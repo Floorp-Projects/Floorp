@@ -25,6 +25,7 @@
 #include "js/TypeDecls.h"     // for Handle, Value, JSObject, JSContext
 #include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/NodeBinding.h"
 #include "nsTHashtable.h"
 #include <iosfwd>
 
@@ -303,6 +304,26 @@ public:
   typedef mozilla::dom::TextOrElementOrDocument TextOrElementOrDocument;
   typedef mozilla::dom::CallerType CallerType;
   typedef mozilla::ErrorResult ErrorResult;
+
+  // XXXbz Maybe we should codegen a class holding these constants and
+  // inherit from it...
+  static const auto ELEMENT_NODE = mozilla::dom::NodeBinding::ELEMENT_NODE;
+  static const auto ATTRIBUTE_NODE = mozilla::dom::NodeBinding::ATTRIBUTE_NODE;
+  static const auto TEXT_NODE = mozilla::dom::NodeBinding::TEXT_NODE;
+  static const auto CDATA_SECTION_NODE =
+    mozilla::dom::NodeBinding::CDATA_SECTION_NODE;
+  static const auto ENTITY_REFERENCE_NODE =
+    mozilla::dom::NodeBinding::ENTITY_REFERENCE_NODE;
+  static const auto ENTITY_NODE = mozilla::dom::NodeBinding::ENTITY_NODE;
+  static const auto PROCESSING_INSTRUCTION_NODE =
+    mozilla::dom::NodeBinding::PROCESSING_INSTRUCTION_NODE;
+  static const auto COMMENT_NODE = mozilla::dom::NodeBinding::COMMENT_NODE;
+  static const auto DOCUMENT_NODE = mozilla::dom::NodeBinding::DOCUMENT_NODE;
+  static const auto DOCUMENT_TYPE_NODE =
+    mozilla::dom::NodeBinding::DOCUMENT_TYPE_NODE;
+  static const auto DOCUMENT_FRAGMENT_NODE =
+    mozilla::dom::NodeBinding::DOCUMENT_FRAGMENT_NODE;
+  static const auto NOTATION_NODE = mozilla::dom::NodeBinding::NOTATION_NODE;
 
   template<class T>
   using Sequence = mozilla::dom::Sequence<T>;
@@ -712,8 +733,7 @@ public:
   bool IsShadowRoot() const
   {
     const bool isShadowRoot = IsInShadowTree() && !GetParentNode();
-    MOZ_ASSERT_IF(isShadowRoot,
-                  NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE);
+    MOZ_ASSERT_IF(isShadowRoot, NodeType() == DOCUMENT_FRAGMENT_NODE);
     return isShadowRoot;
   }
 
@@ -1733,29 +1753,29 @@ public:
   void ClearHasValidDir() { ClearBoolFlag(NodeHasValidDirAttribute); }
   bool HasValidDir() const { return GetBoolFlag(NodeHasValidDirAttribute); }
   void SetHasDirAutoSet() {
-    MOZ_ASSERT(NodeType() != nsIDOMNode::TEXT_NODE,
+    MOZ_ASSERT(NodeType() != TEXT_NODE,
                "SetHasDirAutoSet on text node");
     SetBoolFlag(NodeHasDirAutoSet);
   }
   void ClearHasDirAutoSet() {
-    MOZ_ASSERT(NodeType() != nsIDOMNode::TEXT_NODE,
+    MOZ_ASSERT(NodeType() != TEXT_NODE,
                "ClearHasDirAutoSet on text node");
     ClearBoolFlag(NodeHasDirAutoSet);
   }
   bool HasDirAutoSet() const
     { return GetBoolFlag(NodeHasDirAutoSet); }
   void SetHasTextNodeDirectionalityMap() {
-    MOZ_ASSERT(NodeType() == nsIDOMNode::TEXT_NODE,
+    MOZ_ASSERT(NodeType() == TEXT_NODE,
                "SetHasTextNodeDirectionalityMap on non-text node");
     SetBoolFlag(NodeHasTextNodeDirectionalityMap);
   }
   void ClearHasTextNodeDirectionalityMap() {
-    MOZ_ASSERT(NodeType() == nsIDOMNode::TEXT_NODE,
+    MOZ_ASSERT(NodeType() == TEXT_NODE,
                "ClearHasTextNodeDirectionalityMap on non-text node");
     ClearBoolFlag(NodeHasTextNodeDirectionalityMap);
   }
   bool HasTextNodeDirectionalityMap() const {
-    MOZ_ASSERT(NodeType() == nsIDOMNode::TEXT_NODE,
+    MOZ_ASSERT(NodeType() == TEXT_NODE,
                "HasTextNodeDirectionalityMap on non-text node");
     return GetBoolFlag(NodeHasTextNodeDirectionalityMap);
   }

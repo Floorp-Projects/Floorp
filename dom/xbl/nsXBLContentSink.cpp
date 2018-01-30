@@ -922,7 +922,7 @@ nsXBLContentSink::AddAttributesToXULPrototype(const char16_t **aAtts,
     else {
       RefPtr<NodeInfo> ni;
       ni = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
-                                         nsIDOMNode::ATTRIBUTE_NODE);
+                                         nsINode::ATTRIBUTE_NODE);
       attrs[i].mName.SetTo(ni);
     }
 

@@ -659,7 +659,7 @@ TextServicesDocument::LastSelectedBlock(BlockSelectionStatus* aSelStatus,
     // Now walk through the range till we find a text node.
 
     while (!iter->IsDone()) {
-      if (iter->GetCurrentNode()->NodeType() == nsIDOMNode::TEXT_NODE) {
+      if (iter->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
         // We found a text node, so position the document's
         // iterator at the beginning of the block, then get
         // the selection in terms of the string offset.
@@ -744,7 +744,7 @@ TextServicesDocument::LastSelectedBlock(BlockSelectionStatus* aSelStatus,
   iter->First();
 
   while (!iter->IsDone()) {
-    if (iter->GetCurrentNode()->NodeType() == nsIDOMNode::TEXT_NODE) {
+    if (iter->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
       // We found a text node! Adjust the document's iterator to point
       // to the beginning of its text block, then get the current selection.
       rv = mIterator->PositionAt(iter->GetCurrentNode());
@@ -1955,7 +1955,7 @@ bool
 TextServicesDocument::IsTextNode(nsIContent* aContent)
 {
   NS_ENSURE_TRUE(aContent, false);
-  return nsIDOMNode::TEXT_NODE == aContent->NodeType();
+  return nsINode::TEXT_NODE == aContent->NodeType();
 }
 
 // static
@@ -2201,7 +2201,7 @@ TextServicesDocument::GetCollapsedSelection(BlockSelectionStatus* aSelStatus,
     return NS_OK;
   }
 
-  if (parent->NodeType() == nsIDOMNode::TEXT_NODE) {
+  if (parent->NodeType() == nsINode::TEXT_NODE) {
     // Good news, the caret is in a text node. Look
     // through the offset table for the entry that
     // matches its parent and offset.
@@ -2279,7 +2279,7 @@ TextServicesDocument::GetCollapsedSelection(BlockSelectionStatus* aSelStatus,
   nsIContent* node = nullptr;
   while (!iter->IsDone()) {
     nsINode* current = iter->GetCurrentNode();
-    if (current->NodeType() == nsIDOMNode::TEXT_NODE) {
+    if (current->NodeType() == nsINode::TEXT_NODE) {
       node = current->AsContent();
       break;
     }
@@ -2305,7 +2305,7 @@ TextServicesDocument::GetCollapsedSelection(BlockSelectionStatus* aSelStatus,
     while (!iter->IsDone()) {
       nsINode* current = iter->GetCurrentNode();
 
-      if (current->NodeType() == nsIDOMNode::TEXT_NODE) {
+      if (current->NodeType() == nsINode::TEXT_NODE) {
         node = current->AsContent();
         break;
       }
@@ -2628,7 +2628,7 @@ TextServicesDocument::FirstTextNode(nsIContentIterator* aIterator,
   aIterator->First();
 
   while (!aIterator->IsDone()) {
-    if (aIterator->GetCurrentNode()->NodeType() == nsIDOMNode::TEXT_NODE) {
+    if (aIterator->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
       if (aIteratorStatus) {
         *aIteratorStatus = IteratorStatus::eValid;
       }
@@ -2652,7 +2652,7 @@ TextServicesDocument::LastTextNode(nsIContentIterator* aIterator,
   aIterator->Last();
 
   while (!aIterator->IsDone()) {
-    if (aIterator->GetCurrentNode()->NodeType() == nsIDOMNode::TEXT_NODE) {
+    if (aIterator->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
       if (aIteratorStatus) {
         *aIteratorStatus = IteratorStatus::eValid;
       }

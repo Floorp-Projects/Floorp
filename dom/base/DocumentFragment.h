@@ -28,7 +28,7 @@ class DocumentFragment : public FragmentOrElement,
 private:
   void Init()
   {
-    MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE &&
+    MOZ_ASSERT(mNodeInfo->NodeType() == DOCUMENT_FRAGMENT_NODE &&
                mNodeInfo->Equals(nsGkAtoms::documentFragmentNodeName,
                                  kNameSpaceID_None),
                "Bad NodeType in aNodeInfo");
@@ -58,7 +58,7 @@ public:
     : FragmentOrElement(aNodeInfoManager->GetNodeInfo(
                                             nsGkAtoms::documentFragmentNodeName,
                                             nullptr, kNameSpaceID_None,
-                                            nsIDOMNode::DOCUMENT_FRAGMENT_NODE)),
+                                            DOCUMENT_FRAGMENT_NODE)),
       mHost(nullptr)
   {
     Init();

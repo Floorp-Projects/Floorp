@@ -3559,7 +3559,7 @@ HTMLEditor::CollapseAdjacentTextNodes(nsRange* aInRange)
 
   while (!iter->IsDone()) {
     nsINode* node = iter->GetCurrentNode();
-    if (node->NodeType() == nsIDOMNode::TEXT_NODE &&
+    if (node->NodeType() == nsINode::TEXT_NODE &&
         IsEditable(node->AsContent())) {
       textNodes.AppendElement(node);
     }

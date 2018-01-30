@@ -404,31 +404,31 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
   }
 
   switch (node->NodeType()) {
-    case nsIDOMNode::TEXT_NODE:
+    case nsINode::TEXT_NODE:
     {
       mSerializer->AppendText(static_cast<nsIContent*>(node),
                               aStartOffset, aEndOffset, aStr);
       break;
     }
-    case nsIDOMNode::CDATA_SECTION_NODE:
+    case nsINode::CDATA_SECTION_NODE:
     {
       mSerializer->AppendCDATASection(static_cast<nsIContent*>(node),
                                       aStartOffset, aEndOffset, aStr);
       break;
     }
-    case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
+    case nsINode::PROCESSING_INSTRUCTION_NODE:
     {
       mSerializer->AppendProcessingInstruction(static_cast<nsIContent*>(node),
                                                aStartOffset, aEndOffset, aStr);
       break;
     }
-    case nsIDOMNode::COMMENT_NODE:
+    case nsINode::COMMENT_NODE:
     {
       mSerializer->AppendComment(static_cast<nsIContent*>(node),
                                  aStartOffset, aEndOffset, aStr);
       break;
     }
-    case nsIDOMNode::DOCUMENT_TYPE_NODE:
+    case nsINode::DOCUMENT_TYPE_NODE:
     {
       mSerializer->AppendDoctype(static_cast<nsIContent*>(node), aStr);
       break;
@@ -547,7 +547,7 @@ nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode,
         // Handle template element. If the parent is a template's content,
         // then adjust the parent to be the template element.
         if (current && current != aNode &&
-            current->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+            current->NodeType() == nsINode::DOCUMENT_FRAGMENT_NODE) {
           DocumentFragment* frag = static_cast<DocumentFragment*>(current);
           nsIContent* host = frag->GetHost();
           if (host && host->IsHTMLElement(nsGkAtoms::_template)) {

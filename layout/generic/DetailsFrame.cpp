@@ -103,7 +103,7 @@ DetailsFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   already_AddRefed<NodeInfo> nodeInfo =
     nodeInfoManager->GetNodeInfo(nsGkAtoms::summary, nullptr, kNameSpaceID_XHTML,
-                                 nsIDOMNode::ELEMENT_NODE);
+                                 nsINode::ELEMENT_NODE);
   mDefaultSummary = new HTMLSummaryElement(nodeInfo);
 
   nsAutoString defaultSummaryText;
