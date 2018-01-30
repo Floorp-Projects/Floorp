@@ -81,12 +81,11 @@ HTMLEditor::AbsolutePositionSelection(bool aEnabled)
 NS_IMETHODIMP
 HTMLEditor::GetAbsolutelyPositionedSelectionContainer(nsIDOMElement** _retval)
 {
-  nsCOMPtr<nsINode> container;
-  nsresult rv =
-    GetAbsolutelyPositionedSelectionContainer(getter_AddRefs(container));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  RefPtr<Element> container =
+    GetAbsolutelyPositionedSelectionContainer();
+  if (NS_WARN_IF(!container)) {
     *_retval = nullptr;
-    return rv;
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIDOMElement> domContainer = do_QueryInterface(container);
@@ -94,31 +93,25 @@ HTMLEditor::GetAbsolutelyPositionedSelectionContainer(nsIDOMElement** _retval)
   return NS_OK;
 }
 
-nsresult
-HTMLEditor::GetAbsolutelyPositionedSelectionContainer(nsINode** aContainer)
+already_AddRefed<Element>
+HTMLEditor::GetAbsolutelyPositionedSelectionContainer()
 {
-  MOZ_ASSERT(aContainer);
-
   nsAutoString positionStr;
-  nsCOMPtr<nsINode> node = GetSelectionContainer();
-  nsCOMPtr<nsINode> resultNode;
+  RefPtr<Element> element = GetSelectionContainer();
 
-  while (!resultNode && node && !node->IsHTMLElement(nsGkAtoms::html)) {
+  while (element && !element->IsHTMLElement(nsGkAtoms::html)) {
     nsresult rv =
-      mCSSEditUtils->GetComputedProperty(*node, *nsGkAtoms::position,
+      mCSSEditUtils->GetComputedProperty(*element, *nsGkAtoms::position,
                                          positionStr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      *aContainer = nullptr;
-      return rv;
+      return nullptr;
     }
-    if (positionStr.EqualsLiteral("absolute"))
-      resultNode = node;
-    else {
-      node = node->GetParentNode();
+    if (positionStr.EqualsLiteral("absolute")) {
+      return element.forget();
     }
+    element = element->GetParentElement();
   }
-  resultNode.forget(aContainer);
-  return NS_OK;
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -327,8 +320,13 @@ HTMLEditor::ShowGrabberOnElement(nsIDOMElement* aElement)
 {
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
   NS_ENSURE_ARG_POINTER(element);
+  return ShowGrabberOnElement(*element);
+}
 
-  if (NS_WARN_IF(!IsDescendantOfEditorRoot(element))) {
+nsresult
+HTMLEditor::ShowGrabberOnElement(Element& aElement)
+{
+  if (NS_WARN_IF(!IsDescendantOfEditorRoot(&aElement))) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -338,17 +336,18 @@ HTMLEditor::ShowGrabberOnElement(nsIDOMElement* aElement)
   }
 
   nsAutoString classValue;
-  nsresult rv = CheckPositionedElementBGandFG(aElement, classValue);
+  nsresult rv =
+    GetTemporaryStyleForFocusedPositionedElement(aElement, classValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = element->SetAttr(kNameSpaceID_None, nsGkAtoms::_moz_abspos,
+  rv = aElement.SetAttr(kNameSpaceID_None, nsGkAtoms::_moz_abspos,
                         classValue, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // first, let's keep track of that element...
-  mAbsolutelyPositionedObject = element;
+  mAbsolutelyPositionedObject = &aElement;
 
-  nsIContent* parentContent = element->GetParent();
+  nsIContent* parentContent = aElement.GetParent();
   if (NS_WARN_IF(!parentContent)) {
     return NS_ERROR_FAILURE;
   }
@@ -640,8 +639,8 @@ HTMLEditor::GetPositionedElement(nsIDOMElement** aReturn)
 }
 
 nsresult
-HTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement* aElement,
-                                          nsAString& aReturn)
+HTMLEditor::GetTemporaryStyleForFocusedPositionedElement(Element& aElement,
+                                                         nsAString& aReturn)
 {
   // we are going to outline the positioned element and bring it to the
   // front to overlap any other element intersecting with it. But
@@ -653,58 +652,61 @@ HTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement* aElement,
   //   If the background color is 'auto' and at least one of R G B values of
   //       the foreground is below #d0, use a white background
   // Otherwise don't change background/foreground
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  NS_ENSURE_STATE(element || !aElement);
-
   aReturn.Truncate();
 
   nsAutoString bgImageStr;
   nsresult rv =
-    mCSSEditUtils->GetComputedProperty(*element, *nsGkAtoms::background_image,
+    mCSSEditUtils->GetComputedProperty(aElement, *nsGkAtoms::background_image,
                                        bgImageStr);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (bgImageStr.EqualsLiteral("none")) {
-    nsAutoString bgColorStr;
-    rv =
-      mCSSEditUtils->GetComputedProperty(*element, *nsGkAtoms::backgroundColor,
-                                         bgColorStr);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (bgColorStr.EqualsLiteral("transparent")) {
-      RefPtr<nsComputedDOMStyle> cssDecl =
-        mCSSEditUtils->GetComputedStyle(element);
-      NS_ENSURE_STATE(cssDecl);
-
-      // from these declarations, get the one we want and that one only
-      ErrorResult error;
-      RefPtr<dom::CSSValue> cssVal = cssDecl->GetPropertyCSSValue(NS_LITERAL_STRING("color"), error);
-      NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
-
-      nsROCSSPrimitiveValue* val = cssVal->AsPrimitiveValue();
-      NS_ENSURE_TRUE(val, NS_ERROR_FAILURE);
-
-      if (CSSPrimitiveValueBinding::CSS_RGBCOLOR == val->PrimitiveType()) {
-        nsDOMCSSRGBColor* rgbVal = val->GetRGBColorValue(error);
-        NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
-        float r = rgbVal->Red()->
-          GetFloatValue(CSSPrimitiveValueBinding::CSS_NUMBER, error);
-        NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
-        float g = rgbVal->Green()->
-          GetFloatValue(CSSPrimitiveValueBinding::CSS_NUMBER, error);
-        NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
-        float b = rgbVal->Blue()->
-          GetFloatValue(CSSPrimitiveValueBinding::CSS_NUMBER, error);
-        NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
-        if (r >= BLACK_BG_RGB_TRIGGER &&
-            g >= BLACK_BG_RGB_TRIGGER &&
-            b >= BLACK_BG_RGB_TRIGGER)
-          aReturn.AssignLiteral("black");
-        else
-          aReturn.AssignLiteral("white");
-        return NS_OK;
-      }
-    }
+  if (!bgImageStr.EqualsLiteral("none")) {
+    return NS_OK;
   }
 
+  nsAutoString bgColorStr;
+  rv =
+    mCSSEditUtils->GetComputedProperty(aElement, *nsGkAtoms::backgroundColor,
+                                       bgColorStr);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!bgColorStr.EqualsLiteral("transparent")) {
+    return NS_OK;
+  }
+
+  RefPtr<nsComputedDOMStyle> cssDecl =
+    mCSSEditUtils->GetComputedStyle(&aElement);
+  NS_ENSURE_STATE(cssDecl);
+
+  // from these declarations, get the one we want and that one only
+  ErrorResult error;
+  RefPtr<dom::CSSValue> cssVal =
+    cssDecl->GetPropertyCSSValue(NS_LITERAL_STRING("color"), error);
+  NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
+
+  nsROCSSPrimitiveValue* val = cssVal->AsPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_FAILURE);
+
+  if (CSSPrimitiveValueBinding::CSS_RGBCOLOR != val->PrimitiveType()) {
+    return NS_OK;
+  }
+
+  nsDOMCSSRGBColor* rgbVal = val->GetRGBColorValue(error);
+  NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
+  float r = rgbVal->Red()->
+    GetFloatValue(CSSPrimitiveValueBinding::CSS_NUMBER, error);
+  NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
+  float g = rgbVal->Green()->
+    GetFloatValue(CSSPrimitiveValueBinding::CSS_NUMBER, error);
+  NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
+  float b = rgbVal->Blue()->
+    GetFloatValue(CSSPrimitiveValueBinding::CSS_NUMBER, error);
+  NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
+  if (r >= BLACK_BG_RGB_TRIGGER &&
+      g >= BLACK_BG_RGB_TRIGGER &&
+      b >= BLACK_BG_RGB_TRIGGER) {
+    aReturn.AssignLiteral("black");
+  } else {
+    aReturn.AssignLiteral("white");
+  }
   return NS_OK;
 }
 
