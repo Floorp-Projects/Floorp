@@ -4,12 +4,15 @@
  #screenshot-preview {width: 200px; height: 200px;}
 </style>
 <div id="url"></div>
+<div id="details"></div>
 <div id="screenshot-preview">Fail</div>
 <script>
 let params = new URL(location.href).searchParams;
 let preview = document.getElementById("screenshot-preview");
 let url = document.getElementById("url");
 url.innerText = params.get("url");
+let details = document.getElementById("details");
+details.innerText = params.get("details");
 
 function getBlobAsDataURL(blob) {
   return new Promise((resolve, reject) => {
