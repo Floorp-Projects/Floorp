@@ -16,6 +16,7 @@ public:
   static int8_t GetFrequencyIndex(uint32_t aSamplesPerSecond);
   static bool ConvertSample(uint16_t aChannelCount, int8_t aFrequencyIndex,
                             int8_t aProfile, mozilla::MediaRawData* aSample);
+  static bool RevertSample(MediaRawData* aSample);
 };
 }
 
