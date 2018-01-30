@@ -2204,12 +2204,5 @@ NS_IMETHOD GetAttribute(const nsAString& name, nsAString& _retval) final      \
   GetAttribute(name, attr);                                                   \
   _retval = attr;                                                             \
   return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD SetAttribute(const nsAString& name,                                \
-                        const nsAString& value) override                      \
-{                                                                             \
-  mozilla::ErrorResult rv;                                                    \
-  Element::SetAttribute(name, value, nullptr, rv);                            \
-  return rv.StealNSResult();                                                  \
 }
 #endif // mozilla_dom_Element_h__
