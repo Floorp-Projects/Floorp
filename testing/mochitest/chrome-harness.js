@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 /*
  * getChromeURI converts a URL to a URI

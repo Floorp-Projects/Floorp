@@ -73,7 +73,7 @@ const NC_OBJPATH            = NC_NS + "objectPath";
 // nsIDBusHandlerApp::dbusInterface
 const NC_INTERFACE            = NC_NS + "dBusInterface";
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 
 function HandlerService() {

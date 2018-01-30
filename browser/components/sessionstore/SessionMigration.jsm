@@ -7,10 +7,10 @@
 this.EXPORTED_SYMBOLS = ["SessionMigration"];
 
 const Cu = Components.utils;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-Cu.import("resource://gre/modules/osfile.jsm", this);
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 
-XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+ChromeUtils.defineModuleGetter(this, "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm");
 
 // An encoder to UTF-8.

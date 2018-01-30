@@ -6,8 +6,8 @@
 
 var Cu = Components.utils;
 
-Cu.import("resource://gre/modules/PromiseWorker.jsm", this);
-Cu.import("resource://gre/modules/Timer.jsm", this);
+ChromeUtils.import("resource://gre/modules/PromiseWorker.jsm", this);
+ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 
 // Worker must be loaded from a chrome:// uri, not a file://
 // uri, so we first need to load it.

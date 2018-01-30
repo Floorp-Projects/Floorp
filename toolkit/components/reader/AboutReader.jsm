@@ -8,16 +8,16 @@ var Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = [ "AboutReader" ];
 
-Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/ReaderMode.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/ReaderMode.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AsyncPrefs", "resource://gre/modules/AsyncPrefs.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NarrateControls", "resource://gre/modules/narrate/NarrateControls.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
+ChromeUtils.defineModuleGetter(this, "AsyncPrefs", "resource://gre/modules/AsyncPrefs.jsm");
+ChromeUtils.defineModuleGetter(this, "NarrateControls", "resource://gre/modules/narrate/NarrateControls.jsm");
+ChromeUtils.defineModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
+ChromeUtils.defineModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
+ChromeUtils.defineModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
 var gStrings = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 

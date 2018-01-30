@@ -39,14 +39,12 @@ class nsCSSFontFaceStyleDecl final : public nsICSSDeclaration
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER
-  NS_DECL_NSICSSDECLARATION
   virtual already_AddRefed<mozilla::dom::CSSValue>
   GetPropertyCSSValue(const nsAString& aProp, mozilla::ErrorResult& aRv)
     override;
   using nsICSSDeclaration::GetPropertyCSSValue;
 
   virtual nsINode *GetParentObject() override;
-  virtual mozilla::dom::DocGroup* GetDocGroup() const override;
   virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName) override;
 
   nsresult GetPropertyValue(nsCSSFontDesc aFontDescID,

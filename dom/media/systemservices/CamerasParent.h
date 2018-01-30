@@ -141,13 +141,13 @@ protected:
   // be accessed by main thread / PBackground thread / VideoCapture thread
   // sNumOfCamerasParent and sThreadMonitor create & delete are protected by sMutex
   // sNumOfOpenCamerasParentEngines and sVideoCaptureThread are protected by sThreadMonitor
-  static RefPtr<VideoEngine> sEngines[CaptureEngine::MaxEngine];
+  static StaticRefPtr<VideoEngine> sEngines[CaptureEngine::MaxEngine];
   static int32_t sNumOfOpenCamerasParentEngines;
   static int32_t sNumOfCamerasParents;
   nsTArray<CallbackHelper*> mCallbacks;
 
   // image buffers
-  mozilla::ShmemPool mShmemPool;
+  ShmemPool mShmemPool;
 
   // PBackground parent thread
   nsCOMPtr<nsISerialEventTarget> mPBackgroundEventTarget;
@@ -163,7 +163,7 @@ protected:
   bool mDestroyed;
   // Above 2 are PBackground only, but this is potentially
   // read cross-thread.
-  mozilla::Atomic<bool> mWebRTCAlive;
+  Atomic<bool> mWebRTCAlive;
   RefPtr<InputObserver> mCameraObserver;
   std::map<nsCString, std::map<uint32_t, webrtc::VideoCaptureCapability>>
     mAllCandidateCapabilities;

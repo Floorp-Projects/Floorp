@@ -1,6 +1,6 @@
 function test() {
-  let {Promise} = Components.utils.import("resource://gre/modules/Promise.jsm");
-  Components.utils.import("resource://gre/modules/osfile.jsm");
+  let {Promise} = ChromeUtils.import("resource://gre/modules/Promise.jsm");
+  ChromeUtils.import("resource://gre/modules/osfile.jsm");
   let decoder = new TextDecoder();
 
   waitForExplicitFinish();

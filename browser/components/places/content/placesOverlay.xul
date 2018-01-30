@@ -25,11 +25,11 @@
     var Cr = Components.results;
     var Cu = Components.utils;
 
-    Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-    Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
-    XPCOMUtils.defineLazyModuleGetter(window,
+    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+    ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+    ChromeUtils.defineModuleGetter(window,
       "PlacesUIUtils", "resource:///modules/PlacesUIUtils.jsm");
-    XPCOMUtils.defineLazyModuleGetter(window,
+    ChromeUtils.defineModuleGetter(window,
       "PlacesTransactions", "resource://gre/modules/PlacesTransactions.jsm");
   ]]></script>
   <script type="application/javascript"

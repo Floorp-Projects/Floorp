@@ -15,7 +15,7 @@ function frameScript() {
     let selection = controller.getSelection(controller.SELECTION_FIND);
     let range = selection.getRangeAt(0);
     let scope = {};
-    Cu.import("resource://gre/modules/FindContent.jsm", scope);
+    ChromeUtils.import("resource://gre/modules/FindContent.jsm", scope);
     let highlighter = (new scope.FindContent(docShell)).highlighter;
     let r1 = frame.parent.frameElement.getBoundingClientRect();
     let f1 = highlighter._getFrameElementOffsets(frame.parent);

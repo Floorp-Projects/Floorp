@@ -6,7 +6,7 @@ function test() {
   // Customize something to make sure stuff changed:
   CustomizableUI.addWidgetToArea("feed-button", CustomizableUI.AREA_NAVBAR);
 
-  let CustomizableUIBSPass = Cu.import("resource:///modules/CustomizableUI.jsm", {});
+  let CustomizableUIBSPass = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", {});
 
   is(CustomizableUIBSPass.gFuturePlacements.size, 0,
      "All future placements should be dealt with by now.");

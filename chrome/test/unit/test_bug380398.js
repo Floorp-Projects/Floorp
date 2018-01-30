@@ -10,7 +10,7 @@ var MANIFESTS = [
 
 registerManifests(MANIFESTS);
 
-Components.utils.import("resource://testing-common/AppInfo.jsm", this);
+ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
 updateAppInfo({
   name: "XPCShell",
   id: "{39885e5f-f6b4-4e2a-87e5-6259ecf79011}",

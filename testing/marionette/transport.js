@@ -6,14 +6,14 @@
 
 /* global Pipe, ScriptableInputStream, uneval */
 
-const {Constructor: CC, classes: Cc, utils: Cu, results: Cr} = Components;
+const {Constructor: CC, classes: Cc, results: Cr} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/EventEmitter.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 const {StreamUtils} =
-    Cu.import("chrome://marionette/content/stream-utils.js", {});
+    ChromeUtils.import("chrome://marionette/content/stream-utils.js", {});
 const {Packet, JSONPacket, BulkPacket} =
-    Cu.import("chrome://marionette/content/packets.js", {});
+    ChromeUtils.import("chrome://marionette/content/packets.js", {});
 
 const defer = function() {
   let deferred = {

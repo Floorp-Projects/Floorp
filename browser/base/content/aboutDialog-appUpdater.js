@@ -7,11 +7,11 @@
 
 /* import-globals-from aboutDialog.js */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
-                                  "resource://gre/modules/UpdateUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "UpdateUtils",
+                               "resource://gre/modules/UpdateUtils.jsm");
 
 const PREF_APP_UPDATE_CANCELATIONS_OSX = "app.update.cancelations.osx";
 const PREF_APP_UPDATE_ELEVATE_NEVER    = "app.update.elevate.never";

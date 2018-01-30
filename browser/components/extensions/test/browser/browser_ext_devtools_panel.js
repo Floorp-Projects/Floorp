@@ -2,10 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
+ChromeUtils.defineModuleGetter(this, "Preferences",
+                               "resource://gre/modules/Preferences.jsm");
 
-const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const {gDevTools} = require("devtools/client/framework/devtools");
 
 const DEVTOOLS_THEME_PREF = "devtools.theme";

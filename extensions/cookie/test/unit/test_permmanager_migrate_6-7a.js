@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
-                                  "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
+                               "resource://testing-common/PlacesTestUtils.jsm");
 
 var PERMISSIONS_FILE_NAME = "permissions.sqlite";
 

@@ -1,4 +1,4 @@
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const CWD = do_get_cwd();
 function checkOS(os) {

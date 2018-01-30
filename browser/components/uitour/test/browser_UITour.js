@@ -7,9 +7,9 @@ var gTestTab;
 var gContentAPI;
 var gContentWindow;
 
-Components.utils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
-Components.utils.import("resource://gre/modules/ProfileAge.jsm", this);
-Components.utils.import("resource://gre/modules/UpdateUtils.jsm", this);
+ChromeUtils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
+ChromeUtils.import("resource://gre/modules/ProfileAge.jsm", this);
+ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm", this);
 
 
 function test() {

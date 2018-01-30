@@ -5,7 +5,7 @@
 
 var {utils: Cu, interfaces: Ci, classes: Cc} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const BASE_URL = "http://example.org/";
 

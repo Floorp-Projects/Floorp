@@ -432,6 +432,14 @@ var tests = [
   // Bug 783502 - xpcshell test netwerk/test/unit/test_MIME_params.js fails on AddressSanitizer
   ['attachment; filename="\\b\\a\\', 
    "attachment", "ba\\"], 
+
+  // Bug 1412213 - do continue to parse, behind an empty parameter
+  ['attachment; ; filename=foo',
+   "attachment", "foo"],
+
+  // Bug 1412213 - do continue to parse, behind a parameter w/o =
+  ['attachment; badparameter; filename=foo',
+   "attachment", "foo"],
 ];
 
 var rfc5987paramtests = [

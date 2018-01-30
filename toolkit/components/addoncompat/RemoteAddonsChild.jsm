@@ -9,13 +9,13 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
-                                  "resource://gre/modules/BrowserUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Prefetcher",
-                                  "resource://gre/modules/Prefetcher.jsm");
+ChromeUtils.defineModuleGetter(this, "BrowserUtils",
+                               "resource://gre/modules/BrowserUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "Prefetcher",
+                               "resource://gre/modules/Prefetcher.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "SystemPrincipal",
                                    "@mozilla.org/systemprincipal;1", "nsIPrincipal");

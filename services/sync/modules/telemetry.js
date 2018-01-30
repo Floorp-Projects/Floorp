@@ -8,28 +8,28 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 this.EXPORTED_SYMBOLS = ["SyncTelemetry"];
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://services-sync/browserid_identity.js");
-Cu.import("resource://services-sync/main.js");
-Cu.import("resource://services-sync/status.js");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/resource.js");
-Cu.import("resource://services-common/observers.js");
-Cu.import("resource://services-common/async.js");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://services-sync/browserid_identity.js");
+ChromeUtils.import("resource://services-sync/main.js");
+ChromeUtils.import("resource://services-sync/status.js");
+ChromeUtils.import("resource://services-sync/util.js");
+ChromeUtils.import("resource://services-sync/resource.js");
+ChromeUtils.import("resource://services-common/observers.js");
+ChromeUtils.import("resource://services-common/async.js");
 
 let constants = {};
-Cu.import("resource://services-sync/constants.js", constants);
+ChromeUtils.import("resource://services-sync/constants.js", constants);
 
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryController",
+ChromeUtils.defineModuleGetter(this, "TelemetryController",
                               "resource://gre/modules/TelemetryController.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryUtils",
-                                  "resource://gre/modules/TelemetryUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
-                                  "resource://gre/modules/TelemetryEnvironment.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
-                                  "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(this, "TelemetryUtils",
+                               "resource://gre/modules/TelemetryUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "TelemetryEnvironment",
+                               "resource://gre/modules/TelemetryEnvironment.jsm");
+ChromeUtils.defineModuleGetter(this, "OS",
+                               "resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
                                    "@mozilla.org/base/telemetry;1",

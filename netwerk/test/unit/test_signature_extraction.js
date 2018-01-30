@@ -11,14 +11,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Globals
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-                                  "resource://gre/modules/FileUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileTestUtils",
-                                  "resource://testing-common/FileTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "FileUtils",
+                               "resource://gre/modules/FileUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "NetUtil",
+                               "resource://gre/modules/NetUtil.jsm");
+ChromeUtils.defineModuleGetter(this, "FileTestUtils",
+                               "resource://testing-common/FileTestUtils.jsm");
 
 const BackgroundFileSaverOutputStream = Components.Constructor(
       "@mozilla.org/network/background-file-saver;1?mode=outputstream",

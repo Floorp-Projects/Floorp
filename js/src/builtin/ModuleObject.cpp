@@ -145,7 +145,10 @@ ImportEntryObject::create(JSContext* cx,
 {
     MOZ_ASSERT(lineNumber > 0);
 
-    RootedObject proto(cx, cx->global()->getImportEntryPrototype());
+    RootedObject proto(cx, GlobalObject::getOrCreateImportEntryPrototype(cx, cx->global()));
+    if (!proto)
+        return nullptr;
+
     RootedObject obj(cx, NewObjectWithGivenProto(cx, &class_, proto));
     if (!obj)
         return nullptr;
@@ -231,7 +234,10 @@ ExportEntryObject::create(JSContext* cx,
     // Line and column numbers are optional for export entries since direct
     // entries are checked at parse time.
 
-    RootedObject proto(cx, cx->global()->getExportEntryPrototype());
+    RootedObject proto(cx, GlobalObject::getOrCreateExportEntryPrototype(cx, cx->global()));
+    if (!proto)
+        return nullptr;
+
     RootedObject obj(cx, NewObjectWithGivenProto(cx, &class_, proto));
     if (!obj)
         return nullptr;
@@ -299,7 +305,10 @@ RequestedModuleObject::create(JSContext* cx,
 {
     MOZ_ASSERT(lineNumber > 0);
 
-    RootedObject proto(cx, cx->global()->getRequestedModulePrototype());
+    RootedObject proto(cx, GlobalObject::getOrCreateRequestedModulePrototype(cx, cx->global()));
+    if (!proto)
+        return nullptr;
+
     RootedObject obj(cx, NewObjectWithGivenProto(cx, &class_, proto));
     if (!obj)
         return nullptr;
@@ -760,7 +769,10 @@ ModuleObject::isInstance(HandleValue value)
 /* static */ ModuleObject*
 ModuleObject::create(JSContext* cx)
 {
-    RootedObject proto(cx, cx->global()->getModulePrototype());
+    RootedObject proto(cx, GlobalObject::getOrCreateModulePrototype(cx, cx->global()));
+    if (!proto)
+        return nullptr;
+
     RootedObject obj(cx, NewObjectWithGivenProto(cx, &class_, proto));
     if (!obj)
         return nullptr;

@@ -1,5 +1,5 @@
-Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /*
  * Test that when doing HTTP requests, the nsIHttpChannel is detected in

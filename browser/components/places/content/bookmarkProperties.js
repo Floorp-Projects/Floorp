@@ -59,9 +59,9 @@
 
 /* import-globals-from editBookmarkOverlay.js */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
-                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 const BOOKMARK_ITEM = 0;
 const BOOKMARK_FOLDER = 1;

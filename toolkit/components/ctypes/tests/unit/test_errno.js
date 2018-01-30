@@ -1,4 +1,4 @@
-Components.utils.import("resource://gre/modules/ctypes.jsm");
+ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 
 // Scope used to relaunch the tests with |ctypes| opened in a limited scope.
 var scope = {};
@@ -10,7 +10,7 @@ function run_test() {
 
   // Relaunch the test with exotic loading of ctypes.jsm
   Components.utils.unload("resource://gre/modules/ctypes.jsm");
-  Components.utils.import("resource://gre/modules/ctypes.jsm", scope);
+  ChromeUtils.import("resource://gre/modules/ctypes.jsm", scope);
   ctypes = scope.ctypes;
   main_test();
 }

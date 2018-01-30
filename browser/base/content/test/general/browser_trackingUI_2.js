@@ -12,7 +12,7 @@ const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/
 var TrackingProtection = null;
 var tabbrowser = null;
 
-var {UrlClassifierTestUtils} = Cu.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
+var {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
 registerCleanupFunction(function() {
   TrackingProtection = tabbrowser = null;

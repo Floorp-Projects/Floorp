@@ -1,15 +1,15 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 
-Cu.import("resource://gre/modules/Preferences.jsm", this);
-Cu.import("resource://testing-common/AddonTestUtils.jsm", this);
-Cu.import("resource://testing-common/TestUtils.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/Addons.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/SandboxManager.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/NormandyDriver.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/NormandyApi.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/TelemetryEvents.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/Utils.jsm", this);
+ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
+ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
+ChromeUtils.import("resource://testing-common/TestUtils.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/Addons.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/SandboxManager.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/NormandyDriver.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/NormandyApi.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/TelemetryEvents.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/Utils.jsm", this);
 
 // Load mocking/stubbing library, sinon
 // docs: http://sinonjs.org/docs/

@@ -4,9 +4,9 @@
 
 "use strict";
 
-Components.utils.import("resource://gre/modules/PromiseUtils.jsm");
-Components.utils.import("resource://gre/modules/Timer.jsm");
-Components.utils.import("resource://testing-common/PromiseTestUtils.jsm");
+ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
 
 // Tests for PromiseUtils.jsm
 

@@ -16,7 +16,7 @@ Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/" +
 // Calls the native execv library function. Include imports so this can be
 // safely serialized and run remotely by ContentTask.spawn.
 function callExec(args) {
-  Components.utils.import("resource://gre/modules/ctypes.jsm");
+  ChromeUtils.import("resource://gre/modules/ctypes.jsm");
   let {lib, cmd} = args;
   let libc = ctypes.open(lib);
   let exec = libc.declare("execv", ctypes.default_abi,
@@ -28,7 +28,7 @@ function callExec(args) {
 
 // Calls the native fork syscall.
 function callFork(args) {
-  Components.utils.import("resource://gre/modules/ctypes.jsm");
+  ChromeUtils.import("resource://gre/modules/ctypes.jsm");
   let {lib} = args;
   let libc = ctypes.open(lib);
   let fork = libc.declare("fork", ctypes.default_abi, ctypes.int);
@@ -39,7 +39,7 @@ function callFork(args) {
 
 // Calls the native sysctl syscall.
 function callSysctl(args) {
-  Components.utils.import("resource://gre/modules/ctypes.jsm");
+  ChromeUtils.import("resource://gre/modules/ctypes.jsm");
   let {lib, name} = args;
   let libc = ctypes.open(lib);
   let sysctlbyname = libc.declare("sysctlbyname", ctypes.default_abi,
@@ -53,7 +53,7 @@ function callSysctl(args) {
 
 // Calls the native open/close syscalls.
 function callOpen(args) {
-  Components.utils.import("resource://gre/modules/ctypes.jsm");
+  ChromeUtils.import("resource://gre/modules/ctypes.jsm");
   let {lib, path, flags} = args;
   let libc = ctypes.open(lib);
   let open = libc.declare("open", ctypes.default_abi,

@@ -11,13 +11,13 @@ var Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = [ "ContentClick" ];
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUIUtils",
-                                  "resource:///modules/PlacesUIUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
-                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PlacesUIUtils",
+                               "resource:///modules/PlacesUIUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 var ContentClick = {
   // Listeners are added in nsBrowserGlue.js

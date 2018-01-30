@@ -6,9 +6,9 @@
 
 const { interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
+ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
 this.EXPORTED_SYMBOLS = [ "Narrator" ];

@@ -3,7 +3,7 @@
 
 "use strict";
 
-var {OS: {File, Path, Constants}} = Components.utils.import("resource://gre/modules/osfile.jsm", {});
+var {OS: {File, Path, Constants}} = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
 /**
  * Remove all temporary files and back up files, including

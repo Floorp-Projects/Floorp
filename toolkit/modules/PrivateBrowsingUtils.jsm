@@ -4,7 +4,7 @@
 
 this.EXPORTED_SYMBOLS = ["PrivateBrowsingUtils"];
 
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const kAutoStartPref = "browser.privatebrowsing.autostart";
 

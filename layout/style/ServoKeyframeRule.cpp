@@ -74,16 +74,6 @@ public:
     return mRule ? mRule->GetDocument() : nullptr;
   }
 
-  DocGroup* GetDocGroup() const final override
-  {
-    if (!mRule) {
-      return nullptr;
-    }
-
-    nsIDocument* document = mRule->GetDocument();
-    return document ? document->GetDocGroup() : nullptr;
-  }
-
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   {
     size_t n = aMallocSizeOf(this);

@@ -3,16 +3,16 @@
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ext-toolkit.js */
 
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
-                                  "resource://gre/modules/Downloads.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
-                                  "resource://gre/modules/DownloadPaths.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
-                                  "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-                                  "resource://gre/modules/FileUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "AppConstants",
+                               "resource://gre/modules/AppConstants.jsm");
+ChromeUtils.defineModuleGetter(this, "Downloads",
+                               "resource://gre/modules/Downloads.jsm");
+ChromeUtils.defineModuleGetter(this, "DownloadPaths",
+                               "resource://gre/modules/DownloadPaths.jsm");
+ChromeUtils.defineModuleGetter(this, "OS",
+                               "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(this, "FileUtils",
+                               "resource://gre/modules/FileUtils.jsm");
 
 var {
   EventEmitter,

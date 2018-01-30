@@ -89,7 +89,7 @@ const MAX_TRIM_LENGTH = 100;
 /**
  * Services to determine if e10s is enabled.
  */
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * nsIAccessibilityService service.

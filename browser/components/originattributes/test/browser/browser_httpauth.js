@@ -1,5 +1,5 @@
 let Cu = Components.utils;
-let {HttpServer} = Cu.import("resource://testing-common/httpd.js", {});
+let {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js", {});
 
 let server = new HttpServer();
 server.registerPathHandler("/file.html", fileHandler);

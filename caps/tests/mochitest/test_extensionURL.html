@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
     const Ci = Components.interfaces;
     const Cc = Components.classes;
     const Cu = Components.utils;
-    Cu.import("resource://gre/modules/Services.jsm");
+    ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     // Sets up a substitution in the parent process
     this.addMessageListener("SetSubstitution", ({from, to}) => {

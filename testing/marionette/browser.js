@@ -7,12 +7,12 @@
 
 const {utils: Cu} = Components;
 
-const {WebElementEventTarget} = Cu.import("chrome://marionette/content/dom.js", {});
-Cu.import("chrome://marionette/content/element.js");
+const {WebElementEventTarget} = ChromeUtils.import("chrome://marionette/content/dom.js", {});
+ChromeUtils.import("chrome://marionette/content/element.js");
 const {
   NoSuchWindowError,
   UnsupportedOperationError,
-} = Cu.import("chrome://marionette/content/error.js", {});
+} = ChromeUtils.import("chrome://marionette/content/error.js", {});
 
 this.EXPORTED_SYMBOLS = ["browser", "Context", "WindowState"];
 

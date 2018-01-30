@@ -48,12 +48,12 @@ this.EXPORTED_SYMBOLS = [
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
+ChromeUtils.defineModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
+ChromeUtils.defineModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
 
 const TRANSITION_PHASES = Object.freeze({

@@ -12,10 +12,10 @@ this.EXPORTED_SYMBOLS = [ "PlacesSearchAutocompleteProvider" ];
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "SearchSuggestionController",
+ChromeUtils.defineModuleGetter(this, "SearchSuggestionController",
   "resource://gre/modules/SearchSuggestionController.jsm");
 
 const SEARCH_ENGINE_TOPIC = "browser-search-engine-modified";

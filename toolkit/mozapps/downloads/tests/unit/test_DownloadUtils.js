@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var Cu = Components.utils;
-Cu.import("resource://gre/modules/DownloadUtils.jsm");
+ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
 
 const gDecimalSymbol = Number(5.4).toLocaleString().match(/\D/);
 function _(str) {

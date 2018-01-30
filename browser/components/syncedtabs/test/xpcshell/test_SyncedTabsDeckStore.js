@@ -1,6 +1,6 @@
 "use strict";
 
-let { SyncedTabsDeckStore } = Cu.import("resource:///modules/syncedtabs/SyncedTabsDeckStore.js", {});
+let { SyncedTabsDeckStore } = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsDeckStore.js", {});
 
 add_task(async function testSelectUnkownPanel() {
   let deckStore = new SyncedTabsDeckStore();

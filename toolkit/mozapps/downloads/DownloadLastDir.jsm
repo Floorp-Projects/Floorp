@@ -30,9 +30,9 @@ const nsIFile = Components.interfaces.nsIFile;
 
 this.EXPORTED_SYMBOLS = [ "DownloadLastDir" ];
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 let nonPrivateLoadContext = Components.classes["@mozilla.org/loadcontext;1"].
                               createInstance(Components.interfaces.nsILoadContext);

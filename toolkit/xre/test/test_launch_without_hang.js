@@ -9,9 +9,9 @@
 
 const { classes: Cc, interfaces: Ci, manager: Cm, results: Cr, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 
 const APP_TIMER_TIMEOUT_MS = 1000 * 15;

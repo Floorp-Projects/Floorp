@@ -11,14 +11,14 @@ var Cc = Components.classes;
 var Cr = Components.results;
 var Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
-                                  "resource://gre/modules/PluralForm.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
-                                  "resource:///modules/sessionstore/SessionStore.jsm");
+ChromeUtils.defineModuleGetter(this, "PluralForm",
+                               "resource://gre/modules/PluralForm.jsm");
+ChromeUtils.defineModuleGetter(this, "SessionStore",
+                               "resource:///modules/sessionstore/SessionStore.jsm");
 
 var navigatorBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 

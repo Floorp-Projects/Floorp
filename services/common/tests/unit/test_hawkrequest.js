@@ -3,9 +3,9 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://services-common/utils.js");
-Cu.import("resource://services-common/hawkrequest.js");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://services-common/utils.js");
+ChromeUtils.import("resource://services-common/hawkrequest.js");
 
 // https://github.com/mozilla/fxa-auth-server/wiki/onepw-protocol#wiki-use-session-certificatesign-etc
 var SESSION_KEYS = {

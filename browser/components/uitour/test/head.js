@@ -3,8 +3,8 @@
 // This file expects these globals to be defined by the test case.
 /* global gTestTab:true, gContentAPI:true, gContentWindow:true, tests:false */
 
-XPCOMUtils.defineLazyModuleGetter(this, "UITour",
-                                  "resource:///modules/UITour.jsm");
+ChromeUtils.defineModuleGetter(this, "UITour",
+                               "resource:///modules/UITour.jsm");
 
 
 const SINGLE_TRY_TIMEOUT = 100;

@@ -4,9 +4,9 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
-var GMPScope = Cu.import("resource://gre/modules/addons/GMPProvider.jsm", {});
+ChromeUtils.import("resource://gre/modules/Promise.jsm", this);
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+var GMPScope = ChromeUtils.import("resource://gre/modules/addons/GMPProvider.jsm", {});
 
 const TEST_DATE = new Date(2013, 0, 1, 12);
 

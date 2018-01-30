@@ -48,28 +48,9 @@ class nsICSSDeclaration : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSSDECLARATION_IID)
 
-  /**
-   * Method analogous to CSSStyleDeclaration::GetPropertyValue,
-   * which obeys all the same restrictions.
-   */
-  NS_IMETHOD GetPropertyValue(const nsCSSPropertyID aPropID,
-                              nsAString& aValue) = 0;
-
-  /**
-   * Method analogous to CSSStyleDeclaration::SetProperty.  This
-   * method does NOT allow setting a priority (the priority will
-   * always be set to default priority).
-   */
-  NS_IMETHOD SetPropertyValue(const nsCSSPropertyID aPropID,
-                              const nsAString& aValue,
-                              nsIPrincipal* aSubjectPrincipal = nullptr) = 0;
-
   virtual nsINode *GetParentObject() = 0;
-  virtual mozilla::dom::DocGroup* GetDocGroup() const = 0;
+  mozilla::dom::DocGroup* GetDocGroup();
 
-  NS_IMETHOD GetCssText(nsAString& aCssText) = 0;
-  NS_IMETHOD SetCssText(const nsAString& aCssText,
-                        nsIPrincipal* aSubjectPrincipal = nullptr) = 0;
   NS_IMETHOD GetPropertyValue(const nsAString& aPropName,
                               nsAString& aValue) = 0;
   virtual already_AddRefed<mozilla::dom::CSSValue>
@@ -77,13 +58,10 @@ public:
                         mozilla::ErrorResult& aRv) = 0;
   NS_IMETHOD RemoveProperty(const nsAString& aPropertyName,
                             nsAString& aReturn) = 0;
-  NS_IMETHOD GetPropertyPriority(const nsAString& aPropertyName,
-                                 nsAString& aReturn) = 0;
   NS_IMETHOD SetProperty(const nsAString& aPropertyName,
                          const nsAString& aValue,
                          const nsAString& aPriority,
                          nsIPrincipal* aSubjectPrincipal = nullptr) = 0;
-  NS_IMETHOD GetLength(uint32_t* aLength) = 0;
   void Item(uint32_t aIndex, nsAString& aReturn)
   {
     bool found;
@@ -94,23 +72,11 @@ public:
   }
 
   // WebIDL interface for CSSStyleDeclaration
-  void SetCssText(const nsAString& aString, nsIPrincipal* aSubjectPrincipal,
-                  mozilla::ErrorResult& rv) {
-    rv = SetCssText(aString, aSubjectPrincipal);
-  }
-  void GetCssText(nsString& aString) {
-    // Cast to nsAString& so we end up calling our virtual
-    // |GetCssText(nsAString& aCssText)| overload, which does the real work.
-    GetCssText(static_cast<nsAString&>(aString));
-  }
-  uint32_t Length() {
-    uint32_t length;
-    GetLength(&length);
-    return length;
-  }
-  void Item(uint32_t aIndex, nsString& aPropName) {
-    Item(aIndex, static_cast<nsAString&>(aPropName));
-  }
+  virtual void SetCssText(const nsAString& aString,
+                          nsIPrincipal* aSubjectPrincipal,
+                          mozilla::ErrorResult& rv) = 0;
+  virtual void GetCssText(nsAString& aString) = 0;
+  virtual uint32_t Length() = 0;
 
   // The actual implementation of the Item method and the WebIDL indexed getter
   virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName) = 0;
@@ -119,9 +85,8 @@ public:
                         mozilla::ErrorResult& rv) {
     rv = GetPropertyValue(aPropName, aValue);
   }
-  void GetPropertyPriority(const nsAString& aPropName, nsString& aPriority) {
-    GetPropertyPriority(aPropName, static_cast<nsAString&>(aPriority));
-  }
+  virtual void GetPropertyPriority(const nsAString& aPropName,
+                                   nsAString& aPriority) = 0;
   void SetProperty(const nsAString& aPropName, const nsAString& aValue,
                    const nsAString& aPriority, nsIPrincipal* aSubjectPrincipal,
                    mozilla::ErrorResult& rv) {
@@ -136,25 +101,20 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
 
-#define NS_DECL_NSICSSDECLARATION                                   \
-  NS_IMETHOD GetPropertyValue(const nsCSSPropertyID aPropID,        \
-                              nsAString& aValue) override;          \
-  NS_IMETHOD SetPropertyValue(const nsCSSPropertyID aPropID,        \
-                              const nsAString& aValue,              \
-                              nsIPrincipal* aSubjectPrincipal = nullptr) override;
-
-#define NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER \
-  NS_IMETHOD GetCssText(nsAString & aCssText) override; \
-  NS_IMETHOD SetCssText(const nsAString& aCssText,                 \
-                        nsIPrincipal* aSubjectPrincipal) override; \
+#define NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER                        \
+  void GetCssText(nsAString& aCssText) override;                        \
+  void SetCssText(const nsAString& aCssText,                            \
+                  nsIPrincipal* aSubjectPrincipal,                      \
+                  mozilla::ErrorResult& aRv) override;                  \
   NS_IMETHOD GetPropertyValue(const nsAString & propertyName, nsAString & _retval) override; \
   NS_IMETHOD RemoveProperty(const nsAString & propertyName, nsAString & _retval) override; \
-  NS_IMETHOD GetPropertyPriority(const nsAString & propertyName, nsAString & _retval) override; \
+  void GetPropertyPriority(const nsAString & propertyName,              \
+                           nsAString & aPriority) override;             \
   NS_IMETHOD SetProperty(const nsAString& propertyName,                       \
                          const nsAString& value,                              \
                          const nsAString& priority,                           \
                          nsIPrincipal* aSubjectPrincipal = nullptr) override; \
-  NS_IMETHOD GetLength(uint32_t *aLength) override; \
+  uint32_t Length() override;                                           \
   mozilla::css::Rule* GetParentRule() override;
 
 #endif // nsICSSDeclaration_h__
