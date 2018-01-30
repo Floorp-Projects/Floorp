@@ -41,10 +41,6 @@ function HTML_TAG(aTagName, aImplClass) {
   var interfaceName = "nsIDOM" + getClassName(aTagName);
   if (interfaceName in SpecialPowers.Ci) {  // no nsIDOMHTMLSpanElement
     interfaces[aTagName].push(interfaceName);
-    interfacesNonClassinfo[aTagName].push("nsIDOMHTMLElement");
-  } else {
-    // Inherits directly from nsIDOMHTMLElement.
-    interfaces[aTagName].push("nsIDOMHTMLElement");
   }
 
   var interfaceNameNS = "nsIDOMNS" + getClassName(aTagName);
