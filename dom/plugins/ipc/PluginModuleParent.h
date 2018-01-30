@@ -605,6 +605,8 @@ private:
     TakeFullMinidumpCallback mTakeFullMinidumpCallback;
 
     TerminateChildProcessCallback mTerminateChildProcessCallback;
+
+    bool mIsCleaningFromTimeout;
 };
 
 } // namespace plugins
