@@ -14,4 +14,5 @@ add_UITour_task(async function test_aboutNewTab() {
   info("Waiting for about:newtab to load");
   await newTabLoaded;
   is(gBrowser.selectedBrowser.currentURI.spec, "about:newtab", "Loaded about:newtab");
+  ok(gURLBar.focused, "Address bar gets focus");
 });
