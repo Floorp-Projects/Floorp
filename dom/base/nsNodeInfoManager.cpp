@@ -354,7 +354,7 @@ nsNodeInfoManager::GetTextNodeInfo()
 
   if (!mTextNodeInfo) {
     nodeInfo = GetNodeInfo(nsGkAtoms::textTagName, nullptr, kNameSpaceID_None,
-                           nsIDOMNode::TEXT_NODE, nullptr);
+                           nsINode::TEXT_NODE, nullptr);
     // Hold a weak ref; the nodeinfo will let us know when it goes away
     mTextNodeInfo = nodeInfo;
   } else {
@@ -371,7 +371,7 @@ nsNodeInfoManager::GetCommentNodeInfo()
 
   if (!mCommentNodeInfo) {
     nodeInfo = GetNodeInfo(nsGkAtoms::commentTagName, nullptr,
-                           kNameSpaceID_None, nsIDOMNode::COMMENT_NODE,
+                           kNameSpaceID_None, nsINode::COMMENT_NODE,
                            nullptr);
     // Hold a weak ref; the nodeinfo will let us know when it goes away
     mCommentNodeInfo = nodeInfo;
@@ -391,7 +391,7 @@ nsNodeInfoManager::GetDocumentNodeInfo()
   if (!mDocumentNodeInfo) {
     NS_ASSERTION(mDocument, "Should have mDocument!");
     nodeInfo = GetNodeInfo(nsGkAtoms::documentNodeName, nullptr,
-                           kNameSpaceID_None, nsIDOMNode::DOCUMENT_NODE,
+                           kNameSpaceID_None, nsINode::DOCUMENT_NODE,
                            nullptr);
     // Hold a weak ref; the nodeinfo will let us know when it goes away
     mDocumentNodeInfo = nodeInfo;

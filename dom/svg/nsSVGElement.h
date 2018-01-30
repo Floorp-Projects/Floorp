@@ -134,8 +134,6 @@ public:
   static const MappedAttributeEntry sLightingEffectsMap[];
   static const MappedAttributeEntry sMaskMap[];
 
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
   NS_DECL_NSIDOMSVGELEMENT
 
   NS_IMPL_FROMCONTENT(nsSVGElement, kNameSpaceID_SVG)

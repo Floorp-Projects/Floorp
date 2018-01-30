@@ -128,7 +128,6 @@
 
 #include "nsIScriptContext.h"
 #include "nsBindingManager.h"
-#include "nsIDOMHTMLDocument.h"
 #include "nsHTMLDocument.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIRequest.h"
@@ -2168,7 +2167,7 @@ nsDocument::Init()
   // mNodeInfo keeps NodeInfoManager alive!
   mNodeInfo = mNodeInfoManager->GetDocumentNodeInfo();
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_OUT_OF_MEMORY);
-  MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_NODE,
+  MOZ_ASSERT(mNodeInfo->NodeType() == DOCUMENT_NODE,
              "Bad NodeType in aNodeInfo");
 
   NS_ASSERTION(OwnerDoc() == this, "Our nodeinfo is busted!");
@@ -5812,7 +5811,7 @@ nsIDocument::GetDoctype() const
   for (nsIContent* child = GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    if (child->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+    if (child->NodeType() == DOCUMENT_TYPE_NODE) {
       return static_cast<DocumentType*>(child);
     }
   }
@@ -6000,7 +5999,7 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
   rv = nsContentUtils::GetNodeInfoFromQName(aNamespaceURI,
                                             aQualifiedName,
                                             mNodeInfoManager,
-                                            nsIDOMNode::ELEMENT_NODE,
+                                            ELEMENT_NODE,
                                             getter_AddRefs(nodeInfo));
   if (rv.Failed()) {
     return nullptr;
@@ -6174,8 +6173,7 @@ nsIDocument::CreateAttribute(const nsAString& aName, ErrorResult& rv)
 
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
   res = mNodeInfoManager->GetNodeInfo(name, nullptr, kNameSpaceID_None,
-                                      nsIDOMNode::ATTRIBUTE_NODE,
-                                      getter_AddRefs(nodeInfo));
+                                      ATTRIBUTE_NODE, getter_AddRefs(nodeInfo));
   if (NS_FAILED(res)) {
     rv.Throw(res);
     return nullptr;
@@ -6195,7 +6193,7 @@ nsIDocument::CreateAttributeNS(const nsAString& aNamespaceURI,
   rv = nsContentUtils::GetNodeInfoFromQName(aNamespaceURI,
                                             aQualifiedName,
                                             mNodeInfoManager,
-                                            nsIDOMNode::ATTRIBUTE_NODE,
+                                            ATTRIBUTE_NODE,
                                             getter_AddRefs(nodeInfo));
   if (rv.Failed()) {
     return nullptr;
@@ -6455,18 +6453,18 @@ nsIDocument::ImportNode(nsINode& aNode, bool aDeep, ErrorResult& rv) const
   nsINode* imported = &aNode;
 
   switch (imported->NodeType()) {
-    case nsIDOMNode::DOCUMENT_NODE:
+    case DOCUMENT_NODE:
     {
       break;
     }
-    case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
-    case nsIDOMNode::ATTRIBUTE_NODE:
-    case nsIDOMNode::ELEMENT_NODE:
-    case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
-    case nsIDOMNode::TEXT_NODE:
-    case nsIDOMNode::CDATA_SECTION_NODE:
-    case nsIDOMNode::COMMENT_NODE:
-    case nsIDOMNode::DOCUMENT_TYPE_NODE:
+    case DOCUMENT_FRAGMENT_NODE:
+    case ATTRIBUTE_NODE:
+    case ELEMENT_NODE:
+    case PROCESSING_INSTRUCTION_NODE:
+    case TEXT_NODE:
+    case CDATA_SECTION_NODE:
+    case COMMENT_NODE:
+    case DOCUMENT_TYPE_NODE:
     {
       return nsNodeUtils::Clone(imported, aDeep, mNodeInfoManager, nullptr, rv);
     }
@@ -6801,6 +6799,49 @@ nsIDocument::GetHtmlChildElement(nsAtom* aTag)
   return nullptr;
 }
 
+nsGenericHTMLElement*
+nsIDocument::GetBody()
+{
+  Element* html = GetHtmlElement();
+  if (!html) {
+    return nullptr;
+  }
+
+  for (nsIContent* child = html->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    if (child->IsHTMLElement(nsGkAtoms::body) ||
+        child->IsHTMLElement(nsGkAtoms::frameset)) {
+      return static_cast<nsGenericHTMLElement*>(child);
+    }
+  }
+
+  return nullptr;
+}
+
+void
+nsIDocument::SetBody(nsGenericHTMLElement* newBody, ErrorResult& rv)
+{
+  nsCOMPtr<Element> root = GetRootElement();
+
+  // The body element must be either a body tag or a frameset tag. And we must
+  // have a root element to be able to add kids to it.
+  if (!newBody ||
+      !newBody->IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::frameset) ||
+      !root) {
+    rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+    return;
+  }
+
+  // Use DOM methods so that we pass through the appropriate security checks.
+  nsCOMPtr<Element> currentBody = GetBody();
+  if (currentBody) {
+    root->ReplaceChild(*newBody, *currentBody, rv);
+  } else {
+    root->AppendChild(*newBody, rv);
+  }
+}
+
 Element*
 nsDocument::GetTitleElement()
 {
@@ -6901,7 +6942,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
       RefPtr<mozilla::dom::NodeInfo> titleInfo =
         mNodeInfoManager->GetNodeInfo(nsGkAtoms::title, nullptr,
                                       kNameSpaceID_SVG,
-                                      nsIDOMNode::ELEMENT_NODE);
+                                      ELEMENT_NODE);
       NS_NewSVGElement(getter_AddRefs(title), titleInfo.forget(),
                        NOT_FROM_PARSER);
       if (!title) {
@@ -6918,8 +6959,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
 
       RefPtr<mozilla::dom::NodeInfo> titleInfo;
       titleInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::title, nullptr,
-          kNameSpaceID_XHTML,
-          nsIDOMNode::ELEMENT_NODE);
+          kNameSpaceID_XHTML, ELEMENT_NODE);
       title = NS_NewHTMLTitleElement(titleInfo.forget());
       if (!title) {
         return NS_OK;
@@ -7599,7 +7639,7 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
   nsAutoScriptBlocker scriptBlocker;
 
   switch (adoptedNode->NodeType()) {
-    case nsIDOMNode::ATTRIBUTE_NODE:
+    case ATTRIBUTE_NODE:
     {
       // Remove from ownerElement.
       RefPtr<Attr> adoptedAttr = static_cast<Attr*>(adoptedNode);
@@ -7621,7 +7661,7 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
 
       break;
     }
-    case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+    case DOCUMENT_FRAGMENT_NODE:
     {
       if (adoptedNode->IsShadowRoot()) {
         rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
@@ -7629,12 +7669,12 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
       }
       MOZ_FALLTHROUGH;
     }
-    case nsIDOMNode::ELEMENT_NODE:
-    case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
-    case nsIDOMNode::TEXT_NODE:
-    case nsIDOMNode::CDATA_SECTION_NODE:
-    case nsIDOMNode::COMMENT_NODE:
-    case nsIDOMNode::DOCUMENT_TYPE_NODE:
+    case ELEMENT_NODE:
+    case PROCESSING_INSTRUCTION_NODE:
+    case TEXT_NODE:
+    case CDATA_SECTION_NODE:
+    case COMMENT_NODE:
+    case DOCUMENT_TYPE_NODE:
     {
       // Don't allow adopting a node's anonymous subtree out from under it.
       if (adoptedNode->AsContent()->IsRootOfAnonymousSubtree()) {
@@ -7676,7 +7716,7 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
 
       break;
     }
-    case nsIDOMNode::DOCUMENT_NODE:
+    case DOCUMENT_NODE:
     {
       rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return nullptr;
@@ -8504,8 +8544,7 @@ nsDocument::CreateElem(const nsAString& aName, nsAtom *aPrefix,
 
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
   mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID,
-                                nsIDOMNode::ELEMENT_NODE,
-                                getter_AddRefs(nodeInfo));
+                                ELEMENT_NODE, getter_AddRefs(nodeInfo));
   NS_ENSURE_TRUE(nodeInfo, nullptr);
 
   nsCOMPtr<Element> element;
@@ -10116,12 +10155,15 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
   // Make document use different container during cloning.
   RefPtr<nsDocShell> originalShell = mDocumentContainer.get();
   SetContainer(static_cast<nsDocShell*>(aCloneContainer));
-  nsCOMPtr<nsIDOMNode> clonedNode;
-  nsresult rv = thisAsDoc->CloneNode(true, 1, getter_AddRefs(clonedNode));
+  ErrorResult rv;
+  nsCOMPtr<nsINode> clonedNode = thisAsDoc->CloneNode(true, rv);
   SetContainer(originalShell);
 
   RefPtr<nsDocument> clonedDoc;
-  if (NS_SUCCEEDED(rv)) {
+  if (rv.Failed()) {
+    // Don't return yet; we need to reset mCreatingStaticClone
+    rv.SuppressException();
+  } else {
     nsCOMPtr<nsIDocument> tmp = do_QueryInterface(clonedNode);
     if (tmp) {
       clonedDoc = static_cast<nsDocument*>(tmp.get());
@@ -12417,16 +12459,16 @@ AddSizeOfNodeTree(nsIContent* aNode, nsWindowSizes& aWindowSizes)
   // This is where we transfer the nodeSize obtained from
   // nsINode::AddSizeOfIncludingThis() to a value in nsWindowSizes.
   switch (aNode->NodeType()) {
-  case nsIDOMNode::ELEMENT_NODE:
+  case nsINode::ELEMENT_NODE:
     aWindowSizes.mDOMElementNodesSize += nodeSize;
     break;
-  case nsIDOMNode::TEXT_NODE:
+  case nsINode::TEXT_NODE:
     aWindowSizes.mDOMTextNodesSize += nodeSize;
     break;
-  case nsIDOMNode::CDATA_SECTION_NODE:
+  case nsINode::CDATA_SECTION_NODE:
     aWindowSizes.mDOMCDATANodesSize += nodeSize;
     break;
-  case nsIDOMNode::COMMENT_NODE:
+  case nsINode::COMMENT_NODE:
     aWindowSizes.mDOMCommentNodesSize += nodeSize;
     break;
   default:
@@ -12986,7 +13028,7 @@ nsIDocument::CreateHTMLElement(nsAtom* aTag)
 {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(aTag, nullptr, kNameSpaceID_XHTML,
-                                           nsIDOMNode::ELEMENT_NODE);
+                                           ELEMENT_NODE);
   MOZ_ASSERT(nodeInfo, "GetNodeInfo should never fail");
 
   nsCOMPtr<Element> element;

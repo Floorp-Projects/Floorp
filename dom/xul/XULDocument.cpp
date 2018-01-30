@@ -3380,7 +3380,7 @@ XULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
         newNodeInfo = mNodeInfoManager->GetNodeInfo(aPrototype->mNodeInfo->NameAtom(),
                                                     aPrototype->mNodeInfo->GetPrefixAtom(),
                                                     aPrototype->mNodeInfo->NamespaceID(),
-                                                    nsIDOMNode::ELEMENT_NODE);
+                                                    ELEMENT_NODE);
         if (!newNodeInfo) return NS_ERROR_OUT_OF_MEMORY;
         RefPtr<mozilla::dom::NodeInfo> xtfNi = newNodeInfo;
         rv = NS_NewElement(getter_AddRefs(result), newNodeInfo.forget(),

@@ -24,14 +24,13 @@
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIPresShell.h"
 
 #include <algorithm>
 #include "nsIDOMNodeList.h" //for selection setting helper func
 #include "nsIDOMRange.h" //for selection setting helper func
+#include "nsINode.h"
 #include "nsPIDOMWindow.h" //needed for notify selection changed to update the menus ect.
-#include "nsIDOMNode.h"
 
 #include "nsIDOMText.h" //for multiline getselection
 #include "nsFocusManager.h"
@@ -345,7 +344,7 @@ CreateEmptyDiv(const nsTextControlFrame& aOwnerFrame)
   RefPtr<mozilla::dom::NodeInfo> nodeInfo =
     doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nullptr,
                                         kNameSpaceID_XHTML,
-                                        nsIDOMNode::ELEMENT_NODE);
+                                        nsINode::ELEMENT_NODE);
 
   RefPtr<Element> element = NS_NewHTMLDivElement(nodeInfo.forget());
   return element.forget();
@@ -848,9 +847,9 @@ nsTextControlFrame::GetTextEditor()
 }
 
 nsresult
-nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
+nsTextControlFrame::SetSelectionInternal(nsINode* aStartNode,
                                          uint32_t aStartOffset,
-                                         nsIDOMNode *aEndNode,
+                                         nsINode* aEndNode,
                                          uint32_t aEndOffset,
                                          nsITextControlFrame::SelectionDirection aDirection)
 {
@@ -861,14 +860,13 @@ nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
   RefPtr<nsRange> range = new nsRange(mContent);
   // Be careful to use internal nsRange methods which do not check to make sure
   // we have access to the node.
-  nsCOMPtr<nsINode> start = do_QueryInterface(aStartNode);
-  nsCOMPtr<nsINode> end = do_QueryInterface(aEndNode);
   // XXXbz nsRange::SetStartAndEnd takes int32_t (and ranges generally work on
   // int32_t), but we're passing uint32_t.  The good news is that at this point
   // our endpoints should really be within our length, so not really that big.
   // And if they _are_ that big, SetStartAndEnd() will simply error out, which
   // is not too bad for a case we don't expect to happen.
-  nsresult rv = range->SetStartAndEnd(start, aStartOffset, end, aEndOffset);
+  nsresult rv = range->SetStartAndEnd(aStartNode, aStartOffset,
+				      aEndNode, aEndOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the selection, clear it and add the new range to it!
@@ -938,7 +936,8 @@ nsTextControlFrame::SelectAllOrCollapseToEndOfText(bool aSelect)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> rootContent = do_QueryInterface(rootElement);
-  nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
+  nsCOMPtr<nsINode> rootNode;
+  rootNode = rootContent;
 
   NS_ENSURE_TRUE(rootNode && rootContent, NS_ERROR_FAILURE);
 
@@ -960,7 +959,7 @@ nsTextControlFrame::SelectAllOrCollapseToEndOfText(bool aSelect)
     if (!aSelect && numChildren) {
       child = child->GetPreviousSibling();
       if (child && child->IsNodeOfType(nsINode::eTEXT)) {
-        rootNode = do_QueryInterface(child);
+        rootNode = child;
         const nsTextFragment* fragment = child->GetText();
         numChildren = fragment ? fragment->GetLength() : 0;
       }
@@ -983,7 +982,7 @@ nsTextControlFrame::SetSelectionEndPoints(uint32_t aSelStart, uint32_t aSelEnd,
   if (aSelStart > aSelEnd)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMNode> startNode, endNode;
+  nsCOMPtr<nsINode> startNode, endNode;
   uint32_t startOffset, endOffset;
 
   // Calculate the selection start point.
@@ -1029,7 +1028,7 @@ nsTextControlFrame::SetSelectionRange(uint32_t aSelStart, uint32_t aSelEnd,
 
 nsresult
 nsTextControlFrame::OffsetToDOMPoint(uint32_t aOffset,
-                                     nsIDOMNode** aResult,
+                                     nsINode** aResult,
                                      uint32_t* aPosition)
 {
   NS_ENSURE_ARG_POINTER(aResult && aPosition);
@@ -1040,26 +1039,16 @@ nsTextControlFrame::OffsetToDOMPoint(uint32_t aOffset,
   nsCOMPtr<nsIDOMElement> rootElement;
   nsresult rv = GetRootNodeAndInitializeEditor(getter_AddRefs(rootElement));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
+  nsCOMPtr<nsINode> rootNode(do_QueryInterface(rootElement));
 
   NS_ENSURE_TRUE(rootNode, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMNodeList> nodeList;
-
-  rv = rootNode->GetChildNodes(getter_AddRefs(nodeList));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
-
-  uint32_t length = 0;
-
-  rv = nodeList->GetLength(&length);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINodeList> nodeList = rootNode->ChildNodes();
+  uint32_t length = nodeList->Length();
 
   NS_ASSERTION(length <= 2, "We should have one text node and one mozBR at most");
 
-  nsCOMPtr<nsIDOMNode> firstNode;
-  rv = nodeList->Item(0, getter_AddRefs(firstNode));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> firstNode = nodeList->Item(0);
   nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(firstNode);
 
   if (length == 0) {

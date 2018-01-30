@@ -593,6 +593,46 @@ struct CbData {
   nsTArray<nsIFrame*>* framesWithProps;
 };
 
+static nsIFrame*
+GetRootFrameForPainting(nsDisplayListBuilder* aBuilder, nsIDocument* aDocument)
+{
+  // Although this is the actual subdocument, it might not be
+  // what painting uses. Walk up to the nsSubDocumentFrame owning
+  // us, and then ask that which subdoc it's going to paint.
+
+  nsIPresShell* presShell = aDocument->GetShell();
+  if (!presShell) {
+    return nullptr;
+  }
+  nsView* rootView = presShell->GetViewManager()->GetRootView();
+  if (!rootView) {
+    return nullptr;
+  }
+
+  // There should be an anonymous inner view between the root view
+  // of the subdoc, and the view for the nsSubDocumentFrame.
+  nsView* innerView = rootView->GetParent();
+  if (!innerView) {
+    return nullptr;
+  }
+
+  nsView* subDocView = innerView->GetParent();
+  if (!subDocView) {
+    return nullptr;
+  }
+
+  nsIFrame* subDocFrame = subDocView->GetFrame();
+  if (!subDocFrame) {
+    return nullptr;
+  }
+
+  nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(subDocFrame);
+  MOZ_ASSERT(subdocumentFrame);
+  presShell = subdocumentFrame->GetSubdocumentPresShellForPainting(
+    aBuilder->IsIgnoringPaintSuppression() ? nsSubDocumentFrame::IGNORE_PAINT_SUPPRESSION : 0);
+  return presShell ? presShell->GetRootFrame() : nullptr;
+}
+
 static bool
 SubDocEnumCb(nsIDocument* aDocument, void* aData)
 {
@@ -601,41 +641,17 @@ SubDocEnumCb(nsIDocument* aDocument, void* aData)
 
   CbData* data = static_cast<CbData*>(aData);
 
-  // Although this is the actual subdocument, it might not be
-  // what painting uses. Walk up to the nsSubDocumentFrame owning
-  // us, and then ask that which subdoc it's going to paint.
+  nsIFrame* rootFrame = GetRootFrameForPainting(data->builder, aDocument);
+  if (rootFrame) {
+    TakeAndAddModifiedAndFramesWithPropsFromRootFrame(data->modifiedFrames,
+                                                      data->framesWithProps,
+                                                      rootFrame);
 
-  nsIPresShell* presShell = aDocument->GetShell();
-  if (presShell) {
-    nsView* rootView = presShell->GetViewManager()->GetRootView();
-    MOZ_ASSERT(rootView);
-
-    // There should be an anonymous inner view between the root view
-    // of the subdoc, and the view for the nsSubDocumentFrame.
-    nsView* innerView = rootView->GetParent();
-    MOZ_ASSERT(innerView);
-
-    nsView* subDocView = innerView->GetParent();
-    MOZ_ASSERT(subDocView);
-
-    nsIFrame* subDocFrame = subDocView->GetFrame();
-    if (subDocFrame) {
-      nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(subDocFrame);
-      MOZ_ASSERT(subdocumentFrame);
-
-      presShell = subdocumentFrame->GetSubdocumentPresShellForPainting(
-        data->builder->IsIgnoringPaintSuppression() ? nsSubDocumentFrame::IGNORE_PAINT_SUPPRESSION : 0);
-      nsIFrame* rootFrame = presShell ? presShell->GetRootFrame() : nullptr;
-
-      if (rootFrame) {
-        TakeAndAddModifiedAndFramesWithPropsFromRootFrame(data->modifiedFrames,
-                                                          data->framesWithProps,
-                                                          rootFrame);
-      }
+    nsIDocument* innerDoc = rootFrame->PresShell()->GetDocument();
+    if (innerDoc) {
+      innerDoc->EnumerateSubDocuments(SubDocEnumCb, aData);
     }
   }
-
-  aDocument->EnumerateSubDocuments(SubDocEnumCb, aData);
   return true;
 }
 

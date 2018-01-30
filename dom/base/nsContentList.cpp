@@ -7,7 +7,7 @@
 /*
  * nsBaseContentList is a basic list of content nodes; nsContentList
  * is a commonly used NodeList implementation (used for
- * getElementsByTagName, some properties on nsIDOMHTMLDocument, etc).
+ * getElementsByTagName, some properties on HTMLDocument/Document, etc).
  */
 
 #include "nsContentList.h"

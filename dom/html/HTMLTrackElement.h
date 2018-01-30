@@ -13,7 +13,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIHttpChannel.h"
 

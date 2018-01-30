@@ -471,7 +471,7 @@ HTMLEditor::StartResizing(nsIDOMElement* aHandle)
   // the way we change the position/size of the shadow depends on
   // the handle
   nsAutoString locationStr;
-  aHandle->GetAttribute(NS_LITERAL_STRING("anonlocation"), locationStr);
+  mActivatedHandle->GetAttribute(NS_LITERAL_STRING("anonlocation"), locationStr);
   if (locationStr.Equals(kTopLeft)) {
     SetResizeIncrements(1, 1, -1, -1, preserveRatio);
   } else if (locationStr.Equals(kTop)) {
@@ -524,29 +524,30 @@ HTMLEditor::OnMouseDown(int32_t aClientX,
                         nsIDOMElement* aTarget,
                         nsIDOMEvent* aEvent)
 {
-  bool anonElement = false;
-  if (aTarget && NS_SUCCEEDED(aTarget->HasAttribute(NS_LITERAL_STRING("_moz_anonclass"), &anonElement)))
-    // we caught a click on an anonymous element
-    if (anonElement) {
-      nsAutoString anonclass;
-      nsresult rv =
-        aTarget->GetAttribute(NS_LITERAL_STRING("_moz_anonclass"), anonclass);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (anonclass.EqualsLiteral("mozResizer")) {
-        // and that element is a resizer, let's start resizing!
-        aEvent->PreventDefault();
+  nsCOMPtr<Element> element = do_QueryInterface(aTarget);
+  NS_ENSURE_ARG_POINTER(element);
 
-        mOriginalX = aClientX;
-        mOriginalY = aClientY;
-        return StartResizing(aTarget);
-      }
-      if (anonclass.EqualsLiteral("mozGrabber")) {
-        // and that element is a grabber, let's start moving the element!
-        mOriginalX = aClientX;
-        mOriginalY = aClientY;
-        return GrabberClicked();
-      }
-    }
+  nsAutoString anonclass;
+  element->GetAttribute(NS_LITERAL_STRING("_moz_anonclass"), anonclass);
+
+  if (anonclass.EqualsLiteral("mozResizer")) {
+    // If we have an anonymous element and that element is a resizer,
+    // let's start resizing!
+    aEvent->PreventDefault();
+
+    mOriginalX = aClientX;
+    mOriginalY = aClientY;
+    return StartResizing(aTarget);
+  }
+
+  if (anonclass.EqualsLiteral("mozGrabber")) {
+    // If we have an anonymous element and that element is a grabber,
+    // let's start moving the element!
+    mOriginalX = aClientX;
+    mOriginalY = aClientY;
+    return GrabberClicked();
+  }
+
   return NS_OK;
 }
 

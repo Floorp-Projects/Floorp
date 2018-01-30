@@ -1296,8 +1296,8 @@ public:
 
   void UnbindSubtree(nsIContent* aNode)
   {
-    if (aNode->NodeType() != nsIDOMNode::ELEMENT_NODE &&
-        aNode->NodeType() != nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+    if (aNode->NodeType() != nsINode::ELEMENT_NODE &&
+        aNode->NodeType() != nsINode::DOCUMENT_FRAGMENT_NODE) {
       return;
     }
     FragmentOrElement* container = static_cast<FragmentOrElement*>(aNode);

@@ -206,7 +206,8 @@ BrowserCLH.prototype = {
     }, options);
 
     aWindow.addEventListener("pageshow", event => {
-      if (event.target instanceof Ci.nsIDOMHTMLDocument) {
+      // XXXbz what about non-HTML documents??
+      if (ChromeUtils.getClassName(event.target) == "HTMLDocument") {
         this.LoginManagerContent.onPageShow(event, event.target.defaultView.top);
       }
     }, options);

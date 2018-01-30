@@ -619,7 +619,7 @@ var LoginManagerContent = {
     var acInputField = event.target;
 
     // This is probably a bit over-conservatative.
-    if (!(acInputField.ownerDocument instanceof Ci.nsIDOMHTMLDocument))
+    if (ChromeUtils.getClassName(acInputField.ownerDocument) != "HTMLDocument")
       return;
 
     if (!LoginHelper.isUsernameFieldType(acInputField))

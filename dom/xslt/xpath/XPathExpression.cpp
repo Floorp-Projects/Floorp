@@ -12,6 +12,7 @@
 #include "nsIDOMCharacterData.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIDOMDocument.h"
+#include "nsINode.h"
 #include "XPathResult.h"
 #include "txURIUtils.h"
 #include "txXPathTreeWalker.h"
@@ -123,8 +124,8 @@ XPathExpression::EvaluateWithContext(nsINode& aContextNode,
 
     uint16_t nodeType = aContextNode.NodeType();
 
-    if (nodeType == nsIDOMNode::TEXT_NODE ||
-        nodeType == nsIDOMNode::CDATA_SECTION_NODE) {
+    if (nodeType == nsINode::TEXT_NODE ||
+        nodeType == nsINode::CDATA_SECTION_NODE) {
         nsCOMPtr<nsIDOMCharacterData> textNode =
             do_QueryInterface(&aContextNode);
         if (!textNode) {
@@ -142,11 +143,11 @@ XPathExpression::EvaluateWithContext(nsINode& aContextNode,
         // XXX Need to get logical XPath text node for CDATASection
         //     and Text nodes.
     }
-    else if (nodeType != nsIDOMNode::DOCUMENT_NODE &&
-             nodeType != nsIDOMNode::ELEMENT_NODE &&
-             nodeType != nsIDOMNode::ATTRIBUTE_NODE &&
-             nodeType != nsIDOMNode::COMMENT_NODE &&
-             nodeType != nsIDOMNode::PROCESSING_INSTRUCTION_NODE) {
+    else if (nodeType != nsINode::DOCUMENT_NODE &&
+             nodeType != nsINode::ELEMENT_NODE &&
+             nodeType != nsINode::ATTRIBUTE_NODE &&
+             nodeType != nsINode::COMMENT_NODE &&
+             nodeType != nsINode::PROCESSING_INSTRUCTION_NODE) {
         aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
         return nullptr;
     }

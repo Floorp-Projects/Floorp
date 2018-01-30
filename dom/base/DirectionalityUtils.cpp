@@ -212,7 +212,6 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Element.h"
-#include "nsIDOMHTMLDocument.h"
 #include "nsUnicodeProperties.h"
 #include "nsTextFragment.h"
 #include "nsAttrValue.h"
@@ -389,7 +388,7 @@ WalkDescendantsSetDirectionFromText(Element* aElement, bool aNotify = true,
       continue;
     }
 
-    if (child->NodeType() == nsIDOMNode::TEXT_NODE &&
+    if (child->NodeType() == nsINode::TEXT_NODE &&
         child != aChangedNode) {
       Directionality textNodeDir = GetDirectionFromText(child->GetText());
       if (textNodeDir != eDir_NotSet) {
@@ -490,7 +489,7 @@ private:
 
   static nsTextNodeDirectionalityMap* GetDirectionalityMap(nsINode* aTextNode)
   {
-    MOZ_ASSERT(aTextNode->NodeType() == nsIDOMNode::TEXT_NODE,
+    MOZ_ASSERT(aTextNode->NodeType() == nsINode::TEXT_NODE,
                "Must be a text node");
     nsTextNodeDirectionalityMap* map = nullptr;
 
@@ -716,7 +715,7 @@ WalkDescendantsResetAutoDirection(Element* aElement)
       continue;
     }
 
-    if (child->NodeType() == nsIDOMNode::TEXT_NODE &&
+    if (child->NodeType() == nsINode::TEXT_NODE &&
         child->HasTextNodeDirectionalityMap()) {
       nsTextNodeDirectionalityMap::ResetTextNodeDirection(static_cast<nsTextNode*>(child), nullptr);
       // Don't call nsTextNodeDirectionalityMap::EnsureMapIsClearFor(child)
@@ -787,7 +786,7 @@ WalkDescendantsClearAncestorDirAuto(Element* aElement)
 void SetAncestorDirectionIfAuto(nsTextNode* aTextNode, Directionality aDir,
                                 bool aNotify = true)
 {
-  MOZ_ASSERT(aTextNode->NodeType() == nsIDOMNode::TEXT_NODE,
+  MOZ_ASSERT(aTextNode->NodeType() == nsINode::TEXT_NODE,
              "Must be a text node");
 
   Element* parent = aTextNode->GetParentElement();
