@@ -570,7 +570,7 @@ WorkerMainThreadRunnable::WorkerMainThreadRunnable(
 }
 
 void
-WorkerMainThreadRunnable::Dispatch(Status aFailStatus, ErrorResult& aRv)
+WorkerMainThreadRunnable::Dispatch(Status aFailStatus, mozilla::ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
