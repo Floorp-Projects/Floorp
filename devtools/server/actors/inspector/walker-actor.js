@@ -332,28 +332,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   /**
-   * This is kept for backward-compatibility reasons with older remote targets.
-   * Targets prior to bug 916443.
-   *
-   * pick/cancelPick are used to pick a node on click on the content
-   * document. But in their implementation prior to bug 916443, they don't allow
-   * highlighting on hover.
-   * The client-side now uses the highlighter actor's pick and cancelPick
-   * methods instead. The client-side uses the the highlightable trait found in
-   * the root actor to determine which version of pick to use.
-   *
-   * As for highlight, the new highlighter actor is used instead of the walker's
-   * highlight method. Same here though, the client-side uses the highlightable
-   * trait to dertermine which to use.
-   *
-   * Keeping these actor methods for now allows newer client-side debuggers to
-   * inspect fxos 1.2 remote targets or older firefox desktop remote targets.
-   */
-  pick: function () {},
-  cancelPick: function () {},
-  highlight: function (node) {},
-
-  /**
    * Ensures that the node is attached and it can be accessed from the root.
    *
    * @param {(Node|NodeActor)} nodes The nodes
