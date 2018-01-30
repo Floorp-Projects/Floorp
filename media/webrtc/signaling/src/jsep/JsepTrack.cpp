@@ -486,25 +486,21 @@ JsepTrack::NegotiateCodecs(
 
   // TODO(bug 814227): Remove this once we're ready to put multiple codecs in an
   // answer.  For now, remove all but the first codec unless the red codec
-  // exists, in which case we include the others per RFC 5109, section 14.2.
+  // exists, and then we include the others per RFC 5109, section 14.2.
+  // Note: now allows keeping the telephone-event codec, if it appears, as the
+  // last codec in the list.
   if (!codecs->empty() && !red) {
-    std::vector<JsepCodecDescription*> codecsToKeep;
-
-    bool foundPreferredCodec = false;
-    for (auto codec: *codecs) {
-      if (codec == dtmf) {
-        codecsToKeep.push_back(codec);
-      } else if (codec == ulpfec) {
-        codecsToKeep.push_back(codec);
-      } else if (!foundPreferredCodec) {
-        codecsToKeep.insert(codecsToKeep.begin(), codec);
-        foundPreferredCodec = true;
-      } else {
-        delete codec;
+    int newSize = dtmf ? 2 : 1;
+    for (size_t i = 1; i < codecs->size(); ++i) {
+      if (!dtmf || dtmf != (*codecs)[i]) {
+        delete (*codecs)[i];
+        (*codecs)[i] = nullptr;
       }
     }
-
-    *codecs = codecsToKeep;
+    if (dtmf) {
+      (*codecs)[newSize-1] = dtmf;
+    }
+    codecs->resize(newSize);
   }
 }
 
