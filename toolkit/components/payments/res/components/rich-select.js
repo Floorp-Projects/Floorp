@@ -52,6 +52,12 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
     this.tabIndex = 0;
     this.appendChild(this.popupBox);
 
+    // Move options initially placed inside the select to the popup box.
+    let options = this.querySelectorAll(":scope > .rich-option:not(.rich-select-selected-clone)");
+    for (let option of options) {
+      this.popupBox.appendChild(option);
+    }
+
     this.render();
   }
 
@@ -171,11 +177,6 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
   }
 
   render() {
-    let options = this.querySelectorAll(":scope > .rich-option:not(.rich-select-selected-clone)");
-    for (let option of options) {
-      this.popupBox.appendChild(option);
-    }
-
     let selectedChild;
     for (let child of this.popupBox.children) {
       if (child.selected) {
