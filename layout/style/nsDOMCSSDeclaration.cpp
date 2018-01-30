@@ -161,18 +161,16 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText,
   aRv = SetCSSDeclaration(newdecl);
 }
 
-NS_IMETHODIMP
-nsDOMCSSDeclaration::GetLength(uint32_t* aLength)
+uint32_t
+nsDOMCSSDeclaration::Length()
 {
   DeclarationBlock* decl = GetCSSDeclaration(eOperation_Read);
 
   if (decl) {
-    *aLength = decl->Count();
-  } else {
-    *aLength = 0;
+    return decl->Count();
   }
 
-  return NS_OK;
+  return 0;
 }
 
 already_AddRefed<dom::CSSValue>
