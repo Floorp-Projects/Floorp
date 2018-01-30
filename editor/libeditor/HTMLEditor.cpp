@@ -3088,8 +3088,7 @@ HTMLEditor::DeleteSelectionImpl(EDirection aAction,
 nsresult
 HTMLEditor::DeleteNode(nsINode* aNode)
 {
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
-  return DeleteNode(node);
+  return DeleteNode(aNode->AsDOMNode());
 }
 
 NS_IMETHODIMP

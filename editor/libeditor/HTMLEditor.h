@@ -731,9 +731,9 @@ protected:
   nsresult CreateDOMFragmentFromPaste(const nsAString& aInputString,
                                       const nsAString& aContextStr,
                                       const nsAString& aInfoStr,
-                                      nsCOMPtr<nsIDOMNode>* outFragNode,
-                                      nsCOMPtr<nsIDOMNode>* outStartNode,
-                                      nsCOMPtr<nsIDOMNode>* outEndNode,
+                                      nsCOMPtr<nsINode>* outFragNode,
+                                      nsCOMPtr<nsINode>* outStartNode,
+                                      nsCOMPtr<nsINode>* outEndNode,
                                       int32_t* outStartOffset,
                                       int32_t* outEndOffset,
                                       bool aTrustedInput);
