@@ -59,13 +59,6 @@ class RichOption extends ObservedPropertiesMixin(HTMLElement) {
       }
     }
   }
-
-  static _createElement(fragment, className) {
-    let element = document.createElement("span");
-    element.classList.add(className);
-    fragment.appendChild(element);
-    return element;
-  }
 }
 
 customElements.define("rich-option", RichOption);
