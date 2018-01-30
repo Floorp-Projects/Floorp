@@ -29,6 +29,7 @@
 #include "modules/rtp_rtcp/source/rtcp_packet/dlrr.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/report_block.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/tmmb_item.h"
+#include "modules/rtp_rtcp/source/rtp_rtcp_config.h"
 #include "rtc_base/constructormagic.h"
 #include "rtc_base/criticalsection.h"
 #include "rtc_base/random.h"
@@ -107,6 +108,11 @@ class RTCPSender {
   int32_t AddMixedCNAME(uint32_t SSRC, const char* c_name);
 
   int32_t RemoveMixedCNAME(uint32_t SSRC);
+
+  bool GetSendReportMetadata(const uint32_t sendReport,
+                             uint64_t *timeOfSend,
+                             uint32_t *packetCount,
+                             uint64_t *octetCount);
 
   bool TimeToSendRTCPReport(bool sendKeyframeBeforeRTP = false) const;
 
@@ -213,6 +219,16 @@ class RTCPSender {
       RTC_GUARDED_BY(critical_section_rtcp_sender_);
   std::map<uint32_t, std::string> csrc_cnames_
       RTC_GUARDED_BY(critical_section_rtcp_sender_);
+
+  // Sent
+  uint32_t last_send_report_[RTCP_NUMBER_OF_SR] RTC_GUARDED_BY(
+      critical_section_rtcp_sender_);  // allow packet loss and RTT above 1 sec
+  int64_t last_rtcp_time_[RTCP_NUMBER_OF_SR] RTC_GUARDED_BY(
+      critical_section_rtcp_sender_);
+  uint32_t lastSRPacketCount_[RTCP_NUMBER_OF_SR] RTC_GUARDED_BY(
+      critical_section_rtcp_sender_);
+  uint64_t lastSROctetCount_[RTCP_NUMBER_OF_SR] RTC_GUARDED_BY(
+      critical_section_rtcp_sender_);
 
   // send CSRCs
   std::vector<uint32_t> csrcs_ RTC_GUARDED_BY(critical_section_rtcp_sender_);
