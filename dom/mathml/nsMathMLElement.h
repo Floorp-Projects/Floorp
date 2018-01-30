@@ -39,7 +39,6 @@ public:
 
   // Forward implementations of parent interfaces of nsMathMLElement to
   // our base class
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,

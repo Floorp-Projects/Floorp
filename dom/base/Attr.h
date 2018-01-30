@@ -41,8 +41,7 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  // nsIDOMNode interface
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
+  // nsINode interface
   virtual void GetTextContentInternal(nsAString& aTextContent,
                                       OOMReporter& aError) override;
   virtual void SetTextContentInternal(const nsAString& aTextContent,

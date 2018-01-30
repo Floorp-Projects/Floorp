@@ -2258,8 +2258,4 @@ ToCanonicalSupports(nsINode* aPointer)
   return aPointer;
 }
 
-#define NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-#define NS_FORWARD_NSIDOMNODE_TO_NSINODE_OVERRIDABLE
-
 #endif /* nsINode_h___ */
