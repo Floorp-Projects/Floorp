@@ -11,8 +11,14 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "gXulStore",
+                                   "@mozilla.org/xul/xulstore;1",
+                                   "nsIXULStore");
 
 const PREF_LOGLEVEL           = "browser.policies.loglevel";
+const PREF_MENU_ALREADY_DISPLAYED = "browser.policies.menuBarWasDisplayed";
+const BROWSER_DOCUMENT_URL        = "chrome://browser/content/browser.xul";
+const PREF_BOOKMARKS_ALREADY_DISPLAYED = "browser.policies.bookmarkBarWasDisplayed";
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let { ConsoleAPI } = Cu.import("resource://gre/modules/Console.jsm", {});
@@ -32,6 +38,40 @@ this.Policies = {
     onBeforeUIStartup(manager, param) {
       if (param == true) {
         manager.disallowFeature("about:config", true);
+      }
+    }
+  },
+
+  "display_menu_bar": {
+    onBeforeUIStartup(manager, param) {
+      if (param == true) {
+        // This policy is meant to change the default behavior, not to force it.
+        // If this policy was alreay applied and the user chose to re-hide the
+        // menu bar, do not show it again.
+        if (!Services.prefs.getBoolPref(PREF_MENU_ALREADY_DISPLAYED, false)) {
+          log.debug("Showing the menu bar");
+          gXulStore.setValue(BROWSER_DOCUMENT_URL, "toolbar-menubar", "autohide", "false");
+          Services.prefs.setBoolPref(PREF_MENU_ALREADY_DISPLAYED, true);
+        } else {
+          log.debug("Not showing the menu bar because it has already been shown.");
+        }
+      }
+    }
+  },
+
+  "display_bookmarks_toolbar": {
+    onBeforeUIStartup(manager, param) {
+      if (param == true) {
+        // This policy is meant to change the default behavior, not to force it.
+        // If this policy was alreay applied and the user chose to re-hide the
+        // bookmarks toolbar, do not show it again.
+        if (!Services.prefs.getBoolPref(PREF_BOOKMARKS_ALREADY_DISPLAYED, false)) {
+          log.debug("Showing the bookmarks toolbar");
+          gXulStore.setValue(BROWSER_DOCUMENT_URL, "PersonalToolbar", "collapsed", "false");
+          Services.prefs.setBoolPref(PREF_BOOKMARKS_ALREADY_DISPLAYED, true);
+        } else {
+          log.debug("Not showing the bookmarks toolbar because it has already been shown.");
+        }
       }
     }
   },

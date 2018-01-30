@@ -136,7 +136,7 @@ function addNodeLines(node, reindent) {
   // treated differently for indentation
   let indentFirst = false;
 
-  // Strip off any preceeding whitespace only lines. These are often used to
+  // Strip off any preceding whitespace only lines. These are often used to
   // format the XML and CDATA blocks.
   while (lines.length && lines[0].trim() == "") {
     indentFirst = true;
@@ -172,7 +172,7 @@ function addNodeLines(node, reindent) {
     startLine++;
   }
 
-  // Find the preceeding whitespace for all lines that aren't entirely
+  // Find the preceding whitespace for all lines that aren't entirely
   // whitespace.
   let indents = lines.filter(s => s.trim().length > 0)
                      .map(s => s.length - s.trimLeft().length);

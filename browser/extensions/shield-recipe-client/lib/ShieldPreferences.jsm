@@ -73,22 +73,24 @@ this.ShieldPreferences = {
     let prefValue;
     switch (prefName) {
       // If the FHR pref changes, set the opt-out-study pref to the value it is changing to.
-      case FHR_UPLOAD_ENABLED_PREF:
+      case FHR_UPLOAD_ENABLED_PREF: {
         prefValue = Services.prefs.getBoolPref(FHR_UPLOAD_ENABLED_PREF);
         Services.prefs.setBoolPref(OPT_OUT_STUDIES_ENABLED_PREF, prefValue);
         break;
+      }
 
       // If the opt-out pref changes to be false, disable all current studies.
-      case OPT_OUT_STUDIES_ENABLED_PREF:
+      case OPT_OUT_STUDIES_ENABLED_PREF: {
         prefValue = Services.prefs.getBoolPref(OPT_OUT_STUDIES_ENABLED_PREF);
         if (!prefValue) {
           for (const study of await AddonStudies.getAll()) {
             if (study.active) {
-              await AddonStudies.stop(study.recipeId);
+              await AddonStudies.stop(study.recipeId, "general-opt-out");
             }
           }
         }
         break;
+      }
     }
   },
 

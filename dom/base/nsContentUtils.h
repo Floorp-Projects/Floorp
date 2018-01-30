@@ -781,9 +781,19 @@ public:
    *
    * @param aContent The content node.
    * @return the presContext, or nullptr if the content is not in a document
-   *         (if GetCurrentDoc returns nullptr)
+   *         (if GetComposedDoc returns nullptr)
    */
   static nsPresContext* GetContextForContent(const nsIContent* aContent);
+
+
+  /**
+   * Method that gets the pres shell for the node.
+   *
+   * @param aContent The content node.
+   * @return the pres shell, or nullptr if the content is not in a document
+   *         (if GetComposedDoc returns nullptr)
+   */
+  static nsIPresShell* GetPresShellForContent(const nsIContent* aContent);
 
   /**
    * Method to do security and content policy checks on the image URI

@@ -8,9 +8,9 @@
 <script src="../resources/alignment-parsing-utils.js"></script>
 <div id="log"></div>
 <script>
-    var values = ["normal"].concat(contentPositionValues, distributionValues, baselineValues);
-    values.forEach(function(alignValue) {
-        values.forEach(function(justifyValue) {
+    var values = ["normal"].concat(contentPositionValues, distributionValues);
+    baselineValues.concat(values).forEach(function(alignValue) {
+        ["left", "right"].concat(values).forEach(function(justifyValue) {
            test(function() {
                checkPlaceShorhandLonghands("place-content", "align-content", "justify-content", alignValue, justifyValue);
            }, "Checking place-content: " + alignValue + " " + justifyValue);

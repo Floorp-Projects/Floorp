@@ -10,6 +10,22 @@
       "enum": [true]
     },
 
+    "display_menu_bar": {
+      "description": "Causes the menu bar to be displayed by default.",
+      "first_available": "60.0",
+
+      "type": "boolean",
+      "enum": [true]
+    },
+
+    "display_bookmarks_toolbar": {
+      "description": "Causes the bookmarks toolbar to be displayed by default.",
+      "first_available": "60.0",
+
+      "type": "boolean",
+      "enum": [true]
+    },
+
     "dont_check_default_browser": {
       "description": "Don't check for the default browser on startup.",
       "first_available": "60.0",

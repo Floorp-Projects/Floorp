@@ -1296,14 +1296,6 @@ if test -n "$MOZ_X11"; then
     AC_CHECK_LIB(X11-xcb, XGetXCBConnection, [XLIBS="-lX11-xcb $XLIBS"],
         [MISSING_X="$MISSING_X -lX11-xcb"], $XLIBS)
 
-    dnl ========================================================
-    dnl = Check for Xss
-    dnl ========================================================
-    MOZ_CHECK_HEADER(X11/extensions/scrnsaver.h,
-        AC_CHECK_LIB(Xss, XScreenSaverQueryInfo,
-            [XSS_LIBS="-lXss $XEXT_LIBS $XLIBS"
-             AC_DEFINE(HAVE_LIBXSS)],, $XEXT_LIBS $XLIBS))
-
     LDFLAGS="$_SAVE_LDFLAGS"
     LIBS="$_SAVE_LIBS"
 fi # $MOZ_X11
@@ -1313,7 +1305,6 @@ AC_SUBST_LIST(XLDFLAGS)
 AC_SUBST_LIST(XLIBS)
 AC_SUBST_LIST(XEXT_LIBS)
 AC_SUBST_LIST(XT_LIBS)
-AC_SUBST_LIST(XSS_LIBS)
 
 dnl ========================================================
 dnl = pthread support
