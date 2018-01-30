@@ -19,8 +19,8 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla.dom.workers += [
     'RuntimeService.h',
+    'WorkerCommon.h',
     'WorkerDebuggerManager.h',
-    'Workers.h',
 ]
 
 # Stuff needed for the bindings, not really public though.
