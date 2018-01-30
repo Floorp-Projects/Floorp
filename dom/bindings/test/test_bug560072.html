@@ -20,11 +20,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=560072
 
 /** Test for Bug 560072 **/
 is(document.body,
-   Object.getOwnPropertyDescriptor(HTMLDocument.prototype, "body").get.call(document),
+   Object.getOwnPropertyDescriptor(Document.prototype, "body").get.call(document),
    "Should get body out of property descriptor");
 
 is(document.body,
-   Object.getOwnPropertyDescriptor(Object.getPrototypeOf(document), "body").get.call(document),
+   Object.getOwnPropertyDescriptor(
+     Object.getPrototypeOf(Object.getPrototypeOf(document)), "body").get.call(document),
    "Should get body out of property descriptor this way too");
 
 </script>

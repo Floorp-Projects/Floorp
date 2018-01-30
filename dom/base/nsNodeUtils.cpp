@@ -358,7 +358,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
   }
   aNode->UnsetFlags(NODE_HAS_PROPERTIES);
 
-  if (aNode->NodeType() != nsIDOMNode::DOCUMENT_NODE &&
+  if (aNode->NodeType() != nsINode::DOCUMENT_NODE &&
       aNode->HasFlag(NODE_HAS_LISTENERMANAGER)) {
 #ifdef DEBUG
     if (nsContentUtils::IsInitialized()) {

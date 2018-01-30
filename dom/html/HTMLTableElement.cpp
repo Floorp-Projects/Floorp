@@ -729,7 +729,7 @@ HTMLTableElement::CreateTBody()
   RefPtr<mozilla::dom::NodeInfo> nodeInfo =
     OwnerDoc()->NodeInfoManager()->GetNodeInfo(nsGkAtoms::tbody, nullptr,
                                                kNameSpaceID_XHTML,
-                                               nsIDOMNode::ELEMENT_NODE);
+                                               ELEMENT_NODE);
   MOZ_ASSERT(nodeInfo);
 
   RefPtr<nsGenericHTMLElement> newBody =

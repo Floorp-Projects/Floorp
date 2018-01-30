@@ -45,22 +45,22 @@ using namespace mozilla::dom;
 nsGenericDOMDataNode::nsGenericDOMDataNode(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsIContent(aNodeInfo)
 {
-  MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::TEXT_NODE ||
-             mNodeInfo->NodeType() == nsIDOMNode::CDATA_SECTION_NODE ||
-             mNodeInfo->NodeType() == nsIDOMNode::COMMENT_NODE ||
-             mNodeInfo->NodeType() == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
-             mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE,
+  MOZ_ASSERT(mNodeInfo->NodeType() == TEXT_NODE ||
+             mNodeInfo->NodeType() == CDATA_SECTION_NODE ||
+             mNodeInfo->NodeType() == COMMENT_NODE ||
+             mNodeInfo->NodeType() == PROCESSING_INSTRUCTION_NODE ||
+             mNodeInfo->NodeType() == DOCUMENT_TYPE_NODE,
              "Bad NodeType in aNodeInfo");
 }
 
 nsGenericDOMDataNode::nsGenericDOMDataNode(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
   : nsIContent(aNodeInfo)
 {
-  MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::TEXT_NODE ||
-             mNodeInfo->NodeType() == nsIDOMNode::CDATA_SECTION_NODE ||
-             mNodeInfo->NodeType() == nsIDOMNode::COMMENT_NODE ||
-             mNodeInfo->NodeType() == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
-             mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE,
+  MOZ_ASSERT(mNodeInfo->NodeType() == TEXT_NODE ||
+             mNodeInfo->NodeType() == CDATA_SECTION_NODE ||
+             mNodeInfo->NodeType() == COMMENT_NODE ||
+             mNodeInfo->NodeType() == PROCESSING_INSTRUCTION_NODE ||
+             mNodeInfo->NodeType() == DOCUMENT_TYPE_NODE,
              "Bad NodeType in aNodeInfo");
 }
 
@@ -310,7 +310,7 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
   }
 
   Directionality oldDir = eDir_NotSet;
-  bool dirAffectsAncestor = (NodeType() == nsIDOMNode::TEXT_NODE &&
+  bool dirAffectsAncestor = (NodeType() == TEXT_NODE &&
                              TextNodeWillChangeDirection(this, &oldDir, aOffset));
 
   if (aOffset == 0 && endOffset == textLength) {
@@ -377,7 +377,7 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
   if (dirAffectsAncestor) {
     // dirAffectsAncestor being true implies that we have a text node, see
     // above.
-    MOZ_ASSERT(NodeType() == nsIDOMNode::TEXT_NODE);
+    MOZ_ASSERT(NodeType() == TEXT_NODE);
     TextNodeChangedDirection(static_cast<nsTextNode*>(this), oldDir, aNotify);
   }
 
@@ -937,8 +937,8 @@ nsGenericDOMDataNode::ThreadSafeTextIsOnlyWhitespace() const
 bool
 nsGenericDOMDataNode::HasTextForTranslation()
 {
-  if (NodeType() != nsIDOMNode::TEXT_NODE &&
-      NodeType() != nsIDOMNode::CDATA_SECTION_NODE) {
+  if (NodeType() != TEXT_NODE &&
+      NodeType() != CDATA_SECTION_NODE) {
     return false;
   }
 

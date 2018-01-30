@@ -36,6 +36,7 @@
 #include "gfxContext.h"
 #include "gfxPrefs.h"
 #include "gfxUserFontSet.h"
+#include "nsContentList.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
@@ -72,7 +73,6 @@
 #include "nsIMozBrowserFrame.h"
 #include "nsCaret.h"
 #include "AccessibleCaretEventHub.h"
-#include "nsIDOMHTMLDocument.h"
 #include "nsFrameManager.h"
 #include "nsXPCOM.h"
 #include "nsILayoutHistoryState.h"
@@ -170,7 +170,6 @@
 #include "ChildIterator.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIDragSession.h"
 #include "nsIFrameInlines.h"
 #include "mozilla/gfx/2D.h"
@@ -3076,7 +3075,6 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
   nsresult rv = NS_OK;
   nsCOMPtr<nsIContent> content;
 
@@ -3086,7 +3084,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
   }
 
   // Search for an anchor element with a matching "name" attribute
-  if (!content && htmlDoc) {
+  if (!content && mDocument->IsHTMLDocument()) {
     // Find a matching list of named nodes
     nsCOMPtr<nsIDOMNodeList> list = mDocument->GetElementsByName(aAnchorName);
     if (list) {
@@ -3111,31 +3109,27 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
   }
 
   // Search for anchor in the HTML namespace with a matching name
-  if (!content && !htmlDoc)
+  if (!content && !mDocument->IsHTMLDocument())
   {
-    nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(mDocument);
-    nsCOMPtr<nsIDOMNodeList> list;
     NS_NAMED_LITERAL_STRING(nameSpace, "http://www.w3.org/1999/xhtml");
     // Get the list of anchor elements
-    rv = doc->GetElementsByTagNameNS(nameSpace, NS_LITERAL_STRING("a"), getter_AddRefs(list));
-    if (NS_SUCCEEDED(rv) && list) {
-      uint32_t i;
-      // Loop through the named nodes looking for the first anchor
-      for (i = 0; true; i++) {
-        nsCOMPtr<nsIDOMNode> node;
-        rv = list->Item(i, getter_AddRefs(node));
-        if (!node) { // End of list
-          break;
-        }
-        // Compare the name attribute
-        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
-        nsAutoString value;
-        if (element && NS_SUCCEEDED(element->GetAttribute(NS_LITERAL_STRING("name"), value))) {
-          if (value.Equals(aAnchorName)) {
-            content = do_QueryInterface(element);
-            break;
-          }
-        }
+    nsCOMPtr<nsINodeList> list =
+      mDocument->GetElementsByTagNameNS(nameSpace, NS_LITERAL_STRING("a"));
+    // Loop through the anchors looking for the first one with the given name.
+    for (uint32_t i = 0; true; i++) {
+      nsIContent* node = list->Item(i);
+      if (!node) { // End of list
+        break;
+      }
+
+      // Compare the name attribute
+      if (node->IsElement() &&
+          node->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                         nsGkAtoms::name,
+                                         aAnchorName,
+                                         eCaseMatters)) {
+        content = node;
+        break;
       }
     }
   }
@@ -4944,7 +4938,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
       frame->BuildDisplayListForStackingContext(&info->mBuilder, &info->mList);
     }
   };
-  if (startContainer->NodeType() == nsIDOMNode::TEXT_NODE) {
+  if (startContainer->NodeType() == nsINode::TEXT_NODE) {
     BuildDisplayListForNode(startContainer);
   }
   for (; !iter->IsDone(); iter->Next()) {
@@ -4952,7 +4946,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
     BuildDisplayListForNode(node);
   }
   if (endContainer != startContainer &&
-      endContainer->NodeType() == nsIDOMNode::TEXT_NODE) {
+      endContainer->NodeType() == nsINode::TEXT_NODE) {
     BuildDisplayListForNode(endContainer);
   }
 

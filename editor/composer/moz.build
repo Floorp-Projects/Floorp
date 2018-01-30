@@ -33,6 +33,8 @@ EXPORTS.mozilla += [
 # Needed because we include HTMLEditor.h which indirectly includes nsDocument.h
 LOCAL_INCLUDES += [
     '/dom/base',
+    '/dom/html',  # For nsHTMLDocument
+    '/layout/style', # For things nsHTMLDocument includes.
 ]
 
 FINAL_LIBRARY = 'xul'

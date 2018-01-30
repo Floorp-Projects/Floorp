@@ -322,7 +322,7 @@ public:
    * Returns true if this scroll frame might be scrolled
    * asynchronously by the compositor.
    */
-  virtual bool MayBeAsynchronouslyScrolled() = 0;
+  virtual bool IsMaybeAsynchronouslyScrolled() = 0;
 
   /**
    * Same as the above except doesn't take into account will-change budget,

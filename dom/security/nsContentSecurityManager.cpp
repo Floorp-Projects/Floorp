@@ -9,6 +9,7 @@
 #include "nsDataHandler.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannelInternal.h"
+#include "nsINode.h"
 #include "nsIStreamListener.h"
 #include "nsILoadInfo.h"
 #include "nsIOService.h"
@@ -342,7 +343,7 @@ DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
 #ifdef DEBUG
       {
         nsCOMPtr<nsINode> node = do_QueryInterface(requestingContext);
-        MOZ_ASSERT(!node || node->NodeType() == nsIDOMNode::DOCUMENT_NODE,
+        MOZ_ASSERT(!node || node->NodeType() == nsINode::DOCUMENT_NODE,
                    "type_xml requires requestingContext of type Document");
       }
 #endif
@@ -369,7 +370,7 @@ DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
 #ifdef DEBUG
       {
         nsCOMPtr<nsINode> node = do_QueryInterface(requestingContext);
-        MOZ_ASSERT(!node || node->NodeType() == nsIDOMNode::ELEMENT_NODE,
+        MOZ_ASSERT(!node || node->NodeType() == nsINode::ELEMENT_NODE,
                    "type_subrequest requires requestingContext of type Element");
       }
 #endif
@@ -382,7 +383,7 @@ DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
 #ifdef DEBUG
       {
         nsCOMPtr<nsINode> node = do_QueryInterface(requestingContext);
-        MOZ_ASSERT(!node || node->NodeType() == nsIDOMNode::DOCUMENT_NODE,
+        MOZ_ASSERT(!node || node->NodeType() == nsINode::DOCUMENT_NODE,
                    "type_dtd requires requestingContext of type Document");
       }
 #endif
@@ -406,7 +407,7 @@ DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
 #ifdef DEBUG
       {
         nsCOMPtr<nsINode> node = do_QueryInterface(requestingContext);
-        MOZ_ASSERT(!node || node->NodeType() == nsIDOMNode::ELEMENT_NODE,
+        MOZ_ASSERT(!node || node->NodeType() == nsINode::ELEMENT_NODE,
                    "type_media requires requestingContext of type Element");
       }
 #endif
@@ -440,7 +441,7 @@ DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
 #ifdef DEBUG
       {
         nsCOMPtr<nsINode> node = do_QueryInterface(requestingContext);
-        MOZ_ASSERT(!node || node->NodeType() == nsIDOMNode::DOCUMENT_NODE,
+        MOZ_ASSERT(!node || node->NodeType() == nsINode::DOCUMENT_NODE,
                    "type_xslt requires requestingContext of type Document");
       }
 #endif
@@ -453,7 +454,7 @@ DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
 #ifdef DEBUG
       {
         nsCOMPtr<nsINode> node = do_QueryInterface(requestingContext);
-        MOZ_ASSERT(!node || node->NodeType() == nsIDOMNode::DOCUMENT_NODE,
+        MOZ_ASSERT(!node || node->NodeType() == nsINode::DOCUMENT_NODE,
                    "type_beacon requires requestingContext of type Document");
       }
 #endif

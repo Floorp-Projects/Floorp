@@ -191,12 +191,10 @@ txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
         {
             txOutputFormat format;
             format.merge(*aFormat);
-            nsCOMPtr<nsIDOMDocument> domdoc;
-            mFragment->GetOwnerDocument(getter_AddRefs(domdoc));
-            NS_ASSERTION(domdoc, "unable to get ownerdocument");
-            nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+            nsCOMPtr<nsINode> node = do_QueryInterface(mFragment);
+            nsCOMPtr<nsIDocument> doc = node->OwnerDoc();
 
-            if (doc && doc->IsHTMLDocument()) {
+            if (doc->IsHTMLDocument()) {
                 format.mMethod = eHTMLOutput;
             } else {
                 format.mMethod = eXMLOutput;
@@ -391,7 +389,7 @@ txMozillaXSLTProcessor::SetSourceContentModel(nsIDocument* aDocument,
     ErrorResult rv;
     for (nsIContent* child : aSource) {
         // XPath data model doesn't have DocumentType nodes.
-        if (child->NodeType() != nsIDOMNode::DOCUMENT_TYPE_NODE) {
+        if (child->NodeType() != nsINode::DOCUMENT_TYPE_NODE) {
             mSource->AppendChild(*child, rv);
             if (rv.Failed()) {
                 return rv.StealNSResult();

@@ -248,7 +248,7 @@ GetNodeInfos(nsXULPrototypeElement* aPrototype,
         if (name->IsAtom()) {
             ni = aPrototype->mNodeInfo->NodeInfoManager()->
                 GetNodeInfo(name->Atom(), nullptr, kNameSpaceID_None,
-                            nsIDOMNode::ATTRIBUTE_NODE);
+                            nsINode::ATTRIBUTE_NODE);
         }
         else {
             ni = name->NodeInfo();

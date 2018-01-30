@@ -5,8 +5,6 @@
 
 #include "domstubs.idl"
 
-interface nsIVariant;
-
 /**
  * The nsIDOMNode interface is the primary datatype for the entire
  * Document Object Model.
@@ -19,55 +17,4 @@ interface nsIVariant;
 [uuid(cc35b412-009b-46a3-9be0-76448f12548d)]
 interface nsIDOMNode : nsISupports
 {
-  const unsigned short      ELEMENT_NODE       = 1;
-  const unsigned short      ATTRIBUTE_NODE     = 2;
-  const unsigned short      TEXT_NODE          = 3;
-  const unsigned short      CDATA_SECTION_NODE = 4;
-  const unsigned short      ENTITY_REFERENCE_NODE = 5;
-  const unsigned short      ENTITY_NODE        = 6;
-  const unsigned short      PROCESSING_INSTRUCTION_NODE = 7;
-  const unsigned short      COMMENT_NODE       = 8;
-  const unsigned short      DOCUMENT_NODE      = 9;
-  const unsigned short      DOCUMENT_TYPE_NODE = 10;
-  const unsigned short      DOCUMENT_FRAGMENT_NODE = 11;
-  const unsigned short      NOTATION_NODE      = 12;
-
-  readonly attribute DOMString        nodeName;
-           attribute DOMString        nodeValue;
-                                          // raises(DOMException) on setting
-                                          // raises(DOMException) on retrieval
-  readonly attribute unsigned short   nodeType;
-  readonly attribute nsIDOMNode       parentNode;
-  readonly attribute nsIDOMNodeList   childNodes;
-  readonly attribute nsIDOMNode       firstChild;
-  readonly attribute nsIDOMNode       lastChild;
-  readonly attribute nsIDOMNode       previousSibling;
-  readonly attribute nsIDOMNode       nextSibling;
-  // Modified in DOM Level 2:
-  readonly attribute nsIDOMDocument   ownerDocument;
-  nsIDOMNode                removeChild(in nsIDOMNode oldChild)
-                                         raises(DOMException);
-  boolean                   hasChildNodes();
-  // Modified in DOM Level 4:
-  [optional_argc] nsIDOMNode                cloneNode([optional] in boolean deep);
-  // Introduced in DOM Level 2:
-  readonly attribute DOMString        namespaceURI;
-  // Modified in DOM Core
-  readonly attribute DOMString        prefix;
-
-  // Introduced in DOM Level 2:
-  readonly attribute DOMString        localName;
-
-  // DocumentPosition
-  const unsigned short      DOCUMENT_POSITION_DISCONNECTED = 0x01;
-  const unsigned short      DOCUMENT_POSITION_PRECEDING    = 0x02;
-  const unsigned short      DOCUMENT_POSITION_FOLLOWING    = 0x04;
-  const unsigned short      DOCUMENT_POSITION_CONTAINS     = 0x08;
-  const unsigned short      DOCUMENT_POSITION_CONTAINED_BY = 0x10;
-  const unsigned short      DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20;
-
-  // Introduced in DOM Level 3:
-           attribute DOMString       textContent;
-                                        // raises(DOMException) on setting
-                                        // raises(DOMException) on retrieval
 };

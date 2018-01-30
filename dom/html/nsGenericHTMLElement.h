@@ -9,7 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "nsMappedAttributeElement.h"
-#include "nsIDOMHTMLElement.h"
+#include "nsIDOMElement.h"
 #include "nsNameSpaceManager.h"  // for kNameSpaceID_None
 #include "nsIFormControl.h"
 #include "nsGkAtoms.h"
@@ -47,7 +47,7 @@ typedef nsMappedAttributeElement nsGenericHTMLElementBase;
  * A common superclass for HTML elements
  */
 class nsGenericHTMLElement : public nsGenericHTMLElementBase,
-                             public nsIDOMHTMLElement
+                             public nsIDOMElement
 {
 public:
   using Element::SetTabIndex;
@@ -268,30 +268,6 @@ public:
    */
   MOZ_CAN_RUN_SCRIPT
   nsSize GetWidthHeightForImage(RefPtr<imgRequestProxy>& aImageRequest);
-
-  // XPIDL methods
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  NS_IMETHOD GetSpellcheck(bool* aSpellcheck) final override {
-    *aSpellcheck = Spellcheck();
-    return NS_OK;
-  }
-  NS_IMETHOD GetOffsetWidth(int32_t* aOffsetWidth) final override {
-    *aOffsetWidth = OffsetWidth();
-    return NS_OK;
-  }
-  NS_IMETHOD GetOffsetHeight(int32_t* aOffsetHeight) final override {
-    *aOffsetHeight = OffsetHeight();
-    return NS_OK;
-  }
-  NS_IMETHOD GetDraggable(bool* aDraggable) final override {
-    *aDraggable = Draggable();
-    return NS_OK;
-  }
-
-  using nsGenericHTMLElementBase::GetOwnerDocument;
 
   virtual nsIDOMNode* AsDOMNode() override { return this; }
 
@@ -937,11 +913,6 @@ protected:
    * @param aRect the offset information [OUT]
    */
   mozilla::dom::Element* GetOffsetRect(mozilla::CSSIntRect& aRect);
-
-  /**
-   * Returns true if this is the current document's body element
-   */
-  bool IsCurrentBodyElement();
 
   /**
    * Ensures all editors associated with a subtree are synced, for purposes of

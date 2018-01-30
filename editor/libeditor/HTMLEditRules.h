@@ -281,7 +281,7 @@ protected:
   nsresult AlignBlockContents(nsIDOMNode* aNode, const nsAString* alignType);
   nsresult AppendInnerFormatNodes(nsTArray<OwningNonNull<nsINode>>& aArray,
                                   nsINode* aNode);
-  nsresult GetFormatString(nsIDOMNode* aNode, nsAString &outFormat);
+  nsresult GetFormatString(nsINode* aNode, nsAString &outFormat);
   enum class Lists { no, yes };
   enum class Tables { no, yes };
   void GetInnerContent(nsINode& aNode,

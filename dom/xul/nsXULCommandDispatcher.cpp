@@ -360,12 +360,11 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
   }
 
   nsAutoString id;
-  nsCOMPtr<nsIDOMElement> element;
-  GetFocusedElement(getter_AddRefs(element));
+  nsCOMPtr<nsIDOMElement> domElement;
+  GetFocusedElement(getter_AddRefs(domElement));
+  nsCOMPtr<Element> element = do_QueryInterface(domElement);
   if (element) {
-    nsresult rv = element->GetAttribute(NS_LITERAL_STRING("id"), id);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element's id");
-    if (NS_FAILED(rv)) return rv;
+    element->GetAttribute(NS_LITERAL_STRING("id"), id);
   }
 
   nsCOMArray<nsIContent> updaters;

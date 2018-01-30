@@ -2003,6 +2003,7 @@ public:
     , mForceNotVisible(false)
     , mDisableSubpixelAA(false)
     , mReusedItem(false)
+    , mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden())
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
 #endif
@@ -2074,6 +2075,7 @@ public:
     , mForceNotVisible(aOther.mForceNotVisible)
     , mDisableSubpixelAA(aOther.mDisableSubpixelAA)
     , mReusedItem(false)
+    , mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden())
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
 #endif
@@ -2704,16 +2706,7 @@ public:
 
   bool In3DContextAndBackfaceIsHidden()
   {
-    if (mBackfaceHidden) {
-      return *mBackfaceHidden;
-    }
-
-    // We never need to invalidate this cached value since we're
-    // guaranteed to rebuild the display item entirely if it changes.
-    bool backfaceHidden = Frame()->In3DContextAndBackfaceIsHidden();
-    mBackfaceHidden.emplace(backfaceHidden);
-
-    return backfaceHidden;
+    return mBackfaceHidden;
   }
 
   bool HasSameTypeAndClip(const nsDisplayItem* aOther) const
@@ -2774,11 +2767,11 @@ protected:
   bool      mForceNotVisible;
   bool      mDisableSubpixelAA;
   bool      mReusedItem;
+  bool      mBackfaceHidden;
 #ifdef MOZ_DUMP_PAINTING
   // True if this frame has been painted.
   bool      mPainted;
 #endif
-  mozilla::Maybe<bool> mBackfaceHidden;
 
   struct {
     nsRect mVisibleRect;
@@ -3253,6 +3246,8 @@ public:
                                                 nsDisplayListBuilder* aBuilder);
   void ConfigureLayer(ImageLayer* aLayer,
                       const ContainerLayerParameters& aParameters);
+
+  virtual void UpdateDrawResult(mozilla::image::ImgDrawResult aResult) = 0;
 
   virtual already_AddRefed<imgIContainer> GetImage() = 0;
 
@@ -3852,6 +3847,11 @@ public:
                                        nsDisplayListBuilder* aBuilder) override;
   virtual already_AddRefed<imgIContainer> GetImage() override;
   virtual nsRect GetDestRect() const override;
+
+  virtual void UpdateDrawResult(mozilla::image::ImgDrawResult aResult) override
+  {
+    nsDisplayBackgroundGeometry::UpdateDrawResult(this, aResult);
+  }
 
   static nsRegion GetInsideClipRegion(const nsDisplayItem* aItem,
                                       StyleGeometryBox aClip,

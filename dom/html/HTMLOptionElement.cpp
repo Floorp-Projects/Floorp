@@ -250,8 +250,8 @@ HTMLOptionElement::GetText(nsAString& aText)
 
   nsIContent* child = nsINode::GetFirstChild();
   while (child) {
-    if (child->NodeType() == nsIDOMNode::TEXT_NODE ||
-        child->NodeType() == nsIDOMNode::CDATA_SECTION_NODE) {
+    if (child->NodeType() == TEXT_NODE ||
+        child->NodeType() == CDATA_SECTION_NODE) {
       child->AppendTextTo(text);
     }
     if (child->IsHTMLElement(nsGkAtoms::script) ||
@@ -351,7 +351,7 @@ HTMLOptionElement::Option(const GlobalObject& aGlobal,
   already_AddRefed<mozilla::dom::NodeInfo> nodeInfo =
     doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::option, nullptr,
                                         kNameSpaceID_XHTML,
-                                        nsIDOMNode::ELEMENT_NODE);
+                                        ELEMENT_NODE);
 
   RefPtr<HTMLOptionElement> option = new HTMLOptionElement(nodeInfo);
 
