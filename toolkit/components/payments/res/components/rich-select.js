@@ -27,19 +27,27 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
     this.addEventListener("blur", this);
     this.addEventListener("click", this);
     this.addEventListener("keydown", this);
+
+    this._mutationObserver = new MutationObserver((mutations) => {
+      for (let mutation of mutations) {
+        for (let addedNode of mutation.addedNodes) {
+          if (addedNode.nodeType != Node.ELEMENT_NODE ||
+              !addedNode.matches(".rich-option:not(.rich-select-selected-clone)")) {
+            continue;
+          }
+          // Move the added rich option to the popup.
+          this.popupBox.appendChild(addedNode);
+        }
+      }
+    });
+    this._mutationObserver.observe(this, {
+      childList: true,
+    });
   }
 
   connectedCallback() {
     this.setAttribute("tabindex", "0");
     this.render();
-
-    this._mutationObserver = new MutationObserver(() => {
-      this.render();
-    });
-    this._mutationObserver.observe(this, {
-      childList: true,
-      subtree: true,
-    });
   }
 
   get popupBox() {
@@ -152,10 +160,7 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
       this.appendChild(popupBox);
     }
 
-    /* eslint-disable max-len */
-    let options =
-      this.querySelectorAll(":scope > :not(.rich-select-popup-box):not(.rich-select-selected-clone)");
-    /* eslint-enable max-len */
+    let options = this.querySelectorAll(":scope > .rich-option:not(.rich-select-selected-clone)");
     for (let option of options) {
       popupBox.appendChild(option);
     }
@@ -166,10 +171,6 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
         selectedChild = child;
         break;
       }
-    }
-    if (!selectedChild && popupBox.children.length) {
-      selectedChild = popupBox.children[0];
-      selectedChild.selected = true;
     }
 
     let selectedClone = this.querySelector(":scope > .rich-select-selected-clone");
@@ -182,9 +183,12 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
         selectedClone = selectedChild.cloneNode(false);
         selectedClone.removeAttribute("id");
         selectedClone.removeAttribute("selected");
-        selectedClone.classList.add("rich-select-selected-clone");
-        selectedClone = this.appendChild(selectedClone);
+      } else {
+        selectedClone = document.createElement("rich-option");
+        selectedClone.textContent = "(None selected)";
       }
+      selectedClone.classList.add("rich-select-selected-clone");
+      selectedClone = this.appendChild(selectedClone);
     }
   }
 }
