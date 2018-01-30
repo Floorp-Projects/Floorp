@@ -8,6 +8,7 @@
 #define mozilla_dom_workers_workerrunnable_h__
 
 #include "WorkerCommon.h"
+#include "WorkerHolder.h"
 
 #include "nsICancelableRunnable.h"
 
