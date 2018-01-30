@@ -63,8 +63,8 @@ add_task(async function setup() {
 add_task(async function test_initial_focus() {
   let results = await notifyMenuChanged(2, "name");
   checkArrayValues(results, ["name", "name1"], "Two results");
-  doKey("down");
-  doKey("return");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_Enter", {code: "Enter"});
   await promiseFormsProcessed();
   is(iframeDoc.getElementById("form-basic-password").value, "pass", "Check first password filled");
   let popupState = await getPopupState();
