@@ -160,6 +160,7 @@
 #ifdef XP_WIN
 #include <process.h>
 #include <shlobj.h>
+#include "mozilla/CertAnnotator.h"
 #include "mozilla/WinDllServices.h"
 #include "nsThreadUtils.h"
 #include <comdef.h>
@@ -4314,6 +4315,8 @@ XREMain::XRE_mainRun()
   auto dllServicesDisable = MakeScopeExit([&dllServices]() {
     dllServices->Disable();
   });
+
+  mozilla::CertAnnotator::Register();
 #endif // defined(XP_WIN)
 
 #ifdef NS_FUNCTION_TIMER
