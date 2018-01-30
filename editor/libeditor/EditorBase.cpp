@@ -64,6 +64,7 @@
 #include "nsError.h"                    // for NS_OK, etc.
 #include "nsFocusManager.h"             // for nsFocusManager
 #include "nsFrameSelection.h"           // for nsFrameSelection
+#include "nsGenericHTMLElement.h"       // for nsGenericHTMLElement
 #include "nsGkAtoms.h"                  // for nsGkAtoms, nsGkAtoms::dir
 #include "nsIAbsorbingTransaction.h"    // for nsIAbsorbingTransaction
 #include "nsAtom.h"                    // for nsAtom
@@ -451,7 +452,7 @@ EditorBase::GetDesiredSpellCheckState()
     return false;
   }
 
-  nsCOMPtr<nsIDOMHTMLElement> element = do_QueryInterface(content);
+  auto element = nsGenericHTMLElement::FromContent(content);
   if (!element) {
     return false;
   }
@@ -464,10 +465,7 @@ EditorBase::GetDesiredSpellCheckState()
     return doc && doc->IsEditingOn();
   }
 
-  bool enable;
-  element->GetSpellcheck(&enable);
-
-  return enable;
+  return element->Spellcheck();
 }
 
 NS_IMETHODIMP
