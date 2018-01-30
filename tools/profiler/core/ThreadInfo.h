@@ -175,7 +175,7 @@ class ThreadInfo final
 {
 public:
   ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
-             nsIEventTarget* aThread, void* aStackTop);
+             void* aStackTop);
 
   ~ThreadInfo();
 
@@ -207,7 +207,6 @@ private:
   mozilla::TimeStamp mRegisterTime;
   mozilla::TimeStamp mUnregisterTime;
   const bool mIsMainThread;
-  nsCOMPtr<nsIEventTarget> mThread;
 
   // The thread's RacyThreadInfo. This is an owning pointer. It could be an
   // inline member, but we don't do that because RacyThreadInfo is quite large
@@ -239,7 +238,7 @@ public:
   ThreadResponsiveness* GetThreadResponsiveness()
   {
     ThreadResponsiveness* responsiveness = mResponsiveness.ptrOr(nullptr);
-    MOZ_ASSERT(!responsiveness || mIsBeingProfiled);
+    MOZ_ASSERT(!!responsiveness == (mIsMainThread && mIsBeingProfiled));
     return responsiveness;
   }
 
@@ -324,7 +323,7 @@ private:
   mozilla::UniquePtr<char[]> mSavedStreamedMarkers;
   mozilla::Maybe<UniqueStacks> mUniqueStacks;
 
-  // This is used only for nsIThreads.
+  // This is only used for the main thread.
   mozilla::Maybe<ThreadResponsiveness> mResponsiveness;
 
 public:

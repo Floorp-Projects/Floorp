@@ -530,16 +530,6 @@ NS_GetCurrentThread()
 {
   return nsThreadManager::get().GetCurrentThread();
 }
-
-
-nsIThread*
-NS_GetCurrentThreadNoCreate()
-{
-  if (nsThreadManager::get().IsNSThread()) {
-    return NS_GetCurrentThread();
-  }
-  return nullptr;
-}
 #endif
 
 // nsThreadPoolNaming

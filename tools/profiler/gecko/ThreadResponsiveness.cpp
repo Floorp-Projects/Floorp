@@ -16,13 +16,11 @@ using namespace mozilla;
 class CheckResponsivenessTask : public Runnable,
                                 public nsITimerCallback {
 public:
-  explicit CheckResponsivenessTask(nsIEventTarget* aThread, bool aIsMainThread)
+  CheckResponsivenessTask()
     : Runnable("CheckResponsivenessTask")
     , mStartToPrevTracer_us(uint64_t(profiler_time() * 1000.0))
     , mStop(false)
     , mHasEverBeenSuccessfullyDispatched(false)
-    , mThread(aThread)
-    , mIsMainThread(aIsMainThread)
   {
   }
 
@@ -36,62 +34,36 @@ public:
   // Must be called from the same thread every time. Call that the update
   // thread, because it's the thread that ThreadResponsiveness::Update() is
   // called on. In reality it's the profiler's sampler thread.
-  bool DoFirstDispatchIfNeeded()
+  void DoFirstDispatchIfNeeded()
   {
     if (mHasEverBeenSuccessfullyDispatched) {
-      return true;
+      return;
     }
 
-    // The profiler for the main thread is set up before the thread manager is,
-    // meaning we can't get the nsIThread when the CheckResponsivenessTask is
-    // constructed. We _do_ know whether it is the main thread at that time,
-    // however, so here's the workaround. We can still hit this code before the
-    // thread manager is initted, in which case we won't try to record
-    // responsiveness, which is fine because there's no event queue to check
-    // responsiveness on anyway.
-    if (mIsMainThread) {
-      if (!mThread) {
-        nsCOMPtr<nsIThread> temp;
-        NS_GetMainThread(getter_AddRefs(temp));
-        mThread = temp.forget();
-      }
-
-      if (mThread) {
-        nsresult rv = SystemGroup::Dispatch(TaskCategory::Other, do_AddRef(this));
-        if (NS_SUCCEEDED(rv)) {
-          mHasEverBeenSuccessfullyDispatched = true;
-        }
-      }
-    } else if (mThread) {
-      nsresult rv = mThread->Dispatch(this, nsIThread::NS_DISPATCH_NORMAL);
+    // We can hit this code very early during startup, at a time where the
+    // thread manager hasn't been initialized with the main thread yet.
+    // In that case, calling SystemGroup::Dispatch would assert, so we make
+    // sure that NS_GetMainThread succeeds before attempting to dispatch this
+    // runnable.
+    nsCOMPtr<nsIThread> mainThread;
+    nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
+    if (NS_SUCCEEDED(rv) && mainThread) {
+      rv = SystemGroup::Dispatch(TaskCategory::Other, do_AddRef(this));
       if (NS_SUCCEEDED(rv)) {
         mHasEverBeenSuccessfullyDispatched = true;
       }
     }
-
-    return mHasEverBeenSuccessfullyDispatched;
   }
 
-  // Only runs on the thread being profiled. Always called via a thread
-  // dispatch, so inherently functions as a responsiveness statistic.
+  // Can only run on the main thread.
   NS_IMETHOD Run() override
   {
-    // This approach means that the 16ms delay in the timer below, _plus_ any
-    // additional delays in the TimerThread itself, become part of the
-    // responsiveness statistic for this thread. What we should probably be
-    // doing is recording responsiveness only when we have dispatched (but not
-    // executed) a call to this function, either because of a call to
-    // DoFirstDispatchIfNeeded, or a call to Notify.
     mStartToPrevTracer_us = uint64_t(profiler_time() * 1000.0);
 
     if (!mStop) {
       if (!mTimer) {
-        if (mIsMainThread) {
-          mTimer = NS_NewTimer(
-            SystemGroup::EventTargetFor(TaskCategory::Other));
-        } else {
-          mTimer = NS_NewTimer();
-        }
+        mTimer = NS_NewTimer(
+          SystemGroup::EventTargetFor(TaskCategory::Other));
       }
       mTimer->InitWithCallback(this, 16, nsITimer::TYPE_ONE_SHOT);
     }
@@ -99,10 +71,11 @@ public:
     return NS_OK;
   }
 
-  // Should always fire on the thread being profiled
+  // Main thread only
   NS_IMETHOD Notify(nsITimer* aTimer) final override
   {
-    Run();
+    SystemGroup::Dispatch(TaskCategory::Other,
+                          do_AddRef(this));
     return NS_OK;
   }
 
@@ -119,37 +92,31 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 private:
-  // The timer that's responsible for redispatching this event to the thread we
-  // are profiling (ie; mThread). Only touched on mThread.
+  // The timer that's responsible for redispatching this event to the main
+  // thread. This field is only accessed on the main thread.
   nsCOMPtr<nsITimer> mTimer;
 
   // The time (in integer microseconds since process startup) at which this
   // event was last processed (Run() was last called).
-  // This field is written on mThread and read on the update thread.
+  // This field is written on the main thread and read on the update thread.
   // This is stored as integer microseconds instead of double milliseconds
   // because Atomic<double> is not available.
   Atomic<uint64_t> mStartToPrevTracer_us;
 
   // Whether we should stop redispatching this event once the timer fires the
   // next time. Set to true by any thread when the profiler is stopped; read on
-  // mThread.
+  // the main thread.
   Atomic<bool> mStop;
 
   // Only accessed on the update thread.
   bool mHasEverBeenSuccessfullyDispatched;
-
-  // The thread that we're profiling. Use nsIEventTarget to allow for checking
-  // responsiveness on non-nsIThreads someday.
-  nsCOMPtr<nsIEventTarget> mThread;
-  bool mIsMainThread;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(CheckResponsivenessTask, mozilla::Runnable,
                             nsITimerCallback)
 
-ThreadResponsiveness::ThreadResponsiveness(nsIEventTarget* aThread,
-                                           bool aIsMainThread)
-  : mActiveTracerEvent(new CheckResponsivenessTask(aThread, aIsMainThread))
+ThreadResponsiveness::ThreadResponsiveness()
+  : mActiveTracerEvent(new CheckResponsivenessTask())
 {
   MOZ_COUNT_CTOR(ThreadResponsiveness);
 }
@@ -163,9 +130,7 @@ ThreadResponsiveness::~ThreadResponsiveness()
 void
 ThreadResponsiveness::Update()
 {
-  if (!mActiveTracerEvent->DoFirstDispatchIfNeeded()) {
-    return;
-  }
+  mActiveTracerEvent->DoFirstDispatchIfNeeded();
   mStartToPrevTracer_ms = Some(mActiveTracerEvent->GetStartToPrevTracer_ms());
 }
 
