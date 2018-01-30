@@ -10,7 +10,9 @@
 #include <stdint.h>
 
 #include "nsAttrValue.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ServoUtils.h"
 
 struct MiscContainer;
 
@@ -23,7 +25,12 @@ struct MiscContainer final
   // mType isn't eCSSDeclaration.
   // Note eStringBase and eAtomBase is used also to handle the type of
   // mStringBits.
-  uintptr_t mStringBits;
+  //
+  // Note that we use a relaxed atomic here so that we can use Compare-And-Swap
+  // to cache the serialization during the parallel servo traversal. This case
+  // (which happens when the main thread is blocked) is the only case where
+  // mStringBits is mutated off-main-thread.
+  mozilla::Atomic<uintptr_t, mozilla::Relaxed> mStringBits;
   union {
     struct {
       union {
@@ -80,6 +87,15 @@ protected:
 
 public:
   bool GetString(nsAString& aString) const;
+
+  void SetStringBitsMainThread(uintptr_t aBits)
+  {
+    // mStringBits is atomic, but the callers of this function are
+    // single-threaded so they don't have to worry about it.
+    MOZ_ASSERT(!mozilla::IsInServoTraversal());
+    MOZ_ASSERT(NS_IsMainThread());
+    mStringBits = aBits;
+  }
 
   inline bool IsRefCounted() const
   {
