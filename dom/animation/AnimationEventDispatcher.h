@@ -73,13 +73,10 @@ struct AnimationEventInfo
       nsCSSPseudoElements::PseudoTypeAsString(aTarget.mPseudoType);
   }
 
-  // InternalAnimationEvent and InternalTransitionEvent don't support
-  // copy-construction, so we need to ourselves in order to work with nsTArray.
-  //
-  // FIXME: Drop this copy constructor and copy assignment below once
-  // WidgetEvent have move constructor and move assignment (bug 1433008).
-  AnimationEventInfo(const AnimationEventInfo& aOther) = default;
-  AnimationEventInfo& operator=(const AnimationEventInfo& aOther) = default;
+  AnimationEventInfo(const AnimationEventInfo& aOther) = delete;
+  AnimationEventInfo& operator=(const AnimationEventInfo& aOther) = delete;
+  AnimationEventInfo(AnimationEventInfo&& aOther) = default;
+  AnimationEventInfo& operator=(AnimationEventInfo&& aOther) = default;
 
   WidgetEvent* AsWidgetEvent()
   {
