@@ -1042,9 +1042,6 @@ public:
   static nsresult GetEndChildNode(Selection* aSelection,
                                   nsIContent** aEndNode);
 
-#if DEBUG_JOE
-  static void DumpNode(nsIDOMNode* aNode, int32_t indent = 0);
-#endif
   Selection* GetSelection(SelectionType aSelectionType =
                                           SelectionType::eNormal)
   {

@@ -2078,7 +2078,6 @@ protected:
   // NS_FORWARD_NSIDOMNODE_TO_NSINODE_HELPER and for quickstubs.
   nsresult GetParentNode(nsIDOMNode** aParentNode);
   nsresult GetChildNodes(nsIDOMNodeList** aChildNodes);
-  nsresult GetNextSibling(nsIDOMNode** aNextSibling);
   nsresult GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
 
   void EnsurePreInsertionValidity1(nsINode& aNewChild, nsINode* aRefChild,
@@ -2273,10 +2272,6 @@ ToCanonicalSupports(nsINode* aPointer)
   NS_IMETHOD GetChildNodes(nsIDOMNodeList** aChildNodes) __VA_ARGS__ override \
   { \
     return nsINode::GetChildNodes(aChildNodes); \
-  } \
-  NS_IMETHOD GetNextSibling(nsIDOMNode** aNextSibling) __VA_ARGS__ override \
-  { \
-    return nsINode::GetNextSibling(aNextSibling); \
   } \
   NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument) __VA_ARGS__ override \
   { \
