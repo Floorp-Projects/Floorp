@@ -62,7 +62,6 @@ public:
                          const nsAString& aValue,
                          const nsAString& aPriority,
                          nsIPrincipal* aSubjectPrincipal = nullptr) = 0;
-  NS_IMETHOD GetLength(uint32_t* aLength) = 0;
   void Item(uint32_t aIndex, nsAString& aReturn)
   {
     bool found;
@@ -77,11 +76,7 @@ public:
                           nsIPrincipal* aSubjectPrincipal,
                           mozilla::ErrorResult& rv) = 0;
   virtual void GetCssText(nsAString& aString) = 0;
-  uint32_t Length() {
-    uint32_t length;
-    GetLength(&length);
-    return length;
-  }
+  virtual uint32_t Length() = 0;
   void Item(uint32_t aIndex, nsString& aPropName) {
     Item(aIndex, static_cast<nsAString&>(aPropName));
   }
@@ -122,7 +117,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
                          const nsAString& value,                              \
                          const nsAString& priority,                           \
                          nsIPrincipal* aSubjectPrincipal = nullptr) override; \
-  NS_IMETHOD GetLength(uint32_t *aLength) override; \
+  uint32_t Length() override;                                           \
   mozilla::css::Rule* GetParentRule() override;
 
 #endif // nsICSSDeclaration_h__

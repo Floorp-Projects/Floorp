@@ -225,18 +225,19 @@ nsCSSFontFaceStyleDecl::SetProperty(const nsAString& propertyName,
   return NS_ERROR_NOT_IMPLEMENTED; // bug 443978
 }
 
-NS_IMETHODIMP
-nsCSSFontFaceStyleDecl::GetLength(uint32_t *aLength)
+uint32_t
+nsCSSFontFaceStyleDecl::Length()
 {
   uint32_t len = 0;
   for (nsCSSFontDesc id = nsCSSFontDesc(eCSSFontDesc_UNKNOWN + 1);
        id < eCSSFontDesc_COUNT;
-       id = nsCSSFontDesc(id + 1))
-    if (mDescriptors.Get(id).GetUnit() != eCSSUnit_Null)
+       id = nsCSSFontDesc(id + 1)) {
+    if (mDescriptors.Get(id).GetUnit() != eCSSUnit_Null) {
       len++;
+    }
+  }
 
-  *aLength = len;
-  return NS_OK;
+  return len;
 }
 
 void
