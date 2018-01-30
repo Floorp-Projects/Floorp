@@ -647,6 +647,7 @@ PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
     , mFlashProcess2(0)
     , mFinishInitTask(nullptr)
 #endif
+    , mIsCleaningFromTimeout(false)
 {
     NS_ASSERTION(mSubprocess, "Out of memory!");
     mSandboxLevel = aSandboxLevel;
@@ -803,6 +804,15 @@ PluginModuleChromeParent::CleanupFromTimeout(const bool aFromHangUI)
                 &PluginModuleChromeParent::CleanupFromTimeout, aFromHangUI), 10);
         return;
     }
+
+    // Avoid recursively calling this method.  MessageChannel::Close() can
+    // cause this task to be re-launched.
+    if (mIsCleaningFromTimeout) {
+      return;
+    }
+
+    AutoRestore<bool> resetCleaningFlag(mIsCleaningFromTimeout);
+    mIsCleaningFromTimeout = true;
 
     /* If the plugin container was terminated by the Plugin Hang UI,
        then either the I/O thread detects a channel error, or the
