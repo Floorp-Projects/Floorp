@@ -217,7 +217,8 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
   // stash the document of the dom node
-  aDOMNode->GetOwnerDocument(getter_AddRefs(mSourceDocument));
+  nsCOMPtr<nsINode> node = do_QueryInterface(aDOMNode);
+  mSourceDocument = do_QueryInterface(node->OwnerDoc());
   mSourceNode = aDOMNode;
   mContentPolicyType = aContentPolicyType;
   mEndDragPoint = LayoutDeviceIntPoint(0, 0);

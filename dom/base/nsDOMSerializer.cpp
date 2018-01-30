@@ -51,14 +51,12 @@ SetUpEncoder(nsIDOMNode *aRoot, const nsACString& aCharset,
   if (NS_FAILED(rv))
     return rv;
 
-  bool entireDocument = true;
-  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(aRoot));
-  if (!domDoc) {
-    entireDocument = false;
-    rv = aRoot->GetOwnerDocument(getter_AddRefs(domDoc));
-    if (NS_FAILED(rv))
-      return rv;
-  }
+  nsCOMPtr<nsINode> root = do_QueryInterface(aRoot);
+  MOZ_ASSERT(root);
+
+  nsIDocument* doc = root->OwnerDoc();
+  bool entireDocument = (doc == root);
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
 
   // This method will fail if no document
   rv = encoder->Init(domDoc, NS_LITERAL_STRING("application/xhtml+xml"),

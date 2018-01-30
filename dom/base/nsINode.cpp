@@ -524,16 +524,6 @@ nsINode::GetParentNode(nsIDOMNode** aParentNode)
   return parent ? CallQueryInterface(parent, aParentNode) : NS_OK;
 }
 
-nsresult
-nsINode::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
-{
-  *aOwnerDocument = nullptr;
-
-  nsIDocument *ownerDoc = GetOwnerDocument();
-
-  return ownerDoc ? CallQueryInterface(ownerDoc, aOwnerDocument) : NS_OK;
-}
-
 void
 nsINode::GetNodeValueInternal(nsAString& aNodeValue)
 {

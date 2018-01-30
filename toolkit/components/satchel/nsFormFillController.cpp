@@ -696,12 +696,9 @@ nsFormFillController::OnTextEntered(nsIDOMEvent* aEvent,
                                     bool* aPrevent)
 {
   NS_ENSURE_ARG(aPrevent);
-  NS_ENSURE_TRUE(mFocusedInput, NS_OK);
+  NS_ENSURE_TRUE(mFocusedInputNode, NS_OK);
   // Fire off a DOMAutoComplete event
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mFocusedInput);
-  element->GetOwnerDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_STATE(domDoc);
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mFocusedInputNode->OwnerDoc());
 
   nsCOMPtr<nsIDOMEvent> event;
   domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
@@ -738,15 +735,12 @@ nsFormFillController::GetConsumeRollupEvent(bool *aConsumeRollupEvent)
 NS_IMETHODIMP
 nsFormFillController::GetInPrivateContext(bool *aInPrivateContext)
 {
-  if (!mFocusedInput) {
+  if (!mFocusedInputNode) {
     *aInPrivateContext = false;
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMDocument> inputDoc;
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mFocusedInput);
-  element->GetOwnerDocument(getter_AddRefs(inputDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(inputDoc);
+  nsCOMPtr<nsIDocument> doc = mFocusedInputNode->OwnerDoc();
   nsCOMPtr<nsILoadContext> loadContext = doc->GetLoadContext();
   *aInPrivateContext = loadContext && loadContext->UsePrivateBrowsing();
   return NS_OK;
