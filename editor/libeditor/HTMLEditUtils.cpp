@@ -85,17 +85,16 @@ HTMLEditUtils::IsFormatNode(nsINode* aNode)
  * blockquote.
  */
 bool
-HTMLEditUtils::IsNodeThatCanOutdent(nsIDOMNode* aNode)
+HTMLEditUtils::IsNodeThatCanOutdent(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
-  RefPtr<nsAtom> nodeAtom = EditorBase::GetTag(aNode);
-  return (nodeAtom == nsGkAtoms::ul)
-      || (nodeAtom == nsGkAtoms::ol)
-      || (nodeAtom == nsGkAtoms::dl)
-      || (nodeAtom == nsGkAtoms::li)
-      || (nodeAtom == nsGkAtoms::dd)
-      || (nodeAtom == nsGkAtoms::dt)
-      || (nodeAtom == nsGkAtoms::blockquote);
+  return aNode->IsAnyOfHTMLElements(nsGkAtoms::ul,
+                                    nsGkAtoms::ol,
+                                    nsGkAtoms::dl,
+                                    nsGkAtoms::li,
+                                    nsGkAtoms::dd,
+                                    nsGkAtoms::dt,
+                                    nsGkAtoms::blockquote);
 }
 
 /**
