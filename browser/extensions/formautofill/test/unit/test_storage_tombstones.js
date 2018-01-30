@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {ProfileStorage} = ChromeUtils.import("resource://formautofill/ProfileStorage.jsm", {});
+const {FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {});
 
 const TEST_STORE_FILE_NAME = "test-tombstones.json";
 
@@ -39,7 +39,7 @@ let do_check_tombstone_record = (profile) => {
 function add_storage_task(test_function) {
   add_task(async function() {
     let path = getTempFile(TEST_STORE_FILE_NAME).path;
-    let profileStorage = new ProfileStorage(path);
+    let profileStorage = new FormAutofillStorage(path);
     let testCC1 = Object.assign({}, TEST_CC_1);
     await profileStorage.initialize();
 

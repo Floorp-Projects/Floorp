@@ -1,5 +1,5 @@
 /**
- * Tests ProfileStorage object with addresses records.
+ * Tests FormAutofillStorage object with addresses records.
  */
 
 "use strict";

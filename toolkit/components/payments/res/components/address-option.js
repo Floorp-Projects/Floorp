@@ -15,7 +15,7 @@
  *                  tel="+1 650 555-5555"></address-option>
  * </rich-select>
  *
- * Attribute names follow ProfileStorage.jsm.
+ * Attribute names follow FormAutofillStorage.jsm.
  */
 
 /* global ObservedPropertiesMixin, RichOption */
