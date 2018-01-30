@@ -48,7 +48,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMNode.h"

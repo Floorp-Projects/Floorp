@@ -40,7 +40,6 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIWebNavigation.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIPresShell.h"
 #include "nsIStringBundle.h"
 #include "nsPIDOMWindow.h"

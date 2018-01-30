@@ -24,7 +24,6 @@
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIPresShell.h"
 
 #include <algorithm>
