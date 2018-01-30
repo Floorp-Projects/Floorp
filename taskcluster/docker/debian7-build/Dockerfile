@@ -55,7 +55,6 @@ RUN apt-get update && \
       libpango1.0-dev:$ARCH \
       libpulse-dev:$ARCH \
       libx11-xcb-dev:$ARCH \
-      libxss-dev:$ARCH \
       libxt-dev:$ARCH
 
 # Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
