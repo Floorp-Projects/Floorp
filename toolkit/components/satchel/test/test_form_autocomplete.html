@@ -145,7 +145,6 @@ Form History test: form field autocomplete
 /** Test for Form History autocomplete **/
 
 var input = $_(1, "field1");
-const shiftModifier = Event.SHIFT_MASK;
 
 function setupFormHistory(aCallback) {
   updateFormHistory([
@@ -252,177 +251,177 @@ function runTest() { // eslint-disable-line complexity
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 2:
       checkMenuEntries(["value1", "value2", "value3", "value4"], testNum);
       // Check first entry
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       checkForm(""); // value shouldn't update
-      doKey("return"); // not "enter"!
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value1");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 3:
       // Check second entry
-      doKey("down");
-      doKey("down");
-      doKey("return"); // not "enter"!
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value2");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 4:
       // Check third entry
-      doKey("down");
-      doKey("down");
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value3");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 5:
       // Check fourth entry
-      doKey("down");
-      doKey("down");
-      doKey("down");
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value4");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 6:
       // Check first entry (wraparound)
-      doKey("down");
-      doKey("down");
-      doKey("down");
-      doKey("down");
-      doKey("down"); // deselects
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // deselects
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value1");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 7:
       // Check the last entry via arrow-up
-      doKey("up");
-      doKey("return");
+      synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value4");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 8:
       // Check the last entry via arrow-up
-      doKey("down"); // select first entry
-      doKey("up"); // selects nothing!
-      doKey("up"); // select last entry
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // select first entry
+      synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"}); // selects nothing!
+      synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"}); // select last entry
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value4");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 9:
       // Check the last entry via arrow-up (wraparound)
-      doKey("down");
-      doKey("up"); // deselects
-      doKey("up"); // last entry
-      doKey("up");
-      doKey("up");
-      doKey("up"); // first entry
-      doKey("up"); // deselects
-      doKey("up"); // last entry
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"}); // deselects
+      synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"}); // last entry
+      synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"});
+      synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"});
+      synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"}); // first entry
+      synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"}); // deselects
+      synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"}); // last entry
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value4");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 10:
       // Set first entry w/o triggering autocomplete
-      doKey("down");
-      doKey("right");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowRight", {code: "ArrowRight"});
       checkForm("value1");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 11:
       // Set first entry w/o triggering autocomplete
-      doKey("down");
-      doKey("left");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowLeft", {code: "ArrowLeft"});
       checkForm("value1");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 12:
       // Check first entry (page up)
-      doKey("down");
-      doKey("down");
-      doKey("page_up");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_PageUp", {code: "PageUp"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value1");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 13:
       // Check last entry (page down)
-      doKey("down");
-      doKey("page_down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_PageDown", {code: "PageDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value4");
 
       // Trigger autocomplete popup
       testNum = 49;
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     /* Test removing entries from the dropdown */
@@ -431,14 +430,14 @@ function runTest() { // eslint-disable-line complexity
       checkMenuEntries(["value1", "value2", "value3", "value4"], testNum);
       // Delete the first entry (of 4)
       setForm("value");
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
 
       // On OS X, shift-backspace and shift-delete work, just delete does not.
       // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
       if (SpecialPowers.OS == "Darwin") {
-        doKey("back_space", shiftModifier);
+        synthesizeKey("KEY_Backspace", {code: "Backspace", shiftKey: true});
       } else {
-        doKey("delete", shiftModifier);
+        synthesizeKey("KEY_Delete", {code: "Delete", shiftKey: true});
       }
 
       // This tests that on OS X shift-backspace didn't delete the last character
@@ -456,33 +455,33 @@ function runTest() { // eslint-disable-line complexity
       break;
 
     case 52:
-      doKey("return");
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value2");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 53:
       checkMenuEntries(["value2", "value3", "value4"], testNum);
       // Check the new first entry (of 3)
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value2");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 54:
       // Delete the second entry (of 3)
-      doKey("down");
-      doKey("down");
-      doKey("delete", shiftModifier);
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Delete", {code: "Delete", shiftKey: true});
       waitForMenuChange(2);
       break;
 
@@ -496,33 +495,33 @@ function runTest() { // eslint-disable-line complexity
       break;
 
     case 56:
-      doKey("return");
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value4");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 57:
       checkMenuEntries(["value2", "value4"], testNum);
       // Check the new first entry (of 2)
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value2");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 58:
       // Delete the last entry (of 2)
-      doKey("down");
-      doKey("down");
-      doKey("delete", shiftModifier);
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Delete", {code: "Delete", shiftKey: true});
       checkForm("");
       waitForMenuChange(1);
       break;
@@ -536,32 +535,32 @@ function runTest() { // eslint-disable-line complexity
       break;
 
     case 60:
-      doKey("return");
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value2");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 61:
       checkMenuEntries(["value2"], testNum);
       // Check the new first entry (of 1)
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value2");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 62:
       // Delete the only remaining entry
-      doKey("down");
-      doKey("delete", shiftModifier);
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Delete", {code: "Delete", shiftKey: true});
       waitForMenuChange(0);
       break;
 
@@ -580,15 +579,15 @@ function runTest() { // eslint-disable-line complexity
       testNum = 99;
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     /* Test entries with autocomplete=off */
 
     case 100:
       // Select first entry
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value1");
 
       // Look at form 3, try to trigger autocomplete popup
@@ -597,27 +596,27 @@ function runTest() { // eslint-disable-line complexity
       // Sometimes, this will fail if scrollTo(0, 0) is called, so that doesn't
       // happen here. Fortunately, a different input is used from the last test,
       // so a scroll should still occur.
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       waitForScroll();
       break;
 
     case 101:
       // Ensure there's no autocomplete dropdown (autocomplete=off is present)
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("");
 
       // Look at form 4, try to trigger autocomplete popup
       input = $_(4, "field2");
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       waitForMenuChange(0);
       break;
 
     case 102:
       // Ensure there's no autocomplete dropdown (autocomplete=off is present)
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("");
 
       // Look at form 5, try to trigger autocomplete popup
@@ -647,13 +646,13 @@ function runTest() { // eslint-disable-line complexity
 
     case 202:
       checkMenuEntries(["aa\xe6"], testNum);
-      doKey("back_space");
+      synthesizeKey("KEY_Backspace", {code: "Backspace"});
       waitForMenuChange(3);
       break;
 
     case 203:
       checkMenuEntries(["aa", "aaz", "aa\xe6"], testNum);
-      doKey("back_space");
+      synthesizeKey("KEY_Backspace", {code: "Backspace"});
       waitForMenuChange(5);
       break;
 
@@ -667,7 +666,7 @@ function runTest() { // eslint-disable-line complexity
     case 205:
       checkMenuEntries(["az", "aaz"], testNum);
       input.focus();
-      doKey("left");
+      synthesizeKey("KEY_ArrowLeft", {code: "ArrowLeft"});
       expectPopup();
       // Check case-insensitivity.
       sendChar("A");
@@ -681,7 +680,7 @@ function runTest() { // eslint-disable-line complexity
     case 207:
       // check that results were cached
       input.focus();
-      doKey("right");
+      synthesizeKey("KEY_ArrowRight", {code: "ArrowRight"});
       sendChar("q");
       waitForMenuChange(0);
       break;
@@ -702,7 +701,7 @@ function runTest() { // eslint-disable-line complexity
     case 210:
       // check that empty results were cached - bug 496466
       checkMenuEntries([], testNum);
-      doKey("escape");
+      synthesizeKey("KEY_Escape", {code: "Escape"});
 
       // Look at form 6, try to trigger autocomplete popup
       input = $_(6, "field4");
@@ -755,7 +754,7 @@ function runTest() { // eslint-disable-line complexity
       checkMenuEntries(["bc d\xe6", "aba\xe6"]);
       input.focus();
       expectPopup();
-      doKey("left");
+      synthesizeKey("KEY_ArrowLeft", {code: "ArrowLeft"});
       sendChar("d");
       break;
 
@@ -775,46 +774,46 @@ function runTest() { // eslint-disable-line complexity
       testNum = 299;
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 300:
       checkMenuEntries(["1", "12", "123", "1234"], testNum);
       input.maxLength = 4;
       expectPopup();
-      doKey("escape");
-      doKey("down");
+      synthesizeKey("KEY_Escape", {code: "Escape"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 301:
       checkMenuEntries(["1", "12", "123", "1234"], testNum);
       input.maxLength = 3;
       expectPopup();
-      doKey("escape");
-      doKey("down");
+      synthesizeKey("KEY_Escape", {code: "Escape"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 302:
       checkMenuEntries(["1", "12", "123"], testNum);
       input.maxLength = 2;
       expectPopup();
-      doKey("escape");
-      doKey("down");
+      synthesizeKey("KEY_Escape", {code: "Escape"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 303:
       checkMenuEntries(["1", "12"], testNum);
       input.maxLength = 1;
       expectPopup();
-      doKey("escape");
-      doKey("down");
+      synthesizeKey("KEY_Escape", {code: "Escape"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 304:
       checkMenuEntries(["1"], testNum);
       input.maxLength = 0;
-      doKey("escape");
-      doKey("down");
+      synthesizeKey("KEY_Escape", {code: "Escape"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       waitForMenuChange(0);
       break;
 
@@ -826,39 +825,39 @@ function runTest() { // eslint-disable-line complexity
       input.focus();
       sendChar("1");
       expectPopup();
-      doKey("escape");
-      doKey("down");
+      synthesizeKey("KEY_Escape", {code: "Escape"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 306:
       checkMenuEntries(["1", "12", "123", "1234"], testNum);
       input.maxLength = 3;
       expectPopup();
-      doKey("escape");
-      doKey("down");
+      synthesizeKey("KEY_Escape", {code: "Escape"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 307:
       checkMenuEntries(["1", "12", "123"], testNum);
       input.maxLength = 2;
       expectPopup();
-      doKey("escape");
-      doKey("down");
+      synthesizeKey("KEY_Escape", {code: "Escape"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 308:
       checkMenuEntries(["1", "12"], testNum);
       input.maxLength = 1;
       expectPopup();
-      doKey("escape");
-      doKey("down");
+      synthesizeKey("KEY_Escape", {code: "Escape"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 309:
       checkMenuEntries(["1"], testNum);
       input.maxLength = 0;
-      doKey("escape");
-      doKey("down");
+      synthesizeKey("KEY_Escape", {code: "Escape"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       waitForMenuChange(0);
       break;
 
@@ -869,7 +868,7 @@ function runTest() { // eslint-disable-line complexity
       testNum = 399;
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 400:
@@ -877,8 +876,8 @@ function runTest() { // eslint-disable-line complexity
     case 402:
     case 403:
       checkMenuEntries(["value"], testNum);
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value");
 
       if (testNum == 400) {
@@ -894,13 +893,13 @@ function runTest() { // eslint-disable-line complexity
 
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 404:
       checkMenuEntries(["42"], testNum);
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("42");
 
       input = $_(14, "field11");
@@ -925,14 +924,14 @@ function runTest() { // eslint-disable-line complexity
 
       input = $_(16, "field13");
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       waitForMenuChange(0);
       break;
 
     case 407:
       checkMenuEntries([]); // type=range does not have a drop down menu
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("30"); // default (midway between minimum (0) and maximum (64)) - step
 
       input = $_(17, "field14");
@@ -947,37 +946,37 @@ function runTest() { // eslint-disable-line complexity
       input = $_(18, "field15");
       restoreForm();
       expectPopup();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 409:
       checkMenuEntries(["2016-08"]);
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("2016-08");
 
       input = $_(19, "field16");
       restoreForm();
       expectPopup();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 410:
       checkMenuEntries(["2016-W32"]);
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("2016-W32");
 
       input = $_(20, "field17");
       restoreForm();
       expectPopup();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 411:
       checkMenuEntries(["2016-10-21T10:10"]);
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("2016-10-21T10:10");
 
       addEntry("field1", "value1");
@@ -990,7 +989,7 @@ function runTest() { // eslint-disable-line complexity
 
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     // Check that the input event is fired.
@@ -1001,9 +1000,9 @@ function runTest() { // eslint-disable-line complexity
         ok(event.cancelable, testNum + " input event should be cancelable");
       }, {once: true});
 
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       checkForm("");
-      doKey("return");
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("value1");
       testNum = 599;
       setTimeout(runTest, 100);
@@ -1016,7 +1015,7 @@ function runTest() { // eslint-disable-line complexity
       // Trigger autocomplete popup
       checkForm("");
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       waitForMenuChange(0);
       break;
 

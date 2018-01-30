@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Test form autofill - preview and highlight</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="formautofill_common.js"></script>
   <script type="text/javascript" src="satchel_common.js"></script>
@@ -54,22 +55,22 @@ add_task(async function setup_storage() {
 add_task(async function check_preview() {
   const focusedInput = await setInput("#organization", "");
 
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkFormFieldsStyle(null);
 
   for (let i = 0; i < MOCK_STORAGE.length; i++) {
-    doKey("down");
+    synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
     await notifySelectedIndex(i);
     checkFormFieldsStyle(MOCK_STORAGE[i]);
   }
 
   // Navigate to the footer
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await notifySelectedIndex(MOCK_STORAGE.length);
   checkFormFieldsStyle(null);
 
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await notifySelectedIndex(-1);
   checkFormFieldsStyle(null);
 

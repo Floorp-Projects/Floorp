@@ -6,6 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=812687
 <head>
   <title>Test for Bug 812687: focus order of reordered flex items</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <style>
     .container { display: flex; }
@@ -42,7 +43,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=812687
 
 /** Test for Bug 812687 **/
 
-const gKeyCodeForTab = 9;
 const gExpectedFocusedIds = [
   "focus1",
   "focus2",
@@ -60,7 +60,7 @@ function doTest() {
   // And then we advance focus across the focusable things in the flex container
   // and check that we traverse them in the expected order:
   for (let expectedId of gExpectedFocusedIds) {
-    SpecialPowers.DOMWindowUtils.sendKeyEvent('keypress', gKeyCodeForTab, 0, 0);
+    synthesizeKey("KEY_Tab", {code: "Tab"});
     is(document.activeElement, document.getElementById(expectedId),
        "expecting element '#" + expectedId + "' to be focused");
   }
