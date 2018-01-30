@@ -530,7 +530,7 @@ protected:
 
   bool ShouldReplaceRootElement();
   void NotifyRootChanged();
-  nsresult GetBodyElement(nsIDOMHTMLElement** aBody);
+  Element* GetBodyElement();
 
   /**
    * Get the focused node of this editor.
