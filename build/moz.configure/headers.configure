@@ -40,8 +40,13 @@ check_headers(
 )
 
 # Quota support
-check_header('sys/quota.h',
-             when=non_msvc_compiler)
+# Check for both the header and quotactl() because Android headers can have the
+# header but not quotactl().
+set_define('HAVE_SYS_QUOTA_H',
+           try_compile(includes=['sys/quota.h'],
+                       body='quotactl(0, nullptr, 0, (caddr_t)nullptr);',
+                       when=non_msvc_compiler,
+                       check_msg='for sys/quota.h'))
 check_header('linux/quota.h',
              includes=['sys/socket.h'],
              when=building_linux)
