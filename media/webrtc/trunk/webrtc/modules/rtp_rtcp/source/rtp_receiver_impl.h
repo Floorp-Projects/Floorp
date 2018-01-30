@@ -55,6 +55,8 @@ class RtpReceiverImpl : public RtpReceiver {
 
   int32_t CSRCs(uint32_t array_of_csrc[kRtpCsrcSize]) const override;
 
+  void GetRID(char rtp_stream_id[256]) const override;
+
   int32_t Energy(uint8_t array_of_energy[kRtpCsrcSize]) const override;
 
   TelephoneEventHandler* GetTelephoneEventHandler() override;
@@ -101,6 +103,8 @@ class RtpReceiverImpl : public RtpReceiver {
   uint32_t last_received_timestamp_
       RTC_GUARDED_BY(critical_section_rtp_receiver_);
   int64_t last_received_frame_time_ms_
+      RTC_GUARDED_BY(critical_section_rtp_receiver_);
+  StreamId rtp_stream_id_
       RTC_GUARDED_BY(critical_section_rtp_receiver_);
 
   std::unordered_map<uint32_t, std::list<RtpSource>::iterator>

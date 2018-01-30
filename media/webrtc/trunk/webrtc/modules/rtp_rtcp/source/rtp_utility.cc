@@ -321,7 +321,7 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
     const int id = (*ptr & 0xf0) >> 4;
     const int len = (*ptr & 0x0f);
     if (ptr + len + 1 > ptrRTPDataExtensionEnd) {
-      LOG(LS_WARNING)
+      RTC_LOG(LS_WARNING)
           << "RTP extension header length out of bounds. Terminate parsing.";
       return;
     }
@@ -348,7 +348,9 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
     RTPExtensionType type = ptrExtensionMap->GetType(id);
     if (type == RtpHeaderExtensionMap::kInvalidType) {
       // If we encounter an unknown extension, just skip over it.
-      RTC_LOG(LS_WARNING) << "Failed to find extension id: " << id;
+      // Mozilla - we reuse the parse for demux, without registering extensions.
+      // Reduce log-spam by switching to VERBOSE
+      RTC_LOG(LS_VERBOSE) << "Failed to find extension id: " << id;
     } else {
       switch (type) {
         case kRtpExtensionTransmissionTimeOffset: {
@@ -492,6 +494,20 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
         }
         case kRtpExtensionMid: {
           header->extension.mid.Set(rtc::MakeArrayView(ptr, len + 1));
+          break;
+        }
+        case kRtpExtensionCsrcAudioLevel: {
+          auto& levels = header->extension.csrcAudioLevels;
+          levels.numAudioLevels = static_cast<uint8_t>(len + 1);
+          if (levels.numAudioLevels > kRtpCsrcSize)  {
+            RTC_LOG(LS_WARNING) << "Incorrect number of CSRC audio levels: " <<
+                                   levels.numAudioLevels;
+            levels.numAudioLevels = 0;
+            return;
+          }
+          for (uint8_t i = 0; i < levels.numAudioLevels; i++) {
+            levels.arrOfAudioLevels[i] = ptr[i] & 0x7f;
+          }
           break;
         }
         case kRtpExtensionNone:
