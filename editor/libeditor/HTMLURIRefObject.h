@@ -37,9 +37,9 @@ protected:
   virtual ~HTMLURIRefObject();
 
   nsCOMPtr<nsIDOMNode> mNode;
-  RefPtr<nsDOMAttributeMap> mAttributes;
   uint32_t mCurAttrIndex;
   uint32_t mAttributeCnt;
+  bool mAttrsInited;
 };
 
 } // namespace mozilla

@@ -22,14 +22,14 @@
 #include "nsIPrefService.h"
 #include "nsString.h"
 #include "nsCRT.h"
+#include "nsGenericHTMLElement.h"
 
 #include "nsIDOMNode.h"
 #include "mozilla/dom/Element.h"
 #include "nsIFrame.h"
 #include "nsFrameTraversal.h"
 #include "nsIImageDocument.h"
-#include "nsIDOMHTMLDocument.h"
-#include "nsIDOMHTMLElement.h"
+#include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsISelection.h"
 #include "nsTextFragment.h"
@@ -569,8 +569,9 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
         // We may be inside an editable element, and therefore the selection
         // may be controlled by a different selection controller.  Walk up the
         // chain of parent nodes to see if we find one.
-        nsCOMPtr<nsIDOMNode> node;
-        returnRange->GetStartContainer(getter_AddRefs(node));
+        nsCOMPtr<nsIDOMNode> domNode;
+        returnRange->GetStartContainer(getter_AddRefs(domNode));
+        nsCOMPtr<nsINode> node = do_QueryInterface(domNode);
         while (node) {
           nsCOMPtr<nsIDOMNSEditableElement> editable = do_QueryInterface(node);
           if (editable) {
@@ -599,8 +600,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
               fm->SetFocus(mFoundEditable, 0);
             break;
           }
-          nsIDOMNode* tmp = node;
-          tmp->GetParentNode(getter_AddRefs(node));
+          node = node->GetParentNode();
         }
 
         // If we reach here without setting mFoundEditable, then something
@@ -790,11 +790,8 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContent> rootContent;
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(doc));
-  if (htmlDoc) {
-    nsCOMPtr<nsIDOMHTMLElement> bodyEl;
-    htmlDoc->GetBody(getter_AddRefs(bodyEl));
-    rootContent = do_QueryInterface(bodyEl);
+  if (doc->IsHTMLOrXHTML()) {
+    rootContent = doc->GetBody();
   }
 
   if (!rootContent)
@@ -1181,23 +1178,20 @@ nsTypeAheadFind::IsRangeVisible(nsIDOMRange *aRange,
                                 bool aMustBeInViewPort,
                                 bool *aResult)
 {
-  // Jump through hoops to extract the docShell from the range.
-  nsCOMPtr<nsIDOMNode> node;
-  aRange->GetStartContainer(getter_AddRefs(node));
-  nsCOMPtr<nsIDOMDocument> document;
-  node->GetOwnerDocument(getter_AddRefs(document));
-  nsCOMPtr<mozIDOMWindowProxy> window;
-  document->GetDefaultView(getter_AddRefs(window));
-  nsCOMPtr<nsIWebNavigation> navNav (do_GetInterface(window));
-  nsCOMPtr<nsIDocShell> docShell (do_GetInterface(navNav));
+  nsCOMPtr<nsIDOMNode> domNode;
+  aRange->GetStartContainer(getter_AddRefs(domNode));
+  nsCOMPtr<nsINode> node = do_QueryInterface(domNode);
 
-  // Set up the arguments needed to check if a range is visible.
-  nsCOMPtr<nsIPresShell> presShell (docShell->GetPresShell());
+  nsIDocument* doc = node->OwnerDoc();
+  nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
+  if (!presShell) {
+    return NS_ERROR_UNEXPECTED;
+  }
   RefPtr<nsPresContext> presContext = presShell->GetPresContext();
-  nsCOMPtr<nsIDOMRange> startPointRange = new nsRange(presShell->GetDocument());
+  nsCOMPtr<nsIDOMRange> ignored;
   *aResult = IsRangeVisible(presShell, presContext, aRange,
                             aMustBeInViewPort, false,
-                            getter_AddRefs(startPointRange),
+                            getter_AddRefs(ignored),
                             nullptr);
   return NS_OK;
 }
@@ -1341,18 +1335,15 @@ NS_IMETHODIMP
 nsTypeAheadFind::IsRangeRendered(nsIDOMRange *aRange,
                                 bool *aResult)
 {
-  // Jump through hoops to extract the docShell from the range.
-  nsCOMPtr<nsIDOMNode> node;
-  aRange->GetStartContainer(getter_AddRefs(node));
-  nsCOMPtr<nsIDOMDocument> document;
-  node->GetOwnerDocument(getter_AddRefs(document));
-  nsCOMPtr<mozIDOMWindowProxy> window;
-  document->GetDefaultView(getter_AddRefs(window));
-  nsCOMPtr<nsIWebNavigation> navNav (do_GetInterface(window));
-  nsCOMPtr<nsIDocShell> docShell (do_GetInterface(navNav));
+  nsCOMPtr<nsIDOMNode> domNode;
+  aRange->GetStartContainer(getter_AddRefs(domNode));
+  nsCOMPtr<nsINode> node = do_QueryInterface(domNode);
 
-  // Set up the arguments needed to check if a range is visible.
-  nsCOMPtr<nsIPresShell> presShell (docShell->GetPresShell());
+  nsIDocument* doc = node->OwnerDoc();
+  nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
+  if (!presShell) {
+    return NS_ERROR_UNEXPECTED;
+  }
   RefPtr<nsPresContext> presContext = presShell->GetPresContext();
   *aResult = IsRangeRendered(presShell, presContext, aRange);
   return NS_OK;

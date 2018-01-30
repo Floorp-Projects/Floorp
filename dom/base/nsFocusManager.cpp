@@ -47,6 +47,7 @@
 #include "nsFrameLoader.h"
 #include "nsNumberControlFrame.h"
 #include "nsNetUtil.h"
+#include "nsRange.h"
 
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/Element.h"
@@ -2430,37 +2431,41 @@ nsFocusManager::UpdateCaret(bool aMoveCaretToFocus,
 void
 nsFocusManager::MoveCaretToFocus(nsIPresShell* aPresShell, nsIContent* aContent)
 {
-  // domDoc is a document interface we can create a range with
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aPresShell->GetDocument());
-  if (domDoc) {
+  nsCOMPtr<nsIDocument> doc = aPresShell->GetDocument();
+  if (doc) {
     RefPtr<nsFrameSelection> frameSelection = aPresShell->FrameSelection();
     nsCOMPtr<nsISelection> domSelection =
       frameSelection->GetSelection(SelectionType::eNormal);
     if (domSelection) {
-      nsCOMPtr<nsIDOMNode> currentFocusNode(do_QueryInterface(aContent));
       // First clear the selection. This way, if there is no currently focused
       // content, the selection will just be cleared.
       domSelection->RemoveAllRanges();
-      if (currentFocusNode) {
-        nsCOMPtr<nsIDOMRange> newRange;
-        nsresult rv = domDoc->CreateRange(getter_AddRefs(newRange));
-        if (NS_SUCCEEDED(rv)) {
-          // Set the range to the start of the currently focused node
-          // Make sure it's collapsed
-          newRange->SelectNodeContents(currentFocusNode);
-          nsCOMPtr<nsIDOMNode> firstChild;
-          currentFocusNode->GetFirstChild(getter_AddRefs(firstChild));
-          if (!firstChild ||
-              aContent->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
-            // If current focus node is a leaf, set range to before the
-            // node by using the parent as a container.
-            // This prevents it from appearing as selected.
-            newRange->SetStartBefore(currentFocusNode);
-            newRange->SetEndBefore(currentFocusNode);
-          }
-          domSelection->AddRange(newRange);
-          domSelection->CollapseToStart();
+      if (aContent) {
+        ErrorResult rv;
+        RefPtr<nsRange> newRange = doc->CreateRange(rv);
+        if (NS_WARN_IF(rv.Failed())) {
+          rv.SuppressException();
+          return;
         }
+
+        // Set the range to the start of the currently focused node
+        // Make sure it's collapsed
+        {
+          IgnoredErrorResult ignored;
+          newRange->SelectNodeContents(*aContent, ignored);
+        }
+
+        if (!aContent->GetFirstChild() ||
+            aContent->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
+          // If current focus node is a leaf, set range to before the
+          // node by using the parent as a container.
+          // This prevents it from appearing as selected.
+          IgnoredErrorResult err1, err2;
+          newRange->SetStartBefore(*aContent, err1);
+          newRange->SetEndBefore(*aContent, err2);
+        }
+        domSelection->AddRange(newRange);
+        domSelection->CollapseToStart();
       }
     }
   }
@@ -2588,7 +2593,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
       // logical frame's primary node - so for this case we need to
       // change caretContent to that node.
 
-      if (startContent->NodeType() == nsIDOMNode::TEXT_NODE) {
+      if (startContent->NodeType() == nsINode::TEXT_NODE) {
         nsAutoString nodeValue;
         startContent->AppendTextTo(nodeValue);
 
@@ -3956,13 +3961,12 @@ nsFocusManager::GetFocusInSelection(nsPIDOMWindowOuter* aWindow,
   // We couldn't find an anchor that was an ancestor of the selection start
   // Method #2: look for anchor in selection's primary range (depth first search)
 
-  // Turn into nodes so that we can use GetNextSibling() and GetFirstChild()
-  nsCOMPtr<nsIDOMNode> selectionNode(do_QueryInterface(aStartSelection));
-  nsCOMPtr<nsIDOMNode> endSelectionNode(do_QueryInterface(aEndSelection));
-  nsCOMPtr<nsIDOMNode> testNode;
+  nsCOMPtr<nsIContent> selectionNode = aStartSelection;
+  nsCOMPtr<nsIContent> endSelectionNode = aEndSelection;
+  nsCOMPtr<nsIContent> testNode;
 
   do {
-    testContent = do_QueryInterface(selectionNode);
+    testContent = selectionNode;
 
     // We're looking for any focusable link that could be part of the
     // main document's selection.
@@ -3973,7 +3977,7 @@ nsFocusManager::GetFocusInSelection(nsPIDOMWindowOuter* aWindow,
       return;
     }
 
-    selectionNode->GetFirstChild(getter_AddRefs(testNode));
+    nsIContent* testNode = selectionNode->GetFirstChild();
     if (testNode) {
       selectionNode = testNode;
       continue;
@@ -3981,19 +3985,26 @@ nsFocusManager::GetFocusInSelection(nsPIDOMWindowOuter* aWindow,
 
     if (selectionNode == endSelectionNode)
       break;
-    selectionNode->GetNextSibling(getter_AddRefs(testNode));
+    testNode = selectionNode->GetNextSibling();
     if (testNode) {
       selectionNode = testNode;
       continue;
     }
 
     do {
-      selectionNode->GetParentNode(getter_AddRefs(testNode));
+      // GetParent is OK here, instead of GetParentNode, because the only case
+      // where the latter returns something different from the former is when
+      // GetParentNode is the document.  But in that case we would simply get
+      // null for selectionNode when setting it to testNode->GetNextSibling()
+      // (because a document has no next sibling).  And then the next iteration
+      // of this loop would get null for GetParentNode anyway, and break out of
+      // all the loops.
+      testNode = selectionNode->GetParent();
       if (!testNode || testNode == endSelectionNode) {
         selectionNode = nullptr;
         break;
       }
-      testNode->GetNextSibling(getter_AddRefs(selectionNode));
+      selectionNode = testNode->GetNextSibling();
       if (selectionNode)
         break;
       selectionNode = testNode;

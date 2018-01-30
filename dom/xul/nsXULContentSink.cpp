@@ -409,7 +409,7 @@ XULContentSinkImpl::NormalizeAttributeString(const char16_t *aExpatName,
     RefPtr<mozilla::dom::NodeInfo> ni;
     ni = mNodeInfoManager->GetNodeInfo(localName, prefix,
                                        nameSpaceID,
-                                       nsIDOMNode::ATTRIBUTE_NODE);
+                                       nsINode::ATTRIBUTE_NODE);
     aName.SetTo(ni);
 
     return NS_OK;
@@ -456,7 +456,7 @@ XULContentSinkImpl::HandleStartElement(const char16_t *aName,
 
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
-                                           nsIDOMNode::ELEMENT_NODE);
+                                           nsINode::ELEMENT_NODE);
 
   nsresult rv = NS_OK;
   switch (mState) {

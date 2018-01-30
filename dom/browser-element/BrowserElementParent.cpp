@@ -46,7 +46,7 @@ CreateIframe(Element* aOpenerFrameElement, const nsAString& aName, bool aRemote)
     nodeInfoManager->GetNodeInfo(nsGkAtoms::iframe,
                                  /* aPrefix = */ nullptr,
                                  kNameSpaceID_XHTML,
-                                 nsIDOMNode::ELEMENT_NODE);
+                                 nsINode::ELEMENT_NODE);
 
   RefPtr<HTMLIFrameElement> popupFrameElement =
     static_cast<HTMLIFrameElement*>(

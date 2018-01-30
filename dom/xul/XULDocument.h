@@ -100,9 +100,6 @@ public:
     virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
                            bool aPreallocateChildren) const override;
 
-    // nsIDOMNode interface
-    NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
     // nsIDOMDocument interface
     using nsDocument::CreateElement;
     using nsDocument::CreateElementNS;

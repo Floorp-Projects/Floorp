@@ -25,7 +25,7 @@
 #include "nsIControllers.h"             // for nsIControllers
 #include "nsID.h"                       // for NS_GET_IID, etc
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
-#include "nsIDOMHTMLDocument.h"         // for nsIDOMHTMLDocument
+#include "nsHTMLDocument.h"             // for nsHTMLDocument
 #include "nsIDOMWindow.h"               // for nsIDOMWindow
 #include "nsIDocShell.h"                // for nsIDocShell
 #include "nsIDocument.h"                // for nsIDocument
@@ -668,13 +668,10 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
 
         auto* piWindow = nsPIDOMWindowOuter::From(window);
         nsCOMPtr<nsIDocument> doc = piWindow->GetDoc();
-
-        nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(doc));
-
+        nsHTMLDocument* htmlDoc = doc ? doc->AsHTMLDocument() : nullptr;
         if (htmlDoc && htmlDoc->IsWriting()) {
-          nsCOMPtr<nsIDOMHTMLDocument> htmlDomDoc = do_QueryInterface(doc);
           nsAutoString designMode;
-          htmlDomDoc->GetDesignMode(designMode);
+          htmlDoc->GetDesignMode(designMode);
 
           if (designMode.EqualsLiteral("on")) {
             // This notification is for data coming in through

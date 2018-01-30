@@ -209,7 +209,8 @@ MOZ_ReportCrash(const char* aStr, const char* aFilename, int aLine)
     * by MSVC, so doing it this way reduces complexity.)
     */
 
-static MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE void MOZ_NoReturn(int aLine)
+MOZ_MAYBE_UNUSED static MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE void
+MOZ_NoReturn(int aLine)
 {
   *((volatile int*) NULL) = aLine;
   TerminateProcess(GetCurrentProcess(), 3);

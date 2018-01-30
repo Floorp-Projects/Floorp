@@ -8,7 +8,6 @@
 #define mozilla_dom_HTMLTimeElement_h
 
 #include "mozilla/Attributes.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 
