@@ -102,25 +102,21 @@ SelectAGRForFrame(nsIFrame* aFrame, AnimatedGeometryRoot* aParentAGR)
 // TODO: We currently descend into all children even if we don't have an AGR
 // to mark, as child stacking contexts might. It would be nice if we could
 // jump into those immediately rather than walking the entire thing.
-bool
+void
 RetainedDisplayListBuilder::PreProcessDisplayList(nsDisplayList* aList,
                                                   AnimatedGeometryRoot* aAGR)
 {
-  bool modified = false;
   nsDisplayList saved;
   while (nsDisplayItem* i = aList->RemoveBottom()) {
     if (i->HasDeletedFrame() || !i->CanBeReused()) {
       i->Destroy(&mBuilder);
-      modified = true;
       continue;
     }
 
     nsIFrame* f = i->Frame();
 
     if (i->GetChildren()) {
-      if (PreProcessDisplayList(i->GetChildren(), SelectAGRForFrame(f, aAGR))) {
-        modified = true;
-      }
+      PreProcessDisplayList(i->GetChildren(), SelectAGRForFrame(f, aAGR));
     }
 
     // TODO: We should be able to check the clipped bounds relative
@@ -128,7 +124,6 @@ RetainedDisplayListBuilder::PreProcessDisplayList(nsDisplayList* aList,
     // frame) and determine if they can ever intersect.
     if (aAGR && i->GetAnimatedGeometryRoot()->GetAsyncAGR() != aAGR) {
       mBuilder.MarkFrameForDisplayIfVisible(f, mBuilder.RootReferenceFrame());
-      modified = true;
     }
 
     // TODO: This is here because we sometimes reuse the previous display list
@@ -140,7 +135,6 @@ RetainedDisplayListBuilder::PreProcessDisplayList(nsDisplayList* aList,
   }
   aList->AppendToTop(&saved);
   aList->RestoreState();
-  return modified;
 }
 
 bool IsSameItem(nsDisplayItem* aFirst, nsDisplayItem* aSecond)
@@ -392,14 +386,12 @@ void UpdateASR(nsDisplayItem* aItem,
  *
  * Merged List: C, A, B
  */
-bool
+void
 RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
                                               nsDisplayList* aOldList,
                                               nsDisplayList* aOutList,
                                               Maybe<const ActiveScrolledRoot*>& aOutContainerASR)
 {
-  bool modified = aNewList->IsEmpty() ? false : true;
-
   nsDisplayList merged;
   const auto UseItem = [&](nsDisplayItem* aItem) {
     const ActiveScrolledRoot* itemClipASR =
@@ -543,10 +535,8 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
         nsDisplayList empty;
         Maybe<const ActiveScrolledRoot*> containerASRForChildren;
 
-        if (MergeDisplayLists(&empty, old->GetChildren(),
-                              old->GetChildren(), containerASRForChildren)) {
-          modified = true;
-        }
+        MergeDisplayLists(&empty, old->GetChildren(),
+                          old->GetChildren(), containerASRForChildren);
         UpdateASR(old, containerASRForChildren);
         old->UpdateBounds(&mBuilder);
       }
@@ -556,12 +546,10 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
       ReuseItem(old);
     } else {
       old->Destroy(&mBuilder);
-      modified = true;
     }
   }
 
   aOutList->AppendToTop(&merged);
-  return modified;
 }
 
 static void
@@ -779,10 +767,6 @@ ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
                                                            /* aStopAtStackingContextAndDisplayPortAndOOFFrame = */ true,
                                                            &currentFrame);
     MOZ_ASSERT(currentFrame);
-    aOverflow.IntersectRect(aOverflow, currentFrame->GetVisualOverflowRectRelativeToSelf());
-    if (aOverflow.IsEmpty()) {
-      break;
-    }
 
     if (nsLayoutUtils::FrameHasDisplayPort(currentFrame)) {
       CRR_LOG("Frame belongs to displayport frame %p\n", currentFrame);
@@ -939,20 +923,18 @@ RetainedDisplayListBuilder::ComputeRebuildRegion(nsTArray<nsIFrame*>& aModifiedF
     ProcessFrame(f, mBuilder, &agr, overflow, mBuilder.RootReferenceFrame(),
                  aOutFramesWithProps, true);
 
-    if (!overflow.IsEmpty()) {
-      aOutDirty->UnionRect(*aOutDirty, overflow);
-      CRR_LOG("Adding area to root draw area: %d %d %d %d\n",
-              overflow.x, overflow.y, overflow.width, overflow.height);
+    aOutDirty->UnionRect(*aOutDirty, overflow);
+    CRR_LOG("Adding area to root draw area: %d %d %d %d\n",
+            overflow.x, overflow.y, overflow.width, overflow.height);
 
-      // If we get changed frames from multiple AGRS, then just give up as it gets really complex to
-      // track which items would need to be marked in MarkFramesForDifferentAGR.
-      if (!*aOutModifiedAGR) {
-        CRR_LOG("Setting %p as root stacking context AGR\n", agr);
-        *aOutModifiedAGR = agr;
-      } else if (agr && *aOutModifiedAGR != agr) {
-        CRR_LOG("Found multiple AGRs in root stacking context, giving up\n");
-        return false;
-      }
+    // If we get changed frames from multiple AGRS, then just give up as it gets really complex to
+    // track which items would need to be marked in MarkFramesForDifferentAGR.
+    if (!*aOutModifiedAGR) {
+      CRR_LOG("Setting %p as root stacking context AGR\n", agr);
+      *aOutModifiedAGR = agr;
+    } else if (agr && *aOutModifiedAGR != agr) {
+      CRR_LOG("Found multiple AGRs in root stacking context, giving up\n");
+      return false;
     }
   }
 
@@ -1005,34 +987,19 @@ ClearFrameProps(nsTArray<nsIFrame*>& aFrames)
   }
 }
 
-class AutoClearFramePropsArray
-{
-public:
-  AutoClearFramePropsArray() = default;
-
-  ~AutoClearFramePropsArray()
-  {
-    ClearFrameProps(mFrames);
-  }
-
-  nsTArray<nsIFrame*>& Frames() { return mFrames; }
-
-  bool IsEmpty() const { return mFrames.IsEmpty(); }
-
-private:
-  nsTArray<nsIFrame*> mFrames;
-};
-
 void
 RetainedDisplayListBuilder::ClearFramesWithProps()
 {
-  AutoClearFramePropsArray modifiedFrames;
-  AutoClearFramePropsArray framesWithProps;
-  GetModifiedAndFramesWithProps(&mBuilder, &modifiedFrames.Frames(), &framesWithProps.Frames());
+  nsTArray<nsIFrame*> modifiedFrames;
+  nsTArray<nsIFrame*> framesWithProps;
+  GetModifiedAndFramesWithProps(&mBuilder, &modifiedFrames, &framesWithProps);
+
+  ClearFrameProps(modifiedFrames);
+  ClearFrameProps(framesWithProps);
 }
 
-auto
-RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop) -> PartialUpdateResult
+bool
+RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
 {
   mBuilder.RemoveModifiedWindowDraggingRegion();
   if (mBuilder.ShouldSyncDecodeImages()) {
@@ -1041,27 +1008,24 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop) -> PartialUp
 
   mBuilder.EnterPresShell(mBuilder.RootReferenceFrame());
 
-  // We set the override dirty regions during ComputeRebuildRegion or in
-  // nsLayoutUtils::InvalidateForDisplayPortChange. The display port change also
-  // marks the frame modified, so those regions are cleared here as well.
-  AutoClearFramePropsArray modifiedFrames;
-  AutoClearFramePropsArray framesWithProps;
-  GetModifiedAndFramesWithProps(&mBuilder, &modifiedFrames.Frames(), &framesWithProps.Frames());
+  nsTArray<nsIFrame*> modifiedFrames;
+  nsTArray<nsIFrame*> framesWithProps;
+  GetModifiedAndFramesWithProps(&mBuilder, &modifiedFrames, &framesWithProps);
 
   // Do not allow partial builds if the retained display list is empty, or if
   // ShouldBuildPartial heuristic fails.
-  const bool shouldBuildPartial = !mList.IsEmpty() && ShouldBuildPartial(modifiedFrames.Frames());
+  const bool shouldBuildPartial = !mList.IsEmpty() && ShouldBuildPartial(modifiedFrames);
 
   if (mPreviousCaret != mBuilder.GetCaretFrame()) {
     if (mPreviousCaret) {
       if (mBuilder.MarkFrameModifiedDuringBuilding(mPreviousCaret)) {
-        modifiedFrames.Frames().AppendElement(mPreviousCaret);
+        modifiedFrames.AppendElement(mPreviousCaret);
       }
     }
 
     if (mBuilder.GetCaretFrame()) {
       if (mBuilder.MarkFrameModifiedDuringBuilding(mBuilder.GetCaretFrame())) {
-        modifiedFrames.Frames().AppendElement(mBuilder.GetCaretFrame());
+        modifiedFrames.AppendElement(mBuilder.GetCaretFrame());
       }
     }
 
@@ -1070,61 +1034,57 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop) -> PartialUp
 
   nsRect modifiedDirty;
   AnimatedGeometryRoot* modifiedAGR = nullptr;
-  if (!shouldBuildPartial ||
-      !ComputeRebuildRegion(modifiedFrames.Frames(), &modifiedDirty,
-                           &modifiedAGR, framesWithProps.Frames())) {
-    mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), &mList);
-    return PartialUpdateResult::Failed;
+  bool merged = false;
+  if (shouldBuildPartial &&
+      ComputeRebuildRegion(modifiedFrames, &modifiedDirty,
+                           &modifiedAGR, framesWithProps)) {
+    modifiedDirty.IntersectRect(modifiedDirty, mBuilder.RootReferenceFrame()->GetVisualOverflowRectRelativeToSelf());
+
+    PreProcessDisplayList(&mList, modifiedAGR);
+
+    nsDisplayList modifiedDL;
+    if (!modifiedDirty.IsEmpty() || !framesWithProps.IsEmpty()) {
+      mBuilder.SetDirtyRect(modifiedDirty);
+      mBuilder.SetPartialUpdate(true);
+      mBuilder.RootReferenceFrame()->BuildDisplayListForStackingContext(&mBuilder, &modifiedDL);
+      nsLayoutUtils::AddExtraBackgroundItems(mBuilder, modifiedDL, mBuilder.RootReferenceFrame(),
+                                             nsRect(nsPoint(0, 0), mBuilder.RootReferenceFrame()->GetSize()),
+                                             mBuilder.RootReferenceFrame()->GetVisualOverflowRectRelativeToSelf(),
+                                             aBackstop);
+      mBuilder.SetPartialUpdate(false);
+
+      //printf_stderr("Painting --- Modified list (dirty %d,%d,%d,%d):\n",
+      //      modifiedDirty.x, modifiedDirty.y, modifiedDirty.width, modifiedDirty.height);
+      //nsFrame::PrintDisplayList(&mBuilder, modifiedDL);
+
+    } else {
+      // TODO: We can also skip layer building and painting if
+      // PreProcessDisplayList didn't end up changing anything
+      // Invariant: display items should have their original state here.
+      // printf_stderr("Skipping display list building since nothing needed to be done\n");
+    }
+
+    // |modifiedDL| can sometimes be empty here. We still perform the
+    // display list merging to prune unused items (for example, items that
+    // are not visible anymore) from the old list.
+    // TODO: Optimization opportunity. In this case, MergeDisplayLists()
+    // unnecessarily creates a hashtable of the old items.
+    Maybe<const ActiveScrolledRoot*> dummy;
+    MergeDisplayLists(&modifiedDL, &mList, &mList, dummy);
+
+    //printf_stderr("Painting --- Merged list:\n");
+    //nsFrame::PrintDisplayList(&mBuilder, mList);
+
+    merged = true;
   }
-
-  modifiedDirty.IntersectRect(modifiedDirty, mBuilder.RootReferenceFrame()->GetVisualOverflowRectRelativeToSelf());
-
-  PartialUpdateResult result = PartialUpdateResult::NoChange;
-  if (PreProcessDisplayList(&mList, modifiedAGR) ||
-      !modifiedDirty.IsEmpty() ||
-      !framesWithProps.IsEmpty()) {
-    result = PartialUpdateResult::Updated;
-  }
-
-  nsDisplayList modifiedDL;
-  if (!modifiedDirty.IsEmpty() || !framesWithProps.IsEmpty()) {
-    mBuilder.SetDirtyRect(modifiedDirty);
-    mBuilder.SetPartialUpdate(true);
-    mBuilder.RootReferenceFrame()->BuildDisplayListForStackingContext(&mBuilder, &modifiedDL);
-    nsLayoutUtils::AddExtraBackgroundItems(mBuilder, modifiedDL, mBuilder.RootReferenceFrame(),
-                                           nsRect(nsPoint(0, 0), mBuilder.RootReferenceFrame()->GetSize()),
-                                           mBuilder.RootReferenceFrame()->GetVisualOverflowRectRelativeToSelf(),
-                                           aBackstop);
-    mBuilder.SetPartialUpdate(false);
-
-    //printf_stderr("Painting --- Modified list (dirty %d,%d,%d,%d):\n",
-    //      modifiedDirty.x, modifiedDirty.y, modifiedDirty.width, modifiedDirty.height);
-    //nsFrame::PrintDisplayList(&mBuilder, modifiedDL);
-
-  } else {
-    // TODO: We can also skip layer building and painting if
-    // PreProcessDisplayList didn't end up changing anything
-    // Invariant: display items should have their original state here.
-    // printf_stderr("Skipping display list building since nothing needed to be done\n");
-  }
-
-  // |modifiedDL| can sometimes be empty here. We still perform the
-  // display list merging to prune unused items (for example, items that
-  // are not visible anymore) from the old list.
-  // TODO: Optimization opportunity. In this case, MergeDisplayLists()
-  // unnecessarily creates a hashtable of the old items.
-  // TODO: Ideally we could skip this if result is NoChange, but currently when
-  // we call RestoreState on nsDisplayWrapList it resets the clip to the base
-  // clip, and we need the UpdateBounds call (within MergeDisplayLists) to
-  // move it to the correct inner clip.
-  Maybe<const ActiveScrolledRoot*> dummy;
-  if (MergeDisplayLists(&modifiedDL, &mList, &mList, dummy)) {
-    result = PartialUpdateResult::Updated;
-  }
-
-  //printf_stderr("Painting --- Merged list:\n");
-  //nsFrame::PrintDisplayList(&mBuilder, mList);
 
   mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), &mList);
-  return result;
+
+  // We set the override dirty regions during ComputeRebuildRegion or in
+  // nsLayoutUtils::InvalidateForDisplayPortChange. The display port change also
+  // marks the frame modified, so those regions are cleared here as well.
+  ClearFrameProps(modifiedFrames);
+  ClearFrameProps(framesWithProps);
+
+  return merged;
 }
