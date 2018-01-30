@@ -9,29 +9,29 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "E10SUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
   "resource://gre/modules/E10SUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Utils",
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "AboutReader",
+XPCOMUtils.defineLazyModuleGetter(this, "AboutReader",
   "resource://gre/modules/AboutReader.jsm");
-ChromeUtils.defineModuleGetter(this, "ReaderMode",
+XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm");
 XPCOMUtils.defineLazyGetter(this, "SimpleServiceDiscovery", function() {
-  let ssdp = ChromeUtils.import("resource://gre/modules/SimpleServiceDiscovery.jsm", {}).SimpleServiceDiscovery;
+  let ssdp = Cu.import("resource://gre/modules/SimpleServiceDiscovery.jsm", {}).SimpleServiceDiscovery;
   // Register targets
   ssdp.registerDevice({
     id: "roku:ecp",
     target: "roku:ecp",
     factory(aService) {
-      ChromeUtils.import("resource://gre/modules/RokuApp.jsm");
+      Cu.import("resource://gre/modules/RokuApp.jsm");
       return new RokuApp(aService);
     },
     types: ["video/mp4"],
@@ -562,7 +562,7 @@ PageStyleHandler.init();
 // Keep a reference to the translation content handler to avoid it it being GC'ed.
 var trHandler = null;
 if (Services.prefs.getBoolPref("browser.translation.detectLanguage")) {
-  ChromeUtils.import("resource:///modules/translation/TranslationContentHandler.jsm");
+  Cu.import("resource:///modules/translation/TranslationContentHandler.jsm");
   trHandler = new TranslationContentHandler(global, docShell);
 }
 

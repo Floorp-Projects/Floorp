@@ -6,7 +6,7 @@ add_task(async function() {
   let rooturi = "https://example.com/browser/toolkit/modules/tests/browser/";
   await BrowserTestUtils.openNewForegroundTab(gBrowser, rooturi + "metadata_simple.html");
   await ContentTask.spawn(gBrowser.selectedBrowser, { rooturi }, async function(args) {
-    ChromeUtils.import("resource://gre/modules/PageMetadata.jsm");
+    Components.utils.import("resource://gre/modules/PageMetadata.jsm");
 
     let result = PageMetadata.getData(content.document);
     // Result should have description.

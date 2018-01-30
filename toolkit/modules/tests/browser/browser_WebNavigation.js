@@ -2,7 +2,7 @@
 
 var { interfaces: Ci, classes: Cc, utils: Cu, results: Cr } = Components;
 
-var {WebNavigation} = ChromeUtils.import("resource://gre/modules/WebNavigation.jsm", {});
+var {WebNavigation} = Cu.import("resource://gre/modules/WebNavigation.jsm", {});
 
 const BASE = "http://example.com/browser/toolkit/modules/tests/browser";
 const URL = BASE + "/file_WebNavigation_page1.html";

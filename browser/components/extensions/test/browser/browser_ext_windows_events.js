@@ -61,7 +61,7 @@ add_task(async function testWindowsEvents() {
     return windowInfo.winId;
   }
 
-  let {Management: {global: {windowTracker}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+  let {Management: {global: {windowTracker}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
   let currentWindow = window;
   let currentWindowId = windowTracker.getId(currentWindow);

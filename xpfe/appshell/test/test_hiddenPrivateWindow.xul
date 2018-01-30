@@ -26,8 +26,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=815847
 
 var Cu = Components.utils;
 
-ChromeUtils.import('resource://gre/modules/Services.jsm');
-ChromeUtils.import('resource://gre/modules/PrivateBrowsingUtils.jsm');
+Cu.import('resource://gre/modules/Services.jsm');
+Cu.import('resource://gre/modules/PrivateBrowsingUtils.jsm');
 
 ok(Services.appShell.hiddenWindow, "hiddenWindow should exist");
 ok(Services.appShell.hiddenDOMWindow, "hiddenDOMWindow should exist");

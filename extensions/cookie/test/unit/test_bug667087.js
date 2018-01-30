@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 function run_test() {
   var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);

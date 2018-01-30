@@ -5,8 +5,8 @@
 
 /* import-globals-from sanitizeDialog.js */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
@@ -285,7 +285,7 @@ Sanitizer.prototype = {
     offlineApps: {
       async clear(range) {
         // AppCache
-        ChromeUtils.import("resource:///modules/offlineAppCache.jsm");
+        Components.utils.import("resource:///modules/offlineAppCache.jsm");
         // This doesn't wait for the cleanup to be complete.
         OfflineAppCacheHelper.clear();
 

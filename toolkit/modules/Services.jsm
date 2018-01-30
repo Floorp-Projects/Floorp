@@ -10,8 +10,8 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.Services = {};
 
@@ -49,7 +49,7 @@ XPCOMUtils.defineLazyGetter(Services, "dirsvc", function() {
 if (AppConstants.MOZ_CRASHREPORTER) {
   XPCOMUtils.defineLazyGetter(Services, "crashmanager", () => {
     let ns = {};
-    ChromeUtils.import("resource://gre/modules/CrashManager.jsm", ns);
+    Components.utils.import("resource://gre/modules/CrashManager.jsm", ns);
 
     return ns.CrashManager.Singleton;
   });

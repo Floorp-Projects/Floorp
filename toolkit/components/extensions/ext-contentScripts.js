@@ -5,7 +5,7 @@
 /* exported registerContentScript, unregisterContentScript */
 /* global registerContentScript, unregisterContentScript */
 
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
   ExtensionError,

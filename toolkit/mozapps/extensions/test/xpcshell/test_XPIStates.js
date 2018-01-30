@@ -99,7 +99,7 @@ function checkChange(XS, aPath, aChange) {
 
 // Get a reference to the XPIState (loaded by startupManager) so we can unit test it.
 function getXS() {
-  let XPI = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
+  let XPI = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
   return XPI.XPIStates;
 }
 

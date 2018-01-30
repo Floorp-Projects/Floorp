@@ -6,23 +6,23 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource:///modules/ShellService.jsm");
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://shield-recipe-client/lib/Addons.jsm");
-ChromeUtils.import("resource://shield-recipe-client/lib/LogManager.jsm");
-ChromeUtils.import("resource://shield-recipe-client/lib/Storage.jsm");
-ChromeUtils.import("resource://shield-recipe-client/lib/Heartbeat.jsm");
-ChromeUtils.import("resource://shield-recipe-client/lib/FilterExpressions.jsm");
-ChromeUtils.import("resource://shield-recipe-client/lib/ClientEnvironment.jsm");
-ChromeUtils.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm");
-ChromeUtils.import("resource://shield-recipe-client/lib/Sampling.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource:///modules/ShellService.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://shield-recipe-client/lib/Addons.jsm");
+Cu.import("resource://shield-recipe-client/lib/LogManager.jsm");
+Cu.import("resource://shield-recipe-client/lib/Storage.jsm");
+Cu.import("resource://shield-recipe-client/lib/Heartbeat.jsm");
+Cu.import("resource://shield-recipe-client/lib/FilterExpressions.jsm");
+Cu.import("resource://shield-recipe-client/lib/ClientEnvironment.jsm");
+Cu.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm");
+Cu.import("resource://shield-recipe-client/lib/Sampling.jsm");
 
-ChromeUtils.defineModuleGetter(this, "UpdateUtils", "resource://gre/modules/UpdateUtils.jsm");
-ChromeUtils.defineModuleGetter(
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils", "resource://gre/modules/UpdateUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(
   this, "AddonStudies", "resource://shield-recipe-client/lib/AddonStudies.jsm");
 
 const {generateUUID} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);

@@ -6,14 +6,14 @@ this.EXPORTED_SYMBOLS = [ "CharsetMenu" ];
 
 const { classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGetter(this, "gBundle", function() {
   const kUrl = "chrome://global/locale/charsetMenu.properties";
   return Services.strings.createBundle(kUrl);
 });
 
-ChromeUtils.defineModuleGetter(this, "Deprecated",
+XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
     "resource://gre/modules/Deprecated.jsm");
 
 const kAutoDetectors = [

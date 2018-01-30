@@ -10,20 +10,20 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "DocShellCapabilities",
+XPCOMUtils.defineLazyModuleGetter(this, "DocShellCapabilities",
   "resource:///modules/sessionstore/DocShellCapabilities.jsm");
-ChromeUtils.defineModuleGetter(this, "FormData",
+XPCOMUtils.defineLazyModuleGetter(this, "FormData",
   "resource://gre/modules/FormData.jsm");
-ChromeUtils.defineModuleGetter(this, "ScrollPosition",
+XPCOMUtils.defineLazyModuleGetter(this, "ScrollPosition",
   "resource://gre/modules/ScrollPosition.jsm");
-ChromeUtils.defineModuleGetter(this, "SessionHistory",
+XPCOMUtils.defineLazyModuleGetter(this, "SessionHistory",
   "resource://gre/modules/sessionstore/SessionHistory.jsm");
-ChromeUtils.defineModuleGetter(this, "SessionStorage",
+XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
   "resource:///modules/sessionstore/SessionStorage.jsm");
-ChromeUtils.defineModuleGetter(this, "Utils",
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm");
 
 const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]

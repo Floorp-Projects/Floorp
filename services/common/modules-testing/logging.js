@@ -11,7 +11,7 @@ this.EXPORTED_SYMBOLS = [
 
 var {utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
 
 this.initTestLogging = function initTestLogging(level) {
   function LogStats() {

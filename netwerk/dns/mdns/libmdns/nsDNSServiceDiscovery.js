@@ -5,14 +5,14 @@
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import('resource://gre/modules/Services.jsm');
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import('resource://gre/modules/Services.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 if (AppConstants.platform == "android" && !Services.prefs.getBoolPref("network.mdns.use_js_fallback")) {
-  ChromeUtils.import("resource://gre/modules/MulticastDNSAndroid.jsm");
+  Cu.import("resource://gre/modules/MulticastDNSAndroid.jsm");
 } else {
-  ChromeUtils.import("resource://gre/modules/MulticastDNS.jsm");
+  Cu.import("resource://gre/modules/MulticastDNS.jsm");
 }
 
 const DNSSERVICEDISCOVERY_CID = Components.ID("{f9346d98-f27a-4e89-b744-493843416480}");

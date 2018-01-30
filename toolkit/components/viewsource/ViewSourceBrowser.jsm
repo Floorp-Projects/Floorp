@@ -6,11 +6,11 @@
 
 const { utils: Cu, interfaces: Ci, classes: Cc } = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Services",
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "Deprecated",
+XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
   "resource://gre/modules/Deprecated.jsm");
 
 const BUNDLE_URL = "chrome://global/locale/viewSource.properties";

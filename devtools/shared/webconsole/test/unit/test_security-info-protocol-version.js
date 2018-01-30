@@ -6,7 +6,7 @@
 // Tests that NetworkHelper.formatSecurityProtocol returns correct
 // protocol version strings.
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const { require } = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
 
 Object.defineProperty(this, "NetworkHelper", {
   get: function () {

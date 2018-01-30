@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-let {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+let {Management} = Cu.import("resource://gre/modules/Extension.jsm", {});
 function getNextContext() {
   return new Promise(resolve => {
     Management.on("proxy-context-load", function listener(type, context) {

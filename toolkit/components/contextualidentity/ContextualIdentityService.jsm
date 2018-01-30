@@ -6,8 +6,8 @@ this.EXPORTED_SYMBOLS = ["ContextualIdentityService"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const DEFAULT_TAB_COLOR = "#909090";
 const SAVE_DELAY_MS = 1500;
@@ -25,18 +25,18 @@ XPCOMUtils.defineLazyGetter(this, "gTextEncoder", function() {
   return new TextEncoder();
 });
 
-ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
-                               "resource://gre/modules/AsyncShutdown.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "DeferredTask",
-                               "resource://gre/modules/DeferredTask.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-                               "resource://gre/modules/AppConstants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
+                                  "resource://gre/modules/AsyncShutdown.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
+                                  "resource://gre/modules/DeferredTask.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
 
 function _TabRemovalObserver(resolver, tabParentIds) {
   this._resolver = resolver;

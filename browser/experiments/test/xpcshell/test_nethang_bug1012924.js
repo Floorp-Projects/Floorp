@@ -3,8 +3,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource:///modules/experiments/Experiments.jsm");
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource:///modules/experiments/Experiments.jsm");
 
 const MANIFEST_HANDLER         = "manifests/handler";
 

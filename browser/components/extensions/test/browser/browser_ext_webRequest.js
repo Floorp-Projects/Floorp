@@ -6,7 +6,7 @@
 Services.scriptloader.loadSubScript(new URL("head_webrequest.js", gTestPath).href,
                                     this);
 
-ChromeUtils.import("resource://testing-common/HiddenFrame.jsm", this);
+Cu.import("resource://testing-common/HiddenFrame.jsm", this);
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 SimpleTest.requestCompleteLog();

@@ -20,35 +20,35 @@ this.EXPORTED_SYMBOLS = [
 
 /* globals DownloadAddonInstall, LocalAddonInstall */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AddonRepository",
-                               "resource://gre/modules/addons/AddonRepository.jsm");
-ChromeUtils.defineModuleGetter(this, "AddonSettings",
-                               "resource://gre/modules/addons/AddonSettings.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-                               "resource://gre/modules/AppConstants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
+                                  "resource://gre/modules/addons/AddonRepository.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonSettings",
+                                  "resource://gre/modules/addons/AddonSettings.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyGetter(this, "CertUtils",
-                            () => ChromeUtils.import("resource://gre/modules/CertUtils.jsm", {}));
-ChromeUtils.defineModuleGetter(this, "ChromeManifestParser",
-                               "resource://gre/modules/ChromeManifestParser.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionData",
-                               "resource://gre/modules/Extension.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
+                            () => Cu.import("resource://gre/modules/CertUtils.jsm", {}));
+XPCOMUtils.defineLazyModuleGetter(this, "ChromeManifestParser",
+                                  "resource://gre/modules/ChromeManifestParser.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionData",
+                                  "resource://gre/modules/Extension.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyGetter(this, "IconDetails", () => {
-  return ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm", {}).ExtensionParent.IconDetails;
+  return Cu.import("resource://gre/modules/ExtensionParent.jsm", {}).ExtensionParent.IconDetails;
 });
-ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
-                               "resource://gre/modules/LightweightThemeManager.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "ZipUtils",
-                               "resource://gre/modules/ZipUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
+                                  "resource://gre/modules/LightweightThemeManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ZipUtils",
+                                  "resource://gre/modules/ZipUtils.jsm");
 
 const {nsIBlocklistService} = Ci;
 
@@ -62,10 +62,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gRDF", "@mozilla.org/rdf/rdf-service;1
                                    Ci.nsIRDFService);
 
 
-ChromeUtils.defineModuleGetter(this, "XPIInternal",
-                               "resource://gre/modules/addons/XPIProvider.jsm");
-ChromeUtils.defineModuleGetter(this, "XPIProvider",
-                               "resource://gre/modules/addons/XPIProvider.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "XPIInternal",
+                                  "resource://gre/modules/addons/XPIProvider.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "XPIProvider",
+                                  "resource://gre/modules/addons/XPIProvider.jsm");
 
 /* globals AddonInternal, BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, KEY_APP_TEMPORARY, TEMPORARY_ADDON_SUFFIX, TOOLKIT_ID, XPIDatabase, XPIStates, getExternalType, isTheme, isUsableAddon, isWebExtension, recordAddonTelemetry */
 const XPI_INTERNAL_SYMBOLS = [
@@ -201,7 +201,7 @@ const MSG_MESSAGE_MANAGER_CACHES_FLUSH = "AddonMessageManagerCachesFlush";
  */
 var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i;
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.xpi";
 
 // Create a new logger for use by all objects in this Addons XPI Provider module
@@ -2690,7 +2690,7 @@ this.UpdateChecker = function(aAddon, aListener, aReason, aAppVersion, aPlatform
   if (!aListener || !aReason)
     throw Cr.NS_ERROR_INVALID_ARG;
 
-  ChromeUtils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm");
+  Components.utils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm");
 
   this.addon = aAddon;
   aAddon._updateCheck = this;

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://services-common/observers.js");
+Components.utils.import("resource://services-common/observers.js");
 
 var gSubject = {};
 

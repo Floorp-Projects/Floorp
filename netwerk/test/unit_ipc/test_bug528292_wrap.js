@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   Services.prefs.setBoolPref("network.cookie.ipc.sync", true);

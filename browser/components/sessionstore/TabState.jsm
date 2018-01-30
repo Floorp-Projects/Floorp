@@ -8,15 +8,15 @@ this.EXPORTED_SYMBOLS = ["TabState"];
 
 const Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "PrivacyFilter",
+XPCOMUtils.defineLazyModuleGetter(this, "PrivacyFilter",
   "resource:///modules/sessionstore/PrivacyFilter.jsm");
-ChromeUtils.defineModuleGetter(this, "TabStateCache",
+XPCOMUtils.defineLazyModuleGetter(this, "TabStateCache",
   "resource:///modules/sessionstore/TabStateCache.jsm");
-ChromeUtils.defineModuleGetter(this, "TabAttributes",
+XPCOMUtils.defineLazyModuleGetter(this, "TabAttributes",
   "resource:///modules/sessionstore/TabAttributes.jsm");
-ChromeUtils.defineModuleGetter(this, "Utils",
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm");
 
 /**

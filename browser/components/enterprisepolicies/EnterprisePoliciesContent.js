@@ -7,13 +7,13 @@ const Cc = Components.classes;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const PREF_LOGLEVEL           = "browser.policies.loglevel";
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+  let { ConsoleAPI } = Cu.import("resource://gre/modules/Console.jsm", {});
   return new ConsoleAPI({
     prefix: "Enterprise Policies Child",
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed

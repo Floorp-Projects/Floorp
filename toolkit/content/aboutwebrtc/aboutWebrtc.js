@@ -5,11 +5,11 @@
 
 var Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "FilePicker",
                                    "@mozilla.org/filepicker;1", "nsIFilePicker");
 XPCOMUtils.defineLazyGetter(this, "strings", () => {

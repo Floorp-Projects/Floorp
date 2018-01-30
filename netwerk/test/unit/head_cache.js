@@ -1,5 +1,5 @@
-ChromeUtils.import('resource://gre/modules/XPCOMUtils.jsm');
-ChromeUtils.import('resource://gre/modules/LoadContextInfo.jsm');
+Components.utils.import('resource://gre/modules/XPCOMUtils.jsm');
+Components.utils.import('resource://gre/modules/LoadContextInfo.jsm');
 
 var _CSvc;
 function get_cache_service() {

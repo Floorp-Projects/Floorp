@@ -18,7 +18,7 @@ SimpleTest.waitForExplicitFinish();
 function expectProcessCreated() {
   return new Promise(resolve => {
     function parentExpectProcessCreated() {
-      ChromeUtils.import('resource://gre/modules/Services.jsm');
+      Components.utils.import('resource://gre/modules/Services.jsm');
       let topic = "ipc:content-initializing";
       let obs = { observe: function() {
         Services.obs.removeObserver(obs, topic);

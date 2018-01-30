@@ -8,9 +8,9 @@
 
 var Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const AMO_ICON = "chrome://browser/skin/images/amo-logo.png";
 const UPDATE_INDICATOR = "chrome://browser/skin/images/extension-update.svg";
@@ -26,8 +26,8 @@ XPCOMUtils.defineLazyGetter(window, "gChromeWin", function() {
            .getInterface(Ci.nsIDOMWindow)
            .QueryInterface(Ci.nsIDOMChromeWindow);
 });
-ChromeUtils.defineModuleGetter(window, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(window, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
 
 var ContextMenus = {
   target: null,

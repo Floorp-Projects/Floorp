@@ -59,7 +59,7 @@ add_task(async function testAlertNotShownInBackgroundWindow() {
 
   chromeScript = loadChromeScript(async () => {
     const {sendAsyncMessage} = this;
-    let {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+    let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
     require("devtools/client/framework/devtools-browser");
     let {HUDService} = require("devtools/client/webconsole/hudservice");
 

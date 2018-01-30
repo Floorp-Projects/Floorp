@@ -1,8 +1,8 @@
 "use strict";
 // https://bugzilla.mozilla.org/show_bug.cgi?id=760955
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var httpServer = null;
 const testFileName = "test_nsHttpChannel_CacheForOfflineUse-no-store";

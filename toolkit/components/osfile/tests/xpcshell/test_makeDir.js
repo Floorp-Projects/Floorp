@@ -4,8 +4,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/osfile.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 var Path = OS.Path;
 var profileDir;

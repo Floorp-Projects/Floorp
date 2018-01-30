@@ -11,8 +11,8 @@ var Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = ["ProcessHangMonitor"];
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 /**
  * This JSM is responsible for observing content process hang reports

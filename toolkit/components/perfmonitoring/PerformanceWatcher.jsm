@@ -44,8 +44,8 @@ this.EXPORTED_SYMBOLS = ["PerformanceWatcher"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-let { PerformanceStats, performanceStatsService } = ChromeUtils.import("resource://gre/modules/PerformanceStats.jsm", {});
-let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+let { PerformanceStats, performanceStatsService } = Cu.import("resource://gre/modules/PerformanceStats.jsm", {});
+let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 // `true` if the code is executed in content, `false` otherwise
 let isContent = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;

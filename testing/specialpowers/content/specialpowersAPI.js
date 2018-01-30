@@ -16,13 +16,13 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cu = Components.utils;
 
-ChromeUtils.import("chrome://specialpowers/content/MockFilePicker.jsm");
-ChromeUtils.import("chrome://specialpowers/content/MockColorPicker.jsm");
-ChromeUtils.import("chrome://specialpowers/content/MockPermissionPrompt.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("chrome://specialpowers/content/MockFilePicker.jsm");
+Cu.import("chrome://specialpowers/content/MockColorPicker.jsm");
+Cu.import("chrome://specialpowers/content/MockPermissionPrompt.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // We're loaded with "this" not set to the global in some cases, so we
 // have to play some games to get at the global object here.  Normally
@@ -1447,7 +1447,7 @@ SpecialPowersAPI.prototype = {
   },
   get formHistory() {
     let tmp = {};
-    ChromeUtils.import("resource://gre/modules/FormHistory.jsm", tmp);
+    Cu.import("resource://gre/modules/FormHistory.jsm", tmp);
     return wrapPrivileged(tmp.FormHistory);
   },
   getFormFillController(window) {

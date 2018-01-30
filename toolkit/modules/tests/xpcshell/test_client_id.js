@@ -5,10 +5,10 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/ClientID.jsm");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/ClientID.jsm");
+Cu.import("resource://services-common/utils.js");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function run_test() {
   do_get_profile();

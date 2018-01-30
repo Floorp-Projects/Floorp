@@ -66,7 +66,6 @@ function goQuitApplication(waitForSafeBrowsing) {
   const privs = "UniversalPreferencesRead UniversalPreferencesWrite " +
     "UniversalXPConnect";
 
-  /* eslint-disable mozilla/use-chromeutils-import */
   try {
     netscape.security.PrivilegeManager.enablePrivilege(privs);
   } catch (ex) {

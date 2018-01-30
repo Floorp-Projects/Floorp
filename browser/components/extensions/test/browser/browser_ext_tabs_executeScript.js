@@ -6,7 +6,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "useRemoteWebExtensions",
                                       "extensions.webextensions.remote", false);
 
 add_task(async function testExecuteScript() {
-  let {MessageChannel} = ChromeUtils.import("resource://gre/modules/MessageChannel.jsm", {});
+  let {MessageChannel} = Cu.import("resource://gre/modules/MessageChannel.jsm", {});
 
   function countMM(messageManagerMap) {
     let count = 0;

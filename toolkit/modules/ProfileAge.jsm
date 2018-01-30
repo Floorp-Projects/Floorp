@@ -8,9 +8,9 @@ this.EXPORTED_SYMBOLS = ["ProfileAge"];
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/utils.js");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-common/utils.js");
 
 /**
  * Profile access to times.json (eg, creation/reset time).

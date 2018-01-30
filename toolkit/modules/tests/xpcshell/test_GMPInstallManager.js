@@ -5,23 +5,23 @@
 var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu, manager: Cm} = Components;
 const URL_HOST = "http://localhost";
 
-var GMPScope = ChromeUtils.import("resource://gre/modules/GMPInstallManager.jsm", {});
+var GMPScope = Cu.import("resource://gre/modules/GMPInstallManager.jsm", {});
 var GMPInstallManager = GMPScope.GMPInstallManager;
 
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
-var ProductAddonCheckerScope = ChromeUtils.import("resource://gre/modules/addons/ProductAddonChecker.jsm", {});
+var ProductAddonCheckerScope = Cu.import("resource://gre/modules/addons/ProductAddonChecker.jsm", {});
 
 do_get_profile();
 
 function run_test() {
- ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+ Cu.import("resource://gre/modules/Preferences.jsm");
   Preferences.set("media.gmp.log.dump", true);
   Preferences.set("media.gmp.log.level", 0);
   run_next_test();

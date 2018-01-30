@@ -1,5 +1,5 @@
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 /*
  * This xpcshell test checks whether we detect infinite HTTP redirect loops.

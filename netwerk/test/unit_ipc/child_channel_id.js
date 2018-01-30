@@ -2,7 +2,7 @@
  * Send HTTP requests and notify the parent about their channelId
  */
 
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 let shouldQuit = false;
 

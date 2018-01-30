@@ -9,8 +9,8 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.importGlobalProperties(["URL"]);
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",

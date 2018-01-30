@@ -13,7 +13,7 @@ body { color: red; }
 SimpleTest.waitForExplicitFinish();
 
 const Cu = SpecialPowers.Components.utils;
-const { ContentTaskUtils } = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", {});
+const { ContentTaskUtils } = Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
 
 let sheet = document.styleSheets[1];
 document.styleSheetChangeEventsEnabled = true;

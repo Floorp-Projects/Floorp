@@ -6,7 +6,7 @@
 // Tests that NetworkHelper.getReasonsForWeakness returns correct reasons for
 // weak requests.
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const { require } = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
 
 Object.defineProperty(this, "NetworkHelper", {
   get: function () {

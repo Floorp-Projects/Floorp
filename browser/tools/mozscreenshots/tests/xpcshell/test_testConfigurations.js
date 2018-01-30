@@ -5,7 +5,7 @@
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-ChromeUtils.import("resource://test/TestRunner.jsm");
+Cu.import("resource://test/TestRunner.jsm");
 
 add_task(async function capture() {
   equal(TestRunner.findComma("Toolbars,Devs"), 8);

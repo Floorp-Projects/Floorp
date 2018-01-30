@@ -2,5 +2,5 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 Services.cpmm.sendAsyncMessage("my-addon-1");

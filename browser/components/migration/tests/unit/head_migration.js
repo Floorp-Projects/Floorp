@@ -6,25 +6,25 @@ var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.importGlobalProperties([ "URL" ]);
 
-ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
-ChromeUtils.import("resource://gre/modules/LoginHelper.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://testing-common/TestUtils.jsm");
-ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
+Cu.import("resource:///modules/MigrationUtils.jsm");
+Cu.import("resource://gre/modules/LoginHelper.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://testing-common/TestUtils.jsm");
+Cu.import("resource://testing-common/PlacesTestUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Sqlite",
-                               "resource://gre/modules/Sqlite.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
+                                  "resource://gre/modules/Sqlite.jsm");
 // Initialize profile.
 var gProfD = do_get_profile();
 
-ChromeUtils.import("resource://testing-common/AppInfo.jsm");
+Cu.import("resource://testing-common/AppInfo.jsm");
 updateAppInfo();
 
 /**

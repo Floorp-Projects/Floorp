@@ -8,16 +8,16 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.importGlobalProperties(["URL"]);
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.import("chrome://marionette/content/assert.js");
+Cu.import("chrome://marionette/content/assert.js");
 const {
   InvalidArgumentError,
-} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+} = Cu.import("chrome://marionette/content/error.js", {});
 const {
   pprint,
-} = ChromeUtils.import("chrome://marionette/content/format.js", {});
+} = Cu.import("chrome://marionette/content/format.js", {});
 
 this.EXPORTED_SYMBOLS = ["session"];
 

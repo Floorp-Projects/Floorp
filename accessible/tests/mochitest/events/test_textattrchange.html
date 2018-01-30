@@ -27,7 +27,7 @@
     const nsIDOMNSEditableElement =
       Components.interfaces.nsIDOMNSEditableElement;
 
-    ChromeUtils.import("resource://gre/modules/InlineSpellChecker.jsm");
+    Components.utils.import("resource://gre/modules/InlineSpellChecker.jsm");
 
     function spelledTextInvoker(aID) {
       this.DOMNode = getNode(aID);

@@ -1,14 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/keys.js");
-ChromeUtils.import("resource://services-sync/engines/tabs.js");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/util.js");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/keys.js");
+Cu.import("resource://services-sync/engines/tabs.js");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 add_task(async function v4_upgrade() {
   enableValidationPrefs();

@@ -5,9 +5,9 @@
 
 // Tests for the FxA storage manager.
 
-ChromeUtils.import("resource://gre/modules/FxAccountsStorage.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/FxAccountsStorage.jsm");
+Cu.import("resource://gre/modules/FxAccountsCommon.js");
+Cu.import("resource://gre/modules/Log.jsm");
 
 initTestLogging("Trace");
 log.level = Log.Level.Trace;

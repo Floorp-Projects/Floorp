@@ -3,7 +3,7 @@ var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cr = Components.results;
 
-ChromeUtils.import("resource://testing-common/httpd.js");
+Cu.import("resource://testing-common/httpd.js");
 
 var httpserver = null;
 var geolocation = null;

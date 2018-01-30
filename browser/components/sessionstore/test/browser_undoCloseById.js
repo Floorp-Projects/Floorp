@@ -5,7 +5,7 @@
  * This test is for the undoCloseById function.
  */
 
-ChromeUtils.import("resource:///modules/sessionstore/SessionStore.jsm");
+Cu.import("resource:///modules/sessionstore/SessionStore.jsm");
 
 async function openAndCloseTab(window, url) {
   let tab = window.gBrowser.addTab(url);

@@ -8,15 +8,15 @@ this.EXPORTED_SYMBOLS = ["StartupPerformance"];
 
 const { utils: Cu, classes: Cc, interfaces: Ci } = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "Services",
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "console",
+XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/Console.jsm");
-ChromeUtils.defineModuleGetter(this, "setTimeout",
+XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
   "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "clearTimeout",
+XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
   "resource://gre/modules/Timer.jsm");
 
 const COLLECT_RESULTS_AFTER_MS = 10000;

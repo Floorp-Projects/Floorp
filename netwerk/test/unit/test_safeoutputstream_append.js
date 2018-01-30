@@ -6,7 +6,7 @@ const PR_CREATE_FILE = 0x08;
 const PR_APPEND      = 0x10;
 const PR_TRUNCATE    = 0x20;
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 function check_flag(file, contractID, flags, throws) {
   let stream = Cc[contractID].createInstance(Ci.nsIFileOutputStream);

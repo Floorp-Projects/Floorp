@@ -1,6 +1,6 @@
 {
   const { DOMLocalization } =
-    ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm");
+    Components.utils.import("resource://gre/modules/DOMLocalization.jsm");
 
   /**
    * Polyfill for document.ready polyfill.

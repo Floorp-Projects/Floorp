@@ -4,13 +4,13 @@
 const XULRUNTIME_CONTRACTID = "@mozilla.org/xre/runtime;1";
 const XULRUNTIME_CID = Components.ID("7685dac8-3637-4660-a544-928c5ec0e714}");
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var gAppInfo = null;
 
 function createAppInfo(ID, name, version, platformVersion = "1.0") {
   let tmp = {};
-  ChromeUtils.import("resource://testing-common/AppInfo.jsm", tmp);
+  Components.utils.import("resource://testing-common/AppInfo.jsm", tmp);
   gAppInfo = tmp.newAppInfo({
     ID, name, version, platformVersion,
     crashReporter: true,

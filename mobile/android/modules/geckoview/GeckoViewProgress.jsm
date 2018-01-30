@@ -8,16 +8,16 @@ this.EXPORTED_SYMBOLS = ["GeckoViewProgress"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/GeckoViewModule.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "EventDispatcher",
+XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
   "resource://gre/modules/Messaging.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "dump", () =>
-    ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
-                       {}).AndroidLog.d.bind(null, "ViewProgress"));
+    Cu.import("resource://gre/modules/AndroidLog.jsm",
+              {}).AndroidLog.d.bind(null, "ViewProgress"));
 
 function debug(aMsg) {
   // dump(aMsg);

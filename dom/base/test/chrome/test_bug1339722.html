@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1339722
   **/
 
   const {interfaces: Ci, utils: Cu} = Components;
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
 
   const TOPIC = 'http-on-useragent-request';
   Services.obs.addObserver({

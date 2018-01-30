@@ -16,10 +16,10 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "ContentWebRTC",
+XPCOMUtils.defineLazyModuleGetter(this, "ContentWebRTC",
   "resource:///modules/ContentWebRTC.jsm");
 
 var gEMEUIObserver = function(subject, topic, data) {

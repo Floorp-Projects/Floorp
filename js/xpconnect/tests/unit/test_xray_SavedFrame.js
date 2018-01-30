@@ -5,7 +5,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
+Cu.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 
 const lowP = Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);

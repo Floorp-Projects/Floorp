@@ -1,7 +1,7 @@
 "use strict";
 
 /* global AddressResult, CreditCardResult */
-ChromeUtils.import("resource://formautofill/ProfileAutoCompleteResult.jsm");
+Cu.import("resource://formautofill/ProfileAutoCompleteResult.jsm");
 
 let matchingProfiles = [{
   guid: "test-guid-1",

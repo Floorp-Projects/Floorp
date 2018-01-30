@@ -6,11 +6,11 @@
 
 const Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/narrate/VoiceSelect.jsm");
-ChromeUtils.import("resource://gre/modules/narrate/Narrator.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AsyncPrefs.jsm");
-ChromeUtils.import("resource://gre/modules/TelemetryStopwatch.jsm");
+Cu.import("resource://gre/modules/narrate/VoiceSelect.jsm");
+Cu.import("resource://gre/modules/narrate/Narrator.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AsyncPrefs.jsm");
+Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
 
 this.EXPORTED_SYMBOLS = ["NarrateControls"];
 

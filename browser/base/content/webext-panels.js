@@ -7,10 +7,10 @@
 /* import-globals-from browser.js */
 /* import-globals-from nsContextMenu.js */
 
-ChromeUtils.defineModuleGetter(this, "ExtensionParent",
-                               "resource://gre/modules/ExtensionParent.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
+                                  "resource://gre/modules/ExtensionParent.jsm");
 
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
   promiseEvent,

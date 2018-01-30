@@ -7,9 +7,9 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Cr = Components.results;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Messaging.jsm");
 
 function ContentDispatchChooser() {}
 

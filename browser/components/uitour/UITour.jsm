@@ -8,35 +8,35 @@ this.EXPORTED_SYMBOLS = ["UITour"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/TelemetryController.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.importGlobalProperties(["URL"]);
 
-ChromeUtils.defineModuleGetter(this, "BrowserUITelemetry",
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
   "resource:///modules/BrowserUITelemetry.jsm");
-ChromeUtils.defineModuleGetter(this, "CustomizableUI",
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
-ChromeUtils.defineModuleGetter(this, "fxAccounts",
+XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
   "resource://gre/modules/FxAccounts.jsm");
-ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
+XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
   "resource://gre/modules/LightweightThemeManager.jsm");
-ChromeUtils.defineModuleGetter(this, "PageActions",
+XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
   "resource:///modules/PageActions.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "ProfileAge",
+XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
   "resource://gre/modules/ProfileAge.jsm");
-ChromeUtils.defineModuleGetter(this, "ReaderParent",
+XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
   "resource:///modules/ReaderParent.jsm");
-ChromeUtils.defineModuleGetter(this, "ResetProfile",
+XPCOMUtils.defineLazyModuleGetter(this, "ResetProfile",
   "resource://gre/modules/ResetProfile.jsm");
-ChromeUtils.defineModuleGetter(this, "UITelemetry",
+XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry",
   "resource://gre/modules/UITelemetry.jsm");
-ChromeUtils.defineModuleGetter(this, "UpdateUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
   "resource://gre/modules/UpdateUtils.jsm");
 
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
@@ -73,7 +73,7 @@ const TARGET_SEARCHENGINE_PREFIX = "searchEngine-";
 
 // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
+  let ConsoleAPI = Cu.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
   let consoleOptions = {
     maxLogLevelPref: PREF_LOG_LEVEL,
     prefix: "UITour",

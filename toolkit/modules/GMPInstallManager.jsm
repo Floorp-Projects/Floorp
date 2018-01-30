@@ -18,14 +18,14 @@ var GMPInstallFailureReason = {
   GMP_UPDATE_DISABLED: 4,
 };
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/GMPUtils.jsm");
-ChromeUtils.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/GMPUtils.jsm");
+Cu.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
 
 this.EXPORTED_SYMBOLS = ["GMPInstallManager", "GMPExtractor", "GMPDownloader",
                          "GMPAddon"];
@@ -33,12 +33,12 @@ this.EXPORTED_SYMBOLS = ["GMPInstallManager", "GMPExtractor", "GMPDownloader",
 // Shared code for suppressing bad cert dialogs
 XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {
   let temp = { };
-  ChromeUtils.import("resource://gre/modules/CertUtils.jsm", temp);
+  Cu.import("resource://gre/modules/CertUtils.jsm", temp);
   return temp;
 });
 
-ChromeUtils.defineModuleGetter(this, "UpdateUtils",
-                               "resource://gre/modules/UpdateUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
+                                  "resource://gre/modules/UpdateUtils.jsm");
 
 function getScopedLogger(prefix) {
   // `PARENT_LOGGER_ID.` being passed here effectively links this logger

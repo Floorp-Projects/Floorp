@@ -3,9 +3,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/TelemetryLog.jsm");
-var {TELEMETRY_LOG, Experiments} = ChromeUtils.import("resource:///modules/experiments/Experiments.jsm", {});
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/TelemetryLog.jsm");
+var {TELEMETRY_LOG, Experiments} = Cu.import("resource:///modules/experiments/Experiments.jsm", {});
 
 
 const MANIFEST_HANDLER         = "manifests/handler";

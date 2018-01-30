@@ -10,9 +10,9 @@
 // is used (from service.js).
 /* global Service */
 
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/keys.js");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/keys.js");
 
 // Common code for test_errorhandler_{1,2}.js -- pulled out to make it less
 // monolithic and take less time to execute.

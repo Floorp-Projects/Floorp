@@ -14,10 +14,10 @@ var gTestFuncs = [];
   */
 var gIterator;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
-ChromeUtils.import("resource://gre/modules/accessibility/EventManager.jsm");
-ChromeUtils.import("resource://gre/modules/accessibility/Gestures.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/accessibility/Utils.jsm");
+Components.utils.import("resource://gre/modules/accessibility/EventManager.jsm");
+Components.utils.import("resource://gre/modules/accessibility/Gestures.jsm");
 
 var AccessFuTest = {
 
@@ -139,7 +139,7 @@ var AccessFuTest = {
     })();
 
     // Start AccessFu and put it in stand-by.
-    ChromeUtils.import("resource://gre/modules/accessibility/AccessFu.jsm");
+    Components.utils.import("resource://gre/modules/accessibility/AccessFu.jsm");
 
     AccessFu.attach(getMainChromeWindow(window));
 

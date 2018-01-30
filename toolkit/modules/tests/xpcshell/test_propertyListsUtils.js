@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/PropertyListUtils.jsm");
+Components.utils.import("resource://gre/modules/PropertyListUtils.jsm");
 
 function checkValue(aPropertyListObject, aType, aValue) {
   Assert.equal(PropertyListUtils.getObjectType(aPropertyListObject), aType);

@@ -13,7 +13,7 @@ function deactivateDomainPolicy() {
 
 async function test_domainPolicy() {
 
-  ChromeUtils.defineModuleGetter(this, "Promise", "resource://gre/modules/Promise.jsm");
+  XPCOMUtils.defineLazyModuleGetter(this, "Promise", "resource://gre/modules/Promise.jsm");
   let deferred = Promise.defer();
   let currentTask = deferred.promise;
   SpecialPowers.pushPrefEnv(
@@ -32,7 +32,7 @@ async function test_domainPolicy() {
     gBrowser.selectedTab = tab;
 
     let initPromise = ContentTask.spawn(tab.linkedBrowser, null, function() {
-      ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+      Cu.import("resource://gre/modules/PromiseUtils.jsm");
       function loadBase() {
         let deferred = PromiseUtils.defer();
         let listener = (event) => {
@@ -94,7 +94,7 @@ async function test_domainPolicy() {
   function testDomain(domain) {
     ipcArgs.domain = domain;
     return (aUtils) => {
-      ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+      Cu.import("resource://gre/modules/PromiseUtils.jsm");
       var ipcArgs;
       var utils = {};
       eval(aUtils);
@@ -133,7 +133,7 @@ async function test_domainPolicy() {
     ipcArgs.expectEnabled = expectEnabled;
     ipcArgs.list = list;
     return (aUtils) => {
-      ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+      Cu.import("resource://gre/modules/PromiseUtils.jsm");
       var ipcArgs;
       var utils = {};
       eval(aUtils);

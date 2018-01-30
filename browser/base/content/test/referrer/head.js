@@ -1,8 +1,8 @@
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BrowserTestUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserTestUtils",
   "resource://testing-common/BrowserTestUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "ContentTask",
+XPCOMUtils.defineLazyModuleGetter(this, "ContentTask",
   "resource://testing-common/ContentTask.jsm");
 
 const REFERRER_URL_BASE = "/browser/browser/base/content/test/referrer/";

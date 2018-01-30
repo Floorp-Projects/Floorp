@@ -7,8 +7,8 @@
 // by ext-utils.js).
 /* global tabTracker */
 
-ChromeUtils.defineModuleGetter(this, "WebRequest",
-                               "resource://gre/modules/WebRequest.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "WebRequest",
+                                  "resource://gre/modules/WebRequest.jsm");
 
 // EventManager-like class specifically for WebRequest. Inherits from
 // EventManager. Takes care of converting |details| parameter

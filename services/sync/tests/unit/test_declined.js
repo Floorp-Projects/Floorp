@@ -1,11 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://services-sync/stages/declined.js");
-ChromeUtils.import("resource://services-sync/stages/enginesync.js");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-common/observers.js");
+Cu.import("resource://services-sync/stages/declined.js");
+Cu.import("resource://services-sync/stages/enginesync.js");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-common/observers.js");
 
 function PetrolEngine() {}
 PetrolEngine.prototype.name = "petrol";

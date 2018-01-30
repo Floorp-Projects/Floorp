@@ -19,7 +19,7 @@
     {
       SimpleTest.waitForExplicitFinish();
 
-      ChromeUtils.import("chrome://mochitests/content/chrome/dom/url/tests/file_worker_url.jsm");
+      Components.utils.import("chrome://mochitests/content/chrome/dom/url/tests/file_worker_url.jsm");
       checkFromJSM(ok, is, SimpleTest.finish);
     }
 

@@ -8,11 +8,11 @@ this.EXPORTED_SYMBOLS = ["FinderHighlighter"];
 
 const { interfaces: Ci, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Color", "resource://gre/modules/Color.jsm");
-ChromeUtils.defineModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Color", "resource://gre/modules/Color.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
 XPCOMUtils.defineLazyGetter(this, "kDebug", () => {
   const kDebugPref = "findbar.modalHighlight.debug";
   return Services.prefs.getPrefType(kDebugPref) && Services.prefs.getBoolPref(kDebugPref);
@@ -144,7 +144,7 @@ FinderHighlighter.prototype = {
   get iterator() {
     if (this._iterator)
       return this._iterator;
-    this._iterator = ChromeUtils.import("resource://gre/modules/FinderIterator.jsm", null).FinderIterator;
+    this._iterator = Cu.import("resource://gre/modules/FinderIterator.jsm", null).FinderIterator;
     return this._iterator;
   },
 

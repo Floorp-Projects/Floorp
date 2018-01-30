@@ -9,9 +9,9 @@ var Primitives;
 if (typeof Components != "undefined") {
   let Cu = Components.utils;
   SharedAll = {};
-  ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
-  ChromeUtils.import("resource://gre/modules/lz4_internal.js");
-  ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  Cu.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
+  Cu.import("resource://gre/modules/lz4_internal.js");
+  Cu.import("resource://gre/modules/ctypes.jsm");
 
   this.EXPORTED_SYMBOLS = [
     "Lz4"

@@ -5,14 +5,14 @@
 
 var Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
-ChromeUtils.defineModuleGetter(this, "DownloadUtils", "resource://gre/modules/DownloadUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
-ChromeUtils.defineModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils", "resource://gre/modules/DownloadUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
 
 var gStrings = Services.strings.createBundle("chrome://browser/locale/aboutDownloads.properties");
 XPCOMUtils.defineLazyGetter(this, "strings",

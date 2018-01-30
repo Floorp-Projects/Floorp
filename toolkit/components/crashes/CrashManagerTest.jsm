@@ -18,10 +18,10 @@ this.EXPORTED_SYMBOLS = [
   "TestingCrashManager",
 ];
 
-ChromeUtils.import("resource://gre/modules/CrashManager.jsm", this);
-ChromeUtils.import("resource://gre/modules/Log.jsm", this);
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
+Cu.import("resource://gre/modules/CrashManager.jsm", this);
+Cu.import("resource://gre/modules/Log.jsm", this);
+Cu.import("resource://gre/modules/osfile.jsm", this);
+Cu.import("resource://gre/modules/Timer.jsm", this);
 
 var loggingConfigured = false;
 

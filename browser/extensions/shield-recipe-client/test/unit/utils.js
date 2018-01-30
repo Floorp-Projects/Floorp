@@ -4,7 +4,7 @@
 // Loaded into the same scope as head_xpc.js
 /* import-globals-from head_xpc.js */
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 
 const preferenceBranches = {
   user: Preferences,

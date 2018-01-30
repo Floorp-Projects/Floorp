@@ -7,7 +7,7 @@
 
 // Until X509.jsm is actually used in production code, this is where we have to
 // import it from.
-var { X509 } = ChromeUtils.import("resource://testing-common/psm/X509.jsm", {});
+var { X509 } = Cu.import("resource://testing-common/psm/X509.jsm", {});
 
 function stringToBytes(s) {
   let b = [];
