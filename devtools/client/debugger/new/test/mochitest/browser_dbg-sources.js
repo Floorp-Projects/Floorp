@@ -11,6 +11,11 @@ async function waitForSourceCount(dbg, i) {
   });
 }
 
+async function assertSourceCount(dbg, count) {
+  await waitForSourceCount(dbg, count);
+  is(findAllElements(dbg, "sourceNodes").length, count, `${count} sources`);
+}
+
 function getLabel(dbg, index) {
   return findElement(dbg, "sourceNode", index).textContent.trim();
 }
@@ -22,13 +27,13 @@ add_task(async function() {
   await waitForSources(dbg, "simple1", "simple2", "nested-source", "long.js");
 
   // Expand nodes and make sure more sources appear.
-  is(findAllElements(dbg, "sourceNodes").length, 2);
-
+  assertSourceCount(dbg, 2);
   await clickElement(dbg, "sourceArrow", 2);
-  is(findAllElements(dbg, "sourceNodes").length, 7);
 
+  assertSourceCount(dbg, 7);
   await clickElement(dbg, "sourceArrow", 3);
-  is(findAllElements(dbg, "sourceNodes").length, 8);
+
+  assertSourceCount(dbg, 8);
 
   // Select a source.
   ok(
@@ -58,20 +63,4 @@ add_task(async function() {
 
   await waitForSourceCount(dbg, 9);
   is(getLabel(dbg, 7), "math.min.js", "The dynamic script exists");
-
-  // Make sure named eval sources appear in the list.
-});
-
-add_task(async function() {
-  const dbg = await initDebugger("doc-sources.html");
-  const { selectors: { getSelectedSource }, getState } = dbg;
-
-  await waitForSources(dbg, "simple1", "simple2", "nested-source", "long.js");
-
-  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    content.eval("window.evaledFunc = function() {} //# sourceURL=evaled.js");
-  });
-  await waitForSourceCount(dbg, 3);
-
-  is(getLabel(dbg, 3), "evaled.js", "the eval script exists");
 });
