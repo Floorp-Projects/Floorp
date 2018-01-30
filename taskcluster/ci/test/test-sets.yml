@@ -151,6 +151,9 @@ linux-talos-profiling:
     - talos-tp5o-profiling
     - talos-tp6-profiling
 
+linux-talos-flex:
+    - talos-flex
+
 windows-qr-tests:
     - crashtest
     - mochitest-gpu
