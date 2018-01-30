@@ -167,7 +167,7 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer, nsIF
                                                  (const UniChar*)path.get(),
                                                  path.Length());
     }
-    if (pathCFStr) {
+    if (pathCFStr && !aIsPrivate) {
       bool isFromWeb = IsURLPossiblyFromWeb(aSource);
 
       CFURLRef sourceCFURL = CreateCFURLFromNSIURI(aSource);
