@@ -15,6 +15,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/EnumSet.h"
+#include "mozilla/EnumTypeTraits.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/net/WebSocketFrame.h"
 #include "mozilla/TimeStamp.h"
@@ -24,7 +25,9 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/IntegerTypeTraits.h"
 
+#include <limits>
 #include <stdint.h>
+#include <type_traits>
 
 #include "nsExceptionHandler.h"
 #include "nsID.h"
@@ -934,20 +937,42 @@ template<typename T>
 struct ParamTraits<mozilla::EnumSet<T>>
 {
   typedef mozilla::EnumSet<T> paramType;
+  typedef typename mozilla::EnumSet<T>::serializedType serializedType;
 
   static void Write(Message* msg, const paramType& param)
   {
+    MOZ_RELEASE_ASSERT(IsLegalValue(param.serialize()));
     WriteParam(msg, param.serialize());
   }
 
   static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
   {
-    decltype(result->serialize()) tmp;
+    serializedType tmp;
+
     if (ReadParam(msg, iter, &tmp)) {
-      result->deserialize(tmp);
-      return true;
+      if (IsLegalValue(tmp)) {
+        result->deserialize(tmp);
+        return true;
+      }
     }
+
     return false;
+  }
+
+  static constexpr serializedType AllEnumBits()
+  {
+    return ~serializedType(0) >>
+           (std::numeric_limits<serializedType>::digits - (mozilla::MaxEnumValue<T>::value + 1));
+  }
+
+  static constexpr bool IsLegalValue(const serializedType value)
+  {
+    static_assert(mozilla::MaxEnumValue<T>::value < std::numeric_limits<serializedType>::digits,
+                  "Enum max value is not in the range!");
+    static_assert(std::is_unsigned<decltype(mozilla::MaxEnumValue<T>::value)>::value,
+                  "Type of MaxEnumValue<T>::value specialization should be unsigned!");
+
+    return (value & AllEnumBits()) == value;
   }
 };
 

@@ -15,8 +15,11 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIXULWindow.h"
+#include "mozilla/dom/Element.h"
 
 #include "nsWindowMediator.h"
+
+using mozilla::dom::Element;
 
 //
 // static helper functions
@@ -54,7 +57,7 @@ void GetAttribute(nsIXULWindow *inWindow, const nsAString &inAttribute,
   if (inWindow && NS_SUCCEEDED(inWindow->GetDocShell(getter_AddRefs(shell)))) {
     nsCOMPtr<nsIDOMNode> node(GetDOMNodeFromDocShell(shell));
     if (node) {
-      nsCOMPtr<nsIDOMElement> webshellElement(do_QueryInterface(node));
+      nsCOMPtr<Element> webshellElement(do_QueryInterface(node));
       if (webshellElement)
         webshellElement->GetAttribute(inAttribute, outValue);
     }

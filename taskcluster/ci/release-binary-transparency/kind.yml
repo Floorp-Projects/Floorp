@@ -66,8 +66,9 @@ job-defaults:
                maple: ["release+tcstaging@mozilla.com"]
                default: []
 
-jobs:
-   firefox:
-      shipping-product: firefox
-      index:
-         product: firefox
+# Bug 1433467 - binary transparency disabled for now
+# jobs:
+#    firefox:
+#       shipping-product: firefox
+#       index:
+#          product: firefox

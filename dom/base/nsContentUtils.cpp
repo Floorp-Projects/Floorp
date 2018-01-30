@@ -52,6 +52,7 @@
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/IDTracker.h"
 #include "mozilla/dom/IPCBlobUtils.h"
+#include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TabParent.h"
@@ -132,7 +133,6 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNode.h"
@@ -2546,7 +2546,7 @@ nsContentUtils::ContentIsHostIncludingDescendantOf(
   do {
     if (aPossibleDescendant == aPossibleAncestor)
       return true;
-    if (aPossibleDescendant->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+    if (aPossibleDescendant->NodeType() == nsINode::DOCUMENT_FRAGMENT_NODE) {
       aPossibleDescendant =
         static_cast<const DocumentFragment*>(aPossibleDescendant)->GetHost();
     } else {
@@ -2757,9 +2757,9 @@ bool
 nsContentUtils::PositionIsBefore(nsINode* aNode1, nsINode* aNode2)
 {
   return (aNode2->CompareDocumentPosition(*aNode1) &
-    (nsIDOMNode::DOCUMENT_POSITION_PRECEDING |
-     nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED)) ==
-    nsIDOMNode::DOCUMENT_POSITION_PRECEDING;
+    (NodeBinding::DOCUMENT_POSITION_PRECEDING |
+     NodeBinding::DOCUMENT_POSITION_DISCONNECTED)) ==
+    NodeBinding::DOCUMENT_POSITION_PRECEDING;
 }
 
 /* static */
@@ -3804,18 +3804,19 @@ nsContentUtils::GetStaticRequest(nsIDocument* aLoadingDocument,
 bool
 nsContentUtils::ContentIsDraggable(nsIContent* aContent)
 {
-  nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(aContent);
-  if (htmlElement) {
-    bool draggable = false;
-    htmlElement->GetDraggable(&draggable);
-    if (draggable)
-      return true;
+  MOZ_ASSERT(aContent);
 
-    if (aContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                           nsGkAtoms::draggable,
-                                           nsGkAtoms::_false,
-                                           eIgnoreCase))
+  if (auto htmlElement = nsGenericHTMLElement::FromContent(aContent)) {
+    if (htmlElement->Draggable()) {
+      return true;
+    }
+
+    if (htmlElement->AttrValueIs(kNameSpaceID_None,
+                                 nsGkAtoms::draggable,
+                                 nsGkAtoms::_false,
+                                 eIgnoreCase)) {
       return false;
+    }
   }
 
   // special handling for content area image and link dragging
@@ -9633,8 +9634,8 @@ StartElement(Element* aContent, StringBuilder& aBuilder)
         localName == nsGkAtoms::listing) {
       nsIContent* fc = aContent->GetFirstChild();
       if (fc &&
-          (fc->NodeType() == nsIDOMNode::TEXT_NODE ||
-           fc->NodeType() == nsIDOMNode::CDATA_SECTION_NODE)) {
+          (fc->NodeType() == nsINode::TEXT_NODE ||
+           fc->NodeType() == nsINode::CDATA_SECTION_NODE)) {
         const nsTextFragment* text = fc->GetText();
         if (text && text->GetLength() && text->CharAt(0) == char16_t('\n')) {
           aBuilder.Append("\n");
@@ -9697,7 +9698,7 @@ nsContentUtils::SerializeNodeToMarkup(nsINode* aRoot,
 {
   // If you pass in a DOCUMENT_NODE, you must pass aDescendentsOnly as true
   MOZ_ASSERT(aDescendentsOnly ||
-             aRoot->NodeType() != nsIDOMNode::DOCUMENT_NODE);
+             aRoot->NodeType() != nsINode::DOCUMENT_NODE);
 
   nsINode* current = aDescendentsOnly ?
     nsNodeUtils::GetFirstChildOfTemplateOrNode(aRoot) : aRoot;
@@ -9711,7 +9712,7 @@ nsContentUtils::SerializeNodeToMarkup(nsINode* aRoot,
   while (true) {
     bool isVoid = false;
     switch (current->NodeType()) {
-      case nsIDOMNode::ELEMENT_NODE: {
+      case nsINode::ELEMENT_NODE: {
         Element* elem = current->AsElement();
         StartElement(elem, builder);
         isVoid = IsVoidTag(elem);
@@ -9723,8 +9724,8 @@ nsContentUtils::SerializeNodeToMarkup(nsINode* aRoot,
         break;
       }
 
-      case nsIDOMNode::TEXT_NODE:
-      case nsIDOMNode::CDATA_SECTION_NODE: {
+      case nsINode::TEXT_NODE:
+      case nsINode::CDATA_SECTION_NODE: {
         const nsTextFragment* text = static_cast<nsIContent*>(current)->GetText();
         nsIContent* parent = current->GetParent();
         if (ShouldEscape(parent)) {
@@ -9735,21 +9736,21 @@ nsContentUtils::SerializeNodeToMarkup(nsINode* aRoot,
         break;
       }
 
-      case nsIDOMNode::COMMENT_NODE: {
+      case nsINode::COMMENT_NODE: {
         builder.Append("<!--");
         builder.Append(static_cast<nsIContent*>(current)->GetText());
         builder.Append("-->");
         break;
       }
 
-      case nsIDOMNode::DOCUMENT_TYPE_NODE: {
+      case nsINode::DOCUMENT_TYPE_NODE: {
         builder.Append("<!DOCTYPE ");
         builder.Append(current->NodeName());
         builder.Append(">");
         break;
       }
 
-      case nsIDOMNode::PROCESSING_INSTRUCTION_NODE: {
+      case nsINode::PROCESSING_INSTRUCTION_NODE: {
         builder.Append("<?");
         builder.Append(current->NodeName());
         builder.Append(" ");
@@ -9760,7 +9761,7 @@ nsContentUtils::SerializeNodeToMarkup(nsINode* aRoot,
     }
 
     while (true) {
-      if (!isVoid && current->NodeType() == nsIDOMNode::ELEMENT_NODE) {
+      if (!isVoid && current->NodeType() == nsINode::ELEMENT_NODE) {
         builder.Append("</");
         nsIContent* elem = static_cast<nsIContent*>(current);
         if (elem->IsHTMLElement() || elem->IsSVGElement() ||
@@ -9787,7 +9788,7 @@ nsContentUtils::SerializeNodeToMarkup(nsINode* aRoot,
       // Handle template element. If the parent is a template's content,
       // then adjust the parent to be the template element.
       if (current != aRoot &&
-          current->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+          current->NodeType() == nsINode::DOCUMENT_FRAGMENT_NODE) {
         DocumentFragment* frag = static_cast<DocumentFragment*>(current);
         nsIContent* fragHost = frag->GetHost();
         if (fragHost && nsNodeUtils::IsTemplateElement(fragHost)) {
@@ -9909,7 +9910,8 @@ nsContentUtils::GetPresentationURL(nsIDocShell* aDocShell, nsAString& aPresentat
     return;
   }
 
-  topFrameElement->GetAttribute(NS_LITERAL_STRING("mozpresentation"), aPresentationUrl);
+  nsCOMPtr<Element> topFrameElt = do_QueryInterface(topFrameElement);
+  topFrameElt->GetAttribute(NS_LITERAL_STRING("mozpresentation"), aPresentationUrl);
 }
 
 /* static */ nsIDocShell*

@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_HTMLSlotElement_h
 #define mozilla_dom_HTMLSlotElement_h
 
-#include "nsIDOMHTMLElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsTArray.h"
 

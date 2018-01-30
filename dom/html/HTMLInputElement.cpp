@@ -1887,20 +1887,6 @@ HTMLInputElement::GetList() const
   return static_cast<nsGenericHTMLElement*>(element);
 }
 
-NS_IMETHODIMP
-HTMLInputElement::GetList(nsIDOMHTMLElement** aValue)
-{
-  *aValue = nullptr;
-
-  RefPtr<nsGenericHTMLElement> element = GetList();
-  if (!element) {
-    return NS_OK;
-  }
-
-  element.forget(aValue);
-  return NS_OK;
-}
-
 void
 HTMLInputElement::SetValue(Decimal aValue, CallerType aCallerType)
 {

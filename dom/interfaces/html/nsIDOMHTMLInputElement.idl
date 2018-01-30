@@ -3,11 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMHTMLElement.idl"
+#include "nsISupports.idl"
 
 interface nsIControllers;
 interface nsIDOMFileList;
 interface nsIDOMValidityState;
+interface nsIDOMHTMLFormElement;
 
  /**
   * The nsIDOMHTMLInputElement interface is the interface to a [X]HTML
@@ -30,11 +31,9 @@ interface nsIDOMHTMLInputElement : nsISupports
 
            attribute boolean               indeterminate;
 
-  readonly attribute nsIDOMHTMLElement     list;
-
            attribute DOMString             name;
 
            attribute boolean               readOnly;
 
-  readonly attribute nsIControllers        controllers;	
+  readonly attribute nsIControllers        controllers;
 };

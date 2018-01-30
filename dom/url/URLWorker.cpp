@@ -709,6 +709,13 @@ URLWorker::GetHref(nsAString& aHref, ErrorResult& aRv) const
 void
 URLWorker::SetHref(const nsAString& aHref, ErrorResult& aRv)
 {
+  SetHrefInternal(aHref, eUseProxyIfNeeded, aRv);
+}
+
+void
+URLWorker::SetHrefInternal(const nsAString& aHref, Strategy aStrategy,
+                           ErrorResult& aRv)
+{
   nsAutoCString scheme;
   nsresult rv = net_ExtractURLScheme(NS_ConvertUTF16toUTF8(aHref), scheme);
   if (NS_FAILED(rv)) {
@@ -716,7 +723,8 @@ URLWorker::SetHref(const nsAString& aHref, ErrorResult& aRv)
     return;
   }
 
-  if (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https")) {
+  if (aStrategy == eUseProxyIfNeeded &&
+      (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https"))) {
     nsCOMPtr<nsIURI> uri;
     aRv = NS_MutateURI(new nsStandardURL::Mutator())
             .SetSpec(NS_ConvertUTF16toUTF8(aHref))
@@ -807,27 +815,41 @@ URLWorker::GetProtocol(nsAString& aProtocol, ErrorResult& aRv) const
 void
 URLWorker::SetProtocol(const nsAString& aProtocol, ErrorResult& aRv)
 {
-  if (mStdURL) {
-    nsAString::const_iterator start, end;
-    aProtocol.BeginReading(start);
-    aProtocol.EndReading(end);
-    nsAString::const_iterator iter(start);
+  nsAString::const_iterator start, end;
+  aProtocol.BeginReading(start);
+  aProtocol.EndReading(end);
+  nsAString::const_iterator iter(start);
 
-    FindCharInReadable(':', iter, end);
+  FindCharInReadable(':', iter, end);
+  NS_ConvertUTF16toUTF8 scheme(Substring(start, iter));
 
-    nsresult rv = mStdURL->SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-
-    nsAutoCString href;
-    rv = mStdURL->GetSpec(href);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-
-    SetHref(NS_ConvertUTF8toUTF16(href), aRv);
+  // If we are using nsStandardURL on the owning thread, we can continue only if
+  // the scheme is http or https.
+  if (mStdURL &&
+      (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https"))) {
+    mStdURL->SetScheme(scheme);
     return;
+  }
+
+  // If we are using mStandardURL but the new scheme is not http nor https, we
+  // have to migrate to the URL proxy.
+  if (mStdURL) {
+    nsAutoCString href;
+    nsresult rv = mStdURL->GetSpec(href);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    SetHrefInternal(NS_ConvertUTF8toUTF16(href), eAlwaysUseProxy, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    // We want a proxy here.
+    MOZ_ASSERT(!mStdURL);
+    MOZ_ASSERT(mURLProxy);
+
+    // Now we can restart setting the protocol.
   }
 
   MOZ_ASSERT(mURLProxy);

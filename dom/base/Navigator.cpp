@@ -62,7 +62,6 @@
 #include "nsIStringStream.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
-#include "TimeManager.h"
 #include "nsStreamUtils.h"
 #include "WidgetUtils.h"
 #include "nsIPresentationService.h"
@@ -198,7 +197,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStorageManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCredentials)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaDevices)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTimeManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServiceWorkerContainer)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
@@ -247,10 +245,6 @@ Navigator::Invalidate()
   }
 
   mMediaDevices = nullptr;
-
-  if (mTimeManager) {
-    mTimeManager = nullptr;
-  }
 
   if (mPresentation) {
     mPresentation = nullptr;
@@ -1501,23 +1495,6 @@ Navigator::GetConnection(ErrorResult& aRv)
 
   return mConnection;
 }
-
-#ifdef MOZ_TIME_MANAGER
-time::TimeManager*
-Navigator::GetMozTime(ErrorResult& aRv)
-{
-  if (!mWindow) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  if (!mTimeManager) {
-    mTimeManager = new time::TimeManager(mWindow);
-  }
-
-  return mTimeManager;
-}
-#endif
 
 already_AddRefed<ServiceWorkerContainer>
 Navigator::ServiceWorker()

@@ -24,6 +24,7 @@
 #include "nsHTMLTags.h"
 #include "nsIDocShell.h"
 #include "nsIDOMGlobalPropertyInitializer.h"
+#include "nsINode.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsIXPConnect.h"
@@ -3636,7 +3637,7 @@ CreateXULOrHTMLElement(const GlobalObject& aGlobal, const JS::CallArgs& aCallArg
     doc->NodeInfoManager()->GetNodeInfo(definition->mLocalName,
                                         nullptr,
                                         ns,
-                                        nsIDOMNode::ELEMENT_NODE);
+                                        nsINode::ELEMENT_NODE);
   if (!nodeInfo) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;

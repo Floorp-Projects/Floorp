@@ -530,7 +530,7 @@ protected:
 
   bool ShouldReplaceRootElement();
   void NotifyRootChanged();
-  nsresult GetBodyElement(nsIDOMHTMLElement** aBody);
+  Element* GetBodyElement();
 
   /**
    * Get the focused node of this editor.
@@ -726,14 +726,14 @@ protected:
   nsresult ParseCFHTML(nsCString& aCfhtml, char16_t** aStuffToPaste,
                        char16_t** aCfcontext);
 
-  bool IsInLink(nsIDOMNode* aNode, nsCOMPtr<nsIDOMNode>* outLink = nullptr);
+  bool IsInLink(nsINode* aNode, nsCOMPtr<nsINode>* outLink = nullptr);
   nsresult StripFormattingNodes(nsIContent& aNode, bool aOnlyList = false);
   nsresult CreateDOMFragmentFromPaste(const nsAString& aInputString,
                                       const nsAString& aContextStr,
                                       const nsAString& aInfoStr,
-                                      nsCOMPtr<nsIDOMNode>* outFragNode,
-                                      nsCOMPtr<nsIDOMNode>* outStartNode,
-                                      nsCOMPtr<nsIDOMNode>* outEndNode,
+                                      nsCOMPtr<nsINode>* outFragNode,
+                                      nsCOMPtr<nsINode>* outStartNode,
+                                      nsCOMPtr<nsINode>* outEndNode,
                                       int32_t* outStartOffset,
                                       int32_t* outEndOffset,
                                       bool aTrustedInput);
@@ -992,6 +992,12 @@ protected:
   void SetSelectionAfterTableEdit(nsIDOMElement* aTable,
                                   int32_t aRow, int32_t aCol,
                                   int32_t aDirection, bool aSelected);
+
+  /**
+   * A more C++-friendly version of nsIHTMLEditor::GetSelectedElement
+   * that just returns null on errors.
+   */
+  already_AddRefed<dom::Element> GetSelectedElement(const nsAString& aTagName);
 
 protected:
   RefPtr<TypeInState> mTypeInState;
