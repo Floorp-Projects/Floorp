@@ -119,7 +119,8 @@ bool RTPSenderAudio::SendAudio(FrameType frame_type,
                                int8_t payload_type,
                                uint32_t rtp_timestamp,
                                const uint8_t* payload_data,
-                               size_t payload_size) {
+                               size_t payload_size,
+                               const StreamId* mId) {
   // From RFC 4733:
   // A source has wide latitude as to how often it sends event updates. A
   // natural interval is the spacing between non-event audio packets. [...]
@@ -221,6 +222,10 @@ bool RTPSenderAudio::SendAudio(FrameType frame_type,
   // Update audio level extension, if included.
   packet->SetExtension<AudioLevel>(frame_type == kAudioFrameSpeech,
                                    audio_level_dbov);
+
+  if (mId && !mId->empty()) {
+    packet->SetExtension<RtpMid>(*mId);
+  }
 
   uint8_t* payload = packet->AllocatePayload(payload_size);
   if (!payload)  // Too large payload buffer.
