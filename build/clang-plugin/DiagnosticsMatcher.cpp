@@ -4,12 +4,7 @@
 
 #include "DiagnosticsMatcher.h"
 
-DiagnosticsMatcher::DiagnosticsMatcher(CompilerInstance &CI)
-    :
-#define CHECK(cls, name) cls##_(name),
-#include "Checks.inc"
-#undef CHECK
-      AstMatcher() {
+DiagnosticsMatcher::DiagnosticsMatcher(CompilerInstance &CI) {
 #define CHECK(cls, name)                                                       \
   cls##_.registerMatchers(&AstMatcher);                                        \
   cls##_.registerPPCallbacks(CI);
