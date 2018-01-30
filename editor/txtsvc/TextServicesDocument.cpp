@@ -21,7 +21,6 @@
 #include "nsID.h"                       // for NS_GET_IID
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMElement.h"              // for nsIDOMElement
-#include "nsIDOMHTMLElement.h"          // for nsIDOMHTMLElement
 #include "nsIDOMNode.h"                 // for nsIDOMNode, etc
 #include "nsIEditor.h"                  // for nsIEditor, etc
 #include "nsINode.h"                    // for nsINode
