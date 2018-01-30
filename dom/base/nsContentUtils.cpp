@@ -3794,18 +3794,19 @@ nsContentUtils::GetStaticRequest(nsIDocument* aLoadingDocument,
 bool
 nsContentUtils::ContentIsDraggable(nsIContent* aContent)
 {
-  nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(aContent);
-  if (htmlElement) {
-    bool draggable = false;
-    htmlElement->GetDraggable(&draggable);
-    if (draggable)
-      return true;
+  MOZ_ASSERT(aContent);
 
-    if (aContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                           nsGkAtoms::draggable,
-                                           nsGkAtoms::_false,
-                                           eIgnoreCase))
+  if (auto htmlElement = nsGenericHTMLElement::FromContent(aContent)) {
+    if (htmlElement->Draggable()) {
+      return true;
+    }
+
+    if (htmlElement->AttrValueIs(kNameSpaceID_None,
+                                 nsGkAtoms::draggable,
+                                 nsGkAtoms::_false,
+                                 eIgnoreCase)) {
       return false;
+    }
   }
 
   // special handling for content area image and link dragging

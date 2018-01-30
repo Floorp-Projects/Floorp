@@ -282,10 +282,6 @@ public:
     *aOffsetHeight = OffsetHeight();
     return NS_OK;
   }
-  NS_IMETHOD GetDraggable(bool* aDraggable) final override {
-    *aDraggable = Draggable();
-    return NS_OK;
-  }
 
   using nsGenericHTMLElementBase::GetOwnerDocument;
 
