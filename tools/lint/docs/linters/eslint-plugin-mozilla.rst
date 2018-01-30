@@ -256,13 +256,6 @@ object is assigned to another variable e.g.:
    var b = gBrowser;
    b.content // Would not be detected as a CPOW.
 
-use-chromeutils-import
-----------------------
-
-Require use of ``ChromeUtils.import`` and ``ChromeUtils.defineModuleGetter``
-rather than ``Components.utils.import`` and
-``XPCOMUtils.defineLazyModuleGetter``.
-
 use-default-preference-values
 ---------------
 
