@@ -19,7 +19,6 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIDOMNode.h"
 #include "nsIHttpChannel.h"
 #include "nsIInterfaceRequestor.h"

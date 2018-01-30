@@ -26,7 +26,6 @@
 #include "nsFontMetrics.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsFrameList.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"

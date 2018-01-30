@@ -26,7 +26,6 @@
 #include "nsIFrame.h"
 #include "nsITextControlFrame.h"
 #include "nsReadableUtils.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIContent.h"
 #include "nsContentCID.h"
 #include "nsIServiceManager.h"
