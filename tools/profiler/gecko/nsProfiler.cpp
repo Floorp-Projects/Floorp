@@ -550,7 +550,9 @@ nsProfiler::ReceiveShutdownProfile(const nsCString& aProfile)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  if (!profiler_is_active()) {
+  Maybe<ProfilerBufferInfo> bufferInfo = profiler_get_buffer_info();
+  if (!bufferInfo) {
+    // The profiler is not running. Discard the profile.
     return;
   }
 
@@ -562,7 +564,8 @@ nsProfiler::ReceiveShutdownProfile(const nsCString& aProfile)
   if (mExitProfiles.Length() >= MAX_SUBPROCESS_EXIT_PROFILES) {
     mExitProfiles.RemoveElementAt(0);
   }
-  mExitProfiles.AppendElement(ExitProfile{ aProfile, TimeStamp::Now() });
+  uint64_t bufferPosition = bufferInfo->mRangeEnd;
+  mExitProfiles.AppendElement(ExitProfile{ aProfile, bufferPosition });
 }
 
 RefPtr<nsProfiler::GatheringPromise>
@@ -589,13 +592,12 @@ nsProfiler::StartGathering(double aSinceTime)
 
   mWriter.emplace();
 
-  TimeStamp thisProcessFirstSampleTime;
+  Maybe<ProfilerBufferInfo> bufferInfo = profiler_get_buffer_info();
 
   // Start building up the JSON result and grab the profile from this process.
   mWriter->Start();
   if (!profiler_stream_json_for_this_process(*mWriter, aSinceTime,
-                                             /* aIsShuttingDown */ false,
-                                             &thisProcessFirstSampleTime)) {
+                                             /* aIsShuttingDown */ false)) {
     // The profiler is inactive. This either means that it was inactive even
     // at the time that ProfileGatherer::Start() was called, or that it was
     // stopped on a different thread since that call. Either way, we need to
@@ -608,8 +610,8 @@ nsProfiler::StartGathering(double aSinceTime)
   // If we have any process exit profiles, add them immediately, and clear
   // mExitProfiles.
   for (auto& exitProfile : mExitProfiles) {
-    if (thisProcessFirstSampleTime &&
-        exitProfile.mGatherTime < thisProcessFirstSampleTime) {
+    if (bufferInfo &&
+        exitProfile.mBufferPositionAtGatherTime < bufferInfo->mRangeStart) {
       // Don't include exit profiles that have no overlap with the profile
       // from our own process.
       continue;

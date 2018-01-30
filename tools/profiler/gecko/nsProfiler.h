@@ -12,7 +12,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/TimeStamp.h"
 #include "nsServiceManagerUtils.h"
 #include "ProfileJSONWriter.h"
 
@@ -49,7 +48,7 @@ private:
 
   struct ExitProfile {
     nsCString mJSON;
-    mozilla::TimeStamp mGatherTime;
+    uint64_t mBufferPositionAtGatherTime;
   };
 
   // These fields are all related to profile gathering.
