@@ -9,7 +9,6 @@ with Files("**"):
 
 # Public stuff.
 EXPORTS.mozilla.dom += [
-    'FileReaderSync.h',
     'WorkerLocation.h',
     'WorkerNavigator.h',
     'WorkerPrivate.h',
@@ -41,7 +40,6 @@ XPIDL_SOURCES += [
 
 UNIFIED_SOURCES += [
     'ChromeWorkerScope.cpp',
-    'FileReaderSync.cpp',
     'MessageEventRunnable.cpp',
     'Principal.cpp',
     'RegisterBindings.cpp',
