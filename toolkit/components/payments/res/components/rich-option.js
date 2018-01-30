@@ -22,43 +22,9 @@ class RichOption extends ObservedPropertiesMixin(HTMLElement) {
   connectedCallback() {
     this.classList.add("rich-option");
     this.render();
-    this.addEventListener("click", this);
-    this.addEventListener("keydown", this);
   }
 
   render() {}
-
-  handleEvent(event) {
-    switch (event.type) {
-      case "click": {
-        this.onClick(event);
-        break;
-      }
-      case "keydown": {
-        this.onKeyDown(event);
-        break;
-      }
-    }
-  }
-
-  onClick(event) {
-    if (this.closest("rich-select").open &&
-        !this.disabled &&
-        event.button == 0) {
-      for (let option of this.parentNode.children) {
-        option.selected = option == this;
-      }
-    }
-  }
-
-  onKeyDown(event) {
-    if (!this.disabled &&
-        event.which == 13 /* Enter */) {
-      for (let option of this.parentNode.children) {
-        option.selected = option == this;
-      }
-    }
-  }
 }
 
 customElements.define("rich-option", RichOption);
