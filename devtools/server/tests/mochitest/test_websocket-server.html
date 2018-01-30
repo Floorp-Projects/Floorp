@@ -24,11 +24,14 @@ window.onload = function () {
     // Create a TCP server on auto-assigned port
     let server = new ServerSocket(-1, true, -1);
     ok(server, `Launched WebSocket server on port ${server.port}`);
+
+    let input, output;
+
     server.asyncListen({
       onSocketAccepted: Task.async(function* (socket, transport) {
         info("Accepted incoming connection");
-        let input = transport.openInputStream(0, 0, 0);
-        let output = transport.openOutputStream(0, 0, 0);
+        input = transport.openInputStream(0, 0, 0);
+        output = transport.openOutputStream(0, 0, 0);
 
         // Perform the WebSocket handshake
         let webSocket = yield WebSocketServer.accept(transport, input, output);
@@ -77,6 +80,10 @@ window.onload = function () {
     // Close the connection
     client.close();
     yield closed;
+
+    // Prevent leaking the streams by closing them before test ends
+    input.close();
+    output.close();
   });
 };
 </script>
