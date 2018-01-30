@@ -3,7 +3,7 @@
 
 "use strict";
 
-var Preferences = Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
+var Preferences = ChromeUtils.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
 
 function test() {
   waitForExplicitFinish();

@@ -4,8 +4,8 @@
 
 "use strict";
 const {MockRegistrar} =
-  Cu.import("resource://testing-common/MockRegistrar.jsm", {});
-let {MasterPassword} = Cu.import("resource://formautofill/MasterPassword.jsm", {});
+  ChromeUtils.import("resource://testing-common/MockRegistrar.jsm", {});
+let {MasterPassword} = ChromeUtils.import("resource://formautofill/MasterPassword.jsm", {});
 
 const TESTCASES = [{
   description: "With master password set",

@@ -4,7 +4,7 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/LoginHelper.jsm");
+ChromeUtils.import("resource://gre/modules/LoginHelper.jsm");
 
 const DOMAIN1_HTTP_TO_HTTP_U1_P1 = TestData.formLogin({
   timePasswordChanged: 3000,

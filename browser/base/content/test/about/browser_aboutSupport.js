@@ -3,8 +3,8 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_task(async function() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:support" }, async function(browser) {

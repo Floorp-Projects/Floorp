@@ -4,7 +4,7 @@
 
 "use strict";
 
-Cu.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
+ChromeUtils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
 
 add_task(async function test_updatePing() {
   const TEST_VERSION = "37.85";

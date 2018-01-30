@@ -4,8 +4,8 @@
 
 const {utils: Cu} = Components;
 
-Cu.import("chrome://marionette/content/error.js");
-Cu.import("chrome://marionette/content/message.js");
+ChromeUtils.import("chrome://marionette/content/error.js");
+ChromeUtils.import("chrome://marionette/content/message.js");
 
 add_test(function test_Message_Origin() {
   equal(0, Message.Origin.Client);

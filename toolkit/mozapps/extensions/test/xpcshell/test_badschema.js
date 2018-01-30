@@ -5,7 +5,7 @@
 // Checks that we rebuild something sensible from a database with a bad schema
 
 
-Components.utils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://testing-common/httpd.js");
 var testserver = new HttpServer();
 testserver.start(-1);
 gPort = testserver.identity.primaryPort;

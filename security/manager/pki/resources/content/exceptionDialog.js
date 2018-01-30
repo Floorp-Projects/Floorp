@@ -15,7 +15,7 @@ var gNeedReset;
 var gSecHistogram;
 var gNsISecTel;
 
-Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 function initExceptionDialog() {
   gNeedReset = false;

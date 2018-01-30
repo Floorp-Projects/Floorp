@@ -8,7 +8,7 @@ this.EXPORTED_SYMBOLS = ["OnboardingTelemetry"];
 
 const {utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   PingCentre: "resource:///modules/PingCentre.jsm",
   Services: "resource://gre/modules/Services.jsm",

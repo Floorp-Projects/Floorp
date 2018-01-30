@@ -20,12 +20,12 @@
 /* eslint-env mozilla/frame-script */
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 let PaymentFrameScript = {
   init() {
     XPCOMUtils.defineLazyGetter(this, "log", () => {
-      let {ConsoleAPI} = Cu.import("resource://gre/modules/Console.jsm", {});
+      let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
       return new ConsoleAPI({
         maxLogLevelPref: "dom.payments.loglevel",
         prefix: "paymentDialogFrameScript",

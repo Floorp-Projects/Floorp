@@ -17,8 +17,8 @@ const Ci = SpecialPowers.Ci;
 const chromeScript = SpecialPowers.loadChromeScript(_ => {
   const { utils: Cu } = Components;
 
-  Cu.import("resource://gre/modules/Services.jsm");
-  Cu.import("resource://gre/modules/Timer.jsm");
+  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
   addMessageListener("waitForXULAlert", function() {
     var timer = setTimeout(function() {

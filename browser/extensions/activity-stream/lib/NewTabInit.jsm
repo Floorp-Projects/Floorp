@@ -5,7 +5,7 @@
 
 const {utils: Cu} = Components;
 
-const {actionCreators: ac, actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
+const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 
 /**
  * NewTabInit - A placeholder for now. This will send a copy of the state to all

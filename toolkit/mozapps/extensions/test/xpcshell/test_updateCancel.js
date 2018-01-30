@@ -4,7 +4,7 @@
 
 // Test cancelling add-on update checks while in progress (bug 925389)
 
-Components.utils.import("resource://gre/modules/Promise.jsm");
+ChromeUtils.import("resource://gre/modules/Promise.jsm");
 
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
@@ -13,7 +13,7 @@ Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
 // Set up an HTTP server to respond to update requests
-Components.utils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://testing-common/httpd.js");
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");

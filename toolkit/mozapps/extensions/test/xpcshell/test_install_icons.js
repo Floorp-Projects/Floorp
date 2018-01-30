@@ -3,7 +3,7 @@
  */
 
 // use httpserver to find an available port
-Components.utils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://testing-common/httpd.js");
 var gServer = new HttpServer();
 gServer.start(-1);
 gPort = gServer.identity.primaryPort;

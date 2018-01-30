@@ -121,6 +121,10 @@ GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key)
 GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key)
 {
     MOZ_ASSERT(!global->isStandardClassResolved(key));
+
+    if (global->zone()->group()->createdForHelperThread())
+        return resolveOffThreadConstructor(cx, global, key);
+
     MOZ_ASSERT(!cx->helperThread());
 
     // Prohibit collection of allocation metadata. Metadata builders shouldn't
@@ -272,6 +276,105 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
     }
 
     return true;
+}
+
+/* static */ JSObject*
+GlobalObject::createObject(JSContext* cx, Handle<GlobalObject*> global, unsigned slot, ObjectInitOp init)
+{
+    if (global->zone()->group()->createdForHelperThread())
+        return createOffThreadObject(cx, global, slot);
+
+    MOZ_ASSERT(!cx->helperThread());
+    if (!init(cx, global))
+        return nullptr;
+
+    return &global->getSlot(slot).toObject();
+}
+
+const Class GlobalObject::OffThreadPlaceholderObject::class_ = {
+    "off-thread-prototype-placeholder",
+    JSCLASS_IS_ANONYMOUS | JSCLASS_HAS_RESERVED_SLOTS(1)
+};
+
+/* static */ GlobalObject::OffThreadPlaceholderObject*
+GlobalObject::OffThreadPlaceholderObject::New(JSContext* cx, unsigned slot)
+{
+    Rooted<OffThreadPlaceholderObject*> placeholder(cx);
+    placeholder =
+        NewObjectWithGivenTaggedProto<OffThreadPlaceholderObject>(cx, AsTaggedProto(nullptr));
+    if (!placeholder)
+        return nullptr;
+
+    placeholder->setReservedSlot(SlotIndexSlot, Int32Value(slot));
+    return placeholder;
+}
+
+inline int32_t
+GlobalObject::OffThreadPlaceholderObject::getSlotIndex() const
+{
+    return getReservedSlot(SlotIndexSlot).toInt32();
+}
+
+/* static */ bool
+GlobalObject::resolveOffThreadConstructor(JSContext* cx,
+                                          Handle<GlobalObject*> global,
+                                          JSProtoKey key)
+{
+    // Don't resolve constructors for off-thread parse globals. Instead create a
+    // placeholder object for the prototype which we can use to find the real
+    // prototype when the off-thread compartment is merged back into the target
+    // compartment.
+
+    MOZ_ASSERT(global->zone()->group()->createdForHelperThread());
+    MOZ_ASSERT(key == JSProto_Object ||
+               key == JSProto_Function ||
+               key == JSProto_Array ||
+               key == JSProto_RegExp);
+
+    Rooted<OffThreadPlaceholderObject*> placeholder(cx);
+    placeholder = OffThreadPlaceholderObject::New(cx, prototypeSlot(key));
+    if (!placeholder)
+        return false;
+
+    if (key == JSProto_Object &&
+        !JSObject::setFlags(cx, placeholder, BaseShape::IMMUTABLE_PROTOTYPE))
+    {
+        return false;
+    }
+
+    global->setPrototype(key, ObjectValue(*placeholder));
+    global->setConstructor(key, MagicValue(JS_OFF_THREAD_CONSTRUCTOR));
+    return true;
+}
+
+/* static */ JSObject*
+GlobalObject::createOffThreadObject(JSContext* cx, Handle<GlobalObject*> global, unsigned slot)
+{
+    // Don't create prototype objects for off-thread parse globals. Instead
+    // create a placeholder object which we can use to find the real prototype
+    // when the off-thread compartment is merged back into the target
+    // compartment.
+
+    MOZ_ASSERT(global->zone()->group()->createdForHelperThread());
+    MOZ_ASSERT(slot == GENERATOR_FUNCTION_PROTO ||
+               slot == MODULE_PROTO ||
+               slot == IMPORT_ENTRY_PROTO ||
+               slot == EXPORT_ENTRY_PROTO ||
+               slot == REQUESTED_MODULE_PROTO);
+
+    auto placeholder = OffThreadPlaceholderObject::New(cx, slot);
+    if (!placeholder)
+        return nullptr;
+
+    global->setSlot(slot, ObjectValue(*placeholder));
+    return placeholder;
+}
+
+JSObject*
+GlobalObject::getPrototypeForOffThreadPlaceholder(JSObject* obj)
+{
+    auto placeholder = &obj->as<OffThreadPlaceholderObject>();
+    return &getSlot(placeholder->getSlotIndex()).toObject();
 }
 
 /* static */ bool
@@ -869,8 +972,8 @@ GlobalObject::addIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
 /* static */ bool
 GlobalObject::ensureModulePrototypesCreated(JSContext *cx, Handle<GlobalObject*> global)
 {
-    return getOrCreateObject(cx, global, MODULE_PROTO, initModuleProto) &&
-           getOrCreateObject(cx, global, IMPORT_ENTRY_PROTO, initImportEntryProto) &&
-           getOrCreateObject(cx, global, EXPORT_ENTRY_PROTO, initExportEntryProto) &&
-           getOrCreateObject(cx, global, REQUESTED_MODULE_PROTO, initRequestedModuleProto);
+    return getOrCreateModulePrototype(cx, global) &&
+           getOrCreateImportEntryPrototype(cx, global) &&
+           getOrCreateExportEntryPrototype(cx, global) &&
+           getOrCreateRequestedModulePrototype(cx, global);
 }

@@ -28,8 +28,5 @@ ruleTester.run("no-single-arg-cu-import", rule, {
   invalid: [{
     code: "Cu.import('fake');",
     errors: [ExpectedError]
-  }, {
-    code: "ChromeUtils.import('fake');",
-    errors: [ExpectedError]
   }]
 });

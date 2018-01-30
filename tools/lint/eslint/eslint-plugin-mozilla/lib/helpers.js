@@ -23,6 +23,7 @@ const callExpressionDefinitions = [
   /^loader\.lazyRequireGetter\(this, "(\w+)"/,
   /^XPCOMUtils\.defineLazyGetter\(this, "(\w+)"/,
   /^XPCOMUtils\.defineLazyModuleGetter\(this, "(\w+)"/,
+  /^ChromeUtils\.defineModuleGetter\(this, "(\w+)"/,
   /^XPCOMUtils\.defineLazyPreferenceGetter\(this, "(\w+)"/,
   /^XPCOMUtils\.defineLazyScriptGetter\(this, "(\w+)"/,
   /^XPCOMUtils\.defineLazyServiceGetter\(this, "(\w+)"/,

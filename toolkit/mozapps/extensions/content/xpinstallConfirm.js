@@ -7,8 +7,8 @@
 var XPInstallConfirm = {};
 
 XPInstallConfirm.init = function() {
-  Components.utils.import("resource://gre/modules/AddonManager.jsm");
-  Components.utils.import("resource://gre/modules/Services.jsm");
+  ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+  ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   var _installCountdown;
   var _installCountdownInterval;

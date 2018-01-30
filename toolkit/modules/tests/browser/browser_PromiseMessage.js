@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* global Cu, BrowserTestUtils, is, ok, add_task, gBrowser */
 "use strict";
-Cu.import("resource://gre/modules/PromiseMessage.jsm", this);
+ChromeUtils.import("resource://gre/modules/PromiseMessage.jsm", this);
 
 
 const url = "http://example.org/tests/dom/manifest/test/resource.sjs";

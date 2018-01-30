@@ -1,5 +1,5 @@
 const { utils: Cu, interfaces: Ci } = Components;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function SHistoryListener() {
 }

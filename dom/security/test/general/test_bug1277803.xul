@@ -19,7 +19,7 @@
     let Ci = Components.interfaces;
     let Cc = Components.classes;
     let Cu = Components.utils;
-    let makeURI = Cu.import("resource://gre/modules/BrowserUtils.jsm", {}).BrowserUtils.makeURI;
+    let makeURI = ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm", {}).BrowserUtils.makeURI;
 
     const BASE_URI = "http://mochi.test:8888/chrome/dom/security/test/general/";
     const FAVICON_URI = BASE_URI + "favicon_bug1277803.ico";

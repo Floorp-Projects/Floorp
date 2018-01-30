@@ -1,4 +1,4 @@
-Cu.import("resource://testing-common/AppInfo.jsm", this);
+ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
 
 function updateVersion(version) {
   updateAppInfo({ version });

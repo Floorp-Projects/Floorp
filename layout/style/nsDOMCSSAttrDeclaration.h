@@ -41,11 +41,10 @@ public:
   mozilla::css::Rule* GetParentRule() override;
 
   virtual nsINode* GetParentObject() override;
-  virtual mozilla::dom::DocGroup* GetDocGroup() const override;
 
-  NS_IMETHOD SetPropertyValue(const nsCSSPropertyID aPropID,
-                              const nsAString& aValue,
-                              nsIPrincipal* aSubjectPrincipal) override;
+  nsresult SetPropertyValue(const nsCSSPropertyID aPropID,
+                            const nsAString& aValue,
+                            nsIPrincipal* aSubjectPrincipal) override;
 
 protected:
   ~nsDOMCSSAttributeDeclaration();
