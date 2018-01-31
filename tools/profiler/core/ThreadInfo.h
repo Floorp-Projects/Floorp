@@ -20,12 +20,11 @@
 // protection against data races, it must provide internal protection. Hence
 // the "Racy" prefix.
 //
-class RacyThreadInfo final : public PseudoStack
+class RacyThreadInfo final
 {
 public:
   explicit RacyThreadInfo(int aThreadId)
-    : PseudoStack()
-    , mThreadId(aThreadId)
+    : mThreadId(aThreadId)
     , mSleep(AWAKE)
   {
     MOZ_COUNT_CTOR(RacyThreadInfo);
@@ -116,7 +115,11 @@ public:
 
   int ThreadId() const { return mThreadId; }
 
+  class PseudoStack& PseudoStack() { return mPseudoStack; }
+
 private:
+  class PseudoStack mPseudoStack;
+
   // A list of pending markers that must be moved to the circular buffer.
   ProfilerSignalSafeLinkedList<ProfilerMarker> mPendingMarkers;
 
@@ -275,10 +278,9 @@ public:
 
     mContext = aContext;
 
-    // We give the JS engine a non-owning reference to the RacyInfo (just the
-    // PseudoStack, really). It's important that the JS engine doesn't touch
-    // this once the thread dies.
-    js::SetContextProfilingStack(aContext, RacyInfo());
+    // We give the JS engine a non-owning reference to the PseudoStack. It's
+    // important that the JS engine doesn't touch this once the thread dies.
+    js::SetContextProfilingStack(aContext, &RacyInfo()->PseudoStack());
 
     PollJSSampling();
   }
