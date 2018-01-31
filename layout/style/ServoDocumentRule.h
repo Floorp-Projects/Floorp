@@ -32,7 +32,7 @@ public:
   RawServoDocumentRule* Raw() const { return mRawRule; }
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetCssText(nsAString& aCssText) const final override;
   void GetConditionText(nsAString& aConditionText) final override;
   void SetConditionText(const nsAString& aConditionText,
                         ErrorResult& aRv) final override;

@@ -146,6 +146,7 @@ def make_task_description(config, jobs):
             'dependencies': {job['depname']: dep_job.label},
             'attributes': attributes,
             'run-on-projects': dep_job.attributes.get('run_on_projects'),
+            'optimization': dep_job.optimization,
             'treeherder': treeherder,
             'routes': job.get('routes', []),
         }

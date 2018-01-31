@@ -59,9 +59,9 @@ function getTempFile(leafName) {
 }
 
 async function initProfileStorage(fileName, records, collectionName = "addresses") {
-  let {ProfileStorage} = ChromeUtils.import("resource://formautofill/ProfileStorage.jsm", {});
+  let {FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {});
   let path = getTempFile(fileName).path;
-  let profileStorage = new ProfileStorage(path);
+  let profileStorage = new FormAutofillStorage(path);
   await profileStorage.initialize();
 
   if (!records || !Array.isArray(records)) {

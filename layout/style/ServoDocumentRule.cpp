@@ -79,7 +79,7 @@ ServoDocumentRule::SetConditionText(const nsAString& aConditionText,
 }
 
 /* virtual */ void
-ServoDocumentRule::GetCssTextImpl(nsAString& aCssText) const
+ServoDocumentRule::GetCssText(nsAString& aCssText) const
 {
   Servo_DocumentRule_GetCssText(mRawRule, &aCssText);
 }

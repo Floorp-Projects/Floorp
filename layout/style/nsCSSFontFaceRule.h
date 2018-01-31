@@ -63,6 +63,8 @@ protected:
   mozilla::CSSFontFaceDescriptors mDescriptors;
 
   // The actual implementation of GetCssText, so we can make it const.
+  // We can't make nsICSSDeclaration::GetCssText const, because some
+  // subclasses call non-const methods in their implementations.
   void GetCssTextImpl(nsAString& aCssText) const;
 
 private:
@@ -102,7 +104,7 @@ public:
 
   // WebIDL interface
   uint16_t Type() const override;
-  void GetCssTextImpl(nsAString& aCssText) const override;
+  void GetCssText(nsAString& aCssText) const override;
   nsICSSDeclaration* Style();
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;

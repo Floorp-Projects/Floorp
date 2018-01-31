@@ -87,7 +87,7 @@ add_task(async function test_first_time_save_with_sync_account() {
     async function(browser) {
       let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
                                                        "popupshown");
-      let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:preferences#privacy");
+      let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:preferences#privacy-address-autofill");
       await ContentTask.spawn(browser, null, async function() {
         let form = content.document.getElementById("form");
         form.querySelector("#organization").focus();
