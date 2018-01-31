@@ -1244,14 +1244,12 @@ nsXULElement::ParseAttribute(int32_t aNamespaceID,
 void
 nsXULElement::RemoveBroadcaster(const nsAString & broadcasterId)
 {
-    nsCOMPtr<nsIDOMXULDocument> xuldoc = do_QueryInterface(OwnerDoc());
+    XULDocument* xuldoc = OwnerDoc()->AsXULDocument();
     if (xuldoc) {
-        nsCOMPtr<nsIDOMElement> broadcaster;
-        nsCOMPtr<nsIDOMDocument> domDoc (do_QueryInterface(xuldoc));
-        domDoc->GetElementById(broadcasterId, getter_AddRefs(broadcaster));
+        Element* broadcaster = xuldoc->GetElementById(broadcasterId);
         if (broadcaster) {
-            xuldoc->RemoveBroadcastListenerFor(broadcaster, this,
-              NS_LITERAL_STRING("*"));
+            xuldoc->RemoveBroadcastListenerFor(*broadcaster, *this,
+                                               NS_LITERAL_STRING("*"));
         }
     }
 }
