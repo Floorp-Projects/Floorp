@@ -2218,14 +2218,11 @@ OffsetPercentBasis(const nsIFrame*    aFrame,
                    WritingMode        aWM,
                    const LogicalSize& aContainingBlockSize)
 {
+  // XXX The next patch in this series will get rid of this function and have
+  // the upstream/downstream code just work with the one nscoord value that
+  // we'll be dealing with now (which is aContainingBlockSize.ISize(aWM)).
   LogicalSize offsetPercentBasis = aContainingBlockSize;
-  if (MOZ_LIKELY(!aFrame->GetParent() ||
-                 !aFrame->GetParent()->IsFlexOrGridContainer())) {
-    offsetPercentBasis.BSize(aWM) = offsetPercentBasis.ISize(aWM);
-  } else if (offsetPercentBasis.BSize(aWM) == NS_AUTOHEIGHT) {
-    offsetPercentBasis.BSize(aWM) = 0;
-  }
-
+  offsetPercentBasis.BSize(aWM) = offsetPercentBasis.ISize(aWM);
   return offsetPercentBasis;
 }
 
