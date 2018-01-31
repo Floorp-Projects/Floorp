@@ -23,7 +23,8 @@ namespace mozilla {
 using namespace ipc;
 
 namespace dom {
-namespace workers {
+
+using namespace workers;
 
 namespace {
 
@@ -542,6 +543,5 @@ NS_IMPL_RELEASE(WorkerLoadInfo::InterfaceRequestor)
 NS_IMPL_QUERY_INTERFACE(WorkerLoadInfo::InterfaceRequestor,
                         nsIInterfaceRequestor)
 
-} // worker namespace
 } // dom namespace
 } // mozilla namespace
