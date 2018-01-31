@@ -1730,7 +1730,7 @@ pref("extensions.formautofill.heuristics.enabled", true);
 pref("extensions.formautofill.section.enabled", true);
 pref("extensions.formautofill.loglevel", "Warn");
 // Comma separated list of countries Form Autofill supports
-#ifdef MOZ_UPDATE_CHANNEL == release
+#if MOZ_UPDATE_CHANNEL == release
 pref("extensions.formautofill.supportedCountries", "US");
 pref("extensions.formautofill.supportRTL", false);
 #else
