@@ -1440,9 +1440,7 @@ nsFormFillController::GetWindowForDocShell(nsIDocShell *aDocShell)
   aDocShell->GetContentViewer(getter_AddRefs(contentViewer));
   NS_ENSURE_TRUE(contentViewer, nullptr);
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  contentViewer->GetDOMDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  nsCOMPtr<nsIDocument> doc = contentViewer->GetDocument();
   NS_ENSURE_TRUE(doc, nullptr);
 
   return doc->GetWindow();

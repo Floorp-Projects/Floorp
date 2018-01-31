@@ -16,7 +16,6 @@
 
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 
 #include "nsIPresShell.h"
 #include "nsViewManager.h"
@@ -69,11 +68,7 @@ document(nsIDocShell *aDocShell)
     nsCOMPtr<nsIContentViewer> cv(doc_viewer(aDocShell));
     if (!cv)
         return nullptr;
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    cv->GetDOMDocument(getter_AddRefs(domDoc));
-    if (!domDoc)
-        return nullptr;
-    nsCOMPtr<nsIDocument> result = do_QueryInterface(domDoc);
+    nsCOMPtr<nsIDocument> result = cv->GetDocument();
     return result.forget();
 }
 #endif
