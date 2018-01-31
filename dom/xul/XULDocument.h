@@ -18,7 +18,6 @@
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsCOMArray.h"
 #include "nsIURI.h"
-#include "nsIXULDocument.h"
 #include "nsIStreamListener.h"
 #include "nsIStreamLoader.h"
 #include "nsICSSLoaderObserver.h"
@@ -49,11 +48,13 @@ class nsIObjectOutputStream;
  * The XUL document class
  */
 
+// Factory function.
+nsresult NS_NewXULDocument(nsIDocument** result);
+
 namespace mozilla {
 namespace dom {
 
 class XULDocument final : public XMLDocument,
-                          public nsIXULDocument,
                           public nsIStreamLoaderObserver,
                           public nsICSSLoaderObserver,
                           public nsIOffThreadScriptReceiver
@@ -200,7 +201,7 @@ protected:
 
     // Implementation methods
     friend nsresult
-    (::NS_NewXULDocument(nsIXULDocument** aResult));
+    (::NS_NewXULDocument(nsIDocument** aResult));
 
     nsresult Init(void) override;
     nsresult StartLayout(void);
