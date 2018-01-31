@@ -363,6 +363,22 @@ add_task(async function test_discardBigPings() {
   Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), 0, "Should not have recorded send failure time.");
 });
 
+add_task(async function test_largeButWithinLimit() {
+  const TEST_PING_TYPE = "test-ping-type";
+
+  let histSuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
+  histSuccess.clear();
+
+  // Generate a 900KB string and a large payload that is still within the 1MB limit.
+  const LARGE_PAYLOAD = {"data": generateRandomString(900 * 1024)};
+
+  await TelemetryController.submitExternalPing(TEST_PING_TYPE, LARGE_PAYLOAD);
+  await TelemetrySend.testWaitOnOutgoingPings();
+  await PingServer.promiseNextPing();
+
+  Assert.deepEqual(histSuccess.snapshot().counts, [0, 1, 0], "Should have sent large ping.");
+});
+
 add_task(async function test_evictedOnServerErrors() {
   const TEST_TYPE = "test-evicted";
 
