@@ -755,12 +755,15 @@ class ContextMenu_ContextMenu extends external__React__default.a.PureComponent {
     super(props);
     this.hideContext = this.hideContext.bind(this);
   }
+
   hideContext() {
     this.props.onUpdate(false);
   }
+
   componentWillMount() {
     this.hideContext();
   }
+
   componentDidUpdate(prevProps) {
     if (this.props.visible && !prevProps.visible) {
       setTimeout(() => {
@@ -771,9 +774,11 @@ class ContextMenu_ContextMenu extends external__React__default.a.PureComponent {
       window.removeEventListener("click", this.hideContext);
     }
   }
+
   componentWillUnmount() {
     window.removeEventListener("click", this.hideContext);
   }
+
   render() {
     return external__React__default.a.createElement(
       "span",
@@ -793,10 +798,12 @@ class ContextMenu_ContextMenuItem extends external__React__default.a.PureCompone
     this.onClick = this.onClick.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
   }
+
   onClick() {
     this.props.hideContext();
     this.props.option.onClick();
   }
+
   onKeyDown(event) {
     const { option } = this.props;
     switch (event.key) {
@@ -814,6 +821,7 @@ class ContextMenu_ContextMenuItem extends external__React__default.a.PureCompone
         break;
     }
   }
+
   render() {
     const { option } = this.props;
     return external__React__default.a.createElement(
@@ -961,7 +969,7 @@ const DEFAULT_SITE_MENU_OPTIONS = ["CheckPinTopSite", "EditTopSite", "Separator"
 
 class LinkMenu__LinkMenu extends external__React__default.a.PureComponent {
   getOptions() {
-    const props = this.props;
+    const { props } = this;
     const { site, index, source } = props;
 
     // Handle special case of default site
@@ -995,6 +1003,7 @@ class LinkMenu__LinkMenu extends external__React__default.a.PureComponent {
     options[options.length - 1].last = true;
     return options;
   }
+
   render() {
     return external__React__default.a.createElement(ContextMenu_ContextMenu, {
       visible: this.props.visible,
@@ -1057,20 +1066,24 @@ class Info extends __WEBPACK_IMPORTED_MODULE_2_react___default.a.PureComponent {
       this.setState({ infoActive });
     }
   }
+
   onInfoEnter() {
     // We're getting focus or hover, so info state should be true if not yet.
     this._setInfoState(true);
   }
+
   onInfoLeave(event) {
     // We currently have an active (true) info state, so keep it true only if we
     // have a related event target that is contained "within" the current target
     // (section-info-option) as itself or a descendant. Set to false otherwise.
     this._setInfoState(event && event.relatedTarget && (event.relatedTarget === event.currentTarget || event.relatedTarget.compareDocumentPosition(event.currentTarget) & Node.DOCUMENT_POSITION_CONTAINS));
   }
+
   onManageClick() {
     this.props.dispatch({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SETTINGS_OPEN });
     this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].UserEvent({ event: "OPEN_NEWTAB_PREFS" }));
   }
+
   render() {
     const { infoOption, intl } = this.props;
     const infoOptionIconA11yAttrs = {
@@ -1141,7 +1154,7 @@ class Disclaimer extends __WEBPACK_IMPORTED_MODULE_2_react___default.a.PureCompo
   }
 
   render() {
-    const disclaimer = this.props.disclaimer;
+    const { disclaimer } = this.props;
     return __WEBPACK_IMPORTED_MODULE_2_react___default.a.createElement(
       "div",
       { className: "section-disclaimer" },
@@ -1185,6 +1198,7 @@ class _CollapsibleSection extends __WEBPACK_IMPORTED_MODULE_2_react___default.a.
   componentWillMount() {
     this.props.document.addEventListener(VISIBILITY_CHANGE_EVENT, this.enableOrDisableAnimation);
   }
+
   componentWillUpdate(nextProps) {
     // Check if we're about to go from expanded to collapsed
     if (!getCollapsed(this.props) && getCollapsed(nextProps)) {
@@ -1195,9 +1209,11 @@ class _CollapsibleSection extends __WEBPACK_IMPORTED_MODULE_2_react___default.a.
       this.sectionBody.scrollHeight; // eslint-disable-line no-unused-expressions
     }
   }
+
   componentWillUnmount() {
     this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this.enableOrDisableAnimation);
   }
+
   enableOrDisableAnimation() {
     // Only animate the collapse/expand for visible tabs.
     const visible = this.props.document.visibilityState === VISIBLE;
@@ -1205,6 +1221,7 @@ class _CollapsibleSection extends __WEBPACK_IMPORTED_MODULE_2_react___default.a.
       this.setState({ enableAnimation: visible });
     }
   }
+
   _setInfoState(nextActive) {
     // Take a truthy value to conditionally change the infoActive state.
     const infoActive = !!nextActive;
@@ -1212,19 +1229,23 @@ class _CollapsibleSection extends __WEBPACK_IMPORTED_MODULE_2_react___default.a.
       this.setState({ infoActive });
     }
   }
+
   onBodyMount(node) {
     this.sectionBody = node;
   }
+
   onInfoEnter() {
     // We're getting focus or hover, so info state should be true if not yet.
     this._setInfoState(true);
   }
+
   onInfoLeave(event) {
     // We currently have an active (true) info state, so keep it true only if we
     // have a related event target that is contained "within" the current target
     // (section-info-option) as itself or a descendant. Set to false otherwise.
     this._setInfoState(event && event.relatedTarget && (event.relatedTarget === event.currentTarget || event.relatedTarget.compareDocumentPosition(event.currentTarget) & Node.DOCUMENT_POSITION_CONTAINS));
   }
+
   onHeaderClick() {
     // Get the current height of the body so max-height transitions can work
     this.setState({
@@ -1233,19 +1254,22 @@ class _CollapsibleSection extends __WEBPACK_IMPORTED_MODULE_2_react___default.a.
     });
     this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].SetPref(this.props.prefName, !getCollapsed(this.props)));
   }
+
   onTransitionEnd(event) {
     // Only update the animating state for our own transition (not a child's)
     if (event.target === event.currentTarget) {
       this.setState({ isAnimating: false });
     }
   }
+
   renderIcon() {
-    const icon = this.props.icon;
+    const { icon } = this.props;
     if (icon && icon.startsWith("moz-extension://")) {
       return __WEBPACK_IMPORTED_MODULE_2_react___default.a.createElement("span", { className: "icon icon-small-spacer", style: { backgroundImage: `url('${icon}')` } });
     }
     return __WEBPACK_IMPORTED_MODULE_2_react___default.a.createElement("span", { className: `icon icon-small-spacer icon-${icon || "webextension"}` });
   }
+
   render() {
     const isCollapsible = this.props.prefName in this.props.Prefs.values;
     const isCollapsed = getCollapsed(this.props);
@@ -1728,7 +1752,7 @@ class SnippetsMap extends Map {
     if (!id) {
       return;
     }
-    let blockList = this.blockList;
+    const { blockList } = this;
     if (!blockList.includes(id)) {
       blockList.push(id);
       this._dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].SendToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SNIPPETS_BLOCKLIST_UPDATED, data: blockList }));
@@ -2179,6 +2203,7 @@ class ManualMigration__ManualMigration extends external__React__default.a.PureCo
     this.onLaunchTour = this.onLaunchTour.bind(this);
     this.onCancelTour = this.onCancelTour.bind(this);
   }
+
   onLaunchTour() {
     this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({ type: Actions["b" /* actionTypes */].MIGRATION_START }));
     this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: Actions["b" /* actionTypes */].MIGRATION_START }));
@@ -2264,6 +2289,7 @@ class PreferencesPane__PreferencesPane extends external__React__default.a.PureCo
     this.togglePane = this.togglePane.bind(this);
     this.onWrapperMount = this.onWrapperMount.bind(this);
   }
+
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.PreferencesPane.visible !== this.props.PreferencesPane.visible) {
       // While the sidebar is open, listen for all document clicks.
@@ -2274,30 +2300,32 @@ class PreferencesPane__PreferencesPane extends external__React__default.a.PureCo
       }
     }
   }
+
   isSidebarOpen() {
     return this.props.PreferencesPane.visible;
   }
+
   handleClickOutside(event) {
     // if we are showing the sidebar and there is a click outside, close it.
     if (this.isSidebarOpen() && !this.wrapper.contains(event.target)) {
       this.togglePane();
     }
   }
-  handlePrefChange(event) {
-    const target = event.target;
-    const { name, checked } = target;
+
+  handlePrefChange({ target: { name, checked } }) {
     let value = checked;
     if (name === "topSitesCount") {
       value = checked ? Reducers["b" /* TOP_SITES_SHOWMORE_LENGTH */] : Reducers["a" /* TOP_SITES_DEFAULT_LENGTH */];
     }
     this.props.dispatch(Actions["a" /* actionCreators */].SetPref(name, value));
   }
-  handleSectionChange(event) {
-    const target = event.target;
+
+  handleSectionChange({ target }) {
     const id = target.name;
     const type = target.checked ? Actions["b" /* actionTypes */].SECTION_ENABLE : Actions["b" /* actionTypes */].SECTION_DISABLE;
     this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({ type, data: id }));
   }
+
   togglePane() {
     if (this.isSidebarOpen()) {
       this.props.dispatch({ type: Actions["b" /* actionTypes */].SETTINGS_CLOSE });
@@ -2307,11 +2335,13 @@ class PreferencesPane__PreferencesPane extends external__React__default.a.PureCo
       this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: "OPEN_NEWTAB_PREFS" }));
     }
   }
+
   onWrapperMount(wrapper) {
     this.wrapper = wrapper;
   }
+
   render() {
-    const props = this.props;
+    const { props } = this;
     const prefs = props.Prefs.values;
     const sections = props.Sections;
     const isVisible = this.isSidebarOpen();
@@ -2526,12 +2556,15 @@ class Search__Search extends external__React__default.a.PureComponent {
       this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: "SEARCH" }));
     }
   }
+
   onClick(event) {
     window.gContentSearchController.search(event);
   }
+
   componentWillUnmount() {
     delete window.gContentSearchController;
   }
+
   onInputMount(input) {
     if (input) {
       // The "healthReportKey" and needs to be "newtab" or "abouthome" so that
@@ -2618,6 +2651,190 @@ var CollapsibleSection = __webpack_require__(7);
 // EXTERNAL MODULE: ./system-addon/content-src/components/ComponentPerfTimer/ComponentPerfTimer.jsx
 var ComponentPerfTimer = __webpack_require__(8);
 
+// CONCATENATED MODULE: ./system-addon/content-src/components/TopSites/TopSiteForm.jsx
+
+
+
+
+
+class TopSiteForm_TopSiteForm extends external__React__default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      label: props.label || "",
+      url: props.url || "",
+      validationError: false
+    };
+    this.onLabelChange = this.onLabelChange.bind(this);
+    this.onUrlChange = this.onUrlChange.bind(this);
+    this.onCancelButtonClick = this.onCancelButtonClick.bind(this);
+    this.onAddButtonClick = this.onAddButtonClick.bind(this);
+    this.onSaveButtonClick = this.onSaveButtonClick.bind(this);
+    this.onUrlInputMount = this.onUrlInputMount.bind(this);
+  }
+
+  onLabelChange(event) {
+    this.resetValidation();
+    this.setState({ "label": event.target.value });
+  }
+
+  onUrlChange(event) {
+    this.resetValidation();
+    this.setState({ "url": event.target.value });
+  }
+
+  onCancelButtonClick(ev) {
+    ev.preventDefault();
+    this.props.onClose();
+  }
+
+  onAddButtonClick(ev) {
+    ev.preventDefault();
+    if (this.validateForm()) {
+      let site = { url: this.cleanUrl() };
+      if (this.state.label !== "") {
+        site.label = this.state.label;
+      }
+      this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
+        type: Actions["b" /* actionTypes */].TOP_SITES_INSERT,
+        data: { site }
+      }));
+      this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
+        source: TOP_SITES_SOURCE,
+        event: "TOP_SITES_ADD"
+      }));
+      this.props.onClose();
+    }
+  }
+
+  onSaveButtonClick(ev) {
+    ev.preventDefault();
+    if (this.validateForm()) {
+      let site = { url: this.cleanUrl() };
+      if (this.state.label !== "") {
+        site.label = this.state.label;
+      }
+      this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
+        type: Actions["b" /* actionTypes */].TOP_SITES_PIN,
+        data: { site, index: this.props.index }
+      }));
+      this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
+        source: TOP_SITES_SOURCE,
+        event: "TOP_SITES_EDIT",
+        action_position: this.props.index
+      }));
+      this.props.onClose();
+    }
+  }
+
+  cleanUrl() {
+    let { url } = this.state;
+    // If we are missing a protocol, prepend http://
+    if (!url.startsWith("http:") && !url.startsWith("https:")) {
+      url = `http://${url}`;
+    }
+    return url;
+  }
+
+  resetValidation() {
+    if (this.state.validationError) {
+      this.setState({ validationError: false });
+    }
+  }
+
+  validateUrl() {
+    try {
+      return !!new URL(this.cleanUrl());
+    } catch (e) {
+      return false;
+    }
+  }
+
+  validateForm() {
+    this.resetValidation();
+    // Only the URL is required and must be valid.
+    if (!this.state.url || !this.validateUrl()) {
+      this.setState({ validationError: true });
+      this.inputUrl.focus();
+      return false;
+    }
+    return true;
+  }
+
+  onUrlInputMount(input) {
+    this.inputUrl = input;
+  }
+
+  render() {
+    return external__React__default.a.createElement(
+      "form",
+      { className: "topsite-form" },
+      external__React__default.a.createElement(
+        "section",
+        { className: "edit-topsites-inner-wrapper" },
+        external__React__default.a.createElement(
+          "div",
+          { className: "form-wrapper" },
+          external__React__default.a.createElement(
+            "h3",
+            { className: "section-title" },
+            external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: this.props.editMode ? "topsites_form_edit_header" : "topsites_form_add_header" })
+          ),
+          external__React__default.a.createElement(
+            "div",
+            { className: "field title" },
+            external__React__default.a.createElement("input", {
+              type: "text",
+              value: this.state.label,
+              onChange: this.onLabelChange,
+              placeholder: this.props.intl.formatMessage({ id: "topsites_form_title_placeholder" }) })
+          ),
+          external__React__default.a.createElement(
+            "div",
+            { className: `field url${this.state.validationError ? " invalid" : ""}` },
+            external__React__default.a.createElement("input", {
+              type: "text",
+              ref: this.onUrlInputMount,
+              value: this.state.url,
+              onChange: this.onUrlChange,
+              placeholder: this.props.intl.formatMessage({ id: "topsites_form_url_placeholder" }) }),
+            this.state.validationError && external__React__default.a.createElement(
+              "aside",
+              { className: "error-tooltip" },
+              external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "topsites_form_url_validation" })
+            )
+          )
+        )
+      ),
+      external__React__default.a.createElement(
+        "section",
+        { className: "actions" },
+        external__React__default.a.createElement(
+          "button",
+          { className: "cancel", type: "button", onClick: this.onCancelButtonClick },
+          external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "topsites_form_cancel_button" })
+        ),
+        this.props.editMode && external__React__default.a.createElement(
+          "button",
+          { className: "done save", type: "submit", onClick: this.onSaveButtonClick },
+          external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "topsites_form_save_button" })
+        ),
+        !this.props.editMode && external__React__default.a.createElement(
+          "button",
+          { className: "done add", type: "submit", onClick: this.onAddButtonClick },
+          external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "topsites_form_add_button" })
+        )
+      )
+    );
+  }
+}
+
+TopSiteForm_TopSiteForm.defaultProps = {
+  label: "",
+  url: "",
+  index: 0,
+  editMode: false // by default we are in "Add New Top Site" mode
+};
 // EXTERNAL MODULE: ./system-addon/content-src/components/LinkMenu/LinkMenu.jsx + 2 modules
 var LinkMenu = __webpack_require__(6);
 
@@ -2676,11 +2893,12 @@ class TopSite_TopSiteLink extends external__React__default.a.PureComponent {
         break;
     }
   }
+
   render() {
     const { children, className, isDraggable, link, onClick, title } = this.props;
     const topSiteOuterClassName = `top-site-outer${className ? ` ${className}` : ""}`;
     const { tippyTopIcon, faviconSize } = link;
-    const letterFallback = title[0];
+    const [letterFallback] = title;
     let imageClassName;
     let imageStyle;
     let showSmallFavicon = false;
@@ -2765,10 +2983,8 @@ class TopSite_TopSite extends external__React__default.a.PureComponent {
     this.onLinkClick = this.onLinkClick.bind(this);
     this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
     this.onMenuUpdate = this.onMenuUpdate.bind(this);
-    this.onDismissButtonClick = this.onDismissButtonClick.bind(this);
-    this.onPinButtonClick = this.onPinButtonClick.bind(this);
-    this.onEditButtonClick = this.onEditButtonClick.bind(this);
   }
+
   userEvent(event) {
     this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
       event,
@@ -2776,55 +2992,21 @@ class TopSite_TopSite extends external__React__default.a.PureComponent {
       action_position: this.props.index
     }));
   }
+
   onLinkClick(ev) {
-    if (this.props.onEdit) {
-      // Ignore clicks if we are in the edit modal.
-      ev.preventDefault();
-      return;
-    }
     this.userEvent("CLICK");
   }
+
   onMenuButtonClick(event) {
     event.preventDefault();
     this.props.onActivate(this.props.index);
     this.setState({ showContextMenu: true });
   }
+
   onMenuUpdate(showContextMenu) {
     this.setState({ showContextMenu });
   }
-  onDismissButtonClick() {
-    const { link } = this.props;
-    if (link.isPinned) {
-      this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
-        type: Actions["b" /* actionTypes */].TOP_SITES_UNPIN,
-        data: { site: { url: link.url } }
-      }));
-    }
-    this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
-      type: Actions["b" /* actionTypes */].BLOCK_URL,
-      data: link.url
-    }));
-    this.userEvent("BLOCK");
-  }
-  onPinButtonClick() {
-    const { link, index } = this.props;
-    if (link.isPinned) {
-      this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
-        type: Actions["b" /* actionTypes */].TOP_SITES_UNPIN,
-        data: { site: { url: link.url } }
-      }));
-      this.userEvent("UNPIN");
-    } else {
-      this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
-        type: Actions["b" /* actionTypes */].TOP_SITES_PIN,
-        data: { site: { url: link.url }, index }
-      }));
-      this.userEvent("PIN");
-    }
-  }
-  onEditButtonClick() {
-    this.props.onEdit(this.props.index);
-  }
+
   render() {
     const { props } = this;
     const { link } = props;
@@ -2833,7 +3015,7 @@ class TopSite_TopSite extends external__React__default.a.PureComponent {
     return external__React__default.a.createElement(
       TopSite_TopSiteLink,
       _extends({}, props, { onClick: this.onLinkClick, onDragEvent: this.props.onDragEvent, className: isContextMenuOpen ? "active" : "", title: title }),
-      !props.onEdit && external__React__default.a.createElement(
+      external__React__default.a.createElement(
         "div",
         null,
         external__React__default.a.createElement(
@@ -2842,7 +3024,7 @@ class TopSite_TopSite extends external__React__default.a.PureComponent {
           external__React__default.a.createElement(
             "span",
             { className: "sr-only" },
-            `Open context menu for ${title}`
+            external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "context_menu_button_sr", values: { title } })
           )
         ),
         external__React__default.a.createElement(LinkMenu["a" /* LinkMenu */], {
@@ -2853,22 +3035,6 @@ class TopSite_TopSite extends external__React__default.a.PureComponent {
           site: link,
           source: TOP_SITES_SOURCE,
           visible: isContextMenuOpen })
-      ),
-      props.onEdit && external__React__default.a.createElement(
-        "div",
-        { className: "edit-menu" },
-        external__React__default.a.createElement("button", {
-          className: `icon icon-${link.isPinned ? "unpin" : "pin"}`,
-          title: this.props.intl.formatMessage({ id: `edit_topsites_${link.isPinned ? "unpin" : "pin"}_button` }),
-          onClick: this.onPinButtonClick }),
-        external__React__default.a.createElement("button", {
-          className: "icon icon-edit",
-          title: this.props.intl.formatMessage({ id: "edit_topsites_edit_button" }),
-          onClick: this.onEditButtonClick }),
-        external__React__default.a.createElement("button", {
-          className: "icon icon-dismiss",
-          title: this.props.intl.formatMessage({ id: "edit_topsites_dismiss_button" }),
-          onClick: this.onDismissButtonClick })
       )
     );
   }
@@ -2905,28 +3071,34 @@ class TopSite_TopSitePlaceholder extends external__React__default.a.PureComponen
 }
 
 class TopSite__TopSiteList extends external__React__default.a.PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = this.DEFAULT_STATE = {
+  static get DEFAULT_STATE() {
+    return {
+      activeIndex: null,
       draggedIndex: null,
       draggedSite: null,
       draggedTitle: null,
-      topSitesPreview: null,
-      activeIndex: null
+      topSitesPreview: null
     };
+  }
+
+  constructor(props) {
+    super(props);
+    this.state = TopSite__TopSiteList.DEFAULT_STATE;
     this.onDragEvent = this.onDragEvent.bind(this);
     this.onActivate = this.onActivate.bind(this);
   }
+
   componentWillUpdate(nextProps) {
     if (this.state.draggedSite) {
       const prevTopSites = this.props.TopSites && this.props.TopSites.rows;
       const newTopSites = nextProps.TopSites && nextProps.TopSites.rows;
       if (prevTopSites && prevTopSites[this.state.draggedIndex] && prevTopSites[this.state.draggedIndex].url === this.state.draggedSite.url && (!newTopSites[this.state.draggedIndex] || newTopSites[this.state.draggedIndex].url !== this.state.draggedSite.url)) {
         // We got the new order from the redux store via props. We can clear state now.
-        this.setState(this.DEFAULT_STATE);
+        this.setState(TopSite__TopSiteList.DEFAULT_STATE);
       }
     }
   }
+
   userEvent(event, index) {
     this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
       event,
@@ -2934,6 +3106,7 @@ class TopSite__TopSiteList extends external__React__default.a.PureComponent {
       action_position: index
     }));
   }
+
   onDragEvent(event, index, link, title) {
     switch (event.type) {
       case "dragstart":
@@ -2949,7 +3122,7 @@ class TopSite__TopSiteList extends external__React__default.a.PureComponent {
       case "dragend":
         if (!this.dropped) {
           // If there was no drop event, reset the state to the default.
-          this.setState(this.DEFAULT_STATE);
+          this.setState(TopSite__TopSiteList.DEFAULT_STATE);
         }
         break;
       case "dragenter":
@@ -2971,6 +3144,7 @@ class TopSite__TopSiteList extends external__React__default.a.PureComponent {
         break;
     }
   }
+
   _getTopSites() {
     // Make a copy of the sites to truncate or extend to desired length
     let topSites = this.props.TopSites.rows.slice();
@@ -3019,9 +3193,11 @@ class TopSite__TopSiteList extends external__React__default.a.PureComponent {
 
     return preview;
   }
+
   onActivate(index) {
     this.setState({ activeIndex: index });
   }
+
   render() {
     const { props } = this;
     const topSites = this.state.topSitesPreview || this._getTopSites();
@@ -3060,353 +3236,6 @@ class TopSite__TopSiteList extends external__React__default.a.PureComponent {
 }
 
 const TopSiteList = Object(external__ReactIntl_["injectIntl"])(TopSite__TopSiteList);
-// CONCATENATED MODULE: ./system-addon/content-src/components/TopSites/TopSiteForm.jsx
-
-
-
-
-
-class TopSiteForm_TopSiteForm extends external__React__default.a.PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      label: props.label || "",
-      url: props.url || "",
-      validationError: false
-    };
-    this.onLabelChange = this.onLabelChange.bind(this);
-    this.onUrlChange = this.onUrlChange.bind(this);
-    this.onCancelButtonClick = this.onCancelButtonClick.bind(this);
-    this.onAddButtonClick = this.onAddButtonClick.bind(this);
-    this.onSaveButtonClick = this.onSaveButtonClick.bind(this);
-    this.onUrlInputMount = this.onUrlInputMount.bind(this);
-  }
-  onLabelChange(event) {
-    this.resetValidation();
-    this.setState({ "label": event.target.value });
-  }
-  onUrlChange(event) {
-    this.resetValidation();
-    this.setState({ "url": event.target.value });
-  }
-  onCancelButtonClick(ev) {
-    ev.preventDefault();
-    this.props.onClose();
-  }
-  onAddButtonClick(ev) {
-    ev.preventDefault();
-    if (this.validateForm()) {
-      let site = { url: this.cleanUrl() };
-      if (this.state.label !== "") {
-        site.label = this.state.label;
-      }
-      this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
-        type: Actions["b" /* actionTypes */].TOP_SITES_INSERT,
-        data: { site }
-      }));
-      this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
-        source: TOP_SITES_SOURCE,
-        event: "TOP_SITES_ADD"
-      }));
-      this.props.onClose();
-    }
-  }
-  onSaveButtonClick(ev) {
-    ev.preventDefault();
-    if (this.validateForm()) {
-      let site = { url: this.cleanUrl() };
-      if (this.state.label !== "") {
-        site.label = this.state.label;
-      }
-      this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
-        type: Actions["b" /* actionTypes */].TOP_SITES_PIN,
-        data: { site, index: this.props.index }
-      }));
-      this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
-        source: TOP_SITES_SOURCE,
-        event: "TOP_SITES_EDIT",
-        action_position: this.props.index
-      }));
-      this.props.onClose();
-    }
-  }
-  cleanUrl() {
-    let url = this.state.url;
-    // If we are missing a protocol, prepend http://
-    if (!url.startsWith("http:") && !url.startsWith("https:")) {
-      url = `http://${url}`;
-    }
-    return url;
-  }
-  resetValidation() {
-    if (this.state.validationError) {
-      this.setState({ validationError: false });
-    }
-  }
-  validateUrl() {
-    try {
-      return !!new URL(this.cleanUrl());
-    } catch (e) {
-      return false;
-    }
-  }
-  validateForm() {
-    this.resetValidation();
-    // Only the URL is required and must be valid.
-    if (!this.state.url || !this.validateUrl()) {
-      this.setState({ validationError: true });
-      this.inputUrl.focus();
-      return false;
-    }
-    return true;
-  }
-  onUrlInputMount(input) {
-    this.inputUrl = input;
-  }
-  render() {
-    return external__React__default.a.createElement(
-      "form",
-      { className: "topsite-form" },
-      external__React__default.a.createElement(
-        "section",
-        { className: "edit-topsites-inner-wrapper" },
-        external__React__default.a.createElement(
-          "div",
-          { className: "form-wrapper" },
-          external__React__default.a.createElement(
-            "h3",
-            { className: "section-title" },
-            external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: this.props.editMode ? "topsites_form_edit_header" : "topsites_form_add_header" })
-          ),
-          external__React__default.a.createElement(
-            "div",
-            { className: "field title" },
-            external__React__default.a.createElement("input", {
-              type: "text",
-              value: this.state.label,
-              onChange: this.onLabelChange,
-              placeholder: this.props.intl.formatMessage({ id: "topsites_form_title_placeholder" }) })
-          ),
-          external__React__default.a.createElement(
-            "div",
-            { className: `field url${this.state.validationError ? " invalid" : ""}` },
-            external__React__default.a.createElement("input", {
-              type: "text",
-              ref: this.onUrlInputMount,
-              value: this.state.url,
-              onChange: this.onUrlChange,
-              placeholder: this.props.intl.formatMessage({ id: "topsites_form_url_placeholder" }) }),
-            this.state.validationError && external__React__default.a.createElement(
-              "aside",
-              { className: "error-tooltip" },
-              external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "topsites_form_url_validation" })
-            )
-          )
-        )
-      ),
-      external__React__default.a.createElement(
-        "section",
-        { className: "actions" },
-        external__React__default.a.createElement(
-          "button",
-          { className: "cancel", type: "button", onClick: this.onCancelButtonClick },
-          external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "topsites_form_cancel_button" })
-        ),
-        this.props.editMode && external__React__default.a.createElement(
-          "button",
-          { className: "done save", type: "submit", onClick: this.onSaveButtonClick },
-          external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "topsites_form_save_button" })
-        ),
-        !this.props.editMode && external__React__default.a.createElement(
-          "button",
-          { className: "done add", type: "submit", onClick: this.onAddButtonClick },
-          external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "topsites_form_add_button" })
-        )
-      )
-    );
-  }
-}
-
-TopSiteForm_TopSiteForm.defaultProps = {
-  label: "",
-  url: "",
-  index: 0,
-  editMode: false // by default we are in "Add New Top Site" mode
-};
-// CONCATENATED MODULE: ./system-addon/content-src/components/TopSites/TopSitesEdit.jsx
-
-
-
-
-
-
-
-
-class TopSitesEdit__TopSitesEdit extends external__React__default.a.PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      showEditModal: false,
-      showAddForm: false,
-      showEditForm: false,
-      editIndex: -1 // Index of top site being edited
-    };
-    this.onEditButtonClick = this.onEditButtonClick.bind(this);
-    this.onShowMoreLessClick = this.onShowMoreLessClick.bind(this);
-    this.onModalOverlayClick = this.onModalOverlayClick.bind(this);
-    this.onAddButtonClick = this.onAddButtonClick.bind(this);
-    this.onFormClose = this.onFormClose.bind(this);
-    this.onEdit = this.onEdit.bind(this);
-    this.dispatchEditModalUserEvent = this.dispatchEditModalUserEvent.bind(this);
-  }
-  dispatchEditModalUserEvent() {
-    const event = this.state.showEditModal ? "TOP_SITES_EDIT_OPEN" : "TOP_SITES_EDIT_CLOSE";
-    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
-      source: TOP_SITES_SOURCE,
-      event
-    }));
-  }
-  onEditButtonClick() {
-    function toggleEditModal(prevState) {
-      return { showEditModal: !prevState.showEditModal };
-    }
-    this.setState(toggleEditModal, this.dispatchEditModalUserEvent);
-  }
-  onModalOverlayClick() {
-    this.setState({ showEditModal: false, showAddForm: false, showEditForm: false });
-    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
-      source: TOP_SITES_SOURCE,
-      event: "TOP_SITES_EDIT_CLOSE"
-    }));
-    this.props.dispatch({ type: Actions["b" /* actionTypes */].TOP_SITES_CANCEL_EDIT });
-  }
-  onShowMoreLessClick() {
-    const prefIsSetToDefault = this.props.TopSitesCount === Reducers["a" /* TOP_SITES_DEFAULT_LENGTH */];
-    this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
-      type: Actions["b" /* actionTypes */].SET_PREF,
-      data: { name: "topSitesCount", value: prefIsSetToDefault ? Reducers["b" /* TOP_SITES_SHOWMORE_LENGTH */] : Reducers["a" /* TOP_SITES_DEFAULT_LENGTH */] }
-    }));
-    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
-      source: TOP_SITES_SOURCE,
-      event: prefIsSetToDefault ? "TOP_SITES_EDIT_SHOW_MORE" : "TOP_SITES_EDIT_SHOW_LESS"
-    }));
-  }
-  onAddButtonClick() {
-    this.setState({ showAddForm: true });
-    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
-      source: TOP_SITES_SOURCE,
-      event: "TOP_SITES_ADD_FORM_OPEN"
-    }));
-  }
-  onFormClose() {
-    this.setState({ showAddForm: false, showEditForm: false });
-    this.props.dispatch({ type: Actions["b" /* actionTypes */].TOP_SITES_CANCEL_EDIT });
-  }
-  onEdit(index) {
-    this.setState({ showEditForm: true, editIndex: index });
-    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
-      source: TOP_SITES_SOURCE,
-      event: "TOP_SITES_EDIT_FORM_OPEN"
-    }));
-  }
-  render() {
-    const { editForm } = this.props.TopSites;
-    const showEditForm = editForm && editForm.visible || this.state.showEditModal && this.state.showEditForm;
-    let editIndex = this.state.editIndex;
-    if (editIndex < 0 && editForm) {
-      editIndex = editForm.index;
-    }
-    const editSite = this.props.TopSites.rows[editIndex] || {};
-    return external__React__default.a.createElement(
-      "div",
-      { className: "edit-topsites-wrapper" },
-      external__React__default.a.createElement(
-        "div",
-        { className: "edit-topsites-button" },
-        external__React__default.a.createElement(
-          "button",
-          {
-            className: "edit",
-            title: this.props.intl.formatMessage({ id: "edit_topsites_button_label" }),
-            onClick: this.onEditButtonClick },
-          external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "edit_topsites_button_text" })
-        )
-      ),
-      this.state.showEditModal && !this.state.showAddForm && !this.state.showEditForm && external__React__default.a.createElement(
-        "div",
-        { className: "edit-topsites" },
-        external__React__default.a.createElement("div", { className: "modal-overlay", onClick: this.onModalOverlayClick }),
-        external__React__default.a.createElement(
-          "div",
-          { className: "modal" },
-          external__React__default.a.createElement(
-            "section",
-            { className: "edit-topsites-inner-wrapper" },
-            external__React__default.a.createElement(
-              "div",
-              { className: "section-top-bar" },
-              external__React__default.a.createElement(
-                "h3",
-                { className: "section-title" },
-                external__React__default.a.createElement("span", { className: `icon icon-small-spacer icon-topsites` }),
-                external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "header_top_sites" })
-              )
-            ),
-            external__React__default.a.createElement(TopSiteList, { TopSites: this.props.TopSites, TopSitesCount: this.props.TopSitesCount, onEdit: this.onEdit, dispatch: this.props.dispatch, intl: this.props.intl })
-          ),
-          external__React__default.a.createElement(
-            "section",
-            { className: "actions" },
-            external__React__default.a.createElement(
-              "button",
-              { className: "add", onClick: this.onAddButtonClick },
-              external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "edit_topsites_add_button" })
-            ),
-            external__React__default.a.createElement(
-              "button",
-              { className: `icon icon-topsites show-${this.props.TopSitesCount === Reducers["a" /* TOP_SITES_DEFAULT_LENGTH */] ? "more" : "less"}`, onClick: this.onShowMoreLessClick },
-              external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: `edit_topsites_show${this.props.TopSitesCount === Reducers["a" /* TOP_SITES_DEFAULT_LENGTH */] ? "more" : "less"}_button` })
-            ),
-            external__React__default.a.createElement(
-              "button",
-              { className: "done", onClick: this.onEditButtonClick },
-              external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "edit_topsites_done_button" })
-            )
-          )
-        )
-      ),
-      this.state.showEditModal && this.state.showAddForm && external__React__default.a.createElement(
-        "div",
-        { className: "edit-topsites" },
-        external__React__default.a.createElement("div", { className: "modal-overlay", onClick: this.onModalOverlayClick }),
-        external__React__default.a.createElement(
-          "div",
-          { className: "modal" },
-          external__React__default.a.createElement(TopSiteForm_TopSiteForm, { onClose: this.onFormClose, dispatch: this.props.dispatch, intl: this.props.intl })
-        )
-      ),
-      showEditForm && external__React__default.a.createElement(
-        "div",
-        { className: "edit-topsites" },
-        external__React__default.a.createElement("div", { className: "modal-overlay", onClick: this.onModalOverlayClick }),
-        external__React__default.a.createElement(
-          "div",
-          { className: "modal" },
-          external__React__default.a.createElement(TopSiteForm_TopSiteForm, {
-            label: editSite.label || editSite.hostname || "",
-            url: editSite.url || "",
-            index: editIndex,
-            editMode: true,
-            onClose: this.onFormClose,
-            dispatch: this.props.dispatch,
-            intl: this.props.intl })
-        )
-      )
-    );
-  }
-}
-
-const TopSitesEdit = Object(external__ReactIntl_["injectIntl"])(TopSitesEdit__TopSitesEdit);
 // CONCATENATED MODULE: ./system-addon/content-src/components/TopSites/TopSites.jsx
 
 
@@ -3450,6 +3279,21 @@ function countTopSitesIconsTypes(topSites) {
 }
 
 class TopSites__TopSites extends external__React__default.a.PureComponent {
+  static get DEFAULT_STATE() {
+    return {
+      showAddForm: false,
+      showEditForm: false,
+      editIndex: -1 // Index of top site being edited
+    };
+  }
+
+  constructor(props) {
+    super(props);
+    this.state = TopSites__TopSites.DEFAULT_STATE;
+    this.onAddButtonClick = this.onAddButtonClick.bind(this);
+    this.onFormClose = this.onFormClose.bind(this);
+  }
+
   /**
    * Dispatch session statistics about the quality of TopSites icons and pinned count.
    */
@@ -3479,12 +3323,37 @@ class TopSites__TopSites extends external__React__default.a.PureComponent {
     this._dispatchTopSitesStats();
   }
 
+  onAddButtonClick() {
+    this.setState({ showAddForm: true });
+    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
+      source: TOP_SITES_SOURCE,
+      event: "TOP_SITES_ADD_FORM_OPEN"
+    }));
+  }
+
+  onFormClose() {
+    this.setState(TopSites__TopSites.DEFAULT_STATE);
+    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
+      source: TOP_SITES_SOURCE,
+      event: "TOP_SITES_EDIT_CLOSE"
+    }));
+    this.props.dispatch({ type: Actions["b" /* actionTypes */].TOP_SITES_CANCEL_EDIT });
+  }
+
   render() {
-    const props = this.props;
+    const { props } = this;
     const infoOption = {
       header: { id: "settings_pane_topsites_header" },
       body: { id: "settings_pane_topsites_body" }
     };
+    const { showAddForm } = this.state;
+    const { editForm } = this.props.TopSites;
+    const showEditForm = editForm && editForm.visible || this.state.showEditForm;
+    let { editIndex } = this.state;
+    if (editIndex < 0 && editForm) {
+      editIndex = editForm.index;
+    }
+    const editSite = this.props.TopSites.rows[editIndex] || {};
     return external__React__default.a.createElement(
       ComponentPerfTimer["a" /* ComponentPerfTimer */],
       { id: "topsites", initialized: props.TopSites.initialized, dispatch: props.dispatch },
@@ -3492,7 +3361,49 @@ class TopSites__TopSites extends external__React__default.a.PureComponent {
         CollapsibleSection["a" /* CollapsibleSection */],
         { className: "top-sites", icon: "topsites", title: external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "header_top_sites" }), infoOption: infoOption, prefName: "collapseTopSites", Prefs: props.Prefs, dispatch: props.dispatch },
         external__React__default.a.createElement(TopSiteList, { TopSites: props.TopSites, TopSitesCount: props.TopSitesCount, dispatch: props.dispatch, intl: props.intl }),
-        external__React__default.a.createElement(TopSitesEdit, props)
+        external__React__default.a.createElement(
+          "div",
+          { className: "edit-topsites-wrapper" },
+          external__React__default.a.createElement(
+            "div",
+            { className: "add-topsites-button" },
+            external__React__default.a.createElement(
+              "button",
+              {
+                className: "add",
+                title: this.props.intl.formatMessage({ id: "edit_topsites_add_button_tooltip" }),
+                onClick: this.onAddButtonClick },
+              external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "edit_topsites_add_button" })
+            )
+          ),
+          showAddForm && external__React__default.a.createElement(
+            "div",
+            { className: "edit-topsites" },
+            external__React__default.a.createElement("div", { className: "modal-overlay", onClick: this.onFormClose }),
+            external__React__default.a.createElement(
+              "div",
+              { className: "modal" },
+              external__React__default.a.createElement(TopSiteForm_TopSiteForm, { onClose: this.onFormClose, dispatch: this.props.dispatch, intl: this.props.intl })
+            )
+          ),
+          showEditForm && external__React__default.a.createElement(
+            "div",
+            { className: "edit-topsites" },
+            external__React__default.a.createElement("div", { className: "modal-overlay", onClick: this.onFormClose }),
+            external__React__default.a.createElement(
+              "div",
+              { className: "modal" },
+              external__React__default.a.createElement(TopSiteForm_TopSiteForm, {
+                label: editSite.label || editSite.hostname || "",
+                url: editSite.url || "",
+                index: editIndex,
+                editMode: true,
+                onClose: this.onFormClose,
+                dispatch: this.props.dispatch,
+                intl: this.props.intl })
+            )
+          )
+        )
       )
     );
   }
@@ -3502,7 +3413,7 @@ const TopSites = Object(external__ReactRedux_["connect"])(state => ({
   TopSites: state.TopSites,
   Prefs: state.Prefs,
   TopSitesCount: state.Prefs.values.topSitesCount
-}))(TopSites__TopSites);
+}))(Object(external__ReactIntl_["injectIntl"])(TopSites__TopSites));
 // CONCATENATED MODULE: ./system-addon/content-src/components/Base/Base.jsx
 
 
@@ -3555,7 +3466,7 @@ class Base__Base extends external__React__default.a.PureComponent {
   }
 
   render() {
-    const props = this.props;
+    const { props } = this;
     const { App, locale, strings } = props;
     const { initialized } = App;
     const prefs = props.Prefs.values;
@@ -3949,6 +3860,7 @@ class Card_Card extends external__React__default.a.PureComponent {
       showContextMenu: true
     });
   }
+
   onLinkClick(event) {
     event.preventDefault();
     const { altKey, button, ctrlKey, metaKey, shiftKey } = event;
@@ -3969,21 +3881,26 @@ class Card_Card extends external__React__default.a.PureComponent {
       }));
     }
   }
+
   onMenuUpdate(showContextMenu) {
     this.setState({ showContextMenu });
   }
+
   componentDidMount() {
     this.maybeLoadImage();
   }
+
   componentDidUpdate() {
     this.maybeLoadImage();
   }
+
   componentWillReceiveProps(nextProps) {
     // Clear the image state if changing images
     if (nextProps.link.image !== this.props.link.image) {
       this.setState({ imageLoaded: false });
     }
   }
+
   render() {
     const { index, link, dispatch, contextMenuOptions, eventSource, shouldSendImpressionStats } = this.props;
     const { props } = this;

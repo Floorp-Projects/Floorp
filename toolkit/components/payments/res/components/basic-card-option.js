@@ -21,30 +21,27 @@ class BasicCardOption extends ObservedPropertiesMixin(RichOption) {
     ]);
   }
 
-  connectedCallback() {
-    for (let child of this.children) {
-      child.remove();
+  constructor() {
+    super();
+
+    for (let name of ["owner", "number", "expiration", "type"]) {
+      this[`_${name}`] = document.createElement("span");
+      this[`_${name}`].classList.add(name);
     }
+  }
 
-    let fragment = document.createDocumentFragment();
-    RichOption._createElement(fragment, "owner");
-    RichOption._createElement(fragment, "number");
-    RichOption._createElement(fragment, "expiration");
-    RichOption._createElement(fragment, "type");
-    this.appendChild(fragment);
-
+  connectedCallback() {
+    for (let name of ["owner", "number", "expiration", "type"]) {
+      this.appendChild(this[`_${name}`]);
+    }
     super.connectedCallback();
   }
 
   render() {
-    if (!this.parentNode) {
-      return;
-    }
-
-    this.querySelector(".owner").textContent = this.owner;
-    this.querySelector(".number").textContent = this.number;
-    this.querySelector(".expiration").textContent = this.expiration;
-    this.querySelector(".type").textContent = this.type;
+    this._owner.textContent = this.owner;
+    this._number.textContent = this.number;
+    this._expiration.textContent = this.expiration;
+    this._type.textContent = this.type;
   }
 }
 

@@ -39,8 +39,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-ServoStyleSet* ServoStyleSet::sInServoTraversal = nullptr;
-
 #ifdef DEBUG
 bool
 ServoStyleSet::IsCurrentThreadInServoTraversal()
@@ -50,6 +48,9 @@ ServoStyleSet::IsCurrentThreadInServoTraversal()
 #endif
 
 namespace mozilla {
+ServoStyleSet* sInServoTraversal = nullptr;
+
+
 // On construction, sets sInServoTraversal to the given ServoStyleSet.
 // On destruction, clears sInServoTraversal and calls RunPostTraversalTasks.
 class MOZ_RAII AutoSetInServoTraversal
@@ -58,15 +59,15 @@ public:
   explicit AutoSetInServoTraversal(ServoStyleSet* aSet)
     : mSet(aSet)
   {
-    MOZ_ASSERT(!ServoStyleSet::sInServoTraversal);
+    MOZ_ASSERT(!sInServoTraversal);
     MOZ_ASSERT(aSet);
-    ServoStyleSet::sInServoTraversal = aSet;
+    sInServoTraversal = aSet;
   }
 
   ~AutoSetInServoTraversal()
   {
-    MOZ_ASSERT(ServoStyleSet::sInServoTraversal);
-    ServoStyleSet::sInServoTraversal = nullptr;
+    MOZ_ASSERT(sInServoTraversal);
+    sInServoTraversal = nullptr;
     mSet->RunPostTraversalTasks();
   }
 

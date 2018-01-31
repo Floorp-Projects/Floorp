@@ -150,6 +150,56 @@ def android_platform(target, android_version, ndk, _):
 add_old_configure_assignment('android_platform', android_platform)
 
 
+@depends(android_platform, ndk, target, '--help')
+@checking('for android sysroot directory')
+@imports(_from='os.path', _import='isdir')
+def android_sysroot(android_platform, ndk, target, _):
+    if target.os != 'Android':
+        return
+
+    # NDK r15 has both unified and non-unified headers, but we only support
+    # non-unified for that NDK, so look for that first.
+    search_dirs = [
+        # (<if this directory exists>, <return this directory>)
+        (os.path.join(android_platform, 'usr', 'include'), android_platform),
+        (os.path.join(ndk, 'sysroot'), os.path.join(ndk, 'sysroot')),
+    ]
+
+    for test_dir, sysroot_dir in search_dirs:
+        if isdir(test_dir):
+            return sysroot_dir
+
+    die("Android sysroot directory not found in %s." %
+        str([sysroot_dir for test_dir, sysroot_dir in search_dirs]))
+
+
+add_old_configure_assignment('android_sysroot', android_sysroot)
+
+
+@depends(android_platform, ndk, target, '--help')
+@checking('for android system directory')
+@imports(_from='os.path', _import='isdir')
+def android_system(android_platform, ndk, target, _):
+    if target.os != 'Android':
+        return
+
+    # NDK r15 has both unified and non-unified headers, but we only support
+    # non-unified for that NDK, so look for that first.
+    search_dirs = [
+        os.path.join(android_platform, 'usr', 'include'),
+        os.path.join(ndk, 'sysroot', 'usr', 'include', target.toolchain),
+    ]
+
+    for system_dir in search_dirs:
+        if isdir(system_dir):
+            return system_dir
+
+    die("Android system directory not found in %s." % str(search_dirs))
+
+
+add_old_configure_assignment('android_system', android_system)
+
+
 @depends(target, host, ndk, '--with-android-toolchain', '--help')
 @checking('for the Android toolchain directory', lambda x: x or 'not found')
 @imports(_from='os.path', _import='isdir')
@@ -241,14 +291,19 @@ def stlport_cppflags(value, ndk, _):
 add_old_configure_assignment('stlport_cppflags', stlport_cppflags)
 
 
-@depends(android_platform, android_toolchain, stlport_cppflags)
-def extra_toolchain_flags(platform_dir, toolchain_dir, stlport_cppflags):
-    if not platform_dir:
+@depends(android_system, android_sysroot, android_toolchain, android_version,
+         stlport_cppflags)
+def extra_toolchain_flags(android_system, android_sysroot, toolchain_dir,
+                          android_version, stlport_cppflags):
+    if not android_sysroot:
         return []
     flags = ['-isystem',
-             os.path.join(platform_dir, 'usr', 'include'),
+             android_system,
+             '-isystem',
+             os.path.join(android_sysroot, 'usr', 'include'),
              '-gcc-toolchain',
-             toolchain_dir]
+             toolchain_dir,
+             '-D__ANDROID_API__=%d' % android_version]
     flags.extend(stlport_cppflags if stlport_cppflags else [])
     return flags
 

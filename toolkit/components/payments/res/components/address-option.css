@@ -3,19 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 address-option {
-  display: grid;
   grid-row-gap: 5px;
   grid-column-gap: 10px;
   grid-template-areas:
     "name          "
     "street-address";
-
-  border-bottom: 1px solid #ddd;
-  background: #fff;
-  padding: 5px;
-  padding-inline-start: 20px;
-  width: 400px;
-  font-size: .8em;
 }
 
 rich-select[open] > .rich-select-popup-box > address-option {
@@ -48,11 +40,7 @@ address-option > .tel {
   white-space: nowrap;
 }
 
-.rich-select-popup-box > address-option[selected] {
-  background-color: #ffa;
-}
-
-rich-select > .rich-select-selected-clone > .email,
-rich-select > .rich-select-selected-clone > .tel {
+.rich-select-selected-clone > .email,
+.rich-select-selected-clone > .tel {
   display: none;
 }

@@ -8,12 +8,12 @@ AC_DEFUN([MOZ_ANDROID_NDK],
 case "$target" in
 *-android*|*-linuxandroid*)
     dnl $android_platform will be set for us by Python configure.
-    directory_include_args="-isystem $android_platform/usr/include"
+    directory_include_args="-isystem $android_system -isystem $android_sysroot/usr/include"
 
     # clang will do any number of interesting things with host tools unless we tell
     # it to use the NDK tools.
     extra_opts="-gcc-toolchain $(dirname $(dirname $TOOLCHAIN_PREFIX))"
-    CPPFLAGS="$extra_opts $CPPFLAGS"
+    CPPFLAGS="$extra_opts -D__ANDROID_API__=$android_version $CPPFLAGS"
     ASFLAGS="$extra_opts $ASFLAGS"
     LDFLAGS="$extra_opts $LDFLAGS"
 

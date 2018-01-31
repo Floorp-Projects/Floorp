@@ -26,7 +26,7 @@ describe("initStore", () => {
   });
   it("should add a listener that dispatches actions", () => {
     assert.calledWith(global.addMessageListener, INCOMING_MESSAGE_NAME);
-    const listener = global.addMessageListener.firstCall.args[1];
+    const [, listener] = global.addMessageListener.firstCall.args;
     globals.sandbox.spy(store, "dispatch");
     const message = {name: INCOMING_MESSAGE_NAME, data: {type: "FOO"}};
 
@@ -46,7 +46,7 @@ describe("initStore", () => {
     assert.equal(store.getState().number, 42);
   });
   it("should log errors from failed messages", () => {
-    const callback = global.addMessageListener.firstCall.args[1];
+    const [, callback] = global.addMessageListener.firstCall.args;
     globals.sandbox.stub(global.console, "error");
     globals.sandbox.stub(store, "dispatch").throws(Error("failed"));
 

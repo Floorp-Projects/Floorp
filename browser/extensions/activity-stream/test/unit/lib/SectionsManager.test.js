@@ -326,7 +326,7 @@ describe("SectionsFeed", () => {
   describe("#onAddSection", () => {
     it("should broadcast a SECTION_REGISTER action with the correct data", () => {
       feed.onAddSection(null, FAKE_ID, FAKE_OPTIONS);
-      const action = feed.store.dispatch.firstCall.args[0];
+      const [action] = feed.store.dispatch.firstCall.args;
       assert.equal(action.type, "SECTION_REGISTER");
       assert.deepEqual(action.data, Object.assign({id: FAKE_ID}, FAKE_OPTIONS));
       assert.equal(action.meta.from, MAIN_MESSAGE_TYPE);
@@ -336,7 +336,7 @@ describe("SectionsFeed", () => {
   describe("#onRemoveSection", () => {
     it("should broadcast a SECTION_DEREGISTER action with the correct data", () => {
       feed.onRemoveSection(null, FAKE_ID);
-      const action = feed.store.dispatch.firstCall.args[0];
+      const [action] = feed.store.dispatch.firstCall.args;
       assert.equal(action.type, "SECTION_DEREGISTER");
       assert.deepEqual(action.data, FAKE_ID);
       // Should be broadcast
@@ -351,7 +351,7 @@ describe("SectionsFeed", () => {
     });
     it("should dispatch a SECTION_UPDATE action with the correct data", () => {
       feed.onUpdateSection(null, FAKE_ID, {rows: FAKE_ROWS});
-      const action = feed.store.dispatch.firstCall.args[0];
+      const [action] = feed.store.dispatch.firstCall.args;
       assert.equal(action.type, "SECTION_UPDATE");
       assert.deepEqual(action.data, {id: FAKE_ID, rows: FAKE_ROWS});
       // Should be not broadcast by default, but should update the preloaded tab, so check meta
@@ -360,7 +360,7 @@ describe("SectionsFeed", () => {
     });
     it("should broadcast the action only if shouldBroadcast is true", () => {
       feed.onUpdateSection(null, FAKE_ID, {rows: FAKE_ROWS}, true);
-      const action = feed.store.dispatch.firstCall.args[0];
+      const [action] = feed.store.dispatch.firstCall.args;
       // Should be broadcast
       assert.equal(action.meta.from, MAIN_MESSAGE_TYPE);
       assert.equal(action.meta.to, CONTENT_MESSAGE_TYPE);
@@ -373,7 +373,7 @@ describe("SectionsFeed", () => {
     });
     it("should dispatch a SECTION_UPDATE_CARD action with the correct data", () => {
       feed.onUpdateSectionCard(null, FAKE_ID, FAKE_URL, FAKE_CARD_OPTIONS);
-      const action = feed.store.dispatch.firstCall.args[0];
+      const [action] = feed.store.dispatch.firstCall.args;
       assert.equal(action.type, "SECTION_UPDATE_CARD");
       assert.deepEqual(action.data, {id: FAKE_ID, url: FAKE_URL, options: FAKE_CARD_OPTIONS});
       // Should be not broadcast by default, but should update the preloaded tab, so check meta
@@ -382,7 +382,7 @@ describe("SectionsFeed", () => {
     });
     it("should broadcast the action only if shouldBroadcast is true", () => {
       feed.onUpdateSectionCard(null, FAKE_ID, FAKE_URL, FAKE_CARD_OPTIONS, true);
-      const action = feed.store.dispatch.firstCall.args[0];
+      const [action] = feed.store.dispatch.firstCall.args;
       // Should be broadcast
       assert.equal(action.meta.from, MAIN_MESSAGE_TYPE);
       assert.equal(action.meta.to, CONTENT_MESSAGE_TYPE);
@@ -410,7 +410,7 @@ describe("SectionsFeed", () => {
     it("should fire SECTION_OPTIONS_UPDATED on suitable PREF_CHANGED events", () => {
       feed.onAction({type: "PREF_CHANGED", data: {name: "feeds.section.topstories.options", value: "foo"}});
       assert.calledOnce(feed.store.dispatch);
-      const action = feed.store.dispatch.firstCall.args[0];
+      const [action] = feed.store.dispatch.firstCall.args;
       assert.equal(action.type, "SECTION_OPTIONS_CHANGED");
       assert.equal(action.data, "topstories");
     });

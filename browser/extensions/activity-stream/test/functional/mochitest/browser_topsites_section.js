@@ -2,13 +2,13 @@
 
 // Check TopSites edit modal and overlay show up.
 test_newtab(
-  // it should be able to click the topsites edit button to reveal the edit topsites modal and overlay.
+  // it should be able to click the topsites add button to reveal the add top site modal and overlay.
   function topsites_edit() {
-    const topsitesEditBtn = content.document.querySelector(".edit-topsites-button button");
-    topsitesEditBtn.click();
+    const topsitesAddBtn = content.document.querySelector(".add-topsites-button button");
+    topsitesAddBtn.click();
 
-    let found = content.document.querySelector(".edit-topsites");
-    ok(found && !found.hidden, "Should find a visible topsites edit menu");
+    let found = content.document.querySelector(".topsite-form");
+    ok(found && !found.hidden, "Should find a visible topsite form");
 
     found = content.document.querySelector(".modal-overlay");
     ok(found && !found.hidden, "Should find a visible overlay");

@@ -8,7 +8,10 @@ module.exports = {
     "sinon": true
   },
   "rules": {
+    "func-name-matching": 0,
     "import/no-commonjs": 2,
-    "react/jsx-no-bind": 0
+    "lines-between-class-members": 0,
+    "react/jsx-no-bind": 0,
+    "require-await": 0
   }
 };

@@ -60,7 +60,8 @@ describe("Top Sites Feed", () => {
     };
     fakeScreenshot = {
       getScreenshotForURL: sandbox.spy(() => Promise.resolve(FAKE_SCREENSHOT)),
-      maybeCacheScreenshot: Screenshots.maybeCacheScreenshot
+      maybeCacheScreenshot: Screenshots.maybeCacheScreenshot,
+      _shouldGetScreenshots: sinon.stub().returns(true)
     };
     filterAdultStub = sinon.stub().returns([]);
     shortURLStub = sinon.stub().callsFake(site => site.url);
@@ -683,6 +684,24 @@ describe("Top Sites Feed", () => {
       feed.pin({data: {index: 2, site}});
       assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 2);
+    });
+    it("should properly update LinksCache object properties between migrations", async () => {
+      fakeNewTabUtils.pinnedLinks.links = [{url: "https://foo.com/"}];
+
+      let pinnedLinks = await feed.pinnedCache.request();
+      assert.equal(pinnedLinks.length, 1);
+      feed.pinnedCache.expire();
+      pinnedLinks[0].__sharedCache.updateLink("screenshot", "foo");
+
+      pinnedLinks = await feed.pinnedCache.request();
+      assert.propertyVal(pinnedLinks[0], "screenshot", "foo");
+
+      // Force cache expiration in order to trigger a migration of objects
+      feed.pinnedCache.expire();
+      pinnedLinks[0].__sharedCache.updateLink("screenshot", "bar");
+
+      pinnedLinks = await feed.pinnedCache.request();
+      assert.propertyVal(pinnedLinks[0], "screenshot", "bar");
     });
   });
   describe("#drop", () => {

@@ -21,7 +21,7 @@ describe("prerenderStore", () => {
 
     const state = store.getState();
     // TopStories
-    const firstSection = state.Sections[0];
+    const [firstSection] = state.Sections;
     assert.equal(firstSection.id, "topstories");
     // it should start uninitialized
     assert.equal(firstSection.initialized, false);
