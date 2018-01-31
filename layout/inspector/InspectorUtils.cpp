@@ -672,6 +672,7 @@ PropertySupportsVariant(nsCSSPropertyID aPropertyID, uint32_t aVariant)
       case eCSSProperty_scroll_snap_coordinate:
       case eCSSProperty_scroll_snap_destination:
       case eCSSProperty_transform_origin:
+      case eCSSProperty_translate:
       case eCSSProperty_perspective_origin:
       case eCSSProperty__moz_outline_radius_topleft:
       case eCSSProperty__moz_outline_radius_topright:
@@ -705,6 +706,7 @@ PropertySupportsVariant(nsCSSPropertyID aPropertyID, uint32_t aVariant)
         break;
 
       case eCSSProperty_image_orientation:
+      case eCSSProperty_rotate:
         supported |= VARIANT_ANGLE;
         break;
 
@@ -718,6 +720,7 @@ PropertySupportsVariant(nsCSSPropertyID aPropertyID, uint32_t aVariant)
       case eCSSProperty_grid_row_end:
       case eCSSProperty_font_weight:
       case eCSSProperty_initial_letter:
+      case eCSSProperty_scale:
         supported |= VARIANT_NUMBER;
         break;
 

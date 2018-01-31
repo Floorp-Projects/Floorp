@@ -8122,7 +8122,7 @@ nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(const nsI
                                                                        float aAppUnitsPerPixel,
                                                                        const nsRect* aBoundsOverride)
   : mFrame(aFrame)
-  , mTransformList(aFrame->StyleDisplay()->mSpecifiedTransform)
+  , mTransformList(aFrame->StyleDisplay()->GetCombinedTransform())
   , mToTransformOrigin(GetDeltaToTransformOrigin(aFrame, aAppUnitsPerPixel, aBoundsOverride))
 {
 }

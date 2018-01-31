@@ -313,7 +313,7 @@ ServoKeyframesRule::DeleteRule(const nsAString& aKey)
 }
 
 /* virtual */ void
-ServoKeyframesRule::GetCssTextImpl(nsAString& aCssText) const
+ServoKeyframesRule::GetCssText(nsAString& aCssText) const
 {
   Servo_KeyframesRule_GetCssText(mRawRule, &aCssText);
 }

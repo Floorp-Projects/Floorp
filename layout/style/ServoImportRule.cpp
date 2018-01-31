@@ -103,7 +103,7 @@ ServoImportRule::GetHref(nsAString& aHref) const
 }
 
 /* virtual */ void
-ServoImportRule::GetCssTextImpl(nsAString& aCssText) const
+ServoImportRule::GetCssText(nsAString& aCssText) const
 {
   Servo_ImportRule_GetCssText(mRawRule, &aCssText);
 }

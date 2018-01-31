@@ -410,7 +410,8 @@ Instance::Instance(JSContext* cx,
     tlsData()->boundsCheckLimit = memory ? memory->buffer().wasmBoundsCheckLimit() : 0;
 #endif
     tlsData()->instance = this;
-    tlsData()->addressOfContext = (JSContext**)object->zone()->group()->addressOfOwnerContext();
+    tlsData()->cx = cx;
+    tlsData()->stackLimit = cx->stackLimitForJitCode(JS::StackForUntrustedScript);
     tlsData()->jumpTable = code_->jumpTable();
 
     Tier callerTier = code_->bestTier();

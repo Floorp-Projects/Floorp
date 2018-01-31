@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {ProfileStorage} = ChromeUtils.import("resource://formautofill/ProfileStorage.jsm", {});
+const {FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {});
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
 
@@ -239,7 +239,7 @@ let do_check_record_matches = (expectedRecord, record) => {
 add_task(async function test_migrateAddressRecords() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
 
-  let profileStorage = new ProfileStorage(path);
+  let profileStorage = new FormAutofillStorage(path);
   await profileStorage.initialize();
 
   ADDRESS_TESTCASES.forEach(testcase => {
@@ -252,7 +252,7 @@ add_task(async function test_migrateAddressRecords() {
 add_task(async function test_migrateCreditCardRecords() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
 
-  let profileStorage = new ProfileStorage(path);
+  let profileStorage = new FormAutofillStorage(path);
   await profileStorage.initialize();
 
   CREDIT_CARD_TESTCASES.forEach(testcase => {
