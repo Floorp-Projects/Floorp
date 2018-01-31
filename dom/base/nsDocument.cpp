@@ -5853,20 +5853,6 @@ nsDocument::GetImplementation(ErrorResult& rv)
   return mDOMImplementation;
 }
 
-NS_IMETHODIMP
-nsDocument::CreateElement(const nsAString& aTagName,
-                          nsIDOMElement** aReturn)
-{
-  *aReturn = nullptr;
-  ErrorResult rv;
-  ElementCreationOptionsOrString options;
-
-  options.SetAsString();
-  nsCOMPtr<Element> element = CreateElement(aTagName, options, rv);
-  NS_ENSURE_FALSE(rv.Failed(), rv.StealNSResult());
-  return CallQueryInterface(element, aReturn);
-}
-
 bool IsLowercaseASCII(const nsAString& aValue)
 {
   int32_t len = aValue.Length();
@@ -5947,22 +5933,6 @@ nsDocument::CreateElement(const nsAString& aTagName,
   return elem.forget();
 }
 
-NS_IMETHODIMP
-nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
-                            const nsAString& aQualifiedName,
-                            nsIDOMElement** aReturn)
-{
-  *aReturn = nullptr;
-  ElementCreationOptionsOrString options;
-
-  options.SetAsString();
-  ErrorResult rv;
-  nsCOMPtr<Element> element =
-    CreateElementNS(aNamespaceURI, aQualifiedName, options, rv);
-  NS_ENSURE_FALSE(rv.Failed(), rv.StealNSResult());
-  return CallQueryInterface(element, aReturn);
-}
-
 already_AddRefed<Element>
 nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
                             const nsAString& aQualifiedName,
@@ -6002,13 +5972,6 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
   return element.forget();
 }
 
-NS_IMETHODIMP
-nsDocument::CreateTextNode(const nsAString& aData, nsIDOMText** aReturn)
-{
-  *aReturn = nsIDocument::CreateTextNode(aData).take();
-  return NS_OK;
-}
-
 already_AddRefed<nsTextNode>
 nsIDocument::CreateEmptyTextNode() const
 {
@@ -6039,13 +6002,6 @@ nsIDocument::CreateDocumentFragment() const
   return frag.forget();
 }
 
-NS_IMETHODIMP
-nsDocument::CreateComment(const nsAString& aData, nsIDOMComment** aReturn)
-{
-  *aReturn = nsIDocument::CreateComment(aData).take();
-  return NS_OK;
-}
-
 // Unfortunately, bareword "Comment" is ambiguous with some Mac system headers.
 already_AddRefed<dom::Comment>
 nsIDocument::CreateComment(const nsAString& aData) const
@@ -6055,18 +6011,6 @@ nsIDocument::CreateComment(const nsAString& aData) const
   // Don't notify; this node is still being created.
   comment->SetText(aData, false);
   return comment.forget();
-}
-
-NS_IMETHODIMP
-nsDocument::CreateCDATASection(const nsAString& aData,
-                               nsISupports** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  ErrorResult rv;
-  already_AddRefed<CDATASection> supports =
-    nsIDocument::CreateCDATASection(aData, rv);
-  *aReturn = ToSupports(supports.take());
-  return rv.StealNSResult();
 }
 
 already_AddRefed<CDATASection>
@@ -6089,17 +6033,6 @@ nsIDocument::CreateCDATASection(const nsAString& aData,
   cdata->SetText(aData, false);
 
   return cdata.forget();
-}
-
-NS_IMETHODIMP
-nsDocument::CreateProcessingInstruction(const nsAString& aTarget,
-                                        const nsAString& aData,
-                                        nsIDOMProcessingInstruction** aReturn)
-{
-  ErrorResult rv;
-  *aReturn =
-    nsIDocument::CreateProcessingInstruction(aTarget, aData, rv).take();
-  return rv.StealNSResult();
 }
 
 already_AddRefed<ProcessingInstruction>
