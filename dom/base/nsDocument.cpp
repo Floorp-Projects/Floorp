@@ -153,7 +153,6 @@
 #include "nsIDocumentLoader.h"
 #include "nsIContentViewer.h"
 #include "nsIXMLContentSink.h"
-#include "nsIXULDocument.h"
 #include "nsIPrompt.h"
 #include "nsIPropertyBag2.h"
 #include "mozilla/dom/PageTransitionEvent.h"
@@ -987,8 +986,7 @@ nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
     doc = aViewer->GetDocument();
     NS_ASSERTION(doc, "Must have a document");
 
-    nsCOMPtr<nsIXULDocument> xulDoc = do_QueryInterface(doc);
-    if (xulDoc) {
+    if (doc->IsXULDocument()) {
       // We don't handle XUL stuff here yet.
       rv = NS_ERROR_NOT_AVAILABLE;
     } else {

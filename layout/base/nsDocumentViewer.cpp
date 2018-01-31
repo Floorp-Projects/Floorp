@@ -64,7 +64,6 @@
 #include "nsIImageLoadingContent.h"
 #include "nsCopySupport.h"
 #ifdef MOZ_XUL
-#include "nsIXULDocument.h"
 #include "nsXULPopupManager.h"
 #endif
 
@@ -3843,8 +3842,7 @@ nsDocumentViewer::Print(nsIPrintSettings*       aPrintSettings,
                           nsIWebProgressListener* aWebProgressListener)
 {
   // Printing XUL documents is not supported.
-  nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
-  if (xulDoc) {
+  if (mDocument && mDocument->IsXULDocument()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -3959,8 +3957,7 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   }
 
   // Printing XUL documents is not supported.
-  nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
-  if (xulDoc) {
+  if (mDocument && mDocument->IsXULDocument()) {
     nsPrintJob::CloseProgressDialog(aWebProgressListener);
     return NS_ERROR_FAILURE;
   }
