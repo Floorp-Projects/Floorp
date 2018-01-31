@@ -27,8 +27,6 @@
 #include "nsITooltipListener.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMDocumentType.h"
 #include "nsIDOMElement.h"
 #include "Link.h"
 #include "mozilla/dom/Element.h"
@@ -414,16 +412,12 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
     return webBrowserChrome->SizeBrowserTo(aCX, aCY);
   }
 
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(aShellItem));
-  NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aShellItem, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  webNav->GetDocument(getter_AddRefs(domDocument));
-  NS_ENSURE_TRUE(domDocument, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDocument> document = aShellItem->GetDocument();
+  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMElement> domElement;
-  domDocument->GetDocumentElement(getter_AddRefs(domElement));
-  NS_ENSURE_TRUE(domElement, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(document->GetDocumentElement(), NS_ERROR_FAILURE);
 
   // Set the preferred Size
   //XXX

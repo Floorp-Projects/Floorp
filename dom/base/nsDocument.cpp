@@ -5854,21 +5854,6 @@ nsDocument::GetImplementation(ErrorResult& rv)
 }
 
 NS_IMETHODIMP
-nsDocument::GetDocumentElement(nsIDOMElement** aDocumentElement)
-{
-  NS_ENSURE_ARG_POINTER(aDocumentElement);
-
-  Element* root = GetRootElement();
-  if (root) {
-    return CallQueryInterface(root, aDocumentElement);
-  }
-
-  *aDocumentElement = nullptr;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocument::CreateElement(const nsAString& aTagName,
                           nsIDOMElement** aReturn)
 {
