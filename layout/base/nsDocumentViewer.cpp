@@ -1853,14 +1853,14 @@ nsDocumentViewer::GetDOMDocument(nsIDOMDocument **aResult)
   return CallQueryInterface(mDocument, aResult);
 }
 
-NS_IMETHODIMP_(nsIDocument *)
+nsIDocument*
 nsDocumentViewer::GetDocument()
 {
   return mDocument;
 }
 
-NS_IMETHODIMP
-nsDocumentViewer::SetDOMDocument(nsIDOMDocument *aDocument)
+nsresult
+nsDocumentViewer::SetDocument(nsIDocument *aDocument)
 {
   // Assumptions:
   //
@@ -1877,10 +1877,7 @@ nsDocumentViewer::SetDOMDocument(nsIDOMDocument *aDocument)
   if (!aDocument)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDocument> newDoc = do_QueryInterface(aDocument);
-  NS_ENSURE_TRUE(newDoc, NS_ERROR_UNEXPECTED);
-
-  return SetDocumentInternal(newDoc, false);
+  return SetDocumentInternal(aDocument, false);
 }
 
 NS_IMETHODIMP
