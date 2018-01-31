@@ -6,6 +6,7 @@
 #include "nsIURL.idl"
 
 interface nsIFile;
+interface nsIURIMutator;
 
 /**
  * nsIFileURL provides access to the underlying nsIFile object corresponding to
@@ -21,9 +22,16 @@ interface nsIFileURL : nsIURL
      *  - Getter returns a reference to an immutable object.  Callers must clone
      *    before attempting to modify the returned nsIFile object.  NOTE: this
      *    constraint might not be enforced at runtime, so beware!!
-     *
+     */
+    attribute nsIFile file;
+};
+
+[scriptable, builtinclass, uuid(a588b6f2-d2b9-4024-84c7-be3368546b57)]
+interface nsIFileURLMutator : nsISupports
+{
+    /*
      *  - Setter clones the nsIFile object (allowing the caller to safely modify
      *    the nsIFile object after setting it on this interface).
      */
-    attribute nsIFile file;
+    [must_use, noscript] void setFile(in nsIFile aFile);
 };
