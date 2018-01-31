@@ -73,6 +73,7 @@
 #include "nsIDOMXPathEvaluator.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMXULCommandEvent.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
 #include "nsIFrameLoader.h"
 #include "nsIListBoxObject.h"
@@ -305,6 +306,7 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(XPathEvaluator),
   DEFINE_SHIM(XPathResult),
   DEFINE_SHIM(XULCommandEvent),
+  DEFINE_SHIM(XULDocument),
   DEFINE_SHIM(XULElement),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsISelection, Selection),
 };
