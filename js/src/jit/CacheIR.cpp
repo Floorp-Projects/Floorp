@@ -4143,7 +4143,11 @@ TypeOfIRGenerator::tryAttachPrimitive(ValOperandId valId)
     if (!val_.isPrimitive())
         return false;
 
-    writer.guardType(valId, val_.isNumber() ? JSVAL_TYPE_DOUBLE : val_.extractNonDoubleType());
+    if (val_.isNumber())
+        writer.guardIsNumber(valId);
+    else
+        writer.guardType(valId,  val_.extractNonDoubleType());
+
     writer.loadStringResult(TypeName(js::TypeOfValue(val_), cx_->names()));
     writer.returnFromIC();
 
@@ -4681,4 +4685,145 @@ CompareIRGenerator::trackNotAttached()
         sp.endCache(guard);
     }
 #endif
+}
+
+ToBoolIRGenerator::ToBoolIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
+                                     HandleValue val)
+  : IRGenerator(cx, script, pc, CacheKind::ToBool, mode),
+    val_(val)
+{}
+
+void
+ToBoolIRGenerator::trackAttached(const char* name)
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "val", val_);
+        sp.attached(guard, name);
+        sp.endCache(guard);
+    }
+#endif
+}
+
+void
+ToBoolIRGenerator::trackNotAttached()
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "val", val_);
+        sp.endCache(guard);
+    }
+#endif
+}
+
+bool
+ToBoolIRGenerator::tryAttachStub()
+{
+    AutoAssertNoPendingException aanpe(cx_);
+
+    if (tryAttachInt32())
+        return true;
+    if (tryAttachDouble())
+        return true;
+    if (tryAttachString())
+        return true;
+    if (tryAttachNullOrUndefined())
+        return true;
+    if (tryAttachObject())
+        return true;
+    if (tryAttachSymbol())
+        return true;
+
+    trackNotAttached();
+    return false;
+}
+
+bool
+ToBoolIRGenerator::tryAttachInt32()
+{
+    if (!val_.isInt32())
+        return false;
+
+    ValOperandId valId(writer.setInputOperandId(0));
+    writer.guardType(valId, JSVAL_TYPE_INT32);
+    writer.loadInt32TruthyResult(valId);
+    writer.returnFromIC();
+    trackAttached("ToBoolInt32");
+    return true;
+}
+
+bool
+ToBoolIRGenerator::tryAttachDouble()
+{
+    if (!val_.isDouble() || !cx_->runtime()->jitSupportsFloatingPoint)
+        return false;
+
+    ValOperandId valId(writer.setInputOperandId(0));
+    writer.guardType(valId, JSVAL_TYPE_DOUBLE);
+    writer.loadDoubleTruthyResult(valId);
+    writer.returnFromIC();
+    trackAttached("ToBoolDouble");
+    return true;
+}
+
+bool
+ToBoolIRGenerator::tryAttachSymbol()
+{
+    if (!val_.isSymbol())
+        return false;
+
+    ValOperandId valId(writer.setInputOperandId(0));
+    writer.guardType(valId, JSVAL_TYPE_SYMBOL);
+    writer.loadBooleanResult(true);
+    writer.returnFromIC();
+    trackAttached("ToBoolSymbol");
+    return true;
+}
+
+bool
+ToBoolIRGenerator::tryAttachString()
+{
+    if (!val_.isString())
+        return false;
+
+    ValOperandId valId(writer.setInputOperandId(0));
+    StringOperandId strId = writer.guardIsString(valId);
+    writer.loadStringTruthyResult(strId);
+    writer.returnFromIC();
+    trackAttached("ToBoolString");
+    return true;
+}
+
+bool
+ToBoolIRGenerator::tryAttachNullOrUndefined()
+{
+    if (!val_.isNullOrUndefined())
+        return false;
+
+    ValOperandId valId(writer.setInputOperandId(0));
+    writer.guardIsNullOrUndefined(valId);
+    writer.loadBooleanResult(false);
+    writer.returnFromIC();
+    trackAttached("ToBoolNullOrUndefined");
+    return true;
+}
+
+bool
+ToBoolIRGenerator::tryAttachObject()
+{
+    if (!val_.isObject())
+        return false;
+
+    ValOperandId valId(writer.setInputOperandId(0));
+    ObjOperandId objId = writer.guardIsObject(valId);
+    writer.loadObjectTruthyResult(objId);
+    writer.returnFromIC();
+    trackAttached("ToBoolObject");
+    return true;
 }

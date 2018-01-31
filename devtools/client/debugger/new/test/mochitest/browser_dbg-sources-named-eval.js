@@ -12,7 +12,9 @@ async function waitForSourceCount(dbg, i) {
 }
 
 function getLabel(dbg, index) {
-  return findElement(dbg, "sourceNode", index).textContent.trim();
+  return findElement(dbg, "sourceNode", index)
+    .textContent.trim()
+    .replace(/^[\s\u200b]*/g, "");
 }
 
 add_task(async function() {
@@ -27,5 +29,5 @@ add_task(async function() {
 
   await waitForSourceCount(dbg, 3);
 
-  is(getLabel(dbg, 3), "evaled.js", "the eval script exists");
+  is(getLabel(dbg, 3), "evaled.js", "evaled exists");
 });

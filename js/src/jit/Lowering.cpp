@@ -1168,6 +1168,33 @@ LIRGenerator::visitCompare(MCompare* comp)
 }
 
 void
+LIRGenerator::visitSameValue(MSameValue* ins)
+{
+    MDefinition* lhs = ins->lhs();
+    MDefinition* rhs = ins->rhs();
+
+    if (lhs->type() == MIRType::Double && rhs->type() == MIRType::Double) {
+        auto* lir = new(alloc()) LSameValueD(useRegister(lhs), useRegister(rhs), tempDouble());
+        define(lir, ins);
+        return;
+    }
+
+    if (lhs->type() == MIRType::Value && rhs->type() == MIRType::Double) {
+        auto* lir = new(alloc()) LSameValueV(useBox(lhs), useRegister(rhs), tempDouble(),
+                                             tempDouble());
+        define(lir, ins);
+        return;
+    }
+
+    MOZ_ASSERT(lhs->type() == MIRType::Value);
+    MOZ_ASSERT(rhs->type() == MIRType::Value);
+
+    auto* lir = new(alloc()) LSameValueVM(useBoxAtStart(lhs), useBoxAtStart(rhs));
+    defineReturn(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::lowerBitOp(JSOp op, MInstruction* ins)
 {
     MDefinition* lhs = ins->getOperand(0);
@@ -1971,7 +1998,7 @@ LIRGenerator::visitCharCodeAt(MCharCodeAt* ins)
     MOZ_ASSERT(str->type() == MIRType::String);
     MOZ_ASSERT(idx->type() == MIRType::Int32);
 
-    LCharCodeAt* lir = new(alloc()) LCharCodeAt(useRegister(str), useRegister(idx));
+    LCharCodeAt* lir = new(alloc()) LCharCodeAt(useRegister(str), useRegister(idx), temp());
     define(lir, ins);
     assignSafepoint(lir, ins);
 }

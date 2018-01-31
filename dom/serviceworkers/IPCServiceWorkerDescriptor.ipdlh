@@ -17,6 +17,7 @@ struct IPCServiceWorkerDescriptor
   uint64_t id;
   PrincipalInfo principalInfo;
   nsCString scope;
+  nsCString scriptURL;
   ServiceWorkerState state;
 };
 

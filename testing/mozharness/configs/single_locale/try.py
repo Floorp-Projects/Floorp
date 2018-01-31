@@ -18,7 +18,6 @@ config = {
     ),
 
     # repositories
-    "mozilla_dir": "try",
     "repos": [{
         "vcs": "hg",
         "repo": "https://hg.mozilla.org/build/tools",

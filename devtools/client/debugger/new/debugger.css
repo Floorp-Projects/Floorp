@@ -1124,6 +1124,95 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.tree {
+  overflow: auto;
+}
+
+.tree.inline {
+  display: inline-block;
+}
+
+.tree.nowrap {
+  white-space: nowrap;
+}
+
+.tree.noselect {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.tree button {
+  display: block;
+}
+
+.tree .tree-node {
+  display: flex;
+}
+
+.tree .tree-node:not(.focused):hover {
+  background-color: var(--theme-selection-background-hover);
+}
+
+.tree-indent {
+  display: inline-block;
+  width: 12px;
+  margin-inline-start: 5px;
+  border-inline-start: 1px solid #A2D1FF;
+  flex-shrink: 0;
+}
+
+/* Align with expandables siblings (where we have the arrow) */
+.tree-node[data-expandable="false"] .tree-indent:last-of-type {
+  margin-inline-end: 15px;
+}
+
+/* For non expandable root nodes, we don't have .tree-indent elements, so we declare
+   the margin on the start of the node */
+.tree-node[data-expandable="false"][aria-level="0"] {
+  padding-inline-start: 15px
+}
+
+.tree .tree-node[data-expandable="true"] {
+  cursor: default;
+}
+
+.tree .tree-node.focused {
+  color: white;
+  background-color: var(--theme-selection-background, #0a84ff);
+}
+
+.tree-node.focused .arrow svg {
+  fill: currentColor;
+}
+
+.tree-node:hover img {
+  background-color: var(--theme-content-color3);
+}
+
+.arrow svg {
+  fill: var(--theme-splitter-color, #9B9B9B);
+  transition: transform 0.125s ease;
+  width: 10px;
+  margin-inline-end: 5px;
+  transform: rotate(-90deg);
+}
+
+html[dir="rtl"] .arrow svg,
+.arrow svg:dir(rtl),
+.arrow svg:-moz-locale-dir(rtl) {
+  transform: rotate(90deg);
+}
+
+.arrow.expanded.expanded svg {
+  transform: rotate(0deg);
+}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .close-btn {
@@ -1407,6 +1496,10 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   display: flex;
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+.sources-list .tree:focus {
+  outline: none;
 }
 
 .sources-list .managed-tree {
@@ -2061,6 +2154,13 @@ html .toggle-button.end.vertical svg {
 }
 
 /******************************************************************************/
+/* Length bubble for arraylikes and maplikes */
+
+.objectLengthBubble {
+  color: var(--null-color);
+}
+
+/******************************************************************************/
 
 .objectLeftBrace,
 .objectRightBrace,
@@ -2070,7 +2170,7 @@ html .toggle-button.end.vertical svg {
 }
 
 /******************************************************************************/
-/* Cycle reference*/
+/* Cycle reference */
 
 .objectBox-Reference {
   font-weight: bold;
@@ -2144,91 +2244,6 @@ html .toggle-button.end.vertical svg {
 /* "more…" ellipsis */
 .more-ellipsis {
   color: var(--comment-node-color);
-}
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-.tree {
-  overflow: auto;
-}
-
-.tree.inline {
-  display: inline-block;
-}
-
-.tree.nowrap {
-  white-space: nowrap;
-}
-
-.tree.noselect {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
-  user-select: none;
-}
-
-.tree button {
-  display: block;
-}
-
-.tree .tree-node {
-  display: flex;
-}
-
-.tree-indent {
-  display: inline-block;
-  width: 12px;
-  margin-inline-start: 5px;
-  border-inline-start: 1px solid #A2D1FF;
-  flex-shrink: 0;
-}
-
-/* Align with expandables siblings (where we have the arrow) */
-.tree-node[data-expandable="false"] .tree-indent:last-of-type {
-  margin-inline-end: 15px;
-}
-
-/* For non expandable root nodes, we don't have .tree-indent elements, so we declare
-   the margin on the start of the node */
-.tree-node[data-expandable="false"][aria-level="0"] {
-  padding-inline-start: 15px
-}
-
-.tree .tree-node[data-expandable="true"] {
-  cursor: default;
-}
-
-.tree .tree-node:not(.focused):hover {
-  background-color: #F0F9FE;
-}
-
-.tree .tree-node.focused {
-  color: white;
-  background-color: var(--theme-selection-background, #0a84ff);
-}
-
-.tree-node.focused .arrow svg {
-  fill: currentColor;
-}
-
-.arrow svg {
-  fill: var(--theme-splitter-color, #9B9B9B);
-  transition: transform 0.125s ease;
-  width: 10px;
-  margin-inline-end: 5px;
-  transform: rotate(-90deg);
-}
-
-html[dir="rtl"] .arrow svg,
-.arrow svg:dir(rtl),
-.arrow svg:-moz-locale-dir(rtl) {
-  transform: rotate(90deg);
-}
-
-.arrow.expanded.expanded svg {
-  transform: rotate(0deg);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -3025,6 +3040,10 @@ html .breakpoints-list .breakpoint.paused {
 .expression-input {
   max-width: 50%;
 }
+
+.expressions-list .tree:focus {
+  outline: none;
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -3612,6 +3631,10 @@ img.ignore-exceptions {
 
 .scopes-list {
   padding-inline-start: 4px;
+}
+
+.scopes-list .tree:focus {
+  outline: none;
 }
 
 .scopes-list .function-signature {
