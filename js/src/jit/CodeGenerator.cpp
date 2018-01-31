@@ -7745,7 +7745,6 @@ CodeGenerator::visitCompareStrictS(LCompareStrictS* lir)
     const ValueOperand leftV = ToValue(lir, LCompareStrictS::Lhs);
     Register right = ToRegister(lir->right());
     Register output = ToRegister(lir->output());
-    Register tempToUnbox = ToTempUnboxRegister(lir->tempToUnbox());
 
     Label string, done;
 
@@ -7754,7 +7753,12 @@ CodeGenerator::visitCompareStrictS(LCompareStrictS* lir)
     masm.jump(&done);
 
     masm.bind(&string);
-    Register left = masm.extractString(leftV, tempToUnbox);
+#ifdef JS_NUNBOX32
+    Register left = leftV.payloadReg();
+#else
+    Register left = ToTempUnboxRegister(lir->tempToUnbox());
+#endif
+    masm.unboxString(leftV, left);
     emitCompareS(lir, op, left, right, output);
 
     masm.bind(&done);
