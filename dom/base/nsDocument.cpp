@@ -5988,13 +5988,6 @@ nsIDocument::CreateTextNode(const nsAString& aData) const
   return text.forget();
 }
 
-NS_IMETHODIMP
-nsDocument::CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)
-{
-  *aReturn = nsIDocument::CreateDocumentFragment().take();
-  return NS_OK;
-}
-
 already_AddRefed<DocumentFragment>
 nsIDocument::CreateDocumentFragment() const
 {
