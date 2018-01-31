@@ -1383,11 +1383,13 @@ MacroAssembler::loadStringChars(Register str, Register dest)
 }
 
 void
-MacroAssembler::loadStringChar(Register str, Register index, Register output, Label* fail)
+MacroAssembler::loadStringChar(Register str, Register index, Register output, Register scratch,
+                               Label* fail)
 {
     MOZ_ASSERT(str != output);
     MOZ_ASSERT(str != index);
     MOZ_ASSERT(index != output);
+    MOZ_ASSERT(output != scratch);
 
     movePtr(str, output);
 
@@ -1400,17 +1402,7 @@ MacroAssembler::loadStringChar(Register str, Register index, Register output, La
 
     // Check if the index is contained in the leftChild.
     // Todo: Handle index in the rightChild.
-    Label failPopStr, inLeft;
-    push(str);
-    boundsCheck32ForLoad(index, Address(output, JSString::offsetOfLength()), str, &failPopStr);
-    pop(str);
-    jump(&inLeft);
-
-    bind(&failPopStr);
-    pop(str);
-    jump(fail);
-
-    bind(&inLeft);
+    boundsCheck32ForLoad(index, Address(output, JSString::offsetOfLength()), scratch, fail);
 
     // If the left side is another rope, give up.
     branchIfRope(output, fail);
@@ -3468,7 +3460,6 @@ void
 MacroAssembler::computeSpectreIndexMask(Register index, Register length, Register output)
 {
     MOZ_ASSERT(JitOptions.spectreIndexMasking);
-    MOZ_ASSERT(index != length);
     MOZ_ASSERT(length != output);
     MOZ_ASSERT(index != output);
 
@@ -3513,7 +3504,6 @@ MacroAssembler::spectreMaskIndex(int32_t index, const Address& length, Register 
 void
 MacroAssembler::spectreMaskIndex(Register index, Register length, Register output)
 {
-    MOZ_ASSERT(index != length);
     MOZ_ASSERT(length != output);
     MOZ_ASSERT(index != output);
 

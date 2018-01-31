@@ -1834,7 +1834,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void loadStringChars(Register str, Register dest);
-    void loadStringChar(Register str, Register index, Register output, Label* fail);
+    void loadStringChar(Register str, Register index, Register output, Register scratch,
+                        Label* fail);
 
     void loadStringIndexValue(Register str, Register dest, Label* fail);
 

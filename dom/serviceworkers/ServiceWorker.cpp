@@ -38,22 +38,58 @@ ServiceWorkerVisible(JSContext* aCx, JSObject* aObj)
   return IS_INSTANCE_OF(ServiceWorkerGlobalScope, aObj);
 }
 
-ServiceWorker::ServiceWorker(nsPIDOMWindowInner* aWindow,
-                             ServiceWorkerInfo* aInfo)
-  : DOMEventTargetHelper(aWindow),
-    mInfo(aInfo)
+// static
+already_AddRefed<ServiceWorker>
+ServiceWorker::Create(nsIGlobalObject* aOwner,
+                      const ServiceWorkerDescriptor& aDescriptor)
+{
+  RefPtr<ServiceWorker> ref;
+
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (!swm) {
+    return ref.forget();
+  }
+
+  RefPtr<ServiceWorkerRegistrationInfo> reg =
+    swm->GetRegistration(aDescriptor.PrincipalInfo(), aDescriptor.Scope());
+  if (!reg) {
+    return ref.forget();
+  }
+
+  RefPtr<ServiceWorkerInfo> info = reg->GetByID(aDescriptor.Id());
+  if (!info) {
+    return ref.forget();
+  }
+
+  ref = new ServiceWorker(aOwner, aDescriptor, info);
+  return ref.forget();
+}
+
+ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
+                             const ServiceWorkerDescriptor& aDescriptor,
+                             ServiceWorker::Inner* aInner)
+  : DOMEventTargetHelper(aGlobal)
+  , mDescriptor(aDescriptor)
+  , mInner(aInner)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aInfo);
+  MOZ_DIAGNOSTIC_ASSERT(aGlobal);
+  MOZ_DIAGNOSTIC_ASSERT(mInner);
+
+  aGlobal->AddServiceWorker(this);
 
   // This will update our state too.
-  mInfo->AppendWorker(this);
+  mInner->AddServiceWorker(this);
 }
 
 ServiceWorker::~ServiceWorker()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mInfo->RemoveWorker(this);
+  mInner->RemoveServiceWorker(this);
+  nsIGlobalObject* global = GetParentObject();
+  if (global) {
+    global->RemoveServiceWorker(this);
+  }
 }
 
 NS_IMPL_ADDREF_INHERITED(ServiceWorker, DOMEventTargetHelper)
@@ -70,10 +106,26 @@ ServiceWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return ServiceWorkerBinding::Wrap(aCx, this, aGivenProto);
 }
 
+ServiceWorkerState
+ServiceWorker::State() const
+{
+  return mDescriptor.State();
+}
+
+void
+ServiceWorker::SetState(ServiceWorkerState aState)
+{
+  ServiceWorkerState oldState = mDescriptor.State();
+  mDescriptor.SetState(aState);
+  if (oldState != aState) {
+    DOMEventTargetHelper::DispatchTrustedEvent(NS_LITERAL_STRING("statechange"));
+  }
+}
+
 void
 ServiceWorker::GetScriptURL(nsString& aURL) const
 {
-  CopyUTF8toUTF16(mInfo->ScriptSpec(), aURL);
+  CopyUTF8toUTF16(mDescriptor.ScriptURL(), aURL);
 }
 
 void
@@ -86,33 +138,28 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetParentObject());
-  if (!window || !window->GetExtantDoc()) {
-    NS_WARNING("Trying to call post message from an invalid dom object.");
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
+  mInner->PostMessage(GetParentObject(), aCx, aMessage, aTransferable, aRv);
+}
 
-  auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
-  if (storageAllowed != nsContentUtils::StorageAccess::eAllow) {
-    ServiceWorkerManager::LocalizeAndReportToAllClients(
-      mInfo->Scope(), "ServiceWorkerPostMessageStorageError",
-      nsTArray<nsString> { NS_ConvertUTF8toUTF16(mInfo->Scope()) });
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
+bool
+ServiceWorker::MatchesDescriptor(const ServiceWorkerDescriptor& aDescriptor) const
+{
+  // Compare everything in the descriptor except the state.  That is mutable
+  // and may not exactly match.
+  return mDescriptor.PrincipalInfo() == aDescriptor.PrincipalInfo() &&
+         mDescriptor.Scope() == aDescriptor.Scope() &&
+         mDescriptor.ScriptURL() == aDescriptor.ScriptURL() &&
+         mDescriptor.Id() == aDescriptor.Id();
+}
 
-  Maybe<ClientInfo> clientInfo = window->GetClientInfo();
-  Maybe<ClientState> clientState = window->GetClientState();
-  if (clientInfo.isNothing() || clientState.isNothing()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
+void
+ServiceWorker::DisconnectFromOwner()
+{
+  nsIGlobalObject* global = GetParentObject();
+  if (global) {
+    global->RemoveServiceWorker(this);
   }
-
-  ServiceWorkerPrivate* workerPrivate = mInfo->WorkerPrivate();
-  aRv = workerPrivate->SendMessageEvent(aCx, aMessage, aTransferable,
-                                        ClientInfoAndState(clientInfo.ref().ToIPC(),
-                                                           clientState.ref().ToIPC()));
+  DOMEventTargetHelper::DisconnectFromOwner();
 }
 
 } // namespace dom

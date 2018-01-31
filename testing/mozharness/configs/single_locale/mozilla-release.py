@@ -13,7 +13,6 @@ config = {
     "mar_tools_url": os.environ["MAR_TOOLS_URL"],
 
     # repositories
-    "mozilla_dir": "mozilla-release",
     "repos": [{
         "vcs": "hg",
         "repo": "https://hg.mozilla.org/build/tools",

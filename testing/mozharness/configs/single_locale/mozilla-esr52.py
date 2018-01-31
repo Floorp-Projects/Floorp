@@ -13,7 +13,6 @@ config = {
     "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-release",
 
     # repositories
-    "mozilla_dir": "mozilla-esr52",
     "repos": [{
         "vcs": "hg",
         "repo": "https://hg.mozilla.org/build/tools",

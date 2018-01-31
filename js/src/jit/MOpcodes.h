@@ -44,6 +44,7 @@ namespace jit {
     _(ObjectGroupDispatch)                                                  \
     _(FunctionDispatch)                                                     \
     _(Compare)                                                              \
+    _(SameValue)                                                            \
     _(Phi)                                                                  \
     _(Beta)                                                                 \
     _(NaNToZero)                                                            \

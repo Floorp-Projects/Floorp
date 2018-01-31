@@ -78,6 +78,8 @@ ServiceWorkerRegistrationInfo::Clear()
     mActiveWorker = nullptr;
   }
 
+  mDescriptor.SetWorkers(mInstallingWorker, mWaitingWorker, mActiveWorker);
+
   NotifyChromeRegistrationListeners();
 }
 
@@ -85,20 +87,49 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
     const nsACString& aScope,
     nsIPrincipal* aPrincipal,
     ServiceWorkerUpdateViaCache aUpdateViaCache)
-  : mControlledClientsCounter(0)
+  : mPrincipal(aPrincipal)
+  , mDescriptor(aPrincipal, aScope, aUpdateViaCache)
+  , mControlledClientsCounter(0)
   , mUpdateState(NoUpdate)
   , mCreationTime(PR_Now())
   , mCreationTimeStamp(TimeStamp::Now())
   , mLastUpdateTime(0)
-  , mUpdateViaCache(aUpdateViaCache)
-  , mScope(aScope)
-  , mPrincipal(aPrincipal)
   , mPendingUninstall(false)
 {}
 
 ServiceWorkerRegistrationInfo::~ServiceWorkerRegistrationInfo()
 {
   MOZ_DIAGNOSTIC_ASSERT(!IsControllingClients());
+}
+
+const nsCString&
+ServiceWorkerRegistrationInfo::Scope() const
+{
+  return mDescriptor.Scope();
+}
+
+nsIPrincipal*
+ServiceWorkerRegistrationInfo::Principal() const
+{
+  return mPrincipal;
+}
+
+bool
+ServiceWorkerRegistrationInfo::IsPendingUninstall() const
+{
+  return mPendingUninstall;
+}
+
+void
+ServiceWorkerRegistrationInfo::SetPendingUninstall()
+{
+  mPendingUninstall = true;
+}
+
+void
+ServiceWorkerRegistrationInfo::ClearPendingUninstall()
+{
+  mPendingUninstall = false;
 }
 
 NS_IMPL_ISUPPORTS(ServiceWorkerRegistrationInfo, nsIServiceWorkerRegistrationInfo)
@@ -115,7 +146,7 @@ NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::GetScope(nsAString& aScope)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  CopyUTF8toUTF16(mScope, aScope);
+  CopyUTF8toUTF16(Scope(), aScope);
   return NS_OK;
 }
 
@@ -311,6 +342,9 @@ ServiceWorkerRegistrationInfo::FinishActivate(bool aSuccess)
   // Activation never fails, so aSuccess is ignored.
   mActiveWorker->UpdateState(ServiceWorkerState::Activated);
   mActiveWorker->UpdateActivatedTime();
+
+  mDescriptor.SetWorkers(mInstallingWorker, mWaitingWorker, mActiveWorker);
+
   NotifyChromeRegistrationListeners();
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
@@ -420,7 +454,7 @@ ServiceWorkerRegistrationInfo::MaybeScheduleTimeCheckAndUpdate()
     mUpdateState = NeedTimeCheckAndUpdate;
   }
 
-  swm->ScheduleUpdateTimer(mPrincipal, mScope);
+  swm->ScheduleUpdateTimer(mPrincipal, Scope());
 }
 
 void
@@ -436,7 +470,7 @@ ServiceWorkerRegistrationInfo::MaybeScheduleUpdate()
 
   mUpdateState = NeedUpdate;
 
-  swm->ScheduleUpdateTimer(mPrincipal, mScope);
+  swm->ScheduleUpdateTimer(mPrincipal, Scope());
 }
 
 bool
@@ -542,6 +576,8 @@ ServiceWorkerRegistrationInfo::ClearInstalling()
   mInstallingWorker->UpdateRedundantTime();
   mInstallingWorker = nullptr;
 
+  mDescriptor.SetWorkers(mInstallingWorker, mWaitingWorker, mActiveWorker);
+
   NotifyChromeRegistrationListeners();
 }
 
@@ -554,6 +590,9 @@ ServiceWorkerRegistrationInfo::TransitionEvaluatingToInstalling()
 
   mInstallingWorker = mEvaluatingWorker.forget();
   mInstallingWorker->UpdateState(ServiceWorkerState::Installing);
+
+  mDescriptor.SetWorkers(mInstallingWorker, mWaitingWorker, mActiveWorker);
+
   NotifyChromeRegistrationListeners();
 }
 
@@ -574,6 +613,9 @@ ServiceWorkerRegistrationInfo::TransitionInstallingToWaiting()
                                     TransitionToNextState);
   mWaitingWorker->UpdateState(ServiceWorkerState::Installed);
   mWaitingWorker->UpdateInstalledTime();
+
+  mDescriptor.SetWorkers(mInstallingWorker, mWaitingWorker, mActiveWorker);
+
   NotifyChromeRegistrationListeners();
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
@@ -612,6 +654,9 @@ ServiceWorkerRegistrationInfo::SetActive(ServiceWorkerInfo* aServiceWorker)
   // We don't need to update activated time when we load registration from
   // registrar.
   UpdateRegistrationStateProperties(WhichServiceWorker::ACTIVE_WORKER, Invalidate);
+
+  mDescriptor.SetWorkers(mInstallingWorker, mWaitingWorker, mActiveWorker);
+
   NotifyChromeRegistrationListeners();
 }
 
@@ -633,6 +678,9 @@ ServiceWorkerRegistrationInfo::TransitionWaitingToActive()
   UpdateRegistrationStateProperties(WhichServiceWorker::WAITING_WORKER,
                                     TransitionToNextState);
   mActiveWorker->UpdateState(ServiceWorkerState::Activating);
+
+  mDescriptor.SetWorkers(mInstallingWorker, mWaitingWorker, mActiveWorker);
+
   NotifyChromeRegistrationListeners();
 }
 
@@ -645,14 +693,14 @@ ServiceWorkerRegistrationInfo::IsIdle() const
 ServiceWorkerUpdateViaCache
 ServiceWorkerRegistrationInfo::GetUpdateViaCache() const
 {
-  return mUpdateViaCache;
+  return mDescriptor.UpdateViaCache();
 }
 
 void
 ServiceWorkerRegistrationInfo::SetUpdateViaCache(
     ServiceWorkerUpdateViaCache aUpdateViaCache)
 {
-  mUpdateViaCache = aUpdateViaCache;
+  mDescriptor.SetUpdateViaCache(aUpdateViaCache);
 }
 
 int64_t
@@ -669,6 +717,12 @@ ServiceWorkerRegistrationInfo::SetLastUpdateTime(const int64_t aTime)
   }
 
   mLastUpdateTime = aTime;
+}
+
+const ServiceWorkerRegistrationDescriptor&
+ServiceWorkerRegistrationInfo::Descriptor() const
+{
+  return mDescriptor;
 }
 
 } // namespace dom
