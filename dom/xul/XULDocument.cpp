@@ -523,7 +523,7 @@ XULDocument::EndLoad()
     }
 }
 
-NS_IMETHODIMP
+nsresult
 XULDocument::OnPrototypeLoadDone(bool aResumeWalk)
 {
     nsresult rv;
