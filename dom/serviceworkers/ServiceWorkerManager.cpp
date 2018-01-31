@@ -2366,7 +2366,8 @@ ServiceWorkerManager::GetServiceWorkerForScope(nsPIDOMWindowInner* aWindow,
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  RefPtr<ServiceWorker> serviceWorker = info->GetOrCreateInstance(aWindow);
+  RefPtr<ServiceWorker> serviceWorker =
+    aWindow->GetOrCreateServiceWorker(info->Descriptor());
 
   serviceWorker->SetState(info->State());
   serviceWorker.forget(aServiceWorker);

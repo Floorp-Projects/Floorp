@@ -290,30 +290,6 @@ ServiceWorkerInfo::PostMessage(nsIGlobalObject* aGlobal,
                                                                    clientState.ref().ToIPC()));
 }
 
-already_AddRefed<ServiceWorker>
-ServiceWorkerInfo::GetOrCreateInstance(nsPIDOMWindowInner* aWindow)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWindow);
-
-  RefPtr<ServiceWorker> ref;
-
-  for (uint32_t i = 0; i < mInstances.Length(); ++i) {
-    MOZ_ASSERT(mInstances[i]);
-    if (mInstances[i]->GetOwner() == aWindow) {
-      ref = mInstances[i];
-      break;
-    }
-  }
-
-  if (!ref) {
-    nsCOMPtr<nsIGlobalObject> global(do_QueryInterface(aWindow));
-    ref = ServiceWorker::Create(global, mDescriptor);
-  }
-
-  return ref.forget();
-}
-
 void
 ServiceWorkerInfo::UpdateInstalledTime()
 {
