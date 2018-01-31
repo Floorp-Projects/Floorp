@@ -6,9 +6,7 @@
 registration.onupdatefound = function(e) {
   clients.matchAll().then(function(clients) {
     if (!clients.length) {
-      // We don't control any clients when the first update event is fired
-      // because we haven't reached the 'activated' state.
-      return;
+      reject("No clients found");
     }
 
     if (registration.scope.match(/updatefoundevent\.html$/)) {
