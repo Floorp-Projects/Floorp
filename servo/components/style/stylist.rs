@@ -24,7 +24,7 @@ use properties::{self, CascadeFlags, ComputedValues};
 use properties::{AnimationRules, PropertyDeclarationBlock};
 use rule_tree::{CascadeLevel, RuleTree, StrongRuleNode, StyleSource};
 use selector_map::{PrecomputedHashMap, SelectorMap, SelectorMapEntry};
-use selector_parser::{SelectorImpl, PerPseudoElementMap, PseudoElement};
+use selector_parser::{SelectorImpl, SnapshotMap, PerPseudoElementMap, PseudoElement};
 use selectors::NthIndexCache;
 use selectors::attr::{CaseSensitivity, NamespaceConstraint};
 use selectors::bloom::{BloomFilter, NonCountingBloomFilter};
@@ -503,6 +503,7 @@ impl Stylist {
         &mut self,
         guards: &StylesheetGuards,
         document_element: Option<E>,
+        snapshots: Option<&SnapshotMap>,
     ) -> bool
     where
         E: TElement,
@@ -547,7 +548,7 @@ impl Stylist {
             }
         }
 
-        let flusher = self.stylesheets.flush(document_element);
+        let flusher = self.stylesheets.flush(document_element, snapshots);
 
         let had_invalidations = flusher.had_invalidations();
 
