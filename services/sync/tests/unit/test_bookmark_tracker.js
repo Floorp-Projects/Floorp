@@ -27,7 +27,7 @@ add_task(async function setup() {
 // Test helpers.
 async function verifyTrackerEmpty() {
   await PlacesTestUtils.promiseAsyncUpdates();
-  let changes = await tracker.getChangedIDs();
+  let changes = await tracker.promiseChangedIDs();
   deepEqual(changes, {});
   equal(tracker.score, 0);
 }
@@ -42,19 +42,23 @@ async function cleanup() {
   engine._needWeakUpload.clear();
   await store.wipe();
   await resetTracker();
-  await tracker.stop();
+  await stopTracking();
 }
 
 // startTracking is a signal that the test wants to notice things that happen
 // after this is called (ie, things already tracked should be discarded.)
 async function startTracking() {
-  engine._tracker.start();
+  Svc.Obs.notify("weave:engine:start-tracking");
   await PlacesTestUtils.markBookmarksAsSynced();
+}
+
+async function stopTracking() {
+  Svc.Obs.notify("weave:engine:stop-tracking");
 }
 
 async function verifyTrackedItems(tracked) {
   await PlacesTestUtils.promiseAsyncUpdates();
-  let changedIDs = await tracker.getChangedIDs();
+  let changedIDs = await tracker.promiseChangedIDs();
   let trackedIDs = new Set(Object.keys(changedIDs));
   for (let guid of tracked) {
     ok(guid in changedIDs, `${guid} should be tracked`);
@@ -68,7 +72,7 @@ async function verifyTrackedItems(tracked) {
 
 async function verifyTrackedCount(expected) {
   await PlacesTestUtils.promiseAsyncUpdates();
-  let changedIDs = await tracker.getChangedIDs();
+  let changedIDs = await tracker.promiseChangedIDs();
   do_check_attribute_count(changedIDs, expected);
 }
 
@@ -186,7 +190,7 @@ add_task(async function test_leftPaneFolder() {
 
     {
       await PlacesTestUtils.promiseAsyncUpdates();
-      let changes = await tracker.getChangedIDs();
+      let changes = await tracker.promiseChangedIDs();
       deepEqual(changes, {}, "New left pane queries should not be tracked");
       Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
     }
@@ -196,7 +200,7 @@ add_task(async function test_leftPaneFolder() {
 
     {
       await PlacesTestUtils.promiseAsyncUpdates();
-      let changes = await tracker.getChangedIDs();
+      let changes = await tracker.promiseChangedIDs();
       deepEqual(Object.keys(changes).sort(), ["menu", "mobile", "toolbar", "unfiled"],
         "Left pane queries should not be tracked after reset");
       Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
@@ -222,7 +226,7 @@ add_task(async function test_leftPaneFolder() {
       _(`Left pane root ID after deleting unrelated folder: ${leftPaneId}`);
 
       await PlacesTestUtils.promiseAsyncUpdates();
-      let changes = await tracker.getChangedIDs();
+      let changes = await tracker.promiseChangedIDs();
       deepEqual(changes, {},
         "Should not track left pane items after deleting unrelated folder");
     }
@@ -236,7 +240,7 @@ add_task(async function test_leftPaneFolder() {
       _(`Left pane root ID after restoring version: ${leftPaneId}`);
 
       await PlacesTestUtils.promiseAsyncUpdates();
-      let changes = await tracker.getChangedIDs();
+      let changes = await tracker.promiseChangedIDs();
       deepEqual(changes, {},
         "Should not track left pane items after restoring version");
     }
@@ -250,7 +254,7 @@ add_task(async function test_leftPaneFolder() {
       _(`Left pane root ID after detecting nonexistent item: ${leftPaneId}`);
 
       await PlacesTestUtils.promiseAsyncUpdates();
-      let changes = await tracker.getChangedIDs();
+      let changes = await tracker.promiseChangedIDs();
       deepEqual(changes, {},
         "Should not track left pane items after detecting nonexistent item");
     }
@@ -269,7 +273,7 @@ add_task(async function test_leftPaneFolder() {
       _(`Left pane root ID after restoring moved query: ${leftPaneId}`);
 
       await PlacesTestUtils.promiseAsyncUpdates();
-      let changes = await tracker.getChangedIDs();
+      let changes = await tracker.promiseChangedIDs();
       deepEqual(changes, {},
         "Should not track left pane items after restoring moved query");
     }
@@ -289,7 +293,7 @@ add_task(async function test_leftPaneFolder() {
       _(`Left pane root ID after removing dupe query: ${leftPaneId}`);
 
       await PlacesTestUtils.promiseAsyncUpdates();
-      let changes = await tracker.getChangedIDs();
+      let changes = await tracker.promiseChangedIDs();
       deepEqual(changes, {},
         "Should not track left pane items after removing dupe query");
     }
@@ -521,7 +525,7 @@ add_task(async function test_async_onItemChanged() {
   _("Items updated using the asynchronous bookmarks API should be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     _("Insert a bookmark");
     let fxBmk = await PlacesUtils.bookmarks.insert({
@@ -556,7 +560,7 @@ add_task(async function test_onItemChanged_itemDates() {
   _("Changes to item dates should be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     _("Insert a bookmark");
     let fx_id = PlacesUtils.bookmarks.insertBookmark(
@@ -592,7 +596,7 @@ add_task(async function test_onItemTagged() {
   _("Items tagged using the synchronous API should be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     _("Create a folder");
     let folder = PlacesUtils.bookmarks.createFolder(
@@ -629,7 +633,7 @@ add_task(async function test_onItemUntagged() {
   _("Items untagged using the synchronous API should be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     _("Insert tagged bookmarks");
     let uri = CommonUtils.makeURI("http://getfirefox.com");
@@ -661,7 +665,7 @@ add_task(async function test_async_onItemUntagged() {
   _("Items untagged using the asynchronous API should be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     _("Insert tagged bookmarks");
     let fxBmk1 = await PlacesUtils.bookmarks.insert({
@@ -704,7 +708,7 @@ add_task(async function test_async_onItemTagged() {
   _("Items tagged using the asynchronous API should be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     _("Insert untagged bookmarks");
     let folder1 = await PlacesUtils.bookmarks.insert({
@@ -762,7 +766,7 @@ add_task(async function test_onItemKeywordChanged() {
   _("Keyword changes via the synchronous API should be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
     let folder = PlacesUtils.bookmarks.createFolder(
       PlacesUtils.bookmarks.bookmarksMenuFolder, "Parent",
       PlacesUtils.bookmarks.DEFAULT_INDEX);
@@ -794,7 +798,7 @@ add_task(async function test_async_onItemKeywordChanged() {
   _("Keyword changes via the asynchronous API should be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     _("Insert two bookmarks with the same URL");
     let fxBmk1 = await PlacesUtils.bookmarks.insert({
@@ -831,7 +835,7 @@ add_task(async function test_async_onItemKeywordDeleted() {
   _("Keyword deletions via the asynchronous API should be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     _("Insert two bookmarks with the same URL and keywords");
     let fxBmk1 = await PlacesUtils.bookmarks.insert({
@@ -868,7 +872,7 @@ add_task(async function test_onItemPostDataChanged() {
   _("Post data changes should be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     _("Insert a bookmark");
     let fx_id = PlacesUtils.bookmarks.insertBookmark(
@@ -897,7 +901,7 @@ add_task(async function test_onItemAnnoChanged() {
   _("Item annotations should be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
     let folder = PlacesUtils.bookmarks.createFolder(
       PlacesUtils.bookmarks.bookmarksMenuFolder, "Parent",
       PlacesUtils.bookmarks.DEFAULT_INDEX);
@@ -972,7 +976,7 @@ add_task(async function test_onItemDeleted_filtered_root() {
   _("Deleted items outside the change roots should not be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     _("Insert a bookmark underneath the Places root");
     let rootBmkID = PlacesUtils.bookmarks.insertBookmark(
@@ -999,7 +1003,7 @@ add_task(async function test_onPageAnnoChanged() {
   _("Page annotations should not be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     _("Insert a bookmark without an annotation");
     let pageURI = CommonUtils.makeURI("http://getfirefox.com");
@@ -1033,7 +1037,7 @@ add_task(async function test_onFaviconChanged() {
   _("Favicon changes should not be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     let pageURI = CommonUtils.makeURI("http://getfirefox.com");
     let iconURI = CommonUtils.makeURI("http://getfirefox.com/icon");
@@ -1099,7 +1103,7 @@ add_task(async function test_onLivemarkDeleted() {
   _("Deleted livemarks should be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     _("Insert a livemark");
     let livemark = await PlacesUtils.livemarks.addLivemark({
@@ -1169,7 +1173,7 @@ add_task(async function test_async_onItemMoved_update() {
   _("Items moved via the asynchronous API should be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     await PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -1214,7 +1218,7 @@ add_task(async function test_async_onItemMoved_reorder() {
   _("Items reordered via the asynchronous API should be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     _("Insert out-of-order bookmarks");
     let fxBmk = await PlacesUtils.bookmarks.insert({
@@ -1261,7 +1265,7 @@ add_task(async function test_onItemDeleted_removeFolderTransaction() {
   _("Folders removed in a transaction should be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     _("Create a folder with two children");
     let folder_id = PlacesUtils.bookmarks.createFolder(
@@ -1394,7 +1398,7 @@ add_task(async function test_async_onItemDeleted() {
   _("Bookmarks deleted via the asynchronous API should be tracked");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     let fxBmk = await PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -1426,7 +1430,7 @@ add_task(async function test_async_onItemDeleted_eraseEverything() {
   _("Erasing everything should track all deleted items");
 
   try {
-    await tracker.stop();
+    await stopTracking();
 
     let fxBmk = await PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,

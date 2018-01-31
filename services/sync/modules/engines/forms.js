@@ -221,15 +221,16 @@ FormTracker.prototype = {
     Ci.nsIObserver,
     Ci.nsISupportsWeakReference]),
 
-  onStart() {
-    Svc.Obs.add("satchel-storage-changed", this.asyncObserver);
+  startTracking() {
+    Svc.Obs.add("satchel-storage-changed", this);
   },
 
-  onStop() {
-    Svc.Obs.remove("satchel-storage-changed", this.asyncObserver);
+  stopTracking() {
+    Svc.Obs.remove("satchel-storage-changed", this);
   },
 
-  async observe(subject, topic, data) {
+  observe(subject, topic, data) {
+    Tracker.prototype.observe.call(this, subject, topic, data);
     if (this.ignoreAll) {
       return;
     }
@@ -237,15 +238,14 @@ FormTracker.prototype = {
       case "satchel-storage-changed":
         if (data == "formhistory-add" || data == "formhistory-remove") {
           let guid = subject.QueryInterface(Ci.nsISupportsString).toString();
-          await this.trackEntry(guid);
+          this.trackEntry(guid);
         }
         break;
     }
   },
 
-  async trackEntry(guid) {
-    const added = await this.addChangedID(guid);
-    if (added) {
+  trackEntry(guid) {
+    if (this.addChangedID(guid)) {
       this.score += SCORE_INCREMENT_MEDIUM;
     }
   },

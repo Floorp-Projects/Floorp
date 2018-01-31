@@ -16,7 +16,8 @@ var fakeServer = new SyncServer();
 fakeServer.start();
 
 registerCleanupFunction(function() {
-  return promiseStopServer(fakeServer).finally(() => {
+  return new Promise(resolve => {
+    fakeServer.stop(resolve);
     Svc.Prefs.resetBranch("");
   });
 });
@@ -41,7 +42,7 @@ let errorHandler = Service.errorHandler;
 let engine;
 
 add_task(async function setup() {
-  await Service.engineManager.clear();
+  Service.engineManager.clear();
   await Service.engineManager.register(EHTestsCommon.CatapultEngine);
   engine = Service.engineManager.get("catapult");
 });
