@@ -5,7 +5,17 @@
 add_task(async function testExecuteScript() {
   let {MessageChannel} = ChromeUtils.import("resource://gre/modules/MessageChannel.jsm", {});
 
-  let messageManagersSize = MessageChannel.messageManagers.size;
+  // When the first extension is started, ProxyMessenger.init adds MessageChannel
+  // listeners for Services.mm and Services.ppmm, and they are never unsubscribed.
+  // We have to exclude them after the extension has been unloaded to get an accurate
+  // test.
+  function getMessageManagersSize(messageManagers) {
+    return Array.from(messageManagers).filter(([mm]) => {
+      return !([Services.mm, Services.ppmm].includes(mm));
+    }).length;
+  }
+
+  let messageManagersSize = getMessageManagersSize(MessageChannel.messageManagers);
   let responseManagersSize = MessageChannel.responseManagers.size;
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/", true);
@@ -31,14 +41,14 @@ add_task(async function testExecuteScript() {
         },
       },
       {
-        background: "rgb(42, 42, 42)",
+        background: "rgb(43, 43, 43)",
         foreground: "rgb(0, 113, 4)",
         promise: () => {
           return browser.tabs.insertCSS({
             code: "* { background: rgb(100, 100, 100) !important }",
             cssOrigin: "author",
           }).then(r => browser.tabs.insertCSS({
-            code: "* { background: rgb(42, 42, 42) !important }",
+            code: "* { background: rgb(43, 43, 43) !important }",
             cssOrigin: "author",
           }));
         },
@@ -52,7 +62,7 @@ add_task(async function testExecuteScript() {
             code: "* { background: rgb(100, 100, 100) !important }",
             cssOrigin: "user",
           }).then(r => browser.tabs.insertCSS({
-            code: "* { background: rgb(42, 42, 42) !important }",
+            code: "* { background: rgb(44, 44, 44) !important }",
             cssOrigin: "author",
           }));
         },
@@ -81,7 +91,7 @@ add_task(async function testExecuteScript() {
       browser.test.notifyPass("insertCSS");
     } catch (e) {
       browser.test.fail(`Error: ${e} :: ${e.stack}`);
-      browser.test.notifyFailure("insertCSS");
+      browser.test.notifyFail("insertCSS");
     }
   }
 
@@ -107,7 +117,52 @@ add_task(async function testExecuteScript() {
 
   // Make sure that we're not holding on to references to closed message
   // managers.
-  is(MessageChannel.messageManagers.size, messageManagersSize, "Message manager count");
+  is(getMessageManagersSize(MessageChannel.messageManagers), messageManagersSize,
+     "Message manager count");
   is(MessageChannel.responseManagers.size, responseManagersSize, "Response manager count");
   is(MessageChannel.pendingResponses.size, 0, "Pending response count");
+});
+
+add_task(async function testInsertCSS_cleanup() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/", true);
+
+  async function background() {
+    await browser.tabs.insertCSS({code: "* { background: rgb(42, 42, 42) }"});
+    await browser.tabs.insertCSS({file: "customize_fg_color.css"});
+
+    browser.test.notifyPass("insertCSS");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["http://mochi.test/"],
+    },
+    background,
+    files: {
+      "customize_fg_color.css": `* { color: rgb(255, 0, 0) }`,
+    },
+  });
+
+  await extension.startup();
+
+  await extension.awaitFinish("insertCSS");
+
+  const getTabContentComputedStyle = async () => {
+    let computedStyle = content.getComputedStyle(content.document.body);
+    return [computedStyle.backgroundColor, computedStyle.color];
+  };
+
+  const appliedStyles = await ContentTask.spawn(tab.linkedBrowser, null, getTabContentComputedStyle);
+
+  is(appliedStyles[0], "rgb(42, 42, 42)", "The injected CSS code has been applied as expected");
+  is(appliedStyles[1], "rgb(255, 0, 0)", "The injected CSS file has been applied as expected");
+
+  await extension.unload();
+
+  const unloadedStyles = await ContentTask.spawn(tab.linkedBrowser, null, getTabContentComputedStyle);
+
+  is(unloadedStyles[0], "rgba(0, 0, 0, 0)", "The injected CSS code has been removed as expected");
+  is(unloadedStyles[1], "rgb(0, 0, 0)", "The injected CSS file has been removed as expected");
+
+  await BrowserTestUtils.removeTab(tab);
 });

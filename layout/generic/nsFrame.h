@@ -835,7 +835,7 @@ public:
 
   struct DR_init_offsets_cookie {
     DR_init_offsets_cookie(nsIFrame* aFrame, mozilla::SizeComputationInput* aState,
-                           const mozilla::LogicalSize& aPercentBasis,
+                           nscoord aPercentBasis,
                            mozilla::WritingMode aCBWritingMode,
                            const nsMargin* aBorder,
                            const nsMargin* aPadding);

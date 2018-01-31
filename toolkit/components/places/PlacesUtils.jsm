@@ -1103,29 +1103,6 @@ this.PlacesUtils = {
   },
 
   /**
-   * Annotate a URI with a batch of annotations.
-   * @param aURI
-   *        The URI for which annotations are to be set.
-   * @param aAnnotations
-   *        Array of objects, each containing the following properties:
-   *        name, flags, expires.
-   *        If the value for an annotation is not set it will be removed.
-   */
-  setAnnotationsForURI: function PU_setAnnotationsForURI(aURI, aAnnos) {
-    var annosvc = this.annotations;
-    aAnnos.forEach(function(anno) {
-      if (anno.value === undefined || anno.value === null) {
-        annosvc.removePageAnnotation(aURI, anno.name);
-      } else {
-        let flags = ("flags" in anno) ? anno.flags : 0;
-        let expires = ("expires" in anno) ?
-          anno.expires : Ci.nsIAnnotationService.EXPIRE_NEVER;
-        annosvc.setPageAnnotation(aURI, anno.name, anno.value, flags, expires);
-      }
-    });
-  },
-
-  /**
    * Annotate an item with a batch of annotations.
    * @param aItemId
    *        The identifier of the item for which annotations are to be set
@@ -1204,74 +1181,6 @@ this.PlacesUtils = {
            guid == PlacesUtils.tagsFolderId ||
            guid == PlacesUtils.placesRootId ||
            guid == PlacesUtils.mobileFolderId;
-  },
-
-  /**
-   * Set the POST data associated with a bookmark, if any.
-   * Used by POST keywords.
-   *   @param aBookmarkId
-   *
-   * @deprecated Use PlacesUtils.keywords.insert() API instead.
-   */
-  setPostDataForBookmark(aBookmarkId, aPostData) {
-    if (!aPostData)
-      throw new Error("Must provide valid POST data");
-    // For now we don't have a unified API to create a keyword with postData,
-    // thus here we can just try to complete a keyword that should already exist
-    // without any post data.
-    let stmt = PlacesUtils.history.DBConnection.createStatement(
-      `UPDATE moz_keywords SET post_data = :post_data
-       WHERE id = (SELECT k.id FROM moz_keywords k
-                   JOIN moz_bookmarks b ON b.fk = k.place_id
-                   WHERE b.id = :item_id
-                   AND post_data ISNULL
-                   LIMIT 1)`);
-    stmt.params.item_id = aBookmarkId;
-    stmt.params.post_data = aPostData;
-    try {
-      stmt.execute();
-    } finally {
-      stmt.finalize();
-    }
-
-    // Update the cache.
-    return (async function() {
-      let guid = await PlacesUtils.promiseItemGuid(aBookmarkId);
-      let bm = await PlacesUtils.bookmarks.fetch(guid);
-
-      // Fetch keywords for this href.
-      let cache = await gKeywordsCachePromise;
-      for (let [ , entry ] of cache) {
-        // Set the POST data on keywords not having it.
-        if (entry.url.href == bm.url.href && !entry.postData) {
-          entry.postData = aPostData;
-        }
-      }
-    })().catch(Cu.reportError);
-  },
-
-  /**
-   * Get the POST data associated with a bookmark, if any.
-   * @param aBookmarkId
-   * @returns string of POST data if set for aBookmarkId. null otherwise.
-   *
-   * @deprecated Use PlacesUtils.keywords.fetch() API instead.
-   */
-  getPostDataForBookmark(aBookmarkId) {
-    let stmt = PlacesUtils.history.DBConnection.createStatement(
-      `SELECT k.post_data
-       FROM moz_keywords k
-       JOIN moz_places h ON h.id = k.place_id
-       JOIN moz_bookmarks b ON b.fk = h.id
-       WHERE b.id = :item_id`);
-    stmt.params.item_id = aBookmarkId;
-    try {
-      if (!stmt.executeStep())
-        return null;
-      return stmt.row.post_data;
-    } finally {
-      stmt.finalize();
-    }
   },
 
   /**

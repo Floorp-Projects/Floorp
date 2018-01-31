@@ -45,26 +45,6 @@ function $_(formNum, name) {
   return element;
 }
 
-// Mochitest gives us a sendKey(), but it's targeted to a specific element.
-// This basically sends an untargeted key event, to whatever's focused.
-function doKey(aKey, modifier) {
-  let keyName = "DOM_VK_" + aKey.toUpperCase();
-  let key = SpecialPowers.Ci.nsIDOMKeyEvent[keyName];
-
-  // undefined --> null
-  if (!modifier) {
-    modifier = null;
-  }
-
-  // Window utils for sending fake key events.
-  let wutils = SpecialPowers.getDOMWindowUtils(window);
-
-  if (wutils.sendKeyEvent("keydown", key, 0, modifier)) {
-    wutils.sendKeyEvent("keypress", key, 0, modifier);
-  }
-  wutils.sendKeyEvent("keyup", key, 0, modifier);
-}
-
 function registerPopupShownListener(listener) {
   if (gPopupShownListener) {
     ok(false, "got too many popupshownlisteners");

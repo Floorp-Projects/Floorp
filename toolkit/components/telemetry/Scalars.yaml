@@ -1258,7 +1258,7 @@ idb.type:
       - 1360567
     description: >
       Number of times indexeddb.open(name, {storage: "persistent"}) has been used.
-    expires: "60"
+    expires: "62"
     kind: uint
     notification_emails:
       - shuang@mozilla.com
@@ -1272,7 +1272,7 @@ idb.type:
       - 1360567
     description: >
       Number of times indexeddb.open(name, {storage: "temporary"}) has been used.
-    expires: "60"
+    expires: "62"
     kind: uint
     notification_emails:
       - shuang@mozilla.com

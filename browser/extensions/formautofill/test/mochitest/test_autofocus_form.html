@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Test basic autofill</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="formautofill_common.js"></script>
   <script type="text/javascript" src="satchel_common.js"></script>
@@ -38,7 +39,7 @@ async function setupAddressStorage() {
 
 add_task(async function check_autocomplete_on_autofocus_field() {
   await setupAddressStorage();
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({primary: address.organization, secondary: address["street-address"]})
