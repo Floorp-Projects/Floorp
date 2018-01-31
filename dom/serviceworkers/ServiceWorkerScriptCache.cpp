@@ -981,8 +981,8 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
     statusAsText.AppendInt(status);
 
     ServiceWorkerManager::LocalizeAndReportToAllClients(
-      mRegistration->mScope, "ServiceWorkerRegisterNetworkError",
-      nsTArray<nsString> { NS_ConvertUTF8toUTF16(mRegistration->mScope),
+      mRegistration->Scope(), "ServiceWorkerRegisterNetworkError",
+      nsTArray<nsString> { NS_ConvertUTF8toUTF16(mRegistration->Scope()),
         statusAsText, mURL });
 
     rv = NS_ERROR_FAILURE;
@@ -1016,8 +1016,8 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
       !mimeType.LowerCaseEqualsLiteral("application/x-javascript") &&
       !mimeType.LowerCaseEqualsLiteral("application/javascript")) {
     ServiceWorkerManager::LocalizeAndReportToAllClients(
-      mRegistration->mScope, "ServiceWorkerRegisterMimeTypeError",
-      nsTArray<nsString> { NS_ConvertUTF8toUTF16(mRegistration->mScope),
+      mRegistration->Scope(), "ServiceWorkerRegisterMimeTypeError",
+      nsTArray<nsString> { NS_ConvertUTF8toUTF16(mRegistration->Scope()),
         NS_ConvertUTF8toUTF16(mimeType), mURL });
     rv = NS_ERROR_DOM_SECURITY_ERR;
     return rv;

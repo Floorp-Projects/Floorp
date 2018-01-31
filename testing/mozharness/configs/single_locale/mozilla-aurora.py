@@ -17,7 +17,6 @@ config = {
     ),
 
     # repositories
-    "mozilla_dir": "mozilla-aurora",
     "repos": [{
         "vcs": "hg",
         "repo": "https://hg.mozilla.org/build/tools",

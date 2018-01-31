@@ -120,17 +120,17 @@ ServiceWorkerUnregisterJob::Unregister()
   }
 
   // Note, we send the message to remove the registration from disk now even
-  // though we may only set the mPendingUninstall flag below.  This is
+  // though we may only set the pending uninstall flag below.  This is
   // necessary to ensure the registration is removed if the controlled
   // clients are closed by shutting down the browser.  If the registration
-  // is resurrected by clearing mPendingUninstall then it should be saved
+  // is resurrected by clearing pending uninstall then it should be saved
   // to disk again.
-  if (mSendToParent && !registration->mPendingUninstall) {
+  if (mSendToParent && !registration->IsPendingUninstall()) {
     swm->MaybeSendUnregister(mPrincipal, mScope);
   }
 
   // "Set registration's uninstalling flag."
-  registration->mPendingUninstall = true;
+  registration->SetPendingUninstall();
 
   // "Resolve promise with true"
   mResult = true;

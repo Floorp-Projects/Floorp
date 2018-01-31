@@ -99,7 +99,10 @@ class AllDoublePolicy final : public TypePolicy
 {
   public:
     EMPTY_DATA_;
-    MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc, MInstruction* def) override;
+    static MOZ_MUST_USE bool staticAdjustInputs(TempAllocator& alloc, MInstruction* def);
+    MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc, MInstruction* def) override {
+        return staticAdjustInputs(alloc, def);
+    }
 };
 
 class BitwisePolicy final : public TypePolicy
@@ -110,6 +113,13 @@ class BitwisePolicy final : public TypePolicy
 };
 
 class ComparePolicy final : public TypePolicy
+{
+  public:
+    EMPTY_DATA_;
+    virtual MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc, MInstruction* def) override;
+};
+
+class SameValuePolicy final : public TypePolicy
 {
   public:
     EMPTY_DATA_;

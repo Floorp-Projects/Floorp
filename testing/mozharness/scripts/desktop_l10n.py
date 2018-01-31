@@ -25,7 +25,10 @@ from mozharness.base.transfer import TransferMixin
 from mozharness.base.vcs.vcsbase import VCSMixin
 from mozharness.mozilla.buildbot import BuildbotMixin
 from mozharness.mozilla.purge import PurgeMixin
-from mozharness.mozilla.building.buildbase import MakeUploadOutputParser
+from mozharness.mozilla.building.buildbase import (
+    MakeUploadOutputParser,
+    get_mozconfig_path,
+)
 from mozharness.mozilla.l10n.locales import LocalesMixin
 from mozharness.mozilla.mar import MarMixin
 from mozharness.mozilla.mock import MockMixin
@@ -691,8 +694,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         """
         config = self.config
         dirs = self.query_abs_dirs()
-        mozconfig = config['mozconfig']
-        src = os.path.join(dirs['abs_work_dir'], mozconfig)
+        src = get_mozconfig_path(self, config, dirs)
         dst = os.path.join(dirs['abs_mozilla_dir'], '.mozconfig')
         self.copyfile(src, dst)
         self.read_from_file(dst, verbose=True)
@@ -917,6 +919,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             abs_dirs[directory] = value
         dirs = {}
         dirs['abs_tools_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tools')
+        dirs['abs_src_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'src')
         for key in dirs.keys():
             if key not in abs_dirs:
                 abs_dirs[key] = dirs[key]

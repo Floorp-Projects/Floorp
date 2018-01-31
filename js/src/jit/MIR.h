@@ -4811,6 +4811,31 @@ class MCompare
     }
 };
 
+class MSameValue
+  : public MBinaryInstruction,
+    public SameValuePolicy::Data
+{
+    MSameValue(MDefinition* left, MDefinition* right)
+      : MBinaryInstruction(classOpcode, left, right)
+    {
+        setResultType(MIRType::Boolean);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(SameValue)
+    TRIVIAL_NEW_WRAPPERS
+
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+
+    ALLOW_CLONE(MSameValue)
+};
+
 // Takes a typed value and returns an untyped value.
 class MBox
   : public MUnaryInstruction,
