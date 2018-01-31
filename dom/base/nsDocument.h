@@ -959,7 +959,7 @@ public:
     GetImplementation(mozilla::ErrorResult& rv) override;
 
   virtual void SetSelectedStyleSheetSet(const nsAString& aSheetSet) override;
-  virtual void GetLastStyleSheetSet(nsString& aSheetSet) override;
+  virtual void GetLastStyleSheetSet(nsAString& aSheetSet) override;
   virtual mozilla::dom::DOMStringList* StyleSheetSets() override;
   virtual void EnableStyleSheetsForSet(const nsAString& aSheetSet) override;
   virtual already_AddRefed<Element> CreateElement(const nsAString& aTagName,

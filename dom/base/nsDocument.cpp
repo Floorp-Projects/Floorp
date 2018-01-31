@@ -6140,13 +6140,6 @@ nsDocument::BlockedTrackingNodes() const
   return list.forget();
 }
 
-NS_IMETHODIMP
-nsDocument::GetMozSelectedStyleSheetSet(nsAString& aSheetSet)
-{
-  nsIDocument::GetSelectedStyleSheetSet(aSheetSet);
-  return NS_OK;
-}
-
 void
 nsIDocument::GetSelectedStyleSheetSet(nsAString& aSheetSet)
 {
@@ -6176,13 +6169,6 @@ nsIDocument::GetSelectedStyleSheetSet(nsAString& aSheetSet)
   }
 }
 
-NS_IMETHODIMP
-nsDocument::SetMozSelectedStyleSheetSet(const nsAString& aSheetSet)
-{
-  SetSelectedStyleSheetSet(aSheetSet);
-  return NS_OK;
-}
-
 void
 nsDocument::SetSelectedStyleSheetSet(const nsAString& aSheetSet)
 {
@@ -6196,39 +6182,16 @@ nsDocument::SetSelectedStyleSheetSet(const nsAString& aSheetSet)
   EnableStyleSheetsForSetInternal(aSheetSet, true);
 }
 
-NS_IMETHODIMP
+void
 nsDocument::GetLastStyleSheetSet(nsAString& aSheetSet)
 {
-  nsString sheetSet;
-  GetLastStyleSheetSet(sheetSet);
-  aSheetSet = sheetSet;
-  return NS_OK;
-}
-
-void
-nsDocument::GetLastStyleSheetSet(nsString& aSheetSet)
-{
   aSheetSet = mLastStyleSheetSet;
-}
-
-NS_IMETHODIMP
-nsDocument::GetPreferredStyleSheetSet(nsAString& aSheetSet)
-{
-  nsIDocument::GetPreferredStyleSheetSet(aSheetSet);
-  return NS_OK;
 }
 
 void
 nsIDocument::GetPreferredStyleSheetSet(nsAString& aSheetSet)
 {
   GetHeaderData(nsGkAtoms::headerDefaultStyle, aSheetSet);
-}
-
-NS_IMETHODIMP
-nsDocument::GetStyleSheetSets(nsISupports** aList)
-{
-  NS_ADDREF(*aList = StyleSheetSets());
-  return NS_OK;
 }
 
 DOMStringList*
@@ -6238,13 +6201,6 @@ nsDocument::StyleSheetSets()
     mStyleSheetSetList = new nsDOMStyleSheetSetList(this);
   }
   return mStyleSheetSetList;
-}
-
-NS_IMETHODIMP
-nsDocument::MozEnableStyleSheetsForSet(const nsAString& aSheetSet)
-{
-  EnableStyleSheetsForSet(aSheetSet);
-  return NS_OK;
 }
 
 void
