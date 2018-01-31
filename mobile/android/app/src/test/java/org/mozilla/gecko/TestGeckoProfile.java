@@ -87,26 +87,6 @@ public class TestGeckoProfile {
     }
 
     @Test
-    public void testGetClientIdMigrateFromFHR() throws Exception {
-        final File fhrClientIdFile = new File(profileDir, "healthreport/state.json");
-        final String fhrClientId = "905de1c0-0ea6-4a43-95f9-6170035f5a82";
-
-        assertFalse("client ID file does not exist", clientIdFile.exists());
-        assertTrue("Created FHR data directory", new File(profileDir, "healthreport").mkdirs());
-        writeClientIdToFile(fhrClientIdFile, fhrClientId);
-        assertEquals("Migrated Client ID equals FHR client ID", fhrClientId, profile.getClientId());
-
-        // Verify migration wrote to contemporary client ID file.
-        assertTrue("Client ID file created during migration", clientIdFile.exists());
-        assertEquals("Migrated client ID on disk equals value returned from method",
-                fhrClientId, readClientIdFromFile(clientIdFile));
-
-        assertTrue("Deleted FHR clientID file", fhrClientIdFile.delete());
-        assertEquals("Ensure method calls read from newly created client ID file & not FHR client ID file",
-                fhrClientId, profile.getClientId());
-    }
-
-    @Test
     public void testGetClientIdInvalidIdOnDisk() throws Exception {
         assertTrue("Created the parent dirs of the client ID file", clientIdFile.getParentFile().mkdirs());
         writeClientIdToFile(clientIdFile, "");
