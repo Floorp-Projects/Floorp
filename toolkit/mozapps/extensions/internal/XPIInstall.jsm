@@ -123,10 +123,6 @@ const PREF_EM_UPDATE_URL              = "extensions.update.url";
 const PREF_XPI_SIGNATURES_DEV_ROOT    = "xpinstall.signatures.dev-root";
 const PREF_XPI_UNPACK                 = "extensions.alwaysUnpack";
 const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
-const PREF_EM_HOTFIX_ID               = "extensions.hotfix.id";
-const PREF_EM_CERT_CHECKATTRIBUTES    = "extensions.hotfix.cert.checkAttributes";
-const PREF_EM_HOTFIX_CERTS            = "extensions.hotfix.certs.";
-
 const FILE_RDF_MANIFEST               = "install.rdf";
 const FILE_WEB_MANIFEST               = "manifest.json";
 
@@ -1046,19 +1042,6 @@ function getSignedStatus(aRv, aCert, aAddonID) {
       if (expectedCommonName && expectedCommonName != aCert.commonName)
         return AddonManager.SIGNEDSTATE_BROKEN;
 
-      let hotfixID = Services.prefs.getStringPref(PREF_EM_HOTFIX_ID, undefined);
-      if (hotfixID && hotfixID == aAddonID && Services.prefs.getBoolPref(PREF_EM_CERT_CHECKATTRIBUTES, false)) {
-        // The hotfix add-on has some more rigorous certificate checks
-        try {
-          CertUtils.validateCert(aCert,
-                                 CertUtils.readCertPrefs(PREF_EM_HOTFIX_CERTS));
-        } catch (e) {
-          logger.warn("The hotfix add-on was not signed by the expected " +
-                      "certificate and so will not be installed.", e);
-          return AddonManager.SIGNEDSTATE_BROKEN;
-        }
-      }
-
       if (aCert.organizationalUnit == "Mozilla Components") {
         return AddonManager.SIGNEDSTATE_SYSTEM;
       }
@@ -1094,11 +1077,6 @@ function shouldVerifySignedState(aAddon) {
   // We don't care about signatures for default system add-ons
   if (aAddon._installLocation.name == KEY_APP_SYSTEM_DEFAULTS)
     return false;
-
-  // Hotfixes should always have their signature checked
-  let hotfixID = Services.prefs.getStringPref(PREF_EM_HOTFIX_ID, undefined);
-  if (hotfixID && aAddon.id == hotfixID)
-    return true;
 
   // Otherwise only check signatures if signing is enabled and the add-on is one
   // of the signed types.

@@ -1,6 +1,20 @@
 Adding a New Linter to the Tree
 ===============================
 
+Linter Requirements
+-------------------
+
+For a linter to be integrated into the mozilla-central tree, it needs to have:
+
+* Any required dependencies should be installed as part of ``./mach bootstrap``
+* A ``./mach lint`` interface
+* Running ``./mach lint`` command must pass (note, linters can be disabled for individual directories)
+* Taskcluster/Treeherder integration
+* In tree documentation (under ``tools/lint/docs``) to give a basic summary, links and any other useful information
+
+Linter Basics
+-------------
+
 A linter is a yaml file with a ``.yml`` extension. Depending on how the type of linter, there may
 be python code alongside the definition, pointed to by the 'payload' attribute.
 

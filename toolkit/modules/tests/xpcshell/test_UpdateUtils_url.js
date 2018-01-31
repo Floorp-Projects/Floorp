@@ -218,6 +218,11 @@ add_task(async function test_build_target() {
     abi += "-" + getProcArchitecture();
   }
 
+  if (AppConstants.ASAN) {
+    // Allow ASan builds to receive their own updates
+    abi += "-asan";
+  }
+
   Assert.equal(await getResult(url), gAppInfo.OS + "_" + abi,
                "the url param for %BUILD_TARGET%" + MSG_SHOULD_EQUAL);
 });

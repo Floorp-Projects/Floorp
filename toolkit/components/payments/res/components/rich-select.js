@@ -2,14 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global ObservedPropertiesMixin */
+
 /**
  * <rich-select>
  *  <rich-option></rich-option>
  * </rich-select>
+ *
+ * Note: The only supported way to change the selected option is via the
+ *       `selectedOption` setter.
  */
-
-/* global ObservedPropertiesMixin */
-
 class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
   static get observedAttributes() {
     return [
@@ -25,31 +27,60 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
     this.addEventListener("blur", this);
     this.addEventListener("click", this);
     this.addEventListener("keydown", this);
-  }
 
-  connectedCallback() {
-    this.setAttribute("tabindex", "0");
-    this.render();
+    this.popupBox = document.createElement("div");
+    this.popupBox.classList.add("rich-select-popup-box");
 
-    this._mutationObserver = new MutationObserver(() => {
-      this.render();
+    this._mutationObserver = new MutationObserver((mutations) => {
+      for (let mutation of mutations) {
+        for (let addedNode of mutation.addedNodes) {
+          if (addedNode.nodeType != Node.ELEMENT_NODE ||
+              !addedNode.matches(".rich-option:not(.rich-select-selected-clone)")) {
+            continue;
+          }
+          // Move the added rich option to the popup.
+          this.popupBox.appendChild(addedNode);
+        }
+      }
     });
     this._mutationObserver.observe(this, {
       childList: true,
-      subtree: true,
     });
   }
 
-  get popupBox() {
-    return this.querySelector(":scope > .rich-select-popup-box");
+  connectedCallback() {
+    this.tabIndex = 0;
+    this.appendChild(this.popupBox);
+
+    // Move options initially placed inside the select to the popup box.
+    let options = this.querySelectorAll(":scope > .rich-option:not(.rich-select-selected-clone)");
+    for (let option of options) {
+      this.popupBox.appendChild(option);
+    }
+
+    this.render();
   }
 
   get selectedOption() {
     return this.popupBox.querySelector(":scope > [selected]");
   }
 
-  namedItem(name) {
-    return this.popupBox.querySelector(`:scope > [name="${CSS.escape(name)}"]`);
+
+  /**
+   * This is the only supported method of changing the selected option. Do not
+   * manipulate the `selected` property or attribute on options directly.
+   * @param {HTMLOptionElement} option
+   */
+  set selectedOption(option) {
+    for (let child of this.popupBox.children) {
+      child.selected = child == option;
+    }
+
+    this.render();
+  }
+
+  getOptionByValue(value) {
+    return this.popupBox.querySelector(`:scope > [value="${CSS.escape(value)}"]`);
   }
 
   handleEvent(event) {
@@ -76,10 +107,16 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
   }
 
   onClick(event) {
-    if (!this.disabled &&
-        event.button == 0) {
-      this.open = !this.open;
+    if (event.button != 0) {
+      return;
     }
+
+    let option = event.target.closest(".rich-option");
+    if (this.open && option && !option.matches(".rich-select-selected-clone") && !option.selected) {
+      this.selectedOption = option;
+      this._dispatchChangeEvent();
+    }
+    this.open = !this.open;
   }
 
   onKeyDown(event) {
@@ -91,6 +128,7 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
       if (next) {
         next.selected = true;
         selectedOption.selected = false;
+        this._dispatchChangeEvent();
       }
     } else if (event.key == "ArrowUp") {
       let selectedOption = this.selectedOption;
@@ -98,11 +136,21 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
       if (next) {
         next.selected = true;
         selectedOption.selected = false;
+        this._dispatchChangeEvent();
       }
     } else if (event.key == "Enter" ||
                event.key == "Escape") {
       this.open = false;
     }
+  }
+
+  /**
+   * Only dispatched upon a user-initiated change.
+   */
+  _dispatchChangeEvent() {
+    let changeEvent = document.createEvent("UIEvent");
+    changeEvent.initEvent("change", true, true);
+    this.dispatchEvent(changeEvent);
   }
 
   _optionsAreEquivalent(a, b) {
@@ -117,6 +165,9 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
     }
 
     for (let aAttr of aAttrs) {
+      if (aAttr == "selected") {
+        continue;
+      }
       if (a.getAttribute(aAttr) != b.getAttribute(aAttr)) {
         return false;
       }
@@ -126,45 +177,33 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
   }
 
   render() {
-    let popupBox = this.popupBox;
-    if (!popupBox) {
-      popupBox = document.createElement("div");
-      popupBox.classList.add("rich-select-popup-box");
-      this.appendChild(popupBox);
-    }
-
-    /* eslint-disable max-len */
-    let options =
-      this.querySelectorAll(":scope > :not(.rich-select-popup-box):not(.rich-select-selected-clone)");
-    /* eslint-enable max-len */
-    for (let option of options) {
-      popupBox.appendChild(option);
-    }
-
     let selectedChild;
-    for (let child of popupBox.children) {
+    for (let child of this.popupBox.children) {
       if (child.selected) {
         selectedChild = child;
+        break;
       }
-    }
-    if (!selectedChild && popupBox.children.length) {
-      selectedChild = popupBox.children[0];
-      selectedChild.selected = true;
     }
 
     let selectedClone = this.querySelector(":scope > .rich-select-selected-clone");
-    if (!this._optionsAreEquivalent(selectedClone, selectedChild)) {
-      if (selectedClone) {
-        selectedClone.remove();
-      }
-
-      if (selectedChild) {
-        selectedClone = selectedChild.cloneNode(false);
-        selectedClone.removeAttribute("id");
-        selectedClone.classList.add("rich-select-selected-clone");
-        selectedClone = this.appendChild(selectedClone);
-      }
+    if (this._optionsAreEquivalent(selectedClone, selectedChild)) {
+      return;
     }
+
+    if (selectedClone) {
+      selectedClone.remove();
+    }
+
+    if (selectedChild) {
+      selectedClone = selectedChild.cloneNode(false);
+      selectedClone.removeAttribute("id");
+      selectedClone.removeAttribute("selected");
+    } else {
+      selectedClone = document.createElement("rich-option");
+      selectedClone.textContent = "(None selected)";
+    }
+    selectedClone.classList.add("rich-select-selected-clone");
+    selectedClone = this.appendChild(selectedClone);
   }
 }
 

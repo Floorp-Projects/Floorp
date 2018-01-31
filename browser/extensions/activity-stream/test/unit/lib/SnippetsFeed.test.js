@@ -50,7 +50,7 @@ describe("SnippetsFeed", () => {
 
     assert.calledOnce(feed.store.dispatch);
 
-    const action = feed.store.dispatch.firstCall.args[0];
+    const [action] = feed.store.dispatch.firstCall.args;
     assert.propertyVal(action, "type", at.SNIPPETS_DATA);
     assert.isObject(action.data);
     assert.propertyVal(action.data, "snippetsURL", "foo.com/5");
@@ -106,7 +106,7 @@ describe("SnippetsFeed", () => {
     await feed.observe(null, "browser-search-engine-modified");
 
     assert.calledOnce(feed.store.dispatch);
-    const action = feed.store.dispatch.firstCall.args[0];
+    const [action] = feed.store.dispatch.firstCall.args;
     assert.equal(action.type, at.SNIPPETS_DATA);
     assert.deepEqual(action.data, {selectedSearchEngine: searchData});
   });

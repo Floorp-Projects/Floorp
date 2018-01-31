@@ -321,6 +321,7 @@ public:
         : public nsIURIMutator
         , public BaseURIMutator<T>
         , public nsIStandardURLMutator
+        , public nsIURLMutator
     {
         NS_FORWARD_SAFE_NSIURISETTERS_RET(BaseURIMutator<T>::mURI)
 
@@ -389,6 +390,46 @@ public:
             }
             return BaseURIMutator<T>::mURI->SetDefaultPort(aNewDefaultPort);
         }
+
+        MOZ_MUST_USE NS_IMETHOD
+        SetFileName(const nsACString& aFileName, nsIURIMutator** aMutator) override
+        {
+            if (!BaseURIMutator<T>::mURI) {
+                return NS_ERROR_NULL_POINTER;
+            }
+            if (aMutator) {
+                nsCOMPtr<nsIURIMutator> mutator = this;
+                mutator.forget(aMutator);
+            }
+            return BaseURIMutator<T>::mURI->SetFileName(aFileName);
+        }
+
+        MOZ_MUST_USE NS_IMETHOD
+        SetFileBaseName(const nsACString& aFileBaseName, nsIURIMutator** aMutator) override
+        {
+            if (!BaseURIMutator<T>::mURI) {
+                return NS_ERROR_NULL_POINTER;
+            }
+            if (aMutator) {
+                nsCOMPtr<nsIURIMutator> mutator = this;
+                mutator.forget(aMutator);
+            }
+            return BaseURIMutator<T>::mURI->SetFileBaseName(aFileBaseName);
+        }
+
+        MOZ_MUST_USE NS_IMETHOD
+        SetFileExtension(const nsACString& aFileExtension, nsIURIMutator** aMutator) override
+        {
+            if (!BaseURIMutator<T>::mURI) {
+                return NS_ERROR_NULL_POINTER;
+            }
+            if (aMutator) {
+                nsCOMPtr<nsIURIMutator> mutator = this;
+                mutator.forget(aMutator);
+            }
+            return BaseURIMutator<T>::mURI->SetFileExtension(aFileExtension);
+        }
+
 
         explicit TemplatedMutator() { }
     private:
