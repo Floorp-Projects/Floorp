@@ -314,9 +314,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mUsesExChUnits(false),
     mPendingViewportChange(false),
     mCounterStylesDirty(true),
-    mPostedFlushCounterStyles(false),
     mFontFeatureValuesDirty(true),
-    mPostedFlushFontFeatureValues(false),
     mSuppressResizeReflow(false),
     mIsVisual(false),
     mFireAfterPaintEvents(false),
@@ -2078,9 +2076,16 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,
     MOZ_CRASH("old style system disabled");
 #endif
   }
-  mDocument->RebuildUserFontSet();
-  RebuildCounterStyles();
-  RebuildFontFeatureValues();
+
+  // TODO(emilio): It's unclear to me why would these three calls below be
+  // needed. In particular, RebuildAllStyleData doesn't rebuild rules or
+  // specified style information and such (note the comment in
+  // ServoRestyleManager::RebuildAllStyleData re. the funny semantics), so I
+  // don't know why should we rebuild the user font set / counter styles /
+  // etc...
+  mDocument->MarkUserFontSetDirty();
+  MarkCounterStylesDirty();
+  MarkFontFeatureValuesDirty();
 
   RestyleManager()->RebuildAllStyleData(aExtraHint, aRestyleHint);
 }
@@ -2426,27 +2431,14 @@ nsPresContext::FlushCounterStyles()
 }
 
 void
-nsPresContext::RebuildCounterStyles()
+nsPresContext::MarkCounterStylesDirty()
 {
   if (mCounterStyleManager->IsInitial()) {
-    // Still in its initial state, no need to reset.
+    // Still in its initial state, no need to touch anything.
     return;
   }
 
   mCounterStylesDirty = true;
-  if (mShell) {
-    mShell->SetNeedStyleFlush();
-  }
-  if (!mPostedFlushCounterStyles) {
-    nsCOMPtr<nsIRunnable> ev =
-      NewRunnableMethod("nsPresContext::HandleRebuildCounterStyles",
-                        this, &nsPresContext::HandleRebuildCounterStyles);
-    nsresult rv =
-      Document()->Dispatch(TaskCategory::Other, ev.forget());
-    if (NS_SUCCEEDED(rv)) {
-      mPostedFlushCounterStyles = true;
-    }
-  }
 }
 
 void
@@ -3186,28 +3178,6 @@ nsPresContext::FlushFontFeatureValues()
     StyleSetHandle styleSet = mShell->StyleSet();
     mFontFeatureValuesLookup = styleSet->BuildFontFeatureValueSet();
     mFontFeatureValuesDirty = false;
-  }
-}
-
-void
-nsPresContext::RebuildFontFeatureValues()
-{
-  if (!mShell) {
-    return; // we've been torn down
-  }
-
-  mFontFeatureValuesDirty = true;
-  mShell->SetNeedStyleFlush();
-
-  if (!mPostedFlushFontFeatureValues) {
-    nsCOMPtr<nsIRunnable> ev =
-      NewRunnableMethod("nsPresContext::HandleRebuildFontFeatureValues",
-                        this, &nsPresContext::HandleRebuildFontFeatureValues);
-    nsresult rv =
-      Document()->Dispatch(TaskCategory::Other, ev.forget());
-    if (NS_SUCCEEDED(rv)) {
-      mPostedFlushFontFeatureValues = true;
-    }
   }
 }
 

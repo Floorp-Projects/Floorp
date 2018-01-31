@@ -3071,7 +3071,7 @@ public:
 
   gfxUserFontSet* GetUserFontSet(bool aFlushUserFontSet = true);
   void FlushUserFontSet();
-  void RebuildUserFontSet(); // asynchronously
+  void MarkUserFontSetDirty();
   mozilla::dom::FontFaceSet* GetFonts() { return mFontFaceSet; }
 
   // FontFaceSource
@@ -3288,11 +3288,6 @@ protected:
   }
 
   mozilla::dom::XPathEvaluator* XPathEvaluator();
-
-  void HandleRebuildUserFontSet() {
-    mPostedFlushUserFontSet = false;
-    FlushUserFontSet();
-  }
 
   // Update our frame request callback scheduling state, if needed.  This will
   // schedule or unschedule them, if necessary, and update
@@ -3542,9 +3537,6 @@ protected:
 
   // Has GetUserFontSet() been called?
   bool mGetUserFontSetCalled : 1;
-
-  // Do we currently have an event posted to call FlushUserFontSet?
-  bool mPostedFlushUserFontSet : 1;
 
   // True if we have fired the DOMContentLoaded event, or don't plan to fire one
   // (e.g. we're not being parsed at all).
