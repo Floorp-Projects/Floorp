@@ -1310,6 +1310,29 @@ CacheIRCompiler::emitGuardIsSymbol()
 }
 
 bool
+CacheIRCompiler::emitGuardIsInt32()
+{
+    ValOperandId inputId = reader.valOperandId();
+    Register output = allocator.defineRegister(masm, reader.int32OperandId());
+
+    if (allocator.knownType(inputId) == JSVAL_TYPE_INT32) {
+        Register input = allocator.useRegister(masm, Int32OperandId(inputId.id()));
+        masm.move32(input, output);
+        return true;
+    }
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Label notInt32, done;
+    masm.branchTestInt32(Assembler::NotEqual, input, failure->label());
+    masm.unboxInt32(input, output);
+    return true;
+}
+
+bool
 CacheIRCompiler::emitGuardIsInt32Index()
 {
     ValOperandId inputId = reader.valOperandId();

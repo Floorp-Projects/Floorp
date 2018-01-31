@@ -181,6 +181,7 @@ extern const char* CacheKindNames[];
     _(GuardIsString)                      \
     _(GuardIsSymbol)                      \
     _(GuardIsNumber)                      \
+    _(GuardIsInt32)                       \
     _(GuardIsInt32Index)                  \
     _(GuardType)                          \
     _(GuardShape)                         \
@@ -534,6 +535,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     SymbolOperandId guardIsSymbol(ValOperandId val) {
         writeOpWithOperandId(CacheOp::GuardIsSymbol, val);
         return SymbolOperandId(val.id());
+    }
+    Int32OperandId guardIsInt32(ValOperandId val) {
+        Int32OperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::GuardIsInt32, val);
+        writeOperandId(res);
+        return res;
     }
     Int32OperandId guardIsInt32Index(ValOperandId val) {
         Int32OperandId res(nextOperandId_++);
