@@ -20,8 +20,8 @@
 
 namespace mozilla {
 namespace dom {
-namespace workers {
 
+using namespace workers;
 using namespace mozilla::ipc;
 
 namespace {
@@ -356,6 +356,5 @@ WorkerThread::Observer::AfterProcessNextEvent(nsIThreadInternal* /* aThread */,
   return NS_OK;
 }
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla
