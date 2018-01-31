@@ -5,20 +5,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
  /**
-  * Check for correct functionality of PlacesUtils.setAnnotationsForItem/URI
+  * Check for correct functionality of PlacesUtils.setAnnotationsForItem
   */
 
 var as = PlacesUtils.annotations;
 
 const TEST_URL = "http://test.mozilla.org/";
 
-add_task(async function test_setAnnotationsFor() {
-  let testURI = uri(TEST_URL);
-  // add a bookmark
+add_task(async function test_setAnnotationsForItem() {
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "test",
-    url: testURI,
+    url: TEST_URL,
   });
 
   let itemId = await PlacesUtils.promiseItemId(bookmark.guid);
@@ -49,14 +47,6 @@ add_task(async function test_setAnnotationsFor() {
     Assert.equal(as.getItemAnnotation(itemId, anno.name), anno.value);
   });
 
-  // Add page annotations
-  PlacesUtils.setAnnotationsForURI(testURI, testAnnos);
-  // Check for correct addition
-  testAnnos.forEach(function(anno) {
-    Assert.ok(as.pageHasAnnotation(testURI, anno.name));
-    Assert.equal(as.getPageAnnotation(testURI, anno.name), anno.value);
-  });
-
   // To unset annotations we unset their values or set them to
   // null/undefined
   testAnnos[0].value = null;
@@ -69,14 +59,5 @@ add_task(async function test_setAnnotationsFor() {
   // Check for correct removal
   testAnnos.forEach(function(anno) {
     Assert.ok(!as.itemHasAnnotation(itemId, anno.name));
-    // sanity: page annotations should not be removed here
-    Assert.ok(as.pageHasAnnotation(testURI, anno.name));
-  });
-
-  // Unset all page annotations
-  PlacesUtils.setAnnotationsForURI(testURI, testAnnos);
-  // Check for correct removal
-  testAnnos.forEach(function(anno) {
-    Assert.ok(!as.pageHasAnnotation(testURI, anno.name));
   });
 });
