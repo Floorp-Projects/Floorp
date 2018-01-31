@@ -2175,14 +2175,18 @@ XULDocument::AddChromeOverlays()
     return rv;
 }
 
-NS_IMETHODIMP
-XULDocument::LoadOverlay(const nsAString& aURL, nsIObserver* aObserver)
+void
+XULDocument::LoadOverlay(const nsAString& aURL, nsIObserver* aObserver,
+                         ErrorResult& aRv)
 {
     nsresult rv;
 
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        aRv.Throw(rv);
+        return;
+    }
 
     if (aObserver) {
         nsIObserver* obs = nullptr;
@@ -2194,15 +2198,21 @@ XULDocument::LoadOverlay(const nsAString& aURL, nsIObserver* aObserver)
         if (obs) {
             // We don't support loading the same overlay twice into the same
             // document - that doesn't make sense anyway.
-            return NS_ERROR_FAILURE;
+            aRv.Throw(NS_ERROR_FAILURE);
+            return;
         }
         mOverlayLoadObservers->Put(uri, aObserver);
     }
     bool shouldReturn, failureFromContent;
     rv = LoadOverlayInternal(uri, true, &shouldReturn, &failureFromContent);
-    if (NS_FAILED(rv) && mOverlayLoadObservers)
-        mOverlayLoadObservers->Remove(uri); // remove the observer if LoadOverlayInternal generated an error
-    return rv;
+    if (NS_FAILED(rv)) {
+        // remove the observer if LoadOverlayInternal generated an error
+        if (mOverlayLoadObservers) {
+            mOverlayLoadObservers->Remove(uri);
+        }
+        aRv.Throw(rv);
+        return;
+    }
 }
 
 nsresult

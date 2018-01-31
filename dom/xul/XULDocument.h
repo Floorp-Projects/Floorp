@@ -177,10 +177,7 @@ public:
                  ErrorResult& aRv);
     using nsDocument::GetBoxObjectFor;
     void LoadOverlay(const nsAString& aURL, nsIObserver* aObserver,
-                     ErrorResult& aRv)
-    {
-        aRv = LoadOverlay(aURL, aObserver);
-    }
+                     ErrorResult& aRv);
 
 protected:
     virtual ~XULDocument();
