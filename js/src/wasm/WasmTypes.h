@@ -1506,8 +1506,12 @@ struct TlsData
     // Pointer to the Instance that contains this TLS data.
     Instance* instance;
 
-    // Shortcut to instance->zone->group->addressOfOwnerContext
-    JSContext** addressOfContext;
+    // The containing JSContext.
+    JSContext* cx;
+
+    // The native stack limit which is checked by prologues. Shortcut for
+    // cx->stackLimitForJitCode(JS::StackForUntrustedScript).
+    uintptr_t stackLimit;
 
     // Pointer that should be freed (due to padding before the TlsData).
     void* allocatedBase;

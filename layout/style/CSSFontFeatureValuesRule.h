@@ -24,7 +24,7 @@ public:
 
   // WebIDL interfaces
   uint16_t Type() const final override { return CSSRuleBinding::FONT_FEATURE_VALUES_RULE; }
-  virtual void GetCssTextImpl(nsAString& aCssText) const override = 0;
+  virtual void GetCssText(nsAString& aCssText) const override = 0;
   virtual void GetFontFamily(nsAString& aFamily) = 0;
   virtual void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv) = 0;
   virtual void GetValueText(nsAString& aValueText) = 0;

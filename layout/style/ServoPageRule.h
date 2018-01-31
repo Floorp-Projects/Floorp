@@ -69,7 +69,7 @@ public:
   RawServoPageRule* Raw() const { return mRawRule; }
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetCssText(nsAString& aCssText) const final override;
   nsICSSDeclaration* Style() final override;
 
   // Methods of mozilla::css::Rule

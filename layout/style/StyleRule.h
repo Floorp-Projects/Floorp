@@ -345,7 +345,7 @@ public:
 
   // WebIDL interface
   uint16_t Type() const override;
-  void GetCssTextImpl(nsAString& aCssText) const override;
+  void GetCssText(nsAString& aCssText) const override;
   void GetSelectorText(nsAString& aSelectorText) final override;
   void SetSelectorText(const nsAString& aSelectorText) final override;
   nsICSSDeclaration* Style() override;

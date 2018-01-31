@@ -3143,10 +3143,8 @@ MacroAssembler::wasmEmitOldTrapOutOfLineCode()
 void
 MacroAssembler::wasmEmitStackCheck(Register sp, Register scratch, Label* onOverflow)
 {
-    loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, addressOfContext)), scratch);
-    loadPtr(Address(scratch, 0), scratch);
     branchPtr(Assembler::AboveOrEqual,
-              Address(scratch, offsetof(JSContext, jitStackLimitNoInterrupt)),
+              Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)),
               sp,
               onOverflow);
 }
