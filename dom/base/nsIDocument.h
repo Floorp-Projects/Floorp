@@ -2896,10 +2896,7 @@ public:
   void GetReferrer(nsAString& aReferrer) const;
   void GetLastModified(nsAString& aLastModified) const;
   void GetReadyState(nsAString& aReadyState) const;
-  // Not const because otherwise the compiler can't figure out whether to call
-  // this GetTitle or the nsAString version from non-const methods, since
-  // neither is an exact match.
-  virtual void GetTitle(nsString& aTitle) = 0;
+  virtual void GetTitle(nsAString& aTitle) = 0;
   virtual void SetTitle(const nsAString& aTitle, mozilla::ErrorResult& rv) = 0;
   void GetDir(nsAString& aDirection) const;
   void SetDir(const nsAString& aDirection);
