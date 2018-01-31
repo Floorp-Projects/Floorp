@@ -565,7 +565,7 @@ class RefTest(object):
         for jobArgs in perProcessArgs:
             try:
                 jobArgs.remove("--run-tests-in-parallel")
-            except:
+            except Exception:
                 pass
             jobArgs[0:0] = [sys.executable, "-u"]
 

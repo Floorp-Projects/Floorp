@@ -171,7 +171,7 @@ class LinuxCounterManager(CounterManager):
         """Returns the last value of the counter 'counterName'"""
         try:
             return self.registeredCounters[counterName][0](self.pidList())
-        except:
+        except Exception:
             return None
 
     def pidList(self):
@@ -179,5 +179,5 @@ class LinuxCounterManager(CounterManager):
         try:
             return [self.process.pid] + [child.pid
                                          for child in self.process.children()]
-        except:
+        except Exception:
             print("WARNING: problem updating child PID's")
