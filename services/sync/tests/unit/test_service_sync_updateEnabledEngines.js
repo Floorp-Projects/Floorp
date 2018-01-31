@@ -76,7 +76,7 @@ async function setUp(server) {
 const PAYLOAD = 42;
 
 add_task(async function setup() {
-  await Service.engineManager.clear();
+  Service.engineManager.clear();
   validate_all_future_pings();
 
   await Service.engineManager.register(SteamEngine);
@@ -96,7 +96,9 @@ add_task(async function test_newAccount() {
 
   try {
     _("Engine is enabled from the beginning.");
-    Svc.Prefs.set("engine." + engine.prefName, true);
+    Service._ignorePrefObserver = true;
+    engine.enabled = true;
+    Service._ignorePrefObserver = false;
 
     _("Sync.");
     await Service.sync();
@@ -164,7 +166,9 @@ add_task(async function test_disabledLocally() {
 
   try {
     _("Disable engine locally.");
-    Svc.Prefs.set("engine." + engine.prefName, true);
+    Service._ignorePrefObserver = true;
+    engine.enabled = true;
+    Service._ignorePrefObserver = false;
     engine.enabled = false;
 
     _("Sync.");
@@ -211,7 +215,9 @@ add_task(async function test_disabledLocally_wipe503() {
   await setUp(server);
 
   _("Disable engine locally.");
-  Svc.Prefs.set("engine." + engine.prefName, true);
+  Service._ignorePrefObserver = true;
+  engine.enabled = true;
+  Service._ignorePrefObserver = false;
   engine.enabled = false;
 
   let promiseObserved = promiseOneObserver("weave:ui:sync:error");
@@ -291,7 +297,9 @@ add_task(async function test_disabledRemotelyTwoClients() {
 
   try {
     _("Enable engine locally.");
-    Svc.Prefs.set("engine." + engine.prefName, true);
+    Service._ignorePrefObserver = true;
+    engine.enabled = true;
+    Service._ignorePrefObserver = false;
 
     _("Sync.");
     await Service.sync();
@@ -332,7 +340,9 @@ add_task(async function test_disabledRemotely() {
 
   try {
     _("Enable engine locally.");
-    Svc.Prefs.set("engine." + engine.prefName, true);
+    Service._ignorePrefObserver = true;
+    engine.enabled = true;
+    Service._ignorePrefObserver = false;
 
     _("Sync.");
     await Service.sync();
@@ -411,8 +421,10 @@ add_task(async function test_dependentEnginesDisabledLocally() {
 
   try {
     _("Disable engines locally. Doing it on one is enough.");
-    Svc.Prefs.set("engine." + steamEngine.prefName, true);
+    Service._ignorePrefObserver = true;
+    steamEngine.enabled = true;
     Assert.ok(stirlingEngine.enabled);
+    Service._ignorePrefObserver = false;
     steamEngine.enabled = false;
     Assert.ok(!stirlingEngine.enabled);
 

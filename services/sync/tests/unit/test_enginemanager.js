@@ -92,7 +92,7 @@ add_task(async function test_basics() {
   Assert.deepEqual(engines, [petrol, diesel, dummy]);
 
   _("Unregister an engine by name");
-  await manager.unregister("dummy");
+  manager.unregister("dummy");
   Assert.equal((await manager.get("dummy")), undefined);
   engines = await manager.getAll();
   Assert.equal(engines.length, 2);
@@ -105,7 +105,7 @@ add_task(async function test_basics() {
   Assert.ok(actual instanceof ActualEngine);
   Assert.ok(actual instanceof Engine);
 
-  await manager.unregister(actual);
+  manager.unregister(actual);
   Assert.equal((await manager.get("actual")), undefined);
 });
 

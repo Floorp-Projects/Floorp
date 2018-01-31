@@ -27,7 +27,7 @@ async function shared_setup() {
   engine.lastSync = 123; // Needs to be non-zero so that tracker is queried.
   engine._store.items = {flying: "LNER Class A3 4472",
                          scotsman: "Flying Scotsman"};
-  await tracker.addChangedID("scotsman", 0);
+  tracker.addChangedID("scotsman", 0);
   Assert.equal(1, Service.engineManager.getEnabled().length);
 
   let engines = {rotary:  {version: engine.version,
@@ -92,8 +92,8 @@ add_task(async function hmac_error_during_404() {
     // Two rotary items, one client record... no errors.
     Assert.equal(hmacErrorCount, 0);
   } finally {
-    await tracker.clearChangedIDs();
-    await Service.engineManager.unregister(engine);
+    tracker.clearChangedIDs();
+    Service.engineManager.unregister(engine);
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
     await promiseStopServer(server);
@@ -178,9 +178,9 @@ add_task(async function hmac_error_during_node_reassignment() {
 
   // This kicks off the actual test. Split into a function here to allow this
   // source file to broadly follow actual execution order.
-  async function onwards() {
+  function onwards() {
     _("== Invoking first sync.");
-    await Service.sync();
+    Async.promiseSpinningly(Service.sync());
     _("We should not simultaneously have data but no keys on the server.");
     let hasData = rotaryColl.wbo("flying") ||
                   rotaryColl.wbo("scotsman");
@@ -193,7 +193,7 @@ add_task(async function hmac_error_during_node_reassignment() {
   }
 
   _("Make sure that syncing again causes recovery.");
-  let callbacksPromise = new Promise(resolve => {
+  await new Promise(resolve => {
     onSyncFinished = function() {
       _("== First sync done.");
       _("---------------------------");
@@ -213,28 +213,26 @@ add_task(async function hmac_error_during_node_reassignment() {
           engine.lastSync = 0;
           hmacErrorCount = 0;
 
-          onSyncFinished = async function() {
+          onSyncFinished = function() {
             // Two rotary items, one client record... no errors.
             Assert.equal(hmacErrorCount, 0);
 
             Svc.Obs.remove("weave:service:sync:finish", obs);
             Svc.Obs.remove("weave:service:sync:error", obs);
 
-            (async () => {
-              await tracker.clearChangedIDs();
-              await Service.engineManager.unregister(engine);
-              Svc.Prefs.resetBranch("");
-              Service.recordManager.clearCache();
-              server.stop(resolve);
-            })();
+            tracker.clearChangedIDs();
+            Service.engineManager.unregister(engine);
+            Svc.Prefs.resetBranch("");
+            Service.recordManager.clearCache();
+            server.stop(resolve);
           };
 
-          Service.sync();
+          Async.promiseSpinningly(Service.sync());
         },
         this);
       };
     };
+
+    onwards();
   });
-  await onwards();
-  await callbacksPromise;
 });

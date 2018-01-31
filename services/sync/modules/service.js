@@ -302,7 +302,6 @@ Sync11Service.prototype = {
 
     this._log.info("Loading Weave " + WEAVE_VERSION);
 
-    this.asyncObserver = Async.asyncObserver(this, this._log);
     this._clusterManager = this.identity.createClusterManager(this);
     this.recordManager = new RecordManager(this);
 
@@ -320,9 +319,10 @@ Sync11Service.prototype = {
                       "Weave, since it will not work correctly.");
     }
 
-    Svc.Obs.add("weave:service:setup-complete", this.asyncObserver);
-    Svc.Obs.add("sync:collection_changed", this.asyncObserver); // Pulled from FxAccountsCommon
-    Svc.Obs.add("fxaccounts:device_disconnected", this.asyncObserver);
+    Svc.Obs.add("weave:service:setup-complete", this);
+    Svc.Obs.add("sync:collection_changed", this); // Pulled from FxAccountsCommon
+    Svc.Obs.add("fxaccounts:device_disconnected", this);
+    Services.prefs.addObserver(PREFS_BRANCH + "engine.", this);
 
     if (!this.enabled) {
       this._log.info("Firefox Sync disabled.");
@@ -332,7 +332,7 @@ Sync11Service.prototype = {
 
     let status = this._checkSetup();
     if (status != STATUS_DISABLED && status != CLIENT_NOT_CONFIGURED) {
-      this._startTracking();
+      Svc.Obs.notify("weave:engine:start-tracking");
     }
 
     // Send an event now that Weave service is ready.  We don't do this
@@ -416,53 +416,57 @@ Sync11Service.prototype = {
     this.engineManager.setDeclined(declined);
   },
 
-  async observe(subject, topic, data) {
-    try {
-      switch (topic) {
-        // Ideally this observer should be in the SyncScheduler, but it would require
-        // some work to know about the sync specific engines. We should move this there once it does.
-        case "sync:collection_changed":
-          // We check if we're running TPS here to avoid TPS failing because it
-          // couldn't get to get the sync lock, due to us currently syncing the
-          // clients engine.
-          if (data.includes("clients") && !Svc.Prefs.get("testing.tps", false)) {
-            // [] = clients collection only
-            await this.sync({why: "collection_changed", engines: []});
-          }
-          break;
-        case "fxaccounts:device_disconnected":
-          data = JSON.parse(data);
-          if (!data.isLocalDevice) {
-            await this.clientsEngine.updateKnownStaleClients();
-          }
-          break;
-        case "weave:service:setup-complete":
-          let status = this._checkSetup();
-          if (status != STATUS_DISABLED && status != CLIENT_NOT_CONFIGURED) {
-            this._startTracking();
-          }
-          break;
-      }
-    } catch (e) {
-      this._log.error(e);
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
+
+  // nsIObserver
+
+  observe: function observe(subject, topic, data) {
+    switch (topic) {
+      // Ideally this observer should be in the SyncScheduler, but it would require
+      // some work to know about the sync specific engines. We should move this there once it does.
+      case "sync:collection_changed":
+        // We check if we're running TPS here to avoid TPS failing because it
+        // couldn't get to get the sync lock, due to us currently syncing the
+        // clients engine.
+        if (data.includes("clients") && !Svc.Prefs.get("testing.tps", false)) {
+          // Sync in the background (it's fine not to wait on the returned promise
+          // because sync() has a lock).
+          // [] = clients collection only
+          this.sync({why: "collection_changed", engines: []}).catch(e => {
+            this._log.error(e);
+          });
+        }
+        break;
+      case "fxaccounts:device_disconnected":
+        data = JSON.parse(data);
+        if (!data.isLocalDevice) {
+          Async.promiseSpinningly(this.clientsEngine.updateKnownStaleClients());
+        }
+        break;
+      case "weave:service:setup-complete":
+        let status = this._checkSetup();
+        if (status != STATUS_DISABLED && status != CLIENT_NOT_CONFIGURED)
+            Svc.Obs.notify("weave:engine:start-tracking");
+        break;
+      case "nsPref:changed":
+        if (this._ignorePrefObserver)
+          return;
+        let engine = data.slice((PREFS_BRANCH + "engine.").length);
+        this._handleEngineStatusChanged(engine);
+        break;
     }
   },
 
-  async _startTracking() {
-    const engines = this.engineManager.getAll();
-    for (let engine of engines) {
-      engine.startTracking();
+  _handleEngineStatusChanged: function handleEngineDisabled(engine) {
+    this._log.trace("Status for " + engine + " engine changed.");
+    if (Svc.Prefs.get("engineStatusChanged." + engine, false)) {
+      // The enabled status being changed back to what it was before.
+      Svc.Prefs.reset("engineStatusChanged." + engine);
+    } else {
+      // Remember that the engine status changed locally until the next sync.
+      Svc.Prefs.set("engineStatusChanged." + engine, true);
     }
-    // This is for TPS. We should try to do better.
-    Svc.Obs.notify("weave:service:tracking-started");
-  },
-
-  async _stopTracking() {
-    const engines = this.engineManager.getAll();
-    for (let engine of engines) {
-      await engine.stopTracking();
-    }
-    Svc.Obs.notify("weave:service:tracking-stopped");
   },
 
   /**
@@ -647,7 +651,7 @@ Sync11Service.prototype = {
       // Make sure we have a cluster to verify against.
       // This is a little weird, if we don't get a node we pretend
       // to succeed, since that probably means we just don't have storage.
-      if (this.clusterURL == "" && !(await this._clusterManager.setCluster())) {
+      if (this.clusterURL == "" && !this._clusterManager.setCluster()) {
         this.status.sync = NO_SYNC_NODE_FOUND;
         return true;
       }
@@ -686,7 +690,7 @@ Sync11Service.prototype = {
 
         case 404:
           // Check that we're verifying with the correct cluster
-          if (allow40XRecovery && (await this._clusterManager.setCluster())) {
+          if (allow40XRecovery && this._clusterManager.setCluster()) {
             return await this.verifyLogin(false);
           }
 
@@ -771,7 +775,7 @@ Sync11Service.prototype = {
 
   async startOver() {
     this._log.trace("Invoking Service.startOver.");
-    await this._stopTracking();
+    Svc.Obs.notify("weave:engine:stop-tracking");
     this.status.resetSync();
 
     // Deletion doesn't make sense if we aren't set up yet!
@@ -804,7 +808,9 @@ Sync11Service.prototype = {
     this.status.resetBackoff();
 
     // Reset Weave prefs.
+    this._ignorePrefObserver = true;
     Svc.Prefs.resetBranch("");
+    this._ignorePrefObserver = false;
     this.clusterURL = null;
 
     Svc.Prefs.set("lastversion", WEAVE_VERSION);
@@ -1080,7 +1086,6 @@ Sync11Service.prototype = {
     let dateStr = Utils.formatTimestamp(new Date());
     this._log.debug("User-Agent: " + Utils.userAgent);
     await this.promiseInitialized;
-    await this.asyncObserver.promiseObserversComplete();
     this._log.info(`Starting sync at ${dateStr} in browser session ${browserSessionID}`);
     return this._catch(async function() {
       // Make sure we're logged in.
