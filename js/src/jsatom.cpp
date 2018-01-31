@@ -311,6 +311,12 @@ AtomIsPinnedInRuntime(JSRuntime* rt, JSAtom* atom)
 
 #endif // DEBUG
 
+template <typename CharT>
+MOZ_ALWAYS_INLINE
+static JSAtom*
+AtomizeAndCopyCharsInner(JSContext* cx, const CharT* tbchars, size_t length, PinningBehavior pin,
+                         const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup);
+
 /* |tbchars| must not point into an inline or short string. */
 template <typename CharT>
 MOZ_ALWAYS_INLINE
@@ -361,6 +367,24 @@ AtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t length, PinningB
     if (MOZ_UNLIKELY(!JSString::validateLength(cx, length)))
         return nullptr;
 
+    JSAtom* atom = AtomizeAndCopyCharsInner(cx, tbchars, length, pin, indexValue, lookup);
+    if (!atom)
+        return nullptr;
+
+    cx->atomMarking().inlinedMarkAtom(cx, atom);
+
+    if (zonePtr)
+        mozilla::Unused << zone->atomCache().add(*zonePtr, AtomStateEntry(atom, false));
+
+    return atom;
+}
+
+template <typename CharT>
+MOZ_ALWAYS_INLINE
+static JSAtom*
+AtomizeAndCopyCharsInner(JSContext* cx, const CharT* tbchars, size_t length, PinningBehavior pin,
+                         const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup)
+{
     AutoLockForExclusiveAccess lock(cx);
 
     JSRuntime* rt = cx->runtime();
@@ -390,9 +414,6 @@ AtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t length, PinningB
     if (p) {
         JSAtom* atom = p->asPtr(cx);
         p->setPinned(bool(pin));
-        cx->atomMarking().inlinedMarkAtom(cx, atom);
-        if (zonePtr)
-            mozilla::Unused << zone->atomCache().add(*zonePtr, AtomStateEntry(atom, false));
         return atom;
     }
 
@@ -425,9 +446,6 @@ AtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t length, PinningB
         }
     }
 
-    cx->atomMarking().inlinedMarkAtom(cx, atom);
-    if (zonePtr)
-        mozilla::Unused << zone->atomCache().add(*zonePtr, AtomStateEntry(atom, false));
     return atom;
 }
 
