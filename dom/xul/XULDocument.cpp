@@ -284,7 +284,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(XULDocument,
                                              XMLDocument,
                                              nsIXULDocument,
-                                             nsIDOMXULDocument,
                                              nsIStreamLoaderObserver,
                                              nsICSSLoaderObserver,
                                              nsIOffThreadScriptReceiver)
@@ -1281,11 +1280,6 @@ GetScopeObjectOfNode(nsINode* node)
     nsIGlobalObject* global = doc->GetScopeObject();
     return global ? global->GetGlobalJSObject() : nullptr;
 }
-
-//----------------------------------------------------------------------
-//
-// nsIDOMXULDocument interface
-//
 
 already_AddRefed<nsINode>
 XULDocument::GetPopupNode()
