@@ -15,8 +15,6 @@
 #include "nsIDOMEvent.h"
 #include "nsXULElement.h"
 #include "nsIDOMXULMenuListElement.h"
-#include "nsIXULDocument.h"
-#include "nsIDOMXULDocument.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsGlobalWindow.h"
@@ -36,6 +34,7 @@
 #include "nsPIWindowRoot.h"
 #include "nsFrameManager.h"
 #include "nsIObserverService.h"
+#include "XULDocument.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/UIEvent.h"
@@ -1978,10 +1977,10 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
   }
 
   // When a menu is opened, make sure that command updating is unlocked first.
-  nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(document);
+  XULDocument* xulDoc = document->AsXULDocument();
   if (xulDoc) {
-    nsCOMPtr<nsIDOMXULCommandDispatcher> xulCommandDispatcher;
-    xulDoc->GetCommandDispatcher(getter_AddRefs(xulCommandDispatcher));
+    nsCOMPtr<nsIDOMXULCommandDispatcher> xulCommandDispatcher =
+      xulDoc->GetCommandDispatcher();
     if (xulCommandDispatcher) {
       xulCommandDispatcher->Unlock();
     }
