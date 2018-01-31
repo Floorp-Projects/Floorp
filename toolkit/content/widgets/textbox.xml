@@ -519,7 +519,7 @@
             this._spellCheckInitialized = true;
 
             const CI = Components.interfaces;
-            if (!(document instanceof CI.nsIDOMXULDocument))
+            if (ChromeUtils.getClassName(document) != "XULDocument")
               return null;
 
             var textbox = document.getBindingParent(this);
