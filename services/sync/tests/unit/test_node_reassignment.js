@@ -78,9 +78,11 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
 
   let getTokenCount = 0;
   let mockTSC = { // TokenServerClient
-    async getTokenFromBrowserIDAssertion(uri, assertion) {
+    getTokenFromBrowserIDAssertion(uri, assertion, cb) {
       getTokenCount++;
-      return {endpoint: server.baseURI + "1.1/johndoe/"};
+      cb(null, {
+        endpoint: server.baseURI + "1.1/johndoe/"
+      });
     },
   };
   Service.identity._tokenServerClient = mockTSC;
@@ -177,8 +179,8 @@ add_task(async function test_momentary_401_engine() {
                                       "weave:service:sync:finish",
                                       Service.storageURL + "rotary");
 
-  await tracker.clearChangedIDs();
-  await Service.engineManager.unregister(engine);
+  tracker.clearChangedIDs();
+  Service.engineManager.unregister(engine);
 });
 
 // This test ends up being a failing fetch *after we're already logged in*.
@@ -278,9 +280,11 @@ add_task(async function test_loop_avoidance_storage() {
 
   let getTokenCount = 0;
   let mockTSC = { // TokenServerClient
-    async getTokenFromBrowserIDAssertion(uri, assertion) {
+    getTokenFromBrowserIDAssertion(uri, assertion, cb) {
       getTokenCount++;
-      return {endpoint: server.baseURI + "1.1/johndoe/"};
+      cb(null, {
+        endpoint: server.baseURI + "1.1/johndoe/"
+      });
     },
   };
   Service.identity._tokenServerClient = mockTSC;
@@ -372,9 +376,11 @@ add_task(async function test_loop_avoidance_engine() {
 
   let getTokenCount = 0;
   let mockTSC = { // TokenServerClient
-    getTokenFromBrowserIDAssertion(uri, assertion) {
+    getTokenFromBrowserIDAssertion(uri, assertion, cb) {
       getTokenCount++;
-      return {endpoint: server.baseURI + "1.1/johndoe/"};
+      cb(null, {
+        endpoint: server.baseURI + "1.1/johndoe/"
+      });
     },
   };
   Service.identity._tokenServerClient = mockTSC;
@@ -490,6 +496,6 @@ add_task(async function test_loop_avoidance_engine() {
   await Service.sync();
   await deferred.promise;
 
-  await tracker.clearChangedIDs();
-  await Service.engineManager.unregister(engine);
+  tracker.clearChangedIDs();
+  Service.engineManager.unregister(engine);
 });

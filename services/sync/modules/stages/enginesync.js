@@ -51,7 +51,7 @@ EngineSynchronizer.prototype = {
     }
 
     // If we don't have a node, get one. If that fails, retry in 10 minutes.
-    if (!this.service.clusterURL && !(await this.service._clusterManager.setCluster())) {
+    if (!this.service.clusterURL && !this.service._clusterManager.setCluster()) {
       this.service.status.sync = NO_SYNC_NODE_FOUND;
       this._log.info("No cluster URL found. Cannot sync.");
       return;
@@ -252,6 +252,8 @@ EngineSynchronizer.prototype = {
       return;
     }
 
+    this.service._ignorePrefObserver = true;
+
     let enabled = engineManager.enabledEngineNames;
 
     let toDecline = new Set();
@@ -330,6 +332,7 @@ EngineSynchronizer.prototype = {
     engineManager.undecline(toUndecline);
 
     Svc.Prefs.resetBranch("engineStatusChanged.");
+    this.service._ignorePrefObserver = false;
   },
 
   async _updateEnabledEngines() {

@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://services-common/async.js");
 ChromeUtils.import("resource://services-common/utils.js");
 ChromeUtils.import("resource://services-sync/engines/history.js");
 ChromeUtils.import("resource://services-sync/service.js");
@@ -42,17 +43,14 @@ function isDateApproximately(actual, expected, skewMillis = 1000) {
   return actual >= lowerBound && actual <= upperBound;
 }
 
-let engine, store, fxuri, fxguid, tburi, tbguid;
-
+var engine = new HistoryEngine(Service);
+Async.promiseSpinningly(engine.initialize());
+var store = engine._store;
 async function applyEnsureNoFailures(records) {
   Assert.equal((await store.applyIncomingBatch(records)).length, 0);
 }
 
-add_task(async function setup() {
-  engine = new HistoryEngine(Service);
-  await engine.initialize();
-  store = engine._store;
-});
+var fxuri, fxguid, tburi, tbguid;
 
 add_task(async function test_store() {
   _("Verify that we've got an empty store to work with.");
