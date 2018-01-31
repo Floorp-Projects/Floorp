@@ -3108,13 +3108,6 @@ nsDocument::SetChromeXHRDocBaseURI(nsIURI* aURI)
   mChromeXHRDocBaseURI = aURI;
 }
 
-NS_IMETHODIMP
-nsDocument::GetLastModified(nsAString& aLastModified)
-{
-  nsIDocument::GetLastModified(aLastModified);
-  return NS_OK;
-}
-
 static void
 GetFormattedTimeString(PRTime aTime, nsAString& aFormattedTimeString)
 {
@@ -3443,14 +3436,6 @@ nsIDocument::GetSVGRootElement() const
 
 /* Return true if the document is in the focused top-level window, and is an
  * ancestor of the focused DOMWindow. */
-NS_IMETHODIMP
-nsDocument::HasFocus(bool* aResult)
-{
-  ErrorResult rv;
-  *aResult = nsIDocument::HasFocus(rv);
-  return rv.StealNSResult();
-}
-
 bool
 nsIDocument::HasFocus(ErrorResult& rv) const
 {
@@ -3496,13 +3481,6 @@ nsIDocument::SetLastFocusTime(const TimeStamp& aFocusTime)
   mLastFocusTime = aFocusTime;
 }
 
-NS_IMETHODIMP
-nsDocument::GetReferrer(nsAString& aReferrer)
-{
-  nsIDocument::GetReferrer(aReferrer);
-  return NS_OK;
-}
-
 void
 nsIDocument::GetReferrer(nsAString& aReferrer) const
 {
@@ -3522,14 +3500,6 @@ nsIDocument::GetSrcdocData(nsAString &aSrcdocData)
     }
   }
   aSrcdocData = VoidString();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetActiveElement(nsIDOMElement **aElement)
-{
-  nsCOMPtr<nsIDOMElement> el(do_QueryInterface(nsIDocument::GetActiveElement()));
-  el.forget(aElement);
   return NS_OK;
 }
 
@@ -3554,28 +3524,11 @@ nsIDocument::GetActiveElement()
   return GetDocumentElement();
 }
 
-NS_IMETHODIMP
-nsDocument::GetCurrentScript(nsIDOMElement **aElement)
-{
-  nsCOMPtr<nsIDOMElement> el(do_QueryInterface(nsIDocument::GetCurrentScript()));
-  el.forget(aElement);
-  return NS_OK;
-}
-
 Element*
 nsIDocument::GetCurrentScript()
 {
   nsCOMPtr<Element> el(do_QueryInterface(ScriptLoader()->GetCurrentScript()));
   return el;
-}
-
-NS_IMETHODIMP
-nsDocument::ElementFromPoint(float aX, float aY, nsIDOMElement** aReturn)
-{
-  Element* el = nsIDocument::ElementFromPoint(aX, aY);
-  nsCOMPtr<nsIDOMElement> retval = do_QueryInterface(el);
-  retval.forget(aReturn);
-  return NS_OK;
 }
 
 Element*
@@ -5060,8 +5013,8 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 
     // If we are set in a window that is already focused we should remember this
     // as the time the document gained focus.
-    bool focused = false;
-    Unused << HasFocus(&focused);
+    IgnoredErrorResult ignored;
+    bool focused = HasFocus(ignored);
     if (focused) {
       SetLastFocusTime(TimeStamp::Now());
     }
@@ -5347,15 +5300,6 @@ nsDocument::RemoveIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
   }
 
   entry->RemoveContentChangeCallback(aObserver, aData, aForImage);
-}
-
-NS_IMETHODIMP
-nsDocument::MozSetImageElement(const nsAString& aImageElementId,
-                               nsIDOMElement* aImageElement)
-{
-  nsCOMPtr<Element> el = do_QueryInterface(aImageElement);
-  MozSetImageElement(aImageElementId, el);
-  return NS_OK;
 }
 
 void
@@ -5792,19 +5736,6 @@ nsIDocument::GetDoctype() const
   return nullptr;
 }
 
-NS_IMETHODIMP
-nsDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
-{
-  ErrorResult rv;
-  *aImplementation = GetImplementation(rv);
-  if (rv.Failed()) {
-    MOZ_ASSERT(!*aImplementation);
-    return rv.StealNSResult();
-  }
-  NS_ADDREF(*aImplementation);
-  return NS_OK;
-}
-
 DOMImplementation*
 nsDocument::GetImplementation(ErrorResult& rv)
 {
@@ -6235,13 +6166,6 @@ nsDocument::EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
   EndUpdate(UPDATE_STYLE);
 }
 
-NS_IMETHODIMP
-nsDocument::GetCharacterSet(nsAString& aCharacterSet)
-{
-  nsIDocument::GetCharacterSet(aCharacterSet);
-  return NS_OK;
-}
-
 void
 nsIDocument::GetCharacterSet(nsAString& aCharacterSet) const
 {
@@ -6444,14 +6368,6 @@ nsIDocument::GetAnonymousNodes(Element& aElement)
   return BindingManager()->GetAnonymousNodesFor(&aElement);
 }
 
-NS_IMETHODIMP
-nsDocument::CreateRange(nsIDOMRange** aReturn)
-{
-  ErrorResult rv;
-  *aReturn = nsIDocument::CreateRange(rv).take();
-  return rv.StealNSResult();
-}
-
 already_AddRefed<nsRange>
 nsIDocument::CreateRange(ErrorResult& rv)
 {
@@ -6463,33 +6379,6 @@ nsIDocument::CreateRange(ErrorResult& rv)
   }
 
   return range.forget();
-}
-
-NS_IMETHODIMP
-nsDocument::CreateNodeIterator(nsIDOMNode *aRoot,
-                               uint32_t aWhatToShow,
-                               nsIDOMNodeFilter *aFilter,
-                               uint8_t aOptionalArgc,
-                               nsIDOMNodeIterator **_retval)
-{
-  *_retval = nullptr;
-
-  if (!aOptionalArgc) {
-    aWhatToShow = nsIDOMNodeFilter::SHOW_ALL;
-  }
-
-  if (!aRoot) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-
-  nsCOMPtr<nsINode> root = do_QueryInterface(aRoot);
-  NS_ENSURE_TRUE(root, NS_ERROR_UNEXPECTED);
-
-  ErrorResult rv;
-  *_retval = nsIDocument::CreateNodeIterator(*root, aWhatToShow,
-                                             NodeFilterHolder(aFilter),
-                                             rv).take();
-  return rv.StealNSResult();
 }
 
 already_AddRefed<NodeIterator>
@@ -6528,15 +6417,6 @@ nsIDocument::CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
   return walker.forget();
 }
 
-
-NS_IMETHODIMP
-nsDocument::GetDefaultView(mozIDOMWindowProxy** aDefaultView)
-{
-  *aDefaultView = nullptr;
-  nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
-  win.forget(aDefaultView);
-  return NS_OK;
-}
 
 already_AddRefed<Location>
 nsIDocument::GetLocation() const
@@ -7071,13 +6951,6 @@ nsDocument::GetOrCreatePendingAnimationTracker()
  *
  * @lina 01/09/2001
  */
-NS_IMETHODIMP
-nsDocument::GetDir(nsAString& aDirection)
-{
-  nsIDocument::GetDir(aDirection);
-  return NS_OK;
-}
-
 void
 nsIDocument::GetDir(nsAString& aDirection) const
 {
@@ -7093,13 +6966,6 @@ nsIDocument::GetDir(nsAString& aDirection) const
  *
  * @lina 01/09/2001
  */
-NS_IMETHODIMP
-nsDocument::SetDir(const nsAString& aDirection)
-{
-  nsIDocument::SetDir(aDirection);
-  return NS_OK;
-}
-
 void
 nsIDocument::SetDir(const nsAString& aDirection)
 {
@@ -7135,29 +7001,6 @@ nsIDocument::UseExistingNameString(nsINode* aRootNode, const nsString* aName)
   return const_cast<nsString*>(aName);
 }
 
-NS_IMETHODIMP
-nsDocument::GetInputEncoding(nsAString& aInputEncoding)
-{
-  nsIDocument::GetCharacterSet(aInputEncoding);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetMozSyntheticDocument(bool *aSyntheticDocument)
-{
-  *aSyntheticDocument = mIsSyntheticDocument;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetDocumentURI(nsAString& aDocumentURI)
-{
-  nsString temp;
-  nsresult rv = nsIDocument::GetDocumentURI(temp);
-  aDocumentURI = temp;
-  return rv;
-}
-
 nsresult
 nsIDocument::GetDocumentURI(nsString& aDocumentURI) const
 {
@@ -7175,12 +7018,6 @@ nsIDocument::GetDocumentURI(nsString& aDocumentURI) const
 }
 
 // Alias of above
-NS_IMETHODIMP
-nsDocument::GetURL(nsAString& aURL)
-{
-  return GetDocumentURI(aURL);
-}
-
 nsresult
 nsIDocument::GetURL(nsString& aURL) const
 {
@@ -9262,13 +9099,6 @@ nsDocument::SetReadyStateInternal(ReadyState rs)
   asyncDispatcher->RunDOMEventWhenSafe();
 }
 
-NS_IMETHODIMP
-nsDocument::GetReadyState(nsAString& aReadyState)
-{
-  nsIDocument::GetReadyState(aReadyState);
-  return NS_OK;
-}
-
 void
 nsIDocument::GetReadyState(nsAString& aReadyState) const
 {
@@ -10371,14 +10201,6 @@ nsIDocument::CaretPositionFromPoint(float aX, float aY)
     aCaretPos->SetAnonymousContentNode(anonNode);
   }
   return aCaretPos.forget();
-}
-
-NS_IMETHODIMP
-nsDocument::CaretPositionFromPoint(float aX, float aY, nsISupports** aCaretPos)
-{
-  NS_ENSURE_ARG_POINTER(aCaretPos);
-  *aCaretPos = nsIDocument::CaretPositionFromPoint(aX, aY).take();
-  return NS_OK;
 }
 
 bool
@@ -12127,22 +11949,6 @@ nsDocument::MaybeActiveMediaComponents()
   }
 
   GetWindow()->MaybeActiveMediaComponents();
-}
-
-NS_IMETHODIMP
-nsDocument::GetHidden(bool* aHidden)
-{
-  *aHidden = Hidden();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetVisibilityState(nsAString& aState)
-{
-  const EnumEntry& entry =
-    VisibilityStateValues::strings[static_cast<int>(mVisibilityState)];
-  aState.AssignASCII(entry.value, entry.length);
-  return NS_OK;
 }
 
 /* virtual */ void
