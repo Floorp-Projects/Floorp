@@ -197,7 +197,7 @@ AudioSink::InitializeAudioStream(const PlaybackParams& aParams)
   // the coming audio data, so we use the predefined channel map instead.
   uint32_t channelMap = mConverter
                         ? mConverter->OutputConfig().Layout().Map()
-                        : AudioStream::GetPreferredChannelMap(mOutputChannels);
+                        : AudioConfig::ChannelLayout(mOutputChannels).Map();
   // The layout map used here is already processed by mConverter with
   // mOutputChannels into SMPTE format, so there is no need to worry if
   // MediaPrefs::MonoAudio() or MediaPrefs::AudioSinkForceStereo() is applied.
