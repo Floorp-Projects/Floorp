@@ -393,18 +393,7 @@ enum class FrameDroppingMode {
 class VideoTrackEncoder : public TrackEncoder
 {
 public:
-  VideoTrackEncoder(TrackRate aTrackRate, FrameDroppingMode aFrameDroppingMode)
-    : TrackEncoder(aTrackRate)
-    , mFrameWidth(0)
-    , mFrameHeight(0)
-    , mDisplayWidth(0)
-    , mDisplayHeight(0)
-    , mEncodedTicks(0)
-    , mVideoBitrate(0)
-    , mFrameDroppingMode(aFrameDroppingMode)
-  {
-    mLastChunk.mDuration = 0;
-  }
+  explicit VideoTrackEncoder(TrackRate aTrackRate, FrameDroppingMode aFrameDroppingMode);
 
   /**
    * Suspends encoding from aTime, i.e., all video frame with a timestamp
@@ -485,6 +474,11 @@ public:
    */
   void AdvanceCurrentTime(StreamTime aDuration) override;
 
+  /**
+   * Set desired keyframe interval defined in milliseconds.
+   */
+  void SetKeyFrameInterval(int32_t aKeyFrameInterval);
+
 protected:
   /**
    * Initialize the video encoder. In order to collect the value of width and
@@ -563,6 +557,11 @@ protected:
    * DISALLOW to encode all frames, mainly for testing.
    */
   FrameDroppingMode mFrameDroppingMode;
+
+  /**
+   * The desired keyframe interval defined in milliseconds.
+   */
+  int32_t mKeyFrameInterval;
 };
 
 } // namespace mozilla

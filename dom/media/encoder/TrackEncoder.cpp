@@ -27,6 +27,9 @@ static const int DEFAULT_FRAME_HEIGHT = 480;
 static const int AUDIO_INIT_FAILED_DURATION = 1;
 // 30 second threshold if the video encoder cannot be initialized.
 static const int VIDEO_INIT_FAILED_DURATION = 30;
+// A maximal key frame interval allowed to set.
+// Longer values will be shorten to this value.
+static const int DEFAULT_KEYFRAME_INTERVAL_MS = 1000;
 
 TrackEncoder::TrackEncoder(TrackRate aTrackRate)
   : mEncodingComplete(false)
@@ -402,6 +405,20 @@ AudioTrackEncoder::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   return mIncomingBuffer.SizeOfExcludingThis(aMallocSizeOf) +
          mOutgoingBuffer.SizeOfExcludingThis(aMallocSizeOf);
+}
+
+VideoTrackEncoder::VideoTrackEncoder(TrackRate aTrackRate, FrameDroppingMode aFrameDroppingMode)
+  : TrackEncoder(aTrackRate)
+  , mFrameWidth(0)
+  , mFrameHeight(0)
+  , mDisplayWidth(0)
+  , mDisplayHeight(0)
+  , mEncodedTicks(0)
+  , mVideoBitrate(0)
+  , mFrameDroppingMode(aFrameDroppingMode)
+  , mKeyFrameInterval(DEFAULT_KEYFRAME_INTERVAL_MS)
+{
+  mLastChunk.mDuration = 0;
 }
 
 void
@@ -780,6 +797,13 @@ VideoTrackEncoder::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   return mIncomingBuffer.SizeOfExcludingThis(aMallocSizeOf) +
          mOutgoingBuffer.SizeOfExcludingThis(aMallocSizeOf);
+}
+
+void
+VideoTrackEncoder::SetKeyFrameInterval(int32_t aKeyFrameInterval)
+{
+  MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
+  mKeyFrameInterval = std::min(aKeyFrameInterval, DEFAULT_KEYFRAME_INTERVAL_MS);
 }
 
 } // namespace mozilla
