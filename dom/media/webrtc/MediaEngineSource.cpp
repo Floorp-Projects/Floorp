@@ -9,6 +9,9 @@
 
 namespace mozilla {
 
+using dom::MediaSourceEnum;
+using dom::MediaTrackSettings;
+
 // These need a definition somewhere because template
 // code is allowed to take their address, and they aren't
 // guaranteed to have one without this.
@@ -16,7 +19,7 @@ const unsigned int MediaEngineSource::kMaxDeviceNameLength;
 const unsigned int MediaEngineSource::kMaxUniqueIdLength;
 
 /* static */ bool
-MediaEngineSource::IsVideo(dom::MediaSourceEnum aSource)
+MediaEngineSource::IsVideo(MediaSourceEnum aSource)
 {
   switch (aSource) {
     case MediaSourceEnum::Camera:
@@ -64,9 +67,9 @@ MediaEngineSource::TakePhoto(MediaEnginePhotoCallback* aCallback)
 }
 
 void
-MediaEngineSource::GetSettings(dom::MediaTrackSettings& aOutSettings) const
+MediaEngineSource::GetSettings(MediaTrackSettings& aOutSettings) const
 {
-  dom::MediaTrackSettings empty;
+  MediaTrackSettings empty;
   aOutSettings = empty;
 }
 
