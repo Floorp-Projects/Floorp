@@ -1376,8 +1376,8 @@ ServoStyleSet::UpdateStylist()
     // deal with dynamic content changes.
     Element* root =
       IsMaster() ? mPresContext->Document()->GetDocumentElement() : nullptr;
-
-    Servo_StyleSet_FlushStyleSheets(mRawSet.get(), root);
+    auto& snapshots = mPresContext->RestyleManager()->AsServo()->Snapshots();
+    Servo_StyleSet_FlushStyleSheets(mRawSet.get(), root, &snapshots);
   }
 
   if (MOZ_UNLIKELY(mStylistState & StylistState::XBLStyleSheetsDirty)) {
