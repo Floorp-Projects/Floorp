@@ -9,7 +9,6 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsXULPrototypeDocument.h"
-#include "nsXULPrototypeCache.h"
 #include "nsTArray.h"
 
 #include "mozilla/dom/XMLDocument.h"
@@ -17,10 +16,8 @@
 #include "nsForwardReference.h"
 #include "nsIContent.h"
 #include "nsIDOMXULCommandDispatcher.h"
-#include "nsIDOMXULDocument.h"
 #include "nsCOMArray.h"
 #include "nsIURI.h"
-#include "nsIXULDocument.h"
 #include "nsIStreamListener.h"
 #include "nsIStreamLoader.h"
 #include "nsICSSLoaderObserver.h"
@@ -35,6 +32,7 @@
 class nsIRDFResource;
 class nsIRDFService;
 class nsPIWindowRoot;
+class nsXULPrototypeElement;
 #if 0 // XXXbe save me, scc (need NSCAP_FORWARD_DECL(nsXULPrototypeScript))
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
@@ -50,12 +48,13 @@ class nsIObjectOutputStream;
  * The XUL document class
  */
 
+// Factory function.
+nsresult NS_NewXULDocument(nsIDocument** result);
+
 namespace mozilla {
 namespace dom {
 
 class XULDocument final : public XMLDocument,
-                          public nsIXULDocument,
-                          public nsIDOMXULDocument,
                           public nsIStreamLoaderObserver,
                           public nsICSSLoaderObserver,
                           public nsIOffThreadScriptReceiver
@@ -84,17 +83,39 @@ public:
 
     virtual void EndLoad() override;
 
+    virtual XULDocument* AsXULDocument() override {
+        return this;
+    }
+
     // nsIMutationObserver interface
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
     NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
-    // nsIXULDocument interface
-    NS_IMETHOD AddSubtreeToDocument(nsIContent* aContent) override;
-    NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aContent) override;
-    NS_IMETHOD OnPrototypeLoadDone(bool aResumeWalk) override;
-    bool OnDocumentParserError() override;
+    /**
+     * Notify the XUL document that a subtree has been added
+     */
+    nsresult AddSubtreeToDocument(nsIContent* aContent);
+    /**
+     * Notify the XUL document that a subtree has been removed
+     */
+    nsresult RemoveSubtreeFromDocument(nsIContent* aContent);
+    /**
+     * This is invoked whenever the prototype for this document is loaded
+     * and should be walked, regardless of whether the XUL cache is
+     * disabled, whether the protototype was loaded, whether the
+     * prototype was loaded from the cache or created by parsing the
+     * actual XUL source, etc.
+     *
+     * @param aResumeWalk whether this should also call ResumeWalk().
+     * Sometimes the caller of OnPrototypeLoadDone resumes the walk itself
+     */
+    nsresult OnPrototypeLoadDone(bool aResumeWalk);
+    /**
+     * Callback notifying when a document could not be parsed properly.
+     */
+    bool OnDocumentParserError();
 
     // nsINode interface overrides
     virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
@@ -113,9 +134,6 @@ public:
     using nsDocument::MozSetImageElement;
     using nsIDocument::GetLocation;
 
-    // nsIDOMXULDocument interface
-    NS_DECL_NSIDOMXULDOCUMENT
-
     // nsICSSLoaderObserver
     NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet,
                                 bool aWasAlternate,
@@ -125,12 +143,15 @@ public:
 
     virtual bool IsDocumentRightToLeft() override;
 
-    virtual void ResetDocumentDirection() override;
+    /**
+     * Reset the document direction so that it is recomputed.
+     */
+    void ResetDocumentDirection();
 
     virtual nsIDocument::DocumentTheme GetDocumentLWTheme() override;
     virtual nsIDocument::DocumentTheme ThreadSafeGetDocumentLWTheme() const override;
 
-    virtual void ResetDocumentLWTheme() override { mDocLWTheme = Doc_Theme_Uninitialized; }
+    void ResetDocumentLWTheme() { mDocLWTheme = Doc_Theme_Uninitialized; }
 
     NS_IMETHOD OnScriptCompileComplete(JSScript* aScript, nsresult aStatus) override;
 
@@ -147,7 +168,7 @@ public:
     // WebIDL API
     already_AddRefed<nsINode> GetPopupNode();
     void SetPopupNode(nsINode* aNode);
-    already_AddRefed<nsINode> GetPopupRangeParent(ErrorResult& aRv);
+    nsINode* GetPopupRangeParent(ErrorResult& aRv);
     int32_t GetPopupRangeOffset(ErrorResult& aRv);
     already_AddRefed<nsINode> GetTooltipNode();
     void SetTooltipNode(nsINode* aNode) { /* do nothing */ }
@@ -169,23 +190,18 @@ public:
                                  const nsAString& aAttr, ErrorResult& aRv);
     void RemoveBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
                                     const nsAString& aAttr);
-    void Persist(const nsAString& aId, const nsAString& aAttr, ErrorResult& aRv)
-    {
-        aRv = Persist(aId, aAttr);
-    }
+    void Persist(const nsAString& aId, const nsAString& aAttr,
+                 ErrorResult& aRv);
     using nsDocument::GetBoxObjectFor;
     void LoadOverlay(const nsAString& aURL, nsIObserver* aObserver,
-                     ErrorResult& aRv)
-    {
-        aRv = LoadOverlay(aURL, aObserver);
-    }
+                     ErrorResult& aRv);
 
 protected:
     virtual ~XULDocument();
 
     // Implementation methods
     friend nsresult
-    (::NS_NewXULDocument(nsIXULDocument** aResult));
+    (::NS_NewXULDocument(nsIDocument** aResult));
 
     nsresult Init(void) override;
     nsresult StartLayout(void);

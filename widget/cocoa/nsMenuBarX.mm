@@ -22,8 +22,6 @@
 #include "nsIContent.h"
 #include "nsIWidget.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
 #include "nsIAppStartup.h"
 #include "nsIStringBundle.h"
 #include "nsToolkitCompsCID.h"
@@ -480,14 +478,12 @@ char nsMenuBarX::GetLocalizedAccelKey(const char *shortcutID)
   if (!sLastGeckoMenuBarPainted)
     return 0;
 
-  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(sLastGeckoMenuBarPainted->mContent->OwnerDoc()));
-  if (!domDoc)
+  nsCOMPtr<nsIDocument> doc = sLastGeckoMenuBarPainted->mContent->OwnerDoc();
+  if (!doc)
     return 0;
 
-  NS_ConvertASCIItoUTF16 shortcutIDStr((const char *)shortcutID);
-  nsCOMPtr<nsIDOMElement> shortcutElement;
-  domDoc->GetElementById(shortcutIDStr, getter_AddRefs(shortcutElement));
-  nsCOMPtr<Element> shortcutContent = do_QueryInterface(shortcutElement);
+  NS_ConvertASCIItoUTF16 shortcutIDStr(shortcutID);
+  nsCOMPtr<Element> shortcutContent = doc->GetElementById(shortcutIDStr);
   if (!shortcutContent)
     return 0;
 
@@ -540,11 +536,9 @@ bool nsMenuBarX::PerformKeyEquivalent(NSEvent* theEvent)
 // Hide the item in the menu by setting the 'hidden' attribute. Returns it in |outHiddenNode| so
 // the caller can hang onto it if they so choose. It is acceptable to pass nsull
 // for |outHiddenNode| if the caller doesn't care about the hidden node.
-void nsMenuBarX::HideItem(nsIDOMDocument* inDoc, const nsAString & inID, nsIContent** outHiddenNode)
+void nsMenuBarX::HideItem(nsIDocument* inDoc, const nsAString & inID, nsIContent** outHiddenNode)
 {
-  nsCOMPtr<nsIDOMElement> menuItem;
-  inDoc->GetElementById(inID, getter_AddRefs(menuItem));
-  nsCOMPtr<Element> menuElement(do_QueryInterface(menuItem));
+  nsCOMPtr<Element> menuElement = inDoc->GetElementById(inID);
   if (menuElement) {
     menuElement->SetAttr(kNameSpaceID_None, nsGkAtoms::hidden, NS_LITERAL_STRING("true"), false);
     if (outHiddenNode) {
@@ -557,7 +551,7 @@ void nsMenuBarX::HideItem(nsIDOMDocument* inDoc, const nsAString & inID, nsICont
 // Do what is necessary to conform to the Aqua guidelines for menus.
 void nsMenuBarX::AquifyMenuBar()
 {
-  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mContent->GetComposedDoc()));
+  nsCOMPtr<nsIDocument> domDoc = mContent->GetComposedDoc();
   if (domDoc) {
     // remove the "About..." item and its separator
     HideItem(domDoc, NS_LITERAL_STRING("aboutSeparator"), nullptr);

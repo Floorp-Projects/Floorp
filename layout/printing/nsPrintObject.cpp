@@ -85,10 +85,9 @@ nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
   }
 
   mDocument = doc->CreateStaticClone(mDocShell);
-  nsCOMPtr<nsIDOMDocument> clonedDOMDoc = do_QueryInterface(mDocument);
-  NS_ENSURE_STATE(clonedDOMDoc);
+  NS_ENSURE_STATE(mDocument);
 
-  viewer->SetDOMDocument(clonedDOMDoc);
+  viewer->SetDocument(mDocument);
   return NS_OK;
 }
 

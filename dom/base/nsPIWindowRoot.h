@@ -14,6 +14,7 @@
 class nsPIDOMWindowOuter;
 class nsIControllers;
 class nsIController;
+class nsINode;
 
 namespace mozilla {
 namespace dom {
@@ -33,8 +34,8 @@ public:
   virtual nsPIDOMWindowOuter* GetWindow()=0;
 
   // get and set the node that is the context of a popup menu
-  virtual nsIDOMNode* GetPopupNode() = 0;
-  virtual void SetPopupNode(nsIDOMNode* aNode) = 0;
+  virtual already_AddRefed<nsINode> GetPopupNode() = 0;
+  virtual void SetPopupNode(nsINode* aNode) = 0;
 
   /**
    * @param aForVisibleWindow   true if caller needs controller which is

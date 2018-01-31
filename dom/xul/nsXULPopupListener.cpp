@@ -21,7 +21,6 @@
 #include "nsXULPopupManager.h"
 #include "nsIScriptContext.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIPrincipal.h"

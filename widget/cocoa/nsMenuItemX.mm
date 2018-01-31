@@ -16,11 +16,13 @@
 #include "nsGkAtoms.h"
 
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
+#include "mozilla/ErrorResult.h"
 #include "nsIWidget.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMEvent.h"
+
+using mozilla::dom::Event;
+using mozilla::dom::CallerType;
 
 nsMenuItemX::nsMenuItemX()
 {
@@ -177,19 +179,14 @@ nsresult nsMenuItemX::DispatchDOMEvent(const nsString &eventName, bool *preventD
   // get owner document for content
   nsCOMPtr<nsIDocument> parentDoc = mContent->OwnerDoc();
 
-  // get interface for creating DOM events from content owner document
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(parentDoc);
-  if (!domDoc) {
-    NS_WARNING("Failed to QI parent nsIDocument to nsIDOMDocument");
-    return NS_ERROR_FAILURE;
-  }
-
   // create DOM event
-  nsCOMPtr<nsIDOMEvent> event;
-  nsresult rv = domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to create nsIDOMEvent");
-    return rv;
+  ErrorResult rv;
+  RefPtr<Event> event = parentDoc->CreateEvent(NS_LITERAL_STRING("Events"),
+                                               CallerType::System,
+                                               rv);
+  if (rv.Failed()) {
+    NS_WARNING("Failed to create Event");
+    return rv.StealNSResult();
   }
   event->InitEvent(eventName, true, true);
 
@@ -197,10 +194,10 @@ nsresult nsMenuItemX::DispatchDOMEvent(const nsString &eventName, bool *preventD
   event->SetTrusted(true);
 
   // send DOM event
-  rv = mContent->DispatchEvent(event, preventDefaultCalled);
-  if (NS_FAILED(rv)) {
+  nsresult err = mContent->DispatchEvent(event, preventDefaultCalled);
+  if (NS_FAILED(err)) {
     NS_WARNING("Failed to send DOM event via EventTarget");
-    return rv;
+    return err;
   }
 
   return NS_OK;
