@@ -95,10 +95,6 @@ def get_flake8_binary():
     Returns the path of the first flake8 binary available
     if not found returns None
     """
-    binary = os.environ.get('FLAKE8')
-    if binary:
-        return binary
-
     try:
         return which.which('flake8')
     except which.WhichError:
