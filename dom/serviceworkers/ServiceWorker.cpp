@@ -73,7 +73,10 @@ ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
   , mInner(aInner)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(aGlobal);
   MOZ_DIAGNOSTIC_ASSERT(mInner);
+
+  aGlobal->AddServiceWorker(this);
 
   // This will update our state too.
   mInner->AddServiceWorker(this);
@@ -83,6 +86,10 @@ ServiceWorker::~ServiceWorker()
 {
   MOZ_ASSERT(NS_IsMainThread());
   mInner->RemoveServiceWorker(this);
+  nsIGlobalObject* global = GetParentObject();
+  if (global) {
+    global->RemoveServiceWorker(this);
+  }
 }
 
 NS_IMPL_ADDREF_INHERITED(ServiceWorker, DOMEventTargetHelper)
@@ -143,6 +150,16 @@ ServiceWorker::MatchesDescriptor(const ServiceWorkerDescriptor& aDescriptor) con
          mDescriptor.Scope() == aDescriptor.Scope() &&
          mDescriptor.ScriptURL() == aDescriptor.ScriptURL() &&
          mDescriptor.Id() == aDescriptor.Id();
+}
+
+void
+ServiceWorker::DisconnectFromOwner()
+{
+  nsIGlobalObject* global = GetParentObject();
+  if (global) {
+    global->RemoveServiceWorker(this);
+  }
+  DOMEventTargetHelper::DisconnectFromOwner();
 }
 
 } // namespace dom
