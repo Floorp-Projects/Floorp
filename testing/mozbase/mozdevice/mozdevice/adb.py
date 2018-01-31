@@ -1728,7 +1728,7 @@ class ADBDevice(ADBCommand):
         """
         # remove trailing /
         local = os.path.normpath(local)
-        remote = os.path.normpath(remote)
+        remote = posixpath.normpath(remote)
         copy_required = False
         if os.path.isdir(local):
             copy_required = True
@@ -1773,7 +1773,7 @@ class ADBDevice(ADBCommand):
         """
         # remove trailing /
         local = os.path.normpath(local)
-        remote = os.path.normpath(remote)
+        remote = posixpath.normpath(remote)
         copy_required = False
         original_local = local
         if self._adb_version >= '1.0.36' and \
