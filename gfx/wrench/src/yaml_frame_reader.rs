@@ -1273,11 +1273,13 @@ impl YamlFrameReader {
         let content_rect = LayerRect::new(clip_rect.origin, content_size);
 
         let numeric_id = yaml["id"].as_i64().map(|id| id as u64);
+
         let complex_clips = self.to_complex_clip_regions(&yaml["complex"]);
         let image_mask = self.to_image_mask(&yaml["image-mask"], wrench);
 
+        let external_id = numeric_id.map(|id| ExternalScrollId(id as u64, dl.pipeline_id));
         let real_id = dl.define_scroll_frame(
-            None,
+            external_id,
             content_rect,
             clip_rect,
             complex_clips,
@@ -1309,7 +1311,6 @@ impl YamlFrameReader {
         let numeric_id = yaml["id"].as_i64().map(|id| id as u64);
 
         let real_id = dl.define_sticky_frame(
-            None,
             bounds,
             SideOffsets2D::new(
                 yaml["margin-top"].as_f32(),
@@ -1389,7 +1390,7 @@ impl YamlFrameReader {
         let complex_clips = self.to_complex_clip_regions(&yaml["complex"]);
         let image_mask = self.to_image_mask(&yaml["image-mask"], wrench);
 
-        let real_id = dl.define_clip(None, clip_rect, complex_clips, image_mask);
+        let real_id = dl.define_clip(clip_rect, complex_clips, image_mask);
         if let Some(numeric_id) = numeric_id {
             self.clip_id_map.insert(numeric_id as u64, real_id);
         }
