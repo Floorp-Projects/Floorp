@@ -78,15 +78,12 @@
 
 #define WORKERS_SHUTDOWN_TOPIC "web-workers-shutdown"
 
-using namespace mozilla;
-using namespace mozilla::dom;
-using namespace mozilla::ipc;
+namespace mozilla {
 
-USING_WORKERS_NAMESPACE
+using namespace ipc;
 
-using mozilla::MutexAutoLock;
-using mozilla::MutexAutoUnlock;
-using mozilla::Preferences;
+namespace dom {
+namespace workers {
 
 // The size of the worker runtime heaps in bytes. May be changed via pref.
 #define WORKER_DEFAULT_RUNTIME_HEAPSIZE 32 * 1024 * 1024
@@ -1254,8 +1251,6 @@ PlatformOverrideChanged(const char* /* aPrefName */, void* /* aClosure */)
 
 } /* anonymous namespace */
 
-BEGIN_WORKERS_NAMESPACE
-
 void
 CancelWorkersForWindow(nsPIDOMWindowInner* aWindow)
 {
@@ -1305,11 +1300,6 @@ ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow)
     runtime->ResumeWorkersForWindow(aWindow);
   }
 }
-
-END_WORKERS_NAMESPACE
-
-namespace mozilla {
-namespace dom {
 
 WorkerPrivate*
 GetWorkerPrivateFromContext(JSContext* aCx)
@@ -1376,8 +1366,15 @@ GetCurrentThreadWorkerGlobal()
   return scope->GetGlobalJSObject();
 }
 
-} // dom namespace
-} // mozilla namespace
+#ifdef DEBUG
+
+void
+AssertIsOnMainThread()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+}
+
+#endif
 
 struct RuntimeService::IdleThreadInfo
 {
@@ -2933,3 +2930,7 @@ WorkerThreadPrimaryRunnable::FinishedRunnable::Run()
 
   return NS_OK;
 }
+
+} // workers namespace
+} // dom namespace
+} // mozilla namespace

@@ -140,7 +140,7 @@ FileReader::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 
   if (!NS_IsMainThread()) {
     JSContext* cx = aGlobal.Context();
-    workerPrivate = GetWorkerPrivateFromContext(cx);
+    workerPrivate = workers::GetWorkerPrivateFromContext(cx);
     MOZ_ASSERT(workerPrivate);
   }
 

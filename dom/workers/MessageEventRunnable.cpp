@@ -130,7 +130,7 @@ MessageEventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
                             !aWorkerPrivate->GetParent());
   }
 
-  MOZ_ASSERT(aWorkerPrivate == GetWorkerPrivateFromContext(aCx));
+  MOZ_ASSERT(aWorkerPrivate == workers::GetWorkerPrivateFromContext(aCx));
 
   return DispatchDOMEvent(aCx, aWorkerPrivate, aWorkerPrivate->GlobalScope(),
                           false);

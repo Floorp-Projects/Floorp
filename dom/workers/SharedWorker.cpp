@@ -58,7 +58,7 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
 {
   AssertIsOnMainThread();
 
-  RuntimeService* rts = RuntimeService::GetOrCreateService();
+  workers::RuntimeService* rts = workers::RuntimeService::GetOrCreateService();
   if (!rts) {
     aRv = NS_ERROR_NOT_AVAILABLE;
     return nullptr;
