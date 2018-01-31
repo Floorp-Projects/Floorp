@@ -26,6 +26,7 @@ LazyLogModule gVP8TrackEncoderLog("VP8TrackEncoder");
                                         (msg, ##__VA_ARGS__))
 
 #define DEFAULT_BITRATE_BPS 2500000
+#define MAX_KEYFRAME_INTERVAL 600
 
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
@@ -60,6 +61,7 @@ VP8TrackEncoder::VP8TrackEncoder(TrackRate aTrackRate,
                                  FrameDroppingMode aFrameDroppingMode)
   : VideoTrackEncoder(aTrackRate, aFrameDroppingMode)
   , mEncodedTimestamp(0)
+  , mDurationSinceLastKeyframe(0)
   , mVPXContext(new vpx_codec_ctx_t())
   , mVPXImageWrapper(new vpx_image_t())
 {
@@ -208,9 +210,10 @@ VP8TrackEncoder::SetConfigurationValues(int32_t aWidth, int32_t aHeight, int32_t
   config.rc_buf_optimal_sz = 600;
   config.rc_buf_sz = 1000;
 
+  // we set key frame interval to automatic and later manually
+  // force key frame by setting VPX_EFLAG_FORCE_KF when mKeyFrameInterval > 0
   config.kf_mode = VPX_KF_AUTO;
-  // Ensure that we can output one I-frame per second.
-  config.kf_max_dist = 60;
+  config.kf_max_dist = MAX_KEYFRAME_INTERVAL;
 
   return NS_OK;
 }
@@ -649,6 +652,18 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
         VP8LOG(LogLevel::Warning, "MediaRecorder lagging behind. Encoding keyframe.");
         flags |= VPX_EFLAG_FORCE_KF;
       }
+
+      // Sum duration of non-key frames and force keyframe if exceeded the given keyframe interval
+      if (mKeyFrameInterval > 0)
+      {
+        if ((mDurationSinceLastKeyframe * 1000 / mTrackRate) >= mKeyFrameInterval)
+        {
+          mDurationSinceLastKeyframe = 0;
+          flags |= VPX_EFLAG_FORCE_KF;
+        }
+        mDurationSinceLastKeyframe += chunk.GetDuration();
+      }
+
       if (vpx_codec_encode(mVPXContext, mVPXImageWrapper, mEncodedTimestamp,
                            (unsigned long)chunk.GetDuration(), flags,
                            VPX_DL_REALTIME)) {
