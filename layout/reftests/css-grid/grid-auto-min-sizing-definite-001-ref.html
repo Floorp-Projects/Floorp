@@ -62,40 +62,31 @@ b40 {
   z-index: 1; position:relative;
 }
 
-w {
-  position:absolute;
-  background: lime;
-  border-width: 1px 0 0 3px;
-  border-style: solid;
-  height:48px;
-  width:75px;
+.h.r {
+  height: 42px;
+  width: 42px;
+  /* This margin-left is 20% of 98px-wide grid area */
+  margin-left: 19.6px;
+  /* This padding-bottom is 10% of 98px wide grid area */
+  /* This padding-left   is 30% of 98px wide grid area */
+  padding: 1px 3px 9.8px 29.4px;
 }
-.v > w {
-  border-width: 3px 0 0 1px;
-  left:-1px; top:-3px;
-  height:53px;
-  width:61px;
-}
-.h.r { margin-left:19px; padding: 1px 15px 37px 30px; }
-.v .h > w {
-  height:48px;
-  width:45px;
-}
-.v.r > w {
-  height:53px;
-  width:61px;
-}
-.v .v > w {
-  height:41px;
-  width:45px;
+.v.r {
+  height: 42px;
+  width: 42px;
+  /* This margin-left is 20% of 54px-wide grid area */
+  margin-left: 10.8px;
+  /* This padding-bottom is 10% of 54px wide grid area */
+  /* This padding-left   is 30% of 54px wide grid area */
+  padding: 1px 3px 5.4px 16.2px;
 }
 
 .r { position:relative; }
 
 .t6 { width:46px; }
-.t8 { width:118px; }
+.t8 { width:118px; height: 102.5px; }
 
-xx { 
+xx {
   display: block;
   background: lime;
   padding:32px 32px 16px 32px;
@@ -114,7 +105,7 @@ xx {
 <div class="grid"><span class="v"><x></x></span></div>
 <div class="grid t6"><span class="v bb"><x></x></span></div>
 <div class="grid"><span class="v"><x></x></span><span class="v"><x></x></span></div>
-<div class="grid t8"><span class="v r"><w></w><b40></b40></span></div>
+<div class="grid t8"><span class="v r"><b40></b40></span></div>
 
 <div class="grid"><xx class="v"></xx></div>
 <div class="grid v"><xx class="h"></xx></div>

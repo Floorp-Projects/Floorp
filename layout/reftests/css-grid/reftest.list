@@ -43,7 +43,7 @@ skip-if(Android) fuzzy-if(winWidget,1,32) == grid-placement-auto-implicit-001.ht
 == vrl-grid-placement-auto-row-sparse-001.html vrl-grid-placement-auto-row-sparse-001-ref.html
 == grid-relpos-items-001.html grid-relpos-items-001-ref.html
 == grid-item-sizing-percent-001.html grid-item-sizing-percent-001-ref.html
-== grid-item-sizing-percent-002.html grid-item-sizing-percent-002-ref.html
+fails == grid-item-sizing-percent-002.html grid-item-sizing-percent-002-ref.html # bug 1434397
 == grid-item-sizing-percent-003.html grid-item-sizing-percent-003-ref.html
 == grid-item-sizing-percent-004.html grid-item-sizing-percent-004-ref.html
 == grid-item-sizing-px-001.html grid-item-sizing-percent-001-ref.html

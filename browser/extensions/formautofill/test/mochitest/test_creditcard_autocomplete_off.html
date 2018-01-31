@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Test basic autofill</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="formautofill_common.js"></script>
   <script type="text/javascript" src="satchel_common.js"></script>
@@ -50,12 +51,12 @@ add_task(async function history_only_menu_checking() {
   await setupFormHistory();
 
   await setInput("#cc-number", "");
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(["1234000056780000"], false);
 
   await setInput("#cc-name", "");
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await notExpectPopup();
 });
 
@@ -64,7 +65,7 @@ add_task(async function check_menu_when_both_with_autocomplete_off() {
   await setupCreditCardStorage();
 
   await setInput("#cc-number", "");
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primaryAffix: cc.ccNumberFmt.affix,
@@ -73,7 +74,7 @@ add_task(async function check_menu_when_both_with_autocomplete_off() {
   })));
 
   await setInput("#cc-name", "");
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-name"],

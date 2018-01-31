@@ -634,3 +634,16 @@ function* checkDeleteAndSelection(inspector, key, {selector, focusedSelector, ps
   node = yield getNodeFront(selector, inspector);
   ok(node, "The node is back");
 }
+
+/**
+ * Expand the provided markup container by clicking on the expand arrow and waiting for
+ * inspector and children to update.
+ */
+async function expandContainer(inspector, container) {
+  let onChildren = waitForChildrenUpdated(inspector);
+  let onUpdated = inspector.once("inspector-updated");
+  EventUtils.synthesizeMouseAtCenter(container.expander, {},
+    inspector.markup.doc.defaultView);
+  await onChildren;
+  await onUpdated;
+}

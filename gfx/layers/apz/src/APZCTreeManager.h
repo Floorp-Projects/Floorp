@@ -18,7 +18,7 @@
 #include "mozilla/layers/IAPZCTreeManager.h" // for IAPZCTreeManager
 #include "mozilla/layers/KeyboardMap.h" // for KeyboardMap
 #include "mozilla/layers/FocusState.h"  // for FocusState
-#include "mozilla/Mutex.h"              // for Mutex
+#include "mozilla/RecursiveMutex.h"     // for RecursiveMutex
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/TimeStamp.h"          // for mozilla::TimeStamp
 #include "nsCOMPtr.h"                   // for already_AddRefed
@@ -649,7 +649,7 @@ private:
    * is considered part of the APZC tree management state.
    * Finally, the lock needs to be held when accessing mZoomConstraints.
    * IMPORTANT: See the note about lock ordering at the top of this file. */
-  mutable mozilla::Mutex mTreeLock;
+  mutable mozilla::RecursiveMutex mTreeLock;
   RefPtr<HitTestingTreeNode> mRootNode;
   /* Holds the zoom constraints for scrollable layers, as determined by the
    * the main-thread gecko code. */

@@ -110,7 +110,4 @@ nsresultForErrno(int aErr)
 
 #define NSRESULT_FOR_ERRNO() nsresultForErrno(errno)
 
-void NS_StartupLocalFile();
-void NS_ShutdownLocalFile();
-
 #endif

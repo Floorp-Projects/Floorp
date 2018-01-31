@@ -189,18 +189,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return {
       actor: this.actorID,
       root: this.rootNode.form(),
-      traits: {
-        // FF42+ Inspector starts managing the Walker, while the inspector also
-        // starts cleaning itself up automatically on client disconnection.
-        // So that there is no need to manually release the walker anymore.
-        autoReleased: true,
-        // XXX: It seems silly that we need to tell the front which capabilities
-        // its actor has in this way when the target can use actorHasMethod. If
-        // this was ported to the protocol (Bug 1157048) we could call that
-        // inside of custom front methods and not need to do traits for this.
-        multiFrameQuerySelectorAll: true,
-        textSearch: true,
-      }
+      traits: {}
     };
   },
 
@@ -341,28 +330,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   _onResize: function () {
     this.emit("resize");
   },
-
-  /**
-   * This is kept for backward-compatibility reasons with older remote targets.
-   * Targets prior to bug 916443.
-   *
-   * pick/cancelPick are used to pick a node on click on the content
-   * document. But in their implementation prior to bug 916443, they don't allow
-   * highlighting on hover.
-   * The client-side now uses the highlighter actor's pick and cancelPick
-   * methods instead. The client-side uses the the highlightable trait found in
-   * the root actor to determine which version of pick to use.
-   *
-   * As for highlight, the new highlighter actor is used instead of the walker's
-   * highlight method. Same here though, the client-side uses the highlightable
-   * trait to dertermine which to use.
-   *
-   * Keeping these actor methods for now allows newer client-side debuggers to
-   * inspect fxos 1.2 remote targets or older firefox desktop remote targets.
-   */
-  pick: function () {},
-  cancelPick: function () {},
-  highlight: function (node) {},
 
   /**
    * Ensures that the node is attached and it can be accessed from the root.

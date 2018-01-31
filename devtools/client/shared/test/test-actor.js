@@ -10,7 +10,7 @@
 
 const { Cc, Ci, Cu } = require("chrome");
 const {
-  getRect, getElementFromPoint, getAdjustedQuads, getWindowDimensions
+  getRect, getAdjustedQuads, getWindowDimensions
 } = require("devtools/shared/layout/utils");
 const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
@@ -124,16 +124,6 @@ var testSpec = protocol.generateActorSpec({
         actorID: Arg(1, "string"),
       },
       response: {}
-    },
-    assertElementAtPoint: {
-      request: {
-        x: Arg(0, "number"),
-        y: Arg(1, "number"),
-        selector: Arg(2, "string")
-      },
-      response: {
-        value: RetVal("boolean")
-      }
     },
     getAllAdjustedQuads: {
       request: {
@@ -471,15 +461,6 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
                                  .QueryInterface(Ci.nsIDocShell);
       docShell.contentViewer.fullZoom = level;
     });
-  },
-
-  assertElementAtPoint: function (x, y, selector) {
-    let elementAtPoint = getElementFromPoint(this.content.document, x, y);
-    if (!elementAtPoint) {
-      throw new Error("Unable to find element at (" + x + ", " + y + ")");
-    }
-    let node = this._querySelector(selector);
-    return node == elementAtPoint;
   },
 
   /**
