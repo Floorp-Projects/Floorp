@@ -14,7 +14,10 @@
 #include "WorkerPrivate.h"
 #include "WorkerScope.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
+
+using namespace workers;
 
 MessageEventRunnable::MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
                                            TargetAndBusyBehavior aBehavior)
@@ -151,4 +154,5 @@ MessageEventRunnable::DispatchError(JSContext* aCx,
   aTarget->DispatchEvent(event, &dummy);
 }
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace

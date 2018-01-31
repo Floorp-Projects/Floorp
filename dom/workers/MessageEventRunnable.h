@@ -16,28 +16,26 @@ namespace mozilla {
 class DOMEventTargetHelper;
 
 namespace dom {
-namespace workers {
 
-class MessageEventRunnable final : public WorkerRunnable
+class MessageEventRunnable final : public workers::WorkerRunnable
                                  , public StructuredCloneHolder
 {
 public:
-  MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
+  MessageEventRunnable(workers::WorkerPrivate* aWorkerPrivate,
                        TargetAndBusyBehavior aBehavior);
 
   bool
-  DispatchDOMEvent(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+  DispatchDOMEvent(JSContext* aCx, workers::WorkerPrivate* aWorkerPrivate,
                    DOMEventTargetHelper* aTarget, bool aIsMainThread);
 
 private:
   bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
+  WorkerRun(JSContext* aCx, workers::WorkerPrivate* aWorkerPrivate) override;
 
   void
   DispatchError(JSContext* aCx, DOMEventTargetHelper* aTarget);
 };
 
-} // workers namespace
 } // dom namespace
 } // mozilla namespace
 

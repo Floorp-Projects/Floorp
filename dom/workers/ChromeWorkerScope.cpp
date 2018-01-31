@@ -14,8 +14,8 @@
 
 #include "WorkerPrivate.h"
 
-using namespace mozilla::dom;
-USING_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -46,8 +46,6 @@ UnicodeToNative(JSContext* aCx, const char16_t* aSource, size_t aSourceLen)
 
 } // namespace
 
-BEGIN_WORKERS_NAMESPACE
-
 bool
 DefineChromeWorkerFunctions(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
 {
@@ -71,4 +69,5 @@ DefineChromeWorkerFunctions(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
   return true;
 }
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
