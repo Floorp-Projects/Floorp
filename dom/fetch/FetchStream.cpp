@@ -205,7 +205,7 @@ FetchStream::RequestDataCallback(JSContext* aCx,
 
     nsCOMPtr<nsIAsyncInputStream> asyncStream;
     nsresult rv =
-      NS_MakeAsyncNonBlockingInputStream(stream->mOriginalInputStream,
+      NS_MakeAsyncNonBlockingInputStream(stream->mOriginalInputStream.forget(),
                                          getter_AddRefs(asyncStream));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       stream->ErrorPropagation(aCx, aStream, rv);

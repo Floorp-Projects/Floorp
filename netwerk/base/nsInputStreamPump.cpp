@@ -335,10 +335,11 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
     if (nonBlocking) {
         mAsyncStream = do_QueryInterface(mStream);
         if (!mAsyncStream) {
-            rv = NonBlockingAsyncInputStream::Create(mStream,
+            rv = NonBlockingAsyncInputStream::Create(mStream.forget(),
                                                      getter_AddRefs(mAsyncStream));
             if (NS_WARN_IF(NS_FAILED(rv))) return rv;
         }
+        MOZ_ASSERT(mAsyncStream);
     }
 
     if (!mAsyncStream) {

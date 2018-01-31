@@ -405,16 +405,18 @@ FileReader::ReadFileContent(Blob& aBlob,
   mDataFormat = aDataFormat;
   CopyUTF16toUTF8(aCharset, mCharset);
 
-  nsCOMPtr<nsIInputStream> stream;
-  mBlob->CreateInputStream(getter_AddRefs(stream), aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  {
+    nsCOMPtr<nsIInputStream> stream;
+    mBlob->CreateInputStream(getter_AddRefs(stream), aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
 
-  aRv = NS_MakeAsyncNonBlockingInputStream(stream,
-                                           getter_AddRefs(mAsyncStream));
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
+    aRv = NS_MakeAsyncNonBlockingInputStream(stream.forget(),
+                                             getter_AddRefs(mAsyncStream));
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
   }
 
   MOZ_ASSERT(mAsyncStream);
