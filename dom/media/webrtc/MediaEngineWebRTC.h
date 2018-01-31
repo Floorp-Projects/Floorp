@@ -621,6 +621,7 @@ public:
   void EnumerateDevices(uint64_t aWindowId,
                         dom::MediaSourceEnum,
                         nsTArray<RefPtr<MediaEngineSource>>*) override;
+  void ReleaseResourcesForWindow(uint64_t aWindowId) override;
 private:
   ~MediaEngineWebRTC() = default;
 
@@ -634,10 +635,14 @@ private:
   bool mExtendedFilter;
   bool mHasTabVideoSource;
 
-  // Store devices we've already seen in a hashtable for quick return.
-  // Maps UUID to MediaEngineSource (one set for audio, one for video).
-  nsRefPtrHashtable<nsStringHashKey, MediaEngineSource> mVideoSources;
-  nsRefPtrHashtable<nsStringHashKey, MediaEngineSource> mAudioSources;
+  // Maps WindowID to a map of device uuid to their MediaEngineSource,
+  // separately for audio and video.
+  nsClassHashtable<nsUint64HashKey,
+                    nsRefPtrHashtable<nsStringHashKey,
+                                      MediaEngineSource>> mVideoSources;
+  nsClassHashtable<nsUint64HashKey,
+                    nsRefPtrHashtable<nsStringHashKey,
+                                      MediaEngineSource>> mAudioSources;
 };
 
 }
