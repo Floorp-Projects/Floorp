@@ -36,6 +36,7 @@ class Function;
 class MessagePort;
 class MessagePortIdentifier;
 class PerformanceStorage;
+class SharedWorker;
 class WorkerDebuggerGlobalScope;
 class WorkerErrorReport;
 class WorkerGlobalScope;
@@ -46,7 +47,6 @@ struct WorkerOptions;
 
 BEGIN_WORKERS_NAMESPACE
 
-class SharedWorker;
 class WorkerControlRunnable;
 class WorkerDebugger;
 class WorkerEventTarget;
