@@ -4084,14 +4084,15 @@ class LConcat : public LInstructionHelper<1, 2, 5>
 };
 
 // Get uint16 character code from a string.
-class LCharCodeAt : public LInstructionHelper<1, 2, 0>
+class LCharCodeAt : public LInstructionHelper<1, 2, 1>
 {
   public:
     LIR_HEADER(CharCodeAt)
 
-    LCharCodeAt(const LAllocation& str, const LAllocation& index) {
+    LCharCodeAt(const LAllocation& str, const LAllocation& index, const LDefinition& temp) {
         setOperand(0, str);
         setOperand(1, index);
+        setTemp(0, temp);
     }
 
     const LAllocation* str() {
@@ -4099,6 +4100,9 @@ class LCharCodeAt : public LInstructionHelper<1, 2, 0>
     }
     const LAllocation* index() {
         return this->getOperand(1);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
     }
 };
 
