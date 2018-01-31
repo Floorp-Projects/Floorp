@@ -41,6 +41,7 @@ class WorkerDebuggerGlobalScope;
 class WorkerErrorReport;
 class WorkerGlobalScope;
 struct WorkerOptions;
+class WorkerThread;
 
 } // dom namespace
 } // mozilla namespace
@@ -51,7 +52,6 @@ class WorkerControlRunnable;
 class WorkerDebugger;
 class WorkerEventTarget;
 class WorkerRunnable;
-class WorkerThread;
 
 // SharedMutex is a small wrapper around an (internal) reference-counted Mutex
 // object. It exists to avoid changing a lot of code to use Mutex* instead of
@@ -883,7 +883,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   class MemoryReporter;
   friend class MemoryReporter;
 
-  friend class WorkerThread;
+  friend class mozilla::dom::WorkerThread;
 
   enum GCTimerMode
   {
