@@ -36,16 +36,6 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXULDOCUMENT_IID)
 
   /**
-   * Notify the XUL document that a subtree has been added
-   */
-  NS_IMETHOD AddSubtreeToDocument(nsIContent* aElement) = 0;
-
-  /**
-   * Notify the XUL document that a subtree has been removed
-   */
-  NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aElement) = 0;
-
-  /**
    * This is invoked whenever the prototype for this document is loaded
    * and should be walked, regardless of whether the XUL cache is
    * disabled, whether the protototype was loaded, whether the
