@@ -83,7 +83,6 @@
 #include "ServiceWorkerUpdateJob.h"
 #include "ServiceWorkerUpdaterChild.h"
 #include "SharedWorker.h"
-#include "WorkerInlines.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
