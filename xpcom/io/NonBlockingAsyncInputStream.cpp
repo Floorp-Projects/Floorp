@@ -12,9 +12,7 @@ namespace mozilla {
 
 using namespace ipc;
 
-namespace {
-
-class AsyncWaitRunnable final : public CancelableRunnable
+class NonBlockingAsyncInputStream::AsyncWaitRunnable final : public CancelableRunnable
 {
   RefPtr<NonBlockingAsyncInputStream> mStream;
   nsCOMPtr<nsIInputStreamCallback> mCallback;
@@ -30,15 +28,19 @@ public:
   NS_IMETHOD
   Run() override
   {
-    mCallback->OnInputStreamReady(mStream);
+    mStream->RunAsyncWaitCallback(this, mCallback.forget());
     return NS_OK;
   }
 };
 
-} // anonymous
-
 NS_IMPL_ADDREF(NonBlockingAsyncInputStream);
 NS_IMPL_RELEASE(NonBlockingAsyncInputStream);
+
+NonBlockingAsyncInputStream::WaitClosureOnly::WaitClosureOnly(AsyncWaitRunnable* aRunnable,
+                                                              nsIEventTarget* aEventTarget)
+  : mRunnable(aRunnable)
+  , mEventTarget(aEventTarget)
+{}
 
 NS_INTERFACE_MAP_BEGIN(NonBlockingAsyncInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
@@ -84,6 +86,7 @@ NonBlockingAsyncInputStream::NonBlockingAsyncInputStream(already_AddRefed<nsIInp
   , mWeakCloneableInputStream(nullptr)
   , mWeakIPCSerializableInputStream(nullptr)
   , mWeakSeekableInputStream(nullptr)
+  , mLock("NonBlockingAsyncInputStream::mLock")
   , mClosed(false)
 {
   MOZ_ASSERT(mInputStream);
@@ -114,29 +117,38 @@ NonBlockingAsyncInputStream::~NonBlockingAsyncInputStream()
 NS_IMETHODIMP
 NonBlockingAsyncInputStream::Close()
 {
-  if (mClosed) {
-    return NS_BASE_STREAM_CLOSED;
+  RefPtr<AsyncWaitRunnable> waitClosureOnlyRunnable;
+  nsCOMPtr<nsIEventTarget> waitClosureOnlyEventTarget;
+
+  {
+    MutexAutoLock lock(mLock);
+
+    if (mClosed) {
+      return NS_BASE_STREAM_CLOSED;
+    }
+
+    mClosed = true;
+
+    NS_ENSURE_STATE(mInputStream);
+    nsresult rv = mInputStream->Close();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mWaitClosureOnly.reset();
+      return rv;
+    }
+
+    // If we have a WaitClosureOnly runnable, it's time to use it.
+    if (mWaitClosureOnly.isSome()) {
+      waitClosureOnlyRunnable = Move(mWaitClosureOnly->mRunnable);
+      waitClosureOnlyEventTarget = Move(mWaitClosureOnly->mEventTarget);
+
+      mWaitClosureOnly.reset();
+
+      // Now we want to dispatch the asyncWaitCallback.
+      mAsyncWaitCallback = waitClosureOnlyRunnable;
+    }
   }
 
-  mClosed = true;
-
-  NS_ENSURE_STATE(mInputStream);
-  nsresult rv = mInputStream->Close();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    mWaitClosureOnly.reset();
-    return rv;
-  }
-
-  // If we have a WaitClosureOnly runnable, it's time to use it.
-  if (mWaitClosureOnly.isSome()) {
-    nsCOMPtr<nsIRunnable> waitClosureOnlyRunnable =
-      Move(mWaitClosureOnly->mRunnable);
-
-    nsCOMPtr<nsIEventTarget> waitClosureOnlyEventTarget =
-      Move(mWaitClosureOnly->mEventTarget);
-
-    mWaitClosureOnly.reset();
-
+  if (waitClosureOnlyRunnable) {
     if (waitClosureOnlyEventTarget) {
       waitClosureOnlyEventTarget->Dispatch(waitClosureOnlyRunnable,
                                            NS_DISPATCH_NORMAL);
@@ -256,24 +268,41 @@ NonBlockingAsyncInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
                                        uint32_t aRequestedCount,
                                        nsIEventTarget* aEventTarget)
 {
-  if (aCallback && mWaitClosureOnly.isSome()) {
-    return NS_ERROR_FAILURE;
+  RefPtr<AsyncWaitRunnable> runnable;
+  {
+    MutexAutoLock lock(mLock);
+
+    if (aCallback && (mWaitClosureOnly.isSome() || mAsyncWaitCallback)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (!aCallback) {
+      // Canceling previous callbacks.
+      mWaitClosureOnly.reset();
+      mAsyncWaitCallback = nullptr;
+      return NS_OK;
+    }
+
+    // Maybe the stream is already closed.
+    if (!mClosed) {
+      uint64_t length;
+      nsresult rv = mInputStream->Available(&length);
+      if (NS_SUCCEEDED(rv) && length == 0) {
+        mInputStream->Close();
+        mClosed = true;
+      }
+    }
+
+    runnable = new AsyncWaitRunnable(this, aCallback);
+    if ((aFlags & nsIAsyncInputStream::WAIT_CLOSURE_ONLY) && !mClosed) {
+      mWaitClosureOnly.emplace(runnable, aEventTarget);
+      return NS_OK;
+    }
+
+    mAsyncWaitCallback = runnable;
   }
 
-  if (!aCallback) {
-    // Canceling previous callback.
-    mWaitClosureOnly.reset();
-    return NS_OK;
-  }
-
-  RefPtr<NonBlockingAsyncInputStream> self = this;
-  nsCOMPtr<nsIInputStreamCallback> callback = aCallback;
-
-  nsCOMPtr<nsIRunnable> runnable = new AsyncWaitRunnable(this, aCallback);
-  if ((aFlags & nsIAsyncInputStream::WAIT_CLOSURE_ONLY) && !mClosed) {
-    mWaitClosureOnly.emplace(runnable, aEventTarget);
-    return NS_OK;
-  }
+  MOZ_ASSERT(runnable);
 
   if (aEventTarget) {
     return aEventTarget->Dispatch(runnable.forget());
@@ -328,8 +357,26 @@ NS_IMETHODIMP
 NonBlockingAsyncInputStream::SetEOF()
 {
   NS_ENSURE_STATE(mWeakSeekableInputStream);
-  mClosed = true;
-  return mWeakSeekableInputStream->SetEOF();
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void
+NonBlockingAsyncInputStream::RunAsyncWaitCallback(NonBlockingAsyncInputStream::AsyncWaitRunnable* aRunnable,
+                                                  already_AddRefed<nsIInputStreamCallback> aCallback)
+{
+  nsCOMPtr<nsIInputStreamCallback> callback = Move(aCallback);
+
+  {
+    MutexAutoLock lock(mLock);
+    if (mAsyncWaitCallback != aRunnable) {
+      // The callback has been canceled in the meantime.
+      return;
+    }
+
+    mAsyncWaitCallback = nullptr;
+  }
+
+  callback->OnInputStreamReady(this);
 }
 
 } // mozilla namespace
