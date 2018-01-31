@@ -2610,7 +2610,7 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
     // Don't fire any events anywhere.  Just log to console.
     // XXXbz should we log to all the consoles of all the relevant windows?
     MOZ_ASSERT(aReport);
-    LogErrorToConsole(*aReport, 0);
+    WorkerErrorReport::LogErrorToConsole(*aReport, 0);
     return;
   }
 
@@ -2729,7 +2729,7 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
   // Finally log a warning in the console if no window tried to prevent it.
   if (shouldLogErrorToConsole) {
     MOZ_ASSERT(aReport);
-    LogErrorToConsole(*aReport, 0);
+    WorkerErrorReport::LogErrorToConsole(*aReport, 0);
   }
 }
 
@@ -5047,7 +5047,8 @@ WorkerPrivate::ReportError(JSContext* aCx, JS::ConstUTF8CharsZ aToStringResult,
                      report.mErrorNumber != JSMSG_OUT_OF_MEMORY &&
                      JS::CurrentGlobalOrNull(aCx);
 
-  workers::ReportError(aCx, this, fireAtScope, nullptr, report, 0, exn);
+  WorkerErrorReport::ReportError(aCx, this, fireAtScope, nullptr, report, 0,
+                                 exn);
 
   mErrorHandlerRecursionCount--;
 }

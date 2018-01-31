@@ -9,7 +9,8 @@
 #include "jsapi.h"
 #include "mozilla/Assertions.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 struct WorkerPrincipal final : public JSPrincipals
 {
@@ -48,4 +49,5 @@ DestroyWorkerPrincipals(JSPrincipals* aPrincipals)
   MOZ_ASSERT_UNREACHABLE("Worker principals refcount should never fall below one");
 }
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
