@@ -720,7 +720,7 @@ impl SourceTextureResolver {
             SourceTexture::External(external_image) => {
                 let texture = self.external_images
                     .get(&(external_image.id, external_image.channel_index))
-                    .expect(&format!("BUG: External image should be resolved by now: {:?}", external_image));
+                    .expect(&format!("BUG: External image should be resolved by now"));
                 device.bind_external_texture(sampler, texture);
             }
             SourceTexture::TextureCache(index) => {
@@ -1192,7 +1192,7 @@ impl LazilyCompiledShader {
             device.bind_program(program);
             device.draw_triangles_u16(0, 3);
             let t2 = precise_time_ns();
-            println!("[C: {:.1} ms D: {:.1} ms] Precache {} {:?}",
+            debug!("[C: {:.1} ms D: {:.1} ms] Precache {} {:?}",
                 (t1 - t0) as f64 / 1000000.0,
                 (t2 - t1) as f64 / 1000000.0,
                 name,
@@ -2684,6 +2684,9 @@ impl Renderer {
             DebugCommand::EnableGpuSampleQueries(enable) => {
                 self.set_debug_flag(DebugFlags::GPU_SAMPLE_QUERIES, enable);
             }
+            DebugCommand::EnableDualSourceBlending(_) => {
+                panic!("Should be handled by render backend");
+            }
             DebugCommand::FetchDocuments |
             DebugCommand::FetchClipScrollTree => {}
             DebugCommand::FetchRenderTasks => {
@@ -2702,8 +2705,19 @@ impl Renderer {
             DebugCommand::LoadCapture(..) => {
                 panic!("Capture commands are not welcome here! Did you build with 'capture' feature?")
             }
-            DebugCommand::EnableDualSourceBlending(_) => {
-                panic!("Should be handled by render backend");
+            DebugCommand::ClearCaches(_) => {}
+            DebugCommand::InvalidateGpuCache => {
+                match self.gpu_cache_texture.bus {
+                    CacheBus::PixelBuffer { ref mut rows, .. } => {
+                        info!("Invalidating GPU caches");
+                        for row in rows {
+                            row.is_dirty = true;
+                        }
+                    }
+                    CacheBus::Scatter { .. } => {
+                        warn!("Unable to invalidate scattered GPU cache");
+                    }
+                }
             }
         }
     }
@@ -4132,7 +4146,7 @@ impl Renderer {
             let texture_target = match ext_image.image_type {
                 ExternalImageType::TextureHandle(target) => target,
                 ExternalImageType::Buffer => {
-                    panic!("{:?} is not a suitable image type in update_deferred_resolves()", ext_image.image_type);
+                    panic!("not a suitable image type in update_deferred_resolves()");
                 }
             };
 
@@ -4145,8 +4159,9 @@ impl Renderer {
                     ExternalTexture::new(texture_id, texture_target)
                 }
                 ExternalImageSource::Invalid => {
-                    warn!(
-                        "Invalid ext-image for ext_id:{:?}, channel:{}.",
+                    warn!("Invalid ext-image");
+                    debug!(
+                        "For ext_id:{:?}, channel:{}.",
                         ext_image.id,
                         ext_image.channel_index
                     );

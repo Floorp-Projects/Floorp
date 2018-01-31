@@ -7,7 +7,7 @@ use api::{DeviceIntPoint, DeviceIntRect, LayerToWorldScale, PipelineId};
 use api::{BoxShadowClipMode, LayerPoint, LayerRect, LayerVector2D, Shadow};
 use api::{ClipId, PremultipliedColorF};
 use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowCacheKey};
-use frame_builder::{FrameContext, FrameState};
+use frame_builder::{FrameContext, FrameState, PictureState};
 use gpu_cache::GpuDataRequest;
 use gpu_types::{BrushImageKind, PictureType};
 use prim_store::{BrushKind, BrushPrimitive, PrimitiveIndex, PrimitiveRun, PrimitiveRunLocalRect};
@@ -331,8 +331,8 @@ impl PicturePrimitive {
         prim_index: PrimitiveIndex,
         prim_screen_rect: &DeviceIntRect,
         prim_local_rect: &LayerRect,
-        child_tasks: Vec<RenderTaskId>,
-        parent_tasks: &mut Vec<RenderTaskId>,
+        pic_state_for_children: PictureState,
+        pic_state: &mut PictureState,
         frame_context: &FrameContext,
         frame_state: &mut FrameState,
     ) {
@@ -354,7 +354,7 @@ impl PicturePrimitive {
                             content_origin,
                             PremultipliedColorF::TRANSPARENT,
                             ClearMode::Transparent,
-                            child_tasks,
+                            pic_state_for_children.tasks,
                             PictureType::Image,
                         );
 
@@ -371,7 +371,7 @@ impl PicturePrimitive {
                         );
 
                         let render_task_id = frame_state.render_tasks.add(blur_render_task);
-                        parent_tasks.push(render_task_id);
+                        pic_state.tasks.push(render_task_id);
                         self.surface = Some(PictureSurface::RenderTask(render_task_id));
                     }
                     Some(PictureCompositeMode::Filter(FilterOp::DropShadow(offset, blur_radius, color))) => {
@@ -383,7 +383,7 @@ impl PicturePrimitive {
                             ContentOrigin::Screen(rect.origin),
                             PremultipliedColorF::TRANSPARENT,
                             ClearMode::Transparent,
-                            child_tasks,
+                            pic_state_for_children.tasks,
                             PictureType::Image,
                         );
 
@@ -402,7 +402,7 @@ impl PicturePrimitive {
                         *secondary_render_task_id = Some(picture_task_id);
 
                         let render_task_id = frame_state.render_tasks.add(blur_render_task);
-                        parent_tasks.push(render_task_id);
+                        pic_state.tasks.push(render_task_id);
                         self.surface = Some(PictureSurface::RenderTask(render_task_id));
                     }
                     Some(PictureCompositeMode::MixBlend(..)) => {
@@ -413,17 +413,17 @@ impl PicturePrimitive {
                             content_origin,
                             PremultipliedColorF::TRANSPARENT,
                             ClearMode::Transparent,
-                            child_tasks,
+                            pic_state_for_children.tasks,
                             PictureType::Image,
                         );
 
                         let readback_task_id = frame_state.render_tasks.add(RenderTask::new_readback(*prim_screen_rect));
 
                         *secondary_render_task_id = Some(readback_task_id);
-                        parent_tasks.push(readback_task_id);
+                        pic_state.tasks.push(readback_task_id);
 
                         let render_task_id = frame_state.render_tasks.add(picture_task);
-                        parent_tasks.push(render_task_id);
+                        pic_state.tasks.push(render_task_id);
                         self.surface = Some(PictureSurface::RenderTask(render_task_id));
                     }
                     Some(PictureCompositeMode::Filter(filter)) => {
@@ -433,7 +433,7 @@ impl PicturePrimitive {
                         // when opacity == 1.0, but can also occur on other
                         // filters and be a significant performance win.
                         if filter.is_noop() {
-                            parent_tasks.extend(child_tasks);
+                            pic_state.tasks.extend(pic_state_for_children.tasks);
                             self.surface = None;
                         } else {
                             let picture_task = RenderTask::new_picture(
@@ -443,12 +443,12 @@ impl PicturePrimitive {
                                 content_origin,
                                 PremultipliedColorF::TRANSPARENT,
                                 ClearMode::Transparent,
-                                child_tasks,
+                                pic_state_for_children.tasks,
                                 PictureType::Image,
                             );
 
                             let render_task_id = frame_state.render_tasks.add(picture_task);
-                            parent_tasks.push(render_task_id);
+                            pic_state.tasks.push(render_task_id);
                             self.surface = Some(PictureSurface::RenderTask(render_task_id));
                         }
                     }
@@ -460,16 +460,16 @@ impl PicturePrimitive {
                             content_origin,
                             PremultipliedColorF::TRANSPARENT,
                             ClearMode::Transparent,
-                            child_tasks,
+                            pic_state_for_children.tasks,
                             PictureType::Image,
                         );
 
                         let render_task_id = frame_state.render_tasks.add(picture_task);
-                        parent_tasks.push(render_task_id);
+                        pic_state.tasks.push(render_task_id);
                         self.surface = Some(PictureSurface::RenderTask(render_task_id));
                     }
                     None => {
-                        parent_tasks.extend(child_tasks);
+                        pic_state.tasks.extend(pic_state_for_children.tasks);
                         self.surface = None;
                     }
                 }
@@ -516,7 +516,7 @@ impl PicturePrimitive {
                 );
 
                 let render_task_id = frame_state.render_tasks.add(blur_render_task);
-                parent_tasks.push(render_task_id);
+                pic_state.tasks.push(render_task_id);
                 self.surface = Some(PictureSurface::RenderTask(render_task_id));
             }
             PictureKind::BoxShadow { blur_radius, clip_mode, color, content_rect, cache_key, .. } => {
@@ -576,7 +576,7 @@ impl PicturePrimitive {
                         );
 
                         let root_task_id = render_tasks.add(blur_render_task);
-                        parent_tasks.push(root_task_id);
+                        pic_state.tasks.push(root_task_id);
 
                         // TODO(gw): Remove the nastiness with having to pass
                         //           the scale factor through the texture cache

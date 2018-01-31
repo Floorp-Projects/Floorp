@@ -90,7 +90,7 @@ fn render_blob(
                 }
                 _ => {
                     return Err(api::BlobImageError::Other(
-                        format!("Usupported image format {:?}", descriptor.format),
+                        format!("Usupported image format"),
                     ));
                 }
             }

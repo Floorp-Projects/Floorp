@@ -226,7 +226,7 @@ impl Example for App {
             BorderRadius::uniform(20.0),
             ClipMode::Clip
         );
-        let id = builder.define_clip(None, bounds, vec![complex], Some(mask));
+        let id = builder.define_clip(bounds, vec![complex], Some(mask));
         builder.push_clip_id(id);
 
         let info = LayoutPrimitiveInfo::new((100, 100).to(200, 200));
