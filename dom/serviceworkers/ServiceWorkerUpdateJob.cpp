@@ -260,7 +260,7 @@ ServiceWorkerUpdateJob::AsyncExecute()
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     swm->GetRegistration(mPrincipal, mScope);
 
-  if (!registration || registration->mPendingUninstall) {
+  if (!registration || registration->IsPendingUninstall()) {
     ErrorResult rv;
     rv.ThrowTypeError<MSG_SW_UPDATE_BAD_REGISTRATION>(NS_ConvertUTF8toUTF16(mScope),
                                                       NS_LITERAL_STRING("uninstalled"));
@@ -399,9 +399,9 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
     }
   }
 
-  if (!StringBeginsWith(mRegistration->mScope, maxPrefix)) {
+  if (!StringBeginsWith(mRegistration->Scope(), maxPrefix)) {
     nsAutoString message;
-    NS_ConvertUTF8toUTF16 reportScope(mRegistration->mScope);
+    NS_ConvertUTF8toUTF16 reportScope(mRegistration->Scope());
     NS_ConvertUTF8toUTF16 reportMaxPrefix(maxPrefix);
     const char16_t* params[] = { reportScope.get(), reportMaxPrefix.get() };
 
@@ -434,8 +434,8 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
   }
 
   RefPtr<ServiceWorkerInfo> sw =
-    new ServiceWorkerInfo(mRegistration->mPrincipal,
-                          mRegistration->mScope,
+    new ServiceWorkerInfo(mRegistration->Principal(),
+                          mRegistration->Scope(),
                           mScriptSpec,
                           aNewCacheName,
                           flags);
@@ -475,7 +475,7 @@ ServiceWorkerUpdateJob::ContinueUpdateAfterScriptEval(bool aScriptEvaluationResu
     ErrorResult error;
 
     NS_ConvertUTF8toUTF16 scriptSpec(mScriptSpec);
-    NS_ConvertUTF8toUTF16 scope(mRegistration->mScope);
+    NS_ConvertUTF8toUTF16 scope(mRegistration->Scope());
     error.ThrowTypeError<MSG_SW_SCRIPT_THREW>(scriptSpec, scope);
     FailUpdateJob(error);
     return;
