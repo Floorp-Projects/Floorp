@@ -78,11 +78,6 @@ if CONFIG['MOZ_WEBSPEECH']:
         '/dom/media/webspeech/synth',
     ]
 
-if CONFIG['MOZ_SECUREELEMENT']:
-    LOCAL_INCLUDES += [
-        '/dom/secureelement',
-    ]
-
 FINAL_LIBRARY = 'xul'
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):

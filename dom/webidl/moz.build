@@ -265,7 +265,7 @@ with Files("SVG*"):
 with Files("ScriptProcessorNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
-# TODO: SecureElement*, SettingChangeNotification
+# TODO: SettingChangeNotification
 # are FirefoxOS::*, leaving as Core::DOM
 
 with Files("Selection.webidl"):
@@ -1033,12 +1033,6 @@ if CONFIG['MOZ_DEBUG']:
                      'TestInterfaceJS.webidl',
                      'TestInterfaceJSDictionaries.webidl',
                      'TestInterfaceJSMaplikeSetlikeIterable.webidl']
-
-if CONFIG['MOZ_SECUREELEMENT']:
-    WEBIDL_FILES += [
-         'SecureElement.webidl',
-         'SecureElementManager.webidl',
-    ]
 
 WEBIDL_FILES += [
     'InstallTrigger.webidl',

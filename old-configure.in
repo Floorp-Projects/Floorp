@@ -3797,15 +3797,6 @@ fi
 AC_SUBST(MOZ_DISABLE_STARTUPCACHE)
 
 dnl ========================================================
-dnl = Enable Support for Secure Element API
-dnl ========================================================
-   MOZ_SECUREELEMENT=1,
-if test -n "$MOZ_SECUREELEMENT"; then
-   AC_DEFINE(MOZ_SECUREELEMENT)
-fi
- AC_SUBST(MOZ_SECUREELEMENT)
-
-dnl ========================================================
 dnl = Support for demangling undefined symbols
 dnl ========================================================
 if test -z "$SKIP_LIBRARY_CHECKS"; then
