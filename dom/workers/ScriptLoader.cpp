@@ -75,11 +75,14 @@
 
 USING_WORKERS_NAMESPACE
 
-using namespace mozilla;
-using namespace mozilla::dom;
 using mozilla::dom::cache::Cache;
 using mozilla::dom::cache::CacheStorage;
 using mozilla::ipc::PrincipalInfo;
+
+namespace mozilla {
+namespace dom {
+
+using namespace workers;
 
 namespace {
 
@@ -1921,17 +1924,17 @@ public:
     clientInfo.emplace(mClientInfo);
 
     nsCOMPtr<nsIChannel> channel;
-    mResult =
-      scriptloader::ChannelFromScriptURLMainThread(mLoadInfo.mLoadingPrincipal,
-                                                   baseURI, parentDoc,
-                                                   mLoadInfo.mLoadGroup,
-                                                   mScriptURL,
-                                                   clientInfo,
-                                                   // Nested workers are always dedicated.
-                                                   nsIContentPolicy::TYPE_INTERNAL_WORKER,
-                                                   // Nested workers use default uri encoding.
-                                                   true,
-                                                   getter_AddRefs(channel));
+    mResult = workerinternals::
+      ChannelFromScriptURLMainThread(mLoadInfo.mLoadingPrincipal,
+                                     baseURI, parentDoc,
+                                     mLoadInfo.mLoadGroup,
+                                     mScriptURL,
+                                     clientInfo,
+                                     // Nested workers are always dedicated.
+                                     nsIContentPolicy::TYPE_INTERNAL_WORKER,
+                                     // Nested workers use default uri encoding.
+                                     true,
+                                     getter_AddRefs(channel));
     NS_ENSURE_SUCCESS(mResult, true);
 
     mResult = mLoadInfo.SetPrincipalFromChannel(channel);
@@ -2048,8 +2051,8 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");
     mScriptLoader.mRv.MightThrowJSException();
     if (NS_FAILED(loadInfo.mLoadResult)) {
-      scriptloader::ReportLoadError(mScriptLoader.mRv,
-                                    loadInfo.mLoadResult, loadInfo.mURL);
+      workerinternals::ReportLoadError(mScriptLoader.mRv,
+                                       loadInfo.mLoadResult, loadInfo.mURL);
       // Top level scripts only!
       if (mIsWorkerScript) {
         aWorkerPrivate->MaybeDispatchLoadFailedRunnable();
@@ -2255,9 +2258,7 @@ LoadAllScripts(WorkerPrivate* aWorkerPrivate,
 
 } /* anonymous namespace */
 
-BEGIN_WORKERS_NAMESPACE
-
-namespace scriptloader {
+namespace workerinternals {
 
 nsresult
 ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
@@ -2404,6 +2405,7 @@ Load(WorkerPrivate* aWorkerPrivate,
   LoadAllScripts(aWorkerPrivate, loadInfos, false, aWorkerScriptType, aRv);
 }
 
-} // namespace scriptloader
+} // namespace workerinternals
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace

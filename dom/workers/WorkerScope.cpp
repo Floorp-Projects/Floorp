@@ -254,7 +254,7 @@ WorkerGlobalScope::ImportScripts(const Sequence<nsString>& aScriptURLs,
                                  ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
-  scriptloader::Load(mWorkerPrivate, aScriptURLs, WorkerScript, aRv);
+  workerinternals::Load(mWorkerPrivate, aScriptURLs, WorkerScript, aRv);
 }
 
 int32_t
@@ -995,7 +995,7 @@ WorkerDebuggerGlobalScope::LoadSubScript(JSContext* aCx,
 
   nsTArray<nsString> urls;
   urls.AppendElement(aURL);
-  scriptloader::Load(mWorkerPrivate, urls, DebuggerScript, aRv);
+  workerinternals::Load(mWorkerPrivate, urls, DebuggerScript, aRv);
 }
 
 void
