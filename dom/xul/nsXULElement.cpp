@@ -552,22 +552,20 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
     nsCOMPtr<nsIContent> content(this);
 
     if (IsXULElement(nsGkAtoms::label)) {
-        nsCOMPtr<nsIDOMElement> element;
-
         nsAutoString control;
         GetAttr(kNameSpaceID_None, nsGkAtoms::control, control);
-        if (!control.IsEmpty()) {
-            //XXXsmaug Should we use ShadowRoot::GetElementById in case
-            //         content is in Shadow DOM?
-            nsCOMPtr<nsIDOMDocument> domDocument =
-                do_QueryInterface(content->GetUncomposedDoc());
-            if (domDocument)
-                domDocument->GetElementById(control, getter_AddRefs(element));
+        if (control.IsEmpty()) {
+            return false;
         }
-        // here we'll either change |content| to the element referenced by
-        // |element|, or clear it.
-        content = do_QueryInterface(element);
 
+        //XXXsmaug Should we use ShadowRoot::GetElementById in case
+        //         content is in Shadow DOM?
+        nsCOMPtr<nsIDocument> document = content->GetUncomposedDoc();
+        if (!document) {
+            return false;
+        }
+
+        content = document->GetElementById(control);
         if (!content) {
             return false;
         }
@@ -1295,12 +1293,10 @@ nsXULElement::DispatchXULCommand(const EventChainVisitor& aVisitor,
                                  nsAutoString& aCommand)
 {
     // XXX sXBL/XBL2 issue! Owner or current document?
-    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(GetUncomposedDoc()));
-    NS_ENSURE_STATE(domDoc);
-    nsCOMPtr<nsIDOMElement> commandElt;
-    domDoc->GetElementById(aCommand, getter_AddRefs(commandElt));
-    nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
-    if (commandContent) {
+    nsCOMPtr<nsIDocument> doc = GetUncomposedDoc();
+    NS_ENSURE_STATE(doc);
+    RefPtr<Element> commandElt = doc->GetElementById(aCommand);
+    if (commandElt) {
         // Create a new command event to dispatch to the element
         // pointed to by the command attribute. The new event's
         // sourceEvent will be the original command event that we're
@@ -1310,7 +1306,7 @@ nsXULElement::DispatchXULCommand(const EventChainVisitor& aVisitor,
         while (domEvent) {
             Event* event = domEvent->InternalDOMEvent();
             NS_ENSURE_STATE(!SameCOMIdentity(event->GetOriginalTarget(),
-                                            commandContent));
+                                             commandElt));
             nsCOMPtr<nsIDOMXULCommandEvent> commandEvent =
                 do_QueryInterface(domEvent);
             if (commandEvent) {
@@ -1322,7 +1318,7 @@ nsXULElement::DispatchXULCommand(const EventChainVisitor& aVisitor,
         }
         WidgetInputEvent* orig = aVisitor.mEvent->AsInputEvent();
         nsContentUtils::DispatchXULCommand(
-          commandContent,
+          commandElt,
           orig->IsTrusted(),
           aVisitor.mDOMEvent,
           nullptr,
