@@ -370,7 +370,7 @@ nsCSSFontFaceRule::Type() const
 }
 
 void
-nsCSSFontFaceRule::GetCssTextImpl(nsAString& aCssText) const
+nsCSSFontFaceRule::GetCssText(nsAString& aCssText) const
 {
   nsAutoString propText;
   mDecl.GetCssTextImpl(propText);

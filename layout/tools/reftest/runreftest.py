@@ -331,12 +331,13 @@ class RefTest(object):
             prefs['reftest.nocache'] = True
 
         if options.marionette:
+            # options.marionette can specify host:port
             port = options.marionette.split(":")[1]
             prefs["marionette.port"] = int(port)
 
-            # Enable tracing output for detailed failures in case of
-            # failing connection attempts, and hangs (bug 1397201)
-            prefs["marionette.log.level"] = "TRACE"
+        # Enable tracing output for detailed failures in case of
+        # failing connection attempts, and hangs (bug 1397201)
+        prefs["marionette.log.level"] = "TRACE"
 
         preference_file = os.path.join(here, 'reftest-preferences.js')
         prefs.update(mozprofile.Preferences.read_prefs(preference_file))

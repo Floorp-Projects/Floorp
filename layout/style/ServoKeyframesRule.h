@@ -32,7 +32,7 @@ public:
   void SetStyleSheet(StyleSheet* aSheet) final override;
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetCssText(nsAString& aCssText) const final override;
   void GetName(nsAString& aName) const final override;
   void SetName(const nsAString& aName) final override;
   dom::CSSRuleList* CssRules() final override;

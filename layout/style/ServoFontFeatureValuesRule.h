@@ -23,7 +23,7 @@ public:
   RawServoFontFeatureValuesRule* Raw() const { return mRawRule; }
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const override;
+  void GetCssText(nsAString& aCssText) const override;
   void GetFontFamily(nsAString& aFamily) final override;
   void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv) final override;
   void GetValueText(nsAString& aValueText) final override;

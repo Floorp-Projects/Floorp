@@ -3581,7 +3581,6 @@ nsStyleDisplay::nsStyleDisplay(const nsPresContext* aContext)
   , mBackfaceVisibility(NS_STYLE_BACKFACE_VISIBILITY_VISIBLE)
   , mTransformStyle(NS_STYLE_TRANSFORM_STYLE_FLAT)
   , mTransformBox(StyleGeometryBox::BorderBox)
-  , mSpecifiedTransform(nullptr)
   , mTransformOrigin{ {0.5f, eStyleUnit_Percent}, // Transform is centered on origin
                       {0.5f, eStyleUnit_Percent},
                       {0, nsStyleCoord::CoordConstructor} }
@@ -3650,6 +3649,10 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mTransformStyle(aSource.mTransformStyle)
   , mTransformBox(aSource.mTransformBox)
   , mSpecifiedTransform(aSource.mSpecifiedTransform)
+  , mSpecifiedRotate(aSource.mSpecifiedRotate)
+  , mSpecifiedTranslate(aSource.mSpecifiedTranslate)
+  , mSpecifiedScale(aSource.mSpecifiedScale)
+  , mCombinedTransform(aSource.mCombinedTransform)
   , mTransformOrigin{ aSource.mTransformOrigin[0],
                       aSource.mTransformOrigin[1],
                       aSource.mTransformOrigin[2] }
@@ -3677,13 +3680,16 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   MOZ_COUNT_CTOR(nsStyleDisplay);
 }
 
-nsStyleDisplay::~nsStyleDisplay()
+
+static
+void ReleaseSharedListOnMainThread(const char* aName,
+                                   RefPtr<nsCSSValueSharedList>& aList)
 {
   // We don't allow releasing nsCSSValues with refcounted data in the Servo
   // traversal, since the refcounts aren't threadsafe. Since Servo may trigger
   // the deallocation of style structs during styling, we need to handle it
   // here.
-  if (mSpecifiedTransform && ServoStyleSet::IsInServoTraversal()) {
+  if (aList && ServoStyleSet::IsInServoTraversal()) {
     // The default behavior of NS_ReleaseOnMainThreadSystemGroup is to only
     // proxy the release if we're not already on the main thread. This is a nice
     // optimization for the cases we happen to be doing a sequential traversal
@@ -3696,10 +3702,22 @@ nsStyleDisplay::~nsStyleDisplay()
 #else
       false;
 #endif
-    NS_ReleaseOnMainThreadSystemGroup(
-      "nsStyleDisplay::mSpecifiedTransform",
-      mSpecifiedTransform.forget(), alwaysProxy);
+    NS_ReleaseOnMainThreadSystemGroup(aName, aList.forget(), alwaysProxy);
   }
+}
+
+nsStyleDisplay::~nsStyleDisplay()
+{
+  ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedTransform",
+                                mSpecifiedTransform);
+  ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedRotate",
+                                mSpecifiedRotate);
+  ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedTranslate",
+                                mSpecifiedTranslate);
+  ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedScale",
+                                mSpecifiedScale);
+  ReleaseSharedListOnMainThread("nsStyleDisplay::mCombinedTransform",
+                                mCombinedTransform);
 
   MOZ_COUNT_DTOR(nsStyleDisplay);
 }
@@ -3716,6 +3734,25 @@ nsStyleDisplay::FinishStyle(nsPresContext* aPresContext)
       shapeImage->ResolveImage(aPresContext);
     }
   }
+
+  GenerateCombinedTransform();
+}
+
+static inline nsChangeHint
+CompareTransformValues(const RefPtr<nsCSSValueSharedList>& aList,
+                       const RefPtr<nsCSSValueSharedList>& aNewList)
+{
+  nsChangeHint result = nsChangeHint(0);
+  if (!aList != !aNewList || (aList && *aList != *aNewList)) {
+    result |= nsChangeHint_UpdateTransformLayer;
+    if (aList && aNewList) {
+      result |= nsChangeHint_UpdatePostTransformOverflow;
+    } else {
+      result |= nsChangeHint_UpdateOverflow;
+    }
+  }
+
+  return result;
 }
 
 nsChangeHint
@@ -3846,18 +3883,14 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
      */
     nsChangeHint transformHint = nsChangeHint(0);
 
-    if (!mSpecifiedTransform != !aNewData.mSpecifiedTransform ||
-        (mSpecifiedTransform &&
-         *mSpecifiedTransform != *aNewData.mSpecifiedTransform)) {
-      transformHint |= nsChangeHint_UpdateTransformLayer;
-
-      if (mSpecifiedTransform &&
-          aNewData.mSpecifiedTransform) {
-        transformHint |= nsChangeHint_UpdatePostTransformOverflow;
-      } else {
-        transformHint |= nsChangeHint_UpdateOverflow;
-      }
-    }
+    transformHint |= CompareTransformValues(mSpecifiedTransform,
+                                            aNewData.mSpecifiedTransform);
+    transformHint |= CompareTransformValues(mSpecifiedRotate, aNewData.
+                                            mSpecifiedRotate);
+    transformHint |= CompareTransformValues(mSpecifiedTranslate,
+                                            aNewData.mSpecifiedTranslate);
+    transformHint |= CompareTransformValues(mSpecifiedScale,
+                                            aNewData.mSpecifiedScale);
 
     const nsChangeHint kUpdateOverflowAndRepaintHint =
       nsChangeHint_UpdateOverflow | nsChangeHint_RepaintFrame;
@@ -3972,6 +4005,57 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
   return hint;
 }
 
+void
+nsStyleDisplay::GenerateCombinedTransform()
+{
+  mCombinedTransform = nullptr;
+
+  // Follow the order defined in the spec to append transform functions.
+  // https://drafts.csswg.org/css-transforms-2/#ctm
+  AutoTArray<nsCSSValueSharedList*, 4> shareLists;
+  if (mSpecifiedTranslate) {
+    shareLists.AppendElement(mSpecifiedTranslate.get());
+  }
+  if (mSpecifiedRotate) {
+    shareLists.AppendElement(mSpecifiedRotate.get());
+  }
+  if (mSpecifiedScale) {
+    shareLists.AppendElement(mSpecifiedScale.get());
+  }
+  if (mSpecifiedTransform) {
+    shareLists.AppendElement(mSpecifiedTransform.get());
+  }
+
+  if (shareLists.Length() == 0) {
+    return;
+  }
+
+  if (shareLists.Length() == 1) {
+    mCombinedTransform = shareLists[0];
+    return;
+  }
+
+  // In common, we may have 3 transform functions(for rotate, translate and
+  // scale) in mSpecifiedTransform, one rotate function in mSpecifiedRotate,
+  // one translate function in mSpecifiedTranslate, and one scale function in
+  // mSpecifiedScale. So 6 slots are enough for the most cases.
+  AutoTArray<nsCSSValueList*, 6> valueLists;
+  for (auto list: shareLists) {
+    if (list) {
+      valueLists.AppendElement(list->mHead->Clone());
+    }
+  }
+
+  // Check we have at least one list or else valueLists.Length() - 1 below will
+  // underflow.
+  MOZ_ASSERT(valueLists.Length());
+
+  for (uint32_t i = 0; i < valueLists.Length() - 1; i++) {
+    valueLists[i]->mNext = valueLists[i + 1];
+  }
+
+  mCombinedTransform = new nsCSSValueSharedList(valueLists[0]);
+}
 // --------------------
 // nsStyleVisibility
 //
@@ -4629,18 +4713,8 @@ nsStyleUIReset::~nsStyleUIReset()
 {
   MOZ_COUNT_DTOR(nsStyleUIReset);
 
-  // See the nsStyleDisplay destructor for why we're doing this.
-  if (mSpecifiedWindowTransform && ServoStyleSet::IsInServoTraversal()) {
-    bool alwaysProxy =
-#ifdef DEBUG
-      true;
-#else
-      false;
-#endif
-    NS_ReleaseOnMainThreadSystemGroup(
-      "nsStyleUIReset::mSpecifiedWindowTransform",
-      mSpecifiedWindowTransform.forget(), alwaysProxy);
-  }
+  ReleaseSharedListOnMainThread("nsStyleUIReset::mSpecifiedWindowTransform",
+                                mSpecifiedWindowTransform);
 }
 
 nsChangeHint

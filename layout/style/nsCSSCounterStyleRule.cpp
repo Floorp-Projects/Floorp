@@ -88,7 +88,7 @@ nsCSSCounterStyleRule::Type() const
 }
 
 void
-nsCSSCounterStyleRule::GetCssTextImpl(nsAString& aCssText) const
+nsCSSCounterStyleRule::GetCssText(nsAString& aCssText) const
 {
   aCssText.AssignLiteral(u"@counter-style ");
   nsDependentAtomString name(mName);
