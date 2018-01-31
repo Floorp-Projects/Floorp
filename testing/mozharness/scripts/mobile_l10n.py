@@ -15,8 +15,6 @@ import os
 import re
 import subprocess
 import sys
-import time
-import shlex
 
 try:
     import simplejson as json
@@ -666,14 +664,12 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         return bool(self.config.get("is_release_or_beta"))
 
     def submit_to_balrog(self):
-
         if not self.query_is_nightly() and not self.query_is_release_or_beta():
             self.info("Not a nightly or release build, skipping balrog submission.")
             return
 
         self.checkout_tools()
 
-        dirs = self.query_abs_dirs()
         locales = self.query_locales()
         if not self.config.get('taskcluster_nightly'):
             balrogReady = True
@@ -722,22 +718,9 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
             self.set_buildbot_property("isOSUpdate", False)
             self.set_buildbot_property("buildid", self.query_buildid())
 
-            if self.config.get('taskcluster_nightly'):
-                props_path = os.path.join(env["UPLOAD_PATH"], locale,
-                                          'balrog_props.json')
-                self.generate_balrog_props(props_path)
-            else:
-                if not self.config.get("balrog_servers"):
-                    self.info("balrog_servers not set; skipping balrog submission.")
-                    return
-
-                if self.query_is_nightly():
-                    self.submit_balrog_updates(release_type="nightly")
-                else:
-                    self.submit_balrog_updates(release_type="release")
-
-                if not self.query_is_nightly():
-                    self.submit_balrog_release_pusher(dirs)
+            props_path = os.path.join(env["UPLOAD_PATH"], locale,
+                                      'balrog_props.json')
+            self.generate_balrog_props(props_path)
 
 
 # main {{{1
