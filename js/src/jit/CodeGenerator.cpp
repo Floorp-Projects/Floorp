@@ -10191,11 +10191,6 @@ CodeGenerator::linkSharedStubs(JSContext* cx)
             stub = stubCompiler.getStub(&stubSpace_);
             break;
           }
-          case ICStub::Kind::UnaryArith_Fallback: {
-            ICUnaryArith_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonSharedIC);
-            stub = stubCompiler.getStub(&stubSpace_);
-            break;
-          }
           case ICStub::Kind::Compare_Fallback: {
             ICCompare_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonSharedIC);
             stub = stubCompiler.getStub(&stubSpace_);
