@@ -46,14 +46,16 @@ function run_test() {
   run_next_test();
 }
 
-add_task(async function test_handle_empty_source_uri() {
+add_test(function test_handle_empty_source_uri() {
   _("Ensure that search results without a sourceURI are properly ignored.");
 
   let server = createAndStartHTTPServer();
 
   const ID = "missing-sourceuri@tests.mozilla.org";
 
-  const result = await AddonUtils.installAddons([{id: ID, requireSecureURI: false}]);
+  let cb = Async.makeSpinningCallback();
+  AddonUtils.installAddons([{id: ID, requireSecureURI: false}], cb);
+  let result = cb.wait();
 
   Assert.ok("installedIDs" in result);
   Assert.equal(0, result.installedIDs.length);
@@ -61,7 +63,7 @@ add_task(async function test_handle_empty_source_uri() {
   Assert.ok("skipped" in result);
   Assert.ok(result.skipped.includes(ID));
 
-  await promiseStopServer(server);
+  server.stop(run_next_test);
 });
 
 add_test(function test_ignore_untrusted_source_uris() {
@@ -91,7 +93,7 @@ add_test(function test_ignore_untrusted_source_uris() {
   run_next_test();
 });
 
-add_task(async function test_source_uri_rewrite() {
+add_test(function test_source_uri_rewrite() {
   _("Ensure that a 'src=api' query string is rewritten to 'src=sync'");
 
   // This tests for conformance with bug 708134 so server-side metrics aren't
@@ -102,29 +104,34 @@ add_task(async function test_source_uri_rewrite() {
 
   let installCalled = false;
   AddonUtils.__proto__.installAddonFromSearchResult =
-    async function testInstallAddon(addon, metadata) {
+    function testInstallAddon(addon, metadata, cb) {
 
     Assert.equal(SERVER_ADDRESS + "/require.xpi?src=sync",
                  addon.sourceURI.spec);
 
     installCalled = true;
 
-    const install = await AddonUtils.getInstallFromSearchResult(addon);
-    Assert.equal(SERVER_ADDRESS + "/require.xpi?src=sync",
-                install.sourceURI.spec);
-    return {id: addon.id, addon, install};
+    AddonUtils.getInstallFromSearchResult(addon, function(error, install) {
+      Assert.equal(null, error);
+      Assert.equal(SERVER_ADDRESS + "/require.xpi?src=sync",
+                   install.sourceURI.spec);
+
+      cb(null, {id: addon.id, addon, install});
+    }, false);
   };
 
   let server = createAndStartHTTPServer();
 
+  let installCallback = Async.makeSpinningCallback();
   let installOptions = {
     id: "rewrite@tests.mozilla.org",
     requireSecureURI: false,
   };
-  await AddonUtils.installAddons([installOptions]);
+  AddonUtils.installAddons([installOptions], installCallback);
 
+  installCallback.wait();
   Assert.ok(installCalled);
   AddonUtils.__proto__.installAddonFromSearchResult = oldFunction;
 
-  await promiseStopServer(server);
+  server.stop(run_next_test);
 });

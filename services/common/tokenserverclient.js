@@ -209,28 +209,48 @@ TokenServerClient.prototype = {
    *   let assertion = getBrowserIDAssertionFromSomewhere();
    *   let url = "https://token.services.mozilla.com/1.0/sync/2.0";
    *
-   *   try {
-   *     const result = await client.getTokenFromBrowserIDAssertion(url, assertion);
-   *     let {id, key, uid, endpoint, duration} = result;
+   *   client.getTokenFromBrowserIDAssertion(url, assertion,
+   *                                         function onResponse(error, result) {
+   *     if (error) {
+   *       if (error.cause == "conditions-required") {
+   *         promptConditionsAcceptance(error.urls, function onAccept() {
+   *           client.getTokenFromBrowserIDAssertion(url, assertion,
+   *           onResponse, true);
+   *         }
+   *         return;
+   *       }
+   *
+   *       // Do other error handling.
+   *       return;
+   *     }
+   *
+   *     let {
+   *       id: id, key: key, uid: uid, endpoint: endpoint, duration: duration
+   *     } = result;
    *     // Do stuff with data and carry on.
-   *   } catch (error) {
-   *     // Handle errors.
-   *   }
+   *   });
    *
    * @param  url
    *         (string) URL to fetch token from.
    * @param  assertion
    *         (string) BrowserID assertion to exchange token for.
+   * @param  cb
+   *         (function) Callback to be invoked with result of operation.
    * @param  conditionsAccepted
    *         (bool) Whether to send acceptance to service conditions.
    */
-  async getTokenFromBrowserIDAssertion(url, assertion, addHeaders = {}) {
+  getTokenFromBrowserIDAssertion:
+    function getTokenFromBrowserIDAssertion(url, assertion, cb, addHeaders = {}) {
     if (!url) {
       throw new TokenServerClientError("url argument is not valid.");
     }
 
     if (!assertion) {
       throw new TokenServerClientError("assertion argument is not valid.");
+    }
+
+    if (!cb) {
+      throw new TokenServerClientError("cb argument is not valid.");
     }
 
     this._log.debug("Beginning BID assertion exchange: " + url);
@@ -243,25 +263,39 @@ TokenServerClient.prototype = {
       req.setHeader(header, addHeaders[header]);
     }
 
-    let response = await new Promise((resolve, reject) => {
-      req.get(function(err) {
-        // Yes this is weird, the callback's |this| gets bound to the RESTRequest object.
-        err ? reject(new TokenServerClientNetworkError(err)) :
-              resolve(this.response);
-      });
-    });
-
-    try {
-      return this._processTokenResponse(response);
-    } catch (ex) {
-      if (ex instanceof TokenServerClientServerError) {
-        throw ex;
+    let client = this;
+    req.get(function onResponse(error) {
+      if (error) {
+        cb(new TokenServerClientNetworkError(error), null);
+        return;
       }
-      this._log.warn("Error processing token server response", ex);
-      let error = new TokenServerClientError(ex);
-      error.response = response;
-      throw error;
-    }
+
+      let self = this;
+      function callCallback(error, result) {
+        if (!cb) {
+          self._log.warn("Callback already called! Did it throw?");
+          return;
+        }
+
+        try {
+          cb(error, result);
+        } catch (ex) {
+          self._log.warn("Exception when calling user-supplied callback", ex);
+        }
+
+        cb = null;
+      }
+
+      try {
+        client._processTokenResponse(this.response, callCallback);
+      } catch (ex) {
+        this._log.warn("Error processing token server response", ex);
+
+        let error = new TokenServerClientError(ex);
+        error.response = this.response;
+        callCallback(error, null);
+      }
+    });
   },
 
   /**
@@ -269,8 +303,10 @@ TokenServerClient.prototype = {
    *
    * @param response
    *        RESTResponse from token HTTP request.
+   * @param cb
+   *        The original callback passed to the public API.
    */
-  _processTokenResponse(response) {
+  _processTokenResponse: function processTokenResponse(response, cb) {
     this._log.debug("Got token response: " + response.status);
 
     // Responses should *always* be JSON, even in the case of 4xx and 5xx
@@ -284,7 +320,8 @@ TokenServerClient.prototype = {
       let error = new TokenServerClientServerError("Non-JSON response.",
                                                    "malformed-response");
       error.response = response;
-      throw error;
+      cb(error, null);
+      return;
     }
 
     let result;
@@ -295,7 +332,8 @@ TokenServerClient.prototype = {
       let error = new TokenServerClientServerError("Malformed JSON.",
                                                    "malformed-response");
       error.response = response;
-      throw error;
+      cb(error, null);
+      return;
     }
 
     // Any response status can have X-Backoff or X-Weave-Backoff headers.
@@ -355,7 +393,8 @@ TokenServerClient.prototype = {
       // we'll look for it on any error response.
       this._maybeNotifyBackoff(response, "retry-after");
 
-      throw error;
+      cb(error, null);
+      return;
     }
 
     for (let k of ["id", "key", "api_endpoint", "uid", "duration"]) {
@@ -365,19 +404,20 @@ TokenServerClient.prototype = {
                                                      k);
         error.cause = "malformed-response";
         error.response = response;
-        throw error;
+        cb(error, null);
+        return;
       }
     }
 
     this._log.debug("Successful token response");
-    return {
+    cb(null, {
       id:             result.id,
       key:            result.key,
       endpoint:       result.api_endpoint,
       uid:            result.uid,
       duration:       result.duration,
       hashed_fxa_uid: result.hashed_fxa_uid,
-    };
+    });
   },
 
   /*

@@ -4,7 +4,6 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource://services-common/async.js");
 ChromeUtils.import("resource://services-sync/addonsreconciler.js");
 ChromeUtils.import("resource://services-sync/engines/addons.js");
 ChromeUtils.import("resource://services-sync/service.js");
@@ -13,13 +12,7 @@ ChromeUtils.import("resource://services-sync/util.js");
 loadAddonTestFunctions();
 startupManager();
 
-function makeAddonsReconciler() {
-  const log = Service.engineManager.get("addons")._log;
-  const queueCaller = Async.asyncQueueCaller(log);
-  return new AddonsReconciler(queueCaller);
-}
-
-add_task(async function setup() {
+add_task(async function run_test() {
   Svc.Prefs.set("engine.addons", true);
   await Service.engineManager.register(AddonsEngine);
 });
@@ -27,7 +20,7 @@ add_task(async function setup() {
 add_task(async function test_defaults() {
   _("Ensure new objects have reasonable defaults.");
 
-  let reconciler = makeAddonsReconciler();
+  let reconciler = new AddonsReconciler();
   await reconciler.ensureStateLoaded();
 
   Assert.ok(!reconciler._listening);
@@ -40,7 +33,7 @@ add_task(async function test_defaults() {
 add_task(async function test_load_state_empty_file() {
   _("Ensure loading from a missing file results in defaults being set.");
 
-  let reconciler = makeAddonsReconciler();
+  let reconciler = new AddonsReconciler();
   await reconciler.ensureStateLoaded();
 
   let loaded = await reconciler.loadState();
@@ -54,12 +47,12 @@ add_task(async function test_load_state_empty_file() {
 add_task(async function test_install_detection() {
   _("Ensure that add-on installation results in appropriate side-effects.");
 
-  let reconciler = makeAddonsReconciler();
+  let reconciler = new AddonsReconciler();
   await reconciler.ensureStateLoaded();
   reconciler.startListening();
 
   let before = new Date();
-  let addon = await installAddon("test_bootstrap1_1");
+  let addon = installAddon("test_bootstrap1_1");
   let after = new Date();
 
   Assert.equal(1, Object.keys(reconciler.addons).length);
@@ -87,24 +80,24 @@ add_task(async function test_install_detection() {
   Assert.equal(CHANGE_INSTALLED, change[1]);
   Assert.equal(addon.id, change[2]);
 
-  await uninstallAddon(addon);
+  uninstallAddon(addon);
 });
 
 add_task(async function test_uninstall_detection() {
   _("Ensure that add-on uninstallation results in appropriate side-effects.");
 
-  let reconciler = makeAddonsReconciler();
+  let reconciler = new AddonsReconciler();
   await reconciler.ensureStateLoaded();
   reconciler.startListening();
 
   reconciler._addons = {};
   reconciler._changes = [];
 
-  let addon = await installAddon("test_bootstrap1_1");
+  let addon = installAddon("test_bootstrap1_1");
   let id = addon.id;
 
   reconciler._changes = [];
-  await uninstallAddon(addon, reconciler);
+  uninstallAddon(addon);
 
   Assert.equal(1, Object.keys(reconciler.addons).length);
   Assert.ok(id in reconciler.addons);
@@ -123,7 +116,7 @@ add_task(async function test_load_state_future_version() {
 
   const FILENAME = "TEST_LOAD_STATE_FUTURE_VERSION";
 
-  let reconciler = makeAddonsReconciler();
+  let reconciler = new AddonsReconciler();
   await reconciler.ensureStateLoaded();
 
   // First we populate our new file.
@@ -144,7 +137,7 @@ add_task(async function test_load_state_future_version() {
 add_task(async function test_prune_changes_before_date() {
   _("Ensure that old changes are pruned properly.");
 
-  let reconciler = makeAddonsReconciler();
+  let reconciler = new AddonsReconciler();
   await reconciler.ensureStateLoaded();
   reconciler._changes = [];
 

@@ -61,15 +61,17 @@ function ExtensionStorageTracker(name, engine) {
 ExtensionStorageTracker.prototype = {
   __proto__: Tracker.prototype,
 
-  onStart() {
-    Svc.Obs.add("ext.storage.sync-changed", this.asyncObserver);
+  startTracking() {
+    Svc.Obs.add("ext.storage.sync-changed", this);
   },
 
-  onStop() {
-    Svc.Obs.remove("ext.storage.sync-changed", this.asyncObserver);
+  stopTracking() {
+    Svc.Obs.remove("ext.storage.sync-changed", this);
   },
 
-  async observe(subject, topic, data) {
+  observe(subject, topic, data) {
+    Tracker.prototype.observe.call(this, subject, topic, data);
+
     if (this.ignoreAll) {
       return;
     }
