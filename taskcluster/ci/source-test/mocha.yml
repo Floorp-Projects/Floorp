@@ -4,7 +4,7 @@ eslint-plugin-mozilla:
     treeherder:
         symbol: mocha(epm)
         kind: test
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
     worker:
         docker-image: {in-tree: "lint"}
