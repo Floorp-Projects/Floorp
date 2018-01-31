@@ -21,10 +21,11 @@ let tracker;
 const addon1ID = "addon1@tests.mozilla.org";
 
 async function cleanup() {
-  tracker.stop();
+  Svc.Obs.notify("weave:engine:stop-tracking");
+  tracker.stopTracking();
 
   tracker.resetScore();
-  await tracker.clearChangedIDs();
+  tracker.clearChangedIDs();
 
   reconciler._addons = {};
   reconciler._changes = [];
@@ -47,7 +48,7 @@ add_task(async function setup() {
 add_task(async function test_empty() {
   _("Verify the tracker is empty to start with.");
 
-  Assert.equal(0, Object.keys((await tracker.getChangedIDs())).length);
+  Assert.equal(0, Object.keys(tracker.changedIDs).length);
   Assert.equal(0, tracker.score);
 
   await cleanup();
@@ -56,10 +57,10 @@ add_task(async function test_empty() {
 add_task(async function test_not_tracking() {
   _("Ensures the tracker doesn't do anything when it isn't tracking.");
 
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
-  await uninstallAddon(addon, reconciler);
+  let addon = installAddon("test_bootstrap1_1");
+  uninstallAddon(addon);
 
-  Assert.equal(0, Object.keys((await tracker.getChangedIDs())).length);
+  Assert.equal(0, Object.keys(tracker.changedIDs).length);
   Assert.equal(0, tracker.score);
 
   await cleanup();
@@ -70,17 +71,17 @@ add_task(async function test_track_install() {
 
   reconciler.startListening();
 
-  tracker.start();
+  Svc.Obs.notify("weave:engine:start-tracking");
 
   Assert.equal(0, tracker.score);
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
-  let changed = await tracker.getChangedIDs();
+  let addon = installAddon("test_bootstrap1_1");
+  let changed = tracker.changedIDs;
 
   Assert.equal(1, Object.keys(changed).length);
   Assert.ok(addon.syncGUID in changed);
   Assert.equal(SCORE_INCREMENT_XLARGE, tracker.score);
 
-  await uninstallAddon(addon, reconciler);
+  uninstallAddon(addon);
   await cleanup();
 });
 
@@ -89,14 +90,14 @@ add_task(async function test_track_uninstall() {
 
   reconciler.startListening();
 
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  let addon = installAddon("test_bootstrap1_1");
   let guid = addon.syncGUID;
   Assert.equal(0, tracker.score);
 
-  tracker.start();
+  Svc.Obs.notify("weave:engine:start-tracking");
 
-  await uninstallAddon(addon, reconciler);
-  let changed = await tracker.getChangedIDs();
+  uninstallAddon(addon);
+  let changed = tracker.changedIDs;
   Assert.equal(1, Object.keys(changed).length);
   Assert.ok(guid in changed);
   Assert.equal(SCORE_INCREMENT_XLARGE, tracker.score);
@@ -109,42 +110,41 @@ add_task(async function test_track_user_disable() {
 
   reconciler.startListening();
 
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  let addon = installAddon("test_bootstrap1_1");
   Assert.ok(!addon.userDisabled);
   Assert.ok(!addon.appDisabled);
   Assert.ok(addon.isActive);
 
-  tracker.start();
+  Svc.Obs.notify("weave:engine:start-tracking");
   Assert.equal(0, tracker.score);
 
-  let disabledPromise = new Promise(res => {
-    let listener = {
-      onDisabled(disabled) {
-        _("onDisabled");
-        if (disabled.id == addon.id) {
-          AddonManager.removeAddonListener(listener);
-          res();
-        }
-      },
-      onDisabling(disabling) {
-        _("onDisabling add-on");
+  let cb = Async.makeSyncCallback();
+
+  let listener = {
+    onDisabled(disabled) {
+      _("onDisabled");
+      if (disabled.id == addon.id) {
+        AddonManager.removeAddonListener(listener);
+        cb();
       }
-    };
-    AddonManager.addAddonListener(listener);
-  });
+    },
+    onDisabling(disabling) {
+      _("onDisabling add-on");
+    }
+  };
+  AddonManager.addAddonListener(listener);
 
   _("Disabling add-on");
   addon.userDisabled = true;
   _("Disabling started...");
-  await disabledPromise;
-  await reconciler.queueCaller.promiseCallsComplete();
+  Async.waitForSyncCallback(cb);
 
-  let changed = await tracker.getChangedIDs();
+  let changed = tracker.changedIDs;
   Assert.equal(1, Object.keys(changed).length);
   Assert.ok(addon.syncGUID in changed);
   Assert.equal(SCORE_INCREMENT_XLARGE, tracker.score);
 
-  await uninstallAddon(addon, reconciler);
+  uninstallAddon(addon);
   await cleanup();
 });
 
@@ -153,22 +153,21 @@ add_task(async function test_track_enable() {
 
   reconciler.startListening();
 
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  let addon = installAddon("test_bootstrap1_1");
   addon.userDisabled = true;
   await Async.promiseYield();
 
   Assert.equal(0, tracker.score);
 
-  tracker.start();
+  Svc.Obs.notify("weave:engine:start-tracking");
   addon.userDisabled = false;
   await Async.promiseYield();
-  await reconciler.queueCaller.promiseCallsComplete();
 
-  let changed = await tracker.getChangedIDs();
+  let changed = tracker.changedIDs;
   Assert.equal(1, Object.keys(changed).length);
   Assert.ok(addon.syncGUID in changed);
   Assert.equal(SCORE_INCREMENT_XLARGE, tracker.score);
 
-  await uninstallAddon(addon, reconciler);
+  uninstallAddon(addon);
   await cleanup();
 });

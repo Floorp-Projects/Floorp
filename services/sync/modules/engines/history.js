@@ -74,15 +74,14 @@ HistoryEngine.prototype = {
   },
 
   async pullNewChanges() {
-    const changedIDs = await this._tracker.getChangedIDs();
-    let modifiedGUIDs = Object.keys(changedIDs);
+    let modifiedGUIDs = Object.keys(this._tracker.changedIDs);
     if (!modifiedGUIDs.length) {
       return {};
     }
 
     let guidsToRemove = await PlacesSyncUtils.history.determineNonSyncableGuids(modifiedGUIDs);
-    await this._tracker.removeChangedID(...guidsToRemove);
-    return changedIDs;
+    this._tracker.removeChangedID(...guidsToRemove);
+    return this._tracker.changedIDs;
   },
 };
 
@@ -438,12 +437,12 @@ function HistoryTracker(name, engine) {
 HistoryTracker.prototype = {
   __proto__: Tracker.prototype,
 
-  onStart() {
+  startTracking() {
     this._log.info("Adding Places observer.");
     PlacesUtils.history.addObserver(this, true);
   },
 
-  onStop() {
+  stopTracking() {
     this._log.info("Removing Places observer.");
     PlacesUtils.history.removeObserver(this);
   },
@@ -453,34 +452,25 @@ HistoryTracker.prototype = {
     Ci.nsISupportsWeakReference
   ]),
 
-  async onDeleteAffectsGUID(uri, guid, reason, source, increment) {
+  onDeleteAffectsGUID(uri, guid, reason, source, increment) {
     if (this.ignoreAll || reason == Ci.nsINavHistoryObserver.REASON_EXPIRED) {
       return;
     }
     this._log.trace(source + ": " + uri.spec + ", reason " + reason);
-    const added = await this.addChangedID(guid);
-    if (added) {
+    if (this.addChangedID(guid)) {
       this.score += increment;
     }
   },
 
   onDeleteVisits(uri, visitTime, guid, reason) {
-    this.asyncObserver.enqueueCall(() =>
-      this.onDeleteAffectsGUID(uri, guid, reason, "onDeleteVisits", SCORE_INCREMENT_SMALL)
-    );
+    this.onDeleteAffectsGUID(uri, guid, reason, "onDeleteVisits", SCORE_INCREMENT_SMALL);
   },
 
   onDeleteURI(uri, guid, reason) {
-    this.asyncObserver.enqueueCall(() =>
-      this.onDeleteAffectsGUID(uri, guid, reason, "onDeleteURI", SCORE_INCREMENT_XLARGE)
-    );
+    this.onDeleteAffectsGUID(uri, guid, reason, "onDeleteURI", SCORE_INCREMENT_XLARGE);
   },
 
   onVisits(aVisits) {
-    this.asyncObserver.enqueueCall(() => this._onVisits(aVisits));
-  },
-
-  async _onVisits(aVisits) {
     if (this.ignoreAll) {
       this._log.trace("ignoreAll: ignoring visits [" +
                       aVisits.map(v => v.guid).join(",") + "]");
@@ -488,7 +478,7 @@ HistoryTracker.prototype = {
     }
     for (let {uri, guid} of aVisits) {
       this._log.trace("onVisits: " + uri.spec);
-      if (this.engine.shouldSyncURL(uri.spec) && (await this.addChangedID(guid))) {
+      if (this.engine.shouldSyncURL(uri.spec) && this.addChangedID(guid)) {
         this.score += SCORE_INCREMENT_SMALL;
       }
     }
