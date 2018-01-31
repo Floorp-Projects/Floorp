@@ -37,6 +37,7 @@ class MessagePort;
 class MessagePortIdentifier;
 class PerformanceStorage;
 class SharedWorker;
+class WorkerDebugger;
 class WorkerDebuggerGlobalScope;
 class WorkerErrorReport;
 class WorkerEventTarget;
@@ -50,7 +51,6 @@ class WorkerThread;
 BEGIN_WORKERS_NAMESPACE
 
 class WorkerControlRunnable;
-class WorkerDebugger;
 class WorkerRunnable;
 
 // SharedMutex is a small wrapper around an (internal) reference-counted Mutex

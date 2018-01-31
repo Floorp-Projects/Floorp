@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workers_workerdebuggermanager_h
 #define mozilla_dom_workers_workerdebuggermanager_h
 
-#include "WorkerCommon.h"
+#include "mozilla/dom/workers/WorkerCommon.h"
 
 #include "nsIObserver.h"
 #include "nsIWorkerDebuggerManager.h"
@@ -22,7 +22,12 @@
 #define WORKERDEBUGGERMANAGER_CONTRACTID \
   "@mozilla.org/dom/workers/workerdebuggermanager;1"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
+
+namespace workers {
+class WorkerPrivate;
+}
 
 class WorkerDebugger;
 
@@ -60,24 +65,24 @@ public:
   Shutdown();
 
   void
-  RegisterDebugger(WorkerPrivate* aWorkerPrivate);
+  RegisterDebugger(workers::WorkerPrivate* aWorkerPrivate);
 
   void
-  RegisterDebuggerMainThread(WorkerPrivate* aWorkerPrivate,
+  RegisterDebuggerMainThread(workers::WorkerPrivate* aWorkerPrivate,
                              bool aNotifyListeners);
 
   void
-  UnregisterDebugger(WorkerPrivate* aWorkerPrivate);
+  UnregisterDebugger(workers::WorkerPrivate* aWorkerPrivate);
 
   void
-  UnregisterDebuggerMainThread(WorkerPrivate* aWorkerPrivate);
+  UnregisterDebuggerMainThread(workers::WorkerPrivate* aWorkerPrivate);
 
 private:
   virtual ~WorkerDebuggerManager();
 };
 
 inline nsresult
-RegisterWorkerDebugger(WorkerPrivate* aWorkerPrivate)
+RegisterWorkerDebugger(workers::WorkerPrivate* aWorkerPrivate)
 {
   WorkerDebuggerManager* manager;
 
@@ -97,7 +102,7 @@ RegisterWorkerDebugger(WorkerPrivate* aWorkerPrivate)
 }
 
 inline nsresult
-UnregisterWorkerDebugger(WorkerPrivate* aWorkerPrivate)
+UnregisterWorkerDebugger(workers::WorkerPrivate* aWorkerPrivate)
 {
   WorkerDebuggerManager* manager;
 
@@ -116,6 +121,7 @@ UnregisterWorkerDebugger(WorkerPrivate* aWorkerPrivate)
   return NS_OK;
 }
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
 
 #endif // mozilla_dom_workers_workerdebuggermanager_h

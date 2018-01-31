@@ -84,7 +84,7 @@
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/SessionStorageManager.h"
-#include "mozilla/dom/workers/WorkerDebuggerManager.h"
+#include "mozilla/dom/WorkerDebuggerManager.h"
 #include "mozilla/dom/Notification.h"
 #include "mozilla/OSFileConstants.h"
 #include "mozilla/Services.h"
@@ -181,7 +181,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using mozilla::dom::power::PowerManagerService;
 using mozilla::dom::quota::QuotaManagerService;
-using mozilla::dom::workers::WorkerDebuggerManager;
+using mozilla::dom::WorkerDebuggerManager;
 using mozilla::dom::UDPSocketChild;
 using mozilla::gmp::GeckoMediaPluginService;
 using mozilla::dom::NotificationTelemetryService;
