@@ -1102,15 +1102,6 @@ XULDocument::ResolveForwardReferences()
 // nsIDOMDocument interface
 //
 
-NS_IMETHODIMP
-XULDocument::GetElementsByAttribute(const nsAString& aAttribute,
-                                    const nsAString& aValue,
-                                    nsIDOMNodeList** aReturn)
-{
-    *aReturn = GetElementsByAttribute(aAttribute, aValue).take();
-    return NS_OK;
-}
-
 already_AddRefed<nsINodeList>
 XULDocument::GetElementsByAttribute(const nsAString& aAttribute,
                                     const nsAString& aValue)
@@ -1126,18 +1117,6 @@ XULDocument::GetElementsByAttribute(const nsAString& aAttribute,
                                             kNameSpaceID_Unknown);
 
     return list.forget();
-}
-
-NS_IMETHODIMP
-XULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
-                                      const nsAString& aAttribute,
-                                      const nsAString& aValue,
-                                      nsIDOMNodeList** aReturn)
-{
-    ErrorResult rv;
-    *aReturn = GetElementsByAttributeNS(aNamespaceURI, aAttribute,
-                                        aValue, rv).take();
-    return rv.StealNSResult();
 }
 
 already_AddRefed<nsINodeList>

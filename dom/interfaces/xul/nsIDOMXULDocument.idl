@@ -13,13 +13,6 @@ interface nsIBoxObject;
 [uuid(7790d4c3-e8f0-4e29-9887-d683ed2b2a44)]
 interface nsIDOMXULDocument : nsIDOMDocument
 {
-  nsIDOMNodeList            getElementsByAttribute(in DOMString name,
-                                                   in DOMString value);
-
-  nsIDOMNodeList            getElementsByAttributeNS(in DOMString namespaceURI,
-                                                     in DOMString name,
-                                                     in DOMString value);
-
   void                      addBroadcastListenerFor(in nsIDOMElement broadcaster,
                                                     in nsIDOMElement observer,
                                                     in DOMString attr);
