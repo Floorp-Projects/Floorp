@@ -52,8 +52,8 @@ public:
   virtual void GetEnabledDisabledCommands(nsTArray<nsCString>& aEnabledCommands,
                                           nsTArray<nsCString>& aDisabledCommands) override;
 
-  virtual already_AddRefed<nsINode> GetPopupNode() override;
-  virtual void SetPopupNode(nsINode* aNode) override;
+  virtual nsIDOMNode* GetPopupNode() override;
+  virtual void SetPopupNode(nsIDOMNode* aNode) override;
 
   virtual void SetParentTarget(mozilla::dom::EventTarget* aTarget) override
   {

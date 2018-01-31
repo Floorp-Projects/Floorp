@@ -20,6 +20,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULCommandDispatcher.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsXULContentUtils.h"
@@ -27,10 +28,8 @@
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsGkAtoms.h"
-#include "XULDocument.h"
 
 using namespace mozilla;
-using dom::XULDocument;
 
 //------------------------------------------------------------------------
 
@@ -121,13 +120,16 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, Element* aElement)
 
     nsresult rv;
 
-    XULDocument* xuldoc = aDocument->AsXULDocument();
+    nsCOMPtr<nsIDOMXULDocument> xuldoc = do_QueryInterface(aDocument);
     NS_ASSERTION(xuldoc != nullptr, "not a xul document");
     if (! xuldoc)
         return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIDOMXULCommandDispatcher> dispatcher =
-        xuldoc->GetCommandDispatcher();
+    nsCOMPtr<nsIDOMXULCommandDispatcher> dispatcher;
+    rv = xuldoc->GetCommandDispatcher(getter_AddRefs(dispatcher));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get dispatcher");
+    if (NS_FAILED(rv)) return rv;
+
     NS_ASSERTION(dispatcher != nullptr, "no dispatcher");
     if (! dispatcher)
         return NS_ERROR_UNEXPECTED;

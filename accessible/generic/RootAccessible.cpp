@@ -42,6 +42,7 @@
 #include "nsGlobalWindow.h"
 
 #ifdef MOZ_XUL
+#include "nsIXULDocument.h"
 #include "nsIXULWindow.h"
 #endif
 

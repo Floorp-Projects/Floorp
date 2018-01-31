@@ -371,15 +371,15 @@ nsWindowRoot::GetEnabledDisabledCommands(nsTArray<nsCString>& aEnabledCommands,
   }
 }
 
-already_AddRefed<nsINode>
+nsIDOMNode*
 nsWindowRoot::GetPopupNode()
 {
-  nsCOMPtr<nsINode> popupNode = do_QueryReferent(mPopupNode);
-  return popupNode.forget();
+  nsCOMPtr<nsIDOMNode> popupNode = do_QueryReferent(mPopupNode);
+  return popupNode;
 }
 
 void
-nsWindowRoot::SetPopupNode(nsINode* aNode)
+nsWindowRoot::SetPopupNode(nsIDOMNode* aNode)
 {
   mPopupNode = do_GetWeakReference(aNode);
 }

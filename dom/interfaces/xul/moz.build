@@ -15,6 +15,7 @@ XPIDL_SOURCES += [
     'nsIDOMXULContainerElement.idl',
     'nsIDOMXULControlElement.idl',
     'nsIDOMXULDescriptionElement.idl',
+    'nsIDOMXULDocument.idl',
     'nsIDOMXULElement.idl',
     'nsIDOMXULLabeledControlEl.idl',
     'nsIDOMXULLabelElement.idl',

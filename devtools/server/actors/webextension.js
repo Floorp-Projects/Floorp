@@ -12,7 +12,6 @@ const makeDebugger = require("./utils/make-debugger");
 
 loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/script", true);
-loader.lazyRequireGetter(this, "ChromeUtils");
 
 const FALLBACK_DOC_MESSAGE = "Your addon does not have any document opened yet.";
 
@@ -348,7 +347,7 @@ WebExtensionChildActor.prototype._shouldAddNewGlobalAsDebuggee = function (newGl
     }
 
     // Filter out any global which contains a XUL document.
-    if (ChromeUtils.getClassName(global.document) == "XULDocument") {
+    if (global.document instanceof Ci.nsIDOMXULDocument) {
       return false;
     }
 

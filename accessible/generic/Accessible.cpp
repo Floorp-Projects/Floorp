@@ -28,18 +28,17 @@
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"
 #include "TreeWalker.h"
-#include "XULDocument.h"
 
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMTreeWalker.h"
 #include "nsIDOMXULButtonElement.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULLabelElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
-#include "nsINodeList.h"
 #include "nsPIDOMWindow.h"
 
 #include "nsIDocument.h"
@@ -1752,17 +1751,22 @@ Accessible::RelationByType(RelationType aType)
         }
       } else {
         // In XUL, use first <button default="true" .../> in the document
-        dom::XULDocument* xulDoc = mContent->OwnerDoc()->AsXULDocument();
+        nsCOMPtr<nsIDOMXULDocument> xulDoc =
+          do_QueryInterface(mContent->OwnerDoc());
         nsCOMPtr<nsIDOMXULButtonElement> buttonEl;
         if (xulDoc) {
-          nsCOMPtr<nsINodeList> possibleDefaultButtons =
-            xulDoc->GetElementsByAttribute(NS_LITERAL_STRING("default"),
-                                           NS_LITERAL_STRING("true"));
+          nsCOMPtr<nsIDOMNodeList> possibleDefaultButtons;
+          xulDoc->GetElementsByAttribute(NS_LITERAL_STRING("default"),
+                                         NS_LITERAL_STRING("true"),
+                                         getter_AddRefs(possibleDefaultButtons));
           if (possibleDefaultButtons) {
-            uint32_t length = possibleDefaultButtons->Length();
+            uint32_t length;
+            possibleDefaultButtons->GetLength(&length);
+            nsCOMPtr<nsIDOMNode> possibleButton;
             // Check for button in list of default="true" elements
             for (uint32_t count = 0; count < length && !buttonEl; count ++) {
-              buttonEl = do_QueryInterface(possibleDefaultButtons->Item(count));
+              possibleDefaultButtons->Item(count, getter_AddRefs(possibleButton));
+              buttonEl = do_QueryInterface(possibleButton);
             }
           }
           if (!buttonEl) { // Check for anonymous accept button in <dialog>

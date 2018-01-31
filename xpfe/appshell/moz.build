@@ -39,7 +39,6 @@ UNIFIED_SOURCES += [
 
 LOCAL_INCLUDES += [
     '/dom/base',
-    '/dom/xul',
 ]
 
 FINAL_LIBRARY = 'xul'

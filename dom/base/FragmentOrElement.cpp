@@ -103,6 +103,10 @@
 #include "nsTextNode.h"
 #include "mozilla/dom/NodeListBinding.h"
 
+#ifdef MOZ_XUL
+#include "nsIXULDocument.h"
+#endif /* MOZ_XUL */
+
 #include "nsCCUncollectableMarker.h"
 
 #include "mozAutoDocUpdate.h"
