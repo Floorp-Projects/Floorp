@@ -572,8 +572,9 @@ ClientSource::PostMessage(const ClientPostMessageArgs& aArgs)
   if (reg) {
     RefPtr<ServiceWorkerInfo> serviceWorker = reg->GetByID(source.Id());
     if (serviceWorker) {
-      init.mSource.SetValue().SetAsServiceWorker() =
-        serviceWorker->GetOrCreateInstance(GetInnerWindow());
+      RefPtr<ServiceWorker> instance =
+        globalObject->GetOrCreateServiceWorker(source);
+      init.mSource.SetValue().SetAsServiceWorker() = instance;
     }
   }
 

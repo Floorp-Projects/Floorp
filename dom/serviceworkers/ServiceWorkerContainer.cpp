@@ -251,7 +251,7 @@ ServiceWorkerContainer::GetController()
     // Right now we only know how to create ServiceWorker DOM objects on
     // the main thread with a window.  In the future this should operate
     // on only nsIGlobalObject somehow.
-    mControllerWorker = info->GetOrCreateInstance(inner);
+    mControllerWorker = inner->GetOrCreateServiceWorker(info->Descriptor());
   }
 
   RefPtr<ServiceWorker> ref = mControllerWorker;
