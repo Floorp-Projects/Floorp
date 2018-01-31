@@ -8,8 +8,8 @@
 
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/ClientOpPromise.h"
+#include "mozilla/dom/WorkerHolderToken.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/workers/bindings/WorkerHolderToken.h"
 
 class nsIGlobalObject;
 
@@ -26,7 +26,6 @@ StartClientManagerOp(Func aFunc, const Arg& aArg, nsISerialEventTarget* aTarget,
 {
   using mozilla::dom::workers::Closing;
   using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
-  using mozilla::dom::workers::WorkerHolderToken;
 
   RefPtr<WorkerHolderToken> token;
   if (!NS_IsMainThread()) {

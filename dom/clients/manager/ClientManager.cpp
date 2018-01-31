@@ -11,8 +11,8 @@
 #include "ClientManagerOpChild.h"
 #include "ClientPrefs.h"
 #include "ClientSource.h"
+#include "mozilla/dom/WorkerHolderToken.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/workers/bindings/WorkerHolderToken.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "nsContentUtils.h"
@@ -26,7 +26,6 @@ using mozilla::ipc::PBackgroundChild;
 using mozilla::ipc::PrincipalInfo;
 using mozilla::dom::workers::Closing;
 using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
-using mozilla::dom::workers::WorkerHolderToken;
 using mozilla::dom::workers::WorkerPrivate;
 
 namespace {
