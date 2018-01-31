@@ -23,6 +23,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource;
+import org.mozilla.geckoview.GeckoSession.Response;
 import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
 import org.mozilla.geckoview.GeckoView;
 
@@ -53,6 +54,7 @@ public class GeckoViewActivity extends Activity {
         if (BuildConfig.DEBUG) {
             // In debug builds, we want to load JavaScript resources fresh with each build.
             geckoArgs = "-purgecaches";
+
         }
 
         if (!TextUtils.isEmpty(intentArgs)) {
@@ -87,8 +89,8 @@ public class GeckoViewActivity extends Activity {
         permission.androidPermissionRequestCode = REQUEST_PERMISSIONS;
         mGeckoSession.setPermissionDelegate(permission);
 
-        mGeckoView.getSettings().setBoolean(GeckoSessionSettings.USE_MULTIPROCESS,
-                                            useMultiprocess);
+        mGeckoSession.getSettings().setBoolean(GeckoSessionSettings.USE_MULTIPROCESS,
+                                               useMultiprocess);
 
         mGeckoSession.enableTrackingProtection(
               TrackingProtectionDelegate.CATEGORY_AD |
@@ -346,13 +348,13 @@ public class GeckoViewActivity extends Activity {
         @Override
         public boolean onLoadUri(final GeckoSession session, final String uri,
                                  final TargetWindow where) {
-            Log.d(LOGTAG, "onLoadUri=" + uri +
-                          " where=" + where);
-            if (where != TargetWindow.NEW) {
-                return false;
-            }
-            session.loadUri(uri);
-            return true;
+            Log.d(LOGTAG, "onLoadUri=" + uri + " where=" + where);
+            return false;
+        }
+
+        @Override
+        public void onNewSession(final GeckoSession session, final String uri, Response<GeckoSession> response) {
+            response.respond(null);
         }
     }
 

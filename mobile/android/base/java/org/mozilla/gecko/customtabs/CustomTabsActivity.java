@@ -649,6 +649,13 @@ public class CustomTabsActivity extends AppCompatActivity
         return true;
     }
 
+    @Override
+    public void onNewSession(final GeckoSession session, final String uri,
+                             final GeckoSession.Response<GeckoSession> response) {
+        // We should never get here because we abort loads that need a new session in onLoadUri()
+        throw new IllegalStateException("Unexpected new session");
+    }
+
     /* GeckoSession.ProgressListener */
     @Override
     public void onPageStart(GeckoSession session, String url) {
