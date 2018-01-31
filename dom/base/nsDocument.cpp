@@ -5817,15 +5817,6 @@ nsIDocument::GetDoctype() const
 }
 
 NS_IMETHODIMP
-nsDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
-{
-  MOZ_ASSERT(aDoctype);
-  nsCOMPtr<nsIDOMDocumentType> doctype = nsIDocument::GetDoctype();
-  doctype.forget(aDoctype);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
 {
   ErrorResult rv;
@@ -7856,11 +7847,10 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     if (viewport.IsEmpty()) {
       // If the docType specifies that we are on a site optimized for mobile,
       // then we want to return specially crafted defaults for the viewport info.
-      nsCOMPtr<nsIDOMDocumentType> docType;
-      nsresult rv = GetDoctype(getter_AddRefs(docType));
-      if (NS_SUCCEEDED(rv) && docType) {
+      RefPtr<DocumentType> docType = GetDoctype();
+      if (docType) {
         nsAutoString docId;
-        rv = docType->GetPublicId(docId);
+        nsresult rv = docType->GetPublicId(docId);
         if (NS_SUCCEEDED(rv)) {
           if ((docId.Find("WAP") != -1) ||
               (docId.Find("Mobile") != -1) ||
