@@ -61,14 +61,15 @@ ServiceWorker::Create(nsIGlobalObject* aOwner,
     return ref.forget();
   }
 
-  ref = new ServiceWorker(aOwner, info);
+  ref = new ServiceWorker(aOwner, aDescriptor, info);
   return ref.forget();
 }
 
 ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
                              ServiceWorkerInfo* aInfo)
-  : DOMEventTargetHelper(aGlobal),
-    mInfo(aInfo)
+  : DOMEventTargetHelper(aGlobal)
+  , mDescriptor(aDescriptor)
+  , mInfo(aInfo)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aInfo);
@@ -97,10 +98,28 @@ ServiceWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return ServiceWorkerBinding::Wrap(aCx, this, aGivenProto);
 }
 
+ServiceWorkerState
+ServiceWorker::State() const
+{
+  return mDescriptor.State();
+}
+
+void
+ServiceWorker::SetState(ServiceWorkerState aState)
+{
+  mDescriptor.SetState(aState);
+}
+
 void
 ServiceWorker::GetScriptURL(nsString& aURL) const
 {
-  CopyUTF8toUTF16(mInfo->ScriptSpec(), aURL);
+  CopyUTF8toUTF16(mDescriptor.ScriptURL(), aURL);
+}
+
+void
+ServiceWorker::DispatchStateChange(ServiceWorkerState aState)
+{
+  DOMEventTargetHelper::DispatchTrustedEvent(NS_LITERAL_STRING("statechange"));
 }
 
 void

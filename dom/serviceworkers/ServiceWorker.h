@@ -10,6 +10,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ServiceWorkerBinding.h" // For ServiceWorkerState.
+#include "mozilla/dom/ServiceWorkerDescriptor.h"
 
 class nsIGlobalObject;
 
@@ -38,25 +39,16 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   ServiceWorkerState
-  State() const
-  {
-    return mState;
-  }
+  State() const;
 
   void
-  SetState(ServiceWorkerState aState)
-  {
-    mState = aState;
-  }
+  SetState(ServiceWorkerState aState);
 
   void
   GetScriptURL(nsString& aURL) const;
 
   void
-  DispatchStateChange(ServiceWorkerState aState)
-  {
-    DOMEventTargetHelper::DispatchTrustedEvent(NS_LITERAL_STRING("statechange"));
-  }
+  DispatchStateChange(ServiceWorkerState aState);
 
 #ifdef XP_WIN
 #undef PostMessage
@@ -67,12 +59,14 @@ public:
               const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
 
 private:
-  ServiceWorker(nsIGlobalObject* aWindow, ServiceWorkerInfo* aInfo);
+  ServiceWorker(nsIGlobalObject* aWindow,
+                const ServiceWorkerDescriptor& aDescriptor,
+                ServiceWorkerInfo* aInfo);
 
   // This class is reference-counted and will be destroyed from Release().
   ~ServiceWorker();
 
-  ServiceWorkerState mState;
+  ServiceWorkerDescriptor mDescriptor;
   const RefPtr<ServiceWorkerInfo> mInfo;
 };
 
