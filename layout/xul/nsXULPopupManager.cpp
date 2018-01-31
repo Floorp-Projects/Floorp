@@ -38,6 +38,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/UIEvent.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/LookAndFeel.h"
@@ -599,12 +600,16 @@ nsXULPopupManager::GetTopVisibleMenu()
   return nullptr;
 }
 
-void
-nsXULPopupManager::GetMouseLocation(nsIDOMNode** aNode, int32_t* aOffset)
+nsINode*
+nsXULPopupManager::GetMouseLocationParent()
 {
-  *aNode = mRangeParent;
-  NS_IF_ADDREF(*aNode);
-  *aOffset = mRangeOffset;
+  return mRangeParent;
+}
+
+int32_t
+nsXULPopupManager::MouseLocationOffset()
+{
+  return mRangeOffset;
 }
 
 void
@@ -625,10 +630,11 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
 
   mCachedModifiers = 0;
 
-  nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aEvent);
-  if (uiEvent) {
-    uiEvent->GetRangeParent(getter_AddRefs(mRangeParent));
-    uiEvent->GetRangeOffset(&mRangeOffset);
+  nsCOMPtr<nsIDOMUIEvent> domUiEvent = do_QueryInterface(aEvent);
+  if (domUiEvent) {
+    auto uiEvent = static_cast<UIEvent*>(domUiEvent.get())
+    mRangeParent = uiEvent->GetRangeParent();
+    mRangeOffset = uiEvent->RangeOffset();
 
     // get the event coordinates relative to the root frame of the document
     // containing the popup.
