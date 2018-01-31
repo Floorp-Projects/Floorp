@@ -54,10 +54,6 @@ interface nsIDOMDocument : nsIDOMNode
                                                         [optional] in unsigned long whatToShow,
                                                         [optional] in nsIDOMNodeFilter filter)
                                                           raises(DOMException);
-  [optional_argc] nsIDOMTreeWalker   createTreeWalker(in nsIDOMNode root,
-                                                      [optional] in unsigned long whatToShow,
-                                                      [optional] in nsIDOMNodeFilter filter)
-                                                        raises(DOMException);
 
   nsIDOMEvent               createEvent(in DOMString eventType)
                                                raises(DOMException);
