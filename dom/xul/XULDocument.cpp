@@ -1340,11 +1340,9 @@ GetScopeObjectOfNode(nsINode* node)
 // nsIDOMXULDocument interface
 //
 
-NS_IMETHODIMP
-XULDocument::GetPopupNode(nsIDOMNode** aNode)
+already_AddRefed<nsINode>
+XULDocument::GetPopupNode()
 {
-    *aNode = nullptr;
-
     nsCOMPtr<nsINode> node;
     nsCOMPtr<nsPIWindowRoot> rootWin = GetWindowRoot();
     if (rootWin) {
@@ -1360,46 +1358,19 @@ XULDocument::GetPopupNode(nsIDOMNode** aNode)
 
     if (node && nsContentUtils::CanCallerAccess(node)
         && GetScopeObjectOfNode(node)) {
-        *aNode = node->AsDOMNode();
-        NS_ADDREF(*aNode);
+        return node.forget();
     }
 
-    return NS_OK;
-}
-
-already_AddRefed<nsINode>
-XULDocument::GetPopupNode()
-{
-    nsCOMPtr<nsIDOMNode> node;
-    DebugOnly<nsresult> rv = GetPopupNode(getter_AddRefs(node));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    nsCOMPtr<nsINode> retval(do_QueryInterface(node));
-    return retval.forget();
-}
-
-NS_IMETHODIMP
-XULDocument::SetPopupNode(nsIDOMNode* aNode)
-{
-    nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-    if (aNode) {
-        // only allow real node objects
-        NS_ENSURE_ARG(node);
-    }
-
-    nsCOMPtr<nsPIWindowRoot> rootWin = GetWindowRoot();
-    if (rootWin) {
-        rootWin->SetPopupNode(node);
-    }
-
-    return NS_OK;
+    return nullptr;
 }
 
 void
 XULDocument::SetPopupNode(nsINode* aNode)
 {
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aNode));
-    DebugOnly<nsresult> rv = SetPopupNode(node);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    nsCOMPtr<nsPIWindowRoot> rootWin = GetWindowRoot();
+    if (rootWin) {
+        rootWin->SetPopupNode(aNode);
+    }
 }
 
 // Returns the rangeOffset element from the XUL Popup Manager. This is for
