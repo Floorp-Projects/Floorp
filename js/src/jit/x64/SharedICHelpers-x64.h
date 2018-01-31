@@ -95,27 +95,6 @@ EmitBaselineLeaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false)
     masm.Pop(Operand(BaselineStackReg, 0));
 }
 
-inline void
-EmitStowICValues(MacroAssembler& masm, int values)
-{
-    MOZ_ASSERT(values >= 0 && values <= 2);
-    switch(values) {
-      case 1:
-        // Stow R0
-        masm.pop(ICTailCallReg);
-        masm.Push(R0);
-        masm.push(ICTailCallReg);
-        break;
-      case 2:
-        // Stow R0 and R1
-        masm.pop(ICTailCallReg);
-        masm.Push(R0);
-        masm.Push(R1);
-        masm.push(ICTailCallReg);
-        break;
-    }
-}
-
 template <typename AddrType>
 inline void
 EmitPreBarrier(MacroAssembler& masm, const AddrType& addr, MIRType type)
