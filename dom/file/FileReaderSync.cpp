@@ -443,7 +443,7 @@ FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
     return rv;
   }
 
-  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  WorkerPrivate* workerPrivate = workers::GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
   AutoSyncLoopHolder syncLoop(workerPrivate, Closing);

@@ -606,7 +606,7 @@ public:
   bool ParallelAxisStartsOnSameSide(LogicalAxis aLogicalAxis,
                                     const WritingMode& aOther) const
   {
-    Side myStartSide =
+    mozilla::Side myStartSide =
       this->PhysicalSide(MakeLogicalSide(aLogicalAxis,
                                          eLogicalEdgeStart));
 
@@ -614,7 +614,7 @@ public:
     // aLogicalAxis, and get its physical start side as well.
     LogicalAxis otherWMAxis = aOther.IsOrthogonalTo(*this) ?
       GetOrthogonalAxis(aLogicalAxis) : aLogicalAxis;
-    Side otherWMStartSide =
+    mozilla::Side otherWMStartSide =
       aOther.PhysicalSide(MakeLogicalSide(otherWMAxis,
                                           eLogicalEdgeStart));
 

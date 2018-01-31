@@ -13,7 +13,6 @@
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 
-using mozilla::dom::GetCurrentThreadWorkerPrivate;
 using mozilla::dom::WorkerPrivate;
 using mozilla::dom::WorkerStatus;
 using mozilla::wr::ByteBuffer;
@@ -138,7 +137,7 @@ IPCStreamSource::Initialize()
   // do not need anything special in order to be kept alive.
   WorkerPrivate* workerPrivate = nullptr;
   if (!NS_IsMainThread()) {
-    workerPrivate = GetCurrentThreadWorkerPrivate();
+    workerPrivate = mozilla::dom::workers::GetCurrentThreadWorkerPrivate();
     if (workerPrivate) {
       bool result = HoldWorker(workerPrivate, WorkerStatus::Canceling);
       if (!result) {

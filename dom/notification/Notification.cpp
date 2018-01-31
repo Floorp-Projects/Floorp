@@ -61,7 +61,7 @@
 namespace mozilla {
 namespace dom {
 
-using workers::AssertIsOnMainThread;
+using namespace workers;
 
 struct NotificationStrings
 {

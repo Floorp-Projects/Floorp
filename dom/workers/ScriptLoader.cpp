@@ -73,14 +73,14 @@
 
 #define MAX_CONCURRENT_SCRIPTS 1000
 
-USING_WORKERS_NAMESPACE
-
 using mozilla::dom::cache::Cache;
 using mozilla::dom::cache::CacheStorage;
 using mozilla::ipc::PrincipalInfo;
 
 namespace mozilla {
 namespace dom {
+
+using namespace workers;
 
 namespace {
 

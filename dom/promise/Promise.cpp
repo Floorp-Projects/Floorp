@@ -494,7 +494,7 @@ Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise)
   RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
   bool isMainThread = MOZ_LIKELY(NS_IsMainThread());
   bool isChrome = isMainThread ? nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(aPromise))
-                               : GetCurrentThreadWorkerPrivate()->IsChromeWorker();
+                               : workers::GetCurrentThreadWorkerPrivate()->IsChromeWorker();
   nsGlobalWindowInner* win = isMainThread
     ? xpc::WindowGlobalOrNull(aPromise)
     : nullptr;
@@ -762,7 +762,7 @@ void
 PromiseWorkerProxy::CleanProperties()
 {
 #ifdef DEBUG
-  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(worker);
   worker->AssertIsOnWorkerThread();
 #endif
@@ -815,7 +815,7 @@ Promise*
 PromiseWorkerProxy::WorkerPromise() const
 {
 #ifdef DEBUG
-  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(worker);
   worker->AssertIsOnWorkerThread();
 #endif
