@@ -88,7 +88,7 @@ PerformanceObserver::Constructor(const GlobalObject& aGlobal,
   }
 
   JSContext* cx = aGlobal.Context();
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
+  WorkerPrivate* workerPrivate = workers::GetWorkerPrivateFromContext(cx);
   MOZ_ASSERT(workerPrivate);
 
   RefPtr<PerformanceObserver> observer =

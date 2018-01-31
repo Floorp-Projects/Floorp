@@ -94,23 +94,10 @@ TimeoutsLog()
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::dom::workers;
 using namespace mozilla::ipc;
 
 MOZ_DEFINE_MALLOC_SIZE_OF(JsWorkerMallocSizeOf)
-
-#ifdef DEBUG
-
-BEGIN_WORKERS_NAMESPACE
-
-void
-AssertIsOnMainThread()
-{
-  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-}
-
-END_WORKERS_NAMESPACE
-
-#endif
 
 namespace {
 

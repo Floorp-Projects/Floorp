@@ -28,7 +28,8 @@ StartClientManagerOp(Func aFunc, const Arg& aArg, nsISerialEventTarget* aTarget,
 
   RefPtr<WorkerHolderToken> token;
   if (!NS_IsMainThread()) {
-    token = WorkerHolderToken::Create(GetCurrentThreadWorkerPrivate(), Closing);
+    token = WorkerHolderToken::Create(workers::GetCurrentThreadWorkerPrivate(),
+                                      Closing);
   }
 
   RefPtr<ClientOpPromise> promise = aFunc(aArg, aTarget);

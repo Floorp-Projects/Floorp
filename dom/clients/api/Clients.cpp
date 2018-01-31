@@ -21,6 +21,7 @@
 namespace mozilla {
 namespace dom {
 
+using namespace workers;
 using mozilla::ipc::PrincipalInfo;
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Clients);

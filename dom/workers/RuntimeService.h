@@ -24,10 +24,8 @@ namespace dom {
 class SharedWorker;
 struct WorkerLoadInfo;
 class WorkerThread;
-}
-}
 
-BEGIN_WORKERS_NAMESPACE
+namespace workers {
 
 class RuntimeService final : public nsIObserver
 {
@@ -272,6 +270,8 @@ private:
                                  SharedWorker** aSharedWorker);
 };
 
-END_WORKERS_NAMESPACE
+} // workers namespace
+} // dom namespace
+} // mozilla namespace
 
 #endif /* mozilla_dom_workers_runtimeservice_h__ */

@@ -42,7 +42,7 @@ ClientManager::ClientManager()
 
   RefPtr<WorkerHolderToken> workerHolderToken;
   if (!NS_IsMainThread()) {
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    WorkerPrivate* workerPrivate = workers::GetCurrentThreadWorkerPrivate();
     MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
 
     workerHolderToken =

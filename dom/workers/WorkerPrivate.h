@@ -889,8 +889,8 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   bool mDebuggerRegistered;
   WorkerDebugger* mDebugger;
 
-  workers::Queue<WorkerControlRunnable*, 4> mControlQueue;
-  workers::Queue<WorkerRunnable*, 4> mDebuggerQueue;
+  workersinternals::Queue<WorkerControlRunnable*, 4> mControlQueue;
+  workersinternals::Queue<WorkerRunnable*, 4> mDebuggerQueue;
 
   // Touched on multiple threads, protected with mMutex.
   JSContext* mJSContext;
@@ -1504,21 +1504,6 @@ private:
   ChromeWorkerPrivate(const ChromeWorkerPrivate& aRHS) = delete;
   ChromeWorkerPrivate& operator =(const ChromeWorkerPrivate& aRHS) = delete;
 };
-
-WorkerPrivate*
-GetWorkerPrivateFromContext(JSContext* aCx);
-
-WorkerPrivate*
-GetCurrentThreadWorkerPrivate();
-
-bool
-IsCurrentThreadRunningChromeWorker();
-
-JSContext*
-GetCurrentThreadJSContext();
-
-JSObject*
-GetCurrentThreadWorkerGlobal();
 
 class AutoSyncLoopHolder
 {

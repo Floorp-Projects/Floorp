@@ -12,7 +12,9 @@
 #include "mozilla/Mutex.h"
 #include "nsTArray.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
+namespace workersinternals {
 
 template <typename T, int TCount>
 struct StorageWithTArray
@@ -198,6 +200,8 @@ private:
   Queue & operator=(const Queue&);
 };
 
-END_WORKERS_NAMESPACE
+} // workersinternals namespace
+} // dom namespace
+} // mozilla namespace
 
 #endif /* mozilla_dom_workers_queue_h__ */
