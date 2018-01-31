@@ -308,8 +308,7 @@ OffscreenCanvas::GetGlobalObject()
     return GetParentObject();
   }
 
-  dom::workers::WorkerPrivate* workerPrivate =
-    dom::workers::GetCurrentThreadWorkerPrivate();
+  dom::WorkerPrivate* workerPrivate = dom::GetCurrentThreadWorkerPrivate();
   return workerPrivate->GlobalScope();
 }
 

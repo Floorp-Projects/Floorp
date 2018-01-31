@@ -33,8 +33,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 #define ABORT_STR "abort"
 #define LOAD_STR "load"
 #define LOADSTART_STR "loadstart"

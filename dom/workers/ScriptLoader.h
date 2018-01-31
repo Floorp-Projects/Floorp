@@ -23,11 +23,8 @@ class ErrorResult;
 
 namespace dom {
 
-namespace workers {
-class WorkerPrivate;
-}
-
 struct WorkerLoadInfo;
+class WorkerPrivate;
 
 enum WorkerScriptType {
   WorkerScript,
@@ -49,19 +46,19 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
 
 nsresult
 ChannelFromScriptURLWorkerThread(JSContext* aCx,
-                                 workers::WorkerPrivate* aParent,
+                                 WorkerPrivate* aParent,
                                  const nsAString& aScriptURL,
                                  WorkerLoadInfo& aLoadInfo);
 
 void ReportLoadError(ErrorResult& aRv, nsresult aLoadResult,
                      const nsAString& aScriptURL);
 
-void LoadMainScript(workers::WorkerPrivate* aWorkerPrivate,
+void LoadMainScript(WorkerPrivate* aWorkerPrivate,
                     const nsAString& aScriptURL,
                     WorkerScriptType aWorkerScriptType,
                     ErrorResult& aRv);
 
-void Load(workers::WorkerPrivate* aWorkerPrivate,
+void Load(WorkerPrivate* aWorkerPrivate,
           const nsTArray<nsString>& aScriptURLs,
           WorkerScriptType aWorkerScriptType,
           ErrorResult& aRv);

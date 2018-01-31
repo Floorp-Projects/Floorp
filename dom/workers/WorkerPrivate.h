@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workers_workerprivate_h__
 #define mozilla_dom_workers_workerprivate_h__
 
-#include "WorkerCommon.h"
+#include "mozilla/dom/workers/WorkerCommon.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsDOMNavigationTiming.h"
@@ -16,9 +16,9 @@
 #include "nsThreadUtils.h"
 #include "nsTObserverArray.h"
 
-#include "Queue.h"
-#include "WorkerHolder.h"
-#include "WorkerLoadInfo.h"
+#include "mozilla/dom/WorkerHolder.h"
+#include "mozilla/dom/WorkerLoadInfo.h"
+#include "mozilla/dom/workers/Queue.h"
 
 #ifdef XP_WIN
 #undef PostMessage
@@ -46,11 +46,6 @@ class WorkerGlobalScope;
 struct WorkerOptions;
 class WorkerRunnable;
 class WorkerThread;
-
-} // dom namespace
-} // mozilla namespace
-
-BEGIN_WORKERS_NAMESPACE
 
 // SharedMutex is a small wrapper around an (internal) reference-counted Mutex
 // object. It exists to avoid changing a lot of code to use Mutex* instead of
@@ -149,7 +144,7 @@ private:
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
 
   // Protected by mMutex.
-  JSSettings mJSSettings;
+  workers::JSSettings mJSSettings;
 
   // Only touched on the parent thread (currently this is always the main
   // thread as SharedWorkers are always top-level).
@@ -403,7 +398,7 @@ public:
   nsIScriptContext*
   GetScriptContext() const
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mScriptContext;
   }
 
@@ -452,7 +447,7 @@ public:
   nsIURI*
   GetBaseURI() const
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mBaseURI;
   }
 
@@ -462,7 +457,7 @@ public:
   nsIURI*
   GetResolvedScriptURI() const
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mResolvedScriptURI;
   }
 
@@ -470,7 +465,7 @@ public:
   ServiceWorkerCacheName() const
   {
     MOZ_DIAGNOSTIC_ASSERT(IsServiceWorker());
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mServiceWorkerCacheName;
   }
 
@@ -505,7 +500,7 @@ public:
   void
   SetChannelInfo(const ChannelInfo& aChannelInfo)
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     MOZ_ASSERT(!mLoadInfo.mChannelInfo.IsInitialized());
     MOZ_ASSERT(aChannelInfo.IsInitialized());
     mLoadInfo.mChannelInfo = aChannelInfo;
@@ -566,14 +561,14 @@ public:
   nsIPrincipal*
   GetPrincipal() const
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mPrincipal;
   }
 
   nsIPrincipal*
   GetLoadingPrincipal() const
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mLoadingPrincipal;
   }
 
@@ -585,7 +580,7 @@ public:
   nsILoadGroup*
   GetLoadGroup() const
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mLoadGroup;
   }
 
@@ -627,7 +622,7 @@ public:
   already_AddRefed<nsIChannel>
   ForgetWorkerChannel()
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mChannel.forget();
   }
 
@@ -636,14 +631,14 @@ public:
   nsPIDOMWindowInner*
   GetWindow()
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mWindow;
   }
 
   nsIContentSecurityPolicy*
   GetCSP() const
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mCSP;
   }
 
@@ -712,7 +707,7 @@ public:
   }
 
   void
-  CopyJSSettings(JSSettings& aSettings)
+  CopyJSSettings(workers::JSSettings& aSettings)
   {
     mozilla::MutexAutoLock lock(mMutex);
     aSettings = mJSSettings;
@@ -894,8 +889,8 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   bool mDebuggerRegistered;
   WorkerDebugger* mDebugger;
 
-  Queue<WorkerControlRunnable*, 4> mControlQueue;
-  Queue<WorkerRunnable*, 4> mDebuggerQueue;
+  workers::Queue<WorkerControlRunnable*, 4> mControlQueue;
+  workers::Queue<WorkerRunnable*, 4> mDebuggerQueue;
 
   // Touched on multiple threads, protected with mMutex.
   JSContext* mJSContext;
@@ -1007,7 +1002,7 @@ public:
   bool
   IsDebuggerRegistered()
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
     // No need to lock here since this is only ever modified by the same thread.
     return mDebuggerRegistered;
@@ -1016,7 +1011,7 @@ public:
   void
   SetIsDebuggerRegistered(bool aDebuggerRegistered)
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
     MutexAutoLock lock(mMutex);
 
@@ -1043,7 +1038,7 @@ public:
   WorkerDebugger*
   Debugger() const
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
     MOZ_ASSERT(mDebugger);
     return mDebugger;
@@ -1052,7 +1047,7 @@ public:
   void
   SetDebugger(WorkerDebugger* aDebugger)
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
     MOZ_ASSERT(mDebugger != aDebugger);
     mDebugger = aDebugger;
@@ -1570,6 +1565,7 @@ public:
   }
 };
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
 
 #endif /* mozilla_dom_workers_workerprivate_h__ */

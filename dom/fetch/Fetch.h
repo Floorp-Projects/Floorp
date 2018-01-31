@@ -35,11 +35,9 @@ class InternalRequest;
 class OwningBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString;
 struct  ReadableStream;
 class RequestOrUSVString;
-enum class CallerType : uint32_t;
-
-namespace workers {
 class WorkerPrivate;
-} // namespace workers
+
+enum class CallerType : uint32_t;
 
 already_AddRefed<Promise>
 FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
@@ -253,7 +251,7 @@ protected:
   nsCOMPtr<nsIGlobalObject> mOwner;
 
   // Always set whenever the FetchBody is created on the worker thread.
-  workers::WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
 
   // This is the ReadableStream exposed to content. It's underlying source is a
   // FetchStream object.

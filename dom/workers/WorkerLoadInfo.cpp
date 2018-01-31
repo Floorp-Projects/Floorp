@@ -24,8 +24,6 @@ using namespace ipc;
 
 namespace dom {
 
-using namespace workers;
-
 namespace {
 
 class MainThreadReleaseRunnable final : public Runnable

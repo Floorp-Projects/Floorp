@@ -35,10 +35,7 @@ class ClientSourceExecutionReadyArgs;
 class ClientState;
 class ClientWindowState;
 class PClientManagerChild;
-
-namespace workers {
 class WorkerPrivate;
-} // workers namespace
 
 // ClientSource is an RAII style class that is designed to be held via
 // a UniquePtr<>.  When created ClientSource will register the existence
@@ -58,7 +55,7 @@ class ClientSource final : public ClientThing<ClientSourceChild>
   Variant<Nothing,
           RefPtr<nsPIDOMWindowInner>,
           nsCOMPtr<nsIDocShell>,
-          mozilla::dom::workers::WorkerPrivate*> mOwner;
+          WorkerPrivate*> mOwner;
 
   ClientInfo mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
@@ -75,7 +72,7 @@ class ClientSource final : public ClientThing<ClientSourceChild>
   void
   ExecutionReady(const ClientSourceExecutionReadyArgs& aArgs);
 
-  mozilla::dom::workers::WorkerPrivate*
+  WorkerPrivate*
   GetWorkerPrivate() const;
 
   nsIDocShell*
@@ -102,7 +99,7 @@ public:
   GetInnerWindow() const;
 
   void
-  WorkerExecutionReady(mozilla::dom::workers::WorkerPrivate* aWorkerPrivate);
+  WorkerExecutionReady(WorkerPrivate* aWorkerPrivate);
 
   nsresult
   WindowExecutionReady(nsPIDOMWindowInner* aInnerWindow);
@@ -124,7 +121,7 @@ public:
   // by the WorkerPrivate startup code to deal with a ClientHandle::Control()
   // call racing on the main thread.  Do not call this in other circumstances!
   void
-  WorkerSyncPing(mozilla::dom::workers::WorkerPrivate* aWorkerPrivate);
+  WorkerSyncPing(WorkerPrivate* aWorkerPrivate);
 
   // Synchronously mark the ClientSource as controlled by the given service
   // worker.  This can happen as a result of a remote operation or directly

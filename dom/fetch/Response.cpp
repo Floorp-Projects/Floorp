@@ -119,7 +119,7 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
 
     CopyUTF8toUTF16(spec, parsedURL);
   } else {
-    workers::WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
+    WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);
     worker->AssertIsOnWorkerThread();
 
@@ -204,7 +204,7 @@ Response::Constructor(const GlobalObject& aGlobal,
     }
     internalResponse->InitChannelInfo(info);
   } else {
-    workers::WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
+    WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);
     internalResponse->InitChannelInfo(worker->GetChannelInfo());
   }

@@ -96,8 +96,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
-USING_WORKERS_NAMESPACE
-
 MOZ_DEFINE_MALLOC_SIZE_OF(JsWorkerMallocSizeOf)
 
 #ifdef DEBUG
@@ -256,7 +254,7 @@ private:
       NS_WARNING("Failed to dispatch, going to leak!");
     }
 
-    RuntimeService* runtime = RuntimeService::GetService();
+    workers::RuntimeService* runtime = workers::RuntimeService::GetService();
     NS_ASSERTION(runtime, "This should never be null!");
 
     mFinishedWorker->DisableDebugger();
@@ -288,9 +286,9 @@ private:
   NS_IMETHOD
   Run() override
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
-    RuntimeService* runtime = RuntimeService::GetService();
+    workers::RuntimeService* runtime = workers::RuntimeService::GetService();
     MOZ_ASSERT(runtime);
 
     mFinishedWorker->DisableDebugger();
@@ -570,7 +568,7 @@ public:
     if (aWorkerPrivate) {
       aWorkerPrivate->AssertIsOnWorkerThread();
     } else {
-      AssertIsOnMainThread();
+      workers::AssertIsOnMainThread();
     }
 
     // Now fire a runnable to do the same on the parent's thread if we can.
@@ -1037,12 +1035,12 @@ struct WorkerPrivate::TimeoutInfo
   TimeoutInfo()
   : mId(0), mIsInterval(false), mCanceled(false)
   {
-    MOZ_COUNT_CTOR(mozilla::dom::workers::WorkerPrivate::TimeoutInfo);
+    MOZ_COUNT_CTOR(mozilla::dom::WorkerPrivate::TimeoutInfo);
   }
 
   ~TimeoutInfo()
   {
-    MOZ_COUNT_DTOR(mozilla::dom::workers::WorkerPrivate::TimeoutInfo);
+    MOZ_COUNT_DTOR(mozilla::dom::WorkerPrivate::TimeoutInfo);
   }
 
   bool operator==(const TimeoutInfo& aOther)
@@ -1228,7 +1226,7 @@ private:
     ~FinishCollectRunnable()
     {
       // mHandleReport and mHandlerData are released on the main thread.
-      AssertIsOnMainThread();
+      workers::AssertIsOnMainThread();
     }
 
     FinishCollectRunnable(const FinishCollectRunnable&) = delete;
@@ -1262,7 +1260,7 @@ WorkerPrivate::MemoryReporter::CollectReports(nsIHandleReportCallback* aHandleRe
                                               nsISupports* aData,
                                               bool aAnonymize)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   RefPtr<CollectReportsRunnable> runnable;
 
@@ -1314,7 +1312,7 @@ WorkerPrivate::MemoryReporter::CollectReports(nsIHandleReportCallback* aHandleRe
 void
 WorkerPrivate::MemoryReporter::TryToMapAddon(nsACString &path)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
   mMutex.AssertCurrentThreadOwns();
 
   if (mAlreadyMappedToAddon || !mWorkerPrivate) {
@@ -1390,8 +1388,7 @@ WorkerPrivate::MemoryReporter::FinishCollectRunnable::FinishCollectRunnable(
   nsISupports* aHandlerData,
   bool aAnonymize,
   const nsACString& aPath)
-  : mozilla::Runnable(
-      "dom::workers::WorkerPrivate::MemoryReporter::FinishCollectRunnable")
+  : mozilla::Runnable("dom::WorkerPrivate::MemoryReporter::FinishCollectRunnable")
   , mHandleReport(aHandleReport)
   , mHandlerData(aHandlerData)
   , mPerformanceUserEntries(0)
@@ -1404,7 +1401,7 @@ WorkerPrivate::MemoryReporter::FinishCollectRunnable::FinishCollectRunnable(
 NS_IMETHODIMP
 WorkerPrivate::MemoryReporter::FinishCollectRunnable::Run()
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   nsCOMPtr<nsIMemoryReporterManager> manager =
     do_GetService("@mozilla.org/memory-reporter-manager;1");
@@ -1457,7 +1454,7 @@ template <class Derived>
 nsIDocument*
 WorkerPrivateParent<Derived>::GetDocument() const
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
   if (mLoadInfo.mWindow) {
     return mLoadInfo.mWindow->GetExtantDoc();
   }
@@ -1478,7 +1475,7 @@ template <class Derived>
 void
 WorkerPrivateParent<Derived>::SetCSP(nsIContentSecurityPolicy* aCSP)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
   if (!aCSP) {
     return;
   }
@@ -1492,7 +1489,7 @@ nsresult
 WorkerPrivateParent<Derived>::SetCSPFromHeaderValues(const nsACString& aCSPHeaderValue,
                                                      const nsACString& aCSPReportOnlyHeaderValue)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
   MOZ_DIAGNOSTIC_ASSERT(!mLoadInfo.mCSP);
 
   NS_ConvertASCIItoUTF16 cspHeaderValue(aCSPHeaderValue);
@@ -1592,7 +1589,7 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
 
   if (aLoadInfo.mWindow) {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     BindToOwner(aLoadInfo.mWindow);
   }
 
@@ -1616,9 +1613,9 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
     }
   }
   else {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
-    RuntimeService::GetDefaultJSSettings(mJSSettings);
+    workers::RuntimeService::GetDefaultJSSettings(mJSSettings);
 
     // Our secure context state depends on the kind of worker we have.
     if (UsesSystemPrincipal() || IsServiceWorker()) {
@@ -1882,7 +1879,7 @@ WorkerPrivateParent<Derived>::NotifyPrivate(WorkerStatus aStatus)
   }
 
   if (IsSharedWorker()) {
-    RuntimeService* runtime = RuntimeService::GetService();
+    workers::RuntimeService* runtime = workers::RuntimeService::GetService();
     MOZ_ASSERT(runtime);
 
     runtime->ForgetSharedWorker(ParentAsWorkerPrivate());
@@ -1930,7 +1927,7 @@ WorkerPrivateParent<Derived>::Freeze(nsPIDOMWindowInner* aWindow)
   // frozen. It can happen that mSharedWorkers is empty but this thread has
   // not been unregistered yet.
   if ((IsSharedWorker() || IsServiceWorker()) && !mSharedWorkers.IsEmpty()) {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
     bool allFrozen = true;
 
@@ -1989,7 +1986,7 @@ WorkerPrivateParent<Derived>::Thaw(nsPIDOMWindowInner* aWindow)
   // It can happen that mSharedWorkers is empty but this thread has not been
   // unregistered yet.
   if ((IsSharedWorker() || IsServiceWorker()) && !mSharedWorkers.IsEmpty()) {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
     bool anyRunning = false;
 
@@ -2056,7 +2053,7 @@ template <class Derived>
 void
 WorkerPrivateParent<Derived>::ParentWindowPaused()
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
   MOZ_ASSERT_IF(IsDedicatedWorker(), mParentWindowPausedDepth == 0);
   mParentWindowPausedDepth += 1;
 }
@@ -2065,7 +2062,7 @@ template <class Derived>
 void
 WorkerPrivateParent<Derived>::ParentWindowResumed()
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   MOZ_ASSERT(mParentWindowPausedDepth > 0);
   MOZ_ASSERT_IF(IsDedicatedWorker(), mParentWindowPausedDepth == 1);
@@ -2401,7 +2398,7 @@ bool
 WorkerPrivateParent<Derived>::RegisterSharedWorker(SharedWorker* aSharedWorker,
                                                    MessagePort* aPort)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
   MOZ_ASSERT(aSharedWorker);
   MOZ_ASSERT(IsSharedWorker());
   MOZ_ASSERT(!mSharedWorkers.Contains(aSharedWorker));
@@ -2432,7 +2429,7 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
                                                     const WorkerErrorReport* aReport,
                                                     bool aIsErrorEvent)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   if (aIsErrorEvent && JSREPORT_IS_WARNING(aReport->mFlags)) {
     // Don't fire any events anywhere.  Just log to console.
@@ -2566,7 +2563,7 @@ void
 WorkerPrivateParent<Derived>::GetAllSharedWorkers(
                                nsTArray<RefPtr<SharedWorker>>& aSharedWorkers)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
   MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
 
   if (!aSharedWorkers.IsEmpty()) {
@@ -2583,7 +2580,7 @@ void
 WorkerPrivateParent<Derived>::CloseSharedWorkersForWindow(
                                                     nsPIDOMWindowInner* aWindow)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
   MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
   MOZ_ASSERT(aWindow);
 
@@ -2620,7 +2617,7 @@ template <class Derived>
 void
 WorkerPrivateParent<Derived>::CloseAllSharedWorkers()
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
   MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
 
   for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
@@ -2636,7 +2633,7 @@ template <class Derived>
 void
 WorkerPrivateParent<Derived>::WorkerScriptLoaded()
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   if (IsSharedWorker() || IsServiceWorker()) {
     // No longer need to hold references to the window or document we came from.
@@ -2649,7 +2646,7 @@ template <class Derived>
 void
 WorkerPrivateParent<Derived>::SetBaseURI(nsIURI* aBaseURI)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   if (!mLoadInfo.mBaseURI) {
     NS_ASSERTION(GetParent(), "Shouldn't happen without a parent!");
@@ -2743,7 +2740,7 @@ template <class Derived>
 void
 WorkerPrivateParent<Derived>::UpdateOverridenLoadGroup(nsILoadGroup* aBaseLoadGroup)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   // The load group should have been overriden at init time.
   mLoadInfo.mInterfaceRequestor->MaybeAddTabChild(aBaseLoadGroup);
@@ -2754,7 +2751,7 @@ void
 WorkerPrivateParent<Derived>::FlushReportsToSharedWorkers(
                                            nsIConsoleReportCollector* aReporter)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   AutoTArray<RefPtr<SharedWorker>, 10> sharedWorkers;
   AutoTArray<WindowAction, 10> windowActions;
@@ -2847,7 +2844,7 @@ WorkerPrivateParent<Derived>::AssertIsOnParentThread() const
     GetParent()->AssertIsOnWorkerThread();
   }
   else {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
   }
 }
 
@@ -2862,7 +2859,7 @@ WorkerPrivateParent<Derived>::AssertInnerWindowIsCorrect() const
     return;
   }
 
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   nsPIDOMWindowOuter* outer = mLoadInfo.mWindow->GetOuterWindow();
   NS_ASSERTION(outer && outer->GetCurrentInnerWindow() == mLoadInfo.mWindow,
@@ -2920,7 +2917,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
     mOnLine = aParent->OnLine();
   }
   else {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     mOnLine = !NS_IsOffline();
   }
 
@@ -3064,7 +3061,7 @@ WorkerPrivate::Constructor(JSContext* aCx,
       return nullptr;
     }
   } else {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
   }
 
   Maybe<WorkerLoadInfo> stackLoadInfo;
@@ -3086,17 +3083,17 @@ WorkerPrivate::Constructor(JSContext* aCx,
   // NB: This has to be done before creating the WorkerPrivate, because it will
   // attempt to use static variables that are initialized in the RuntimeService
   // constructor.
-  RuntimeService* runtimeService;
+  workers::RuntimeService* runtimeService;
 
   if (!parent) {
-    runtimeService = RuntimeService::GetOrCreateService();
+    runtimeService = workers::RuntimeService::GetOrCreateService();
     if (!runtimeService) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
   }
   else {
-    runtimeService = RuntimeService::GetService();
+    runtimeService = workers::RuntimeService::GetService();
   }
 
   MOZ_ASSERT(runtimeService);
@@ -3154,7 +3151,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT_IF(NS_IsMainThread(), aCx == nsContentUtils::GetCurrentJSContext());
 
   if (aWindow) {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
   }
 
   WorkerLoadInfo loadInfo;
@@ -3204,7 +3201,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
       aParent->ServiceWorkersTestingInWindow();
     loadInfo.mParentController = aParent->GetController();
   } else {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
     // Make sure that the IndexedDatabaseManager is set up
     Unused << NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate());
@@ -3841,13 +3838,13 @@ WorkerPrivate::SetGCTimerMode(GCTimerMode aMode)
     delay = PERIODIC_GC_TIMER_DELAY_SEC * 1000;
     type = nsITimer::TYPE_REPEATING_SLACK;
     callback = PeriodicGCTimerCallback;
-    name = "dom::workers::PeriodicGCTimerCallback";
+    name = "dom::PeriodicGCTimerCallback";
   }
   else {
     delay = IDLE_GC_TIMER_DELAY_SEC * 1000;
     type = nsITimer::TYPE_ONE_SHOT;
     callback = IdleGCTimerCallback;
-    name = "dom::workers::IdleGCTimerCallback";
+    name = "dom::IdleGCTimerCallback";
   }
 
   MOZ_ALWAYS_SUCCEEDS(mGCTimer->SetTarget(mWorkerControlEventTarget));
@@ -5551,7 +5548,7 @@ WorkerPrivate::DumpCrashInformation(nsACString& aString)
 PerformanceStorage*
 WorkerPrivate::GetPerformanceStorage()
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   if (!mPerformanceStorage) {
     mPerformanceStorage = PerformanceStorageWorker::Create(this);
@@ -5674,9 +5671,5 @@ EventTarget::IsOnCurrentThreadInfallible()
   return mWorkerPrivate->IsOnCurrentThread();
 }
 
-BEGIN_WORKERS_NAMESPACE
-
 // Force instantiation.
 template class WorkerPrivateParent<WorkerPrivate>;
-
-END_WORKERS_NAMESPACE

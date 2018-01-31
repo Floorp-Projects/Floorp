@@ -32,10 +32,7 @@ namespace dom {
 class NotificationRef;
 class WorkerNotificationObserver;
 class Promise;
-
-namespace workers {
-  class WorkerPrivate;
-} // namespace workers
+class WorkerPrivate;
 
 class Notification;
 class NotificationWorkerHolder final : public WorkerHolder
@@ -249,7 +246,7 @@ public:
                                        const GetNotificationOptions& aFilter,
                                        ErrorResult& aRv);
 
-  static already_AddRefed<Promise> WorkerGet(workers::WorkerPrivate* aWorkerPrivate,
+  static already_AddRefed<Promise> WorkerGet(WorkerPrivate* aWorkerPrivate,
                                              const GetNotificationOptions& aFilter,
                                              const nsAString& aScope,
                                              ErrorResult& aRv);
@@ -292,7 +289,7 @@ public:
 
   // Initialized on the worker thread, never unset, and always used in
   // a read-only capacity. Used on any thread.
-  workers::WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
 
   // Main thread only.
   WorkerNotificationObserver* mObserver;

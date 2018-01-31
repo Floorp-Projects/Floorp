@@ -40,12 +40,12 @@ enum WorkerType
   WorkerTypeService
 };
 
+class WorkerPrivate;
+
 } // namespace dom
 } // namespace mozilla
 
 BEGIN_WORKERS_NAMESPACE
-
-class WorkerPrivate;
 
 struct PrivatizableBase
 { };

@@ -12,14 +12,12 @@
 namespace mozilla {
 namespace dom {
 
-namespace workers {
 class WorkerPrivate;
-}
 
 class PerformanceWorker final : public Performance
 {
 public:
-  explicit PerformanceWorker(workers::WorkerPrivate* aWorkerPrivate);
+  explicit PerformanceWorker(WorkerPrivate* aWorkerPrivate);
 
   PerformanceStorage* AsPerformanceStorage() override
   {
@@ -72,7 +70,7 @@ protected:
   }
 
 private:
-  workers::WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
 };
 
 } // namespace dom

@@ -43,14 +43,11 @@ class nsIPrincipal;
 namespace mozilla {
 namespace dom {
 
-namespace workers {
-class WorkerPrivate;
-}
-
 class OwningArrayBufferViewOrArrayBufferOrString;
 class Promise;
 class PushManagerImpl;
 struct PushSubscriptionOptionsInit;
+class WorkerPrivate;
 
 class PushManager final : public nsISupports
                         , public nsWrapperCache

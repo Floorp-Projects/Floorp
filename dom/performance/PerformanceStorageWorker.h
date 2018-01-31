@@ -13,10 +13,7 @@ namespace mozilla {
 namespace dom {
 
 class WorkerHolder;
-
-namespace workers {
 class WorkerPrivate;
-}
 
 class PerformanceProxyData;
 
@@ -26,7 +23,7 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PerformanceStorageWorker, override)
 
   static already_AddRefed<PerformanceStorageWorker>
-  Create(workers::WorkerPrivate* aWorkerPrivate);
+  Create(WorkerPrivate* aWorkerPrivate);
 
   void InitializeOnWorker();
 
@@ -38,7 +35,7 @@ public:
   void AddEntryOnWorker(UniquePtr<PerformanceProxyData>&& aData);
 
 private:
-  explicit PerformanceStorageWorker(workers::WorkerPrivate* aWorkerPrivate);
+  explicit PerformanceStorageWorker(WorkerPrivate* aWorkerPrivate);
   ~PerformanceStorageWorker();
 
   Mutex mMutex;
@@ -46,7 +43,7 @@ private:
   // Protected by mutex.
   // This raw pointer is nullified when the WorkerHolder communicates the
   // shutting down of the worker thread.
-  workers::WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
 
   // Protected by mutex.
   enum {

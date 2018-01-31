@@ -40,10 +40,6 @@ UNIFIED_SOURCES += [
     'PerformanceWorker.cpp',
 ]
 
-LOCAL_INCLUDES += [
-    '/dom/workers',
-]
-
 MOCHITEST_MANIFESTS += [ 'tests/mochitest.ini' ]
 
 FINAL_LIBRARY = 'xul'

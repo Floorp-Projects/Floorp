@@ -1306,6 +1306,11 @@ ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow)
   }
 }
 
+END_WORKERS_NAMESPACE
+
+namespace mozilla {
+namespace dom {
+
 WorkerPrivate*
 GetWorkerPrivateFromContext(JSContext* aCx)
 {
@@ -1371,7 +1376,8 @@ GetCurrentThreadWorkerGlobal()
   return scope->GetGlobalJSObject();
 }
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
 
 struct RuntimeService::IdleThreadInfo
 {

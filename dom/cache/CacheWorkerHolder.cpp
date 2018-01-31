@@ -13,8 +13,6 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-using mozilla::dom::workers::WorkerPrivate;
-
 // static
 already_AddRefed<CacheWorkerHolder>
 CacheWorkerHolder::Create(WorkerPrivate* aWorkerPrivate, Behavior aBehavior)

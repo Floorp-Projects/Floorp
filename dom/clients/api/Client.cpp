@@ -19,8 +19,6 @@
 namespace mozilla {
 namespace dom {
 
-using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
-using mozilla::dom::workers::WorkerPrivate;
 using mozilla::dom::ipc::StructuredCloneData;
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(mozilla::dom::Client);

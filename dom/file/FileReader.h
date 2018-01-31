@@ -28,10 +28,7 @@ namespace dom {
 
 class Blob;
 class DOMException;
-
-namespace workers {
 class WorkerPrivate;
-}
 
 extern const uint64_t kUnknownSize;
 
@@ -49,7 +46,7 @@ class FileReader final : public DOMEventTargetHelper,
 
 public:
   FileReader(nsIGlobalObject* aGlobal,
-             workers::WorkerPrivate* aWorkerPrivate);
+             WorkerPrivate* aWorkerPrivate);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -201,7 +198,7 @@ private:
   uint64_t mBusyCount;
 
   // Kept alive with a WorkerHolder.
-  workers::WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
 };
 
 } // dom namespace

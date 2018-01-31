@@ -14,9 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-namespace workers {
 class WorkerPrivate;
-}
 
 // This is a ref-counted WorkerHolder implementation.  If you wish
 // to be notified of worker shutdown beginning, then you can implement
@@ -40,7 +38,7 @@ public:
   // passed the given shutdown phase or fails for another reason then
   // nullptr is returned.
   static already_AddRefed<WorkerHolderToken>
-  Create(workers::WorkerPrivate* aWorkerPrivate,
+  Create(WorkerPrivate* aWorkerPrivate,
          WorkerStatus aShutdownStatus,
          Behavior aBehavior = PreventIdleShutdownStart);
 
@@ -59,7 +57,7 @@ public:
   bool
   IsShuttingDown() const;
 
-  workers::WorkerPrivate*
+  WorkerPrivate*
   GetWorkerPrivate() const;
 
 private:
