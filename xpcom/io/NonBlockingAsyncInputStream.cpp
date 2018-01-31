@@ -53,14 +53,15 @@ NS_INTERFACE_MAP_BEGIN(NonBlockingAsyncInputStream)
 NS_INTERFACE_MAP_END
 
 /* static */ nsresult
-NonBlockingAsyncInputStream::Create(nsIInputStream* aInputStream,
+NonBlockingAsyncInputStream::Create(already_AddRefed<nsIInputStream> aInputStream,
                                     nsIAsyncInputStream** aResult)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aInputStream);
   MOZ_DIAGNOSTIC_ASSERT(aResult);
 
+  nsCOMPtr<nsIInputStream> inputStream = Move(aInputStream);
+
   bool nonBlocking = false;
-  nsresult rv = aInputStream->IsNonBlocking(&nonBlocking);
+  nsresult rv = inputStream->IsNonBlocking(&nonBlocking);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -68,18 +69,18 @@ NonBlockingAsyncInputStream::Create(nsIInputStream* aInputStream,
   MOZ_DIAGNOSTIC_ASSERT(nonBlocking);
 
   nsCOMPtr<nsIAsyncInputStream> asyncInputStream =
-    do_QueryInterface(aInputStream);
+    do_QueryInterface(inputStream);
   MOZ_DIAGNOSTIC_ASSERT(!asyncInputStream);
 
   RefPtr<NonBlockingAsyncInputStream> stream =
-    new NonBlockingAsyncInputStream(aInputStream);
+    new NonBlockingAsyncInputStream(inputStream.forget());
 
   stream.forget(aResult);
   return NS_OK;
 }
 
-NonBlockingAsyncInputStream::NonBlockingAsyncInputStream(nsIInputStream* aInputStream)
-  : mInputStream(aInputStream)
+NonBlockingAsyncInputStream::NonBlockingAsyncInputStream(already_AddRefed<nsIInputStream> aInputStream)
+  : mInputStream(Move(aInputStream))
   , mWeakCloneableInputStream(nullptr)
   , mWeakIPCSerializableInputStream(nullptr)
   , mWeakSeekableInputStream(nullptr)
@@ -88,21 +89,21 @@ NonBlockingAsyncInputStream::NonBlockingAsyncInputStream(nsIInputStream* aInputS
   MOZ_ASSERT(mInputStream);
 
   nsCOMPtr<nsICloneableInputStream> cloneableStream =
-    do_QueryInterface(aInputStream);
-  if (cloneableStream && SameCOMIdentity(aInputStream, cloneableStream)) {
+    do_QueryInterface(mInputStream);
+  if (cloneableStream && SameCOMIdentity(mInputStream, cloneableStream)) {
     mWeakCloneableInputStream = cloneableStream;
   }
 
   nsCOMPtr<nsIIPCSerializableInputStream> serializableStream =
-    do_QueryInterface(aInputStream);
+    do_QueryInterface(mInputStream);
   if (serializableStream &&
-      SameCOMIdentity(aInputStream, serializableStream)) {
+      SameCOMIdentity(mInputStream, serializableStream)) {
     mWeakIPCSerializableInputStream = serializableStream;
   }
 
   nsCOMPtr<nsISeekableStream> seekableStream =
-    do_QueryInterface(aInputStream);
-  if (seekableStream && SameCOMIdentity(aInputStream, seekableStream)) {
+    do_QueryInterface(mInputStream);
+  if (seekableStream && SameCOMIdentity(mInputStream, seekableStream)) {
     mWeakSeekableInputStream = seekableStream;
   }
 }
@@ -232,7 +233,7 @@ NonBlockingAsyncInputStream::Clone(nsIInputStream** aResult)
   }
 
   nsCOMPtr<nsIAsyncInputStream> asyncStream;
-  rv = Create(clonedStream, getter_AddRefs(asyncStream));
+  rv = Create(clonedStream.forget(), getter_AddRefs(asyncStream));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
