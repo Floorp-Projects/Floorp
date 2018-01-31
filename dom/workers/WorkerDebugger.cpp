@@ -103,8 +103,8 @@ private:
 
     ErrorResult rv;
     JSAutoCompartment ac(aCx, global);
-    scriptloader::LoadMainScript(aWorkerPrivate, mScriptURL,
-                                 DebuggerScript, rv);
+    workerinternals::LoadMainScript(aWorkerPrivate, mScriptURL,
+                                    DebuggerScript, rv);
     rv.WouldReportJSException();
     // Explicitly ignore NS_BINDING_ABORTED on rv.  Or more precisely, still
     // return false and don't SetWorkerScriptExecutedSuccessfully() in that

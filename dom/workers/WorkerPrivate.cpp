@@ -435,7 +435,7 @@ private:
     }
 
     ErrorResult rv;
-    scriptloader::LoadMainScript(aWorkerPrivate, mScriptURL, WorkerScript, rv);
+    workerinternals::LoadMainScript(aWorkerPrivate, mScriptURL, WorkerScript, rv);
     rv.WouldReportJSException();
     // Explicitly ignore NS_BINDING_ABORTED on rv.  Or more precisely, still
     // return false and don't SetWorkerScriptExecutedSuccessfully() in that
@@ -3076,7 +3076,7 @@ WorkerPrivate::Constructor(JSContext* aCx,
                               aWorkerType, stackLoadInfo.ptr());
     aRv.MightThrowJSException();
     if (NS_FAILED(rv)) {
-      scriptloader::ReportLoadError(aRv, rv, aScriptURL);
+      workerinternals::ReportLoadError(aRv, rv, aScriptURL);
       return nullptr;
     }
 
@@ -3148,7 +3148,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
                            WorkerType aWorkerType,
                            WorkerLoadInfo* aLoadInfo)
 {
-  using namespace mozilla::dom::workers::scriptloader;
+  using namespace mozilla::dom::workerinternals;
 
   MOZ_ASSERT(aCx);
   MOZ_ASSERT_IF(NS_IsMainThread(), aCx == nsContentUtils::GetCurrentJSContext());
