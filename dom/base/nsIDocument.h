@@ -564,10 +564,8 @@ public:
 
   /**
    * Get the Content-Type of this document.
-   * (This will always return NS_OK, but has this signature to be compatible
-   *  with nsIDOMDocument::GetContentType())
    */
-  NS_IMETHOD GetContentType(nsAString& aContentType) = 0;
+  void GetContentType(nsAString& aContentType);
 
   /**
    * Set the Content-Type of this document.

@@ -122,12 +122,6 @@ interface nsIDOMDocument : nsIDOMNode
   nsIDOMElement             elementFromPoint(in float x, in float y);
 
 
-  // Mozilla extensions
-  /**
-   * @see <https://developer.mozilla.org/en/DOM/document.contentType>
-   */
-  readonly attribute DOMString      contentType;
-
   /**
    * True if this document is synthetic : stand alone image, video, audio file,
    * etc.
