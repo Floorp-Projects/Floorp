@@ -80,6 +80,30 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
    */
   setStateFromParent(state) {
     this.requestStore.setState(state);
+
+    // Check if any foreign-key constraints were invalidated.
+    let {
+      savedAddresses,
+      savedBasicCards,
+      selectedPaymentCard,
+      selectedShippingAddress,
+    } = this.requestStore.getState();
+
+    // Ensure `selectedShippingAddress` never refers to a deleted address and refers
+    // to an address if one exists.
+    if (!savedAddresses[selectedShippingAddress]) {
+      this.requestStore.setState({
+        selectedShippingAddress: Object.keys(savedAddresses)[0] || null,
+      });
+    }
+
+    // Ensure `selectedPaymentCard` never refers to a deleted payment card and refers
+    // to a payment card if one exists.
+    if (!savedBasicCards[selectedPaymentCard]) {
+      this.requestStore.setState({
+        selectedPaymentCard: Object.keys(savedBasicCards)[0] || null,
+      });
+    }
   }
 
   render(state) {

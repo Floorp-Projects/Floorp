@@ -102,10 +102,12 @@ public:
     class Mutator
         : public nsIURIMutator
         , public BaseURIMutator<nsJARURI>
+        , public nsIURLMutator
     {
         NS_DECL_ISUPPORTS
         NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
         NS_DEFINE_NSIMUTATOR_COMMON
+        NS_DECL_NSIURLMUTATOR
 
         explicit Mutator() { }
     private:

@@ -24,13 +24,21 @@
 /* #undef EVENT__DISABLE_THREAD_SUPPORT */
 
 /* Define to 1 if you have the `accept4' function. */
+#if __ANDROID_API__ >= 21
 #define EVENT__HAVE_ACCEPT4 1
+#else
+/* #undef EVENT__HAVE_ACCEPT4 */
+#endif
 
 /* Define to 1 if you have the `arc4random' function. */
 #define EVENT__HAVE_ARC4RANDOM 1
 
 /* Define to 1 if you have the `arc4random_buf' function. */
+#if __ANDROID_API__ >= 21 || defined(__ANDROID_API_L__)
+#define EVENT__HAVE_ARC4RANDOM_BUF 1
+#else
 /* #undef EVENT__HAVE_ARC4RANDOM_BUF */
+#endif
 
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #define EVENT__HAVE_ARPA_INET_H 1

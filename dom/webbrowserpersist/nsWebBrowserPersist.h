@@ -105,8 +105,9 @@ private:
     nsresult StartUpload(nsIInputStream *aInputStream, nsIURI *aDestinationURI,
         const nsACString &aContentType);
     nsresult CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChannel,
-        nsIURI *aOriginalURIWithExtension);
-    nsresult CalculateUniqueFilename(nsIURI *aURI);
+                                       nsIURI *aOriginalURIWithExtension,
+                                       nsCOMPtr<nsIURI>& aOutURI);
+    nsresult CalculateUniqueFilename(nsIURI *aURI, nsCOMPtr<nsIURI>& aOutURI);
     nsresult MakeFilenameFromURI(
         nsIURI *aURI, nsString &aFilename);
     nsresult StoreURI(

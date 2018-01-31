@@ -31,7 +31,6 @@ Structure:
         vendor: <string>, // e.g. "Mozilla"
         platformVersion: <string>, // e.g. "35.0"
         xpcomAbi: <string>, // e.g. "x86-msvc"
-        hotfixVersion: <string>, // e.g. "20141211.01"
         updaterAvailable: <bool>, // Whether the app was built with app update available (MOZ_UPDATER)
       },
       settings: {

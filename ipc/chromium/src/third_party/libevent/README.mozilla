@@ -34,5 +34,5 @@ ipc/chromium/src/third_party/libevent/patches/:
 - "linux-no-sysctl.patch". Fixes the build on Linux systems without sysctl.h.
   See bug 1263429.
 
-- "android-arc4random-buf.patch". Fixes the build for clang/android builds.
-  See bug 1281596 and bug 1282141.
+- "android-api-level.patch". Fixes the build under clang or NDK r16.
+  See bug 1281596, bug 1282141, and bug 1428182.

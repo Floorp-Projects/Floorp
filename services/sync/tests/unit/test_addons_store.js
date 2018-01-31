@@ -321,44 +321,6 @@ add_test(function test_addon_syncability() {
   run_next_test();
 });
 
-add_test(function test_ignore_hotfixes() {
-  _("Ensure that hotfix extensions are ignored.");
-
-  // A hotfix extension is one that has the id the same as the
-  // extensions.hotfix.id pref.
-  let extensionPrefs = new Preferences("extensions.");
-
-  let addon = installAddon("test_bootstrap1_1");
-  Assert.ok(store.isAddonSyncable(addon));
-
-  let dummy = {};
-  const KEYS = ["id", "syncGUID", "type", "scope", "foreignInstall", "isSyncable"];
-  for (let k of KEYS) {
-    dummy[k] = addon[k];
-  }
-
-  // Basic sanity check.
-  Assert.ok(store.isAddonSyncable(dummy));
-
-  extensionPrefs.set("hotfix.id", dummy.id);
-  Assert.ok(!store.isAddonSyncable(dummy));
-
-  // Verify that int values don't throw off checking.
-  let prefSvc = Services.prefs.getBranch("extensions.");
-  // Need to delete pref before changing type.
-  prefSvc.deleteBranch("hotfix.id");
-  prefSvc.setIntPref("hotfix.id", 0xdeadbeef);
-
-  Assert.ok(store.isAddonSyncable(dummy));
-
-  uninstallAddon(addon);
-
-  extensionPrefs.reset("hotfix.id");
-
-  run_next_test();
-});
-
-
 add_task(async function test_get_all_ids() {
   _("Ensures that getAllIDs() returns an appropriate set.");
 

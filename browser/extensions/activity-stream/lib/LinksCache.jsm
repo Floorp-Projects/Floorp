@@ -104,13 +104,13 @@ this.LinksCache = class LinksCache {
             }
           } else {
             // Share data among link copies and new links from future requests
-            newLink.__sharedCache = {
-              // Provide a helper to update the cached link
-              updateLink(property, value) {
-                newLink[property] = value;
-              }
-            };
+            newLink.__sharedCache = {};
           }
+          // Provide a helper to update the cached link
+          newLink.__sharedCache.updateLink = (property, value) => {
+            newLink[property] = value;
+          };
+
           return newLink;
         }));
       });

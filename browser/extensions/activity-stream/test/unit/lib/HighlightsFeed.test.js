@@ -37,7 +37,8 @@ describe("Highlights Feed", () => {
     };
     fakeScreenshot = {
       getScreenshotForURL: sandbox.spy(() => Promise.resolve(FAKE_IMAGE)),
-      maybeCacheScreenshot: Screenshots.maybeCacheScreenshot
+      maybeCacheScreenshot: Screenshots.maybeCacheScreenshot,
+      _shouldGetScreenshots: sinon.stub().returns(true)
     };
     filterAdultStub = sinon.stub().returns([]);
     shortURLStub = sinon.stub().callsFake(site => site.url.match(/\/([^/]+)/)[1]);
@@ -179,7 +180,7 @@ describe("Highlights Feed", () => {
       await feed.fetchHighlights();
 
       assert.calledOnce(feed.fetchImage);
-      const arg = feed.fetchImage.firstCall.args[0];
+      const [arg] = feed.fetchImage.firstCall.args;
       assert.propertyVal(arg, "url", links[0].url);
       assert.propertyVal(arg, "preview_image_url", links[0].preview_image_url);
     });
