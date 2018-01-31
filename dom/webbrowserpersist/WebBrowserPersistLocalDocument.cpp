@@ -117,11 +117,8 @@ NS_IMETHODIMP
 WebBrowserPersistLocalDocument::GetContentType(nsACString& aContentType)
 {
     nsAutoString utf16Type;
-    nsresult rv;
-
-    rv = mDocument->GetContentType(utf16Type);
-    NS_ENSURE_SUCCESS(rv, rv);
-    aContentType = NS_ConvertUTF16toUTF8(utf16Type);
+    mDocument->GetContentType(utf16Type);
+    CopyUTF16toUTF8(utf16Type, aContentType);
     return NS_OK;
 }
 
