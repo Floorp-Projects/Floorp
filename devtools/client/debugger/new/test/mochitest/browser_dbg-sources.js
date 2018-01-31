@@ -17,7 +17,9 @@ async function assertSourceCount(dbg, count) {
 }
 
 function getLabel(dbg, index) {
-  return findElement(dbg, "sourceNode", index).textContent.trim();
+  return findElement(dbg, "sourceNode", index)
+    .textContent.trim()
+    .replace(/^[\s\u200b]*/g, "");
 }
 
 add_task(async function() {
@@ -62,5 +64,9 @@ add_task(async function() {
   });
 
   await waitForSourceCount(dbg, 9);
-  is(getLabel(dbg, 7), "math.min.js", "The dynamic script exists");
+  is(
+    getLabel(dbg, 7),
+    "math.min.js",
+    "math.min.js - The dynamic script exists"
+  );
 });

@@ -25,7 +25,7 @@ enum class ServiceWorkerState : uint8_t;
 // accurate. Currently the only variable field is the ServiceWorkerState.
 class ServiceWorkerDescriptor final
 {
-  // This class is largely a wrapper wround an IPDL generated struct.  We
+  // This class is largely a wrapper around an IPDL generated struct.  We
   // need the wrapper class since IPDL generated code includes windows.h
   // which is in turn incompatible with bindings code.
   UniquePtr<IPCServiceWorkerDescriptor> mData;
@@ -34,11 +34,13 @@ public:
   ServiceWorkerDescriptor(uint64_t aId,
                           nsIPrincipal* aPrincipal,
                           const nsACString& aScope,
+                          const nsACString& aScriptURL,
                           ServiceWorkerState aState);
 
   ServiceWorkerDescriptor(uint64_t aId,
                           const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                           const nsACString& aScope,
+                          const nsACString& aScriptURL,
                           ServiceWorkerState aState);
 
   explicit ServiceWorkerDescriptor(const IPCServiceWorkerDescriptor& aDescriptor);
@@ -66,6 +68,9 @@ public:
 
   const nsCString&
   Scope() const;
+
+  const nsCString&
+  ScriptURL() const;
 
   ServiceWorkerState
   State() const;

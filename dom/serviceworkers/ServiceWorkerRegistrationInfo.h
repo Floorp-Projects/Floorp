@@ -10,6 +10,7 @@
 #include "mozilla/dom/ServiceWorkerInfo.h"
 #include "mozilla/dom/ServiceWorkerCommon.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
+#include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
 #include "nsProxyRelease.h"
 
 namespace mozilla {
@@ -18,6 +19,10 @@ namespace dom {
 class ServiceWorkerRegistrationInfo final
   : public nsIServiceWorkerRegistrationInfo
 {
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  ServiceWorkerRegistrationDescriptor mDescriptor;
+  nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> mListeners;
+
   uint32_t mControlledClientsCounter;
 
   enum
@@ -33,8 +38,6 @@ class ServiceWorkerRegistrationInfo final
   // The time of update is 0, if SWR've never been updated yet.
   PRTime mLastUpdateTime;
 
-  ServiceWorkerUpdateViaCache mUpdateViaCache;
-
   RefPtr<ServiceWorkerInfo> mEvaluatingWorker;
   RefPtr<ServiceWorkerInfo> mActiveWorker;
   RefPtr<ServiceWorkerInfo> mWaitingWorker;
@@ -42,24 +45,33 @@ class ServiceWorkerRegistrationInfo final
 
   virtual ~ServiceWorkerRegistrationInfo();
 
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISERVICEWORKERREGISTRATIONINFO
-
-  const nsCString mScope;
-
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-
-  nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> mListeners;
-
   // When unregister() is called on a registration, it is not immediately
   // removed since documents may be controlled. It is marked as
   // pendingUninstall and when all controlling documents go away, removed.
   bool mPendingUninstall;
 
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISERVICEWORKERREGISTRATIONINFO
+
   ServiceWorkerRegistrationInfo(const nsACString& aScope,
                                 nsIPrincipal* aPrincipal,
                                 ServiceWorkerUpdateViaCache aUpdateViaCache);
+
+  const nsCString&
+  Scope() const;
+
+  nsIPrincipal*
+  Principal() const;
+
+  bool
+  IsPendingUninstall() const;
+
+  void
+  SetPendingUninstall();
+
+  void
+  ClearPendingUninstall();
 
   already_AddRefed<ServiceWorkerInfo>
   Newest() const
@@ -196,6 +208,9 @@ public:
 
   void
   SetLastUpdateTime(const int64_t aTime);
+
+  const ServiceWorkerRegistrationDescriptor&
+  Descriptor() const;
 
 private:
   enum TransitionType {

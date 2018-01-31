@@ -94,6 +94,7 @@
                                     \
     _(Object)                       \
     _(ObjectCreate)                 \
+    _(ObjectIs)                     \
     _(ObjectToString)               \
                                     \
     _(SimdInt32x4)                  \

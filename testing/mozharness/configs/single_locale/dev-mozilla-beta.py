@@ -8,7 +8,6 @@ config = {
 
     # repositories
     # staging beta dev releases use jamun repo for now
-    "mozilla_dir": "jamun",
     "repos": [{
         "vcs": "hg",
         "repo": "https://hg.mozilla.org/build/tools",

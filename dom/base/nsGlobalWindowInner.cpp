@@ -246,6 +246,7 @@
 #include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
+#include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerRegistration.h"
 #include "mozilla/dom/U2F.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
@@ -2393,6 +2394,12 @@ Maybe<ServiceWorkerDescriptor>
 nsPIDOMWindowInner::GetController() const
 {
   return Move(nsGlobalWindowInner::Cast(this)->GetController());
+}
+
+RefPtr<mozilla::dom::ServiceWorker>
+nsPIDOMWindowInner::GetOrCreateServiceWorker(const mozilla::dom::ServiceWorkerDescriptor& aDescriptor)
+{
+  return Move(nsGlobalWindowInner::Cast(this)->GetOrCreateServiceWorker(aDescriptor));
 }
 
 void
@@ -6369,6 +6376,39 @@ nsGlobalWindowInner::GetController() const
     controller = mClientSource->GetController();
   }
   return Move(controller);
+}
+
+RefPtr<ServiceWorker>
+nsGlobalWindowInner::GetOrCreateServiceWorker(const ServiceWorkerDescriptor& aDescriptor)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  RefPtr<ServiceWorker> ref;
+  for (auto sw : mServiceWorkerList) {
+    if (sw->MatchesDescriptor(aDescriptor)) {
+      ref = sw;
+      return ref.forget();
+    }
+  }
+  ref = ServiceWorker::Create(this, aDescriptor);
+  return ref.forget();
+}
+
+void
+nsGlobalWindowInner::AddServiceWorker(ServiceWorker* aServiceWorker)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(aServiceWorker);
+  MOZ_ASSERT(!mServiceWorkerList.Contains(aServiceWorker));
+  mServiceWorkerList.AppendElement(aServiceWorker);
+}
+
+void
+nsGlobalWindowInner::RemoveServiceWorker(ServiceWorker* aServiceWorker)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(aServiceWorker);
+  MOZ_ASSERT(mServiceWorkerList.Contains(aServiceWorker));
+  mServiceWorkerList.RemoveElement(aServiceWorker);
 }
 
 nsresult

@@ -1988,7 +1988,7 @@ static const JSFunctionSpec object_static_methods[] = {
     JS_FN("keys",                      obj_keys,                    1, 0),
     JS_FN("values",                    obj_values,                  1, 0),
     JS_FN("entries",                   obj_entries,                 1, 0),
-    JS_FN("is",                        obj_is,                      2, 0),
+    JS_INLINABLE_FN("is",              obj_is,                      2, 0, ObjectIs),
     JS_SELF_HOSTED_FN("defineProperty", "ObjectDefineProperty",     3, 0),
     JS_FN("defineProperties",          obj_defineProperties,        2, 0),
     JS_INLINABLE_FN("create",          obj_create,                  2, 0, ObjectCreate),

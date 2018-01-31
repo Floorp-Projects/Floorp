@@ -1496,18 +1496,6 @@ if test -n "$MOZ_DEBUG"; then
 fi
 
 dnl ========================================================
-dnl Enable breakpoint for artificial OOMs
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(oom-breakpoint,
-[  --enable-oom-breakpoint
-                          Enable a breakpoint function for artificial OOMs],
-    JS_OOM_BREAKPOINT=1,
-    JS_OOM_BREAKPOINT= )
-if test -n "$JS_OOM_BREAKPOINT"; then
-    AC_DEFINE(JS_OOM_BREAKPOINT)
-fi
-
-dnl ========================================================
 dnl = Enable using the clang plugin to build
 dnl ========================================================
 

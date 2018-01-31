@@ -53,6 +53,7 @@ class TabGroup;
 class Element;
 class Navigator;
 class Performance;
+class ServiceWorker;
 class ServiceWorkerDescriptor;
 class ServiceWorkerRegistration;
 class Timeout;
@@ -333,6 +334,9 @@ public:
   mozilla::Maybe<mozilla::dom::ClientInfo> GetClientInfo() const;
   mozilla::Maybe<mozilla::dom::ClientState> GetClientState() const;
   mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController() const;
+
+  RefPtr<mozilla::dom::ServiceWorker>
+  GetOrCreateServiceWorker(const mozilla::dom::ServiceWorkerDescriptor& aDescriptor);
 
   void NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
 
