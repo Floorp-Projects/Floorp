@@ -83,14 +83,8 @@ Locale::Locale(const nsACString& aLocale)
   }
 }
 
-bool
-Locale::IsValid()
-{
-  return mIsValid;
-}
-
 const nsCString
-Locale::AsString()
+Locale::AsString() const
 {
   nsCString tag;
 
@@ -145,6 +139,10 @@ Locale::GetVariants() const
 bool
 Locale::Matches(const Locale& aOther, bool aThisRange, bool aOtherRange) const
 {
+  if (!IsValid() || !aOther.IsValid()) {
+    return false;
+  }
+
   if ((!aThisRange || !mLanguage.IsEmpty()) &&
       (!aOtherRange || !aOther.mLanguage.IsEmpty()) &&
       !mLanguage.Equals(aOther.mLanguage)) {
