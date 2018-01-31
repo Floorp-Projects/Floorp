@@ -14,6 +14,9 @@
 #include "mozilla/dom/PushSubscription.h"
 #include "mozilla/dom/PushSubscriptionOptionsBinding.h"
 #include "mozilla/dom/PushUtil.h"
+#include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerScope.h"
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
@@ -25,10 +28,6 @@
 
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
-
-#include "WorkerRunnable.h"
-#include "WorkerPrivate.h"
-#include "WorkerScope.h"
 
 namespace mozilla {
 namespace dom {

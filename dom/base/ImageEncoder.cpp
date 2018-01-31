@@ -6,6 +6,7 @@
 
 #include "ImageEncoder.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/layers/AsyncCanvasRenderer.h"
@@ -16,7 +17,6 @@
 #include "nsIThreadPool.h"
 #include "nsNetUtil.h"
 #include "nsXPCOMCIDInternal.h"
-#include "WorkerPrivate.h"
 #include "YCbCrUtils.h"
 
 using namespace mozilla::gfx;

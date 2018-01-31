@@ -7,7 +7,7 @@
 #include "mozilla/dom/cache/CacheWorkerHolder.h"
 
 #include "mozilla/dom/cache/ActorChild.h"
-#include "WorkerPrivate.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {

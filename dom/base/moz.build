@@ -436,7 +436,6 @@ LOCAL_INCLUDES += [
     '/dom/storage',
     '/dom/svg',
     '/dom/u2f',
-    '/dom/workers',
     '/dom/xbl',
     '/dom/xml',
     '/dom/xslt/xpath',

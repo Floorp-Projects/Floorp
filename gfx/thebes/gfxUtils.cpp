@@ -1458,7 +1458,8 @@ gfxUtils::ThreadSafeGetFeatureStatus(const nsCOMPtr<nsIGfxInfo>& gfxInfo,
                                      int32_t* status)
 {
   if (!NS_IsMainThread()) {
-    dom::WorkerPrivate* workerPrivate = dom::GetCurrentThreadWorkerPrivate();
+    dom::WorkerPrivate* workerPrivate =
+      dom::workers::GetCurrentThreadWorkerPrivate();
 
     RefPtr<GetFeatureStatusRunnable> runnable =
       new GetFeatureStatusRunnable(workerPrivate, gfxInfo, feature, failureId,

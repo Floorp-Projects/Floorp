@@ -92,11 +92,14 @@ TimeoutsLog()
 
 #define LOG(log, _args) MOZ_LOG(log, LogLevel::Debug, _args);
 
-using namespace mozilla;
-using namespace mozilla::dom;
-using namespace mozilla::dom::workers;
-using namespace mozilla::dom::workerinternals;
-using namespace mozilla::ipc;
+namespace mozilla {
+
+using namespace ipc;
+
+namespace dom {
+
+using namespace workers;
+using namespace workerinternals;
 
 MOZ_DEFINE_MALLOC_SIZE_OF(JsWorkerMallocSizeOf)
 
@@ -5661,3 +5664,6 @@ EventTarget::IsOnCurrentThreadInfallible()
 
 // Force instantiation.
 template class WorkerPrivateParent<WorkerPrivate>;
+
+} // dom namespace
+} // mozilla namespace

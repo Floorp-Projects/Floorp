@@ -19,8 +19,4 @@ UNIFIED_SOURCES += [
     'AbortSignal.cpp',
 ]
 
-LOCAL_INCLUDES += [
-    '../workers',
-]
-
 FINAL_LIBRARY = 'xul'

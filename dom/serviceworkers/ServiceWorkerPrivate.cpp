@@ -22,9 +22,6 @@
 #include "nsQueryObject.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
-#include "WorkerDebugger.h"
-#include "WorkerRunnable.h"
-#include "WorkerScope.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/Client.h"
 #include "mozilla/dom/ClientIPCTypes.h"
@@ -36,6 +33,9 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/PushEventBinding.h"
 #include "mozilla/dom/RequestBinding.h"
+#include "mozilla/dom/WorkerDebugger.h"
+#include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/Unused.h"
 
 using namespace mozilla;

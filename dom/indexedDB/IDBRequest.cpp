@@ -23,6 +23,8 @@
 #include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/IDBOpenDBRequestBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/WorkerHolder.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsIScriptContext.h"
@@ -30,8 +32,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsString.h"
 #include "ReportInternalError.h"
-#include "WorkerHolder.h"
-#include "WorkerPrivate.h"
 
 // Include this last to avoid path problems on Windows.
 #include "ActorsChild.h"

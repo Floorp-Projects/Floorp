@@ -9,7 +9,7 @@
 
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
-#include "WorkerHolder.h"
+#include "mozilla/dom/WorkerHolder.h"
 
 namespace mozilla {
 
