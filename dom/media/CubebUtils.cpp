@@ -204,11 +204,6 @@ const layoutInfo kLayoutInfos[CUBEB_LAYOUT_MAX] = {
 // visible on the querying thread/CPU.
 uint32_t sPreferredSampleRate;
 
-// We only support SMPTE layout in cubeb for now. If the value is
-// CUBEB_LAYOUT_UNDEFINED, then it implies that the preferred layout is
-// non-SMPTE format.
-cubeb_channel_layout sPreferredChannelLayout;
-
 } // namespace
 
 static const uint32_t CUBEB_NORMAL_LATENCY_MS = 100;
@@ -343,59 +338,6 @@ uint32_t PreferredSampleRate()
   }
   MOZ_ASSERT(sPreferredSampleRate);
   return sPreferredSampleRate;
-}
-
-bool InitPreferredChannelLayout()
-{
-  {
-    StaticMutexAutoLock lock(sMutex);
-    if (sPreferredChannelLayout != 0) {
-      return true;
-    }
-  }
-
-  cubeb* context = GetCubebContext();
-  if (!context) {
-    return false;
-  }
-
-  // Favor calling cubeb api with the mutex unlock, potential deadlock.
-  cubeb_channel_layout layout;
-  if (cubeb_get_preferred_channel_layout(context, &layout) != CUBEB_OK) {
-    return false;
-  }
-
-  StaticMutexAutoLock lock(sMutex);
-  sPreferredChannelLayout = layout;
-  return true;
-}
-
-uint32_t PreferredChannelMap(uint32_t aChannels)
-{
-  // Use SMPTE default channel map if we can't get preferred layout
-  // or the channel counts of preferred layout is different from input's one
-  if (!InitPreferredChannelLayout() ||
-      kLayoutInfos[sPreferredChannelLayout].channels != aChannels) {
-    AudioConfig::ChannelLayout smpteLayout(aChannels);
-    return smpteLayout.Map();
-  }
-
-  return kLayoutInfos[sPreferredChannelLayout].mask;
-}
-
-cubeb_channel_layout GetPreferredChannelLayoutOrSMPTE(cubeb* context, uint32_t aChannels)
-{
-  cubeb_channel_layout layout = CUBEB_LAYOUT_UNDEFINED;
-  if (cubeb_get_preferred_channel_layout(context, &layout) != CUBEB_OK) {
-    return layout; //undefined
-  }
-
-  if (kLayoutInfos[layout].channels != aChannels) {
-    AudioConfig::ChannelLayout smpteLayout(aChannels);
-    return ConvertChannelMapToCubebLayout(smpteLayout.Map());
-  }
-
-  return layout;
 }
 
 void InitBrandName()
@@ -641,33 +583,6 @@ uint32_t MaxNumberOfChannels()
   return 0;
 }
 
-cubeb_channel_layout ConvertChannelMapToCubebLayout(uint32_t aChannelMap)
-{
-  switch(aChannelMap) {
-    case MASK_MONO: return CUBEB_LAYOUT_MONO;
-    case MASK_MONO_LFE: return CUBEB_LAYOUT_MONO_LFE;
-    case MASK_STEREO: return CUBEB_LAYOUT_STEREO;
-    case MASK_STEREO_LFE: return CUBEB_LAYOUT_STEREO_LFE;
-    case MASK_3F: return CUBEB_LAYOUT_3F;
-    case MASK_3F_LFE: return CUBEB_LAYOUT_3F_LFE;
-    case MASK_2F1: return CUBEB_LAYOUT_2F1;
-    case MASK_2F1_LFE: return CUBEB_LAYOUT_2F1_LFE;
-    case MASK_3F1: return CUBEB_LAYOUT_3F1;
-    case MASK_3F1_LFE: return CUBEB_LAYOUT_3F1_LFE;
-    case MASK_2F2: return CUBEB_LAYOUT_2F2;
-    case MASK_2F2_LFE: return CUBEB_LAYOUT_2F2_LFE;
-    case MASK_QUAD: return CUBEB_LAYOUT_QUAD;
-    case MASK_QUAD_LFE: return CUBEB_LAYOUT_QUAD_LFE;
-    case MASK_3F2: return CUBEB_LAYOUT_3F2;
-    case MASK_3F2_LFE: return CUBEB_LAYOUT_3F2_LFE;
-    case MASK_3F3R_LFE: return CUBEB_LAYOUT_3F3R_LFE;
-    case MASK_3F4_LFE: return CUBEB_LAYOUT_3F4_LFE;
-    default:
-      NS_ERROR("The channel map is unsupported");
-      return CUBEB_LAYOUT_UNDEFINED;
-  }
-}
-
 void GetCurrentBackend(nsAString& aBackend)
 {
   cubeb* cubebContext = GetCubebContext();
@@ -679,13 +594,6 @@ void GetCurrentBackend(nsAString& aBackend)
     }
   }
   aBackend.AssignLiteral("unknown");
-}
-
-void GetPreferredChannelLayout(nsAString& aLayout)
-{
-  const char* layout = InitPreferredChannelLayout() ?
-    kLayoutInfos[sPreferredChannelLayout].name : "unknown";
-  aLayout.AssignASCII(layout);
 }
 
 uint16_t ConvertCubebType(cubeb_device_type aType)
