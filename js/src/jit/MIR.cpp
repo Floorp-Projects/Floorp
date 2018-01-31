@@ -4321,11 +4321,11 @@ MToNumberInt32::foldsTo(TempAllocator& alloc)
         DebugOnly<IntConversionInputKind> convert = conversion();
         switch (input->type()) {
           case MIRType::Null:
-            MOZ_ASSERT(convert == IntConversion_Any);
+            MOZ_ASSERT(convert.value == IntConversionInputKind::Any);
             return MConstant::New(alloc, Int32Value(0));
           case MIRType::Boolean:
-            MOZ_ASSERT(convert == IntConversion_Any ||
-                       convert == IntConversion_NumbersOrBoolsOnly);
+            MOZ_ASSERT(convert.value == IntConversionInputKind::Any ||
+                       convert.value == IntConversionInputKind::NumbersOrBoolsOnly);
             return MConstant::New(alloc, Int32Value(input->toConstant()->toBoolean()));
           case MIRType::Int32:
             return MConstant::New(alloc, Int32Value(input->toConstant()->toInt32()));

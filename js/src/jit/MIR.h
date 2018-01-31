@@ -5685,7 +5685,7 @@ class MToNumberInt32
     IntConversionInputKind conversion_;
 
     explicit MToNumberInt32(MDefinition* def, IntConversionInputKind conversion
-                                              = IntConversion_Any)
+                                              = IntConversionInputKind::Any)
       : MUnaryInstruction(classOpcode, def),
         canBeNegativeZero_(true),
         conversion_(conversion)

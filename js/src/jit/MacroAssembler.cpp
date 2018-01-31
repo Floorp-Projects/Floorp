@@ -2151,14 +2151,14 @@ MacroAssembler::convertDoubleToInt(FloatRegister src, Register output, FloatRegi
                                    IntConversionBehavior behavior)
 {
     switch (behavior) {
-      case IntConversion_Normal:
-      case IntConversion_NegativeZeroCheck:
-        convertDoubleToInt32(src, output, fail, behavior == IntConversion_NegativeZeroCheck);
+      case IntConversionBehavior::Normal:
+      case IntConversionBehavior::NegativeZeroCheck:
+        convertDoubleToInt32(src, output, fail, behavior == IntConversionBehavior::NegativeZeroCheck);
         break;
-      case IntConversion_Truncate:
+      case IntConversionBehavior::Truncate:
         branchTruncateDoubleMaybeModUint32(src, output, truncateFail ? truncateFail : fail);
         break;
-      case IntConversion_ClampToUint8:
+      case IntConversionBehavior::ClampToUint8:
         // Clamping clobbers the input register, so use a temp.
         moveDouble(src, temp);
         clampDoubleToUint8(temp, output);
@@ -2175,31 +2175,31 @@ MacroAssembler::convertValueToInt(ValueOperand value, MDefinition* maybeInput,
                                   IntConversionInputKind conversion)
 {
     Register tag = splitTagForTest(value);
-    bool handleStrings = (behavior == IntConversion_Truncate ||
-                          behavior == IntConversion_ClampToUint8) &&
+    bool handleStrings = (behavior == IntConversionBehavior::Truncate ||
+                          behavior == IntConversionBehavior::ClampToUint8) &&
                          handleStringEntry &&
                          handleStringRejoin;
 
-    MOZ_ASSERT_IF(handleStrings, conversion == IntConversion_Any);
+    MOZ_ASSERT_IF(handleStrings, conversion == IntConversionInputKind::Any);
 
     Label done, isInt32, isBool, isDouble, isNull, isString;
 
     maybeBranchTestType(MIRType::Int32, maybeInput, tag, &isInt32);
-    if (conversion == IntConversion_Any || conversion == IntConversion_NumbersOrBoolsOnly)
+    if (conversion == IntConversionInputKind::Any || conversion == IntConversionInputKind::NumbersOrBoolsOnly)
         maybeBranchTestType(MIRType::Boolean, maybeInput, tag, &isBool);
     maybeBranchTestType(MIRType::Double, maybeInput, tag, &isDouble);
 
-    if (conversion == IntConversion_Any) {
+    if (conversion == IntConversionInputKind::Any) {
         // If we are not truncating, we fail for anything that's not
         // null. Otherwise we might be able to handle strings and objects.
         switch (behavior) {
-          case IntConversion_Normal:
-          case IntConversion_NegativeZeroCheck:
+          case IntConversionBehavior::Normal:
+          case IntConversionBehavior::NegativeZeroCheck:
             branchTestNull(Assembler::NotEqual, tag, fail);
             break;
 
-          case IntConversion_Truncate:
-          case IntConversion_ClampToUint8:
+          case IntConversionBehavior::Truncate:
+          case IntConversionBehavior::ClampToUint8:
             maybeBranchTestType(MIRType::Null, maybeInput, tag, &isNull);
             if (handleStrings)
                 maybeBranchTestType(MIRType::String, maybeInput, tag, &isString);
@@ -2249,7 +2249,7 @@ MacroAssembler::convertValueToInt(ValueOperand value, MDefinition* maybeInput,
     if (isInt32.used()) {
         bind(&isInt32);
         unboxInt32(value, output);
-        if (behavior == IntConversion_ClampToUint8)
+        if (behavior == IntConversionBehavior::ClampToUint8)
             clampIntToUint8(output);
     }
 
@@ -2260,8 +2260,8 @@ bool
 MacroAssembler::convertValueToInt(JSContext* cx, const Value& v, Register output, Label* fail,
                                   IntConversionBehavior behavior)
 {
-    bool handleStrings = (behavior == IntConversion_Truncate ||
-                          behavior == IntConversion_ClampToUint8);
+    bool handleStrings = (behavior == IntConversionBehavior::Truncate ||
+                          behavior == IntConversionBehavior::ClampToUint8);
 
     if (v.isNumber() || (handleStrings && v.isString())) {
         double d;
@@ -2271,8 +2271,8 @@ MacroAssembler::convertValueToInt(JSContext* cx, const Value& v, Register output
             return false;
 
         switch (behavior) {
-          case IntConversion_Normal:
-          case IntConversion_NegativeZeroCheck: {
+          case IntConversionBehavior::Normal:
+          case IntConversionBehavior::NegativeZeroCheck: {
             // -0 is checked anyways if we have a constant value.
             int i;
             if (mozilla::NumberIsInt32(d, &i))
@@ -2281,10 +2281,10 @@ MacroAssembler::convertValueToInt(JSContext* cx, const Value& v, Register output
                 jump(fail);
             break;
           }
-          case IntConversion_Truncate:
+          case IntConversionBehavior::Truncate:
             move32(Imm32(ToInt32(d)), output);
             break;
-          case IntConversion_ClampToUint8:
+          case IntConversionBehavior::ClampToUint8:
             move32(Imm32(ClampDoubleToUint8(d)), output);
             break;
         }
@@ -2340,7 +2340,7 @@ MacroAssembler::convertTypedOrValueToInt(TypedOrValueRegister src, FloatRegister
       case MIRType::Int32:
         if (src.typedReg().gpr() != output)
             move32(src.typedReg().gpr(), output);
-        if (src.type() == MIRType::Int32 && behavior == IntConversion_ClampToUint8)
+        if (src.type() == MIRType::Int32 && behavior == IntConversionBehavior::ClampToUint8)
             clampIntToUint8(output);
         break;
       case MIRType::Double:
