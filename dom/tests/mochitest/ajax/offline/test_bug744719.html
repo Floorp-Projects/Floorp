@@ -1,4 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml" manifest="https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/744719.cacheManifest">
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/744719.cacheManifest">
 <head>
 <title>parallel load</title>
 
@@ -20,11 +20,11 @@ if (SpecialPowers.isMainProcess()) {
 
 function manifestUpdated()
 {
-  OfflineTest.checkCache("https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/744719.cacheManifest", true);
-  OfflineTest.checkCache("https://mochi.test:8888/tests/SimpleTest/SimpleTest.js", true);
-  OfflineTest.checkCache("https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
+  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/744719.cacheManifest", true);
+  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", true);
+  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
 
-  var URL = "https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/subresource744719.html?";
+  var URL = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/subresource744719.html?";
   OfflineTest.checkCache(URL + "001", true);
   OfflineTest.checkCache(URL + "002", true);
   OfflineTest.checkCache(URL + "003", true);

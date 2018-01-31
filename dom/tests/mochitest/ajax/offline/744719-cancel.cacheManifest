@@ -1,7 +1,7 @@
 CACHE MANIFEST
 
-https://mochi.test:8888/tests/SimpleTest/SimpleTest.js
-https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js
+http://mochi.test:8888/tests/SimpleTest/SimpleTest.js
+http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js
 
 # more than 15 what is a number of parallel loads
 subresource744719.html?001
