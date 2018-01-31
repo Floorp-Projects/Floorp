@@ -41,6 +41,26 @@ var paymentDialogWrapper = {
     Ci.nsISupportsWeakReference,
   ]),
 
+  _convertProfileAddressToPaymentAddress(guid) {
+    let addressData = profileStorage.addresses.get(guid);
+    if (!addressData) {
+      throw new Error(`Shipping address not found: ${guid}`);
+    }
+
+    let address = this.createPaymentAddress({
+      country: addressData.country,
+      addressLines: addressData["street-address"].split("\n"),
+      region: addressData["address-level1"],
+      city: addressData["address-level2"],
+      postalCode: addressData["postal-code"],
+      organization: addressData.organization,
+      recipient: addressData.name,
+      phone: addressData.tel,
+    });
+
+    return address;
+  },
+
   init(requestId, frame) {
     if (!requestId || typeof(requestId) != "string") {
       throw new Error("Invalid PaymentRequest ID");
@@ -110,7 +130,7 @@ var paymentDialogWrapper = {
     recipient = "",
     phone = "",
   }) {
-    const billingAddress = Cc["@mozilla.org/dom/payments/payment-address;1"]
+    const paymentAddress = Cc["@mozilla.org/dom/payments/payment-address;1"]
                            .createInstance(Ci.nsIPaymentAddress);
     const addressLine = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
     for (let line of addressLines) {
@@ -118,7 +138,7 @@ var paymentDialogWrapper = {
       address.data = line;
       addressLine.appendElement(address);
     }
-    billingAddress.init(country,
+    paymentAddress.init(country,
                         addressLine,
                         region,
                         city,
@@ -129,7 +149,7 @@ var paymentDialogWrapper = {
                         organization,
                         recipient,
                         phone);
-    return billingAddress;
+    return paymentAddress;
   },
 
   createComponentInstance(componentInterface) {
@@ -248,6 +268,11 @@ var paymentDialogWrapper = {
     paymentSrv.respondPayment(showResponse);
   },
 
+  onChangeShippingAddress({shippingAddressGUID}) {
+    let address = this._convertProfileAddressToPaymentAddress(shippingAddressGUID);
+    paymentSrv.changeShippingAddress(this.request.requestId, address);
+  },
+
   /**
    * @implements {nsIObserver}
    * @param {nsISupports} subject
@@ -276,6 +301,10 @@ var paymentDialogWrapper = {
       }
       case "initializeRequest": {
         this.initializeFrame();
+        break;
+      }
+      case "changeShippingAddress": {
+        this.onChangeShippingAddress(data);
         break;
       }
       case "paymentCancel": {
