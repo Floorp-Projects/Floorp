@@ -12,7 +12,11 @@ add_task(async function test_default_browser_check() {
   ShellService.shouldCheckDefaultBrowser = true;
   is(ShellService.shouldCheckDefaultBrowser, true, "Sanity check");
 
-  await setupPolicyEngineWithJson("config_dont_check_default_browser.json");
+  await setupPolicyEngineWithJson({
+    "policies": {
+      "dont_check_default_browser": true
+    }
+  });
 
   is(ShellService.shouldCheckDefaultBrowser, false, "Policy changed it to not check");
 
