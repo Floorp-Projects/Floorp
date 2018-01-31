@@ -5318,19 +5318,6 @@ nsDocument::ReportEmptyGetElementByIdArg()
   nsContentUtils::ReportEmptyGetElementByIdArg(this);
 }
 
-NS_IMETHODIMP
-nsDocument::GetElementById(const nsAString& aId, nsIDOMElement** aReturn)
-{
-  Element *content = GetElementById(aId);
-  if (content) {
-    return CallQueryInterface(content, aReturn);
-  }
-
-  *aReturn = nullptr;
-
-  return NS_OK;
-}
-
 Element*
 nsDocument::AddIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
                                 void* aData, bool aForImage)
