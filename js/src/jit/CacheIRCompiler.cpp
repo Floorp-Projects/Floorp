@@ -1818,6 +1818,34 @@ CacheIRCompiler::emitLoadInt32ArrayLengthResult()
 }
 
 bool
+CacheIRCompiler::emitInt32NegationResult()
+{
+    AutoOutputRegister output(*this);
+    Register val = allocator.useRegister(masm, reader.int32OperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Guard against 0 and MIN_INT by checking if low 31-bits are all zero.
+    // Both of these result in a double.
+    masm.branchTest32(Assembler::Zero, val, Imm32(0x7fffffff), failure->label());
+    masm.neg32(val);
+    masm.tagValue(JSVAL_TYPE_INT32, val, output.valueReg());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitInt32NotResult()
+{
+    AutoOutputRegister output(*this);
+    Register val = allocator.useRegister(masm, reader.int32OperandId());
+    masm.not32(val);
+    masm.tagValue(JSVAL_TYPE_INT32, val, output.valueReg());
+    return true;
+}
+
+bool
 CacheIRCompiler::emitLoadArgumentsObjectLengthResult()
 {
     AutoOutputRegister output(*this);

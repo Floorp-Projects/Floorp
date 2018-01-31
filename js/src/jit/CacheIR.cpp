@@ -4839,3 +4839,56 @@ GetIntrinsicIRGenerator::tryAttachStub()
     trackAttached("GetIntrinsic");
     return true;
 }
+UnaryArithIRGenerator::UnaryArithIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
+                                             JSOp op, HandleValue val, HandleValue res)
+  : IRGenerator(cx, script, pc, CacheKind::UnaryArith, mode),
+    op_(op),
+    val_(val),
+    res_(res)
+{ }
+
+void
+UnaryArithIRGenerator::trackAttached(const char* name)
+{
+#ifdef JS_CACHEIR_SPEW
+    if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
+        sp.valueProperty("val", val_);
+    }
+#endif
+}
+
+bool
+UnaryArithIRGenerator::tryAttachStub()
+{
+    if (tryAttachInt32())
+        return true;
+
+    trackAttached(IRGenerator::NotAttached);
+    return false;
+}
+
+bool
+UnaryArithIRGenerator::tryAttachInt32()
+{
+    if (!val_.isInt32() || !res_.isInt32())
+        return false;
+
+    ValOperandId valId(writer.setInputOperandId(0));
+
+    Int32OperandId intId = writer.guardIsInt32(valId);
+    switch (op_) {
+      case JSOP_BITNOT:
+        writer.int32NotResult(intId);
+        trackAttached("UnaryArith.Int32Not");
+        break;
+      case JSOP_NEG:
+        writer.int32NegationResult(intId);
+        trackAttached("UnaryArith.Int32Neg");
+        break;
+      default:
+        MOZ_CRASH("Unexected OP");
+    }
+
+    writer.returnFromIC();
+    return true;
+}
