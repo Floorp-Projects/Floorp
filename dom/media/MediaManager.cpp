@@ -3143,6 +3143,11 @@ MediaManager::OnNavigation(uint64_t aWindowID)
   MOZ_ASSERT(!GetWindowListener(aWindowID));
 
   RemoveMediaDevicesCallback(aWindowID);
+
+  RefPtr<MediaManager> self = this;
+  MediaManager::PostTask(NewTaskFrom([self, aWindowID]() {
+    self->GetBackend()->ReleaseResourcesForWindow(aWindowID);
+  }));
 }
 
 void
