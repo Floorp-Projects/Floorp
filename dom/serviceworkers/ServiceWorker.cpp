@@ -134,5 +134,16 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   mInner->PostMessage(GetParentObject(), aCx, aMessage, aTransferable, aRv);
 }
 
+bool
+ServiceWorker::MatchesDescriptor(const ServiceWorkerDescriptor& aDescriptor) const
+{
+  // Compare everything in the descriptor except the state.  That is mutable
+  // and may not exactly match.
+  return mDescriptor.PrincipalInfo() == aDescriptor.PrincipalInfo() &&
+         mDescriptor.Scope() == aDescriptor.Scope() &&
+         mDescriptor.ScriptURL() == aDescriptor.ScriptURL() &&
+         mDescriptor.Id() == aDescriptor.Id();
+}
+
 } // namespace dom
 } // namespace mozilla
