@@ -26,14 +26,11 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIAsyncInputStream.h"
-#include "WorkerPrivate.h"
-#include "WorkerRunnable.h"
-
-#include "RuntimeService.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRunnable.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::dom::workers;
 using mozilla::dom::Optional;
 using mozilla::dom::GlobalObject;
 
@@ -444,7 +441,7 @@ FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
     return rv;
   }
 
-  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  WorkerPrivate* workerPrivate = workers::GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
   AutoSyncLoopHolder syncLoop(workerPrivate, Closing);

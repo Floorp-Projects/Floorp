@@ -25,17 +25,15 @@ class EventChainPreVisitor;
 namespace dom {
 class MessagePort;
 class StringOrWorkerOptions;
-}
-} // namespace mozilla
-
-BEGIN_WORKERS_NAMESPACE
-
-class RuntimeService;
 class WorkerPrivate;
+
+namespace workerinternals {
+class RuntimeService;
+}
 
 class SharedWorker final : public DOMEventTargetHelper
 {
-  friend class RuntimeService;
+  friend class workerinternals::RuntimeService;
 
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::GlobalObject GlobalObject;
@@ -103,6 +101,7 @@ private:
               const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
 };
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
 
 #endif // mozilla_dom_workers_sharedworker_h__

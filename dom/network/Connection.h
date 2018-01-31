@@ -21,9 +21,7 @@ class NetworkInformation;
 
 namespace dom {
 
-namespace workers {
 class WorkerPrivate;
-} // namespace workers
 
 namespace network {
 
@@ -41,7 +39,7 @@ public:
   CreateForWindow(nsPIDOMWindowInner* aWindow);
 
   static already_AddRefed<Connection>
-  CreateForWorker(workers::WorkerPrivate* aWorkerPrivate,
+  CreateForWorker(WorkerPrivate* aWorkerPrivate,
                   ErrorResult& aRv);
 
   void Shutdown();

@@ -13,9 +13,9 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/workers/WorkerCommon.h"
 
-#include "WorkerPrivate.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {

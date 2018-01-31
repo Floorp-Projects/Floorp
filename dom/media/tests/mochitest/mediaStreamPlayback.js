@@ -230,8 +230,6 @@ function createHTML(options) {
   return scriptsReady.then(() => realCreateHTML(options));
 }
 
-var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
-
 // noGum - Helper to detect whether active guM tracks still exist.
 //
 // It relies on the fact that, by spec, device labels from enumerateDevices are

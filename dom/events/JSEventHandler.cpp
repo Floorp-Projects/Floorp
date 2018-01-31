@@ -17,13 +17,13 @@
 #include "xpcpublic.h"
 #include "nsJSEnvironment.h"
 #include "nsDOMJSUtils.h"
-#include "WorkerPrivate.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/JSEventHandler.h"
 #include "mozilla/Likely.h"
 #include "mozilla/dom/ErrorEvent.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 namespace mozilla {
 

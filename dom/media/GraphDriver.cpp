@@ -884,8 +884,6 @@ long
 AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
                                   AudioDataValue* aOutputBuffer, long aFrames)
 {
-  bool stillProcessing;
-
   // Don't add the callback until we're inited and ready
   if (!mAddedMixer) {
     mGraphImpl->mMixer.AddCallback(this);
@@ -924,6 +922,49 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     mIterationDurationMS /= 4;
   }
 
+  mBuffer.SetBuffer(aOutputBuffer, aFrames);
+  // fill part or all with leftover data from last iteration (since we
+  // align to Audio blocks)
+  mScratchBuffer.Empty(mBuffer);
+
+  // State computed time is decided by the audio callback's buffer length. We
+  // compute the iteration start and end from there, trying to keep the amount
+  // of buffering in the graph constant.
+  GraphTime nextStateComputedTime =
+    mGraphImpl->RoundUpToNextAudioBlock(stateComputedTime + mBuffer.Available());
+
+  mIterationStart = mIterationEnd;
+  // inGraph is the number of audio frames there is between the state time and
+  // the current time, i.e. the maximum theoretical length of the interval we
+  // could use as [mIterationStart; mIterationEnd].
+  GraphTime inGraph = stateComputedTime - mIterationStart;
+  // We want the interval [mIterationStart; mIterationEnd] to be before the
+  // interval [stateComputedTime; nextStateComputedTime]. We also want
+  // the distance between these intervals to be roughly equivalent each time, to
+  // ensure there is no clock drift between current time and state time. Since
+  // we can't act on the state time because we have to fill the audio buffer, we
+  // reclock the current time against the state time, here.
+  mIterationEnd = mIterationStart + 0.8 * inGraph;
+
+  LOG(LogLevel::Verbose,
+      ("interval[%ld; %ld] state[%ld; %ld] (frames: %ld) (durationMS: %u) "
+       "(duration ticks: %ld)",
+       (long)mIterationStart,
+       (long)mIterationEnd,
+       (long)stateComputedTime,
+       (long)nextStateComputedTime,
+       (long)aFrames,
+       (uint32_t)durationMS,
+       (long)(nextStateComputedTime - stateComputedTime)));
+
+  mCurrentTimeStamp = TimeStamp::Now();
+
+  if (stateComputedTime < mIterationEnd) {
+    LOG(LogLevel::Error, ("Media graph global underrun detected"));
+    MOZ_ASSERT_UNREACHABLE("We should not underrun in full duplex");
+    mIterationEnd = stateComputedTime;
+  }
+
   // Process mic data if any/needed
   if (aInputBuffer) {
     if (mAudioInput) { // for this specific input-only or full-duplex stream
@@ -933,51 +974,10 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     }
   }
 
-  mBuffer.SetBuffer(aOutputBuffer, aFrames);
-  // fill part or all with leftover data from last iteration (since we
-  // align to Audio blocks)
-  mScratchBuffer.Empty(mBuffer);
-  // if we totally filled the buffer (and mScratchBuffer isn't empty),
-  // we don't need to run an iteration and if we do so we may overflow.
+  bool stillProcessing;
   if (mBuffer.Available()) {
-
-    // State computed time is decided by the audio callback's buffer length. We
-    // compute the iteration start and end from there, trying to keep the amount
-    // of buffering in the graph constant.
-    GraphTime nextStateComputedTime =
-      mGraphImpl->RoundUpToNextAudioBlock(stateComputedTime + mBuffer.Available());
-
-    mIterationStart = mIterationEnd;
-    // inGraph is the number of audio frames there is between the state time and
-    // the current time, i.e. the maximum theoretical length of the interval we
-    // could use as [mIterationStart; mIterationEnd].
-    GraphTime inGraph = stateComputedTime - mIterationStart;
-    // We want the interval [mIterationStart; mIterationEnd] to be before the
-    // interval [stateComputedTime; nextStateComputedTime]. We also want
-    // the distance between these intervals to be roughly equivalent each time, to
-    // ensure there is no clock drift between current time and state time. Since
-    // we can't act on the state time because we have to fill the audio buffer, we
-    // reclock the current time against the state time, here.
-    mIterationEnd = mIterationStart + 0.8 * inGraph;
-
-    LOG(LogLevel::Verbose,
-        ("interval[%ld; %ld] state[%ld; %ld] (frames: %ld) (durationMS: %u) "
-         "(duration ticks: %ld)",
-         (long)mIterationStart,
-         (long)mIterationEnd,
-         (long)stateComputedTime,
-         (long)nextStateComputedTime,
-         (long)aFrames,
-         (uint32_t)durationMS,
-         (long)(nextStateComputedTime - stateComputedTime)));
-
-    mCurrentTimeStamp = TimeStamp::Now();
-
-    if (stateComputedTime < mIterationEnd) {
-      LOG(LogLevel::Warning, ("Media graph global underrun detected"));
-      mIterationEnd = stateComputedTime;
-    }
-
+    // We totally filled the buffer (and mScratchBuffer isn't empty).
+    // We don't need to run an iteration and if we do so we may overflow.
     stillProcessing = mGraphImpl->OneIteration(nextStateComputedTime);
   } else {
     LOG(LogLevel::Verbose,

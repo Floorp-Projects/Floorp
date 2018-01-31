@@ -57,19 +57,18 @@
 
 extern already_AddRefed<nsIScriptTimeoutHandler>
 NS_CreateJSTimeoutHandler(JSContext* aCx,
-                          mozilla::dom::workers::WorkerPrivate* aWorkerPrivate,
+                          mozilla::dom::WorkerPrivate* aWorkerPrivate,
                           mozilla::dom::Function& aFunction,
                           const mozilla::dom::Sequence<JS::Value>& aArguments,
                           mozilla::ErrorResult& aError);
 
 extern already_AddRefed<nsIScriptTimeoutHandler>
 NS_CreateJSTimeoutHandler(JSContext* aCx,
-                          mozilla::dom::workers::WorkerPrivate* aWorkerPrivate,
+                          mozilla::dom::WorkerPrivate* aWorkerPrivate,
                           const nsAString& aExpression);
 
-using namespace mozilla;
-using namespace mozilla::dom;
-USING_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 using mozilla::dom::cache::CacheStorage;
 using mozilla::ipc::PrincipalInfo;
@@ -254,7 +253,7 @@ WorkerGlobalScope::ImportScripts(const Sequence<nsString>& aScriptURLs,
                                  ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
-  scriptloader::Load(mWorkerPrivate, aScriptURLs, WorkerScript, aRv);
+  workerinternals::Load(mWorkerPrivate, aScriptURLs, WorkerScript, aRv);
 }
 
 int32_t
@@ -995,7 +994,7 @@ WorkerDebuggerGlobalScope::LoadSubScript(JSContext* aCx,
 
   nsTArray<nsString> urls;
   urls.AppendElement(aURL);
-  scriptloader::Load(mWorkerPrivate, urls, DebuggerScript, aRv);
+  workerinternals::Load(mWorkerPrivate, urls, DebuggerScript, aRv);
 }
 
 void
@@ -1118,7 +1117,7 @@ WorkerDebuggerGlobalScope::AbstractMainThreadFor(TaskCategory aCategory)
   MOZ_CRASH("AbstractMainThreadFor not supported for workers.");
 }
 
-BEGIN_WORKERS_NAMESPACE
+namespace workers {
 
 bool
 IsWorkerGlobal(JSObject* object)
@@ -1139,4 +1138,6 @@ IsDebuggerSandbox(JSObject* object)
     SimpleGlobalObject::GlobalType::WorkerDebuggerSandbox;
 }
 
-END_WORKERS_NAMESPACE
+} // workers namespace
+} // dom namespace
+} // mozilla namespace

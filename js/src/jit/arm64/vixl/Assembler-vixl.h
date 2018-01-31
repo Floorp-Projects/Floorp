@@ -265,8 +265,10 @@ class Register : public CPURegister {
   }
 
   js::jit::Register asUnsized() const {
-    if (code_ == kSPRegInternalCode)
-      return js::jit::Register::FromCode((js::jit::Register::Code)kZeroRegCode);
+    // asUnsized() is only ever used on temp registers or on registers that
+    // are known not to be SP, and there should be no risk of it being
+    // applied to SP.  Check anyway.
+    VIXL_ASSERT(code_ != kSPRegInternalCode);
     return js::jit::Register::FromCode((js::jit::Register::Code)code_);
   }
 
@@ -706,6 +708,9 @@ class Operand {
   explicit Operand(js::jit::Register, int32_t) {
     MOZ_CRASH("Operand with implicit Address");
   }
+  explicit Operand(js::jit::RegisterOrSP, int32_t) {
+    MOZ_CRASH("Operand with implicit Address");
+  }
 
   bool IsImmediate() const;
   bool IsShiftedRegister() const;
@@ -777,7 +782,7 @@ class MemOperand {
   // Adapter constructors using C++11 delegating.
   // TODO: If sp == kSPRegInternalCode, the xzr check isn't necessary.
   explicit MemOperand(js::jit::Address addr)
-    : MemOperand(addr.base.code() == 31 ? sp : Register(addr.base, 64),
+    : MemOperand(IsHiddenSP(addr.base) ? sp : Register(AsRegister(addr.base), 64),
                  (ptrdiff_t)addr.offset) {
   }
 

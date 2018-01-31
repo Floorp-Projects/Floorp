@@ -1245,7 +1245,7 @@ IsChromeOrXBL(JSContext* cx, JSObject* /* unused */)
 
 namespace workers {
 extern bool IsCurrentThreadRunningChromeWorker();
-} // namespace workers
+}
 
 bool
 ThreadSafeIsChromeOrXBL(JSContext* cx, JSObject* obj)

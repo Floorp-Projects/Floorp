@@ -33,7 +33,6 @@
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
 #include "prtime.h"
-#include "MediaEngine.h"
 
 #include "AudioConduit.h"
 #include "VideoConduit.h"
@@ -2404,13 +2403,13 @@ PeerConnectionImpl::CreateReceiveTrack(SdpMediaSection::MediaType type)
   RefPtr<MediaStreamTrack> track;
   if (audio) {
     track = stream->CreateDOMTrack(
-        kAudioTrack,
+        333, // Use a constant TrackID. Dependents read this from the DOM track.
         MediaSegment::AUDIO,
         new RemoteTrackSource(principal,
                               NS_ConvertASCIItoUTF16("remote audio")));
   } else {
     track = stream->CreateDOMTrack(
-        kVideoTrack,
+        666, // Use a constant TrackID. Dependents read this from the DOM track.
         MediaSegment::VIDEO,
         new RemoteTrackSource(principal,
                               NS_ConvertASCIItoUTF16("remote video")));

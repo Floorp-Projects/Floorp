@@ -7,13 +7,13 @@
 #include "Fetch.h"
 #include "FetchConsumer.h"
 
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsIInputStreamPump.h"
 #include "nsProxyRelease.h"
-#include "WorkerCommon.h"
-#include "WorkerPrivate.h"
-#include "WorkerRunnable.h"
-#include "WorkerScope.h"
 
 namespace mozilla {
 namespace dom {
@@ -23,14 +23,14 @@ using namespace workers;
 namespace {
 
 template <class Derived>
-class FetchBodyWorkerHolder final : public workers::WorkerHolder
+class FetchBodyWorkerHolder final : public WorkerHolder
 {
   RefPtr<FetchBodyConsumer<Derived>> mConsumer;
   bool mWasNotified;
 
 public:
   explicit FetchBodyWorkerHolder(FetchBodyConsumer<Derived>* aConsumer)
-    : workers::WorkerHolder("FetchBodyWorkerHolder")
+    : WorkerHolder("FetchBodyWorkerHolder")
     , mConsumer(aConsumer)
     , mWasNotified(false)
   {
@@ -39,9 +39,9 @@ public:
 
   ~FetchBodyWorkerHolder() = default;
 
-  bool Notify(workers::Status aStatus) override
+  bool Notify(WorkerStatus aStatus) override
   {
-    MOZ_ASSERT(aStatus > workers::Running);
+    MOZ_ASSERT(aStatus > Running);
     if (!mWasNotified) {
       mWasNotified = true;
       mConsumer->ShutDownMainThreadConsuming();

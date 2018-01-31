@@ -6,6 +6,7 @@
 #define MOZILLA_MEDIAMANAGER_H
 
 #include "MediaEngine.h"
+#include "MediaEnginePrefs.h"
 #include "mozilla/media/DeviceChangeCallback.h"
 #include "mozilla/dom/GetUserMediaRequest.h"
 #include "mozilla/Services.h"
@@ -14,14 +15,12 @@
 #include "nsIMediaManager.h"
 
 #include "nsHashKeys.h"
-#include "nsGlobalWindow.h"
 #include "nsClassHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsIObserver.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
-#include "nsPIDOMWindow.h"
 #include "nsIDOMNavigatorUserMedia.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Attributes.h"
@@ -56,36 +55,53 @@ namespace ipc {
 class PrincipalInfo;
 }
 
+class AllocationHandle;
 class GetUserMediaTask;
 class GetUserMediaWindowListener;
 class MediaManager;
 class SourceListener;
 
+LogModule* GetMediaManagerLog();
+
 class MediaDevice : public nsIMediaDevice
 {
 public:
-  typedef MediaEngineSource Source;
-
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEDIADEVICE
 
-  void SetId(const nsAString& aID);
-  void SetRawId(const nsAString& aID);
-  virtual uint32_t GetBestFitnessDistance(
+  explicit MediaDevice(MediaEngineSource* aSource,
+                       const nsString& aName,
+                       const nsString& aID,
+                       const nsString& aRawID = NS_LITERAL_STRING(""));
+
+  uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       bool aIsChrome);
-  virtual Source* GetSource() = 0;
-  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                    const MediaEnginePrefs &aPrefs,
+
+  nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
+                    const MediaEnginePrefs& aPrefs,
                     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint);
-  nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
-                   const MediaEnginePrefs &aPrefs,
-                   const char** aOutBadConstraint);
+  nsresult SetTrack(const RefPtr<SourceMediaStream>& aStream,
+                    TrackID aTrackID,
+                    const PrincipalHandle& aPrincipal);
+  nsresult Start();
+  nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
+                       const MediaEnginePrefs& aPrefs,
+                       const char** aOutBadConstraint);
+  nsresult Stop();
   nsresult Deallocate();
+
+  void Pull(const RefPtr<SourceMediaStream>& aStream,
+            TrackID aTrackID,
+            StreamTime aDesiredTime,
+            const PrincipalHandle& aPrincipal);
+
+  void GetSettings(dom::MediaTrackSettings& aOutSettings) const;
+
+  dom::MediaSourceEnum GetMediaSource() const;
 protected:
-  virtual ~MediaDevice() {}
-  explicit MediaDevice(MediaEngineSource* aSource, bool aIsVideo);
+  virtual ~MediaDevice() = default;
 
   static uint32_t FitnessDistance(nsString aN,
     const dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters& aConstraint);
@@ -94,91 +110,19 @@ private:
                              nsString aN);
   static uint32_t FitnessDistance(nsString aN,
       const dom::ConstrainDOMStringParameters& aParams);
-protected:
-  nsString mName;
-  nsString mID;
-  nsString mRawID;
-  bool mScary;
-  dom::MediaSourceEnum mMediaSource;
-  RefPtr<MediaEngineSource> mSource;
-  RefPtr<MediaEngineSource::AllocationHandle> mAllocationHandle;
+
+  // Assigned on allocation on media thread, then read on the media thread and
+  // graph thread
+  RefPtr<AllocationHandle> mAllocationHandle;
+
 public:
-  dom::MediaSourceEnum GetMediaSource() {
-    return mMediaSource;
-  }
-  bool mIsVideo;
-};
-
-class VideoDevice : public MediaDevice
-{
-public:
-  typedef MediaEngineVideoSource Source;
-
-  explicit VideoDevice(Source* aSource);
-  NS_IMETHOD GetType(nsAString& aType) override;
-  Source* GetSource() override;
-};
-
-class AudioDevice : public MediaDevice
-{
-public:
-  typedef MediaEngineAudioSource Source;
-
-  explicit AudioDevice(Source* aSource);
-  NS_IMETHOD GetType(nsAString& aType) override;
-  Source* GetSource() override;
-};
-
-class GetUserMediaNotificationEvent: public Runnable
-{
-  public:
-    enum GetUserMediaStatus {
-      STARTING,
-      STOPPING,
-    };
-    GetUserMediaNotificationEvent(GetUserMediaStatus aStatus,
-                                  uint64_t aWindowID);
-
-    GetUserMediaNotificationEvent(GetUserMediaStatus aStatus,
-                                  already_AddRefed<DOMMediaStream> aStream,
-                                  already_AddRefed<media::Refcountable<UniquePtr<OnTracksAvailableCallback>>> aOnTracksAvailableCallback,
-                                  uint64_t aWindowID,
-                                  already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError);
-    virtual ~GetUserMediaNotificationEvent();
-
-    NS_IMETHOD Run() override;
-
-  protected:
-    RefPtr<GetUserMediaWindowListener> mListener; // threadsafe
-    RefPtr<DOMMediaStream> mStream;
-    RefPtr<media::Refcountable<UniquePtr<OnTracksAvailableCallback>>> mOnTracksAvailableCallback;
-    GetUserMediaStatus mStatus;
-    uint64_t mWindowID;
-    RefPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
-};
-
-typedef enum {
-  MEDIA_STOP,
-  MEDIA_STOP_TRACK,
-  MEDIA_DIRECT_LISTENERS,
-} MediaOperation;
-
-class ReleaseMediaOperationResource : public Runnable
-{
-public:
-  ReleaseMediaOperationResource(
-    already_AddRefed<DOMMediaStream> aStream,
-    already_AddRefed<media::Refcountable<UniquePtr<OnTracksAvailableCallback>>>
-      aOnTracksAvailableCallback)
-    : Runnable("ReleaseMediaOperationResource")
-    , mStream(aStream)
-    , mOnTracksAvailableCallback(aOnTracksAvailableCallback)
-  {
-  }
-  NS_IMETHOD Run() override {return NS_OK;}
-private:
-  RefPtr<DOMMediaStream> mStream;
-  RefPtr<media::Refcountable<UniquePtr<OnTracksAvailableCallback>>> mOnTracksAvailableCallback;
+  const RefPtr<MediaEngineSource> mSource;
+  const bool mIsVideo;
+  const bool mScary;
+  const nsString mType;
+  const nsString mName;
+  const nsString mID;
+  const nsString mRawID;
 };
 
 typedef nsRefPtrHashtable<nsUint64HashKey, GetUserMediaWindowListener> WindowTable;
@@ -213,8 +157,7 @@ public:
     return !!sSingleton;
   }
 
-  static nsresult NotifyRecordingStatusChange(nsPIDOMWindowInner* aWindow,
-                                              const nsString& aMsg);
+  static nsresult NotifyRecordingStatusChange(nsPIDOMWindowInner* aWindow);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER

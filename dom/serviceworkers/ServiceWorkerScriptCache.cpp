@@ -13,6 +13,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/ScriptLoader.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsICacheInfoChannel.h"
@@ -27,7 +28,6 @@
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "ServiceWorkerManager.h"
-#include "WorkerCommon.h"
 #include "nsStringStream.h"
 
 using mozilla::dom::cache::Cache;

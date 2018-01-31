@@ -2446,7 +2446,7 @@ nsContentUtils::ThreadsafeIsCallerChrome()
 {
   return NS_IsMainThread() ?
     IsCallerChrome() :
-    mozilla::dom::workers::IsCurrentThreadRunningChromeWorker();
+    workers::IsCurrentThreadRunningChromeWorker();
 }
 
 bool

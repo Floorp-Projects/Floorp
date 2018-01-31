@@ -235,12 +235,12 @@ ComparePolicy::adjustInputs(TempAllocator& alloc, MInstruction* def)
             break;
           }
           case MIRType::Int32: {
-            MacroAssembler::IntConversionInputKind convert = MacroAssembler::IntConversion_NumbersOnly;
+            IntConversionInputKind convert = IntConversionInputKind::NumbersOnly;
             if (compare->compareType() == MCompare::Compare_Int32MaybeCoerceBoth ||
                 (compare->compareType() == MCompare::Compare_Int32MaybeCoerceLHS && i == 0) ||
                 (compare->compareType() == MCompare::Compare_Int32MaybeCoerceRHS && i == 1))
             {
-                convert = MacroAssembler::IntConversion_NumbersOrBoolsOnly;
+                convert = IntConversionInputKind::NumbersOrBoolsOnly;
             }
             replace = MToNumberInt32::New(alloc, in, convert);
             break;
@@ -728,7 +728,7 @@ ToInt32Policy::staticAdjustInputs(TempAllocator& alloc, MInstruction* ins)
 {
     MOZ_ASSERT(ins->isToNumberInt32() || ins->isTruncateToInt32());
 
-    MacroAssembler::IntConversionInputKind conversion = MacroAssembler::IntConversion_Any;
+    IntConversionInputKind conversion = IntConversionInputKind::Any;
     if (ins->isToNumberInt32())
         conversion = ins->toToNumberInt32()->conversion();
 
@@ -747,14 +747,14 @@ ToInt32Policy::staticAdjustInputs(TempAllocator& alloc, MInstruction* ins)
         break;
       case MIRType::Null:
         // No need for boxing, when we will convert.
-        if (conversion == MacroAssembler::IntConversion_Any)
+        if (conversion == IntConversionInputKind::Any)
             return true;
         break;
       case MIRType::Boolean:
         // No need for boxing, when we will convert.
-        if (conversion == MacroAssembler::IntConversion_Any)
+        if (conversion == IntConversionInputKind::Any)
             return true;
-        if (conversion == MacroAssembler::IntConversion_NumbersOrBoolsOnly)
+        if (conversion == IntConversionInputKind::NumbersOrBoolsOnly)
             return true;
         break;
       case MIRType::Object:
@@ -857,7 +857,7 @@ SimdShufflePolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
         if (in->type() == MIRType::Int32)
             continue;
 
-        auto* replace = MToNumberInt32::New(alloc, in, MacroAssembler::IntConversion_NumbersOnly);
+        auto* replace = MToNumberInt32::New(alloc, in, IntConversionInputKind::NumbersOnly);
         ins->block()->insertBefore(ins, replace);
         ins->replaceOperand(s->numVectors() + i, replace);
         if (!replace->typePolicy()->adjustInputs(alloc, replace))

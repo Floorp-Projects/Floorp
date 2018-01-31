@@ -7,16 +7,19 @@
 #ifndef MEDIATRACKCONSTRAINTS_H_
 #define MEDIATRACKCONSTRAINTS_H_
 
+#include <map>
+#include <set>
+#include <vector>
+
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/MediaTrackConstraintSetBinding.h"
 #include "mozilla/dom/MediaTrackSupportedConstraintsBinding.h"
 
-#include <map>
-#include <set>
-#include <vector>
-
 namespace mozilla {
+
+class MediaDevice;
+class MediaEngineSource;
 
 template<class EnumValuesStrings, class Enum>
 static const char* EnumToASCII(const EnumValuesStrings& aStrings, Enum aValue) {
@@ -36,7 +39,6 @@ static Enum StringToEnum(const EnumValuesStrings& aStrings,
 
 // Helper classes for orthogonal constraints without interdependencies.
 // Instead of constraining values, constrain the constraints themselves.
-
 class NormalizedConstraintSet
 {
 protected:
@@ -297,166 +299,45 @@ struct FlattenedConstraints : public NormalizedConstraintSet
     : FlattenedConstraints(NormalizedConstraints(aOther)) {}
 };
 
-// A helper class for MediaEngines
-
+// A helper class for MediaEngineSources
 class MediaConstraintsHelper
 {
-protected:
+public:
   template<class ValueType, class NormalizedRange>
   static uint32_t FitnessDistance(ValueType aN, const NormalizedRange& aRange);
   template<class ValueType, class NormalizedRange>
   static uint32_t FeasibilityDistance(ValueType aN, const NormalizedRange& aRange);
   static uint32_t FitnessDistance(nsString aN,
       const NormalizedConstraintSet::StringRange& aConstraint);
+protected:
+
+  static bool
+  SomeSettingsFit(const NormalizedConstraints &aConstraints,
+                  const nsTArray<RefPtr<MediaDevice>>& aDevices);
+
+public:
 
   static uint32_t
   GetMinimumFitnessDistance(const NormalizedConstraintSet &aConstraints,
                             const nsString& aDeviceId);
 
-  template<class DeviceType>
-  static bool
-  SomeSettingsFit(const NormalizedConstraints &aConstraints,
-                  nsTArray<RefPtr<DeviceType>>& aDevices)
-  {
-    nsTArray<const NormalizedConstraintSet*> sets;
-    sets.AppendElement(&aConstraints);
-
-    MOZ_ASSERT(aDevices.Length());
-    for (auto& device : aDevices) {
-      if (device->GetBestFitnessDistance(sets, false) != UINT32_MAX) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-public:
   // Apply constrains to a supplied list of devices (removes items from the list)
-
-  template<class DeviceType>
   static const char*
-  SelectSettings(const NormalizedConstraints &aConstraints,
-                 nsTArray<RefPtr<DeviceType>>& aDevices,
-                 bool aIsChrome)
-  {
-    auto& c = aConstraints;
+  SelectSettings(
+      const NormalizedConstraints& aConstraints,
+      nsTArray<RefPtr<MediaDevice>>& aDevices,
+      bool aIsChrome);
 
-    // First apply top-level constraints.
-
-    // Stack constraintSets that pass, starting with the required one, because the
-    // whole stack must be re-satisfied each time a capability-set is ruled out
-    // (this avoids storing state or pushing algorithm into the lower-level code).
-    nsTArray<RefPtr<DeviceType>> unsatisfactory;
-    nsTArray<const NormalizedConstraintSet*> aggregateConstraints;
-    aggregateConstraints.AppendElement(&c);
-
-    std::multimap<uint32_t, RefPtr<DeviceType>> ordered;
-
-    for (uint32_t i = 0; i < aDevices.Length();) {
-      uint32_t distance = aDevices[i]->GetBestFitnessDistance(aggregateConstraints,
-                                                              aIsChrome);
-      if (distance == UINT32_MAX) {
-        unsatisfactory.AppendElement(aDevices[i]);
-        aDevices.RemoveElementAt(i);
-      } else {
-        ordered.insert(std::pair<uint32_t, RefPtr<DeviceType>>(distance,
-                                                               aDevices[i]));
-        ++i;
-      }
-    }
-    if (!aDevices.Length()) {
-      return FindBadConstraint(c, unsatisfactory);
-    }
-
-    // Order devices by shortest distance
-    for (auto& ordinal : ordered) {
-      aDevices.RemoveElement(ordinal.second);
-      aDevices.AppendElement(ordinal.second);
-    }
-
-    // Then apply advanced constraints.
-
-    for (int i = 0; i < int(c.mAdvanced.size()); i++) {
-      aggregateConstraints.AppendElement(&c.mAdvanced[i]);
-      nsTArray<RefPtr<DeviceType>> rejects;
-      for (uint32_t j = 0; j < aDevices.Length();) {
-        if (aDevices[j]->GetBestFitnessDistance(aggregateConstraints,
-                                                aIsChrome) == UINT32_MAX) {
-          rejects.AppendElement(aDevices[j]);
-          aDevices.RemoveElementAt(j);
-        } else {
-          ++j;
-        }
-      }
-      if (!aDevices.Length()) {
-        aDevices.AppendElements(Move(rejects));
-        aggregateConstraints.RemoveElementAt(aggregateConstraints.Length() - 1);
-      }
-    }
-    return nullptr;
-  }
-
-  template<class DeviceType>
   static const char*
   FindBadConstraint(const NormalizedConstraints& aConstraints,
-                    nsTArray<RefPtr<DeviceType>>& aDevices)
-  {
-    // The spec says to report a constraint that satisfies NONE
-    // of the sources. Unfortunately, this is a bit laborious to find out, and
-    // requires updating as new constraints are added!
-    auto& c = aConstraints;
-    dom::MediaTrackConstraints empty;
+                    const nsTArray<RefPtr<MediaDevice>>& aDevices);
 
-    if (!aDevices.Length() ||
-        !SomeSettingsFit(NormalizedConstraints(empty), aDevices)) {
-      return "";
-    }
-    {
-      NormalizedConstraints fresh(empty);
-      fresh.mDeviceId = c.mDeviceId;
-      if (!SomeSettingsFit(fresh, aDevices)) {
-        return "deviceId";
-      }
-    }
-    {
-      NormalizedConstraints fresh(empty);
-      fresh.mWidth = c.mWidth;
-      if (!SomeSettingsFit(fresh, aDevices)) {
-        return "width";
-      }
-    }
-    {
-      NormalizedConstraints fresh(empty);
-      fresh.mHeight = c.mHeight;
-      if (!SomeSettingsFit(fresh, aDevices)) {
-        return "height";
-      }
-    }
-    {
-      NormalizedConstraints fresh(empty);
-      fresh.mFrameRate = c.mFrameRate;
-      if (!SomeSettingsFit(fresh, aDevices)) {
-        return "frameRate";
-      }
-    }
-    {
-      NormalizedConstraints fresh(empty);
-      fresh.mFacingMode = c.mFacingMode;
-      if (!SomeSettingsFit(fresh, aDevices)) {
-        return "facingMode";
-      }
-    }
-    return "";
-  }
-
-  template<class MediaEngineSourceType>
   static const char*
   FindBadConstraint(const NormalizedConstraints& aConstraints,
-                    const MediaEngineSourceType& aMediaEngineSource,
+                    const RefPtr<MediaEngineSource>& aMediaEngineSource,
                     const nsString& aDeviceId);
 
   // Warn on and convert use of deprecated constraints to new ones
-
   static void
   ConvertOldWithWarning(
       const dom::OwningBooleanOrConstrainBooleanParameters& old,
