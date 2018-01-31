@@ -104,8 +104,10 @@ SERVO_BINDING_FUNC(Servo_StyleSet_InsertStyleSheetBefore, void,
                    RawServoStyleSetBorrowed set,
                    const mozilla::ServoStyleSheet* gecko_sheet,
                    const mozilla::ServoStyleSheet* before)
-SERVO_BINDING_FUNC(Servo_StyleSet_FlushStyleSheets, void, RawServoStyleSetBorrowed set,
-                   RawGeckoElementBorrowedOrNull doc_elem)
+SERVO_BINDING_FUNC(Servo_StyleSet_FlushStyleSheets, void,
+                   RawServoStyleSetBorrowed set,
+                   RawGeckoElementBorrowedOrNull doc_elem,
+                   const mozilla::ServoElementSnapshotTable* snapshots)
 SERVO_BINDING_FUNC(Servo_StyleSet_NoteStyleSheetsChanged, void,
                    RawServoStyleSetBorrowed set,
                    bool author_style_disabled,
