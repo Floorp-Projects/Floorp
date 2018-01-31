@@ -7,13 +7,14 @@ import android.os.Bundle;
 import android.os.Parcelable;
 
 import org.json.JSONException;
-import org.json.JSONObject;
+
 import org.json.simple.JSONArray;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.synchronizer.StoreBatchTracker;
 import org.mozilla.gecko.sync.telemetry.TelemetryStageCollector;
 import org.mozilla.gecko.sync.validation.BookmarkValidationResults;
 import org.mozilla.gecko.sync.validation.ValidationResults;
@@ -61,6 +62,7 @@ public class TelemetrySyncPingBuilderTest {
         assertEquals("device-id", payload.getString("deviceID"));
         assertTrue(payload.getLong("when") != null);
         assertEquals(true, payload.getBoolean("restarted"));
+
     }
 
     @Test
@@ -82,15 +84,26 @@ public class TelemetrySyncPingBuilderTest {
         stage.inboundFailed = 1;
         stage.reconciled = 1;
 
+        stage.outbound = new ArrayList<>();
+        stage.outbound.add(new StoreBatchTracker.Batch(1, 1));
+        stage.outbound.add(new StoreBatchTracker.Batch(9, 0));
+        stage.outbound.add(new StoreBatchTracker.Batch(0, 0));
 
         stages.put("testing", stage);
+
+        TelemetryStageCollector stage2 = new TelemetryStageCollector(null);
+        // If it's actually completely empty, it will get omitted.
+        stage2.inbound = 1;
+        stage2.inboundStored = 1;
+        stages.put("testing2", stage2);
+
         TelemetryLocalPing localPing = builder
                 .setStages(stages)
                 .build();
         ExtendedJSONObject payload = localPing.getPayload();
 
-        assertEquals(1, payload.getArray("engines").size());
-        ExtendedJSONObject engine = (ExtendedJSONObject)payload.getArray("engines").get(0);
+        assertEquals(2, payload.getArray("engines").size());
+        ExtendedJSONObject engine = (ExtendedJSONObject) payload.getArray("engines").get(0);
 
         assertEquals("testing", engine.getString("name"));
         assertEquals(Long.valueOf(5L), engine.getLong("took"));
@@ -101,8 +114,6 @@ public class TelemetrySyncPingBuilderTest {
         assertEquals(Integer.valueOf(stage.inboundFailed), inbound.getIntegerSafely("failed"));
         assertEquals(Integer.valueOf(stage.reconciled), inbound.getIntegerSafely("reconciled"));
 
-        // TODO: Test outbound once bug 1389233 is addressed
-
         ExtendedJSONObject error = engine.getObject("failureReason");
         assertEquals("unexpectederror", error.getString("name"));
         assertEquals("test", error.getString("error"));
@@ -111,6 +122,25 @@ public class TelemetrySyncPingBuilderTest {
         assertEquals(stage.validation.getLong("took"), validation.getLong("took"));
         assertEquals(stage.validation.getLong("checked"), validation.getLong("checked"));
         assertEquals(0, stage.validation.getArray("problems").size());
+
+        JSONArray outgoing = engine.getArray("outgoing");
+        assertEquals(outgoing.size(), 3);
+
+        ExtendedJSONObject firstBatch = (ExtendedJSONObject) outgoing.get(0);
+        assertEquals(firstBatch.getLong("sent", -1), 1);
+        assertEquals(firstBatch.getLong("failed", -1), 1);
+
+        ExtendedJSONObject secondBatch = (ExtendedJSONObject) outgoing.get(1);
+        assertEquals(secondBatch.getLong("sent", -1), 9);
+        assertFalse(secondBatch.containsKey("failed"));
+
+        // Ensure we include "all zero" batches, since we can actually send those on android.
+        ExtendedJSONObject lastBatch = (ExtendedJSONObject) outgoing.get(2);
+        assertFalse(lastBatch.containsKey("sent"));
+        assertFalse(lastBatch.containsKey("failed"));
+
+        ExtendedJSONObject emptyEngine = (ExtendedJSONObject) payload.getArray("engines").get(1);
+        assertFalse(emptyEngine.containsKey("outgoing"));
     }
 
     @Test
