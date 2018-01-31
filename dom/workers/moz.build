@@ -10,6 +10,7 @@ with Files("**"):
 # Public stuff.
 EXPORTS.mozilla.dom += [
     'SharedWorker.h',
+    'WorkerCommon.h',
     'WorkerDebugger.h',
     'WorkerDebuggerManager.h',
     'WorkerHolder.h',
@@ -22,10 +23,11 @@ EXPORTS.mozilla.dom += [
     'WorkerScope.h',
 ]
 
-EXPORTS.mozilla.dom.workers += [
+# Private stuff.
+EXPORTS.mozilla.dom.workerinternals += [
+    'JSSettings.h',
     'Queue.h',
     'RuntimeService.h',
-    'WorkerCommon.h',
 ]
 
 XPIDL_MODULE = 'dom_workers'

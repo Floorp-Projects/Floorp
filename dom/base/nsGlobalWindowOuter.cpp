@@ -80,7 +80,7 @@
 #include "nsContentCID.h"
 #include "nsLayoutStatics.h"
 #include "nsCCUncollectableMarker.h"
-#include "mozilla/dom/workers/WorkerCommon.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "nsJSPrincipals.h"
 #include "mozilla/Attributes.h"

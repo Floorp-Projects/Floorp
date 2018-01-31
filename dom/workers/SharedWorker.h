@@ -27,13 +27,13 @@ class MessagePort;
 class StringOrWorkerOptions;
 class WorkerPrivate;
 
-namespace workers {
+namespace workerinternals {
 class RuntimeService;
 }
 
 class SharedWorker final : public DOMEventTargetHelper
 {
-  friend class workers::RuntimeService;
+  friend class workerinternals::RuntimeService;
 
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::GlobalObject GlobalObject;

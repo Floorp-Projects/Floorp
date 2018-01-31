@@ -16,7 +16,7 @@
 
 #include "mozilla/dom/StructuredCloneTags.h"
 // for mozilla::dom::workers::kJSPrincipalsDebugToken
-#include "mozilla/dom/workers/WorkerCommon.h"
+#include "mozilla/dom/workerinternals/JSSettings.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 
 using namespace mozilla;
@@ -90,7 +90,7 @@ JSPrincipals::dump()
       nsresult rv = static_cast<nsJSPrincipals *>(this)->GetScriptLocation(str);
       fprintf(stderr, "nsIPrincipal (%p) = %s\n", static_cast<void*>(this),
               NS_SUCCEEDED(rv) ? str.get() : "(unknown)");
-    } else if (debugToken == dom::workers::kJSPrincipalsDebugToken) {
+    } else if (debugToken == dom::workerinternals::kJSPrincipalsDebugToken) {
         fprintf(stderr, "Web Worker principal singleton (%p)\n", this);
     } else {
         fprintf(stderr,
