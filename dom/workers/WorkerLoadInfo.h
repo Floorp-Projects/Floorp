@@ -27,12 +27,16 @@ class nsIURI;
 class nsPIDOMWindowInner;
 
 namespace mozilla {
+
 namespace ipc {
 class PrincipalInfo;
 } // namespace ipc
-} // namespace mozilla
 
-BEGIN_WORKERS_NAMESPACE
+namespace dom {
+
+namespace workers {
+class WorkerPrivate;
+}
 
 struct WorkerLoadInfo
 {
@@ -136,13 +140,14 @@ struct WorkerLoadInfo
 #endif
 
   bool
-  ProxyReleaseMainThreadObjects(WorkerPrivate* aWorkerPrivate);
+  ProxyReleaseMainThreadObjects(workers::WorkerPrivate* aWorkerPrivate);
 
   bool
-  ProxyReleaseMainThreadObjects(WorkerPrivate* aWorkerPrivate,
+  ProxyReleaseMainThreadObjects(workers::WorkerPrivate* aWorkerPrivate,
                                 nsCOMPtr<nsILoadGroup>& aLoadGroupToCancel);
 };
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
 
 #endif // mozilla_dom_workers_WorkerLoadInfo_h
