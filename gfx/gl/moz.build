@@ -13,7 +13,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
     gl_provider = 'EAGL'
 elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
-    if CONFIG['MOZ_EGL_XRENDER_COMPOSITE']:
+    if CONFIG['MOZ_EGL_XRENDER_COMPOSITE'] or CONFIG['MOZ_WAYLAND']:
         gl_provider = 'EGL'
     else:
         gl_provider = 'GLX'
