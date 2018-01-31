@@ -39,25 +39,6 @@
 #define PREF_CUBEB_LOGGING_LEVEL "media.cubeb.logging_level"
 #define PREF_CUBEB_SANDBOX "media.cubeb.sandbox"
 
-#define MASK_MONO       (AudioConfig::ChannelLayout::LMONO_MAP)
-#define MASK_MONO_LFE   (AudioConfig::ChannelLayout::LMONO_LFE_MAP)
-#define MASK_STEREO     (AudioConfig::ChannelLayout::LSTEREO_MAP)
-#define MASK_STEREO_LFE (AudioConfig::ChannelLayout::LSTEREO_LFE_MAP)
-#define MASK_3F         (AudioConfig::ChannelLayout::L3F_MAP)
-#define MASK_3F_LFE     (AudioConfig::ChannelLayout::L3F_LFE_MAP)
-#define MASK_2F1        (AudioConfig::ChannelLayout::L2F1_MAP)
-#define MASK_2F1_LFE    (AudioConfig::ChannelLayout::L2F1_LFE_MAP)
-#define MASK_3F1        (AudioConfig::ChannelLayout::L3F1_MAP)
-#define MASK_3F1_LFE    (AudioConfig::ChannelLayout::L3F1_LFE_MAP)
-#define MASK_2F2        (AudioConfig::ChannelLayout::L2F2_MAP)
-#define MASK_2F2_LFE    (AudioConfig::ChannelLayout::L2F2_LFE_MAP)
-#define MASK_QUAD       (AudioConfig::ChannelLayout::LQUAD_MAP)
-#define MASK_QUAD_LFE   (AudioConfig::ChannelLayout::LQUAD_MAP_LFE)
-#define MASK_3F2        (AudioConfig::ChannelLayout::L3F2_MAP)
-#define MASK_3F2_LFE    (AudioConfig::ChannelLayout::L3F2_LFE_MAP)
-#define MASK_3F3R_LFE   (AudioConfig::ChannelLayout::L3F3R_LFE_MAP)
-#define MASK_3F4_LFE    (AudioConfig::ChannelLayout::L3F4_LFE_MAP)
-
 #if (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)) || defined(XP_MACOSX)
 #define MOZ_CUBEB_REMOTING
 #endif
@@ -163,34 +144,6 @@ const int CUBEB_BACKEND_INIT_FAILURE_FIRST =
 const int CUBEB_BACKEND_INIT_FAILURE_OTHER = CUBEB_BACKEND_INIT_FAILURE_FIRST + 1;
 /* Index for an unknown backend. */
 const int CUBEB_BACKEND_UNKNOWN = CUBEB_BACKEND_INIT_FAILURE_FIRST + 2;
-
-typedef struct {
-  const char* name;
-  const unsigned int channels;
-  const uint32_t mask;
-} layoutInfo;
-
-const layoutInfo kLayoutInfos[CUBEB_LAYOUT_MAX] = {
-  { "undefined",      0, 0 },               // CUBEB_LAYOUT_UNDEFINED
-  { "mono",           1, MASK_MONO },       // CUBEB_LAYOUT_MONO
-  { "mono lfe",       2, MASK_MONO_LFE },   // CUBEB_LAYOUT_MONO_LFE
-  { "stereo",         2, MASK_STEREO },     // CUBEB_LAYOUT_STEREO
-  { "stereo lfe",     3, MASK_STEREO_LFE }, // CUBEB_LAYOUT_STEREO_LFE
-  { "3f",             3, MASK_3F },         // CUBEB_LAYOUT_3F
-  { "3f lfe",         4, MASK_3F_LFE },     // CUBEB_LAYOUT_3F_LFE
-  { "2f1",            3, MASK_2F1 },        // CUBEB_LAYOUT_2F1
-  { "2f1 lfe",        4, MASK_2F1_LFE },    // CUBEB_LAYOUT_2F1_LFE
-  { "3f1",            4, MASK_3F1 },        // CUBEB_LAYOUT_3F1
-  { "3f1 lfe",        5, MASK_3F1_LFE },    // CUBEB_LAYOUT_3F1_LFE
-  { "2f2",            4, MASK_2F2 },        // CUBEB_LAYOUT_2F2
-  { "2f2 lfe",        5, MASK_2F2_LFE },    // CUBEB_LAYOUT_2F2_LFE
-  { "quad",           4, MASK_QUAD },       // CUBEB_LAYOUT_QUAD
-  { "quad lfe",       5, MASK_QUAD_LFE },   // CUBEB_LAYOUT_QUAD_LFE
-  { "3f2",            5, MASK_3F2 },        // CUBEB_LAYOUT_3F2
-  { "3f2 lfe",        6, MASK_3F2_LFE },    // CUBEB_LAYOUT_3F2_LFE
-  { "3f3r lfe",       7, MASK_3F3R_LFE },   // CUBEB_LAYOUT_3F3R_LFE
-  { "3f4 lfe",        8, MASK_3F4_LFE }     // CUBEB_LAYOUT_3F4_LFE
-};
 
 // Prefered samplerate, in Hz (characteristic of the hardware, mixer, platform,
 // and API used).
