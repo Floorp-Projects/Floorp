@@ -104,7 +104,7 @@ public:
      * Notifies each document registered via AwaitLoadDone on this
      * prototype document that the prototype has finished loading.
      * The notification is performed by calling
-     * nsIXULDocument::OnPrototypeLoadDone on the registered documents.
+     * XULDocument::OnPrototypeLoadDone on the registered documents.
      */
     nsresult NotifyLoadDone();
 

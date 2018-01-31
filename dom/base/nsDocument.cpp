@@ -153,7 +153,6 @@
 #include "nsIDocumentLoader.h"
 #include "nsIContentViewer.h"
 #include "nsIXMLContentSink.h"
-#include "nsIXULDocument.h"
 #include "nsIPrompt.h"
 #include "nsIPropertyBag2.h"
 #include "mozilla/dom/PageTransitionEvent.h"
@@ -987,8 +986,7 @@ nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
     doc = aViewer->GetDocument();
     NS_ASSERTION(doc, "Must have a document");
 
-    nsCOMPtr<nsIXULDocument> xulDoc = do_QueryInterface(doc);
-    if (xulDoc) {
+    if (doc->IsXULDocument()) {
       // We don't handle XUL stuff here yet.
       rv = NS_ERROR_NOT_AVAILABLE;
     } else {
@@ -3110,13 +3108,6 @@ nsDocument::SetChromeXHRDocBaseURI(nsIURI* aURI)
   mChromeXHRDocBaseURI = aURI;
 }
 
-NS_IMETHODIMP
-nsDocument::GetLastModified(nsAString& aLastModified)
-{
-  nsIDocument::GetLastModified(aLastModified);
-  return NS_OK;
-}
-
 static void
 GetFormattedTimeString(PRTime aTime, nsAString& aFormattedTimeString)
 {
@@ -3341,12 +3332,10 @@ nsDocument::SetApplicationCache(nsIApplicationCache *aApplicationCache)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocument::GetContentType(nsAString& aContentType)
+void
+nsIDocument::GetContentType(nsAString& aContentType)
 {
   CopyUTF8toUTF16(GetContentTypeInternal(), aContentType);
-
-  return NS_OK;
 }
 
 void
@@ -3447,14 +3436,6 @@ nsIDocument::GetSVGRootElement() const
 
 /* Return true if the document is in the focused top-level window, and is an
  * ancestor of the focused DOMWindow. */
-NS_IMETHODIMP
-nsDocument::HasFocus(bool* aResult)
-{
-  ErrorResult rv;
-  *aResult = nsIDocument::HasFocus(rv);
-  return rv.StealNSResult();
-}
-
 bool
 nsIDocument::HasFocus(ErrorResult& rv) const
 {
@@ -3500,13 +3481,6 @@ nsIDocument::SetLastFocusTime(const TimeStamp& aFocusTime)
   mLastFocusTime = aFocusTime;
 }
 
-NS_IMETHODIMP
-nsDocument::GetReferrer(nsAString& aReferrer)
-{
-  nsIDocument::GetReferrer(aReferrer);
-  return NS_OK;
-}
-
 void
 nsIDocument::GetReferrer(nsAString& aReferrer) const
 {
@@ -3526,14 +3500,6 @@ nsIDocument::GetSrcdocData(nsAString &aSrcdocData)
     }
   }
   aSrcdocData = VoidString();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetActiveElement(nsIDOMElement **aElement)
-{
-  nsCOMPtr<nsIDOMElement> el(do_QueryInterface(nsIDocument::GetActiveElement()));
-  el.forget(aElement);
   return NS_OK;
 }
 
@@ -3558,28 +3524,11 @@ nsIDocument::GetActiveElement()
   return GetDocumentElement();
 }
 
-NS_IMETHODIMP
-nsDocument::GetCurrentScript(nsIDOMElement **aElement)
-{
-  nsCOMPtr<nsIDOMElement> el(do_QueryInterface(nsIDocument::GetCurrentScript()));
-  el.forget(aElement);
-  return NS_OK;
-}
-
 Element*
 nsIDocument::GetCurrentScript()
 {
   nsCOMPtr<Element> el(do_QueryInterface(ScriptLoader()->GetCurrentScript()));
   return el;
-}
-
-NS_IMETHODIMP
-nsDocument::ElementFromPoint(float aX, float aY, nsIDOMElement** aReturn)
-{
-  Element* el = nsIDocument::ElementFromPoint(aX, aY);
-  nsCOMPtr<nsIDOMElement> retval = do_QueryInterface(el);
-  retval.forget(aReturn);
-  return NS_OK;
 }
 
 Element*
@@ -3748,14 +3697,6 @@ nsDocument::NodesFromRectHelper(float aX, float aY,
     }
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetElementsByClassName(const nsAString& aClasses,
-                                   nsIDOMNodeList** aReturn)
-{
-  *aReturn = nsIDocument::GetElementsByClassName(aClasses).take();
   return NS_OK;
 }
 
@@ -5072,8 +5013,8 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 
     // If we are set in a window that is already focused we should remember this
     // as the time the document gained focus.
-    bool focused = false;
-    Unused << HasFocus(&focused);
+    IgnoredErrorResult ignored;
+    bool focused = HasFocus(ignored);
     if (focused) {
       SetLastFocusTime(TimeStamp::Now());
     }
@@ -5328,19 +5269,6 @@ nsDocument::ReportEmptyGetElementByIdArg()
   nsContentUtils::ReportEmptyGetElementByIdArg(this);
 }
 
-NS_IMETHODIMP
-nsDocument::GetElementById(const nsAString& aId, nsIDOMElement** aReturn)
-{
-  Element *content = GetElementById(aId);
-  if (content) {
-    return CallQueryInterface(content, aReturn);
-  }
-
-  *aReturn = nullptr;
-
-  return NS_OK;
-}
-
 Element*
 nsDocument::AddIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
                                 void* aData, bool aForImage)
@@ -5372,15 +5300,6 @@ nsDocument::RemoveIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
   }
 
   entry->RemoveContentChangeCallback(aObserver, aData, aForImage);
-}
-
-NS_IMETHODIMP
-nsDocument::MozSetImageElement(const nsAString& aImageElementId,
-                               nsIDOMElement* aImageElement)
-{
-  nsCOMPtr<Element> el = do_QueryInterface(aImageElement);
-  MozSetImageElement(aImageElementId, el);
-  return NS_OK;
 }
 
 void
@@ -5477,12 +5396,11 @@ nsDocument::DispatchContentLoadedEvents()
   if (target_frame) {
     nsCOMPtr<nsIDocument> parent = mParentDocument;
     do {
-      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(parent);
-
-      nsCOMPtr<nsIDOMEvent> event;
-      if (domDoc) {
-        domDoc->CreateEvent(NS_LITERAL_STRING("Events"),
-                            getter_AddRefs(event));
+      RefPtr<Event> event;
+      if (parent) {
+        IgnoredErrorResult ignored;
+        event = parent->CreateEvent(NS_LITERAL_STRING("Events"),
+                                    CallerType::System, ignored);
 
       }
 
@@ -5818,28 +5736,6 @@ nsIDocument::GetDoctype() const
   return nullptr;
 }
 
-NS_IMETHODIMP
-nsDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
-{
-  MOZ_ASSERT(aDoctype);
-  nsCOMPtr<nsIDOMDocumentType> doctype = nsIDocument::GetDoctype();
-  doctype.forget(aDoctype);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
-{
-  ErrorResult rv;
-  *aImplementation = GetImplementation(rv);
-  if (rv.Failed()) {
-    MOZ_ASSERT(!*aImplementation);
-    return rv.StealNSResult();
-  }
-  NS_ADDREF(*aImplementation);
-  return NS_OK;
-}
-
 DOMImplementation*
 nsDocument::GetImplementation(ErrorResult& rv)
 {
@@ -5862,35 +5758,6 @@ nsDocument::GetImplementation(ErrorResult& rv)
   }
 
   return mDOMImplementation;
-}
-
-NS_IMETHODIMP
-nsDocument::GetDocumentElement(nsIDOMElement** aDocumentElement)
-{
-  NS_ENSURE_ARG_POINTER(aDocumentElement);
-
-  Element* root = GetRootElement();
-  if (root) {
-    return CallQueryInterface(root, aDocumentElement);
-  }
-
-  *aDocumentElement = nullptr;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::CreateElement(const nsAString& aTagName,
-                          nsIDOMElement** aReturn)
-{
-  *aReturn = nullptr;
-  ErrorResult rv;
-  ElementCreationOptionsOrString options;
-
-  options.SetAsString();
-  nsCOMPtr<Element> element = CreateElement(aTagName, options, rv);
-  NS_ENSURE_FALSE(rv.Failed(), rv.StealNSResult());
-  return CallQueryInterface(element, aReturn);
 }
 
 bool IsLowercaseASCII(const nsAString& aValue)
@@ -5973,22 +5840,6 @@ nsDocument::CreateElement(const nsAString& aTagName,
   return elem.forget();
 }
 
-NS_IMETHODIMP
-nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
-                            const nsAString& aQualifiedName,
-                            nsIDOMElement** aReturn)
-{
-  *aReturn = nullptr;
-  ElementCreationOptionsOrString options;
-
-  options.SetAsString();
-  ErrorResult rv;
-  nsCOMPtr<Element> element =
-    CreateElementNS(aNamespaceURI, aQualifiedName, options, rv);
-  NS_ENSURE_FALSE(rv.Failed(), rv.StealNSResult());
-  return CallQueryInterface(element, aReturn);
-}
-
 already_AddRefed<Element>
 nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
                             const nsAString& aQualifiedName,
@@ -6028,13 +5879,6 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
   return element.forget();
 }
 
-NS_IMETHODIMP
-nsDocument::CreateTextNode(const nsAString& aData, nsIDOMText** aReturn)
-{
-  *aReturn = nsIDocument::CreateTextNode(aData).take();
-  return NS_OK;
-}
-
 already_AddRefed<nsTextNode>
 nsIDocument::CreateEmptyTextNode() const
 {
@@ -6051,25 +5895,11 @@ nsIDocument::CreateTextNode(const nsAString& aData) const
   return text.forget();
 }
 
-NS_IMETHODIMP
-nsDocument::CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)
-{
-  *aReturn = nsIDocument::CreateDocumentFragment().take();
-  return NS_OK;
-}
-
 already_AddRefed<DocumentFragment>
 nsIDocument::CreateDocumentFragment() const
 {
   RefPtr<DocumentFragment> frag = new DocumentFragment(mNodeInfoManager);
   return frag.forget();
-}
-
-NS_IMETHODIMP
-nsDocument::CreateComment(const nsAString& aData, nsIDOMComment** aReturn)
-{
-  *aReturn = nsIDocument::CreateComment(aData).take();
-  return NS_OK;
 }
 
 // Unfortunately, bareword "Comment" is ambiguous with some Mac system headers.
@@ -6081,18 +5911,6 @@ nsIDocument::CreateComment(const nsAString& aData) const
   // Don't notify; this node is still being created.
   comment->SetText(aData, false);
   return comment.forget();
-}
-
-NS_IMETHODIMP
-nsDocument::CreateCDATASection(const nsAString& aData,
-                               nsISupports** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  ErrorResult rv;
-  already_AddRefed<CDATASection> supports =
-    nsIDocument::CreateCDATASection(aData, rv);
-  *aReturn = ToSupports(supports.take());
-  return rv.StealNSResult();
 }
 
 already_AddRefed<CDATASection>
@@ -6115,17 +5933,6 @@ nsIDocument::CreateCDATASection(const nsAString& aData,
   cdata->SetText(aData, false);
 
   return cdata.forget();
-}
-
-NS_IMETHODIMP
-nsDocument::CreateProcessingInstruction(const nsAString& aTarget,
-                                        const nsAString& aData,
-                                        nsIDOMProcessingInstruction** aReturn)
-{
-  ErrorResult rv;
-  *aReturn =
-    nsIDocument::CreateProcessingInstruction(aTarget, aData, rv).take();
-  return rv.StealNSResult();
 }
 
 already_AddRefed<ProcessingInstruction>
@@ -6233,18 +6040,6 @@ nsDocument::ResolveScheduledSVGPresAttrs()
   mLazySVGPresElements.Clear();
 }
 
-NS_IMETHODIMP
-nsDocument::GetElementsByTagName(const nsAString& aTagname,
-                                 nsIDOMNodeList** aReturn)
-{
-  RefPtr<nsContentList> list = GetElementsByTagName(aTagname);
-  NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
-
-  // transfer ref to aReturn
-  list.forget(aReturn);
-  return NS_OK;
-}
-
 long
 nsDocument::BlockedTrackingNodeCount() const
 {
@@ -6271,30 +6066,6 @@ nsDocument::BlockedTrackingNodes() const
   }
 
   return list.forget();
-}
-
-NS_IMETHODIMP
-nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
-                                   const nsAString& aLocalName,
-                                   nsIDOMNodeList** aReturn)
-{
-  ErrorResult rv;
-  RefPtr<nsContentList> list =
-    GetElementsByTagNameNS(aNamespaceURI, aLocalName, rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  // transfer ref to aReturn
-  list.forget(aReturn);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetMozSelectedStyleSheetSet(nsAString& aSheetSet)
-{
-  nsIDocument::GetSelectedStyleSheetSet(aSheetSet);
-  return NS_OK;
 }
 
 void
@@ -6326,13 +6097,6 @@ nsIDocument::GetSelectedStyleSheetSet(nsAString& aSheetSet)
   }
 }
 
-NS_IMETHODIMP
-nsDocument::SetMozSelectedStyleSheetSet(const nsAString& aSheetSet)
-{
-  SetSelectedStyleSheetSet(aSheetSet);
-  return NS_OK;
-}
-
 void
 nsDocument::SetSelectedStyleSheetSet(const nsAString& aSheetSet)
 {
@@ -6346,39 +6110,16 @@ nsDocument::SetSelectedStyleSheetSet(const nsAString& aSheetSet)
   EnableStyleSheetsForSetInternal(aSheetSet, true);
 }
 
-NS_IMETHODIMP
+void
 nsDocument::GetLastStyleSheetSet(nsAString& aSheetSet)
 {
-  nsString sheetSet;
-  GetLastStyleSheetSet(sheetSet);
-  aSheetSet = sheetSet;
-  return NS_OK;
-}
-
-void
-nsDocument::GetLastStyleSheetSet(nsString& aSheetSet)
-{
   aSheetSet = mLastStyleSheetSet;
-}
-
-NS_IMETHODIMP
-nsDocument::GetPreferredStyleSheetSet(nsAString& aSheetSet)
-{
-  nsIDocument::GetPreferredStyleSheetSet(aSheetSet);
-  return NS_OK;
 }
 
 void
 nsIDocument::GetPreferredStyleSheetSet(nsAString& aSheetSet)
 {
   GetHeaderData(nsGkAtoms::headerDefaultStyle, aSheetSet);
-}
-
-NS_IMETHODIMP
-nsDocument::GetStyleSheetSets(nsISupports** aList)
-{
-  NS_ADDREF(*aList = StyleSheetSets());
-  return NS_OK;
 }
 
 DOMStringList*
@@ -6388,13 +6129,6 @@ nsDocument::StyleSheetSets()
     mStyleSheetSetList = new nsDOMStyleSheetSetList(this);
   }
   return mStyleSheetSetList;
-}
-
-NS_IMETHODIMP
-nsDocument::MozEnableStyleSheetsForSet(const nsAString& aSheetSet)
-{
-  EnableStyleSheetsForSet(aSheetSet);
-  return NS_OK;
 }
 
 void
@@ -6430,13 +6164,6 @@ nsDocument::EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
     CSSLoader()->SetPreferredSheet(aSheetSet);
   }
   EndUpdate(UPDATE_STYLE);
-}
-
-NS_IMETHODIMP
-nsDocument::GetCharacterSet(nsAString& aCharacterSet)
-{
-  nsIDocument::GetCharacterSet(aCharacterSet);
-  return NS_OK;
 }
 
 void
@@ -6641,14 +6368,6 @@ nsIDocument::GetAnonymousNodes(Element& aElement)
   return BindingManager()->GetAnonymousNodesFor(&aElement);
 }
 
-NS_IMETHODIMP
-nsDocument::CreateRange(nsIDOMRange** aReturn)
-{
-  ErrorResult rv;
-  *aReturn = nsIDocument::CreateRange(rv).take();
-  return rv.StealNSResult();
-}
-
 already_AddRefed<nsRange>
 nsIDocument::CreateRange(ErrorResult& rv)
 {
@@ -6660,33 +6379,6 @@ nsIDocument::CreateRange(ErrorResult& rv)
   }
 
   return range.forget();
-}
-
-NS_IMETHODIMP
-nsDocument::CreateNodeIterator(nsIDOMNode *aRoot,
-                               uint32_t aWhatToShow,
-                               nsIDOMNodeFilter *aFilter,
-                               uint8_t aOptionalArgc,
-                               nsIDOMNodeIterator **_retval)
-{
-  *_retval = nullptr;
-
-  if (!aOptionalArgc) {
-    aWhatToShow = nsIDOMNodeFilter::SHOW_ALL;
-  }
-
-  if (!aRoot) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-
-  nsCOMPtr<nsINode> root = do_QueryInterface(aRoot);
-  NS_ENSURE_TRUE(root, NS_ERROR_UNEXPECTED);
-
-  ErrorResult rv;
-  *_retval = nsIDocument::CreateNodeIterator(*root, aWhatToShow,
-                                             NodeFilterHolder(aFilter),
-                                             rv).take();
-  return rv.StealNSResult();
 }
 
 already_AddRefed<NodeIterator>
@@ -6708,29 +6400,6 @@ nsIDocument::CreateNodeIterator(nsINode& aRoot, uint32_t aWhatToShow,
   return iterator.forget();
 }
 
-NS_IMETHODIMP
-nsDocument::CreateTreeWalker(nsIDOMNode *aRoot,
-                             uint32_t aWhatToShow,
-                             nsIDOMNodeFilter *aFilter,
-                             uint8_t aOptionalArgc,
-                             nsIDOMTreeWalker **_retval)
-{
-  *_retval = nullptr;
-
-  if (!aOptionalArgc) {
-    aWhatToShow = nsIDOMNodeFilter::SHOW_ALL;
-  }
-
-  nsCOMPtr<nsINode> root = do_QueryInterface(aRoot);
-  NS_ENSURE_TRUE(root, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-
-  ErrorResult rv;
-  *_retval = nsIDocument::CreateTreeWalker(*root, aWhatToShow,
-                                           NodeFilterHolder(aFilter),
-                                           rv).take();
-  return rv.StealNSResult();
-}
-
 already_AddRefed<TreeWalker>
 nsIDocument::CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
                               NodeFilter* aFilter,
@@ -6748,15 +6417,6 @@ nsIDocument::CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
   return walker.forget();
 }
 
-
-NS_IMETHODIMP
-nsDocument::GetDefaultView(mozIDOMWindowProxy** aDefaultView)
-{
-  *aDefaultView = nullptr;
-  nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
-  win.forget(aDefaultView);
-  return NS_OK;
-}
 
 already_AddRefed<Location>
 nsIDocument::GetLocation() const
@@ -6879,17 +6539,8 @@ nsDocument::GetTitleElement()
   return first ? first->AsElement() : nullptr;
 }
 
-NS_IMETHODIMP
-nsDocument::GetTitle(nsAString& aTitle)
-{
-  nsString title;
-  GetTitle(title);
-  aTitle = title;
-  return NS_OK;
-}
-
 void
-nsDocument::GetTitle(nsString& aTitle)
+nsDocument::GetTitle(nsAString& aTitle)
 {
   aTitle.Truncate();
 
@@ -6917,18 +6568,19 @@ nsDocument::GetTitle(nsString& aTitle)
   aTitle = tmp;
 }
 
-NS_IMETHODIMP
-nsDocument::SetTitle(const nsAString& aTitle)
+void
+nsDocument::SetTitle(const nsAString& aTitle, ErrorResult& aRv)
 {
   Element* rootElement = GetRootElement();
   if (!rootElement) {
-    return NS_OK;
+    return;
   }
 
 #ifdef MOZ_XUL
   if (rootElement->IsXULElement()) {
-    return rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::title,
-                                aTitle, true);
+    aRv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::title,
+                               aTitle, true);
+    return;
   }
 #endif
 
@@ -6946,7 +6598,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
       NS_NewSVGElement(getter_AddRefs(title), titleInfo.forget(),
                        NOT_FROM_PARSER);
       if (!title) {
-        return NS_OK;
+        return;
       }
       rootElement->InsertChildBefore(title, rootElement->GetFirstChild(), true);
     }
@@ -6954,7 +6606,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
     if (!title) {
       Element* head = GetHeadElement();
       if (!head) {
-        return NS_OK;
+        return;
       }
 
       RefPtr<mozilla::dom::NodeInfo> titleInfo;
@@ -6962,22 +6614,16 @@ nsDocument::SetTitle(const nsAString& aTitle)
           kNameSpaceID_XHTML, ELEMENT_NODE);
       title = NS_NewHTMLTitleElement(titleInfo.forget());
       if (!title) {
-        return NS_OK;
+        return;
       }
 
       head->AppendChildTo(title, true);
     }
   } else {
-    return NS_OK;
+    return;
   }
 
-  return nsContentUtils::SetNodeTextContent(title, aTitle, false);
-}
-
-void
-nsDocument::SetTitle(const nsAString& aTitle, ErrorResult& rv)
-{
-  rv = SetTitle(aTitle);
+  aRv = nsContentUtils::SetNodeTextContent(title, aTitle, false);
 }
 
 void
@@ -7305,13 +6951,6 @@ nsDocument::GetOrCreatePendingAnimationTracker()
  *
  * @lina 01/09/2001
  */
-NS_IMETHODIMP
-nsDocument::GetDir(nsAString& aDirection)
-{
-  nsIDocument::GetDir(aDirection);
-  return NS_OK;
-}
-
 void
 nsIDocument::GetDir(nsAString& aDirection) const
 {
@@ -7327,13 +6966,6 @@ nsIDocument::GetDir(nsAString& aDirection) const
  *
  * @lina 01/09/2001
  */
-NS_IMETHODIMP
-nsDocument::SetDir(const nsAString& aDirection)
-{
-  nsIDocument::SetDir(aDirection);
-  return NS_OK;
-}
-
 void
 nsIDocument::SetDir(const nsAString& aDirection)
 {
@@ -7369,29 +7001,6 @@ nsIDocument::UseExistingNameString(nsINode* aRootNode, const nsString* aName)
   return const_cast<nsString*>(aName);
 }
 
-NS_IMETHODIMP
-nsDocument::GetInputEncoding(nsAString& aInputEncoding)
-{
-  nsIDocument::GetCharacterSet(aInputEncoding);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetMozSyntheticDocument(bool *aSyntheticDocument)
-{
-  *aSyntheticDocument = mIsSyntheticDocument;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetDocumentURI(nsAString& aDocumentURI)
-{
-  nsString temp;
-  nsresult rv = nsIDocument::GetDocumentURI(temp);
-  aDocumentURI = temp;
-  return rv;
-}
-
 nsresult
 nsIDocument::GetDocumentURI(nsString& aDocumentURI) const
 {
@@ -7409,12 +7018,6 @@ nsIDocument::GetDocumentURI(nsString& aDocumentURI) const
 }
 
 // Alias of above
-NS_IMETHODIMP
-nsDocument::GetURL(nsAString& aURL)
-{
-  return GetDocumentURI(aURL);
-}
-
 nsresult
 nsIDocument::GetURL(nsString& aURL) const
 {
@@ -7858,11 +7461,10 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     if (viewport.IsEmpty()) {
       // If the docType specifies that we are on a site optimized for mobile,
       // then we want to return specially crafted defaults for the viewport info.
-      nsCOMPtr<nsIDOMDocumentType> docType;
-      nsresult rv = GetDoctype(getter_AddRefs(docType));
-      if (NS_SUCCEEDED(rv) && docType) {
+      RefPtr<DocumentType> docType = GetDoctype();
+      if (docType) {
         nsAutoString docId;
-        rv = docType->GetPublicId(docId);
+        nsresult rv = docType->GetPublicId(docId);
         if (NS_SUCCEEDED(rv)) {
           if ((docId.Find("WAP") != -1) ||
               (docId.Find("Mobile") != -1) ||
@@ -8083,16 +7685,6 @@ nsDocument::GetEventTargetParent(EventChainPreVisitor& aVisitor)
       window ? window->GetTargetForEventTargetChain() : nullptr, false);
   }
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::CreateEvent(const nsAString& aEventType, nsIDOMEvent** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  ErrorResult rv;
-  *aReturn = nsIDocument::CreateEvent(aEventType, CallerType::System,
-                                      rv).take();
-  return rv.StealNSResult();
 }
 
 already_AddRefed<Event>
@@ -9507,13 +9099,6 @@ nsDocument::SetReadyStateInternal(ReadyState rs)
   asyncDispatcher->RunDOMEventWhenSafe();
 }
 
-NS_IMETHODIMP
-nsDocument::GetReadyState(nsAString& aReadyState)
-{
-  nsIDocument::GetReadyState(aReadyState);
-  return NS_OK;
-}
-
 void
 nsIDocument::GetReadyState(nsAString& aReadyState) const
 {
@@ -10616,14 +10201,6 @@ nsIDocument::CaretPositionFromPoint(float aX, float aY)
     aCaretPos->SetAnonymousContentNode(anonNode);
   }
   return aCaretPos.forget();
-}
-
-NS_IMETHODIMP
-nsDocument::CaretPositionFromPoint(float aX, float aY, nsISupports** aCaretPos)
-{
-  NS_ENSURE_ARG_POINTER(aCaretPos);
-  *aCaretPos = nsIDocument::CaretPositionFromPoint(aX, aY).take();
-  return NS_OK;
 }
 
 bool
@@ -12372,22 +11949,6 @@ nsDocument::MaybeActiveMediaComponents()
   }
 
   GetWindow()->MaybeActiveMediaComponents();
-}
-
-NS_IMETHODIMP
-nsDocument::GetHidden(bool* aHidden)
-{
-  *aHidden = Hidden();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetVisibilityState(nsAString& aState)
-{
-  const EnumEntry& entry =
-    VisibilityStateValues::strings[static_cast<int>(mVisibilityState)];
-  aState.AssignASCII(entry.value, entry.length);
-  return NS_OK;
 }
 
 /* virtual */ void

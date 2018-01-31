@@ -32,9 +32,9 @@ function* testExpandersShown(inspector, view) {
   is(rule.textProps[1].name, "top", "Second property is top.");
 
   info("Check that the expanders are shown correctly");
-  is(rule.textProps[0].editor.expander.style.visibility, "visible",
-      "margin expander is visible.");
-  is(rule.textProps[1].editor.expander.style.visibility, "hidden",
+  is(rule.textProps[0].editor.expander.style.display, "inline-block",
+      "margin expander is displayed.");
+  is(rule.textProps[1].editor.expander.style.display, "none",
       "top expander is hidden.");
   ok(!rule.textProps[0].editor.expander.hasAttribute("open"),
       "margin computed list is closed.");

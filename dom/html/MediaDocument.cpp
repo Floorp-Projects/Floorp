@@ -405,7 +405,8 @@ MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
 
   // set it on the document
   if (aStatus.IsEmpty()) {
-    SetTitle(title);
+    IgnoredErrorResult ignored;
+    SetTitle(title, ignored);
   }
   else {
     nsAutoString titleWithStatus;
@@ -413,7 +414,8 @@ MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
     const char16_t *formatStrings[2] = {title.get(), status.get()};
     mStringBundle->FormatStringFromName("TitleWithStatus", formatStrings,
                                         2, titleWithStatus);
-    SetTitle(titleWithStatus);
+    IgnoredErrorResult ignored;
+    SetTitle(titleWithStatus, ignored);
   }
 }
 

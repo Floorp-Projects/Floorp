@@ -6,7 +6,6 @@
 
 interface nsIDocShell;
 interface nsIDocument;
-interface nsIDOMDocument;
 interface nsIDOMNode;
 interface nsISHEntry;
 interface nsIPrintSettings;
@@ -126,12 +125,21 @@ interface nsIContentViewer : nsISupports
 
   void stop();
 
-  attribute nsIDOMDocument DOMDocument;
+  /**
+   * Returns the same thing as getDocument(), but for use from script
+   * only.  C++ consumers should use getDocument().
+   */
+  readonly attribute nsISupports DOMDocument;
 
   /**
    * Returns DOMDocument as nsIDocument and without addrefing.
    */
-  [noscript,notxpcom] nsIDocument getDocument();
+  [noscript,notxpcom,nostdcall] nsIDocument getDocument();
+
+  /**
+   * Allows setting the document.
+   */
+  [noscript,nostdcall] void setDocument(in nsIDocument aDocument);
 
   [noscript] void getBounds(in nsIntRectRef aBounds);
   [noscript] void setBounds([const] in nsIntRectRef aBounds);

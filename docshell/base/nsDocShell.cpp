@@ -554,7 +554,9 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
     return mScriptGlobal->QueryInterface(aIID, aSink);
   } else if (aIID.Equals(NS_GET_IID(nsIDOMDocument)) &&
              NS_SUCCEEDED(EnsureContentViewer())) {
-    mContentViewer->GetDOMDocument((nsIDOMDocument**)aSink);
+    nsCOMPtr<nsIDOMDocument> doc =
+      do_QueryInterface(mContentViewer->GetDocument());
+    doc.forget(aSink);
     return *aSink ? NS_OK : NS_NOINTERFACE;
   } else if (aIID.Equals(NS_GET_IID(nsIDocument)) &&
              NS_SUCCEEDED(EnsureContentViewer())) {
@@ -572,19 +574,18 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
       return NS_ERROR_NO_INTERFACE;
     }
 
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    contentViewer->GetDOMDocument(getter_AddRefs(domDoc));
-    NS_ASSERTION(domDoc, "Should have a document.");
-    if (!domDoc) {
+    nsCOMPtr<nsIDocument> doc = contentViewer->GetDocument();
+    NS_ASSERTION(doc, "Should have a document.");
+    if (!doc) {
       return NS_ERROR_NO_INTERFACE;
     }
 
 #if defined(DEBUG)
     MOZ_LOG(gDocShellLog, LogLevel::Debug,
            ("nsDocShell[%p]: returning app cache container %p",
-            this, domDoc.get()));
+            this, doc.get()));
 #endif
-    return domDoc->QueryInterface(aIID, aSink);
+    return doc->QueryInterface(aIID, aSink);
   } else if (aIID.Equals(NS_GET_IID(nsIPrompt)) &&
              NS_SUCCEEDED(EnsureScriptEnvironment())) {
     nsresult rv;
@@ -5198,7 +5199,12 @@ nsDocShell::GetDocument(nsIDOMDocument** aDocument)
   NS_ENSURE_ARG_POINTER(aDocument);
   NS_ENSURE_SUCCESS(EnsureContentViewer(), NS_ERROR_FAILURE);
 
-  return mContentViewer->GetDOMDocument(aDocument);
+  nsIDocument* doc = mContentViewer->GetDocument();
+  if (!doc) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return CallQueryInterface(doc, aDocument);
 }
 
 NS_IMETHODIMP
@@ -7981,9 +7987,7 @@ nsDocShell::BeginRestore(nsIContentViewer* aContentViewer, bool aTop)
   // the document's channel to the loadgroup to initiate stateChange
   // notifications.
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  aContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  nsCOMPtr<nsIDocument> doc = aContentViewer->GetDocument();
   if (doc) {
     nsIChannel* channel = doc->GetChannel();
     if (channel) {
@@ -8203,9 +8207,7 @@ nsDocShell::RestoreFromHistory()
     // at the time we initiated the new load.  We need to check whether
     // it's still safe to do so, since there may have been DOM mutations
     // or new requests initiated.
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    viewer->GetDOMDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+    nsCOMPtr<nsIDocument> doc = viewer->GetDocument();
     nsIRequest* request = nullptr;
     if (doc) {
       request = doc->GetChannel();
@@ -8381,8 +8383,7 @@ nsDocShell::RestoreFromHistory()
   bool sticky;
   mLSHE->GetSticky(&sticky);
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> document = mContentViewer->GetDocument();
 
   nsCOMArray<nsIDocShellTreeItem> childShells;
   int32_t i = 0;
@@ -8462,7 +8463,6 @@ nsDocShell::RestoreFromHistory()
     newCv->SetAuthorStyleDisabled(styleDisabled);
   }
 
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
   if (document) {
     RefPtr<nsDocShell> parent = GetParentDocshell();
     if (parent) {
@@ -8720,9 +8720,7 @@ nsDocShell::CreateContentViewer(const nsACString& aContentType,
     // at the time we initiated the new load.  We need to check whether
     // it's still safe to do so, since there may have been DOM mutations
     // or new requests initiated.
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    viewer->GetDOMDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+    nsCOMPtr<nsIDocument> doc = viewer->GetDocument();
     mSavingOldViewer = CanSavePresentation(mLoadType, aRequest, doc);
   }
 

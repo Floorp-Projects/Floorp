@@ -8,7 +8,6 @@
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIFactory.h"
@@ -37,12 +36,12 @@ nsCOMPtr<nsIDOMNode> GetDOMNodeFromDocShell(nsIDocShell *aShell)
   nsCOMPtr<nsIContentViewer> cv;
   aShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
-    nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(cv->GetDocument()));
-    if (domdoc) {
-      nsCOMPtr<nsIDOMElement> element;
-      domdoc->GetDocumentElement(getter_AddRefs(element));
-      if (element)
-        node = element;
+    nsCOMPtr<nsIDocument> doc = cv->GetDocument();
+    if (doc) {
+      Element* element = doc->GetDocumentElement();
+      if (element) {
+        node = element->AsDOMNode();
+      }
     }
   }
 
