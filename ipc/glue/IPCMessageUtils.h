@@ -68,12 +68,6 @@ struct null_t {
 
 struct SerializedStructuredCloneBuffer final
 {
-  SerializedStructuredCloneBuffer() {}
-  SerializedStructuredCloneBuffer(const SerializedStructuredCloneBuffer& aOther)
-  {
-    *this = aOther;
-  }
-
   SerializedStructuredCloneBuffer&
   operator=(const SerializedStructuredCloneBuffer& aOther)
   {
