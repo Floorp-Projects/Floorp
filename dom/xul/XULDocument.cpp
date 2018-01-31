@@ -1413,40 +1413,19 @@ XULDocument::GetPopupRangeOffset(ErrorResult& aRv)
     return pm->MouseLocationOffset();
 }
 
-NS_IMETHODIMP
-XULDocument::GetTooltipNode(nsIDOMNode** aNode)
+already_AddRefed<nsINode>
+XULDocument::GetTooltipNode()
 {
-    *aNode = nullptr;
-
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
         nsCOMPtr<nsINode> node = pm->GetLastTriggerTooltipNode(this);
         if (node && nsContentUtils::CanCallerAccess(node)) {
-            *aNode = node->AsDOMNode();
-            NS_ADDREF(*aNode);
+            return node.forget();
         }
     }
 
-    return NS_OK;
+    return nullptr;
 }
-
-already_AddRefed<nsINode>
-XULDocument::GetTooltipNode()
-{
-    nsCOMPtr<nsIDOMNode> node;
-    DebugOnly<nsresult> rv = GetTooltipNode(getter_AddRefs(node));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    nsCOMPtr<nsINode> retval(do_QueryInterface(node));
-    return retval.forget();
-}
-
-NS_IMETHODIMP
-XULDocument::SetTooltipNode(nsIDOMNode* aNode)
-{
-    // do nothing
-    return NS_OK;
-}
-
 
 NS_IMETHODIMP
 XULDocument::GetCommandDispatcher(nsIDOMXULCommandDispatcher** aTracker)

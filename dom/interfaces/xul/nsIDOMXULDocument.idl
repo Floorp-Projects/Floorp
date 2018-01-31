@@ -13,8 +13,6 @@ interface nsIBoxObject;
 [uuid(7790d4c3-e8f0-4e29-9887-d683ed2b2a44)]
 interface nsIDOMXULDocument : nsIDOMDocument
 {
-  attribute nsIDOMNode                          tooltipNode;
-
   readonly attribute nsIDOMXULCommandDispatcher commandDispatcher;
 
   readonly attribute long                       width;
