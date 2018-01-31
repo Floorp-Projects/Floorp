@@ -3749,14 +3749,6 @@ nsDocument::NodesFromRectHelper(float aX, float aY,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocument::GetElementsByClassName(const nsAString& aClasses,
-                                   nsIDOMNodeList** aReturn)
-{
-  *aReturn = nsIDocument::GetElementsByClassName(aClasses).take();
-  return NS_OK;
-}
-
 void
 nsIDocument::ReleaseCapture() const
 {
@@ -6133,18 +6125,6 @@ nsDocument::ResolveScheduledSVGPresAttrs()
   mLazySVGPresElements.Clear();
 }
 
-NS_IMETHODIMP
-nsDocument::GetElementsByTagName(const nsAString& aTagname,
-                                 nsIDOMNodeList** aReturn)
-{
-  RefPtr<nsContentList> list = GetElementsByTagName(aTagname);
-  NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
-
-  // transfer ref to aReturn
-  list.forget(aReturn);
-  return NS_OK;
-}
-
 long
 nsDocument::BlockedTrackingNodeCount() const
 {
@@ -6171,23 +6151,6 @@ nsDocument::BlockedTrackingNodes() const
   }
 
   return list.forget();
-}
-
-NS_IMETHODIMP
-nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
-                                   const nsAString& aLocalName,
-                                   nsIDOMNodeList** aReturn)
-{
-  ErrorResult rv;
-  RefPtr<nsContentList> list =
-    GetElementsByTagNameNS(aNamespaceURI, aLocalName, rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  // transfer ref to aReturn
-  list.forget(aReturn);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

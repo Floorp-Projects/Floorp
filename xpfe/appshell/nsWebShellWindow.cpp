@@ -33,7 +33,7 @@
 #include "nsIWidgetListener.h"
 
 #include "nsIDOMCharacterData.h"
-#include "nsIDOMNodeList.h"
+#include "nsINodeList.h"
 
 #include "nsITimer.h"
 #include "nsXULPopupManager.h"
@@ -44,7 +44,6 @@
 #include "nsIWebProgressListener.h"
 
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDocumentLoaderFactory.h"
@@ -505,7 +504,7 @@ nsWebShellWindow::WindowDeactivated()
 }
 
 #ifdef USE_NATIVE_MENUS
-static void LoadNativeMenus(nsIDOMDocument *aDOMDoc, nsIWidget *aParentWindow)
+static void LoadNativeMenus(nsIDocument *aDoc, nsIWidget *aParentWindow)
 {
   if (gfxPlatform::IsHeadless()) {
     return;
@@ -517,14 +516,14 @@ static void LoadNativeMenus(nsIDOMDocument *aDOMDoc, nsIWidget *aParentWindow)
 
   // Find the menubar tag (if there is more than one, we ignore all but
   // the first).
-  nsCOMPtr<nsIDOMNodeList> menubarElements;
-  aDOMDoc->GetElementsByTagNameNS(NS_LITERAL_STRING("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
-                                  NS_LITERAL_STRING("menubar"),
-                                  getter_AddRefs(menubarElements));
+  nsCOMPtr<nsINodeList> menubarElements =
+    aDoc->GetElementsByTagNameNS(NS_LITERAL_STRING("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
+                                 NS_LITERAL_STRING("menubar"));
 
-  nsCOMPtr<nsIDOMNode> menubarNode;
-  if (menubarElements)
-    menubarElements->Item(0, getter_AddRefs(menubarNode));
+  nsCOMPtr<nsINode> menubarNode;
+  if (menubarElements) {
+    menubarNode = menubarElements->Item(0);
+  }
 
   if (menubarNode) {
     nsCOMPtr<Element> menubarContent(do_QueryInterface(menubarNode));
@@ -652,9 +651,9 @@ nsWebShellWindow::OnStateChange(nsIWebProgress *aProgress,
   nsCOMPtr<nsIContentViewer> cv;
   mDocShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
-    nsCOMPtr<nsIDOMDocument> menubarDOMDoc(do_QueryInterface(cv->GetDocument()));
-    if (menubarDOMDoc)
-      LoadNativeMenus(menubarDOMDoc, mWindow);
+    nsCOMPtr<nsIDocument> menubarDoc = cv->GetDocument();
+    if (menubarDoc)
+      LoadNativeMenus(menubarDoc, mWindow);
   }
 #endif // USE_NATIVE_MENUS
 
