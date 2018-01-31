@@ -190,7 +190,7 @@ ServoKeyframeRule::SetKeyText(const nsAString& aKeyText)
 }
 
 void
-ServoKeyframeRule::GetCssTextImpl(nsAString& aCssText) const
+ServoKeyframeRule::GetCssText(nsAString& aCssText) const
 {
   Servo_Keyframe_GetCssText(mRaw, &aCssText);
 }

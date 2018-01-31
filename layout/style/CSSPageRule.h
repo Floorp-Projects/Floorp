@@ -27,7 +27,7 @@ public:
 
   // WebIDL interfaces
   uint16_t Type() const final override { return CSSRuleBinding::PAGE_RULE; }
-  virtual void GetCssTextImpl(nsAString& aCssText) const override = 0;
+  virtual void GetCssText(nsAString& aCssText) const override = 0;
   virtual nsICSSDeclaration* Style() = 0;
 
   virtual size_t

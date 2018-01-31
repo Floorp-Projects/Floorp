@@ -19,7 +19,7 @@ ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Log",
                                "resource://gre/modules/Log.jsm");
 ChromeUtils.defineModuleGetter(this, "profileStorage",
-                               "resource://formautofill/ProfileStorage.jsm");
+                               "resource://formautofill/FormAutofillStorage.jsm");
 
 // A helper to sanitize address and creditcard records suitable for logging.
 function sanitizeStorageObject(ob) {
@@ -223,7 +223,7 @@ FormAutofillTracker.prototype = {
   },
 
   // We never want to persist changed IDs, as the changes are already stored
-  // in ProfileStorage
+  // in FormAutofillStorage
   persistChangedIDs: false,
 
   // Ensure we aren't accidentally using the base persistence.
@@ -273,7 +273,7 @@ class AutofillChangeset extends Changeset {
     let change = this.changes[id];
     if (change) {
       // Mark the change as synced without removing it from the set. We do this
-      // so that we can update ProfileStorage in `trackRemainingChanges`.
+      // so that we can update FormAutofillStorage in `trackRemainingChanges`.
       change.synced = true;
     }
   }
@@ -292,7 +292,7 @@ FormAutofillEngine.prototype = {
 
   // We don't use SyncEngine.initialize() for this, as we initialize even if
   // the engine is disabled, and we don't want to be the loader of
-  // ProfileStorage in this case.
+  // FormAutofillStorage in this case.
   async _syncStartup() {
     await profileStorage.initialize();
     await SyncEngine.prototype._syncStartup.call(this);

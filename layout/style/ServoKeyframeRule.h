@@ -36,7 +36,7 @@ public:
   RawServoKeyframe* Raw() const { return mRaw; }
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetCssText(nsAString& aCssText) const final override;
   void GetKeyText(nsAString& aKeyText) final override;
   void SetKeyText(const nsAString& aKeyText) final override;
   nsICSSDeclaration* Style() final override;

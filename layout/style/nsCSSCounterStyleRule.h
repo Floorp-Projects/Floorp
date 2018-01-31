@@ -37,7 +37,7 @@ public:
 
   // WebIDL interface
   uint16_t Type() const override;
-  void GetCssTextImpl(nsAString& aCssText) const override;
+  void GetCssText(nsAString& aCssText) const override;
   void GetName(nsAString& aName);
   void SetName(const nsAString& aName);
   void GetSystem(nsAString& aSystem);

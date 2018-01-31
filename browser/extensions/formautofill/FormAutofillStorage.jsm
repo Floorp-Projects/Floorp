@@ -94,7 +94,7 @@
  * "cc-number-encrypted". Therefore, calling "_stripComputedFields" followed by
  * "_computeFields" can make sure the encrypt-related fields are up-to-date.
  *
- * In general, you have to decrypt the number by your own outside ProfileStorage
+ * In general, you have to decrypt the number by your own outside FormAutofillStorage
  * when necessary. However, you will get the decrypted records when querying
  * data with "rawData=true" to ensure they're ready to sync.
  *
@@ -1741,13 +1741,13 @@ class CreditCards extends AutofillRecords {
   }
 }
 
-function ProfileStorage(path) {
+function FormAutofillStorage(path) {
   this._path = path;
   this._initializePromise = null;
   this.INTERNAL_FIELDS = INTERNAL_FIELDS;
 }
 
-ProfileStorage.prototype = {
+FormAutofillStorage.prototype = {
   get version() {
     return STORAGE_SCHEMA_VERSION;
   },
@@ -1804,5 +1804,5 @@ ProfileStorage.prototype = {
 };
 
 // The singleton exposed by this module.
-this.profileStorage = new ProfileStorage(
+this.profileStorage = new FormAutofillStorage(
   OS.Path.join(OS.Constants.Path.profileDir, PROFILE_JSON_FILE_NAME));
