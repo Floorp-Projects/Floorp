@@ -23,7 +23,10 @@
 #include "WorkerPrivate.h"
 #include "WorkerScope.h"
 
-USING_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
+
+using namespace workers;
 
 namespace {
 
@@ -792,3 +795,6 @@ WorkerProxyToMainThreadRunnable::ReleaseWorker()
   MOZ_ASSERT(mWorkerHolder);
   mWorkerHolder = nullptr;
 }
+
+} // dom namespace
+} // mozilla namespace

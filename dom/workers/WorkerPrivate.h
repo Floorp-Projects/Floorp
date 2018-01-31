@@ -37,21 +37,20 @@ class MessagePort;
 class MessagePortIdentifier;
 class PerformanceStorage;
 class SharedWorker;
+class WorkerControlRunnable;
 class WorkerDebugger;
 class WorkerDebuggerGlobalScope;
 class WorkerErrorReport;
 class WorkerEventTarget;
 class WorkerGlobalScope;
 struct WorkerOptions;
+class WorkerRunnable;
 class WorkerThread;
 
 } // dom namespace
 } // mozilla namespace
 
 BEGIN_WORKERS_NAMESPACE
-
-class WorkerControlRunnable;
-class WorkerRunnable;
 
 // SharedMutex is a small wrapper around an (internal) reference-counted Mutex
 // object. It exists to avoid changing a lot of code to use Mutex* instead of

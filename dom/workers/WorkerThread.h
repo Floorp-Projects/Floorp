@@ -19,11 +19,12 @@ class nsIRunnable;
 namespace mozilla {
 namespace dom {
 
+class WorkerRunnable;
+
 namespace workers {
 class RuntimeService;
 class WorkerPrivate;
 template <class> class WorkerPrivateParent;
-class WorkerRunnable;
 }
 
 // This class lets us restrict the public methods that can be called on
@@ -75,7 +76,7 @@ public:
 
   nsresult
   DispatchAnyThread(const WorkerThreadFriendKey& aKey,
-           already_AddRefed<workers::WorkerRunnable> aWorkerRunnable);
+           already_AddRefed<WorkerRunnable> aWorkerRunnable);
 
   uint32_t
   RecursionDepth(const WorkerThreadFriendKey& aKey) const;
