@@ -8,7 +8,7 @@
 
 #include "ClientThing.h"
 #include "mozilla/dom/PClientManagerChild.h"
-#include "mozilla/dom/workers/bindings/WorkerHolderToken.h"
+#include "mozilla/dom/WorkerHolderToken.h"
 
 namespace mozilla {
 namespace dom {
@@ -18,11 +18,11 @@ class WorkerPrivate;
 } // workers namespace
 
 class ClientManagerChild final : public PClientManagerChild
-                               , public mozilla::dom::workers::WorkerHolderToken::Listener
+                               , public WorkerHolderToken::Listener
 {
   ClientThing<ClientManagerChild>* mManager;
 
-  RefPtr<mozilla::dom::workers::WorkerHolderToken> mWorkerHolderToken;
+  RefPtr<WorkerHolderToken> mWorkerHolderToken;
   bool mTeardownStarted;
 
   // PClientManagerChild interface
@@ -62,7 +62,7 @@ class ClientManagerChild final : public PClientManagerChild
   WorkerShuttingDown() override;
 
 public:
-  explicit ClientManagerChild(workers::WorkerHolderToken* aWorkerHolderToken);
+  explicit ClientManagerChild(WorkerHolderToken* aWorkerHolderToken);
 
   void
   SetOwner(ClientThing<ClientManagerChild>* aThing);

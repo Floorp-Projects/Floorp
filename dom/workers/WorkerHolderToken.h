@@ -11,9 +11,12 @@
 #include "nsTObserverArray.h"
 #include "WorkerHolder.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
+namespace workers {
 class WorkerPrivate;
+}
 
 // This is a ref-counted WorkerHolder implementation.  If you wish
 // to be notified of worker shutdown beginning, then you can implement
@@ -21,7 +24,7 @@ class WorkerPrivate;
 //
 // This is purely a convenience class to avoid requiring code to
 // extend WorkerHolder all the time.
-class WorkerHolderToken final : public WorkerHolder
+class WorkerHolderToken final : public workers::WorkerHolder
 {
 public:
   // Pure virtual class defining the interface for objects that
@@ -37,7 +40,8 @@ public:
   // passed the given shutdown phase or fails for another reason then
   // nullptr is returned.
   static already_AddRefed<WorkerHolderToken>
-  Create(workers::WorkerPrivate* aWorkerPrivate, Status aShutdownStatus,
+  Create(workers::WorkerPrivate* aWorkerPrivate,
+         workers::Status aShutdownStatus,
          Behavior aBehavior = PreventIdleShutdownStart);
 
   // Add a listener to the token.  Note, this does not hold a strong
@@ -55,11 +59,11 @@ public:
   bool
   IsShuttingDown() const;
 
-  WorkerPrivate*
+  workers::WorkerPrivate*
   GetWorkerPrivate() const;
 
 private:
-  WorkerHolderToken(Status aShutdownStatus, Behavior aBehavior);
+  WorkerHolderToken(workers::Status aShutdownStatus, Behavior aBehavior);
 
   ~WorkerHolderToken();
 
@@ -68,13 +72,14 @@ private:
   Notify(workers::Status aStatus) override;
 
   nsTObserverArray<Listener*> mListenerList;
-  const Status mShutdownStatus;
+  const workers::Status mShutdownStatus;
   bool mShuttingDown;
 
 public:
   NS_INLINE_DECL_REFCOUNTING(WorkerHolderToken)
 };
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
 
 #endif // mozilla_dom_workers_WorkerHolderToken_h
