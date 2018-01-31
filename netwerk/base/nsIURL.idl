@@ -48,7 +48,7 @@ interface nsIURL : nsIURI
      *
      * Some characters may be escaped.
      */
-    attribute AUTF8String directory;
+    readonly attribute AUTF8String directory;
 
     /**
      * Returns the file name portion of a URL.  If the URL denotes a path to a
@@ -59,8 +59,7 @@ interface nsIURL : nsIURI
      *
      * Some characters may be escaped.
      */
-    attribute AUTF8String fileName;
-
+    readonly attribute AUTF8String fileName;
 
     /*************************************************************************
      * The URL filename is broken down even further:
@@ -71,7 +70,7 @@ interface nsIURL : nsIURI
      *
      * Some characters may be escaped.
      */
-    attribute AUTF8String fileBaseName;
+    readonly attribute AUTF8String fileBaseName;
 
     /**
      * Returns the file extension portion of a filename in a url.  If a file
@@ -79,7 +78,7 @@ interface nsIURL : nsIURI
      *
      * Some characters may be escaped.
      */
-    attribute AUTF8String fileExtension;
+    readonly attribute AUTF8String fileExtension;
 
     /**
      * This method takes a uri and compares the two.  The common uri portion
