@@ -123,6 +123,7 @@ void ScopeChecker::check(const MatchFinder::MatchResult &Result) {
   const char *Heap = "variable of type %0 only valid on the heap";
   const char *NonHeap = "variable of type %0 is not valid on the heap";
   const char *NonTemporary = "variable of type %0 is not valid in a temporary";
+  const char *Temporary = "variable of type %0 is only valid as a temporary";
 
   const char *StackNote =
       "value incorrectly allocated in an automatic variable";
@@ -138,11 +139,13 @@ void ScopeChecker::check(const MatchFinder::MatchResult &Result) {
   case AV_Global:
     StackClass.reportErrorIfPresent(*this, T, Loc, Stack, GlobalNote);
     HeapClass.reportErrorIfPresent(*this, T, Loc, Heap, GlobalNote);
+    TemporaryClass.reportErrorIfPresent(*this, T, Loc, Temporary, GlobalNote);
     break;
 
   case AV_Automatic:
     GlobalClass.reportErrorIfPresent(*this, T, Loc, Global, StackNote);
     HeapClass.reportErrorIfPresent(*this, T, Loc, Heap, StackNote);
+    TemporaryClass.reportErrorIfPresent(*this, T, Loc, Temporary, StackNote);
     break;
 
   case AV_Temporary:
@@ -156,6 +159,7 @@ void ScopeChecker::check(const MatchFinder::MatchResult &Result) {
     GlobalClass.reportErrorIfPresent(*this, T, Loc, Global, HeapNote);
     StackClass.reportErrorIfPresent(*this, T, Loc, Stack, HeapNote);
     NonHeapClass.reportErrorIfPresent(*this, T, Loc, NonHeap, HeapNote);
+    TemporaryClass.reportErrorIfPresent(*this, T, Loc, Temporary, HeapNote);
     break;
   }
 }

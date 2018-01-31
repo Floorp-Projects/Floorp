@@ -43,6 +43,7 @@ SOURCES += [
     'TestRefCountedCopyConstructor.cpp',
     'TestSprintfLiteral.cpp',
     'TestStackClass.cpp',
+    'TestTemporaryClass.cpp',
     'TestTrivialCtorDtor.cpp',
 ]
 
