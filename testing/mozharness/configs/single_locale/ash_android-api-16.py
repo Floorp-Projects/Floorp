@@ -53,8 +53,6 @@ config = {
     },
     "upload_branch": "%s-android-api-16" % BRANCH,
     "ssh_key_dir": "~/.ssh",
-    "mozilla_dir": MOZILLA_DIR,
-    "mozconfig": "%s/mobile/android/config/mozconfigs/android-api-16/l10n-nightly" % MOZILLA_DIR,
     "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
     "stage_product": "mobile",
     "platform": "android",

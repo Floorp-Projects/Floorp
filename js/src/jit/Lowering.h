@@ -120,6 +120,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitFunctionDispatch(MFunctionDispatch* ins) override;
     void visitObjectGroupDispatch(MObjectGroupDispatch* ins) override;
     void visitCompare(MCompare* comp) override;
+    void visitSameValue(MSameValue* comp) override;
     void visitTypeOf(MTypeOf* ins) override;
     void visitToAsync(MToAsync* ins) override;
     void visitToAsyncGen(MToAsyncGen* ins) override;

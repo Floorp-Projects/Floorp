@@ -1,7 +1,9 @@
 config = {
     "platform": "win64",
     "stage_product": "firefox",
-    "mozconfig": "src/browser/config/mozconfigs/win64/l10n-mozconfig-devedition",
+    "app_name": "browser",
+    "mozconfig_platform": "win64",
+    "mozconfig_variant": "l10n-mozconfig-devedition",
     "ssh_key_dir": "~/.ssh",
     "objdir": "obj-firefox",
     "vcs_share_base": "c:/builds/hg-shared",
