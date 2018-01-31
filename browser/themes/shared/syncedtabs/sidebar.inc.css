@@ -217,8 +217,8 @@ body {
 
 .deck .syncIllustration,
 .deck .syncIllustrationIssue {
-  height: 150px;
-  margin: 38px 8px;
+  height: 91px;
+  margin: 38px 8px 15px;
   background-position: center;
   background-repeat: no-repeat;
 }
