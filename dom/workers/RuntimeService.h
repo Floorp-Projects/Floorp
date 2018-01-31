@@ -12,6 +12,7 @@
 #include "nsIObserver.h"
 
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/workerinternals/JSSettings.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
@@ -25,7 +26,7 @@ class SharedWorker;
 struct WorkerLoadInfo;
 class WorkerThread;
 
-namespace workers {
+namespace workerinternals {
 
 class RuntimeService final : public nsIObserver
 {
@@ -93,7 +94,7 @@ class RuntimeService final : public nsIObserver
   // Only used on the main thread.
   nsCOMPtr<nsITimer> mIdleThreadTimer;
 
-  static JSSettings sDefaultJSSettings;
+  static workerinternals::JSSettings sDefaultJSSettings;
 
 public:
   struct NavigatorProperties
@@ -169,16 +170,16 @@ public:
   NoteIdleThread(WorkerThread* aThread);
 
   static void
-  GetDefaultJSSettings(JSSettings& aSettings)
+  GetDefaultJSSettings(workerinternals::JSSettings& aSettings)
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     aSettings = sDefaultJSSettings;
   }
 
   static void
   SetDefaultContextOptions(const JS::ContextOptions& aContextOptions)
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     sDefaultJSSettings.contextOptions = aContextOptions;
   }
 
@@ -200,7 +201,7 @@ public:
   static void
   SetDefaultJSGCSettings(JSGCParamKey aKey, uint32_t aValue)
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     sDefaultJSSettings.ApplyGCSetting(aKey, aValue);
   }
 
@@ -211,7 +212,7 @@ public:
   static void
   SetDefaultGCZeal(uint8_t aGCZeal, uint32_t aFrequency)
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     sDefaultJSSettings.gcZeal = aGCZeal;
     sDefaultJSSettings.gcZealFrequency = aFrequency;
   }
@@ -270,7 +271,7 @@ private:
                                  SharedWorker** aSharedWorker);
 };
 
-} // workers namespace
+} // workerinternals namespace
 } // dom namespace
 } // mozilla namespace
 

@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workers_workerdebuggermanager_h
 #define mozilla_dom_workers_workerdebuggermanager_h
 
-#include "mozilla/dom/workers/WorkerCommon.h"
+#include "mozilla/dom/WorkerCommon.h"
 
 #include "nsIObserver.h"
 #include "nsIWorkerDebuggerManager.h"

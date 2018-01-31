@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workers_workerprivate_h__
 #define mozilla_dom_workers_workerprivate_h__
 
-#include "mozilla/dom/workers/WorkerCommon.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsDOMNavigationTiming.h"
@@ -18,7 +18,8 @@
 
 #include "mozilla/dom/WorkerHolder.h"
 #include "mozilla/dom/WorkerLoadInfo.h"
-#include "mozilla/dom/workers/Queue.h"
+#include "mozilla/dom/workerinternals/JSSettings.h"
+#include "mozilla/dom/workerinternals/Queue.h"
 
 #ifdef XP_WIN
 #undef PostMessage
@@ -144,7 +145,7 @@ private:
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
 
   // Protected by mMutex.
-  workers::JSSettings mJSSettings;
+  workerinternals::JSSettings mJSSettings;
 
   // Only touched on the parent thread (currently this is always the main
   // thread as SharedWorkers are always top-level).
@@ -707,7 +708,7 @@ public:
   }
 
   void
-  CopyJSSettings(workers::JSSettings& aSettings)
+  CopyJSSettings(workerinternals::JSSettings& aSettings)
   {
     mozilla::MutexAutoLock lock(mMutex);
     aSettings = mJSSettings;
@@ -889,8 +890,8 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   bool mDebuggerRegistered;
   WorkerDebugger* mDebugger;
 
-  workersinternals::Queue<WorkerControlRunnable*, 4> mControlQueue;
-  workersinternals::Queue<WorkerRunnable*, 4> mDebuggerQueue;
+  workerinternals::Queue<WorkerControlRunnable*, 4> mControlQueue;
+  workerinternals::Queue<WorkerRunnable*, 4> mDebuggerQueue;
 
   // Touched on multiple threads, protected with mMutex.
   JSContext* mJSContext;

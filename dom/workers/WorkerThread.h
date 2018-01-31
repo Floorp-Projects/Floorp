@@ -23,7 +23,7 @@ class WorkerRunnable;
 class WorkerPrivate;
 template <class> class WorkerPrivateParent;
 
-namespace workers {
+namespace workerinternals {
 class RuntimeService;
 }
 
@@ -32,7 +32,7 @@ class RuntimeService;
 // full access to private methods (as would happen if they were simply friends).
 class WorkerThreadFriendKey
 {
-  friend class workers::RuntimeService;
+  friend class workerinternals::RuntimeService;
   friend class WorkerPrivate;
   friend class WorkerPrivateParent<WorkerPrivate>;
 

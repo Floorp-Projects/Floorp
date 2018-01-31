@@ -8,7 +8,7 @@
 #define mozilla_dom_workers_WorkerLoadInfo_h
 
 #include "mozilla/dom/ChannelInfo.h"
-#include "mozilla/dom/workers/WorkerCommon.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadContext.h"

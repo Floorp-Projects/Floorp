@@ -4,17 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_queue_h__
-#define mozilla_dom_workers_queue_h__
+#ifndef mozilla_dom_workerinternal_Queue_h
+#define mozilla_dom_workerinternal_Queue_h
 
-#include "mozilla/dom/workers/WorkerCommon.h"
+#include "mozilla/dom/WorkerCommon.h"
 
 #include "mozilla/Mutex.h"
 #include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {
-namespace workersinternals {
+namespace workerinternals {
 
 template <typename T, int TCount>
 struct StorageWithTArray
@@ -200,8 +200,8 @@ private:
   Queue & operator=(const Queue&);
 };
 
-} // workersinternals namespace
+} // workerinternals namespace
 } // dom namespace
 } // mozilla namespace
 
-#endif /* mozilla_dom_workers_queue_h__ */
+#endif /* mozilla_dom_workerinternals_Queue_h*/

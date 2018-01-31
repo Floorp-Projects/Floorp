@@ -10,7 +10,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/NotificationEventBinding.h"
 #include "mozilla/dom/ServiceWorkerEvents.h"
-#include "mozilla/dom/workers/WorkerCommon.h"
+#include "mozilla/dom/WorkerCommon.h"
 
 namespace mozilla {
 namespace dom {
