@@ -2951,7 +2951,7 @@ public:
 #endif
   void GetSelectedStyleSheetSet(nsAString& aSheetSet);
   virtual void SetSelectedStyleSheetSet(const nsAString& aSheetSet) = 0;
-  virtual void GetLastStyleSheetSet(nsString& aSheetSet) = 0;
+  virtual void GetLastStyleSheetSet(nsAString& aSheetSet) = 0;
   void GetPreferredStyleSheetSet(nsAString& aSheetSet);
   virtual mozilla::dom::DOMStringList* StyleSheetSets() = 0;
   virtual void EnableStyleSheetsForSet(const nsAString& aSheetSet) = 0;
