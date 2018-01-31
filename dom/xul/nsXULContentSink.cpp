@@ -32,7 +32,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsParserBase.h"
 #include "nsViewManager.h"
-#include "nsIXULDocument.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
@@ -54,6 +53,7 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsContentTypeParser.h"
+#include "XULDocument.h"
 
 static mozilla::LazyLogModule gContentSinkLog("nsXULContentSink");;
 
@@ -674,7 +674,7 @@ XULContentSinkImpl::ReportError(const char16_t* aErrorText,
     return NS_OK;
   };
 
-  nsCOMPtr<nsIXULDocument> doc = do_QueryReferent(mDocument);
+  XULDocument* doc = idoc ? idoc->AsXULDocument() : nullptr;
   if (doc && !doc->OnDocumentParserError()) {
     // The overlay was broken.  Don't add a messy element to the master doc.
     return NS_OK;

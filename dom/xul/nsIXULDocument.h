@@ -36,11 +36,6 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXULDOCUMENT_IID)
 
   /**
-   * Callback notifying when a document could not be parsed properly.
-   */
-  virtual bool OnDocumentParserError() = 0;
-
-  /**
    * Reset the document direction so that it is recomputed.
    */
   virtual void ResetDocumentDirection() = 0;
