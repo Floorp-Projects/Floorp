@@ -147,7 +147,7 @@ public:
     // WebIDL API
     already_AddRefed<nsINode> GetPopupNode();
     void SetPopupNode(nsINode* aNode);
-    already_AddRefed<nsINode> GetPopupRangeParent(ErrorResult& aRv);
+    nsINode* GetPopupRangeParent(ErrorResult& aRv);
     int32_t GetPopupRangeOffset(ErrorResult& aRv);
     already_AddRefed<nsINode> GetTooltipNode();
     void SetTooltipNode(nsINode* aNode) { /* do nothing */ }
