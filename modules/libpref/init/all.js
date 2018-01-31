@@ -5743,11 +5743,6 @@ pref("media.gmp.insecure.allow", false);
 // HTML <dialog> element
 pref("dom.dialog_element.enabled", false);
 
-// Secure Element API
-#ifdef MOZ_SECUREELEMENT
-pref("dom.secureelement.enabled", false);
-#endif
-
 // Allow control characters appear in composition string.
 // When this is false, control characters except
 // CHARACTER TABULATION (horizontal tab) are removed from
