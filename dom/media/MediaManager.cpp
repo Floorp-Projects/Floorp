@@ -1907,7 +1907,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
         result->AppendElement(source);
       }
     }
-    NS_DispatchToMainThread(NewRunnableFrom([id, result{Move(result)}]() mutable {
+    NS_DispatchToMainThread(NewRunnableFrom([id, result = Move(result)]() mutable {
       MediaManager* mgr = MediaManager::GetIfExists();
       if (!mgr) {
         return NS_OK;
