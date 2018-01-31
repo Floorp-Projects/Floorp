@@ -4,6 +4,8 @@
 
 "use strict";
 
+const Services = require("Services");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
   CANVAS_SIZE,
@@ -23,6 +25,7 @@ const {
   CanvasFrameAnonymousContentHelper,
   createNode,
   createSVGNode,
+  getComputedStyle,
   moveInfobar,
 } = require("./utils/markup");
 const { apply } = require("devtools/shared/layout/dom-matrix-2d");
@@ -72,6 +75,50 @@ const GRID_GAP_ALPHA = 0.5;
 // 25 is a good margin distance between the document grid container edge without cutting
 // off parts of the arrow box container.
 const OFFSET_FROM_EDGE = 25;
+
+// Boolean pref to enable adjustment for writing mode and RTL content.
+DevToolsUtils.defineLazyGetter(this, "WRITING_MODE_ADJUST_ENABLED", () => {
+  return Services.prefs.getBoolPref("devtools.highlighter.writingModeAdjust");
+});
+
+/**
+ * Given an `edge` of a box, return the name of the edge one move to the right.
+ */
+function rotateEdgeRight(edge) {
+  switch (edge) {
+    case "top": return "right";
+    case "right": return "bottom";
+    case "bottom": return "left";
+    case "left": return "top";
+    default: return edge;
+  }
+}
+
+/**
+ * Given an `edge` of a box, return the name of the edge one move to the left.
+ */
+function rotateEdgeLeft(edge) {
+  switch (edge) {
+    case "top": return "left";
+    case "right": return "top";
+    case "bottom": return "right";
+    case "left": return "bottom";
+    default: return edge;
+  }
+}
+
+/**
+ * Given an `edge` of a box, return the name of the opposite edge.
+ */
+function reflectEdge(edge) {
+  switch (edge) {
+    case "top": return "bottom";
+    case "right": return "left";
+    case "bottom": return "top";
+    case "left": return "right";
+    default: return edge;
+  }
+}
 
 /**
  * Cached used by `CssGridHighlighter.getGridGapPattern`.
@@ -1185,109 +1232,124 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     let margin = 2 * displayPixelRatio;
     let arrowSize = 8 * displayPixelRatio;
 
-    let minOffsetFromEdge = OFFSET_FROM_EDGE * displayPixelRatio;
-
     let minBoxSize = arrowSize * 2 + padding;
     boxWidth = Math.max(boxWidth, minBoxSize);
     boxHeight = Math.max(boxHeight, minBoxSize);
 
-    let { width, height } = this._winDimensions;
-
-    let boxAlignment;
-    let textCenterPos;
-
+    // Determine default box edge to aim the line number arrow at.
+    let boxEdge;
     if (dimensionType === COLUMNS) {
       if (lineNumber > 0) {
-        boxAlignment = "top";
-        textCenterPos = (boxHeight + arrowSize + radius) - boxHeight / 2;
-
-        // If there is not enough space for the box number, flip its alignment and
-        // its text position.
-        if (y <= minOffsetFromEdge) {
-          boxAlignment = "bottom";
-          textCenterPos = -((boxHeight + arrowSize + radius) - boxHeight / 2);
-
-          // Maintain a consistent margin between the pointer and viewport edge when the
-          // grid edge falls out of view. We can use the arrow text's padding value to
-          // maintain this distance.
-          if (y + padding < 0 || y === padding) {
-            y = padding;
-          } else {
-            // If the grid edge is still visible, increment the pointer position by its
-            // arrow size so that the it does not cross over edge.
-            y += arrowSize;
-          }
-        }
-
-        drawBubbleRect(this.ctx, x, y, boxWidth, boxHeight, radius, margin, arrowSize,
-          boxAlignment);
-
-        // After drawing the number box, we need to center the x/y coordinates of the
-        // number text written it.
-        y -= textCenterPos;
+        boxEdge = "top";
       } else {
-        boxAlignment = "bottom";
-        textCenterPos = (boxHeight + arrowSize + radius) - boxHeight / 2;
-
-        // Flip the negative number when its position reaches 95% of the document's
-        // height/width.
-        if (y / displayPixelRatio >= height * .95) {
-          boxAlignment = "top";
-          textCenterPos = -((boxHeight + arrowSize + radius) - boxHeight / 2);
-
-          if (y + padding > height) {
-            y -= arrowSize;
-          }
-        }
-
-        drawBubbleRect(this.ctx, x, y, boxWidth, boxHeight, radius, margin, arrowSize,
-                       boxAlignment);
-
-        y += textCenterPos;
+        boxEdge = "bottom";
+      }
+    }
+    if (dimensionType === ROWS) {
+      if (lineNumber > 0) {
+        boxEdge = "left";
+      } else {
+        boxEdge = "right";
       }
     }
 
-    if (dimensionType === ROWS) {
-      if (lineNumber > 0) {
-        boxAlignment = "left";
-        textCenterPos = (boxWidth + arrowSize + radius) - boxWidth / 2;
+    // Rotate box edge as needed for writing mode and text direction.
+    if (WRITING_MODE_ADJUST_ENABLED) {
+      let { direction, writingMode } = getComputedStyle(this.currentNode);
 
-        if (x <= minOffsetFromEdge) {
-          boxAlignment = "right";
-          textCenterPos = -((boxWidth + arrowSize + radius) - boxWidth / 2);
-
-          // See comment above for maintaining a consistent distance between the arrow box
-          // pointer and the edge of the viewport.
-          if (x + padding < 0 || x === padding) {
-            x = padding;
+      switch (writingMode) {
+        case "horizontal-tb":
+          // This is the initial value.  No further adjustment needed.
+          break;
+        case "vertical-rl":
+          boxEdge = rotateEdgeRight(boxEdge);
+          break;
+        case "vertical-lr":
+          if (dimensionType === COLUMNS) {
+            boxEdge = rotateEdgeLeft(boxEdge);
           } else {
-            x += arrowSize;
+            boxEdge = rotateEdgeRight(boxEdge);
           }
-        }
-
-        drawBubbleRect(this.ctx, x, y, boxWidth, boxHeight, radius, margin, arrowSize,
-                       boxAlignment);
-
-        x -= textCenterPos;
-      } else {
-        boxAlignment = "right";
-        textCenterPos = (boxWidth + arrowSize + radius) - boxWidth / 2;
-
-        // See above comment for flipping negative numbers .
-        if (x / displayPixelRatio >= width * .95) {
-          boxAlignment = "left";
-          textCenterPos = -((boxWidth + arrowSize + radius) - boxWidth / 2);
-
-          if (x + padding > width) {
-            x -= arrowSize;
-          }
-        }
-
-        drawBubbleRect(this.ctx, x, y, boxWidth, boxHeight, radius, margin, arrowSize,
-                       boxAlignment);
-
-        x += textCenterPos;
+          break;
+        case "sideways-rl":
+          boxEdge = rotateEdgeRight(boxEdge);
+          break;
+        case "sideways-lr":
+          boxEdge = rotateEdgeLeft(boxEdge);
+          break;
+        default:
+          console.error(`Unexpected writing-mode: ${writingMode}`);
       }
+
+      switch (direction) {
+        case "ltr":
+          // This is the initial value.  No further adjustment needed.
+          break;
+        case "rtl":
+          if (dimensionType === ROWS) {
+            boxEdge = reflectEdge(boxEdge);
+          }
+          break;
+        default:
+          console.error(`Unexpected direction: ${direction}`);
+      }
+    }
+
+    // Default to drawing outside the edge, but move inside when close to viewport.
+    let minOffsetFromEdge = OFFSET_FROM_EDGE * displayPixelRatio;
+    let { width, height } = this._winDimensions;
+    width *= displayPixelRatio;
+    height *= displayPixelRatio;
+
+    // Check if the x or y position of the line number's arrow is too close to the edge
+    // of the window.  If it is too close, flip the arrow around (by reflecting the box
+    // edge we're thinking of) and adjust the position by 2 x padding since we're now
+    // going the opposite direction.
+    switch (boxEdge) {
+      case "left":
+        if (x < minOffsetFromEdge) {
+          boxEdge = reflectEdge(boxEdge);
+          x += 2 * padding;
+        }
+        break;
+      case "right":
+        if ((width - x) < minOffsetFromEdge) {
+          boxEdge = reflectEdge(boxEdge);
+          x -= 2 * padding;
+        }
+        break;
+      case "top":
+        if (y < minOffsetFromEdge) {
+          boxEdge = reflectEdge(boxEdge);
+          y += 2 * padding;
+        }
+        break;
+      case "bottom":
+        if ((height - y) < minOffsetFromEdge) {
+          boxEdge = reflectEdge(boxEdge);
+          y -= 2 * padding;
+        }
+        break;
+    }
+
+    // Draw the bubble rect to show the arrow.
+    drawBubbleRect(this.ctx, x, y, boxWidth, boxHeight, radius, margin, arrowSize,
+                   boxEdge);
+
+    // Adjust position based on the edge.
+    switch (boxEdge) {
+      case "left":
+        x -= (boxWidth + arrowSize + radius) - boxWidth / 2;
+        break;
+      case "right":
+        x += (boxWidth + arrowSize + radius) - boxWidth / 2;
+        break;
+      case "top":
+        y -= (boxHeight + arrowSize + radius) - boxHeight / 2;
+        break;
+      case "bottom":
+        y += (boxHeight + arrowSize + radius) - boxHeight / 2;
+        break;
     }
 
     // Write the line number inside of the rectangle.

@@ -19,6 +19,7 @@ const {
   translate,
 } = require("devtools/shared/layout/dom-matrix-2d");
 const { getViewportDimensions } = require("devtools/shared/layout/utils");
+const { getComputedStyle } = require("./markup");
 
 // A set of utility functions for highlighters that render their content to a <canvas>
 // element.
@@ -290,7 +291,7 @@ function getBoundsFromPoints(points) {
  *           true if the node has transformed and false otherwise.
  */
 function getCurrentMatrix(element, window) {
-  let computedStyle = element.ownerGlobal.getComputedStyle(element);
+  let computedStyle = getComputedStyle(element);
 
   let paddingTop = parseFloat(computedStyle.paddingTop);
   let paddingLeft = parseFloat(computedStyle.paddingLeft);
