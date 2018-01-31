@@ -68,7 +68,7 @@ class ContentScriptParent {
       exclude_globs: details.excludeGlobs,
       all_frames: details.allFrames,
       match_about_blank: details.matchAboutBlank,
-      run_at: details.runAt,
+      run_at: details.runAt || "document_idle",
       js: [],
       css: [],
     };
