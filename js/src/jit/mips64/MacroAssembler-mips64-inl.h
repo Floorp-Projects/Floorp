@@ -243,15 +243,15 @@ MacroAssembler::add64(Imm64 imm, Register64 dest)
 }
 
 CodeOffset
-MacroAssembler::add32ToPtrWithPatch(Register src, Register dest)
+MacroAssembler::sub32FromStackPtrWithPatch(Register dest)
 {
-    MOZ_CRASH("NYI - add32ToPtrWithPatch");
+    MOZ_CRASH("NYI - sub32FromStackPtrWithPatch");
 }
 
 void
-MacroAssembler::patchAdd32ToPtr(CodeOffset offset, Imm32 imm)
+MacroAssembler::patchSub32FromStackPtr(CodeOffset offset, Imm32 imm)
 {
-    MOZ_CRASH("NYI - patchAdd32ToPtr");
+    MOZ_CRASH("NYI - patchSub32FromStackPtr");
 }
 
 void

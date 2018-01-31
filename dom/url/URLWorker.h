@@ -18,9 +18,7 @@ class nsStandardURL;
 
 namespace dom {
 
-namespace workers {
 class WorkerPrivate;
-}
 
 // URLWorker implements the URL object in workers.
 class URLWorker final : public URL
@@ -48,7 +46,7 @@ public:
   IsValidURL(const GlobalObject& aGlobal, const nsAString& aUrl,
              ErrorResult& aRv);
 
-  explicit URLWorker(workers::WorkerPrivate* aWorkerPrivate);
+  explicit URLWorker(WorkerPrivate* aWorkerPrivate);
 
   void
   Init(const nsAString& aURL, const Optional<nsAString>& aBase,
@@ -132,7 +130,7 @@ private:
                   Strategy aStrategy,
                   ErrorResult& aRv);
 
-  workers::WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
   RefPtr<URLProxy> mURLProxy;
   RefPtr<net::nsStandardURL> mStdURL;
 };

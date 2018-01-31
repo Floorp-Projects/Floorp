@@ -17,7 +17,6 @@ UNIFIED_SOURCES += [
 
 LOCAL_INCLUDES += [
     '/dom/base',
-    '/dom/workers',
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [

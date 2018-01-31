@@ -34,7 +34,6 @@ class FrameRelay {
 public:
   virtual int DeliverFrame(uint8_t* buffer,
     const mozilla::camera::VideoFrameProperties& props) = 0;
-  virtual void FrameSizeChange(unsigned int w, unsigned int h) = 0;
 };
 
 struct CapturerElement {
@@ -156,8 +155,6 @@ public:
   mozilla::ipc::IPCResult RecvDeliverFrame(const CaptureEngine&, const int&,
                                            mozilla::ipc::Shmem&&,
                                            const VideoFrameProperties & prop) override;
-  mozilla::ipc::IPCResult RecvFrameSizeChange(const CaptureEngine&, const int&,
-                                              const int& w, const int& h) override;
 
   mozilla::ipc::IPCResult RecvDeviceChange() override;
   int AddDeviceChangeCallback(DeviceChangeCallback* aCallback) override;

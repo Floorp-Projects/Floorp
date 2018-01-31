@@ -8,7 +8,6 @@
 
 #include "GetDirectoryListingTask.h"
 #include "GetFilesTask.h"
-#include "WorkerPrivate.h"
 
 #include "nsCharSeparatedTokenizer.h"
 #include "nsString.h"
@@ -16,6 +15,7 @@
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/OSFileSystem.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {

@@ -219,9 +219,14 @@ MediaStreamTrack::SetEnabled(bool aEnabled)
   LOG(LogLevel::Info, ("MediaStreamTrack %p %s",
                        this, aEnabled ? "Enabled" : "Disabled"));
 
+  if (mEnabled == aEnabled) {
+    return;
+  }
+
   mEnabled = aEnabled;
   GetOwnedStream()->SetTrackEnabled(mTrackID, mEnabled ? DisabledTrackMode::ENABLED
                                                        : DisabledTrackMode::SILENCE_BLACK);
+  GetSource().SinkEnabledStateChanged();
 }
 
 void

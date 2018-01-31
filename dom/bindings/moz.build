@@ -77,7 +77,6 @@ LOCAL_INCLUDES += [
     '/dom/media/webaudio',
     '/dom/media/webspeech/recognition',
     '/dom/svg',
-    '/dom/workers',
     '/dom/xbl',
     '/dom/xml',
     '/dom/xslt/base',

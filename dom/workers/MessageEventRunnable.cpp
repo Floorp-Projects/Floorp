@@ -14,7 +14,8 @@
 #include "WorkerPrivate.h"
 #include "WorkerScope.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 MessageEventRunnable::MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
                                            TargetAndBusyBehavior aBehavior)
@@ -129,7 +130,7 @@ MessageEventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
                             !aWorkerPrivate->GetParent());
   }
 
-  MOZ_ASSERT(aWorkerPrivate == GetWorkerPrivateFromContext(aCx));
+  MOZ_ASSERT(aWorkerPrivate == workers::GetWorkerPrivateFromContext(aCx));
 
   return DispatchDOMEvent(aCx, aWorkerPrivate, aWorkerPrivate->GlobalScope(),
                           false);
@@ -151,4 +152,5 @@ MessageEventRunnable::DispatchError(JSContext* aCx,
   aTarget->DispatchEvent(event, &dummy);
 }
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace

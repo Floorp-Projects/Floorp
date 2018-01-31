@@ -49,6 +49,14 @@ public:
     Destroy();
   }
 
+  void Disable() override
+  {
+  }
+
+  void Enable() override
+  {
+  }
+
 private:
   ~AudioDestinationTrackSource() = default;
 

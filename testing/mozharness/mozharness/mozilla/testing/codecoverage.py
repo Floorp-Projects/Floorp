@@ -105,6 +105,7 @@ class CodeCoverageMixin(object):
         # Install grcov on the test machine
         # Get the path to the build machines gcno files.
         self.url_to_gcno = self.query_build_dir_url('target.code-coverage-gcno.zip')
+        self.url_to_chrome_map = self.query_build_dir_url('chrome-map.json')
         dirs = self.query_abs_dirs()
 
         # Create the grcov directory, get the tooltool manifest, and finally
@@ -163,13 +164,25 @@ class CodeCoverageMixin(object):
             file_path_gcda = os.path.join(os.getcwd(), 'code-coverage-gcda.zip')
             self.run_command(['zip', '-q', '-0', '-r', file_path_gcda, '.'], cwd=self.gcov_dir)
 
+            sys.path.append(dirs['abs_test_install_dir'])
+            sys.path.append(os.path.join(dirs['abs_test_install_dir'], 'mozbuild/codecoverage'))
+
+            # Download the chrome-map.json file from the build machine.
+            self.download_file(self.url_to_chrome_map)
+
+            from lcov_rewriter import LcovFileRewriter
+            jsvm_files = [os.path.join(self.jsvm_dir, e) for e in os.listdir(self.jsvm_dir)]
+            rewriter = LcovFileRewriter('chrome-map.json')
+            rewriter.rewrite_files(jsvm_files, 'jsvm_lcov_output.info', '')
+            assert os.path.getsize('jsvm_lcov_output.info') > 0
+
             # Package JSVM coverage data.
             file_path_jsvm = os.path.join(dirs['abs_blob_upload_dir'], 'code-coverage-jsvm.zip')
-            self.run_command(['zip', '-r', '-q', file_path_jsvm, '.'], cwd=self.jsvm_dir)
+            self.run_command(['zip', '-q', file_path_jsvm, 'jsvm_lcov_output.info'])
 
             # GRCOV post-processing
-            # Download the gcno fom the build machine.
-            self.download_file(self.url_to_gcno, file_name=None, parent_dir=self.grcov_dir)
+            # Download the gcno from the build machine.
+            self.download_file(self.url_to_gcno, parent_dir=self.grcov_dir)
 
             # Run grcov on the zipped .gcno and .gcda files.
             grcov_command = [

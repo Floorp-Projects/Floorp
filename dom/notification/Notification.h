@@ -10,7 +10,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/NotificationBinding.h"
-#include "mozilla/dom/workers/bindings/WorkerHolder.h"
+#include "mozilla/dom/WorkerHolder.h"
 
 #include "nsIObserver.h"
 #include "nsISupports.h"
@@ -32,13 +32,10 @@ namespace dom {
 class NotificationRef;
 class WorkerNotificationObserver;
 class Promise;
-
-namespace workers {
-  class WorkerPrivate;
-} // namespace workers
+class WorkerPrivate;
 
 class Notification;
-class NotificationWorkerHolder final : public workers::WorkerHolder
+class NotificationWorkerHolder final : public WorkerHolder
 {
   // Since the feature is strongly held by a Notification, it is ok to hold
   // a raw pointer here.
@@ -48,7 +45,7 @@ public:
   explicit NotificationWorkerHolder(Notification* aNotification);
 
   bool
-  Notify(workers::Status aStatus) override;
+  Notify(WorkerStatus aStatus) override;
 };
 
 // Records telemetry probes at application startup, when a notification is
@@ -249,7 +246,7 @@ public:
                                        const GetNotificationOptions& aFilter,
                                        ErrorResult& aRv);
 
-  static already_AddRefed<Promise> WorkerGet(workers::WorkerPrivate* aWorkerPrivate,
+  static already_AddRefed<Promise> WorkerGet(WorkerPrivate* aWorkerPrivate,
                                              const GetNotificationOptions& aFilter,
                                              const nsAString& aScope,
                                              ErrorResult& aRv);
@@ -292,7 +289,7 @@ public:
 
   // Initialized on the worker thread, never unset, and always used in
   // a read-only capacity. Used on any thread.
-  workers::WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
 
   // Main thread only.
   WorkerNotificationObserver* mObserver;

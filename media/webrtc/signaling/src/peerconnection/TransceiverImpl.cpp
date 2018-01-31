@@ -62,8 +62,6 @@ TransceiverImpl::TransceiverImpl(
 
   mConduit->SetPCHandle(mPCHandle);
 
-  StartReceiveStream();
-
   mTransmitPipeline = new MediaPipelineTransmit(
       mPCHandle,
       mMainThread.get(),
@@ -1024,73 +1022,6 @@ TransceiverImpl::UpdateVideoExtmap(const JsepTrackNegotiatedDetails& aDetails,
   if (!extmaps.empty()) {
     conduit->SetLocalRTPExtensions(aSending, extmaps);
   }
-}
-
-static void StartTrack(MediaStream* aSource,
-                       nsAutoPtr<MediaSegment>&& aSegment)
-{
-  class Message : public ControlMessage {
-   public:
-    Message(MediaStream* aStream, nsAutoPtr<MediaSegment>&& aSegment)
-      : ControlMessage(aStream),
-        segment_(aSegment) {}
-
-    void Run() override {
-      TrackRate track_rate = mStream->GraphRate();
-      StreamTime current_end = mStream->GetTracksEnd();
-      MOZ_MTLOG(ML_DEBUG, "current_end = " << current_end);
-      TrackTicks current_ticks =
-        mStream->TimeToTicksRoundUp(track_rate, current_end);
-
-      // Add a track 'now' to avoid possible underrun, especially if we add
-      // a track "later".
-
-      if (current_end != 0L) {
-        MOZ_MTLOG(ML_DEBUG, "added track @ " << current_end << " -> "
-                  << mStream->StreamTimeToSeconds(current_end));
-      }
-
-      // To avoid assertions, we need to insert a dummy segment that covers up
-      // to the "start" time for the track
-      segment_->AppendNullData(current_ticks);
-      MOZ_MTLOG(ML_DEBUG, "segment_->GetDuration() = " << segment_->GetDuration());
-      if (segment_->GetType() == MediaSegment::AUDIO) {
-        MOZ_MTLOG(ML_DEBUG, "Calling AddAudioTrack");
-        mStream->AsSourceStream()->AddAudioTrack(
-            kAudioTrack,
-            track_rate,
-            0,
-            static_cast<AudioSegment*>(segment_.forget()));
-      } else {
-        mStream->AsSourceStream()->AddTrack(kVideoTrack, 0, segment_.forget());
-      }
-
-      mStream->AsSourceStream()->SetPullEnabled(true);
-      mStream->AsSourceStream()->AdvanceKnownTracksTime(STREAM_TIME_MAX);
-    }
-   private:
-    nsAutoPtr<MediaSegment> segment_;
-  };
-
-  aSource->GraphImpl()->AppendMessage(
-      MakeUnique<Message>(aSource, Move(aSegment)));
-  MOZ_MTLOG(ML_INFO, "Dispatched track-add on stream " << aSource);
-}
-
-void
-TransceiverImpl::StartReceiveStream()
-{
-  MOZ_MTLOG(ML_DEBUG, mPCHandle << "[" << mMid << "]: " << __FUNCTION__);
-  SourceMediaStream* source(mReceiveTrack->GetInputStream()->AsSourceStream());
-
-  nsAutoPtr<MediaSegment> segment;
-  if (IsVideo()) {
-    segment = new VideoSegment;
-  } else {
-    segment = new AudioSegment;
-  }
-
-  StartTrack(source, Move(segment));
 }
 
 void

@@ -19,10 +19,7 @@
 namespace mozilla {
 namespace dom {
 
-using mozilla::dom::workers::Closing;
-using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
-using mozilla::dom::workers::WorkerHolderToken;
-using mozilla::dom::workers::WorkerPrivate;
+using namespace workers;
 using mozilla::dom::ipc::StructuredCloneData;
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(mozilla::dom::Client);

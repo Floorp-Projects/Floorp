@@ -5682,10 +5682,10 @@ class MToNumberInt32
     public ToInt32Policy::Data
 {
     bool canBeNegativeZero_;
-    MacroAssembler::IntConversionInputKind conversion_;
+    IntConversionInputKind conversion_;
 
-    explicit MToNumberInt32(MDefinition* def, MacroAssembler::IntConversionInputKind conversion
-                                              = MacroAssembler::IntConversion_Any)
+    explicit MToNumberInt32(MDefinition* def, IntConversionInputKind conversion
+                                              = IntConversionInputKind::Any)
       : MUnaryInstruction(classOpcode, def),
         canBeNegativeZero_(true),
         conversion_(conversion)
@@ -5715,7 +5715,7 @@ class MToNumberInt32
         canBeNegativeZero_ = negativeZero;
     }
 
-    MacroAssembler::IntConversionInputKind conversion() const {
+    IntConversionInputKind conversion() const {
         return conversion_;
     }
 

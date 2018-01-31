@@ -833,11 +833,13 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
     MOZ_ASSERT(joinedBorderArea.IsEqualEdges(aBorderArea),
                "Should use aBorderArea for box-decoration-break:clone");
     MOZ_ASSERT(aForFrame->GetSkipSides().IsEmpty() ||
-               IS_TRUE_OVERFLOW_CONTAINER(aForFrame),
+               IS_TRUE_OVERFLOW_CONTAINER(aForFrame) ||
+               aForFrame->IsColumnSetFrame(), // a little broader than column-rule
                "Should not skip sides for box-decoration-break:clone except "
                "::first-letter/line continuations or other frame types that "
                "don't have borders but those shouldn't reach this point. "
-               "Overflow containers do reach this point though.");
+               "Overflow containers do reach this point though, as does "
+               "column-rule drawing (which always involves a columnset).");
     border.ApplySkipSides(aSkipSides);
   }
 
