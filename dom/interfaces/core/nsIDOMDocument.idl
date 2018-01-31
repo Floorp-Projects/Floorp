@@ -36,11 +36,6 @@ interface nsIDOMTreeWalker;
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDOMImplementation    implementation;
-  nsIDOMNodeList                getElementsByTagName(in DOMString tagname);
-
-  // Introduced in DOM Level 2:
-  nsIDOMNodeList                getElementsByTagNameNS(in DOMString namespaceURI,
-                                                       in DOMString localName);
   // Introduced in DOM Level 2:
   nsIDOMElement                 getElementById(in DOMString elementId);
   // Introduced in DOM Level 3:
@@ -114,15 +109,6 @@ interface nsIDOMDocument : nsIDOMNode
    * @see <http://www.whatwg.org/html/#dom-document-activeelement>
    */
   readonly attribute nsIDOMElement  activeElement;
-
-  /**
-   * Retrieve elements matching all classes listed in a
-   * space-separated string.
-   *
-   * @see <http://www.whatwg.org/html/#dom-document-getelementsbyclassname>
-   */
-  nsIDOMNodeList getElementsByClassName(in DOMString classes);
-
 
   // CSSOM
 
