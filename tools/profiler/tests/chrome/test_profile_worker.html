@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1428076
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1428076</title>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1428076">Mozilla Bug 1428076</a>
+
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="profiler_test_utils.js"></script>
+<script type="application/javascript">
+/* globals runTest */
+
+"use strict";
+
+const settings = {
+  entries: 1000000, // 9MB
+  interval: 1, // ms
+  features: ["js", "threads", "leaf", "stackwalk"],
+  threads: ["GeckoMain", "Compositor", "Worker"] // most common combination
+};
+
+const workerCode = `
+  console.log('hello world');
+  setTimeout(() => postMessage('message from worker'), 50);
+`;
+
+function startWorker() {
+  // We use a Blob for the worker content to avoid an external JS file, and data
+  // URLs seem to be blocked in a chrome environment.
+  const workerContent = new Blob(
+    [ workerCode ],
+    { type: "application/javascript" }
+  );
+  const blobURL = URL.createObjectURL(workerContent);
+
+  // We start a worker and then terminate it right away to trigger our bug.
+  info("Starting the worker...");
+  const myWorker = new Worker(blobURL);
+  return { worker: myWorker, url: blobURL };
+}
+
+function workload() {
+  const { worker, url } = startWorker();
+
+  return new Promise(resolve => {
+    worker.onmessage = () => {
+      info("Got a message, terminating the worker.");
+      worker.terminate();
+      URL.revokeObjectURL(url);
+      resolve();
+    };
+  });
+}
+
+runTest(settings, workload);
+
+</script>
+</body>
+</html>
