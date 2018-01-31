@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=462856
+-->
+<head>
+  <title>Test offline app notification</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="offlineByDefault.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display">
+<!-- Load the test frame twice from the same domain,
+     to make sure we get notifications for both -->
+<iframe name="testFrame" src="offlineChild.html"></iframe>
+<iframe name="testFrame2" src="offlineChild2.html"></iframe>
+<!-- Load from another domain to make sure we get a second allow/deny
+     notification -->
+<iframe name="testFrame3" src="http://example.com/tests/browser/base/content/test/general/offlineChild.html"></iframe>
+
+<iframe id="eventsTestFrame" src="offlineEvent.html"></iframe>
+
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/* import-globals-from offlineByDefault.js */
+SimpleTest.waitForExplicitFinish();
+const Cc = SpecialPowers.Cc;
+
+var numFinished = 0;
+
+window.addEventListener("message", function(event) {
+    is(event.data, "success", "Child was successfully cached.");
+
+    if (++numFinished == 3) {
+      // Clean up after ourself
+      var uri1 = SpecialPowers.Services.io.newURI(frames.testFrame.location);
+      var uri2 = SpecialPowers.Services.io.newURI(frames.testFrame3.location);
+
+      var principal1 = SpecialPowers.Services.scriptSecurityManager.createCodebasePrincipal(uri1, {});
+      var principal2 = SpecialPowers.Services.scriptSecurityManager.createCodebasePrincipal(uri2, {});
+
+      SpecialPowers.Services.perms.removeFromPrincipal(principal1, "offline-app");
+      SpecialPowers.Services.perms.removeFromPrincipal(principal2, "offline-app");
+
+      offlineByDefault.reset();
+
+      SimpleTest.finish();
+    }
+  });
+
+var count = 0;
+var expectedEvent = "";
+function eventHandler(evt) {
+  ++count;
+  is(evt.type, expectedEvent, "Wrong event!");
+}
+
+function testEventHandling() {
+  var events = [ "checking",
+                 "error",
+                 "noupdate",
+                 "downloading",
+                 "progress",
+                 "updateready",
+                 "cached",
+                 "obsolete"];
+  var w = document.getElementById("eventsTestFrame").contentWindow;
+  var e;
+  for (var i = 0; i < events.length; ++i) {
+    count = 0;
+    expectedEvent = events[i];
+    e = w.document.createEvent("event");
+    e.initEvent(expectedEvent, true, true);
+    w.applicationCache["on" + expectedEvent] = eventHandler;
+    w.applicationCache.addEventListener(expectedEvent, eventHandler, true);
+    w.applicationCache.dispatchEvent(e);
+    is(count, 2, "Wrong number events!");
+    w.applicationCache["on" + expectedEvent] = null;
+    w.applicationCache.removeEventListener(expectedEvent, eventHandler, true);
+    w.applicationCache.dispatchEvent(e);
+    is(count, 2, "Wrong number events!");
+  }
+
+  // Test some random event.
+  count = 0;
+  expectedEvent = "foo";
+  e = w.document.createEvent("event");
+  e.initEvent(expectedEvent, true, true);
+  w.applicationCache.addEventListener(expectedEvent, eventHandler, true);
+  w.applicationCache.dispatchEvent(e);
+  is(count, 1, "Wrong number events!");
+  w.applicationCache.removeEventListener(expectedEvent, eventHandler, true);
+  w.applicationCache.dispatchEvent(e);
+  is(count, 1, "Wrong number events!");
+}
+
+function loaded() {
+  testEventHandling();
+
+  // Click the notification panel's "Allow" button.  This should kick
+  // off updates, which will eventually lead to getting messages from
+  // the children.
+  var win = SpecialPowers.Services.wm.getMostRecentWindow("navigator:browser");
+  var panel = win.PopupNotifications.panel;
+  is(panel.childElementCount, 2, "2 notifications being displayed");
+  panel.firstElementChild.button.click();
+
+  // should have dismissed one of the notifications.
+  is(panel.childElementCount, 1, "1 notification now being displayed");
+  panel.firstElementChild.button.click();
+}
+
+SimpleTest.waitForFocus(loaded);
+
+</script>
+</pre>
+</body>
+</html>
