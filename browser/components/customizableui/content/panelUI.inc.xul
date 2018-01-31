@@ -439,7 +439,7 @@
                 <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.tabsnotsyncing.label;</label>
                 <hbox pack="center">
                   <toolbarbutton class="PanelUI-remotetabs-button"
-                                 label="&appMenuRemoteTabs.openprefs.label;"
+                                 label="&appMenuRemoteTabs.opensyncprefs.label;"
                                  oncommand="gSync.openPrefs('synced-tabs');"/>
                 </hbox>
               </vbox>
@@ -450,7 +450,7 @@
             </vbox>
             <!-- Sync has only 1 (ie, this) device connected -->
             <hbox id="PanelUI-remotetabs-nodevicespane" pack="center" flex="1">
-              <vbox class="PanelUI-remotetabs-instruction-box">
+              <vbox class="PanelUI-remotetabs-instruction-box" align="center">
                 <hbox pack="center">
                   <image class="fxaSyncIllustrationIssue"/>
                 </hbox>
@@ -499,7 +499,7 @@
             <image class="fxaSyncIllustrationIssue"/>
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.unverified.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-button"
-                           label="&appMenuRemoteTabs.openprefs.label;"
+                           label="&appMenuRemoteTabs.opensyncprefs.label;"
                            oncommand="gSync.openPrefs('synced-tabs');"/>
           </vbox>
         </hbox>

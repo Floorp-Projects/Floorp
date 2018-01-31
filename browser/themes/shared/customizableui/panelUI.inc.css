@@ -622,23 +622,18 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 #PanelUI-remotetabs {
-  --panel-ui-sync-illustration-height: 157.5px;
+  --panel-ui-sync-illustration-height: 91px;
 }
 
-.PanelUI-remotetabs-instruction-title,
 .PanelUI-remotetabs-instruction-label {
   /* If you change the margin here, the min-height of the synced tabs panel
     (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync, etc) may
     need adjusting (see bug 1248506) */
-  margin-bottom: 15px;
+  margin: 0;
   text-align: center;
   text-shadow: none;
   max-width: 15em;
   color: GrayText;
-}
-
-.PanelUI-remotetabs-instruction-title {
-  font-size: 1.3em;
 }
 
 /* The boxes with "instructions" get extra top and bottom padding for space
@@ -660,8 +655,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   /* If you change the margin or padding below, the min-height of the synced tabs
      panel (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync,
      etc) may need adjusting (see bug 1248506) */
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-top: 15px;
+  margin-bottom: 15px;
   padding: 8px;
   text-shadow: none;
   min-width: 200px;
@@ -694,9 +689,9 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   /* If you change the margin here, the min-height of the synced tabs panel
     (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync, etc) may
     need adjusting (see bug 1248506) */
-  width: 180px;
+  width: 104px;
   height: var(--panel-ui-sync-illustration-height);
-  margin: 38px 0;
+  margin: 38px 0 15px;
   -moz-context-properties: fill;
   fill: #cdcdcd;
 }
@@ -728,10 +723,9 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-nodevicespane,
 #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-tabsdisabledpane {
   min-height: calc(var(--panel-ui-sync-illustration-height) +
-                   76px + /* margin of .fxaSyncIllustration */
-                   20px + /* margin of .PanelUI-remotetabs-button */
+                   53px + /* margin of .fxaSyncIllustration */
+                   30px + /* margin of .PanelUI-remotetabs-button */
                    16px + /* padding of .PanelUI-remotetabs-button */
-                   15px + /* margin of .PanelUI-remotetabs-instruction-label */
                    30px + /* padding of .PanelUI-remotetabs-instruction-box */
                    11em);
 }
