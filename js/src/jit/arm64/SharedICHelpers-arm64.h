@@ -103,24 +103,6 @@ EmitBaselineLeaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false)
     masm.checkStackAlignment();
 }
 
-inline void
-EmitStowICValues(MacroAssembler& masm, int values)
-{
-    switch (values) {
-      case 1:
-        // Stow R0.
-        masm.Push(R0);
-        break;
-      case 2:
-        // Stow R0 and R1.
-        masm.Push(R0.valueReg());
-        masm.Push(R1.valueReg());
-        break;
-      default:
-        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Expected 1 or 2 values");
-    }
-}
-
 template <typename AddrType>
 inline void
 EmitPreBarrier(MacroAssembler& masm, const AddrType& addr, MIRType type)
