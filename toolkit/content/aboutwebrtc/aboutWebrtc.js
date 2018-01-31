@@ -664,6 +664,7 @@ ICEStats.prototype = {
     let tbody = stats.map(stat => [
       stat["local-candidate"],
       stat["remote-candidate"],
+      stat.componentId,
       stat.state,
       stat.priority,
       stat.nominated,
@@ -673,7 +674,8 @@ ICEStats.prototype = {
     ].map(entry => Object.is(entry, undefined) ? "" : entry));
 
     let statsTable = new SimpleTable(
-      ["local_candidate", "remote_candidate", "ice_state",
+      ["local_candidate", "remote_candidate",
+       "ice_component_id", "ice_state",
        "priority", "nominated", "selected",
        "ice_pair_bytes_sent", "ice_pair_bytes_received"
       ].map(columnName => getString(columnName)),
@@ -691,6 +693,17 @@ ICEStats.prototype = {
         statsTable.rows[rowIndex].cells[0].className = "trickled";
       }
     });
+
+    // if the next row's component id changes, mark the bottom of the
+    // current row with a thin, black border to differentiate the
+    // component id grouping.
+    let rowCount = statsTable.rows.length - 1;
+    for (var i = 0; i < rowCount; i++) {
+      if (statsTable.rows[i].cells[2].innerHTML !==
+          statsTable.rows[i + 1].cells[2].innerHTML) {
+        statsTable.rows[i].className = "bottom-border";
+      }
+    }
 
     return statsTable;
   },
@@ -791,10 +804,10 @@ ICEStats.prototype = {
     for (let pair of this._report.iceCandidatePairStats) {
       let local = candidates.get(pair.localCandidateId);
       let remote = candidates.get(pair.remoteCandidateId);
-
       if (local) {
         stat = {
           ["local-candidate"]: this.candidateToString(local),
+          componentId: pair.componentId,
           state: pair.state,
           priority: pair.priority,
           nominated: pair.nominated,
@@ -818,10 +831,17 @@ ICEStats.prototype = {
       }
     }
 
-    return stats.sort((a, b) => (b.bytesSent ?
-                                 (b.bytesSent || 0) - (a.bytesSent || 0) :
-                                 (b.priority || 0) - (a.priority || 0)
-                                ));
+    // sort (group by) componentId first, then bytesSent if available, else by
+    // priority
+    return stats.sort((a, b) => {
+        if (a.componentId != b.componentId) {
+          return a.componentId - b.componentId;
+        }
+        return (b.bytesSent ?
+                (b.bytesSent || 0) - (a.bytesSent || 0) :
+                (b.priority || 0) - (a.priority || 0)
+               );
+      });
   },
 
   candidateToString(c) {
