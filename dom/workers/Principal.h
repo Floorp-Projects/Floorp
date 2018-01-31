@@ -9,7 +9,8 @@
 
 #include "WorkerCommon.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 JSPrincipals*
 GetWorkerPrincipal();
@@ -17,6 +18,7 @@ GetWorkerPrincipal();
 void
 DestroyWorkerPrincipals(JSPrincipals* aPrincipals);
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
 
 #endif /* mozilla_dom_workers_principal_h__ */
