@@ -1426,7 +1426,7 @@ XULDocument::AddElementToDocumentPost(Element* aElement)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 XULDocument::AddSubtreeToDocument(nsIContent* aContent)
 {
     NS_ASSERTION(aContent->GetUncomposedDoc() == this, "Element not in doc!");
@@ -1455,7 +1455,7 @@ XULDocument::AddSubtreeToDocument(nsIContent* aContent)
     return AddElementToDocumentPost(aElement);
 }
 
-NS_IMETHODIMP
+nsresult
 XULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
 {
     // From here on we only care about elements.
