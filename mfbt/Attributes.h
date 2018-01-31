@@ -472,6 +472,10 @@
  *   class uses this class or if another class inherits from this class, then it
  *   is considered to be a non-temporary class as well, although this attribute
  *   need not be provided in such cases.
+ * MOZ_TEMPORARY_CLASS: Applies to all classes. Any class with this annotation
+ *   is expected to only live in a temporary. If another class inherits from
+ *   this class, then it is considered to be a non-temporary class as well,
+ *   although this attribute need not be provided in such cases.
  * MOZ_RAII: Applies to all classes. Any class with this annotation is assumed
  *   to be a RAII guard, which is expected to live on the stack in an automatic
  *   allocation. It is prohibited from being allocated in a temporary, static
@@ -607,6 +611,7 @@
 #  define MOZ_NONHEAP_CLASS __attribute__((annotate("moz_nonheap_class")))
 #  define MOZ_HEAP_CLASS __attribute__((annotate("moz_heap_class")))
 #  define MOZ_NON_TEMPORARY_CLASS __attribute__((annotate("moz_non_temporary_class")))
+#  define MOZ_TEMPORARY_CLASS __attribute__((annotate("moz_temporary_class")))
 #  define MOZ_TRIVIAL_CTOR_DTOR __attribute__((annotate("moz_trivial_ctor_dtor")))
 #  ifdef DEBUG
      /* in debug builds, these classes do have non-trivial constructors. */
@@ -663,6 +668,7 @@
 #  define MOZ_NONHEAP_CLASS /* nothing */
 #  define MOZ_HEAP_CLASS /* nothing */
 #  define MOZ_NON_TEMPORARY_CLASS /* nothing */
+#  define MOZ_TEMPORARY_CLASS /* nothing */
 #  define MOZ_TRIVIAL_CTOR_DTOR /* nothing */
 #  define MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS /* nothing */
 #  define MOZ_IMPLICIT /* nothing */
