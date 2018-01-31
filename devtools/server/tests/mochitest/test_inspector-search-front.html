@@ -168,38 +168,6 @@ window.onload = function () {
     runNextTest();
   });
 
-  addAsyncTest(function* testBackwardsCompat() {
-    info("Simulating a server that doesn't have the new search functionality.");
-    walkerFront.traits.textSearch = false;
-    let front = yield walkerFront.querySelector(walkerFront.rootNode, "h1");
-
-    let results = yield walkerFront.search("h1");
-    isDeeply(results, {
-      node: front,
-      type: "selector",
-      resultsIndex: 0,
-      resultsLength: 1
-    }, "Only querySelectorAll results being returned");
-
-    // Clear search data to remove result state on the front
-    yield walkerFront.search("");
-
-    // Reset the normal textSearch behavior
-    walkerFront.traits.textSearch = true;
-
-    results = yield walkerFront.search("h1");
-    isDeeply(results, {
-      node: front,
-      type: "search",
-      resultsIndex: 0,
-      resultsLength: 3
-    }, "Other results being included");
-
-    // Clear search data to remove result state on the front
-    yield walkerFront.search("");
-    runNextTest();
-  });
-
   runNextTest();
 };
   </script>

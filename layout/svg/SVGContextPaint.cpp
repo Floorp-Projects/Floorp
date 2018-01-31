@@ -52,6 +52,11 @@ SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI)
   // use this feature because we're not sure that image context paint is a
   // good mechanism for wider use, or suitable for specification.)
   //
+  // Because the default favicon used in the browser UI needs context paint, we
+  // also allow it for page-icon:<page-url>. This exposes context paint to
+  // 3rd-party favicons, but only for history and bookmark items. Other places
+  // such as the tab bar don't use the page-icon protocol to load favicons.
+  //
   // One case that is not covered by chrome:// or resource:// are WebExtensions,
   // specifically ones that are "ours". WebExtensions are moz-extension://
   // regardless if the extension is in-tree or not. Since we don't want
@@ -60,7 +65,9 @@ SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI)
   //
   nsAutoCString scheme;
   if (NS_SUCCEEDED(aURI->GetScheme(scheme)) &&
-      (scheme.EqualsLiteral("chrome") || scheme.EqualsLiteral("resource"))) {
+      (scheme.EqualsLiteral("chrome")
+       || scheme.EqualsLiteral("resource")
+       || scheme.EqualsLiteral("page-icon"))) {
     return true;
   }
   RefPtr<BasePrincipal> principal = BasePrincipal::CreateCodebasePrincipal(aURI, OriginAttributes());

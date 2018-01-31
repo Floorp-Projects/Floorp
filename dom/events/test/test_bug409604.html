@@ -5,7 +5,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
 -->
 <head>
   <title>Test for Bug 409604</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body id="body">
@@ -19,8 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
 
   /** Test for Bug 409604 **/
 
-  var modifier = SpecialPowers.Ci.nsIDOMEvent.ALT_MASK |
-                 SpecialPowers.Ci.nsIDOMEvent.SHIFT_MASK;
   var expectedFocus = "a,c,d,e,f,g,h,i,j,k,l,m,n,p,x,y";
   // XXX the "map" test is causing trouble, see bug 433089
   var focusArray = expectedFocus.split(",");
@@ -120,10 +119,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
   }
 
   function pressAccessKey(key) {
-    var utils = SpecialPowers.DOMWindowUtils;
-    utils.sendKeyEvent("keydown", key, key, modifier);
-    utils.sendKeyEvent("keypress", key, key, modifier);
-    utils.sendKeyEvent("keyup", key, key, modifier);
+    synthesizeKey(key.key, {code: key.code, altKey: true, shiftKey: true});
   }
 
   function testFocusableElements() {
@@ -131,7 +127,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
       // XXX the "map" test is causing trouble, see bug 433089
       if (code == "b".charCodeAt(0))
         continue;
-      pressAccessKey(code);
+      var accessChar = String.fromCharCode(code).toUpperCase();
+      pressAccessKey({key: accessChar, code: "Key" + accessChar});
     }
     ok(focusArray.length == 0, "(focus) unhandled elements remaining: " + focusArray.join(","));
   }
@@ -190,7 +187,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
     var i, e;
     for (i = 0; i < unfocusableTags.length; ++ i) {
       createUnfocusableElement(unfocusableTags[i], "z");
-      pressAccessKey("z".charCodeAt(0));
+      pressAccessKey({key: "Z", code:"KeyZ"});
       destroyUnfocusableElement();
     }
     for (i = 0; i < invalidElements.length; ++ i) {
@@ -199,7 +196,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
       e.setAttribute("accesskey", "z");
       e.setAttribute("onclick", "handleClick(event.target); event.preventDefault();");
       e.setAttribute("onfocus", "handleInvalid(event.target);");
-      pressAccessKey("z".charCodeAt(0));
+      pressAccessKey({key: "Z", code:"KeyZ"});
       e.removeAttribute("accesskey");
       e.removeAttribute("onclick");
       e.removeAttribute("onfocus");

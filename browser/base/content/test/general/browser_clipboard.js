@@ -19,6 +19,14 @@ add_task(async function() {
                    Components.interfaces.nsIDOMWindowUtils.MODIFIER_META :
                    Components.interfaces.nsIDOMWindowUtils.MODIFIER_CONTROL;
 
+  function sendKey(message) {
+    BrowserTestUtils.synthesizeKey(message.data.key,
+                                   {code: message.data.code, accelKey: true},
+                                   browser);
+  }
+
+  browser.messageManager.addMessageListener("Test:SendKey", sendKey);
+
   // On windows, HTML clipboard includes extra data.
   // The values are from widget/windows/nsDataObj.cpp.
   const htmlPrefix = (navigator.platform.indexOf("Win") >= 0) ? "<html><body>\n<!--StartFragment-->" : "";
@@ -28,16 +36,6 @@ add_task(async function() {
     var doc = content.document;
     var main = doc.getElementById("main");
     main.focus();
-
-    const utils = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                         .getInterface(Components.interfaces.nsIDOMWindowUtils);
-
-    function sendKey(key) {
-      if (utils.sendKeyEvent("keydown", key, 0, arg.modifier)) {
-        utils.sendKeyEvent("keypress", key, key.charCodeAt(0), arg.modifier);
-      }
-      utils.sendKeyEvent("keyup", key, 0, arg.modifier);
-    }
 
     // Select an area of the text.
     let selection = doc.getSelection();
@@ -56,7 +54,7 @@ add_task(async function() {
         resolve();
       }, true);
 
-      sendKey("c");
+      sendAsyncMessage("Test:SendKey", { key: "c", code: "KeyC" });
     });
 
     selection.modify("move", "right", "line");
@@ -74,7 +72,8 @@ add_task(async function() {
         Assert.equal(clipboardData.getData("text/plain"), "t Bold", "text/plain value");
         resolve();
       }, true);
-      sendKey("v");
+
+      sendAsyncMessage("Test:SendKey", {key: "v", code: "KeyV"});
     });
 
     Assert.equal(main.innerHTML, "Test <b>Bold</b> After Textt <b>Bold</b>", "Copy and paste html");
@@ -92,7 +91,8 @@ add_task(async function() {
         event.preventDefault();
         resolve();
       }, true);
-      sendKey("x");
+
+      sendAsyncMessage("Test:SendKey", {key: "x", code: "KeyX"});
     });
 
     selection.modify("move", "left", "line");
@@ -110,7 +110,8 @@ add_task(async function() {
         Assert.equal(clipboardData.getData("text/plain"), "Some text", "text/plain value 2");
         resolve();
       }, true);
-      sendKey("v");
+
+      sendAsyncMessage("Test:SendKey", {key: "v", code: "KeyV"});
     });
 
     Assert.equal(main.innerHTML, "<i>Italic</i> Test <b>Bold</b> After<b></b>",
@@ -154,13 +155,7 @@ add_task(async function() {
         resolve();
       }, true);
 
-      const utils = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIDOMWindowUtils);
-
-      if (utils.sendKeyEvent("keydown", "v", 0, arg.modifier)) {
-        utils.sendKeyEvent("keypress", "v", "v".charCodeAt(0), arg.modifier);
-      }
-      utils.sendKeyEvent("keyup", "v", 0, arg.modifier);
+      sendAsyncMessage("Test:SendKey", {key: "v", code: "KeyV"});
     });
 
     // The new content should now include an image.
@@ -168,6 +163,8 @@ add_task(async function() {
       'src="http://example.org/browser/browser/base/content/test/general/moz.png">' +
       "Test <b>Bold</b> After<b></b>", "Paste after copy image");
   });
+
+  browser.messageManager.removeMessageListener("Test:SendKey", sendKey);
 
   gBrowser.removeCurrentTab();
 });

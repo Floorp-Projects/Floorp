@@ -250,169 +250,32 @@ private:
   nsAString::const_iterator mEndOfDrivesString;
 };
 
-//----------------------------------------------------------------------------
-// short cut resolver
-//----------------------------------------------------------------------------
-class ShortcutResolver
+
+//-----------------------------------------------------------------------------
+// static helper functions
+//-----------------------------------------------------------------------------
+
+// |out| must be an allocated buffer of size MAX_PATH
+static nsresult
+ResolveShellLink(const WCHAR* aIn, WCHAR* aOut)
 {
-public:
-  ShortcutResolver();
-  // nonvirtual since we're not subclassed
-  ~ShortcutResolver();
-
-  nsresult Init();
-  nsresult Resolve(const WCHAR* aIn, WCHAR* aOut);
-  nsresult SetShortcut(bool aUpdateExisting,
-                       const WCHAR* aShortcutPath,
-                       const WCHAR* aTargetPath,
-                       const WCHAR* aWorkingDir,
-                       const WCHAR* aArgs,
-                       const WCHAR* aDescription,
-                       const WCHAR* aIconFile,
-                       int32_t aIconIndex);
-
-private:
-  Mutex                  mLock;
-  RefPtr<IPersistFile> mPersistFile;
-  RefPtr<IShellLinkW>  mShellLink;
-};
-
-ShortcutResolver::ShortcutResolver() :
-  mLock("ShortcutResolver.mLock")
-{
-  CoInitialize(nullptr);
-}
-
-ShortcutResolver::~ShortcutResolver()
-{
-  CoUninitialize();
-}
-
-nsresult
-ShortcutResolver::Init()
-{
+  RefPtr<IPersistFile> persistFile;
+  RefPtr<IShellLinkW>  shellLink;
   // Get a pointer to the IPersistFile interface.
   if (FAILED(CoCreateInstance(CLSID_ShellLink,
                               nullptr,
                               CLSCTX_INPROC_SERVER,
                               IID_IShellLinkW,
-                              getter_AddRefs(mShellLink))) ||
-      FAILED(mShellLink->QueryInterface(IID_IPersistFile,
-                                        getter_AddRefs(mPersistFile)))) {
-    mShellLink = nullptr;
+                              getter_AddRefs(shellLink))) ||
+      FAILED(shellLink->QueryInterface(IID_IPersistFile,
+                                       getter_AddRefs(persistFile))) ||
+      FAILED(persistFile->Load(aIn, STGM_READ)) ||
+      FAILED(shellLink->Resolve(nullptr, SLR_NO_UI)) ||
+      FAILED(shellLink->GetPath(aOut, MAX_PATH, nullptr, SLGP_UNCPRIORITY))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
-
-// |out| must be an allocated buffer of size MAX_PATH
-nsresult
-ShortcutResolver::Resolve(const WCHAR* aIn, WCHAR* aOut)
-{
-  if (!mShellLink) {
-    return NS_ERROR_FAILURE;
-  }
-
-  MutexAutoLock lock(mLock);
-
-  if (FAILED(mPersistFile->Load(aIn, STGM_READ)) ||
-      FAILED(mShellLink->Resolve(nullptr, SLR_NO_UI)) ||
-      FAILED(mShellLink->GetPath(aOut, MAX_PATH, nullptr, SLGP_UNCPRIORITY))) {
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
-nsresult
-ShortcutResolver::SetShortcut(bool aUpdateExisting,
-                              const WCHAR* aShortcutPath,
-                              const WCHAR* aTargetPath,
-                              const WCHAR* aWorkingDir,
-                              const WCHAR* aArgs,
-                              const WCHAR* aDescription,
-                              const WCHAR* aIconPath,
-                              int32_t aIconIndex)
-{
-  if (!mShellLink) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!aShortcutPath) {
-    return NS_ERROR_FAILURE;
-  }
-
-  MutexAutoLock lock(mLock);
-
-  if (aUpdateExisting) {
-    if (FAILED(mPersistFile->Load(aShortcutPath, STGM_READWRITE))) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    if (!aTargetPath) {
-      return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
-    }
-
-    // Since we reuse our IPersistFile, we have to clear out any values that
-    // may be left over from previous calls to SetShortcut.
-    if (FAILED(mShellLink->SetWorkingDirectory(L"")) ||
-        FAILED(mShellLink->SetArguments(L"")) ||
-        FAILED(mShellLink->SetDescription(L"")) ||
-        FAILED(mShellLink->SetIconLocation(L"", 0))) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  if (aTargetPath && FAILED(mShellLink->SetPath(aTargetPath))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (aWorkingDir && FAILED(mShellLink->SetWorkingDirectory(aWorkingDir))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (aArgs && FAILED(mShellLink->SetArguments(aArgs))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (aDescription && FAILED(mShellLink->SetDescription(aDescription))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (aIconPath && FAILED(mShellLink->SetIconLocation(aIconPath, aIconIndex))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (FAILED(mPersistFile->Save(aShortcutPath,
-                                TRUE))) {
-    // Second argument indicates whether the file path specified in the
-    // first argument should become the "current working file" for this
-    // IPersistFile
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
-static ShortcutResolver* gResolver = nullptr;
-
-static nsresult
-NS_CreateShortcutResolver()
-{
-  gResolver = new ShortcutResolver();
-  return gResolver->Init();
-}
-
-static void
-NS_DestroyShortcutResolver()
-{
-  delete gResolver;
-  gResolver = nullptr;
-}
-
-
-//-----------------------------------------------------------------------------
-// static helper functions
-//-----------------------------------------------------------------------------
 
 // certainly not all the error that can be
 // encountered, but many of them common ones
@@ -984,11 +847,6 @@ nsLocalFile::nsLocalFile(const nsLocalFile& aOther)
 nsresult
 nsLocalFile::ResolveShortcut()
 {
-  // we can't do anything without the resolver
-  if (!gResolver) {
-    return NS_ERROR_FAILURE;
-  }
-
   mResolvedPath.SetLength(MAX_PATH);
   if (mResolvedPath.Length() != MAX_PATH) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -997,7 +855,7 @@ nsLocalFile::ResolveShortcut()
   wchar_t* resolvedPath = mResolvedPath.get();
 
   // resolve this shortcut
-  nsresult rv = gResolver->Resolve(mWorkingPath.get(), resolvedPath);
+  nsresult rv = ResolveShellLink(mWorkingPath.get(), resolvedPath);
 
   size_t len = NS_FAILED(rv) ? 0 : wcslen(resolvedPath);
   mResolvedPath.SetLength(len);
@@ -1807,66 +1665,6 @@ nsLocalFile::GetVersionInfoField(const char* aField, nsAString& aResult)
     }
   }
   free(ver);
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsLocalFile::SetShortcut(nsIFile* aTargetFile,
-                         nsIFile* aWorkingDir,
-                         const char16_t* aArgs,
-                         const char16_t* aDescription,
-                         nsIFile* aIconFile,
-                         int32_t aIconIndex)
-{
-  bool exists;
-  nsresult rv = this->Exists(&exists);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  const WCHAR* targetFilePath = nullptr;
-  const WCHAR* workingDirPath = nullptr;
-  const WCHAR* iconFilePath = nullptr;
-
-  nsAutoString targetFilePathAuto;
-  if (aTargetFile) {
-    rv = aTargetFile->GetPath(targetFilePathAuto);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    targetFilePath = targetFilePathAuto.get();
-  }
-
-  nsAutoString workingDirPathAuto;
-  if (aWorkingDir) {
-    rv = aWorkingDir->GetPath(workingDirPathAuto);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    workingDirPath = workingDirPathAuto.get();
-  }
-
-  nsAutoString iconPathAuto;
-  if (aIconFile) {
-    rv = aIconFile->GetPath(iconPathAuto);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    iconFilePath = iconPathAuto.get();
-  }
-
-  rv = gResolver->SetShortcut(exists,
-                              mWorkingPath.get(),
-                              targetFilePath,
-                              workingDirPath,
-                              char16ptr_t(aArgs),
-                              char16ptr_t(aDescription),
-                              iconFilePath,
-                              iconFilePath ? aIconIndex : 0);
-  if (targetFilePath && NS_SUCCEEDED(rv)) {
-    MakeDirty();
-  }
 
   return rv;
 }
@@ -3712,23 +3510,6 @@ nsLocalFile::GetHashCode(uint32_t* aResult)
 
   *aResult = HashString(mShortWorkingPath);
   return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// nsLocalFile <static members>
-//-----------------------------------------------------------------------------
-
-void
-nsLocalFile::GlobalInit()
-{
-  DebugOnly<nsresult> rv = NS_CreateShortcutResolver();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Shortcut resolver could not be created");
-}
-
-void
-nsLocalFile::GlobalShutdown()
-{
-  NS_DestroyShortcutResolver();
 }
 
 NS_IMPL_ISUPPORTS(nsDriveEnumerator, nsISimpleEnumerator)

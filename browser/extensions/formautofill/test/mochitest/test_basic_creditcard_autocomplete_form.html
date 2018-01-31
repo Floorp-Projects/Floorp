@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Test basic autofill</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="formautofill_common.js"></script>
   <script type="text/javascript" src="satchel_common.js"></script>
@@ -61,7 +62,7 @@ add_task(async function history_only_menu_checking() {
   await setupFormHistory();
 
   await setInput("#cc-exp-year", "");
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(["2023"], false);
 });
@@ -71,7 +72,7 @@ add_task(async function all_saved_fields_less_than_threshold() {
   await addCreditCard(reducedMockRecord);
 
   await setInput("#cc-name", "");
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries([reducedMockRecord].map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-name"],
@@ -86,7 +87,7 @@ add_task(async function check_menu_when_both_existed() {
   await setupCreditCardStorage();
 
   await setInput("#cc-number", "");
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primaryAffix: cc.ccNumberFmt.affix,
@@ -95,7 +96,7 @@ add_task(async function check_menu_when_both_existed() {
   })));
 
   await setInput("#cc-name", "");
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-name"],
@@ -103,7 +104,7 @@ add_task(async function check_menu_when_both_existed() {
   })));
 
   await setInput("#cc-exp-year", "");
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-exp-year"],
@@ -111,7 +112,7 @@ add_task(async function check_menu_when_both_existed() {
   })));
 
   await setInput("#cc-exp-month", "");
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-exp-month"],
@@ -126,7 +127,7 @@ add_task(async function check_fallback_for_mismatched_field() {
   await addCreditCard(reducedMockRecord);
 
   await setInput("#cc-exp-year", "");
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(["2023"], false);
 
@@ -142,7 +143,7 @@ add_task(async function check_search_result_for_pref_off() {
   });
 
   await setInput("#cc-name", "");
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(["John Smith"], false);
 
@@ -153,21 +154,21 @@ add_task(async function check_search_result_for_pref_off() {
 add_task(async function check_fields_after_form_autofill() {
   await setInput("#cc-exp-year", 202);
 
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.slice(1).map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-exp-year"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
   })));
 
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await triggerAutofillAndCheckProfile(MOCK_STORAGE[1]);
 });
 
 // Fallback to history search after autofill address.
 add_task(async function check_fallback_after_form_autofill() {
   await setInput("#cc-name", "", true);
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(["John Smith"], false);
 });
@@ -178,7 +179,7 @@ add_task(async function check_form_autofill_resume() {
   document.querySelector("#form1").reset();
 
   await setInput("#cc-name", "");
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-name"],

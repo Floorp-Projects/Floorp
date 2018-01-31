@@ -63,11 +63,13 @@
   width: 16px;
   height: 16px;
   margin: 0 2px;
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg") !important;
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 #cookiesChildren::-moz-tree-image(domainCol, container) {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 

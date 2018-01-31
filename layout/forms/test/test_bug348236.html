@@ -7,6 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348236
 
   <title>Test for Bug 348236</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <style type="text/css">
   #eSelect {
@@ -41,25 +42,21 @@ addLoadEvent(function test() {
         WinUtils = SpecialPowers.getDOMWindowUtils(window),
         sec = netscape.security,
         eSelect = $("eSelect"),
-        IDOMEvent = CI.nsIDOMEvent,
-        IDOMKeyEvent = CI.nsIDOMKeyEvent,
         timeout = 0 // Choose a larger value like 500 ms if you want to see what's happening.
 
-    function keypressOnSelect(key, modifiers) {
+    function keypressOnSelect(key) {
         WinUtils.focus(eSelect)
-        WinUtils.sendKeyEvent("keyup", key, 0, modifiers)
-        WinUtils.sendKeyEvent("keypress", key, 0, modifiers)
-        WinUtils.sendKeyEvent("keydown", key, 0, modifiers)
+        synthesizeKey(key.key, {code: key.code, altKey: key.altKey});
     }
 
-    function testKey(key, modifiers, keyString, functionToContinue) {
+    function testKey(key, keyString, functionToContinue) {
         var selectGotClick
         function clickListener() { selectGotClick = true }
         eSelect.selectedIndex = 0
         eSelect.onchangeCount = 0
 
         // Drop the SELECT down.
-        keypressOnSelect(key, modifiers)
+        keypressOnSelect(key)
         // This timeout and the following are necessary to let the sent events take effect.
         setTimeout(cont1, timeout)
         function cont1() {
@@ -69,7 +66,7 @@ addLoadEvent(function test() {
         }
         function cont2() {
             // Close the select.
-            keypressOnSelect(key, modifiers)
+            keypressOnSelect(key)
             setTimeout(cont3, timeout)
         }
         function cont3() {
@@ -96,19 +93,19 @@ addLoadEvent(function test() {
     is(eSelect.selectedIndex, 0, "SELECT selectedIndex should be 0 after load.")
 
     // Check if sending key events works.
-    keypressOnSelect(IDOMKeyEvent.DOM_VK_DOWN, 0)
+    keypressOnSelect({key: "KEY_ArrowDown", code: "ArrowDown"});
     is(eSelect.value, "2", "SELECT value should be 2 after pressing Down.")
       
     // Test ALT-Down.
-    testKey(IDOMKeyEvent.DOM_VK_DOWN, IDOMEvent.ALT_MASK, "ALT-Down", nextKey1)
+    testKey({key: "KEY_ArrowDown", code: "ArrowDown", altKey: true}, "ALT-Down", nextKey1)
     function nextKey1() {
         // Test ALT-Up.
-        testKey(IDOMKeyEvent.DOM_VK_UP, IDOMEvent.ALT_MASK, "ALT-Up", nextKey2)
+        testKey({key: "KEY_ArrowUp", code: "ArrowUp", altKey: true}, "ALT-Up", nextKey2)
     }
     function nextKey2() {
-        // Test the F4 key on OS/2 and Windows.
-        if (/OS\/2|Win/i.test(navigator.platform))
-            testKey(IDOMKeyEvent.DOM_VK_F4, 0, "F4", finished)
+        // Test the F4 key on Windows.
+        if (/Win/i.test(navigator.platform))
+            testKey({key: "KEY_F4", code: "F4"}, "F4", finished)
         else
             finished()
     }

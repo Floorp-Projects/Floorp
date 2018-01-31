@@ -5,6 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=226361
 <head>
   <title>Test for Bug 226361</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body id="body1">
@@ -37,8 +38,7 @@ function setTabFocus() {
 
 var doc = document;
 function tab_to(id) {
-  var wu = SpecialPowers.DOMWindowUtils;
-  wu.sendKeyEvent('keypress',  9, 0, 0);
+  synthesizeKey("KEY_Tab", {code: "Tab"});
   is(doc.activeElement.id, id, "element with id=" + id + " should have focus");
 }
 
