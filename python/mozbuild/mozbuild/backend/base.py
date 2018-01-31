@@ -203,6 +203,65 @@ class BuildBackend(LoggingMixin):
         """
         return None
 
+    def _write_purgecaches(self, config):
+        """Write .purgecaches sentinels.
+
+        The purgecaches mechanism exists to allow the platform to
+        invalidate the XUL cache (which includes some JS) at application
+        startup-time.  The application checks for .purgecaches in the
+        application directory, which varies according to
+        --enable-application.  There's a further wrinkle on macOS, where
+        the real application directory is part of a Cocoa bundle
+        produced from the regular application directory by the build
+        system.  In this case, we write to both locations, since the
+        build system recreates the Cocoa bundle from the contents of the
+        regular application directory and might remove a sentinel
+        created here.
+        """
+
+        app = config.substs['MOZ_BUILD_APP']
+        if app == 'mobile/android':
+            # In order to take effect, .purgecaches sentinels would need to be
+            # written to the Android device file system.
+            return
+
+        root = mozpath.join(config.topobjdir, 'dist', 'bin')
+
+        if app == 'browser':
+            root = mozpath.join(config.topobjdir, 'dist', 'bin', 'browser')
+
+        purgecaches_dirs = [root]
+        if app == 'browser' and 'cocoa' == config.substs['MOZ_WIDGET_TOOLKIT']:
+            bundledir = mozpath.join(config.topobjdir, 'dist',
+                                     config.substs['MOZ_MACBUNDLE_NAME'],
+                                     'Contents', 'Resources',
+                                     'browser')
+            purgecaches_dirs.append(bundledir)
+
+        for dir in purgecaches_dirs:
+            with open(mozpath.join(dir, '.purgecaches'), 'wt') as f:
+                f.write('\n')
+
+    def post_build(self, config, output, jobs, verbose, status):
+        """Called late during 'mach build' execution, after `build(...)` has finished.
+
+        `status` is the status value returned from `build(...)`.
+
+        In the case where `build` returns `None`, this is called after
+        the default `make` command has completed, with the status of
+        that command.
+
+        This should return the status value from `build(...)`, or the
+        status value of a subprocess, where 0 denotes success and any
+        other value is an error code.
+
+        If an exception is raised, |mach build| will fail with a
+        non-zero exit code.
+        """
+        self._write_purgecaches(config)
+
+        return status
+
     @contextmanager
     def _write_file(self, path=None, fh=None, mode='rU'):
         """Context manager to write a file.
