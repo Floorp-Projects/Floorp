@@ -11,7 +11,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ServiceWorkerBinding.h" // For ServiceWorkerState.
 
-class nsPIDOMWindowInner;
+class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
@@ -25,12 +25,14 @@ ServiceWorkerVisible(JSContext* aCx, JSObject* aObj);
 
 class ServiceWorker final : public DOMEventTargetHelper
 {
-  friend class ServiceWorkerInfo;
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
   IMPL_EVENT_HANDLER(statechange)
   IMPL_EVENT_HANDLER(error)
+
+  static already_AddRefed<ServiceWorker>
+  Create(nsIGlobalObject* aOwner, const ServiceWorkerDescriptor& aDescriptor);
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -65,8 +67,7 @@ public:
               const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
 
 private:
-  // This class can only be created from ServiceWorkerInfo::GetOrCreateInstance().
-  ServiceWorker(nsPIDOMWindowInner* aWindow, ServiceWorkerInfo* aInfo);
+  ServiceWorker(nsIGlobalObject* aWindow, ServiceWorkerInfo* aInfo);
 
   // This class is reference-counted and will be destroyed from Release().
   ~ServiceWorker();

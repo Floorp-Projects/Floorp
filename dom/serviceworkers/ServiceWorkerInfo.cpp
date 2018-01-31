@@ -277,7 +277,8 @@ ServiceWorkerInfo::GetOrCreateInstance(nsPIDOMWindowInner* aWindow)
   }
 
   if (!ref) {
-    ref = new ServiceWorker(aWindow, this);
+    nsCOMPtr<nsIGlobalObject> global(do_QueryInterface(aWindow));
+    ref = ServiceWorker::Create(global, mDescriptor);
   }
 
   return ref.forget();
