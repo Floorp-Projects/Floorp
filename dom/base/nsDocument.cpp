@@ -6558,29 +6558,6 @@ nsIDocument::CreateNodeIterator(nsINode& aRoot, uint32_t aWhatToShow,
   return iterator.forget();
 }
 
-NS_IMETHODIMP
-nsDocument::CreateTreeWalker(nsIDOMNode *aRoot,
-                             uint32_t aWhatToShow,
-                             nsIDOMNodeFilter *aFilter,
-                             uint8_t aOptionalArgc,
-                             nsIDOMTreeWalker **_retval)
-{
-  *_retval = nullptr;
-
-  if (!aOptionalArgc) {
-    aWhatToShow = nsIDOMNodeFilter::SHOW_ALL;
-  }
-
-  nsCOMPtr<nsINode> root = do_QueryInterface(aRoot);
-  NS_ENSURE_TRUE(root, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-
-  ErrorResult rv;
-  *_retval = nsIDocument::CreateTreeWalker(*root, aWhatToShow,
-                                           NodeFilterHolder(aFilter),
-                                           rv).take();
-  return rv.StealNSResult();
-}
-
 already_AddRefed<TreeWalker>
 nsIDocument::CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
                               NodeFilter* aFilter,

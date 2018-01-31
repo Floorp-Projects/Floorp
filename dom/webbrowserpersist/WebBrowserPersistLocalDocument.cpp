@@ -18,6 +18,7 @@
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/TreeWalker.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsContentCID.h"
@@ -34,7 +35,6 @@
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMProcessingInstruction.h"
-#include "nsIDOMTreeWalker.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
@@ -1193,18 +1193,19 @@ WebBrowserPersistLocalDocument::ReadResources(nsIWebBrowserPersistResourceVisito
     nsresult rv = NS_OK;
     nsCOMPtr<nsIWebBrowserPersistResourceVisitor> visitor = aVisitor;
 
-    nsCOMPtr<nsIDOMNode> docAsNode = do_QueryInterface(mDocument);
-    NS_ENSURE_TRUE(docAsNode, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIDOMTreeWalker> walker;
-    nsCOMPtr<nsIDOMDocument> oldStyleDoc = do_QueryInterface(mDocument);
-    MOZ_ASSERT(oldStyleDoc);
-    rv = oldStyleDoc->CreateTreeWalker(docAsNode,
+    ErrorResult err;
+    nsCOMPtr<nsIDOMTreeWalker> walker =
+        mDocument->CreateTreeWalker(*mDocument,
             nsIDOMNodeFilter::SHOW_ELEMENT |
             nsIDOMNodeFilter::SHOW_DOCUMENT |
             nsIDOMNodeFilter::SHOW_PROCESSING_INSTRUCTION,
-            nullptr, 1, getter_AddRefs(walker));
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+            nullptr, err);
+
+    if (NS_WARN_IF(err.Failed())) {
+        return err.StealNSResult();
+    }
     MOZ_ASSERT(walker);
 
     RefPtr<ResourceReader> reader = new ResourceReader(this, aVisitor);
