@@ -5162,6 +5162,7 @@ var gCSSProperties = {
     initial_values: [ "auto" ],
     other_values: [ "normal", "start", "end", "flex-start", "flex-end", "self-start",
                     "self-end", "center", "left", "right", "stretch", "unsafe left",
+                    "baseline", "last baseline", "first baseline",
                     "unsafe right", "safe right", "safe center" ],
     invalid_values: [ "space-between", "abc", "30px", "none", "first", "last",
                       "legacy left", "right legacy", "baseline first", "baseline last" ]
@@ -5195,8 +5196,9 @@ var gCSSProperties = {
     subproperties: [ "align-self", "justify-self" ],
     initial_values: [ "auto" ],
     other_values: [ "normal start", "first baseline end", "end auto",
-                    "end", "normal", "baseline start",
-                    "self-end left", "last baseline start", "stretch" ],
+                    "end", "normal", "baseline start", "baseline",
+                    "start baseline", "self-end left", "last baseline start",
+                    "stretch" ],
     invalid_values: [ "space-between", "start space-evenly", "none", "end safe",
                       "auto legacy left", "legacy left", "auto/auto" ]
   },

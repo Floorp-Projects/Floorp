@@ -45,6 +45,8 @@ span.i { font-size:12px; grid-column:2; }
 
 .sfb { align-self:baseline; }
 .slb { align-self:last baseline; align-content:self-end; }
+.jfb { justify-self:baseline; justify-content:self-end; }
+.jlb { justify-self:last baseline; justify-content:self-end; }
 
 .hl { writing-mode: horizontal-tb; direction:ltr; }
 .hr { writing-mode: horizontal-tb; direction:rtl; }
@@ -143,6 +145,29 @@ A<div class="igrid sfb">
 
 <br>
 
+<!-- TODO: impossible to make a reference due to bug 1166120
+
+A<div class="igrid" style="grid: auto / 100px;">
+<span class="jfb a vlr" style="margin:1px 3px 5px 7px">A<br>B</span>
+</div>
+<div class="igrid" style="grid: auto / 100px;">
+<span class="jlb a vlr" style="margin:1px 3px 5px 7px">A<br>B</span>
+</div>
+<div class="igrid slb" style="grid: auto / 100px;">
+<span class="jlb a vlr" style="margin:1px 3px 5px 7px">A<br>B</span>
+</div>
+<div class="igrid vl" style="grid: 100px / 50px;">
+<span class="jlb a" style="margin:1px 3px 5px 7px">A<br>B</span>
+</div>
+<div class="igrid slb vl" style="grid: 100px / 50px;">
+<span class="jfb a" style="margin:1px 3px 5px 7px">A<br>B</span>
+</div>
+<div class="igrid sfb vl" style="grid: 100px / 50px;">
+<span class="jfb a" style="margin:1px 3px 5px 7px">A<br>B</span>
+</div>
+
+-->
+
 <!--  TODO: figure out a way to make a reference for these:
 
 A<div class="igrid" style="grid-template-columns:200px">
@@ -181,7 +206,7 @@ A<div class="igrid" style="grid-template-columns:200px">
   </div>
 </div><div class="igrid" style="grid-template-columns:200px">
   <div class="igrid sfb vl" style="grid: 1fr / 7px 13px 50px; grid-row: span 4;">
-    <span class="a" style="margin-block-end:27px; padding-block-end:15px;">A<br>B</span>
+    <span class="jfb a" style="margin-block-end:27px; padding-block-end:15px;">A<br>B</span>
     <n></n>
     <n></n>
   </div>
