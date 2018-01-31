@@ -18,6 +18,7 @@
 #include "nsDataHashtable.h"
 
 class nsIDOMWindow;
+class nsIDocument;
 
 namespace mozilla {
 namespace dom {
@@ -60,7 +61,7 @@ private:
                                double aGamma,
                                bool aIsAbsolute);
 
-  void FireDOMMotionEvent(class nsIDOMDocument *domDoc,
+  void FireDOMMotionEvent(nsIDocument* domDoc,
                           mozilla::dom::EventTarget* target,
                           uint32_t type,
                           PRTime timestamp,

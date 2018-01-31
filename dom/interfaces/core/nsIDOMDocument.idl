@@ -55,10 +55,6 @@ interface nsIDOMDocument : nsIDOMNode
                                                         [optional] in nsIDOMNodeFilter filter)
                                                           raises(DOMException);
 
-  nsIDOMEvent               createEvent(in DOMString eventType)
-                                               raises(DOMException);
-
-
   // HTML
   /**
    * The window associated with this document.

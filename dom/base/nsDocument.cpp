@@ -5452,12 +5452,11 @@ nsDocument::DispatchContentLoadedEvents()
   if (target_frame) {
     nsCOMPtr<nsIDocument> parent = mParentDocument;
     do {
-      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(parent);
-
-      nsCOMPtr<nsIDOMEvent> event;
-      if (domDoc) {
-        domDoc->CreateEvent(NS_LITERAL_STRING("Events"),
-                            getter_AddRefs(event));
+      RefPtr<Event> event;
+      if (parent) {
+        IgnoredErrorResult ignored;
+        event = parent->CreateEvent(NS_LITERAL_STRING("Events"),
+                                    CallerType::System, ignored);
 
       }
 
@@ -7849,16 +7848,6 @@ nsDocument::GetEventTargetParent(EventChainPreVisitor& aVisitor)
       window ? window->GetTargetForEventTargetChain() : nullptr, false);
   }
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::CreateEvent(const nsAString& aEventType, nsIDOMEvent** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  ErrorResult rv;
-  *aReturn = nsIDocument::CreateEvent(aEventType, CallerType::System,
-                                      rv).take();
-  return rv.StealNSResult();
 }
 
 already_AddRefed<Event>
