@@ -25,11 +25,8 @@
 namespace mozilla {
 namespace dom {
 
-namespace workers {
-class WorkerPrivate;
-}
-
 class WorkerDebugger;
+class WorkerPrivate;
 
 class WorkerDebuggerManager final : public nsIObserver,
                                     public nsIWorkerDebuggerManager
@@ -65,24 +62,24 @@ public:
   Shutdown();
 
   void
-  RegisterDebugger(workers::WorkerPrivate* aWorkerPrivate);
+  RegisterDebugger(WorkerPrivate* aWorkerPrivate);
 
   void
-  RegisterDebuggerMainThread(workers::WorkerPrivate* aWorkerPrivate,
+  RegisterDebuggerMainThread(WorkerPrivate* aWorkerPrivate,
                              bool aNotifyListeners);
 
   void
-  UnregisterDebugger(workers::WorkerPrivate* aWorkerPrivate);
+  UnregisterDebugger(WorkerPrivate* aWorkerPrivate);
 
   void
-  UnregisterDebuggerMainThread(workers::WorkerPrivate* aWorkerPrivate);
+  UnregisterDebuggerMainThread(WorkerPrivate* aWorkerPrivate);
 
 private:
   virtual ~WorkerDebuggerManager();
 };
 
 inline nsresult
-RegisterWorkerDebugger(workers::WorkerPrivate* aWorkerPrivate)
+RegisterWorkerDebugger(WorkerPrivate* aWorkerPrivate)
 {
   WorkerDebuggerManager* manager;
 
@@ -102,7 +99,7 @@ RegisterWorkerDebugger(workers::WorkerPrivate* aWorkerPrivate)
 }
 
 inline nsresult
-UnregisterWorkerDebugger(workers::WorkerPrivate* aWorkerPrivate)
+UnregisterWorkerDebugger(WorkerPrivate* aWorkerPrivate)
 {
   WorkerDebuggerManager* manager;
 

@@ -29,7 +29,6 @@ namespace mozilla {
 namespace dom {
 
 using mozilla::dom::ipc::StructuredCloneData;
-using mozilla::dom::workers::WorkerPrivate;
 using mozilla::ipc::PrincipalInfo;
 using mozilla::ipc::PrincipalInfoToPrincipal;
 

@@ -19,10 +19,10 @@
 #endif
 
 namespace mozilla {
-namespace dom {
 
-using namespace workers;
-using namespace mozilla::ipc;
+using namespace ipc;
+
+namespace dom {
 
 namespace {
 

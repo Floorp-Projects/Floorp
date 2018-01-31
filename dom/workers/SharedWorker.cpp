@@ -30,7 +30,6 @@ using mozilla::dom::Sequence;
 using mozilla::dom::MessagePort;
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::dom::workers;
 
 SharedWorker::SharedWorker(nsPIDOMWindowInner* aWindow,
                            WorkerPrivate* aWorkerPrivate,

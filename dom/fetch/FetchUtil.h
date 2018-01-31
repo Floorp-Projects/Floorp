@@ -22,10 +22,7 @@ namespace mozilla {
 namespace dom {
 
 class InternalRequest;
-
-namespace workers {
 class WorkerPrivate;
-}
 
 class FetchUtil final
 {
@@ -69,7 +66,7 @@ public:
                      JS::HandleObject aObj,
                      JS::MimeType aMimeType,
                      JS::StreamConsumer* aConsumer,
-                     workers::WorkerPrivate* aMaybeWorker);
+                     WorkerPrivate* aMaybeWorker);
 };
 
 } // namespace dom

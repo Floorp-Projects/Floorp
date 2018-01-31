@@ -17,8 +17,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 namespace {
 
 class RegisterDebuggerMainThreadRunnable final : public mozilla::Runnable

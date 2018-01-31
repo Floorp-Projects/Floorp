@@ -190,7 +190,7 @@ already_AddRefed<URL>
 ParseURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
                    ErrorResult& aRv)
 {
-  workers::WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
+  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(worker);
   worker->AssertIsOnWorkerThread();
 
@@ -251,7 +251,7 @@ GetRequestURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
 class ReferrerSameOriginChecker final : public WorkerMainThreadRunnable
 {
 public:
-  ReferrerSameOriginChecker(workers::WorkerPrivate* aWorkerPrivate,
+  ReferrerSameOriginChecker(WorkerPrivate* aWorkerPrivate,
                             const nsAString& aReferrerURL,
                             nsresult& aResult)
     : WorkerMainThreadRunnable(aWorkerPrivate,
@@ -407,7 +407,7 @@ Request::Constructor(const GlobalObject& aGlobal,
           return nullptr;
         }
         if (!referrerURL.EqualsLiteral(kFETCH_CLIENT_REFERRER_STR)) {
-          workers::WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
+          WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
           nsresult rv = NS_OK;
           // ReferrerSameOriginChecker uses a sync loop to get the main thread
           // to perform the same-origin check.  Overall, on Workers this method
@@ -445,7 +445,7 @@ Request::Constructor(const GlobalObject& aGlobal,
       }
     }
   } else {
-    workers::WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
+    WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     if (worker) {
       worker->AssertIsOnWorkerThread();
       request->SetEnvironmentReferrerPolicy(worker->GetReferrerPolicy());

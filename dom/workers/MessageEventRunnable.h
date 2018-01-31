@@ -21,16 +21,16 @@ class MessageEventRunnable final : public WorkerRunnable
                                  , public StructuredCloneHolder
 {
 public:
-  MessageEventRunnable(workers::WorkerPrivate* aWorkerPrivate,
+  MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
                        TargetAndBusyBehavior aBehavior);
 
   bool
-  DispatchDOMEvent(JSContext* aCx, workers::WorkerPrivate* aWorkerPrivate,
+  DispatchDOMEvent(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                    DOMEventTargetHelper* aTarget, bool aIsMainThread);
 
 private:
   bool
-  WorkerRun(JSContext* aCx, workers::WorkerPrivate* aWorkerPrivate) override;
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
 
   void
   DispatchError(JSContext* aCx, DOMEventTargetHelper* aTarget);

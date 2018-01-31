@@ -21,8 +21,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 namespace network {
 
 NS_IMPL_QUERY_INTERFACE_INHERITED(Connection, DOMEventTargetHelper,
@@ -114,7 +112,7 @@ Connection::CreateForWindow(nsPIDOMWindowInner* aWindow)
 }
 
 /* static */ already_AddRefed<Connection>
-Connection::CreateForWorker(workers::WorkerPrivate* aWorkerPrivate,
+Connection::CreateForWorker(WorkerPrivate* aWorkerPrivate,
                             ErrorResult& aRv)
 {
   MOZ_ASSERT(aWorkerPrivate);

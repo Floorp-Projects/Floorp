@@ -29,10 +29,7 @@ class ClientOpConstructorArgs;
 class ClientOpenWindowArgs;
 class ClientSource;
 enum class ClientType : uint8_t;
-
-namespace workers {
 class WorkerPrivate;
-} // workers namespace
 
 // The ClientManager provides a per-thread singleton interface workering
 // with the client subsystem.  It allows globals to create ClientSource
@@ -76,7 +73,7 @@ class ClientManager final : public ClientThing<ClientManagerChild>
   GetOrCreateForCurrentThread();
 
   // Private methods called by ClientSource
-  mozilla::dom::workers::WorkerPrivate*
+  mozilla::dom::WorkerPrivate*
   GetWorkerPrivate() const;
 
 public:

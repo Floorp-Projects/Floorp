@@ -40,8 +40,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 /* static */ void
 XMLHttpRequestWorker::StateData::trace(JSTracer *aTrc)
 {
@@ -164,7 +162,7 @@ public:
   void
   Reset()
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
     if (mUploadEventListenersAttached) {
       AddRemoveEventListeners(true, false);
@@ -174,7 +172,7 @@ public:
   already_AddRefed<nsIEventTarget>
   GetEventTarget()
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
     nsCOMPtr<nsIEventTarget> target = mSyncEventResponseTarget ?
                                       mSyncEventResponseTarget :
@@ -375,7 +373,7 @@ private:
   NS_IMETHOD
   Run() override
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
     // This means the XHR was GC'd, so we can't be pinned, and we don't need to
     // try to unpin.
@@ -452,7 +450,7 @@ public:
     , mChannelId(mProxy->mInnerChannelId)
     , mReceivedLoadStart(false)
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     CopyASCIItoUTF16(sEventStrings[STRING_loadstart], mEventType);
   }
 
@@ -463,7 +461,7 @@ public:
   bool
   RegisterAndDispatch()
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
     if (NS_FAILED(mXHR->AddEventListener(mEventType, this, false, false, 2))) {
       NS_WARNING("Failed to add event listener!");
@@ -476,8 +474,8 @@ public:
 private:
   ~LoadStartDetectionRunnable()
   {
-    AssertIsOnMainThread();
-    }
+    workers::AssertIsOnMainThread();
+  }
 };
 
 class EventRunnable final : public MainThreadProxyRunnable
@@ -855,7 +853,7 @@ public:
 bool
 Proxy::Init()
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
   MOZ_ASSERT(mWorkerPrivate);
 
   if (mXHR) {
@@ -898,7 +896,7 @@ Proxy::Init()
 void
 Proxy::Teardown(bool aSendUnpin)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   if (mXHR) {
     Reset();
@@ -948,7 +946,7 @@ Proxy::Teardown(bool aSendUnpin)
 bool
 Proxy::AddRemoveEventListeners(bool aUpload, bool aAdd)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   NS_ASSERTION(!aUpload ||
                (mUploadEventListenersAttached && !aAdd) ||
@@ -988,7 +986,7 @@ NS_IMPL_ISUPPORTS(Proxy, nsIDOMEventListener)
 NS_IMETHODIMP
 Proxy::HandleEvent(nsIDOMEvent* aEvent)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   if (!mWorkerPrivate || !mXMLHttpRequestPrivate) {
     NS_ERROR("Shouldn't get here!");
@@ -1069,7 +1067,7 @@ NS_IMPL_ISUPPORTS_INHERITED(LoadStartDetectionRunnable, Runnable,
 NS_IMETHODIMP
 LoadStartDetectionRunnable::Run()
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   if (NS_FAILED(mXHR->RemoveEventListener(mEventType, this, false))) {
     NS_WARNING("Failed to remove event listener!");
@@ -1101,7 +1099,7 @@ LoadStartDetectionRunnable::Run()
 NS_IMETHODIMP
 LoadStartDetectionRunnable::HandleEvent(nsIDOMEvent* aEvent)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
 #ifdef DEBUG
   {
@@ -1122,7 +1120,7 @@ LoadStartDetectionRunnable::HandleEvent(nsIDOMEvent* aEvent)
 bool
 EventRunnable::PreDispatch(WorkerPrivate* /* unused */)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   AutoJSAPI jsapi;
   DebugOnly<bool> ok = jsapi.Init(xpc::NativeGlobal(mScopeObj));
@@ -1377,7 +1375,7 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 bool
 WorkerThreadProxySyncRunnable::MainThreadRun()
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   nsCOMPtr<nsIEventTarget> tempTarget = mSyncLoopTarget;
 

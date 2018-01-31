@@ -10,17 +10,16 @@
 #include "mozilla/dom/PerformanceBinding.h"
 #include "mozilla/dom/PerformanceEntryBinding.h"
 #include "mozilla/dom/PerformanceObserverBinding.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "nsPIDOMWindow.h"
 #include "nsQueryObject.h"
 #include "nsString.h"
 #include "PerformanceEntry.h"
 #include "PerformanceObserverEntryList.h"
-#include "WorkerPrivate.h"
-#include "WorkerScope.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::dom::workers;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PerformanceObserver)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PerformanceObserver)

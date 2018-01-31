@@ -137,7 +137,7 @@ private:
   // Raw pointer because this IPCStreamSource keeps the worker alive using a
   // WorkerHolder. The worker is kept alive when the actor is created and,
   // released when the actor is destroyed.
-  dom::workers::WorkerPrivate* mWorkerPrivate;
+  dom::WorkerPrivate* mWorkerPrivate;
 
 #ifdef DEBUG
 protected:

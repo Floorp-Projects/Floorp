@@ -1413,7 +1413,7 @@ gfxUtils::GetInputStream(gfx::DataSourceSurface* aSurface,
 class GetFeatureStatusRunnable final : public dom::WorkerMainThreadRunnable
 {
 public:
-    GetFeatureStatusRunnable(dom::workers::WorkerPrivate* workerPrivate,
+    GetFeatureStatusRunnable(dom::WorkerPrivate* workerPrivate,
                              const nsCOMPtr<nsIGfxInfo>& gfxInfo,
                              int32_t feature,
                              nsACString& failureId,
@@ -1458,8 +1458,7 @@ gfxUtils::ThreadSafeGetFeatureStatus(const nsCOMPtr<nsIGfxInfo>& gfxInfo,
                                      int32_t* status)
 {
   if (!NS_IsMainThread()) {
-    dom::workers::WorkerPrivate* workerPrivate =
-      dom::workers::GetCurrentThreadWorkerPrivate();
+    dom::WorkerPrivate* workerPrivate = dom::GetCurrentThreadWorkerPrivate();
 
     RefPtr<GetFeatureStatusRunnable> runnable =
       new GetFeatureStatusRunnable(workerPrivate, gfxInfo, feature, failureId,

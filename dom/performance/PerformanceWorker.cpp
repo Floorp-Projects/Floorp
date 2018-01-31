@@ -6,12 +6,10 @@
 
 #include "PerformanceWorker.h"
 #include "mozilla/dom/DOMPrefs.h"
-#include "WorkerPrivate.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {
-
-using namespace workers;
 
 PerformanceWorker::PerformanceWorker(WorkerPrivate* aWorkerPrivate)
   : mWorkerPrivate(aWorkerPrivate)

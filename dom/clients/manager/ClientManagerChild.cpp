@@ -14,8 +14,6 @@
 namespace mozilla {
 namespace dom {
 
-using mozilla::dom::workers::WorkerPrivate;
-
 void
 ClientManagerChild::ActorDestroy(ActorDestroyReason aReason)
 {

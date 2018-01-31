@@ -23,8 +23,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 namespace {
 
 class ReportErrorRunnable final : public WorkerRunnable

@@ -26,8 +26,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 namespace {
 
 const nsIID kWorkerRunnableIID = {
@@ -475,7 +473,7 @@ MainThreadStopSyncLoopRunnable::MainThreadStopSyncLoopRunnable(
                                bool aResult)
 : WorkerSyncRunnable(aWorkerPrivate, Move(aSyncLoopTarget)), mResult(aResult)
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 #ifdef DEBUG
   mWorkerPrivate->AssertValidSyncLoop(mSyncLoopTarget);
 #endif
@@ -565,7 +563,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(WorkerControlRunnable, WorkerRunnable)
 WorkerMainThreadRunnable::WorkerMainThreadRunnable(
   WorkerPrivate* aWorkerPrivate,
   const nsACString& aTelemetryKey)
-  : mozilla::Runnable("dom::workers::WorkerMainThreadRunnable")
+  : mozilla::Runnable("dom::WorkerMainThreadRunnable")
   , mWorkerPrivate(aWorkerPrivate)
   , mTelemetryKey(aTelemetryKey)
 {
@@ -609,7 +607,7 @@ WorkerMainThreadRunnable::Dispatch(WorkerStatus aFailStatus,
 NS_IMETHODIMP
 WorkerMainThreadRunnable::Run()
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
 
   bool runResult = MainThreadRun();
 
@@ -669,7 +667,7 @@ WorkerSameThreadRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
 
 WorkerProxyToMainThreadRunnable::WorkerProxyToMainThreadRunnable(
   WorkerPrivate* aWorkerPrivate)
-  : mozilla::Runnable("dom::workers::WorkerProxyToMainThreadRunnable")
+  : mozilla::Runnable("dom::WorkerProxyToMainThreadRunnable")
   , mWorkerPrivate(aWorkerPrivate)
 {
   MOZ_ASSERT(mWorkerPrivate);
@@ -701,7 +699,7 @@ WorkerProxyToMainThreadRunnable::Dispatch()
 NS_IMETHODIMP
 WorkerProxyToMainThreadRunnable::Run()
 {
-  AssertIsOnMainThread();
+  workers::AssertIsOnMainThread();
   RunOnMainThread();
   PostDispatchOnMainThread();
   return NS_OK;
@@ -733,7 +731,7 @@ WorkerProxyToMainThreadRunnable::PostDispatchOnMainThread()
     }
 
     virtual bool
-    WorkerRun(JSContext* aCx, workers::WorkerPrivate* aWorkerPrivate) override
+    WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
     {
       MOZ_ASSERT(aWorkerPrivate);
       aWorkerPrivate->AssertIsOnWorkerThread();

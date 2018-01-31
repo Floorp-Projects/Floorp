@@ -20,11 +20,11 @@ namespace mozilla {
 namespace dom {
 
 class WorkerRunnable;
+class WorkerPrivate;
+template <class> class WorkerPrivateParent;
 
 namespace workers {
 class RuntimeService;
-class WorkerPrivate;
-template <class> class WorkerPrivateParent;
 }
 
 // This class lets us restrict the public methods that can be called on
@@ -33,8 +33,8 @@ template <class> class WorkerPrivateParent;
 class WorkerThreadFriendKey
 {
   friend class workers::RuntimeService;
-  friend class workers::WorkerPrivate;
-  friend class workers::WorkerPrivateParent<workers::WorkerPrivate>;
+  friend class WorkerPrivate;
+  friend class WorkerPrivateParent<WorkerPrivate>;
 
   WorkerThreadFriendKey();
   ~WorkerThreadFriendKey();
@@ -49,7 +49,7 @@ class WorkerThread final
   CondVar mWorkerPrivateCondVar;
 
   // Protected by nsThread::mLock.
-  workers::WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
 
   // Only touched on the target thread.
   RefPtr<Observer> mObserver;
@@ -68,7 +68,7 @@ public:
 
   void
   SetWorker(const WorkerThreadFriendKey& aKey,
-            workers::WorkerPrivate* aWorkerPrivate);
+            WorkerPrivate* aWorkerPrivate);
 
   nsresult
   DispatchPrimaryRunnable(const WorkerThreadFriendKey& aKey,

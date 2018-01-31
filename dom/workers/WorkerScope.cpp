@@ -57,14 +57,14 @@
 
 extern already_AddRefed<nsIScriptTimeoutHandler>
 NS_CreateJSTimeoutHandler(JSContext* aCx,
-                          mozilla::dom::workers::WorkerPrivate* aWorkerPrivate,
+                          mozilla::dom::WorkerPrivate* aWorkerPrivate,
                           mozilla::dom::Function& aFunction,
                           const mozilla::dom::Sequence<JS::Value>& aArguments,
                           mozilla::ErrorResult& aError);
 
 extern already_AddRefed<nsIScriptTimeoutHandler>
 NS_CreateJSTimeoutHandler(JSContext* aCx,
-                          mozilla::dom::workers::WorkerPrivate* aWorkerPrivate,
+                          mozilla::dom::WorkerPrivate* aWorkerPrivate,
                           const nsAString& aExpression);
 
 using namespace mozilla;

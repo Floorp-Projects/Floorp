@@ -13,21 +13,19 @@
 namespace mozilla {
 namespace dom {
 
-namespace workers {
 class WorkerPrivate;
-}
 
 class WorkerDebugger : public nsIWorkerDebugger
 {
   class ReportDebuggerErrorRunnable;
   class PostDebuggerMessageRunnable;
 
-  workers::WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
   bool mIsInitialized;
   nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> mListeners;
 
 public:
-  explicit WorkerDebugger(workers::WorkerPrivate* aWorkerPrivate);
+  explicit WorkerDebugger(WorkerPrivate* aWorkerPrivate);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWORKERDEBUGGER

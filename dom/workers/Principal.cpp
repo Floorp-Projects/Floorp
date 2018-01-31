@@ -36,7 +36,7 @@ GetWorkerPrincipal()
     --sPrincipal.refcount;
   } else {
 #ifdef DEBUG
-    sPrincipal.debugToken = kJSPrincipalsDebugToken;
+    sPrincipal.debugToken = workers::kJSPrincipalsDebugToken;
 #endif
   }
 

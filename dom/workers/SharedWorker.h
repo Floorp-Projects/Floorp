@@ -25,10 +25,10 @@ class EventChainPreVisitor;
 namespace dom {
 class MessagePort;
 class StringOrWorkerOptions;
+class WorkerPrivate;
 
 namespace workers {
 class RuntimeService;
-class WorkerPrivate;
 }
 
 class SharedWorker final : public DOMEventTargetHelper
@@ -38,7 +38,7 @@ class SharedWorker final : public DOMEventTargetHelper
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::GlobalObject GlobalObject;
 
-  RefPtr<workers::WorkerPrivate> mWorkerPrivate;
+  RefPtr<WorkerPrivate> mWorkerPrivate;
   RefPtr<MessagePort> mMessagePort;
   nsTArray<nsCOMPtr<nsIDOMEvent>> mFrozenEvents;
   bool mFrozen;
@@ -80,7 +80,7 @@ public:
   virtual nsresult
   GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
-  workers::WorkerPrivate*
+  WorkerPrivate*
   GetWorkerPrivate() const
   {
     return mWorkerPrivate;
@@ -89,7 +89,7 @@ public:
 private:
   // This class can only be created from the RuntimeService.
   SharedWorker(nsPIDOMWindowInner* aWindow,
-               workers::WorkerPrivate* aWorkerPrivate,
+               WorkerPrivate* aWorkerPrivate,
                MessagePort* aMessagePort);
 
   // This class is reference-counted and will be destroyed from Release().

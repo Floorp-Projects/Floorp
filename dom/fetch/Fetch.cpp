@@ -190,7 +190,7 @@ class WorkerFetchResolver final : public FetchDriverObserver
 public:
   // Returns null if worker is shutting down.
   static already_AddRefed<WorkerFetchResolver>
-  Create(workers::WorkerPrivate* aWorkerPrivate, Promise* aPromise,
+  Create(WorkerPrivate* aWorkerPrivate, Promise* aPromise,
          AbortSignal* aSignal, FetchObserver* aObserver)
   {
     MOZ_ASSERT(aWorkerPrivate);
@@ -871,7 +871,7 @@ WorkerFetchResolver::FlushConsoleReport()
     return;
   }
 
-  workers::WorkerPrivate* worker = mPromiseProxy->GetWorkerPrivate();
+  WorkerPrivate* worker = mPromiseProxy->GetWorkerPrivate();
   if (!worker) {
     mReporter->FlushReportsToConsole(0);
     return;

@@ -13,9 +13,7 @@
 namespace mozilla {
 namespace dom {
 
-namespace workers {
 class WorkerPrivate;
-} // workers namespace
 
 class ClientManagerChild final : public PClientManagerChild
                                , public WorkerHolderToken::Listener
@@ -73,7 +71,7 @@ public:
   void
   MaybeStartTeardown();
 
-  mozilla::dom::workers::WorkerPrivate*
+  mozilla::dom::WorkerPrivate*
   GetWorkerPrivate() const;
 };
 

@@ -61,7 +61,7 @@ public:
                       const nsAString& aScope);
 
   static already_AddRefed<ServiceWorkerRegistration>
-  CreateForWorker(workers::WorkerPrivate* aWorkerPrivate,
+  CreateForWorker(WorkerPrivate* aWorkerPrivate,
                   const nsAString& aScope);
 
   JSObject*

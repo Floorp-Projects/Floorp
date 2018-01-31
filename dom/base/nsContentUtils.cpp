@@ -2446,7 +2446,7 @@ nsContentUtils::ThreadsafeIsCallerChrome()
 {
   return NS_IsMainThread() ?
     IsCallerChrome() :
-    mozilla::dom::workers::IsCurrentThreadRunningChromeWorker();
+    mozilla::dom::IsCurrentThreadRunningChromeWorker();
 }
 
 bool
@@ -2485,7 +2485,7 @@ nsContentUtils::ThreadsafeIsSystemCaller(JSContext* aCx)
     return IsSystemCaller(aCx);
   }
 
-  return workers::GetWorkerPrivateFromContext(aCx)->UsesSystemPrincipal();
+  return GetWorkerPrivateFromContext(aCx)->UsesSystemPrincipal();
 }
 
 // static
@@ -6143,7 +6143,7 @@ nsContentUtils::GetCurrentJSContextForThread()
   if (MOZ_LIKELY(NS_IsMainThread())) {
     return GetCurrentJSContext();
   }
-  return workers::GetCurrentThreadJSContext();
+  return GetCurrentThreadJSContext();
 }
 
 template<typename StringType, typename CharType>

@@ -18,10 +18,7 @@ namespace dom {
 class Proxy;
 class SendRunnable;
 class DOMString;
-
-namespace workers {
 class WorkerPrivate;
-}
 
 class XMLHttpRequestWorker final : public XMLHttpRequest,
                                    public WorkerHolder
@@ -51,7 +48,7 @@ public:
 
 private:
   RefPtr<XMLHttpRequestUpload> mUpload;
-  workers::WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
   RefPtr<Proxy> mProxy;
   XMLHttpRequestResponseType mResponseType;
   StateData mStateData;
@@ -285,7 +282,7 @@ public:
   }
 
 private:
-  explicit XMLHttpRequestWorker(workers::WorkerPrivate* aWorkerPrivate);
+  explicit XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate);
   ~XMLHttpRequestWorker();
 
   enum ReleaseType { Default, XHRIsGoingAway, WorkerIsGoingAway };
