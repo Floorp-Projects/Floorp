@@ -15,10 +15,12 @@ import sys
 # to record from.
 KNOWN_PROCESS_FLAGS = {
     'all': 'All',
-    'all_childs': 'AllChilds',
+    'all_children': 'AllChildren',
     'main': 'Main',
     'content': 'Content',
     'gpu': 'Gpu',
+    # Historical Values
+    'all_childs': 'AllChildren',  # Supporting files from before bug 1363725
 }
 
 PROCESS_ENUM_PREFIX = "mozilla::Telemetry::Common::RecordedProcessType::"
