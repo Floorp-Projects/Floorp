@@ -23,6 +23,8 @@
 #include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/IDBOpenDBRequestBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/WorkerHolder.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsIScriptContext.h"
@@ -30,8 +32,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsString.h"
 #include "ReportInternalError.h"
-#include "WorkerHolder.h"
-#include "WorkerPrivate.h"
 
 // Include this last to avoid path problems on Windows.
 #include "ActorsChild.h"
@@ -416,7 +416,7 @@ IDBRequest::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 }
 
 class IDBOpenDBRequest::WorkerHolder final
-  : public mozilla::dom::workers::WorkerHolder
+  : public mozilla::dom::WorkerHolder
 {
   WorkerPrivate* mWorkerPrivate;
 #ifdef DEBUG
@@ -428,7 +428,7 @@ class IDBOpenDBRequest::WorkerHolder final
 public:
   explicit
   WorkerHolder(WorkerPrivate* aWorkerPrivate)
-    : mozilla::dom::workers::WorkerHolder("IDBOpenDBRequest::WorkerHolder")
+    : mozilla::dom::WorkerHolder("IDBOpenDBRequest::WorkerHolder")
     , mWorkerPrivate(aWorkerPrivate)
 #ifdef DEBUG
     , mWorkerPrivateDEBUG(aWorkerPrivate)
@@ -460,7 +460,7 @@ public:
 
 private:
   virtual bool
-  Notify(Status aStatus) override;
+  Notify(WorkerStatus aStatus) override;
 };
 
 IDBOpenDBRequest::IDBOpenDBRequest(IDBFactory* aFactory,
@@ -664,7 +664,7 @@ IDBOpenDBRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 bool
 IDBOpenDBRequest::
-WorkerHolder::Notify(Status aStatus)
+WorkerHolder::Notify(WorkerStatus aStatus)
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();

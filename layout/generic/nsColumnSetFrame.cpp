@@ -35,7 +35,8 @@ public:
                            bool* aSnap) const override
   {
     *aSnap = false;
-    return static_cast<nsColumnSetFrame*>(mFrame)->CalculateBounds(ToReferenceFrame());
+    return static_cast<nsColumnSetFrame*>(mFrame)->
+      CalculateColumnRuleBounds(ToReferenceFrame());
   }
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
@@ -147,8 +148,8 @@ nsColumnSetFrame::nsColumnSetFrame(nsStyleContext* aContext)
 }
 
 void
-nsColumnSetFrame::ForEachColumn(const std::function<void(const nsRect& lineRect)>& aSetLineRect,
-                                const nsPoint& aPt)
+nsColumnSetFrame::ForEachColumnRule(const std::function<void(const nsRect& lineRect)>& aSetLineRect,
+                                    const nsPoint& aPt)
 {
   nsIFrame* child = mFrames.FirstChild();
   if (!child)
@@ -167,9 +168,7 @@ nsColumnSetFrame::ForEachColumn(const std::function<void(const nsRect& lineRect)
   bool isVertical = wm.IsVertical();
   bool isRTL = !wm.IsBidiLTR();
 
-  // Get our content rect as an absolute coordinate, not relative to
-  // our parent (which is what the X and Y normally is)
-  nsRect contentRect = GetContentRect() - GetRect().TopLeft() + aPt;
+  nsRect contentRect = GetContentRectRelativeToSelf() + aPt;
   nsSize ruleSize = isVertical ? nsSize(contentRect.width, ruleWidth)
                                : nsSize(ruleWidth, contentRect.height);
 
@@ -205,13 +204,13 @@ nsColumnSetFrame::ForEachColumn(const std::function<void(const nsRect& lineRect)
 }
 
 nsRect
-nsColumnSetFrame::CalculateBounds(const nsPoint& aOffset)
+nsColumnSetFrame::CalculateColumnRuleBounds(const nsPoint& aOffset)
 {
   nsRect combined;
-  ForEachColumn([&combined](const nsRect& aLineRect)
-                {
-                  combined = combined.Union(aLineRect);
-                }, aOffset);
+  ForEachColumnRule([&combined](const nsRect& aLineRect)
+                    {
+                      combined = combined.Union(aLineRect);
+                    }, aOffset);
   return combined;
 }
 
@@ -263,28 +262,35 @@ nsColumnSetFrame::CreateBorderRenderers(nsTArray<nsCSSBorderRenderer>& aBorderRe
     skipSides |= mozilla::eSideBitsTopBottom;
     skipSides |= mozilla::eSideBitsRight;
   }
+  // If we use box-decoration-break: slice (the default), the border
+  // renderers will require clipping if we have continuations (see the
+  // aNeedsClip parameter to ConstructBorderRenderer in nsCSSRendering).
+  //
+  // Since it doesn't matter which box-decoration-break we use since
+  // we're only drawing borders (and not border-images), use 'clone'.
+  border.mBoxDecorationBreak = StyleBoxDecorationBreak::Clone;
 
-  ForEachColumn([&]
-                (const nsRect& aLineRect)
-                {
-                  // Assert that we're not drawing a border-image here; if we were, we
-                  // couldn't ignore the ImgDrawResult that PaintBorderWithStyleBorder returns.
-                  MOZ_ASSERT(border.mBorderImageSource.GetType() == eStyleImageType_Null);
+  ForEachColumnRule([&]
+                    (const nsRect& aLineRect)
+                    {
+                      // Assert that we're not drawing a border-image here; if we were, we
+                      // couldn't ignore the ImgDrawResult that PaintBorderWithStyleBorder returns.
+                      MOZ_ASSERT(border.mBorderImageSource.GetType() == eStyleImageType_Null);
 
-                  gfx::DrawTarget* dt = aCtx ? aCtx->GetDrawTarget() : nullptr;
-                  bool borderIsEmpty = false;
-                  Maybe<nsCSSBorderRenderer> br =
-                    nsCSSRendering::CreateBorderRendererWithStyleBorder(presContext, dt,
-                                                                        this, aDirtyRect,
-                                                                        aLineRect, border,
-                                                                        StyleContext(),
-                                                                        &borderIsEmpty,
-                                                                        skipSides);
-                  if (br.isSome()) {
-                    MOZ_ASSERT(!borderIsEmpty);
-                    aBorderRenderers.AppendElement(br.value());
-                  }
-                }, aPt);
+                      gfx::DrawTarget* dt = aCtx ? aCtx->GetDrawTarget() : nullptr;
+                      bool borderIsEmpty = false;
+                      Maybe<nsCSSBorderRenderer> br =
+                        nsCSSRendering::CreateBorderRendererWithStyleBorder(presContext, dt,
+                                                                            this, aDirtyRect,
+                                                                            aLineRect, border,
+                                                                            StyleContext(),
+                                                                            &borderIsEmpty,
+                                                                            skipSides);
+                      if (br.isSome()) {
+                        MOZ_ASSERT(!borderIsEmpty);
+                        aBorderRenderers.AppendElement(br.value());
+                      }
+                    }, aPt);
 }
 
 static nscoord

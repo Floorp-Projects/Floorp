@@ -14,9 +14,11 @@ with Files('PeerIdentity.*'):
 XPIDL_MODULE = 'content_webrtc'
 
 EXPORTS += [
+    'AllocationHandle.h',
     'MediaEngine.h',
-    'MediaEngineCameraVideoSource.h',
     'MediaEngineDefault.h',
+    'MediaEnginePrefs.h',
+    'MediaEngineSource.h',
     'MediaTrackConstraints.h',
     'SineWaveGenerator.h',
 ]
@@ -26,7 +28,6 @@ if CONFIG['MOZ_WEBRTC']:
                 'MediaEngineWebRTC.h']
     EXPORTS.mozilla.dom += [ 'RTCIdentityProviderRegistrar.h' ]
     UNIFIED_SOURCES += [
-        'MediaEngineCameraVideoSource.cpp',
         'MediaEngineRemoteVideoSource.cpp',
         'MediaEngineTabVideoSource.cpp',
         'MediaEngineWebRTCAudio.cpp',
@@ -40,6 +41,7 @@ if CONFIG['MOZ_WEBRTC']:
     LOCAL_INCLUDES += [
         '..',
         '/dom/base',
+        '/dom/media',
         '/media/libyuv/libyuv/include',
         '/media/webrtc/signaling/src/common',
         '/media/webrtc/signaling/src/common/browser_logging',
@@ -52,6 +54,7 @@ XPIDL_SOURCES += [
 
 UNIFIED_SOURCES += [
     'MediaEngineDefault.cpp',
+    'MediaEngineSource.cpp',
     'MediaTrackConstraints.cpp',
     'PeerIdentity.cpp',
 ]

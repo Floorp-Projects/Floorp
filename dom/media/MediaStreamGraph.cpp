@@ -1185,6 +1185,29 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
       }
     } else {
       stream->mStartBlocking = WillUnderrun(stream, aEndBlockingDecisions);
+
+      SourceMediaStream* s = stream->AsSourceStream();
+      if (s && s->mPullEnabled) {
+        for (StreamTracks::TrackIter i(s->mTracks); !i.IsEnded(); i.Next()) {
+          if (i->IsEnded()) {
+            continue;
+          }
+          if (i->GetEnd() < stream->GraphTimeToStreamTime(aEndBlockingDecisions)) {
+            LOG(LogLevel::Error,
+                ("SourceMediaStream %p track %u (%s) is live and pulled, but wasn't fed "
+                 "enough data. Listeners=%zu. Track-end=%f, Iteration-end=%f",
+                 stream,
+                 i->GetID(),
+                 (i->GetType() == MediaSegment::AUDIO ? "audio" : "video"),
+                 stream->mListeners.Length(),
+                 MediaTimeToSeconds(i->GetEnd()),
+                 MediaTimeToSeconds(stream->GraphTimeToStreamTime(aEndBlockingDecisions))));
+            MOZ_DIAGNOSTIC_ASSERT(false,
+                                  "A non-finished SourceMediaStream wasn't fed "
+                                  "enough data by NotifyPull");
+          }
+        }
+      }
     }
   }
 
@@ -1951,13 +1974,17 @@ MediaStream::FinishOnGraphThread()
   }
   LOG(LogLevel::Debug, ("MediaStream %p will finish", this));
 #ifdef DEBUG
-  for (StreamTracks::TrackIter track(mTracks); !track.IsEnded(); track.Next()) {
-    if (!track->IsEnded()) {
-      LOG(LogLevel::Error,
-          ("MediaStream %p will finish, but track %d has not ended.",
-           this,
-           track->GetID()));
-      NS_ASSERTION(false, "Finished stream cannot contain live track");
+  if (!mGraph->mForceShutDown) {
+    // All tracks must be ended by the source before the stream finishes.
+    // The exception is in forced shutdown, where we finish all streams as is.
+    for (StreamTracks::TrackIter track(mTracks); !track.IsEnded(); track.Next()) {
+      if (!track->IsEnded()) {
+        LOG(LogLevel::Error,
+            ("MediaStream %p will finish, but track %d has not ended.",
+             this,
+             track->GetID()));
+        NS_ASSERTION(false, "Finished stream cannot contain live track");
+      }
     }
   }
 #endif
@@ -2707,11 +2734,22 @@ SourceMediaStream::DestroyImpl()
 void
 SourceMediaStream::SetPullEnabled(bool aEnabled)
 {
-  MutexAutoLock lock(mMutex);
-  mPullEnabled = aEnabled;
-  if (mPullEnabled && GraphImpl()) {
-    GraphImpl()->EnsureNextIteration();
-  }
+  class Message : public ControlMessage {
+  public:
+    Message(SourceMediaStream* aStream, bool aEnabled)
+      : ControlMessage(nullptr)
+      , mStream(aStream)
+      , mEnabled(aEnabled)
+    {}
+    void Run() override
+    {
+      MutexAutoLock lock(mStream->mMutex);
+      mStream->mPullEnabled = mEnabled;
+    }
+    SourceMediaStream* mStream;
+    bool mEnabled;
+  };
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aEnabled));
 }
 
 bool
@@ -2735,17 +2773,6 @@ SourceMediaStream::PullNewData(
   if (t <= current) {
     return false;
   }
-#ifdef DEBUG
-  if (mListeners.Length() == 0) {
-    LOG(
-      LogLevel::Error,
-      ("No listeners in NotifyPull aStream=%p desired=%f current end=%f",
-        this,
-        GraphImpl()->MediaTimeToSeconds(t),
-        GraphImpl()->MediaTimeToSeconds(current)));
-    DumpTrackInfo();
-  }
-#endif
   for (uint32_t j = 0; j < mListeners.Length(); ++j) {
     MediaStreamListener* l = mListeners[j];
     {

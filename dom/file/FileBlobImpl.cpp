@@ -18,8 +18,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 NS_IMPL_ISUPPORTS_INHERITED0(FileBlobImpl, BlobImpl)
 
 FileBlobImpl::FileBlobImpl(nsIFile* aFile)
@@ -171,7 +169,7 @@ FileBlobImpl::GetType(nsAString& aType)
                "Should only use lazy ContentType when using the whole file");
 
     if (!NS_IsMainThread()) {
-      WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+      WorkerPrivate* workerPrivate = workers::GetCurrentThreadWorkerPrivate();
       if (!workerPrivate) {
         // I have no idea in which thread this method is called. We cannot
         // return any valid value.

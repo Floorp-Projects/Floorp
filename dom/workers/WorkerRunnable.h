@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_workers_workerrunnable_h__
 #define mozilla_dom_workers_workerrunnable_h__
 
-#include "WorkerCommon.h"
-#include "WorkerHolder.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerHolder.h"
 
 #include "nsICancelableRunnable.h"
 
@@ -20,10 +20,10 @@ struct JSContext;
 class nsIEventTarget;
 
 namespace mozilla {
-class ErrorResult;
-} // namespace mozilla
 
-BEGIN_WORKERS_NAMESPACE
+class ErrorResult;
+
+namespace dom {
 
 class WorkerPrivate;
 
@@ -168,7 +168,8 @@ protected:
   // exception on the JSContext and must not run script, because the incoming
   // JSContext may be in the null compartment.
   virtual void
-  PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aRunResult);
+  PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+          bool aRunResult);
 
   virtual bool
   DispatchInternal();
@@ -200,13 +201,14 @@ private:
   virtual bool
   PreDispatch(WorkerPrivate* aWorkerPrivate) override final
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
     return true;
   }
 
   virtual void
-  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override;
+  PostDispatch(WorkerPrivate* aWorkerPrivate,
+               bool aDispatchResult) override;
 };
 
 // This runnable is used to send a message directly to a worker's sync loop.
@@ -241,14 +243,14 @@ protected:
                                nsIEventTarget* aSyncLoopTarget)
   : WorkerSyncRunnable(aWorkerPrivate, aSyncLoopTarget)
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
   }
 
   MainThreadWorkerSyncRunnable(WorkerPrivate* aWorkerPrivate,
                                already_AddRefed<nsIEventTarget>&& aSyncLoopTarget)
   : WorkerSyncRunnable(aWorkerPrivate, Move(aSyncLoopTarget))
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
   }
 
   virtual ~MainThreadWorkerSyncRunnable()
@@ -258,12 +260,13 @@ private:
   virtual bool
   PreDispatch(WorkerPrivate* aWorkerPrivate) override
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return true;
   }
 
   virtual void
-  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override;
+  PostDispatch(WorkerPrivate* aWorkerPrivate,
+               bool aDispatchResult) override;
 };
 
 // This runnable is processed as soon as it is received by the worker,
@@ -310,7 +313,7 @@ protected:
   explicit MainThreadWorkerRunnable(WorkerPrivate* aWorkerPrivate)
   : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
   }
 
   virtual ~MainThreadWorkerRunnable()
@@ -319,7 +322,7 @@ protected:
   virtual bool
   PreDispatch(WorkerPrivate* aWorkerPrivate) override
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return true;
   }
 
@@ -327,7 +330,7 @@ protected:
   PostDispatch(WorkerPrivate* aWorkerPrivate,
                bool aDispatchResult) override
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
   }
 };
 
@@ -346,14 +349,15 @@ protected:
   virtual bool
   PreDispatch(WorkerPrivate* aWorkerPrivate) override
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return true;
   }
 
   virtual void
-  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
+  PostDispatch(WorkerPrivate* aWorkerPrivate,
+               bool aDispatchResult) override
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
   }
 };
 
@@ -377,7 +381,8 @@ protected:
   PreDispatch(WorkerPrivate* aWorkerPrivate) override;
 
   virtual void
-  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override;
+  PostDispatch(WorkerPrivate* aWorkerPrivate,
+               bool aDispatchResult) override;
 
   // We just delegate PostRun to WorkerRunnable, since it does exactly
   // what we want.
@@ -407,7 +412,7 @@ public:
   // aFailStatus, except if you want an infallible runnable. In this case, use
   // 'Killing'.
   // In that case the error MUST be propagated out to script.
-  void Dispatch(Status aFailStatus, ErrorResult& aRv);
+  void Dispatch(WorkerStatus aFailStatus, ErrorResult& aRv);
 
 private:
   NS_IMETHOD Run() override;
@@ -500,12 +505,13 @@ private:
   virtual bool
   PreDispatch(WorkerPrivate* aWorkerPrivate) override final
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return true;
   }
 
   virtual void
-  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override;
+  PostDispatch(WorkerPrivate* aWorkerPrivate,
+               bool aDispatchResult) override;
 
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
@@ -514,6 +520,7 @@ private:
   DispatchInternal() override final;
 };
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
 
 #endif // mozilla_dom_workers_workerrunnable_h__

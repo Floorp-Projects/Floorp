@@ -8,11 +8,11 @@
 #define mozilla_dom_workernavigator_h__
 
 #include "WorkerCommon.h"
-#include "RuntimeService.h"
 #include "nsString.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/StorageManager.h"
+#include "mozilla/dom/workerinternals/RuntimeService.h"
 
 namespace mozilla {
 namespace dom {
@@ -25,7 +25,7 @@ class Connection;
 
 class WorkerNavigator final : public nsWrapperCache
 {
-  typedef struct workers::RuntimeService::NavigatorProperties NavigatorProperties;
+  typedef struct workerinternals::RuntimeService::NavigatorProperties NavigatorProperties;
 
   NavigatorProperties mProperties;
   RefPtr<StorageManager> mStorageManager;

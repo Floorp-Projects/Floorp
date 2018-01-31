@@ -117,6 +117,82 @@ struct Register {
     }
 };
 
+// Architectures where the stack pointer is not a plain register with a standard
+// register encoding must define JS_HAS_HIDDEN_SP and HiddenSPEncoding.
+
+#ifdef JS_HAS_HIDDEN_SP
+struct RegisterOrSP
+{
+    // The register code -- but possibly one that cannot be represented as a bit
+    // position in a 32-bit vector.
+    const uint32_t code;
+
+    explicit RegisterOrSP(uint32_t code) : code(code) {}
+    explicit RegisterOrSP(Register r) : code(r.code()) {}
+};
+
+static inline bool
+IsHiddenSP(RegisterOrSP r)
+{
+    return r.code == HiddenSPEncoding;
+}
+
+static inline Register
+AsRegister(RegisterOrSP r)
+{
+    MOZ_ASSERT(!IsHiddenSP(r));
+    return Register::FromCode(r.code);
+}
+
+inline bool
+operator == (Register r, RegisterOrSP e) {
+    return r.code() == e.code;
+}
+
+inline bool
+operator != (Register r, RegisterOrSP e) {
+    return !(r == e);
+}
+
+inline bool
+operator == (RegisterOrSP e, Register r) {
+    return r == e;
+}
+
+inline bool
+operator != (RegisterOrSP e, Register r) {
+    return r != e;
+}
+
+inline bool
+operator == (RegisterOrSP lhs, RegisterOrSP rhs) {
+    return lhs.code == rhs.code;
+}
+
+inline bool
+operator != (RegisterOrSP lhs, RegisterOrSP rhs) {
+    return !(lhs == rhs);
+}
+#else
+// On platforms where there's nothing special about SP, make RegisterOrSP be
+// just Register, and return false for IsHiddenSP(r) for any r so that we use
+// "normal" code for handling the SP.  This reduces ifdeffery throughout the
+// jit.
+typedef Register RegisterOrSP;
+
+static inline bool
+IsHiddenSP(RegisterOrSP r)
+{
+    return false;
+}
+
+static inline Register
+AsRegister(RegisterOrSP r)
+{
+    return r;
+}
+#endif
+
 template <> inline Register::SetType
 Register::LiveAsIndexableSet<RegTypeName::GPR>(SetType set)
 {

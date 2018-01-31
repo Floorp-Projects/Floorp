@@ -9,7 +9,7 @@
 #include "nsIScriptError.h"
 #include "nsIURL.h"
 #include "ServiceWorkerScriptCache.h"
-#include "WorkerCommon.h"
+#include "mozilla/dom/WorkerCommon.h"
 
 namespace mozilla {
 namespace dom {

@@ -8,6 +8,7 @@
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 #include "jsapi.h"
 #include "xpcpublic.h"
@@ -21,7 +22,6 @@
 #include "nsTArray.h"
 #include "nsJSUtils.h"
 #include "nsDOMJSUtils.h"
-#include "WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {
@@ -544,7 +544,7 @@ WarningOnlyErrorReporter(JSContext* aCx, JSErrorReport* aRep)
     // That said, it feels like we should be able to short-circuit things a bit
     // here by posting an appropriate runnable to the main thread directly...
     // Worth looking into sometime.
-    workers::WorkerPrivate* worker = workers::GetWorkerPrivateFromContext(aCx);
+    WorkerPrivate* worker = workers::GetWorkerPrivateFromContext(aCx);
     MOZ_ASSERT(worker);
 
     worker->ReportError(aCx, JS::ConstUTF8CharsZ(), aRep);
@@ -617,7 +617,7 @@ AutoJSAPI::ReportException()
       // bother with xpc::ErrorReport.  This will ensure that all the right
       // events (which are a lot more complicated than in the window case) get
       // fired.
-      workers::WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
+      WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
       MOZ_ASSERT(worker);
       MOZ_ASSERT(worker->GetJSContext() == cx());
       // Before invoking ReportError, put the exception back on the context,

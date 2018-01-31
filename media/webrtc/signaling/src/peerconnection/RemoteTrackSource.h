@@ -40,6 +40,14 @@ public:
     //                    clarity in the spec.
   }
 
+  void Disable() override
+  {
+  }
+
+  void Enable() override
+  {
+  }
+
   void SetPrincipal(nsIPrincipal* aPrincipal)
   {
     mPrincipal = aPrincipal;

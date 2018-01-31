@@ -2224,12 +2224,8 @@ class MacroAssembler : public js::jit::Assembler {
     return sp_;
   }
 
-  const js::jit::Register getStackPointer() const {
-    int code = sp_.code();
-    if (code == kSPRegInternalCode) {
-      code = 31;
-    }
-    return js::jit::Register::FromCode(code);
+  const js::jit::RegisterOrSP getStackPointer() const {
+      return js::jit::RegisterOrSP(sp_.code());
   }
 
   CPURegList* TmpList() { return &tmp_list_; }

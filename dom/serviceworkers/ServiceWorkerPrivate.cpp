@@ -22,9 +22,6 @@
 #include "nsQueryObject.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
-#include "WorkerDebugger.h"
-#include "WorkerRunnable.h"
-#include "WorkerScope.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/Client.h"
 #include "mozilla/dom/ClientIPCTypes.h"
@@ -36,6 +33,9 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/PushEventBinding.h"
 #include "mozilla/dom/RequestBinding.h"
+#include "mozilla/dom/WorkerDebugger.h"
+#include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/Unused.h"
 
 using namespace mozilla;
@@ -315,7 +315,7 @@ public:
   }
 
   bool
-  Notify(Status aStatus) override
+  Notify(WorkerStatus aStatus) override
   {
     MOZ_ASSERT(mWorkerPrivate);
     mWorkerPrivate->AssertIsOnWorkerThread();
@@ -732,7 +732,7 @@ public:
   }
 
   bool
-  Notify(Status aStatus) override
+  Notify(WorkerStatus aStatus) override
   {
     if (aStatus < Terminating) {
       return true;
@@ -1152,7 +1152,7 @@ class AllowWindowInteractionHandler final : public ExtendableEventCallback
 
   // WorkerHolder virtual methods
   bool
-  Notify(Status aStatus) override
+  Notify(WorkerStatus aStatus) override
   {
     // We could try to hold the worker alive until the timer fires, but other
     // APIs are not likely to work in this partially shutdown state.  We might

@@ -2258,9 +2258,9 @@ public:
   {
   }
 
-  bool Notify(Status aStatus) override
+  bool Notify(WorkerStatus aStatus) override
   {
-    MOZ_ASSERT(aStatus > workers::Running);
+    MOZ_ASSERT(aStatus > Running);
 
     if (aStatus >= Canceling) {
       {

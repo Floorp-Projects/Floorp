@@ -29,8 +29,7 @@ using mozilla::dom::Optional;
 using mozilla::dom::Sequence;
 using mozilla::dom::MessagePort;
 using namespace mozilla;
-
-USING_WORKERS_NAMESPACE
+using namespace mozilla::dom;
 
 SharedWorker::SharedWorker(nsPIDOMWindowInner* aWindow,
                            WorkerPrivate* aWorkerPrivate,
@@ -59,7 +58,8 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
 {
   AssertIsOnMainThread();
 
-  RuntimeService* rts = RuntimeService::GetOrCreateService();
+  workerinternals::RuntimeService* rts =
+    workerinternals::RuntimeService::GetOrCreateService();
   if (!rts) {
     aRv = NS_ERROR_NOT_AVAILABLE;
     return nullptr;

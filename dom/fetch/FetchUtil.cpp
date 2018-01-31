@@ -284,7 +284,7 @@ public:
   {
     auto self = MakeUnique<WorkerStreamOwner>(aStream);
 
-    if (!self->HoldWorker(aWorker, workers::Closing)) {
+    if (!self->HoldWorker(aWorker, Closing)) {
       return nullptr;
     }
 
@@ -316,7 +316,7 @@ public:
 
   // WorkerHolder:
 
-  bool Notify(workers::Status aStatus) override
+  bool Notify(WorkerStatus aStatus) override
   {
     if (!mStream) {
       return true;
@@ -408,7 +408,7 @@ public:
   static bool Start(nsIInputStream* aStream,
                     JS::StreamConsumer* aConsumer,
                     nsIGlobalObject* aGlobal,
-                    workers::WorkerPrivate* aMaybeWorker)
+                    WorkerPrivate* aMaybeWorker)
   {
     nsresult rv;
 
@@ -531,7 +531,7 @@ FetchUtil::StreamResponseToJS(JSContext* aCx,
                               JS::HandleObject aObj,
                               JS::MimeType aMimeType,
                               JS::StreamConsumer* aConsumer,
-                              workers::WorkerPrivate* aMaybeWorker)
+                              WorkerPrivate* aMaybeWorker)
 {
   MOZ_ASSERT(!aMaybeWorker == NS_IsMainThread());
 

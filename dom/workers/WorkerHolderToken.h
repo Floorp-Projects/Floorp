@@ -11,7 +11,8 @@
 #include "nsTObserverArray.h"
 #include "WorkerHolder.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 class WorkerPrivate;
 
@@ -37,7 +38,8 @@ public:
   // passed the given shutdown phase or fails for another reason then
   // nullptr is returned.
   static already_AddRefed<WorkerHolderToken>
-  Create(workers::WorkerPrivate* aWorkerPrivate, Status aShutdownStatus,
+  Create(WorkerPrivate* aWorkerPrivate,
+         WorkerStatus aShutdownStatus,
          Behavior aBehavior = PreventIdleShutdownStart);
 
   // Add a listener to the token.  Note, this does not hold a strong
@@ -59,22 +61,23 @@ public:
   GetWorkerPrivate() const;
 
 private:
-  WorkerHolderToken(Status aShutdownStatus, Behavior aBehavior);
+  WorkerHolderToken(WorkerStatus aShutdownStatus, Behavior aBehavior);
 
   ~WorkerHolderToken();
 
   // WorkerHolder methods
   virtual bool
-  Notify(workers::Status aStatus) override;
+  Notify(WorkerStatus aStatus) override;
 
   nsTObserverArray<Listener*> mListenerList;
-  const Status mShutdownStatus;
+  const WorkerStatus mShutdownStatus;
   bool mShuttingDown;
 
 public:
   NS_INLINE_DECL_REFCOUNTING(WorkerHolderToken)
 };
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
 
 #endif // mozilla_dom_workers_WorkerHolderToken_h

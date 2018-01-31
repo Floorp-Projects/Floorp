@@ -7,15 +7,11 @@
 #include "mozilla/dom/cache/CacheWorkerHolder.h"
 
 #include "mozilla/dom/cache/ActorChild.h"
-#include "WorkerPrivate.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {
 namespace cache {
-
-using mozilla::dom::workers::Terminating;
-using mozilla::dom::workers::Status;
-using mozilla::dom::workers::WorkerPrivate;
 
 // static
 already_AddRefed<CacheWorkerHolder>
@@ -93,7 +89,7 @@ CacheWorkerHolder::Notified() const
 }
 
 bool
-CacheWorkerHolder::Notify(Status aStatus)
+CacheWorkerHolder::Notify(WorkerStatus aStatus)
 {
   NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
 
