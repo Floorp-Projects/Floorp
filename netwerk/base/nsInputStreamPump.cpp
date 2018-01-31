@@ -13,6 +13,8 @@
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Logging.h"
+#include "mozilla/NonBlockingAsyncInputStream.h"
+#include "mozilla/SlicedInputStream.h"
 #include "GeckoProfiler.h"
 #include "nsIStreamListener.h"
 #include "nsILoadGroup.h"
@@ -332,6 +334,11 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 
     if (nonBlocking) {
         mAsyncStream = do_QueryInterface(mStream);
+        if (!mAsyncStream) {
+            rv = NonBlockingAsyncInputStream::Create(mStream,
+                                                     getter_AddRefs(mAsyncStream));
+            if (NS_WARN_IF(NS_FAILED(rv))) return rv;
+        }
     }
 
     if (!mAsyncStream) {
