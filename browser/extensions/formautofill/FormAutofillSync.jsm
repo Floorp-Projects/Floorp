@@ -184,7 +184,8 @@ function FormAutofillTracker(name, engine) {
 
 FormAutofillTracker.prototype = {
   __proto__: Tracker.prototype,
-  async observe(subject, topic, data) {
+  observe: function observe(subject, topic, data) {
+    Tracker.prototype.observe.call(this, subject, topic, data);
     if (topic != "formautofill-storage-changed") {
       return;
     }
@@ -213,11 +214,11 @@ FormAutofillTracker.prototype = {
   // setting a read-only property.
   set ignoreAll(value) {},
 
-  onStart() {
+  startTracking() {
     Services.obs.addObserver(this, "formautofill-storage-changed");
   },
 
-  onStop() {
+  stopTracking() {
     Services.obs.removeObserver(this, "formautofill-storage-changed");
   },
 

@@ -16,7 +16,9 @@ var fakeServer = new SyncServer();
 fakeServer.start();
 
 registerCleanupFunction(function() {
-  return promiseStopServer(fakeServer);
+  return new Promise(resolve => {
+    fakeServer.stop(resolve);
+  });
 });
 
 var fakeServerUrl = "http://localhost:" + fakeServer.port;
@@ -73,7 +75,7 @@ async function syncAndReportErrorsAndWait(topic) {
   await promise2;
 }
 add_task(async function setup() {
-  await Service.engineManager.clear();
+  Service.engineManager.clear();
   await Service.engineManager.register(EHTestsCommon.CatapultEngine);
   engine = Service.engineManager.get("catapult");
 });

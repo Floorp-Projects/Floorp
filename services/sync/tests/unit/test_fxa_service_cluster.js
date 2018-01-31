@@ -19,7 +19,9 @@ add_task(async function test_findCluster() {
   await Assert.rejects(Service.identity.whenReadyToAuthenticate.promise,
                        "should reject due to 500");
 
-  await Assert.rejects(Service._clusterManager._findCluster());
+  Assert.throws(function() {
+    Service._clusterManager._findCluster();
+  });
 
   _("_findCluster() returns null on authentication errors.");
   initializeIdentityWithTokenServerResponse({
@@ -32,7 +34,7 @@ add_task(async function test_findCluster() {
   await Assert.rejects(Service.identity.whenReadyToAuthenticate.promise,
                        "should reject due to 401");
 
-  let cluster = await Service._clusterManager._findCluster();
+  let cluster = Service._clusterManager._findCluster();
   Assert.strictEqual(cluster, null);
 
   _("_findCluster() works with correct tokenserver response.");
@@ -52,7 +54,7 @@ add_task(async function test_findCluster() {
 
   await Service.identity.initializeWithCurrentIdentity();
   await Service.identity.whenReadyToAuthenticate.promise;
-  cluster = await Service._clusterManager._findCluster();
+  cluster = Service._clusterManager._findCluster();
   // The cluster manager ensures a trailing "/"
   Assert.strictEqual(cluster, endpoint + "/");
 

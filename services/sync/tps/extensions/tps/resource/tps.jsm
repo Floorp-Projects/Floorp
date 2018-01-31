@@ -98,8 +98,8 @@ const OBSERVER_TOPICS = ["fxaccounts:onlogin",
                          "private-browsing",
                          "profile-before-change",
                          "sessionstore-windows-restored",
-                         "weave:service:tracking-started",
-                         "weave:service:tracking-stopped",
+                         "weave:engine:start-tracking",
+                         "weave:engine:stop-tracking",
                          "weave:service:login:error",
                          "weave:service:setup-complete",
                          "weave:service:sync:finish",
@@ -247,11 +247,11 @@ var TPS = {
           this._syncActive = true;
           break;
 
-        case "weave:service:tracking-started":
+        case "weave:engine:start-tracking":
           this._isTracking = true;
           break;
 
-        case "weave:service:tracking-stopped":
+        case "weave:engine:stop-tracking":
           this._isTracking = false;
           break;
       }
@@ -484,19 +484,19 @@ var TPS = {
       let addon = new Addon(this, entry);
       switch (action) {
         case ACTION_ADD:
-          await addon.install();
+          addon.install();
           break;
         case ACTION_DELETE:
-          await addon.uninstall();
+          addon.uninstall();
           break;
         case ACTION_VERIFY:
-          Logger.AssertTrue((await addon.find(state)), "addon " + addon.id + " not found");
+          Logger.AssertTrue(addon.find(state), "addon " + addon.id + " not found");
           break;
         case ACTION_VERIFY_NOT:
-          Logger.AssertFalse((await addon.find(state)), "addon " + addon.id + " is present, but it shouldn't be");
+          Logger.AssertFalse(addon.find(state), "addon " + addon.id + " is present, but it shouldn't be");
           break;
         case ACTION_SET_ENABLED:
-          Logger.AssertTrue((await addon.setEnabled(state)), "addon " + addon.id + " not found");
+          Logger.AssertTrue(addon.setEnabled(state), "addon " + addon.id + " not found");
           break;
         default:
           throw new Error("Unknown action for add-on: " + action);
@@ -926,7 +926,7 @@ var TPS = {
         for (let engine of Weave.Service.engineManager.getEnabled()) {
           if (!(engine.name in names)) {
             Logger.logInfo("Unregistering unused engine: " + engine.name);
-            await Weave.Service.engineManager.unregister(engine);
+            Weave.Service.engineManager.unregister(engine);
           }
         }
       }
@@ -1099,7 +1099,7 @@ var TPS = {
    */
   async waitForTracking() {
     if (!this._isTracking) {
-      await this.waitForEvent("weave:service:tracking-started");
+      await this.waitForEvent("weave:engine:start-tracking");
     }
   },
 
