@@ -45,7 +45,7 @@
 #include "mozilla/dom/VRDisplay.h"
 #include "mozilla/dom/VRDisplayEvent.h"
 #include "mozilla/dom/VRServiceTest.h"
-#include "mozilla/dom/workers/RuntimeService.h"
+#include "mozilla/dom/workerinternals/RuntimeService.h"
 #include "mozilla/Hal.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
@@ -692,7 +692,8 @@ Navigator::JavaEnabled(CallerType aCallerType, ErrorResult& aRv)
 uint64_t
 Navigator::HardwareConcurrency()
 {
-  workers::RuntimeService* rts = workers::RuntimeService::GetOrCreateService();
+  workerinternals::RuntimeService* rts =
+    workerinternals::RuntimeService::GetOrCreateService();
   if (!rts) {
     return 1;
   }

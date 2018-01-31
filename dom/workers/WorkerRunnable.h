@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workers_workerrunnable_h__
 #define mozilla_dom_workers_workerrunnable_h__
 
-#include "mozilla/dom/workers/WorkerCommon.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerHolder.h"
 
 #include "nsICancelableRunnable.h"

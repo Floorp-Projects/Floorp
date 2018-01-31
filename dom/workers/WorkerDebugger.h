@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workers_WorkerDebugger_h
 #define mozilla_dom_workers_WorkerDebugger_h
 
-#include "mozilla/dom/workers/WorkerCommon.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "nsIWorkerDebugger.h"
 
 namespace mozilla {
