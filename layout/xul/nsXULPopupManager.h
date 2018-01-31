@@ -422,9 +422,10 @@ public:
   // retrieve the node and offset of the last mouse event used to open a
   // context menu. This information is determined from the rangeParent and
   // the rangeOffset of the event supplied to ShowPopup or ShowPopupAtScreen.
-  // This is used by the implementation of nsIDOMXULDocument::GetPopupRangeParent
-  // and nsIDOMXULDocument::GetPopupRangeOffset.
-  void GetMouseLocation(nsIDOMNode** aNode, int32_t* aOffset);
+  // This is used by the implementation of XULDocument::GetPopupRangeParent
+  // and XULDocument::GetPopupRangeOffset.
+  nsINode* GetMouseLocationParent();
+  int32_t MouseLocationOffset();
 
   /**
    * Open a <menu> given its content node. If aSelectFirstItem is
@@ -832,7 +833,7 @@ protected:
   nsCOMPtr<nsIWidget> mWidget;
 
   // range parent and offset set in SetTriggerEvent
-  nsCOMPtr<nsIDOMNode> mRangeParent;
+  nsCOMPtr<nsINode> mRangeParent;
   int32_t mRangeOffset;
   // Device pixels relative to the showing popup's presshell's
   // root prescontext's root frame.
