@@ -422,6 +422,13 @@ public class WebAppActivity extends AppCompatActivity
         return true;
     }
 
+    @Override
+    public void onNewSession(final GeckoSession session, final String uri,
+                             final GeckoSession.Response<GeckoSession> response) {
+        // We should never get here because we abort loads that need a new session in onLoadUri()
+        throw new IllegalStateException("Unexpected new session");
+    }
+
     private void updateFullScreen() {
         boolean fullScreen = mIsFullScreenContent || mIsFullScreenMode;
         if (ActivityUtils.isFullScreen(this) == fullScreen) {
