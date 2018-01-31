@@ -299,8 +299,6 @@ NS_CloneInputStream(nsIInputStream* aSource, nsIInputStream** aCloneOut,
  * different approaches are used based on what |aSource| is and what it
  * implements.
  *
- * Note that this component takes the owninship of aSource.
- *
  * If the |aSource| is already a non-blocking and async stream,
  * |aAsyncInputStream| will be equal to |aSource|.
  *
@@ -312,7 +310,7 @@ NS_CloneInputStream(nsIInputStream* aSource, nsIInputStream** aCloneOut,
  * a separate thread.
  */
 extern nsresult
-NS_MakeAsyncNonBlockingInputStream(already_AddRefed<nsIInputStream> aSource,
+NS_MakeAsyncNonBlockingInputStream(nsIInputStream* aSource,
                                    nsIAsyncInputStream** aAsyncInputStream);
 
 #endif // !nsStreamUtils_h__

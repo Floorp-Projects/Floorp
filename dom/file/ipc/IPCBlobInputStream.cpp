@@ -649,13 +649,11 @@ IPCBlobInputStream::EnsureAsyncRemoteStream()
 
   // If non-blocking and non-async, let's use NonBlockingAsyncInputStream.
   if (nonBlocking && !asyncStream) {
-    rv = NonBlockingAsyncInputStream::Create(mRemoteStream.forget(),
+    rv = NonBlockingAsyncInputStream::Create(mRemoteStream,
                                              getter_AddRefs(asyncStream));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    MOZ_ASSERT(asyncStream);
   }
 
   if (!asyncStream) {
