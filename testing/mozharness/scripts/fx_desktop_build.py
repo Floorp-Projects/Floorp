@@ -51,7 +51,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 # nightly stuff
                 "nightly_build": False,
                 'balrog_credentials_file': 'oauth.txt',
-                'taskcluster_credentials_file': 'oauth.txt',
                 'periodic_clobber': 168,
                 # hg tool stuff
                 "tools_repo": "https://hg.mozilla.org/build/tools",
@@ -87,8 +86,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 'stage_ssh_key': 'ffxbld_rsa',
                 'virtualenv_modules': [
                     'requests==2.8.1',
-                    'PyHawk-with-a-single-extra-commit==0.1.5',
-                    'taskcluster==0.0.26',
                 ],
                 'virtualenv_path': 'venv',
                 #

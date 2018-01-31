@@ -12,7 +12,6 @@ import os
 import glob
 import re
 import sys
-import time
 import shlex
 import subprocess
 
@@ -34,7 +33,6 @@ from mozharness.mozilla.mar import MarMixin
 from mozharness.mozilla.release import ReleaseMixin
 from mozharness.mozilla.signing import SigningMixin
 from mozharness.mozilla.updates.balrog import BalrogMixin
-from mozharness.mozilla.taskcluster_helper import Taskcluster
 from mozharness.base.python import VirtualenvMixin
 
 try:
@@ -198,11 +196,8 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
                 "clobber_file": 'CLOBBER',
                 "appName": "Firefox",
                 "hashType": "sha512",
-                "taskcluster_credentials_file": "oauth.txt",
                 'virtualenv_modules': [
                     'requests==2.8.1',
-                    'PyHawk-with-a-single-extra-commit==0.1.5',
-                    'taskcluster==0.0.26',
                 ],
                 'virtualenv_path': 'venv',
             },
@@ -1012,101 +1007,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         self.info(str(cmd))
         self.run_command(cmd, cwd=dirs['abs_mozilla_dir'], halt_on_failure=True,
                          env=env)
-
-    def taskcluster_upload(self):
-        auth = os.path.join(os.getcwd(), self.config['taskcluster_credentials_file'])
-        credentials = {}
-        execfile(auth, credentials)
-        client_id = credentials.get('taskcluster_clientId')
-        access_token = credentials.get('taskcluster_accessToken')
-        if not client_id or not access_token:
-            self.warning('Skipping S3 file upload: No taskcluster credentials.')
-            return
-
-        # We need to activate the virtualenv so that we can import taskcluster
-        # (and its dependent modules, like requests and hawk).  Normally we
-        # could create the virtualenv as an action, but due to some odd
-        # dependencies with query_build_env() being called from build(), which
-        # is necessary before the virtualenv can be created.
-        self.create_virtualenv()
-        self.activate_virtualenv()
-
-        branch = self.config['branch']
-        revision = self._query_revision()
-        repo = self.query_l10n_repo()
-        if not repo:
-            self.fatal("Unable to determine repository for querying the push info.")
-        pushinfo = self.vcs_query_pushinfo(repo, revision, vcs='hg')
-        pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
-
-        routes_json = os.path.join(self.query_abs_dirs()['abs_mozilla_dir'],
-                                   'testing/mozharness/configs/routes.json')
-        with open(routes_json) as f:
-            contents = json.load(f)
-            templates = contents['l10n']
-
-        # Release promotion creates a special task to accumulate all artifacts
-        # under the same task
-        artifacts_task = None
-        self.read_buildbot_config()
-        if "artifactsTaskId" in self.buildbot_config.get("properties", {}):
-            artifacts_task_id = self.buildbot_config["properties"]["artifactsTaskId"]
-            artifacts_tc = Taskcluster(
-                    branch=branch, rank=pushinfo.pushdate, client_id=client_id,
-                    access_token=access_token, log_obj=self.log_obj,
-                    task_id=artifacts_task_id)
-            artifacts_task = artifacts_tc.get_task(artifacts_task_id)
-            artifacts_tc.claim_task(artifacts_task)
-
-        for locale, files in self.upload_files.iteritems():
-            self.info("Uploading files to S3 for locale '%s': %s" % (locale, files))
-            routes = []
-            for template in templates:
-                fmt = {
-                    'index': self.config.get('taskcluster_index', 'index.garbage.staging'),
-                    'project': branch,
-                    'head_rev': revision,
-                    'pushdate': pushdate,
-                    'year': pushdate[0:4],
-                    'month': pushdate[4:6],
-                    'day': pushdate[6:8],
-                    'build_product': self.config['stage_product'],
-                    'build_name': self.query_build_name(),
-                    'build_type': self.query_build_type(),
-                    'locale': locale,
-                }
-                fmt.update(self.buildid_to_dict(self._query_buildid()))
-                routes.append(template.format(**fmt))
-
-            self.info('Using routes: %s' % routes)
-            tc = Taskcluster(branch,
-                             pushinfo.pushdate,  # Use pushdate as the rank
-                             client_id,
-                             access_token,
-                             self.log_obj,
-                             )
-            task = tc.create_task(routes)
-            tc.claim_task(task)
-
-            for upload_file in files:
-                # Create an S3 artifact for each file that gets uploaded. We also
-                # check the uploaded file against the property conditions so that we
-                # can set the buildbot config with the correct URLs for package
-                # locations.
-                artifact_url = tc.create_artifact(task, upload_file)
-                if artifacts_task:
-                    artifacts_tc.create_reference_artifact(
-                            artifacts_task, upload_file, artifact_url)
-
-            tc.report_completed(task)
-
-        if artifacts_task:
-            if not self.query_failed_locales():
-                artifacts_tc.report_completed(artifacts_task)
-            else:
-                # If some locales fail, we want to mark the artifacts
-                # task failed, so a retry can reuse the same task ID
-                artifacts_tc.report_failed(artifacts_task)
 
 
 # main {{{

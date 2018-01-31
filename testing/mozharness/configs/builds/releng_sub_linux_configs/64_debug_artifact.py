@@ -24,7 +24,6 @@ config = {
     'base_name': 'Linux_x86-64_%(branch)s_Artifact_build',
     'platform': 'linux64',
     'stage_platform': 'linux64-debug',
-    'publish_nightly_en_US_routes': False,
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'DISPLAY': ':2',
