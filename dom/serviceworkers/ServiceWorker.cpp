@@ -66,22 +66,23 @@ ServiceWorker::Create(nsIGlobalObject* aOwner,
 }
 
 ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
-                             ServiceWorkerInfo* aInfo)
+                             const ServiceWorkerDescriptor& aDescriptor,
+                             ServiceWorker::Inner* aInner)
   : DOMEventTargetHelper(aGlobal)
   , mDescriptor(aDescriptor)
-  , mInfo(aInfo)
+  , mInner(aInner)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aInfo);
+  MOZ_DIAGNOSTIC_ASSERT(mInner);
 
   // This will update our state too.
-  mInfo->AppendWorker(this);
+  mInner->AddServiceWorker(this);
 }
 
 ServiceWorker::~ServiceWorker()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mInfo->RemoveWorker(this);
+  mInner->RemoveServiceWorker(this);
 }
 
 NS_IMPL_ADDREF_INHERITED(ServiceWorker, DOMEventTargetHelper)
@@ -130,33 +131,7 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetParentObject());
-  if (!window || !window->GetExtantDoc()) {
-    NS_WARNING("Trying to call post message from an invalid dom object.");
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
-  if (storageAllowed != nsContentUtils::StorageAccess::eAllow) {
-    ServiceWorkerManager::LocalizeAndReportToAllClients(
-      mInfo->Scope(), "ServiceWorkerPostMessageStorageError",
-      nsTArray<nsString> { NS_ConvertUTF8toUTF16(mInfo->Scope()) });
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
-  Maybe<ClientInfo> clientInfo = window->GetClientInfo();
-  Maybe<ClientState> clientState = window->GetClientState();
-  if (clientInfo.isNothing() || clientState.isNothing()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  ServiceWorkerPrivate* workerPrivate = mInfo->WorkerPrivate();
-  aRv = workerPrivate->SendMessageEvent(aCx, aMessage, aTransferable,
-                                        ClientInfoAndState(clientInfo.ref().ToIPC(),
-                                                           clientState.ref().ToIPC()));
+  mInner->PostMessage(GetParentObject(), aCx, aMessage, aTransferable, aRv);
 }
 
 } // namespace dom

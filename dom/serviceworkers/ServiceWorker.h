@@ -9,17 +9,16 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/ServiceWorkerBinding.h" // For ServiceWorkerState.
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
+
+#ifdef XP_WIN
+#undef PostMessage
+#endif
 
 class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
-
-class ServiceWorkerInfo;
-class ServiceWorkerManager;
-class SharedWorker;
 
 bool
 ServiceWorkerVisible(JSContext* aCx, JSObject* aObj);
@@ -27,6 +26,39 @@ ServiceWorkerVisible(JSContext* aCx, JSObject* aObj);
 class ServiceWorker final : public DOMEventTargetHelper
 {
 public:
+  // Abstract interface for the internal representation of the
+  // ServiceWorker object.
+  class Inner
+  {
+  public:
+    // This will be called when a DOM ServiceWorker object is
+    // created and takes a strong ref to the Inner object.
+    // RemoveServiceWorker() is guaranteed to be called on the
+    // current thread before the ServiceWorker is destroyed.
+    //
+    // In addition, the Inner object should check to see if
+    // the ServiceWorker's state is correct.  If not, it should
+    // be updated automatically by calling SetState().  This is
+    // necessary to handle race conditions where the DOM
+    // ServiceWorker object is created while the state is being
+    // updated in another process.
+    virtual void
+    AddServiceWorker(ServiceWorker* aWorker) = 0;
+
+    // This is called when the DOM ServiceWorker object is
+    // destroyed and drops its ref to the Inner object.
+    virtual void
+    RemoveServiceWorker(ServiceWorker* aWorker) = 0;
+
+    virtual void
+    PostMessage(nsIGlobalObject* aGlobal,
+                JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                const Sequence<JSObject*>& aTransferable,
+                ErrorResult& aRv) = 0;
+
+    NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+  };
+
   NS_DECL_ISUPPORTS_INHERITED
 
   IMPL_EVENT_HANDLER(statechange)
@@ -47,10 +79,6 @@ public:
   void
   GetScriptURL(nsString& aURL) const;
 
-#ifdef XP_WIN
-#undef PostMessage
-#endif
-
   void
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
               const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
@@ -58,13 +86,13 @@ public:
 private:
   ServiceWorker(nsIGlobalObject* aWindow,
                 const ServiceWorkerDescriptor& aDescriptor,
-                ServiceWorkerInfo* aInfo);
+                Inner* aInner);
 
   // This class is reference-counted and will be destroyed from Release().
   ~ServiceWorker();
 
   ServiceWorkerDescriptor mDescriptor;
-  const RefPtr<ServiceWorkerInfo> mInfo;
+  const RefPtr<Inner> mInner;
 };
 
 } // namespace dom
