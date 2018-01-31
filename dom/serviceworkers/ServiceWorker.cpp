@@ -107,19 +107,17 @@ ServiceWorker::State() const
 void
 ServiceWorker::SetState(ServiceWorkerState aState)
 {
+  ServiceWorkerState oldState = mDescriptor.State();
   mDescriptor.SetState(aState);
+  if (oldState != aState) {
+    DOMEventTargetHelper::DispatchTrustedEvent(NS_LITERAL_STRING("statechange"));
+  }
 }
 
 void
 ServiceWorker::GetScriptURL(nsString& aURL) const
 {
   CopyUTF8toUTF16(mDescriptor.ScriptURL(), aURL);
-}
-
-void
-ServiceWorker::DispatchStateChange(ServiceWorkerState aState)
-{
-  DOMEventTargetHelper::DispatchTrustedEvent(NS_LITERAL_STRING("statechange"));
 }
 
 void

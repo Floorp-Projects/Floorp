@@ -159,16 +159,9 @@ public:
 
   NS_IMETHOD Run() override
   {
-    // We need to update the state of all instances atomically before notifying
-    // them to make sure that the observed state for all instances inside
-    // statechange event handlers is correct.
     for (size_t i = 0; i < mInstances.Length(); ++i) {
       mInstances[i]->SetState(mState);
     }
-    for (size_t i = 0; i < mInstances.Length(); ++i) {
-      mInstances[i]->DispatchStateChange(mState);
-    }
-
     return NS_OK;
   }
 

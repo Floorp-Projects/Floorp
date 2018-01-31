@@ -47,9 +47,6 @@ public:
   void
   GetScriptURL(nsString& aURL) const;
 
-  void
-  DispatchStateChange(ServiceWorkerState aState);
-
 #ifdef XP_WIN
 #undef PostMessage
 #endif
