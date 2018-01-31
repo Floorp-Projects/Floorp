@@ -40,6 +40,7 @@
 #include "nsILoadContext.h"
 #include "nsINetworkPredictor.h"
 #include "nsIPresShell.h"
+#include "nsIPresShellInlines.h"
 #include "nsIPrincipal.h"
 #include "nsISupportsPriority.h"
 #include "nsIWebNavigation.h"
@@ -509,7 +510,7 @@ FontFaceSet::Add(FontFace& aFontFace, ErrorResult& aRv)
     aFontFace.Status() == FontFaceLoadStatus::Loading;
 
   mNonRuleFacesDirty = true;
-  RebuildUserFontSet();
+  MarkUserFontSetDirty();
   mHasLoadingFontFacesIsDirty = true;
   CheckLoadingStarted();
   return this;
@@ -531,7 +532,7 @@ FontFaceSet::Clear()
 
   mNonRuleFaces.Clear();
   mNonRuleFacesDirty = true;
-  RebuildUserFontSet();
+  MarkUserFontSetDirty();
   mHasLoadingFontFacesIsDirty = true;
   CheckLoadingFinished();
 }
@@ -560,7 +561,7 @@ FontFaceSet::Delete(FontFace& aFontFace)
   aFontFace.RemoveFontFaceSet(this);
 
   mNonRuleFacesDirty = true;
-  RebuildUserFontSet();
+  MarkUserFontSetDirty();
   mHasLoadingFontFacesIsDirty = true;
   CheckLoadingFinished();
   return true;
@@ -1841,10 +1842,16 @@ FontFaceSet::FlushUserFontSet()
 }
 
 void
-FontFaceSet::RebuildUserFontSet()
+FontFaceSet::MarkUserFontSetDirty()
 {
   if (mDocument) {
-    mDocument->RebuildUserFontSet();
+    // Ensure we trigger at least a style flush, that will eventually flush the
+    // user font set. Otherwise the font loads that that flush may cause could
+    // never be triggered.
+    if (nsIPresShell* shell = mDocument->GetShell()) {
+      shell->EnsureStyleFlush();
+    }
+    mDocument->MarkUserFontSetDirty();
   }
 }
 
@@ -1985,7 +1992,7 @@ FontFaceSet::UserFontSet::DoRebuildUserFontSet()
   if (!mFontFaceSet) {
     return;
   }
-  mFontFaceSet->RebuildUserFontSet();
+  mFontFaceSet->MarkUserFontSetDirty();
 }
 
 /* virtual */ already_AddRefed<gfxUserFontEntry>
