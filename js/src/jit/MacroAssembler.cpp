@@ -1496,6 +1496,8 @@ void
 MacroAssembler::compareStrings(JSOp op, Register left, Register right, Register result,
                                Label* fail)
 {
+    MOZ_ASSERT(left != result);
+    MOZ_ASSERT(right != result);
     MOZ_ASSERT(IsEqualityOp(op));
 
     Label done;

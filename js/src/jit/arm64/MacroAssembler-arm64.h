@@ -418,10 +418,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         unboxObject(value, scratch);
         return scratch;
     }
-    Register extractString(const ValueOperand& value, Register scratch) {
-        unboxString(value, scratch);
-        return scratch;
-    }
     Register extractSymbol(const ValueOperand& value, Register scratch) {
         unboxSymbol(value, scratch);
         return scratch;
