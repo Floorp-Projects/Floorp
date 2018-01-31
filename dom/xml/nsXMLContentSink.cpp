@@ -8,7 +8,6 @@
 #include "nsXMLContentSink.h"
 #include "nsIParser.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIContent.h"
 #include "nsIURI.h"
@@ -361,8 +360,6 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
 
   mDocumentChildren.Clear();
 
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aResultDocument);
-
   nsCOMPtr<nsIContentViewer> contentViewer;
   mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
 
@@ -370,7 +367,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
     // Transform failed.
     aResultDocument->SetMayStartLayout(false);
     // We have an error document.
-    contentViewer->SetDOMDocument(domDoc);
+    contentViewer->SetDocument(aResultDocument);
   }
 
   nsCOMPtr<nsIDocument> originalDocument = mDocument;
