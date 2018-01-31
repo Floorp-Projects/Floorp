@@ -26,7 +26,6 @@
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMKeyEvent.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
@@ -686,10 +685,10 @@ nsFormFillController::OnTextEntered(nsIDOMEvent* aEvent,
   NS_ENSURE_ARG(aPrevent);
   NS_ENSURE_TRUE(mFocusedInput, NS_OK);
   // Fire off a DOMAutoComplete event
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mFocusedInput->OwnerDoc());
 
-  nsCOMPtr<nsIDOMEvent> event;
-  domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+  IgnoredErrorResult ignored;
+  RefPtr<Event> event = mFocusedInput->OwnerDoc()->
+    CreateEvent(NS_LITERAL_STRING("Events"), CallerType::System, ignored);
   NS_ENSURE_STATE(event);
 
   event->InitEvent(NS_LITERAL_STRING("DOMAutoComplete"), true, true);
@@ -1440,9 +1439,7 @@ nsFormFillController::GetWindowForDocShell(nsIDocShell *aDocShell)
   aDocShell->GetContentViewer(getter_AddRefs(contentViewer));
   NS_ENSURE_TRUE(contentViewer, nullptr);
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  contentViewer->GetDOMDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  nsCOMPtr<nsIDocument> doc = contentViewer->GetDocument();
   NS_ENSURE_TRUE(doc, nullptr);
 
   return doc->GetWindow();

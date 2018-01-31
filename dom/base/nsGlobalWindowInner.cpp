@@ -182,10 +182,6 @@
 #include "nsNetCID.h"
 #include "nsIArray.h"
 
-// XXX An unfortunate dependency exists here (two XUL files).
-#include "nsIDOMXULDocument.h"
-#include "nsIDOMXULCommandDispatcher.h"
-
 #include "nsBindingManager.h"
 #include "nsXBLService.h"
 

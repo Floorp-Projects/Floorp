@@ -38,7 +38,6 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
 #include "mozilla/css/StyleRule.h"
@@ -64,6 +63,7 @@
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsDisplayList.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/TreeBoxObject.h"
 #include "nsIScriptableRegion.h"
 #include <algorithm>
@@ -76,6 +76,7 @@
 #include "nsBidiUtils.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 using namespace mozilla::layout;
@@ -4662,13 +4663,12 @@ nsTreeBodyFrame::FireRowCountChangedEvent(int32_t aIndex, int32_t aCount)
   if (!content)
     return;
 
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(content->OwnerDoc());
-  if (!domDoc)
-    return;
+  nsCOMPtr<nsIDocument> doc = content->OwnerDoc();
+  MOZ_ASSERT(doc);
 
-  nsCOMPtr<nsIDOMEvent> event;
-  domDoc->CreateEvent(NS_LITERAL_STRING("customevent"),
-                      getter_AddRefs(event));
+  IgnoredErrorResult ignored;
+  RefPtr<Event> event = doc->CreateEvent(NS_LITERAL_STRING("customevent"),
+                                         CallerType::System, ignored);
 
   nsCOMPtr<nsIDOMCustomEvent> treeEvent(do_QueryInterface(event));
   if (!treeEvent)
@@ -4707,13 +4707,11 @@ nsTreeBodyFrame::FireInvalidateEvent(int32_t aStartRowIdx, int32_t aEndRowIdx,
   if (!content)
     return;
 
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(content->OwnerDoc());
-  if (!domDoc)
-    return;
+  nsCOMPtr<nsIDocument> doc = content->OwnerDoc();
 
-  nsCOMPtr<nsIDOMEvent> event;
-  domDoc->CreateEvent(NS_LITERAL_STRING("customevent"),
-                      getter_AddRefs(event));
+  IgnoredErrorResult ignored;
+  RefPtr<Event> event = doc->CreateEvent(NS_LITERAL_STRING("customevent"),
+                                         CallerType::System, ignored);
 
   nsCOMPtr<nsIDOMCustomEvent> treeEvent(do_QueryInterface(event));
   if (!treeEvent)

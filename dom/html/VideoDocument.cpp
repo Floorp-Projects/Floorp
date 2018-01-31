@@ -139,7 +139,8 @@ VideoDocument::UpdateTitle(nsIChannel* aChannel)
 
   nsAutoString fileName;
   GetFileName(fileName, aChannel);
-  SetTitle(fileName);
+  IgnoredErrorResult ignored;
+  SetTitle(fileName, ignored);
 }
 
 } // namespace dom

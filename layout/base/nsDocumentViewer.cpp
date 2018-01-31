@@ -64,7 +64,6 @@
 #include "nsIImageLoadingContent.h"
 #include "nsCopySupport.h"
 #ifdef MOZ_XUL
-#include "nsIXULDocument.h"
 #include "nsXULPopupManager.h"
 #endif
 
@@ -281,9 +280,9 @@ private:
    */
   nsresult InitPresentationStuff(bool aDoInitialReflow);
 
-  nsresult GetPopupNode(nsIDOMNode** aNode);
-  nsresult GetPopupLinkNode(nsIDOMNode** aNode);
-  nsresult GetPopupImageNode(nsIImageLoadingContent** aNode);
+  already_AddRefed<nsINode> GetPopupNode();
+  already_AddRefed<nsINode> GetPopupLinkNode();
+  already_AddRefed<nsIImageLoadingContent> GetPopupImageNode();
 
   nsresult GetContentSizeInternal(int32_t* aWidth, int32_t* aHeight,
                                   nscoord aMaxWidth, nscoord aMaxHeight);
@@ -1848,20 +1847,20 @@ nsDocumentViewer::Stop(void)
 }
 
 NS_IMETHODIMP
-nsDocumentViewer::GetDOMDocument(nsIDOMDocument **aResult)
+nsDocumentViewer::GetDOMDocument(nsISupports **aResult)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
   return CallQueryInterface(mDocument, aResult);
 }
 
-NS_IMETHODIMP_(nsIDocument *)
+nsIDocument*
 nsDocumentViewer::GetDocument()
 {
   return mDocument;
 }
 
-NS_IMETHODIMP
-nsDocumentViewer::SetDOMDocument(nsIDOMDocument *aDocument)
+nsresult
+nsDocumentViewer::SetDocument(nsIDocument *aDocument)
 {
   // Assumptions:
   //
@@ -1878,10 +1877,7 @@ nsDocumentViewer::SetDOMDocument(nsIDOMDocument *aDocument)
   if (!aDocument)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDocument> newDoc = do_QueryInterface(aDocument);
-  NS_ENSURE_TRUE(newDoc, NS_ERROR_UNEXPECTED);
-
-  return SetDocumentInternal(newDoc, false);
+  return SetDocumentInternal(aDocument, false);
 }
 
 NS_IMETHODIMP
@@ -2764,8 +2760,7 @@ NS_IMETHODIMP nsDocumentViewer::CopySelection()
 NS_IMETHODIMP nsDocumentViewer::CopyLinkLocation()
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
-  nsCOMPtr<nsIDOMNode> node;
-  GetPopupLinkNode(getter_AddRefs(node));
+  nsCOMPtr<nsINode> node = GetPopupLinkNode();
   // make noise if we're not in a link
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
@@ -2788,8 +2783,7 @@ NS_IMETHODIMP nsDocumentViewer::CopyLinkLocation()
 NS_IMETHODIMP nsDocumentViewer::CopyImage(int32_t aCopyFlags)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
-  nsCOMPtr<nsIImageLoadingContent> node;
-  GetPopupImageNode(getter_AddRefs(node));
+  nsCOMPtr<nsIImageLoadingContent> node = GetPopupImageNode();
   // make noise if we're not in an image
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
@@ -2849,7 +2843,8 @@ NS_IMETHODIMP nsDocumentViewer::SetCommandNode(nsIDOMNode* aNode)
   nsCOMPtr<nsPIWindowRoot> root = window->GetTopWindowRoot();
   NS_ENSURE_STATE(root);
 
-  root->SetPopupNode(aNode);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  root->SetPopupNode(node);
   return NS_OK;
 }
 
@@ -3615,26 +3610,22 @@ nsresult nsDocViewerSelectionListener::Init(nsDocumentViewer *aDocViewer)
  * not all content (images included) can receive focus.
  */
 
-nsresult
-nsDocumentViewer::GetPopupNode(nsIDOMNode** aNode)
+already_AddRefed<nsINode>
+nsDocumentViewer::GetPopupNode()
 {
-  NS_ENSURE_ARG_POINTER(aNode);
-
-  *aNode = nullptr;
-
   // get the document
   nsIDocument* document = GetDocument();
-  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(document, nullptr);
 
   // get the private dom window
   nsCOMPtr<nsPIDOMWindowOuter> window(document->GetWindow());
-  NS_ENSURE_TRUE(window, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(window, nullptr);
   if (window) {
     nsCOMPtr<nsPIWindowRoot> root = window->GetTopWindowRoot();
-    NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(root, nullptr);
 
     // get the popup node
-    nsCOMPtr<nsIDOMNode> node = root->GetPopupNode();
+    nsCOMPtr<nsINode> node = root->GetPopupNode();
 #ifdef MOZ_XUL
     if (!node) {
       nsPIDOMWindowOuter* rootWindow = root->GetWindow();
@@ -3649,27 +3640,18 @@ nsDocumentViewer::GetPopupNode(nsIDOMNode** aNode)
       }
     }
 #endif
-    node.swap(*aNode);
+    return node.forget();
   }
 
-  return NS_OK;
+  return nullptr;
 }
 
 // GetPopupLinkNode: return popup link node or fail
-nsresult
-nsDocumentViewer::GetPopupLinkNode(nsIDOMNode** aNode)
+already_AddRefed<nsINode>
+nsDocumentViewer::GetPopupLinkNode()
 {
-  NS_ENSURE_ARG_POINTER(aNode);
-
-  // you get null unless i say so
-  *aNode = nullptr;
-
   // find popup node
-  nsCOMPtr<nsIDOMNode> domNode;
-  nsresult rv = GetPopupNode(getter_AddRefs(domNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsINode> node = do_QueryInterface(domNode);
+  nsCOMPtr<nsINode> node = GetPopupNode();
 
   // find out if we have a link in our ancestry
   while (node) {
@@ -3677,9 +3659,7 @@ nsDocumentViewer::GetPopupLinkNode(nsIDOMNode** aNode)
     if (content) {
       nsCOMPtr<nsIURI> hrefURI = content->GetHrefURI();
       if (hrefURI) {
-        *aNode = node->AsDOMNode();
-        NS_IF_ADDREF(*aNode); // addref
-        return NS_OK;
+        return node.forget();
       }
     }
 
@@ -3688,27 +3668,17 @@ nsDocumentViewer::GetPopupLinkNode(nsIDOMNode** aNode)
   }
 
   // if we have no node, fail
-  return NS_ERROR_FAILURE;
+  return nullptr;
 }
 
 // GetPopupLinkNode: return popup image node or fail
-nsresult
-nsDocumentViewer::GetPopupImageNode(nsIImageLoadingContent** aNode)
+already_AddRefed<nsIImageLoadingContent>
+nsDocumentViewer::GetPopupImageNode()
 {
-  NS_ENSURE_ARG_POINTER(aNode);
-
-  // you get null unless i say so
-  *aNode = nullptr;
-
   // find popup node
-  nsCOMPtr<nsIDOMNode> node;
-  nsresult rv = GetPopupNode(getter_AddRefs(node));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (node)
-    CallQueryInterface(node, aNode);
-
-  return NS_OK;
+  nsCOMPtr<nsINode> node = GetPopupNode();
+  nsCOMPtr<nsIImageLoadingContent> img = do_QueryInterface(node);
+  return img.forget();
 }
 
 /*
@@ -3734,9 +3704,7 @@ NS_IMETHODIMP nsDocumentViewer::GetInLink(bool* aInLink)
   *aInLink = false;
 
   // get the popup link
-  nsCOMPtr<nsIDOMNode> node;
-  nsresult rv = GetPopupLinkNode(getter_AddRefs(node));
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsINode> node = GetPopupLinkNode();
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
   // if we made it here, we're in a link
@@ -3756,9 +3724,7 @@ NS_IMETHODIMP nsDocumentViewer::GetInImage(bool* aInImage)
   *aInImage = false;
 
   // get the popup image
-  nsCOMPtr<nsIImageLoadingContent> node;
-  nsresult rv = GetPopupImageNode(getter_AddRefs(node));
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIImageLoadingContent> node = GetPopupImageNode();
   if (!node) {
     return NS_ERROR_FAILURE;
   }
@@ -3873,8 +3839,7 @@ nsDocumentViewer::Print(nsIPrintSettings*       aPrintSettings,
                           nsIWebProgressListener* aWebProgressListener)
 {
   // Printing XUL documents is not supported.
-  nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
-  if (xulDoc) {
+  if (mDocument && mDocument->IsXULDocument()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -3989,8 +3954,7 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   }
 
   // Printing XUL documents is not supported.
-  nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
-  if (xulDoc) {
+  if (mDocument && mDocument->IsXULDocument()) {
     nsPrintJob::CloseProgressDialog(aWebProgressListener);
     return NS_ERROR_FAILURE;
   }

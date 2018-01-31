@@ -69,14 +69,14 @@ const data = {
     "should handle all matches on the 1st higher than any on the 2nd": [
       [["fr-CA-macos", "de-DE"], ["de-DE", "fr-FR-windows"], ["fr-FR-windows", "de-DE"]],
     ],
-    "should handle cases and underscores": [
+    "should handle cases and underscores, returning the form given in the 'available' list": [
       [["fr_FR"], ["fr-FR"], ["fr-FR"]],
-      [["fr_fr"], ["fr-fr"], ["fr-FR"]],
-      [["fr_Fr"], ["fr-fR"], ["fr-FR"]],
+      [["fr_fr"], ["fr-FR"], ["fr-FR"]],
+      [["fr_Fr"], ["fr-fR"], ["fr-fR"]],
       [["fr_lAtN_fr"], ["fr-Latn-FR"], ["fr-Latn-FR"]],
-      [["fr_FR"], ["fr_FR"], ["fr-FR"]],
-      [["fr-FR"], ["fr_FR"], ["fr-FR"]],
-      [["fr_Cyrl_FR_macos"], ["fr_Cyrl_fr-macos"], ["fr-Cyrl-FR-macos"]],
+      [["fr_FR"], ["fr_FR"], ["fr_FR"]],
+      [["fr-FR"], ["fr_FR"], ["fr_FR"]],
+      [["fr_Cyrl_FR_macos"], ["fr_Cyrl_fr-macos"], ["fr_Cyrl_fr-macos"]],
     ],
     "should handle mozilla specific 3-letter variants": [
       [["ja-JP-mac", "de-DE"], ["ja-JP-mac", "de-DE"], ["ja-JP-mac", "de-DE"]],
