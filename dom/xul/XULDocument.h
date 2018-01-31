@@ -111,7 +111,10 @@ public:
      * Sometimes the caller of OnPrototypeLoadDone resumes the walk itself
      */
     nsresult OnPrototypeLoadDone(bool aResumeWalk);
-    bool OnDocumentParserError() override;
+    /**
+     * Callback notifying when a document could not be parsed properly.
+     */
+    bool OnDocumentParserError();
 
     // nsINode interface overrides
     virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
