@@ -94,8 +94,16 @@ add_task(async function test_API_through_policies() {
   };
 
   await setupPolicyEngineWithJson(
-    "config_setAndLockPref.json",
-    /* custom schema */
+    // policies.json
+    {
+      "policies": {
+        "bool_policy": true,
+        "int_policy": 42,
+        "string_policy": "policies test 2"
+      }
+    },
+
+    // custom schema
     {
       properties: {
         "bool_policy": {
