@@ -9254,20 +9254,9 @@ nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr,
     return;
   }
 
-  nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
-  switch (Element::StringToCORSMode(aCrossOriginAttr)) {
-  case CORS_NONE:
-    // Nothing to do
-    break;
-  case CORS_ANONYMOUS:
-    loadFlags |= imgILoader::LOAD_CORS_ANONYMOUS;
-    break;
-  case CORS_USE_CREDENTIALS:
-    loadFlags |= imgILoader::LOAD_CORS_USE_CREDENTIALS;
-    break;
-  default:
-    MOZ_CRASH("Unknown CORS mode!");
-  }
+  nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL |
+                          nsContentUtils::CORSModeToLoadImageFlags(
+                            Element::StringToCORSMode(aCrossOriginAttr));
 
   nsContentPolicyType policyType =
     aIsImgSet ? nsIContentPolicy::TYPE_IMAGESET :

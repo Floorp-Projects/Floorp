@@ -963,13 +963,9 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
              "Principal mismatch?");
 #endif
 
-  nsLoadFlags loadFlags = aLoadFlags;
-  int32_t corsmode = GetCORSMode();
-  if (corsmode == CORS_ANONYMOUS) {
-    loadFlags |= imgILoader::LOAD_CORS_ANONYMOUS;
-  } else if (corsmode == CORS_USE_CREDENTIALS) {
-    loadFlags |= imgILoader::LOAD_CORS_USE_CREDENTIALS;
-  }
+  nsLoadFlags loadFlags = aLoadFlags |
+                          nsContentUtils::CORSModeToLoadImageFlags(
+                            GetCORSMode());
 
   // get document wide referrer policy
   // if referrer attributes are enabled in preferences, load img referrer attribute
