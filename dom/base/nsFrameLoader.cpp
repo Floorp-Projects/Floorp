@@ -20,7 +20,6 @@
 #include "nsIContentInlines.h"
 #include "nsIContentViewer.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsPIDOMWindow.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"
@@ -2984,9 +2983,8 @@ nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
   NS_ENSURE_STATE(doc);
 
   nsCOMPtr<nsIDocument> clonedDoc = doc->CreateStaticClone(dest->mDocShell);
-  nsCOMPtr<nsIDOMDocument> clonedDOMDoc = do_QueryInterface(clonedDoc);
 
-  viewer->SetDOMDocument(clonedDOMDoc);
+  viewer->SetDocument(clonedDoc);
   return NS_OK;
 }
 

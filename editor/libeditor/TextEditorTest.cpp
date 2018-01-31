@@ -12,12 +12,14 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
+#include "nsIDocument.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
+#include "nsINodeList.h"
 #include "nsIPlaintextEditor.h"
 #include "nsISelection.h"
 #include "nsLiteralString.h"
@@ -130,23 +132,20 @@ nsresult TextEditorTest::TestInsertBreak()
 
 nsresult TextEditorTest::TestTextProperties()
 {
-  nsCOMPtr<nsIDOMDocument>doc;
-  nsresult rv = mEditor->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDOMDocument>domDoc;
+  nsresult rv = mEditor->GetDocument(getter_AddRefs(domDoc));
   TEST_RESULT(rv);
+  TEST_POINTER(domDoc.get());
+  nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
   TEST_POINTER(doc.get());
-  nsCOMPtr<nsIDOMNodeList>nodeList;
   // XXX This is broken, text nodes are not elements.
   nsAutoString textTag(NS_LITERAL_STRING("#text"));
-  rv = doc->GetElementsByTagName(textTag, getter_AddRefs(nodeList));
-  TEST_RESULT(rv);
+  nsCOMPtr<nsINodeList>nodeList = doc->GetElementsByTagName(textTag);
   TEST_POINTER(nodeList.get());
-  uint32_t count;
-  nodeList->GetLength(&count);
-  NS_ASSERTION(0!=count, "there are no text nodes in the document!");
-  nsCOMPtr<nsIDOMNode> domTextNode;
-  rv = nodeList->Item(count - 1, getter_AddRefs(domTextNode));
-  TEST_RESULT(rv);
-  TEST_POINTER(domTextNode.get());
+  uint32_t count = nodeList->Length();
+  NS_ASSERTION(0 != count, "there are no text nodes in the document!");
+  nsCOMPtr<nsINode>textNode = nodeList->Item(count - 1);
+  TEST_POINTER(textNode.get());
 
   // set the whole text node to bold
   printf("set the whole first text node to bold\n");
@@ -154,7 +153,6 @@ nsresult TextEditorTest::TestTextProperties()
   rv = mEditor->GetSelection(getter_AddRefs(selection));
   TEST_RESULT(rv);
   TEST_POINTER(selection.get());
-  nsCOMPtr<nsINode> textNode = do_QueryInterface(domTextNode);
   uint32_t length = textNode->Length();
   selection->AsSelection()->Collapse(textNode, 0);
   selection->AsSelection()->Extend(textNode, length);
@@ -225,15 +223,12 @@ nsresult TextEditorTest::TestTextProperties()
   mEditor->DebugDumpContent();
 
   // make all the text underlined, except for the first 2 and last 2 characters
-  rv = doc->GetElementsByTagName(textTag, getter_AddRefs(nodeList));
-  TEST_RESULT(rv);
+  nodeList = doc->GetElementsByTagName(textTag);
   TEST_POINTER(nodeList.get());
-  nodeList->GetLength(&count);
+  count = nodeList->Length();
   NS_ASSERTION(0!=count, "there are no text nodes in the document!");
-  rv = nodeList->Item(count-2, getter_AddRefs(domTextNode));
-  TEST_RESULT(rv);
+  textNode = nodeList->Item(count-2);
   TEST_POINTER(textNode.get());
-  textNode = do_QueryInterface(domTextNode);
   length = textNode->Length();
   NS_ASSERTION(length==915, "wrong text node");
   selection->AsSelection()->Collapse(textNode, 1);

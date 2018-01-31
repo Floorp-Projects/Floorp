@@ -159,6 +159,7 @@
 
 .ruleview-namecontainer {
   cursor: text;
+  padding-left: 3px;
 }
 
 .ruleview-propertyvaluecontainer {
@@ -389,7 +390,10 @@
 
 .ruleview-expander {
   vertical-align: middle;
-  display: inline-block;
+}
+
+.ruleview-propertycontainer .ruleview-expander {
+  margin-left: -6px;
 }
 
 .ruleview-rule .ruleview-expander.theme-twisty:dir(rtl) {
@@ -415,11 +419,11 @@
 }
 
 .ruleview-computed {
-  margin-inline-start: 35px;
+  margin-inline-start: 26px;
 }
 
 .ruleview-overridden-items {
-  margin: 0px 0px 0px 5px;
+  margin: 0px 0px 0px 2px;
   list-style: none;
   line-height: 1.5em;
 }
