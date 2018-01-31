@@ -76,7 +76,7 @@ add_task(async function setup() {
   // that lets us add clients directly to the store, without losing them on
   // the next sync.
   clientsEngine._removeRemoteClient = async (id) => {};
-  await Service.engineManager.clear();
+  Service.engineManager.clear();
 
   validate_all_future_pings();
 
