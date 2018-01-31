@@ -30,7 +30,6 @@ class ServiceWorkerInfo final : public nsIServiceWorkerInfo
 private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   ServiceWorkerDescriptor mDescriptor;
-  const nsCString mScriptSpec;
   const nsString mCacheName;
   OriginAttributes mOriginAttributes;
 
@@ -96,7 +95,7 @@ public:
   const nsCString&
   ScriptSpec() const
   {
-    return mScriptSpec;
+    return mDescriptor.ScriptURL();
   }
 
   const nsCString&
