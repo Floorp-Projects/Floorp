@@ -10,6 +10,7 @@ with Files("**"):
 # Public stuff.
 EXPORTS.mozilla.dom += [
     'SharedWorker.h',
+    'WorkerLoadInfo.h',
     'WorkerLocation.h',
     'WorkerNavigator.h',
     'WorkerPrivate.h',
@@ -22,7 +23,6 @@ EXPORTS.mozilla.dom.workers += [
     'WorkerCommon.h',
     'WorkerDebugger.h',
     'WorkerDebuggerManager.h',
-    'WorkerLoadInfo.h',
 ]
 
 # Stuff needed for the bindings, not really public though.
@@ -49,6 +49,7 @@ UNIFIED_SOURCES += [
     'WorkerDebugger.cpp',
     'WorkerDebuggerManager.cpp',
     'WorkerError.cpp',
+    'WorkerEventTarget.cpp',
     'WorkerHolder.cpp',
     'WorkerHolderToken.cpp',
     'WorkerLoadInfo.cpp',

@@ -27,6 +27,7 @@
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceStorageWorker.h"
 #include "mozilla/dom/PromiseDebugging.h"
+#include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/ThrottledEventQueue.h"
 #include "mozilla/TimelineConsumers.h"
@@ -52,6 +53,7 @@
 #include "WorkerDebugger.h"
 #include "WorkerDebuggerManager.h"
 #include "WorkerError.h"
+#include "WorkerEventTarget.h"
 #include "WorkerNavigator.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
@@ -973,180 +975,6 @@ public:
 
 NS_IMPL_ISUPPORTS_INHERITED0(TopLevelWorkerFinishedRunnable, Runnable)
 
-namespace {
-
-class WrappedControlRunnable final : public WorkerControlRunnable
-{
-  nsCOMPtr<nsIRunnable> mInner;
-
-  ~WrappedControlRunnable()
-  {
-  }
-
-public:
-  WrappedControlRunnable(WorkerPrivate* aWorkerPrivate,
-                         already_AddRefed<nsIRunnable>&& aInner)
-    : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
-    , mInner(aInner)
-  {
-  }
-
-  virtual bool
-  PreDispatch(WorkerPrivate* aWorkerPrivate) override
-  {
-    // Silence bad assertions, this can be dispatched from any thread.
-    return true;
-  }
-
-  virtual void
-  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
-  {
-    // Silence bad assertions, this can be dispatched from any thread.
-  }
-
-  bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
-    mInner->Run();
-    return true;
-  }
-
-  nsresult
-  Cancel() override
-  {
-    nsCOMPtr<nsICancelableRunnable> cr = do_QueryInterface(mInner);
-
-    // If the inner runnable is not cancellable, then just do the normal
-    // WorkerControlRunnable thing.  This will end up calling Run().
-    if (!cr) {
-      WorkerControlRunnable::Cancel();
-      return NS_OK;
-    }
-
-    // Otherwise call the inner runnable's Cancel() and treat this like
-    // a WorkerRunnable cancel.  We can't call WorkerControlRunnable::Cancel()
-    // in this case since that would result in both Run() and the inner
-    // Cancel() being called.
-    Unused << cr->Cancel();
-    return WorkerRunnable::Cancel();
-  }
-};
-
-} // anonymous namespace
-
-BEGIN_WORKERS_NAMESPACE
-
-class WorkerEventTarget final : public nsISerialEventTarget
-{
-public:
-  // The WorkerEventTarget supports different dispatch behaviors:
-  //
-  // * Hybrid targets will attempt to dispatch as a normal runnable,
-  //   but fallback to a control runnable if that fails.  This is
-  //   often necessary for code that wants normal dispatch order, but
-  //   also needs to execute while the worker is shutting down (possibly
-  //   with a holder in place.)
-  //
-  // * ControlOnly targets will simply dispatch a control runnable.
-  enum class Behavior : uint8_t {
-    Hybrid,
-    ControlOnly
-  };
-
-private:
-  mozilla::Mutex mMutex;
-  WorkerPrivate* mWorkerPrivate;
-  const Behavior mBehavior;
-
-  ~WorkerEventTarget() = default;
-
-public:
-  WorkerEventTarget(WorkerPrivate* aWorkerPrivate,
-                           Behavior aBehavior)
-    : mMutex("WorkerEventTarget")
-    , mWorkerPrivate(aWorkerPrivate)
-    , mBehavior(aBehavior)
-  {
-    MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate);
-  }
-
-  void
-  ForgetWorkerPrivate(WorkerPrivate* aWorkerPrivate)
-  {
-    MutexAutoLock lock(mMutex);
-    MOZ_DIAGNOSTIC_ASSERT(!mWorkerPrivate || mWorkerPrivate == aWorkerPrivate);
-    mWorkerPrivate = nullptr;
-  }
-
-  NS_IMETHOD
-  DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) override
-  {
-    nsCOMPtr<nsIRunnable> runnable(aRunnable);
-    return Dispatch(runnable.forget(), aFlags);
-  }
-
-  NS_IMETHOD
-  Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags = NS_DISPATCH_NORMAL) override
-  {
-    MutexAutoLock lock(mMutex);
-
-    if (!mWorkerPrivate) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIRunnable> runnable(aRunnable);
-
-    if (mBehavior == Behavior::Hybrid) {
-      RefPtr<WorkerRunnable> r =
-        mWorkerPrivate->MaybeWrapAsWorkerRunnable(runnable.forget());
-      if (r->Dispatch()) {
-        return NS_OK;
-      }
-
-      runnable = r.forget();
-    }
-
-    RefPtr<WorkerControlRunnable> r = new WrappedControlRunnable(mWorkerPrivate,
-                                                                 runnable.forget());
-    if (!r->Dispatch()) {
-      return NS_ERROR_FAILURE;
-    }
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) override
-  {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  NS_IMETHOD_(bool) IsOnCurrentThreadInfallible() override
-  {
-    MutexAutoLock lock(mMutex);
-
-    if (!mWorkerPrivate) {
-      return false;
-    }
-
-    return mWorkerPrivate->IsOnCurrentThread();
-  }
-
-  NS_IMETHOD
-  IsOnCurrentThread(bool* aIsOnCurrentThread) override
-  {
-    MOZ_ASSERT(aIsOnCurrentThread);
-    *aIsOnCurrentThread = IsOnCurrentThreadInfallible();
-    return NS_OK;
-  }
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-};
-
-NS_IMPL_ISUPPORTS(WorkerEventTarget, nsIEventTarget,
-                                            nsISerialEventTarget)
-
-END_WORKERS_NAMESPACE
 
 template <class Derived>
 class WorkerPrivateParent<Derived>::EventTarget final

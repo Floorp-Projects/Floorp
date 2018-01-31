@@ -39,6 +39,7 @@ class PerformanceStorage;
 class SharedWorker;
 class WorkerDebuggerGlobalScope;
 class WorkerErrorReport;
+class WorkerEventTarget;
 class WorkerGlobalScope;
 struct WorkerOptions;
 class WorkerThread;
@@ -50,7 +51,6 @@ BEGIN_WORKERS_NAMESPACE
 
 class WorkerControlRunnable;
 class WorkerDebugger;
-class WorkerEventTarget;
 class WorkerRunnable;
 
 // SharedMutex is a small wrapper around an (internal) reference-counted Mutex
