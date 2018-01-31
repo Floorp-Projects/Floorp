@@ -19,9 +19,14 @@
 class nsITimer;
 class nsPIDOMWindowInner;
 
+namespace mozilla {
+namespace dom {
+class SharedWorker;
+}
+}
+
 BEGIN_WORKERS_NAMESPACE
 
-class SharedWorker;
 struct WorkerLoadInfo;
 class WorkerThread;
 
