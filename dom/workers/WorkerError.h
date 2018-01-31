@@ -40,6 +40,8 @@ public:
   void AssignErrorNote(JSErrorNotes::Note* aNote);
 };
 
+class WorkerPrivate;
+
 class WorkerErrorReport : public WorkerErrorBase
 {
 public:
@@ -56,27 +58,22 @@ public:
   { }
 
   void AssignErrorReport(JSErrorReport* aReport);
+
+  // aWorkerPrivate is the worker thread we're on (or the main thread, if null)
+  // aTarget is the worker object that we are going to fire an error at
+  // (if any).
+  static void
+  ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+              bool aFireAtScope, DOMEventTargetHelper* aTarget,
+              const WorkerErrorReport& aReport, uint64_t aInnerWindowId,
+              JS::Handle<JS::Value> aException = JS::NullHandleValue);
+
+  static void
+  LogErrorToConsole(const WorkerErrorReport& aReport, uint64_t aInnerWindowId);
+
 };
 
 } // dom namespace
 } // mozilla namespace
-
-BEGIN_WORKERS_NAMESPACE
-
-class WorkerPrivate;
-
-// aWorkerPrivate is the worker thread we're on (or the main thread, if null)
-// aTarget is the worker object that we are going to fire an error at
-// (if any).
-void
-ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-            bool aFireAtScope, DOMEventTargetHelper* aTarget,
-            const WorkerErrorReport& aReport, uint64_t aInnerWindowId,
-            JS::Handle<JS::Value> aException = JS::NullHandleValue);
-
-void
-LogErrorToConsole(const WorkerErrorReport& aReport, uint64_t aInnerWindowId);
-
-END_WORKERS_NAMESPACE
 
 #endif // mozilla_dom_workers_WorkerError_h

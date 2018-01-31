@@ -20,7 +20,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace workers {
 
 namespace {
 
@@ -102,8 +101,8 @@ private:
 
     ErrorResult rv;
     JSAutoCompartment ac(aCx, global);
-    scriptloader::LoadMainScript(aWorkerPrivate, mScriptURL,
-                                 DebuggerScript, rv);
+    workerinternals::LoadMainScript(aWorkerPrivate, mScriptURL,
+                                    DebuggerScript, rv);
     rv.WouldReportJSException();
     // Explicitly ignore NS_BINDING_ABORTED on rv.  Or more precisely, still
     // return false and don't SetWorkerScriptExecutedSuccessfully() in that
@@ -469,10 +468,9 @@ WorkerDebugger::ReportErrorToDebuggerOnMainThread(const nsAString& aFilename,
   WorkerErrorReport report;
   report.mMessage = aMessage;
   report.mFilename = aFilename;
-  LogErrorToConsole(report, 0);
+  WorkerErrorReport::LogErrorToConsole(report, 0);
 }
 
 
-} // worker namespace
 } // dom namespace
 } // mozilla namespace

@@ -9,7 +9,7 @@ import urlparse
 
 from mozpack.chrome.manifest import parse_manifest
 import mozpack.path as mozpath
-from chrome_map import ChromeManifestHandler
+from manifest_handler import ChromeManifestHandler
 
 class LcovRecord(object):
     __slots__ = ("test_name",
@@ -605,7 +605,7 @@ class UrlFinder(object):
 class LcovFileRewriter(object):
     # Class for partial parses of LCOV format and rewriting to resolve urls
     # and preprocessed file lines.
-    def __init__(self, chrome_map_path, appdir, gredir, extra_chrome_manifests):
+    def __init__(self, chrome_map_path, appdir='dist/bin/browser/', gredir='dist/bin/', extra_chrome_manifests=[]):
         self.url_finder = UrlFinder(chrome_map_path, appdir, gredir, extra_chrome_manifests)
         self.pp_rewriter = RecordRewriter()
 
@@ -626,11 +626,13 @@ class LcovFileRewriter(object):
                 return None
 
             source_file, pp_info = res
-            assert os.path.isfile(source_file), "Couldn't find mapped source file %s at %s!" % (url, source_file)
+            # We can't assert that the file exists here, because we don't have the source checkout available
+            # on test machines. We can bring back this assertion when bug 1432287 is fixed.
+            # assert os.path.isfile(source_file), "Couldn't find mapped source file %s at %s!" % (url, source_file)
 
             found_valid[0] = True
 
-            return source_file, pp_info
+            return res
 
         in_paths = [os.path.abspath(in_path) for in_path in in_paths]
 

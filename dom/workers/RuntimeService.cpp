@@ -78,15 +78,16 @@
 
 #define WORKERS_SHUTDOWN_TOPIC "web-workers-shutdown"
 
-using namespace mozilla;
-using namespace mozilla::dom;
-using namespace mozilla::ipc;
+namespace mozilla {
 
-USING_WORKERS_NAMESPACE
+using namespace ipc;
 
-using mozilla::MutexAutoLock;
-using mozilla::MutexAutoUnlock;
-using mozilla::Preferences;
+namespace dom {
+
+using namespace workers;
+using namespace workerinternals;
+
+namespace workerinternals {
 
 // The size of the worker runtime heaps in bytes. May be changed via pref.
 #define WORKER_DEFAULT_RUNTIME_HEAPSIZE 32 * 1024 * 1024
@@ -1196,38 +1197,6 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-class WorkerTaskRunnable final : public WorkerRunnable
-{
-  RefPtr<WorkerTask> mTask;
-
-public:
-  WorkerTaskRunnable(WorkerPrivate* aWorkerPrivate, WorkerTask* aTask)
-  : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount), mTask(aTask)
-  {
-    MOZ_ASSERT(aTask);
-  }
-
-private:
-  virtual bool
-  PreDispatch(WorkerPrivate* aWorkerPrivate) override
-  {
-    // May be called on any thread!
-    return true;
-  }
-
-  virtual void
-  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
-  {
-    // May be called on any thread!
-  }
-
-  virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
-    return mTask->RunTask(aCx);
-  }
-};
-
 void
 PrefLanguagesChanged(const char* /* aPrefName */, void* /* aClosure */)
 {
@@ -1285,151 +1254,6 @@ PlatformOverrideChanged(const char* /* aPrefName */, void* /* aClosure */)
 }
 
 } /* anonymous namespace */
-
-BEGIN_WORKERS_NAMESPACE
-
-void
-CancelWorkersForWindow(nsPIDOMWindowInner* aWindow)
-{
-  AssertIsOnMainThread();
-  RuntimeService* runtime = RuntimeService::GetService();
-  if (runtime) {
-    runtime->CancelWorkersForWindow(aWindow);
-  }
-}
-
-void
-FreezeWorkersForWindow(nsPIDOMWindowInner* aWindow)
-{
-  AssertIsOnMainThread();
-  RuntimeService* runtime = RuntimeService::GetService();
-  if (runtime) {
-    runtime->FreezeWorkersForWindow(aWindow);
-  }
-}
-
-void
-ThawWorkersForWindow(nsPIDOMWindowInner* aWindow)
-{
-  AssertIsOnMainThread();
-  RuntimeService* runtime = RuntimeService::GetService();
-  if (runtime) {
-    runtime->ThawWorkersForWindow(aWindow);
-  }
-}
-
-void
-SuspendWorkersForWindow(nsPIDOMWindowInner* aWindow)
-{
-  AssertIsOnMainThread();
-  RuntimeService* runtime = RuntimeService::GetService();
-  if (runtime) {
-    runtime->SuspendWorkersForWindow(aWindow);
-  }
-}
-
-void
-ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow)
-{
-  AssertIsOnMainThread();
-  RuntimeService* runtime = RuntimeService::GetService();
-  if (runtime) {
-    runtime->ResumeWorkersForWindow(aWindow);
-  }
-}
-
-WorkerCrossThreadDispatcher::WorkerCrossThreadDispatcher(
-                                                  WorkerPrivate* aWorkerPrivate)
-: mMutex("WorkerCrossThreadDispatcher::mMutex"),
-  mWorkerPrivate(aWorkerPrivate)
-{
-  MOZ_ASSERT(aWorkerPrivate);
-}
-
-bool
-WorkerCrossThreadDispatcher::PostTask(WorkerTask* aTask)
-{
-  MOZ_ASSERT(aTask);
-
-  MutexAutoLock lock(mMutex);
-
-  if (!mWorkerPrivate) {
-    NS_WARNING("Posted a task to a WorkerCrossThreadDispatcher that is no "
-               "longer accepting tasks!");
-    return false;
-  }
-
-  RefPtr<WorkerTaskRunnable> runnable =
-    new WorkerTaskRunnable(mWorkerPrivate, aTask);
-  return runnable->Dispatch();
-}
-
-WorkerPrivate*
-GetWorkerPrivateFromContext(JSContext* aCx)
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(aCx);
-
-  void* cxPrivate = JS_GetContextPrivate(aCx);
-  if (!cxPrivate) {
-    return nullptr;
-  }
-
-  return
-    static_cast<WorkerThreadContextPrivate*>(cxPrivate)->GetWorkerPrivate();
-}
-
-WorkerPrivate*
-GetCurrentThreadWorkerPrivate()
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get();
-  if (!ccjscx) {
-    return nullptr;
-  }
-
-  JSContext* cx = ccjscx->Context();
-  MOZ_ASSERT(cx);
-
-  // Note that we can return nullptr if the nsCycleCollector_shutdown() in
-  // ~WorkerJSContext() triggers any calls to GetCurrentThreadWorkerPrivate().
-  // At this stage CycleCollectedJSContext::Get() will still return a context,
-  // but the context private has already been cleared.
-  return GetWorkerPrivateFromContext(cx);
-}
-
-bool
-IsCurrentThreadRunningChromeWorker()
-{
-  return GetCurrentThreadWorkerPrivate()->UsesSystemPrincipal();
-}
-
-JSContext*
-GetCurrentThreadJSContext()
-{
-  WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
-  if (!wp) {
-    return nullptr;
-  }
-  return wp->GetJSContext();
-}
-
-JSObject*
-GetCurrentThreadWorkerGlobal()
-{
-  WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
-  if (!wp) {
-    return nullptr;
-  }
-  WorkerGlobalScope* scope = wp->GlobalScope();
-  if (!scope) {
-    return nullptr;
-  }
-  return scope->GetGlobalJSObject();
-}
-
-END_WORKERS_NAMESPACE
 
 struct RuntimeService::IdleThreadInfo
 {
@@ -2985,3 +2809,137 @@ WorkerThreadPrimaryRunnable::FinishedRunnable::Run()
 
   return NS_OK;
 }
+
+} // workerinternals namespace
+
+namespace workers {
+
+void
+CancelWorkersForWindow(nsPIDOMWindowInner* aWindow)
+{
+  AssertIsOnMainThread();
+  RuntimeService* runtime = RuntimeService::GetService();
+  if (runtime) {
+    runtime->CancelWorkersForWindow(aWindow);
+  }
+}
+
+void
+FreezeWorkersForWindow(nsPIDOMWindowInner* aWindow)
+{
+  AssertIsOnMainThread();
+  RuntimeService* runtime = RuntimeService::GetService();
+  if (runtime) {
+    runtime->FreezeWorkersForWindow(aWindow);
+  }
+}
+
+void
+ThawWorkersForWindow(nsPIDOMWindowInner* aWindow)
+{
+  AssertIsOnMainThread();
+  RuntimeService* runtime = RuntimeService::GetService();
+  if (runtime) {
+    runtime->ThawWorkersForWindow(aWindow);
+  }
+}
+
+void
+SuspendWorkersForWindow(nsPIDOMWindowInner* aWindow)
+{
+  AssertIsOnMainThread();
+  RuntimeService* runtime = RuntimeService::GetService();
+  if (runtime) {
+    runtime->SuspendWorkersForWindow(aWindow);
+  }
+}
+
+void
+ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow)
+{
+  AssertIsOnMainThread();
+  RuntimeService* runtime = RuntimeService::GetService();
+  if (runtime) {
+    runtime->ResumeWorkersForWindow(aWindow);
+  }
+}
+
+WorkerPrivate*
+GetWorkerPrivateFromContext(JSContext* aCx)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(aCx);
+
+  void* cxPrivate = JS_GetContextPrivate(aCx);
+  if (!cxPrivate) {
+    return nullptr;
+  }
+
+  return
+    static_cast<WorkerThreadContextPrivate*>(cxPrivate)->GetWorkerPrivate();
+}
+
+WorkerPrivate*
+GetCurrentThreadWorkerPrivate()
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get();
+  if (!ccjscx) {
+    return nullptr;
+  }
+
+  JSContext* cx = ccjscx->Context();
+  MOZ_ASSERT(cx);
+
+  // Note that we can return nullptr if the nsCycleCollector_shutdown() in
+  // ~WorkerJSContext() triggers any calls to GetCurrentThreadWorkerPrivate().
+  // At this stage CycleCollectedJSContext::Get() will still return a context,
+  // but the context private has already been cleared.
+  return GetWorkerPrivateFromContext(cx);
+}
+
+bool
+IsCurrentThreadRunningChromeWorker()
+{
+  return GetCurrentThreadWorkerPrivate()->UsesSystemPrincipal();
+}
+
+JSContext*
+GetCurrentThreadJSContext()
+{
+  WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
+  if (!wp) {
+    return nullptr;
+  }
+  return wp->GetJSContext();
+}
+
+JSObject*
+GetCurrentThreadWorkerGlobal()
+{
+  WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
+  if (!wp) {
+    return nullptr;
+  }
+  WorkerGlobalScope* scope = wp->GlobalScope();
+  if (!scope) {
+    return nullptr;
+  }
+  return scope->GetGlobalJSObject();
+}
+
+#ifdef DEBUG
+
+void
+AssertIsOnMainThread()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+}
+
+#endif
+
+} // workers namespace
+
+} // dom namespace
+} // mozilla namespace

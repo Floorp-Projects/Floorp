@@ -906,11 +906,11 @@ SandboxBroker::SetSecurityLevelForPDFiumProcess()
     sandbox::MITIGATION_SEHOP |
     sandbox::MITIGATION_DEP_NO_ATL_THUNK |
     sandbox::MITIGATION_DEP |
-    sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
-    sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL;
+    sandbox::MITIGATION_EXTENSION_POINT_DISABLE;
 
   if (!sRunningFromNetworkDrive) {
-    mitigations |= sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE;
+    mitigations |= sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE |
+                   sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL;
   }
 
   result = mPolicy->SetProcessMitigations(mitigations);
@@ -980,6 +980,7 @@ SandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel)
     sandbox::MITIGATION_BOTTOM_UP_ASLR |
     sandbox::MITIGATION_HEAP_TERMINATE |
     sandbox::MITIGATION_SEHOP |
+    sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
     sandbox::MITIGATION_DEP_NO_ATL_THUNK |
     sandbox::MITIGATION_DEP;
 

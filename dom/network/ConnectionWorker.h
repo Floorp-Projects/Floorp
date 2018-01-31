@@ -23,15 +23,15 @@ class ConnectionWorker final : public Connection
 
 public:
   static already_AddRefed<ConnectionWorker>
-  Create(workers::WorkerPrivate* aWorkerPrivate, ErrorResult& aRv);
+  Create(WorkerPrivate* aWorkerPrivate, ErrorResult& aRv);
 
 private:
-  explicit ConnectionWorker(workers::WorkerPrivate* aWorkerPrivate);
+  explicit ConnectionWorker(WorkerPrivate* aWorkerPrivate);
   ~ConnectionWorker();
 
   virtual void ShutdownInternal() override;
 
-  workers::WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
   RefPtr<ConnectionProxy> mProxy;
 };
 

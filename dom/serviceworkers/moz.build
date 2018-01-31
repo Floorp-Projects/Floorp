@@ -59,10 +59,6 @@ IPDL_SOURCES += [
     'ServiceWorkerRegistrarTypes.ipdlh',
 ]
 
-LOCAL_INCLUDES += [
-    '/dom/workers',
-]
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

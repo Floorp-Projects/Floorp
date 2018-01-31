@@ -10,7 +10,7 @@
 #include "nsIDOMClassInfo.h"
 #include "Constants.h"
 #include "mozilla/Telemetry.h"
-#include "WorkerPrivate.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 /**
  * We have to use macros here because our leak analysis tool things we are
@@ -20,8 +20,6 @@
 
 namespace mozilla {
 namespace dom {
-
-using namespace workers;
 
 namespace network {
 
@@ -114,7 +112,7 @@ Connection::CreateForWindow(nsPIDOMWindowInner* aWindow)
 }
 
 /* static */ already_AddRefed<Connection>
-Connection::CreateForWorker(workers::WorkerPrivate* aWorkerPrivate,
+Connection::CreateForWorker(WorkerPrivate* aWorkerPrivate,
                             ErrorResult& aRv)
 {
   MOZ_ASSERT(aWorkerPrivate);

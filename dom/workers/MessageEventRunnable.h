@@ -16,7 +16,6 @@ namespace mozilla {
 class DOMEventTargetHelper;
 
 namespace dom {
-namespace workers {
 
 class MessageEventRunnable final : public WorkerRunnable
                                  , public StructuredCloneHolder
@@ -37,7 +36,6 @@ private:
   DispatchError(JSContext* aCx, DOMEventTargetHelper* aTarget);
 };
 
-} // workers namespace
 } // dom namespace
 } // mozilla namespace
 

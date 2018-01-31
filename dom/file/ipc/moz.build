@@ -43,7 +43,6 @@ IPDL_SOURCES += [
 LOCAL_INCLUDES += [
     '/dom/file',
     '/dom/ipc',
-    '/dom/workers',
     '/xpcom/build',
 ]
 

@@ -137,7 +137,7 @@ SetupABIArguments(MacroAssembler& masm, const FuncExport& fe, Register argv, Reg
                 masm.storePtr(scratch, Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
               case MIRType::Int64: {
-                Register sp = masm.getStackPointer();
+                RegisterOrSP sp = masm.getStackPointer();
 #if JS_BITS_PER_WORD == 32
                 masm.load32(LowWord(src), scratch);
                 masm.store32(scratch, LowWord(Address(sp, iter->offsetFromArgBase())));

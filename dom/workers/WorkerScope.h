@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workerscope_h__
 #define mozilla_dom_workerscope_h__
 
-#include "WorkerCommon.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/RequestBinding.h"
@@ -37,6 +37,7 @@ class RequestOrUSVString;
 class ServiceWorkerRegistration;
 class WorkerLocation;
 class WorkerNavigator;
+class WorkerPrivate;
 enum class CallerType : uint32_t;
 
 namespace cache {
@@ -44,12 +45,6 @@ namespace cache {
 class CacheStorage;
 
 } // namespace cache
-
-namespace workers {
-
-class WorkerPrivate;
-
-} // namespace workers
 
 class WorkerGlobalScope : public DOMEventTargetHelper,
                           public nsIGlobalObject,
@@ -69,7 +64,6 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
   uint32_t mWindowInteractionsAllowed;
 
 protected:
-  typedef mozilla::dom::workers::WorkerPrivate WorkerPrivate;
   WorkerPrivate* mWorkerPrivate;
 
   explicit WorkerGlobalScope(WorkerPrivate* aWorkerPrivate);
@@ -355,8 +349,6 @@ public:
 class WorkerDebuggerGlobalScope final : public DOMEventTargetHelper,
                                         public nsIGlobalObject
 {
-  typedef mozilla::dom::workers::WorkerPrivate WorkerPrivate;
-
   WorkerPrivate* mWorkerPrivate;
   RefPtr<Console> mConsole;
   nsCOMPtr<nsISerialEventTarget> mSerialEventTarget;

@@ -5,13 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PerformanceStorageWorker.h"
-#include "WorkerPrivate.h"
-#include "WorkerHolder.h"
+#include "mozilla/dom/WorkerHolder.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {
-
-using namespace workers;
 
 class PerformanceProxyData
 {
@@ -126,7 +124,7 @@ public:
   {}
 
   bool
-  Notify(Status aStatus) override
+  Notify(WorkerStatus aStatus) override
   {
     if (mStorage) {
       RefPtr<PerformanceStorageWorker> storage;

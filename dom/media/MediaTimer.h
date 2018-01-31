@@ -42,7 +42,9 @@ public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
   NS_IMETHOD_(MozExternalRefCountType) Release(void);
 
+  RefPtr<MediaTimerPromise> WaitFor(const TimeDuration& aDuration, const char* aCallSite);
   RefPtr<MediaTimerPromise> WaitUntil(const TimeStamp& aTimeStamp, const char* aCallSite);
+  void Cancel(); // Cancel and reject any unresolved promises with false.
 
 private:
   virtual ~MediaTimer() { MOZ_ASSERT(OnMediaTimerThread()); }
@@ -55,6 +57,7 @@ private:
   void Update();
   void UpdateLocked();
   bool IsExpired(const TimeStamp& aTarget, const TimeStamp& aNow);
+  void Reject();
 
   static void TimerCallback(nsITimer* aTimer, void* aClosure);
   void TimerFired();

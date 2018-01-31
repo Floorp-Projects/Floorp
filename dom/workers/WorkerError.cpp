@@ -23,8 +23,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 namespace {
 
 class ReportErrorRunnable final : public WorkerRunnable
@@ -157,7 +155,7 @@ public:
     }
 
     // Otherwise log an error to the error console.
-    LogErrorToConsole(aReport, aInnerWindowId);
+    WorkerErrorReport::LogErrorToConsole(aReport, aInnerWindowId);
   }
 
   ReportErrorRunnable(WorkerPrivate* aWorkerPrivate,
@@ -287,16 +285,15 @@ WorkerErrorReport::AssignErrorReport(JSErrorReport* aReport)
   }
 }
 
-namespace workers {
-
 // aWorkerPrivate is the worker thread we're on (or the main thread, if null)
 // aTarget is the worker object that we are going to fire an error at
 // (if any).
-void
-ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-            bool aFireAtScope, DOMEventTargetHelper* aTarget,
-            const WorkerErrorReport& aReport, uint64_t aInnerWindowId,
-            JS::Handle<JS::Value> aException)
+/* static */ void
+WorkerErrorReport::ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+                               bool aFireAtScope, DOMEventTargetHelper* aTarget,
+                               const WorkerErrorReport& aReport,
+                               uint64_t aInnerWindowId,
+                               JS::Handle<JS::Value> aException)
 {
   if (aWorkerPrivate) {
     aWorkerPrivate->AssertIsOnWorkerThread();
@@ -414,11 +411,12 @@ ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
   }
 
   // Otherwise log an error to the error console.
-  LogErrorToConsole(aReport, aInnerWindowId);
+  WorkerErrorReport::LogErrorToConsole(aReport, aInnerWindowId);
 }
 
-void
-LogErrorToConsole(const WorkerErrorReport& aReport, uint64_t aInnerWindowId)
+/* static */ void
+WorkerErrorReport::LogErrorToConsole(const WorkerErrorReport& aReport,
+                                     uint64_t aInnerWindowId)
 {
   AssertIsOnMainThread();
 
@@ -480,6 +478,5 @@ LogErrorToConsole(const WorkerErrorReport& aReport, uint64_t aInnerWindowId)
   fflush(stderr);
 }
 
-} // workers namespace
 } // dom namespace
 } // mozilla namespace

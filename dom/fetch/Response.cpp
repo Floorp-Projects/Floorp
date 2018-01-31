@@ -17,6 +17,7 @@
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/URL.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 #include "nsDOMString.h"
 
@@ -24,7 +25,6 @@
 #include "FetchStream.h"
 #include "FetchStreamReader.h"
 #include "InternalResponse.h"
-#include "WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {
@@ -119,7 +119,7 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
 
     CopyUTF8toUTF16(spec, parsedURL);
   } else {
-    workers::WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
+    WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);
     worker->AssertIsOnWorkerThread();
 
@@ -204,7 +204,7 @@ Response::Constructor(const GlobalObject& aGlobal,
     }
     internalResponse->InitChannelInfo(info);
   } else {
-    workers::WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
+    WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);
     internalResponse->InitChannelInfo(worker->GetChannelInfo());
   }

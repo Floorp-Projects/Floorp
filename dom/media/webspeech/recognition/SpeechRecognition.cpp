@@ -21,6 +21,7 @@
 
 #include "AudioSegment.h"
 #include "DOMMediaStream.h"
+#include "MediaEnginePrefs.h"
 #include "endpointer.h"
 
 #include "mozilla/dom/SpeechRecognitionEvent.h"
