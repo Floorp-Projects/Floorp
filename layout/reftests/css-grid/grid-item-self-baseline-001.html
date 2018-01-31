@@ -43,6 +43,9 @@ span:nth-child(4) { font-size:32px; }
 .fb { align-self:baseline; }
 .lb { align-self:last baseline; }
 
+.jfb { justify-self:baseline; }
+.jlb { justify-self:last baseline; }
+
 .hl { writing-mode: horizontal-tb; direction:ltr; }
 .hr { writing-mode: horizontal-tb; direction:rtl; }
 .vl { writing-mode: vertical-lr; text-orientation: sideways; }
@@ -69,6 +72,15 @@ span:nth-child(4) { font-size:32px; }
 <div class="grid vl"><span class="lb pbs">A</span><span class="lb">A</span><span class="lb">A</span><span class="lb">A</span></div>
 <div class="grid vr"><span class="lb">A</span><span class="lb">A</span><span class="lb">A</span><span class="lb">A</span></div>
 <div class="grid vr"><span class="lb pbe">A</span><span class="lb">A</span><span class="lb">A</span><span class="lb">A</span></div>
+
+<br clear="all">
+
+<div class="grid c"><span class="jfb vl">A</span><span class="jfb vl">A</span><span class="jfb vl">A</span><span class="jfb vl">A</span></div>
+<div class="grid c"><span class="jfb vl pbe">A</span><span class="jfb vl">A</span><span class="jfb vl">A</span><span class="jfb vl">A</span></div>
+<div class="grid c vl"><span class="jfb hl">A</span><span class="jfb hl">A</span><span class="jfb hl">A</span><span class="jfb hl">A</span></div>
+<div class="grid c vl"><span class="jfb hl pbs">A</span><span class="jfb hl">A</span><span class="jfb hl">A</span><span class="jfb hl">A</span></div>
+<div class="grid c vr"><span class="jfb hl">A</span><span class="jfb hl">A</span><span class="jfb hl">A</span><span class="jfb hl">A</span></div>
+<div class="grid c vr"><span class="jfb hl pbe">A</span><span class="jfb hl">A</span><span class="jfb hl">A</span><span class="jfb hl">A</span></div>
 
 <br clear="all">
 
