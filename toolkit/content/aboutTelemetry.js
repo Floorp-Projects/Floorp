@@ -2219,10 +2219,10 @@ var HistogramSection = {
     }
 
     let hasData = Array.from(hgramsSelect.options).some((option) => {
-      if (option == "parent") {
+      let value = option.getAttribute("value");
+      if (value == "parent") {
         return Object.keys(aPayload.histograms).length > 0;
       }
-      let value = option.getAttribute("value");
       let histos = aPayload.processes[value].histograms;
       return histos && Object.keys(histos).length > 0;
     });
