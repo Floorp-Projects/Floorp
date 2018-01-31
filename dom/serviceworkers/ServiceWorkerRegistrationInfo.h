@@ -10,6 +10,7 @@
 #include "mozilla/dom/ServiceWorkerInfo.h"
 #include "mozilla/dom/ServiceWorkerCommon.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
+#include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
 #include "nsProxyRelease.h"
 
 namespace mozilla {
@@ -18,8 +19,8 @@ namespace dom {
 class ServiceWorkerRegistrationInfo final
   : public nsIServiceWorkerRegistrationInfo
 {
-  const nsCString mScope;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  ServiceWorkerRegistrationDescriptor mDescriptor;
   nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> mListeners;
 
   uint32_t mControlledClientsCounter;
@@ -36,8 +37,6 @@ class ServiceWorkerRegistrationInfo final
   TimeStamp mCreationTimeStamp;
   // The time of update is 0, if SWR've never been updated yet.
   PRTime mLastUpdateTime;
-
-  ServiceWorkerUpdateViaCache mUpdateViaCache;
 
   RefPtr<ServiceWorkerInfo> mEvaluatingWorker;
   RefPtr<ServiceWorkerInfo> mActiveWorker;
@@ -209,6 +208,9 @@ public:
 
   void
   SetLastUpdateTime(const int64_t aTime);
+
+  const ServiceWorkerRegistrationDescriptor&
+  Descriptor() const;
 
 private:
   enum TransitionType {
