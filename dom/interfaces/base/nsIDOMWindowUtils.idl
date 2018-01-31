@@ -1294,11 +1294,6 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute unsigned long currentMaxAudioChannels;
 
   /**
-   * Returns the preferred channel layout of the current audio device.
-   */
-  readonly attribute AString currentPreferredChannelLayout;
-
-  /**
    * Returns the preferred sample rate of the current audio device.
    */
   readonly attribute unsigned long currentPreferredSampleRate;
