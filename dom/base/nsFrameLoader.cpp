@@ -2930,35 +2930,6 @@ nsFrameLoader::ActivateFrameEvent(const nsAString& aType,
   return NS_ERROR_FAILURE;
 }
 
-void
-nsFrameLoader::SendCrossProcessKeyEvent(const nsAString& aType,
-                                        int32_t aKeyCode,
-                                        int32_t aCharCode,
-                                        int32_t aModifiers,
-                                        bool aPreventDefault,
-                                        ErrorResult& aRv)
-{
-  nsresult rv = SendCrossProcessKeyEvent(aType, aKeyCode, aCharCode, aModifiers, aPreventDefault);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-}
-
-NS_IMETHODIMP
-nsFrameLoader::SendCrossProcessKeyEvent(const nsAString& aType,
-                                        int32_t aKeyCode,
-                                        int32_t aCharCode,
-                                        int32_t aModifiers,
-                                        bool aPreventDefault)
-{
-  if (mRemoteBrowser) {
-    mRemoteBrowser->SendKeyEvent(aType, aKeyCode, aCharCode, aModifiers,
-                                 aPreventDefault);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
 nsresult
 nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
 {

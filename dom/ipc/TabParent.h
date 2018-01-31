@@ -429,10 +429,6 @@ public:
                       int32_t aButton, int32_t aClickCount,
                       int32_t aModifiers, bool aIgnoreRootScrollFrame);
 
-  void SendKeyEvent(const nsAString& aType, int32_t aKeyCode,
-                    int32_t aCharCode, int32_t aModifiers,
-                    bool aPreventDefault);
-
   /**
    * The following Send*Event() marks aEvent as posted to remote process if
    * it succeeded.  So, you can check the result with

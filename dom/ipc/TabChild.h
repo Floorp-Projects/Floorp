@@ -432,12 +432,6 @@ public:
                                        const uint64_t& aInputBlockId,
                                        const nsEventStatus& aApzResponse) override;
 
-  virtual mozilla::ipc::IPCResult RecvKeyEvent(const nsString& aType,
-                                               const int32_t& aKeyCode,
-                                               const int32_t& aCharCode,
-                                               const int32_t& aModifiers,
-                                               const bool& aPreventDefault) override;
-
   virtual mozilla::ipc::IPCResult RecvNativeSynthesisResponse(const uint64_t& aObserverId,
                                                               const nsCString& aResponse) override;
 

@@ -107,16 +107,6 @@ interface FrameLoader {
   readonly attribute nsIMessageSender? messageManager;
 
   /**
-   * @see nsIDOMWindowUtils sendKeyEvent.
-   */
-  [Throws]
-  void sendCrossProcessKeyEvent(DOMString aType,
-                                long aKeyCode,
-                                long aCharCode,
-                                long aModifiers,
-                                optional boolean aPreventDefault = false);
-
-  /**
    * Request that the next time a remote layer transaction has been
    * received by the Compositor, a MozAfterRemoteFrame event be sent
    * to the window.
