@@ -8167,9 +8167,10 @@ CodeGenerator::visitCharCodeAt(LCharCodeAt* lir)
     Register str = ToRegister(lir->str());
     Register index = ToRegister(lir->index());
     Register output = ToRegister(lir->output());
+    Register temp = ToRegister(lir->temp());
 
     OutOfLineCode* ool = oolCallVM(CharCodeAtInfo, lir, ArgList(str, index), StoreRegisterTo(output));
-    masm.loadStringChar(str, index, output, ool->entry());
+    masm.loadStringChar(str, index, output, temp, ool->entry());
     masm.bind(ool->rejoin());
 }
 
