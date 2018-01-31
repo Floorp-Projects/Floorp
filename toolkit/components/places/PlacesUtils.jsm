@@ -1103,29 +1103,6 @@ this.PlacesUtils = {
   },
 
   /**
-   * Annotate a URI with a batch of annotations.
-   * @param aURI
-   *        The URI for which annotations are to be set.
-   * @param aAnnotations
-   *        Array of objects, each containing the following properties:
-   *        name, flags, expires.
-   *        If the value for an annotation is not set it will be removed.
-   */
-  setAnnotationsForURI: function PU_setAnnotationsForURI(aURI, aAnnos) {
-    var annosvc = this.annotations;
-    aAnnos.forEach(function(anno) {
-      if (anno.value === undefined || anno.value === null) {
-        annosvc.removePageAnnotation(aURI, anno.name);
-      } else {
-        let flags = ("flags" in anno) ? anno.flags : 0;
-        let expires = ("expires" in anno) ?
-          anno.expires : Ci.nsIAnnotationService.EXPIRE_NEVER;
-        annosvc.setPageAnnotation(aURI, anno.name, anno.value, flags, expires);
-      }
-    });
-  },
-
-  /**
    * Annotate an item with a batch of annotations.
    * @param aItemId
    *        The identifier of the item for which annotations are to be set
