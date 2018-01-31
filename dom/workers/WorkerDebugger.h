@@ -10,19 +10,24 @@
 #include "mozilla/dom/workers/WorkerCommon.h"
 #include "nsIWorkerDebugger.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
+
+namespace workers {
+class WorkerPrivate;
+}
 
 class WorkerDebugger : public nsIWorkerDebugger
 {
   class ReportDebuggerErrorRunnable;
   class PostDebuggerMessageRunnable;
 
-  WorkerPrivate* mWorkerPrivate;
+  workers::WorkerPrivate* mWorkerPrivate;
   bool mIsInitialized;
   nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> mListeners;
 
 public:
-  explicit WorkerDebugger(WorkerPrivate* aWorkerPrivate);
+  explicit WorkerDebugger(workers::WorkerPrivate* aWorkerPrivate);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWORKERDEBUGGER
@@ -53,6 +58,7 @@ private:
                                     const nsAString& aMessage);
 };
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
 
 #endif // mozilla_dom_workers_WorkerDebugger_h

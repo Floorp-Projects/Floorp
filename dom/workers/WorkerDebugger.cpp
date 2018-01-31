@@ -20,7 +20,8 @@
 
 namespace mozilla {
 namespace dom {
-namespace workers {
+
+using namespace workers;
 
 namespace {
 
@@ -473,6 +474,5 @@ WorkerDebugger::ReportErrorToDebuggerOnMainThread(const nsAString& aFilename,
 }
 
 
-} // worker namespace
 } // dom namespace
 } // mozilla namespace

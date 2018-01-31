@@ -10,6 +10,8 @@ with Files("**"):
 # Public stuff.
 EXPORTS.mozilla.dom += [
     'SharedWorker.h',
+    'WorkerDebugger.h',
+    'WorkerDebuggerManager.h',
     'WorkerLoadInfo.h',
     'WorkerLocation.h',
     'WorkerNavigator.h',
@@ -21,8 +23,6 @@ EXPORTS.mozilla.dom += [
 EXPORTS.mozilla.dom.workers += [
     'RuntimeService.h',
     'WorkerCommon.h',
-    'WorkerDebugger.h',
-    'WorkerDebuggerManager.h',
 ]
 
 # Stuff needed for the bindings, not really public though.
