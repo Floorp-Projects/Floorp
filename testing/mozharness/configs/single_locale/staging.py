@@ -10,7 +10,6 @@ config = {
         "POST_UPLOAD_CMD": "post_upload.py -b %(branch)s-l10n -p %(stage_product)s -i %(buildid)s --release-to-latest --release-to-dated %(post_upload_extra)s",
         "UPLOAD_TO_TEMP": "1"
     },
-    'taskcluster_index': 'index.garbage.staging',
     'post_upload_extra': ['--bucket-prefix', 'net-mozaws-stage-delivery',
                           '--url-prefix', 'http://ftp.stage.mozaws.net/',
                           ],

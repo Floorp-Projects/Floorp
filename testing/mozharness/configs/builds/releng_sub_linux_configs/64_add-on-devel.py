@@ -8,7 +8,6 @@ config = {
         # 'update',
     ],
     'stage_platform': 'linux64-add-on-devel',
-    'publish_nightly_en_US_routes': False,
     'build_type': 'add-on-devel',
     'platform_supports_post_upload_to_latest': False,
     'enable_signing': False,
