@@ -26,6 +26,7 @@ class ServiceWorkerPrivate;
  * by this class and spawn a ServiceWorker in the right global when required.
  */
 class ServiceWorkerInfo final : public nsIServiceWorkerInfo
+                              , public ServiceWorker::Inner
 {
 private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
