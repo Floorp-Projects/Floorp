@@ -44,7 +44,6 @@ public final class GeckoProfile {
 
     // The path in the profile to the file containing the client ID.
     private static final String CLIENT_ID_FILE_PATH = "datareporting/state.json";
-    private static final String FHR_CLIENT_ID_FILE_PATH = "healthreport/state.json";
     // In the client ID file, the attribute title in the JSON object containing the client ID value.
     private static final String CLIENT_ID_JSON_ATTR = "clientID";
 
@@ -430,8 +429,8 @@ public final class GeckoProfile {
     }
 
     /**
-     * Retrieves the Gecko client ID from the filesystem. If the client ID does not exist, we attempt to migrate and
-     * persist it from FHR and, if that fails, we attempt to create a new one ourselves.
+     * Retrieves the Gecko client ID from the filesystem. If the client ID does not exist,
+     * we attempt to create a new one ourselves.
      *
      * This method assumes the client ID is located in a file at a hard-coded path within the profile. The format of
      * this file is a JSONObject which at the bottom level contains a String -&gt; String mapping containing the client ID.
@@ -454,17 +453,10 @@ public final class GeckoProfile {
             return getValidClientIdFromDisk(CLIENT_ID_FILE_PATH);
         } catch (final IOException e) {
             // Avoid log spam: don't log the full Exception w/ the stack trace.
-            Log.d(LOGTAG, "Could not get client ID - attempting to migrate ID from FHR: " + e.getLocalizedMessage());
+            Log.d(LOGTAG, "Could not get client ID - creating a new one: " + e.getLocalizedMessage());
         }
 
-        String clientIdToWrite;
-        try {
-            clientIdToWrite = getValidClientIdFromDisk(FHR_CLIENT_ID_FILE_PATH);
-        } catch (final IOException e) {
-            // Avoid log spam: don't log the full Exception w/ the stack trace.
-            Log.d(LOGTAG, "Could not migrate client ID from FHR - creating a new one: " + e.getLocalizedMessage());
-            clientIdToWrite = generateNewClientId();
-        }
+        String clientIdToWrite = generateNewClientId();
 
         // There is a possibility Gecko is running and the Gecko telemetry implementation decided it's time to generate
         // the client ID, writing client ID underneath us. Since it's highly unlikely (e.g. we run in onStart before
