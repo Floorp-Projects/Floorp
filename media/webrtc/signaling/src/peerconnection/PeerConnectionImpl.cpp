@@ -3412,6 +3412,7 @@ static void RecordIceStats_s(
     s.mLastPacketSentTimestamp.Construct(candPair.ms_since_last_send);
     s.mLastPacketReceivedTimestamp.Construct(candPair.ms_since_last_recv);
     s.mState.Construct(RTCStatsIceCandidatePairState(candPair.state));
+    s.mComponentId.Construct(candPair.component_id);
     report->mIceCandidatePairStats.Value().AppendElement(s, fallible);
   }
 
