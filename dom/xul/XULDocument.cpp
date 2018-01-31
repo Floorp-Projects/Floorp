@@ -678,19 +678,6 @@ XULDocument::SynchronizeBroadcastListener(Element *aBroadcaster,
     }
 }
 
-NS_IMETHODIMP
-XULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
-                                     nsIDOMElement* aListener,
-                                     const nsAString& aAttr)
-{
-    ErrorResult rv;
-    nsCOMPtr<Element> broadcaster = do_QueryInterface(aBroadcaster);
-    nsCOMPtr<Element> listener = do_QueryInterface(aListener);
-    NS_ENSURE_ARG(broadcaster && listener);
-    AddBroadcastListenerFor(*broadcaster, *listener, aAttr, rv);
-    return rv.StealNSResult();
-}
-
 void
 XULDocument::AddBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
                                      const nsAString& aAttr, ErrorResult& aRv)
@@ -757,18 +744,6 @@ XULDocument::AddBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
     entry->mListeners.AppendElement(bl);
 
     SynchronizeBroadcastListener(&aBroadcaster, &aListener, aAttr);
-}
-
-NS_IMETHODIMP
-XULDocument::RemoveBroadcastListenerFor(nsIDOMElement* aBroadcaster,
-                                        nsIDOMElement* aListener,
-                                        const nsAString& aAttr)
-{
-    nsCOMPtr<Element> broadcaster = do_QueryInterface(aBroadcaster);
-    nsCOMPtr<Element> listener = do_QueryInterface(aListener);
-    NS_ENSURE_ARG(broadcaster && listener);
-    RemoveBroadcastListenerFor(*broadcaster, *listener, aAttr);
-    return NS_OK;
 }
 
 void
