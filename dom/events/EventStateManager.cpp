@@ -76,6 +76,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsITimer.h"
 #include "nsFontMetrics.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -990,7 +991,9 @@ IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
       !contentKey.Equals(aKey, nsCaseInsensitiveStringComparator()))
     return false;
 
-  if (!aContent->OwnerDoc()->IsXULDocument() && !aContent->IsXULElement())
+  nsCOMPtr<nsIDOMXULDocument> xulDoc =
+    do_QueryInterface(aContent->OwnerDoc());
+  if (!xulDoc && !aContent->IsXULElement())
     return true;
 
     // For XUL we do visibility checks.

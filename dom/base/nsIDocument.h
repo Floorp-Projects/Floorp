@@ -178,7 +178,6 @@ class XPathEvaluator;
 class XPathExpression;
 class XPathNSResolver;
 class XPathResult;
-class XULDocument;
 template<typename> class Sequence;
 
 template<typename, typename> class CallbackObjectHolder;
@@ -3043,7 +3042,6 @@ public:
 
   virtual nsHTMLDocument* AsHTMLDocument() { return nullptr; }
   virtual mozilla::dom::SVGDocument* AsSVGDocument() { return nullptr; }
-  virtual mozilla::dom::XULDocument* AsXULDocument() { return nullptr; }
 
   /*
    * Given a node, get a weak reference to it and append that reference to

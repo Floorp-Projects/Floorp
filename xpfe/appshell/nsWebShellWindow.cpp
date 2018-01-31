@@ -38,6 +38,9 @@
 #include "nsITimer.h"
 #include "nsXULPopupManager.h"
 
+
+#include "nsIDOMXULDocument.h"
+
 #include "nsFocusManager.h"
 
 #include "nsIWebProgress.h"

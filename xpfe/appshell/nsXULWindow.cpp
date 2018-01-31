@@ -26,6 +26,7 @@
 #include "nsIContentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsPIDOMWindow.h"
@@ -50,7 +51,6 @@
 #include "nsContentUtils.h"
 #include "nsWebShellWindow.h" // get rid of this one, too...
 #include "nsGlobalWindow.h"
-#include "XULDocument.h"
 
 #include "prenv.h"
 #include "mozilla/AutoRestore.h"
@@ -1620,10 +1620,10 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   char                        sizeBuf[10];
   nsAutoString                sizeString;
   nsAutoString                windowElementId;
-  RefPtr<dom::XULDocument>    ownerXULDoc;
+  nsCOMPtr<nsIDOMXULDocument> ownerXULDoc;
 
   // fetch docShellElement's ID and XUL owner document
-  ownerXULDoc = docShellElement->OwnerDoc()->AsXULDocument();
+  ownerXULDoc = do_QueryInterface(docShellElement->OwnerDoc());
   if (docShellElement->IsXULElement()) {
     docShellElement->GetId(windowElementId);
   }
@@ -1637,8 +1637,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       CopyASCIItoUTF16(sizeBuf, sizeString);
       docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
-        IgnoredErrorResult err;
-        ownerXULDoc->Persist(windowElementId, SCREENX_ATTRIBUTE, err);
+        ownerXULDoc->Persist(windowElementId, SCREENX_ATTRIBUTE);
       }
     }
     if (persistString.Find("screenY") >= 0) {
@@ -1646,8 +1645,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       CopyASCIItoUTF16(sizeBuf, sizeString);
       docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
-        IgnoredErrorResult err;
-        ownerXULDoc->Persist(windowElementId, SCREENY_ATTRIBUTE, err);
+        ownerXULDoc->Persist(windowElementId, SCREENY_ATTRIBUTE);
       }
     }
   }
@@ -1658,8 +1656,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       CopyASCIItoUTF16(sizeBuf, sizeString);
       docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
-        IgnoredErrorResult err;
-        ownerXULDoc->Persist(windowElementId, WIDTH_ATTRIBUTE, err);
+        ownerXULDoc->Persist(windowElementId, WIDTH_ATTRIBUTE);
       }
     }
     if (persistString.Find("height") >= 0) {
@@ -1667,8 +1664,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       CopyASCIItoUTF16(sizeBuf, sizeString);
       docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
-        IgnoredErrorResult err;
-        ownerXULDoc->Persist(windowElementId, HEIGHT_ATTRIBUTE, err);
+        ownerXULDoc->Persist(windowElementId, HEIGHT_ATTRIBUTE);
       }
     }
   }
@@ -1685,8 +1681,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
         sizeString.Assign(SIZEMODE_NORMAL);
       docShellElement->SetAttribute(MODE_ATTRIBUTE, sizeString, rv);
       if (shouldPersist && persistString.Find("sizemode") >= 0) {
-        IgnoredErrorResult err;
-        ownerXULDoc->Persist(windowElementId, MODE_ATTRIBUTE, err);
+        ownerXULDoc->Persist(windowElementId, MODE_ATTRIBUTE);
       }
     }
     if (persistString.Find("zlevel") >= 0) {
@@ -1698,8 +1693,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
         CopyASCIItoUTF16(sizeBuf, sizeString);
         docShellElement->SetAttribute(ZLEVEL_ATTRIBUTE, sizeString, rv);
         if (shouldPersist) {
-          IgnoredErrorResult err;
-          ownerXULDoc->Persist(windowElementId, ZLEVEL_ATTRIBUTE, err);
+          ownerXULDoc->Persist(windowElementId, ZLEVEL_ATTRIBUTE);
         }
       }
     }

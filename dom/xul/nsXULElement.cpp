@@ -40,6 +40,7 @@
 #include "nsIURL.h"
 #include "nsViewManager.h"
 #include "nsIWidget.h"
+#include "nsIXULDocument.h"
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
 #include "mozilla/dom/Event.h"
@@ -73,6 +74,9 @@
 #include "nsQueryObject.h"
 #include <algorithm>
 #include "nsIDOMChromeWindow.h"
+
+// The XUL doc interface
+#include "nsIDOMXULDocument.h"
 
 #include "nsReadableUtils.h"
 #include "nsIFrame.h"
@@ -1151,14 +1155,14 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                         aValue->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
                 } else if (aName == nsGkAtoms::localedir) {
                     // if the localedir changed on the root element, reset the document direction
-                    XULDocument* xuldoc = document->AsXULDocument();
+                    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(document);
                     if (xuldoc) {
                         xuldoc->ResetDocumentDirection();
                     }
                 } else if (aName == nsGkAtoms::lwtheme ||
                          aName == nsGkAtoms::lwthemetextcolor) {
                     // if the lwtheme changed, make sure to reset the document lwtheme cache
-                    XULDocument* xuldoc = document->AsXULDocument();
+                    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(document);
                     if (xuldoc) {
                         xuldoc->ResetDocumentLWTheme();
                         UpdateBrightTitlebarForeground(document);
@@ -1188,14 +1192,14 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                     SetTitlebarColor(NS_RGBA(0, 0, 0, 0), aName == nsGkAtoms::activetitlebarcolor);
                 } else if (aName == nsGkAtoms::localedir) {
                     // if the localedir changed on the root element, reset the document direction
-                    XULDocument* xuldoc = doc->AsXULDocument();
+                    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
                     if (xuldoc) {
                         xuldoc->ResetDocumentDirection();
                     }
                 } else if ((aName == nsGkAtoms::lwtheme ||
                             aName == nsGkAtoms::lwthemetextcolor)) {
                     // if the lwtheme changed, make sure to restyle appropriately
-                    XULDocument* xuldoc = doc->AsXULDocument();
+                    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
                     if (xuldoc) {
                         xuldoc->ResetDocumentLWTheme();
                         UpdateBrightTitlebarForeground(doc);
@@ -1238,12 +1242,14 @@ nsXULElement::ParseAttribute(int32_t aNamespaceID,
 void
 nsXULElement::RemoveBroadcaster(const nsAString & broadcasterId)
 {
-    XULDocument* xuldoc = OwnerDoc()->AsXULDocument();
+    nsCOMPtr<nsIDOMXULDocument> xuldoc = do_QueryInterface(OwnerDoc());
     if (xuldoc) {
-        Element* broadcaster = xuldoc->GetElementById(broadcasterId);
+        nsCOMPtr<nsIDOMElement> broadcaster;
+        nsCOMPtr<nsIDOMDocument> domDoc (do_QueryInterface(xuldoc));
+        domDoc->GetElementById(broadcasterId, getter_AddRefs(broadcaster));
         if (broadcaster) {
-            xuldoc->RemoveBroadcastListenerFor(*broadcaster, *this,
-                                               NS_LITERAL_STRING("*"));
+            xuldoc->RemoveBroadcastListenerFor(broadcaster, this,
+              NS_LITERAL_STRING("*"));
         }
     }
 }
