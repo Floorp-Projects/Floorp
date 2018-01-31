@@ -463,46 +463,6 @@ interface nsIDOMWindowUtils : nsISupports {
                       in unsigned long aOptions);
 
   /**
-   * Synthesize a key event to the window. The event types supported are:
-   *   keydown, keyup, keypress
-   *
-   * Key events generally end up being sent to the focused node.
-   *
-   * Cannot be accessed from unprivileged context (not content-accessible)
-   * Will throw a DOM security error if called without chrome privileges.
-   *
-   * @param aType event type
-   * @param aKeyCode key code
-   * @param aCharCode character code
-   * @param aModifiers modifiers pressed, using constants defined as MODIFIER_*
-   * @param aAdditionalFlags special flags for the key event, see KEY_FLAG_*.
-   *
-   * @return false if the event had preventDefault() called on it,
-   *               true otherwise.  In other words, true if and only if the
-   *               default action was taken.
-   */
-
-  // If this is set, preventDefault() the event before dispatch.
-  const unsigned long KEY_FLAG_PREVENT_DEFAULT   = 0x0001;
-
-  // If this is set, the mIsSynthesizedForTests flag is set to false
-  // on the key event. Otherwise it is true.
-  const unsigned long KEY_FLAG_NOT_SYNTHESIZED_FOR_TESTS = 0x0002;
-
-  // if one of these flags is set, the KeyboardEvent.location will be the value.
-  // Otherwise, it will be computed from aKeyCode.
-  const unsigned long KEY_FLAG_LOCATION_STANDARD = 0x0010;
-  const unsigned long KEY_FLAG_LOCATION_LEFT     = 0x0020;
-  const unsigned long KEY_FLAG_LOCATION_RIGHT    = 0x0040;
-  const unsigned long KEY_FLAG_LOCATION_NUMPAD   = 0x0080;
-
-  boolean sendKeyEvent(in AString aType,
-                       in long aKeyCode,
-                       in long aCharCode,
-                       in long aModifiers,
-                       [optional] in unsigned long aAdditionalFlags);
-
-  /**
    * See nsIWidget::SynthesizeNativeKeyEvent
    *
    * Cannot be accessed from unprivileged context (not content-accessible)
