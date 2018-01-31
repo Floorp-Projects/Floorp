@@ -4956,15 +4956,6 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
     }
   }
 
-  if (mCrossThreadDispatcher) {
-    // Since we'll no longer process events, make sure we no longer allow
-    // anyone to post them. We have to do this without mMutex held, since our
-    // mutex must be acquired *after* mCrossThreadDispatcher's mutex when
-    // they're both held.
-    mCrossThreadDispatcher->Forget();
-    mCrossThreadDispatcher = nullptr;
-  }
-
   MOZ_ASSERT(previousStatus != Pending);
 
   // Let all our holders know the new status.
@@ -5557,18 +5548,6 @@ WorkerPrivate::SetThread(WorkerThread* aThread)
       mThread.swap(doomedThread);
     }
   }
-}
-
-WorkerCrossThreadDispatcher*
-WorkerPrivate::GetCrossThreadDispatcher()
-{
-  MutexAutoLock lock(mMutex);
-
-  if (!mCrossThreadDispatcher && mStatus <= Running) {
-    mCrossThreadDispatcher = new WorkerCrossThreadDispatcher(this);
-  }
-
-  return mCrossThreadDispatcher;
 }
 
 void
