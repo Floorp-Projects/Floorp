@@ -191,12 +191,16 @@ public:
                         dom::MediaSourceEnum,
                         nsTArray<RefPtr<MediaEngineSource>>*) override;
   void Shutdown() override;
+  void ReleaseResourcesForWindow(uint64_t aWindowId) override;
 
 private:
   ~MediaEngineDefault() = default;
 
-  nsTArray<RefPtr<MediaEngineDefaultVideoSource>> mVSources;
-  nsTArray<RefPtr<MediaEngineDefaultAudioSource>> mASources;
+  // WindowID -> Array of devices.
+  nsClassHashtable<nsUint64HashKey,
+                   nsTArray<RefPtr<MediaEngineSource>>> mVSources;
+  nsClassHashtable<nsUint64HashKey,
+                   nsTArray<RefPtr<MediaEngineDefaultAudioSource>>> mASources;
 };
 
 } // namespace mozilla
