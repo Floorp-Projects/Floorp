@@ -40,6 +40,7 @@
 #include "nsGkAtoms.h"
 #include "nsIFrame.h"
 #include "nsIURI.h"
+#include "nsIURIMutator.h"
 #include "nsISimpleEnumerator.h"
 
 // image copy stuff
@@ -651,15 +652,15 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
                                           &validExtension)) ||
       !validExtension) {
     // Fix the file extension in the URL
-    rv = imgUrl->Clone(getter_AddRefs(imgUri));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    imgUrl = do_QueryInterface(imgUri);
-
     nsAutoCString primaryExtension;
     mimeInfo->GetPrimaryExtension(primaryExtension);
 
-    imgUrl->SetFileExtension(primaryExtension);
+    rv = NS_MutateURI(imgUri)
+           .Apply<nsIURLMutator>(&nsIURLMutator::SetFileExtension,
+                                 primaryExtension,
+                                 nullptr)
+           .Finalize(imgUrl);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsAutoCString fileName;
