@@ -175,10 +175,9 @@ SizeComputationInput::SizeComputationInput(nsIFrame *aFrame,
              "flex/grid items. "
              "Additionally for grid items, this path doesn't handle baseline "
              "padding contribution - see SizeComputationInput::InitOffsets");
-  LogicalSize cbSize(aContainingBlockWritingMode, aContainingBlockISize,
-                     aContainingBlockISize);
   ReflowInputFlags flags;
-  InitOffsets(aContainingBlockWritingMode, cbSize, mFrame->Type(), flags);
+  InitOffsets(aContainingBlockWritingMode, aContainingBlockISize,
+              mFrame->Type(), flags);
 }
 
 // Initialize a reflow state for a child frame's reflow. Some state
@@ -2208,24 +2207,6 @@ IsSideCaption(nsIFrame* aFrame, const nsStyleDisplay* aStyleDisplay,
          captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;
 }
 
-// Flex/grid items resolve block-axis percentage margin & padding against the
-// containing block block-size (also for abs/fixed-pos child frames).
-// For everything else: the CSS21 spec requires that margin and padding
-// percentage values are calculated with respect to the inline-size of the
-// containing block, even for margin & padding in the block axis.
-static LogicalSize
-OffsetPercentBasis(const nsIFrame*    aFrame,
-                   WritingMode        aWM,
-                   const LogicalSize& aContainingBlockSize)
-{
-  // XXX The next patch in this series will get rid of this function and have
-  // the upstream/downstream code just work with the one nscoord value that
-  // we'll be dealing with now (which is aContainingBlockSize.ISize(aWM)).
-  LogicalSize offsetPercentBasis = aContainingBlockSize;
-  offsetPercentBasis.BSize(aWM) = offsetPercentBasis.ISize(aWM);
-  return offsetPercentBasis;
-}
-
 // XXX refactor this code to have methods for each set of properties
 // we are computing: width,height,line-height; margin; offsets
 
@@ -2246,7 +2227,7 @@ ReflowInput::InitConstraints(nsPresContext* aPresContext,
   // height equal to the available space
   if (nullptr == mParentReflowInput || mFlags.mDummyParentReflowInput) {
     // XXXldb This doesn't mean what it used to!
-    InitOffsets(wm, OffsetPercentBasis(mFrame, wm, aContainingBlockSize),
+    InitOffsets(wm, aContainingBlockSize.ISize(wm),
                 aFrameType, mFlags, aBorder, aPadding, mStyleDisplay);
     // Override mComputedMargin since reflow roots start from the
     // frame's boundary, which is inside the margin.
@@ -2304,8 +2285,7 @@ ReflowInput::InitConstraints(nsPresContext* aPresContext,
     // For calculating positioning offsets, margins, borders and
     // padding, we use the writing mode of the containing block
     WritingMode cbwm = cbri->GetWritingMode();
-    InitOffsets(cbwm, OffsetPercentBasis(mFrame, cbwm,
-                                         cbSize.ConvertTo(cbwm, wm)),
+    InitOffsets(cbwm, cbSize.ConvertTo(cbwm, wm).ISize(cbwm),
                 aFrameType, mFlags, aBorder, aPadding, mStyleDisplay);
 
     // For calculating the size of this box, we use its own writing mode
@@ -2579,7 +2559,7 @@ UpdateProp(nsIFrame* aFrame,
 
 void
 SizeComputationInput::InitOffsets(WritingMode aWM,
-                                  const LogicalSize& aPercentBasis,
+                                  nscoord aPercentBasis,
                                   LayoutFrameType aFrameType,
                                   ReflowInputFlags aFlags,
                                   const nsMargin* aBorder,
@@ -2950,7 +2930,7 @@ ReflowInput::CalcLineHeight(nsIContent* aContent,
 
 bool
 SizeComputationInput::ComputeMargin(WritingMode aWM,
-                                const LogicalSize& aPercentBasis)
+                                    nscoord aPercentBasis)
 {
   // SVG text frames have no margin.
   if (nsSVGUtils::IsInSVGTextSubtree(mFrame)) {
@@ -2967,17 +2947,17 @@ SizeComputationInput::ComputeMargin(WritingMode aWM,
     // (http://dev.w3.org/csswg/css-writing-modes-3/#orthogonal-flows)
     LogicalMargin m(aWM);
     m.IStart(aWM) = nsLayoutUtils::
-      ComputeCBDependentValue(aPercentBasis.ISize(aWM),
+      ComputeCBDependentValue(aPercentBasis,
                               styleMargin->mMargin.GetIStart(aWM));
     m.IEnd(aWM) = nsLayoutUtils::
-      ComputeCBDependentValue(aPercentBasis.ISize(aWM),
+      ComputeCBDependentValue(aPercentBasis,
                               styleMargin->mMargin.GetIEnd(aWM));
 
     m.BStart(aWM) = nsLayoutUtils::
-      ComputeCBDependentValue(aPercentBasis.BSize(aWM),
+      ComputeCBDependentValue(aPercentBasis,
                               styleMargin->mMargin.GetBStart(aWM));
     m.BEnd(aWM) = nsLayoutUtils::
-      ComputeCBDependentValue(aPercentBasis.BSize(aWM),
+      ComputeCBDependentValue(aPercentBasis,
                               styleMargin->mMargin.GetBEnd(aWM));
 
     SetComputedLogicalMargin(aWM, m);
@@ -2998,7 +2978,7 @@ SizeComputationInput::ComputeMargin(WritingMode aWM,
 
 bool
 SizeComputationInput::ComputePadding(WritingMode aWM,
-                                     const LogicalSize& aPercentBasis,
+                                     nscoord aPercentBasis,
                                      LayoutFrameType aFrameType)
 {
   // If style can provide us the padding directly, then use it.
@@ -3019,17 +2999,17 @@ SizeComputationInput::ComputePadding(WritingMode aWM,
     // clamp negative calc() results to 0
     LogicalMargin p(aWM);
     p.IStart(aWM) = std::max(0, nsLayoutUtils::
-      ComputeCBDependentValue(aPercentBasis.ISize(aWM),
+      ComputeCBDependentValue(aPercentBasis,
                               stylePadding->mPadding.GetIStart(aWM)));
     p.IEnd(aWM) = std::max(0, nsLayoutUtils::
-      ComputeCBDependentValue(aPercentBasis.ISize(aWM),
+      ComputeCBDependentValue(aPercentBasis,
                               stylePadding->mPadding.GetIEnd(aWM)));
 
     p.BStart(aWM) = std::max(0, nsLayoutUtils::
-      ComputeCBDependentValue(aPercentBasis.BSize(aWM),
+      ComputeCBDependentValue(aPercentBasis,
                               stylePadding->mPadding.GetBStart(aWM)));
     p.BEnd(aWM) = std::max(0, nsLayoutUtils::
-      ComputeCBDependentValue(aPercentBasis.BSize(aWM),
+      ComputeCBDependentValue(aPercentBasis,
                               stylePadding->mPadding.GetBEnd(aWM)));
 
     SetComputedLogicalPadding(aWM, p);
