@@ -618,7 +618,8 @@ public:
   // Returns whether the host supports duplex audio stream.
   bool SupportsDuplex();
 
-  void EnumerateDevices(dom::MediaSourceEnum,
+  void EnumerateDevices(uint64_t aWindowId,
+                        dom::MediaSourceEnum,
                         nsTArray<RefPtr<MediaEngineSource>>*) override;
 private:
   ~MediaEngineWebRTC() = default;
