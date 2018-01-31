@@ -43,7 +43,7 @@ class FileReader final : public DOMEventTargetHelper,
                          public nsIInputStreamCallback,
                          public nsITimerCallback,
                          public nsINamed,
-                         public workers::WorkerHolder
+                         public WorkerHolder
 {
   friend class FileReaderDecreaseBusyCounter;
 
@@ -115,7 +115,7 @@ public:
   }
 
   // WorkerHolder
-  bool Notify(workers::Status) override;
+  bool Notify(WorkerStatus) override;
 
 private:
   virtual ~FileReader();

@@ -13,8 +13,6 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-using mozilla::dom::workers::Terminating;
-using mozilla::dom::workers::Status;
 using mozilla::dom::workers::WorkerPrivate;
 
 // static
@@ -93,7 +91,7 @@ CacheWorkerHolder::Notified() const
 }
 
 bool
-CacheWorkerHolder::Notify(Status aStatus)
+CacheWorkerHolder::Notify(WorkerStatus aStatus)
 {
   NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
 

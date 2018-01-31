@@ -12,8 +12,9 @@
 namespace mozilla {
 namespace dom {
 
-namespace workers {
 class WorkerHolder;
+
+namespace workers {
 class WorkerPrivate;
 }
 
@@ -55,7 +56,7 @@ private:
   } mState;
 
   // Touched on worker-thread only.
-  UniquePtr<workers::WorkerHolder> mWorkerHolder;
+  UniquePtr<WorkerHolder> mWorkerHolder;
 };
 
 } // namespace dom

@@ -940,7 +940,7 @@ public:
   }
 
   bool
-  Notify(Status aStatus) override;
+  Notify(WorkerStatus aStatus) override;
 
   already_AddRefed<PushManager>
   GetPushManager(JSContext* aCx, ErrorResult& aRv) override;
@@ -1246,7 +1246,7 @@ ServiceWorkerRegistrationWorkerThread::ReleaseListener()
 }
 
 bool
-ServiceWorkerRegistrationWorkerThread::Notify(Status aStatus)
+ServiceWorkerRegistrationWorkerThread::Notify(WorkerStatus aStatus)
 {
   ReleaseListener();
   return true;

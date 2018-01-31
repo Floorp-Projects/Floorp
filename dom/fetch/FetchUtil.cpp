@@ -284,7 +284,7 @@ public:
   {
     auto self = MakeUnique<WorkerStreamOwner>(aStream);
 
-    if (!self->HoldWorker(aWorker, workers::Closing)) {
+    if (!self->HoldWorker(aWorker, Closing)) {
       return nullptr;
     }
 
@@ -316,7 +316,7 @@ public:
 
   // WorkerHolder:
 
-  bool Notify(workers::Status aStatus) override
+  bool Notify(WorkerStatus aStatus) override
   {
     if (!mStream) {
       return true;

@@ -162,7 +162,7 @@ private:
   // SharedWorkers may have multiple windows paused, so this must be
   // a count instead of just a boolean.
   uint32_t mParentWindowPausedDepth;
-  Status mParentStatus;
+  WorkerStatus mParentStatus;
   bool mParentFrozen;
   bool mIsChromeWorker;
   bool mMainThreadObjectsForgotten;
@@ -202,7 +202,7 @@ private:
   }
 
   bool
-  NotifyPrivate(Status aStatus);
+  NotifyPrivate(WorkerStatus aStatus);
 
   bool
   TerminatePrivate()
@@ -261,7 +261,7 @@ public:
 
   // Called on the parent thread.
   bool
-  Notify(Status aStatus)
+  Notify(WorkerStatus aStatus)
   {
     return NotifyPrivate(aStatus);
   }
@@ -393,7 +393,7 @@ public:
     return mParentStatus < Terminating;
     }
 
-  Status
+  WorkerStatus
   ParentStatus() const
   {
     mMutex.AssertCurrentThreadOwns();
@@ -872,7 +872,7 @@ public:
 
 class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 {
-  friend class WorkerHolder;
+  friend class mozilla::dom::WorkerHolder;
   friend class WorkerPrivateParent<WorkerPrivate>;
   typedef WorkerPrivateParent<WorkerPrivate> ParentType;
   friend class AutoSyncLoopHolder;
@@ -948,7 +948,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   TimeStamp mKillTime;
   uint32_t mErrorHandlerRecursionCount;
   uint32_t mNextTimeoutId;
-  Status mStatus;
+  WorkerStatus mStatus;
   UniquePtr<ClientSource> mClientSource;
   bool mFrozen;
   bool mTimerRunning;
@@ -1136,7 +1136,7 @@ public:
                         const nsAString& aMessage);
 
   bool
-  NotifyInternal(JSContext* aCx, Status aStatus);
+  NotifyInternal(JSContext* aCx, WorkerStatus aStatus);
 
   void
   ReportError(JSContext* aCx, JS::ConstUTF8CharsZ aToStringResult,
@@ -1401,7 +1401,7 @@ private:
   {
     AssertIsOnWorkerThread();
 
-    Status status;
+    WorkerStatus status;
     {
       MutexAutoLock lock(mMutex);
       status = mStatus;
@@ -1457,7 +1457,7 @@ private:
   // operation will fail and nullptr will be returned. See WorkerHolder.h for
   // more information about the correct value to use.
   already_AddRefed<nsIEventTarget>
-  CreateNewSyncLoop(Status aFailStatus);
+  CreateNewSyncLoop(WorkerStatus aFailStatus);
 
   bool
   RunCurrentSyncLoop();
@@ -1475,13 +1475,13 @@ private:
   ShutdownGCTimers();
 
   bool
-  AddHolder(WorkerHolder* aHolder, Status aFailStatus);
+  AddHolder(WorkerHolder* aHolder, WorkerStatus aFailStatus);
 
   void
   RemoveHolder(WorkerHolder* aHolder);
 
   void
-  NotifyHolders(JSContext* aCx, Status aStatus);
+  NotifyHolders(JSContext* aCx, WorkerStatus aStatus);
 
   bool
   HasActiveHolders()
@@ -1534,7 +1534,7 @@ class AutoSyncLoopHolder
 public:
   // See CreateNewSyncLoop() for more information about the correct value to use
   // for aFailStatus.
-  AutoSyncLoopHolder(WorkerPrivate* aWorkerPrivate, Status aFailStatus)
+  AutoSyncLoopHolder(WorkerPrivate* aWorkerPrivate, WorkerStatus aFailStatus)
   : mWorkerPrivate(aWorkerPrivate)
   , mTarget(aWorkerPrivate->CreateNewSyncLoop(aFailStatus))
   , mIndex(aWorkerPrivate->mSyncLoopStack.Length() - 1)

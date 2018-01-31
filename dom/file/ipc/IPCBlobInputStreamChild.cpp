@@ -99,7 +99,7 @@ public:
     : WorkerHolder("IPCBlobInputStreamWorkerHolder")
   {}
 
-  bool Notify(Status aStatus) override
+  bool Notify(WorkerStatus aStatus) override
   {
     // We must keep the worker alive until the migration is completed.
     return true;
@@ -109,8 +109,7 @@ public:
 class ReleaseWorkerHolderRunnable final : public CancelableRunnable
 {
 public:
-  explicit ReleaseWorkerHolderRunnable(
-    UniquePtr<workers::WorkerHolder>&& aWorkerHolder)
+  explicit ReleaseWorkerHolderRunnable(UniquePtr<WorkerHolder>&& aWorkerHolder)
     : CancelableRunnable("dom::ReleaseWorkerHolderRunnable")
     , mWorkerHolder(Move(aWorkerHolder))
   {}
@@ -129,7 +128,7 @@ public:
   }
 
 private:
-  UniquePtr<workers::WorkerHolder> mWorkerHolder;
+  UniquePtr<WorkerHolder> mWorkerHolder;
 };
 
 } // anonymous

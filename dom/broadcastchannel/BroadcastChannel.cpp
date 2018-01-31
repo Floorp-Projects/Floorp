@@ -234,19 +234,19 @@ private:
 
 NS_IMPL_ISUPPORTS(TeardownRunnable, nsICancelableRunnable, nsIRunnable)
 
-class BroadcastChannelWorkerHolder final : public workers::WorkerHolder
+class BroadcastChannelWorkerHolder final : public WorkerHolder
 {
   BroadcastChannel* mChannel;
 
 public:
   explicit BroadcastChannelWorkerHolder(BroadcastChannel* aChannel)
-    : workers::WorkerHolder("BroadcastChannelWorkerHolder")
+    : WorkerHolder("BroadcastChannelWorkerHolder")
     , mChannel(aChannel)
   {
     MOZ_COUNT_CTOR(BroadcastChannelWorkerHolder);
   }
 
-  virtual bool Notify(workers::Status aStatus) override
+  virtual bool Notify(WorkerStatus aStatus) override
   {
     if (aStatus >= Closing) {
       mChannel->Shutdown();

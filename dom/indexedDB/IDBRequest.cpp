@@ -416,7 +416,7 @@ IDBRequest::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 }
 
 class IDBOpenDBRequest::WorkerHolder final
-  : public mozilla::dom::workers::WorkerHolder
+  : public mozilla::dom::WorkerHolder
 {
   WorkerPrivate* mWorkerPrivate;
 #ifdef DEBUG
@@ -428,7 +428,7 @@ class IDBOpenDBRequest::WorkerHolder final
 public:
   explicit
   WorkerHolder(WorkerPrivate* aWorkerPrivate)
-    : mozilla::dom::workers::WorkerHolder("IDBOpenDBRequest::WorkerHolder")
+    : mozilla::dom::WorkerHolder("IDBOpenDBRequest::WorkerHolder")
     , mWorkerPrivate(aWorkerPrivate)
 #ifdef DEBUG
     , mWorkerPrivateDEBUG(aWorkerPrivate)
@@ -460,7 +460,7 @@ public:
 
 private:
   virtual bool
-  Notify(Status aStatus) override;
+  Notify(WorkerStatus aStatus) override;
 };
 
 IDBOpenDBRequest::IDBOpenDBRequest(IDBFactory* aFactory,
@@ -664,7 +664,7 @@ IDBOpenDBRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 bool
 IDBOpenDBRequest::
-WorkerHolder::Notify(Status aStatus)
+WorkerHolder::Notify(WorkerStatus aStatus)
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();

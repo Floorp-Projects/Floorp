@@ -15,7 +15,8 @@ using namespace workers;
 
 // static
 already_AddRefed<WorkerHolderToken>
-WorkerHolderToken::Create(WorkerPrivate* aWorkerPrivate, Status aShutdownStatus,
+WorkerHolderToken::Create(WorkerPrivate* aWorkerPrivate,
+                          WorkerStatus aShutdownStatus,
                           Behavior aBehavior)
 {
   MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate);
@@ -74,7 +75,7 @@ WorkerHolderToken::GetWorkerPrivate() const
   return mWorkerPrivate;
 }
 
-WorkerHolderToken::WorkerHolderToken(Status aShutdownStatus,
+WorkerHolderToken::WorkerHolderToken(WorkerStatus aShutdownStatus,
                                      Behavior aBehavior)
   : WorkerHolder("WorkerHolderToken", aBehavior)
   , mShutdownStatus(aShutdownStatus)
@@ -89,7 +90,7 @@ WorkerHolderToken::~WorkerHolderToken()
 }
 
 bool
-WorkerHolderToken::Notify(Status aStatus)
+WorkerHolderToken::Notify(WorkerStatus aStatus)
 {
   NS_ASSERT_OWNINGTHREAD(WorkerHolderToken);
 

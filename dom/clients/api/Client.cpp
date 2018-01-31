@@ -19,7 +19,6 @@
 namespace mozilla {
 namespace dom {
 
-using mozilla::dom::workers::Closing;
 using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
 using mozilla::dom::workers::WorkerPrivate;
 using mozilla::dom::ipc::StructuredCloneData;

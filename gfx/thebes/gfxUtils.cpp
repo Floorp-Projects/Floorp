@@ -1466,7 +1466,7 @@ gfxUtils::ThreadSafeGetFeatureStatus(const nsCOMPtr<nsIGfxInfo>& gfxInfo,
                                    status);
 
     ErrorResult rv;
-    runnable->Dispatch(dom::workers::Terminating, rv);
+    runnable->Dispatch(dom::WorkerStatus::Terminating, rv);
     if (rv.Failed()) {
         // XXXbz This is totally broken, since we're supposed to just abort
         // everything up the callstack but the callers basically eat the

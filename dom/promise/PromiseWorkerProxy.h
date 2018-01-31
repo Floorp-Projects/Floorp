@@ -11,7 +11,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
-#include "mozilla/dom/workers/bindings/WorkerHolder.h"
+#include "mozilla/dom/WorkerHolder.h"
 #include "nsProxyRelease.h"
 
 #include "WorkerRunnable.h"
@@ -218,7 +218,7 @@ private:
   // Ensure the worker and the main thread won't race to access |mCleanedUp|.
   Mutex mCleanUpLock;
 
-  UniquePtr<workers::WorkerHolder> mWorkerHolder;
+  UniquePtr<WorkerHolder> mWorkerHolder;
 };
 } // namespace dom
 } // namespace mozilla

@@ -12,6 +12,7 @@ EXPORTS.mozilla.dom += [
     'SharedWorker.h',
     'WorkerDebugger.h',
     'WorkerDebuggerManager.h',
+    'WorkerHolder.h',
     'WorkerHolderToken.h',
     'WorkerLoadInfo.h',
     'WorkerLocation.h',
@@ -24,11 +25,6 @@ EXPORTS.mozilla.dom += [
 EXPORTS.mozilla.dom.workers += [
     'RuntimeService.h',
     'WorkerCommon.h',
-]
-
-# Stuff needed for the bindings, not really public though.
-EXPORTS.mozilla.dom.workers.bindings += [
-    'WorkerHolder.h',
 ]
 
 XPIDL_MODULE = 'dom_workers'

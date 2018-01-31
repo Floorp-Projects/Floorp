@@ -22,7 +22,7 @@ namespace cache {
 
 class ActorChild;
 
-class CacheWorkerHolder final : public workers::WorkerHolder
+class CacheWorkerHolder final : public WorkerHolder
 {
 public:
   static already_AddRefed<CacheWorkerHolder>
@@ -38,7 +38,7 @@ public:
   bool Notified() const;
 
   // WorkerHolder methods
-  virtual bool Notify(workers::Status aStatus) override;
+  virtual bool Notify(WorkerStatus aStatus) override;
 
 private:
   explicit CacheWorkerHolder(Behavior aBehavior);

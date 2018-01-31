@@ -174,7 +174,7 @@ public:
   {}
 
   bool
-  Notify(Status aStatus) override;
+  Notify(WorkerStatus aStatus) override;
 };
 
 class WorkerFetchResolver final : public FetchDriverObserver
@@ -780,7 +780,7 @@ public:
 };
 
 bool
-WorkerNotifier::Notify(Status aStatus)
+WorkerNotifier::Notify(WorkerStatus aStatus)
 {
   if (mResolver) {
     // This will nullify this object.
