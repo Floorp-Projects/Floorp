@@ -173,10 +173,8 @@ public:
                                  const nsAString& aAttr, ErrorResult& aRv);
     void RemoveBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
                                     const nsAString& aAttr);
-    void Persist(const nsAString& aId, const nsAString& aAttr, ErrorResult& aRv)
-    {
-        aRv = Persist(aId, aAttr);
-    }
+    void Persist(const nsAString& aId, const nsAString& aAttr,
+                 ErrorResult& aRv);
     using nsDocument::GetBoxObjectFor;
     void LoadOverlay(const nsAString& aURL, nsIObserver* aObserver,
                      ErrorResult& aRv)
