@@ -71,7 +71,7 @@ UnscaledFontFreeType::GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton)
 
   const char* path = mFile.c_str();
   size_t pathLength = strlen(path) + 1;
-  aCb(reinterpret_cast<const uint8_t*>(path), pathLength, 0, aBaton);
+  aCb(reinterpret_cast<const uint8_t*>(path), pathLength, mIndex, aBaton);
   return true;
 }
 

@@ -484,7 +484,7 @@ UnscaledFontFontconfig::GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aB
 
   const char* path = mFile.c_str();
   size_t pathLength = strlen(path);
-  aCb(reinterpret_cast<const uint8_t*>(path), pathLength, 0, aBaton);
+  aCb(reinterpret_cast<const uint8_t*>(path), pathLength, mIndex, aBaton);
   return true;
 }
 
