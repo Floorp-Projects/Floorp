@@ -19,9 +19,9 @@ import org.mozilla.gecko.GeckoSession.TrackingProtectionDelegate;
     private static final String LISTS_PREF =
         "browser.safebrowsing.provider.mozilla.lists";
 
-    private static final String AD = "base-track-digest256";
-    private static final String ANALYTIC = "base-track-digest256";
-    private static final String SOCIAL = "base-track-digest256";
+    private static final String AD = "ads-track-digest256";
+    private static final String ANALYTIC = "analytics-track-digest256";
+    private static final String SOCIAL = "social-track-digest256";
     private static final String CONTENT = "content-track-digest256";
 
     private String buildPrefValue(int categories) {
