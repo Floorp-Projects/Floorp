@@ -119,11 +119,6 @@ DrawTargetCaptureImpl::DetachAllSnapshots()
 void
 DrawTargetCaptureImpl::SetPermitSubpixelAA(bool aPermitSubpixelAA)
 {
-  // Save memory by eliminating state changes with no effect
-  if (mPermitSubpixelAA == aPermitSubpixelAA) {
-    return;
-  }
-
   AppendCommand(SetPermitSubpixelAACommand)(aPermitSubpixelAA);
 
   // Have to update mPermitSubpixelAA for this DT
@@ -315,11 +310,6 @@ DrawTargetCaptureImpl::PopClip()
 void
 DrawTargetCaptureImpl::SetTransform(const Matrix& aTransform)
 {
-  // Save memory by eliminating state changes with no effect
-  if (mTransform == aTransform) {
-    return;
-  }
-
   AppendCommand(SetTransformCommand)(aTransform);
 
   // Have to update the transform for this DT
