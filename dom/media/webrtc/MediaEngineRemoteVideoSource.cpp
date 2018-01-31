@@ -456,19 +456,26 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
     return 0;
   }
 
+  int width = aProps.width();
+  int height = aProps.height();
+
   // Update the dimensions
-  FrameSizeChange(aProps.width(), aProps.height());
+  FrameSizeChange(width, height);
 
   MOZ_ASSERT(mSources.Length() == mPrincipalHandles.Length());
   MOZ_ASSERT(mSources.Length() == mTargetCapabilities.Length());
   MOZ_ASSERT(mSources.Length() == mHandleIds.Length());
   MOZ_ASSERT(mSources.Length() == mImages.Length());
 
-  for (uint32_t i = 0; i < mTargetCapabilities.Length(); i++ ) {
-    int32_t req_max_width = mTargetCapabilities[i].width & 0xffff;
-    int32_t req_max_height = mTargetCapabilities[i].height & 0xffff;
-    int32_t req_ideal_width = (mTargetCapabilities[i].width >> 16) & 0xffff;
-    int32_t req_ideal_height = (mTargetCapabilities[i].height >> 16) & 0xffff;
+  // Take copies while iterating so handles or capabilities don't change while
+  // we unlock for rescale and copy
+  AutoTArray<uint64_t, 5> handleIds(mHandleIds);
+  AutoTArray<webrtc::CaptureCapability, 5> targetCapabilities(mTargetCapabilities);
+  for (uint32_t i = 0; i < targetCapabilities.Length(); ++i) {
+    int32_t req_max_width = targetCapabilities[i].width & 0xffff;
+    int32_t req_max_height = targetCapabilities[i].height & 0xffff;
+    int32_t req_ideal_width = (targetCapabilities[i].width >> 16) & 0xffff;
+    int32_t req_ideal_height = (targetCapabilities[i].height >> 16) & 0xffff;
 
     int32_t dest_max_width = std::min(req_max_width, mWidth);
     int32_t dest_max_height = std::min(req_max_height, mHeight);
@@ -481,88 +488,104 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
     int dst_stride_y = dst_width;
     int dst_stride_uv = (dst_width + 1) / 2;
 
-    camera::VideoFrameProperties properties;
-    UniquePtr<uint8_t []> frameBuf;
-    uint8_t* frame;
-    bool needReScale = !((dst_width == mWidth && dst_height == mHeight) ||
-                         (dst_width > mWidth || dst_height > mHeight));
+    RefPtr<layers::PlanarYCbCrImage> image;
+    {
+      // Unlock the monitor while rescaling and copying to avoid slowing
+      // the MediaStreamGraph (i.e., the audio callback!)
+      MonitorAutoUnlock open(mMonitor);
+      camera::VideoFrameProperties properties;
+      UniquePtr<uint8_t []> frameBuf;
+      uint8_t* frame;
+      bool needReScale = !((dst_width == width && dst_height == height) ||
+                           (dst_width > width || dst_height > height));
 
-    if (!needReScale) {
-      dst_width = mWidth;
-      dst_height = mHeight;
-      frame = aBuffer;
-    } else {
-      rtc::scoped_refptr<webrtc::I420Buffer> i420Buffer;
-      i420Buffer = webrtc::I420Buffer::Create(mWidth, mHeight, mWidth,
-                                              (mWidth + 1) / 2, (mWidth + 1) / 2);
+      if (!needReScale) {
+        dst_width = width;
+        dst_height = height;
+        frame = aBuffer;
+      } else {
+        rtc::scoped_refptr<webrtc::I420Buffer> i420Buffer;
+        i420Buffer = webrtc::I420Buffer::Create(width, height, width,
+                                                (width + 1) / 2, (width + 1) / 2);
 
-      const int conversionResult = webrtc::ConvertToI420(webrtc::kI420,
-                                                         aBuffer,
-                                                         0, 0,  // No cropping
-                                                         mWidth, mHeight,
-                                                         mWidth * mHeight * 3 / 2,
-                                                         webrtc::kVideoRotation_0,
-                                                         i420Buffer.get());
+        const int conversionResult = webrtc::ConvertToI420(webrtc::kI420,
+                                                           aBuffer,
+                                                           0, 0,  // No cropping
+                                                           width, height,
+                                                           width * height * 3 / 2,
+                                                           webrtc::kVideoRotation_0,
+                                                           i420Buffer.get());
 
-      webrtc::VideoFrame captureFrame(i420Buffer, 0, 0, webrtc::kVideoRotation_0);
-      if (conversionResult < 0) {
-        return 0;
+        webrtc::VideoFrame captureFrame(i420Buffer, 0, 0, webrtc::kVideoRotation_0);
+        if (conversionResult < 0) {
+          return 0;
+        }
+
+        rtc::scoped_refptr<webrtc::I420Buffer> scaledBuffer;
+        scaledBuffer = webrtc::I420Buffer::Create(dst_width, dst_height, dst_stride_y,
+                                                  dst_stride_uv, dst_stride_uv);
+
+        scaledBuffer->CropAndScaleFrom(*captureFrame.video_frame_buffer().get());
+        webrtc::VideoFrame scaledFrame(scaledBuffer, 0, 0, webrtc::kVideoRotation_0);
+
+        VideoFrameUtils::InitFrameBufferProperties(scaledFrame, properties);
+        frameBuf.reset(new (fallible) uint8_t[properties.bufferSize()]);
+        frame = frameBuf.get();
+
+        if (!frame) {
+          return 0;
+        }
+
+        VideoFrameUtils::CopyVideoFrameBuffers(frame,
+                                               properties.bufferSize(), scaledFrame);
       }
 
-      rtc::scoped_refptr<webrtc::I420Buffer> scaledBuffer;
-      scaledBuffer = webrtc::I420Buffer::Create(dst_width, dst_height, dst_stride_y,
-                                                dst_stride_uv, dst_stride_uv);
+      // Create a video frame and append it to the track.
+      image = mImageContainer->CreatePlanarYCbCrImage();
 
-      scaledBuffer->CropAndScaleFrom(*captureFrame.video_frame_buffer().get());
-      webrtc::VideoFrame scaledFrame(scaledBuffer, 0, 0, webrtc::kVideoRotation_0);
+      const uint8_t lumaBpp = 8;
+      const uint8_t chromaBpp = 4;
 
-      VideoFrameUtils::InitFrameBufferProperties(scaledFrame, properties);
-      frameBuf.reset(new (fallible) uint8_t[properties.bufferSize()]);
-      frame = frameBuf.get();
+      layers::PlanarYCbCrData data;
 
-      if (!frame) {
+      // Take lots of care to round up!
+      data.mYChannel = frame;
+      data.mYSize = IntSize(dst_width, dst_height);
+      data.mYStride = (dst_width * lumaBpp + 7) / 8;
+      data.mCbCrStride = (dst_width * chromaBpp + 7) / 8;
+      data.mCbChannel = frame + dst_height * data.mYStride;
+      data.mCrChannel = data.mCbChannel + ((dst_height + 1) / 2) * data.mCbCrStride;
+      data.mCbCrSize = IntSize((dst_width + 1) / 2, (dst_height + 1) / 2);
+      data.mPicX = 0;
+      data.mPicY = 0;
+      data.mPicSize = IntSize(dst_width, dst_height);
+      data.mStereoMode = StereoMode::MONO;
+
+      if (!image->CopyData(data)) {
+        MOZ_ASSERT(false);
         return 0;
       }
-
-      VideoFrameUtils::CopyVideoFrameBuffers(frame,
-                                             properties.bufferSize(), scaledFrame);
-    }
-
-    // Create a video frame and append it to the track.
-    RefPtr<layers::PlanarYCbCrImage> image = mImageContainer->CreatePlanarYCbCrImage();
-
-    const uint8_t lumaBpp = 8;
-    const uint8_t chromaBpp = 4;
-
-    layers::PlanarYCbCrData data;
-
-    // Take lots of care to round up!
-    data.mYChannel = frame;
-    data.mYSize = IntSize(dst_width, dst_height);
-    data.mYStride = (dst_width * lumaBpp + 7) / 8;
-    data.mCbCrStride = (dst_width * chromaBpp + 7) / 8;
-    data.mCbChannel = frame + dst_height * data.mYStride;
-    data.mCrChannel = data.mCbChannel + ((dst_height + 1) / 2) * data.mCbCrStride;
-    data.mCbCrSize = IntSize((dst_width + 1) / 2, (dst_height + 1) / 2);
-    data.mPicX = 0;
-    data.mPicY = 0;
-    data.mPicSize = IntSize(dst_width, dst_height);
-    data.mStereoMode = StereoMode::MONO;
-
-    if (!image->CopyData(data)) {
-      MOZ_ASSERT(false);
-      return 0;
-    }
 
 #ifdef DEBUG
-    static uint32_t frame_num = 0;
-    LOGFRAME(("frame %d (%dx%d); timeStamp %u, ntpTimeMs %" PRIu64 ", renderTimeMs %" PRIu64,
-              frame_num++, mWidth, mHeight,
-              aProps.timeStamp(), aProps.ntpTimeMs(), aProps.renderTimeMs()));
+      static uint32_t frame_num = 0;
+      LOGFRAME(("frame %d (%dx%d); timeStamp %u, ntpTimeMs %" PRIu64 ", renderTimeMs %" PRIu64,
+                frame_num++, width, height,
+                aProps.timeStamp(), aProps.ntpTimeMs(), aProps.renderTimeMs()));
 #endif
+    }
 
-    // implicitly releases last image
-    mImages[i] = image.forget();
+    // The allocated handles (and associated target capabilities) may have
+    // changed during rescale/copy. Try to locate the index of the current
+    // allocation handle and set the image if found.
+    // Note that mMonitor is now locked again.
+
+    for (size_t j = 0; j < mHandleIds.Length(); ++j) {
+      if (handleIds[i] == mHandleIds[j]) {
+        // implicitly releases last image
+        mImages[j] = image.forget();
+        break;
+      }
+    }
   }
 
   // We'll push the frame into the MSG on the next NotifyPull. This will avoid
