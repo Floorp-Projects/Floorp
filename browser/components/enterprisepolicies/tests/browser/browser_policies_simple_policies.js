@@ -51,8 +51,17 @@ add_task(async function test_simple_policies() {
   };
 
   await setupPolicyEngineWithJson(
-    "config_simple_policies.json",
-    /* custom schema */
+    // policies.json
+    {
+      "policies": {
+        "simple_policy0": true,
+        "simple_policy1": true,
+        "simple_policy2": true,
+        "simple_policy3": false
+      }
+    },
+
+    // custom schema
     {
       properties: {
         "simple_policy0": {
