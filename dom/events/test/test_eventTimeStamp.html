@@ -60,10 +60,10 @@ function testRegularEvents() {
   var timeBeforeEvent = performance.now();
   addEventListener("load", function(evt) {
     var timeAfterEvent = performance.now();
-    ok(evt.timeStamp > timeBeforeEvent &&
-       evt.timeStamp < timeAfterEvent,
-       "Event timestamp (" + evt.timeStamp + ") is in expected range: (" +
-         timeBeforeEvent + ", " + timeAfterEvent + ")");
+    ok(evt.timeStamp >= timeBeforeEvent &&
+       evt.timeStamp <= timeAfterEvent,
+       "Event timestamp (" + evt.timeStamp + ") is in expected range: [" +
+         timeBeforeEvent + ", " + timeAfterEvent + "]");
     testWorkerEvents();
   });
 }
@@ -77,8 +77,8 @@ function testWorkerEvents() {
     ok(evt.data >= timeBeforeEvent &&
        evt.data <= timeAfterEvent,
        "Event timestamp in dedicated worker (" + evt.data +
-         ") is in expected range: (" +
-         timeBeforeEvent + ", " + timeAfterEvent + ")");
+         ") is in expected range: [" +
+         timeBeforeEvent + ", " + timeAfterEvent + "]");
     worker.terminate();
     testSharedWorkerEvents();
   };
