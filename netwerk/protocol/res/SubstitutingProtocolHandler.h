@@ -122,7 +122,8 @@ private:
 class SubstitutingURL : public nsStandardURL
 {
 public:
-  SubstitutingURL() : nsStandardURL(true) {}
+  explicit SubstitutingURL() : nsStandardURL(true) {}
+  explicit SubstitutingURL(bool aSupportsFileURL) : nsStandardURL(true) { MOZ_ASSERT(aSupportsFileURL); }
   virtual nsStandardURL* StartClone() override;
   virtual MOZ_MUST_USE nsresult EnsureFile() override;
   NS_IMETHOD GetClassIDNoAlloc(nsCID *aCID) override;
