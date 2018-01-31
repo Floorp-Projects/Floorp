@@ -214,10 +214,12 @@ def gl_provider_define(provider):
 
 set_define('MOZ_GL_PROVIDER', gl_provider_define)
 
-@depends(gl_provider, x11)
-def gl_default_provider(value, x11):
+@depends(gl_provider, wayland, x11)
+def gl_default_provider(value, wayland, x11):
     if value:
         return value
+    elif wayland:
+        return 'EGL'
     elif x11:
         return 'GLX'
 
