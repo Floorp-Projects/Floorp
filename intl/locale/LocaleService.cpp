@@ -442,22 +442,13 @@ LocaleService::FilterMatches(const nsTArray<nsCString>& aRequested,
                              nsTArray<nsCString>& aRetVal)
 {
   // Local copy of the list of available locales, in Locale form for flexible
-  // matching. We will remove entries from this list as they get appended to
-  // aRetVal, so that no available locale will be found more than once.
+  // matching. We will invalidate entries in this list when they are matched
+  // and the corresponding strings from aAvailable added to aRetVal, so that
+  // no available locale will be found more than once.
   AutoTArray<Locale, 100> availLocales;
   for (auto& avail : aAvailable) {
     availLocales.AppendElement(Locale(avail));
   }
-
-  // Helper to erase an entry from availLocales once we have copied it to
-  // the result list. Returns an iterator pointing to the entry that was
-  // immediately after the one that was erased (or availLocales.end() if
-  // the target was the last in the array).
-  auto eraseFromAvail = [&](nsTArray<Locale>::iterator aIter) {
-    nsTArray<Locale>::size_type index = aIter - availLocales.begin();
-    availLocales.RemoveElementAt(index);
-    return availLocales.begin() + index;
-  };
 
   for (auto& requested : aRequested) {
     if (requested.IsEmpty()) {
@@ -472,8 +463,8 @@ LocaleService::FilterMatches(const nsTArray<nsCString>& aRequested,
     auto match = std::find_if(availLocales.begin(), availLocales.end(),
                               matchesExactly);
     if (match != availLocales.end()) {
-      aRetVal.AppendElement(match->AsString());
-      eraseFromAvail(match);
+      aRetVal.AppendElement(aAvailable[match - availLocales.begin()]);
+      match->Invalidate();
     }
 
     if (!aRetVal.IsEmpty()) {
@@ -489,8 +480,8 @@ LocaleService::FilterMatches(const nsTArray<nsCString>& aRequested,
       auto match = availLocales.begin();
       while ((match = std::find_if(match, availLocales.end(),
                                    matchesRange)) != availLocales.end()) {
-        aRetVal.AppendElement(match->AsString());
-        match = eraseFromAvail(match);
+        aRetVal.AppendElement(aAvailable[match - availLocales.begin()]);
+        match->Invalidate();
         foundMatch = true;
         if (aStrategy != LangNegStrategy::Filtering) {
           return true; // we only want the first match

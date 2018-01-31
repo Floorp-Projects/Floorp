@@ -25,7 +25,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMXULDocument.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsPIDOMWindow.h"
 #include "nsIEditingSession.h"
@@ -49,10 +48,6 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
-
-#ifdef MOZ_XUL
-#include "nsIXULDocument.h"
-#endif
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -213,8 +208,7 @@ DocAccessible::NativeRole()
 
       if (itemType == nsIDocShellTreeItem::typeContent) {
 #ifdef MOZ_XUL
-        nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocumentNode));
-        if (xulDoc)
+        if (mDocumentNode && mDocumentNode->IsXULDocument())
           return roles::APPLICATION;
 #endif
         return roles::DOCUMENT;
@@ -392,8 +386,7 @@ void
 DocAccessible::DocType(nsAString& aType) const
 {
 #ifdef MOZ_XUL
-  nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocumentNode));
-  if (xulDoc) {
+  if (mDocumentNode->IsXULDocument()) {
     aType.AssignLiteral("window"); // doctype not implemented for XUL at time of writing - causes assertion
     return;
   }

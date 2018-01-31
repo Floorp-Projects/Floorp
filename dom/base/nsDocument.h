@@ -378,12 +378,6 @@ public:
   virtual void SetPrincipal(nsIPrincipal *aPrincipal) override;
 
   /**
-   * Get the Content-Type of this document.
-   */
-  // NS_IMETHOD GetContentType(nsAString& aContentType);
-  // Already declared in nsIDOMDocument
-
-  /**
    * Set the Content-Type of this document.
    */
   virtual void SetContentType(const nsAString& aContentType) override;
@@ -959,7 +953,7 @@ public:
     GetImplementation(mozilla::ErrorResult& rv) override;
 
   virtual void SetSelectedStyleSheetSet(const nsAString& aSheetSet) override;
-  virtual void GetLastStyleSheetSet(nsString& aSheetSet) override;
+  virtual void GetLastStyleSheetSet(nsAString& aSheetSet) override;
   virtual mozilla::dom::DOMStringList* StyleSheetSets() override;
   virtual void EnableStyleSheetsForSet(const nsAString& aSheetSet) override;
   virtual already_AddRefed<Element> CreateElement(const nsAString& aTagName,
@@ -1035,7 +1029,7 @@ protected:
 
 public:
   // Get our title
-  virtual void GetTitle(nsString& aTitle) override;
+  virtual void GetTitle(nsAString& aTitle) override;
   // Set our title
   virtual void SetTitle(const nsAString& aTitle, mozilla::ErrorResult& rv) override;
 

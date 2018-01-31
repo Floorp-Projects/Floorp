@@ -15,8 +15,6 @@
 #include "nsIDOMEvent.h"
 #include "nsXULElement.h"
 #include "nsIDOMXULMenuListElement.h"
-#include "nsIXULDocument.h"
-#include "nsIDOMXULDocument.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsGlobalWindow.h"
@@ -36,8 +34,10 @@
 #include "nsPIWindowRoot.h"
 #include "nsFrameManager.h"
 #include "nsIObserverService.h"
+#include "XULDocument.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/UIEvent.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/LookAndFeel.h"
@@ -599,12 +599,16 @@ nsXULPopupManager::GetTopVisibleMenu()
   return nullptr;
 }
 
-void
-nsXULPopupManager::GetMouseLocation(nsIDOMNode** aNode, int32_t* aOffset)
+nsINode*
+nsXULPopupManager::GetMouseLocationParent()
 {
-  *aNode = mRangeParent;
-  NS_IF_ADDREF(*aNode);
-  *aOffset = mRangeOffset;
+  return mRangeParent;
+}
+
+int32_t
+nsXULPopupManager::MouseLocationOffset()
+{
+  return mRangeOffset;
 }
 
 void
@@ -625,10 +629,11 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
 
   mCachedModifiers = 0;
 
-  nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aEvent);
-  if (uiEvent) {
-    uiEvent->GetRangeParent(getter_AddRefs(mRangeParent));
-    uiEvent->GetRangeOffset(&mRangeOffset);
+  nsCOMPtr<nsIDOMUIEvent> domUiEvent = do_QueryInterface(aEvent);
+  if (domUiEvent) {
+    auto uiEvent = static_cast<UIEvent*>(domUiEvent.get());
+    mRangeParent = uiEvent->GetRangeParent();
+    mRangeOffset = uiEvent->RangeOffset();
 
     // get the event coordinates relative to the root frame of the document
     // containing the popup.
@@ -1706,20 +1711,20 @@ nsXULPopupManager::GetVisiblePopups(nsTArray<nsIFrame *>& aPopups)
   }
 }
 
-already_AddRefed<nsIDOMNode>
+already_AddRefed<nsINode>
 nsXULPopupManager::GetLastTriggerNode(nsIDocument* aDocument, bool aIsTooltip)
 {
   if (!aDocument)
     return nullptr;
 
-  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsINode> node;
 
   // if mOpeningPopup is set, it means that a popupshowing event is being
   // fired. In this case, just use the cached node, as the popup is not yet in
   // the list of open popups.
   if (mOpeningPopup && mOpeningPopup->GetUncomposedDoc() == aDocument &&
       aIsTooltip == mOpeningPopup->IsXULElement(nsGkAtoms::tooltip)) {
-    node = do_QueryInterface(nsMenuPopupFrame::GetTriggerContent(GetPopupFrameForContent(mOpeningPopup, false)));
+    node = nsMenuPopupFrame::GetTriggerContent(GetPopupFrameForContent(mOpeningPopup, false));
   }
   else {
     nsMenuChainItem* item = mPopups;
@@ -1727,7 +1732,7 @@ nsXULPopupManager::GetLastTriggerNode(nsIDocument* aDocument, bool aIsTooltip)
       // look for a popup of the same type and document.
       if ((item->PopupType() == ePopupTypeTooltip) == aIsTooltip &&
           item->Content()->GetUncomposedDoc() == aDocument) {
-        node = do_QueryInterface(nsMenuPopupFrame::GetTriggerContent(item->Frame()));
+        node = nsMenuPopupFrame::GetTriggerContent(item->Frame());
         if (node)
           break;
       }
@@ -1972,10 +1977,10 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
   }
 
   // When a menu is opened, make sure that command updating is unlocked first.
-  nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(document);
+  XULDocument* xulDoc = document->AsXULDocument();
   if (xulDoc) {
-    nsCOMPtr<nsIDOMXULCommandDispatcher> xulCommandDispatcher;
-    xulDoc->GetCommandDispatcher(getter_AddRefs(xulCommandDispatcher));
+    nsCOMPtr<nsIDOMXULCommandDispatcher> xulCommandDispatcher =
+      xulDoc->GetCommandDispatcher();
     if (xulCommandDispatcher) {
       xulCommandDispatcher->Unlock();
     }

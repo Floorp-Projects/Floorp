@@ -50,6 +50,7 @@
 #include "nsPIWindowRoot.h"
 #include "nsXULCommandDispatcher.h"
 #include "nsXULElement.h"
+#include "nsXULPrototypeCache.h"
 #include "mozilla/Logging.h"
 #include "nsIFrame.h"
 #include "nsXBLService.h"
@@ -216,7 +217,7 @@ XULDocument::~XULDocument()
 } // namespace mozilla
 
 nsresult
-NS_NewXULDocument(nsIXULDocument** result)
+NS_NewXULDocument(nsIDocument** result)
 {
     NS_PRECONDITION(result != nullptr, "null ptr");
     if (! result)
@@ -282,8 +283,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(XULDocument,
                                              XMLDocument,
-                                             nsIXULDocument,
-                                             nsIDOMXULDocument,
                                              nsIStreamLoaderObserver,
                                              nsICSSLoaderObserver,
                                              nsIOffThreadScriptReceiver)
@@ -523,7 +522,7 @@ XULDocument::EndLoad()
     }
 }
 
-NS_IMETHODIMP
+nsresult
 XULDocument::OnPrototypeLoadDone(bool aResumeWalk)
 {
     nsresult rv;
@@ -677,19 +676,6 @@ XULDocument::SynchronizeBroadcastListener(Element *aBroadcaster,
     }
 }
 
-NS_IMETHODIMP
-XULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
-                                     nsIDOMElement* aListener,
-                                     const nsAString& aAttr)
-{
-    ErrorResult rv;
-    nsCOMPtr<Element> broadcaster = do_QueryInterface(aBroadcaster);
-    nsCOMPtr<Element> listener = do_QueryInterface(aListener);
-    NS_ENSURE_ARG(broadcaster && listener);
-    AddBroadcastListenerFor(*broadcaster, *listener, aAttr, rv);
-    return rv.StealNSResult();
-}
-
 void
 XULDocument::AddBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
                                      const nsAString& aAttr, ErrorResult& aRv)
@@ -756,18 +742,6 @@ XULDocument::AddBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
     entry->mListeners.AppendElement(bl);
 
     SynchronizeBroadcastListener(&aBroadcaster, &aListener, aAttr);
-}
-
-NS_IMETHODIMP
-XULDocument::RemoveBroadcastListenerFor(nsIDOMElement* aBroadcaster,
-                                        nsIDOMElement* aListener,
-                                        const nsAString& aAttr)
-{
-    nsCOMPtr<Element> broadcaster = do_QueryInterface(aBroadcaster);
-    nsCOMPtr<Element> listener = do_QueryInterface(aListener);
-    NS_ENSURE_ARG(broadcaster && listener);
-    RemoveBroadcastListenerFor(*broadcaster, *listener, aAttr);
-    return NS_OK;
 }
 
 void
@@ -1015,11 +989,6 @@ XULDocument::ContentRemoved(nsIDocument* aDocument,
     RemoveSubtreeFromDocument(aChild);
 }
 
-//----------------------------------------------------------------------
-//
-// nsIXULDocument interface
-//
-
 nsresult
 XULDocument::AddForwardReference(nsForwardReference* aRef)
 {
@@ -1101,15 +1070,6 @@ XULDocument::ResolveForwardReferences()
 // nsIDOMDocument interface
 //
 
-NS_IMETHODIMP
-XULDocument::GetElementsByAttribute(const nsAString& aAttribute,
-                                    const nsAString& aValue,
-                                    nsIDOMNodeList** aReturn)
-{
-    *aReturn = GetElementsByAttribute(aAttribute, aValue).take();
-    return NS_OK;
-}
-
 already_AddRefed<nsINodeList>
 XULDocument::GetElementsByAttribute(const nsAString& aAttribute,
                                     const nsAString& aValue)
@@ -1125,18 +1085,6 @@ XULDocument::GetElementsByAttribute(const nsAString& aAttribute,
                                             kNameSpaceID_Unknown);
 
     return list.forget();
-}
-
-NS_IMETHODIMP
-XULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
-                                      const nsAString& aAttribute,
-                                      const nsAString& aValue,
-                                      nsIDOMNodeList** aReturn)
-{
-    ErrorResult rv;
-    *aReturn = GetElementsByAttributeNS(aNamespaceURI, aAttribute,
-                                        aValue, rv).take();
-    return rv.StealNSResult();
 }
 
 already_AddRefed<nsINodeList>
@@ -1169,18 +1117,21 @@ XULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
     return list.forget();
 }
 
-NS_IMETHODIMP
+void
 XULDocument::Persist(const nsAString& aID,
-                     const nsAString& aAttr)
+                     const nsAString& aAttr,
+                     ErrorResult& aRv)
 {
     // If we're currently reading persisted attributes out of the
     // localstore, _don't_ re-enter and try to set them again!
-    if (mApplyingPersistedAttrs)
-        return NS_OK;
+    if (mApplyingPersistedAttrs) {
+        return;
+    }
 
     Element* element = nsDocument::GetElementById(aID);
-    if (!element)
-        return NS_OK;
+    if (!element) {
+        return;
+    }
 
     RefPtr<nsAtom> tag;
     int32_t nameSpaceID;
@@ -1198,21 +1149,26 @@ XULDocument::Persist(const nsAString& aID,
 
         if (NS_FAILED(rv)) {
             // There was an invalid character or it was malformed.
-            return NS_ERROR_INVALID_ARG;
+            aRv.Throw(NS_ERROR_INVALID_ARG);
+            return;
         }
 
         if (colon) {
             // We don't really handle namespace qualifiers in attribute names.
-            return NS_ERROR_NOT_IMPLEMENTED;
+            aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+            return;
         }
 
         tag = NS_Atomize(aAttr);
-        NS_ENSURE_TRUE(tag, NS_ERROR_OUT_OF_MEMORY);
+        if (NS_WARN_IF(!tag)) {
+            aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+            return;
+        }
 
         nameSpaceID = kNameSpaceID_None;
     }
 
-    return Persist(element, nameSpaceID, tag);
+    aRv = Persist(element, nameSpaceID, tag);
 }
 
 nsresult
@@ -1281,42 +1237,26 @@ XULDocument::GetViewportSize(int32_t* aWidth,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-XULDocument::GetWidth(int32_t* aWidth)
-{
-    NS_ENSURE_ARG_POINTER(aWidth);
-
-    int32_t height;
-    return GetViewportSize(aWidth, &height);
-}
-
 int32_t
 XULDocument::GetWidth(ErrorResult& aRv)
 {
-    int32_t width;
-    aRv = GetWidth(&width);
+    int32_t width = 0;
+    int32_t height = 0;
+    aRv = GetViewportSize(&width, &height);
     return width;
-}
-
-NS_IMETHODIMP
-XULDocument::GetHeight(int32_t* aHeight)
-{
-    NS_ENSURE_ARG_POINTER(aHeight);
-
-    int32_t width;
-    return GetViewportSize(&width, aHeight);
 }
 
 int32_t
 XULDocument::GetHeight(ErrorResult& aRv)
 {
-    int32_t height;
-    aRv = GetHeight(&height);
+    int32_t width = 0;
+    int32_t height = 0;
+    aRv = GetViewportSize(&width, &height);
     return height;
 }
 
-JSObject*
-GetScopeObjectOfNode(nsIDOMNode* node)
+static JSObject*
+GetScopeObjectOfNode(nsINode* node)
 {
     MOZ_ASSERT(node, "Must not be called with null.");
 
@@ -1328,30 +1268,21 @@ GetScopeObjectOfNode(nsIDOMNode* node)
     // this, let's do the same check as nsNodeSH::PreCreate does to
     // determine the scope and if it fails let's just return null in
     // XULDocument::GetPopupNode.
-    nsCOMPtr<nsINode> inode = do_QueryInterface(node);
-    MOZ_ASSERT(inode, "How can this happen?");
-
-    nsIDocument* doc = inode->OwnerDoc();
-    MOZ_ASSERT(inode, "This should never happen.");
+    nsIDocument* doc = node->OwnerDoc();
+    MOZ_ASSERT(doc, "This should never happen.");
 
     nsIGlobalObject* global = doc->GetScopeObject();
     return global ? global->GetGlobalJSObject() : nullptr;
 }
 
-//----------------------------------------------------------------------
-//
-// nsIDOMXULDocument interface
-//
-
-NS_IMETHODIMP
-XULDocument::GetPopupNode(nsIDOMNode** aNode)
+already_AddRefed<nsINode>
+XULDocument::GetPopupNode()
 {
-    *aNode = nullptr;
-
-    nsCOMPtr<nsIDOMNode> node;
+    nsCOMPtr<nsINode> node;
     nsCOMPtr<nsPIWindowRoot> rootWin = GetWindowRoot();
-    if (rootWin)
+    if (rootWin) {
         node = rootWin->GetPopupNode(); // addref happens here
+    }
 
     if (!node) {
         nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
@@ -1362,89 +1293,43 @@ XULDocument::GetPopupNode(nsIDOMNode** aNode)
 
     if (node && nsContentUtils::CanCallerAccess(node)
         && GetScopeObjectOfNode(node)) {
-        node.forget(aNode);
+        return node.forget();
     }
 
-    return NS_OK;
-}
-
-already_AddRefed<nsINode>
-XULDocument::GetPopupNode()
-{
-    nsCOMPtr<nsIDOMNode> node;
-    DebugOnly<nsresult> rv = GetPopupNode(getter_AddRefs(node));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    nsCOMPtr<nsINode> retval(do_QueryInterface(node));
-    return retval.forget();
-}
-
-NS_IMETHODIMP
-XULDocument::SetPopupNode(nsIDOMNode* aNode)
-{
-    if (aNode) {
-        // only allow real node objects
-        nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-        NS_ENSURE_ARG(node);
-    }
-
-    nsCOMPtr<nsPIWindowRoot> rootWin = GetWindowRoot();
-    if (rootWin)
-        rootWin->SetPopupNode(aNode); // addref happens here
-
-    return NS_OK;
+    return nullptr;
 }
 
 void
 XULDocument::SetPopupNode(nsINode* aNode)
 {
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aNode));
-    DebugOnly<nsresult> rv = SetPopupNode(node);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    nsCOMPtr<nsPIWindowRoot> rootWin = GetWindowRoot();
+    if (rootWin) {
+        rootWin->SetPopupNode(aNode);
+    }
 }
 
 // Returns the rangeOffset element from the XUL Popup Manager. This is for
 // chrome callers only.
-NS_IMETHODIMP
-XULDocument::GetPopupRangeParent(nsIDOMNode** aRangeParent)
-{
-    NS_ENSURE_ARG_POINTER(aRangeParent);
-    *aRangeParent = nullptr;
-
-    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    if (!pm)
-        return NS_ERROR_FAILURE;
-
-    int32_t offset;
-    pm->GetMouseLocation(aRangeParent, &offset);
-
-    if (*aRangeParent && !nsContentUtils::CanCallerAccess(*aRangeParent)) {
-        NS_RELEASE(*aRangeParent);
-        return NS_ERROR_DOM_SECURITY_ERR;
-    }
-
-    return NS_OK;
-}
-
-already_AddRefed<nsINode>
+nsINode*
 XULDocument::GetPopupRangeParent(ErrorResult& aRv)
 {
-    nsCOMPtr<nsIDOMNode> node;
-    aRv = GetPopupRangeParent(getter_AddRefs(node));
-    nsCOMPtr<nsINode> retval(do_QueryInterface(node));
-    return retval.forget();
-}
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    if (!pm) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return nullptr;
+    }
 
+    nsINode* rangeParent = pm->GetMouseLocationParent();
+    if (rangeParent && !nsContentUtils::CanCallerAccess(rangeParent)) {
+        aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        return nullptr;
+    }
+
+    return rangeParent;
+}
 
 // Returns the rangeOffset element from the XUL Popup Manager. We check the
 // rangeParent to determine if the caller has rights to access to the data.
-NS_IMETHODIMP
-XULDocument::GetPopupRangeOffset(int32_t* aRangeOffset)
-{
-    ErrorResult rv;
-    *aRangeOffset = GetPopupRangeOffset(rv);
-    return rv.StealNSResult();
-}
-
 int32_t
 XULDocument::GetPopupRangeOffset(ErrorResult& aRv)
 {
@@ -1454,56 +1339,27 @@ XULDocument::GetPopupRangeOffset(ErrorResult& aRv)
         return 0;
     }
 
-    int32_t offset;
-    nsCOMPtr<nsIDOMNode> parent;
-    pm->GetMouseLocation(getter_AddRefs(parent), &offset);
-
-    if (parent && !nsContentUtils::CanCallerAccess(parent)) {
+    nsINode* rangeParent = pm->GetMouseLocationParent();
+    if (rangeParent && !nsContentUtils::CanCallerAccess(rangeParent)) {
         aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
         return 0;
     }
-    return offset;
-}
 
-NS_IMETHODIMP
-XULDocument::GetTooltipNode(nsIDOMNode** aNode)
-{
-    *aNode = nullptr;
-
-    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    if (pm) {
-        nsCOMPtr<nsIDOMNode> node = pm->GetLastTriggerTooltipNode(this);
-        if (node && nsContentUtils::CanCallerAccess(node))
-            node.forget(aNode);
-    }
-
-    return NS_OK;
+    return pm->MouseLocationOffset();
 }
 
 already_AddRefed<nsINode>
 XULDocument::GetTooltipNode()
 {
-    nsCOMPtr<nsIDOMNode> node;
-    DebugOnly<nsresult> rv = GetTooltipNode(getter_AddRefs(node));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    nsCOMPtr<nsINode> retval(do_QueryInterface(node));
-    return retval.forget();
-}
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    if (pm) {
+        nsCOMPtr<nsINode> node = pm->GetLastTriggerTooltipNode(this);
+        if (node && nsContentUtils::CanCallerAccess(node)) {
+            return node.forget();
+        }
+    }
 
-NS_IMETHODIMP
-XULDocument::SetTooltipNode(nsIDOMNode* aNode)
-{
-    // do nothing
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-XULDocument::GetCommandDispatcher(nsIDOMXULCommandDispatcher** aTracker)
-{
-    *aTracker = mCommandDispatcher;
-    NS_IF_ADDREF(*aTracker);
-    return NS_OK;
+    return nullptr;
 }
 
 nsresult
@@ -1564,7 +1420,7 @@ XULDocument::AddElementToDocumentPost(Element* aElement)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 XULDocument::AddSubtreeToDocument(nsIContent* aContent)
 {
     NS_ASSERTION(aContent->GetUncomposedDoc() == this, "Element not in doc!");
@@ -1593,7 +1449,7 @@ XULDocument::AddSubtreeToDocument(nsIContent* aContent)
     return AddElementToDocumentPost(aElement);
 }
 
-NS_IMETHODIMP
+nsresult
 XULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
 {
     // From here on we only care about elements.
@@ -2307,14 +2163,18 @@ XULDocument::AddChromeOverlays()
     return rv;
 }
 
-NS_IMETHODIMP
-XULDocument::LoadOverlay(const nsAString& aURL, nsIObserver* aObserver)
+void
+XULDocument::LoadOverlay(const nsAString& aURL, nsIObserver* aObserver,
+                         ErrorResult& aRv)
 {
     nsresult rv;
 
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        aRv.Throw(rv);
+        return;
+    }
 
     if (aObserver) {
         nsIObserver* obs = nullptr;
@@ -2326,15 +2186,21 @@ XULDocument::LoadOverlay(const nsAString& aURL, nsIObserver* aObserver)
         if (obs) {
             // We don't support loading the same overlay twice into the same
             // document - that doesn't make sense anyway.
-            return NS_ERROR_FAILURE;
+            aRv.Throw(NS_ERROR_FAILURE);
+            return;
         }
         mOverlayLoadObservers->Put(uri, aObserver);
     }
     bool shouldReturn, failureFromContent;
     rv = LoadOverlayInternal(uri, true, &shouldReturn, &failureFromContent);
-    if (NS_FAILED(rv) && mOverlayLoadObservers)
-        mOverlayLoadObservers->Remove(uri); // remove the observer if LoadOverlayInternal generated an error
-    return rv;
+    if (NS_FAILED(rv)) {
+        // remove the observer if LoadOverlayInternal generated an error
+        if (mOverlayLoadObservers) {
+            mOverlayLoadObservers->Remove(uri);
+        }
+        aRv.Throw(rv);
+        return;
+    }
 }
 
 nsresult
@@ -4277,15 +4143,6 @@ XULDocument::ThreadSafeGetDocumentLWTheme() const
         }
     }
     return theme;
-}
-
-NS_IMETHODIMP
-XULDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
-{
-    ErrorResult rv;
-    nsCOMPtr<Element> el = do_QueryInterface(aElement);
-    *aResult = GetBoxObjectFor(el, rv).take();
-    return rv.StealNSResult();
 }
 
 JSObject*

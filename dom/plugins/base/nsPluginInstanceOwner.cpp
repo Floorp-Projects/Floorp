@@ -75,8 +75,6 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 #ifdef XP_MACOSX
 #include "ComplexTextInputPanel.h"
-#include "nsIDOMXULDocument.h"
-#include "nsIDOMXULCommandDispatcher.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK
