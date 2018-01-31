@@ -5539,36 +5539,23 @@ nsComputedDOMStyle::DoGetMaxWidth()
   return val.forget();
 }
 
+/**
+ * This function indicates whether we should return "auto" as the
+ * getComputedStyle() result for the (default) "min-width: auto" and
+ * "min-height: auto" CSS values.
+ *
+ * As of this writing, the CSS Sizing draft spec says this "auto" value
+ * *always* computes to itself.  However, for now, we only make it compute to
+ * itself for grid and flex items (the containers where "auto" has special
+ * significance), because those are the only areas where the CSSWG has actually
+ * resolved on this "computes-to-itself" behavior. For elements in other sorts
+ * of containers, this function returns false, which will make us resolve
+ * "auto" to 0.
+ */
 bool
 nsComputedDOMStyle::ShouldHonorMinSizeAutoInAxis(PhysicalAxis aAxis)
 {
-  // A {flex,grid} item's min-{width|height} "auto" value gets special
-  // treatment in getComputedStyle().
-  // https://drafts.csswg.org/css-flexbox-1/#valdef-min-width-auto
-  // https://drafts.csswg.org/css-grid/#min-size-auto
-  // In most cases, "min-{width|height}: auto" is mapped to "0px", unless
-  // we're a flex item (and the min-size is in the flex container's main
-  // axis), or we're a grid item, AND we also have overflow:visible.
-
-  // Note: We only need to bother checking one "overflow" subproperty for
-  // "visible", because a non-"visible" value in either axis would force the
-  // other axis to also be non-"visible" as well.
-
-  if (mOuterFrame) {
-    nsIFrame* containerFrame = mOuterFrame->GetParent();
-    if (containerFrame &&
-        StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE) {
-      if (containerFrame->IsFlexContainerFrame() &&
-          (static_cast<nsFlexContainerFrame*>(containerFrame)->IsHorizontal() ==
-           (aAxis == eAxisHorizontal))) {
-        return true;
-      }
-      if (containerFrame->IsGridContainerFrame()) {
-        return true;
-      }
-    }
-  }
-  return false;
+  return mOuterFrame && mOuterFrame->IsFlexOrGridItem();
 }
 
 already_AddRefed<CSSValue>
