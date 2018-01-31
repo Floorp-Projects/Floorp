@@ -36,8 +36,6 @@ interface nsIDOMTreeWalker;
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDOMImplementation    implementation;
-  // Introduced in DOM Level 2:
-  nsIDOMElement                 getElementById(in DOMString elementId);
   // Introduced in DOM Level 3:
   readonly attribute DOMString       inputEncoding;
   // Introduced in DOM Level 3:
