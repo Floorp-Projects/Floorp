@@ -262,6 +262,13 @@ nsColumnSetFrame::CreateBorderRenderers(nsTArray<nsCSSBorderRenderer>& aBorderRe
     skipSides |= mozilla::eSideBitsTopBottom;
     skipSides |= mozilla::eSideBitsRight;
   }
+  // If we use box-decoration-break: slice (the default), the border
+  // renderers will require clipping if we have continuations (see the
+  // aNeedsClip parameter to ConstructBorderRenderer in nsCSSRendering).
+  //
+  // Since it doesn't matter which box-decoration-break we use since
+  // we're only drawing borders (and not border-images), use 'clone'.
+  border.mBoxDecorationBreak = StyleBoxDecorationBreak::Clone;
 
   ForEachColumnRule([&]
                     (const nsRect& aLineRect)
