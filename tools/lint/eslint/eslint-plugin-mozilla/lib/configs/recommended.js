@@ -70,12 +70,12 @@ module.exports = {
     },
     "files": "**/*.jsm",
     "rules": {
-      "mozilla/mark-exported-symbols-as-used": "error"
-      // "no-unused-vars": ["error", {
-      //   "args": "none",
-      //   "vars": "all",
-      //   "varsIgnorePattern": "^Cc|Ci|Cu|Cr|EXPORTED_SYMBOLS"
-      // }]
+      "mozilla/mark-exported-symbols-as-used": "error",
+      "no-unused-vars": ["error", {
+        "args": "none",
+        "vars": "all",
+        "varsIgnorePattern": "^Cc|Ci|Cu|Cr|EXPORTED_SYMBOLS"
+      }]
     }
   }],
 
