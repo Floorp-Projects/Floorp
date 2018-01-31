@@ -182,58 +182,6 @@ SuspendWorkersForWindow(nsPIDOMWindowInner* aWindow);
 void
 ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
-// A class that can be used with WorkerCrossThreadDispatcher to run a
-// bit of C++ code on the worker thread.
-class WorkerTask
-{
-protected:
-  WorkerTask()
-  { }
-
-  virtual ~WorkerTask()
-  { }
-
-public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WorkerTask)
-
-  // The return value here has the same semantics as the return value
-  // of WorkerRunnable::WorkerRun.
-  virtual bool
-  RunTask(JSContext* aCx) = 0;
-};
-
-class WorkerCrossThreadDispatcher
-{
-   friend class WorkerPrivate;
-
-  // Must be acquired *before* the WorkerPrivate's mutex, when they're both
-  // held.
-  Mutex mMutex;
-  WorkerPrivate* mWorkerPrivate;
-
-private:
-  // Only created by WorkerPrivate.
-  explicit WorkerCrossThreadDispatcher(WorkerPrivate* aWorkerPrivate);
-
-  // Only called by WorkerPrivate.
-  void
-  Forget()
-  {
-    MutexAutoLock lock(mMutex);
-    mWorkerPrivate = nullptr;
-  }
-
-  ~WorkerCrossThreadDispatcher() {}
-
-public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WorkerCrossThreadDispatcher)
-
-  // Generically useful function for running a bit of C++ code on the worker
-  // thread.
-  bool
-  PostTask(WorkerTask* aTask);
-};
-
 // Random unique constant to facilitate JSPrincipal debugging
 const uint32_t kJSPrincipalsDebugToken = 0x7e2df9d2;
 

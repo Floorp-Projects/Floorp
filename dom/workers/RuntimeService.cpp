@@ -1196,38 +1196,6 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-class WorkerTaskRunnable final : public WorkerRunnable
-{
-  RefPtr<WorkerTask> mTask;
-
-public:
-  WorkerTaskRunnable(WorkerPrivate* aWorkerPrivate, WorkerTask* aTask)
-  : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount), mTask(aTask)
-  {
-    MOZ_ASSERT(aTask);
-  }
-
-private:
-  virtual bool
-  PreDispatch(WorkerPrivate* aWorkerPrivate) override
-  {
-    // May be called on any thread!
-    return true;
-  }
-
-  virtual void
-  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
-  {
-    // May be called on any thread!
-  }
-
-  virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
-    return mTask->RunTask(aCx);
-  }
-};
-
 void
 PrefLanguagesChanged(const char* /* aPrefName */, void* /* aClosure */)
 {
@@ -1336,32 +1304,6 @@ ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow)
   if (runtime) {
     runtime->ResumeWorkersForWindow(aWindow);
   }
-}
-
-WorkerCrossThreadDispatcher::WorkerCrossThreadDispatcher(
-                                                  WorkerPrivate* aWorkerPrivate)
-: mMutex("WorkerCrossThreadDispatcher::mMutex"),
-  mWorkerPrivate(aWorkerPrivate)
-{
-  MOZ_ASSERT(aWorkerPrivate);
-}
-
-bool
-WorkerCrossThreadDispatcher::PostTask(WorkerTask* aTask)
-{
-  MOZ_ASSERT(aTask);
-
-  MutexAutoLock lock(mMutex);
-
-  if (!mWorkerPrivate) {
-    NS_WARNING("Posted a task to a WorkerCrossThreadDispatcher that is no "
-               "longer accepting tasks!");
-    return false;
-  }
-
-  RefPtr<WorkerTaskRunnable> runnable =
-    new WorkerTaskRunnable(mWorkerPrivate, aTask);
-  return runnable->Dispatch();
 }
 
 WorkerPrivate*
