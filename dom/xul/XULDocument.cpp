@@ -1315,8 +1315,8 @@ XULDocument::GetHeight(ErrorResult& aRv)
     return height;
 }
 
-JSObject*
-GetScopeObjectOfNode(nsIDOMNode* node)
+static JSObject*
+GetScopeObjectOfNode(nsINode* node)
 {
     MOZ_ASSERT(node, "Must not be called with null.");
 
@@ -1328,11 +1328,8 @@ GetScopeObjectOfNode(nsIDOMNode* node)
     // this, let's do the same check as nsNodeSH::PreCreate does to
     // determine the scope and if it fails let's just return null in
     // XULDocument::GetPopupNode.
-    nsCOMPtr<nsINode> inode = do_QueryInterface(node);
-    MOZ_ASSERT(inode, "How can this happen?");
-
-    nsIDocument* doc = inode->OwnerDoc();
-    MOZ_ASSERT(inode, "This should never happen.");
+    nsIDocument* doc = node->OwnerDoc();
+    MOZ_ASSERT(doc, "This should never happen.");
 
     nsIGlobalObject* global = doc->GetScopeObject();
     return global ? global->GetGlobalJSObject() : nullptr;
@@ -1348,10 +1345,11 @@ XULDocument::GetPopupNode(nsIDOMNode** aNode)
 {
     *aNode = nullptr;
 
-    nsCOMPtr<nsIDOMNode> node;
+    nsCOMPtr<nsINode> node;
     nsCOMPtr<nsPIWindowRoot> rootWin = GetWindowRoot();
-    if (rootWin)
+    if (rootWin) {
         node = rootWin->GetPopupNode(); // addref happens here
+    }
 
     if (!node) {
         nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
@@ -1362,7 +1360,8 @@ XULDocument::GetPopupNode(nsIDOMNode** aNode)
 
     if (node && nsContentUtils::CanCallerAccess(node)
         && GetScopeObjectOfNode(node)) {
-        node.forget(aNode);
+        *aNode = node->AsDOMNode();
+        NS_ADDREF(*aNode);
     }
 
     return NS_OK;
@@ -1381,15 +1380,16 @@ XULDocument::GetPopupNode()
 NS_IMETHODIMP
 XULDocument::SetPopupNode(nsIDOMNode* aNode)
 {
+    nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
     if (aNode) {
         // only allow real node objects
-        nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
         NS_ENSURE_ARG(node);
     }
 
     nsCOMPtr<nsPIWindowRoot> rootWin = GetWindowRoot();
-    if (rootWin)
-        rootWin->SetPopupNode(aNode); // addref happens here
+    if (rootWin) {
+        rootWin->SetPopupNode(node);
+    }
 
     return NS_OK;
 }
@@ -1472,9 +1472,11 @@ XULDocument::GetTooltipNode(nsIDOMNode** aNode)
 
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
-        nsCOMPtr<nsIDOMNode> node = pm->GetLastTriggerTooltipNode(this);
-        if (node && nsContentUtils::CanCallerAccess(node))
-            node.forget(aNode);
+        nsCOMPtr<nsINode> node = pm->GetLastTriggerTooltipNode(this);
+        if (node && nsContentUtils::CanCallerAccess(node)) {
+            *aNode = node->AsDOMNode();
+            NS_ADDREF(*aNode);
+        }
     }
 
     return NS_OK;
