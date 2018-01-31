@@ -18,9 +18,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "MIMEService",
   "@mozilla.org/mime;1", "nsIMIMEService");
 ChromeUtils.defineModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
+ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
 const GREY_10 = "#F9F9FA";
