@@ -15,6 +15,8 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMStringList.h"
+#include "mozilla/dom/WorkerHolder.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "nsAutoPtr.h"
 #include "nsPIDOMWindow.h"
@@ -23,8 +25,6 @@
 #include "nsTHashtable.h"
 #include "ProfilerHelpers.h"
 #include "ReportInternalError.h"
-#include "WorkerHolder.h"
-#include "WorkerPrivate.h"
 
 // Include this last to avoid path problems on Windows.
 #include "ActorsChild.h"

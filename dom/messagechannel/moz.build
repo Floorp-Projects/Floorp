@@ -32,7 +32,6 @@ IPDL_SOURCES += [
 LOCAL_INCLUDES += [
     '../base',
     '../events',
-    '../workers',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

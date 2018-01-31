@@ -10,13 +10,13 @@
 #include "nsPIDOMWindow.h"
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerPrivate.h"
-#include "WorkerPrivate.h"
 
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 #ifdef XP_WIN
 #undef PostMessage

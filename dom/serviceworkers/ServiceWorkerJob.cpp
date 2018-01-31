@@ -6,9 +6,9 @@
 
 #include "ServiceWorkerJob.h"
 
+#include "mozilla/dom/WorkerCommon.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
-#include "WorkerCommon.h"
 
 namespace mozilla {
 namespace dom {

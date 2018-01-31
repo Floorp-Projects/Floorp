@@ -10,7 +10,7 @@
 #include "nsIDOMClassInfo.h"
 #include "Constants.h"
 #include "mozilla/Telemetry.h"
-#include "WorkerPrivate.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 /**
  * We have to use macros here because our leak analysis tool things we are

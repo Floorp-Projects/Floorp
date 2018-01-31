@@ -22,6 +22,9 @@
 #include "mozilla/dom/ProgressEvent.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/URLSearchParams.h"
+#include "mozilla/dom/WorkerScope.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/Telemetry.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
@@ -29,10 +32,6 @@
 #include "nsThreadUtils.h"
 #include "nsVariant.h"
 
-#include "RuntimeService.h"
-#include "WorkerScope.h"
-#include "WorkerPrivate.h"
-#include "WorkerRunnable.h"
 #include "XMLHttpRequestUpload.h"
 
 #include "mozilla/UniquePtr.h"
@@ -1590,7 +1589,7 @@ XMLHttpRequestWorker::Construct(const GlobalObject& aGlobal,
                                 ErrorResult& aRv)
 {
   JSContext* cx = aGlobal.Context();
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
+  WorkerPrivate* workerPrivate = workers::GetWorkerPrivateFromContext(cx);
   MOZ_ASSERT(workerPrivate);
 
   RefPtr<XMLHttpRequestWorker> xhr = new XMLHttpRequestWorker(workerPrivate);

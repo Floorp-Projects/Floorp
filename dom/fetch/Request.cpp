@@ -18,8 +18,6 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/Unused.h"
 
-#include "WorkerPrivate.h"
-
 namespace mozilla {
 namespace dom {
 

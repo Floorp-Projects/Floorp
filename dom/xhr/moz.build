@@ -33,7 +33,6 @@ UNIFIED_SOURCES += [
 LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/file',
-    '/dom/workers',
     '/netwerk/base',
 ]
 

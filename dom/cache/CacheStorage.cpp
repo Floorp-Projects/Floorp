@@ -21,6 +21,7 @@
 #include "mozilla/dom/cache/PCacheChild.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/dom/cache/TypeUtils.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
@@ -30,7 +31,6 @@
 #include "nsIGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsURLParsers.h"
-#include "WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {

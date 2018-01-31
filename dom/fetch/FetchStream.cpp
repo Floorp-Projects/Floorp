@@ -6,11 +6,11 @@
 
 #include "FetchStream.h"
 #include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "nsITransport.h"
 #include "nsIStreamTransportService.h"
 #include "nsProxyRelease.h"
-#include "WorkerCommon.h"
-#include "WorkerPrivate.h"
 
 #define FETCH_STREAM_FLAG 0
 

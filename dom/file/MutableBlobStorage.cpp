@@ -8,6 +8,7 @@
 #include "MemoryBlobImpl.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/ipc/TemporaryIPCBlobChild.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/Preferences.h"
@@ -16,7 +17,6 @@
 #include "nsAnonymousTemporaryFile.h"
 #include "nsNetCID.h"
 #include "nsProxyRelease.h"
-#include "WorkerPrivate.h"
 
 #define BLOB_MEMORY_TEMPORARY_FILE 1048576
 

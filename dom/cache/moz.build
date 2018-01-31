@@ -82,10 +82,6 @@ IPDL_SOURCES += [
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-LOCAL_INCLUDES += [
-    '../workers',
-]
-
 FINAL_LIBRARY = 'xul'
 
 MOCHITEST_MANIFESTS += [

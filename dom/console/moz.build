@@ -42,7 +42,6 @@ EXTRA_COMPONENTS += [
 LOCAL_INCLUDES += [
     '/docshell/base',
     '/dom/base',
-    '/dom/workers',
     '/js/xpconnect/src',
 ]
 

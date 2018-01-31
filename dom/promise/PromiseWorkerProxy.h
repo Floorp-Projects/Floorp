@@ -12,9 +12,8 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/WorkerHolder.h"
+#include "mozilla/dom/WorkerRunnable.h"
 #include "nsProxyRelease.h"
-
-#include "WorkerRunnable.h"
 
 namespace mozilla {
 namespace dom {
