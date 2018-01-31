@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /* import-globals-from ../../../../toolkit/content/globalOverlay.js */
@@ -238,7 +237,7 @@ const nsICacheStorageService = Components.interfaces.nsICacheStorageService;
 const nsICacheStorage = Components.interfaces.nsICacheStorage;
 const cacheService = Components.classes["@mozilla.org/netwerk/cache-storage-service;1"].getService(nsICacheStorageService);
 
-var loadContextInfo = LoadContextInfo.fromLoadContext(
+var loadContextInfo = Services.loadContextInfo.fromLoadContext(
   window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
         .getInterface(Components.interfaces.nsIWebNavigation)
         .QueryInterface(Components.interfaces.nsILoadContext), false);

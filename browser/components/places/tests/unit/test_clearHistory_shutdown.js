@@ -124,7 +124,7 @@ function getFormHistoryCount() {
 
 function storeCache(aURL, aContent) {
   let cache = Services.cache2;
-  let storage = cache.diskCacheStorage(LoadContextInfo.default, false);
+  let storage = cache.diskCacheStorage(Services.loadContextInfo.default, false);
 
   return new Promise(resolve => {
     let storeCacheListener = {
@@ -159,7 +159,7 @@ function storeCache(aURL, aContent) {
 
 function checkCache(aURL) {
   let cache = Services.cache2;
-  let storage = cache.diskCacheStorage(LoadContextInfo.default, false);
+  let storage = cache.diskCacheStorage(Services.loadContextInfo.default, false);
 
   return new Promise(resolve => {
     let checkCacheListener = {

@@ -9,8 +9,6 @@
 
 const TEST_URL = "http://" + TEST_HOST + "/browser/devtools/client/" +
   "styleeditor/test/test_private.html";
-const {LoadContextInfo} =
-  Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
 const cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
   .getService(Ci.nsICacheStorageService);
 
@@ -64,7 +62,7 @@ function checkDiskCacheFor(host) {
     };
     function Visitor() {}
 
-    let storage = cache.diskCacheStorage(LoadContextInfo.default, false);
+    let storage = cache.diskCacheStorage(Services.loadContextInfo.default, false);
     storage.asyncVisitStorage(new Visitor(),
       /* Do walk entries */
       true);

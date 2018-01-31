@@ -1,5 +1,3 @@
-ChromeUtils.import('resource://gre/modules/LoadContextInfo.jsm');
-
 function run_test()
 {
   do_get_profile();
@@ -14,7 +12,7 @@ function run_test()
       payload += String.fromCharCode(i + 65);
   }
 
-  asyncOpenCacheEntry("http://read/", "disk", Ci.nsICacheStorage.OPEN_TRUNCATE, LoadContextInfo.default,
+  asyncOpenCacheEntry("http://read/", "disk", Ci.nsICacheStorage.OPEN_TRUNCATE, Services.loadContextInfo.default,
     new OpenCallback(NEW|WAITFORWRITE, "", payload, function(entry) {
       var is = entry.openInputStream(0);
       pumpReadStream(is, function(read) {

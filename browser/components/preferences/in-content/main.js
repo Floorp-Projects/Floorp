@@ -13,7 +13,6 @@ ChromeUtils.import("resource:///modules/ShellService.jsm");
 ChromeUtils.import("resource:///modules/TransientPrefs.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
-ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm");
 ChromeUtils.defineModuleGetter(this, "CloudStorage",
   "resource://gre/modules/CloudStorage.jsm");
 
