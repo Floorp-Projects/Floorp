@@ -33,14 +33,18 @@ JSObject*
 Allocate(JSContext* cx, gc::AllocKind kind, size_t nDynamicSlots, gc::InitialHeap heap,
          const Class* clasp);
 
+// Internal function used for nursery-allocatable strings.
+template <typename StringAllocT, AllowGC allowGC = CanGC>
+StringAllocT*
+AllocateString(JSContext* cx, gc::InitialHeap heap);
+
 // Use for nursery-allocatable strings. Returns a value cast to the correct
 // type.
 template <typename StringT, AllowGC allowGC = CanGC>
 StringT*
 Allocate(JSContext* cx, gc::InitialHeap heap)
 {
-    MOZ_ASSERT(heap == gc::TenuredHeap);
-    return static_cast<StringT*>(js::Allocate<JSString, allowGC>(cx));
+    return static_cast<StringT*>(js::AllocateString<JSString, allowGC>(cx, heap));
 }
 
 // Specialization for JSFatInlineString that must use a different allocation
@@ -50,16 +54,14 @@ template <>
 inline JSFatInlineString*
 Allocate<JSFatInlineString, CanGC>(JSContext* cx, gc::InitialHeap heap)
 {
-    MOZ_ASSERT(heap == gc::TenuredHeap);
-    return static_cast<JSFatInlineString*>(js::Allocate<JSFatInlineString, CanGC>(cx));
+    return static_cast<JSFatInlineString*>(js::AllocateString<JSFatInlineString, CanGC>(cx, heap));
 }
 
 template <>
 inline JSFatInlineString*
 Allocate<JSFatInlineString, NoGC>(JSContext* cx, gc::InitialHeap heap)
 {
-    MOZ_ASSERT(heap == gc::TenuredHeap);
-    return static_cast<JSFatInlineString*>(js::Allocate<JSFatInlineString, NoGC>(cx));
+    return static_cast<JSFatInlineString*>(js::AllocateString<JSFatInlineString, NoGC>(cx, heap));
 }
 
 } // namespace js
