@@ -337,7 +337,7 @@ add_task(async function test_move_order() {
   let tracker = engine._tracker;
 
   // Make sure the tracker is turned on.
-  tracker.start();
+  Svc.Obs.notify("weave:engine:start-tracking");
   try {
     _("Create two bookmarks");
     let bmk1 = await PlacesUtils.bookmarks.insert({
@@ -374,7 +374,7 @@ add_task(async function test_move_order() {
     Assert.deepEqual(newChildIds, [bmk2.guid, bmk1.guid]);
 
   } finally {
-    await tracker.stop();
+    Svc.Obs.notify("weave:engine:stop-tracking");
     _("Clean up.");
     await store.wipe();
     await engine.finalize();

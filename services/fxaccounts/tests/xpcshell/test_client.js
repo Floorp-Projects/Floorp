@@ -29,6 +29,12 @@ var ACCOUNT_KEYS = {
                   "5051525354555657 58595a5b5c5d5e5f"),
 };
 
+function deferredStop(server) {
+  return new Promise(resolve => {
+    server.stop(resolve);
+  });
+}
+
 add_task(async function test_authenticated_get_request() {
   let message = "{\"msg\": \"Great Success!\"}";
   let credentials = {
@@ -51,7 +57,7 @@ add_task(async function test_authenticated_get_request() {
   let result = await client._request("/foo", method, credentials);
   Assert.equal("Great Success!", result.msg);
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_authenticated_post_request() {
@@ -76,7 +82,7 @@ add_task(async function test_authenticated_post_request() {
   let result = await client._request("/foo", method, credentials, {foo: "bar"});
   Assert.equal("bar", result.foo);
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_500_error() {
@@ -99,7 +105,7 @@ add_task(async function test_500_error() {
     Assert.equal("Internal Server Error", e.message);
   }
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_backoffError() {
@@ -146,7 +152,7 @@ add_task(async function test_backoffError() {
   Assert.equal(client.backoffError, null);
   Assert.equal(result.working, "yes");
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_signUp() {
@@ -231,7 +237,7 @@ add_task(async function test_signUp() {
     Assert.equal(101, expectedError.errno);
   }
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_signIn() {
@@ -318,7 +324,7 @@ add_task(async function test_signIn() {
     Assert.equal(102, expectedError.errno);
   }
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_signOut() {
@@ -354,7 +360,7 @@ add_task(async function test_signOut() {
     Assert.equal(102, expectedError.errno);
   }
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_recoveryEmailStatus() {
@@ -392,7 +398,7 @@ add_task(async function test_recoveryEmailStatus() {
     Assert.equal(102, expectedError.errno);
   }
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_recoveryEmailStatusWithReason() {
@@ -413,7 +419,7 @@ add_task(async function test_recoveryEmailStatusWithReason() {
     reason: "push",
   });
   Assert.equal(result.verified, true);
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_resendVerificationEmail() {
@@ -449,7 +455,7 @@ add_task(async function test_resendVerificationEmail() {
     Assert.equal(102, expectedError.errno);
   }
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_accountKeys() {
@@ -530,7 +536,7 @@ add_task(async function test_accountKeys() {
     Assert.equal(102, expectedError.errno);
   }
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_signCertificate() {
@@ -571,7 +577,7 @@ add_task(async function test_signCertificate() {
     Assert.equal(102, expectedError.errno);
   }
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_accountExists() {
@@ -630,7 +636,7 @@ add_task(async function test_accountExists() {
     Assert.equal(unexpectedError.code, 500);
   }
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_registerDevice() {
@@ -683,7 +689,7 @@ add_task(async function test_registerDevice() {
     Assert.equal(unexpectedError.code, 500);
   }
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_updateDevice() {
@@ -729,7 +735,7 @@ add_task(async function test_updateDevice() {
     Assert.equal(unexpectedError.code, 500);
   }
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_signOutAndDestroyDevice() {
@@ -771,7 +777,7 @@ add_task(async function test_signOutAndDestroyDevice() {
     Assert.equal(unexpectedError.code, 500);
   }
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_getDeviceList() {
@@ -804,7 +810,7 @@ add_task(async function test_getDeviceList() {
     Assert.equal(unexpectedError.code, 500);
   }
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_client_metrics() {
@@ -837,7 +843,7 @@ add_task(async function test_client_metrics() {
     return err.errno == 111;
   });
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 add_task(async function test_email_case() {
@@ -890,7 +896,7 @@ add_task(async function test_email_case() {
   Assert.equal(result.areWeHappy, "yes");
   Assert.equal(attempts, 2);
 
-  await promiseStopServer(server);
+  await deferredStop(server);
 });
 
 // turn formatted test vectors into normal hex strings
