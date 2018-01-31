@@ -40,7 +40,6 @@
 #include "nsIURL.h"
 #include "nsViewManager.h"
 #include "nsIWidget.h"
-#include "nsIXULDocument.h"
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
 #include "mozilla/dom/Event.h"
@@ -1161,7 +1160,7 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                 } else if (aName == nsGkAtoms::lwtheme ||
                          aName == nsGkAtoms::lwthemetextcolor) {
                     // if the lwtheme changed, make sure to reset the document lwtheme cache
-                    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(document);
+                    XULDocument* xuldoc = document->AsXULDocument();
                     if (xuldoc) {
                         xuldoc->ResetDocumentLWTheme();
                         UpdateBrightTitlebarForeground(document);
@@ -1198,7 +1197,7 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                 } else if ((aName == nsGkAtoms::lwtheme ||
                             aName == nsGkAtoms::lwthemetextcolor)) {
                     // if the lwtheme changed, make sure to restyle appropriately
-                    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
+                    XULDocument* xuldoc = doc->AsXULDocument();
                     if (xuldoc) {
                         xuldoc->ResetDocumentLWTheme();
                         UpdateBrightTitlebarForeground(doc);
