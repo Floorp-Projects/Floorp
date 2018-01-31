@@ -43,6 +43,8 @@
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/SystemGroup.h"
@@ -52,8 +54,6 @@
 #include "nsStringStream.h"
 #include "ProfilerHelpers.h"
 #include "ReportInternalError.h"
-#include "WorkerPrivate.h"
-#include "WorkerScope.h"
 
 // Include this last to avoid path problems on Windows.
 #include "ActorsChild.h"

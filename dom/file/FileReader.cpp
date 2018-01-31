@@ -18,6 +18,8 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileReaderBinding.h"
 #include "mozilla/dom/ProgressEvent.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/Encoding.h"
 #include "nsAlgorithm.h"
 #include "nsCycleCollectionParticipant.h"
@@ -27,13 +29,8 @@
 #include "nsNetUtil.h"
 #include "xpcpublic.h"
 
-#include "WorkerPrivate.h"
-#include "WorkerScope.h"
-
 namespace mozilla {
 namespace dom {
-
-using namespace workers;
 
 #define ABORT_STR "abort"
 #define LOAD_STR "load"
@@ -142,7 +139,7 @@ FileReader::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 
   if (!NS_IsMainThread()) {
     JSContext* cx = aGlobal.Context();
-    workerPrivate = GetWorkerPrivateFromContext(cx);
+    workerPrivate = workers::GetWorkerPrivateFromContext(cx);
     MOZ_ASSERT(workerPrivate);
   }
 
@@ -834,7 +831,7 @@ FileReader::DecreaseBusyCounter()
 }
 
 bool
-FileReader::Notify(Status aStatus)
+FileReader::Notify(WorkerStatus aStatus)
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();

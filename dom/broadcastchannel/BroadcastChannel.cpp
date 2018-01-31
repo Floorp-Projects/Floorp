@@ -11,12 +11,12 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "nsContentUtils.h"
-#include "WorkerPrivate.h"
-#include "WorkerRunnable.h"
 
 #include "nsIBFCacheEntry.h"
 #include "nsIDocument.h"
@@ -234,19 +234,19 @@ private:
 
 NS_IMPL_ISUPPORTS(TeardownRunnable, nsICancelableRunnable, nsIRunnable)
 
-class BroadcastChannelWorkerHolder final : public workers::WorkerHolder
+class BroadcastChannelWorkerHolder final : public WorkerHolder
 {
   BroadcastChannel* mChannel;
 
 public:
   explicit BroadcastChannelWorkerHolder(BroadcastChannel* aChannel)
-    : workers::WorkerHolder("BroadcastChannelWorkerHolder")
+    : WorkerHolder("BroadcastChannelWorkerHolder")
     , mChannel(aChannel)
   {
     MOZ_COUNT_CTOR(BroadcastChannelWorkerHolder);
   }
 
-  virtual bool Notify(workers::Status aStatus) override
+  virtual bool Notify(WorkerStatus aStatus) override
   {
     if (aStatus >= Closing) {
       mChannel->Shutdown();

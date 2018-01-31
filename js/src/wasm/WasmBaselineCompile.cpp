@@ -985,7 +985,7 @@ class BaseStackFrame
     CodeOffset stackAddOffset_;
 
     // The stack pointer, cached for brevity.
-    Register sp_;
+    RegisterOrSP sp_;
 
   public:
 
@@ -1177,13 +1177,13 @@ class BaseStackFrame
     // generally tmp0 and tmp1 must be something else.
 
     void allocStack(Register tmp0, Register tmp1, Label* stackOverflowLabel) {
-        stackAddOffset_ = masm.add32ToPtrWithPatch(sp_, tmp0);
-        masm.wasmEmitStackCheck(tmp0, tmp1, stackOverflowLabel);
+        stackAddOffset_ = masm.sub32FromStackPtrWithPatch(tmp0);
+        masm.wasmEmitStackCheck(RegisterOrSP(tmp0), tmp1, stackOverflowLabel);
     }
 
     void patchAllocStack() {
-        masm.patchAdd32ToPtr(stackAddOffset_,
-                             Imm32(-int32_t(maxStackHeight_ - localSize_)));
+        masm.patchSub32FromStackPtr(stackAddOffset_,
+                                    Imm32(int32_t(maxStackHeight_ - localSize_)));
     }
 
     // Very large frames are implausible, probably an attack.

@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/WorkerHolder.h"
 
 #include "nsIAsyncInputStream.h"
 #include "nsIInterfaceRequestor.h"
@@ -16,7 +17,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsWeakReference.h"
-#include "WorkerHolder.h"
 
 #define NS_PROGRESS_EVENT_INTERVAL 50
 
@@ -28,10 +28,7 @@ namespace dom {
 
 class Blob;
 class DOMException;
-
-namespace workers {
 class WorkerPrivate;
-}
 
 extern const uint64_t kUnknownSize;
 
@@ -43,13 +40,13 @@ class FileReader final : public DOMEventTargetHelper,
                          public nsIInputStreamCallback,
                          public nsITimerCallback,
                          public nsINamed,
-                         public workers::WorkerHolder
+                         public WorkerHolder
 {
   friend class FileReaderDecreaseBusyCounter;
 
 public:
   FileReader(nsIGlobalObject* aGlobal,
-             workers::WorkerPrivate* aWorkerPrivate);
+             WorkerPrivate* aWorkerPrivate);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -115,7 +112,7 @@ public:
   }
 
   // WorkerHolder
-  bool Notify(workers::Status) override;
+  bool Notify(WorkerStatus) override;
 
 private:
   virtual ~FileReader();
@@ -201,7 +198,7 @@ private:
   uint64_t mBusyCount;
 
   // Kept alive with a WorkerHolder.
-  workers::WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
 };
 
 } // dom namespace

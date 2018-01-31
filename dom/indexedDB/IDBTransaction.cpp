@@ -15,6 +15,8 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMStringList.h"
+#include "mozilla/dom/WorkerHolder.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "nsAutoPtr.h"
 #include "nsPIDOMWindow.h"
@@ -23,8 +25,6 @@
 #include "nsTHashtable.h"
 #include "ProfilerHelpers.h"
 #include "ReportInternalError.h"
-#include "WorkerHolder.h"
-#include "WorkerPrivate.h"
 
 // Include this last to avoid path problems on Windows.
 #include "ActorsChild.h"
@@ -36,8 +36,7 @@ using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::workers;
 using namespace mozilla::ipc;
 
-class IDBTransaction::WorkerHolder final
-  : public mozilla::dom::workers::WorkerHolder
+class IDBTransaction::WorkerHolder final : public mozilla::dom::WorkerHolder
 {
   WorkerPrivate* mWorkerPrivate;
 
@@ -47,7 +46,7 @@ class IDBTransaction::WorkerHolder final
 
 public:
   WorkerHolder(WorkerPrivate* aWorkerPrivate, IDBTransaction* aTransaction)
-    : mozilla::dom::workers::WorkerHolder("IDBTransaction::WorkerHolder")
+    : mozilla::dom::WorkerHolder("IDBTransaction::WorkerHolder")
     , mWorkerPrivate(aWorkerPrivate)
     , mTransaction(aTransaction)
   {
@@ -68,7 +67,7 @@ public:
 
 private:
   virtual bool
-  Notify(Status aStatus) override;
+  Notify(WorkerStatus aStatus) override;
 };
 
 IDBTransaction::IDBTransaction(IDBDatabase* aDatabase,
@@ -1078,7 +1077,7 @@ IDBTransaction::Run()
 
 bool
 IDBTransaction::
-WorkerHolder::Notify(Status aStatus)
+WorkerHolder::Notify(WorkerStatus aStatus)
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();

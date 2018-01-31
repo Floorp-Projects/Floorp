@@ -26,10 +26,7 @@ class MessagePortChild;
 class MessagePortIdentifier;
 class PostMessageRunnable;
 class SharedMessagePortMessage;
-
-namespace workers {
 class WorkerHolder;
-} // namespace workers
 
 class MessagePort final : public DOMEventTargetHelper
                         , public nsIObserver
@@ -165,7 +162,7 @@ private:
     return mIsKeptAlive;
   }
 
-  nsAutoPtr<workers::WorkerHolder> mWorkerHolder;
+  nsAutoPtr<WorkerHolder> mWorkerHolder;
 
   RefPtr<PostMessageRunnable> mPostMessageRunnable;
 

@@ -52,6 +52,10 @@
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/TypedArray.h"
+#include "mozilla/dom/SharedWorker.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
@@ -67,7 +71,6 @@
 #include "nsQueryObject.h"
 #include "nsTArray.h"
 
-#include "RuntimeService.h"
 #include "ServiceWorker.h"
 #include "ServiceWorkerContainer.h"
 #include "ServiceWorkerInfo.h"
@@ -82,11 +85,6 @@
 #include "ServiceWorkerUnregisterJob.h"
 #include "ServiceWorkerUpdateJob.h"
 #include "ServiceWorkerUpdaterChild.h"
-#include "SharedWorker.h"
-#include "WorkerInlines.h"
-#include "WorkerPrivate.h"
-#include "WorkerRunnable.h"
-#include "WorkerScope.h"
 
 #ifdef PostMessage
 #undef PostMessage

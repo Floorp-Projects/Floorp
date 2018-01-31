@@ -32,7 +32,6 @@ async function mustFailWith(msg, reason, constraint, f) {
   }
 }
 
-var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
 var gUM = c => navigator.mediaDevices.getUserMedia(c);
 
 var validateDevice = ({kind, label, deviceId, groupId}) => {

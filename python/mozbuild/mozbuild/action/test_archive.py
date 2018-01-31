@@ -478,6 +478,16 @@ ARCHIVE_FILES = {
     ],
 }
 
+if buildconfig.substs.get('MOZ_CODE_COVERAGE'):
+    ARCHIVE_FILES['common'].append({
+        'source': buildconfig.topsrcdir,
+        'base': 'python/mozbuild/',
+        'patterns': [
+            'mozpack/**',
+            'mozbuild/codecoverage/**',
+        ],
+    })
+
 
 if buildconfig.substs.get('MOZ_ASAN') and buildconfig.substs.get('CLANG_CL'):
     asan_dll = {

@@ -26,10 +26,6 @@ class nsIGlobalObject;
 namespace mozilla {
 namespace dom {
 
-namespace workers {
-class WorkerPrivate;
-}
-
 class Promise;
 
 class PushSubscription final : public nsISupports

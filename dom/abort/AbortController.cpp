@@ -7,7 +7,7 @@
 #include "AbortController.h"
 #include "AbortSignal.h"
 #include "mozilla/dom/AbortControllerBinding.h"
-#include "WorkerPrivate.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {

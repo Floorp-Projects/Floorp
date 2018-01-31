@@ -31,6 +31,7 @@
 #endif
 #include "jit/AtomicOp.h"
 #include "jit/IonInstrumentation.h"
+#include "jit/IonTypes.h"
 #include "jit/JitCompartment.h"
 #include "jit/VMFunctions.h"
 #include "vm/ProxyObject.h"
@@ -420,6 +421,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     size_t instructionsSize() const {
         return size();
     }
+
+#ifdef JS_HAS_HIDDEN_SP
+    void Push(RegisterOrSP reg);
+#endif
 
     //{{{ check_macroassembler_decl_style
   public:
@@ -838,12 +843,11 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void addFloat32(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
 
-    // Compute dest=src+imm where `src` and `dest` are pointer registers; `src`
-    // may be SP, and `src` may equal `dest`.  `dest` should not normally be SP,
-    // as stack probes are required for large negative immediates.  The offset
-    // returned from add32ToPtrWithPatch() must be passed to patchAdd32ToPtr().
-    inline CodeOffset add32ToPtrWithPatch(Register src, Register dest) PER_ARCH;
-    inline void patchAdd32ToPtr(CodeOffset offset, Imm32 imm) PER_ARCH;
+    // Compute dest=SP-imm where dest is a pointer registers and not SP.  The
+    // offset returned from sub32FromStackPtrWithPatch() must be passed to
+    // patchSub32FromStackPtr().
+    inline CodeOffset sub32FromStackPtrWithPatch(Register dest) PER_ARCH;
+    inline void patchSub32FromStackPtr(CodeOffset offset, Imm32 imm) PER_ARCH;
 
     inline void addDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
     inline void addConstantDouble(double d, FloatRegister dest) DEFINED_ON(x86);
@@ -1565,7 +1569,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void wasmEmitOldTrapOutOfLineCode();
 
     // Perform a stack-overflow test, branching to the given Label on overflow.
-    void wasmEmitStackCheck(Register sp, Register scratch, Label* onOverflow);
+    void wasmEmitStackCheck(RegisterOrSP sp, Register scratch, Label* onOverflow);
 
     void emitPreBarrierFastPath(JSRuntime* rt, MIRType type, Register temp1, Register temp2,
                                 Register temp3, Label* noBarrier);
@@ -2343,23 +2347,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     void convertTypedOrValueToFloat(TypedOrValueRegister src, FloatRegister output, Label* fail) {
         convertTypedOrValueToFloatingPoint(src, output, fail, MIRType::Float32);
     }
-
-    enum IntConversionBehavior {
-        // These two try to convert the input to an int32 using ToNumber and
-        // will fail if the resulting int32 isn't strictly equal to the input.
-        IntConversion_Normal,
-        IntConversion_NegativeZeroCheck,
-        // These two will convert the input to an int32 with loss of precision.
-        IntConversion_Truncate,
-        IntConversion_ClampToUint8,
-    };
-
-    enum IntConversionInputKind {
-        IntConversion_NumbersOnly,
-        IntConversion_NumbersOrBoolsOnly,
-        IntConversion_Any
-    };
-
     //
     // Functions for converting values to int.
     //
@@ -2375,7 +2362,7 @@ class MacroAssembler : public MacroAssemblerSpecific
                            Label* truncateDoubleSlow,
                            Register stringReg, FloatRegister temp, Register output,
                            Label* fail, IntConversionBehavior behavior,
-                           IntConversionInputKind conversion = IntConversion_Any);
+                           IntConversionInputKind conversion = IntConversionInputKind::Any);
     void convertValueToInt(ValueOperand value, FloatRegister temp, Register output, Label* fail,
                            IntConversionBehavior behavior)
     {
@@ -2396,12 +2383,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     void convertValueToInt32(ValueOperand value, MDefinition* input,
                              FloatRegister temp, Register output, Label* fail,
                              bool negativeZeroCheck,
-                             IntConversionInputKind conversion = IntConversion_Any)
+                             IntConversionInputKind conversion = IntConversionInputKind::Any)
     {
         convertValueToInt(value, input, nullptr, nullptr, nullptr, InvalidReg, temp, output, fail,
                           negativeZeroCheck
-                          ? IntConversion_NegativeZeroCheck
-                          : IntConversion_Normal,
+                          ? IntConversionBehavior::NegativeZeroCheck
+                          : IntConversionBehavior::Normal,
                           conversion);
     }
 
@@ -2413,7 +2400,7 @@ class MacroAssembler : public MacroAssemblerSpecific
                               Register stringReg, FloatRegister temp, Register output, Label* fail)
     {
         convertValueToInt(value, input, handleStringEntry, handleStringRejoin, truncateDoubleSlow,
-                          stringReg, temp, output, fail, IntConversion_Truncate);
+                          stringReg, temp, output, fail, IntConversionBehavior::Truncate);
     }
 
     void truncateValueToInt32(ValueOperand value, FloatRegister temp, Register output, Label* fail)
@@ -2427,7 +2414,7 @@ class MacroAssembler : public MacroAssemblerSpecific
                                                         FloatRegister temp, Register output,
                                                         Label* fail)
     {
-        return convertConstantOrRegisterToInt(cx, src, temp, output, fail, IntConversion_Truncate);
+        return convertConstantOrRegisterToInt(cx, src, temp, output, fail, IntConversionBehavior::Truncate);
     }
 
     // Convenience functions for clamping values to uint8.
@@ -2436,7 +2423,7 @@ class MacroAssembler : public MacroAssemblerSpecific
                            Register stringReg, FloatRegister temp, Register output, Label* fail)
     {
         convertValueToInt(value, input, handleStringEntry, handleStringRejoin, nullptr,
-                          stringReg, temp, output, fail, IntConversion_ClampToUint8);
+                          stringReg, temp, output, fail, IntConversionBehavior::ClampToUint8);
     }
 
     MOZ_MUST_USE bool clampConstantOrRegisterToUint8(JSContext* cx,
@@ -2445,7 +2432,7 @@ class MacroAssembler : public MacroAssemblerSpecific
                                                      Label* fail)
     {
         return convertConstantOrRegisterToInt(cx, src, temp, output, fail,
-                                              IntConversion_ClampToUint8);
+                                              IntConversionBehavior::ClampToUint8);
     }
 
   public:

@@ -21,11 +21,8 @@ class nsIInputStream;
 namespace mozilla {
 namespace dom {
 
-namespace workers {
-class WorkerHolder;
-}
-
 class FetchStreamHolder;
+class WorkerHolder;
 
 class FetchStream final : public nsIInputStreamCallback
                         , public nsIObserver
@@ -125,7 +122,7 @@ private:
   nsCOMPtr<nsIInputStream> mOriginalInputStream;
   nsCOMPtr<nsIAsyncInputStream> mInputStream;
 
-  UniquePtr<workers::WorkerHolder> mWorkerHolder;
+  UniquePtr<WorkerHolder> mWorkerHolder;
 };
 
 } // dom namespace

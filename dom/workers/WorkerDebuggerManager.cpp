@@ -14,7 +14,8 @@
 #include "WorkerDebugger.h"
 #include "WorkerPrivate.h"
 
-USING_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -74,8 +75,6 @@ private:
 static StaticRefPtr<WorkerDebuggerManager> gWorkerDebuggerManager;
 
 } /* anonymous namespace */
-
-BEGIN_WORKERS_NAMESPACE
 
 class WorkerDebuggerEnumerator final : public nsISimpleEnumerator
 {
@@ -362,4 +361,5 @@ WorkerDebuggerManager::UnregisterDebuggerMainThread(
   aWorkerPrivate->SetIsDebuggerRegistered(false);
 }
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace

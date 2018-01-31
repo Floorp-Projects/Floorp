@@ -12,8 +12,6 @@
     title: "Renegotiation: replaceTrack followed by adding a second video stream"
   });
 
-  const pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
-
   runNetworkTest(function (options) {
    pushPrefs(['media.peerconnection.video.min_bitrate_estimate', 180*1000]).then(() => {
     const test = new PeerConnectionTest(options);

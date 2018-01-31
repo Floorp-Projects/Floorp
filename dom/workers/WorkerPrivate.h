@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workers_workerprivate_h__
 #define mozilla_dom_workers_workerprivate_h__
 
-#include "WorkerCommon.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsDOMNavigationTiming.h"
@@ -16,9 +16,10 @@
 #include "nsThreadUtils.h"
 #include "nsTObserverArray.h"
 
-#include "Queue.h"
-#include "WorkerHolder.h"
-#include "WorkerLoadInfo.h"
+#include "mozilla/dom/WorkerHolder.h"
+#include "mozilla/dom/WorkerLoadInfo.h"
+#include "mozilla/dom/workerinternals/JSSettings.h"
+#include "mozilla/dom/workerinternals/Queue.h"
 
 #ifdef XP_WIN
 #undef PostMessage
@@ -36,20 +37,14 @@ class Function;
 class MessagePort;
 class MessagePortIdentifier;
 class PerformanceStorage;
-class WorkerDebuggerGlobalScope;
-class WorkerErrorReport;
-class WorkerGlobalScope;
-struct WorkerOptions;
-
-} // dom namespace
-} // mozilla namespace
-
-BEGIN_WORKERS_NAMESPACE
-
 class SharedWorker;
 class WorkerControlRunnable;
 class WorkerDebugger;
+class WorkerDebuggerGlobalScope;
+class WorkerErrorReport;
 class WorkerEventTarget;
+class WorkerGlobalScope;
+struct WorkerOptions;
 class WorkerRunnable;
 class WorkerThread;
 
@@ -150,7 +145,7 @@ private:
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
 
   // Protected by mMutex.
-  JSSettings mJSSettings;
+  workerinternals::JSSettings mJSSettings;
 
   // Only touched on the parent thread (currently this is always the main
   // thread as SharedWorkers are always top-level).
@@ -163,7 +158,7 @@ private:
   // SharedWorkers may have multiple windows paused, so this must be
   // a count instead of just a boolean.
   uint32_t mParentWindowPausedDepth;
-  Status mParentStatus;
+  WorkerStatus mParentStatus;
   bool mParentFrozen;
   bool mIsChromeWorker;
   bool mMainThreadObjectsForgotten;
@@ -203,7 +198,7 @@ private:
   }
 
   bool
-  NotifyPrivate(Status aStatus);
+  NotifyPrivate(WorkerStatus aStatus);
 
   bool
   TerminatePrivate()
@@ -262,7 +257,7 @@ public:
 
   // Called on the parent thread.
   bool
-  Notify(Status aStatus)
+  Notify(WorkerStatus aStatus)
   {
     return NotifyPrivate(aStatus);
   }
@@ -394,7 +389,7 @@ public:
     return mParentStatus < Terminating;
     }
 
-  Status
+  WorkerStatus
   ParentStatus() const
   {
     mMutex.AssertCurrentThreadOwns();
@@ -404,7 +399,7 @@ public:
   nsIScriptContext*
   GetScriptContext() const
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mScriptContext;
   }
 
@@ -453,7 +448,7 @@ public:
   nsIURI*
   GetBaseURI() const
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mBaseURI;
   }
 
@@ -463,7 +458,7 @@ public:
   nsIURI*
   GetResolvedScriptURI() const
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mResolvedScriptURI;
   }
 
@@ -471,7 +466,7 @@ public:
   ServiceWorkerCacheName() const
   {
     MOZ_DIAGNOSTIC_ASSERT(IsServiceWorker());
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mServiceWorkerCacheName;
   }
 
@@ -506,7 +501,7 @@ public:
   void
   SetChannelInfo(const ChannelInfo& aChannelInfo)
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     MOZ_ASSERT(!mLoadInfo.mChannelInfo.IsInitialized());
     MOZ_ASSERT(aChannelInfo.IsInitialized());
     mLoadInfo.mChannelInfo = aChannelInfo;
@@ -567,14 +562,14 @@ public:
   nsIPrincipal*
   GetPrincipal() const
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mPrincipal;
   }
 
   nsIPrincipal*
   GetLoadingPrincipal() const
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mLoadingPrincipal;
   }
 
@@ -586,7 +581,7 @@ public:
   nsILoadGroup*
   GetLoadGroup() const
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mLoadGroup;
   }
 
@@ -628,7 +623,7 @@ public:
   already_AddRefed<nsIChannel>
   ForgetWorkerChannel()
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mChannel.forget();
   }
 
@@ -637,14 +632,14 @@ public:
   nsPIDOMWindowInner*
   GetWindow()
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mWindow;
   }
 
   nsIContentSecurityPolicy*
   GetCSP() const
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
     return mLoadInfo.mCSP;
   }
 
@@ -713,7 +708,7 @@ public:
   }
 
   void
-  CopyJSSettings(JSSettings& aSettings)
+  CopyJSSettings(workerinternals::JSSettings& aSettings)
   {
     mozilla::MutexAutoLock lock(mMutex);
     aSettings = mJSSettings;
@@ -873,7 +868,7 @@ public:
 
 class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 {
-  friend class WorkerHolder;
+  friend class mozilla::dom::WorkerHolder;
   friend class WorkerPrivateParent<WorkerPrivate>;
   typedef WorkerPrivateParent<WorkerPrivate> ParentType;
   friend class AutoSyncLoopHolder;
@@ -883,7 +878,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   class MemoryReporter;
   friend class MemoryReporter;
 
-  friend class WorkerThread;
+  friend class mozilla::dom::WorkerThread;
 
   enum GCTimerMode
   {
@@ -895,13 +890,11 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   bool mDebuggerRegistered;
   WorkerDebugger* mDebugger;
 
-  Queue<WorkerControlRunnable*, 4> mControlQueue;
-  Queue<WorkerRunnable*, 4> mDebuggerQueue;
+  workerinternals::Queue<WorkerControlRunnable*, 4> mControlQueue;
+  workerinternals::Queue<WorkerRunnable*, 4> mDebuggerQueue;
 
   // Touched on multiple threads, protected with mMutex.
   JSContext* mJSContext;
-  RefPtr<WorkerCrossThreadDispatcher> mCrossThreadDispatcher;
-  nsTArray<nsCOMPtr<nsIRunnable>> mUndispatchedRunnablesForSyncLoop;
   RefPtr<WorkerThread> mThread;
   PRThread* mPRThread;
 
@@ -951,7 +944,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   TimeStamp mKillTime;
   uint32_t mErrorHandlerRecursionCount;
   uint32_t mNextTimeoutId;
-  Status mStatus;
+  WorkerStatus mStatus;
   UniquePtr<ClientSource> mClientSource;
   bool mFrozen;
   bool mTimerRunning;
@@ -1010,7 +1003,7 @@ public:
   bool
   IsDebuggerRegistered()
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
     // No need to lock here since this is only ever modified by the same thread.
     return mDebuggerRegistered;
@@ -1019,7 +1012,7 @@ public:
   void
   SetIsDebuggerRegistered(bool aDebuggerRegistered)
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
     MutexAutoLock lock(mMutex);
 
@@ -1046,7 +1039,7 @@ public:
   WorkerDebugger*
   Debugger() const
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
     MOZ_ASSERT(mDebugger);
     return mDebugger;
@@ -1055,7 +1048,7 @@ public:
   void
   SetDebugger(WorkerDebugger* aDebugger)
   {
-    AssertIsOnMainThread();
+    workers::AssertIsOnMainThread();
 
     MOZ_ASSERT(mDebugger != aDebugger);
     mDebugger = aDebugger;
@@ -1139,7 +1132,7 @@ public:
                         const nsAString& aMessage);
 
   bool
-  NotifyInternal(JSContext* aCx, Status aStatus);
+  NotifyInternal(JSContext* aCx, WorkerStatus aStatus);
 
   void
   ReportError(JSContext* aCx, JS::ConstUTF8CharsZ aToStringResult,
@@ -1247,9 +1240,6 @@ public:
 #else
   { }
 #endif
-
-  WorkerCrossThreadDispatcher*
-  GetCrossThreadDispatcher();
 
   // This may block!
   void
@@ -1407,7 +1397,7 @@ private:
   {
     AssertIsOnWorkerThread();
 
-    Status status;
+    WorkerStatus status;
     {
       MutexAutoLock lock(mMutex);
       status = mStatus;
@@ -1463,7 +1453,7 @@ private:
   // operation will fail and nullptr will be returned. See WorkerHolder.h for
   // more information about the correct value to use.
   already_AddRefed<nsIEventTarget>
-  CreateNewSyncLoop(Status aFailStatus);
+  CreateNewSyncLoop(WorkerStatus aFailStatus);
 
   bool
   RunCurrentSyncLoop();
@@ -1481,13 +1471,13 @@ private:
   ShutdownGCTimers();
 
   bool
-  AddHolder(WorkerHolder* aHolder, Status aFailStatus);
+  AddHolder(WorkerHolder* aHolder, WorkerStatus aFailStatus);
 
   void
   RemoveHolder(WorkerHolder* aHolder);
 
   void
-  NotifyHolders(JSContext* aCx, Status aStatus);
+  NotifyHolders(JSContext* aCx, WorkerStatus aStatus);
 
   bool
   HasActiveHolders()
@@ -1516,21 +1506,6 @@ private:
   ChromeWorkerPrivate& operator =(const ChromeWorkerPrivate& aRHS) = delete;
 };
 
-WorkerPrivate*
-GetWorkerPrivateFromContext(JSContext* aCx);
-
-WorkerPrivate*
-GetCurrentThreadWorkerPrivate();
-
-bool
-IsCurrentThreadRunningChromeWorker();
-
-JSContext*
-GetCurrentThreadJSContext();
-
-JSObject*
-GetCurrentThreadWorkerGlobal();
-
 class AutoSyncLoopHolder
 {
   WorkerPrivate* mWorkerPrivate;
@@ -1540,7 +1515,7 @@ class AutoSyncLoopHolder
 public:
   // See CreateNewSyncLoop() for more information about the correct value to use
   // for aFailStatus.
-  AutoSyncLoopHolder(WorkerPrivate* aWorkerPrivate, Status aFailStatus)
+  AutoSyncLoopHolder(WorkerPrivate* aWorkerPrivate, WorkerStatus aFailStatus)
   : mWorkerPrivate(aWorkerPrivate)
   , mTarget(aWorkerPrivate->CreateNewSyncLoop(aFailStatus))
   , mIndex(aWorkerPrivate->mSyncLoopStack.Length() - 1)
@@ -1576,6 +1551,7 @@ public:
   }
 };
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
 
 #endif /* mozilla_dom_workers_workerprivate_h__ */

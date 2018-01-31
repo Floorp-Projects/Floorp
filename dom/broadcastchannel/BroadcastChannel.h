@@ -24,12 +24,9 @@ class PrincipalInfo;
 
 namespace dom {
 
-namespace workers {
-class WorkerHolder;
-} // namespace workers
-
 class BroadcastChannelChild;
 class BroadcastChannelMessage;
+class WorkerHolder;
 
 class BroadcastChannel final
   : public DOMEventTargetHelper
@@ -86,7 +83,7 @@ private:
 
   RefPtr<BroadcastChannelChild> mActor;
 
-  nsAutoPtr<workers::WorkerHolder> mWorkerHolder;
+  nsAutoPtr<WorkerHolder> mWorkerHolder;
 
   nsString mChannel;
 
