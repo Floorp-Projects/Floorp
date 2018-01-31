@@ -13,8 +13,6 @@ interface nsIBoxObject;
 [uuid(7790d4c3-e8f0-4e29-9887-d683ed2b2a44)]
 interface nsIDOMXULDocument : nsIDOMDocument
 {
-  nsIBoxObject getBoxObjectFor(in nsIDOMElement elt);
-
   /**
    * Loads a XUL overlay and merges it with the current document, notifying an
    * observer when the merge is complete. 
