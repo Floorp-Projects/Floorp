@@ -187,7 +187,8 @@ class MediaEngineDefault : public MediaEngine
 public:
   MediaEngineDefault() = default;
 
-  void EnumerateDevices(dom::MediaSourceEnum,
+  void EnumerateDevices(uint64_t aWindowId,
+                        dom::MediaSourceEnum,
                         nsTArray<RefPtr<MediaEngineSource>>*) override;
   void Shutdown() override;
 

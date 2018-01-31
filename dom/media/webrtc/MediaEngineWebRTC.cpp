@@ -129,7 +129,8 @@ MediaEngineWebRTC::SetFakeDeviceChangeEvents()
 }
 
 void
-MediaEngineWebRTC::EnumerateDevices(dom::MediaSourceEnum aMediaSource,
+MediaEngineWebRTC::EnumerateDevices(uint64_t aWindowId,
+                                    dom::MediaSourceEnum aMediaSource,
                                     nsTArray<RefPtr<MediaEngineSource> >* aSources)
 {
   if (MediaEngineSource::IsVideo(aMediaSource)) {
