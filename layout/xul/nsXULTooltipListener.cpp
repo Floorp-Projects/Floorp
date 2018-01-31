@@ -103,12 +103,12 @@ nsXULTooltipListener::MouseOut(nsIDOMEvent* aEvent)
   // hide the tooltip
   if (currentTooltip) {
     // which node did the mouse leave?
-    nsCOMPtr<nsIDOMNode> targetNode = do_QueryInterface(
+    nsCOMPtr<nsINode> targetNode = do_QueryInterface(
       aEvent->InternalDOMEvent()->GetTarget());
 
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
-      nsCOMPtr<nsIDOMNode> tooltipNode =
+      nsCOMPtr<nsINode> tooltipNode =
         pm->GetLastTriggerTooltipNode(currentTooltip->GetUncomposedDoc());
       if (tooltipNode == targetNode) {
         // if the target node is the current tooltip target node, the mouse
