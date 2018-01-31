@@ -2000,7 +2000,8 @@ or run without that action (ie: --no-{action})"
             yield filter_alert({
                 "name": "installer size",
                 "value": installer_size,
-                "alertThreshold": 1.0,
+                "alertChangeType": "absolute",
+                "alertThreshold": (100 * 1024),
                 "subtests": size_measurements
             })
 
