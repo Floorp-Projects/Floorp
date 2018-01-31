@@ -100,7 +100,17 @@ public:
      * Notify the XUL document that a subtree has been removed
      */
     nsresult RemoveSubtreeFromDocument(nsIContent* aContent);
-    NS_IMETHOD OnPrototypeLoadDone(bool aResumeWalk) override;
+    /**
+     * This is invoked whenever the prototype for this document is loaded
+     * and should be walked, regardless of whether the XUL cache is
+     * disabled, whether the protototype was loaded, whether the
+     * prototype was loaded from the cache or created by parsing the
+     * actual XUL source, etc.
+     *
+     * @param aResumeWalk whether this should also call ResumeWalk().
+     * Sometimes the caller of OnPrototypeLoadDone resumes the walk itself
+     */
+    nsresult OnPrototypeLoadDone(bool aResumeWalk);
     bool OnDocumentParserError() override;
 
     // nsINode interface overrides
