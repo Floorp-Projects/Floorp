@@ -54,41 +54,41 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
     var internalProps = std_Object_create(null);
 
     // Compute effective locale.
-    // Step 8.
     var DateTimeFormat = dateTimeFormatInternalProperties;
 
-    // Step 9.
+    // Step 10.
     var localeData = DateTimeFormat.localeData;
 
-    // Step 10.
+    // Step 11.
     var r = ResolveLocale(callFunction(DateTimeFormat.availableLocales, DateTimeFormat),
                           lazyDateTimeFormatData.requestedLocales,
                           lazyDateTimeFormatData.localeOpt,
                           DateTimeFormat.relevantExtensionKeys,
                           localeData);
 
-    // Steps 11-13.
+    // Steps 12-13, 15.
     internalProps.locale = r.locale;
     internalProps.calendar = r.ca;
     internalProps.numberingSystem = r.nu;
 
     // Compute formatting options.
-    // Step 14.
+    // Step 16.
     var dataLocale = r.dataLocale;
 
-    // Steps 15-17.
+    // Step 20.
     internalProps.timeZone = lazyDateTimeFormatData.timeZone;
 
-    // Step 18.
+    // Step 21.
     var formatOpt = lazyDateTimeFormatData.formatOpt;
 
+    // Step 16.
     // Copy the hourCycle setting, if present, to the format options. But
     // only do this if no hour12 option is present, because the latter takes
     // precedence over hourCycle.
     if (r.hc !== null && formatOpt.hour12 === undefined)
         formatOpt.hourCycle = r.hc;
 
-    // Steps 27-28, more or less - see comment after this function.
+    // Steps 26-30, more or less - see comment after this function.
     var pattern;
     if (lazyDateTimeFormatData.mozExtensions) {
         if (lazyDateTimeFormatData.patternOption !== undefined) {
@@ -115,10 +115,9 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
     if (formatOpt.hourCycle !== undefined)
         pattern = replaceHourRepresentation(pattern, formatOpt.hourCycle);
 
-    // Step 29.
+    // Step 31.
     internalProps.pattern = pattern;
 
-    // Step 30.
     internalProps.boundFormat = undefined;
 
     // The caller is responsible for associating |internalProps| with the right
@@ -356,29 +355,42 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
     localeOpt.localeMatcher = localeMatcher;
 
     // Step 6.
+    var hr12  = GetOption(options, "hour12", "boolean", undefined, undefined);
+
+    // Step 7.
     var hc = GetOption(options, "hourCycle", "string", ["h11", "h12", "h23", "h24"], undefined);
+
+    // Step 8.
+    if (hr12 !== undefined) {
+        // The "hourCycle" option is ignored if "hr12" is also present.
+        hc = null;
+    }
+
+    // Step 9.
     localeOpt.hc = hc;
 
-    // Steps 15-18.
+    // Steps 10-16 (see resolveDateTimeFormatInternals).
+
+    // Steps 17-20.
     var tz = options.timeZone;
     if (tz !== undefined) {
-        // Step 15.a.
+        // Step 18.a.
         tz = ToString(tz);
 
-        // Step 15.b.
+        // Step 18.b.
         var timeZone = intl_IsValidTimeZoneName(tz);
         if (timeZone === null)
             ThrowRangeError(JSMSG_INVALID_TIME_ZONE, tz);
 
-        // Step 15.c.
+        // Step 18.c.
         tz = CanonicalizeTimeZoneName(timeZone);
     } else {
-        // Step 16.
+        // Step 19.
         tz = DefaultTimeZone();
     }
     lazyDateTimeFormatData.timeZone = tz;
 
-    // Step 19.
+    // Step 21.
     var formatOpt = new Record();
     lazyDateTimeFormatData.formatOpt = formatOpt;
 
@@ -394,8 +406,8 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
         lazyDateTimeFormatData.timeStyle = timeStyle;
     }
 
-    // Step 20.
-    // 12.1, Table 4: Components of date and time formats.
+    // Step 22.
+    // 12.1, Table 5: Components of date and time formats.
     formatOpt.weekday = GetOption(options, "weekday", "string", ["narrow", "short", "long"],
                                   undefined);
     formatOpt.era = GetOption(options, "era", "string", ["narrow", "short", "long"], undefined);
@@ -409,9 +421,9 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
     formatOpt.timeZoneName = GetOption(options, "timeZoneName", "string", ["short", "long"],
                                        undefined);
 
-    // Steps 21-22 provided by ICU - see comment after this function.
+    // Steps 23-24 provided by ICU - see comment after this function.
 
-    // Step 23.
+    // Step 25.
     //
     // For some reason (ICU not exposing enough interface?) we drop the
     // requested format matcher on the floor after this.  In any case, even if
@@ -422,21 +434,20 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
                   "best fit");
     void formatMatcher;
 
-    // Steps 24-26 provided by ICU, more or less - see comment after this function.
+    // Steps 26-28 provided by ICU, more or less - see comment after this function.
 
-    // Step 27.
-    var hr12  = GetOption(options, "hour12", "boolean", undefined, undefined);
-
+    // Steps 29-30.
     // Pass hr12 on to ICU.
     if (hr12 !== undefined)
         formatOpt.hour12 = hr12;
 
-    // Step 31.
+    // Step 32.
     //
     // We've done everything that must be done now: mark the lazy data as fully
     // computed and install it.
     initializeIntlObject(dateTimeFormat, "DateTimeFormat", lazyDateTimeFormatData);
 
+    // 12.2.1, steps 4-5.
     if (dateTimeFormat !== thisValue && IsObject(thisValue) &&
         thisValue instanceof GetDateTimeFormatConstructor())
     {
@@ -446,6 +457,7 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
         return thisValue;
     }
 
+    // 12.2.1, step 6.
     return dateTimeFormat;
 }
 
