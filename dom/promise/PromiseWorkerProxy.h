@@ -20,10 +20,7 @@ namespace mozilla {
 namespace dom {
 
 class Promise;
-
-namespace workers {
 class WorkerPrivate;
-} // namespace workers
 
 // A proxy to (eventually) mirror a resolved/rejected Promise's result from the
 // main thread to a Promise on the worker thread.
@@ -134,14 +131,14 @@ public:
   };
 
   static already_AddRefed<PromiseWorkerProxy>
-  Create(workers::WorkerPrivate* aWorkerPrivate,
+  Create(WorkerPrivate* aWorkerPrivate,
          Promise* aWorkerPromise,
          const PromiseWorkerProxyStructuredCloneCallbacks* aCallbacks = nullptr);
 
   // Main thread callers must hold Lock() and check CleanUp() before calling this.
   // Worker thread callers, this will assert that the proxy has not been cleaned
   // up.
-  workers::WorkerPrivate* GetWorkerPrivate() const;
+  WorkerPrivate* GetWorkerPrivate() const;
 
   // This should only be used within WorkerRunnable::WorkerRun() running on the
   // worker thread! Do not call this after calling CleanUp().
@@ -183,7 +180,7 @@ protected:
                                 JS::Handle<JS::Value> aValue) override;
 
 private:
-  PromiseWorkerProxy(workers::WorkerPrivate* aWorkerPrivate,
+  PromiseWorkerProxy(WorkerPrivate* aWorkerPrivate,
                      Promise* aWorkerPromise,
                      const PromiseWorkerProxyStructuredCloneCallbacks* aCallbacks = nullptr);
 
@@ -203,7 +200,7 @@ private:
                    RunCallbackFunc aFunc);
 
   // Any thread with appropriate checks.
-  workers::WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
 
   // Worker thread only.
   RefPtr<Promise> mWorkerPromise;

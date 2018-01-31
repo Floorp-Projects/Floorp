@@ -38,7 +38,6 @@ namespace cache {
 
 using mozilla::Unused;
 using mozilla::ErrorResult;
-using mozilla::dom::workers::WorkerPrivate;
 using mozilla::ipc::BackgroundChild;
 using mozilla::ipc::PBackgroundChild;
 using mozilla::ipc::IProtocol;

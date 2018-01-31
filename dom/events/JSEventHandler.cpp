@@ -126,7 +126,7 @@ JSEventHandler::HandleEvent(nsIDOMEvent* aEvent)
       nsContentUtils::ObjectPrincipal(
         GetTypedEventHandler().Ptr()->CallbackPreserveColor()) ==
         nsContentUtils::GetSystemPrincipal() :
-      mozilla::dom::workers::IsCurrentThreadRunningChromeWorker();
+      mozilla::dom::IsCurrentThreadRunningChromeWorker();
 
   if (mTypedHandler.Type() == TypedEventHandler::eOnError) {
     MOZ_ASSERT_IF(mEventName, mEventName == nsGkAtoms::onerror);

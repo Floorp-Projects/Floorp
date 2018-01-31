@@ -16,15 +16,12 @@ namespace mozilla {
 class ErrorResult;
 
 namespace dom {
-namespace workers {
-class WorkerPrivate;
-} // namespace workers
-
 class Promise;
 struct PromiseDebuggingStateHolder;
 class GlobalObject;
 class UncaughtRejectionObserver;
 class FlushRejections;
+class WorkerPrivate;
 
 void TriggerFlushRejections();
 
@@ -70,7 +67,7 @@ public:
 protected:
   static void FlushUncaughtRejectionsInternal();
   friend class FlushRejections;
-  friend class mozilla::dom::workers::WorkerPrivate;
+  friend class mozilla::dom::WorkerPrivate;
 private:
   // Identity of the process.
   // This property is:

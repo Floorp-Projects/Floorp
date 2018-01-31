@@ -17,8 +17,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 MessageEventRunnable::MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
                                            TargetAndBusyBehavior aBehavior)
   : WorkerRunnable(aWorkerPrivate, aBehavior)

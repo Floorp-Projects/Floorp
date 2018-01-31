@@ -20,7 +20,7 @@ using net::nsStandardURL;
 
 namespace dom {
 
-using namespace workers;
+using workers::AssertIsOnMainThread;
 
 // Proxy class to forward all the requests to a URLMainThread object.
 class URLWorker::URLProxy final

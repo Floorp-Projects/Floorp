@@ -13,9 +13,7 @@
 
 namespace mozilla {
 
-namespace workers {
 class WorkerPrivate;
-} // namespace workers
 
 namespace dom {
 namespace cache {
@@ -26,7 +24,7 @@ class CacheWorkerHolder final : public WorkerHolder
 {
 public:
   static already_AddRefed<CacheWorkerHolder>
-  Create(workers::WorkerPrivate* aWorkerPrivate,
+  Create(WorkerPrivate* aWorkerPrivate,
          Behavior aBehavior);
 
   static already_AddRefed<CacheWorkerHolder>

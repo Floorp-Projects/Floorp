@@ -23,6 +23,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 EXPORTS.mozilla.dom.workers += [
+    'Queue.h',
     'RuntimeService.h',
     'WorkerCommon.h',
 ]

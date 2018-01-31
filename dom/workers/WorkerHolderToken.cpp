@@ -11,8 +11,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 // static
 already_AddRefed<WorkerHolderToken>
 WorkerHolderToken::Create(WorkerPrivate* aWorkerPrivate,

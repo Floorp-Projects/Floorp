@@ -20,10 +20,7 @@ namespace dom {
 
 class Promise;
 class WorkerHolder;
-
-namespace workers {
 class WorkerPrivate;
-}
 
 template <class Derived> class FetchBody;
 
@@ -62,7 +59,7 @@ public:
   void
   ShutDownMainThreadConsuming();
 
-  workers::WorkerPrivate*
+  WorkerPrivate*
   GetWorkerPrivate() const
   {
     return mWorkerPrivate;
@@ -81,7 +78,7 @@ public:
 private:
   FetchBodyConsumer(nsIEventTarget* aMainThreadEventTarget,
                     nsIGlobalObject* aGlobalObject,
-                    workers::WorkerPrivate* aWorkerPrivate,
+                    WorkerPrivate* aWorkerPrivate,
                     FetchBody<Derived>* aBody,
                     nsIInputStream* aBodyStream,
                     Promise* aPromise,
@@ -117,7 +114,7 @@ private:
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
   // Always set whenever the FetchBodyConsumer is created on the worker thread.
-  workers::WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
 
   // Touched on the main-thread only.
   nsCOMPtr<nsIInputStreamPump> mConsumeBodyPump;

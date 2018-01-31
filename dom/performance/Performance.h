@@ -26,10 +26,7 @@ class PerformanceObserver;
 class PerformanceService;
 class PerformanceStorage;
 class PerformanceTiming;
-
-namespace workers {
 class WorkerPrivate;
-}
 
 // Base class for main-thread and worker Performance API
 class Performance : public DOMEventTargetHelper
@@ -47,7 +44,7 @@ public:
                       nsITimedChannel* aChannel);
 
   static already_AddRefed<Performance>
-  CreateForWorker(workers::WorkerPrivate* aWorkerPrivate);
+  CreateForWorker(WorkerPrivate* aWorkerPrivate);
 
   JSObject* WrapObject(JSContext *cx,
                        JS::Handle<JSObject*> aGivenProto) override;

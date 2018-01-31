@@ -40,9 +40,7 @@ public:
   void AssignErrorNote(JSErrorNotes::Note* aNote);
 };
 
-namespace workers {
 class WorkerPrivate;
-}
 
 class WorkerErrorReport : public WorkerErrorBase
 {
@@ -65,7 +63,7 @@ public:
   // aTarget is the worker object that we are going to fire an error at
   // (if any).
   static void
-  ReportError(JSContext* aCx, workers::WorkerPrivate* aWorkerPrivate,
+  ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
               bool aFireAtScope, DOMEventTargetHelper* aTarget,
               const WorkerErrorReport& aReport, uint64_t aInnerWindowId,
               JS::Handle<JS::Value> aException = JS::NullHandleValue);

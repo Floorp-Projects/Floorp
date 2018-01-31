@@ -34,9 +34,7 @@ class PrincipalInfo;
 
 namespace dom {
 
-namespace workers {
 class WorkerPrivate;
-}
 
 struct WorkerLoadInfo
 {
@@ -140,10 +138,10 @@ struct WorkerLoadInfo
 #endif
 
   bool
-  ProxyReleaseMainThreadObjects(workers::WorkerPrivate* aWorkerPrivate);
+  ProxyReleaseMainThreadObjects(WorkerPrivate* aWorkerPrivate);
 
   bool
-  ProxyReleaseMainThreadObjects(workers::WorkerPrivate* aWorkerPrivate,
+  ProxyReleaseMainThreadObjects(WorkerPrivate* aWorkerPrivate,
                                 nsCOMPtr<nsILoadGroup>& aLoadGroupToCancel);
 };
 

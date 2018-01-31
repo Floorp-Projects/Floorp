@@ -12,9 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-namespace workers {
 class WorkerPrivate;
-}
 
 /**
  * Use this chart to help figure out behavior during each of the closing
@@ -86,8 +84,7 @@ public:
                         Behavior aBehavior = PreventIdleShutdownStart);
   virtual ~WorkerHolder();
 
-  bool HoldWorker(workers::WorkerPrivate* aWorkerPrivate,
-                  WorkerStatus aFailStatus);
+  bool HoldWorker(WorkerPrivate* aWorkerPrivate, WorkerStatus aFailStatus);
   void ReleaseWorker();
 
   virtual bool Notify(WorkerStatus aStatus) = 0;
@@ -103,7 +100,7 @@ public:
 protected:
   void ReleaseWorkerInternal();
 
-  workers::WorkerPrivate* MOZ_NON_OWNING_REF mWorkerPrivate;
+  WorkerPrivate* MOZ_NON_OWNING_REF mWorkerPrivate;
 
 private:
   void AssertIsOwningThread() const;

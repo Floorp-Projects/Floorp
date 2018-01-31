@@ -9,8 +9,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 namespace {
 
 class WrappedControlRunnable final : public WorkerControlRunnable

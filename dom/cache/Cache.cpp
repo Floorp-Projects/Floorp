@@ -27,8 +27,6 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
-using mozilla::dom::workers::WorkerPrivate;
 using mozilla::ipc::PBackgroundChild;
 
 namespace {

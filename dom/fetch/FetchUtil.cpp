@@ -408,7 +408,7 @@ public:
   static bool Start(nsIInputStream* aStream,
                     JS::StreamConsumer* aConsumer,
                     nsIGlobalObject* aGlobal,
-                    workers::WorkerPrivate* aMaybeWorker)
+                    WorkerPrivate* aMaybeWorker)
   {
     nsresult rv;
 
@@ -531,7 +531,7 @@ FetchUtil::StreamResponseToJS(JSContext* aCx,
                               JS::HandleObject aObj,
                               JS::MimeType aMimeType,
                               JS::StreamConsumer* aConsumer,
-                              workers::WorkerPrivate* aMaybeWorker)
+                              WorkerPrivate* aMaybeWorker)
 {
   MOZ_ASSERT(!aMaybeWorker == NS_IsMainThread());
 

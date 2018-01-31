@@ -13,9 +13,7 @@
 namespace mozilla {
 namespace dom {
 
-namespace workers {
 class WorkerPrivate;
-}
 
 class WorkerEventTarget final : public nsISerialEventTarget
 {
@@ -36,17 +34,16 @@ public:
 
 private:
   mozilla::Mutex mMutex;
-  workers::WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
   const Behavior mBehavior;
 
   ~WorkerEventTarget() = default;
 
 public:
-  WorkerEventTarget(workers::WorkerPrivate* aWorkerPrivate,
-                    Behavior aBehavior);
+  WorkerEventTarget(WorkerPrivate* aWorkerPrivate, Behavior aBehavior);
 
   void
-  ForgetWorkerPrivate(workers::WorkerPrivate* aWorkerPrivate);
+  ForgetWorkerPrivate(WorkerPrivate* aWorkerPrivate);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET

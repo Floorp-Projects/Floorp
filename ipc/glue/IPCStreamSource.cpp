@@ -13,8 +13,8 @@
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 
-using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
-using mozilla::dom::workers::WorkerPrivate;
+using mozilla::dom::GetCurrentThreadWorkerPrivate;
+using mozilla::dom::WorkerPrivate;
 using mozilla::dom::WorkerStatus;
 using mozilla::wr::ByteBuffer;
 

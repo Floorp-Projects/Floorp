@@ -39,9 +39,6 @@ const SEC_ASN1Template SGN_DigestInfoTemplate[] = {
 namespace mozilla {
 namespace dom {
 
-using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
-using mozilla::dom::workers::WorkerPrivate;
-
 // Pre-defined identifiers for telemetry histograms
 
 enum TelemetryMethod {
