@@ -252,6 +252,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineObject(callInfo);
       case InlinableNative::ObjectCreate:
         return inlineObjectCreate(callInfo);
+      case InlinableNative::ObjectIs:
+        return inlineObjectIs(callInfo);
       case InlinableNative::ObjectToString:
         return inlineObjectToString(callInfo);
 
@@ -2378,6 +2380,68 @@ IonBuilder::inlineObjectCreate(CallInfo& callInfo)
     MOZ_TRY(newObjectTryTemplateObject(&emitted, templateObject));
 
     MOZ_ASSERT(emitted);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningResult
+IonBuilder::inlineObjectIs(CallInfo& callInfo)
+{
+    if (callInfo.argc() < 2 || callInfo.constructing())
+        return InliningStatus_NotInlined;
+
+    if (getInlineReturnType() != MIRType::Boolean)
+        return InliningStatus_NotInlined;
+
+    MDefinition* left = callInfo.getArg(0);
+    MDefinition* right = callInfo.getArg(1);
+    MIRType leftType = left->type();
+    MIRType rightType = right->type();
+
+    bool strictEq;
+    bool incompatibleTypes = false;
+    if (leftType == rightType) {
+        // We can only compare the arguments with strict-equals semantics if
+        // they aren't floating-point types or values. Otherwise we need to
+        // use MSameValue.
+        strictEq = !(IsFloatingPointType(leftType) || leftType == MIRType::Value);
+    } else if (leftType == MIRType::Value) {
+        // Also use strict-equals when comparing a value with a non-number.
+        strictEq = !IsNumberType(rightType);
+    } else if (rightType == MIRType::Value) {
+        // Dual case to the previous one, only with reversed operands.
+        strictEq = !IsNumberType(leftType);
+    } else if (IsNumberType(leftType) && IsNumberType(rightType)) {
+        // Both arguments are numbers, but with different representations. We
+        // can't use strict-equals semantics to compare the operands, but
+        // instead need to use MSameValue.
+        strictEq = false;
+    } else {
+        incompatibleTypes = true;
+    }
+
+    if (incompatibleTypes) {
+        // The result is always |false| when comparing incompatible types.
+        pushConstant(BooleanValue(false));
+    } else {
+        bool emitted = false;
+        if (strictEq) {
+            // Specialize |Object.is(lhs, rhs)| as |lhs === rhs|.
+            MOZ_TRY(compareTrySpecialized(&emitted, JSOP_STRICTEQ, left, right, false));
+        }
+
+        if (!emitted) {
+            MSameValue* ins = MSameValue::New(alloc(), left, right);
+
+            // The more specific operand is expected to be in the rhs.
+            if (IsNumberType(leftType) && rightType == MIRType::Value)
+                ins->swapOperands();
+
+            current->add(ins);
+            current->push(ins);
+        }
+    }
+
+    callInfo.setImplicitlyUsedUnchecked();
     return InliningStatus_Inlined;
 }
 

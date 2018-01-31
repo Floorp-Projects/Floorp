@@ -18,10 +18,11 @@ async function waitForBreakpoint(dbg, location) {
 }
 
 add_task(async function() {
-  const dbg = await initDebugger("reload/doc_reload.html", "sjs_code_reload");
-
+  const dbg = await initDebugger("reload/doc-reload.html");
+  await waitForSource(dbg, "sjs_code_reload");
   await selectSource(dbg, "sjs_code_reload");
   await waitForSelectedSource(dbg, "sjs_code_reload");
+
   await addBreakpoint(dbg, "sjs_code_reload", 2);
 
   await reload(dbg, "sjs_code_reload");

@@ -3132,6 +3132,68 @@ class LIsNullOrLikeUndefinedAndBranchT : public LControlInstructionHelper<2, 1, 
     }
 };
 
+class LSameValueD : public LInstructionHelper<1, 2, 1>
+{
+  public:
+    LIR_HEADER(SameValueD)
+    LSameValueD(const LAllocation& left, const LAllocation& right, const LDefinition& temp) {
+        setOperand(0, left);
+        setOperand(1, right);
+        setTemp(0, temp);
+    }
+
+    const LAllocation* left() {
+        return getOperand(0);
+    }
+    const LAllocation* right() {
+        return getOperand(1);
+    }
+    const LDefinition* tempFloat() {
+        return getTemp(0);
+    }
+};
+
+class LSameValueV : public LInstructionHelper<1, BOX_PIECES + 1, 2>
+{
+  public:
+    LIR_HEADER(SameValueV)
+
+    static const size_t LhsInput = 0;
+
+    LSameValueV(const LBoxAllocation& left, const LAllocation& right, const LDefinition& temp1,
+                const LDefinition& temp2)
+    {
+        setBoxOperand(LhsInput, left);
+        setOperand(BOX_PIECES, right);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+    }
+
+    const LAllocation* right() {
+        return getOperand(BOX_PIECES);
+    }
+    const LDefinition* tempFloat1() {
+        return getTemp(0);
+    }
+    const LDefinition* tempFloat2() {
+        return getTemp(1);
+    }
+};
+
+class LSameValueVM : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(SameValueVM)
+
+    static const size_t LhsInput = 0;
+    static const size_t RhsInput = BOX_PIECES;
+
+    LSameValueVM(const LBoxAllocation& left, const LBoxAllocation& right) {
+        setBoxOperand(LhsInput, left);
+        setBoxOperand(RhsInput, right);
+    }
+};
+
 // Not operation on an integer.
 class LNotI : public LInstructionHelper<1, 1, 0>
 {
@@ -4084,14 +4146,15 @@ class LConcat : public LInstructionHelper<1, 2, 5>
 };
 
 // Get uint16 character code from a string.
-class LCharCodeAt : public LInstructionHelper<1, 2, 0>
+class LCharCodeAt : public LInstructionHelper<1, 2, 1>
 {
   public:
     LIR_HEADER(CharCodeAt)
 
-    LCharCodeAt(const LAllocation& str, const LAllocation& index) {
+    LCharCodeAt(const LAllocation& str, const LAllocation& index, const LDefinition& temp) {
         setOperand(0, str);
         setOperand(1, index);
+        setTemp(0, temp);
     }
 
     const LAllocation* str() {
@@ -4099,6 +4162,9 @@ class LCharCodeAt : public LInstructionHelper<1, 2, 0>
     }
     const LAllocation* index() {
         return this->getOperand(1);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
     }
 };
 

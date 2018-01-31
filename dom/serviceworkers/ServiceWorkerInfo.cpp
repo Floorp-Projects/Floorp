@@ -34,7 +34,7 @@ NS_IMETHODIMP
 ServiceWorkerInfo::GetScriptSpec(nsAString& aScriptSpec)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  CopyUTF8toUTF16(mScriptSpec, aScriptSpec);
+  CopyUTF8toUTF16(mDescriptor.ScriptURL(), aScriptSpec);
   return NS_OK;
 }
 
@@ -113,35 +113,6 @@ ServiceWorkerInfo::DetachDebugger()
   return mServiceWorkerPrivate->DetachDebugger();
 }
 
-void
-ServiceWorkerInfo::AppendWorker(ServiceWorker* aWorker)
-{
-  MOZ_ASSERT(aWorker);
-#ifdef DEBUG
-  nsAutoString workerURL;
-  aWorker->GetScriptURL(workerURL);
-  MOZ_ASSERT(workerURL.Equals(NS_ConvertUTF8toUTF16(mScriptSpec)));
-#endif
-  MOZ_ASSERT(!mInstances.Contains(aWorker));
-
-  mInstances.AppendElement(aWorker);
-  aWorker->SetState(State());
-}
-
-void
-ServiceWorkerInfo::RemoveWorker(ServiceWorker* aWorker)
-{
-  MOZ_ASSERT(aWorker);
-#ifdef DEBUG
-  nsAutoString workerURL;
-  aWorker->GetScriptURL(workerURL);
-  MOZ_ASSERT(workerURL.Equals(NS_ConvertUTF8toUTF16(mScriptSpec)));
-#endif
-  MOZ_ASSERT(mInstances.Contains(aWorker));
-
-  mInstances.RemoveElement(aWorker);
-}
-
 namespace {
 
 class ChangeStateUpdater final : public Runnable
@@ -159,16 +130,9 @@ public:
 
   NS_IMETHOD Run() override
   {
-    // We need to update the state of all instances atomically before notifying
-    // them to make sure that the observed state for all instances inside
-    // statechange event handlers is correct.
     for (size_t i = 0; i < mInstances.Length(); ++i) {
       mInstances[i]->SetState(mState);
     }
-    for (size_t i = 0; i < mInstances.Length(); ++i) {
-      mInstances[i]->DispatchStateChange(mState);
-    }
-
     return NS_OK;
   }
 
@@ -221,8 +185,8 @@ ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
                                      const nsAString& aCacheName,
                                      nsLoadFlags aImportsLoadFlags)
   : mPrincipal(aPrincipal)
-  , mDescriptor(GetNextID(), aPrincipal, aScope, ServiceWorkerState::Parsed)
-  , mScriptSpec(aScriptSpec)
+  , mDescriptor(GetNextID(), aPrincipal, aScope, aScriptSpec,
+                ServiceWorkerState::Parsed)
   , mCacheName(aCacheName)
   , mImportsLoadFlags(aImportsLoadFlags)
   , mCreationTime(PR_Now())
@@ -237,7 +201,7 @@ ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(mPrincipal);
   // cache origin attributes so we can use them off main thread
   mOriginAttributes = mPrincipal->OriginAttributesRef();
-  MOZ_ASSERT(!mScriptSpec.IsEmpty());
+  MOZ_ASSERT(!mDescriptor.ScriptURL().IsEmpty());
   MOZ_ASSERT(!mCacheName.IsEmpty());
 
   // Scripts of a service worker should always be loaded bypass service workers.
@@ -260,27 +224,70 @@ ServiceWorkerInfo::GetNextID() const
   return ++gServiceWorkerInfoCurrentID;
 }
 
-already_AddRefed<ServiceWorker>
-ServiceWorkerInfo::GetOrCreateInstance(nsPIDOMWindowInner* aWindow)
+void
+ServiceWorkerInfo::AddServiceWorker(ServiceWorker* aWorker)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aWorker);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  nsAutoString workerURL;
+  aWorker->GetScriptURL(workerURL);
+  MOZ_DIAGNOSTIC_ASSERT(
+    workerURL.Equals(NS_ConvertUTF8toUTF16(mDescriptor.ScriptURL())));
+#endif
+  MOZ_ASSERT(!mInstances.Contains(aWorker));
+
+  mInstances.AppendElement(aWorker);
+  aWorker->SetState(State());
+}
+
+void
+ServiceWorkerInfo::RemoveServiceWorker(ServiceWorker* aWorker)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aWorker);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  nsAutoString workerURL;
+  aWorker->GetScriptURL(workerURL);
+  MOZ_DIAGNOSTIC_ASSERT(
+    workerURL.Equals(NS_ConvertUTF8toUTF16(mDescriptor.ScriptURL())));
+#endif
+  MOZ_ASSERT(mInstances.Contains(aWorker));
+
+  mInstances.RemoveElement(aWorker);
+}
+
+void
+ServiceWorkerInfo::PostMessage(nsIGlobalObject* aGlobal,
+                               JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                               const Sequence<JSObject*>& aTransferable,
+                               ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWindow);
 
-  RefPtr<ServiceWorker> ref;
-
-  for (uint32_t i = 0; i < mInstances.Length(); ++i) {
-    MOZ_ASSERT(mInstances[i]);
-    if (mInstances[i]->GetOwner() == aWindow) {
-      ref = mInstances[i];
-      break;
-    }
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
+  if (NS_WARN_IF(!window || !window->GetExtantDoc())) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
-  if (!ref) {
-    ref = new ServiceWorker(aWindow, this);
+  auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
+  if (storageAllowed != nsContentUtils::StorageAccess::eAllow) {
+    ServiceWorkerManager::LocalizeAndReportToAllClients(
+      Scope(), "ServiceWorkerPostMessageStorageError",
+      nsTArray<nsString> { NS_ConvertUTF8toUTF16(Scope()) });
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
   }
 
-  return ref.forget();
+  Maybe<ClientInfo> clientInfo = window->GetClientInfo();
+  Maybe<ClientState> clientState = window->GetClientState();
+  if (NS_WARN_IF(clientInfo.isNothing() || clientState.isNothing())) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  aRv = mServiceWorkerPrivate->SendMessageEvent(aCx, aMessage, aTransferable,
+                                                ClientInfoAndState(clientInfo.ref().ToIPC(),
+                                                                   clientState.ref().ToIPC()));
 }
 
 void

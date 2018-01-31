@@ -5736,7 +5736,7 @@ IonBuilder::jsop_compare(JSOp op, MDefinition* left, MDefinition* right)
     startTrackingOptimizations();
 
     if (!forceInlineCaches()) {
-        MOZ_TRY(compareTrySpecialized(&emitted, op, left, right));
+        MOZ_TRY(compareTrySpecialized(&emitted, op, left, right, true));
         if (emitted)
             return Ok();
         MOZ_TRY(compareTryBitwise(&emitted, op, left, right));
@@ -5779,16 +5779,19 @@ ObjectOrSimplePrimitive(MDefinition* op)
 }
 
 AbortReasonOr<Ok>
-IonBuilder::compareTrySpecialized(bool* emitted, JSOp op, MDefinition* left, MDefinition* right)
+IonBuilder::compareTrySpecialized(bool* emitted, JSOp op, MDefinition* left, MDefinition* right,
+                                  bool canTrackOptimization)
 {
     MOZ_ASSERT(*emitted == false);
-    trackOptimizationAttempt(TrackedStrategy::Compare_SpecializedTypes);
+    if (canTrackOptimization)
+        trackOptimizationAttempt(TrackedStrategy::Compare_SpecializedTypes);
 
     // Try to emit an compare based on the input types.
 
     MCompare::CompareType type = MCompare::determineCompareType(op, left, right);
     if (type == MCompare::Compare_Unknown) {
-        trackOptimizationOutcome(TrackedOutcome::SpeculationOnInputTypesFailed);
+        if (canTrackOptimization)
+            trackOptimizationOutcome(TrackedOutcome::SpeculationOnInputTypesFailed);
         return Ok();
     }
 
@@ -5815,7 +5818,8 @@ IonBuilder::compareTrySpecialized(bool* emitted, JSOp op, MDefinition* left, MDe
     current->push(ins);
 
     MOZ_ASSERT(!ins->isEffectful());
-    trackOptimizationSuccess();
+    if (canTrackOptimization)
+        trackOptimizationSuccess();
     *emitted = true;
     return Ok();
 }

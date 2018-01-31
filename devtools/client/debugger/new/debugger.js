@@ -13925,7 +13925,7 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 /* 960 */
 /***/ (function(module, exports) {
 
-module.exports = "# This Source Code Form is subject to the terms of the Mozilla Public\n# License, v. 2.0. If a copy of the MPL was not distributed with this\n# file, You can obtain one at http://mozilla.org/MPL/2.0/.\n\n# LOCALIZATION NOTE These strings are used inside the Debugger\n# which is available from the Web Developer sub-menu -> 'Debugger'.\n# The correct localization of this file might be to keep it in\n# English, or another language commonly spoken among web developers.\n# You want to make that choice consistent across the developer tools.\n# A good criteria is the language in which you'd find the best\n# documentation on web development on the web.\n\n# LOCALIZATION NOTE (collapsePanes): This is the tooltip for the button\n# that collapses the left and right panes in the debugger UI.\ncollapsePanes=Collapse panes\n\n# LOCALIZATION NOTE (copySource): This is the text that appears in the\n# context menu to copy the selected source of file open.\ncopySource=Copy\ncopySource.accesskey=y\n\n# LOCALIZATION NOTE (copySourceUri2): This is the text that appears in the\n# context menu to copy the source URI of file open.\ncopySourceUri2=Copy source URI\ncopySourceUri2.accesskey=u\n\n# LOCALIZATION NOTE (setDirectoryRoot): This is the text that appears in the\n# context menu to set a directory as root directory\nsetDirectoryRoot.label=Set directory root\nsetDirectoryRoot.accesskey=r\n\n# LOCALIZATION NOTE (copyFunction): This is the text that appears in the\n# context menu to copy the function the user selected\ncopyFunction.label=Copy function\ncopyFunction.accesskey=F\n\n# LOCALIZATION NOTE (copyStackTrace): This is the text that appears in the\n# context menu to copy the stack trace methods, file names and row number.\ncopyStackTrace=Copy stack trace\ncopyStackTrace.accesskey=c\n\n# LOCALIZATION NOTE (expandPanes): This is the tooltip for the button\n# that expands the left and right panes in the debugger UI.\nexpandPanes=Expand panes\n\n# LOCALIZATION NOTE (pauseButtonTooltip): The tooltip that is displayed for the pause\n# button when the debugger is in a running state.\npauseButtonTooltip=Pause %S\n\n# LOCALIZATION NOTE (pausePendingButtonTooltip): The tooltip that is displayed for\n# the pause button after it's been clicked but before the next JavaScript to run.\npausePendingButtonTooltip=Waiting for next execution\n\n# LOCALIZATION NOTE (resumeButtonTooltip): The label that is displayed on the pause\n# button when the debugger is in a paused state.\nresumeButtonTooltip=Resume %S\n\n# LOCALIZATION NOTE (stepOverTooltip): The label that is displayed on the\n# button that steps over a function call.\nstepOverTooltip=Step over %S\n\n# LOCALIZATION NOTE (stepInTooltip): The label that is displayed on the\n# button that steps into a function call.\nstepInTooltip=Step in %S\n\n# LOCALIZATION NOTE (stepOutTooltip): The label that is displayed on the\n# button that steps out of a function call.\nstepOutTooltip=Step out %S\n\n# LOCALIZATION NOTE (pauseButtonItem): The label that is displayed for the dropdown pause\n# list item when the debugger is in a running state.\npauseButtonItem=Pause on Next Statement\n\n# LOCALIZATION NOTE (ignoreExceptionsItem): The pause on exceptions button description\n# when the debugger will not pause on exceptions.\nignoreExceptionsItem=Ignore exceptions\n\n# LOCALIZATION NOTE (pauseOnUncaughtExceptionsItem): The pause on exceptions dropdown\n# item shown when a user is adding a new breakpoint.\npauseOnUncaughtExceptionsItem=Pause on uncaught exceptions\n\n# LOCALIZATION NOTE (pauseOnExceptionsItem): The pause on exceptions button description\n# when the debugger will pause on all exceptions.\npauseOnExceptionsItem=Pause on all exceptions\n\n# LOCALIZATION NOTE (workersHeader): The text to display in the events\n# header.\nworkersHeader=Workers\n\n# LOCALIZATION NOTE (noWorkersText): The text to display in the workers list\n# when there are no workers.\nnoWorkersText=This page has no workers.\n\n# LOCALIZATION NOTE (noSourcesText): The text to display in the sources list\n# when there are no sources.\nnoSourcesText=This page has no sources.\n\n# LOCALIZATION NOTE (noEventListenersText): The text to display in the events tab\n# when there are no events.\nnoEventListenersText=No event listeners to display.\n\n# LOCALIZATION NOTE (eventListenersHeader): The text to display in the events\n# header.\neventListenersHeader=Event listeners\n\n# LOCALIZATION NOTE (noStackFramesText): The text to display in the call stack tab\n# when there are no stack frames.\nnoStackFramesText=No stack frames to display\n\n# LOCALIZATION NOTE (eventCheckboxTooltip): The tooltip text to display when\n# the user hovers over the checkbox used to toggle an event breakpoint.\neventCheckboxTooltip=Toggle breaking on this event\n\n# LOCALIZATION NOTE (eventOnSelector): The text to display in the events tab\n# for every event item, between the event type and event selector.\neventOnSelector=on\n\n# LOCALIZATION NOTE (eventInSource): The text to display in the events tab\n# for every event item, between the event selector and listener's owner source.\neventInSource=in\n\n# LOCALIZATION NOTE (eventNodes): The text to display in the events tab when\n# an event is listened on more than one target node.\neventNodes=%S nodes\n\n# LOCALIZATION NOTE (eventNative): The text to display in the events tab when\n# a listener is added from plugins, thus getting translated to native code.\neventNative=[native code]\n\n# LOCALIZATION NOTE (*Events): The text to display in the events tab for\n# each group of sub-level event entries.\nanimationEvents=Animation\naudioEvents=Audio\nbatteryEvents=Battery\nclipboardEvents=Clipboard\ncompositionEvents=Composition\ndeviceEvents=Device\ndisplayEvents=Display\ndragAndDropEvents=Drag and Drop\ngamepadEvents=Gamepad\nindexedDBEvents=IndexedDB\ninteractionEvents=Interaction\nkeyboardEvents=Keyboard\nmediaEvents=HTML5 Media\nmouseEvents=Mouse\nmutationEvents=Mutation\nnavigationEvents=Navigation\npointerLockEvents=Pointer Lock\nsensorEvents=Sensor\nstorageEvents=Storage\ntimeEvents=Time\ntouchEvents=Touch\notherEvents=Other\n\n# LOCALIZATION NOTE (blackboxCheckboxTooltip2): The tooltip text to display when\n# the user hovers over the checkbox used to toggle blackboxing its associated\n# source.\nblackboxCheckboxTooltip2=Toggle blackboxing\n\n# LOCALIZATION NOTE (sources.search.key2): Key shortcut to open the search for\n# searching all the source files the debugger has seen.\nsources.search.key2=CmdOrCtrl+P\n\n# LOCALIZATION NOTE (sources.search.alt.key): A second key shortcut to open the\n# search for searching all the source files the debugger has seen.\nsources.search.alt.key=CmdOrCtrl+O\n\n# LOCALIZATION NOTE (projectTextSearch.key): A key shortcut to open the\n# full project text search for searching all the files the debugger has seen.\nprojectTextSearch.key=CmdOrCtrl+Shift+F\n\n# LOCALIZATION NOTE (functionSearch.key): A key shortcut to open the\n# modal for searching functions in a file.\nfunctionSearch.key=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE (toggleBreakpoint.key): A key shortcut to toggle\n# breakpoints.\ntoggleBreakpoint.key=CmdOrCtrl+B\n\n# LOCALIZATION NOTE (toggleCondPanel.key): A key shortcut to toggle\n# the conditional breakpoint panel.\ntoggleCondPanel.key=CmdOrCtrl+Shift+B\n\n# LOCALIZATION NOTE (stepOut.key): A key shortcut to\n# step out.\nstepOut.key=Shift+F11\n\n# LOCALIZATION NOTE (shortcuts.header.editor): Sections header in\n# the shortcuts modal for keyboard shortcuts related to editing.\nshortcuts.header.editor=Editor\n\n# LOCALIZATION NOTE (shortcuts.header.stepping): Sections header in\n# the shortcuts modal for keyboard shortcuts related to stepping.\nshortcuts.header.stepping=Stepping\n\n# LOCALIZATION NOTE (shortcuts.header.search): Sections header in\n# the shortcuts modal for keyboard shortcuts related to search.\nshortcuts.header.search=Search\n\n# LOCALIZATION NOTE (projectTextSearch.placeholder): A placeholder shown\n# when searching across all of the files in a project.\nprojectTextSearch.placeholder=Find in files…\n\n# LOCALIZATION NOTE (projectTextSearch.noResults): The center pane Text Search\n# message when the query did not match any text of all files in a project.\nprojectTextSearch.noResults=No results found\n\n# LOCALIZATION NOTE (sources.noSourcesAvailable): Text shown when the debugger\n# does not have any sources.\nsources.noSourcesAvailable=This page has no sources\n\n# LOCALIZATION NOTE (sourceSearch.search.key2): Key shortcut to open the search\n# for searching within a the currently opened files in the editor\nsourceSearch.search.key2=CmdOrCtrl+F\n\n# LOCALIZATION NOTE (sourceSearch.search.placeholder): placeholder text in\n# the source search input bar\nsourceSearch.search.placeholder=Search in file…\n\n# LOCALIZATION NOTE (sourceSearch.search.again.key2): Key shortcut to highlight\n# the next occurrence of the last search triggered from a source search\nsourceSearch.search.again.key2=CmdOrCtrl+G\n\n# LOCALIZATION NOTE (sourceSearch.search.againPrev.key2): Key shortcut to highlight\n# the previous occurrence of the last search triggered from a source search\nsourceSearch.search.againPrev.key2=CmdOrCtrl+Shift+G\n\n# LOCALIZATION NOTE (sourceSearch.resultsSummary1): Shows a summary of\n# the number of matches for autocomplete\nsourceSearch.resultsSummary1=%d results\n\n# LOCALIZATION NOTE (noMatchingStringsText): The text to display in the\n# global search results when there are no matching strings after filtering.\nnoMatchingStringsText=No matches found\n\n# LOCALIZATION NOTE (emptySearchText): This is the text that appears in the\n# filter text box when it is empty and the scripts container is selected.\nemptySearchText=Search scripts (%S)\n\n# LOCALIZATION NOTE (emptyVariablesFilterText): This is the text that\n# appears in the filter text box for the variables view container.\nemptyVariablesFilterText=Filter variables\n\n# LOCALIZATION NOTE (emptyPropertiesFilterText): This is the text that\n# appears in the filter text box for the editor's variables view bubble.\nemptyPropertiesFilterText=Filter properties\n\n# LOCALIZATION NOTE (searchPanelFilter): This is the text that appears in the\n# filter panel popup for the filter scripts operation.\nsearchPanelFilter=Filter scripts (%S)\n\n# LOCALIZATION NOTE (searchPanelGlobal): This is the text that appears in the\n# filter panel popup for the global search operation.\nsearchPanelGlobal=Search in all files (%S)\n\n# LOCALIZATION NOTE (searchPanelFunction): This is the text that appears in the\n# filter panel popup for the function search operation.\nsearchPanelFunction=Search for function definition (%S)\n\n# LOCALIZATION NOTE (searchPanelToken): This is the text that appears in the\n# filter panel popup for the token search operation.\nsearchPanelToken=Find in this file (%S)\n\n# LOCALIZATION NOTE (searchPanelGoToLine): This is the text that appears in the\n# filter panel popup for the line search operation.\nsearchPanelGoToLine=Go to line (%S)\n\n# LOCALIZATION NOTE (searchPanelVariable): This is the text that appears in the\n# filter panel popup for the variables search operation.\nsearchPanelVariable=Filter variables (%S)\n\n# LOCALIZATION NOTE (breakpointMenuItem): The text for all the elements that\n# are displayed in the breakpoints menu item popup.\nbreakpointMenuItem.setConditional=Configure conditional breakpoint\nbreakpointMenuItem.enableSelf2.label=Enable\nbreakpointMenuItem.enableSelf2.accesskey=E\nbreakpointMenuItem.disableSelf2.label=Disable\nbreakpointMenuItem.disableSelf2.accesskey=D\nbreakpointMenuItem.deleteSelf2.label=Remove\nbreakpointMenuItem.deleteSelf2.accesskey=R\nbreakpointMenuItem.enableOthers2.label=Enable others\nbreakpointMenuItem.enableOthers2.accesskey=o\nbreakpointMenuItem.disableOthers2.label=Disable others\nbreakpointMenuItem.disableOthers2.accesskey=s\nbreakpointMenuItem.deleteOthers2.label=Remove others\nbreakpointMenuItem.deleteOthers2.accesskey=h\nbreakpointMenuItem.enableAll2.label=Enable all\nbreakpointMenuItem.enableAll2.accesskey=b\nbreakpointMenuItem.disableAll2.label=Disable all\nbreakpointMenuItem.disableAll2.accesskey=k\nbreakpointMenuItem.deleteAll2.label=Remove all\nbreakpointMenuItem.deleteAll2.accesskey=a\nbreakpointMenuItem.removeCondition2.label=Remove condition\nbreakpointMenuItem.removeCondition2.accesskey=c\nbreakpointMenuItem.addCondition2.label=Add condition\nbreakpointMenuItem.addCondition2.accesskey=A\nbreakpointMenuItem.editCondition2.label=Edit condition\nbreakpointMenuItem.editCondition2.accesskey=n\nbreakpointMenuItem.enableSelf=Enable breakpoint\nbreakpointMenuItem.enableSelf.accesskey=E\nbreakpointMenuItem.disableSelf=Disable breakpoint\nbreakpointMenuItem.disableSelf.accesskey=D\nbreakpointMenuItem.deleteSelf=Remove breakpoint\nbreakpointMenuItem.deleteSelf.accesskey=R\nbreakpointMenuItem.enableOthers=Enable others\nbreakpointMenuItem.enableOthers.accesskey=o\nbreakpointMenuItem.disableOthers=Disable others\nbreakpointMenuItem.disableOthers.accesskey=s\nbreakpointMenuItem.deleteOthers=Remove others\nbreakpointMenuItem.deleteOthers.accesskey=h\nbreakpointMenuItem.enableAll=Enable all breakpoints\nbreakpointMenuItem.enableAll.accesskey=b\nbreakpointMenuItem.disableAll=Disable all breakpoints\nbreakpointMenuItem.disableAll.accesskey=k\nbreakpointMenuItem.deleteAll=Remove all breakpoints\nbreakpointMenuItem.deleteAll.accesskey=a\nbreakpointMenuItem.removeCondition.label=Remove breakpoint condition\nbreakpointMenuItem.removeCondition.accesskey=c\nbreakpointMenuItem.editCondition.label=Edit breakpoint condition\nbreakpointMenuItem.editCondition.accesskey=n\n\n# LOCALIZATION NOTE (breakpoints.header): Breakpoints right sidebar pane header.\nbreakpoints.header=Breakpoints\n\n# LOCALIZATION NOTE (breakpoints.none): The text that appears when there are\n# no breakpoints present\nbreakpoints.none=No breakpoints\n\n# LOCALIZATION NOTE (breakpoints.enable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.enable=Enable breakpoints\n\n# LOCALIZATION NOTE (breakpoints.disable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.disable=Disable breakpoints\n\n# LOCALIZATION NOTE (breakpoints.removeBreakpointTooltip): The tooltip that is displayed\n# for remove breakpoint button in right sidebar\nbreakpoints.removeBreakpointTooltip=Remove breakpoint\n\n# LOCALIZATION NOTE (callStack.header): Call Stack right sidebar pane header.\ncallStack.header=Call stack\n\n# LOCALIZATION NOTE (callStack.notPaused): Call Stack right sidebar pane\n# message when not paused.\ncallStack.notPaused=Not paused\n\n# LOCALIZATION NOTE (callStack.collapse): Call Stack right sidebar pane\n# message to hide some of the frames that are shown.\ncallStack.collapse=Collapse rows\n\n# LOCALIZATION NOTE (callStack.expand): Call Stack right sidebar pane\n# message to show more of the frames.\ncallStack.expand=Expand rows\n\n# LOCALIZATION NOTE (editor.searchResults): Editor Search bar message\n# for the summarizing the selected search result. e.g. 5 of 10 results.\neditor.searchResults=%d of %d results\n\n# LOCALIZATION NOTE (editor.singleResult): Copy shown when there is one result.\neditor.singleResult=1 result\n\n# LOCALIZATION NOTE (editor.noResults): Editor Search bar message\n# for when no results found.\neditor.noResults=No results\n\n# LOCALIZATION NOTE (editor.searchResults.nextResult): Editor Search bar\n# tooltip for traversing to the Next Result\neditor.searchResults.nextResult=Next result\n\n# LOCALIZATION NOTE (editor.searchResults.prevResult): Editor Search bar\n# tooltip for traversing to the Previous Result\neditor.searchResults.prevResult=Previous result\n\n# LOCALIZATION NOTE (editor.searchTypeToggleTitle): Search bar title for\n# toggling search type buttons(function search, variable search)\neditor.searchTypeToggleTitle=Search for:\n\n# LOCALIZATION NOTE (editor.continueToHere.label): Editor gutter context\n# menu item for jumping to a new paused location\neditor.continueToHere.label=Continue to here\neditor.continueToHere.accesskey=H\n\n# LOCALIZATION NOTE (editor.addBreakpoint): Editor gutter context menu item\n# for adding a breakpoint on a line.\neditor.addBreakpoint=Add breakpoint\n\n# LOCALIZATION NOTE (editor.disableBreakpoint): Editor gutter context menu item\n# for disabling a breakpoint on a line.\neditor.disableBreakpoint=Disable breakpoint\neditor.disableBreakpoint.accesskey=D\n\n# LOCALIZATION NOTE (editor.enableBreakpoint): Editor gutter context menu item\n# for enabling a breakpoint on a line.\neditor.enableBreakpoint=Enable breakpoint\n\n# LOCALIZATION NOTE (editor.removeBreakpoint): Editor gutter context menu item\n# for removing a breakpoint on a line.\neditor.removeBreakpoint=Remove breakpoint\n\n# LOCALIZATION NOTE (editor.editBreakpoint): Editor gutter context menu item\n# for setting a breakpoint condition on a line.\neditor.editBreakpoint=Edit breakpoint\n\n# LOCALIZATION NOTE (editor.addConditionalBreakpoint): Editor gutter context\n# menu item for adding a breakpoint condition on a line.\neditor.addConditionalBreakpoint=Add conditional breakpoint\neditor.addConditionalBreakpoint.accesskey=c\n\n# LOCALIZATION NOTE (editor.conditionalPanel.placeholder): Placeholder text for\n# input element inside ConditionalPanel component\neditor.conditionalPanel.placeholder=This breakpoint will pause when the expression is true\n\n# LOCALIZATION NOTE (editor.conditionalPanel.close): Tooltip text for\n# close button inside ConditionalPanel component\neditor.conditionalPanel.close=Cancel edit breakpoint and close\n\n# LOCALIZATION NOTE (editor.jumpToMappedLocation1): Context menu item\n# for navigating to a source mapped location\neditor.jumpToMappedLocation1=Jump to %S location\neditor.jumpToMappedLocation1.accesskey=m\n\n# LOCALIZATION NOTE (framework.disableGrouping): This is the text that appears in the\n# context menu to disable framework grouping.\nframework.disableGrouping=Disable framework grouping\nframework.disableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (framework.enableGrouping): This is the text that appears in the\n# context menu to enable framework grouping.\nframework.enableGrouping=Enable framework grouping\nframework.enableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (generated): Source Map term for a server source location\ngenerated=generated\n\n# LOCALIZATION NOTE (original): Source Map term for a debugger UI source location\noriginal=original\n\n# LOCALIZATION NOTE (expressions.placeholder): Placeholder text for expression\n# input element\nexpressions.placeholder=Add watch expression\n# LOCALIZATION NOTE (expressions.errorMsg): Error text for expression\n# input element\nexpressions.errorMsg=Invalid expression…\nexpressions.label=Add watch expression\nexpressions.accesskey=e\n\n# LOCALIZATION NOTE (sourceTabs.closeTab): Editor source tab context menu item\n# for closing the selected tab below the mouse.\nsourceTabs.closeTab=Close tab\nsourceTabs.closeTab.accesskey=c\n\n# LOCALIZATION NOTE (sourceTabs.closeOtherTabs): Editor source tab context menu item\n# for closing the other tabs.\nsourceTabs.closeOtherTabs=Close other tabs\nsourceTabs.closeOtherTabs.accesskey=o\n\n# LOCALIZATION NOTE (sourceTabs.closeTabsToEnd): Editor source tab context menu item\n# for closing the tabs to the end (the right for LTR languages) of the selected tab.\nsourceTabs.closeTabsToEnd=Close tabs to the right\nsourceTabs.closeTabsToEnd.accesskey=e\n\n# LOCALIZATION NOTE (sourceTabs.closeAllTabs): Editor source tab context menu item\n# for closing all tabs.\nsourceTabs.closeAllTabs=Close all tabs\nsourceTabs.closeAllTabs.accesskey=a\n\n# LOCALIZATION NOTE (sourceTabs.revealInTree): Editor source tab context menu item\n# for revealing source in tree.\nsourceTabs.revealInTree=Reveal in tree\nsourceTabs.revealInTree.accesskey=r\n\n# LOCALIZATION NOTE (sourceTabs.prettyPrint): Editor source tab context menu item\n# for pretty printing the source.\nsourceTabs.prettyPrint=Pretty print source\nsourceTabs.prettyPrint.accesskey=p\n\n# LOCALIZATION NOTE (sourceFooter.blackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.blackbox=Blackbox source\nsourceFooter.blackbox.accesskey=B\n\n# LOCALIZATION NOTE (sourceFooter.unblackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.unblackbox=Unblackbox source\nsourceFooter.unblackbox.accesskey=b\n\n# LOCALIZATION NOTE (sourceFooter.blackboxed): Text associated\n# with a blackboxed source\nsourceFooter.blackboxed=Blackboxed source\n\n# LOCALIZATION NOTE (sourceFooter.mappedSource): Text associated\n# with a mapped source. %S is replaced by the source map origin.\nsourceFooter.mappedSource=(From %S)\n\n# LOCALIZATION NOTE (sourceFooter.mappedSourceTooltip): Tooltip text associated\n# with a mapped source. %S is replaced by the source map origin.\nsourceFooter.mappedSourceTooltip=(Source mapped from %S)\n\n# LOCALIZATION NOTE (sourceFooter.codeCoverage): Text associated\n# with a code coverage button\nsourceFooter.codeCoverage=Code coverage\n\n# LOCALIZATION NOTE (sourceTabs.closeTabButtonTooltip): The tooltip that is displayed\n# for close tab button in source tabs.\nsourceTabs.closeTabButtonTooltip=Close tab\n\n# LOCALIZATION NOTE (scopes.header): Scopes right sidebar pane header.\nscopes.header=Scopes\n\n# LOCALIZATION NOTE (scopes.notAvailable): Scopes right sidebar pane message\n# for when the debugger is paused, but there isn't pause data.\nscopes.notAvailable=Scopes unavailable\n\n# LOCALIZATION NOTE (scopes.notPaused): Scopes right sidebar pane message\n# for when the debugger is not paused.\nscopes.notPaused=Not paused\n\n# LOCALIZATION NOTE (scopes.block): Refers to a block of code in\n# the scopes pane when the debugger is paused.\nscopes.block=Block\n\n# LOCALIZATION NOTE (sources.header): Sources left sidebar header\nsources.header=Sources\n\n# LOCALIZATION NOTE (outline.header): Outline left sidebar header\noutline.header=Outline\n\n# LOCALIZATION NOTE (outline.noFunctions): Outline text when there are no functions to display\noutline.noFunctions=No functions\n\n# LOCALIZATION NOTE (sources.search): Sources left sidebar prompt\n# e.g. Cmd+P to search. On a mac, we use the command unicode character.\n# On windows, it's ctrl.\nsources.search=%S to search\n\n# LOCALIZATION NOTE (watchExpressions.header): Watch Expressions right sidebar\n# pane header.\nwatchExpressions.header=Watch expressions\n\n# LOCALIZATION NOTE (watchExpressions.refreshButton): Watch Expressions header\n# button for refreshing the expressions.\nwatchExpressions.refreshButton=Refresh\n\n# LOCALIZATION NOTE (welcome.search): The center pane welcome panel's\n# search prompt. e.g. cmd+p to search for files. On windows, it's ctrl, on\n# a mac we use the unicode character.\nwelcome.search=%S to search for sources\n\n# LOCALIZATION NOTE (welcome.findInFiles): The center pane welcome panel's\n# search prompt. e.g. cmd+f to search for files. On windows, it's ctrl+shift+f, on\n# a mac we use the unicode character.\nwelcome.findInFiles=%S to find in files\n\n# LOCALIZATION NOTE (welcome.searchFunction): Label displayed in the welcome\n# panel. %S is replaced by the keyboard shortcut to search for functions.\nwelcome.searchFunction=%S to search for functions in file\n\n# LOCALIZATION NOTE (sourceSearch.search): The center pane Source Search\n# prompt for searching for files.\nsourceSearch.search=Search sources…\n\n# LOCALIZATION NOTE (sourceSearch.noResults2): The center pane Source Search\n# message when the query did not match any of the sources.\nsourceSearch.noResults2=No results found\n\n# LOCALIZATION NOTE (ignoreExceptions): The pause on exceptions button tooltip\n# when the debugger will not pause on exceptions.\nignoreExceptions=Ignore exceptions. Click to pause on uncaught exceptions\n\n# LOCALIZATION NOTE (pauseOnUncaughtExceptions): The pause on exceptions button\n# tooltip when the debugger will pause on uncaught exceptions.\npauseOnUncaughtExceptions=Pause on uncaught exceptions. Click to pause on all exceptions\n\n# LOCALIZATION NOTE (pauseOnExceptions): The pause on exceptions button tooltip\n# when the debugger will pause on all exceptions.\npauseOnExceptions=Pause on all exceptions. Click to ignore exceptions\n\n# LOCALIZATION NOTE (loadingText): The text that is displayed in the script\n# editor when the loading process has started but there is no file to display\n# yet.\nloadingText=Loading\\u2026\n\n# LOCALIZATION NOTE (wasmIsNotAvailable): The text that is displayed in the\n# script editor when the WebAssembly source is not available.\nwasmIsNotAvailable=Please refresh to debug this module\n\n# LOCALIZATION NOTE (errorLoadingText3): The text that is displayed in the debugger\n# viewer when there is an error loading a file\nerrorLoadingText3=Error loading this URI: %S\n\n# LOCALIZATION NOTE (addWatchExpressionText): The text that is displayed in the\n# watch expressions list to add a new item.\naddWatchExpressionText=Add watch expression\n\n# LOCALIZATION NOTE (addWatchExpressionButton): The button that is displayed in the\n# variables view popup.\naddWatchExpressionButton=Watch\n\n# LOCALIZATION NOTE (emptyVariablesText): The text that is displayed in the\n# variables pane when there are no variables to display.\nemptyVariablesText=No variables to display\n\n# LOCALIZATION NOTE (scopeLabel): The text that is displayed in the variables\n# pane as a header for each variable scope (e.g. \"Global scope, \"With scope\",\n# etc.).\nscopeLabel=%S scope\n\n# LOCALIZATION NOTE (watchExpressionsScopeLabel): The name of the watch\n# expressions scope. This text is displayed in the variables pane as a header for\n# the watch expressions scope.\nwatchExpressionsScopeLabel=Watch expressions\n\n# LOCALIZATION NOTE (globalScopeLabel): The name of the global scope. This text\n# is added to scopeLabel and displayed in the variables pane as a header for\n# the global scope.\nglobalScopeLabel=Global\n\n# LOCALIZATION NOTE (variablesViewErrorStacktrace): This is the text that is\n# shown before the stack trace in an error.\nvariablesViewErrorStacktrace=Stack trace:\n\n# LOCALIZATION NOTE (variablesViewMoreObjects): the text that is displayed\n# when you have an object preview that does not show all of the elements. At the end of the list\n# you see \"N more...\" in the web console output.\n# This is a semi-colon list of plural forms.\n# See: http://developer.mozilla.org/en/docs/Localization_and_Plurals\n# #1 number of remaining items in the object\n# example: 3 more…\nvariablesViewMoreObjects=#1 more…;#1 more…\n\n# LOCALIZATION NOTE (variablesEditableNameTooltip): The text that is displayed\n# in the variables list on an item with an editable name.\nvariablesEditableNameTooltip=Double click to edit\n\n# LOCALIZATION NOTE (variablesEditableValueTooltip): The text that is displayed\n# in the variables list on an item with an editable value.\nvariablesEditableValueTooltip=Click to change value\n\n# LOCALIZATION NOTE (variablesCloseButtonTooltip): The text that is displayed\n# in the variables list on an item which can be removed.\nvariablesCloseButtonTooltip=Click to remove\n\n# LOCALIZATION NOTE (variablesEditButtonTooltip): The text that is displayed\n# in the variables list on a getter or setter which can be edited.\nvariablesEditButtonTooltip=Click to set value\n\n# LOCALIZATION NOTE (variablesDomNodeValueTooltip): The text that is displayed\n# in a tooltip on the \"open in inspector\" button in the the variables list for a\n# DOMNode item.\nvariablesDomNodeValueTooltip=Click to select the node in the inspector\n\n# LOCALIZATION NOTE (configurable|...|Tooltip): The text that is displayed\n# in the variables list on certain variables or properties as tooltips.\n# Expanations of what these represent can be found at the following links:\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isExtensible\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isFrozen\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isSealed\n# It's probably best to keep these in English.\nconfigurableTooltip=configurable\nenumerableTooltip=enumerable\nwritableTooltip=writable\nfrozenTooltip=frozen\nsealedTooltip=sealed\nextensibleTooltip=extensible\noverriddenTooltip=overridden\nWebIDLTooltip=WebIDL\n\n# LOCALIZATION NOTE (variablesSeparatorLabel): The text that is displayed\n# in the variables list as a separator between the name and value.\nvariablesSeparatorLabel=:\n\n# LOCALIZATION NOTE (watchExpressionsSeparatorLabel2): The text that is displayed\n# in the watch expressions list as a separator between the code and evaluation.\nwatchExpressionsSeparatorLabel2=\\u0020→\n\n# LOCALIZATION NOTE (functionSearchSeparatorLabel): The text that is displayed\n# in the functions search panel as a separator between function's inferred name\n# and its real name (if available).\nfunctionSearchSeparatorLabel=←\n\n# LOCALIZATION NOTE(gotoLineModal.placeholder): The placeholder\n# text displayed when the user searches for specific lines in a file\ngotoLineModal.placeholder=Go to line…\ngotoLineModal.key=CmdOrCtrl+Shift+;\ngotoLineModal.title=Go to a line number in a file\n\n# LOCALIZATION NOTE(symbolSearch.search.functionsPlaceholder): The placeholder\n# text displayed when the user searches for functions in a file\nsymbolSearch.search.functionsPlaceholder=Search functions…\nsymbolSearch.search.functionsPlaceholder.title=Search for a function in a file\n\n# LOCALIZATION NOTE(symbolSearch.search.variablesPlaceholder): The placeholder\n# text displayed when the user searches for variables in a file\nsymbolSearch.search.variablesPlaceholder=Search variables…\nsymbolSearch.search.variablesPlaceholder.title=Search for a variable in a file\n\n# LOCALIZATION NOTE(symbolSearch.search.key2): The Key Shortcut for\n# searching for a function or variable\nsymbolSearch.search.key2=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.modifiersLabel): A label\n# preceding the group of modifiers\nsymbolSearch.searchModifier.modifiersLabel=Modifiers:\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.regex): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.regex=Regex\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.caseSensitive): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.caseSensitive=Case sensitive\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.wholeWord): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.wholeWord=Whole word\n\n# LOCALIZATION NOTE (resumptionOrderPanelTitle): This is the text that appears\n# as a description in the notification panel popup, when multiple debuggers are\n# open in separate tabs and the user tries to resume them in the wrong order.\n# The substitution parameter is the URL of the last paused window that must be\n# resumed first.\nresumptionOrderPanelTitle=There are one or more paused debuggers. Please resume the most-recently paused debugger first at: %S\n\nvariablesViewOptimizedOut=(optimized away)\nvariablesViewUninitialized=(uninitialized)\nvariablesViewMissingArgs=(unavailable)\n\nanonymousSourcesLabel=Anonymous sources\n\nexperimental=This is an experimental feature\n\n# LOCALIZATION NOTE (whyPaused.debuggerStatement): The text that is displayed\n# in a info block explaining how the debugger is currently paused due to a `debugger`\n# statement in the code\nwhyPaused.debuggerStatement=Paused on debugger statement\n\n# LOCALIZATION NOTE (whyPaused.breakpoint): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a breakpoint\nwhyPaused.breakpoint=Paused on breakpoint\n\n# LOCALIZATION NOTE (whyPaused.exception): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an exception\nwhyPaused.exception=Paused on exception\n\n# LOCALIZATION NOTE (whyPaused.resumeLimit): The text that is displayed\n# in a info block explaining how the debugger is currently paused while stepping\n# in or out of the stack\nwhyPaused.resumeLimit=Paused while stepping\n\n# LOCALIZATION NOTE (whyPaused.pauseOnDOMEvents): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# dom event\nwhyPaused.pauseOnDOMEvents=Paused on event listener\n\n# LOCALIZATION NOTE (whyPaused.breakpointConditionThrown): The text that is displayed\n# in an info block when evaluating a conditional breakpoint throws an error\nwhyPaused.breakpointConditionThrown=Error with conditional breakpoint\n\n# LOCALIZATION NOTE (whyPaused.xhr): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# xml http request\nwhyPaused.xhr=Paused on XMLHttpRequest\n\n# LOCALIZATION NOTE (whyPaused.promiseRejection): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# promise rejection\nwhyPaused.promiseRejection=Paused on promise rejection\n\n# LOCALIZATION NOTE (whyPaused.assert): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# assert\nwhyPaused.assert=Paused on assertion\n\n# LOCALIZATION NOTE (whyPaused.debugCommand): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# debugger statement\nwhyPaused.debugCommand=Paused on debugged function\n\n# LOCALIZATION NOTE (whyPaused.other): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an event\n# listener breakpoint set\nwhyPaused.other=Debugger paused\n\n# LOCALIZATION NOTE (ctrl): The text that is used for documenting\n# keyboard shortcuts that use the control key\nctrl=Ctrl\n\n# LOCALIZATION NOTE (anonymous): The text that is displayed when the\n# display name is null.\nanonymous=(anonymous)\n\n# LOCALIZATION NOTE (shortcuts.toggleBreakpoint): text describing\n# keyboard shortcut action for toggling breakpoint\nshortcuts.toggleBreakpoint=Toggle Breakpoint\nshortcuts.toggleBreakpoint.accesskey=B\n\n# LOCALIZATION NOTE (shortcuts.toggleCondPanel): text describing\n# keyboard shortcut action for toggling conditional panel keyboard\nshortcuts.toggleCondPanel=Toggle Conditional Panel\n\n# LOCALIZATION NOTE (shortcuts.pauseOrResume): text describing\n# keyboard shortcut action for pause of resume\nshortcuts.pauseOrResume=Pause/Resume\n\n# LOCALIZATION NOTE (shortcuts.stepOver): text describing\n# keyboard shortcut action for stepping over\nshortcuts.stepOver=Step Over\n\n# LOCALIZATION NOTE (shortcuts.stepIn): text describing\n# keyboard shortcut action for stepping in\nshortcuts.stepIn=Step In\n\n# LOCALIZATION NOTE (shortcuts.stepOut): text describing\n# keyboard shortcut action for stepping out\nshortcuts.stepOut=Step Out\n\n# LOCALIZATION NOTE (shortcuts.fileSearch): text describing\n# keyboard shortcut action for source file search\nshortcuts.fileSearch=Source File Search\n\n# LOCALIZATION NOTE (shortcuts.searchAgain): text describing\n# keyboard shortcut action for searching again\nshortcuts.searchAgain=Search Again\n\n# LOCALIZATION NOTE (shortcuts.projectSearch): text describing\n# keyboard shortcut action for full project search\nshortcuts.projectSearch=Full Project Search\n\n# LOCALIZATION NOTE (shortcuts.functionSearch): text describing\n# keyboard shortcut action for function search\nshortcuts.functionSearch=Function Search\n\n# LOCALIZATION NOTE (shortcuts.buttonName): text describing\n# keyboard shortcut button text\nshortcuts.buttonName=Keyboard shortcuts\n"
+module.exports = "# This Source Code Form is subject to the terms of the Mozilla Public\n# License, v. 2.0. If a copy of the MPL was not distributed with this\n# file, You can obtain one at http://mozilla.org/MPL/2.0/.\n\n# LOCALIZATION NOTE These strings are used inside the Debugger\n# which is available from the Web Developer sub-menu -> 'Debugger'.\n# The correct localization of this file might be to keep it in\n# English, or another language commonly spoken among web developers.\n# You want to make that choice consistent across the developer tools.\n# A good criteria is the language in which you'd find the best\n# documentation on web development on the web.\n\n# LOCALIZATION NOTE (collapsePanes): This is the tooltip for the button\n# that collapses the left and right panes in the debugger UI.\ncollapsePanes=Collapse panes\n\n# LOCALIZATION NOTE (copySource): This is the text that appears in the\n# context menu to copy the selected source of file open.\ncopySource=Copy\ncopySource.accesskey=y\n\n# LOCALIZATION NOTE (copySourceUri2): This is the text that appears in the\n# context menu to copy the source URI of file open.\ncopySourceUri2=Copy source URI\ncopySourceUri2.accesskey=u\n\n# LOCALIZATION NOTE (setDirectoryRoot): This is the text that appears in the\n# context menu to set a directory as root directory\nsetDirectoryRoot.label=Set directory root\nsetDirectoryRoot.accesskey=r\n\nremoveDirectoryRoot.label=Remove directory root\n\n# LOCALIZATION NOTE (copyFunction): This is the text that appears in the\n# context menu to copy the function the user selected\ncopyFunction.label=Copy function\ncopyFunction.accesskey=F\n\n# LOCALIZATION NOTE (copyStackTrace): This is the text that appears in the\n# context menu to copy the stack trace methods, file names and row number.\ncopyStackTrace=Copy stack trace\ncopyStackTrace.accesskey=c\n\n# LOCALIZATION NOTE (expandPanes): This is the tooltip for the button\n# that expands the left and right panes in the debugger UI.\nexpandPanes=Expand panes\n\n# LOCALIZATION NOTE (pauseButtonTooltip): The tooltip that is displayed for the pause\n# button when the debugger is in a running state.\npauseButtonTooltip=Pause %S\n\n# LOCALIZATION NOTE (pausePendingButtonTooltip): The tooltip that is displayed for\n# the pause button after it's been clicked but before the next JavaScript to run.\npausePendingButtonTooltip=Waiting for next execution\n\n# LOCALIZATION NOTE (resumeButtonTooltip): The label that is displayed on the pause\n# button when the debugger is in a paused state.\nresumeButtonTooltip=Resume %S\n\n# LOCALIZATION NOTE (stepOverTooltip): The label that is displayed on the\n# button that steps over a function call.\nstepOverTooltip=Step over %S\n\n# LOCALIZATION NOTE (stepInTooltip): The label that is displayed on the\n# button that steps into a function call.\nstepInTooltip=Step in %S\n\n# LOCALIZATION NOTE (stepOutTooltip): The label that is displayed on the\n# button that steps out of a function call.\nstepOutTooltip=Step out %S\n\n# LOCALIZATION NOTE (pauseButtonItem): The label that is displayed for the dropdown pause\n# list item when the debugger is in a running state.\npauseButtonItem=Pause on Next Statement\n\n# LOCALIZATION NOTE (ignoreExceptionsItem): The pause on exceptions button description\n# when the debugger will not pause on exceptions.\nignoreExceptionsItem=Ignore exceptions\n\n# LOCALIZATION NOTE (pauseOnUncaughtExceptionsItem): The pause on exceptions dropdown\n# item shown when a user is adding a new breakpoint.\npauseOnUncaughtExceptionsItem=Pause on uncaught exceptions\n\n# LOCALIZATION NOTE (pauseOnExceptionsItem): The pause on exceptions button description\n# when the debugger will pause on all exceptions.\npauseOnExceptionsItem=Pause on all exceptions\n\n# LOCALIZATION NOTE (workersHeader): The text to display in the events\n# header.\nworkersHeader=Workers\n\n# LOCALIZATION NOTE (noWorkersText): The text to display in the workers list\n# when there are no workers.\nnoWorkersText=This page has no workers.\n\n# LOCALIZATION NOTE (noSourcesText): The text to display in the sources list\n# when there are no sources.\nnoSourcesText=This page has no sources.\n\n# LOCALIZATION NOTE (noEventListenersText): The text to display in the events tab\n# when there are no events.\nnoEventListenersText=No event listeners to display.\n\n# LOCALIZATION NOTE (eventListenersHeader): The text to display in the events\n# header.\neventListenersHeader=Event listeners\n\n# LOCALIZATION NOTE (noStackFramesText): The text to display in the call stack tab\n# when there are no stack frames.\nnoStackFramesText=No stack frames to display\n\n# LOCALIZATION NOTE (eventCheckboxTooltip): The tooltip text to display when\n# the user hovers over the checkbox used to toggle an event breakpoint.\neventCheckboxTooltip=Toggle breaking on this event\n\n# LOCALIZATION NOTE (eventOnSelector): The text to display in the events tab\n# for every event item, between the event type and event selector.\neventOnSelector=on\n\n# LOCALIZATION NOTE (eventInSource): The text to display in the events tab\n# for every event item, between the event selector and listener's owner source.\neventInSource=in\n\n# LOCALIZATION NOTE (eventNodes): The text to display in the events tab when\n# an event is listened on more than one target node.\neventNodes=%S nodes\n\n# LOCALIZATION NOTE (eventNative): The text to display in the events tab when\n# a listener is added from plugins, thus getting translated to native code.\neventNative=[native code]\n\n# LOCALIZATION NOTE (*Events): The text to display in the events tab for\n# each group of sub-level event entries.\nanimationEvents=Animation\naudioEvents=Audio\nbatteryEvents=Battery\nclipboardEvents=Clipboard\ncompositionEvents=Composition\ndeviceEvents=Device\ndisplayEvents=Display\ndragAndDropEvents=Drag and Drop\ngamepadEvents=Gamepad\nindexedDBEvents=IndexedDB\ninteractionEvents=Interaction\nkeyboardEvents=Keyboard\nmediaEvents=HTML5 Media\nmouseEvents=Mouse\nmutationEvents=Mutation\nnavigationEvents=Navigation\npointerLockEvents=Pointer Lock\nsensorEvents=Sensor\nstorageEvents=Storage\ntimeEvents=Time\ntouchEvents=Touch\notherEvents=Other\n\n# LOCALIZATION NOTE (blackboxCheckboxTooltip2): The tooltip text to display when\n# the user hovers over the checkbox used to toggle blackboxing its associated\n# source.\nblackboxCheckboxTooltip2=Toggle blackboxing\n\n# LOCALIZATION NOTE (sources.search.key2): Key shortcut to open the search for\n# searching all the source files the debugger has seen.\nsources.search.key2=CmdOrCtrl+P\n\n# LOCALIZATION NOTE (sources.search.alt.key): A second key shortcut to open the\n# search for searching all the source files the debugger has seen.\nsources.search.alt.key=CmdOrCtrl+O\n\n# LOCALIZATION NOTE (projectTextSearch.key): A key shortcut to open the\n# full project text search for searching all the files the debugger has seen.\nprojectTextSearch.key=CmdOrCtrl+Shift+F\n\n# LOCALIZATION NOTE (functionSearch.key): A key shortcut to open the\n# modal for searching functions in a file.\nfunctionSearch.key=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE (toggleBreakpoint.key): A key shortcut to toggle\n# breakpoints.\ntoggleBreakpoint.key=CmdOrCtrl+B\n\n# LOCALIZATION NOTE (toggleCondPanel.key): A key shortcut to toggle\n# the conditional breakpoint panel.\ntoggleCondPanel.key=CmdOrCtrl+Shift+B\n\n# LOCALIZATION NOTE (stepOut.key): A key shortcut to\n# step out.\nstepOut.key=Shift+F11\n\n# LOCALIZATION NOTE (shortcuts.header.editor): Sections header in\n# the shortcuts modal for keyboard shortcuts related to editing.\nshortcuts.header.editor=Editor\n\n# LOCALIZATION NOTE (shortcuts.header.stepping): Sections header in\n# the shortcuts modal for keyboard shortcuts related to stepping.\nshortcuts.header.stepping=Stepping\n\n# LOCALIZATION NOTE (shortcuts.header.search): Sections header in\n# the shortcuts modal for keyboard shortcuts related to search.\nshortcuts.header.search=Search\n\n# LOCALIZATION NOTE (projectTextSearch.placeholder): A placeholder shown\n# when searching across all of the files in a project.\nprojectTextSearch.placeholder=Find in files…\n\n# LOCALIZATION NOTE (projectTextSearch.noResults): The center pane Text Search\n# message when the query did not match any text of all files in a project.\nprojectTextSearch.noResults=No results found\n\n# LOCALIZATION NOTE (sources.noSourcesAvailable): Text shown when the debugger\n# does not have any sources.\nsources.noSourcesAvailable=This page has no sources\n\n# LOCALIZATION NOTE (sourceSearch.search.key2): Key shortcut to open the search\n# for searching within a the currently opened files in the editor\nsourceSearch.search.key2=CmdOrCtrl+F\n\n# LOCALIZATION NOTE (sourceSearch.search.placeholder): placeholder text in\n# the source search input bar\nsourceSearch.search.placeholder=Search in file…\n\n# LOCALIZATION NOTE (sourceSearch.search.again.key2): Key shortcut to highlight\n# the next occurrence of the last search triggered from a source search\nsourceSearch.search.again.key2=CmdOrCtrl+G\n\n# LOCALIZATION NOTE (sourceSearch.search.againPrev.key2): Key shortcut to highlight\n# the previous occurrence of the last search triggered from a source search\nsourceSearch.search.againPrev.key2=CmdOrCtrl+Shift+G\n\n# LOCALIZATION NOTE (sourceSearch.resultsSummary1): Shows a summary of\n# the number of matches for autocomplete\nsourceSearch.resultsSummary1=%d results\n\n# LOCALIZATION NOTE (noMatchingStringsText): The text to display in the\n# global search results when there are no matching strings after filtering.\nnoMatchingStringsText=No matches found\n\n# LOCALIZATION NOTE (emptySearchText): This is the text that appears in the\n# filter text box when it is empty and the scripts container is selected.\nemptySearchText=Search scripts (%S)\n\n# LOCALIZATION NOTE (emptyVariablesFilterText): This is the text that\n# appears in the filter text box for the variables view container.\nemptyVariablesFilterText=Filter variables\n\n# LOCALIZATION NOTE (emptyPropertiesFilterText): This is the text that\n# appears in the filter text box for the editor's variables view bubble.\nemptyPropertiesFilterText=Filter properties\n\n# LOCALIZATION NOTE (searchPanelFilter): This is the text that appears in the\n# filter panel popup for the filter scripts operation.\nsearchPanelFilter=Filter scripts (%S)\n\n# LOCALIZATION NOTE (searchPanelGlobal): This is the text that appears in the\n# filter panel popup for the global search operation.\nsearchPanelGlobal=Search in all files (%S)\n\n# LOCALIZATION NOTE (searchPanelFunction): This is the text that appears in the\n# filter panel popup for the function search operation.\nsearchPanelFunction=Search for function definition (%S)\n\n# LOCALIZATION NOTE (searchPanelToken): This is the text that appears in the\n# filter panel popup for the token search operation.\nsearchPanelToken=Find in this file (%S)\n\n# LOCALIZATION NOTE (searchPanelGoToLine): This is the text that appears in the\n# filter panel popup for the line search operation.\nsearchPanelGoToLine=Go to line (%S)\n\n# LOCALIZATION NOTE (searchPanelVariable): This is the text that appears in the\n# filter panel popup for the variables search operation.\nsearchPanelVariable=Filter variables (%S)\n\n# LOCALIZATION NOTE (breakpointMenuItem): The text for all the elements that\n# are displayed in the breakpoints menu item popup.\nbreakpointMenuItem.setConditional=Configure conditional breakpoint\nbreakpointMenuItem.enableSelf2.label=Enable\nbreakpointMenuItem.enableSelf2.accesskey=E\nbreakpointMenuItem.disableSelf2.label=Disable\nbreakpointMenuItem.disableSelf2.accesskey=D\nbreakpointMenuItem.deleteSelf2.label=Remove\nbreakpointMenuItem.deleteSelf2.accesskey=R\nbreakpointMenuItem.enableOthers2.label=Enable others\nbreakpointMenuItem.enableOthers2.accesskey=o\nbreakpointMenuItem.disableOthers2.label=Disable others\nbreakpointMenuItem.disableOthers2.accesskey=s\nbreakpointMenuItem.deleteOthers2.label=Remove others\nbreakpointMenuItem.deleteOthers2.accesskey=h\nbreakpointMenuItem.enableAll2.label=Enable all\nbreakpointMenuItem.enableAll2.accesskey=b\nbreakpointMenuItem.disableAll2.label=Disable all\nbreakpointMenuItem.disableAll2.accesskey=k\nbreakpointMenuItem.deleteAll2.label=Remove all\nbreakpointMenuItem.deleteAll2.accesskey=a\nbreakpointMenuItem.removeCondition2.label=Remove condition\nbreakpointMenuItem.removeCondition2.accesskey=c\nbreakpointMenuItem.addCondition2.label=Add condition\nbreakpointMenuItem.addCondition2.accesskey=A\nbreakpointMenuItem.editCondition2.label=Edit condition\nbreakpointMenuItem.editCondition2.accesskey=n\nbreakpointMenuItem.enableSelf=Enable breakpoint\nbreakpointMenuItem.enableSelf.accesskey=E\nbreakpointMenuItem.disableSelf=Disable breakpoint\nbreakpointMenuItem.disableSelf.accesskey=D\nbreakpointMenuItem.deleteSelf=Remove breakpoint\nbreakpointMenuItem.deleteSelf.accesskey=R\nbreakpointMenuItem.enableOthers=Enable others\nbreakpointMenuItem.enableOthers.accesskey=o\nbreakpointMenuItem.disableOthers=Disable others\nbreakpointMenuItem.disableOthers.accesskey=s\nbreakpointMenuItem.deleteOthers=Remove others\nbreakpointMenuItem.deleteOthers.accesskey=h\nbreakpointMenuItem.enableAll=Enable all breakpoints\nbreakpointMenuItem.enableAll.accesskey=b\nbreakpointMenuItem.disableAll=Disable all breakpoints\nbreakpointMenuItem.disableAll.accesskey=k\nbreakpointMenuItem.deleteAll=Remove all breakpoints\nbreakpointMenuItem.deleteAll.accesskey=a\nbreakpointMenuItem.removeCondition.label=Remove breakpoint condition\nbreakpointMenuItem.removeCondition.accesskey=c\nbreakpointMenuItem.editCondition.label=Edit breakpoint condition\nbreakpointMenuItem.editCondition.accesskey=n\n\n# LOCALIZATION NOTE (breakpoints.header): Breakpoints right sidebar pane header.\nbreakpoints.header=Breakpoints\n\n# LOCALIZATION NOTE (breakpoints.none): The text that appears when there are\n# no breakpoints present\nbreakpoints.none=No breakpoints\n\n# LOCALIZATION NOTE (breakpoints.enable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.enable=Enable breakpoints\n\n# LOCALIZATION NOTE (breakpoints.disable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.disable=Disable breakpoints\n\n# LOCALIZATION NOTE (breakpoints.removeBreakpointTooltip): The tooltip that is displayed\n# for remove breakpoint button in right sidebar\nbreakpoints.removeBreakpointTooltip=Remove breakpoint\n\n# LOCALIZATION NOTE (callStack.header): Call Stack right sidebar pane header.\ncallStack.header=Call stack\n\n# LOCALIZATION NOTE (callStack.notPaused): Call Stack right sidebar pane\n# message when not paused.\ncallStack.notPaused=Not paused\n\n# LOCALIZATION NOTE (callStack.collapse): Call Stack right sidebar pane\n# message to hide some of the frames that are shown.\ncallStack.collapse=Collapse rows\n\n# LOCALIZATION NOTE (callStack.expand): Call Stack right sidebar pane\n# message to show more of the frames.\ncallStack.expand=Expand rows\n\n# LOCALIZATION NOTE (editor.searchResults): Editor Search bar message\n# for the summarizing the selected search result. e.g. 5 of 10 results.\neditor.searchResults=%d of %d results\n\n# LOCALIZATION NOTE (editor.singleResult): Copy shown when there is one result.\neditor.singleResult=1 result\n\n# LOCALIZATION NOTE (editor.noResults): Editor Search bar message\n# for when no results found.\neditor.noResults=No results\n\n# LOCALIZATION NOTE (editor.searchResults.nextResult): Editor Search bar\n# tooltip for traversing to the Next Result\neditor.searchResults.nextResult=Next result\n\n# LOCALIZATION NOTE (editor.searchResults.prevResult): Editor Search bar\n# tooltip for traversing to the Previous Result\neditor.searchResults.prevResult=Previous result\n\n# LOCALIZATION NOTE (editor.searchTypeToggleTitle): Search bar title for\n# toggling search type buttons(function search, variable search)\neditor.searchTypeToggleTitle=Search for:\n\n# LOCALIZATION NOTE (editor.continueToHere.label): Editor gutter context\n# menu item for jumping to a new paused location\neditor.continueToHere.label=Continue to here\neditor.continueToHere.accesskey=H\n\n# LOCALIZATION NOTE (editor.addBreakpoint): Editor gutter context menu item\n# for adding a breakpoint on a line.\neditor.addBreakpoint=Add breakpoint\n\n# LOCALIZATION NOTE (editor.disableBreakpoint): Editor gutter context menu item\n# for disabling a breakpoint on a line.\neditor.disableBreakpoint=Disable breakpoint\neditor.disableBreakpoint.accesskey=D\n\n# LOCALIZATION NOTE (editor.enableBreakpoint): Editor gutter context menu item\n# for enabling a breakpoint on a line.\neditor.enableBreakpoint=Enable breakpoint\n\n# LOCALIZATION NOTE (editor.removeBreakpoint): Editor gutter context menu item\n# for removing a breakpoint on a line.\neditor.removeBreakpoint=Remove breakpoint\n\n# LOCALIZATION NOTE (editor.editBreakpoint): Editor gutter context menu item\n# for setting a breakpoint condition on a line.\neditor.editBreakpoint=Edit breakpoint\n\n# LOCALIZATION NOTE (editor.addConditionalBreakpoint): Editor gutter context\n# menu item for adding a breakpoint condition on a line.\neditor.addConditionalBreakpoint=Add conditional breakpoint\neditor.addConditionalBreakpoint.accesskey=c\n\n# LOCALIZATION NOTE (editor.conditionalPanel.placeholder): Placeholder text for\n# input element inside ConditionalPanel component\neditor.conditionalPanel.placeholder=This breakpoint will pause when the expression is true\n\n# LOCALIZATION NOTE (editor.conditionalPanel.close): Tooltip text for\n# close button inside ConditionalPanel component\neditor.conditionalPanel.close=Cancel edit breakpoint and close\n\n# LOCALIZATION NOTE (editor.jumpToMappedLocation1): Context menu item\n# for navigating to a source mapped location\neditor.jumpToMappedLocation1=Jump to %S location\neditor.jumpToMappedLocation1.accesskey=m\n\n# LOCALIZATION NOTE (framework.disableGrouping): This is the text that appears in the\n# context menu to disable framework grouping.\nframework.disableGrouping=Disable framework grouping\nframework.disableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (framework.enableGrouping): This is the text that appears in the\n# context menu to enable framework grouping.\nframework.enableGrouping=Enable framework grouping\nframework.enableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (generated): Source Map term for a server source location\ngenerated=generated\n\n# LOCALIZATION NOTE (original): Source Map term for a debugger UI source location\noriginal=original\n\n# LOCALIZATION NOTE (expressions.placeholder): Placeholder text for expression\n# input element\nexpressions.placeholder=Add watch expression\n# LOCALIZATION NOTE (expressions.errorMsg): Error text for expression\n# input element\nexpressions.errorMsg=Invalid expression…\nexpressions.label=Add watch expression\nexpressions.accesskey=e\n\n# LOCALIZATION NOTE (sourceTabs.closeTab): Editor source tab context menu item\n# for closing the selected tab below the mouse.\nsourceTabs.closeTab=Close tab\nsourceTabs.closeTab.accesskey=c\n\n# LOCALIZATION NOTE (sourceTabs.closeOtherTabs): Editor source tab context menu item\n# for closing the other tabs.\nsourceTabs.closeOtherTabs=Close other tabs\nsourceTabs.closeOtherTabs.accesskey=o\n\n# LOCALIZATION NOTE (sourceTabs.closeTabsToEnd): Editor source tab context menu item\n# for closing the tabs to the end (the right for LTR languages) of the selected tab.\nsourceTabs.closeTabsToEnd=Close tabs to the right\nsourceTabs.closeTabsToEnd.accesskey=e\n\n# LOCALIZATION NOTE (sourceTabs.closeAllTabs): Editor source tab context menu item\n# for closing all tabs.\nsourceTabs.closeAllTabs=Close all tabs\nsourceTabs.closeAllTabs.accesskey=a\n\n# LOCALIZATION NOTE (sourceTabs.revealInTree): Editor source tab context menu item\n# for revealing source in tree.\nsourceTabs.revealInTree=Reveal in tree\nsourceTabs.revealInTree.accesskey=r\n\n# LOCALIZATION NOTE (sourceTabs.prettyPrint): Editor source tab context menu item\n# for pretty printing the source.\nsourceTabs.prettyPrint=Pretty print source\nsourceTabs.prettyPrint.accesskey=p\n\n# LOCALIZATION NOTE (sourceFooter.blackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.blackbox=Blackbox source\nsourceFooter.blackbox.accesskey=B\n\n# LOCALIZATION NOTE (sourceFooter.unblackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.unblackbox=Unblackbox source\nsourceFooter.unblackbox.accesskey=b\n\n# LOCALIZATION NOTE (sourceFooter.blackboxed): Text associated\n# with a blackboxed source\nsourceFooter.blackboxed=Blackboxed source\n\n# LOCALIZATION NOTE (sourceFooter.mappedSource): Text associated\n# with a mapped source. %S is replaced by the source map origin.\nsourceFooter.mappedSource=(From %S)\n\n# LOCALIZATION NOTE (sourceFooter.mappedSourceTooltip): Tooltip text associated\n# with a mapped source. %S is replaced by the source map origin.\nsourceFooter.mappedSourceTooltip=(Source mapped from %S)\n\n# LOCALIZATION NOTE (sourceFooter.codeCoverage): Text associated\n# with a code coverage button\nsourceFooter.codeCoverage=Code coverage\n\n# LOCALIZATION NOTE (sourceTabs.closeTabButtonTooltip): The tooltip that is displayed\n# for close tab button in source tabs.\nsourceTabs.closeTabButtonTooltip=Close tab\n\n# LOCALIZATION NOTE (scopes.header): Scopes right sidebar pane header.\nscopes.header=Scopes\n\n# LOCALIZATION NOTE (scopes.notAvailable): Scopes right sidebar pane message\n# for when the debugger is paused, but there isn't pause data.\nscopes.notAvailable=Scopes unavailable\n\n# LOCALIZATION NOTE (scopes.notPaused): Scopes right sidebar pane message\n# for when the debugger is not paused.\nscopes.notPaused=Not paused\n\n# LOCALIZATION NOTE (scopes.block): Refers to a block of code in\n# the scopes pane when the debugger is paused.\nscopes.block=Block\n\n# LOCALIZATION NOTE (sources.header): Sources left sidebar header\nsources.header=Sources\n\n# LOCALIZATION NOTE (outline.header): Outline left sidebar header\noutline.header=Outline\n\n# LOCALIZATION NOTE (outline.noFunctions): Outline text when there are no functions to display\noutline.noFunctions=No functions\n\n# LOCALIZATION NOTE (sources.search): Sources left sidebar prompt\n# e.g. Cmd+P to search. On a mac, we use the command unicode character.\n# On windows, it's ctrl.\nsources.search=%S to search\n\n# LOCALIZATION NOTE (watchExpressions.header): Watch Expressions right sidebar\n# pane header.\nwatchExpressions.header=Watch expressions\n\n# LOCALIZATION NOTE (watchExpressions.refreshButton): Watch Expressions header\n# button for refreshing the expressions.\nwatchExpressions.refreshButton=Refresh\n\n# LOCALIZATION NOTE (welcome.search): The center pane welcome panel's\n# search prompt. e.g. cmd+p to search for files. On windows, it's ctrl, on\n# a mac we use the unicode character.\nwelcome.search=%S to search for sources\n\n# LOCALIZATION NOTE (welcome.findInFiles): The center pane welcome panel's\n# search prompt. e.g. cmd+f to search for files. On windows, it's ctrl+shift+f, on\n# a mac we use the unicode character.\nwelcome.findInFiles=%S to find in files\n\n# LOCALIZATION NOTE (welcome.searchFunction): Label displayed in the welcome\n# panel. %S is replaced by the keyboard shortcut to search for functions.\nwelcome.searchFunction=%S to search for functions in file\n\n# LOCALIZATION NOTE (sourceSearch.search): The center pane Source Search\n# prompt for searching for files.\nsourceSearch.search=Search sources…\n\n# LOCALIZATION NOTE (sourceSearch.noResults2): The center pane Source Search\n# message when the query did not match any of the sources.\nsourceSearch.noResults2=No results found\n\n# LOCALIZATION NOTE (ignoreExceptions): The pause on exceptions button tooltip\n# when the debugger will not pause on exceptions.\nignoreExceptions=Ignore exceptions. Click to pause on uncaught exceptions\n\n# LOCALIZATION NOTE (pauseOnUncaughtExceptions): The pause on exceptions button\n# tooltip when the debugger will pause on uncaught exceptions.\npauseOnUncaughtExceptions=Pause on uncaught exceptions. Click to pause on all exceptions\n\n# LOCALIZATION NOTE (pauseOnExceptions): The pause on exceptions button tooltip\n# when the debugger will pause on all exceptions.\npauseOnExceptions=Pause on all exceptions. Click to ignore exceptions\n\n# LOCALIZATION NOTE (loadingText): The text that is displayed in the script\n# editor when the loading process has started but there is no file to display\n# yet.\nloadingText=Loading\\u2026\n\n# LOCALIZATION NOTE (wasmIsNotAvailable): The text that is displayed in the\n# script editor when the WebAssembly source is not available.\nwasmIsNotAvailable=Please refresh to debug this module\n\n# LOCALIZATION NOTE (errorLoadingText3): The text that is displayed in the debugger\n# viewer when there is an error loading a file\nerrorLoadingText3=Error loading this URI: %S\n\n# LOCALIZATION NOTE (addWatchExpressionText): The text that is displayed in the\n# watch expressions list to add a new item.\naddWatchExpressionText=Add watch expression\n\n# LOCALIZATION NOTE (addWatchExpressionButton): The button that is displayed in the\n# variables view popup.\naddWatchExpressionButton=Watch\n\n# LOCALIZATION NOTE (emptyVariablesText): The text that is displayed in the\n# variables pane when there are no variables to display.\nemptyVariablesText=No variables to display\n\n# LOCALIZATION NOTE (scopeLabel): The text that is displayed in the variables\n# pane as a header for each variable scope (e.g. \"Global scope, \"With scope\",\n# etc.).\nscopeLabel=%S scope\n\n# LOCALIZATION NOTE (watchExpressionsScopeLabel): The name of the watch\n# expressions scope. This text is displayed in the variables pane as a header for\n# the watch expressions scope.\nwatchExpressionsScopeLabel=Watch expressions\n\n# LOCALIZATION NOTE (globalScopeLabel): The name of the global scope. This text\n# is added to scopeLabel and displayed in the variables pane as a header for\n# the global scope.\nglobalScopeLabel=Global\n\n# LOCALIZATION NOTE (variablesViewErrorStacktrace): This is the text that is\n# shown before the stack trace in an error.\nvariablesViewErrorStacktrace=Stack trace:\n\n# LOCALIZATION NOTE (variablesViewMoreObjects): the text that is displayed\n# when you have an object preview that does not show all of the elements. At the end of the list\n# you see \"N more...\" in the web console output.\n# This is a semi-colon list of plural forms.\n# See: http://developer.mozilla.org/en/docs/Localization_and_Plurals\n# #1 number of remaining items in the object\n# example: 3 more…\nvariablesViewMoreObjects=#1 more…;#1 more…\n\n# LOCALIZATION NOTE (variablesEditableNameTooltip): The text that is displayed\n# in the variables list on an item with an editable name.\nvariablesEditableNameTooltip=Double click to edit\n\n# LOCALIZATION NOTE (variablesEditableValueTooltip): The text that is displayed\n# in the variables list on an item with an editable value.\nvariablesEditableValueTooltip=Click to change value\n\n# LOCALIZATION NOTE (variablesCloseButtonTooltip): The text that is displayed\n# in the variables list on an item which can be removed.\nvariablesCloseButtonTooltip=Click to remove\n\n# LOCALIZATION NOTE (variablesEditButtonTooltip): The text that is displayed\n# in the variables list on a getter or setter which can be edited.\nvariablesEditButtonTooltip=Click to set value\n\n# LOCALIZATION NOTE (variablesDomNodeValueTooltip): The text that is displayed\n# in a tooltip on the \"open in inspector\" button in the the variables list for a\n# DOMNode item.\nvariablesDomNodeValueTooltip=Click to select the node in the inspector\n\n# LOCALIZATION NOTE (configurable|...|Tooltip): The text that is displayed\n# in the variables list on certain variables or properties as tooltips.\n# Expanations of what these represent can be found at the following links:\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isExtensible\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isFrozen\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isSealed\n# It's probably best to keep these in English.\nconfigurableTooltip=configurable\nenumerableTooltip=enumerable\nwritableTooltip=writable\nfrozenTooltip=frozen\nsealedTooltip=sealed\nextensibleTooltip=extensible\noverriddenTooltip=overridden\nWebIDLTooltip=WebIDL\n\n# LOCALIZATION NOTE (variablesSeparatorLabel): The text that is displayed\n# in the variables list as a separator between the name and value.\nvariablesSeparatorLabel=:\n\n# LOCALIZATION NOTE (watchExpressionsSeparatorLabel2): The text that is displayed\n# in the watch expressions list as a separator between the code and evaluation.\nwatchExpressionsSeparatorLabel2=\\u0020→\n\n# LOCALIZATION NOTE (functionSearchSeparatorLabel): The text that is displayed\n# in the functions search panel as a separator between function's inferred name\n# and its real name (if available).\nfunctionSearchSeparatorLabel=←\n\n# LOCALIZATION NOTE(gotoLineModal.placeholder): The placeholder\n# text displayed when the user searches for specific lines in a file\ngotoLineModal.placeholder=Go to line…\ngotoLineModal.key=CmdOrCtrl+Shift+;\ngotoLineModal.title=Go to a line number in a file\n\n# LOCALIZATION NOTE(symbolSearch.search.functionsPlaceholder): The placeholder\n# text displayed when the user searches for functions in a file\nsymbolSearch.search.functionsPlaceholder=Search functions…\nsymbolSearch.search.functionsPlaceholder.title=Search for a function in a file\n\n# LOCALIZATION NOTE(symbolSearch.search.variablesPlaceholder): The placeholder\n# text displayed when the user searches for variables in a file\nsymbolSearch.search.variablesPlaceholder=Search variables…\nsymbolSearch.search.variablesPlaceholder.title=Search for a variable in a file\n\n# LOCALIZATION NOTE(symbolSearch.search.key2): The Key Shortcut for\n# searching for a function or variable\nsymbolSearch.search.key2=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.modifiersLabel): A label\n# preceding the group of modifiers\nsymbolSearch.searchModifier.modifiersLabel=Modifiers:\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.regex): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.regex=Regex\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.caseSensitive): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.caseSensitive=Case sensitive\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.wholeWord): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.wholeWord=Whole word\n\n# LOCALIZATION NOTE (resumptionOrderPanelTitle): This is the text that appears\n# as a description in the notification panel popup, when multiple debuggers are\n# open in separate tabs and the user tries to resume them in the wrong order.\n# The substitution parameter is the URL of the last paused window that must be\n# resumed first.\nresumptionOrderPanelTitle=There are one or more paused debuggers. Please resume the most-recently paused debugger first at: %S\n\nvariablesViewOptimizedOut=(optimized away)\nvariablesViewUninitialized=(uninitialized)\nvariablesViewMissingArgs=(unavailable)\n\nanonymousSourcesLabel=Anonymous sources\n\nexperimental=This is an experimental feature\n\n# LOCALIZATION NOTE (whyPaused.debuggerStatement): The text that is displayed\n# in a info block explaining how the debugger is currently paused due to a `debugger`\n# statement in the code\nwhyPaused.debuggerStatement=Paused on debugger statement\n\n# LOCALIZATION NOTE (whyPaused.breakpoint): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a breakpoint\nwhyPaused.breakpoint=Paused on breakpoint\n\n# LOCALIZATION NOTE (whyPaused.exception): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an exception\nwhyPaused.exception=Paused on exception\n\n# LOCALIZATION NOTE (whyPaused.resumeLimit): The text that is displayed\n# in a info block explaining how the debugger is currently paused while stepping\n# in or out of the stack\nwhyPaused.resumeLimit=Paused while stepping\n\n# LOCALIZATION NOTE (whyPaused.pauseOnDOMEvents): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# dom event\nwhyPaused.pauseOnDOMEvents=Paused on event listener\n\n# LOCALIZATION NOTE (whyPaused.breakpointConditionThrown): The text that is displayed\n# in an info block when evaluating a conditional breakpoint throws an error\nwhyPaused.breakpointConditionThrown=Error with conditional breakpoint\n\n# LOCALIZATION NOTE (whyPaused.xhr): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# xml http request\nwhyPaused.xhr=Paused on XMLHttpRequest\n\n# LOCALIZATION NOTE (whyPaused.promiseRejection): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# promise rejection\nwhyPaused.promiseRejection=Paused on promise rejection\n\n# LOCALIZATION NOTE (whyPaused.assert): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# assert\nwhyPaused.assert=Paused on assertion\n\n# LOCALIZATION NOTE (whyPaused.debugCommand): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# debugger statement\nwhyPaused.debugCommand=Paused on debugged function\n\n# LOCALIZATION NOTE (whyPaused.other): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an event\n# listener breakpoint set\nwhyPaused.other=Debugger paused\n\n# LOCALIZATION NOTE (ctrl): The text that is used for documenting\n# keyboard shortcuts that use the control key\nctrl=Ctrl\n\n# LOCALIZATION NOTE (anonymous): The text that is displayed when the\n# display name is null.\nanonymous=(anonymous)\n\n# LOCALIZATION NOTE (shortcuts.toggleBreakpoint): text describing\n# keyboard shortcut action for toggling breakpoint\nshortcuts.toggleBreakpoint=Toggle Breakpoint\nshortcuts.toggleBreakpoint.accesskey=B\n\n# LOCALIZATION NOTE (shortcuts.toggleCondPanel): text describing\n# keyboard shortcut action for toggling conditional panel keyboard\nshortcuts.toggleCondPanel=Toggle Conditional Panel\n\n# LOCALIZATION NOTE (shortcuts.pauseOrResume): text describing\n# keyboard shortcut action for pause of resume\nshortcuts.pauseOrResume=Pause/Resume\n\n# LOCALIZATION NOTE (shortcuts.stepOver): text describing\n# keyboard shortcut action for stepping over\nshortcuts.stepOver=Step Over\n\n# LOCALIZATION NOTE (shortcuts.stepIn): text describing\n# keyboard shortcut action for stepping in\nshortcuts.stepIn=Step In\n\n# LOCALIZATION NOTE (shortcuts.stepOut): text describing\n# keyboard shortcut action for stepping out\nshortcuts.stepOut=Step Out\n\n# LOCALIZATION NOTE (shortcuts.fileSearch): text describing\n# keyboard shortcut action for source file search\nshortcuts.fileSearch=Source File Search\n\n# LOCALIZATION NOTE (shortcuts.searchAgain): text describing\n# keyboard shortcut action for searching again\nshortcuts.searchAgain=Search Again\n\n# LOCALIZATION NOTE (shortcuts.projectSearch): text describing\n# keyboard shortcut action for full project search\nshortcuts.projectSearch=Full Project Search\n\n# LOCALIZATION NOTE (shortcuts.functionSearch): text describing\n# keyboard shortcut action for function search\nshortcuts.functionSearch=Function Search\n\n# LOCALIZATION NOTE (shortcuts.buttonName): text describing\n# keyboard shortcut button text\nshortcuts.buttonName=Keyboard shortcuts\n"
 
 /***/ }),
 /* 961 */,
@@ -16628,6 +16628,12 @@ function isURL(token) {
   }
 }
 
+const ellipsisElement = span({
+  key: "more",
+  className: "more-ellipsis",
+  title: `more${ELLIPSIS}`
+}, ELLIPSIS);
+
 module.exports = {
   isGrip,
   isURL,
@@ -16646,6 +16652,7 @@ module.exports = {
   getGripPreviewItems,
   getGripType,
   tokenSplitRegex,
+  ellipsisElement,
   ELLIPSIS
 };
 
@@ -18901,6 +18908,11 @@ function update(state = initialState(), action) {
       {
         return remapBreakpoints(state, action);
       }
+
+    case "NAVIGATE":
+      {
+        return initialState();
+      }
   }
 
   return state;
@@ -18929,12 +18941,16 @@ function addBreakpoint(state, action) {
 
 function syncBreakpoint(state, data) {
   const { breakpoint, previousLocation } = data;
-  const locationId = (0, _breakpoint.makeLocationId)(breakpoint.location);
 
   if (previousLocation) {
-    return state.deleteIn(["breakpoints", (0, _breakpoint.makeLocationId)(previousLocation)]).setIn(["breakpoints", locationId], breakpoint);
+    state = state.deleteIn(["breakpoints", (0, _breakpoint.makeLocationId)(previousLocation)]);
   }
 
+  if (!breakpoint) {
+    return state;
+  }
+
+  const locationId = (0, _breakpoint.makeLocationId)(breakpoint.location);
   return state.setIn(["breakpoints", locationId], breakpoint);
 }
 
@@ -19847,18 +19863,23 @@ exports.flashLineRange = flashLineRange;
 exports.clearHighlightLineRange = clearHighlightLineRange;
 exports.openConditionalPanel = openConditionalPanel;
 exports.closeConditionalPanel = closeConditionalPanel;
+exports.clearProjectDirectoryRoot = clearProjectDirectoryRoot;
 exports.setProjectDirectoryRoot = setProjectDirectoryRoot;
 exports.setOrientation = setOrientation;
 
 var _selectors = __webpack_require__(1352);
 
+var _ui = __webpack_require__(1421);
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 function setContextMenu(type, event) {
   return ({ dispatch }) => {
     dispatch({ type: "SET_CONTEXT_MENU", contextMenu: { type, event } });
   };
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 function setPrimaryPaneTab(tabName) {
   return { type: "SET_PRIMARY_PANE_TAB", tabName };
@@ -19971,10 +19992,26 @@ function closeConditionalPanel() {
   };
 }
 
-function setProjectDirectoryRoot(url) {
+function clearProjectDirectoryRoot() {
   return {
     type: "SET_PROJECT_DIRECTORY_ROOT",
-    url
+    url: ""
+  };
+}
+
+function setProjectDirectoryRoot(newRoot) {
+  return ({ dispatch, getState }) => {
+    const curRoot = (0, _ui.getProjectDirectoryRoot)(getState());
+    if (newRoot && curRoot) {
+      const temp = newRoot.split("/");
+      temp.splice(0, 2);
+      newRoot = `${curRoot}/${temp.join("/")}`;
+    }
+
+    dispatch({
+      type: "SET_PROJECT_DIRECTORY_ROOT",
+      url: newRoot
+    });
   };
 }
 
@@ -22754,12 +22791,11 @@ function findClosestScope(functions, location) {
   }, null);
 }
 
-async function getASTLocation(source, location) {
+function getASTLocation(source, symbols, location) {
   if (source.isWasm) {
     return { name: undefined, offset: location };
   }
 
-  const symbols = await (0, _parser.getSymbols)(source);
   const functions = [...symbols.functions];
 
   const scope = findClosestScope(functions, location);
@@ -23058,12 +23094,17 @@ function addBreakpoint(state, action) {
 
 function syncBreakpoint(state, action) {
   const { breakpoint, previousLocation } = action;
-  const locationId = (0, _breakpoint.makePendingLocationId)(breakpoint.location);
-  const pendingBreakpoint = (0, _breakpoint.createPendingBreakpoint)(breakpoint);
 
   if (previousLocation) {
-    return state.deleteIn(["pendingBreakpoints", (0, _breakpoint.makePendingLocationId)(previousLocation)]).setIn(["pendingBreakpoints", locationId], pendingBreakpoint);
+    state = state.deleteIn(["pendingBreakpoints", (0, _breakpoint.makePendingLocationId)(previousLocation)]);
   }
+
+  if (!breakpoint) {
+    return state;
+  }
+
+  const locationId = (0, _breakpoint.makePendingLocationId)(breakpoint.location);
+  const pendingBreakpoint = (0, _breakpoint.createPendingBreakpoint)(breakpoint);
 
   return state.setIn(["pendingBreakpoints", locationId], pendingBreakpoint);
 }
@@ -24622,15 +24663,17 @@ module.exports = SplitBox;
 "use strict";
 
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+var _tree = __webpack_require__(1541);
 
-const Tree = __webpack_require__(1541);
+var _tree2 = _interopRequireDefault(_tree);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
-  Tree
-};
+  Tree: _tree2.default
+}; /* This Source Code Form is subject to the terms of the Mozilla Public
+    * License, v. 2.0. If a copy of the MPL was not distributed with this
+    * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /***/ }),
 /* 1442 */
@@ -24643,36 +24686,12 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _formatTree = __webpack_require__(1542);
-
-Object.defineProperty(exports, "formatTree", {
-  enumerable: true,
-  get: function () {
-    return _formatTree.formatTree;
-  }
-});
-
 var _addToTree = __webpack_require__(1443);
 
 Object.defineProperty(exports, "addToTree", {
   enumerable: true,
   get: function () {
     return _addToTree.addToTree;
-  }
-});
-
-var _sortTree = __webpack_require__(1544);
-
-Object.defineProperty(exports, "sortTree", {
-  enumerable: true,
-  get: function () {
-    return _sortTree.sortTree;
-  }
-});
-Object.defineProperty(exports, "sortEntireTree", {
-  enumerable: true,
-  get: function () {
-    return _sortTree.sortEntireTree;
   }
 });
 
@@ -24685,15 +24704,6 @@ Object.defineProperty(exports, "collapseTree", {
   }
 });
 
-var _getDirectories = __webpack_require__(1545);
-
-Object.defineProperty(exports, "getDirectories", {
-  enumerable: true,
-  get: function () {
-    return _getDirectories.getDirectories;
-  }
-});
-
 var _createTree = __webpack_require__(1546);
 
 Object.defineProperty(exports, "createTree", {
@@ -24703,41 +24713,65 @@ Object.defineProperty(exports, "createTree", {
   }
 });
 
-var _getURL = __webpack_require__(1405);
+var _formatTree = __webpack_require__(1542);
 
-Object.defineProperty(exports, "getURL", {
+Object.defineProperty(exports, "formatTree", {
   enumerable: true,
   get: function () {
-    return _getURL.getURL;
+    return _formatTree.formatTree;
   }
 });
+
+var _getDirectories = __webpack_require__(1545);
+
+Object.defineProperty(exports, "getDirectories", {
+  enumerable: true,
+  get: function () {
+    return _getDirectories.getDirectories;
+  }
+});
+
+var _getURL = __webpack_require__(1405);
+
 Object.defineProperty(exports, "getFilenameFromPath", {
   enumerable: true,
   get: function () {
     return _getURL.getFilenameFromPath;
   }
 });
+Object.defineProperty(exports, "getURL", {
+  enumerable: true,
+  get: function () {
+    return _getURL.getURL;
+  }
+});
+
+var _sortTree = __webpack_require__(1544);
+
+Object.defineProperty(exports, "sortEntireTree", {
+  enumerable: true,
+  get: function () {
+    return _sortTree.sortEntireTree;
+  }
+});
+Object.defineProperty(exports, "sortTree", {
+  enumerable: true,
+  get: function () {
+    return _sortTree.sortTree;
+  }
+});
+
+var _updateTree = __webpack_require__(2245);
+
+Object.defineProperty(exports, "updateTree", {
+  enumerable: true,
+  get: function () {
+    return _updateTree.updateTree;
+  }
+});
 
 var _utils = __webpack_require__(1371);
 
-Object.defineProperty(exports, "nodeHasChildren", {
-  enumerable: true,
-  get: function () {
-    return _utils.nodeHasChildren;
-  }
-});
-Object.defineProperty(exports, "isExactUrlMatch", {
-  enumerable: true,
-  get: function () {
-    return _utils.isExactUrlMatch;
-  }
-});
-Object.defineProperty(exports, "isDirectory", {
-  enumerable: true,
-  get: function () {
-    return _utils.isDirectory;
-  }
-});
 Object.defineProperty(exports, "createNode", {
   enumerable: true,
   get: function () {
@@ -24756,10 +24790,28 @@ Object.defineProperty(exports, "getRelativePath", {
     return _utils.getRelativePath;
   }
 });
+Object.defineProperty(exports, "isDirectory", {
+  enumerable: true,
+  get: function () {
+    return _utils.isDirectory;
+  }
+});
+Object.defineProperty(exports, "isExactUrlMatch", {
+  enumerable: true,
+  get: function () {
+    return _utils.isExactUrlMatch;
+  }
+});
 Object.defineProperty(exports, "isNotJavaScript", {
   enumerable: true,
   get: function () {
     return _utils.isNotJavaScript;
+  }
+});
+Object.defineProperty(exports, "nodeHasChildren", {
+  enumerable: true,
+  get: function () {
+    return _utils.nodeHasChildren;
   }
 });
 
@@ -24781,6 +24833,21 @@ var _treeOrder = __webpack_require__(1543);
 
 var _getURL = __webpack_require__(1405);
 
+function isUnderRoot(url, projectRoot) {
+  if (!projectRoot) {
+    return true;
+  }
+
+  return `/${url.group}${url.path}`.startsWith(projectRoot);
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function removeProjectRoot(parts, projectRoot) {
+  const rootParts = projectRoot.replace("://", "").split("/");
+  return parts.splice(0, rootParts.length - 2);
+}
+
 function createNodeInTree(part, path, tree, index) {
   const node = (0, _utils.createNode)(part, path, []);
 
@@ -24798,10 +24865,6 @@ function createNodeInTree(part, path, tree, index) {
  * 2. if it does not exist create it
  * 3. if it is a file, replace it with a directory
  */
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 function findOrCreateNode(parts, subTree, path, part, index, url, debuggeeHost) {
   const addedPartIsFile = (0, _utils.partIsFile)(index, parts, url);
   const { found: childFound, index: childIndex } = (0, _treeOrder.findNodeInContents)(subTree, (0, _treeOrder.createTreeNodeMatcher)(part, !addedPartIsFile, debuggeeHost));
@@ -24829,11 +24892,15 @@ function findOrCreateNode(parts, subTree, path, part, index, url, debuggeeHost) 
  * walk the source tree to the final node for a given url,
  * adding new nodes along the way
  */
-function traverseTree(url, tree, debuggeeHost) {
+function traverseTree(url, tree, debuggeeHost, projectRoot) {
   url.path = decodeURIComponent(url.path);
 
   const parts = url.path.split("/").filter(p => p !== "");
   parts.unshift(url.group);
+
+  if (projectRoot) {
+    removeProjectRoot(parts, projectRoot);
+  }
 
   let path = "";
   return parts.reduce((subTree, part, index) => {
@@ -24881,11 +24948,11 @@ function addToTree(tree, source, debuggeeUrl, projectRoot) {
   const url = (0, _getURL.getURL)(source.get("url"), debuggeeUrl);
   const debuggeeHost = (0, _treeOrder.getDomain)(debuggeeUrl);
 
-  if ((0, _utils.isInvalidUrl)(url, source)) {
+  if ((0, _utils.isInvalidUrl)(url, source) || !isUnderRoot(url, projectRoot)) {
     return;
   }
 
-  const finalNode = traverseTree(url, tree, debuggeeHost);
+  const finalNode = traverseTree(url, tree, debuggeeHost, projectRoot);
   finalNode.contents = addSourceToNode(finalNode, url, source);
 }
 
@@ -25425,7 +25492,8 @@ module.exports = {
   rep: wrapRender(ArrayRep),
   supportsObject,
   maxLengthMap,
-  getLength
+  getLength,
+  ModePropType
 };
 
 /***/ }),
@@ -25475,15 +25543,19 @@ module.exports = {
 
 // Dependencies
 const PropTypes = __webpack_require__(20);
+
+const { lengthBubble } = __webpack_require__(2249);
 const {
   getGripType,
   isGrip,
-  wrapRender
+  wrapRender,
+  ellipsisElement
 } = __webpack_require__(1353);
 const { MODE } = __webpack_require__(1357);
 
 const dom = __webpack_require__(1758);
 const { span } = dom;
+const { ModePropType } = __webpack_require__(1448);
 
 /**
  * Renders an array. The array is enclosed by left and right bracket
@@ -25492,7 +25564,7 @@ const { span } = dom;
 GripArray.propTypes = {
   object: PropTypes.object.isRequired,
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  mode: ModePropType,
   provider: PropTypes.object,
   onDOMNodeMouseOver: PropTypes.func,
   onDOMNodeMouseOut: PropTypes.func,
@@ -25511,35 +25583,32 @@ function GripArray(props) {
     return space ? { left: "[ ", right: " ]" } : { left: "[", right: "]" };
   };
 
+  const config = {
+    "data-link-actor-id": object.actor,
+    className: "objectBox objectBox-array"
+  };
+
+  const title = getTitle(props, object);
+
   if (mode === MODE.TINY) {
-    let objectLength = getLength(object);
-    let isEmpty = objectLength === 0;
-    let ellipsis;
-    if (!isEmpty) {
-      ellipsis = span({
-        className: "more-ellipsis",
-        title: "more…"
-      }, "…");
+    const isEmpty = getLength(object) === 0;
+
+    // Omit bracketed ellipsis for non-empty non-Array arraylikes (f.e: Sets).
+    if (!isEmpty && object.class !== "Array") {
+      return span(config, title);
     }
 
-    let title;
-    if (object.class != "Array") {
-      title = object.class + " ";
-    }
     brackets = needSpace(false);
-    return span({
-      "data-link-actor-id": object.actor,
-      className: "objectBox objectBox-array" }, title, span({
+    return span(config, title, span({
       className: "arrayLeftBracket"
-    }, brackets.left), ellipsis, span({
+    }, brackets.left), isEmpty ? null : ellipsisElement, span({
       className: "arrayRightBracket"
     }, brackets.right));
   }
+
   let max = maxLengthMap.get(mode);
   items = arrayIterator(props, object, max);
   brackets = needSpace(items.length > 0);
-
-  let title = getTitle(props, object);
 
   return span({
     "data-link-actor-id": object.actor,
@@ -25570,14 +25639,36 @@ function getLength(grip) {
 }
 
 function getTitle(props, object) {
-  if (props.mode === MODE.TINY) {
-    return "";
-  }
+  let objectLength = getLength(object);
+  let isEmpty = objectLength === 0;
 
   let title = props.title || object.class || "Array";
+
+  const length = lengthBubble({
+    object,
+    mode: props.mode,
+    maxLengthMap,
+    getLength
+  });
+
+  if (props.mode === MODE.TINY) {
+    if (isEmpty) {
+      return object.class === "Array" ? "" : span({
+        className: "objectTitle" }, title, " ");
+    }
+
+    let trailingSpace;
+    if (object.class === "Array") {
+      title = "";
+      trailingSpace = " ";
+    }
+
+    return span({
+      className: "objectTitle" }, title, length, trailingSpace);
+  }
+
   return span({
-    className: "objectTitle"
-  }, title + " ");
+    className: "objectTitle" }, title, length, " ");
 }
 
 function getPreviewItems(grip) {
@@ -25646,10 +25737,7 @@ function arrayIterator(props, grip, max) {
 
   const itemsShown = items.length + foldedEmptySlots;
   if (gripLength > itemsShown) {
-    items.push(span({
-      className: "more-ellipsis",
-      title: "more…"
-    }, "…"));
+    items.push(ellipsisElement);
   }
 
   return items;
@@ -29016,9 +29104,7 @@ var chrome = _interopRequireWildcard(_chrome);
 
 var _prefs = __webpack_require__(226);
 
-var _timings = __webpack_require__(1657);
-
-var timings = _interopRequireWildcard(_timings);
+var _dbg = __webpack_require__(2246);
 
 var _devtoolsConfig = __webpack_require__(1355);
 
@@ -29059,28 +29145,16 @@ async function onConnect(connection, { services, toolboxActions }) {
   const { bpClients } = await client.onConnect(connection, actions);
   await loadFromPrefs(actions);
 
-  window.getGlobalsForTesting = () => {
-    return {
+  if (!(0, _devtoolsConfig.isFirefoxPanel)()) {
+    (0, _dbg.setupHelper)({
       store,
       actions,
       selectors,
       client: client.clientCommands,
-      prefs: _prefs.prefs,
-      features: _prefs.features,
       connection,
       bpClients,
-      services,
-      timings
-    };
-  };
-
-  if (!(0, _devtoolsConfig.isFirefoxPanel)()) {
-    console.group("Development Notes");
-    const baseUrl = "https://devtools-html.github.io/debugger.html";
-    const localDevelopmentUrl = `${baseUrl}/docs/local-development.html`;
-    console.log("Debugging Tips", localDevelopmentUrl);
-    console.log("getGlobalsForTesting", window.getGlobalsForTesting());
-    console.groupEnd();
+      services
+    });
   }
 
   (0, _bootstrap.bootstrapApp)(connection, { store, actions });
@@ -29243,7 +29317,7 @@ function sourceContents(sourceId) {
 }
 
 function getBreakpointByLocation(location) {
-  const id = (0, _breakpoint.makeLocationId)(location);
+  const id = (0, _breakpoint.makePendingLocationId)(location);
   const bpClient = bpClients[id];
 
   if (bpClient) {
@@ -29272,7 +29346,7 @@ function setBreakpoint(location, condition, noSliding) {
     noSliding
   }).then(([{ actualLocation }, bpClient]) => {
     actualLocation = (0, _create.createBreakpointLocation)(location, actualLocation);
-    const id = (0, _breakpoint.makeLocationId)(actualLocation);
+    const id = (0, _breakpoint.makePendingLocationId)(actualLocation);
     bpClients[id] = bpClient;
     bpClient.location.line = actualLocation.line;
     bpClient.location.column = actualLocation.column;
@@ -29284,7 +29358,7 @@ function setBreakpoint(location, condition, noSliding) {
 
 function removeBreakpoint(generatedLocation) {
   try {
-    const id = (0, _breakpoint.makeLocationId)(generatedLocation);
+    const id = (0, _breakpoint.makePendingLocationId)(generatedLocation);
     const bpClient = bpClients[id];
     if (!bpClient) {
       console.warn("No breakpoint to delete on server");
@@ -30606,7 +30680,8 @@ exports.default = async function addBreakpoint(getState, client, sourceMaps, { b
   const newGeneratedLocation = actualLocation || generatedLocation;
   const newLocation = await sourceMaps.getOriginalLocation(newGeneratedLocation);
 
-  const astLocation = await (0, _breakpoint.getASTLocation)(sourceRecord, newLocation);
+  const symbols = (0, _selectors.getSymbols)(getState(), sourceRecord);
+  const astLocation = await (0, _breakpoint.getASTLocation)(sourceRecord, symbols, newLocation);
 
   const newBreakpoint = {
     id,
@@ -30699,7 +30774,7 @@ async function makeScopedLocation({ name, offset }, location, source) {
   };
 }
 
-function createSyncData(id, pendingBreakpoint, location, generatedLocation, previousLocation = null) {
+function createSyncData(id, pendingBreakpoint, location, generatedLocation, previousLocation) {
   const overrides = _extends({}, pendingBreakpoint, { generatedLocation, id });
   const breakpoint = (0, _breakpoint.createBreakpoint)(location, overrides);
 
@@ -30748,6 +30823,11 @@ async function syncClientBreakpoint(getState, client, sourceMaps, sourceId, pend
   /** ******* Case 2: Add New Breakpoint ***********/
   // If we are not disabled, set the breakpoint on the server and get
   // that info so we can set it on our breakpoints.
+
+  if (!scopedGeneratedLocation.line) {
+    return { previousLocation, breakpoint: null };
+  }
+
   const { id, actualLocation } = await client.setBreakpoint(scopedGeneratedLocation, pendingBreakpoint.condition, sourceMaps.isOriginalId(sourceId));
 
   // the breakpoint might have slid server side, so we want to get the location
@@ -32146,11 +32226,37 @@ module.exports = Svg;
 "use strict";
 
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
-const { DOM: dom, createClass, createFactory, PropTypes } = __webpack_require__(0);
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDomFactories = __webpack_require__(1758);
+
+var _reactDomFactories2 = _interopRequireDefault(_reactDomFactories);
+
+var _propTypes = __webpack_require__(20);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+var _svgInlineReact = __webpack_require__(1763);
+
+var _svgInlineReact2 = _interopRequireDefault(_svgInlineReact);
+
+var _arrow = __webpack_require__(2247);
+
+var _arrow2 = _interopRequireDefault(_arrow);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const { Component, createFactory, createElement } = _react2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                      * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                      * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+__webpack_require__(2248);
 
 const AUTO_EXPAND_DEPTH = 0; // depth
 
@@ -32158,94 +32264,95 @@ const AUTO_EXPAND_DEPTH = 0; // depth
  * An arrow that displays whether its node is expanded (▼) or collapsed
  * (▶). When its node has no children, it is hidden.
  */
-const ArrowExpander = createFactory(createClass({
-  displayName: "ArrowExpander",
+class ArrowExpander extends Component {
+  static get propTypes() {
+    return {
+      expanded: _propTypes2.default.bool
+    };
+  }
 
   shouldComponentUpdate(nextProps, nextState) {
-    return this.props.item !== nextProps.item || this.props.visible !== nextProps.visible || this.props.expanded !== nextProps.expanded;
-  },
+    return this.props.expanded !== nextProps.expanded;
+  }
 
   render() {
-    const attrs = {
-      className: "arrow theme-twisty",
-      onClick: this.props.expanded ? () => this.props.onCollapse(this.props.item) : e => this.props.onExpand(this.props.item, e.altKey)
-    };
+    const {
+      expanded
+    } = this.props;
 
-    if (this.props.expanded) {
-      attrs.className += " open";
+    const classNames = ["arrow"];
+    if (expanded) {
+      classNames.push("expanded");
     }
-
-    if (!this.props.visible) {
-      attrs.style = Object.assign({}, this.props.style || {}, {
-        visibility: "hidden"
-      });
-    }
-
-    return dom.div(attrs, this.props.children);
+    return createElement(_svgInlineReact2.default, {
+      className: classNames.join(" "),
+      src: _arrow2.default
+    });
   }
-}));
+}
 
-const TreeNode = createFactory(createClass({
-  displayName: "TreeNode",
+const treeIndent = _reactDomFactories2.default.span({ className: "tree-indent" }, "\u200B");
 
-  componentDidMount() {
-    if (this.props.focused) {
-      this.refs.button.focus();
-    }
-  },
-
-  componentDidUpdate() {
-    if (this.props.focused) {
-      this.refs.button.focus();
-    }
-  },
+class TreeNode extends Component {
+  static get propTypes() {
+    return {
+      id: _propTypes2.default.any.isRequired,
+      index: _propTypes2.default.number.isRequired,
+      depth: _propTypes2.default.number.isRequired,
+      focused: _propTypes2.default.bool.isRequired,
+      expanded: _propTypes2.default.bool.isRequired,
+      item: _propTypes2.default.any.isRequired,
+      isExpandable: _propTypes2.default.bool.isRequired,
+      onClick: _propTypes2.default.func,
+      renderItem: _propTypes2.default.func.isRequired
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     return this.props.item !== nextProps.item || this.props.focused !== nextProps.focused || this.props.expanded !== nextProps.expanded;
-  },
+  }
 
   render() {
-    const arrow = ArrowExpander({
-      item: this.props.item,
-      expanded: this.props.expanded,
-      visible: this.props.hasChildren,
-      onExpand: this.props.onExpand,
-      onCollapse: this.props.onCollapse
-    });
+    const {
+      depth,
+      id,
+      item,
+      focused,
+      expanded,
+      renderItem,
+      isExpandable
+    } = this.props;
 
-    let isOddRow = this.props.index % 2;
-    return dom.div({
-      className: `tree-node div ${isOddRow ? "tree-node-odd" : ""}`,
-      onFocus: this.props.onFocus,
-      onClick: this.props.onFocus,
-      onBlur: this.props.onBlur,
-      style: {
-        padding: 0,
-        margin: 0
-      }
-    }, this.props.renderItem(this.props.item, this.props.depth, this.props.focused, arrow, this.props.expanded),
+    const arrow = isExpandable ? ArrowExpanderFactory({
+      item,
+      expanded
+    }) : null;
 
-    // XXX: OSX won't focus/blur regular elements even if you set tabindex
-    // unless there is an input/button child.
-    dom.button(this._buttonAttrs));
-  },
-
-  _buttonAttrs: {
-    ref: "button",
-    style: {
-      opacity: 0,
-      width: "0 !important",
-      height: "0 !important",
-      padding: "0 !important",
-      outline: "none",
-      MozAppearance: "none",
-      // XXX: Despite resetting all of the above properties (and margin), the
-      // button still ends up with ~79px width, so we set a large negative
-      // margin to completely hide it.
-      MozMarginStart: "-1000px !important"
+    let ariaExpanded;
+    if (this.props.isExpandable) {
+      ariaExpanded = false;
     }
+    if (this.props.expanded) {
+      ariaExpanded = true;
+    }
+
+    const indents = Array.from({ length: depth }).fill(treeIndent);
+    let items = indents.concat(renderItem(item, depth, focused, arrow, expanded));
+
+    return _reactDomFactories2.default.div({
+      id,
+      className: "tree-node" + (focused ? " focused" : ""),
+      onClick: this.props.onClick,
+      role: "treeitem",
+      "aria-level": depth,
+      "aria-expanded": ariaExpanded,
+      "data-expandable": this.props.isExpandable
+    }, ...items);
   }
-}));
+}
+
+const ArrowExpanderFactory = createFactory(ArrowExpander);
+const TreeNodeFactory = createFactory(TreeNode);
 
 /**
  * Create a function that calls the given function `fn` only once per animation
@@ -32271,86 +32378,259 @@ function oncePerAnimationFrame(fn) {
   };
 }
 
-const NUMBER_OF_OFFSCREEN_ITEMS = 1;
-
 /**
  * A generic tree component. See propTypes for the public API.
  *
- * @see `devtools/client/memory/components/test/mochitest/head.js` for usage
- * @see `devtools/client/memory/components/heap.js` for usage
+ * This tree component doesn't make any assumptions about the structure of your
+ * tree data. Whether children are computed on demand, or stored in an array in
+ * the parent's `_children` property, it doesn't matter. We only require the
+ * implementation of `getChildren`, `getRoots`, `getParent`, and `isExpanded`
+ * functions.
+ *
+ * This tree component is well tested and reliable. See the tests in ./tests
+ * and its usage in the performance and memory panels in mozilla-central.
+ *
+ * This tree component doesn't make any assumptions about how to render items in
+ * the tree. You provide a `renderItem` function, and this component will ensure
+ * that only those items whose parents are expanded and which are visible in the
+ * viewport are rendered. The `renderItem` function could render the items as a
+ * "traditional" tree or as rows in a table or anything else. It doesn't
+ * restrict you to only one certain kind of tree.
+ *
+ * The tree comes with basic styling for the indent, the arrow, as well as hovered
+ * and focused styles which can be override in CSS.
+ *
+ * ### Example Usage
+ *
+ * Suppose we have some tree data where each item has this form:
+ *
+ *     {
+ *       id: Number,
+ *       label: String,
+ *       parent: Item or null,
+ *       children: Array of child items,
+ *       expanded: bool,
+ *     }
+ *
+ * Here is how we could render that data with this component:
+ *
+ *     class MyTree extends Component {
+ *       static get propTypes() {
+ *         // The root item of the tree, with the form described above.
+ *         return {
+ *           root: PropTypes.object.isRequired
+ *         };
+ *       },
+ *
+ *       render() {
+ *         return Tree({
+ *           itemHeight: 20, // px
+ *
+ *           getRoots: () => [this.props.root],
+ *
+ *           getParent: item => item.parent,
+ *           getChildren: item => item.children,
+ *           getKey: item => item.id,
+ *           isExpanded: item => item.expanded,
+ *
+ *           renderItem: (item, depth, isFocused, arrow, isExpanded) => {
+ *             let className = "my-tree-item";
+ *             if (isFocused) {
+ *               className += " focused";
+ *             }
+ *             return dom.div({
+ *               className,
+ *             },
+ *               arrow,
+ *               // And here is the label for this item.
+ *               dom.span({ className: "my-tree-item-label" }, item.label)
+ *             );
+ *           },
+ *
+ *           onExpand: item => dispatchExpandActionToRedux(item),
+ *           onCollapse: item => dispatchCollapseActionToRedux(item),
+ *         });
+ *       }
+ *     }
  */
-const Tree = module.exports = createClass({
-  displayName: "Tree",
+class Tree extends Component {
+  static get propTypes() {
+    return {
+      // Required props
 
-  propTypes: {
-    // Required props
+      // A function to get an item's parent, or null if it is a root.
+      //
+      // Type: getParent(item: Item) -> Maybe<Item>
+      //
+      // Example:
+      //
+      //     // The parent of this item is stored in its `parent` property.
+      //     getParent: item => item.parent
+      getParent: _propTypes2.default.func.isRequired,
 
-    // A function to get an item's parent, or null if it is a root.
-    getParent: PropTypes.func.isRequired,
-    // A function to get an item's children.
-    getChildren: PropTypes.func.isRequired,
-    // A function which takes an item and ArrowExpander and returns a
-    // component.
-    renderItem: PropTypes.func.isRequired,
-    // A function which returns the roots of the tree (forest).
-    getRoots: PropTypes.func.isRequired,
-    // A function to get a unique key for the given item.
-    getKey: PropTypes.func.isRequired,
-    // A function to get whether an item is expanded or not. If an item is not
-    // expanded, then it must be collapsed.
-    isExpanded: PropTypes.func.isRequired,
-    // The height of an item in the tree including margin and padding, in
-    // pixels.
-    itemHeight: PropTypes.number.isRequired,
+      // A function to get an item's children.
+      //
+      // Type: getChildren(item: Item) -> [Item]
+      //
+      // Example:
+      //
+      //     // This item's children are stored in its `children` property.
+      //     getChildren: item => item.children
+      getChildren: _propTypes2.default.func.isRequired,
 
-    // Optional props
+      // A function which takes an item and ArrowExpander component instance and
+      // returns a component, or text, or anything else that React considers
+      // renderable.
+      //
+      // Type: renderItem(item: Item,
+      //                  depth: Number,
+      //                  isFocused: Boolean,
+      //                  arrow: ReactComponent,
+      //                  isExpanded: Boolean) -> ReactRenderable
+      //
+      // Example:
+      //
+      //     renderItem: (item, depth, isFocused, arrow, isExpanded) => {
+      //       let className = "my-tree-item";
+      //       if (isFocused) {
+      //         className += " focused";
+      //       }
+      //       return dom.div(
+      //         {
+      //           className,
+      //           style: { marginLeft: depth * 10 + "px" }
+      //         },
+      //         arrow,
+      //         dom.span({ className: "my-tree-item-label" }, item.label)
+      //       );
+      //     },
+      renderItem: _propTypes2.default.func.isRequired,
 
-    // The currently focused item, if any such item exists.
-    focused: PropTypes.any,
-    // Handle when a new item is focused.
-    onFocus: PropTypes.func,
-    // The depth to which we should automatically expand new items.
-    autoExpandDepth: PropTypes.number,
-    // Should auto expand all new items or just the new items under the first
-    // root item.
-    autoExpandAll: PropTypes.bool,
-    // Optional event handlers for when items are expanded or collapsed.
-    onExpand: PropTypes.func,
-    onCollapse: PropTypes.func
-  },
+      // A function which returns the roots of the tree (forest).
+      //
+      // Type: getRoots() -> [Item]
+      //
+      // Example:
+      //
+      //     // In this case, we only have one top level, root item. You could
+      //     // return multiple items if you have many top level items in your
+      //     // tree.
+      //     getRoots: () => [this.props.rootOfMyTree]
+      getRoots: _propTypes2.default.func.isRequired,
 
-  getDefaultProps() {
+      // A function to get a unique key for the given item. This helps speed up
+      // React's rendering a *TON*.
+      //
+      // Type: getKey(item: Item) -> String
+      //
+      // Example:
+      //
+      //     getKey: item => `my-tree-item-${item.uniqueId}`
+      getKey: _propTypes2.default.func.isRequired,
+
+      // A function to get whether an item is expanded or not. If an item is not
+      // expanded, then it must be collapsed.
+      //
+      // Type: isExpanded(item: Item) -> Boolean
+      //
+      // Example:
+      //
+      //     isExpanded: item => item.expanded,
+      isExpanded: _propTypes2.default.func.isRequired,
+
+      // Optional props
+
+      // The currently focused item, if any such item exists.
+      focused: _propTypes2.default.any,
+
+      // Handle when a new item is focused.
+      onFocus: _propTypes2.default.func,
+
+      // The depth to which we should automatically expand new items.
+      autoExpandDepth: _propTypes2.default.number,
+      // Should auto expand all new items or just the new items under the first
+      // root item.
+      autoExpandAll: _propTypes2.default.bool,
+
+      // Note: the two properties below are mutually exclusive. Only one of the
+      // label properties is necessary.
+      // ID of an element whose textual content serves as an accessible label for
+      // a tree.
+      labelledby: _propTypes2.default.string,
+      // Accessibility label for a tree widget.
+      label: _propTypes2.default.string,
+
+      // Optional event handlers for when items are expanded or collapsed. Useful
+      // for dispatching redux events and updating application state, maybe lazily
+      // loading subtrees from a worker, etc.
+      //
+      // Type:
+      //     onExpand(item: Item)
+      //     onCollapse(item: Item)
+      //
+      // Example:
+      //
+      //     onExpand: item => dispatchExpandActionToRedux(item)
+      onExpand: _propTypes2.default.func,
+      onCollapse: _propTypes2.default.func,
+      isExpandable: _propTypes2.default.func,
+      // Additional classes to add to the root element.
+      className: _propTypes2.default.string,
+      // style object to be applied to the root element.
+      style: _propTypes2.default.object
+    };
+  }
+
+  static get defaultProps() {
     return {
       autoExpandDepth: AUTO_EXPAND_DEPTH,
       autoExpandAll: true
     };
-  },
+  }
 
-  getInitialState() {
-    return {
-      scroll: 0,
-      height: window.innerHeight,
+  constructor(props) {
+    super(props);
+
+    this.state = {
       seen: new Set()
     };
-  },
+
+    this._onExpand = oncePerAnimationFrame(this._onExpand).bind(this);
+    this._onCollapse = oncePerAnimationFrame(this._onCollapse).bind(this);
+    this._focusPrevNode = oncePerAnimationFrame(this._focusPrevNode).bind(this);
+    this._focusNextNode = oncePerAnimationFrame(this._focusNextNode).bind(this);
+    this._focusParentNode = oncePerAnimationFrame(this._focusParentNode).bind(this);
+
+    this._autoExpand = this._autoExpand.bind(this);
+    this._preventArrowKeyScrolling = this._preventArrowKeyScrolling.bind(this);
+    this._dfs = this._dfs.bind(this);
+    this._dfsFromRoots = this._dfsFromRoots.bind(this);
+    this._focus = this._focus.bind(this);
+    this._scrollNodeIntoView = this._scrollNodeIntoView.bind(this);
+    this._onBlur = this._onBlur.bind(this);
+    this._onKeyDown = this._onKeyDown.bind(this);
+    this._nodeIsExpandable = this._nodeIsExpandable.bind(this);
+  }
 
   componentDidMount() {
-    window.addEventListener("resize", this._updateHeight);
-    this._autoExpand(this.props);
-    this._updateHeight();
-  },
-
-  componentWillUnmount() {
-    window.removeEventListener("resize", this._updateHeight);
-  },
+    this._autoExpand();
+    if (this.props.focused) {
+      this._scrollNodeIntoView(this.props.focused);
+    }
+  }
 
   componentWillReceiveProps(nextProps) {
-    this._autoExpand(nextProps);
-    this._updateHeight();
-  },
+    this._autoExpand();
+  }
 
-  _autoExpand(props) {
-    if (!props.autoExpandDepth) {
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.focused !== this.props.focused) {
+      this._scrollNodeIntoView(this.props.focused);
+    }
+  }
+
+  _autoExpand() {
+    if (!this.props.autoExpandDepth) {
       return;
     }
 
@@ -32358,66 +32638,30 @@ const Tree = module.exports = createClass({
     // not use the usual DFS infrastructure because we don't want to ignore
     // collapsed nodes.
     const autoExpand = (item, currentDepth) => {
-      if (currentDepth >= props.autoExpandDepth || this.state.seen.has(item)) {
+      if (currentDepth >= this.props.autoExpandDepth || this.state.seen.has(item)) {
         return;
       }
 
-      props.onExpand(item);
+      this.props.onExpand(item);
       this.state.seen.add(item);
 
-      const children = props.getChildren(item);
+      const children = this.props.getChildren(item);
       const length = children.length;
       for (let i = 0; i < length; i++) {
         autoExpand(children[i], currentDepth + 1);
       }
     };
 
-    const roots = props.getRoots();
+    const roots = this.props.getRoots();
     const length = roots.length;
-    if (props.autoExpandAll) {
+    if (this.props.autoExpandAll) {
       for (let i = 0; i < length; i++) {
         autoExpand(roots[i], 0);
       }
     } else if (length != 0) {
       autoExpand(roots[0], 0);
     }
-  },
-
-  render() {
-    const traversal = this._dfsFromRoots();
-
-    const renderItem = i => {
-      let { item, depth } = traversal[i];
-      return TreeNode({
-        key: this.props.getKey(item, i),
-        index: i,
-        item: item,
-        depth: depth,
-        renderItem: this.props.renderItem,
-        focused: this.props.focused === item,
-        expanded: this.props.isExpanded(item),
-        hasChildren: !!this.props.getChildren(item).length,
-        onExpand: this._onExpand,
-        onCollapse: this._onCollapse,
-        onFocus: () => this._focus(i, item)
-      });
-    };
-
-    const style = Object.assign({}, this.props.style || {}, {
-      padding: 0,
-      margin: 0
-    });
-
-    return dom.div({
-      className: `tree ${this.props.className ? this.props.className : ""}`,
-      ref: "tree",
-      onKeyDown: this._onKeyDown,
-      onKeyPress: this._preventArrowKeyScrolling,
-      onKeyUp: this._preventArrowKeyScrolling,
-      onScroll: this._onScroll,
-      style
-    }, traversal.map((v, i) => renderItem(i)));
-  },
+  }
 
   _preventArrowKeyScrolling(e) {
     switch (e.key) {
@@ -32436,16 +32680,7 @@ const Tree = module.exports = createClass({
           }
         }
     }
-  },
-
-  /**
-   * Updates the state's height based on clientHeight.
-   */
-  _updateHeight() {
-    this.setState({
-      height: this.refs.tree.clientHeight
-    });
-  },
+  }
 
   /**
    * Perform a pre-order depth-first search from item.
@@ -32470,7 +32705,7 @@ const Tree = module.exports = createClass({
     }
 
     return traversal;
-  },
+  }
 
   /**
    * Perform a pre-order depth-first search over the whole forest.
@@ -32485,7 +32720,7 @@ const Tree = module.exports = createClass({
     }
 
     return traversal;
-  },
+  }
 
   /**
    * Expands current row.
@@ -32493,7 +32728,7 @@ const Tree = module.exports = createClass({
    * @param {Object} item
    * @param {Boolean} expandAllChildren
    */
-  _onExpand: oncePerAnimationFrame(function (item, expandAllChildren) {
+  _onExpand(item, expandAllChildren) {
     if (this.props.onExpand) {
       this.props.onExpand(item);
 
@@ -32505,71 +32740,83 @@ const Tree = module.exports = createClass({
         }
       }
     }
-  }),
+  }
 
   /**
    * Collapses current row.
    *
    * @param {Object} item
    */
-  _onCollapse: oncePerAnimationFrame(function (item) {
+  _onCollapse(item) {
     if (this.props.onCollapse) {
       this.props.onCollapse(item);
     }
-  }),
+  }
 
   /**
    * Sets the passed in item to be the focused item.
    *
-   * @param {Number} index
-   *        The index of the item in a full DFS traversal (ignoring collapsed
-   *        nodes). Ignored if `item` is undefined.
-   *
    * @param {Object|undefined} item
    *        The item to be focused, or undefined to focus no item.
+   *
+   * @param {Object|undefined} options
+   *        An options object which can contain:
+   *          - dir: "up" or "down" to indicate if we should scroll the element to the
+   *                 top or the bottom of the scrollable container when the element is
+   *                 off canvas.
    */
-  _focus(index, item) {
-    if (item !== undefined) {
-      const itemStartPosition = index * this.props.itemHeight;
-      const itemEndPosition = (index + 1) * this.props.itemHeight;
-
-      // Note that if the height of the viewport (this.state.height) is less than
-      // `this.props.itemHeight`, we could accidentally try and scroll both up and
-      // down in a futile attempt to make both the item's start and end positions
-      // visible. Instead, give priority to the start of the item by checking its
-      // position first, and then using an "else if", rather than a separate "if",
-      // for the end position.
-      if (this.state.scroll > itemStartPosition) {
-        this.refs.tree.scrollTop = itemStartPosition;
-      } else if (this.state.scroll + this.state.height < itemEndPosition) {
-        this.refs.tree.scrollTop = itemEndPosition - this.state.height;
-      }
-    }
-
+  _focus(item, options) {
+    this._scrollNodeIntoView(item, options);
     if (this.props.onFocus) {
       this.props.onFocus(item);
     }
-  },
+  }
+
+  /**
+   * Sets the passed in item to be the focused item.
+   *
+   * @param {Object|undefined} item
+   *        The item to be scrolled to.
+   *
+   * @param {Object|undefined} options
+   *        An options object which can contain:
+   *          - dir: "up" or "down" to indicate if we should scroll the element to the
+   *                 top or the bottom of the scrollable container when the element is
+   *                 off canvas.
+   */
+  _scrollNodeIntoView(item, options = {}) {
+    if (item !== undefined) {
+      const treeElement = this.treeRef;
+      const element = document.getElementById(this.props.getKey(item));
+      if (element) {
+        const { top, bottom } = element.getBoundingClientRect();
+        const closestScrolledParent = node => {
+          if (node == null) {
+            return null;
+          }
+
+          if (node.scrollHeight > node.clientHeight) {
+            return node;
+          }
+          return closestScrolledParent(node.parentNode);
+        };
+        const scrolledParent = closestScrolledParent(treeElement);
+        const isVisible = !scrolledParent || top >= 0 && bottom <= scrolledParent.clientHeight;
+
+        if (!isVisible) {
+          let scrollToTop = !options.alignTo && top < 0 || options.alignTo === "top";
+          element.scrollIntoView(scrollToTop);
+        }
+      }
+    }
+  }
 
   /**
    * Sets the state to have no focused item.
    */
   _onBlur() {
-    this._focus(0, undefined);
-  },
-
-  /**
-   * Fired on a scroll within the tree's container, updates
-   * the stored position of the view port to handle virtual view rendering.
-   *
-   * @param {Event} e
-   */
-  _onScroll: oncePerAnimationFrame(function (e) {
-    this.setState({
-      scroll: Math.max(this.refs.tree.scrollTop, 0),
-      height: this.refs.tree.clientHeight
-    });
-  }),
+    this._focus(undefined);
+  }
 
   /**
    * Handles key down events in the tree's container.
@@ -32598,7 +32845,7 @@ const Tree = module.exports = createClass({
         return;
 
       case "ArrowLeft":
-        if (this.props.isExpanded(this.props.focused) && this.props.getChildren(this.props.focused).length) {
+        if (this.props.isExpanded(this.props.focused) && this._nodeIsExpandable(this.props.focused)) {
           this._onCollapse(this.props.focused);
         } else {
           this._focusParentNode();
@@ -32606,23 +32853,23 @@ const Tree = module.exports = createClass({
         return;
 
       case "ArrowRight":
-        if (!this.props.isExpanded(this.props.focused)) {
+        if (this._nodeIsExpandable(this.props.focused) && !this.props.isExpanded(this.props.focused)) {
           this._onExpand(this.props.focused);
+        } else {
+          this._focusNextNode();
         }
-        return;
     }
-  },
+  }
 
   /**
    * Sets the previous node relative to the currently focused item, to focused.
    */
-  _focusPrevNode: oncePerAnimationFrame(function () {
+  _focusPrevNode() {
     // Start a depth first search and keep going until we reach the currently
     // focused node. Focus the previous node in the DFS, if it exists. If it
     // doesn't exist, we're at the first node already.
 
     let prev;
-    let prevIndex;
 
     const traversal = this._dfsFromRoots();
     const length = traversal.length;
@@ -32632,25 +32879,22 @@ const Tree = module.exports = createClass({
         break;
       }
       prev = item;
-      prevIndex = i;
     }
-
     if (prev === undefined) {
       return;
     }
 
-    this._focus(prevIndex, prev);
-  }),
+    this._focus(prev, { alignTo: "top" });
+  }
 
   /**
    * Handles the down arrow key which will focus either the next child
    * or sibling row.
    */
-  _focusNextNode: oncePerAnimationFrame(function () {
+  _focusNextNode() {
     // Start a depth first search and keep going until we reach the currently
     // focused node. Focus the next node in the DFS, if it exists. If it
     // doesn't exist, we're at the last node already.
-
     const traversal = this._dfsFromRoots();
     const length = traversal.length;
     let i = 0;
@@ -32663,17 +32907,18 @@ const Tree = module.exports = createClass({
     }
 
     if (i + 1 < traversal.length) {
-      this._focus(i + 1, traversal[i + 1].item);
+      this._focus(traversal[i + 1].item, { alignTo: "bottom" });
     }
-  }),
+  }
 
   /**
    * Handles the left arrow key, going back up to the current rows'
    * parent row.
    */
-  _focusParentNode: oncePerAnimationFrame(function () {
+  _focusParentNode() {
     const parent = this.props.getParent(this.props.focused);
     if (!parent) {
+      this._focusPrevNode(this.props.focused);
       return;
     }
 
@@ -32686,9 +32931,87 @@ const Tree = module.exports = createClass({
       }
     }
 
-    this._focus(parentIndex, parent);
-  })
-});
+    this._focus(parent, { alignTo: "top" });
+  }
+
+  _nodeIsExpandable(item) {
+    return this.props.isExpandable ? this.props.isExpandable(item) : !!this.props.getChildren(item).length;
+  }
+
+  render() {
+    const traversal = this._dfsFromRoots();
+    const {
+      focused
+    } = this.props;
+
+    const nodes = traversal.map((v, i) => {
+      const { item, depth } = traversal[i];
+      const key = this.props.getKey(item, i);
+      return TreeNodeFactory({
+        key,
+        id: key,
+        index: i,
+        item,
+        depth,
+        renderItem: this.props.renderItem,
+        focused: focused === item,
+        expanded: this.props.isExpanded(item),
+        isExpandable: this._nodeIsExpandable(item),
+        onExpand: this._onExpand,
+        onCollapse: this._onCollapse,
+        onClick: e => {
+          this._focus(item);
+          if (this.props.isExpanded(item)) {
+            this.props.onCollapse(item);
+          } else {
+            this.props.onExpand(item, e.altKey);
+          }
+        }
+      });
+    });
+
+    const style = Object.assign({}, this.props.style || {}, {
+      padding: 0,
+      margin: 0
+    });
+
+    return _reactDomFactories2.default.div({
+      className: `tree ${this.props.className ? this.props.className : ""}`,
+      ref: el => {
+        this.treeRef = el;
+      },
+      role: "tree",
+      tabIndex: "0",
+      onKeyDown: this._onKeyDown,
+      onKeyPress: this._preventArrowKeyScrolling,
+      onKeyUp: this._preventArrowKeyScrolling,
+      onFocus: ({ nativeEvent }) => {
+        if (focused || !nativeEvent || !this.treeRef) {
+          return;
+        }
+
+        let { explicitOriginalTarget } = nativeEvent;
+        // Only set default focus to the first tree node if the focus came
+        // from outside the tree (e.g. by tabbing to the tree from other
+        // external elements).
+        if (explicitOriginalTarget !== this.treeRef && !this.treeRef.contains(explicitOriginalTarget)) {
+          this._focus(traversal[0].item);
+        }
+      },
+      onBlur: this._onBlur,
+      onClick: () => {
+        // Focus should always remain on the tree container itself.
+        this.treeRef.focus();
+      },
+      "aria-label": this.props.label,
+      "aria-labelledby": this.props.labelledby,
+      "aria-activedescendant": focused && this.props.getKey(focused),
+      style
+    }, nodes);
+  }
+}
+
+exports.default = Tree;
 
 /***/ }),
 /* 1542 */
@@ -32993,13 +33316,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.createTree = createTree;
 
-var _utils = __webpack_require__(1371);
+var _addToTree = __webpack_require__(1443);
 
 var _collapseTree = __webpack_require__(1444);
 
-var _addToTree = __webpack_require__(1443);
+var _utils = __webpack_require__(1371);
 
-function createTree(sources, debuggeeUrl, projectRoot) {
+function createTree({ sources, debuggeeUrl, projectRoot }) {
   const uncollapsedTree = (0, _utils.createNode)("root", "", []);
   for (const source of sources.valueSeq()) {
     (0, _addToTree.addToTree)(uncollapsedTree, source, debuggeeUrl, projectRoot);
@@ -33326,6 +33649,8 @@ var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
+var _devtoolsContextmenu = __webpack_require__(1413);
+
 var _reactRedux = __webpack_require__(1189);
 
 var _selectors = __webpack_require__(1352);
@@ -33333,6 +33658,8 @@ var _selectors = __webpack_require__(1352);
 var _sourceTree = __webpack_require__(1532);
 
 var _sources = __webpack_require__(1797);
+
+var _ui = __webpack_require__(1385);
 
 var _ManagedTree = __webpack_require__(1404);
 
@@ -33344,39 +33671,39 @@ var _Svg2 = _interopRequireDefault(_Svg);
 
 var _sourcesTree = __webpack_require__(1442);
 
-var _immutable = __webpack_require__(146);
-
-var _devtoolsContextmenu = __webpack_require__(1413);
-
 var _clipboard = __webpack_require__(1388);
 
 var _utils = __webpack_require__(1366);
 
 var _prefs = __webpack_require__(226);
 
-var _ui = __webpack_require__(1385);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+// Utils
+
+
+// Components
+
+
+// Selectors
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// Dependencies
 class SourcesTree extends _react.Component {
 
   constructor(props) {
     super(props);
-    this.state = (0, _sourcesTree.createTree)(this.props.sources, this.props.debuggeeUrl, this.props.projectRoot);
-    this.focusItem = this.focusItem.bind(this);
-    this.selectItem = this.selectItem.bind(this);
-    this.getPath = this.getPath.bind(this);
-    this.getIcon = this.getIcon.bind(this);
-    this.onContextMenu = this.onContextMenu.bind(this);
-    this.renderItem = this.renderItem.bind(this);
 
-    this.queueUpdate = (0, _utils.throttle)(function () {
-      if (!this.mounted) {
-        return;
-      }
+    _initialiseProps.call(this);
 
-      this.forceUpdate();
-    }, 50);
+    const { projectRoot, debuggeeUrl, sources } = this.props;
+    this.state = (0, _sourcesTree.createTree)({
+      projectRoot,
+      debuggeeUrl,
+      sources
+    });
   }
 
   componentDidMount() {
@@ -33393,13 +33720,27 @@ class SourcesTree extends _react.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (this.props.projectRoot !== nextProps.projectRoot || this.props.debuggeeUrl !== nextProps.debuggeeUrl) {
-      // Recreate tree because the sort order changed
-      this.setState((0, _sourcesTree.createTree)(nextProps.sources, nextProps.debuggeeUrl, nextProps.projectRoot));
-      return;
+    const {
+      projectRoot,
+      debuggeeUrl,
+      sources,
+      shownSource,
+      selectedSource
+    } = this.props;
+
+    const { uncollapsedTree, sourceTree } = this.state;
+
+    if (projectRoot != nextProps.projectRoot || debuggeeUrl != nextProps.debuggeeUrl || nextProps.sources.size === 0) {
+      // early recreate tree because of changes
+      // to project root, debugee url or lack of sources
+      return this.setState((0, _sourcesTree.createTree)({
+        sources: nextProps.sources,
+        debuggeeUrl: nextProps.debuggeeUrl,
+        projectRoot: nextProps.projectRoot
+      }));
     }
-    if (nextProps.shownSource && nextProps.shownSource != this.props.shownSource) {
-      const listItems = (0, _sourcesTree.getDirectories)(nextProps.shownSource, this.state.sourceTree);
+    if (nextProps.shownSource && nextProps.shownSource != shownSource) {
+      const listItems = (0, _sourcesTree.getDirectories)(nextProps.shownSource, sourceTree);
 
       if (listItems && listItems[0]) {
         this.selectItem(listItems[0]);
@@ -33408,72 +33749,127 @@ class SourcesTree extends _react.Component {
       return this.setState({ listItems });
     }
 
-    if (nextProps.selectedSource && nextProps.selectedSource != this.props.selectedSource) {
-      const highlightItems = (0, _sourcesTree.getDirectories)(nextProps.selectedSource.get("url"), this.state.sourceTree);
+    if (nextProps.selectedSource && nextProps.selectedSource != selectedSource) {
+      const highlightItems = (0, _sourcesTree.getDirectories)(nextProps.selectedSource.get("url"), sourceTree);
 
       return this.setState({ highlightItems });
     }
 
-    if (nextProps.sources === this.props.sources) {
-      return;
-    }
-
-    if (nextProps.sources.size === 0) {
-      // remove all sources
-      this.setState((0, _sourcesTree.createTree)(nextProps.sources, nextProps.debuggeeUrl, nextProps.projectRoot));
-      return;
-    }
-
-    // TODO: do not run this every time a source is clicked,
+    // NOTE: do not run this every time a source is clicked,
     // only when a new source is added
-    const next = (0, _immutable.Set)(nextProps.sources.valueSeq());
-    const prev = (0, _immutable.Set)(this.props.sources.valueSeq());
-    const newSet = next.subtract(prev);
+    if (nextProps.sources != this.props.sources) {
+      this.setState((0, _sourcesTree.updateTree)({
+        newSources: nextProps.sources,
+        prevSources: sources,
+        debuggeeUrl,
+        projectRoot,
+        uncollapsedTree,
+        sourceTree
+      }));
+    }
+  }
 
-    const uncollapsedTree = this.state.uncollapsedTree;
+  render() {
+    const expanded = this.props.expanded;
+    const {
+      focusedItem,
+      highlightItems,
+      listItems,
+      parentMap,
+      sourceTree
+    } = this.state;
 
-    // TODO: recreating the tree every time messes with the expanded
-    // state of ManagedTree, because it depends on item instances
-    // being the same. The result is that if a source is added at a
-    // later time, all expanded state is lost.
-    let sourceTree = this.state.sourceTree;
-    if (newSet.size > 0) {
-      for (const source of newSet) {
-        (0, _sourcesTree.addToTree)(uncollapsedTree, source, this.props.debuggeeUrl, this.props.projectRoot);
-      }
-      sourceTree = (0, _sourcesTree.collapseTree)(uncollapsedTree);
+    const onExpand = (item, expandedState) => {
+      this.props.setExpandedState(expandedState);
+    };
+
+    const onCollapse = (item, expandedState) => {
+      this.props.setExpandedState(expandedState);
+    };
+
+    const isEmpty = sourceTree.contents.length === 0;
+    const treeProps = {
+      autoExpandAll: false,
+      autoExpandDepth: expanded ? 0 : 1,
+      expanded,
+      getChildren: item => (0, _sourcesTree.nodeHasChildren)(item) ? item.contents : [],
+      getParent: item => parentMap.get(item),
+      getPath: this.getPath,
+      getRoots: () => sourceTree.contents,
+      highlightItems,
+      itemHeight: 21,
+      key: isEmpty ? "empty" : "full",
+      listItems,
+      onCollapse,
+      onExpand,
+      onFocus: this.focusItem,
+      renderItem: this.renderItem
+    };
+
+    const tree = _react2.default.createElement(_ManagedTree2.default, treeProps);
+
+    if (isEmpty) {
+      return _react2.default.createElement(
+        "div",
+        { className: "no-sources-message" },
+        L10N.getStr("sources.noSourcesAvailable")
+      );
     }
 
-    this.setState({
-      uncollapsedTree,
-      sourceTree,
-      parentMap: (0, _sourcesTree.createParentMap)(sourceTree)
-    });
-  }
+    const onKeyDown = e => {
+      if (e.keyCode === 13 && focusedItem) {
+        this.selectItem(focusedItem);
+      }
+    };
 
-  focusItem(item) {
+    return _react2.default.createElement(
+      "div",
+      { className: "sources-list", onKeyDown: onKeyDown },
+      tree
+    );
+  }
+}
+
+// Actions
+
+var _initialiseProps = function () {
+  this.queueUpdate = (0, _utils.throttle)(function () {
+    if (!this.mounted) {
+      return;
+    }
+
+    this.forceUpdate();
+  }, 50);
+
+  this.focusItem = item => {
     this.setState({ focusedItem: item });
-  }
+  };
 
-  selectItem(item) {
+  this.selectItem = item => {
     if (!(0, _sourcesTree.nodeHasChildren)(item)) {
       this.props.selectLocation({ sourceId: item.contents.get("id") });
     }
-  }
+  };
 
-  getPath(item) {
+  this.getPath = item => {
     const { sources } = this.props;
-    const blackBoxedPart = item.contents.get && sources.get(item.contents.get("id")).get("isBlackBoxed") ? "update" : "";
-    return `${item.path}/${item.name}/${blackBoxedPart}`;
-  }
+    const obj = item.contents.get && item.contents.get("id");
 
-  getIcon(sources, item, depth) {
+    let blackBoxedPart = "";
+
+    if (typeof obj !== "undefined" && sources.has(obj) && sources.get(obj).get("isBlackBoxed")) {
+      blackBoxedPart = "update";
+    }
+
+    return `${item.path}/${item.name}/${blackBoxedPart}`;
+  };
+
+  this.getIcon = (sources, item, depth) => {
     const { debuggeeUrl } = this.props;
 
     if (item.path === "/Webpack") {
       return _react2.default.createElement(_Svg2.default, { name: "webpack" });
     }
-
     if (item.path === "/Angular") {
       return _react2.default.createElement(_Svg2.default, { name: "angular" });
     }
@@ -33487,21 +33883,23 @@ class SourcesTree extends _react.Component {
     }
 
     if (!(0, _sourcesTree.nodeHasChildren)(item)) {
-      const source = sources.get(item.contents.get("id"));
-      if (source.get("isBlackBoxed")) {
+      const obj = item.contents.get("id");
+      const source = sources.get(obj);
+      if (source && source.get("isBlackBoxed")) {
         return _react2.default.createElement("img", { className: "blackBox" });
       }
       return _react2.default.createElement("img", { className: "file" });
     }
 
     return _react2.default.createElement("img", { className: "folder" });
-  }
+  };
 
-  onContextMenu(event, item) {
+  this.onContextMenu = (event, item) => {
     const copySourceUri2Label = L10N.getStr("copySourceUri2");
     const copySourceUri2Key = L10N.getStr("copySourceUri2.accesskey");
     const setDirectoryRootLabel = L10N.getStr("setDirectoryRoot.label");
     const setDirectoryRootKey = L10N.getStr("setDirectoryRoot.accesskey");
+    const removeDirectoryRootLabel = L10N.getStr("removeDirectoryRoot.label");
 
     event.stopPropagation();
     event.preventDefault();
@@ -33522,19 +33920,31 @@ class SourcesTree extends _react.Component {
     }
 
     if ((0, _sourcesTree.isDirectory)(item) && _prefs.features.root) {
-      menuOptions.push({
-        id: "node-set-directory-root",
-        label: setDirectoryRootLabel,
-        accesskey: setDirectoryRootKey,
-        disabled: false,
-        click: () => (0, _ui.setProjectDirectoryRoot)(item.path)
-      });
+      const { path } = item;
+      const { projectRoot } = this.props;
+
+      if (projectRoot.endsWith(path)) {
+        menuOptions.push({
+          id: "node-remove-directory-root",
+          label: removeDirectoryRootLabel,
+          disabled: false,
+          click: () => this.props.clearProjectDirectoryRoot()
+        });
+      } else {
+        menuOptions.push({
+          id: "node-set-directory-root",
+          label: setDirectoryRootLabel,
+          accesskey: setDirectoryRootKey,
+          disabled: false,
+          click: () => this.props.setProjectDirectoryRoot(path)
+        });
+      }
     }
 
     (0, _devtoolsContextmenu.showMenu)(event, menuOptions);
-  }
+  };
 
-  renderItem(item, depth, focused, _, expanded, { setExpanded }) {
+  this.renderItem = (item, depth, focused, _, expanded, { setExpanded }) => {
     const arrow = (0, _sourcesTree.nodeHasChildren)(item) ? _react2.default.createElement("img", {
       className: (0, _classnames2.default)("arrow", {
         expanded: expanded
@@ -33573,85 +33983,8 @@ class SourcesTree extends _react.Component {
         " "
       )
     );
-  }
-
-  render() {
-    const expanded = this.props.expanded;
-    const {
-      focusedItem,
-      sourceTree,
-      parentMap,
-      listItems,
-      highlightItems
-    } = this.state;
-
-    const onExpand = (item, expandedState) => {
-      this.props.setExpandedState(expandedState);
-    };
-
-    const onCollapse = (item, expandedState) => {
-      this.props.setExpandedState(expandedState);
-    };
-
-    const isEmpty = sourceTree.contents.length === 0;
-    const treeProps = {
-      key: isEmpty ? "empty" : "full",
-      getParent: item => parentMap.get(item),
-      getChildren: item => (0, _sourcesTree.nodeHasChildren)(item) ? item.contents : [],
-      getRoots: () => sourceTree.contents,
-      getPath: this.getPath,
-      itemHeight: 21,
-      autoExpandDepth: expanded ? 0 : 1,
-      autoExpandAll: false,
-      onFocus: this.focusItem,
-      listItems,
-      highlightItems,
-      expanded,
-      onExpand,
-      onCollapse,
-      renderItem: this.renderItem
-    };
-
-    const tree = _react2.default.createElement(_ManagedTree2.default, treeProps);
-
-    if (isEmpty) {
-      return _react2.default.createElement(
-        "div",
-        { className: "no-sources-message" },
-        L10N.getStr("sources.noSourcesAvailable")
-      );
-    }
-
-    const onKeyDown = e => {
-      if (e.keyCode === 13 && focusedItem) {
-        this.selectItem(focusedItem);
-      }
-    };
-
-    return _react2.default.createElement(
-      "div",
-      { className: "sources-list", onKeyDown: onKeyDown },
-      tree
-    );
-  }
-}
-
-// Utils
-
-
-// Components
-
-
-// Types
-
-
-// Redux
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-// React
-
+  };
+};
 
 const mapStateToProps = state => {
   return {
@@ -33666,7 +33999,9 @@ const mapStateToProps = state => {
 
 const actionCreators = {
   setExpandedState: _sourceTree.setExpandedState,
-  selectLocation: _sources.selectLocation
+  selectLocation: _sources.selectLocation,
+  setProjectDirectoryRoot: _ui.setProjectDirectoryRoot,
+  clearProjectDirectoryRoot: _ui.clearProjectDirectoryRoot
 };
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(SourcesTree);
@@ -35569,7 +35904,8 @@ module.exports = {
 // Dependencies
 const PropTypes = __webpack_require__(20);
 const {
-  wrapRender
+  wrapRender,
+  ellipsisElement
 } = __webpack_require__(1353);
 const PropRep = __webpack_require__(1381);
 const { MODE } = __webpack_require__(1357);
@@ -35601,11 +35937,7 @@ function ObjectRep(props) {
     } else {
       tinyModeItems.push(span({
         className: "objectLeftBrace"
-      }, "{"), propsArray.length > 0 ? span({
-        key: "more",
-        className: "more-ellipsis",
-        title: "more…"
-      }, "…") : null, span({
+      }, "{"), propsArray.length > 0 ? ellipsisElement : null, span({
         className: "objectRightBrace"
       }, "}"));
     }
@@ -35708,11 +36040,7 @@ function propIterator(props, object, max) {
   }
 
   if (propertiesNumber < propertiesNames.length) {
-    elements.push(span({
-      key: "more",
-      className: "more-ellipsis",
-      title: ", more…"
-    }, "…"));
+    elements.push(ellipsisElement);
   }
 
   return elements;
@@ -37252,13 +37580,17 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
+
+const { lengthBubble } = __webpack_require__(2249);
 const PropTypes = __webpack_require__(20);
 const {
   isGrip,
-  wrapRender
+  wrapRender,
+  ellipsisElement
 } = __webpack_require__(1353);
 const PropRep = __webpack_require__(1381);
 const { MODE } = __webpack_require__(1357);
+const { ModePropType } = __webpack_require__(1448);
 
 const dom = __webpack_require__(1758);
 const { span } = dom;
@@ -37270,7 +37602,7 @@ const { span } = dom;
 GripMap.propTypes = {
   object: PropTypes.object,
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  mode: ModePropType,
   isInterestingEntry: PropTypes.func,
   onDOMNodeMouseOver: PropTypes.func,
   onDOMNodeMouseOut: PropTypes.func,
@@ -37289,13 +37621,16 @@ function GripMap(props) {
     className: "objectBox objectBox-object"
   };
 
-  if (mode === MODE.TINY) {
-    return span(config, getTitle(props, object));
+  const title = getTitle(props, object);
+  const isEmpty = getLength(object) === 0;
+
+  if (isEmpty || mode === MODE.TINY) {
+    return span(config, title);
   }
 
-  let propsArray = safeEntriesIterator(props, object, maxLengthMap.get(mode));
+  const propsArray = safeEntriesIterator(props, object, maxLengthMap.get(mode));
 
-  return span(config, getTitle(props, object), span({
+  return span(config, title, span({
     className: "objectLeftBrace"
   }, " { "), ...propsArray, span({
     className: "objectRightBrace"
@@ -37303,10 +37638,15 @@ function GripMap(props) {
 }
 
 function getTitle(props, object) {
-  let title = props.title || (object && object.class ? object.class : "Map");
+  const title = props.title || (object && object.class ? object.class : "Map");
   return span({
-    className: "objectTitle"
-  }, title);
+    className: "objectTitle" }, title, lengthBubble({
+    object,
+    mode: props.mode,
+    maxLengthMap,
+    getLength,
+    showZeroLength: true
+  }));
 }
 
 function safeEntriesIterator(props, object, max) {
@@ -37338,11 +37678,7 @@ function entriesIterator(props, object, max) {
   let entries = getEntries(props, mapEntries, indexes);
   if (entries.length < getLength(object)) {
     // There are some undisplayed entries. Then display "…".
-    entries.push(span({
-      key: "more",
-      className: "more-ellipsis",
-      title: "more…"
-    }, "…"));
+    entries.push(ellipsisElement);
   }
 
   return unfoldEntries(entries);
@@ -37455,7 +37791,7 @@ module.exports = {
 "use strict";
 
 
-var _devtoolsComponents = __webpack_require__(2013);
+var _devtoolsComponents = __webpack_require__(1441);
 
 var _devtoolsComponents2 = _interopRequireDefault(_devtoolsComponents);
 
@@ -39095,14 +39431,17 @@ function getMenuItems(event, {
     click: () => (0, _clipboard.copyToTheClipboard)(selectedSource.get("url"))
   };
 
-  const functionText = getFunctionText(line + 1);
+  const sourceId = selectedSource.get("id");
+  const sourceLine = (0, _editor.toSourceLine)(sourceId, line);
+
+  const functionText = getFunctionText(sourceLine);
   const copyFunctionItem = {
     id: "node-menu-copy-function",
     label: copyFunctionLabel,
     accesskey: copyFunctionKey,
     disabled: !functionText,
     click: () => {
-      const { location: { start, end } } = getFunctionLocation(line);
+      const { location: { start, end } } = getFunctionLocation(sourceLine);
       flashLineRange({
         start: start.line,
         end: end.line,
@@ -39125,7 +39464,7 @@ function getMenuItems(event, {
     label: revealInTreeLabel,
     accesskey: revealInTreeKey,
     disabled: isPrettyPrinted,
-    click: () => showSource(selectedSource.get("id"))
+    click: () => showSource(sourceId)
   };
 
   const blackBoxMenuItem = {
@@ -40103,10 +40442,10 @@ class Expressions extends _react.PureComponent {
     return expressions !== nextProps.expressions || expressionError !== nextProps.expressionError || editing !== nextState.editing || inputValue !== nextState.inputValue;
   }
 
-  componentDidUpdate() {
-    if (this._input) {
+  componentDidUpdate(prevProps, prevState) {
+    if (this._input && !prevState.editing) {
       const input = this._input;
-      input.setSelectionRange(input.value.length + 1, input.value.length + 1);
+      input.setSelectionRange(0, input.value.length);
       input.focus();
     }
   }
@@ -42866,7 +43205,6 @@ class QuickOpenModal extends _react.Component {
         const results = this.props.sources;
         return this.setState({ results });
       }
-
       if (this.isGotoSourceQuery()) {
         const [baseQuery] = query.split(":");
         const results = filter(this.props.sources, baseQuery);
@@ -42903,6 +43241,10 @@ class QuickOpenModal extends _react.Component {
     };
 
     this.updateResults = query => {
+      if (this.isGotoQuery()) {
+        return;
+      }
+
       if (query == "") {
         return this.showTopSources();
       }
@@ -42914,7 +43256,6 @@ class QuickOpenModal extends _react.Component {
       if (this.isShortcutQuery()) {
         return this.showShortcuts(query);
       }
-
       return this.searchSources(query);
     };
 
@@ -43001,7 +43342,7 @@ class QuickOpenModal extends _react.Component {
       const { selectedSource, setQuickOpenQuery } = this.props;
       setQuickOpenQuery(e.target.value);
       const noSource = !selectedSource || !selectedSource.get("text");
-      if (this.isSymbolSearch() && noSource) {
+      if (this.isSymbolSearch() && noSource || this.isGotoQuery()) {
         return;
       }
       this.updateResults(e.target.value);
@@ -43011,7 +43352,7 @@ class QuickOpenModal extends _react.Component {
       const { enabled, query } = this.props;
       const { results, selectedIndex } = this.state;
 
-      if (!enabled || !results) {
+      if (!this.isGotoQuery() && (!enabled || !results)) {
         return;
       }
 
@@ -43021,11 +43362,13 @@ class QuickOpenModal extends _react.Component {
           return this.gotoLocation(location);
         }
 
-        if (this.isShortcutQuery()) {
-          return this.setModifier(results[selectedIndex]);
-        }
+        if (results) {
+          if (this.isShortcutQuery()) {
+            return this.setModifier(results[selectedIndex]);
+          }
 
-        return this.selectResultItem(e, results[selectedIndex]);
+          return this.selectResultItem(e, results[selectedIndex]);
+        }
       }
 
       if (e.key === "Tab") {
@@ -43263,7 +43606,6 @@ function mapScopes(scopes, frame) {
 function fetchScopes() {
   return async function ({ dispatch, getState, client, sourceMaps }) {
     const frame = (0, _selectors.getSelectedFrame)(getState());
-
     if (!frame || (0, _selectors.getFrameScope)(getState(), frame.id)) {
       return;
     }
@@ -43282,7 +43624,6 @@ function fetchScopes() {
     }
 
     const sourceRecord = (0, _selectors.getSource)(getState(), frame.location.sourceId);
-
     if (sourceRecord.get("isPrettyPrinted")) {
       return;
     }
@@ -49265,6 +49606,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getHiddenTabs = getHiddenTabs;
 exports.getSourceAnnotation = getSourceAnnotation;
+exports.getTabMenuItems = getTabMenuItems;
 
 var _react = __webpack_require__(0);
 
@@ -49321,6 +49663,53 @@ function getSourceAnnotation(source, getMetaData) {
   if (source.get("isBlackBoxed")) {
     return _react2.default.createElement("img", { className: "blackBox" });
   }
+}
+
+function getTabMenuItems() {
+  return {
+    closeTab: {
+      id: "node-menu-close-tab",
+      label: L10N.getStr("sourceTabs.closeTab"),
+      accesskey: L10N.getStr("sourceTabs.closeTab.accesskey"),
+      disabled: false
+    },
+    closeOtherTabs: {
+      id: "node-menu-close-other-tabs",
+      label: L10N.getStr("sourceTabs.closeOtherTabs"),
+      accesskey: L10N.getStr("sourceTabs.closeOtherTabs.accesskey"),
+      disabled: false
+    },
+    closeTabsToEnd: {
+      id: "node-menu-close-tabs-to-end",
+      label: L10N.getStr("sourceTabs.closeTabsToEnd"),
+      accesskey: L10N.getStr("sourceTabs.closeTabsToEnd.accesskey"),
+      disabled: false
+    },
+    closeAllTabs: {
+      id: "node-menu-close-all-tabs",
+      label: L10N.getStr("sourceTabs.closeAllTabs"),
+      accesskey: L10N.getStr("sourceTabs.closeAllTabs.accesskey"),
+      disabled: false
+    },
+    showSource: {
+      id: "node-menu-show-source",
+      label: L10N.getStr("sourceTabs.revealInTree"),
+      accesskey: L10N.getStr("sourceTabs.revealInTree.accesskey"),
+      disabled: false
+    },
+    copySourceUri2: {
+      id: "node-menu-copy-source-url",
+      label: L10N.getStr("copySourceUri2"),
+      accesskey: L10N.getStr("copySourceUri2.accesskey"),
+      disabled: false
+    },
+    prettyPrint: {
+      id: "node-menu-pretty-print",
+      label: L10N.getStr("sourceTabs.prettyPrint"),
+      accesskey: L10N.getStr("sourceTabs.prettyPrint.accesskey"),
+      disabled: false
+    }
+  };
 }
 
 /***/ }),
@@ -49776,831 +50165,10 @@ function highlightMatches(lineMatch) {
 module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><g stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" stroke-linecap=\"round\"><g id=\"arrow\" transform=\"translate(1.000000, 3.000000)\"><path d=\"M4.5,0.5 L6.5,2.5\"></path><path d=\"M4.5,2.5 L6.5,4.5\" transform=\"translate(5.500000, 3.500000) scale(1, -1) translate(-5.500000, -3.500000) \"></path><path d=\"M6.00090144,2.5 C4.67806937,2.5 3.67938478,2.5 3.00484766,2.5 C1.99304199,2.5 1.01049805,3.5168457 0.993840144,4.52403846 C0.988750751,4.54723808 0.988750751,5.87097168 0.993840144,8.49523926\" id=\"Path-2\" stroke-linejoin=\"round\"></path></g><g id=\"content-lines\" transform=\"translate(9.000000, 2.000000)\"><path d=\"M1.5,3.5 L5.5,3.5\"></path><path d=\"M0.5,1.5 L5.5,1.5\"></path><path d=\"M0.5,5.5 L5.5,5.5\"></path></g></g></svg>"
 
 /***/ }),
-/* 2013 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _tree = __webpack_require__(2014);
-
-var _tree2 = _interopRequireDefault(_tree);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-module.exports = {
-  Tree: _tree2.default
-}; /* This Source Code Form is subject to the terms of the Mozilla Public
-    * License, v. 2.0. If a copy of the MPL was not distributed with this
-    * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/***/ }),
-/* 2014 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactDomFactories = __webpack_require__(1758);
-
-var _reactDomFactories2 = _interopRequireDefault(_reactDomFactories);
-
-var _propTypes = __webpack_require__(20);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
-var _svgInlineReact = __webpack_require__(1763);
-
-var _svgInlineReact2 = _interopRequireDefault(_svgInlineReact);
-
-var _arrow = __webpack_require__(2015);
-
-var _arrow2 = _interopRequireDefault(_arrow);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const { Component, createFactory, createElement } = _react2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                      * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                      * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-__webpack_require__(2016);
-
-const AUTO_EXPAND_DEPTH = 0; // depth
-
-/**
- * An arrow that displays whether its node is expanded (▼) or collapsed
- * (▶). When its node has no children, it is hidden.
- */
-class ArrowExpander extends Component {
-  static get propTypes() {
-    return {
-      expanded: _propTypes2.default.bool
-    };
-  }
-
-  shouldComponentUpdate(nextProps, nextState) {
-    return this.props.expanded !== nextProps.expanded;
-  }
-
-  render() {
-    const {
-      expanded
-    } = this.props;
-
-    const classNames = ["arrow"];
-    if (expanded) {
-      classNames.push("expanded");
-    }
-    return createElement(_svgInlineReact2.default, {
-      className: classNames.join(" "),
-      src: _arrow2.default
-    });
-  }
-}
-
-const treeIndent = _reactDomFactories2.default.span({ className: "tree-indent" }, "\u200B");
-
-class TreeNode extends Component {
-  static get propTypes() {
-    return {
-      id: _propTypes2.default.any.isRequired,
-      index: _propTypes2.default.number.isRequired,
-      depth: _propTypes2.default.number.isRequired,
-      focused: _propTypes2.default.bool.isRequired,
-      expanded: _propTypes2.default.bool.isRequired,
-      item: _propTypes2.default.any.isRequired,
-      isExpandable: _propTypes2.default.bool.isRequired,
-      onClick: _propTypes2.default.func,
-      renderItem: _propTypes2.default.func.isRequired
-    };
-  }
-
-  shouldComponentUpdate(nextProps) {
-    return this.props.item !== nextProps.item || this.props.focused !== nextProps.focused || this.props.expanded !== nextProps.expanded;
-  }
-
-  render() {
-    const {
-      depth,
-      id,
-      item,
-      focused,
-      expanded,
-      renderItem,
-      isExpandable
-    } = this.props;
-
-    const arrow = isExpandable ? ArrowExpanderFactory({
-      item,
-      expanded
-    }) : null;
-
-    let ariaExpanded;
-    if (this.props.isExpandable) {
-      ariaExpanded = false;
-    }
-    if (this.props.expanded) {
-      ariaExpanded = true;
-    }
-
-    const indents = Array.from({ length: depth }).fill(treeIndent);
-    let items = indents.concat(renderItem(item, depth, focused, arrow, expanded));
-
-    return _reactDomFactories2.default.div({
-      id,
-      className: "tree-node" + (focused ? " focused" : ""),
-      onClick: this.props.onClick,
-      role: "treeitem",
-      "aria-level": depth,
-      "aria-expanded": ariaExpanded,
-      "data-expandable": this.props.isExpandable
-    }, ...items);
-  }
-}
-
-const ArrowExpanderFactory = createFactory(ArrowExpander);
-const TreeNodeFactory = createFactory(TreeNode);
-
-/**
- * Create a function that calls the given function `fn` only once per animation
- * frame.
- *
- * @param {Function} fn
- * @returns {Function}
- */
-function oncePerAnimationFrame(fn) {
-  let animationId = null;
-  let argsToPass = null;
-  return function (...args) {
-    argsToPass = args;
-    if (animationId !== null) {
-      return;
-    }
-
-    animationId = requestAnimationFrame(() => {
-      fn.call(this, ...argsToPass);
-      animationId = null;
-      argsToPass = null;
-    });
-  };
-}
-
-/**
- * A generic tree component. See propTypes for the public API.
- *
- * This tree component doesn't make any assumptions about the structure of your
- * tree data. Whether children are computed on demand, or stored in an array in
- * the parent's `_children` property, it doesn't matter. We only require the
- * implementation of `getChildren`, `getRoots`, `getParent`, and `isExpanded`
- * functions.
- *
- * This tree component is well tested and reliable. See the tests in ./tests
- * and its usage in the performance and memory panels in mozilla-central.
- *
- * This tree component doesn't make any assumptions about how to render items in
- * the tree. You provide a `renderItem` function, and this component will ensure
- * that only those items whose parents are expanded and which are visible in the
- * viewport are rendered. The `renderItem` function could render the items as a
- * "traditional" tree or as rows in a table or anything else. It doesn't
- * restrict you to only one certain kind of tree.
- *
- * The tree comes with basic styling for the indent, the arrow, as well as hovered
- * and focused styles which can be override in CSS.
- *
- * ### Example Usage
- *
- * Suppose we have some tree data where each item has this form:
- *
- *     {
- *       id: Number,
- *       label: String,
- *       parent: Item or null,
- *       children: Array of child items,
- *       expanded: bool,
- *     }
- *
- * Here is how we could render that data with this component:
- *
- *     class MyTree extends Component {
- *       static get propTypes() {
- *         // The root item of the tree, with the form described above.
- *         return {
- *           root: PropTypes.object.isRequired
- *         };
- *       },
- *
- *       render() {
- *         return Tree({
- *           itemHeight: 20, // px
- *
- *           getRoots: () => [this.props.root],
- *
- *           getParent: item => item.parent,
- *           getChildren: item => item.children,
- *           getKey: item => item.id,
- *           isExpanded: item => item.expanded,
- *
- *           renderItem: (item, depth, isFocused, arrow, isExpanded) => {
- *             let className = "my-tree-item";
- *             if (isFocused) {
- *               className += " focused";
- *             }
- *             return dom.div({
- *               className,
- *             },
- *               arrow,
- *               // And here is the label for this item.
- *               dom.span({ className: "my-tree-item-label" }, item.label)
- *             );
- *           },
- *
- *           onExpand: item => dispatchExpandActionToRedux(item),
- *           onCollapse: item => dispatchCollapseActionToRedux(item),
- *         });
- *       }
- *     }
- */
-class Tree extends Component {
-  static get propTypes() {
-    return {
-      // Required props
-
-      // A function to get an item's parent, or null if it is a root.
-      //
-      // Type: getParent(item: Item) -> Maybe<Item>
-      //
-      // Example:
-      //
-      //     // The parent of this item is stored in its `parent` property.
-      //     getParent: item => item.parent
-      getParent: _propTypes2.default.func.isRequired,
-
-      // A function to get an item's children.
-      //
-      // Type: getChildren(item: Item) -> [Item]
-      //
-      // Example:
-      //
-      //     // This item's children are stored in its `children` property.
-      //     getChildren: item => item.children
-      getChildren: _propTypes2.default.func.isRequired,
-
-      // A function which takes an item and ArrowExpander component instance and
-      // returns a component, or text, or anything else that React considers
-      // renderable.
-      //
-      // Type: renderItem(item: Item,
-      //                  depth: Number,
-      //                  isFocused: Boolean,
-      //                  arrow: ReactComponent,
-      //                  isExpanded: Boolean) -> ReactRenderable
-      //
-      // Example:
-      //
-      //     renderItem: (item, depth, isFocused, arrow, isExpanded) => {
-      //       let className = "my-tree-item";
-      //       if (isFocused) {
-      //         className += " focused";
-      //       }
-      //       return dom.div(
-      //         {
-      //           className,
-      //           style: { marginLeft: depth * 10 + "px" }
-      //         },
-      //         arrow,
-      //         dom.span({ className: "my-tree-item-label" }, item.label)
-      //       );
-      //     },
-      renderItem: _propTypes2.default.func.isRequired,
-
-      // A function which returns the roots of the tree (forest).
-      //
-      // Type: getRoots() -> [Item]
-      //
-      // Example:
-      //
-      //     // In this case, we only have one top level, root item. You could
-      //     // return multiple items if you have many top level items in your
-      //     // tree.
-      //     getRoots: () => [this.props.rootOfMyTree]
-      getRoots: _propTypes2.default.func.isRequired,
-
-      // A function to get a unique key for the given item. This helps speed up
-      // React's rendering a *TON*.
-      //
-      // Type: getKey(item: Item) -> String
-      //
-      // Example:
-      //
-      //     getKey: item => `my-tree-item-${item.uniqueId}`
-      getKey: _propTypes2.default.func.isRequired,
-
-      // A function to get whether an item is expanded or not. If an item is not
-      // expanded, then it must be collapsed.
-      //
-      // Type: isExpanded(item: Item) -> Boolean
-      //
-      // Example:
-      //
-      //     isExpanded: item => item.expanded,
-      isExpanded: _propTypes2.default.func.isRequired,
-
-      // Optional props
-
-      // The currently focused item, if any such item exists.
-      focused: _propTypes2.default.any,
-
-      // Handle when a new item is focused.
-      onFocus: _propTypes2.default.func,
-
-      // The depth to which we should automatically expand new items.
-      autoExpandDepth: _propTypes2.default.number,
-      // Should auto expand all new items or just the new items under the first
-      // root item.
-      autoExpandAll: _propTypes2.default.bool,
-
-      // Note: the two properties below are mutually exclusive. Only one of the
-      // label properties is necessary.
-      // ID of an element whose textual content serves as an accessible label for
-      // a tree.
-      labelledby: _propTypes2.default.string,
-      // Accessibility label for a tree widget.
-      label: _propTypes2.default.string,
-
-      // Optional event handlers for when items are expanded or collapsed. Useful
-      // for dispatching redux events and updating application state, maybe lazily
-      // loading subtrees from a worker, etc.
-      //
-      // Type:
-      //     onExpand(item: Item)
-      //     onCollapse(item: Item)
-      //
-      // Example:
-      //
-      //     onExpand: item => dispatchExpandActionToRedux(item)
-      onExpand: _propTypes2.default.func,
-      onCollapse: _propTypes2.default.func,
-      isExpandable: _propTypes2.default.func,
-      // Additional classes to add to the root element.
-      className: _propTypes2.default.string,
-      // style object to be applied to the root element.
-      style: _propTypes2.default.object
-    };
-  }
-
-  static get defaultProps() {
-    return {
-      autoExpandDepth: AUTO_EXPAND_DEPTH,
-      autoExpandAll: true
-    };
-  }
-
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      seen: new Set()
-    };
-
-    this._onExpand = oncePerAnimationFrame(this._onExpand).bind(this);
-    this._onCollapse = oncePerAnimationFrame(this._onCollapse).bind(this);
-    this._focusPrevNode = oncePerAnimationFrame(this._focusPrevNode).bind(this);
-    this._focusNextNode = oncePerAnimationFrame(this._focusNextNode).bind(this);
-    this._focusParentNode = oncePerAnimationFrame(this._focusParentNode).bind(this);
-
-    this._autoExpand = this._autoExpand.bind(this);
-    this._preventArrowKeyScrolling = this._preventArrowKeyScrolling.bind(this);
-    this._dfs = this._dfs.bind(this);
-    this._dfsFromRoots = this._dfsFromRoots.bind(this);
-    this._focus = this._focus.bind(this);
-    this._scrollNodeIntoView = this._scrollNodeIntoView.bind(this);
-    this._onBlur = this._onBlur.bind(this);
-    this._onKeyDown = this._onKeyDown.bind(this);
-    this._nodeIsExpandable = this._nodeIsExpandable.bind(this);
-  }
-
-  componentDidMount() {
-    this._autoExpand();
-    if (this.props.focused) {
-      this._scrollNodeIntoView(this.props.focused);
-    }
-  }
-
-  componentWillReceiveProps(nextProps) {
-    this._autoExpand();
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.focused !== this.props.focused) {
-      this._scrollNodeIntoView(this.props.focused);
-    }
-  }
-
-  _autoExpand() {
-    if (!this.props.autoExpandDepth) {
-      return;
-    }
-
-    // Automatically expand the first autoExpandDepth levels for new items. Do
-    // not use the usual DFS infrastructure because we don't want to ignore
-    // collapsed nodes.
-    const autoExpand = (item, currentDepth) => {
-      if (currentDepth >= this.props.autoExpandDepth || this.state.seen.has(item)) {
-        return;
-      }
-
-      this.props.onExpand(item);
-      this.state.seen.add(item);
-
-      const children = this.props.getChildren(item);
-      const length = children.length;
-      for (let i = 0; i < length; i++) {
-        autoExpand(children[i], currentDepth + 1);
-      }
-    };
-
-    const roots = this.props.getRoots();
-    const length = roots.length;
-    if (this.props.autoExpandAll) {
-      for (let i = 0; i < length; i++) {
-        autoExpand(roots[i], 0);
-      }
-    } else if (length != 0) {
-      autoExpand(roots[0], 0);
-    }
-  }
-
-  _preventArrowKeyScrolling(e) {
-    switch (e.key) {
-      case "ArrowUp":
-      case "ArrowDown":
-      case "ArrowLeft":
-      case "ArrowRight":
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.nativeEvent) {
-          if (e.nativeEvent.preventDefault) {
-            e.nativeEvent.preventDefault();
-          }
-          if (e.nativeEvent.stopPropagation) {
-            e.nativeEvent.stopPropagation();
-          }
-        }
-    }
-  }
-
-  /**
-   * Perform a pre-order depth-first search from item.
-   */
-  _dfs(item, maxDepth = Infinity, traversal = [], _depth = 0) {
-    traversal.push({ item, depth: _depth });
-
-    if (!this.props.isExpanded(item)) {
-      return traversal;
-    }
-
-    const nextDepth = _depth + 1;
-
-    if (nextDepth > maxDepth) {
-      return traversal;
-    }
-
-    const children = this.props.getChildren(item);
-    const length = children.length;
-    for (let i = 0; i < length; i++) {
-      this._dfs(children[i], maxDepth, traversal, nextDepth);
-    }
-
-    return traversal;
-  }
-
-  /**
-   * Perform a pre-order depth-first search over the whole forest.
-   */
-  _dfsFromRoots(maxDepth = Infinity) {
-    const traversal = [];
-
-    const roots = this.props.getRoots();
-    const length = roots.length;
-    for (let i = 0; i < length; i++) {
-      this._dfs(roots[i], maxDepth, traversal);
-    }
-
-    return traversal;
-  }
-
-  /**
-   * Expands current row.
-   *
-   * @param {Object} item
-   * @param {Boolean} expandAllChildren
-   */
-  _onExpand(item, expandAllChildren) {
-    if (this.props.onExpand) {
-      this.props.onExpand(item);
-
-      if (expandAllChildren) {
-        const children = this._dfs(item);
-        const length = children.length;
-        for (let i = 0; i < length; i++) {
-          this.props.onExpand(children[i].item);
-        }
-      }
-    }
-  }
-
-  /**
-   * Collapses current row.
-   *
-   * @param {Object} item
-   */
-  _onCollapse(item) {
-    if (this.props.onCollapse) {
-      this.props.onCollapse(item);
-    }
-  }
-
-  /**
-   * Sets the passed in item to be the focused item.
-   *
-   * @param {Object|undefined} item
-   *        The item to be focused, or undefined to focus no item.
-   *
-   * @param {Object|undefined} options
-   *        An options object which can contain:
-   *          - dir: "up" or "down" to indicate if we should scroll the element to the
-   *                 top or the bottom of the scrollable container when the element is
-   *                 off canvas.
-   */
-  _focus(item, options) {
-    this._scrollNodeIntoView(item, options);
-    if (this.props.onFocus) {
-      this.props.onFocus(item);
-    }
-  }
-
-  /**
-   * Sets the passed in item to be the focused item.
-   *
-   * @param {Object|undefined} item
-   *        The item to be scrolled to.
-   *
-   * @param {Object|undefined} options
-   *        An options object which can contain:
-   *          - dir: "up" or "down" to indicate if we should scroll the element to the
-   *                 top or the bottom of the scrollable container when the element is
-   *                 off canvas.
-   */
-  _scrollNodeIntoView(item, options = {}) {
-    if (item !== undefined) {
-      const treeElement = this.treeRef;
-      const element = document.getElementById(this.props.getKey(item));
-      if (element) {
-        const { top, bottom } = element.getBoundingClientRect();
-        const closestScrolledParent = node => {
-          if (node == null) {
-            return null;
-          }
-
-          if (node.scrollHeight > node.clientHeight) {
-            return node;
-          }
-          return closestScrolledParent(node.parentNode);
-        };
-        const scrolledParent = closestScrolledParent(treeElement);
-        const isVisible = !scrolledParent || top >= 0 && bottom <= scrolledParent.clientHeight;
-
-        if (!isVisible) {
-          let scrollToTop = !options.alignTo && top < 0 || options.alignTo === "top";
-          element.scrollIntoView(scrollToTop);
-        }
-      }
-    }
-  }
-
-  /**
-   * Sets the state to have no focused item.
-   */
-  _onBlur() {
-    this._focus(undefined);
-  }
-
-  /**
-   * Handles key down events in the tree's container.
-   *
-   * @param {Event} e
-   */
-  _onKeyDown(e) {
-    if (this.props.focused == null) {
-      return;
-    }
-
-    // Allow parent nodes to use navigation arrows with modifiers.
-    if (e.altKey || e.ctrlKey || e.shiftKey || e.metaKey) {
-      return;
-    }
-
-    this._preventArrowKeyScrolling(e);
-
-    switch (e.key) {
-      case "ArrowUp":
-        this._focusPrevNode();
-        return;
-
-      case "ArrowDown":
-        this._focusNextNode();
-        return;
-
-      case "ArrowLeft":
-        if (this.props.isExpanded(this.props.focused) && this._nodeIsExpandable(this.props.focused)) {
-          this._onCollapse(this.props.focused);
-        } else {
-          this._focusParentNode();
-        }
-        return;
-
-      case "ArrowRight":
-        if (this._nodeIsExpandable(this.props.focused) && !this.props.isExpanded(this.props.focused)) {
-          this._onExpand(this.props.focused);
-        } else {
-          this._focusNextNode();
-        }
-    }
-  }
-
-  /**
-   * Sets the previous node relative to the currently focused item, to focused.
-   */
-  _focusPrevNode() {
-    // Start a depth first search and keep going until we reach the currently
-    // focused node. Focus the previous node in the DFS, if it exists. If it
-    // doesn't exist, we're at the first node already.
-
-    let prev;
-
-    const traversal = this._dfsFromRoots();
-    const length = traversal.length;
-    for (let i = 0; i < length; i++) {
-      const item = traversal[i].item;
-      if (item === this.props.focused) {
-        break;
-      }
-      prev = item;
-    }
-    if (prev === undefined) {
-      return;
-    }
-
-    this._focus(prev, { alignTo: "top" });
-  }
-
-  /**
-   * Handles the down arrow key which will focus either the next child
-   * or sibling row.
-   */
-  _focusNextNode() {
-    // Start a depth first search and keep going until we reach the currently
-    // focused node. Focus the next node in the DFS, if it exists. If it
-    // doesn't exist, we're at the last node already.
-    const traversal = this._dfsFromRoots();
-    const length = traversal.length;
-    let i = 0;
-
-    while (i < length) {
-      if (traversal[i].item === this.props.focused) {
-        break;
-      }
-      i++;
-    }
-
-    if (i + 1 < traversal.length) {
-      this._focus(traversal[i + 1].item, { alignTo: "bottom" });
-    }
-  }
-
-  /**
-   * Handles the left arrow key, going back up to the current rows'
-   * parent row.
-   */
-  _focusParentNode() {
-    const parent = this.props.getParent(this.props.focused);
-    if (!parent) {
-      this._focusPrevNode(this.props.focused);
-      return;
-    }
-
-    const traversal = this._dfsFromRoots();
-    const length = traversal.length;
-    let parentIndex = 0;
-    for (; parentIndex < length; parentIndex++) {
-      if (traversal[parentIndex].item === parent) {
-        break;
-      }
-    }
-
-    this._focus(parent, { alignTo: "top" });
-  }
-
-  _nodeIsExpandable(item) {
-    return this.props.isExpandable ? this.props.isExpandable(item) : !!this.props.getChildren(item).length;
-  }
-
-  render() {
-    const traversal = this._dfsFromRoots();
-    const {
-      focused
-    } = this.props;
-
-    const nodes = traversal.map((v, i) => {
-      const { item, depth } = traversal[i];
-      const key = this.props.getKey(item, i);
-      return TreeNodeFactory({
-        key,
-        id: key,
-        index: i,
-        item,
-        depth,
-        renderItem: this.props.renderItem,
-        focused: focused === item,
-        expanded: this.props.isExpanded(item),
-        isExpandable: this._nodeIsExpandable(item),
-        onExpand: this._onExpand,
-        onCollapse: this._onCollapse,
-        onClick: e => {
-          this._focus(item);
-          if (this.props.isExpanded(item)) {
-            this.props.onCollapse(item);
-          } else {
-            this.props.onExpand(item, e.altKey);
-          }
-        }
-      });
-    });
-
-    const style = Object.assign({}, this.props.style || {}, {
-      padding: 0,
-      margin: 0
-    });
-
-    return _reactDomFactories2.default.div({
-      className: `tree ${this.props.className ? this.props.className : ""}`,
-      ref: el => {
-        this.treeRef = el;
-      },
-      role: "tree",
-      tabIndex: "0",
-      onKeyDown: this._onKeyDown,
-      onKeyPress: this._preventArrowKeyScrolling,
-      onKeyUp: this._preventArrowKeyScrolling,
-      onFocus: ({ nativeEvent }) => {
-        if (focused || !nativeEvent || !this.treeRef) {
-          return;
-        }
-
-        let { explicitOriginalTarget } = nativeEvent;
-        // Only set default focus to the first tree node if the focus came
-        // from outside the tree (e.g. by tabbing to the tree from other
-        // external elements).
-        if (explicitOriginalTarget !== this.treeRef && !this.treeRef.contains(explicitOriginalTarget)) {
-          this._focus(traversal[0].item);
-        }
-      },
-      onBlur: this._onBlur,
-      onClick: () => {
-        // Focus should always remain on the tree container itself.
-        this.treeRef.focus();
-      },
-      "aria-label": this.props.label,
-      "aria-labelledby": this.props.labelledby,
-      "aria-activedescendant": focused && this.props.getKey(focused),
-      style
-    }, nodes);
-  }
-}
-
-exports.default = Tree;
-
-/***/ }),
-/* 2015 */
-/***/ (function(module, exports) {
-
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M8 13.4c-.5 0-.9-.2-1.2-.6L.4 5.2C0 4.7-.1 4.3.2 3.7S1 3 1.6 3h12.8c.6 0 1.2.1 1.4.7.3.6.2 1.1-.2 1.6l-6.4 7.6c-.3.4-.7.5-1.2.5z\"></path></svg>"
-
-/***/ }),
-/* 2016 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
+/* 2013 */,
+/* 2014 */,
+/* 2015 */,
+/* 2016 */,
 /* 2017 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -50748,6 +50316,10 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
@@ -50799,22 +50371,6 @@ class Tab extends _react.PureComponent {
       togglePrettyPrint
     } = this.props;
 
-    const closeTabLabel = L10N.getStr("sourceTabs.closeTab");
-    const closeOtherTabsLabel = L10N.getStr("sourceTabs.closeOtherTabs");
-    const closeTabsToEndLabel = L10N.getStr("sourceTabs.closeTabsToEnd");
-    const closeAllTabsLabel = L10N.getStr("sourceTabs.closeAllTabs");
-    const revealInTreeLabel = L10N.getStr("sourceTabs.revealInTree");
-    const copyLinkLabel = L10N.getStr("copySourceUri2");
-    const prettyPrintLabel = L10N.getStr("sourceTabs.prettyPrint");
-
-    const closeTabKey = L10N.getStr("sourceTabs.closeTab.accesskey");
-    const closeOtherTabsKey = L10N.getStr("sourceTabs.closeOtherTabs.accesskey");
-    const closeTabsToEndKey = L10N.getStr("sourceTabs.closeTabsToEnd.accesskey");
-    const closeAllTabsKey = L10N.getStr("sourceTabs.closeAllTabs.accesskey");
-    const revealInTreeKey = L10N.getStr("sourceTabs.revealInTree.accesskey");
-    const copyLinkKey = L10N.getStr("copySourceUri2.accesskey");
-    const prettyPrintKey = L10N.getStr("sourceTabs.prettyPrint.accesskey");
-
     const otherTabs = tabSources.filter(t => t.get("id") !== tab);
     const sourceTab = tabSources.find(t => t.get("id") == tab);
     const tabURLs = tabSources.map(t => t.get("url"));
@@ -50825,74 +50381,42 @@ class Tab extends _react.PureComponent {
     }
 
     const isPrettySource = (0, _source.isPretty)(sourceTab);
-
-    const closeTabMenuItem = {
-      id: "node-menu-close-tab",
-      label: closeTabLabel,
-      accesskey: closeTabKey,
-      disabled: false,
-      click: () => closeTab(sourceTab.get("url"))
-    };
-
-    const closeOtherTabsMenuItem = {
-      id: "node-menu-close-other-tabs",
-      label: closeOtherTabsLabel,
-      accesskey: closeOtherTabsKey,
-      disabled: false,
-      click: () => closeTabs(otherTabURLs)
-    };
-
-    const closeTabsToEndMenuItem = {
-      id: "node-menu-close-tabs-to-end",
-      label: closeTabsToEndLabel,
-      accesskey: closeTabsToEndKey,
-      disabled: false,
-      click: () => {
-        const tabIndex = tabSources.findIndex(t => t == tab);
-        closeTabs(tabURLs.filter((t, i) => i > tabIndex));
-      }
-    };
-
-    const closeAllTabsMenuItem = {
-      id: "node-menu-close-all-tabs",
-      label: closeAllTabsLabel,
-      accesskey: closeAllTabsKey,
-      disabled: false,
-      click: () => closeTabs(tabURLs)
-    };
-
-    const showSourceMenuItem = {
-      id: "node-menu-show-source",
-      label: revealInTreeLabel,
-      accesskey: revealInTreeKey,
-      disabled: false,
-      click: () => showSource(sourceTab)
-    };
-
-    const copySourceUri2 = {
-      id: "node-menu-copy-source-url",
-      label: copyLinkLabel,
-      accesskey: copyLinkKey,
-      disabled: false,
-      click: () => (0, _clipboard.copyToTheClipboard)(sourceTab.get("url"))
-    };
-
-    const prettyPrint = {
-      id: "node-menu-pretty-print",
-      label: prettyPrintLabel,
-      accesskey: prettyPrintKey,
-      disabled: false,
-      click: () => togglePrettyPrint(sourceTab.get("id"))
-    };
-
-    const items = [{ item: closeTabMenuItem }, { item: closeOtherTabsMenuItem, hidden: () => tabSources.size === 1 }, {
-      item: closeTabsToEndMenuItem,
+    const tabMenuItems = (0, _tabs.getTabMenuItems)();
+    const items = [{
+      item: _extends({}, tabMenuItems.closeTab, {
+        click: () => closeTab(sourceTab.get("url"))
+      })
+    }, {
+      item: _extends({}, tabMenuItems.closeOtherTabs, {
+        click: () => closeTabs(otherTabURLs)
+      }),
+      hidden: () => tabSources.size === 1
+    }, {
+      item: _extends({}, tabMenuItems.closeTabsToEnd, {
+        click: () => {
+          const tabIndex = tabSources.findIndex(t => t.get("id") == tab);
+          closeTabs(tabURLs.filter((t, i) => i > tabIndex));
+        }
+      }),
       hidden: () => tabSources.some((t, i) => t === tab && tabSources.size - 1 === i)
-    }, { item: closeAllTabsMenuItem }, { item: { type: "separator" } }, { item: copySourceUri2 }];
+    }, {
+      item: _extends({}, tabMenuItems.closeAllTabs, { click: () => closeTabs(tabURLs) })
+    }, { item: { type: "separator" } }, {
+      item: _extends({}, tabMenuItems.copySourceUri2, {
+        click: () => (0, _clipboard.copyToTheClipboard)(sourceTab.get("url"))
+      })
+    }];
 
     if (!isPrettySource) {
-      items.push({ item: showSourceMenuItem });
-      items.push({ item: prettyPrint });
+      items.push({
+        item: _extends({}, tabMenuItems.showSource, { click: () => showSource(tab) })
+      });
+
+      items.push({
+        item: _extends({}, tabMenuItems.prettyPrint, {
+          click: () => togglePrettyPrint(tab)
+        })
+      });
     }
 
     (0, _devtoolsContextmenu.showMenu)(e, (0, _devtoolsContextmenu.buildMenu)(items));
@@ -50952,9 +50476,7 @@ class Tab extends _react.PureComponent {
       })
     );
   }
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 exports.default = (0, _reactRedux.connect)(state => {
   return {
@@ -51217,6 +50739,166 @@ function getTokenLocation(codeMirror, tokenEl) {
     column: ch
   };
 }
+
+/***/ }),
+/* 2245 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.updateTree = updateTree;
+
+var _addToTree = __webpack_require__(1443);
+
+var _collapseTree = __webpack_require__(1444);
+
+var _utils = __webpack_require__(1371);
+
+function newSourcesSet(newSources, prevSources) {
+  const next = newSources.toSet();
+  const prev = prevSources.toSet();
+  return next.subtract(prev);
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function updateTree({
+  newSources,
+  prevSources,
+  debuggeeUrl,
+  projectRoot,
+  uncollapsedTree,
+  sourceTree
+}) {
+  const newSet = newSourcesSet(newSources, prevSources);
+
+  for (const source of newSet) {
+    (0, _addToTree.addToTree)(uncollapsedTree, source, debuggeeUrl, projectRoot);
+  }
+
+  const newSourceTree = (0, _collapseTree.collapseTree)(uncollapsedTree);
+
+  return {
+    uncollapsedTree,
+    sourceTree: newSourceTree,
+    parentMap: (0, _utils.createParentMap)(sourceTree),
+    focusedItem: null
+  };
+}
+
+/***/ }),
+/* 2246 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+exports.setupHelper = setupHelper;
+
+var _redux = __webpack_require__(3);
+
+var _timings = __webpack_require__(1657);
+
+var timings = _interopRequireWildcard(_timings);
+
+var _prefs = __webpack_require__(226);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function setupHelper(obj) {
+  const selectors = Object.keys(obj.selectors).reduce((bound, selector) => {
+    bound[selector] = (a, b, c) => obj.selectors[selector](obj.store.getState(), a, b, c);
+    return bound;
+  }, {});
+
+  const actions = (0, _redux.bindActionCreators)(obj.actions, obj.store.dispatch);
+  window.dbg = _extends({}, obj, {
+    selectors,
+    actions,
+    prefs: _prefs.prefs,
+    features: _prefs.features,
+    timings
+  });
+
+  console.group("Development Notes");
+  const baseUrl = "https://devtools-html.github.io/debugger.html";
+  const localDevelopmentUrl = `${baseUrl}/docs/local-development.html`;
+  console.log("Debugging Tips", localDevelopmentUrl);
+  console.log("dbg", window.dbg);
+  console.groupEnd();
+}
+
+/***/ }),
+/* 2247 */
+/***/ (function(module, exports) {
+
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M8 13.4c-.5 0-.9-.2-1.2-.6L.4 5.2C0 4.7-.1 4.3.2 3.7S1 3 1.6 3h12.8c.6 0 1.2.1 1.4.7.3.6.2 1.1-.2 1.6l-6.4 7.6c-.3.4-.7.5-1.2.5z\"></path></svg>"
+
+/***/ }),
+/* 2248 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 2249 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const PropTypes = __webpack_require__(20);
+
+const { wrapRender } = __webpack_require__(1353);
+const { MODE } = __webpack_require__(1357);
+const { ModePropType } = __webpack_require__(1448);
+
+const dom = __webpack_require__(1758);
+const { span } = dom;
+
+GripLengthBubble.propTypes = {
+  object: PropTypes.object.isRequired,
+  maxLengthMap: PropTypes.instanceOf(Map).isRequired,
+  getLength: PropTypes.func.isRequired,
+  mode: ModePropType,
+  visibilityThreshold: PropTypes.number
+};
+
+function GripLengthBubble(props) {
+  const {
+    object,
+    mode = MODE.SHORT,
+    visibilityThreshold = 2,
+    maxLengthMap,
+    getLength,
+    showZeroLength = false
+  } = props;
+
+  const length = getLength(object);
+  const isEmpty = length === 0;
+  const isObvious = [MODE.SHORT, MODE.LONG].includes(mode) && length > 0 && length <= maxLengthMap.get(mode) && length <= visibilityThreshold;
+  if (isEmpty && !showZeroLength || isObvious) {
+    return "";
+  }
+
+  return span({
+    className: "objectLengthBubble"
+  }, `(${length})`);
+}
+
+module.exports = {
+  lengthBubble: wrapRender(GripLengthBubble)
+};
 
 /***/ })
 /******/ ]);

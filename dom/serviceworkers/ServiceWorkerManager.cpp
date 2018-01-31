@@ -192,7 +192,7 @@ PopulateRegistrationData(nsIPrincipal* aPrincipal,
     return rv;
   }
 
-  aData.scope() = aRegistration->mScope;
+  aData.scope() = aRegistration->Scope();
 
   RefPtr<ServiceWorkerInfo> newest = aRegistration->Newest();
   if (NS_WARN_IF(!newest)) {
@@ -465,7 +465,7 @@ class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public Service
     RefPtr<ServiceWorkerRegistrationInfo> reg = registerJob->GetRegistration();
 
     RefPtr<ServiceWorkerRegistration> swr =
-      window->GetServiceWorkerRegistration(NS_ConvertUTF8toUTF16(reg->mScope));
+      window->GetServiceWorkerRegistration(NS_ConvertUTF8toUTF16(reg->Scope()));
     promise->MaybeResolve(swr);
   }
 
@@ -1003,7 +1003,7 @@ public:
     for (uint32_t i = 0; i < data->mOrderedScopes.Length(); ++i) {
       RefPtr<ServiceWorkerRegistrationInfo> info =
         data->mInfos.GetWeak(data->mOrderedScopes[i]);
-      if (info->mPendingUninstall) {
+      if (info->IsPendingUninstall()) {
         continue;
       }
 
@@ -1146,7 +1146,7 @@ public:
       return NS_OK;
     }
 
-    NS_ConvertUTF8toUTF16 scope(registration->mScope);
+    NS_ConvertUTF8toUTF16 scope(registration->Scope());
     RefPtr<ServiceWorkerRegistration> swr =
       mWindow->GetServiceWorkerRegistration(scope);
     mPromise->MaybeResolve(swr);
@@ -1463,7 +1463,7 @@ ServiceWorkerManager::CheckReadyPromise(nsPIDOMWindowInner* aWindow,
     GetServiceWorkerRegistrationInfo(principal, aURI);
 
   if (registration && registration->GetActive()) {
-    NS_ConvertUTF8toUTF16 scope(registration->mScope);
+    NS_ConvertUTF8toUTF16 scope(registration->Scope());
     RefPtr<ServiceWorkerRegistration> swr =
       aWindow->GetServiceWorkerRegistration(scope);
     aPromise->MaybeResolve(swr);
@@ -1651,7 +1651,7 @@ ServiceWorkerManager::WorkerIsIdle(ServiceWorkerInfo* aWorker)
     return;
   }
 
-  if (!reg->IsControllingClients() && reg->mPendingUninstall) {
+  if (!reg->IsControllingClients() && reg->IsPendingUninstall()) {
     RemoveRegistration(reg);
     return;
   }
@@ -1840,8 +1840,8 @@ ServiceWorkerManager::LoadRegistration(
   const nsCString& currentWorkerURL = aRegistration.currentWorkerURL();
   if (!currentWorkerURL.IsEmpty()) {
     registration->SetActive(
-      new ServiceWorkerInfo(registration->mPrincipal,
-                            registration->mScope,
+      new ServiceWorkerInfo(registration->Principal(),
+                            registration->Scope(),
                             currentWorkerURL,
                             aRegistration.cacheName(),
                             importsLoadFlags));
@@ -1962,12 +1962,12 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(const nsACString& aScopeK
 
 #ifdef DEBUG
   nsAutoCString origin;
-  rv = registration->mPrincipal->GetOrigin(origin);
+  rv = registration->Principal()->GetOrigin(origin);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   MOZ_ASSERT(origin.Equals(aScopeKey));
 #endif
 
-  if (registration->mPendingUninstall) {
+  if (registration->IsPendingUninstall()) {
     return nullptr;
   }
   return registration.forget();
@@ -2015,7 +2015,7 @@ ServiceWorkerManager::AddScopeAndRegistration(const nsACString& aScope,
                                               ServiceWorkerRegistrationInfo* aInfo)
 {
   MOZ_ASSERT(aInfo);
-  MOZ_ASSERT(aInfo->mPrincipal);
+  MOZ_ASSERT(aInfo->Principal());
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {
@@ -2024,7 +2024,7 @@ ServiceWorkerManager::AddScopeAndRegistration(const nsACString& aScope,
   }
 
   nsAutoCString scopeKey;
-  nsresult rv = swm->PrincipalToScopeKey(aInfo->mPrincipal, scopeKey);
+  nsresult rv = swm->PrincipalToScopeKey(aInfo->Principal(), scopeKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -2118,7 +2118,7 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
   }
 
   nsAutoCString scopeKey;
-  nsresult rv = swm->PrincipalToScopeKey(aRegistration->mPrincipal, scopeKey);
+  nsresult rv = swm->PrincipalToScopeKey(aRegistration->Principal(), scopeKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -2128,7 +2128,7 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
     return;
   }
 
-  if (auto entry = data->mUpdateTimers.Lookup(aRegistration->mScope)) {
+  if (auto entry = data->mUpdateTimers.Lookup(aRegistration->Scope())) {
     entry.Data()->Cancel();
     entry.Remove();
   }
@@ -2136,8 +2136,8 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
   // Verify there are no controlled clients for the purged registration.
   for (auto iter = swm->mControlledClients.Iter(); !iter.Done(); iter.Next()) {
     auto& reg = iter.UserData()->mRegistrationInfo;
-    if (reg->mScope.Equals(aRegistration->mScope) &&
-        reg->mPrincipal->Equals(aRegistration->mPrincipal)) {
+    if (reg->Scope().Equals(aRegistration->Scope()) &&
+        reg->Principal()->Equals(aRegistration->Principal())) {
       MOZ_DIAGNOSTIC_ASSERT(false,
                             "controlled client when removing registration");
       iter.Remove();
@@ -2146,8 +2146,8 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
   }
 
   RefPtr<ServiceWorkerRegistrationInfo> info;
-  data->mInfos.Remove(aRegistration->mScope, getter_AddRefs(info));
-  data->mOrderedScopes.RemoveElement(aRegistration->mScope);
+  data->mInfos.Remove(aRegistration->Scope(), getter_AddRefs(info));
+  data->mOrderedScopes.RemoveElement(aRegistration->Scope());
   swm->NotifyListenersOnUnregister(info);
 
   swm->MaybeRemoveRegistrationInfo(scopeKey);
@@ -2216,7 +2216,7 @@ ServiceWorkerManager::StopControllingRegistration(ServiceWorkerRegistrationInfo*
     return;
   }
 
-  if (aRegistration->mPendingUninstall) {
+  if (aRegistration->IsPendingUninstall()) {
     RemoveRegistration(aRegistration);
     return;
   }
@@ -2246,7 +2246,7 @@ ServiceWorkerManager::GetScopeForUrl(nsIPrincipal* aPrincipal,
       return NS_ERROR_FAILURE;
   }
 
-  aScope = NS_ConvertUTF8toUTF16(r->mScope);
+  aScope = NS_ConvertUTF8toUTF16(r->Scope());
   return NS_OK;
 }
 
@@ -2302,7 +2302,7 @@ ServiceWorkerManager::FireUpdateFoundOnServiceWorkerRegistrations(
     MOZ_ASSERT(!regScope.IsEmpty());
 
     NS_ConvertUTF16toUTF8 utf8Scope(regScope);
-    if (utf8Scope.Equals(aRegistration->mScope)) {
+    if (utf8Scope.Equals(aRegistration->Scope())) {
       target->UpdateFound();
     }
   }
@@ -2366,7 +2366,8 @@ ServiceWorkerManager::GetServiceWorkerForScope(nsPIDOMWindowInner* aWindow,
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  RefPtr<ServiceWorker> serviceWorker = info->GetOrCreateInstance(aWindow);
+  RefPtr<ServiceWorker> serviceWorker =
+    aWindow->GetOrCreateServiceWorker(info->Descriptor());
 
   serviceWorker->SetState(info->State());
   serviceWorker.forget(aServiceWorker);
@@ -2669,7 +2670,7 @@ ServiceWorkerManager::TransitionServiceWorkerRegistrationWorker(ServiceWorkerReg
 
     NS_ConvertUTF16toUTF8 utf8Scope(regScope);
 
-    if (utf8Scope.Equals(aRegistration->mScope)) {
+    if (utf8Scope.Equals(aRegistration->Scope())) {
       target->TransitionWorker(aWhichOne);
     }
   }
@@ -2689,7 +2690,7 @@ ServiceWorkerManager::InvalidateServiceWorkerRegistrationWorker(ServiceWorkerReg
 
     NS_ConvertUTF16toUTF8 utf8Scope(regScope);
 
-    if (utf8Scope.Equals(aRegistration->mScope)) {
+    if (utf8Scope.Equals(aRegistration->Scope())) {
       target->InvalidateWorkers(aWhichOnes);
     }
   }
@@ -2708,7 +2709,7 @@ ServiceWorkerManager::NotifyServiceWorkerRegistrationRemoved(ServiceWorkerRegist
 
     NS_ConvertUTF16toUTF8 utf8Scope(regScope);
 
-    if (utf8Scope.Equals(aRegistration->mScope)) {
+    if (utf8Scope.Equals(aRegistration->Scope())) {
       target->RegistrationRemoved();
     }
   }
@@ -2816,7 +2817,7 @@ ServiceWorkerManager::SoftUpdateInternal(const OriginAttributes& aOriginAttribut
   }
 
   // "If registration's uninstalling flag is set, abort these steps."
-  if (registration->mPendingUninstall) {
+  if (registration->IsPendingUninstall()) {
     return;
   }
 
@@ -2841,7 +2842,7 @@ ServiceWorkerManager::SoftUpdateInternal(const OriginAttributes& aOriginAttribut
                                                             aScope);
 
   RefPtr<ServiceWorkerUpdateJob> job =
-    new ServiceWorkerUpdateJob(principal, registration->mScope,
+    new ServiceWorkerUpdateJob(principal, registration->Scope(),
                                newest->ScriptSpec(), nullptr,
                                registration->GetUpdateViaCache());
 
@@ -2916,7 +2917,7 @@ ServiceWorkerManager::UpdateInternal(nsIPrincipal* aPrincipal,
   // "Invoke Update algorithm, or its equivalent, with client, registration as
   // its argument."
   RefPtr<ServiceWorkerUpdateJob> job =
-    new ServiceWorkerUpdateJob(aPrincipal, registration->mScope,
+    new ServiceWorkerUpdateJob(aPrincipal, registration->Scope(),
                                newest->ScriptSpec(), nullptr,
                                registration->GetUpdateViaCache());
 
@@ -2936,7 +2937,7 @@ ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDocument,
   RefPtr<GenericPromise> ref;
 
   // Same origin check
-  if (!aWorkerRegistration->mPrincipal->Equals(aDocument->NodePrincipal())) {
+  if (!aWorkerRegistration->Principal()->Equals(aDocument->NodePrincipal())) {
     ref = GenericPromise::CreateAndReject(NS_ERROR_DOM_SECURITY_ERR, __func__);
     return ref.forget();
   }
@@ -3144,7 +3145,7 @@ ServiceWorkerManager::MaybeRemoveRegistration(ServiceWorkerRegistrationInfo* aRe
 {
   MOZ_ASSERT(aRegistration);
   RefPtr<ServiceWorkerInfo> newest = aRegistration->Newest();
-  if (!newest && HasScope(aRegistration->mPrincipal, aRegistration->mScope)) {
+  if (!newest && HasScope(aRegistration->Principal(), aRegistration->Scope())) {
     RemoveRegistration(aRegistration);
   }
 }
@@ -3165,10 +3166,10 @@ ServiceWorkerManager::RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistr
   // null workers (case 3).
 #ifdef DEBUG
   RefPtr<ServiceWorkerInfo> newest = aRegistration->Newest();
-  MOZ_ASSERT(aRegistration->mPendingUninstall || !newest);
+  MOZ_ASSERT(aRegistration->IsPendingUninstall() || !newest);
 #endif
 
-  MOZ_ASSERT(HasScope(aRegistration->mPrincipal, aRegistration->mScope));
+  MOZ_ASSERT(HasScope(aRegistration->Principal(), aRegistration->Scope()));
 
   // When a registration is removed, we must clear its contents since the DOM
   // object may be held by content script.
@@ -3236,7 +3237,7 @@ ServiceWorkerManager::GetAllRegistrations(nsIArray** aResult)
       ServiceWorkerRegistrationInfo* reg = it2.UserData();
       MOZ_ASSERT(reg);
 
-      if (reg->mPendingUninstall) {
+      if (reg->IsPendingUninstall()) {
         continue;
       }
 
@@ -3257,18 +3258,18 @@ ServiceWorkerManager::ForceUnregister(RegistrationDataPerPrincipal* aRegistratio
   MOZ_ASSERT(aRegistration);
 
   RefPtr<ServiceWorkerJobQueue> queue;
-  aRegistrationData->mJobQueues.Get(aRegistration->mScope, getter_AddRefs(queue));
+  aRegistrationData->mJobQueues.Get(aRegistration->Scope(), getter_AddRefs(queue));
   if (queue) {
     queue->CancelAll();
   }
 
-  if (auto entry = aRegistrationData->mUpdateTimers.Lookup(aRegistration->mScope)) {
+  if (auto entry = aRegistrationData->mUpdateTimers.Lookup(aRegistration->Scope())) {
     entry.Data()->Cancel();
     entry.Remove();
   }
 
   // Since Unregister is async, it is ok to call it in an enumeration.
-  Unregister(aRegistration->mPrincipal, nullptr, NS_ConvertUTF8toUTF16(aRegistration->mScope));
+  Unregister(aRegistration->Principal(), nullptr, NS_ConvertUTF8toUTF16(aRegistration->Scope()));
 }
 
 NS_IMETHODIMP
@@ -3345,10 +3346,10 @@ ServiceWorkerManager::RemoveAllRegistrations(OriginAttributesPattern* aPattern)
       ServiceWorkerRegistrationInfo* reg = it2.UserData();
 
       MOZ_ASSERT(reg);
-      MOZ_ASSERT(reg->mPrincipal);
+      MOZ_ASSERT(reg->Principal());
 
       bool matches =
-        aPattern->Matches(reg->mPrincipal->OriginAttributesRef());
+        aPattern->Matches(reg->Principal()->OriginAttributesRef());
       if (!matches) {
         continue;
       }

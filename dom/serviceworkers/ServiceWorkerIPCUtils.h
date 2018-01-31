@@ -7,7 +7,12 @@
 #define _mozilla_dom_ServiceWorkerIPCUtils_h
 
 #include "ipc/IPCMessageUtils.h"
+
+// Undo X11/X.h's definition of None
+#undef None
+
 #include "mozilla/dom/ServiceWorkerBinding.h"
+#include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 
 namespace IPC {
 
@@ -16,6 +21,13 @@ namespace IPC {
     public ContiguousEnumSerializer<mozilla::dom::ServiceWorkerState,
                                     mozilla::dom::ServiceWorkerState::Parsed,
                                     mozilla::dom::ServiceWorkerState::EndGuard_>
+  {};
+
+  template<>
+  struct ParamTraits<mozilla::dom::ServiceWorkerUpdateViaCache> :
+    public ContiguousEnumSerializer<mozilla::dom::ServiceWorkerUpdateViaCache,
+                                    mozilla::dom::ServiceWorkerUpdateViaCache::Imports,
+                                    mozilla::dom::ServiceWorkerUpdateViaCache::EndGuard_>
   {};
 
 } // namespace IPC
