@@ -1410,7 +1410,7 @@ gfxUtils::GetInputStream(gfx::DataSourceSurface* aSurface,
                                              encoder, aEncoderOptions, outStream);
 }
 
-class GetFeatureStatusRunnable final : public dom::workers::WorkerMainThreadRunnable
+class GetFeatureStatusRunnable final : public dom::WorkerMainThreadRunnable
 {
 public:
     GetFeatureStatusRunnable(dom::workers::WorkerPrivate* workerPrivate,
