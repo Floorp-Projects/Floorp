@@ -945,8 +945,8 @@ public:
 
   LayoutDeviceIntRegion GetWindowDraggingRegion() const;
 
-  void RemoveModifiedWindowDraggingRegion();
-  void ClearWindowDraggingRegion();
+  void RemoveModifiedWindowRegions();
+  void ClearRetainedWindowRegions();
 
   /**
    * Allocate memory in our arena. It will only be freed when this display list
@@ -1581,12 +1581,19 @@ public:
    * Windows; changing those margins willy-nilly can cause the Windows 7 glass
    * haze effect to jump around disconcertingly.
    */
-  void AddWindowExcludeGlassRegion(const nsRegion& bounds) {
-    mWindowExcludeGlassRegion.Or(mWindowExcludeGlassRegion, bounds);
+  void AddWindowExcludeGlassRegion(nsIFrame* aFrame, const nsRect& aBounds)
+  {
+    mWindowExcludeGlassRegion.Add(aFrame, aBounds);
   }
-  const nsRegion& GetWindowExcludeGlassRegion() {
-    return mWindowExcludeGlassRegion;
+
+  /**
+   * Returns the window exclude glass region.
+   */
+  nsRegion GetWindowExcludeGlassRegion() const
+  {
+    return mWindowExcludeGlassRegion.ToRegion();
   }
+
   /**
    * Accumulates opaque stuff into the window opaque region.
    */
@@ -1600,6 +1607,15 @@ public:
   const nsRegion& GetWindowOpaqueRegion() {
     return mWindowOpaqueRegion;
   }
+
+  /**
+   * Clears the window opaque region.
+   */
+  void ClearWindowOpaqueRegion()
+  {
+    mWindowOpaqueRegion.SetEmpty();
+  }
+
   void SetGlassDisplayItem(nsDisplayItem* aItem) {
     if (mGlassDisplayItem) {
       // Web pages or extensions could trigger this by using
@@ -1730,6 +1746,48 @@ public:
     mHitTestIsForVisibility = aHitTestIsForVisibility;
   }
 
+  /**
+   * Represents a region composed of frame/rect pairs.
+   * WeakFrames are used to track whether a rect still belongs to the region.
+   * Modified frames and rects are removed and re-added to the region if needed.
+   * nsDisplayLayerEventRegions::FrameRects implements the same functionality
+   * with nsIFrames.
+   */
+  struct WeakFrameRegion {
+    std::vector<WeakFrame> mFrames;
+    nsTArray<pixman_box32_t> mRects;
+
+    void Add(nsIFrame* aFrame, const nsRect& aRect)
+    {
+      mFrames.emplace_back(aFrame);
+      mRects.AppendElement(nsRegion::RectToBox(aRect));
+    }
+
+    void Add(nsIFrame* aFrame, const mozilla::gfx::IntRect& aRect)
+    {
+      mFrames.emplace_back(aFrame);
+      mRects.AppendElement(nsRegion::RectToBox(aRect));
+    }
+
+    void Clear()
+    {
+      mFrames.clear();
+      mRects.Clear();
+    }
+
+    typedef mozilla::gfx::ArrayView<pixman_box32_t> BoxArrayView;
+
+    nsRegion ToRegion() const
+    {
+      return nsRegion(BoxArrayView(mRects));
+    }
+
+    LayoutDeviceIntRegion ToLayoutDeviceIntRegion() const
+    {
+      return LayoutDeviceIntRegion(BoxArrayView(mRects));
+    }
+  };
+
 private:
   bool MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame);
 
@@ -1856,16 +1914,19 @@ private:
   // Relative to mCurrentFrame.
   nsRect                         mVisibleRect;
   nsRect                         mDirtyRect;
-  nsRegion                       mWindowExcludeGlassRegion;
+
+  // Tracked regions used for retained display list.
+  WeakFrameRegion                mWindowExcludeGlassRegion;
+  WeakFrameRegion                mRetainedWindowDraggingRegion;
+  WeakFrameRegion                mRetainedWindowNoDraggingRegion;
+
+  // Optimized versions for non-retained display list.
+  LayoutDeviceIntRegion          mWindowDraggingRegion;
+  LayoutDeviceIntRegion          mWindowNoDraggingRegion;
+
+  // Window opaque region is calculated during layer building.
   nsRegion                       mWindowOpaqueRegion;
 
-  std::vector<WeakFrame>         mWindowDraggingFrames;
-  nsTArray<pixman_box32_t>       mWindowDraggingRects;
-  LayoutDeviceIntRegion          mWindowDraggingRegion;
-
-  std::vector<WeakFrame>         mWindowNoDraggingFrames;
-  nsTArray<pixman_box32_t>       mWindowNoDraggingRects;
-  LayoutDeviceIntRegion          mWindowNoDraggingRegion;
   // The display item for the Windows window glass background, if any
   nsDisplayItem*                 mGlassDisplayItem;
   // A temporary list that we append scroll info items to while building

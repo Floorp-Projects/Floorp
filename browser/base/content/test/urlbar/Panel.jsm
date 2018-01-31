@@ -6,8 +6,6 @@ this.EXPORTED_SYMBOLS = [
   "Panel",
 ];
 
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 ChromeUtils.import("resource://gre/modules/Timer.jsm");

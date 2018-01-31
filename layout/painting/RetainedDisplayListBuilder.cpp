@@ -1001,7 +1001,9 @@ RetainedDisplayListBuilder::ClearFramesWithProps()
 bool
 RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
 {
-  mBuilder.RemoveModifiedWindowDraggingRegion();
+  mBuilder.RemoveModifiedWindowRegions();
+  mBuilder.ClearWindowOpaqueRegion();
+
   if (mBuilder.ShouldSyncDecodeImages()) {
     MarkFramesWithItemsAndImagesModified(&mList);
   }

@@ -126,19 +126,6 @@ function getFaviconAsImage(iconurl, privateMode, callback) {
   }
 }
 
-// Snaps the given rectangle to be pixel-aligned at the given scale
-function snapRectAtScale(r, scale) {
-  let x = Math.floor(r.x * scale);
-  let y = Math.floor(r.y * scale);
-  let width = Math.ceil((r.x + r.width) * scale) - x;
-  let height = Math.ceil((r.y + r.height) * scale) - y;
-
-  r.x = x / scale;
-  r.y = y / scale;
-  r.width = width / scale;
-  r.height = height / scale;
-}
-
 // PreviewController
 
 /*
