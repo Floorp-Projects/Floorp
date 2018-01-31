@@ -39,7 +39,7 @@ class TestProfilePrint(unittest.TestCase):
             self.assertEqual(set(parts.keys()), keys)
             self.assertEqual(pref_string, parts['user.js'].strip())
 
-        except:
+        except BaseException:
             raise
         finally:
             mozfile.rmtree(tempdir)

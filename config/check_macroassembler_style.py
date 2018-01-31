@@ -141,7 +141,7 @@ def get_file_annotation(filename):
 def get_macroassembler_definitions(filename):
     try:
         fileAnnot = get_file_annotation(filename)
-    except:
+    except Exception:
         return []
 
     style_section = False

@@ -248,7 +248,7 @@ def run_test_harness(options, args):
         if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
             dm_args['logLevel'] = logging.DEBUG # noqa python 2 / 3
         dm = devicemanagerADB.DeviceManagerADB(**dm_args)
-    except:
+    except BaseException:
         if options.with_b2g_emulator:
             runner.cleanup()
             runner.wait()

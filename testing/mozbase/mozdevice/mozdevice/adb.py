@@ -1748,7 +1748,7 @@ class ADBDevice(ADBCommand):
                 remote = '/'.join(remote.rstrip('/').split('/')[:-1])
         try:
             self.command_output(["push", local, remote], timeout=timeout)
-        except:
+        except BaseException:
             raise
         finally:
             if copy_required:
@@ -1801,7 +1801,7 @@ class ADBDevice(ADBCommand):
                 local = '/'.join(local.rstrip('/').split('/')[:-1])
         try:
             self.command_output(["pull", remote, local], timeout=timeout)
-        except:
+        except BaseException:
             raise
         finally:
             if copy_required:

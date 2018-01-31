@@ -67,7 +67,7 @@ class AutophoneRunner(object):
                 json.dump(self.config, f)
             if self.verbose:
                 print("saved configuration: %s" % self.config)
-        except:
+        except Exception:
             self.build_obj.log(logging.ERROR, "autophone", {},
                                "unable to save 'mach autophone' "
                                "configuration to %s" % self.CONFIG_FILE)
@@ -85,7 +85,7 @@ class AutophoneRunner(object):
                     self.config = json.load(f)
                 if self.verbose:
                     print("loaded configuration: %s" % self.config)
-            except:
+            except Exception:
                 self.build_obj.log(logging.ERROR, "autophone", {},
                                    "unable to load 'mach autophone' "
                                    "configuration from %s" % self.CONFIG_FILE)
@@ -181,7 +181,7 @@ class AutophoneRunner(object):
             try:
                 if os.path.exists(self.build_obj.substs["ADB"]):
                     adb_path = self.build_obj.substs["ADB"]
-            except:
+            except Exception:
                 if self.verbose:
                     self.build_obj.log(logging.ERROR, "autophone", {},
                                        str(sys.exc_info()[0]))
@@ -208,7 +208,7 @@ class AutophoneRunner(object):
                         else:
                             self.build_obj.log(logging.WARNING, "autophone", {},
                                                "Device '%s' is not rooted - skipping" % serial)
-            except:
+            except Exception:
                 self.build_obj.log(logging.ERROR, "autophone", {},
                                    "Failed to get list of connected Android devices.")
                 if self.verbose:
@@ -314,7 +314,7 @@ log_level = DEBUG
 time_out = 300""" % (xre_path, xre_path))
             if self.verbose:
                 print("Created %s with host utilities path %s" % (defaults_path, xre_path))
-        except:
+        except Exception:
             self.build_obj.log(logging.ERROR, "autophone", {},
                                "Unable to create %s" % defaults_path)
             if self.verbose:
@@ -447,7 +447,7 @@ time_out = 300""" % (xre_path, xre_path))
             dm = DeviceManagerADB(adbPath=adb_path, retryLimit=1, deviceSerial=device)
             if dm._haveSu or dm._haveRootShell:
                 return True
-        except:
+        except Exception:
             self.build_obj.log(
                 logging.WARN, "autophone", {},
                 "Unable to verify root on device.")
@@ -644,7 +644,7 @@ quit
             proc.wait()
             if proc.proc.returncode == 0:
                 proc_complete = True
-        except:
+        except Exception:
             if proc.poll() is None:
                 proc.kill(signal.SIGTERM)
         if not proc_complete:

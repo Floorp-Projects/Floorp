@@ -145,7 +145,7 @@ class ProcessHandlerMixin(object):
                     self.debug("calling TerminateProcess")
                     try:
                         winprocess.TerminateProcess(self._handle, winprocess.ERROR_CONTROL_C_EXIT)
-                    except:
+                    except Exception:
                         traceback.print_exc()
                         raise OSError("Could not terminate process")
                     finally:
@@ -353,7 +353,7 @@ class ProcessHandlerMixin(object):
 
                         # Spin up our thread for managing the IO Completion Port
                         self._procmgrthread = threading.Thread(target=self._procmgr)
-                    except:
+                    except Exception:
                         print("""Exception trying to use job objects;
 falling back to not using job objects for managing child processes""", file=sys.stderr)
                         tb = traceback.format_exc()
@@ -521,7 +521,7 @@ falling back to not using job objects for managing child processes""", file=sys.
                         if item[self.pid] == 'FINISHED':
                             self.debug("received 'FINISHED' from _procmgrthread")
                             self._process_events.task_done()
-                    except:
+                    except Exception:
                         traceback.print_exc()
                         raise OSError("IO Completion Port failed to signal process shutdown")
                     finally:
