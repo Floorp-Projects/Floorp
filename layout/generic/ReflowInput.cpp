@@ -156,11 +156,6 @@ FontSizeInflationListMarginAdjustment(const nsIFrame* aFrame)
   return 0;
 }
 
-// NOTE: If we ever want to use SizeComputationInput for a flex item or a
-// grid item, we need to make it take the containing-block block-size as
-// well as the inline-size, since flex items and grid items resolve
-// block-direction percent margins and padding against the
-// containing-block block-size, rather than its inline-size.
 SizeComputationInput::SizeComputationInput(nsIFrame *aFrame,
                                    gfxContext *aRenderingContext,
                                    WritingMode aContainingBlockWritingMode,
@@ -169,12 +164,6 @@ SizeComputationInput::SizeComputationInput(nsIFrame *aFrame,
   , mRenderingContext(aRenderingContext)
   , mWritingMode(aFrame->GetWritingMode())
 {
-  MOZ_ASSERT(!aFrame->IsFlexOrGridItem(),
-             "We're about to resolve percent margin & padding "
-             "values against CB inline size, which is incorrect for "
-             "flex/grid items. "
-             "Additionally for grid items, this path doesn't handle baseline "
-             "padding contribution - see SizeComputationInput::InitOffsets");
   ReflowInputFlags flags;
   InitOffsets(aContainingBlockWritingMode, aContainingBlockISize,
               mFrame->Type(), flags);
