@@ -125,6 +125,34 @@
     ],
     "functions": [
       {
+        "name": "update",
+        "type": "function",
+        "async": true,
+        "description": "Update the details of an already defined command.",
+        "parameters": [
+          {
+            "type": "object",
+            "name": "detail",
+            "description": "The new description for the command.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the command."
+                },
+              "description": {
+                "type": "string",
+                "optional": true,
+                "description": "The new description for the command."
+              },
+              "shortcut": {
+                "$ref": "manifest.KeyName",
+                "optional": true
+              }
+            }
+          }
+        ]
+      },
+      {
         "name": "getAll",
         "type": "function",
         "async": "callback",
