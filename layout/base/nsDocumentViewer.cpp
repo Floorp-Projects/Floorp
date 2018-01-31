@@ -1847,7 +1847,7 @@ nsDocumentViewer::Stop(void)
 }
 
 NS_IMETHODIMP
-nsDocumentViewer::GetDOMDocument(nsIDOMDocument **aResult)
+nsDocumentViewer::GetDOMDocument(nsISupports **aResult)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
   return CallQueryInterface(mDocument, aResult);

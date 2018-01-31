@@ -448,9 +448,8 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow)
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(contentViewer, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  rv = contentViewer->GetDOMDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMDocument> domDoc =
+    do_QueryInterface(contentViewer->GetDocument());
   NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
 
   // Set up as a doc state listener
