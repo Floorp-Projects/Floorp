@@ -14,6 +14,11 @@ public abstract class SimpleSuccessStoreDelegate extends DefaultDelegate impleme
   }
 
   @Override
+  public void onBatchCommitted() {
+    performNotify("Store committed", null);
+  }
+
+  @Override
   public RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor) {
     return this;
   }

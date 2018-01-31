@@ -207,6 +207,11 @@ public class VersioningDelegateHelper {
         }
 
         @Override
+        public void onBatchCommitted() {
+            inner.onBatchCommitted();
+        }
+
+        @Override
         public RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor) {
             return inner.deferredStoreDelegate(executor);
         }
