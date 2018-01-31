@@ -217,7 +217,7 @@ XULDocument::~XULDocument()
 } // namespace mozilla
 
 nsresult
-NS_NewXULDocument(nsIXULDocument** result)
+NS_NewXULDocument(nsIDocument** result)
 {
     NS_PRECONDITION(result != nullptr, "null ptr");
     if (! result)
@@ -283,7 +283,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(XULDocument,
                                              XMLDocument,
-                                             nsIXULDocument,
                                              nsIStreamLoaderObserver,
                                              nsICSSLoaderObserver,
                                              nsIOffThreadScriptReceiver)
@@ -989,11 +988,6 @@ XULDocument::ContentRemoved(nsIDocument* aDocument,
 
     RemoveSubtreeFromDocument(aChild);
 }
-
-//----------------------------------------------------------------------
-//
-// nsIXULDocument interface
-//
 
 nsresult
 XULDocument::AddForwardReference(nsForwardReference* aRef)
