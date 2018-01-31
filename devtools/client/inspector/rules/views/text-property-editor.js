@@ -135,12 +135,6 @@ TextPropertyEditor.prototype = {
       tabindex: "-1"
     });
 
-    // Click to expand the computed properties of the text property.
-    this.expander = createChild(this.container, "span", {
-      class: "ruleview-expander theme-twisty"
-    });
-    this.expander.addEventListener("click", this._onExpandClicked, true);
-
     this.nameContainer = createChild(this.container, "span", {
       class: "ruleview-namecontainer"
     });
@@ -153,6 +147,12 @@ TextPropertyEditor.prototype = {
     });
 
     appendText(this.nameContainer, ": ");
+
+    // Click to expand the computed properties of the text property.
+    this.expander = createChild(this.container, "span", {
+      class: "ruleview-expander theme-twisty"
+    });
+    this.expander.addEventListener("click", this._onExpandClicked, true);
 
     // Create a span that will hold the property and semicolon.
     // Use this span to create a slightly larger click target
@@ -554,6 +554,7 @@ TextPropertyEditor.prototype = {
     this.element.classList.remove("ruleview-overridden");
     this.filterProperty.hidden = true;
     this.enable.style.visibility = "hidden";
+    this.expander.style.display = "none";
   },
 
   /**
@@ -575,6 +576,9 @@ TextPropertyEditor.prototype = {
                                  !this.prop.overridden ||
                                  this.ruleEditor.rule.isUnmatched;
 
+    let showExpander = this.prop.computed.some(c => c.name !== this.prop.name);
+    this.expander.style.display = showExpander ? "inline-block" : "none";
+
     if (!this.editing &&
         (this.prop.overridden || !this.prop.enabled ||
          !this.prop.isKnownProperty())) {
@@ -592,7 +596,7 @@ TextPropertyEditor.prototype = {
     this.computed.innerHTML = "";
 
     let showExpander = this.prop.computed.some(c => c.name !== this.prop.name);
-    this.expander.style.visibility = showExpander ? "visible" : "hidden";
+    this.expander.style.display = !this.editing && showExpander ? "inline-block" : "none";
 
     this._populatedComputed = false;
     if (this.expander.hasAttribute("open")) {
