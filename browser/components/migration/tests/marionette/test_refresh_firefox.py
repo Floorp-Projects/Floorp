@@ -424,7 +424,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
         """)
         self._formAutofillAvailable = self.runCode("""
           try {
-            global.profileStorage = Cu.import("resource://formautofill/ProfileStorage.jsm", {}).profileStorage;
+            global.profileStorage = Cu.import("resource://formautofill/FormAutofillStorage.jsm", {}).profileStorage;
           } catch(e) {
             return false;
           }

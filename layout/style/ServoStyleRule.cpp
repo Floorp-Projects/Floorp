@@ -201,7 +201,7 @@ ServoStyleRule::Type() const
 }
 
 void
-ServoStyleRule::GetCssTextImpl(nsAString& aCssText) const
+ServoStyleRule::GetCssText(nsAString& aCssText) const
 {
   Servo_StyleRule_GetCssText(mRawRule, &aCssText);
 }

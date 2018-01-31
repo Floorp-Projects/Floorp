@@ -59,7 +59,7 @@ ServoNamespaceRule::GetURLSpec(nsString& aURLSpec) const
 }
 
 void
-ServoNamespaceRule::GetCssTextImpl(nsAString& aCssText) const
+ServoNamespaceRule::GetCssText(nsAString& aCssText) const
 {
   Servo_NamespaceRule_GetCssText(mRawRule, &aCssText);
 }
