@@ -50,7 +50,8 @@ tabbrowser {
     /* Needed to allow tabs to shrink to be skinnier than their page-title: */
     min-width: 0;
   }
-  .scrollbox-innerbox {
+
+  .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox > .scrollbox-innerbox {
     /* Needed to prevent tabstrip from growing as wide as the sum of the tabs'
        page-title widths (when we'd rather have it be as wide as the window and
        compress the tabs to their minimum size): */
