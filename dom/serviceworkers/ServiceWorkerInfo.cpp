@@ -221,7 +221,8 @@ ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
                                      const nsAString& aCacheName,
                                      nsLoadFlags aImportsLoadFlags)
   : mPrincipal(aPrincipal)
-  , mDescriptor(GetNextID(), aPrincipal, aScope, ServiceWorkerState::Parsed)
+  , mDescriptor(GetNextID(), aPrincipal, aScope, aScriptSpec,
+                ServiceWorkerState::Parsed)
   , mScriptSpec(aScriptSpec)
   , mCacheName(aCacheName)
   , mImportsLoadFlags(aImportsLoadFlags)
