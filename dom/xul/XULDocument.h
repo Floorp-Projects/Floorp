@@ -92,9 +92,14 @@ public:
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
     NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
-    // nsIXULDocument interface
-    NS_IMETHOD AddSubtreeToDocument(nsIContent* aContent) override;
-    NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aContent) override;
+    /**
+     * Notify the XUL document that a subtree has been added
+     */
+    nsresult AddSubtreeToDocument(nsIContent* aContent);
+    /**
+     * Notify the XUL document that a subtree has been removed
+     */
+    nsresult RemoveSubtreeFromDocument(nsIContent* aContent);
     NS_IMETHOD OnPrototypeLoadDone(bool aResumeWalk) override;
     bool OnDocumentParserError() override;
 
