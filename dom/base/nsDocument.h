@@ -378,12 +378,6 @@ public:
   virtual void SetPrincipal(nsIPrincipal *aPrincipal) override;
 
   /**
-   * Get the Content-Type of this document.
-   */
-  // NS_IMETHOD GetContentType(nsAString& aContentType);
-  // Already declared in nsIDOMDocument
-
-  /**
    * Set the Content-Type of this document.
    */
   virtual void SetContentType(const nsAString& aContentType) override;

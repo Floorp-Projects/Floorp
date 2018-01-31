@@ -3339,12 +3339,10 @@ nsDocument::SetApplicationCache(nsIApplicationCache *aApplicationCache)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocument::GetContentType(nsAString& aContentType)
+void
+nsIDocument::GetContentType(nsAString& aContentType)
 {
   CopyUTF8toUTF16(GetContentTypeInternal(), aContentType);
-
-  return NS_OK;
 }
 
 void

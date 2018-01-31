@@ -319,8 +319,8 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow)
   //then lets check the mime type
   if (nsCOMPtr<nsIDocument> doc = window->GetDoc()) {
     nsAutoString mimeType;
-    if (NS_SUCCEEDED(doc->GetContentType(mimeType)))
-      AppendUTF16toUTF8(mimeType, mimeCType);
+    doc->GetContentType(mimeType);
+    AppendUTF16toUTF8(mimeType, mimeCType);
 
     if (IsSupportedTextType(mimeCType.get())) {
       mEditorType.AssignLiteral("text");
