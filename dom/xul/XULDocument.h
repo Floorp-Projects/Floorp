@@ -142,7 +142,10 @@ public:
 
     virtual bool IsDocumentRightToLeft() override;
 
-    virtual void ResetDocumentDirection() override;
+    /**
+     * Reset the document direction so that it is recomputed.
+     */
+    void ResetDocumentDirection();
 
     virtual nsIDocument::DocumentTheme GetDocumentLWTheme() override;
     virtual nsIDocument::DocumentTheme ThreadSafeGetDocumentLWTheme() const override;

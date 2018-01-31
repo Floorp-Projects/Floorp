@@ -1152,7 +1152,7 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                         aValue->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
                 } else if (aName == nsGkAtoms::localedir) {
                     // if the localedir changed on the root element, reset the document direction
-                    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(document);
+                    XULDocument* xuldoc = document->AsXULDocument();
                     if (xuldoc) {
                         xuldoc->ResetDocumentDirection();
                     }
@@ -1189,7 +1189,7 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                     SetTitlebarColor(NS_RGBA(0, 0, 0, 0), aName == nsGkAtoms::activetitlebarcolor);
                 } else if (aName == nsGkAtoms::localedir) {
                     // if the localedir changed on the root element, reset the document direction
-                    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
+                    XULDocument* xuldoc = doc->AsXULDocument();
                     if (xuldoc) {
                         xuldoc->ResetDocumentDirection();
                     }
