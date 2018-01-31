@@ -420,6 +420,12 @@ register_zone(void)
   // a scalable_zone.
   malloc_zone_t* purgeable_zone = malloc_default_purgeable_zone();
 
+  // There is a problem related to the above with the system nano zone, which
+  // is hard to work around from here, and that is instead worked around by
+  // disabling the nano zone through an environment variable
+  // (MallocNanoZone=0). In Firefox, we do that through
+  // browser/app/macbuild/Contents/Info.plist.in.
+
   // Register the custom zone.  At this point it won't be the default.
   malloc_zone_register(&zone);
 
