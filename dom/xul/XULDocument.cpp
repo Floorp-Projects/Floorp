@@ -1282,37 +1282,21 @@ XULDocument::GetViewportSize(int32_t* aWidth,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-XULDocument::GetWidth(int32_t* aWidth)
-{
-    NS_ENSURE_ARG_POINTER(aWidth);
-
-    int32_t height;
-    return GetViewportSize(aWidth, &height);
-}
-
 int32_t
 XULDocument::GetWidth(ErrorResult& aRv)
 {
-    int32_t width;
-    aRv = GetWidth(&width);
+    int32_t width = 0;
+    int32_t height = 0;
+    aRv = GetViewportSize(&width, &height);
     return width;
-}
-
-NS_IMETHODIMP
-XULDocument::GetHeight(int32_t* aHeight)
-{
-    NS_ENSURE_ARG_POINTER(aHeight);
-
-    int32_t width;
-    return GetViewportSize(&width, aHeight);
 }
 
 int32_t
 XULDocument::GetHeight(ErrorResult& aRv)
 {
-    int32_t height;
-    aRv = GetHeight(&height);
+    int32_t width = 0;
+    int32_t height = 0;
+    aRv = GetViewportSize(&width, &height);
     return height;
 }
 
