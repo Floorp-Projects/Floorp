@@ -25,7 +25,6 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMDocument.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"
@@ -399,10 +398,7 @@ Loader::Loader(nsIDocument* aDocument)
   // We can just use the preferred set, since there are no sheets in the
   // document yet (if there are, how did they get there? _we_ load the sheets!)
   // and hence the selected set makes no sense at this time.
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
-  if (domDoc) {
-    domDoc->GetPreferredStyleSheetSet(mPreferredSheet);
-  }
+  mDocument->GetPreferredStyleSheetSet(mPreferredSheet);
 }
 
 Loader::~Loader()
@@ -432,12 +428,11 @@ nsresult
 Loader::SetPreferredSheet(const nsAString& aTitle)
 {
 #ifdef DEBUG
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(mDocument);
-  if (doc) {
+  if (mDocument) {
     nsAutoString currentPreferred;
-    doc->GetLastStyleSheetSet(currentPreferred);
+    mDocument->GetLastStyleSheetSet(currentPreferred);
     if (DOMStringIsNull(currentPreferred)) {
-      doc->GetPreferredStyleSheetSet(currentPreferred);
+      mDocument->GetPreferredStyleSheetSet(currentPreferred);
     }
     NS_ASSERTION(currentPreferred.Equals(aTitle),
                  "Unexpected argument to SetPreferredSheet");

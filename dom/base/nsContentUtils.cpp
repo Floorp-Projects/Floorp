@@ -45,6 +45,7 @@
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/FileSystemSecurity.h"
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/HTMLInputElement.h"
@@ -131,7 +132,6 @@
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
-#include "nsIDOMEvent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -4457,19 +4457,20 @@ nsresult GetEventAndTarget(nsIDocument* aDoc, nsISupports* aTarget,
                            bool aTrusted, nsIDOMEvent** aEvent,
                            EventTarget** aTargetOut)
 {
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDoc);
   nsCOMPtr<EventTarget> target(do_QueryInterface(aTarget));
-  NS_ENSURE_TRUE(domDoc && target, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(aDoc && target, NS_ERROR_INVALID_ARG);
 
-  nsCOMPtr<nsIDOMEvent> event;
-  nsresult rv =
-    domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult err;
+  RefPtr<Event> event = aDoc->CreateEvent(NS_LITERAL_STRING("Events"),
+                                          CallerType::System, err);
+  if (NS_WARN_IF(err.Failed())) {
+    return err.StealNSResult();
+  }
 
   event->InitEvent(aEventName, aCanBubble, aCancelable);
   event->SetTrusted(aTrusted);
 
-  rv = event->SetTarget(target);
+  nsresult rv = event->SetTarget(target);
   NS_ENSURE_SUCCESS(rv, rv);
 
   event.forget(aEvent);

@@ -46,6 +46,11 @@
 #include "mozilla/UniquePtr.h"
 #include <bitset>                        // for member
 
+// windows.h #defines CreateEvent
+#ifdef CreateEvent
+#undef CreateEvent
+#endif
+
 #ifdef MOZILLA_INTERNAL_API
 #include "mozilla/dom/DocumentBinding.h"
 #else
@@ -173,6 +178,7 @@ class XPathEvaluator;
 class XPathExpression;
 class XPathNSResolver;
 class XPathResult;
+class XULDocument;
 template<typename> class Sequence;
 
 template<typename, typename> class CallbackObjectHolder;
@@ -563,10 +569,8 @@ public:
 
   /**
    * Get the Content-Type of this document.
-   * (This will always return NS_OK, but has this signature to be compatible
-   *  with nsIDOMDocument::GetContentType())
    */
-  NS_IMETHOD GetContentType(nsAString& aContentType) = 0;
+  void GetContentType(nsAString& aContentType);
 
   /**
    * Set the Content-Type of this document.
@@ -2895,10 +2899,7 @@ public:
   void GetReferrer(nsAString& aReferrer) const;
   void GetLastModified(nsAString& aLastModified) const;
   void GetReadyState(nsAString& aReadyState) const;
-  // Not const because otherwise the compiler can't figure out whether to call
-  // this GetTitle or the nsAString version from non-const methods, since
-  // neither is an exact match.
-  virtual void GetTitle(nsString& aTitle) = 0;
+  virtual void GetTitle(nsAString& aTitle) = 0;
   virtual void SetTitle(const nsAString& aTitle, mozilla::ErrorResult& rv) = 0;
   void GetDir(nsAString& aDirection) const;
   void SetDir(const nsAString& aDirection);
@@ -2953,7 +2954,7 @@ public:
 #endif
   void GetSelectedStyleSheetSet(nsAString& aSheetSet);
   virtual void SetSelectedStyleSheetSet(const nsAString& aSheetSet) = 0;
-  virtual void GetLastStyleSheetSet(nsString& aSheetSet) = 0;
+  virtual void GetLastStyleSheetSet(nsAString& aSheetSet) = 0;
   void GetPreferredStyleSheetSet(nsAString& aSheetSet);
   virtual mozilla::dom::DOMStringList* StyleSheetSets() = 0;
   virtual void EnableStyleSheetsForSet(const nsAString& aSheetSet) = 0;
@@ -3042,6 +3043,7 @@ public:
 
   virtual nsHTMLDocument* AsHTMLDocument() { return nullptr; }
   virtual mozilla::dom::SVGDocument* AsSVGDocument() { return nullptr; }
+  virtual mozilla::dom::XULDocument* AsXULDocument() { return nullptr; }
 
   /*
    * Given a node, get a weak reference to it and append that reference to

@@ -10,7 +10,6 @@
 #include "nsContentUtils.h"
 #include "nsDeviceSensors.h"
 
-#include "nsIDOMEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
@@ -24,7 +23,9 @@
 #include "mozilla/dom/DeviceLightEvent.h"
 #include "mozilla/dom/DeviceOrientationEvent.h"
 #include "mozilla/dom/DeviceProximityEvent.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/UserProximityEvent.h"
+#include "mozilla/ErrorResult.h"
 
 #include <cmath>
 
@@ -359,12 +360,12 @@ nsDeviceSensors::Notify(const mozilla::hal::SensorData& aSensorData)
         continue;
     }
 
-    if (nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(pwindow->GetDoc())) {
+    if (nsCOMPtr<nsIDocument> doc = pwindow->GetDoc()) {
       nsCOMPtr<mozilla::dom::EventTarget> target = do_QueryInterface(windowListeners[i]);
       if (type == nsIDeviceSensorData::TYPE_ACCELERATION ||
         type == nsIDeviceSensorData::TYPE_LINEAR_ACCELERATION ||
         type == nsIDeviceSensorData::TYPE_GYROSCOPE) {
-        FireDOMMotionEvent(domDoc, target, type, timestamp, x, y, z);
+        FireDOMMotionEvent(doc, target, type, timestamp, x, y, z);
       } else if (type == nsIDeviceSensorData::TYPE_ORIENTATION) {
         FireDOMOrientationEvent(target, x, y, z, Orientation::kAbsolute);
       } else if (type == nsIDeviceSensorData::TYPE_ROTATION_VECTOR) {
@@ -498,7 +499,7 @@ nsDeviceSensors::FireDOMOrientationEvent(EventTarget* aTarget,
 }
 
 void
-nsDeviceSensors::FireDOMMotionEvent(nsIDOMDocument *domdoc,
+nsDeviceSensors::FireDOMMotionEvent(nsIDocument *doc,
                                     EventTarget* target,
                                     uint32_t type,
                                     PRTime timestamp,
@@ -556,8 +557,12 @@ nsDeviceSensors::FireDOMMotionEvent(nsIDOMDocument *domdoc,
     return;
   }
 
-  nsCOMPtr<nsIDOMEvent> event;
-  domdoc->CreateEvent(NS_LITERAL_STRING("DeviceMotionEvent"), getter_AddRefs(event));
+  IgnoredErrorResult ignored;
+  RefPtr<Event> event = doc->CreateEvent(NS_LITERAL_STRING("DeviceMotionEvent"),
+                                         CallerType::System, ignored);
+  if (!event) {
+    return;
+  }
 
   DeviceMotionEvent* me = static_cast<DeviceMotionEvent*>(event.get());
 
