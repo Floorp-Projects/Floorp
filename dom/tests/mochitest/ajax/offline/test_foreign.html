@@ -1,4 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml" manifest="https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign1.cacheManifest">
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign1.cacheManifest">
 <head>
 <title>Foreign test</title>
 
@@ -7,7 +7,6 @@
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 <script class="testbody" type="text/javascript">
-/* globals foreign1cache */
 
 /**
  * This test loads a manifest that contains as an explicit entry
@@ -28,12 +27,12 @@ function manifestUpdated()
     .getService(SpecialPowers.Ci.nsIApplicationCacheService);
 
   foreign1cache = appCacheService.chooseApplicationCache(
-    "https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html", OfflineTest.loadContextInfo());
+    "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html", OfflineTest.loadContextInfo());
 
   OfflineTest.ok(foreign1cache, "foreign2.html chosen from foreign1 cache");
-  OfflineTest.is(foreign1cache.manifestURI.asciiSpec, "https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign1.cacheManifest");
+  OfflineTest.is(foreign1cache.manifestURI.asciiSpec, "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign1.cacheManifest")
 
-  win = window.open("https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html");
+  win = window.open("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html");
 }
 
 function onDone() // called by the open window after stuff is finished

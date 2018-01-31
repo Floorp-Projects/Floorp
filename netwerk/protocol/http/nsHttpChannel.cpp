@@ -8682,12 +8682,6 @@ nsHttpChannel::MaybeWarnAboutAppCache()
     GetCallback(warner);
     if (warner) {
         warner->IssueWarning(nsIDocument::eAppCache, false);
-        // When the page is insecure and the API is still enabled
-        // provide an additional warning for developers of removal
-        if (!IsHTTPS() &&
-            Preferences::GetBool("browser.cache.offline.insecure.enable")) {
-            warner->IssueWarning(nsIDocument::eAppCacheInsecure, true);
-        }
     }
 }
 

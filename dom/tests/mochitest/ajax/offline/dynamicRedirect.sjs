@@ -14,7 +14,7 @@ function handleRequest(request, response)
     {
       case "": // The default value
         response.setStatusLine(request.httpVersion, 307, "Moved temporarly");
-        response.setHeader("Location", "https://example.com/non-existing-dynamic.html");
+        response.setHeader("Location", "http://example.com/non-existing-dynamic.html");
         response.setHeader("Content-Type", "text/html");
         break;
       case "on":

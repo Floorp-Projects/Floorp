@@ -2971,13 +2971,6 @@ nsGlobalWindowInner::IsPrivilegedChromeWindow(JSContext* aCx, JSObject* aObj)
 }
 
 /* static */ bool
-nsGlobalWindowInner::OfflineCacheAllowedForContext(JSContext* aCx, JSObject* aObj)
-{
-  return IsSecureContextOrObjectIsFromSecureContext(aCx, aObj) ||
-         Preferences::GetBool("browser.cache.offline.insecure.enable");
-}
-
-/* static */ bool
 nsGlobalWindowInner::IsRequestIdleCallbackEnabled(JSContext* aCx, JSObject* aObj)
 {
   // The requestIdleCallback should always be enabled for system code.
