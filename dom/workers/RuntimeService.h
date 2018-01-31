@@ -22,13 +22,12 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 namespace dom {
 class SharedWorker;
+struct WorkerLoadInfo;
 class WorkerThread;
 }
 }
 
 BEGIN_WORKERS_NAMESPACE
-
-struct WorkerLoadInfo;
 
 class RuntimeService final : public nsIObserver
 {
