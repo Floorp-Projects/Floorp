@@ -969,20 +969,21 @@ NS_CloneInputStream(nsIInputStream* aSource, nsIInputStream** aCloneOut,
 }
 
 nsresult
-NS_MakeAsyncNonBlockingInputStream(nsIInputStream* aSource,
+NS_MakeAsyncNonBlockingInputStream(already_AddRefed<nsIInputStream> aSource,
                                    nsIAsyncInputStream** aAsyncInputStream)
 {
-  if (NS_WARN_IF(!aSource || !aAsyncInputStream)) {
+  nsCOMPtr<nsIInputStream> source = Move(aSource);
+  if (NS_WARN_IF(!aAsyncInputStream)) {
     return NS_ERROR_FAILURE;
   }
 
   bool nonBlocking = false;
-  nsresult rv = aSource->IsNonBlocking(&nonBlocking);
+  nsresult rv = source->IsNonBlocking(&nonBlocking);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aSource);
+  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(source);
 
   if (nonBlocking && asyncStream) {
     // This stream is perfect!
@@ -992,7 +993,8 @@ NS_MakeAsyncNonBlockingInputStream(nsIInputStream* aSource,
 
   if (nonBlocking) {
     // If the stream is non-blocking but not async, we wrap it.
-    return NonBlockingAsyncInputStream::Create(aSource, aAsyncInputStream);
+    return NonBlockingAsyncInputStream::Create(source.forget(),
+                                               aAsyncInputStream);
   }
 
   nsCOMPtr<nsIStreamTransportService> sts =
@@ -1002,7 +1004,7 @@ NS_MakeAsyncNonBlockingInputStream(nsIInputStream* aSource,
   }
 
   nsCOMPtr<nsITransport> transport;
-  rv = sts->CreateInputTransport(aSource,
+  rv = sts->CreateInputTransport(source,
                                  /* aCloseWhenDone */ true,
                                  getter_AddRefs(transport));
   if (NS_WARN_IF(NS_FAILED(rv))) {

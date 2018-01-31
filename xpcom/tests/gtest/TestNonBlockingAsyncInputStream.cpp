@@ -8,26 +8,30 @@
 #include "Helpers.h"
 
 TEST(TestNonBlockingAsyncInputStream, Simple) {
-  nsCOMPtr<nsIInputStream> stream;
-
   nsCString data;
   data.Assign("Hello world!");
 
-  // Let's create a test string inputStream
-  ASSERT_EQ(NS_OK, NS_NewCStringInputStream(getter_AddRefs(stream), data));
-
   // It should not be async.
-  nsCOMPtr<nsIAsyncInputStream> async = do_QueryInterface(stream);
-  ASSERT_EQ(nullptr, async);
-
-  // It must be non-blocking
   bool nonBlocking = false;
-  ASSERT_EQ(NS_OK, stream->IsNonBlocking(&nonBlocking));
-  ASSERT_TRUE(nonBlocking);
+  nsCOMPtr<nsIAsyncInputStream> async;
 
-  // Here the non-blocking stream.
-  ASSERT_EQ(NS_OK,
-            NonBlockingAsyncInputStream::Create(stream, getter_AddRefs(async)));
+  {
+    // Let's create a test string inputStream
+    nsCOMPtr<nsIInputStream> stream;
+    ASSERT_EQ(NS_OK, NS_NewCStringInputStream(getter_AddRefs(stream), data));
+
+    async = do_QueryInterface(stream);
+    ASSERT_EQ(nullptr, async);
+
+    // It must be non-blocking
+    ASSERT_EQ(NS_OK, stream->IsNonBlocking(&nonBlocking));
+    ASSERT_TRUE(nonBlocking);
+
+    // Here the non-blocking stream.
+    ASSERT_EQ(NS_OK,
+              NonBlockingAsyncInputStream::Create(stream.forget(),
+                                                  getter_AddRefs(async)));
+  }
   ASSERT_TRUE(!!async);
 
   // Still non-blocking
@@ -75,18 +79,20 @@ ReadSegmentsFunction(nsIInputStream* aInStr,
 }
 
 TEST(TestNonBlockingAsyncInputStream, ReadSegments) {
-  nsCOMPtr<nsIInputStream> stream;
-
   nsCString data;
   data.Assign("Hello world!");
 
-  // Let's create a test string inputStream
-  ASSERT_EQ(NS_OK, NS_NewCStringInputStream(getter_AddRefs(stream), data));
-
-  // Here the non-blocking stream.
   nsCOMPtr<nsIAsyncInputStream> async;
-  ASSERT_EQ(NS_OK,
-            NonBlockingAsyncInputStream::Create(stream, getter_AddRefs(async)));
+  {
+    // Let's create a test string inputStream
+    nsCOMPtr<nsIInputStream> stream;
+    ASSERT_EQ(NS_OK, NS_NewCStringInputStream(getter_AddRefs(stream), data));
+
+    // Here the non-blocking stream.
+    ASSERT_EQ(NS_OK,
+              NonBlockingAsyncInputStream::Create(stream.forget(),
+                                                  getter_AddRefs(async)));
+  }
 
   // Read works fine.
   char buffer[1024];
@@ -99,18 +105,20 @@ TEST(TestNonBlockingAsyncInputStream, ReadSegments) {
 }
 
 TEST(TestNonBlockingAsyncInputStream, AsyncWait_Simple) {
-  nsCOMPtr<nsIInputStream> stream;
-
   nsCString data;
   data.Assign("Hello world!");
 
-  // Let's create a test string inputStream
-  ASSERT_EQ(NS_OK, NS_NewCStringInputStream(getter_AddRefs(stream), data));
-
-  // Here the non-blocking stream.
   nsCOMPtr<nsIAsyncInputStream> async;
-  ASSERT_EQ(NS_OK,
-            NonBlockingAsyncInputStream::Create(stream, getter_AddRefs(async)));
+  {
+    // Let's create a test string inputStream
+    nsCOMPtr<nsIInputStream> stream;
+    ASSERT_EQ(NS_OK, NS_NewCStringInputStream(getter_AddRefs(stream), data));
+
+    // Here the non-blocking stream.
+    ASSERT_EQ(NS_OK,
+              NonBlockingAsyncInputStream::Create(stream.forget(),
+                                                  getter_AddRefs(async)));
+  }
   ASSERT_TRUE(!!async);
 
   // Testing ::Available()
@@ -143,18 +151,20 @@ TEST(TestNonBlockingAsyncInputStream, AsyncWait_Simple) {
 }
 
 TEST(TestNonBlockingAsyncInputStream, AsyncWait_ClosureOnly_withoutEventTarget) {
-  nsCOMPtr<nsIInputStream> stream;
-
   nsCString data;
   data.Assign("Hello world!");
 
-  // Let's create a test string inputStream
-  ASSERT_EQ(NS_OK, NS_NewCStringInputStream(getter_AddRefs(stream), data));
-
-  // Here the non-blocking stream.
   nsCOMPtr<nsIAsyncInputStream> async;
-  ASSERT_EQ(NS_OK,
-            NonBlockingAsyncInputStream::Create(stream, getter_AddRefs(async)));
+  {
+    // Let's create a test string inputStream
+    nsCOMPtr<nsIInputStream> stream;
+    ASSERT_EQ(NS_OK, NS_NewCStringInputStream(getter_AddRefs(stream), data));
+
+    // Here the non-blocking stream.
+    ASSERT_EQ(NS_OK,
+              NonBlockingAsyncInputStream::Create(stream.forget(),
+                                                  getter_AddRefs(async)));
+  }
   ASSERT_TRUE(!!async);
 
   // Testing ::AsyncWait - no eventTarget
@@ -169,18 +179,20 @@ TEST(TestNonBlockingAsyncInputStream, AsyncWait_ClosureOnly_withoutEventTarget) 
 }
 
 TEST(TestNonBlockingAsyncInputStream, AsyncWait_ClosureOnly_withEventTarget) {
-  nsCOMPtr<nsIInputStream> stream;
-
   nsCString data;
   data.Assign("Hello world!");
 
-  // Let's create a test string inputStream
-  ASSERT_EQ(NS_OK, NS_NewCStringInputStream(getter_AddRefs(stream), data));
-
-  // Here the non-blocking stream.
   nsCOMPtr<nsIAsyncInputStream> async;
-  ASSERT_EQ(NS_OK,
-            NonBlockingAsyncInputStream::Create(stream, getter_AddRefs(async)));
+  {
+    // Let's create a test string inputStream
+    nsCOMPtr<nsIInputStream> stream;
+    ASSERT_EQ(NS_OK, NS_NewCStringInputStream(getter_AddRefs(stream), data));
+
+    // Here the non-blocking stream.
+    ASSERT_EQ(NS_OK,
+              NonBlockingAsyncInputStream::Create(stream.forget(),
+                                                  getter_AddRefs(async)));
+  }
   ASSERT_TRUE(!!async);
 
   // Testing ::AsyncWait - with EventTarget
@@ -199,30 +211,39 @@ TEST(TestNonBlockingAsyncInputStream, AsyncWait_ClosureOnly_withEventTarget) {
 }
 
 TEST(TestNonBlockingAsyncInputStream, Helper) {
-  nsCOMPtr<nsIInputStream> stream;
-
   nsCString data;
   data.Assign("Hello world!");
 
-  // Let's create a test string inputStream
-  ASSERT_EQ(NS_OK, NS_NewCStringInputStream(getter_AddRefs(stream), data));
-
-  // Here the non-blocking stream.
   nsCOMPtr<nsIAsyncInputStream> async;
-  ASSERT_EQ(NS_OK,
-            NonBlockingAsyncInputStream::Create(stream, getter_AddRefs(async)));
+  {
+    // Let's create a test string inputStream
+    nsCOMPtr<nsIInputStream> stream;
+    ASSERT_EQ(NS_OK, NS_NewCStringInputStream(getter_AddRefs(stream), data));
+
+    // Here the non-blocking stream.
+    ASSERT_EQ(NS_OK,
+              NonBlockingAsyncInputStream::Create(stream.forget(),
+                                                  getter_AddRefs(async)));
+  }
   ASSERT_TRUE(!!async);
 
   // This should return the same object because async is already non-blocking
   // and async.
   nsCOMPtr<nsIAsyncInputStream> result;
+  nsCOMPtr<nsIAsyncInputStream> asyncTmp = async;
   ASSERT_EQ(NS_OK,
-            NS_MakeAsyncNonBlockingInputStream(async, getter_AddRefs(result)));
+            NS_MakeAsyncNonBlockingInputStream(asyncTmp.forget(),
+                                               getter_AddRefs(result)));
   ASSERT_EQ(async, result);
 
   // This will use NonBlockingAsyncInputStream wrapper.
-  ASSERT_EQ(NS_OK,
-            NS_MakeAsyncNonBlockingInputStream(stream, getter_AddRefs(result)));
+  {
+    nsCOMPtr<nsIInputStream> stream;
+    ASSERT_EQ(NS_OK, NS_NewCStringInputStream(getter_AddRefs(stream), data));
+    ASSERT_EQ(NS_OK,
+              NS_MakeAsyncNonBlockingInputStream(stream.forget(),
+                                                 getter_AddRefs(result)));
+  }
   ASSERT_TRUE(async != result);
   ASSERT_TRUE(async);
 }
@@ -291,11 +312,15 @@ NS_INTERFACE_MAP_END
 
 TEST(TestNonBlockingAsyncInputStream, QI) {
   // Let's test ::Create() returning error.
-  nsCOMPtr<nsIInputStream> stream = new QIInputStream(true, true, true, true);
 
   nsCOMPtr<nsIAsyncInputStream> async;
-  ASSERT_EQ(NS_ERROR_FAILURE,
-            NonBlockingAsyncInputStream::Create(stream, getter_AddRefs(async)));
+  {
+    nsCOMPtr<nsIInputStream> stream = new QIInputStream(true, true, true, true);
+
+    ASSERT_EQ(NS_ERROR_FAILURE,
+              NonBlockingAsyncInputStream::Create(stream.forget(),
+                                                  getter_AddRefs(async)));
+  }
 
   // Let's test the QIs
   for (int i = 0; i < 8; ++i) {
@@ -303,29 +328,40 @@ TEST(TestNonBlockingAsyncInputStream, QI) {
     bool shouldBeSerializable = !!(i & 0x02);
     bool shouldBeSeekable = !!(i & 0x04);
 
-    stream = new QIInputStream(false, shouldBeCloneable, shouldBeSerializable,
-                               shouldBeSeekable);
-    ASSERT_EQ(NS_OK, NonBlockingAsyncInputStream::Create(stream, getter_AddRefs(async)));
+    nsCOMPtr<nsICloneableInputStream> cloneable;
+    nsCOMPtr<nsIIPCSerializableInputStream> ipcSerializable;
+    nsCOMPtr<nsISeekableStream> seekable;
+
+    {
+      nsCOMPtr<nsIInputStream> stream =
+        new QIInputStream(false, shouldBeCloneable, shouldBeSerializable, shouldBeSeekable);
+
+      cloneable = do_QueryInterface(stream);
+      ASSERT_EQ(shouldBeCloneable, !!cloneable);
+
+      ipcSerializable = do_QueryInterface(stream);
+      ASSERT_EQ(shouldBeSerializable, !!ipcSerializable);
+
+      seekable = do_QueryInterface(stream);
+      ASSERT_EQ(shouldBeSeekable, !!seekable);
+
+      ASSERT_EQ(NS_OK, NonBlockingAsyncInputStream::Create(stream.forget(),
+                                                           getter_AddRefs(async)));
+    }
 
     // The returned async stream should be cloneable only if the underlying
     // stream is.
-    nsCOMPtr<nsICloneableInputStream> cloneable = do_QueryInterface(async);
-    ASSERT_EQ(shouldBeCloneable, !!cloneable);
-    cloneable = do_QueryInterface(stream);
+    cloneable = do_QueryInterface(async);
     ASSERT_EQ(shouldBeCloneable, !!cloneable);
 
     // The returned async stream should be serializable only if the underlying
     // stream is.
-    nsCOMPtr<nsIIPCSerializableInputStream> ipcSerializable = do_QueryInterface(async);
-    ASSERT_EQ(shouldBeSerializable, !!ipcSerializable);
-    ipcSerializable = do_QueryInterface(stream);
+    ipcSerializable = do_QueryInterface(async);
     ASSERT_EQ(shouldBeSerializable, !!ipcSerializable);
 
     // The returned async stream should be seekable only if the underlying
     // stream is.
-    nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(async);
-    ASSERT_EQ(shouldBeSeekable, !!seekable);
-    seekable = do_QueryInterface(stream);
+    seekable = do_QueryInterface(async);
     ASSERT_EQ(shouldBeSeekable, !!seekable);
   }
 }
