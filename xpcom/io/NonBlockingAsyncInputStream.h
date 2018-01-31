@@ -44,6 +44,12 @@ private:
   explicit NonBlockingAsyncInputStream(already_AddRefed<nsIInputStream> aInputStream);
   ~NonBlockingAsyncInputStream();
 
+  class AsyncWaitRunnable;
+
+  void
+  RunAsyncWaitCallback(AsyncWaitRunnable* aRunnable,
+                       already_AddRefed<nsIInputStreamCallback> aCallback);
+
   nsCOMPtr<nsIInputStream> mInputStream;
 
   // Raw pointers because these are just QI of mInputStream.
@@ -51,21 +57,25 @@ private:
   nsIIPCSerializableInputStream* MOZ_NON_OWNING_REF mWeakIPCSerializableInputStream;
   nsISeekableStream* MOZ_NON_OWNING_REF mWeakSeekableInputStream;
 
+  Mutex mLock;
+
   struct WaitClosureOnly
   {
-    WaitClosureOnly(nsIRunnable* aRunnable, nsIEventTarget* aEventTarget)
-      : mRunnable(aRunnable)
-      , mEventTarget(aEventTarget)
-    {}
+    WaitClosureOnly(AsyncWaitRunnable* aRunnable, nsIEventTarget* aEventTarget);
 
-    nsCOMPtr<nsIRunnable> mRunnable;
+    RefPtr<AsyncWaitRunnable> mRunnable;
     nsCOMPtr<nsIEventTarget> mEventTarget;
   };
 
   // This is set when AsyncWait is called with a callback and with
   // WAIT_CLOSURE_ONLY as flag.
+  // This is protected by mLock.
   Maybe<WaitClosureOnly> mWaitClosureOnly;
 
+  // This is protected by mLock.
+  RefPtr<AsyncWaitRunnable> mAsyncWaitCallback;
+
+  // This is protected by mLock.
   bool mClosed;
 };
 
