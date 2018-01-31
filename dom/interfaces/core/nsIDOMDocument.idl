@@ -36,22 +36,9 @@ interface nsIDOMTreeWalker;
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDOMImplementation    implementation;
-  nsIDOMElement                 createElement([Null(Stringify)] in DOMString tagName)
-                                  raises(DOMException);
   nsIDOMDocumentFragment        createDocumentFragment();
-  nsIDOMText                    createTextNode(in DOMString data);
-  nsIDOMComment                 createComment(in DOMString data);
-  nsISupports                   createCDATASection(in DOMString data)
-                                  raises(DOMException);
-  nsIDOMProcessingInstruction   createProcessingInstruction(in DOMString target, 
-                                                            in DOMString data)
-                                  raises(DOMException);
   nsIDOMNodeList                getElementsByTagName(in DOMString tagname);
 
-  // Introduced in DOM Level 2:
-  nsIDOMElement                 createElementNS(in DOMString namespaceURI,
-                                                [Null(Stringify)] in DOMString qualifiedName)
-                                  raises(DOMException);
   // Introduced in DOM Level 2:
   nsIDOMNodeList                getElementsByTagNameNS(in DOMString namespaceURI,
                                                        in DOMString localName);
