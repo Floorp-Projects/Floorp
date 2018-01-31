@@ -153,6 +153,19 @@
         ]
       },
       {
+        "name": "reset",
+        "type": "function",
+        "async": true,
+        "description": "Reset a command's details to what is specified in the manifest.",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "name",
+            "description": "The name of the command."
+          }
+        ]
+      },
+      {
         "name": "getAll",
         "type": "function",
         "async": "callback",

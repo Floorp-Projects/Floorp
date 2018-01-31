@@ -335,6 +335,24 @@ this.commands = class extends ExtensionAPI {
 
           this.registerKeys(commands);
         },
+        reset: async (name) => {
+          let {extension, manifestCommands} = this;
+          let commands = await this.commands;
+          let command = commands.get(name);
+
+          if (!command) {
+            throw new ExtensionError(`Unknown command "${name}"`);
+          }
+
+          let storedCommand = ExtensionSettingsStore.getSetting(
+            "commands", name, extension.id);
+
+          if (storedCommand && storedCommand.value) {
+            commands.set(name, {...manifestCommands.get(name)});
+            ExtensionSettingsStore.removeSetting(extension.id, "commands", name);
+            this.registerKeys(commands);
+          }
+        },
         onCommand: new EventManager(context, "commands.onCommand", fire => {
           let listener = (eventName, commandName) => {
             fire.async(commandName);

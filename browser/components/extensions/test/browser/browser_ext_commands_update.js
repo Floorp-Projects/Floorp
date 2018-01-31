@@ -72,6 +72,9 @@ add_task(async function test_update_defined_command() {
         if (msg == "update") {
           await browser.commands.update(data);
           return browser.test.sendMessage("updateDone");
+        } else if (msg == "reset") {
+          await browser.commands.reset(data);
+          return browser.test.sendMessage("resetDone");
         } else if (msg != "run") {
           return;
         }
@@ -186,6 +189,12 @@ add_task(async function test_update_defined_command() {
     "commands", "foo", extension.id);
   is(storedCommand.value.shortcut, "Alt+Shift+P", "The shortcut is saved correctly");
   is(storedCommand.value.description, "description only", "The description is saved correctly");
+
+  // Calling browser.commands.reset("foo") should reset to manifest version.
+  extension.sendMessage("reset", "foo");
+  await extension.awaitMessage("resetDone");
+
+  checkKey(extension.id, "I", "accel shift");
 
   // Check that enable/disable removes the keyset and reloads the saved command.
   let addon = await AddonManager.getAddonByID(extension.id);
