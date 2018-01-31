@@ -6868,12 +6868,17 @@ nsWindow::GetCSDSupportLevel() {
 
     const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
     if (currentDesktop) {
-        if (strstr(currentDesktop, "GNOME") != nullptr) {
+        // GNOME Flashback (fallback)
+        if (strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr) {
+            sCSDSupportLevel = CSD_SUPPORT_FLAT;
+        // gnome-shell
+        } else if (strstr(currentDesktop, "GNOME") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_FULL;
         } else if (strstr(currentDesktop, "XFCE") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_FLAT;
         } else if (strstr(currentDesktop, "X-Cinnamon") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_FULL;
+        // KDE Plasma
         } else if (strstr(currentDesktop, "KDE") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_FLAT;
         } else if (strstr(currentDesktop, "LXDE") != nullptr) {
@@ -6884,8 +6889,10 @@ nsWindow::GetCSDSupportLevel() {
             sCSDSupportLevel = CSD_SUPPORT_NONE;
         } else if (strstr(currentDesktop, "MATE") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_FLAT;
+        // Ubuntu Unity
         } else if (strstr(currentDesktop, "Unity") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_FLAT;
+        // Elementary OS
         } else if (strstr(currentDesktop, "Pantheon") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_FULL;
         } else if (strstr(currentDesktop, "LXQt") != nullptr) {

@@ -261,6 +261,12 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "ABI", function() {
     // Windows build should report the CPU architecture that it's running on.
     abi += "-" + gWinCPUArch;
   }
+
+  if (AppConstants.ASAN) {
+    // Allow ASan builds to receive their own updates
+    abi += "-asan";
+  }
+
   return abi;
 });
 

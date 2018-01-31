@@ -39,6 +39,7 @@
 #include "nsITextControlElement.h"
 #include "nsUnicharUtils.h"
 #include "nsIURL.h"
+#include "nsIURIMutator.h"
 #include "nsIDocument.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
@@ -597,15 +598,15 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
                                                       &validExtension)) ||
                   !validExtension) {
                 // Fix the file extension in the URL
-                nsresult rv = imgUrl->Clone(getter_AddRefs(imgUri));
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                imgUrl = do_QueryInterface(imgUri);
-
                 nsAutoCString primaryExtension;
                 mimeInfo->GetPrimaryExtension(primaryExtension);
 
-                imgUrl->SetFileExtension(primaryExtension);
+                rv = NS_MutateURI(imgUrl)
+                       .Apply<nsIURLMutator>(&nsIURLMutator::SetFileExtension,
+                                             primaryExtension,
+                                             nullptr)
+                       .Finalize(imgUrl);
+                NS_ENSURE_SUCCESS(rv, rv);
               }
 
               nsAutoCString fileName;

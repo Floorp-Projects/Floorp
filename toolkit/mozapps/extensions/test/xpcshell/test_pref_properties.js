@@ -199,21 +199,6 @@ function run_test() {
 
   gManagerEventsListener.shutdown();
 
-  // AddonManager.hotfixID
-  let hotfixID = "hotfix@tests.mozilla.org";
-  Services.prefs.setCharPref("extensions.hotfix.id", hotfixID);
-  Assert.equal(AddonManager.hotfixID, hotfixID);
-  // Change the pref and make sure the property is updated
-  hotfixID = "hotfix2@tests.mozilla.org";
-  Services.prefs.setCharPref("extensions.hotfix.id", hotfixID);
-  Assert.equal(AddonManager.hotfixID, hotfixID);
-  // Test an invalid pref value
-  hotfixID = 99;
-  Services.prefs.deleteBranch("extensions.hotfix.id");
-  Services.prefs.setIntPref("extensions.hotfix.id", hotfixID);
-  Assert.equal(AddonManager.hotfixID, "");
-  Services.prefs.clearUserPref("extensions.hotfix.id");
-
   // After removing the listener, ensure we get no further events.
   gManagerEventsListener.expect([]);
   AddonManager.updateEnabled = false;

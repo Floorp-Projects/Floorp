@@ -257,7 +257,7 @@ this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
     options.sortingMode = options.SORT_BY_VISITCOUNT_DESCENDING;
     options.maxResults = this.maxHistoryQueryResults;
 
-    const root = history.executeQuery(query, options).root;
+    const {root} = history.executeQuery(query, options);
     root.containerOpen = true;
     for (let i = 0; i < root.childCount; i++) {
       let node = root.getChild(i);

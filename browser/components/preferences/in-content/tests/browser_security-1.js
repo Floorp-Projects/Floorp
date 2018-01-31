@@ -40,11 +40,7 @@ add_task(async function() {
     let blockDownloads = doc.getElementById("blockDownloads");
     let blockUncommon = doc.getElementById("blockUncommonUnwanted");
     let checked = checkbox.checked;
-    if (!AppConstants.MOZILLA_OFFICIAL) {
-      is(blockDownloads, undefined, "downloads protection is disabled in un-official builds");
-    } else {
-      is(blockDownloads.hasAttribute("disabled"), !checked, "block downloads checkbox is set correctly");
-    }
+    is(blockDownloads.hasAttribute("disabled"), !checked, "block downloads checkbox is set correctly");
 
     is(checked, val1 && val2, "safebrowsing preference is initialized correctly");
     // should be disabled when checked is false (= pref is turned off)

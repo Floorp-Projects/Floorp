@@ -24,7 +24,8 @@ Test the address-picker component
 </head>
 <body>
   <p id="display">
-    <address-picker id="picker1"></address-picker>
+    <address-picker id="picker1"
+                    selected-state-key="selectedShippingAddress"></address-picker>
   </p>
 <div id="content" style="display: none">
 
@@ -112,6 +113,23 @@ add_task(async function test_update() {
   ok(options[0].textContent.includes("new-edit"), "Check updated first address");
 
   ok(options[1].textContent.includes("P.O. Box 123"), "Check second address is the same");
+});
+
+add_task(async function test_change_selected_address() {
+  let options = picker1.dropdown.popupBox.children;
+  let selectedOption = picker1.dropdown.selectedOption;
+  is(selectedOption, null, "Should default to no selected option");
+  let {selectedShippingAddress} = picker1.requestStore.getState();
+  is(selectedShippingAddress, null, "store should have no option selected");
+
+  picker1.dropdown.click();
+  options[1].click();
+  await asyncElementRendered();
+
+  selectedOption = picker1.dropdown.selectedOption;
+  is(selectedOption, options[1], "Selected option should now be the second option");
+  selectedShippingAddress = picker1.requestStore.getState().selectedShippingAddress;
+  is(selectedShippingAddress, selectedOption.guid, "store should have second option selected");
 });
 
 add_task(async function test_delete() {

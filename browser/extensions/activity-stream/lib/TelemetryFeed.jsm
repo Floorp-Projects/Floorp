@@ -333,7 +333,7 @@ this.TelemetryFeed = class TelemetryFeed {
     );
   }
 
-  async sendEvent(event_object) {
+  sendEvent(event_object) {
     if (this.telemetryEnabled) {
       this.pingCentre.sendPing(event_object,
       {filter: ACTIVITY_STREAM_ID});

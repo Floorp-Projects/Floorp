@@ -45,8 +45,7 @@
 
         <section>
           <div><label>Shipping Address</label></div>
-          <address-picker>
-          </address-picker>
+          <address-picker selected-state-key="selectedShippingAddress"></address-picker>
         </section>
 
         <footer id="controls-container">
@@ -61,7 +60,10 @@
   </template>
 </head>
 <body>
-  <iframe id="debugging-console" hidden="hidden" src="debugging.html"></iframe>
+  <iframe id="debugging-console"
+          hidden="hidden"
+          height="300"
+          src="debugging.html"></iframe>
   <payment-dialog></payment-dialog>
 </body>
 </html>

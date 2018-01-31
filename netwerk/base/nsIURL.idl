@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIURI.idl"
+interface nsIURIMutator;
 
 /**
  * The nsIURL interface provides convenience methods that further
@@ -119,4 +120,12 @@ interface nsIURL : nsIURI
      */
     AUTF8String getRelativeSpec(in nsIURI aURIToCompare);
 
+};
+
+[scriptable, builtinclass, uuid(25072eb8-f1e6-482f-9ca9-eddd3d65169a)]
+interface nsIURLMutator : nsISupports
+{
+    [must_use] nsIURIMutator setFileName(in AUTF8String aFileName);
+    [must_use] nsIURIMutator setFileBaseName(in AUTF8String aFileBaseName);
+    [must_use] nsIURIMutator setFileExtension(in AUTF8String aFileExtension);
 };

@@ -36,10 +36,6 @@ add_task(async function() {
 
     let doc = gBrowser.selectedBrowser.contentDocument;
     let checkbox = doc.getElementById("blockDownloads");
-    if (!AppConstants.MOZILLA_OFFICIAL) {
-      is(checkbox, undefined, "downloads protection is disabled in un-official builds");
-      return;
-    }
 
     let blockUncommon = doc.getElementById("blockUncommonUnwanted");
     let checked = checkbox.checked;
