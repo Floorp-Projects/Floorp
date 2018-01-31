@@ -3460,7 +3460,6 @@ void
 MacroAssembler::computeSpectreIndexMask(Register index, Register length, Register output)
 {
     MOZ_ASSERT(JitOptions.spectreIndexMasking);
-    MOZ_ASSERT(index != length);
     MOZ_ASSERT(length != output);
     MOZ_ASSERT(index != output);
 
@@ -3505,7 +3504,6 @@ MacroAssembler::spectreMaskIndex(int32_t index, const Address& length, Register 
 void
 MacroAssembler::spectreMaskIndex(Register index, Register length, Register output)
 {
-    MOZ_ASSERT(index != length);
     MOZ_ASSERT(length != output);
     MOZ_ASSERT(index != output);
 
