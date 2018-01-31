@@ -85,20 +85,50 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
     const nsACString& aScope,
     nsIPrincipal* aPrincipal,
     ServiceWorkerUpdateViaCache aUpdateViaCache)
-  : mControlledClientsCounter(0)
+  : mScope(aScope)
+  , mPrincipal(aPrincipal)
+  , mControlledClientsCounter(0)
   , mUpdateState(NoUpdate)
   , mCreationTime(PR_Now())
   , mCreationTimeStamp(TimeStamp::Now())
   , mLastUpdateTime(0)
   , mUpdateViaCache(aUpdateViaCache)
-  , mScope(aScope)
-  , mPrincipal(aPrincipal)
   , mPendingUninstall(false)
 {}
 
 ServiceWorkerRegistrationInfo::~ServiceWorkerRegistrationInfo()
 {
   MOZ_DIAGNOSTIC_ASSERT(!IsControllingClients());
+}
+
+const nsCString&
+ServiceWorkerRegistrationInfo::Scope() const
+{
+  return mScope;
+}
+
+nsIPrincipal*
+ServiceWorkerRegistrationInfo::Principal() const
+{
+  return mPrincipal;
+}
+
+bool
+ServiceWorkerRegistrationInfo::IsPendingUninstall() const
+{
+  return mPendingUninstall;
+}
+
+void
+ServiceWorkerRegistrationInfo::SetPendingUninstall()
+{
+  mPendingUninstall = true;
+}
+
+void
+ServiceWorkerRegistrationInfo::ClearPendingUninstall()
+{
+  mPendingUninstall = false;
 }
 
 NS_IMPL_ISUPPORTS(ServiceWorkerRegistrationInfo, nsIServiceWorkerRegistrationInfo)

@@ -18,6 +18,10 @@ namespace dom {
 class ServiceWorkerRegistrationInfo final
   : public nsIServiceWorkerRegistrationInfo
 {
+  const nsCString mScope;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> mListeners;
+
   uint32_t mControlledClientsCounter;
 
   enum
@@ -42,24 +46,33 @@ class ServiceWorkerRegistrationInfo final
 
   virtual ~ServiceWorkerRegistrationInfo();
 
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISERVICEWORKERREGISTRATIONINFO
-
-  const nsCString mScope;
-
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-
-  nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> mListeners;
-
   // When unregister() is called on a registration, it is not immediately
   // removed since documents may be controlled. It is marked as
   // pendingUninstall and when all controlling documents go away, removed.
   bool mPendingUninstall;
 
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISERVICEWORKERREGISTRATIONINFO
+
   ServiceWorkerRegistrationInfo(const nsACString& aScope,
                                 nsIPrincipal* aPrincipal,
                                 ServiceWorkerUpdateViaCache aUpdateViaCache);
+
+  const nsCString&
+  Scope() const;
+
+  nsIPrincipal*
+  Principal() const;
+
+  bool
+  IsPendingUninstall() const;
+
+  void
+  SetPendingUninstall();
+
+  void
+  ClearPendingUninstall();
 
   already_AddRefed<ServiceWorkerInfo>
   Newest() const
