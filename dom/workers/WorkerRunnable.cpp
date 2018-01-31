@@ -573,7 +573,8 @@ WorkerMainThreadRunnable::WorkerMainThreadRunnable(
 }
 
 void
-WorkerMainThreadRunnable::Dispatch(Status aFailStatus, mozilla::ErrorResult& aRv)
+WorkerMainThreadRunnable::Dispatch(WorkerStatus aFailStatus,
+                                   mozilla::ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -771,7 +772,7 @@ WorkerProxyToMainThreadRunnable::HoldWorker()
       : WorkerHolder("WorkerProxyToMainThreadRunnable::SimpleWorkerHolder")
     {}
 
-    bool Notify(Status aStatus) override
+    bool Notify(WorkerStatus aStatus) override
     {
       // We don't care about the notification. We just want to keep the
       // mWorkerPrivate alive.

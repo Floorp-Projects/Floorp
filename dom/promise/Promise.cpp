@@ -703,7 +703,7 @@ public:
   }
 
   bool
-  Notify(Status aStatus) override
+  Notify(WorkerStatus aStatus) override
   {
     if (aStatus >= Canceling) {
       mProxy->CleanUp();

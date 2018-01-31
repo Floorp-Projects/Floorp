@@ -34,7 +34,7 @@ public:
     , mWasNotified(false)
   {}
 
-  bool Notify(Status aStatus) override
+  bool Notify(WorkerStatus aStatus) override
   {
     if (!mWasNotified) {
       mWasNotified = true;

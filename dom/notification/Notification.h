@@ -10,7 +10,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/NotificationBinding.h"
-#include "mozilla/dom/workers/bindings/WorkerHolder.h"
+#include "mozilla/dom/WorkerHolder.h"
 
 #include "nsIObserver.h"
 #include "nsISupports.h"
@@ -38,7 +38,7 @@ namespace workers {
 } // namespace workers
 
 class Notification;
-class NotificationWorkerHolder final : public workers::WorkerHolder
+class NotificationWorkerHolder final : public WorkerHolder
 {
   // Since the feature is strongly held by a Notification, it is ok to hold
   // a raw pointer here.
@@ -48,7 +48,7 @@ public:
   explicit NotificationWorkerHolder(Notification* aNotification);
 
   bool
-  Notify(workers::Status aStatus) override;
+  Notify(WorkerStatus aStatus) override;
 };
 
 // Records telemetry probes at application startup, when a notification is

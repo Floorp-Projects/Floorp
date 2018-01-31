@@ -24,7 +24,7 @@ class WorkerPrivate;
 }
 
 class XMLHttpRequestWorker final : public XMLHttpRequest,
-                                   public workers::WorkerHolder
+                                   public WorkerHolder
 {
 public:
   struct StateData
@@ -81,7 +81,7 @@ public:
   Unpin();
 
   bool
-  Notify(workers::Status aStatus) override;
+  Notify(WorkerStatus aStatus) override;
 
   virtual uint16_t
   ReadyState() const override

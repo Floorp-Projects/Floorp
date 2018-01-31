@@ -213,7 +213,7 @@ public:
   }
 
   void
-  Dispatch(Status aFailStatus, ErrorResult& aRv)
+  Dispatch(WorkerStatus aFailStatus, ErrorResult& aRv)
   {
     WorkerMainThreadRunnable::Dispatch(aFailStatus, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
@@ -1856,7 +1856,7 @@ XMLHttpRequestWorker::SendInternal(SendRunnable* aRunnable,
 }
 
 bool
-XMLHttpRequestWorker::Notify(Status aStatus)
+XMLHttpRequestWorker::Notify(WorkerStatus aStatus)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 

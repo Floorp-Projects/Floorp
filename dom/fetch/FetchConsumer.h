@@ -19,10 +19,10 @@ namespace mozilla {
 namespace dom {
 
 class Promise;
+class WorkerHolder;
 
 namespace workers {
 class WorkerPrivate;
-class WorkerHolder;
 }
 
 template <class Derived> class FetchBody;
@@ -112,7 +112,7 @@ private:
   // Set when consuming the body is attempted on a worker.
   // Unset when consumption is done/aborted.
   // This WorkerHolder keeps alive the consumer via a cycle.
-  UniquePtr<workers::WorkerHolder> mWorkerHolder;
+  UniquePtr<WorkerHolder> mWorkerHolder;
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
 

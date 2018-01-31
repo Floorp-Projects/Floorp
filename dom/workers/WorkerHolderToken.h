@@ -24,7 +24,7 @@ class WorkerPrivate;
 //
 // This is purely a convenience class to avoid requiring code to
 // extend WorkerHolder all the time.
-class WorkerHolderToken final : public workers::WorkerHolder
+class WorkerHolderToken final : public WorkerHolder
 {
 public:
   // Pure virtual class defining the interface for objects that
@@ -41,7 +41,7 @@ public:
   // nullptr is returned.
   static already_AddRefed<WorkerHolderToken>
   Create(workers::WorkerPrivate* aWorkerPrivate,
-         workers::Status aShutdownStatus,
+         WorkerStatus aShutdownStatus,
          Behavior aBehavior = PreventIdleShutdownStart);
 
   // Add a listener to the token.  Note, this does not hold a strong
@@ -63,16 +63,16 @@ public:
   GetWorkerPrivate() const;
 
 private:
-  WorkerHolderToken(workers::Status aShutdownStatus, Behavior aBehavior);
+  WorkerHolderToken(WorkerStatus aShutdownStatus, Behavior aBehavior);
 
   ~WorkerHolderToken();
 
   // WorkerHolder methods
   virtual bool
-  Notify(workers::Status aStatus) override;
+  Notify(WorkerStatus aStatus) override;
 
   nsTObserverArray<Listener*> mListenerList;
-  const workers::Status mShutdownStatus;
+  const WorkerStatus mShutdownStatus;
   bool mShuttingDown;
 
 public:

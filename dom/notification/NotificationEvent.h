@@ -12,7 +12,8 @@
 #include "mozilla/dom/ServiceWorkerEvents.h"
 #include "mozilla/dom/workers/WorkerCommon.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 class ServiceWorker;
 class ServiceWorkerClient;
@@ -71,6 +72,7 @@ private:
   RefPtr<Notification> mNotification;
 };
 
-END_WORKERS_NAMESPACE
-#endif /* mozilla_dom_workers_notificationevent_h__ */
+} // dom namspace
+} // mozilla namespace
 
+#endif /* mozilla_dom_workers_notificationevent_h__ */
