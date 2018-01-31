@@ -42,7 +42,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
     const initFeed = () => {
       SectionsManager.enableSection(SECTION_ID);
       try {
-        const options = SectionsManager.sections.get(SECTION_ID).options;
+        const {options} = SectionsManager.sections.get(SECTION_ID);
         const apiKey = this.getApiKeyFromPref(options.api_key_pref);
         this.stories_endpoint = this.produceFinalEndpointUrl(options.stories_endpoint, apiKey);
         this.topics_endpoint = this.produceFinalEndpointUrl(options.topics_endpoint, apiKey);
@@ -102,7 +102,8 @@ this.TopStoriesFeed = class TopStoriesFeed {
       }
 
       this.dispatchUpdateEvent(this.storiesLastUpdated, {rows: this.stories});
-      body._timestamp = this.storiesLastUpdated = Date.now();
+      this.storiesLastUpdated = Date.now();
+      body._timestamp = this.storiesLastUpdated;
       // This is filtered so an update function can return true to retry on the next run
       this.contentUpdateQueue = this.contentUpdateQueue.filter(update => update());
 
@@ -172,7 +173,8 @@ this.TopStoriesFeed = class TopStoriesFeed {
       const {topics} = body;
       if (topics) {
         this.dispatchUpdateEvent(this.topicsLastUpdated, {topics, read_more_endpoint: this.read_more_endpoint});
-        body._timestamp = this.topicsLastUpdated = Date.now();
+        this.topicsLastUpdated = Date.now();
+        body._timestamp = this.topicsLastUpdated;
         this.cache.set("topics", body);
       }
     } catch (error) {
@@ -224,7 +226,8 @@ this.TopStoriesFeed = class TopStoriesFeed {
     }));
 
     const affinities = this.affinityProvider.getAffinities();
-    affinities._timestamp = this.domainAffinitiesLastUpdated = Date.now();
+    this.domainAffinitiesLastUpdated = Date.now();
+    affinities._timestamp = this.domainAffinitiesLastUpdated;
     this.cache.set("domainAffinities", affinities);
   }
 

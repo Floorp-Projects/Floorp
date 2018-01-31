@@ -2,7 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const requestStore = window.parent.document.querySelector("payment-dialog").requestStore;
+const paymentDialog = window.parent.document.querySelector("payment-dialog");
+// The requestStore should be manipulated for most changes but autofill storage changes
+// happen through setStateFromParent which includes some consistency checks.
+const requestStore = paymentDialog.requestStore;
 
 let REQUEST_1 = {
   tabId: 9,
@@ -136,7 +139,9 @@ let buttonActions = {
   delete1Address() {
     let savedAddresses = Object.assign({}, requestStore.getState().savedAddresses);
     delete savedAddresses[Object.keys(savedAddresses)[0]];
-    requestStore.setState({
+    // Use setStateFromParent since it ensures there is no dangling
+    // `selectedShippingAddress` foreign key (FK) reference.
+    paymentDialog.setStateFromParent({
       savedAddresses,
     });
   },
@@ -152,8 +157,12 @@ let buttonActions = {
     window.parent.location.reload(true);
   },
 
+  rerender() {
+    requestStore.setState({});
+  },
+
   setAddresses1() {
-    requestStore.setState({savedAddresses: ADDRESSES_1});
+    paymentDialog.setStateFromParent({savedAddresses: ADDRESSES_1});
   },
 
   setRequest1() {

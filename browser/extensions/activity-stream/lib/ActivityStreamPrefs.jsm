@@ -20,14 +20,17 @@ this.Prefs = class Prefs extends Preferences {
     this._branchName = branch;
     this._branchObservers = new Map();
   }
+
   get branchName() {
     return this._branchName;
   }
+
   ignoreBranch(listener) {
     const observer = this._branchObservers.get(listener);
     this._prefBranch.removeObserver("", observer);
     this._branchObservers.delete(listener);
   }
+
   observeBranch(listener) {
     const observer = (subject, topic, pref) => {
       listener.onPrefChanged(pref, this.get(pref));

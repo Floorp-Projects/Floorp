@@ -165,8 +165,7 @@ NarrateControls.prototype = {
       let win = this._win;
       let voicePrefs = this._getVoicePref();
       let selectedVoice = voicePrefs[language || "default"];
-      let comparer = win.Intl ?
-        (new Intl.Collator()).compare : (a, b) => a.localeCompare(b);
+      let comparer = (new Services.intl.Collator()).compare;
       let filter = !Services.prefs.getBoolPref("narrate.filter-voices");
       let options = win.speechSynthesis.getVoices().filter(v => {
         return filter || !language || v.lang.split("-")[0] == language;

@@ -33,8 +33,14 @@ nsWindow::NativePtr<mozilla::widget::GeckoEditableSupport>::sName[] =
         "GeckoEditableSupport";
 
 enum {
+    AKEYCODE_dummy, // Avoid enum without declarations.
+
     // These keycode masks are not defined in android/keycodes.h:
-#if __ANDROID_API__ < 13
+    // Note that the NDK unified headers always define these constants, so we
+    // need to ensure we're _not_ using unified headers, by checking for the
+    // absence of __ANDROID_API_X__ macros (e.g. __ANDROID_API_L__), which are
+    // only defined by the unified headers.
+#if __ANDROID_API__ < 13 && !defined(__ANDROID_API_I__)
     AKEYCODE_ESCAPE             = 111,
     AKEYCODE_FORWARD_DEL        = 112,
     AKEYCODE_CTRL_LEFT          = 113,
@@ -129,18 +135,18 @@ enum {
     AKEYCODE_BUTTON_15          = 202,
     AKEYCODE_BUTTON_16          = 203,
 #endif
-#if __ANDROID_API__ < 14
+#if __ANDROID_API__ < 14 && !defined(__ANDROID_API_I__)
     AKEYCODE_LANGUAGE_SWITCH    = 204,
     AKEYCODE_MANNER_MODE        = 205,
     AKEYCODE_3D_MODE            = 206,
 #endif
-#if __ANDROID_API__ < 15
+#if __ANDROID_API__ < 15 && !defined(__ANDROID_API_J__)
     AKEYCODE_CONTACTS           = 207,
     AKEYCODE_CALENDAR           = 208,
     AKEYCODE_MUSIC              = 209,
     AKEYCODE_CALCULATOR         = 210,
 #endif
-#if __ANDROID_API__ < 16
+#if __ANDROID_API__ < 16 && !defined(__ANDROID_API_J__)
     AKEYCODE_ZENKAKU_HANKAKU    = 211,
     AKEYCODE_EISU               = 212,
     AKEYCODE_MUHENKAN           = 213,
@@ -151,18 +157,18 @@ enum {
     AKEYCODE_KANA               = 218,
     AKEYCODE_ASSIST             = 219,
 #endif
-#if __ANDROID_API__ < 18
+#if __ANDROID_API__ < 18 && !defined(__ANDROID_API_J_MR2__)
     AKEYCODE_BRIGHTNESS_DOWN    = 220,
     AKEYCODE_BRIGHTNESS_UP      = 221,
 #endif
-#if __ANDROID_API__ < 19
+#if __ANDROID_API__ < 19 && !defined(__ANDROID_API_K__)
     AKEYCODE_MEDIA_AUDIO_TRACK  = 222,
 #endif
-#if __ANDROID_API__ < 20
+#if __ANDROID_API__ < 20 && !defined(__ANDROID_API_L__)
     AKEYCODE_SLEEP              = 223,
     AKEYCODE_WAKEUP             = 224,
 #endif
-#if __ANDROID_API__ < 21
+#if __ANDROID_API__ < 21 && !defined(__ANDROID_API_L__)
     AKEYCODE_PAIRING                       = 225,
     AKEYCODE_MEDIA_TOP_MENU                = 226,
     AKEYCODE_11                            = 227,
@@ -199,13 +205,17 @@ enum {
     AKEYCODE_TV_TIMER_PROGRAMMING          = 258,
     AKEYCODE_HELP                          = 259,
 #endif
-#if __ANDROID_API__ < 23
+#if __ANDROID_API__ < 23 && !defined(__ANDROID_API_M__)
     AKEYCODE_NAVIGATE_PREVIOUS  = 260,
     AKEYCODE_NAVIGATE_NEXT      = 261,
     AKEYCODE_NAVIGATE_IN        = 262,
     AKEYCODE_NAVIGATE_OUT       = 263,
+    AKEYCODE_MEDIA_SKIP_FORWARD  = 272,
+    AKEYCODE_MEDIA_SKIP_BACKWARD = 273,
+    AKEYCODE_MEDIA_STEP_FORWARD  = 274,
+    AKEYCODE_MEDIA_STEP_BACKWARD = 275,
 #endif
-#if __ANDROID_API__ < 24
+#if __ANDROID_API__ < 24 && !defined(__ANDROID_API_N__)
     AKEYCODE_STEM_PRIMARY       = 264,
     AKEYCODE_STEM_1             = 265,
     AKEYCODE_STEM_2             = 266,
@@ -214,20 +224,12 @@ enum {
     AKEYCODE_DPAD_DOWN_LEFT     = 269,
     AKEYCODE_DPAD_UP_RIGHT      = 270,
     AKEYCODE_DPAD_DOWN_RIGHT    = 271,
-#endif
-#if __ANDROID_API__ < 23
-    AKEYCODE_MEDIA_SKIP_FORWARD  = 272,
-    AKEYCODE_MEDIA_SKIP_BACKWARD = 273,
-    AKEYCODE_MEDIA_STEP_FORWARD  = 274,
-    AKEYCODE_MEDIA_STEP_BACKWARD = 275,
-#endif
-#if __ANDROID_API__ < 24
     AKEYCODE_SOFT_SLEEP         = 276,
     AKEYCODE_CUT                = 277,
     AKEYCODE_COPY               = 278,
     AKEYCODE_PASTE              = 279,
 #endif
-#if __ANDROID_API__ < 25
+#if __ANDROID_API__ < 25 && !defined(__ANDROID_API_N_MR1__)
     AKEYCODE_SYSTEM_NAVIGATION_UP    = 280,
     AKEYCODE_SYSTEM_NAVIGATION_DOWN  = 281,
     AKEYCODE_SYSTEM_NAVIGATION_LEFT  = 282,

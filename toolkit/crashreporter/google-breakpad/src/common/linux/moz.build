@@ -40,8 +40,8 @@ HOST_CXXFLAGS += [
 if CONFIG['OS_TARGET'] == 'Android':
     DEFINES['ANDROID_NDK_MAJOR_VERSION'] = CONFIG['ANDROID_NDK_MAJOR_VERSION']
     DEFINES['ANDROID_NDK_MINOR_VERSION'] = CONFIG['ANDROID_NDK_MINOR_VERSION']
-    LOCAL_INCLUDES += [
-        '/toolkit/crashreporter/google-breakpad/src/common/android/include',
+    COMPILE_FLAGS['OS_INCLUDES'] += [
+        '-I%s/toolkit/crashreporter/google-breakpad/src/common/android/include' % TOPSRCDIR,
     ]
 
 Library('breakpad_linux_common_s')

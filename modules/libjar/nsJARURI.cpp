@@ -257,7 +257,46 @@ nsJARURI::SetSpecInternal(const nsACString& aSpec)
     return SetSpecWithBase(aSpec, nullptr);
 }
 
-NS_IMPL_ISUPPORTS(nsJARURI::Mutator, nsIURISetters, nsIURIMutator)
+NS_IMPL_ISUPPORTS(nsJARURI::Mutator, nsIURISetters, nsIURIMutator, nsIURLMutator)
+
+NS_IMETHODIMP
+nsJARURI::Mutator::SetFileName(const nsACString& aFileName, nsIURIMutator** aMutator)
+{
+    if (!mURI) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    if (aMutator) {
+        nsCOMPtr<nsIURIMutator> mutator = this;
+        mutator.forget(aMutator);
+    }
+    return mURI->SetFileName(aFileName);
+}
+
+NS_IMETHODIMP
+nsJARURI::Mutator::SetFileBaseName(const nsACString& aFileBaseName, nsIURIMutator** aMutator)
+{
+    if (!mURI) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    if (aMutator) {
+        nsCOMPtr<nsIURIMutator> mutator = this;
+        mutator.forget(aMutator);
+    }
+    return mURI->SetFileBaseName(aFileBaseName);
+}
+
+NS_IMETHODIMP
+nsJARURI::Mutator::SetFileExtension(const nsACString& aFileExtension, nsIURIMutator** aMutator)
+{
+    if (!mURI) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    if (aMutator) {
+        nsCOMPtr<nsIURIMutator> mutator = this;
+        mutator.forget(aMutator);
+    }
+    return mURI->SetFileExtension(aFileExtension);
+}
 
 NS_IMETHODIMP
 nsJARURI::Mutate(nsIURIMutator** aMutator)
@@ -670,7 +709,8 @@ nsJARURI::GetDirectory(nsACString& directory)
 NS_IMETHODIMP
 nsJARURI::SetDirectory(const nsACString& directory)
 {
-    return mJAREntry->SetDirectory(directory);
+    MOZ_ASSERT_UNREACHABLE("SetDirectory");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -682,7 +722,11 @@ nsJARURI::GetFileName(nsACString& fileName)
 NS_IMETHODIMP
 nsJARURI::SetFileName(const nsACString& fileName)
 {
-    return mJAREntry->SetFileName(fileName);
+    return NS_MutateURI(mJAREntry)
+             .Apply<nsIURLMutator>(&nsIURLMutator::SetFileName,
+                                   nsCString(fileName),
+                                   nullptr)
+             .Finalize(mJAREntry);
 }
 
 NS_IMETHODIMP
@@ -694,7 +738,11 @@ nsJARURI::GetFileBaseName(nsACString& fileBaseName)
 NS_IMETHODIMP
 nsJARURI::SetFileBaseName(const nsACString& fileBaseName)
 {
-    return mJAREntry->SetFileBaseName(fileBaseName);
+    return NS_MutateURI(mJAREntry)
+             .Apply<nsIURLMutator>(&nsIURLMutator::SetFileBaseName,
+                                   nsCString(fileBaseName),
+                                   nullptr)
+             .Finalize(mJAREntry);
 }
 
 NS_IMETHODIMP
@@ -706,7 +754,11 @@ nsJARURI::GetFileExtension(nsACString& fileExtension)
 NS_IMETHODIMP
 nsJARURI::SetFileExtension(const nsACString& fileExtension)
 {
-    return mJAREntry->SetFileExtension(fileExtension);
+    return NS_MutateURI(mJAREntry)
+             .Apply<nsIURLMutator>(&nsIURLMutator::SetFileExtension,
+                                   nsCString(fileExtension),
+                                   nullptr)
+             .Finalize(mJAREntry);
 }
 
 NS_IMETHODIMP

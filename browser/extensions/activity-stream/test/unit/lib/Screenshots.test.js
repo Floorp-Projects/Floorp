@@ -8,15 +8,28 @@ const FAKE_THUMBNAIL_PATH = "fake/path/thumb.jpg";
 describe("Screenshots", () => {
   let globals;
   let sandbox;
+  let fakeServices;
 
   beforeEach(() => {
     globals = new GlobalOverrider();
     sandbox = globals.sandbox;
+    fakeServices = {
+      wm: {
+        getEnumerator() {
+          return {
+            hasMoreElements: () => true,
+            getNext: () => {}
+          };
+        }
+      }
+    };
     globals.set("BackgroundPageThumbs", {captureIfMissing: sandbox.spy(() => Promise.resolve())});
     globals.set("PageThumbs", {getThumbnailPath: sandbox.spy(() => Promise.resolve(FAKE_THUMBNAIL_PATH))});
+    globals.set("PrivateBrowsingUtils", {isWindowPrivate: sandbox.spy(() => false)});
     globals.set("OS", {File: {open: sandbox.spy(() => Promise.resolve({read: () => [], close: () => {}}))}});
     globals.set("FileUtils", {File: sandbox.spy(() => {})});
     globals.set("MIMEService", {getTypeFromFile: sandbox.spy(() => {})});
+    globals.set("Services", fakeServices);
   });
   afterEach(() => {
     globals.restore();
@@ -57,6 +70,7 @@ describe("Screenshots", () => {
     });
     it("should call getScreenshotForURL", () => {
       sandbox.stub(Screenshots, "getScreenshotForURL");
+      sandbox.stub(Screenshots, "_shouldGetScreenshots").returns(true);
       Screenshots.maybeCacheScreenshot(link, "mozilla.com", "image", sinon.stub());
 
       assert.calledOnce(Screenshots.getScreenshotForURL);
@@ -64,6 +78,7 @@ describe("Screenshots", () => {
     });
     it("should not call getScreenshotForURL twice if a fetch is in progress", () => {
       sandbox.stub(Screenshots, "getScreenshotForURL").returns(new Promise(() => {}));
+      sandbox.stub(Screenshots, "_shouldGetScreenshots").returns(true);
       Screenshots.maybeCacheScreenshot(link, "mozilla.com", "image", sinon.stub());
       Screenshots.maybeCacheScreenshot(link, "mozilla.org", "image", sinon.stub());
 
@@ -72,11 +87,25 @@ describe("Screenshots", () => {
     });
     it("should not call getScreenshotsForURL if property !== undefined", async () => {
       sandbox.stub(Screenshots, "getScreenshotForURL").returns(Promise.resolve(null));
+      sandbox.stub(Screenshots, "_shouldGetScreenshots").returns(true);
       await Screenshots.maybeCacheScreenshot(link, "mozilla.com", "image", sinon.stub());
       await Screenshots.maybeCacheScreenshot(link, "mozilla.org", "image", sinon.stub());
 
       assert.calledOnce(Screenshots.getScreenshotForURL);
       assert.calledWithExactly(Screenshots.getScreenshotForURL, "mozilla.com");
+    });
+    it("should check if we are in private browsing before getting screenshots", async () => {
+      sandbox.stub(Screenshots, "_shouldGetScreenshots").returns(true);
+      await Screenshots.maybeCacheScreenshot(link, "mozilla.com", "image", sinon.stub());
+
+      assert.calledOnce(Screenshots._shouldGetScreenshots);
+    });
+    it("should not get a screenshot if we are in private browsing", async () => {
+      sandbox.stub(Screenshots, "getScreenshotForURL");
+      sandbox.stub(Screenshots, "_shouldGetScreenshots").returns(false);
+      await Screenshots.maybeCacheScreenshot(link, "mozilla.com", "image", sinon.stub());
+
+      assert.notCalled(Screenshots.getScreenshotForURL);
     });
   });
 
@@ -100,6 +129,25 @@ describe("Screenshots", () => {
       assert.propertyVal(str, 0, "\t");
       assert.propertyVal(str, "length", 1000000);
       assert.propertyVal(str, 999999, "\u0009");
+    });
+  });
+
+  describe("#_shouldGetScreenshots", () => {
+    beforeEach(() => {
+      let more = 2;
+      sandbox.stub(global.Services.wm, "getEnumerator").returns({getNext: () => {}, hasMoreElements() { return more--; }});
+    });
+    it("should use private browsing utils to determine if a window is private", () => {
+      Screenshots._shouldGetScreenshots();
+      assert.calledOnce(global.PrivateBrowsingUtils.isWindowPrivate);
+    });
+    it("should return true if there exists at least 1 non-private window", () => {
+      assert.isTrue(Screenshots._shouldGetScreenshots());
+    });
+    it("should return false if there exists private windows", () => {
+      global.PrivateBrowsingUtils = {isWindowPrivate: sandbox.spy(() => true)};
+      assert.isFalse(Screenshots._shouldGetScreenshots());
+      assert.calledTwice(global.PrivateBrowsingUtils.isWindowPrivate);
     });
   });
 });

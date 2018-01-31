@@ -443,7 +443,7 @@ describe("Top Stories Feed", () => {
 
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.calledOnce(instance.store.dispatch);
-      let action = instance.store.dispatch.firstCall.args[0];
+      let [action] = instance.store.dispatch.firstCall.args;
 
       assert.equal(at.SECTION_UPDATE, action.type);
       assert.equal(true, action.meta.skipMain);
@@ -457,7 +457,7 @@ describe("Top Stories Feed", () => {
 
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.calledTwice(instance.store.dispatch);
-      action = instance.store.dispatch.secondCall.args[0];
+      [action] = instance.store.dispatch.secondCall.args;
       assert.equal(at.SECTION_UPDATE, action.type);
       assert.equal(true, action.meta.skipMain);
       assert.equal(action.data.rows[0].guid, "rec1");
@@ -490,7 +490,7 @@ describe("Top Stories Feed", () => {
       await instance.fetchStories();
       assert.equal(instance.contentUpdateQueue.length, 0);
       assert.calledOnce(instance.store.dispatch);
-      let action = instance.store.dispatch.firstCall.args[0];
+      let [action] = instance.store.dispatch.firstCall.args;
       assert.equal(action.type, at.SECTION_UPDATE);
     });
     it("should not insert spoc if preffed off", async () => {
@@ -665,7 +665,7 @@ describe("Top Stories Feed", () => {
 
       clock.tick();
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
-      let action = instance.store.dispatch.firstCall.args[0];
+      let [action] = instance.store.dispatch.firstCall.args;
       assert.equal(action.data.rows[0].guid, "rec1");
       assert.equal(action.data.rows[1].guid, "rec2");
       assert.equal(action.data.rows[2].guid, "spoc1");
@@ -673,7 +673,7 @@ describe("Top Stories Feed", () => {
 
       clock.tick();
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
-      action = instance.store.dispatch.secondCall.args[0];
+      [action] = instance.store.dispatch.secondCall.args;
       assert.equal(action.data.rows[0].guid, "rec1");
       assert.equal(action.data.rows[1].guid, "rec2");
       assert.equal(action.data.rows[2].guid, "spoc1");
@@ -682,7 +682,7 @@ describe("Top Stories Feed", () => {
       // campaign 1 period frequency cap now reached (spoc 2 should be shown)
       clock.tick();
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
-      action = instance.store.dispatch.thirdCall.args[0];
+      [action] = instance.store.dispatch.thirdCall.args;
       assert.equal(action.data.rows[0].guid, "rec1");
       assert.equal(action.data.rows[1].guid, "rec2");
       assert.equal(action.data.rows[2].guid, "spoc2");
@@ -691,7 +691,7 @@ describe("Top Stories Feed", () => {
       // new campaign 1 period starting (spoc 1 sohuld be shown again)
       clock.tick(2 * 60 * 60 * 1000);
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
-      action = instance.store.dispatch.lastCall.args[0];
+      [action] = instance.store.dispatch.lastCall.args;
       assert.equal(action.data.rows[0].guid, "rec1");
       assert.equal(action.data.rows[1].guid, "rec2");
       assert.equal(action.data.rows[2].guid, "spoc1");
@@ -784,7 +784,7 @@ describe("Top Stories Feed", () => {
       instance.observe("", "idle-daily");
 
       assert.calledOnce(instance.store.dispatch);
-      let action = instance.store.dispatch.firstCall.args[0];
+      let [action] = instance.store.dispatch.firstCall.args;
       assert.equal(action.type, at.TELEMETRY_PERFORMANCE_EVENT);
       assert.equal(action.data.event, "topstories.domain.affinity.calculation.ms");
     });

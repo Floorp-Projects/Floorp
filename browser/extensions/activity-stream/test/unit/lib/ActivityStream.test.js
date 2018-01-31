@@ -61,19 +61,19 @@ describe("ActivityStream", () => {
 
       as.init();
 
-      const action = as.store.init.firstCall.args[1];
+      const [, action] = as.store.init.firstCall.args;
       assert.propertyVal(action.data, "version", "1.2.3");
     });
     it("should pass to Store an INIT event for content", () => {
       as.init();
 
-      const action = as.store.init.firstCall.args[1];
+      const [, action] = as.store.init.firstCall.args;
       assert.equal(action.meta.to, CONTENT_MESSAGE_TYPE);
     });
     it("should pass to Store an UNINIT event", () => {
       as.init();
 
-      const action = as.store.init.firstCall.args[2];
+      const [, , action] = as.store.init.firstCall.args;
       assert.equal(action.type, "UNINIT");
     });
   });

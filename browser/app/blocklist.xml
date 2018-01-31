@@ -9,13 +9,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="1.1.1" severity="3"/>
     </emItem>
-    <emItem blockID="i874" id="/^toolbar[0-9]*@findwide\.com$/">
-      <prefs>
-        <pref>browser.startup.homepage</pref>
-        <pref>browser.search.defaultenginename</pref>
-      </prefs>
-      <versionRange minVersion="0" maxVersion="*" severity="1"/>
-    </emItem>
     <emItem blockID="i922" id="{34712C68-7391-4c47-94F3-8F88D49AD632}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3">
@@ -1074,6 +1067,10 @@
         </targetApplication>
       </versionRange>
     </emItem>
+    <emItem blockID="805ee80e-0929-4c92-93ed-062b98053f28" id="/^({d78d27f4-9716-4f13-a8b6-842c455d6a46})|({bd5ba448-b096-4bd0-9582-eb7a5c9c0948})|({0b24cf69-02b8-407d-83db-e7af04fc1f3e})|({e08d85c5-4c0f-4ce3-9194-760187ce93ba})|({1c7d6d9e-325a-4260-8213-82d51277fc31})|({8a0699a0-09c3-4cf1-b38d-fec25441650c})|({1e68848a-2bb7-425c-81a2-524ab93763eb})$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
     <emItem blockID="i714" id="{25dd52dc-89a8-469d-9e8f-8d483095d1e8}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -1359,6 +1356,10 @@
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
     <emItem blockID="i58" id="webmaster@buzzzzvideos.info">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="70f37cc7-9f8a-4d0f-a881-f0c56934fa75" id="/^({be5d0c88-571b-4d01-a27a-cc2d2b75868c})|({3908d078-e1db-40bf-9567-5845aa77b833})|({5b620343-cd69-49b8-a7ba-f9d499ee5d3d})|({6eee2d17-f932-4a43-a254-9e2223be8f32})|({e05ba06a-6d6a-4c51-b8fc-60b461ffecaf})|({a5808da1-5b4f-42f2-b030-161fd11a36f7})|({d355bee9-07f0-47d3-8de6-59b8eecba57b})|({a1f8e136-bce5-4fd3-9ed1-f260703a5582})$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
@@ -2197,6 +2198,13 @@
     </emItem>
     <emItem blockID="i698" id="{6b2a75c8-6e2e-4267-b955-43e25b54e575}">
       <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="i874" id="/^toolbar[0-9]*@findwide\.com$/">
+      <prefs>
+        <pref>browser.startup.homepage</pref>
+        <pref>browser.search.defaultenginename</pref>
+      </prefs>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
   </emItems>
@@ -3427,6 +3435,9 @@
     <certItem issuerName="MFoxCzAJBgNVBAYTAklFMRIwEAYDVQQKEwlCYWx0aW1vcmUxEzARBgNVBAsTCkN5YmVyVHJ1c3QxIjAgBgNVBAMTGUJhbHRpbW9yZSBDeWJlclRydXN0IFJvb3Q=">
       <serialNumber>ByfJhw==</serialNumber>
     </certItem>
+    <certItem issuerName="MIGFMQswCQYDVQQGEwJQTDEiMCAGA1UEChMZVW5pemV0byBUZWNobm9sb2dpZXMgUy5BLjEnMCUGA1UECxMeQ2VydHVtIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MSkwJwYDVQQDEyBDZXJ0dW0gRG9tYWluIFZhbGlkYXRpb24gQ0EgU0hBMg==">
+      <serialNumber>VEav0UR+l38TpKTRi7sS1g==</serialNumber>
+    </certItem>
     <certItem issuerName="MD8xJDAiBgNVBAoTG0RpZ2l0YWwgU2lnbmF0dXJlIFRydXN0IENvLjEXMBUGA1UEAxMORFNUIFJvb3QgQ0EgWDM=">
       <serialNumber>AJBQSPqrEvDE2Hz8xH39Low=</serialNumber>
     </certItem>
@@ -3501,6 +3512,9 @@
     </certItem>
     <certItem issuerName="MEQxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1HZW9UcnVzdCBJbmMuMR0wGwYDVQQDExRHZW9UcnVzdCBTU0wgQ0EgLSBHMw==">
       <serialNumber>RUT1Gehd1KKYPfqOlgspoQ==</serialNumber>
+    </certItem>
+    <certItem issuerName="MHAxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xLzAtBgNVBAMTJkRpZ2lDZXJ0IFNIQTIgSGlnaCBBc3N1cmFuY2UgU2VydmVyIENB">
+      <serialNumber>Cn+uUpLudsH09lYYIPTK5A==</serialNumber>
     </certItem>
     <certItem issuerName="MHUxCzAJBgNVBAYTAkVFMSIwIAYDVQQKDBlBUyBTZXJ0aWZpdHNlZXJpbWlza2Vza3VzMSgwJgYDVQQDDB9FRSBDZXJ0aWZpY2F0aW9uIENlbnRyZSBSb290IENBMRgwFgYJKoZIhvcNAQkBFglwa2lAc2suZWU=">
       <serialNumber>KuzHPJLdK5hNgJRo3R47Ag==</serialNumber>
@@ -4147,6 +4161,9 @@
     <certItem issuerName="MGExCzAJBgNVBAYTAk5MMR4wHAYDVQQKDBVTdGFhdCBkZXIgTmVkZXJsYW5kZW4xMjAwBgNVBAMMKVN0YWF0IGRlciBOZWRlcmxhbmRlbiBPcmdhbmlzYXRpZSBDQSAtIEcy">
       <serialNumber>ZECgRdZEsns=</serialNumber>
     </certItem>
+    <certItem issuerName="MFoxCzAJBgNVBAYTAklFMRIwEAYDVQQKEwlCYWx0aW1vcmUxEzARBgNVBAsTCkN5YmVyVHJ1c3QxIjAgBgNVBAMTGUJhbHRpbW9yZSBDeWJlclRydXN0IFJvb3Q=">
+      <serialNumber>ByeWyA==</serialNumber>
+    </certItem>
     <certItem issuerName="MIGVMQswCQYDVQQGEwJHUjFEMEIGA1UEChM7SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkxQDA+BgNVBAMTN0hlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1dGlvbnMgUm9vdENBIDIwMTE=">
       <serialNumber>AQAAAAM=</serialNumber>
     </certItem>
@@ -4756,6 +4773,9 @@
     <certItem issuerName="MEcxCzAJBgNVBAYTAkhLMRYwFAYDVQQKEw1Ib25na29uZyBQb3N0MSAwHgYDVQQDExdIb25na29uZyBQb3N0IFJvb3QgQ0EgMQ==">
       <serialNumber>BHk=</serialNumber>
     </certItem>
+    <certItem issuerName="MFoxCzAJBgNVBAYTAklFMRIwEAYDVQQKEwlCYWx0aW1vcmUxEzARBgNVBAsTCkN5YmVyVHJ1c3QxIjAgBgNVBAMTGUJhbHRpbW9yZSBDeWJlclRydXN0IFJvb3Q=">
+      <serialNumber>Bye9zw==</serialNumber>
+    </certItem>
     <certItem issuerName="MHYxCzAJBgNVBAYTAlVTMR0wGwYDVQQKExRTeW1hbnRlYyBDb3Jwb3JhdGlvbjEfMB0GA1UECxMWU3ltYW50ZWMgVHJ1c3QgTmV0d29yazEnMCUGA1UEAxMeU3ltYW50ZWMgV2ViIFBLSSBFQ0MgUm9vdCAtIEcx">
       <serialNumber>EYfoVrySx7V3OUqs4xKvgA==</serialNumber>
     </certItem>
@@ -5097,6 +5117,9 @@
     </certItem>
     <certItem issuerName="MFoxCzAJBgNVBAYTAklFMRIwEAYDVQQKEwlCYWx0aW1vcmUxEzARBgNVBAsTCkN5YmVyVHJ1c3QxIjAgBgNVBAMTGUJhbHRpbW9yZSBDeWJlclRydXN0IFJvb3Q=">
       <serialNumber>ByfDtA==</serialNumber>
+    </certItem>
+    <certItem issuerName="MFoxCzAJBgNVBAYTAklFMRIwEAYDVQQKEwlCYWx0aW1vcmUxEzARBgNVBAsTCkN5YmVyVHJ1c3QxIjAgBgNVBAMTGUJhbHRpbW9yZSBDeWJlclRydXN0IFJvb3Q=">
+      <serialNumber>Bye9zg==</serialNumber>
     </certItem>
     <certItem issuerName="MIGVMQswCQYDVQQGEwJHUjFEMEIGA1UEChM7SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkxQDA+BgNVBAMTN0hlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1dGlvbnMgUm9vdENBIDIwMTE=">
       <serialNumber>GN2Hrh9Ltm8=</serialNumber>

@@ -85,8 +85,10 @@
         return features;
     }
 
-#elif defined(SK_CPU_ARM32) && __has_include(<asm/hwcap.h>) && __has_include(<sys/auxv.h>)
-    // asm/hwcap.h and sys/auxv.h won't be present on NDK builds before API v21.
+#elif defined(SK_CPU_ARM32) && __has_include(<sys/auxv.h>) && \
+    (!defined(__ANDROID_API__) || __ANDROID_API__ >= 18)
+    // sys/auxv.h will always be present in the Android NDK due to unified
+    //headers, but getauxval is only defined for API >= 18.
     #include <asm/hwcap.h>
     #include <sys/auxv.h>
 
