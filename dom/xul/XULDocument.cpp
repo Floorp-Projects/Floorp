@@ -50,6 +50,7 @@
 #include "nsPIWindowRoot.h"
 #include "nsXULCommandDispatcher.h"
 #include "nsXULElement.h"
+#include "nsXULPrototypeCache.h"
 #include "mozilla/Logging.h"
 #include "nsIFrame.h"
 #include "nsXBLService.h"
@@ -1425,14 +1426,6 @@ XULDocument::GetTooltipNode()
     }
 
     return nullptr;
-}
-
-NS_IMETHODIMP
-XULDocument::GetCommandDispatcher(nsIDOMXULCommandDispatcher** aTracker)
-{
-    *aTracker = mCommandDispatcher;
-    NS_IF_ADDREF(*aTracker);
-    return NS_OK;
 }
 
 nsresult
