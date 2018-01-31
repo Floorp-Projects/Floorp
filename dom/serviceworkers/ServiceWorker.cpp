@@ -38,9 +38,36 @@ ServiceWorkerVisible(JSContext* aCx, JSObject* aObj)
   return IS_INSTANCE_OF(ServiceWorkerGlobalScope, aObj);
 }
 
-ServiceWorker::ServiceWorker(nsPIDOMWindowInner* aWindow,
+// static
+already_AddRefed<ServiceWorker>
+ServiceWorker::Create(nsIGlobalObject* aOwner,
+                      const ServiceWorkerDescriptor& aDescriptor)
+{
+  RefPtr<ServiceWorker> ref;
+
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (!swm) {
+    return ref.forget();
+  }
+
+  RefPtr<ServiceWorkerRegistrationInfo> reg =
+    swm->GetRegistration(aDescriptor.PrincipalInfo(), aDescriptor.Scope());
+  if (!reg) {
+    return ref.forget();
+  }
+
+  RefPtr<ServiceWorkerInfo> info = reg->GetByID(aDescriptor.Id());
+  if (!info) {
+    return ref.forget();
+  }
+
+  ref = new ServiceWorker(aOwner, info);
+  return ref.forget();
+}
+
+ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
                              ServiceWorkerInfo* aInfo)
-  : DOMEventTargetHelper(aWindow),
+  : DOMEventTargetHelper(aGlobal),
     mInfo(aInfo)
 {
   MOZ_ASSERT(NS_IsMainThread());
