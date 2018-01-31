@@ -38,6 +38,7 @@
 
 #include "nsIURL.h"
 #include "nsIFileURL.h"
+#include "nsIURIMutator.h"
 #include "nsIWebProgressListener.h"
 #include "nsIAuthPrompt.h"
 #include "nsIPrompt.h"
@@ -855,11 +856,19 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(
 
         if (data->mCalcFileExt && !(mPersistFlags & PERSIST_FLAGS_DONT_CHANGE_FILENAMES))
         {
+            nsCOMPtr<nsIURI> uriWithExt;
             // this is the first point at which the server can tell us the mimetype
-            CalculateAndAppendFileExt(data->mFile, channel, data->mOriginalLocation);
+            nsresult rv = CalculateAndAppendFileExt(data->mFile, channel, data->mOriginalLocation, uriWithExt);
+            if (NS_SUCCEEDED(rv)) {
+                data->mFile = uriWithExt;
+            }
 
             // now make filename conformant and unique
-            CalculateUniqueFilename(data->mFile);
+            nsCOMPtr<nsIURI> uniqueFilenameURI;
+            rv = CalculateUniqueFilename(data->mFile, uniqueFilenameURI);
+            if (NS_SUCCEEDED(rv)) {
+                data->mFile = uniqueFilenameURI;
+            }
         }
 
         // compare uris and bail before we add to output map if they are equal
@@ -1959,7 +1968,7 @@ void nsWebBrowserPersist::CleanupLocalFiles()
 }
 
 nsresult
-nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI)
+nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI, nsCOMPtr<nsIURI>& aOutURI)
 {
     nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
     NS_ENSURE_TRUE(url, NS_ERROR_FAILURE);
@@ -2111,10 +2120,16 @@ nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI)
         }
         else
         {
-            url->SetFileName(filename);
+            return NS_MutateURI(url)
+                     .Apply<nsIURLMutator>(&nsIURLMutator::SetFileName,
+                                           filename,
+                                           nullptr)
+                     .Finalize(aOutURI);
         }
     }
 
+    // TODO (:valentin) This method should always clone aURI
+    aOutURI = aURI;
     return NS_OK;
 }
 
@@ -2183,9 +2198,12 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsString &aFilename)
 
 
 nsresult
-nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChannel, nsIURI *aOriginalURIWithExtension)
+nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI,
+                                               nsIChannel *aChannel,
+                                               nsIURI *aOriginalURIWithExtension,
+                                               nsCOMPtr<nsIURI>& aOutURI)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     if (!mMIMEService)
     {
@@ -2280,13 +2298,19 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
                 }
                 else
                 {
-                    url->SetFileName(newFileName);
+                    return NS_MutateURI(url)
+                             .Apply<nsIURLMutator>(&nsIURLMutator::SetFileName,
+                                                   newFileName,
+                                                   nullptr)
+                             .Finalize(aOutURI);
                 }
             }
 
         }
     }
 
+    // TODO (:valentin) This method should always clone aURI
+    aOutURI = aURI;
     return NS_OK;
 }
 
@@ -2683,10 +2707,14 @@ nsWebBrowserPersist::SaveSubframeContent(
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Make frame document & data path conformant and unique
-    rv = CalculateUniqueFilename(frameURI);
+    nsCOMPtr<nsIURI> out;
+    rv = CalculateUniqueFilename(frameURI, out);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = CalculateUniqueFilename(frameDataURI);
+    frameURI = out;
+
+    rv = CalculateUniqueFilename(frameDataURI, out);
     NS_ENSURE_SUCCESS(rv, rv);
+    frameDataURI = out;
 
     mCurrentThingsToPersist++;
 

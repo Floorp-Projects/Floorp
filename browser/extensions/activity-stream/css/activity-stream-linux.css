@@ -408,59 +408,18 @@ main {
         padding: 0 13px; }
     .top-sites-list .top-site-outer .edit-button {
       background-image: url("../data/content/assets/glyph-edit-16.svg"); }
-    .top-sites-list .top-site-outer .edit-menu {
-      background: #FFF;
-      border: 1px solid #B1B1B3;
-      border-radius: 12.5px;
-      box-shadow: 0 2px rgba(12, 12, 13, 0.1);
-      height: 25px;
-      position: absolute;
-      offset-inline-end: -12.5px;
-      opacity: 0;
-      overflow: hidden;
-      top: -12.5px;
-      transform: scale(0.25);
-      transition-property: transform, opacity;
-      transition-duration: 200ms;
-      z-index: 1000; }
-      .top-sites-list .top-site-outer .edit-menu:-moz-any(:active, :focus) {
-        transform: scale(1);
-        opacity: 1; }
-      .top-sites-list .top-site-outer .edit-menu button {
-        border: 0;
-        border-right: 1px solid #B1B1B3;
-        background-color: #FFF;
-        cursor: pointer;
-        height: 100%;
-        width: 25px; }
-        .top-sites-list .top-site-outer .edit-menu button:hover {
-          background-color: #EDEDF0; }
-        .top-sites-list .top-site-outer .edit-menu button:first-child:dir(ltr), .top-sites-list .top-site-outer .edit-menu button:last-child:dir(rtl) {
-          width: 30px; }
-        .top-sites-list .top-site-outer .edit-menu button:last-child:dir(ltr), .top-sites-list .top-site-outer .edit-menu button:first-child:dir(rtl) {
-          width: 28px; }
-        .top-sites-list .top-site-outer .edit-menu button:last-child:dir(ltr) {
-          border-right: 0; }
-        .top-sites-list .top-site-outer .edit-menu button:first-child:dir(rtl) {
-          border-right: 0; }
     .top-sites-list .top-site-outer.placeholder .tile {
       box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1); }
     .top-sites-list .top-site-outer.placeholder .screenshot {
       display: none; }
-    .top-sites-list .top-site-outer.placeholder .edit-menu:last-child button {
-      background-size: 13px;
-      width: 23px; }
   .top-sites-list:not(.dnd-active) .top-site-outer:-moz-any(.active, :focus, :hover) .tile {
     box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1), 0 0 0 5px #D7D7DB;
     transition: box-shadow 150ms; }
-  .top-sites-list:not(.dnd-active) .top-site-outer:-moz-any(.active, :focus, :hover) .edit-menu {
-    opacity: 1;
-    transform: scale(1); }
   .top-sites-list:not(.dnd-active) .top-site-outer:-moz-any(.active, :focus, :hover) .context-menu-button {
     opacity: 1;
     transform: scale(1); }
 
-.edit-topsites-wrapper .edit-topsites-button {
+.edit-topsites-wrapper .add-topsites-button {
   border-right: 1px solid #D7D7DB;
   line-height: 13px;
   offset-inline-end: 24px;
@@ -470,19 +429,19 @@ main {
   position: absolute;
   top: 2px;
   transition: opacity 0.2s cubic-bezier(0.07, 0.95, 0, 1); }
-  .edit-topsites-wrapper .edit-topsites-button:dir(rtl) {
+  .edit-topsites-wrapper .add-topsites-button:dir(rtl) {
     border-left: 1px solid #D7D7DB;
     border-right: 0; }
-  .edit-topsites-wrapper .edit-topsites-button:-moz-any(:active, :focus) {
+  .edit-topsites-wrapper .add-topsites-button:-moz-any(:active, :focus) {
     opacity: 1; }
-  .edit-topsites-wrapper .edit-topsites-button button {
+  .edit-topsites-wrapper .add-topsites-button button {
     background: none;
     border: 0;
     color: #737373;
     cursor: pointer;
     font-size: 12px;
     padding: 0; }
-    .edit-topsites-wrapper .edit-topsites-button button:focus {
+    .edit-topsites-wrapper .add-topsites-button button:focus {
       background: #EDEDF0;
       border-bottom: dotted 1px #737373; }
 
@@ -497,22 +456,7 @@ main {
   margin: 0;
   padding: 15px 30px; }
 
-.edit-topsites-wrapper .show-more,
-.edit-topsites-wrapper .show-less {
-  background-position: left 10px center;
-  background-repeat: no-repeat;
-  height: auto;
-  margin-inline-start: 10px;
-  padding-inline-end: 15px;
-  width: auto; }
-  .edit-topsites-wrapper .show-more:dir(rtl),
-  .edit-topsites-wrapper .show-less:dir(rtl) {
-    background-position: right 10px center; }
-  .edit-topsites-wrapper .show-more span,
-  .edit-topsites-wrapper .show-less span {
-    padding-inline-start: 3px; }
-
-.top-sites:not(.collapsed):hover .edit-topsites-button {
+.top-sites:not(.collapsed):hover .add-topsites-button {
   opacity: 1;
   pointer-events: auto; }
 

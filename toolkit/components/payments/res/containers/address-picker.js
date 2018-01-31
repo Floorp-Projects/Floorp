@@ -16,6 +16,7 @@ class AddressPicker extends PaymentStateSubscriberMixin(HTMLElement) {
   constructor() {
     super();
     this.dropdown = document.createElement("rich-select");
+    this.dropdown.addEventListener("change", this);
   }
 
   connectedCallback() {
@@ -27,11 +28,10 @@ class AddressPicker extends PaymentStateSubscriberMixin(HTMLElement) {
     let {savedAddresses} = state;
     let desiredOptions = [];
     for (let [guid, address] of Object.entries(savedAddresses)) {
-      let optionEl = this.dropdown.namedItem(guid);
+      let optionEl = this.dropdown.getOptionByValue(guid);
       if (!optionEl) {
         optionEl = document.createElement("address-option");
-        optionEl.name = guid;
-        optionEl.guid = guid;
+        optionEl.value = guid;
       }
       for (let [key, val] of Object.entries(address)) {
         optionEl.setAttribute(key, val);
@@ -42,7 +42,42 @@ class AddressPicker extends PaymentStateSubscriberMixin(HTMLElement) {
     while ((el = this.dropdown.popupBox.querySelector(":scope > address-option"))) {
       el.remove();
     }
-    this.dropdown.popupBox.append(...desiredOptions);
+    for (let option of desiredOptions) {
+      this.dropdown.popupBox.appendChild(option);
+    }
+
+    // Update selectedness after the options are updated
+    let selectedAddressGUID = state[this.selectedStateKey];
+    let optionWithGUID = this.dropdown.getOptionByValue(selectedAddressGUID);
+    this.dropdown.selectedOption = optionWithGUID;
+
+    if (selectedAddressGUID && !optionWithGUID) {
+      throw new Error(`${this.selectedStateKey} option ${selectedAddressGUID}` +
+                      `does not exist in options`);
+    }
+  }
+
+  get selectedStateKey() {
+    return this.getAttribute("selected-state-key");
+  }
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "change": {
+        this.onChange(event);
+        break;
+      }
+    }
+  }
+
+  onChange(event) {
+    let select = event.target;
+    let selectedKey = this.selectedStateKey;
+    if (selectedKey) {
+      this.requestStore.setState({
+        [selectedKey]: select.selectedOption && select.selectedOption.guid,
+      });
+    }
   }
 }
 

@@ -34,10 +34,16 @@
    Provide custom version here. */
 #include_next <link.h>
 
-// TODO(rmcilroy): Remove this file once the ndk is updated for other
-// architectures - crbug.com/358831
-#if !defined(__aarch64__) && !defined(__x86_64__) && \
-    !(defined(__mips__) && _MIPS_SIM == _ABI64)
+#include <android/api-level.h>
+
+// TODO(rmcilroy): Remove this file once the NDK API level is updated to at
+// least 21 for all architectures. https://crbug.com/358831
+
+// These structures are only present in traditional headers at API level 21 and
+// above. Unified headers define these structures regardless of the chosen API
+// level. __ANDROID_API_N__ is a proxy for determining whether unified headers
+// are in use. It’s only defined by unified headers.
+#if __ANDROID_API__ < 21 && !defined(__ANDROID_API_N__)
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,6 +74,6 @@ struct link_map {
 }  // extern "C"
 #endif  // __cplusplus
 
-#endif  // !defined(__aarch64__) && !defined(__x86_64__)
+#endif  // __ANDROID_API__ < 21 && !defined(__ANDROID_API_N__)
 
 #endif /* GOOGLE_BREAKPAD_ANDROID_INCLUDE_LINK_H */

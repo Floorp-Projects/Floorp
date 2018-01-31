@@ -248,6 +248,24 @@ diff --git a/gfx/cairo/libpixman/src/pixman-fast-path.c b/gfx/cairo/libpixman/sr
 diff --git a/gfx/cairo/libpixman/src/pixman-inlines.h b/gfx/cairo/libpixman/src/pixman-inlines.h
 --- a/gfx/cairo/libpixman/src/pixman-inlines.h
 +++ b/gfx/cairo/libpixman/src/pixman-inlines.h
+@@ -21,16 +21,17 @@
+  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  *
+  * Author:  Keith Packard, SuSE, Inc.
+  */
+ 
+ #ifndef PIXMAN_FAST_PATH_H__
+ #define PIXMAN_FAST_PATH_H__
+ 
++#include <stdlib.h>
+ #include "pixman-private.h"
+ 
+ #define PIXMAN_REPEAT_COVER -1
+ 
+ /* Flags describing input parameters to fast path macro template.
+  * Turning on some flag values may indicate that
+  * "some property X is available so template can use this" or
+  * "some property X should be handled by template".
 @@ -816,18 +816,48 @@ bilinear_pad_repeat_get_scanline_bounds 
   *
   * Note: normally the sum of 'weight_top' and 'weight_bottom' is equal to 256,

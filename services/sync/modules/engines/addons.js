@@ -581,16 +581,6 @@ AddonsStore.prototype = {
       return false;
     }
 
-    // Ignore hotfix extensions (bug 741670). The pref may not be defined.
-    // XXX - note that addon.isSyncable will be false for hotfix addons, so
-    // this check isn't strictly necessary - except for Sync tests which aren't
-    // setup to create a "real" hotfix addon. This can be removed once those
-    // tests are fixed (but keeping it doesn't hurt either)
-    if (this._extensionsPrefs.get("hotfix.id", null) == addon.id) {
-      this._log.debug(addon.id + " not syncable: is a hotfix.");
-      return false;
-    }
-
     // If the AddonRepository's cache isn't enabled (which it typically isn't
     // in tests), getCachedAddonByID always returns null - so skip the check
     // in that case. We also provide a way to specifically opt-out of the check

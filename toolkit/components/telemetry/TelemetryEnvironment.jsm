@@ -268,7 +268,6 @@ const PREF_DISTRIBUTION_ID = "distribution.id";
 const PREF_DISTRIBUTION_VERSION = "distribution.version";
 const PREF_DISTRIBUTOR = "app.distributor";
 const PREF_DISTRIBUTOR_CHANNEL = "app.distributor.channel";
-const PREF_HOTFIX_LASTVERSION = "extensions.hotfix.lastVersion";
 const PREF_APP_PARTNER_BRANCH = "app.partner.";
 const PREF_PARTNER_ID = "mozilla.partner.id";
 const PREF_UPDATE_ENABLED = "app.update.enabled";
@@ -1301,7 +1300,6 @@ EnvironmentCache.prototype = {
       vendor: Services.appinfo.vendor || null,
       platformVersion: Services.appinfo.platformVersion || null,
       xpcomAbi: Services.appinfo.XPCOMABI,
-      hotfixVersion: Services.prefs.getStringPref(PREF_HOTFIX_LASTVERSION, null),
       updaterAvailable: AppConstants.MOZ_UPDATER,
     };
 

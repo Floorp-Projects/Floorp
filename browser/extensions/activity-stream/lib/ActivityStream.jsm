@@ -58,9 +58,9 @@ const PREFS_CONFIG = new Map([
       provider_name: "Pocket",
       read_more_endpoint: "https://getpocket.com/explore/trending?src=fx_new_tab",
       stories_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`,
-      stories_referrer: "http://getpocket.com/recommendations",
+      stories_referrer: "https://getpocket.com/recommendations",
       info_link: "https://www.mozilla.org/privacy/firefox/#pocketstories",
-      disclaimer_link: "https://getpocket.com/firefox/new_tab_learn_more.php",
+      disclaimer_link: "https://getpocket.com/firefox/new_tab_learn_more",
       topics_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/trending-topics?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`,
       show_spocs: false,
       personalized: true
@@ -244,6 +244,7 @@ this.ActivityStream = class ActivityStream {
     this.feeds = FEEDS_CONFIG;
     this._defaultPrefs = new DefaultPrefs(PREFS_CONFIG);
   }
+
   init() {
     try {
       this._updateDynamicPrefs();
@@ -266,6 +267,7 @@ this.ActivityStream = class ActivityStream {
       throw e;
     }
   }
+
   uninit() {
     if (this.geo === "") {
       Services.prefs.removeObserver(GEO_PREF, this);
@@ -274,6 +276,7 @@ this.ActivityStream = class ActivityStream {
     this.store.uninit();
     this.initialized = false;
   }
+
   uninstall(reason) {
     if (reason === REASON_ADDON_UNINSTALL) {
       // This resets all prefs in the config to their default values,
@@ -282,6 +285,7 @@ this.ActivityStream = class ActivityStream {
       this._defaultPrefs.reset();
     }
   }
+
   _updateDynamicPrefs() {
     // Save the geo pref if we have it
     if (Services.prefs.prefHasUserValue(GEO_PREF)) {
@@ -315,6 +319,7 @@ this.ActivityStream = class ActivityStream {
       prefConfig.value = newValue;
     }
   }
+
   observe(subject, topic, data) {
     switch (topic) {
       case "nsPref:changed":
