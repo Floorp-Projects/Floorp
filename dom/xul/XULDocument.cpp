@@ -4147,15 +4147,6 @@ XULDocument::ThreadSafeGetDocumentLWTheme() const
     return theme;
 }
 
-NS_IMETHODIMP
-XULDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
-{
-    ErrorResult rv;
-    nsCOMPtr<Element> el = do_QueryInterface(aElement);
-    *aResult = GetBoxObjectFor(el, rv).take();
-    return rv.StealNSResult();
-}
-
 JSObject*
 XULDocument::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
