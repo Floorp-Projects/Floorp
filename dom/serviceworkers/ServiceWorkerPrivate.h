@@ -231,7 +231,7 @@ private:
 
   // Array of function event worker runnables that are pending due to
   // the worker activating.  Main thread only.
-  nsTArray<RefPtr<workers::WorkerRunnable>> mPendingFunctionalEvents;
+  nsTArray<RefPtr<WorkerRunnable>> mPendingFunctionalEvents;
 };
 
 } // namespace dom

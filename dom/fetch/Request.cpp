@@ -248,14 +248,14 @@ GetRequestURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
   }
 }
 
-class ReferrerSameOriginChecker final : public workers::WorkerMainThreadRunnable
+class ReferrerSameOriginChecker final : public WorkerMainThreadRunnable
 {
 public:
   ReferrerSameOriginChecker(workers::WorkerPrivate* aWorkerPrivate,
                             const nsAString& aReferrerURL,
                             nsresult& aResult)
-    : workers::WorkerMainThreadRunnable(aWorkerPrivate,
-                                        NS_LITERAL_CSTRING("Fetch :: Referrer same origin check")),
+    : WorkerMainThreadRunnable(aWorkerPrivate,
+                               NS_LITERAL_CSTRING("Fetch :: Referrer same origin check")),
       mReferrerURL(aReferrerURL),
       mResult(aResult)
   {

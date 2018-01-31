@@ -17,7 +17,7 @@ class DOMEventTargetHelper;
 
 namespace dom {
 
-class MessageEventRunnable final : public workers::WorkerRunnable
+class MessageEventRunnable final : public WorkerRunnable
                                  , public StructuredCloneHolder
 {
 public:
