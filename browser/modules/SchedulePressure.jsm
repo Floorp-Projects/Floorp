@@ -119,6 +119,8 @@ this.SchedulePressure = {
         map.delete(window);
       }
     }
+
+    TelemetryStopwatch.cancel("FX_SCHEDULE_PRESSURE_IDLE_SAMPLE_MS", window);
     removeFromMapAndCancelTimeout(this._setTimeoutWeakMap, window.clearTimeout);
     removeFromMapAndCancelTimeout(this._idleCallbackWeakMap, window.cancelIdleCallback);
     removeFromMapAndCancelTimeout(this._telemetryCallbackWeakMap, window.cancelIdleCallback);

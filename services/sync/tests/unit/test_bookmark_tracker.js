@@ -868,35 +868,6 @@ add_task(async function test_async_onItemKeywordDeleted() {
   }
 });
 
-add_task(async function test_onItemPostDataChanged() {
-  _("Post data changes should be tracked");
-
-  try {
-    await stopTracking();
-
-    _("Insert a bookmark");
-    let fx_id = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      CommonUtils.makeURI("http://getfirefox.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Firefox!");
-    let fx_guid = await PlacesUtils.promiseItemGuid(fx_id);
-    _(`Firefox GUID: ${fx_guid}`);
-
-    await startTracking();
-
-    // PlacesUtils.setPostDataForBookmark is deprecated, but still used by
-    // PlacesTransactions.NewBookmark.
-    _("Post data for the bookmark should be ignored");
-    await PlacesUtils.setPostDataForBookmark(fx_id, "postData");
-    await verifyTrackedItems([]);
-    Assert.equal(tracker.score, 0);
-  } finally {
-    _("Clean up.");
-    await cleanup();
-  }
-});
-
 add_task(async function test_onItemAnnoChanged() {
   _("Item annotations should be tracked");
 

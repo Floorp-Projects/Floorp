@@ -545,8 +545,6 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   }
 #endif
 
-  NS_StartupLocalFile();
-
   nsDirectoryService::RealInit();
 
   bool value;
@@ -977,9 +975,6 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
 #endif /* XP_MACOSX */
     mozilla::BeginLateWriteChecks();
   }
-
-  // Shutdown nsLocalFile string conversion
-  NS_ShutdownLocalFile();
 
   // Shutdown xpcom. This will release all loaders and cause others holding
   // a refcount to the component manager to release it.

@@ -110,6 +110,8 @@ body {
 
 .item.tab > .item-title-container > .item-icon-container {
   background-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .item-icon-container {

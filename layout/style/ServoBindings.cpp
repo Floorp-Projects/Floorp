@@ -1038,6 +1038,21 @@ AttrHasSuffix(Implementor* aElement, nsAtom* aNS, nsAtom* aName,
 }
 
 /**
+ * Returns whether an element contains a class in its class list or not.
+ */
+template <typename Implementor>
+static bool
+HasClass(Implementor* aElement, nsAtom* aClass, bool aIgnoreCase)
+{
+  const nsAttrValue* attr = aElement->DoGetClasses();
+  if (!attr) {
+    return false;
+  }
+
+  return attr->Contains(aClass, aIgnoreCase ? eIgnoreCase : eCaseMatters);
+}
+
+/**
  * Gets the class or class list (if any) of the implementor. The calling
  * convention here is rather hairy, and is optimized for getting Servo the
  * information it needs for hot calls.
@@ -1106,53 +1121,58 @@ ClassOrClassList(Implementor* aElement, nsAtom** aClass, nsAtom*** aClassList)
 }
 
 #define SERVO_IMPL_ELEMENT_ATTR_MATCHING_FUNCTIONS(prefix_, implementor_)        \
-  nsAtom* prefix_##AtomAttrValue(implementor_ aElement, nsAtom* aName)         \
+  nsAtom* prefix_##AtomAttrValue(implementor_ aElement, nsAtom* aName)           \
   {                                                                              \
     return AtomAttrValue(aElement, aName);                                       \
   }                                                                              \
-  nsAtom* prefix_##LangValue(implementor_ aElement)                             \
+  nsAtom* prefix_##LangValue(implementor_ aElement)                              \
   {                                                                              \
     return LangValue(aElement);                                                  \
   }                                                                              \
-  bool prefix_##HasAttr(implementor_ aElement, nsAtom* aNS, nsAtom* aName)     \
+  bool prefix_##HasAttr(implementor_ aElement, nsAtom* aNS, nsAtom* aName)       \
   {                                                                              \
     return HasAttr(aElement, aNS, aName);                                        \
   }                                                                              \
-  bool prefix_##AttrEquals(implementor_ aElement, nsAtom* aNS,                  \
-                           nsAtom* aName, nsAtom* aStr, bool aIgnoreCase)      \
+  bool prefix_##AttrEquals(implementor_ aElement, nsAtom* aNS,                   \
+                           nsAtom* aName, nsAtom* aStr, bool aIgnoreCase)        \
   {                                                                              \
     return AttrEquals(aElement, aNS, aName, aStr, aIgnoreCase);                  \
   }                                                                              \
-  bool prefix_##AttrDashEquals(implementor_ aElement, nsAtom* aNS,              \
-                               nsAtom* aName, nsAtom* aStr, bool aIgnoreCase)  \
+  bool prefix_##AttrDashEquals(implementor_ aElement, nsAtom* aNS,               \
+                               nsAtom* aName, nsAtom* aStr, bool aIgnoreCase)    \
   {                                                                              \
     return AttrDashEquals(aElement, aNS, aName, aStr, aIgnoreCase);              \
   }                                                                              \
-  bool prefix_##AttrIncludes(implementor_ aElement, nsAtom* aNS,                \
-                             nsAtom* aName, nsAtom* aStr, bool aIgnoreCase)    \
+  bool prefix_##AttrIncludes(implementor_ aElement, nsAtom* aNS,                 \
+                             nsAtom* aName, nsAtom* aStr, bool aIgnoreCase)      \
   {                                                                              \
     return AttrIncludes(aElement, aNS, aName, aStr, aIgnoreCase);                \
   }                                                                              \
-  bool prefix_##AttrHasSubstring(implementor_ aElement, nsAtom* aNS,            \
-                                 nsAtom* aName, nsAtom* aStr, bool aIgnoreCase)\
+  bool prefix_##AttrHasSubstring(implementor_ aElement, nsAtom* aNS,             \
+                                 nsAtom* aName, nsAtom* aStr, bool aIgnoreCase)  \
   {                                                                              \
     return AttrHasSubstring(aElement, aNS, aName, aStr, aIgnoreCase);            \
   }                                                                              \
-  bool prefix_##AttrHasPrefix(implementor_ aElement, nsAtom* aNS,               \
-                              nsAtom* aName, nsAtom* aStr, bool aIgnoreCase)   \
+  bool prefix_##AttrHasPrefix(implementor_ aElement, nsAtom* aNS,                \
+                              nsAtom* aName, nsAtom* aStr, bool aIgnoreCase)     \
   {                                                                              \
     return AttrHasPrefix(aElement, aNS, aName, aStr, aIgnoreCase);               \
   }                                                                              \
-  bool prefix_##AttrHasSuffix(implementor_ aElement, nsAtom* aNS,               \
-                              nsAtom* aName, nsAtom* aStr, bool aIgnoreCase)   \
+  bool prefix_##AttrHasSuffix(implementor_ aElement, nsAtom* aNS,                \
+                              nsAtom* aName, nsAtom* aStr, bool aIgnoreCase)     \
   {                                                                              \
     return AttrHasSuffix(aElement, aNS, aName, aStr, aIgnoreCase);               \
   }                                                                              \
-  uint32_t prefix_##ClassOrClassList(implementor_ aElement, nsAtom** aClass,    \
-                                     nsAtom*** aClassList)                      \
+  uint32_t prefix_##ClassOrClassList(implementor_ aElement, nsAtom** aClass,     \
+                                     nsAtom*** aClassList)                       \
   {                                                                              \
     return ClassOrClassList(aElement, aClass, aClassList);                       \
-  }
+  }                                                                              \
+  bool prefix_##HasClass(implementor_ aElement, nsAtom* aClass, bool aIgnoreCase)\
+  {                                                                              \
+    return HasClass(aElement, aClass, aIgnoreCase);                              \
+  }                                                                              \
+
 
 SERVO_IMPL_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_, RawGeckoElementBorrowed)
 SERVO_IMPL_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_Snapshot, const ServoElementSnapshot*)
