@@ -6,7 +6,6 @@ var Cc = Components.classes;
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm");
 
 var running_single_process = false;
 
@@ -106,7 +105,7 @@ Verifier.prototype = {
     dump("checking validity of entry for " + uri.spec + "\n");
     var checker = new ValidityChecker(this, status);
     asyncOpenCacheEntry(uri.spec, "disk",
-        Ci.nsICacheStorage.OPEN_NORMALLY, LoadContextInfo.default,
+        Ci.nsICacheStorage.OPEN_NORMALLY, Services.loadContextInfo.default,
         checker);
   },
 
@@ -179,7 +178,7 @@ var prepListener = {
 };
 
 function open_and_continue(uris, continueCallback) {
-  var ds = Services.cache2.diskCacheStorage(LoadContextInfo.default, false);
+  var ds = Services.cache2.diskCacheStorage(Services.loadContextInfo.default, false);
 
   prepListener.init(uris.length, continueCallback);
   for (var i = 0; i < uris.length; ++i) {

@@ -10,7 +10,6 @@
 
 const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 
-let {LoadContextInfo} = ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm", {});
 let protocolProxyService = Cc["@mozilla.org/network/protocol-proxy-service;1"]
                              .getService(Ci.nsIProtocolProxyService);
 
@@ -227,17 +226,17 @@ async function doTest(aBrowser) {
 async function doCheck(aShouldIsolate, aInputA, aInputB) {
   let expectedEntryCount = 1;
   let data = [];
-  data = data.concat(await cacheDataForContext(LoadContextInfo.default));
-  data = data.concat(await cacheDataForContext(LoadContextInfo.private));
-  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(true, {})));
-  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(false, { userContextId: 1 })));
-  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(true, { userContextId: 1 })));
-  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(false, { userContextId: 2 })));
-  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(true, { userContextId: 2 })));
-  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(false, { firstPartyDomain: "example.com" })));
-  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(true, { firstPartyDomain: "example.com" })));
-  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(false, { firstPartyDomain: "example.org" })));
-  data = data.concat(await cacheDataForContext(LoadContextInfo.custom(true, { firstPartyDomain: "example.org" })));
+  data = data.concat(await cacheDataForContext(Services.loadContextInfo.default));
+  data = data.concat(await cacheDataForContext(Services.loadContextInfo.private));
+  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(true, {})));
+  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(false, { userContextId: 1 })));
+  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(true, { userContextId: 1 })));
+  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(false, { userContextId: 2 })));
+  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(true, { userContextId: 2 })));
+  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(false, { firstPartyDomain: "example.com" })));
+  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(true, { firstPartyDomain: "example.com" })));
+  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(false, { firstPartyDomain: "example.org" })));
+  data = data.concat(await cacheDataForContext(Services.loadContextInfo.custom(true, { firstPartyDomain: "example.org" })));
 
   if (aShouldIsolate) {
     expectedEntryCount = 2;

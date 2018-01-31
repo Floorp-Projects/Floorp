@@ -1,10 +1,10 @@
 function run_test()
 {
   var storage = getCacheStorage("disk");
-  var lcis = [LoadContextInfo.default,
-              LoadContextInfo.custom(false, { userContextId: 1 }),
-              LoadContextInfo.custom(false, { userContextId: 2 }),
-              LoadContextInfo.custom(false, { userContextId: 3 })];
+  var lcis = [Services.loadContextInfo.default,
+              Services.loadContextInfo.custom(false, { userContextId: 1 }),
+              Services.loadContextInfo.custom(false, { userContextId: 2 }),
+              Services.loadContextInfo.custom(false, { userContextId: 3 })];
 
   do_get_profile();
 

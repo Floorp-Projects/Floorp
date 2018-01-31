@@ -1,5 +1,3 @@
-ChromeUtils.import('resource://gre/modules/LoadContextInfo.jsm');
-
 function run_test()
 {
   do_get_profile();
@@ -8,7 +6,7 @@ function run_test()
     finish_cache2_test();
   });
 
-  asyncOpenCacheEntry("http://m1/", "memory", Ci.nsICacheStorage.OPEN_NORMALLY, LoadContextInfo.default,
+  asyncOpenCacheEntry("http://m1/", "memory", Ci.nsICacheStorage.OPEN_NORMALLY, Services.loadContextInfo.default,
     new OpenCallback(NEW, "meta", "data", function(entry) {
       // Check the default
       equal(entry.isForcedValid, false);

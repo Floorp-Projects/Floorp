@@ -1,4 +1,3 @@
-ChromeUtils.import('resource://gre/modules/LoadContextInfo.jsm');
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 

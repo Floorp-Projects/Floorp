@@ -18,8 +18,6 @@
  */
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var {LoadContextInfo} = ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm", {});
-
 ChromeUtils.defineModuleGetter(this, "FormHistory",
                                "resource://gre/modules/FormHistory.jsm");
 ChromeUtils.defineModuleGetter(this, "Downloads",
@@ -553,9 +551,9 @@ add_task(async function test_offline_cache() {
   // Store something to the offline cache
   var appcacheserv = Cc["@mozilla.org/network/application-cache-service;1"]
                      .getService(Ci.nsIApplicationCacheService);
-  var appcachegroupid = appcacheserv.buildGroupIDForInfo(makeURI(URL + "/manifest"), LoadContextInfo.default);
+  var appcachegroupid = appcacheserv.buildGroupIDForInfo(makeURI(URL + "/manifest"), Services.loadContextInfo.default);
   var appcache = appcacheserv.createApplicationCache(appcachegroupid);
-  var storage = Services.cache2.appCacheStorage(LoadContextInfo.default, appcache);
+  var storage = Services.cache2.appCacheStorage(Services.loadContextInfo.default, appcache);
 
   // Open the dialog
   let wh = new WindowHelper();
