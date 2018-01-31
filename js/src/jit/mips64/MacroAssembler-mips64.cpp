@@ -1432,28 +1432,6 @@ MacroAssemblerMIPS64Compat::testUndefinedSet(Condition cond, const ValueOperand&
     ma_cmp_set(dest, SecondScratchReg, ImmTag(JSVAL_TAG_UNDEFINED), cond);
 }
 
-// unboxing code
-void
-MacroAssemblerMIPS64Compat::unboxNonDouble(const ValueOperand& operand, Register dest)
-{
-    ma_dext(dest, operand.valueReg(), Imm32(0), Imm32(JSVAL_TAG_SHIFT));
-}
-
-void
-MacroAssemblerMIPS64Compat::unboxNonDouble(const Address& src, Register dest)
-{
-    loadPtr(Address(src.base, src.offset), dest);
-    ma_dext(dest, dest, Imm32(0), Imm32(JSVAL_TAG_SHIFT));
-}
-
-void
-MacroAssemblerMIPS64Compat::unboxNonDouble(const BaseIndex& src, Register dest)
-{
-    computeScaledAddress(src, SecondScratchReg);
-    loadPtr(Address(SecondScratchReg, src.offset), dest);
-    ma_dext(dest, dest, Imm32(0), Imm32(JSVAL_TAG_SHIFT));
-}
-
 void
 MacroAssemblerMIPS64Compat::unboxInt32(const ValueOperand& operand, Register dest)
 {
@@ -1519,53 +1497,59 @@ MacroAssemblerMIPS64Compat::unboxDouble(const Address& src, FloatRegister dest)
 void
 MacroAssemblerMIPS64Compat::unboxString(const ValueOperand& operand, Register dest)
 {
-    unboxNonDouble(operand, dest);
+    unboxNonDouble(operand, dest, JSVAL_TYPE_STRING);
 }
 
 void
 MacroAssemblerMIPS64Compat::unboxString(Register src, Register dest)
 {
-    ma_dext(dest, src, Imm32(0), Imm32(JSVAL_TAG_SHIFT));
+    unboxNonDouble(src, dest, JSVAL_TYPE_STRING);
 }
 
 void
 MacroAssemblerMIPS64Compat::unboxString(const Address& src, Register dest)
 {
-    unboxNonDouble(src, dest);
+    unboxNonDouble(src, dest, JSVAL_TYPE_STRING);
+}
+
+void
+MacroAssemblerMIPS64Compat::unboxSymbol(const ValueOperand& operand, Register dest)
+{
+    unboxNonDouble(operand, dest, JSVAL_TYPE_SYMBOL);
 }
 
 void
 MacroAssemblerMIPS64Compat::unboxSymbol(Register src, Register dest)
 {
-    ma_dext(dest, src, Imm32(0), Imm32(JSVAL_TAG_SHIFT));
+    unboxNonDouble(src, dest, JSVAL_TYPE_SYMBOL);
 }
 
 void
 MacroAssemblerMIPS64Compat::unboxSymbol(const Address& src, Register dest)
 {
-    unboxNonDouble(src, dest);
+    unboxNonDouble(src, dest, JSVAL_TYPE_SYMBOL);
 }
 
 void
 MacroAssemblerMIPS64Compat::unboxObject(const ValueOperand& src, Register dest)
 {
-    unboxNonDouble(src, dest);
+    unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
 }
 
 void
 MacroAssemblerMIPS64Compat::unboxObject(Register src, Register dest)
 {
-    ma_dext(dest, src, Imm32(0), Imm32(JSVAL_TAG_SHIFT));
+    unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
 }
 
 void
 MacroAssemblerMIPS64Compat::unboxObject(const Address& src, Register dest)
 {
-    unboxNonDouble(src, dest);
+    unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
 }
 
 void
-MacroAssemblerMIPS64Compat::unboxValue(const ValueOperand& src, AnyRegister dest)
+MacroAssemblerMIPS64Compat::unboxValue(const ValueOperand& src, AnyRegister dest, JSValueType type)
 {
     if (dest.isFloat()) {
         Label notInt32, end;
@@ -1576,7 +1560,7 @@ MacroAssemblerMIPS64Compat::unboxValue(const ValueOperand& src, AnyRegister dest
         unboxDouble(src, dest.fpu());
         bind(&end);
     } else {
-        unboxNonDouble(src, dest.gpr());
+        unboxNonDouble(src, dest.gpr(), type);
     }
 }
 
