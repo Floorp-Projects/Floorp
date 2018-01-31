@@ -277,6 +277,8 @@ TabStore.prototype = {
 
 function TabTracker(name, engine) {
   Tracker.call(this, name, engine);
+  Svc.Obs.add("weave:engine:start-tracking", this);
+  Svc.Obs.add("weave:engine:stop-tracking", this);
 
   // Make sure "this" pointer is always set correctly for event listeners.
   this.onTab = Utils.bind2(this, this.onTab);
@@ -320,23 +322,25 @@ TabTracker.prototype = {
     }
   },
 
-  onStart() {
-    Svc.Obs.add("domwindowopened", this.asyncObserver);
+  startTracking() {
+    Svc.Obs.add("domwindowopened", this);
     let wins = Services.wm.getEnumerator("navigator:browser");
     while (wins.hasMoreElements()) {
       this._registerListenersForWindow(wins.getNext());
     }
   },
 
-  onStop() {
-    Svc.Obs.remove("domwindowopened", this.asyncObserver);
+  stopTracking() {
+    Svc.Obs.remove("domwindowopened", this);
     let wins = Services.wm.getEnumerator("navigator:browser");
     while (wins.hasMoreElements()) {
       this._unregisterListenersForWindow(wins.getNext());
     }
   },
 
-  async observe(subject, topic, data) {
+  observe(subject, topic, data) {
+    Tracker.prototype.observe.call(this, subject, topic, data);
+
     switch (topic) {
       case "domwindowopened":
         let onLoad = () => {

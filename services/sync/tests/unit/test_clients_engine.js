@@ -58,7 +58,7 @@ add_task(async function setup() {
 
 async function cleanup() {
   Svc.Prefs.resetBranch("");
-  await engine._tracker.clearChangedIDs();
+  engine._tracker.clearChangedIDs();
   await engine._resetClient();
   // un-cleanup the logs (the resetBranch will have reset their levels), since
   // not all the tests use SyncTestingInfrastructure, and it's cheap.
@@ -335,29 +335,26 @@ add_task(async function test_client_name_change() {
   engine.localID; // Needed to increase the tracker changedIDs count.
   let initialName = engine.localName;
 
-  tracker.start();
+  Svc.Obs.notify("weave:engine:start-tracking");
   _("initial name: " + initialName);
 
   // Tracker already has data, so clear it.
-  await tracker.clearChangedIDs();
+  tracker.clearChangedIDs();
 
   let initialScore = tracker.score;
 
-  let changedIDs = await tracker.getChangedIDs();
-  equal(Object.keys(changedIDs).length, 0);
+  equal(Object.keys(tracker.changedIDs).length, 0);
 
   Svc.Prefs.set("client.name", "new name");
-  await tracker.asyncObserver.promiseObserversComplete();
 
   _("new name: " + engine.localName);
   notEqual(initialName, engine.localName);
-  changedIDs = await tracker.getChangedIDs();
-  equal(Object.keys(changedIDs).length, 1);
-  ok(engine.localID in changedIDs);
+  equal(Object.keys(tracker.changedIDs).length, 1);
+  ok(engine.localID in tracker.changedIDs);
   ok(tracker.score > initialScore);
   ok(tracker.score >= SCORE_INCREMENT_XLARGE);
 
-  await tracker.stop();
+  Svc.Obs.notify("weave:engine:stop-tracking");
 
   await cleanup();
 });
@@ -442,9 +439,7 @@ add_task(async function test_send_command() {
   deepEqual(command.args, args);
   ok(command.flowID);
 
-
-  const changes = await tracker.getChangedIDs();
-  notEqual(changes[remoteId], undefined);
+  notEqual(tracker.changedIDs[remoteId], undefined);
 
   await cleanup();
 });
@@ -506,8 +501,7 @@ add_task(async function test_command_validation() {
       deepEqual(command.args, args);
 
       notEqual(engine._tracker, undefined);
-      const changes = await engine._tracker.getChangedIDs();
-      notEqual(changes[remoteId], undefined);
+      notEqual(engine._tracker.changedIDs[remoteId], undefined);
     } else {
       _("Ensuring command is scrubbed: " + action);
       equal(clientCommands, undefined);
@@ -952,7 +946,7 @@ add_task(async function test_send_uri_to_client_for_display() {
   await store.create(rec);
   await store.createRecord(remoteId, "clients");
 
-  await tracker.clearChangedIDs();
+  tracker.clearChangedIDs();
   let initialScore = tracker.score;
 
   let uri = "http://www.mozilla.org/";
@@ -1543,7 +1537,7 @@ add_task(async function test_command_sync() {
     equal(collection.count(), 3, "3 remote records written (+1 for the synced local record)");
 
     await engine.sendCommand("wipeAll", []);
-    await engine._tracker.addChangedID(engine.localID);
+    engine._tracker.addChangedID(engine.localID);
     const getClientFxaDeviceId = sinon.stub(engine, "getClientFxaDeviceId", (id) => "fxa-" + id);
     const engineMock = sinon.mock(engine);
     let _notifyCollectionChanged = engineMock.expects("_notifyCollectionChanged")
@@ -1556,7 +1550,7 @@ add_task(async function test_command_sync() {
     getClientFxaDeviceId.restore();
   } finally {
     await cleanup();
-    await engine._tracker.clearChangedIDs();
+    engine._tracker.clearChangedIDs();
 
     try {
       server.deleteCollections("foo");
@@ -1751,22 +1745,6 @@ add_task(async function test_other_clients_notified_on_first_sync() {
 
 add_task(async function device_disconnected_notification_updates_known_stale_clients() {
   const spyUpdate = sinon.spy(engine, "updateKnownStaleClients");
-
-  Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
-                               JSON.stringify({ isLocalDevice: false }));
-  await Service.asyncObserver.promiseObserversComplete();
-  ok(spyUpdate.calledOnce, "updateKnownStaleClients should be called");
-  spyUpdate.reset();
-
-  Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
-                               JSON.stringify({ isLocalDevice: true }));
-  await Service.asyncObserver.promiseObserversComplete();
-  ok(spyUpdate.notCalled, "updateKnownStaleClients should not be called");
-
-  spyUpdate.restore();
-});
-
-add_task(async function update_known_stale_clients() {
   const makeFakeClient = (id) => ({ id, fxaDeviceId: `fxa-${id}` });
   const clients = [makeFakeClient("one"), makeFakeClient("two"), makeFakeClient("three")];
   const stubRemoteClients = sinon.stub(engine._store, "_remoteClients").get(() => {
@@ -1777,12 +1755,26 @@ add_task(async function update_known_stale_clients() {
   });
 
   engine._knownStaleFxADeviceIds = null;
-  await engine.updateKnownStaleClients();
+  Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
+                               JSON.stringify({ isLocalDevice: false }));
+  ok(spyUpdate.calledOnce, "updateKnownStaleClients should be called");
   ok(clients[0].stale);
   ok(clients[1].stale);
   ok(!clients[2].stale);
+  spyUpdate.reset();
+
+  ok(engine._knownStaleFxADeviceIds);
+  Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
+                               JSON.stringify({ isLocalDevice: false }));
+  ok(spyUpdate.calledOnce, "updateKnownStaleClients should be called");
+  spyUpdate.reset();
+
+  Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
+                               JSON.stringify({ isLocalDevice: true }));
+  ok(spyUpdate.notCalled, "updateKnownStaleClients should not be called");
 
   stubRemoteClients.restore();
+  spyUpdate.restore();
   stubRefresh.restore();
 });
 

@@ -11,7 +11,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(async function test_authenticated_request() {
+add_test(function test_authenticated_request() {
   _("Ensure that sending a MAC authenticated GET request works as expected.");
 
   let message = "Great Success!";
@@ -41,10 +41,12 @@ add_task(async function test_authenticated_request() {
   auth = sig.getHeader();
 
   let req = new TokenAuthenticatedRESTRequest(uri, {id, key}, extra);
-  let error = await new Promise(res => req.get(res));
+  let cb = Async.makeSpinningCallback();
+  req.get(cb);
+  let result = cb.wait();
 
-  Assert.equal(null, error);
+  Assert.equal(null, result);
   Assert.equal(message, req.response.body);
 
-  await promiseStopServer(server);
+  server.stop(run_next_test);
 });

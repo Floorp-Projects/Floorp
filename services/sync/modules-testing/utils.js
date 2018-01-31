@@ -193,9 +193,9 @@ this.configureFxAccountIdentity = function(authService,
   fxa.internal._fxAccountsClient = mockFxAClient;
 
   let mockTSC = { // TokenServerClient
-    async getTokenFromBrowserIDAssertion(uri, assertion) {
+    getTokenFromBrowserIDAssertion(uri, assertion, cb) {
       config.fxaccount.token.uid = config.username;
-      return config.fxaccount.token;
+      cb(null, config.fxaccount.token);
     },
   };
   authService._fxaService = fxa;
