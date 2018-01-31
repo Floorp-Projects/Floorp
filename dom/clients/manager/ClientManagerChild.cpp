@@ -14,7 +14,6 @@
 namespace mozilla {
 namespace dom {
 
-using mozilla::dom::workers::WorkerHolderToken;
 using mozilla::dom::workers::WorkerPrivate;
 
 void

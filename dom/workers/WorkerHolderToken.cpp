@@ -8,7 +8,10 @@
 
 #include "WorkerPrivate.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
+
+using namespace workers;
 
 // static
 already_AddRefed<WorkerHolderToken>
@@ -110,4 +113,5 @@ WorkerHolderToken::Notify(Status aStatus)
   return true;
 }
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
