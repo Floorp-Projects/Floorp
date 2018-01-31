@@ -357,6 +357,7 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
         masm.jump(ool->rejoin());
         return;
       }
+      case CacheKind::UnaryArith:
       case CacheKind::Call:
       case CacheKind::Compare:
       case CacheKind::TypeOf:

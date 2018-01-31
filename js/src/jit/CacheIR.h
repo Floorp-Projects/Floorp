@@ -163,7 +163,8 @@ class TypedOperandId : public OperandId
     _(GetIterator)          \
     _(Compare)              \
     _(ToBool)               \
-    _(Call)
+    _(Call)                 \
+    _(UnaryArith)
 
 enum class CacheKind : uint8_t
 {
@@ -285,6 +286,8 @@ extern const char* CacheKindNames[];
     _(LoadStringResult)                   \
     _(LoadInstanceOfObjectResult)         \
     _(LoadTypeOfObjectResult)             \
+    _(Int32NotResult)                     \
+    _(Int32NegationResult)                \
     _(LoadInt32TruthyResult)              \
     _(LoadDoubleTruthyResult)             \
     _(LoadStringTruthyResult)             \
@@ -963,6 +966,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         buffer_.writeByte(uint32_t(hasOwn));
     }
 
+    void int32NotResult(Int32OperandId id) {
+        writeOpWithOperandId(CacheOp::Int32NotResult, id);
+    }
+    void int32NegationResult(Int32OperandId id) {
+        writeOpWithOperandId(CacheOp::Int32NegationResult, id);
+    }
     void loadBooleanResult(bool val) {
         writeOp(CacheOp::LoadBooleanResult);
         buffer_.writeByte(uint32_t(val));
@@ -1715,6 +1724,23 @@ class MOZ_RAII GetIntrinsicIRGenerator : public IRGenerator
   public:
     GetIntrinsicIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode,
                             HandleValue val);
+
+    bool tryAttachStub();
+};
+
+class MOZ_RAII UnaryArithIRGenerator : public IRGenerator
+{
+    JSOp op_;
+    HandleValue val_;
+    HandleValue res_;
+
+    bool tryAttachInt32();
+
+    void trackAttached(const char* name);
+
+  public:
+    UnaryArithIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode,
+                          JSOp op, HandleValue val, HandleValue res);
 
     bool tryAttachStub();
 };
