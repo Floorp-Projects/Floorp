@@ -31,7 +31,6 @@ from mozharness.mozilla.building.buildbase import (
 )
 from mozharness.mozilla.l10n.locales import LocalesMixin
 from mozharness.mozilla.mar import MarMixin
-from mozharness.mozilla.mock import MockMixin
 from mozharness.mozilla.release import ReleaseMixin
 from mozharness.mozilla.signing import SigningMixin
 from mozharness.mozilla.updates.balrog import BalrogMixin
@@ -73,7 +72,7 @@ runtime_config_tokens = ('buildid', 'version', 'locale', 'from_buildid',
 
 
 # DesktopSingleLocale {{{1
-class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
+class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
                           VCSMixin, SigningMixin, PurgeMixin, BaseScript,
                           BalrogMixin, MarMixin, VirtualenvMixin, TransferMixin):
     """Manages desktop repacks"""
@@ -161,7 +160,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         ["--disable-mock"], {
          "dest": "disable_mock",
          "action": "store_true",
-         "help": "do not run under mock despite what gecko-config says"}
+         "help": "(deprecated) no-op for CLI compatability with mobile_l10n.py"}
     ], [
         ['--scm-level'], {  # Ignored on desktop for now: see Bug 1414678.
          "action": "store",
@@ -230,9 +229,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         self.pushdate = None
         # upload_files is a dictionary of files to upload, keyed by locale.
         self.upload_files = {}
-
-        if 'mock_target' in self.config:
-            self.enable_mock()
 
     def _pre_config_lock(self, rw_config):
         """replaces 'configuration_tokens' with their values, before the
@@ -713,12 +709,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         return self._mach(target=target, env=env)
 
     def _get_mach_executable(self):
-        python = sys.executable
-        # A mock environment is a special case, the system python isn't
-        # available there
-        if 'mock_target' in self.config:
-            python = 'python2.7'
-        return [python, 'mach']
+        return [sys.executable, 'mach']
 
     def _get_make_executable(self):
         config = self.config
@@ -992,10 +983,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         if not manifest_src and not toolchains:
             return
         python = sys.executable
-        # A mock environment is a special case, the system python isn't
-        # available there
-        if 'mock_target' in self.config:
-            python = 'python2.7'
 
         cmd = [
             python, '-u',
@@ -1041,9 +1028,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         # could create the virtualenv as an action, but due to some odd
         # dependencies with query_build_env() being called from build(), which
         # is necessary before the virtualenv can be created.
-        self.disable_mock()
         self.create_virtualenv()
-        self.enable_mock()
         self.activate_virtualenv()
 
         branch = self.config['branch']
