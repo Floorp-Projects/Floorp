@@ -14,6 +14,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/dom/Performance.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
@@ -33,7 +34,6 @@
 #include "nsLayoutUtils.h"
 #include "nsPIWindowRoot.h"
 #include "nsRFPService.h"
-#include "WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {

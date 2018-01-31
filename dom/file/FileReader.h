@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/WorkerHolder.h"
 
 #include "nsIAsyncInputStream.h"
 #include "nsIInterfaceRequestor.h"
@@ -16,7 +17,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsWeakReference.h"
-#include "WorkerHolder.h"
 
 #define NS_PROGRESS_EVENT_INTERVAL 50
 

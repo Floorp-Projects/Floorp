@@ -64,7 +64,6 @@ UNIFIED_SOURCES += [
 
 LOCAL_INCLUDES += [
     '/dom/file/ipc',
-    '/dom/workers',
 ]
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']

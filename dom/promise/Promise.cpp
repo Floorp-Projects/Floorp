@@ -19,6 +19,8 @@
 #include "mozilla/dom/MediaStreamError.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRunnable.h"
 
 #include "jsfriendapi.h"
 #include "js/StructuredClone.h"
@@ -32,8 +34,6 @@
 #include "PromiseDebugging.h"
 #include "PromiseNativeHandler.h"
 #include "PromiseWorkerProxy.h"
-#include "WorkerPrivate.h"
-#include "WorkerRunnable.h"
 #include "WrapperFactory.h"
 #include "xpcpublic.h"
 

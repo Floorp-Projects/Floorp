@@ -18,6 +18,8 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileReaderBinding.h"
 #include "mozilla/dom/ProgressEvent.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/Encoding.h"
 #include "nsAlgorithm.h"
 #include "nsCycleCollectionParticipant.h"
@@ -26,9 +28,6 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "xpcpublic.h"
-
-#include "WorkerPrivate.h"
-#include "WorkerScope.h"
 
 namespace mozilla {
 namespace dom {

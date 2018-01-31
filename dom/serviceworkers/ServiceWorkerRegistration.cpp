@@ -15,6 +15,9 @@
 #include "mozilla/dom/PushManagerBinding.h"
 #include "mozilla/dom/PushManager.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 #include "nsCycleCollectionParticipant.h"
@@ -28,10 +31,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentUtils.h"
-
-#include "WorkerPrivate.h"
-#include "WorkerCommon.h"
-#include "WorkerScope.h"
 
 using namespace mozilla::dom::workers;
 

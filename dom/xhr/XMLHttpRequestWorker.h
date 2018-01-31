@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_XMLHttpRequestWorker_h
 #define mozilla_dom_XMLHttpRequestWorker_h
 
-#include "WorkerHolder.h"
 #include "XMLHttpRequest.h"
 #include "XMLHttpRequestString.h"
 #include "mozilla/dom/TypedArray.h"
+#include "mozilla/dom/WorkerHolder.h"
 
 namespace mozilla {
 namespace dom {

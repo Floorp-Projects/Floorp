@@ -24,12 +24,10 @@ void
 StartClientManagerOp(Func aFunc, const Arg& aArg, nsISerialEventTarget* aTarget,
                      Resolve aResolve, Reject aReject)
 {
-  using mozilla::dom::WorkerStatus::Closing;
-
   RefPtr<WorkerHolderToken> token;
   if (!NS_IsMainThread()) {
     token = WorkerHolderToken::Create(workers::GetCurrentThreadWorkerPrivate(),
-                                      Closing);
+                                      mozilla::dom::WorkerStatus::Closing);
   }
 
   RefPtr<ClientOpPromise> promise = aFunc(aArg, aTarget);

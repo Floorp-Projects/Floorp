@@ -17,6 +17,7 @@
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/URL.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 #include "nsDOMString.h"
 
@@ -24,7 +25,6 @@
 #include "FetchStream.h"
 #include "FetchStreamReader.h"
 #include "InternalResponse.h"
-#include "WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {

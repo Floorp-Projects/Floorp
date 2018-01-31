@@ -7,7 +7,7 @@
 #include <limits>
 #include "mozilla/Hal.h"
 #include "ConnectionWorker.h"
-#include "WorkerRunnable.h"
+#include "mozilla/dom/WorkerRunnable.h"
 
 namespace mozilla {
 namespace dom {

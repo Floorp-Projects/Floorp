@@ -1243,7 +1243,9 @@ IsChromeOrXBL(JSContext* cx, JSObject* /* unused */)
     return AccessCheck::isChrome(c) || IsContentXBLCompartment(c) || !AllowContentXBLScope(realm);
 }
 
+namespace workers {
 extern bool IsCurrentThreadRunningChromeWorker();
+}
 
 bool
 ThreadSafeIsChromeOrXBL(JSContext* cx, JSObject* obj)
@@ -1251,7 +1253,7 @@ ThreadSafeIsChromeOrXBL(JSContext* cx, JSObject* obj)
     if (NS_IsMainThread()) {
         return IsChromeOrXBL(cx, obj);
     }
-    return IsCurrentThreadRunningChromeWorker();
+    return workers::IsCurrentThreadRunningChromeWorker();
 }
 
 } // namespace dom

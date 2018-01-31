@@ -10,6 +10,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/FunctionBinding.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
@@ -19,7 +20,6 @@
 #include "nsIScriptTimeoutHandler.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
-#include "WorkerPrivate.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

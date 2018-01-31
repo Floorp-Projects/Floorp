@@ -82,8 +82,8 @@
 #include "mozilla/dom/FormData.h"
 #include "nsIDocShell.h"
 
-#include "WorkerPrivate.h"
-#include "WorkerRunnable.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRunnable.h"
 
 #if defined(XP_LINUX)
 #include "mozilla/Hal.h"
