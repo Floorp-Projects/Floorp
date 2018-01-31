@@ -61,20 +61,31 @@ class Locale {
     const nsACString& GetRegion() const;
     const nsTArray<nsCString>& GetVariants() const;
 
-    bool IsValid();
-    const nsCString AsString();
+    bool IsValid() const {
+      return mIsValid;
+    }
+
+    const nsCString AsString() const;
 
     bool Matches(const Locale& aOther, bool aThisRange, bool aOtherRange) const;
     bool AddLikelySubtags();
     void ClearVariants();
     void ClearRegion();
 
+    // Mark the object as invalid, meaning we shouldn't use it any more.
+    void Invalidate() {
+      mIsValid = false;
+    }
+
     bool operator== (const Locale& aOther) {
-      return mLanguage.Equals(aOther.mLanguage) &&
+      // Note: invalid Locale objects are never treated as equal to anything
+      // (even other invalid ones).
+      return IsValid() &&
+             aOther.IsValid() &&
+             mLanguage.Equals(aOther.mLanguage) &&
              mScript.Equals(aOther.mScript) &&
              mRegion.Equals(aOther.mRegion) &&
              mVariants == aOther.mVariants;
-
     }
 
   private:
