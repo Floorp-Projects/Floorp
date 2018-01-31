@@ -2425,7 +2425,7 @@ class CloseNotificationRunnable final
 };
 
 bool
-NotificationWorkerHolder::Notify(Status aStatus)
+NotificationWorkerHolder::Notify(WorkerStatus aStatus)
 {
   if (aStatus >= Canceling) {
     // CloseNotificationRunnable blocks the worker by pushing a sync event loop

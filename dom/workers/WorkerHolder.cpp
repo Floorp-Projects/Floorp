@@ -7,7 +7,8 @@
 #include "WorkerHolder.h"
 #include "WorkerPrivate.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -37,7 +38,8 @@ WorkerHolder::~WorkerHolder()
 }
 
 bool
-WorkerHolder::HoldWorker(WorkerPrivate* aWorkerPrivate, Status aFailStatus)
+WorkerHolder::HoldWorker(WorkerPrivate* aWorkerPrivate,
+                         WorkerStatus aFailStatus)
 {
   AssertOnOwningThread(mThread);
   MOZ_ASSERT(aWorkerPrivate);
@@ -78,4 +80,5 @@ WorkerHolder::ReleaseWorkerInternal()
   }
 }
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace

@@ -794,7 +794,7 @@ private:
   }
 
   bool
-  Notify(Status aStatus)
+  Notify(WorkerStatus aStatus)
   {
     mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -1463,7 +1463,7 @@ public:
   }
 
   virtual bool
-  Notify(Status aStatus) override
+  Notify(WorkerStatus aStatus) override
   {
     mRunnable->Notify(aStatus);
     return true;

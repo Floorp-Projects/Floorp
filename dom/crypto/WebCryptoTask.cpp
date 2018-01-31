@@ -19,8 +19,8 @@
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/dom/WebCryptoTask.h"
 #include "mozilla/dom/WebCryptoThreadPool.h"
+#include "mozilla/dom/WorkerHolder.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/workers/bindings/WorkerHolder.h"
 
 // Template taken from security/nss/lib/util/templates.c
 // This (or SGN_EncodeDigestInfo) would ideally be exported
@@ -39,10 +39,7 @@ const SEC_ASN1Template SGN_DigestInfoTemplate[] = {
 namespace mozilla {
 namespace dom {
 
-using mozilla::dom::workers::Canceling;
 using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
-using mozilla::dom::workers::Status;
-using mozilla::dom::workers::WorkerHolder;
 using mozilla::dom::workers::WorkerPrivate;
 
 // Pre-defined identifiers for telemetry histograms
@@ -169,7 +166,7 @@ public:
   }
 
   virtual bool
-  Notify(Status aStatus) override
+  Notify(WorkerStatus aStatus) override
   {
     NS_ASSERT_OWNINGTHREAD(InternalWorkerHolder);
     // Do nothing here.  Since WebCryptoTask dispatches back to

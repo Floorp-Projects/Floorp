@@ -9,7 +9,12 @@
 
 #include "mozilla/dom/workers/WorkerCommon.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
+
+namespace workers {
+class WorkerPrivate;
+}
 
 /**
  * Use this chart to help figure out behavior during each of the closing
@@ -35,7 +40,7 @@ BEGIN_WORKERS_NAMESPACE
    it'll override our member name */
 #undef Status
 #endif
-enum Status
+enum WorkerStatus
 {
   // Not yet scheduled.
   Pending = 0,
@@ -81,10 +86,11 @@ public:
                         Behavior aBehavior = PreventIdleShutdownStart);
   virtual ~WorkerHolder();
 
-  bool HoldWorker(WorkerPrivate* aWorkerPrivate, Status aFailStatus);
+  bool HoldWorker(workers::WorkerPrivate* aWorkerPrivate,
+                  WorkerStatus aFailStatus);
   void ReleaseWorker();
 
-  virtual bool Notify(Status aStatus) = 0;
+  virtual bool Notify(WorkerStatus aStatus) = 0;
 
   Behavior GetBehavior() const;
 
@@ -97,7 +103,7 @@ public:
 protected:
   void ReleaseWorkerInternal();
 
-  WorkerPrivate* MOZ_NON_OWNING_REF mWorkerPrivate;
+  workers::WorkerPrivate* MOZ_NON_OWNING_REF mWorkerPrivate;
 
 private:
   void AssertIsOwningThread() const;
@@ -109,6 +115,7 @@ private:
   const char* mName;
 };
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
 
 #endif /* mozilla_dom_workers_WorkerHolder_h */

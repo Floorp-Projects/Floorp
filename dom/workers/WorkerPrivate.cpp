@@ -482,10 +482,10 @@ private:
 
 class NotifyRunnable final : public WorkerControlRunnable
 {
-  Status mStatus;
+  WorkerStatus mStatus;
 
 public:
-  NotifyRunnable(WorkerPrivate* aWorkerPrivate, Status aStatus)
+  NotifyRunnable(WorkerPrivate* aWorkerPrivate, WorkerStatus aStatus)
   : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
     mStatus(aStatus)
   {
@@ -968,7 +968,7 @@ public:
     : WorkerHolder("SimpleWorkerHolder")
   {}
 
-  virtual bool Notify(Status aStatus) override { return true; }
+  virtual bool Notify(WorkerStatus aStatus) override { return true; }
 };
 
 } /* anonymous namespace */
@@ -1865,7 +1865,7 @@ WorkerPrivateParent<Derived>::Start()
 // aCx is null when called from the finalizer
 template <class Derived>
 bool
-WorkerPrivateParent<Derived>::NotifyPrivate(Status aStatus)
+WorkerPrivateParent<Derived>::NotifyPrivate(WorkerStatus aStatus)
 {
   AssertIsOnParentThread();
 
@@ -3164,7 +3164,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     aParent->AssertIsOnWorkerThread();
 
     // If the parent is going away give up now.
-    Status parentStatus;
+    WorkerStatus parentStatus;
     {
       MutexAutoLock lock(aParent->mMutex);
       parentStatus = aParent->mStatus;
@@ -3471,7 +3471,7 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
   Maybe<JSAutoCompartment> workerCompartment;
 
   for (;;) {
-    Status currentStatus, previousStatus;
+    WorkerStatus currentStatus, previousStatus;
     bool debuggerRunnablesPending = false;
     bool normalRunnablesPending = false;
 
@@ -4202,7 +4202,7 @@ WorkerPrivate::AddChildWorker(ParentType* aChildWorker)
 
 #ifdef DEBUG
   {
-    Status currentStatus;
+    WorkerStatus currentStatus;
     {
       MutexAutoLock lock(mMutex);
       currentStatus = mStatus;
@@ -4236,7 +4236,7 @@ WorkerPrivate::RemoveChildWorker(ParentType* aChildWorker)
 }
 
 bool
-WorkerPrivate::AddHolder(WorkerHolder* aHolder, Status aFailStatus)
+WorkerPrivate::AddHolder(WorkerHolder* aHolder, WorkerStatus aFailStatus)
 {
   AssertIsOnWorkerThread();
 
@@ -4278,7 +4278,7 @@ WorkerPrivate::RemoveHolder(WorkerHolder* aHolder)
 }
 
 void
-WorkerPrivate::NotifyHolders(JSContext* aCx, Status aStatus)
+WorkerPrivate::NotifyHolders(JSContext* aCx, WorkerStatus aStatus)
 {
   AssertIsOnWorkerThread();
   MOZ_ASSERT(!JS_IsExceptionPending(aCx));
@@ -4352,7 +4352,7 @@ WorkerPrivate::CancelAllTimeouts()
 }
 
 already_AddRefed<nsIEventTarget>
-WorkerPrivate::CreateNewSyncLoop(Status aFailStatus)
+WorkerPrivate::CreateNewSyncLoop(WorkerStatus aFailStatus)
 {
   AssertIsOnWorkerThread();
 
@@ -4737,7 +4737,7 @@ WorkerPrivate::ReportErrorToDebugger(const nsAString& aFilename,
 }
 
 bool
-WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
+WorkerPrivate::NotifyInternal(JSContext* aCx, WorkerStatus aStatus)
 {
   AssertIsOnWorkerThread();
 
@@ -4746,7 +4746,7 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
   RefPtr<EventTarget> eventTarget;
 
   // Save the old status and set the new status.
-  Status previousStatus;
+  WorkerStatus previousStatus;
   {
     MutexAutoLock lock(mMutex);
 
@@ -4904,7 +4904,7 @@ WorkerPrivate::SetTimeout(JSContext* aCx,
 
   const int32_t timerId = mNextTimeoutId++;
 
-  Status currentStatus;
+  WorkerStatus currentStatus;
   {
     MutexAutoLock lock(mMutex);
     currentStatus = mStatus;

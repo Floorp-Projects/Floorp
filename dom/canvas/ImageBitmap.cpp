@@ -1355,7 +1355,7 @@ public:
     , mNotified(false)
   {}
 
-  bool Notify(Status aStatus) override
+  bool Notify(WorkerStatus aStatus) override
   {
     if (!mNotified) {
       mNotified = true;

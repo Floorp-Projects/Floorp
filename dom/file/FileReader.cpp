@@ -834,7 +834,7 @@ FileReader::DecreaseBusyCounter()
 }
 
 bool
-FileReader::Notify(Status aStatus)
+FileReader::Notify(WorkerStatus aStatus)
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();

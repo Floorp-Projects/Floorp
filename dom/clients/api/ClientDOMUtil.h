@@ -24,7 +24,7 @@ void
 StartClientManagerOp(Func aFunc, const Arg& aArg, nsISerialEventTarget* aTarget,
                      Resolve aResolve, Reject aReject)
 {
-  using mozilla::dom::workers::Closing;
+  using mozilla::dom::WorkerStatus::Closing;
   using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
 
   RefPtr<WorkerHolderToken> token;
