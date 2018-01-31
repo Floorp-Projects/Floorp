@@ -25,7 +25,6 @@ config = {
     'base_name': 'OS X 10.7 %(branch)s_Artifact_build',
     'platform': 'macosx64',
     'stage_platform': 'macosx64-debug',
-    'publish_nightly_en_US_routes': False,
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'HG_SHARE_BASE_DIR': '/builds/hg-shared',

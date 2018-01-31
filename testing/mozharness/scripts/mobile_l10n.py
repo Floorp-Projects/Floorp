@@ -41,7 +41,6 @@ from mozharness.mozilla.mock import MockMixin
 from mozharness.mozilla.secrets import SecretsMixin
 from mozharness.mozilla.updates.balrog import BalrogMixin
 from mozharness.base.python import VirtualenvMixin
-from mozharness.mozilla.taskcluster_helper import Taskcluster
 
 
 # MobileSingleLocale {{{1
@@ -144,16 +143,12 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
                 "validate-repacks-signed",
                 "upload-repacks",
                 "create-virtualenv",
-                "taskcluster-upload",
                 "submit-to-balrog",
                 "summary",
             ],
             'config': {
-                'taskcluster_credentials_file': 'oauth.txt',
                 'virtualenv_modules': [
                     'requests==2.8.1',
-                    'PyHawk-with-a-single-extra-commit==0.1.5',
-                    'taskcluster==0.0.26',
                 ],
                 'virtualenv_path': 'venv',
             },
@@ -574,74 +569,6 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         self.summarize_success_count(success_count, total_count,
                                      message="Validated signatures on %d of %d "
                                              "binaries successfully.")
-
-    def taskcluster_upload(self):
-        auth = os.path.join(os.getcwd(), self.config['taskcluster_credentials_file'])
-        credentials = {}
-        execfile(auth, credentials)
-        client_id = credentials.get('taskcluster_clientId')
-        access_token = credentials.get('taskcluster_accessToken')
-        if not client_id or not access_token:
-            self.warning('Skipping S3 file upload: No taskcluster credentials.')
-            return
-
-        self.activate_virtualenv()
-
-        dirs = self.query_abs_dirs()
-        locales = self.query_locales()
-        make = self.query_exe("make")
-        upload_env = self.query_upload_env()
-        cwd = dirs['abs_locales_dir']
-        branch = self.config['branch']
-        revision = self.query_revision()
-        repo = self.query_l10n_repo()
-        pushinfo = self.vcs_query_pushinfo(repo, revision, vcs='hg')
-        pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
-        routes_json = os.path.join(self.query_abs_dirs()['abs_mozilla_dir'],
-                                   'testing/mozharness/configs/routes.json')
-        with open(routes_json) as routes_file:
-            contents = json.load(routes_file)
-            templates = contents['l10n']
-
-        for locale in locales:
-            output = self.get_output_from_command_m(
-                "%s echo-variable-UPLOAD_FILES AB_CD=%s" % (make, locale),
-                cwd=cwd,
-                env=upload_env,
-            )
-            files = shlex.split(output)
-            abs_files = [os.path.abspath(os.path.join(cwd, f)) for f in files]
-
-            routes = []
-            fmt = {
-                'index': self.config.get('taskcluster_index', 'index.garbage.staging'),
-                'project': branch,
-                'head_rev': revision,
-                'pushdate': pushdate,
-                'year': pushdate[0:4],
-                'month': pushdate[4:6],
-                'day': pushdate[6:8],
-                'build_product': self.config['stage_product'],
-                'build_name': self.query_build_name(),
-                'build_type': self.query_build_type(),
-                'locale': locale,
-            }
-            for template in templates:
-                routes.append(template.format(**fmt))
-
-            self.info('Using routes: %s' % routes)
-            tc = Taskcluster(branch,
-                             pushinfo.pushdate,  # Use pushdate as the rank
-                             client_id,
-                             access_token,
-                             self.log_obj,
-                             )
-            task = tc.create_task(routes)
-            tc.claim_task(task)
-
-            for upload_file in abs_files:
-                tc.create_artifact(task, upload_file)
-            tc.report_completed(task)
 
     def upload_repacks(self):
         c = self.config

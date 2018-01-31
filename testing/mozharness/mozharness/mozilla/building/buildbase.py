@@ -19,7 +19,6 @@ import time
 import uuid
 import copy
 import glob
-import shlex
 from itertools import chain
 
 # import the power of mozharness ;)
@@ -47,7 +46,6 @@ from mozharness.mozilla.signing import SigningMixin
 from mozharness.mozilla.testing.errors import TinderBoxPrintRe
 from mozharness.mozilla.testing.unittest import tbox_print_summary
 from mozharness.mozilla.updates.balrog import BalrogMixin
-from mozharness.mozilla.taskcluster_helper import Taskcluster
 from mozharness.base.python import (
     PerfherderResourceOptionsMixin,
     VirtualenvMixin,
@@ -1367,229 +1365,6 @@ or run without that action (ie: --no-{action})"
 
         self.generated_build_props = True
 
-    def _initialize_taskcluster(self):
-        if self.client_id and self.access_token:
-            # Already initialized
-            return
-
-        dirs = self.query_abs_dirs()
-        auth = os.path.join(os.getcwd(), self.config['taskcluster_credentials_file'])
-        credentials = {}
-        execfile(auth, credentials)
-        self.client_id = credentials.get('taskcluster_clientId')
-        self.access_token = credentials.get('taskcluster_accessToken')
-
-        # We need to create & activate the virtualenv so that we can import
-        # taskcluster (and its dependent modules, like requests and hawk).
-        # Normally we could create the virtualenv as an action, but due to some
-        # odd dependencies with query_build_env() being called from build(),
-        # which is necessary before the virtualenv can be created.
-        self.create_virtualenv()
-        self.activate_virtualenv()
-
-        routes_file = os.path.join(dirs['abs_src_dir'],
-                                   'testing',
-                                   'mozharness',
-                                   'configs',
-                                   'routes.json')
-        with open(routes_file) as f:
-            self.routes_json = json.load(f)
-
-    def _taskcluster_upload(self, files, templates, locale='en-US',
-                            property_conditions=[]):
-        if not self.client_id or not self.access_token:
-            self.warning('Skipping S3 file upload: No taskcluster credentials.')
-            return
-
-        dirs = self.query_abs_dirs()
-        repo = self._query_repo()
-        revision = self.query_revision()
-        pushinfo = self.vcs_query_pushinfo(repo, revision)
-        pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
-
-        index = self.config.get('taskcluster_index', 'index.garbage.staging')
-        fmt = {
-            'index': index,
-            'project': self.buildbot_config['properties']['branch'],
-            'head_rev': revision,
-            'pushdate': pushdate,
-            'pushid': pushinfo.pushid,
-            'year': pushdate[0:4],
-            'month': pushdate[4:6],
-            'day': pushdate[6:8],
-            'build_product': self.config['stage_product'],
-            'build_name': self.query_build_name(),
-            'build_type': self.query_build_type(),
-            'locale': locale,
-        }
-        fmt.update(self.buildid_to_dict(self.query_buildid()))
-        routes = []
-        for template in templates:
-            routes.append(template.format(**fmt))
-        self.info("Using routes: %s" % routes)
-
-        taskid = self.buildbot_config['properties'].get('upload_to_task_id')
-        tc = Taskcluster(
-            branch=self.branch,
-            rank=pushinfo.pushdate, # Use pushdate as the rank
-            client_id=self.client_id,
-            access_token=self.access_token,
-            log_obj=self.log_obj,
-            # `upload_to_task_id` is used by mozci to have access to where the artifacts
-            # will be uploaded
-            task_id=taskid,
-        )
-
-        if taskid:
-            task = tc.get_task(taskid)
-        else:
-            task = tc.create_task(routes)
-        tc.claim_task(task)
-
-        # Only those files uploaded with valid extensions are processed.
-        # This ensures that we get the correct packageUrl from the list.
-        valid_extensions = (
-            '.apk',
-            '.dmg',
-            '.mar',
-            '.rpm',
-            '.tar.bz2',
-            '.tar.gz',
-            '.zip',
-            '.json',
-        )
-
-        for upload_file in files:
-            # Create an S3 artifact for each file that gets uploaded. We also
-            # check the uploaded file against the property conditions so that we
-            # can set the buildbot config with the correct URLs for package
-            # locations.
-            tc.create_artifact(task, upload_file)
-            if upload_file.endswith(valid_extensions):
-                for prop, condition in property_conditions:
-                    if condition(upload_file):
-                        self.set_buildbot_property(prop, tc.get_taskcluster_url(upload_file))
-                        break
-
-        # Upload a file with all Buildbot properties
-        # This is necessary for Buildbot Bridge test jobs work properly
-        # until we can migrate to TaskCluster
-        properties_path = os.path.join(
-            dirs['base_work_dir'],
-            'buildbot_properties.json'
-        )
-        self._generate_properties_file(properties_path)
-        tc.create_artifact(task, properties_path)
-
-        tc.report_completed(task)
-
-    def upload_files(self):
-        self._initialize_taskcluster()
-        dirs = self.query_abs_dirs()
-
-        if self.query_is_nightly():
-            templates = self.routes_json['nightly']
-
-            # Nightly builds with l10n counterparts also publish to the
-            # 'en-US' locale.
-            if self.config.get('publish_nightly_en_US_routes'):
-                templates.extend(self.routes_json['l10n'])
-        else:
-            templates = self.routes_json['routes']
-
-        # Some trees may not be setting uploadFiles, so default to []. Normally
-        # we'd only expect to get here if the build completes successfully,
-        # which means we should have uploadFiles.
-        files = self.query_buildbot_property('uploadFiles') or []
-        if not files:
-            self.warning('No files from the build system to upload to S3: uploadFiles property is missing or empty.')
-
-        packageName = self.query_buildbot_property('packageFilename')
-        self.info('packageFilename is: %s' % packageName)
-
-        if self.config.get('use_package_as_marfile'):
-            self.info('Using packageUrl for the MAR file')
-            self.set_buildbot_property('completeMarUrl',
-                                       self.query_buildbot_property('packageUrl'),
-                                       write_to_file=True)
-
-            # Find the full path to the package in uploadFiles so we can
-            # get the size/hash of the mar
-            for upload_file in files:
-                if upload_file.endswith(packageName):
-                    self.set_buildbot_property('completeMarSize',
-                                               self.query_filesize(upload_file),
-                                               write_to_file=True)
-                    self.set_buildbot_property('completeMarHash',
-                                               self.query_sha512sum(upload_file),
-                                               write_to_file=True)
-                    break
-
-        property_conditions = [
-            # key: property name, value: condition
-            ('symbolsUrl', lambda m: m.endswith('crashreporter-symbols.zip') or
-                           m.endswith('crashreporter-symbols-full.zip')),
-            ('testsUrl', lambda m: m.endswith(('tests.tar.bz2', 'tests.zip'))),
-            ('robocopApkUrl', lambda m: m.endswith('apk') and 'robocop' in m),
-            ('jsshellUrl', lambda m: 'jsshell-' in m and m.endswith('.zip')),
-            # Temporarily use "TC" in MarUrl parameters. We don't want to
-            # override these to point to taskcluster just yet, and still
-            # need to use FTP. However, they can't be removed outright since
-            # that can affect packageUrl. See bug 1144985.
-            ('completeMarUrlTC', lambda m: m.endswith('.complete.mar')),
-            ('partialMarUrlTC', lambda m: m.endswith('.mar') and '.partial.' in m),
-            ('codeCoverageURL', lambda m: m.endswith('code-coverage-gcno.zip')),
-            ('sdkUrl', lambda m: m.endswith(('sdk.tar.bz2', 'sdk.zip'))),
-            ('testPackagesUrl', lambda m: m.endswith('test_packages.json')),
-            ('packageUrl', lambda m: m.endswith(packageName)),
-        ]
-
-        # Also upload our mozharness log files
-        files.extend([os.path.join(self.log_obj.abs_log_dir, x) for x in self.log_obj.log_files.values()])
-
-        # Also upload our buildprops.json file.
-        files.extend([os.path.join(dirs['base_work_dir'], 'buildprops.json')])
-
-        self._taskcluster_upload(files, templates,
-                                 property_conditions=property_conditions)
-
-    def _set_file_properties(self, file_name, find_dir, prop_type,
-                             error_level=ERROR):
-        c = self.config
-        dirs = self.query_abs_dirs()
-
-        # windows fix. even bash -c loses two single slashes.
-        find_dir = find_dir.replace('\\', '\\\\\\\\')
-
-        error_msg = "Not setting props: %s{Filename, Size, Hash}" % prop_type
-        cmd = ["bash", "-c",
-               "find %s -maxdepth 1 -type f -name %s" % (find_dir, file_name)]
-        file_path = self.get_output_from_command(cmd, dirs['abs_work_dir'])
-        if not file_path:
-            self.error(error_msg)
-            self.error("Can't determine filepath with cmd: %s" % (str(cmd),))
-            return
-
-        cmd = [
-            self.query_exe('openssl'), 'dgst',
-            '-%s' % (c.get("hash_type", "sha512"),), file_path
-        ]
-        hash_prop = self.get_output_from_command(cmd, dirs['abs_work_dir'])
-        if not hash_prop:
-            self.log("undetermined hash_prop with cmd: %s" % (str(cmd),),
-                     level=error_level)
-            self.log(error_msg, level=error_level)
-            return
-        self.set_buildbot_property(prop_type + 'Filename',
-                                   os.path.split(file_path)[1],
-                                   write_to_file=True)
-        self.set_buildbot_property(prop_type + 'Size',
-                                   os.path.getsize(file_path),
-                                   write_to_file=True)
-        self.set_buildbot_property(prop_type + 'Hash',
-                                   hash_prop.strip().split(' ', 2)[1],
-                                   write_to_file=True)
-
     def _create_mozbuild_dir(self, mozbuild_path=None):
         if not mozbuild_path:
             env = self.query_build_env()
@@ -1665,7 +1440,6 @@ or run without that action (ie: --no-{action})"
         if not self.query_is_nightly():
             self.info("Not a nightly build, skipping multi l10n.")
             return
-        self._initialize_taskcluster()
 
         dirs = self.query_abs_dirs()
         base_work_dir = dirs['base_work_dir']
@@ -1748,10 +1522,6 @@ or run without that action (ie: --no-{action})"
             upload_files_cmd,
             cwd=objdir,
         )
-        files = shlex.split(output)
-        abs_files = [os.path.abspath(os.path.join(objdir, f)) for f in files]
-        self._taskcluster_upload(abs_files, self.routes_json['l10n'],
-                                 locale='multi')
 
     def postflight_build(self):
         """grabs properties from post build and calls ccache -s"""
@@ -1917,20 +1687,15 @@ or run without that action (ie: --no-{action})"
         import zipfile
 
         dirs = self.query_abs_dirs()
-        packageName = self.query_buildbot_property('packageFilename')
 
-        # if packageName is not set because we are not running in Buildbot,
-        # then assume we are using MOZ_SIMPLE_PACKAGE_NAME, which means the
-        # package is named one of target.{tar.bz2,zip,dmg}.
-        if not packageName:
-            dist_dir = os.path.join(dirs['abs_obj_dir'], 'dist')
-            for ext in ['apk', 'dmg', 'tar.bz2', 'zip']:
-                name = 'target.' + ext
-                if os.path.exists(os.path.join(dist_dir, name)):
-                    packageName = name
-                    break
-            else:
-                self.fatal("could not determine packageName")
+        dist_dir = os.path.join(dirs['abs_obj_dir'], 'dist')
+        for ext in ['apk', 'dmg', 'tar.bz2', 'zip']:
+            name = 'target.' + ext
+            if os.path.exists(os.path.join(dist_dir, name)):
+                packageName = name
+                break
+        else:
+            self.fatal("could not determine packageName")
 
         interests = ['libxul.so', 'classes.dex', 'omni.ja']
         installer = os.path.join(dirs['abs_obj_dir'], 'dist', packageName)

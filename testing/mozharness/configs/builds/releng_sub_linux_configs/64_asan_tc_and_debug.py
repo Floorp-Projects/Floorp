@@ -8,7 +8,6 @@ config = {
         # 'update',
     ],
     'stage_platform': 'linux64-asan-debug',
-    'publish_nightly_en_US_routes': False,
     'build_type': 'asan-debug',
     'debug_build': True,
     'platform_supports_post_upload_to_latest': False,

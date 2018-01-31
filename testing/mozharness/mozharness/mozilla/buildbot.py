@@ -145,40 +145,6 @@ class BuildbotMixin(object):
             contents += "%s:%s\n" % (prop, self.buildbot_properties.get(prop, "None"))
         return self.write_to_file(file_name, contents)
 
-    def query_build_name(self):
-        build_name = self.config.get('platform')
-        if not build_name:
-            self.fatal('Must specify "platform" in the mozharness config for indexing')
-
-        return build_name
-
-    def query_build_type(self):
-        if self.config.get('build_type'):
-            build_type = self.config['build_type']
-        elif self.config.get('pgo_build'):
-            build_type = 'pgo'
-        elif self.config.get('debug_build', False):
-            build_type = 'debug'
-        else:
-            build_type = 'opt'
-        return build_type
-
-    def buildid_to_dict(self, buildid):
-        """Returns an dict with the year, month, day, hour, minute, and second
-           as keys, as parsed from the buildid"""
-        buildidDict = {}
-        try:
-            # strptime is no good here because it strips leading zeros
-            buildidDict['year'] = buildid[0:4]
-            buildidDict['month'] = buildid[4:6]
-            buildidDict['day'] = buildid[6:8]
-            buildidDict['hour'] = buildid[8:10]
-            buildidDict['minute'] = buildid[10:12]
-            buildidDict['second'] = buildid[12:14]
-        except:
-            self.fatal('Could not parse buildid into YYYYMMDDHHMMSS: %s' % buildid)
-        return buildidDict
-
     def query_who(self):
         """ looks for who triggered the build with a change.
 
