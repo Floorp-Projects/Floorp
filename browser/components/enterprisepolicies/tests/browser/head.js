@@ -4,8 +4,8 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "FileTestUtils",
-                                  "resource://testing-common/FileTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "FileTestUtils",
+                               "resource://testing-common/FileTestUtils.jsm");
 
 async function setupPolicyEngineWithJson(json, customSchema) {
   let filePath;
