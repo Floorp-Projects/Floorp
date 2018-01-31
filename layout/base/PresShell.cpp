@@ -1826,6 +1826,9 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
     // (Do this in a script runner, since our caller might have a script
     // blocker on the stack.)
     nsContentUtils::AddScriptRunner(new XBLConstructorRunner(mDocument));
+
+    // XBLConstructorRunner might destroy us.
+    NS_ENSURE_STATE(!mHaveShutDown);
   }
 
   NS_ASSERTION(rootFrame, "How did that happen?");
