@@ -37,11 +37,11 @@ public:
 
   // |aInputStream| must be a non-blocking, non-async inputSteam.
   static nsresult
-  Create(already_AddRefed<nsIInputStream> aInputStream,
+  Create(nsIInputStream* aInputStream,
          nsIAsyncInputStream** aAsyncInputStream);
 
 private:
-  explicit NonBlockingAsyncInputStream(already_AddRefed<nsIInputStream> aInputStream);
+  explicit NonBlockingAsyncInputStream(nsIInputStream* aInputStream);
   ~NonBlockingAsyncInputStream();
 
   nsCOMPtr<nsIInputStream> mInputStream;
