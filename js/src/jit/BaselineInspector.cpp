@@ -334,11 +334,9 @@ BaselineInspector::expectedResultType(jsbytecode* pc)
             return MIRType::Double;
         return MIRType::Int32;
       case ICStub::BinaryArith_BooleanWithInt32:
-      case ICStub::UnaryArith_Int32:
       case ICStub::BinaryArith_DoubleWithInt32:
         return MIRType::Int32;
       case ICStub::BinaryArith_Double:
-      case ICStub::UnaryArith_Double:
         return MIRType::Double;
       case ICStub::BinaryArith_StringConcat:
       case ICStub::BinaryArith_StringObjectConcat:
