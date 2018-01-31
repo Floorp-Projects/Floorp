@@ -4,10 +4,10 @@
 
 use {AlphaType, BorderDetails, BorderDisplayItem, BorderRadius, BorderWidths, BoxShadowClipMode};
 use {BoxShadowDisplayItem, ClipAndScrollInfo, ClipChainId, ClipChainItem, ClipDisplayItem, ClipId};
-use {ColorF, ComplexClipRegion, DisplayItem, ExtendMode, FilterOp, FontInstanceKey, GlyphInstance};
-use {GlyphOptions, Gradient, GradientDisplayItem, GradientStop, IframeDisplayItem};
-use {ImageDisplayItem, ImageKey, ImageMask, ImageRendering, LayerPrimitiveInfo, LayoutPoint};
-use {LayoutPrimitiveInfo, LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D};
+use {ColorF, ComplexClipRegion, DisplayItem, ExtendMode, ExternalScrollId, FilterOp};
+use {FontInstanceKey, GlyphInstance, GlyphOptions, Gradient, GradientDisplayItem, GradientStop};
+use {IframeDisplayItem, ImageDisplayItem, ImageKey, ImageMask, ImageRendering, LayerPrimitiveInfo};
+use {LayoutPoint, LayoutPrimitiveInfo, LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D};
 use {LineDisplayItem, LineOrientation, LineStyle, LocalClip, MixBlendMode, PipelineId};
 use {PropertyBinding, PushStackingContextDisplayItem, RadialGradient, RadialGradientDisplayItem};
 use {RectangleDisplayItem, ScrollFrameDisplayItem, ScrollPolicy, ScrollSensitivity, Shadow};
@@ -192,7 +192,8 @@ impl<'a> BuiltDisplayListIter<'a> {
             cur_item: DisplayItem {
                 // Dummy data, will be overwritten by `next`
                 item: SpecificDisplayItem::PopStackingContext,
-                clip_and_scroll: ClipAndScrollInfo::simple(ClipId::new(0, PipelineId::dummy())),
+                clip_and_scroll:
+                    ClipAndScrollInfo::simple(ClipId::root_scroll_node(PipelineId::dummy())),
                 info: LayoutPrimitiveInfo::new(LayoutRect::zero()),
             },
             cur_stops: ItemRange::default(),
@@ -1337,11 +1338,9 @@ impl DisplayListBuilder {
         self.push_iter(stops);
     }
 
-    fn generate_clip_id(&mut self, id: Option<ClipId>) -> ClipId {
-        id.unwrap_or_else(|| {
-            self.next_clip_id += 1;
-            ClipId::Clip(self.next_clip_id - 1, self.pipeline_id)
-        })
+    fn generate_clip_id(&mut self) -> ClipId {
+        self.next_clip_id += 1;
+        ClipId::Clip(self.next_clip_id - 1, self.pipeline_id)
     }
 
     fn generate_clip_chain_id(&mut self) -> ClipChainId {
@@ -1351,7 +1350,7 @@ impl DisplayListBuilder {
 
     pub fn define_scroll_frame<I>(
         &mut self,
-        id: Option<ClipId>,
+        external_id: Option<ExternalScrollId>,
         content_rect: LayoutRect,
         clip_rect: LayoutRect,
         complex_clips: I,
@@ -1364,8 +1363,8 @@ impl DisplayListBuilder {
     {
         let parent = self.clip_stack.last().unwrap().scroll_node_id;
         self.define_scroll_frame_with_parent(
-            id,
             parent,
+            external_id,
             content_rect,
             clip_rect,
             complex_clips,
@@ -1375,8 +1374,8 @@ impl DisplayListBuilder {
 
     pub fn define_scroll_frame_with_parent<I>(
         &mut self,
-        id: Option<ClipId>,
         parent: ClipId,
+        external_id: Option<ExternalScrollId>,
         content_rect: LayoutRect,
         clip_rect: LayoutRect,
         complex_clips: I,
@@ -1387,9 +1386,10 @@ impl DisplayListBuilder {
         I: IntoIterator<Item = ComplexClipRegion>,
         I::IntoIter: ExactSizeIterator + Clone,
     {
-        let id = self.generate_clip_id(id);
+        let id = self.generate_clip_id();
         let item = SpecificDisplayItem::ScrollFrame(ScrollFrameDisplayItem {
             id,
+            external_id,
             image_mask,
             scroll_sensitivity,
         });
@@ -1418,7 +1418,6 @@ impl DisplayListBuilder {
 
     pub fn define_clip<I>(
         &mut self,
-        id: Option<ClipId>,
         clip_rect: LayoutRect,
         complex_clips: I,
         image_mask: Option<ImageMask>,
@@ -1429,16 +1428,15 @@ impl DisplayListBuilder {
     {
         let parent = self.clip_stack.last().unwrap().scroll_node_id;
         self.define_clip_with_parent(
-            id,
             parent,
             clip_rect,
             complex_clips,
-            image_mask)
+            image_mask
+        )
     }
 
     pub fn define_clip_with_parent<I>(
         &mut self,
-        id: Option<ClipId>,
         parent: ClipId,
         clip_rect: LayoutRect,
         complex_clips: I,
@@ -1448,7 +1446,7 @@ impl DisplayListBuilder {
         I: IntoIterator<Item = ComplexClipRegion>,
         I::IntoIter: ExactSizeIterator + Clone,
     {
-        let id = self.generate_clip_id(id);
+        let id = self.generate_clip_id();
         let item = SpecificDisplayItem::Clip(ClipDisplayItem {
             id,
             image_mask: image_mask,
@@ -1464,7 +1462,6 @@ impl DisplayListBuilder {
 
     pub fn define_sticky_frame(
         &mut self,
-        id: Option<ClipId>,
         frame_rect: LayoutRect,
         margins: SideOffsets2D<Option<f32>>,
         vertical_offset_bounds: StickyOffsetBounds,
@@ -1472,7 +1469,7 @@ impl DisplayListBuilder {
         previously_applied_offset: LayoutVector2D,
 
     ) -> ClipId {
-        let id = self.generate_clip_id(id);
+        let id = self.generate_clip_id();
         let item = SpecificDisplayItem::StickyFrame(StickyFrameDisplayItem {
             id,
             margins,

@@ -214,6 +214,7 @@ pub enum ScrollSensitivity {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ScrollFrameDisplayItem {
     pub id: ClipId,
+    pub external_id: Option<ExternalScrollId>,
     pub image_mask: Option<ImageMask>,
     pub scroll_sensitivity: ScrollSensitivity,
 }
@@ -751,7 +752,6 @@ pub struct ClipChainId(pub u64, pub PipelineId);
 pub enum ClipId {
     Clip(u64, PipelineId),
     ClipChain(ClipChainId),
-    ClipExternalId(u64, PipelineId),
     DynamicallyAddedNode(u64, PipelineId),
 }
 
@@ -764,29 +764,11 @@ impl ClipId {
         ClipId::DynamicallyAddedNode(0, pipeline_id)
     }
 
-    pub fn new(id: u64, pipeline_id: PipelineId) -> ClipId {
-        // We do this because it is very easy to create accidentally create something that
-        // seems like a root scroll node, but isn't one.
-        if id == 0 {
-            return ClipId::root_scroll_node(pipeline_id);
-        }
-
-        ClipId::ClipExternalId(id, pipeline_id)
-    }
-
     pub fn pipeline_id(&self) -> PipelineId {
         match *self {
             ClipId::Clip(_, pipeline_id) |
             ClipId::ClipChain(ClipChainId(_, pipeline_id)) |
-            ClipId::ClipExternalId(_, pipeline_id) |
             ClipId::DynamicallyAddedNode(_, pipeline_id) => pipeline_id,
-        }
-    }
-
-    pub fn external_id(&self) -> Option<u64> {
-        match *self {
-            ClipId::ClipExternalId(id, _) => Some(id),
-            _ => None,
         }
     }
 
@@ -795,5 +777,25 @@ impl ClipId {
             ClipId::Clip(0, _) => true,
             _ => false,
         }
+    }
+}
+
+/// An external identifier that uniquely identifies a scroll frame independent of its ClipId, which
+/// may change from frame to frame. This should be unique within a pipeline. WebRender makes no
+/// attempt to ensure uniqueness. The zero value is reserved for use by the root scroll node of
+/// every pipeline, which always has an external id.
+///
+/// When setting display lists with the `preserve_frame_state` this id is used to preserve scroll
+/// offsets between different sets of ClipScrollNodes which are ScrollFrames.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub struct ExternalScrollId(pub u64, pub PipelineId);
+
+impl ExternalScrollId {
+    pub fn pipeline_id(&self) -> PipelineId {
+        self.1
+    }
+
+    pub fn is_root(&self) -> bool {
+        self.0 == 0
     }
 }
