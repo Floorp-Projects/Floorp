@@ -8,6 +8,7 @@
 #ifndef nsTSubstringTuple_h
 #define nsTSubstringTuple_h
 
+#include "mozilla/Attributes.h"
 #include "nsTStringRepr.h"
 
 /**
@@ -20,7 +21,7 @@
  * referenced outside the string code.
  */
 template <typename T>
-class nsTSubstringTuple
+class MOZ_TEMPORARY_CLASS nsTSubstringTuple
 {
 public:
 
