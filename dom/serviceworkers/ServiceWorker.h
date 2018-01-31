@@ -86,6 +86,9 @@ public:
   bool
   MatchesDescriptor(const ServiceWorkerDescriptor& aDescriptor) const;
 
+  void
+  DisconnectFromOwner() override;
+
 private:
   ServiceWorker(nsIGlobalObject* aWindow,
                 const ServiceWorkerDescriptor& aDescriptor,
