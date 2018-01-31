@@ -1268,7 +1268,7 @@ nsNSSCertList::SegmentCertificateChain(/* out */ nsCOMPtr<nsIX509Cert>& aRoot,
   }
 
   if (!aRoot || !aEndEntity) {
-    // No self-sigend (or empty) chains allowed
+    // No self-signed (or empty) chains allowed
     return NS_ERROR_INVALID_ARG;
   }
 
