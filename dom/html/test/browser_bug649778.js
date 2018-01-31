@@ -4,13 +4,12 @@
 var testPath = "http://mochi.test:8888/browser/dom/html/test/";
 var popup;
 
-var {LoadContextInfo} = ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm", null);
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", null);
 
 function checkCache(url, inMemory, shouldExist, cb)
 {
   var cache = Services.cache2;
-  var storage = cache.diskCacheStorage(LoadContextInfo.default, false);
+  var storage = cache.diskCacheStorage(Services.loadContextInfo.default, false);
 
   function CheckCacheListener(inMemory, shouldExist)
   {

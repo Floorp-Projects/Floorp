@@ -47,7 +47,7 @@ function store_entries(cb)
   asyncOpenCacheEntry(entries[store_idx][0],
                       entries[store_idx][2],
                       Ci.nsICacheStorage.OPEN_TRUNCATE,
-                      LoadContextInfo.custom(false,
+                      Services.loadContextInfo.custom(false,
                         {privateBrowsingId : entries[store_idx][3] ? 0 : 1}),
                       store_data,
                       appCache);
@@ -88,7 +88,7 @@ function check_entries(cb, pbExited)
   asyncOpenCacheEntry(entries[check_idx][0],
                       entries[check_idx][2],
                       Ci.nsICacheStorage.OPEN_READONLY,
-                      LoadContextInfo.custom(false,
+                      Services.loadContextInfo.custom(false,
                         {privateBrowsingId : entries[check_idx][3] ? 0 : 1}),
                       check_data,
                       appCache);
