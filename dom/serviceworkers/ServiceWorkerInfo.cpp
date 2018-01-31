@@ -34,7 +34,7 @@ NS_IMETHODIMP
 ServiceWorkerInfo::GetScriptSpec(nsAString& aScriptSpec)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  CopyUTF8toUTF16(mScriptSpec, aScriptSpec);
+  CopyUTF8toUTF16(mDescriptor.ScriptURL(), aScriptSpec);
   return NS_OK;
 }
 
@@ -120,7 +120,7 @@ ServiceWorkerInfo::AppendWorker(ServiceWorker* aWorker)
 #ifdef DEBUG
   nsAutoString workerURL;
   aWorker->GetScriptURL(workerURL);
-  MOZ_ASSERT(workerURL.Equals(NS_ConvertUTF8toUTF16(mScriptSpec)));
+  MOZ_ASSERT(workerURL.Equals(NS_ConvertUTF8toUTF16(mDescriptor.ScriptURL())));
 #endif
   MOZ_ASSERT(!mInstances.Contains(aWorker));
 
@@ -135,7 +135,7 @@ ServiceWorkerInfo::RemoveWorker(ServiceWorker* aWorker)
 #ifdef DEBUG
   nsAutoString workerURL;
   aWorker->GetScriptURL(workerURL);
-  MOZ_ASSERT(workerURL.Equals(NS_ConvertUTF8toUTF16(mScriptSpec)));
+  MOZ_ASSERT(workerURL.Equals(NS_ConvertUTF8toUTF16(mDescriptor.ScriptURL())));
 #endif
   MOZ_ASSERT(mInstances.Contains(aWorker));
 
@@ -223,7 +223,6 @@ ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
   : mPrincipal(aPrincipal)
   , mDescriptor(GetNextID(), aPrincipal, aScope, aScriptSpec,
                 ServiceWorkerState::Parsed)
-  , mScriptSpec(aScriptSpec)
   , mCacheName(aCacheName)
   , mImportsLoadFlags(aImportsLoadFlags)
   , mCreationTime(PR_Now())
@@ -238,7 +237,7 @@ ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(mPrincipal);
   // cache origin attributes so we can use them off main thread
   mOriginAttributes = mPrincipal->OriginAttributesRef();
-  MOZ_ASSERT(!mScriptSpec.IsEmpty());
+  MOZ_ASSERT(!mDescriptor.ScriptURL().IsEmpty());
   MOZ_ASSERT(!mCacheName.IsEmpty());
 
   // Scripts of a service worker should always be loaded bypass service workers.
