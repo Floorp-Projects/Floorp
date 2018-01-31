@@ -25,7 +25,7 @@ enum class ServiceWorkerState : uint8_t;
 // accurate. Currently the only variable field is the ServiceWorkerState.
 class ServiceWorkerDescriptor final
 {
-  // This class is largely a wrapper wround an IPDL generated struct.  We
+  // This class is largely a wrapper around an IPDL generated struct.  We
   // need the wrapper class since IPDL generated code includes windows.h
   // which is in turn incompatible with bindings code.
   UniquePtr<IPCServiceWorkerDescriptor> mData;
