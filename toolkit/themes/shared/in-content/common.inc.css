@@ -886,10 +886,12 @@ xul|treechildren::-moz-tree-row {
 }
 
 /* Color needs to be set on tree cell in order to be applied */
-xul|treechildren::-moz-tree-cell-text {
+xul|treechildren::-moz-tree-cell-text,
+xul|treechildren::-moz-tree-image {
   color: var(--in-content-text-color);
 }
 
-xul|treechildren::-moz-tree-cell-text(selected) {
+xul|treechildren::-moz-tree-cell-text(selected),
+xul|treechildren::-moz-tree-image(selected) {
   color: var(--in-content-selected-text);
 }

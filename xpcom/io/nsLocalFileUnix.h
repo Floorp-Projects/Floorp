@@ -103,10 +103,6 @@ public:
 #endif
   NS_DECL_NSIHASHABLE
 
-public:
-  static void GlobalInit();
-  static void GlobalShutdown();
-
 private:
   nsLocalFile(const nsLocalFile& aOther);
   ~nsLocalFile()

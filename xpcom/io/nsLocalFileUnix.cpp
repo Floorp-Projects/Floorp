@@ -2201,20 +2201,6 @@ NS_NewLocalFile(const nsAString& aPath, bool aFollowLinks, nsIFile** aResult)
   return NS_NewNativeLocalFile(buf, aFollowLinks, aResult);
 }
 
-//-----------------------------------------------------------------------------
-// global init/shutdown
-//-----------------------------------------------------------------------------
-
-void
-nsLocalFile::GlobalInit()
-{
-}
-
-void
-nsLocalFile::GlobalShutdown()
-{
-}
-
 // nsILocalFileMac
 
 #ifdef MOZ_WIDGET_COCOA

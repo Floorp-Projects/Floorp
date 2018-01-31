@@ -4,6 +4,7 @@
   <title>Test for permissions</title>
   <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
   <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
@@ -121,9 +122,7 @@ function makeTest(manifestPermissions, optionalPermissions, checkFetch = true) {
       is(result, false, "fetch() failed from content script due to lack of host permission");
     }
 
-    // Request some permissions
-    let winutils = SpecialPowers.getDOMWindowUtils(win);
-    winutils.sendKeyEvent("keypress", KeyEvent.DOM_VK_A, 0, 0);
+    synthesizeKey("a", {code: "KeyA"}, win);
     result = await extension.awaitMessage("request.result");
     is(result, true, "permissions.request() succeeded");
 

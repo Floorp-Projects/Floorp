@@ -196,24 +196,26 @@ nsIDocument::DocumentTheme Gecko_GetDocumentLWTheme(const nsIDocument* aDocument
 
 // Attributes.
 #define SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(prefix_, implementor_)  \
-  nsAtom* prefix_##AtomAttrValue(implementor_ element, nsAtom* attribute);  \
-  nsAtom* prefix_##LangValue(implementor_ element);                          \
-  bool prefix_##HasAttr(implementor_ element, nsAtom* ns, nsAtom* name);    \
-  bool prefix_##AttrEquals(implementor_ element, nsAtom* ns, nsAtom* name,  \
-                           nsAtom* str, bool ignoreCase);                    \
-  bool prefix_##AttrDashEquals(implementor_ element, nsAtom* ns,             \
-                               nsAtom* name, nsAtom* str, bool ignore_case);\
-  bool prefix_##AttrIncludes(implementor_ element, nsAtom* ns,               \
-                             nsAtom* name, nsAtom* str, bool ignore_case);  \
-  bool prefix_##AttrHasSubstring(implementor_ element, nsAtom* ns,           \
-                                 nsAtom* name, nsAtom* str,                 \
+  nsAtom* prefix_##AtomAttrValue(implementor_ element, nsAtom* attribute);    \
+  nsAtom* prefix_##LangValue(implementor_ element);                           \
+  bool prefix_##HasAttr(implementor_ element, nsAtom* ns, nsAtom* name);      \
+  bool prefix_##AttrEquals(implementor_ element, nsAtom* ns, nsAtom* name,    \
+                           nsAtom* str, bool ignoreCase);                     \
+  bool prefix_##AttrDashEquals(implementor_ element, nsAtom* ns,              \
+                               nsAtom* name, nsAtom* str, bool ignore_case);  \
+  bool prefix_##AttrIncludes(implementor_ element, nsAtom* ns,                \
+                             nsAtom* name, nsAtom* str, bool ignore_case);    \
+  bool prefix_##AttrHasSubstring(implementor_ element, nsAtom* ns,            \
+                                 nsAtom* name, nsAtom* str,                   \
                                  bool ignore_case);                           \
-  bool prefix_##AttrHasPrefix(implementor_ element, nsAtom* ns,              \
-                              nsAtom* name, nsAtom* str, bool ignore_case); \
-  bool prefix_##AttrHasSuffix(implementor_ element, nsAtom* ns,              \
-                              nsAtom* name, nsAtom* str, bool ignore_case); \
-  uint32_t prefix_##ClassOrClassList(implementor_ element, nsAtom** class_,  \
-                                     nsAtom*** classList);
+  bool prefix_##AttrHasPrefix(implementor_ element, nsAtom* ns,               \
+                              nsAtom* name, nsAtom* str, bool ignore_case);   \
+  bool prefix_##AttrHasSuffix(implementor_ element, nsAtom* ns,               \
+                              nsAtom* name, nsAtom* str, bool ignore_case);   \
+  uint32_t prefix_##ClassOrClassList(implementor_ element, nsAtom** class_,   \
+                                     nsAtom*** classList);                    \
+  bool prefix_##HasClass(implementor_ element, nsAtom* class_,                \
+                         bool ignore_case);
 
 SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_, RawGeckoElementBorrowed)
 SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_Snapshot,

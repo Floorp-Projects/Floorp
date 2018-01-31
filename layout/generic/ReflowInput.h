@@ -247,7 +247,7 @@ public:
   static void* DisplayInitOffsetsEnter(
                                      nsIFrame* aFrame,
                                      SizeComputationInput* aState,
-                                     const mozilla::LogicalSize& aPercentBasis,
+                                     nscoord aPercentBasis,
                                      WritingMode aCBWritingMode,
                                      const nsMargin* aBorder,
                                      const nsMargin* aPadding);
@@ -263,19 +263,12 @@ private:
    *
    * @param aWM Writing mode of the containing block
    * @param aPercentBasis
-   *    Logical size in the writing mode of the containing block to use
-   *    for resolving percentage margin values in the inline and block
-   *    axes.
-   *    The inline size is usually the containing block inline-size
-   *    (width if writing mode is horizontal, and height if vertical).
-   *    The block size is usually the containing block inline-size, per
-   *    CSS21 sec 8.3 (read in conjunction with CSS Writing Modes sec
-   *    7.2), but may be the containing block block-size, e.g. in CSS3
-   *    Flexbox and Grid.
+   *    Inline size of the containing block (in its own writing mode), to use
+   *    for resolving percentage margin values in the inline and block axes.
    * @return true if the margin is dependent on the containing block size.
    */
   bool ComputeMargin(mozilla::WritingMode aWM,
-                     const mozilla::LogicalSize& aPercentBasis);
+                     nscoord aPercentBasis);
 
   /**
    * Computes padding values from the specified padding style information, and
@@ -283,24 +276,17 @@ private:
    *
    * @param aWM Writing mode of the containing block
    * @param aPercentBasis
-   *    Logical size in the writing mode of the containing block to use
-   *    for resolving percentage padding values in the inline and block
-   *    axes.
-   *    The inline size is usually the containing block inline-size
-   *    (width if writing mode is horizontal, and height if vertical).
-   *    The block size is usually the containing block inline-size, per
-   *    CSS21 sec 8.3 (read in conjunction with CSS Writing Modes sec
-   *    7.2), but may be the containing block block-size, e.g. in CSS3
-   *    Flexbox and Grid.
+   *    Inline size of the containing block (in its own writing mode), to use
+   *    for resolving percentage padding values in the inline and block axes.
    * @return true if the padding is dependent on the containing block size.
    */
   bool ComputePadding(mozilla::WritingMode aWM,
-                      const mozilla::LogicalSize& aPercentBasis,
+                      nscoord aPercentBasis,
                       mozilla::LayoutFrameType aFrameType);
 
 protected:
   void InitOffsets(mozilla::WritingMode aWM,
-                   const mozilla::LogicalSize& aPercentBasis,
+                   nscoord aPercentBasis,
                    mozilla::LayoutFrameType aFrameType,
                    ReflowInputFlags aFlags,
                    const nsMargin* aBorder = nullptr,

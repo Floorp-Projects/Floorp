@@ -99,29 +99,6 @@ function checkUnmodifiedForm(formNum) {
 }
 
 /**
- * Mochitest gives us a sendKey(), but it's targeted to a specific element.
- * This basically sends an untargeted key event, to whatever's focused.
- */
-function doKey(aKey, modifier) {
-  var keyName = "DOM_VK_" + aKey.toUpperCase();
-  var key = KeyEvent[keyName];
-
-  // undefined --> null
-  if (!modifier)
-    modifier = null;
-
-  // Window utils for sending fake sey events.
-  var wutils = SpecialPowers.wrap(window).
-               QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
-               getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
-
-  if (wutils.sendKeyEvent("keydown", key, 0, modifier)) {
-    wutils.sendKeyEvent("keypress", key, 0, modifier);
-  }
-  wutils.sendKeyEvent("keyup", key, 0, modifier);
-}
-
-/**
  * Init with a common login
  * If selfFilling is true or non-undefined, fires an event at the page so that
  * the test can start checking filled-in values. Tests that check observer

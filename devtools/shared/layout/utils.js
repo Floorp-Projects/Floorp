@@ -439,47 +439,6 @@ function getFrameContentOffset(frame) {
 }
 
 /**
- * Find an element from the given coordinates. This method descends through
- * frames to find the element the user clicked inside frames.
- *
- * @param {DOMDocument} document
- *        The document to look into.
- * @param {Number} x
- * @param {Number} y
- * @return {DOMNode}
- *         the element node found at the given coordinates, or null if no node
- *         was found
- */
-function getElementFromPoint(document, x, y) {
-  let node = document.elementFromPoint(x, y);
-  if (node && node.contentDocument) {
-    if (ChromeUtils.getClassName(node) === "HTMLIFrameElement") {
-      let rect = node.getBoundingClientRect();
-
-      // Gap between the frame and its content window.
-      let [offsetTop, offsetLeft] = getFrameContentOffset(node);
-
-      x -= rect.left + offsetLeft;
-      y -= rect.top + offsetTop;
-
-      if (x < 0 || y < 0) {
-        // Didn't reach the content document, still over the frame.
-        return node;
-      }
-    }
-    if (ChromeUtils.getClassName(node) === "HTMLIFrameElement" ||
-        ChromeUtils.getClassName(node) === "HTMLFrameElement") {
-      let subnode = getElementFromPoint(node.contentDocument, x, y);
-      if (subnode) {
-        node = subnode;
-      }
-    }
-  }
-  return node;
-}
-exports.getElementFromPoint = getElementFromPoint;
-
-/**
  * Check if a node and its document are still alive
  * and attached to the window.
  *
