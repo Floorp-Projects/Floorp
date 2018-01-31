@@ -24,8 +24,8 @@
 #include "mozilla/dom/PerformanceNavigationTiming.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
-#include "WorkerPrivate.h"
-#include "WorkerRunnable.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRunnable.h"
 
 #ifdef MOZ_GECKO_PROFILER
 #include "ProfilerMarkerPayload.h"
@@ -35,8 +35,6 @@
 
 namespace mozilla {
 namespace dom {
-
-using namespace workers;
 
 namespace {
 
@@ -94,7 +92,7 @@ Performance::CreateForMainThread(nsPIDOMWindowInner* aWindow,
 }
 
 /* static */ already_AddRefed<Performance>
-Performance::CreateForWorker(workers::WorkerPrivate* aWorkerPrivate)
+Performance::CreateForWorker(WorkerPrivate* aWorkerPrivate)
 {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
@@ -543,7 +541,7 @@ Performance::IsObserverEnabled(JSContext* aCx, JSObject* aGlobal)
     return Preferences::GetBool("dom.enable_performance_observer", false);
   }
 
-  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  WorkerPrivate* workerPrivate = workers::GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 

@@ -45,10 +45,10 @@
 #include "InternalRequest.h"
 #include "InternalResponse.h"
 
-#include "WorkerCommon.h"
-#include "WorkerPrivate.h"
-#include "WorkerRunnable.h"
-#include "WorkerScope.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/dom/WorkerScope.h"
 
 namespace mozilla {
 namespace dom {
@@ -174,7 +174,7 @@ public:
   {}
 
   bool
-  Notify(Status aStatus) override;
+  Notify(WorkerStatus aStatus) override;
 };
 
 class WorkerFetchResolver final : public FetchDriverObserver
@@ -190,7 +190,7 @@ class WorkerFetchResolver final : public FetchDriverObserver
 public:
   // Returns null if worker is shutting down.
   static already_AddRefed<WorkerFetchResolver>
-  Create(workers::WorkerPrivate* aWorkerPrivate, Promise* aPromise,
+  Create(WorkerPrivate* aWorkerPrivate, Promise* aPromise,
          AbortSignal* aSignal, FetchObserver* aObserver)
   {
     MOZ_ASSERT(aWorkerPrivate);
@@ -780,7 +780,7 @@ public:
 };
 
 bool
-WorkerNotifier::Notify(Status aStatus)
+WorkerNotifier::Notify(WorkerStatus aStatus)
 {
   if (mResolver) {
     // This will nullify this object.
@@ -871,7 +871,7 @@ WorkerFetchResolver::FlushConsoleReport()
     return;
   }
 
-  workers::WorkerPrivate* worker = mPromiseProxy->GetWorkerPrivate();
+  WorkerPrivate* worker = mPromiseProxy->GetWorkerPrivate();
   if (!worker) {
     mReporter->FlushReportsToConsole(0);
     return;

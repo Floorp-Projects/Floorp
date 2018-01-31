@@ -9,24 +9,22 @@
 
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
-#include "WorkerHolder.h"
+#include "mozilla/dom/WorkerHolder.h"
 
 namespace mozilla {
 
-namespace workers {
 class WorkerPrivate;
-} // namespace workers
 
 namespace dom {
 namespace cache {
 
 class ActorChild;
 
-class CacheWorkerHolder final : public workers::WorkerHolder
+class CacheWorkerHolder final : public WorkerHolder
 {
 public:
   static already_AddRefed<CacheWorkerHolder>
-  Create(workers::WorkerPrivate* aWorkerPrivate,
+  Create(WorkerPrivate* aWorkerPrivate,
          Behavior aBehavior);
 
   static already_AddRefed<CacheWorkerHolder>
@@ -38,7 +36,7 @@ public:
   bool Notified() const;
 
   // WorkerHolder methods
-  virtual bool Notify(workers::Status aStatus) override;
+  virtual bool Notify(WorkerStatus aStatus) override;
 
 private:
   explicit CacheWorkerHolder(Behavior aBehavior);

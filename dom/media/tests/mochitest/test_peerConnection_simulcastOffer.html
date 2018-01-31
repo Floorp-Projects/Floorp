@@ -14,8 +14,6 @@
     visible: true
   });
 
-  const pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
-
   function addRIDExtension(pc, extensionId) {
     const receivers = pc._pc.getReceivers();
     is(receivers.length, 1, "We have exactly one RTP receiver");

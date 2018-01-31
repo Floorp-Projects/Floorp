@@ -7,7 +7,7 @@
 #include <limits>
 #include "mozilla/Hal.h"
 #include "ConnectionWorker.h"
-#include "WorkerRunnable.h"
+#include "mozilla/dom/WorkerRunnable.h"
 
 namespace mozilla {
 namespace dom {
@@ -36,7 +36,7 @@ public:
   void Notify(const hal::NetworkInformation& aNetworkInfo) override;
 
   // Worker notification
-  virtual bool Notify(Status aStatus) override
+  virtual bool Notify(WorkerStatus aStatus) override
   {
     Shutdown();
     return true;

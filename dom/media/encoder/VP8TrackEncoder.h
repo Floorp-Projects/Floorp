@@ -80,6 +80,11 @@ private:
   nsTArray<uint8_t> mI420Frame;
 
   /**
+   * A duration of non-key frames in milliseconds.
+  */
+  StreamTime mDurationSinceLastKeyframe;
+
+  /**
    * A local segment queue which takes the raw data out from mRawSegment in the
    * call of GetEncodedTrack().
    */

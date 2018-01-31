@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_XMLHttpRequestWorker_h
 #define mozilla_dom_XMLHttpRequestWorker_h
 
-#include "WorkerHolder.h"
 #include "XMLHttpRequest.h"
 #include "XMLHttpRequestString.h"
 #include "mozilla/dom/TypedArray.h"
+#include "mozilla/dom/WorkerHolder.h"
 
 namespace mozilla {
 namespace dom {
@@ -18,13 +18,10 @@ namespace dom {
 class Proxy;
 class SendRunnable;
 class DOMString;
-
-namespace workers {
 class WorkerPrivate;
-}
 
 class XMLHttpRequestWorker final : public XMLHttpRequest,
-                                   public workers::WorkerHolder
+                                   public WorkerHolder
 {
 public:
   struct StateData
@@ -51,7 +48,7 @@ public:
 
 private:
   RefPtr<XMLHttpRequestUpload> mUpload;
-  workers::WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
   RefPtr<Proxy> mProxy;
   XMLHttpRequestResponseType mResponseType;
   StateData mStateData;
@@ -81,7 +78,7 @@ public:
   Unpin();
 
   bool
-  Notify(workers::Status aStatus) override;
+  Notify(WorkerStatus aStatus) override;
 
   virtual uint16_t
   ReadyState() const override
@@ -285,7 +282,7 @@ public:
   }
 
 private:
-  explicit XMLHttpRequestWorker(workers::WorkerPrivate* aWorkerPrivate);
+  explicit XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate);
   ~XMLHttpRequestWorker();
 
   enum ReleaseType { Default, XHRIsGoingAway, WorkerIsGoingAway };

@@ -43,10 +43,10 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/WorkerScope.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 #include "js/Conversions.h"
 #include "js/TypeDecls.h"
-#include "WorkerPrivate.h"
 #include "xpcpublic.h"
 
 using namespace mozilla;

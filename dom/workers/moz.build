@@ -9,6 +9,13 @@ with Files("**"):
 
 # Public stuff.
 EXPORTS.mozilla.dom += [
+    'SharedWorker.h',
+    'WorkerCommon.h',
+    'WorkerDebugger.h',
+    'WorkerDebuggerManager.h',
+    'WorkerHolder.h',
+    'WorkerHolderToken.h',
+    'WorkerLoadInfo.h',
     'WorkerLocation.h',
     'WorkerNavigator.h',
     'WorkerPrivate.h',
@@ -16,19 +23,11 @@ EXPORTS.mozilla.dom += [
     'WorkerScope.h',
 ]
 
-EXPORTS.mozilla.dom.workers += [
+# Private stuff.
+EXPORTS.mozilla.dom.workerinternals += [
+    'JSSettings.h',
+    'Queue.h',
     'RuntimeService.h',
-    'WorkerCommon.h',
-    'WorkerDebugger.h',
-    'WorkerDebuggerManager.h',
-    'WorkerLoadInfo.h',
-]
-
-# Stuff needed for the bindings, not really public though.
-EXPORTS.mozilla.dom.workers.bindings += [
-    'SharedWorker.h',
-    'WorkerHolder.h',
-    'WorkerHolderToken.h',
 ]
 
 XPIDL_MODULE = 'dom_workers'
@@ -49,6 +48,7 @@ UNIFIED_SOURCES += [
     'WorkerDebugger.cpp',
     'WorkerDebuggerManager.cpp',
     'WorkerError.cpp',
+    'WorkerEventTarget.cpp',
     'WorkerHolder.cpp',
     'WorkerHolderToken.cpp',
     'WorkerLoadInfo.cpp',

@@ -1782,50 +1782,6 @@ WebrtcVideoConduit::SelectSendFrameRate(const VideoCodecConfig* codecConfig,
   return new_framerate;
 }
 
-MediaConduitErrorCode
-WebrtcVideoConduit::SendVideoFrame(const unsigned char* video_buffer,
-                                   unsigned int video_length,
-                                   unsigned short width,
-                                   unsigned short height,
-                                   VideoType video_type,
-                                   uint64_t capture_time)
-{
-  // check for parameter sanity
-  if (!video_buffer || video_length == 0 || width == 0 || height == 0) {
-    CSFLogError(LOGTAG, "%s Invalid Parameters ", __FUNCTION__);
-    MOZ_ASSERT(false);
-    return kMediaConduitMalformedArgument;
-  }
-  MOZ_ASSERT(video_type == VideoType::kVideoI420);
-
-  // Transmission should be enabled before we insert any frames.
-  if (!mEngineTransmitting) {
-    CSFLogError(LOGTAG, "%s Engine not transmitting ", __FUNCTION__);
-    return kMediaConduitSessionNotInited;
-  }
-
-  // insert the frame to video engine in I420 format only
-  const int stride_y = width;
-  const int stride_uv = (width + 1) / 2;
-
-  const uint8_t* buffer_y = video_buffer;
-  const uint8_t* buffer_u = buffer_y + stride_y * height;
-  const uint8_t* buffer_v = buffer_u + stride_uv * ((height + 1) / 2);
-  rtc::Callback0<void> callback_unused;
-  rtc::scoped_refptr<webrtc::WrappedI420Buffer> video_frame_buffer(
-    new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
-      width, height,
-      buffer_y, stride_y,
-      buffer_u, stride_uv,
-      buffer_v, stride_uv,
-      callback_unused));
-
-  webrtc::VideoFrame video_frame(video_frame_buffer, capture_time,
-                                 capture_time, webrtc::kVideoRotation_0); // XXX
-
-  return SendVideoFrame(video_frame);
-}
-
 void
 WebrtcVideoConduit::AddOrUpdateSink(
   rtc::VideoSinkInterface<webrtc::VideoFrame>* sink,

@@ -105,7 +105,6 @@ LOCAL_INCLUDES += [
     '/db/sqlite3/src',
     '/dom/base',
     '/dom/storage',
-    '/dom/workers',
     '/ipc/glue',
     '/xpcom/build',
     '/xpcom/threads',

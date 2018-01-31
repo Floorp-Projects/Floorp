@@ -8,7 +8,7 @@
 #define mozilla_dom_serviceworkerprivate_h
 
 #include "nsCOMPtr.h"
-#include "WorkerPrivate.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 #define NOTIFICATION_CLICK_EVENT_NAME "notificationclick"
 #define NOTIFICATION_CLOSE_EVENT_NAME "notificationclose"
@@ -211,7 +211,7 @@ private:
   // The WorkerPrivate object can only be closed by this class or by the
   // RuntimeService class if gecko is shutting down. Closing the worker
   // multiple times is OK, since the second attempt will be a no-op.
-  RefPtr<workers::WorkerPrivate> mWorkerPrivate;
+  RefPtr<WorkerPrivate> mWorkerPrivate;
 
   nsCOMPtr<nsITimer> mIdleWorkerTimer;
 
@@ -231,7 +231,7 @@ private:
 
   // Array of function event worker runnables that are pending due to
   // the worker activating.  Main thread only.
-  nsTArray<RefPtr<workers::WorkerRunnable>> mPendingFunctionalEvents;
+  nsTArray<RefPtr<WorkerRunnable>> mPendingFunctionalEvents;
 };
 
 } // namespace dom

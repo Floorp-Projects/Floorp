@@ -13,7 +13,6 @@
 #include "mozilla/dom/RegisterWorkerDebuggerBindings.h"
 #include "mozilla/OSFileConstants.h"
 
-USING_WORKERS_NAMESPACE
 using namespace mozilla::dom;
 
 bool

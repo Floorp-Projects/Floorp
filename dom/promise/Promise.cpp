@@ -19,6 +19,8 @@
 #include "mozilla/dom/MediaStreamError.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRunnable.h"
 
 #include "jsfriendapi.h"
 #include "js/StructuredClone.h"
@@ -32,8 +34,6 @@
 #include "PromiseDebugging.h"
 #include "PromiseNativeHandler.h"
 #include "PromiseWorkerProxy.h"
-#include "WorkerPrivate.h"
-#include "WorkerRunnable.h"
 #include "WrapperFactory.h"
 #include "xpcpublic.h"
 
@@ -44,8 +44,6 @@ namespace {
 // Generator used by Promise::GetID.
 Atomic<uintptr_t> gIDGenerator(0);
 } // namespace
-
-using namespace workers;
 
 // Promise
 
@@ -496,7 +494,7 @@ Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise)
   RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
   bool isMainThread = MOZ_LIKELY(NS_IsMainThread());
   bool isChrome = isMainThread ? nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(aPromise))
-                               : GetCurrentThreadWorkerPrivate()->IsChromeWorker();
+                               : workers::GetCurrentThreadWorkerPrivate()->IsChromeWorker();
   nsGlobalWindowInner* win = isMainThread
     ? xpc::WindowGlobalOrNull(aPromise)
     : nullptr;
@@ -703,7 +701,7 @@ public:
   }
 
   bool
-  Notify(Status aStatus) override
+  Notify(WorkerStatus aStatus) override
   {
     if (aStatus >= Canceling) {
       mProxy->CleanUp();
@@ -764,7 +762,7 @@ void
 PromiseWorkerProxy::CleanProperties()
 {
 #ifdef DEBUG
-  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(worker);
   worker->AssertIsOnWorkerThread();
 #endif
@@ -817,7 +815,7 @@ Promise*
 PromiseWorkerProxy::WorkerPromise() const
 {
 #ifdef DEBUG
-  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(worker);
   worker->AssertIsOnWorkerThread();
 #endif

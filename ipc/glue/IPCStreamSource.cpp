@@ -13,10 +13,8 @@
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 
-using mozilla::dom::workers::Canceling;
-using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
-using mozilla::dom::workers::Status;
-using mozilla::dom::workers::WorkerPrivate;
+using mozilla::dom::WorkerPrivate;
+using mozilla::dom::WorkerStatus;
 using mozilla::wr::ByteBuffer;
 
 namespace mozilla {
@@ -139,9 +137,9 @@ IPCStreamSource::Initialize()
   // do not need anything special in order to be kept alive.
   WorkerPrivate* workerPrivate = nullptr;
   if (!NS_IsMainThread()) {
-    workerPrivate = GetCurrentThreadWorkerPrivate();
+    workerPrivate = mozilla::dom::workers::GetCurrentThreadWorkerPrivate();
     if (workerPrivate) {
-      bool result = HoldWorker(workerPrivate, Canceling);
+      bool result = HoldWorker(workerPrivate, WorkerStatus::Canceling);
       if (!result) {
         return false;
       }
@@ -163,7 +161,7 @@ IPCStreamSource::ActorConstructed()
 }
 
 bool
-IPCStreamSource::Notify(Status aStatus)
+IPCStreamSource::Notify(WorkerStatus aStatus)
 {
   NS_ASSERT_OWNINGTHREAD(IPCStreamSource);
 

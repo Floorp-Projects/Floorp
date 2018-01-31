@@ -8,7 +8,7 @@
 #define mozilla_dom_workers_WorkerLoadInfo_h
 
 #include "mozilla/dom/ChannelInfo.h"
-#include "mozilla/dom/workers/WorkerCommon.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadContext.h"
@@ -27,12 +27,14 @@ class nsIURI;
 class nsPIDOMWindowInner;
 
 namespace mozilla {
+
 namespace ipc {
 class PrincipalInfo;
 } // namespace ipc
-} // namespace mozilla
 
-BEGIN_WORKERS_NAMESPACE
+namespace dom {
+
+class WorkerPrivate;
 
 struct WorkerLoadInfo
 {
@@ -143,6 +145,7 @@ struct WorkerLoadInfo
                                 nsCOMPtr<nsILoadGroup>& aLoadGroupToCancel);
 };
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
 
 #endif // mozilla_dom_workers_WorkerLoadInfo_h

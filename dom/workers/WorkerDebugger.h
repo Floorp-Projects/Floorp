@@ -7,10 +7,13 @@
 #ifndef mozilla_dom_workers_WorkerDebugger_h
 #define mozilla_dom_workers_WorkerDebugger_h
 
-#include "mozilla/dom/workers/WorkerCommon.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "nsIWorkerDebugger.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
+
+class WorkerPrivate;
 
 class WorkerDebugger : public nsIWorkerDebugger
 {
@@ -53,6 +56,7 @@ private:
                                     const nsAString& aMessage);
 };
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
 
 #endif // mozilla_dom_workers_WorkerDebugger_h

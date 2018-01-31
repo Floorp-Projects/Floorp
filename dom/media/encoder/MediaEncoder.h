@@ -224,6 +224,11 @@ public :
    */
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
+  /**
+   * Set desired video keyframe interval defined in milliseconds.
+   */
+  void SetVideoKeyFrameInterval(int32_t aVideoKeyFrameInterval);
+
 protected:
   ~MediaEncoder();
 
