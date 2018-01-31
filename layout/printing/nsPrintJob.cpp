@@ -300,8 +300,7 @@ GetDocumentTitleAndURL(nsIDocument* aDoc,
   aTitle.Truncate();
   aURLStr.Truncate();
 
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aDoc);
-  doc->GetTitle(aTitle);
+  aDoc->GetTitle(aTitle);
 
   nsIURI* url = aDoc->GetDocumentURI();
   if (!url) return;

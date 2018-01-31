@@ -6706,17 +6706,8 @@ nsDocument::GetTitleElement()
   return first ? first->AsElement() : nullptr;
 }
 
-NS_IMETHODIMP
-nsDocument::GetTitle(nsAString& aTitle)
-{
-  nsString title;
-  GetTitle(title);
-  aTitle = title;
-  return NS_OK;
-}
-
 void
-nsDocument::GetTitle(nsString& aTitle)
+nsDocument::GetTitle(nsAString& aTitle)
 {
   aTitle.Truncate();
 
@@ -6744,18 +6735,19 @@ nsDocument::GetTitle(nsString& aTitle)
   aTitle = tmp;
 }
 
-NS_IMETHODIMP
-nsDocument::SetTitle(const nsAString& aTitle)
+void
+nsDocument::SetTitle(const nsAString& aTitle, ErrorResult& aRv)
 {
   Element* rootElement = GetRootElement();
   if (!rootElement) {
-    return NS_OK;
+    return;
   }
 
 #ifdef MOZ_XUL
   if (rootElement->IsXULElement()) {
-    return rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::title,
-                                aTitle, true);
+    aRv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::title,
+                               aTitle, true);
+    return;
   }
 #endif
 
@@ -6773,7 +6765,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
       NS_NewSVGElement(getter_AddRefs(title), titleInfo.forget(),
                        NOT_FROM_PARSER);
       if (!title) {
-        return NS_OK;
+        return;
       }
       rootElement->InsertChildBefore(title, rootElement->GetFirstChild(), true);
     }
@@ -6781,7 +6773,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
     if (!title) {
       Element* head = GetHeadElement();
       if (!head) {
-        return NS_OK;
+        return;
       }
 
       RefPtr<mozilla::dom::NodeInfo> titleInfo;
@@ -6789,22 +6781,16 @@ nsDocument::SetTitle(const nsAString& aTitle)
           kNameSpaceID_XHTML, ELEMENT_NODE);
       title = NS_NewHTMLTitleElement(titleInfo.forget());
       if (!title) {
-        return NS_OK;
+        return;
       }
 
       head->AppendChildTo(title, true);
     }
   } else {
-    return NS_OK;
+    return;
   }
 
-  return nsContentUtils::SetNodeTextContent(title, aTitle, false);
-}
-
-void
-nsDocument::SetTitle(const nsAString& aTitle, ErrorResult& rv)
-{
-  rv = SetTitle(aTitle);
+  aRv = nsContentUtils::SetNodeTextContent(title, aTitle, false);
 }
 
 void

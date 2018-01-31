@@ -77,11 +77,6 @@ interface nsIDOMDocument : nsIDOMNode
            attribute DOMString      dir;
 
   /**
-   * @see <http://www.whatwg.org/html/#document.title>
-   */
-           attribute DOMString      title;
-
-  /**
    * @see <http://www.whatwg.org/html/#dom-document-readystate>
    */
   readonly attribute DOMString      readyState;
