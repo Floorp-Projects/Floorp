@@ -499,6 +499,13 @@ static void GetKeywordsForProperty(const nsCSSPropertyID aProperty,
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("polygon"));
   } else if (aProperty == eCSSProperty_clip) {
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("rect"));
+  } else if (aProperty == eCSSProperty_list_style_type) {
+    int32_t length;
+    const char* const* values = nsCSSProps::GetListStyleTypes(&length);
+    for (int32_t i = 0; i < length; ++i) {
+      InsertNoDuplicates(aArray, NS_ConvertASCIItoUTF16(values[i]));
+    }
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("symbols"));
   }
 }
 
