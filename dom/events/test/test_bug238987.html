@@ -5,7 +5,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
 -->
 <head>
   <title>Test for Bug 238987</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -20,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
   /** Test for Bug 238987 **/
 
   var shouldStop = false;
-  var modifier = 0;
+  var activateShift = false;
   var expectedResult = "i1,i2,i3,i4,i5,i6,i7,i8,number,i9,i10,i11,i12";
   var forwardFocusArray = expectedResult.split(",");
   var backwardFocusArray = expectedResult.split(",");
@@ -33,13 +34,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
 
   function handleFocus(e) {
     if (e.target.id == "begin") {
-      // if the modifier is set, the test is coming back from the end.
-      if (modifier) {
+      // if the activateShift is set, the test is coming back from the end.
+      if (activateShift) {
         shouldStop = true;
       }
     } else if (e.target.id == "end") {
-      modifier = Components.interfaces.nsIDOMEvent.SHIFT_MASK;
-    } else if (modifier) {
+      activateShift = true;
+    } else if (activateShift) {
       var expected = backwardFocusArray.pop();
       ok(expected == e.target.id,
          "(focus) Backward tabbing, expected [" +
@@ -66,7 +67,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
   function handleBlur(e) {
     if (e.target.id == "begin" || e.target.id == "end") {
       return;
-    } else if (modifier) {
+    } else if (activateShift) {
       var expected = backwardBlurArray.pop();
       ok(expected == e.target.id,
          "(blur) backward tabbing, expected [" +
@@ -90,12 +91,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
   }
 
   function tab() {
-    var utils = SpecialPowers.DOMWindowUtils;
     // Send tab key events.
-    var key = Components.interfaces.nsIDOMKeyEvent.DOM_VK_TAB;
-    utils.sendKeyEvent("keydown", key, 0, modifier);
-    utils.sendKeyEvent("keypress", key, 0, modifier);
-    utils.sendKeyEvent("keyup", key, 0, modifier);
+    synthesizeKey("KEY_Tab", {code: "Tab", shiftKey: activateShift});
     if (shouldStop) {
       // Did focus handling succeed
       is(forwardFocusArray.length, 0,

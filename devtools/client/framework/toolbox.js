@@ -2579,18 +2579,6 @@ Toolbox.prototype = {
       // in the initialization process can throw errors.
       yield this._initInspector;
 
-      // Releasing the walker (if it has been created)
-      // This can fail, but in any case, we want to continue destroying the
-      // inspector/highlighter/selection
-      // FF42+: Inspector actor starts managing Walker actor and auto destroy it.
-      if (this._walker && !this.walker.traits.autoReleased) {
-        try {
-          yield this._walker.release();
-        } catch (e) {
-          // Do nothing;
-        }
-      }
-
       yield this.highlighterUtils.stopPicker();
       yield this._inspector.destroy();
       if (this._highlighter) {

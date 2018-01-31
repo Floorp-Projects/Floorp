@@ -22,18 +22,6 @@
 #endif
 
 
-void
-NS_StartupLocalFile()
-{
-  nsLocalFile::GlobalInit();
-}
-
-void
-NS_ShutdownLocalFile()
-{
-  nsLocalFile::GlobalShutdown();
-}
-
 #if !defined(MOZ_WIDGET_COCOA) && !defined(XP_WIN)
 NS_IMETHODIMP
 nsLocalFile::InitWithFile(nsIFile* aFile)

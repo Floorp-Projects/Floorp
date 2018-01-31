@@ -1,4 +1,5 @@
 /* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/SimpleTest.js */
+/* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/EventUtils.js */
 /* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
 /* eslint-disable no-unused-vars */
 
@@ -117,8 +118,8 @@ function triggerAutofillAndCheckProfile(profile) {
 
     promises.push(checkFieldAutofilled);
   }
-  // Press return key and trigger form autofill.
-  doKey("return");
+  // Press Enter key and trigger form autofill.
+  synthesizeKey("KEY_Enter", {code: "Enter"});
 
   return Promise.all(promises);
 }
@@ -242,10 +243,10 @@ function initPopupListener() {
 
 async function triggerPopupAndHoverItem(fieldSelector, selectIndex) {
   await focusAndWaitForFieldsIdentified(fieldSelector);
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   for (let i = 0; i <= selectIndex; i++) {
-    doKey("down");
+    synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   }
   await notifySelectedIndex(selectIndex);
 }

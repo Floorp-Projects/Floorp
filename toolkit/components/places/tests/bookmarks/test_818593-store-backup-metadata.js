@@ -15,13 +15,11 @@ add_task(async function test_saveBookmarksToJSONFile_and_create() {
   });
 
   // Test saveBookmarksToJSONFile()
-  let backupFile = FileUtils.getFile("TmpD", ["bookmarks.json"]);
-  backupFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0600", 8));
+  let backupFile = OS.Path.join(OS.Constants.Path.tmpDir, "bookmarks.json");
 
   let nodeCount = await PlacesBackups.saveBookmarksToJSONFile(backupFile, true);
   Assert.ok(nodeCount > 0);
-  Assert.ok(backupFile.exists());
-  Assert.equal(backupFile.leafName, "bookmarks.json");
+  Assert.ok(await OS.File.exists(backupFile));
 
   // Ensure the backup would be copied to our backups folder when the original
   // backup is saved somewhere else.
@@ -45,7 +43,7 @@ add_task(async function test_saveBookmarksToJSONFile_and_create() {
   Assert.equal(matches[3].length, 24);
 
   // Cleanup
-  backupFile.remove(false);
+  await OS.File.remove(backupFile);
   await PlacesBackups.create(0);
   await PlacesUtils.bookmarks.remove(bookmark);
 });

@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Test basic autofill</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="formautofill_common.js"></script>
   <script type="text/javascript" src="satchel_common.js"></script>
@@ -49,7 +50,7 @@ function addInputField(form, className) {
 async function checkFormChangeHappened(formId) {
   info("expecting form changed");
   await focusAndWaitForFieldsIdentified(`#${formId} input[name=tel]`);
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({primary: address.tel, secondary: address.name})
@@ -59,7 +60,7 @@ async function checkFormChangeHappened(formId) {
   addInputField(document.querySelector(`#${formId}`), "address-level2");
 
   await focusAndWaitForFieldsIdentified(`#${formId} input[name=name]`);
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({primary: address.name, secondary: address["address-level2"]})
@@ -70,7 +71,7 @@ async function checkFormChangeHappened(formId) {
   addInputField(document.querySelector(`#${formId}`), "address-level2");
 
   await focusAndWaitForFieldsIdentified(`#${formId} input[name=address-level2]`, true);
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({primary: address["address-level2"], secondary: address.name})

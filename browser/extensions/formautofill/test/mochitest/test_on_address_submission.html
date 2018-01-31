@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Test autofill submit</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="formautofill_common.js"></script>
   <script type="text/javascript" src="satchel_common.js"></script>
@@ -72,7 +73,7 @@ add_task(async function check_storage_after_another_address_submitted() {
   ok(matching, "New address saved as expected");
 
   await setInput("#organization", "");
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
   checkMenuEntries(addressesInMenu.map(address =>
     JSON.stringify({primary: address.organization, secondary: address["street-address"]})
@@ -107,10 +108,10 @@ add_task(async function check_storage_after_form_submitted() {
   TEST_ADDRESSES[1].country = "US";
 
   await setInput("#organization", "Moz");
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
-  doKey("down");
-  doKey("return");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_Enter", {code: "Enter"});
   clickOnElement("input[type=submit]");
 
   let expectedAddresses = TEST_ADDRESSES.slice(0);

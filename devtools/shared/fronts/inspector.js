@@ -213,16 +213,9 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
     let searchData = this.searchData = this.searchData || { };
     let selectorOnly = !!options.selectorOnly;
 
-    // Backwards compat.  Use selector only search if the new
-    // search functionality isn't implemented, or if the caller (tests)
-    // want it.
-    if (selectorOnly || !this.traits.textSearch) {
+    if (selectorOnly) {
       searchType = "selector";
-      if (this.traits.multiFrameQuerySelectorAll) {
-        nodeList = yield this.multiFrameQuerySelectorAll(query);
-      } else {
-        nodeList = yield this.querySelectorAll(this.rootNode, query);
-      }
+      nodeList = yield this.multiFrameQuerySelectorAll(query);
     } else {
       searchType = "search";
       let result = yield this._search(query, options);
@@ -442,39 +435,6 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
 
   isLocal: function () {
     return !!this.conn._transport._serverConnection;
-  },
-
-  // XXX hack during transition to remote inspector: get a proper NodeFront
-  // for a given local node.  Only works locally.
-  frontForRawNode: function (rawNode) {
-    if (!this.isLocal()) {
-      console.warn("Tried to use frontForRawNode on a remote connection.");
-      return null;
-    }
-    const { DebuggerServer } = require("devtools/server/main");
-    let walkerActor = DebuggerServer.searchAllConnectionsForActor(this.actorID);
-    if (!walkerActor) {
-      throw Error("Could not find client side for actor " + this.actorID);
-    }
-    let nodeActor = walkerActor._ref(rawNode);
-
-    // Pass the node through a read/write pair to create the client side actor.
-    let nodeType = types.getType("domnode");
-    let returnNode = nodeType.read(
-      nodeType.write(nodeActor, walkerActor), this);
-    let top = returnNode;
-    let extras = walkerActor.parents(nodeActor, {sameTypeRootTreeItem: true});
-    for (let extraActor of extras) {
-      top = nodeType.read(nodeType.write(extraActor, walkerActor), this);
-    }
-
-    if (top !== this.rootNode) {
-      // Imported an already-orphaned node.
-      this._orphaned.add(top);
-      walkerActor._orphaned
-        .add(DebuggerServer.searchAllConnectionsForActor(top.actorID));
-    }
-    return returnNode;
   },
 
   removeNode: custom(Task.async(function* (node) {

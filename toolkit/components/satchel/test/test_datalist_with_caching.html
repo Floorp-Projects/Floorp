@@ -103,18 +103,18 @@ function checkMenuEntries(expectedValues) {
 async function runTests() {
   testNum++;
   restoreForm();
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
 
   checkMenuEntries(["Sec", "First", "Second", "Secomundo"]);
-  doKey("down");
-  doKey("return");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_Enter", {code: "Enter"});
   checkForm("Sec");
 
   testNum++;
   restoreForm();
   sendString("Sec");
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await expectPopup();
 
   testNum++;
@@ -124,8 +124,8 @@ async function runTests() {
 
   testNum++;
   checkMenuEntries(["Second", "Secomundo"]);
-  doKey("down");
-  doKey("return");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_Enter", {code: "Enter"});
   checkForm("Second");
   SimpleTest.finish();
 }

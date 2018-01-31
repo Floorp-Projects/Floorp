@@ -50,23 +50,6 @@ function defineListener(type, cb) {
   });
 }
 
-defineListener("sendKeyEvent", function(data) {
-  let frame = content;
-  if (data.hasOwnProperty("frame")) {
-    frame = content.frames[data.frame];
-  }
-
-  let ifreq = frame.QueryInterface(Ci.nsIInterfaceRequestor);
-  let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
-
-  let keyCode = data.key.charCodeAt(0);
-  let charCode = Ci.nsIDOMKeyEvent.DOM_VK_A + keyCode - "a".charCodeAt(0);
-
-  utils.sendKeyEvent("keydown", keyCode, charCode, null);
-  utils.sendKeyEvent("keypress", keyCode, charCode, null);
-  utils.sendKeyEvent("keyup", keyCode, charCode, null);
-});
-
 defineListener("getInnerHTML", function(data) {
   return queryElement(data).innerHTML;
 });

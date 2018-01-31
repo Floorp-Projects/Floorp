@@ -6,6 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493251
 <head>
   <title>Test for Bug 493251</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -34,14 +35,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493251
     var utils = SpecialPowers.getDOMWindowUtils(win);
     ok(true, "suppressEventHandling: aSuppress=" + aSuppress);
     utils.suppressEventHandling(aSuppress);
-  }
-
-  function dispatchKeyEvent(type) {
-    var utils = SpecialPowers.getDOMWindowUtils(win);
-    ok(true, "Dipatching key event: type=" + type);
-    utils.sendKeyEvent(type, 
-                       SpecialPowers.Ci.nsIDOMKeyEvent.DOM_VK_A,
-                       0, 0);
   }
 
   function dispatchMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers) {
@@ -105,18 +98,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493251
                          function(e) { dumpEvent(e); ++mouseClick; }, true);
 
     ok(true, "doTest #1...");
-    dispatchKeyEvent("keydown");
-    dispatchKeyEvent("keypress");
-    dispatchKeyEvent("keyup");
+    synthesizeKey("a", {code: "KeyA"}, win);
     is(keyDown, 1, "Wrong number events (1)");
     is(keyPress, 1, "Wrong number events (2)");
     is(keyUp, 1, "Wrong number events (3)");
 
     ok(true, "doTest #2...");
     suppressEventHandling(true);
-    dispatchKeyEvent("keydown");
-    dispatchKeyEvent("keypress");
-    dispatchKeyEvent("keyup");
+    synthesizeKey("a", {code: "KeyA"}, win);
     is(keyDown, 1, "Wrong number events (4)");
     is(keyPress, 1, "Wrong number events (5)");
     is(keyUp, 1, "Wrong number events (6)");
@@ -130,10 +119,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493251
 
   function continueTest1() {
     ok(true, "continueTest1...");
-    dispatchKeyEvent("keydown");
-    suppressEventHandling(true);
-    dispatchKeyEvent("keypress");
-    dispatchKeyEvent("keyup");
+    win.addEventListener("keydown", () => { suppressEventHandling(true); }, {once: true});
+    synthesizeKey("a", {code: "KeyA"}, win);
     is(keyDown, 2, "Wrong number events (10)");
     is(keyPress, 1, "Wrong number events (11)");
     is(keyUp, 1, "Wrong number events (12)");
