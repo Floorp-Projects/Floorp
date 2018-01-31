@@ -980,6 +980,7 @@ SandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel)
     sandbox::MITIGATION_BOTTOM_UP_ASLR |
     sandbox::MITIGATION_HEAP_TERMINATE |
     sandbox::MITIGATION_SEHOP |
+    sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
     sandbox::MITIGATION_DEP_NO_ATL_THUNK |
     sandbox::MITIGATION_DEP;
 
