@@ -34,11 +34,13 @@ public:
   ServiceWorkerDescriptor(uint64_t aId,
                           nsIPrincipal* aPrincipal,
                           const nsACString& aScope,
+                          const nsACString& aScriptURL,
                           ServiceWorkerState aState);
 
   ServiceWorkerDescriptor(uint64_t aId,
                           const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                           const nsACString& aScope,
+                          const nsACString& aScriptURL,
                           ServiceWorkerState aState);
 
   explicit ServiceWorkerDescriptor(const IPCServiceWorkerDescriptor& aDescriptor);
@@ -66,6 +68,9 @@ public:
 
   const nsCString&
   Scope() const;
+
+  const nsCString&
+  ScriptURL() const;
 
   ServiceWorkerState
   State() const;

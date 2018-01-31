@@ -1854,10 +1854,7 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   rv = PrincipalToPrincipalInfo(mInfo->Principal(), &principalInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  info.mServiceWorkerDescriptor.emplace(ServiceWorkerDescriptor(mInfo->ID(),
-                                                                principalInfo,
-                                                                mInfo->Scope(),
-                                                                mInfo->State()));
+  info.mServiceWorkerDescriptor.emplace(mInfo->Descriptor());
 
   info.mLoadGroup = aLoadGroup;
   info.mLoadFailedAsyncRunnable = aLoadFailedRunnable;

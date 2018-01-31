@@ -15,6 +15,7 @@ namespace dom {
 ServiceWorkerDescriptor::ServiceWorkerDescriptor(uint64_t aId,
                                                  nsIPrincipal* aPrincipal,
                                                  const nsACString& aScope,
+                                                 const nsACString& aScriptURL,
                                                  ServiceWorkerState aState)
   : mData(MakeUnique<IPCServiceWorkerDescriptor>())
 {
@@ -23,14 +24,17 @@ ServiceWorkerDescriptor::ServiceWorkerDescriptor(uint64_t aId,
 
   mData->id() = aId;
   mData->scope() = aScope;
+  mData->scriptURL() = aScriptURL;
   mData->state() = aState;
 }
 
 ServiceWorkerDescriptor::ServiceWorkerDescriptor(uint64_t aId,
                                                  const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                                                  const nsACString& aScope,
+                                                 const nsACString& aScriptURL,
                                                  ServiceWorkerState aState)
   : mData(MakeUnique<IPCServiceWorkerDescriptor>(aId, aPrincipalInfo,
+                                                 nsCString(aScriptURL),
                                                  nsCString(aScope), aState))
 {
 }
@@ -92,6 +96,12 @@ const nsCString&
 ServiceWorkerDescriptor::Scope() const
 {
   return mData->scope();
+}
+
+const nsCString&
+ServiceWorkerDescriptor::ScriptURL() const
+{
+  return mData->scriptURL();
 }
 
 ServiceWorkerState
