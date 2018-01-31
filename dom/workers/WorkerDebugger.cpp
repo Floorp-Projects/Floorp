@@ -469,7 +469,7 @@ WorkerDebugger::ReportErrorToDebuggerOnMainThread(const nsAString& aFilename,
   WorkerErrorReport report;
   report.mMessage = aMessage;
   report.mFilename = aFilename;
-  LogErrorToConsole(report, 0);
+  WorkerErrorReport::LogErrorToConsole(report, 0);
 }
 
 
