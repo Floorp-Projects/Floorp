@@ -36,18 +36,6 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXULDOCUMENT_IID)
 
   /**
-   * This is invoked whenever the prototype for this document is loaded
-   * and should be walked, regardless of whether the XUL cache is
-   * disabled, whether the protototype was loaded, whether the
-   * prototype was loaded from the cache or created by parsing the
-   * actual XUL source, etc.
-   *
-   * @param aResumeWalk whether this should also call ResumeWalk().
-   * Sometimes the caller of OnPrototypeLoadDone resumes the walk itself
-   */
-  NS_IMETHOD OnPrototypeLoadDone(bool aResumeWalk) = 0;
-
-  /**
    * Callback notifying when a document could not be parsed properly.
    */
   virtual bool OnDocumentParserError() = 0;
