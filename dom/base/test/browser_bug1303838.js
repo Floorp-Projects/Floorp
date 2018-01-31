@@ -16,6 +16,18 @@
 const BASE_URL = "http://mochi.test:8888/browser/dom/base/test/";
 
 add_task(async function() {
+  // On Linux, in our test automation, the mouse cursor floats over
+  // the first tab, which causes it to be warmed up when tab warming
+  // is enabled. The TabSwitchDone event doesn't fire until the warmed
+  // tab is evicted, which is after a few seconds. That means that
+  // this test ends up taking longer than we'd like, since its waiting
+  // for the TabSwitchDone event between tab switches.
+  //
+  // So now we make sure that warmed tabs are evicted very shortly
+  // after warming to avoid the test running too long.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.remote.warmup.unloadDelayMs", 50]],
+  });
   await testLinkClick(false, false);
   await testLinkClick(false, true);
   await testLinkClick(true, false);
