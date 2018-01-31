@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CSS Test: shape-outside with a CORS violation</title>
+<link rel="author" title="Brad Werth" href="mailto:bwerth@mozilla.com"/>
+<link rel="help" href="https://drafts.csswg.org/css-shapes/#shape-outside-property"/>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+
+<script>
+SimpleTest.waitForExplicitFinish();
+
+// We'll eventually receive messages from our iframe, so prep to receive them here.
+function receiveMessage(event)
+{
+  if (event.data.done) {
+    // Remove ourself as an event listener, just to be thorough.
+    window.removeEventListener("message", receiveMessage);
+    // Undo our meddling in preferences, then finish the test.
+    SpecialPowers.popPrefEnv(SimpleTest.finish);
+    return;
+  }
+
+  let reportResult = event.data.todo ? todo : ok;
+  reportResult(event.data.result, event.data.message);
+}
+
+function runTests()
+{
+  window.addEventListener("message", receiveMessage);
+
+  // Set a pref that we'll need, then set the source of the iframe.
+  // Once the iframe source is set, the contents will start sending
+  // messages to us.
+  SpecialPowers.pushPrefEnv({"set": [
+    ["layout.css.shape-outside.enabled", true],
+  ]}, () => {
+    let content = document.getElementById("content");
+    content.src = "file_shape_outside_CORS.html";
+  });
+}
+</script>
+</head>
+<body onload="runTests()">
+<iframe id="content"></iframe>
+</body>
+</html>
