@@ -7,7 +7,6 @@
 #include "nsXULTooltipListener.h"
 
 #include "nsIDOMMouseEvent.h"
-#include "nsIDOMXULDocument.h"
 #include "nsXULElement.h"
 #include "nsIDocument.h"
 #include "nsGkAtoms.h"
@@ -404,9 +403,8 @@ nsXULTooltipListener::ShowTooltip()
     return NS_ERROR_FAILURE; // the target node doesn't need a tooltip
 
   // set the node in the document that triggered the tooltip and show it
-  nsCOMPtr<nsIDOMXULDocument> xulDoc =
-    do_QueryInterface(tooltipNode->GetComposedDoc());
-  if (xulDoc) {
+  if (tooltipNode->GetComposedDoc() &&
+      tooltipNode->GetComposedDoc()->IsXULDocument()) {
     // Make sure the target node is still attached to some document.
     // It might have been deleted.
     if (sourceNode->IsInComposedDoc()) {
