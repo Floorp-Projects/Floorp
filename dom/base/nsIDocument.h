@@ -46,6 +46,11 @@
 #include "mozilla/UniquePtr.h"
 #include <bitset>                        // for member
 
+// windows.h #defines CreateEvent
+#ifdef CreateEvent
+#undef CreateEvent
+#endif
+
 #ifdef MOZILLA_INTERNAL_API
 #include "mozilla/dom/DocumentBinding.h"
 #else
