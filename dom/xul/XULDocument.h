@@ -16,7 +16,6 @@
 #include "nsForwardReference.h"
 #include "nsIContent.h"
 #include "nsIDOMXULCommandDispatcher.h"
-#include "nsIDOMXULDocument.h"
 #include "nsCOMArray.h"
 #include "nsIURI.h"
 #include "nsIXULDocument.h"
@@ -55,7 +54,6 @@ namespace dom {
 
 class XULDocument final : public XMLDocument,
                           public nsIXULDocument,
-                          public nsIDOMXULDocument,
                           public nsIStreamLoaderObserver,
                           public nsICSSLoaderObserver,
                           public nsIOffThreadScriptReceiver
@@ -116,9 +114,6 @@ public:
     using nsDocument::GetLastStyleSheetSet;
     using nsDocument::MozSetImageElement;
     using nsIDocument::GetLocation;
-
-    // nsIDOMXULDocument interface
-    NS_DECL_NSIDOMXULDOCUMENT
 
     // nsICSSLoaderObserver
     NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet,

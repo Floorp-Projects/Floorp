@@ -75,9 +75,6 @@
 #include <algorithm>
 #include "nsIDOMChromeWindow.h"
 
-// The XUL doc interface
-#include "nsIDOMXULDocument.h"
-
 #include "nsReadableUtils.h"
 #include "nsIFrame.h"
 #include "nsNodeInfoManager.h"

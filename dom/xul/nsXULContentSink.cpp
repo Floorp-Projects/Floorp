@@ -23,7 +23,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMXULDocument.h"
 #include "nsIFormControl.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "nsIScriptContext.h"
