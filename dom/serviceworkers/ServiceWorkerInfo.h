@@ -12,11 +12,11 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/OriginAttributes.h"
 #include "nsIServiceWorkerManager.h"
+#include "ServiceWorker.h"
 
 namespace mozilla {
 namespace dom {
 
-class ServiceWorker;
 class ServiceWorkerPrivate;
 
 /*
@@ -74,6 +74,19 @@ private:
   // invalid.
   uint64_t
   GetNextID() const;
+
+  // ServiceWorker::Inner implementation
+  virtual void
+  AddServiceWorker(ServiceWorker* aWorker) override;
+
+  virtual void
+  RemoveServiceWorker(ServiceWorker* aWorker) override;
+
+  virtual void
+  PostMessage(nsIGlobalObject* aGlobal,
+              JSContext* aCx, JS::Handle<JS::Value> aMessage,
+              const Sequence<JSObject*>& aTransferable,
+              ErrorResult& aRv) override;
 
 public:
   NS_DECL_ISUPPORTS
@@ -184,12 +197,6 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(mHandlesFetch != Unknown);
     return mHandlesFetch != Disabled;
   }
-
-  void
-  AppendWorker(ServiceWorker* aWorker);
-
-  void
-  RemoveWorker(ServiceWorker* aWorker);
 
   already_AddRefed<ServiceWorker>
   GetOrCreateInstance(nsPIDOMWindowInner* aWindow);
