@@ -193,7 +193,7 @@ class TcpTransport(object):
             self._sock.settimeout(self.socket_timeout)
 
             self._sock.connect((self.host, self.port))
-        except:
+        except Exception:
             # Unset so that the next attempt to send will cause
             # another connection attempt.
             self._sock = None

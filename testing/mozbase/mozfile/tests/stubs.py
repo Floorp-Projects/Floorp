@@ -34,6 +34,6 @@ def create_stub():
     except Exception:
         try:
             shutil.rmtree(tempdir)
-        except:
+        except Exception:
             pass
         raise

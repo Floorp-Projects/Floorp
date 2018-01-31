@@ -570,7 +570,7 @@ class DeviceManager(object):
 
         try:
             mdsum = hashlib.md5()
-        except:
+        except Exception:
             return None
 
         while 1:

@@ -101,7 +101,7 @@ class SymbolicationRequest:
                         else:
                             LogTrace("Unrecognized symbol source: " + source)
                             continue
-                except:
+                except Exception:
                     self.symbolSources = []
                     pass
 

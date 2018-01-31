@@ -141,6 +141,6 @@ def create_task(session, task_id, label, task_def):
     if res.status_code != 200:
         try:
             logger.error(res.json()['message'])
-        except:
+        except Exception:
             logger.error(res.text)
         res.raise_for_status()

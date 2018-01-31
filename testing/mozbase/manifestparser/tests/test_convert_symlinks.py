@@ -47,7 +47,7 @@ class TestSymlinkConversion(unittest.TestCase):
             parser = convert([stub], relative_to='.')
             self.assertEqual([i['name'] for i in parser.tests],
                              files)
-        except:
+        except BaseException:
             raise
         finally:
             shutil.rmtree(stub)

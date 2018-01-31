@@ -238,7 +238,7 @@ class BaseRunner(object):
                         quiet=quiet)
 
             self.crashed += crash_count
-        except:
+        except Exception:
             traceback.print_exc()
 
         return crash_count

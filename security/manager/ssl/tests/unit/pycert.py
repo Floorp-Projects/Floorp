@@ -637,7 +637,7 @@ class Certificate(object):
             except ValueError:
                 try:
                     featureValue = namedFeatures[feature]
-                except:
+                except Exception:
                     raise UnknownTLSFeature(feature)
             sequence.setComponentByPosition(len(sequence),
                                             univ.Integer(featureValue))
