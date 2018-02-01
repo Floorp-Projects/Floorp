@@ -82,6 +82,13 @@ static constexpr FloatRegister ScratchDoubleReg = { FloatRegisters::f18, FloatRe
 static constexpr FloatRegister SecondScratchFloat32Reg = { FloatRegisters::f16, FloatRegister::Single };
 static constexpr FloatRegister SecondScratchDoubleReg = { FloatRegisters::f16, FloatRegister::Double };
 
+struct ScratchFloat32Scope : public AutoFloatRegisterScope
+{
+    explicit ScratchFloat32Scope(MacroAssembler& masm)
+      : AutoFloatRegisterScope(masm, ScratchFloat32Reg)
+    { }
+};
+
 struct ScratchDoubleScope : public AutoFloatRegisterScope
 {
     explicit ScratchDoubleScope(MacroAssembler& masm)
