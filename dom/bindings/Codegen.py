@@ -15891,7 +15891,7 @@ class CGCallback(CGClass):
         argsWithoutRv.insert(0, Argument("const T&",  "thisVal"))
 
         argnamesWithoutThisAndRv = [arg.name for arg in argsWithoutThisAndRv]
-        argnamesWithoutThisAndRv.insert(rvIndex, "rv");
+        argnamesWithoutThisAndRv.insert(rvIndex, "IgnoreErrors()");
         # If we just leave things like that, and have no actual arguments in the
         # IDL, we will end up trying to call the templated "without rv" overload
         # with "rv" as the thisVal.  That's no good.  So explicitly append the
@@ -15902,7 +15902,7 @@ class CGCallback(CGClass):
         argnamesWithoutRv = [arg.name for arg in argsWithoutRv]
         # Note that we need to insert at rvIndex + 1, since we inserted a
         # thisVal arg at the start.
-        argnamesWithoutRv.insert(rvIndex + 1, "rv")
+        argnamesWithoutRv.insert(rvIndex + 1, "IgnoreErrors()")
 
         errorReturn = method.getDefaultRetval()
 
@@ -15946,14 +15946,12 @@ class CGCallback(CGClass):
             callArgs=", ".join(argnamesWithoutThis))
         bodyWithThisWithoutRv = fill(
             """
-            IgnoredErrorResult rv;
             return ${methodName}(${callArgs});
             """,
             methodName=method.name,
             callArgs=", ".join(argnamesWithoutRv))
         bodyWithoutThisAndRv = fill(
             """
-            IgnoredErrorResult rv;
             return ${methodName}(${callArgs});
             """,
             methodName=method.name,
