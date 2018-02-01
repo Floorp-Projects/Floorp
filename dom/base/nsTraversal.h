@@ -15,7 +15,6 @@
 #include "mozilla/dom/CallbackObject.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/NodeFilterBinding.h"
-#include "nsIDOMNodeFilter.h"
 
 class nsINode;
 

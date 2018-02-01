@@ -5,7 +5,6 @@
 #include "nsISupports.idl"
 
 interface nsIDOMNode;
-interface nsIDOMNodeFilter;
 
 // Note: the iterator does not handle DOM mutations gracefully. So if
 // the underlying DOM we are iterating over is changed, the behavior
@@ -33,7 +32,6 @@ interface inIDeepTreeWalker : nsISupports
   // limitation for the parentNode will work again.
   readonly attribute nsIDOMNode       root;
   readonly attribute unsigned long    whatToShow;
-  readonly attribute nsIDOMNodeFilter filter;
            attribute nsIDOMNode       currentNode;
 
   nsIDOMNode         parentNode();
