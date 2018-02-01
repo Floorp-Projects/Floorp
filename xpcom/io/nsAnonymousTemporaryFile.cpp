@@ -111,7 +111,7 @@ NS_OpenAnonymousTemporaryNsIFile(nsIFile** aFile)
     return rv;
   }
 
-  rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0700);
+  rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
