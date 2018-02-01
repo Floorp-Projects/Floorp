@@ -216,6 +216,16 @@ class MacroAssemblerMIPSShared : public Assembler
     // Handle NaN specially if handleNaN is true.
     void minMaxDouble(FloatRegister srcDest, FloatRegister other, bool handleNaN, bool isMax);
     void minMaxFloat32(FloatRegister srcDest, FloatRegister other, bool handleNaN, bool isMax);
+
+    void outOfLineWasmTruncateToIntCheck(FloatRegister input, MIRType fromType,
+                                         MIRType toType, bool isUnsigned, Label* rejoin,
+                                         wasm::BytecodeOffset trapOffset);
+
+  protected:
+    void wasmLoadImpl(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
+                      Register ptrScratch, AnyRegister output, Register tmp);
+    void wasmStoreImpl(const wasm::MemoryAccessDesc& access, AnyRegister value, Register memoryBase,
+                       Register ptr, Register ptrScratch, Register tmp);
 };
 
 } // namespace jit
