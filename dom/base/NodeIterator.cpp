@@ -138,8 +138,8 @@ void NodeIterator::NodePointer::MoveBackward(nsINode *aParent, nsINode *aNode)
 
 NodeIterator::NodeIterator(nsINode *aRoot,
                            uint32_t aWhatToShow,
-                           NodeFilterHolder aFilter) :
-    nsTraversal(aRoot, aWhatToShow, Move(aFilter)),
+                           NodeFilter* aFilter) :
+    nsTraversal(aRoot, aWhatToShow, aFilter),
     mPointer(mRoot, true)
 {
     aRoot->AddMutationObserver(this);
