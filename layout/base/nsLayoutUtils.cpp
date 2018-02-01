@@ -8220,6 +8220,7 @@ nsLayoutUtils::Initialize()
   Preferences::AddBoolVarCache(&sTextCombineUprightDigitsEnabled,
                                "layout.css.text-combine-upright-digits.enabled");
 #ifdef MOZ_STYLO
+#ifdef MOZ_OLD_STYLE
   if (PR_GetEnv("STYLO_FORCE_ENABLED")) {
     sStyloEnabled = true;
   } else if (PR_GetEnv("STYLO_FORCE_DISABLED")) {
@@ -8228,7 +8229,11 @@ nsLayoutUtils::Initialize()
     Preferences::AddBoolVarCache(&sStyloEnabled,
                                  "layout.css.servo.enabled");
   }
+#else
+  sStyloEnabled = true;
 #endif
+#endif
+
   Preferences::AddUintVarCache(&sIdlePeriodDeadlineLimit,
                                "layout.idle_period.time_limit",
                                DEFAULT_IDLE_PERIOD_TIME_LIMIT);
@@ -8281,6 +8286,7 @@ nsLayoutUtils::ShouldUseStylo(nsIPrincipal* aPrincipal)
 bool
 nsLayoutUtils::StyloChromeEnabled()
 {
+#ifdef MOZ_OLD_STYLE
   static bool sInitialized = false;
   static bool sEnabled = false;
   if (!sInitialized) {
@@ -8290,6 +8296,9 @@ nsLayoutUtils::StyloChromeEnabled()
     sInitialized = true;
   }
   return sEnabled;
+#else
+  return true;
+#endif
 }
 #endif
 
