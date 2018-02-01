@@ -1061,7 +1061,7 @@ nsAbsolutePositioningCommand::ToggleState(mozilla::HTMLEditor* aHTMLEditor)
 
   RefPtr<Element> container =
     aHTMLEditor->GetAbsolutelyPositionedSelectionContainer();
-  return aHTMLEditor->AbsolutePositionSelection(!container);
+  return aHTMLEditor->SetSelectionToAbsoluteOrStatic(!container);
 }
 
 
@@ -1089,11 +1089,7 @@ nsDecreaseZIndexCommand::IsCommandEnabled(const char * aCommandName,
     return NS_OK;
   }
 
-  int32_t z;
-  nsresult rv = htmlEditor->GetElementZIndex(positionedElement, &z);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  int32_t z = htmlEditor->GetZIndex(*positionedElement);
   *outCmdEnabled = (z > 0);
   return NS_OK;
 }
@@ -1110,7 +1106,7 @@ nsDecreaseZIndexCommand::DoCommand(const char *aCommandName,
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  return htmlEditor->RelativeChangeZIndex(-1);
+  return htmlEditor->AddZIndex(-1);
 }
 
 NS_IMETHODIMP
@@ -1170,7 +1166,7 @@ nsIncreaseZIndexCommand::DoCommand(const char *aCommandName,
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  return htmlEditor->RelativeChangeZIndex(1);
+  return htmlEditor->AddZIndex(1);
 }
 
 NS_IMETHODIMP
