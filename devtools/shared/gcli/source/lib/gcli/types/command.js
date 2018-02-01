@@ -124,7 +124,7 @@ exports.findPredictions = function(arg, lookup) {
       // If someone hasn't typed anything, we only show top level commands in
       // the menu. i.e. sub-commands (those with a space in their name) are
       // excluded. We do this to keep the list at an overview level.
-      if (option.name.indexOf(' ') === -1) {
+      if (!option.name.includes(' ')) {
         predictions.push(option);
       }
     }
@@ -173,7 +173,7 @@ exports.findPredictions = function(arg, lookup) {
   for (i = 0; i < lookup.length && predictions.length < maxPredictions; i++) {
     option = lookup[i];
     if (option._gcliLowerName.indexOf(match) === 0 && !option.value.hidden) {
-      if (predictions.indexOf(option) === -1) {
+      if (!predictions.includes(option)) {
         addToPredictions(option);
       }
     }
@@ -183,8 +183,8 @@ exports.findPredictions = function(arg, lookup) {
   if (predictions.length < (maxPredictions / 2)) {
     for (i = 0; i < lookup.length && predictions.length < maxPredictions; i++) {
       option = lookup[i];
-      if (option._gcliLowerName.indexOf(match) !== -1 && !option.value.hidden) {
-        if (predictions.indexOf(option) === -1) {
+      if (option._gcliLowerName.includes(match) && !option.value.hidden) {
+        if (!predictions.includes(option)) {
           addToPredictions(option);
         }
       }

@@ -242,7 +242,7 @@ try {
     else {
       // If we're testing redirect, determine whether the body is
       // this document by looking for the relevant bug url
-      is(xhr.responseText.indexOf("https://bugzilla.mozilla.org/show_bug.cgi?id=464848") >= 0, true,
+      is(xhr.responseText.includes("https://bugzilla.mozilla.org/show_bug.cgi?id=464848"), true,
                                   "Wrong page for redirect");
     }
   }

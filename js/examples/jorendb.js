@@ -271,9 +271,9 @@ function setCommand(rest) {
             var yes = ["1", "yes", "true", "on"];
             var no = ["0", "no", "false", "off"];
 
-            if (yes.indexOf(value) !== -1)
+            if (yes.includes(value))
                 options[name] = true;
-            else if (no.indexOf(value) !== -1)
+            else if (no.includes(value))
                 options[name] = false;
             else
                 options[name] = value;
@@ -285,9 +285,9 @@ function split_print_options(s, style) {
     var m = /^\/(\w+)/.exec(s);
     if (!m)
         return [ s, style ];
-    if (m[1].indexOf("p") != -1)
+    if (m[1].includes("p"))
         style.pretty = true;
-    if (m[1].indexOf("b") != -1)
+    if (m[1].includes("b"))
         style.brief = true;
     return [ s.substr(m[0].length).trimLeft(), style ];
 }
@@ -645,7 +645,7 @@ function helpCommand(rest) {
 //
 function breakcmd(cmd) {
     cmd = cmd.trimLeft();
-    if ("!@#$%^&*_+=/?.,<>:;'\"".indexOf(cmd.substr(0, 1)) != -1)
+    if ("!@#$%^&*_+=/?.,<>:;'\"".includes(cmd.substr(0, 1)))
         return [cmd.substr(0, 1), cmd.substr(1).trimLeft()];
     var m = /\s+|(?=\/)/.exec(cmd);
     if (m === null)

@@ -295,7 +295,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
    * Show the highlighter on a given node
    */
   _show() {
-    if (BOX_MODEL_REGIONS.indexOf(this.options.region) == -1) {
+    if (!BOX_MODEL_REGIONS.includes(this.options.region)) {
       this.options.region = "content";
     }
 

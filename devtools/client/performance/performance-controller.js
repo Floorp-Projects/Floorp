@@ -435,7 +435,7 @@ var PerformanceController = {
    * @param {PerformanceRecordingFront} recording
    */
   _addRecordingIfUnknown: function (recording) {
-    if (this._recordings.indexOf(recording) === -1) {
+    if (!this._recordings.includes(recording)) {
       this._recordings.push(recording);
       this.emit(EVENTS.RECORDING_ADDED, recording);
     }

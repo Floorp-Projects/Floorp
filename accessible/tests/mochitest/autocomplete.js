@@ -79,7 +79,7 @@ ResultsHeap.prototype =
   getAutoCompleteResultFor(aSearchString) {
     var values = [], comments = [];
     for (var idx = 0; idx < this.values.length; idx++) {
-      if (this.values[idx].indexOf(aSearchString) != -1) {
+      if (this.values[idx].includes(aSearchString)) {
         values.push(this.values[idx]);
         comments.push(this.comments[idx]);
       }

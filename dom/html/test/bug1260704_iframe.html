@@ -5,8 +5,8 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript">
-    var noDefault = (location.search.indexOf("noDefault=true") !== -1);
-    var isMap = (location.search.indexOf("isMap=true") !== -1);
+    var noDefault = (location.search.includes("noDefault=true"));
+    var isMap = (location.search.includes("isMap=true"));
 
     window.addEventListener("load", () => {
       let image = document.getElementById("testImage");

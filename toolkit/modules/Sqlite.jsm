@@ -1377,7 +1377,7 @@ OpenedConnection.prototype = Object.freeze({
    *        One of the TRANSACTION_* constants attached to this type.
    */
   executeTransaction(func, type = this.TRANSACTION_DEFERRED) {
-    if (this.TRANSACTION_TYPES.indexOf(type) == -1) {
+    if (!this.TRANSACTION_TYPES.includes(type)) {
       throw new Error("Unknown transaction type: " + type);
     }
 

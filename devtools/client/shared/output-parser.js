@@ -376,7 +376,7 @@ OutputParser.prototype = {
 
         case "ident":
           if (options.expectCubicBezier &&
-              BEZIER_KEYWORDS.indexOf(token.text) >= 0) {
+              BEZIER_KEYWORDS.includes(token.text)) {
             this._appendCubicBezier(token.text, options);
           } else if (this._isDisplayFlex(text, token, options) &&
                      Services.prefs.getBoolPref(FLEXBOX_HIGHLIGHTER_ENABLED_PREF)) {

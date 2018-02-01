@@ -281,7 +281,7 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
   }
 
   function containsTimeDirectionSymbol(input) {
-    return input.indexOf("-->") !== -1;
+    return input.includes("-->");
   }
 
   function maybeIsTimeStampFormat(input) {

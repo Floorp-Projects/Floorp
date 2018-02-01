@@ -1063,7 +1063,7 @@ NetworkMonitor.prototype = {
     // from platform, but instead let the throttler emit the events
     // after some time has elapsed.
     if (httpActivity.downloadThrottle &&
-        this.httpDownloadActivities.indexOf(activitySubtype) >= 0) {
+        this.httpDownloadActivities.includes(activitySubtype)) {
       let callback = this._dispatchActivity.bind(this);
       httpActivity.downloadThrottle
         .addActivityCallback(callback, httpActivity, channel, activityType,

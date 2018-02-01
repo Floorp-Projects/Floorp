@@ -28,7 +28,7 @@
 
       function checkFrame(evt) {
         var ifr = evt.target;
-        opener.ok(new String(ifr.contentWindow.location).indexOf(ifr.src) >= 0,
+        opener.ok(new String(ifr.contentWindow.location).includes(ifr.src),
            "Wrong document loaded (" + ifr.src + ", " + 
            ifr.contentWindow.location + ")!");
 

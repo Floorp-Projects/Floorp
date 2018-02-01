@@ -500,15 +500,15 @@ var Logins = {
   _filter: function(event) {
     let value = event.target.value.toLowerCase();
     let logins = this._logins.filter((login) => {
-      if (login.hostname.toLowerCase().indexOf(value) != -1) {
+      if (login.hostname.toLowerCase().includes(value)) {
         return true;
       }
       if (login.username &&
-          login.username.toLowerCase().indexOf(value) != -1) {
+          login.username.toLowerCase().includes(value)) {
         return true;
       }
       if (login.httpRealm &&
-          login.httpRealm.toLowerCase().indexOf(value) != -1) {
+          login.httpRealm.toLowerCase().includes(value)) {
         return true;
       }
       return false;

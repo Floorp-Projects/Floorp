@@ -85,7 +85,7 @@ var mockedDeviceSupportHttpsURL = {
   },
   disconnect: function() {},
   isRequestedUrlSupported: function(requestedUrl) {
-    if (requestedUrl.indexOf("https://") != -1) {
+    if (requestedUrl.includes("https://")) {
       return true;
     }
     return false;

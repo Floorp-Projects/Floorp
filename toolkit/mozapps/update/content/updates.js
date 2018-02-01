@@ -129,7 +129,7 @@ var gUpdates = {
   _setButton(button, string) {
     if (string) {
       var label = this.getAUSString(string);
-      if (label.indexOf("%S") != -1)
+      if (label.includes("%S"))
         label = label.replace(/%S/, this.brandName);
       button.label = label;
       button.setAttribute("accesskey",

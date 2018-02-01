@@ -98,7 +98,7 @@ ConfigView.prototype = {
     let table = this._doc.querySelector("table");
     let sResetDefault = Strings.GetStringFromName("device_reset_default");
 
-    if (this._keys.indexOf(name) === -1) {
+    if (!this._keys.includes(name)) {
       this._keys.push(name);
     }
 

@@ -114,7 +114,7 @@ function computeButton(aEvent) {
 }
 
 function sendMouseEvent(aEvent, aTarget, aWindow) {
-  if (['click', 'contextmenu', 'dblclick', 'mousedown', 'mouseup', 'mouseover', 'mouseout'].indexOf(aEvent.type) == -1) {
+  if (!['click', 'contextmenu', 'dblclick', 'mousedown', 'mouseup', 'mouseover', 'mouseout'].includes(aEvent.type)) {
     throw new Error("sendMouseEvent doesn't know about event type '" + aEvent.type + "'");
   }
 
@@ -167,7 +167,7 @@ function isHidden(aElement) {
  * have. This includes the type of the drag event.
  */
 function sendDragEvent(aEvent, aTarget, aWindow = window) {
-  if (['drag', 'dragstart', 'dragend', 'dragover', 'dragenter', 'dragleave', 'drop'].indexOf(aEvent.type) == -1) {
+  if (!['drag', 'dragstart', 'dragend', 'dragover', 'dragenter', 'dragleave', 'drop'].includes(aEvent.type)) {
     throw new Error("sendDragEvent doesn't know about event type '" + aEvent.type + "'");
   }
 

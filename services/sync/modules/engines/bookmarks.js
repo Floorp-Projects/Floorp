@@ -1272,7 +1272,7 @@ BookmarksTracker.prototype = {
       return;
     }
 
-    if (isAnno && (ANNOS_TO_TRACK.indexOf(property) == -1))
+    if (isAnno && (!ANNOS_TO_TRACK.includes(property)))
       // Ignore annotations except for the ones that we sync.
       return;
 

@@ -232,8 +232,8 @@ function computeIsContentAndCategory(frame) {
     for (let j = schemeStartIndex; j < location.length; j++) {
       if (location.charCodeAt(j) === CHAR_CODE_R &&
           isChromeScheme(location, j) &&
-          (location.indexOf("resource://devtools") !== -1 ||
-           location.indexOf("resource://devtools") !== -1)) {
+          (location.includes("resource://devtools") ||
+           location.includes("resource://devtools"))) {
         frame.category = CATEGORY_MASK("tools");
         return;
       }

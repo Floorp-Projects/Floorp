@@ -9,7 +9,7 @@ function synthesizeImage() {
 }
 
 self.addEventListener("fetch", function(event) {
-  if (event.request.url.indexOf("image-20px.png") >= 0) {
+  if (event.request.url.includes("image-20px.png")) {
     event.respondWith(synthesizeImage());
   }
 });

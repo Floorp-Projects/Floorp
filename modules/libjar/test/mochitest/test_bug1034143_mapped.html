@@ -32,7 +32,7 @@ function runTest() {
   xhr.onload = function onload(e) {
     ok(xhr.status == 200, "Status is 200");
     let ct = xhr.getResponseHeader("Content-Type");
-    ok(ct.indexOf("mem-mapped") == -1, "Data is not memory-mapped");
+    ok(!ct.includes("mem-mapped"), "Data is not memory-mapped");
     SimpleTest.finish();
   };
   xhr.responseType = 'arraybuffer';

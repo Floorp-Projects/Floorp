@@ -167,7 +167,7 @@ function getPostUpdateOverridePage(defaultOverridePage) {
 
   // The existence of silent or the non-existence of showURL in the actions both
   // mean that an override page should not be displayed.
-  if (actions.indexOf("silent") != -1 || actions.indexOf("showURL") == -1)
+  if (actions.includes("silent") || !actions.includes("showURL"))
     return "";
 
   return update.getProperty("openURL") || defaultOverridePage;

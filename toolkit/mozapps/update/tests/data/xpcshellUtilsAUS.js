@@ -1146,11 +1146,11 @@ function setTestFilesAndDirsForFailure() {
  */
 function preventDistributionFiles() {
   gTestFiles = gTestFiles.filter(function(aTestFile) {
-    return aTestFile.relPathDir.indexOf("distribution/") == -1;
+    return !aTestFile.relPathDir.includes("distribution/");
   });
 
   gTestDirs = gTestDirs.filter(function(aTestDir) {
-    return aTestDir.relPathDir.indexOf("distribution/") == -1;
+    return !aTestDir.relPathDir.includes("distribution/");
   });
 }
 

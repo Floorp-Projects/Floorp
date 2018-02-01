@@ -155,7 +155,7 @@ function testtag_scale_UI_Mouse(element, testid, horiz, reverse, pinc)
   // check that clicking the mouse on the trough moves the thumb properly
   synthesizeMouseExpectEvent(element, hmove, vmove, { }, element, "change", testid + "mouse on left movetoclick=default");
 
-  if (navigator.platform.indexOf("Mac") >= 0) {
+  if (navigator.platform.includes("Mac")) {
     if (pinc == 30)
       ok(element.value > 4, testid + " mouse on left movetoclick=default");
     else
@@ -170,7 +170,7 @@ function testtag_scale_UI_Mouse(element, testid, horiz, reverse, pinc)
                              rect.bottom - rect.top - vmove, { },
                              element, "change", testid + " mouse on right movetoclick=default");
 
-  if (navigator.platform.indexOf("Mac") >= 0) {
+  if (navigator.platform.includes("Mac")) {
     if (pinc == 30)
       ok(element.value < 20, testid + " mouse on right movetoclick=default");
     else
@@ -229,7 +229,7 @@ function testtag_scale_UI_Mouse(element, testid, horiz, reverse, pinc)
   // it should snap back to the original location.
   element.value = reverse ? element.max : element.min;
 
-  var expected = (navigator.platform.indexOf("Win") >= 0) ? element.value :
+  var expected = (navigator.platform.includes("Win")) ? element.value :
                   (reverse ? element.min : element.max);
   synthesizeMouse(element, 7, 7, { type: "mousedown" });
   synthesizeMouse(element, 2000, 2000, { type: "mousemove" });

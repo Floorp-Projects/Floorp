@@ -392,7 +392,7 @@ async function updatePinningList(records) {
   for (let item of records) {
     try {
       const {pinType, pins = [], versions} = item;
-      if (versions.indexOf(Services.appinfo.version) != -1) {
+      if (versions.includes(Services.appinfo.version)) {
         if (pinType == "KeyPin" && pins.length) {
           siteSecurityService.setKeyPins(item.hostName,
               item.includeSubdomains,

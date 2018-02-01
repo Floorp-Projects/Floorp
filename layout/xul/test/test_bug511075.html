@@ -37,7 +37,7 @@ var tests = [
     var y = 5;
     // On MacOSX the top scroll arrow can be below the slider just above
     // the bottom scroll arrow.
-    if (navigator.platform.indexOf("Mac") >= 0)
+    if (navigator.platform.includes("Mac"))
       y = scroller.getBoundingClientRect().height - 40;
     synthesizeMouse(scroller, x, y, { type : "mousedown" }, window);
     synthesizeMouse(scroller, x, y, { type: "mouseup" }, window);

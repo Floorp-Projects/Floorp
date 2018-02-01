@@ -95,7 +95,7 @@ Settings.prototype.getAll = function(filter) {
   }
 
   return this._settingsAll.filter(setting => {
-    return setting.name.indexOf(filter) !== -1;
+    return setting.name.includes(filter);
   });
 };
 

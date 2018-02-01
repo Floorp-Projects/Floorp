@@ -140,7 +140,7 @@ function runTest() {
 
 function runSupportedTest(extensionEnabled) {
     var supported = gl.getSupportedExtensions();
-    if (supported.indexOf("WEBGL_compressed_texture_es3") >= 0) {
+    if (supported.includes("WEBGL_compressed_texture_es3")) {
         if (extensionEnabled) {
             ok(true, "WEBGL_compressed_texture_es3 listed as supported and getExtension succeeded");
         } else {

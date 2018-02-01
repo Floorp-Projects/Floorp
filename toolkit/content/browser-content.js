@@ -146,13 +146,13 @@ var ClickEventHandler = {
       // overflow property
       var scrollVert = node.scrollTopMax &&
         (node instanceof content.HTMLSelectElement ||
-         scrollingAllowed.indexOf(overflowy) >= 0);
+         scrollingAllowed.includes(overflowy));
 
       // do not allow horizontal scrolling for select elements, it leads
       // to visual artifacts and is not the expected behavior anyway
       if (!(node instanceof content.HTMLSelectElement) &&
           node.scrollLeftMin != node.scrollLeftMax &&
-          scrollingAllowed.indexOf(overflowx) >= 0) {
+          scrollingAllowed.includes(overflowx)) {
         this._scrolldir = scrollVert ? "NSEW" : "EW";
         this._scrollable = node;
         break;
@@ -976,7 +976,7 @@ var FindBar = {
       fakeEvent,
       shouldFastFind: fastFind.should
     });
-    if (rv.indexOf(false) !== -1) {
+    if (rv.includes(false)) {
       event.preventDefault();
       return false;
     }

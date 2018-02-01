@@ -54,10 +54,10 @@ function childFocused() {
 }
 
 function childResized() {
-    const isOSXLion = navigator.userAgent.indexOf("Mac OS X 10.7") != -1;
-    const isOSXMtnLion = navigator.userAgent.indexOf("Mac OS X 10.8") != -1;
-    const isOSXMavericks = navigator.userAgent.indexOf("Mac OS X 10.9") != -1;
-    const isOSXYosemite = navigator.userAgent.indexOf("Mac OS X 10.10") != -1;
+    const isOSXLion = navigator.userAgent.includes("Mac OS X 10.7");
+    const isOSXMtnLion = navigator.userAgent.includes("Mac OS X 10.8");
+    const isOSXMavericks = navigator.userAgent.includes("Mac OS X 10.9");
+    const isOSXYosemite = navigator.userAgent.includes("Mac OS X 10.10");
     if (isOSXLion || isOSXMtnLion || isOSXMavericks || isOSXYosemite) {
         todo_is(win.windowState, win.STATE_MAXIMIZED,
                 "A resize before being maximized breaks this test on 10.7 and 10.8 and 10.9 and 10.10");
@@ -146,7 +146,7 @@ function openContextMenu() {
 }
 
 function finish() {
-    if (menu && navigator.platform.indexOf("Win") >= 0) {
+    if (menu && navigator.platform.includes("Win")) {
         todo(false, "Should not have to hide popup before closing its window");
         // This avoids mochitest "Unable to restore focus" errors (bug 670053).
         menu.hidePopup();

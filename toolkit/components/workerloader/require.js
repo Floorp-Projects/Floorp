@@ -93,7 +93,7 @@
      * @return {*} An object containing the properties exported by the module.
      */
     return function require(path) {
-      if (typeof path != "string" || path.indexOf("://") == -1) {
+      if (typeof path != "string" || !path.includes("://")) {
         throw new TypeError("The argument to require() must be a string uri, got " + path);
       }
       // Automatically add ".js" if there is no extension

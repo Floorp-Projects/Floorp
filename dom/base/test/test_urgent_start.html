@@ -110,7 +110,7 @@ function sendRequsetAndCheckUrgentStart(aEventToTest) {
 
   function checkUrgentStart(aSubject) {
     var channel = aSubject.QueryInterface(Ci.nsIChannel);
-    if (channel.URI.spec.indexOf(scope) === -1 ) {
+    if (!channel.URI.spec.includes(scope) ) {
       return;
     }
 
@@ -132,7 +132,7 @@ function sendRequsetAndCheckUrgentStart(aEventToTest) {
   // requests to Necko in a short time.
   function getResponse(aSubject) {
     var channel = aSubject.QueryInterface(Ci.nsIChannel);
-    if (channel.URI.spec.indexOf(scope) === -1 ) {
+    if (!channel.URI.spec.includes(scope) ) {
       return;
     }
     info("GetResponse");

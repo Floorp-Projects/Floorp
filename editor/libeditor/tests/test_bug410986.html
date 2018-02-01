@@ -36,7 +36,7 @@ SimpleTest.waitForFocus(function() {
     function() {
       var ed = document.getElementById("editor");
       ed.focus();
-      if (navigator.platform.indexOf("Mac") >= 0) {
+      if (navigator.platform.includes("Mac")) {
         synthesizeKey("V", {accelKey: true, shiftKey: true, altKey: true});
       } else {
         synthesizeKey("V", {accelKey: true, shiftKey: true});

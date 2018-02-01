@@ -765,8 +765,8 @@ function getAddresses() {
     networkInfoService.listNetworkAddresses({
       onListedNetworkAddresses(aAddressArray) {
         _addresses = aAddressArray.filter((address) => {
-          return address.indexOf('%p2p') === -1 &&  // No WiFi Direct interfaces
-                 address.indexOf(':')    === -1 &&  // XXX: No IPv6 for now
+          return !address.includes('%p2p') &&  // No WiFi Direct interfaces
+                 !address.includes(':') &&  // XXX: No IPv6 for now
                  address != "127.0.0.1"             // No ipv4 loopback addresses.
         });
 

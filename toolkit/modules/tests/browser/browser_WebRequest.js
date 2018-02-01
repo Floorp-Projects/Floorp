@@ -11,17 +11,17 @@ var expected_browser;
 
 function checkType(details) {
   let expected_type = "???";
-  if (details.url.indexOf("style") != -1) {
+  if (details.url.includes("style")) {
     expected_type = "stylesheet";
-  } else if (details.url.indexOf("image") != -1) {
+  } else if (details.url.includes("image")) {
     expected_type = "image";
-  } else if (details.url.indexOf("script") != -1) {
+  } else if (details.url.includes("script")) {
     expected_type = "script";
-  } else if (details.url.indexOf("page1") != -1) {
+  } else if (details.url.includes("page1")) {
     expected_type = "main_frame";
   } else if (/page2|_redirection\.|dummy_page/.test(details.url)) {
     expected_type = "sub_frame";
-  } else if (details.url.indexOf("xhr") != -1) {
+  } else if (details.url.includes("xhr")) {
     expected_type = "xmlhttprequest";
   }
   is(details.type, expected_type, "resource type is correct");
@@ -40,7 +40,7 @@ function onBeforeRequest(details) {
     checkType(details);
 
     windowIDs.set(details.url, details.windowId);
-    if (details.url.indexOf("page2") != -1) {
+    if (details.url.includes("page2")) {
       let page1id = windowIDs.get(URL);
       ok(details.windowId != page1id, "sub-frame gets its own window ID");
       is(details.parentWindowId, page1id, "parent window id is correct");
@@ -51,7 +51,7 @@ function onBeforeRequest(details) {
       is(ancestor.frameId, page1id, "parent window id is correct");
     }
   }
-  if (details.url.indexOf("_bad.") != -1) {
+  if (details.url.includes("_bad.")) {
     return {cancel: true};
   }
   return undefined;
@@ -70,7 +70,7 @@ function onBeforeSendHeaders(details) {
     let id = windowIDs.get(details.url);
     is(id, details.windowId, "window ID same in onBeforeSendHeaders as onBeforeRequest");
   }
-  if (details.url.indexOf("_redirect.") != -1) {
+  if (details.url.includes("_redirect.")) {
     return {redirectUrl: details.url.replace("_redirect.", "_good.")};
   }
   return undefined;

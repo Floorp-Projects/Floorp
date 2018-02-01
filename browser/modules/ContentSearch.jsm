@@ -338,7 +338,7 @@ this.ContentSearch = {
       state.engines.push({
         name: engine.name,
         iconBuffer,
-        hidden: hiddenList.indexOf(engine.name) !== -1,
+        hidden: hiddenList.includes(engine.name),
       });
     }
     return state;

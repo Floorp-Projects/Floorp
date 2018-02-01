@@ -447,7 +447,7 @@ FilterView.prototype = {
 
     let content = this.DebuggerView.editor.getText();
     if (content.length < this.DebuggerView.LARGE_FILE_SIZE &&
-        SEARCH_AUTOFILL.indexOf(aOperator) != -1) {
+        SEARCH_AUTOFILL.includes(aOperator)) {
       let cursor = this.DebuggerView.editor.getCursor();
       let location = this.DebuggerView.Sources.selectedItem.attachment.source.url;
       let source = this.Parser.get(content, location);

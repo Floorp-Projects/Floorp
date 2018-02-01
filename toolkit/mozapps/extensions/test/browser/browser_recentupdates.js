@@ -76,7 +76,7 @@ add_test(function() {
     var possible = ["addon1@tests.mozilla.org", "addon2@tests.mozilla.org", "addon3@tests.mozilla.org"];
     for (let item of items) {
       let itemId = item.mAddon.id;
-      if (possible.indexOf(itemId) == -1)
+      if (!possible.includes(itemId))
         continue; // skip over any other addons, such as shipped addons that would update on every build
       isnot(expected.length, 0, "Should be expecting more items");
       is(itemId, expected.shift(), "Should get expected item based on sort order");
