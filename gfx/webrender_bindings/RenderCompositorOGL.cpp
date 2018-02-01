@@ -86,7 +86,7 @@ RenderCompositorOGL::Resume()
 }
 
 LayoutDeviceIntSize
-RenderCompositorOGL::GetClientSize()
+RenderCompositorOGL::GetBufferSize()
 {
   return mWidget->GetClientSize();
 }

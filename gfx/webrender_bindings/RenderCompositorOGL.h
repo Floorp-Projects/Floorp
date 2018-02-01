@@ -32,7 +32,7 @@ public:
 
   bool UseANGLE() const override { return false; }
 
-  LayoutDeviceIntSize GetClientSize() override;
+  LayoutDeviceIntSize GetBufferSize() override;
 
 protected:
   RefPtr<gl::GLContext> mGL;
