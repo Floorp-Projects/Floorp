@@ -729,7 +729,6 @@ ShowProtectedAuthPrompt(PK11SlotInfo* slot, nsIInterfaceRequestor *ir)
 }
 
 class PK11PasswordPromptRunnable : public SyncRunnableBase
-                                 , public nsNSSShutDownObject
 {
 public:
   PK11PasswordPromptRunnable(PK11SlotInfo* slot,
@@ -739,11 +738,8 @@ public:
       mIR(ir)
   {
   }
-  virtual ~PK11PasswordPromptRunnable();
+  virtual ~PK11PasswordPromptRunnable() = default;
 
-  // This doesn't own the PK11SlotInfo or any other NSS objects, so there's
-  // nothing to release.
-  virtual void virtualDestroyNSSReference() override {}
   char * mResult; // out
   virtual void RunOnTargetThread() override;
 private:
@@ -751,24 +747,9 @@ private:
   nsIInterfaceRequestor* const mIR; // in
 };
 
-PK11PasswordPromptRunnable::~PK11PasswordPromptRunnable()
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return;
-  }
-
-  shutdown(ShutdownCalledFrom::Object);
-}
-
 void
 PK11PasswordPromptRunnable::RunOnTargetThread()
 {
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return;
-  }
-
   nsresult rv;
   nsCOMPtr<nsIPrompt> prompt;
   if (!mIR) {
@@ -992,8 +973,6 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
 {
   *canFalseStart = false;
 
-  nsNSSShutDownPreventionLock locker;
-
   nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
   if (!infoObject) {
     PR_SetError(PR_INVALID_STATE_ERROR, 0);
@@ -1001,12 +980,6 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
   }
 
   infoObject->SetFalseStartCallbackCalled();
-
-  if (infoObject->isAlreadyShutDown()) {
-    MOZ_CRASH("SSL socket used after NSS shut down");
-    PR_SetError(PR_INVALID_STATE_ERROR, 0);
-    return SECFailure;
-  }
 
   PreliminaryHandshakeDone(fd);
 
@@ -1330,7 +1303,6 @@ IsCertificateDistrustImminent(nsIX509CertList* aCertList,
 }
 
 void HandshakeCallback(PRFileDesc* fd, void* client_data) {
-  nsNSSShutDownPreventionLock locker;
   SECStatus rv;
 
   nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;

@@ -1702,13 +1702,13 @@ fn static_assert() {
     %>
 
     pub fn set_border_image_repeat(&mut self, v: longhands::border_image_repeat::computed_value::T) {
-        use properties::longhands::border_image_repeat::computed_value::RepeatKeyword;
+        use values::specified::border::BorderImageRepeatKeyword;
         use gecko_bindings::structs::StyleBorderImageRepeat;
 
         % for i, side in enumerate(["H", "V"]):
             self.gecko.mBorderImageRepeat${side} = match v.${i} {
                 % for keyword in border_image_repeat_keywords:
-                RepeatKeyword::${keyword} => StyleBorderImageRepeat::${keyword},
+                BorderImageRepeatKeyword::${keyword} => StyleBorderImageRepeat::${keyword},
                 % endfor
             };
         % endfor
@@ -1724,13 +1724,13 @@ fn static_assert() {
     }
 
     pub fn clone_border_image_repeat(&self) -> longhands::border_image_repeat::computed_value::T {
-        use properties::longhands::border_image_repeat::computed_value::RepeatKeyword;
+        use values::specified::border::BorderImageRepeatKeyword;
         use gecko_bindings::structs::StyleBorderImageRepeat;
 
         % for side in ["H", "V"]:
         let servo_${side.lower()} = match self.gecko.mBorderImageRepeat${side} {
             % for keyword in border_image_repeat_keywords:
-            StyleBorderImageRepeat::${keyword} => RepeatKeyword::${keyword},
+            StyleBorderImageRepeat::${keyword} => BorderImageRepeatKeyword::${keyword},
             % endfor
         };
         % endfor
@@ -3807,16 +3807,16 @@ fn static_assert() {
     %>
 
     <%self:simple_image_array_property name="repeat" shorthand="${shorthand}" field_name="mRepeat">
-        use values::specified::background::RepeatKeyword;
+        use values::specified::background::BackgroundRepeatKeyword;
         use gecko_bindings::structs::nsStyleImageLayers_Repeat;
         use gecko_bindings::structs::StyleImageLayerRepeat;
 
-        fn to_ns(repeat: RepeatKeyword) -> StyleImageLayerRepeat {
+        fn to_ns(repeat: BackgroundRepeatKeyword) -> StyleImageLayerRepeat {
             match repeat {
-                RepeatKeyword::Repeat => StyleImageLayerRepeat::Repeat,
-                RepeatKeyword::Space => StyleImageLayerRepeat::Space,
-                RepeatKeyword::Round => StyleImageLayerRepeat::Round,
-                RepeatKeyword::NoRepeat => StyleImageLayerRepeat::NoRepeat,
+                BackgroundRepeatKeyword::Repeat => StyleImageLayerRepeat::Repeat,
+                BackgroundRepeatKeyword::Space => StyleImageLayerRepeat::Space,
+                BackgroundRepeatKeyword::Round => StyleImageLayerRepeat::Round,
+                BackgroundRepeatKeyword::NoRepeat => StyleImageLayerRepeat::NoRepeat,
             }
         }
 
@@ -3830,15 +3830,15 @@ fn static_assert() {
 
     pub fn clone_${shorthand}_repeat(&self) -> longhands::${shorthand}_repeat::computed_value::T {
         use properties::longhands::${shorthand}_repeat::single_value::computed_value::T;
-        use values::specified::background::RepeatKeyword;
+        use values::specified::background::BackgroundRepeatKeyword;
         use gecko_bindings::structs::StyleImageLayerRepeat;
 
-        fn to_servo(repeat: StyleImageLayerRepeat) -> RepeatKeyword {
+        fn to_servo(repeat: StyleImageLayerRepeat) -> BackgroundRepeatKeyword {
             match repeat {
-                StyleImageLayerRepeat::Repeat => RepeatKeyword::Repeat,
-                StyleImageLayerRepeat::Space => RepeatKeyword::Space,
-                StyleImageLayerRepeat::Round => RepeatKeyword::Round,
-                StyleImageLayerRepeat::NoRepeat => RepeatKeyword::NoRepeat,
+                StyleImageLayerRepeat::Repeat => BackgroundRepeatKeyword::Repeat,
+                StyleImageLayerRepeat::Space => BackgroundRepeatKeyword::Space,
+                StyleImageLayerRepeat::Round => BackgroundRepeatKeyword::Round,
+                StyleImageLayerRepeat::NoRepeat => BackgroundRepeatKeyword::NoRepeat,
                 _ => panic!("Found unexpected value in style struct for ${shorthand}_repeat property"),
             }
         }
@@ -5675,11 +5675,14 @@ clip-path
     }
 
     % for counter_property in ["Increment", "Reset"]:
-        pub fn set_counter_${counter_property.lower()}(&mut self, v: longhands::counter_increment::computed_value::T) {
+        pub fn set_counter_${counter_property.lower()}(
+            &mut self,
+            v: longhands::counter_${counter_property.lower()}::computed_value::T
+        ) {
             unsafe {
                 bindings::Gecko_ClearAndResizeCounter${counter_property}s(&mut self.gecko,
-                                                                      v.0.len() as u32);
-                for (i, (name, value)) in v.0.into_iter().enumerate() {
+                                                                      v.get_values().len() as u32);
+                for (i, &(ref name, value)) in v.get_values().into_iter().enumerate() {
                     self.gecko.m${counter_property}s[i].mCounter.assign(name.0.as_slice());
                     self.gecko.m${counter_property}s[i].mValue = value;
                 }
@@ -5696,11 +5699,13 @@ clip-path
             self.copy_counter_${counter_property.lower()}_from(other)
         }
 
-        pub fn clone_counter_${counter_property.lower()}(&self) -> longhands::counter_increment::computed_value::T {
+        pub fn clone_counter_${counter_property.lower()}(
+            &self
+        ) -> longhands::counter_${counter_property.lower()}::computed_value::T {
             use values::CustomIdent;
             use gecko_string_cache::Atom;
 
-            longhands::counter_increment::computed_value::T(
+            longhands::counter_${counter_property.lower()}::computed_value::T::new(
                 self.gecko.m${counter_property}s.iter().map(|ref gecko_counter| {
                     (CustomIdent(Atom::from(gecko_counter.mCounter.to_string())), gecko_counter.mValue)
                 }).collect()

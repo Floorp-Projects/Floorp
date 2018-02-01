@@ -11,7 +11,6 @@
 #include "hasht.h"
 #include "nsICryptoHMAC.h"
 #include "nsICryptoHash.h"
-#include "nsNSSShutDown.h"
 #include "secmodt.h"
 
 class nsIInputStream;
@@ -19,7 +18,7 @@ class nsIInputStream;
 #define NS_CRYPTO_HASH_CID {0x36a1d3b3, 0xd886, 0x4317, {0x96, 0xff, 0x87, 0xb0, 0x00, 0x5c, 0xfe, 0xf7}}
 #define NS_CRYPTO_HMAC_CID {0xa496d0a2, 0xdff7, 0x4e23, {0xbd, 0x65, 0x1c, 0xa7, 0x42, 0xfa, 0x17, 0x8a}}
 
-class nsCryptoHash final : public nsICryptoHash, public nsNSSShutDownObject
+class nsCryptoHash final : public nsICryptoHash
 {
 public:
   NS_DECL_ISUPPORTS
@@ -28,16 +27,13 @@ public:
   nsCryptoHash();
 
 private:
-  ~nsCryptoHash();
+  virtual ~nsCryptoHash() {}
 
   mozilla::UniqueHASHContext mHashContext;
   bool mInitialized;
-
-  virtual void virtualDestroyNSSReference() override;
-  void destructorSafeDestroyNSSReference();
 };
 
-class nsCryptoHMAC : public nsICryptoHMAC, public nsNSSShutDownObject
+class nsCryptoHMAC : public nsICryptoHMAC
 {
 public:
   NS_DECL_ISUPPORTS
@@ -46,11 +42,9 @@ public:
   nsCryptoHMAC();
 
 private:
-  ~nsCryptoHMAC();
-  mozilla::UniquePK11Context mHMACContext;
+  virtual ~nsCryptoHMAC() {}
 
-  virtual void virtualDestroyNSSReference() override;
-  void destructorSafeDestroyNSSReference();
+  mozilla::UniquePK11Context mHMACContext;
 };
 
 #endif // nsCryptoHash_h

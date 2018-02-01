@@ -90,8 +90,6 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINSSComponent, NS_INSSCOMPONENT_IID)
 
-class nsNSSShutDownList;
-
 // Implementation of the PSM component interface.
 class nsNSSComponent final : public nsINSSComponent
                            , public nsIObserver
@@ -183,9 +181,6 @@ private:
   nsresult mLoadableRootsLoadedResult;
 
   // mMutex protects all members that are accessed from more than one thread.
-  // While this lock is held, the same thread must not attempt to acquire a
-  // nsNSSShutDownPreventionLock (acquiring a nsNSSShutDownPreventionLock and
-  // then acquiring this lock is fine).
   mozilla::Mutex mMutex;
 
   // The following members are accessed from more than one thread:

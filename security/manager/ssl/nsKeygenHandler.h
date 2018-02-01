@@ -13,15 +13,13 @@
 #include "nsError.h"
 #include "nsIFormProcessor.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsNSSShutDown.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "secmodt.h"
 
 nsresult GetSlotWithMechanism(uint32_t mechanism,
                               nsIInterfaceRequestor* ctx,
-                              PK11SlotInfo** retSlot,
-                              nsNSSShutDownPreventionLock& /*proofOfLock*/);
+                              PK11SlotInfo** retSlot);
 
 #define DEFAULT_RSA_KEYGEN_PE 65537L
 #define DEFAULT_RSA_KEYGEN_ALG SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION
@@ -29,7 +27,6 @@ nsresult GetSlotWithMechanism(uint32_t mechanism,
 mozilla::UniqueSECItem DecodeECParams(const char* curve);
 
 class nsKeygenFormProcessor : public nsIFormProcessor
-                            , public nsNSSShutDownObject
 {
 public:
   nsKeygenFormProcessor();
@@ -57,11 +54,8 @@ public:
                             nsAString& keyTypeValue,
                             nsAString& keyParamsValue);
 
-  // Nothing to release.
-  virtual void virtualDestroyNSSReference() override {}
-
 protected:
-  virtual ~nsKeygenFormProcessor();
+  virtual ~nsKeygenFormProcessor() {}
 
   nsresult GetPublicKey(const nsAString& aValue, const nsAString& aChallenge,
                         const nsString& akeyType, nsAString& aOutPublicKey,
