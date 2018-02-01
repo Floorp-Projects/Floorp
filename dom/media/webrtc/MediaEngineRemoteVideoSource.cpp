@@ -602,7 +602,7 @@ MediaEngineRemoteVideoSource::GetFitnessDistance(
     uint64_t(H::FitnessDistance(aDeviceId, aConstraints.mDeviceId)) +
     uint64_t(H::FitnessDistance(mFacingMode, aConstraints.mFacingMode)) +
     uint64_t(aCandidate.width ? H::FitnessDistance(int32_t(aCandidate.width),
-                                                  aConstraints.mWidth) : 0) +
+                                                   aConstraints.mWidth) : 0) +
     uint64_t(aCandidate.height ? H::FitnessDistance(int32_t(aCandidate.height),
                                                     aConstraints.mHeight) : 0) +
     uint64_t(aCandidate.maxFPS ? H::FitnessDistance(double(aCandidate.maxFPS),
