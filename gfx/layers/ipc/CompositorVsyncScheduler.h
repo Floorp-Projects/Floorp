@@ -51,7 +51,6 @@ public:
   bool NotifyVsync(TimeStamp aVsyncTimestamp);
   void SetNeedsComposite();
 
-  void ScheduleTask(already_AddRefed<CancelableRunnable>, int);
   void ResumeComposition();
   void ComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
   void PostCompositeTask(TimeStamp aCompositeTimestamp);
@@ -78,6 +77,8 @@ public:
 private:
   virtual ~CompositorVsyncScheduler();
 
+  // Schedule a task to run on the compositor thread.
+  void ScheduleTask(already_AddRefed<CancelableRunnable>);
   void NotifyCompositeTaskExecuted();
   void ObserveVsync();
   void UnobserveVsync();
