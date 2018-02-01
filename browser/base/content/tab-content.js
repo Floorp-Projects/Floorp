@@ -64,6 +64,7 @@ addMessageListener("Browser:HideSessionRestoreButton", function(message) {
 });
 
 
+// XXX(nika): Should we try to call this in the parent process instead?
 addMessageListener("Browser:Reload", function(message) {
   /* First, we'll try to use the session history object to reload so
    * that framesets are handled properly. If we're in a special
@@ -73,9 +74,9 @@ addMessageListener("Browser:Reload", function(message) {
 
   let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
   try {
-    let sh = webNav.sessionHistory;
-    if (sh)
-      webNav = sh.QueryInterface(Ci.nsIWebNavigation);
+    if (webNav.sessionHistory) {
+      webNav = webNav.sessionHistory;
+    }
   } catch (e) {
   }
 

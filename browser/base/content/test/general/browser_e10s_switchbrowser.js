@@ -19,7 +19,7 @@ function get_remote_history(browser) {
     };
 
     for (let i = 0; i < sessionHistory.count; i++) {
-      let entry = sessionHistory.getEntryAtIndex(i, false);
+      let entry = sessionHistory.legacySHistory.getEntryAtIndex(i, false);
       result.entries.push({
         uri: entry.URI.spec,
         title: entry.title
