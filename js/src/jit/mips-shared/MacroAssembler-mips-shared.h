@@ -217,9 +217,12 @@ class MacroAssemblerMIPSShared : public Assembler
     void minMaxDouble(FloatRegister srcDest, FloatRegister other, bool handleNaN, bool isMax);
     void minMaxFloat32(FloatRegister srcDest, FloatRegister other, bool handleNaN, bool isMax);
 
-    void outOfLineWasmTruncateToIntCheck(FloatRegister input, MIRType fromType,
-                                         MIRType toType, bool isUnsigned, Label* rejoin,
-                                         wasm::BytecodeOffset trapOffset);
+   void outOfLineWasmTruncateToInt32Check(FloatRegister input, Register output, MIRType fromType,
+                                           TruncFlags flags, Label* rejoin,
+                                           wasm::BytecodeOffset trapOffset);
+    void outOfLineWasmTruncateToInt64Check(FloatRegister input, Register64 output, MIRType fromType,
+                                           TruncFlags flags, Label* rejoin,
+                                           wasm::BytecodeOffset trapOffset);
 
   protected:
     void wasmLoadImpl(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,

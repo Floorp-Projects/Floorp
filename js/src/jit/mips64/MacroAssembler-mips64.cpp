@@ -832,8 +832,13 @@ MacroAssemblerMIPS64::ma_lid(FloatRegister dest, double value)
 {
     ImmWord imm(mozilla::BitwiseCast<uint64_t>(value));
 
-    ma_li(ScratchRegister, imm);
-    moveToDouble(ScratchRegister, dest);
+    if(imm.value != 0){
+        ma_li(ScratchRegister, imm);
+        moveToDouble(ScratchRegister, dest);
+    } else {
+        moveToDouble(zero, dest);
+    }
+
 }
 
 void
@@ -2418,33 +2423,22 @@ void
 MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output, bool isSaturating,
                                            Label* oolEntry)
 {
-    MOZ_ASSERT(!isSaturating, "NYI");
-
     as_truncld(ScratchDoubleReg, input);
-    moveFromDoubleHi(ScratchDoubleReg, output);
-    as_cfc1(ScratchRegister, Assembler::FCSR);
-    ma_ext(ScratchRegister, ScratchRegister, 6, 1);
-    ma_or(ScratchRegister, output);
-    moveFromFloat32(ScratchDoubleReg, output);
+    moveFromDouble(ScratchDoubleReg, output);
+    ma_dsrl(ScratchRegister, output, Imm32(32));
+    as_sll(output, output, 0);
     ma_b(ScratchRegister, Imm32(0), oolEntry, Assembler::NotEqual);
-
-
 }
 
 void
 MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, bool isSaturating,
                                             Label* oolEntry)
 {
-    MOZ_ASSERT(!isSaturating, "NYI");
-
     as_truncls(ScratchDoubleReg, input);
-    moveFromDoubleHi(ScratchDoubleReg, output);
-    as_cfc1(ScratchRegister, Assembler::FCSR);
-    ma_ext(ScratchRegister, ScratchRegister, 6, 1);
-    ma_or(ScratchRegister, output);
-    moveFromFloat32(ScratchDoubleReg, output);
+    moveFromDouble(ScratchDoubleReg, output);
+    ma_dsrl(ScratchRegister, output, Imm32(32));
+    as_sll(output, output, 0);
     ma_b(ScratchRegister, Imm32(0), oolEntry, Assembler::NotEqual);
-
 }
 
 void
@@ -2478,113 +2472,117 @@ MacroAssembler::wasmUnalignedStoreI64(const wasm::MemoryAccessDesc& access, Regi
 }
 
 void
-MacroAssembler::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, bool,
-                                          Label* oolEntry, Label* oolRejoin,
-                                          FloatRegister tempDouble)
+MacroAssembler::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output,
+                                          bool isSaturating, Label* oolEntry,
+                                          Label* oolRejoin, FloatRegister tempDouble)
 {
     MOZ_ASSERT(tempDouble.isInvalid());
-    wasmTruncateToI64(input, output.reg, MIRType::Double, false, oolEntry, oolRejoin);
+
+    as_truncld(ScratchDoubleReg, input);
+    as_cfc1(ScratchRegister, Assembler::FCSR);
+    moveFromDouble(ScratchDoubleReg, output.reg);
+    ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseV, 1);
+    ma_b(ScratchRegister, Imm32(0), oolEntry, Assembler::NotEqual);
+
+    if (isSaturating)
+        bind(oolRejoin);
 }
 
 void
-MacroAssembler::wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, bool,
-                                           Label* oolEntry, Label* oolRejoin,
-                                           FloatRegister tempDouble)
+MacroAssembler::wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output_,
+                                           bool isSaturating, Label* oolEntry,
+                                           Label* oolRejoin, FloatRegister tempDouble)
 {
     MOZ_ASSERT(tempDouble.isInvalid());
-    wasmTruncateToI64(input, output.reg, MIRType::Double, true, oolEntry, oolRejoin);
+    Register output = output_.reg;
+
+    Label done;
+
+    as_truncld(ScratchDoubleReg, input);
+    // ma_li INT64_MAX
+    ma_li(SecondScratchReg, Imm32(-1));
+    ma_dext(SecondScratchReg, SecondScratchReg, Imm32(0), Imm32(63));
+    moveFromDouble(ScratchDoubleReg, output);
+    // For numbers in  -1.[ : ]INT64_MAX range do nothing more
+    ma_b(output, SecondScratchReg, &done, Assembler::Below, ShortJump);
+
+    loadConstantDouble(double(INT64_MAX + 1ULL), ScratchDoubleReg);
+    // ma_li INT64_MIN
+    ma_daddu(SecondScratchReg, Imm32(1));
+    as_subd(ScratchDoubleReg, input, ScratchDoubleReg);
+    as_truncld(ScratchDoubleReg, ScratchDoubleReg);
+    as_cfc1(ScratchRegister, Assembler::FCSR);
+    moveFromDouble(ScratchDoubleReg, output);
+    ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseV, 1);
+    ma_daddu(output, SecondScratchReg);
+
+    // Guard against negative values that result in 0 due the precision loss.
+    as_sltiu(SecondScratchReg, output, 1);
+    ma_or(ScratchRegister, SecondScratchReg);
+
+    ma_b(ScratchRegister, Imm32(0), oolEntry, Assembler::NotEqual);
+
+    bind(&done);
+
+    if (isSaturating)
+        bind(oolRejoin);
 }
 
 void
-MacroAssembler::wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, bool,
-                                           Label* oolEntry, Label* oolRejoin,
-                                           FloatRegister tempFloat)
+MacroAssembler::wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output,
+                                           bool isSaturating, Label* oolEntry,
+                                           Label* oolRejoin, FloatRegister tempFloat)
 {
     MOZ_ASSERT(tempFloat.isInvalid());
-    wasmTruncateToI64(input, output.reg, MIRType::Float32, false, oolEntry, oolRejoin);
+
+    as_truncls(ScratchDoubleReg, input);
+    as_cfc1(ScratchRegister, Assembler::FCSR);
+    moveFromDouble(ScratchDoubleReg, output.reg);
+    ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseV, 1);
+    ma_b(ScratchRegister, Imm32(0), oolEntry, Assembler::NotEqual);
+
+    if (isSaturating)
+        bind(oolRejoin);
 }
 
 void
-MacroAssembler::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, bool,
-                                            Label* oolEntry, Label* oolRejoin,
-                                            FloatRegister tempFloat)
+MacroAssembler::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output_,
+                                            bool isSaturating, Label* oolEntry,
+                                            Label* oolRejoin, FloatRegister tempFloat)
 {
     MOZ_ASSERT(tempFloat.isInvalid());
-    wasmTruncateToI64(input, output.reg, MIRType::Float32, true, oolEntry, oolRejoin);
-}
+    Register output = output_.reg;
 
-void
-MacroAssemblerMIPS64Compat::wasmTruncateToI64(FloatRegister input, Register output, MIRType fromType,
-                                              bool isUnsigned, Label* oolEntry, Label* oolRejoin)
-{
-    if (isUnsigned) {
-        Label isLarge, done;
+    Label done;
 
-        if (fromType == MIRType::Double) {
-            asMasm().loadConstantDouble(double(INT64_MAX), ScratchDoubleReg);
-            asMasm().ma_bc1d(ScratchDoubleReg, input, &isLarge,
-                             Assembler::DoubleLessThanOrEqual, ShortJump);
+    as_truncls(ScratchDoubleReg, input);
+    // ma_li INT64_MAX
+    ma_li(SecondScratchReg, Imm32(-1));
+    ma_dext(SecondScratchReg, SecondScratchReg, Imm32(0), Imm32(63));
+    moveFromDouble(ScratchDoubleReg, output);
+    // For numbers in  -1.[ : ]INT64_MAX range do nothing more
+    ma_b(output, SecondScratchReg, &done, Assembler::Below, ShortJump);
 
-            asMasm().as_truncld(ScratchDoubleReg, input);
-        } else {
-            asMasm().loadConstantFloat32(float(INT64_MAX), ScratchFloat32Reg);
-            asMasm().ma_bc1s(ScratchFloat32Reg, input, &isLarge,
-                             Assembler::DoubleLessThanOrEqual, ShortJump);
+    loadConstantFloat32(float(INT64_MAX + 1ULL), ScratchFloat32Reg);
+    // ma_li INT64_MIN
+    ma_daddu(SecondScratchReg, Imm32(1));
+    as_subs(ScratchFloat32Reg, input, ScratchFloat32Reg);
+    as_truncls(ScratchDoubleReg, ScratchFloat32Reg);
+    as_cfc1(ScratchRegister, Assembler::FCSR);
+    moveFromDouble(ScratchDoubleReg, output);
+    ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseV, 1);
+    ma_daddu(output, SecondScratchReg);
 
-            asMasm().as_truncls(ScratchDoubleReg, input);
-        }
+    // Guard against negative values that result in 0 due the precision loss.
+    as_sltiu(SecondScratchReg, output, 1);
+    ma_or(ScratchRegister, SecondScratchReg);
 
-        // Check that the result is in the uint64_t range.
-        asMasm().moveFromDouble(ScratchDoubleReg, output);
-        asMasm().as_cfc1(ScratchRegister, Assembler::FCSR);
-        // extract invalid operation flag (bit 6) from FCSR
-        asMasm().ma_ext(ScratchRegister, ScratchRegister, 16, 1);
-        asMasm().ma_dsrl(SecondScratchReg, output, Imm32(63));
-        asMasm().ma_or(SecondScratchReg, ScratchRegister);
-        asMasm().ma_b(SecondScratchReg, Imm32(0), oolEntry, Assembler::NotEqual);
+    ma_b(ScratchRegister, Imm32(0), oolEntry, Assembler::NotEqual);
 
-        asMasm().ma_b(&done, ShortJump);
+    bind(&done);
 
-        // The input is greater than double(INT64_MAX).
-        asMasm().bind(&isLarge);
-        if (fromType == MIRType::Double) {
-            asMasm().as_subd(ScratchDoubleReg, input, ScratchDoubleReg);
-            asMasm().as_truncld(ScratchDoubleReg, ScratchDoubleReg);
-        } else {
-            asMasm().as_subs(ScratchDoubleReg, input, ScratchDoubleReg);
-            asMasm().as_truncls(ScratchDoubleReg, ScratchDoubleReg);
-        }
-
-        // Check that the result is in the uint64_t range.
-        asMasm().moveFromDouble(ScratchDoubleReg, output);
-        asMasm().as_cfc1(ScratchRegister, Assembler::FCSR);
-        asMasm().ma_ext(ScratchRegister, ScratchRegister, 16, 1);
-        asMasm().ma_dsrl(SecondScratchReg, output, Imm32(63));
-        asMasm().ma_or(SecondScratchReg, ScratchRegister);
-        asMasm().ma_b(SecondScratchReg, Imm32(0), oolEntry, Assembler::NotEqual);
-
-        asMasm().ma_li(ScratchRegister, Imm32(1));
-        asMasm().ma_dins(output, ScratchRegister, Imm32(63), Imm32(1));
-
-        asMasm().bind(&done);
-        asMasm().bind(oolRejoin);
-        return;
-    }
-
-    // When the input value is Infinity, NaN, or rounds to an integer outside the
-    // range [INT64_MIN; INT64_MAX + 1[, the Invalid Operation flag is set in the FCSR.
-    if (fromType == MIRType::Double)
-        asMasm().as_truncld(ScratchDoubleReg, input);
-    else
-        asMasm().as_truncls(ScratchDoubleReg, input);
-
-    // Check that the result is in the int64_t range.
-    asMasm().as_cfc1(output, Assembler::FCSR);
-    asMasm().ma_ext(output, output, 16, 1);
-    asMasm().ma_b(output, Imm32(0), oolEntry, Assembler::NotEqual);
-
-    asMasm().bind(oolRejoin);
-    asMasm().moveFromDouble(ScratchDoubleReg, output);
+    if (isSaturating)
+        bind(oolRejoin);
 }
 
 void
