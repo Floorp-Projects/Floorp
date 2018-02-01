@@ -5,7 +5,7 @@ const URL = "http://example.com/browser_switch_remoteness_";
 function countHistoryEntries(browser, expected) {
   return ContentTask.spawn(browser, { expected }, async function(args) {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
-    let history = webNavigation.sessionHistory.QueryInterface(Ci.nsISHistoryInternal);
+    let history = webNavigation.sessionHistory;
     Assert.equal(history && history.count, args.expected,
       "correct number of shistory entries");
   });

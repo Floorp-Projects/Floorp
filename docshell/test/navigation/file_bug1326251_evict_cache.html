@@ -12,7 +12,7 @@
                        .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
                        .getInterface(SpecialPowers.Ci.nsIWebNavigation)
                        .sessionHistory;
-      let shPrivate = shistory.QueryInterface(SpecialPowers.Ci.nsISHistoryInternal);
+      let shPrivate = shistory.legacySHistory.QueryInterface(SpecialPowers.Ci.nsISHistoryInternal);
       shPrivate.evictAllContentViewers();
       history.back();
     }

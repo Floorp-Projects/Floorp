@@ -22,7 +22,7 @@ class TestNavBar(PuppeteerMixin, MarionetteTestCase):
         # TODO: check why self.puppeteer.places.remove_all_history() does not work here
         self.marionette.execute_script("""
             let count = gBrowser.sessionHistory.count;
-            gBrowser.sessionHistory.PurgeHistory(count);
+            gBrowser.sessionHistory.legacySHistory.PurgeHistory(count);
         """)
 
     def test_elements(self):

@@ -270,6 +270,7 @@ var ViewSourceContent = {
     shEntry.cacheKey = shEntrySource.cacheKey;
     docShell.QueryInterface(Ci.nsIWebNavigation)
             .sessionHistory
+            .legacySHistory
             .QueryInterface(Ci.nsISHistoryInternal)
             .addEntry(shEntry, true);
   },
