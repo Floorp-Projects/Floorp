@@ -12,16 +12,4 @@ interface nsIDOMNodeFilter;
 // Introduced in DOM Level 2, updated to DOM Level 4:
 interface nsIDOMNodeIterator : nsISupports
 {
-  readonly attribute nsIDOMNode       root;
-  readonly attribute unsigned long    whatToShow;
-  readonly attribute nsIDOMNodeFilter filter;
-  nsIDOMNode         nextNode()
-                                        raises(DOMException);
-  nsIDOMNode         previousNode()
-                                        raises(DOMException);
-  void               detach();
-
-  // WebKit extensions, convenient for debugging.
-  readonly attribute nsIDOMNode referenceNode;
-  readonly attribute boolean    pointerBeforeReferenceNode;
 };
