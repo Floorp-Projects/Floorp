@@ -62,6 +62,7 @@ use values::computed::{NonNegativeLength, ToComputedValue, Percentage};
 use values::computed::font::{FontSize, SingleFontFamily};
 use values::computed::effects::{BoxShadow, Filter, SimpleShadow};
 use values::computed::outline::OutlineStyle;
+use values::generics::transform::TransformStyle;
 use computed_values::border_style;
 
 pub mod style_structs {
@@ -1426,29 +1427,21 @@ impl Clone for ${style_struct.gecko_struct_name} {
     }
 </%def>
 
-<%def name="impl_font_settings(ident, tag_type)">
+<%def name="impl_font_settings(ident, tag_type, value_type, gecko_value_type)">
     <%
     gecko_ffi_name = to_camel_case_lower(ident)
     %>
 
     pub fn set_${ident}(&mut self, v: longhands::${ident}::computed_value::T) {
-        use values::generics::FontSettings;
-
         let current_settings = &mut self.gecko.mFont.${gecko_ffi_name};
         current_settings.clear_pod();
 
-        match v {
-            FontSettings::Normal => (), // do nothing, length is already 0
+        unsafe { current_settings.set_len_pod(v.0.len() as u32) };
 
-            FontSettings::Tag(other_settings) => {
-                unsafe { current_settings.set_len_pod(other_settings.len() as u32) };
-
-                for (current, other) in current_settings.iter_mut().zip(other_settings) {
-                    current.mTag = other.tag;
-                    current.mValue = other.value.0;
-                }
-            }
-        };
+        for (current, other) in current_settings.iter_mut().zip(v.0.iter()) {
+            current.mTag = other.tag.0;
+            current.mValue = other.value as ${gecko_value_type};
+        }
     }
 
     pub fn copy_${ident}_from(&mut self, other: &Self) {
@@ -1470,20 +1463,17 @@ impl Clone for ${style_struct.gecko_struct_name} {
     }
 
     pub fn clone_${ident}(&self) -> longhands::${ident}::computed_value::T {
-        use values::generics::{FontSettings, FontSettingTag, ${tag_type}} ;
+        use values::generics::font::{FontSettings, ${tag_type}};
+        use values::specified::font::FontTag;
 
-        if self.gecko.mFont.${gecko_ffi_name}.len() == 0 {
-            FontSettings::Normal
-        } else {
-            FontSettings::Tag(
-                self.gecko.mFont.${gecko_ffi_name}.iter().map(|gecko_font_setting| {
-                    FontSettingTag {
-                        tag: gecko_font_setting.mTag,
-                        value: ${tag_type}(gecko_font_setting.mValue),
-                    }
-                }).collect()
-            )
-        }
+        FontSettings(
+            self.gecko.mFont.${gecko_ffi_name}.iter().map(|gecko_font_setting| {
+                ${tag_type} {
+                    tag: FontTag(gecko_font_setting.mTag),
+                    value: gecko_font_setting.mValue as ${value_type},
+                }
+            }).collect::<Vec<_>>().into_boxed_slice()
+        )
     }
 </%def>
 
@@ -2337,8 +2327,10 @@ fn static_assert() {
 <%self:impl_trait style_struct_name="Font"
     skip_longhands="${skip_font_longhands}">
 
-    <% impl_font_settings("font_feature_settings", "FontSettingTagInt") %>
-    <% impl_font_settings("font_variation_settings", "FontSettingTagFloat") %>
+    // Negative numbers are invalid at parse time, but <integer> is still an
+    // i32.
+    <% impl_font_settings("font_feature_settings", "FeatureTagValue", "i32", "u32") %>
+    <% impl_font_settings("font_variation_settings", "VariationValue", "f32", "f32") %>
 
     pub fn fixup_none_generic(&mut self, device: &Device) {
         self.gecko.mFont.systemFont = false;
@@ -3344,6 +3336,25 @@ fn static_assert() {
     pub fn reset_transition_property(&mut self, other: &Self) {
         self.copy_transition_property_from(other)
     }
+
+    // Hand-written because the Mako helpers transform `Preserve3d` into `PRESERVE3D`.
+    pub fn set_transform_style(&mut self, v: TransformStyle) {
+        self.gecko.mTransformStyle = match v {
+            TransformStyle::Flat => structs::NS_STYLE_TRANSFORM_STYLE_FLAT as u8,
+            TransformStyle::Preserve3d => structs::NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D as u8,
+        };
+    }
+
+    // Hand-written because the Mako helpers transform `Preserve3d` into `PRESERVE3D`.
+    pub fn clone_transform_style(&self) -> TransformStyle {
+        match self.gecko.mTransformStyle as u32 {
+            structs::NS_STYLE_TRANSFORM_STYLE_FLAT => TransformStyle::Flat,
+            structs::NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D => TransformStyle::Preserve3d,
+            _ => panic!("illegal transform style"),
+        }
+    }
+
+    ${impl_simple_copy('transform_style', 'mTransformStyle')}
 
     ${impl_transition_count('property', 'Property')}
 
@@ -5081,7 +5092,7 @@ fn static_assert() {
                             coord.0.to_gecko_style_coord(&mut shape.mCoordinates[2 * i]);
                             coord.1.to_gecko_style_coord(&mut shape.mCoordinates[2 * i + 1]);
                         }
-                        shape.mFillRule = if poly.fill == FillRule::EvenOdd {
+                        shape.mFillRule = if poly.fill == FillRule::Evenodd {
                             StyleFillRule::Evenodd
                         } else {
                             StyleFillRule::Nonzero

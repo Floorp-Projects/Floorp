@@ -686,6 +686,13 @@
         ]
       }
     },
+    "tl": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo", "bing", "amazondotcom", "ddg", "twitter"
+        ]
+      }
+    },
     "tr": {
       "default": {
         "visibleDefaultEngines": [

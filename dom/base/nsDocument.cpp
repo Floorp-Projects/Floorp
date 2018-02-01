@@ -1478,7 +1478,6 @@ nsIDocument::nsIDocument()
     mHasDisplayDocument(false),
     mFontFaceSetDirty(true),
     mGetUserFontSetCalled(false),
-    mPostedFlushUserFontSet(false),
     mDidFireDOMContentLoaded(true),
     mHasScrollLinkedEffect(false),
     mFrameRequestCallbacksScheduled(false),
@@ -3993,8 +3992,11 @@ nsDocument::CreateShell(nsPresContext* aContext, nsViewManager* aViewManager,
 
   UpdateFrameRequestCallbackSchedulingState();
 
-  // Now that we have a shell, we might have @font-face rules.
-  RebuildUserFontSet();
+  // Now that we have a shell, we might have @font-face rules (the presence of a
+  // shell may change which rules apply to us). We don't need to do anything
+  // like EnsureStyleFlush or such, there's nothing to update yet and when stuff
+  // is ready to update we'll flush the font set.
+  MarkUserFontSetDirty();
 
   return shell.forget();
 }
@@ -4090,8 +4092,10 @@ nsDocument::DeleteShell()
   ImageTracker()->RequestDiscardAll();
 
   // Now that we no longer have a shell, we need to forget about any FontFace
-  // objects for @font-face rules that came from the style set.
-  RebuildUserFontSet();
+  // objects for @font-face rules that came from the style set. There's no need
+  // to call EnsureStyleFlush either, the shell is going away anyway, so there's
+  // no point on it.
+  MarkUserFontSetDirty();
 
   nsIPresShell* oldShell = mPresShell;
   mPresShell = nullptr;
@@ -12668,7 +12672,7 @@ nsIDocument::GetUserFontSet(bool aFlushUserFontSet)
   // we *never* build the user font set until the first call to
   // GetUserFontSet.  However, once it's been requested, we can't wait
   // for somebody to call GetUserFontSet in order to rebuild it (see
-  // comments below in RebuildUserFontSet for why).
+  // comments below in MarkUserFontSetDirty for why).
 #ifdef DEBUG
   bool userFontSetGottenBefore = mGetUserFontSetCalled;
 #endif
@@ -12705,42 +12709,44 @@ nsIDocument::FlushUserFontSet()
             // does we'll create it.
   }
 
-  if (mFontFaceSetDirty) {
-    if (gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
-      nsTArray<nsFontFaceRuleContainer> rules;
-      nsIPresShell* shell = GetShell();
-      if (shell && !shell->StyleSet()->AppendFontFaceRules(rules)) {
-        return;
-      }
+  if (!mFontFaceSetDirty) {
+    return;
+  }
 
-      bool changed = false;
+  mFontFaceSetDirty = false;
 
-      if (!mFontFaceSet && !rules.IsEmpty()) {
-        nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetScopeObject());
-        mFontFaceSet = new FontFaceSet(window, this);
-      }
-      if (mFontFaceSet) {
-        changed = mFontFaceSet->UpdateRules(rules);
-      }
-
-      // We need to enqueue a style change reflow (for later) to
-      // reflect that we're modifying @font-face rules.  (However,
-      // without a reflow, nothing will happen to start any downloads
-      // that are needed.)
-      if (changed && shell) {
-        nsPresContext* presContext = shell->GetPresContext();
-        if (presContext) {
-          presContext->UserFontSetUpdated();
-        }
-      }
+  if (gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
+    nsTArray<nsFontFaceRuleContainer> rules;
+    nsIPresShell* shell = GetShell();
+    if (shell && !shell->StyleSet()->AppendFontFaceRules(rules)) {
+      return;
     }
 
-    mFontFaceSetDirty = false;
+
+    if (!mFontFaceSet && !rules.IsEmpty()) {
+      nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetScopeObject());
+      mFontFaceSet = new FontFaceSet(window, this);
+    }
+
+    bool changed = false;
+    if (mFontFaceSet) {
+      changed = mFontFaceSet->UpdateRules(rules);
+    }
+
+    // We need to enqueue a style change reflow (for later) to
+    // reflect that we're modifying @font-face rules.  (However,
+    // without a reflow, nothing will happen to start any downloads
+    // that are needed.)
+    if (changed && shell) {
+      if (nsPresContext* presContext = shell->GetPresContext()) {
+        presContext->UserFontSetUpdated();
+      }
+    }
   }
 }
 
 void
-nsIDocument::RebuildUserFontSet()
+nsIDocument::MarkUserFontSetDirty()
 {
   if (!mGetUserFontSetCalled) {
     // We want to lazily build the user font set the first time it's
@@ -12750,27 +12756,6 @@ nsIDocument::RebuildUserFontSet()
   }
 
   mFontFaceSetDirty = true;
-  if (nsIPresShell* shell = GetShell()) {
-    shell->SetNeedStyleFlush();
-  }
-
-  // Somebody has already asked for the user font set, so we need to
-  // post an event to rebuild it.  Setting the user font set to be dirty
-  // and lazily rebuilding it isn't sufficient, since it is only the act
-  // of rebuilding it that will trigger the style change reflow that
-  // calls GetUserFontSet.  (This reflow causes rebuilding of text runs,
-  // which starts font loads, whose completion causes another style
-  // change reflow).
-  if (!mPostedFlushUserFontSet) {
-    MOZ_RELEASE_ASSERT(NS_IsMainThread());
-    nsCOMPtr<nsIRunnable> ev =
-      NewRunnableMethod("nsIDocument::HandleRebuildUserFontSet",
-                        this,
-                        &nsIDocument::HandleRebuildUserFontSet);
-    if (NS_SUCCEEDED(Dispatch(TaskCategory::Other, ev.forget()))) {
-      mPostedFlushUserFontSet = true;
-    }
-  }
 }
 
 FontFaceSet*

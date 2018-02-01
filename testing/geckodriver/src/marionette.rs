@@ -3,7 +3,7 @@ use logging;
 use logging::LogLevel;
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
-use mozrunner::runner::{Runner, FirefoxRunner};
+use mozrunner::runner::{FirefoxRunner, FirefoxProcess, Runner, RunnerProcess};
 use regex::Captures;
 use rustc_serialize::base64::FromBase64;
 use rustc_serialize::json;
@@ -391,7 +391,7 @@ pub struct MarionetteSettings {
 pub struct MarionetteHandler {
     connection: Mutex<Option<MarionetteConnection>>,
     settings: MarionetteSettings,
-    browser: Option<FirefoxRunner>,
+    browser: Option<FirefoxProcess>,
     current_log_level: Option<LogLevel>,
 }
 
@@ -438,45 +438,49 @@ impl MarionetteHandler {
         Ok(capabilities)
     }
 
-    fn start_browser(&mut self, port: u16, mut options: FirefoxOptions) -> WebDriverResult<()> {
-        let binary = try!(options.binary
+    fn start_browser(&mut self, port: u16, options: FirefoxOptions) -> WebDriverResult<()> {
+        let binary = options.binary
             .ok_or(WebDriverError::new(ErrorStatus::SessionNotCreated,
                                        "Expected browser binary location, but unable to find \
                                         binary in default location, no \
                                         'moz:firefoxOptions.binary' capability provided, and \
-                                        no binary flag set on the command line")));
+                                        no binary flag set on the command line"))?;
 
-        let custom_profile = options.profile.is_some();
+        let is_custom_profile = options.profile.is_some();
 
-        let mut runner = try!(FirefoxRunner::new(&binary, options.profile.take())
-                              .map_err(|e| WebDriverError::new(ErrorStatus::SessionNotCreated,
-                                                               e.description().to_owned())));
-
-        // double-dashed flags are not accepted on Windows systems
-        runner.args().push("-marionette".to_owned());
-
-        // https://developer.mozilla.org/docs/Environment_variables_affecting_crash_reporting
-        runner.envs().insert("MOZ_CRASHREPORTER".to_string(), "1".to_string());
-        runner.envs().insert("MOZ_CRASHREPORTER_NO_REPORT".to_string(), "1".to_string());
-        runner.envs().insert("MOZ_CRASHREPORTER_SHUTDOWN".to_string(), "1".to_string());
-
-        if let Some(args) = options.args.take() {
-            runner.args().extend(args);
+        let mut profile = match options.profile {
+            Some(x) => x,
+            None => Profile::new(None)?
         };
 
-        try!(self.set_prefs(port, &mut runner.profile, custom_profile, options.prefs)
+        self.set_prefs(port, &mut profile, is_custom_profile, options.prefs)
             .map_err(|e| {
                 WebDriverError::new(ErrorStatus::SessionNotCreated,
                                     format!("Failed to set preferences: {}", e))
-            }));
+            })?;
 
-        try!(runner.start()
+
+        let mut runner = FirefoxRunner::new(&binary, profile);
+
+        runner
+             // double-dashed flags are not accepted on Windows systems
+            .arg("-marionette")
+             // https://developer.mozilla.org/docs/Environment_variables_affecting_crash_reporting
+            .env("MOZ_CRASHREPORTER", "1")
+            .env("MOZ_CRASHREPORTER_NO_REPORT", "1")
+            .env("MOZ_CRASHREPORTER_SHUTDOWN", "1");
+
+        if let Some(args) = options.args.as_ref() {
+            runner.args(args);
+        };
+
+        let browser_proc = runner.start()
             .map_err(|e| {
                 WebDriverError::new(ErrorStatus::SessionNotCreated,
                                     format!("Failed to start browser {}: {}",
                                             binary.display(), e))
-            }));
-        self.browser = Some(runner);
+            })?;
+        self.browser = Some(browser_proc);
 
         Ok(())
     }
@@ -1336,7 +1340,7 @@ impl MarionetteConnection {
         }
     }
 
-    pub fn connect(&mut self, browser: &mut Option<FirefoxRunner>) -> WebDriverResult<()> {
+    pub fn connect(&mut self, browser: &mut Option<FirefoxProcess>) -> WebDriverResult<()> {
         let timeout = 60 * 1000;  // ms
         let poll_interval = 100;  // ms
         let poll_attempts = timeout / poll_interval;

@@ -47,6 +47,7 @@ const PREF_BLOCKLIST_LASTUPDATETIME   = "app.update.lastUpdateTime.blocklist-bac
 const PREF_BLOCKLIST_URL              = "extensions.blocklist.url";
 const PREF_BLOCKLIST_ITEM_URL         = "extensions.blocklist.itemURL";
 const PREF_BLOCKLIST_ENABLED          = "extensions.blocklist.enabled";
+const PREF_BLOCKLIST_LAST_MODIFIED    = "extensions.blocklist.lastModified";
 const PREF_BLOCKLIST_LEVEL            = "extensions.blocklist.level";
 const PREF_BLOCKLIST_PINGCOUNTTOTAL   = "extensions.blocklist.pingCountTotal";
 const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
@@ -579,7 +580,15 @@ Blocklist.prototype = {
     request.open("GET", uri.spec, true);
     request.channel.notificationCallbacks = new gCertUtils.BadCertHandler();
     request.overrideMimeType("text/xml");
-    request.setRequestHeader("Cache-Control", "no-cache");
+
+    // The server will return a `304 Not Modified` response if the blocklist was
+    // not changed since last check.
+    const lastModified = Services.prefs.getCharPref(PREF_BLOCKLIST_LAST_MODIFIED, "");
+    if (lastModified) {
+      request.setRequestHeader("If-Modified-Since", lastModified);
+    } else {
+      request.setRequestHeader("Cache-Control", "no-cache");
+    }
 
     request.addEventListener("error", event => this.onXMLError(event));
     request.addEventListener("load", event => this.onXMLLoad(event));
@@ -607,12 +616,22 @@ Blocklist.prototype = {
       LOG("Blocklist::onXMLLoad: " + e);
       return;
     }
+
+    if (request.status == 304) {
+      LOG("Blocklist::onXMLLoad: up to date.");
+      return;
+    }
+
     let responseXML = request.responseXML;
     if (!responseXML || responseXML.documentElement.namespaceURI == XMLURI_PARSE_ERROR ||
         (request.status != 200 && request.status != 0)) {
       LOG("Blocklist::onXMLLoad: there was an error during load");
       return;
     }
+
+    // Save current blocklist timestamp to pref.
+    const lastModified = request.getResponseHeader("Last-Modified") || "";
+    Services.prefs.setCharPref(PREF_BLOCKLIST_LAST_MODIFIED, lastModified);
 
     var oldAddonEntries = this._addonEntries;
     var oldPluginEntries = this._pluginEntries;

@@ -41,7 +41,7 @@ namespace gl {
   #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderCGL
 #endif
 
-#if defined(MOZ_X11)
+#if defined(MOZ_X11) && !defined(MOZ_WAYLAND)
   #define GL_CONTEXT_PROVIDER_NAME GLContextProviderGLX
   #include "GLContextProviderImpl.h"
   #undef GL_CONTEXT_PROVIDER_NAME
