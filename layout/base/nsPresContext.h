@@ -998,7 +998,7 @@ public:
   // as that value may be out of date when mPaintFlashingInitialized is false.
   bool GetPaintFlashing() const;
 
-  bool             SuppressingResizeReflow() const { return mSuppressResizeReflow; }
+  bool SuppressingResizeReflow() const { return mSuppressResizeReflow; }
 
   gfxUserFontSet* GetUserFontSet(bool aFlushUserFontSet = true);
 
@@ -1011,10 +1011,13 @@ public:
   void NotifyMissingFonts();
 
   void FlushCounterStyles();
-  void RebuildCounterStyles(); // asynchronously
+  void MarkCounterStylesDirty();
 
   void FlushFontFeatureValues();
-  void RebuildFontFeatureValues(); // asynchronously
+  void MarkFontFeatureValuesDirty()
+  {
+    mFontFeatureValuesDirty = true;
+  }
 
   // Ensure that it is safe to hand out CSS rules outside the layout
   // engine by ensuring that all CSS style sheets have unique inners
@@ -1265,16 +1268,6 @@ protected:
 
   void AppUnitsPerDevPixelChanged();
 
-  void HandleRebuildCounterStyles() {
-    mPostedFlushCounterStyles = false;
-    FlushCounterStyles();
-  }
-
-  void HandleRebuildFontFeatureValues() {
-    mPostedFlushFontFeatureValues = false;
-    FlushFontFeatureValues();
-  }
-
   bool HavePendingInputEvent();
 
   // Can't be inline because we can't include nsStyleSet.h.
@@ -1478,13 +1471,9 @@ protected:
 
   // Is the current mCounterStyleManager valid?
   unsigned              mCounterStylesDirty : 1;
-  // Do we currently have an event posted to call FlushCounterStyles?
-  unsigned              mPostedFlushCounterStyles: 1;
 
   // Is the current mFontFeatureValuesLookup valid?
   unsigned              mFontFeatureValuesDirty : 1;
-  // Do we currently have an event posted to call FlushFontFeatureValues?
-  unsigned              mPostedFlushFontFeatureValues: 1;
 
   // resize reflow is suppressed when the only change has been to zoom
   // the document rather than to change the document's dimensions
