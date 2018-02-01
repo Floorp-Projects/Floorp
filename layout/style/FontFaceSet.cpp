@@ -479,18 +479,18 @@ FontFaceSet::HasRuleFontFace(FontFace* aFontFace)
 }
 #endif
 
-FontFaceSet*
+void
 FontFaceSet::Add(FontFace& aFontFace, ErrorResult& aRv)
 {
   FlushUserFontSet();
 
   if (aFontFace.IsInFontFaceSet(this)) {
-    return this;
+    return;
   }
 
   if (aFontFace.HasRule()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_MODIFICATION_ERR);
-    return nullptr;
+    return;
   }
 
   aFontFace.AddFontFaceSet(this);
@@ -513,7 +513,6 @@ FontFaceSet::Add(FontFace& aFontFace, ErrorResult& aRv)
   MarkUserFontSetDirty();
   mHasLoadingFontFacesIsDirty = true;
   CheckLoadingStarted();
-  return this;
 }
 
 void
