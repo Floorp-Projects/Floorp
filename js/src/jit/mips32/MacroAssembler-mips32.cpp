@@ -2564,25 +2564,26 @@ void
 MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output, bool isSaturating,
                                            Label* oolEntry)
 {
-    MOZ_ASSERT(!isSaturating, "NYI");
+    Label done;
 
-    loadConstantDouble(double(-1.0), ScratchDoubleReg);
-    branchDouble(Assembler::DoubleLessThanOrEqual, input, ScratchDoubleReg, oolEntry);
+    as_truncwd(ScratchFloat32Reg, input);
+    ma_li(ScratchRegister, Imm32(INT32_MAX));
+    moveFromFloat32(ScratchFloat32Reg, output);
 
-    loadConstantDouble(double(UINT32_MAX) + 1.0, ScratchDoubleReg);
-    branchDouble(Assembler::DoubleGreaterThanOrEqualOrUnordered, input, ScratchDoubleReg, oolEntry);
-    Label done, simple;
-    loadConstantDouble(double(0x80000000UL), ScratchDoubleReg);
-    branchDouble(Assembler::DoubleLessThan, input, ScratchDoubleReg, &simple);
+    // For numbers in  -1.[ : ]INT32_MAX range do nothing more
+    ma_b(output, ScratchRegister, &done, Assembler::Below, ShortJump);
+
+    loadConstantDouble(double(INT32_MAX + 1ULL), ScratchDoubleReg);
+    ma_li(ScratchRegister, Imm32(INT32_MIN));
     as_subd(ScratchDoubleReg, input, ScratchDoubleReg);
-    as_truncwd(ScratchDoubleReg, ScratchDoubleReg);
-    moveFromFloat32(ScratchDoubleReg, output);
-    ma_li(ScratchRegister, Imm32(0x80000000UL));
-    ma_or(output, ScratchRegister);
-    ma_b(&done);
-    bind(&simple);
-    as_truncwd(ScratchDoubleReg, input);
-    moveFromFloat32(ScratchDoubleReg, output);
+    as_truncwd(ScratchFloat32Reg, ScratchDoubleReg);
+    as_cfc1(SecondScratchReg, Assembler::FCSR);
+    moveFromFloat32(ScratchFloat32Reg, output);
+    ma_ext(SecondScratchReg, SecondScratchReg, Assembler::CauseV, 1);
+    ma_addu(output, ScratchRegister);
+
+    ma_b(SecondScratchReg, Imm32(0), oolEntry, Assembler::NotEqual);
+
     bind(&done);
 }
 
@@ -2590,25 +2591,29 @@ void
 MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, bool isSaturating,
                                             Label* oolEntry)
 {
-    MOZ_ASSERT(!isSaturating, "NYI");
+    Label done;
 
-    loadConstantFloat32(double(-1.0), ScratchDoubleReg);
-    branchFloat(Assembler::DoubleLessThanOrEqualOrUnordered, input, ScratchDoubleReg, oolEntry);
+    as_truncws(ScratchFloat32Reg, input);
+    ma_li(ScratchRegister, Imm32(INT32_MAX));
+    moveFromFloat32(ScratchFloat32Reg, output);
+    // For numbers in  -1.[ : ]INT32_MAX range do nothing more
+    ma_b(output, ScratchRegister, &done, Assembler::Below, ShortJump);
 
-    loadConstantFloat32(double(UINT32_MAX) + 1.0, ScratchDoubleReg);
-    branchFloat(Assembler::DoubleGreaterThanOrEqualOrUnordered, input, ScratchDoubleReg, oolEntry);
-    Label done, simple;
-    loadConstantFloat32(double(0x80000000UL), ScratchDoubleReg);
-    branchFloat(Assembler::DoubleLessThan, input, ScratchDoubleReg, &simple);
-    as_subs(ScratchDoubleReg, input, ScratchDoubleReg);
-    as_truncws(ScratchDoubleReg, ScratchDoubleReg);
-    moveFromFloat32(ScratchDoubleReg, output);
-    ma_li(ScratchRegister, Imm32(0x80000000UL));
-    ma_or(output, ScratchRegister);
-    ma_b(&done);
-    bind(&simple);
-    as_truncws(ScratchDoubleReg, input);
-    moveFromFloat32(ScratchDoubleReg, output);
+    loadConstantFloat32(float(INT32_MAX + 1ULL), ScratchFloat32Reg);
+    ma_li(ScratchRegister, Imm32(INT32_MIN));
+    as_subs(ScratchFloat32Reg, input, ScratchFloat32Reg);
+    as_truncws(ScratchFloat32Reg, ScratchFloat32Reg);
+    as_cfc1(SecondScratchReg, Assembler::FCSR);
+    moveFromFloat32(ScratchFloat32Reg, output);
+    ma_ext(SecondScratchReg, SecondScratchReg, Assembler::CauseV, 1);
+    ma_addu(output, ScratchRegister);
+
+    // Guard against negative values that result in 0 due the precision loss.
+    as_sltiu(ScratchRegister, output, 1);
+    ma_or(SecondScratchReg, ScratchRegister);
+
+    ma_b(SecondScratchReg, Imm32(0), oolEntry, Assembler::NotEqual);
+
     bind(&done);
 }
 
