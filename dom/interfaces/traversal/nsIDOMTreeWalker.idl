@@ -11,17 +11,4 @@ interface nsIDOMNodeFilter;
 [uuid(c4ffa159-237c-4dde-b0ba-20b9f9270cf6)]
 // Introduced in DOM Level 2:
 interface nsIDOMTreeWalker : nsISupports {
-  readonly attribute nsIDOMNode       root;
-  readonly attribute unsigned long    whatToShow;
-  readonly attribute nsIDOMNodeFilter filter;
-           attribute nsIDOMNode       currentNode;
-                                        // raises(DOMException) on setting
-
-  nsIDOMNode         parentNode();
-  nsIDOMNode         firstChild();
-  nsIDOMNode         lastChild();
-  nsIDOMNode         previousSibling();
-  nsIDOMNode         nextSibling();
-  nsIDOMNode         previousNode();
-  nsIDOMNode         nextNode();
 };

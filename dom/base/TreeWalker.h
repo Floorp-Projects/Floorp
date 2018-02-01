@@ -89,19 +89,6 @@ private:
      */
     already_AddRefed<nsINode> NextSiblingInternal(bool aReversed,
                                                   ErrorResult& aResult);
-
-    // Implementation for our various XPCOM getters
-    typedef already_AddRefed<nsINode> (TreeWalker::*NodeGetter)(ErrorResult&);
-    inline nsresult ImplNodeGetter(NodeGetter aGetter, nsIDOMNode** aRetval)
-    {
-        mozilla::ErrorResult rv;
-        nsCOMPtr<nsINode> node = (this->*aGetter)(rv);
-        if (rv.Failed()) {
-            return rv.StealNSResult();
-        }
-        *aRetval = node ? node.forget().take()->AsDOMNode() : nullptr;
-        return NS_OK;
-    }
 };
 
 } // namespace dom
