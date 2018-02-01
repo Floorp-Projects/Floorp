@@ -71,7 +71,7 @@ add_task(async function test_insertMany() {
     info(name);
     info(`filter: ${filter}`);
     info(`useCallbacks: ${useCallbacks}`);
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
 
     let result;
     let allUrls = GOOD_URLS.concat(BAD_URLS);
@@ -124,7 +124,7 @@ add_task(async function test_insertMany() {
       Assert.equal("No items were added to history.", error.message, "History.insertMany rejected promise with all bad URLs");
     });
   } finally {
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
   }
 });
 

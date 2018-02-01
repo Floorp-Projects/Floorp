@@ -90,7 +90,7 @@ function test()
 {
   SimpleTest.waitForExplicitFinish();
   (async () => {
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
 
     info("Inserting new visit");
     await PlacesUtils.history.insert({

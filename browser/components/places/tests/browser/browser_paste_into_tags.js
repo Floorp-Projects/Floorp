@@ -83,7 +83,7 @@ add_task(async function() {
   is(tags.length, 0, "tags are gone");
 
   await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 function focusTag(PlacesOrganizer) {

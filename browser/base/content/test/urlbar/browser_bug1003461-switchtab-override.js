@@ -57,5 +57,5 @@ add_task(async function test_switchtab_override() {
   EventUtils.synthesizeKey("VK_SHIFT", { type: "keyup" });
   await deferred.promise;
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });

@@ -966,7 +966,7 @@ async function blankSlate() {
     });
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 }
 
 /**

@@ -48,7 +48,7 @@
       SimpleTest.waitForExplicitFinish();
 
       (async function() {
-        await PlacesTestUtils.clearHistory();
+        await PlacesUtils.history.clear();
 
         await PlacesTestUtils.addVisits({
           uri: Services.io.newURI("http://example.tld/"),
@@ -71,7 +71,7 @@
         ok(true, "No exceptions thrown");
 
         // Cleanup.
-        await PlacesTestUtils.clearHistory();
+        await PlacesUtils.history.clear();
       })().then(SimpleTest.finish);
     }
   ]]></script>

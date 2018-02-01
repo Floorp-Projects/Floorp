@@ -298,5 +298,5 @@ add_task(async function test_redirects() {
 
   await PlacesUtils.bookmarks.eraseEverything();
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });

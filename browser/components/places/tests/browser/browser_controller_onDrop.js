@@ -17,7 +17,7 @@ add_task(async function setup() {
     sandbox.restore();
     delete window.sinon;
     await PlacesUtils.bookmarks.eraseEverything();
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
   });
 
   sandbox.stub(PlacesUIUtils, "getTransactionForData");

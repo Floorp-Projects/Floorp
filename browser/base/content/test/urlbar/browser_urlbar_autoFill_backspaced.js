@@ -32,7 +32,7 @@ add_task(async function() {
   registerCleanupFunction(async function() {
     Services.prefs.clearUserPref("browser.urlbar.autoFill");
     gURLBar.handleRevert();
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
   });
   Services.prefs.setBoolPref("browser.urlbar.autoFill", true);
 
@@ -142,5 +142,5 @@ add_task(async function() {
                             }
                          });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });

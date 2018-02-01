@@ -51,7 +51,7 @@ function test() {
         }
 
         win.close();
-        PlacesTestUtils.clearHistory().then(finish);
+        PlacesUtils.history.clear().then(finish);
       }
     });
   };

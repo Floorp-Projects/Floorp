@@ -66,6 +66,6 @@ add_task(async function() {
   });
 
   gBrowser.removeCurrentTab();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 

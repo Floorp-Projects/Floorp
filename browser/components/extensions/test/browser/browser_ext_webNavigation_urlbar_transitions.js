@@ -77,7 +77,7 @@ async function prepareSearchEngine() {
 
     // Clicking suggestions causes visits to search results pages, so clear that
     // history now.
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
   });
 }
 

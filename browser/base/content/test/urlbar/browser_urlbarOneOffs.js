@@ -13,10 +13,10 @@ add_task(async function init() {
 
   registerCleanupFunction(async function() {
     await hidePopup();
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   let visits = [];
   for (let i = 0; i < gMaxResults; i++) {

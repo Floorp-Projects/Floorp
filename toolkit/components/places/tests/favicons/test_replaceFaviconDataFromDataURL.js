@@ -85,7 +85,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_validHistoryURI() {
       }, Services.scriptSecurityManager.getSystemPrincipal());
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_replaceFaviconDataFromDataURL_overrideDefaultFavicon() {
@@ -116,7 +116,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_overrideDefaultFavico
       }, Services.scriptSecurityManager.getSystemPrincipal());
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_replaceFaviconDataFromDataURL_replaceExisting() {
@@ -150,7 +150,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_replaceExisting() {
       }, Services.scriptSecurityManager.getSystemPrincipal());
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_replaceFaviconDataFromDataURL_unrelatedReplace() {
@@ -181,7 +181,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_unrelatedReplace() {
       }, Services.scriptSecurityManager.getSystemPrincipal());
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_replaceFaviconDataFromDataURL_badInputs() {
@@ -211,7 +211,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_badInputs() {
 
   favicon.file.remove(false);
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_replaceFaviconDataFromDataURL_twiceReplace() {
@@ -244,7 +244,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_twiceReplace() {
       }, Services.scriptSecurityManager.getSystemPrincipal());
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_replaceFaviconDataFromDataURL_afterRegularAssign() {
@@ -278,7 +278,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_afterRegularAssign() 
       }, Services.scriptSecurityManager.getSystemPrincipal());
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_replaceFaviconDataFromDataURL_beforeRegularAssign() {
@@ -312,7 +312,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_beforeRegularAssign()
       }, Services.scriptSecurityManager.getSystemPrincipal());
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 /* toBase64 copied from image/test/unit/test_encoder_png.js */

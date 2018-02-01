@@ -67,7 +67,7 @@ add_task(async function test_copyFavicons_noop() {
                null, "Icon should not have been copied");
 
   PlacesUtils.favicons.expireAllFavicons();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_copyFavicons() {
@@ -101,7 +101,7 @@ add_task(async function test_copyFavicons() {
                SMALLSVG_DATA_URI.spec, "Large icon found");
 
   PlacesUtils.favicons.expireAllFavicons();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_copyFavicons_overlap() {
