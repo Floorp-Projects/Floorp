@@ -2735,8 +2735,7 @@ void
 Console::ExecuteDumpFunction(const nsAString& aMessage)
 {
   if (mDumpFunction) {
-    IgnoredErrorResult rv;
-    mDumpFunction->Call(aMessage, rv);
+    mDumpFunction->Call(aMessage);
     return;
   }
 

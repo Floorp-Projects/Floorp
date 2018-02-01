@@ -197,7 +197,7 @@ public:
   mozilla::dom::Promise* GetReady(mozilla::ErrorResult& aRv);
   mozilla::dom::FontFaceSetLoadStatus Status();
 
-  FontFaceSet* Add(FontFace& aFontFace, mozilla::ErrorResult& aRv);
+  void Add(FontFace& aFontFace, mozilla::ErrorResult& aRv);
   void Clear();
   bool Delete(FontFace& aFontFace);
   bool Has(FontFace& aFontFace);

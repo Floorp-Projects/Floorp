@@ -190,8 +190,7 @@ HTMLScriptElement::GetScriptType(nsAString& aType)
 void
 HTMLScriptElement::GetScriptText(nsAString& text)
 {
-  IgnoredErrorResult rv;
-  GetText(text, rv);
+  GetText(text, IgnoreErrors());
 }
 
 void

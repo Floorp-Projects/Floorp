@@ -4302,11 +4302,11 @@ EditorBase::SplitNodeDeep(nsIContent& aMostAncestorToSplit,
          !atStartOfRightNode.GetContainerAsText()) ||
         (!atStartOfRightNode.IsStartOfContainer() &&
          !atStartOfRightNode.IsEndOfContainer())) {
-      IgnoredErrorResult error;
+      ErrorResult error;
       nsCOMPtr<nsIContent> newLeftNode =
         SplitNode(atStartOfRightNode.AsRaw(), error);
       if (NS_WARN_IF(error.Failed())) {
-        return SplitNodeResult(NS_ERROR_FAILURE);
+        return SplitNodeResult(error.StealNSResult());
       }
 
       if (currentRightNode == &aMostAncestorToSplit) {
