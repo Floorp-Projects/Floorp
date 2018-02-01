@@ -82,7 +82,7 @@ function testBasics() {
 function testBasicKeys() {
   function checkRequest(reqs) {
     is(reqs.length, 1, "One request expected");
-    ok(reqs[0].url.indexOf(requestURL) >= 0, "The correct request expected");
+    ok(reqs[0].url.includes(requestURL), "The correct request expected");
     ok(reqs[0].headers.get("WhatToVary"), "Custom", "The correct request headers expected");
   }
   var test;

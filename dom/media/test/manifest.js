@@ -477,7 +477,7 @@ function makeAbsolutePathConverter() {
 
       resolve((path, mustExist) => {
 	// android mochitest doesn't support file://
-	if (manifestNavigator().appVersion.indexOf("Android") != -1 || SpecialPowers.Services.appinfo.name == "B2G")
+	if (manifestNavigator().appVersion.includes("Android") || SpecialPowers.Services.appinfo.name == "B2G")
 	  return path;
 
 	const { Ci, Cc } = SpecialPowers;
@@ -624,11 +624,11 @@ var gUnseekableTests = [
 ];
 
 var androidVersion = -1; // non-Android platforms
-if (manifestNavigator().userAgent.indexOf("Mobile") != -1 ||
-    manifestNavigator().userAgent.indexOf("Tablet") != -1) {
+if (manifestNavigator().userAgent.includes("Mobile") ||
+    manifestNavigator().userAgent.includes("Tablet")) {
   // See nsSystemInfo.cpp, the getProperty('version') returns different value
   // on each platforms, so we need to distinguish the android and B2G platform.
-  var versionString = manifestNavigator().userAgent.indexOf("Android") != -1 ?
+  var versionString = manifestNavigator().userAgent.includes("Android") ?
                       'version' : 'sdk_version';
   androidVersion = SpecialPowers.Cc['@mozilla.org/system-info;1']
                                 .getService(SpecialPowers.Ci.nsIPropertyBag2)

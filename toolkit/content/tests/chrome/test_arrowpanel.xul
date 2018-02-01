@@ -44,7 +44,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-const isOSXYosemite = navigator.userAgent.indexOf("Mac OS X 10.10") != -1;
+const isOSXYosemite = navigator.userAgent.includes("Mac OS X 10.10");
 
 var expectedAnchor = null;
 var expectedSide = "", expectedAnchorEdge = "", expectedPack = "", expectedAlignment = "";
@@ -182,7 +182,7 @@ function* nextTest()
 
   // Test that a transition occurs when opening or closing the popup. The transition is
   // disabled on Linux.
-  if (navigator.platform.indexOf("Linux") == -1) {
+  if (!navigator.platform.includes("Linux")) {
     function transitionEnded(event) {
       if ($("animatepanel").state != "open") {
         is($("animatepanel").state, "showing", "state is showing during transitionend");

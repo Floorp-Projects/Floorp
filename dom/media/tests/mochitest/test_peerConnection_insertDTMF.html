@@ -36,10 +36,10 @@ function insertdtmftest(pc) {
 
   sender.dtmf.insertDTMF("A");
   sender.dtmf.insertDTMF("B");
-  ok(sender.dtmf.toneBuffer.indexOf("A") == -1, "calling insertDTMF should replace current characters");
+  ok(!sender.dtmf.toneBuffer.includes("A"), "calling insertDTMF should replace current characters");
 
   sender.dtmf.insertDTMF("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-  ok(sender.dtmf.toneBuffer.indexOf("A") != -1, "lowercase characters should be normalized");
+  ok(sender.dtmf.toneBuffer.includes("A"), "lowercase characters should be normalized");
 
   pc.removeTrack(sender);
   threw = false;

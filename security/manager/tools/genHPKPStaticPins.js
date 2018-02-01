@@ -353,11 +353,11 @@ function downloadAndParseChromePins(filename,
     entry.name = entry.name.trim();
 
     let isProductionDomain =
-      (cData.production_domains.indexOf(entry.name) != -1);
+      (cData.production_domains.includes(entry.name));
     let isProductionPinset =
-      (cData.production_pinsets.indexOf(pinsetName) != -1);
+      (cData.production_pinsets.includes(pinsetName));
     let excludeDomain =
-      (cData.exclude_domains.indexOf(entry.name) != -1);
+      (cData.exclude_domains.includes(entry.name));
     let isTestMode = !isProductionPinset && !isProductionDomain;
     if (entry.pins && !excludeDomain && chromeImportedPinsets[entry.pins]) {
       chromeImportedEntries.push({
@@ -483,7 +483,7 @@ function writeEntry(entry) {
   } else {
     printVal += "false, ";
   }
-  if (entry.is_moz || (entry.pins.indexOf("mozilla") != -1 &&
+  if (entry.is_moz || (entry.pins.includes("mozilla") &&
                        entry.pins != "mozilla_test")) {
     printVal += "true, ";
   } else {

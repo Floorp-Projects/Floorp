@@ -223,7 +223,7 @@ var clone = function(object, refs = []) {
     });
   };
   for (let k in object) {
-    if (refs.indexOf(k) < 0) {
+    if (!refs.includes(k)) {
       result[k] = object[k];
     } else {
       refer(result, k, object);

@@ -22,7 +22,7 @@ text <span id="c">ccc text</span> text text <span id="e">eee text</span> text te
  var wu = SpecialPowers.getDOMWindowUtils(window);
 
 function ctrlselect(aX,aY, aX2, aY2) {
-  var modifyers = (navigator.platform.indexOf("Mac") >= 0) ? 8 : 2;
+  var modifyers = (navigator.platform.includes("Mac")) ? 8 : 2;
   wu.sendMouseEvent('mousedown',  aX, aY, 0, 1, modifyers);
   wu.sendMouseEvent('mousemove',  aX2, aY2, 0, 0, modifyers);
   wu.sendMouseEvent('mouseup',  aX2, aY2, 0, 1, modifyers);

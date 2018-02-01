@@ -34,8 +34,8 @@ add_task(async function() {
 
     info("State: " + state);
     // Ensure that sessionstore.js only knows about the public tab
-    ok(state.indexOf(URL_PUBLIC) != -1, "State contains public tab");
-    ok(state.indexOf(URL_PRIVATE) == -1, "State does not contain private tab");
+    ok(state.includes(URL_PUBLIC), "State contains public tab");
+    ok(!state.includes(URL_PRIVATE), "State does not contain private tab");
 
     // Ensure that we can close and undo close the public tab but not the private tab
     gBrowser.removeTab(tab2);

@@ -159,7 +159,7 @@ var Modules = (function (modules) {
 						// find v1 names
 						for(var key in modules.maps) {
 							// dont double count if v1 and v2 roots are present
-							if(modules.maps[key].root === classItems[x] && classItems.indexOf(key) === -1) {
+							if(modules.maps[key].root === classItems[x] && !classItems.includes(key)) {
 								this.appendCount(key, 1, out);
 							}
 						}
@@ -880,7 +880,7 @@ var Modules = (function (modules) {
 			}
 
 			// if we have no protocol separator, turn relative url to absolute url
-			if(out && out !== '' && out.indexOf('://') === -1) {
+			if(out && out !== '' && !out.includes('://')) {
 				out = modules.url.resolve(out, this.options.baseUrl);
 			}
 
@@ -1139,7 +1139,7 @@ var Modules = (function (modules) {
 
 						// test for root prefix - v2
 						if(modules.utils.startWith(item, context.rootPrefix)) {
-							if(out.root.indexOf(item) === -1){
+							if(!out.root.includes(item)){
 								out.root.push(item);
 							}
 							out.typeVersion = 'v2';
@@ -1157,7 +1157,7 @@ var Modules = (function (modules) {
 						for(key in modules.maps) {
 							if(modules.maps.hasOwnProperty(key)) {
 								// only add a root once
-								if(modules.maps[key].root === item && out.root.indexOf(key) === -1) {
+								if(modules.maps[key].root === item && !out.root.includes(key)) {
 									// if root map has subTree set to true
 									// test to see if we should create a property or root
 									if(modules.maps[key].subTree) {
@@ -1195,18 +1195,18 @@ var Modules = (function (modules) {
 													while(y < i) {
 														v2Name = context.getV2RootName(items[y]);
 														// add new root
-														if(prop.uf.indexOf(v2Name) > -1 && out.root.indexOf(v2Name) === -1) {
+														if(prop.uf.indexOf(v2Name) > -1 && !out.root.includes(v2Name)) {
 															out.root.push(v2Name);
 															out.typeVersion = 'v1';
 														}
 														y++;
 													}
 													//only add property once
-													if(out.properties.indexOf(propName) === -1) {
+													if(!out.properties.includes(propName)) {
 														out.properties.push([propName,'v1']);
 													}
 												} else {
-													if(out.properties.indexOf(propName) === -1) {
+													if(!out.properties.includes(propName)) {
 														out.properties.push([propName,'v1']);
 													}
 												}
@@ -1231,7 +1231,7 @@ var Modules = (function (modules) {
 				for (var b = 0; b < ufNameArr.length; b++) {
 					ufName = ufNameArr[b];
 					impiedRel = this.findRelImpied(node, ufName);
-					if(impiedRel && out.properties.indexOf(impiedRel) === -1) {
+					if(impiedRel && !out.properties.includes(impiedRel)) {
 						out.properties.push([impiedRel, 'v1']);
 					}
 				}
@@ -1382,7 +1382,7 @@ var Modules = (function (modules) {
 				try{
 					// the url parser can blow up if the format is not right
 					attr = modules.domUtils.getAttribute(nodes[i], attrName);
-					if(attr && attr !== '' && baseUrl !== '' && attr.indexOf('://') === -1) {
+					if(attr && attr !== '' && baseUrl !== '' && !attr.includes('://')) {
 						//attr = urlParser.resolve(baseUrl, attr);
 						attr = modules.url.resolve(attr, baseUrl);
 						modules.domUtils.setAttribute(nodes[i], attrName, attr);

@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1823
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 1823 **/
-ok((document.location + "").indexOf("[") == -1, "location object has a toString()");
+ok(!(document.location + "").includes("["), "location object has a toString()");
 
 
 

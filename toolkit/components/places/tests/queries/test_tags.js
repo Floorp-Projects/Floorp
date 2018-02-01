@@ -725,7 +725,7 @@ function makeQuery(aTags, aTagsAreNot) {
     query.tags = aTags;
     var uniqueTags = [];
     aTags.forEach(function(t) {
-      if (typeof(t) === "string" && uniqueTags.indexOf(t) < 0)
+      if (typeof(t) === "string" && !uniqueTags.includes(t))
         uniqueTags.push(t);
     });
     uniqueTags.sort();
@@ -786,7 +786,7 @@ function setsAreEqual(aArr1, aArr2, aIsOrdered) {
       Assert.equal(aArr1[i], aArr2[i]);
     }
   } else {
-    aArr1.forEach(u => Assert.ok(aArr2.indexOf(u) >= 0));
-    aArr2.forEach(u => Assert.ok(aArr1.indexOf(u) >= 0));
+    aArr1.forEach(u => Assert.ok(aArr2.includes(u)));
+    aArr2.forEach(u => Assert.ok(aArr1.includes(u)));
   }
 }

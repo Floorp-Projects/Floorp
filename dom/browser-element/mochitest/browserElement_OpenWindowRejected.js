@@ -14,7 +14,7 @@ function runTest() {
   iframe.setAttribute('mozbrowser', 'true');
 
   iframe.addEventListener('mozbrowseropenwindow', function(e) {
-    ok(e.detail.url.indexOf('does_not_exist.html') != -1,
+    ok(e.detail.url.includes('does_not_exist.html'),
        'Opened URL; got ' + e.detail.url);
     is(e.detail.name, '');
     is(e.detail.features, '');

@@ -86,7 +86,7 @@ async function testTabRestoreData(aFormData, aExpectedValue) {
        "FormData format is valid: " + restoredFormData);
     // validate that there are no old keys
     for (let key of Object.keys(restoredFormData)) {
-      if (["id", "xpath", "url"].indexOf(key) === -1) {
+      if (!["id", "xpath", "url"].includes(key)) {
         ok(false, "FormData format is invalid.");
       }
     }

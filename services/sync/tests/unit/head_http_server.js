@@ -287,7 +287,7 @@ ServerCollection.prototype = {
 
   _inResultSet(wbo, options) {
     return wbo.payload
-           && (!options.ids || (options.ids.indexOf(wbo.id) != -1))
+           && (!options.ids || (options.ids.includes(wbo.id)))
            && (!options.newer || (wbo.modified > options.newer))
            && (!options.older || (wbo.modified < options.older));
   },

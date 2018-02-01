@@ -603,7 +603,7 @@ add_task(async function test_setCrashClassifications() {
                    "main-crash", DUMMY_DATE);
   await m.setCrashClassifications("main-crash", ["a"]);
   let classifications = (await m.getCrashes())[0].classifications;
-  Assert.ok(classifications.indexOf("a") != -1);
+  Assert.ok(classifications.includes("a"));
 });
 
 add_task(async function test_setRemoteCrashID() {

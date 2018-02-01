@@ -236,7 +236,7 @@ GMPInstallManager.prototype = {
         }
 
         let addonUpdateEnabled = false;
-        if (GMP_PLUGIN_IDS.indexOf(gmpAddon.id) >= 0) {
+        if (GMP_PLUGIN_IDS.includes(gmpAddon.id)) {
           if (!this._isAddonEnabled(gmpAddon.id)) {
             log.info("GMP |" + gmpAddon.id + "| has been disabled; skipping check.");
           } else if (!this._isAddonUpdateEnabled(gmpAddon.id)) {

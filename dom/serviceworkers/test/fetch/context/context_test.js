@@ -1,91 +1,91 @@
 self.addEventListener("fetch", function(event) {
-  if (event.request.url.indexOf("index.html") >= 0 ||
-      event.request.url.indexOf("register.html") >= 0 ||
-      event.request.url.indexOf("unregister.html") >= 0 ||
-      event.request.url.indexOf("ping.html") >= 0 ||
-      event.request.url.indexOf("xml.xml") >= 0 ||
-      event.request.url.indexOf("csp-violate.sjs") >= 0) {
+  if (event.request.url.includes("index.html") ||
+      event.request.url.includes("register.html") ||
+      event.request.url.includes("unregister.html") ||
+      event.request.url.includes("ping.html") ||
+      event.request.url.includes("xml.xml") ||
+      event.request.url.includes("csp-violate.sjs")) {
     // Handle pass-through requests
     event.respondWith(fetch(event.request));
-  } else if (event.request.url.indexOf("fetch.txt") >= 0) {
+  } else if (event.request.url.includes("fetch.txt")) {
     var body = event.request.context == "fetch" ?
                "so fetch" : "so unfetch";
     event.respondWith(new Response(body));
-  } else if (event.request.url.indexOf("img.jpg") >= 0) {
+  } else if (event.request.url.includes("img.jpg")) {
     if (event.request.context == "image") {
       event.respondWith(fetch("realimg.jpg"));
     }
-  } else if (event.request.url.indexOf("responsive.jpg") >= 0) {
+  } else if (event.request.url.includes("responsive.jpg")) {
     if (event.request.context == "imageset") {
       event.respondWith(fetch("realimg.jpg"));
     }
-  } else if (event.request.url.indexOf("audio.ogg") >= 0) {
+  } else if (event.request.url.includes("audio.ogg")) {
     if (event.request.context == "audio") {
       event.respondWith(fetch("realaudio.ogg"));
     }
-  } else if (event.request.url.indexOf("video.ogg") >= 0) {
+  } else if (event.request.url.includes("video.ogg")) {
     if (event.request.context == "video") {
       event.respondWith(fetch("realaudio.ogg"));
     }
-  } else if (event.request.url.indexOf("beacon.sjs") >= 0) {
-    if (event.request.url.indexOf("queryContext") == -1) {
+  } else if (event.request.url.includes("beacon.sjs")) {
+    if (!event.request.url.includes("queryContext")) {
       event.respondWith(fetch("beacon.sjs?" + event.request.context));
     } else {
       event.respondWith(fetch(event.request));
     }
-  } else if (event.request.url.indexOf("csp-report.sjs") >= 0) {
+  } else if (event.request.url.includes("csp-report.sjs")) {
     respondToServiceWorker(event, "csp-report");
-  } else if (event.request.url.indexOf("embed") >= 0) {
+  } else if (event.request.url.includes("embed")) {
     respondToServiceWorker(event, "embed");
-  } else if (event.request.url.indexOf("object") >= 0) {
+  } else if (event.request.url.includes("object")) {
     respondToServiceWorker(event, "object");
-  } else if (event.request.url.indexOf("font") >= 0) {
+  } else if (event.request.url.includes("font")) {
     respondToServiceWorker(event, "font");
-  } else if (event.request.url.indexOf("iframe") >= 0) {
+  } else if (event.request.url.includes("iframe")) {
     if (event.request.context == "iframe") {
       event.respondWith(fetch("context_test.js"));
     }
-  } else if (event.request.url.indexOf("frame") >= 0) {
+  } else if (event.request.url.includes("frame")) {
     if (event.request.context == "frame") {
       event.respondWith(fetch("context_test.js"));
     }
-  } else if (event.request.url.indexOf("newwindow") >= 0) {
+  } else if (event.request.url.includes("newwindow")) {
     respondToServiceWorker(event, "newwindow");
-  } else if (event.request.url.indexOf("ping") >= 0) {
+  } else if (event.request.url.includes("ping")) {
     respondToServiceWorker(event, "ping");
-  } else if (event.request.url.indexOf("plugin") >= 0) {
+  } else if (event.request.url.includes("plugin")) {
     respondToServiceWorker(event, "plugin");
-  } else if (event.request.url.indexOf("script.js") >= 0) {
+  } else if (event.request.url.includes("script.js")) {
     if (event.request.context == "script") {
       event.respondWith(new Response(""));
     }
-  } else if (event.request.url.indexOf("style.css") >= 0) {
+  } else if (event.request.url.includes("style.css")) {
     respondToServiceWorker(event, "style");
-  } else if (event.request.url.indexOf("track") >= 0) {
+  } else if (event.request.url.includes("track")) {
     respondToServiceWorker(event, "track");
-  } else if (event.request.url.indexOf("xhr") >= 0) {
+  } else if (event.request.url.includes("xhr")) {
     if (event.request.context == "xmlhttprequest") {
       event.respondWith(new Response(""));
     }
-  } else if (event.request.url.indexOf("xslt") >= 0) {
+  } else if (event.request.url.includes("xslt")) {
     respondToServiceWorker(event, "xslt");
-   } else if (event.request.url.indexOf("myworker") >= 0) {
+   } else if (event.request.url.includes("myworker")) {
      if (event.request.context == "worker") {
        event.respondWith(fetch("worker.js"));
      }
-   } else if (event.request.url.indexOf("myparentworker") >= 0) {
+   } else if (event.request.url.includes("myparentworker")) {
      if (event.request.context == "worker") {
        event.respondWith(fetch("parentworker.js"));
      }
-   } else if (event.request.url.indexOf("mysharedworker") >= 0) {
+   } else if (event.request.url.includes("mysharedworker")) {
      if (event.request.context == "sharedworker") {
        event.respondWith(fetch("sharedworker.js"));
      }
-   } else if (event.request.url.indexOf("myparentsharedworker") >= 0) {
+   } else if (event.request.url.includes("myparentsharedworker")) {
      if (event.request.context == "sharedworker") {
        event.respondWith(fetch("parentsharedworker.js"));
      }
-  } else if (event.request.url.indexOf("cache") >= 0) {
+  } else if (event.request.url.includes("cache")) {
     var cache;
     var origContext = event.request.context;
     event.respondWith(caches.open("cache")

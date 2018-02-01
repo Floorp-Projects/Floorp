@@ -100,7 +100,7 @@ function isObjectOrArray(obj) {
                       "Uint32Array", "Float32Array", "Float64Array",
                       "Uint8ClampedArray"];
   let className = Cu.getClassName(obj, true);
-  return arrayClasses.indexOf(className) != -1;
+  return arrayClasses.includes(className);
 }
 
 // In general, we want Xray wrappers for content DOM objects, because waiving

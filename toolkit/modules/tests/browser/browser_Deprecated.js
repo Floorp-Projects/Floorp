@@ -127,8 +127,8 @@ function nextTest() {
       if (!(aMessage instanceof Ci.nsIScriptError)) {
         return;
       }
-      if (aMessage.errorMessage.indexOf("DEPRECATION WARNING: ") < 0 &&
-          aMessage.errorMessage.indexOf("must provide a URL") < 0) {
+      if (!aMessage.errorMessage.includes("DEPRECATION WARNING: ") &&
+          !aMessage.errorMessage.includes("must provide a URL")) {
         return;
       }
       ok(aMessage instanceof Ci.nsIScriptError,

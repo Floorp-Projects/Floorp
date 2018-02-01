@@ -36,7 +36,7 @@ function testBasics() {
       return cache.keys();
     }).then(function(keys) {
       is(keys.length, 1, "Only one entry should exist now");
-      ok(keys[0].url.indexOf(tests[1]) >= 0, "The correct entry must be deleted");
+      ok(keys[0].url.includes(tests[1]), "The correct entry must be deleted");
     });
 }
 
@@ -56,8 +56,8 @@ function testFragment() {
       return cache.keys();
     }).then(function(keys) {
       is(keys.length, 2, "Only one entry should exist now");
-      ok(keys[0].url.indexOf(tests[1]) >= 0, "The correct entry must be deleted");
-      ok(keys[1].url.indexOf(tests[2].replace("#fragment", "")) >= 0, "The correct entry must be deleted");
+      ok(keys[0].url.includes(tests[1]), "The correct entry must be deleted");
+      ok(keys[1].url.includes(tests[2].replace("#fragment", "")), "The correct entry must be deleted");
       // Now, delete a request that was added with a fragment
       return cache.delete("//mochi.test:8888/?baz" + context);
     }).then(function(deleted) {
@@ -65,7 +65,7 @@ function testFragment() {
       return cache.keys();
     }).then(function(keys) {
       is(keys.length, 1, "Only one entry should exist now");
-      ok(keys[0].url.indexOf(tests[1]) >= 0, "3The correct entry must be deleted");
+      ok(keys[0].url.includes(tests[1]), "3The correct entry must be deleted");
     });
 }
 
@@ -89,9 +89,9 @@ function testInterleaved() {
       return cache.keys();
     }).then(function(keys) {
       is(keys.length, 3, "Tree entries should still exist");
-      ok(keys[0].url.indexOf(tests[0]) >= 0, "The correct entry must be deleted");
-      ok(keys[1].url.indexOf(tests[1]) >= 0, "The correct entry must be deleted");
-      ok(keys[2].url.indexOf(newURL) >= 0, "The new entry should be correctly inserted");
+      ok(keys[0].url.includes(tests[0]), "The correct entry must be deleted");
+      ok(keys[1].url.includes(tests[1]), "The correct entry must be deleted");
+      ok(keys[2].url.includes(newURL), "The new entry should be correctly inserted");
     });
 }
 

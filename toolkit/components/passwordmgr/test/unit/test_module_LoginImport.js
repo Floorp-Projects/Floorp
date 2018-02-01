@@ -167,8 +167,8 @@ add_task(async function test_import()
 
   // Verify that disabled hosts have been imported.
   Assert.equal(store.data.disabledHosts.length, 2);
-  Assert.ok(store.data.disabledHosts.indexOf("http://www.example.com") != -1);
-  Assert.ok(store.data.disabledHosts.indexOf("https://www.example.org") != -1);
+  Assert.ok(store.data.disabledHosts.includes("http://www.example.com"));
+  Assert.ok(store.data.disabledHosts.includes("https://www.example.org"));
 });
 
 /**

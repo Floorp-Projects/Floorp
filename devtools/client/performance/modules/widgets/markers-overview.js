@@ -73,7 +73,7 @@ MarkersOverview.prototype = extend(AbstractCanvasGraph.prototype, {
     let observedGroups = new Set();
 
     for (let type in TIMELINE_BLUEPRINT) {
-      if (filter.indexOf(type) !== -1) {
+      if (filter.includes(type)) {
         continue;
       }
       this._paintBatches.set(type, { definition: TIMELINE_BLUEPRINT[type], batch: [] });

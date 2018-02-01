@@ -106,7 +106,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565541
 
     function posChangeCondition() {
       // With GTK, sometimes, only one dimension changes.
-      if (navigator.platform.indexOf('Linux') != -1) {
+      if (navigator.platform.includes('Linux')) {
         return aWindow.screenX != prevX || aWindow.screenY != prevY;
       }
       return aWindow.screenX != prevX && aWindow.screenY != prevY;
@@ -117,14 +117,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565541
         return true;
       }
 
-      if (navigator.platform.indexOf('Linux') != -1) {
+      if (navigator.platform.includes('Linux')) {
         return true;
       }
     }
 
     function posChangeTest() {
       // With GTK, sometimes, only one dimension changes.
-      if (navigator.platform.indexOf('Linux') != -1) {
+      if (navigator.platform.includes('Linux')) {
         // With GTK, sometimes, aWindow.screenX changes during two calls.
         // So we call it once and save the returned value.
         var x = aWindow.screenX;

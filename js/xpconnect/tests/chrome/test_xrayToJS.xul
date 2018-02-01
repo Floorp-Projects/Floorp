@@ -114,10 +114,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     ok(Cu.isXrayWrapper(foopyFunction), "Should be Xrays");
     is(foopyFunction.name, "namedFoopyFunction", ".name works over Xrays");
     is(foopyFunction.length, 3, ".length works over Xrays");
-    ok(Object.getOwnPropertyNames(foopyFunction).indexOf('length') >= 0, "Should list length");
-    ok(Object.getOwnPropertyNames(foopyFunction).indexOf('name') >= 0, "Should list name");
-    ok(Object.getOwnPropertyNames(foopyFunction).indexOf('prototype') == -1, "Should not list prototype");
-    ok(Object.getOwnPropertyNames(iwin.Array).indexOf('prototype') >= 0, "Should list prototype for standard constructor");
+    ok(Object.getOwnPropertyNames(foopyFunction).includes('length'), "Should list length");
+    ok(Object.getOwnPropertyNames(foopyFunction).includes('name'), "Should list name");
+    ok(!Object.getOwnPropertyNames(foopyFunction).includes('prototype'), "Should not list prototype");
+    ok(Object.getOwnPropertyNames(iwin.Array).includes('prototype'), "Should list prototype for standard constructor");
 
     // Test proxies.
     var targetObject = new iwin.Object();
@@ -297,11 +297,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     sortProperties(gConstructorProperties[c]);
 
   function filterOut(array, props) {
-    return array.filter(p => props.indexOf(p) == -1);
+    return array.filter(p => !props.includes(p));
   }
 
   function isTypedArrayClass(classname) {
-    return typedArrayClasses.indexOf(classname) >= 0;
+    return typedArrayClasses.includes(classname);
   }
 
   function propertyIsGetter(obj, name, classname) {

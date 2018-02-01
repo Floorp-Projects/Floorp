@@ -36,7 +36,7 @@ if ("MozMutationObserver" in window) {
 function log(str) {
   var d = document.createElement("div");
   d.textContent = str;
-  if (str.indexOf("PASSED") >= 0) {
+  if (str.includes("PASSED")) {
     d.setAttribute("style", "color: green;");
   } else {
     d.setAttribute("style", "color: red;");

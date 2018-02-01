@@ -1223,8 +1223,8 @@ PeerConnectionWrapper.prototype = {
     this._pc.addEventListener('signalingstatechange', e => {
       var newstate = this._pc.signalingState;
       var oldstate = this.signalingStateLog[this.signalingStateLog.length - 1]
-      if (Object.keys(signalingStateTransitions).indexOf(oldstate) >= 0) {
-        ok(signalingStateTransitions[oldstate].indexOf(newstate) >= 0, this + ": legal signaling state transition from " + oldstate + " to " + newstate);
+      if (Object.keys(signalingStateTransitions).includes(oldstate)) {
+        ok(signalingStateTransitions[oldstate].includes(newstate), this + ": legal signaling state transition from " + oldstate + " to " + newstate);
       } else {
         ok(false, this + ": old signaling state " + oldstate + " missing in signaling transition array");
       }
@@ -1329,7 +1329,7 @@ PeerConnectionWrapper.prototype = {
     this.ice_connection_callbacks.logIceStatus = () => {
       var newstate = this._pc.iceConnectionState;
       var oldstate = this.iceConnectionLog[this.iceConnectionLog.length - 1]
-      if (Object.keys(iceStateTransitions).indexOf(oldstate) != -1) {
+      if (Object.keys(iceStateTransitions).includes(oldstate)) {
         if (this.iceCheckingRestartExpected) {
           is(newstate, "checking",
              "iceconnectionstate event \'" + newstate +
@@ -1341,7 +1341,7 @@ PeerConnectionWrapper.prototype = {
              "\' matches expected state \'connected\'");
           this.iceCheckingIceRollbackExpected = false;
         } else {
-          ok(iceStateTransitions[oldstate].indexOf(newstate) != -1, this + ": legal ICE state transition from " + oldstate + " to " + newstate);
+          ok(iceStateTransitions[oldstate].includes(newstate), this + ": legal ICE state transition from " + oldstate + " to " + newstate);
         }
       } else {
         ok(false, this + ": old ICE state " + oldstate + " missing in ICE transition array");
@@ -1770,7 +1770,7 @@ PeerConnectionWrapper.prototype = {
    *        The stats to check from this PeerConnectionWrapper
    */
   checkStats : function(stats, twoMachines) {
-    const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
+    const isWinXP = navigator.userAgent.includes("Windows NT 5.1");
 
     // Use spec way of enumerating stats
     var counters = {};

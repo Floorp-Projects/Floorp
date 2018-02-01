@@ -48,7 +48,7 @@ function expectSizeModeChange(newMode, duringActionCallback) {
 }
 
 function startTest() {
-  if (navigator.platform.indexOf("Lin") != -1) {
+  if (navigator.platform.includes("Lin")) {
     ok(true, "This test is disabled on Linux because it expects window sizemode changes to be synchronous (which is not the case on Linux).");
     SimpleTest.finish();
     return;

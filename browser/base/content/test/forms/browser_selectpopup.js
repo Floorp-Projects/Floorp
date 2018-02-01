@@ -136,7 +136,7 @@ async function doSelectTests(contentType, content) {
 
   await openSelectPopup(selectPopup);
 
-  let isWindows = navigator.platform.indexOf("Win") >= 0;
+  let isWindows = navigator.platform.includes("Win");
 
   is(menulist.selectedIndex, 1, "Initial selection");
   is(selectPopup.firstChild.localName, "menucaption", "optgroup is caption");

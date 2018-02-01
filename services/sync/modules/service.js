@@ -1089,7 +1089,7 @@ Sync11Service.prototype = {
     else if (!Async.isAppReady())
       reason = kFirefoxShuttingDown;
 
-    if (ignore && ignore.indexOf(reason) != -1)
+    if (ignore && ignore.includes(reason))
       return "";
 
     return reason;

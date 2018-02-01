@@ -90,7 +90,7 @@ function checkObject(obj, required, optional) {
   }
   optional = optional || [];
   for (let attr in obj) {
-    if (required.indexOf(attr) == -1 && optional.indexOf(attr) == -1) {
+    if (!required.includes(attr) && !optional.includes(attr)) {
       return false;
     }
   }
@@ -248,7 +248,7 @@ class AbstractShot {
     }
 
     for (let attr in attrs) {
-      if (attr !== "clips" && attr !== "id" && this.REGULAR_ATTRS.indexOf(attr) === -1 && this.DEPRECATED_ATTRS.indexOf(attr) === -1) {
+      if (attr !== "clips" && attr !== "id" && !this.REGULAR_ATTRS.includes(attr) && !this.DEPRECATED_ATTRS.includes(attr)) {
         throw new Error("Unexpected attribute: " + attr);
       } else if (attr === "id") {
         console.warn("passing id in attrs in AbstractShot constructor");

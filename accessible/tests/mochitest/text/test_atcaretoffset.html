@@ -338,7 +338,7 @@
           var isOk1 = kOk, isOk2 = kOk, isOk3 = kOk;
           for (var fIdx = 0; fIdx < this.failures.length; fIdx++) {
             var failure = this.failures[fIdx];
-            if (func.name.indexOf(failure[0]) != -1 && boundary == failure[1]) {
+            if (func.name.includes(failure[0]) && boundary == failure[1]) {
               isOk1 = failure[2];
               isOk2 = failure[3];
               isOk3 = failure[4];
