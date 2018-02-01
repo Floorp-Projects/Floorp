@@ -11,6 +11,11 @@ import stat
 import subprocess
 import sys
 
+# We need the NDK version in multiple different places, and it's inconvenient
+# to pass down the NDK version to all relevant places, so we have this global
+# variable.
+NDK_VERSION = 'r15c'
+
 ANDROID_NDK_EXISTS = '''
 Looks like you have the Android NDK installed at:
 %s
@@ -137,7 +142,7 @@ def get_paths(os_name):
     sdk_path = os.environ.get('ANDROID_SDK_HOME',
                               os.path.join(mozbuild_path, 'android-sdk-{0}'.format(os_name)))
     ndk_path = os.environ.get('ANDROID_NDK_HOME',
-                              os.path.join(mozbuild_path, 'android-ndk-r15c'))
+                              os.path.join(mozbuild_path, 'android-ndk-{0}'.format(NDK_VERSION)))
     return (mozbuild_path, sdk_path, ndk_path)
 
 
@@ -260,7 +265,7 @@ def suggest_mozconfig(os_name, artifact_mode=False):
         print(MOBILE_ANDROID_MOZCONFIG_TEMPLATE % (sdk_path, ndk_path))
 
 
-def android_ndk_url(os_name, ver='r15c'):
+def android_ndk_url(os_name, ver=NDK_VERSION):
     # Produce a URL like
     # 'https://dl.google.com/android/repository/android-ndk-$VER-linux-x86_64.zip
     base_url = 'https://dl.google.com/android/repository/android-ndk'
