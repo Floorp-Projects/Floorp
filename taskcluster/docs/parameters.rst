@@ -153,11 +153,10 @@ Release Promotion
 ``next_version``
    Specify the next version for version bump tasks.
 
-``desktop_release_type``
-   The type of desktop release being promoted. One of "beta", "devedition", "esr", "rc",
-   or "release".
+``release_type``
+   The type of release being promoted. One of "beta", "devedition", "esr", "rc", or "release".
 
- ``release_eta``
+``release_eta``
    The time and date when a release is scheduled to live. This value is passed to Balrog.
 
 Comm Push Information

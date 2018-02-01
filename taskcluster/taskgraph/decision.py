@@ -196,7 +196,7 @@ def get_decision_parameters(options):
     parameters['version'] = get_version()
     parameters['app_version'] = get_app_version()
     parameters['next_version'] = None
-    parameters['desktop_release_type'] = ''
+    parameters['release_type'] = ''
     parameters['release_eta'] = ''
 
     # owner must be an email, but sometimes (e.g., for ffxbld) it is not, in which
