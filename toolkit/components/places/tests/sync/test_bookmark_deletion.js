@@ -649,3 +649,111 @@ add_task(async function test_nonexistent_on_one_side() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
+
+add_task(async function test_clear_folder_then_delete() {
+  let buf = await openMirror("clear_folder_then_delete");
+
+  info("Set up mirror");
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [{
+      guid: "folderAAAAAA",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      title: "A",
+      children: [{
+        guid: "bookmarkBBBB",
+        url: "http://example.com/b",
+        title: "B",
+      }],
+    }, {
+      guid: "folderCCCCCC",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      title: "C",
+      children: [{
+        guid: "bookmarkDDDD",
+        url: "http://example.com/d",
+        title: "D",
+      }],
+    }],
+  });
+  await buf.store([{
+    id: "menu",
+    type: "folder",
+    title: "Bookmarks Menu",
+    children: ["folderAAAAAA", "folderCCCCCC"],
+  }, {
+    id: "folderAAAAAA",
+    type: "folder",
+    title: "A",
+    children: ["bookmarkBBBB"],
+  }, {
+    id: "bookmarkBBBB",
+    type: "bookmark",
+    title: "A",
+    bmkUri: "http://example.com/b",
+  }, {
+    id: "folderCCCCCC",
+    type: "folder",
+    title: "C",
+    children: ["bookmarkDDDD"],
+  }, {
+    id: "bookmarkDDDD",
+    type: "bookmark",
+    title: "D",
+    bmkUri: "http://example.com/d",
+  }], { needsMerge: false });
+  await PlacesTestUtils.markBookmarksAsSynced();
+
+  info("Make local changes: Menu > D, delete C");
+  await PlacesUtils.bookmarks.update({
+    guid: "bookmarkDDDD",
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    index: 0,
+  });
+  await PlacesUtils.bookmarks.remove("folderCCCCCC");
+
+  info("Make remote changes: Menu > B, delete A");
+  await buf.store([{
+    id: "menu",
+    type: "folder",
+    title: "Bookmarks Menu",
+    children: ["bookmarkBBBB"],
+  }, {
+    id: "folderAAAAAA",
+    deleted: true,
+  }]);
+
+  info("Apply remote");
+  let changesToUpload = await buf.apply();
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+
+  let idsToUpload = inspectChangeRecords(changesToUpload);
+  deepEqual(idsToUpload, {
+    updated: ["bookmarkDDDD", "menu"],
+    deleted: ["folderCCCCCC"],
+  }, "Should upload locally moved and deleted items");
+
+  await assertLocalTree(PlacesUtils.bookmarks.menuGuid, {
+    guid: PlacesUtils.bookmarks.menuGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    index: 0,
+    title: "Bookmarks Menu",
+    children: [{
+      guid: "bookmarkBBBB",
+      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      index: 0,
+      title: "B",
+      url: "http://example.com/b",
+    }, {
+      guid: "bookmarkDDDD",
+      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      index: 1,
+      title: "D",
+      url: "http://example.com/d",
+    }],
+  }, "Should not treat moved children of a deleted folder as orphans");
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
