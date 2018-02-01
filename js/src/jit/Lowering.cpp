@@ -2533,17 +2533,6 @@ LIRGenerator::visitBinarySharedStub(MBinarySharedStub* ins)
 }
 
 void
-LIRGenerator::visitUnarySharedStub(MUnarySharedStub* ins)
-{
-    MDefinition* input = ins->getOperand(0);
-    MOZ_ASSERT(ins->type() == MIRType::Value);
-
-    LUnarySharedStub* lir = new(alloc()) LUnarySharedStub(useBoxFixedAtStart(input, R0));
-    defineSharedStubReturn(lir, ins);
-    assignSafepoint(lir, ins);
-}
-
-void
 LIRGenerator::visitNullarySharedStub(MNullarySharedStub* ins)
 {
     MOZ_ASSERT(ins->type() == MIRType::Value);
