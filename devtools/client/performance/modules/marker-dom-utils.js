@@ -251,7 +251,7 @@ exports.MarkerDOMUtils = {
 function shouldShowAllocationsTrigger(marker) {
   if (marker.name == "GarbageCollection") {
     let showTriggers = PREFS["show-triggers-for-gc-types"];
-    return showTriggers.split(" ").indexOf(marker.causeName) !== -1;
+    return showTriggers.split(" ").includes(marker.causeName);
   }
   return false;
 }

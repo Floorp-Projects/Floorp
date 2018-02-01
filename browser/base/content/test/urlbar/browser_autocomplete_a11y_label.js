@@ -45,7 +45,7 @@ add_task(async function searchSuggestions() {
     "foobar",
   ];
   for (let child of gURLBar.popup.richlistbox.children) {
-    if (child.getAttribute("type").split(/\s+/).indexOf("searchengine") >= 0) {
+    if (child.getAttribute("type").split(/\s+/).includes("searchengine")) {
       Assert.ok(expectedSearches.length > 0);
       let suggestion = expectedSearches.shift();
       Assert.equal(child.label, suggestion + " browser_searchSuggestionEngine searchSuggestionEngine.xml Search",

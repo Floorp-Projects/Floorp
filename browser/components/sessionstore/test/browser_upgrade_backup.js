@@ -118,7 +118,7 @@ add_task(async function test_upgrade_backup_removal() {
   // find all backups that were created during the last call to `SessionFile.write("");`
   // ie, filter out all the backups that have already been present before the call
   newBackups = newBackups.filter(function(backup) {
-    return backups.indexOf(backup) < 0;
+    return !backups.includes(backup);
   });
 
   // check that exactly one new backup was created

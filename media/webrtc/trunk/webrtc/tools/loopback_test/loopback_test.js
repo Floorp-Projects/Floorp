@@ -40,7 +40,7 @@ function LoopbackTest(
     var origAddIceCandidate = pc.addIceCandidate;
     pc.addIceCandidate = function (candidate, successCallback,
                                    failureCallback) {
-      if (forceTurn && candidate.candidate.indexOf("typ relay ") == -1) {
+      if (forceTurn && !candidate.candidate.includes("typ relay ")) {
         trace("Dropping non-turn candidate: " + candidate.candidate);
         successCallback();
         return;

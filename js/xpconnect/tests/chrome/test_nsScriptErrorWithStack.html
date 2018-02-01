@@ -36,13 +36,13 @@
       // Main assertions
       var s = aSubject.stack;
       ok(!!s, "has first frame");
-      ok(s.source.indexOf("test_nsScriptErrorWithStack.html") !== -1, "source is correct");
+      ok(s.source.includes("test_nsScriptErrorWithStack.html"), "source is correct");
       is(s.line, 23, "line is correct");
       is(s.column, 5, "column is correct");
       is(s.functionDisplayName, "nestedFunction");
       s = s.parent;
       ok(!!s, "has second frame");
-      ok(s.source.indexOf("test_nsScriptErrorWithStack.html") !== -1, "source is correct");
+      ok(s.source.includes("test_nsScriptErrorWithStack.html"), "source is correct");
       is(s.line, 20, "line is correct");
       is(s.column, 5, "column is correct");
       is(s.functionDisplayName, "failingStack");

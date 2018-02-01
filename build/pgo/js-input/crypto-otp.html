@@ -592,7 +592,7 @@ function gen() {
         useed = document.getElementById('onetime').seeder.value;
         seedNum = true;
         for (i = 0; i < useed.length; i++) {
-            if ("0123456789".indexOf(useed.charAt(i)) == -1) {
+            if (!"0123456789".includes(useed.charAt(i))) {
                 seedNum = false;
                 break;
             }

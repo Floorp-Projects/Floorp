@@ -207,7 +207,7 @@ this.SafeBrowsing = {
 
   observe(aSubject, aTopic, aData) {
     // skip nextupdatetime and lastupdatetime
-    if (aData.indexOf("lastupdatetime") >= 0 || aData.indexOf("nextupdatetime") >= 0) {
+    if (aData.includes("lastupdatetime") || aData.includes("nextupdatetime")) {
       return;
     }
 
@@ -287,7 +287,7 @@ this.SafeBrowsing = {
 
       for (let i = 0; i < obsoleteLists.length; ++i) {
         obsoleteLists[i] = obsoleteLists[i]
-          .filter(list => newLists[i].indexOf(list) == -1);
+          .filter(list => !newLists[i].includes(list));
       }
     }
 

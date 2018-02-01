@@ -309,7 +309,7 @@ ToolSidebar.prototype = {
     let knownTabs = [...this._tabs.values()];
 
     for (let tab of this._tabbox.tabs.querySelectorAll("tab")) {
-      if (knownTabs.indexOf(tab) !== -1) {
+      if (knownTabs.includes(tab)) {
         continue;
       }
 

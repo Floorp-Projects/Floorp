@@ -6431,7 +6431,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    // Only consider this section if the requested source is in the list of
 	    // sources of the consumer.
-	    if (section.consumer.sources.indexOf(util.getArg(aArgs, 'source')) === -1) {
+	    if (!section.consumer.sources.includes(util.getArg(aArgs, 'source'))) {
 	      continue;
 	    }
 	    var generatedPosition = section.consumer.generatedPositionFor(aArgs);

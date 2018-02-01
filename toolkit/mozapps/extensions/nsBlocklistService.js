@@ -181,13 +181,13 @@ function restartApp() {
 function matchesOSABI(blocklistElement) {
   if (blocklistElement.hasAttribute("os")) {
     var choices = blocklistElement.getAttribute("os").split(",");
-    if (choices.length > 0 && choices.indexOf(gApp.OS) < 0)
+    if (choices.length > 0 && !choices.includes(gApp.OS))
       return false;
   }
 
   if (blocklistElement.hasAttribute("xpcomabi")) {
     choices = blocklistElement.getAttribute("xpcomabi").split(",");
-    if (choices.length > 0 && choices.indexOf(gApp.XPCOMABI) < 0)
+    if (choices.length > 0 && !choices.includes(gApp.XPCOMABI))
       return false;
   }
 

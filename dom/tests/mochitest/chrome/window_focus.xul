@@ -539,7 +539,7 @@ function startTest()
     legend.tabIndex = "-1";
   }
 
-  var accessKeyDetails = (navigator.platform.indexOf("Mac") >= 0) ?
+  var accessKeyDetails = (navigator.platform.includes("Mac")) ?
                          { ctrlKey : true } : { altKey : true };
 
   // test accesskeys
@@ -554,7 +554,7 @@ function startTest()
     // on Windows and Linux, the shift key must be pressed for content area access keys
     // and on Mac, the alt key must be pressed for content area access keys
     var isContent = (getById(keys[k]).ownerGlobal == gChildWindow);
-    if (navigator.platform.indexOf("Mac") == -1) {
+    if (!navigator.platform.includes("Mac")) {
       accessKeyDetails.shiftKey = isContent;
     } else {
       accessKeyDetails.altKey = isContent;
@@ -1143,7 +1143,7 @@ function otherWindowFocused(otherWindow)
   // next, check modal dialogs
   // XXXndeakin Bug 621399 - the modal dialog test as well as later tests sometime fail
   // on Windows 8 so just end the test here.
-  if (navigator.userAgent.indexOf("Windows NT 6.2") >= 0) {
+  if (navigator.userAgent.includes("Windows NT 6.2")) {
     done();
   }
   else {
@@ -1254,7 +1254,7 @@ function framesetWindowLoaded(framesetWindow)
 
   // skip the window switching tests for now on Linux, as raising and lowering
   // a window is asynchronous there
-  if (navigator.platform.indexOf("Linux") == -1) {
+  if (!navigator.platform.includes("Linux")) {
     window.openDialog("focus_window2.xul", "_blank", "chrome", switchWindowTest, framesetWindow);
   }
   else {

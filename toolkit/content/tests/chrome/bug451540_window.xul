@@ -26,7 +26,7 @@
 
     let sendCtrl = true;
     let sendMeta = false;
-    if (navigator.platform.indexOf("Mac") >= 0) {
+    if (navigator.platform.includes("Mac")) {
       sendCtrl = false;
       sendMeta = true;
     }
@@ -94,7 +94,7 @@
         element.focus();
       });
       info(`focused element`);
-      if (navigator.platform.indexOf("Mac") >= 0) {
+      if (navigator.platform.includes("Mac")) {
         await BrowserTestUtils.synthesizeKey("VK_LEFT", { metaKey: true }, gBrowser);
       } else {
         await BrowserTestUtils.synthesizeKey("VK_HOME", {}, gBrowser);

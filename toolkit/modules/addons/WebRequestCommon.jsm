@@ -46,7 +46,7 @@ var WebRequestCommon = {
       return true;
     }
 
-    return filterTypes.indexOf(this.typeForPolicyType(policyType)) != -1;
+    return filterTypes.includes(this.typeForPolicyType(policyType));
   },
 
   urlMatches(uri, urlFilter) {

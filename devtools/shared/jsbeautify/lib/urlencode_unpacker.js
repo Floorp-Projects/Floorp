@@ -21,8 +21,8 @@ var Urlencoded = {
     detect: function (str) {
         // the fact that script doesn't contain any space, but has %20 instead
         // should be sufficient check for now.
-        if (str.indexOf(' ') == -1) {
-            if (str.indexOf('%2') != -1) return true;
+        if (!str.includes(' ')) {
+            if (str.includes('%2')) return true;
             if (str.replace(/[^%]+/g, '').length > 3) return true;
         }
         return false;
@@ -30,7 +30,7 @@ var Urlencoded = {
 
     unpack: function (str) {
         if (Urlencoded.detect(str)) {
-            if (str.indexOf('%2B') != -1 || str.indexOf('%2b') != -1) {
+            if (str.includes('%2B') || str.includes('%2b')) {
                 // "+" escaped as "%2B"
                 return unescape(str.replace(/\+/g, '%20'));
             } else {

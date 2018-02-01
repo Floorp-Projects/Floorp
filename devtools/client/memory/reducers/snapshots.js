@@ -203,7 +203,7 @@ handlers[actions.SELECT_SNAPSHOT] = function (snapshots, { id }) {
 };
 
 handlers[actions.DELETE_SNAPSHOTS_START] = function (snapshots, { ids }) {
-  return snapshots.filter(s => ids.indexOf(s.id) === -1);
+  return snapshots.filter(s => !ids.includes(s.id));
 };
 
 handlers[actions.DELETE_SNAPSHOTS_END] = function (snapshots) {

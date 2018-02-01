@@ -197,7 +197,7 @@ ServerLoggingListener.prototype = {
 
     httpChannel.visitResponseHeaders((header, value) => {
       header = header.toLowerCase();
-      if (acceptableHeaders.indexOf(header) !== -1) {
+      if (acceptableHeaders.includes(header)) {
         headers.push({header: header, value: value});
       }
     });
@@ -285,7 +285,7 @@ ServerLoggingListener.prototype = {
 
       // Old version of the protocol includes a label.
       // If this is the old version do some converting.
-      if (data.columns.indexOf("label") != -1) {
+      if (data.columns.includes("label")) {
         let label = row[columnMap.get("label")];
         let showLabel = label && typeof label === "string";
 

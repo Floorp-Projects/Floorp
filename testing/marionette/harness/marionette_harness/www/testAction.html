@@ -25,7 +25,7 @@
     function appendText(text) {
       return function(evt) {
          var element;
-         if (evt.type.indexOf("touch") !== -1) {
+         if (evt.type.includes("touch")) {
            if (evt.type == "touchstart") {
              element = evt.target;
            }

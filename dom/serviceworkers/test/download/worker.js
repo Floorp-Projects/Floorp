@@ -13,7 +13,7 @@ addEventListener('activate', function(evt) {
 addEventListener('fetch', function(evt) {
   // This worker may live long enough to receive a fetch event from the next
   // test.  Just pass such requests through to the network.
-  if (evt.request.url.indexOf('fake_download') === -1) {
+  if (!evt.request.url.includes('fake_download')) {
     return;
   }
 

@@ -363,7 +363,7 @@ var WebGLInstrumenter = {
         return context;
       }
       // Make sure a WebGL (not a 2D) context will be instrumented.
-      if (WEBGL_CONTEXT_NAMES.indexOf(name) == -1) {
+      if (!WEBGL_CONTEXT_NAMES.includes(name)) {
         return context;
       }
       // Repeated calls to 'getContext' return the same instance, no need to

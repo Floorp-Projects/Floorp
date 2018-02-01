@@ -539,7 +539,7 @@ add_task(async function dont_rollup_oncaretmove() {
   is(textbox.selectionEnd, 8, "Should have moved the caret (selectionEnd after right)");
   is(searchPopup.state, "open", "Popup should still be open");
 
-  if (navigator.platform.indexOf("Mac") == -1) {
+  if (!navigator.platform.includes("Mac")) {
     EventUtils.synthesizeKey("VK_HOME", {});
     is(textbox.selectionStart, 0, "Should have moved the caret (selectionStart after home)");
     is(textbox.selectionEnd, 0, "Should have moved the caret (selectionEnd after home)");

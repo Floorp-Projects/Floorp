@@ -448,7 +448,7 @@ TaskImpl.prototype = {
       }
 
       if ("name" in aException &&
-          ERRORS_TO_REPORT.indexOf(aException.name) != -1) {
+          ERRORS_TO_REPORT.includes(aException.name)) {
 
         // We suspect that the exception is a programmer error, so we now
         // display it using dump().  Note that we do not use Cu.reportError as
@@ -471,7 +471,7 @@ TaskImpl.prototype = {
     // Cut `this._stack` at the last line of the first block that
     // contains Task.jsm, keep the tail.
     for (let [line, index] of linesOf(this._stack || "")) {
-      if (line.indexOf("/Task.jsm:") == -1) {
+      if (!line.includes("/Task.jsm:")) {
         return this._stack.substring(index);
       }
     }
@@ -520,7 +520,7 @@ Task.Debugging = {
     // Cut `topStack` at the first line that contains Task.jsm, keep the head.
     let lines = [];
     for (let [line] of linesOf(topStack)) {
-      if (line.indexOf("/Task.jsm:") != -1) {
+      if (line.includes("/Task.jsm:")) {
         break;
       }
       lines.push(prefix + line);

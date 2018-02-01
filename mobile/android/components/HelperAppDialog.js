@@ -128,7 +128,7 @@ HelperAppLauncherDialog.prototype = {
       OMA_DRM_MESSAGE_MIME,
       OMA_DRM_CONTENT_MIME,
       OMA_DRM_RIGHTS_MIME
-    ].indexOf(mimeType) != -1;
+    ].includes(mimeType);
   },
 
   show: function hald_show(aLauncher, aContext, aReason) {

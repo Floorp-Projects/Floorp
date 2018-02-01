@@ -42,8 +42,8 @@ add_task(async function test_isr_cycles() {
   ])).problemData;
 
   equal(c.cycles.length, 1);
-  ok(c.cycles[0].indexOf("A") >= 0);
-  ok(c.cycles[0].indexOf("B") >= 0);
+  ok(c.cycles[0].includes("A"));
+  ok(c.cycles[0].includes("B"));
 });
 
 add_task(async function test_isr_orphansMultiParents() {
@@ -55,8 +55,8 @@ add_task(async function test_isr_orphansMultiParents() {
   ])).problemData;
   deepEqual(c.orphans, [{ id: "A", parent: "D" }]);
   equal(c.multipleParents.length, 1);
-  ok(c.multipleParents[0].parents.indexOf("B") >= 0);
-  ok(c.multipleParents[0].parents.indexOf("C") >= 0);
+  ok(c.multipleParents[0].parents.includes("B"));
+  ok(c.multipleParents[0].parents.includes("C"));
 });
 
 add_task(async function test_isr_orphansMultiParents2() {

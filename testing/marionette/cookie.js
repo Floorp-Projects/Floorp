@@ -210,7 +210,7 @@ cookie.iter = function* (host, currentPath = "/") {
   assert.string(host, "host must be string");
   assert.string(currentPath, "currentPath must be string");
 
-  const isForCurrentPath = path => currentPath.indexOf(path) != -1;
+  const isForCurrentPath = path => currentPath.includes(path);
 
   let en = cookie.manager.getCookiesFromHost(host, {});
   while (en.hasMoreElements()) {
@@ -236,6 +236,6 @@ cookie.iter = function* (host, currentPath = "/") {
         yield data;
       }
       hostname = hostname.replace(/^.*?\./, "");
-    } while (hostname.indexOf(".") != -1);
+    } while (hostname.includes("."));
   }
 };

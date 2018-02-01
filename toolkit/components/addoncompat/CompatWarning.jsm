@@ -28,10 +28,10 @@ var CompatWarning = {
   // registration site.
   delayedWarning(msg, addon, warning) {
     function isShimLayer(filename) {
-      return filename.indexOf("CompatWarning.jsm") != -1 ||
-        filename.indexOf("RemoteAddonsParent.jsm") != -1 ||
-        filename.indexOf("RemoteAddonsChild.jsm") != -1 ||
-        filename.indexOf("multiprocessShims.js") != -1;
+      return filename.includes("CompatWarning.jsm") ||
+        filename.includes("RemoteAddonsParent.jsm") ||
+        filename.includes("RemoteAddonsChild.jsm") ||
+        filename.includes("multiprocessShims.js");
     }
 
     let stack = Components.stack;

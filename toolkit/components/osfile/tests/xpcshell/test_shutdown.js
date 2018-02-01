@@ -33,11 +33,11 @@ add_task(async function system_shutdown() {
           }
           let message = aMessage.message;
           info("Got message: " + message);
-          if (message.indexOf("TEST OS Controller WARNING") < 0) {
+          if (!message.includes("TEST OS Controller WARNING")) {
             return;
           }
           info("Got message: " + message + ", looking for resource " + resource);
-          if (message.indexOf(resource) < 0) {
+          if (!message.includes(resource)) {
             return;
           }
           info("Resource: " + resource + " found");

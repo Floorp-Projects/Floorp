@@ -360,7 +360,7 @@ OutgoingMessage.prototype.setHeader = function setHeader(name, value) {
     return this.emit('error', new Error('Can\'t set headers after they are sent.'));
   } else {
     name = name.toLowerCase();
-    if (deprecatedHeaders.indexOf(name) !== -1) {
+    if (deprecatedHeaders.includes(name)) {
       return this.emit('error', new Error('Cannot set deprecated header: ' + name));
     }
     this._headers[name] = value;

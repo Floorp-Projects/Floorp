@@ -52,7 +52,7 @@ SpecialPowersLogger.prototype = {
       var data = formatLogMessage(msg);
       SpecialPowers.log(data);
 
-      if (data.indexOf("SimpleTest FINISH") >= 0) {
+      if (data.includes("SimpleTest FINISH")) {
         SpecialPowers.closeLogFile();
       }
     };
@@ -108,7 +108,7 @@ MozillaFileLogger.prototype = {
         this._converter.writeString(data);
       }
 
-      if (data.indexOf("SimpleTest FINISH") >= 0) {
+      if (data.includes("SimpleTest FINISH")) {
         MozillaFileLogger.close();
       }
     };

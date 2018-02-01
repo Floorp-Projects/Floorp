@@ -80,7 +80,7 @@ function doneTests()
   if (gTestSet == "box") {
     gTestSet = "popup";
     // only test this on Mac for now
-    if (navigator.platform.indexOf("Mac") >= 0) {
+    if (navigator.platform.includes("Mac")) {
       checkScrollState($("outerpopup"), 0, 0, 0, 0, "popup before open");
       checkClientState($("outerpopup"), 0, 0, 0, 0, "popup before open");
     }

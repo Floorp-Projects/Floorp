@@ -208,7 +208,7 @@ exports.items = [
         // First, if the user explicitly includes a 'Z' timezone marker, then
         // we assume they know what they are doing with timezones. ISO-8601
         // uses 'Z' as a marker for 'Zulu time', zero hours offset i.e. UTC
-        if (arg.text.indexOf('Z') !== -1) {
+        if (arg.text.includes('Z')) {
           value = new Date(arg.text);
         }
         else {

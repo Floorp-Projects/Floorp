@@ -46,7 +46,7 @@ window.onload = Task.async(function* () {
     });
 
     is(output2.props.title, "Collapse", "Proper title is set");
-    ok(output2.props.className.indexOf("pane-collapsed") >= 0,
+    ok(output2.props.className.includes("pane-collapsed"),
       "Proper class name is set");
   }
 });

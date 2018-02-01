@@ -12,7 +12,7 @@ worker.onmessage = function (event) {
 
 self.onmessage = function (event) {
   var message = event.data;
-  if (message.indexOf(":") >= 0) {
+  if (message.includes(":")) {
     worker.postMessage(message.split(":")[1]);
     return;
   }

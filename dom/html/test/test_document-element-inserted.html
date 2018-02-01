@@ -20,7 +20,7 @@ var loc;
 
 var observe = function(doc){
     if (doc == media.contentDocument) {
-        ok(media.contentDocument.location.toString().indexOf(loc) != -1,
+        ok(media.contentDocument.location.toString().includes(loc),
           "The loaded media should be " + loc);
         next();
     }

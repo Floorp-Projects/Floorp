@@ -41,12 +41,12 @@ function isnot(received, notExpected, message) {
 }
 
 window.onload = function() {
-  if (location.href.indexOf("_blank") != -1) {
+  if (location.href.includes("_blank")) {
     test_blank();
     return;
   }
 
-  if (location.href.indexOf("_self") != -1) {
+  if (location.href.includes("_self")) {
     test_self();
     return;
   }

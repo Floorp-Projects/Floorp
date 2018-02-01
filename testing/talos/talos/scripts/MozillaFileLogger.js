@@ -84,7 +84,7 @@ MozFileLogger.getLogCallback = function() {
     if (MozFileLogger._foStream)
       MozFileLogger._foStream.write(data, data.length);
 
-    if (data.indexOf("SimpleTest FINISH") >= 0) {
+    if (data.includes("SimpleTest FINISH")) {
       MozFileLogger.close();
     }
   };

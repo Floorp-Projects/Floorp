@@ -129,7 +129,7 @@ var gUpdater = {
     // Delete sites that were removed from the grid.
     gGrid.sites.forEach(function (aSite) {
       // The site must be valid and not in the current grid.
-      if (!aSite || aSites.indexOf(aSite) != -1)
+      if (!aSite || aSites.includes(aSite))
         return;
 
       batch.push(new Promise(resolve => {

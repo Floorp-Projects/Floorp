@@ -111,7 +111,7 @@ function testFirstEditor(editor) {
 
 function testEditor(editor, possibleNames) {
   let name = getStylesheetNameFor(editor);
-  ok(possibleNames.indexOf(name) >= 0, name + " editor name is correct");
+  ok(possibleNames.includes(name), name + " editor name is correct");
 
   return openEditor(editor).then(() => {
     let expectedText = contents[name];

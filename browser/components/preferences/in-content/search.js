@@ -417,7 +417,7 @@ EngineStore.prototype = {
     for (var i in aEngine)
       clonedObj[i] = aEngine[i];
     clonedObj.originalEngine = aEngine;
-    clonedObj.shown = this.hiddenList.indexOf(clonedObj.name) == -1;
+    clonedObj.shown = !this.hiddenList.includes(clonedObj.name);
     return clonedObj;
   },
 

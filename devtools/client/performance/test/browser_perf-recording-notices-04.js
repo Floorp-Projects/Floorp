@@ -54,7 +54,7 @@ add_task(function* () {
   ok(bufferUsage, 1, "Buffer is full for this recording.");
   ok(DETAILS_CONTAINER.getAttribute("buffer-status"), "full",
     "Container has [buffer-status=full].");
-  ok(NORMAL_BUFFER_STATUS_MESSAGE.value.indexOf(gPercent + "%") !== -1,
+  ok(NORMAL_BUFFER_STATUS_MESSAGE.value.includes(gPercent + "%"),
     "Buffer status text has correct percentage.");
 
   // Stop the manual recording.

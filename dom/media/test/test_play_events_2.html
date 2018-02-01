@@ -22,7 +22,7 @@ var tokens = {
 
 function gotPlayEvent(event) {
   var v = event.target;
-  ok(tokens[v._state].indexOf(event.type) >= 0,
+  ok(tokens[v._state].includes(event.type),
      "Check expected event got " + event.type + " at " + v._state + " for " + v.src);
   v._state = event.type;
 }

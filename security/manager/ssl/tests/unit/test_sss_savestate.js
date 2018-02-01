@@ -37,7 +37,7 @@ function checkStateWritten(aSubject, aTopic, aData) {
     let host = parts[0];
     let entry = parts[3].split(",");
     let expectedColumns = EXPECTED_HSTS_COLUMNS;
-    if (host.indexOf("HPKP") != -1) {
+    if (host.includes("HPKP")) {
       expectedColumns = EXPECTED_HPKP_COLUMNS;
     }
     equal(entry.length, expectedColumns);

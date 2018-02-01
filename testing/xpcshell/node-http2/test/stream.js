@@ -23,7 +23,7 @@ function execute_sequence(stream, sequence, done) {
 
   var emit = stream.emit, events = [];
   stream.emit = function(name) {
-    if (recorded_events.indexOf(name) !== -1) {
+    if (recorded_events.includes(name)) {
       events.push({ name: name, data: Array.prototype.slice.call(arguments, 1) });
     }
     return emit.apply(this, arguments);

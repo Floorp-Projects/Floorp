@@ -518,7 +518,7 @@ var CustomizableUIInternal = {
       let widget = gPalette.get(widgetId);
       if (!widget || widget.source !== CustomizableUI.SOURCE_BUILTIN ||
           !widget.defaultArea || !widget._introducedInVersion ||
-          savedPlacements.indexOf(widget.id) !== -1) {
+          savedPlacements.includes(widget.id)) {
         continue;
       }
       defaultWidgetIndex = defaultPlacements.indexOf(widget.id);
@@ -618,7 +618,7 @@ var CustomizableUIInternal = {
     }
     // Sanity check type:
     let allTypes = [CustomizableUI.TYPE_TOOLBAR, CustomizableUI.TYPE_MENU_PANEL];
-    if (allTypes.indexOf(props.get("type")) == -1) {
+    if (!allTypes.includes(props.get("type"))) {
       throw new Error("Invalid area type " + props.get("type"));
     }
 
@@ -2857,7 +2857,7 @@ var CustomizableUIInternal = {
         let removableOrDefault = (itemNodeOrItem) => {
           let item = (itemNodeOrItem && itemNodeOrItem.id) || itemNodeOrItem;
           let isRemovable = this.isWidgetRemovable(itemNodeOrItem);
-          let isInDefault = defaultPlacements.indexOf(item) != -1;
+          let isInDefault = defaultPlacements.includes(item);
           return isRemovable || isInDefault;
         };
         // Toolbars have a currentSet property which also deals correctly with overflown

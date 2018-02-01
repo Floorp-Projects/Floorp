@@ -63,14 +63,14 @@ function onLoad() {
   waitForSuccess({
     name: gCurrentTest.name,
     validator: function () {
-      if (gHud.outputNode.textContent.indexOf(TRIGGER_MSG) >= 0) {
+      if (gHud.outputNode.textContent.includes(TRIGGER_MSG)) {
         for (let warning of gCurrentTest.warning) {
-          if (gHud.outputNode.textContent.indexOf(warning) < 0) {
+          if (!gHud.outputNode.textContent.includes(warning)) {
             return false;
           }
         }
         for (let nowarning of gCurrentTest.nowarning) {
-          if (gHud.outputNode.textContent.indexOf(nowarning) >= 0) {
+          if (gHud.outputNode.textContent.includes(nowarning)) {
             return false;
           }
         }

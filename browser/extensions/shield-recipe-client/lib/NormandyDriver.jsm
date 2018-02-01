@@ -57,7 +57,7 @@ this.NormandyDriver = function(sandboxManager) {
 
     log(message, level = "debug") {
       const levels = ["debug", "info", "warn", "error"];
-      if (levels.indexOf(level) === -1) {
+      if (!levels.includes(level)) {
         throw new Error(`Invalid log level "${level}"`);
       }
       actionLog[level](message);

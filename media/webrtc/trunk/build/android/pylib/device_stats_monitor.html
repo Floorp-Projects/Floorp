@@ -120,7 +120,7 @@ function display(hz, results, units) {
     var name = key;
     var values = [results[key]];
     var unit = units[key];
-    if (combine.indexOf(key) >= 0) {
+    if (combine.includes(key)) {
       i--;
       name = combine;
       values = [];

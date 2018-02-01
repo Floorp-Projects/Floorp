@@ -97,7 +97,7 @@
 
     is(anode.attributes.length, attrs.length, "correct number of attributes");
     for (let i = 0; i < attrs.length; i++) {
-      ok(attrs.indexOf(anode.attributes[i]) >= 0,
+      ok(attrs.includes(anode.attributes[i]),
          `${anode.attributes[i]} attribute is expected and found`);
     }
 

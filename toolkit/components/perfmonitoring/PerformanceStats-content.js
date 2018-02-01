@@ -80,7 +80,7 @@ Services.cpmm.addMessageListener("performance-stats-service-release", function(m
 
   // Keep only the probes that do not appear in the payload
   let probes = gMonitor.probeNames
-    .filter(x => msg.data.payload.indexOf(x) == -1);
+    .filter(x => !msg.data.payload.includes(x));
   gMonitor = PerformanceStats.getMonitor(probes);
 });
 
@@ -96,7 +96,7 @@ function ensureAcquired(probeNames) {
   // Algorithm is O(n^2) because we expect that n ≤ 3.
   let shouldAcquire = [];
   for (let probeName of probeNames) {
-    if (alreadyAcquired.indexOf(probeName) == -1) {
+    if (!alreadyAcquired.includes(probeName)) {
       shouldAcquire.push(probeName);
     }
   }

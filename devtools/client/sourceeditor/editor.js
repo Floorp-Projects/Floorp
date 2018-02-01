@@ -166,7 +166,7 @@ function Editor(config) {
     this.config.gutters = [];
   }
   if (this.config.lineNumbers
-      && this.config.gutters.indexOf("CodeMirror-linenumbers") === -1) {
+      && !this.config.gutters.includes("CodeMirror-linenumbers")) {
     this.config.gutters.push("CodeMirror-linenumbers");
   }
 
@@ -886,7 +886,7 @@ Editor.prototype = {
       return false;
     }
 
-    return info.wrapClass.split(" ").indexOf(className) != -1;
+    return info.wrapClass.split(" ").includes(className);
   },
 
   /**

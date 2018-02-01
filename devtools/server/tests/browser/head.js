@@ -263,7 +263,7 @@ function waitForMarkerType(front, types, predicate,
     info("Got markers: " + JSON.stringify(markers, null, 2));
 
     filteredMarkers = filteredMarkers.concat(
-      markers.filter(m => types.indexOf(m.name) !== -1));
+      markers.filter(m => types.includes(m.name)));
 
     if (types.every(t => filteredMarkers.some(m => m.name === t)) &&
         predicate(filteredMarkers)) {

@@ -16,9 +16,9 @@ caches.open(name).then(function(cache) {
   return c.keys();
 }).then(function(keys) {
   is(keys.length, 3, "Correct number of entries expected");
-  ok(keys[0].url.indexOf(reqs[0]) >= 0, "The first entry should be untouched");
-  ok(keys[2].url.indexOf(reqs[1]) >= 0, "The second entry should be moved to the end");
-  ok(keys[1].url.indexOf(reqs[2]) >= 0, "The third entry should now be the second one");
+  ok(keys[0].url.includes(reqs[0]), "The first entry should be untouched");
+  ok(keys[2].url.includes(reqs[1]), "The second entry should be moved to the end");
+  ok(keys[1].url.includes(reqs[2]), "The third entry should now be the second one");
   return c.match(reqs[1]);
 }).then(function(r) {
   return r.text();

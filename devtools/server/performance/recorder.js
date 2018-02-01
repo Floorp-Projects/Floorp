@@ -388,7 +388,7 @@ PerformanceRecorder.prototype = {
     // If model isn't in the Recorder's internal store,
     // then do nothing, like if this was a console.profileEnd
     // from a different target.
-    if (this._recordings.indexOf(model) === -1) {
+    if (!this._recordings.includes(model)) {
       return model;
     }
 

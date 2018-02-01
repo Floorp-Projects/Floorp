@@ -135,13 +135,13 @@ class JITOptimizations extends Component {
     let getIonTypeForObserved = type => {
       return getSite(type.id).data.types
         .find(iontype => (iontype.typeset || [])
-        .indexOf(type) !== -1);
+        .includes(type));
     };
     let isSite = site => getSite(site.id) === site;
     let isAttempts = attempts => getSite(attempts.id).data.attempts === attempts;
-    let isAttempt = attempt => getSite(attempt.id).data.attempts.indexOf(attempt) !== -1;
+    let isAttempt = attempt => getSite(attempt.id).data.attempts.includes(attempt);
     let isTypes = types => getSite(types.id).data.types === types;
-    let isType = type => getSite(type.id).data.types.indexOf(type) !== -1;
+    let isType = type => getSite(type.id).data.types.includes(type);
     let isObservedType = type => getIonTypeForObserved(type);
 
     let getRowType = node => {

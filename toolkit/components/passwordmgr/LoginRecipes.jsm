@@ -134,12 +134,12 @@ LoginRecipesParent.prototype = {
   add(recipe) {
     log.debug("Adding recipe:", recipe);
     let recipeKeys = Object.keys(recipe);
-    let unknownKeys = recipeKeys.filter(key => SUPPORTED_KEYS.indexOf(key) == -1);
+    let unknownKeys = recipeKeys.filter(key => !SUPPORTED_KEYS.includes(key));
     if (unknownKeys.length > 0) {
       throw new Error("The following recipe keys aren't supported: " + unknownKeys.join(", "));
     }
 
-    let missingRequiredKeys = REQUIRED_KEYS.filter(key => recipeKeys.indexOf(key) == -1);
+    let missingRequiredKeys = REQUIRED_KEYS.filter(key => !recipeKeys.includes(key));
     if (missingRequiredKeys.length > 0) {
       throw new Error("The following required recipe keys are missing: " + missingRequiredKeys.join(", "));
     }

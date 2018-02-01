@@ -868,7 +868,7 @@ Requisition.prototype.toCanonicalString = function() {
   var lineSuffix = '';
   if (cmd === '{') {
     var scriptSuffix = this.getAssignment(0).arg.suffix;
-    lineSuffix = (scriptSuffix.indexOf('}') === -1) ? ' }' : '';
+    lineSuffix = (!scriptSuffix.includes('}')) ? ' }' : '';
   }
 
   var ctx = this.executionContext;
@@ -1350,7 +1350,7 @@ Requisition.prototype.getStateData = function(start, rank) {
 
     // Is the entered command a JS command with no closing '}'?
     var unclosedJs = command && command.name === '{' &&
-                     this.getAssignment(0).arg.suffix.indexOf('}') === -1;
+                     !this.getAssignment(0).arg.suffix.includes('}');
 
     return {
       statusMarkup: this.getInputStatusMarkup(start),

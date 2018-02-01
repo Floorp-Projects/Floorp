@@ -92,7 +92,7 @@ class SecurityPanel extends Component {
           value,
         })
       ,
-      weaknessReasons.indexOf("cipher") !== -1 &&
+      weaknessReasons.includes("cipher") &&
       member.name === CIPHER_SUITE_LABEL ?
         // Display an extra warning icon after the cipher suite
         div({

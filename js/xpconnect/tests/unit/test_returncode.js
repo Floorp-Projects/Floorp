@@ -39,7 +39,7 @@ function test_simple() {
 
   let messages = getConsoleMessages();
   Assert.equal(messages.length, 1, "got a console message from the exception");
-  Assert.ok(messages[0].indexOf("a requested error") != -1, "got the message text");
+  Assert.ok(messages[0].includes("a requested error"), "got the message text");
 
   // Ask the C++ to call the JS object which will return success.
   result = parent.callChild(Ci.nsIXPCTestReturnCodeChild.CHILD_SHOULD_RETURN_SUCCESS);

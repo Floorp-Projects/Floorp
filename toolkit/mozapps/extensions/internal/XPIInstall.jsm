@@ -485,7 +485,7 @@ async function loadManifestFromRDF(aUri, aStream) {
           logger.warn("Ignoring empty locale in localized properties");
           continue;
         }
-        if (aSeenLocales.indexOf(localeName) != -1) {
+        if (aSeenLocales.includes(localeName)) {
           logger.warn("Ignoring duplicate locale in localized properties");
           continue;
         }
@@ -658,7 +658,7 @@ async function loadManifestFromRDF(aUri, aStream) {
       logger.warn("Ignoring invalid targetApplication entry in install manifest");
       continue;
     }
-    if (seenApplications.indexOf(targetAppInfo.id) != -1) {
+    if (seenApplications.includes(targetAppInfo.id)) {
       logger.warn("Ignoring duplicate targetApplication entry for " + targetAppInfo.id +
            " in install manifest");
       continue;

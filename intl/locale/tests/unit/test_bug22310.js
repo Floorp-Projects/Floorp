@@ -1,4 +1,4 @@
-String.prototype.has = function(s) { return this.indexOf(s) != -1; }
+String.prototype.has = function(s) { return this.includes(s); }
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;

@@ -830,9 +830,9 @@ var gCookiesWindow = {
   },
 
   _cookieMatchesFilter(aCookie) {
-    return aCookie.rawHost.indexOf(this._view._filterValue) != -1 ||
-           aCookie.name.indexOf(this._view._filterValue) != -1 ||
-           aCookie.value.indexOf(this._view._filterValue) != -1;
+    return aCookie.rawHost.includes(this._view._filterValue) ||
+           aCookie.name.includes(this._view._filterValue) ||
+           aCookie.value.includes(this._view._filterValue);
   },
 
   _filterCookies(aFilterValue) {

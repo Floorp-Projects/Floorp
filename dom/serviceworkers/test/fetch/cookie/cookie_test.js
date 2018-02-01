@@ -1,5 +1,5 @@
 self.addEventListener("fetch", function(event) {
-  if (event.request.url.indexOf("synth.html") >= 0) {
+  if (event.request.url.includes("synth.html")) {
     var body = '<script>' +
         'window.parent.postMessage({status: "done", cookie: document.cookie}, "*");' +
       '</script>';

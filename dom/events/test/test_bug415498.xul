@@ -88,7 +88,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
     
     function verifyErrorReceived(errorString) {
       for (var i = 0; i < gMessages.length; i++) {
-        if (gMessages[i].message.indexOf(errorString) != -1)
+        if (gMessages[i].message.includes(errorString))
           return true;
       }
       return false;

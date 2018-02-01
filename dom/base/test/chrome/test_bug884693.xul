@@ -39,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=884693
           is(messages.length, expectedMessages.length, "Got expected message count");
           messages = messages.map(m => m.message).join(",");
           for(let message of expectedMessages) {
-            ok(messages.indexOf(message) >= 0, "Got expected message: " + message);
+            ok(messages.includes(message), "Got expected message: " + message);
           }
 
           resolve();

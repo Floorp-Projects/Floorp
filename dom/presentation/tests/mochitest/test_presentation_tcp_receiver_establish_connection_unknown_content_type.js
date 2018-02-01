@@ -16,7 +16,7 @@ function setup() {
     receiverIframe.setAttribute('mozbrowser', 'true');
     receiverIframe.setAttribute('mozpresentation', receiverUrl);
     receiverIframe.setAttribute('src', receiverUrl);
-    var oop = location.pathname.indexOf('_inproc') == -1;
+    var oop = !location.pathname.includes('_inproc');
     receiverIframe.setAttribute("remote", oop);
 
     var promise = new Promise(function(aResolve, aReject) {
