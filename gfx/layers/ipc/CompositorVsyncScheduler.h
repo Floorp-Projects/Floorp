@@ -48,6 +48,10 @@ public:
   explicit CompositorVsyncScheduler(CompositorVsyncSchedulerOwner* aVsyncSchedulerOwner,
                                     widget::CompositorWidget* aWidget);
 
+  /**
+   * Notify this class of a vsync. This will trigger a composite if one is
+   * needed. This must be called from the vsync dispatch thread.
+   */
   bool NotifyVsync(TimeStamp aVsyncTimestamp);
 
   /**
@@ -55,9 +59,28 @@ public:
    */
   void Destroy();
 
+  /**
+   * Notify this class that a composition is needed. This will trigger a
+   * composition soon (likely at the next vsync). This must be called on the
+   * compositor thread.
+   */
   void ScheduleComposition();
+
+  /**
+   * Cancel any composite task that has been scheduled but hasn't run yet.
+   */
   void CancelCurrentCompositeTask();
+
+  /**
+   * Check if a composite is pending. This is generally true between a call
+   * to ScheduleComposition() and the time the composite happens.
+   */
   bool NeedsComposite();
+
+  /**
+   * Force a composite to happen right away, without waiting for the next vsync.
+   * This must be called on the compositor thread.
+   */
   void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect);
 
   const TimeStamp& GetLastComposeTime()
