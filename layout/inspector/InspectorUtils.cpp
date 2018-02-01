@@ -21,9 +21,11 @@
 #include "nsIPresShell.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMCharacterData.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleNode.h"
 #include "nsIStyleRule.h"
 #include "mozilla/css/StyleRule.h"
+#endif
 #include "nsIDOMWindow.h"
 #include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"
@@ -36,9 +38,13 @@
 #include "nsRange.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/Element.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleWalker.h"
+#endif
 #include "nsCSSPseudoClasses.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsCSSRuleProcessor.h"
+#endif
 #include "mozilla/dom/CSSLexer.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/ToJSValue.h"

@@ -29,7 +29,6 @@ EXPORTS.mozilla += [
     'AnimationPropertySegment.h',
     'AnimationTarget.h',
     'AnimationUtils.h',
-    'AnimValuesStyleRule.h',
     'ComputedTiming.h',
     'ComputedTimingFunction.h',
     'EffectCompositor.h',
@@ -42,6 +41,11 @@ EXPORTS.mozilla += [
     'TimingParams.h',
 ]
 
+if CONFIG['MOZ_OLD_STYLE']:
+    EXPORTS.mozilla += [
+        'AnimValuesStyleRule.h',
+    ]
+
 UNIFIED_SOURCES += [
     'Animation.cpp',
     'AnimationEffectReadOnly.cpp',
@@ -51,7 +55,6 @@ UNIFIED_SOURCES += [
     'AnimationPerformanceWarning.cpp',
     'AnimationTimeline.cpp',
     'AnimationUtils.cpp',
-    'AnimValuesStyleRule.cpp',
     'ComputedTimingFunction.cpp',
     'CSSPseudoElement.cpp',
     'DocumentTimeline.cpp',
@@ -63,6 +66,11 @@ UNIFIED_SOURCES += [
     'PendingAnimationTracker.cpp',
     'TimingParams.cpp',
 ]
+
+if CONFIG['MOZ_OLD_STYLE']:
+    UNIFIED_SOURCES += [
+        'AnimValuesStyleRule.cpp',
+    ]
 
 LOCAL_INCLUDES += [
     '/dom/base',

@@ -14,7 +14,9 @@
 #ifndef mozilla_GenericSpecifiedValuesInlines_h
 #define mozilla_GenericSpecifiedValuesInlines_h
 
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleData.h"
+#endif
 #include "mozilla/GenericSpecifiedValues.h"
 #include "mozilla/ServoSpecifiedValues.h"
 

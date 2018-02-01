@@ -4,7 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef MOZ_OLD_STYLE
 #include "nsIStyleRuleProcessor.h"
+#endif
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIServiceManager.h"
@@ -15,8 +17,10 @@
 #include "mozilla/css/Loader.h"
 #include "nsIURI.h"
 #include "nsLayoutCID.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsCSSRuleProcessor.h"
 #include "nsStyleSet.h"
+#endif
 #include "mozilla/dom/URL.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/StyleSheet.h"

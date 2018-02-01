@@ -11,6 +11,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/dom/FontFaceSet.h"
 #include "nsCOMPtr.h"
 #include "nsIStreamLoader.h"
 #include "nsIChannel.h"
@@ -18,7 +19,9 @@
 #include "gfxUserFontSet.h"
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsCSSRules.h"
+#endif
 
 class nsIPrincipal;
 

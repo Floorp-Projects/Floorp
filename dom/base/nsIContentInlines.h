@@ -9,6 +9,7 @@
 
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsBindingManager.h"
 #include "nsContentUtils.h"
 #include "nsAtom.h"
 #include "nsIFrame.h"

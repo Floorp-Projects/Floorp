@@ -38,7 +38,9 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIScriptError.h"
 
+#ifdef MOZ_OLD_STYLE
 #include "nsCSSRuleProcessor.h"
+#endif
 #include "nsXBLResourceLoader.h"
 #include "mozilla/AddonPathService.h"
 #include "mozilla/dom/CDATASection.h"

@@ -7,7 +7,9 @@
 #ifndef mozilla_DeclarationBlockInlines_h
 #define mozilla_DeclarationBlockInlines_h
 
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/css/Declaration.h"
+#endif
 #include "mozilla/ServoDeclarationBlock.h"
 
 namespace mozilla {

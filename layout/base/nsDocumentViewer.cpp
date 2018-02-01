@@ -122,6 +122,7 @@
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/dom/ScriptLoader.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

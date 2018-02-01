@@ -8,8 +8,10 @@
 
 #include "nsDOMCSSAttrDeclaration.h"
 
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/css/Declaration.h"
 #include "mozilla/css/StyleRule.h"
+#endif
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/dom/Element.h"

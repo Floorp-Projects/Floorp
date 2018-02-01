@@ -74,7 +74,6 @@ EXPORTS.mozilla += [
     'ArenaObjectID.h',
     'ArenaRefPtr.h',
     'ArenaRefPtrInlines.h',
-    'GeckoRestyleManager.h',
     'GeometryUtils.h',
     'OverflowChangedTracker.h',
     'PresShell.h',
@@ -86,11 +85,15 @@ EXPORTS.mozilla += [
     'StaticPresData.h',
 ]
 
+if CONFIG['MOZ_OLD_STYLE']:
+    EXPORTS.mozilla += [
+        'GeckoRestyleManager.h',
+    ]
+
 UNIFIED_SOURCES += [
     'AccessibleCaret.cpp',
     'AccessibleCaretEventHub.cpp',
     'AccessibleCaretManager.cpp',
-    'GeckoRestyleManager.cpp',
     'GeometryUtils.cpp',
     'LayoutLogging.cpp',
     'MobileViewportManager.cpp',
@@ -115,7 +118,6 @@ UNIFIED_SOURCES += [
     'PositionedEventTargeting.cpp',
     'PresShell.cpp',
     'RestyleManager.cpp',
-    'RestyleTracker.cpp',
     'ScrollbarStyles.cpp',
     'ServoRestyleManager.cpp',
     'ShapeUtils.cpp',
@@ -124,6 +126,12 @@ UNIFIED_SOURCES += [
     'TouchManager.cpp',
     'ZoomConstraintsClient.cpp',
 ]
+
+if CONFIG['MOZ_OLD_STYLE']:
+    UNIFIED_SOURCES += [
+        'GeckoRestyleManager.cpp',
+        'RestyleTracker.cpp',
+    ]
 
 # nsRefreshDriver.cpp needs to be built separately because of name clashes in the OS X headers
 SOURCES += [

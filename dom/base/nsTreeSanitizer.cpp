@@ -7,11 +7,14 @@
 #include "nsTreeSanitizer.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/BindingStyleRule.h"
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/ServoDeclarationBlock.h"
 #include "mozilla/StyleSheetInlines.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/css/Declaration.h"
 #include "mozilla/css/StyleRule.h"
+#endif
 #include "mozilla/css/Rule.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/SRIMetadata.h"

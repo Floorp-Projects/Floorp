@@ -15,8 +15,10 @@
 #include "nsColor.h"
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsIStyleRule.h"
 #include "nsIStyleRuleProcessor.h"
+#endif
 #include "PLDHashTable.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"

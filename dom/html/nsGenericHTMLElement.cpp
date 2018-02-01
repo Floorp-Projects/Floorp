@@ -23,7 +23,9 @@
 #include "nsQueryObject.h"
 #include "nsIContentInlines.h"
 #include "nsIContentViewer.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/css/Declaration.h"
+#endif
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMDocumentFragment.h"

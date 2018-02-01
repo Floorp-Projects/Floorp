@@ -10,7 +10,9 @@
 #include "nsStyleConsts.h"
 #include "nsStyleStruct.h"
 #include "nsPresContext.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsCSSRuleProcessor.h"
+#endif
 #include "mozilla/dom/HTMLBodyElement.h"
 
 #include "mozilla/ServoBindings.h"

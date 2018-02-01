@@ -40,7 +40,9 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/css/StyleRule.h"
+#endif
 #include "nsCSSRendering.h"
 #include "nsString.h"
 #include "nsContainerFrame.h"

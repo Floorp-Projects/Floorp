@@ -15,7 +15,9 @@
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StyleComplexColor.h"
 #include "nsCSSAnonBoxes.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsStyleSet.h"
+#endif
 
 class nsAtom;
 class nsPresContext;

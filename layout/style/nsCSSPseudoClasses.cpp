@@ -16,6 +16,7 @@
 #include "nsString.h"
 #include "nsAttrValueInlines.h"
 #include "nsIMozBrowserFrame.h"
+#include "nsStyleUtil.h"
 
 using namespace mozilla;
 
