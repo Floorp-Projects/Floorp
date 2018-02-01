@@ -9,8 +9,9 @@ extern crate mp4parse_capi;
 extern crate nsstring;
 extern crate nserror;
 extern crate xpcom;
-extern crate rust_url_capi;
 extern crate netwerk_helper;
+extern crate prefs_parser;
+extern crate rust_url_capi;
 #[cfg(feature = "quantum_render")]
 extern crate webrender_bindings;
 #[cfg(feature = "cubeb_pulse_rust")]
