@@ -6,8 +6,6 @@
 // This test covers MozTrap test 6047
 // bug 880621
 
-var {LoadContextInfo} = ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm", null);
-
 var tmp = {};
 
 Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tmp);
@@ -65,10 +63,10 @@ function getStorageEntryCount(device, goon) {
   var storage;
   switch (device) {
   case "private":
-    storage = Services.cache2.diskCacheStorage(LoadContextInfo.private, false);
+    storage = Services.cache2.diskCacheStorage(Services.loadContextInfo.private, false);
     break;
   case "regular":
-    storage = Services.cache2.diskCacheStorage(LoadContextInfo.default, false);
+    storage = Services.cache2.diskCacheStorage(Services.loadContextInfo.default, false);
     break;
   default:
     throw "Unknown device " + device + " at getStorageEntryCount";

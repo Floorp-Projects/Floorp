@@ -112,9 +112,11 @@
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsIScrollableFrame.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/css/StyleRule.h" /* For nsCSSSelectorList */
 #include "nsCSSRuleProcessor.h"
 #include "nsRuleProcessorData.h"
+#endif
 #include "nsTextNode.h"
 
 #include "nsCycleCollectionParticipant.h"
@@ -3538,6 +3540,7 @@ Element::Closest(const nsAString& aSelector, ErrorResult& aResult)
       return const_cast<Element*>(Servo_SelectorList_Closest(this, aList));
     },
     [&](nsCSSSelectorList* aList) -> Element* {
+#ifdef MOZ_OLD_STYLE
       if (!aList) {
         // Either we failed (and aError already has the exception), or this
         // is a pseudo-element-only selector that matches nothing.
@@ -3558,6 +3561,9 @@ Element::Closest(const nsAString& aSelector, ErrorResult& aResult)
         }
       }
       return nullptr;
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     }
   );
 }
@@ -3575,6 +3581,7 @@ Element::Matches(const nsAString& aSelector, ErrorResult& aError)
       return Servo_SelectorList_Matches(this, aList);
     },
     [&](nsCSSSelectorList* aList) {
+#ifdef MOZ_OLD_STYLE
       if (!aList) {
         // Either we failed (and aError already has the exception), or this
         // is a pseudo-element-only selector that matches nothing.
@@ -3588,6 +3595,9 @@ Element::Matches(const nsAString& aSelector, ErrorResult& aError)
       matchingContext.AddScopeElement(this);
       return nsCSSRuleProcessor::SelectorListMatches(this, matchingContext,
                                                      aList);
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     }
   );
 }

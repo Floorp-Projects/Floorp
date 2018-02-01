@@ -364,14 +364,18 @@ HasValidOffsets(const nsTArray<Keyframe>& aKeyframes);
 static void
 MarkAsComputeValuesFailureKey(PropertyValuePair& aPair);
 
+#ifdef MOZ_OLD_STYLE
 static bool
 IsComputeValuesFailureKey(const PropertyValuePair& aPair);
 #endif
+#endif
 
+#ifdef MOZ_OLD_STYLE
 static nsTArray<ComputedKeyframeValues>
 GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
                           dom::Element* aElement,
                           GeckoStyleContext* aStyleContext);
+#endif
 
 static nsTArray<ComputedKeyframeValues>
 GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
@@ -897,6 +901,7 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
     return result;
   }
 
+#ifdef MOZ_OLD_STYLE
   nsCSSValue value;
   if (!nsCSSProps::IsShorthand(aProperty)) {
     aParser.ParseLonghandProperty(aProperty,
@@ -936,6 +941,9 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
 
   result.emplace(aProperty, Move(value));
   return result;
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 /**
@@ -980,6 +988,7 @@ MarkAsComputeValuesFailureKey(PropertyValuePair& aPair)
   aPair.mSimulateComputeValuesFailure = true;
 }
 
+#ifdef MOZ_OLD_STYLE
 /**
  * Returns true if |aPair| is a property-value pair on which we have
  * previously called MarkAsComputeValuesFailureKey (and hence we should
@@ -996,7 +1005,9 @@ IsComputeValuesFailureKey(const PropertyValuePair& aPair)
          aPair.mSimulateComputeValuesFailure;
 }
 #endif
+#endif
 
+#ifdef MOZ_OLD_STYLE
 /**
  * Calculate the StyleAnimationValues of properties of each keyframe.
  * This involves expanding shorthand properties into longhand properties,
@@ -1083,6 +1094,7 @@ GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
   MOZ_ASSERT(result.Length() == aKeyframes.Length(), "Array length mismatch");
   return result;
 }
+#endif
 
 /**
  * The variation of the above function. This is for Servo backend.
@@ -1632,6 +1644,7 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
     for (const PropertyValuePair& pair : frame.mPropertyValues) {
       if (nsCSSProps::IsShorthand(pair.mProperty)) {
         if (styleBackend == StyleBackendType::Gecko) {
+#ifdef MOZ_OLD_STYLE
           nsCSSValueTokenStream* tokenStream =
             pair.mValue.GetTokenStreamValue();
           nsCSSParser parser(aDocument->CSSLoader());
@@ -1639,6 +1652,9 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
                                               tokenStream->mTokenStream)) {
             continue;
           }
+#else
+          MOZ_CRASH("old style system disabled");
+#endif
         }
 
         MOZ_ASSERT(styleBackend != StyleBackendType::Servo ||
@@ -1678,6 +1694,7 @@ DistributeRange(const Range<Keyframe>& aRange)
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 template
 nsTArray<AnimationProperty>
 KeyframeUtils::GetAnimationPropertiesFromKeyframes(
@@ -1685,6 +1702,7 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
   dom::Element* aElement,
   GeckoStyleContext* aStyle,
   dom::CompositeOperation aEffectComposite);
+#endif
 
 template
 nsTArray<AnimationProperty>

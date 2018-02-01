@@ -524,7 +524,7 @@ impl Wrench {
         for (id, offset) in scroll_offsets {
             txn.scroll_node_with_id(
                 *offset,
-                *id,
+                IdType::ClipId(*id),
                 ScrollClamping::NoClamping,
             );
         }

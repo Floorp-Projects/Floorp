@@ -30,7 +30,7 @@ class Connector {
 
   // Connect/Disconnect API
 
-  connect(connection, actions, getState) {
+  async connect(connection, actions, getState) {
     if (!connection || !connection.tab) {
       return;
     }
@@ -38,10 +38,10 @@ class Connector {
     let { clientType } = connection.tab;
     switch (clientType) {
       case "chrome":
-        this.connectChrome(connection, actions, getState);
+        await this.connectChrome(connection, actions, getState);
         break;
       case "firefox":
-        this.connectFirefox(connection, actions, getState);
+        await this.connectFirefox(connection, actions, getState);
         break;
       default:
         throw Error(`Unknown client type - ${clientType}`);
@@ -54,20 +54,20 @@ class Connector {
 
   connectChrome(connection, actions, getState) {
     this.connector = require("./chrome-connector");
-    this.connector.connect(connection, actions, getState);
+    return this.connector.connect(connection, actions, getState);
   }
 
   connectFirefox(connection, actions, getState) {
     this.connector = require("./firefox-connector");
-    this.connector.connect(connection, actions, getState);
+    return this.connector.connect(connection, actions, getState);
   }
 
   pause() {
-    this.connector.pause();
+    return this.connector.pause();
   }
 
   resume() {
-    this.connector.resume();
+    return this.connector.resume();
   }
 
   // Public API

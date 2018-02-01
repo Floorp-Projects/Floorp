@@ -23,7 +23,9 @@
 #include "nsLayoutUtils.h"
 #include "nsContentUtils.h"
 #include "nsCSSValue.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleNode.h"
+#endif
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/ServoCSSParser.h"
 
@@ -72,12 +74,16 @@ DocumentRendererChild::RenderDocument(nsPIDOMWindowOuter* window,
         return false;
       }
     } else {
+#ifdef MOZ_OLD_STYLE
       nsCSSParser parser;
       nsCSSValue bgColorValue;
       if (!parser.ParseColorString(aBGColor, nullptr, 0, bgColorValue) ||
           !nsRuleNode::ComputeColor(bgColorValue, presContext, nullptr, bgColor)) {
         return false;
       }
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     }
 
     // Draw directly into the output array.

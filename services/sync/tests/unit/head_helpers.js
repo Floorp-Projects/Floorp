@@ -114,41 +114,28 @@ function loadWebExtensionTestFunctions() {
   Services.scriptloader.loadSubScript(uri.spec, gGlobalScope);
 }
 
+// Returns a promise
 function getAddonInstall(name) {
   let f = do_get_file(ExtensionsTestPath("/addons/" + name + ".xpi"));
-  let cb = Async.makeSyncCallback();
-  AddonManager.getInstallForFile(f, cb);
-
-  return Async.waitForSyncCallback(cb);
+  return AddonManager.getInstallForFile(f);
 }
 
 /**
- * Obtains an addon from the add-on manager by id.
- *
- * This is merely a synchronous wrapper.
- *
- * @param  id
- *         ID of add-on to fetch
- * @return addon object on success or undefined or null on failure
- */
-function getAddonFromAddonManagerByID(id) {
-   let cb = Async.makeSyncCallback();
-   AddonManager.getAddonByID(id, cb);
-   return Async.waitForSyncCallback(cb);
-}
-
-/**
- * Installs an add-on synchronously from an addonInstall
+ * Installs an add-on from an addonInstall
  *
  * @param  install addonInstall instance to install
  */
-function installAddonFromInstall(install) {
-  let cb = Async.makeSyncCallback();
-  let listener = {onInstallEnded: cb};
-  AddonManager.addInstallListener(listener);
-  install.install();
-  Async.waitForSyncCallback(cb);
-  AddonManager.removeAddonListener(listener);
+async function installAddonFromInstall(install) {
+  await new Promise(res => {
+    let listener = {
+      onInstallEnded() {
+        AddonManager.removeAddonListener(listener);
+        res();
+      }
+    };
+    AddonManager.addInstallListener(listener);
+    install.install();
+  });
 
   Assert.notEqual(null, install.addon);
   Assert.notEqual(null, install.addon.syncGUID);
@@ -161,32 +148,47 @@ function installAddonFromInstall(install) {
  *
  * @param  name
  *         String name of add-on to install. e.g. test_install1
+ * @param  reconciler
+ *         addons reconciler, if passed we will wait on the events to be
+ *         processed before resolving
  * @return addon object that was installed
  */
-function installAddon(name) {
-  let install = getAddonInstall(name);
+async function installAddon(name, reconciler = null) {
+  let install = await getAddonInstall(name);
   Assert.notEqual(null, install);
-  return installAddonFromInstall(install);
+  const addon = await installAddonFromInstall(install);
+  if (reconciler) {
+    await reconciler.queueCaller.promiseCallsComplete();
+  }
+  return addon;
 }
 
 /**
- * Convenience function to uninstall an add-on synchronously.
+ * Convenience function to uninstall an add-on.
  *
  * @param addon
  *        Addon instance to uninstall
+ * @param reconciler
+ *        addons reconciler, if passed we will wait on the events to be
+ *        processed before resolving
  */
-function uninstallAddon(addon) {
-  let cb = Async.makeSyncCallback();
-  let listener = {onUninstalled(uninstalled) {
-    if (uninstalled.id == addon.id) {
-      AddonManager.removeAddonListener(listener);
-      cb(uninstalled);
-    }
-  }};
-
-  AddonManager.addAddonListener(listener);
+async function uninstallAddon(addon, reconciler = null) {
+  const uninstallPromise = new Promise(res => {
+    let listener = {
+      onUninstalled(uninstalled) {
+        if (uninstalled.id == addon.id) {
+          AddonManager.removeAddonListener(listener);
+          res(uninstalled);
+        }
+      }
+    };
+    AddonManager.addAddonListener(listener);
+  });
   addon.uninstall();
-  Async.waitForSyncCallback(cb);
+  await uninstallPromise;
+  if (reconciler) {
+    await reconciler.queueCaller.promiseCallsComplete();
+  }
 }
 
 async function generateNewKeys(collectionKeys, collections = null) {
@@ -487,9 +489,6 @@ function promiseOneObserver(topic, callback) {
   });
 }
 
-function promiseStopServer(server) {
-  return new Promise(resolve => server.stop(resolve));
-}
 // Avoid an issue where `client.name2` containing unicode characters causes
 // a number of tests to fail, due to them assuming that we do not need to utf-8
 // encode or decode data sent through the mocked server (see bug 1268912).
@@ -502,7 +501,7 @@ Utils.getDefaultDeviceName = function() {
 async function registerRotaryEngine() {
   let {RotaryEngine} =
     ChromeUtils.import("resource://testing-common/services/sync/rotaryengine.js", {});
-  Service.engineManager.clear();
+  await Service.engineManager.clear();
 
   await Service.engineManager.register(RotaryEngine);
   let engine = Service.engineManager.get("rotary");

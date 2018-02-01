@@ -21,7 +21,7 @@ ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 add_task(async function setup() {
   // Disables all built-in engines. Important for avoiding errors thrown by the
   // add-ons engine.
-  Service.engineManager.clear();
+  await Service.engineManager.clear();
 
   // Setup the FxA identity manager and cluster manager.
   Status.__authManager = Service.identity = new BrowserIDManager();
@@ -71,20 +71,22 @@ function prepareServer(cbAfterTokenFetch) {
   let numReassigns = 0;
   return configureIdentity(config).then(() => {
     Service.identity._tokenServerClient = {
-      getTokenFromBrowserIDAssertion(uri, assertion, cb) {
-        // Build a new URL with trailing zeros for the SYNC_VERSION part - this
-        // will still be seen as equivalent by the test server, but different
-        // by sync itself.
-        numReassigns += 1;
-        let trailingZeros = new Array(numReassigns + 1).join("0");
-        let token = config.fxaccount.token;
-        token.endpoint = server.baseURI + "1.1" + trailingZeros + "/johndoe";
-        token.uid = config.username;
-        numTokenRequests += 1;
-        cb(null, token);
-        if (cbAfterTokenFetch) {
-          cbAfterTokenFetch();
-        }
+      getTokenFromBrowserIDAssertion(uri, assertion) {
+        return new Promise(res => {
+          // Build a new URL with trailing zeros for the SYNC_VERSION part - this
+          // will still be seen as equivalent by the test server, but different
+          // by sync itself.
+          numReassigns += 1;
+          let trailingZeros = new Array(numReassigns + 1).join("0");
+          let token = config.fxaccount.token;
+          token.endpoint = server.baseURI + "1.1" + trailingZeros + "/johndoe";
+          token.uid = config.username;
+          numTokenRequests += 1;
+          res(token);
+          if (cbAfterTokenFetch) {
+            cbAfterTokenFetch();
+          }
+        });
       },
     };
     return server;
@@ -250,8 +252,8 @@ add_task(async function test_momentary_401_engine() {
                                       "weave:service:sync:finish",
                                       Service.storageURL + "rotary");
 
-  tracker.clearChangedIDs();
-  Service.engineManager.unregister(engine);
+  await tracker.clearChangedIDs();
+  await Service.engineManager.unregister(engine);
 });
 
 // This test ends up being a failing info fetch *after we're already logged in*.

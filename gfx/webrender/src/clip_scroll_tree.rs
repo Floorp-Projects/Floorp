@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ClipId, ClipChainId, DeviceIntRect, DevicePixelScale, LayerPoint, LayerRect};
-use api::{LayerToWorldTransform, LayerVector2D, LayoutTransform, PipelineId, PropertyBinding};
-use api::{ScrollClamping, ScrollEventPhase, ScrollLayerState, ScrollLocation, WorldPoint};
+use api::{ClipChainId, ClipId, DeviceIntRect, DevicePixelScale, ExternalScrollId, IdType};
+use api::{LayerPoint, LayerRect, LayerToWorldTransform, LayerVector2D, LayoutTransform};
+use api::{PipelineId, PropertyBinding, ScrollClamping, ScrollEventPhase, ScrollLocation};
+use api::{ScrollNodeState, WorldPoint};
 use clip::ClipStore;
-use clip_scroll_node::{ClipScrollNode, NodeType, ScrollingState, StickyFrameInfo};
+use clip_scroll_node::{ClipScrollNode, NodeType, ScrollFrameInfo, StickyFrameInfo};
 use gpu_cache::GpuCache;
 use gpu_types::{ClipScrollNodeIndex, ClipScrollNodeData};
 use internal_types::{FastHashMap, FastHashSet};
@@ -16,7 +17,7 @@ use resource_cache::ResourceCache;
 use scene::SceneProperties;
 use util::TransformOrOffset;
 
-pub type ScrollStates = FastHashMap<ClipId, ScrollingState>;
+pub type ScrollStates = FastHashMap<ExternalScrollId, ScrollFrameInfo>;
 
 /// An id that identifies coordinate systems in the ClipScrollTree. Each
 /// coordinate system has an id and those ids will be shared when the coordinates
@@ -59,7 +60,7 @@ pub struct ClipScrollTree {
     /// A HashMap of built ClipChains that are described by `clip_chains_descriptors`.
     pub clip_chains: FastHashMap<ClipChainId, ClipChain>,
 
-    pub pending_scroll_offsets: FastHashMap<ClipId, (LayerPoint, ScrollClamping)>,
+    pub pending_scroll_offsets: FastHashMap<IdType, (LayerPoint, ScrollClamping)>,
 
     /// The ClipId of the currently scrolling node. Used to allow the same
     /// node to scroll even if a touch operation leaves the boundaries of that node.
@@ -234,14 +235,13 @@ impl ClipScrollTree {
         true
     }
 
-    pub fn get_scroll_node_state(&self) -> Vec<ScrollLayerState> {
+    pub fn get_scroll_node_state(&self) -> Vec<ScrollNodeState> {
         let mut result = vec![];
-        for (id, node) in self.nodes.iter() {
-            if let NodeType::ScrollFrame(scrolling) = node.node_type {
-                result.push(ScrollLayerState {
-                    id: *id,
-                    scroll_offset: scrolling.offset,
-                })
+        for node in self.nodes.values() {
+            if let NodeType::ScrollFrame(info) = node.node_type {
+                if let Some(id) = info.external_id {
+                    result.push(ScrollNodeState { id, scroll_offset: info.offset })
+                }
             }
         }
         result
@@ -251,13 +251,16 @@ impl ClipScrollTree {
         self.current_new_node_item = 1;
 
         let mut scroll_states = FastHashMap::default();
-        for (layer_id, old_node) in &mut self.nodes.drain() {
-            if self.pipelines_to_discard.contains(&layer_id.pipeline_id()) {
+        for (node_id, old_node) in &mut self.nodes.drain() {
+            if self.pipelines_to_discard.contains(&node_id.pipeline_id()) {
                 continue;
             }
 
-            if let NodeType::ScrollFrame(scrolling) = old_node.node_type {
-                scroll_states.insert(layer_id, scrolling);
+            match old_node.node_type {
+                NodeType::ScrollFrame(info) if info.external_id.is_some() => {
+                    scroll_states.insert(info.external_id.unwrap(), info);
+                }
+                _ => {}
             }
         }
 
@@ -267,14 +270,11 @@ impl ClipScrollTree {
         scroll_states
     }
 
-    pub fn scroll_node(&mut self, origin: LayerPoint, id: ClipId, clamp: ScrollClamping) -> bool {
-        if self.nodes.is_empty() {
-            self.pending_scroll_offsets.insert(id, (origin, clamp));
-            return false;
-        }
-
-        if let Some(node) = self.nodes.get_mut(&id) {
-            return node.set_scroll_origin(&origin, clamp);
+    pub fn scroll_node(&mut self, origin: LayerPoint, id: IdType, clamp: ScrollClamping) -> bool {
+        for (clip_id, node) in &mut self.nodes {
+            if node.matches_id(*clip_id, id) {
+                return node.set_scroll_origin(&origin, clamp);
+            }
         }
 
         self.pending_scroll_offsets.insert(id, (origin, clamp));
@@ -491,16 +491,30 @@ impl ClipScrollTree {
     }
 
     pub fn finalize_and_apply_pending_scroll_offsets(&mut self, old_states: ScrollStates) {
-        // TODO(gw): These are all independent - can be run through thread pool if it shows up
-        // in the profile!
         for (clip_id, node) in &mut self.nodes {
-            if let Some(scrolling_state) = old_states.get(clip_id) {
-                node.apply_old_scrolling_state(scrolling_state);
+            let external_id = match node.node_type {
+                NodeType::ScrollFrame(info) if info.external_id.is_some() => info.external_id,
+                _ => None,
+            };
+
+            if let Some(external_id) = external_id {
+                if let Some(scrolling_state) = old_states.get(&external_id) {
+                    node.apply_old_scrolling_state(scrolling_state);
+                }
             }
 
-            if let Some((pending_offset, clamping)) = self.pending_scroll_offsets.remove(clip_id) {
-                node.set_scroll_origin(&pending_offset, clamping);
+            let id = IdType::ClipId(*clip_id);
+            if let Some((offset, clamping)) = self.pending_scroll_offsets.remove(&id) {
+                node.set_scroll_origin(&offset, clamping);
             }
+
+            if let Some(external_id) = external_id {
+                let id = IdType::ExternalScrollId(external_id);
+                if let Some((offset, clamping)) = self.pending_scroll_offsets.remove(&id) {
+                    node.set_scroll_origin(&offset, clamping);
+                }
+            }
+
         }
     }
 

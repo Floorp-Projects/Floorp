@@ -62,6 +62,6 @@ add_task(async function test_processIncoming_abort() {
   Svc.Prefs.resetBranch("");
   Service.recordManager.clearCache();
 
-  engine._tracker.clearChangedIDs();
+  await engine._tracker.clearChangedIDs();
   await engine.finalize();
 });

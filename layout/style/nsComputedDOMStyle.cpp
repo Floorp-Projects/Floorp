@@ -38,7 +38,9 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/GeckoRestyleManager.h"
+#endif
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
 #include "imgIRequest.h"
@@ -104,6 +106,7 @@ GetBackgroundList(T nsStyleImageLayers::Layer::* aMember,
   return valueList.forget();
 }
 
+#ifdef MOZ_OLD_STYLE
 // Whether there is any pending restyle for the element or any of its ancestors.
 static bool
 ContentNeedsRestyle(nsIContent* aContent)
@@ -131,6 +134,7 @@ ContentNeedsRestyle(nsIContent* aContent)
   }
   return false;
 }
+#endif
 
 // Whether aDocument needs to restyle for aElement
 static bool
@@ -185,6 +189,7 @@ DocumentNeedsRestyle(
     return restyleManager->HasPendingRestyleAncestor(aElement);
   }
 
+#ifdef MOZ_OLD_STYLE
   // For Gecko, first check if there is any pending restyle, then we check if
   // any ancestor has dirty bits for restyle.
   GeckoRestyleManager* restyleManager =
@@ -195,6 +200,9 @@ DocumentNeedsRestyle(
   }
 
   return ContentNeedsRestyle(aElement);
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
 }
 
 /**
@@ -448,9 +456,15 @@ nsComputedDOMStyle::Length()
   // properties.
   UpdateCurrentStyleSources(false);
   if (mStyleContext) {
-    length += mStyleContext->IsServo()
-      ? Servo_GetCustomPropertiesCount(mStyleContext->AsServo())
-      : StyleVariables()->mVariables.Count();
+    if (mStyleContext->IsServo()) {
+      length += Servo_GetCustomPropertiesCount(mStyleContext->AsServo());
+    } else {
+#ifdef MOZ_OLD_STYLE
+      length += StyleVariables()->mVariables.Count();
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
+    }
   }
 
   ClearCurrentStyleSources();
@@ -511,6 +525,7 @@ nsComputedDOMStyle::GetStyleContext(Element* aElement,
   return GetStyleContextNoFlush(aElement, aPseudo, presShell, aStyleType);
 }
 
+#ifdef MOZ_OLD_STYLE
 namespace {
 class MOZ_STACK_CLASS StyleResolver final
 {
@@ -629,6 +644,7 @@ private:
   nsComputedDOMStyle::AnimationFlag mAnimationFlag;
 };
 }
+#endif
 
 /**
  * The following function checks whether we need to explicitly resolve the style
@@ -651,8 +667,12 @@ MustReresolveStyle(const nsStyleContext* aContext)
       return true;
     }
 
+#ifdef MOZ_OLD_STYLE
     return aContext->AsGecko()->GetParent() &&
            aContext->AsGecko()->GetParent()->HasPseudoElementData();
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   return false;
@@ -735,10 +755,14 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
           nsPresContext* presContext = presShell->GetPresContext();
           MOZ_ASSERT(presContext, "Should have a prescontext if we have a frame");
           if (presContext && presContext->StyleSet()->IsGecko()) {
+#ifdef MOZ_OLD_STYLE
             nsStyleSet* styleSet = presContext->StyleSet()->AsGecko();
             return styleSet->ResolveStyleByRemovingAnimation(
                      aElement, result->AsGecko(),
                      eRestyle_AllHintsWithAnimations);
+#else
+            MOZ_CRASH("old style system disabled");
+#endif
           } else {
             Element* elementOrPseudoElement =
               EffectCompositor::GetElementToRestyle(aElement, pseudoType);
@@ -790,6 +814,7 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
                                               result);
   }
 
+#ifdef MOZ_OLD_STYLE
   RefPtr<GeckoStyleContext> parentContext;
   nsIContent* parent = aPseudo ? aElement : aElement->GetParent();
   // Don't resolve parent context for document fragments.
@@ -815,6 +840,9 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
                                                aElement, pseudoType,
                                                parentContext,
                                                inDocWithShell);
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 nsMargin
@@ -1028,6 +1056,7 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
   if (!mStyleContext || MustReresolveStyle(mStyleContext)) {
 #ifdef DEBUG
     if (mStyleContext && mStyleContext->IsGecko()) {
+#ifdef MOZ_OLD_STYLE
       // We want to check that going through this path because of
       // HasPseudoElementData is rare, because it slows us down a good
       // bit.  So check that we're really inside something associated
@@ -1047,6 +1076,9 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
       NS_ASSERTION(nsCSSPseudoElements::PseudoElementContainsElements(pseudo) ||
                    mContent->IsNativeAnonymous(),
                    NS_LossyConvertUTF16toASCII(assertMsg).get());
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     }
 #endif
     // Need to resolve a style context
@@ -1076,6 +1108,7 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
   }
 
   if (mAnimationFlag == eWithoutAnimation) {
+#ifdef MOZ_OLD_STYLE
     // We will support Servo in bug 1311257.
     MOZ_ASSERT(mPresShell->StyleSet()->IsGecko(),
                "eWithoutAnimationRules support Gecko only");
@@ -1085,6 +1118,9 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
         mContent->AsElement(), mStyleContext->AsGecko(),
         eRestyle_AllHintsWithAnimations);
     SetResolvedStyleContext(Move(unanimatedStyleContext), currentGeneration);
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   // mExposeVisitedStyle is set to true only by testing APIs that
@@ -1226,13 +1262,22 @@ nsComputedDOMStyle::IndexedGetter(uint32_t   aIndex,
 
   bool isServo = mStyleContext->IsServo();
 
+#ifdef MOZ_OLD_STYLE
   const nsStyleVariables* variables = isServo
     ? nullptr
     : StyleVariables();
+#endif
 
-  const uint32_t count = isServo
-    ? Servo_GetCustomPropertiesCount(mStyleContext->AsServo())
-    : variables->mVariables.Count();
+  uint32_t count;
+  if (isServo) {
+    count = Servo_GetCustomPropertiesCount(mStyleContext->AsServo());
+  } else {
+#ifdef MOZ_OLD_STYLE
+    count = variables->mVariables.Count();
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
+  }
 
   const uint32_t index = aIndex - length;
   if (index < count) {
@@ -1241,7 +1286,11 @@ nsComputedDOMStyle::IndexedGetter(uint32_t   aIndex,
     if (isServo) {
       Servo_GetCustomPropertyNameAt(mStyleContext->AsServo(), index, &varName);
     } else {
+#ifdef MOZ_OLD_STYLE
       variables->mVariables.GetVariableAt(index, varName);
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     }
     aPropName.AssignLiteral("--");
     aPropName.Append(varName);
@@ -7287,9 +7336,17 @@ nsComputedDOMStyle::DoGetCustomProperty(const nsAString& aPropertyName)
   nsString variableValue;
   const nsAString& name = Substring(aPropertyName,
                                     CSS_CUSTOM_NAME_PREFIX_LENGTH);
-  bool present = mStyleContext->IsServo()
-    ? Servo_GetCustomPropertyValue(mStyleContext->AsServo(), &name, &variableValue)
-    : StyleVariables()->mVariables.Get(name, variableValue);
+  bool present;
+  if (mStyleContext->IsServo()) {
+    present = Servo_GetCustomPropertyValue(mStyleContext->AsServo(), &name,
+                                           &variableValue);
+  } else {
+#ifdef MOZ_OLD_STYLE
+    present = StyleVariables()->mVariables.Get(name, variableValue);
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
+  }
   if (!present) {
     return nullptr;
   }

@@ -683,6 +683,7 @@ DOMMatrix::SetMatrixValue(const nsAString& aTransformList, ErrorResult& aRv)
       return nullptr;
     }
   } else {
+#ifdef MOZ_OLD_STYLE
     nsCSSValue value;
     nsCSSParser parser;
     bool parseSuccess = parser.ParseTransformProperty(aTransformList,
@@ -713,6 +714,9 @@ DOMMatrix::SetMatrixValue(const nsAString& aTransformList, ErrorResult& aRv)
                     nullptr, nullptr, dummy, dummyBox,
                     nsPresContext::AppUnitsPerCSSPixel(),
                     &contains3dTransform);
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   if (!contains3dTransform) {

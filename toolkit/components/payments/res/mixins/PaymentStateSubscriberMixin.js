@@ -22,7 +22,7 @@ let requestStore = new PaymentsStore({
     paymentMethods: [],
     paymentDetails: {
       id: null,
-      totalItem: {label: null, amount: {currency: null, value: null}},
+      totalItem: {label: null, amount: {currency: null, value: 0}},
       displayItems: [],
       shippingOptions: [],
       modifiers: null,

@@ -9,7 +9,9 @@
 #include "gfxFontConstants.h"
 #include "gfxFontSrcPrincipal.h"
 #include "gfxFontSrcURI.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/css/Declaration.h"
+#endif
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/FontFaceSetBinding.h"
 #include "mozilla/dom/FontFaceSetIterator.h"
@@ -47,7 +49,9 @@
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsPrintfCString.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsStyleSet.h"
+#endif
 #include "nsUTF8Utils.h"
 #include "nsDOMNavigationTiming.h"
 
@@ -223,6 +227,7 @@ FontFaceSet::ParseFontShorthandForMatching(
     return;
   }
 
+#ifdef MOZ_OLD_STYLE
   // Parse aFont as a 'font' property value.
   RefPtr<Declaration> declaration = new Declaration;
   declaration->InitializeEmpty();
@@ -275,6 +280,9 @@ FontFaceSet::ParseFontShorthandForMatching(
 
   aStretch = data->ValueFor(eCSSProperty_font_stretch)->GetIntValue();
   aStyle = data->ValueFor(eCSSProperty_font_style)->GetIntValue();
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 static bool

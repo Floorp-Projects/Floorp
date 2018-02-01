@@ -1,6 +1,7 @@
 #filter substitution
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:tools="http://schemas.android.com/tools"
       package="@ANDROID_PACKAGE_NAME@"
       android:installLocation="internalOnly"
       android:versionCode="@ANDROID_VERSION_CODE@"
@@ -29,6 +30,10 @@
                  android:hardwareAccelerated="true"
                  android:supportsRtl="true"
                  android:allowBackup="false"
+#ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
+# Android-Gradle 3.0+ doesn't respect android:debuggable from AndroidManifest.xml.
+                 >
+#else
 # The preprocessor does not yet support arbitrary parentheses, so this cannot
 # be parenthesized thus to clarify that the logical AND operator has precedence:
 #   !defined(MOZILLA_OFFICIAL) || (defined(NIGHTLY_BUILD) && defined(MOZ_DEBUG))
@@ -36,6 +41,7 @@
                  android:debuggable="true">
 #else
                  android:debuggable="false">
+#endif
 #endif
 
         <meta-data android:name="com.sec.android.support.multiwindow" android:value="true"/>
@@ -130,7 +136,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
-            <intent-filter>
+            <intent-filter tools:ignore="AppLinkUrlError">
                 <action android:name="android.intent.action.WEB_SEARCH" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
@@ -156,7 +162,7 @@
                 android:resource="@integer/assist_launch_icon_res"/>
 
             <!-- For XPI installs from websites and the download manager. -->
-            <intent-filter>
+            <intent-filter tools:ignore="AppLinkUrlError">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:scheme="file" />
@@ -166,7 +172,7 @@
             </intent-filter>
 
             <!-- For XPI installs from file: URLs. -->
-            <intent-filter>
+            <intent-filter tools:ignore="AppLinkUrlError">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:host="" />

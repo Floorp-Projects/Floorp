@@ -95,9 +95,9 @@ function createAndStartHTTPServer(port) {
 // is the same as the addon itself. If it's not, then the reconciler missed a
 // change, and is likely to re-upload the addon next sync because of the change
 // it missed.
-function checkReconcilerUpToDate(addon) {
+async function checkReconcilerUpToDate(addon) {
   let stateBefore = Object.assign({}, store.reconciler.addons[addon.id]);
-  store.reconciler.rectifyStateFromAddon(addon);
+  await store.reconciler.rectifyStateFromAddon(addon);
   let stateAfter = store.reconciler.addons[addon.id];
   deepEqual(stateBefore, stateAfter);
 }
@@ -119,20 +119,20 @@ add_task(async function setup() {
 add_task(async function test_remove() {
   _("Ensure removing add-ons from deleted records works.");
 
-  let addon = installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1", reconciler);
   let record = createRecordForThisApp(addon.syncGUID, addon.id, true, true);
 
   let failed = await store.applyIncomingBatch([record]);
   Assert.equal(0, failed.length);
 
-  let newAddon = getAddonFromAddonManagerByID(addon.id);
+  let newAddon = await AddonManager.getAddonByID(addon.id);
   Assert.equal(null, newAddon);
 });
 
 add_task(async function test_apply_enabled() {
   _("Ensures that changes to the userEnabled flag apply.");
 
-  let addon = installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1", reconciler);
   Assert.ok(addon.isActive);
   Assert.ok(!addon.userDisabled);
 
@@ -141,18 +141,18 @@ add_task(async function test_apply_enabled() {
   records.push(createRecordForThisApp(addon.syncGUID, addon.id, false, false));
   let failed = await store.applyIncomingBatch(records);
   Assert.equal(0, failed.length);
-  addon = getAddonFromAddonManagerByID(addon.id);
+  addon = await AddonManager.getAddonByID(addon.id);
   Assert.ok(addon.userDisabled);
-  checkReconcilerUpToDate(addon);
+  await checkReconcilerUpToDate(addon);
   records = [];
 
   _("Ensure enable record works as expected.");
   records.push(createRecordForThisApp(addon.syncGUID, addon.id, true, false));
   failed = await store.applyIncomingBatch(records);
   Assert.equal(0, failed.length);
-  addon = getAddonFromAddonManagerByID(addon.id);
+  addon = await AddonManager.getAddonByID(addon.id);
   Assert.ok(!addon.userDisabled);
-  checkReconcilerUpToDate(addon);
+  await checkReconcilerUpToDate(addon);
   records = [];
 
   _("Ensure enabled state updates don't apply if the ignore pref is set.");
@@ -160,18 +160,18 @@ add_task(async function test_apply_enabled() {
   Svc.Prefs.set("addons.ignoreUserEnabledChanges", true);
   failed = await store.applyIncomingBatch(records);
   Assert.equal(0, failed.length);
-  addon = getAddonFromAddonManagerByID(addon.id);
+  addon = await AddonManager.getAddonByID(addon.id);
   Assert.ok(!addon.userDisabled);
   records = [];
 
-  uninstallAddon(addon);
+  await uninstallAddon(addon, reconciler);
   Svc.Prefs.reset("addons.ignoreUserEnabledChanges");
 });
 
 add_task(async function test_apply_enabled_appDisabled() {
   _("Ensures that changes to the userEnabled flag apply when the addon is appDisabled.");
 
-  let addon = installAddon("test_install3"); // this addon is appDisabled by default.
+  let addon = await installAddon("test_install3"); // this addon is appDisabled by default.
   Assert.ok(addon.appDisabled);
   Assert.ok(!addon.isActive);
   Assert.ok(!addon.userDisabled);
@@ -183,28 +183,28 @@ add_task(async function test_apply_enabled_appDisabled() {
   records.push(createRecordForThisApp(addon.syncGUID, addon.id, false, false));
   let failed = await store.applyIncomingBatch(records);
   Assert.equal(0, failed.length);
-  addon = getAddonFromAddonManagerByID(addon.id);
+  addon = await AddonManager.getAddonByID(addon.id);
   Assert.ok(addon.userDisabled);
-  checkReconcilerUpToDate(addon);
+  await checkReconcilerUpToDate(addon);
   records = [];
 
   _("Ensure enable record works as expected.");
   records.push(createRecordForThisApp(addon.syncGUID, addon.id, true, false));
   failed = await store.applyIncomingBatch(records);
   Assert.equal(0, failed.length);
-  addon = getAddonFromAddonManagerByID(addon.id);
+  addon = await AddonManager.getAddonByID(addon.id);
   Assert.ok(!addon.userDisabled);
-  checkReconcilerUpToDate(addon);
+  await checkReconcilerUpToDate(addon);
   records = [];
 
-  uninstallAddon(addon);
+  await uninstallAddon(addon, reconciler);
 });
 
 add_task(async function test_ignore_different_appid() {
   _("Ensure that incoming records with a different application ID are ignored.");
 
   // We test by creating a record that should result in an update.
-  let addon = installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1", reconciler);
   Assert.ok(!addon.userDisabled);
 
   let record = createRecordForThisApp(addon.syncGUID, addon.id, false, false);
@@ -213,16 +213,16 @@ add_task(async function test_ignore_different_appid() {
   let failed = await store.applyIncomingBatch([record]);
   Assert.equal(0, failed.length);
 
-  let newAddon = getAddonFromAddonManagerByID(addon.id);
+  let newAddon = await AddonManager.getAddonByID(addon.id);
   Assert.ok(!newAddon.userDisabled);
 
-  uninstallAddon(addon);
+  await uninstallAddon(addon, reconciler);
 });
 
 add_task(async function test_ignore_unknown_source() {
   _("Ensure incoming records with unknown source are ignored.");
 
-  let addon = installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1", reconciler);
 
   let record = createRecordForThisApp(addon.syncGUID, addon.id, false, false);
   record.source = "DUMMY_SOURCE";
@@ -230,36 +230,36 @@ add_task(async function test_ignore_unknown_source() {
   let failed = await store.applyIncomingBatch([record]);
   Assert.equal(0, failed.length);
 
-  let newAddon = getAddonFromAddonManagerByID(addon.id);
+  let newAddon = await AddonManager.getAddonByID(addon.id);
   Assert.ok(!newAddon.userDisabled);
 
-  uninstallAddon(addon);
+  await uninstallAddon(addon, reconciler);
 });
 
 add_task(async function test_apply_uninstall() {
   _("Ensures that uninstalling an add-on from a record works.");
 
-  let addon = installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1", reconciler);
 
   let records = [];
   records.push(createRecordForThisApp(addon.syncGUID, addon.id, true, true));
   let failed = await store.applyIncomingBatch(records);
   Assert.equal(0, failed.length);
 
-  addon = getAddonFromAddonManagerByID(addon.id);
+  addon = await AddonManager.getAddonByID(addon.id);
   Assert.equal(null, addon);
 });
 
-add_test(function test_addon_syncability() {
+add_task(async function test_addon_syncability() {
   _("Ensure isAddonSyncable functions properly.");
 
   Svc.Prefs.set("addons.trustedSourceHostnames",
                 "addons.mozilla.org,other.example.com");
 
-  Assert.ok(!store.isAddonSyncable(null));
+  Assert.ok(!(await store.isAddonSyncable(null)));
 
-  let addon = installAddon("test_bootstrap1_1");
-  Assert.ok(store.isAddonSyncable(addon));
+  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  Assert.ok((await store.isAddonSyncable(addon)));
 
   let dummy = {};
   const KEYS = ["id", "syncGUID", "type", "scope", "foreignInstall", "isSyncable"];
@@ -267,25 +267,25 @@ add_test(function test_addon_syncability() {
     dummy[k] = addon[k];
   }
 
-  Assert.ok(store.isAddonSyncable(dummy));
+  Assert.ok((await store.isAddonSyncable(dummy)));
 
   dummy.type = "UNSUPPORTED";
-  Assert.ok(!store.isAddonSyncable(dummy));
+  Assert.ok(!(await store.isAddonSyncable(dummy)));
   dummy.type = addon.type;
 
   dummy.scope = 0;
-  Assert.ok(!store.isAddonSyncable(dummy));
+  Assert.ok(!(await store.isAddonSyncable(dummy)));
   dummy.scope = addon.scope;
 
   dummy.isSyncable = false;
-  Assert.ok(!store.isAddonSyncable(dummy));
+  Assert.ok(!(await store.isAddonSyncable(dummy)));
   dummy.isSyncable = addon.isSyncable;
 
   dummy.foreignInstall = true;
-  Assert.ok(!store.isAddonSyncable(dummy));
+  Assert.ok(!(await store.isAddonSyncable(dummy)));
   dummy.foreignInstall = false;
 
-  uninstallAddon(addon);
+  await uninstallAddon(addon, reconciler);
 
   Assert.ok(!store.isSourceURITrusted(null));
 
@@ -317,8 +317,6 @@ add_test(function test_addon_syncability() {
   Assert.ok(store.isSourceURITrusted(Services.io.newURI("https://addons.mozilla.org/foo")));
 
   Svc.Prefs.reset("addons.trustedSourceHostnames");
-
-  run_next_test();
 });
 
 add_task(async function test_get_all_ids() {
@@ -330,15 +328,15 @@ add_task(async function test_get_all_ids() {
   // tests, even though those tests uninstalled the addon.
   // So if any tests above ever add a new addon ID, they are going to need to
   // be added here too.
-  // do_check_eq(0, Object.keys(store.getAllIDs()).length);
-  let addon1 = installAddon("test_install1");
-  let addon2 = installAddon("test_bootstrap1_1");
-  let addon3 = installAddon("test_install3");
+  // Assert.equal(0, Object.keys(store.getAllIDs()).length);
+  let addon1 = await installAddon("test_install1", reconciler);
+  let addon2 = await installAddon("test_bootstrap1_1", reconciler);
+  let addon3 = await installAddon("test_install3", reconciler);
 
   _("Ensure they're syncable.");
-  Assert.ok(store.isAddonSyncable(addon1));
-  Assert.ok(store.isAddonSyncable(addon2));
-  Assert.ok(store.isAddonSyncable(addon3));
+  Assert.ok((await store.isAddonSyncable(addon1)));
+  Assert.ok((await store.isAddonSyncable(addon2)));
+  Assert.ok((await store.isAddonSyncable(addon3)));
 
   let ids = await store.getAllIDs();
 
@@ -349,25 +347,25 @@ add_task(async function test_get_all_ids() {
   Assert.ok(addon3.syncGUID in ids);
 
   addon1.install.cancel();
-  uninstallAddon(addon2);
-  uninstallAddon(addon3);
+  await uninstallAddon(addon2, reconciler);
+  await uninstallAddon(addon3, reconciler);
 });
 
 add_task(async function test_change_item_id() {
   _("Ensures that changeItemID() works properly.");
 
-  let addon = installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1", reconciler);
 
   let oldID = addon.syncGUID;
   let newID = Utils.makeGUID();
 
   await store.changeItemID(oldID, newID);
 
-  let newAddon = getAddonFromAddonManagerByID(addon.id);
+  let newAddon = await AddonManager.getAddonByID(addon.id);
   Assert.notEqual(null, newAddon);
   Assert.equal(newID, newAddon.syncGUID);
 
-  uninstallAddon(newAddon);
+  await uninstallAddon(newAddon, reconciler);
 });
 
 add_task(async function test_create() {
@@ -375,9 +373,9 @@ add_task(async function test_create() {
 
   let server = createAndStartHTTPServer(HTTP_PORT);
 
-  let addon = installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1", reconciler);
   let id = addon.id;
-  uninstallAddon(addon);
+  await uninstallAddon(addon, reconciler);
 
   let guid = Utils.makeGUID();
   let record = createRecordForThisApp(guid, id, true, false);
@@ -385,12 +383,12 @@ add_task(async function test_create() {
   let failed = await store.applyIncomingBatch([record]);
   Assert.equal(0, failed.length);
 
-  let newAddon = getAddonFromAddonManagerByID(id);
+  let newAddon = await AddonManager.getAddonByID(id);
   Assert.notEqual(null, newAddon);
   Assert.equal(guid, newAddon.syncGUID);
   Assert.ok(!newAddon.userDisabled);
 
-  uninstallAddon(newAddon);
+  await uninstallAddon(newAddon, reconciler);
 
   await promiseStopServer(server);
 });
@@ -409,7 +407,7 @@ add_task(async function test_create_missing_search() {
   Assert.equal(1, failed.length);
   Assert.equal(guid, failed[0]);
 
-  let addon = getAddonFromAddonManagerByID(id);
+  let addon = await AddonManager.getAddonByID(id);
   Assert.equal(null, addon);
 
   await promiseStopServer(server);
@@ -437,9 +435,9 @@ add_task(async function test_create_bad_install() {
   // to be tricky to distinguish a 404 from other transient network errors
   // where we do want the addon to end up in |failed|.
   // This is being tracked in bug 1284778.
-  // do_check_eq(0, failed.length);
+  // Assert.equal(0, failed.length);
 
-  let addon = getAddonFromAddonManagerByID(id);
+  let addon = await AddonManager.getAddonByID(id);
   Assert.equal(null, addon);
 
   await promiseStopServer(server);
@@ -466,7 +464,7 @@ add_task(async function test_incoming_system() {
   // to this.
 
   // before we start, ensure the system addon isn't disabled.
-  Assert.ok(!getAddonFromAddonManagerByID(SYSTEM_ADDON_ID).userDisabled);
+  Assert.ok(!(await AddonManager.getAddonByID(SYSTEM_ADDON_ID).userDisabled));
 
   // Now simulate an incoming record with the same ID as the system addon,
   // but flagged as disabled - it should not be applied.
@@ -480,7 +478,7 @@ add_task(async function test_incoming_system() {
   Assert.equal(0, failed.length);
 
   // The system addon should still not be userDisabled.
-  Assert.ok(!getAddonFromAddonManagerByID(SYSTEM_ADDON_ID).userDisabled);
+  Assert.ok(!(await AddonManager.getAddonByID(SYSTEM_ADDON_ID).userDisabled));
 
   await promiseStopServer(server);
 });
@@ -488,11 +486,11 @@ add_task(async function test_incoming_system() {
 add_task(async function test_wipe() {
   _("Ensures that wiping causes add-ons to be uninstalled.");
 
-  let addon1 = installAddon("test_bootstrap1_1");
+  let addon1 = await installAddon("test_bootstrap1_1", reconciler);
 
   await store.wipe();
 
-  let addon = getAddonFromAddonManagerByID(addon1.id);
+  let addon = await AddonManager.getAddonByID(addon1.id);
   Assert.equal(null, addon);
 });
 
@@ -502,14 +500,14 @@ add_task(async function test_wipe_and_install() {
   // This tests the reset sync flow where remote data is replaced by local. The
   // receiving client will see a wipe followed by a record which should undo
   // the wipe.
-  let installed = installAddon("test_bootstrap1_1");
+  let installed = await installAddon("test_bootstrap1_1", reconciler);
 
   let record = createRecordForThisApp(installed.syncGUID, installed.id, true,
                                       false);
 
   await store.wipe();
 
-  let deleted = getAddonFromAddonManagerByID(installed.id);
+  let deleted = await AddonManager.getAddonByID(installed.id);
   Assert.equal(null, deleted);
 
   // Re-applying the record can require re-fetching the XPI.
@@ -517,14 +515,13 @@ add_task(async function test_wipe_and_install() {
 
   await store.applyIncoming(record);
 
-  let fetched = getAddonFromAddonManagerByID(record.addonID);
+  let fetched = await AddonManager.getAddonByID(record.addonID);
   Assert.ok(!!fetched);
 
   await promiseStopServer(server);
 });
 
-add_test(function cleanup() {
+add_task(async function cleanup() {
   // There's an xpcom-shutdown hook for this, but let's give this a shot.
   reconciler.stopListening();
-  run_next_test();
 });

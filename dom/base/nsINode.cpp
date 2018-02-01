@@ -25,7 +25,9 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TimeStamp.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/css/StyleRule.h"
+#endif
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ShadowRoot.h"
@@ -83,7 +85,9 @@
 #include "nsPIBoxObject.h"
 #include "nsPIDOMWindow.h"
 #include "nsPresContext.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleProcessorData.h"
+#endif
 #include "nsString.h"
 #include "nsStyleConsts.h"
 #include "nsSVGUtils.h"
@@ -93,7 +97,9 @@
 #include "nsXBLPrototypeBinding.h"
 #include "mozilla/Preferences.h"
 #include "xpcpublic.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsCSSRuleProcessor.h"
+#endif
 #include "nsCSSParser.h"
 #include "HTMLLegendElement.h"
 #include "nsWrapperCacheInlines.h"
@@ -2634,6 +2640,7 @@ nsINode::ParseServoSelectorList(
   return selectorList;
 }
 
+#ifdef MOZ_OLD_STYLE
 nsCSSSelectorList*
 nsINode::ParseSelectorList(const nsAString& aSelectorString,
                            ErrorResult& aRv)
@@ -2715,11 +2722,14 @@ AddScopeElements(TreeMatchContext& aMatchContext,
     aMatchContext.AddScopeElement(aMatchContextNode->AsElement());
   }
 }
+#endif
 
 namespace {
 struct SelectorMatchInfo {
+#ifdef MOZ_OLD_STYLE
   nsCSSSelectorList* const mSelectorList;
   TreeMatchContext& mMatchContext;
+#endif
 };
 } // namespace
 
@@ -2755,10 +2765,13 @@ FindMatchingElementsWithId(const nsAString& aId, nsINode* aRoot,
            nsContentUtils::ContentIsDescendantOf(element, aRoot))) {
       // We have an element with the right id and it's a strict descendant
       // of aRoot.  Make sure it really matches the selector.
-      if (!aMatchInfo ||
-          nsCSSRuleProcessor::SelectorListMatches(element,
-                                                  aMatchInfo->mMatchContext,
-                                                  aMatchInfo->mSelectorList)) {
+      if (!aMatchInfo
+#ifdef MOZ_OLD_STYLE
+          || nsCSSRuleProcessor::SelectorListMatches(element,
+                                                     aMatchInfo->mMatchContext,
+                                                     aMatchInfo->mSelectorList)
+#endif
+      ) {
         aList.AppendElement(element);
         if (onlyFirstMatch) {
           return;
@@ -2768,6 +2781,7 @@ FindMatchingElementsWithId(const nsAString& aId, nsINode* aRoot,
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 // Actually find elements matching aSelectorList (which must not be
 // null) and which are descendants of aRoot and put them in aList.  If
 // onlyFirstMatch, then stop once the first one is found.
@@ -2827,6 +2841,7 @@ FindMatchingElements(nsINode* aRoot, nsCSSSelectorList* aSelectorList, T &aList,
     }
   }
 }
+#endif
 
 struct ElementHolder {
   ElementHolder() : mElement(nullptr) {}
@@ -2856,6 +2871,7 @@ nsINode::QuerySelector(const nsAString& aSelector, ErrorResult& aResult)
           Servo_SelectorList_QueryFirst(this, aList, useInvalidation));
     },
     [&](nsCSSSelectorList* aList) -> Element* {
+#ifdef MOZ_OLD_STYLE
       if (!aList) {
         // Either we failed (and aResult already has the exception), or this
         // is a pseudo-element-only selector that matches nothing.
@@ -2864,6 +2880,9 @@ nsINode::QuerySelector(const nsAString& aSelector, ErrorResult& aResult)
       ElementHolder holder;
       FindMatchingElements<true, ElementHolder>(this, aList, holder, aResult);
       return holder.mElement;
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     }
   );
 }
@@ -2885,11 +2904,15 @@ nsINode::QuerySelectorAll(const nsAString& aSelector, ErrorResult& aResult)
         this, aList, contentList.get(), useInvalidation);
     },
     [&](nsCSSSelectorList* aList) {
+#ifdef MOZ_OLD_STYLE
       if (!aList) {
         return;
       }
       FindMatchingElements<false, AutoTArray<Element*, 128>>(
         this, aList, *contentList, aResult);
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     }
   );
 

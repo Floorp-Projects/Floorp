@@ -2,15 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayList, ClipAndScrollInfo, ClipId};
-use api::{ColorF, ColorU, DeviceIntPoint, DevicePixelScale, DeviceUintPoint, DeviceUintRect};
-use api::{DeviceUintSize, DocumentLayer, ExtendMode, FontRenderMode, GlyphInstance, GlyphOptions};
-use api::{GradientStop, HitTestFlags, HitTestItem, HitTestResult, ImageKey, ImageRendering};
-use api::{Epoch, ItemRange, ItemTag, LayerPoint, LayerPrimitiveInfo, LayerRect, LayerSize};
-use api::{LayerTransform, LayerVector2D, LayoutTransform, LayoutVector2D, LineOrientation};
-use api::{LineStyle, LocalClip, PipelineId, PremultipliedColorF, PropertyBinding, RepeatMode};
-use api::{ScrollSensitivity, Shadow, TexelRect, TileOffset, TransformStyle, WorldPoint};
-use api::{DeviceIntRect, DeviceIntSize, YuvColorSpace, YuvData};
+use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayList, ClipAndScrollInfo};
+use api::{ClipId, ColorF, ColorU, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale};
+use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, Epoch, ExtendMode};
+use api::{ExternalScrollId, FontRenderMode, GlyphInstance, GlyphOptions, GradientStop};
+use api::{HitTestFlags, HitTestItem, HitTestResult, ImageKey, ImageRendering, ItemRange, ItemTag};
+use api::{LayerPoint, LayerPrimitiveInfo, LayerRect, LayerSize, LayerTransform, LayerVector2D};
+use api::{LayoutTransform, LayoutVector2D, LineOrientation, LineStyle, LocalClip, PipelineId};
+use api::{PremultipliedColorF, PropertyBinding, RepeatMode, ScrollSensitivity, Shadow, TexelRect};
+use api::{TileOffset, TransformStyle, WorldPoint, WorldToLayerTransform, YuvColorSpace, YuvData};
 use app_units::Au;
 use border::ImageBorderSegment;
 use clip::{ClipRegion, ClipSource, ClipSources, ClipStore, Contains};
@@ -25,9 +25,9 @@ use internal_types::{FastHashMap, FastHashSet, RenderPassIndex};
 use picture::{ContentOrigin, PictureCompositeMode, PictureKind, PicturePrimitive, PictureSurface};
 use prim_store::{BrushKind, BrushPrimitive, ImageCacheKey, YuvImagePrimitiveCpu};
 use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu, ImageSource, PrimitiveKind};
-use prim_store::{PrimitiveContainer, PrimitiveIndex, SpecificPrimitiveIndex};
+use prim_store::{PrimitiveContainer, PrimitiveIndex};
 use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu};
-use prim_store::{BrushSegmentDescriptor, TextRunPrimitiveCpu};
+use prim_store::{BrushSegmentDescriptor, PrimitiveRun, TextRunPrimitiveCpu};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use render_task::{ClearMode, ClipChain, RenderTask, RenderTaskId, RenderTaskTree};
 use resource_cache::ResourceCache;
@@ -144,8 +144,29 @@ pub struct FrameState<'a> {
     pub gpu_cache: &'a mut GpuCache,
 }
 
-pub struct PrimitiveRunContext<'a> {
+pub struct PictureContext<'a> {
+    pub pipeline_id: PipelineId,
+    pub perform_culling: bool,
+    pub prim_runs: Vec<PrimitiveRun>,
+    pub original_reference_frame_id: Option<ClipId>,
     pub display_list: &'a BuiltDisplayList,
+    pub draw_text_transformed: bool,
+    pub inv_world_transform: Option<WorldToLayerTransform>,
+}
+
+pub struct PictureState {
+    pub tasks: Vec<RenderTaskId>,
+}
+
+impl PictureState {
+    pub fn new() -> PictureState {
+        PictureState {
+            tasks: Vec::new(),
+        }
+    }
+}
+
+pub struct PrimitiveRunContext<'a> {
     pub clip_chain: Option<&'a ClipChain>,
     pub scroll_node: &'a ClipScrollNode,
     pub clip_chain_rect_index: ClipChainRectIndex,
@@ -153,13 +174,11 @@ pub struct PrimitiveRunContext<'a> {
 
 impl<'a> PrimitiveRunContext<'a> {
     pub fn new(
-        display_list: &'a BuiltDisplayList,
         clip_chain: Option<&'a ClipChain>,
         scroll_node: &'a ClipScrollNode,
         clip_chain_rect_index: ClipChainRectIndex,
     ) -> Self {
         PrimitiveRunContext {
-            display_list,
             clip_chain,
             scroll_node,
             clip_chain_rect_index,
@@ -651,6 +670,7 @@ impl FrameBuilder {
         self.add_scroll_frame(
             topmost_scrolling_node_id,
             clip_scroll_tree.root_reference_frame_id,
+            Some(ExternalScrollId(0, pipeline_id)),
             pipeline_id,
             &viewport_rect,
             content_size,
@@ -683,6 +703,7 @@ impl FrameBuilder {
         &mut self,
         new_node_id: ClipId,
         parent_id: ClipId,
+        external_id: Option<ExternalScrollId>,
         pipeline_id: PipelineId,
         frame_rect: &LayerRect,
         content_size: &LayerSize,
@@ -692,6 +713,7 @@ impl FrameBuilder {
         let node = ClipScrollNode::new_scroll_frame(
             pipeline_id,
             parent_id,
+            external_id,
             frame_rect,
             content_size,
             scroll_sensitivity,
@@ -1612,7 +1634,6 @@ impl FrameBuilder {
         }
 
         // The root picture is always the first one added.
-        let prim_run_cmds = mem::replace(&mut self.prim_store.cpu_pictures[0].runs, Vec::new());
         let root_clip_scroll_node = &clip_scroll_tree.nodes[&clip_scroll_tree.root_reference_frame_id()];
 
         let display_list = &pipelines
@@ -1638,29 +1659,28 @@ impl FrameBuilder {
             gpu_cache,
         };
 
-        let root_prim_run_context = PrimitiveRunContext::new(
+        let pic_context = PictureContext {
+            pipeline_id: root_clip_scroll_node.pipeline_id,
+            perform_culling: true,
+            prim_runs: mem::replace(&mut self.prim_store.cpu_pictures[0].runs, Vec::new()),
+            original_reference_frame_id: None,
             display_list,
-            root_clip_scroll_node.clip_chain.as_ref(),
-            root_clip_scroll_node,
-            ClipChainRectIndex(0),
-        );
+            draw_text_transformed: true,
+            inv_world_transform: None,
+        };
 
-        let mut child_tasks = Vec::new();
+        let mut pic_state = PictureState::new();
+
         self.prim_store.reset_prim_visibility();
         self.prim_store.prepare_prim_runs(
-            &prim_run_cmds,
-            root_clip_scroll_node.pipeline_id,
-            &root_prim_run_context,
-            true,
-            &mut child_tasks,
-            None,
-            SpecificPrimitiveIndex(0),
+            &pic_context,
+            &mut pic_state,
             &frame_context,
             &mut frame_state,
         );
 
         let pic = &mut self.prim_store.cpu_pictures[0];
-        pic.runs = prim_run_cmds;
+        pic.runs = pic_context.prim_runs;
 
         let root_render_task = RenderTask::new_picture(
             None,
@@ -1669,7 +1689,7 @@ impl FrameBuilder {
             ContentOrigin::Screen(DeviceIntPoint::zero()),
             PremultipliedColorF::TRANSPARENT,
             ClearMode::Transparent,
-            child_tasks,
+            pic_state.tasks,
             PictureType::Image,
         );
 

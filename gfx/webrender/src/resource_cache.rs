@@ -4,7 +4,7 @@
 
 use api::{AddFont, BlobImageData, BlobImageResources, ResourceUpdate, ResourceUpdates};
 use api::{BlobImageDescriptor, BlobImageError, BlobImageRenderer, BlobImageRequest};
-use api::{ColorF, DevicePoint, DeviceUintRect, DeviceUintSize};
+use api::{ClearCache, ColorF, DevicePoint, DeviceUintRect, DeviceUintSize};
 use api::{Epoch, FontInstanceKey, FontKey, FontTemplate};
 use api::{ExternalImageData, ExternalImageType};
 use api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
@@ -113,17 +113,12 @@ pub struct ImageTiling {
 
 pub type TiledImageMap = FastHashMap<ImageKey, ImageTiling>;
 
+#[derive(Default)]
 struct ImageTemplates {
     images: FastHashMap<ImageKey, ImageResource>,
 }
 
 impl ImageTemplates {
-    fn new() -> Self {
-        ImageTemplates {
-            images: FastHashMap::default(),
-        }
-    }
-
     fn insert(&mut self, key: ImageKey, resource: ImageResource) {
         self.images.insert(key, resource);
     }
@@ -232,6 +227,7 @@ impl Into<BlobImageRequest> for ImageRequest {
 type ImageCache = ResourceClassCache<ImageRequest, CachedImageInfo>;
 pub type FontInstanceMap = Arc<RwLock<FastHashMap<FontInstanceKey, FontInstance>>>;
 
+#[derive(Default)]
 struct Resources {
     font_templates: FastHashMap<FontKey, FontTemplate>,
     font_instances: FontInstanceMap,
@@ -286,11 +282,7 @@ impl ResourceCache {
             cached_glyphs: GlyphCache::new(),
             cached_images: ResourceClassCache::new(),
             cached_render_tasks: RenderTaskCache::new(),
-            resources: Resources {
-                font_templates: FastHashMap::default(),
-                font_instances: Arc::new(RwLock::new(FastHashMap::default())),
-                image_templates: ImageTemplates::new(),
-            },
+            resources: Resources::default(),
             cached_glyph_dimensions: FastHashMap::default(),
             texture_cache,
             state: State::Idle,
@@ -499,10 +491,7 @@ impl ResourceCache {
         let max_texture_size = self.max_texture_size();
         let image = match self.resources.image_templates.get_mut(image_key) {
             Some(res) => res,
-            None => panic!(
-                "Attempt to update non-existent image (key {:?}).",
-                image_key
-            ),
+            None => panic!("Attempt to update non-existent image"),
         };
 
         let mut tiling = image.tiling;
@@ -541,7 +530,8 @@ impl ResourceCache {
                 self.blob_image_renderer.as_mut().unwrap().delete(image_key);
             },
             None => {
-                println!("Delete the non-exist key:{:?}", image_key);
+                warn!("Delete the non-exist key");
+                debug!("key={:?}", image_key);
             }
         }
     }
@@ -563,10 +553,8 @@ impl ResourceCache {
         let template = match self.resources.image_templates.get(key) {
             Some(template) => template,
             None => {
-                warn!(
-                    "ERROR: Trying to render deleted / non-existent key {:?}",
-                    key
-                );
+                warn!("ERROR: Trying to render deleted / non-existent key");
+                debug!("key={:?}", key);
                 return
             }
         };
@@ -942,18 +930,19 @@ impl ResourceCache {
         self.state = State::Idle;
     }
 
-    pub fn on_memory_pressure(&mut self) {
-        // This is drastic. It will basically flush everything out of the cache,
-        // and the next frame will have to rebuild all of its resources.
-        // We may want to look into something less extreme, but on the other hand this
-        // should only be used in situations where are running low enough on memory
-        // that we risk crashing if we don't do something about it.
-        // The advantage of clearing the cache completely is that it gets rid of any
-        // remaining fragmentation that could have persisted if we kept around the most
-        // recently used resources.
-        self.cached_images.clear();
-        self.cached_glyphs.clear();
-        self.cached_render_tasks.clear();
+    pub fn clear(&mut self, what: ClearCache) {
+        if what.contains(ClearCache::IMAGES) {
+            self.cached_images.clear();
+        }
+        if what.contains(ClearCache::GLYPHS) {
+            self.cached_glyphs.clear();
+        }
+        if what.contains(ClearCache::GLYPH_DIMENSIONS) {
+            self.cached_glyph_dimensions.clear();
+        }
+        if what.contains(ClearCache::RENDER_TASKS) {
+            self.cached_render_tasks.clear();
+        }
     }
 
     pub fn clear_namespace(&mut self, namespace: IdNamespace) {
@@ -1035,6 +1024,7 @@ pub struct PlainCacheRef<'a> {
     glyphs: PlainGlyphCacheRef<'a>,
     glyph_dimensions: &'a GlyphDimensionsCache,
     images: &'a ImageCache,
+    render_tasks: &'a RenderTaskCache,
     textures: &'a TextureCache,
 }
 
@@ -1045,6 +1035,7 @@ pub struct PlainCacheOwn {
     glyphs: PlainGlyphCacheOwn,
     glyph_dimensions: GlyphDimensionsCache,
     images: ImageCache,
+    render_tasks: RenderTaskCache,
     textures: TextureCache,
 }
 
@@ -1286,6 +1277,7 @@ impl ResourceCache {
                 .collect(),
             glyph_dimensions: &self.cached_glyph_dimensions,
             images: &self.cached_images,
+            render_tasks: &self.cached_render_tasks,
             textures: &self.texture_cache,
         }
     }
@@ -1350,6 +1342,8 @@ impl ResourceCache {
                 self.current_frame_id = cached.current_frame_id;
                 self.cached_glyphs = GlyphCache { glyph_key_caches };
                 self.cached_glyph_dimensions = cached.glyph_dimensions;
+                self.cached_images = cached.images;
+                self.cached_render_tasks = cached.render_tasks;
                 self.texture_cache = cached.textures;
             }
             None => {
@@ -1357,15 +1351,13 @@ impl ResourceCache {
                 self.cached_glyphs.clear();
                 self.cached_glyph_dimensions.clear();
                 self.cached_images.clear();
+                self.cached_render_tasks.clear();
                 let max_texture_size = self.texture_cache.max_texture_size();
                 self.texture_cache = TextureCache::new(max_texture_size);
             }
         }
 
-        self.state = State::Idle;
         self.glyph_rasterizer.reset();
-        self.pending_image_requests.clear();
-
         let res = &mut self.resources;
         res.font_templates.clear();
         *res.font_instances.write().unwrap() = resources.font_instances;

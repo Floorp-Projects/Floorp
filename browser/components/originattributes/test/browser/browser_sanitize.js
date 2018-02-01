@@ -4,8 +4,6 @@
 
 const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 
-let {LoadContextInfo} = ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm", {});
-
 const TEST_DOMAIN = "http://example.net/";
 
 let tempScope = {};
@@ -54,11 +52,11 @@ function checkCookiesSanitized(aBrowser) {
 function checkCacheExists(aShouldExist) {
   return async function() {
     let loadContextInfos = [
-      LoadContextInfo.default,
-      LoadContextInfo.custom(false, { userContextId: 1 }),
-      LoadContextInfo.custom(false, { userContextId: 2 }),
-      LoadContextInfo.custom(false, { firstPartyDomain: "example.com" }),
-      LoadContextInfo.custom(false, { firstPartyDomain: "example.org" }),
+      Services.loadContextInfo.default,
+      Services.loadContextInfo.custom(false, { userContextId: 1 }),
+      Services.loadContextInfo.custom(false, { userContextId: 2 }),
+      Services.loadContextInfo.custom(false, { firstPartyDomain: "example.com" }),
+      Services.loadContextInfo.custom(false, { firstPartyDomain: "example.org" }),
     ];
     let i = 0;
     for (let loadContextInfo of loadContextInfos) {

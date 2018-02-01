@@ -5,21 +5,10 @@ ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 ChromeUtils.import("resource://services-sync/service.js");
 ChromeUtils.import("resource://services-sync/util.js");
 
-function do_check_throws(func) {
-  var raised = false;
-  try {
-    func();
-  } catch (ex) {
-    raised = true;
-  }
-  Assert.ok(raised);
-}
-
-add_test(function test_findCluster() {
+add_task(async function test_findCluster() {
   syncTestLogging();
   _("Test Service._findCluster()");
   try {
-
     let whenReadyToAuthenticate = PromiseUtils.defer();
     Service.identity.whenReadyToAuthenticate = whenReadyToAuthenticate;
     whenReadyToAuthenticate.resolve(true);
@@ -27,24 +16,21 @@ add_test(function test_findCluster() {
     Service.identity._ensureValidToken = () => Promise.reject(new Error("Connection refused"));
 
     _("_findCluster() throws on network errors (e.g. connection refused).");
-    do_check_throws(function() {
-      Service._clusterManager._findCluster();
-    });
+    await Assert.rejects(Service._clusterManager._findCluster());
 
     Service.identity._ensureValidToken = () => Promise.resolve(true);
     Service.identity._token = { endpoint: "http://weave.user.node" };
 
     _("_findCluster() returns the user's cluster node");
-    let cluster = Service._clusterManager._findCluster();
+    let cluster = await Service._clusterManager._findCluster();
     Assert.equal(cluster, "http://weave.user.node/");
 
   } finally {
     Svc.Prefs.resetBranch("");
-    run_next_test();
   }
 });
 
-add_test(function test_setCluster() {
+add_task(async function test_setCluster() {
   syncTestLogging();
   _("Test Service._setCluster()");
   try {
@@ -54,20 +40,18 @@ add_test(function test_setCluster() {
     Service._clusterManager._findCluster = () => "http://weave.user.node/";
 
     _("Set the cluster URL.");
-    Assert.ok(Service._clusterManager.setCluster());
+    Assert.ok((await Service._clusterManager.setCluster()));
     Assert.equal(Service.clusterURL, "http://weave.user.node/");
 
     _("Setting it again won't make a difference if it's the same one.");
-    Assert.ok(!Service._clusterManager.setCluster());
+    Assert.ok(!(await Service._clusterManager.setCluster()));
     Assert.equal(Service.clusterURL, "http://weave.user.node/");
 
     _("A 'null' response won't make a difference either.");
     Service._clusterManager._findCluster = () => null;
-    Assert.ok(!Service._clusterManager.setCluster());
+    Assert.ok(!(await Service._clusterManager.setCluster()));
     Assert.equal(Service.clusterURL, "http://weave.user.node/");
-
   } finally {
     Svc.Prefs.resetBranch("");
-    run_next_test();
   }
 });

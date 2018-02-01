@@ -1333,7 +1333,12 @@ pref("security.insecure_field_warning.contextual.enabled", true);
 
 // Show degraded UI for http pages; disabled for now
 pref("security.insecure_connection_icon.enabled", false);
+// Show degraded UI for http pages in private mode only for Nightly: Bug 1434626
+#if defined(NIGHTLY_BUILD)
+pref("security.insecure_connection_icon.pbmode.enabled", true);
+#else
 pref("security.insecure_connection_icon.pbmode.enabled", false);
+#endif
 
 // Show "Not Secure" text for http pages; disabled for now
 pref("security.insecure_connection_text.enabled", false);
@@ -1728,7 +1733,7 @@ pref("extensions.formautofill.heuristics.enabled", true);
 pref("extensions.formautofill.section.enabled", true);
 pref("extensions.formautofill.loglevel", "Warn");
 // Comma separated list of countries Form Autofill supports
-#ifdef MOZ_UPDATE_CHANNEL == release
+#if MOZ_UPDATE_CHANNEL == release
 pref("extensions.formautofill.supportedCountries", "US");
 pref("extensions.formautofill.supportRTL", false);
 #else

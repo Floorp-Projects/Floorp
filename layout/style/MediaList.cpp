@@ -13,7 +13,9 @@
 #include "mozilla/ServoMediaList.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "nsCSSParser.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsMediaList.h"
+#endif
 
 namespace mozilla {
 namespace dom {
@@ -81,10 +83,14 @@ MediaList::Create(
     return mediaList.forget();
   }
 
+#ifdef MOZ_OLD_STYLE
   nsCSSParser parser;
   RefPtr<nsMediaList> mediaList = new nsMediaList();
   parser.ParseMediaList(aMedia, nullptr, 0, mediaList, aCallerType);
   return mediaList.forget();
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 void

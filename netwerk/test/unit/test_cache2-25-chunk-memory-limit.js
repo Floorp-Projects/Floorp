@@ -1,5 +1,3 @@
-ChromeUtils.import('resource://gre/modules/LoadContextInfo.jsm');
-
 function gen_200k()
 {
   var i;

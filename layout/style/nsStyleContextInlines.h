@@ -16,7 +16,9 @@
 
 #include "nsStyleContext.h"
 #include "mozilla/ServoStyleContext.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/GeckoStyleContext.h"
+#endif
 #include "mozilla/ServoUtils.h"
 #include "mozilla/ServoBindings.h"
 
@@ -24,12 +26,14 @@ MOZ_DEFINE_STYLO_METHODS(nsStyleContext,
                          mozilla::GeckoStyleContext,
                          mozilla::ServoStyleContext);
 
+#ifdef MOZ_OLD_STYLE
 nsRuleNode*
 nsStyleContext::RuleNode()
 {
-    MOZ_RELEASE_ASSERT(IsGecko());
-    return AsGecko()->RuleNode();
+  MOZ_RELEASE_ASSERT(IsGecko());
+  return AsGecko()->RuleNode();
 }
+#endif
 
 const ServoComputedData*
 nsStyleContext::ComputedData()
@@ -68,11 +72,10 @@ const nsStyle##name_ * nsStyleContext::PeekStyle##name_() {     \
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
-// Helper functions for GetStyle* and PeekStyle*
-#define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                \
-template<bool aComputeData>                                         \
-const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
-  if (auto gecko = GetAsGecko()) {                                  \
+#ifdef MOZ_OLD_STYLE
+#define DO_GET_STYLE_INHERITED_GECKO(name_, checkdata_cb_)          \
+  {                                                                 \
+    auto gecko = AsGecko();                                         \
     const nsStyle##name_ * cachedData =                             \
       static_cast<nsStyle##name_*>(                                 \
         gecko->mCachedInheritedData                                 \
@@ -95,6 +98,18 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
       .mStyleStructs[eStyleStruct_##name_] =                        \
       const_cast<nsStyle##name_ *>(newData);                        \
     return newData;                                                 \
+  }
+#else
+#define DO_GET_STYLE_INHERITED_GECKO(name_, checkdata_cb_)          \
+  MOZ_CRASH("old style system disabled");
+#endif
+
+// Helper functions for GetStyle* and PeekStyle*
+#define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                \
+template<bool aComputeData>                                         \
+const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
+  if (IsGecko()) {                                                  \
+    DO_GET_STYLE_INHERITED_GECKO(name_, checkdata_cb_)              \
   }                                                                 \
   const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));\
   if (!aComputeData && needToCompute) {                             \
@@ -114,10 +129,10 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
   return data;                                                      \
 }
 
-#define STYLE_STRUCT_RESET(name_, checkdata_cb_)                              \
-template<bool aComputeData>                                                   \
-const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {                  \
-  if (auto* gecko = GetAsGecko()) {                                           \
+#ifdef MOZ_OLD_STYLE
+#define DO_GET_STYLE_RESET_GECKO(name_, checkdata_cb_)                        \
+  {                                                                           \
+    auto gecko = AsGecko();                                                   \
     if (gecko->mCachedResetData) {                                            \
       const nsStyle##name_ * cachedData =                                     \
         static_cast<nsStyle##name_*>(                                         \
@@ -128,6 +143,17 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {                  \
     /* Have the rulenode deal */                                              \
     AUTO_CHECK_DEPENDENCY(gecko, eStyleStruct_##name_);                       \
     return gecko->RuleNode()->GetStyle##name_<aComputeData>(gecko);           \
+  }
+#else
+#define DO_GET_STYLE_RESET_GECKO(name_, checkdata_cb_)                        \
+  MOZ_CRASH("old style system disabled");
+#endif
+
+#define STYLE_STRUCT_RESET(name_, checkdata_cb_)                              \
+template<bool aComputeData>                                                   \
+const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {                  \
+  if (IsGecko()) {                                                            \
+    DO_GET_STYLE_RESET_GECKO(name_, checkdata_cb_)                            \
   }                                                                           \
   const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));          \
   if (!aComputeData && needToCompute) {                                       \

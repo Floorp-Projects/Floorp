@@ -21,10 +21,13 @@
 #include "nsIStyleRule.h"
 
 #include "nsCOMPtr.h"
-#include "nsStyleSet.h"
 #include "nsIPresShell.h"
 
+#ifdef MOZ_OLD_STYLE
+#include "nsStyleSet.h"
 #include "nsRuleNode.h"
+#include "mozilla/GeckoStyleContext.h"
+#endif
 #include "GeckoProfiler.h"
 #include "nsIDocument.h"
 #include "nsPrintfCString.h"
@@ -33,7 +36,6 @@
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
-#include "mozilla/GeckoStyleContext.h"
 #include "mozilla/ServoStyleContext.h"
 #include "nsStyleContextInlines.h"
 
@@ -135,6 +137,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
   DebugOnly<uint32_t> structsFound = 0;
 
   if (IsGecko()) {
+#ifdef MOZ_OLD_STYLE
     // CalcStyleDifference is always called on the main thread for Gecko
     // style contexts.  This assertion helps the heap write static analysis.
     MOZ_ASSERT(NS_IsMainThread());
@@ -155,6 +158,9 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
     } else {
       *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
     }
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   } else {
     if (aIgnoreVariables ||
         Servo_ComputedValues_EqualCustomProperties(
@@ -373,6 +379,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
 
 namespace mozilla {
 
+#ifdef MOZ_OLD_STYLE
 void
 GeckoStyleContext::EnsureSameStructsCached(nsStyleContext* aOldContext)
 {
@@ -390,6 +397,7 @@ GeckoStyleContext::EnsureSameStructsCached(nsStyleContext* aOldContext)
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 }
+#endif
 
 } // namespace mozilla
 
@@ -403,8 +411,14 @@ void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
     str.AppendLiteral("  ");
   }
   str.Append(nsPrintfCString("%p(%d) parent=%p ",
-                             (void*)this, IsGecko() ? AsGecko()->mRefCnt : 0,
-                             IsGecko() ? AsGecko()->GetParent() : nullptr));
+                             (void*)this,
+#ifdef MOZ_OLD_STYLE
+                             IsGecko() ? AsGecko()->mRefCnt : 0,
+                             IsGecko() ? AsGecko()->GetParent() : nullptr
+#else
+                             0, nullptr
+#endif
+                             ));
   if (mPseudoTag) {
     nsAutoString  buffer;
     mPseudoTag->ToString(buffer);
@@ -414,33 +428,41 @@ void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
 
   if (IsServo()) {
     fprintf_stderr(out, "%s{ServoComputedData}\n", str.get());
-  } else if (nsRuleNode* ruleNode = AsGecko()->RuleNode()) {
-    fprintf_stderr(out, "%s{\n", str.get());
-    str.Truncate();
-    while (ruleNode) {
-      nsIStyleRule *styleRule = ruleNode->GetRule();
-      if (styleRule) {
-        styleRule->List(out, aIndent + 1);
+  } else {
+#ifdef MOZ_OLD_STYLE
+    if (nsRuleNode* ruleNode = AsGecko()->RuleNode()) {
+      fprintf_stderr(out, "%s{\n", str.get());
+      str.Truncate();
+      while (ruleNode) {
+        nsIStyleRule *styleRule = ruleNode->GetRule();
+        if (styleRule) {
+          styleRule->List(out, aIndent + 1);
+        }
+        ruleNode = ruleNode->GetParent();
       }
-      ruleNode = ruleNode->GetParent();
+      for (ix = aIndent; --ix >= 0; ) {
+        str.AppendLiteral("  ");
+      }
+      fprintf_stderr(out, "%s}\n", str.get());
+    } else {
+      fprintf_stderr(out, "%s{}\n", str.get());
     }
-    for (ix = aIndent; --ix >= 0; ) {
-      str.AppendLiteral("  ");
-    }
-    fprintf_stderr(out, "%s}\n", str.get());
-  }
-  else {
-    fprintf_stderr(out, "%s{}\n", str.get());
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   if (aListDescendants) {
+#ifdef MOZ_OLD_STYLE
     if (GeckoStyleContext* gecko = GetAsGecko()) {
       gecko->ListDescendants(out, aIndent);
     }
+#endif
   }
 }
 #endif
 
+#ifdef MOZ_OLD_STYLE
 already_AddRefed<GeckoStyleContext>
 NS_NewStyleContext(GeckoStyleContext* aParentContext,
                    nsAtom* aPseudoTag,
@@ -455,6 +477,7 @@ NS_NewStyleContext(GeckoStyleContext* aParentContext,
                    aSkipParentDisplayBasedStyleFixup);
   return context.forget();
 }
+#endif
 
 nsIPresShell*
 nsStyleContext::Arena()
@@ -574,16 +597,20 @@ nsStyleContext::LookupStruct(const nsACString& aName, nsStyleStructID& aResult)
 void
 nsStyleContext::FrameAddRef()
 {
+#ifdef MOZ_OLD_STYLE
   if (auto gecko = GetAsGecko()) {
     gecko->FrameAddRef();
   }
+#endif
 }
 
 void
 nsStyleContext::FrameRelease()
 {
+#ifdef MOZ_OLD_STYLE
   if (auto gecko = GetAsGecko()) {
     gecko->FrameRelease();
   }
+#endif
 }
 #endif

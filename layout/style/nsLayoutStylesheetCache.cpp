@@ -899,8 +899,12 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<StyleSheet>* aSheet,
                                               nsPresContext* aPresContext)
 {
   if (mBackendType == StyleBackendType::Gecko) {
+#ifdef MOZ_OLD_STYLE
     *aSheet = new CSSStyleSheet(eAgentSheetFeatures, CORS_NONE,
                                 mozilla::net::RP_Unset);
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   } else {
     *aSheet = new ServoStyleSheet(eAgentSheetFeatures, CORS_NONE,
                                   mozilla::net::RP_Unset, dom::SRIMetadata());
@@ -1000,7 +1004,11 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<StyleSheet>* aSheet,
                "sheet without reallocation");
 
   if (sheet->IsGecko()) {
+#ifdef MOZ_OLD_STYLE
     sheet->AsGecko()->ReparseSheet(NS_ConvertUTF8toUTF16(sheetText));
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   } else {
     ServoStyleSheet* servoSheet = sheet->AsServo();
     // NB: The pref sheet never has @import rules.

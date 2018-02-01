@@ -191,7 +191,8 @@ impl FontContext {
                     },
                 );
             } else {
-                println!("WARN: webrender failed to load font {:?}", font_key);
+                println!("WARN: webrender failed to load font");
+                debug!("font={:?}", font_key);
             }
         }
     }
@@ -217,7 +218,8 @@ impl FontContext {
                     },
                 );
             } else {
-                println!("WARN: webrender failed to load font {:?} from path {:?}", font_key, pathname);
+                println!("WARN: webrender failed to load font");
+                debug!("font={:?}, path={:?}", font_key, pathname);
             }
         }
     }
@@ -331,13 +333,15 @@ impl FontContext {
                 FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE |
                 FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP => Some(slot),
                 _ => {
-                    error!("Unsupported {:?}", format);
+                    error!("Unsupported format");
+                    debug!("format={:?}", format);
                     None
                 }
             }
         } else {
-            error!(
-                "Unable to load glyph for {} of size {:?} from font {:?}, {:?}",
+            error!("Unable to load glyph");
+            debug!(
+                "{} of size {:?} from font {:?}, {:?}",
                 glyph.index,
                 font.size,
                 font.font_key,
@@ -564,8 +568,9 @@ impl FontContext {
         };
         let result = unsafe { FT_Render_Glyph(slot, render_mode) };
         if !result.succeeded() {
-            error!(
-                "Unable to rasterize {:?} with {:?}, {:?}",
+            error!("Unable to rasterize");
+            debug!(
+                "{:?} with {:?}, {:?}",
                 key,
                 render_mode,
                 result
@@ -611,12 +616,13 @@ impl FontContext {
                 }
             }
             _ => {
-                error!("Unsupported {:?}", format);
+                error!("Unsupported format");
+                debug!("format={:?}", format);
                 return None;
             }
         };
 
-        info!(
+        debug!(
             "Rasterizing {:?} as {:?} with dimensions {:?}",
             key,
             font.render_mode,
@@ -639,7 +645,7 @@ impl FontContext {
             FT_Pixel_Mode::FT_PIXEL_MODE_BGRA => {
                 (bitmap.width as usize, bitmap.rows as usize)
             }
-            _ => panic!("Unsupported {:?}", pixel_mode),
+            _ => panic!("Unsupported mode"),
         };
         let mut final_buffer = vec![0u8; actual_width * actual_height * 4];
 
@@ -717,7 +723,7 @@ impl FontContext {
                     let src_slice = unsafe { slice::from_raw_parts(src, dest_slice.len()) };
                     dest_slice.copy_from_slice(src_slice);
                 }
-                _ => panic!("Unsupported {:?}", pixel_mode),
+                _ => panic!("Unsupported mode"),
             }
             src_row = unsafe { src_row.offset(bitmap.pitch as isize) };
             dest = row_end;

@@ -322,6 +322,7 @@ public:
         , public BaseURIMutator<T>
         , public nsIStandardURLMutator
         , public nsIURLMutator
+        , public nsIFileURLMutator
     {
         NS_FORWARD_SAFE_NSIURISETTERS_RET(BaseURIMutator<T>::mURI)
 
@@ -430,6 +431,24 @@ public:
             return BaseURIMutator<T>::mURI->SetFileExtension(aFileExtension);
         }
 
+        MOZ_MUST_USE NS_IMETHOD
+        SetFile(nsIFile* aFile) override
+        {
+            RefPtr<T> uri;
+            if (BaseURIMutator<T>::mURI) {
+                // We don't need a new URI object if we already have one
+                BaseURIMutator<T>::mURI.swap(uri);
+            } else {
+                uri = new T(/* supportsFileURL = */ true);
+            }
+
+            nsresult rv = uri->SetFile(aFile);
+            if (NS_FAILED(rv)) {
+                return rv;
+            }
+            BaseURIMutator<T>::mURI = uri;
+            return NS_OK;
+        }
 
         explicit TemplatedMutator() { }
     private:

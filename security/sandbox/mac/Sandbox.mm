@@ -127,13 +127,11 @@ namespace mozilla {
 bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
 {
   std::vector<const char *> params;
-  char *profile = NULL;
-  bool profile_needs_free = false;
-
+  std::string profile;
   std::string macOSMinor = std::to_string(OSXVersion::OSXVersionMinor());
 
   if (aInfo.type == MacSandboxType_Plugin) {
-    profile = const_cast<char *>(pluginSandboxRules);
+    profile = pluginSandboxRules;
     params.push_back("SHOULD_LOG");
     params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
     params.push_back("PLUGIN_BINARY_PATH");
@@ -144,17 +142,13 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
     params.push_back(aInfo.appBinaryPath.c_str());
 
     if (aInfo.pluginInfo.type == MacSandboxPluginType_GMPlugin_EME_Widevine) {
-      char *widevineProfile = NULL;
-      asprintf(&widevineProfile, "%s%s", profile,
-        widevinePluginSandboxRulesAddend);
-      profile = widevineProfile;
-      profile_needs_free = true;
+      profile.append(widevinePluginSandboxRulesAddend);
     }
   }
   else if (aInfo.type == MacSandboxType_Content) {
     MOZ_ASSERT(aInfo.level >= 1);
     if (aInfo.level >= 1) {
-      profile = const_cast<char *>(contentSandboxRules);
+      profile = contentSandboxRules;
       params.push_back("SHOULD_LOG");
       params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
       params.push_back("SANDBOX_LEVEL_1");
@@ -203,11 +197,10 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
 #endif // DEBUG
 
       if (aInfo.hasFilePrivileges) {
-        char *fileContentProfile = NULL;
-        asprintf(&fileContentProfile, "%s%s", profile,
-          fileContentProcessAddend);
-        profile = fileContentProfile;
-        profile_needs_free = true;
+        profile.append(fileContentProcessAddend);
+      }
+      if (aInfo.hasAudio) {
+        profile.append(contentProcessAudioAddend);
       }
     } else {
       fprintf(stderr,
@@ -225,7 +218,7 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
     return false;
   }
 
-  if (!profile) {
+  if (profile.empty()) {
     fprintf(stderr, "Out of memory in StartMacSandbox()!\n");
     return false;
   }
@@ -240,14 +233,14 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
   for (size_t i = 0; i < params.size() / 2; i++) {
     printf("  %s = %s\n", params[i * 2], params[(i * 2) + 1]);
   }
-  printf("Sandbox profile:\n%s\n", profile);
+  printf("Sandbox profile:\n%s\n", profile.c_str());
 #endif
 
   // The parameters array is null terminated.
   params.push_back(nullptr);
 
   char *errorbuf = NULL;
-  int rv = sandbox_init_with_parameters(profile, 0, params.data(),
+  int rv = sandbox_init_with_parameters(profile.c_str(), 0, params.data(),
                                         &errorbuf);
   if (rv) {
     if (errorbuf) {
@@ -257,12 +250,9 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
         aErrorMessage.assign(msg);
         free(msg);
       }
-      fprintf(stderr, "profile: %s\n", profile);
+      fprintf(stderr, "profile: %s\n", profile.c_str());
       sandbox_free_error(errorbuf);
     }
-  }
-  if (profile_needs_free) {
-    free(profile);
   }
   if (rv) {
     return false;
