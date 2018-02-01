@@ -1269,6 +1269,12 @@ protected:
     // Note: p is also non-null... its just hard to assert that.
     MOZ_ASSERT(bmhi && monitor && ok && winErr && r);
     *ok = bmhi->BrokerCallClient(*winErr, *r, *p...);
+    {
+      // By grabbing (and freeing) the lock, we make sure that Wait() has been
+      // called in PostToDispatchThread.  We need that since we wake it with
+      // Notify().
+      MonitorAutoLock lock(*monitor);
+    }
     *ok &= NS_SUCCEEDED(monitor->Notify());
   };
 
