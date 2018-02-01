@@ -332,7 +332,7 @@ def target_tasks_promote_firefox(full_task_graph, parameters, graph_config):
 
         # 'secondary' update/final verify tasks only run for
         # RCs
-        if parameters.get('desktop_release_type') != 'rc':
+        if parameters.get('release_type') != 'rc':
             if task.kind in ('release-buildbot-update-verify',
                              'release-update-verify',
                              'release-secondary-final-verify'):
@@ -369,7 +369,7 @@ def target_tasks_push_firefox(full_task_graph, parameters, graph_config):
 def target_tasks_ship_firefox(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to ship firefox.
     Previous build deps will be optimized out via action task."""
-    is_rc = (parameters.get('desktop_release_type') == 'rc')
+    is_rc = (parameters.get('release_type') == 'rc')
     if is_rc:
         # ship_firefox_rc runs after `promote` rather than `push`; include
         # all promote tasks.
