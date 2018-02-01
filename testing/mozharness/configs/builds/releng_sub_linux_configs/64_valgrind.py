@@ -10,7 +10,6 @@ config = {
     ],
     'stage_platform': 'linux64-valgrind',
     'build_type': 'valgrind',
-    'platform_supports_post_upload_to_latest': False,
     'enable_signing': False,
     'perfherder_extra_options': ['valgrind'],
     #### 64 bit build specific #####

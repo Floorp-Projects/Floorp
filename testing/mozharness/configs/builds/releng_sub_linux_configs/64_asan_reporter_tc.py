@@ -9,7 +9,6 @@ config = {
     ],
     'stage_platform': 'linux64-asan-reporter',
     'build_type': 'asan',
-    'platform_supports_post_upload_to_latest': False,
     'enable_signing': False,
     #### 64 bit build specific #####
     'env': {
