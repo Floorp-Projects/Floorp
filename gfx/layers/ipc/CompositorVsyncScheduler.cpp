@@ -277,7 +277,7 @@ CompositorVsyncScheduler::Composite(TimeStamp aVsyncTimestamp)
   if (mNeedsComposite || mAsapScheduling) {
     mNeedsComposite = 0;
     mLastCompose = aVsyncTimestamp;
-    ComposeToTarget(nullptr);
+    mVsyncSchedulerOwner->CompositeToTarget(nullptr, nullptr);
     mVsyncNotificationsSkipped = 0;
 
     TimeDuration compositeFrameTotal = TimeStamp::Now() - aVsyncTimestamp;
@@ -311,7 +311,8 @@ CompositorVsyncScheduler::ForceComposeToTarget(gfx::DrawTarget* aTarget, const I
   mVsyncNotificationsSkipped = 0;
 
   mLastCompose = TimeStamp::Now();
-  ComposeToTarget(aTarget, aRect);
+  MOZ_ASSERT(mVsyncSchedulerOwner);
+  mVsyncSchedulerOwner->CompositeToTarget(aTarget, aRect);
 }
 
 bool
@@ -365,14 +366,6 @@ CompositorVsyncScheduler::ScheduleTask(already_AddRefed<CancelableRunnable> aTas
 {
   MOZ_ASSERT(CompositorThreadHolder::Loop());
   CompositorThreadHolder::Loop()->PostDelayedTask(Move(aTask), 0);
-}
-
-void
-CompositorVsyncScheduler::ComposeToTarget(gfx::DrawTarget* aTarget, const IntRect* aRect)
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  MOZ_ASSERT(mVsyncSchedulerOwner);
-  mVsyncSchedulerOwner->CompositeToTarget(aTarget, aRect);
 }
 
 } // namespace layers
