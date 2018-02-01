@@ -112,12 +112,12 @@ MacroAssemblerMIPS64Compat::convertDoubleToInt32(FloatRegister src, Register des
         ma_b(dest, Imm32(1), fail, Assembler::Equal);
     }
 
-    // Convert double to int, then convert back and check if we have the
-    // same number.
-    as_cvtwd(ScratchDoubleReg, src);
-    as_mfc1(dest, ScratchDoubleReg);
-    as_cvtdw(ScratchDoubleReg, ScratchDoubleReg);
-    ma_bc1d(src, ScratchDoubleReg, fail, Assembler::DoubleNotEqualOrUnordered);
+    // Truncate double to int ; if result is inexact fail
+    as_truncwd(ScratchFloat32Reg, src);
+    as_cfc1(ScratchRegister, Assembler::FCSR);
+    moveFromFloat32(ScratchFloat32Reg, dest);
+    ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseI, 1);
+    ma_b(ScratchRegister, Imm32(0), fail, Assembler::NotEqual);
 }
 
 // Checks whether a float32 is representable as a 32-bit integer. If so, the
@@ -132,18 +132,11 @@ MacroAssemblerMIPS64Compat::convertFloat32ToInt32(FloatRegister src, Register de
         ma_b(dest, Imm32(INT32_MIN), fail, Assembler::Equal);
     }
 
-    // Converting the floating point value to an integer and then converting it
-    // back to a float32 would not work, as float to int32 conversions are
-    // clamping (e.g. float(INT32_MAX + 1) would get converted into INT32_MAX
-    // and then back to float(INT32_MAX + 1)).  If this ever happens, we just
-    // bail out.
-    as_cvtws(ScratchFloat32Reg, src);
-    as_mfc1(dest, ScratchFloat32Reg);
-    as_cvtsw(ScratchFloat32Reg, ScratchFloat32Reg);
-    ma_bc1s(src, ScratchFloat32Reg, fail, Assembler::DoubleNotEqualOrUnordered);
-
-    // Bail out in the clamped cases.
-    ma_b(dest, Imm32(INT32_MAX), fail, Assembler::Equal);
+    as_truncws(ScratchFloat32Reg, src);
+    as_cfc1(ScratchRegister, Assembler::FCSR);
+    moveFromFloat32(ScratchFloat32Reg, dest);
+    ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseI, 1);
+    ma_b(ScratchRegister, Imm32(0), fail, Assembler::NotEqual);
 }
 
 void
