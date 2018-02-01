@@ -82,31 +82,30 @@ function evalXPathInDocumentFragment(aContextNode, aPath) {
     prefix = prefix.substr(0, bracketIndex);
   }
 
-  var targetType = C_i.nsIDOMNodeFilter.SHOW_ELEMENT;
+  var targetType = 1 /* NodeFilter.SHOW_ELEMENT */;
   var targetNodeName = prefix;
   if (prefix.indexOf("processing-instruction(") == 0) {
-    targetType = C_i.nsIDOMNodeFilter.SHOW_PROCESSING_INSTRUCTION;
+    targetType = 0x40 /* NodeFilter.SHOW_PROCESSING_INSTRUCTION */;
     targetNodeName = prefix.substring(prefix.indexOf("(") + 2, prefix.indexOf(")") - 1);
   }
   switch (prefix) {
     case "text()":
-      targetType = C_i.nsIDOMNodeFilter.SHOW_TEXT |
-                   C_i.nsIDOMNodeFilter.SHOW_CDATA_SECTION;
+      targetType = 4 | 8 /* NodeFilter.SHOW_TEXT | NodeFilter.SHOW_CDATA_SECTION*/;
       targetNodeName = null;
       break;
     case "comment()":
-      targetType = C_i.nsIDOMNodeFilter.SHOW_COMMENT;
+      targetType = 0x80 /* NodeFilter.SHOW_COMMENT */;
       targetNodeName = null;
       break;
     case "node()":
-      targetType = C_i.nsIDOMNodeFilter.SHOW_ALL;
+      targetType = 0xFFFFFFFF /* NodeFilter.SHOW_ALL */;
       targetNodeName = null;
   }
 
   var filter = {
     count: 0,
 
-    // nsIDOMNodeFilter
+    // NodeFilter
     acceptNode: function acceptNode(aNode) {
       if (aNode.parentNode != aContextNode) {
         // Don't bother looking at kids either.
@@ -183,8 +182,8 @@ function processParsedDocument(doc) {
 
   // Clean out whitespace.
   var walker = doc.createTreeWalker(doc,
-                                    C_i.nsIDOMNodeFilter.SHOW_TEXT |
-                                    C_i.nsIDOMNodeFilter.SHOW_CDATA_SECTION,
+                                    4 | 8 /* NodeFilter.SHOW_TEXT |
+					     NodeFilter.SHOW_CDATA_SECTION */,
                                     isWhitespace);
   while (walker.nextNode()) {
     var parent = walker.currentNode.parentNode;
@@ -278,7 +277,7 @@ function do_extract_test(doc) {
 
     dump("Ensure the original nodes weren't extracted - test " + i + "\n\n");
     var walker = doc.createTreeWalker(baseFrag,
-				      C_i.nsIDOMNodeFilter.SHOW_ALL,
+				      0xFFFFFFFF /* NodeFilter.SHOW_ALL */,
 				      null);
     var foundStart = false;
     var foundEnd = false;
@@ -311,7 +310,7 @@ function do_extract_test(doc) {
 
     dump("Ensure the original nodes weren't deleted - test " + i + "\n\n");
     walker = doc.createTreeWalker(baseFrag,
-                                  C_i.nsIDOMNodeFilter.SHOW_ALL,
+                                  0xFFFFFFFF /* NodeFilter.SHOW_ALL */,
                                   null);
     foundStart = false;
     foundEnd = false;
