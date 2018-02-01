@@ -11,6 +11,8 @@
 namespace mozilla
 {
 
+static const int kADTSHeaderSize = 7;
+
 int8_t
 Adts::GetFrequencyIndex(uint32_t aSamplesPerSecond)
 {
@@ -31,11 +33,11 @@ Adts::GetFrequencyIndex(uint32_t aSamplesPerSecond)
 }
 
 bool
-Adts::ConvertSample(uint16_t aChannelCount, int8_t aFrequencyIndex,
-                    int8_t aProfile, MediaRawData* aSample)
+Adts::ConvertSample(uint16_t aChannelCount,
+                    int8_t aFrequencyIndex,
+                    int8_t aProfile,
+                    MediaRawData* aSample)
 {
-  static const int kADTSHeaderSize = 7;
-
   size_t newSize = aSample->Size() + kADTSHeaderSize;
 
   // ADTS header uses 13 bits for packet size.
@@ -65,6 +67,34 @@ Adts::ConvertSample(uint16_t aChannelCount, int8_t aFrequencyIndex,
       writer->mCrypto.mEncryptedSizes.AppendElement(aSample->Size() - kADTSHeaderSize);
     } else {
       writer->mCrypto.mPlainSizes[0] += kADTSHeaderSize;
+    }
+  }
+
+  return true;
+}
+
+bool
+Adts::RevertSample(MediaRawData* aSample)
+{
+  if (aSample->Size() < kADTSHeaderSize) {
+    return false;
+  }
+
+  {
+    const uint8_t* header = aSample->Data();
+    if (header[0] != 0xff || header[1] != 0xf1 || header[6] != 0xfc) {
+      // Not ADTS.
+      return false;
+    }
+  }
+
+  nsAutoPtr<MediaRawDataWriter> writer(aSample->CreateWriter());
+  writer->PopFront(kADTSHeaderSize);
+
+  if (aSample->mCrypto.mValid) {
+    if (aSample->mCrypto.mPlainSizes.Length() > 0 &&
+        writer->mCrypto.mPlainSizes[0] >= kADTSHeaderSize) {
+      writer->mCrypto.mPlainSizes[0] -= kADTSHeaderSize;
     }
   }
 

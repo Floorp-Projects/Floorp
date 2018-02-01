@@ -174,7 +174,6 @@ class CodeCoverageMixin(object):
             jsvm_files = [os.path.join(self.jsvm_dir, e) for e in os.listdir(self.jsvm_dir)]
             rewriter = LcovFileRewriter('chrome-map.json')
             rewriter.rewrite_files(jsvm_files, 'jsvm_lcov_output.info', '')
-            assert os.path.getsize('jsvm_lcov_output.info') > 0
 
             # Package JSVM coverage data.
             file_path_jsvm = os.path.join(dirs['abs_blob_upload_dir'], 'code-coverage-jsvm.zip')

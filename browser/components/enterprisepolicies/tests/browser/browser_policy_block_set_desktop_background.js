@@ -3,7 +3,11 @@
 "use strict";
 
 add_task(async function setup() {
-  await setupPolicyEngineWithJson("config_block_set_desktop_background.json");
+  await setupPolicyEngineWithJson({
+    "policies": {
+      "block_set_desktop_background": true
+    }
+  });
 });
 
 add_task(async function test_check_set_desktop_background() {

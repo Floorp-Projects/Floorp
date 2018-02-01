@@ -41,7 +41,8 @@ class PrefValue;
 
 struct PrefsSizes;
 
-enum class PrefValueKind : bool
+// Keep this in sync with PrefType in parser/src/lib.rs.
+enum class PrefValueKind : uint8_t
 {
   Default,
   User

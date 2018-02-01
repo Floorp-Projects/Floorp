@@ -12,6 +12,7 @@ LOCAL_INCLUDES += [
 
 UNIFIED_SOURCES = [
     'CallbackAndVarCacheOrder.cpp',
+    'Parser.cpp',
 ]
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):

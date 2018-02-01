@@ -173,7 +173,7 @@ TEST(CallbackAndVarCacheOrder, AtomicBoolRelaxed)
 {
   RunTest<bool, Atomic<bool, Relaxed>>(
     "test_pref.atomic_bool.1", "test_pref.atomic_bool.2", false, true);
- }
+}
 
 TEST(CallbackAndVarCacheOrder, AtomicBoolReleaseAcquire)
 {
