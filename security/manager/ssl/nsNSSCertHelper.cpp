@@ -1834,10 +1834,6 @@ RegisterDynamicOids()
 nsresult
 nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence)
 {
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   if (RegisterDynamicOids() != SECSuccess)
     return NS_ERROR_FAILURE;
 
@@ -1982,10 +1978,6 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence)
 nsresult
 nsNSSCertificate::CreateASN1Struct(nsIASN1Object** aRetVal)
 {
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   nsCOMPtr<nsIASN1Sequence> sequence = new nsNSSASN1Sequence();
 
   nsCOMPtr<nsIMutableArray> asn1Objects;

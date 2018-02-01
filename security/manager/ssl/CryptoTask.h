@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsThreadUtils.h"
-#include "nsNSSShutDown.h"
 
 namespace mozilla {
 
@@ -19,30 +18,10 @@ namespace mozilla {
  * result. This class provides the framework for that. Subclasses must:
  *
  *   (1) Override CalculateResult for the off-the-main-thread computation.
- *       NSS functionality may only be accessed within CalculateResult.
- *   (2) Override ReleaseNSSResources to release references to all NSS
- *       resources (that do implement nsNSSShutDownObject themselves).
- *   (3) Override CallCallback() for the on-the-main-thread call of the
+ *   (2) Override CallCallback() for the on-the-main-thread call of the
  *       callback.
- *
- * CalculateResult, ReleaseNSSResources, and CallCallback are called in order,
- * except CalculateResult might be skipped if NSS is shut down before it can
- * be called; in that case ReleaseNSSResources will be called and then
- * CallCallback will be called with an error code.
- *
- * That sequence of events is what happens if you call Dispatch.  If for
- * some reason, you decide not to run the task (e.g., due to an error in the
- * constructor), you may call Skip, in which case the task is cleaned up and
- * not run.  In that case, only ReleaseNSSResources is called.  (So a
- * subclass must be prepared for ReleaseNSSResources to be run without
- * CalculateResult having been called first.)
- *
- * Once a CryptoTask is created, the calling code must call either
- * Dispatch or Skip.
- *
  */
-class CryptoTask : public Runnable,
-                   public nsNSSShutDownObject
+class CryptoTask : public Runnable
 {
 public:
   template <size_t LEN>
@@ -55,49 +34,30 @@ public:
 
   nsresult Dispatch(const nsACString& taskThreadName);
 
-  void Skip()
-  {
-    virtualDestroyNSSReference();
-  }
-
 protected:
   CryptoTask()
     : Runnable("CryptoTask")
     , mRv(NS_ERROR_NOT_INITIALIZED)
-    , mReleasedNSSResources(false)
   {
   }
 
-  virtual ~CryptoTask();
+  virtual ~CryptoTask() {}
 
   /**
-   * Called on a background thread (never the main thread). If CalculateResult
-   * is called, then its result will be passed to CallCallback on the main
-   * thread.
+   * Called on a background thread (never the main thread). Its result will be
+   * passed to CallCallback on the main thread.
    */
   virtual nsresult CalculateResult() = 0;
 
   /**
-   * Called on the main thread during NSS shutdown or just before CallCallback
-   * has been called. All NSS resources must be released. Usually, this just
-   * means assigning nullptr to the ScopedNSSType-based memory variables.
-   */
-  virtual void ReleaseNSSResources() = 0;
-
-  /**
-   * Called on the main thread with the result from CalculateResult() or
-   * with an error code if NSS was shut down before CalculateResult could
-   * be called.
+   * Called on the main thread with the result from CalculateResult().
    */
   virtual void CallCallback(nsresult rv) = 0;
 
 private:
   NS_IMETHOD Run() override final;
-  virtual void virtualDestroyNSSReference() override final;
 
   nsresult mRv;
-  bool mReleasedNSSResources;
-
   nsCOMPtr<nsIThread> mThread;
 };
 

@@ -169,6 +169,7 @@ HarAutomation.prototype = {
 
     let options = {
       requestData: null,
+      getTimingMarker: null,
       getString: this.getString.bind(this),
       view: this,
       items: items,

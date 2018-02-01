@@ -26,8 +26,6 @@ interface nsIX509CertList : nsISupports {
 
   /**
    * Returns the raw, backing cert list.
-   * Must be called only from functions where an nsNSSShutDownPreventionLock
-   * has been acquired.
    */
   [notxpcom, noscript, must_use]
   CERTCertListPtr getRawCertList();

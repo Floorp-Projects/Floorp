@@ -60,28 +60,9 @@ void BackgroundSdrEncryptStrings(const nsTArray<nsCString>& plaintexts,
   NS_DispatchToMainThread(runnable);
 }
 
-SecretDecoderRing::SecretDecoderRing()
-{
-}
-
-SecretDecoderRing::~SecretDecoderRing()
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return;
-  }
-
-  shutdown(ShutdownCalledFrom::Object);
-}
-
 nsresult
 SecretDecoderRing::Encrypt(const nsACString& data, /*out*/ nsACString& result)
 {
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -89,7 +70,7 @@ SecretDecoderRing::Encrypt(const nsACString& data, /*out*/ nsACString& result)
 
   /* Make sure token is initialized. */
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
-  nsresult rv = setPassword(slot.get(), ctx, locker);
+  nsresult rv = setPassword(slot.get(), ctx);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -118,11 +99,6 @@ SecretDecoderRing::Encrypt(const nsACString& data, /*out*/ nsACString& result)
 nsresult
 SecretDecoderRing::Decrypt(const nsACString& data, /*out*/ nsACString& result)
 {
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   /* Find token with SDR key */
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {
@@ -231,11 +207,6 @@ SecretDecoderRing::DecryptString(const nsACString& encryptedBase64Text,
 NS_IMETHODIMP
 SecretDecoderRing::ChangePassword()
 {
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -259,23 +230,8 @@ SecretDecoderRing::ChangePassword()
 NS_IMETHODIMP
 SecretDecoderRing::Logout()
 {
-  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
-  nsresult rv;
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
-  {
-    nsNSSShutDownPreventionLock locker;
-    if (isAlreadyShutDown()) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    PK11_LogoutAll();
-    SSL_ClearSessionCache();
-  }
-
+  PK11_LogoutAll();
+  SSL_ClearSessionCache();
   return NS_OK;
 }
 
@@ -284,19 +240,13 @@ SecretDecoderRing::LogoutAndTeardown()
 {
   static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
+  PK11_LogoutAll();
+  SSL_ClearSessionCache();
+
   nsresult rv;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return rv;
-
-  {
-    nsNSSShutDownPreventionLock locker;
-    if (isAlreadyShutDown()) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    PK11_LogoutAll();
-    SSL_ClearSessionCache();
   }
 
   rv = nssComponent->LogoutAuthenticatedPK11();
@@ -305,8 +255,9 @@ SecretDecoderRing::LogoutAndTeardown()
   // sure that all connections that should be stopped, are stopped. See
   // bug 517584.
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os)
+  if (os) {
     os->NotifyObservers(nullptr, "net:prune-dead-connections", nullptr);
+  }
 
   return rv;
 }

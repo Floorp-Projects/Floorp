@@ -89,20 +89,16 @@ function checkAllTheMinSizes() {
   // and "min-height" (auto) computes to "0px".
   checkElemMinSizes("block-item", "0px", "0px");
 
-  // ...but for a flex item in a horizontal flex container, "min-width: auto"
-  // computes to "auto".
-  checkElemMinSizes("horizontal-flex-item", "auto", "0px");
-  checkElemMinSizes("horizontal-flex-item-OH", "0px", "0px");
-
-  // ...and for a flex item in a vertical flex container, "min-height: auto"
-  // computes to "auto".
-  checkElemMinSizes("vertical-flex-item", "0px", "auto");
-  checkElemMinSizes("vertical-flex-item-OH", "0px", "0px");
-
-  // ...and for a grid item, "min-width: auto" and min-height both
-  // compute to "auto".
-  checkElemMinSizes("grid-item", "auto", "auto");
-  checkElemMinSizes("grid-item-OH", "0px", "0px");
+  // ...but for a flex item or grid item, "min-width: auto" and
+  // "min-height: auto" both compute to "auto" (even in cases where
+  // we know it'll actually resolve to 0 in layout, like for example
+  // when the item has "overflow:hidden").
+  checkElemMinSizes("horizontal-flex-item",    "auto", "auto");
+  checkElemMinSizes("horizontal-flex-item-OH", "auto", "auto");
+  checkElemMinSizes("vertical-flex-item",      "auto", "auto");
+  checkElemMinSizes("vertical-flex-item-OH",   "auto", "auto");
+  checkElemMinSizes("grid-item",               "auto", "auto");
+  checkElemMinSizes("grid-item-OH",            "auto", "auto");
 }
 
 // Main test function
