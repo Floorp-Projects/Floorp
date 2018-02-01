@@ -349,8 +349,7 @@ public:
   NS_IMETHOD
   VisitHeader(const nsACString& aHeader, const nsACString& aValue) override
   {
-    IgnoredErrorResult result;
-    mInternalHeaders->Append(aHeader, aValue, result);
+    mInternalHeaders->Append(aHeader, aValue, IgnoreErrors());
     return NS_OK;
   }
 };

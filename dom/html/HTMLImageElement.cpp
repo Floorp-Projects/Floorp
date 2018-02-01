@@ -495,8 +495,7 @@ HTMLImageElement::AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName,
       // Bug 1076583 - We still use the older synchronous algorithm in
       // non-responsive mode. Force a new load of the image with the
       // new cross origin policy
-      IgnoredErrorResult error;
-      ForceReload(aNotify, error);
+      ForceReload(aNotify, IgnoreErrors());
     }
   }
 }
