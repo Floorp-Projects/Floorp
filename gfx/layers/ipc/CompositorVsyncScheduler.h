@@ -83,11 +83,11 @@ public:
    */
   void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect);
 
-  const TimeStamp& GetLastComposeTime()
-  {
-    return mLastCompose;
-  }
-
+  /**
+   * Return the vsync timestamp of the last or ongoing composite. Must be called
+   * on the compositor thread.
+   */
+  const TimeStamp& GetLastComposeTime() const;
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
   const TimeStamp& GetExpectedComposeStartTime()
   {
