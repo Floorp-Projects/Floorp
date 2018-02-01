@@ -879,8 +879,7 @@ nsXULElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
         nsCOMPtr<nsIContent> curNode = do_QueryInterface(curItem);
         if (curNode && nsContentUtils::ContentIsDescendantOf(curNode, oldKid)) {
             // Current item going away
-            IgnoredErrorResult ignored;
-            nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(ignored);
+            nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(IgnoreErrors());
             listBox = do_QueryInterface(box);
             if (listBox && oldKidElem) {
               listBox->GetIndexOfItem(oldKidElem, &newCurrentIndex);
@@ -974,8 +973,7 @@ nsXULElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
         nsCOMPtr<nsIContent> curNode = do_QueryInterface(curItem);
         if (curNode && nsContentUtils::ContentIsDescendantOf(curNode, aKid)) {
             // Current item going away
-            IgnoredErrorResult ignored;
-            nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(ignored);
+            nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(IgnoreErrors());
             listBox = do_QueryInterface(box);
             if (listBox && oldKidElem) {
               listBox->GetIndexOfItem(oldKidElem, &newCurrentIndex);

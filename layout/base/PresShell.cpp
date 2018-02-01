@@ -8387,8 +8387,7 @@ PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
       RefPtr<nsXULElement> xulElement =
         nsXULElement::FromContent(focusedContent);
       if (xulElement) {
-        IgnoredErrorResult ignored;
-        nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(ignored);
+        nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(IgnoreErrors());
         nsCOMPtr<nsITreeBoxObject> treeBox(do_QueryInterface(box));
         // Tree view special case (tree items have no frames)
         // Get the focused row and add its coordinates, which are already in pixels

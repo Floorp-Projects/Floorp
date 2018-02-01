@@ -560,7 +560,12 @@ sandbox.compareRetainedDisplayLists = g.compareRetainedDisplayLists;
     sandbox.styloVsGecko = false;
 #endif
 
+// Printing via Skia PDF is only supported on Mac for now.
+#ifdef XP_MACOSX && MOZ_ENABLE_SKIA_PDF
+    sandbox.skiaPdf = true;
+#else
     sandbox.skiaPdf = false;
+#endif
 
 #ifdef RELEASE_OR_BETA
     sandbox.release_or_beta = true;

@@ -466,8 +466,7 @@ GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode,
   int32_t junk;
   aTreeBox->GetCoordsForCellItem(aRow, aCol, EmptyCString(), aX, aY, &junk, &junk);
   RefPtr<nsXULElement> xulEl = nsXULElement::FromContent(aSourceNode);
-  IgnoredErrorResult ignored;
-  nsCOMPtr<nsIBoxObject> bx = xulEl->GetBoxObject(ignored);
+  nsCOMPtr<nsIBoxObject> bx = xulEl->GetBoxObject(IgnoreErrors());
   int32_t myX, myY;
   bx->GetX(&myX);
   bx->GetY(&myY);
@@ -730,8 +729,7 @@ nsXULTooltipListener::GetSourceTreeBoxObject(nsITreeBoxObject** aBoxObject)
     RefPtr<nsXULElement> xulEl =
       nsXULElement::FromContentOrNull(sourceNode->GetParent());
     if (xulEl) {
-      IgnoredErrorResult ignored;
-      nsCOMPtr<nsIBoxObject> bx = xulEl->GetBoxObject(ignored);
+      nsCOMPtr<nsIBoxObject> bx = xulEl->GetBoxObject(IgnoreErrors());
       nsCOMPtr<nsITreeBoxObject> obx(do_QueryInterface(bx));
       if (obx) {
         *aBoxObject = obx;

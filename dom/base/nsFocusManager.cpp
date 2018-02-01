@@ -2450,19 +2450,15 @@ nsFocusManager::MoveCaretToFocus(nsIPresShell* aPresShell, nsIContent* aContent)
 
         // Set the range to the start of the currently focused node
         // Make sure it's collapsed
-        {
-          IgnoredErrorResult ignored;
-          newRange->SelectNodeContents(*aContent, ignored);
-        }
+        newRange->SelectNodeContents(*aContent, IgnoreErrors());
 
         if (!aContent->GetFirstChild() ||
             aContent->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
           // If current focus node is a leaf, set range to before the
           // node by using the parent as a container.
           // This prevents it from appearing as selected.
-          IgnoredErrorResult err1, err2;
-          newRange->SetStartBefore(*aContent, err1);
-          newRange->SetEndBefore(*aContent, err2);
+          newRange->SetStartBefore(*aContent, IgnoreErrors());
+          newRange->SetEndBefore(*aContent, IgnoreErrors());
         }
         domSelection->AddRange(newRange);
         domSelection->CollapseToStart();

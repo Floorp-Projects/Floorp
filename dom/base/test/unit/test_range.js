@@ -9,13 +9,13 @@ const UNORDERED_TYPE = C_i.nsIDOMXPathResult.ANY_UNORDERED_NODE_TYPE;
 /**
  * Determine if the data node has only ignorable white-space.
  *
- * @return nsIDOMNodeFilter.FILTER_SKIP if it does.
- * @return nsIDOMNodeFilter.FILTER_ACCEPT otherwise.
+ * @return NodeFilter.FILTER_SKIP if it does.
+ * @return NodeFilter.FILTER_ACCEPT otherwise.
  */
 function isWhitespace(aNode) {
   return ((/\S/).test(aNode.nodeValue)) ?
-         C_i.nsIDOMNodeFilter.FILTER_SKIP :
-         C_i.nsIDOMNodeFilter.FILTER_ACCEPT;
+         3 /* NodeFilter.FILTER_SKIP */ :
+         1 /* NodeFilter.FILTER_ACCEPT */;
 }
 
 /**
@@ -82,47 +82,46 @@ function evalXPathInDocumentFragment(aContextNode, aPath) {
     prefix = prefix.substr(0, bracketIndex);
   }
 
-  var targetType = C_i.nsIDOMNodeFilter.SHOW_ELEMENT;
+  var targetType = 1 /* NodeFilter.SHOW_ELEMENT */;
   var targetNodeName = prefix;
   if (prefix.indexOf("processing-instruction(") == 0) {
-    targetType = C_i.nsIDOMNodeFilter.SHOW_PROCESSING_INSTRUCTION;
+    targetType = 0x40 /* NodeFilter.SHOW_PROCESSING_INSTRUCTION */;
     targetNodeName = prefix.substring(prefix.indexOf("(") + 2, prefix.indexOf(")") - 1);
   }
   switch (prefix) {
     case "text()":
-      targetType = C_i.nsIDOMNodeFilter.SHOW_TEXT |
-                   C_i.nsIDOMNodeFilter.SHOW_CDATA_SECTION;
+      targetType = 4 | 8 /* NodeFilter.SHOW_TEXT | NodeFilter.SHOW_CDATA_SECTION*/;
       targetNodeName = null;
       break;
     case "comment()":
-      targetType = C_i.nsIDOMNodeFilter.SHOW_COMMENT;
+      targetType = 0x80 /* NodeFilter.SHOW_COMMENT */;
       targetNodeName = null;
       break;
     case "node()":
-      targetType = C_i.nsIDOMNodeFilter.SHOW_ALL;
+      targetType = 0xFFFFFFFF /* NodeFilter.SHOW_ALL */;
       targetNodeName = null;
   }
 
   var filter = {
     count: 0,
 
-    // nsIDOMNodeFilter
+    // NodeFilter
     acceptNode: function acceptNode(aNode) {
       if (aNode.parentNode != aContextNode) {
         // Don't bother looking at kids either.
-        return C_i.nsIDOMNodeFilter.FILTER_REJECT;
+        return 2 /* NodeFilter.FILTER_REJECT */;
       }
 
       if (targetNodeName && targetNodeName != aNode.nodeName) {
-        return C_i.nsIDOMNodeFilter.FILTER_SKIP;
+        return 3 /* NodeFilter.FILTER_SKIP */;
       }
 
       this.count++;
       if (this.count != childIndex) {
-        return C_i.nsIDOMNodeFilter.FILTER_SKIP;
+        return 3 /* NodeFilter.FILTER_SKIP */;
       }
 
-      return C_i.nsIDOMNodeFilter.FILTER_ACCEPT;
+      return 1 /* NodeFilter.FILTER_ACCEPT */;
     }
   };
 
@@ -183,8 +182,8 @@ function processParsedDocument(doc) {
 
   // Clean out whitespace.
   var walker = doc.createTreeWalker(doc,
-                                    C_i.nsIDOMNodeFilter.SHOW_TEXT |
-                                    C_i.nsIDOMNodeFilter.SHOW_CDATA_SECTION,
+                                    4 | 8 /* NodeFilter.SHOW_TEXT |
+					     NodeFilter.SHOW_CDATA_SECTION */,
                                     isWhitespace);
   while (walker.nextNode()) {
     var parent = walker.currentNode.parentNode;
@@ -278,7 +277,7 @@ function do_extract_test(doc) {
 
     dump("Ensure the original nodes weren't extracted - test " + i + "\n\n");
     var walker = doc.createTreeWalker(baseFrag,
-				      C_i.nsIDOMNodeFilter.SHOW_ALL,
+				      0xFFFFFFFF /* NodeFilter.SHOW_ALL */,
 				      null);
     var foundStart = false;
     var foundEnd = false;
@@ -311,7 +310,7 @@ function do_extract_test(doc) {
 
     dump("Ensure the original nodes weren't deleted - test " + i + "\n\n");
     walker = doc.createTreeWalker(baseFrag,
-                                  C_i.nsIDOMNodeFilter.SHOW_ALL,
+                                  0xFFFFFFFF /* NodeFilter.SHOW_ALL */,
                                   null);
     foundStart = false;
     foundEnd = false;

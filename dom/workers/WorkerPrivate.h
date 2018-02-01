@@ -978,9 +978,6 @@ public:
               const nsACString& aServiceWorkerScope,
               WorkerLoadInfo* aLoadInfo, ErrorResult& aRv);
 
-  static bool
-  WorkerAvailable(JSContext* /* unused */, JSObject* /* unused */);
-
   enum LoadGroupBehavior
   {
     InheritLoadGroup,
