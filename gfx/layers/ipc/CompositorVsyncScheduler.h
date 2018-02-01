@@ -50,7 +50,6 @@ public:
 
   bool NotifyVsync(TimeStamp aVsyncTimestamp);
   void SetNeedsComposite();
-  void OnForceComposeToTarget();
 
   void ScheduleTask(already_AddRefed<CancelableRunnable>, int);
   void ResumeComposition();
