@@ -246,16 +246,85 @@ var paymentDialogWrapper = {
     });
   },
 
-  initializeFrame() {
-    let requestSerialized = JSON.parse(JSON.stringify(this.request));
+  /**
+   * Recursively convert and filter input to the subset of data types supported by JSON
+   *
+   * @param {*} value - any type of input to serialize
+   * @param {string?} name - name or key associated with this input.
+   *                         E.g. property name or array index.
+   * @returns {*} serialized deep copy of the value
+   */
+  _serializeRequest(value, name = null) {
+    // Primitives: String, Number, Boolean, null
+    let type = typeof value;
+    if (value === null ||
+        type == "string" ||
+        type == "number" ||
+        type == "boolean") {
+      return value;
+    }
+    if (name == "topLevelPrincipal") {
+      // Manually serialize the nsIPrincipal.
+      let displayHost = value.URI.displayHost;
+      return {
+        URI: {
+          displayHost,
+        },
+      };
+    }
+    if (type == "function" || type == "undefined") {
+      return undefined;
+    }
+    // Structures: nsIArray
+    if (value instanceof Ci.nsIArray) {
+      let iface;
+      let items = [];
+      switch (name) {
+        case "displayItems": // falls through
+        case "additionalDisplayItems":
+          iface = Ci.nsIPaymentItem;
+          break;
+        case "shippingOptions":
+          iface = Ci.nsIPaymentShippingOption;
+          break;
+        case "paymentMethods":
+          iface = Ci.nsIPaymentMethodData;
+          break;
+        case "modifiers":
+          iface = Ci.nsIPaymentDetailsModifier;
+          break;
+      }
+      if (!iface) {
+        throw new Error(`No interface associated with the members of the ${name} nsIArray`);
+      }
+      for (let i = 0; i < value.length; i++) {
+        let item = value.queryElementAt(i, iface);
+        let result = this._serializeRequest(item, i);
+        if (result !== undefined) {
+          items.push(result);
+        }
+      }
+      return items;
+    }
+    // Structures: Arrays
+    if (Array.isArray(value)) {
+      let items = value.map(item => { this._serializeRequest(item); })
+                       .filter(item => item !== undefined);
+      return items;
+    }
+    // Structures: Objects
+    let obj = {};
+    for (let [key, item] of Object.entries(value)) {
+      let result = this._serializeRequest(item, key);
+      if (result !== undefined) {
+        obj[key] = result;
+      }
+    }
+    return obj;
+  },
 
-    // Manually serialize the nsIPrincipal.
-    let displayHost = this.request.topLevelPrincipal.URI.displayHost;
-    requestSerialized.topLevelPrincipal = {
-      URI: {
-        displayHost,
-      },
-    };
+  initializeFrame() {
+    let requestSerialized = this._serializeRequest(this.request);
 
     this.mm.sendAsyncMessage("paymentChromeToContent", {
       messageType: "showPaymentRequest",
