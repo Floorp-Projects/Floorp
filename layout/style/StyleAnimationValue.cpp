@@ -18,16 +18,22 @@
 #include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsIStyleRule.h"
 #include "mozilla/css/StyleRule.h"
+#endif
 #include "nsString.h"
 #include "nsStyleContext.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsStyleSet.h"
+#endif
 #include "nsComputedDOMStyle.h"
 #include "nsContentUtils.h"
 #include "nsCSSParser.h"
 #include "nsCSSPseudoElements.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/css/Declaration.h"
+#endif
 #include "mozilla/dom/Element.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"

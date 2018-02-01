@@ -15,15 +15,20 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleAnimationValue.h"
+#include "mozilla/dom/AnimationEffectReadOnly.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/KeyframeEffectReadOnly.h"
 
 #include "nsPresContext.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsStyleSet.h"
+#endif
 #include "nsStyleChangeList.h"
 #include "nsContentUtils.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsCSSRules.h"
 #include "mozilla/GeckoRestyleManager.h"
+#endif
 #include "nsLayoutUtils.h"
 #include "nsIFrame.h"
 #include "nsIDocument.h"

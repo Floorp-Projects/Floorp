@@ -13,9 +13,11 @@
 
 #include "nsCSSParser.h"
 #include "nsCSSProps.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsMediaList.h"
 #include "nsRuleNode.h"
 #include "nsRuleData.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;

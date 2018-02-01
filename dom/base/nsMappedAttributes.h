@@ -14,7 +14,9 @@
 
 #include "nsAttrAndChildArray.h"
 #include "nsMappedAttributeElement.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsIStyleRule.h"
+#endif
 #include "mozilla/Attributes.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/MemoryReporting.h"

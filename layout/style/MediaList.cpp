@@ -13,7 +13,9 @@
 #include "mozilla/ServoMediaList.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "nsCSSParser.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsMediaList.h"
+#endif
 
 namespace mozilla {
 namespace dom {

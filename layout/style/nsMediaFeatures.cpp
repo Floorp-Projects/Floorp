@@ -15,7 +15,9 @@
 #ifdef XP_WIN
 #include "mozilla/LookAndFeel.h"
 #endif
+#ifdef MOZ_OLD_STYLE
 #include "nsCSSRuleProcessor.h"
+#endif
 #include "nsDeviceContext.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"

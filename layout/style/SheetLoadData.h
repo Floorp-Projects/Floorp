@@ -7,8 +7,21 @@
 #ifndef mozilla_css_SheetLoadData_h
 #define mozilla_css_SheetLoadData_h
 
+#include "mozilla/css/Loader.h"
+#include "mozilla/css/SheetParsingMode.h"
+#include "mozilla/Encoding.h"
+#include "mozilla/NotNull.h"
 #include "nsIUnicharStreamLoader.h"
 #include "nsIThreadInternal.h"
+
+namespace mozilla {
+class StyleSheet;
+}
+class nsICSSLoaderObserver;
+class nsINode;
+class nsIPrincipal;
+class nsIStyleLinkingElement;
+class nsIURI;
 
 namespace mozilla {
 namespace css {

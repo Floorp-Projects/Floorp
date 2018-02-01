@@ -23,7 +23,9 @@
 #include "nsLayoutUtils.h"
 #include "nsContentUtils.h"
 #include "nsCSSValue.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleNode.h"
+#endif
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/ServoCSSParser.h"
 

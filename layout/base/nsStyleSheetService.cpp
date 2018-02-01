@@ -7,7 +7,9 @@
 /* implementation of interface for managing user and user-agent style sheets */
 
 #include "nsStyleSheetService.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/CSSStyleSheet.h"
+#endif
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PreloadedStyleSheet.h"
 #include "mozilla/StyleSheet.h"

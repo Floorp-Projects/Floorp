@@ -22,8 +22,10 @@
 #include "nsError.h"
 #include "nsIPresShell.h"
 #include "nsGkAtoms.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleWalker.h"
 #include "mozilla/css/Declaration.h"
+#endif
 #include "nsCSSProps.h"
 #include "nsCSSParser.h"
 #include "mozilla/EventListenerManager.h"

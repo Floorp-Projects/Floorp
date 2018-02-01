@@ -27,10 +27,14 @@
 
 #include "nsCSSParser.h"
 #include "nsCSSPseudoElements.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/css/StyleRule.h"
 #include "mozilla/css/Declaration.h"
+#endif
 #include "nsComputedDOMStyle.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsStyleSet.h"
+#endif
 
 #include "nsPrintfCString.h"
 
@@ -1179,9 +1183,9 @@ CanvasRenderingContext2D::ParseColor(const nsAString& aString,
 
   bool useServoParser =
 #ifdef MOZ_OLD_STYLE
-    document && document->IsStyledByServo()
+    document && document->IsStyledByServo();
 #else
-    true
+    true;
 #endif
 
   if (useServoParser) {

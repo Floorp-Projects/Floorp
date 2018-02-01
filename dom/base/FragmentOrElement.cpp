@@ -98,8 +98,10 @@
 #include "nsViewManager.h"
 #include "nsIScrollableFrame.h"
 #include "ChildIterator.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/css/StyleRule.h" /* For nsCSSSelectorList */
 #include "nsRuleProcessorData.h"
+#endif
 #include "nsTextNode.h"
 #include "mozilla/dom/NodeListBinding.h"
 
@@ -125,6 +127,7 @@
 #include "nsStyledElement.h"
 #include "nsIContentInlines.h"
 #include "nsChildContentList.h"
+#include "mozilla/BloomFilter.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

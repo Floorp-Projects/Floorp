@@ -47,7 +47,6 @@ EXPORTS += [
     'nsCSSPseudoClassList.h',
     'nsCSSPseudoElementList.h',
     'nsCSSPseudoElements.h',
-    'nsCSSRuleProcessor.h',
     'nsCSSScanner.h',
     'nsCSSValue.h',
     'nsDOMCSSAttrDeclaration.h',
@@ -55,21 +54,14 @@ EXPORTS += [
     'nsDOMCSSRGBColor.h',
     'nsICSSDeclaration.h',
     'nsICSSLoaderObserver.h',
-    'nsIStyleRule.h',
-    'nsIStyleRuleProcessor.h',
     'nsLayoutStylesheetCache.h',
     'nsMediaFeatures.h',
-    'nsMediaList.h',
-    'nsRuleData.h',
-    'nsRuleNode.h',
     'nsRuleProcessorData.h',
-    'nsRuleWalker.h',
     'nsStyleAutoArray.h',
     'nsStyleConsts.h',
     'nsStyleContext.h',
     'nsStyleContextInlines.h',
     'nsStyleCoord.h',
-    'nsStyleSet.h',
     'nsStyleStruct.h',
     'nsStyleStructFwd.h',
     'nsStyleStructInlines.h',
@@ -77,27 +69,32 @@ EXPORTS += [
     'nsStyleUtil.h',
 ]
 
+if CONFIG['MOZ_OLD_STYLE']:
+    EXPORTS += [
+        'nsCSSRuleProcessor.h',
+        'nsIStyleRule.h',
+        'nsIStyleRuleProcessor.h',
+        'nsMediaList.h',
+        'nsRuleData.h',
+        'nsRuleNode.h',
+        'nsRuleWalker.h',
+        'nsStyleSet.h',
+    ]
+
 EXPORTS.mozilla += [
     'AnimationCollection.h',
     'BindingStyleRule.h',
     'CachedInheritingStyles.h',
     'CSSEnabledState.h',
-    'CSSStyleSheet.h',
-    'CSSVariableDeclarations.h',
-    'CSSVariableResolver.h',
-    'CSSVariableValues.h',
     'DeclarationBlock.h',
     'DeclarationBlockInlines.h',
     'DocumentStyleRootIterator.h',
-    'GeckoStyleContext.h',
     'GenericSpecifiedValues.h',
     'GenericSpecifiedValuesInlines.h',
-    'IncrementalClearCOMRuleArray.h',
     'LayerAnimationInfo.h',
     'PostTraversalTask.h',
     'PreloadedStyleSheet.h',
     'RuleNodeCacheConditions.h',
-    'RuleProcessorCache.h',
     'ServoArcTypeList.h',
     'ServoBindingList.h',
     'ServoBindings.h',
@@ -139,6 +136,17 @@ EXPORTS.mozilla += [
     'URLExtraData.h',
 ]
 
+if CONFIG['MOZ_OLD_STYLE']:
+    EXPORTS.mozilla += [
+        'CSSStyleSheet.h',
+        'CSSVariableDeclarations.h',
+        'CSSVariableResolver.h',
+        'CSSVariableValues.h',
+        'GeckoStyleContext.h',
+        'IncrementalClearCOMRuleArray.h',
+        'RuleProcessorCache.h',
+    ]
+
 EXPORTS.mozilla.dom += [
     'CSS.h',
     'CSSFontFeatureValuesRule.h',
@@ -161,20 +169,24 @@ EXPORTS.mozilla.dom += [
 ]
 
 EXPORTS.mozilla.css += [
-    'Declaration.h',
     'ErrorReporter.h',
     'GroupRule.h',
     'ImageLoader.h',
-    'ImportRule.h',
     'Loader.h',
-    'NameSpaceRule.h',
     'Rule.h',
     'SheetLoadData.h',
     'SheetParsingMode.h',
     'StreamLoader.h',
-    'StyleRule.h',
     'URLMatchingFunction.h',
 ]
+
+if CONFIG['MOZ_OLD_STYLE']:
+    EXPORTS.mozilla.css += [
+        'Declaration.h',
+        'ImportRule.h',
+        'NameSpaceRule.h',
+        'StyleRule.h',
+    ]
 
 UNIFIED_SOURCES += [
     'AnimationCollection.cpp',
@@ -191,21 +203,14 @@ UNIFIED_SOURCES += [
     'CSSMozDocumentRule.cpp',
     'CSSPageRule.cpp',
     'CSSRuleList.cpp',
-    'CSSStyleSheet.cpp',
     'CSSSupportsRule.cpp',
-    'CSSVariableDeclarations.cpp',
-    'CSSVariableResolver.cpp',
-    'CSSVariableValues.cpp',
-    'Declaration.cpp',
     'DocumentStyleRootIterator.cpp',
     'ErrorReporter.cpp',
     'FontFace.cpp',
     'FontFaceSet.cpp',
     'FontFaceSetIterator.cpp',
-    'GeckoStyleContext.cpp',
     'GroupRule.cpp',
     'ImageLoader.cpp',
-    'IncrementalClearCOMRuleArray.cpp',
     'LayerAnimationInfo.cpp',
     'Loader.cpp',
     'MediaList.cpp',
@@ -214,14 +219,10 @@ UNIFIED_SOURCES += [
     'nsComputedDOMStyle.cpp',
     'nsCSSAnonBoxes.cpp',
     'nsCSSCounterStyleRule.cpp',
-    'nsCSSDataBlock.cpp',
     'nsCSSFontFaceRule.cpp',
     'nsCSSKeywords.cpp',
-    'nsCSSParser.cpp',
     'nsCSSProps.cpp',
     'nsCSSPseudoClasses.cpp',
-    'nsCSSRuleProcessor.cpp',
-    'nsCSSRules.cpp',
     'nsCSSScanner.cpp',
     'nsCSSValue.cpp',
     'nsDOMCSSAttrDeclaration.cpp',
@@ -235,14 +236,9 @@ UNIFIED_SOURCES += [
     'nsHTMLStyleSheet.cpp',
     'nsICSSDeclaration.cpp',
     'nsMediaFeatures.cpp',
-    'nsMediaList.cpp',
-    'nsNthIndexCache.cpp',
     'nsROCSSPrimitiveValue.cpp',
-    'nsRuleData.cpp',
-    'nsRuleNode.cpp',
     'nsStyleContext.cpp',
     'nsStyleCoord.cpp',
-    'nsStyleSet.cpp',
     'nsStyleStruct.cpp',
     'nsStyleTransformMatrix.cpp',
     'nsStyleUtil.cpp',
@@ -250,8 +246,6 @@ UNIFIED_SOURCES += [
     'PostTraversalTask.cpp',
     'PreloadedStyleSheet.cpp',
     'Rule.cpp',
-    'RuleNodeCacheConditions.cpp',
-    'RuleProcessorCache.cpp',
     'ServoBindings.cpp',
     'ServoCSSParser.cpp',
     'ServoCSSRuleList.cpp',
@@ -275,10 +269,32 @@ UNIFIED_SOURCES += [
     'StreamLoader.cpp',
     'StyleAnimationValue.cpp',
     'StylePrefs.cpp',
-    'StyleRule.cpp',
     'StyleSheet.cpp',
     'URLExtraData.cpp',
 ]
+
+if CONFIG['MOZ_OLD_STYLE']:
+    UNIFIED_SOURCES += [
+        'CSSStyleSheet.cpp',
+        'CSSVariableDeclarations.cpp',
+        'CSSVariableResolver.cpp',
+        'CSSVariableValues.cpp',
+        'Declaration.cpp',
+        'GeckoStyleContext.cpp',
+        'IncrementalClearCOMRuleArray.cpp',
+        'nsCSSDataBlock.cpp',
+        'nsCSSParser.cpp',
+        'nsCSSRuleProcessor.cpp',
+        'nsCSSRules.cpp',
+        'nsMediaList.cpp',
+        'nsNthIndexCache.cpp',
+        'nsRuleData.cpp',
+        'nsRuleNode.cpp',
+        'nsStyleSet.cpp',
+        'RuleNodeCacheConditions.cpp',
+        'RuleProcessorCache.cpp',
+        'StyleRule.cpp',
+    ]
 
 SOURCES += [
     # Both nsCSSPseudoElements.cpp and nsCSSPseudoClasses.cpp defined a

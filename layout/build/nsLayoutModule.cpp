@@ -41,7 +41,9 @@
 #include "nsPlainTextSerializer.h"
 #include "nsXMLContentSerializer.h"
 #include "nsXHTMLContentSerializer.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleNode.h"
+#endif
 #include "nsContentAreaDragDrop.h"
 #include "nsBox.h"
 #include "nsIFrameTraversal.h"

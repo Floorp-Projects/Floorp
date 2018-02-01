@@ -18,7 +18,9 @@
 #include "nsMappedAttributeElement.h"
 #include "nsString.h"
 #include "nsHTMLStyleSheet.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleWalker.h"
+#endif
 #include "nsMappedAttributes.h"
 #include "nsUnicharUtils.h"
 #include "nsContentUtils.h" // nsAutoScriptBlocker

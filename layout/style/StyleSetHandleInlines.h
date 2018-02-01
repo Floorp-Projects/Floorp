@@ -9,7 +9,10 @@
 
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/ServoStyleSet.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsStyleSet.h"
+#endif
+#include "nsStyleContext.h"
 
 #ifdef MOZ_OLD_STYLE
 

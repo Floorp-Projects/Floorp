@@ -21,10 +21,13 @@
 #include "nsIStyleRule.h"
 
 #include "nsCOMPtr.h"
-#include "nsStyleSet.h"
 #include "nsIPresShell.h"
 
+#ifdef MOZ_OLD_STYLE
+#include "nsStyleSet.h"
 #include "nsRuleNode.h"
+#include "mozilla/GeckoStyleContext.h"
+#endif
 #include "GeckoProfiler.h"
 #include "nsIDocument.h"
 #include "nsPrintfCString.h"
@@ -33,7 +36,6 @@
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
-#include "mozilla/GeckoStyleContext.h"
 #include "mozilla/ServoStyleContext.h"
 #include "nsStyleContextInlines.h"
 

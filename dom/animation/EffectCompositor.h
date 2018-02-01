@@ -16,7 +16,9 @@
 #include "nsCSSPropertyID.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsIStyleRuleProcessor.h"
+#endif
 #include "nsTArray.h"
 
 class nsCSSPropertyIDSet;

@@ -6,6 +6,7 @@
 
 #include "mozilla/ServoKeyframeRule.h"
 
+#include "mozilla/ServoDeclarationBlock.h"
 #include "nsDOMCSSDeclaration.h"
 #include "mozAutoDocUpdate.h"
 

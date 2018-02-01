@@ -16,7 +16,9 @@
 
 #include "nsStyleContext.h"
 #include "mozilla/ServoStyleContext.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/GeckoStyleContext.h"
+#endif
 #include "mozilla/ServoUtils.h"
 #include "mozilla/ServoBindings.h"
 
