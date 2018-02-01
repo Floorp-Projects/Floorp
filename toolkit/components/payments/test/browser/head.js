@@ -113,7 +113,7 @@ function withNewDialogFrame(requestId, taskFn) {
 
   let args = {
     gBrowser,
-    url: `chrome://payments/content/paymentDialog.xhtml?requestId=${requestId}`,
+    url: `chrome://payments/content/paymentDialogWrapper.xhtml?requestId=${requestId}`,
   };
   return BrowserTestUtils.withNewTab(args, dialogTabTask);
 }
