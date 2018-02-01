@@ -12,7 +12,6 @@
 #include "nsReadableUtils.h"
 #include "nsIAttribute.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMMutationEvent.h"
@@ -26,6 +25,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/InspectorUtils.h"
+#include "mozilla/dom/NodeFilterBinding.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -81,7 +81,7 @@ inDOMView::inDOMView() :
   mShowSubDocuments(false),
   mShowWhitespaceNodes(true),
   mShowAccessibleNodes(false),
-  mWhatToShow(nsIDOMNodeFilter::SHOW_ALL)
+  mWhatToShow(dom::NodeFilterBinding::SHOW_ALL)
 {
 }
 
@@ -130,7 +130,7 @@ inDOMView::SetRootNode(nsIDOMNode* aNode)
   if (aNode) {
     // If we are able to show element nodes, then start with the root node
     // as the first node in the buffer
-    if (mWhatToShow & nsIDOMNodeFilter::SHOW_ELEMENT) {
+    if (mWhatToShow & dom::NodeFilterBinding::SHOW_ELEMENT) {
       // allocate new node array
       AppendNode(CreateNode(aNode, nullptr));
     } else {
@@ -627,7 +627,7 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
     return;
   }
 
-  if (!(mWhatToShow & nsIDOMNodeFilter::SHOW_ATTRIBUTE)) {
+  if (!(mWhatToShow & dom::NodeFilterBinding::SHOW_ATTRIBUTE)) {
     return;
   }
 
@@ -672,7 +672,7 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
     int32_t contentRow;
     int32_t attrRow;
     if (mRootNode == el &&
-        !(mWhatToShow & nsIDOMNodeFilter::SHOW_ELEMENT)) {
+        !(mWhatToShow & dom::NodeFilterBinding::SHOW_ELEMENT)) {
       // if this view has a root node but is not displaying it,
       // it is ok to act as if the changed attribute is on the root.
       attrRow = attrCount - 1;
@@ -1158,14 +1158,14 @@ inDOMView::GetChildNodesFor(nsIDOMNode* aNode, nsCOMArray<nsIDOMNode>& aResult)
 {
   NS_ENSURE_ARG(aNode);
   // attribute nodes
-  if (mWhatToShow & nsIDOMNodeFilter::SHOW_ATTRIBUTE) {
+  if (mWhatToShow & dom::NodeFilterBinding::SHOW_ATTRIBUTE) {
     nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
     if (element) {
       AppendAttrsToArray(element->Attributes(), aResult);
     }
   }
 
-  if (mWhatToShow & nsIDOMNodeFilter::SHOW_ELEMENT) {
+  if (mWhatToShow & dom::NodeFilterBinding::SHOW_ELEMENT) {
     nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
     MOZ_ASSERT(node);
 

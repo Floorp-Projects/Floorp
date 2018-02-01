@@ -339,7 +339,7 @@ class Preprocessor:
         """
         self.marker = aMarker
         if aMarker:
-            self.instruction = re.compile('{0}(?P<cmd>[a-z]+)(?:\s+(?P<args>.*?))?\s*$'
+            self.instruction = re.compile('{0}(?P<cmd>[a-z]+)(?:\s(?P<args>.*))?$'
                                           .format(aMarker),
                                           re.U)
             self.comment = re.compile(aMarker, re.U)
@@ -606,7 +606,7 @@ class Preprocessor:
         if self.disableLevel and not replace:
             self.disableLevel += 1
             return
-        if re.search('\W', args, re.U):
+        if re.match('\W', args, re.U):
             raise Preprocessor.Error(self, 'INVALID_VAR', args)
         if args not in self.context:
             self.disableLevel = 1
@@ -621,7 +621,7 @@ class Preprocessor:
         if self.disableLevel and not replace:
             self.disableLevel += 1
             return
-        if re.search('\W', args, re.U):
+        if re.match('\W', args, re.U):
             raise Preprocessor.Error(self, 'INVALID_VAR', args)
         if args in self.context:
             self.disableLevel = 1

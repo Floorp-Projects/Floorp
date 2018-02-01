@@ -9,13 +9,13 @@
 
 #include "nsString.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeList.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIContent.h"
 #include "ChildIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/InspectorUtils.h"
+#include "mozilla/dom/NodeFilterBinding.h"
 
 /*****************************************************************************
  * This implementation does not currently operaate according to the W3C spec.
@@ -29,7 +29,7 @@ inDeepTreeWalker::inDeepTreeWalker()
   : mShowAnonymousContent(false),
     mShowSubDocuments(false),
     mShowDocumentsAsNodes(false),
-    mWhatToShow(nsIDOMNodeFilter::SHOW_ALL)
+    mWhatToShow(mozilla::dom::NodeFilterBinding::SHOW_ALL)
 {
 }
 
@@ -100,7 +100,6 @@ inDeepTreeWalker::Init(nsIDOMNode* aRoot, uint32_t aWhatToShow)
 }
 
 ////////////////////////////////////////////////////
-// nsIDOMTreeWalker
 
 NS_IMETHODIMP
 inDeepTreeWalker::GetRoot(nsIDOMNode** aRoot)
@@ -115,12 +114,6 @@ inDeepTreeWalker::GetWhatToShow(uint32_t* aWhatToShow)
 {
   *aWhatToShow = mWhatToShow;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-inDeepTreeWalker::GetFilter(nsIDOMNodeFilter** aFilter)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

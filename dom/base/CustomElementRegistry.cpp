@@ -72,21 +72,20 @@ class CustomElementCallbackReaction final : public CustomElementReaction
 void
 CustomElementCallback::Call()
 {
-  IgnoredErrorResult rv;
   switch (mType) {
     case nsIDocument::eConnected:
-      static_cast<LifecycleConnectedCallback *>(mCallback.get())->Call(mThisObject, rv);
+      static_cast<LifecycleConnectedCallback *>(mCallback.get())->Call(mThisObject);
       break;
     case nsIDocument::eDisconnected:
-      static_cast<LifecycleDisconnectedCallback *>(mCallback.get())->Call(mThisObject, rv);
+      static_cast<LifecycleDisconnectedCallback *>(mCallback.get())->Call(mThisObject);
       break;
     case nsIDocument::eAdopted:
       static_cast<LifecycleAdoptedCallback *>(mCallback.get())->Call(mThisObject,
-        mAdoptedCallbackArgs.mOldDocument, mAdoptedCallbackArgs.mNewDocument, rv);
+        mAdoptedCallbackArgs.mOldDocument, mAdoptedCallbackArgs.mNewDocument);
       break;
     case nsIDocument::eAttributeChanged:
       static_cast<LifecycleAttributeChangedCallback *>(mCallback.get())->Call(mThisObject,
-        mArgs.name, mArgs.oldValue, mArgs.newValue, mArgs.namespaceURI, rv);
+        mArgs.name, mArgs.oldValue, mArgs.newValue, mArgs.namespaceURI);
       break;
   }
 }

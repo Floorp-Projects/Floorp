@@ -53,6 +53,7 @@ interface PeerConnectionImpl  {
                   optional unsigned long interToneGap = 70);
   [Throws]
   DOMString getDTMFToneBuffer(RTCRtpSender sender);
+  [Throws]
   sequence<RTCRtpSourceEntry> getRtpSources(MediaStreamTrack track,
                                             DOMHighResTimeStamp rtpSourceNow);
   DOMHighResTimeStamp getNowInRtpSourceReferenceTime();
@@ -63,20 +64,25 @@ interface PeerConnectionImpl  {
   [Throws]
   void closeStreams();
 
+  [Throws]
   void addRIDExtension(MediaStreamTrack recvTrack, unsigned short extensionId);
+  [Throws]
   void addRIDFilter(MediaStreamTrack recvTrack, DOMString rid);
 
   // Inserts CSRC data for the RtpSourceObserver for testing
+  [Throws]
   void insertAudioLevelForContributingSource(MediaStreamTrack recvTrack,
                                              unsigned long source,
                                              DOMHighResTimeStamp timestamp,
                                              boolean hasLevel,
                                              byte level);
 
+  [Throws]
   void enablePacketDump(unsigned long level,
                         mozPacketDumpType type,
                         boolean sending);
 
+  [Throws]
   void disablePacketDump(unsigned long level,
                          mozPacketDumpType type,
                          boolean sending);
@@ -90,6 +96,7 @@ interface PeerConnectionImpl  {
   void addIceCandidate(DOMString candidate, DOMString mid, unsigned short level);
 
   /* Puts the SIPCC engine back to 'kIdle', shuts down threads, deletes state */
+  [Throws]
   void close();
 
   /* Notify DOM window if this plugin crash is ours. */
@@ -115,6 +122,7 @@ interface PeerConnectionImpl  {
   readonly attribute PCImplSignalingState signalingState;
   attribute DOMString id;
 
+  [SetterThrows]
   attribute DOMString peerIdentity;
   readonly attribute boolean privacyRequested;
 

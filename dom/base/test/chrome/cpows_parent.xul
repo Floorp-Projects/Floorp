@@ -248,7 +248,7 @@
 
         let walker = Components.classes["@mozilla.org/inspector/deep-tree-walker;1"]
                                .createInstance(Components.interfaces.inIDeepTreeWalker);
-        const SHOW_ELEMENT = Components.interfaces.nsIDOMNodeFilter.SHOW_ELEMENT;
+        const SHOW_ELEMENT = NodeFilter.SHOW_ELEMENT;
         walker.showAnonymousContent = true;
         walker.showSubDocuments = false;
 

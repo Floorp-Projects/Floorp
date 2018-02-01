@@ -217,7 +217,6 @@
 @RESPATH@/components/dom_security.xpt
 @RESPATH@/components/dom_sidebar.xpt
 @RESPATH@/components/dom_storage.xpt
-@RESPATH@/components/dom_traversal.xpt
 #ifdef MOZ_WEBSPEECH
 @RESPATH@/components/dom_webspeechrecognition.xpt
 #endif

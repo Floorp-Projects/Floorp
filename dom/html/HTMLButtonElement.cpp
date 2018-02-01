@@ -463,8 +463,7 @@ bool
 HTMLButtonElement::RestoreState(nsPresState* aState)
 {
   if (aState && aState->IsDisabledSet() && !aState->GetDisabled()) {
-    IgnoredErrorResult rv;
-    SetDisabled(false, rv);
+    SetDisabled(false, IgnoreErrors());
   }
 
   return false;

@@ -734,7 +734,7 @@ class ZoneList
 
     void append(Zone* zone);
     void transferFrom(ZoneList& other);
-    void removeFront();
+    Zone* removeFront();
     void clear();
 
   private:
