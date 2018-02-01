@@ -69,7 +69,7 @@ class FloatRegisters : public FloatRegistersMIPSShared
     static const uint32_t TotalDouble = 16;
     static const uint32_t TotalSingle = 16;
 
-    static const uint32_t Allocatable = 28;
+    static const uint32_t Allocatable = 30;
     static const SetType AllSingleMask = (1ULL << TotalSingle) - 1;
 
     static const SetType AllDoubleMask = ((1ULL << TotalDouble) - 1) << TotalSingle;
@@ -95,8 +95,7 @@ class FloatRegisters : public FloatRegistersMIPSShared
     static const SetType WrapperMask = VolatileMask;
 
     static const SetType NonAllocatableMask =
-        ((SetType(1) << (FloatRegisters::f16 >> 1)) |
-         (SetType(1) << (FloatRegisters::f18 >> 1))) * ((1 << TotalSingle) + 1);
+        (SetType(1) << (FloatRegisters::f18 >> 1)) * ((1 << TotalSingle) + 1);
 
     static const SetType AllocatableMask = AllMask & ~NonAllocatableMask;
 };
