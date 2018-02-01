@@ -68,22 +68,14 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                     "%(objdir)s/dist/thunderbird*",
                     "%(objdir)s/dist/install/sea/*.exe"
                 ],
-                'stage_product': 'firefox',
-                'platform_supports_post_upload_to_latest': True,
                 'build_resources_path': '%(abs_obj_dir)s/.mozbuild/build_resources.json',
                 'nightly_promotion_branches': ['mozilla-central', 'mozilla-aurora'],
 
                 # try will overwrite these
                 'clone_with_purge': False,
                 'clone_by_revision': False,
-                'tinderbox_build_dir': None,
-                'to_tinderbox_dated': True,
-                'release_to_try_builds': False,
-                'include_post_upload_builddir': False,
                 'use_clobberer': True,
 
-                'stage_username': 'ffxbld',
-                'stage_ssh_key': 'ffxbld_rsa',
                 'virtualenv_modules': [
                     'requests==2.8.1',
                 ],

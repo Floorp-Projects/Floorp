@@ -59,13 +59,6 @@ config = {
         'LD_LIBRARY_PATH': "/tools/gcc-4.3.3/installed/lib64",
         ##
     },
-    'upload_env': {
-        # stage_server is dictated from build_pool_specifics.py
-        'UPLOAD_HOST': '%(stage_server)s',
-        'UPLOAD_USER': '%(stage_username)s',
-        'UPLOAD_SSH_KEY': '/home/mock_mozilla/.ssh/%(stage_ssh_key)s',
-        'UPLOAD_TO_TEMP': '1',
-    },
     "check_test_env": {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/linux64/minidump_stackwalk',
         'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
