@@ -13,7 +13,6 @@
  */
 
 [Constructor(USVString scriptURL, optional WorkerOptions options),
- Func="mozilla::dom::WorkerPrivate::WorkerAvailable",
  Exposed=(Window,DedicatedWorker,SharedWorker,System)]
 interface Worker : EventTarget {
   void terminate();

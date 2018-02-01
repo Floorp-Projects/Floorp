@@ -73,8 +73,6 @@
 // A shrinking GC will run five seconds after the last event is processed.
 #define IDLE_GC_TIMER_DELAY_SEC 5
 
-#define PREF_WORKERS_ENABLED "dom.workers.enabled"
-
 static mozilla::LazyLogModule sWorkerPrivateLog("WorkerPrivate");
 static mozilla::LazyLogModule sWorkerTimeoutsLog("WorkerTimeouts");
 
@@ -2967,24 +2965,6 @@ WorkerPrivate::Constructor(const GlobalObject& aGlobal,
   return WorkerPrivate::Constructor(aGlobal, aScriptURL, false,
                                     WorkerTypeDedicated,
                                     aOptions.mName, nullptr, aRv);
-}
-
-// static
-bool
-WorkerPrivate::WorkerAvailable(JSContext* aCx, JSObject* /* unused */)
-{
-  // If we're already on a worker workers are clearly enabled.
-  if (!NS_IsMainThread()) {
-    return true;
-  }
-
-  // If our caller is chrome, workers are always available.
-  if (nsContentUtils::IsSystemCaller(aCx)) {
-    return true;
-  }
-
-  // Else check the pref.
-  return Preferences::GetBool(PREF_WORKERS_ENABLED);
 }
 
 // static
