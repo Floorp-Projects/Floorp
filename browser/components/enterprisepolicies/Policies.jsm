@@ -84,6 +84,14 @@ this.Policies = {
     }
   },
 
+  "DisableFirefoxScreenshots": {
+    onBeforeAddons(manager, param) {
+      if (param == true) {
+        setAndLockPref("extensions.screenshots.disabled", true);
+      }
+    }
+  },
+
   "dont_check_default_browser": {
     onBeforeUIStartup(manager, param) {
       setAndLockPref("browser.shell.checkDefaultBrowser", false);
