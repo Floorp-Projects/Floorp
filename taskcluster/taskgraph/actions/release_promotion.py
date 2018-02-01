@@ -44,12 +44,12 @@ RELEASE_PROMOTION_CONFIG = {
     'promote_firefox_rc': {
         'target_tasks_method': 'promote_firefox',
         'product': 'firefox',
-        'desktop_release_type': 'rc',
+        'release_type': 'rc',
     },
     'ship_firefox_rc': {
         'target_tasks_method': 'ship_firefox',
         'product': 'firefox',
-        'desktop_release_type': 'rc',
+        'release_type': 'rc',
     },
     'promote_devedition': {
         'target_tasks_method': 'promote_devedition',
@@ -303,7 +303,7 @@ def release_promotion_action(parameters, input, task_group_id, task_id, task):
     parameters['build_number'] = int(input['build_number'])
     parameters['next_version'] = next_version
     parameters['release_history'] = release_history
-    parameters['desktop_release_type'] = promotion_config.get('desktop_release_type', '')
+    parameters['release_type'] = promotion_config.get('release_type', '')
     parameters['release_eta'] = input.get('release_eta', '')
     if input['version']:
         parameters['version'] = input['version']

@@ -37,7 +37,7 @@ def add_command(config, tasks):
 
         # Non-RC builds from mozilla-release shouldn't use the beta channel.
         if config.params.get('project') == 'mozilla-release':
-            if config.params.get('desktop_release_type') != "rc":
+            if config.params.get('release_type') != "rc":
                 real_task["worker"]["properties"]["channels"] = \
                     real_task["worker"]["properties"]["channels"].replace("beta,", "")
 
