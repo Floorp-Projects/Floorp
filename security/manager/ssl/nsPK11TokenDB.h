@@ -12,13 +12,11 @@
 #include "nsIPK11TokenDB.h"
 #include "nsISupports.h"
 #include "nsNSSHelper.h"
-#include "nsNSSShutDown.h"
 #include "nsString.h"
 #include "pk11func.h"
 #include "ScopedNSSTypes.h"
 
-class nsPK11Token : public nsIPK11Token,
-                    public nsNSSShutDownObject
+class nsPK11Token : public nsIPK11Token
 {
 public:
   NS_DECL_ISUPPORTS
@@ -27,11 +25,11 @@ public:
   explicit nsPK11Token(PK11SlotInfo *slot);
 
 protected:
-  virtual ~nsPK11Token();
+  virtual ~nsPK11Token() {}
 
 private:
   friend class nsPK11TokenDB;
-  nsresult refreshTokenInfo(const nsNSSShutDownPreventionLock& proofOfLock);
+  nsresult refreshTokenInfo();
 
   nsCString mTokenName;
   nsCString mTokenLabel;
@@ -42,26 +40,20 @@ private:
   mozilla::UniquePK11SlotInfo mSlot;
   int mSeries;
   nsCOMPtr<nsIInterfaceRequestor> mUIContext;
-  virtual void virtualDestroyNSSReference() override;
-  void destructorSafeDestroyNSSReference();
   nsresult GetAttributeHelper(const nsACString& attribute,
                       /*out*/ nsACString& xpcomOutParam);
 };
 
 class nsPK11TokenDB : public nsIPK11TokenDB
-                    , public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPK11TOKENDB
 
-  nsPK11TokenDB();
+  nsPK11TokenDB() {}
 
 protected:
-  virtual ~nsPK11TokenDB();
-
-  // Nothing to release.
-  virtual void virtualDestroyNSSReference() override {}
+  virtual ~nsPK11TokenDB() {}
 };
 
 #define NS_PK11TOKENDB_CID \

@@ -8,7 +8,6 @@
 #define SecretDecoderRing_h
 
 #include "nsISecretDecoderRing.h"
-#include "nsNSSShutDown.h"
 #include "nsString.h"
 
 #define NS_SECRETDECODERRING_CONTRACTID "@mozilla.org/security/sdr;1"
@@ -17,19 +16,15 @@
   { 0x0c4f1ddc, 0x1dd2, 0x11b2, { 0x9d, 0x95, 0xf2, 0xfd, 0xf1, 0x13, 0x04, 0x4b } }
 
 class SecretDecoderRing : public nsISecretDecoderRing
-                        , public nsNSSShutDownObject
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISECRETDECODERRING
 
-  SecretDecoderRing();
-
-  // Nothing to release.
-  virtual void virtualDestroyNSSReference() override {}
+  SecretDecoderRing() {}
 
 protected:
-  virtual ~SecretDecoderRing();
+  virtual ~SecretDecoderRing() {}
 
 private:
   nsresult Encrypt(const nsACString& data, /*out*/ nsACString& result);

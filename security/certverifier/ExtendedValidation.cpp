@@ -1085,7 +1085,7 @@ CertIsAuthoritativeForEVPolicy(const UniqueCERTCertificate& cert,
 }
 
 nsresult
-LoadExtendedValidationInfo(const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+LoadExtendedValidationInfo()
 {
   static const char* sCABForumOIDString = "2.23.140.1.1";
   static const char* sCABForumOIDDescription = "CA/Browser Forum EV OID";

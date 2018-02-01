@@ -13,7 +13,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/SubtleCryptoBinding.h"
 #include "nsIGlobalObject.h"
-#include "nsNSSShutDown.h"
 
 namespace mozilla {
 namespace dom {
@@ -54,20 +53,13 @@ Cleanup should execute regardless of what else happens.
 #define MAYBE_EARLY_FAIL(rv) \
 if (NS_FAILED(rv)) { \
   FailWithError(rv); \
-  Skip(); \
   return; \
 }
 
-class WebCryptoTask : public CancelableRunnable,
-                      public nsNSSShutDownObject
+class WebCryptoTask : public CancelableRunnable
 {
 public:
   virtual void DispatchWithPromise(Promise* aResultPromise);
-
-  void Skip()
-  {
-    virtualDestroyNSSReference();
-  }
 
 protected:
   static WebCryptoTask* CreateEncryptDecryptTask(JSContext* aCx,
@@ -187,10 +179,6 @@ protected:
 
   void FailWithError(nsresult aRv);
 
-  // Subclasses should override this method if they keep references to
-  // any NSS objects, e.g., SECKEYPrivateKey or PK11SymKey.
-  virtual void ReleaseNSSResources() {}
-
   virtual nsresult CalculateResult() final;
 
   virtual void CallCallback(nsresult rv) final;
@@ -199,22 +187,10 @@ private:
   NS_IMETHOD Run() override final;
   nsresult Cancel() override final;
 
-  virtual void
-  virtualDestroyNSSReference() override final
-  {
-    MOZ_ASSERT(IsOnOriginalThread());
-
-    if (!mReleasedNSSResources) {
-      mReleasedNSSResources = true;
-      ReleaseNSSResources();
-    }
-  }
-
   class InternalWorkerHolder;
 
   nsCOMPtr<nsISerialEventTarget> mOriginalEventTarget;
   RefPtr<InternalWorkerHolder> mWorkerHolder;
-  bool mReleasedNSSResources;
   nsresult mRv;
 };
 
@@ -234,7 +210,6 @@ protected:
   SECKEYDHParams mDhParams;
   nsString mNamedCurve;
 
-  virtual void ReleaseNSSResources() override;
   virtual nsresult DoCrypto() override;
   virtual void Resolve() override;
   virtual void Cleanup() override;

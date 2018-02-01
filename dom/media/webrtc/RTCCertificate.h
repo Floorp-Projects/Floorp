@@ -10,7 +10,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "nsIGlobalObject.h"
-#include "nsNSSShutDown.h"
 #include "prtime.h"
 #include "sslt.h"
 #include "ScopedNSSTypes.h"
@@ -29,10 +28,8 @@ namespace dom {
 
 class ObjectOrString;
 
-class RTCCertificate final
-    : public nsISupports,
-      public nsWrapperCache,
-      public nsNSSShutDownObject
+class RTCCertificate final : public nsISupports
+                           , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -63,27 +60,19 @@ public:
   RefPtr<DtlsIdentity> CreateDtlsIdentity() const;
   const UniqueCERTCertificate& Certificate() const { return mCertificate; }
 
-  // For nsNSSShutDownObject
-  virtual void virtualDestroyNSSReference() override;
-  void destructorSafeDestroyNSSReference();
-
   // Structured clone methods
   bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
   bool ReadStructuredClone(JSStructuredCloneReader* aReader);
 
 private:
-  ~RTCCertificate();
+  ~RTCCertificate() {}
   void operator=(const RTCCertificate&) = delete;
   RTCCertificate(const RTCCertificate&) = delete;
 
-  bool ReadCertificate(JSStructuredCloneReader* aReader,
-                       const nsNSSShutDownPreventionLock& /*lockproof*/);
-  bool ReadPrivateKey(JSStructuredCloneReader* aReader,
-                      const nsNSSShutDownPreventionLock& aLockProof);
-  bool WriteCertificate(JSStructuredCloneWriter* aWriter,
-                        const nsNSSShutDownPreventionLock& /*lockproof*/) const;
-  bool WritePrivateKey(JSStructuredCloneWriter* aWriter,
-                       const nsNSSShutDownPreventionLock& aLockProof) const;
+  bool ReadCertificate(JSStructuredCloneReader* aReader);
+  bool ReadPrivateKey(JSStructuredCloneReader* aReader);
+  bool WriteCertificate(JSStructuredCloneWriter* aWriter) const;
+  bool WritePrivateKey(JSStructuredCloneWriter* aWriter) const;
 
   RefPtr<nsIGlobalObject> mGlobal;
   UniqueSECKEYPrivateKey mPrivateKey;

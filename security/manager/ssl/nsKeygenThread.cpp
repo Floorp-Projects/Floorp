@@ -13,7 +13,6 @@
 #include "PSMRunnable.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
-#include "nsNSSShutDown.h"
 #include "nsThreadUtils.h"
 #include "pk11func.h"
 
@@ -66,7 +65,6 @@ void nsKeygenThread::SetParams(
     void *a_params,
     void *a_wincx )
 {
-  nsNSSShutDownPreventionLock locker;
   MutexAutoLock lock(mutex);
 
     if (!alreadyReceivedParams) {
@@ -178,7 +176,6 @@ nsresult nsKeygenThread::UserCanceled(bool *threadAlreadyClosedDialog)
 
 void nsKeygenThread::Run(void)
 {
-  nsNSSShutDownPreventionLock locker;
   bool canGenerate = false;
 
   {

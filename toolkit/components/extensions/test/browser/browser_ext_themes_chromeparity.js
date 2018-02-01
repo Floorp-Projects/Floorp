@@ -46,3 +46,85 @@ add_task(async function test_support_theme_frame() {
 
   Assert.ok(!docEl.hasAttribute("lwtheme"), "LWT attribute should not be set");
 });
+
+add_task(async function test_support_theme_frame_inactive() {
+  const FRAME_COLOR = [71, 105, 91];
+  const FRAME_COLOR_INACTIVE = [255, 0, 0];
+  const TAB_TEXT_COLOR = [207, 221, 192, .9];
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "theme": {
+        "images": {
+          "theme_frame": "image1.png",
+        },
+        "colors": {
+          "frame": FRAME_COLOR,
+          "frame_inactive": FRAME_COLOR_INACTIVE,
+          "background_tab_text": TAB_TEXT_COLOR,
+        },
+      },
+    },
+    files: {
+      "image1.png": BACKGROUND,
+    },
+  });
+
+  await extension.startup();
+
+  let docEl = window.document.documentElement;
+  let style = window.getComputedStyle(docEl);
+
+  Assert.equal(style.backgroundColor, "rgb(" + FRAME_COLOR.join(", ") + ")",
+               "Window background is set to the colors.frame property");
+
+  // Now we'll open a new window to see if the inactive browser accent color changed
+  let window2 = await BrowserTestUtils.openNewBrowserWindow();
+
+  Assert.equal(style.backgroundColor, "rgb(" + FRAME_COLOR_INACTIVE.join(", ") + ")",
+               `Inactive window background color should be ${FRAME_COLOR_INACTIVE}`);
+
+  await BrowserTestUtils.closeWindow(window2);
+  await extension.unload();
+
+  Assert.ok(!docEl.hasAttribute("lwtheme"), "LWT attribute should not be set");
+});
+
+add_task(async function test_lack_of_theme_frame_inactive() {
+  const FRAME_COLOR = [71, 105, 91];
+  const TAB_TEXT_COLOR = [207, 221, 192, .9];
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "theme": {
+        "images": {
+          "theme_frame": "image1.png",
+        },
+        "colors": {
+          "frame": FRAME_COLOR,
+          "background_tab_text": TAB_TEXT_COLOR,
+        },
+      },
+    },
+    files: {
+      "image1.png": BACKGROUND,
+    },
+  });
+
+  await extension.startup();
+
+  let docEl = window.document.documentElement;
+  let style = window.getComputedStyle(docEl);
+
+  Assert.equal(style.backgroundColor, "rgb(" + FRAME_COLOR.join(", ") + ")",
+               "Window background is set to the colors.frame property");
+
+  // Now we'll open a new window to make sure the inactive browser accent color stayed the same
+  let window2 = await BrowserTestUtils.openNewBrowserWindow();
+
+  Assert.equal(style.backgroundColor, "rgb(" + FRAME_COLOR.join(", ") + ")",
+               "Inactive window background should not change if colors.frame_inactive isn't set");
+
+  await BrowserTestUtils.closeWindow(window2);
+  await extension.unload();
+
+  Assert.ok(!docEl.hasAttribute("lwtheme"), "LWT attribute should not be set");
+});

@@ -7,7 +7,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIMutableArray.h"
-#include "nsNSSShutDown.h"
 #include "nsString.h"
 #include "p12.h"
 #include "seccomon.h"
@@ -20,14 +19,11 @@ class nsIX509Cert;
 //
 // Class for importing/exporting PKCS#12 blobs
 //
-class nsPKCS12Blob : public nsNSSShutDownObject
+class nsPKCS12Blob
 {
 public:
   nsPKCS12Blob();
-  virtual ~nsPKCS12Blob();
-
-  // Nothing to release.
-  virtual void virtualDestroyNSSReference() override {}
+  virtual ~nsPKCS12Blob() {}
 
   // PKCS#12 Import
   nsresult ImportFromFile(nsIFile *file);

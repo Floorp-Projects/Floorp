@@ -137,6 +137,12 @@ HarBuilder.prototype = {
       onLoad: -1
     };
 
+    let getTimingMarker = this._options.getTimingMarker;
+    if (getTimingMarker) {
+      timings.onContentLoad = getTimingMarker("firstDocumentDOMContentLoadedTimestamp");
+      timings.onLoad = getTimingMarker("firstDocumentLoadTimestamp");
+    }
+
     return timings;
   },
 

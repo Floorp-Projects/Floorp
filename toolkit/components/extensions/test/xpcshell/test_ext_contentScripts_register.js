@@ -308,7 +308,6 @@ add_task(async function test_contentscripts_register_js() {
         js: [{code: `(${textScriptCodeIdle})()`}],
         runAt: "document_idle",
       },
-
       // Extension URLs.
       {
         matches: ["http://localhost/*/file_sample.html"],
@@ -328,7 +327,7 @@ add_task(async function test_contentscripts_register_js() {
       {
         matches: ["http://localhost/*/file_sample.html"],
         js: [{file: "content_script.js"}],
-        runAt: "document_idle",
+        // "runAt" is not specified here to ensure that it defaults to document_idle when missing.
       },
     ];
 
