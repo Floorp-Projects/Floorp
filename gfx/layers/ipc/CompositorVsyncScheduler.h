@@ -51,7 +51,11 @@ public:
   bool NotifyVsync(TimeStamp aVsyncTimestamp);
   void SetNeedsComposite();
 
+  /**
+   * Do cleanup. This must be called on the compositor thread.
+   */
   void Destroy();
+
   void ScheduleComposition();
   void CancelCurrentCompositeTask();
   bool NeedsComposite();
