@@ -9,18 +9,38 @@ JSDoc style comments are used within the JS files of the component. This documen
 .. toctree::
    :maxdepth: 5
 
-Debugging
-=========
 
-Set the pref ``dom.payments.loglevel`` to "Debug".
+Debugging/Development
+=====================
 
-To open a debugger in the context of the remote payment frame, run the following while the dialog is the most recent window::
+Logging
+-------
 
-  gDevToolsBrowser.openContentProcessToolbox({
-    selectedBrowser: Services.wm.getMostRecentWindow(null).document.getElementById("paymentRequestFrame").frameLoader,
-  })
+Set the pref ``dom.payments.loglevel`` to "Debug" to increase the verbosity of console messages.
 
-To open the debugging console in the dialog, use the keyboard shortcut **Ctrl-Alt-d (Ctrl-Option-d on macOS)**.
+Unprivileged UI Development
+---------------------------
+During development of the unprivileged custom elements, you can load the dialog over a file: URI or
+local server without even requiring a build. Simply load
+`toolkit/components/payments/res/paymentRequest.xhtml` in the browser. Use the debugging console to
+load sample data.
+
+Debugging Console
+-----------------
+
+To open the debugging console in the dialog, use the keyboard shortcut
+**Ctrl-Alt-d (Ctrl-Option-d on macOS)**. While loading `paymentRequest.xhtml` directly in the
+browser, add `?debug=1` to have the debugging console open by default.
+
+Debugging the unprivileged frame with the developer tools
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To open a debugger in the context of the remote payment frame, click the "Debug frame" button in the
+debugging console.
+
+Use the `tabs` variable in the Browser Content Toolbox's console to access the frame contents.
+There can be multiple frames loaded in the same process so you will need to find the correct tab
+in the array by checking the file name is `paymentRequest.xhtml` (e.g. `tabs[0].content.location`).
 
 
 Communication with the DOM
