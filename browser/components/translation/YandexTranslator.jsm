@@ -147,7 +147,7 @@ this.YandexTranslator.prototype = {
         json = JSON.parse(body);
       } catch (e) {}
 
-      if (json.code && YANDEX_PERMANENT_ERRORS.indexOf(json.code) != -1)
+      if (json.code && YANDEX_PERMANENT_ERRORS.includes(json.code))
         this._serviceUnavailable = true;
     }
 

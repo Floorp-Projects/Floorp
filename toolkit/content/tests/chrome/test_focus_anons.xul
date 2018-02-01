@@ -57,7 +57,7 @@ function runTests()
   gExpectedFocus = document.getAnonymousNodes($("scale"))[0];
   $("scale").focus();
 
-  var accessKeyDetails = (navigator.platform.indexOf("Mac") >= 0) ?
+  var accessKeyDetails = (navigator.platform.includes("Mac")) ?
                          { altKey: true, ctrlKey : true } :
                          { altKey : true, shiftKey: true };
 
@@ -73,7 +73,7 @@ function runTests()
   gExpectedFocus = document.getAnonymousNodes($("scale"))[0];
   synthesizeKey("c", accessKeyDetails);
 
-  if (navigator.platform.indexOf("Mac") == -1) {
+  if (!navigator.platform.includes("Mac")) {
     gExpectedBlur = gExpectedFocus;
     gExpectedFocus = $("textbox").inputField;
     synthesizeKey("VK_TAB", { shiftKey: true });

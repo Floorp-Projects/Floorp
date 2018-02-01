@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
         loc = child.contentDocument.location;
       }
     } catch(e) {
-      if (e.message && e.message.indexOf("Permission denied to access property") == -1) {
+      if (e.message && !e.message.includes("Permission denied to access property")) {
         // We received an exception we didn't expect.
         throw e;
       }

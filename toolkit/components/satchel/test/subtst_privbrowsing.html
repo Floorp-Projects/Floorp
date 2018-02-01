@@ -5,7 +5,7 @@
   <script>
   /* exported submitForm */
   function submitForm() {
-    if (location.search.indexOf("field") == -1) {
+    if (!location.search.includes("field")) {
       let form  = document.getElementById("form");
       let field = document.getElementById("field");
       field.value = "value";

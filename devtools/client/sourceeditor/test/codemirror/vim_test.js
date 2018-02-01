@@ -153,7 +153,7 @@ function testVim(name, run, opts, expectedFail) {
           // Record for insert mode.
           if (handled == "handled" && cm.state.vim.insertMode && arguments[i] != 'Esc') {
             var lastChange = CodeMirror.Vim.getVimGlobalState_().macroModeState.lastInsertModeChanges;
-            if (lastChange && (key.indexOf('Delete') != -1 || key.indexOf('Backspace') != -1)) {
+            if (lastChange && (key.includes('Delete') || key.includes('Backspace'))) {
               lastChange.changes.push(new CodeMirror.Vim.InsertModeKey(key));
             }
           }

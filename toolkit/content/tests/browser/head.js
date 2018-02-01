@@ -39,7 +39,7 @@ async function waitForTabBlockEvent(tab, expectBlocked) {
   } else {
     info("Block state doens't match, wait for attributes changes.");
     await BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
-      if (event.detail.changed.indexOf("activemedia-blocked") >= 0) {
+      if (event.detail.changed.includes("activemedia-blocked")) {
         is(tab.activeMediaBlocked, expectBlocked, "The tab should " + (expectBlocked ? "" : "not ") + "be blocked");
         return true;
       }
@@ -57,7 +57,7 @@ async function waitForTabPlayingEvent(tab, expectPlaying) {
   } else {
     info("Playing state doens't match, wait for attributes changes.");
     await BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
-      if (event.detail.changed.indexOf("soundplaying") >= 0) {
+      if (event.detail.changed.includes("soundplaying")) {
         is(tab.soundPlaying, expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
         return true;
       }

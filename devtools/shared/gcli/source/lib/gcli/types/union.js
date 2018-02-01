@@ -83,7 +83,7 @@ exports.items = [
 
               if (allPredictions[p] != null) {
                 var prediction = allPredictions[p][index];
-                if (prediction != null && predictions.indexOf(prediction) === -1) {
+                if (prediction != null && !predictions.includes(prediction)) {
                   predictions.push(prediction);
                 }
               }

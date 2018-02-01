@@ -39,8 +39,8 @@ add_task(function* () {
   is(receivedEvents[2], "inspector-updated",
      "The third event received was the inspector-updated event");
 
-  ok(receivedEvents.indexOf(controller.PLAYERS_UPDATED_EVENT) !== -1,
+  ok(receivedEvents.includes(controller.PLAYERS_UPDATED_EVENT),
      "The players-updated event was received");
-  ok(receivedEvents.indexOf(panel.UI_UPDATED_EVENT) !== -1,
+  ok(receivedEvents.includes(panel.UI_UPDATED_EVENT),
      "The ui-updated event was received");
 });

@@ -919,12 +919,12 @@ PivotContext.prototype = {
       if (!aAccessible) {
         return null;
       }
-      if ([
+      if (![
             Roles.CELL,
             Roles.COLUMNHEADER,
             Roles.ROWHEADER,
             Roles.MATHML_CELL
-          ].indexOf(aAccessible.role) < 0) {
+          ].includes(aAccessible.role)) {
           return null;
       }
       try {

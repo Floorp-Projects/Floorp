@@ -82,11 +82,11 @@ var gBadComputedNoFrame = {
 
 function xfail_value(property, value, is_initial, has_frame) {
   if ((property in gBadComputed) &&
-      gBadComputed[property].indexOf(value) != -1)
+      gBadComputed[property].includes(value))
     return true;
 
   if (!has_frame && (property in gBadComputedNoFrame) &&
-      gBadComputedNoFrame[property].indexOf(value) != -1)
+      gBadComputedNoFrame[property].includes(value))
     return true;
 
   return false;
@@ -100,7 +100,7 @@ var gSwapInitialWhenHaveFrame = {
 
 function swap_when_frame(property, value) {
   return (property in gSwapInitialWhenHaveFrame) &&
-         gSwapInitialWhenHaveFrame[property].indexOf(value) != -1;
+         gSwapInitialWhenHaveFrame[property].includes(value);
 }
 
 var gDisplayTree = document.getElementById("display");

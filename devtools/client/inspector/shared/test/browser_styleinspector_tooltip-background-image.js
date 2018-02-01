@@ -62,7 +62,7 @@ function* testBodyRuleView(view) {
   let images = previewTooltip.panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
   ok(images[0].getAttribute("src")
-    .indexOf("iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHe") !== -1,
+    .includes("iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHe"),
     "The image URL seems fine");
 
   yield assertTooltipHiddenOnMouseOut(previewTooltip, uriSpan);

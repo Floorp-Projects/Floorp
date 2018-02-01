@@ -47,7 +47,7 @@ function presentHandler(metadata, response) {
   var match = /cookie=([^&]*)/.exec(metadata.queryString);
   if (match) {
     try {
-      present = metadata.getHeader("Cookie").indexOf(match[1].replace("|","=")) != -1;
+      present = metadata.getHeader("Cookie").includes(match[1].replace("|","="));
     } catch (x) {
     }
   }

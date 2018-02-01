@@ -195,11 +195,11 @@ function doPrintMode(contentRootElement) {
     if (contentRootElement &&
         contentRootElement.hasAttribute('class')) {
         var classList = contentRootElement.getAttribute('class').split(/\s+/);
-        if (classList.indexOf("reftest-print") != -1) {
+        if (classList.includes("reftest-print")) {
             SendException("reftest-print is obsolete, use reftest-paged instead");
             return;
         }
-        return classList.indexOf("reftest-paged") != -1;
+        return classList.includes("reftest-paged");
     }
 }
 
@@ -436,7 +436,7 @@ function shouldWaitForReftestWaitRemoval(contentRootElement) {
     return contentRootElement &&
            contentRootElement.hasAttribute('class') &&
            contentRootElement.getAttribute('class').split(/\s+/)
-                             .indexOf("reftest-wait") != -1;
+                             .includes("reftest-wait");
 }
 
 function shouldSnapshotWholePage(contentRootElement) {
@@ -444,7 +444,7 @@ function shouldSnapshotWholePage(contentRootElement) {
     return contentRootElement &&
            contentRootElement.hasAttribute('class') &&
            contentRootElement.getAttribute('class').split(/\s+/)
-                             .indexOf("reftest-snapshot-all") != -1;
+                             .includes("reftest-snapshot-all");
 }
 
 function getNoPaintElements(contentRootElement) {
@@ -946,7 +946,7 @@ function CheckForProcessCrashExpectation(contentRootElement)
     if (contentRootElement &&
         contentRootElement.hasAttribute('class') &&
         contentRootElement.getAttribute('class').split(/\s+/)
-                          .indexOf("reftest-expect-process-crash") != -1) {
+                          .includes("reftest-expect-process-crash")) {
         SendExpectProcessCrash();
     }
 }

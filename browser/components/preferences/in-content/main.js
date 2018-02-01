@@ -1692,8 +1692,8 @@ var gMainPane = {
 
   _matchesFilter(aType) {
     var filterValue = this._filter.value.toLowerCase();
-    return this._describeType(aType).toLowerCase().indexOf(filterValue) != -1 ||
-      this._describePreferredAction(aType).toLowerCase().indexOf(filterValue) != -1;
+    return this._describeType(aType).toLowerCase().includes(filterValue) ||
+      this._describePreferredAction(aType).toLowerCase().includes(filterValue);
   },
 
   /**
@@ -3021,7 +3021,7 @@ HandlerInfoWrapper.prototype = {
   handledOnlyByPlugin: undefined,
 
   get isDisabledPluginType() {
-    return this._getDisabledPluginTypes().indexOf(this.type) != -1;
+    return this._getDisabledPluginTypes().includes(this.type);
   },
 
   _getDisabledPluginTypes() {
@@ -3041,7 +3041,7 @@ HandlerInfoWrapper.prototype = {
   disablePluginType() {
     var disabledPluginTypes = this._getDisabledPluginTypes();
 
-    if (disabledPluginTypes.indexOf(this.type) == -1)
+    if (!disabledPluginTypes.includes(this.type))
       disabledPluginTypes.push(this.type);
 
     Services.prefs.setCharPref(PREF_DISABLED_PLUGIN_TYPES,

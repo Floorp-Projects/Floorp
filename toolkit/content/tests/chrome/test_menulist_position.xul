@@ -40,7 +40,7 @@ function popupShown()
   ok(isWithinHalfPixel(menurect.right + marginLeft, popuprect.right), "right position");
 
   let index = menulist.selectedIndex;
-  if (menulist.selectedItem && navigator.platform.indexOf("Mac") >= 0) {
+  if (menulist.selectedItem && navigator.platform.includes("Mac")) {
     let menulistlabel = document.getAnonymousElementByAttribute(menulist, "class", "menulist-label");
     let mitemlabel = document.getAnonymousElementByAttribute(menulist.selectedItem, "class", "menu-iconic-text");
 

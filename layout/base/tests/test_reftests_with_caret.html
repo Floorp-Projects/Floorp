@@ -67,7 +67,7 @@ function createIframe(url,next) {
   var currentIteration = 0;
   function iframeLoadCompleted() {
     var docEl = iframe.contentDocument.documentElement;
-    if (docEl.className.indexOf("reftest-wait") >= 0) {
+    if (docEl.className.includes("reftest-wait")) {
       if (currentIteration++ > MAX_ITERATIONS) {
         ok(false, "iframe load for " + url + " timed out");
         endTest();
@@ -202,7 +202,7 @@ var tests = [
     function() {SpecialPowers.pushPrefEnv({'clear': [['layout.accessiblecaret.enabled']]}, nextTest);} ,
 ];
 
-if (navigator.appVersion.indexOf("Android") == -1) {
+if (!navigator.appVersion.includes("Android")) {
   tests.push([ 'bug512295-1.html' , 'bug512295-1-ref.html' ]);
   tests.push([ 'bug512295-2.html' , 'bug512295-2-ref.html' ]);
   tests.push([ 'bug923376.html'   , 'bug923376-ref.html'   ]);
@@ -216,7 +216,7 @@ if (navigator.appVersion.indexOf("Android") == -1) {
   is(SpecialPowers.getIntPref("layout.spellcheckDefault"), 0, "Spellcheck should be turned off for this platform or this if..else check removed");
 }
 
-if (navigator.platform.indexOf("Linux") >= 0) {
+if (navigator.platform.includes("Linux")) {
   tests = tests.concat([
     // eDirPrevious, Shift+click
     [ 'multi-range-user-select.html#prev1S_' , 'multi-range-user-select-ref.html#prev1S_'  ] ,

@@ -44,7 +44,7 @@ function testForUrl(url, throwType, clientProperties, resultsArray) {
         });
       } else {
         resultsArray.push({
-          result: err.toString().indexOf(throwType) >= 0,
+          result: err.toString().includes(throwType),
           message: "openWindow should throw: " + err
         });
       }

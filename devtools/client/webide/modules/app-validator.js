@@ -246,10 +246,10 @@ AppValidator.prototype.validateLaunchPath = function (manifest) {
 
 AppValidator.prototype.validateType = function (manifest) {
   let appType = manifest.type || "web";
-  if (["web", "privileged", "certified"].indexOf(appType) === -1) {
+  if (!["web", "privileged", "certified"].includes(appType)) {
     this.error(strings.formatStringFromName("validator.invalidAppType", [appType], 1));
   } else if (this.type == "hosted" &&
-             ["certified", "privileged"].indexOf(appType) !== -1) {
+             ["certified", "privileged"].includes(appType)) {
     this.error(strings.formatStringFromName("validator.invalidHostedPriviledges", [appType], 1));
   }
 

@@ -129,9 +129,9 @@ function testEventListeners(aThreadClient) {
         }
       }
 
-      ok(types.indexOf("click") != -1, "Found the click handler.");
-      ok(types.indexOf("change") != -1, "Found the change handler.");
-      ok(types.indexOf("keyup") != -1, "Found the keyup handler.");
+      ok(types.includes("click"), "Found the click handler.");
+      ok(types.includes("change"), "Found the change handler.");
+      ok(types.includes("keyup"), "Found the keyup handler.");
 
       aThreadClient.resume(deferred.resolve);
     });

@@ -134,7 +134,7 @@ function server_headers(metadata, response) {
   let header_names = [];
   while (headers.hasMoreElements()) {
     let header = headers.getNext().toString();
-    if (ignore_headers.indexOf(header) == -1) {
+    if (!ignore_headers.includes(header)) {
       header_names.push(header);
     }
   }

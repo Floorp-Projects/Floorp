@@ -28,10 +28,10 @@ function BaseTraversalRule(aRoles, aMatchFunc, aPreFilter, aContainerRule) {
   this._explicitMatchRoles = new Set(aRoles);
   this._matchRoles = aRoles;
   if (aRoles.length) {
-    if (aRoles.indexOf(Roles.LABEL) < 0) {
+    if (!aRoles.includes(Roles.LABEL)) {
       this._matchRoles.push(Roles.LABEL);
     }
-    if (aRoles.indexOf(Roles.INTERNAL_FRAME) < 0) {
+    if (!aRoles.includes(Roles.INTERNAL_FRAME)) {
       // Used for traversing in to child OOP frames.
       this._matchRoles.push(Roles.INTERNAL_FRAME);
     }
@@ -122,7 +122,7 @@ var gSimpleMatchFunc = function gSimpleMatchFunc(aAccessible) {
     for (let child = acc.firstChild; child; child = child.nextSibling) {
       // text leafs inherit the actionCount of any ancestor that has a click
       // listener.
-      if ([Roles.TEXT_LEAF, Roles.STATICTEXT].indexOf(child.role) >= 0) {
+      if ([Roles.TEXT_LEAF, Roles.STATICTEXT].includes(child.role)) {
         continue;
       }
       if (Utils.visibleChildCount(child) > 0 || child.actionCount > 0) {

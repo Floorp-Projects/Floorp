@@ -11,9 +11,9 @@ ChromeUtils.import("resource://gre/modules/SearchStaticData.jsm", this);
 
 function run_test() {
   Assert.ok(SearchStaticData.getAlternateDomains("www.google.com")
-                            .indexOf("www.google.fr") != -1);
+                            .includes("www.google.fr"));
   Assert.ok(SearchStaticData.getAlternateDomains("www.google.fr")
-                            .indexOf("www.google.com") != -1);
+                            .includes("www.google.com"));
   Assert.ok(SearchStaticData.getAlternateDomains("www.google.com")
                             .every(d => d.startsWith("www.google.")));
   Assert.ok(SearchStaticData.getAlternateDomains("google.com").length == 0);

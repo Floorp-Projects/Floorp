@@ -87,7 +87,7 @@ function processDirectory(pathString) {
   iterator.forEach(
     (entry) => {
       if (entry.name.indexOf("ff_asan_log.") == 0
-        && entry.name.indexOf("submitted") < 0) {
+        && !entry.name.includes("submitted")) {
         results.push(entry);
       }
     }

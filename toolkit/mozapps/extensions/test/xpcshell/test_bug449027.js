@@ -331,7 +331,7 @@ function check_state(test, lastTest, callback) {
       var expected = 0;
       for (i = 0; i < ADDONS.length; i++) {
         if (ADDONS[i][test] && !ADDONS[i][lastTest]) {
-          if (gNewBlocks.indexOf(ADDONS[i].name + " " + ADDONS[i].version) < 0)
+          if (!gNewBlocks.includes(ADDONS[i].name + " " + ADDONS[i].version))
             do_throw("Addon " + (i + 1) + " should have been listed in the blocklist notification for test " + test);
           expected++;
         }
@@ -339,7 +339,7 @@ function check_state(test, lastTest, callback) {
 
       for (i = 0; i < PLUGINS.length; i++) {
         if (PLUGINS[i][test] && !PLUGINS[i][lastTest]) {
-          if (gNewBlocks.indexOf(PLUGINS[i].name + " " + PLUGINS[i].version) < 0)
+          if (!gNewBlocks.includes(PLUGINS[i].name + " " + PLUGINS[i].version))
             do_throw("Plugin " + (i + 1) + " should have been listed in the blocklist notification for test " + test);
           expected++;
         }

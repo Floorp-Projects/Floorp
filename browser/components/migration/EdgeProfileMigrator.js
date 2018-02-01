@@ -116,7 +116,7 @@ EdgeTypedURLMigrator.prototype = {
       let uri;
       try {
         uri = Services.io.newURI(urlString);
-        if (["http", "https", "ftp"].indexOf(uri.scheme) == -1) {
+        if (!["http", "https", "ftp"].includes(uri.scheme)) {
           continue;
         }
       } catch (ex) {

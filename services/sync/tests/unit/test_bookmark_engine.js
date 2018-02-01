@@ -301,7 +301,7 @@ async function test_restoreOrImport(engine, { replace }) {
     _("Verify that there's only one bookmark on the server, and it's Thunderbird.");
     // Of course, there's also the Bookmarks Toolbar and Bookmarks Menu...
     let wbos = collection.keys(function(id) {
-      return ["menu", "toolbar", "mobile", "unfiled", folder1.guid].indexOf(id) == -1;
+      return !["menu", "toolbar", "mobile", "unfiled", folder1.guid].includes(id);
     });
     Assert.equal(wbos.length, 1);
     Assert.equal(wbos[0], bmk2.guid);

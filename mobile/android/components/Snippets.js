@@ -186,7 +186,7 @@ function updateBanner(messages) {
     let removedSnippetIds = JSON.parse(Services.prefs.getCharPref(SNIPPETS_REMOVED_IDS_PREF));
     messages = messages.filter(function(message) {
       // Only include the snippet if it has not been previously removed.
-      return removedSnippetIds.indexOf(message.id) === -1;
+      return !removedSnippetIds.includes(message.id);
     });
   } catch (e) {
     // If the pref doesn't exist, there aren't any snippets to filter out.
@@ -194,7 +194,7 @@ function updateBanner(messages) {
 
   messages.forEach(function(message) {
     // Don't add this message to the banner if it's not supposed to be shown in this country.
-    if ("countries" in message && message.countries.indexOf(gCountryCode) === -1) {
+    if ("countries" in message && !message.countries.includes(gCountryCode)) {
       return;
     }
 

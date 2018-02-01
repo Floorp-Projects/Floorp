@@ -292,7 +292,7 @@
           if (aSort == this.sortBy)
             this.ascending = !this.ascending;
           else
-            this.setSort(aSort, ASCENDING_SORT_FIELDS.indexOf(aSort) >= 0);
+            this.setSort(aSort, ASCENDING_SORT_FIELDS.includes(aSort));
         ]]></body>
       </method>
 
@@ -1431,7 +1431,7 @@
           function handleResponse(aEvent) {
             var req = aEvent.target;
             var ct = req.getResponseHeader("content-type");
-            if ((!ct || ct.indexOf("text/html") < 0) &&
+            if ((!ct || !ct.includes("text/html")) &&
                 req.responseXML &&
                 req.responseXML.documentElement.namespaceURI != XMLURI_PARSE_ERROR) {
               if (req == dataReq)
@@ -1621,9 +1621,9 @@
       <method name="onPropertyChanged">
         <parameter name="aProperties"/>
         <body><![CDATA[
-          if (aProperties.indexOf("appDisabled") != -1 ||
-              aProperties.indexOf("signedState") != -1 ||
-              aProperties.indexOf("userDisabled") != -1)
+          if (aProperties.includes("appDisabled") ||
+              aProperties.includes("signedState") ||
+              aProperties.includes("userDisabled"))
             this._updateState();
         ]]></body>
       </method>

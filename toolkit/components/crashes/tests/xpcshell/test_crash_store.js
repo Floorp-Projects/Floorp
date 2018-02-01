@@ -564,8 +564,8 @@ add_task(async function test_setCrashClassification() {
   Assert.ok(s.setCrashClassifications("crash1", ["foo", "bar"]));
   classifications = s.crashes[0].classifications;
   Assert.equal(classifications.length, 2);
-  Assert.ok(classifications.indexOf("foo") != -1);
-  Assert.ok(classifications.indexOf("bar") != -1);
+  Assert.ok(classifications.includes("foo"));
+  Assert.ok(classifications.includes("bar"));
 });
 
 add_task(async function test_setRemoteCrashID() {

@@ -23,11 +23,11 @@ function runTests() {
   is(p1.hasWidget(), false, "Plugin should be windowless by default");
 
   var p2 = document.getElementById("plugin2");
-  if (navigator.platform.indexOf("Mac") >= 0) {
+  if (navigator.platform.includes("Mac")) {
     is(p2.hasWidget(), false, "Mac does not support windowed plugins");
-  } else if (navigator.platform.indexOf("Win") >= 0) {
+  } else if (navigator.platform.includes("Win")) {
     is(p2.hasWidget(), true, "Windows supports windowed plugins");
-  } else if (navigator.platform.indexOf("Linux") >= 0) {
+  } else if (navigator.platform.includes("Linux")) {
     is(p2.hasWidget(), false, "Linux does not support windowed plugins");
   }
 

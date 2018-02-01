@@ -45,7 +45,7 @@ WindowDraggingElement.prototype = {
       parent = parent.parentNode;
     }
     while (target != this._elem) {
-      if (this.dragTags.indexOf(target.localName) == -1)
+      if (!this.dragTags.includes(target.localName))
         return false;
       target = target.parentNode;
     }

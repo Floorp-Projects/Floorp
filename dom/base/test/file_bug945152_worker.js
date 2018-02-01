@@ -40,7 +40,7 @@ self.onmessage = function onmessage(event) {
     if (xhr.status) {
       ok(xhr.status == 200, "Status is 200");
       var ct = xhr.getResponseHeader("Content-Type");
-      ok(ct.indexOf("mem-mapped") != -1, "Data is memory-mapped");
+      ok(ct.includes("mem-mapped"), "Data is memory-mapped");
       checkData(xhr.response, gData1, runTests);
     }
   }
@@ -56,7 +56,7 @@ self.onmessage = function onmessage(event) {
       if (xhr.status) {
         ok(xhr.status == 200, "Status is 200");
         var ct = xhr.getResponseHeader("Content-Type");
-        ok(ct.indexOf("mem-mapped") != -1, "Data is memory-mapped");
+        ok(ct.includes("mem-mapped"), "Data is memory-mapped");
         checkData(xhr.response, gData1, runTests);
        }
     }
@@ -76,7 +76,7 @@ self.onmessage = function onmessage(event) {
       if (xhr.status) {
         ok(xhr.status == 200, "Status is 200");
         var ct = xhr.getResponseHeader("Content-Type");
-        ok(ct.indexOf("mem-mapped") == -1, "Data is not memory-mapped");
+        ok(!ct.includes("mem-mapped"), "Data is not memory-mapped");
         checkData(xhr.response, gData2, runTests);
        }
     }

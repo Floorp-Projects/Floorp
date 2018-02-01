@@ -286,7 +286,7 @@ SyncScheduler.prototype = {
           this._log.debug("Couldn't log in: master password is locked.");
           this._log.trace("Scheduling a sync at MASTER_PASSWORD_LOCKED_RETRY_INTERVAL");
           this.scheduleAtInterval(MASTER_PASSWORD_LOCKED_RETRY_INTERVAL);
-        } else if (this._fatalLoginStatus.indexOf(Status.login) == -1) {
+        } else if (!this._fatalLoginStatus.includes(Status.login)) {
           // Not a fatal login error, just an intermittent network or server
           // issue. Keep on syncin'.
           this.checkSyncStatus();
@@ -945,8 +945,8 @@ ErrorHandler.prototype = {
     }
 
 
-    let result = ([Status.login, Status.sync].indexOf(SERVER_MAINTENANCE) == -1 &&
-                  [Status.login, Status.sync].indexOf(LOGIN_FAILED_NETWORK_ERROR) == -1);
+    let result = (![Status.login, Status.sync].includes(SERVER_MAINTENANCE) &&
+                  ![Status.login, Status.sync].includes(LOGIN_FAILED_NETWORK_ERROR));
     this._log.trace("shouldReportError: ${result} due to login=${login}, sync=${sync}",
                     {result, login: Status.login, sync: Status.sync});
     return result;

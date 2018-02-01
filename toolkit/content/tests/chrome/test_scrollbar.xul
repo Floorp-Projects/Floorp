@@ -47,10 +47,10 @@ var scrollbarTester = {
     var x = 160; // on the right half of the thumb
     var y = 5;
     
-    var isMac = navigator.platform.indexOf("Mac") != -1;
+    var isMac = navigator.platform.includes("Mac");
     var runtime = Components.classes["@mozilla.org/xre/app-info;1"]
                                     .getService(Components.interfaces.nsIXULRuntime);
-    var isGtk = runtime.widgetToolkit.indexOf("gtk") != -1;
+    var isGtk = runtime.widgetToolkit.includes("gtk");
     
     // Start the drag.
     this.mousedown(x, y, button, withAlt, withShift);

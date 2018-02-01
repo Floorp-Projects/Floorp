@@ -2,7 +2,7 @@ var state = "from_scope";
 var resolvePromiseCallback;
 
 onfetch = function(event) {
-  if (event.request.url.indexOf("lifetime_frame.html") >= 0) {
+  if (event.request.url.includes("lifetime_frame.html")) {
     event.respondWith(new Response("iframe_lifetime"));
     return;
   }
@@ -17,9 +17,9 @@ onfetch = function(event) {
            })
   );
 
-  if (event.request.url.indexOf("update") >= 0) {
+  if (event.request.url.includes("update")) {
     state = "update";
-  } else if (event.request.url.indexOf("wait") >= 0) {
+  } else if (event.request.url.includes("wait")) {
     event.respondWith(new Promise(function(res, rej) {
       if (resolvePromiseCallback) {
         dump("ERROR: service worker was already waiting on a promise.\n");
@@ -29,7 +29,7 @@ onfetch = function(event) {
       };
     }));
     state = "wait";
-  } else if (event.request.url.indexOf("release") >= 0) {
+  } else if (event.request.url.includes("release")) {
     state = "release";
     resolvePromise();
   }

@@ -701,7 +701,7 @@ AppActorFront.prototype = {
             type: "listRunningApps"
           };
           this.client.request(request).then(res => {
-            if (res.apps.indexOf(manifestURL) !== -1) {
+            if (res.apps.includes(manifestURL)) {
               app.running = true;
               this._notifyListeners("appInstall", app);
               this._notifyListeners("appOpen", app);

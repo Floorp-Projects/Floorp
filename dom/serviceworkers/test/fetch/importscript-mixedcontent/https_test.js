@@ -8,7 +8,7 @@ function sendResponseToParent(response) {
 }
 
 self.addEventListener("fetch", function(event) {
-  if (event.request.url.indexOf("index.html") >= 0) {
+  if (event.request.url.includes("index.html")) {
     var response = "good";
     try {
       importScripts("http://example.org/tests/dom/workers/test/foreign.js");

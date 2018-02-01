@@ -377,7 +377,7 @@ ObjectActor.prototype = {
         // avoid providing safeGetterValues from prototypes if property |name|
         // is already defined as an own property.
         if (name in safeGetterValues ||
-            (obj != this.obj && ownProperties.indexOf(name) !== -1)) {
+            (obj != this.obj && ownProperties.includes(name))) {
           continue;
         }
 

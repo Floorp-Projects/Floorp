@@ -5222,7 +5222,7 @@ function runForceCommitTest()
   ok(!getHTMLEditorIMESupport(iframe2.contentWindow).isComposing,
      "runForceCommitTest: the editable document still has composition #9");
   ok(iframe2.contentDocument.body.innerHTML != iframe2BodyInnerHTML &&
-     iframe2.contentDocument.body.innerHTML.indexOf("\u306E") >= 0,
+     iframe2.contentDocument.body.innerHTML.includes("\u306E"),
      "runForceCommitTest: the editable document doesn't have the committed text #9");
 
   // Make the composition in an editable document commit by click in another document's editor
@@ -5266,7 +5266,7 @@ function runForceCommitTest()
   ok(!getEditor(textarea).isComposing,
      "runForceCommitTest: the textarea has composition #10");
   ok(iframe2.contentDocument.body.innerHTML != iframe2BodyInnerHTML &&
-     iframe2.contentDocument.body.innerHTML.indexOf("\u306E") >= 0,
+     iframe2.contentDocument.body.innerHTML.includes("\u306E"),
      "runForceCommitTest: the editable document doesn't have the committed text #10");
   is(textarea.value, "",
      "runForceCommitTest: the textarea has the committed text? #10");
@@ -5313,7 +5313,7 @@ function runForceCommitTest()
   ok(!getHTMLEditorIMESupport(iframe3.contentWindow).isComposing,
      "runForceCommitTest: the other editable document has composition #11");
   ok(iframe2.contentDocument.body.innerHTML != iframe2BodyInnerHTML &&
-     iframe2.contentDocument.body.innerHTML.indexOf("\u306E") >= 0,
+     iframe2.contentDocument.body.innerHTML.includes("\u306E"),
      "runForceCommitTest: the editable document doesn't have the committed text #11");
   is(iframe3.contentDocument.body.innerHTML, iframe3BodyInnerHTML,
      "runForceCommitTest: the other editable document has the committed text? #11");

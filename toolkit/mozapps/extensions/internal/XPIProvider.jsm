@@ -2233,7 +2233,7 @@ this.XPIProvider = {
             // Eventually set INSTALLED reason when a bootstrap addon
             // is dropped in profile folder and automatically installed
             if (AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_INSTALLED)
-                            .indexOf(addon.id) !== -1)
+                            .includes(addon.id))
               reason = BOOTSTRAP_REASONS.ADDON_INSTALL;
             this.callBootstrapMethod(addon, addon.file, "startup", reason);
           } catch (e) {
@@ -2461,7 +2461,7 @@ this.XPIProvider = {
     if (startupChanges.length > 0) {
     let addons = XPIDatabase.getAddons();
       for (let addon of addons) {
-        if ((startupChanges.indexOf(addon.id) != -1) &&
+        if ((startupChanges.includes(addon.id)) &&
             (addon.permissions() & AddonManager.PERM_CAN_UPGRADE) &&
             (!addon.isCompatible || isDisabledLegacy(addon))) {
           logger.debug("shouldForceUpdateCheck: can upgrade disabled add-on " + addon.id);
@@ -3423,7 +3423,7 @@ this.XPIProvider = {
 
     let requireSecureOrigin = Services.prefs.getBoolPref(PREF_INSTALL_REQUIRESECUREORIGIN, true);
     let safeSchemes = ["https", "chrome", "file"];
-    if (requireSecureOrigin && safeSchemes.indexOf(uri.scheme) == -1)
+    if (requireSecureOrigin && !safeSchemes.includes(uri.scheme))
       return false;
 
     return true;
@@ -6073,7 +6073,7 @@ class DirectoryInstallLocation {
    *        The ID of the addon
    */
   isLinkedAddon(aId) {
-    return this._linkedAddons.indexOf(aId) != -1;
+    return this._linkedAddons.includes(aId);
   }
 }
 

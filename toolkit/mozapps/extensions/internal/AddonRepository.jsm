@@ -917,7 +917,7 @@ this.AddonRepository = {
     let skipSourceURIs = (aSkip && aSkip.sourceURIs) ? aSkip.sourceURIs : [];
 
     let guid = this._getDescendantTextContent(aElement, "guid");
-    if (guid == null || skipIDs.indexOf(guid) != -1)
+    if (guid == null || skipIDs.includes(guid))
       return null;
 
     let addon = new AddonSearchResult(guid);
@@ -1109,7 +1109,7 @@ this.AddonRepository = {
           if (xpiURL == null)
             break;
 
-          if (skipSourceURIs.indexOf(xpiURL) != -1)
+          if (skipSourceURIs.includes(xpiURL))
             return null;
 
           result.xpiURL = xpiURL;

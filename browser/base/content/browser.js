@@ -8593,7 +8593,7 @@ var TabContextMenu = {
       case "TabAttrModified":
         let tab = aEvent.target;
         this._updateToggleMuteMenuItem(tab,
-          attr => aEvent.detail.changed.indexOf(attr) >= 0);
+          attr => aEvent.detail.changed.includes(attr));
         break;
     }
   }

@@ -62,7 +62,7 @@ add_task(async function test_creation() {
 
   ok((await File.exists(Paths.recovery)), "After write, recovery sessionstore file exists again");
   ok(!(await File.exists(Paths.recoveryBackup)), "After write, recoveryBackup sessionstore doesn't exist");
-  ok((await promiseRead(Paths.recovery)).indexOf(URL) != -1, "Recovery sessionstore file contains the required tab");
+  ok((await promiseRead(Paths.recovery)).includes(URL), "Recovery sessionstore file contains the required tab");
   ok(!(await File.exists(Paths.clean)), "After first write, clean shutdown sessionstore doesn't exist, since we haven't shutdown yet");
 
   // Open a second tab, save session, ensure that the correct files exist.
@@ -74,11 +74,11 @@ add_task(async function test_creation() {
   await SessionSaver.run();
 
   ok((await File.exists(Paths.recovery)), "After second write, recovery sessionstore file still exists");
-  ok((await promiseRead(Paths.recovery)).indexOf(URL2) != -1, "Recovery sessionstore file contains the latest url");
+  ok((await promiseRead(Paths.recovery)).includes(URL2), "Recovery sessionstore file contains the latest url");
   ok((await File.exists(Paths.recoveryBackup)), "After write, recoveryBackup sessionstore now exists");
   let backup = await promiseRead(Paths.recoveryBackup);
-  ok(backup.indexOf(URL2) == -1, "Recovery backup doesn't contain the latest url");
-  ok(backup.indexOf(URL) != -1, "Recovery backup contains the original url");
+  ok(!backup.includes(URL2), "Recovery backup doesn't contain the latest url");
+  ok(backup.includes(URL), "Recovery backup contains the original url");
   ok(!(await File.exists(Paths.clean)), "After first write, clean shutdown sessinstore doesn't exist, since we haven't shutdown yet");
 
   info("Reinitialize, ensure that we haven't leaked sensitive files");

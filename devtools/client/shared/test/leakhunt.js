@@ -89,7 +89,7 @@ leakHunt.digProperty = function (prop, data, path, seen, direct, log) {
     return;
   }
 
-  if (message === "function" && direct.indexOf(prop) == -1) {
+  if (message === "function" && !direct.includes(prop)) {
     return;
   }
 
@@ -100,7 +100,7 @@ leakHunt.digProperty = function (prop, data, path, seen, direct, log) {
   } else if (leakHunt.matchesAnyPattern(message, leakHunt.noRecurse)) {
     message += " (no recurse)";
     recurse = false;
-  } else if (seen.indexOf(data) !== -1) {
+  } else if (seen.includes(data)) {
     message += " (already seen)";
     recurse = false;
   }

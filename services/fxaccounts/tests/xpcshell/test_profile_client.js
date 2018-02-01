@@ -397,7 +397,7 @@ add_test(function errorTests() {
   Assert.equal(fields2.error, "Error");
   Assert.equal(fields2.message, "Something");
 
-  Assert.ok(error2.toString().indexOf("Something") >= 0);
+  Assert.ok(error2.toString().includes("Something"));
   run_next_test();
 });
 

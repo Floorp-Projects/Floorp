@@ -572,7 +572,7 @@ function matchVariablesViewProperty(prop, rule, options) {
   outstanding.push(promise.resolve(true));
 
   return promise.all(outstanding).then(function _onMatchDone(results) {
-    let ruleMatched = results.indexOf(false) == -1;
+    let ruleMatched = !results.includes(false);
     return resolve(ruleMatched);
   });
 }
@@ -1257,7 +1257,7 @@ function waitForMessages(options) {
         let url = location.url;
         // Prevent recursion with the browser console and any potential
         // messages coming from head.js.
-        if (url.indexOf("devtools/client/webconsole/test/head.js") != -1) {
+        if (url.includes("devtools/client/webconsole/test/head.js")) {
           continue;
         }
       }

@@ -322,7 +322,7 @@ const cursorHandlers = {
 function findIndexedField(filters) {
   const filteredFields = Object.keys(filters);
   const indexedFields = filteredFields.filter(field => {
-    return INDEXED_FIELDS.indexOf(field) !== -1;
+    return INDEXED_FIELDS.includes(field);
   });
   return indexedFields[0];
 }
@@ -1243,7 +1243,7 @@ class Collection {
     const validatedHooks = {};
 
     for (const hook in hooks) {
-      if (AVAILABLE_HOOKS.indexOf(hook) === -1) {
+      if (!AVAILABLE_HOOKS.includes(hook)) {
         throw new Error("The hook should be one of " + AVAILABLE_HOOKS.join(", "));
       }
       validatedHooks[hook] = this._validateHook(hooks[hook]);
@@ -2507,7 +2507,7 @@ function deepEqual(a, b) {
  */
 function omitKeys(obj, keys = []) {
   return Object.keys(obj).reduce((acc, key) => {
-    if (keys.indexOf(key) === -1) {
+    if (!keys.includes(key)) {
       acc[key] = obj[key];
     }
     return acc;

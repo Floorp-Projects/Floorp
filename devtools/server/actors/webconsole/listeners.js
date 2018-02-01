@@ -156,7 +156,7 @@ ConsoleServiceListener.prototype =
           return false;
         }
         if (ids &&
-            (ids.indexOf(error.innerWindowID) == -1 ||
+            (!ids.includes(error.innerWindowID) ||
              !this.isCategoryAllowed(error.category))) {
           return false;
         }

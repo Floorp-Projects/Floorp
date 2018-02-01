@@ -66,7 +66,7 @@ function removeElement(e) {
   e.remove();
 }
 
-const supportsWindowedMode = navigator.appVersion.indexOf("Windows") != -1;
+const supportsWindowedMode = navigator.appVersion.includes("Windows");
 
 var windowedPlugin = null;
 

@@ -1131,7 +1131,7 @@ EngineURL.prototype = {
     if (this.method == "GET") {
       // GET method requests have no post data, and append the encoded
       // query string to the url...
-      if (url.indexOf("?") == -1 && dataString)
+      if (!url.includes("?") && dataString)
         url += "?";
       url += dataString;
     } else if (this.method == "POST") {
@@ -1813,7 +1813,7 @@ Engine.prototype = {
     if ((element.localName == MOZSEARCH_LOCALNAME &&
          element.namespaceURI == MOZSEARCH_NS_10) ||
         (element.localName == OPENSEARCH_LOCALNAME &&
-         OPENSEARCH_NAMESPACES.indexOf(element.namespaceURI) != -1)) {
+         OPENSEARCH_NAMESPACES.includes(element.namespaceURI))) {
       LOG("_init: Initing search plugin from " + this._location);
 
       this._parse();
@@ -2912,7 +2912,7 @@ SearchService.prototype = {
     }
 
     function notInCacheVisibleEngines(aEngineName) {
-      return cache.visibleDefaultEngines.indexOf(aEngineName) == -1;
+      return !cache.visibleDefaultEngines.includes(aEngineName);
     }
 
     let buildID = Services.appinfo.platformBuildID;
@@ -2982,7 +2982,7 @@ SearchService.prototype = {
     }
 
     function notInCacheVisibleEngines(aEngineName) {
-      return cache.visibleDefaultEngines.indexOf(aEngineName) == -1;
+      return !cache.visibleDefaultEngines.includes(aEngineName);
     }
 
     let buildID = Services.appinfo.platformBuildID;

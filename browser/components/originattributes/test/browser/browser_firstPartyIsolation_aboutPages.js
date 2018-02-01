@@ -160,7 +160,7 @@ add_task(async function test_aboutURL() {
       // errors while loading.
       if ((flags & Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT) &&
           !(flags & Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT) &&
-          networkURLs.indexOf(aboutType) == -1 &&
+          !networkURLs.includes(aboutType) &&
           // handle about:newtab in browser_firstPartyIsolation_about_newtab.js
           aboutType !== "newtab") {
         aboutURLs.push(aboutType);

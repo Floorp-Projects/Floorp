@@ -211,7 +211,7 @@ var DebuggerController = {
     let store = createStore((state, action) => {
       if (action.seqId &&
          (action.status === "done" || action.status === "error") &&
-         state && state.asyncRequests.indexOf(action.seqId) === -1) {
+         state && !state.asyncRequests.includes(action.seqId)) {
         return state;
       }
       return reducer(state, action);

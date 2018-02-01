@@ -562,16 +562,16 @@ goog.string.htmlEscape = function(str, opt_isLikelyToContainHtmlChars) {
     if(!goog.string.allRe_.test(str)) {
       return str
     }
-    if(str.indexOf("&") != -1) {
+    if(str.includes("&")) {
       str = str.replace(goog.string.amperRe_, "&amp;")
     }
-    if(str.indexOf("<") != -1) {
+    if(str.includes("<")) {
       str = str.replace(goog.string.ltRe_, "&lt;")
     }
-    if(str.indexOf(">") != -1) {
+    if(str.includes(">")) {
       str = str.replace(goog.string.gtRe_, "&gt;")
     }
-    if(str.indexOf('"') != -1) {
+    if(str.includes('"')) {
       str = str.replace(goog.string.quotRe_, "&quot;")
     }
     return str
@@ -724,7 +724,7 @@ goog.string.toMap = function(s) {
   return rv
 };
 goog.string.contains = function(s, ss) {
-  return s.indexOf(ss) != -1
+  return s.includes(ss)
 };
 goog.string.removeAt = function(s, index, stringLength) {
   var resultStr = s;
@@ -1078,7 +1078,7 @@ goog.array.findIndexRight = function(arr, f, opt_obj) {
   return-1
 };
 goog.array.contains = function(arr, obj) {
-  return goog.array.indexOf(arr, obj) >= 0
+  return goog.array.includes(arr, obj)
 };
 goog.array.isEmpty = function(arr) {
   return arr.length == 0
@@ -1364,9 +1364,9 @@ goog.userAgent.init_ = function() {
   if(!goog.userAgent.BROWSER_KNOWN_ && (ua = goog.userAgent.getUserAgentString())) {
     var navigator = goog.userAgent.getNavigator();
     goog.userAgent.detectedOpera_ = ua.indexOf("Opera") == 0;
-    goog.userAgent.detectedIe_ = !goog.userAgent.detectedOpera_ && ua.indexOf("MSIE") != -1;
-    goog.userAgent.detectedWebkit_ = !goog.userAgent.detectedOpera_ && ua.indexOf("WebKit") != -1;
-    goog.userAgent.detectedMobile_ = goog.userAgent.detectedWebkit_ && ua.indexOf("Mobile") != -1;
+    goog.userAgent.detectedIe_ = !goog.userAgent.detectedOpera_ && ua.includes("MSIE");
+    goog.userAgent.detectedWebkit_ = !goog.userAgent.detectedOpera_ && ua.includes("WebKit");
+    goog.userAgent.detectedMobile_ = goog.userAgent.detectedWebkit_ && ua.includes("Mobile");
     goog.userAgent.detectedGecko_ = !goog.userAgent.detectedOpera_ && !goog.userAgent.detectedWebkit_ && navigator.product == "Gecko"
   }
 };

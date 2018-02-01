@@ -956,7 +956,7 @@ WebConsoleFrame.prototype = {
     let searchStr = str.toLowerCase();
     let filterStrings = filter.toLowerCase().split(/\s+/);
     return !filterStrings.some(function (f) {
-      return searchStr.indexOf(f) == -1;
+      return !searchStr.includes(f);
     });
   },
 
@@ -980,7 +980,7 @@ WebConsoleFrame.prototype = {
     // (filter="error", filter="cssparser", etc.) and add or remove the
     // "filtered-by-type" class, which turns on or off the display.
 
-    let attribute = WORKERTYPES_PREFKEYS.indexOf(prefKey) == -1
+    let attribute = !WORKERTYPES_PREFKEYS.includes(prefKey)
                       ? "filter" : "workerType";
 
     let xpath = ".//*[contains(@class, 'message') and " +
@@ -2436,7 +2436,7 @@ WebConsoleFrame.prototype = {
     // Create the source location (e.g. www.example.com:6) that sits on the
     // right side of the message, if applicable.
     let locationNode;
-    if (sourceURL && IGNORED_SOURCE_URLS.indexOf(sourceURL) == -1) {
+    if (sourceURL && !IGNORED_SOURCE_URLS.includes(sourceURL)) {
       locationNode = this.createLocationNode({url: sourceURL,
                                               line: sourceLine});
     }
@@ -3045,7 +3045,7 @@ ConsoleContextMenu.prototype = {
     let itemData = selection.split("|");
     for (let type of metadata.selection) {
       // check whether this menu item should show or not.
-      if (itemData.indexOf(type) !== -1) {
+      if (itemData.includes(type)) {
         shouldHide = false;
         break;
       }

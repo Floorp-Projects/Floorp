@@ -181,7 +181,7 @@ let testData =
                              {start: 9, length: 4, contents: "baz\n"}]],
     // Test native line endings
     [["foo\r\n", "bar\r", "baz\n"], { endings: "native" },
-                            navigator.platform.indexOf("Win") != -1 ?
+                            navigator.platform.includes("Win") ?
                             [{start: 0, length: 5, contents:  "foo\r\n"},
                              {start: 5, length: 5, contents:  "bar\r\n"},
                              {start: 10, length: 5, contents: "baz\r\n"}] :

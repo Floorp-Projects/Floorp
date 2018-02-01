@@ -1401,7 +1401,7 @@ PopupNotifications.prototype = {
     Array.forEach(this.panel.childNodes, function(nEl) {
       let notificationObj = nEl.notification;
       // Never call a dismissal handler on a notification that's been removed.
-      if (notifications.indexOf(notificationObj) == -1)
+      if (!notifications.includes(notificationObj))
         return;
 
       // Record the time of the first notification dismissal if the main action

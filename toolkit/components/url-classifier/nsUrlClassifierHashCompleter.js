@@ -522,7 +522,7 @@ HashCompleterRequest.prototype = {
 
     for (let i = 0; i < this._requests.length; i++) {
       let request = this._requests[i];
-      if (prefixes.indexOf(request.partialHash) == -1) {
+      if (!prefixes.includes(request.partialHash)) {
         prefixes.push(request.partialHash);
       }
     }

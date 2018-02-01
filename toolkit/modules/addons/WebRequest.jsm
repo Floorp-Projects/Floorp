@@ -45,7 +45,7 @@ function parseFilter(filter) {
 function parseExtra(extra, allowed = [], optionsObj = {}) {
   if (extra) {
     for (let ex of extra) {
-      if (allowed.indexOf(ex) == -1) {
+      if (!allowed.includes(ex)) {
         throw new ExtensionError(`Invalid option ${ex}`);
       }
     }
@@ -53,7 +53,7 @@ function parseExtra(extra, allowed = [], optionsObj = {}) {
 
   let result = Object.assign({}, optionsObj);
   for (let al of allowed) {
-    if (extra && extra.indexOf(al) != -1) {
+    if (extra && extra.includes(al)) {
       result[al] = true;
     }
   }

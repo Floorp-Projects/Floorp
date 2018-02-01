@@ -38,7 +38,7 @@ function run_test() {
 
             var lastSample = thread0.samples.data[thread0.samples.data.length - 1];
             stack = String(getInflatedStackLocations(thread0, lastSample));
-            if (stack.indexOf("trampoline") !== -1)
+            if (stack.includes("trampoline"))
                 return;
         }
     }

@@ -50,7 +50,7 @@ function fullscreen(event) {
 
 function runTest() {
   // Windows XP cannot play mp4 clip due to the lack of gmp-eme-plugin, so skip it.
-  if (window.navigator.oscpu == "Windows NT 5.1" && test[testIndex].indexOf("mp4") >= 0) {
+  if (window.navigator.oscpu == "Windows NT 5.1" && test[testIndex].includes("mp4")) {
     nextTest();
   }
   vdo.setAttribute("src", "clips/" + test[testIndex]);

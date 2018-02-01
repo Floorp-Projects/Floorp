@@ -75,7 +75,7 @@ var gBadCompute = {
 function xfail_compute(property, value)
 {
   if (property in gBadCompute &&
-      gBadCompute[property].indexOf(value) != -1)
+      gBadCompute[property].includes(value))
     return true;
 
   return false;
@@ -93,7 +93,7 @@ var gPrereqDeclaration =
 
 // On Android, avoid most 'TEST-PASS' logging by overriding
 // SimpleTest.is/isnot, to improve performance
-if (navigator.appVersion.indexOf("Android") >= 0) {
+if (navigator.appVersion.includes("Android")) {
   is = function is(a, b, name)
   {
     var pass = Object.is(a, b);

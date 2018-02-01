@@ -26,20 +26,20 @@ caches.open(name).then(function(cache) {
   // Verify both the insertion order of the requests and their validity.
   keys.forEach(function(r, i) {
     ok(r instanceof Request, "Valid request object");
-    ok(r.url.indexOf(tests[i]) >= 0, "Valid URL");
+    ok(r.url.includes(tests[i]), "Valid URL");
   });
   // Try searching for just one request
   return c.keys(tests[1]);
 }).then(function(keys) {
   is(keys.length, 1, "One match should be found");
-  ok(keys[0].url.indexOf(tests[1]) >= 0, "Valid URL");
+  ok(keys[0].url.includes(tests[1]), "Valid URL");
   // Try to see if ignoreSearch works as expected.
   return c.keys(new Request("//mochi.test:8888/?foo"), {ignoreSearch: true});
 }).then(function(keys) {
   is(keys.length, tests.length, "Same number of elements");
   keys.forEach(function(r, i) {
     ok(r instanceof Request, "Valid request object");
-    ok(r.url.indexOf(tests[i]) >= 0, "Valid URL");
+    ok(r.url.includes(tests[i]), "Valid URL");
   });
   // Try to see if ignoreMethod works as expected
   return Promise.all(
@@ -52,7 +52,7 @@ caches.open(name).then(function(cache) {
             return c.keys(req, {ignoreMethod: true});
           }).then(function(keys) {
             is(keys.length, 1, "One match should be found");
-            ok(keys[0].url.indexOf(tests[2]) >= 0, "Valid URL");
+            ok(keys[0].url.includes(tests[2]), "Valid URL");
           });
       })
   );
@@ -61,12 +61,12 @@ caches.open(name).then(function(cache) {
   return c.keys(new Request(tests[0], {method: "HEAD"}), {ignoreMethod: true});
 }).then(function(keys) {
   is(keys.length, 1, "One match should be found");
-  ok(keys[0].url.indexOf(tests[0]) >= 0, "Valid URL");
+  ok(keys[0].url.includes(tests[0]), "Valid URL");
   // Make sure cacheName is ignored.
   return c.keys(tests[0], {cacheName: "non-existing-cache"});
 }).then(function(keys) {
   is(keys.length, 1, "One match should be found");
-  ok(keys[0].url.indexOf(tests[0]) >= 0, "Valid URL");
+  ok(keys[0].url.includes(tests[0]), "Valid URL");
   return caches.delete(name);
 }).then(function(deleted) {
   ok(deleted, "The cache should be successfully deleted");

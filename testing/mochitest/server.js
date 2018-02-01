@@ -297,7 +297,7 @@ function processLocations(server)
     var [, scheme, host, port, options] = match;
     if (options)
     {
-      if (options.split(",").indexOf("primary") >= 0)
+      if (options.split(",").includes("primary"))
       {
         if (seenPrimary)
         {
@@ -399,7 +399,7 @@ function list(requestPath, directory, recurse)
   // The SimpleTest directory is hidden
   let files = [];
   for (let file of dirIter(dir)) {
-    if (file.exists() && file.path.indexOf("SimpleTest") == -1) {
+    if (file.exists() && !file.path.includes("SimpleTest")) {
       files.push(file);
     }
   }
@@ -453,8 +453,8 @@ function isTest(filename, pattern)
   var pathPieces = filename.split('/');
     
   return testPattern.test(pathPieces[pathPieces.length - 1]) &&
-         filename.indexOf(".js") == -1 &&
-         filename.indexOf(".css") == -1 &&
+         !filename.includes(".js") &&
+         !filename.includes(".css") &&
          !/\^headers\^$/.test(filename);
 }
 
@@ -641,7 +641,7 @@ function testListing(metadata, response)
 {
   var links = {};
   var count = 0;
-  if (metadata.queryString.indexOf('manifestFile') == -1) {
+  if (!metadata.queryString.includes('manifestFile')) {
     [links, count] = list(metadata.path,
                           metadata.getProperty("directory"),
                           true);

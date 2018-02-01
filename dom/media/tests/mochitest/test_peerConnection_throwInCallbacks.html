@@ -28,7 +28,7 @@ runNetworkTest(function () {
   let error_count = 0;
   let oldOnError = window.onerror;
   window.onerror = (errorMsg, url, lineNumber) => {
-    if (errorMsg.indexOf("Expected") == -1) {
+    if (!errorMsg.includes("Expected")) {
       getFail()(errorMsg);
     }
     error_count += 1;

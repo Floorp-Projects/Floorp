@@ -169,7 +169,7 @@ function checkDone() {
 function phishExists(result) {
   dumpn("phishExists: " + result);
   try {
-    Assert.ok(result.indexOf("test-phish-simple") != -1);
+    Assert.ok(result.includes("test-phish-simple"));
   } finally {
     checkDone();
   }
@@ -178,7 +178,7 @@ function phishExists(result) {
 function phishDoesntExist(result) {
   dumpn("phishDoesntExist: " + result);
   try {
-    Assert.ok(result.indexOf("test-phish-simple") == -1);
+    Assert.ok(!result.includes("test-phish-simple"));
   } finally {
     checkDone();
   }
@@ -188,7 +188,7 @@ function malwareExists(result) {
   dumpn("malwareExists: " + result);
 
   try {
-    Assert.ok(result.indexOf("test-malware-simple") != -1);
+    Assert.ok(result.includes("test-malware-simple"));
   } finally {
     checkDone();
   }
@@ -198,7 +198,7 @@ function unwantedExists(result) {
   dumpn("unwantedExists: " + result);
 
   try {
-    Assert.ok(result.indexOf("test-unwanted-simple") != -1);
+    Assert.ok(result.includes("test-unwanted-simple"));
   } finally {
     checkDone();
   }
@@ -208,7 +208,7 @@ function blockedExists(result) {
   dumpn("blockedExists: " + result);
 
   try {
-    Assert.ok(result.indexOf("test-block-simple") != -1);
+    Assert.ok(result.includes("test-block-simple"));
   } finally {
     checkDone();
   }

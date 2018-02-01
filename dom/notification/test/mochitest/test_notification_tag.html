@@ -61,9 +61,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=782211
     var test2notifications = [];
     for (var i = 0; i < notificationsCreated.length; i++) {
       var notificationName = notificationsCreated[i];
-      if (notificationName.indexOf("test1") !== -1) {
+      if (notificationName.includes("test1")) {
         test1notifications.push(notificationsCreated[i]);
-      } else if (notificationName.indexOf("test2") !== -1) {
+      } else if (notificationName.includes("test2")) {
         test2notifications.push(notificationsCreated[i]);
       }
     }

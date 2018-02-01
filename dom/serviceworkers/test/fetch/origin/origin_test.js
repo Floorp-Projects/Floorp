@@ -21,14 +21,14 @@ self.addEventListener("install", function(event) {
 });
 
 self.addEventListener("fetch", function(event) {
-  if (event.request.url.indexOf("index-cached.sjs") >= 0) {
+  if (event.request.url.includes("index-cached.sjs")) {
     event.respondWith(
       self.caches.open("origin-cache")
         .then(c => {
           return c.match(prefix + 'index.sjs');
         })
     );
-  } else if (event.request.url.indexOf("index-to-https-cached.sjs") >= 0) {
+  } else if (event.request.url.includes("index-to-https-cached.sjs")) {
     event.respondWith(
       self.caches.open("origin-cache")
         .then(c => {

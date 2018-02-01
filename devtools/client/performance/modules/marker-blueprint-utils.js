@@ -27,10 +27,10 @@ exports.MarkerBlueprintUtils = {
     // entire category of "UNKNOWN" markers are supposed to be visible or not.
     let isUnknown = !(marker.name in TIMELINE_BLUEPRINT);
     if (isUnknown) {
-      return hiddenMarkerNames.indexOf("UNKNOWN") == -1;
+      return !hiddenMarkerNames.includes("UNKNOWN");
     }
 
-    return hiddenMarkerNames.indexOf(marker.name) == -1;
+    return !hiddenMarkerNames.includes(marker.name);
   },
 
   /**

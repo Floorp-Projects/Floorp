@@ -475,7 +475,7 @@
 
   // utility functions for plural rules methods
   function isIn(n, list) {
-    return list.indexOf(n) !== -1;
+    return list.includes(n);
   }
   function isBetween(n, start, end) {
     return typeof n === typeof start && start <= n && n <= end;
@@ -1917,7 +1917,7 @@
     // Find the first locale in the requested list that is supported.
     for (let i = 0; i < requested.length; i++) {
       const locale = requested[i];
-      if (availableLangs.indexOf(locale) !== -1) {
+      if (availableLangs.includes(locale)) {
         supportedLocale = locale;
         break;
       }
@@ -2203,14 +2203,14 @@
 
   // XXX the allowed list should be amendable; https://bugzil.la/922573
   function isElementAllowed(element) {
-    return allowed.elements.indexOf(element.tagName.toLowerCase()) !== -1;
+    return allowed.elements.includes(element.tagName.toLowerCase());
   }
 
   function isAttrAllowed(attr, element) {
     const attrName = attr.name.toLowerCase();
     const tagName = element.tagName.toLowerCase();
     // is it a globally safe attribute?
-    if (allowed.attributes.global.indexOf(attrName) !== -1) {
+    if (allowed.attributes.global.includes(attrName)) {
       return true;
     }
     // are there no allowed attributes for this element?
@@ -2219,7 +2219,7 @@
     }
     // is it allowed on this element?
     // XXX the allowed list should be amendable; https://bugzil.la/922573
-    if (allowed.attributes[tagName].indexOf(attrName) !== -1) {
+    if (allowed.attributes[tagName].includes(attrName)) {
       return true;
     }
     // special case for value on inputs with type button, reset, submit
@@ -2390,7 +2390,7 @@
   // Intl.Locale
   function getDirection(code) {
     const tag = code.split('-')[0];
-    return ['ar', 'he', 'fa', 'ps', 'ur'].indexOf(tag) >= 0 ?
+    return ['ar', 'he', 'fa', 'ps', 'ur'].includes(tag) ?
       'rtl' : 'ltr';
   }
 

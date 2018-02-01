@@ -50,7 +50,7 @@ function makeHandler(nameTemplate, eventName, expectedStates) {
     var name = nameTemplate.replace(/%1/, eventName);
     ++gState;
     trace(name + ": gState=" + gState);
-    ok(expectedStates.indexOf(gState) != -1,
+    ok(expectedStates.includes(gState),
        "handlers called in the right order: " + name + " is called, " + 
        "gState=" + gState + ", expectedStates=" + expectedStates);
     ok(e.constructor == Event, "event should be an Event");

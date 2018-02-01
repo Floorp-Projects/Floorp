@@ -138,7 +138,7 @@ function processNode(state, node, data) {
           } else if (name.substring(0, 2) === "on") {
             // If this attribute value contains only an expression
             if (value.substring(0, 2) === "${" && value.slice(-1) === "}" &&
-                    value.indexOf("${", 2) === -1) {
+                    !value.includes("${", 2)) {
               value = stripBraces(state, value);
               let func = property(state, value, data);
               if (typeof func === "function") {

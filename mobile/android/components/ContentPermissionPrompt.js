@@ -105,7 +105,7 @@ ContentPermissionPrompt.prototype = {
     let access = (perm.access && perm.access !== "unused") ?
                  (perm.type + "-" + perm.access) : perm.type;
     if (this.handleExistingPermission(request, access,
-          /* denyUnknown */ isApp || PROMPT_FOR_UNKNOWN.indexOf(perm.type) < 0, callback)) {
+          /* denyUnknown */ isApp || !PROMPT_FOR_UNKNOWN.includes(perm.type), callback)) {
        return;
     }
 
