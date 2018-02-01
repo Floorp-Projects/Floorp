@@ -438,7 +438,7 @@ public:
 
   ParentRunnable(const PrincipalInfo& aPrincipalInfo,
                  OpenMode aOpenMode,
-                 WriteParams aWriteParams)
+                 const WriteParams& aWriteParams)
   : mOwningEventTarget(GetCurrentThreadEventTarget()),
     mPrincipalInfo(aPrincipalInfo),
     mOpenMode(aOpenMode),
@@ -1317,7 +1317,7 @@ public:
 
   ChildRunnable(nsIPrincipal* aPrincipal,
                 OpenMode aOpenMode,
-                WriteParams aWriteParams,
+                const WriteParams& aWriteParams,
                 ReadParams aReadParams)
   : mPrincipal(aPrincipal),
     mWriteParams(aWriteParams),
