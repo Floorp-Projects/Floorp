@@ -2872,7 +2872,7 @@
             if (!usingPreloadedContent && (!uriIsAboutBlank || aDisallowInheritPrincipal)) {
               // pretend the user typed this so it'll be available till
               // the document successfully loads
-              if (aURI && gInitialPages.indexOf(aURI) == -1)
+              if (aURI && !gInitialPages.includes(aURI))
                 b.userTypedValue = aURI;
 
               let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
@@ -3483,14 +3483,14 @@
             let tab = aTab;
             do {
               tab = tab.nextSibling;
-            } while (tab && remainingTabs.indexOf(tab) == -1);
+            } while (tab && !remainingTabs.includes(tab));
 
             if (!tab) {
               tab = aTab;
 
               do {
                 tab = tab.previousSibling;
-              } while (tab && remainingTabs.indexOf(tab) == -1);
+              } while (tab && !remainingTabs.includes(tab));
             }
 
             return tab;
@@ -3865,7 +3865,7 @@
         <body>
         <![CDATA[
           for (let tab of this.tabs) {
-            if (aTabs.indexOf(tab) == -1)
+            if (!aTabs.includes(tab))
               this.hideTab(tab);
             else
               this.showTab(tab);

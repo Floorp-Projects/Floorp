@@ -44,7 +44,7 @@ this.Translation = {
         return;
       }
 
-      if (this.supportedSourceLanguages.indexOf(aData.detectedLanguage) == -1) {
+      if (!this.supportedSourceLanguages.includes(aData.detectedLanguage)) {
         // Detected language is not part of the supported languages.
         TranslationTelemetry.recordMissedTranslationOpportunity(aData.detectedLanguage);
         return;
@@ -101,7 +101,7 @@ this.Translation = {
    */
   get translationEngine() {
     let engine = Services.prefs.getCharPref("browser.translation.engine");
-    return Object.keys(this.supportedEngines).indexOf(engine) == -1 ? this.defaultEngine : engine;
+    return !Object.keys(this.supportedEngines).includes(engine) ? this.defaultEngine : engine;
   },
 };
 
@@ -244,7 +244,7 @@ TranslationUI.prototype = {
     // Check if we should never show the infobar for this language.
     let neverForLangs =
       Services.prefs.getCharPref("browser.translation.neverForLanguages");
-    if (neverForLangs.split(",").indexOf(this.detectedLanguage) != -1) {
+    if (neverForLangs.split(",").includes(this.detectedLanguage)) {
       TranslationTelemetry.recordAutoRejectedTranslationOffer();
       return false;
     }

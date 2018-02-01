@@ -560,7 +560,7 @@ MarkupView.prototype = {
       "test"
     ];
     let isHighlight = this._hoveredNode === this.inspector.selection.nodeFront;
-    return !isHighlight && reason && unwantedReasons.indexOf(reason) === -1;
+    return !isHighlight && reason && !unwantedReasons.includes(reason);
   },
 
   /**

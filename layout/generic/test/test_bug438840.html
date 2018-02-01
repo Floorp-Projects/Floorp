@@ -28,7 +28,7 @@ function test() {
   //in windows/linux, pageup/pagedown will trigger movement of caret
   //while in Mac, pageup/pagedown will just scroll. We need to press
   //alt-pageup/pagedown in Mac to actually move caret
-  if(navigator.platform.indexOf("Mac") >= 0){
+  if(navigator.platform.includes("Mac")){
     keymodifier.altKey=true;
   }
 

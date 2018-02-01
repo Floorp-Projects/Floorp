@@ -137,7 +137,7 @@ var Modules = (function (modules) {
 			}
 
 			// if it's a block level tag add an additional space at the end
-			if(node.tagName && this.blockLevelTags.indexOf( node.tagName.toLowerCase() ) !== -1){
+			if(node.tagName && this.blockLevelTags.includes( node.tagName.toLowerCase() )){
 				out += ' ';
 			}
 

@@ -23,7 +23,7 @@ function assertBookmarks(searchValue) {
   for (let i = 0; i < tree.view.rowCount; i++) {
     let cellText = tree.view.getCellText(i, tree.columns.getColumnAt(0));
 
-    if (cellText.indexOf("example page") != -1) {
+    if (cellText.includes("example page")) {
       found++;
     }
   }

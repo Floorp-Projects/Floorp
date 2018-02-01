@@ -113,7 +113,7 @@ addMessageListener("Test:WaitForObserverCall", ({data}) => {
     sendAsyncMessage("Test:ObserverCalled", topic);
     Services.obs.removeObserver(obs, topic);
 
-    if (kObservedTopics.indexOf(topic) != -1) {
+    if (kObservedTopics.includes(topic)) {
       if (!(topic in gObservedTopics))
         gObservedTopics[topic] = -1;
       else

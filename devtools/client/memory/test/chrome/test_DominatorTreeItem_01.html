@@ -29,9 +29,9 @@ Test that we don't display `JS::ubi::RootList` for the root, and instead show "G
                onViewSourceInDebugger: _ => { },
              }), container);
 
-             ok(container.textContent.indexOf("JS::ubi::RootList") == -1,
+             ok(!container.textContent.includes("JS::ubi::RootList"),
                 "Should not display `JS::ubi::RootList`");
-             ok(container.textContent.indexOf("GC Roots") >= 0,
+             ok(container.textContent.includes("GC Roots"),
                 "Should display `GC Roots` instead");
            } catch(e) {
              ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));

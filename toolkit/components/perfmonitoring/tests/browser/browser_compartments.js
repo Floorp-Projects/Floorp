@@ -205,7 +205,7 @@ add_task(async function test() {
   info("Extracting initial state");
   let stats0 = await monitor.promiseSnapshot();
   Assert.notEqual(stats0.componentsData.length, 0, "There is more than one component");
-  Assert.ok(!stats0.componentsData.find(stat => stat.name.indexOf(URL) != -1),
+  Assert.ok(!stats0.componentsData.find(stat => stat.name.includes(URL)),
     "The url doesn't appear yet");
 
   let newTab = BrowserTestUtils.addTab(gBrowser);

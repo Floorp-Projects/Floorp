@@ -3,9 +3,9 @@
     <script>
       function dynFrameLoad() {
         var ifrs = document.getElementsByTagName("iframe");
-        opener.ok(new String(ifrs[0].contentWindow.location).indexOf(ifrs[0].src) >= 0,
+        opener.ok(new String(ifrs[0].contentWindow.location).includes(ifrs[0].src),
                   "Wrong document loaded (1)\n");
-        opener.ok(new String(ifrs[1].contentWindow.location).indexOf(ifrs[1].src) >= 0,
+        opener.ok(new String(ifrs[1].contentWindow.location).includes(ifrs[1].src),
                   "Wrong document loaded (2)\n");
         if (opener && ++opener.testCount == 1) {
           window.location = "goback.html";

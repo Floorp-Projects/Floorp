@@ -27,7 +27,7 @@ function run_test() {
   var whitelist = ['interfaces', 'interfacesByID', 'results', 'isSuccessCode', 'QueryInterface'];
   for (var prop in Components) {
     info("Checking " + prop);
-    Assert.equal((prop in C2), whitelist.indexOf(prop) != -1);
+    Assert.equal((prop in C2), whitelist.includes(prop));
   }
 
   // non-chrome same origin

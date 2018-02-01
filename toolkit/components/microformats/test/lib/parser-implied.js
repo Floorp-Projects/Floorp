@@ -115,7 +115,7 @@ var Modules = (function (modules) {
 				value = this.getImpliedProperty(node, ['img', 'object'], this.getPhotoAttr);
 				if(value) {
 					// relative to absolute URL
-					if(value && value !== '' && this.options.baseUrl !== '' && value.indexOf('://') === -1) {
+					if(value && value !== '' && this.options.baseUrl !== '' && !value.includes('://')) {
 						value = modules.url.resolve(value, this.options.baseUrl);
 					}
 					uf.properties.photo = [modules.utils.trim(value)];
@@ -145,7 +145,7 @@ var Modules = (function (modules) {
 				value = this.getImpliedProperty(node, ['a', 'area'], this.getURLAttr);
 				if(value) {
 					// relative to absolute URL
-					if(value && value !== '' && this.options.baseUrl !== '' && value.indexOf('://') === -1) {
+					if(value && value !== '' && this.options.baseUrl !== '' && !value.includes('://')) {
 						value = modules.url.resolve(value, this.options.baseUrl);
 					}
 					uf.properties.url = [modules.utils.trim(value)];

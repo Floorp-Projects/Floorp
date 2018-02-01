@@ -553,7 +553,7 @@ AddonsStore.prototype = {
       return false;
     }
 
-    if (this._syncableTypes.indexOf(addon.type) == -1) {
+    if (!this._syncableTypes.includes(addon.type)) {
       this._log.debug(addon.id + " not syncable: type not in whitelist: " +
                       addon.type);
       return false;
@@ -631,7 +631,7 @@ AddonsStore.prototype = {
       return false;
     }
 
-    if (trustedHostnames.indexOf(uri.host) == -1) {
+    if (!trustedHostnames.includes(uri.host)) {
       this._log.debug("Source hostname not trusted: " + uri.host);
       return false;
     }

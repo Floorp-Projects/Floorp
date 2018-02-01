@@ -14,7 +14,7 @@ caches.open(name).then(function(openCache) {
 }).then(function(keys) {
   ok(!!keys, 'caches.keys() should resolve to a truthy value');
   ok(keys.length >= 1, 'caches.keys() should resolve to an array of length at least 1');
-  ok(keys.indexOf(name) >= 0, 'caches.keys() should resolve to an array containing key');
+  ok(keys.includes(name), 'caches.keys() should resolve to an array containing key');
   return caches.delete(name);
 }).then(function(deleteResult) {
   ok(deleteResult, 'caches.delete() should resolve true');
@@ -116,7 +116,7 @@ caches.open(name).then(function(openCache) {
 }).then(function(keys) {
   ok(keys, 'Valid keys object expected');
   ok(keys.length >= 2, 'At least two keys are expected');
-  ok(keys.indexOf(name) >= 0, 'snafu should exist');
+  ok(keys.includes(name), 'snafu should exist');
   ok(keys.indexOf(foobar) >= keys.indexOf(name), 'foobar should come after it');
   return caches.delete(foobar);
 }).then(function(deleteResult) {

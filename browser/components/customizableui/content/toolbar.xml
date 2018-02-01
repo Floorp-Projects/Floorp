@@ -163,7 +163,7 @@
           let oldIds = CustomizableUI.getWidgetIdsInArea(this.id);
 
           // Get a list of items only in the new list
-          let newIds = newVal.filter(id => oldIds.indexOf(id) == -1);
+          let newIds = newVal.filter(id => !oldIds.includes(id));
           CustomizableUI.beginBatchUpdate();
           try {
             for (let newId of newIds) {
@@ -184,7 +184,7 @@
             }
 
             let currentIds = this.currentSet.split(",");
-            let removedIds = currentIds.filter(id => newIds.indexOf(id) == -1 && newVal.indexOf(id) == -1);
+            let removedIds = currentIds.filter(id => !newIds.includes(id) && !newVal.includes(id));
             for (let removedId of removedIds) {
               CustomizableUI.removeWidgetFromArea(removedId);
             }

@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1148593
     try {
       noSuchFunction();
     } catch (e) {
-      ok(e.stack.indexOf(functionName) >= 0, "stack includes " + functionName);
+      ok(e.stack.includes(functionName), "stack includes " + functionName);
     }
     nextTest();
   }

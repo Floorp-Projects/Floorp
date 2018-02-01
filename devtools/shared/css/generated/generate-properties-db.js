@@ -42,7 +42,7 @@ function cssProperties() {
   const properties = generateCssProperties();
   for (let key in properties) {
     // Ignore OS-specific properties
-    if (key.indexOf("-moz-osx-") !== -1) {
+    if (key.includes("-moz-osx-")) {
       properties[key] = undefined;
     }
   }

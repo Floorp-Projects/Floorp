@@ -14,7 +14,7 @@ function checkAllLoaded() {
 
 function loadedData(event) {
   var e = event.target;
-  parent.ok(elements.indexOf(e) == -1, "Element already loaded: " + e._name);
+  parent.ok(!elements.includes(e), "Element already loaded: " + e._name);
   parent.info("Loaded " + e._name);
   elements.push(e);
   // Reset "onerror" handler to avoid triggering another error in removeNodeAndSource().

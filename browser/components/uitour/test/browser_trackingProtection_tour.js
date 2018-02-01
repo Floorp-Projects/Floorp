@@ -63,7 +63,7 @@ async function checkToggleTarget(targetID) {
 
   let testTargetAvailability = async function(expectedAvailable) {
     let data = await getConfigurationPromise("availableTargets");
-    let available = (data.targets.indexOf(targetID) != -1);
+    let available = (data.targets.includes(targetID));
     is(available, expectedAvailable, "Target has expected availability.");
   };
   await testTargetAvailability(false);

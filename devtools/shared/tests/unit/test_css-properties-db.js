@@ -72,7 +72,7 @@ function run_test() {
    */
   const mismatches = getKeyMismatches(platformProperties, CSS_PROPERTIES)
     // Filter out OS-specific properties.
-    .filter(name => name && name.indexOf("-moz-osx-") === -1);
+    .filter(name => name && !name.includes("-moz-osx-"));
 
   if (mismatches.length === 0) {
     ok(true, "No client and platform CSS property database mismatches were found.");

@@ -23,7 +23,7 @@ var eventList = ["play", "canplay", "playing", "canplaythrough", "ended"];
 
 function gotPlayEvent(event) {
   var v = event.target;
-  ok(tokens[v._state].indexOf(event.type) >= 0,
+  ok(tokens[v._state].includes(event.type),
      "Check expected event got " + uneval(event.type) +
      " at " + uneval(v._state) + " for " + v._name);
   v._state = event.type;

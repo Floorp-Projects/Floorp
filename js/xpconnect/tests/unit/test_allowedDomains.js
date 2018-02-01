@@ -32,7 +32,7 @@ function run_test() {
       ret = cu.evalInSandbox(str, sb);
       Assert.ok(false, "unexpected pass")
     } catch (e) {    
-      Assert.ok(e.message && e.message.indexOf("Permission denied to access property") != -1);
+      Assert.ok(e.message && e.message.includes("Permission denied to access property"));
     }  
   }
   

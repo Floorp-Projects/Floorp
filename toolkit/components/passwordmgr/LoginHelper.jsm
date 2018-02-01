@@ -79,9 +79,9 @@ this.LoginHelper = {
     // invalid for any field stored as plaintext, and a hostname made of a
     // single dot cannot be stored in the legacy format.
     if (aHostname == "." ||
-        aHostname.indexOf("\r") != -1 ||
-        aHostname.indexOf("\n") != -1 ||
-        aHostname.indexOf("\0") != -1) {
+        aHostname.includes("\r") ||
+        aHostname.includes("\n") ||
+        aHostname.includes("\0")) {
       throw new Error("Invalid hostname");
     }
   },
@@ -95,11 +95,11 @@ this.LoginHelper = {
    */
   checkLoginValues(aLogin) {
     function badCharacterPresent(l, c) {
-      return ((l.formSubmitURL && l.formSubmitURL.indexOf(c) != -1) ||
-              (l.httpRealm && l.httpRealm.indexOf(c) != -1) ||
-                                  l.hostname.indexOf(c) != -1 ||
-                                  l.usernameField.indexOf(c) != -1 ||
-                                  l.passwordField.indexOf(c) != -1);
+      return ((l.formSubmitURL && l.formSubmitURL.includes(c)) ||
+              (l.httpRealm && l.httpRealm.includes(c)) ||
+                                  l.hostname.includes(c) ||
+                                  l.usernameField.includes(c) ||
+                                  l.passwordField.includes(c));
     }
 
     // Nulls are invalid, as they don't round-trip well.
@@ -112,8 +112,8 @@ this.LoginHelper = {
     // values, but nsISecretDecoderRing doesn't use nsStrings, so the
     // nulls cause truncation. Check for them here just to avoid
     // unexpected round-trip surprises.
-    if (aLogin.username.indexOf("\0") != -1 ||
-        aLogin.password.indexOf("\0") != -1) {
+    if (aLogin.username.includes("\0") ||
+        aLogin.password.includes("\0")) {
       throw new Error("login values can't contain nulls");
     }
 
@@ -132,7 +132,7 @@ this.LoginHelper = {
     // A hostname with "\ \(" won't roundtrip.
     // eg host="foo (", realm="bar" --> "foo ( (bar)"
     // vs host="foo", realm=" (bar" --> "foo ( (bar)"
-    if (aLogin.hostname.indexOf(" (") != -1) {
+    if (aLogin.hostname.includes(" (")) {
       throw new Error("bad parens in hostname");
     }
   },

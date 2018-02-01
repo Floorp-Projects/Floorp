@@ -141,7 +141,7 @@ function getMatchingCommands(context, prefix) {
       // Filtered out because they don't match the search
       return false;
     }
-    if (!prefix && command.name.indexOf(' ') != -1) {
+    if (!prefix && command.name.includes(' ')) {
       // We don't show sub commands with plain 'help'
       return false;
     }

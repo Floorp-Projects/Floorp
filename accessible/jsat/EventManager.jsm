@@ -271,9 +271,9 @@ this.EventManager.prototype = {
         // Put vc where the focus is at
         let acc = aEvent.accessible;
         this._setEditingMode(aEvent);
-        if ([Roles.CHROME_WINDOW,
+        if (![Roles.CHROME_WINDOW,
              Roles.DOCUMENT,
-             Roles.APPLICATION].indexOf(acc.role) < 0) {
+             Roles.APPLICATION].includes(acc.role)) {
           this.contentControl.autoMove(acc);
        }
 

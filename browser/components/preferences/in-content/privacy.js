@@ -1284,7 +1284,7 @@ var gPrivacyPane = {
                      x !== "test-unwanted-simple");
 
       if (blockUncommonUnwanted.checked) {
-        if (malware.indexOf("goog-malware-shavar") != -1) {
+        if (malware.includes("goog-malware-shavar")) {
           malware.push("goog-unwanted-shavar");
         } else {
           malware.push("goog-unwanted-proto");

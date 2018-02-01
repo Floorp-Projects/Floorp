@@ -58,7 +58,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
    }
    ok(saw0, "properly enumerated the 0 value");
 
-   ok(win.XPathEvaluator.toString().indexOf("XPathEvaluator") >= 0,
+   ok(win.XPathEvaluator.toString().includes("XPathEvaluator"),
       "Can access content window.XPathEvaluator");
 
    var nativeToString =

@@ -349,7 +349,7 @@ add_task(async function test_non_syncable() {
 
   for (let guid of queryGuids) {
     let wbo = collection.wbo(guid);
-    if (request.ids.indexOf(guid) >= 0 || guid == bookmarksMenuQueryGuid) {
+    if (request.ids.includes(guid) || guid == bookmarksMenuQueryGuid) {
       // explicitly requested or already on the server, so should have a tombstone.
       let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
       ok(payload.deleted, `Should upload tombstone for left pane query ${guid}`);

@@ -29,7 +29,7 @@ function IsLinux() {
     } catch (e) {}
 
     return os.indexOf("Linux") == 0 &&
-           navigator.appVersion.indexOf("Android") == -1;
+           !navigator.appVersion.includes("Android");
 }
 
 function IsMacOSX10_5orOlder() {

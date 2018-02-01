@@ -29,7 +29,7 @@ function focusing() {
 var eatSpace;
 var stopAtPunctuation;
 var wordModifiers =
-    (navigator.platform.indexOf("Mac") >= 0) ? {altKey:true} : {ctrlKey:true};
+    (navigator.platform.includes("Mac")) ? {altKey:true} : {ctrlKey:true};
 var sel = window.getSelection();
 var editor = document.getElementById("editor");
 

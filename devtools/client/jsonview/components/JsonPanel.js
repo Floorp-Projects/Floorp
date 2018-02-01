@@ -73,7 +73,7 @@ define(function (require, exports, module) {
       }
 
       let json = object.name + JSON.stringify(object.value);
-      return json.toLowerCase().indexOf(this.props.searchFilter.toLowerCase()) >= 0;
+      return json.toLowerCase().includes(this.props.searchFilter.toLowerCase());
     }
 
     renderValue(props) {

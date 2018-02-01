@@ -55,7 +55,7 @@
     if (a instanceof Ci.nsIDOMBlob)
       return 'blob';
 
-    if (TypedArrayThings.indexOf(a.constructor.name) !== -1)
+    if (TypedArrayThings.includes(a.constructor.name))
       return a.constructor.name;
 
     if (typeof a == 'object')

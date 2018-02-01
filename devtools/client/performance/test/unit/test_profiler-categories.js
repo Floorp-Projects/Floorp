@@ -28,7 +28,6 @@ add_task(function () {
     "All bitmask mappings keys are powers of 2, or between 9000-9999 for special " +
     "categories.");
 
-  ok(Object.keys(CATEGORY_MAPPINGS).every(e => CATEGORIES.indexOf(CATEGORY_MAPPINGS[e])
-                                               !== -1),
+  ok(Object.keys(CATEGORY_MAPPINGS).every(e => CATEGORIES.includes(CATEGORY_MAPPINGS[e])),
     "All bitmask mappings point to a category.");
 });

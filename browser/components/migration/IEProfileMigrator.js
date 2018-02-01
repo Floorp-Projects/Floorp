@@ -54,7 +54,7 @@ History.prototype = {
       // MSIE stores some types of URLs in its history that we don't handle,
       // like HTMLHelp and others.  Since we don't properly map handling for
       // all of them we just avoid importing them.
-      if (["http", "https", "ftp", "file"].indexOf(uri.scheme) == -1) {
+      if (!["http", "https", "ftp", "file"].includes(uri.scheme)) {
         continue;
       }
 
@@ -138,7 +138,7 @@ IE7FormPasswords.prototype = {
       // MSIE stores some types of URLs in its history that we don't handle, like HTMLHelp
       // and others. Since we are not going to import the logins that are performed in these URLs
       // we can just skip them.
-      if (["http", "https", "ftp"].indexOf(uri.scheme) == -1) {
+      if (!["http", "https", "ftp"].includes(uri.scheme)) {
         continue;
       }
 

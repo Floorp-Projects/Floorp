@@ -98,7 +98,7 @@ add_task(async function test_annotation_uploaded() {
   try {
     await sync_engine_and_validate_telem(engine, false);
     let wbos = collection.keys(function(id) {
-                 return ["menu", "toolbar", "mobile", "unfiled"].indexOf(id) == -1;
+                 return !["menu", "toolbar", "mobile", "unfiled"].includes(id);
                });
     Assert.equal(wbos.length, 1);
 

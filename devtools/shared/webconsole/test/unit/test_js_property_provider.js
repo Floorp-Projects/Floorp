@@ -199,5 +199,5 @@ function test_has_no_results(results) {
 function test_has_result(results, requiredSuggestion) {
   Assert.notEqual(results, null);
   Assert.ok(results.matches.length > 0);
-  Assert.ok(results.matches.indexOf(requiredSuggestion) !== -1);
+  Assert.ok(results.matches.includes(requiredSuggestion));
 }

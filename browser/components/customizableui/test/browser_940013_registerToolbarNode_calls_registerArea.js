@@ -17,7 +17,7 @@ add_task(async function() {
   toolbar.setAttribute("customizable", true);
   toolbar.setAttribute("defaultset", kButtonId);
   gNavToolbox.appendChild(toolbar);
-  ok(CustomizableUI.areas.indexOf(kToolbarId) != -1,
+  ok(CustomizableUI.areas.includes(kToolbarId),
      "Toolbar should have been registered automatically.");
   is(CustomizableUI.getAreaType(kToolbarId), CustomizableUI.TYPE_TOOLBAR,
      "Area should be registered as toolbar");
@@ -38,10 +38,10 @@ add_task(async function() {
   toolbar.id = kToolbarId;
   toolbar.setAttribute("customizable", true);
   gNavToolbox.appendChild(toolbar);
-  ok(CustomizableUI.areas.indexOf(kToolbarId) == -1,
+  ok(!CustomizableUI.areas.includes(kToolbarId),
      "Toolbar should not yet have been registered automatically.");
   CustomizableUI.registerArea(kToolbarId, {defaultPlacements: [kButtonId]});
-  ok(CustomizableUI.areas.indexOf(kToolbarId) != -1,
+  ok(CustomizableUI.areas.includes(kToolbarId),
      "Toolbar should have been registered now.");
   is(CustomizableUI.getAreaType(kToolbarId), CustomizableUI.TYPE_TOOLBAR,
      "Area should be registered as toolbar");

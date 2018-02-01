@@ -150,7 +150,7 @@ function test2() {
           ok(box.matches(":hover"), "Box should be hovered");
           // Unhover box and iframe by moving the mouse outside the window.
           moveMouseTo(0, 150, function () {
-            const isOSXSnowLeopard = navigator.userAgent.indexOf("Mac OS X 10.6") != -1;
+            const isOSXSnowLeopard = navigator.userAgent.includes("Mac OS X 10.6");
             if (!isOSXSnowLeopard) {
               ok(!gIFrame.matches(":hover"), "iframe shouldn't be hovered");
               ok(!box.matches(":hover"), "box shouldn't be hovered");

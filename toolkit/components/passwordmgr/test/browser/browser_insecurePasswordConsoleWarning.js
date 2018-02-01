@@ -14,7 +14,7 @@ add_task(async function testInsecurePasswordWarning() {
   function messageHandler(msgObj) {
     function findWarningPattern(msg) {
       return WARNING_PATTERN.find(patternPair => {
-        return msg.indexOf(patternPair.msg) !== -1;
+        return msg.includes(patternPair.msg);
       });
     }
 

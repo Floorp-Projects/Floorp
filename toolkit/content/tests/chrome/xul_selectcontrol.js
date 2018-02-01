@@ -26,11 +26,11 @@ var behaviours = {
 
 function behaviourContains(tag, behaviour) {
   var platform = "none:";
-  if (navigator.platform.indexOf("Mac") >= 0)
+  if (navigator.platform.includes("Mac"))
     platform = "mac:";
-  else if (navigator.platform.indexOf("Win") >= 0)
+  else if (navigator.platform.includes("Win"))
     platform = "win:";
-  else if (navigator.platform.indexOf("X") >= 0)
+  else if (navigator.platform.includes("X"))
     platform = "gtk:";
 
   var re = new RegExp("\\s" + platform + behaviour + "\\s|\\s" + behaviour + "\\s");

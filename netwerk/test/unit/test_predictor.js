@@ -380,7 +380,7 @@ function continue_test_origin() {
   predictor.learn(sruri, origin_toplevel, predictor.LEARN_LOAD_SUBRESOURCE, origin_attributes);
   do_timeout(0, () => {
   var origin = extract_origin(sruri);
-  if (preconns.indexOf(origin) === -1) {
+  if (!preconns.includes(origin)) {
     preconns.push(origin);
   }
 
@@ -388,7 +388,7 @@ function continue_test_origin() {
   predictor.learn(sruri, origin_toplevel, predictor.LEARN_LOAD_SUBRESOURCE, origin_attributes);
   do_timeout(0, () => {
   var origin = extract_origin(sruri);
-  if (preconns.indexOf(origin) === -1) {
+  if (!preconns.includes(origin)) {
     preconns.push(origin);
   }
 
@@ -396,7 +396,7 @@ function continue_test_origin() {
   predictor.learn(sruri, origin_toplevel, predictor.LEARN_LOAD_SUBRESOURCE, origin_attributes);
   do_timeout(0, () => {
   var origin = extract_origin(sruri);
-  if (preconns.indexOf(origin) === -1) {
+  if (!preconns.includes(origin)) {
     preconns.push(origin);
   }
 

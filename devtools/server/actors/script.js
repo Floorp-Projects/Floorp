@@ -920,7 +920,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    */
   _handleResumeLimit: function (request) {
     let steppingType = request.resumeLimit.type;
-    if (["break", "step", "next", "finish"].indexOf(steppingType) == -1) {
+    if (!["break", "step", "next", "finish"].includes(steppingType)) {
       return reject({ error: "badParameterType",
                       message: "Unknown resumeLimit type" });
     }
@@ -1118,7 +1118,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    */
   _allEventsListener: function (event) {
     if (this._pauseOnDOMEvents == "*" ||
-        this._pauseOnDOMEvents.indexOf(event.type) != -1) {
+        this._pauseOnDOMEvents.includes(event.type)) {
       for (let listener of this._getAllEventListeners(event.target)) {
         if (event.type == listener.type || this._pauseOnDOMEvents == "*") {
           this._breakOnEnter(listener.script);

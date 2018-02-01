@@ -31,7 +31,7 @@ Test that the ShortestPaths component renders a suggestion to select a node when
                                                                  { graph: null })),
                                    container);
 
-             ok(container.textContent.indexOf(L10N.getStr("shortest-paths.select-node")) !== -1,
+             ok(container.textContent.includes(L10N.getStr("shortest-paths.select-node")),
                 "The node selection prompt is displayed");
            } catch(e) {
              ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));

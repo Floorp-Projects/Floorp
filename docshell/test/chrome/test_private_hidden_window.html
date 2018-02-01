@@ -31,7 +31,7 @@ var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
 var hidden = mainWindow.Services.appShell.hiddenPrivateDOMWindow;
 
 function isNotLoaded() {
-  return ["complete", "interactive"].indexOf(hidden.document.readyState) == -1;
+  return !["complete", "interactive"].includes(hidden.document.readyState);
 }
 if (isNotLoaded()) {
   setTimeout(function poll() {

@@ -213,7 +213,7 @@ var gSearchResultsPane = {
       return;
     }
 
-    let subQuery = this.query && query.indexOf(this.query) !== -1;
+    let subQuery = this.query && query.includes(this.query);
     this.query = query;
 
     this.getFindSelection(window).removeAllRanges();

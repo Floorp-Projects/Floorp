@@ -201,7 +201,7 @@ var HomePanels = (function() {
       let panels = [];
       for (let id in _registeredPanels) {
         // Null ids means we want to fetch all available panels
-        if (ids == null || ids.indexOf(id) >= 0) {
+        if (ids == null || ids.includes(id)) {
           try {
             panels.push(_generatePanel(id));
           } catch (e) {

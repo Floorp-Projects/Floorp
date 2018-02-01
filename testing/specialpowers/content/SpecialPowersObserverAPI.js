@@ -300,7 +300,7 @@ SpecialPowersObserverAPI.prototype = {
     while (enumerator.hasMoreElements()) {
       try {
         let observer = enumerator.getNext().QueryInterface(Ci.nsIObserver);
-        if (observers.indexOf(observer) == -1) {
+        if (!observers.includes(observer)) {
           observers.push(observer);
         }
       } catch (e) { }

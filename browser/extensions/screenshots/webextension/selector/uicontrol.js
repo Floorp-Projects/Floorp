@@ -662,7 +662,7 @@ this.uicontrol = (function() {
           return rect.width >= this.minAutoImageWidth && rect.height >= this.minAutoImageHeight;
         }
         let display = window.getComputedStyle(el).display;
-        if (['block', 'inline-block', 'table'].indexOf(display) != -1) {
+        if (['block', 'inline-block', 'table'].includes(display)) {
           return true;
           // FIXME: not sure if this is useful:
           // let rect = el.getBoundingClientRect();

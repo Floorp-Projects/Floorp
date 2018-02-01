@@ -28,7 +28,7 @@ const IGNORE_PRIVATE = ["AddonAuthor", "AddonCompatibilityOverride",
 
 async function test_functions() {
   for (let prop in AddonManager) {
-    if (IGNORE.indexOf(prop) != -1)
+    if (IGNORE.includes(prop))
       continue;
     if (typeof AddonManager[prop] != "function")
       continue;
@@ -64,7 +64,7 @@ async function test_functions() {
   }
 
   for (let prop in AddonManagerPrivate) {
-    if (IGNORE_PRIVATE.indexOf(prop) != -1)
+    if (IGNORE_PRIVATE.includes(prop))
       continue;
     if (typeof AddonManagerPrivate[prop] != "function")
       continue;

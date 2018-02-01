@@ -20,7 +20,7 @@ function run_test() {
     Assert.equal(error, null);
     Assert.ok(!!response);
     Assert.ok(Array.isArray(response.completions));
-    Assert.ok(response.completions.indexOf("concat") != -1);
+    Assert.ok(response.completions.includes("concat"));
     do_test_finished();
   });
 }

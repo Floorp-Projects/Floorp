@@ -224,8 +224,8 @@ function fuzzyMemcmp(buf1, buf2, fuzz) {
 
 function getFuzzTolerance(test) {
   var kIsMobile =
-    navigator.userAgent.indexOf("Mobile") != -1 || // b2g
-    navigator.userAgent.indexOf("Android") != -1;  // android
+    navigator.userAgent.includes("Mobile") || // b2g
+    navigator.userAgent.includes("Android");  // android
   return kIsMobile ? test.fuzzToleranceMobile : test.fuzzTolerance;
 }
 

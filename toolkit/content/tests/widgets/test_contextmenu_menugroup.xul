@@ -33,7 +33,7 @@ ok(gMenuPopup, "Got the reference to the context menu");
 var popupTests = [
 {
   testname: "one-down-key",
-  condition: function() { return (navigator.platform.indexOf("Mac") == -1); },
+  condition: function() { return (!navigator.platform.includes("Mac")); },
   events: [ "popupshowing context", "popupshown context", "DOMMenuItemActive a" ],
   test: function () {
     synthesizeMouse($("popuparea"), 4, 4, {});
@@ -45,7 +45,7 @@ var popupTests = [
 },
 {
   testname: "two-down-keys",
-  condition: function() { return (navigator.platform.indexOf("Mac") == -1); },
+  condition: function() { return (!navigator.platform.includes("Mac")); },
   events: [ "DOMMenuItemInactive a", "DOMMenuItemActive b" ],
   test: () => synthesizeKey("VK_DOWN", {}),
   result: function (testname) {
@@ -54,7 +54,7 @@ var popupTests = [
 },
 {
   testname: "three-down-keys",
-  condition: function() { return (navigator.platform.indexOf("Mac") == -1); },
+  condition: function() { return (!navigator.platform.includes("Mac")); },
   events: [ "DOMMenuItemInactive b", "DOMMenuItemActive c" ],
   test: () => synthesizeKey("VK_DOWN", {}),
   result: function (testname) {
@@ -63,7 +63,7 @@ var popupTests = [
 },
 {
   testname: "three-down-keys-one-up-key",
-  condition: function() { return (navigator.platform.indexOf("Mac") == -1); },
+  condition: function() { return (!navigator.platform.includes("Mac")); },
   events: [ "DOMMenuItemInactive c", "DOMMenuItemActive b" ],
   test: () => synthesizeKey("VK_UP", {}),
   result: function (testname) {
@@ -72,7 +72,7 @@ var popupTests = [
 },
 {
   testname: "three-down-keys-two-up-keys",
-  condition: function() { return (navigator.platform.indexOf("Mac") == -1); },
+  condition: function() { return (!navigator.platform.includes("Mac")); },
   events: [ "DOMMenuItemInactive b", "DOMMenuItemActive a" ],
   test: () => synthesizeKey("VK_UP", {}),
   result: function (testname) {
@@ -81,7 +81,7 @@ var popupTests = [
 },
 {
   testname: "three-down-keys-three-up-key",
-  condition: function() { return (navigator.platform.indexOf("Mac") == -1); },
+  condition: function() { return (!navigator.platform.includes("Mac")); },
   events: [ "DOMMenuItemInactive a", "DOMMenuItemActive c" ],
   test: () => synthesizeKey("VK_UP", {}),
   result: function (testname) {

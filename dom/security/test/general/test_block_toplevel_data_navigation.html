@@ -22,7 +22,7 @@ function test1() {
   let TEST_FILE = "file_block_toplevel_data_navigation.html";
   let win1 = window.open(TEST_FILE);
   setTimeout(function () {
-    ok(SpecialPowers.wrap(win1).document.body.innerHTML.indexOf("test1:") !== -1,
+    ok(SpecialPowers.wrap(win1).document.body.innerHTML.includes("test1:"),
       "toplevel data: URI navigation through click() should be blocked");
     win1.close();
     test2();
@@ -46,7 +46,7 @@ function test3() {
   // navigating to a data: URI using window.location.href should be blocked
   let win3 = window.open("file_block_toplevel_data_navigation3.html");
   setTimeout(function () {
-    ok(win3.document.body.innerHTML.indexOf("test3:") !== -1,
+    ok(win3.document.body.innerHTML.includes("test3:"),
       "data: URI navigation through win.loc.href should be blocked");
     win3.close();
     test4();

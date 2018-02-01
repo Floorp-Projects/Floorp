@@ -25,7 +25,7 @@ function testWithAllPrefsDisabled() {
   // Check that all of the properties behind the prefs are not exposed.
   for (let pref in gProps) {
     for (let prop of gProps[pref]) {
-      ok(exposedProperties.indexOf(prop) == -1, prop + " not exposed when prefs are false");
+      ok(!exposedProperties.includes(prop), prop + " not exposed when prefs are false");
     }
   }
 }
@@ -38,7 +38,7 @@ function testWithOnePrefEnabled(aPref) {
 
   // Check that the properties corresponding to aPref are exposed.
   for (let prop of gProps[aPref]) {
-    ok(exposedProperties.indexOf(prop) != -1, prop + " exposed when " + aPref + " is true");
+    ok(exposedProperties.includes(prop), prop + " exposed when " + aPref + " is true");
   }
 }
 

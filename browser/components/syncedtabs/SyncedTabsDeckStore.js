@@ -39,7 +39,7 @@ Object.assign(SyncedTabsDeckStore.prototype, EventEmitter.prototype, {
    * @param {String} panelId - ID of the panel to select.
    */
   selectPanel(panelId) {
-    if (this._panels.indexOf(panelId) === -1 || this._selectedPanel === panelId) {
+    if (!this._panels.includes(panelId) || this._selectedPanel === panelId) {
       return;
     }
     this._selectedPanel = panelId;

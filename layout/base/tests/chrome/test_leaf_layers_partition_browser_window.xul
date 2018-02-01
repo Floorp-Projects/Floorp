@@ -50,7 +50,7 @@
                            .leafLayersPartitionWindow();
           // "[leafLayersPartitionWindow()] Always returns true in non-DEBUG builds."
           // To prevent random failures on Windows, try to run this again after a timeout.
-          if (!success && navigator.platform.indexOf("Win") >= 0) {
+          if (!success && navigator.platform.includes("Win")) {
             setTimeout(testLeafLayersPartitionWindow, 100);
             return;
           }

@@ -4,7 +4,7 @@
       function nestedIframeLoaded() {
         var tf = document.getElementById("testframe");
         var innerf = tf.contentDocument.getElementsByTagName("iframe")[0];
-        if (innerf.contentDocument.documentURI.indexOf("frame0") < 0) {
+        if (!innerf.contentDocument.documentURI.includes("frame0")) {
           innerf.contentWindow.location.href = "http://mochi.test:8888/tests/docshell/test/navigation/frame0.html";
           return;
         }

@@ -10061,7 +10061,7 @@ var ChunkedStreamManager = function ChunkedStreamManagerClosure() {
         var beginChunk = this.getBeginChunk(ranges[i].begin);
         var endChunk = this.getEndChunk(ranges[i].end);
         for (var chunk = beginChunk; chunk < endChunk; ++chunk) {
-          if (chunksToRequest.indexOf(chunk) < 0) {
+          if (!chunksToRequest.includes(chunk)) {
             chunksToRequest.push(chunk);
           }
         }
@@ -32557,7 +32557,7 @@ var CMapFactory = function CMapFactoryClosure() {
     } else if (name === 'Identity-V') {
       return Promise.resolve(new IdentityCMap(true, 2));
     }
-    if (BUILT_IN_CMAPS.indexOf(name) === -1) {
+    if (!BUILT_IN_CMAPS.includes(name)) {
       return Promise.reject(new Error('Unknown CMap name: ' + name));
     }
     if (!fetchBuiltInCMap) {
@@ -33494,7 +33494,7 @@ var Font = function FontClosure() {
         tables['post'] = null;
         for (let i = 0; i < numTables; i++) {
           let table = readTableEntry(font);
-          if (VALID_TABLES.indexOf(table.tag) < 0) {
+          if (!VALID_TABLES.includes(table.tag)) {
             continue;
           }
           if (table.length === 0) {
@@ -34139,7 +34139,7 @@ var Font = function FontClosure() {
               ttContext.functionsUsed[funcId] = true;
               if (funcId in ttContext.functionsStackDeltas) {
                 stack.length += ttContext.functionsStackDeltas[funcId];
-              } else if (funcId in ttContext.functionsDefined && functionsCalled.indexOf(funcId) < 0) {
+              } else if (funcId in ttContext.functionsDefined && !functionsCalled.includes(funcId)) {
                 callstack.push({
                   data,
                   i,

@@ -478,7 +478,7 @@ add_task(async function test_input_copypaste_dataTransfer_multiple() {
 
     // Firefox for Android's clipboard code doesn't handle x-moz-url. Therefore
     // disabling the following test. Enable this once bug #840101 is fixed.
-    if (navigator.appVersion.indexOf("Android") == -1) {
+    if (!navigator.appVersion.includes("Android")) {
       is(cd.getData("text/x-moz-url"), "http://www.mozilla.org", "paste text/x-moz-url multiple types");
       is(cd.getData("text/x-custom"), "Custom Text with \u0000 null", "paste text/custom multiple types");
     } else {

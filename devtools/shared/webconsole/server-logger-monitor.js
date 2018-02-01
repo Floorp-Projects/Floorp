@@ -157,7 +157,7 @@ var ServerLoggerMonitor = {
 
     httpChannel.visitResponseHeaders((header, value) => {
       header = header.toLowerCase();
-      if (acceptableHeaders.indexOf(header) !== -1) {
+      if (acceptableHeaders.includes(header)) {
         headers.push({header: header, value: value});
       }
     });

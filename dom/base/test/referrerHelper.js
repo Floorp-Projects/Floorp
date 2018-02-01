@@ -62,7 +62,7 @@ function checkIndividualResults(testname, expected) {
             testname + " Test: Expected 2 loads for image requests.");
 
           expected.forEach(function (ref) {
-            ok(results['img'].referrers.indexOf(ref) >= 0,
+            ok(results['img'].referrers.includes(ref),
                 testname + " Test: Expected " + ref + " referrer policy in test, results were " +
                 JSON.stringify(results['img'].referrers) +".");
             });

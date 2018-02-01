@@ -61,7 +61,7 @@ MozillaFileLogger.getLogCallback = function() {
     if (MozillaFileLogger._foStream)
       MozillaFileLogger._foStream.write(data, data.length);
 
-    if (data.indexOf("SimpleTest FINISH") >= 0) {
+    if (data.includes("SimpleTest FINISH")) {
       MozillaFileLogger.close();
     }
   };

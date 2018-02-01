@@ -34,7 +34,7 @@ var AccessFuTest = {
         if (!(aMessage instanceof Components.interfaces.nsIConsoleMessage)) {
           return;
         }
-        if (aMessage.message.indexOf(aWaitForMessage) < 0) {
+        if (!aMessage.message.includes(aWaitForMessage)) {
           return;
         }
         aListenerFunc.apply(listener);

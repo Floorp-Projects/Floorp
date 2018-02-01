@@ -155,10 +155,10 @@ var CastingApps = {
   },
 
   allowableExtension(uri, extensions) {
-    return (uri instanceof Ci.nsIURL) && extensions.indexOf(uri.fileExtension) != -1;
+    return (uri instanceof Ci.nsIURL) && extensions.includes(uri.fileExtension);
   },
 
   allowableMimeType(type, types) {
-    return types.indexOf(type) != -1;
+    return types.includes(type);
   }
 };

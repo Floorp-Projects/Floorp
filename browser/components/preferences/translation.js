@@ -196,7 +196,7 @@ var gTranslationExceptions = {
 
     let removed = this._langTree.getSelectedItems().map(l => l.langCode);
 
-    langs = langs.split(",").filter(l => removed.indexOf(l) == -1);
+    langs = langs.split(",").filter(l => !removed.includes(l));
     Services.prefs.setCharPref(kLanguagesPref, langs.join(","));
   },
 

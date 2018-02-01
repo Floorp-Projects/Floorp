@@ -47,7 +47,7 @@ function setup() {
     receiverIframe.setAttribute('src', receiverUrl);
     receiverIframe.setAttribute("mozbrowser", "true");
     receiverIframe.setAttribute("mozpresentation", receiverUrl);
-    var oop = location.pathname.indexOf('_inproc') == -1;
+    var oop = !location.pathname.includes('_inproc');
     receiverIframe.setAttribute("remote", oop);
 
     // This event is triggered when the iframe calls "alert".

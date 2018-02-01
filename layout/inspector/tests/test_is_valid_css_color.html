@@ -13,7 +13,7 @@
   let notColor = ["hsl", "hsla", "inherit", "initial", "rgb", "rgba",
                   "unset", "transparent", "currentColor"];
   for (let color of colors) {
-    if (notColor.indexOf(color) !== -1) {
+    if (notColor.includes(color)) {
       continue;
     }
     ok(InspectorUtils.isValidCSSColor(color), color + " is a valid color");

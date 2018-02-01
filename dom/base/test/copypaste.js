@@ -95,7 +95,7 @@ async function testCopyPaste (isXHTML) {
   function testHtmlClipboardValue(mime, expected) {
     // For Windows, navigator.platform returns "Win32".
     var expectedValue = expected;
-    if (navigator.platform.indexOf("Win") >= 0) {
+    if (navigator.platform.includes("Win")) {
       // Windows has extra content.
       var expectedValue = "<html><body>\n<!--StartFragment-->" +
                           expected.replace(/\n/g, '\n') +

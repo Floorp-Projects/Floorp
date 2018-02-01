@@ -565,16 +565,16 @@ function FocusFilterBox() {
 }
 
 function SignonMatchesFilter(aSignon, aFilterValue) {
-  if (aSignon.hostname.toLowerCase().indexOf(aFilterValue) != -1)
+  if (aSignon.hostname.toLowerCase().includes(aFilterValue))
     return true;
   if (aSignon.username &&
-      aSignon.username.toLowerCase().indexOf(aFilterValue) != -1)
+      aSignon.username.toLowerCase().includes(aFilterValue))
     return true;
   if (aSignon.httpRealm &&
-      aSignon.httpRealm.toLowerCase().indexOf(aFilterValue) != -1)
+      aSignon.httpRealm.toLowerCase().includes(aFilterValue))
     return true;
   if (showingPasswords && aSignon.password &&
-      aSignon.password.toLowerCase().indexOf(aFilterValue) != -1)
+      aSignon.password.toLowerCase().includes(aFilterValue))
     return true;
 
   return false;

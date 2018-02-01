@@ -113,7 +113,7 @@ function create_fileList() {
 }
 
 function create_directory() {
-  if (navigator.userAgent.toLowerCase().indexOf('Android') != -1) {
+  if (navigator.userAgent.toLowerCase().includes('Android')) {
     next();
     return;
   }

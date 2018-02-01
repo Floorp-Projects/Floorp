@@ -43,7 +43,7 @@ add_task(function* () {
   let error1pos = text.indexOf("fooDuplicateError1");
   ok(error1pos > -1, "found fooDuplicateError1");
   if (error1pos > -1) {
-    ok(text.indexOf("fooDuplicateError1", error1pos + 1) == -1,
+    ok(!text.includes("fooDuplicateError1", error1pos + 1),
       "no duplicate for fooDuplicateError1");
   }
 });

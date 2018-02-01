@@ -398,8 +398,8 @@ add_task(async function remote_pages_multiple_pages() {
   // We don't make any guarantees about which order messages are sent to known
   // pages so the pongs could have come back in any order.
   isnot(pongPorts[0], pongPorts[1], "Should have received pongs from different ports");
-  ok(pongPorts.indexOf(port1) >= 0, "Should have seen a pong from port1");
-  ok(pongPorts.indexOf(port2) >= 0, "Should have seen a pong from port2");
+  ok(pongPorts.includes(port1), "Should have seen a pong from port1");
+  ok(pongPorts.includes(port2), "Should have seen a pong from port2");
 
   // After destroy we should see no messages
   pages.addMessageListener("RemotePage:Unload", failOnMessage);

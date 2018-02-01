@@ -38,7 +38,7 @@ var ConsoleAPI = {
       let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
       let body = bundle.formatStringFromName("timer.end", [aMessage.arguments.name, aMessage.arguments.duration], 2);
       Services.console.logStringMessage(body);
-    } else if (["group", "groupCollapsed", "groupEnd"].indexOf(aMessage.level) != -1) {
+    } else if (["group", "groupCollapsed", "groupEnd"].includes(aMessage.level)) {
       // Do nothing yet
     } else {
       Services.console.logStringMessage(joinedArguments);

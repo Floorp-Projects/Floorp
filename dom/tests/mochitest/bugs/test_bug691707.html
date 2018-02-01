@@ -26,9 +26,9 @@ for (let i in nodeList) {
   properties.push(i);
 }
 for (var j = 1; j < nodeList.length; ++j)
-    ok(properties.indexOf("" + j) >= 0, "Enumerating hit all numeric properties");
-ok(properties.indexOf("item") >= 0, "Enumerating hit 'item' from the prototype");
-ok(properties.indexOf("length") >= 0, "Enumerating hit 'length' from the prototype");
+    ok(properties.includes("" + j), "Enumerating hit all numeric properties");
+ok(properties.includes("item"), "Enumerating hit 'item' from the prototype");
+ok(properties.includes("length"), "Enumerating hit 'length' from the prototype");
 
 </script>
 </pre>

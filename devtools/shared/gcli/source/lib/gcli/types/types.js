@@ -82,7 +82,7 @@ Argument.prototype.beget = function(options) {
 
     // We need to add quotes when the replacement string has spaces or is empty
     if (!options.dontQuote) {
-      var needsQuote = text.indexOf(' ') >= 0 || text.length === 0;
+      var needsQuote = text.includes(' ') || text.length === 0;
       var hasQuote = /['"]$/.test(prefix);
       if (needsQuote && !hasQuote) {
         prefix = prefix + '\'';

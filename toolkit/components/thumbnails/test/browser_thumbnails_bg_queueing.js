@@ -12,7 +12,7 @@ function* runTests() {
   dontExpireThumbnailURLs(urls);
   urls.forEach(url => {
     ok(!thumbnailExists(url), "Thumbnail should not exist yet: " + url);
-    let isTimeoutTest = url.indexOf("wait") >= 0;
+    let isTimeoutTest = url.includes("wait");
     BackgroundPageThumbs.capture(url, {
       timeout: isTimeoutTest ? 100 : 30000,
       onDone: function onDone(capturedURL) {

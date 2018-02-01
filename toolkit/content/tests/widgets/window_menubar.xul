@@ -94,14 +94,14 @@ window.opener.SimpleTest.waitForFocus(function () {
 // fire.
 function pressF10Events()
 {
-  return navigator.platform.indexOf("Linux") >= 0 ?
+  return navigator.platform.includes("Linux") ?
     [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu", "popupshowing filepopup", "popupshown filepopup"] :
     [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ];
 }
 
 function closeAfterF10Events(extraInactive)
 {
-  if (navigator.platform.indexOf("Linux") >= 0) {
+  if (navigator.platform.includes("Linux")) {
     var events = [ "popuphiding filepopup", "popuphidden filepopup",
                    "DOMMenuInactive filepopup", "DOMMenuBarInactive menubar",
                    "DOMMenuItemInactive filemenu" ];
@@ -464,7 +464,7 @@ var popupTests = [
   test: function() { sendKey("F10"); },
   result: function(testname) {
     is(document.getElementById("filemenu").openedWithKey, true, testname + " openedWithKey");
-    if (navigator.platform.indexOf("Linux") >= 0)
+    if (navigator.platform.includes("Linux"))
       checkOpen("filemenu", testname);
     else
       checkClosed("filemenu", testname);
@@ -473,7 +473,7 @@ var popupTests = [
 {
   // pressing cursor left then down should open a menu
   testname: "cursor down on menu",
-  events: (navigator.platform.indexOf("Linux") >= 0) ?
+  events: (navigator.platform.includes("Linux")) ?
             [  "DOMMenuItemInactive filemenu", "DOMMenuItemActive helpmenu",
                // This is in a different order than the
                // "accelerator on active menubar" because menus opened from a
@@ -499,7 +499,7 @@ var popupTests = [
   // should not close because there is more than one item corresponding to
   // that letter
   testname: "menuitem with no accelerator",
-  events: (navigator.platform.indexOf("Linux") >= 0) ?
+  events: (navigator.platform.includes("Linux")) ?
            [ "DOMMenuItemActive one" ] :
            [ "DOMMenuItemInactive contents", "DOMMenuItemActive one" ],
   test: function() { sendChar("o"); },
@@ -539,7 +539,7 @@ var popupTests = [
                   "command third", "popuphiding helppopup",
                   "popuphidden helppopup", "DOMMenuItemInactive third",
                 ];
-    if (navigator.platform.indexOf("Win") == -1)
+    if (!navigator.platform.includes("Win"))
       elist[0] = "DOMMenuItemInactive only";
     return elist;
   },

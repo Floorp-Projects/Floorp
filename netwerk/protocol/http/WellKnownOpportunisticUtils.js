@@ -28,7 +28,7 @@ WellKnownOpportunisticUtils.prototype = {
 	try {
 	  let obj = JSON.parse(aJSON.toLowerCase());
 	  let ports = obj[aOrigin.toLowerCase()]['tls-ports'];
-	  if (ports.indexOf(aAlternatePort) == -1) {
+	  if (!ports.includes(aAlternatePort)) {
 	    throw "invalid port";
 	  }
 	  this.lifetime = obj[aOrigin.toLowerCase()]['lifetime'];

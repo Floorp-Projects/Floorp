@@ -70,7 +70,7 @@ PerformanceTelemetry.prototype.onRecordingStateChange = function (_, status, mod
 
   let config = model.getConfiguration();
   for (let k in config) {
-    if (RECORDING_FEATURES.indexOf(k) !== -1) {
+    if (RECORDING_FEATURES.includes(k)) {
       this._telemetry.logKeyed("DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED", k,
                                config[k]);
     }
