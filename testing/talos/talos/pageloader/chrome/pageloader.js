@@ -832,7 +832,7 @@ function plLoadURLsFromURI(manifestUri) {
       }
 
       if (items.length == 2) {
-        if (items[0].indexOf("%") != -1)
+        if (items[0].includes("%"))
           flags |= TEST_DOES_OWN_TIMING;
 
         urlspec = items[1];
@@ -842,7 +842,7 @@ function plLoadURLsFromURI(manifestUri) {
         // & http://localhost/tests/perf-reftest/base-page.html, http://localhost/tests/perf-reftest/reference-page.html
         // test will run with the base page, then with the reference page; and ultimately the actual test results will
         // be the comparison values of those two pages; more than one line will result in base vs ref subtests
-        if (items[0].indexOf("&") != -1) {
+        if (items[0].includes("&")) {
           baseVsRef = true;
           flags |= TEST_DOES_OWN_TIMING;
           // for the base, must remove the comma on the end of the actual url

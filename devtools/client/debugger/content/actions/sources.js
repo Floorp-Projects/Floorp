@@ -24,7 +24,7 @@ function getSourceClient(source) {
 function newSource(source) {
   return dispatch => {
     // Ignore bogus scripts, e.g. generated from 'clientEvaluate' packets.
-    if (NEW_SOURCE_IGNORED_URLS.indexOf(source.url) != -1) {
+    if (NEW_SOURCE_IGNORED_URLS.includes(source.url)) {
       return;
     }
 
@@ -81,7 +81,7 @@ function loadSources() {
 
       // Ignore bogus scripts, e.g. generated from 'clientEvaluate' packets.
       return response.sources.filter(source => {
-        return NEW_SOURCE_IGNORED_URLS.indexOf(source.url) === -1;
+        return !NEW_SOURCE_IGNORED_URLS.includes(source.url);
       });
     })
   };

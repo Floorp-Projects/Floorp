@@ -918,8 +918,8 @@ PropertyView.prototype = {
     let searchTerm = this.tree.searchField.value.toLowerCase();
     let isValidSearchTerm = searchTerm.trim().length > 0;
     if (isValidSearchTerm &&
-        this.name.toLowerCase().indexOf(searchTerm) === -1 &&
-        this.value.toLowerCase().indexOf(searchTerm) === -1) {
+        !this.name.toLowerCase().includes(searchTerm) &&
+        !this.value.toLowerCase().includes(searchTerm)) {
       return false;
     }
 

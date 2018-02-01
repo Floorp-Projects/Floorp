@@ -16,7 +16,7 @@ const TIMEOUT = 2000;
 
 const ua = Cc["@mozilla.org/network/protocol;1?name=http"]
            .getService(Ci.nsIHttpProtocolHandler).userAgent;
-const isWinXP = ua.indexOf("Windows NT 5.1") != -1;
+const isWinXP = ua.includes("Windows NT 5.1");
 
 var gConverter;
 

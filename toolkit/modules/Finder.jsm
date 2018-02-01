@@ -74,7 +74,7 @@ Finder.prototype = {
   },
 
   addResultListener(aListener) {
-    if (this._listeners.indexOf(aListener) === -1)
+    if (!this._listeners.includes(aListener))
       this._listeners.push(aListener);
   },
 

@@ -409,7 +409,7 @@
       ok(false, "Shouldn't be allowed to register a JS component (WrappedJS)");
     }
     catch (ex) {
-      ok(ex.message.indexOf("NS_ERROR_") >= 0,
+      ok(ex.message.includes("NS_ERROR_"),
          "WrappedJS reporter got rejected: " + ex);
     }
 

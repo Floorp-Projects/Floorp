@@ -350,7 +350,7 @@ Logger.prototype = {
   updateAppenders: function updateAppenders() {
     if (this._parent) {
       let notOwnAppenders = this._parent.appenders.filter(function(appender) {
-        return this.ownAppenders.indexOf(appender) == -1;
+        return !this.ownAppenders.includes(appender);
       }, this);
       this.appenders = notOwnAppenders.concat(this.ownAppenders);
     } else {
@@ -364,7 +364,7 @@ Logger.prototype = {
   },
 
   addAppender: function Logger_addAppender(appender) {
-    if (this.ownAppenders.indexOf(appender) != -1) {
+    if (this.ownAppenders.includes(appender)) {
       return;
     }
     this.ownAppenders.push(appender);

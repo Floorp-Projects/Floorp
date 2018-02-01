@@ -2948,11 +2948,11 @@ Checker.prototype = {
     url = await UpdateUtils.formatUpdateURL(url);
 
     if (force) {
-      url += (url.indexOf("?") != -1 ? "&" : "?") + "force=1";
+      url += (url.includes("?") ? "&" : "?") + "force=1";
     }
 
     if (this._getCanMigrate()) {
-      url += (url.indexOf("?") != -1 ? "&" : "?") + "mig64=1";
+      url += (url.includes("?") ? "&" : "?") + "mig64=1";
     }
 
     LOG("Checker:getUpdateURL - update URL: " + url);

@@ -56,7 +56,7 @@ function test() {
               value: function (library) {
                 is(library.type, "url", "inject type name");
                 is(library.url.origin, "http://example.com", "inject url hostname");
-                ok(library.url.pathname.indexOf("_inject.js") != -1, "inject url path");
+                ok(library.url.pathname.includes("_inject.js"), "inject url path");
               },
               status: "VALID"
             }
@@ -78,7 +78,7 @@ function test() {
               value: function (library) {
                 is(library.type, "url", "inject type name");
                 is(library.url.origin, "https://example.com", "inject url hostname");
-                ok(library.url.pathname.indexOf("_inject.js") != -1, "inject url path");
+                ok(library.url.pathname.includes("_inject.js"), "inject url path");
               },
               status: "VALID"
             }

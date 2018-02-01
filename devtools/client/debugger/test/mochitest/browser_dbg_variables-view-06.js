@@ -27,7 +27,7 @@ var test = Task.async(function* () {
   ok(scope, "Should get the current function's scope.");
 
   const promiseVariables = [...scope].filter(([name]) =>
-    ["p", "f", "r"].indexOf(name) !== -1);
+    ["p", "f", "r"].includes(name));
 
   is(promiseVariables.length, 3,
      "Should have our 3 promise variables: p, f, r");

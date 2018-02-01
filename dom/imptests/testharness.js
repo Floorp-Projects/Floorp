@@ -207,8 +207,8 @@ policies and contribution forms [3].
     WindowTestEnvironment.prototype.setup_messages = function(new_events) {
         var this_obj = this;
         forEach(settings.message_events, function(x) {
-            var current_dispatch = this_obj.message_events.indexOf(x) !== -1;
-            var new_dispatch = new_events.indexOf(x) !== -1;
+            var current_dispatch = this_obj.message_events.includes(x);
+            var new_dispatch = new_events.includes(x);
             if (!current_dispatch && new_dispatch) {
                 this_obj.message_functions[x][0](this_obj.message_functions[x][2]);
             } else if (current_dispatch && !new_dispatch) {
@@ -722,7 +722,7 @@ policies and contribution forms [3].
             seen = [];
         }
         if (typeof val === "object" && val !== null) {
-            if (seen.indexOf(val) >= 0) {
+            if (seen.includes(val)) {
                 return "[...]";
             }
             seen.push(val);
@@ -885,7 +885,7 @@ policies and contribution forms [3].
 
     function assert_in_array(actual, expected, description)
     {
-        assert(expected.indexOf(actual) != -1, "assert_in_array", description,
+        assert(expected.includes(actual), "assert_in_array", description,
                                                "value ${actual} not in array ${expected}",
                                                {actual:actual, expected:expected});
     }
@@ -904,7 +904,7 @@ policies and contribution forms [3].
                                                     "unexpected property ${p}", {p:p});
 
                  if (typeof actual[p] === "object" && actual[p] !== null) {
-                     if (stack.indexOf(actual[p]) === -1) {
+                     if (!stack.includes(actual[p])) {
                          check_equal(actual[p], expected[p], stack);
                      }
                  } else {

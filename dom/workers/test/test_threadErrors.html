@@ -34,7 +34,7 @@ Tests of DOM Worker Threads (Bug 437152)
   function errorListener(event) {
     event.preventDefault();
 
-    if (failedWorkers.indexOf(event.target) != -1) {
+    if (failedWorkers.includes(event.target)) {
       ok(false, "Seen an extra error from this worker");
       SimpleTest.finish();
       return;

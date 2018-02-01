@@ -1,5 +1,5 @@
 onfetch = function(e) {
-  if (e.request.url.indexOf("intercept-this") != -1) {
+  if (e.request.url.includes("intercept-this")) {
     e.respondWith(new Response("intercepted"));
   }
 }

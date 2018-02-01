@@ -105,7 +105,7 @@ add_task(function* () {
 
     let headers = document.getElementById("custom-headers-value").value.split("\n");
     for (let {name, value} of data.requestHeaders.headers) {
-      ok(headers.indexOf(name + ": " + value) >= 0, "form contains header from request");
+      ok(headers.includes(name + ": " + value), "form contains header from request");
     }
 
     let postData = document.getElementById("custom-postdata-value");

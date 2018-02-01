@@ -1139,8 +1139,8 @@ Inspector.prototype = {
            selection.isElementNode() &&
            !selection.isPseudoElementNode() &&
            !selection.isAnonymousNode() &&
-           invalidTagNames.indexOf(
-            selection.nodeFront.nodeName.toLowerCase()) === -1;
+           !invalidTagNames.includes(
+            selection.nodeFront.nodeName.toLowerCase());
   },
 
   /**

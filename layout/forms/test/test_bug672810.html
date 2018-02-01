@@ -91,7 +91,7 @@ SimpleTest.waitForFocus(function() {
     setTimeout(function(){sel[2].focus()},0);
   });
   sel[2].addEventListener('focus', function() {
-    if (navigator.platform.indexOf("Mac") == -1) {
+    if (!navigator.platform.includes("Mac")) {
       s = sel[2];
       s.removeEventListener('focus', arguments.callee);
       synthesizeKey('VK_DOWN', {});

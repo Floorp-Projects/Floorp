@@ -21,7 +21,7 @@ async function test_autocomplete(data) {
   let result = gURLBar.popup.richlistbox.children[0];
   let type = result.getAttribute("type");
   let types = type.split(/\s+/);
-  ok(types.indexOf(action) >= 0, `The type attribute "${type}" includes the expected action "${action}"`);
+  ok(types.includes(action), `The type attribute "${type}" includes the expected action "${action}"`);
 
   gURLBar.popup.hidePopup();
   await promisePopupHidden(gURLBar.popup);

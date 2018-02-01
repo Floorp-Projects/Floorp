@@ -99,7 +99,7 @@ function explodeObject(obj) {
 function filterObject(obj, filterOut) {
   let ret = {};
   for (let k of Object.keys(obj)) {
-    if (filterOut.indexOf(k) == -1) {
+    if (!filterOut.includes(k)) {
       ret[k] = obj[k];
     }
   }
@@ -1288,7 +1288,7 @@ var Search = {
   // Pass if: all non-empty array items match (case-sensitive)
   isPassText(subject, filter) {
     for (let item of filter) {
-      if (item.length && subject.indexOf(item) < 0) {
+      if (item.length && !subject.includes(item)) {
         return false; // mismatch and not a spurious space
       }
     }

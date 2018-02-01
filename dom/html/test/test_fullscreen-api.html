@@ -74,7 +74,7 @@ function shouldSkipTest(test) {
     return true;
   }
   if (!SpecialPowers.isMainProcess() &&
-      navigator.platform.indexOf('Linux') >= 0) {
+      navigator.platform.includes('Linux')) {
     for (let item of gLinuxE10sSkipList) {
       if (item.test == test) {
         todo(false, `${test} skipped due to ${item.reason}`);

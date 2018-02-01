@@ -67,7 +67,7 @@ function nextTest()
 function popupShown(event)
 {
   var panel = event.target;
-  if (waitSteps > 0 && navigator.platform.indexOf("Linux") >= 0 &&
+  if (waitSteps > 0 && navigator.platform.includes("Linux") &&
       panel.boxObject.screenY == 210) {
     waitSteps--;
     setTimeout(popupShown, 10, event);

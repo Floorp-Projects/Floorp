@@ -1391,7 +1391,7 @@ BrowserGlue.prototype = {
     }
 
     var actions = update.getProperty("actions");
-    if (!actions || actions.indexOf("silent") != -1)
+    if (!actions || actions.includes("silent"))
       return;
 
     var appName = gBrandBundle.GetStringFromName("brandShortName");
@@ -1411,7 +1411,7 @@ BrowserGlue.prototype = {
       return propValue;
     }
 
-    if (actions.indexOf("showNotification") != -1) {
+    if (actions.includes("showNotification")) {
       let text = getNotifyString({propName: "notificationText",
                                   stringName: "puNotifyText",
                                   stringParams: [appName]});
@@ -1441,7 +1441,7 @@ BrowserGlue.prototype = {
                                    buttons);
     }
 
-    if (actions.indexOf("showAlert") == -1)
+    if (!actions.includes("showAlert"))
       return;
 
     let title = getNotifyString({propName: "alertTitle",
@@ -2139,7 +2139,7 @@ BrowserGlue.prototype = {
       const MALWARE_PREF = "urlclassifier.malwareTable";
       if (Services.prefs.prefHasUserValue(MALWARE_PREF)) {
         let malwareList = Services.prefs.getCharPref(MALWARE_PREF);
-        if (malwareList.indexOf("goog-malware-shavar") != -1) {
+        if (malwareList.includes("goog-malware-shavar")) {
           malwareList.replace("goog-malware-shavar", "goog-malware-proto");
           Services.prefs.setCharPref(MALWARE_PREF, malwareList);
         }

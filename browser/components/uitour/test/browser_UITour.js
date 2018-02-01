@@ -336,7 +336,7 @@ var tests = [
     is(placement, null, "default UI has panic button in the palette");
 
     gContentAPI.getConfiguration("availableTargets", (data) => {
-      let available = (data.targets.indexOf("forget") != -1);
+      let available = (data.targets.includes("forget"));
       ok(!available, "Forget button should not be available by default");
 
       gContentAPI.addNavBarWidget("forget", () => {
@@ -346,7 +346,7 @@ var tests = [
         is(updatedPlacement.area, CustomizableUI.AREA_NAVBAR);
 
         gContentAPI.getConfiguration("availableTargets", (data2) => {
-          let updatedAvailable = data2.targets.indexOf("forget") != -1;
+          let updatedAvailable = data2.targets.includes("forget");
           ok(updatedAvailable, "Forget button should now be available");
 
           // Cleanup

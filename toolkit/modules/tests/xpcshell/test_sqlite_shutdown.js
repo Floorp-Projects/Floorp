@@ -112,5 +112,5 @@ add_task(async function test_shutdown_clients() {
     exn = ex;
   }
   Assert.ok(!!exn);
-  Assert.ok(exn.message.indexOf("Sqlite.jsm has been shutdown") != -1);
+  Assert.ok(exn.message.includes("Sqlite.jsm has been shutdown"));
 });

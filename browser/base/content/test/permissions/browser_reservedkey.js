@@ -44,7 +44,7 @@ add_task(async function test_reserved_shortcuts() {
 });
 
 // This test checks that Alt+<key> and F10 cannot be blocked when the preference is set.
-if (navigator.platform.indexOf("Mac") == -1) {
+if (!navigator.platform.includes("Mac")) {
   add_task(async function test_accesskeys_menus() {
     await new Promise(resolve => {
       SpecialPowers.pushPrefEnv({"set": [["permissions.default.shortcuts", 2]]}, resolve);
@@ -76,7 +76,7 @@ if (navigator.platform.indexOf("Mac") == -1) {
 
     let filePopup = document.getElementById("menu_FilePopup");
     popupShown = BrowserTestUtils.waitForEvent(filePopup, "popupshown");
-    if (navigator.platform.indexOf("Win") >= 0) {
+    if (navigator.platform.includes("Win")) {
       EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
     }
     await popupShown;

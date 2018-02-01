@@ -57,7 +57,7 @@ window.onload = function () {
     info("Difference in ticks: " + diff);
     ok(diff > 0, "More ticks should be recorded in the second batch.");
 
-    ok(firstBatch.every((e) => secondBatch.indexOf(e) != -1),
+    ok(firstBatch.every((e) => secondBatch.includes(e)),
       "All the ticks in the first batch should be in the second batch as well.");
     ok(secondBatch.every((e, i, array) => i < array.length - 1 ? e < array[i + 1] : true),
       "All the ticks in the final batch should be ascending in value.");

@@ -83,7 +83,7 @@ function runTest(win, searchTerm, cookies, matches) {
     // select two adjacent cells and delete
     EventUtils.synthesizeMouse(tree.body, rect.x + rect.width / 2, rect.y + rect.height / 2, {}, win);
     var eventObj = {};
-    if (navigator.platform.indexOf("Mac") >= 0)
+    if (navigator.platform.includes("Mac"))
         eventObj.metaKey = true;
     else
         eventObj.ctrlKey = true;

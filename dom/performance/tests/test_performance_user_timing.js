@@ -266,7 +266,7 @@ var steps = [
                 performance.measure("test", n);
                 ok(true, "Measure created from reserved name as starting time: " + n);
             } catch (e) {
-                ok(["redirectStart", "redirectEnd", "unloadEventStart", "unloadEventEnd", "loadEventEnd", "secureConnectionStart"].indexOf(n) >= 0,
+                ok(["redirectStart", "redirectEnd", "unloadEventStart", "unloadEventEnd", "loadEventEnd", "secureConnectionStart"].includes(n),
                    "Measure created from reserved name as starting time: " + n + " and threw expected error");
             }
         };

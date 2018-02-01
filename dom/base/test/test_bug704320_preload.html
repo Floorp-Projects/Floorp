@@ -86,12 +86,12 @@ function finalizePreloadNoreuse(results) {
 
     // the 'full' preload is optional, but required if count > 1
     if (results[x].count > 1) {
-      ok(results[x].referrers.indexOf('full') >= 0,
+      ok(results[x].referrers.includes('full'),
          "More than one load for " + x + ", so expected an 'full' referrer preload.")
     }
 
     // 'origin' (final load) is required
-    ok(results[x].referrers.indexOf('origin') >= 0,
+    ok(results[x].referrers.includes('origin'),
        "One load for " + x + " should have had 'origin' referrer.");
 
     // no other values should be in the referrers.
@@ -119,7 +119,7 @@ function finalizePreloadReuse(results) {
        "Expected " + expected[x].count + " loads for " + x + " requests.");
 
     // 'origin' is required
-    ok(results[x].referrers.indexOf('origin') >= 0,
+    ok(results[x].referrers.includes('origin'),
        "One load for " + x + " should have had 'origin' referrer.");
 
     // no other values should be in the referrers.
@@ -148,7 +148,7 @@ function finalizePreloadReferrerPolicyAttr(results) {
        "Expected " + expected[x].count + " loads for " + x + " requests.");
 
     // 'origin' is required
-    ok(results[x].referrers.indexOf('origin') >= 0,
+    ok(results[x].referrers.includes('origin'),
        "One load for " + x + " should have had 'origin' referrer.");
 
     // no other values should be in the referrers.

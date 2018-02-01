@@ -60,7 +60,7 @@ GripProvider.prototype = {
         let preview = value.preview;
         let k = preview.kind;
         let objectsWithProps = ["DOMNode", "ObjectWithURL"];
-        hasChildren = hasChildren || (objectsWithProps.indexOf(k) != -1);
+        hasChildren = hasChildren || (objectsWithProps.includes(k));
         hasChildren = hasChildren || (k == "ArrayLike" && preview.length > 0);
       }
 

@@ -634,7 +634,7 @@ var TPS = {
       for (let {name, count} of problemData.getSummary()) {
         // Exclude mobile showing up on the server hackily so that we don't
         // report it every time, see bug 1273234 and 1274394 for more information.
-        if (name === "serverUnexpected" && problemData.serverUnexpected.indexOf("mobile") >= 0) {
+        if (name === "serverUnexpected" && problemData.serverUnexpected.includes("mobile")) {
           --count;
         }
         if (count) {

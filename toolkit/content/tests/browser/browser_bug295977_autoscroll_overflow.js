@@ -195,7 +195,7 @@ body > div > div {width: 1000px;height: 1000px;}\
           msg += args.elemid + " should" + (args.scrollHori ? "" : " not") + " have scrolled horizontally";
         }
 
-        Assert.ok(msg.indexOf("Failed") == -1, msg);
+        Assert.ok(!msg.includes("Failed"), msg);
        }
     );
 

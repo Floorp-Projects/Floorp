@@ -691,7 +691,7 @@ function doTest(aTest)
         is(gEvent[name], 0, description + ": mismatch with fixed value (" + name + ")");
       } else if (name == "rangeParent" || name == "currentTarget") {
         is(gEvent[name], null, description + ": mismatch with fixed value (" + name + ")");
-      } else if (aTest.todoMismatch.indexOf(name) >= 0) {
+      } else if (aTest.todoMismatch.includes(name)) {
         todo_is(gEvent[name], gCopiedEvent[i].value, description + ": mismatch (" + name + ")");
       } else if (name == "offsetX" || name == "offsetY") {
         // do nothing; these are defined to return different values during event dispatch

@@ -512,7 +512,7 @@ AnimationsTimeline.prototype = {
       // even if the detail pane is closing.
       yield this.onAnimationSelected(this.animations[0]);
     } else if (this.animationRootEl.classList.contains("animation-detail-visible") &&
-               this.animations.indexOf(this.selectedAnimation) >= 0) {
+               this.animations.includes(this.selectedAnimation)) {
       // animation's detail displays in case of the previously displayed animation is
       // included in timeline list and the detail pane is not closing.
       yield this.onAnimationSelected(this.selectedAnimation);
@@ -764,7 +764,7 @@ AnimationsTimeline.prototype = {
 
       for (let frame of frames) {
         for (let name in frame) {
-          if (this.NON_PROPERTIES.indexOf(name) != -1) {
+          if (this.NON_PROPERTIES.includes(name)) {
             continue;
           }
 

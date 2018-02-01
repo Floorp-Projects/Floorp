@@ -2272,7 +2272,7 @@ function runKeyTests()
   function handler(aEvent)
   {
     events.push(aEvent);
-    if (doPreventDefaults.indexOf(aEvent.type) >= 0) {
+    if (doPreventDefaults.includes(aEvent.type)) {
       aEvent.preventDefault();
     }
   }
@@ -2877,16 +2877,16 @@ function runKeyTests()
        desc + ", .key value is wrong");
     is(aEvent.code, aCode,
        desc + ", .code value is wrong");
-    is(aEvent.altKey, aModifiers.indexOf("Alt") >= 0,
+    is(aEvent.altKey, aModifiers.includes("Alt"),
        desc + ", .altKey value is wrong");
-    is(aEvent.ctrlKey, aModifiers.indexOf("Control") >= 0,
+    is(aEvent.ctrlKey, aModifiers.includes("Control"),
        desc + ", .ctrlKey value is wrong");
-    is(aEvent.metaKey, aModifiers.indexOf("Meta") >= 0,
+    is(aEvent.metaKey, aModifiers.includes("Meta"),
        desc + ", .metaKey value is wrong");
-    is(aEvent.shiftKey, aModifiers.indexOf("Shift") >= 0,
+    is(aEvent.shiftKey, aModifiers.includes("Shift"),
        desc + ", .shiftKey value is wrong");
     for (var i = 0; i < kModifiers.length; i++) {
-      is(aEvent.getModifierState(kModifiers[i]), aModifiers.indexOf(kModifiers[i]) >= 0,
+      is(aEvent.getModifierState(kModifiers[i]), aModifiers.includes(kModifiers[i]),
          desc + ", .getModifierState(\"" + kModifiers[i] + "\") returns wrong value");
     }
   }
@@ -2894,7 +2894,7 @@ function runKeyTests()
   function checkAllTIPModifiers(aTestDesc, aModifiers)
   {
     for (var i = 0; i < kModifiers.length; i++) {
-      is(TIP.getModifierState(kModifiers[i]), aModifiers.indexOf(kModifiers[i]) >= 0,
+      is(TIP.getModifierState(kModifiers[i]), aModifiers.includes(kModifiers[i]),
          aTestDesc + ", TIP.getModifierState(\"" + kModifiers[i] + "\") returns wrong value");
       is(sharedTIP.getModifierState(kModifiers[i]), TIP.getModifierState(kModifiers[i]),
          aTestDesc + ", sharedTIP.getModifierState(\"" + kModifiers[i] + "\") returns different value from TIP");
@@ -3294,7 +3294,7 @@ function runKeyTests()
   function checkTIPModifiers(aTestDesc, aTIP, aModifiers)
   {
     for (var i = 0; i < kModifiers.length; i++) {
-      is(aTIP.getModifierState(kModifiers[i]), aModifiers.indexOf(kModifiers[i]) >= 0,
+      is(aTIP.getModifierState(kModifiers[i]), aModifiers.includes(kModifiers[i]),
          description + aTestDesc + ", aTIP.getModifierState(\"" + kModifiers[i] + "\") returns wrong value");
     }
   }

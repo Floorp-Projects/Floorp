@@ -33,7 +33,7 @@
     //
     function verifyIframeInnerHtml(string) {
       var iframeInnerHtml = $("iframe").contentDocument.body.innerHTML;
-      ok(iframeInnerHtml.indexOf(string) != -1,
+      ok(iframeInnerHtml.includes(string),
         "iframe contains wrong document: " + iframeInnerHtml);    
     }
     

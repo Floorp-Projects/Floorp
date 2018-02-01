@@ -53,5 +53,5 @@ function hasTooltip(animationEl, expected) {
   let el = animationEl.querySelector(".name");
   let tooltip = el.getAttribute("title");
 
-  return tooltip.indexOf(expected) !== -1;
+  return tooltip.includes(expected);
 }

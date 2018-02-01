@@ -164,7 +164,7 @@ const Utils = {
     }
 
     // If the uri doesn't contain '%s', it won't be a good handler
-    if (uri.spec.indexOf("%s") < 0)
+    if (!uri.spec.includes("%s"))
       throw NS_ERROR_DOM_SYNTAX_ERR;
 
     return uri;

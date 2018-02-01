@@ -8,7 +8,7 @@
 <iframe srcdoc="<!DOCTYPE html><style></style><div></div>"></iframe>
 
 <script>
-var gIsAndroid = navigator.appVersion.indexOf("Android") != -1;
+var gIsAndroid = navigator.appVersion.includes("Android");
 
 var gTests = [
   // Interact with the ::-moz-progress-bar.

@@ -22,7 +22,7 @@ var mockFileCommands = require('../test/mockFileCommands');
 var mockSettings = require('../test/mockSettings');
 
 var isNode = (typeof(process) !== 'undefined' &&
-             process.title.indexOf('node') != -1);
+             process.title.includes('node'));
 
 exports.items = [
   {

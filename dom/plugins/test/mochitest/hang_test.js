@@ -40,7 +40,7 @@ var testObserver = {
 
     ok("additional_minidumps" in extraData, "got field for additional minidumps");
     let additionalDumps = extraData.additional_minidumps.split(',');
-    ok(additionalDumps.indexOf('browser') >= 0, "browser in additional_minidumps");
+    ok(additionalDumps.includes('browser'), "browser in additional_minidumps");
 
     for (let name of additionalDumps) {
       let file = profD.clone();

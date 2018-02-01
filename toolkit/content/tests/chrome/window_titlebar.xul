@@ -86,7 +86,7 @@ function waitForWindowMove(element, x, y, callback, arg, panel, anchored)
     waitSteps = 0;
 
     // on Linux, we need to wait a bit for the popup to be moved as well
-    if (navigator.platform.indexOf("Linux") >= 0) {
+    if (navigator.platform.includes("Linux")) {
       setTimeout(callback, 0, arg, panel, anchored);
     }
     else {
@@ -162,7 +162,7 @@ function popupshown_step2(oldrect, panel, anchored)
   // on Linux is delayed and there isn't any way to tell when the move
   // actually happened. This causes the checks here to fail. Instead, just
   // wait a bit for the test to be ready.
-  if (navigator.platform.indexOf("Linux") >= 0 &&
+  if (navigator.platform.includes("Linux") &&
       newrect.left != oldrect.left - (anchored ? 0 : 10)) {
     setTimeout(popupshown_step2, 10, oldrect, panel, anchored);
     return;
@@ -183,7 +183,7 @@ function popupshown_step2(oldrect, panel, anchored)
 function popupshown_step3(oldrect, panel, anchored)
 {
   // skip this check on Linux for the same window positioning reasons as above
-  if (navigator.platform.indexOf("Linux") == -1 || (panel.id != "panelanchored" && panel.id != "paneltop")) {
+  if (!navigator.platform.includes("Linux") || (panel.id != "panelanchored" && panel.id != "paneltop")) {
     // next, drag the titlebar in the panel
     var newrect = panel.getBoundingClientRect();
     SimpleTest.is(newrect.left, oldrect.left + 20, panel.id + " move popup horizontal");

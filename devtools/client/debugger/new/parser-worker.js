@@ -4714,7 +4714,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 function makePredicate(words) {
   words = words.split(" ");
   return function (str) {
-    return words.indexOf(str) >= 0;
+    return words.includes(str);
   };
 }
 
@@ -6315,7 +6315,7 @@ var Parser = function (_Tokenizer) {
 
   Parser.prototype.loadPlugins = function loadPlugins(pluginList) {
     // TODO: Deprecate "*" option in next major version of Babylon
-    if (pluginList.indexOf("*") >= 0) {
+    if (pluginList.includes("*")) {
       this.loadAllPlugins();
 
       return { "*": true };
@@ -6323,7 +6323,7 @@ var Parser = function (_Tokenizer) {
 
     var pluginMap = {};
 
-    if (pluginList.indexOf("flow") >= 0) {
+    if (pluginList.includes("flow")) {
       // ensure flow plugin loads last
       pluginList = pluginList.filter(function (plugin) {
         return plugin !== "flow";
@@ -6331,7 +6331,7 @@ var Parser = function (_Tokenizer) {
       pluginList.push("flow");
     }
 
-    if (pluginList.indexOf("estree") >= 0) {
+    if (pluginList.includes("estree")) {
       // ensure estree plugin loads first
       pluginList = pluginList.filter(function (plugin) {
         return plugin !== "estree";
@@ -9099,7 +9099,7 @@ var Node = function () {
     var node2 = new Node();
     for (var key in this) {
       // Do not clone comments that are already attached to the node
-      if (commentKeys.indexOf(key) < 0) {
+      if (!commentKeys.includes(key)) {
         node2[key] = this[key];
       }
     }
@@ -13317,7 +13317,7 @@ for (var _iterator = t.TYPES, _isArray = Array.isArray(_iterator), _i = 0, _iter
 
 var _loop = function _loop(type) {
   if (type[0] === "_") return "continue";
-  if (t.TYPES.indexOf(type) < 0) t.TYPES.push(type);
+  if (!t.TYPES.includes(type)) t.TYPES.push(type);
 
   var virtualType = virtualTypes[type];
 
@@ -15102,7 +15102,7 @@ function isBinding(node, parent) {
       var key = keys[i];
       var val = parent[key];
       if (Array.isArray(val)) {
-        if (val.indexOf(node) >= 0) return true;
+        if (val.includes(node)) return true;
       } else {
         if (val === node) return true;
       }
@@ -15661,7 +15661,7 @@ __webpack_require__(499)('observable');
 
     function isWhiteSpace(ch) {
         return ch === 0x20 || ch === 0x09 || ch === 0x0B || ch === 0x0C || ch === 0xA0 ||
-            ch >= 0x1680 && NON_ASCII_WHITESPACES.indexOf(ch) >= 0;
+            ch >= 0x1680 && NON_ASCII_WHITESPACES.includes(ch);
     }
 
     // 7.3 Line Terminators
@@ -16375,7 +16375,7 @@ function removeTypeDuplicates(nodes) {
     var node = nodes[i];
     if (!node) continue;
 
-    if (types.indexOf(node) >= 0) {
+    if (types.includes(node)) {
       continue;
     }
 
@@ -16389,7 +16389,7 @@ function removeTypeDuplicates(nodes) {
     }
 
     if (t.isUnionTypeAnnotation(node)) {
-      if (typeGroups.indexOf(node.types) < 0) {
+      if (!typeGroups.includes(node.types)) {
         nodes = nodes.concat(node.types);
         typeGroups.push(node.types);
       }
@@ -17533,7 +17533,7 @@ function assertOneOf() {
   }
 
   function validate(node, key, val) {
-    if (vals.indexOf(val) < 0) {
+    if (!vals.includes(val)) {
       throw new TypeError("Property " + key + " expected value to be one of " + (0, _stringify2.default)(vals) + " but got " + (0, _stringify2.default)(val));
     }
   }
@@ -17694,7 +17694,7 @@ function defineType(type) {
   for (var key in opts.fields) {
     var field = opts.fields[key];
 
-    if (opts.builder.indexOf(key) === -1) {
+    if (!opts.builder.includes(key)) {
       field.optional = true;
     }
     if (field.default === undefined) {
@@ -22087,14 +22087,14 @@ var Binding = function () {
 
   Binding.prototype.reassign = function reassign(path) {
     this.constant = false;
-    if (this.constantViolations.indexOf(path) !== -1) {
+    if (this.constantViolations.includes(path)) {
       return;
     }
     this.constantViolations.push(path);
   };
 
   Binding.prototype.reference = function reference(path) {
-    if (this.referencePaths.indexOf(path) !== -1) {
+    if (this.referencePaths.includes(path)) {
       return;
     }
     this.referenced = true;
@@ -22568,7 +22568,7 @@ function formatValue(ctx, value, recurseTimes) {
   // IE doesn't make error fields non-enumerable
   // http://msdn.microsoft.com/en-us/library/ie/dww52sbt(v=vs.94).aspx
   if (isError(value)
-      && (keys.indexOf('message') >= 0 || keys.indexOf('description') >= 0)) {
+      && (keys.includes('message') || keys.includes('description'))) {
     return formatError(value);
   }
 
@@ -22709,7 +22709,7 @@ function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
     name = '[' + key + ']';
   }
   if (!str) {
-    if (ctx.seen.indexOf(desc.value) < 0) {
+    if (!ctx.seen.includes(desc.value)) {
       if (isNull(recurseTimes)) {
         str = formatValue(ctx, desc.value, null);
       } else {
@@ -22754,7 +22754,7 @@ function reduceToSingleString(output, base, braces) {
   var numLinesEst = 0;
   var length = output.reduce(function(prev, cur) {
     numLinesEst++;
-    if (cur.indexOf('\n') >= 0) numLinesEst++;
+    if (cur.includes('\n')) numLinesEst++;
     return prev + cur.replace(/\u001b\[\d\d?m/g, '').length + 1;
   }, 0);
 
@@ -23679,11 +23679,11 @@ function UnaryExpression(node) {
 
   if (operator === "void") {
     return t.voidTypeAnnotation();
-  } else if (t.NUMBER_UNARY_OPERATORS.indexOf(operator) >= 0) {
+  } else if (t.NUMBER_UNARY_OPERATORS.includes(operator)) {
     return t.numberTypeAnnotation();
-  } else if (t.STRING_UNARY_OPERATORS.indexOf(operator) >= 0) {
+  } else if (t.STRING_UNARY_OPERATORS.includes(operator)) {
     return t.stringTypeAnnotation();
-  } else if (t.BOOLEAN_UNARY_OPERATORS.indexOf(operator) >= 0) {
+  } else if (t.BOOLEAN_UNARY_OPERATORS.includes(operator)) {
     return t.booleanTypeAnnotation();
   }
 }
@@ -23691,9 +23691,9 @@ function UnaryExpression(node) {
 function BinaryExpression(node) {
   var operator = node.operator;
 
-  if (t.NUMBER_BINARY_OPERATORS.indexOf(operator) >= 0) {
+  if (t.NUMBER_BINARY_OPERATORS.includes(operator)) {
     return t.numberTypeAnnotation();
-  } else if (t.BOOLEAN_BINARY_OPERATORS.indexOf(operator) >= 0) {
+  } else if (t.BOOLEAN_BINARY_OPERATORS.includes(operator)) {
     return t.booleanTypeAnnotation();
   } else if (operator === "+") {
     var right = this.get("right");
@@ -23855,7 +23855,7 @@ function getTypeAnnotationBindingConstantViolations(path, name) {
     var testConstantViolations = getConstantViolationsBefore(binding, testType.ifStatement);
 
     constantViolations = constantViolations.filter(function (path) {
-      return testConstantViolations.indexOf(path) < 0;
+      return !testConstantViolations.includes(path);
     });
 
     types.push(testType.typeAnnotation);
@@ -23913,7 +23913,7 @@ function inferAnnotationFromBinaryExpression(name, path) {
   if (target) {
     if (operator === "===") {
       return target.getTypeAnnotation();
-    } else if (t.BOOLEAN_NUMBER_BINARY_OPERATORS.indexOf(operator) >= 0) {
+    } else if (t.BOOLEAN_NUMBER_BINARY_OPERATORS.includes(operator)) {
       return t.numberTypeAnnotation();
     } else {
       return;
@@ -24868,7 +24868,7 @@ function evaluate() {
       var context = void 0;
       var func = void 0;
 
-      if (callee.isIdentifier() && !path.scope.getBinding(callee.node.name, true) && VALID_CALLEES.indexOf(callee.node.name) >= 0) {
+      if (callee.isIdentifier() && !path.scope.getBinding(callee.node.name, true) && VALID_CALLEES.includes(callee.node.name)) {
         func = global[node.callee.name];
       }
 
@@ -24876,7 +24876,7 @@ function evaluate() {
         var _object = callee.get("object");
         var _property = callee.get("property");
 
-        if (_object.isIdentifier() && _property.isIdentifier() && VALID_CALLEES.indexOf(_object.node.name) >= 0 && INVALID_METHODS.indexOf(_property.node.name) < 0) {
+        if (_object.isIdentifier() && _property.isIdentifier() && VALID_CALLEES.includes(_object.node.name) && !INVALID_METHODS.includes(_property.node.name)) {
           context = global[_object.node.name];
           func = context[_property.node.name];
         }
@@ -25177,7 +25177,7 @@ function _guessExecutionStatusRelativeTo(target) {
   }
 
   var targetPaths = target.getAncestry();
-  if (targetPaths.indexOf(this) >= 0) return "after";
+  if (targetPaths.includes(this)) return "after";
 
   var selfPaths = this.getAncestry();
 
@@ -25278,7 +25278,7 @@ function resolve(dangerous, resolved) {
 }
 
 function _resolve(dangerous, resolved) {
-  if (resolved && resolved.indexOf(this) >= 0) return;
+  if (resolved && resolved.includes(this)) return;
 
   resolved = resolved || [];
   resolved.push(this);
@@ -26106,7 +26106,7 @@ var PathHoister = function () {
         break;
       }
 
-      if (this.breakOnScopePaths.indexOf(scope.path) >= 0) {
+      if (this.breakOnScopePaths.includes(scope.path)) {
         break;
       }
     } while (scope = scope.parent);
@@ -26740,7 +26740,7 @@ var TraversalContext = function () {
         this.trap = true;
       }
 
-      if (visited.indexOf(path.node) >= 0) continue;
+      if (visited.includes(path.node)) continue;
       visited.push(path.node);
 
       if (path.visit()) {
@@ -26994,7 +26994,7 @@ function verify(visitor) {
 
     if (shouldIgnoreKey(nodeType)) continue;
 
-    if (t.TYPES.indexOf(nodeType) < 0) {
+    if (!t.TYPES.includes(nodeType)) {
       throw new Error(messages.get("traverseVerifyNodeType", nodeType));
     }
 
@@ -30033,7 +30033,7 @@ IndexedSourceMapConsumer.prototype.generatedPositionFor =
 
       // Only consider this section if the requested source is in the list of
       // sources of the consumer.
-      if (section.consumer.sources.indexOf(util.getArg(aArgs, 'source')) === -1) {
+      if (!section.consumer.sources.includes(util.getArg(aArgs, 'source'))) {
         continue;
       }
       var generatedPosition = section.consumer.generatedPositionFor(aArgs);
@@ -35038,7 +35038,7 @@ function applyStyle() {
 	// see https://github.com/chalk/chalk/issues/58
 	// If we're on Windows and we're dealing with a gray color, temporarily make 'dim' a noop.
 	var originalDim = ansiStyles.dim.open;
-	if (isSimpleWindowsTerm && (nestedStyles.indexOf('gray') !== -1 || nestedStyles.indexOf('grey') !== -1)) {
+	if (isSimpleWindowsTerm && (nestedStyles.includes('gray') || nestedStyles.includes('grey'))) {
 		ansiStyles.dim.open = '';
 	}
 
@@ -37836,7 +37836,7 @@ function normalizeOptions(code, opts, tokens) {
     };
   } else {
     format.shouldPrintComment = format.shouldPrintComment || function (value) {
-      return format.comments || value.indexOf("@license") >= 0 || value.indexOf("@preserve") >= 0;
+      return format.comments || value.includes("@license") || value.includes("@preserve");
     };
   }
 

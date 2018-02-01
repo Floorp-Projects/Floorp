@@ -67,8 +67,8 @@ function* spawnTest() {
 
     // For some reason, anything that creates "→" here turns it into a "â" for some reason.
     // So just check that start and end time are in there somewhere.
-    ok(tooltip.indexOf(toMs(mkr.start)) !== -1, "Tooltip has start time.");
-    ok(tooltip.indexOf(toMs(mkr.end)) !== -1, "Tooltip has end time.");
+    ok(tooltip.includes(toMs(mkr.start)), "Tooltip has start time.");
+    ok(tooltip.includes(toMs(mkr.end)), "Tooltip has end time.");
   }
 
   yield teardown(panel);

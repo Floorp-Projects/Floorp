@@ -98,7 +98,7 @@ exports.items = [
         return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
       }
 
-      if (!this.allowFloat && (arg.text.indexOf('.') !== -1)) {
+      if (!this.allowFloat && (arg.text.includes('.'))) {
         msg = l10n.lookupFormat('typesNumberNotInt2', [ arg.text ]);
         return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, msg));
       }

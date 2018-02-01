@@ -49,7 +49,7 @@ http://creativecommons.org/licenses/publicdomain/
       swr.pushManager.permissionState().then(
         function(state) {
           debug("state: " + state);
-          ok(["granted", "denied", "prompt"].indexOf(state) >= 0, "permissionState() returned a valid state.");
+          ok(["granted", "denied", "prompt"].includes(state), "permissionState() returned a valid state.");
           res(swr);
         }, function(error) {
           ok(false, "permissionState() failed.");

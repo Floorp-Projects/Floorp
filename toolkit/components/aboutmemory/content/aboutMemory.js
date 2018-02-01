@@ -68,7 +68,7 @@ var gIsDiff = false;
 // undone are prefixed with "unsafe"; the rest are prefixed with "safe".
 function flipBackslashes(aUnsafeStr) {
   // Save memory by only doing the replacement if it's necessary.
-  return (aUnsafeStr.indexOf("\\") === -1)
+  return (!aUnsafeStr.includes("\\"))
          ? aUnsafeStr
          : aUnsafeStr.replace(/\\/g, "/");
 }

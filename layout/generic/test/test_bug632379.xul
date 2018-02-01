@@ -182,7 +182,7 @@ function snapshot(elem)
         synthesizeKey("VK_LEFT", {});
         synthesizeKey("9", {});
     } else {
-        if (navigator.platform.indexOf("Mac") == -1) {
+        if (!navigator.platform.includes("Mac")) {
             is(pos[1], pos[0], "Popup should open in the same place when the menu is scrolled");
         } else {
             todo(false, "This test fails on Mac since it was ported to chrome: Bug 668716.");

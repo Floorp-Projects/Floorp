@@ -30,7 +30,7 @@ PrivateBrowsingTrackingProtectionWhitelist.prototype = {
    *        The URI to add to the list.
    */
   addToAllowList(uri) {
-    if (this._allowlist.indexOf(uri.spec) === -1) {
+    if (!this._allowlist.includes(uri.spec)) {
       this._allowlist.push(uri.spec);
     }
   },
@@ -55,7 +55,7 @@ PrivateBrowsingTrackingProtectionWhitelist.prototype = {
    *        The URI to add to the list.
    */
   existsInAllowList(uri) {
-    return this._allowlist.indexOf(uri.spec) !== -1;
+    return this._allowlist.includes(uri.spec);
   },
 
   observe(subject, topic, data) {
