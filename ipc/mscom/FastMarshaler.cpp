@@ -103,7 +103,7 @@ FastMarshaler::GetMarshalFlags(DWORD aDestContext, DWORD aMshlFlags)
     return aMshlFlags;
   }
 
-  if (!IsCallerExternalProcess()) {
+  if (IsCallerExternalProcess()) {
     return aMshlFlags;
   }
 
