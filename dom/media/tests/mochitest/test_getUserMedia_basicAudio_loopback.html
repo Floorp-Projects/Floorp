@@ -15,9 +15,12 @@
   /**
    * Run a test to verify the use of LoopbackTone as audio input.
    */
-  scriptsReady
-  .then(() => FAKE_ENABLED = false)
-  .then(() => runTestWhenReady( async () => {
+  scriptsReady.then(() => runTestWhenReady(async () => {
+    if (!audioDevice) {
+      todo(false, "No loopback device set by framework. Try --use-test-media-devices");
+      return Promise.resolve();
+    }
+
     // At this point DefaultLoopbackTone has been instantiated
     // automatically on frequency TEST_AUDIO_FREQ (440 Hz). Verify
     // that a tone is detected on that frequency.
