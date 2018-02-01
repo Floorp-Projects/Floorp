@@ -431,16 +431,22 @@ impl<'a> RawtestHarness<'a> {
         let mut do_test = |should_try_and_fail| {
             let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
 
-            let clip = builder.define_clip(None, rect(110., 120., 200., 200.),
-                                           None::<ComplexClipRegion>, None);
+            let clip = builder.define_clip(
+                rect(110., 120., 200., 200.),
+                None::<ComplexClipRegion>,
+                None
+            );
             builder.push_clip_id(clip);
             builder.push_rect(&PrimitiveInfo::new(rect(100., 100., 100., 100.)),
                               ColorF::new(0.0, 0.0, 1.0, 1.0));
 
             if should_try_and_fail {
                 builder.save();
-                let clip = builder.define_clip(None, rect(80., 80., 90., 90.),
-                                               None::<ComplexClipRegion>, None);
+                let clip = builder.define_clip(
+                    rect(80., 80., 90., 90.),
+                    None::<ComplexClipRegion>,
+                    None
+                );
                 builder.push_clip_id(clip);
                 builder.push_rect(&PrimitiveInfo::new(rect(110., 110., 50., 50.)),
                               ColorF::new(0.0, 1.0, 0.0, 1.0));
@@ -458,8 +464,11 @@ impl<'a> RawtestHarness<'a> {
 
             {
                 builder.save();
-                let clip = builder.define_clip(None, rect(80., 80., 100., 100.),
-                                               None::<ComplexClipRegion>, None);
+                let clip = builder.define_clip(
+                    rect(80., 80., 100., 100.),
+                    None::<ComplexClipRegion>,
+                    None
+                );
                 builder.push_clip_id(clip);
                 builder.push_rect(&PrimitiveInfo::new(rect(150., 150., 100., 100.)),
                                   ColorF::new(0.0, 0.0, 1.0, 1.0));

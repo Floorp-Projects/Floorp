@@ -608,20 +608,13 @@ this.BrowserIDManager.prototype = {
       );
     };
 
-    let getToken = assertion => {
+    let getToken = async (assertion) => {
       log.debug("Getting a token");
-      let deferred = PromiseUtils.defer();
-      let cb = function(err, token) {
-        if (err) {
-          return deferred.reject(err);
-        }
-        log.debug("Successfully got a sync token");
-        return deferred.resolve(token);
-      };
-
       let headers = {"X-Client-State": userData.kXCS};
-      client.getTokenFromBrowserIDAssertion(tokenServerURI, assertion, cb, headers);
-      return deferred.promise;
+      // Exceptions will be handled by the caller.
+      const token = await client.getTokenFromBrowserIDAssertion(tokenServerURI, assertion, headers);
+      log.debug("Successfully got a sync token");
+      return token;
     };
 
     let getAssertion = () => {
@@ -735,19 +728,14 @@ this.BrowserIDManager.prototype = {
    * @return a Hawk HTTP Authorization Header, lightly wrapped, for the .uri
    * of a RESTRequest or AsyncResponse object.
    */
-  _getAuthenticationHeader(httpObject, method) {
-    let cb = Async.makeSpinningCallback();
-    this._ensureValidToken().then(cb, cb);
+  async _getAuthenticationHeader(httpObject, method) {
     // Note that in failure states we return null, causing the request to be
     // made without authorization headers, thereby presumably causing a 401,
     // which causes Sync to log out. If we throw, this may not happen as
     // expected.
     try {
-      cb.wait();
+      await this._ensureValidToken();
     } catch (ex) {
-      if (Async.isShutdownException(ex)) {
-        throw ex;
-      }
       this._log.error("Failed to fetch a token for authentication", ex);
       return null;
     }
@@ -803,9 +791,9 @@ BrowserIDClusterManager.prototype = {
   /**
    * Determine the cluster for the current user and update state.
    */
-  setCluster() {
+  async setCluster() {
     // Make sure we didn't get some unexpected response for the cluster.
-    let cluster = this._findCluster();
+    let cluster = await this._findCluster();
     this._log.debug("Cluster value = " + cluster);
     if (cluster == null) {
       return false;
@@ -825,8 +813,20 @@ BrowserIDClusterManager.prototype = {
     return true;
   },
 
-  _findCluster() {
-    let endPointFromIdentityToken = () => {
+  async _findCluster() {
+    try {
+      // Ensure we are ready to authenticate and have a valid token.
+      await this.identity.whenReadyToAuthenticate.promise;
+      // We need to handle node reassignment here.  If we are being asked
+      // for a clusterURL while the service already has a clusterURL, then
+      // it's likely a 401 was received using the existing token - in which
+      // case we just discard the existing token and fetch a new one.
+      if (this.service.clusterURL) {
+        log.debug("_findCluster has a pre-existing clusterURL, so discarding the current token");
+        this.identity._token = null;
+      }
+      await this.identity._ensureValidToken();
+
       // The only reason (in theory ;) that we can end up with a null token
       // is when this._fxaService.canGetKeys() returned false.  In turn, this
       // should only happen if the master-password is locked or the credentials
@@ -847,30 +847,7 @@ BrowserIDClusterManager.prototype = {
       }
       log.debug("_findCluster returning " + endpoint);
       return endpoint;
-    };
-
-    // Spinningly ensure we are ready to authenticate and have a valid token.
-    let promiseClusterURL = () => {
-      return this.identity.whenReadyToAuthenticate.promise.then(
-        () => {
-          // We need to handle node reassignment here.  If we are being asked
-          // for a clusterURL while the service already has a clusterURL, then
-          // it's likely a 401 was received using the existing token - in which
-          // case we just discard the existing token and fetch a new one.
-          if (this.service.clusterURL) {
-            log.debug("_findCluster has a pre-existing clusterURL, so discarding the current token");
-            this.identity._token = null;
-          }
-          return this.identity._ensureValidToken();
-        }
-      ).then(endPointFromIdentityToken
-      );
-    };
-
-    let cb = Async.makeSpinningCallback();
-    promiseClusterURL().then(function(clusterURL) {
-      cb(null, clusterURL);
-    }).catch(err => {
+    } catch (err) {
       log.info("Failed to fetch the cluster URL", err);
       // service.js's verifyLogin() method will attempt to fetch a cluster
       // URL when it sees a 401.  If it gets null, it treats it as a "real"
@@ -885,14 +862,10 @@ BrowserIDClusterManager.prototype = {
       // * On a real 401, we must return null.
       // * On any other problem we must let an exception bubble up.
       if (err instanceof AuthenticationError) {
-        // callback with no error and a null result - cb.wait() returns null.
-        cb(null, null);
-      } else {
-        // callback with an error - cb.wait() completes by raising an exception.
-        cb(err);
+        return null;
       }
-    });
-    return cb.wait();
+      throw err;
+    }
   },
 
   getUserBaseURL() {

@@ -9,7 +9,6 @@ var Cr = Components.results;
 var Cu = Components.utils;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm");
 
 // Import common head.
 /* import-globals-from ../../../../../toolkit/components/places/tests/head_common.js */

@@ -49,7 +49,9 @@
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/WindowBinding.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/GeckoRestyleManager.h"
+#endif
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
 #include "Layers.h"
@@ -71,6 +73,7 @@
 #include "nsAnimationManager.h"
 #include "nsIDOMEvent.h"
 #include "nsDisplayList.h"
+#include "nsTransitionManager.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"

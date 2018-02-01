@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ClipId, DevicePixelScale, LayerPixel, LayerPoint, LayerRect, LayerSize};
-use api::{LayerToWorldTransform, LayerTransform, LayerVector2D, LayoutTransform, LayoutVector2D};
-use api::{PipelineId, PropertyBinding, ScrollClamping, ScrollEventPhase, ScrollLocation};
-use api::{ScrollSensitivity, StickyOffsetBounds, WorldPoint};
+use api::{ClipId, DevicePixelScale, ExternalScrollId, IdType, LayerPixel, LayerPoint, LayerRect};
+use api::{LayerSize, LayerToWorldTransform, LayerTransform, LayerVector2D, LayoutTransform};
+use api::{LayoutVector2D, PipelineId, PropertyBinding, ScrollClamping, ScrollEventPhase};
+use api::{ScrollLocation, ScrollSensitivity, StickyOffsetBounds, WorldPoint};
 use clip::{ClipSourcesHandle, ClipStore};
 use clip_scroll_tree::{CoordinateSystemId, TransformUpdateState};
 use euclid::SideOffsets2D;
@@ -60,7 +60,7 @@ pub enum NodeType {
 
     /// Transforms it's content, but doesn't clip it. Can also be adjusted
     /// by scroll events or setting scroll offsets.
-    ScrollFrame(ScrollingState),
+    ScrollFrame(ScrollFrameInfo),
 
     /// A special kind of node that adjusts its position based on the position
     /// of its parent node and a given set of sticky positioning offset bounds.
@@ -153,16 +153,18 @@ impl ClipScrollNode {
     pub fn new_scroll_frame(
         pipeline_id: PipelineId,
         parent_id: ClipId,
+        external_id: Option<ExternalScrollId>,
         frame_rect: &LayerRect,
         content_size: &LayerSize,
         scroll_sensitivity: ScrollSensitivity,
     ) -> Self {
-        let node_type = NodeType::ScrollFrame(ScrollingState::new(
+        let node_type = NodeType::ScrollFrame(ScrollFrameInfo::new(
             scroll_sensitivity,
             LayerSize::new(
                 (content_size.width - frame_rect.size.width).max(0.0),
                 (content_size.height - frame_rect.size.height).max(0.0)
-            )
+            ),
+            external_id,
         ));
 
         Self::new(pipeline_id, Some(parent_id), frame_rect, node_type)
@@ -211,7 +213,7 @@ impl ClipScrollNode {
         self.children.push(child);
     }
 
-    pub fn apply_old_scrolling_state(&mut self, old_scrolling_state: &ScrollingState) {
+    pub fn apply_old_scrolling_state(&mut self, old_scrolling_state: &ScrollFrameInfo) {
         match self.node_type {
             NodeType::ScrollFrame(ref mut scrolling) => {
                 let scroll_sensitivity = scrolling.scroll_sensitivity;
@@ -765,10 +767,22 @@ impl ClipScrollNode {
             _ => false,
         }
     }
+
+    pub fn matches_id(&self, node_id: ClipId, id_to_match: IdType) -> bool {
+        let external_id = match id_to_match {
+            IdType::ExternalScrollId(id) => id,
+            IdType::ClipId(clip_id) => return node_id == clip_id,
+        };
+
+        match self.node_type {
+            NodeType::ScrollFrame(info) if info.external_id == Some(external_id) => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct ScrollingState {
+pub struct ScrollFrameInfo {
     pub offset: LayerVector2D,
     pub spring: Spring,
     pub started_bouncing_back: bool,
@@ -779,14 +793,21 @@ pub struct ScrollingState {
     /// Amount that this ScrollFrame can scroll in both directions.
     pub scrollable_size: LayerSize,
 
+    /// An external id to identify this scroll frame to API clients. This
+    /// allows setting scroll positions via the API without relying on ClipsIds
+    /// which may change between frames.
+    pub external_id: Option<ExternalScrollId>,
+
 }
 
 /// Manages scrolling offset, overscroll state, etc.
-impl ScrollingState {
-    pub fn new(scroll_sensitivity: ScrollSensitivity,
-               scrollable_size: LayerSize
-    ) -> ScrollingState {
-        ScrollingState {
+impl ScrollFrameInfo {
+    pub fn new(
+        scroll_sensitivity: ScrollSensitivity,
+        scrollable_size: LayerSize,
+        external_id: Option<ExternalScrollId>,
+    ) -> ScrollFrameInfo {
+        ScrollFrameInfo {
             offset: LayerVector2D::zero(),
             spring: Spring::at(LayerPoint::zero(), STIFFNESS, DAMPING),
             started_bouncing_back: false,
@@ -794,6 +815,7 @@ impl ScrollingState {
             should_handoff_scroll: false,
             scroll_sensitivity,
             scrollable_size,
+            external_id,
         }
     }
 

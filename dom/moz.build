@@ -112,9 +112,6 @@ DIRS += [
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['plugins/ipc/hangui']
 
-if CONFIG['MOZ_SECUREELEMENT']:
-    DIRS += ['secureelement']
-
 DIRS += ['presentation']
 
 TEST_DIRS += [

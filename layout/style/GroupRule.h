@@ -14,7 +14,9 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/IncrementalClearCOMRuleArray.h"
+#endif
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoCSSRuleList.h"
 #include "mozilla/Variant.h"
@@ -37,6 +39,7 @@ namespace css {
 class GroupRule;
 class GroupRuleRuleList;
 
+#ifdef MOZ_OLD_STYLE
 struct GeckoGroupRuleRules
 {
   GeckoGroupRuleRules();
@@ -76,6 +79,7 @@ struct GeckoGroupRuleRules
   IncrementalClearCOMRuleArray mRules;
   RefPtr<GroupRuleRuleList> mRuleCollection; // lazily constructed
 };
+#endif
 
 struct ServoGroupRuleRules
 {
@@ -132,12 +136,37 @@ struct ServoGroupRuleRules
   RefPtr<ServoCSSRuleList> mRuleList;
 };
 
+struct DummyGroupRuleRules
+{
+  void SetParentRule(GroupRule* aParentRule) {}
+  void SetStyleSheet(StyleSheet* aSheet) {}
+  void Clear() {}
+  void Traverse(nsCycleCollectionTraversalCallback& cb) {}
+#ifdef DEBUG
+  void List(FILE* out, int32_t aIndex) const {}
+#endif
+  int32_t StyleRuleCount() const { return 0; }
+  Rule* GetStyleRuleAt(int32_t aIndex) const { return nullptr; }
+  nsresult DeleteStyleRuleAt(uint32_t aIndex) { return NS_ERROR_NOT_IMPLEMENTED; }
+  dom::CSSRuleList* CssRules(GroupRule* aParentRule) { return nullptr; }
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const { return 0; }
+};
+
+#ifdef MOZ_OLD_STYLE
 #define REDIRECT_TO_INNER(call_)                   \
   if (mInner.is<GeckoGroupRuleRules>()) {          \
     return mInner.as<GeckoGroupRuleRules>().call_; \
   } else {                                         \
     return mInner.as<ServoGroupRuleRules>().call_; \
-  }                                                \
+  }
+#else
+#define REDIRECT_TO_INNER(call_)                   \
+  if (mInner.is<DummyGroupRuleRules>()) {          \
+    return mInner.as<DummyGroupRuleRules>().call_; \
+  } else {                                         \
+    return mInner.as<ServoGroupRuleRules>().call_; \
+  }
+#endif
 
 // inherits from Rule so it can be shared between
 // MediaRule and DocumentRule
@@ -163,7 +192,9 @@ public:
   virtual void SetStyleSheet(StyleSheet* aSheet) override;
 
 public:
+#ifdef MOZ_OLD_STYLE
   void AppendStyleRule(Rule* aRule);
+#endif
 
   int32_t StyleRuleCount() const {
     REDIRECT_TO_INNER(StyleRuleCount())
@@ -172,8 +203,10 @@ public:
     REDIRECT_TO_INNER(GetStyleRuleAt(aIndex))
   }
 
+#ifdef MOZ_OLD_STYLE
   typedef bool (*RuleEnumFunc)(Rule* aElement, void* aData);
   bool EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const;
+#endif
 
   /*
    * The next two methods should never be called unless you have first
@@ -183,10 +216,12 @@ public:
   nsresult DeleteStyleRuleAt(uint32_t aIndex) {
     REDIRECT_TO_INNER(DeleteStyleRuleAt(aIndex));
   }
+#ifdef MOZ_OLD_STYLE
   nsresult InsertStyleRuleAt(uint32_t aIndex, Rule* aRule);
 
   virtual bool UseForPresentation(nsPresContext* aPresContext,
                                     nsMediaQueryResultCacheKey& aKey) = 0;
+#endif
 
   // non-virtual -- it is only called by subclasses
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
@@ -201,6 +236,7 @@ public:
   void DeleteRule(uint32_t aIndex, ErrorResult& aRv);
 
 protected:
+#ifdef MOZ_OLD_STYLE
   void AppendRulesToCssText(nsAString& aCssText) const;
 
   // Must only be called if this is a Gecko GroupRule.
@@ -210,9 +246,18 @@ protected:
   const IncrementalClearCOMRuleArray& GeckoRules() const {
     return mInner.as<GeckoGroupRuleRules>().mRules;
   }
+#endif
 
 private:
+#ifdef MOZ_OLD_STYLE
   Variant<GeckoGroupRuleRules, ServoGroupRuleRules> mInner;
+#else
+  // This only reason for the DummyGroupRuleRules is that ServoKeyframesRule
+  // inherits from CSSKeyframesRules (and thus GroupRule). Once
+  // ServoKeyframesRule can be made to inherit from Rule, the
+  // DummyGroupRuleRules can be removed.
+  Variant<DummyGroupRuleRules, ServoGroupRuleRules> mInner;
+#endif
 };
 
 #undef REDIRECT_TO_INNER

@@ -11,7 +11,6 @@ ChromeUtils.import("resource://services-sync/util.js");
 ChromeUtils.import("resource://testing-common/services/sync/fakeservices.js");
 
 var engineManager = Service.engineManager;
-engineManager.clear();
 
 function CatapultEngine() {
   SyncEngine.call(this, "Catapult", Service);
@@ -63,7 +62,8 @@ async function generateAndUploadKeys(server) {
   return (await serverKeys.upload(res)).success;
 }
 
-add_task(async function run_test() {
+add_task(async function setup() {
+  await engineManager.clear();
   validate_all_future_pings();
   await engineManager.register(CatapultEngine);
 });

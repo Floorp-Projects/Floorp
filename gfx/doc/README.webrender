@@ -35,10 +35,7 @@ Option A:
    all the assumptions the script is making. The script can be found at
    https://github.com/staktrace/moz-scripts/blob/master/try-latest-webrender.sh
    and contains documentation on how to use it. Read the documentation carefully
-   before trying to use it. The only extra change you need to make with this
-   option is to manually update the revision in gfx/webrender_bindings/revision.txt
-   so that it points to the new WR version you are landing. The script doesn't
-   do that yet.
+   before trying to use it.
 
 Option B:
    Do the update manually. This is a little more cumbersome but may be required

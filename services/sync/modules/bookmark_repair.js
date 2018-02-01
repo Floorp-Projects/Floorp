@@ -703,7 +703,7 @@ class BookmarkRepairResponder extends CollectionRepairResponder {
       return;
     }
     log.debug(`bookmarks engine has uploaded stuff - creating a repair response`, subject);
-    Async.promiseSpinningly(this._finishRepair());
+    this.service.clientsEngine._tracker.asyncObserver.enqueueCall(() => this._finishRepair());
   }
 
   async _finishRepair() {

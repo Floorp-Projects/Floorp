@@ -2882,6 +2882,7 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(nsIDOMElement* aElement,
     return NS_OK;
   }
 
+#ifdef MOZ_OLD_STYLE
   StyleAnimationValue computedValue;
   if (!StyleAnimationValue::ExtractComputedValue(propertyID,
                                                  styleContext->AsGecko(),
@@ -2915,6 +2916,9 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(nsIDOMElement* aElement,
   MOZ_ASSERT(uncomputeResult,
              "Unable to get specified value from computed value");
   return NS_OK;
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 nsresult

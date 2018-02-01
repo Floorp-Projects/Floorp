@@ -11,8 +11,10 @@
 
 #include "nsMappedAttributes.h"
 #include "nsHTMLStyleSheet.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleData.h"
 #include "nsRuleWalker.h"
+#endif
 #include "mozilla/GenericSpecifiedValues.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
@@ -149,11 +151,13 @@ nsMappedAttributes::LastRelease()
   delete this;
 }
 
+#ifdef MOZ_OLD_STYLE
 NS_IMPL_ADDREF(nsMappedAttributes)
 NS_IMPL_RELEASE_WITH_DESTROY(nsMappedAttributes, LastRelease())
 
 NS_IMPL_QUERY_INTERFACE(nsMappedAttributes,
                         nsIStyleRule)
+#endif
 
 void
 nsMappedAttributes::SetAndSwapAttr(nsAtom* aAttrName, nsAttrValue& aValue,
@@ -254,6 +258,7 @@ nsMappedAttributes::SetStyleSheet(nsHTMLStyleSheet* aSheet)
   mSheet = aSheet;  // not ref counted
 }
 
+#ifdef MOZ_OLD_STYLE
 /* virtual */ void
 nsMappedAttributes::MapRuleInfoInto(nsRuleData* aRuleData)
 {
@@ -301,6 +306,7 @@ nsMappedAttributes::List(FILE* out, int32_t aIndent) const
     fprintf_stderr(out, "%s", str.get());
   }
 }
+#endif
 #endif
 
 void

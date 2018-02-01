@@ -2105,7 +2105,7 @@ dnl ========================================================
 
 case "$MOZ_BUILD_APP" in
 mobile/android)
-    MOZ_ANDROID_SDK(23, 23, 25.0.3, 26.0.0 26.0.0-dev 25.3.2 25.3.1)
+    MOZ_ANDROID_SDK(23, 23, 26.0.2, 26.0.0 26.0.0-dev 25.3.2 25.3.1)
     ;;
 esac
 
@@ -3795,15 +3795,6 @@ if test -n "$MOZ_DISABLE_STARTUPCACHE"; then
   AC_DEFINE(MOZ_DISABLE_STARTUPCACHE)
 fi
 AC_SUBST(MOZ_DISABLE_STARTUPCACHE)
-
-dnl ========================================================
-dnl = Enable Support for Secure Element API
-dnl ========================================================
-   MOZ_SECUREELEMENT=1,
-if test -n "$MOZ_SECUREELEMENT"; then
-   AC_DEFINE(MOZ_SECUREELEMENT)
-fi
- AC_SUBST(MOZ_SECUREELEMENT)
 
 dnl ========================================================
 dnl = Support for demangling undefined symbols

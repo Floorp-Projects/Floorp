@@ -87,7 +87,9 @@
 #include "nsAutoLayoutPhase.h"
 #include "nsStyleStructInlines.h"
 #include "nsPageContentFrame.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/GeckoStyleContext.h"
+#endif
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
 #include "mozilla/StylePrefs.h"
@@ -335,6 +337,8 @@ static int32_t FFWC_recursions=0;
 static int32_t FFWC_nextInFlows=0;
 #endif
 
+#ifdef MOZ_OLD_STYLE
+
 // Wrapper class to handle stack-construction a TreeMatchContext only if we're
 // using the Gecko style system.
 class MOZ_STACK_CLASS TreeMatchContextHolder
@@ -360,6 +364,21 @@ public:
 private:
   Maybe<TreeMatchContext> mMaybeTreeMatchContext;
 };
+
+#else
+
+// Define this dummy class so there are fewer call sites to change when the old
+// style system code is compiled out.
+class TreeMatchContextHolder
+{
+public:
+  explicit TreeMatchContextHolder(nsIDocument* aDocument) {}
+  bool Exists() const { return false; }
+  operator TreeMatchContext*() { return nullptr; }
+  TreeMatchContext* operator->() { MOZ_CRASH("old style system disabled"); }
+};
+
+#endif
 
 // Returns true if aFrame is an anonymous flex/grid item.
 static inline bool
@@ -879,7 +898,11 @@ public:
 
   bool HasAncestorFilter()
   {
+#ifdef MOZ_OLD_STYLE
     return mTreeMatchContext && mTreeMatchContext->mAncestorFilter.HasFilter();
+#else
+    return false;
+#endif
   }
 
   // Function to push the existing absolute containing block state and
@@ -1026,6 +1049,23 @@ protected:
 
   PendingBinding* mCurrentPendingBindingInsertionPoint;
 };
+
+#ifndef MOZ_OLD_STYLE
+
+namespace mozilla {
+
+class AutoDisplayContentsAncestorPusher
+{
+public:
+  AutoDisplayContentsAncestorPusher(TreeMatchContext& aTreeMatchContext,
+                                    nsPresContext* aPresContext,
+                                    nsIContent* aParent) {}
+  bool IsEmpty() const { return false; }
+};
+
+} // namespace mozilla
+
+#endif
 
 nsFrameConstructorState::nsFrameConstructorState(
   nsIPresShell* aPresShell,
@@ -1955,6 +1995,7 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
         styleSet->AsServo()->ResolveServoStyle(container);
     }
   } else {
+#ifdef MOZ_OLD_STYLE
     mozilla::GeckoRestyleManager* geckoRM = RestyleManager()->AsGecko();
     GeckoRestyleManager::ReframingStyleContexts* rsc =
       geckoRM->GetReframingStyleContexts();
@@ -1974,6 +2015,9 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
       }
       pseudoStyleContext = newContext.forget();
     }
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   uint32_t contentCount = pseudoStyleContext->StyleContent()->ContentCount();
@@ -3987,7 +4031,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
     insertionPointPusher(aState.mTreeMatchContext);
   if (adcp.isSome() && adcp->IsEmpty() && parent &&
       parent->IsActiveChildrenElement()) {
-    if (aState.mTreeMatchContext->mAncestorFilter.HasFilter()) {
+    if (aState.HasAncestorFilter()) {
       insertionPointPusher.PushAncestorAndStyleScope(parent);
     } else {
       insertionPointPusher.PushStyleScope(parent);
@@ -5276,7 +5320,9 @@ nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext* aParentStyleContext,
   // ServoRestyleManager does not handle transitions yet, and when it does
   // it probably won't need to track reframed style contexts to start
   // transitions correctly.
-  if (mozilla::GeckoRestyleManager* geckoRM = RestyleManager()->GetAsGecko()) {
+  if (RestyleManager()->IsGecko()) {
+#ifdef MOZ_OLD_STYLE
+    mozilla::GeckoRestyleManager* geckoRM = RestyleManager()->AsGecko();
     GeckoRestyleManager::ReframingStyleContexts* rsc =
       geckoRM->GetReframingStyleContexts();
     if (rsc) {
@@ -5295,6 +5341,9 @@ nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext* aParentStyleContext,
             CSSPseudoElementType::NotPseudo, result->AsGecko());
       }
     }
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   return result.forget();
@@ -5979,9 +6028,13 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
           styleContext =
             mPresShell->StyleSet()->AsServo()->ResolveServoStyle(aContent->AsElement());
         } else {
+#ifdef MOZ_OLD_STYLE
           styleContext =
             ResolveStyleContext(styleContext->AsGecko()->GetParent(),
                                 aContent, &aState);
+#else
+          MOZ_CRASH("old style system disabled");
+#endif
         }
       }
 
@@ -7267,12 +7320,17 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
   // We need different handling for servo given the scoped restyle roots.
   CheckBitsForLazyFrameConstruction(parent);
 
-  if (mozilla::GeckoRestyleManager* geckoRM = RestyleManager()->GetAsGecko()) {
+  if (RestyleManager()->IsGecko()) {
+#ifdef MOZ_OLD_STYLE
+    mozilla::GeckoRestyleManager* geckoRM = RestyleManager()->AsGecko();
     while (parent && !parent->HasFlag(NODE_DESCENDANTS_NEED_FRAMES)) {
       parent->SetFlags(NODE_DESCENDANTS_NEED_FRAMES);
       parent = parent->GetFlattenedTreeParent();
     }
     geckoRM->PostRestyleEventForLazyConstruction();
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   } else {
     parent->AsElement()->NoteDescendantsNeedFramesForServo();
   }
@@ -7280,6 +7338,7 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
   return true;
 }
 
+#ifdef MOZ_OLD_STYLE
 void
 nsCSSFrameConstructor::CreateNeededFrames(
     nsIContent* aContent,
@@ -7376,6 +7435,7 @@ nsCSSFrameConstructor::CreateNeededFrames()
     CreateNeededFrames(rootElement, treeMatchContext);
   }
 }
+#endif
 
 void
 nsCSSFrameConstructor::IssueSingleInsertNofications(nsIContent* aContainer,
@@ -9385,6 +9445,7 @@ nsCSSFrameConstructor::CaptureStateForFramesOf(nsIContent* aContent,
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 static bool
 DefinitelyEqualURIsAndPrincipal(mozilla::css::URLValue* aURI1,
                                 mozilla::css::URLValue* aURI2)
@@ -9436,6 +9497,7 @@ nsCSSFrameConstructor::MaybeRecreateFramesForElement(Element* aElement)
   RecreateFramesForContent(aElement, InsertionKind::Sync);
   return nullptr;
 }
+#endif
 
 static bool
 IsWhitespaceFrame(nsIFrame* aFrame)

@@ -15,7 +15,9 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "nsDataHashtable.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsIStyleRuleProcessor.h"
+#endif
 
 class nsRuleWalker;
 struct MiscContainer;
@@ -27,11 +29,15 @@ class Element;
 } // namespace dom
 } // namespace mozilla
 
-class nsHTMLCSSStyleSheet final : public nsIStyleRuleProcessor
+class nsHTMLCSSStyleSheet final
+#ifdef MOZ_OLD_STYLE
+  : public nsIStyleRuleProcessor
+#endif
 {
 public:
   nsHTMLCSSStyleSheet();
 
+#ifdef MOZ_OLD_STYLE
   NS_DECL_ISUPPORTS
 
   // nsIStyleRuleProcessor
@@ -63,6 +69,9 @@ public:
   void PseudoElementRulesMatching(mozilla::dom::Element* aPseudoElement,
                                   mozilla::CSSPseudoElementType aPseudoType,
                                   nsRuleWalker* aRuleWalker);
+#else
+  NS_INLINE_DECL_REFCOUNTING(nsHTMLCSSStyleSheet)
+#endif
 
   void CacheStyleAttr(const nsAString& aSerialized, MiscContainer* aValue);
   void EvictStyleAttr(const nsAString& aSerialized, MiscContainer* aValue);

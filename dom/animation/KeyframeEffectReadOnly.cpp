@@ -12,12 +12,16 @@
   // For UnrestrictedDoubleOrKeyframeAnimationOptions;
 #include "mozilla/dom/CSSPseudoElement.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/AnimValuesStyleRule.h"
+#endif
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/FloatingPoint.h" // For IsFinite
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/GeckoStyleContext.h"
+#endif
 #include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/KeyframeUtils.h"
@@ -194,24 +198,31 @@ KeyframeEffectReadOnly::SetKeyframes(JSContext* aContext,
 
   RefPtr<nsStyleContext> styleContext = GetTargetStyleContext();
   if (styleContext) {
-    if (auto gecko = styleContext->GetAsGecko()) {
+    if (styleContext->IsGecko()) {
+#ifdef MOZ_OLD_STYLE
+      auto gecko = styleContext->AsGecko();
       SetKeyframes(Move(keyframes), gecko);
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     } else {
       SetKeyframes(Move(keyframes), styleContext->AsServo());
     }
   } else {
     // SetKeyframes has the same behavior for null StyleType* for
     // both backends, just pick one and use it.
-    SetKeyframes(Move(keyframes), (GeckoStyleContext*) nullptr);
+    SetKeyframes(Move(keyframes), (ServoStyleContext*) nullptr);
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 void
 KeyframeEffectReadOnly::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
                                      GeckoStyleContext* aStyleContext)
 {
   DoSetKeyframes(Move(aKeyframes), Move(aStyleContext));
 }
+#endif
 
 void
 KeyframeEffectReadOnly::SetKeyframes(
@@ -226,10 +237,12 @@ void
 KeyframeEffectReadOnly::DoSetKeyframes(nsTArray<Keyframe>&& aKeyframes,
                                        StyleType* aStyle)
 {
+#ifdef MOZ_OLD_STYLE
   static_assert(IsSame<StyleType, GeckoStyleContext>::value ||
                 IsSame<StyleType, const ServoStyleContext>::value,
                 "StyleType should be GeckoStyleContext* or "
                 "const ServoStyleContext*");
+#endif
 
   if (KeyframesEqualIgnoringComputedOffsets(aKeyframes, mKeyframes)) {
     return;
@@ -313,9 +326,14 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 {
   MOZ_ASSERT(aStyleContext);
 
-  if (auto gecko = aStyleContext->GetAsGecko()) {
+  if (aStyleContext->IsGecko()) {
+#ifdef MOZ_OLD_STYLE
+    auto gecko = aStyleContext->AsGecko();
     DoUpdateProperties(Move(gecko));
     return;
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   UpdateProperties(aStyleContext->AsServo());
@@ -377,6 +395,7 @@ KeyframeEffectReadOnly::DoUpdateProperties(StyleType* aStyle)
   RequestRestyle(EffectCompositor::RestyleType::Layer);
 }
 
+#ifdef MOZ_OLD_STYLE
 /* static */ StyleAnimationValue
 KeyframeEffectReadOnly::CompositeValue(
   nsCSSPropertyID aProperty,
@@ -509,6 +528,7 @@ KeyframeEffectReadOnly::EnsureBaseStyle(
 
   mBaseStyleValues.Put(aProperty, result);
 }
+#endif
 
 void
 KeyframeEffectReadOnly::EnsureBaseStyles(
@@ -590,6 +610,7 @@ KeyframeEffectReadOnly::WillComposeStyle()
   mCurrentIterationOnLastCompose = computedTiming.mCurrentIteration;
 }
 
+#ifdef MOZ_OLD_STYLE
 void
 KeyframeEffectReadOnly::ComposeStyleRule(
   RefPtr<AnimValuesStyleRule>& aStyleRule,
@@ -669,6 +690,7 @@ KeyframeEffectReadOnly::ComposeStyleRule(
     aStyleRule->AddValue(aProperty.mProperty, Move(toValue));
   }
 }
+#endif
 
 void
 KeyframeEffectReadOnly::ComposeStyleRule(
@@ -947,10 +969,12 @@ template<typename StyleType>
 nsTArray<AnimationProperty>
 KeyframeEffectReadOnly::BuildProperties(StyleType* aStyle)
 {
+#ifdef MOZ_OLD_STYLE
   static_assert(IsSame<StyleType, GeckoStyleContext>::value ||
                 IsSame<StyleType, const ServoStyleContext>::value,
                 "StyleType should be GeckoStyleContext* or "
                 "const ServoStyleContext*");
+#endif
 
   MOZ_ASSERT(aStyle);
 
@@ -1340,33 +1364,39 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
                                            &stringValue);
           }
         }
-      } else if (nsCSSProps::IsShorthand(propertyValue.mProperty)) {
-         // nsCSSValue::AppendToString does not accept shorthands properties but
-         // works with token stream values if we pass eCSSProperty_UNKNOWN as
-         // the property.
-         propertyValue.mValue.AppendToString(
-           eCSSProperty_UNKNOWN, stringValue);
       } else {
-        nsCSSValue cssValue = propertyValue.mValue;
-        if (cssValue.GetUnit() == eCSSUnit_Null) {
-          // We use an uninitialized nsCSSValue to represent the
-          // "neutral value". We currently only do this for keyframes generated
-          // from CSS animations with missing 0%/100% keyframes. Furthermore,
-          // currently (at least until bug 1339334) keyframes generated from
-          // CSS animations only contain longhand properties so we only need to
-          // handle null nsCSSValues for longhand properties.
-          DebugOnly<bool> uncomputeResult =
-            StyleAnimationValue::UncomputeValue(
-              propertyValue.mProperty,
-              Move(BaseStyle(propertyValue.mProperty).mGecko),
-              cssValue);
+#ifdef MOZ_OLD_STYLE
+        if (nsCSSProps::IsShorthand(propertyValue.mProperty)) {
+           // nsCSSValue::AppendToString does not accept shorthands properties but
+           // works with token stream values if we pass eCSSProperty_UNKNOWN as
+           // the property.
+           propertyValue.mValue.AppendToString(
+             eCSSProperty_UNKNOWN, stringValue);
+        } else {
+          nsCSSValue cssValue = propertyValue.mValue;
+          if (cssValue.GetUnit() == eCSSUnit_Null) {
+            // We use an uninitialized nsCSSValue to represent the
+            // "neutral value". We currently only do this for keyframes generated
+            // from CSS animations with missing 0%/100% keyframes. Furthermore,
+            // currently (at least until bug 1339334) keyframes generated from
+            // CSS animations only contain longhand properties so we only need to
+            // handle null nsCSSValues for longhand properties.
+            DebugOnly<bool> uncomputeResult =
+              StyleAnimationValue::UncomputeValue(
+                propertyValue.mProperty,
+                Move(BaseStyle(propertyValue.mProperty).mGecko),
+                cssValue);
 
-          MOZ_ASSERT(uncomputeResult,
-                     "Unable to get specified value from computed value");
-          MOZ_ASSERT(cssValue.GetUnit() != eCSSUnit_Null,
-                     "Got null computed value");
+            MOZ_ASSERT(uncomputeResult,
+                       "Unable to get specified value from computed value");
+            MOZ_ASSERT(cssValue.GetUnit() != eCSSUnit_Null,
+                       "Got null computed value");
+          }
+          cssValue.AppendToString(propertyValue.mProperty, stringValue);
         }
-        cssValue.AppendToString(propertyValue.mProperty, stringValue);
+#else
+        MOZ_CRASH("old style system disabled");
+#endif
       }
 
       const char* name = nsCSSProps::PropertyIDLName(propertyValue.mProperty);
@@ -1719,6 +1749,7 @@ KeyframeEffectReadOnly::SetPerformanceWarning(
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 already_AddRefed<nsStyleContext>
 KeyframeEffectReadOnly::CreateStyleContextForAnimationValue(
   nsCSSPropertyID aProperty,
@@ -1747,6 +1778,7 @@ KeyframeEffectReadOnly::CreateStyleContextForAnimationValue(
 
   return styleContext.forget();
 }
+#endif
 
 already_AddRefed<nsStyleContext>
 KeyframeEffectReadOnly::CreateStyleContextForAnimationValue(
@@ -1987,11 +2019,13 @@ KeyframeEffectReadOnly::UpdateEffectSet(EffectSet* aEffectSet) const
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 template
 void
 KeyframeEffectReadOnly::ComposeStyle<RefPtr<AnimValuesStyleRule>&>(
   RefPtr<AnimValuesStyleRule>& aAnimationRule,
   const nsCSSPropertyIDSet& aPropertiesToSkip);
+#endif
 
 template
 void

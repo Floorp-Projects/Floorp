@@ -29,7 +29,6 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 var { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-var { LoadContextInfo } = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 var { gDevTools } = require("devtools/client/framework/devtools");
@@ -254,7 +253,7 @@ AppCacheUtils.prototype = {
 
     let entries = [];
 
-    let appCacheStorage = Services.cache2.appCacheStorage(LoadContextInfo.default, null);
+    let appCacheStorage = Services.cache2.appCacheStorage(Services.loadContextInfo.default, null);
     appCacheStorage.asyncVisitStorage({
       onCacheStorageInfo: function () {},
 
@@ -303,7 +302,7 @@ AppCacheUtils.prototype = {
       throw new Error(l10n.GetStringFromName("cacheDisabled"));
     }
 
-    let appCacheStorage = Services.cache2.appCacheStorage(LoadContextInfo.default, null);
+    let appCacheStorage = Services.cache2.appCacheStorage(Services.loadContextInfo.default, null);
     appCacheStorage.asyncEvictStorage({
       onCacheEntryDoomed: function (result) {}
     });

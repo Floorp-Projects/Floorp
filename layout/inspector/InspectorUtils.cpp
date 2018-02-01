@@ -21,9 +21,11 @@
 #include "nsIPresShell.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMCharacterData.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleNode.h"
 #include "nsIStyleRule.h"
 #include "mozilla/css/StyleRule.h"
+#endif
 #include "nsIDOMWindow.h"
 #include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"
@@ -36,9 +38,13 @@
 #include "nsRange.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/Element.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleWalker.h"
+#endif
 #include "nsCSSPseudoClasses.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsCSSRuleProcessor.h"
+#endif
 #include "mozilla/dom/CSSLexer.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -183,7 +189,9 @@ InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
   }
 
 
-  if (auto gecko = styleContext->GetAsGecko()) {
+  if (styleContext->IsGecko()) {
+#ifdef MOZ_OLD_STYLE
+    auto gecko = styleContext->AsGecko();
     nsRuleNode* ruleNode = gecko->RuleNode();
     if (!ruleNode) {
       return;
@@ -204,6 +212,9 @@ InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
         }
       }
     }
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   } else {
     nsIDocument* doc = aElement.OwnerDoc();
     nsIPresShell* shell = doc->GetShell();
@@ -488,6 +499,13 @@ static void GetKeywordsForProperty(const nsCSSPropertyID aProperty,
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("polygon"));
   } else if (aProperty == eCSSProperty_clip) {
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("rect"));
+  } else if (aProperty == eCSSProperty_list_style_type) {
+    int32_t length;
+    const char* const* values = nsCSSProps::GetListStyleTypes(&length);
+    for (int32_t i = 0; i < length; ++i) {
+      InsertNoDuplicates(aArray, NS_ConvertASCIItoUTF16(values[i]));
+    }
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("symbols"));
   }
 }
 
@@ -1128,6 +1146,7 @@ InspectorUtils::ParseStyleSheet(GlobalObject& aGlobalObject,
                                 const nsAString& aInput,
                                 ErrorResult& aRv)
 {
+#ifdef MOZ_OLD_STYLE
   RefPtr<CSSStyleSheet> geckoSheet = do_QueryObject(&aSheet);
   if (geckoSheet) {
     nsresult rv = geckoSheet->ReparseSheet(aInput);
@@ -1136,6 +1155,7 @@ InspectorUtils::ParseStyleSheet(GlobalObject& aGlobalObject,
     }
     return;
   }
+#endif
 
   RefPtr<ServoStyleSheet> servoSheet = do_QueryObject(&aSheet);
   if (servoSheet) {

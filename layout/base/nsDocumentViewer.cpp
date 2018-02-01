@@ -122,6 +122,7 @@
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/dom/ScriptLoader.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2327,7 +2328,11 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
 
   StyleSetHandle styleSet;
   if (backendType == StyleBackendType::Gecko) {
+#ifdef MOZ_OLD_STYLE
     styleSet = new nsStyleSet();
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   } else {
     styleSet = new ServoStyleSet(ServoStyleSet::Kind::Master);
   }

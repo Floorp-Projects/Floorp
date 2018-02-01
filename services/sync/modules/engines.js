@@ -66,9 +66,7 @@ this.Tracker = function Tracker(name, engine) {
   });
   this.ignoreAll = false;
 
-  Svc.Obs.add("weave:engine:start-tracking", this);
-  Svc.Obs.add("weave:engine:stop-tracking", this);
-
+  this.asyncObserver = Async.asyncObserver(this, this._log);
 };
 
 Tracker.prototype = {
@@ -96,11 +94,6 @@ Tracker.prototype = {
     return ensureDirectory(this._storage.path);
   },
 
-  get changedIDs() {
-    Async.promiseSpinningly(this._storage.load());
-    return this._storage.data;
-  },
-
   set score(value) {
     this._score = value;
     Observers.notify("weave:engine:score:updated", this.name);
@@ -112,6 +105,11 @@ Tracker.prototype = {
   },
 
   persistChangedIDs: true,
+
+  async getChangedIDs() {
+    await this._storage.load();
+    return this._storage.data;
+  },
 
   _saveChangedIDs() {
     if (!this.persistChangedIDs) {
@@ -136,13 +134,14 @@ Tracker.prototype = {
       this._ignored.splice(index, 1);
   },
 
-  _saveChangedID(id, when) {
+  async _saveChangedID(id, when) {
     this._log.trace(`Adding changed ID: ${id}, ${JSON.stringify(when)}`);
-    this.changedIDs[id] = when;
+    const changedIDs = await this.getChangedIDs();
+    changedIDs[id] = when;
     this._saveChangedIDs();
   },
 
-  addChangedID(id, when) {
+  async addChangedID(id, when) {
     if (!id) {
       this._log.warn("Attempted to add undefined ID to tracker");
       return false;
@@ -157,15 +156,16 @@ Tracker.prototype = {
       when = this._now();
     }
 
+    const changedIDs = await this.getChangedIDs();
     // Add/update the entry if we have a newer time.
-    if ((this.changedIDs[id] || -Infinity) < when) {
-      this._saveChangedID(id, when);
+    if ((changedIDs[id] || -Infinity) < when) {
+      await this._saveChangedID(id, when);
     }
 
     return true;
   },
 
-  removeChangedID(...ids) {
+  async removeChangedID(...ids) {
     if (!ids.length || this.ignoreAll) {
       return false;
     }
@@ -178,19 +178,20 @@ Tracker.prototype = {
         this._log.debug(`Not removing ignored ID ${id} from tracker`);
         continue;
       }
-      if (this.changedIDs[id] != null) {
+      const changedIDs = await this.getChangedIDs();
+      if (changedIDs[id] != null) {
         this._log.trace("Removing changed ID " + id);
-        delete this.changedIDs[id];
+        delete changedIDs[id];
       }
     }
-    this._saveChangedIDs();
+    await this._saveChangedIDs();
     return true;
   },
 
-  clearChangedIDs() {
+  async clearChangedIDs() {
     this._log.trace("Clearing changed ID list");
     this._storage.data = {};
-    this._saveChangedIDs();
+    await this._saveChangedIDs();
   },
 
   _now() {
@@ -199,12 +200,30 @@ Tracker.prototype = {
 
   _isTracking: false,
 
-  // Override these in your subclasses.
-  startTracking() {
+  start() {
+    if (!this.engineIsEnabled()) {
+      return;
+    }
+    this._log.trace("start().");
+    if (!this._isTracking) {
+      this.onStart();
+      this._isTracking = true;
+    }
   },
 
-  stopTracking() {
+  async stop() {
+    this._log.trace("stop().");
+    if (this._isTracking) {
+      await this.asyncObserver.promiseObserversComplete();
+      this.onStop();
+      this._isTracking = false;
+    }
   },
+
+  // Override these in your subclasses.
+  onStart() {},
+  onStop() {},
+  async observe(subject, topic, data) {},
 
   engineIsEnabled() {
     if (!this.engine) {
@@ -214,48 +233,20 @@ Tracker.prototype = {
     return this.engine.enabled;
   },
 
-  onEngineEnabledChanged(engineEnabled) {
+  async onEngineEnabledChanged(engineEnabled) {
     if (engineEnabled == this._isTracking) {
       return;
     }
 
     if (engineEnabled) {
-      this.startTracking();
-      this._isTracking = true;
+      this.start();
     } else {
-      this.stopTracking();
-      this._isTracking = false;
-      this.clearChangedIDs();
-    }
-  },
-
-  observe(subject, topic, data) {
-    switch (topic) {
-      case "weave:engine:start-tracking":
-        if (!this.engineIsEnabled()) {
-          return;
-        }
-        this._log.trace("Got start-tracking.");
-        if (!this._isTracking) {
-          this.startTracking();
-          this._isTracking = true;
-        }
-        return;
-      case "weave:engine:stop-tracking":
-        this._log.trace("Got stop-tracking.");
-        if (this._isTracking) {
-          this.stopTracking();
-          this._isTracking = false;
-        }
+      await this.stop();
+      await this.clearChangedIDs();
     }
   },
 
   async finalize() {
-    // Stop listening for tracking and engine enabled change notifications.
-    // Important for tests where we unregister the engine during cleanup.
-    Svc.Obs.remove("weave:engine:start-tracking", this);
-    Svc.Obs.remove("weave:engine:stop-tracking", this);
-
     // Persist all pending tracked changes to disk, and wait for the final write
     // to finish.
     this._saveChangedIDs();
@@ -619,7 +610,7 @@ EngineManager.prototype = {
     }
   },
 
-  unregister(val) {
+  async unregister(val) {
     let name = val;
     if (val instanceof Engine) {
       name = val.name;
@@ -627,15 +618,15 @@ EngineManager.prototype = {
     if (name in this._engines) {
       let engine = this._engines[name];
       delete this._engines[name];
-      Async.promiseSpinningly(engine.finalize());
+      await engine.finalize();
     }
   },
 
-  clear() {
+  async clear() {
     for (let name in this._engines) {
       let engine = this._engines[name];
       delete this._engines[name];
-      Async.promiseSpinningly(engine.finalize());
+      await engine.finalize();
     }
   },
 };
@@ -660,6 +651,7 @@ this.Engine = function Engine(name, service) {
   XPCOMUtils.defineLazyPreferenceGetter(this, "_enabled",
     `services.sync.engine.${this.prefName}`, false,
     (data, previous, latest) =>
+      // We do not await on the promise onEngineEnabledChanged returns.
       this._tracker.onEngineEnabledChanged(latest));
 };
 Engine.prototype = {
@@ -712,6 +704,15 @@ Engine.prototype = {
     return tracker;
   },
 
+  startTracking() {
+    this._tracker.start();
+  },
+
+  // Returns a promise
+  stopTracking() {
+    return this._tracker.stop();
+  },
+
   async sync() {
     if (!this.enabled) {
       return false;
@@ -741,7 +742,7 @@ Engine.prototype = {
     this._tracker.ignoreAll = true;
     await this._store.wipe();
     this._tracker.ignoreAll = false;
-    this._tracker.clearChangedIDs();
+    await this._tracker.clearChangedIDs();
   },
 
   async wipeClient() {
@@ -957,7 +958,7 @@ SyncEngine.prototype = {
    * method to bypass the tracker for certain or all changed items.
    */
   async getChangedIDs() {
-    return this._tracker.changedIDs;
+    return this._tracker.getChangedIDs();
   },
 
   // Create a new record using the store and add in metadata.
@@ -983,7 +984,6 @@ SyncEngine.prototype = {
 
   // Any setup that needs to happen at the beginning of each sync.
   async _syncStartup() {
-
     // Determine if we need to wipe on outdated versions
     let metaGlobal = await this.service.recordManager.get(this.metaURL);
     let engines = metaGlobal.payload.engines || {};
@@ -1039,7 +1039,7 @@ SyncEngine.prototype = {
     this._modified.replace(initialChanges);
     // Clear the tracker now. If the sync fails we'll add the ones we failed
     // to upload back.
-    this._tracker.clearChangedIDs();
+    await this._tracker.clearChangedIDs();
     this._tracker.resetScore();
 
     this._log.info(this._modified.count() +
@@ -1337,7 +1337,7 @@ SyncEngine.prototype = {
 
     if (this._shouldDeleteRemotely(item)) {
       this._log.trace("Deleting item from server without applying", item);
-      this._deleteId(item.id);
+      await this._deleteId(item.id);
       return { shouldApply: false, error: null };
     }
 
@@ -1412,8 +1412,8 @@ SyncEngine.prototype = {
     return true;
   },
 
-  _deleteId(id) {
-    this._tracker.removeChangedID(id);
+  async _deleteId(id) {
+    await this._tracker.removeChangedID(id);
     this._noteDeletedId(id);
   },
 
@@ -1427,7 +1427,7 @@ SyncEngine.prototype = {
 
   async _switchItemToDupe(localDupeGUID, incomingItem) {
     // The local, duplicate ID is always deleted on the server.
-    this._deleteId(localDupeGUID);
+    await this._deleteId(localDupeGUID);
 
     // We unconditionally change the item's ID in case the engine knows of
     // an item but doesn't expose it through itemExists. If the API
@@ -1765,6 +1765,7 @@ SyncEngine.prototype = {
         }
       }
     }
+    await this._tracker.asyncObserver.promiseObserversComplete();
   },
 
   async _syncCleanup() {
@@ -1908,6 +1909,7 @@ SyncEngine.prototype = {
    * @return A `Changeset` object.
    */
   async pullNewChanges() {
+    await this._tracker.asyncObserver.promiseObserversComplete();
     return this.getChangedIDs();
   },
 
@@ -1918,7 +1920,7 @@ SyncEngine.prototype = {
    */
   async trackRemainingChanges() {
     for (let [id, change] of this._modified.entries()) {
-      this._tracker.addChangedID(id, change);
+      await this._tracker.addChangedID(id, change);
     }
   },
 

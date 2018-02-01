@@ -199,7 +199,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
             None => {
                 let mut new_target = T::new(Some(self.max_size), self.screen_size);
                 let origin = new_target.allocate(alloc_size).expect(&format!(
-                    "Each render task must allocate <= size of one target! ({:?})",
+                    "Each render task must allocate <= size of one target! ({})",
                     alloc_size
                 ));
                 self.targets.push(new_target);

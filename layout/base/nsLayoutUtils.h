@@ -9,6 +9,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TypedEnumBits.h"
 #include "nsBoundingMetrics.h"
@@ -23,7 +24,9 @@
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleNode.h"
+#endif
 #include "imgIContainer.h"
 #include "mozilla/gfx/2D.h"
 #include "Units.h"
@@ -2518,8 +2521,10 @@ public:
   // or disabled at compile-time. However, we provide the additional capability
   // to disable it dynamically in stylo-enabled builds via a pref.
   static bool StyloEnabled() {
-#ifdef MOZ_STYLO
+#if defined(MOZ_STYLO) && defined(MOZ_OLD_STYLE)
     return sStyloEnabled && StyloSupportedInCurrentProcess();
+#elif defined(MOZ_STYLO)
+    return true;
 #else
     return false;
 #endif

@@ -37,14 +37,20 @@
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
 #include "nsViewManager.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/GeckoRestyleManager.h"
+#endif
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
 #include "SurfaceCacheUtils.h"
 #include "nsMediaFeatures.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleNode.h"
+#endif
 #include "gfxPlatform.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsCSSRules.h"
+#endif
 #include "nsFontFaceLoader.h"
 #include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/EffectCompositor.h"
@@ -156,14 +162,25 @@ nsPresContext::MakeColorPref(const nsString& aColor)
     ? mShell->StyleSet()->GetAsServo()
     : nullptr;
 
-  if (servoStyleSet) {
+  bool useServoParser =
+#ifdef MOZ_OLD_STYLE
+    servoStyleSet;
+#else
+    true;
+#endif
+
+  if (useServoParser) {
     ok = ServoCSSParser::ComputeColor(servoStyleSet, NS_RGB(0, 0, 0), aColor,
                                       &result);
   } else {
+#ifdef MOZ_OLD_STYLE
     nsCSSParser parser;
     nsCSSValue value;
     ok = parser.ParseColorString(aColor, nullptr, 0, value) &&
          nsRuleNode::ComputeColor(value, this, nullptr, result);
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   if (!ok) {
@@ -1011,7 +1028,11 @@ nsPresContext::AttachShell(nsIPresShell* aShell, StyleBackendType aBackendType)
   if (aBackendType == StyleBackendType::Servo) {
     mRestyleManager = new ServoRestyleManager(this);
   } else {
+#ifdef MOZ_OLD_STYLE
     mRestyleManager = new GeckoRestyleManager(this);
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   // Since CounterStyleManager is also the name of a method of
@@ -2050,8 +2071,12 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,
 
   mUsesRootEMUnits = false;
   mUsesExChUnits = false;
-  if (nsStyleSet* styleSet = mShell->StyleSet()->GetAsGecko()) {
-    styleSet->SetUsesViewportUnits(false);
+  if (mShell->StyleSet()->IsGecko()) {
+#ifdef MOZ_OLD_STYLE
+    mShell->StyleSet()->AsGecko()->SetUsesViewportUnits(false);
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
   mDocument->RebuildUserFontSet();
   RebuildCounterStyles();
@@ -2273,11 +2298,16 @@ bool
 nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
                                        uint32_t aRuleTypeMask) const
 {
-  if (auto* geckoStyleContext = aFrame->StyleContext()->GetAsGecko()) {
+  if (aFrame->StyleContext()->IsGecko()) {
+#ifdef MOZ_OLD_STYLE
+    auto* geckoStyleContext = aFrame->StyleContext()->AsGecko();
     return
       nsRuleNode::HasAuthorSpecifiedRules(geckoStyleContext,
                                           aRuleTypeMask,
                                           UseDocumentColors());
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
   Element* elem = aFrame->GetContent()->AsElement();
 
@@ -2793,15 +2823,18 @@ nsPresContext::HasCachedStyleData()
     return false;
   }
 
-  nsStyleSet* styleSet = mShell->StyleSet()->GetAsGecko();
-  if (!styleSet) {
-    // XXXheycam ServoStyleSets do not use the rule tree, so just assume for now
-    // that we need to restyle when e.g. dppx changes assuming we're sufficiently
-    // bootstrapped.
-    return mShell->DidInitialize();
+  if (mShell->StyleSet()->IsGecko()) {
+#ifdef MOZ_OLD_STYLE
+    return mShell->StyleSet()->AsGecko()->HasCachedStyleData();
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
-  return styleSet->HasCachedStyleData();
+  // XXXheycam ServoStyleSets do not use the rule tree, so just assume for now
+  // that we need to restyle when e.g. dppx changes assuming we're sufficiently
+  // bootstrapped.
+  return mShell->DidInitialize();
 }
 
 already_AddRefed<nsITimer>

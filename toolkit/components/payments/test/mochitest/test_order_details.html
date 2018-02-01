@@ -1,0 +1,132 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  Test the order-details component
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the order-details component</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="payments_common.js"></script>
+  <script src="custom-elements.min.js"></script>
+  <script src="PaymentsStore.js"></script>
+  <script src="PaymentStateSubscriberMixin.js"></script>
+  <script src="order-details.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <template id="order-details-template">
+    <ul class="main-list"></ul>
+    <ul class="footer-items-list"></ul>
+
+    <div class="details-total">
+      <h2 class="label">Total</h2>
+      <currency-amount></currency-amount>
+   </div>
+  </template>
+</head>
+<body>
+  <p id="display">
+    <order-details></order-details>
+  </p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+/** Test the order-details component **/
+
+/* import-globals-from payments_common.js */
+/* import-globals-from ../../res/mixins/PaymentStateSubscriberMixin.js */
+/* import-globals-from ../../res/containers/order-details.js */
+
+let orderDetails = document.querySelector("order-details");
+let emptyState = requestStore.getState();
+
+function setup() {
+  let initialState = deepClone(emptyState);
+  requestStore.setState(initialState);
+}
+
+function deepClone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+add_task(async function isFooterItem() {
+  ok(OrderDetails.isFooterItem({
+    label: "Levy",
+    type: "tax",
+    amount: { currency: "USD", value: "1" },
+  }, "items with type of 'tax' are footer items"));
+  ok(!OrderDetails.isFooterItem({
+    label: "Levis",
+    amount: { currency: "USD", value: "1" },
+  }, "items without type of 'tax' arent footer items"));
+});
+
+add_task(async function test_initial_state() {
+  setup();
+  is(orderDetails.mainItemsList.childElementCount, 0, "main items list is initially empty");
+  is(orderDetails.footerItemsList.childElementCount, 0, "footer items list is initially empty");
+  is(orderDetails.totalAmountElem.value, 0, "total amount is 0");
+});
+
+add_task(async function test_list_population() {
+  setup();
+  let paymentDetails = requestStore.getState().request.paymentDetails;
+  paymentDetails.displayItems = [
+    {
+      label: "One",
+      amount: { currency: "USD", value: "5" },
+    },
+    {
+      label: "Two",
+      amount: { currency: "USD", value: "6" },
+    },
+    {
+      label: "Three",
+      amount: { currency: "USD", value: "7" },
+    },
+  ];
+  requestStore.setState({ paymentDetails });
+  await asyncElementRendered();
+  is(orderDetails.mainItemsList.childElementCount, 3, "main items list has correct # children");
+  is(orderDetails.footerItemsList.childElementCount, 0, "footer items list has 0 children");
+
+  paymentDetails.displayItems = [
+    {
+      label: "Levy",
+      type: "tax",
+      amount: { currency: "USD", value: "1" },
+    },
+    {
+      label: "Item",
+      amount: { currency: "USD", value: "6" },
+    },
+    {
+      label: "Thing",
+      amount: { currency: "USD", value: "7" },
+    },
+  ];
+  requestStore.setState({ paymentDetails });
+  await asyncElementRendered();
+
+  is(orderDetails.mainItemsList.childElementCount, 2, "main list has correct # children");
+  is(orderDetails.footerItemsList.childElementCount, 1, "footer list has correct # children");
+});
+
+add_task(async function test_total() {
+  let paymentDetails = requestStore.getState().request.paymentDetails;
+  paymentDetails.totalItem = { label: "foo", amount: { currency: "JPY", value: 5 }};
+  requestStore.setState({ paymentDetails });
+  await asyncElementRendered();
+
+  is(orderDetails.totalAmountElem.value, 5, "total amount gets updated");
+  is(orderDetails.totalAmountElem.currency, "JPY", "total currency gets updated");
+});
+
+</script>
+
+</body>
+</html>

@@ -15,7 +15,9 @@
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StyleComplexColor.h"
 #include "nsCSSAnonBoxes.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsStyleSet.h"
+#endif
 
 class nsAtom;
 class nsPresContext;
@@ -200,7 +202,9 @@ public:
     return mBits & GetBitForSID(aSID);
   }
 
+#ifdef MOZ_OLD_STYLE
   inline nsRuleNode* RuleNode();
+#endif
   inline const ServoComputedData* ComputedData();
 
   void AddStyleBit(const uint64_t& aBit) { mBits |= aBit; }
@@ -349,11 +353,13 @@ protected:
 #endif
 };
 
+#ifdef MOZ_OLD_STYLE
 already_AddRefed<mozilla::GeckoStyleContext>
 NS_NewStyleContext(mozilla::GeckoStyleContext* aParentContext,
                    nsAtom* aPseudoTag,
                    mozilla::CSSPseudoElementType aPseudoType,
                    nsRuleNode* aRuleNode,
                    bool aSkipParentDisplayBasedStyleFixup);
+#endif
 
 #endif

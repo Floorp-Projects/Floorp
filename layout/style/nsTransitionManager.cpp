@@ -17,7 +17,9 @@
 #include "mozilla/TimeStamp.h"
 #include "nsRefreshDriver.h"
 #include "nsRuleProcessorData.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleWalker.h"
+#endif
 #include "nsCSSPropertyIDSet.h"
 #include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/EffectCompositor.h"
@@ -35,7 +37,9 @@
 #include "nsDisplayList.h"
 #include "nsRFPService.h"
 #include "nsStyleChangeList.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsStyleSet.h"
+#endif
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
 #include "nsDOMMutationObserver.h"
@@ -126,20 +130,26 @@ ElementPropertyTransition::UpdateStartValueFromReplacedTransition()
           Servo_AnimationValue_Uncompute(startValue.mServo).Consume();
         mProperties[0].mSegments[0].mFromValue = Move(startValue);
       }
-    } else if (StyleAnimationValue::Interpolate(mProperties[0].mProperty,
+    } else {
+#ifdef MOZ_OLD_STYLE
+      if (StyleAnimationValue::Interpolate(mProperties[0].mProperty,
                                                 replacedFrom.mGecko,
                                                 replacedTo.mGecko,
                                                 valuePosition,
                                                 startValue.mGecko)) {
-      nsCSSValue cssValue;
-      DebugOnly<bool> uncomputeResult =
-        StyleAnimationValue::UncomputeValue(mProperties[0].mProperty,
-                                            startValue.mGecko,
-                                            cssValue);
-      MOZ_ASSERT(uncomputeResult, "UncomputeValue should not fail");
-      mKeyframes[0].mPropertyValues[0].mValue = cssValue;
+        nsCSSValue cssValue;
+        DebugOnly<bool> uncomputeResult =
+          StyleAnimationValue::UncomputeValue(mProperties[0].mProperty,
+                                              startValue.mGecko,
+                                              cssValue);
+        MOZ_ASSERT(uncomputeResult, "UncomputeValue should not fail");
+        mKeyframes[0].mPropertyValues[0].mValue = cssValue;
 
-      mProperties[0].mSegments[0].mFromValue = Move(startValue);
+        mProperties[0].mSegments[0].mFromValue = Move(startValue);
+      }
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     }
   }
 
@@ -423,6 +433,7 @@ CSSTransition::SetEffectFromStyle(dom::AnimationEffectReadOnly* aEffect)
 
 ////////////////////////// nsTransitionManager ////////////////////////////
 
+#ifdef MOZ_OLD_STYLE
 static inline bool
 ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
                                 GeckoStyleContext* aStyleContext,
@@ -433,6 +444,7 @@ ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
          StyleAnimationValue::ExtractComputedValue(aProperty, aStyleContext,
                                                    aAnimationValue.mGecko);
 }
+#endif
 
 static inline bool
 ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
@@ -450,6 +462,7 @@ ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
   return !!aAnimationValue.mServo;
 }
 
+#ifdef MOZ_OLD_STYLE
 void
 nsTransitionManager::StyleContextChanged(dom::Element *aElement,
                                          GeckoStyleContext* aOldStyleContext,
@@ -610,6 +623,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
                                                               cascadeLevel);
   }
 }
+#endif
 
 bool
 nsTransitionManager::UpdateTransitions(
@@ -787,6 +801,7 @@ AppendKeyframe(double aOffset,
     frame.mPropertyValues.AppendElement(
       Move(PropertyValuePair(aProperty, Move(decl))));
   } else {
+#ifdef MOZ_OLD_STYLE
     nsCSSValue propertyValue;
     DebugOnly<bool> uncomputeResult =
       StyleAnimationValue::UncomputeValue(aProperty, Move(aValue.mGecko),
@@ -795,6 +810,9 @@ AppendKeyframe(double aOffset,
                "Unable to get specified value from computed value");
     frame.mPropertyValues.AppendElement(
       Move(PropertyValuePair(aProperty, Move(propertyValue))));
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
   return frame;
 }
@@ -1099,6 +1117,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
   aWhichStarted->AddProperty(aProperty);
 }
 
+#ifdef MOZ_OLD_STYLE
 void
 nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
                                                CSSPseudoElementType aPseudoType,
@@ -1147,3 +1166,4 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
     collection = nullptr;
   }
 }
+#endif

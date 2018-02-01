@@ -22,8 +22,10 @@
 #include "nsError.h"
 #include "nsIPresShell.h"
 #include "nsGkAtoms.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleWalker.h"
 #include "mozilla/css/Declaration.h"
+#endif
 #include "nsCSSProps.h"
 #include "nsCSSParser.h"
 #include "mozilla/EventListenerManager.h"
@@ -930,6 +932,7 @@ nsSVGElement::NodeInfoChanged(nsIDocument* aOldDoc)
   OwnerDoc()->ScheduleSVGForPresAttrEvaluation(this);
 }
 
+#ifdef MOZ_OLD_STYLE
 NS_IMETHODIMP
 nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
@@ -948,6 +951,7 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP_(bool)
 nsSVGElement::IsAttributeMapped(const nsAtom* name) const
@@ -1204,8 +1208,10 @@ public:
 private:
   // MEMBER DATA
   // -----------
-  nsCSSParser       mParser;
   css::Loader*      mLoader;
+#ifdef MOZ_OLD_STYLE
+  nsCSSParser       mParser;
+#endif
 
   // Arguments for nsCSSParser::ParseProperty
   nsIURI*           mDocURI;
@@ -1225,8 +1231,14 @@ MappedAttrParser::MappedAttrParser(css::Loader* aLoader,
                                    already_AddRefed<nsIURI> aBaseURI,
                                    nsSVGElement* aElement,
                                    StyleBackendType aBackend)
-  : mParser(aLoader), mLoader(aLoader), mDocURI(aDocURI), mBaseURI(aBaseURI),
-    mElement(aElement), mBackend(aBackend)
+  : mLoader(aLoader)
+#ifdef MOZ_OLD_STYLE
+  , mParser(aLoader)
+#endif
+  , mDocURI(aDocURI)
+  , mBaseURI(aBaseURI)
+  , mElement(aElement)
+  , mBackend(aBackend)
 {
 }
 
@@ -1243,8 +1255,12 @@ MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
 {
   if (!mDecl) {
     if (mBackend == StyleBackendType::Gecko) {
+#ifdef MOZ_OLD_STYLE
       mDecl = new css::Declaration();
       mDecl->AsGecko()->InitializeEmpty();
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     } else {
       mDecl = new ServoDeclarationBlock();
     }
@@ -1257,8 +1273,12 @@ MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
   if (propertyID != eCSSProperty_UNKNOWN) {
     bool changed = false; // outparam for ParseProperty.
     if (mBackend == StyleBackendType::Gecko) {
+#ifdef MOZ_OLD_STYLE
       mParser.ParseProperty(propertyID, aMappedAttrValue, mDocURI, mBaseURI,
                             mElement->NodePrincipal(), mDecl->AsGecko(), &changed, false, true);
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     } else {
       NS_ConvertUTF16toUTF8 value(aMappedAttrValue);
       // FIXME (bug 1343964): Figure out a better solution for sending the base uri to servo
@@ -1295,12 +1315,16 @@ MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
   if (aMappedAttrName == nsGkAtoms::lang) {
     propertyID = eCSSProperty__x_lang;
     if (mBackend == StyleBackendType::Gecko) {
+#ifdef MOZ_OLD_STYLE
       nsCSSExpandedDataBlock block;
       mDecl->AsGecko()->ExpandTo(&block);
       nsCSSValue cssValue(PromiseFlatString(aMappedAttrValue), eCSSUnit_Ident);
       block.AddLonghandProperty(propertyID, cssValue);
       mDecl->AsGecko()->ValueAppended(propertyID);
       mDecl->AsGecko()->CompressFrom(&block);
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     } else {
       RefPtr<nsAtom> atom = NS_Atomize(aMappedAttrValue);
       Servo_DeclarationBlock_SetIdentStringValue(mDecl->AsServo()->Raw(), propertyID, atom);

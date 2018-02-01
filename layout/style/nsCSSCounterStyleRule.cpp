@@ -130,8 +130,12 @@ nsCSSCounterStyleRule::SetName(const nsAString& aName)
   if (!doc || doc->IsStyledByServo()) {
     name = ServoCSSParser::ParseCounterStyleName(aName);
   } else {
+#ifdef MOZ_OLD_STYLE
     nsCSSParser parser;
     name = parser.ParseCounterStyleName(aName, nullptr);
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   if (name) {
@@ -412,11 +416,15 @@ nsCSSCounterStyleRule::SetDescriptor(nsCSSCounterDesc aDescID,
     ok = ServoCSSParser::ParseCounterStyleDescriptor(aDescID, aValue, data,
                                                      value);
   } else {
+#ifdef MOZ_OLD_STYLE
     nsCSSParser parser;
     nsIURI* baseURL = sheet ? sheet->GetBaseURI() : nullptr;
     nsIPrincipal* principal = sheet ? sheet->Principal() : nullptr;
     ok = parser.ParseCounterDescriptor(aDescID, aValue, nullptr,
                                        baseURL, principal, value);
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   if (ok && CheckDescValue(GetSystem(), aDescID, value)) {

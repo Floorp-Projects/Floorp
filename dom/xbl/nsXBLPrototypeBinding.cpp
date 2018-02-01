@@ -38,7 +38,9 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIScriptError.h"
 
+#ifdef MOZ_OLD_STYLE
 #include "nsCSSRuleProcessor.h"
+#endif
 #include "nsXBLResourceLoader.h"
 #include "mozilla/AddonPathService.h"
 #include "mozilla/dom/CDATASection.h"
@@ -564,6 +566,7 @@ nsXBLPrototypeBinding::SetInitialAttributes(
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 nsIStyleRuleProcessor*
 nsXBLPrototypeBinding::GetRuleProcessor()
 {
@@ -573,6 +576,7 @@ nsXBLPrototypeBinding::GetRuleProcessor()
 
   return nullptr;
 }
+#endif
 
 void
 nsXBLPrototypeBinding::ComputeServoStyleSet(nsPresContext* aPresContext)
