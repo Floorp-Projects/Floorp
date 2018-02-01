@@ -248,8 +248,7 @@ void
 nsTreeContentView::GetColumnProperties(nsTreeColumn& aColumn,
                                        nsAString& aProperties)
 {
-  IgnoredErrorResult rv;
-  RefPtr<Element> element = aColumn.GetElement(rv);
+  RefPtr<Element> element = aColumn.GetElement(IgnoreErrors());
 
   if (element) {
     element->GetAttribute(NS_LITERAL_STRING("properties"), aProperties);

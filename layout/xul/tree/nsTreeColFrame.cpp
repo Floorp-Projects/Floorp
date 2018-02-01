@@ -172,8 +172,8 @@ nsTreeColFrame::GetTreeBoxObject()
     RefPtr<nsXULElement> treeElement =
       nsXULElement::FromContentOrNull(grandParent);
     if (treeElement) {
-      IgnoredErrorResult ignored;
-      nsCOMPtr<nsIBoxObject> boxObject = treeElement->GetBoxObject(ignored);
+      nsCOMPtr<nsIBoxObject> boxObject =
+        treeElement->GetBoxObject(IgnoreErrors());
 
       nsCOMPtr<nsITreeBoxObject> treeBoxObject = do_QueryInterface(boxObject);
       result = treeBoxObject.get();
