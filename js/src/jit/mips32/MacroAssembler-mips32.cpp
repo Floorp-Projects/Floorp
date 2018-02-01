@@ -62,20 +62,26 @@ MacroAssemblerMIPSCompat::convertInt32ToDouble(const BaseIndex& src, FloatRegist
 void
 MacroAssemblerMIPSCompat::convertUInt32ToDouble(Register src, FloatRegister dest)
 {
-    // We use SecondScratchDoubleReg because MacroAssembler::loadFromTypedArray
-    // calls with ScratchDoubleReg as dest.
-    MOZ_ASSERT(dest != SecondScratchDoubleReg);
+    Label positive, done;
+    ma_b(src, src, &positive, NotSigned, ShortJump);
 
-    // Subtract INT32_MIN to get a positive number
-    ma_subu(ScratchRegister, src, Imm32(INT32_MIN));
+    const uint32_t kExponentShift = mozilla::FloatingPoint<double>::kExponentShift - 32;
+    const uint32_t kExponent = (31 + mozilla::FloatingPoint<double>::kExponentBias);
 
-    // Convert value
-    as_mtc1(ScratchRegister, dest);
-    as_cvtdw(dest, dest);
+    ma_ext(SecondScratchReg, src, 31 - kExponentShift, kExponentShift);
+    ma_li(ScratchRegister, Imm32(kExponent << kExponentShift));
+    ma_or(SecondScratchReg, ScratchRegister);
+    ma_sll(ScratchRegister, src, Imm32(kExponentShift + 1));
+    moveToDoubleHi(SecondScratchReg, dest);
+    moveToDoubleLo(ScratchRegister, dest);
 
-    // Add unsigned value of INT32_MIN
-    ma_lid(SecondScratchDoubleReg, 2147483648.0);
-    as_addd(dest, dest, SecondScratchDoubleReg);
+    ma_b(&done, ShortJump);
+
+    bind(&positive);
+    convertInt32ToDouble(src, dest);
+
+    bind(&done);
+
 }
 
 void
@@ -84,10 +90,19 @@ MacroAssemblerMIPSCompat::convertUInt32ToFloat32(Register src, FloatRegister des
     Label positive, done;
     ma_b(src, src, &positive, NotSigned, ShortJump);
 
-    // We cannot do the same as convertUInt32ToDouble because float32 doesn't
-    // have enough precision.
-    convertUInt32ToDouble(src, dest);
-    convertDoubleToFloat32(dest, dest);
+    const uint32_t kExponentShift = mozilla::FloatingPoint<double>::kExponentShift - 32;
+    const uint32_t kExponent = (31 + mozilla::FloatingPoint<double>::kExponentBias);
+
+    ma_ext(SecondScratchReg, src, 31 - kExponentShift, kExponentShift);
+    ma_li(ScratchRegister, Imm32(kExponent << kExponentShift));
+    ma_or(SecondScratchReg, ScratchRegister);
+    ma_sll(ScratchRegister, src, Imm32(kExponentShift + 1));
+    FloatRegister destDouble = dest.asDouble();
+    moveToDoubleHi(SecondScratchReg, destDouble);
+    moveToDoubleLo(ScratchRegister, destDouble);
+
+    convertDoubleToFloat32(destDouble, dest);
+
     ma_b(&done, ShortJump);
 
     bind(&positive);

@@ -58,20 +58,8 @@ MacroAssemblerMIPS64Compat::convertInt32ToDouble(const BaseIndex& src, FloatRegi
 void
 MacroAssemblerMIPS64Compat::convertUInt32ToDouble(Register src, FloatRegister dest)
 {
-    // We use SecondScratchDoubleReg because MacroAssembler::loadFromTypedArray
-    // calls with ScratchDoubleReg as dest.
-    MOZ_ASSERT(dest != SecondScratchDoubleReg);
-
-    // Subtract INT32_MIN to get a positive number
-    ma_subu(ScratchRegister, src, Imm32(INT32_MIN));
-
-    // Convert value
-    as_mtc1(ScratchRegister, dest);
-    as_cvtdw(dest, dest);
-
-    // Add unsigned value of INT32_MIN
-    ma_lid(SecondScratchDoubleReg, 2147483648.0);
-    as_addd(dest, dest, SecondScratchDoubleReg);
+    ma_dext(ScratchRegister, src, Imm32(0), Imm32(32));
+    asMasm().convertInt64ToDouble(Register64(ScratchRegister), dest);
 }
 
 void
@@ -101,19 +89,8 @@ MacroAssemblerMIPS64Compat::convertUInt64ToDouble(Register src, FloatRegister de
 void
 MacroAssemblerMIPS64Compat::convertUInt32ToFloat32(Register src, FloatRegister dest)
 {
-    Label positive, done;
-    ma_b(src, src, &positive, NotSigned, ShortJump);
-
-    // We cannot do the same as convertUInt32ToDouble because float32 doesn't
-    // have enough precision.
-    convertUInt32ToDouble(src, dest);
-    convertDoubleToFloat32(dest, dest);
-    ma_b(&done, ShortJump);
-
-    bind(&positive);
-    convertInt32ToFloat32(src, dest);
-
-    bind(&done);
+    ma_dext(ScratchRegister, src, Imm32(0), Imm32(32));
+    asMasm().convertInt64ToFloat32(Register64(ScratchRegister), dest);
 }
 
 void
