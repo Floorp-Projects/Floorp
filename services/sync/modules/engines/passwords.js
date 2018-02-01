@@ -378,6 +378,10 @@ PasswordTracker.prototype = {
     }
   },
 
+  getValidator() {
+    return new PasswordValidator();
+  },
+
   async _trackLogin(login) {
     if (Utils.getSyncCredentialsHosts().has(login.hostname)) {
       // Skip over Weave password/passphrase changes.
