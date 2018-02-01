@@ -135,12 +135,17 @@ public:
 
   /**
    * Returns true if this principal's CSP should override a document's CSP for
-   * loads that it triggers. Currently true only for expanded principals which
-   * subsume the document principal, and add-on codebase principals regardless
-   * of whether they subsume the document principal.
+   * loads that it triggers. Currently true for system principal, for expanded
+   * principals which subsume the document principal, and add-on codebase
+   * principals regardless of whether they subsume the document principal.
    */
   bool OverridesCSP(nsIPrincipal* aDocumentPrincipal)
   {
+    // SystemPrincipal can override the page's CSP by definition.
+    if (mKind == eSystemPrincipal) {
+      return true;
+    }
+
     // Expanded principals override CSP if and only if they subsume the document
     // principal.
     if (mKind == eExpandedPrincipal) {
