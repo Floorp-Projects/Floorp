@@ -44,6 +44,8 @@ MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
   , mSettings(MakeAndAddRef<media::Refcountable<MediaTrackSettings>>())
 {
   MOZ_ASSERT(aMediaSource != MediaSourceEnum::Other);
+  mSettings->mWidth.Construct(0);
+  mSettings->mHeight.Construct(0);
   Init();
 }
 
@@ -537,7 +539,8 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
   {
     MutexAutoLock lock(mMutex);
     // implicitly releases last image
-    sizeChanged = mImage && image && mImage->GetSize() != image->GetSize();
+    sizeChanged = (!mImage && image) ||
+                  (mImage && image && mImage->GetSize() != image->GetSize());
     mImage = image.forget();
     mImageSize = mImage->GetSize();
   }
