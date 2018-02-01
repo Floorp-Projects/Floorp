@@ -5,13 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Implementation of DOM Traversal's nsIDOMNodeIterator
+ * Implementation of DOM Traversal's NodeIterator
  */
 
 #ifndef mozilla_dom_NodeIterator_h
 #define mozilla_dom_NodeIterator_h
 
-#include "nsIDOMNodeIterator.h"
 #include "nsTraversal.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsStubMutationObserver.h"
@@ -22,13 +21,11 @@ class nsIDOMNode;
 namespace mozilla {
 namespace dom {
 
-class NodeIterator final : public nsIDOMNodeIterator,
-                           public nsTraversal,
-                           public nsStubMutationObserver
+class NodeIterator final : public nsStubMutationObserver,
+                           public nsTraversal
 {
 public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_NSIDOMNODEITERATOR
 
     NodeIterator(nsINode *aRoot,
                  uint32_t aWhatToShow,
@@ -36,7 +33,7 @@ public:
 
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(NodeIterator, nsIDOMNodeIterator)
+    NS_DECL_CYCLE_COLLECTION_CLASS(NodeIterator)
 
     // WebIDL API
     nsINode* Root() const
