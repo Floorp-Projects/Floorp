@@ -66,7 +66,7 @@ ParentSHistory::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 nsISupports*
 ParentSHistory::GetParentObject() const
 {
-  return static_cast<nsIFrameLoader*>(mFrameLoader);
+  return mFrameLoader;
 }
 
 } // namespace dom
