@@ -1479,8 +1479,7 @@ Navigator::RequestVRPresentation(VRDisplay& aDisplay)
 nsINetworkProperties*
 Navigator::GetNetworkProperties()
 {
-  IgnoredErrorResult rv;
-  return GetConnection(rv);
+  return GetConnection(IgnoreErrors());
 }
 
 network::Connection*
