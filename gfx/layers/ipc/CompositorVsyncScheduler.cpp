@@ -334,5 +334,12 @@ CompositorVsyncScheduler::ScheduleTask(already_AddRefed<CancelableRunnable> aTas
   CompositorThreadHolder::Loop()->PostDelayedTask(Move(aTask), 0);
 }
 
+const TimeStamp&
+CompositorVsyncScheduler::GetLastComposeTime() const
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  return mLastCompose;
+}
+
 } // namespace layers
 } // namespace mozilla
