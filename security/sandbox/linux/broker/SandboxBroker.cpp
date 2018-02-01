@@ -28,9 +28,15 @@
 #include "mozilla/NullPtr.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/ipc/FileDescriptor.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "SpecialSystemDirectory.h"
 #include "sandbox/linux/system_headers/linux_syscalls.h"
 
 namespace mozilla {
+
+// Default/fallback temporary directory
+static const nsLiteralCString tempDirPrefix("/tmp");
 
 // This constructor signals failure by setting mFileDesc and aClientFd to -1.
 SandboxBroker::SandboxBroker(UniquePtr<const Policy> aPolicy, int aChildPid,
@@ -515,6 +521,40 @@ SandboxBroker::ConvertToRealPath(char* aPath, size_t aBufSize, size_t aPathLen)
   return aPathLen;
 }
 
+size_t
+SandboxBroker::RemapTempDirs(char* aPath, size_t aBufSize, size_t aPathLen)
+{
+  nsAutoCString path(aPath);
+
+  size_t prefixLen = 0;
+  if (!mTempPath.IsEmpty() && StringBeginsWith(path, mTempPath)) {
+    prefixLen = mTempPath.Length();
+  } else if (StringBeginsWith(path, tempDirPrefix)) {
+    prefixLen = tempDirPrefix.Length();
+  }
+
+  if (prefixLen) {
+    const nsDependentCSubstring cutPath =
+      Substring(path, prefixLen, path.Length() - prefixLen);
+
+    // Only now try to get the content process temp dir
+    nsCOMPtr<nsIFile> tmpDir;
+    nsresult rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
+                                          getter_AddRefs(tmpDir));
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoCString tmpPath;
+      rv = tmpDir->GetNativePath(tmpPath);
+      if (NS_SUCCEEDED(rv)) {
+        tmpPath.Append(cutPath);
+        base::strlcpy(aPath, tmpPath.get(), aBufSize);
+        return strlen(aPath);
+      }
+    }
+  }
+
+  return aPathLen;
+}
+
 nsCString
 SandboxBroker::ReverseSymlinks(const nsACString& aPath)
 {
@@ -584,6 +624,36 @@ SandboxBroker::ThreadMain(void)
   // therefore it is sufficient to fetch the value once
   // before the main thread loop starts
   bool permissive = SandboxInfo::Get().Test(SandboxInfo::kPermissive);
+
+  // Find the current temporary directory
+  nsCOMPtr<nsIFile> tmpDir;
+  nsresult rv = GetSpecialSystemDirectory(OS_TemporaryDirectory,
+                                          getter_AddRefs(tmpDir));
+  if (NS_SUCCEEDED(rv)) {
+    rv = tmpDir->GetNativePath(mTempPath);
+    if (NS_SUCCEEDED(rv)) {
+      // Make sure there's no terminating /
+      if (mTempPath.Last() == '/') {
+        mTempPath.Truncate(mTempPath.Length() - 1);
+      }
+    }
+  }
+  // If we can't find it, we aren't bothered much: we will
+  // always try /tmp anyway in the substitution code
+  if (NS_FAILED(rv) || mTempPath.IsEmpty()) {
+    if (SandboxInfo::Get().Test(SandboxInfo::kVerbose)) {
+      SANDBOX_LOG_ERROR("Tempdir: /tmp");
+    }
+  } else {
+    if (SandboxInfo::Get().Test(SandboxInfo::kVerbose)) {
+      SANDBOX_LOG_ERROR("Tempdir: %s", mTempPath.get());
+    }
+    // If it's /tmp, clear it here so we don't compare against
+    // it twice. Just let the fallback code do the work.
+    if (mTempPath.Equals(tempDirPrefix)) {
+      mTempPath.Truncate();
+    }
+  }
 
   while (true) {
     struct iovec ios[2];
@@ -678,14 +748,19 @@ SandboxBroker::ThreadMain(void)
       perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
 
       // We don't have read permissions on the requested dir.
-      // Did we arrive from a symlink in a path that is not writable?
-      // Then try to figure out the original path and see if that is readable.
       if (!(perms & MAY_READ)) {
-          // Work on the original path,
-          // this reverses ConvertToRealPath above.
-          int symlinkPerms = SymlinkPermissions(recvBuf, first_len);
-          if (symlinkPerms > 0) {
-            perms = symlinkPerms;
+          // Was it a tempdir that we can remap?
+          pathLen = RemapTempDirs(pathBuf, sizeof(pathBuf), pathLen);
+          perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
+          if (!(perms & MAY_READ)) {
+            // Did we arrive from a symlink in a path that is not writable?
+            // Then try to figure out the original path and see if that is
+            // readable. Work on the original path, this reverses
+            // ConvertToRealPath above.
+            int symlinkPerms = SymlinkPermissions(recvBuf, first_len);
+            if (symlinkPerms > 0) {
+              perms = symlinkPerms;
+            }
           }
       }
 

@@ -258,6 +258,7 @@ enum class GlobalLock
 {
     GCLock,
     ExclusiveAccessLock,
+    ScriptDataLock,
     HelperThreadLock
 };
 
@@ -286,6 +287,11 @@ using ExclusiveAccessLockData =
 template <typename T>
 using ExclusiveAccessLockOrGCTaskData =
     ProtectedDataNoCheckArgs<CheckGlobalLock<GlobalLock::ExclusiveAccessLock, AllowedHelperThread::GCTask>, T>;
+
+// Data which may only be accessed while holding the script data lock.
+template <typename T>
+using ScriptDataLockData =
+    ProtectedDataNoCheckArgs<CheckGlobalLock<GlobalLock::ScriptDataLock, AllowedHelperThread::None>, T>;
 
 // Data which may only be accessed while holding the helper thread lock.
 template <typename T>

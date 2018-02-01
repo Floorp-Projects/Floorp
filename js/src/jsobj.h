@@ -7,15 +7,6 @@
 #ifndef jsobj_h
 #define jsobj_h
 
-/*
- * JS object definitions.
- *
- * A JS object consists of a possibly-shared object descriptor containing
- * ordered property names, called the map; and a dense vector of property
- * values, called slots.  The map/slot pointer pair is GC'ed, while the map
- * is reference counted and the slot vector is malloc'ed.
- */
-
 #include "mozilla/MemoryReporting.h"
 
 #include "gc/Barrier.h"
@@ -62,23 +53,48 @@ bool SetImmutablePrototype(JSContext* cx, JS::HandleObject obj, bool* succeeded)
 }  /* namespace js */
 
 /*
- * A JavaScript object. The members common to all objects are as follows:
+ * A JavaScript object.
+ *
+ * This is the base class for all objects exposed to JS script (as well as some
+ * objects that are only accessed indirectly). Subclasses add additional fields
+ * and execution semantics. The runtime class of an arbitrary JSObject is
+ * identified by JSObject::getClass().
+ *
+ * The members common to all objects are as follows:
  *
  * - The |group_| member stores the group of the object, which contains its
  *   prototype object, its class and the possible types of its properties.
  *
- * Subclasses of JSObject --- mainly NativeObject and JSFunction --- add more
- * members. Notable among these is the object's shape, which stores flags and
- * some other state, and, for native objects, the layout of all its properties.
- * The second word of a JSObject generally stores its shape; if the second word
- * stores anything else, the value stored cannot be a valid Shape* pointer, so
- * that shape guards can be performed on objects without regard to the specific
- * layout in use.
+ * - The |shapeOrExpando_| member points to (an optional) guard object that JIT
+ *   may use to optimize. The pointed-to object dictates the constraints
+ *   imposed on the JSObject:
+ *      nullptr
+ *          - Safe value if this field is not needed.
+ *      js::Shape
+ *          - All objects that might point |shapeOrExpando_| to a js::Shape
+ *            must follow the rules specified on js::ShapedObject.
+ *      JSObject
+ *          - Implies nothing about the current object or target object. Either
+ *            of which may mutate in place. Store a JSObject* only to save
+ *            space, not to guard on.
+ *
+ * NOTE: The JIT may check |shapeOrExpando_| pointer value without ever
+ *       inspecting |group_| or the class.
+ *
+ * NOTE: Some operations can change the contents of an object (including class)
+ *       in-place so avoid assuming an object with same pointer has same class
+ *       as before.
+ *       - JSObject::swap()
+ *       - UnboxedPlainObject::convertToNative()
+ *
+ * NOTE: UnboxedObjects may change class without changing |group_|.
+ *       - js::TryConvertToUnboxedLayout
  */
 class JSObject : public js::gc::Cell
 {
   protected:
     js::GCPtrObjectGroup group_;
+    void* shapeOrExpando_;
 
   private:
     friend class js::Shape;
@@ -533,7 +549,12 @@ class JSObject : public js::gc::Cell
 
     /* JIT Accessors */
 
-    static size_t offsetOfGroup() { return offsetof(JSObject, group_); }
+    static constexpr size_t offsetOfGroup() {
+        return offsetof(JSObject, group_);
+    }
+    static constexpr size_t offsetOfShapeOrExpando() {
+        return offsetof(JSObject, shapeOrExpando_);
+    }
 
     // Maximum size in bytes of a JSObject.
     static const size_t MAX_BYTE_SIZE = 4 * sizeof(void*) + 16 * sizeof(JS::Value);
@@ -582,12 +603,12 @@ operator!=(const JSObject& lhs, const JSObject& rhs)
 }
 
 // Size of the various GC thing allocation sizes used for objects.
-struct JSObject_Slots0 : JSObject { void* data[3]; };
-struct JSObject_Slots2 : JSObject { void* data[3]; js::Value fslots[2]; };
-struct JSObject_Slots4 : JSObject { void* data[3]; js::Value fslots[4]; };
-struct JSObject_Slots8 : JSObject { void* data[3]; js::Value fslots[8]; };
-struct JSObject_Slots12 : JSObject { void* data[3]; js::Value fslots[12]; };
-struct JSObject_Slots16 : JSObject { void* data[3]; js::Value fslots[16]; };
+struct JSObject_Slots0 : JSObject { void* data[2]; };
+struct JSObject_Slots2 : JSObject { void* data[2]; js::Value fslots[2]; };
+struct JSObject_Slots4 : JSObject { void* data[2]; js::Value fslots[4]; };
+struct JSObject_Slots8 : JSObject { void* data[2]; js::Value fslots[8]; };
+struct JSObject_Slots12 : JSObject { void* data[2]; js::Value fslots[12]; };
+struct JSObject_Slots16 : JSObject { void* data[2]; js::Value fslots[16]; };
 
 /* static */ MOZ_ALWAYS_INLINE void
 JSObject::readBarrier(JSObject* obj)

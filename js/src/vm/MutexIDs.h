@@ -10,6 +10,9 @@
 #include "threading/Mutex.h"
 
 // Central definition point for mutex ordering.
+//
+// Mutexes can only be acquired in increasing order. This prevents the
+// possibility of deadlock.
 
 #define FOR_EACH_MUTEX(_)             \
   _(TestMutex,                   100) \
@@ -49,7 +52,8 @@
   _(WasmCodeStreamEnd,           500) \
   _(WasmTailBytesPtr,            500) \
   _(WasmStreamStatus,            500) \
-  _(SharedArrayGrow,             500)    \
+  _(SharedArrayGrow,             500) \
+  _(RuntimeScriptData,           500) \
                                       \
   _(ThreadId,                    600) \
   _(WasmCodeSegmentMap,          600) \

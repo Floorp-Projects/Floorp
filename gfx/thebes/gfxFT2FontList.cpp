@@ -23,10 +23,12 @@
 #include FT_FREETYPE_H
 #include FT_TRUETYPE_TAGS_H
 #include FT_TRUETYPE_TABLES_H
+#include FT_MULTIPLE_MASTERS_H
 #include "cairo-ft.h"
 
 #include "gfxFT2FontList.h"
 #include "gfxFT2Fonts.h"
+#include "gfxFT2Utils.h"
 #include "gfxUserFontSet.h"
 #include "gfxFontUtils.h"
 
@@ -105,7 +107,7 @@ public:
                 cursor.Copy(&bufSize);
                 NS_ASSERTION(bufSize == item->RealSize(),
                              "error reading bundled font");
-
+                mDataLength = bufSize;
                 mFace = Factory::NewFTFaceFromData(nullptr, mFontDataBuf, bufSize, aFontEntry->mFTFontIndex);
                 if (!mFace) {
                     NS_WARNING("failed to create freetype face");
@@ -144,6 +146,7 @@ public:
     }
 
     const uint8_t* FontData() const { return mFontDataBuf; }
+    uint32_t DataLength() const { return mDataLength; }
 
 private:
     FT_Face  mFace;
@@ -151,6 +154,7 @@ private:
                            // or null for fonts instantiated from a file.
                            // If non-null, this must survive as long as the
                            // FT_Face.
+    uint32_t mDataLength;  // Size of mFontDataBuf, if present.
     bool     mOwnsFace;
 };
 
@@ -167,7 +171,7 @@ private:
 cairo_scaled_font_t *
 FT2FontEntry::CreateScaledFont(const gfxFontStyle *aStyle)
 {
-    cairo_font_face_t *cairoFace = CairoFontFace();
+    cairo_font_face_t *cairoFace = CairoFontFace(aStyle);
     if (!cairoFace) {
         return nullptr;
     }
@@ -274,7 +278,7 @@ FT2FontEntry::CreateFontEntry(const nsAString& aFontName,
     // as it's not guaranteed that the face has valid names (bug 737315)
     FT2FontEntry* fe =
         FT2FontEntry::CreateFontEntry(face, nullptr, 0, aFontName,
-                                      aFontData);
+                                      aFontData, aLength);
     if (fe) {
         fe->mStyle = aStyle;
         fe->mWeight = aWeight;
@@ -286,8 +290,8 @@ FT2FontEntry::CreateFontEntry(const nsAString& aFontName,
 
 class FTUserFontData {
 public:
-    FTUserFontData(FT_Face aFace, const uint8_t* aData)
-        : mFace(aFace), mFontData(aData)
+    FTUserFontData(FT_Face aFace, const uint8_t* aData, uint32_t aLength)
+        : mFace(aFace), mFontData(aData), mLength(aLength)
     {
     }
 
@@ -300,10 +304,12 @@ public:
     }
 
     const uint8_t *FontData() const { return mFontData; }
+    uint32_t Length() const { return mLength; }
 
 private:
     FT_Face        mFace;
     const uint8_t *mFontData;
+    uint32_t       mLength;
 };
 
 static void
@@ -376,7 +382,8 @@ FT2FontEntry*
 FT2FontEntry::CreateFontEntry(FT_Face aFace,
                               const char* aFilename, uint8_t aIndex,
                               const nsAString& aName,
-                              const uint8_t* aFontData)
+                              const uint8_t* aFontData,
+                              uint32_t aLength)
 {
     FT2FontEntry *fe = new FT2FontEntry(aName);
     fe->mStyle = (FTFaceIsItalic(aFace) ?
@@ -391,7 +398,7 @@ FT2FontEntry::CreateFontEntry(FT_Face aFace,
                     FT_LOAD_DEFAULT :
                     (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
         fe->mFontFace = cairo_ft_font_face_create_for_ft_face(aFace, flags, nullptr, 0);
-        FTUserFontData *userFontData = new FTUserFontData(aFace, aFontData);
+        FTUserFontData *userFontData = new FTUserFontData(aFace, aFontData, aLength);
         cairo_font_face_set_user_data(fe->mFontFace, &sFTUserFontDataKey,
                                       userFontData, FTFontDestroyFunc);
     }
@@ -423,22 +430,67 @@ gfxFT2Font::GetFontEntry()
 }
 
 cairo_font_face_t *
-FT2FontEntry::CairoFontFace()
+FT2FontEntry::CairoFontFace(const gfxFontStyle* aStyle)
 {
+    // Create our basic (no-variations) mFontFace if not already present;
+    // this also ensures we have mFTFace available.
     if (!mFontFace) {
         AutoFTFace face(this);
         if (!face) {
             return nullptr;
         }
-        mFTFace = face.forget();
         int flags = gfxPlatform::GetPlatform()->FontHintingEnabled() ?
                     FT_LOAD_DEFAULT :
                     (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
-        mFontFace = cairo_ft_font_face_create_for_ft_face(face, flags, nullptr, 0);
-        FTUserFontData *userFontData = new FTUserFontData(face, face.FontData());
+        mFontFace = cairo_ft_font_face_create_for_ft_face(face, flags, 
+                                                          nullptr, 0);
+        auto userFontData = new FTUserFontData(face, face.FontData(),
+                                               face.DataLength());
         cairo_font_face_set_user_data(mFontFace, &sFTUserFontDataKey,
                                       userFontData, FTFontDestroyFunc);
+        mFTFace = face.forget();
     }
+
+    // If aStyle includes variations, we will not use our cached mFontFace
+    // but always create a new cairo_font_face_t with the requested variation
+    // settings.
+    if (aStyle && !aStyle->variationSettings.IsEmpty() &&
+        mFTFace->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
+        int flags = gfxPlatform::GetPlatform()->FontHintingEnabled() ?
+                    FT_LOAD_DEFAULT :
+                    (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+        AutoTArray<FT_Fixed,8> coords;
+        gfxFT2FontBase::SetupVarCoords(mFTFace, aStyle->variationSettings,
+                                       &coords);
+        // Create a separate FT_Face because we need to apply custom
+        // variation settings to it.
+        FT_Face ftFace;
+        if (!mFilename.IsEmpty()) {
+            ftFace = Factory::NewFTFace(nullptr, mFilename.get(), mFTFontIndex);
+        } else {
+            auto ufd = reinterpret_cast<FTUserFontData*>(
+                cairo_font_face_get_user_data(mFontFace, &sFTUserFontDataKey));
+            ftFace = Factory::NewFTFaceFromData(nullptr, ufd->FontData(),
+                                                ufd->Length(), mFTFontIndex);
+        }
+        FT_Set_Var_Design_Coordinates(ftFace, coords.Length(), coords.Elements());
+        cairo_font_face_t* cairoFace =
+            cairo_ft_font_face_create_for_ft_face(ftFace, flags,
+                                                  coords.Elements(),
+                                                  coords.Length());
+        // Set up user data to properly release the FT_Face when the cairo face
+        // is deleted.
+        static cairo_user_data_key_t sDestroyFaceKey;
+        if (cairo_font_face_set_user_data(cairoFace, &sDestroyFaceKey, ftFace,
+                    (cairo_destroy_func_t)&Factory::ReleaseFTFace)) {
+            // set_user_data failed! discard, and fall back to default face
+            cairo_font_face_destroy(cairoFace);
+            FT_Done_Face(ftFace);
+        } else {
+            return cairoFace;
+        }
+    }
+
     return mFontFace;
 }
 

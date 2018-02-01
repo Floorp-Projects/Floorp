@@ -23,7 +23,6 @@ job-defaults:
         requires-signed-builds:
             by-test-platform:
                 windows10-64-asan/opt: false    # No XPCShell on ASAN yet
-                windows10-64-ccov/debug: false  # TODO: Sign build.
                 windows.*: true
                 default: false
 

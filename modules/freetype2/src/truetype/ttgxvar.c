@@ -2048,7 +2048,8 @@
       if ( FT_NEW( face->blend ) )
         goto Exit;
 
-      num_axes = fvar_head.axisCount;
+      num_axes              = fvar_head.axisCount;
+      face->blend->num_axis = num_axes;
     }
     else
       num_axes = face->blend->num_axis;

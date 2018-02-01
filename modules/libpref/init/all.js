@@ -5935,5 +5935,9 @@ pref("layers.omtp.enabled", true);
 #else
 pref("layers.omtp.enabled", false);
 #endif
-pref("layers.omtp.release-capture-on-main-thread", false);
+#if defined(XP_MACOSX)
+pref("layers.omtp.paint-workers", -1);
+#else
 pref("layers.omtp.paint-workers", 1);
+#endif
+pref("layers.omtp.release-capture-on-main-thread", false);

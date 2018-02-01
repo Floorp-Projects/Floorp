@@ -333,9 +333,9 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     }
 
     // unboxing code
-    void unboxNonDouble(const ValueOperand& operand, Register dest);
-    void unboxNonDouble(const Address& src, Register dest);
-    void unboxNonDouble(const BaseIndex& src, Register dest);
+    void unboxNonDouble(const ValueOperand& operand, Register dest, JSValueType);
+    void unboxNonDouble(const Address& src, Register dest, JSValueType);
+    void unboxNonDouble(const BaseIndex& src, Register dest, JSValueType);
     void unboxInt32(const ValueOperand& operand, Register dest);
     void unboxInt32(const Address& src, Register dest);
     void unboxBoolean(const ValueOperand& operand, Register dest);
@@ -346,9 +346,17 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void unboxString(const Address& src, Register dest);
     void unboxObject(const ValueOperand& src, Register dest);
     void unboxObject(const Address& src, Register dest);
-    void unboxObject(const BaseIndex& src, Register dest) { unboxNonDouble(src, dest); }
-    void unboxValue(const ValueOperand& src, AnyRegister dest);
+    void unboxObject(const BaseIndex& src, Register dest)
+    {
+        unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
+    }
+    void unboxValue(const ValueOperand& src, AnyRegister dest, JSValueType);
     void unboxPrivate(const ValueOperand& src, Register dest);
+
+    void unboxGCThingForPreBarrierTrampoline(const Address& src, Register dest)
+    {
+        unboxObject(src, dest);
+    }
 
     void notBoolean(const ValueOperand& val) {
         as_xori(val.payloadReg(), val.payloadReg(), 1);
@@ -363,6 +371,12 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     // and returns that.
     Register extractObject(const Address& address, Register scratch);
     Register extractObject(const ValueOperand& value, Register scratch) {
+        return value.payloadReg();
+    }
+    Register extractString(const ValueOperand& value, Register scratch) {
+        return value.payloadReg();
+    }
+    Register extractSymbol(const ValueOperand& value, Register scratch) {
         return value.payloadReg();
     }
     Register extractInt32(const ValueOperand& value, Register scratch) {
@@ -437,7 +451,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
                            MIRType slotType);
 
     template <typename T>
-    void storeUnboxedPayload(ValueOperand value, T address, size_t nbytes) {
+    void storeUnboxedPayload(ValueOperand value, T address, size_t nbytes, JSValueType) {
         switch (nbytes) {
           case 4:
             store32(value.payloadReg(), address);

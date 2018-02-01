@@ -7,11 +7,13 @@
 #ifndef MOZILLA_GFX_RENDERCOMPOSITOR_ANGLE_H
 #define MOZILLA_GFX_RENDERCOMPOSITOR_ANGLE_H
 
+#include "mozilla/Maybe.h"
 #include "mozilla/webrender/RenderCompositor.h"
 
 struct ID3D11DeviceContext;
 struct ID3D11Device;
 struct ID3D11Query;
+struct IDXGISwapChain;
 
 namespace mozilla {
 
@@ -36,20 +38,26 @@ public:
 
   bool UseANGLE() const override { return true; }
 
-  LayoutDeviceIntSize GetClientSize() override;
+  LayoutDeviceIntSize GetBufferSize() override;
 
 protected:
   void InsertPresentWaitQuery();
   void WaitForPreviousPresentQuery();
+  bool ResizeBufferIfNeeded();
+  void DestroyEGLSurface();
 
   RefPtr<gl::GLContext> mGL;
+  EGLConfig mEGLConfig;
+  EGLSurface mEGLSurface;
 
   RefPtr<ID3D11Device> mDevice;
   RefPtr<ID3D11DeviceContext> mCtx;
+  RefPtr<IDXGISwapChain> mSwapChain;
 
   RefPtr<ID3D11Query> mWaitForPresentQuery;
   RefPtr<ID3D11Query> mNextWaitForPresentQuery;
 
+  Maybe<LayoutDeviceIntSize> mBufferSize;
 };
 
 } // namespace wr

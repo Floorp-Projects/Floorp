@@ -726,7 +726,10 @@ _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
     }
 
     if (unscaled->var_coords) {
-        typedef FT_UInt (*SetCoordsFunc)(FT_Face, FT_UInt, FT_Fixed*);
+#if MOZ_TREE_FREETYPE
+        FT_Set_Var_Design_Coordinates(face, unscaled->num_var_coords, unscaled->var_coords);
+#else
+        typedef FT_Error (*SetCoordsFunc)(FT_Face, FT_UInt, FT_Fixed*);
         static SetCoordsFunc setCoords;
         static cairo_bool_t firstTime = TRUE;
         if (firstTime) {
@@ -736,6 +739,7 @@ _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
         if (setCoords) {
             (*setCoords)(face, unscaled->num_var_coords, unscaled->var_coords);
         }
+#endif
     }
 
     unscaled->face = face;

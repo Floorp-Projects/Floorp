@@ -513,9 +513,9 @@ NativeObject::setSlotWithType(JSContext* cx, Shape* shape,
 inline void
 NativeObject::updateShapeAfterMovingGC()
 {
-    Shape* shape = shape_;
+    Shape* shape = this->shape();
     if (IsForwarded(shape))
-        shape_.unsafeSet(Forwarded(shape));
+        shapeRef().unsafeSet(Forwarded(shape));
 }
 
 inline bool
@@ -664,14 +664,14 @@ NativeObject::setLastProperty(JSContext* cx, Shape* shape)
     size_t newSpan = shape->slotSpan();
 
     if (oldSpan == newSpan) {
-        shape_ = shape;
+        setShape(shape);
         return true;
     }
 
     if (MOZ_UNLIKELY(!updateSlotsForSpan(cx, oldSpan, newSpan)))
         return false;
 
-    shape_ = shape;
+    setShape(shape);
     return true;
 }
 
