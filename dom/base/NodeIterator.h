@@ -5,13 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Implementation of DOM Traversal's nsIDOMNodeIterator
+ * Implementation of DOM Traversal's NodeIterator
  */
 
 #ifndef mozilla_dom_NodeIterator_h
 #define mozilla_dom_NodeIterator_h
 
-#include "nsIDOMNodeIterator.h"
 #include "nsTraversal.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsStubMutationObserver.h"
@@ -22,21 +21,19 @@ class nsIDOMNode;
 namespace mozilla {
 namespace dom {
 
-class NodeIterator final : public nsIDOMNodeIterator,
-                           public nsTraversal,
-                           public nsStubMutationObserver
+class NodeIterator final : public nsStubMutationObserver,
+                           public nsTraversal
 {
 public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_NSIDOMNODEITERATOR
 
     NodeIterator(nsINode *aRoot,
                  uint32_t aWhatToShow,
-                 NodeFilterHolder aFilter);
+                 NodeFilter* aFilter);
 
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(NodeIterator, nsIDOMNodeIterator)
+    NS_DECL_CYCLE_COLLECTION_CLASS(NodeIterator)
 
     // WebIDL API
     nsINode* Root() const
@@ -55,9 +52,9 @@ public:
     {
         return mWhatToShow;
     }
-    already_AddRefed<NodeFilter> GetFilter()
+    NodeFilter* GetFilter()
     {
-        return mFilter.ToWebIDLCallback();
+        return mFilter;
     }
     already_AddRefed<nsINode> NextNode(ErrorResult& aResult)
     {
@@ -67,7 +64,7 @@ public:
     {
         return NextOrPrevNode(&NodePointer::MoveToPrevious, aResult);
     }
-    // The XPCOM Detach() is fine for our purposes
+    void Detach();
 
     bool WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
 
@@ -92,19 +89,6 @@ private:
         nsINode *mNode;
         bool mBeforeNode;
     };
-
-    // Implementation for some of our XPCOM getters
-    typedef already_AddRefed<nsINode> (NodeIterator::*NodeGetter)(ErrorResult&);
-    inline nsresult ImplNodeGetter(NodeGetter aGetter, nsIDOMNode** aRetval)
-    {
-        mozilla::ErrorResult rv;
-        nsCOMPtr<nsINode> node = (this->*aGetter)(rv);
-        if (rv.Failed()) {
-            return rv.StealNSResult();
-        }
-        *aRetval = node ? node.forget().take()->AsDOMNode() : nullptr;
-        return NS_OK;
-    }
 
     // Have to return a strong ref, because the act of testing the node can
     // remove it from the DOM so we're holding the only ref to it.

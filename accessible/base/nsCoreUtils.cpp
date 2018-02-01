@@ -98,9 +98,8 @@ nsCoreUtils::DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
     return;
 
   nsCOMPtr<nsIContent> tcXULElm(do_QueryInterface(tcElm));
-  IgnoredErrorResult ignored;
   nsCOMPtr<nsIBoxObject> tcBoxObj =
-    nsXULElement::FromContent(tcXULElm)->GetBoxObject(ignored);
+    nsXULElement::FromContent(tcXULElm)->GetBoxObject(IgnoreErrors());
 
   int32_t tcX = 0;
   tcBoxObj->GetX(&tcX);
@@ -501,8 +500,7 @@ nsCoreUtils::GetTreeBodyBoxObject(nsITreeBoxObject *aTreeBoxObj)
   if (!tcXULElm)
     return nullptr;
 
-  IgnoredErrorResult ignored;
-  return tcXULElm->GetBoxObject(ignored);
+  return tcXULElm->GetBoxObject(IgnoreErrors());
 }
 
 already_AddRefed<nsITreeBoxObject>
@@ -516,8 +514,7 @@ nsCoreUtils::GetTreeBoxObject(nsIContent *aContent)
       // We will get the nsITreeBoxObject from the tree node
       RefPtr<nsXULElement> xulElement =
         nsXULElement::FromContent(currentContent);
-      IgnoredErrorResult ignored;
-      nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(ignored);
+      nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(IgnoreErrors());
       nsCOMPtr<nsITreeBoxObject> treeBox(do_QueryInterface(box));
       if (treeBox)
         return treeBox.forget();

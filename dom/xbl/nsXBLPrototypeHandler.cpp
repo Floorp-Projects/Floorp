@@ -675,8 +675,7 @@ nsXBLPrototypeHandler::GetController(EventTarget* aTarget)
   RefPtr<nsXULElement> xulElement =
     nsXULElement::FromContentOrNull(targetContent);
   if (xulElement) {
-    IgnoredErrorResult rv;
-    controllers = xulElement->GetControllers(rv);
+    controllers = xulElement->GetControllers(IgnoreErrors());
   }
 
   if (!controllers) {

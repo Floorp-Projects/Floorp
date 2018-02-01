@@ -8,7 +8,6 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMTreeWalker.h"
 #include "nsIEditorSpellCheck.h"
 #include "nsIInlineSpellChecker.h"
 #include "nsRange.h"
@@ -130,7 +129,6 @@ private:
   RefPtr<mozilla::TextEditor> mTextEditor;
   RefPtr<mozilla::EditorSpellCheck> mSpellCheck;
   RefPtr<mozilla::EditorSpellCheck> mPendingSpellCheck;
-  nsCOMPtr<nsIDOMTreeWalker> mTreeWalker;
   nsCOMPtr<mozISpellI18NUtil> mConverter;
 
   int32_t mNumWordsInSpellSelection;

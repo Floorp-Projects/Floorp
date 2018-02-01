@@ -642,8 +642,7 @@ HTMLTableElement::CreateTHead()
       }
     }
 
-    IgnoredErrorResult rv;
-    nsINode::InsertBefore(*head, refNode, rv);
+    nsINode::InsertBefore(*head, refNode, IgnoreErrors());
   }
   return head.forget();
 }
@@ -705,9 +704,8 @@ HTMLTableElement::CreateCaption()
       return nullptr;
     }
 
-    IgnoredErrorResult rv;
     nsCOMPtr<nsINode> firsChild = nsINode::GetFirstChild();
-    nsINode::InsertBefore(*caption, firsChild, rv);
+    nsINode::InsertBefore(*caption, firsChild, IgnoreErrors());
   }
   return caption.forget();
 }
@@ -746,8 +744,7 @@ HTMLTableElement::CreateTBody()
     }
   }
 
-  IgnoredErrorResult rv;
-  nsINode::InsertBefore(*newBody, referenceNode, rv);
+  nsINode::InsertBefore(*newBody, referenceNode, IgnoreErrors());
 
   return newBody.forget();
 }

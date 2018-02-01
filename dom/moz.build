@@ -20,7 +20,6 @@ interfaces = [
     'html',
     'events',
     'sidebar',
-    'traversal',
     'range',
     'xbl',
     'xpath',

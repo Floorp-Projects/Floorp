@@ -18,7 +18,7 @@ function test_treeWalker_currentNode()
   var doc = ParseXML(XHTMLDocString);
 
   var body = doc.getElementsByTagName("body")[0];
-  var filter = I.nsIDOMNodeFilter.SHOW_ELEMENT | I.nsIDOMNodeFilter.SHOW_TEXT;
+  var filter = 1 | 4 /* NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT */;
   var walker = doc.createTreeWalker(body, filter, null);
   walker.currentNode = body.firstChild;
   walker.nextNode();

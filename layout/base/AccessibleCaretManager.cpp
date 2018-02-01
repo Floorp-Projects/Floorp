@@ -11,6 +11,7 @@
 #include "AccessibleCaretLogger.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/TreeWalker.h"
 #include "mozilla/IMEStateManager.h"
@@ -1088,7 +1089,7 @@ AccessibleCaretManager::GetFrameForFirstRangeStartOrLastRangeEnd(
   if (!startFrame) {
     ErrorResult err;
     RefPtr<TreeWalker> walker = mPresShell->GetDocument()->CreateTreeWalker(
-      *startNode, nsIDOMNodeFilter::SHOW_ALL, nullptr, err);
+      *startNode, dom::NodeFilterBinding::SHOW_ALL, nullptr, err);
 
     if (!walker) {
       return nullptr;

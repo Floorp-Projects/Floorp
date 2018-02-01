@@ -403,8 +403,7 @@ ClientSource::SetController(const ServiceWorkerDescriptor& aServiceWorker)
   // TODO: Also self.navigator.serviceWorker on workers when its exposed there
 
   if (swc && nsContentUtils::IsSafeToRunScript()) {
-    IgnoredErrorResult ignored;
-    swc->ControllerChanged(ignored);
+    swc->ControllerChanged(IgnoreErrors());
   }
 }
 

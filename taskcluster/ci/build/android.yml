@@ -249,6 +249,7 @@ android-api-16-without-google-play-services/opt:
     run-on-projects: ['mozilla-central']
     toolchains:
         - android-gradle-dependencies
+        - android-ndk-linux
         - android-sdk-linux
         - linux64-clang
         - linux64-rust-android

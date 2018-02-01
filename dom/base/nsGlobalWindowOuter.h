@@ -697,9 +697,9 @@ public:
                        mozilla::ErrorResult& aError);
   already_AddRefed<nsPIDOMWindowOuter> GetContent()
   {
-    mozilla::IgnoredErrorResult ignored;
     nsCOMPtr<nsPIDOMWindowOuter> win =
-      GetContentInternal(ignored, mozilla::dom::CallerType::System);
+      GetContentInternal(mozilla::IgnoreErrors(),
+                         mozilla::dom::CallerType::System);
     return win.forget();
   }
 

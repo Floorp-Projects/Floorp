@@ -20,10 +20,9 @@ function setPass(aNode) {
 SimpleTest.waitForExplicitFinish();
 
 window.addEventListener("load", function() {
-  const nsIDOMNodeFilter = SpecialPowers.Ci.nsIDOMNodeFilter;
   var walker = document.createTreeWalker(
     document,
-    nsIDOMNodeFilter.SHOW_TEXT | nsIDOMNodeFilter.SHOW_DOCUMENT,
+    NodeFilter.SHOW_TEXT | NodeFilter.SHOW_DOCUMENT,
     null
   );
   setPass(walker.firstChild());
@@ -43,7 +42,7 @@ appear as direct children of the root node, no matter how deeply nested the
 structure of the original document.
 */
 
-  walker2 = document.createTreeWalker(document, nsIDOMNodeFilter.SHOW_TEXT, null);
+  walker2 = document.createTreeWalker(document, NodeFilter.SHOW_TEXT, null);
   while (walker2.nextNode()) {
     var cNode = walker2.currentNode;
     ok(passedNodes.get(cNode), "Every text node should appear: " + walker2.currentNode.nodeValue);
