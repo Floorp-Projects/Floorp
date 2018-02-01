@@ -2084,7 +2084,7 @@ PeerConnectionImpl::CloseStreams() {
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 PeerConnectionImpl::SetPeerIdentity(const nsAString& aPeerIdentity)
 {
   PC_AUTO_ENTER_API_CALL(true);
@@ -2577,7 +2577,7 @@ PeerConnectionImpl::GetFingerprint(char** fingerprint)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PeerConnectionImpl::GetLocalDescription(nsAString& aSDP)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
@@ -2585,33 +2585,27 @@ PeerConnectionImpl::GetLocalDescription(nsAString& aSDP)
   std::string localSdp = mJsepSession->GetLocalDescription(
       kJsepDescriptionPendingOrCurrent);
   aSDP = NS_ConvertASCIItoUTF16(localSdp.c_str());
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PeerConnectionImpl::GetCurrentLocalDescription(nsAString& aSDP)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   std::string localSdp = mJsepSession->GetLocalDescription(kJsepDescriptionCurrent);
   aSDP = NS_ConvertASCIItoUTF16(localSdp.c_str());
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PeerConnectionImpl::GetPendingLocalDescription(nsAString& aSDP)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   std::string localSdp = mJsepSession->GetLocalDescription(kJsepDescriptionPending);
   aSDP = NS_ConvertASCIItoUTF16(localSdp.c_str());
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PeerConnectionImpl::GetRemoteDescription(nsAString& aSDP)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
@@ -2619,30 +2613,24 @@ PeerConnectionImpl::GetRemoteDescription(nsAString& aSDP)
   std::string remoteSdp = mJsepSession->GetRemoteDescription(
       kJsepDescriptionPendingOrCurrent);
   aSDP = NS_ConvertASCIItoUTF16(remoteSdp.c_str());
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PeerConnectionImpl::GetCurrentRemoteDescription(nsAString& aSDP)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   std::string remoteSdp = mJsepSession->GetRemoteDescription(kJsepDescriptionCurrent);
   aSDP = NS_ConvertASCIItoUTF16(remoteSdp.c_str());
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PeerConnectionImpl::GetPendingRemoteDescription(nsAString& aSDP)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   std::string remoteSdp = mJsepSession->GetRemoteDescription(kJsepDescriptionPending);
   aSDP = NS_ConvertASCIItoUTF16(remoteSdp.c_str());
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
