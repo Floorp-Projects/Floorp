@@ -274,6 +274,11 @@ use-ownerGlobal
 
 Require .ownerGlobal instead of .ownerDocument.defaultView.
 
+use-includes-instead-of-indexOf
+-------------------------------
+
+Use .includes instead of .indexOf to check if something is in an array or string.
+
 use-services
 ------------
 
