@@ -9,13 +9,13 @@ const UNORDERED_TYPE = C_i.nsIDOMXPathResult.ANY_UNORDERED_NODE_TYPE;
 /**
  * Determine if the data node has only ignorable white-space.
  *
- * @return nsIDOMNodeFilter.FILTER_SKIP if it does.
- * @return nsIDOMNodeFilter.FILTER_ACCEPT otherwise.
+ * @return NodeFilter.FILTER_SKIP if it does.
+ * @return NodeFilter.FILTER_ACCEPT otherwise.
  */
 function isWhitespace(aNode) {
   return ((/\S/).test(aNode.nodeValue)) ?
-         C_i.nsIDOMNodeFilter.FILTER_SKIP :
-         C_i.nsIDOMNodeFilter.FILTER_ACCEPT;
+         3 /* NodeFilter.FILTER_SKIP */ :
+         1 /* NodeFilter.FILTER_ACCEPT */;
 }
 
 /**
@@ -109,19 +109,19 @@ function evalXPathInDocumentFragment(aContextNode, aPath) {
     acceptNode: function acceptNode(aNode) {
       if (aNode.parentNode != aContextNode) {
         // Don't bother looking at kids either.
-        return C_i.nsIDOMNodeFilter.FILTER_REJECT;
+        return 2 /* NodeFilter.FILTER_REJECT */;
       }
 
       if (targetNodeName && targetNodeName != aNode.nodeName) {
-        return C_i.nsIDOMNodeFilter.FILTER_SKIP;
+        return 3 /* NodeFilter.FILTER_SKIP */;
       }
 
       this.count++;
       if (this.count != childIndex) {
-        return C_i.nsIDOMNodeFilter.FILTER_SKIP;
+        return 3 /* NodeFilter.FILTER_SKIP */;
       }
 
-      return C_i.nsIDOMNodeFilter.FILTER_ACCEPT;
+      return 1 /* NodeFilter.FILTER_ACCEPT */;
     }
   };
 
