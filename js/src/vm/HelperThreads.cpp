@@ -86,10 +86,10 @@ ClampDefaultCPUCount(size_t cpuCount)
 static size_t
 ThreadCountForCPUCount(size_t cpuCount)
 {
-    // Create additional threads on top of the number of cores available, to
-    // provide some excess capacity in case threads pause each other.
-    static const uint32_t EXCESS_THREADS = 4;
-    return cpuCount + EXCESS_THREADS;
+    // We need at least two threads for tier-2 wasm compilations, because
+    // there's a master task that holds a thread while other threads do the
+    // compilation.
+    return Max<size_t>(cpuCount, 2);
 }
 
 void

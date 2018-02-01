@@ -301,6 +301,29 @@ linux64-android-sdk-linux-repack:
         toolchain-artifact: project/gecko/android-sdk/android-sdk-linux.tar.xz
         toolchain-alias: android-sdk-linux
 
+linux64-android-ndk-linux-repack:
+    description: "Android NDK (Linux) repack toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(android-ndk-linux)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: android-build}
+        max-run-time: 1800
+        artifacts:
+            - name: project/gecko/android-ndk
+              path: /builds/worker/project/gecko/android-ndk/
+              type: directory
+    run:
+        using: toolchain-script
+        script: repack-android-ndk-linux.sh
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: project/gecko/android-ndk/android-ndk.tar.xz
+        toolchain-alias: android-ndk-linux
+
 linux64-android-gradle-dependencies:
     description: "Android Gradle dependencies toolchain task"
     treeherder:
