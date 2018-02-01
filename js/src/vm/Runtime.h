@@ -234,6 +234,7 @@ void DisableExtraThreads();
 using ScriptAndCountsVector = GCVector<ScriptAndCounts, 0, SystemAllocPolicy>;
 
 class AutoLockForExclusiveAccess;
+class AutoLockScriptData;
 
 } // namespace js
 
@@ -564,10 +565,26 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     bool activeThreadHasExclusiveAccess;
 #endif
 
-    /* Number of zones which may be operated on by non-cooperating helper threads. */
+    /*
+     * Lock used to protect the script data table, which can be used by
+     * off-thread parsing.
+     *
+     * Locking this only occurs if there is actually a thread other than the
+     * active thread which could access this.
+     */
+    js::Mutex scriptDataLock;
+#ifdef DEBUG
+    bool activeThreadHasScriptDataAccess;
+#endif
+
+    /*
+     * Number of zones which may be operated on by non-cooperating helper
+     * threads.
+     */
     js::UnprotectedData<size_t> numActiveHelperThreadZones;
 
     friend class js::AutoLockForExclusiveAccess;
+    friend class js::AutoLockScriptData;
 
   public:
     void setUsedByHelperThread(JS::Zone* zone);
@@ -581,6 +598,11 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     bool currentThreadHasExclusiveAccess() const {
         return (!hasHelperThreadZones() && activeThreadHasExclusiveAccess) ||
             exclusiveAccessLock.ownedByCurrentThread();
+    }
+
+    bool currentThreadHasScriptDataAccess() const {
+        return (!hasHelperThreadZones() && activeThreadHasScriptDataAccess) ||
+            scriptDataLock.ownedByCurrentThread();
     }
 #endif
 
@@ -868,9 +890,9 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     // within the runtime. This may be modified by threads using
     // AutoLockForExclusiveAccess.
   private:
-    js::ExclusiveAccessLockData<js::ScriptDataTable> scriptDataTable_;
+    js::ScriptDataLockData<js::ScriptDataTable> scriptDataTable_;
   public:
-    js::ScriptDataTable& scriptDataTable(js::AutoLockForExclusiveAccess& lock) {
+    js::ScriptDataTable& scriptDataTable(const js::AutoLockScriptData& lock) {
         return scriptDataTable_.ref();
     }
 

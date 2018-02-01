@@ -6451,7 +6451,7 @@ GCRuntime::endSweepPhase(bool destroyingRuntime, AutoLockForExclusiveAccess& loc
          * script and calls rt->destroyScriptHook, the hook can still access the
          * script's filename. See bug 323267.
          */
-        SweepScriptData(rt, lock);
+        SweepScriptData(rt);
 
         /* Clear out any small pools that we're hanging on to. */
         if (rt->hasJitRuntime()) {
