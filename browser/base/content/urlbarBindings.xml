@@ -522,16 +522,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <parameter name="event"/>
         <body><![CDATA[
           let isMouseEvent = event instanceof MouseEvent;
+          let reuseEmpty = !isMouseEvent;
           let where = undefined;
           if (isMouseEvent) {
             where = whereToOpenLink(event, false, false);
           } else {
-            // If the current tab is empty, ignore Alt+Enter (reuse this tab)
-            let altEnter = !isMouseEvent &&
-                           event &&
-                           event.altKey &&
-                           !isTabEmpty(gBrowser.selectedTab);
+            let altEnter = event && event.altKey;
             where = altEnter ? "tab" : "current";
+          }
+          if (where == "tab" && reuseEmpty && isTabEmpty(gBrowser.selectedTab)) {
+            where = "current";
           }
           return where;
         ]]></body>
