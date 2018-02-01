@@ -936,6 +936,14 @@ const FORMATS = {
     throw new SyntaxError(`String ${JSON.stringify(string)} must be a relative URL`);
   },
 
+  homepageUrl(string, context) {
+    // Pipes are used for separating homepages, but we only allow extensions to
+    // set a single homepage. Encoding any pipes makes it one URL.
+    return FORMATS.relativeUrl(
+      string.replace(new RegExp("\\|", "g"), "%7C"),
+      context);
+  },
+
   imageDataOrStrictRelativeUrl(string, context) {
     // Do not accept a string which resolves as an absolute URL, or any
     // protocol-relative URL, except PNG or JPG data URLs
