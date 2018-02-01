@@ -19,7 +19,6 @@ import time
 import uuid
 import copy
 import glob
-from itertools import chain
 
 # import the power of mozharness ;)
 import sys
@@ -988,18 +987,6 @@ or run without that action (ie: --no-{action})"
         mach_env = {}
         if c.get('upload_env'):
             mach_env.update(c['upload_env'])
-            if 'UPLOAD_HOST' in mach_env and 'stage_server' in c:
-                mach_env['UPLOAD_HOST'] = mach_env['UPLOAD_HOST'] % {
-                    'stage_server': c['stage_server']
-                }
-            if 'UPLOAD_USER' in mach_env and 'stage_username' in c:
-                mach_env['UPLOAD_USER'] = mach_env['UPLOAD_USER'] % {
-                    'stage_username': c['stage_username']
-                }
-            if 'UPLOAD_SSH_KEY' in mach_env and 'stage_ssh_key' in c:
-                mach_env['UPLOAD_SSH_KEY'] = mach_env['UPLOAD_SSH_KEY'] % {
-                    'stage_ssh_key': c['stage_ssh_key']
-                }
 
         # this prevents taskcluster from overwriting the target files with
         # the multilocale files. Put everything from the en-US build in a
@@ -1008,13 +995,6 @@ or run without that action (ie: --no-{action})"
             if 'UPLOAD_PATH' in mach_env:
                 mach_env['UPLOAD_PATH'] = os.path.join(mach_env['UPLOAD_PATH'],
                                                        'en-US')
-
-        # _query_post_upload_cmd returns a list (a cmd list), for env sake here
-        # let's make it a string
-        if c.get('is_automation'):
-            pst_up_cmd = ' '.join([str(i) for i in self._query_post_upload_cmd(multiLocale)])
-            mach_env['POST_UPLOAD_CMD'] = pst_up_cmd
-
         return mach_env
 
     def _compile_against_pgo(self):
@@ -1041,65 +1021,6 @@ or run without that action (ie: --no-{action})"
             for env_var, env_value in c['check_test_env'].iteritems():
                 check_test_env[env_var] = env_value % dirs
         return check_test_env
-
-    def _query_post_upload_cmd(self, multiLocale):
-        c = self.config
-        post_upload_cmd = ["post_upload.py"]
-        buildid = self.query_buildid()
-        revision = self.query_revision()
-        platform = self.stage_platform
-        who = self.query_who()
-        if c.get('pgo_build'):
-            platform += '-pgo'
-
-        if c.get('tinderbox_build_dir'):
-            # TODO find out if we should fail here like we are
-            if not who and not revision:
-                self.fatal("post upload failed. --tinderbox-builds-dir could "
-                           "not be determined. 'who' and/or 'revision' unknown")
-            # branches like try will use 'tinderbox_build_dir
-            tinderbox_build_dir = c['tinderbox_build_dir'] % {
-                'who': who,
-                'got_revision': revision
-            }
-        else:
-            # the default
-            tinderbox_build_dir = "%s-%s" % (self.branch, platform)
-
-        if who and self.branch == 'try':
-            post_upload_cmd.extend(["--who", who])
-        if c.get('include_post_upload_builddir'):
-            post_upload_cmd.extend(
-                ["--builddir", "%s-%s" % (self.branch, platform)]
-            )
-        elif multiLocale:
-            # Android builds with multilocale enabled upload the en-US builds
-            # to an en-US subdirectory, and the multilocale builds to the
-            # top-level directory.
-            post_upload_cmd.extend(
-                ["--builddir", "en-US"]
-            )
-
-        post_upload_cmd.extend(["--tinderbox-builds-dir", tinderbox_build_dir])
-        post_upload_cmd.extend(["-p", c['stage_product']])
-        post_upload_cmd.extend(['-i', buildid])
-        if revision:
-            post_upload_cmd.extend(['--revision', revision])
-        if c.get('to_tinderbox_dated'):
-            post_upload_cmd.append('--release-to-tinderbox-dated-builds')
-        if c.get('release_to_try_builds'):
-            post_upload_cmd.append('--release-to-try-builds')
-        if self.query_is_nightly():
-            if c.get('post_upload_include_platform'):
-                post_upload_cmd.extend(['-b', '%s-%s' % (self.branch, platform)])
-            else:
-                post_upload_cmd.extend(['-b', self.branch])
-            post_upload_cmd.append('--release-to-dated')
-            if c['platform_supports_post_upload_to_latest']:
-                post_upload_cmd.append('--release-to-latest')
-        post_upload_cmd.extend(c.get('post_upload_extra', []))
-
-        return post_upload_cmd
 
     def _rm_old_package(self):
         """rm the old package."""
@@ -1251,18 +1172,6 @@ or run without that action (ie: --no-{action})"
         cmd = [python_path, abs_count_ctors_path, abs_libxul_path]
         self.get_output_from_command(cmd, cwd=dirs['abs_src_dir'],
                                      throw_exception=True)
-
-    def _generate_properties_file(self, path):
-        # TODO it would be better to grab all the properties that were
-        # persisted to file rather than use whats in the buildbot_properties
-        # live object so we become less action dependant.
-        all_current_props = dict(
-            chain(self.buildbot_config['properties'].items(),
-                  self.buildbot_properties.items())
-        )
-        # graph_server_post.py expects a file with 'properties' key
-        graph_props = dict(properties=all_current_props)
-        self.dump_config(path, graph_props)
 
     def _query_props_set_by_mach(self, console_output=True, error_level=FATAL):
         mach_properties_path = os.path.join(

@@ -8,7 +8,6 @@ config = {
     ],
     'stage_platform': 'linux64-fuzzing-debug',
     'debug_build': True,
-    'platform_supports_post_upload_to_latest': False,
     'enable_signing': False,
     #### 64 bit build specific #####
     'env': {

@@ -9,7 +9,6 @@ config = {
     ],
     'stage_platform': 'macosx64-add-on-devel',
     'build_type': 'add-on-devel',
-    'platform_supports_post_upload_to_latest': False,
     'enable_signing': False,
     #### 64 bit build specific #####
     'env': {
