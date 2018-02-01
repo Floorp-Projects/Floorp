@@ -871,7 +871,7 @@ FilePickerDelegate.prototype = {
 
   appendFilter: function(aTitle, aFilter) {
     // Only include filter that specify extensions (i.e. exclude generic ones like "*").
-    let filters = aFilter.split(/[\s,;]+/).filter(filter => filter.indexOf(".") >= 0);
+    let filters = aFilter.split(/[\s,;]+/).filter(filter => filter.includes("."));
     Array.prototype.push.apply(this._extensions, filters);
   },
 

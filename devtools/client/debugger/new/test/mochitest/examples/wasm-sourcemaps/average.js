@@ -1739,7 +1739,7 @@ function integrateWasmJS(Module) {
 
   function lookupImport(mod, base) {
     var lookup = info;
-    if (mod.indexOf(".") < 0) {
+    if (!mod.includes(".")) {
       lookup = (lookup || {})[mod];
     } else {
       var parts = mod.split(".");
@@ -2098,8 +2098,8 @@ STATICTOP = STATIC_BASE + 3008;
 /* global initializers */ __ATINIT__.push();
 
 memoryInitializer =
-  Module["wasmJSMethod"].indexOf("asmjs") >= 0 ||
-  Module["wasmJSMethod"].indexOf("interpret-asm2wasm") >= 0
+  Module["wasmJSMethod"].includes("asmjs") ||
+  Module["wasmJSMethod"].includes("interpret-asm2wasm")
     ? "average.js.mem"
     : null;
 

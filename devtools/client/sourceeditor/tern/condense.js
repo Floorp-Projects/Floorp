@@ -152,7 +152,7 @@
 
   infer.Obj.prototype.reached = function(path, state, concrete) {
     if (isSimpleInstance(this) && !this.condenseForceInclude) {
-      if (state.patchUp.indexOf(this) == -1) state.patchUp.push(this);
+      if (!state.patchUp.includes(this)) state.patchUp.push(this);
       return true;
     } else if (this.proto && !concrete) {
       reach(this.proto, path, "!proto", state);

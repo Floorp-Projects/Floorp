@@ -1017,7 +1017,7 @@ Messages.Simple.prototype = extend(Messages.BaseMessage.prototype, {
     }
 
     let {url, line, column} = this.location;
-    if (IGNORED_SOURCE_URLS.indexOf(url) != -1) {
+    if (IGNORED_SOURCE_URLS.includes(url)) {
       return null;
     }
 
@@ -2639,7 +2639,7 @@ Widgets.ObjectRenderers.add({
   _onClick: function () {
     let location = this.objectActor.location;
     let url = location && location.url;
-    if (url && IGNORED_SOURCE_URLS.indexOf(url) === -1) {
+    if (url && !IGNORED_SOURCE_URLS.includes(url)) {
       this.output.openLocationInDebugger(location);
     } else {
       this.openObjectInVariablesView();

@@ -313,7 +313,7 @@ this.BrowserUtils = {
     // The HTML spec says that rel should be split on spaces before looking
     // for particular rel values.
     let values = rel.split(/[ \t\r\n\f]/);
-    return values.indexOf("noreferrer") != -1;
+    return values.includes("noreferrer");
   },
 
   /**

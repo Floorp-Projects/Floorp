@@ -102,7 +102,7 @@ window.addEventListener("DOMContentLoaded", function () {
     fixStylesheetsOnMutation();
   }).observe(document.body, { childList: true, subtree: true });
 
-  const hasFirefoxTabParam = window.location.href.indexOf("firefox-tab") != -1;
+  const hasFirefoxTabParam = window.location.href.includes("firefox-tab");
   if (!hasFirefoxTabParam) {
     const inspectorRoot = document.querySelector(".inspector");
     // Remove the inspector specific markup and add the landing page root element.

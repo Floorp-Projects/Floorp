@@ -40,7 +40,7 @@ function test_radio()
 
   window.blur();
 
-  var accessKeyDetails = (navigator.platform.indexOf("Mac") >= 0) ?
+  var accessKeyDetails = (navigator.platform.includes("Mac")) ?
                          { altKey : true, ctrlKey : true } :
                          { altKey : true, shiftKey: true };
   synthesizeKey("t", accessKeyDetails);  

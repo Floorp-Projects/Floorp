@@ -484,7 +484,7 @@
     function findTextNode(word, node) {
       if (node.nodeType == 3) {
         // Text node, check value.
-        if (node.data.indexOf(word) != -1) {
+        if (node.data.includes(word)) {
           return node;
         }
       } else if (node.nodeType == 1) {
@@ -578,7 +578,7 @@
       // Except for styleWithCSS commands, which only succeed if the
       // expected style was applied.
       if (styleWithCSS) {
-        success = result && result.toLowerCase().indexOf(APPLY_TESTS[command].styleWithCSS) != -1;
+        success = result && result.toLowerCase().includes(APPLY_TESTS[command].styleWithCSS);
       }
       results.push('a-' + command + '-' + (styleWithCSS ? 1 : 0) + '=' + (success ? '1' : '0'));
 

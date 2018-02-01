@@ -33,7 +33,7 @@ function checkXrayProperty(obj, name, values)
     if (typeof value == "undefined") {
       ok(!obj.hasOwnProperty(name), "hasOwnProperty shouldn't see \"" + name + "\" through Xrays");
       is(Object.getOwnPropertyDescriptor(obj, name), undefined, "getOwnPropertyDescriptor shouldn't see \"" + name + "\" through Xrays");
-      ok(Object.keys(obj).indexOf(name) == -1, "Enumerating the Xray should not return \"" + name + "\"");
+      ok(!Object.keys(obj).includes(name), "Enumerating the Xray should not return \"" + name + "\"");
     } else {
       ok(obj.hasOwnProperty(name), "hasOwnProperty should see \"" + name + "\" through Xrays");
       var pd = Object.getOwnPropertyDescriptor(obj, name);

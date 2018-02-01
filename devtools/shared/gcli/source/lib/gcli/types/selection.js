@@ -225,7 +225,7 @@ exports.findPredictions = function(arg, lookup) {
   for (i = 0; i < lookup.length && predictions.length < maxPredictions; i++) {
     option = lookup[i];
     if (option._gcliLowerName.indexOf(match) === 0 && !isHidden(option)) {
-      if (predictions.indexOf(option) === -1) {
+      if (!predictions.includes(option)) {
         predictions.push(option);
       }
     }
@@ -235,8 +235,8 @@ exports.findPredictions = function(arg, lookup) {
   if (predictions.length < (maxPredictions / 2)) {
     for (i = 0; i < lookup.length && predictions.length < maxPredictions; i++) {
       option = lookup[i];
-      if (option._gcliLowerName.indexOf(match) !== -1 && !isHidden(option)) {
-        if (predictions.indexOf(option) === -1) {
+      if (option._gcliLowerName.includes(match) && !isHidden(option)) {
+        if (!predictions.includes(option)) {
           predictions.push(option);
         }
       }

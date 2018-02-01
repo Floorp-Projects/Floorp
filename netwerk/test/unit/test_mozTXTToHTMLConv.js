@@ -180,7 +180,7 @@ function run_test() {
     let t = scanTXTtests[i];
     let output = converter.scanTXT(t.input, Ci.mozITXTToHTMLConv.kURLs);
     let link = hrefLink(t.url);
-    if (output.indexOf(link) == -1)
+    if (!output.includes(link))
       do_throw("Unexpected conversion by scanTXT: input=" + t.input +
                ", output=" + output + ", link=" + link);
   }

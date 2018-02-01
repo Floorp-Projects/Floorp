@@ -260,7 +260,7 @@ AppCacheUtils.prototype = {
       onCacheEntryInfo: function (aURI, aIdEnhance, aDataSize, aFetchCount, aLastModifiedTime, aExpirationTime) {
         let lowerKey = aURI.asciiSpec.toLowerCase();
 
-        if (searchTerm && lowerKey.indexOf(searchTerm.toLowerCase()) == -1) {
+        if (searchTerm && !lowerKey.includes(searchTerm.toLowerCase())) {
           return;
         }
 
@@ -439,7 +439,7 @@ ManifestParser.prototype = {
   parseLine: function OCIMP_parseLine() {
     let text = this.text;
 
-    if (text.indexOf("*") != -1) {
+    if (text.includes("*")) {
       if (this.currSection != "NETWORK" || text.length != 1) {
         this._addError(this.currentLine, "asteriskInWrongSection2",
                        this.currSection, this.currentLine);
@@ -496,7 +496,7 @@ ManifestParser.prototype = {
 
     let [ namespace, fallback ] = split;
 
-    if (namespace.indexOf("*") != -1) {
+    if (namespace.includes("*")) {
       this._addError(this.currentLine, "fallbackAsterisk2", this.currentLine);
     }
 

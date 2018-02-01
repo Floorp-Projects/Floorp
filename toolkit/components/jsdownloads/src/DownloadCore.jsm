@@ -1181,7 +1181,7 @@ Download.fromSerializable = function(aSerializable) {
   }
 
   deserializeUnknownProperties(download, aSerializable, property =>
-    kPlainSerializableDownloadProperties.indexOf(property) == -1 &&
+    !kPlainSerializableDownloadProperties.includes(property) &&
     property != "startTime" &&
     property != "source" &&
     property != "target" &&

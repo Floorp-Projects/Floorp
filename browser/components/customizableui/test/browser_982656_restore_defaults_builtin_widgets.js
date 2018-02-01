@@ -32,7 +32,7 @@ add_task(async function() {
   const kWidgetId = "bug982656-add-on-widget-should-restore-to-default-area-when-area-is-not-builtin";
   ok(CustomizableUI.inDefaultState, "Everything should be in its default state.");
   let toolbar = createToolbarWithPlacements(kToolbarId);
-  ok(CustomizableUI.areas.indexOf(kToolbarId) != -1,
+  ok(CustomizableUI.areas.includes(kToolbarId),
      "Toolbar has been registered.");
   is(CustomizableUI.getAreaType(kToolbarId), CustomizableUI.TYPE_TOOLBAR,
      "Area should be registered as toolbar");

@@ -56,7 +56,7 @@
     {
       // isColumnSelected
       for (var col = 0; col < aCount; col++) {
-        if (aSelIndexesArray && aSelIndexesArray.indexOf(col) != -1) {
+        if (aSelIndexesArray && aSelIndexesArray.includes(col)) {
           is(aAcc.isColumnSelected(col), true,
              aId + ": column " + col + " should be selected");
         } else {
@@ -95,7 +95,7 @@
     {
       // isRowSelected
       for (var row = 0; row < aCount; row++) {
-        if (aSelIndexesArray && aSelIndexesArray.indexOf(row) != -1) {
+        if (aSelIndexesArray && aSelIndexesArray.includes(row)) {
           is(aAcc.isRowSelected(row), true,
              aId + ": row " + row + " should be selected");
         } else {
@@ -137,7 +137,7 @@
       for (var row = 0; row < aRowCount; row++) {
         for (var col = 0; col < aColCount; col++) {
           var index = aAcc.getIndexAt(row, col);
-          if (aSelIndexesArray && aSelIndexesArray.indexOf(index) != -1) {
+          if (aSelIndexesArray && aSelIndexesArray.includes(index)) {
             is(aAcc.isCellSelected(row, col), true,
                aId + ": cell (" + row + ", " + col + ") should be selected");
           } else {

@@ -64,7 +64,7 @@ add_task(function* () {
     PerformanceController.getCurrentRecording());
   either(DETAILS_CONTAINER.getAttribute("buffer-status"), "in-progress", "full",
     "Container has [buffer-status=in-progress] or [buffer-status=full].");
-  ok(NORMAL_BUFFER_STATUS_MESSAGE.value.indexOf(gPercent + "%") !== -1,
+  ok(NORMAL_BUFFER_STATUS_MESSAGE.value.includes(gPercent + "%"),
     "Buffer status text has correct percentage.");
 
   // Start a console profile.
@@ -83,7 +83,7 @@ add_task(function* () {
     PerformanceController.getCurrentRecording());
   either(DETAILS_CONTAINER.getAttribute("buffer-status"), "in-progress", "full",
     "Container has [buffer-status=in-progress] or [buffer-status=full].");
-  ok(NORMAL_BUFFER_STATUS_MESSAGE.value.indexOf(gPercent + "%") !== -1,
+  ok(NORMAL_BUFFER_STATUS_MESSAGE.value.includes(gPercent + "%"),
     "Buffer status text has correct percentage.");
 
   // Select the console recording.
@@ -102,7 +102,7 @@ add_task(function* () {
 
   either(DETAILS_CONTAINER.getAttribute("buffer-status"), "in-progress", "full",
     "Container has [buffer-status=in-progress] or [buffer-status=full].");
-  ok(CONSOLE_BUFFER_STATUS_MESSAGE.value.indexOf(gPercent + "%") !== -1,
+  ok(CONSOLE_BUFFER_STATUS_MESSAGE.value.includes(gPercent + "%"),
     "Buffer status text has correct percentage for console recording.");
 
   // Stop the console profile, then select the original manual recording.
@@ -123,7 +123,7 @@ add_task(function* () {
 
   either(DETAILS_CONTAINER.getAttribute("buffer-status"), "in-progress", "full",
     "Container has [buffer-status=in-progress] or [buffer-status=full].");
-  ok(NORMAL_BUFFER_STATUS_MESSAGE.value.indexOf(gPercent + "%") !== -1,
+  ok(NORMAL_BUFFER_STATUS_MESSAGE.value.includes(gPercent + "%"),
     "Buffer status text has correct percentage.");
 
   // Stop the manual recording.

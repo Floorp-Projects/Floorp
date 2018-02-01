@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1160724
     },
 
     observe(msg) {
-      if (msg.toString().indexOf("transform") != -1) {
+      if (msg.toString().includes("transform")) {
         errorLogged = true;
       }
     }

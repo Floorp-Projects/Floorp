@@ -43,7 +43,7 @@ function runTest()
 
 function runTestSet(suffix)
 {
-  var isMac = (navigator.platform.indexOf("Mac") >= 0);
+  var isMac = (navigator.platform.includes("Mac"));
 
   var one = $("one" + suffix);
   var two = $("two" + suffix);

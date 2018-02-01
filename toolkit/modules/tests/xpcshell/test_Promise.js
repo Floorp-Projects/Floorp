@@ -961,7 +961,7 @@ function wait_for_uncaught(aMustAppear, aTimeout = undefined) {
     let data = message + stack;
     print("Observing " + message + ", looking for " + aMustAppear.join(", "));
     for (let expected of remaining) {
-      if (data.indexOf(expected) != -1) {
+      if (data.includes(expected)) {
         print("I found " + expected);
         remaining.delete(expected);
       }

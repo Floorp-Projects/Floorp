@@ -139,7 +139,7 @@ class Tooltip {
       }
 
       this.emit("keypress", event.keyCode);
-      if (this.closeOnKeys.indexOf(event.keyCode) !== -1 &&
+      if (this.closeOnKeys.includes(event.keyCode) &&
           this.isShown()) {
         event.stopPropagation();
         this.hide();

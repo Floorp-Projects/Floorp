@@ -248,7 +248,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
   function doTest3_b(test_id) {
     // currently no support yet for local files for b2g/Android mochitest, see bug 838726
-    if (navigator.appVersion.indexOf("Android") != -1 || SpecialPowers.Services.appinfo.name == "B2G") {
+    if (navigator.appVersion.includes("Android") || SpecialPowers.Services.appinfo.name == "B2G") {
       setTestHasFinished(test_id);
       return;
     }

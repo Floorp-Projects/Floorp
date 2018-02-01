@@ -82,7 +82,7 @@ function EventManager(sr) {
 
       var dep = eventDependencies[eventName];
       if (dep) {
-        ok(self.eventsReceived.indexOf(dep) >= 0,
+        ok(self.eventsReceived.includes(dep),
            eventName + " must come after " + dep);
       }
 

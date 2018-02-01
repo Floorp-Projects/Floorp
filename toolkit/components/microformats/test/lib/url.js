@@ -35,7 +35,7 @@ var Modules = (function (modules) {
 		 */
 		resolve: function(url, baseUrl) {
 			// use modern URL web API where we can
-			if(modules.utils.isString(url) && modules.utils.isString(baseUrl) && url.indexOf('://') === -1){
+			if(modules.utils.isString(url) && modules.utils.isString(baseUrl) && !url.includes('://')){
 				// this try catch is required as IE has an URL object but no constuctor support
 				// http://glennjones.net/articles/the-problem-with-window-url
 				try {

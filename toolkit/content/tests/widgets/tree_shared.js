@@ -644,7 +644,7 @@ function testtag_tree_UI_editing(tree, testid, rowInfo) {
     tree.view.selection.currentColumn = ecolumn;
     tree.currentIndex = rowIndex;
 
-    const isMac = (navigator.platform.indexOf("Mac") >= 0);
+    const isMac = (navigator.platform.includes("Mac"));
     const StartEditingKey = isMac ? "RETURN" : "F2";
     sendKey(StartEditingKey);
     is(tree.editingColumn, ecolumn, "Should be editing tree cell now");

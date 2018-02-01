@@ -234,7 +234,7 @@ var gEditItemOverlay = {
       (rowId, isAppropriateForInput, nameInHiddenRows = null) => {
         let visible = isAppropriateForInput;
         if (visible && "hiddenRows" in aInfo && nameInHiddenRows)
-          visible &= aInfo.hiddenRows.indexOf(nameInHiddenRows) == -1;
+          visible &= !aInfo.hiddenRows.includes(nameInHiddenRows);
         if (visible)
           visibleRows.add(rowId);
         return !(this._element(rowId).collapsed = !visible);

@@ -256,11 +256,11 @@ var CastingApps = {
   },
 
   allowableExtension: function(aURI, aExtensions) {
-    return (aURI instanceof Ci.nsIURL) && aExtensions.indexOf(aURI.fileExtension) != -1;
+    return (aURI instanceof Ci.nsIURL) && aExtensions.includes(aURI.fileExtension);
   },
 
   allowableMimeType: function(aType, aTypes) {
-    return aTypes.indexOf(aType) != -1;
+    return aTypes.includes(aType);
   },
 
   // This method will look at the aElement (or try to find a video at aX, aY) that has

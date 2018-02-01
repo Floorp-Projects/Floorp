@@ -412,7 +412,7 @@ var test_debug_test = maketest("debug_test", function debug_test(test) {
         if (!(aMessage instanceof Components.interfaces.nsIConsoleMessage)) {
           return;
         }
-        if (aMessage.message.indexOf("TEST OS") < 0) {
+        if (!aMessage.message.includes("TEST OS")) {
           return;
         }
         test.ok(true, "DEBUG TEST messages are logged correctly.");

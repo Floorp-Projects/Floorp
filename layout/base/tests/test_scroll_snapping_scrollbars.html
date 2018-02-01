@@ -18,9 +18,9 @@
 
 var runtime = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"]
                                 .getService(SpecialPowers.Ci.nsIXULRuntime);
-var isMac = navigator.platform.indexOf("Mac") != -1;
-var isGtk = runtime.widgetToolkit.indexOf("gtk") != -1;
-var isWin = navigator.platform.indexOf("Win") != -1;
+var isMac = navigator.platform.includes("Mac");
+var isGtk = runtime.widgetToolkit.includes("gtk");
+var isWin = navigator.platform.includes("Win");
 var isSN = /mac os x 10\.6/.test(navigator.userAgent.toLowerCase());
 
 // Half of the scrollbar control width, in CSS pixels

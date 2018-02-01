@@ -1022,7 +1022,7 @@ add_task(async function test_warning_message_on_finalization() {
       let messageText = msg.message;
       // Make sure the message starts with a warning containing the
       // connection identifier
-      if (messageText.indexOf("Warning: Sqlite connection '" + identifier + "'") !== -1) {
+      if (messageText.includes("Warning: Sqlite connection '" + identifier + "'")) {
         deferred.resolve();
       }
     }
@@ -1046,8 +1046,8 @@ add_task(async function test_error_message_on_unknown_finalization() {
   let listener = {
     observe(msg) {
       let messageText = msg.message;
-      if (messageText.indexOf("Error: Attempt to finalize unknown " +
-                              "Sqlite connection: foo") !== -1) {
+      if (messageText.includes("Error: Attempt to finalize unknown " +
+                              "Sqlite connection: foo")) {
         deferred.resolve();
       }
     }

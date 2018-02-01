@@ -65,7 +65,7 @@ function testKeyboard() {
   $("checkboxTarget").focus();
   synthesizeKey("VK_SPACE", {});
 
-  var accessKeyDetails = (navigator.platform.indexOf("Mac") >= 0) ?
+  var accessKeyDetails = (navigator.platform.includes("Mac")) ?
                           { ctrlKey : true } : { altKey : true, shiftKey: true };
 
   synthesizeKey("o", accessKeyDetails);

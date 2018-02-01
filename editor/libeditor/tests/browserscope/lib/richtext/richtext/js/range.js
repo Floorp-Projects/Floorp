@@ -46,14 +46,14 @@ var goog$now = Date.now || function() {
   if(opt_isLikelyToContainHtmlChars)return str.replace(goog$string$amperRe_, "&amp;").replace(goog$string$ltRe_, "&lt;").replace(goog$string$gtRe_, "&gt;").replace(goog$string$quotRe_, "&quot;");
   else {
     if(!goog$string$allRe_.test(str))return str;
-    if(str.indexOf("&") != -1)str = str.replace(goog$string$amperRe_, "&amp;");
-    if(str.indexOf("<") != -1)str = str.replace(goog$string$ltRe_, "&lt;");
-    if(str.indexOf(">") != -1)str = str.replace(goog$string$gtRe_, "&gt;");
-    if(str.indexOf('"') != -1)str = str.replace(goog$string$quotRe_, "&quot;");
+    if(str.includes("&"))str = str.replace(goog$string$amperRe_, "&amp;");
+    if(str.includes("<"))str = str.replace(goog$string$ltRe_, "&lt;");
+    if(str.includes(">"))str = str.replace(goog$string$gtRe_, "&gt;");
+    if(str.includes('"'))str = str.replace(goog$string$quotRe_, "&quot;");
     return str
   }
 }, goog$string$amperRe_ = /&/g, goog$string$ltRe_ = /</g, goog$string$gtRe_ = />/g, goog$string$quotRe_ = /\"/g, goog$string$allRe_ = /[&<>\"]/, goog$string$contains = function(s, ss) {
-  return s.indexOf(ss) != -1
+  return s.includes(ss)
 }, goog$string$compareVersions = function(version1, version2) {
   for(var order = 0, v1Subs = goog$string$trim(String(version1)).split("."), v2Subs = goog$string$trim(String(version2)).split("."), subCount = Math.max(v1Subs.length, v2Subs.length), subIdx = 0;order == 0 && subIdx < subCount;subIdx++) {
     var v1Sub = v1Subs[subIdx] || "", v2Sub = v2Subs[subIdx] || "", v1CompParser = new RegExp("(\\d*)(\\D*)", "g"), v2CompParser = new RegExp("(\\d*)(\\D*)", "g");
@@ -79,8 +79,8 @@ var JSCompiler_inline_ua_15;
 if(JSCompiler_inline_ua_15 = goog$userAgent$getUserAgentString()) {
   var JSCompiler_inline_navigator$$1_16 = goog$userAgent$getNavigator();
   goog$userAgent$detectedOpera_ = JSCompiler_inline_ua_15.indexOf("Opera") == 0;
-  goog$userAgent$detectedIe_ = !goog$userAgent$detectedOpera_ && JSCompiler_inline_ua_15.indexOf("MSIE") != -1;
-  goog$userAgent$detectedMobile_ = (goog$userAgent$detectedWebkit_ = !goog$userAgent$detectedOpera_ && JSCompiler_inline_ua_15.indexOf("WebKit") != -1) && JSCompiler_inline_ua_15.indexOf("Mobile") != -1;
+  goog$userAgent$detectedIe_ = !goog$userAgent$detectedOpera_ && JSCompiler_inline_ua_15.includes("MSIE");
+  goog$userAgent$detectedMobile_ = (goog$userAgent$detectedWebkit_ = !goog$userAgent$detectedOpera_ && JSCompiler_inline_ua_15.includes("WebKit")) && JSCompiler_inline_ua_15.includes("Mobile");
   goog$userAgent$detectedCamino_ = (goog$userAgent$detectedGecko_ = !goog$userAgent$detectedOpera_ && !goog$userAgent$detectedWebkit_ && JSCompiler_inline_navigator$$1_16.product == "Gecko") && JSCompiler_inline_navigator$$1_16.vendor == "Camino"
 }var goog$userAgent$OPERA = goog$userAgent$detectedOpera_, goog$userAgent$IE = goog$userAgent$detectedIe_, goog$userAgent$GECKO = goog$userAgent$detectedGecko_, goog$userAgent$WEBKIT = goog$userAgent$detectedWebkit_, goog$userAgent$MOBILE = goog$userAgent$detectedMobile_, goog$userAgent$PLATFORM, JSCompiler_inline_navigator$$2_19 = goog$userAgent$getNavigator();
 goog$userAgent$PLATFORM = JSCompiler_inline_navigator$$2_19 && JSCompiler_inline_navigator$$2_19.platform || "";

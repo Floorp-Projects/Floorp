@@ -1061,9 +1061,9 @@ function validateFileName(aFileName) {
       processed = "download";
 
       // Preserve a suffix, if there is one
-      if (original.indexOf(".") >= 0) {
+      if (original.includes(".")) {
         var suffix = original.split(".").slice(-1)[0];
-        if (suffix && suffix.indexOf("_") < 0)
+        if (suffix && !suffix.includes("_"))
           processed += "." + suffix;
       }
     }

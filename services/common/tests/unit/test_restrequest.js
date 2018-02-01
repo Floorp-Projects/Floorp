@@ -598,7 +598,7 @@ add_test(function test_get_no_headers() {
     let server_headers = handler.request.headers;
     while (server_headers.hasMoreElements()) {
       let header = server_headers.getNext().toString();
-      if (ignore_headers.indexOf(header) == -1) {
+      if (!ignore_headers.includes(header)) {
         do_throw("Got unexpected header!");
       }
     }
