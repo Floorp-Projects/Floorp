@@ -109,7 +109,7 @@ MOZ_ALWAYS_INLINE void
 JSRope::init(JSContext* cx, JSString* left, JSString* right, size_t length)
 {
     d.u1.length = length;
-    d.u1.flags = ROPE_FLAGS;
+    d.u1.flags = INIT_ROPE_FLAGS;
     if (left->hasLatin1Chars() && right->hasLatin1Chars())
         d.u1.flags |= LATIN1_CHARS_BIT;
     d.s.u2.left = left;
@@ -206,7 +206,7 @@ MOZ_ALWAYS_INLINE void
 JSFlatString::init(const char16_t* chars, size_t length)
 {
     d.u1.length = length;
-    d.u1.flags = FLAT_BIT;
+    d.u1.flags = LINEAR_BIT;
     d.s.u2.nonInlineCharsTwoByte = chars;
 }
 
@@ -214,7 +214,7 @@ MOZ_ALWAYS_INLINE void
 JSFlatString::init(const JS::Latin1Char* chars, size_t length)
 {
     d.u1.length = length;
-    d.u1.flags = FLAT_BIT | LATIN1_CHARS_BIT;
+    d.u1.flags = LINEAR_BIT | LATIN1_CHARS_BIT;
     d.s.u2.nonInlineCharsLatin1 = chars;
 }
 

@@ -9,6 +9,8 @@
 #    'content_signing_int.pem',
 #    'content_signing_onecrl_RSA_ee.pem',
 #    'content_signing_onecrl_ee.pem',
+#    'content_signing_onecrl_ee_expired.pem',
+#    'content_signing_onecrl_ee_not_valid_yet.pem',
 #    'content_signing_onecrl_no_SAN_ee.pem',
 #    'content_signing_onecrl_wrong_key_ee.pem',
 #    'content_signing_remote_newtab_ee.pem',

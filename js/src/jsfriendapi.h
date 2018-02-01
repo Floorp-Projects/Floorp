@@ -612,10 +612,10 @@ struct Function {
 
 struct String
 {
+    static const uint32_t LINEAR_BIT       = JS_BIT(0);
     static const uint32_t INLINE_CHARS_BIT = JS_BIT(2);
     static const uint32_t LATIN1_CHARS_BIT = JS_BIT(6);
-    static const uint32_t ROPE_FLAGS       = 0;
-    static const uint32_t EXTERNAL_FLAGS   = JS_BIT(5);
+    static const uint32_t EXTERNAL_FLAGS   = JS_BIT(0) | JS_BIT(5);
     static const uint32_t TYPE_FLAGS_MASK  = JS_BIT(6) - 1;
     uint32_t flags;
     uint32_t length;
@@ -904,7 +904,7 @@ StringToLinearString(JSContext* cx, JSString* str)
 {
     using shadow::String;
     String* s = reinterpret_cast<String*>(str);
-    if (MOZ_UNLIKELY((s->flags & String::TYPE_FLAGS_MASK) == String::ROPE_FLAGS))
+    if (MOZ_UNLIKELY(!(s->flags & String::LINEAR_BIT)))
         return StringToLinearStringSlow(cx, str);
     return reinterpret_cast<JSLinearString*>(str);
 }

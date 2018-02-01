@@ -111,7 +111,7 @@ def make_task_description(config, jobs):
             dep_th_platform, build_platform, build_type
         ))
 
-        treeherder.setdefault('tier', 1)
+        treeherder.setdefault('tier', 1 if '-ccov' not in build_platform else 2)
         treeherder.setdefault('kind', 'build')
 
         label = job['label']
@@ -155,7 +155,12 @@ def make_task_description(config, jobs):
 
 
 def _generate_treeherder_platform(dep_th_platform, build_platform, build_type):
-    actual_build_type = 'pgo' if '-pgo' in build_platform else build_type
+    if '-pgo' in build_platform:
+        actual_build_type = 'pgo'
+    elif '-ccov' in build_platform:
+        actual_build_type = 'ccov'
+    else:
+        actual_build_type = build_type
     return '{}/{}'.format(dep_th_platform, actual_build_type)
 
 

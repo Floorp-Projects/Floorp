@@ -868,15 +868,17 @@ struct ScriptBytecodeHasher
     }
 };
 
-typedef HashSet<SharedScriptData*,
-                ScriptBytecodeHasher,
-                SystemAllocPolicy> ScriptDataTable;
+class AutoLockScriptData;
+
+using ScriptDataTable = HashSet<SharedScriptData*,
+                                ScriptBytecodeHasher,
+                                SystemAllocPolicy>;
 
 extern void
-SweepScriptData(JSRuntime* rt, AutoLockForExclusiveAccess& lock);
+SweepScriptData(JSRuntime* rt);
 
 extern void
-FreeScriptData(JSRuntime* rt, AutoLockForExclusiveAccess& lock);
+FreeScriptData(JSRuntime* rt);
 
 } /* namespace js */
 

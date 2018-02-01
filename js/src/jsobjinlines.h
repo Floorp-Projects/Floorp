@@ -139,8 +139,8 @@ js::NativeObject::sweepDictionaryListPointer()
     // unreachable shapes may be marked whose listp points into this object.  In
     // case this happens, null out the shape's pointer so that a moving GC will
     // not try to access the dead object.
-    if (shape_->listp == &shape_)
-        shape_->listp = nullptr;
+    if (shape()->listp == shapePtr())
+        shape()->listp = nullptr;
 }
 
 MOZ_ALWAYS_INLINE void
@@ -150,8 +150,8 @@ js::NativeObject::updateDictionaryListPointerAfterMinorGC(NativeObject* old)
 
     // Dictionary objects can be allocated in the nursery and when they are
     // tenured the shape's pointer into the object needs to be updated.
-    if (shape_->listp == &old->shape_)
-        shape_->listp = &shape_;
+    if (shape()->listp == old->shapePtr())
+        shape()->listp = shapePtr();
 }
 
 inline void
