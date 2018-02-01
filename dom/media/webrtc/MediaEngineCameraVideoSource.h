@@ -16,6 +16,7 @@
 #include "ipc/IPCMessageUtils.h"
 
 // WebRTC includes
+#include "webrtc/common_video/include/i420_buffer_pool.h"
 #include "webrtc/modules/video_capture/video_capture_defines.h"
 
 namespace webrtc {
@@ -45,6 +46,8 @@ public:
                                         const char* aMonitorName = "Camera.Monitor")
     : MediaEngineVideoSource(kReleased)
     , mMonitor(aMonitorName)
+    , mRescalingBufferPool(/* zero_initialize */ false,
+                           /* max_number_of_buffers */ 1)
     , mWidth(0)
     , mHeight(0)
     , mInitDone(false)
@@ -79,6 +82,7 @@ public:
     Unused << NS_WARN_IF(mImage);
     mImage = nullptr;
     mImageContainer = nullptr;
+    mRescalingBufferPool.Release();
   }
 
 protected:
@@ -145,6 +149,10 @@ protected:
   nsTArray<uint64_t> mHandleIds;
   RefPtr<layers::ImageContainer> mImageContainer;
   // end of data protected by mMonitor
+
+  // A buffer pool used to manage the temporary buffer used when rescaling
+  // incoming images. Cameras IPC thread only.
+  webrtc::I420BufferPool mRescalingBufferPool;
 
   int mWidth, mHeight;
   bool mInitDone;
