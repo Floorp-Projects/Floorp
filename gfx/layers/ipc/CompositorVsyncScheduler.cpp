@@ -235,8 +235,6 @@ CompositorVsyncScheduler::Composite(TimeStamp aVsyncTimestamp)
     }
   }
 
-  DispatchTouchEvents(aVsyncTimestamp);
-
   if (mNeedsComposite || mAsapScheduling) {
     mNeedsComposite = 0;
     mLastCompose = aVsyncTimestamp;
@@ -302,11 +300,6 @@ CompositorVsyncScheduler::UnobserveVsync()
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   mWidget->ObserveVsync(nullptr);
   mIsObservingVsync = false;
-}
-
-void
-CompositorVsyncScheduler::DispatchTouchEvents(TimeStamp aVsyncTimestamp)
-{
 }
 
 void
