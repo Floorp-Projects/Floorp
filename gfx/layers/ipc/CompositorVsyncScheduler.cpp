@@ -368,14 +368,6 @@ CompositorVsyncScheduler::ScheduleTask(already_AddRefed<CancelableRunnable> aTas
 }
 
 void
-CompositorVsyncScheduler::ResumeComposition()
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  mLastCompose = TimeStamp::Now();
-  ComposeToTarget(nullptr);
-}
-
-void
 CompositorVsyncScheduler::ComposeToTarget(gfx::DrawTarget* aTarget, const IntRect* aRect)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
