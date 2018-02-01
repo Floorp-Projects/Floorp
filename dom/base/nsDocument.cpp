@@ -6400,17 +6400,8 @@ nsIDocument::CreateNodeIterator(nsINode& aRoot, uint32_t aWhatToShow,
                                 NodeFilter* aFilter,
                                 ErrorResult& rv) const
 {
-  return CreateNodeIterator(aRoot, aWhatToShow, NodeFilterHolder(aFilter), rv);
-}
-
-already_AddRefed<NodeIterator>
-nsIDocument::CreateNodeIterator(nsINode& aRoot, uint32_t aWhatToShow,
-                                NodeFilterHolder aFilter,
-                                ErrorResult& rv) const
-{
-  nsINode* root = &aRoot;
-  RefPtr<NodeIterator> iterator = new NodeIterator(root, aWhatToShow,
-                                                   Move(aFilter));
+  RefPtr<NodeIterator> iterator = new NodeIterator(&aRoot, aWhatToShow,
+                                                   aFilter);
   return iterator.forget();
 }
 
@@ -6419,15 +6410,7 @@ nsIDocument::CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
                               NodeFilter* aFilter,
                               ErrorResult& rv) const
 {
-  return CreateTreeWalker(aRoot, aWhatToShow, NodeFilterHolder(aFilter), rv);
-}
-
-already_AddRefed<TreeWalker>
-nsIDocument::CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
-                              NodeFilterHolder aFilter, ErrorResult& rv) const
-{
-  nsINode* root = &aRoot;
-  RefPtr<TreeWalker> walker = new TreeWalker(root, aWhatToShow, Move(aFilter));
+  RefPtr<TreeWalker> walker = new TreeWalker(&aRoot, aWhatToShow, aFilter);
   return walker.forget();
 }
 

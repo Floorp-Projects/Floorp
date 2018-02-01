@@ -26,8 +26,8 @@ namespace dom {
 
 TreeWalker::TreeWalker(nsINode *aRoot,
                        uint32_t aWhatToShow,
-                       NodeFilterHolder aFilter) :
-    nsTraversal(aRoot, aWhatToShow, Move(aFilter)),
+                       NodeFilter* aFilter) :
+    nsTraversal(aRoot, aWhatToShow, aFilter),
     mCurrentNode(aRoot)
 {
 }

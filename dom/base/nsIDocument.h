@@ -182,7 +182,6 @@ class XULDocument;
 template<typename> class Sequence;
 
 template<typename, typename> class CallbackObjectHolder;
-typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 
 enum class CallerType : uint32_t;
 
@@ -2877,18 +2876,9 @@ public:
     CreateNodeIterator(nsINode& aRoot, uint32_t aWhatToShow,
                        mozilla::dom::NodeFilter* aFilter,
                        mozilla::ErrorResult& rv) const;
-  already_AddRefed<mozilla::dom::NodeIterator>
-    CreateNodeIterator(nsINode& aRoot, uint32_t aWhatToShow,
-                       mozilla::dom::NodeFilterHolder aFilter,
-                       mozilla::ErrorResult& rv) const;
   already_AddRefed<mozilla::dom::TreeWalker>
     CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
                      mozilla::dom::NodeFilter* aFilter, mozilla::ErrorResult& rv) const;
-  already_AddRefed<mozilla::dom::TreeWalker>
-    CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
-                     mozilla::dom::NodeFilterHolder aFilter,
-                     mozilla::ErrorResult& rv) const;
-
   // Deprecated WebIDL bits
   already_AddRefed<mozilla::dom::CDATASection>
     CreateCDATASection(const nsAString& aData, mozilla::ErrorResult& rv);
