@@ -201,7 +201,7 @@ interface nsIChannel : nsIRequest
     /**************************************************************************
      * Channel specific load flags:
      *
-     * Bits 26-31 are reserved for future use by this interface or one of its
+     * Bits 16-31 are reserved for future use by this interface or one of its
      * derivatives (e.g., see nsICachingChannel).
      */
 

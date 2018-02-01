@@ -238,6 +238,13 @@ interface nsISocketTransport : nsITransport
     const unsigned long BE_CONSERVATIVE = (1 << 7);
 
     /**
+     * If set, do not use TRR for resolving the host name. Intended only for
+     * retries or other scenarios when TRR is deemed likely to have returned a
+     * wrong adddress.
+     */
+    const unsigned long DISABLE_TRR = (1 << 8);
+
+    /**
      * An opaque flags for non-standard behavior of the TLS system.
      * It is unlikely this will need to be set outside of telemetry studies
      * relating to the TLS implementation.
