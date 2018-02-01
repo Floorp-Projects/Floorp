@@ -41,10 +41,16 @@ struct ValueWrapper {
       mServoValues.AppendElement(aValue.mServo);
       return;
     }
+#ifdef MOZ_OLD_STYLE
     mGeckoValue = aValue.mGecko;
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
+#ifdef MOZ_OLD_STYLE
   ValueWrapper(nsCSSPropertyID aPropID, const StyleAnimationValue& aValue)
     : mPropID(aPropID), mGeckoValue(aValue) {}
+#endif
   ValueWrapper(nsCSSPropertyID aPropID,
                const RefPtr<RawServoAnimationValue>& aValue)
     : mPropID(aPropID), mServoValues{(aValue)} {}
@@ -71,7 +77,11 @@ struct ValueWrapper {
       return true;
     }
 
+#ifdef MOZ_OLD_STYLE
     return mGeckoValue == aOther.mGeckoValue;
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   bool operator!=(const ValueWrapper& aOther) const
@@ -81,12 +91,14 @@ struct ValueWrapper {
 
   nsCSSPropertyID mPropID;
   ServoAnimationValues mServoValues;
+#ifdef MOZ_OLD_STYLE
   StyleAnimationValue mGeckoValue;
-
+#endif
 };
 
 // Helper Methods
 // --------------
+#ifdef MOZ_OLD_STYLE
 static const StyleAnimationValue*
 GetZeroValueForUnit(StyleAnimationValue::Unit aUnit)
 {
@@ -114,6 +126,7 @@ GetZeroValueForUnit(StyleAnimationValue::Unit aUnit)
       return nullptr;
   }
 }
+#endif
 
 // If one argument is null, this method updates it to point to "zero"
 // for the other argument's Unit (if applicable; otherwise, we return false).
@@ -148,6 +161,7 @@ FinalizeServoAnimationValues(const RefPtr<RawServoAnimationValue>*& aValue1,
   return *aValue1 && *aValue2;
 }
 
+#ifdef MOZ_OLD_STYLE
 static bool
 FinalizeStyleAnimationValues(const StyleAnimationValue*& aValue1,
                              const StyleAnimationValue*& aValue2)
@@ -183,7 +197,6 @@ FinalizeStyleAnimationValues(const StyleAnimationValue*& aValue1,
   return true;
 }
 
-#ifdef MOZ_OLD_STYLE
 static void
 InvertSign(StyleAnimationValue& aValue)
 {
@@ -400,6 +413,7 @@ AddOrAccumulate(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                                    aCount);
   }
 
+#ifdef MOZ_OLD_STYLE
   const StyleAnimationValue* valueToAdd = valueToAddWrapper ?
     &valueToAddWrapper->mGeckoValue : nullptr;
   const StyleAnimationValue* destValue = destWrapper ?
@@ -426,6 +440,9 @@ AddOrAccumulate(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
   return StyleAnimationValue::Add(property,
                                   destWrapper->mGeckoValue,
                                   *valueToAdd, aCount);
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 nsresult
@@ -522,6 +539,7 @@ nsSMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
 #endif
 }
 
+#ifdef MOZ_OLD_STYLE
 static nsresult
 InterpolateForGecko(const ValueWrapper* aStartWrapper,
                     const ValueWrapper& aEndWrapper,
@@ -546,6 +564,7 @@ InterpolateForGecko(const ValueWrapper* aStartWrapper,
   }
   return NS_ERROR_FAILURE;
 }
+#endif
 
 static nsresult
 InterpolateForServo(const ValueWrapper* aStartWrapper,
@@ -625,10 +644,14 @@ nsSMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
                                aResult);
   }
 
+#ifdef MOZ_OLD_STYLE
   return InterpolateForGecko(startWrapper,
                              *endWrapper,
                              aUnitDistance,
                              aResult);
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 // Helper function to extract presContext
@@ -843,11 +866,15 @@ nsSMILCSSValueType::ValueToString(const nsSMILValue& aValue,
   }
 
   if (wrapper->mServoValues.IsEmpty()) {
+#ifdef MOZ_OLD_STYLE
     DebugOnly<bool> uncomputeResult =
       StyleAnimationValue::UncomputeValue(wrapper->mPropID,
                                           wrapper->mGeckoValue,
                                           aString);
     return;
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   if (nsCSSProps::IsShorthand(wrapper->mPropID)) {
@@ -919,6 +946,7 @@ nsSMILCSSValueType::FinalizeValue(nsSMILValue& aValue,
     aValue.mU.mPtr = new ValueWrapper(valueToMatchWrapper->mPropID,
                                       Move(zeroValues));
   } else {
+#ifdef MOZ_OLD_STYLE
     const StyleAnimationValue* zeroValue =
       GetZeroValueForUnit(valueToMatchWrapper->mGeckoValue.GetUnit());
     if (!zeroValue) {
@@ -926,5 +954,8 @@ nsSMILCSSValueType::FinalizeValue(nsSMILValue& aValue,
     }
     aValue.mU.mPtr = new ValueWrapper(valueToMatchWrapper->mPropID,
                                       *zeroValue);
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 }

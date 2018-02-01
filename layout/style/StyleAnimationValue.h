@@ -42,6 +42,7 @@ enum class CSSPseudoElementType : uint8_t;
 enum class StyleBackendType : uint8_t;
 struct PropertyStyleAnimationValuePair;
 
+#ifdef MOZ_OLD_STYLE
 /**
  * Utility class to handle animated style values
  */
@@ -88,7 +89,6 @@ public:
   static double ComputeColorDistance(const css::RGBAColorData& aStartColor,
                                      const css::RGBAColorData& aEndColor);
 
-#ifdef MOZ_OLD_STYLE
   /**
    * Calculates a measure of 'distance' between two values.
    *
@@ -115,7 +115,6 @@ public:
                   const StyleAnimationValue& aEndValue,
                   GeckoStyleContext* aStyleContext,
                   double& aDistance);
-#endif
 
   /**
    * Calculates an interpolated value that is the specified |aPortion| between
@@ -177,7 +176,6 @@ public:
 
   // Type-conversion methods
   // -----------------------
-#ifdef MOZ_OLD_STYLE
   /**
    * Creates a computed value for the given specified value
    * (property ID + string).  A style context is needed in case the
@@ -248,7 +246,6 @@ public:
                 const nsCSSValue& aSpecifiedValue,
                 bool aUseSVGMode,
                 nsTArray<PropertyStyleAnimationValuePair>& aResult);
-#endif
 
   /**
    * Creates a specified value for the given computed value.
@@ -280,7 +277,6 @@ public:
                  const StyleAnimationValue& aComputedValue,
                  nsAString& aSpecifiedValue);
 
-#ifdef MOZ_OLD_STYLE
   /**
    * Gets the computed value for the given property from the given style
    * context.
@@ -299,7 +295,6 @@ public:
     nsCSSPropertyID aProperty,
     mozilla::GeckoStyleContext* aStyleContext,
     StyleAnimationValue& aComputedValue);
-#endif
 
   /**
    * The types and values for the values that we extract and animate.
@@ -574,24 +569,38 @@ private:
     return aUnit == eUnit_UnparsedString;
   }
 };
+#endif
 
 struct AnimationValue
 {
+#ifdef MOZ_OLD_STYLE
   explicit AnimationValue(const StyleAnimationValue& aValue)
     : mGecko(aValue) { }
+#endif
   explicit AnimationValue(const RefPtr<RawServoAnimationValue>& aValue)
     : mServo(aValue) { }
   AnimationValue() = default;
 
   AnimationValue(const AnimationValue& aOther)
-    : mGecko(aOther.mGecko), mServo(aOther.mServo) { }
+#ifdef MOZ_OLD_STYLE
+    : mGecko(aOther.mGecko)
+    , mServo(aOther.mServo) { }
+#else
+    : mServo(aOther.mServo) { }
+#endif
   AnimationValue(AnimationValue&& aOther)
+#ifdef MOZ_OLD_STYLE
     : mGecko(Move(aOther.mGecko)), mServo(Move(aOther.mServo)) { }
+#else
+    : mServo(Move(aOther.mServo)) { }
+#endif
 
   AnimationValue& operator=(const AnimationValue& aOther)
   {
     if (this != &aOther) {
+#ifdef MOZ_OLD_STYLE
       mGecko = aOther.mGecko;
+#endif
       mServo = aOther.mServo;
     }
     return *this;
@@ -600,7 +609,9 @@ struct AnimationValue
   {
     MOZ_ASSERT(this != &aOther, "Do not move itself");
     if (this != &aOther) {
+#ifdef MOZ_OLD_STYLE
       mGecko = Move(aOther.mGecko);
+#endif
       mServo = Move(aOther.mServo);
     }
     return *this;
@@ -609,7 +620,15 @@ struct AnimationValue
   bool operator==(const AnimationValue& aOther) const;
   bool operator!=(const AnimationValue& aOther) const;
 
-  bool IsNull() const { return mGecko.IsNull() && !mServo; }
+  bool IsNull() const
+  {
+#ifdef MOZ_OLD_STYLE
+    if (!mGecko.IsNull()) {
+      return false;
+    }
+#endif
+    return !mServo;
+  }
 
   float GetOpacity() const;
 
@@ -657,7 +676,15 @@ struct AnimationValue
   // FIXME: After obsoleting StyleAnimationValue, we should remove mGecko, and
   // make AnimationValue a wrapper of RawServoAnimationValue to hide these
   // FFIs.
+#ifdef MOZ_OLD_STYLE
   StyleAnimationValue mGecko;
+#else
+  // Ideally we would use conditional compilation based on MOZ_OLD_STYLE in the
+  // Servo code that wants to initialize mGecko, but that seems tricky.  So for
+  // now, just define a dummy member variable that its initialization code will
+  // work on, even when the old style system is compiled out.
+  uintptr_t mGecko;
+#endif
   RefPtr<RawServoAnimationValue> mServo;
 };
 

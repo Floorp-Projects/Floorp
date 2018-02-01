@@ -214,6 +214,7 @@ public:
   void ComposeStyle(ComposeAnimationResult&& aRestultContainer,
                     const nsCSSPropertyIDSet& aPropertiesToSkip);
 
+#ifdef MOZ_OLD_STYLE
   // Composite |aValueToComposite| on |aUnderlyingValue| with
   // |aCompositeOperation|.
   // Returns |aValueToComposite| if |aCompositeOperation| is Replace.
@@ -222,6 +223,7 @@ public:
     const StyleAnimationValue& aValueToComposite,
     const StyleAnimationValue& aUnderlyingValue,
     CompositeOperation aCompositeOperation);
+#endif
 
   // Returns true if at least one property is being animated on compositor.
   bool IsRunningOnCompositor() const;
@@ -281,7 +283,11 @@ public:
       // then assign the raw pointer to a RefPtr.
       result.mServo = mBaseStyleValuesForServo.GetWeak(aProperty, &hasProperty);
     } else {
+#ifdef MOZ_OLD_STYLE
       hasProperty = mBaseStyleValues.Get(aProperty, &result.mGecko);
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     }
     MOZ_ASSERT(hasProperty || result.IsNull());
     return result;
@@ -416,7 +422,9 @@ protected:
   // The non-animated values for properties in this effect that contain at
   // least one animation value that is composited with the underlying value
   // (i.e. it uses the additive or accumulate composite mode).
+#ifdef MOZ_OLD_STYLE
   nsDataHashtable<nsUint32HashKey, StyleAnimationValue> mBaseStyleValues;
+#endif
   nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>
     mBaseStyleValuesForServo;
 
