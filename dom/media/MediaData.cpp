@@ -548,10 +548,4 @@ MediaRawDataWriter::Size()
   return mTarget->Size();
 }
 
-void
-MediaRawDataWriter::PopFront(size_t aSize)
-{
-  mTarget->mBuffer.PopFront(aSize);
-}
-
 } // namespace mozilla
