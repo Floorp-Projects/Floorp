@@ -64,17 +64,17 @@ add_task(async function() {
 
   // Test entering the OS's fullscreen mode.
   var fullScreenEntered = waitOneEvent(win, "sizemodechange");
-  await promiseNextTick();
   synthesizeKey("VK_F11", {});
   await fullScreenEntered;
+  // Wait for the next tick to apply media feature changes. See bug 1430380.
+  await promiseNextTick();
   shouldApply("all and (display-mode: fullscreen)");
   shouldNotApply("all and (display-mode: browser)");
   var fullScreenExited = waitOneEvent(win, "sizemodechange");
-  // Need to wait for the next tick to to avoid nested fullscreen change
-  // in different direction. See bug 1415781.
-  await promiseNextTick();
   synthesizeKey("VK_F11", {});
   await fullScreenExited;
+  // Wait for the next tick to apply media feature changes. See bug 1430380.
+  await promiseNextTick();
   shouldNotApply("all and (display-mode: fullscreen)");
   shouldApply("all and (display-mode: browser)");
 
