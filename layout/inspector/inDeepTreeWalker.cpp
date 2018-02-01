@@ -100,7 +100,6 @@ inDeepTreeWalker::Init(nsIDOMNode* aRoot, uint32_t aWhatToShow)
 }
 
 ////////////////////////////////////////////////////
-// nsIDOMTreeWalker
 
 NS_IMETHODIMP
 inDeepTreeWalker::GetRoot(nsIDOMNode** aRoot)
