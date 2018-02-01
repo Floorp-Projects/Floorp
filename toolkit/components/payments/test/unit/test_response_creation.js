@@ -6,9 +6,9 @@
  * methods is left to the DOM code.
  */
 
-/* import-globals-from ../../content/paymentDialog.js */
+const DIALOG_WRAPPER_URI = "chrome://payments/content/paymentDialogWrapper.js";
 let dialogGlobal = {};
-Services.scriptloader.loadSubScript("chrome://payments/content/paymentDialog.js", dialogGlobal);
+Services.scriptloader.loadSubScript(DIALOG_WRAPPER_URI, dialogGlobal);
 
 /**
  * @param {Object} responseData with properties in the order matching `nsIBasicCardResponseData`
@@ -28,7 +28,7 @@ add_task(async function test_createBasicCardResponseData_basic() {
     expiryYear: "2017",
     cardSecurityCode: "0123",
   };
-  let actual = dialogGlobal.PaymentDialog.createBasicCardResponseData(expected);
+  let actual = dialogGlobal.paymentDialogWrapper.createBasicCardResponseData(expected);
   let expectedSerialized = serializeBasicCardResponseData(expected);
   Assert.equal(actual.data, expectedSerialized, "Check data");
 });
@@ -37,7 +37,7 @@ add_task(async function test_createBasicCardResponseData_minimal() {
   let expected = {
     cardNumber: "1234567890",
   };
-  let actual = dialogGlobal.PaymentDialog.createBasicCardResponseData(expected);
+  let actual = dialogGlobal.paymentDialogWrapper.createBasicCardResponseData(expected);
   let expectedSerialized = serializeBasicCardResponseData(expected);
   info(actual.data);
   Assert.equal(actual.data, expectedSerialized, "Check data");
@@ -50,7 +50,7 @@ add_task(async function test_createBasicCardResponseData_withoutNumber() {
     expiryYear: "2017",
     cardSecurityCode: "0123",
   };
-  Assert.throws(() => dialogGlobal.PaymentDialog.createBasicCardResponseData(data),
+  Assert.throws(() => dialogGlobal.paymentDialogWrapper.createBasicCardResponseData(data),
                 /NS_ERROR_FAILURE/,
                 "Check cardNumber is required");
 });
@@ -74,7 +74,7 @@ add_task(async function test_createPaymentAddress_minimal() {
   let data = {
     country: "CA",
   };
-  let actual = dialogGlobal.PaymentDialog.createPaymentAddress(data);
+  let actual = dialogGlobal.paymentDialogWrapper.createPaymentAddress(data);
   checkAddress(actual, data);
 });
 
@@ -95,13 +95,13 @@ add_task(async function test_createPaymentAddress_basic() {
     recipient: "John Smith",
     phone: "+15195555555",
   };
-  let actual = dialogGlobal.PaymentDialog.createPaymentAddress(data);
+  let actual = dialogGlobal.paymentDialogWrapper.createPaymentAddress(data);
   checkAddress(actual, data);
 });
 
 add_task(async function test_createShowResponse_basic() {
   let requestId = "876hmbvfd45hb";
-  dialogGlobal.PaymentDialog.request = {
+  dialogGlobal.paymentDialogWrapper.request = {
     requestId,
   };
 
@@ -112,7 +112,7 @@ add_task(async function test_createShowResponse_basic() {
     expiryYear: "2099",
     cardSecurityCode: "0123",
   };
-  let methodData = dialogGlobal.PaymentDialog.createBasicCardResponseData(cardData);
+  let methodData = dialogGlobal.paymentDialogWrapper.createBasicCardResponseData(cardData);
 
   let responseData = {
     acceptStatus: Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
@@ -122,7 +122,7 @@ add_task(async function test_createShowResponse_basic() {
     payerEmail: "my.email@example.com",
     payerPhone: "+15195555555",
   };
-  let actual = dialogGlobal.PaymentDialog.createShowResponse(responseData);
+  let actual = dialogGlobal.paymentDialogWrapper.createShowResponse(responseData);
   for (let [propName, propVal] of Object.entries(actual)) {
     if (typeof(propVal) != "string") {
       continue;
