@@ -211,24 +211,28 @@ void
 CompositorVsyncScheduler::Composite(TimeStamp aVsyncTimestamp)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  {
+  MOZ_ASSERT(mVsyncSchedulerOwner);
+
+  { // scope lock
     MonitorAutoLock lock(mCurrentCompositeTaskMonitor);
     mCurrentCompositeTask = nullptr;
   }
 
-  if ((aVsyncTimestamp < mLastCompose) && !mAsapScheduling) {
-    // We can sometimes get vsync timestamps that are in the past
-    // compared to the last compose with force composites.
-    // In those cases, wait until the next vsync;
-    return;
-  }
+  if (!mAsapScheduling) {
+    // Some early exit conditions if we're not in ASAP mode
+    if (aVsyncTimestamp < mLastCompose) {
+      // We can sometimes get vsync timestamps that are in the past
+      // compared to the last compose with force composites.
+      // In those cases, wait until the next vsync;
+      return;
+    }
 
-  MOZ_ASSERT(mVsyncSchedulerOwner);
-  if (!mAsapScheduling && mVsyncSchedulerOwner->IsPendingComposite()) {
-    // If previous composite is still on going, finish it and does a next
-    // composite in a next vsync.
-    mVsyncSchedulerOwner->FinishPendingComposite();
-    return;
+    if (mVsyncSchedulerOwner->IsPendingComposite()) {
+      // If previous composite is still on going, finish it and wait for the
+      // next vsync.
+      mVsyncSchedulerOwner->FinishPendingComposite();
+      return;
+    }
   }
 
   DispatchTouchEvents(aVsyncTimestamp);
@@ -236,7 +240,10 @@ CompositorVsyncScheduler::Composite(TimeStamp aVsyncTimestamp)
   if (mNeedsComposite || mAsapScheduling) {
     mNeedsComposite = 0;
     mLastCompose = aVsyncTimestamp;
+
+    // Tell the owner to do a composite
     mVsyncSchedulerOwner->CompositeToTarget(nullptr, nullptr);
+
     mVsyncNotificationsSkipped = 0;
 
     TimeDuration compositeFrameTotal = TimeStamp::Now() - aVsyncTimestamp;
