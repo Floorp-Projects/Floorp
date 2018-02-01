@@ -73,62 +73,30 @@
  *
  * All such functionality lives in TokenStreamCharsBase<CharT>.
  *
- * == GeneralTokenStreamChars<CharT, AnyCharsAccess> →
- *    TokenStreamCharsBase<CharT> ==
+ * == TokenStreamChars<CharT, AnyCharsAccess> → TokenStreamCharsBase<CharT> ==
  *
- * Some functionality operates differently on different character types, just
- * as for TokenStreamCharsBase, but additionally requires access to character-
- * type-agnostic information in TokenStreamAnyChars.  For example, getting the
- * next character performs different steps for different character types and
- * must access TokenStreamAnyChars to update line break information.
+ * Some functionality operates at a very low level upon character-type-specific
+ * data, but in distinct ways.  For example, "is this character the start of a
+ * multi-character codepoint?"  Consider how such functionality would work on
+ * various encodings (hypothetically -- we haven't fully implemented any
+ * particular single-byte encoding support yet):
  *
- * Such functionality, if it can be defined using the same algorithm for all
- * character types, lives in GeneralTokenStreamChars<CharT, AnyCharsAccess>.
- * The AnyCharsAccess parameter provides a way for a GeneralTokenStreamChars
- * instance to access its corresponding TokenStreamAnyChars, without inheriting
- * from it.
- *
- * GeneralTokenStreamChars<CharT, AnyCharsAccess> is just functionality, no
- * actual member data.
+ *   * For two-byte text, the character must pass |unicode::IsLeadSurrogate|.
+ *   * For single-byte Latin-1 text, there are no multi-character codepoints.
+ *   * For single-byte UTF-8 text, the answer depends on how many high bits of
+ *     the character are set.
  *
  * Such functionality all lives in TokenStreamChars<CharT, AnyCharsAccess>, a
  * declared-but-not-defined template class whose specializations have a common
  * public interface (plus whatever private helper functions are desirable).
  *
- * == TokenStreamChars<CharT, AnyCharsAccess> →
- *    GeneralTokenStreamChars<CharT, AnyCharsAccess> ==
+ * Why the AnyCharsAccess parameter?  Some functionality along these lines
+ * really wants TokenStreamSpecific, below, e.g. to report an error.  Providing
+ * this parameter allows TokenStreamChars functions to statically cast to this
+ * presumed superclass to access its functionality.
  *
- * Some functionality is like that in GeneralTokenStreamChars, *but* it's
- * defined entirely differently for different character types.
- *
- * For example, consider "match a multi-code unit code point" (hypothetically:
- * we've only implemented two-byte tokenizing right now):
- *
- *   * For two-byte text, there must be two code units to get, the leading code
- *     unit must be a UTF-16 lead surrogate, and the trailing code unit must be
- *     a UTF-16 trailing surrogate.  (If any of these fail to hold, a next code
- *     unit encodes that code point and is not multi-code unit.)
- *   * For single-byte Latin-1 text, there are no multi-code unit code points.
- *   * For single-byte UTF-8 text, the first code unit must have N > 1 of its
- *     highest bits set (and the next unset), and |N - 1| successive code units
- *     must have their high bit set and next-highest bit unset, *and*
- *     concatenating all unconstrained bits together must not produce a code
- *     point value that could have been encoded in fewer code units.
- *
- * This functionality can't be implemented as member functions in
- * GeneralTokenStreamChars because we'd need to *partially specialize* those
- * functions -- hold CharT constant while letting AnyCharsAccess vary.  But
- * C++ forbids function template partial specialization like this: either you
- * fix *all* parameters or you fix none of them.
- *
- * Fortunately, C++ *does* allow *class* template partial specialization.  So
- * TokenStreamChars is a template class with one specialization per CharT.
- * Functions can be defined differently in the different specializations,
- * because AnyCharsAccess as the only template parameter on member functions
- * *can* vary.
- *
- * All TokenStreamChars<CharT, AnyCharsAccess> specializations, one per CharT,
- * are just functionality, no actual member data.
+ * TokenStreamChars<CharT, AnyCharsAccess> is just functionality, no actual
+ * member data.
  *
  * == TokenStreamSpecific<CharT, AnyCharsAccess> →
  *    TokenStreamChars<CharT, AnyCharsAccess>, TokenStreamShared ==
@@ -504,7 +472,6 @@ class TokenStreamAnyChars
     TokenStreamAnyChars(JSContext* cx, const ReadOnlyCompileOptions& options,
                         StrictModeGetter* smg);
 
-    template<typename CharT, class AnyCharsAccess> friend class GeneralTokenStreamChars;
     template<typename CharT, class AnyCharsAccess> friend class TokenStreamSpecific;
 
     // Accessors.
@@ -813,9 +780,6 @@ class TokenStreamAnyChars
 template<typename CharT>
 class TokenStreamCharsBase
 {
-  protected:
-    void ungetCharIgnoreEOL(int32_t c);
-
   public:
     using CharBuffer = Vector<CharT, 32>;
 
@@ -995,96 +959,43 @@ TokenStreamCharsBase<char16_t>::atomizeChars(JSContext* cx, const char16_t* char
     return AtomizeChars(cx, chars, length);
 }
 
-template<typename CharT, class AnyCharsAccess>
-class GeneralTokenStreamChars
-  : public TokenStreamCharsBase<CharT>
+template<typename CharT, class AnyCharsAccess> class TokenStreamChars;
+
+template<class AnyCharsAccess>
+class TokenStreamChars<char16_t, AnyCharsAccess>
+  : public TokenStreamCharsBase<char16_t>
 {
-    using CharsSharedBase = TokenStreamCharsBase<CharT>;
+    using Self = TokenStreamChars<char16_t, AnyCharsAccess>;
+    using CharsBase = TokenStreamCharsBase<char16_t>;
 
-  protected:
-    using typename CharsSharedBase::TokenBuf;
-
-    using CharsSharedBase::userbuf;
-
-  public:
-    using CharsSharedBase::CharsSharedBase;
-
-    TokenStreamAnyChars& anyCharsAccess() {
-        return AnyCharsAccess::anyChars(this);
-    }
-
-    const TokenStreamAnyChars& anyCharsAccess() const {
-        return AnyCharsAccess::anyChars(this);
-    }
-
-    using TokenStreamSpecific = frontend::TokenStreamSpecific<CharT, AnyCharsAccess>;
+    using TokenStreamSpecific = frontend::TokenStreamSpecific<char16_t, AnyCharsAccess>;
 
     TokenStreamSpecific* asSpecific() {
-        static_assert(mozilla::IsBaseOf<GeneralTokenStreamChars, TokenStreamSpecific>::value,
+        static_assert(mozilla::IsBaseOf<Self, TokenStreamSpecific>::value,
                       "static_cast below presumes an inheritance relationship");
 
         return static_cast<TokenStreamSpecific*>(this);
     }
 
-    int32_t getCharIgnoreEOL();
-
-    void ungetChar(int32_t c);
-};
-
-template<typename CharT, class AnyCharsAccess> class TokenStreamChars;
-
-template<class AnyCharsAccess>
-class TokenStreamChars<char16_t, AnyCharsAccess>
-  : public GeneralTokenStreamChars<char16_t, AnyCharsAccess>
-{
-  private:
-    using Self = TokenStreamChars<char16_t, AnyCharsAccess>;
-    using GeneralCharsBase = GeneralTokenStreamChars<char16_t, AnyCharsAccess>;
-    using CharsSharedBase = TokenStreamCharsBase<char16_t>;
-
-    using GeneralCharsBase::asSpecific;
-
-    void matchMultiUnitCodePointSlow(char16_t lead, uint32_t* codePoint);
-
-  protected:
-    using GeneralCharsBase::getCharIgnoreEOL;
-    using CharsSharedBase::ungetCharIgnoreEOL;
-    using CharsSharedBase::userbuf;
+    bool matchTrailForLeadSurrogate(char16_t lead, uint32_t* codePoint);
 
   public:
-    using typename GeneralCharsBase::TokenStreamSpecific;
+    using CharsBase::CharsBase;
 
-    using GeneralCharsBase::anyCharsAccess;
-
-  public:
-    using GeneralCharsBase::GeneralCharsBase;
-
-    // |c| must be the code unit just gotten.  If it and the subsequent code
-    // unit form a valid surrogate pair, get the second code unit, set
-    // |*codePoint| to the code point encoded by the surrogate pair, and return
-    // true.  Otherwise do not get a second code unit, set |*codePoint = 0|,
-    // and return true.
-    //
-    // ECMAScript specifically requires that unpaired UTF-16 surrogates be
-    // treated as the corresponding code point and not as an error.  See
-    // <https://tc39.github.io/ecma262/#sec-ecmascript-language-types-string-type>.
-    // Therefore this function always returns true.  The |bool| return type
-    // exists so that a future UTF-8 |TokenStreamChars| can treat malformed
-    // multi-code unit UTF-8 sequences as errors.  (Because ECMAScript only
-    // interprets UTF-16 inputs, the process of translating the UTF-8 to UTF-16
-    // would fail, so no script should execute.  Technically, we shouldn't even
-    // be tokenizing -- but it probably isn't realistic to assume every user
-    // correctly passes only valid UTF-8, at least not without better types in
-    // our codebase for strings that by construction only contain valid UTF-8.)
-    MOZ_ALWAYS_INLINE bool matchMultiUnitCodePoint(char16_t c, uint32_t* codePoint) {
-        if (MOZ_LIKELY(!unicode::IsLeadSurrogate(c)))
-            *codePoint = 0;
-        else
-            matchMultiUnitCodePointSlow(c, codePoint);
-        return true;
+    TokenStreamAnyChars& anyChars() {
+        return AnyCharsAccess::anyChars(this);
     }
 
-    void ungetCodePointIgnoreEOL(uint32_t codePoint);
+    const TokenStreamAnyChars& anyChars() const {
+        return AnyCharsAccess::anyChars(this);
+    }
+
+    MOZ_ALWAYS_INLINE bool isMultiUnitCodepoint(char16_t c, uint32_t* codepoint) {
+        if (MOZ_LIKELY(!unicode::IsLeadSurrogate(c)))
+            return false;
+
+        return matchTrailForLeadSurrogate(c, codepoint);
+    }
 };
 
 // TokenStream is the lexical scanner for JavaScript source text.
@@ -1135,7 +1046,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 {
   public:
     using CharsBase = TokenStreamChars<CharT, AnyCharsAccess>;
-    using GeneralCharsBase = GeneralTokenStreamChars<CharT, AnyCharsAccess>;
     using CharsSharedBase = TokenStreamCharsBase<CharT>;
 
     // Anything inherited through a base class whose type depends upon this
@@ -1153,7 +1063,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using typename CharsSharedBase::Position;
 
   public:
-    using GeneralCharsBase::anyCharsAccess;
     using CharsSharedBase::getTokenbuf;
 
   private:
@@ -1164,17 +1073,21 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsSharedBase::appendMultiUnitCodepointToTokenbuf;
     using CharsSharedBase::atomizeChars;
     using CharsSharedBase::copyTokenbufTo;
-    using GeneralCharsBase::getCharIgnoreEOL;
-    using CharsBase::matchMultiUnitCodePoint;
+    using CharsBase::isMultiUnitCodepoint;
     using CharsSharedBase::tokenbuf;
-    using GeneralCharsBase::ungetChar;
-    using CharsSharedBase::ungetCharIgnoreEOL;
-    using CharsBase::ungetCodePointIgnoreEOL;
     using CharsSharedBase::userbuf;
 
   public:
     TokenStreamSpecific(JSContext* cx, const ReadOnlyCompileOptions& options,
                         const CharT* base, size_t length);
+
+    TokenStreamAnyChars& anyCharsAccess() {
+        return CharsBase::anyChars();
+    }
+
+    const TokenStreamAnyChars& anyCharsAccess() const {
+        return CharsBase::anyChars();
+    }
 
     // If there is an invalid escape in a template, report it and return false,
     // otherwise return true.
@@ -1447,7 +1360,10 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     // and store the character in |*c|.  Return false and leave |*c| undefined
     // on failure.
     MOZ_MUST_USE bool getChar(int32_t* cp);
+    int32_t getCharIgnoreEOL();
 
+    void ungetChar(int32_t c);
+    void ungetCharIgnoreEOL(int32_t c);
     Token* newToken(ptrdiff_t adjust);
     uint32_t peekUnicodeEscape(uint32_t* codePoint);
     uint32_t peekExtendedUnicodeEscape(uint32_t* codePoint);
