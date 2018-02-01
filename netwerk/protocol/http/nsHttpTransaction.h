@@ -191,6 +191,8 @@ public:
     }
 
     void SetFastOpenStatus(uint8_t aStatus) override;
+
+    void SetHttpTrailers(nsCString &aTrailers);
 private:
     friend class DeleteHttpTransaction;
     virtual ~nsHttpTransaction();
