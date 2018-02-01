@@ -2760,24 +2760,6 @@ CodeGenerator::visitBinarySharedStub(LBinarySharedStub* lir)
     }
 }
 
-void
-CodeGenerator::visitUnarySharedStub(LUnarySharedStub* lir)
-{
-    JSOp jsop = JSOp(*lir->mir()->resumePoint()->pc());
-    switch (jsop) {
-      case JSOP_BITNOT:
-      case JSOP_NEG:
-        emitSharedStub(ICStub::Kind::UnaryArith_Fallback, lir);
-        break;
-      case JSOP_CALLPROP:
-      case JSOP_GETPROP:
-      case JSOP_LENGTH:
-        emitSharedStub(ICStub::Kind::GetProp_Fallback, lir);
-        break;
-      default:
-        MOZ_CRASH("Unsupported jsop in shared stubs.");
-    }
-}
 
 void
 CodeGenerator::visitNullarySharedStub(LNullarySharedStub* lir)
