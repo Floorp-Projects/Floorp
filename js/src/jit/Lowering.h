@@ -187,7 +187,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitGetFirstDollarIndex(MGetFirstDollarIndex* ins) override;
     void visitStringReplace(MStringReplace* ins) override;
     void visitBinarySharedStub(MBinarySharedStub* ins) override;
-    void visitUnarySharedStub(MUnarySharedStub* ins) override;
     void visitNullarySharedStub(MNullarySharedStub* ins) override;
     void visitClassConstructor(MClassConstructor* ins) override;
     void visitLambda(MLambda* ins) override;
