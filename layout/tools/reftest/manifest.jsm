@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ReadTopManifest"];
+this.EXPORTED_SYMBOLS = ["ReadTopManifest", "CreateUrls"];
 
 var CC = Components.classes;
 const CI = Components.interfaces;
@@ -706,14 +706,14 @@ function AddTestItem(aTest, aFilter) {
     if (!aFilter)
         aFilter = [null, [], false];
 
-    aTest = CreateUrls(aTest);
+    var {url1, url2} = CreateUrls(Object.assign({}, aTest));
 
     var globalFilter = aFilter[0];
     var manifestFilter = aFilter[1];
     var invertManifest = aFilter[2];
-    if ((globalFilter && !globalFilter.test(aTest.url1.spec)) ||
+    if ((globalFilter && !globalFilter.test(url1.spec)) ||
         (manifestFilter &&
-         !(invertManifest ^ manifestFilter.test(aTest.url1.spec))))
+         !(invertManifest ^ manifestFilter.test(url1.spec))))
         return;
     if (g.focusFilterMode == FOCUS_FILTER_NEEDS_FOCUS_TESTS &&
         !aTest.needsFocus)
@@ -722,9 +722,9 @@ function AddTestItem(aTest, aFilter) {
         aTest.needsFocus)
         return;
 
-    if (aTest.url2 !== null)
-        aTest.identifier = [aTest.url1.spec, aTest.type, aTest.url2.spec];
+    if (url2 !== null)
+        aTest.identifier = [url1.spec, aTest.type, url2.spec];
     else
-        aTest.identifier = aTest.url1.spec;
+        aTest.identifier = url1.spec;
     g.urls.push(aTest);
 }
