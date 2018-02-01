@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_PaymentRequestService_h
 #define mozilla_dom_PaymentRequestService_h
 
+#include "nsInterfaceHashtable.h"
 #include "nsIPaymentRequest.h"
 #include "nsIPaymentRequestService.h"
 #include "nsISimpleEnumerator.h"

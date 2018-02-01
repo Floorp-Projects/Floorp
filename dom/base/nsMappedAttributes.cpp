@@ -11,8 +11,10 @@
 
 #include "nsMappedAttributes.h"
 #include "nsHTMLStyleSheet.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleData.h"
 #include "nsRuleWalker.h"
+#endif
 #include "mozilla/GenericSpecifiedValues.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"

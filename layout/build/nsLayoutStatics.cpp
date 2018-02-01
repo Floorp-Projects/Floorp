@@ -33,7 +33,9 @@
 #include "nsGkAtoms.h"
 #include "nsImageFrame.h"
 #include "nsLayoutStylesheetCache.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/RuleProcessorCache.h"
+#endif
 #include "ContentPrincipal.h"
 #include "nsRange.h"
 #include "nsRegion.h"
@@ -41,7 +43,9 @@
 #include "nsFloatManager.h"
 #include "nsSprocketLayout.h"
 #include "nsStackLayout.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsStyleSet.h"
+#endif
 #include "nsTextControlFrame.h"
 #include "nsXBLService.h"
 #include "txMozillaXSLTProcessor.h"

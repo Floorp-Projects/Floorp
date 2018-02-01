@@ -14,7 +14,9 @@
 
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/Attributes.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/CSSVariableValues.h"
+#endif
 #include "mozilla/Maybe.h"
 #include "mozilla/SheetType.h"
 #include "mozilla/StaticPtr.h"

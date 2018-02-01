@@ -33,8 +33,10 @@
 #include "nsXBLDocumentInfo.h"
 #include "mozilla/dom/XBLChildrenElement.h"
 
+#ifdef MOZ_OLD_STYLE
 #include "nsIStyleRuleProcessor.h"
 #include "nsRuleProcessorData.h"
+#endif
 #include "nsIWeakReference.h"
 
 #include "nsWrapperCacheInlines.h"

@@ -13,7 +13,9 @@
 #include "mozilla/ServoCSSParser.h"
 #include "nsCSSParser.h" // For nsCSSParser
 #include "nsIDocument.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleNode.h"
+#endif
 
 namespace mozilla {
 

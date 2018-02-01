@@ -14,7 +14,9 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/IncrementalClearCOMRuleArray.h"
+#endif
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoCSSRuleList.h"
 #include "mozilla/Variant.h"

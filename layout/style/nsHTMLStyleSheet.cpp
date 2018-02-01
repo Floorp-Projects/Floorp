@@ -17,11 +17,15 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsStyleConsts.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleWalker.h"
 #include "nsRuleData.h"
+#endif
 #include "nsError.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleProcessorData.h"
 #include "nsCSSRuleProcessor.h"
+#endif
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
 #include "nsHashKeys.h"

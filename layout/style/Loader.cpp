@@ -39,7 +39,9 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsCSSParser.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/css/ImportRule.h"
+#endif
 #include "nsThreadUtils.h"
 #include "nsGkAtoms.h"
 #include "nsIThreadInternal.h"

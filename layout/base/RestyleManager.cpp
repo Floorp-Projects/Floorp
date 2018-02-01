@@ -12,7 +12,13 @@
 #include "mozilla/StyleSetHandleInlines.h"
 #include "nsIFrame.h"
 #include "nsIPresShellInlines.h"
-
+#include "nsStyleUtil.h"
+#include "StickyScrollContainer.h"
+#include "mozilla/EffectSet.h"
+#include "mozilla/ViewportFrame.h"
+#include "SVGTextFrame.h"
+#include "ActiveLayerTracker.h"
+#include "nsSVGIntegrationUtils.h"
 
 namespace mozilla {
 
