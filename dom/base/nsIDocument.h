@@ -86,7 +86,6 @@ class nsIDocumentObserver;
 class nsIDOMDocument;
 class nsIDOMDocumentType;
 class nsIDOMElement;
-class nsIDOMNodeFilter;
 class nsIDOMNodeList;
 class nsIHTMLCollection;
 class nsILayoutHistoryState;

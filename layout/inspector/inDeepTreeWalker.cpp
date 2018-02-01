@@ -9,7 +9,6 @@
 
 #include "nsString.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeList.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIContent.h"
@@ -115,12 +114,6 @@ inDeepTreeWalker::GetWhatToShow(uint32_t* aWhatToShow)
 {
   *aWhatToShow = mWhatToShow;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-inDeepTreeWalker::GetFilter(nsIDOMNodeFilter** aFilter)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
