@@ -135,12 +135,17 @@ class AddrInfo {
 public:
   // Creates an AddrInfo object. It calls the AddrInfo(const char*, const char*)
   // to initialize the host and the cname.
-  AddrInfo(const char *host, const PRAddrInfo *prAddrInfo, bool disableIPv4,
-           bool filterNameCollision, const char *cname);
+  explicit AddrInfo(const char *host, const PRAddrInfo *prAddrInfo, bool disableIPv4,
+                    bool filterNameCollision, const char *cname);
 
   // Creates a basic AddrInfo object (initialize only the host and the cname).
-  AddrInfo(const char *host, const char *cname);
+  explicit AddrInfo(const char *host, const char *cname);
+
+  // Creates a basic AddrInfo object (initialize only the host and TRR status).
+  explicit AddrInfo(const char *host, unsigned int TRRType);
   ~AddrInfo();
+
+  explicit AddrInfo(const AddrInfo *src); // copy
 
   void AddAddress(NetAddrElement *address);
 
@@ -152,8 +157,9 @@ public:
   static const uint32_t NO_TTL_DATA = (uint32_t) -1;
 
   LinkedList<NetAddrElement> mAddresses;
-
+  unsigned int IsTRR() { return mFromTRR; }
 private:
+  unsigned int mFromTRR;
   void Init(const char *host, const char *cname);
 };
 

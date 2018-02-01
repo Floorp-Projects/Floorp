@@ -29,6 +29,7 @@ EXPORTS.mozilla.net += [
     'DNSRequestChild.h',
     'DNSRequestParent.h',
     'PDNSParams.h',
+    'TRRService.h',
 ]
 
 SOURCES += [
@@ -46,6 +47,8 @@ UNIFIED_SOURCES += [
     'nsDNSService2.cpp',
     'nsIDNService.cpp',
     'punycode.c',
+    'TRR.cpp',
+    'TRRService.cpp',
 ]
 
 IPDL_SOURCES = [

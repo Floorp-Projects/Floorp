@@ -3612,7 +3612,7 @@
     "description": "I want to be tracked, I do NOT want to be tracked, DNT unset"
   },
   "DNS_LOOKUP_METHOD2": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 16,
@@ -3621,7 +3621,7 @@
     "description": "DNS Lookup Type (hit, renewal, negative-hit, literal, overflow, network-first, network-shared)"
   },
   "DNS_CLEANUP_AGE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1440,
@@ -3629,17 +3629,75 @@
     "description": "DNS Cache Entry Age at Removal Time (minutes)"
   },
   "DNS_LOOKUP_TIME": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 60000,
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
     "n_buckets": 50,
-    "description": "Time for a successful DNS OS resolution (msec)"
+    "description": "Time for a successful DNS resolution (msec)"
+  },
+  "DNS_TRR_LOOKUP_TIME": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "bug_numbers": [1434852],
+    "n_buckets": 50,
+    "description": "Time for a completed TRR resolution (msec)"
+  },
+  "DNS_NATIVE_LOOKUP_TIME": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "bug_numbers": [1434852],
+    "n_buckets": 50,
+    "description": "Time for a completed native name resolution (msec)"
+  },
+  "DNS_TRR_RACE": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": ["TRRFasterBy50", "TRRFaster", "NativeFaster", "NativeFasterBy50"],
+    "bug_numbers": [1434852],
+    "description": "DNS: TRR parallel resolve racing results"
+  },
+  "DNS_TRR_BLACKLISTED": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "DNS check for TRR was blocked by blacklist",
+    "bug_numbers": [1434852],
+    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"]
+  },
+  "DNS_LOOKUP_ALGORITHM": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": ["nativeOnly", "trrRace", "trrFirst", "trrOnly", "trrShadow"],
+    "bug_numbers": [1434852],
+    "description": "DNS: lookup algorithm"
+  },
+  "DNS_LOOKUP_DISPOSITION": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": ["trrOK", "trrFail", "trrAOK", "trrAFail",
+	       "trrAAAAOK", "trrAAAAFail", "osOK", "osFail"],
+    "bug_numbers": [1434852],
+    "description": "DNS: lookup algorithm"
   },
   "DNS_RENEWAL_TIME": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 60000,
@@ -3647,7 +3705,7 @@
     "description": "Time for a renewed DNS OS resolution (msec)"
   },
   "DNS_RENEWAL_TIME_FOR_TTL": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 60000,
@@ -3655,7 +3713,7 @@
     "description": "Time for a DNS OS resolution (msec) used to get TTL"
   },
   "DNS_FAILED_LOOKUP_TIME": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 60000,
@@ -3665,7 +3723,7 @@
     "description": "Time for an unsuccessful DNS OS resolution (msec)"
   },
   "DNS_BLACKLIST_COUNT": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],

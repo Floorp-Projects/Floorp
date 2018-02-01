@@ -1010,6 +1010,9 @@ nsHttpChannel::SetupTransaction()
 
     mUsedNetwork = 1;
 
+    if (mTRR) {
+        mCaps |= NS_HTTP_LARGE_KEEPALIVE;
+    }
     if (!mAllowSpdy) {
         mCaps |= NS_HTTP_DISALLOW_SPDY;
     }
@@ -3755,6 +3758,9 @@ nsHttpChannel::OpenCacheEntryInternal(bool isHttps,
 
     if (mPostID) {
         extension.Append(nsPrintfCString("%d", mPostID));
+    }
+    if (mTRR) {
+        extension.Append("TRR");
     }
 
     mCacheOpenWithPriority = cacheEntryOpenFlags & nsICacheStorage::OPEN_PRIORITY;
