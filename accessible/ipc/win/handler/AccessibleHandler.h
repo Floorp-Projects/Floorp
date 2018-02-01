@@ -254,6 +254,8 @@ private:
   HRESULT MaybeUpdateCachedData();
   HRESULT GetAllTextInfo(BSTR* aText);
   void ClearTextCache();
+  HRESULT GetRelationsInfo();
+  void ClearRelationCache();
 
   RefPtr<IUnknown>                  mDispatchUnk;
   /**
@@ -288,7 +290,15 @@ private:
   long                              mCachedNHyperlinks;
   IA2TextSegment*                   mCachedTextAttribRuns;
   long                              mCachedNTextAttribRuns;
+  IARelationData*                   mCachedRelations;
+  long                              mCachedNRelations;
 };
+
+inline static BSTR
+CopyBSTR(BSTR aSrc)
+{
+  return ::SysAllocStringLen(aSrc, ::SysStringLen(aSrc));
+}
 
 } // namespace a11y
 } // namespace mozilla
