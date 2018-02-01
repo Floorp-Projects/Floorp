@@ -485,9 +485,13 @@ SetAnimatable(nsCSSPropertyID aProperty,
         Servo_AnimationValue_GetTransform(aAnimationValue.mServo, &list);
         AddTransformFunctions(list, aFrame, aRefBox, aAnimatable);
       } else {
+#ifdef MOZ_OLD_STYLE
         nsCSSValueSharedList* list =
           aAnimationValue.mGecko.GetCSSValueSharedListValue();
         AddTransformFunctions(list, aFrame, aRefBox, aAnimatable);
+#else
+        MOZ_CRASH("old style system disabled");
+#endif
       }
       break;
     }

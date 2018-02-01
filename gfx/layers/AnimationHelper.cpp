@@ -9,7 +9,6 @@
 #include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for dom::FillMode
 #include "mozilla/dom/KeyframeEffectBinding.h" // for dom::IterationComposite
 #include "mozilla/dom/KeyframeEffectReadOnly.h" // for dom::KeyFrameEffectReadOnly
-#include "mozilla/gfx/gfxVars.h"        // for USE_STYLO_ON_COMPOSITOR
 #include "mozilla/layers/CompositorThread.h" // for CompositorThreadHolder
 #include "mozilla/layers/LayerAnimationUtils.h" // for TimingFunctionToComputedTimingFunction
 #include "mozilla/StyleAnimationValue.h" // for StyleAnimationValue, etc
@@ -133,6 +132,7 @@ CompositorAnimationStorage::SetAnimations(uint64_t aId, const AnimationArray& aV
   mAnimations.Put(aId, value);
 }
 
+#ifndef MOZ_STYLO
 static StyleAnimationValue
 SampleValue(double aPortion, const layers::Animation& aAnimation,
             const AnimationPropertySegment&& aSegment,
@@ -190,6 +190,7 @@ SampleValue(double aPortion, const layers::Animation& aAnimation,
   MOZ_ASSERT(uncomputeResult, "could not uncompute value");
   return interpolatedValue;
 }
+#endif
 
 bool
 AnimationHelper::SampleAnimationForEachNode(
@@ -277,28 +278,30 @@ AnimationHelper::SampleAnimationForEachNode(
       static_cast<dom::CompositeOperation>(segment->endComposite());
 
     // interpolate the property
-    if (USE_STYLO_ON_COMPOSITOR) {
-      dom::IterationCompositeOperation iterCompositeOperation =
-          static_cast<dom::IterationCompositeOperation>(
-            animation.iterationComposite());
+#ifdef MOZ_STYLO
+    dom::IterationCompositeOperation iterCompositeOperation =
+        static_cast<dom::IterationCompositeOperation>(
+          animation.iterationComposite());
 
-      aAnimationValue.mServo =
-        Servo_ComposeAnimationSegment(
-          &animSegment,
-          aAnimationValue.mServo,
-          animData.mEndValues.LastElement().mServo,
-          iterCompositeOperation,
-          portion,
-          computedTiming.mCurrentIteration).Consume();
-    } else {
-      aAnimationValue.mGecko =
-        SampleValue(portion,
-                    animation,
-                    Move(animSegment),
-                    animData.mEndValues.LastElement().mGecko,
-                    computedTiming.mCurrentIteration,
-                    aAnimationValue.mGecko);
-    }
+    aAnimationValue.mServo =
+      Servo_ComposeAnimationSegment(
+        &animSegment,
+        aAnimationValue.mServo,
+        animData.mEndValues.LastElement().mServo,
+        iterCompositeOperation,
+        portion,
+        computedTiming.mCurrentIteration).Consume();
+#elif MOZ_OLD_STYLE
+    aAnimationValue.mGecko =
+      SampleValue(portion,
+                  animation,
+                  Move(animSegment),
+                  animData.mEndValues.LastElement().mGecko,
+                  computedTiming.mCurrentIteration,
+                  aAnimationValue.mGecko);
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
     aHasInEffectAnimations = true;
   }
 
@@ -477,9 +480,11 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
 static AnimationValue
 ToAnimationValue(const Animatable& aAnimatable)
 {
-  StyleBackendType backend = USE_STYLO_ON_COMPOSITOR
-                             ? StyleBackendType::Servo
-                             : StyleBackendType::Gecko;
+#ifdef MOZ_STYLO
+  StyleBackendType backend = StyleBackendType::Servo;
+#else
+  StyleBackendType backend = StyleBackendType::Gecko;
+#endif
   AnimationValue result;
 
   switch (aAnimatable.type()) {

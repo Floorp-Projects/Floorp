@@ -395,6 +395,7 @@ KeyframeEffectReadOnly::DoUpdateProperties(StyleType* aStyle)
   RequestRestyle(EffectCompositor::RestyleType::Layer);
 }
 
+#ifdef MOZ_OLD_STYLE
 /* static */ StyleAnimationValue
 KeyframeEffectReadOnly::CompositeValue(
   nsCSSPropertyID aProperty,
@@ -430,7 +431,6 @@ KeyframeEffectReadOnly::CompositeValue(
   return StyleAnimationValue();
 }
 
-#ifdef MOZ_OLD_STYLE
 StyleAnimationValue
 KeyframeEffectReadOnly::GetUnderlyingStyle(
   nsCSSPropertyID aProperty,
@@ -1364,33 +1364,39 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
                                            &stringValue);
           }
         }
-      } else if (nsCSSProps::IsShorthand(propertyValue.mProperty)) {
-         // nsCSSValue::AppendToString does not accept shorthands properties but
-         // works with token stream values if we pass eCSSProperty_UNKNOWN as
-         // the property.
-         propertyValue.mValue.AppendToString(
-           eCSSProperty_UNKNOWN, stringValue);
       } else {
-        nsCSSValue cssValue = propertyValue.mValue;
-        if (cssValue.GetUnit() == eCSSUnit_Null) {
-          // We use an uninitialized nsCSSValue to represent the
-          // "neutral value". We currently only do this for keyframes generated
-          // from CSS animations with missing 0%/100% keyframes. Furthermore,
-          // currently (at least until bug 1339334) keyframes generated from
-          // CSS animations only contain longhand properties so we only need to
-          // handle null nsCSSValues for longhand properties.
-          DebugOnly<bool> uncomputeResult =
-            StyleAnimationValue::UncomputeValue(
-              propertyValue.mProperty,
-              Move(BaseStyle(propertyValue.mProperty).mGecko),
-              cssValue);
+#ifdef MOZ_OLD_STYLE
+        if (nsCSSProps::IsShorthand(propertyValue.mProperty)) {
+           // nsCSSValue::AppendToString does not accept shorthands properties but
+           // works with token stream values if we pass eCSSProperty_UNKNOWN as
+           // the property.
+           propertyValue.mValue.AppendToString(
+             eCSSProperty_UNKNOWN, stringValue);
+        } else {
+          nsCSSValue cssValue = propertyValue.mValue;
+          if (cssValue.GetUnit() == eCSSUnit_Null) {
+            // We use an uninitialized nsCSSValue to represent the
+            // "neutral value". We currently only do this for keyframes generated
+            // from CSS animations with missing 0%/100% keyframes. Furthermore,
+            // currently (at least until bug 1339334) keyframes generated from
+            // CSS animations only contain longhand properties so we only need to
+            // handle null nsCSSValues for longhand properties.
+            DebugOnly<bool> uncomputeResult =
+              StyleAnimationValue::UncomputeValue(
+                propertyValue.mProperty,
+                Move(BaseStyle(propertyValue.mProperty).mGecko),
+                cssValue);
 
-          MOZ_ASSERT(uncomputeResult,
-                     "Unable to get specified value from computed value");
-          MOZ_ASSERT(cssValue.GetUnit() != eCSSUnit_Null,
-                     "Got null computed value");
+            MOZ_ASSERT(uncomputeResult,
+                       "Unable to get specified value from computed value");
+            MOZ_ASSERT(cssValue.GetUnit() != eCSSUnit_Null,
+                       "Got null computed value");
+          }
+          cssValue.AppendToString(propertyValue.mProperty, stringValue);
         }
-        cssValue.AppendToString(propertyValue.mProperty, stringValue);
+#else
+        MOZ_CRASH("old style system disabled");
+#endif
       }
 
       const char* name = nsCSSProps::PropertyIDLName(propertyValue.mProperty);
