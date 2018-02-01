@@ -289,27 +289,27 @@ CompositorVsyncScheduler::Composite(TimeStamp aVsyncTimestamp)
 }
 
 void
-CompositorVsyncScheduler::OnForceComposeToTarget()
-{
-  /**
-   * bug 1138502 - There are cases such as during long-running window resizing events
-   * where we receive many sync RecvFlushComposites. We also get vsync notifications which
-   * will increment mVsyncNotificationsSkipped because a composite just occurred. After
-   * enough vsyncs and RecvFlushComposites occurred, we will disable vsync. Then at the next
-   * ScheduleComposite, we will enable vsync, then get a RecvFlushComposite, which will
-   * force us to unobserve vsync again. On some platforms, enabling/disabling vsync is not
-   * free and this oscillating behavior causes a performance hit. In order to avoid this problem,
-   * we reset the mVsyncNotificationsSkipped counter to keep vsync enabled.
-   */
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  mVsyncNotificationsSkipped = 0;
-}
-
-void
 CompositorVsyncScheduler::ForceComposeToTarget(gfx::DrawTarget* aTarget, const IntRect* aRect)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  OnForceComposeToTarget();
+
+  /**
+   * bug 1138502 - There are cases such as during long-running window resizing
+   * events where we receive many force-composites. We also continue to get
+   * vsync notifications. Because the force-composites trigger compositing and
+   * clear the mNeedsComposite counter, the vsync notifications will not need
+   * to do anything and so will increment the mVsyncNotificationsSkipped counter
+   * to indicate the vsync was ignored. If this happens enough times, we will
+   * disable listening for vsync entirely. On the next force-composite we will
+   * enable listening for vsync again, and continued force-composites and vsyncs
+   * will cause oscillation between observing vsync and not.
+   * On some platforms, enabling/disabling vsync is not free and this
+   * oscillating behavior causes a performance hit. In order to avoid this
+   * problem, we reset the mVsyncNotificationsSkipped counter to keep vsync
+   * enabled.
+   */
+  mVsyncNotificationsSkipped = 0;
+
   mLastCompose = TimeStamp::Now();
   ComposeToTarget(aTarget, aRect);
 }
