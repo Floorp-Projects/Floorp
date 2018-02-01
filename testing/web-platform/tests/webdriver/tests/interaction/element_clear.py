@@ -1,6 +1,10 @@
 import pytest
 
-from tests.support.asserts import assert_error, assert_success
+from tests.support.asserts import (
+    assert_element_has_focus,
+    assert_error,
+    assert_success,
+)
 from tests.support.inline import inline
 
 
@@ -108,6 +112,7 @@ def test_input(session, type, value, default):
     assert "focus" in events
     assert "change" in events
     assert "blur" in events
+    assert_element_has_focus(session.execute_script("return document.body"))
 
 
 @pytest.mark.parametrize("type",
@@ -262,6 +267,7 @@ def test_contenteditable(session):
     assert_success(response)
     assert element.property("innerHTML") == ""
     assert get_events(session) == ["focus", "change", "blur"]
+    assert_element_has_focus(session.execute_script("return document.body"))
 
 
 
@@ -274,6 +280,7 @@ def test_designmode(session):
     response = element_clear(session, element)
     assert_success(response)
     assert element.property("innerHTML") == "<br>"
+    assert_element_has_focus(session.execute_script("return document.body"))
 
 
 def test_resettable_element_focus_when_empty(session):

@@ -156,4 +156,3 @@ def assert_move_to_coordinates(point, target, events):
             assert e["pageX"] == point["x"]
             assert e["pageY"] == point["y"]
             assert e["target"] == target
-
