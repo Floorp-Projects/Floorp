@@ -10,10 +10,5 @@
 // Introduced in DOM Level 2:
 interface nsIDOMNodeFilter : nsISupports
 {
-  // Constants returned by acceptNode
-  const short               FILTER_ACCEPT                  = 1;
-  const short               FILTER_REJECT                  = 2;
-  const short               FILTER_SKIP                    = 3;
-
   short              acceptNode(in nsIDOMNode n);
 };

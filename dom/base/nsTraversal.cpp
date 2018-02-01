@@ -10,6 +10,7 @@
 #include "nsError.h"
 #include "nsINode.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/dom/NodeFilterBinding.h"
 
 #include "nsGkAtoms.h"
 
@@ -50,12 +51,12 @@ nsTraversal::TestNode(nsINode* aNode, mozilla::ErrorResult& aResult)
     uint16_t nodeType = aNode->NodeType();
 
     if (nodeType <= 12 && !((1 << (nodeType-1)) & mWhatToShow)) {
-        return nsIDOMNodeFilter::FILTER_SKIP;
+        return NodeFilterBinding::FILTER_SKIP;
     }
 
     if (!mFilter) {
         // No filter, just accept
-        return nsIDOMNodeFilter::FILTER_ACCEPT;
+        return NodeFilterBinding::FILTER_ACCEPT;
     }
 
     AutoRestore<bool> inAcceptNode(mInAcceptNode);

@@ -17,6 +17,7 @@
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
+#include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/NodeIteratorBinding.h"
 
 namespace mozilla {
@@ -202,7 +203,7 @@ NodeIterator::NextOrPrevNode(NodePointer::MoveToMethodType aMove,
             return nullptr;
         }
 
-        if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
+        if (filtered == NodeFilterBinding::FILTER_ACCEPT) {
             mPointer = mWorkingPointer;
             return testNode.forget();
         }

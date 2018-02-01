@@ -15,6 +15,7 @@
 #include "nsError.h"
 #include "nsINode.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/TreeWalkerBinding.h"
 
 namespace mozilla {
@@ -78,7 +79,7 @@ TreeWalker::ParentNode(ErrorResult& aResult)
             if (aResult.Failed()) {
                 return nullptr;
             }
-            if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
+            if (filtered == NodeFilterBinding::FILTER_ACCEPT) {
                 mCurrentNode = node;
                 return node.forget();
             }
@@ -127,7 +128,7 @@ TreeWalker::PreviousNode(ErrorResult& aResult)
             }
 
             nsINode *lastChild;
-            while (filtered != nsIDOMNodeFilter::FILTER_REJECT &&
+            while (filtered != NodeFilterBinding::FILTER_REJECT &&
                    (lastChild = node->GetLastChild())) {
                 node = lastChild;
                 filtered = TestNode(node, aResult);
@@ -136,7 +137,7 @@ TreeWalker::PreviousNode(ErrorResult& aResult)
                 }
             }
 
-            if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
+            if (filtered == NodeFilterBinding::FILTER_ACCEPT) {
                 mCurrentNode = node;
                 return node.forget();
             }
@@ -156,7 +157,7 @@ TreeWalker::PreviousNode(ErrorResult& aResult)
             return nullptr;
         }
 
-        if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
+        if (filtered == NodeFilterBinding::FILTER_ACCEPT) {
             mCurrentNode = node;
             return node.forget();
         }
@@ -168,14 +169,14 @@ TreeWalker::PreviousNode(ErrorResult& aResult)
 already_AddRefed<nsINode>
 TreeWalker::NextNode(ErrorResult& aResult)
 {
-    int16_t filtered = nsIDOMNodeFilter::FILTER_ACCEPT; // pre-init for inner loop
+    int16_t filtered = NodeFilterBinding::FILTER_ACCEPT; // pre-init for inner loop
 
     nsCOMPtr<nsINode> node = mCurrentNode;
 
     while (1) {
 
         nsINode *firstChild;
-        while (filtered != nsIDOMNodeFilter::FILTER_REJECT &&
+        while (filtered != NodeFilterBinding::FILTER_REJECT &&
                (firstChild = node->GetFirstChild())) {
             node = firstChild;
 
@@ -184,7 +185,7 @@ TreeWalker::NextNode(ErrorResult& aResult)
                 return nullptr;
             }
 
-            if (filtered ==  nsIDOMNodeFilter::FILTER_ACCEPT) {
+            if (filtered ==  NodeFilterBinding::FILTER_ACCEPT) {
                 // Node found
                 mCurrentNode = node;
                 return node.forget();
@@ -215,7 +216,7 @@ TreeWalker::NextNode(ErrorResult& aResult)
             return nullptr;
         }
 
-        if (filtered ==  nsIDOMNodeFilter::FILTER_ACCEPT) {
+        if (filtered ==  NodeFilterBinding::FILTER_ACCEPT) {
             // Node found
             mCurrentNode = node;
             return node.forget();
@@ -249,11 +250,11 @@ TreeWalker::FirstChildInternal(bool aReversed, ErrorResult& aResult)
         }
 
         switch (filtered) {
-            case nsIDOMNodeFilter::FILTER_ACCEPT:
+            case NodeFilterBinding::FILTER_ACCEPT:
                 // Node found
                 mCurrentNode = node;
                 return node.forget();
-            case nsIDOMNodeFilter::FILTER_SKIP: {
+            case NodeFilterBinding::FILTER_SKIP: {
                     nsINode *child = aReversed ? node->GetLastChild()
                                                : node->GetFirstChild();
                     if (child) {
@@ -262,7 +263,7 @@ TreeWalker::FirstChildInternal(bool aReversed, ErrorResult& aResult)
                     }
                     break;
                 }
-            case nsIDOMNodeFilter::FILTER_REJECT:
+            case NodeFilterBinding::FILTER_REJECT:
                 // Keep searching
                 break;
         }
@@ -317,14 +318,14 @@ TreeWalker::NextSiblingInternal(bool aReversed, ErrorResult& aResult)
                 return nullptr;
             }
 
-            if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
+            if (filtered == NodeFilterBinding::FILTER_ACCEPT) {
                 // Node found
                 mCurrentNode = node;
                 return node.forget();
             }
 
             // If rejected or no children, try a sibling
-            if (filtered == nsIDOMNodeFilter::FILTER_REJECT ||
+            if (filtered == NodeFilterBinding::FILTER_REJECT ||
                 !(sibling = aReversed ? node->GetLastChild()
                                       : node->GetFirstChild())) {
                 sibling = aReversed ? node->GetPreviousSibling()
@@ -343,7 +344,7 @@ TreeWalker::NextSiblingInternal(bool aReversed, ErrorResult& aResult)
         if (aResult.Failed()) {
             return nullptr;
         }
-        if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
+        if (filtered == NodeFilterBinding::FILTER_ACCEPT) {
             return nullptr;
         }
     }
