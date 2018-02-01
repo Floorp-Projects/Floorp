@@ -139,8 +139,8 @@ BrowserElementChild.prototype = {
 
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     if (!webNavigation.sessionHistory) {
-      webNavigation.sessionHistory = Cc["@mozilla.org/browser/shistory;1"]
-                                       .createInstance(Ci.nsISHistory);
+      // XXX(nika): We might need to start this up some other way?
+      docShell.initSessionHistory();
     }
 
     // This is necessary to get security web progress notifications.

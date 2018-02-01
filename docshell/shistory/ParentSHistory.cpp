@@ -39,12 +39,11 @@ ParentSHistory::GetTabParent()
 already_AddRefed<ChildSHistory>
 ParentSHistory::GetChildIfSameProcess()
 {
-  if (XRE_IsContentProcess()) {
-    MOZ_ASSERT(!mDocShell);
-    return nullptr;
+  if (GetDocShell()) {
+    return GetDocShell()->GetSessionHistory();
   }
 
-  MOZ_CRASH("Unimplemented!");
+  return nullptr;
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ParentSHistory)

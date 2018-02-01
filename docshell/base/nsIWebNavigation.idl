@@ -10,6 +10,11 @@ interface nsIInputStream;
 interface nsISHistory;
 interface nsIURI;
 interface nsIPrincipal;
+interface nsIChildSHistory;
+
+%{ C++
+#include "mozilla/dom/ChildSHistory.h"
+%}
 
 /**
  * The nsIWebNavigation interface defines an interface for navigating the web.
@@ -374,9 +379,28 @@ interface nsIWebNavigation : nsISupports
   readonly attribute nsIURI referringURI;
 
   /**
-   * The session history object used by this web navigation instance.
+   * The session history object used by this web navigation instance. This
+   * object will be a mozilla::dom::ChildSHistory object, but is returned as
+   * nsISupports so it can be called from JS code.
    */
-  attribute nsISHistory sessionHistory;
+  [binaryname(SessionHistoryXPCOM)]
+  readonly attribute nsISupports sessionHistory;
+
+  %{ C++
+  /**
+   * Get the session history object used by this nsIWebNavigation instance.
+   * Use this method instead of the XPCOM method when getting the
+   * SessionHistory from C++ code.
+   */
+  already_AddRefed<mozilla::dom::ChildSHistory>
+  GetSessionHistory()
+  {
+    nsCOMPtr<nsISupports> history;
+    GetSessionHistoryXPCOM(getter_AddRefs(history));
+    return history.forget()
+      .downcast<mozilla::dom::ChildSHistory>();
+  }
+  %}
 
   /**
    * Set an OriginAttributes dictionary in the docShell. This can be done only
