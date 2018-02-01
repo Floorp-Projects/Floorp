@@ -51,7 +51,6 @@ public:
   bool NotifyVsync(TimeStamp aVsyncTimestamp);
   void SetNeedsComposite();
 
-  void ComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
   void PostCompositeTask(TimeStamp aCompositeTimestamp);
   void PostVRTask(TimeStamp aTimestamp);
   void Destroy();
