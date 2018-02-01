@@ -117,13 +117,16 @@ class TestCases {
     info(`Tagged bookmark ${guid}`);
     await checkSyncFields(guid, { syncChangeCounter: 4 });
 
-    await this.setKeyword(guid, "keyword");
-    info(`Set keyword for bookmark ${guid}`);
-    await checkSyncFields(guid, { syncChangeCounter: 5 });
-
-    await this.removeKeyword(guid, "keyword");
-    info(`Removed keyword from bookmark ${guid}`);
-    await checkSyncFields(guid, { syncChangeCounter: 6 });
+    if ("setKeyword" in this) {
+      await this.setKeyword(guid, "keyword");
+      info(`Set keyword for bookmark ${guid}`);
+      await checkSyncFields(guid, { syncChangeCounter: 5 });
+    }
+    if ("removeKeyword" in this) {
+      await this.removeKeyword(guid, "keyword");
+      info(`Removed keyword from bookmark ${guid}`);
+      await checkSyncFields(guid, { syncChangeCounter: 6 });
+    }
   }
 
   async testSeparators() {
@@ -282,19 +285,6 @@ class SyncTestCases extends TestCases {
   async setTitle(guid, title) {
     let id = await PlacesUtils.promiseItemId(guid);
     PlacesUtils.bookmarks.setItemTitle(id, title);
-  }
-
-  async setKeyword(guid, keyword) {
-    let id = await PlacesUtils.promiseItemId(guid);
-    PlacesUtils.bookmarks.setKeywordForBookmark(id, keyword);
-  }
-
-  async removeKeyword(guid, keyword) {
-    let id = await PlacesUtils.promiseItemId(guid);
-    if (PlacesUtils.bookmarks.getKeywordForBookmark(id) != keyword) {
-      throw new Error(`Keyword ${keyword} not set for bookmark ${guid}`);
-    }
-    PlacesUtils.bookmarks.setKeywordForBookmark(id, "");
   }
 
   async tagURI(uri, tags) {
