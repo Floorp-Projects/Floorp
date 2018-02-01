@@ -13,6 +13,8 @@ const TEST_DATA_DIR = "test_content_signing/";
 
 const ONECRL_NAME = "oneCRL-signer.mozilla.org";
 const ABOUT_NEWTAB_NAME = "remotenewtab.content-signature.mozilla.org";
+var VERIFICATION_HISTOGRAM = Services.telemetry
+                                     .getHistogramById("CONTENT_SIGNATURE_VERIFICATION_STATUS");
 
 function getSignatureVerifier() {
   return Cc["@mozilla.org/security/contentsignatureverifier;1"]
@@ -31,6 +33,19 @@ function loadChain(prefix, names) {
     chain.push(readFile(do_get_file(filename)));
   }
   return chain;
+}
+
+function check_telemetry(expected_index, expected) {
+  for (let i = 0; i < 10; i++) {
+    let expected_value = 0;
+    if (i == expected_index) {
+      expected_value = expected;
+    }
+    equal(VERIFICATION_HISTOGRAM.snapshot().counts[i], expected_value,
+      "count " + i + ": " + VERIFICATION_HISTOGRAM.snapshot().counts[i] +
+      " expected " + expected_value);
+  }
+  VERIFICATION_HISTOGRAM.clear();
 }
 
 function run_test() {
@@ -56,11 +71,21 @@ function run_test() {
   let noSANChain = loadChain(TEST_DATA_DIR + "content_signing",
                              ["onecrl_no_SAN_ee", "int", "root"]);
 
+  let expiredOneCRLChain = loadChain(TEST_DATA_DIR + "content_signing",
+                                     ["onecrl_ee_expired", "int", "root"]);
+
+  let notValidYetOneCRLChain = loadChain(TEST_DATA_DIR + "content_signing",
+                                         ["onecrl_ee_not_valid_yet", "int",
+                                          "root"]);
+
   // Check signature verification works without error before the root is set
+  VERIFICATION_HISTOGRAM.clear();
   let chain1 = oneCRLChain.join("\n");
   let verifier = getSignatureVerifier();
   ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1, ONECRL_NAME),
      "Before the root is set, signatures should fail to verify but not throw.");
+  // Check for generic chain building error.
+  check_telemetry(6, 1);
 
   setRoot(TEST_DATA_DIR + "content_signing_root.pem");
 
@@ -73,12 +98,16 @@ function run_test() {
   ok(verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain2,
                                      ABOUT_NEWTAB_NAME),
      "A newtab signature should verify with the newtab chain");
+  // Check for valid signature
+  check_telemetry(0, 2);
 
   // Check a bad signature when a good chain is provided
   chain1 = oneCRLChain.join("\n");
   verifier = getSignatureVerifier();
   ok(!verifier.verifyContentSignature(DATA, BAD_SIGNATURE, chain1, ONECRL_NAME),
      "A bad signature should not verify");
+  // Check for invalid signature
+  check_telemetry(1, 1);
 
   // Check a good signature from cert with good SAN but a different key than the
   // one used to create the signature
@@ -87,6 +116,8 @@ function run_test() {
   ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, badKeyChain,
                                       ONECRL_NAME),
      "A signature should not verify if the signing key is wrong");
+  // Check for wrong key in cert.
+  check_telemetry(9, 1);
 
   // Check a good signature from cert with good SAN but a different key than the
   // one used to create the signature (this time, an RSA key)
@@ -95,6 +126,8 @@ function run_test() {
   ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, rsaKeyChain,
                                       ONECRL_NAME),
      "A signature should not verify if the signing key is wrong (RSA)");
+  // Check for wrong key in cert.
+  check_telemetry(9, 1);
 
   // Check a good signature from cert with good SAN but with chain missing root
   let missingRoot = [oneCRLChain[0], oneCRLChain[1]].join("\n");
@@ -102,6 +135,8 @@ function run_test() {
   ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, missingRoot,
                                       ONECRL_NAME),
      "A signature should not verify if the chain is incomplete (missing root)");
+  // Check for generic chain building error.
+  check_telemetry(6, 1);
 
   // Check a good signature from cert with good SAN but with no path to root
   let missingInt = [oneCRLChain[0], oneCRLChain[2]].join("\n");
@@ -109,6 +144,8 @@ function run_test() {
   ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, missingInt,
                                       ONECRL_NAME),
      "A signature should not verify if the chain is incomplete (missing int)");
+  // Check for generic chain building error.
+  check_telemetry(6, 1);
 
   // Check good signatures from good certificates with the wrong SANs
   chain1 = oneCRLChain.join("\n");
@@ -116,17 +153,39 @@ function run_test() {
   ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1,
                                       ABOUT_NEWTAB_NAME),
      "A OneCRL signature should not verify if we require the newtab SAN");
+  // Check for invalid EE cert.
+  check_telemetry(7, 1);
 
   chain2 = remoteNewTabChain.join("\n");
   verifier = getSignatureVerifier();
   ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain2,
                                       ONECRL_NAME),
      "A newtab signature should not verify if we require the OneCRL SAN");
+  // Check for invalid EE cert.
+  check_telemetry(7, 1);
 
   // Check good signatures with good chains with some other invalid names
   verifier = getSignatureVerifier();
   ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1, ""),
      "A signature should not verify if the SANs do not match an empty name");
+  // Check for invalid EE cert.
+  check_telemetry(7, 1);
+
+  // Test expired certificate.
+  let chainExpired = expiredOneCRLChain.join("\n");
+  verifier = getSignatureVerifier();
+  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chainExpired, ""),
+     "A signature should not verify if the signing certificate is expired");
+  // Check for expired cert.
+  check_telemetry(4, 1);
+
+  // Test not valid yet certificate.
+  let chainNotValidYet = notValidYetOneCRLChain.join("\n");
+  verifier = getSignatureVerifier();
+  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chainNotValidYet, ""),
+     "A signature should not verify if the signing certificate is not valid yet");
+  // Check for not yet valid cert.
+  check_telemetry(5, 1);
 
   let relatedName = "subdomain." + ONECRL_NAME;
   verifier = getSignatureVerifier();

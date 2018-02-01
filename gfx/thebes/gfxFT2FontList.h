@@ -58,19 +58,23 @@ public:
     // Create a font entry for a given freetype face; if it is an installed font,
     // also record the filename and index.
     // aFontData (if non-nullptr) is NS_Malloc'ed data that aFace depends on,
-    // to be freed after the face is destroyed
+    // to be freed after the face is destroyed.
+    // aLength is the length of aFontData.
     static FT2FontEntry* 
     CreateFontEntry(FT_Face aFace,
                     const char *aFilename, uint8_t aIndex,
                     const nsAString& aName,
-                    const uint8_t* aFontData = nullptr);
+                    const uint8_t* aFontData = nullptr,
+                    uint32_t aLength = 0);
 
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle,
                                         bool aNeedsBold) override;
 
     // Create (if necessary) and return the cairo_font_face for this font.
     // This may fail and return null, so caller must be prepared to handle this.
-    cairo_font_face_t *CairoFontFace();
+    // If a style is passed, any variationSettings in the style will be applied
+    // to the resulting font face.
+    cairo_font_face_t *CairoFontFace(const gfxFontStyle *aStyle = nullptr);
 
     // Create a cairo_scaled_font for this face, with the given style.
     // This may fail and return null, so caller must be prepared to handle this.

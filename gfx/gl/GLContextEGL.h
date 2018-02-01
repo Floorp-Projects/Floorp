@@ -139,6 +139,8 @@ public:
 #endif // defined(MOZ_WIDGET_ANDROID)
 };
 
+bool CreateConfig(EGLConfig* config, int32_t depth, bool enableDepthBuffer);
+
 } // namespace gl
 } // namespace mozilla
 
