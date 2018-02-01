@@ -51,8 +51,6 @@ public:
   bool NotifyVsync(TimeStamp aVsyncTimestamp);
   void SetNeedsComposite();
 
-  void PostCompositeTask(TimeStamp aCompositeTimestamp);
-  void PostVRTask(TimeStamp aTimestamp);
   void Destroy();
   void ScheduleComposition();
   void CancelCurrentCompositeTask();
@@ -77,6 +75,15 @@ private:
 
   // Schedule a task to run on the compositor thread.
   void ScheduleTask(already_AddRefed<CancelableRunnable>);
+
+  // Post a task to run Composite() on the compositor thread, if there isn't
+  // such a task already queued. Can be called from any thread.
+  void PostCompositeTask(TimeStamp aCompositeTimestamp);
+
+  // Post a task to run DispatchVREvents() on the VR thread, if there isn't
+  // such a task already queued. Can be called from any thread.
+  void PostVRTask(TimeStamp aTimestamp);
+
   void NotifyCompositeTaskExecuted();
   void ObserveVsync();
   void UnobserveVsync();
