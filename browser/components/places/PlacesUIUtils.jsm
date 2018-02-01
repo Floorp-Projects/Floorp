@@ -257,14 +257,6 @@ this.PlacesUIUtils = {
     return bundle.GetStringFromName(key);
   },
 
-  get _copyableAnnotations() {
-    return [
-      this.DESCRIPTION_ANNO,
-      this.LOAD_IN_SIDEBAR_ANNO,
-      PlacesUtils.READ_ONLY_ANNO,
-    ];
-  },
-
   /**
    * Constructs a Places Transaction for the drop or paste of a blob of data
    * into a container.
@@ -1211,19 +1203,6 @@ this.PlacesUIUtils = {
         return parent;
       }
     });
-  },
-
-  /**
-   * Shortcut for calling promiseNodeLikeFromFetchInfo on the result of
-   * Bookmarks.fetch for the given guid/info object.
-   *
-   * @see promiseNodeLikeFromFetchInfo above and Bookmarks.fetch in Bookmarks.jsm.
-   */
-  async fetchNodeLike(aGuidOrInfo) {
-    let info = await PlacesUtils.bookmarks.fetch(aGuidOrInfo);
-    if (!info)
-      return null;
-    return this.promiseNodeLikeFromFetchInfo(info);
   },
 
   /**

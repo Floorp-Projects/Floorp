@@ -14,6 +14,7 @@ ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
   "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
 
 const kCSSVarsMap = new Map([
+  ["--lwt-accent-color-inactive", "accentcolorInactive"],
   ["--lwt-background-alignment", "backgroundsAlignment"],
   ["--lwt-background-tiling", "backgroundsTiling"],
   ["--lwt-tab-text", "tab_text"],
@@ -25,6 +26,8 @@ const kCSSVarsMap = new Map([
   ["--tabs-border-color", "toolbar_top_separator"],
   ["--toolbox-border-bottom-color", "toolbar_bottom_separator"],
   ["--urlbar-separator-color", "toolbar_vertical_separator"],
+  ["--lwt-toolbarbutton-icon-fill", "icons"],
+  ["--lwt-toolbarbutton-icon-fill-attention", "icons_attention"],
 ]);
 
 this.LightweightThemeConsumer =

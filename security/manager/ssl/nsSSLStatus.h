@@ -29,10 +29,9 @@ class nsSSLStatus final
   : public nsISSLStatus
   , public nsISerializable
   , public nsIClassInfo
-  , public nsNSSShutDownObject
 {
 protected:
-  virtual ~nsSSLStatus();
+  virtual ~nsSSLStatus() {}
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISSLSTATUS
@@ -52,8 +51,6 @@ public:
 
   void SetCertificateTransparencyInfo(
     const mozilla::psm::CertificateTransparencyInfo& info);
-
-  virtual void virtualDestroyNSSReference() override;
 
   /* public for initilization in this file */
   uint16_t mCipherSuite;

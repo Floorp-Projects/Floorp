@@ -118,24 +118,6 @@ BackgroundFileSaver::BackgroundFileSaver()
 BackgroundFileSaver::~BackgroundFileSaver()
 {
   LOG(("Destroying BackgroundFileSaver [this = %p]", this));
-  nsNSSShutDownPreventionLock lock;
-  if (isAlreadyShutDown()) {
-    return;
-  }
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
-void
-BackgroundFileSaver::destructorSafeDestroyNSSReference()
-{
-  mDigestContext = nullptr;
-}
-
-void
-BackgroundFileSaver::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
 }
 
 // Called on the control thread.
@@ -553,12 +535,9 @@ BackgroundFileSaver::ProcessStateChange()
 
   // Create the digest context if requested and NSS hasn't been shut down.
   if (sha256Enabled && !mDigestContext) {
-    nsNSSShutDownPreventionLock lock;
-    if (!isAlreadyShutDown()) {
-      mDigestContext = UniquePK11Context(
-        PK11_CreateDigestContext(SEC_OID_SHA256));
-      NS_ENSURE_TRUE(mDigestContext, NS_ERROR_OUT_OF_MEMORY);
-    }
+    mDigestContext = UniquePK11Context(
+      PK11_CreateDigestContext(SEC_OID_SHA256));
+    NS_ENSURE_TRUE(mDigestContext, NS_ERROR_OUT_OF_MEMORY);
   }
 
   // When we are requested to append to an existing file, we should read the
@@ -580,11 +559,6 @@ BackgroundFileSaver::ProcessStateChange()
         if (count == 0) {
           // We reached the end of the file.
           break;
-        }
-
-        nsNSSShutDownPreventionLock lock;
-        if (isAlreadyShutDown()) {
-          return NS_ERROR_NOT_AVAILABLE;
         }
 
         nsresult rv = MapSECStatus(
@@ -628,13 +602,11 @@ BackgroundFileSaver::ProcessStateChange()
 
   // Wrap the output stream so that it feeds the digest context if needed.
   if (mDigestContext) {
-    // No need to acquire the NSS lock here, DigestOutputStream must acquire it
-    // in any case before each asynchronous write. Constructing the
-    // DigestOutputStream cannot fail. Passing mDigestContext to
-    // DigestOutputStream is safe, because BackgroundFileSaver always outlives
-    // the outputStream. BackgroundFileSaver is reference-counted before the
-    // call to AsyncCopy, and mDigestContext is never destroyed before
-    // AsyncCopyCallback.
+    // Constructing the DigestOutputStream cannot fail. Passing mDigestContext
+    // to DigestOutputStream is safe, because BackgroundFileSaver always
+    // outlives the outputStream. BackgroundFileSaver is reference-counted
+    // before the call to AsyncCopy, and mDigestContext is never destroyed
+    // before AsyncCopyCallback.
     outputStream = new DigestOutputStream(outputStream, mDigestContext.get());
   }
 
@@ -724,16 +696,13 @@ BackgroundFileSaver::CheckCompletion()
 
   // Finish computing the hash
   if (!failed && mDigestContext) {
-    nsNSSShutDownPreventionLock lock;
-    if (!isAlreadyShutDown()) {
-      Digest d;
-      rv = d.End(SEC_OID_SHA256, mDigestContext);
-      if (NS_SUCCEEDED(rv)) {
-        MutexAutoLock lock(mLock);
-        mSha256 =
-          nsDependentCSubstring(BitwiseCast<char*, unsigned char*>(d.get().data),
-                                d.get().len);
-      }
+    Digest d;
+    rv = d.End(SEC_OID_SHA256, mDigestContext);
+    if (NS_SUCCEEDED(rv)) {
+      MutexAutoLock lock(mLock);
+      mSha256 =
+        nsDependentCSubstring(BitwiseCast<char*, unsigned char*>(d.get().data),
+                              d.get().len);
     }
   }
 
@@ -816,11 +785,6 @@ nsresult
 BackgroundFileSaver::ExtractSignatureInfo(const nsAString& filePath)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "Cannot extract signature on main thread");
-
-  nsNSSShutDownPreventionLock nssLock;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   {
     MutexAutoLock lock(mLock);
     if (!mSignatureInfoEnabled) {
@@ -1217,15 +1181,6 @@ DigestOutputStream::DigestOutputStream(nsIOutputStream* aStream,
   MOZ_ASSERT(mOutputStream, "Can't have null output stream");
 }
 
-DigestOutputStream::~DigestOutputStream()
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return;
-  }
-  shutdown(ShutdownCalledFrom::Object);
-}
-
 NS_IMETHODIMP
 DigestOutputStream::Close()
 {
@@ -1241,11 +1196,6 @@ DigestOutputStream::Flush()
 NS_IMETHODIMP
 DigestOutputStream::Write(const char* aBuf, uint32_t aCount, uint32_t* retval)
 {
-  nsNSSShutDownPreventionLock lock;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   nsresult rv = MapSECStatus(
     PK11_DigestOp(mDigestContext,
                   BitwiseCast<const unsigned char*, const char*>(aBuf),

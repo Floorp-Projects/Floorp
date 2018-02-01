@@ -26,6 +26,7 @@ class Connector {
     this.triggerActivity = this.triggerActivity.bind(this);
     this.viewSourceInDebugger = this.viewSourceInDebugger.bind(this);
     this.requestData = this.requestData.bind(this);
+    this.getTimingMarker = this.getTimingMarker.bind(this);
   }
 
   // Connect/Disconnect API
@@ -102,6 +103,10 @@ class Connector {
 
   requestData() {
     return this.connector.requestData(...arguments);
+  }
+
+  getTimingMarker() {
+    return this.connector.getTimingMarker(...arguments);
   }
 }
 

@@ -11,14 +11,7 @@
 #include "nsIObjectOutputStream.h"
 #include "nsIObjectInputStream.h"
 #include "nsNSSCertificate.h"
-#include "nsNSSShutDown.h"
 #include "ssl.h"
-
-
-void
-nsSSLStatus::virtualDestroyNSSReference()
-{
-}
 
 NS_IMETHODIMP
 nsSSLStatus::GetServerCert(nsIX509Cert** aServerCert)
@@ -393,15 +386,6 @@ nsSSLStatus::nsSSLStatus()
 
 NS_IMPL_ISUPPORTS(nsSSLStatus, nsISSLStatus, nsISerializable, nsIClassInfo)
 
-nsSSLStatus::~nsSSLStatus()
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return;
-  }
-  shutdown(ShutdownCalledFrom::Object);
-}
-
 void
 nsSSLStatus::SetServerCert(nsNSSCertificate* aServerCert, EVStatus aEVStatus)
 {
@@ -415,13 +399,8 @@ nsSSLStatus::SetServerCert(nsNSSCertificate* aServerCert, EVStatus aEVStatus)
 nsresult
 nsSSLStatus::SetSucceededCertChain(UniqueCERTCertList aCertList)
 {
-  nsNSSShutDownPreventionLock lock;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   // nsNSSCertList takes ownership of certList
-  mSucceededCertChain = new nsNSSCertList(Move(aCertList), lock);
+  mSucceededCertChain = new nsNSSCertList(Move(aCertList));
 
   return NS_OK;
 }
