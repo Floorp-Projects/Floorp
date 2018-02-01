@@ -1,6 +1,0 @@
-[package]
-name = "prefs_parser"
-version = "0.0.1"
-authors = ["Nicholas Nethercote <nnethercote@mozilla.com>"]
-
-[dependencies]
