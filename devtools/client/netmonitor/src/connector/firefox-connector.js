@@ -7,6 +7,7 @@
 const Services = require("Services");
 const { ACTIVITY_TYPE, EVENTS } = require("../constants");
 const FirefoxDataProvider = require("./firefox-data-provider");
+const { getDisplayedTimingMarker } = require("../selectors/index");
 
 // To be removed once FF60 is deprecated
 loader.lazyRequireGetter(this, "TimelineFront", "devtools/shared/fronts/timeline", true);
@@ -27,6 +28,7 @@ class FirefoxConnector {
     this.getTabTarget = this.getTabTarget.bind(this);
     this.viewSourceInDebugger = this.viewSourceInDebugger.bind(this);
     this.requestData = this.requestData.bind(this);
+    this.getTimingMarker = this.getTimingMarker.bind(this);
 
     // Internals
     this.getLongString = this.getLongString.bind(this);
@@ -362,6 +364,11 @@ class FirefoxConnector {
    */
   requestData(request, type) {
     return this.dataProvider.requestData(request, type);
+  }
+
+  getTimingMarker(name) {
+    let state = this.getState();
+    return getDisplayedTimingMarker(state, name);
   }
 }
 
