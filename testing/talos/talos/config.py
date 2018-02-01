@@ -17,7 +17,11 @@ class ConfigurationError(Exception):
     pass
 
 
-FAR_IN_FUTURE = 7258114800
+# Set places maintenance far in the future (the maximum time possible in an
+# int32_t) to avoid it kicking in during tests. The maintenance can take a
+# relatively long time which may cause unnecessary intermittents and slow
+# things down. This, like many things, will stop working correctly in 2038.
+FAR_IN_FUTURE = 2147483647
 
 DEFAULTS = dict(
     # args to pass to browser
