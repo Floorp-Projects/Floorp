@@ -31,8 +31,10 @@ public:
   virtual void DeleteRule(const nsAString& aKey) = 0;
   virtual CSSKeyframeRule* FindRule(const nsAString& aKey) = 0;
 
+#ifdef MOZ_OLD_STYLE
   bool UseForPresentation(nsPresContext* aPresContext,
                           nsMediaQueryResultCacheKey& aKey) final override;
+#endif
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override = 0;
 

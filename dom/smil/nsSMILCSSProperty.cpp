@@ -74,10 +74,16 @@ nsSMILCSSProperty::GetBaseValue() const
     if (!computedValue.mServo) {
       return baseValue;
     }
-  } else if (!StyleAnimationValue::ExtractComputedValue(mPropID,
-                                                        mBaseStyleContext->AsGecko(),
-                                                        computedValue.mGecko)) {
-    return baseValue;
+  } else {
+#ifdef MOZ_OLD_STYLE
+    if (!StyleAnimationValue::ExtractComputedValue(mPropID,
+                                                   mBaseStyleContext->AsGecko(),
+                                                   computedValue.mGecko)) {
+      return baseValue;
+    }
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   baseValue =

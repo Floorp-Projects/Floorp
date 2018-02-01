@@ -13,6 +13,8 @@
 #ifndef RuleNodeCacheConditions_h_
 #define RuleNodeCacheConditions_h_
 
+#ifdef MOZ_OLD_STYLE
+
 #include "mozilla/Attributes.h"
 #include "nsCoord.h"
 #include "nsTArray.h"
@@ -153,5 +155,19 @@ private:
 };
 
 } // namespace mozilla
+
+#else
+
+namespace mozilla {
+
+// Define this dummy class so there are fewer call sites to change when the old
+// style system code is compiled out.
+class RuleNodeCacheConditions
+{
+};
+
+} // namespace mozilla
+
+#endif
 
 #endif // !defined(RuleNodeCacheConditions_h_)

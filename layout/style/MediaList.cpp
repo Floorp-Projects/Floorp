@@ -81,10 +81,14 @@ MediaList::Create(
     return mediaList.forget();
   }
 
+#ifdef MOZ_OLD_STYLE
   nsCSSParser parser;
   RefPtr<nsMediaList> mediaList = new nsMediaList();
   parser.ParseMediaList(aMedia, nullptr, 0, mediaList, aCallerType);
   return mediaList.forget();
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 void

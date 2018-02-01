@@ -93,6 +93,7 @@ HTMLTableCellElement::CellIndex() const
   return -1;
 }
 
+#ifdef MOZ_OLD_STYLE
 NS_IMETHODIMP
 HTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
@@ -106,6 +107,7 @@ HTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   }
   return NS_OK;
 }
+#endif
 
 nsMappedAttributes*
 HTMLTableCellElement::GetMappedAttributesInheritedFromTable() const

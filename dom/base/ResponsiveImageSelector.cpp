@@ -249,6 +249,7 @@ ResponsiveImageSelector::SetSizesFromDescriptor(const nsAString & aSizes)
     return !!mServoSourceSizeList;
   }
 
+#ifdef MOZ_OLD_STYLE
   nsCSSParser cssParser;
 
   mSizeQueries.Clear();
@@ -256,6 +257,9 @@ ResponsiveImageSelector::SetSizesFromDescriptor(const nsAString & aSizes)
 
   return cssParser.ParseSourceSizeList(aSizes, nullptr, 0,
                                        mSizeQueries, mSizeValues);
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 void
@@ -459,6 +463,7 @@ ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(double *aWidth)
     effectiveWidth = presShell->StyleSet()->AsServo()->EvaluateSourceSizeList(
       mServoSourceSizeList.get());
   } else {
+#ifdef MOZ_OLD_STYLE
     unsigned int numSizes = mSizeQueries.Length();
     MOZ_ASSERT(numSizes == mSizeValues.Length(),
                "mSizeValues length differs from mSizeQueries");
@@ -479,6 +484,9 @@ ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(double *aWidth)
       effectiveWidth = nsRuleNode::CalcLengthWithInitialFont(pctx,
                                                              mSizeValues[i]);
     }
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   *aWidth = nsPresContext::AppUnitsToDoubleCSSPixels(std::max(effectiveWidth, 0));

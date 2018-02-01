@@ -32,7 +32,6 @@
 #include "nsPrintfCString.h"
 #include "nsSMILAnimationController.h"
 #include "nsStyleContext.h"
-#include "nsStyleSet.h"
 #include "nsXBLPrototypeBinding.h"
 #include "gfxUserFontSet.h"
 

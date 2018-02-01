@@ -3631,6 +3631,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset
   uint8_t          mMaskType;         // [reset] see nsStyleConsts.h
 };
 
+// XXX This can be removed once the old style system is gone.
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVariables
 {
   nsStyleVariables();
@@ -3653,7 +3654,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVariables
 
   nsChangeHint CalcDifference(const nsStyleVariables& aNewData) const;
 
+#ifdef MOZ_OLD_STYLE
   mozilla::CSSVariableValues mVariables;
+#endif
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleEffects

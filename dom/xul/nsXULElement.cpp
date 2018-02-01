@@ -1387,11 +1387,13 @@ nsXULElement::PreHandleEvent(EventChainVisitor& aVisitor)
 //----------------------------------------------------------------------
 // Implementation methods
 
+#ifdef MOZ_OLD_STYLE
 NS_IMETHODIMP
 nsXULElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
     return NS_OK;
 }
+#endif
 
 nsChangeHint
 nsXULElement::GetAttributeChangeHint(const nsAtom* aAttribute,
@@ -2335,9 +2337,13 @@ nsXULPrototypeElement::SetAttrAt(uint32_t aPos, const nsAString& aValue,
           declaration = ServoDeclarationBlock::FromCssText(
               aValue, data, eCompatibility_FullStandards, nullptr);
         } else {
+#ifdef MOZ_OLD_STYLE
           nsCSSParser parser;
           declaration = parser.ParseStyleAttribute(aValue, aDocumentURI,
                                                    aDocumentURI, principal);
+#else
+          MOZ_CRASH("old style system disabled");
+#endif
         }
         if (declaration) {
             mAttributes[aPos].mValue.SetTo(declaration.forget(), &aValue);

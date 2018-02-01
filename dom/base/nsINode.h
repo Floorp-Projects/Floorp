@@ -2182,7 +2182,11 @@ protected:
     if (IsStyledByServo()) {
       return aServoFunctor(ParseServoSelectorList(aSelectorString, aRv));
     }
+#ifdef MOZ_OLD_STYLE
     return aGeckoFunctor(ParseSelectorList(aSelectorString, aRv));
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
 public:

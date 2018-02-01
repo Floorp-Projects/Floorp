@@ -290,6 +290,7 @@ public:
   typedef nsTArray<RefPtr<mozilla::dom::CSSAnimation>>
     OwningCSSAnimationPtrArray;
 
+#ifdef MOZ_OLD_STYLE
   /**
    * Update the set of animations on |aElement| based on |aStyleContext|.
    * If necessary, this will notify the corresponding EffectCompositor so
@@ -300,6 +301,7 @@ public:
    */
   void UpdateAnimations(mozilla::GeckoStyleContext* aStyleContext,
                         mozilla::dom::Element* aElement);
+#endif
 
   /**
    * This function does the same thing as the above UpdateAnimations()

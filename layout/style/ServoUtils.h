@@ -35,25 +35,40 @@ inline bool IsInServoTraversal()
 }
 } // namespace mozilla
 
-#ifdef MOZ_STYLO
+#if defined(MOZ_STYLO) && defined(MOZ_OLD_STYLE)
 # define MOZ_DECL_STYLO_CHECK_METHODS \
   bool IsGecko() const { return !IsServo(); } \
   bool IsServo() const { return mType == StyleBackendType::Servo; }
+#elif defined(MOZ_STYLO)
+# define MOZ_DECL_STYLO_CHECK_METHODS \
+  bool IsGecko() const { return false; } \
+  bool IsServo() const { return true; }
 #else
 # define MOZ_DECL_STYLO_CHECK_METHODS \
   bool IsGecko() const { return true; } \
   bool IsServo() const { return false; }
 #endif
 
-#define MOZ_DECL_STYLO_CONVERT_METHODS(geckotype_, servotype_)  \
-  inline geckotype_* AsGecko();                         \
+#define MOZ_DECL_STYLO_CONVERT_METHODS_SERVO(servotype_) \
   inline servotype_* AsServo();                         \
-  inline const geckotype_* AsGecko() const;             \
   inline const servotype_* AsServo() const;             \
-  inline geckotype_* GetAsGecko();                      \
   inline servotype_* GetAsServo();                      \
-  inline const geckotype_* GetAsGecko() const;          \
   inline const servotype_* GetAsServo() const;
+
+#define MOZ_DECL_STYLO_CONVERT_METHODS_GECKO(geckotype_) \
+  inline geckotype_* AsGecko();                         \
+  inline const geckotype_* AsGecko() const;             \
+  inline geckotype_* GetAsGecko();                      \
+  inline const geckotype_* GetAsGecko() const;
+
+#ifdef MOZ_OLD_STYLE
+#define MOZ_DECL_STYLO_CONVERT_METHODS(geckotype_, servotype_) \
+  MOZ_DECL_STYLO_CONVERT_METHODS_SERVO(servotype_) \
+  MOZ_DECL_STYLO_CONVERT_METHODS_GECKO(geckotype_)
+#else
+#define MOZ_DECL_STYLO_CONVERT_METHODS(geckotype_, servotype_) \
+  MOZ_DECL_STYLO_CONVERT_METHODS_SERVO(servotype_)
+#endif
 
 /**
  * Macro used in a base class of |geckotype_| and |servotype_|.
@@ -63,40 +78,52 @@ inline bool IsInServoTraversal()
   MOZ_DECL_STYLO_CHECK_METHODS                          \
   MOZ_DECL_STYLO_CONVERT_METHODS(geckotype_, servotype_)
 
-/**
- * Macro used in inline header of class |type_| with its Gecko and Servo
- * subclasses named |geckotype_| and |servotype_| correspondingly for
- * implementing the inline methods defined by MOZ_DECL_STYLO_METHODS.
- */
-#define MOZ_DEFINE_STYLO_METHODS(type_, geckotype_, servotype_) \
+#define MOZ_DEFINE_STYLO_METHODS_GECKO(type_, geckotype_) \
   geckotype_* type_::AsGecko() {                                \
     MOZ_ASSERT(IsGecko());                                      \
     return static_cast<geckotype_*>(this);                      \
-  }                                                             \
-  servotype_* type_::AsServo() {                                \
-    MOZ_ASSERT(IsServo());                                      \
-    return static_cast<servotype_*>(this);                      \
   }                                                             \
   const geckotype_* type_::AsGecko() const {                    \
     MOZ_ASSERT(IsGecko());                                      \
     return static_cast<const geckotype_*>(this);                \
   }                                                             \
+  geckotype_* type_::GetAsGecko() {                             \
+    return IsGecko() ? AsGecko() : nullptr;                     \
+  }                                                             \
+  const geckotype_* type_::GetAsGecko() const {                 \
+    return IsGecko() ? AsGecko() : nullptr;                     \
+  }
+
+#define MOZ_DEFINE_STYLO_METHODS_SERVO(type_, servotype_) \
+  servotype_* type_::AsServo() {                                \
+    MOZ_ASSERT(IsServo());                                      \
+    return static_cast<servotype_*>(this);                      \
+  }                                                             \
   const servotype_* type_::AsServo() const {                    \
     MOZ_ASSERT(IsServo());                                      \
     return static_cast<const servotype_*>(this);                \
   }                                                             \
-  geckotype_* type_::GetAsGecko() {                             \
-    return IsGecko() ? AsGecko() : nullptr;                     \
-  }                                                             \
   servotype_* type_::GetAsServo() {                             \
     return IsServo() ? AsServo() : nullptr;                     \
-  }                                                             \
-  const geckotype_* type_::GetAsGecko() const {                 \
-    return IsGecko() ? AsGecko() : nullptr;                     \
   }                                                             \
   const servotype_* type_::GetAsServo() const {                 \
     return IsServo() ? AsServo() : nullptr;                     \
   }
+
+
+/**
+ * Macro used in inline header of class |type_| with its Gecko and Servo
+ * subclasses named |geckotype_| and |servotype_| correspondingly for
+ * implementing the inline methods defined by MOZ_DECL_STYLO_METHODS.
+ */
+#ifdef MOZ_OLD_STYLE
+#define MOZ_DEFINE_STYLO_METHODS(type_, geckotype_, servotype_) \
+  MOZ_DEFINE_STYLO_METHODS_SERVO(type_, servotype_) \
+  MOZ_DEFINE_STYLO_METHODS_GECKO(type_, geckotype_)
+#else
+#define MOZ_DEFINE_STYLO_METHODS(type_, geckotype_, servotype_) \
+  MOZ_DEFINE_STYLO_METHODS_SERVO(type_, servotype_)
+#endif
 
 #define MOZ_STYLO_THIS_TYPE  mozilla::RemovePointer<decltype(this)>::Type
 #define MOZ_STYLO_GECKO_TYPE mozilla::RemovePointer<decltype(AsGecko())>::Type
@@ -107,6 +134,7 @@ inline bool IsInServoTraversal()
  * the Servo or Gecko implementation. The class of the method using it
  * should use MOZ_DECL_STYLO_METHODS to define basic stylo methods.
  */
+#ifdef MOZ_OLD_STYLE
 #define MOZ_STYLO_FORWARD_CONCRETE(method_, geckoargs_, servoargs_)         \
   static_assert(!mozilla::IsSame<decltype(&MOZ_STYLO_THIS_TYPE::method_),   \
                                  decltype(&MOZ_STYLO_GECKO_TYPE::method_)>  \
@@ -118,6 +146,10 @@ inline bool IsInServoTraversal()
     return AsServo()->method_ servoargs_;                                   \
   }                                                                         \
   return AsGecko()->method_ geckoargs_;
+#else
+#define MOZ_STYLO_FORWARD_CONCRETE(method_, geckoargs_, servoargs_)         \
+  return AsServo()->method_ servoargs_;
+#endif
 
 #define MOZ_STYLO_FORWARD(method_, args_) \
   MOZ_STYLO_FORWARD_CONCRETE(method_, args_, args_)

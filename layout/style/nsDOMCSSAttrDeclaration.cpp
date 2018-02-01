@@ -144,8 +144,12 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(Operation aOperation)
   if (mElement->IsStyledByServo()) {
     decl = new ServoDeclarationBlock();
   } else {
+#ifdef MOZ_OLD_STYLE
     decl = new css::Declaration();
     decl->AsGecko()->InitializeEmpty();
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   // this *can* fail (inside SetAttrAndNotify, at least).

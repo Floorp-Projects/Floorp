@@ -825,6 +825,7 @@ nsXBLBinding::InheritsStyle() const
   return true;
 }
 
+#ifdef MOZ_OLD_STYLE
 void
 nsXBLBinding::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData)
 {
@@ -835,6 +836,7 @@ nsXBLBinding::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData)
   if (rules)
     (*aFunc)(rules, aData);
 }
+#endif
 
 ServoStyleSet*
 nsXBLBinding::GetServoStyleSet() const

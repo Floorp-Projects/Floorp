@@ -88,6 +88,7 @@ public:
   static double ComputeColorDistance(const css::RGBAColorData& aStartColor,
                                      const css::RGBAColorData& aEndColor);
 
+#ifdef MOZ_OLD_STYLE
   /**
    * Calculates a measure of 'distance' between two values.
    *
@@ -114,6 +115,7 @@ public:
                   const StyleAnimationValue& aEndValue,
                   GeckoStyleContext* aStyleContext,
                   double& aDistance);
+#endif
 
   /**
    * Calculates an interpolated value that is the specified |aPortion| between
@@ -175,6 +177,7 @@ public:
 
   // Type-conversion methods
   // -----------------------
+#ifdef MOZ_OLD_STYLE
   /**
    * Creates a computed value for the given specified value
    * (property ID + string).  A style context is needed in case the
@@ -245,6 +248,7 @@ public:
                 const nsCSSValue& aSpecifiedValue,
                 bool aUseSVGMode,
                 nsTArray<PropertyStyleAnimationValuePair>& aResult);
+#endif
 
   /**
    * Creates a specified value for the given computed value.
@@ -276,6 +280,7 @@ public:
                  const StyleAnimationValue& aComputedValue,
                  nsAString& aSpecifiedValue);
 
+#ifdef MOZ_OLD_STYLE
   /**
    * Gets the computed value for the given property from the given style
    * context.
@@ -294,6 +299,7 @@ public:
     nsCSSPropertyID aProperty,
     mozilla::GeckoStyleContext* aStyleContext,
     StyleAnimationValue& aComputedValue);
+#endif
 
   /**
    * The types and values for the values that we extract and animate.

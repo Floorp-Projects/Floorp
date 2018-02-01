@@ -223,6 +223,7 @@ FontFaceSet::ParseFontShorthandForMatching(
     return;
   }
 
+#ifdef MOZ_OLD_STYLE
   // Parse aFont as a 'font' property value.
   RefPtr<Declaration> declaration = new Declaration;
   declaration->InitializeEmpty();
@@ -275,6 +276,9 @@ FontFaceSet::ParseFontShorthandForMatching(
 
   aStretch = data->ValueFor(eCSSProperty_font_stretch)->GetIntValue();
   aStyle = data->ValueFor(eCSSProperty_font_style)->GetIntValue();
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 static bool

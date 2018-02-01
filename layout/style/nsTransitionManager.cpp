@@ -17,7 +17,9 @@
 #include "mozilla/TimeStamp.h"
 #include "nsRefreshDriver.h"
 #include "nsRuleProcessorData.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleWalker.h"
+#endif
 #include "nsCSSPropertyIDSet.h"
 #include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/EffectCompositor.h"
@@ -423,6 +425,7 @@ CSSTransition::SetEffectFromStyle(dom::AnimationEffectReadOnly* aEffect)
 
 ////////////////////////// nsTransitionManager ////////////////////////////
 
+#ifdef MOZ_OLD_STYLE
 static inline bool
 ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
                                 GeckoStyleContext* aStyleContext,
@@ -433,6 +436,7 @@ ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
          StyleAnimationValue::ExtractComputedValue(aProperty, aStyleContext,
                                                    aAnimationValue.mGecko);
 }
+#endif
 
 static inline bool
 ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
@@ -450,6 +454,7 @@ ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
   return !!aAnimationValue.mServo;
 }
 
+#ifdef MOZ_OLD_STYLE
 void
 nsTransitionManager::StyleContextChanged(dom::Element *aElement,
                                          GeckoStyleContext* aOldStyleContext,
@@ -610,6 +615,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
                                                               cascadeLevel);
   }
 }
+#endif
 
 bool
 nsTransitionManager::UpdateTransitions(
@@ -1099,6 +1105,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
   aWhichStarted->AddProperty(aProperty);
 }
 
+#ifdef MOZ_OLD_STYLE
 void
 nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
                                                CSSPseudoElementType aPseudoType,
@@ -1147,3 +1154,4 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
     collection = nullptr;
   }
 }
+#endif

@@ -427,7 +427,11 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     if (mStyleSheet->IsServo()) {
       // XXXheycam ServoStyleSheets don't support <style scoped>.
     } else {
+#ifdef MOZ_OLD_STYLE
       oldScopeElement = mStyleSheet->AsGecko()->GetScopeElement();
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     }
   }
 
@@ -599,6 +603,7 @@ nsStyleLinkElement::UpdateStyleSheetScopedness(bool aIsNowScoped)
     return;
   }
 
+#ifdef MOZ_OLD_STYLE
   CSSStyleSheet* sheet = mStyleSheet->AsGecko();
 
   nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
@@ -637,4 +642,7 @@ nsStyleLinkElement::UpdateStyleSheetScopedness(bool aIsNowScoped)
   if (newScopeElement) {
     newScopeElement->SetIsElementInStyleScopeFlagOnSubtree(true);
   }
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }

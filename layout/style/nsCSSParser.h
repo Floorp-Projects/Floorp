@@ -9,6 +9,8 @@
 #ifndef nsCSSParser_h___
 #define nsCSSParser_h___
 
+#ifdef MOZ_OLD_STYLE
+
 #include "mozilla/Attributes.h"
 #include "mozilla/css/Loader.h"
 
@@ -348,5 +350,23 @@ protected:
   // the anonymous namespace.
   void* mImpl;
 };
+
+#else
+
+namespace mozilla {
+namespace css {
+class Loader;
+} // namespace css
+} // namespace mozilla
+
+// Define this dummy class so there are fewer call sites to change when the old
+// style system code is compiled out.
+class nsCSSParser
+{
+public:
+  explicit nsCSSParser(mozilla::css::Loader* aLoader = nullptr) {}
+};
+
+#endif
 
 #endif /* nsCSSParser_h___ */

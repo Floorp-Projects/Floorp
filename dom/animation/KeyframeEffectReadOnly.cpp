@@ -194,24 +194,31 @@ KeyframeEffectReadOnly::SetKeyframes(JSContext* aContext,
 
   RefPtr<nsStyleContext> styleContext = GetTargetStyleContext();
   if (styleContext) {
-    if (auto gecko = styleContext->GetAsGecko()) {
+    if (styleContext->IsGecko()) {
+#ifdef MOZ_OLD_STYLE
+      auto gecko = styleContext->AsGecko();
       SetKeyframes(Move(keyframes), gecko);
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     } else {
       SetKeyframes(Move(keyframes), styleContext->AsServo());
     }
   } else {
     // SetKeyframes has the same behavior for null StyleType* for
     // both backends, just pick one and use it.
-    SetKeyframes(Move(keyframes), (GeckoStyleContext*) nullptr);
+    SetKeyframes(Move(keyframes), (ServoStyleContext*) nullptr);
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 void
 KeyframeEffectReadOnly::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
                                      GeckoStyleContext* aStyleContext)
 {
   DoSetKeyframes(Move(aKeyframes), Move(aStyleContext));
 }
+#endif
 
 void
 KeyframeEffectReadOnly::SetKeyframes(
@@ -226,10 +233,12 @@ void
 KeyframeEffectReadOnly::DoSetKeyframes(nsTArray<Keyframe>&& aKeyframes,
                                        StyleType* aStyle)
 {
+#ifdef MOZ_OLD_STYLE
   static_assert(IsSame<StyleType, GeckoStyleContext>::value ||
                 IsSame<StyleType, const ServoStyleContext>::value,
                 "StyleType should be GeckoStyleContext* or "
                 "const ServoStyleContext*");
+#endif
 
   if (KeyframesEqualIgnoringComputedOffsets(aKeyframes, mKeyframes)) {
     return;
@@ -313,9 +322,14 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 {
   MOZ_ASSERT(aStyleContext);
 
-  if (auto gecko = aStyleContext->GetAsGecko()) {
+  if (aStyleContext->IsGecko()) {
+#ifdef MOZ_OLD_STYLE
+    auto gecko = aStyleContext->AsGecko();
     DoUpdateProperties(Move(gecko));
     return;
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   UpdateProperties(aStyleContext->AsServo());
@@ -412,6 +426,7 @@ KeyframeEffectReadOnly::CompositeValue(
   return StyleAnimationValue();
 }
 
+#ifdef MOZ_OLD_STYLE
 StyleAnimationValue
 KeyframeEffectReadOnly::GetUnderlyingStyle(
   nsCSSPropertyID aProperty,
@@ -509,6 +524,7 @@ KeyframeEffectReadOnly::EnsureBaseStyle(
 
   mBaseStyleValues.Put(aProperty, result);
 }
+#endif
 
 void
 KeyframeEffectReadOnly::EnsureBaseStyles(
@@ -590,6 +606,7 @@ KeyframeEffectReadOnly::WillComposeStyle()
   mCurrentIterationOnLastCompose = computedTiming.mCurrentIteration;
 }
 
+#ifdef MOZ_OLD_STYLE
 void
 KeyframeEffectReadOnly::ComposeStyleRule(
   RefPtr<AnimValuesStyleRule>& aStyleRule,
@@ -669,6 +686,7 @@ KeyframeEffectReadOnly::ComposeStyleRule(
     aStyleRule->AddValue(aProperty.mProperty, Move(toValue));
   }
 }
+#endif
 
 void
 KeyframeEffectReadOnly::ComposeStyleRule(
@@ -947,10 +965,12 @@ template<typename StyleType>
 nsTArray<AnimationProperty>
 KeyframeEffectReadOnly::BuildProperties(StyleType* aStyle)
 {
+#ifdef MOZ_OLD_STYLE
   static_assert(IsSame<StyleType, GeckoStyleContext>::value ||
                 IsSame<StyleType, const ServoStyleContext>::value,
                 "StyleType should be GeckoStyleContext* or "
                 "const ServoStyleContext*");
+#endif
 
   MOZ_ASSERT(aStyle);
 
@@ -1719,6 +1739,7 @@ KeyframeEffectReadOnly::SetPerformanceWarning(
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 already_AddRefed<nsStyleContext>
 KeyframeEffectReadOnly::CreateStyleContextForAnimationValue(
   nsCSSPropertyID aProperty,
@@ -1747,6 +1768,7 @@ KeyframeEffectReadOnly::CreateStyleContextForAnimationValue(
 
   return styleContext.forget();
 }
+#endif
 
 already_AddRefed<nsStyleContext>
 KeyframeEffectReadOnly::CreateStyleContextForAnimationValue(
@@ -1987,11 +2009,13 @@ KeyframeEffectReadOnly::UpdateEffectSet(EffectSet* aEffectSet) const
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 template
 void
 KeyframeEffectReadOnly::ComposeStyle<RefPtr<AnimValuesStyleRule>&>(
   RefPtr<AnimValuesStyleRule>& aAnimationRule,
   const nsCSSPropertyIDSet& aPropertiesToSkip);
+#endif
 
 template
 void

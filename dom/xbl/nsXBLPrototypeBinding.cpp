@@ -564,6 +564,7 @@ nsXBLPrototypeBinding::SetInitialAttributes(
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 nsIStyleRuleProcessor*
 nsXBLPrototypeBinding::GetRuleProcessor()
 {
@@ -573,6 +574,7 @@ nsXBLPrototypeBinding::GetRuleProcessor()
 
   return nullptr;
 }
+#endif
 
 void
 nsXBLPrototypeBinding::ComputeServoStyleSet(nsPresContext* aPresContext)

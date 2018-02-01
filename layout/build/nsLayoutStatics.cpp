@@ -289,7 +289,9 @@ nsLayoutStatics::Initialize()
   ServiceWorkerRegistrar::Initialize();
 
 #ifdef DEBUG
+#ifdef MOZ_OLD_STYLE
   GeckoStyleContext::Initialize();
+#endif
   mozilla::LayerAnimationInfo::Initialize();
 #endif
 
@@ -349,7 +351,9 @@ nsLayoutStatics::Shutdown()
   Attr::Shutdown();
   EventListenerManager::Shutdown();
   IMEStateManager::Shutdown();
+#ifdef MOZ_OLD_STYLE
   nsCSSParser::Shutdown();
+#endif
   nsMediaFeatures::Shutdown();
   nsHTMLDNSPrefetch::Shutdown();
   nsCSSRendering::Shutdown();
@@ -387,7 +391,9 @@ nsLayoutStatics::Shutdown()
   nsAttrValue::Shutdown();
   nsContentUtils::Shutdown();
   nsLayoutStylesheetCache::Shutdown();
+#ifdef MOZ_OLD_STYLE
   RuleProcessorCache::Shutdown();
+#endif
 
   ShutdownJSEnvironment();
   nsGlobalWindowInner::ShutDown();
