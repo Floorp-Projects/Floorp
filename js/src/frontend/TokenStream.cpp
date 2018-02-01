@@ -605,7 +605,7 @@ template<class AnyCharsAccess>
 void
 TokenStreamChars<char16_t, AnyCharsAccess>::ungetCodePointIgnoreEOL(uint32_t codePoint)
 {
-    MOZ_ASSERT(!userbuf.atStart());
+    // MOZ_ASSERT(!userbuf.atStart());
 
     unsigned numUnits = 0;
     char16_t units[2];
