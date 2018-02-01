@@ -53,7 +53,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
-#include "nsSubstringTuple.h"
 #include "nsTextNode.h"
 #include "nsUnicharUtils.h"
 #include "nsXPCOM.h"
