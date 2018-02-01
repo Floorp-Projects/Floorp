@@ -98,7 +98,9 @@ def make_task_description(config, jobs):
             for f in artifacts['formats']:
                 formats.add(f)  # Add each format only once
         for format in formats:
-            signing_format_scopes.append(add_scope_prefix(config, 'signing:format:{}'.format(format)))
+            signing_format_scopes.append(
+                add_scope_prefix(config, 'signing:format:{}'.format(format))
+            )
 
         treeherder = job.get('treeherder', {})
         is_nightly = dep_job.attributes.get('nightly', False)
