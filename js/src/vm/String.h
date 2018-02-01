@@ -1088,6 +1088,8 @@ class FatInlineAtom : public JSAtom
     void initHash(HashNumber hash) {
         hash_ = hash;
     }
+
+    inline void finalize(js::FreeOp* fop);
 };
 
 static_assert(sizeof(FatInlineAtom) == sizeof(JSFatInlineString) + sizeof(uint64_t),
