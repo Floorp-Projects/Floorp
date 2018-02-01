@@ -36,7 +36,6 @@
 #ifdef MOZ_OLD_STYLE
 #include "mozilla/RuleProcessorCache.h"
 #endif
-#include "ContentPrincipal.h"
 #include "nsRange.h"
 #include "nsRegion.h"
 #include "nsRepeatService.h"
@@ -264,7 +263,6 @@ nsLayoutStatics::Initialize()
   nsLayoutUtils::Initialize();
   PointerEventHandler::InitializeStatics();
   TouchManager::InitializeStatics();
-  ContentPrincipal::InitializeStatics();
 
   nsCORSListenerProxy::Startup();
 

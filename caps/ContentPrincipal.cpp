@@ -36,8 +36,6 @@
 
 using namespace mozilla;
 
-static bool gCodeBasePrincipalSupport = false;
-
 static bool URIIsImmutable(nsIURI* aURI)
 {
   nsCOMPtr<nsIMutable> mutableObj(do_QueryInterface(aURI));
@@ -62,15 +60,6 @@ NS_IMPL_QUERY_INTERFACE_CI(ContentPrincipal,
 NS_IMPL_CI_INTERFACE_GETTER(ContentPrincipal,
                             nsIPrincipal,
                             nsISerializable)
-
-// Called at startup:
-/* static */ void
-ContentPrincipal::InitializeStatics()
-{
-  Preferences::AddBoolVarCache(&gCodeBasePrincipalSupport,
-                               "signed.applets.codebase_principal_support",
-                               false);
-}
 
 ContentPrincipal::ContentPrincipal()
   : BasePrincipal(eCodebasePrincipal)
