@@ -58,7 +58,6 @@ public:
   void ScheduleComposition();
   void CancelCurrentCompositeTask();
   bool NeedsComposite();
-  void Composite(TimeStamp aVsyncTimestamp);
   void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect);
 
   const TimeStamp& GetLastComposeTime()
@@ -86,6 +85,10 @@ private:
   // Post a task to run DispatchVREvents() on the VR thread, if there isn't
   // such a task already queued. Can be called from any thread.
   void PostVRTask(TimeStamp aTimestamp);
+
+  // This gets run at vsync time and "does" a composite (which really means
+  // update internal state and call the owner to do the composite).
+  void Composite(TimeStamp aVsyncTimestamp);
 
   void NotifyCompositeTaskExecuted();
   void ObserveVsync();
