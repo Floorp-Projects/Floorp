@@ -55,8 +55,7 @@ public:
   void SetTLSVersionRange(SSLVersionRange range) { mTLSVersionRange = range; }
   SSLVersionRange GetTLSVersionRange() const { return mTLSVersionRange; };
 
-  PRStatus CloseSocketAndDestroy(
-                const nsNSSShutDownPreventionLock& proofOfLock);
+  PRStatus CloseSocketAndDestroy();
 
   void SetNegotiatedNPN(const char* value, uint32_t length);
   void SetEarlyDataAccepted(bool aAccepted);

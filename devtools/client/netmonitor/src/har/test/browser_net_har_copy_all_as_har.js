@@ -42,6 +42,10 @@ add_task(function* () {
   is(har.log.pages.length, 1, "There must be one page");
   is(har.log.entries.length, 1, "There must be one request");
 
+  let page = har.log.pages[0];
+  ok(page.pageTimings.onContentLoad > 0, "There must be onContentLoad time");
+  ok(page.pageTimings.onLoad > 0, "There must be onLoad time");
+
   let entry = har.log.entries[0];
   is(entry.request.method, "GET", "Check the method");
   is(entry.request.url, SIMPLE_URL, "Check the URL");

@@ -17,28 +17,6 @@ nsKeyObject::nsKeyObject()
 {
 }
 
-nsKeyObject::~nsKeyObject()
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return;
-  }
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
-void
-nsKeyObject::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
-}
-
-void
-nsKeyObject::destructorSafeDestroyNSSReference()
-{
-  mSymKey = nullptr;
-}
-
 //////////////////////////////////////////////////////////////////////////////
 // nsIKeyObject
 
@@ -47,11 +25,6 @@ nsKeyObject::InitKey(int16_t aAlgorithm, PK11SymKey* aKey)
 {
   if (!aKey || aAlgorithm != nsIKeyObject::HMAC) {
     return NS_ERROR_INVALID_ARG;
-  }
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
   }
 
   mSymKey.reset(aKey);
@@ -66,11 +39,6 @@ nsKeyObject::GetKeyObj(PK11SymKey** _retval)
   }
 
   *_retval = nullptr;
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
   if (!mSymKey) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -95,30 +63,12 @@ nsKeyObject::GetType(int16_t *_retval)
 
 NS_IMPL_ISUPPORTS(nsKeyObjectFactory, nsIKeyObjectFactory)
 
-nsKeyObjectFactory::nsKeyObjectFactory()
-{
-}
-
-nsKeyObjectFactory::~nsKeyObjectFactory()
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return;
-  }
-  shutdown(ShutdownCalledFrom::Object);
-}
-
 NS_IMETHODIMP
 nsKeyObjectFactory::KeyFromString(int16_t aAlgorithm, const nsACString& aKey,
                                   nsIKeyObject** _retval)
 {
   if (!_retval || aAlgorithm != nsIKeyObject::HMAC) {
     return NS_ERROR_INVALID_ARG;
-  }
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
   }
 
   CK_MECHANISM_TYPE cipherMech = CKM_GENERIC_SECRET_KEY_GEN;

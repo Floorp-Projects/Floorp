@@ -12,7 +12,6 @@
 #include "CSTrustDomain.h"
 #include "nsIContentSignatureVerifier.h"
 #include "nsIStreamListener.h"
-#include "nsNSSShutDown.h"
 #include "nsString.h"
 #include "ScopedNSSTypes.h"
 
@@ -25,7 +24,6 @@
 
 class ContentSignatureVerifier final : public nsIContentSignatureVerifier
                                      , public nsIStreamListener
-                                     , public nsNSSShutDownObject
                                      , public nsIInterfaceRequestor
 {
 public:
@@ -42,27 +40,14 @@ public:
   {
   }
 
-  // nsNSSShutDownObject
-  virtual void virtualDestroyNSSReference() override
-  {
-    destructorSafeDestroyNSSReference();
-  }
-
 private:
-  ~ContentSignatureVerifier();
+  ~ContentSignatureVerifier() {}
 
-  nsresult UpdateInternal(const nsACString& aData,
-                          const nsNSSShutDownPreventionLock& /*proofOfLock*/);
+  nsresult UpdateInternal(const nsACString& aData);
   nsresult DownloadCertChain();
   nsresult CreateContextInternal(const nsACString& aData,
                                  const nsACString& aCertChain,
                                  const nsACString& aName);
-
-  void destructorSafeDestroyNSSReference()
-  {
-    mCx = nullptr;
-    mKey = nullptr;
-  }
 
   nsresult ParseContentSignatureHeader(const nsACString& aContentSignatureHeader);
 

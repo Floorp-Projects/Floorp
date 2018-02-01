@@ -7,7 +7,6 @@
 #include "nsIIdentityCryptoService.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsNSSShutDown.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
@@ -47,7 +46,7 @@ HexEncode(const SECItem * it, nsACString & result)
 #define DSA_KEY_TYPE_STRING (NS_LITERAL_CSTRING("DS160"))
 #define RSA_KEY_TYPE_STRING (NS_LITERAL_CSTRING("RS256"))
 
-class KeyPair : public nsIIdentityKeyPair, public nsNSSShutDownObject
+class KeyPair : public nsIIdentityKeyPair
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -57,27 +56,14 @@ public:
           nsIEventTarget* aOperationThread);
 
 private:
-  ~KeyPair() override
+  virtual ~KeyPair()
   {
-    nsNSSShutDownPreventionLock locker;
-    if (isAlreadyShutDown()) {
-      return;
+    if (mPrivateKey) {
+      SECKEY_DestroyPrivateKey(mPrivateKey);
     }
-    destructorSafeDestroyNSSReference();
-    shutdown(ShutdownCalledFrom::Object);
-  }
-
-  void virtualDestroyNSSReference() override
-  {
-    destructorSafeDestroyNSSReference();
-  }
-
-  void destructorSafeDestroyNSSReference()
-  {
-    SECKEY_DestroyPrivateKey(mPrivateKey);
-    mPrivateKey = nullptr;
-    SECKEY_DestroyPublicKey(mPublicKey);
-    mPublicKey = nullptr;
+    if (mPublicKey) {
+      SECKEY_DestroyPublicKey(mPublicKey);
+    }
   }
 
   SECKEYPrivateKey * mPrivateKey;
@@ -90,7 +76,7 @@ private:
 
 NS_IMPL_ISUPPORTS(KeyPair, nsIIdentityKeyPair)
 
-class KeyGenRunnable : public Runnable, public nsNSSShutDownObject
+class KeyGenRunnable : public Runnable
 {
 public:
   NS_DECL_NSIRUNNABLE
@@ -99,25 +85,6 @@ public:
                  nsIEventTarget* aOperationThread);
 
 private:
-  ~KeyGenRunnable() override
-  {
-    nsNSSShutDownPreventionLock locker;
-    if (isAlreadyShutDown()) {
-      return;
-    }
-    destructorSafeDestroyNSSReference();
-    shutdown(ShutdownCalledFrom::Object);
-  }
-
-  void virtualDestroyNSSReference() override
-  {
-    destructorSafeDestroyNSSReference();
-  }
-
-  void destructorSafeDestroyNSSReference()
-  {
-  }
-
   const KeyType mKeyType; // in
   nsMainThreadPtrHandle<nsIIdentityKeyGenCallback> mCallback; // in
   nsresult mRv; // out
@@ -128,7 +95,7 @@ private:
   void operator=(const KeyGenRunnable &) = delete;
 };
 
-class SignRunnable : public Runnable, public nsNSSShutDownObject
+class SignRunnable : public Runnable
 {
 public:
   NS_DECL_NSIRUNNABLE
@@ -139,23 +106,9 @@ public:
 private:
   ~SignRunnable() override
   {
-    nsNSSShutDownPreventionLock locker;
-    if (isAlreadyShutDown()) {
-      return;
+    if (mPrivateKey) {
+      SECKEY_DestroyPrivateKey(mPrivateKey);
     }
-    destructorSafeDestroyNSSReference();
-    shutdown(ShutdownCalledFrom::Object);
-  }
-
-  void virtualDestroyNSSReference() override
-  {
-    destructorSafeDestroyNSSReference();
-  }
-
-  void destructorSafeDestroyNSSReference()
-  {
-    SECKEY_DestroyPrivateKey(mPrivateKey);
-    mPrivateKey = nullptr;
   }
 
   const nsCString mTextToSign; // in
@@ -441,38 +394,33 @@ NS_IMETHODIMP
 KeyGenRunnable::Run()
 {
   if (!NS_IsMainThread()) {
-    nsNSSShutDownPreventionLock locker;
-    if (isAlreadyShutDown()) {
-      mRv = NS_ERROR_NOT_AVAILABLE;
+    // We always want to use the internal slot for BrowserID; in particular,
+    // we want to avoid smartcard slots.
+    PK11SlotInfo *slot = PK11_GetInternalSlot();
+    if (!slot) {
+      mRv = NS_ERROR_UNEXPECTED;
     } else {
-      // We always want to use the internal slot for BrowserID; in particular,
-      // we want to avoid smartcard slots.
-      PK11SlotInfo *slot = PK11_GetInternalSlot();
-      if (!slot) {
-        mRv = NS_ERROR_UNEXPECTED;
-      } else {
-        SECKEYPrivateKey *privk = nullptr;
-        SECKEYPublicKey *pubk = nullptr;
+      SECKEYPrivateKey *privk = nullptr;
+      SECKEYPublicKey *pubk = nullptr;
 
-        switch (mKeyType) {
-        case rsaKey:
-          mRv = GenerateRSAKeyPair(slot, &privk, &pubk);
-          break;
-        case dsaKey:
-          mRv = GenerateDSAKeyPair(slot, &privk, &pubk);
-          break;
-        default:
-          MOZ_CRASH("unknown key type");
-        }
+      switch (mKeyType) {
+      case rsaKey:
+        mRv = GenerateRSAKeyPair(slot, &privk, &pubk);
+        break;
+      case dsaKey:
+        mRv = GenerateDSAKeyPair(slot, &privk, &pubk);
+        break;
+      default:
+        MOZ_CRASH("unknown key type");
+      }
 
-        PK11_FreeSlot(slot);
+      PK11_FreeSlot(slot);
 
-        if (NS_SUCCEEDED(mRv)) {
-          MOZ_ASSERT(privk);
-          MOZ_ASSERT(pubk);
-      // mKeyPair will take over ownership of privk and pubk
-          mKeyPair = new KeyPair(privk, pubk, mThread);
-        }
+      if (NS_SUCCEEDED(mRv)) {
+        MOZ_ASSERT(privk);
+        MOZ_ASSERT(pubk);
+    // mKeyPair will take over ownership of privk and pubk
+        mKeyPair = new KeyPair(privk, pubk, mThread);
       }
     }
 
@@ -500,40 +448,35 @@ NS_IMETHODIMP
 SignRunnable::Run()
 {
   if (!NS_IsMainThread()) {
-    nsNSSShutDownPreventionLock locker;
-    if (isAlreadyShutDown()) {
-      mRv = NS_ERROR_NOT_AVAILABLE;
+    // We need the output in PKCS#11 format, not DER encoding, so we must use
+    // PK11_HashBuf and PK11_Sign instead of SEC_SignData.
+
+    SECItem sig = { siBuffer, nullptr, 0 };
+    int sigLength = PK11_SignatureLen(mPrivateKey);
+    if (sigLength <= 0) {
+      mRv = mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
+    } else if (!SECITEM_AllocItem(nullptr, &sig, sigLength)) {
+      mRv = mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
     } else {
-      // We need the output in PKCS#11 format, not DER encoding, so we must use
-      // PK11_HashBuf and PK11_Sign instead of SEC_SignData.
+      uint8_t hash[32]; // big enough for SHA-1 or SHA-256
+      SECOidTag hashAlg = mPrivateKey->keyType == dsaKey ? SEC_OID_SHA1
+                                                         : SEC_OID_SHA256;
+      SECItem hashItem = { siBuffer, hash,
+                           hashAlg == SEC_OID_SHA1 ? 20u : 32u };
 
-      SECItem sig = { siBuffer, nullptr, 0 };
-      int sigLength = PK11_SignatureLen(mPrivateKey);
-      if (sigLength <= 0) {
-        mRv = mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
-      } else if (!SECITEM_AllocItem(nullptr, &sig, sigLength)) {
-        mRv = mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
-      } else {
-        uint8_t hash[32]; // big enough for SHA-1 or SHA-256
-        SECOidTag hashAlg = mPrivateKey->keyType == dsaKey ? SEC_OID_SHA1
-                                                           : SEC_OID_SHA256;
-        SECItem hashItem = { siBuffer, hash,
-                             hashAlg == SEC_OID_SHA1 ? 20u : 32u };
-
-        mRv = MapSECStatus(PK11_HashBuf(hashAlg, hash,
-                    const_cast<uint8_t*>(reinterpret_cast<const uint8_t *>(
-                                            mTextToSign.get())),
-                                      mTextToSign.Length()));
-        if (NS_SUCCEEDED(mRv)) {
-          mRv = MapSECStatus(PK11_Sign(mPrivateKey, &sig, &hashItem));
-        }
-        if (NS_SUCCEEDED(mRv)) {
-          mRv = Base64URLEncode(sig.len, sig.data,
-                                Base64URLEncodePaddingPolicy::Include,
-                                mSignature);
-        }
-        SECITEM_FreeItem(&sig, false);
+      mRv = MapSECStatus(PK11_HashBuf(hashAlg, hash,
+                  const_cast<uint8_t*>(reinterpret_cast<const uint8_t *>(
+                                          mTextToSign.get())),
+                                    mTextToSign.Length()));
+      if (NS_SUCCEEDED(mRv)) {
+        mRv = MapSECStatus(PK11_Sign(mPrivateKey, &sig, &hashItem));
       }
+      if (NS_SUCCEEDED(mRv)) {
+        mRv = Base64URLEncode(sig.len, sig.data,
+                              Base64URLEncodePaddingPolicy::Include,
+                              mSignature);
+      }
+      SECITEM_FreeItem(&sig, false);
     }
 
     NS_DispatchToMainThread(this);

@@ -19,28 +19,10 @@ namespace mozilla { namespace psm {
 
 NS_IMPL_ISUPPORTS(PKCS11ModuleDB, nsIPKCS11ModuleDB)
 
-PKCS11ModuleDB::PKCS11ModuleDB()
-{
-}
-
-PKCS11ModuleDB::~PKCS11ModuleDB()
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return;
-  }
-  shutdown(ShutdownCalledFrom::Object);
-}
-
 // Delete a PKCS11 module from the user's profile.
 NS_IMETHODIMP
 PKCS11ModuleDB::DeleteModule(const nsAString& aModuleName)
 {
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   if (aModuleName.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -91,11 +73,6 @@ PKCS11ModuleDB::AddModule(const nsAString& aModuleName,
                           int32_t aCryptoMechanismFlags,
                           int32_t aCipherFlags)
 {
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   if (aModuleName.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -155,11 +132,6 @@ PKCS11ModuleDB::FindModuleByName(const nsACString& name,
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   nsresult rv = BlockUntilLoadableRootsLoaded();
   if (NS_FAILED(rv)) {
     return rv;
@@ -179,11 +151,6 @@ NS_IMETHODIMP
 PKCS11ModuleDB::ListModules(nsISimpleEnumerator** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
   nsresult rv = BlockUntilLoadableRootsLoaded();
   if (NS_FAILED(rv)) {
@@ -224,11 +191,6 @@ PKCS11ModuleDB::GetCanToggleFIPS(bool* aCanToggleFIPS)
 {
   NS_ENSURE_ARG_POINTER(aCanToggleFIPS);
 
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   *aCanToggleFIPS = SECMOD_CanDeleteInternalModule();
   return NS_OK;
 }
@@ -237,11 +199,6 @@ PKCS11ModuleDB::GetCanToggleFIPS(bool* aCanToggleFIPS)
 NS_IMETHODIMP
 PKCS11ModuleDB::ToggleFIPSMode()
 {
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   // The way to toggle FIPS mode in NSS is extremely obscure. Basically, we
   // delete the internal module, and it gets replaced with the opposite module
   // (i.e. if it was FIPS before, then it becomes non-FIPS next).
@@ -268,11 +225,6 @@ NS_IMETHODIMP
 PKCS11ModuleDB::GetIsFIPSEnabled(bool* aIsFIPSEnabled)
 {
   NS_ENSURE_ARG_POINTER(aIsFIPSEnabled);
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
   *aIsFIPSEnabled = PK11_IsFIPS();
   return NS_OK;

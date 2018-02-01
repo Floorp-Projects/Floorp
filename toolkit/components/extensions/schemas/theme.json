@@ -77,6 +77,10 @@
                 "$ref": "ThemeColor",
                 "optional": true
               },
+              "frame_inactive": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
               "textcolor": {
                 "$ref": "ThemeColor",
                 "optional": true
@@ -122,6 +126,14 @@
                 "optional": true
               },
               "toolbar_vertical_separator": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
+              "icons": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
+              "icons_attention": {
                 "$ref": "ThemeColor",
                 "optional": true
               }

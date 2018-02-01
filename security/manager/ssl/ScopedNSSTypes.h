@@ -81,7 +81,7 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePK11Context,
 /** A more convenient way of dealing with digests calculated into
  *  stack-allocated buffers. NSS must be initialized on the main thread before
  *  use, and the caller must ensure NSS isn't shut down, typically by
- *  subclassing nsNSSShutDownObject, while Digest is in use.
+ *  being within the lifetime of XPCOM.
  *
  * Typical usage, for digesting a buffer in memory:
  *

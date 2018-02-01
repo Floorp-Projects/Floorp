@@ -338,8 +338,6 @@ private:
     return NS_OK;
   }
 
-  virtual void ReleaseNSSResources() override {}
-
   virtual void CallCallback(nsresult rv) override
   {
     (void) mCallback->HandleCert(mCert, rv);
@@ -365,8 +363,6 @@ private:
   {
     return RemoveExisting();
   }
-
-  virtual void ReleaseNSSResources() override {}
 
   virtual void CallCallback(nsresult rv) override
   {

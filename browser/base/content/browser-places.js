@@ -213,13 +213,6 @@ var StarUI = {
 
     this._isNewBookmark = aIsNewBookmark;
     this._itemGuids = null;
-    // TODO (bug 1131491): Deprecate this once async transactions are enabled
-    // and the legacy transactions code is gone.
-    if (typeof(aNode) == "number") {
-      let itemId = aNode;
-      let guid = await PlacesUtils.promiseItemGuid(itemId);
-      aNode = await PlacesUIUtils.fetchNodeLike(guid);
-    }
 
     // Performance: load the overlay the first time the panel is opened
     // (see bug 392443).
@@ -478,8 +471,9 @@ var PlacesCommandHook = {
    *        The linked page description, if available
    */
   async bookmarkLink(parentId, url, title, description = "") {
-    let node = await PlacesUIUtils.fetchNodeLike({ url });
-    if (node) {
+    let bm = await PlacesUtils.bookmarks.fetch({url});
+    if (bm) {
+      let node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm);
       PlacesUIUtils.showBookmarkDialog({ action: "edit", node }, window.top);
       return;
     }

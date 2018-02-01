@@ -306,32 +306,10 @@ RTCCertificate::RTCCertificate(nsIGlobalObject* aGlobal,
 {
 }
 
-RTCCertificate::~RTCCertificate()
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return;
-  }
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
-// This creates some interesting lifecycle consequences, since the DtlsIdentity
-// holds NSS objects, but does not implement nsNSSShutDownObject.
-
-// Unfortunately, the code that uses DtlsIdentity cannot always use that lock
-// due to external linkage requirements.  Therefore, the lock is held on this
-// object instead.  Consequently, the DtlsIdentity that this method returns must
-// have a lifetime that is strictly shorter than the RTCCertificate.
-//
-// RTCPeerConnection provides this guarantee by holding a strong reference to
-// the RTCCertificate.  It will cleanup any DtlsIdentity instances that it
-// creates before the RTCCertificate reference is released.
 RefPtr<DtlsIdentity>
 RTCCertificate::CreateDtlsIdentity() const
 {
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown() || !mPrivateKey || !mCertificate) {
+  if (!mPrivateKey || !mCertificate) {
     return nullptr;
   }
   UniqueSECKEYPrivateKey key(SECKEY_CopyPrivateKey(mPrivateKey.get()));
@@ -346,25 +324,11 @@ RTCCertificate::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return RTCCertificateBinding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-RTCCertificate::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
-}
-
-void
-RTCCertificate::destructorSafeDestroyNSSReference()
-{
-  mPrivateKey.reset();
-  mCertificate.reset();
-}
-
 bool
-RTCCertificate::WritePrivateKey(JSStructuredCloneWriter* aWriter,
-                                const nsNSSShutDownPreventionLock& aLockProof) const
+RTCCertificate::WritePrivateKey(JSStructuredCloneWriter* aWriter) const
 {
   JsonWebKey jwk;
-  nsresult rv = CryptoKey::PrivateKeyToJwk(mPrivateKey.get(), jwk, aLockProof);
+  nsresult rv = CryptoKey::PrivateKeyToJwk(mPrivateKey.get(), jwk);
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -376,8 +340,7 @@ RTCCertificate::WritePrivateKey(JSStructuredCloneWriter* aWriter,
 }
 
 bool
-RTCCertificate::WriteCertificate(JSStructuredCloneWriter* aWriter,
-                                 const nsNSSShutDownPreventionLock& /*proof*/) const
+RTCCertificate::WriteCertificate(JSStructuredCloneWriter* aWriter) const
 {
   UniqueCERTCertificateList certs(CERT_CertListFromCert(mCertificate.get()));
   if (!certs || certs->len <= 0) {
@@ -392,21 +355,19 @@ RTCCertificate::WriteCertificate(JSStructuredCloneWriter* aWriter,
 bool
 RTCCertificate::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
 {
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown() || !mPrivateKey || !mCertificate) {
+  if (!mPrivateKey || !mCertificate) {
     return false;
   }
 
   return JS_WriteUint32Pair(aWriter, RTCCERTIFICATE_SC_VERSION, mAuthType) &&
       JS_WriteUint32Pair(aWriter, (mExpires >> 32) & 0xffffffff,
                          mExpires & 0xffffffff) &&
-      WritePrivateKey(aWriter, locker) &&
-      WriteCertificate(aWriter, locker);
+      WritePrivateKey(aWriter) &&
+      WriteCertificate(aWriter);
 }
 
 bool
-RTCCertificate::ReadPrivateKey(JSStructuredCloneReader* aReader,
-                               const nsNSSShutDownPreventionLock& aLockProof)
+RTCCertificate::ReadPrivateKey(JSStructuredCloneReader* aReader)
 {
   nsString json;
   if (!ReadString(aReader, json)) {
@@ -416,13 +377,12 @@ RTCCertificate::ReadPrivateKey(JSStructuredCloneReader* aReader,
   if (!jwk.Init(json)) {
     return false;
   }
-  mPrivateKey = CryptoKey::PrivateKeyFromJwk(jwk, aLockProof);
+  mPrivateKey = CryptoKey::PrivateKeyFromJwk(jwk);
   return !!mPrivateKey;
 }
 
 bool
-RTCCertificate::ReadCertificate(JSStructuredCloneReader* aReader,
-                                const nsNSSShutDownPreventionLock& /*proof*/)
+RTCCertificate::ReadCertificate(JSStructuredCloneReader* aReader)
 {
   CryptoBuffer cert;
   if (!ReadBuffer(aReader, cert) || cert.Length() == 0) {
@@ -439,11 +399,6 @@ RTCCertificate::ReadCertificate(JSStructuredCloneReader* aReader,
 bool
 RTCCertificate::ReadStructuredClone(JSStructuredCloneReader* aReader)
 {
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return false;
-  }
-
   uint32_t version, authType;
   if (!JS_ReadUint32Pair(aReader, &version, &authType) ||
       version != RTCCERTIFICATE_SC_VERSION) {
@@ -457,8 +412,8 @@ RTCCertificate::ReadStructuredClone(JSStructuredCloneReader* aReader)
   }
   mExpires = static_cast<PRTime>(high) << 32 | low;
 
-  return ReadPrivateKey(aReader, locker) &&
-      ReadCertificate(aReader, locker);
+  return ReadPrivateKey(aReader) &&
+      ReadCertificate(aReader);
 }
 
 } // namespace dom

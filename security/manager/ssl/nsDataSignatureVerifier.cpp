@@ -29,16 +29,6 @@ const SEC_ASN1Template CERT_SignatureDataTemplate[] =
     { 0, }
 };
 
-nsDataSignatureVerifier::~nsDataSignatureVerifier()
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return;
-  }
-
-  shutdown(ShutdownCalledFrom::Object);
-}
-
 NS_IMETHODIMP
 nsDataSignatureVerifier::VerifyData(const nsACString& aData,
                                     const nsACString& aSignature,
@@ -46,11 +36,6 @@ nsDataSignatureVerifier::VerifyData(const nsACString& aData,
                                     bool* _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
   // Allocate an arena to handle the majority of the allocations
   UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));

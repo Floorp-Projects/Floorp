@@ -6,7 +6,6 @@
 #define nsDataSignatureVerifier_h
 
 #include "nsIDataSignatureVerifier.h"
-#include "nsNSSShutDown.h"
 
 #define NS_DATASIGNATUREVERIFIER_CID \
     { 0x296d76aa, 0x275b, 0x4f3c, \
@@ -15,21 +14,15 @@
     "@mozilla.org/security/datasignatureverifier;1"
 
 class nsDataSignatureVerifier final : public nsIDataSignatureVerifier
-                                    , public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDATASIGNATUREVERIFIER
 
-  nsDataSignatureVerifier()
-  {
-  }
+  nsDataSignatureVerifier() {}
 
 private:
-  ~nsDataSignatureVerifier();
-
-  // Nothing to release.
-  virtual void virtualDestroyNSSReference() override {}
+  ~nsDataSignatureVerifier() {}
 };
 
 #endif // nsDataSignatureVerifier_h

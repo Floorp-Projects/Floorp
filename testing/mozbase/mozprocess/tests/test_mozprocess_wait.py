@@ -64,7 +64,7 @@ class ProcTestWait(proctest.ProcTest):
                                           cwd=here)
 
         p.run()
-        p.wait(timeout=5)
+        p.wait(timeout=0)
 
         self.determine_status(p, True, ())
 
