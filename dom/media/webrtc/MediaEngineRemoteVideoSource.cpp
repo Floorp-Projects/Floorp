@@ -482,6 +482,7 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
     int dst_stride_uv = (dst_width + 1) / 2;
 
     camera::VideoFrameProperties properties;
+    UniquePtr<uint8_t []> frameBuf;
     uint8_t* frame;
     bool needReScale = !((dst_width == mWidth && dst_height == mHeight) ||
                          (dst_width > mWidth || dst_height > mHeight));
@@ -516,7 +517,8 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
       webrtc::VideoFrame scaledFrame(scaledBuffer, 0, 0, webrtc::kVideoRotation_0);
 
       VideoFrameUtils::InitFrameBufferProperties(scaledFrame, properties);
-      frame = new unsigned char[properties.bufferSize()];
+      frameBuf.reset(new (fallible) uint8_t[properties.bufferSize()]);
+      frame = frameBuf.get();
 
       if (!frame) {
         return 0;
@@ -550,11 +552,6 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
     if (!image->CopyData(data)) {
       MOZ_ASSERT(false);
       return 0;
-    }
-
-    if (needReScale && frame) {
-      delete frame;
-      frame = nullptr;
     }
 
 #ifdef DEBUG
