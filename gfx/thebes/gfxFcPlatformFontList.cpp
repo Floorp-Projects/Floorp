@@ -373,8 +373,13 @@ InitializeVarFuncs()
         return;
     }
     sInitializedVarFuncs = true;
+#if MOZ_TREE_FREETYPE
+    sGetVar = &FT_Get_MM_Var;
+    sDoneVar = &FT_Done_MM_Var;
+#else
     sGetVar = (GetVarFunc)dlsym(RTLD_DEFAULT, "FT_Get_MM_Var");
     sDoneVar = (DoneVarFunc)dlsym(RTLD_DEFAULT, "FT_Done_MM_Var");
+#endif
 }
 
 gfxFontconfigFontEntry::~gfxFontconfigFontEntry()
