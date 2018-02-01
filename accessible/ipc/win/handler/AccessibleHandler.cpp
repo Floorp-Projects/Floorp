@@ -12,6 +12,7 @@
 
 #include "AccessibleHandler.h"
 #include "AccessibleHandlerControl.h"
+#include "HandlerRelation.h"
 
 #include "Factory.h"
 #include "HandlerData.h"
@@ -78,6 +79,8 @@ AccessibleHandler::AccessibleHandler(IUnknown* aOuter, HRESULT* aResult)
   , mCachedNHyperlinks(-1)
   , mCachedTextAttribRuns(nullptr)
   , mCachedNTextAttribRuns(-1)
+  , mCachedRelations(nullptr)
+  , mCachedNRelations(-1)
 {
   RefPtr<AccessibleHandlerControl> ctl(gControlFactory.GetOrCreateSingleton());
   MOZ_ASSERT(ctl);
@@ -99,6 +102,7 @@ AccessibleHandler::~AccessibleHandler()
     mCachedData.mGeckoBackChannel->Release();
   }
   ClearTextCache();
+  ClearRelationCache();
 }
 
 HRESULT
@@ -252,6 +256,40 @@ AccessibleHandler::ClearTextCache()
     mCachedTextAttribRuns = nullptr;
     mCachedNTextAttribRuns = -1;
   }
+}
+
+HRESULT
+AccessibleHandler::GetRelationsInfo()
+{
+  MOZ_ASSERT(mCachedData.mGeckoBackChannel);
+
+  ClearRelationCache();
+
+  return mCachedData.mGeckoBackChannel->get_RelationsInfo(&mCachedRelations,
+    &mCachedNRelations);
+}
+
+void
+AccessibleHandler::ClearRelationCache()
+{
+  if (mCachedNRelations == -1) {
+    // No cache; nothing to do.
+    return;
+  }
+
+  // We cached relations, but the client never retrieved them.
+  if (mCachedRelations) {
+    for (long index = 0; index < mCachedNRelations; ++index) {
+      IARelationData& relData = mCachedRelations[index];
+      if (relData.mType) {
+        ::SysFreeString(relData.mType);
+      }
+    }
+    // This array is internal to us, so we must always free it.
+    ::CoTaskMemFree(mCachedRelations);
+    mCachedRelations = nullptr;
+  }
+  mCachedNRelations = -1;
 }
 
 HRESULT
@@ -560,12 +598,6 @@ AccessibleHandler::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
 
   return mDispatch->Invoke(dispIdMember, riid, lcid, wFlags, pDispParams,
                            pVarResult, pExcepInfo, puArgErr);
-}
-
-inline static BSTR
-CopyBSTR(BSTR aSrc)
-{
-  return ::SysAllocStringLen(aSrc, ::SysStringLen(aSrc));
 }
 
 #define BEGIN_CACHE_ACCESS \
@@ -910,7 +942,23 @@ AccessibleHandler::put_accValue(VARIANT varChild, BSTR szValue)
 HRESULT
 AccessibleHandler::get_nRelations(long* nRelations)
 {
-  HRESULT hr = ResolveIA2();
+  if (!nRelations) {
+    return E_INVALIDARG;
+  }
+
+  HRESULT hr;
+  if (mCachedData.mGeckoBackChannel) {
+    // If the caller wants nRelations, they will almost certainly want the
+    // actual relations too.
+    hr = GetRelationsInfo();
+    if (SUCCEEDED(hr)) {
+      *nRelations = mCachedNRelations;
+      return S_OK;
+    }
+    // We fall back to a normal call if this fails.
+  }
+
+  hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
   }
@@ -933,6 +981,28 @@ AccessibleHandler::get_relations(long maxRelations,
                                  IAccessibleRelation** relations,
                                  long* nRelations)
 {
+  if (maxRelations == 0 || !relations || !nRelations) {
+    return E_INVALIDARG;
+  }
+
+  // We currently only support retrieval of *all* cached relations at once.
+  if (mCachedNRelations != -1 && maxRelations >= mCachedNRelations) {
+    for (long index = 0; index < mCachedNRelations; ++index) {
+      IARelationData& relData = mCachedRelations[index];
+      RefPtr<IAccessibleRelation> hrel(new HandlerRelation(this, relData));
+      hrel.forget(&relations[index]);
+    }
+    *nRelations = mCachedNRelations;
+    // Clean up the cache, since we only cache for one call.
+    // We don't use ClearRelationCache here because that scans for data to free
+    // in the array and we don't we need that. The HandlerRelation instances
+    // will handle freeing of the data.
+    ::CoTaskMemFree(mCachedRelations);
+    mCachedRelations = nullptr;
+    mCachedNRelations = -1;
+    return S_OK;
+  }
+
   HRESULT hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
