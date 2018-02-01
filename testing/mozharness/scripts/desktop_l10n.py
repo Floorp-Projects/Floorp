@@ -57,7 +57,6 @@ configuration_tokens = ('branch',
                         'update_channel',
                         'ssh_key_dir',
                         'stage_product',
-                        'upload_environment',
                         )
 # some other values such as "%(version)s", "%(buildid)s", ...
 # are defined at run time and they cannot be enforced in the _pre_config_lock
@@ -66,7 +65,7 @@ runtime_config_tokens = ('buildid', 'version', 'locale', 'from_buildid',
                          'abs_objdir', 'revision',
                          'to_buildid', 'en_us_binary_url',
                          'en_us_installer_binary_url', 'mar_tools_url',
-                         'post_upload_extra', 'who')
+                         'who')
 
 
 # DesktopSingleLocale {{{1
@@ -405,8 +404,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         replace_dict = {
             'buildid': self._query_buildid(),
             'version': self.query_version(),
-            'post_upload_extra': ' '.join(config.get('post_upload_extra', [])),
-            'upload_environment': config['upload_environment'],
         }
         if config['branch'] == 'try':
             replace_dict.update({
@@ -758,19 +755,8 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
 
     def make_upload(self, locale):
         """wrapper for make upload command"""
-        config = self.config
         env = self.query_l10n_env()
         dirs = self.query_abs_dirs()
-        buildid = self._query_buildid()
-        replace_dict = {
-            'buildid': buildid,
-            'branch': config['branch']
-        }
-        try:
-            env['POST_UPLOAD_CMD'] = config['base_post_upload_cmd'] % replace_dict
-        except KeyError:
-            # no base_post_upload_cmd in configuration, just skip it
-            pass
         target = ['upload', 'AB_CD=%s' % (locale)]
         cwd = dirs['abs_locales_dir']
         parser = MakeUploadOutputParser(config=self.config,
