@@ -79,10 +79,6 @@ add_task(function test_invalid_input() {
                 /NS_ERROR_ILLEGAL_VALUE/);
   Assert.throws(() => PlacesUtils.bookmarks.getKeywordForBookmark(0),
                 /NS_ERROR_ILLEGAL_VALUE/);
-  Assert.throws(() => PlacesUtils.bookmarks.setKeywordForBookmark(null, "k"),
-                /NS_ERROR_ILLEGAL_VALUE/);
-  Assert.throws(() => PlacesUtils.bookmarks.setKeywordForBookmark(0, "k"),
-                /NS_ERROR_ILLEGAL_VALUE/);
 });
 
 add_task(async function test_addBookmarkAndKeyword() {
@@ -554,8 +550,6 @@ add_task(async function test_invalidation() {
 
   ok(!(await PlacesUtils.keywords.fetch({ keyword: "tb" })),
     "Should not return URL for removed bookmark keyword");
-
-  await PlacesTestUtils.promiseAsyncUpdates();
   await check_orphans();
 
   await PlacesUtils.bookmarks.eraseEverything();
