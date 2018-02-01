@@ -413,21 +413,27 @@ interaction.flushEventLoop = async function(el) {
 };
 
 /**
- * Focus element and, if a textual input field and no previous selection
- * state exists, move the caret to the end of the input field.
+ * If <var>el<var> is a textual form control and no previous
+ * selection state exists, move the caret to the end of the form control.
  *
- * @param {Element} element
- *     Element to focus.
+ * The element has to be a <code>&lt;input type=text&gt;</code>
+ * or <code>&lt;textarea&gt;</code> element for the cursor to move
+ * be moved.
+ *
+ * @param {Element} el
+ *     Element to potential move the caret in.
  */
-interaction.focusElement = function(el) {
-  let t = el.type;
-  if (t && (t == "text" || t == "textarea")) {
-    if (el.selectionEnd == 0) {
-      let len = el.value.length;
-      el.setSelectionRange(len, len);
-    }
+interaction.moveCaretToEnd = function(el) {
+  if (!element.isDOMElement(el) ||
+      el.localName != "textarea" ||
+      (el.localName != "input" && el.type == "text")) {
+    return;
   }
-  el.focus();
+
+  if (el.selectionEnd == 0) {
+    let len = el.value.length;
+    el.setSelectionRange(len, len);
+  }
 };
 
 /**
@@ -453,7 +459,6 @@ interaction.isKeyboardInteractable = function(el) {
   }
 
   el.focus();
-
   return el === win.document.activeElement;
 };
 
@@ -558,7 +563,8 @@ async function webdriverSendKeysToElement(el, value, a11y) {
   let acc = await a11y.getAccessible(el, true);
   a11y.assertActionable(acc, el);
 
-  interaction.focusElement(el);
+  interaction.moveCaretToEnd(el);
+  el.focus();
 
   if (el.type == "file") {
     await interaction.uploadFile(el, value);
@@ -591,7 +597,8 @@ async function legacySendKeysToElement(el, value, a11y) {
     let acc = await a11y.getAccessible(el, true);
     a11y.assertActionable(acc, el);
 
-    interaction.focusElement(el);
+    interaction.moveCaretToEnd(el);
+    el.focus();
     event.sendKeysToElement(value, el, win);
   }
 }
