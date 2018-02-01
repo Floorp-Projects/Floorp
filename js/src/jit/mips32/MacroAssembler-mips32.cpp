@@ -1264,20 +1264,20 @@ MacroAssemblerMIPSCompat::testUndefinedSet(Condition cond, const ValueOperand& v
 
 // unboxing code
 void
-MacroAssemblerMIPSCompat::unboxNonDouble(const ValueOperand& operand, Register dest)
+MacroAssemblerMIPSCompat::unboxNonDouble(const ValueOperand& operand, Register dest, JSValueType)
 {
     if (operand.payloadReg() != dest)
         ma_move(dest, operand.payloadReg());
 }
 
 void
-MacroAssemblerMIPSCompat::unboxNonDouble(const Address& src, Register dest)
+MacroAssemblerMIPSCompat::unboxNonDouble(const Address& src, Register dest, JSValueType)
 {
     ma_lw(dest, Address(src.base, src.offset + PAYLOAD_OFFSET));
 }
 
 void
-MacroAssemblerMIPSCompat::unboxNonDouble(const BaseIndex& src, Register dest)
+MacroAssemblerMIPSCompat::unboxNonDouble(const BaseIndex& src, Register dest, JSValueType)
 {
     computeScaledAddress(src, SecondScratchReg);
     ma_lw(dest, Address(SecondScratchReg, src.offset + PAYLOAD_OFFSET));
@@ -1348,7 +1348,7 @@ MacroAssemblerMIPSCompat::unboxObject(const Address& src, Register dest)
 }
 
 void
-MacroAssemblerMIPSCompat::unboxValue(const ValueOperand& src, AnyRegister dest)
+MacroAssemblerMIPSCompat::unboxValue(const ValueOperand& src, AnyRegister dest, JSValueType)
 {
     if (dest.isFloat()) {
         Label notInt32, end;

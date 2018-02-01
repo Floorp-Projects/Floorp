@@ -1606,7 +1606,7 @@ OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
 {
     OutlineTypedObject& typedObj = object->as<OutlineTypedObject>();
 
-    TraceEdge(trc, &typedObj.shape_, "OutlineTypedObject_shape");
+    TraceEdge(trc, typedObj.shapePtr(), "OutlineTypedObject_shape");
 
     if (!typedObj.owner_)
         return;
@@ -2118,7 +2118,7 @@ InlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
 {
     InlineTypedObject& typedObj = object->as<InlineTypedObject>();
 
-    TraceEdge(trc, &typedObj.shape_, "InlineTypedObject_shape");
+    TraceEdge(trc, typedObj.shapePtr(), "InlineTypedObject_shape");
 
     // Inline transparent objects do not have references and do not need more
     // tracing. If there is an entry in the compartment's LazyArrayBufferTable,

@@ -397,8 +397,7 @@ void
 MacroAssembler::branchIfRope(Register str, Label* label)
 {
     Address flags(str, JSString::offsetOfFlags());
-    static_assert(JSString::ROPE_FLAGS == 0, "Rope type flags must be 0");
-    branchTest32(Assembler::Zero, flags, Imm32(JSString::TYPE_FLAGS_MASK), label);
+    branchTest32(Assembler::Zero, flags, Imm32(JSString::LINEAR_BIT), label);
 }
 
 void
@@ -408,8 +407,7 @@ MacroAssembler::branchIfRopeOrExternal(Register str, Register temp, Label* label
     move32(Imm32(JSString::TYPE_FLAGS_MASK), temp);
     and32(flags, temp);
 
-    static_assert(JSString::ROPE_FLAGS == 0, "Rope type flags must be 0");
-    branchTest32(Assembler::Zero, temp, temp, label);
+    branchTest32(Assembler::Zero, temp, Imm32(JSString::LINEAR_BIT), label);
 
     branch32(Assembler::Equal, temp, Imm32(JSString::EXTERNAL_FLAGS), label);
 }
@@ -418,8 +416,7 @@ void
 MacroAssembler::branchIfNotRope(Register str, Label* label)
 {
     Address flags(str, JSString::offsetOfFlags());
-    static_assert(JSString::ROPE_FLAGS == 0, "Rope type flags must be 0");
-    branchTest32(Assembler::NonZero, flags, Imm32(JSString::TYPE_FLAGS_MASK), label);
+    branchTest32(Assembler::NonZero, flags, Imm32(JSString::LINEAR_BIT), label);
 }
 
 void

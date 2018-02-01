@@ -190,7 +190,7 @@ js::NativeObject::checkShapeConsistency()
                           shape->slot() < slotSpan());
             if (!prev) {
                 MOZ_ASSERT(lastProperty() == shape);
-                MOZ_ASSERT(shape->listp == &shape_);
+                MOZ_ASSERT(shape->listp == &shapeRef());
             } else {
                 MOZ_ASSERT(shape->listp == &prev->parent);
             }
@@ -326,7 +326,7 @@ NativeObject::setLastPropertyShrinkFixedSlots(Shape* shape)
     MOZ_ASSERT(dynamicSlotsCount(oldFixed, shape->slotSpan(), getClass()) == 0);
     MOZ_ASSERT(dynamicSlotsCount(newFixed, shape->slotSpan(), getClass()) == 0);
 
-    shape_ = shape;
+    setShape(shape);
 }
 
 void
@@ -345,7 +345,7 @@ NativeObject::setLastPropertyMakeNonNative(Shape* shape)
         slots_ = nullptr;
     }
 
-    shape_ = shape;
+    setShape(shape);
 }
 
 void
@@ -358,7 +358,7 @@ NativeObject::setLastPropertyMakeNative(JSContext* cx, Shape* shape)
     // This method is used to convert unboxed objects into native objects. In
     // this case, the shape_ field was previously used to store other data and
     // this should be treated as an initialization.
-    shape_.init(shape);
+    initShape(shape);
 
     slots_ = nullptr;
     elements_ = emptyObjectElements;

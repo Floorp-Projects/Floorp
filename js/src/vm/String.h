@@ -220,13 +220,13 @@ class JSString : public js::gc::TenuredCell
      *   String        Instance     Subtype
      *   type          encoding     predicate
      *   ------------------------------------
-     *   Rope          000000       000000
-     *   Linear        -           !000000
+     *   Rope          000000       xxxxx0
+     *   Linear        -            xxxxx1
      *   HasBase       -            xxxx1x
-     *   Dependent     000010       000010
-     *   External      100000       100000
-     *   Flat          -            xxxxx1
-     *   Undepended    000011       000011
+     *   Dependent     000011       000011
+     *   External      100001       100001
+     *   Flat          -            Linear && !Dependent && !External
+     *   Undepended    010011       010011
      *   Extensible    010001       010001
      *   Inline        000101       xxx1xx
      *   FatInline     010101       x1x1xx
@@ -238,7 +238,7 @@ class JSString : public js::gc::TenuredCell
      * Note that the first 4 flag bits (from right to left in the previous table)
      * have the following meaning and can be used for some hot queries:
      *
-     *   Bit 0: IsFlat
+     *   Bit 0: IsLinear
      *   Bit 1: HasBase (Dependent, Undepended)
      *   Bit 2: IsInline (Inline, FatInline)
      *   Bit 3: IsAtom (Atom, PermanentAtom)
@@ -253,23 +253,23 @@ class JSString : public js::gc::TenuredCell
      * index.
      */
 
-    static const uint32_t FLAT_BIT               = JS_BIT(0);
+    static const uint32_t LINEAR_BIT             = JS_BIT(0);
     static const uint32_t HAS_BASE_BIT           = JS_BIT(1);
     static const uint32_t INLINE_CHARS_BIT       = JS_BIT(2);
     static const uint32_t ATOM_BIT               = JS_BIT(3);
 
-    static const uint32_t ROPE_FLAGS             = 0;
-    static const uint32_t DEPENDENT_FLAGS        = HAS_BASE_BIT;
-    static const uint32_t UNDEPENDED_FLAGS       = FLAT_BIT | HAS_BASE_BIT;
-    static const uint32_t EXTENSIBLE_FLAGS       = FLAT_BIT | JS_BIT(4);
-    static const uint32_t EXTERNAL_FLAGS         = JS_BIT(5);
+    static const uint32_t DEPENDENT_FLAGS        = LINEAR_BIT | HAS_BASE_BIT;
+    static const uint32_t UNDEPENDED_FLAGS       = LINEAR_BIT | HAS_BASE_BIT | JS_BIT(4);
+    static const uint32_t EXTENSIBLE_FLAGS       = LINEAR_BIT | JS_BIT(4);
+    static const uint32_t EXTERNAL_FLAGS         = LINEAR_BIT | JS_BIT(5);
 
     static const uint32_t FAT_INLINE_MASK        = INLINE_CHARS_BIT | JS_BIT(4);
     static const uint32_t PERMANENT_ATOM_MASK    = ATOM_BIT | JS_BIT(5);
 
     /* Initial flags for thin inline and fat inline strings. */
-    static const uint32_t INIT_THIN_INLINE_FLAGS = FLAT_BIT | INLINE_CHARS_BIT;
-    static const uint32_t INIT_FAT_INLINE_FLAGS  = FLAT_BIT | FAT_INLINE_MASK;
+    static const uint32_t INIT_THIN_INLINE_FLAGS = LINEAR_BIT | INLINE_CHARS_BIT;
+    static const uint32_t INIT_FAT_INLINE_FLAGS  = LINEAR_BIT | FAT_INLINE_MASK;
+    static const uint32_t INIT_ROPE_FLAGS        = 0;
 
     static const uint32_t TYPE_FLAGS_MASK        = JS_BIT(6) - 1;
 
@@ -316,14 +316,14 @@ class JSString : public js::gc::TenuredCell
                       "shadow::String inlineStorage offset must match JSString");
         static_assert(offsetof(JSString, d.inlineStorageTwoByte) == offsetof(String, inlineStorageTwoByte),
                       "shadow::String inlineStorage offset must match JSString");
+        static_assert(LINEAR_BIT == String::LINEAR_BIT,
+                      "shadow::String::LINEAR_BIT must match JSString::LINEAR_BIT");
         static_assert(INLINE_CHARS_BIT == String::INLINE_CHARS_BIT,
                       "shadow::String::INLINE_CHARS_BIT must match JSString::INLINE_CHARS_BIT");
         static_assert(LATIN1_CHARS_BIT == String::LATIN1_CHARS_BIT,
                       "shadow::String::LATIN1_CHARS_BIT must match JSString::LATIN1_CHARS_BIT");
         static_assert(TYPE_FLAGS_MASK == String::TYPE_FLAGS_MASK,
                       "shadow::String::TYPE_FLAGS_MASK must match JSString::TYPE_FLAGS_MASK");
-        static_assert(ROPE_FLAGS == String::ROPE_FLAGS,
-                      "shadow::String::ROPE_FLAGS must match JSString::ROPE_FLAGS");
         static_assert(EXTERNAL_FLAGS == String::EXTERNAL_FLAGS,
                       "shadow::String::EXTERNAL_FLAGS must match JSString::EXTERNAL_FLAGS");
     }
@@ -384,7 +384,7 @@ class JSString : public js::gc::TenuredCell
 
     MOZ_ALWAYS_INLINE
     bool isRope() const {
-        return (d.u1.flags & TYPE_FLAGS_MASK) == ROPE_FLAGS;
+        return !(d.u1.flags & LINEAR_BIT);
     }
 
     MOZ_ALWAYS_INLINE
@@ -395,7 +395,7 @@ class JSString : public js::gc::TenuredCell
 
     MOZ_ALWAYS_INLINE
     bool isLinear() const {
-        return !isRope();
+        return d.u1.flags & LINEAR_BIT;
     }
 
     MOZ_ALWAYS_INLINE
@@ -417,7 +417,7 @@ class JSString : public js::gc::TenuredCell
 
     MOZ_ALWAYS_INLINE
     bool isFlat() const {
-        return d.u1.flags & FLAT_BIT;
+        return isLinear() && !isDependent() && !isExternal();
     }
 
     MOZ_ALWAYS_INLINE

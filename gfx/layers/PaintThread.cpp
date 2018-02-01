@@ -137,13 +137,10 @@ PaintThread::CalculatePaintWorkerCount()
 
   int32_t workerCount = gfxPrefs::LayersOMTPPaintWorkers();
 
-  // If not manually specified, default to (cpuCores * 3) / 4
+  // If not manually specified, default to (cpuCores * 3) / 4, and clamp
+  // between 1 and 4. If a user wants more, they can manually specify it
   if (workerCount < 1) {
-    workerCount = std::max((cpuCores * 3) / 4, 1);
-
-    if (workerCount > 32) {
-      workerCount = 32;
-    }
+    workerCount = std::min(std::max((cpuCores * 3) / 4, 1), 4);
   }
 
   return workerCount;

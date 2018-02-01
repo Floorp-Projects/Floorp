@@ -6573,11 +6573,11 @@ function onResize(cm) {
 }
 
 var keyNames = {
-  3: "Enter", 8: "Backspace", 9: "Tab", 13: "Enter", 16: "Shift", 17: "Ctrl", 18: "Alt",
+  3: "Pause", 8: "Backspace", 9: "Tab", 13: "Enter", 16: "Shift", 17: "Ctrl", 18: "Alt",
   19: "Pause", 20: "CapsLock", 27: "Esc", 32: "Space", 33: "PageUp", 34: "PageDown", 35: "End",
   36: "Home", 37: "Left", 38: "Up", 39: "Right", 40: "Down", 44: "PrintScrn", 45: "Insert",
   46: "Delete", 59: ";", 61: "=", 91: "Mod", 92: "Mod", 93: "Mod",
-  106: "*", 107: "=", 109: "-", 110: ".", 111: "/", 127: "Delete",
+  106: "*", 107: "=", 109: "-", 110: ".", 111: "/", 127: "Delete", 145: "ScrollLock",
   173: "-", 186: ";", 187: "=", 188: ",", 189: "-", 190: ".", 191: "/", 192: "`", 219: "[", 220: "\\",
   221: "]", 222: "'", 63232: "Up", 63233: "Down", 63234: "Left", 63235: "Right", 63272: "Delete",
   63273: "Home", 63275: "End", 63276: "PageUp", 63277: "PageDown", 63302: "Insert"
@@ -6724,6 +6724,9 @@ function keyName(event, noShift) {
   if (presto && event.keyCode == 34 && event["char"]) { return false }
   var name = keyNames[event.keyCode]
   if (name == null || event.altGraphKey) { return false }
+  // Ctrl-ScrollLock has keyCode 3, same as Ctrl-Pause,
+  // so we'll use event.code when available (Chrome 48+, FF 38+, Safari 10.1+)
+  if (event.keyCode == 3 && event.code) { name = event.code }
   return addModifierNames(name, event, noShift)
 }
 
@@ -8013,7 +8016,7 @@ function applyTextInput(cm, inserted, deleted, sel, origin) {
 
   var paste = cm.state.pasteIncoming || origin == "paste"
   var textLines = splitLinesAuto(inserted), multiPaste = null
-  // When pasing N lines into N selections, insert one line per selection
+  // When pasting N lines into N selections, insert one line per selection
   if (paste && sel.ranges.length > 1) {
     if (lastCopied && lastCopied.text.join("\n") == inserted) {
       if (sel.ranges.length % lastCopied.text.length == 0) {
@@ -9647,7 +9650,7 @@ CodeMirror.fromTextArea = fromTextArea
 
 addLegacyProps(CodeMirror)
 
-CodeMirror.version = "5.33.0"
+CodeMirror.version = "5.34.0"
 
 return CodeMirror;
 

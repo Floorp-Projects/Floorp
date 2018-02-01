@@ -226,7 +226,10 @@ gfxFT2FontBase::InitMetrics()
     if (!mStyle.variationSettings.IsEmpty()) {
         SetupVarCoords(face, mStyle.variationSettings, &mCoords);
         if (!mCoords.IsEmpty()) {
-            typedef FT_UInt (*SetCoordsFunc)(FT_Face, FT_UInt, FT_Fixed*);
+#if MOZ_TREE_FREETYPE
+            FT_Set_Var_Design_Coordinates(face, mCoords.Length(), mCoords.Elements());
+#else
+            typedef FT_Error (*SetCoordsFunc)(FT_Face, FT_UInt, FT_Fixed*);
             static SetCoordsFunc setCoords;
             static bool firstTime = true;
             if (firstTime) {
@@ -237,6 +240,7 @@ gfxFT2FontBase::InitMetrics()
             if (setCoords) {
                 (*setCoords)(face, mCoords.Length(), mCoords.Elements());
             }
+#endif
         }
     }
 
@@ -625,8 +629,12 @@ gfxFT2FontBase::SetupVarCoords(FT_Face aFace,
     aCoords->TruncateLength(0);
     if (aFace->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
         typedef FT_Error (*GetVarFunc)(FT_Face, FT_MM_Var**);
-        static GetVarFunc getVar;
         typedef FT_Error (*DoneVarFunc)(FT_Library, FT_MM_Var*);
+#if MOZ_TREE_FREETYPE
+        GetVarFunc getVar = &FT_Get_MM_Var;
+        DoneVarFunc doneVar = &FT_Done_MM_Var;
+#else
+        static GetVarFunc getVar;
         static DoneVarFunc doneVar;
         static bool firstTime = true;
         if (firstTime) {
@@ -634,6 +642,7 @@ gfxFT2FontBase::SetupVarCoords(FT_Face aFace,
             getVar = (GetVarFunc)dlsym(RTLD_DEFAULT, "FT_Get_MM_Var");
             doneVar = (DoneVarFunc)dlsym(RTLD_DEFAULT, "FT_Done_MM_Var");
         }
+#endif
         FT_MM_Var* ftVar;
         if (getVar && FT_Err_Ok == (*getVar)(aFace, &ftVar)) {
             for (unsigned i = 0; i < ftVar->num_axis; ++i) {

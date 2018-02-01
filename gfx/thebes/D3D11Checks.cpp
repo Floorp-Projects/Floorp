@@ -420,6 +420,13 @@ D3D11Checks::DoesNV12Work(ID3D11Device* device)
     return false;
   }
 
+  HRESULT hr;
+  UINT formatSupport;
+  hr = device->CheckFormatSupport(DXGI_FORMAT_NV12, &formatSupport);
+  if (FAILED(hr) || !(formatSupport & D3D11_FORMAT_SUPPORT_TEXTURE2D)) {
+    return false;
+  }
+
   nsString version;
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   if (gfxInfo) {

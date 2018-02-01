@@ -11,6 +11,11 @@ import stat
 import subprocess
 import sys
 
+# We need the NDK version in multiple different places, and it's inconvenient
+# to pass down the NDK version to all relevant places, so we have this global
+# variable.
+NDK_VERSION = 'r15c'
+
 ANDROID_NDK_EXISTS = '''
 Looks like you have the Android NDK installed at:
 %s
@@ -137,7 +142,7 @@ def get_paths(os_name):
     sdk_path = os.environ.get('ANDROID_SDK_HOME',
                               os.path.join(mozbuild_path, 'android-sdk-{0}'.format(os_name)))
     ndk_path = os.environ.get('ANDROID_NDK_HOME',
-                              os.path.join(mozbuild_path, 'android-ndk-r15c'))
+                              os.path.join(mozbuild_path, 'android-ndk-{0}'.format(NDK_VERSION)))
     return (mozbuild_path, sdk_path, ndk_path)
 
 
@@ -151,7 +156,7 @@ def ensure_dir(dir):
                 raise
 
 
-def ensure_android(os_name, artifact_mode=False, no_interactive=False):
+def ensure_android(os_name, artifact_mode=False, ndk_only=False, no_interactive=False):
     '''
     Ensure the Android SDK (and NDK, if `artifact_mode` is falsy) are
     installed.  If not, fetch and unpack the SDK and/or NDK from the
@@ -172,7 +177,11 @@ def ensure_android(os_name, artifact_mode=False, no_interactive=False):
     ensure_android_sdk_and_ndk(mozbuild_path, os_name,
                                sdk_path=sdk_path, sdk_url=sdk_url,
                                ndk_path=ndk_path, ndk_url=ndk_url,
-                               artifact_mode=artifact_mode)
+                               artifact_mode=artifact_mode,
+                               ndk_only=ndk_only)
+
+    if ndk_only:
+        return
 
     # We expect the |sdkmanager| tool to be at
     # ~/.mozbuild/android-sdk-$OS_NAME/tools/bin/sdkmanager.
@@ -181,7 +190,7 @@ def ensure_android(os_name, artifact_mode=False, no_interactive=False):
 
 
 def ensure_android_sdk_and_ndk(mozbuild_path, os_name, sdk_path, sdk_url, ndk_path, ndk_url,
-                               artifact_mode):
+                               artifact_mode, ndk_only):
     '''
     Ensure the Android SDK and NDK are found at the given paths.  If not, fetch
     and unpack the SDK and/or NDK from the given URLs into
@@ -198,6 +207,9 @@ def ensure_android_sdk_and_ndk(mozbuild_path, os_name, sdk_path, sdk_url, ndk_pa
         else:
             # The NDK archive unpacks into a top-level android-ndk-$VER directory.
             install_mobile_android_sdk_or_ndk(ndk_url, mozbuild_path)
+
+    if ndk_only:
+        return
 
     # We don't want to blindly overwrite, since we use the
     # |sdkmanager| tool to install additional parts of the Android
@@ -260,7 +272,7 @@ def suggest_mozconfig(os_name, artifact_mode=False):
         print(MOBILE_ANDROID_MOZCONFIG_TEMPLATE % (sdk_path, ndk_path))
 
 
-def android_ndk_url(os_name, ver='r15c'):
+def android_ndk_url(os_name, ver=NDK_VERSION):
     # Produce a URL like
     # 'https://dl.google.com/android/repository/android-ndk-$VER-linux-x86_64.zip
     base_url = 'https://dl.google.com/android/repository/android-ndk'
@@ -284,10 +296,15 @@ def main(argv):
     parser = optparse.OptionParser()
     parser.add_option('-a', '--artifact-mode', dest='artifact_mode', action='store_true',
                       help='If true, install only the Android SDK (and not the Android NDK).')
+    parser.add_option('--ndk-only', dest='ndk_only', action='store_true',
+                      help='If true, install only the Android NDK (and not the Android SDK).')
     parser.add_option('--no-interactive', dest='no_interactive', action='store_true',
                       help='Accept the Android SDK licenses without user interaction.')
 
     options, _ = parser.parse_args(argv)
+
+    if options.artifact_mode and options.ndk_only:
+        raise NotImplementedError('Use no options to install the NDK and the SDK.')
 
     os_name = None
     if platform.system() == 'Darwin':
@@ -301,6 +318,7 @@ def main(argv):
                                   "NDK) on {0} yet!".format(platform.system()))
 
     ensure_android(os_name, artifact_mode=options.artifact_mode,
+                   ndk_only=options.ndk_only,
                    no_interactive=options.no_interactive)
     suggest_mozconfig(os_name, options.artifact_mode)
 
