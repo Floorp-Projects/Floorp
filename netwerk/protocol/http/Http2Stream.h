@@ -125,6 +125,8 @@ public:
                                                nsACString &, int32_t &);
   MOZ_MUST_USE nsresult ConvertPushHeaders(Http2Decompressor *, nsACString &,
                                            nsACString &);
+  MOZ_MUST_USE nsresult ConvertResponseTrailers(Http2Decompressor *,
+                                                nsACString &);
 
   bool AllowFlowControlledWrite();
   void UpdateServerReceiveWindow(int32_t delta);
