@@ -221,16 +221,17 @@ LCovSource::writeScript(JSScript* script)
                 if (!p) {
                     if (!linesHit_.add(p, lineno, hits))
                         return false;
+                    numLinesInstrumented_++;
+                    if (hits != 0)
+                        numLinesHit_++;
+                    maxLineHit_ = std::max(lineno, maxLineHit_);
                 } else {
+                    if (p->value() == 0 && hits != 0)
+                        numLinesHit_++;
                     p->value() += hits;
                 }
 
-                // Count the number of lines instrumented & hit.
                 firstLineHasBeenWritten = true;
-                maxLineHit_ = std::max(lineno, maxLineHit_);
-                numLinesInstrumented_++;
-                if (hits)
-                    numLinesHit_++;
             }
         }
 
