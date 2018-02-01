@@ -5,6 +5,7 @@ geckoview:
     instance-size: xlarge
     loopback-video: true
     e10s: false
+    target: geckoview_example.apk
     mozharness:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true
