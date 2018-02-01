@@ -62,7 +62,7 @@ var popupTests = [
 },
 {
   testname: "open outer context",
-  condition: function() { return (navigator.platform.indexOf("Mac") == -1); },
+  condition: function() { return (!navigator.platform.includes("Mac")); },
   events: [ "popupshowing outercontext", "popupshown outercontext" ],
   test: () => synthesizeMouse($("innermenu"), 4, 4, { type: "contextmenu", button: 2 }),
   result: function (testname) {
@@ -74,7 +74,7 @@ var popupTests = [
 },
 {
   testname: "open inner context",
-  condition: function() { return (navigator.platform.indexOf("Mac") == -1); },
+  condition: function() { return (!navigator.platform.includes("Mac")); },
   events: [ "DOMMenuItemActive outercontextmenu", "popupshowing innercontext", "popupshown innercontext" ],
   test: function () {
     synthesizeMouse($("outercontextmenu"), 4, 4, { type: "mousemove" });
@@ -92,7 +92,7 @@ var popupTests = [
 },
 {
   testname: "close context",
-  condition: function() { return (navigator.platform.indexOf("Mac") == -1); },
+  condition: function() { return (!navigator.platform.includes("Mac")); },
   events: [ "popuphiding innercontext", "popuphidden innercontext",
             "popuphiding outercontext", "popuphidden outercontext",
             "DOMMenuInactive innercontext",

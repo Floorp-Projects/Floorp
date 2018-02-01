@@ -74,13 +74,13 @@ function findCompletionBeginning(str) {
           start = i + 1;
         } else if (c == " ") {
           start = i + 1;
-        } else if (OPEN_BODY.indexOf(c) != -1) {
+        } else if (OPEN_BODY.includes(c)) {
           bodyStack.push({
             token: c,
             start: start
           });
           start = i + 1;
-        } else if (CLOSE_BODY.indexOf(c) != -1) {
+        } else if (CLOSE_BODY.includes(c)) {
           let last = bodyStack.pop();
           if (!last || OPEN_CLOSE_BODY[last.token] != c) {
             return {

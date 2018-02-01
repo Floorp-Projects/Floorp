@@ -172,7 +172,7 @@ var Microformats; // jshint ignore:line
                     // find v1 names
                     for (var key in modules.maps) {
                         // dont double count if v1 and v2 roots are present
-                        if (modules.maps[key].root === classItems[x] && classItems.indexOf(key) === -1) {
+                        if (modules.maps[key].root === classItems[x] && !classItems.includes(key)) {
                             this.appendCount(key, 1, out);
                         }
                     }
@@ -890,7 +890,7 @@ var Microformats; // jshint ignore:line
             }
 
             // if we have no protocol separator, turn relative url to absolute url
-            if (out && out !== "" && out.indexOf("://") === -1) {
+            if (out && out !== "" && !out.includes("://")) {
                 out = modules.url.resolve(out, this.options.baseUrl);
             }
 
@@ -1145,7 +1145,7 @@ var Microformats; // jshint ignore:line
 
                         // test for root prefix - v2
                         if (modules.utils.startWith(item, context.rootPrefix)) {
-                            if (out.root.indexOf(item) === -1) {
+                            if (!out.root.includes(item)) {
                                 out.root.push(item);
                             }
                             out.typeVersion = "v2";
@@ -1163,7 +1163,7 @@ var Microformats; // jshint ignore:line
                         for (key in modules.maps) {
                             if (modules.maps.hasOwnProperty(key)) {
                                 // only add a root once
-                                if (modules.maps[key].root === item && out.root.indexOf(key) === -1) {
+                                if (modules.maps[key].root === item && !out.root.includes(key)) {
                                     // if root map has subTree set to true
                                     // test to see if we should create a property or root
                                     if (modules.maps[key].subTree) {
@@ -1201,17 +1201,17 @@ var Microformats; // jshint ignore:line
                                                     while (y < i) {
                                                         v2Name = context.getV2RootName(items[y]);
                                                         // add new root
-                                                        if (prop.uf.indexOf(v2Name) > -1 && out.root.indexOf(v2Name) === -1) {
+                                                        if (prop.uf.indexOf(v2Name) > -1 && !out.root.includes(v2Name)) {
                                                             out.root.push(v2Name);
                                                             out.typeVersion = "v1";
                                                         }
                                                         y++;
                                                     }
                                                     // only add property once
-                                                    if (out.properties.indexOf(propName) === -1) {
+                                                    if (!out.properties.includes(propName)) {
                                                         out.properties.push([propName, "v1"]);
                                                     }
-                                                } else if (out.properties.indexOf(propName) === -1) {
+                                                } else if (!out.properties.includes(propName)) {
                                                     out.properties.push([propName, "v1"]);
                                                 }
                                             }
@@ -1235,7 +1235,7 @@ var Microformats; // jshint ignore:line
                 for (var b = 0; b < ufNameArr.length; b++) {
                     ufName = ufNameArr[b];
                     impiedRel = this.findRelImpied(node, ufName);
-                    if (impiedRel && out.properties.indexOf(impiedRel) === -1) {
+                    if (impiedRel && !out.properties.includes(impiedRel)) {
                         out.properties.push([impiedRel, "v1"]);
                     }
                 }
@@ -1385,7 +1385,7 @@ var Microformats; // jshint ignore:line
                 try {
                     // the url parser can blow up if the format is not right
                     attr = modules.domUtils.getAttribute(nodes[i], attrName);
-                    if (attr && attr !== "" && baseUrl !== "" && attr.indexOf("://") === -1) {
+                    if (attr && attr !== "" && baseUrl !== "" && !attr.includes("://")) {
                         // attr = urlParser.resolve(baseUrl, attr);
                         attr = modules.url.resolve(attr, baseUrl);
                         modules.domUtils.setAttribute(nodes[i], attrName, attr);
@@ -1555,7 +1555,7 @@ var Microformats; // jshint ignore:line
                 value = this.getImpliedProperty(node, ["img", "object"], this.getPhotoAttr);
                 if (value) {
                     // relative to absolute URL
-                    if (value && value !== "" && this.options.baseUrl !== "" && value.indexOf("://") === -1) {
+                    if (value && value !== "" && this.options.baseUrl !== "" && !value.includes("://")) {
                         value = modules.url.resolve(value, this.options.baseUrl);
                     }
                     uf.properties.photo = [modules.utils.trim(value)];
@@ -1585,7 +1585,7 @@ var Microformats; // jshint ignore:line
                 value = this.getImpliedProperty(node, ["a", "area"], this.getURLAttr);
                 if (value) {
                     // relative to absolute URL
-                    if (value && value !== "" && this.options.baseUrl !== "" && value.indexOf("://") === -1) {
+                    if (value && value !== "" && this.options.baseUrl !== "" && !value.includes("://")) {
                         value = modules.url.resolve(value, this.options.baseUrl);
                     }
                     uf.properties.url = [modules.utils.trim(value)];
@@ -2067,7 +2067,7 @@ var Microformats; // jshint ignore:line
 
                             var resolved = modules.url.resolve(value, this.options.baseUrl);
                             // do not add duplicate rels - based on resolved URLs
-                            if (out.rels[item].indexOf(resolved) === -1) {
+                            if (!out.rels[item].includes(resolved)) {
                                 out.rels[item].push( resolved );
                             }
                         }
@@ -3000,7 +3000,7 @@ var Microformats; // jshint ignore:line
          */
         resolve(url, baseUrl) {
             // use modern URL web API where we can
-            if (modules.utils.isString(url) && modules.utils.isString(baseUrl) && url.indexOf("://") === -1) {
+            if (modules.utils.isString(url) && modules.utils.isString(baseUrl) && !url.includes("://")) {
                 // this try catch is required as IE has an URL object but no constuctor support
                 // http://glennjones.net/articles/the-problem-with-window-url
                 try {
@@ -3155,7 +3155,7 @@ var Microformats; // jshint ignore:line
             if (dateString.indexOf("Z") > -1) {
                 this.autoProfile.tzZulu = "Z";
             }
-            if (dateString.toUpperCase().indexOf("T") === -1) {
+            if (!dateString.toUpperCase().includes("T")) {
                 this.autoProfile.sep = " ";
             }
 
@@ -3224,7 +3224,7 @@ var Microformats; // jshint ignore:line
             var parts = [];
 
             // discover timezone separtor for auto profile // default is ':'
-            if (dateString.indexOf("-") === -1) {
+            if (!dateString.includes("-")) {
                 this.autoProfile.tsep = "";
             }
 
@@ -3268,7 +3268,7 @@ var Microformats; // jshint ignore:line
             var parts = [];
 
             // discover date separtor for auto profile // default is ':'
-            if (timeString.indexOf(":") === -1) {
+            if (!timeString.includes(":")) {
                 this.autoProfile.tsep = "";
             }
 
@@ -3308,7 +3308,7 @@ var Microformats; // jshint ignore:line
             } else {
 
                 // discover timezone separtor for auto profile // default is ':'
-                if (timeString.indexOf(":") === -1) {
+                if (!timeString.includes(":")) {
                     this.autoProfile.tzsep = "";
                 }
 
@@ -3860,7 +3860,7 @@ var Microformats; // jshint ignore:line
             }
 
             // if it's a block level tag add an additional space at the end
-            if (node.tagName && this.blockLevelTags.indexOf( node.tagName.toLowerCase() ) !== -1) {
+            if (node.tagName && this.blockLevelTags.includes( node.tagName.toLowerCase() )) {
                 out += " ";
             }
 
@@ -3929,7 +3929,7 @@ var Microformats; // jshint ignore:line
                     out += " " + attrs[j].name + "=" + '"' + attrs[j].value + '"';
                 }
 
-                if (this.selfClosingElt.indexOf(node.tagName.toLowerCase()) === -1) {
+                if (!this.selfClosingElt.includes(node.tagName.toLowerCase())) {
                     out += ">";
                 }
 

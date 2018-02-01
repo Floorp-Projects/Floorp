@@ -54,7 +54,7 @@ exports.items = [
 
         // Place strings in quotes
         if (typeof output === 'string' && response.exception == null) {
-          if (output.indexOf('\'') === -1) {
+          if (!output.includes('\'')) {
             output = '\'' + output + '\'';
           }
           else {

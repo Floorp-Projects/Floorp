@@ -1221,7 +1221,7 @@ var DownloadsViewController = {
         "downloadsCmd_unblockAndOpen",
         "cmd_delete",
       ];
-      return blockedSubviewCmds.indexOf(aCommand) >= 0;
+      return blockedSubviewCmds.includes(aCommand);
     }
     // If the blocked subview is not showing, then determine if focus is on a
     // control in the downloads list.

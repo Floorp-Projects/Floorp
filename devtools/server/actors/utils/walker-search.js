@@ -176,7 +176,7 @@ WalkerSearch.prototype = {
 
       // Add any relevant results (skipping non-requested options).
       res.filter(entry => {
-        return options.types.indexOf(entry.type) !== -1;
+        return options.types.includes(entry.type);
       }).forEach(({node, type}) => {
         this._addResult(node, type, results);
       });
@@ -187,7 +187,7 @@ WalkerSearch.prototype = {
     // If the query is just one "word", no need to search because _searchIndex
     // will lead the same results since it has access to tagnames anyway
     let isSelector = query && query.match(/[ >~.#\[\]]/);
-    if (options.types.indexOf("selector") === -1 || !isSelector) {
+    if (!options.types.includes("selector") || !isSelector) {
       return;
     }
 
@@ -267,7 +267,7 @@ WalkerSearch.prototype = {
 };
 
 WalkerSearch.SEARCH_METHOD_CONTAINS = (query, candidate) => {
-  return query && candidate.toLowerCase().indexOf(query.toLowerCase()) !== -1;
+  return query && candidate.toLowerCase().includes(query.toLowerCase());
 };
 
 WalkerSearch.ALL_RESULTS_TYPES = ["tag", "text", "attributeName",

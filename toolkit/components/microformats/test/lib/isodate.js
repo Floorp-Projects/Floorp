@@ -136,7 +136,7 @@ var Modules = (function (modules) {
 			if(dateString.indexOf('Z') > -1) {
 				this.autoProfile.tzZulu = 'Z';
 			}
-			if(dateString.toUpperCase().indexOf('T') === -1) {
+			if(!dateString.toUpperCase().includes('T')) {
 				this.autoProfile.sep = ' ';
 			}
 
@@ -205,7 +205,7 @@ var Modules = (function (modules) {
 			var parts = [];
 
 			// discover timezone separtor for auto profile // default is ':'
-			if(dateString.indexOf('-') === -1) {
+			if(!dateString.includes('-')) {
 				this.autoProfile.tsep = '';
 			}
 
@@ -249,7 +249,7 @@ var Modules = (function (modules) {
 			var parts = [];
 
 			// discover date separtor for auto profile // default is ':'
-			if(timeString.indexOf(':') === -1) {
+			if(!timeString.includes(':')) {
 				this.autoProfile.tsep = '';
 			}
 
@@ -289,7 +289,7 @@ var Modules = (function (modules) {
 			}else{
 
 				// discover timezone separtor for auto profile // default is ':'
-				if(timeString.indexOf(':') === -1) {
+				if(!timeString.includes(':')) {
 					this.autoProfile.tzsep = '';
 				}
 

@@ -1708,9 +1708,9 @@ function sortElements(aElements, aSortBy, aAscending) {
 
     if (sortBy == "uiState")
       aSortFuncs[i] = uiStateCompare;
-    else if (DATE_FIELDS.indexOf(sortBy) != -1)
+    else if (DATE_FIELDS.includes(sortBy))
       aSortFuncs[i] = dateCompare;
-    else if (NUMERIC_FIELDS.indexOf(sortBy) != -1)
+    else if (NUMERIC_FIELDS.includes(sortBy))
       aSortFuncs[i] = numberCompare;
   }
 
@@ -3377,15 +3377,15 @@ var gDetailView = {
   },
 
   onPropertyChanged(aProperties) {
-    if (aProperties.indexOf("applyBackgroundUpdates") != -1) {
+    if (aProperties.includes("applyBackgroundUpdates")) {
       this._autoUpdate.value = this._addon.applyBackgroundUpdates;
       let hideFindUpdates = AddonManager.shouldAutoUpdate(this._addon);
       document.getElementById("detail-findUpdates-btn").hidden = hideFindUpdates;
     }
 
-    if (aProperties.indexOf("appDisabled") != -1 ||
-        aProperties.indexOf("signedState") != -1 ||
-        aProperties.indexOf("userDisabled") != -1)
+    if (aProperties.includes("appDisabled") ||
+        aProperties.includes("signedState") ||
+        aProperties.includes("userDisabled"))
       this.updateState();
   },
 
@@ -3625,7 +3625,7 @@ var gUpdatesView = {
   },
 
   onPropertyChanged(aAddon, aProperties) {
-    if (aProperties.indexOf("applyBackgroundUpdates") != -1)
+    if (aProperties.includes("applyBackgroundUpdates"))
       this.updateAvailableCount();
   }
 };

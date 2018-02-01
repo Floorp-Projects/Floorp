@@ -49,7 +49,7 @@ DriverInfo = (function() {
       var versionMatch = /Mac OS X (\d+.\d+)/.exec(navigator.userAgent);
       version = versionMatch ? parseFloat(versionMatch[1]) : null;
 
-    } else if (navigator.appVersion.indexOf('Android') != -1) {
+    } else if (navigator.appVersion.includes('Android')) {
       os = OS.ANDROID;
 
       try {

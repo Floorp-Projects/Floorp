@@ -33,9 +33,9 @@ function synthesizeImage(suffix) {
 }
 
 self.addEventListener("fetch", function(event) {
-  if (event.request.url.indexOf("image.png") >= 0) {
+  if (event.request.url.includes("image.png")) {
     event.respondWith(synthesizeImage(""));
-  } else if (event.request.url.indexOf("image2.png") >= 0) {
+  } else if (event.request.url.includes("image2.png")) {
     event.respondWith(synthesizeImage("2"));
   }
 });

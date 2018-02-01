@@ -15,7 +15,7 @@ add_task(async function() {
   await promiseTabLoadEvent(tab, "data:text/html," + escape(testPage));
   await SimpleTest.promiseFocus(browser.contentWindowAsCPOW);
 
-  const modifier = (navigator.platform.indexOf("Mac") >= 0) ?
+  const modifier = (navigator.platform.includes("Mac")) ?
                    Components.interfaces.nsIDOMWindowUtils.MODIFIER_META :
                    Components.interfaces.nsIDOMWindowUtils.MODIFIER_CONTROL;
 
@@ -29,8 +29,8 @@ add_task(async function() {
 
   // On windows, HTML clipboard includes extra data.
   // The values are from widget/windows/nsDataObj.cpp.
-  const htmlPrefix = (navigator.platform.indexOf("Win") >= 0) ? "<html><body>\n<!--StartFragment-->" : "";
-  const htmlPostfix = (navigator.platform.indexOf("Win") >= 0) ? "<!--EndFragment-->\n</body>\n</html>" : "";
+  const htmlPrefix = (navigator.platform.includes("Win")) ? "<html><body>\n<!--StartFragment-->" : "";
+  const htmlPostfix = (navigator.platform.includes("Win")) ? "<!--EndFragment-->\n</body>\n</html>" : "";
 
   await ContentTask.spawn(browser, { modifier, htmlPrefix, htmlPostfix }, async function(arg) {
     var doc = content.document;

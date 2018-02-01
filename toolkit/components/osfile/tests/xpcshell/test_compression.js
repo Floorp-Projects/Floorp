@@ -47,7 +47,7 @@ add_task(async function test_uncompressed() {
   }
   Assert.ok(!!exn);
   // Check the exception message (and that it contains the file name)
-  Assert.ok(exn.message.indexOf(`Invalid header (no magic number) - Data: ${ path }`) != -1);
+  Assert.ok(exn.message.includes(`Invalid header (no magic number) - Data: ${ path }`));
 });
 
 add_task(async function test_no_header() {
@@ -66,7 +66,7 @@ add_task(async function test_no_header() {
   }
   Assert.ok(!!exn);
   // Check the exception message (and that it contains the file name)
-  Assert.ok(exn.message.indexOf(`Buffer is too short (no header) - Data: ${ path }`) != -1);
+  Assert.ok(exn.message.includes(`Buffer is too short (no header) - Data: ${ path }`));
 });
 
 add_task(async function test_invalid_content() {
@@ -90,7 +90,7 @@ add_task(async function test_invalid_content() {
   }
   Assert.ok(!!exn);
   // Check the exception message (and that it contains the file name)
-  Assert.ok(exn.message.indexOf(`Invalid content: Decompression stopped at 0 - Data: ${ path }`) != -1);
+  Assert.ok(exn.message.includes(`Invalid content: Decompression stopped at 0 - Data: ${ path }`));
 });
 
 add_task(function() {

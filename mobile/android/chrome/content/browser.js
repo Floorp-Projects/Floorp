@@ -4243,14 +4243,14 @@ Tab.prototype = {
 
         // Sanitize rel link
         let list = this.sanitizeRelString(target.rel);
-        if (list.indexOf("[icon]") != -1) {
+        if (list.includes("[icon]")) {
           jsonMessage = this.makeFaviconMessage(target);
-        } else if (list.indexOf("[apple-touch-icon]") != -1 ||
-            list.indexOf("[apple-touch-icon-precomposed]") != -1) {
+        } else if (list.includes("[apple-touch-icon]") ||
+            list.includes("[apple-touch-icon-precomposed]")) {
           jsonMessage = this.makeFaviconMessage(target);
           jsonMessage['type'] = 'Link:Touchicon';
           this.addMetadata("touchIconList", jsonMessage.href, jsonMessage.size);
-        } else if (list.indexOf("[alternate]") != -1 && aEvent.type == "DOMLinkAdded") {
+        } else if (list.includes("[alternate]") && aEvent.type == "DOMLinkAdded") {
           let type = target.type.toLowerCase().replace(/^\s+|\s*(?:;.*)?$/g, "");
           let isFeed = (type == "application/rss+xml" || type == "application/atom+xml");
 
@@ -4258,9 +4258,9 @@ Tab.prototype = {
             return;
 
           jsonMessage = this.makeFeedMessage(target, type);
-        } else if (list.indexOf("[search]") != -1 && aEvent.type == "DOMLinkAdded") {
+        } else if (list.includes("[search]") && aEvent.type == "DOMLinkAdded") {
           this.sendOpenSearchMessage(target);
-        } else if (list.indexOf("[manifest]") != -1 &&
+        } else if (list.includes("[manifest]") &&
                    aEvent.type == "DOMLinkAdded"){
           this.makeManifestMessage(target);
           return;
@@ -6643,7 +6643,7 @@ var Tabs = {
         }
         break;
       case "network:link-status-changed":
-        if (["down", "unknown", "up"].indexOf(aData) == -1) {
+        if (!["down", "unknown", "up"].includes(aData)) {
           return;
         }
         this.useCache = (aData === "down");

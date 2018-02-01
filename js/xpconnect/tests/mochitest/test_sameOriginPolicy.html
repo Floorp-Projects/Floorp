@@ -46,7 +46,7 @@ var crossOriginReadableWindowProps = ['blur', 'close', 'closed', 'focus',
 
 function isCrossOriginReadable(obj, prop) {
   if (obj == "Window")
-    return crossOriginReadableWindowProps.indexOf(prop) != -1;
+    return crossOriginReadableWindowProps.includes(prop);
   if (obj == "Location")
     return prop == 'replace';
   return false;
@@ -70,7 +70,7 @@ function testAll(sameOrigin) {
 
   // On android, this appears to be on the window but not on the iframe. It's
   // not really relevant to this test, so just skip it.
-  if (props.indexOf('crypto') != -1)
+  if (props.includes('crypto'))
     props.splice(props.indexOf('crypto'), 1);
 
   // Add the named grand-child, since that won't appear on our window.

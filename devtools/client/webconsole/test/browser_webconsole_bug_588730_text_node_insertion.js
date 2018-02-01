@@ -32,7 +32,7 @@ function testTextNodeInsertion(hud) {
   let listener = {
     observe: function (aMessage) {
       let messageText = aMessage.message;
-      if (messageText.indexOf("JavaScript Warning") !== -1) {
+      if (messageText.includes("JavaScript Warning")) {
         error = true;
       }
     }

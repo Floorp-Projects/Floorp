@@ -309,7 +309,7 @@ function check_all_in_list(aManager, aIds, aIgnoreExtras) {
   }
 
   for (let id of aIds) {
-    if (inlist.indexOf(id) == -1)
+    if (!inlist.includes(id))
       ok(false, "Should find " + id + " in the list");
   }
 
@@ -317,7 +317,7 @@ function check_all_in_list(aManager, aIds, aIgnoreExtras) {
     return;
 
   for (let inlistItem of inlist) {
-    if (aIds.indexOf(inlistItem) == -1)
+    if (!aIds.includes(inlistItem))
       ok(false, "Shouldn't have seen " + inlistItem + " in the list");
   }
 }
@@ -905,7 +905,7 @@ MockProvider.prototype = {
    */
   getAddonsByTypes: function MP_getAddonsByTypes(aTypes, aCallback) {
     var addons = this.addons.filter(function(aAddon) {
-      if (aTypes && aTypes.length > 0 && aTypes.indexOf(aAddon.type) == -1)
+      if (aTypes && aTypes.length > 0 && !aTypes.includes(aAddon.type))
         return false;
       return true;
     });
@@ -922,7 +922,7 @@ MockProvider.prototype = {
    */
   getAddonsWithOperationsByTypes: function MP_getAddonsWithOperationsByTypes(aTypes, aCallback) {
     var addons = this.addons.filter(function(aAddon) {
-      if (aTypes && aTypes.length > 0 && aTypes.indexOf(aAddon.type) == -1)
+      if (aTypes && aTypes.length > 0 && !aTypes.includes(aAddon.type))
         return false;
       return aAddon.pendingOperations != 0;
     });
@@ -943,7 +943,7 @@ MockProvider.prototype = {
       if (aInstall.state == AddonManager.STATE_CANCELLED)
         return false;
 
-      if (aTypes && aTypes.length > 0 && aTypes.indexOf(aInstall.type) == -1)
+      if (aTypes && aTypes.length > 0 && !aTypes.includes(aInstall.type))
         return false;
 
       return true;

@@ -437,7 +437,7 @@ function testAboutModuleRegistration() {
         if (request.status != 200) {
           throw (`about:test1 response had status ${request.status} - expected 200`);
         }
-        if (request.responseText.indexOf("test1") == -1) {
+        if (!request.responseText.includes("test1")) {
           throw (`about:test1 response had result ${request.responseText}`);
         }
 
@@ -448,7 +448,7 @@ function testAboutModuleRegistration() {
         if (request.status != 200) {
           throw (`about:test2 response had status ${request.status} - expected 200`);
         }
-        if (request.responseText.indexOf("test2") == -1) {
+        if (!request.responseText.includes("test2")) {
           throw (`about:test2 response had result ${request.responseText}`);
         }
 

@@ -1028,7 +1028,7 @@ this.PushServiceWebSocket = {
     let handlerName = reply.messageType[0].toUpperCase() +
                       reply.messageType.slice(1).toLowerCase();
 
-    if (handlers.indexOf(handlerName) == -1) {
+    if (!handlers.includes(handlerName)) {
       console.warn("wsOnMessageAvailable: No whitelisted handler", handlerName,
         "for message", reply.messageType);
       return;

@@ -118,7 +118,7 @@ var PluginProvider = {
    *         A callback to pass an array of Addons to
    */
   getAddonsByTypes(aTypes, aCallback) {
-    if (aTypes && aTypes.indexOf("plugin") < 0) {
+    if (aTypes && !aTypes.includes("plugin")) {
       aCallback([]);
       return;
     }

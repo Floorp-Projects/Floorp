@@ -29,7 +29,7 @@ if (navigator.platform.startsWith("Win")) {
 SimpleTest.waitForExplicitFinish();
 
 SimpleTest.waitForFocus(function () {
-  if (navigator.platform.indexOf("Lin") != -1) {
+  if (navigator.platform.includes("Lin")) {
     ok(true, "This test is disabled on Linux because it expects moving windows to be synchronous which is not guaranteed on Linux.");
     SimpleTest.finish();
     return;

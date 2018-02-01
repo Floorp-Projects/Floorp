@@ -94,7 +94,7 @@ function pastedSelection(event)
   ok(SpecialPowers.getBoolPref("middlemouse.paste"), "paste on middle click is valid");
 
   // Mac and Windows shouldn't get here as the middle mouse preference is false by default
-  ok(navigator.platform.indexOf("Mac") == -1 && navigator.platform.indexOf("Win") == -1, "middle click enabled on right platforms");
+  ok(!navigator.platform.includes("Mac") && !navigator.platform.includes("Win"), "middle click enabled on right platforms");
 
   var expectedText = supportsSelectionClipboard ? "COPY TEXT" : "CLIPBOARD";
   is(event.clipboardData.getData("text/plain"), expectedText, "In pastedSelection(): data pasted properly from selection");

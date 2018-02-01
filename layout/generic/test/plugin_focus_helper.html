@@ -113,11 +113,11 @@ function doTest() {
   input.focus();
 }
 
-if (navigator.platform.indexOf("Mac") >= 0) {
+if (navigator.platform.includes("Mac")) {
   nativeMouseDown = 1; // NSLeftMouseDown
   nativeMouseUp = 2; // NSLeftMouseUp
   SimpleTest.waitForFocus(doTest, window);
-} else if (navigator.platform.indexOf("Win") >= 0) {
+} else if (navigator.platform.includes("Win")) {
   nativeMouseDown = 2; // MOUSEEVENTF_LEFTDOWN
   nativeMouseUp = 4; // MOUSEEVENTF_LEFTUP
   SimpleTest.waitForFocus(doTest, window);

@@ -303,11 +303,11 @@ function parseLayers(layersDumpLines) {
       continue; // Something like a texturehost dump. Safe to ignore
     }
 
-    if (matches[2].indexOf("TiledContentHost") != -1 ||
-        matches[2].indexOf("ContentHost") != -1 ||
-        matches[2].indexOf("ContentClient") != -1 ||
-        matches[2].indexOf("MemoryTextureHost") != -1 ||
-        matches[2].indexOf("ImageHost") != -1) {
+    if (matches[2].includes("TiledContentHost") ||
+        matches[2].includes("ContentHost") ||
+        matches[2].includes("ContentClient") ||
+        matches[2].includes("MemoryTextureHost") ||
+        matches[2].includes("ImageHost")) {
       continue; // We're already pretty good at visualizing these
     }
 

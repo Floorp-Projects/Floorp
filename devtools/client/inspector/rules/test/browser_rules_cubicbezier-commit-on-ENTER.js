@@ -46,7 +46,7 @@ function* testPressingEnterCommitsChanges(swatch, ruleView) {
   }, "Waiting for the change to be previewed on the element");
 
   ok(getRuleViewProperty(ruleView, "body", "transition").valueSpan.textContent
-    .indexOf("cubic-bezier(") !== -1,
+    .includes("cubic-bezier("),
     "The text of the timing-function was updated");
 
   info("Sending RETURN key within the tooltip document");
@@ -61,6 +61,6 @@ function* testPressingEnterCommitsChanges(swatch, ruleView) {
   is(style, expected, "The element's timing-function was kept after RETURN");
 
   let ruleViewStyle = getRuleViewProperty(ruleView, "body", "transition")
-                      .valueSpan.textContent.indexOf("cubic-bezier(") !== -1;
+                      .valueSpan.textContent.includes("cubic-bezier(");
   ok(ruleViewStyle, "The text of the timing-function was kept after RETURN");
 }

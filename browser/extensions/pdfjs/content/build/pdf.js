@@ -1577,7 +1577,7 @@ class SimpleXMLParser {
     return { documentElement: nodes.pop() };
   }
   _decodeXML(text) {
-    if (text.indexOf('&') < 0) {
+    if (!text.includes('&')) {
       return text;
     }
     return text.replace(/&(#(x[0-9a-f]+|\d+)|\w+);/gi, function (all, entityName, number) {
@@ -2365,7 +2365,7 @@ class LoopbackPort {
       var result;
       var buffer;
       if ((buffer = value.buffer) && (0, _util.isArrayBuffer)(buffer)) {
-        var transferable = transfers && transfers.indexOf(buffer) >= 0;
+        var transferable = transfers && transfers.includes(buffer);
         if (value === buffer) {
           result = value;
         } else if (transferable) {
@@ -3680,7 +3680,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
       let optionElement = document.createElement('option');
       optionElement.textContent = option.displayValue;
       optionElement.value = option.exportValue;
-      if (this.data.fieldValue.indexOf(option.displayValue) >= 0) {
+      if (this.data.fieldValue.includes(option.displayValue)) {
         optionElement.setAttribute('selected', true);
       }
       selectElement.appendChild(optionElement);
@@ -3697,7 +3697,7 @@ class PopupAnnotationElement extends AnnotationElement {
   render() {
     const IGNORE_TYPES = ['Line', 'Square', 'Circle', 'PolyLine', 'Polygon'];
     this.container.className = 'popupAnnotation';
-    if (IGNORE_TYPES.indexOf(this.data.parentType) >= 0) {
+    if (IGNORE_TYPES.includes(this.data.parentType)) {
       return this.container;
     }
     let selector = '[data-annotation-id="' + this.data.parentId + '"]';

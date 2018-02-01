@@ -64,7 +64,7 @@ function getFocusedElementForBrowser(browser, dontCheckExtraFocus = false) {
 
 function focusInChild() {
   function getWindowDocId(target) {
-    return (String(target.location).indexOf("1") >= 0) ? "window1" : "window2";
+    return (String(target.location).includes("1")) ? "window1" : "window2";
   }
 
   function eventListener(event) {
@@ -118,7 +118,7 @@ function focusInChild() {
 }
 
 function focusElementInChild(elementid, type) {
-  let browser = (elementid.indexOf("1") >= 0) ? browser1 : browser2;
+  let browser = (elementid.includes("1")) ? browser1 : browser2;
   if (gMultiProcessBrowser) {
     browser.messageManager.sendAsyncMessage("Browser:ChangeFocus",
                                             { id: elementid, type });

@@ -38,6 +38,6 @@ this.SearchStaticData = {
    *         array if none is known.  The returned array should not be modified.
    */
   getAlternateDomains(aDomain) {
-    return gGoogleDomains.indexOf(aDomain) == -1 ? [] : gGoogleDomains;
+    return !gGoogleDomains.includes(aDomain) ? [] : gGoogleDomains;
   },
 };

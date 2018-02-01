@@ -99,7 +99,7 @@ function eventReceived(event) {
 }
 
 function finish() {
-    if (select && navigator.platform.indexOf("Win") >= 0) {
+    if (select && navigator.platform.includes("Win")) {
         todo(false,
              "Should not have to close select before closing its window");
         // This avoids mochitest "Unable to restore focus" errors (bug 670053).

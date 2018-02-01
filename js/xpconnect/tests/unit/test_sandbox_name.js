@@ -19,7 +19,7 @@ function test_sandbox_name() {
   );
 
   for (let name of names) {
-    Assert.ok(fileName.indexOf(name) != -1, `Name ${name} appears in ${fileName}`);
+    Assert.ok(fileName.includes(name), `Name ${name} appears in ${fileName}`);
   }
 };
 

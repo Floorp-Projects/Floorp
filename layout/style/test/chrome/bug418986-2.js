@@ -114,7 +114,7 @@ var testToggles = function (resisting) {
   suppressed_toggles.forEach(
     function (key) {
       var exists = keyValMatches(key, 0) || keyValMatches(key, 1);
-      if (resisting || (toggles_enabled_in_content.indexOf(key) === -1 && !is_chrome_window)) {
+      if (resisting || (!toggles_enabled_in_content.includes(key) && !is_chrome_window)) {
          ok(!exists, key + " should not exist.");
       } else {
          ok(exists, key + " should exist.");
@@ -210,7 +210,7 @@ var generateCSSLines = function (resisting) {
   lines += ".suppress { background-color: " + (resisting ? "green" : "red") + ";}\n";
   suppressed_toggles.forEach(
     function (key) {
-      if (toggles_enabled_in_content.indexOf(key) === -1 && !resisting && !is_chrome_window) {
+      if (!toggles_enabled_in_content.includes(key) && !resisting && !is_chrome_window) {
         lines += "#" + key + " { background-color: green; }\n";
       } else {
         lines += suppressedMediaQueryCSSLine(key, resisting ? "red" : "green");

@@ -194,7 +194,7 @@ function getRandomCompletionSet(forceServerError) {
       for (let j = 0; j < length; j++)
         hash += String.fromCharCode(rand.nextNum(8));
       prefix = hash.substring(0, 4);
-    } while (hashPrefixes.indexOf(prefix) != -1);
+    } while (hashPrefixes.includes(prefix));
 
     hashPrefixes.push(prefix);
     completion.hash = hash;
@@ -326,7 +326,7 @@ function hashCompleterServer(aRequest, aResponse) {
   let httpStatus = 204;
   for (let completion of completionSets[currentCompletionSet]) {
     if (completion.expectCompletion &&
-        (completedHashes.indexOf(completion.hash) == -1)) {
+        (!completedHashes.includes(completion.hash))) {
       completedHashes.push(completion.hash);
 
       if (completion.multipleCompletions)

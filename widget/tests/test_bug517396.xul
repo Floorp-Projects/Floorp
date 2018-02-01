@@ -26,7 +26,7 @@ SimpleTest.waitForExplicitFinish();
 
 SimpleTest.waitForFocus(function () {
    // this test fails on Linux, bug 526236
-  if (navigator.platform.indexOf("Lin") != -1) {
+  if (navigator.platform.includes("Lin")) {
     ok(true, "disabled on Linux");
     SimpleTest.finish();
     return;

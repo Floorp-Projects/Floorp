@@ -121,10 +121,10 @@ function handlePassThrough(evt, filename) {
 
 addEventListener("fetch", evt => {
   console.log(`SW processing fetch of ${evt.request.url}`);
-  if (evt.request.url.indexOf("sw-stream-download") >= 0) {
+  if (evt.request.url.includes("sw-stream-download")) {
     return handleStream(evt, "sw-stream-download");
   }
-  if (evt.request.url.indexOf("sw-passthrough-download") >= 0) {
+  if (evt.request.url.includes("sw-passthrough-download")) {
     return handlePassThrough(evt, "sw-passthrough-download");
   }
 })

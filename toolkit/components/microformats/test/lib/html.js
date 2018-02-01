@@ -71,7 +71,7 @@ var Modules = (function (modules) {
 					out += ' ' + attrs[j].name +  '=' + '"' + attrs[j].value + '"';
 				}
 
-				if(this.selfClosingElt.indexOf(node.tagName.toLowerCase()) === -1){
+				if(!this.selfClosingElt.includes(node.tagName.toLowerCase())){
 					out += '>';
 				}
 

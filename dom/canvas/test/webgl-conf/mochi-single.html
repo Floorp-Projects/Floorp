@@ -39,7 +39,7 @@ if (parent) {
   parent.SimpleTest.requestFlakyTimeout('untriaged');
 
   try {
-    if (navigator.appVersion.indexOf('Android') != -1) {
+    if (navigator.appVersion.includes('Android')) {
       // From layout/tools/reftest/reftest.js:
       var version = SpecialPowers.Services.sysinfo.getProperty('version');
       var kAndroidVersion2_3 = 9;

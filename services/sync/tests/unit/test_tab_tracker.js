@@ -68,11 +68,11 @@ add_task(async function run_test() {
   Assert.equal(logs.length, 2);
   for (let log of logs) {
     Assert.equal(log.addTopics.length, 5);
-    Assert.ok(log.addTopics.indexOf("pageshow") >= 0);
-    Assert.ok(log.addTopics.indexOf("TabOpen") >= 0);
-    Assert.ok(log.addTopics.indexOf("TabClose") >= 0);
-    Assert.ok(log.addTopics.indexOf("TabSelect") >= 0);
-    Assert.ok(log.addTopics.indexOf("unload") >= 0);
+    Assert.ok(log.addTopics.includes("pageshow"));
+    Assert.ok(log.addTopics.includes("TabOpen"));
+    Assert.ok(log.addTopics.includes("TabClose"));
+    Assert.ok(log.addTopics.includes("TabSelect"));
+    Assert.ok(log.addTopics.includes("unload"));
     Assert.equal(log.remTopics.length, 0);
     Assert.equal(log.numAPL, 1, "Added 1 progress listener");
     Assert.equal(log.numRPL, 0, "Didn't remove a progress listener");
@@ -85,11 +85,11 @@ add_task(async function run_test() {
   for (let log of logs) {
     Assert.equal(log.addTopics.length, 0);
     Assert.equal(log.remTopics.length, 5);
-    Assert.ok(log.remTopics.indexOf("pageshow") >= 0);
-    Assert.ok(log.remTopics.indexOf("TabOpen") >= 0);
-    Assert.ok(log.remTopics.indexOf("TabClose") >= 0);
-    Assert.ok(log.remTopics.indexOf("TabSelect") >= 0);
-    Assert.ok(log.remTopics.indexOf("unload") >= 0);
+    Assert.ok(log.remTopics.includes("pageshow"));
+    Assert.ok(log.remTopics.includes("TabOpen"));
+    Assert.ok(log.remTopics.includes("TabClose"));
+    Assert.ok(log.remTopics.includes("TabSelect"));
+    Assert.ok(log.remTopics.includes("unload"));
     Assert.equal(log.numAPL, 0, "Didn't add a progress listener");
     Assert.equal(log.numRPL, 1, "Removed 1 progress listener");
   }

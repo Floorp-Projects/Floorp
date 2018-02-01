@@ -850,7 +850,7 @@ ContentPrefService2.prototype = {
     } else
       observers = this._genericObservers;
 
-    if (observers.indexOf(aObserver) == -1)
+    if (!observers.includes(aObserver))
       observers.push(aObserver);
   },
 
@@ -863,7 +863,7 @@ ContentPrefService2.prototype = {
     } else
       observers = this._genericObservers;
 
-    if (observers.indexOf(aObserver) != -1)
+    if (observers.includes(aObserver))
       observers.splice(observers.indexOf(aObserver), 1);
   },
 

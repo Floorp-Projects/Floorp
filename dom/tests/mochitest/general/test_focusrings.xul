@@ -35,8 +35,8 @@ function initTest()
 
 function runTest()
 {
-  var isMac = (navigator.platform.indexOf("Mac") >= 0);
-  var isWin = (navigator.platform.indexOf("Win") >= 0);
+  var isMac = (navigator.platform.includes("Mac"));
+  var isWin = (navigator.platform.includes("Win"));
 
   function checkFocus(element, visible, testid)
   {
@@ -45,7 +45,7 @@ function runTest()
   }
 
   // make sure that a focus ring appears on the focused button
-  if (navigator.platform.indexOf("Mac") >= 0) {
+  if (navigator.platform.includes("Mac")) {
     var focusedButton = $("b3");
     ok(compareSnapshots(snapShot(focusedButton), snapShot($("b2")), true)[0], "unfocused shows no ring");
     focusedButton.focus();
@@ -77,7 +77,7 @@ function runTest()
 
   synthesizeMouse($("b1"), 4, 4, { });
   checkFocus($("b1"), !isMac && expectedVisible, "appearance on button after mouse focus with :moz-focusring");
-  if (navigator.platform.indexOf("Mac") >= 0) {
+  if (navigator.platform.includes("Mac")) {
     ok(compareSnapshots(snapShot($("b1")), snapShot($("b2")), false)[0], "focus after mouse shows no ring");
   }
 

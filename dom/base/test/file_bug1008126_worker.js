@@ -26,9 +26,9 @@ function is(a, b, msg) {
 function checkData(xhr, data, mapped, cb) {
   var ct = xhr.getResponseHeader("Content-Type");
   if (mapped) {
-    ok(ct.indexOf("mem-mapped") != -1, "Data is memory-mapped");
+    ok(ct.includes("mem-mapped"), "Data is memory-mapped");
   } else {
-    ok(ct.indexOf("mem-mapped") == -1, "Data is not memory-mapped");
+    ok(!ct.includes("mem-mapped"), "Data is not memory-mapped");
   }
   ok(xhr.response, "Data is non-null");
   var str = String.fromCharCode.apply(null, new Uint8Array(xhr.response));

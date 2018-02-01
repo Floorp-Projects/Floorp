@@ -881,7 +881,7 @@
   };
 
   exports.addOrigin = function(origin) {
-    if (cx.origins.indexOf(origin) < 0) cx.origins.push(origin);
+    if (!cx.origins.includes(origin)) cx.origins.push(origin);
   };
 
   var baseMaxWorkDepth = 20, reduceMaxWorkDepth = 0.0001;

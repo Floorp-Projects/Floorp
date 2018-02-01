@@ -276,7 +276,7 @@ NewConsoleOutputWrapper.prototype = {
     // to count with that.
     const NUMBER_OF_NETWORK_UPDATE = 8;
     let expectedLength = NUMBER_OF_NETWORK_UPDATE;
-    if (res.networkInfo.updates.indexOf("requestPostData") != -1) {
+    if (res.networkInfo.updates.includes("requestPostData")) {
       expectedLength++;
     }
 

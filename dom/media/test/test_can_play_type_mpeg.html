@@ -133,7 +133,7 @@ function IsMacOSSnowLeopardOrLater() {
 }
 
 function IsLinux() {
-  return navigator.userAgent.indexOf("Linux") != -1;
+  return navigator.userAgent.includes("Linux");
 }
 
 function getPref(name) {

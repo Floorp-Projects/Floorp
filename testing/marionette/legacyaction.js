@@ -178,7 +178,7 @@ action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) 
   let c;
   i++;
 
-  if (["press", "wait", "keyDown", "keyUp", "click"].indexOf(command) == -1) {
+  if (!["press", "wait", "keyDown", "keyUp", "click"].includes(command)) {
     // if mouseEventsOnly, then touchIds isn't used
     if (!(touchId in this.touchIds) && !this.mouseEventsOnly) {
       this.resetValues();
@@ -227,7 +227,7 @@ action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) 
 
       // look ahead to check if we're scrolling,
       // needed for APZ touch dispatching
-      if ((i != chain.length) && (chain[i][0].indexOf('move') !== -1)) {
+      if ((i != chain.length) && (chain[i][0].includes('move'))) {
         this.scrolling = true;
       }
       webEl = WebElement.fromUUID(pack[1], "content");

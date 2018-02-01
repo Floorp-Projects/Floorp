@@ -19,8 +19,8 @@ var listener = {
         var answer = inRecord.getNextAddrAsString();
         // If there is an answer it should be an IPv4  address
         dump(answer);
-        Assert.ok(answer.indexOf(':') == -1);
-        Assert.ok(answer.indexOf('.') != -1);
+        Assert.ok(!answer.includes(':'));
+        Assert.ok(answer.includes('.'));
       } catch (e) {
         break;
       }

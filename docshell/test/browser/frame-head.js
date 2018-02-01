@@ -71,7 +71,7 @@ this.timelineContentTest = function(tests) {
 
       // Cycle collection markers are non-deterministic, and none of these tests
       // expect them to show up.
-      markers = markers.filter(m => m.name.indexOf("nsCycleCollector") === -1);
+      markers = markers.filter(m => !m.name.includes("nsCycleCollector"));
 
       info("Running the test check function");
       check(markers);
