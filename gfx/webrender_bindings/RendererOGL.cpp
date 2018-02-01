@@ -113,7 +113,7 @@ RendererOGL::UpdateAndRender()
 
   wr_renderer_update(mRenderer);
 
-  auto size = mCompositor->GetClientSize();
+  auto size = mCompositor->GetBufferSize();
 
   if (!wr_renderer_render(mRenderer, size.width, size.height)) {
     NotifyWebRenderError(WebRenderError::RENDER);
