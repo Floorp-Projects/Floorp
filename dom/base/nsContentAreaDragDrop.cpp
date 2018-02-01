@@ -60,6 +60,7 @@
 #include "nsVariant.h"
 
 using namespace mozilla::dom;
+using mozilla::IgnoreErrors;
 
 class MOZ_STACK_CLASS DragDataProducer
 {
@@ -353,10 +354,9 @@ DragDataProducer::GetNodeString(nsIContent* inNode,
 
   // use a range to get the text-equivalent of the node
   nsCOMPtr<nsIDocument> doc = node->OwnerDoc();
-  mozilla::IgnoredErrorResult rv;
-  RefPtr<nsRange> range = doc->CreateRange(rv);
+  RefPtr<nsRange> range = doc->CreateRange(IgnoreErrors());
   if (range) {
-    range->SelectNode(*node, rv);
+    range->SelectNode(*node, IgnoreErrors());
     range->ToString(outNodeString);
   }
 }

@@ -111,15 +111,13 @@ MakeAnonButton(nsIDocument* aDoc, const char* labelKey,
     HTMLButtonElement::FromContentOrNull(button);
 
   if (!aAccessKey.IsEmpty()) {
-    IgnoredErrorResult ignored;
-    buttonElement->SetAccessKey(aAccessKey, ignored);
+    buttonElement->SetAccessKey(aAccessKey, IgnoreErrors());
   }
 
   // Both elements are given the same tab index so that the user can tab
   // to the file control at the correct index, and then between the two
   // buttons.
-  IgnoredErrorResult ignored;
-  buttonElement->SetTabIndex(aInputElement->TabIndex(), ignored);
+  buttonElement->SetTabIndex(aInputElement->TabIndex(), IgnoreErrors());
 
   return button.forget();
 }

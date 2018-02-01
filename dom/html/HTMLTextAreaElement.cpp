@@ -789,8 +789,7 @@ nsresult
 HTMLTextAreaElement::Reset()
 {
   nsAutoString resetVal;
-  IgnoredErrorResult res;
-  GetDefaultValue(resetVal, res);
+  GetDefaultValue(resetVal, IgnoreErrors());
   SetValueChanged(false);
 
   nsresult rv = SetValueInternal(resetVal,
@@ -891,8 +890,7 @@ HTMLTextAreaElement::RestoreState(nsPresState* aState)
   }
 
   if (aState->IsDisabledSet() && !aState->GetDisabled()) {
-    IgnoredErrorResult rv;
-    SetDisabled(false, rv);
+    SetDisabled(false, IgnoreErrors());
   }
 
   return false;
@@ -1312,8 +1310,7 @@ HTMLTextAreaElement::GetRows()
 NS_IMETHODIMP_(void)
 HTMLTextAreaElement::GetDefaultValueFromContent(nsAString& aValue)
 {
-  IgnoredErrorResult rv;
-  GetDefaultValue(aValue, rv);
+  GetDefaultValue(aValue, IgnoreErrors());
 }
 
 NS_IMETHODIMP_(bool)

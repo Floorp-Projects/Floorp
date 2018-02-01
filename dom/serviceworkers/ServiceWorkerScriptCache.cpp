@@ -618,9 +618,8 @@ private:
       ir->SetPrincipalInfo(Move(principalInfo));
     }
 
-    IgnoredErrorResult ignored;
     RefPtr<InternalHeaders> internalHeaders = aCN->GetInternalHeaders();
-    ir->Headers()->Fill(*(internalHeaders.get()), ignored);
+    ir->Headers()->Fill(*(internalHeaders.get()), IgnoreErrors());
 
     RefPtr<Response> response =
       new Response(aCache->GetGlobalObject(), ir, nullptr);

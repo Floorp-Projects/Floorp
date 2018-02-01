@@ -538,7 +538,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(mozInlineSpellChecker)
 NS_IMPL_CYCLE_COLLECTION(mozInlineSpellChecker,
                          mTextEditor,
                          mSpellCheck,
-                         mTreeWalker,
                          mCurrentSelectionAnchorNode)
 
 mozInlineSpellChecker::SpellCheckingState

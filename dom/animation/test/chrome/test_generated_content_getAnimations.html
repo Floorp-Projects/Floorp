@@ -32,7 +32,7 @@ function getWalker(node) {
   var walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"].
     createInstance(Ci.inIDeepTreeWalker);
   walker.showAnonymousContent = true;
-  walker.init(node.ownerDocument, Ci.nsIDOMNodeFilter.SHOW_ALL);
+  walker.init(node.ownerDocument, NodeFilter.SHOW_ALL);
   walker.currentNode = node;
   return walker;
 }
