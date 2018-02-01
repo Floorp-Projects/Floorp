@@ -1727,15 +1727,7 @@ TelemetryImpl::RegisterScalars(const nsACString& aCategoryName,
                                JS::Handle<JS::Value> aScalarData,
                                JSContext* cx)
 {
-  return TelemetryScalar::RegisterScalars(aCategoryName, aScalarData, false, cx);
-}
-
-NS_IMETHODIMP
-TelemetryImpl::RegisterBuiltinScalars(const nsACString& aCategoryName,
-                                      JS::Handle<JS::Value> aScalarData,
-                                      JSContext* cx)
-{
-  return TelemetryScalar::RegisterScalars(aCategoryName, aScalarData, true, cx);
+  return TelemetryScalar::RegisterScalars(aCategoryName, aScalarData, cx);
 }
 
 NS_IMETHODIMP
