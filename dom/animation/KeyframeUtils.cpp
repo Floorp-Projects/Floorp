@@ -1694,6 +1694,7 @@ DistributeRange(const Range<Keyframe>& aRange)
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 template
 nsTArray<AnimationProperty>
 KeyframeUtils::GetAnimationPropertiesFromKeyframes(
@@ -1701,6 +1702,7 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
   dom::Element* aElement,
   GeckoStyleContext* aStyle,
   dom::CompositeOperation aEffectComposite);
+#endif
 
 template
 nsTArray<AnimationProperty>

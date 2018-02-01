@@ -130,20 +130,26 @@ ElementPropertyTransition::UpdateStartValueFromReplacedTransition()
           Servo_AnimationValue_Uncompute(startValue.mServo).Consume();
         mProperties[0].mSegments[0].mFromValue = Move(startValue);
       }
-    } else if (StyleAnimationValue::Interpolate(mProperties[0].mProperty,
+    } else {
+#ifdef MOZ_OLD_STYLE
+      if (StyleAnimationValue::Interpolate(mProperties[0].mProperty,
                                                 replacedFrom.mGecko,
                                                 replacedTo.mGecko,
                                                 valuePosition,
                                                 startValue.mGecko)) {
-      nsCSSValue cssValue;
-      DebugOnly<bool> uncomputeResult =
-        StyleAnimationValue::UncomputeValue(mProperties[0].mProperty,
-                                            startValue.mGecko,
-                                            cssValue);
-      MOZ_ASSERT(uncomputeResult, "UncomputeValue should not fail");
-      mKeyframes[0].mPropertyValues[0].mValue = cssValue;
+        nsCSSValue cssValue;
+        DebugOnly<bool> uncomputeResult =
+          StyleAnimationValue::UncomputeValue(mProperties[0].mProperty,
+                                              startValue.mGecko,
+                                              cssValue);
+        MOZ_ASSERT(uncomputeResult, "UncomputeValue should not fail");
+        mKeyframes[0].mPropertyValues[0].mValue = cssValue;
 
-      mProperties[0].mSegments[0].mFromValue = Move(startValue);
+        mProperties[0].mSegments[0].mFromValue = Move(startValue);
+      }
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     }
   }
 
@@ -795,6 +801,7 @@ AppendKeyframe(double aOffset,
     frame.mPropertyValues.AppendElement(
       Move(PropertyValuePair(aProperty, Move(decl))));
   } else {
+#ifdef MOZ_OLD_STYLE
     nsCSSValue propertyValue;
     DebugOnly<bool> uncomputeResult =
       StyleAnimationValue::UncomputeValue(aProperty, Move(aValue.mGecko),
@@ -803,6 +810,9 @@ AppendKeyframe(double aOffset,
                "Unable to get specified value from computed value");
     frame.mPropertyValues.AppendElement(
       Move(PropertyValuePair(aProperty, Move(propertyValue))));
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
   return frame;
 }
