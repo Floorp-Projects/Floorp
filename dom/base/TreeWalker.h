@@ -32,7 +32,7 @@ public:
 
     TreeWalker(nsINode *aRoot,
                uint32_t aWhatToShow,
-               NodeFilterHolder aFilter);
+               NodeFilter* aFilter);
 
     NS_DECL_CYCLE_COLLECTION_CLASS(TreeWalker)
 
@@ -45,9 +45,9 @@ public:
     {
         return mWhatToShow;
     }
-    already_AddRefed<NodeFilter> GetFilter()
+    NodeFilter* GetFilter()
     {
-        return mFilter.ToWebIDLCallback();
+        return mFilter;
     }
     nsINode* CurrentNode() const
     {

@@ -29,7 +29,7 @@ public:
 
     NodeIterator(nsINode *aRoot,
                  uint32_t aWhatToShow,
-                 NodeFilterHolder aFilter);
+                 NodeFilter* aFilter);
 
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
@@ -52,9 +52,9 @@ public:
     {
         return mWhatToShow;
     }
-    already_AddRefed<NodeFilter> GetFilter()
+    NodeFilter* GetFilter()
     {
-        return mFilter.ToWebIDLCallback();
+        return mFilter;
     }
     already_AddRefed<nsINode> NextNode(ErrorResult& aResult)
     {

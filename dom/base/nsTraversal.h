@@ -12,7 +12,6 @@
 #define nsTraversal_h___
 
 #include "nsCOMPtr.h"
-#include "nsIDocument.h" // for NodeFilterHolder
 #include "mozilla/dom/CallbackObject.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/NodeFilterBinding.h"
@@ -25,13 +24,13 @@ class nsTraversal
 public:
     nsTraversal(nsINode *aRoot,
                 uint32_t aWhatToShow,
-                mozilla::dom::NodeFilterHolder aFilter);
+                mozilla::dom::NodeFilter* aFilter);
     virtual ~nsTraversal();
 
 protected:
     nsCOMPtr<nsINode> mRoot;
     uint32_t mWhatToShow;
-    mozilla::dom::NodeFilterHolder mFilter;
+    RefPtr<mozilla::dom::NodeFilter> mFilter;
     bool mInAcceptNode;
 
     /*
@@ -39,7 +38,7 @@ protected:
      * mFilter to test the node.
      * @param aNode     Node to test
      * @param aResult   Whether we succeeded
-     * @returns         Filtervalue. See nsIDOMNodeFilter.idl
+     * @returns         Filtervalue. See NodeFilter.webidl
      */
     int16_t TestNode(nsINode* aNode, mozilla::ErrorResult& aResult);
 };
