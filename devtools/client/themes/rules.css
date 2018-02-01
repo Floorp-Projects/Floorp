@@ -159,7 +159,7 @@
 
 .ruleview-namecontainer {
   cursor: text;
-  padding-left: 3px;
+  margin-left: -25px;
 }
 
 .ruleview-propertyvaluecontainer {
@@ -251,11 +251,6 @@
   min-height: 0;
 }
 
-:root[platform="win"] .ruleview-header,
-:root[platform="linux"] .ruleview-header {
-  margin-top: 4px;
-}
-
 .ruleview-expandable-header {
   cursor: pointer;
 }
@@ -263,7 +258,6 @@
 .ruleview-expandable-header:hover {
   background-color: var(--theme-toolbar-background-hover);
 }
-
 
 .ruleview-rule-pseudo-element {
   padding-left:20px;
@@ -384,6 +378,12 @@
   margin: 0;
 }
 
+.ruleview-enableproperty {
+  position: relative;
+  float: left;
+  left: -28px;
+}
+
 .ruleview-rule:not(:hover) .ruleview-enableproperty {
   visibility: hidden;
 }
@@ -403,7 +403,7 @@
 
 .ruleview-newproperty {
   /* (enable checkbox width: 12px) + (expander width: 15px) */
-  margin-inline-start: 27px;
+  margin-inline-start: -10px;
 }
 
 .ruleview-namecontainer,
@@ -418,12 +418,8 @@
   padding: 0;
 }
 
-.ruleview-computed {
-  margin-inline-start: 26px;
-}
-
 .ruleview-overridden-items {
-  margin: 0px 0px 0px 2px;
+  margin-inline-start: -25px;
   list-style: none;
   line-height: 1.5em;
 }
@@ -563,6 +559,7 @@
 .ruleview-property {
   border-left: 3px solid transparent;
   clear: right;
+  padding-left: 28px;
 }
 
 .ruleview-propertycontainer  > * {

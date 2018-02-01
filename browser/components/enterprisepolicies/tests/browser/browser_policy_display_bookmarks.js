@@ -4,7 +4,11 @@
 "use strict";
 
 add_task(async function setup() {
-  await setupPolicyEngineWithJson("config_display_bookmarks.json");
+  await setupPolicyEngineWithJson({
+    "policies": {
+      "display_bookmarks_toolbar": true
+    }
+  });
 });
 
 add_task(async function test_menu_shown() {
