@@ -336,6 +336,7 @@ function extraRootedPointers()
 
         'mozilla::ErrorResult',
         'mozilla::IgnoredErrorResult',
+        'mozilla::IgnoreErrors',
         'mozilla::dom::binding_detail::FastErrorResult',
     ];
 }
