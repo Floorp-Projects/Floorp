@@ -43,16 +43,18 @@ add_task(async function() {
 
   // Test entering the OS's fullscreen mode.
   var fullScreenEntered = waitOneEvent(win, "sizemodechange");
-  await promiseNextTick();
   synthesizeKey("VK_F11", {});
   await fullScreenEntered;
+
+  // Wait for the next tick to apply media feature changes. See bug 1430380.
+  await promiseNextTick();
   ok(offsetTop !== secondDiv.offsetTop, "offset top changes");
   var fullScreenExited = waitOneEvent(win, "sizemodechange");
-  // Need to wait for the next tick to to avoid nested fullscreen change
-  // in different direction. See bug 1415781.
-  await promiseNextTick();
   synthesizeKey("VK_F11", {});
   await fullScreenExited;
+
+  // Wait for the next tick to apply media feature changes. See bug 1430380.
+  await promiseNextTick();
   ok(offsetTop === secondDiv.offsetTop, "offset top returns to original value");
 
   offsetTop = secondDiv.offsetTop;
