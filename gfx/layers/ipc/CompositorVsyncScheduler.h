@@ -19,9 +19,6 @@
 #include "nsISupportsImpl.h"
 
 
-class MessageLoop;
-class nsIWidget;
-
 namespace mozilla {
 
 class CancelableRunnable;
@@ -107,10 +104,9 @@ private:
   // update internal state and call the owner to do the composite).
   void Composite(TimeStamp aVsyncTimestamp);
 
-  void NotifyCompositeTaskExecuted();
   void ObserveVsync();
   void UnobserveVsync();
-  void DispatchTouchEvents(TimeStamp aVsyncTimestamp);
+
   void DispatchVREvents(TimeStamp aVsyncTimestamp);
 
   class Observer final : public VsyncObserver
