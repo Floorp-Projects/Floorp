@@ -55,8 +55,6 @@ FAILURE_STR = "Failed"
 configuration_tokens = ('branch',
                         'platform',
                         'update_channel',
-                        'ssh_key_dir',
-                        'stage_product',
                         )
 # some other values such as "%(version)s", "%(buildid)s", ...
 # are defined at run time and they cannot be enforced in the _pre_config_lock
