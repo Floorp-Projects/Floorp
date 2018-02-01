@@ -50,6 +50,8 @@ MOZ_GTEST_BENCH(Stylo, Servo_StyleSheet_FromUTF8Bytes_Bench, ServoParsingBench);
 #endif
 
 
+#ifdef MOZ_OLD_STYLE
+
 static void GeckoParsingBench() {
   // Don’t use NS_LITERAL_STRING to work around
   // "fatal error C1091: compiler limit: string exceeds 65535 bytes in length"
@@ -67,6 +69,8 @@ static void GeckoParsingBench() {
 }
 
 MOZ_GTEST_BENCH(Stylo, Gecko_nsCSSParser_ParseSheet_Bench, GeckoParsingBench);
+
+#endif
 
 
 #ifdef MOZ_STYLO
