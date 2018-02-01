@@ -177,7 +177,7 @@ function getSHTitle(sh, offset)
     offset = 0;
 
   // False instructs the SHistory not to modify its current index.
-  return sh.getEntryAtIndex(sh.index + offset, false).title;
+  return sh.legacySHistory.getEntryAtIndex(sh.index + offset, false).title;
 }
 
 // Tests that win's location ends with str

@@ -139,7 +139,9 @@ BrowserElementChild.prototype = {
 
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     if (!webNavigation.sessionHistory) {
-      // XXX(nika): We might need to start this up some other way?
+      // XXX(nika): I don't think this code should ever be hit? We should run
+      // TabChild::Init before we run this code which will perform this setup
+      // for us.
       docShell.initSessionHistory();
     }
 
@@ -919,7 +921,7 @@ BrowserElementChild.prototype = {
 
     try {
       if (history && history.count) {
-        history.PurgeHistory(history.count);
+        history.legacySHistory.PurgeHistory(history.count);
       }
     } catch(e) {}
 

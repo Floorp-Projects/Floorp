@@ -1277,10 +1277,11 @@ addMessageListener("Browser:PurgeSessionHistory", function BrowserPurgeHistory()
 
   // place the entry at current index at the end of the history list, so it won't get removed
   if (sessionHistory.index < sessionHistory.count - 1) {
-    let indexEntry = sessionHistory.getEntryAtIndex(sessionHistory.index, false);
-    sessionHistory.QueryInterface(Ci.nsISHistoryInternal);
+    let legacy = sessionHistory.legacySHistory;
+    legacy.QueryInterface(Ci.nsISHistoryInternal);
+    let indexEntry = legacy.getEntryAtIndex(sessionHistory.index, false);
     indexEntry.QueryInterface(Ci.nsISHEntry);
-    sessionHistory.addEntry(indexEntry, true);
+    legacy.addEntry(indexEntry, true);
   }
 
   let purge = sessionHistory.count;
@@ -1289,7 +1290,7 @@ addMessageListener("Browser:PurgeSessionHistory", function BrowserPurgeHistory()
   }
 
   if (purge > 0) {
-    sessionHistory.PurgeHistory(purge);
+    sessionHistory.legacySHistory.PurgeHistory(purge);
   }
 });
 

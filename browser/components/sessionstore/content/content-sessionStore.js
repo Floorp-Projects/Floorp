@@ -320,8 +320,8 @@ var SessionHistoryListener = {
     // waiting to add the listener later because these notifications are cheap.
     // We will likely only collect once since we are batching collection on
     // a delay.
-    docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory.
-      addSHistoryListener(this);
+    docShell.QueryInterface(Ci.nsIWebNavigation).
+      sessionHistory.legacySHistory.addSHistoryListener(this);
 
     // Collect data if we start with a non-empty shistory.
     if (!SessionHistory.isEmpty(docShell)) {
@@ -342,7 +342,7 @@ var SessionHistoryListener = {
   uninit() {
     let sessionHistory = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
     if (sessionHistory) {
-      sessionHistory.removeSHistoryListener(this);
+      sessionHistory.legacySHistory.removeSHistoryListener(this);
     }
   },
 

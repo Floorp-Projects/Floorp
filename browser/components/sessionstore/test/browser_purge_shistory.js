@@ -15,7 +15,7 @@ const TAB_STATE = {
 function checkTabContents(browser) {
   return ContentTask.spawn(browser, null, async function() {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
-    let history = webNavigation.sessionHistory.QueryInterface(Ci.nsISHistoryInternal);
+    let history = webNavigation.sessionHistory;
     Assert.ok(history && history.count == 1 && content.document.documentURI == "about:mozilla",
       "expected tab contents found");
   });
