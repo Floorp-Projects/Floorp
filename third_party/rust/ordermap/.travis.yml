@@ -1,0 +1,22 @@
+language: rust
+sudo: false
+matrix:
+  include:
+    - rust: 1.18.0
+    - rust: stable
+      env:
+       - FEATURES='serde-1'
+    - rust: beta
+    - rust: nightly
+    - rust: nightly
+      env:
+       - FEATURES='test_low_transition_point'
+branches:
+  only:
+    - master
+script:
+  - |
+      cargo build --verbose --features "$FEATURES" &&
+      cargo test --verbose --features "$FEATURES" &&
+      cargo test --release --verbose --features "$FEATURES" &&
+      cargo doc --verbose --features "$FEATURES"
