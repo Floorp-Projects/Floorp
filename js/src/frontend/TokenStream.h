@@ -1001,6 +1001,7 @@ class GeneralTokenStreamChars
 {
     using CharsSharedBase = TokenStreamCharsBase<CharT>;
 
+  protected:
     using typename CharsSharedBase::TokenBuf;
 
     using CharsSharedBase::userbuf;
@@ -1036,16 +1037,19 @@ template<class AnyCharsAccess>
 class TokenStreamChars<char16_t, AnyCharsAccess>
   : public GeneralTokenStreamChars<char16_t, AnyCharsAccess>
 {
+  private:
     using Self = TokenStreamChars<char16_t, AnyCharsAccess>;
     using GeneralCharsBase = GeneralTokenStreamChars<char16_t, AnyCharsAccess>;
     using CharsSharedBase = TokenStreamCharsBase<char16_t>;
 
     using GeneralCharsBase::asSpecific;
+
+    void matchMultiUnitCodePointSlow(char16_t lead, uint32_t* codePoint);
+
+  protected:
     using GeneralCharsBase::getCharIgnoreEOL;
     using CharsSharedBase::ungetCharIgnoreEOL;
     using CharsSharedBase::userbuf;
-
-    void matchMultiUnitCodePointSlow(char16_t lead, uint32_t* codePoint);
 
   public:
     using typename GeneralCharsBase::TokenStreamSpecific;
