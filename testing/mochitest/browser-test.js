@@ -286,7 +286,7 @@ function takeInstrumentation() {
     walker.showAnonymousContent = true;
     walker.showSubDocuments = false;
     walker.showDocumentsAsNodes = false;
-    walker.init(element, Ci.nsIDOMNodeFilter.SHOW_ELEMENT);
+    walker.init(element, 1 /* NodeFilter.SHOW_ELEMENT */);
 
     yield element;
     while (walker.nextNode()) {
