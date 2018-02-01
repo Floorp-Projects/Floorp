@@ -756,10 +756,18 @@ CanvasGradient::AddColorStop(float aOffset, const nsAString& aColorstr, ErrorRes
     ? shell->StyleSet()->GetAsServo()
     : nullptr;
 
-  if (servoStyleSet) {
+  bool useServoParser =
+#ifdef MOZ_OLD_STYLE
+    servoStyleSet;
+#else
+    true;
+#endif
+
+  if (useServoParser) {
     ok = ServoCSSParser::ComputeColor(servoStyleSet, NS_RGB(0, 0, 0), aColorstr,
                                       &color);
   } else {
+#ifdef MOZ_OLD_STYLE
     nsCSSValue value;
     nsCSSParser parser;
 
@@ -767,6 +775,9 @@ CanvasGradient::AddColorStop(float aOffset, const nsAString& aColorstr, ErrorRes
 
     ok = parser.ParseColorString(aColorstr, nullptr, 0, value) &&
          nsRuleNode::ComputeColor(value, presContext, nullptr, color);
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   if (!ok) {
@@ -1166,7 +1177,14 @@ CanvasRenderingContext2D::ParseColor(const nsAString& aString,
   nsIDocument* document = mCanvasElement ? mCanvasElement->OwnerDoc() : nullptr;
   css::Loader* loader = document ? document->CSSLoader() : nullptr;
 
-  if (document && document->IsStyledByServo()) {
+  bool useServoParser =
+#ifdef MOZ_OLD_STYLE
+    document && document->IsStyledByServo()
+#else
+    true
+#endif
+
+  if (useServoParser) {
     nsIPresShell* presShell = GetPresShell();
     ServoStyleSet* set = presShell ? presShell->StyleSet()->AsServo() : nullptr;
 
@@ -1190,6 +1208,7 @@ CanvasRenderingContext2D::ParseColor(const nsAString& aString,
     return true;
   }
 
+#ifdef MOZ_OLD_STYLE
   // Pass the CSS Loader object to the parser, to allow parser error
   // reports to include the outer window ID.
   nsCSSParser parser(loader);
@@ -1217,6 +1236,9 @@ CanvasRenderingContext2D::ParseColor(const nsAString& aString,
       *aColor);
   }
   return true;
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 nsresult
@@ -2669,6 +2691,7 @@ CanvasRenderingContext2D::SetShadowColor(const nsAString& aShadowColor)
 // filters
 //
 
+#ifdef MOZ_OLD_STYLE
 static already_AddRefed<Declaration>
 CreateDeclaration(nsINode* aNode,
   const nsCSSPropertyID aProp1, const nsAString& aValue1, bool* aChanged1,
@@ -2821,6 +2844,7 @@ GetFontStyleContext(Element* aElement, const nsAString& aFont,
 
   return sc.forget();
 }
+#endif
 
 static already_AddRefed<RawServoDeclarationBlock>
 CreateDeclarationForServo(nsCSSPropertyID aProperty,
@@ -2930,6 +2954,7 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
   return sc.forget();
 }
 
+#ifdef MOZ_OLD_STYLE
 static already_AddRefed<Declaration>
 CreateFilterDeclaration(const nsAString& aFilter,
                         nsINode* aNode,
@@ -2974,6 +2999,7 @@ ResolveFilterStyle(const nsAString& aFilterString,
 
   return sc.forget();
 }
+#endif
 
 static already_AddRefed<RawServoDeclarationBlock>
 CreateFilterDeclarationForServo(const nsAString& aFilter,
@@ -3030,6 +3056,7 @@ CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
 
   nsString usedFont;
   if (presShell->StyleSet()->IsGecko()) {
+#ifdef MOZ_OLD_STYLE
     RefPtr<GeckoStyleContext> parentContext =
       GetFontStyleContext(mCanvasElement, GetFont(),
                           presShell, usedFont, aError);
@@ -3045,6 +3072,10 @@ CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
     }
     aFilterChain = sc->StyleEffects()->mFilters;
     return true;
+#else
+    MOZ_CRASH("old style system disabled");
+    return false;
+#endif
   }
 
   // For stylo
@@ -3982,8 +4013,12 @@ CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
     sc =
       GetFontStyleForServo(mCanvasElement, aFont, presShell, usedFont, aError);
   } else {
+#ifdef MOZ_OLD_STYLE
     sc =
       GetFontStyleContext(mCanvasElement, aFont, presShell, usedFont, aError);
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
   if (!sc) {
     return false;

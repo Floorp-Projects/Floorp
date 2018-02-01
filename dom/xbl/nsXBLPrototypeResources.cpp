@@ -121,7 +121,11 @@ nsXBLPrototypeResources::FlushSkinSheets()
       ComputeServoStyleSet(shell->GetPresContext());
     }
   } else {
+#ifdef MOZ_OLD_STYLE
     GatherRuleProcessor();
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   return NS_OK;
@@ -141,7 +145,9 @@ nsXBLPrototypeResources::Traverse(nsCycleCollectionTraversalCallback &cb)
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "proto mResources mLoader");
   cb.NoteXPCOMChild(mLoader);
 
+#ifdef MOZ_OLD_STYLE
   CycleCollectionNoteChild(cb, mRuleProcessor.get(), "mRuleProcessor");
+#endif
   ImplCycleCollectionTraverse(cb, mStyleSheetList, "mStyleSheetList");
 }
 
@@ -149,7 +155,9 @@ void
 nsXBLPrototypeResources::Unlink()
 {
   mStyleSheetList.Clear();
+#ifdef MOZ_OLD_STYLE
   mRuleProcessor = nullptr;
+#endif
 }
 
 void
@@ -158,6 +166,7 @@ nsXBLPrototypeResources::ClearLoader()
   mLoader = nullptr;
 }
 
+#ifdef MOZ_OLD_STYLE
 void
 nsXBLPrototypeResources::GatherRuleProcessor()
 {
@@ -174,6 +183,7 @@ nsXBLPrototypeResources::GatherRuleProcessor()
                                           nullptr,
                                           mRuleProcessor);
 }
+#endif
 
 void
 nsXBLPrototypeResources::ComputeServoStyleSet(nsPresContext* aPresContext)

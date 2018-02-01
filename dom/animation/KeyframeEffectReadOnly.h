@@ -165,8 +165,10 @@ public:
   void SetAnimation(Animation* aAnimation) override;
   void SetKeyframes(JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
                     ErrorResult& aRv);
+#ifdef MOZ_OLD_STYLE
   void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
                     GeckoStyleContext* aStyleContext);
+#endif
   void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
                     const ServoStyleContext* aComputedValues);
 
@@ -347,6 +349,7 @@ protected:
   // target and its effectSet.
   void MarkCascadeNeedsUpdate();
 
+#ifdef MOZ_OLD_STYLE
   // Composites |aValueToComposite| using |aCompositeOperation| onto the value
   // for |aProperty| in |aAnimationRule|, or, if there is no suitable value in
   // |aAnimationRule|, uses the base value for the property recorded on the
@@ -365,9 +368,11 @@ protected:
   // Ensure the base styles is available for any properties in |aProperties|.
   void EnsureBaseStyles(GeckoStyleContext* aStyleContext,
                         const nsTArray<AnimationProperty>& aProperties);
+#endif
   void EnsureBaseStyles(const ServoStyleContext* aComputedValues,
                         const nsTArray<AnimationProperty>& aProperties);
 
+#ifdef MOZ_OLD_STYLE
   // If no base style is already stored for |aProperty|, resolves the base style
   // for |aProperty| using |aStyleContext| and stores it in mBaseStyleValues.
   // If |aCachedBaseStyleContext| is non-null, it will be used, otherwise the
@@ -376,6 +381,7 @@ protected:
   void EnsureBaseStyle(nsCSSPropertyID aProperty,
                        GeckoStyleContext* aStyleContext,
                        RefPtr<GeckoStyleContext>& aCachedBaseStyleContext);
+#endif
   // Stylo version of the above function that also first checks for an additive
   // value in |aProperty|'s list of segments.
   void EnsureBaseStyle(const AnimationProperty& aProperty,
@@ -428,20 +434,24 @@ private:
   template<typename StyleType>
   void DoUpdateProperties(StyleType* aStyle);
 
+#ifdef MOZ_OLD_STYLE
   void ComposeStyleRule(RefPtr<AnimValuesStyleRule>& aStyleRule,
                         const AnimationProperty& aProperty,
                         const AnimationPropertySegment& aSegment,
                         const ComputedTiming& aComputedTiming);
+#endif
 
   void ComposeStyleRule(RawServoAnimationValueMap& aAnimationValues,
                         const AnimationProperty& aProperty,
                         const AnimationPropertySegment& aSegment,
                         const ComputedTiming& aComputedTiming);
 
+#ifdef MOZ_OLD_STYLE
   already_AddRefed<nsStyleContext> CreateStyleContextForAnimationValue(
     nsCSSPropertyID aProperty,
     const AnimationValue& aValue,
     GeckoStyleContext* aBaseStyleContext);
+#endif
 
   already_AddRefed<nsStyleContext> CreateStyleContextForAnimationValue(
     nsCSSPropertyID aProperty,

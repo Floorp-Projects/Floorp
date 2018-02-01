@@ -132,6 +132,7 @@ TimingParams::ParseEasing(const nsAString& aEasing,
     return Some(ComputedTimingFunction(timingFunction));
   }
 
+#ifdef MOZ_OLD_STYLE
   nsCSSValue value;
   nsCSSParser parser;
   parser.ParseLonghandProperty(eCSSProperty_animation_timing_function,
@@ -182,6 +183,10 @@ TimingParams::ParseEasing(const nsAString& aEasing,
   }
 
   aRv.ThrowTypeError<dom::MSG_INVALID_EASING_ERROR>(aEasing);
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
+
   return Nothing();
 }
 

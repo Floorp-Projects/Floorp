@@ -121,6 +121,7 @@ DOMIntersectionObserver::SetRootMargin(const nsAString& aString)
                                                                &mRootMargin);
   }
 
+#ifdef MOZ_OLD_STYLE
   // By not passing a CSS Loader object we make sure we don't parse in quirks
   // mode so that pixel/percent and unit-less values will be differentiated.
   nsCSSParser parser(nullptr);
@@ -139,6 +140,9 @@ DOMIntersectionObserver::SetRootMargin(const nsAString& aString)
   }
 
   return true;
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 void

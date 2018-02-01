@@ -186,7 +186,11 @@ nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet,
   if (mPendingSheets == 0) {
     // All stylesheets are loaded.
     if (aSheet->IsGecko()) {
+#ifdef MOZ_OLD_STYLE
       mResources->GatherRuleProcessor();
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     } else {
       mResources->ComputeServoStyleSet(
         mBoundDocument->GetShell()->GetPresContext());

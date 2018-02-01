@@ -129,7 +129,9 @@ public:
 
   void ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument);
 
+#ifdef MOZ_OLD_STYLE
   void WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData);
+#endif
 
   mozilla::ServoStyleSet* GetServoStyleSet() const;
 

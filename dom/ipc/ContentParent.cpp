@@ -2238,7 +2238,13 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
 
   // Content processes have no permission to access profile directory, so we
   // send the file URL instead.
-  StyleSheet* ucs = nsLayoutStylesheetCache::For(StyleBackendType::Gecko)->UserContentSheet();
+  StyleBackendType backendType =
+#ifdef MOZ_OLD_STYLE
+    StyleBackendType::Gecko;
+#else
+    StyleBackendType::Servo;
+#endif
+  StyleSheet* ucs = nsLayoutStylesheetCache::For(backendType)->UserContentSheet();
   if (ucs) {
     SerializeURI(ucs->GetSheetURI(), xpcomInit.userContentSheetURL());
   } else {
@@ -2358,25 +2364,21 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     // send two loads.
     //
     // The URIs of the Gecko and Servo sheets should be the same, so it
-    // shouldn't matter which we look at.  (The Servo sheets don't exist
-    // in non-MOZ-STYLO builds, though, so look at the Gecko ones.)
+    // shouldn't matter which we look at.
 
-    for (StyleSheet* sheet :
-           *sheetService->AgentStyleSheets(StyleBackendType::Gecko)) {
+    for (StyleSheet* sheet : *sheetService->AgentStyleSheets(backendType)) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::AGENT_SHEET);
     }
 
-    for (StyleSheet* sheet :
-           *sheetService->UserStyleSheets(StyleBackendType::Gecko)) {
+    for (StyleSheet* sheet : *sheetService->UserStyleSheets(backendType)) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::USER_SHEET);
     }
 
-    for (StyleSheet* sheet :
-           *sheetService->AuthorStyleSheets(StyleBackendType::Gecko)) {
+    for (StyleSheet* sheet : *sheetService->AuthorStyleSheets(backendType)) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::AUTHOR_SHEET);

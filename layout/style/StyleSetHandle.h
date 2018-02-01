@@ -61,7 +61,15 @@ public:
   public:
     friend class ::mozilla::StyleSetHandle;
 
-    bool IsGecko() const { return !IsServo(); }
+    bool IsGecko() const
+    {
+#ifdef MOZ_OLD_STYLE
+      return !IsServo();
+#else
+      return false;
+#endif
+    }
+
     bool IsServo() const
     {
       MOZ_ASSERT(mValue, "StyleSetHandle null pointer dereference");
@@ -78,11 +86,13 @@ public:
                          StyleBackendType::Servo;
     }
 
+#ifdef MOZ_OLD_STYLE
     nsStyleSet* AsGecko()
     {
       MOZ_ASSERT(IsGecko());
       return reinterpret_cast<nsStyleSet*>(mValue);
     }
+#endif
 
     ServoStyleSet* AsServo()
     {
@@ -90,13 +100,17 @@ public:
       return reinterpret_cast<ServoStyleSet*>(mValue & ~SERVO_BIT);
     }
 
+#ifdef MOZ_OLD_STYLE
     nsStyleSet* GetAsGecko() { return IsGecko() ? AsGecko() : nullptr; }
+#endif
     ServoStyleSet* GetAsServo() { return IsServo() ? AsServo() : nullptr; }
 
+#ifdef MOZ_OLD_STYLE
     const nsStyleSet* AsGecko() const
     {
       return const_cast<Ptr*>(this)->AsGecko();
     }
+#endif
 
     const ServoStyleSet* AsServo() const
     {
@@ -104,7 +118,9 @@ public:
       return const_cast<Ptr*>(this)->AsServo();
     }
 
+#ifdef MOZ_OLD_STYLE
     const nsStyleSet* GetAsGecko() const { return IsGecko() ? AsGecko() : nullptr; }
+#endif
     const ServoStyleSet* GetAsServo() const { return IsServo() ? AsServo() : nullptr; }
 
     // These inline methods are defined in StyleSetHandleInlines.h.

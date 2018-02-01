@@ -1333,12 +1333,17 @@ nsIDocument::SelectorCache::SelectorList::Reset()
     }
   } else {
     if (mGecko) {
+#ifdef MOZ_OLD_STYLE
       delete mGecko;
       mGecko = nullptr;
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
     }
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 // CacheList takes ownership of aSelectorList.
 void nsIDocument::SelectorCache::CacheList(const nsAString& aSelector,
                                            mozilla::UniquePtr<nsCSSSelectorList>&& aSelectorList)
@@ -1348,6 +1353,7 @@ void nsIDocument::SelectorCache::CacheList(const nsAString& aSelector,
   mTable.Put(key->mKey, SelectorList(Move(aSelectorList)));
   AddObject(key);
 }
+#endif
 
 void nsIDocument::SelectorCache::CacheList(
   const nsAString& aSelector,
@@ -1963,7 +1969,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChannel)
+#ifdef MOZ_OLD_STYLE
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleAttrStyleSheet)
+#endif
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mXPathEvaluator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLayoutHistoryState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnloadBlocker)

@@ -629,6 +629,7 @@ nsAttrAndChildArray::DoSetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet)
   return MakeMappedUnique(mapped);
 }
 
+#ifdef MOZ_OLD_STYLE
 void
 nsAttrAndChildArray::WalkMappedAttributeStyleRules(nsRuleWalker* aRuleWalker)
 {
@@ -636,6 +637,7 @@ nsAttrAndChildArray::WalkMappedAttributeStyleRules(nsRuleWalker* aRuleWalker)
     aRuleWalker->Forward(mImpl->mMappedAttrs);
   }
 }
+#endif
 
 void
 nsAttrAndChildArray::Compact()

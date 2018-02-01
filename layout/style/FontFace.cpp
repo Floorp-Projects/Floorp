@@ -526,6 +526,7 @@ FontFace::ParseDescriptor(nsCSSFontDesc aDescID,
     return ServoCSSParser::ParseFontDescriptor(aDescID, aString, url, aResult);
   }
 
+#ifdef MOZ_OLD_STYLE
   nsCSSParser parser;
   if (!parser.ParseFontFaceDescriptor(aDescID, aString,
                                       docURI, // aSheetURL
@@ -537,6 +538,9 @@ FontFace::ParseDescriptor(nsCSSFontDesc aDescID,
   }
 
   return true;
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 void

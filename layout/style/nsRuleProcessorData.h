@@ -12,6 +12,8 @@
 #ifndef nsRuleProcessorData_h_
 #define nsRuleProcessorData_h_
 
+#ifdef MOZ_OLD_STYLE
+
 #include "nsAutoPtr.h"
 #include "nsChangeHint.h"
 #include "nsCompatibility.h"
@@ -637,5 +639,37 @@ struct MOZ_STACK_CLASS AttributeRuleProcessorData :
   int32_t mModType;    // The type of modification (see nsIDOMMutationEvent).
   bool mAttrHasChanged; // Whether the attribute has already changed.
 };
+
+#else
+
+// Define this dummy class so there are fewer call sites to change when the old
+// style system code is compiled out.
+struct TreeMatchContext
+{
+public:
+  class AutoAncestorPusher
+  {
+  public:
+    explicit AutoAncestorPusher(TreeMatchContext* aTreeMatchContext) {}
+    void PushAncestorAndStyleScope(nsIContent* aContent) {}
+    void PushStyleScope(nsIContent* aContent) {}
+  };
+
+  class AutoParentDisplayBasedStyleFixupSkipper
+  {
+  public:
+    explicit AutoParentDisplayBasedStyleFixupSkipper(
+        TreeMatchContext& aTreeMatchContext,
+        bool aSkipParentDisplayBasedStyleFixup = true) {}
+  };
+
+  enum ForFrameConstructionTag { ForFrameConstruction };
+
+  TreeMatchContext(nsIDocument* aDocument, ForFrameConstructionTag) {}
+
+  void InitAncestors(mozilla::dom::Element* aElement) {}
+};
+
+#endif
 
 #endif /* !defined(nsRuleProcessorData_h_) */

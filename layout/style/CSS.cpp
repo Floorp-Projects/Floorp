@@ -69,9 +69,13 @@ CSS::Supports(const GlobalObject& aGlobal,
     return Servo_CSSSupports2(&property, &value);
   }
 
+#ifdef MOZ_OLD_STYLE
   nsCSSParser parser;
   return parser.EvaluateSupportsDeclaration(aProperty, aValue, info.mDocURI,
                                             info.mBaseURI, info.mPrincipal);
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 /* static */ bool
@@ -92,10 +96,15 @@ CSS::Supports(const GlobalObject& aGlobal,
     return Servo_CSSSupports(&cond);
   }
 
+#ifdef MOZ_OLD_STYLE
   nsCSSParser parser;
   return parser.EvaluateSupportsCondition(aCondition, info.mDocURI,
                                           info.mBaseURI, info.mPrincipal,
                                           css::SupportsParsingSettings::ImpliedParentheses);
+#else
+  MOZ_CRASH("old style system disabled");
+  return false;
+#endif
 }
 
 /* static */ void

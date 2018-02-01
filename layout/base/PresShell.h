@@ -518,7 +518,9 @@ protected:
   bool mCaretEnabled;
 
 #ifdef DEBUG
+#ifdef MOZ_OLD_STYLE
   nsStyleSet* CloneStyleSet(nsStyleSet* aSet);
+#endif
   ServoStyleSet* CloneStyleSet(ServoStyleSet* aSet);
   bool VerifyIncrementalReflow();
   bool mInVerifyReflow;

@@ -44,6 +44,7 @@ namespace mozilla {
   enum Side;
   struct StyleTransition;
   namespace css {
+    class ErrorReporter;
     struct URLValue;
     struct ImageValue;
     class LoaderReusableStyleSheets;

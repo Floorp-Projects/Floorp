@@ -383,6 +383,7 @@ EffectCompositor::UpdateEffectProperties(StyleType* aStyleType,
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 void
 EffectCompositor::MaybeUpdateAnimationRule(dom::Element* aElement,
                                            CSSPseudoElementType aPseudoType,
@@ -456,6 +457,7 @@ EffectCompositor::GetAnimationRule(dom::Element* aElement,
 
   return effectSet->AnimationRule(aCascadeLevel);
 }
+#endif
 
 namespace {
   class EffectCompositeOrderComparator {
@@ -570,6 +572,7 @@ EffectCompositor::HasThrottledStyleUpdates() const
   return false;
 }
 
+#ifdef MOZ_OLD_STYLE
 void
 EffectCompositor::AddStyleUpdatesTo(RestyleTracker& aTracker)
 {
@@ -621,6 +624,7 @@ EffectCompositor::AddStyleUpdatesTo(RestyleTracker& aTracker)
     // Note: mElement pointers in elementsToRestyle might now dangle
   }
 }
+#endif
 
 /* static */ bool
 EffectCompositor::HasAnimationsForCompositor(const nsIFrame* aFrame,
@@ -713,6 +717,7 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame)
   return result;
 }
 
+#ifdef MOZ_OLD_STYLE
 /* static */ void
 EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
                                        CSSPseudoElementType aPseudoType,
@@ -752,6 +757,7 @@ EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
   MOZ_ASSERT(effects == EffectSet::GetEffectSet(aElement, aPseudoType),
              "EffectSet should not change while composing style");
 }
+#endif
 
 /* static */ nsCSSPropertyIDSet
 EffectCompositor::GetOverriddenProperties(StyleBackendType aBackendType,
@@ -768,6 +774,7 @@ EffectCompositor::GetOverriddenProperties(StyleBackendType aBackendType,
 
   Element* elementToRestyle = GetElementToRestyle(aElement, aPseudoType);
   if (aBackendType == StyleBackendType::Gecko && !aStyleContext) {
+#ifdef MOZ_OLD_STYLE
     if (elementToRestyle) {
       nsIFrame* frame = elementToRestyle->GetPrimaryFrame();
       if (frame) {
@@ -778,6 +785,9 @@ EffectCompositor::GetOverriddenProperties(StyleBackendType aBackendType,
     if (!aStyleContext) {
       return result;
     }
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   } else if (aBackendType == StyleBackendType::Servo && !elementToRestyle) {
     return result;
   }
@@ -813,9 +823,13 @@ EffectCompositor::GetOverriddenProperties(StyleBackendType aBackendType,
                                                &result);
       break;
     case StyleBackendType::Gecko:
+#ifdef MOZ_OLD_STYLE
       nsRuleNode::ComputePropertiesOverridingAnimation(propertiesToTrack,
                                                        aStyleContext->AsGecko(),
                                                        result);
+#else
+      MOZ_CRASH("old style system disabled");
+#endif
       break;
 
     default:
@@ -1191,6 +1205,7 @@ EffectCompositor::PreTraverse(dom::Element* aElement,
   return found;
 }
 
+#ifdef MOZ_OLD_STYLE
 // ---------------------------------------------------------
 //
 // Nested class: AnimationStyleRuleProcessor
@@ -1305,6 +1320,7 @@ EffectCompositor::UpdateEffectProperties(
   GeckoStyleContext* aStyleContext,
   Element* aElement,
   CSSPseudoElementType aPseudoType);
+#endif
 
 template
 void

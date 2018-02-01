@@ -324,6 +324,7 @@ ToPrimitive(nsCSSValue::Array* aArray)
   return arr.forget();
 }
 
+#ifdef MOZ_OLD_STYLE
 static void
 AppendCSSShadowValue(const nsCSSShadowItem *aShadow,
                      nsCSSValueList **&aResultTail,
@@ -351,6 +352,7 @@ AppendCSSShadowValue(const nsCSSShadowItem *aShadow,
   *aResultTail = resultItem;
   aResultTail = &resultItem->mNext;
 }
+#endif
 
 // Like nsStyleCoord::CalcValue, but with length in float pixels instead
 // of nscoord.
@@ -433,11 +435,13 @@ ExtractCalcValue(const nsCSSValue& aValue)
   return ExtractCalcValueInternal(aValue);
 }
 
+#ifdef MOZ_OLD_STYLE
 static void
 CalcValueToCSSValue(const nsStyleCoord::CalcValue* aCalc, nsCSSValue& aValue)
 {
   aValue.SetCalcValue(aCalc);
 }
+#endif
 
 static void
 CalcValueToCSSValue(const PixelCalcValue& aCalc, nsCSSValue& aValue)
@@ -884,6 +888,7 @@ AddWeightedFilterFunction(double aCoeff1, const nsCSSValueList* aList1,
 static inline float
 GetNumberOrPercent(const nsCSSValue &aValue);
 
+#ifdef MOZ_OLD_STYLE
 static bool
 ComputeSingleShadowSquareDistance(const nsCSSValueList* aShadow1,
                                   const nsCSSValueList* aShadow2,
@@ -1072,6 +1077,7 @@ ComputeFilterListDistance(const nsCSSValueList* aList1,
   aDistance = sqrt(squareDistance);
   return true;
 }
+#endif
 
 enum class Restrictions {
   Enable,
@@ -1084,6 +1090,7 @@ AddShapeFunction(nsCSSPropertyID aProperty,
                  double aCoeff2, const nsCSSValue::Array* aArray2,
                  Restrictions aRestriction = Restrictions::Enable);
 
+#ifdef MOZ_OLD_STYLE
 static bool
 ComputeShapeDistance(nsCSSPropertyID aProperty,
                      const nsCSSValue::Array* aArray1,
@@ -1160,12 +1167,14 @@ ComputeShapeDistance(nsCSSPropertyID aProperty,
   aDistance = sqrt(squareDistance);
   return true;
 }
+#endif
 
 static nsCSSValueList*
 AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
                   double aCoeff2, const nsCSSValueList* aList2,
                   nsCSSKeyword aOperatorType = eCSSKeyword_interpolatematrix);
 
+#ifdef MOZ_OLD_STYLE
 static double
 ComputeTransform2DMatrixDistance(const Matrix& aMatrix1,
                                  const Matrix& aMatrix2)
@@ -1952,6 +1961,7 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
   MOZ_ASSERT(false, "Can't compute distance using the given common unit");
   return false;
 }
+#endif
 
 static inline void
 AddCSSValueNumber(double aCoeff1, const nsCSSValue &aValue1,
@@ -3410,6 +3420,7 @@ StyleAnimationValue::Accumulate(nsCSSPropertyID aProperty,
   return result;
 }
 
+#ifdef MOZ_OLD_STYLE
 already_AddRefed<css::StyleRule>
 BuildStyleRule(nsCSSPropertyID aProperty,
                dom::Element* aTargetElement,
@@ -3681,6 +3692,7 @@ StyleAnimationValue::ComputeValues(
                                          aSpecifiedValue, aUseSVGMode,
                                          aResult);
 }
+#endif
 
 bool
 StyleAnimationValue::UncomputeValue(nsCSSPropertyID aProperty,
@@ -3867,6 +3879,7 @@ StyleDataAtOffset(const void* aStyleStruct, ptrdiff_t aOffset)
     reinterpret_cast<const uint8_t*>(aStyleStruct) + aOffset);
 }
 
+#ifdef MOZ_OLD_STYLE
 static bool
 StyleCoordToValue(const nsStyleCoord& aCoord, StyleAnimationValue& aValue)
 {
@@ -4894,6 +4907,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
   }
   return false;
 }
+#endif
 
 Size
 StyleAnimationValue::GetScaleValue(const nsIFrame* aForFrame) const
@@ -5438,6 +5452,7 @@ AnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
            : distance;
   }
 
+#ifdef MOZ_OLD_STYLE
   return StyleAnimationValue::ComputeDistance(aProperty,
                                               mGecko,
                                               aOther.mGecko,
@@ -5445,6 +5460,9 @@ AnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
                                               distance)
          ? distance
          : 0.0;
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 /* static */ AnimationValue
@@ -5493,6 +5511,7 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
     return result;
   }
 
+#ifdef MOZ_OLD_STYLE
   if (!StyleAnimationValue::ComputeValue(aProperty, aElement,
                                          styleContext->AsGecko(),
                                          aValue, false /* |aUseSVGMode| */,
@@ -5500,6 +5519,9 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
     MOZ_ASSERT(result.IsNull());
   }
   return result;
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 /* static */ AnimationValue
