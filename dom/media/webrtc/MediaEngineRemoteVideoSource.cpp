@@ -46,6 +46,7 @@ MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
   MOZ_ASSERT(aMediaSource != MediaSourceEnum::Other);
   mSettings->mWidth.Construct(0);
   mSettings->mHeight.Construct(0);
+  mSettings->mFrameRate.Construct(0);
   Init();
 }
 
@@ -187,13 +188,14 @@ MediaEngineRemoteVideoSource::Allocate(
   MOZ_ASSERT(mState == kReleased);
 
   NormalizedConstraints constraints(aConstraints);
-  LOG(("ChooseCapability(kFitness) for mTargetCapability and mCapability (Allocate) ++"));
-  if (!ChooseCapability(constraints, aPrefs, aDeviceId, mCapability, kFitness)) {
+  webrtc::CaptureCapability newCapability;
+  LOG(("ChooseCapability(kFitness) for mCapability (Allocate) ++"));
+  if (!ChooseCapability(constraints, aPrefs, aDeviceId, newCapability, kFitness)) {
     *aOutBadConstraint =
       MediaConstraintsHelper::FindBadConstraint(constraints, this, aDeviceId);
     return NS_ERROR_FAILURE;
   }
-  LOG(("ChooseCapability(kFitness) for mTargetCapability and mCapability (Allocate) --"));
+  LOG(("ChooseCapability(kFitness) for mCapability (Allocate) --"));
 
   if (camera::GetChildAndCall(&camera::CamerasChild::AllocateCaptureDevice,
                               mCapEngine, mUniqueId.get(),
@@ -207,6 +209,7 @@ MediaEngineRemoteVideoSource::Allocate(
   {
     MutexAutoLock lock(mMutex);
     mState = kAllocated;
+    mCapability = newCapability;
   }
 
   LOG(("Video device %d allocated", mCaptureIndex));
@@ -304,6 +307,13 @@ MediaEngineRemoteVideoSource::Start(const RefPtr<const AllocationHandle>& aHandl
     return NS_ERROR_FAILURE;
   }
 
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "MediaEngineRemoteVideoSource::SetLastCapability",
+      [settings = mSettings, cap = mCapability]() mutable {
+    settings->mWidth.Value() = cap.width;
+    settings->mHeight.Value() = cap.height;
+    settings->mFrameRate.Value() = cap.maxFPS;
+  }));
 
   return NS_OK;
 }
@@ -360,9 +370,11 @@ MediaEngineRemoteVideoSource::Reconfigure(const RefPtr<AllocationHandle>& aHandl
     return NS_OK;
   }
 
-  // Start() applies mCapability on the device.
-  mCapability = newCapability;
-
+  {
+    MutexAutoLock lock(mMutex);
+    // Start() applies mCapability on the device.
+    mCapability = newCapability;
+  }
 
   if (mState == kStarted) {
     // Allocate always returns a null AllocationHandle.
