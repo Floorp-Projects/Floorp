@@ -40,6 +40,7 @@
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
+#include "nsIPresShellInlines.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for Event::GetEventPopupControlState()
 #include "mozilla/dom/PointerEventHandler.h"
@@ -4595,11 +4596,12 @@ nsIPresShell::RestyleForCSSRuleChanges()
     return;
   }
 
-  mDocument->RebuildUserFontSet();
+  EnsureStyleFlush();
+  mDocument->MarkUserFontSetDirty();
 
   if (mPresContext) {
-    mPresContext->RebuildCounterStyles();
-    mPresContext->RebuildFontFeatureValues();
+    mPresContext->MarkCounterStylesDirty();
+    mPresContext->MarkFontFeatureValuesDirty();
   }
 
   if (!mDidInitialize) {
