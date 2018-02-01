@@ -41,7 +41,7 @@ add_task(async function changeuri_unvisited_bookmark() {
     "Unvisited URI no longer bookmarked => frecency should = 0");
 
   await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function changeuri_visited_bookmark() {
@@ -73,7 +73,7 @@ add_task(async function changeuri_visited_bookmark() {
     "*Visited* URI no longer bookmarked => frecency should != 0");
 
   await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function changeuri_bookmark_still_bookmarked() {
@@ -108,7 +108,7 @@ add_task(async function changeuri_bookmark_still_bookmarked() {
   Assert.notEqual(frecencyForUrl(TEST_URL2), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function changeuri_nonexistent_bookmark() {
@@ -135,5 +135,5 @@ add_task(async function changeuri_nonexistent_bookmark() {
     "Changing the URI of a non-existent bookmark should fail.");
 
   await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });

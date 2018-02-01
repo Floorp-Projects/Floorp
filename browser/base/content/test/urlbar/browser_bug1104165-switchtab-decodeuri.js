@@ -24,5 +24,5 @@ add_task(async function test_switchtab_decodeuri() {
   });
 
   gBrowser.removeCurrentTab();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });

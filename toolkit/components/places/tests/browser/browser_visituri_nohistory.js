@@ -35,6 +35,6 @@ add_task(async function() {
   let uri = subject.QueryInterface(Ci.nsIURI);
   is(uri.spec, FINAL_URL, "received expected visit");
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   gBrowser.removeCurrentTab();
 });

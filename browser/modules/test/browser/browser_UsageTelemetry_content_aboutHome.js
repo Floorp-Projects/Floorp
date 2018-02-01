@@ -35,7 +35,7 @@ add_task(async function setup() {
     Services.search.currentEngine = originalEngine;
     Services.search.removeEngine(engineDefault);
     Services.search.removeEngine(engineOneOff);
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
     Services.telemetry.setEventRecordingEnabled("navigation", false);
     Services.prefs.clearUserPref("browser.newtabpage.activity-stream.aboutHome.enabled");
   });

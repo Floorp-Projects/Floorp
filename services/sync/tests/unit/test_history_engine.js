@@ -128,7 +128,7 @@ add_task(async function test_history_download_limit() {
   deepEqual(ping.engines[0].incoming, { applied: 5 });
 
   deepEqual(Array.from(engine.toFetch), []);
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_history_visit_roundtrip() {
@@ -183,7 +183,7 @@ add_task(async function test_history_visit_roundtrip() {
   // effectively `Math.round(microsecondTimestamp / 1000) * 1000`.)
   visits = await PlacesSyncUtils.history.fetchVisitsForURL("https://www.example.com");
   equal(visits.length, 2);
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_history_visit_dedupe_old() {
@@ -248,5 +248,5 @@ add_task(async function test_history_visit_dedupe_old() {
      "Should contain the Dec. 4th visit");
   ok(allVisits.find(x => x.date.getTime() === Date.UTC(2017, 11, 5)),
      "Should contain the Dec. 5th visit");
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
