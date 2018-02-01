@@ -33,43 +33,52 @@ MacroAssembler::move64(Imm64 imm, Register64 dest)
 void
 MacroAssembler::moveDoubleToGPR64(FloatRegister src, Register64 dest)
 {
-    MOZ_CRASH("NYI: moveDoubleToGPR64");
+    moveFromDoubleHi(src, dest.high);
+    moveFromDoubleLo(src, dest.low);
 }
 
 void
 MacroAssembler::moveGPR64ToDouble(Register64 src, FloatRegister dest)
 {
-    MOZ_CRASH("NYI: moveGPR64ToDouble");
+    moveToDoubleHi(src.high, dest);
+    moveToDoubleLo(src.low, dest);
 }
 
 void
 MacroAssembler::move64To32(Register64 src, Register dest)
 {
-    MOZ_CRASH("NYI: move64To32");
+    if (src.low != dest)
+        move32(src.low, dest);
 }
 
 void
 MacroAssembler::move32To64ZeroExtend(Register src, Register64 dest)
 {
-    MOZ_CRASH("NYI: move32To64ZeroExtend");
+    if (src != dest.low)
+        move32(src, dest.low);
+    move32(Imm32(0), dest.high);
 }
 
 void
 MacroAssembler::move8To64SignExtend(Register src, Register64 dest)
 {
-    MOZ_CRASH("NYI: move8To64SignExtend");
+    move8SignExtend(src, dest.low);
+    move32To64SignExtend(dest.low, dest);
 }
 
 void
 MacroAssembler::move16To64SignExtend(Register src, Register64 dest)
 {
-    MOZ_CRASH("NYI: move16To64SignExtend");
+    move16SignExtend(src, dest.low);
+    move32To64SignExtend(dest.low, dest);
 }
 
 void
 MacroAssembler::move32To64SignExtend(Register src, Register64 dest)
 {
-    MOZ_CRASH("NYI: move32To64SignExtend");
+    if (src != dest.low)
+        move32(src, dest.low);
+    ma_sra(dest.high, dest.low, Imm32(31));
 }
 
 // ===============================================================
@@ -210,13 +219,20 @@ MacroAssembler::add64(Imm64 imm, Register64 dest)
 CodeOffset
 MacroAssembler::sub32FromStackPtrWithPatch(Register dest)
 {
-    MOZ_CRASH("NYI - sub32FromStackPtrWithPatch");
+    CodeOffset offset = CodeOffset(currentOffset());
+    ma_liPatchable(dest, Imm32(0));
+    as_subu(dest, StackPointer, dest);
+    return offset;
 }
 
 void
 MacroAssembler::patchSub32FromStackPtr(CodeOffset offset, Imm32 imm)
 {
-    MOZ_CRASH("NYI - patchSub32FromStackPtr");
+    Instruction* lui = (Instruction*) m_buffer.getInst(BufferOffset(offset.offset()));
+    MOZ_ASSERT(lui->extractOpcode() == ((uint32_t)op_lui >> OpcodeShift));
+    MOZ_ASSERT(lui->next()->extractOpcode() == ((uint32_t)op_ori >> OpcodeShift));
+
+    UpdateLuiOriValue(lui, lui->next(), imm.value);
 }
 
 void
@@ -405,7 +421,7 @@ MacroAssembler::lshift64(Imm32 imm, Register64 dest)
         return;
     } else if (imm.value < 32) {
         as_sll(dest.high, dest.high, imm.value);
-        as_srl(scratch, dest.low, 32 - imm.value);
+        as_srl(scratch, dest.low, (32 - imm.value)%32);
         as_or(dest.high, dest.high, scratch);
         as_sll(dest.low, dest.low, imm.value);
     } else {
@@ -464,7 +480,7 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 
     if (imm.value < 32) {
         as_srl(dest.low, dest.low, imm.value);
-        as_sll(scratch, dest.high, 32 - imm.value);
+        as_sll(scratch, dest.high, (32 - imm.value)%32);
         as_or(dest.low, dest.low, scratch);
         as_srl(dest.high, dest.high, imm.value);
     } else if (imm.value == 32) {
@@ -512,7 +528,7 @@ MacroAssembler::rshift64Arithmetic(Imm32 imm, Register64 dest)
 
     if (imm.value < 32) {
         as_srl(dest.low, dest.low, imm.value);
-        as_sll(scratch, dest.high, 32 - imm.value);
+        as_sll(scratch, dest.high, (32 - imm.value)%32);
         as_or(dest.low, dest.low, scratch);
         as_sra(dest.high, dest.high, imm.value);
     } else if (imm.value == 32) {
@@ -593,26 +609,26 @@ MacroAssembler::rotateLeft64(Register shift, Register64 src, Register64 dest, Re
     MOZ_ASSERT(temp != src.low && temp != src.high);
     MOZ_ASSERT(shift != src.low && shift != src.high);
     MOZ_ASSERT(temp != InvalidReg);
-    MOZ_ASSERT(src != dest);
 
     ScratchRegisterScope shift_value(*this);
     Label high, swap, done, zero;
-    ma_and(temp, shift, Imm32(0x3f));
-    ma_b(temp, Imm32(32), &swap, Equal);
-    ma_b(temp, Imm32(32), &high, GreaterThan);
+    ma_and(shift, shift, Imm32(0x3f));
+    ma_b(shift, Imm32(32), &swap, Equal);
+    ma_b(shift, Imm32(32), &high, GreaterThan);
 
     // high = high << shift | low >> 32 - shift
     // low = low << shift | high >> 32 - shift
-    ma_sll(dest.high, src.high, temp);
-    ma_b(temp, Imm32(0), &zero, Equal);
+    ma_move(temp, src.high);
+    ma_sll(dest.high, src.high, shift);
+    ma_b(shift, Imm32(0), &zero, Equal);
     ma_li(SecondScratchReg, Imm32(32));
-    as_subu(shift_value, SecondScratchReg, temp);
+    as_subu(shift_value, SecondScratchReg, shift);
 
     ma_srl(SecondScratchReg, src.low, shift_value);
     as_or(dest.high, dest.high, SecondScratchReg);
 
-    ma_sll(dest.low, src.low, temp);
-    ma_srl(SecondScratchReg, src.high, shift_value);
+    ma_sll(dest.low, src.low, shift);
+    ma_srl(SecondScratchReg, temp, shift_value);
     as_or(dest.low, dest.low, SecondScratchReg);
     ma_b(&done);
 
@@ -620,6 +636,7 @@ MacroAssembler::rotateLeft64(Register shift, Register64 src, Register64 dest, Re
     ma_move(dest.low, src.low);
     ma_move(dest.high, src.high);
     ma_b(&done);
+
     bind(&swap);
     ma_move(SecondScratchReg, src.low);
     ma_move(dest.low, src.high);
@@ -627,19 +644,21 @@ MacroAssembler::rotateLeft64(Register shift, Register64 src, Register64 dest, Re
     ma_b(&done);
     // A 32 - 64 shift is a 0 - 32 shift in the other direction.
     bind(&high);
-    ma_and(shift, shift, Imm32(0x3f));
     ma_li(SecondScratchReg, Imm32(64));
-    as_subu(temp, SecondScratchReg, shift);
+    as_subu(shift_value, SecondScratchReg, shift);
 
-    ma_srl(dest.high, src.high, temp);
+    ma_move(temp, src.high);
+    ma_srl(dest.high, src.high, shift_value);
     ma_li(SecondScratchReg, Imm32(32));
-    as_subu(shift_value, SecondScratchReg, temp);
+    as_subu(shift_value, SecondScratchReg, shift_value);
     ma_sll(SecondScratchReg, src.low, shift_value);
     as_or(dest.high, dest.high, SecondScratchReg);
 
-    ma_srl(dest.low, src.low, temp);
-    ma_sll(SecondScratchReg, src.high, shift_value);
-    as_or(dest.low, dest.low, SecondScratchReg);
+    ma_sll(temp, temp, shift_value);
+    ma_li(SecondScratchReg, Imm32(64));
+    as_subu(shift_value, SecondScratchReg, shift);
+    ma_srl(dest.low, src.low, shift_value);
+    as_or(dest.low, dest.low, temp);
 
     bind(&done);
 }
@@ -681,30 +700,30 @@ MacroAssembler::rotateRight64(Register shift, Register64 src, Register64 dest, R
     MOZ_ASSERT(temp != src.low && temp != src.high);
     MOZ_ASSERT(shift != src.low && shift != src.high);
     MOZ_ASSERT(temp != InvalidReg);
-    MOZ_ASSERT(src != dest);
 
     ScratchRegisterScope shift_value(*this);
     Label high, swap, done, zero;
 
-    ma_and(temp, shift, Imm32(0x3f));
-    ma_b(temp, Imm32(32), &swap, Equal);
-    ma_b(temp, Imm32(32), &high, GreaterThan);
+    ma_and(shift, shift, Imm32(0x3f));
+    ma_b(shift, Imm32(32), &swap, Equal);
+    ma_b(shift, Imm32(32), &high, GreaterThan);
 
     // high = high >> shift | low << 32 - shift
     // low = low >> shift | high << 32 - shift
-    ma_srl(dest.high, src.high, temp);
-    ma_b(temp, Imm32(0), &zero, Equal);
+    ma_move(temp, src.high);
+    ma_srl(dest.high, src.high, shift);
+    ma_b(shift, Imm32(0), &zero, Equal);
     ma_li(SecondScratchReg, Imm32(32));
-    as_subu(shift_value, SecondScratchReg, temp);
+    as_subu(shift_value, SecondScratchReg, shift);
 
     ma_sll(SecondScratchReg, src.low, shift_value);
     as_or(dest.high, dest.high, SecondScratchReg);
 
-    ma_srl(dest.low, src.low, temp);
+    ma_srl(dest.low, src.low, shift);
 
     //ma_li(SecondScratchReg, Imm32(32));
     //as_subu(shift_value, SecondScratchReg, shift_value);
-    ma_sll(SecondScratchReg, src.high, shift_value);
+    ma_sll(SecondScratchReg, temp, shift_value);
     as_or(dest.low, dest.low, SecondScratchReg);
 
     ma_b(&done);
@@ -713,6 +732,7 @@ MacroAssembler::rotateRight64(Register shift, Register64 src, Register64 dest, R
     ma_move(dest.low, src.low);
     ma_move(dest.high, src.high);
     ma_b(&done);
+
     bind(&swap);
     ma_move(SecondScratchReg, src.low);
     ma_move(dest.low, src.high);
@@ -720,20 +740,21 @@ MacroAssembler::rotateRight64(Register shift, Register64 src, Register64 dest, R
     ma_b(&done);
     // A 32 - 64 shift is a 0 - 32 shift in the other direction.
     bind(&high);
-    ma_and(shift, shift, Imm32(0x3f));
     ma_li(SecondScratchReg, Imm32(64));
-    as_subu(temp, SecondScratchReg, shift);
+    as_subu(shift_value, SecondScratchReg, shift);
 
-    ma_sll(dest.high, src.high, temp);
+    ma_move(temp, src.high);
+    ma_sll(dest.high, src.high, shift_value);
     ma_li(SecondScratchReg, Imm32(32));
-    as_subu(shift_value, SecondScratchReg, temp);
-
+    as_subu(shift_value, SecondScratchReg, shift_value);
     ma_srl(SecondScratchReg, src.low, shift_value);
     as_or(dest.high, dest.high, SecondScratchReg);
 
-    ma_sll(dest.low, src.low, temp);
-    ma_srl(SecondScratchReg, src.high, shift_value);
-    as_or(dest.low, dest.low, SecondScratchReg);
+    ma_srl(temp, temp, shift_value);
+    ma_li(SecondScratchReg, Imm32(64));
+    as_subu(shift_value, SecondScratchReg, shift);
+    ma_sll(dest.low, src.low, shift_value);
+    as_or(dest.low, dest.low, temp);
 
     bind(&done);
 }
