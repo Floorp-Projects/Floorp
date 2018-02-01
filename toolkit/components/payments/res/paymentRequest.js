@@ -10,7 +10,7 @@
 
 "use strict";
 
-let PaymentRequest = {
+var paymentRequest = {
   domReadyPromise: null,
 
   init() {
@@ -110,4 +110,4 @@ let PaymentRequest = {
   },
 };
 
-PaymentRequest.init();
+paymentRequest.init();
