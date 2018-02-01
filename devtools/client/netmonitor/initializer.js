@@ -85,7 +85,12 @@ window.Netmonitor = {
    */
   getHar() {
     let { HarExporter } = require("devtools/client/netmonitor/src/har/har-exporter");
-    let { getLongString, getTabTarget, requestData } = connector;
+    let {
+      getLongString,
+      getTabTarget,
+      getTimingMarker,
+      requestData,
+    } = connector;
     let { form: { title, url } } = getTabTarget();
     let state = store.getState();
 
@@ -93,6 +98,7 @@ window.Netmonitor = {
       getString: getLongString,
       items: getSortedRequests(state),
       requestData,
+      getTimingMarker,
       title: title || url,
     };
 
