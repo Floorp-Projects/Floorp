@@ -145,6 +145,12 @@ interface IHandlerControl : IUnknown
                        [in] IA2TextSegment* aText);
 }
 
+typedef struct _IARelationData 
+{
+  BSTR mType;
+  long mNTargets;
+} IARelationData;
+
 [object,
  uuid(IGECKOBACKCHANNEL_IID),
  pointer_default(unique)]
@@ -157,6 +163,9 @@ interface IGeckoBackChannel : IUnknown
     [out] long* aNHyperlinks,
     [out, size_is(,*aNAttribRuns)] IA2TextSegment** aAttribRuns,
     [out] long* aNAttribRuns);
+  [propget] HRESULT RelationsInfo(
+    [out, size_is(,*aNRelations)] IARelationData** aRelations,
+    [out] long* aNRelations);
 }
 
 [uuid(1e545f07-f108-4912-9471-546827a80983)]
