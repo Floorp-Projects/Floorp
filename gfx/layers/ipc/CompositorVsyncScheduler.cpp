@@ -82,8 +82,6 @@ CompositorVsyncScheduler::CompositorVsyncScheduler(CompositorVsyncSchedulerOwner
   , mWidget(aWidget)
   , mCurrentCompositeTaskMonitor("CurrentCompositeTaskMonitor")
   , mCurrentCompositeTask(nullptr)
-  , mSetNeedsCompositeMonitor("SetNeedsCompositeMonitor")
-  , mSetNeedsCompositeTask(nullptr)
   , mCurrentVRListenerTaskMonitor("CurrentVRTaskMonitor")
   , mCurrentVRListenerTask(nullptr)
 {
@@ -116,7 +114,7 @@ CompositorVsyncScheduler::Destroy()
   mVsyncObserver->Destroy();
   mVsyncObserver = nullptr;
 
-  CancelCurrentSetNeedsCompositeTask();
+  mNeedsComposite = 0;
   CancelCurrentCompositeTask();
 }
 
@@ -173,54 +171,15 @@ CompositorVsyncScheduler::ScheduleComposition()
     PostCompositeTask(TimeStamp::Now());
 #endif
   } else {
-    SetNeedsComposite();
-  }
-}
-
-void
-CompositorVsyncScheduler::CancelCurrentSetNeedsCompositeTask()
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  MonitorAutoLock lock(mSetNeedsCompositeMonitor);
-  if (mSetNeedsCompositeTask) {
-    mSetNeedsCompositeTask->Cancel();
-    mSetNeedsCompositeTask = nullptr;
-  }
-  mNeedsComposite = 0;
-}
-
-/**
- * TODO Potential performance heuristics:
- * If a composite takes 17 ms, do we composite ASAP or wait until next vsync?
- * If a layer transaction comes after vsync, do we composite ASAP or wait until
- * next vsync?
- * How many skipped vsync events until we stop listening to vsync events?
- */
-void
-CompositorVsyncScheduler::SetNeedsComposite()
-{
-  if (!CompositorThreadHolder::IsInCompositorThread()) {
-    MonitorAutoLock lock(mSetNeedsCompositeMonitor);
-    RefPtr<CancelableRunnable> task = NewCancelableRunnableMethod(
-      "layers::CompositorVsyncScheduler::SetNeedsComposite",
-      this,
-      &CompositorVsyncScheduler::SetNeedsComposite);
-    mSetNeedsCompositeTask = task;
-    ScheduleTask(task.forget());
-    return;
-  } else {
-    MonitorAutoLock lock(mSetNeedsCompositeMonitor);
-    mSetNeedsCompositeTask = nullptr;
-  }
-
-  mNeedsComposite++;
-  if (!mIsObservingVsync && mNeedsComposite) {
-    ObserveVsync();
-    // Starting to observe vsync is an async operation that goes
-    // through the main thread of the UI process. It's possible that
-    // we're blocking there waiting on a composite, so schedule an initial
-    // one now to get things started.
-    PostCompositeTask(TimeStamp::Now());
+    mNeedsComposite++;
+    if (!mIsObservingVsync && mNeedsComposite) {
+      ObserveVsync();
+      // Starting to observe vsync is an async operation that goes
+      // through the main thread of the UI process. It's possible that
+      // we're blocking there waiting on a composite, so schedule an initial
+      // one now to get things started.
+      PostCompositeTask(TimeStamp::Now());
+    }
   }
 }
 
