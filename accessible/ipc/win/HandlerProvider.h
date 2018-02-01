@@ -60,6 +60,8 @@ public:
                                long* aNHyperlinks,
                                IA2TextSegment** aAttribRuns,
                                long* aNAttribRuns) override;
+  STDMETHODIMP get_RelationsInfo(IARelationData** aRelations,
+                                 long* aNRelations) override;
 
 private:
   ~HandlerProvider() = default;
@@ -88,6 +90,9 @@ private:
                                 IA2TextSegment** aAttribRuns,
                                 long* aNAttribRuns,
                                 HRESULT* result);
+  void GetRelationsInfoMainThread(IARelationData** aRelations,
+                                  long* aNRelations,
+                                  HRESULT* result);
 
   Atomic<uint32_t>                  mRefCnt;
   Mutex                             mMutex; // Protects mSerializer
