@@ -42,16 +42,6 @@ static LazyLogModule gCSVerifierPRLog("ContentSignatureVerifier");
 // Content-Signature prefix
 const nsLiteralCString kPREFIX = NS_LITERAL_CSTRING("Content-Signature:\x00");
 
-ContentSignatureVerifier::~ContentSignatureVerifier()
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return;
-  }
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
 NS_IMETHODIMP
 ContentSignatureVerifier::VerifyContentSignature(
   const nsACString& aData, const nsACString& aCSHeader,
@@ -81,8 +71,7 @@ IsNewLine(char16_t c)
 }
 
 nsresult
-ReadChainIntoCertList(const nsACString& aCertChain, CERTCertList* aCertList,
-                      const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+ReadChainIntoCertList(const nsACString& aCertChain, CERTCertList* aCertList)
 {
   bool inBlock = false;
   bool certFound = false;
@@ -148,18 +137,13 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
                                                 const nsACString& aName)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    CSVerifier_LOG(("CSVerifier: nss is already shutdown\n"));
-    return NS_ERROR_FAILURE;
-  }
 
   UniqueCERTCertList certCertList(CERT_NewCertList());
   if (!certCertList) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = ReadChainIntoCertList(aCertChain, certCertList.get(), locker);
+  nsresult rv = ReadChainIntoCertList(aCertChain, certCertList.get());
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -280,12 +264,12 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
     return NS_ERROR_INVALID_SIGNATURE;
   }
 
-  rv = UpdateInternal(kPREFIX, locker);
+  rv = UpdateInternal(kPREFIX);
   if (NS_FAILED(rv)) {
     return rv;
   }
   // add data if we got any
-  return UpdateInternal(aData, locker);
+  return UpdateInternal(aData);
 }
 
 nsresult
@@ -391,8 +375,7 @@ ContentSignatureVerifier::CreateContext(const nsACString& aData,
 }
 
 nsresult
-ContentSignatureVerifier::UpdateInternal(
-  const nsACString& aData, const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+ContentSignatureVerifier::UpdateInternal(const nsACString& aData)
 {
   if (!aData.IsEmpty()) {
     if (VFY_Update(mCx.get(), (const unsigned char*)nsPromiseFlatCString(aData).get(),
@@ -410,11 +393,6 @@ NS_IMETHODIMP
 ContentSignatureVerifier::Update(const nsACString& aData)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    CSVerifier_LOG(("CSVerifier: nss is already shutdown\n"));
-    return NS_ERROR_FAILURE;
-  }
 
   // If we didn't create the context yet, bail!
   if (!mHasCertChain) {
@@ -424,7 +402,7 @@ ContentSignatureVerifier::Update(const nsACString& aData)
     return NS_ERROR_FAILURE;
   }
 
-  return UpdateInternal(aData, locker);
+  return UpdateInternal(aData);
 }
 
 /**
@@ -435,11 +413,6 @@ ContentSignatureVerifier::End(bool* _retval)
 {
   NS_ENSURE_ARG(_retval);
   MOZ_ASSERT(NS_IsMainThread());
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    CSVerifier_LOG(("CSVerifier: nss is already shutdown\n"));
-    return NS_ERROR_FAILURE;
-  }
 
   // If we didn't create the context yet, bail!
   if (!mHasCertChain) {

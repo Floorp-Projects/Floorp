@@ -22,24 +22,9 @@ nsX509CertValidity::nsX509CertValidity(const mozilla::UniqueCERTCertificate& cer
     return;
   }
 
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return;
-  }
-
   if (CERT_GetCertTimes(cert.get(), &mNotBefore, &mNotAfter) == SECSuccess) {
     mTimesInitialized = true;
   }
-}
-
-nsX509CertValidity::~nsX509CertValidity()
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return;
-  }
-
-  shutdown(ShutdownCalledFrom::Object);
 }
 
 NS_IMETHODIMP

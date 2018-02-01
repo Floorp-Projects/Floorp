@@ -8,7 +8,6 @@
 
 #include "nsIPKCS11ModuleDB.h"
 
-#include "nsNSSShutDown.h"
 #include "nsString.h"
 
 namespace mozilla { namespace psm {
@@ -18,19 +17,15 @@ namespace mozilla { namespace psm {
   { 0xb9, 0x7a, 0xce, 0xed, 0x78, 0x90, 0x99, 0x74 }}
 
 class PKCS11ModuleDB : public nsIPKCS11ModuleDB
-                     , public nsNSSShutDownObject
 {
 public:
-  PKCS11ModuleDB();
+  PKCS11ModuleDB() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPKCS11MODULEDB
 
 protected:
-  virtual ~PKCS11ModuleDB();
-
-private:
-  virtual void virtualDestroyNSSReference() override {}
+  virtual ~PKCS11ModuleDB() {}
 };
 
 void GetModuleNameForTelemetry(/*in*/ const SECMODModule* module,

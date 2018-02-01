@@ -9,7 +9,6 @@
 
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsNSSShutDown.h"
 #include "pk11func.h"
 
 //
@@ -52,7 +51,6 @@ pip_ucs2_ascii_conversion_fn(PRBool toUnicode,
 // A function that sets the password on an unitialized slot.
 //
 nsresult
-setPassword(PK11SlotInfo* slot, nsIInterfaceRequestor* ctx,
-            nsNSSShutDownPreventionLock& /*proofOfLock*/);
+setPassword(PK11SlotInfo* slot, nsIInterfaceRequestor* ctx);
 
 #endif

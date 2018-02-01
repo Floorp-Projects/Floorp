@@ -856,7 +856,7 @@ falling back to not using job objects for managing child processes""", file=sys.
             while self.reader.is_alive():
                 self.reader.thread.join(timeout=1)
                 count += 1
-                if timeout and count > timeout:
+                if timeout is not None and count > timeout:
                     return None
 
         self.returncode = self.proc.wait()
