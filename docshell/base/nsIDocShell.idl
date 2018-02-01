@@ -1189,6 +1189,12 @@ interface nsIDocShell : nsIDocShellTreeItem
   void getColorMatrix([optional] out unsigned long aMatrixLen,
                       [array, size_is(aMatrixLen), retval] out float aMatrix);
 
+  /**
+   * Initialize session history for this docshell. The docshell must be the root
+   * docshell.
+   */
+  void initSessionHistory();
+
 %{C++
   /**
    * These methods call nsDocShell::GetHTMLEditorInternal() and
