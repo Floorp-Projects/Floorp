@@ -39,6 +39,7 @@ android-api-16/debug:
         tooltool-downloads: internal
     toolchains:
         - android-gradle-dependencies
+        - android-ndk-linux
         - android-sdk-linux
         - linux64-clang
         - linux64-rust-android
@@ -91,6 +92,7 @@ android-x86/opt:
         tooltool-downloads: internal
     toolchains:
         - android-gradle-dependencies
+        - android-ndk-linux
         - android-sdk-linux
         - linux64-clang
         - linux64-rust-android
@@ -149,6 +151,7 @@ android-x86-nightly/opt:
         tooltool-downloads: internal
     toolchains:
         - android-gradle-dependencies
+        - android-ndk-linux
         - android-sdk-linux
         - linux64-clang
         - linux64-rust-android
@@ -196,6 +199,7 @@ android-api-16/opt:
         tooltool-downloads: internal
     toolchains:
         - android-gradle-dependencies
+        - android-ndk-linux
         - android-sdk-linux
         - linux64-clang
         - linux64-rust-android
@@ -298,6 +302,7 @@ android-api-16-nightly/opt:
         tooltool-downloads: internal
     toolchains:
         - android-gradle-dependencies
+        - android-ndk-linux
         - android-sdk-linux
         - linux64-clang
         - linux64-rust-android
@@ -351,6 +356,7 @@ android-x86-old-id/opt:
     run-on-projects: ['mozilla-central']
     toolchains:
         - android-gradle-dependencies
+        - android-ndk-linux
         - android-sdk-linux
         - linux64-clang
         - linux64-rust-android
@@ -408,6 +414,7 @@ android-x86-old-id-nightly/opt:
     run-on-projects: ['mozilla-central']
     toolchains:
         - android-gradle-dependencies
+        - android-ndk-linux
         - android-sdk-linux
         - linux64-clang
         - linux64-rust-android
@@ -456,6 +463,7 @@ android-api-16-old-id/opt:
     run-on-projects: ['mozilla-central']
     toolchains:
         - android-gradle-dependencies
+        - android-ndk-linux
         - android-sdk-linux
         - linux64-clang
         - linux64-rust-android
@@ -508,6 +516,7 @@ android-api-16-old-id-nightly/opt:
     run-on-projects: ['mozilla-central']
     toolchains:
         - android-gradle-dependencies
+        - android-ndk-linux
         - android-sdk-linux
         - linux64-clang
         - linux64-rust-android
@@ -554,6 +563,7 @@ android-api-16-gradle/opt:
         custom-build-variant-cfg: api-16-gradle
         tooltool-downloads: internal
     toolchains:
+        - android-ndk-linux
         - android-sdk-linux
         - linux64-clang
         - linux64-rust-android
@@ -601,6 +611,7 @@ android-aarch64/opt:
         tooltool-downloads: internal
     toolchains:
         - android-gradle-dependencies
+        - android-ndk-linux
         - android-sdk-linux
         - linux64-clang
         - linux64-rust-android
@@ -654,6 +665,7 @@ android-aarch64-nightly/opt:
         tooltool-downloads: internal
     toolchains:
         - android-gradle-dependencies
+        - android-ndk-linux
         - android-sdk-linux
         - linux64-clang
         - linux64-rust-android
