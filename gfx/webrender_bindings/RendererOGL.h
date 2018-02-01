@@ -50,10 +50,7 @@ public:
   wr::WrExternalImageHandler GetExternalImageHandler();
 
   /// This can be called on the render thread only.
-  void Update();
-
-  /// This can be called on the render thread only.
-  bool Render();
+  bool UpdateAndRender();
 
   /// This can be called on the render thread only.
   bool RenderToTarget(gfx::DrawTarget& aTarget);
