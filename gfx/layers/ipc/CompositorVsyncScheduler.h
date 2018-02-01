@@ -49,7 +49,6 @@ public:
                                     widget::CompositorWidget* aWidget);
 
   bool NotifyVsync(TimeStamp aVsyncTimestamp);
-  void SetNeedsComposite();
 
   /**
    * Do cleanup. This must be called on the compositor thread.
@@ -93,7 +92,6 @@ private:
   void UnobserveVsync();
   void DispatchTouchEvents(TimeStamp aVsyncTimestamp);
   void DispatchVREvents(TimeStamp aVsyncTimestamp);
-  void CancelCurrentSetNeedsCompositeTask();
 
   class Observer final : public VsyncObserver
   {
@@ -125,9 +123,6 @@ private:
 
   mozilla::Monitor mCurrentCompositeTaskMonitor;
   RefPtr<CancelableRunnable> mCurrentCompositeTask;
-
-  mozilla::Monitor mSetNeedsCompositeMonitor;
-  RefPtr<CancelableRunnable> mSetNeedsCompositeTask;
 
   mozilla::Monitor mCurrentVRListenerTaskMonitor;
   RefPtr<Runnable> mCurrentVRListenerTask;
