@@ -16,6 +16,7 @@
 #include "ChildIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/InspectorUtils.h"
+#include "mozilla/dom/NodeFilterBinding.h"
 
 /*****************************************************************************
  * This implementation does not currently operaate according to the W3C spec.
@@ -29,7 +30,7 @@ inDeepTreeWalker::inDeepTreeWalker()
   : mShowAnonymousContent(false),
     mShowSubDocuments(false),
     mShowDocumentsAsNodes(false),
-    mWhatToShow(nsIDOMNodeFilter::SHOW_ALL)
+    mWhatToShow(mozilla::dom::NodeFilterBinding::SHOW_ALL)
 {
 }
 

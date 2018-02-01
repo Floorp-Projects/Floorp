@@ -373,10 +373,10 @@ function test_isEqualNode_wholeDoc()
   doc = ParseFile("isequalnode_data.xml");
   var doc2 = ParseFile("isequalnode_data.xml");
   var tw1 =
-    doc.createTreeWalker(doc, Components.interfaces.nsIDOMNodeFilter.SHOW_ALL,
+    doc.createTreeWalker(doc, 0xFFFFFFFF /* NodeFilter.SHOW_ALL */,
                          null);
   var tw2 =
-    doc2.createTreeWalker(doc2, Components.interfaces.nsIDOMNodeFilter.SHOW_ALL,
+    doc2.createTreeWalker(doc2, 0xFFFFFFFF /* NodeFilter.SHOW_ALL */,
                           null);
   do {
     check_eq_nodes(tw1.currentNode, tw2.currentNode);

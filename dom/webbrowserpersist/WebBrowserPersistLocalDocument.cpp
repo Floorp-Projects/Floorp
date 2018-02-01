@@ -17,6 +17,7 @@
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
+#include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/TreeWalker.h"
 #include "nsComponentManagerUtils.h"
@@ -32,7 +33,6 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMWindowUtils.h"
@@ -1188,9 +1188,9 @@ WebBrowserPersistLocalDocument::ReadResources(nsIWebBrowserPersistResourceVisito
     ErrorResult err;
     RefPtr<dom::TreeWalker> walker =
         mDocument->CreateTreeWalker(*mDocument,
-            nsIDOMNodeFilter::SHOW_ELEMENT |
-            nsIDOMNodeFilter::SHOW_DOCUMENT |
-            nsIDOMNodeFilter::SHOW_PROCESSING_INSTRUCTION,
+            dom::NodeFilterBinding::SHOW_ELEMENT |
+            dom::NodeFilterBinding::SHOW_DOCUMENT |
+            dom::NodeFilterBinding::SHOW_PROCESSING_INSTRUCTION,
             nullptr, err);
 
     if (NS_WARN_IF(err.Failed())) {
