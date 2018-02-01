@@ -283,7 +283,8 @@ class GCMarker : public JSTracer
 
     void setGCMode(JSGCMode mode) { stack.setGCMode(mode); }
 
-    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                               const AutoLockForExclusiveAccess& lock) const;
 
 #ifdef DEBUG
 
