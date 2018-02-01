@@ -9,7 +9,6 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     'nsIDOMNodeFilter.idl',
-    'nsIDOMNodeIterator.idl',
     'nsIDOMTreeWalker.idl',
 ]
 
