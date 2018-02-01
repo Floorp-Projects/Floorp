@@ -51,6 +51,6 @@ add_task(async function() {
   let newTabPromise = BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
   await Promise.all([visitedPromise, newTabPromise]);
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   gBrowser.removeCurrentTab();
 });

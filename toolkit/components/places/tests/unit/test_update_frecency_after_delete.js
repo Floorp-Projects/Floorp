@@ -33,7 +33,7 @@ add_task(async function removed_bookmark() {
   Assert.equal(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function removed_but_visited_bookmark() {
@@ -58,7 +58,7 @@ add_task(async function removed_but_visited_bookmark() {
   Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function remove_bookmark_still_bookmarked() {
@@ -87,7 +87,7 @@ add_task(async function remove_bookmark_still_bookmarked() {
   Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function cleared_parent_of_visited_bookmark() {
@@ -112,7 +112,7 @@ add_task(async function cleared_parent_of_visited_bookmark() {
   Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function cleared_parent_of_bookmark_still_bookmarked() {
@@ -147,5 +147,5 @@ add_task(async function cleared_parent_of_bookmark_still_bookmarked() {
   Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });

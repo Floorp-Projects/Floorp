@@ -2,7 +2,7 @@
 "use strict";
 
 add_task(async function test_fetch_existent() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 
   // Populate places and historyvisits.
@@ -78,7 +78,7 @@ add_task(async function test_fetch_existent() {
 });
 
 add_task(async function test_fetch_page_meta_info() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   let TEST_URI = NetUtil.newURI("http://mozilla.com/test_fetch_page_meta_info");
   await PlacesTestUtils.addVisits(TEST_URI);
@@ -107,7 +107,7 @@ add_task(async function test_fetch_page_meta_info() {
 });
 
 add_task(async function test_fetch_nonexistent() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 
   let uri = NetUtil.newURI("http://doesntexist.in.db");

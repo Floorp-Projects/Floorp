@@ -68,7 +68,7 @@ add_task(async function test_error_cases() {
 });
 
 add_task(async function test_description_change_saved() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   let TEST_URL = "http://mozilla.org/test_description_change_saved";
   await PlacesTestUtils.addVisits(TEST_URL);
@@ -102,7 +102,7 @@ add_task(async function test_description_change_saved() {
 });
 
 add_task(async function test_previewImageURL_change_saved() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   let TEST_URL = "http://mozilla.org/test_previewImageURL_change_saved";
   let IMAGE_URL = "http://mozilla.org/test_preview_image.png";
@@ -127,7 +127,7 @@ add_task(async function test_previewImageURL_change_saved() {
 });
 
 add_task(async function test_change_both_saved() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   let TEST_URL = "http://mozilla.org/test_change_both_saved";
   await PlacesTestUtils.addVisits(TEST_URL);

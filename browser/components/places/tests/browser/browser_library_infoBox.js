@@ -13,7 +13,7 @@ add_task(async function() {
   gLibrary = await promiseLibrary();
   registerCleanupFunction(async () => {
     gLibrary.close();
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
   });
   gLibrary.PlacesOrganizer._places.focus();
 

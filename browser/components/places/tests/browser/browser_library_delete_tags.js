@@ -10,7 +10,7 @@
 
 registerCleanupFunction(async function() {
   await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_tags() {

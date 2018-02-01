@@ -101,9 +101,9 @@ add_task(async function test_pref_maxpages() {
                  currentTest.expectedNotifications);
 
     // Clean up.
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
   }
 
   clearMaxPages();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });

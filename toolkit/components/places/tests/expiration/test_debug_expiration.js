@@ -37,7 +37,7 @@ add_task(async function test_expire_orphans() {
   Assert.ok(!page_in_database("http://page3.mozilla.org/"));
 
   // Clean up.
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_expire_orphans_optionalarg() {
@@ -67,7 +67,7 @@ add_task(async function test_expire_orphans_optionalarg() {
   Assert.ok(!page_in_database("http://page3.mozilla.org/"));
 
   // Clean up.
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_expire_limited() {
@@ -91,7 +91,7 @@ add_task(async function test_expire_limited() {
   Assert.ok(!page_in_database("http://old.mozilla.org/"));
 
   // Clean up.
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_expire_limited_longurl() {
@@ -119,7 +119,7 @@ add_task(async function test_expire_limited_longurl() {
   Assert.ok(!page_in_database("http://old.mozilla.org/"));
 
   // Clean up.
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_expire_limited_exoticurl() {
@@ -152,7 +152,7 @@ add_task(async function test_expire_limited_exoticurl() {
   Assert.ok(!page_in_database("http://old.mozilla.org/"));
 
   // Clean up.
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_expire_unlimited() {
@@ -205,7 +205,7 @@ add_task(async function test_expire_unlimited() {
   Assert.ok(!page_in_database("http://new.mozilla.org/"));
 
   // Clean up.
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 function run_test() {

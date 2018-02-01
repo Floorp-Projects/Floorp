@@ -6,7 +6,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(gRestyleSearchesPref);
   Services.search.currentEngine = gOriginalEngine;
   Services.search.removeEngine(gEngine);
-  return PlacesTestUtils.clearHistory();
+  return PlacesUtils.history.clear();
 });
 
 add_task(async function() {

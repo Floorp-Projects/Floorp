@@ -212,7 +212,7 @@ async function test_history_not_cleared_with_uri_contains_domain() {
   Assert.ok(await PlacesUtils.history.hasVisits(TEST_URI));
 
   // Clear history since we left something there from this test.
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 }
 
 // Cookie Service

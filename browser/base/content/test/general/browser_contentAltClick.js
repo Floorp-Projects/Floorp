@@ -14,8 +14,6 @@
 
 ChromeUtils.defineModuleGetter(this, "Downloads",
                                "resource://gre/modules/Downloads.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
-                               "resource://testing-common/PlacesTestUtils.jsm");
 
 function setup() {
   Services.prefs.setBoolPref("browser.altClickSave", true);
@@ -38,7 +36,7 @@ async function clean_up() {
     await download.finalize(true);
   }
   // Remove download history.
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   Services.prefs.clearUserPref("browser.altClickSave");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);

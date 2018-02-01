@@ -3,7 +3,7 @@ const DB_NOW = JS_NOW * 1000;
 const TEST_URI = uri("http://example.com/");
 
 async function cleanup() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
   // This is needed to remove place: entries.
   DBConn().executeSimpleSQL("DELETE FROM moz_places");

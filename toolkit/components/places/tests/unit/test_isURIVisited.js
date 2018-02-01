@@ -56,7 +56,7 @@ function* step() {
               Assert.ok(uri.equals(aURI2));
               Assert.ok(SCHEMES[scheme] ? aIsVisited2 : !aIsVisited2);
 
-              PlacesTestUtils.clearHistory().then(function() {
+              PlacesUtils.history.clear().then(function() {
                 history.isURIVisited(uri, function(aURI3, aIsVisited3) {
                   Assert.ok(uri.equals(aURI3));
                   Assert.ok(!aIsVisited3);

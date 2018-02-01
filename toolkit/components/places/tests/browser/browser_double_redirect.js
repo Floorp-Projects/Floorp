@@ -3,7 +3,7 @@
 // previous visit in the chain, not to the first visit in the chain.
 
 add_task(async function() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   const BASE_URL = "http://example.com/tests/toolkit/components/places/tests/browser/";
   const TEST_URI = NetUtil.newURI(BASE_URL + "begin.html");
@@ -70,5 +70,5 @@ add_task(async function() {
     await promiseVisits;
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
