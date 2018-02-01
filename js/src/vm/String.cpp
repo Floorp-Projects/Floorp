@@ -205,7 +205,7 @@ JSString::dumpRepresentationHeader(js::GenericPrinter& out, int indent, const ch
     // Print the string's address as an actual C++ expression, to facilitate
     // copy-and-paste into a debugger.
     out.printf("((%s*) %p) length: %zu  flags: 0x%x", subclass, this, length(), flags);
-    if (flags & FLAT_BIT)               out.put(" FLAT");
+    if (flags & LINEAR_BIT)             out.put(" LINEAR");
     if (flags & HAS_BASE_BIT)           out.put(" HAS_BASE");
     if (flags & INLINE_CHARS_BIT)       out.put(" INLINE_CHARS");
     if (flags & ATOM_BIT)               out.put(" ATOM");
@@ -497,8 +497,10 @@ JSRope::flattenInternal(JSContext* maybecx)
             wholeCapacity = capacity;
             wholeChars = const_cast<CharT*>(left.nonInlineChars<CharT>(nogc));
             pos = wholeChars + left.d.u1.length;
-            JS_STATIC_ASSERT(!(EXTENSIBLE_FLAGS & DEPENDENT_FLAGS));
-            left.d.u1.flags ^= (EXTENSIBLE_FLAGS | DEPENDENT_FLAGS);
+            if (IsSame<CharT, char16_t>::value)
+                left.d.u1.flags = DEPENDENT_FLAGS;
+            else
+                left.d.u1.flags = DEPENDENT_FLAGS | LATIN1_CHARS_BIT;
             left.d.s.u3.base = (JSLinearString*)this;  /* will be true on exit */
             StringWriteBarrierPostRemove(maybecx, &left.d.s.u2.left);
             StringWriteBarrierPost(maybecx, (JSString**)&left.d.s.u3.base);
@@ -1102,7 +1104,7 @@ JSExternalString::ensureFlat(JSContext* cx)
 
     // Transform the string into a non-external, flat string.
     setNonInlineChars<char16_t>(s);
-    d.u1.flags = FLAT_BIT;
+    d.u1.flags = LINEAR_BIT;
 
     return &this->asFlat();
 }

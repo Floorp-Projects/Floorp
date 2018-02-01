@@ -136,6 +136,10 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
 #ifdef DEBUG
     activeThreadHasExclusiveAccess(false),
 #endif
+    scriptDataLock(mutexid::RuntimeScriptData),
+#ifdef DEBUG
+    activeThreadHasScriptDataAccess(false),
+#endif
     numActiveHelperThreadZones(0),
     numCompartments(0),
     localeCallbacks(nullptr),
@@ -322,13 +326,12 @@ JSRuntime::destroyRuntime()
     AutoNoteSingleThreadedRegion anstr;
 
     MOZ_ASSERT(!hasHelperThreadZones());
-    AutoLockForExclusiveAccess lock(this);
 
     /*
      * Even though all objects in the compartment are dead, we may have keep
      * some filenames around because of gcKeepAtoms.
      */
-    FreeScriptData(this, lock);
+    FreeScriptData(this);
 
 #if !EXPOSE_INTL_API
     FinishRuntimeNumberState(this);
@@ -459,11 +462,13 @@ JSRuntime::setUseCounterCallback(JSRuntime* rt, JSSetUseCounterCallback callback
 void
 JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSizes* rtSizes)
 {
-    // Several tables in the runtime enumerated below can be used off thread.
-    AutoLockForExclusiveAccess lock(this);
-
     rtSizes->object += mallocSizeOf(this);
-    rtSizes->atomsTable += atoms(lock).sizeOfIncludingThis(mallocSizeOf);
+
+    {
+        AutoLockForExclusiveAccess lock(this);
+        rtSizes->atomsTable += atoms(lock).sizeOfIncludingThis(mallocSizeOf);
+        rtSizes->gc.marker += gc.marker.sizeOfExcludingThis(mallocSizeOf, lock);
+    }
 
     if (!parentRuntime) {
         rtSizes->atomsTable += mallocSizeOf(staticStrings);
@@ -500,16 +505,17 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
 
     rtSizes->sharedIntlData += sharedIntlData.ref().sizeOfExcludingThis(mallocSizeOf);
 
-    rtSizes->scriptData += scriptDataTable(lock).sizeOfExcludingThis(mallocSizeOf);
-    for (ScriptDataTable::Range r = scriptDataTable(lock).all(); !r.empty(); r.popFront())
-        rtSizes->scriptData += mallocSizeOf(r.front());
+    {
+        AutoLockScriptData lock(this);
+        rtSizes->scriptData += scriptDataTable(lock).sizeOfExcludingThis(mallocSizeOf);
+        for (ScriptDataTable::Range r = scriptDataTable(lock).all(); !r.empty(); r.popFront())
+            rtSizes->scriptData += mallocSizeOf(r.front());
+    }
 
     if (jitRuntime_) {
         jitRuntime_->execAlloc().addSizeOfCode(&rtSizes->code);
         jitRuntime_->backedgeExecAlloc().addSizeOfCode(&rtSizes->code);
     }
-
-    rtSizes->gc.marker += gc.marker.sizeOfExcludingThis(mallocSizeOf);
 }
 
 static bool
