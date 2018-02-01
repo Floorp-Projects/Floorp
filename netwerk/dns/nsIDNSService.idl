@@ -233,4 +233,10 @@ interface nsIDNSService : nsISupports
      * If set, allow name collision results (127.0.53.53) which are normally filtered.
      */
     const unsigned long RESOLVE_ALLOW_NAME_COLLISION = (1 << 8);
+
+    /**
+     * If set, do not use TRR for resolving the host name.
+     */
+    const unsigned long RESOLVE_DISABLE_TRR = (1 << 9);
+
 };

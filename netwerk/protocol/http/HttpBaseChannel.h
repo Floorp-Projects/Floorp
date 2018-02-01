@@ -236,6 +236,8 @@ public:
   NS_IMETHOD SetAllowAltSvc(bool aAllowAltSvc) override;
   NS_IMETHOD GetBeConservative(bool *aBeConservative) override;
   NS_IMETHOD SetBeConservative(bool aBeConservative) override;
+  NS_IMETHOD GetTrr(bool *aTRR) override;
+  NS_IMETHOD SetTrr(bool aTRR) override;
   NS_IMETHOD GetTlsFlags(uint32_t *aTlsFlags) override;
   NS_IMETHOD SetTlsFlags(uint32_t aTlsFlags) override;
   NS_IMETHOD GetApiRedirectToURI(nsIURI * *aApiRedirectToURI) override;
@@ -574,6 +576,7 @@ protected:
   uint32_t                          mAllowSpdy                  : 1;
   uint32_t                          mAllowAltSvc                : 1;
   uint32_t                          mBeConservative             : 1;
+  uint32_t                          mTRR                        : 1;
   uint32_t                          mResponseTimeoutEnabled     : 1;
   // A flag that should be false only if a cross-domain redirect occurred
   uint32_t                          mAllRedirectsSameOrigin     : 1;

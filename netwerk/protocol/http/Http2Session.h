@@ -154,7 +154,7 @@ public:
 
   // below the emergency threshold of local window we ack every received
   // byte. Above that we coalesce bytes into the MinimumToAck size.
-  const static int32_t  kEmergencyWindowThreshold = 256 * 1024;
+  const static int32_t  kEmergencyWindowThreshold = 96 * 1024;
   const static uint32_t kMinimumToAck = 4 * 1024 * 1024;
 
   // The default rwin is 64KB - 1 unless updated by a settings frame
