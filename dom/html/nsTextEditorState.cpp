@@ -2040,12 +2040,10 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   if (!IsSelectionCached()) {
     // Go ahead and cache it now.
     uint32_t start = 0, end = 0;
-    IgnoredErrorResult rangeRv;
-    GetSelectionRange(&start, &end, rangeRv);
+    GetSelectionRange(&start, &end, IgnoreErrors());
 
-    IgnoredErrorResult dirRv;
     nsITextControlFrame::SelectionDirection direction =
-      GetSelectionDirection(dirRv);
+      GetSelectionDirection(IgnoreErrors());
 
     SelectionProperties& props = GetSelectionProperties();
     props.SetStart(start);

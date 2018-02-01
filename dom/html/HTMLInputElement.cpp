@@ -748,8 +748,7 @@ nsColorPickerShownCallback::UpdateInternal(const nsAString& aColor,
     mInput->GetValue(oldValue, CallerType::System);
   }
 
-  IgnoredErrorResult rv;
-  mInput->SetValue(aColor, CallerType::System, rv);
+  mInput->SetValue(aColor, CallerType::System, IgnoreErrors());
 
   if (!aTrustedUpdate) {
     nsAutoString newValue;
@@ -1893,15 +1892,13 @@ HTMLInputElement::SetValue(Decimal aValue, CallerType aCallerType)
   MOZ_ASSERT(!aValue.isInfinity(), "aValue must not be Infinity!");
 
   if (aValue.isNaN()) {
-    IgnoredErrorResult rv;
-    SetValue(EmptyString(), aCallerType, rv);
+    SetValue(EmptyString(), aCallerType, IgnoreErrors());
     return;
   }
 
   nsAutoString value;
   mInputType->ConvertNumberToString(aValue, value);
-  IgnoredErrorResult rv;
-  SetValue(value, aCallerType, rv);
+  SetValue(value, aCallerType, IgnoreErrors());
 }
 
 Nullable<Date>
@@ -6691,8 +6688,7 @@ HTMLInputElement::RestoreState(nsPresState* aState)
   }
 
   if (aState->IsDisabledSet() && !aState->GetDisabled()) {
-    IgnoredErrorResult ignored;
-    SetDisabled(false, ignored);
+    SetDisabled(false, IgnoreErrors());
   }
 
   return restoredCheckedState;

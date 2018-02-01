@@ -360,32 +360,30 @@ DOMEventTargetHelper::WantsUntrusted(bool* aRetVal)
 void
 DOMEventTargetHelper::EventListenerAdded(nsAtom* aType)
 {
-  IgnoredErrorResult rv;
-  EventListenerWasAdded(Substring(nsDependentAtomString(aType), 2), rv);
+  EventListenerWasAdded(Substring(nsDependentAtomString(aType), 2),
+                        IgnoreErrors());
   MaybeUpdateKeepAlive();
 }
 
 void
 DOMEventTargetHelper::EventListenerAdded(const nsAString& aType)
 {
-  IgnoredErrorResult rv;
-  EventListenerWasAdded(aType, rv);
+  EventListenerWasAdded(aType, IgnoreErrors());
   MaybeUpdateKeepAlive();
 }
 
 void
 DOMEventTargetHelper::EventListenerRemoved(nsAtom* aType)
 {
-  IgnoredErrorResult rv;
-  EventListenerWasRemoved(Substring(nsDependentAtomString(aType), 2), rv);
+  EventListenerWasRemoved(Substring(nsDependentAtomString(aType), 2),
+                          IgnoreErrors());
   MaybeUpdateKeepAlive();
 }
 
 void
 DOMEventTargetHelper::EventListenerRemoved(const nsAString& aType)
 {
-  IgnoredErrorResult rv;
-  EventListenerWasRemoved(aType, rv);
+  EventListenerWasRemoved(aType, IgnoreErrors());
   MaybeUpdateKeepAlive();
 }
 

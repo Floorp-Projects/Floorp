@@ -1776,8 +1776,7 @@ nsINode::Remove()
     return;
   }
 
-  IgnoredErrorResult err;
-  parent->RemoveChild(*this, err);
+  parent->RemoveChild(*this, IgnoreErrors());
 }
 
 Element*

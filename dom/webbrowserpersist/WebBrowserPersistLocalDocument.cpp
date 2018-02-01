@@ -696,8 +696,7 @@ PersistNodeFixup::FixupAttribute(nsINode* aNode,
         attr->GetValue(uri);
         rv = FixupURI(uri);
         if (NS_SUCCEEDED(rv)) {
-            IgnoredErrorResult err;
-            attr->SetValue(uri, err);
+            attr->SetValue(uri, IgnoreErrors());
         }
     }
 
@@ -749,8 +748,7 @@ PersistNodeFixup::FixupAnchor(nsINode *aNode)
             nsAutoCString uriSpec;
             rv = newURI->GetSpec(uriSpec);
             NS_ENSURE_SUCCESS(rv, rv);
-            IgnoredErrorResult err;
-            attr->SetValue(NS_ConvertUTF8toUTF16(uriSpec), err);
+            attr->SetValue(NS_ConvertUTF8toUTF16(uriSpec), IgnoreErrors());
         }
     }
 
@@ -1128,19 +1126,16 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
                     nodeAsInput->GetValue(valueStr, dom::CallerType::System);
                     // Avoid superfluous value="" serialization
                     if (valueStr.IsEmpty()) {
-                      IgnoredErrorResult ignored;
-                      outElt->RemoveAttribute(valueAttr, ignored);
+                      outElt->RemoveAttribute(valueAttr, IgnoreErrors());
                     } else {
-                      IgnoredErrorResult ignored;
-                      outElt->SetAttribute(valueAttr, valueStr, ignored);
+                      outElt->SetAttribute(valueAttr, valueStr, IgnoreErrors());
                     }
                     break;
                 case NS_FORM_INPUT_CHECKBOX:
                 case NS_FORM_INPUT_RADIO:
                     {
                         bool checked = nodeAsInput->Checked();
-                        IgnoredErrorResult ignored;
-                        outElt->SetDefaultChecked(checked, ignored);
+                        outElt->SetDefaultChecked(checked, IgnoreErrors());
                     }
                     break;
                 default:
@@ -1160,8 +1155,7 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
             nsAutoString valueStr;
             nodeAsTextArea->GetValue(valueStr);
 
-            IgnoredErrorResult err;
-            (*aNodeOut)->SetTextContent(valueStr, err);
+            (*aNodeOut)->SetTextContent(valueStr, IgnoreErrors());
         }
         return rv;
     }
@@ -1173,8 +1167,7 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
             dom::HTMLOptionElement* outElt =
                 dom::HTMLOptionElement::FromContent((*aNodeOut)->AsContent());
             bool selected = nodeAsOption->Selected();
-            IgnoredErrorResult ignored;
-            outElt->SetDefaultSelected(selected, ignored);
+            outElt->SetDefaultSelected(selected, IgnoreErrors());
         }
         return rv;
     }
