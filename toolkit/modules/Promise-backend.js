@@ -932,7 +932,7 @@ Handler.prototype = {
       // An exception has occurred in the handler.
 
       if (ex && typeof ex == "object" && "name" in ex &&
-          ERRORS_TO_REPORT.indexOf(ex.name) != -1) {
+          ERRORS_TO_REPORT.includes(ex.name)) {
 
         // We suspect that the exception is a programmer error, so we now
         // display it using dump().  Note that we do not use Cu.reportError as

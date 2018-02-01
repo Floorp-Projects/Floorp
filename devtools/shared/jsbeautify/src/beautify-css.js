@@ -144,7 +144,7 @@
                 return false;
             }
             var restOfLine = source_text.substring(pos, endOfLine);
-            return restOfLine.indexOf('//') !== -1;
+            return restOfLine.includes('//');
         }
 
         // printer

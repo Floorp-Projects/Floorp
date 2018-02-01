@@ -16,7 +16,7 @@ self.addEventListener("install", function(event) {
 });
 
 self.addEventListener("fetch", function(event) {
-  if (event.request.url.indexOf("index-cached-https.sjs") >= 0) {
+  if (event.request.url.includes("index-cached-https.sjs")) {
     event.respondWith(
       self.caches.open("origin-cache")
         .then(c => {

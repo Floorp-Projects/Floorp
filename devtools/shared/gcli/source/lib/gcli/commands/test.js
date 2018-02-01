@@ -25,7 +25,7 @@ var Requisition = require('../cli').Requisition;
 var createRequisitionAutomator = require('../test/automators/requisition').createRequisitionAutomator;
 
 var isNode = (typeof(process) !== 'undefined' &&
-             process.title.indexOf('node') != -1);
+             process.title.includes('node'));
 
 suite.init(isNode);
 

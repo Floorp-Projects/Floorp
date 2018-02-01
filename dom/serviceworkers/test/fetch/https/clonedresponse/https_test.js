@@ -5,7 +5,7 @@ self.addEventListener("install", function(event) {
 });
 
 self.addEventListener("fetch", function(event) {
-  if (event.request.url.indexOf("index.html") >= 0) {
+  if (event.request.url.includes("index.html")) {
     event.respondWith(new Promise(function(resolve, reject) {
       caches.match(event.request).then(function(response) {
         resolve(response.clone());

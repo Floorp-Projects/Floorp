@@ -880,7 +880,7 @@ DebuggerClient.prototype = {
     if (this._clients.has(packet.from) && packet.type) {
       let client = this._clients.get(packet.from);
       let type = packet.type;
-      if (client.events.indexOf(type) != -1) {
+      if (client.events.includes(type)) {
         client.emit(type, packet);
         // we ignore the rest, as the client is expected to handle this packet.
         return;

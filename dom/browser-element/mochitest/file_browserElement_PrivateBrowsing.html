@@ -2,7 +2,7 @@
 <body>
 <script>
 
-if (location.href.indexOf("clear=true") != -1) {
+if (location.href.includes("clear=true")) {
   localStorage.removeItem("foo");
   alert("CLEAR");
 } else {

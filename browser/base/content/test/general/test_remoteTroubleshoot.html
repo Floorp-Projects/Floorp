@@ -5,7 +5,7 @@
 // WebChannel, and once with objects allowed. This function allows us to handle
 // both cases without too much pain.
 function makeDetails(object) {
-  if (window.location.search.indexOf("object") >= 0) {
+  if (window.location.search.includes("object")) {
     return object;
   }
   return JSON.stringify(object);

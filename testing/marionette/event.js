@@ -217,7 +217,7 @@ event.parseModifiers_ = function(modifiers) {
     mval |= Ci.nsIDOMNSEvent.META_MASK;
   }
   if (modifiers.accelKey) {
-    if (navigator.platform.indexOf("Mac") >= 0) {
+    if (navigator.platform.includes("Mac")) {
       mval |= Ci.nsIDOMNSEvent.META_MASK;
     } else {
       mval |= Ci.nsIDOMNSEvent.CONTROL_MASK;
@@ -1306,8 +1306,8 @@ event.sendKeyDown = function(keyToSend, modifiers, document) {
   // TODO: This doesn't do anything since |synthesizeKeyEvent| ignores
   // explicit keypress request, and instead figures out itself when to
   // send keypress.
-  if (["VK_SHIFT", "VK_CONTROL", "VK_ALT", "VK_META"]
-      .indexOf(getKeyCode(keyToSend)) < 0) {
+  if (!["VK_SHIFT", "VK_CONTROL", "VK_ALT", "VK_META"]
+      .includes(getKeyCode(keyToSend))) {
     modifiers.type = "keypress";
     event.sendSingleKey(keyToSend, modifiers, document);
   }

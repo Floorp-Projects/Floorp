@@ -232,7 +232,7 @@ var Monitor = {
 
           // Find the header row to locate NAME and USS, looks like:
           // '      NAME PID NICE  USS  PSS  RSS VSIZE OOM_ADJ USER '.
-          while (line.indexOf("NAME") < 0) {
+          while (!line.includes("NAME")) {
             if (lines.length < 1) {
               // Something is wrong with this output, don't trust b2g-info.
               Monitor.unpollB2GInfo();

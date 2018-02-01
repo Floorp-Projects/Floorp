@@ -265,7 +265,7 @@ this.AccessFu = { // jshint ignore:line
   },
 
   _loadFrameScript: function _loadFrameScript(aMessageManager) {
-    if (this._processedMessageManagers.indexOf(aMessageManager) < 0) {
+    if (!this._processedMessageManagers.includes(aMessageManager)) {
       aMessageManager.loadFrameScript(
         "chrome://global/content/accessibility/content-script.js", true);
       this._processedMessageManagers.push(aMessageManager);

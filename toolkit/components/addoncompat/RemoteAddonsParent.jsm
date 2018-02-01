@@ -384,7 +384,7 @@ var ObserverInterposition = new Interposition("ObserverInterposition");
 
 ObserverInterposition.methods.addObserver =
   function(addon, target, observer, topic, ownsWeak) {
-    if (TOPIC_WHITELIST.indexOf(topic) >= 0) {
+    if (TOPIC_WHITELIST.includes(topic)) {
       CompatWarning.warn(`${topic} observer should be added from the child process only.`,
                          addon, CompatWarning.warnings.observers);
 
@@ -396,7 +396,7 @@ ObserverInterposition.methods.addObserver =
 
 ObserverInterposition.methods.removeObserver =
   function(addon, target, observer, topic) {
-    if (TOPIC_WHITELIST.indexOf(topic) >= 0) {
+    if (TOPIC_WHITELIST.includes(topic)) {
       ObserverParent.removeObserver(addon, observer, topic);
     }
 

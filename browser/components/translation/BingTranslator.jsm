@@ -132,7 +132,7 @@ this.BingTranslator.prototype = {
    */
   _chunkFailed(aError) {
     if (aError instanceof Ci.nsIXMLHttpRequest &&
-        [400, 401].indexOf(aError.status) != -1) {
+        [400, 401].includes(aError.status)) {
       let body = aError.responseText;
       if (body && body.includes("TranslateApiException") &&
           (body.includes("balance") || body.includes("active state")))

@@ -621,7 +621,7 @@ var GMPProvider = {
 
   getAddonsByTypes(aTypes, aCallback) {
     if (!this.isEnabled ||
-        (aTypes && aTypes.indexOf("plugin") < 0)) {
+        (aTypes && !aTypes.includes("plugin"))) {
       aCallback([]);
       return;
     }

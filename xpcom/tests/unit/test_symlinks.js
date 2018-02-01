@@ -122,9 +122,9 @@ function testSymLinks(testDir, relative) {
     const name = file.leafName;
     print(name + spaces.substring(name.length) + bools[file.isDirectory()] +
           bools[file.isFile()] + bools[file.isSymlink()]);
-    Assert.equal(file.isDirectory(), dirs.indexOf(name) != -1);
-    Assert.equal(file.isFile(), files.indexOf(name) != -1);
-    Assert.equal(file.isSymlink(), links.indexOf(name) != -1);
+    Assert.equal(file.isDirectory(), dirs.includes(name));
+    Assert.equal(file.isFile(), files.includes(name));
+    Assert.equal(file.isSymlink(), links.includes(name));
   }
 }
 

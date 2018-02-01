@@ -114,9 +114,9 @@ DistributionCustomizer.prototype = {
         if (ilocale)
           continue;
 
-        if (keys.indexOf(key + "." + this._locale) >= 0) {
+        if (keys.includes(key + "." + this._locale)) {
           key += "." + this._locale;
-        } else if (keys.indexOf(key + "." + this._language) >= 0) {
+        } else if (keys.includes(key + "." + this._language)) {
           key += "." + this._language;
         }
 

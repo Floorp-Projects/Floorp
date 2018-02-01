@@ -37,8 +37,8 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     info("desktop: " + desktopBrowser.contentDocument.body.innerHTML);
 
     // Check the server UA and the navigator UA for 'desktop'
-    ok(desktopBrowser.contentWindow.navigator.userAgent.indexOf("Linux x86_64") != -1, "window.navigator.userAgent has 'Linux' in it");
-    ok(desktopBrowser.contentDocument.body.innerHTML.indexOf("Linux x86_64") != -1, "HTTP header 'User-Agent' has 'Linux' in it");
+    ok(desktopBrowser.contentWindow.navigator.userAgent.includes("Linux x86_64"), "window.navigator.userAgent has 'Linux' in it");
+    ok(desktopBrowser.contentDocument.body.innerHTML.includes("Linux x86_64"), "HTTP header 'User-Agent' has 'Linux' in it");
 
     BrowserApp.closeTab(desktopTab);
 
@@ -53,8 +53,8 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
     // Check the server UA and the navigator UA for 'mobile'
     // We only check for 'Android' because we don't know the version or if it's phone or tablet
-    ok(mobileBrowser.contentWindow.navigator.userAgent.indexOf("Android") != -1, "window.navigator.userAgent has 'Android' in it");
-    ok(mobileBrowser.contentDocument.body.innerHTML.indexOf("Android") != -1, "HTTP header 'User-Agent' has 'Android' in it");
+    ok(mobileBrowser.contentWindow.navigator.userAgent.includes("Android"), "window.navigator.userAgent has 'Android' in it");
+    ok(mobileBrowser.contentDocument.body.innerHTML.includes("Android"), "HTTP header 'User-Agent' has 'Android' in it");
 
     BrowserApp.closeTab(mobileTab);
   });

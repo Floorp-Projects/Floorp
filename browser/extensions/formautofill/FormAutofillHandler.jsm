@@ -951,7 +951,7 @@ class FormAutofillHandler {
       return true;
     }
 
-    if (this.form.elements.indexOf(element) === -1) {
+    if (!this.form.elements.includes(element)) {
       log.debug("The element can not be found in the current form.");
       this._updateForm(getFormLike());
       return true;

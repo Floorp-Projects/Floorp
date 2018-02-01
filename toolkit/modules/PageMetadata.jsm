@@ -286,7 +286,7 @@ this.PageMetadata = {
     let docURI = Services.io.newURI(document.documentURI);
     let uri = Services.io.newURI(docURI.resolve(url));
 
-    if (["http", "https"].indexOf(uri.scheme) < 0) {
+    if (!["http", "https"].includes(uri.scheme)) {
       return null;
     }
 

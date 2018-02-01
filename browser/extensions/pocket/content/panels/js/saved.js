@@ -348,7 +348,7 @@ var PKT_SAVED_OVERLAY = function(options) {
 
         var inactivetags = $(".pkt_ext_suggestedtag_detail").find(".token_tag_inactive");
         inactivetags.each(function(index, element) {
-            if (activetokenstext.indexOf("|" + $(element).text() + "|") == -1) {
+            if (!activetokenstext.includes("|" + $(element).text() + "|")) {
                 $(element).removeClass("token_tag_inactive");
             }
         });

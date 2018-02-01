@@ -454,7 +454,7 @@ this.LightweightThemeManager = {
    *         A callback to pass an array of Addons to
    */
   getAddonsByTypes(aTypes, aCallback) {
-    if (aTypes && aTypes.indexOf(ADDON_TYPE) == -1) {
+    if (aTypes && !aTypes.includes(ADDON_TYPE)) {
       aCallback([]);
       return;
     }

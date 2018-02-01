@@ -55,7 +55,7 @@ function IsCommandEnabled(command) {
   // non-editable div: should return false unless alwaysEnabled
   window.getSelection().selectAllChildren(gBlock1);
   enabled = document.queryCommandEnabled(command);
-  is(enabled, alwaysEnabledCommands.indexOf(command) != -1,
+  is(enabled, alwaysEnabledCommands.includes(command),
      "'" + command + "' should not be enabled on a non-editable block.");
 
   // editable div: should return true

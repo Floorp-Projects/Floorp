@@ -234,11 +234,11 @@ const querySwitches = [
       if (q1Folders.length !== q2Folders.length)
         return false;
       for (let i = 0; i < q1Folders.length; i++) {
-        if (q2Folders.indexOf(q1Folders[i]) < 0)
+        if (!q2Folders.includes(q1Folders[i]))
           return false;
       }
       for (let i = 0; i < q2Folders.length; i++) {
-        if (q1Folders.indexOf(q2Folders[i]) < 0)
+        if (!q1Folders.includes(q2Folders[i]))
           return false;
       }
       return true;
@@ -266,11 +266,11 @@ const querySwitches = [
       if (q1Tags.length !== q2Tags.length)
         return false;
       for (let i = 0; i < q1Tags.length; i++) {
-        if (q2Tags.indexOf(q1Tags[i]) < 0)
+        if (!q2Tags.includes(q1Tags[i]))
           return false;
       }
       for (let i = 0; i < q2Tags.length; i++) {
-        if (q1Tags.indexOf(q2Tags[i]) < 0)
+        if (!q1Tags.includes(q2Tags[i]))
           return false;
       }
       return true;
@@ -320,11 +320,11 @@ const querySwitches = [
       if (q1Trans.length !== q2Trans.length)
         return false;
       for (let i = 0; i < q1Trans.length; i++) {
-        if (q2Trans.indexOf(q1Trans[i]) < 0)
+        if (!q2Trans.includes(q1Trans[i]))
           return false;
       }
       for (let i = 0; i < q2Trans.length; i++) {
-        if (q1Trans.indexOf(q2Trans[i]) < 0)
+        if (!q1Trans.includes(q2Trans[i]))
           return false;
       }
       return true;

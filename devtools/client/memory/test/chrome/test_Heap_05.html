@@ -87,7 +87,7 @@ Test that we show a message when the census results are empty.
 
              ok(container.querySelector(".empty"),
                 "When the report is empty in census view, we show the empty message");
-             ok(container.textContent.indexOf(L10N.getStr("heapview.empty")) >= 0);
+             ok(container.textContent.includes(L10N.getStr("heapview.empty")));
 
              // Empty Diffing Report
 
@@ -104,7 +104,7 @@ Test that we show a message when the census results are empty.
 
              ok(container.querySelector(".empty"),
                 "When the report is empty in diffing view, the empty message is shown");
-             ok(container.textContent.indexOf(L10N.getStr("heapview.no-difference")) >= 0);
+             ok(container.textContent.includes(L10N.getStr("heapview.no-difference")));
 
              // Empty Filtered Census
 
@@ -118,7 +118,7 @@ Test that we show a message when the census results are empty.
 
              ok(container.querySelector(".empty"),
                 "When the report is empty in census view w/ filter, we show the empty message");
-             ok(container.textContent.indexOf(L10N.getStr("heapview.none-match")) >= 0);
+             ok(container.textContent.includes(L10N.getStr("heapview.none-match")));
 
            } catch(e) {
              ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));

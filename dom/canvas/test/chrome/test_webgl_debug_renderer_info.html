@@ -29,7 +29,7 @@ ok(!gl.getParameter(UNMASKED_RENDERER_WEBGL) && gl.getError() == gl.INVALID_ENUM
    "Should not be able to query UNMASKED_RENDERER_WEBGL without having enabled the WEBGL_debug_renderer_info extension");
 
 var exts = gl.getSupportedExtensions();
-ok(exts.indexOf("WEBGL_debug_renderer_info") != -1,
+ok(exts.includes("WEBGL_debug_renderer_info"),
    "WEBGL_debug_renderer_info should be listed by getSupportedExtensions in chrome contexts");
 var ext = gl.getExtension("WEBGL_debug_renderer_info");
 ok(ext,

@@ -476,7 +476,7 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
     remoteClients.sort((a, b) => b.serverLastModified - a.serverLastModified);
     for (let client of remoteClients) {
       log.trace("findNextClient considering", client);
-      if (alreadyDone.indexOf(client.id) == -1 && this._isSuitableClient(client)) {
+      if (!alreadyDone.includes(client.id) && this._isSuitableClient(client)) {
         return client.id;
       }
     }

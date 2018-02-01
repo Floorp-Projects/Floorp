@@ -13,7 +13,7 @@ function setup() {
     var iframe = document.createElement("iframe");
     iframe.setAttribute("mozbrowser", "true");
     iframe.setAttribute("mozpresentation", receiverUrl);
-    var oop = location.pathname.indexOf('_inproc') == -1;
+    var oop = !location.pathname.includes('_inproc');
     iframe.setAttribute("remote", oop);
     iframe.setAttribute("src", receiverUrl);
 

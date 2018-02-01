@@ -47,7 +47,7 @@ function* checkArrowsLabelsAndHandlers(selector, expectedProperties,
 
   // Testing that the other arrows are hidden
   for (let name of PROPS) {
-    if (expectedProperties.indexOf(name) !== -1) {
+    if (expectedProperties.includes(name)) {
       continue;
     }
     let hidden = (yield isElementHidden("arrow-" + name)) &&

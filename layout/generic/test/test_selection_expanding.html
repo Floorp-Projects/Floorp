@@ -133,12 +133,12 @@ function test()
       var f = aSouldBeSelected & kToDo ? todo : ok;
       var str = aSelectedText.replace('\n', '\\n');
       if (boolvalue) {
-        f(aSelectedText.indexOf(aShouldBeIncludedCharacter) >= 0,
+        f(aSelectedText.includes(aShouldBeIncludedCharacter),
           "The contents of " + aElementName +
           " aren't selected (" + aTestingDescription +
           "): Selected String: \"" + str + "\"");
       } else {
-        f(aSelectedText.indexOf(aShouldBeIncludedCharacter) < 0,
+        f(!aSelectedText.includes(aShouldBeIncludedCharacter),
           "The contents of " + aElementName +
           " are selected (" + aTestingDescription +
           "): Selected String: \"" + str + "\"");

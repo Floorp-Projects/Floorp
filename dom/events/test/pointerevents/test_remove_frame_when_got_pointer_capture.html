@@ -48,7 +48,7 @@ function startTest() {
 
   divEvents.forEach((event) => {
     div1.addEventListener(event, (e) => {
-      ok(divEvents.indexOf(e.type) >= 0, " don't expect " + e.type);
+      ok(divEvents.includes(e.type), " don't expect " + e.type);
       divEvents = divEvents.filter(item => item !== e.type);
     }, { once: true });
   });
@@ -94,7 +94,7 @@ function startTest() {
   ];
   divEvents.forEach((event) => {
     div1.addEventListener(event, (e) => {
-      ok(divEvents.indexOf(e.type) >= 0, " don't expect " + e.type);
+      ok(divEvents.includes(e.type), " don't expect " + e.type);
       divEvents = divEvents.filter(item => item !== e.type);
     }, { once: true });
   });

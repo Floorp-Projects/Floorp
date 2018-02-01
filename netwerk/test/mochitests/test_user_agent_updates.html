@@ -54,9 +54,9 @@ function testUAIFrame(host, expected, sameQ, message, testNavQ, navSameQ, navMes
   document.getElementById('content').appendChild(ifr);
 
   window.addEventListener("message", function recv(e) {
-    ok(sameQ == (e.data.header.indexOf(expected) != -1), message);
+    ok(sameQ == (e.data.header.includes(expected)), message);
     if (testNavQ) {
-      ok(navSameQ == (e.data.nav.indexOf(expected) != -1), navMessage);
+      ok(navSameQ == (e.data.nav.includes(expected)), navMessage);
     }
     window.removeEventListener("message", recv);
     callback();

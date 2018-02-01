@@ -366,7 +366,7 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
       if (this.source &&
           this.source.text !== "[no source]" &&
           this._contentType &&
-          (this._contentType.indexOf("javascript") !== -1 ||
+          (this._contentType.includes("javascript") ||
            this._contentType === "text/wasm")) {
         return toResolvedContent(this.source.text);
       }

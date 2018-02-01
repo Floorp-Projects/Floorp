@@ -42,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=895340
   };
 
   listener.observe = function(aMessage) {
-    if (aMessage.message.indexOf("Will you report me?") != -1 && !finished) {
+    if (aMessage.message.includes("Will you report me?") && !finished) {
       finished = true;
       ok(true, "exception reported");
       console.unregisterListener(listener);

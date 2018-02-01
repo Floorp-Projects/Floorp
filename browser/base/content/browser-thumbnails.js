@@ -136,7 +136,7 @@ var gBrowserThumbnails = {
     // Only capture about:newtab top sites.
     const topSites = await this._topSiteURLs;
     if (!aBrowser.currentURI ||
-        topSites.indexOf(aBrowser.currentURI.spec) == -1)
+        !topSites.includes(aBrowser.currentURI.spec))
       return;
     this._shouldCapture(aBrowser, function(aResult) {
       if (aResult) {

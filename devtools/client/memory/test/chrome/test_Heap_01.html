@@ -36,7 +36,7 @@ Test that rendering a dominator tree error is handled correctly.
              yield renderComponent(Heap(props), container);
 
              ok(container.querySelector(".error"), "Should render an error view");
-             ok(container.textContent.indexOf(errorMessage) !== -1,
+             ok(container.textContent.includes(errorMessage),
                 "Should see our error message");
            } catch(e) {
              ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));

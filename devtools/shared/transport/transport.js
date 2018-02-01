@@ -9,7 +9,7 @@
 // TODO: Get rid of this code once the marionette server loads transport.js as
 // an SDK module (see bug 1000814)
 (function (factory) {
-  if (this.module && module.id.indexOf("transport") >= 0) {
+  if (this.module && module.id.includes("transport")) {
     // require
     factory.call(this, require, exports);
   } else if (this.require) {

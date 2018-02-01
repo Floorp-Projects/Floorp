@@ -659,7 +659,7 @@ pp.parseIdent = function (liberal) {
   var node = this.startNode();
   if (liberal && this.options.allowReserved == "never") liberal = false;
   if (this.type === _tokentype.types.name) {
-    if (!liberal && (this.strict ? this.reservedWordsStrict : this.reservedWords).test(this.value) && (this.options.ecmaVersion >= 6 || this.input.slice(this.start, this.end).indexOf("\\") == -1)) this.raise(this.start, "The keyword '" + this.value + "' is reserved");
+    if (!liberal && (this.strict ? this.reservedWordsStrict : this.reservedWords).test(this.value) && (this.options.ecmaVersion >= 6 || !this.input.slice(this.start, this.end).includes("\\"))) this.raise(this.start, "The keyword '" + this.value + "' is reserved");
     node.name = this.value;
   } else if (liberal && this.type.keyword) {
     node.name = this.type.keyword;
@@ -2833,7 +2833,7 @@ pp.readRegexp = function () {
     var validFlags = /^[gmsiy]*$/;
     if (this.options.ecmaVersion >= 6) validFlags = /^[gmsiyu]*$/;
     if (!validFlags.test(mods)) this.raise(start, "Invalid regular expression flag");
-    if (mods.indexOf('u') >= 0 && !regexpUnicodeSupport) {
+    if (mods.includes('u') && !regexpUnicodeSupport) {
       // Replace each astral symbol and every Unicode escape sequence that
       // possibly represents an astral symbol or a paired surrogate with a
       // single ASCII symbol to avoid throwing on regular expressions that
