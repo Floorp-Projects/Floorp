@@ -550,22 +550,30 @@ simple_keyfile('Pocket API')
 
 # Servo integration
 # ==============================================================
-option('--enable-stylo', nargs='?', choices=('build',),
-       help='Include Stylo in the build and/or enable it at runtime')
+option('--enable-stylo', nargs='?', choices=('build', 'only'),
+       help='Include Stylo in the build.  "build" means to disable Stylo at ' +
+            'runtime, and "only" means to exclude the old style system from ' +
+            'the build.')
 
 @depends('--enable-stylo', '--help')
 def stylo_config(value, _):
     build_stylo = None
     enable_stylo = None
+    old_style = True
 
-    # If nothing is specified, default to building and enabling Stylo where it
-    # is known to work.
+    # If nothing is specified, default to building and enabling Stylo,
+    # and building the old style system.
     if value.origin == 'default':
         build_stylo = True
         enable_stylo = True
     elif len(value) and value[0] == 'build':
         # Build but disable by request.
         build_stylo = True
+    elif len(value) and value[0] == 'only':
+        # Disable the old style system.
+        build_stylo = True
+        enable_stylo = True
+        old_style = None
     elif bool(value):
         # Build and enable.
         build_stylo = True
@@ -574,6 +582,7 @@ def stylo_config(value, _):
     return namespace(
         build = build_stylo,
         enable = enable_stylo,
+        old_style = old_style,
     )
 
 option('--disable-stylo-build-bindgen',
@@ -789,6 +798,8 @@ set_config('MOZ_STYLO', stylo_config.build)
 set_define('MOZ_STYLO', stylo_config.build)
 set_config('MOZ_STYLO_ENABLE', stylo_config.enable)
 set_define('MOZ_STYLO_ENABLE', stylo_config.enable)
+set_config('MOZ_OLD_STYLE', stylo_config.old_style)
+set_define('MOZ_OLD_STYLE', stylo_config.old_style)
 
 option('--with-servo', env='SERVO_TARGET_DIR', nargs=1,
        help='Absolute path of the target directory where libgeckoservo can '
