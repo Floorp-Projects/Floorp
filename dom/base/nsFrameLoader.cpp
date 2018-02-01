@@ -98,6 +98,8 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/GroupedHistoryEvent.h"
+#include "mozilla/dom/ParentSHistory.h"
+#include "mozilla/dom/ChildSHistory.h"
 
 #include "mozilla/dom/HTMLBodyElement.h"
 
@@ -1376,10 +1378,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsCOMPtr<nsISHistory> ourHistory;
-  nsCOMPtr<nsISHistory> otherHistory;
-  ourRootWebnav->GetSessionHistory(getter_AddRefs(ourHistory));
-  otherRootWebnav->GetSessionHistory(getter_AddRefs(otherHistory));
+  RefPtr<ChildSHistory> ourHistory = ourRootWebnav->GetSessionHistory();
+  RefPtr<ChildSHistory> otherHistory = otherRootWebnav->GetSessionHistory();
 
   if ((ourRootTreeItem != ourDocshell || otherRootTreeItem != otherDocshell) &&
       (ourHistory || otherHistory)) {
@@ -1609,15 +1609,11 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   aOtherOwner->InternalSetFrameLoader(kungFuDeathGrip);
 
   // Drop any cached content viewers in the two session histories.
-  nsCOMPtr<nsISHistoryInternal> ourInternalHistory =
-    do_QueryInterface(ourHistory);
-  nsCOMPtr<nsISHistoryInternal> otherInternalHistory =
-    do_QueryInterface(otherHistory);
-  if (ourInternalHistory) {
-    ourInternalHistory->EvictAllContentViewers();
+  if (ourHistory) {
+    ourHistory->LegacySHistoryInternal()->EvictAllContentViewers();
   }
-  if (otherInternalHistory) {
-    otherInternalHistory->EvictAllContentViewers();
+  if (otherHistory) {
+    otherHistory->LegacySHistoryInternal()->EvictAllContentViewers();
   }
 
   NS_ASSERTION(ourFrame == ourContent->GetPrimaryFrame() &&
@@ -2110,13 +2106,9 @@ nsFrameLoader::MaybeCreateDocShell()
   if (mIsTopLevelContent &&
       mOwnerContent->IsXULElement(nsGkAtoms::browser) &&
       !mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disablehistory)) {
-    nsresult rv;
-    nsCOMPtr<nsISHistory> sessionHistory =
-      do_CreateInstance(NS_SHISTORY_CONTRACTID, &rv);
+    // XXX(nika): Set this up more explicitly?
+    nsresult rv = mDocShell->InitSessionHistory();
     NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-    webNav->SetSessionHistory(sessionHistory);
   }
 
   OriginAttributes attrs;

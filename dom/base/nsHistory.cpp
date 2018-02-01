@@ -69,22 +69,14 @@ nsHistory::GetLength(ErrorResult& aRv) const
   }
 
   // Get session History from docshell
-  nsCOMPtr<nsISHistory> sHistory = GetSessionHistory();
+  RefPtr<ChildSHistory> sHistory = GetSessionHistory();
   if (!sHistory) {
     aRv.Throw(NS_ERROR_FAILURE);
 
     return 0;
   }
 
-  int32_t len;
-  nsresult rv = sHistory->GetCount(&len);
-
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-
-    return 0;
-  }
-
+  int32_t len = sHistory->Count();;
   return len >= 0 ? len : 0;
 }
 
@@ -198,26 +190,16 @@ nsHistory::Go(int32_t aDelta, ErrorResult& aRv)
     }
   }
 
-  nsCOMPtr<nsISHistory> session_history = GetSessionHistory();
-  nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(session_history));
-  if (!webnav) {
+  RefPtr<ChildSHistory> session_history = GetSessionHistory();
+  if (!session_history) {
     aRv.Throw(NS_ERROR_FAILURE);
 
     return;
   }
 
-  int32_t curIndex = -1;
-  int32_t len = 0;
-  session_history->GetIndex(&curIndex);
-  session_history->GetCount(&len);
-
-  int32_t index = curIndex + aDelta;
-  if (index > -1 && index < len)
-    webnav->GotoIndex(index);
-
-  // Ignore the return value from GotoIndex(), since returning errors
-  // from GotoIndex() can lead to exceptions and a possible leak
-  // of history length
+  // Ignore the return value from Go(), since returning errors from Go() can
+  // lead to exceptions and a possible leak of history length
+  session_history->Go(aDelta, IgnoreErrors());
 }
 
 void
@@ -230,15 +212,14 @@ nsHistory::Back(ErrorResult& aRv)
     return;
   }
 
-  nsCOMPtr<nsISHistory> sHistory = GetSessionHistory();
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(sHistory));
-  if (!webNav) {
+  RefPtr<ChildSHistory> sHistory = GetSessionHistory();
+  if (!sHistory) {
     aRv.Throw(NS_ERROR_FAILURE);
 
     return;
   }
 
-  webNav->GoBack();
+  sHistory->Go(-1, IgnoreErrors());
 }
 
 void
@@ -251,15 +232,14 @@ nsHistory::Forward(ErrorResult& aRv)
     return;
   }
 
-  nsCOMPtr<nsISHistory> sHistory = GetSessionHistory();
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(sHistory));
-  if (!webNav) {
+  RefPtr<ChildSHistory> sHistory = GetSessionHistory();
+  if (!sHistory) {
     aRv.Throw(NS_ERROR_FAILURE);
 
     return;
   }
 
-  webNav->GoForward();
+  sHistory->Go(1, IgnoreErrors());
 }
 
 void
@@ -322,7 +302,7 @@ nsHistory::GetDocShell() const
   return win->GetDocShell();
 }
 
-already_AddRefed<nsISHistory>
+already_AddRefed<ChildSHistory>
 nsHistory::GetSessionHistory() const
 {
   nsIDocShell *docShell = GetDocShell();
@@ -334,10 +314,6 @@ nsHistory::GetSessionHistory() const
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(root));
   NS_ENSURE_TRUE(webNav, nullptr);
 
-  nsCOMPtr<nsISHistory> shistory;
-
   // Get SH from nsIWebNavigation
-  webNav->GetSessionHistory(getter_AddRefs(shistory));
-
-  return shistory.forget();
+  return webNav->GetSessionHistory();
 }
