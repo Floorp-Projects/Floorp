@@ -1782,9 +1782,9 @@ nsHttpTransaction::HandleContent(char *buf,
     if ((mContentRead == mContentLength) ||
         (mChunkedDecoder && mChunkedDecoder->ReachedEOF())) {
         MutexAutoLock lock(*nsHttp::GetLock());
-        mForTakeResponseTrailers = mChunkedDecoder
-            ? mChunkedDecoder->TakeTrailers()
-            : nullptr;
+        if (mChunkedDecoder) {
+            mForTakeResponseTrailers = mChunkedDecoder->TakeTrailers();
+        }
 
         // the transaction is done with a complete response.
         mTransactionDone = true;
@@ -2435,6 +2435,43 @@ nsHttpTransaction::Refused0RTT()
     LOG(("nsHttpTransaction::Refused0RTT %p\n", this));
     if (mEarlyDataDisposition == EARLY_ACCEPTED) {
         mEarlyDataDisposition = EARLY_SENT; // undo accepted state
+    }
+}
+
+void
+nsHttpTransaction::SetHttpTrailers(nsCString &aTrailers)
+{
+    LOG(("nsHttpTransaction::SetHttpTrailers %p", this));
+    LOG(("[\n    %s\n]", aTrailers.BeginReading()));
+    if (!mForTakeResponseTrailers) {
+        mForTakeResponseTrailers = new nsHttpHeaderArray();
+    }
+
+    int32_t cur = 0;
+    int32_t len = aTrailers.Length();
+    while (cur < len) {
+        int32_t newline = aTrailers.FindCharInSet("\n", cur);
+        if (newline == -1) {
+            newline = len;
+        }
+
+        int32_t end = aTrailers[newline - 1] == '\r' ? newline - 1 : newline;
+        nsDependentCSubstring line(aTrailers, cur, end);
+        nsHttpAtom hdr = {nullptr};
+        nsAutoCString hdrNameOriginal;
+        nsAutoCString val;
+        if (NS_SUCCEEDED(mForTakeResponseTrailers->ParseHeaderLine(line, &hdr, &hdrNameOriginal, &val))) {
+            if (hdr == nsHttp::Server_Timing) {
+                Unused << mForTakeResponseTrailers->SetHeaderFromNet(hdr, hdrNameOriginal, val, true);
+            }
+        }
+
+        cur = newline + 1;
+    }
+
+    if (mForTakeResponseTrailers->Count() == 0) {
+        // Didn't find a Server-Timing header, so get rid of this.
+        mForTakeResponseTrailers = nullptr;
     }
 }
 
