@@ -2925,6 +2925,13 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     return NS_OK;
   }
 
+  // In case this channel was instrument to discard the CSP, then
+  // there is nothing for us to do here.
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  if (loadInfo->GetAllowDocumentToBeAgnosticToCSP()) {
+    return NS_OK;
+  }
+
   nsAutoCString tCspHeaderValue, tCspROHeaderValue;
 
   nsCOMPtr<nsIHttpChannel> httpChannel;
@@ -2951,7 +2958,6 @@ nsDocument::InitCSP(nsIChannel* aChannel)
 
   // Check if this is a signed content to apply default CSP.
   bool applySignedContentCSP = false;
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
   if (loadInfo && loadInfo->GetVerifySignedContent()) {
     applySignedContentCSP = true;
   }
