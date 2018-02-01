@@ -225,7 +225,6 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         # So we override the branch with something that contains the platform
         # name.
         replace_dict['branch'] = c['upload_branch']
-        replace_dict['post_upload_extra'] = ' '.join(c.get('post_upload_extra', []))
 
         upload_env = self.query_env(partial_env=c.get("upload_env"),
                                     replace_dict=replace_dict)
@@ -569,27 +568,17 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
                                              "binaries successfully.")
 
     def upload_repacks(self):
-        c = self.config
         dirs = self.query_abs_dirs()
         locales = self.query_locales()
         make = self.query_exe("make")
         base_package_name = self.query_base_package_name()
-        version = self.query_version()
         upload_env = self.query_upload_env()
         success_count = total_count = 0
-        buildnum = None
-        if c.get('release_config_file'):
-            rc = self.query_release_config()
-            buildnum = rc['buildnum']
         for locale in locales:
             if self.query_failure(locale):
                 self.warning("Skipping previously failed locale %s." % locale)
                 continue
             total_count += 1
-            if c.get('base_post_upload_cmd'):
-                upload_env['POST_UPLOAD_CMD'] = c['base_post_upload_cmd'] % \
-                    {'version': version, 'locale': locale, 'buildnum': str(buildnum),
-                        'post_upload_extra': ' '.join(c.get('post_upload_extra', []))}
             output = self.get_output_from_command_m(
                 # Ugly hack to avoid |make upload| stderr from showing up
                 # as get_output_from_command errors
