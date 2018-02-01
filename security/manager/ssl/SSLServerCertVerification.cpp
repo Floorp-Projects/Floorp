@@ -1394,7 +1394,7 @@ AuthCertificate(CertVerifier& certVerifier,
     !(providerFlags & nsISocketProvider::NO_PERMANENT_STORAGE);
 
   SECOidTag evOidPolicy;
-  UniqueCERTCertList certList;
+  UniqueCERTCertList builtCertChain;
   CertVerifier::OCSPStaplingStatus ocspStaplingStatus =
     CertVerifier::OCSP_STAPLING_NEVER_CHECKED;
   KeySizeStatus keySizeStatus = KeySizeStatus::NeverChecked;
@@ -1412,8 +1412,9 @@ AuthCertificate(CertVerifier& certVerifier,
                                                sctsFromTLSExtension, time,
                                                infoObject,
                                                infoObject->GetHostName(),
-                                               certList, saveIntermediates,
-                                               flags, infoObject->
+                                               builtCertChain,
+                                               saveIntermediates, flags,
+                                               infoObject->
                                                       GetOriginAttributes(),
                                                &evOidPolicy,
                                                &ocspStaplingStatus,
@@ -1454,8 +1455,8 @@ AuthCertificate(CertVerifier& certVerifier,
     RememberCertErrorsTable::GetInstance().RememberCertHasError(infoObject,
                                                                 nullptr,
                                                                 SECSuccess);
-    GatherSuccessfulValidationTelemetry(certList);
-    GatherCertificateTransparencyTelemetry(certList,
+    GatherSuccessfulValidationTelemetry(builtCertChain);
+    GatherCertificateTransparencyTelemetry(builtCertChain,
                                   /*isEV*/ evOidPolicy != SEC_OID_UNKNOWN,
                                            certificateTransparencyInfo);
 
@@ -1478,9 +1479,9 @@ AuthCertificate(CertVerifier& certVerifier,
     RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(cert.get());
     status->SetServerCert(nsc, evStatus);
 
-    status->SetSucceededCertChain(Move(certList));
+    status->SetSucceededCertChain(Move(builtCertChain));
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-        ("AuthCertificate setting NEW cert %p", nsc.get()));
+            ("AuthCertificate setting NEW cert %p", nsc.get()));
 
     status->SetCertificateTransparencyInfo(certificateTransparencyInfo);
   }
@@ -1488,7 +1489,7 @@ AuthCertificate(CertVerifier& certVerifier,
   if (rv != Success) {
     // Certificate validation failed; store the peer certificate chain on
     // infoObject so it can be used for error reporting.
-    infoObject->SetFailedCertChain(Move(certList));
+    infoObject->SetFailedCertChain(Move(peerCertChain));
     PR_SetError(MapResultToPRErrorCode(rv), 0);
   }
 
@@ -1583,7 +1584,8 @@ SSLServerCertVerificationJob::Run()
                                    mPeerCertChain, mStapledOCSPResponse.get(),
                                    mSCTsFromTLSExtension.get(),
                                    mProviderFlags, mTime);
-    MOZ_ASSERT(mPeerCertChain || rv != SECSuccess,
+    MOZ_ASSERT((mPeerCertChain && rv == SECSuccess) ||
+               (!mPeerCertChain && rv != SECSuccess),
                "AuthCertificate() should take ownership of chain on failure");
     if (rv == SECSuccess) {
       uint32_t interval = (uint32_t) ((TimeStamp::Now() - mJobStartTime).ToMilliseconds());
@@ -1764,7 +1766,8 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
   SECStatus rv = AuthCertificate(*certVerifier, socketInfo, serverCert,
                                  peerCertChain, stapledOCSPResponse,
                                  sctsFromTLSExtension, providerFlags, now);
-  MOZ_ASSERT(peerCertChain || rv != SECSuccess,
+  MOZ_ASSERT((peerCertChain && rv == SECSuccess) ||
+             (!peerCertChain && rv != SECSuccess),
              "AuthCertificate() should take ownership of chain on failure");
   if (rv == SECSuccess) {
     Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, 1);
