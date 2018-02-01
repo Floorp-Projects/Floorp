@@ -11,7 +11,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/ScopeExit.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -34,7 +33,6 @@
 #include "vm/Unicode.h"
 
 using mozilla::ArrayLength;
-using mozilla::MakeScopeExit;
 using mozilla::Maybe;
 using mozilla::PodArrayZero;
 using mozilla::PodAssign;
@@ -547,7 +545,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getChar(int32_t* cp)
 // before it's ungotten.
 template<typename CharT, class AnyCharsAccess>
 int32_t
-GeneralTokenStreamChars<CharT, AnyCharsAccess>::getCharIgnoreEOL()
+TokenStreamSpecific<CharT, AnyCharsAccess>::getCharIgnoreEOL()
 {
     if (MOZ_LIKELY(userbuf.hasRawChars()))
         return userbuf.getRawChar();
@@ -567,7 +565,7 @@ TokenStreamAnyChars::undoGetChar()
 
 template<typename CharT, class AnyCharsAccess>
 void
-GeneralTokenStreamChars<CharT, AnyCharsAccess>::ungetChar(int32_t c)
+TokenStreamSpecific<CharT, AnyCharsAccess>::ungetChar(int32_t c)
 {
     if (c == EOF)
         return;
@@ -590,31 +588,15 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::ungetChar(int32_t c)
     }
 }
 
-template<typename CharT>
+template<typename CharT, class AnyCharsAccess>
 void
-TokenStreamCharsBase<CharT>::ungetCharIgnoreEOL(int32_t c)
+TokenStreamSpecific<CharT, AnyCharsAccess>::ungetCharIgnoreEOL(int32_t c)
 {
     if (c == EOF)
         return;
 
     MOZ_ASSERT(!userbuf.atStart());
     userbuf.ungetRawChar();
-}
-
-template<class AnyCharsAccess>
-void
-TokenStreamChars<char16_t, AnyCharsAccess>::ungetCodePointIgnoreEOL(uint32_t codePoint)
-{
-    // MOZ_ASSERT(!userbuf.atStart());
-
-    unsigned numUnits = 0;
-    char16_t units[2];
-    unicode::UTF16Encode(codePoint, units, &numUnits);
-
-    MOZ_ASSERT(numUnits == 1 || numUnits == 2);
-
-    while (numUnits-- > 0)
-        ungetCharIgnoreEOL(units[numUnits]);
 }
 
 // Return true iff |n| raw characters can be read from this without reading past
@@ -1289,6 +1271,23 @@ IsTokenSane(Token* tp)
 }
 #endif
 
+template<class AnyCharsAccess>
+bool
+TokenStreamChars<char16_t, AnyCharsAccess>::matchTrailForLeadSurrogate(char16_t lead,
+                                                                       uint32_t* codePoint)
+{
+    TokenStreamSpecific* ts = asSpecific();
+
+    int32_t maybeTrail = ts->getCharIgnoreEOL();
+    if (!unicode::IsTrailSurrogate(maybeTrail)) {
+        ts->ungetCharIgnoreEOL(maybeTrail);
+        return false;
+    }
+
+    *codePoint = unicode::UTF16Decode(lead, maybeTrail);
+    return true;
+}
+
 template<>
 MOZ_MUST_USE bool
 TokenStreamCharsBase<char16_t>::appendMultiUnitCodepointToTokenbuf(uint32_t codepoint)
@@ -1299,49 +1298,26 @@ TokenStreamCharsBase<char16_t>::appendMultiUnitCodepointToTokenbuf(uint32_t code
     return tokenbuf.append(lead) && tokenbuf.append(trail);
 }
 
-template<class AnyCharsAccess>
-void
-TokenStreamChars<char16_t, AnyCharsAccess>::matchMultiUnitCodePointSlow(char16_t lead,
-                                                                        uint32_t* codePoint)
-{
-    MOZ_ASSERT(unicode::IsLeadSurrogate(lead),
-               "matchMultiUnitCodepoint should have ensured |lead| is a lead "
-               "surrogate");
-
-    int32_t maybeTrail = getCharIgnoreEOL();
-    if (MOZ_LIKELY(unicode::IsTrailSurrogate(maybeTrail))) {
-        *codePoint = unicode::UTF16Decode(lead, maybeTrail);
-    } else {
-        ungetCharIgnoreEOL(maybeTrail);
-        *codePoint = 0;
-    }
-}
-
 template<typename CharT, class AnyCharsAccess>
 bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInTokenbuf(const CharT* identStart)
 {
-    const CharT* const originalAddress = userbuf.addressOfNextRawChar();
+    const CharT* tmp = userbuf.addressOfNextRawChar();
     userbuf.setAddressOfNextRawChar(identStart);
-
-    auto restoreNextRawCharAddress =
-        MakeScopeExit([this, originalAddress]() {
-            this->userbuf.setAddressOfNextRawChar(originalAddress);
-        });
 
     tokenbuf.clear();
     for (;;) {
         int32_t c = getCharIgnoreEOL();
 
         uint32_t codePoint;
-        if (!matchMultiUnitCodePoint(c, &codePoint))
-            return false;
-        if (codePoint) {
+        if (isMultiUnitCodepoint(c, &codePoint)) {
             if (!unicode::IsIdentifierPart(codePoint))
                 break;
 
-            if (!appendMultiUnitCodepointToTokenbuf(codePoint))
+            if (!appendMultiUnitCodepointToTokenbuf(codePoint)) {
+                userbuf.setAddressOfNextRawChar(tmp);
                 return false;
+            }
 
             continue;
         }
@@ -1354,19 +1330,23 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInTokenbuf(const CharT* iden
             if (MOZ_UNLIKELY(unicode::IsSupplementary(qc))) {
                 char16_t lead, trail;
                 unicode::UTF16Encode(qc, &lead, &trail);
-                if (!tokenbuf.append(lead) || !tokenbuf.append(trail))
+                if (!tokenbuf.append(lead) || !tokenbuf.append(trail)) {
+                    userbuf.setAddressOfNextRawChar(tmp);
                     return false;
-
+                }
                 continue;
             }
 
             c = qc;
         }
 
-        if (!tokenbuf.append(c))
+        if (!tokenbuf.append(c)) {
+            userbuf.setAddressOfNextRawChar(tmp);
             return false;
+        }
     }
 
+    userbuf.setAddressOfNextRawChar(tmp);
     return true;
 }
 
@@ -1520,17 +1500,13 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             goto identifier;
         }
 
-        uint32_t codePoint = c;
-        if (!matchMultiUnitCodePoint(c, &codePoint))
-            goto error;
-        if (codePoint && unicode::IsUnicodeIDStart(codePoint)) {
+        uint32_t codePoint;
+        if (isMultiUnitCodepoint(c, &codePoint) && unicode::IsUnicodeIDStart(codePoint)) {
             hadUnicodeEscape = false;
             goto identifier;
         }
 
-        ungetCodePointIgnoreEOL(codePoint);
-        error(JSMSG_ILLEGAL_CHARACTER);
-        goto error;
+        goto badchar;
     }
 
     // Get the token kind, based on the first char.  The ordering of c1kind
@@ -1582,9 +1558,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
                 break;
 
             uint32_t codePoint;
-            if (!matchMultiUnitCodePoint(c, &codePoint))
-                goto error;
-            if (codePoint) {
+            if (isMultiUnitCodepoint(c, &codePoint)) {
                 if (!unicode::IsIdentifierPart(codePoint))
                     break;
 
@@ -1673,9 +1647,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             }
 
             uint32_t codePoint;
-            if (!matchMultiUnitCodePoint(c, &codePoint))
-                goto error;
-            if (codePoint && unicode::IsIdentifierStart(codePoint)) {
+            if (isMultiUnitCodepoint(c, &codePoint) &&
+                unicode::IsIdentifierStart(codePoint))
+            {
                 reportError(JSMSG_IDSTART_AFTER_NUMBER);
                 goto error;
             }
@@ -1798,9 +1772,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             }
 
             uint32_t codePoint;
-            if (!matchMultiUnitCodePoint(c, &codePoint))
-                goto error;
-            if (codePoint && unicode::IsIdentifierStart(codePoint)) {
+            if (isMultiUnitCodepoint(c, &codePoint) &&
+                unicode::IsIdentifierStart(codePoint))
+            {
                 reportError(JSMSG_IDSTART_AFTER_NUMBER);
                 goto error;
             }
@@ -1865,14 +1839,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             hadUnicodeEscape = true;
             goto identifier;
         }
-
-        // We could point "into" a mistyped escape, e.g. for "\u{41H}" we could
-        // point at the 'H'.  But we don't do that now, so the character after
-        // the '\' isn't necessarily bad, so just point at the start of
-        // the actually-invalid escape.
-        ungetCharIgnoreEOL('\\');
-        error(JSMSG_BAD_ESCAPE);
-        goto error;
+        goto badchar;
       }
 
       case '|':
@@ -2089,11 +2056,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
         }
         goto out;
 
+      badchar:
       default:
-        // We consumed a bad character/code point.  Put it back so the error
-        // location is the bad character.
-        ungetCodePointIgnoreEOL(c);
-        error(JSMSG_ILLEGAL_CHARACTER);
+        reportError(JSMSG_ILLEGAL_CHARACTER);
         goto error;
     }
 
