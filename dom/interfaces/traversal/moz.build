@@ -9,7 +9,6 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     'nsIDOMNodeFilter.idl',
-    'nsIDOMTreeWalker.idl',
 ]
 
 XPIDL_MODULE = 'dom_traversal'

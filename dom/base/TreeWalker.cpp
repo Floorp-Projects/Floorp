@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Implementation of DOM Traversal's nsIDOMTreeWalker
+ * Implementation of DOM Traversal's TreeWalker
  */
 
 #include "mozilla/dom/TreeWalker.h"
@@ -45,8 +45,7 @@ NS_IMPL_CYCLE_COLLECTION(TreeWalker, mFilter, mCurrentNode, mRoot)
 
 // QueryInterface implementation for TreeWalker
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TreeWalker)
-    NS_INTERFACE_MAP_ENTRY(nsIDOMTreeWalker)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMTreeWalker)
+    NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 // Have to pass in dom::TreeWalker because a11y has an a11y::TreeWalker that

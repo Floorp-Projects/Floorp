@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Implementation of DOM Traversal's nsIDOMTreeWalker
+ * Implementation of common traversal methods for TreeWalker and NodeIterator.
  */
 
 #ifndef nsTraversal_h___
