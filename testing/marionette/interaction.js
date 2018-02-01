@@ -287,6 +287,7 @@ interaction.selectOption = function(el) {
 
   event.mouseup(containerEl);
   event.click(containerEl);
+  containerEl.blur();
 };
 
 /**
@@ -498,6 +499,7 @@ interaction.uploadFile = async function(el, path) {
   el.mozSetFileArray(fs);
 
   event.change(el);
+  el.blur();
 };
 
 /**
@@ -574,6 +576,8 @@ async function webdriverSendKeysToElement(el, value, a11y) {
   } else {
     event.sendKeysToElement(value, el, win);
   }
+
+  el.blur();
 }
 
 async function legacySendKeysToElement(el, value, a11y) {
