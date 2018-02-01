@@ -183,6 +183,7 @@ FinalizeStyleAnimationValues(const StyleAnimationValue*& aValue1,
   return true;
 }
 
+#ifdef MOZ_OLD_STYLE
 static void
 InvertSign(StyleAnimationValue& aValue)
 {
@@ -201,6 +202,7 @@ InvertSign(StyleAnimationValue& aValue)
       break;
   }
 }
+#endif
 
 static ValueWrapper*
 ExtractValueWrapper(nsSMILValue& aValue)
@@ -500,6 +502,7 @@ nsSMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
     return ComputeDistanceForServo(fromWrapper, *toWrapper, aDistance);
   }
 
+#ifdef MOZ_OLD_STYLE
   const StyleAnimationValue* fromCSSValue = fromWrapper ?
     &fromWrapper->mGeckoValue : nullptr;
   const StyleAnimationValue* toCSSValue = &toWrapper->mGeckoValue;
@@ -514,6 +517,9 @@ nsSMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
                                               aDistance)
          ? NS_OK
          : NS_ERROR_FAILURE;
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 static nsresult
@@ -640,6 +646,7 @@ GetPresContextForElement(Element* aElem)
   return shell ? shell->GetPresContext() : nullptr;
 }
 
+#ifdef MOZ_OLD_STYLE
 static const nsDependentSubstring
 GetNonNegativePropValue(const nsAString& aString, nsCSSPropertyID aPropID,
                         bool& aIsNegative)
@@ -697,6 +704,7 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
   }
   return true;
 }
+#endif
 
 static ServoAnimationValues
 ValueFromStringHelper(nsCSSPropertyID aPropID,
@@ -780,6 +788,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
     return;
   }
 
+#ifdef MOZ_OLD_STYLE
   StyleAnimationValue parsedValue;
   if (ValueFromStringHelper(aPropID, aTargetElement, presContext,
                             styleContext->AsGecko(), aString, parsedValue,
@@ -787,6 +796,9 @@ nsSMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
     sSingleton.Init(aValue);
     aValue.mU.mPtr = new ValueWrapper(aPropID, parsedValue);
   }
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
 }
 
 // static

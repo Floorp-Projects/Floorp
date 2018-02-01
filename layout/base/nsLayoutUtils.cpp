@@ -8270,6 +8270,7 @@ nsLayoutUtils::Shutdown()
 bool
 nsLayoutUtils::ShouldUseStylo(nsIPrincipal* aPrincipal)
 {
+#ifdef MOZ_OLD_STYLE
   // Disable stylo for system principal because XUL hasn't been fully
   // supported. Other principal aren't able to use XUL by default, and
   // the back door to enable XUL is mostly just for testing, which means
@@ -8278,7 +8279,7 @@ nsLayoutUtils::ShouldUseStylo(nsIPrincipal* aPrincipal)
       nsContentUtils::IsSystemPrincipal(aPrincipal)) {
     return false;
   }
-
+#endif
   return true;
 }
 

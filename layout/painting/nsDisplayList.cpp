@@ -174,9 +174,12 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
     return;
   }
 
-  GeckoStyleContext* contextIfGecko = aContext
-                                      ? aContext->GetAsGecko()
-                                      : nullptr;
+  GeckoStyleContext* contextIfGecko =
+#ifdef MOZ_OLD_STYLE
+    aContext ? aContext->GetAsGecko() : nullptr;
+#else
+    nullptr;
+#endif
 
   for (const nsCSSValueList* curr = aList; curr; curr = curr->mNext) {
     const nsCSSValue& currElem = curr->mValue;

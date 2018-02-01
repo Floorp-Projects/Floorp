@@ -51,6 +51,7 @@ nsHTMLCSSStyleSheet::~nsHTMLCSSStyleSheet()
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 NS_IMPL_ISUPPORTS(nsHTMLCSSStyleSheet, nsIStyleRuleProcessor)
 
 /* virtual */ void
@@ -190,6 +191,7 @@ nsHTMLCSSStyleSheet::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
 {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
+#endif
 
 void
 nsHTMLCSSStyleSheet::CacheStyleAttr(const nsAString& aSerialized,

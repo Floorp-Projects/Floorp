@@ -1176,8 +1176,12 @@ public:
             mServo = aOther.mServo;
             aOther.mServo = nullptr;
           } else {
+#ifdef MOZ_OLD_STYLE
             mGecko = aOther.mGecko;
             aOther.mGecko = nullptr;
+#else
+            MOZ_CRASH("old style system disabled");
+#endif
           }
           return *this;
         }
@@ -1189,10 +1193,12 @@ public:
           , mServo(aList.release())
         {}
 
+#ifdef MOZ_OLD_STYLE
         explicit SelectorList(mozilla::UniquePtr<nsCSSSelectorList>&& aList)
           : mIsServo(false)
           , mGecko(aList.release())
         {}
+#endif
 
         ~SelectorList() {
           Reset();

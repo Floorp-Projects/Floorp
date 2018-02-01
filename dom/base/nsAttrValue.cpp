@@ -1744,10 +1744,14 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
                                               ownerDoc->GetCompatibilityMode(),
                                               ownerDoc->CSSLoader());
   } else {
+#ifdef MOZ_OLD_STYLE
     css::Loader* cssLoader = ownerDoc->CSSLoader();
     nsCSSParser cssParser(cssLoader);
     decl = cssParser.ParseStyleAttribute(aString, docURI, baseURI,
                                          principal);
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
   if (!decl) {
     return false;

@@ -19,7 +19,8 @@ class nsCSSScanner;
 class nsIURI;
 
 namespace mozilla {
-class CSSStyleSheet;
+class ServoStyleSheet;
+class StyleSheet;
 
 namespace css {
 
@@ -93,7 +94,7 @@ private:
 
 #ifndef CSS_REPORT_PARSE_ERRORS
 inline ErrorReporter::ErrorReporter(const nsCSSScanner&,
-                                    const CSSStyleSheet*,
+                                    const StyleSheet*,
                                     const Loader*,
                                     nsIURI*) {}
 inline ErrorReporter::~ErrorReporter() {}

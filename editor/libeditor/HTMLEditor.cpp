@@ -2908,7 +2908,11 @@ HTMLEditor::EnableExistingStyleSheet(const nsAString& aURL)
     NS_ERROR("stylo: ServoStyleSheets can't be disabled yet");
     return true;
   }
+#ifdef MOZ_OLD_STYLE
   sheet->AsGecko()->SetDisabled(false);
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
   return true;
 }
 

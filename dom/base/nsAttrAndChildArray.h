@@ -125,7 +125,9 @@ public:
     }
     return DoSetMappedAttrStyleSheet(aSheet);
   }
+#ifdef MOZ_OLD_STYLE
   void WalkMappedAttributeStyleRules(nsRuleWalker* aRuleWalker);
+#endif
 
   void Compact();
 

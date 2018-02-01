@@ -482,6 +482,7 @@ static bool gInApplyRenderingChangeToTree = false;
 #endif
 
 #ifdef DEBUG
+#ifdef MOZ_OLD_STYLE
 static void
 DumpContext(nsIFrame* aFrame, nsStyleContext* aContext)
 {
@@ -628,6 +629,7 @@ VerifyStyleTree(nsIFrame* aFrame)
     VerifyContextParent(aFrame, extraContext->AsGecko(), context);
   }
 }
+#endif
 
 void
 RestyleManager::DebugVerifyStyleTree(nsIFrame* aFrame)
@@ -638,9 +640,13 @@ RestyleManager::DebugVerifyStyleTree(nsIFrame* aFrame)
     // we work out what we want to assert (bug 1322570).
     return;
   }
+#ifdef MOZ_OLD_STYLE
   if (aFrame) {
     VerifyStyleTree(aFrame);
   }
+#else
+  MOZ_CRASH("old style system disabled");
+#endif
 }
 
 #endif // DEBUG
@@ -1752,10 +1758,20 @@ RestyleManager::IncrementAnimationGeneration()
   // We update the animation generation at start of each call to
   // ProcessPendingRestyles so we should ignore any subsequent (redundant)
   // calls that occur while we are still processing restyles.
-  if ((IsGecko() && !AsGecko()->IsProcessingRestyles()) ||
-      (IsServo() && !mInStyleRefresh)) {
-    ++mAnimationGeneration;
+  if (IsGecko()) {
+#ifdef MOZ_OLD_STYLE
+    if (AsGecko()->IsProcessingRestyles()) {
+      return;
+    }
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
+  } else {
+    if (mInStyleRefresh) {
+      return;
+    }
   }
+  ++mAnimationGeneration;
 }
 
 /* static */ void

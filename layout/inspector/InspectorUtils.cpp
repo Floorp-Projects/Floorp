@@ -183,7 +183,9 @@ InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
   }
 
 
-  if (auto gecko = styleContext->GetAsGecko()) {
+  if (styleContext->IsGecko()) {
+#ifdef MOZ_OLD_STYLE
+    auto gecko = styleContext->AsGecko();
     nsRuleNode* ruleNode = gecko->RuleNode();
     if (!ruleNode) {
       return;
@@ -204,6 +206,9 @@ InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
         }
       }
     }
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   } else {
     nsIDocument* doc = aElement.OwnerDoc();
     nsIPresShell* shell = doc->GetShell();
@@ -1128,6 +1133,7 @@ InspectorUtils::ParseStyleSheet(GlobalObject& aGlobalObject,
                                 const nsAString& aInput,
                                 ErrorResult& aRv)
 {
+#ifdef MOZ_OLD_STYLE
   RefPtr<CSSStyleSheet> geckoSheet = do_QueryObject(&aSheet);
   if (geckoSheet) {
     nsresult rv = geckoSheet->ReparseSheet(aInput);
@@ -1136,6 +1142,7 @@ InspectorUtils::ParseStyleSheet(GlobalObject& aGlobalObject,
     }
     return;
   }
+#endif
 
   RefPtr<ServoStyleSheet> servoSheet = do_QueryObject(&aSheet);
   if (servoSheet) {
