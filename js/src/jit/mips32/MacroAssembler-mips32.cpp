@@ -1392,49 +1392,19 @@ MacroAssemblerMIPSCompat::storeUnalignedDouble(const wasm::MemoryAccessDesc& acc
     append(access, store.getOffset(), framePushed);
 }
 
-// Note: this function clobbers the input register.
 void
 MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 {
-    MOZ_ASSERT(input != ScratchDoubleReg);
-    Label positive, done;
-
-    // <= 0 or NaN --> 0
-    zeroDouble(ScratchDoubleReg);
-    branchDouble(DoubleGreaterThan, input, ScratchDoubleReg, &positive);
-    {
-        move32(Imm32(0), output);
-        jump(&done);
-    }
-
-    bind(&positive);
-
-    // Add 0.5 and truncate.
-    loadConstantDouble(0.5, ScratchDoubleReg);
-    addDouble(ScratchDoubleReg, input);
-
-    Label outOfRange;
-
-    branchTruncateDoubleMaybeModUint32(input, output, &outOfRange);
-    asMasm().branch32(Assembler::Above, output, Imm32(255), &outOfRange);
-    {
-        // Check if we had a tie.
-        convertInt32ToDouble(output, ScratchDoubleReg);
-        branchDouble(DoubleNotEqual, input, ScratchDoubleReg, &done);
-
-        // It was a tie. Mask out the ones bit to get an even value.
-        // See also js_TypedArray_uint8_clamp_double.
-        and32(Imm32(~1), output);
-        jump(&done);
-    }
-
-    // > 255 --> 255
-    bind(&outOfRange);
-    {
-        move32(Imm32(255), output);
-    }
-
-    bind(&done);
+     as_roundwd(ScratchDoubleReg, input);
+     ma_li(ScratchRegister, Imm32(255));
+     as_mfc1(output, ScratchDoubleReg);
+     zeroDouble(ScratchDoubleReg);
+     as_sltiu(SecondScratchReg, output, 255);
+     as_colt(DoubleFloat, ScratchDoubleReg, input);
+     // if res > 255; res = 255;
+     as_movz(output, ScratchRegister, SecondScratchReg);
+     // if !(input > 0); res = 0;
+     as_movf(output, zero);
 }
 
 // higher level tag testing code
