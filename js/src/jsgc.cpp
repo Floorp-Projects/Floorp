@@ -3403,39 +3403,43 @@ GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks)
     if (zones.isEmpty())
         return;
 
-    // We must finalize thing kinds in the order specified by BackgroundFinalizePhases.
-    Arena* emptyArenas = nullptr;
     FreeOp fop(nullptr);
-    for (unsigned phase = 0 ; phase < ArrayLength(BackgroundFinalizePhases) ; ++phase) {
-        for (Zone* zone = zones.front(); zone; zone = zone->nextZone()) {
-            for (auto kind : BackgroundFinalizePhases[phase].kinds) {
+
+    // Sweep zones in order. The atoms zone must be finalized last as other
+    // zones may have direct pointers into it.
+    while (!zones.isEmpty()) {
+        Zone* zone = zones.removeFront();
+        Arena* emptyArenas = nullptr;
+
+        // We must finalize thing kinds in the order specified by
+        // BackgroundFinalizePhases.
+        for (auto phase : BackgroundFinalizePhases) {
+            for (auto kind : phase.kinds) {
                 Arena* arenas = zone->arenas.arenaListsToSweep(kind);
                 MOZ_RELEASE_ASSERT(uintptr_t(arenas) != uintptr_t(-1));
                 if (arenas)
                     ArenaLists::backgroundFinalize(&fop, arenas, &emptyArenas);
             }
         }
-    }
 
-    AutoLockGC lock(rt);
+        AutoLockGC lock(rt);
 
-    // Release swept arenas, dropping and reaquiring the lock every so often to
-    // avoid blocking the active thread from allocating chunks.
-    static const size_t LockReleasePeriod = 32;
-    size_t releaseCount = 0;
-    Arena* next;
-    for (Arena* arena = emptyArenas; arena; arena = next) {
-        next = arena->next;
-        rt->gc.releaseArena(arena, lock);
-        releaseCount++;
-        if (releaseCount % LockReleasePeriod == 0) {
-            lock.unlock();
-            lock.lock();
+        // Release any arenas that are now empty, dropping and reaquiring the GC
+        // lock every so often to avoid blocking the active thread from
+        // allocating chunks.
+        static const size_t LockReleasePeriod = 32;
+        size_t releaseCount = 0;
+        Arena* next;
+        for (Arena* arena = emptyArenas; arena; arena = next) {
+            next = arena->next;
+            rt->gc.releaseArena(arena, lock);
+            releaseCount++;
+            if (releaseCount % LockReleasePeriod == 0) {
+                lock.unlock();
+                lock.lock();
+            }
         }
     }
-
-    while (!zones.isEmpty())
-        zones.removeFront();
 }
 
 void
@@ -5648,10 +5652,21 @@ GCRuntime::endSweepingSweepGroup(FreeOp* fop, SliceBudget& budget)
         zone->updateAllGCMallocCountersOnGCEnd(lock);
     }
 
-    /* Start background thread to sweep zones if required. */
+    /*
+     * Start background thread to sweep zones if required, sweeping the atoms
+     * zone last if present.
+     */
+    bool sweepAtomsZone = false;
     ZoneList zones;
-    for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next())
-        zones.append(zone);
+    for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
+        if (zone->isAtomsZone())
+            sweepAtomsZone = true;
+        else
+            zones.append(zone);
+    }
+    if (sweepAtomsZone)
+        zones.append(atomsZone);
+
     if (sweepOnBackgroundThread)
         queueZonesForBackgroundSweep(zones);
     else
