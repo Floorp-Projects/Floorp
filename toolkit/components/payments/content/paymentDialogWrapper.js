@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyGetter(this, "profileStorage", () => {
   return profileStorage;
 });
 
-var PaymentDialog = {
+var paymentDialogWrapper = {
   componentsLoaded: new Map(),
   frame: null,
   mm: null,
@@ -275,5 +275,5 @@ if ("document" in this) {
   // Running in a browser, not a unit test
   let frame = document.getElementById("paymentRequestFrame");
   let requestId = (new URLSearchParams(window.location.search)).get("requestId");
-  PaymentDialog.init(requestId, frame);
+  paymentDialogWrapper.init(requestId, frame);
 }
