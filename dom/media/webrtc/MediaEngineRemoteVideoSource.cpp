@@ -13,7 +13,7 @@
 #include "nsIPrefService.h"
 #include "VideoFrameUtils.h"
 #include "VideoUtils.h"
-#include "webrtc/api/video/i420_buffer.h"
+#include "webrtc/common_video/include/video_frame_buffer.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 
 mozilla::LogModule* GetMediaManagerLog();
@@ -39,6 +39,8 @@ MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
   , mCapEngine(aCapEngine)
   , mScary(aScary)
   , mMutex("MediaEngineRemoteVideoSource::mMutex")
+  , mRescalingBufferPool(/* zero_initialize */ false,
+                         /* max_number_of_buffers */ 1)
   , mSettings(MakeAndAddRef<media::Refcountable<MediaTrackSettings>>())
 {
   MOZ_ASSERT(aMediaSource != MediaSourceEnum::Other);
@@ -232,8 +234,9 @@ MediaEngineRemoteVideoSource::Deallocate(const RefPtr<const AllocationHandle>& a
 
   // Stop() has stopped capture synchronously on the media thread before we get
   // here, so there are no longer any callbacks on an IPC thread accessing
-  // mImageContainer.
+  // mImageContainer or mRescalingBufferPool.
   mImageContainer = nullptr;
+  mRescalingBufferPool.Release();
 
   LOG(("Video device %d deallocated", mCaptureIndex));
 
@@ -465,93 +468,61 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
     req_ideal_height = (mCapability.height >> 16) & 0xffff;
   }
 
-  int32_t dest_max_width = std::min(req_max_width, aProps.width());
-  int32_t dest_max_height = std::min(req_max_height, aProps.height());
+  int32_t dst_max_width = std::min(req_max_width, aProps.width());
+  int32_t dst_max_height = std::min(req_max_height, aProps.height());
   // This logic works for both camera and screen sharing case.
   // for camera case, req_ideal_width and req_ideal_height is 0.
-  // The following snippet will set dst_width to dest_max_width and dst_height to dest_max_height
-  int32_t dst_width = std::min(req_ideal_width > 0 ? req_ideal_width : aProps.width(), dest_max_width);
-  int32_t dst_height = std::min(req_ideal_height > 0 ? req_ideal_height : aProps.height(), dest_max_height);
+  // The following snippet will set dst_width to dst_max_width and dst_height to dst_max_height
+  int32_t dst_width = std::min(req_ideal_width > 0 ? req_ideal_width : aProps.width(), dst_max_width);
+  int32_t dst_height = std::min(req_ideal_height > 0 ? req_ideal_height : aProps.height(), dst_max_height);
 
-  int dst_stride_y = dst_width;
-  int dst_stride_uv = (dst_width + 1) / 2;
+  rtc::Callback0<void> callback_unused;
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer =
+    new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
+      aProps.width(),
+      aProps.height(),
+      aBuffer,
+      aProps.yStride(),
+      aBuffer + aProps.yAllocatedSize(),
+      aProps.uStride(),
+      aBuffer + aProps.yAllocatedSize() + aProps.uAllocatedSize(),
+      aProps.vStride(),
+      callback_unused);
 
-  camera::VideoFrameProperties properties;
-  UniquePtr<uint8_t []> frameBuf;
-  uint8_t* frame;
-  bool needReScale = (dst_width != aProps.width() ||
-                      dst_height != aProps.height()) &&
-                     dst_width <= aProps.width() &&
-                     dst_height <= aProps.height();
-
-  if (!needReScale) {
-    dst_width = aProps.width();
-    dst_height = aProps.height();
-    frame = aBuffer;
-  } else {
-    rtc::scoped_refptr<webrtc::I420Buffer> i420Buffer;
-    i420Buffer = webrtc::I420Buffer::Create(aProps.width(),
-                                            aProps.height(),
-                                            aProps.width(),
-                                            (aProps.width() + 1) / 2,
-                                            (aProps.width() + 1) / 2);
-
-    const int conversionResult = webrtc::ConvertToI420(webrtc::kI420,
-                                                       aBuffer,
-                                                       0, 0,  // No cropping
-                                                       aProps.width(), aProps.height(),
-                                                       aProps.width() * aProps.height() * 3 / 2,
-                                                       webrtc::kVideoRotation_0,
-                                                       i420Buffer.get());
-
-    webrtc::VideoFrame captureFrame(i420Buffer, 0, 0, webrtc::kVideoRotation_0);
-    if (conversionResult < 0) {
+  if ((dst_width != aProps.width() || dst_height != aProps.height()) &&
+      dst_width <= aProps.width() &&
+      dst_height <= aProps.height()) {
+    // Destination resolution is smaller than source buffer. We'll rescale.
+    rtc::scoped_refptr<webrtc::I420Buffer> scaledBuffer =
+      mRescalingBufferPool.CreateBuffer(dst_width, dst_height);
+    if (!scaledBuffer) {
+      MOZ_ASSERT_UNREACHABLE("We might fail to allocate a buffer, but with this "
+                             "being a recycling pool that shouldn't happen");
       return 0;
     }
-
-    rtc::scoped_refptr<webrtc::I420Buffer> scaledBuffer;
-    scaledBuffer = webrtc::I420Buffer::Create(dst_width, dst_height, dst_stride_y,
-                                              dst_stride_uv, dst_stride_uv);
-
-    scaledBuffer->CropAndScaleFrom(*captureFrame.video_frame_buffer().get());
-    webrtc::VideoFrame scaledFrame(scaledBuffer, 0, 0, webrtc::kVideoRotation_0);
-
-    VideoFrameUtils::InitFrameBufferProperties(scaledFrame, properties);
-    frameBuf.reset(new (fallible) uint8_t[properties.bufferSize()]);
-    frame = frameBuf.get();
-
-    if (!frame) {
-      return 0;
-    }
-
-    VideoFrameUtils::CopyVideoFrameBuffers(frame,
-                                           properties.bufferSize(), scaledFrame);
+    scaledBuffer->CropAndScaleFrom(*buffer);
+    buffer = scaledBuffer;
   }
 
-  // Create a video frame and append it to the track.
-  RefPtr<layers::PlanarYCbCrImage> image =
-    mImageContainer->CreatePlanarYCbCrImage();
-
-  const uint8_t lumaBpp = 8;
-  const uint8_t chromaBpp = 4;
-
   layers::PlanarYCbCrData data;
-
-  // Take lots of care to round up!
-  data.mYChannel = frame;
-  data.mYSize = IntSize(dst_width, dst_height);
-  data.mYStride = (dst_width * lumaBpp + 7) / 8;
-  data.mCbCrStride = (dst_width * chromaBpp + 7) / 8;
-  data.mCbChannel = frame + dst_height * data.mYStride;
-  data.mCrChannel = data.mCbChannel + ((dst_height + 1) / 2) * data.mCbCrStride;
-  data.mCbCrSize = IntSize((dst_width + 1) / 2, (dst_height + 1) / 2);
+  data.mYChannel = const_cast<uint8_t*>(buffer->DataY());
+  data.mYSize = IntSize(buffer->width(), buffer->height());
+  data.mYStride = buffer->StrideY();
+  MOZ_ASSERT(buffer->StrideU() == buffer->StrideV());
+  data.mCbCrStride = buffer->StrideU();
+  data.mCbChannel = const_cast<uint8_t*>(buffer->DataU());
+  data.mCrChannel = const_cast<uint8_t*>(buffer->DataV());
+  data.mCbCrSize = IntSize((buffer->width() + 1) / 2,
+                           (buffer->height() + 1) / 2);
   data.mPicX = 0;
   data.mPicY = 0;
-  data.mPicSize = IntSize(dst_width, dst_height);
-  data.mStereoMode = StereoMode::MONO;
+  data.mPicSize = IntSize(buffer->width(), buffer->height());
 
+  RefPtr<layers::PlanarYCbCrImage> image =
+    mImageContainer->CreatePlanarYCbCrImage();
   if (!image->CopyData(data)) {
-    MOZ_ASSERT(false);
+    MOZ_ASSERT_UNREACHABLE("We might fail to allocate a buffer, but with this "
+                           "being a recycling container that shouldn't happen");
     return 0;
   }
 
