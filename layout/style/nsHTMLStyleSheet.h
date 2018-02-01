@@ -15,8 +15,10 @@
 #include "nsColor.h"
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsIStyleRule.h"
 #include "nsIStyleRuleProcessor.h"
+#endif
 #include "PLDHashTable.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
@@ -26,13 +28,17 @@ class nsIDocument;
 class nsMappedAttributes;
 struct RawServoDeclarationBlock;
 
-class nsHTMLStyleSheet final : public nsIStyleRuleProcessor
+class nsHTMLStyleSheet final
+#ifdef MOZ_OLD_STYLE
+  : public nsIStyleRuleProcessor
+#endif
 {
 public:
   explicit nsHTMLStyleSheet(nsIDocument* aDocument);
 
   void SetOwningDocument(nsIDocument* aDocument);
 
+#ifdef MOZ_OLD_STYLE
   NS_DECL_ISUPPORTS
 
   // nsIStyleRuleProcessor API
@@ -53,6 +59,12 @@ public:
     const MOZ_MUST_OVERRIDE override;
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const MOZ_MUST_OVERRIDE override;
+
+  nsIStyleRule* LangRuleFor(const nsAtom* aLanguage);
+#else
+  NS_INLINE_DECL_REFCOUNTING(nsHTMLStyleSheet)
+#endif
+
   size_t DOMSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   void Reset();
@@ -79,14 +91,13 @@ public:
   // and converting the ruledata to Servo specified values.
   void CalculateMappedServoDeclarations();
 
-  nsIStyleRule* LangRuleFor(const nsAtom* aLanguage);
-
 private:
   nsHTMLStyleSheet(const nsHTMLStyleSheet& aCopy) = delete;
   nsHTMLStyleSheet& operator=(const nsHTMLStyleSheet& aCopy) = delete;
 
   ~nsHTMLStyleSheet() {}
 
+#ifdef MOZ_OLD_STYLE
   class HTMLColorRule;
   friend class HTMLColorRule;
   class HTMLColorRule final : public nsIStyleRule {
@@ -110,11 +121,6 @@ private:
 
     nscolor mColor;
   };
-
-  // Implementation of SetLink/VisitedLink/ActiveLinkColor
-  nsresult ImplLinkColorSetter(RefPtr<HTMLColorRule>& aRule,
-                               RefPtr<RawServoDeclarationBlock>& aDecl,
-                               nscolor aColor);
 
   class GenericTableRule;
   friend class GenericTableRule;
@@ -159,9 +165,19 @@ private:
     virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
                                                nsCSSValue* aValue) override;
   };
+#endif
+
+  // Implementation of SetLink/VisitedLink/ActiveLinkColor
+  nsresult ImplLinkColorSetter(
+#ifdef MOZ_OLD_STYLE
+      RefPtr<HTMLColorRule>& aRule,
+#endif
+      RefPtr<RawServoDeclarationBlock>& aDecl,
+      nscolor aColor);
 
 public: // for mLangRuleTable structures only
 
+#ifdef MOZ_OLD_STYLE
   // Rule to handle xml:lang attributes, of which we have exactly one
   // per language string, maintained in mLangRuleTable.
   // We also create one extra rule for the "x-math" language string, used on
@@ -185,24 +201,31 @@ public: // for mLangRuleTable structures only
 
     RefPtr<nsAtom> mLang;
   };
+#endif
 
 private:
   nsIDocument*            mDocument;
+#ifdef MOZ_OLD_STYLE
   RefPtr<HTMLColorRule> mLinkRule;
   RefPtr<HTMLColorRule> mVisitedRule;
   RefPtr<HTMLColorRule> mActiveRule;
+#endif
   RefPtr<RawServoDeclarationBlock> mServoUnvisitedLinkDecl;
   RefPtr<RawServoDeclarationBlock> mServoVisitedLinkDecl;
   RefPtr<RawServoDeclarationBlock> mServoActiveLinkDecl;
+#ifdef MOZ_OLD_STYLE
   RefPtr<TableQuirkColorRule> mTableQuirkColorRule;
   RefPtr<TableTHRule>   mTableTHRule;
+#endif
 
   PLDHashTable            mMappedAttrTable;
   // Whether or not the mapped attributes table
   // has been changed since the last call to
   // CalculateMappedServoDeclarations()
   bool                    mMappedAttrsDirty;
+#ifdef MOZ_OLD_STYLE
   PLDHashTable            mLangRuleTable;
+#endif
 };
 
 #endif /* !defined(nsHTMLStyleSheet_h_) */

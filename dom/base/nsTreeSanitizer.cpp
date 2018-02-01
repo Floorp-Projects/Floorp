@@ -7,11 +7,14 @@
 #include "nsTreeSanitizer.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/BindingStyleRule.h"
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/ServoDeclarationBlock.h"
 #include "mozilla/StyleSheetInlines.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/css/Declaration.h"
 #include "mozilla/css/StyleRule.h"
+#endif
 #include "mozilla/css/Rule.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/SRIMetadata.h"
@@ -1094,8 +1097,12 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
                                 CORS_NONE, aDocument->GetReferrerPolicy(),
                                 SRIMetadata());
   } else {
+#ifdef MOZ_OLD_STYLE
     sheet = new CSSStyleSheet(mozilla::css::eAuthorSheetFeatures,
                               CORS_NONE, aDocument->GetReferrerPolicy());
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
   sheet->SetURIs(aDocument->GetDocumentURI(), nullptr, aBaseURI);
   sheet->SetPrincipal(aDocument->NodePrincipal());
@@ -1105,10 +1112,14 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
         aDocument->GetDocumentURI(), aBaseURI, aDocument->NodePrincipal(),
         0, aDocument->GetCompatibilityMode());
   } else {
+#ifdef MOZ_OLD_STYLE
     // Create the CSS parser, and parse the CSS text.
     nsCSSParser parser(nullptr, sheet->AsGecko());
     rv = parser.ParseSheet(aOriginal, aDocument->GetDocumentURI(), aBaseURI,
                            aDocument->NodePrincipal(), 0);
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
   NS_ENSURE_SUCCESS(rv, true);
   // Mark the sheet as complete.
@@ -1188,12 +1199,16 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
               document->GetCompatibilityMode(),
               document->CSSLoader());
         } else {
+#ifdef MOZ_OLD_STYLE
           // Pass the CSS Loader object to the parser, to allow parser error
           // reports to include the outer window ID.
           nsCSSParser parser(document->CSSLoader());
           decl = parser.ParseStyleAttribute(value, document->GetDocumentURI(),
                                             aElement->GetBaseURIForStyleAttr(),
                                             document->NodePrincipal());
+#else
+          MOZ_CRASH("old style system disabled");
+#endif
         }
         if (decl) {
           if (SanitizeStyleDeclaration(decl)) {

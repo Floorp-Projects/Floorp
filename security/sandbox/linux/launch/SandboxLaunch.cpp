@@ -34,7 +34,69 @@
 #include "prenv.h"
 #include "sandbox/linux/system_headers/linux_syscalls.h"
 
+#ifdef MOZ_X11
+#ifndef MOZ_WIDGET_GTK
+#error "Unknown toolkit"
+#endif
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
+#include "X11UndefineNone.h"
+#include "gfxPlatform.h"
+#endif
+
 namespace mozilla {
+
+// Returns true if graphics will work from a content process
+// started in a new network namespace.  Specifically, named
+// Unix-domain sockets will work, but TCP/IP will not, even if it's a
+// connection to localhost: the child process has its own private
+// loopback interface.
+//
+// (Longer-term we intend to either proxy or remove X11 access from
+// content processes, at which point this will stop being an issue.)
+static bool
+IsDisplayLocal()
+{
+  // For X11, check whether the parent's connection is a Unix-domain
+  // socket.  This is done instead of trying to parse the display name
+  // because an empty hostname (e.g., ":0") will fall back to TCP in
+  // case of failure to connect using Unix-domain sockets.
+#ifdef MOZ_X11
+  // First, ensure that the parent process's graphics are initialized.
+  Unused << gfxPlatform::GetPlatform();
+
+  const auto display = gdk_display_get_default();
+  if (NS_WARN_IF(display == nullptr)) {
+    return false;
+  }
+  if (GDK_IS_X11_DISPLAY(display)) {
+    const int xSocketFd = ConnectionNumber(GDK_DISPLAY_XDISPLAY(display));
+    if (NS_WARN_IF(xSocketFd < 0)) {
+      return false;
+    }
+
+    int domain;
+    socklen_t optlen = static_cast<socklen_t>(sizeof(domain));
+    int rv = getsockopt(xSocketFd, SOL_SOCKET, SO_DOMAIN, &domain, &optlen);
+    if (NS_WARN_IF(rv != 0)) {
+      return false;
+    }
+    MOZ_RELEASE_ASSERT(static_cast<size_t>(optlen) == sizeof(domain));
+    // There's one more wrinkle here: the network namespace also
+    // controls "abstract namespace" addresses in the Unix domain.
+    // Xorg seems to listen on both abstract and normal addresses, but
+    // prefers abstract. This mean that if there exists a server that
+    // uses only the abstract namespace, then it will break and we
+    // won't be able to detect that ahead of time.  So, hopefully it
+    // does not exist.
+    return domain == AF_LOCAL;
+  }
+#endif
+
+  // Assume that other backends (e.g., Wayland) will not use the
+  // network namespace.
+  return true;
+}
 
 static void
 PreloadSandboxLib(base::environment_map* aEnv)
@@ -157,15 +219,19 @@ SandboxLaunchPrepare(GeckoProcessType aType,
     // TODO: CLONE_NEWIPC (bug 1376910) if not fglrx and level >= 1,
     // once the XShm detection shim is fixed.
 
+    if (level >= 4) {
+      canChroot = true;
+      // Unshare network namespace if allowed by graphics; see
+      // function definition above for details.  (The display
+      // local-ness is cached because it won't change.)
+      static const bool isDisplayLocal = IsDisplayLocal();
+      if (isDisplayLocal) {
+        flags |= CLONE_NEWNET;
+      }
+    }
     // Hidden pref to allow testing user namespaces separately, even
     // if there's nothing that would require them.
-    if (Preferences::GetBool("security.sandbox.content.force-namespace",
-#ifdef NIGHTLY_BUILD
-                             true
-#else
-                             false
-#endif
-          )) {
+    if (Preferences::GetBool("security.sandbox.content.force-namespace", false)) {
       flags |= CLONE_NEWUSER;
     }
     break;

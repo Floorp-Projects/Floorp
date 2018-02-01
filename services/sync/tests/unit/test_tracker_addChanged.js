@@ -12,23 +12,28 @@ add_task(async function test_tracker_basics() {
   let id = "the_id!";
 
   _("Make sure nothing exists yet..");
-  Assert.equal(tracker.changedIDs[id], null);
+  let changes = await tracker.getChangedIDs();
+  Assert.equal(changes[id], null);
 
   _("Make sure adding of time 0 works");
-  tracker.addChangedID(id, 0);
-  Assert.equal(tracker.changedIDs[id], 0);
+  await tracker.addChangedID(id, 0);
+  changes = await tracker.getChangedIDs();
+  Assert.equal(changes[id], 0);
 
   _("A newer time will replace the old 0");
-  tracker.addChangedID(id, 10);
-  Assert.equal(tracker.changedIDs[id], 10);
+  await tracker.addChangedID(id, 10);
+  changes = await tracker.getChangedIDs();
+  Assert.equal(changes[id], 10);
 
   _("An older time will not replace the newer 10");
-  tracker.addChangedID(id, 5);
-  Assert.equal(tracker.changedIDs[id], 10);
+  await tracker.addChangedID(id, 5);
+  changes = await tracker.getChangedIDs();
+  Assert.equal(changes[id], 10);
 
   _("Adding without time defaults to current time");
-  tracker.addChangedID(id);
-  Assert.ok(tracker.changedIDs[id] > 10);
+  await tracker.addChangedID(id);
+  changes = await tracker.getChangedIDs();
+  Assert.ok(changes[id] > 10);
 });
 
 add_task(async function test_tracker_persistence() {
@@ -44,12 +49,13 @@ add_task(async function test_tracker_persistence() {
     };
   });
 
-  tracker.addChangedID(id, 5);
+  await tracker.addChangedID(id, 5);
 
   await promiseSave;
 
   _("IDs saved.");
-  Assert.equal(5, tracker.changedIDs[id]);
+  const changes = await tracker.getChangedIDs();
+  Assert.equal(5, changes[id]);
 
   let json = await Utils.jsonLoad("changes/tracker", tracker);
   Assert.equal(5, json[id]);

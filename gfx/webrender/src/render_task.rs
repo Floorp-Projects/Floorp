@@ -731,29 +731,37 @@ impl RenderTask {
 }
 
 #[derive(Debug, Hash, PartialEq, Eq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum RenderTaskCacheKeyKind {
     BoxShadow(BoxShadowCacheKey),
     Image(ImageCacheKey),
 }
 
 #[derive(Debug, Hash, PartialEq, Eq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskCacheKey {
     pub size: DeviceIntSize,
     pub kind: RenderTaskCacheKeyKind,
 }
 
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct RenderTaskCacheEntry {
     handle: TextureCacheHandle,
 }
 
 // A cache of render tasks that are stored in the texture
 // cache for usage across frames.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskCache {
     entries: FastHashMap<RenderTaskCacheKey, RenderTaskCacheEntry>,
 }
 
 impl RenderTaskCache {
-    pub fn new() -> RenderTaskCache {
+    pub fn new() -> Self {
         RenderTaskCache {
             entries: FastHashMap::default(),
         }

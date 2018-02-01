@@ -10,6 +10,9 @@
   <link rel="stylesheet" href="paymentRequest.css"/>
   <link rel="stylesheet" href="components/rich-select.css"/>
   <link rel="stylesheet" href="components/address-option.css"/>
+  <link rel="stylesheet" href="components/payment-details-item.css"/>
+  <link rel="stylesheet" href="containers/order-details.css"/>
+
   <script src="vendor/custom-elements.min.js"></script>
 
   <script src="PaymentsStore.js"></script>
@@ -18,7 +21,8 @@
   <script src="mixins/PaymentStateSubscriberMixin.js"></script>
 
   <script src="components/currency-amount.js"></script>
-
+  <script src="containers/order-details.js"></script>
+  <script src="components/payment-details-item.js"></script>
   <script src="components/rich-select.js"></script>
   <script src="components/rich-option.js"></script>
   <script src="components/address-option.js"></script>
@@ -55,7 +59,18 @@
       </section>
       <section id="order-details-overlay" hidden="hidden">
         <h1>Order Details</h1>
+        <order-details></order-details>
       </section>
+    </div>
+  </template>
+
+  <template id="order-details-template">
+    <ul class="main-list"></ul>
+    <ul class="footer-items-list"></ul>
+
+    <div class="details-total">
+      <h2 class="label">Total</h2>
+      <currency-amount></currency-amount>
     </div>
   </template>
 </head>

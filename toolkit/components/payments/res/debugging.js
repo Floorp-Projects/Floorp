@@ -79,6 +79,14 @@ let REQUEST_2 = {
           value: "10.50",
         },
       },
+      {
+        label: "Tax",
+        type: "tax",
+        amount: {
+          currency: "USD",
+          value: "1.50",
+        },
+      },
     ],
     shippingOptions: [
       {

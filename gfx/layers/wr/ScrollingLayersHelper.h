@@ -47,23 +47,23 @@ public:
   ~ScrollingLayersHelper();
 
 private:
-  typedef std::pair<FrameMetrics::ViewID, Maybe<wr::WrClipId>> ClipAndScroll;
+  typedef std::pair<wr::WrScrollId, Maybe<wr::WrClipId>> ClipAndScroll;
 
-  std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>>
+  std::pair<Maybe<wr::WrScrollId>, Maybe<wr::WrClipId>>
   DefineClipChain(nsDisplayItem* aItem,
                   const ActiveScrolledRoot* aAsr,
                   const DisplayItemClipChain* aChain,
                   int32_t aAppUnitsPerDevPixel,
                   const StackingContextHelper& aStackingContext);
 
-  std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>>
+  std::pair<Maybe<wr::WrScrollId>, Maybe<wr::WrClipId>>
   RecurseAndDefineClip(nsDisplayItem* aItem,
                        const ActiveScrolledRoot* aAsr,
                        const DisplayItemClipChain* aChain,
                        int32_t aAppUnitsPerDevPixel,
                        const StackingContextHelper& aSc);
 
-  std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>>
+  std::pair<Maybe<wr::WrScrollId>, Maybe<wr::WrClipId>>
   RecurseAndDefineAsr(nsDisplayItem* aItem,
                       const ActiveScrolledRoot* aAsr,
                       const DisplayItemClipChain* aChain,
@@ -95,7 +95,7 @@ private:
     const ActiveScrolledRoot* mAsr;
     const DisplayItemClipChain* mChain;
 
-    Maybe<FrameMetrics::ViewID> mScrollId;
+    Maybe<wr::WrScrollId> mScrollId;
     Maybe<wr::WrClipId> mClipId;
     Maybe<ClipAndScroll> mClipAndScroll;
 

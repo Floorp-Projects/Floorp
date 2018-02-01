@@ -642,5 +642,24 @@ class TestPreprocessor(unittest.TestCase):
             self.pp.handleCommandLine(['-Fsubstitution', '-Dfoo=foobarbaz', '@foo@.in'])
             self.assertEqual(self.pp.out.getvalue(), 'foobarbaz\n')
 
+    def test_invalid_ifdef(self):
+        with MockedOpen({'dummy': '#ifdef FOO == BAR\nPASS\n#endif'}):
+            with self.assertRaises(Preprocessor.Error) as e:
+                self.pp.do_include('dummy')
+            self.assertEqual(e.exception.key, 'INVALID_VAR')
+
+        with MockedOpen({'dummy': '#ifndef FOO == BAR\nPASS\n#endif'}):
+            with self.assertRaises(Preprocessor.Error) as e:
+                self.pp.do_include('dummy')
+            self.assertEqual(e.exception.key, 'INVALID_VAR')
+
+        # Trailing whitespaces, while not nice, shouldn't be an error.
+        self.do_include_pass([
+            '#ifndef  FOO ',
+            'PASS',
+            '#endif',
+        ])
+
+
 if __name__ == '__main__':
     main()

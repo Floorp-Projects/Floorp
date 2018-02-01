@@ -20,15 +20,15 @@ function TimingMarkers() {
 function addTimingMarker(state, action) {
   state = { ...state };
 
-  if (action.marker.name === "document::DOMContentLoaded" &&
+  if (action.marker.name === "dom-interactive" &&
       state.firstDocumentDOMContentLoadedTimestamp === -1) {
-    state.firstDocumentDOMContentLoadedTimestamp = action.marker.unixTime / 1000;
+    state.firstDocumentDOMContentLoadedTimestamp = action.marker.time;
     return state;
   }
 
-  if (action.marker.name === "document::Load" &&
+  if (action.marker.name === "dom-complete" &&
       state.firstDocumentLoadTimestamp === -1) {
-    state.firstDocumentLoadTimestamp = action.marker.unixTime / 1000;
+    state.firstDocumentLoadTimestamp = action.marker.time;
     return state;
   }
 

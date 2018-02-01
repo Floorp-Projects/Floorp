@@ -3,6 +3,7 @@
 
 package org.mozilla.gecko.background.db;
 
+import android.content.ContentProvider;
 import android.content.ContentProviderClient;
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -17,7 +18,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.db.TabsProvider;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 import org.mozilla.gecko.sync.repositories.domain.TabsRecord;
@@ -35,13 +35,11 @@ public class TestTabsProvider {
     protected Tab testTab2;
     protected Tab testTab3;
 
-    protected TabsProvider provider;
+    protected ContentProvider provider;
 
     @Before
     public void setUp() {
-        provider = new TabsProvider();
-        provider.onCreate();
-        ShadowContentResolver.registerProvider(BrowserContract.TABS_AUTHORITY, new DelegatingTestContentProvider(provider));
+        provider = DelegatingTestContentProvider.createDelegatingTabsProvider();
     }
 
     @After

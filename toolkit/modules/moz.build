@@ -94,9 +94,6 @@ with Files('JSONFile.jsm'):
 with Files('LightweightThemeConsumer.jsm'):
     BUG_COMPONENT = ('Firefox', 'Toolbars and Customization')
 
-with Files('LoadContextInfo.jsm'):
-    BUG_COMPONENT = ('Core', 'Networking: Cache')
-
 with Files('Memory.jsm'):
     BUG_COMPONENT = ('Core', 'DOM: Content Processes')
 
@@ -210,7 +207,6 @@ EXTRA_JS_MODULES += [
     'InlineSpellCheckerContent.jsm',
     'Integration.jsm',
     'JSONFile.jsm',
-    'LoadContextInfo.jsm',
     'Log.jsm',
     'Memory.jsm',
     'NewTabUtils.jsm',

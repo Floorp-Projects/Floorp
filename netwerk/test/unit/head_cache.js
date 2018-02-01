@@ -1,5 +1,5 @@
 ChromeUtils.import('resource://gre/modules/XPCOMUtils.jsm');
-ChromeUtils.import('resource://gre/modules/LoadContextInfo.jsm');
+ChromeUtils.import('resource://gre/modules/Services.jsm');
 
 var _CSvc;
 function get_cache_service() {
@@ -20,17 +20,17 @@ function evict_cache_entries(where)
   var storage;
 
   if (clearMem) {
-    storage = svc.memoryCacheStorage(LoadContextInfo.default);
+    storage = svc.memoryCacheStorage(Services.loadContextInfo.default);
     storage.asyncEvictStorage(null);
   }
 
   if (clearDisk) {
-    storage = svc.diskCacheStorage(LoadContextInfo.default, false);
+    storage = svc.diskCacheStorage(Services.loadContextInfo.default, false);
     storage.asyncEvictStorage(null);
   }
 
   if (clearAppCache) {
-    storage = svc.appCacheStorage(LoadContextInfo.default, null);
+    storage = svc.appCacheStorage(Services.loadContextInfo.default, null);
     storage.asyncEvictStorage(null);
   }
 }
@@ -44,7 +44,7 @@ function createURI(urispec)
 
 function getCacheStorage(where, lci, appcache)
 {
-  if (!lci) lci = LoadContextInfo.default;
+  if (!lci) lci = Services.loadContextInfo.default;
   var svc = get_cache_service();
   switch (where) {
     case "disk": return svc.diskCacheStorage(lci, false);

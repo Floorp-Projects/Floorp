@@ -10,7 +10,9 @@
 #include "nsXBLService.h"
 #include "nsCOMPtr.h"
 #include "nsINodeList.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsIStyleRuleProcessor.h"
+#endif
 #include "nsClassHashtable.h"
 #include "nsTArray.h"
 #include "nsCycleCollectionParticipant.h"
@@ -129,7 +131,9 @@ public:
 
   void ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument);
 
+#ifdef MOZ_OLD_STYLE
   void WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData);
+#endif
 
   mozilla::ServoStyleSet* GetServoStyleSet() const;
 

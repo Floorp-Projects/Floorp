@@ -10,7 +10,9 @@
 #include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleWalker.h"
+#endif
 #include "celldata.h"
 #include "mozilla/dom/HTMLTableCellElementBinding.h"
 
@@ -93,6 +95,7 @@ HTMLTableCellElement::CellIndex() const
   return -1;
 }
 
+#ifdef MOZ_OLD_STYLE
 NS_IMETHODIMP
 HTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
@@ -106,6 +109,7 @@ HTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   }
   return NS_OK;
 }
+#endif
 
 nsMappedAttributes*
 HTMLTableCellElement::GetMappedAttributesInheritedFromTable() const

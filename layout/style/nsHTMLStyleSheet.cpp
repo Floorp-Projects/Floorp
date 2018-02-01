@@ -17,11 +17,15 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsStyleConsts.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleWalker.h"
 #include "nsRuleData.h"
+#endif
 #include "nsError.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleProcessorData.h"
 #include "nsCSSRuleProcessor.h"
+#endif
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
 #include "nsHashKeys.h"
@@ -33,6 +37,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+#ifdef MOZ_OLD_STYLE
 NS_IMPL_ISUPPORTS(nsHTMLStyleSheet::HTMLColorRule, nsIStyleRule)
 
 /* virtual */ void
@@ -182,6 +187,7 @@ nsHTMLStyleSheet::LangRule::List(FILE* out, int32_t aIndent) const
   fprintf_stderr(out, "%s", str.get());
 }
 #endif
+#endif
 
 // -----------------------------------------------------------
 
@@ -228,6 +234,7 @@ static const PLDHashTableOps MappedAttrTable_Ops = {
 
 // -----------------------------------------------------------
 
+#ifdef MOZ_OLD_STYLE
 struct LangRuleTableEntry : public PLDHashEntryHdr {
   RefPtr<nsHTMLStyleSheet::LangRule> mRule;
 };
@@ -275,20 +282,26 @@ static const PLDHashTableOps LangRuleTable_Ops = {
   LangRuleTable_ClearEntry,
   LangRuleTable_InitEntry
 };
+#endif
 
 // -----------------------------------------------------------
 
 nsHTMLStyleSheet::nsHTMLStyleSheet(nsIDocument* aDocument)
   : mDocument(aDocument)
+#ifdef MOZ_OLD_STYLE
   , mTableQuirkColorRule(new TableQuirkColorRule())
   , mTableTHRule(new TableTHRule())
+#endif
   , mMappedAttrTable(&MappedAttrTable_Ops, sizeof(MappedAttrTableEntry))
   , mMappedAttrsDirty(false)
+#ifdef MOZ_OLD_STYLE
   , mLangRuleTable(&LangRuleTable_Ops, sizeof(LangRuleTableEntry))
+#endif
 {
   MOZ_ASSERT(aDocument);
 }
 
+#ifdef MOZ_OLD_STYLE
 NS_IMPL_ISUPPORTS(nsHTMLStyleSheet, nsIStyleRuleProcessor)
 
 /* virtual */ void
@@ -457,6 +470,7 @@ nsHTMLStyleSheet::RulesMatching(XULTreeRuleProcessorData* aData)
 {
 }
 #endif
+#endif
 
 void
 nsHTMLStyleSheet::SetOwningDocument(nsIDocument* aDocument)
@@ -467,22 +481,28 @@ nsHTMLStyleSheet::SetOwningDocument(nsIDocument* aDocument)
 void
 nsHTMLStyleSheet::Reset()
 {
+#ifdef MOZ_OLD_STYLE
   mLinkRule          = nullptr;
   mVisitedRule       = nullptr;
   mActiveRule        = nullptr;
+#endif
 
   mServoUnvisitedLinkDecl = nullptr;
   mServoVisitedLinkDecl = nullptr;
   mServoActiveLinkDecl = nullptr;
 
+#ifdef MOZ_OLD_STYLE
   mLangRuleTable.Clear();
+#endif
   mMappedAttrTable.Clear();
   mMappedAttrsDirty = false;
 }
 
 nsresult
 nsHTMLStyleSheet::ImplLinkColorSetter(
+#ifdef MOZ_OLD_STYLE
     RefPtr<HTMLColorRule>& aRule,
+#endif
     RefPtr<RawServoDeclarationBlock>& aDecl,
     nscolor aColor)
 {
@@ -499,6 +519,7 @@ nsHTMLStyleSheet::ImplLinkColorSetter(
     Servo_DeclarationBlock_SetColorValue(aDecl.get(), eCSSProperty_color,
                                          aColor);
   } else {
+#ifdef MOZ_OLD_STYLE
     if (aRule && aRule->mColor == aColor) {
       return NS_OK;
     }
@@ -507,6 +528,9 @@ nsHTMLStyleSheet::ImplLinkColorSetter(
     if (!aRule) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+#else
+    MOZ_CRASH("old style system disabled");
+#endif
   }
 
   // Now make sure we restyle any links that might need it.  This
@@ -521,20 +545,34 @@ nsHTMLStyleSheet::ImplLinkColorSetter(
 nsresult
 nsHTMLStyleSheet::SetLinkColor(nscolor aColor)
 {
-  return ImplLinkColorSetter(mLinkRule, mServoUnvisitedLinkDecl, aColor);
+  return ImplLinkColorSetter(
+#ifdef MOZ_OLD_STYLE
+      mLinkRule,
+#endif
+      mServoUnvisitedLinkDecl,
+      aColor);
 }
-
 
 nsresult
 nsHTMLStyleSheet::SetActiveLinkColor(nscolor aColor)
 {
-  return ImplLinkColorSetter(mActiveRule, mServoActiveLinkDecl, aColor);
+  return ImplLinkColorSetter(
+#ifdef MOZ_OLD_STYLE
+      mActiveRule,
+#endif
+      mServoActiveLinkDecl,
+      aColor);
 }
 
 nsresult
 nsHTMLStyleSheet::SetVisitedLinkColor(nscolor aColor)
 {
-  return ImplLinkColorSetter(mVisitedRule, mServoVisitedLinkDecl, aColor);
+  return ImplLinkColorSetter(
+#ifdef MOZ_OLD_STYLE
+      mVisitedRule,
+#endif
+      mServoVisitedLinkDecl,
+      aColor);
 }
 
 already_AddRefed<nsMappedAttributes>
@@ -579,6 +617,7 @@ nsHTMLStyleSheet::CalculateMappedServoDeclarations()
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 nsIStyleRule*
 nsHTMLStyleSheet::LangRuleFor(const nsAtom* aLanguage)
 {
@@ -590,6 +629,7 @@ nsHTMLStyleSheet::LangRuleFor(const nsAtom* aLanguage)
   }
   return entry->mRule;
 }
+#endif
 
 size_t
 nsHTMLStyleSheet::DOMSizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const

@@ -5743,11 +5743,6 @@ pref("media.gmp.insecure.allow", false);
 // HTML <dialog> element
 pref("dom.dialog_element.enabled", false);
 
-// Secure Element API
-#ifdef MOZ_SECUREELEMENT
-pref("dom.secureelement.enabled", false);
-#endif
-
 // Allow control characters appear in composition string.
 // When this is false, control characters except
 // CHARACTER TABULATION (horizontal tab) are removed from
@@ -5822,7 +5817,11 @@ pref("layout.css.servo.enabled", false);
 // If Stylo is not enabled, this pref doesn't take any effect.
 // Note that this pref is only read once when requested. Changing it
 // at runtime may have no effect.
+#ifdef MOZ_OLD_STYLE
 pref("layout.css.servo.chrome.enabled", false);
+#else
+pref("layout.css.servo.chrome.enabled", true);
+#endif
 #endif
 
 // TODO: Bug 1324406: Treat 'data:' documents as unique, opaque origins

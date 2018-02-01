@@ -3300,9 +3300,9 @@ class BookmarkMerger {
     // device. We want to keep the folder deleted, but we also don't want
     // to lose the new bookmark, so we move the bookmark to the deleted
     // folder's parent.
-    let locallyDeleted = this.checkForLocalDeletionOfRemoteNode(mergedNode,
-      remoteChildNode);
-    if (locallyDeleted) {
+    let locallyMovedOrDeleted = this.checkForLocalMoveOrDeletionOfRemoteNode(
+      mergedNode, remoteChildNode);
+    if (locallyMovedOrDeleted) {
       return true;
     }
 
@@ -3426,9 +3426,9 @@ class BookmarkMerger {
     // this folder on the server. Check if the child is remotely deleted.
     // If so, we need to move any new local descendants to the merged node,
     // just as we did for new remote descendants of locally deleted parents.
-    let remotelyDeleted = this.checkForRemoteDeletionOfLocalNode(mergedNode,
-      localChildNode);
-    if (remotelyDeleted) {
+    let remotelyMovedOrDeleted = this.checkForRemoteMoveOrDeletionOfLocalNode(
+      mergedNode, localChildNode);
+    if (remotelyMovedOrDeleted) {
       return true;
     }
 
@@ -3577,14 +3577,19 @@ class BookmarkMerger {
   }
 
   /**
-   * Walks a locally deleted remote node's children, reparenting any children
-   * that aren't also deleted remotely to the merged node. Returns `true` if
-   * `remoteNode` is deleted locally; `false` if `remoteNode` is not deleted or
-   * doesn't exist locally.
+   * Checks if a remote node is locally moved or deleted, and reparents any
+   * descendants that aren't also remotely deleted to the merged node. Returns
+   * `true` if `remoteNode` is locally moved or deleted; `false` if `remoteNode`
+   * is not deleted or doesn't exist locally.
    *
-   * This is the inverse of `checkForRemoteDeletionOfLocalNode`.
+   * This is the inverse of `checkForRemoteMoveOrDeletionOfLocalNode`.
    */
-  checkForLocalDeletionOfRemoteNode(mergedNode, remoteNode) {
+  checkForLocalMoveOrDeletionOfRemoteNode(mergedNode, remoteNode) {
+    if (this.mergedGuids.has(remoteNode.guid)) {
+      // Already merged, so must be locally moved.
+      return true;
+    }
+
     if (!this.localTree.isDeleted(remoteNode.guid)) {
       return false;
     }
@@ -3631,14 +3636,19 @@ class BookmarkMerger {
   }
 
   /**
-   * Walks a remotely deleted local node's children, reparenting any children
-   * that aren't also deleted locally to the merged node. Returns `true` if
-   * `localNode` is deleted remotely; `false` if `localNode` is not deleted or
-   * doesn't exist locally.
+   * Checks if a local node is remotely moved or deleted, and reparents any
+   * descendants that aren't also locally deleted to the merged node. Returns
+   * `true` if `localNode` is moved or deleted remotely; `false` if `localNode`
+   * is not deleted or doesn't exist locally.
    *
-   * This is the inverse of `checkForLocalDeletionOfRemoteNode`.
+   * This is the inverse of `checkForLocalMoveOrDeletionOfRemoteNode`.
    */
-  checkForRemoteDeletionOfLocalNode(mergedNode, localNode) {
+  checkForRemoteMoveOrDeletionOfLocalNode(mergedNode, localNode) {
+    if (this.mergedGuids.has(localNode.guid)) {
+      // Already merged, so must be remotely moved.
+      return true;
+    }
+
     if (!this.remoteTree.isDeleted(localNode.guid)) {
       return false;
     }
@@ -3688,11 +3698,11 @@ class BookmarkMerger {
     let remoteOrphanNodes = [];
 
     for (let remoteChildNode of remoteNode.children) {
-      let locallyDeleted = this.checkForLocalDeletionOfRemoteNode(mergedNode,
-        remoteChildNode);
-      if (locallyDeleted) {
-        // The remote child doesn't exist locally, or is also deleted locally,
-        // so we can safely delete its parent.
+      let locallyMovedOrDeleted = this.checkForLocalMoveOrDeletionOfRemoteNode(
+        mergedNode, remoteChildNode);
+      if (locallyMovedOrDeleted) {
+        // The remote child doesn't exist locally, or is already moved or
+        // deleted locally, so we can safely ignore it.
         continue;
       }
       remoteOrphanNodes.push(remoteChildNode);
@@ -3722,11 +3732,11 @@ class BookmarkMerger {
 
     let localOrphanNodes = [];
     for (let localChildNode of localNode.children) {
-      let remotelyDeleted = this.checkForRemoteDeletionOfLocalNode(mergedNode,
-        localChildNode);
-      if (remotelyDeleted) {
-        // The local child doesn't exist or is also deleted on the server, so we
-        // can safely delete its parent without orphaning any local children.
+      let remotelyMovedOrDeleted = this.checkForRemoteMoveOrDeletionOfLocalNode(
+        mergedNode, localChildNode);
+      if (remotelyMovedOrDeleted) {
+        // The local child doesn't exist remotely, or is already moved or
+        // deleted remotely, so we can safely ignore it.
         continue;
       }
       localOrphanNodes.push(localChildNode);

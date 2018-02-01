@@ -27,7 +27,7 @@ function run_test()
 {
   do_get_profile();
 
-  var lci = LoadContextInfo.default;
+  var lci = Services.loadContextInfo.default;
   var testingInterface = get_cache_service().QueryInterface(Ci.nsICacheTesting);
   Assert.ok(testingInterface);
 

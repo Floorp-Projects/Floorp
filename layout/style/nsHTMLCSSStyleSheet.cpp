@@ -10,12 +10,18 @@
 
 #include "nsHTMLCSSStyleSheet.h"
 #include "mozilla/MemoryReporting.h"
+#ifdef MOZ_OLD_STYLE
 #include "mozilla/css/StyleRule.h"
+#endif
 #include "mozilla/DeclarationBlockInlines.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsIStyleRuleProcessor.h"
+#endif
 #include "nsPresContext.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsRuleWalker.h"
 #include "nsRuleProcessorData.h"
+#endif
 #include "mozilla/dom/Element.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
@@ -51,6 +57,7 @@ nsHTMLCSSStyleSheet::~nsHTMLCSSStyleSheet()
   }
 }
 
+#ifdef MOZ_OLD_STYLE
 NS_IMPL_ISUPPORTS(nsHTMLCSSStyleSheet, nsIStyleRuleProcessor)
 
 /* virtual */ void
@@ -190,6 +197,7 @@ nsHTMLCSSStyleSheet::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
 {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
+#endif
 
 void
 nsHTMLCSSStyleSheet::CacheStyleAttr(const nsAString& aSerialized,

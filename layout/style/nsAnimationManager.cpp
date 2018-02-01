@@ -15,15 +15,20 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleAnimationValue.h"
+#include "mozilla/dom/AnimationEffectReadOnly.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/KeyframeEffectReadOnly.h"
 
 #include "nsPresContext.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsStyleSet.h"
+#endif
 #include "nsStyleChangeList.h"
 #include "nsContentUtils.h"
+#ifdef MOZ_OLD_STYLE
 #include "nsCSSRules.h"
 #include "mozilla/GeckoRestyleManager.h"
+#endif
 #include "nsLayoutUtils.h"
 #include "nsIFrame.h"
 #include "nsIDocument.h"
@@ -345,6 +350,7 @@ PopExistingAnimation(const nsAtom* aName,
   return nullptr;
 }
 
+#ifdef MOZ_OLD_STYLE
 class ResolvedStyleCache {
 public:
   ResolvedStyleCache() : mCache() {}
@@ -389,6 +395,7 @@ ResolvedStyleCache::Get(nsPresContext* aPresContext,
   }
   return result;
 }
+#endif
 
 class MOZ_STACK_CLASS ServoCSSAnimationBuilder final {
 public:
@@ -441,7 +448,7 @@ public:
   // post the required restyles.
   void NotifyNewOrRemovedAnimation(const Animation& aAnimation)
   {
-    AnimationEffectReadOnly* effect = aAnimation.GetEffect();
+    dom::AnimationEffectReadOnly* effect = aAnimation.GetEffect();
     if (!effect) {
       return;
     }
@@ -458,6 +465,7 @@ private:
   const ServoStyleContext* mStyleContext;
 };
 
+#ifdef MOZ_OLD_STYLE
 class MOZ_STACK_CLASS GeckoCSSAnimationBuilder final {
 public:
   GeckoCSSAnimationBuilder(GeckoStyleContext* aStyleContext,
@@ -508,6 +516,7 @@ private:
 
 static Maybe<ComputedTimingFunction>
 ConvertTimingFunction(const nsTimingFunction& aTimingFunction);
+#endif
 
 template<class BuilderType>
 static void
@@ -645,6 +654,7 @@ BuildAnimation(nsPresContext* aPresContext,
   return animation.forget();
 }
 
+#ifdef MOZ_OLD_STYLE
 bool
 GeckoCSSAnimationBuilder::BuildKeyframes(nsPresContext* aPresContext,
                                          nsAtom* aName,
@@ -990,6 +1000,7 @@ GeckoCSSAnimationBuilder::FillInMissingKeyframeValues(
     }
   }
 }
+#endif
 
 template<class BuilderType>
 static nsAnimationManager::OwningCSSAnimationPtrArray
@@ -1027,6 +1038,7 @@ BuildAnimations(nsPresContext* aPresContext,
   return result;
 }
 
+#ifdef MOZ_OLD_STYLE
 void
 nsAnimationManager::UpdateAnimations(GeckoStyleContext* aStyleContext,
                                      mozilla::dom::Element* aElement)
@@ -1048,6 +1060,7 @@ nsAnimationManager::UpdateAnimations(GeckoStyleContext* aStyleContext,
   const nsStyleDisplay* disp = aStyleContext->StyleDisplay();
   DoUpdateAnimations(target, *disp, builder);
 }
+#endif
 
 void
 nsAnimationManager::UpdateAnimations(

@@ -365,7 +365,7 @@ ClientEngine.prototype = {
     this.isFirstSync = !this.lastRecordUpload;
     // Reupload new client record periodically.
     if (Date.now() / 1000 - this.lastRecordUpload > CLIENTS_TTL_REFRESH) {
-      this._tracker.addChangedID(this.localID);
+      await this._tracker.addChangedID(this.localID);
       this.lastRecordUpload = Date.now() / 1000;
     }
     return SyncEngine.prototype._syncStartup.call(this);
@@ -633,7 +633,7 @@ ClientEngine.prototype = {
 
     // It's a bad client record. Save it to be deleted at the end of the sync.
     this._log.debug("Bad client record detected. Scheduling for deletion.");
-    this._deleteId(item.id);
+    await this._deleteId(item.id);
 
     // Neither try again nor error; we're going to delete it.
     return SyncEngine.kRecoveryStrategy.ignore;
@@ -684,7 +684,7 @@ ClientEngine.prototype = {
 
     if ((await this._addClientCommand(clientId, action))) {
       this._log.trace(`Client ${clientId} got a new action`, [command, args]);
-      this._tracker.addChangedID(clientId);
+      await this._tracker.addChangedID(clientId);
       try {
         telemetryExtra.deviceID = this.service.identity.hashedDeviceID(clientId);
       } catch (_) {}
@@ -800,7 +800,7 @@ ClientEngine.prototype = {
         }
       }
       if (didRemoveCommand) {
-        this._tracker.addChangedID(this.localID);
+        await this._tracker.addChangedID(this.localID);
       }
 
       if (URIsToDisplay.length) {
@@ -914,7 +914,7 @@ ClientEngine.prototype = {
 
   async _removeRemoteClient(id) {
     delete this._store._remoteClients[id];
-    this._tracker.removeChangedID(id);
+    await this._tracker.removeChangedID(id);
     await this._removeClientCommands(id);
     this._modified.delete(id);
   },
@@ -1047,31 +1047,24 @@ ClientStore.prototype = {
 
 function ClientsTracker(name, engine) {
   Tracker.call(this, name, engine);
-  Svc.Obs.add("weave:engine:start-tracking", this);
-  Svc.Obs.add("weave:engine:stop-tracking", this);
 }
 ClientsTracker.prototype = {
   __proto__: Tracker.prototype,
 
   _enabled: false,
 
-  observe: function observe(subject, topic, data) {
+  onStart() {
+    Svc.Prefs.observe("client.name", this.asyncObserver);
+  },
+  onStop() {
+    Svc.Prefs.ignore("client.name", this.asyncObserver);
+  },
+
+  async observe(subject, topic, data) {
     switch (topic) {
-      case "weave:engine:start-tracking":
-        if (!this._enabled) {
-          Svc.Prefs.observe("client.name", this);
-          this._enabled = true;
-        }
-        break;
-      case "weave:engine:stop-tracking":
-        if (this._enabled) {
-          Svc.Prefs.ignore("client.name", this);
-          this._enabled = false;
-        }
-        break;
       case "nsPref:changed":
         this._log.debug("client.name preference changed");
-        this.addChangedID(this.engine.localID);
+        await this.addChangedID(this.engine.localID);
         this.score += SCORE_INCREMENT_XLARGE;
         break;
     }

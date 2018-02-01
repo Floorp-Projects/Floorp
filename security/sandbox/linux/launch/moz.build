@@ -26,4 +26,7 @@ USE_LIBS += [
     'mozsandbox',
 ]
 
+# For the X11 socket domain inspection in SandboxLaunch:
+CXXFLAGS += CONFIG['TK_CFLAGS']
+
 FINAL_LIBRARY = 'xul'

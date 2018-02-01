@@ -712,6 +712,13 @@ nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc)
   }
 }
 
+const char* const*
+nsCSSProps::GetListStyleTypes(int32_t *aLength)
+{
+  *aLength = ArrayLength(kCSSRawPredefinedCounterStyles);
+  return kCSSRawPredefinedCounterStyles;
+}
+
 /***************************************************************************/
 
 const KTableEntry nsCSSProps::kAnimationDirectionKTable[] = {
