@@ -79,7 +79,7 @@ this.Policies = {
   "block_set_desktop_background": {
     onBeforeUIStartup(manager, param) {
       if (param == true) {
-        manager.disallowFeature("set_desktop_background", true);
+        manager.disallowFeature("setDesktopBackground", true);
       }
     }
   },
