@@ -1186,7 +1186,7 @@ WebBrowserPersistLocalDocument::ReadResources(nsIWebBrowserPersistResourceVisito
     NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
 
     ErrorResult err;
-    nsCOMPtr<nsIDOMTreeWalker> walker =
+    RefPtr<dom::TreeWalker> walker =
         mDocument->CreateTreeWalker(*mDocument,
             nsIDOMNodeFilter::SHOW_ELEMENT |
             nsIDOMNodeFilter::SHOW_DOCUMENT |
@@ -1199,18 +1199,20 @@ WebBrowserPersistLocalDocument::ReadResources(nsIWebBrowserPersistResourceVisito
     MOZ_ASSERT(walker);
 
     RefPtr<ResourceReader> reader = new ResourceReader(this, aVisitor);
-    nsCOMPtr<nsIDOMNode> currentNode;
-    walker->GetCurrentNode(getter_AddRefs(currentNode));
-    while (currentNode) {
-        rv = reader->OnWalkDOMNode(currentNode);
+    nsCOMPtr<nsINode> currentNode = walker->CurrentNode();
+    do {
+        rv = reader->OnWalkDOMNode(currentNode->AsDOMNode());
         if (NS_WARN_IF(NS_FAILED(rv))) {
             break;
         }
-        rv = walker->NextNode(getter_AddRefs(currentNode));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
+
+        ErrorResult err;
+        currentNode = walker->NextNode(err);
+        if (NS_WARN_IF(err.Failed())) {
+            err.SuppressException();
             break;
         }
-    }
+    } while (currentNode);
     reader->DocumentDone(rv);
     // If NS_FAILED(rv), it was / will be reported by an EndVisit call
     // via DocumentDone.  This method must return a failure if and
