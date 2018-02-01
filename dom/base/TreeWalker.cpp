@@ -55,56 +55,6 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(dom::TreeWalker)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(dom::TreeWalker)
 
-
-
-/*
- * nsIDOMTreeWalker Getters/Setters
- */
-
-NS_IMETHODIMP TreeWalker::GetRoot(nsIDOMNode * *aRoot)
-{
-    NS_ADDREF(*aRoot = Root()->AsDOMNode());
-    return NS_OK;
-}
-
-NS_IMETHODIMP TreeWalker::GetWhatToShow(uint32_t *aWhatToShow)
-{
-    *aWhatToShow = WhatToShow();
-    return NS_OK;
-}
-
-NS_IMETHODIMP TreeWalker::GetFilter(nsIDOMNodeFilter * *aFilter)
-{
-    NS_ENSURE_ARG_POINTER(aFilter);
-
-    *aFilter = mFilter.ToXPCOMCallback().take();
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP TreeWalker::GetCurrentNode(nsIDOMNode * *aCurrentNode)
-{
-    if (mCurrentNode) {
-        return CallQueryInterface(mCurrentNode, aCurrentNode);
-    }
-
-    *aCurrentNode = nullptr;
-
-    return NS_OK;
-}
-NS_IMETHODIMP TreeWalker::SetCurrentNode(nsIDOMNode * aCurrentNode)
-{
-    NS_ENSURE_TRUE(aCurrentNode, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    NS_ENSURE_TRUE(mRoot, NS_ERROR_UNEXPECTED);
-
-    nsCOMPtr<nsINode> node = do_QueryInterface(aCurrentNode);
-    NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
-
-    ErrorResult rv;
-    SetCurrentNode(*node, rv);
-    return rv.StealNSResult();
-}
-
 void
 TreeWalker::SetCurrentNode(nsINode& aNode, ErrorResult& aResult)
 {
@@ -114,15 +64,6 @@ TreeWalker::SetCurrentNode(nsINode& aNode, ErrorResult& aResult)
     }
 
     mCurrentNode = &aNode;
-}
-
-/*
- * nsIDOMTreeWalker functions
- */
-
-NS_IMETHODIMP TreeWalker::ParentNode(nsIDOMNode **_retval)
-{
-    return ImplNodeGetter(&TreeWalker::ParentNode, _retval);
 }
 
 already_AddRefed<nsINode>
@@ -148,20 +89,10 @@ TreeWalker::ParentNode(ErrorResult& aResult)
     return nullptr;
 }
 
-NS_IMETHODIMP TreeWalker::FirstChild(nsIDOMNode **_retval)
-{
-    return ImplNodeGetter(&TreeWalker::FirstChild, _retval);
-}
-
 already_AddRefed<nsINode>
 TreeWalker::FirstChild(ErrorResult& aResult)
 {
     return FirstChildInternal(false, aResult);
-}
-
-NS_IMETHODIMP TreeWalker::LastChild(nsIDOMNode **_retval)
-{
-    return ImplNodeGetter(&TreeWalker::LastChild, _retval);
 }
 
 already_AddRefed<nsINode>
@@ -170,31 +101,16 @@ TreeWalker::LastChild(ErrorResult& aResult)
     return FirstChildInternal(true, aResult);
 }
 
-NS_IMETHODIMP TreeWalker::PreviousSibling(nsIDOMNode **_retval)
-{
-    return ImplNodeGetter(&TreeWalker::PreviousSibling, _retval);
-}
-
 already_AddRefed<nsINode>
 TreeWalker::PreviousSibling(ErrorResult& aResult)
 {
     return NextSiblingInternal(true, aResult);
 }
 
-NS_IMETHODIMP TreeWalker::NextSibling(nsIDOMNode **_retval)
-{
-    return ImplNodeGetter(&TreeWalker::NextSibling, _retval);
-}
-
 already_AddRefed<nsINode>
 TreeWalker::NextSibling(ErrorResult& aResult)
 {
     return NextSiblingInternal(false, aResult);
-}
-
-NS_IMETHODIMP TreeWalker::PreviousNode(nsIDOMNode **_retval)
-{
-    return ImplNodeGetter(&TreeWalker::PreviousNode, _retval);
 }
 
 already_AddRefed<nsINode>
@@ -248,11 +164,6 @@ TreeWalker::PreviousNode(ErrorResult& aResult)
     }
 
     return nullptr;
-}
-
-NS_IMETHODIMP TreeWalker::NextNode(nsIDOMNode **_retval)
-{
-    return ImplNodeGetter(&TreeWalker::NextNode, _retval);
 }
 
 already_AddRefed<nsINode>
