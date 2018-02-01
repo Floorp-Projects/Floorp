@@ -131,7 +131,7 @@ CompositorVsyncScheduler::PostCompositeTask(TimeStamp aCompositeTimestamp)
       &CompositorVsyncScheduler::Composite,
       aCompositeTimestamp);
     mCurrentCompositeTask = task;
-    ScheduleTask(task.forget(), 0);
+    ScheduleTask(task.forget());
   }
 }
 
@@ -206,7 +206,7 @@ CompositorVsyncScheduler::SetNeedsComposite()
       this,
       &CompositorVsyncScheduler::SetNeedsComposite);
     mSetNeedsCompositeTask = task;
-    ScheduleTask(task.forget(), 0);
+    ScheduleTask(task.forget());
     return;
   } else {
     MonitorAutoLock lock(mSetNeedsCompositeMonitor);
@@ -361,12 +361,10 @@ CompositorVsyncScheduler::DispatchVREvents(TimeStamp aVsyncTimestamp)
 }
 
 void
-CompositorVsyncScheduler::ScheduleTask(already_AddRefed<CancelableRunnable> aTask,
-                                       int aTime)
+CompositorVsyncScheduler::ScheduleTask(already_AddRefed<CancelableRunnable> aTask)
 {
   MOZ_ASSERT(CompositorThreadHolder::Loop());
-  MOZ_ASSERT(aTime >= 0);
-  CompositorThreadHolder::Loop()->PostDelayedTask(Move(aTask), aTime);
+  CompositorThreadHolder::Loop()->PostDelayedTask(Move(aTask), 0);
 }
 
 void
