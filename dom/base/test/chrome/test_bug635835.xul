@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=635835
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
 SimpleTest.waitForExplicitFinish();
-const SHOW_ALL = Components.interfaces.nsIDOMNodeFilter.SHOW_ALL;
+const SHOW_ALL = NodeFilter.SHOW_ALL;
 
 addLoadEvent(function() {
   var walker = document.createTreeWalker(document, SHOW_ALL, null);

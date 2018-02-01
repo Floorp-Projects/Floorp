@@ -510,35 +510,35 @@ public:
     rv = DisablePacketDump(level, type, sending);
   }
 
-  nsresult GetPeerIdentity(nsAString& peerIdentity)
+  void GetPeerIdentity(nsAString& peerIdentity)
   {
     if (mPeerIdentity) {
       peerIdentity = mPeerIdentity->ToString();
-      return NS_OK;
     }
 
     peerIdentity.SetIsVoid(true);
-    return NS_OK;
   }
 
   const PeerIdentity* GetPeerIdentity() const { return mPeerIdentity; }
-  nsresult SetPeerIdentity(const nsAString& peerIdentity);
+  NS_IMETHODIMP_TO_ERRORRESULT(SetPeerIdentity, ErrorResult& rv,
+			       const nsAString& peerIdentity)
+  {
+    rv = SetPeerIdentity(peerIdentity);
+  }
 
   const std::string& GetIdAsAscii() const
   {
     return mName;
   }
 
-  nsresult GetId(nsAString& id)
+  void GetId(nsAString& id)
   {
     id = NS_ConvertASCIItoUTF16(mName.c_str());
-    return NS_OK;
   }
 
-  nsresult SetId(const nsAString& id)
+  void SetId(const nsAString& id)
   {
     mName = NS_ConvertUTF16toUTF8(id).get();
-    return NS_OK;
   }
 
   // this method checks to see if we've made a promise to protect media.
@@ -553,13 +553,13 @@ public:
     delete[] tmp;
   }
 
-  NS_IMETHODIMP GetLocalDescription(nsAString& aSDP);
-  NS_IMETHODIMP GetCurrentLocalDescription(nsAString& aSDP);
-  NS_IMETHODIMP GetPendingLocalDescription(nsAString& aSDP);
+  void GetLocalDescription(nsAString& aSDP);
+  void GetCurrentLocalDescription(nsAString& aSDP);
+  void GetPendingLocalDescription(nsAString& aSDP);
 
-  NS_IMETHODIMP GetRemoteDescription(nsAString& aSDP);
-  NS_IMETHODIMP GetCurrentRemoteDescription(nsAString& aSDP);
-  NS_IMETHODIMP GetPendingRemoteDescription(nsAString& aSDP);
+  void GetRemoteDescription(nsAString& aSDP);
+  void GetCurrentRemoteDescription(nsAString& aSDP);
+  void GetPendingRemoteDescription(nsAString& aSDP);
 
   NS_IMETHODIMP SignalingState(mozilla::dom::PCImplSignalingState* aState);
 

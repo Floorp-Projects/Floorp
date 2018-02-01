@@ -17,6 +17,7 @@
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
+#include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/TreeWalker.h"
 #include "nsComponentManagerUtils.h"
@@ -32,7 +33,6 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMWindowUtils.h"
@@ -696,8 +696,7 @@ PersistNodeFixup::FixupAttribute(nsINode* aNode,
         attr->GetValue(uri);
         rv = FixupURI(uri);
         if (NS_SUCCEEDED(rv)) {
-            IgnoredErrorResult err;
-            attr->SetValue(uri, err);
+            attr->SetValue(uri, IgnoreErrors());
         }
     }
 
@@ -749,8 +748,7 @@ PersistNodeFixup::FixupAnchor(nsINode *aNode)
             nsAutoCString uriSpec;
             rv = newURI->GetSpec(uriSpec);
             NS_ENSURE_SUCCESS(rv, rv);
-            IgnoredErrorResult err;
-            attr->SetValue(NS_ConvertUTF8toUTF16(uriSpec), err);
+            attr->SetValue(NS_ConvertUTF8toUTF16(uriSpec), IgnoreErrors());
         }
     }
 
@@ -1128,19 +1126,16 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
                     nodeAsInput->GetValue(valueStr, dom::CallerType::System);
                     // Avoid superfluous value="" serialization
                     if (valueStr.IsEmpty()) {
-                      IgnoredErrorResult ignored;
-                      outElt->RemoveAttribute(valueAttr, ignored);
+                      outElt->RemoveAttribute(valueAttr, IgnoreErrors());
                     } else {
-                      IgnoredErrorResult ignored;
-                      outElt->SetAttribute(valueAttr, valueStr, ignored);
+                      outElt->SetAttribute(valueAttr, valueStr, IgnoreErrors());
                     }
                     break;
                 case NS_FORM_INPUT_CHECKBOX:
                 case NS_FORM_INPUT_RADIO:
                     {
                         bool checked = nodeAsInput->Checked();
-                        IgnoredErrorResult ignored;
-                        outElt->SetDefaultChecked(checked, ignored);
+                        outElt->SetDefaultChecked(checked, IgnoreErrors());
                     }
                     break;
                 default:
@@ -1160,8 +1155,7 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
             nsAutoString valueStr;
             nodeAsTextArea->GetValue(valueStr);
 
-            IgnoredErrorResult err;
-            (*aNodeOut)->SetTextContent(valueStr, err);
+            (*aNodeOut)->SetTextContent(valueStr, IgnoreErrors());
         }
         return rv;
     }
@@ -1173,8 +1167,7 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
             dom::HTMLOptionElement* outElt =
                 dom::HTMLOptionElement::FromContent((*aNodeOut)->AsContent());
             bool selected = nodeAsOption->Selected();
-            IgnoredErrorResult ignored;
-            outElt->SetDefaultSelected(selected, ignored);
+            outElt->SetDefaultSelected(selected, IgnoreErrors());
         }
         return rv;
     }
@@ -1193,11 +1186,11 @@ WebBrowserPersistLocalDocument::ReadResources(nsIWebBrowserPersistResourceVisito
     NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
 
     ErrorResult err;
-    nsCOMPtr<nsIDOMTreeWalker> walker =
+    RefPtr<dom::TreeWalker> walker =
         mDocument->CreateTreeWalker(*mDocument,
-            nsIDOMNodeFilter::SHOW_ELEMENT |
-            nsIDOMNodeFilter::SHOW_DOCUMENT |
-            nsIDOMNodeFilter::SHOW_PROCESSING_INSTRUCTION,
+            dom::NodeFilterBinding::SHOW_ELEMENT |
+            dom::NodeFilterBinding::SHOW_DOCUMENT |
+            dom::NodeFilterBinding::SHOW_PROCESSING_INSTRUCTION,
             nullptr, err);
 
     if (NS_WARN_IF(err.Failed())) {
@@ -1206,18 +1199,20 @@ WebBrowserPersistLocalDocument::ReadResources(nsIWebBrowserPersistResourceVisito
     MOZ_ASSERT(walker);
 
     RefPtr<ResourceReader> reader = new ResourceReader(this, aVisitor);
-    nsCOMPtr<nsIDOMNode> currentNode;
-    walker->GetCurrentNode(getter_AddRefs(currentNode));
-    while (currentNode) {
-        rv = reader->OnWalkDOMNode(currentNode);
+    nsCOMPtr<nsINode> currentNode = walker->CurrentNode();
+    do {
+        rv = reader->OnWalkDOMNode(currentNode->AsDOMNode());
         if (NS_WARN_IF(NS_FAILED(rv))) {
             break;
         }
-        rv = walker->NextNode(getter_AddRefs(currentNode));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
+
+        ErrorResult err;
+        currentNode = walker->NextNode(err);
+        if (NS_WARN_IF(err.Failed())) {
+            err.SuppressException();
             break;
         }
-    }
+    } while (currentNode);
     reader->DocumentDone(rv);
     // If NS_FAILED(rv), it was / will be reported by an EndVisit call
     // via DocumentDone.  This method must return a failure if and

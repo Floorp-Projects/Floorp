@@ -540,7 +540,7 @@ var ViewSourceContent = {
 
     // Walk through each of the text nodes and count newlines.
     let treewalker = content.document
-        .createTreeWalker(pre, Ci.nsIDOMNodeFilter.SHOW_TEXT, null);
+        .createTreeWalker(pre, 4 /* NodeFilter.SHOW_TEXT */, null);
 
     // The column number of the first character in the current text node.
     let firstCol = 1;

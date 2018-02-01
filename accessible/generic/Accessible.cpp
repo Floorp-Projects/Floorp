@@ -31,9 +31,7 @@
 #include "XULDocument.h"
 
 #include "nsIDOMElement.h"
-#include "nsIDOMNodeFilter.h"
 #include "nsIDOMKeyEvent.h"
-#include "nsIDOMTreeWalker.h"
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULLabelElement.h"

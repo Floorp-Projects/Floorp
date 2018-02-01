@@ -379,9 +379,9 @@ inline void
 JSFatInlineString::finalize(js::FreeOp* fop)
 {
     MOZ_ASSERT(getAllocKind() == js::gc::AllocKind::FAT_INLINE_STRING);
+    MOZ_ASSERT(isInline());
 
-    if (!isInline())
-        fop->free_(nonInlineCharsRaw());
+    // Nothing to do.
 }
 
 inline void
@@ -389,11 +389,19 @@ JSAtom::finalize(js::FreeOp* fop)
 {
     MOZ_ASSERT(JSString::isAtom());
     MOZ_ASSERT(JSString::isFlat());
-    MOZ_ASSERT(getAllocKind() == js::gc::AllocKind::ATOM ||
-               getAllocKind() == js::gc::AllocKind::FAT_INLINE_ATOM);
+    MOZ_ASSERT(getAllocKind() == js::gc::AllocKind::ATOM);
 
     if (!isInline())
         fop->free_(nonInlineCharsRaw());
+}
+
+inline void
+js::FatInlineAtom::finalize(js::FreeOp* fop)
+{
+    MOZ_ASSERT(JSString::isAtom());
+    MOZ_ASSERT(getAllocKind() == js::gc::AllocKind::FAT_INLINE_ATOM);
+
+    // Nothing to do.
 }
 
 inline void

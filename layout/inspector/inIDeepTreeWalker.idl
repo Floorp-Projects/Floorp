@@ -5,7 +5,6 @@
 #include "nsISupports.idl"
 
 interface nsIDOMNode;
-interface nsIDOMNodeFilter;
 
 // Note: the iterator does not handle DOM mutations gracefully. So if
 // the underlying DOM we are iterating over is changed, the behavior
@@ -25,7 +24,7 @@ interface inIDeepTreeWalker : nsISupports
 
   void init(in nsIDOMNode aRoot, in unsigned long aWhatToShow);
 
-  // Methods and attributes from nsIDOMTreeWalker, which is not scriptable.
+  // Methods and attributes that look like TreeWalker.
   // Note: normally parentNode cannot go further up on the tree once it reached
   // the root, but setting currentNode does not have this limitation. If currentNode
   // is set to a node that does not have the root as its ancestor the walk can be
@@ -33,7 +32,6 @@ interface inIDeepTreeWalker : nsISupports
   // limitation for the parentNode will work again.
   readonly attribute nsIDOMNode       root;
   readonly attribute unsigned long    whatToShow;
-  readonly attribute nsIDOMNodeFilter filter;
            attribute nsIDOMNode       currentNode;
 
   nsIDOMNode         parentNode();

@@ -7154,8 +7154,7 @@ MaybeGetListBoxBodyFrame(nsIContent* aContainer, nsIContent* aChild)
   if (IsXULListBox(aContainer) &&
       aChild->IsXULElement(nsGkAtoms::listitem)) {
     RefPtr<nsXULElement> xulElement = nsXULElement::FromContent(aContainer);
-    IgnoredErrorResult ignored;
-    nsCOMPtr<nsIBoxObject> boxObject = xulElement->GetBoxObject(ignored);
+    nsCOMPtr<nsIBoxObject> boxObject = xulElement->GetBoxObject(IgnoreErrors());
     nsCOMPtr<nsPIListBoxObject> listBoxObject = do_QueryInterface(boxObject);
     if (listBoxObject) {
       return listBoxObject->GetListBoxBody(false);

@@ -672,8 +672,7 @@ AudioContext::Shutdown()
   // We don't want to touch promises if the global is going away soon.
   if (!mIsDisconnecting) {
     if (!mIsOffline) {
-      IgnoredErrorResult dummy;
-      RefPtr<Promise> ignored = Close(dummy);
+      RefPtr<Promise> ignored = Close(IgnoreErrors());
     }
 
     for (auto p : mPromiseGripArray) {

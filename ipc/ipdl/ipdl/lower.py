@@ -9,7 +9,7 @@ from collections import OrderedDict
 import ipdl.ast
 import ipdl.builtin
 from ipdl.cxx.ast import *
-from ipdl.type import ActorType, TypeVisitor, builtinHeaderIncludes
+from ipdl.type import ActorType, UnionType, TypeVisitor, builtinHeaderIncludes
 
 ##-----------------------------------------------------------------------------
 ## "Public" interface to lowering
@@ -602,12 +602,21 @@ def _cxxTypeNeedsMove(ipdltype):
                                   ipdltype.isByteBuf() or
                                   ipdltype.isEndpoint())
 
+def _cxxTypeCanMove(ipdltype):
+    return not (ipdltype.isIPDL() and ipdltype.isActor())
+
 def _cxxMoveRefType(ipdltype, side):
     t = _cxxBareType(ipdltype, side)
     if _cxxTypeNeedsMove(ipdltype):
         t.ref = 2
         return t
     return _cxxConstRefType(ipdltype, side)
+
+def _cxxForceMoveRefType(ipdltype, side):
+    assert _cxxTypeCanMove(ipdltype)
+    t = _cxxBareType(ipdltype, side)
+    t.ref = 2
+    return t
 
 def _cxxPtrToType(ipdltype, side):
     t = _cxxBareType(ipdltype, side)
@@ -697,6 +706,11 @@ necessarily a C++ reference."""
         t.ptr = 1
         return t
 
+    def forceMoveType(self, side):
+        """Return this decl's C++ Type with forced move semantics."""
+        assert _cxxTypeCanMove(self.ipdltype)
+        return _cxxForceMoveRefType(self.ipdltype, side)
+
 ##--------------------------------------------------
 
 class HasFQName:
@@ -708,13 +722,6 @@ class _CompoundTypeComponent(_HybridDecl):
         _HybridDecl.__init__(self, ipdltype, name)
         self.side = side
         self.special = _hasVisibleActor(ipdltype)
-        self.recursive = ct.decl.type.mutuallyRecursiveWith(ipdltype)
-
-    def internalType(self):
-        if self.recursive:
-            return self.ptrToType()
-        else:
-            return self.bareType()
 
     # @override the following methods to pass |self.side| instead of
     # forcing the caller to remember which side we're declared to
@@ -731,6 +738,8 @@ class _CompoundTypeComponent(_HybridDecl):
         return _HybridDecl.constPtrToType(self, self.side)
     def inType(self, side=None):
         return _HybridDecl.inType(self, self.side)
+    def forceMoveType(self, side=None):
+        return _HybridDecl.forceMoveType(self, self.side)
 
 
 class StructDecl(ipdl.ast.StructDecl, HasFQName):
@@ -765,8 +774,6 @@ class _StructField(_CompoundTypeComponent):
         ref = self.memberVar()
         if thisexpr is not None:
             ref = ExprSelect(thisexpr, '.', ref.name)
-        if self.recursive:
-            ref = ExprDeref(ref)
         return ref
 
     def constRefExpr(self, thisexpr=None):
@@ -785,22 +792,6 @@ class _StructField(_CompoundTypeComponent):
 
     def memberVar(self):
         return ExprVar(self.name + '_')
-
-    def initStmts(self):
-        if self.recursive:
-            return [ StmtExpr(ExprAssn(self.memberVar(),
-                                       ExprNew(self.bareType()))) ]
-        elif self.ipdltype.isIPDL() and self.ipdltype.isActor():
-            return [ StmtExpr(ExprAssn(self.memberVar(),
-                                       ExprLiteral.NULL)) ]
-        else:
-            return []
-
-    def destructStmts(self):
-        if self.recursive:
-            return [ StmtExpr(ExprDelete(self.memberVar())) ]
-        else:
-            return []
 
 
 class UnionDecl(ipdl.ast.UnionDecl, HasFQName):
@@ -833,6 +824,11 @@ IPDL union type."""
             else:
                 self.other = _UnionMember(ipdltype, ud, _otherSide(side), self)
 
+        # To create a finite object with a mutually recursive type, a union must
+        # be present somewhere in the recursive loop. Because of that we only
+        # need to care about introducing indirections inside unions.
+        self.recursive = ud.decl.type.mutuallyRecursiveWith(ipdltype)
+
     def enum(self):
         return 'T' + self.flattypename
 
@@ -841,6 +837,12 @@ IPDL union type."""
 
     def enumvar(self):
         return ExprVar(self.enum())
+
+    def internalType(self):
+        if self.recursive:
+            return self.ptrToType()
+        else:
+            return self.bareType()
 
     def unionType(self):
         """Type used for storage in generated C union decl."""
@@ -1488,7 +1490,20 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             for headername in sorted(iter(aggregateTypeIncludes)):
                 hf.addthing(CppDirective('include', '"' + headername + '"'))
 
-        ipdl.ast.Visitor.visitTranslationUnit(self, tu)
+        # Manually run Visitor.visitTranslationUnit. For dependency resolution
+        # we need to handle structs and unions separately.
+        for cxxInc in tu.cxxIncludes:
+            cxxInc.accept(self)
+        for inc in tu.includes:
+            inc.accept(self)
+        self.generateStructsAndUnions(tu)
+        for using in tu.builtinUsing:
+            using.accept(self)
+        for using in tu.using:
+            using.accept(self)
+        if tu.protocol:
+            tu.protocol.accept(self)
+
         if tu.filetype == 'header':
             self.cppIncludeHeaders.append(_ipdlhHeaderName(tu))
 
@@ -1522,36 +1537,56 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             self.hdrfile.addthing(CppDirective(
                     'include', '"'+ _ipdlhHeaderName(inc.tu) +'.h"'))
 
-    def processStructOrUnionClass(self, su, which, forwarddecls, cls):
-        clsdecl, methoddefns = _splitClassDeclDefn(cls)
+    def generateStructsAndUnions(self, tu):
+        '''Generate the definitions for all structs and unions. This will
+        re-order the declarations if needed in the C++ code such that
+        dependencies have already been defined.'''
+        decls = OrderedDict()
+        for su in tu.structsAndUnions:
+            if isinstance(su, StructDecl):
+                which = 'struct'
+                forwarddecls, fulldecltypes, cls = _generateCxxStruct(su)
+            else:
+                assert isinstance(su, UnionDecl)
+                which = 'union'
+                forwarddecls, fulldecltypes, cls = _generateCxxUnion(su)
 
-        self.hdrfile.addthings(
-            [  Whitespace.NL ]
-            + forwarddecls
-            + [ Whitespace("""
+            clsdecl, methoddefns = _splitClassDeclDefn(cls)
+
+            # Store the declarations in the decls map so we can emit in
+            # dependency order.
+            decls[su.decl.type] = (
+                fulldecltypes,
+                [  Whitespace.NL ]
+                + forwarddecls
+                + [ Whitespace("""
 //-----------------------------------------------------------------------------
 // Declaration of the IPDL type |%s %s|
 //
 """% (which, su.name)),
-                _putInNamespaces(clsdecl, su.namespaces),
-            ])
+                    _putInNamespaces(clsdecl, su.namespaces),
+                ])
 
-        self.structUnionDefns.extend([
-            Whitespace("""
+            self.structUnionDefns.extend([
+                Whitespace("""
 //-----------------------------------------------------------------------------
 // Method definitions for the IPDL type |%s %s|
 //
 """% (which, su.name)),
-            _putInNamespaces(methoddefns, su.namespaces),
-        ])
+                _putInNamespaces(methoddefns, su.namespaces),
+            ])
 
-    def visitStructDecl(self, sd):
-        return self.processStructOrUnionClass(sd, 'struct',
-                                              *_generateCxxStruct(sd))
-
-    def visitUnionDecl(self, ud):
-        return self.processStructOrUnionClass(ud, 'union',
-                                              *_generateCxxUnion(ud))
+        # Generate the declarations structs in dependency order.
+        def gen_struct(deps, defn):
+            for dep in deps:
+                if dep in decls:
+                    d, t = decls[dep]
+                    del decls[dep]
+                    gen_struct(d, t)
+            self.hdrfile.addthings(defn)
+        while len(decls) > 0:
+            _, (d, t) = decls.popitem(False)
+            gen_struct(d, t)
 
     def visitProtocol(self, p):
         self.cppIncludeHeaders.append(_protocolHeaderName(self.protocol, ''))
@@ -1806,14 +1841,16 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
 
 class _ComputeTypeDeps(TypeVisitor):
     '''Pass that gathers the C++ types that a particular IPDL type
-(recursively) depends on.  There are two kinds of dependencies: (i)
+(recursively) depends on.  There are three kinds of dependencies: (i)
 types that need forward declaration; (ii) types that need a |using|
-stmt.  Some types generate both kinds.'''
+stmt; (iii) IPDL structs or unions which must be fully declared
+before this struct.  Some types generate multiple kinds.'''
 
     def __init__(self, fortype, unqualifiedTypedefs=False):
         ipdl.type.TypeVisitor.__init__(self)
         self.usingTypedefs = [ ]
         self.forwardDeclStmts = [ ]
+        self.fullDeclTypes = [ ]
         self.fortype = fortype
         self.unqualifiedTypedefs = unqualifiedTypedefs
 
@@ -1847,8 +1884,12 @@ stmt.  Some types generate both kinds.'''
         self.visited.add(su)
         self.maybeTypedef(su.fullname(), su.name())
 
-        if su.mutuallyRecursiveWith(self.fortype):
+        # Mutually recursive fields in unions are behind indirection, so we only
+        # need a forward decl, and don't need a full type declaration.
+        if isinstance(self.fortype, UnionType) and self.fortype.mutuallyRecursiveWith(su):
             self.forwardDeclStmts.append(_makeForwardDecl(su))
+        else:
+            self.fullDeclTypes.append(su)
 
         return defaultVisit(self, su)
 
@@ -1891,6 +1932,7 @@ def _generateCxxStruct(sd):
 
     usingTypedefs = gettypedeps.usingTypedefs
     forwarddeclstmts = gettypedeps.forwardDeclStmts
+    fulldecltypes = gettypedeps.fullDeclTypes
 
     struct = Class(sd.name, final=1)
     struct.addstmts([ Label.PRIVATE ]
@@ -1898,9 +1940,6 @@ def _generateCxxStruct(sd):
                     + [ Whitespace.NL, Label.PUBLIC ])
 
     constreftype = Type(sd.name, const=1, ref=1)
-    initvar = ExprVar('Init')
-    callinit = ExprCall(initvar)
-    assignvar = ExprVar('Assign')
 
     def fieldsAsParamList():
         return [ Decl(f.inType(), f.argVar().name) for f in sd.fields ]
@@ -1914,54 +1953,30 @@ def _generateCxxStruct(sd):
     # with the default ctor.
     if len(sd.fields):
         # Struct()
-        defctor = ConstructorDefn(ConstructorDecl(sd.name))
-        defctor.addstmt(StmtExpr(callinit))
-        defctor.memberinits = []
-        for f in sd.fields:
-          # Only generate default values for primitives.
-          if not (f.ipdltype.isCxx() and f.ipdltype.isAtom()):
-            continue
-          defctor.memberinits.append(ExprMemberInit(f.memberVar()))
+        defctor = ConstructorDefn(ConstructorDecl(sd.name, force_inline=1))
+
+        # We want to explicitly default-construct every member of the struct.
+        # This will initialize all primitives which wouldn't be initialized
+        # normally to their default values, and will initialize any actor member
+        # pointers to the correct default value of `nullptr`. Other C++ types
+        # with custom constructors must also provide a default constructor.
+        defctor.memberinits = [ ExprMemberInit(f.memberVar()) for f in sd.fields ]
         struct.addstmts([ defctor, Whitespace.NL ])
 
     # Struct(const field1& _f1, ...)
     valctor = ConstructorDefn(ConstructorDecl(sd.name,
                                               params=fieldsAsParamList(),
                                               force_inline=1))
-    valctor.addstmts([
-        StmtExpr(callinit),
-        StmtExpr(ExprCall(assignvar,
-                          args=[ f.argVar() for f in sd.fields ]))
-    ])
+    valctor.memberinits = [ ExprMemberInit(f.memberVar(),
+                                           args=[ f.argVar() ])
+                            for f in sd.fields ]
     struct.addstmts([ valctor, Whitespace.NL ])
 
-    # Struct(const Struct& _o)
-    ovar = ExprVar('_o')
-    copyctor = ConstructorDefn(ConstructorDecl(
-        sd.name,
-        params=[ Decl(constreftype, ovar.name) ],
-        force_inline=1))
-    copyctor.addstmts([
-        StmtExpr(callinit),
-        StmtExpr(assignFromOther(ovar))
-    ])
-    struct.addstmts([ copyctor, Whitespace.NL ])
-
-    # ~Struct()
-    dtor = DestructorDefn(DestructorDecl(sd.name))
-    for f in sd.fields:
-        dtor.addstmts(f.destructStmts())
-    struct.addstmts([ dtor, Whitespace.NL ])
-
-    # Struct& operator=(const Struct& _o)
-    opeq = MethodDefn(MethodDecl(
-        'operator=',
-        params=[ Decl(constreftype, ovar.name) ],
-        force_inline=1))
-    opeq.addstmt(StmtExpr(assignFromOther(ovar)))
-    struct.addstmts([ opeq, Whitespace.NL ])
+    # The default copy, move, and assignment constructors, and the default
+    # destructor, will do the right thing.
 
     # bool operator==(const Struct& _o)
+    ovar = ExprVar('_o')
     opeqeq = MethodDefn(MethodDecl(
         'operator==',
         params=[ Decl(constreftype, ovar.name) ],
@@ -2006,31 +2021,18 @@ def _generateCxxStruct(sd):
     # private:
     struct.addstmt(Label.PRIVATE)
 
-    # Init()
-    init = MethodDefn(MethodDecl(initvar.name))
-    for f in sd.fields:
-        init.addstmts(f.initStmts())
-    struct.addstmts([ init, Whitespace.NL ])
-
-    # Assign(const field1& _f1, ...)
-    assign = MethodDefn(MethodDecl(assignvar.name,
-                                   params=fieldsAsParamList()))
-    assign.addstmts([ StmtExpr(ExprAssn(f.refExpr(), f.argVar()))
-                      for f in sd.fields ])
-    struct.addstmts([ assign, Whitespace.NL ])
-
     # members
-    struct.addstmts([ StmtDecl(Decl(f.internalType(), f.memberVar().name))
+    struct.addstmts([ StmtDecl(Decl(f.bareType(), f.memberVar().name))
                       for f in sd.fields ])
 
-    return forwarddeclstmts, struct
+    return forwarddeclstmts, fulldecltypes, struct
 
 ##--------------------------------------------------
 
 def _generateCxxUnion(ud):
     # This Union class basically consists of a type (enum) and a
     # union for storage.  The union can contain POD and non-POD
-    # types.  Each type needs a copy ctor, assignment operator,
+    # types.  Each type needs a copy/move ctor, assignment operators,
     # and dtor.
     #
     # Rather than templating this class and only providing
@@ -2055,8 +2057,10 @@ def _generateCxxUnion(ud):
     # (public)
     #  - placement delete case for dtor
     #  - copy ctor
+    #  - move ctor
     #  - case in generic copy ctor
-    #  - operator= impl
+    #  - copy operator= impl
+    #  - move operator= impl
     #  - case in generic operator=
     #  - operator [type&]
     #  - operator [const type&] const
@@ -2067,6 +2071,7 @@ def _generateCxxUnion(ud):
     # const Union&, i.e., Union type with inparam semantics
     inClsType = Type(ud.name, const=1, ref=1)
     refClsType = Type(ud.name, ref=1)
+    rvalueRefClsType = Type(ud.name, ref=2)
     typetype = Type('Type')
     valuetype = Type('Value')
     mtypevar = ExprVar('mType')
@@ -2093,6 +2098,9 @@ def _generateCxxUnion(ud):
         ifdied.addifstmt(StmtExpr(memb.callCtor()))
         return ifdied
 
+    def voidCast(expr):
+        return ExprCast(expr, Type.VOID, static=1)
+
     # compute all the typedefs and forward decls we need to make
     gettypedeps = _ComputeTypeDeps(ud.decl.type)
     for c in ud.components:
@@ -2100,6 +2108,7 @@ def _generateCxxUnion(ud):
 
     usingTypedefs = gettypedeps.usingTypedefs
     forwarddeclstmts = gettypedeps.forwardDeclStmts
+    fulldecltypes = gettypedeps.fullDeclTypes
 
     # the |Type| enum, used to switch on the discunion's real type
     cls.addstmt(Label.PUBLIC)
@@ -2211,7 +2220,7 @@ def _generateCxxUnion(ud):
         Whitespace.NL
     ])
 
-    # Union(const T&) copy ctors
+    # Union(const T&) copy & Union(T&&) move ctors
     othervar = ExprVar('aOther')
     for c in ud.components:
         copyctor = ConstructorDefn(ConstructorDecl(
@@ -2220,6 +2229,15 @@ def _generateCxxUnion(ud):
             StmtExpr(c.callCtor(othervar)),
             StmtExpr(ExprAssn(mtypevar, c.enumvar())) ])
         cls.addstmts([ copyctor, Whitespace.NL ])
+
+        if not _cxxTypeCanMove(c.ipdltype):
+            continue
+        movector = ConstructorDefn(ConstructorDecl(
+            ud.name, params=[ Decl(c.forceMoveType(), othervar.name) ]))
+        movector.addstmts([
+            StmtExpr(c.callCtor(ExprMove(othervar))),
+            StmtExpr(ExprAssn(mtypevar, c.enumvar())) ])
+        cls.addstmts([ movector, Whitespace.NL ])
 
     # Union(const Union&) copy ctor
     copyctor = ConstructorDefn(ConstructorDecl(
@@ -2247,12 +2265,49 @@ def _generateCxxUnion(ud):
     ])
     cls.addstmts([ copyctor, Whitespace.NL ])
 
+    # Union(Union&&) move ctor
+    movector = ConstructorDefn(ConstructorDecl(
+        ud.name, params=[ Decl(rvalueRefClsType, othervar.name) ]))
+    othertypevar = ExprVar("t")
+    moveswitch = StmtSwitch(othertypevar)
+    for c in ud.components:
+        case = StmtBlock()
+        if c.recursive:
+            # This is sound as we set othervar.mTypeVar to T__None after the
+            # switch. The pointer in the union will be left dangling.
+            case.addstmts([
+                # ptr_C() = other.ptr_C()
+                StmtExpr(ExprAssn(c.callGetPtr(),
+                                  ExprCall(ExprSelect(othervar, '.', ExprVar(c.getPtrName())))))
+            ])
+        else:
+            case.addstmts([
+                # new ... (Move(other.get_C()))
+                StmtExpr(c.callCtor(ExprMove(ExprCall(ExprSelect(othervar, '.', c.getTypeName()))))),
+                # other.MaybeDestroy(T__None)
+                StmtExpr(voidCast(ExprCall(ExprSelect(othervar, '.', maybedtorvar), args=[ tnonevar ]))),
+            ])
+        case.addstmts([ StmtBreak() ])
+        moveswitch.addcase(CaseLabel(c.enum()), case)
+    moveswitch.addcase(CaseLabel(tnonevar.name),
+                       StmtBlock([ StmtBreak() ]))
+    moveswitch.addcase(
+        DefaultLabel(),
+        StmtBlock([ _logicError('unreached'), StmtReturn() ]))
+    movector.addstmts([
+        StmtExpr(callAssertSanity(uvar=othervar)),
+        StmtDecl(Decl(typetype, othertypevar.name), init=ud.callType(othervar)),
+        moveswitch,
+        StmtExpr(ExprAssn(ExprSelect(othervar, '.', mtypevar), tnonevar)),
+        StmtExpr(ExprAssn(mtypevar, othertypevar))
+    ])
+    cls.addstmts([ movector, Whitespace.NL ])
+
     # ~Union()
     dtor = DestructorDefn(DestructorDecl(ud.name))
     # The void cast prevents Coverity from complaining about missing return
     # value checks.
-    dtor.addstmt(StmtExpr(ExprCast(callMaybeDestroy(tnonevar), Type.VOID,
-                                   static=1)))
+    dtor.addstmt(StmtExpr(voidCast(callMaybeDestroy(tnonevar))))
     cls.addstmts([ dtor, Whitespace.NL ])
 
     # type()
@@ -2261,9 +2316,10 @@ def _generateCxxUnion(ud):
     typemeth.addstmt(StmtReturn(mtypevar))
     cls.addstmts([ typemeth, Whitespace.NL ])
 
-    # Union& operator=(const T&) methods
+    # Union& operator= methods
     rhsvar = ExprVar('aRhs')
     for c in ud.components:
+        # Union& operator=(const T&)
         opeq = MethodDefn(MethodDecl(
             'operator=',
             params=[ Decl(c.inType(), rhsvar.name) ],
@@ -2272,6 +2328,23 @@ def _generateCxxUnion(ud):
             # might need to placement-delete old value first
             maybeReconstruct(c, c.enumvar()),
             StmtExpr(c.callOperatorEq(rhsvar)),
+            StmtExpr(ExprAssn(mtypevar, c.enumvar())),
+            StmtReturn(ExprDeref(ExprVar.THIS))
+        ])
+        cls.addstmts([ opeq, Whitespace.NL ])
+
+        # Union& operator=(T&&)
+        if not _cxxTypeCanMove(c.ipdltype):
+            continue
+
+        opeq = MethodDefn(MethodDecl(
+            'operator=',
+            params=[ Decl(c.forceMoveType(), rhsvar.name) ],
+            ret=refClsType))
+        opeq.addstmts([
+            # might need to placement-delete old value first
+            maybeReconstruct(c, c.enumvar()),
+            StmtExpr(c.callOperatorEq(ExprMove(rhsvar))),
             StmtExpr(ExprAssn(mtypevar, c.enumvar())),
             StmtReturn(ExprDeref(ExprVar.THIS))
         ])
@@ -2308,6 +2381,51 @@ def _generateCxxUnion(ud):
         StmtExpr(callAssertSanity(uvar=rhsvar)),
         StmtDecl(Decl(typetype, rhstypevar.name), init=ud.callType(rhsvar)),
         opeqswitch,
+        StmtExpr(ExprAssn(mtypevar, rhstypevar)),
+        StmtReturn(ExprDeref(ExprVar.THIS))
+    ])
+    cls.addstmts([ opeq, Whitespace.NL ])
+
+    # Union& operator=(Union&&)
+    opeq = MethodDefn(MethodDecl(
+        'operator=',
+        params=[ Decl(rvalueRefClsType, rhsvar.name) ],
+        ret=refClsType))
+    rhstypevar = ExprVar('t')
+    opeqswitch = StmtSwitch(rhstypevar)
+    for c in ud.components:
+        case = StmtBlock()
+        if c.recursive:
+            case.addstmts([
+                StmtExpr(voidCast(callMaybeDestroy(tnonevar))),
+                StmtExpr(ExprAssn(c.callGetPtr(),
+                                  ExprCall(ExprSelect(rhsvar, '.', ExprVar(c.getPtrName()))))),
+            ])
+        else:
+            case.addstmts([
+                maybeReconstruct(c, rhstypevar),
+                StmtExpr(c.callOperatorEq(
+                    ExprMove(ExprCall(ExprSelect(rhsvar, '.', c.getTypeName()))))),
+                # other.MaybeDestroy(T__None)
+                StmtExpr(voidCast(ExprCall(ExprSelect(rhsvar, '.', maybedtorvar), args=[ tnonevar ]))),
+            ])
+        case.addstmts([ StmtBreak() ])
+        opeqswitch.addcase(CaseLabel(c.enum()), case)
+    opeqswitch.addcase(
+        CaseLabel(tnonevar.name),
+        # The void cast prevents Coverity from complaining about missing return
+        # value checks.
+        StmtBlock([ StmtExpr(voidCast(callMaybeDestroy(rhstypevar))),
+                    StmtBreak() ])
+    )
+    opeqswitch.addcase(
+        DefaultLabel(),
+        StmtBlock([ _logicError('unreached'), StmtBreak() ]))
+    opeq.addstmts([
+        StmtExpr(callAssertSanity(uvar=rhsvar)),
+        StmtDecl(Decl(typetype, rhstypevar.name), init=ud.callType(rhsvar)),
+        opeqswitch,
+        StmtExpr(ExprAssn(ExprSelect(rhsvar, '.', mtypevar), tnonevar)),
         StmtExpr(ExprAssn(mtypevar, rhstypevar)),
         StmtReturn(ExprDeref(ExprVar.THIS))
     ])
@@ -2397,7 +2515,7 @@ def _generateCxxUnion(ud):
         StmtDecl(Decl(typetype, mtypevar.name))
     ])
 
-    return forwarddeclstmts, cls
+    return forwarddeclstmts, fulldecltypes, cls
 
 ##-----------------------------------------------------------------------------
 

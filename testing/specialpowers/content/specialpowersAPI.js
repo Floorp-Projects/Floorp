@@ -2195,7 +2195,7 @@ SpecialPowersAPI.prototype = {
     let walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"].
                  createInstance(Ci.inIDeepTreeWalker);
     walker.showAnonymousContent = showAnonymousContent;
-    walker.init(node.ownerDocument, Ci.nsIDOMNodeFilter.SHOW_ALL);
+    walker.init(node.ownerDocument, 0xFFFFFFFF /* NodeFilter.SHOW_ALL */);
     walker.currentNode = node;
     return {
       get firstChild() {

@@ -909,13 +909,11 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
         // same editor object, instead of creating a new one.
         RefPtr<HTMLEditor> htmlEditor = mDocShell->GetHTMLEditor();
         Unused << htmlEditor;
-        {
-          IgnoredErrorResult rv;
-          htmlDoc->SetDesignMode(NS_LITERAL_STRING("off"), Nothing(), rv);
-        }
+        htmlDoc->SetDesignMode(NS_LITERAL_STRING("off"), Nothing(),
+                               IgnoreErrors());
 
-        IgnoredErrorResult rv;
-        htmlDoc->SetDesignMode(NS_LITERAL_STRING("on"), Nothing(), rv);
+        htmlDoc->SetDesignMode(NS_LITERAL_STRING("on"), Nothing(),
+                               IgnoreErrors());
       } else {
         // Re-initialize the presentation for contenteditable documents
         bool editable = false,

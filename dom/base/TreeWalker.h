@@ -5,13 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Implementation of DOM Traversal's nsIDOMTreeWalker
+ * Implementation of DOM Traversal's TreeWalker
  */
 
 #ifndef mozilla_dom_TreeWalker_h
 #define mozilla_dom_TreeWalker_h
 
-#include "nsIDOMTreeWalker.h"
+#include "nsISupports.h"
 #include "nsTraversal.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
@@ -23,17 +23,16 @@ class nsIDOMNode;
 namespace mozilla {
 namespace dom {
 
-class TreeWalker final : public nsIDOMTreeWalker, public nsTraversal
+class TreeWalker final : public nsISupports, public nsTraversal
 {
     virtual ~TreeWalker();
 
 public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_NSIDOMTREEWALKER
 
     TreeWalker(nsINode *aRoot,
                uint32_t aWhatToShow,
-               NodeFilterHolder aFilter);
+               NodeFilter* aFilter);
 
     NS_DECL_CYCLE_COLLECTION_CLASS(TreeWalker)
 
@@ -46,9 +45,9 @@ public:
     {
         return mWhatToShow;
     }
-    already_AddRefed<NodeFilter> GetFilter()
+    NodeFilter* GetFilter()
     {
-        return mFilter.ToWebIDLCallback();
+        return mFilter;
     }
     nsINode* CurrentNode() const
     {
@@ -89,19 +88,6 @@ private:
      */
     already_AddRefed<nsINode> NextSiblingInternal(bool aReversed,
                                                   ErrorResult& aResult);
-
-    // Implementation for our various XPCOM getters
-    typedef already_AddRefed<nsINode> (TreeWalker::*NodeGetter)(ErrorResult&);
-    inline nsresult ImplNodeGetter(NodeGetter aGetter, nsIDOMNode** aRetval)
-    {
-        mozilla::ErrorResult rv;
-        nsCOMPtr<nsINode> node = (this->*aGetter)(rv);
-        if (rv.Failed()) {
-            return rv.StealNSResult();
-        }
-        *aRetval = node ? node.forget().take()->AsDOMNode() : nullptr;
-        return NS_OK;
-    }
 };
 
 } // namespace dom

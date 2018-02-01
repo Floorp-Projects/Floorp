@@ -8,8 +8,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 this.EXPORTED_SYMBOLS = [ "TranslationDocument" ];
 
-const SHOW_ELEMENT = Ci.nsIDOMNodeFilter.SHOW_ELEMENT;
-const SHOW_TEXT = Ci.nsIDOMNodeFilter.SHOW_TEXT;
 const TEXT_NODE = Ci.nsIDOMNode.TEXT_NODE;
 
 ChromeUtils.import("resource://services-common/utils.js");

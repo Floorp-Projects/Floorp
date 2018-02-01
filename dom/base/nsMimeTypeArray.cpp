@@ -174,8 +174,7 @@ nsMimeTypeArray::EnsurePluginMimeTypes()
 
   RefPtr<Navigator> navigator = mWindow->Navigator();
 
-  IgnoredErrorResult rv;
-  nsPluginArray *pluginArray = navigator->GetPlugins(rv);
+  nsPluginArray *pluginArray = navigator->GetPlugins(IgnoreErrors());
   if (!pluginArray) {
     return;
   }

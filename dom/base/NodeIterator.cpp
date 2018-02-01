@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Implementation of DOM Traversal's nsIDOMNodeIterator
+ * Implementation of DOM Traversal's NodeIterator
  */
 
 #include "mozilla/dom/NodeIterator.h"
@@ -17,6 +17,7 @@
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
+#include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/NodeIteratorBinding.h"
 
 namespace mozilla {
@@ -138,8 +139,8 @@ void NodeIterator::NodePointer::MoveBackward(nsINode *aParent, nsINode *aNode)
 
 NodeIterator::NodeIterator(nsINode *aRoot,
                            uint32_t aWhatToShow,
-                           NodeFilterHolder aFilter) :
-    nsTraversal(aRoot, aWhatToShow, Move(aFilter)),
+                           NodeFilter* aFilter) :
+    nsTraversal(aRoot, aWhatToShow, aFilter),
     mPointer(mRoot, true)
 {
     aRoot->AddMutationObserver(this);
@@ -171,45 +172,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // QueryInterface implementation for NodeIterator
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(NodeIterator)
-    NS_INTERFACE_MAP_ENTRY(nsIDOMNodeIterator)
     NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNodeIterator)
+    NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(NodeIterator)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(NodeIterator)
-
-NS_IMETHODIMP NodeIterator::GetRoot(nsIDOMNode * *aRoot)
-{
-    nsCOMPtr<nsIDOMNode> root = Root()->AsDOMNode();
-    root.forget(aRoot);
-    return NS_OK;
-}
-
-NS_IMETHODIMP NodeIterator::GetWhatToShow(uint32_t *aWhatToShow)
-{
-    *aWhatToShow = WhatToShow();
-    return NS_OK;
-}
-
-NS_IMETHODIMP NodeIterator::GetFilter(nsIDOMNodeFilter **aFilter)
-{
-    NS_ENSURE_ARG_POINTER(aFilter);
-
-    *aFilter = mFilter.ToXPCOMCallback().take();
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP NodeIterator::NextNode(nsIDOMNode **_retval)
-{
-    return ImplNodeGetter(&NodeIterator::NextNode, _retval);
-}
-
-NS_IMETHODIMP NodeIterator::PreviousNode(nsIDOMNode **_retval)
-{
-    return ImplNodeGetter(&NodeIterator::PreviousNode, _retval);
-}
 
 already_AddRefed<nsINode>
 NodeIterator::NextOrPrevNode(NodePointer::MoveToMethodType aMove,
@@ -235,7 +203,7 @@ NodeIterator::NextOrPrevNode(NodePointer::MoveToMethodType aMove,
             return nullptr;
         }
 
-        if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
+        if (filtered == NodeFilterBinding::FILTER_ACCEPT) {
             mPointer = mWorkingPointer;
             return testNode.forget();
         }
@@ -244,25 +212,12 @@ NodeIterator::NextOrPrevNode(NodePointer::MoveToMethodType aMove,
     return nullptr;
 }
 
-NS_IMETHODIMP NodeIterator::Detach(void)
+void
+NodeIterator::Detach()
 {
     if (mRoot) {
         mRoot->OwnerDoc()->WarnOnceAbout(nsIDocument::eNodeIteratorDetach);
     }
-    return NS_OK;
-}
-
-NS_IMETHODIMP NodeIterator::GetReferenceNode(nsIDOMNode * *aRefNode)
-{
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(GetReferenceNode()));
-    node.forget(aRefNode);
-    return NS_OK;
-}
-
-NS_IMETHODIMP NodeIterator::GetPointerBeforeReferenceNode(bool *aBeforeNode)
-{
-    *aBeforeNode = PointerBeforeReferenceNode();
-    return NS_OK;
 }
 
 /*

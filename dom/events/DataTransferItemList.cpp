@@ -578,9 +578,8 @@ DataTransferItemList::GenerateFiles(FileList* aFiles,
     MOZ_ASSERT(found);
 
     if (item->Kind() == DataTransferItem::KIND_FILE) {
-      IgnoredErrorResult rv;
-      RefPtr<File> file = item->GetAsFile(*aFilesPrincipal, rv);
-      if (NS_WARN_IF(rv.Failed() || !file)) {
+      RefPtr<File> file = item->GetAsFile(*aFilesPrincipal, IgnoreErrors());
+      if (NS_WARN_IF(!file)) {
         continue;
       }
       aFiles->Append(file);

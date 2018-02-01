@@ -737,7 +737,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   ir->GetUnfilteredBody(getter_AddRefs(body));
   // Errors and redirects may not have a body.
   if (body) {
-    IgnoredErrorResult error;
+    ErrorResult error;
     response->SetBodyUsed(aCx, error);
     if (NS_WARN_IF(error.Failed())) {
       autoCancel.SetCancelErrorResult(aCx, error);
