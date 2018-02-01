@@ -100,37 +100,41 @@ EvalCert(const CERTCertificate* cert, const StaticFingerprints* fingerprints,
  * dynamicFingerprints array, or to false otherwise.
  */
 static nsresult
-EvalChain(const UniqueCERTCertList& certList,
+EvalChain(const RefPtr<nsNSSCertList>& certList,
           const StaticFingerprints* fingerprints,
           const nsTArray<nsCString>* dynamicFingerprints,
   /*out*/ bool& certListIntersectsPinset)
 {
   certListIntersectsPinset = false;
-  CERTCertificate* currentCert;
-
   if (!fingerprints && !dynamicFingerprints) {
     MOZ_ASSERT(false, "Must pass in at least one type of pinset");
     return NS_ERROR_FAILURE;
   }
 
-  CERTCertListNode* node;
-  for (node = CERT_LIST_HEAD(certList); !CERT_LIST_END(node, certList);
-       node = CERT_LIST_NEXT(node)) {
-    currentCert = node->cert;
-    MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
-           ("pkpin: certArray subject: '%s'\n", currentCert->subjectName));
-    MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
-           ("pkpin: certArray issuer: '%s'\n", currentCert->issuerName));
-    nsresult rv = EvalCert(currentCert, fingerprints, dynamicFingerprints,
-                           certListIntersectsPinset);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    if (certListIntersectsPinset) {
+  certList->ForEachCertificateInChain(
+    [&certListIntersectsPinset, &fingerprints, &dynamicFingerprints]
+      (nsCOMPtr<nsIX509Cert> aCert, bool aHasMore, /* out */ bool& aContinue) {
+      // We need an owning handle when calling nsIX509Cert::GetCert().
+      UniqueCERTCertificate nssCert(aCert->GetCert());
+      MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
+             ("pkpin: certArray subject: '%s'\n", nssCert->subjectName));
+      MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
+             ("pkpin: certArray issuer: '%s'\n", nssCert->issuerName));
+      nsresult rv = EvalCert(nssCert.get(), fingerprints, dynamicFingerprints,
+                             certListIntersectsPinset);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      if (certListIntersectsPinset) {
+        aContinue = false;
+      }
       return NS_OK;
-    }
+  });
+
+  if (!certListIntersectsPinset) {
+    MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug, ("pkpin: no matches found\n"));
   }
-  MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug, ("pkpin: no matches found\n"));
   return NS_OK;
 }
 
@@ -151,7 +155,7 @@ private:
 };
 
 nsresult
-PublicKeyPinningService::ChainMatchesPinset(const UniqueCERTCertList& certList,
+PublicKeyPinningService::ChainMatchesPinset(const RefPtr<nsNSSCertList>& certList,
                                             const nsTArray<nsCString>& aSHA256keys,
                                     /*out*/ bool& chainMatchesPinset)
 {
@@ -240,7 +244,7 @@ FindPinningInformation(const char* hostname, mozilla::pkix::Time time,
 // subject public key info data in the list and the most relevant non-expired
 // pinset for the host or there is no pinning information for the host.
 static nsresult
-CheckPinsForHostname(const UniqueCERTCertList& certList, const char* hostname,
+CheckPinsForHostname(const RefPtr<nsNSSCertList>& certList, const char* hostname,
                      bool enforceTestMode, mozilla::pkix::Time time,
                      const OriginAttributes& originAttributes,
              /*out*/ bool& chainHasValidPins,
@@ -305,11 +309,18 @@ CheckPinsForHostname(const UniqueCERTCertList& certList, const char* hostname,
     }
 
     // We only collect per-CA pinning statistics upon failures.
-    CERTCertListNode* rootNode = CERT_LIST_TAIL(certList);
+    nsCOMPtr<nsIX509Cert> rootCert;
+    rv = certList->GetRootCertificate(rootCert);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
     // Only log telemetry if the certificate list is non-empty.
-    if (!CERT_LIST_END(rootNode, certList)) {
-      if (!enforceTestModeResult && pinningTelemetryInfo) {
-        int32_t binNumber = RootCABinNumber(&rootNode->cert->derCert);
+    if (rootCert && !enforceTestModeResult && pinningTelemetryInfo) {
+      UniqueCERTCertificate rootCertObj =
+        UniqueCERTCertificate(rootCert.get()->GetCert());
+      if (rootCertObj) {
+        int32_t binNumber = RootCABinNumber(&rootCertObj->derCert);
         if (binNumber != ROOT_CERTIFICATE_UNKNOWN ) {
           pinningTelemetryInfo->accumulateForRoot = true;
           pinningTelemetryInfo->rootBucket = binNumber;
@@ -329,7 +340,7 @@ CheckPinsForHostname(const UniqueCERTCertList& certList, const char* hostname,
 
 nsresult
 PublicKeyPinningService::ChainHasValidPins(
-  const UniqueCERTCertList& certList,
+  const RefPtr<nsNSSCertList>& certList,
   const char* hostname,
   mozilla::pkix::Time time,
   bool enforceTestMode,
