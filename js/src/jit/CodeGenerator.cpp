@@ -175,11 +175,15 @@ typedef bool (*IonInICFn)(JSContext*, HandleScript, IonInIC*, HandleValue, Handl
 static const VMFunction IonInICInfo =
     FunctionInfo<IonInICFn>(IonInIC::update, "IonInIC::update");
 
-
 typedef bool (*IonInstanceOfICFn)(JSContext*, HandleScript, IonInstanceOfIC*,
                          HandleValue lhs, HandleObject rhs, bool* res);
 static const VMFunction IonInstanceOfInfo =
     FunctionInfo<IonInstanceOfICFn>(IonInstanceOfIC::update, "IonInstanceOfIC::update");
+
+typedef bool (*IonUnaryArithICFn)(JSContext* cx, HandleScript outerScript, IonUnaryArithIC* stub,
+                                    HandleValue val, MutableHandleValue res);
+static const VMFunction IonUnaryArithICInfo =
+    FunctionInfo<IonUnaryArithICFn>(IonUnaryArithIC::update, "IonUnaryArithIC::update");
 
 void
 CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
@@ -357,7 +361,22 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
         masm.jump(ool->rejoin());
         return;
       }
-      case CacheKind::UnaryArith:
+      case CacheKind::UnaryArith: {
+        IonUnaryArithIC* unaryArithIC = ic->asUnaryArithIC();
+
+        saveLive(lir);
+
+        pushArg(unaryArithIC->input());
+        icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
+        pushArg(ImmGCPtr(gen->info().script()));
+        callVM(IonUnaryArithICInfo, lir);
+
+        StoreValueTo(unaryArithIC->output()).generate(this);
+        restoreLiveIgnore(lir, StoreValueTo(unaryArithIC->output()).clobbered());
+
+        masm.jump(ool->rejoin());
+        return;
+      }
       case CacheKind::Call:
       case CacheKind::Compare:
       case CacheKind::TypeOf:
@@ -2760,6 +2779,16 @@ CodeGenerator::visitBinarySharedStub(LBinarySharedStub* lir)
     }
 }
 
+void
+CodeGenerator::visitUnaryCache(LUnaryCache* lir)
+{
+    LiveRegisterSet liveRegs = lir->safepoint()->liveRegs();
+    TypedOrValueRegister input = TypedOrValueRegister(ToValue(lir, LUnaryCache::Input));
+    ValueOperand output = ToOutValue(lir);
+
+    IonUnaryArithIC ic(liveRegs, input, output);
+    addIC(lir, allocateIC(ic));
+}
 
 void
 CodeGenerator::visitNullarySharedStub(LNullarySharedStub* lir)

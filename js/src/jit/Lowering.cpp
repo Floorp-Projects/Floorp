@@ -2533,6 +2533,17 @@ LIRGenerator::visitBinarySharedStub(MBinarySharedStub* ins)
 }
 
 void
+LIRGenerator::visitUnaryCache(MUnaryCache* ins)
+{
+    MDefinition* input = ins->getOperand(0);
+    MOZ_ASSERT(ins->type() == MIRType::Value);
+
+    LUnaryCache* lir = new(alloc()) LUnaryCache(useBox(input));
+    defineBox(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitNullarySharedStub(MNullarySharedStub* ins)
 {
     MOZ_ASSERT(ins->type() == MIRType::Value);
