@@ -66,6 +66,7 @@ this.SafeBrowsing = {
     Services.prefs.addObserver("privacy.trackingprotection", this);
     Services.prefs.addObserver("urlclassifier", this);
     Services.prefs.addObserver("plugins.flashBlock.enabled", this);
+    Services.prefs.addObserver("plugins.show_infobar", this);
 
     this.readPrefs();
     this.addMozEntries();
@@ -151,7 +152,7 @@ this.SafeBrowsing = {
   blockedEnabled:       false,
   trackingAnnotations:  false,
   flashBlockEnabled:    false,
-  flashInfobarListEnabled: true,
+  flashInfobarListEnabled: false,
 
   phishingLists:                [],
   malwareLists:                 [],
@@ -231,6 +232,7 @@ this.SafeBrowsing = {
     this.blockedEnabled = Services.prefs.getBoolPref("browser.safebrowsing.blockedURIs.enabled");
     this.trackingAnnotations = Services.prefs.getBoolPref("privacy.trackingprotection.annotate_channels");
     this.flashBlockEnabled = Services.prefs.getBoolPref("plugins.flashBlock.enabled");
+    this.flashInfobarListEnabled = Services.prefs.getBoolPref("plugins.show_infobar", false);
 
     let flashAllowTable, flashAllowExceptTable, flashTable,
         flashExceptTable, flashSubDocTable,
