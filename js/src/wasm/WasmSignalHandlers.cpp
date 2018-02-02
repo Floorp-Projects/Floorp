@@ -428,7 +428,7 @@ struct macos_arm_context {
 # define LR_sig(p) R31_sig(p)
 #endif
 
-#if defined(FP_sig) && defined(SP_sig) && defined(SP_sig)
+#if defined(PC_sig) && defined(FP_sig) && defined(SP_sig)
 # define KNOWS_MACHINE_STATE
 #endif
 
