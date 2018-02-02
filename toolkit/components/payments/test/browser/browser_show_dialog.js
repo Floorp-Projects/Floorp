@@ -48,6 +48,24 @@ add_task(async function test_show_manualAbort_dialog() {
 });
 
 add_task(async function test_show_completePayment() {
+  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
+                                          (subject, data) => data == "add");
+  let address = {
+    "given-name": "Timothy",
+    "additional-name": "John",
+    "family-name": "Berners-Lee",
+    organization: "World Wide Web Consortium",
+    "street-address": "32 Vassar Street\nMIT Room 32-G524",
+    "address-level2": "Cambridge",
+    "address-level1": "MA",
+    "postal-code": "02139",
+    country: "US",
+    tel: "+16172535702",
+    email: "timbl@example.org",
+  };
+  profileStorage.addresses.add(address);
+  await onChanged;
+
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: BLANK_PAGE_URL,
@@ -72,6 +90,20 @@ add_task(async function test_show_completePayment() {
     info("acknowledging the completion from the merchant page");
     let result = await ContentTask.spawn(browser, {}, PTU.ContentTasks.addCompletionHandler);
     is(result.response.methodName, "basic-card", "Check methodName");
+
+    let addressLines = address["street-address"].split("\n");
+    let actualShippingAddress = result.response.shippingAddress;
+    is(actualShippingAddress.addressLine[0], addressLines[0], "Address line 1 should match");
+    is(actualShippingAddress.addressLine[1], addressLines[1], "Address line 2 should match");
+    is(actualShippingAddress.country, address.country, "Country should match");
+    is(actualShippingAddress.region, address["address-level1"], "Region should match");
+    is(actualShippingAddress.city, address["address-level2"], "City should match");
+    is(actualShippingAddress.postalCode, address["postal-code"], "Zip code should match");
+    is(actualShippingAddress.organization, address.organization, "Org should match");
+    is(actualShippingAddress.recipient,
+       `${address["given-name"]} ${address["additional-name"]} ${address["family-name"]}`,
+       "Recipient country should match");
+    is(actualShippingAddress.phone, address.tel, "Phone should match");
 
     let methodDetails = result.methodDetails;
     is(methodDetails.cardholderName, "John Doe", "Check cardholderName");

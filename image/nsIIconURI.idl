@@ -49,10 +49,10 @@
 interface nsIMozIconURI : nsIURI
 {
   /// iconFile: the file URL contained within this moz-icon url, or null.
-  attribute nsIURL iconURL;
+  readonly attribute nsIURL iconURL;
 
   /// imageSize: The image area in square pixels, defaults to 16 if unspecified.
-  attribute unsigned long imageSize;
+  readonly attribute unsigned long imageSize;
 
   /// stockIcon: The stock icon name requested from the OS.
    readonly attribute ACString stockIcon;
@@ -64,7 +64,7 @@ interface nsIMozIconURI : nsIURI
    readonly attribute ACString iconState;
 
   /// contentType: A valid mime type, or the empty string.
-  attribute ACString contentType;
+  readonly attribute ACString contentType;
 
   /// fileExtension: The file extension of the file which we are looking up.
   readonly attribute ACString fileExtension;

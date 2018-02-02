@@ -199,6 +199,11 @@ class ScalarType:
                               .format(self._name, expires, BASE_DOC_URL))
 
     @property
+    def category(self):
+        """Get the category name"""
+        return self._category_name
+
+    @property
     def name(self):
         """Get the scalar name"""
         return self._name

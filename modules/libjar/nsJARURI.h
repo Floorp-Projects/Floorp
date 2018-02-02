@@ -71,6 +71,7 @@ public:
 
 protected:
     virtual ~nsJARURI();
+    nsresult SetJAREntry(const nsACString &entryPath);
 
     // enum used in a few places to specify how .ref attribute should be handled
     enum RefHandlingEnum {

@@ -6,8 +6,10 @@
 # in a file provided as a command-line argument.
 
 from __future__ import print_function
+from collections import OrderedDict
 from shared_telemetry_utils import StringTable, static_assert, ParserError
 
+import json
 import parse_scalars
 import sys
 
@@ -78,16 +80,48 @@ def write_scalar_tables(scalars, output):
                   "index overflow")
 
 
-def main(output, *filenames):
-    # Load the scalars first.
+def parse_scalar_definitions(filenames):
     if len(filenames) > 1:
         raise Exception('We don\'t support loading from more than one file.')
 
     try:
-        scalars = parse_scalars.load_scalars(filenames[0])
+        return parse_scalars.load_scalars(filenames[0])
     except ParserError as ex:
         print("\nError processing scalars:\n" + str(ex) + "\n")
         sys.exit(1)
+
+
+def generate_JSON_definitions(output, *filenames):
+    """ Write the scalar definitions to a JSON file.
+
+    :param output: the file to write the content to.
+    :param filenames: a list of filenames provided by the build system.
+           We only support a single file.
+    """
+    scalars = parse_scalar_definitions(filenames)
+
+    scalar_definitions = OrderedDict()
+    for scalar in scalars:
+        category = scalar.category
+
+        if category not in scalar_definitions:
+            scalar_definitions[category] = OrderedDict()
+
+        scalar_definitions[category][scalar.name] = OrderedDict({
+            'kind': scalar.nsITelemetry_kind,
+            'keyed': scalar.keyed,
+            'record_on_release': True if scalar.dataset == 'opt-out' else False,
+            # We don't expire dynamic-builtin scalars: they're only meant for
+            # use in local developer builds anyway. They will expire when rebuilding.
+            'expired': False,
+        })
+
+    json.dump(scalar_definitions, output)
+
+
+def main(output, *filenames):
+    # Load the scalars first.
+    scalars = parse_scalar_definitions(filenames)
 
     # Write the scalar data file.
     print(banner, file=output)

@@ -6,8 +6,15 @@ requestLongerTimeout(2);
 
 let extData = {
   manifest: {
-    "sidebar_action": {
-      "default_panel": "sidebar.html",
+    commands: {
+      _execute_sidebar_action: {
+        suggested_key: {
+          default: "Ctrl+Shift+I",
+        },
+      },
+    },
+    sidebar_action: {
+      default_panel: "sidebar.html",
     },
   },
   useAddonManager: "temporary",
@@ -109,6 +116,12 @@ add_task(async function sidebar_isOpen() {
   await extension1.awaitMessage("sidebar");
   await sendMessage(extension1, "isOpen", {result: true});
   let sidebar1ID = SidebarUI.currentID;
+
+  // Test that the key is set for the extension.
+  let button = document.getElementById(`button_${makeWidgetId(extension1.id)}-sidebar-action`);
+  ok(button.hasAttribute("key"), "The menu item has a key specified");
+  let key = document.getElementById(button.getAttribute("key"));
+  ok(key, "The key attribute finds the related key element");
 
   info("Load extension2");
   let extension2 = ExtensionTestUtils.loadExtension(extData);
