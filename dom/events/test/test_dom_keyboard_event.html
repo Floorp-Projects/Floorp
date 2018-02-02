@@ -17,6 +17,9 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests, window);
 
+const kStrictKeyPressEvents =
+  SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
+
 function testInitializingUntrustedEvent()
 {
   const kTests = [
@@ -207,86 +210,106 @@ function testInitializingUntrustedEvent()
 function testSynthesizedKeyLocation()
 {
   const kTests = [
-    { key: "a", isModifier: false,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+    { key: "a", isModifier: false, isPrintable: true,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_A,
                location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
     },
-    { key: "VK_SHIFT", isModifier: true,
-      event: { shiftKey: true, ctrlKey: false, altKey: false, metaKey: false,
+    { key: "KEY_Shift", isModifier: true, isPrintable: false,
+      event: { shiftKey: true, ctrlKey: false, altKey: false, metaKey: false, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_SHIFT,
                location: KeyboardEvent.DOM_KEY_LOCATION_LEFT },
     },
-    { key: "VK_SHIFT", isModifier: true,
-      event: { shiftKey: true, ctrlKey: false, altKey: false, metaKey: false,
+    { key: "KEY_Shift", isModifier: true, isPrintable: false,
+      event: { shiftKey: true, ctrlKey: false, altKey: false, metaKey: false, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_SHIFT,
                location: KeyboardEvent.DOM_KEY_LOCATION_RIGHT },
     },
-    { key: "VK_CONTROL", isModifier: true,
-      event: { shiftKey: false, ctrlKey: true, altKey: false, metaKey: false,
+    { key: "KEY_Control", isModifier: true, isPrintable: false,
+      event: { shiftKey: false, ctrlKey: true, altKey: false, metaKey: false, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_CONTROL,
                location: KeyboardEvent.DOM_KEY_LOCATION_LEFT },
     },
-    { key: "VK_CONTROL", isModifier: true,
-      event: { shiftKey: false, ctrlKey: true, altKey: false, metaKey: false,
+    { key: "KEY_Control", isModifier: true, isPrintable: false,
+      event: { shiftKey: false, ctrlKey: true, altKey: false, metaKey: false, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_CONTROL,
                location: KeyboardEvent.DOM_KEY_LOCATION_RIGHT },
     },
 /* XXX Alt key activates menubar even if we consume the key events.
-    { key: "VK_ALT", isModifier: true,
-      event: { shiftKey: false, ctrlKey: false, altKey: true, metaKey: false,
+    { key: "KEY_Alt", isModifier: true, isPrintable: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: true, metaKey: false, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_ALT,
                location: KeyboardEvent.DOM_KEY_LOCATION_LEFT },
     },
-    { key: "VK_ALT", isModifier: true,
-      event: { shiftKey: false, ctrlKey: false, altKey: true, metaKey: false,
+    { key: "KEY_Alt", isModifier: true, isPrintable: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: true, metaKey: false, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_ALT,
                location: KeyboardEvent.DOM_KEY_LOCATION_RIGHT },
     },
 */
-    { key: "VK_META", isModifier: true,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: true,
+    { key: "KEY_Meta", isModifier: true, isPrintable: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: true, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_META,
                location: KeyboardEvent.DOM_KEY_LOCATION_LEFT },
     },
-    { key: "VK_META", isModifier: true,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: true,
+    { key: "KEY_Meta", isModifier: true, isPrintable: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: true, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_META,
                location: KeyboardEvent.DOM_KEY_LOCATION_RIGHT },
     },
-    { key: "VK_DOWN", isModifier: false,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+    { key: "KEY_ArrowDown", isModifier: false, isPrintable: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_DOWN,
                location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
     },
-    { key: "VK_DOWN", isModifier: false,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+    { key: "KEY_ArrowDown", isModifier: false, isPrintable: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_DOWN,
                location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
     },
-    { key: "5", isModifier: false,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+    { key: "5", isModifier: false, isPrintable: true,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_5,
                location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
     },
-    { key: "VK_NUMPAD5", isModifier: false,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+    { key: "5", isModifier: false, isPrintable: true,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,  numLockKey: true,
+               keyCode: KeyboardEvent.DOM_VK_NUMPAD5,
                location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
     },
-    { key: "+", isModifier: false,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+    { key: "+", isModifier: false, isPrintable: true,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_EQUALS,
                location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
     },
-    { key: "VK_ADD", isModifier: false,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+    { key: "+", isModifier: false, isPrintable: true,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, numLockKey: true,
+               keyCode: KeyboardEvent.DOM_VK_ADD,
                location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
     },
-    { key: "VK_RETURN", isModifier: false,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+    { key: "KEY_Enter", isModifier: false, isPrintable: true,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_RETURN,
                location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
     },
-    { key: "VK_RETURN", isModifier: false,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+    { key: "KEY_Enter", isModifier: false, isPrintable: true,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_RETURN,
                location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
     },
-    { key: "VK_NUM_LOCK", isModifier: true,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+    { key: "KEY_NumLock", isModifier: true, isPrintable: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_NUM_LOCK,
                location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
     },
-    { key: "VK_INSERT", isModifier: false,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+    { key: "KEY_Insert", isModifier: false, isPrintable: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_INSERT,
                location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
     },
-    { key: "VK_INSERT", isModifier: false,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+    { key: "KEY_Insert", isModifier: false, isPrintable: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, numLockKey: false,
+               keyCode: KeyboardEvent.DOM_VK_INSERT,
                location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
     },
   ];
@@ -333,10 +356,18 @@ function testSynthesizedKeyLocation()
       getLocationName(currentTest.event.location) + ": ";
     synthesizeKey(currentTest.key, currentTest.event);
     ok(events.keydown, description + "keydown event wasn't fired");
-    if (currentTest.isModifier) {
-      todo(events.keypress, description + "keypress event was fired for modifier key");
+    if (kStrictKeyPressEvents) {
+      if (currentTest.isPrintable) {
+        ok(events.keypress, description + "keypress event wasn't fired for printable key");
+      } else {
+        ok(!events.keypress, description + "keypress event was fired for non-printable key");
+      }
     } else {
-      ok(events.keypress, description + "keypress event wasn't fired");
+      if (currentTest.isModifier) {
+        todo(events.keypress, description + "keypress event was fired for modifier key");
+      } else {
+        ok(events.keypress, description + "keypress event wasn't fired");
+      }
     }
     ok(events.keyup, description + "keyup event wasn't fired");
   }
