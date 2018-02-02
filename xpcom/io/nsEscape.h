@@ -137,6 +137,20 @@ bool NS_UnescapeURL(const char* aStr,
                     uint32_t aFlags,
                     nsACString& aResult);
 
+/**
+ * Fallible version of |NS_UnescapeURL|. See above for details.
+ *
+ * @param aAppended Out param: true if aResult was written to (i.e. at least
+ *                  one character was unescaped or esc_AlwaysCopy was
+ *                  requested), false otherwise.
+ */
+nsresult NS_UnescapeURL(const char* aStr,
+                        int32_t aLen,
+                        uint32_t aFlags,
+                        nsACString& aResult,
+                        bool& aAppended,
+                        const mozilla::fallible_t&);
+
 /** returns resultant string length **/
 inline int32_t
 NS_UnescapeURL(char* aStr)
@@ -185,6 +199,7 @@ NS_UnescapeURL(const nsACString& aStr, uint32_t aFlags, nsACString& aResult)
   }
   return aStr;
 }
+
 const nsAString&
 NS_EscapeURL(const nsAString& aStr, uint32_t aFlags, nsAString& aResult);
 
