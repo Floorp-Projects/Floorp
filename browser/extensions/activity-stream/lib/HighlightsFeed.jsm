@@ -10,7 +10,7 @@ const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/
 
 const {shortURL} = ChromeUtils.import("resource://activity-stream/lib/ShortURL.jsm", {});
 const {SectionsManager} = ChromeUtils.import("resource://activity-stream/lib/SectionsManager.jsm", {});
-const {TOP_SITES_SHOWMORE_LENGTH} = ChromeUtils.import("resource://activity-stream/common/Reducers.jsm", {});
+const {TOP_SITES_DEFAULT_ROWS, TOP_SITES_MAX_SITES_PER_ROW} = ChromeUtils.import("resource://activity-stream/common/Reducers.jsm", {});
 const {Dedupe} = ChromeUtils.import("resource://activity-stream/common/Dedupe.jsm", {});
 
 ChromeUtils.defineModuleGetter(this, "filterAdult",
@@ -25,7 +25,7 @@ ChromeUtils.defineModuleGetter(this, "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm");
 
 const HIGHLIGHTS_MAX_LENGTH = 9;
-const MANY_EXTRA_LENGTH = HIGHLIGHTS_MAX_LENGTH * 5 + TOP_SITES_SHOWMORE_LENGTH;
+const MANY_EXTRA_LENGTH = HIGHLIGHTS_MAX_LENGTH * 5 + TOP_SITES_DEFAULT_ROWS * TOP_SITES_MAX_SITES_PER_ROW;
 const SECTION_ID = "highlights";
 
 this.HighlightsFeed = class HighlightsFeed {
