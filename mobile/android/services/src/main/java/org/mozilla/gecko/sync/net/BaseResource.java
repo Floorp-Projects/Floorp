@@ -79,7 +79,7 @@ public class BaseResource implements Resource {
   protected DefaultHttpClient client;
   public    ResourceDelegate delegate;
   protected HttpRequestBase request;
-  public final String charset = "utf-8";
+  public static final String charset = "utf-8";
 
   private boolean shouldGzipCompress = false;
   // A hint whether uploaded payloads are chunked. Default true to use GzipCompressingEntity, which is built-in functionality.
