@@ -7,6 +7,7 @@
 #include "nsDataHandler.h"
 #include "nsNetCID.h"
 #include "nsError.h"
+#include "nsIOService.h"
 #include "DataChannelChild.h"
 #include "plstr.h"
 #include "nsSimpleURI.h"
@@ -151,46 +152,60 @@ nsDataHandler::AllowPort(int32_t port, const char *scheme, bool *_retval) {
 
 #define BASE64_EXTENSION ";base64"
 
-nsresult
-nsDataHandler::ParseURI(nsCString& spec,
-                        nsCString& contentType,
-                        nsCString* contentCharset,
-                        bool&    isBase64,
-                        nsCString* dataBuffer)
+/**
+ * Helper that performs a case insensitive match to find the offset of a given
+ * pattern in a nsACString.
+ */
+bool
+FindOffsetOf(const nsACString& aPattern, const nsACString& aSrc,
+             nsACString::size_type& aOffset)
 {
-    isBase64 = false;
+    static const nsCaseInsensitiveCStringComparator kComparator;
 
-    // move past "data:"
-    const char* roBuffer = (const char*) PL_strcasestr(spec.get(), "data:");
-    if (!roBuffer) {
-        // malformed uri
-        return NS_ERROR_MALFORMED_URI;
+    nsACString::const_iterator begin, end;
+    aSrc.BeginReading(begin);
+    aSrc.EndReading(end);
+    if (!FindInReadable(aPattern, begin, end, kComparator)) {
+        return false;
     }
-    roBuffer += sizeof("data:") - 1;
+
+    // FindInReadable updates |begin| and |end| to the match coordinates.
+    aOffset = nsACString::size_type(begin.get() - aSrc.Data());
+    return true;
+}
+
+nsresult
+nsDataHandler::ParsePathWithoutRef(
+    const nsACString& aPath,
+    nsCString& aContentType,
+    nsCString* aContentCharset,
+    bool& aIsBase64,
+    nsDependentCSubstring* aDataBuffer)
+{
+    static NS_NAMED_LITERAL_CSTRING(kBase64Ext, BASE64_EXTENSION);
+    static NS_NAMED_LITERAL_CSTRING(kCharset, "charset=");
+
+    aIsBase64 = false;
 
     // First, find the start of the data
-    const char* roComma = strchr(roBuffer, ',');
-    const char* roHash = strchr(roBuffer, '#');
-    if (!roComma || (roHash && roHash < roComma)) {
+    int32_t commaIdx = aPath.FindChar(',');
+    if (commaIdx == kNotFound) {
         return NS_ERROR_MALFORMED_URI;
     }
 
-    if (roComma == roBuffer) {
-        // nothing but data
-        contentType.AssignLiteral("text/plain");
-        if (contentCharset) {
-            contentCharset->AssignLiteral("US-ASCII");
+    if (commaIdx == 0) {
+        // Nothing but data.
+        aContentType.AssignLiteral("text/plain");
+        if (aContentCharset) {
+            aContentCharset->AssignLiteral("US-ASCII");
         }
     } else {
-        // Make a copy of the non-data part so we can null out parts of it as
-        // we go. This copy will be a small number of chars, in contrast to the
-        // data which may be large.
-        char* buffer = PL_strndup(roBuffer, roComma - roBuffer);
+        auto mediaType = Substring(aPath, 0, commaIdx);
 
-        // determine if the data is base64 encoded.
-        char* base64 = PL_strcasestr(buffer, BASE64_EXTENSION);
-        if (base64) {
-            char *beyond = base64 + sizeof(BASE64_EXTENSION) - 1;
+        // Determine if the data is base64 encoded.
+        nsACString::size_type base64;
+        if (FindOffsetOf(kBase64Ext, mediaType, base64)) {
+            nsACString::size_type offset = base64 + kBase64Ext.Length();
             // Per the RFC 2397 grammar, "base64" MUST be at the end of the
             // non-data part.
             //
@@ -198,51 +213,78 @@ nsDataHandler::ParseURI(nsCString& spec,
             // is ok as well (this deals with *broken* data URIs, see bug
             // 781693 for an example). Anything after "base64" in the non-data
             // part will be discarded in this case, however.
-            if (*beyond == '\0' || *beyond == ';') {
-                isBase64 = true;
-                *base64 = '\0';
+            if (offset == mediaType.Length() || mediaType[offset] == ';') {
+                aIsBase64 = true;
+                // Trim the base64 part off.
+                mediaType.Rebind(aPath, 0, base64);
             }
         }
 
-        // everything else is content type
-        char *semiColon = (char *) strchr(buffer, ';');
-        if (semiColon)
-            *semiColon = '\0';
+        // Everything else is content type.
+        int32_t semiColon = mediaType.FindChar(';');
 
-        if (semiColon == buffer || base64 == buffer) {
-            // there is no content type, but there are other parameters
-            contentType.AssignLiteral("text/plain");
+        if (semiColon == 0 || mediaType.IsEmpty()) {
+            // There is no content type, but there are other parameters.
+            aContentType.AssignLiteral("text/plain");
         } else {
-            contentType.Assign(buffer);
-            ToLowerCase(contentType);
-            if (!contentType.StripWhitespace(mozilla::fallible)) {
+            aContentType = Substring(mediaType, 0, semiColon);
+            ToLowerCase(aContentType);
+            if (!aContentType.StripWhitespace(mozilla::fallible)) {
                 return NS_ERROR_OUT_OF_MEMORY;
             }
         }
 
-        if (semiColon && contentCharset) {
-            char *charset = PL_strcasestr(semiColon + 1, "charset=");
-            if (charset) {
-                contentCharset->Assign(charset + sizeof("charset=") - 1);
-                if (!contentCharset->StripWhitespace(mozilla::fallible)) {
+        if (semiColon != kNotFound && aContentCharset) {
+            auto afterSemi = Substring(mediaType, semiColon + 1);
+            nsACString::size_type charset;
+            if (FindOffsetOf(kCharset, afterSemi, charset)) {
+                *aContentCharset =
+                        Substring(afterSemi, charset + kCharset.Length());
+                if (!aContentCharset->StripWhitespace(mozilla::fallible)) {
                     return NS_ERROR_OUT_OF_MEMORY;
                 }
             }
         }
-
-        free(buffer);
     }
 
-    if (dataBuffer) {
-        // Split encoded data from terminal "#ref" (if present)
-        const char* roData = roComma + 1;
-        bool ok = !roHash
-                ? dataBuffer->Assign(roData, mozilla::fallible)
-                : dataBuffer->Assign(roData, roHash - roData, mozilla::fallible);
-        if (!ok) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
+    if (aDataBuffer) {
+        aDataBuffer->Rebind(aPath, commaIdx + 1);
     }
 
     return NS_OK;
+}
+
+nsresult
+nsDataHandler::ParseURI(nsCString& spec,
+                        nsCString& contentType,
+                        nsCString* contentCharset,
+                        bool&    isBase64,
+                        nsCString* dataBuffer)
+{
+    static NS_NAMED_LITERAL_CSTRING(kDataScheme, "data:");
+
+    // move past "data:"
+    int32_t scheme = spec.Find(kDataScheme, /* aIgnoreCase = */ true);
+    if (scheme == kNotFound) {
+        // malformed uri
+        return NS_ERROR_MALFORMED_URI;
+    }
+
+    scheme += kDataScheme.Length();
+
+    // Find the start of the hash ref if present.
+    int32_t hash = spec.FindChar('#', scheme);
+
+    auto pathWithoutRef = Substring(spec, scheme,
+                                    hash != kNotFound ? hash : -1);
+    nsDependentCSubstring dataRange;
+    nsresult rv = ParsePathWithoutRef(pathWithoutRef, contentType,
+                                      contentCharset, isBase64, &dataRange);
+    if (NS_SUCCEEDED(rv) && dataBuffer) {
+        if (!dataBuffer->Assign(dataRange, mozilla::fallible)) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+
+    return rv;
 }
