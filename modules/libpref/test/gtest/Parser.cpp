@@ -497,48 +497,29 @@ pref("parse.error", true);;
   //-------------------------------------------------------------------------
 
   // In all of the following we have a \n, a \r, a \r\n, and then an error, so
-  // the error is on line 4.
+  // the error is on line 4. (Note: these ones don't use raw string literals
+  // because MSVC somehow swallows any \r that appears in them.)
 
-// XXX: these are temporarily commented out due to differing results on Windows
-#if 0
-
-  P(R"(
-  
-bad
-    )",
+  P("\n \r \r\n bad",
     "test:4: prefs parse error: unknown keyword"
   );
 
-  P(R"(#
-##
-bad
-    )",
+  P("#\n#\r#\r\n bad",
     "test:4: prefs parse error: unknown keyword"
   );
 
-  P(R"(//
-////
-bad
-    )",
+  P("//\n//\r//\r\n bad",
     "test:4: prefs parse error: unknown keyword"
   );
 
-  P(R"(/*
- 
-*/ bad
-    )",
+  P("/*\n \r \r\n*/ bad",
     "test:4: prefs parse error: unknown keyword"
   );
 
   // Note: the escape sequences do *not* affect the line number.
-  P(R"(pref("foo\n
-\rfoo\r\n
-foo", bad
-    )",
+  P("pref(\"foo\\n\n foo\\r\r foo\\r\\n\r\n foo\", bad);",
     "test:4: prefs parse error: unknown keyword"
   );
-
-#endif
 
   // clang-format on
 }

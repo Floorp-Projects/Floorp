@@ -129,7 +129,7 @@ function limitProperties(name, obj, count, log) {
       // properties.
       if (name === "data" && (
           key === "max_pause" ||
-          key === "num_slices" ||
+          key === "slices" ||
           key === "slices_list" ||
           key === "status" ||
           key === "timestamp" ||
@@ -156,9 +156,6 @@ function limitProperties(name, obj, count, log) {
  * etc.
  */
 function limitSize(data, log) {
-  // Store the number of slices so we know if we lost any at the end.
-  data.num_slices = data.slices_list.length;
-
   data.slices_list.sort((a, b) => b.pause - a.pause);
 
   if (data.slices_list.length > MAX_SLICES) {
