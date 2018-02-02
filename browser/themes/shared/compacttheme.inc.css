@@ -16,8 +16,6 @@
   --toolbar-non-lwt-bgimage: none;
 
   --toolbarbutton-icon-fill-opacity: .7;
-
-  --tab-line-color: #0a84ff;
 }
 
 :root:-moz-lwtheme-brighttext {
@@ -52,6 +50,10 @@
   --chrome-nav-bar-controls-border-color: #ccc;
   --chrome-selection-color: #f5f7fa;
   --chrome-selection-background-color: #4c9ed9;
+}
+
+#tabbrowser-tabs:-moz-lwtheme {
+  --tab-line-color: #0a84ff;
 }
 
 .toolbarbutton-animatable-box[brighttext],
