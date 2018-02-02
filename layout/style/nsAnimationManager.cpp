@@ -1008,20 +1008,23 @@ BuildAnimations(nsPresContext* aPresContext,
                 const NonOwningAnimationTarget& aTarget,
                 const nsStyleDisplay& aStyleDisplay,
                 BuilderType& aBuilder,
-                nsAnimationManager::CSSAnimationCollection* aCollection)
+                nsAnimationManager::CSSAnimationCollection* aCollection,
+                nsTHashtable<nsRefPtrHashKey<nsAtom>>& aReferencedAnimations)
 {
   nsAnimationManager::OwningCSSAnimationPtrArray result;
 
   for (size_t animIdx = aStyleDisplay.mAnimationNameCount; animIdx-- != 0;) {
+    nsAtom* name = aStyleDisplay.GetAnimationName(animIdx);
     // CSS Animations whose animation-name does not match a @keyframes rule do
     // not generate animation events. This includes when the animation-name is
     // "none" which is represented by an empty name in the StyleAnimation.
     // Since such animations neither affect style nor dispatch events, we do
     // not generate a corresponding CSSAnimation for them.
-    if (aStyleDisplay.GetAnimationName(animIdx) == nsGkAtoms::_empty) {
+    if (name == nsGkAtoms::_empty) {
       continue;
     }
 
+    aReferencedAnimations.PutEntry(name);
     RefPtr<CSSAnimation> dest = BuildAnimation(aPresContext,
                                                aTarget,
                                                aStyleDisplay,
@@ -1125,7 +1128,8 @@ nsAnimationManager::DoUpdateAnimations(
                                   aTarget,
                                   aStyleDisplay,
                                   aBuilder,
-                                  collection);
+                                  collection,
+                                  mMaybeReferencedAnimations);
 
   if (newAnimations.IsEmpty()) {
     if (collection) {
