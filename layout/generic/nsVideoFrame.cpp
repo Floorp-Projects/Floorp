@@ -451,12 +451,12 @@ public:
 
     nsIntSize videoSizeInPx;
     if (NS_FAILED(element->GetVideoSize(&videoSizeInPx)) || area.IsEmpty()) {
-      return true;
+      return false;
     }
 
     RefPtr<ImageContainer> container = element->GetImageContainer();
     if (!container) {
-      return true;
+      return false;
     }
 
     // Retrieve the size of the decoded video frame, before being scaled
@@ -484,7 +484,7 @@ public:
     gfxRect destGFXRect = Frame()->PresContext()->AppUnitsToGfxUnits(dest);
     destGFXRect.Round();
     if (destGFXRect.IsEmpty()) {
-      return true;
+      return false;
     }
 
     VideoInfo::Rotation rotationDeg = element->RotationDegrees();
