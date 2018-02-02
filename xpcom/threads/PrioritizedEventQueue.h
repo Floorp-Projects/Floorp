@@ -40,6 +40,8 @@ template<class InnerQueueT>
 class PrioritizedEventQueue final : public AbstractEventQueue
 {
 public:
+  static const bool SupportsPrioritization = true;
+
   PrioritizedEventQueue(UniquePtr<InnerQueueT> aHighQueue,
                         UniquePtr<InnerQueueT> aInputQueue,
                         UniquePtr<InnerQueueT> aNormalQueue,

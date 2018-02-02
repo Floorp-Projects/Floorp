@@ -83,6 +83,22 @@ ThreadEventQueue<InnerQueueT>::PutEventInternal(already_AddRefed<nsIRunnable>&& 
   nsCOMPtr<nsIThreadObserver> obs;
 
   {
+    // Check if the runnable wants to override the passed-in priority.
+    // Do this outside the lock, so runnables implemented in JS can QI
+    // (and possibly GC) outside of the lock.
+    if (InnerQueueT::SupportsPrioritization) {
+      auto* e = event.get();    // can't do_QueryInterface on LeakRefPtr.
+      if (nsCOMPtr<nsIRunnablePriority> runnablePrio = do_QueryInterface(e)) {
+        uint32_t prio = nsIRunnablePriority::PRIORITY_NORMAL;
+        runnablePrio->GetPriority(&prio);
+        if (prio == nsIRunnablePriority::PRIORITY_HIGH) {
+          aPriority = EventPriority::High;
+        } else if (prio == nsIRunnablePriority::PRIORITY_INPUT) {
+          aPriority = EventPriority::Input;
+        }
+      }
+    }
+
     MutexAutoLock lock(mLock);
 
     if (mEventsAreDoomed) {
