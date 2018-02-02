@@ -29,6 +29,11 @@ RELEASE_PROMOTION_CONFIG = {
         'target_tasks_method': 'ship_fennec',
         'product': 'fennec',
     },
+    'ship_fennec_rc': {
+        'target_tasks_method': 'ship_fennec',
+        'product': 'fennec',
+        'release_type': 'rc',
+    },
     'promote_firefox': {
         'target_tasks_method': 'promote_firefox',
         'product': 'firefox',

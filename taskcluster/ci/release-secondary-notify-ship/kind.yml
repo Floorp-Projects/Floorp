@@ -10,6 +10,7 @@ transforms:
 
 kind-dependencies:
    - release-secondary-balrog-publishing
+   - push-apk
 
 job-defaults:
    name: notify-release-drivers-ship
@@ -54,3 +55,7 @@ jobs:
       shipping-product: firefox
       index:
          product: firefox
+   fennec-rc:
+      shipping-product: fennec
+      index:
+         product: fennec
