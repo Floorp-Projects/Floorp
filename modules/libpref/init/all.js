@@ -88,6 +88,15 @@ pref("browser.cache.frecency_half_life_hours", 6);
 pref("browser.cache.max_shutdown_io_lag", 2);
 
 pref("browser.cache.offline.enable",           true);
+
+// Nightly and Early Beta will have AppCache disabled by default
+// Stable will remain enabled until Firefox 62.
+#ifdef EARLY_BETA_OR_EARLIER
+pref("browser.cache.offline.insecure.enable",  false);
+#else
+pref("browser.cache.offline.insecure.enable",  true);
+#endif
+
 // enable offline apps by default, disable prompt
 pref("offline-apps.allow_by_default",          true);
 
@@ -2584,7 +2593,6 @@ pref("font.blacklist.underline_offset", "FangSong,Gulim,GulimChe,MingLiU,MingLiU
 
 pref("security.directory",              "");
 
-pref("signed.applets.codebase_principal_support", false);
 // security-sensitive dialogs should delay button enabling. In milliseconds.
 pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);

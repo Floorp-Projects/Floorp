@@ -12,14 +12,18 @@
 // Make sure we can initialize our thread profile
 TEST(ThreadProfile, Initialization) {
   int tid = 1000;
-  ThreadInfo info("testThread", tid, true, nullptr);
+  nsCOMPtr<nsIThread> mainThread;
+  NS_GetMainThread(getter_AddRefs(mainThread));
+  ThreadInfo info("testThread", tid, true, mainThread, nullptr);
   info.StartProfiling();
 }
 
 // Make sure we can record one entry and read it
 TEST(ThreadProfile, InsertOneEntry) {
   int tid = 1000;
-  ThreadInfo info("testThread", tid, true, nullptr);
+  nsCOMPtr<nsIThread> mainThread;
+  NS_GetMainThread(getter_AddRefs(mainThread));
+  ThreadInfo info("testThread", tid, true, mainThread, nullptr);
   auto pb = MakeUnique<ProfileBuffer>(10);
   pb->AddEntry(ProfileBufferEntry::Time(123.1));
   ASSERT_TRUE(pb->mEntries != nullptr);
@@ -30,7 +34,9 @@ TEST(ThreadProfile, InsertOneEntry) {
 // See if we can insert some entries
 TEST(ThreadProfile, InsertEntriesNoWrap) {
   int tid = 1000;
-  ThreadInfo info("testThread", tid, true, nullptr);
+  nsCOMPtr<nsIThread> mainThread;
+  NS_GetMainThread(getter_AddRefs(mainThread));
+  ThreadInfo info("testThread", tid, true, mainThread, nullptr);
   auto pb = MakeUnique<ProfileBuffer>(100);
   int test_size = 50;
   for (int i = 0; i < test_size; i++) {
@@ -51,7 +57,9 @@ TEST(ThreadProfile, InsertEntriesWrap) {
   // we can fit only 24 entries in this buffer because of the empty slot
   int entries = 24;
   int buffer_size = entries + 1;
-  ThreadInfo info("testThread", tid, true, nullptr);
+  nsCOMPtr<nsIThread> mainThread;
+  NS_GetMainThread(getter_AddRefs(mainThread));
+  ThreadInfo info("testThread", tid, true, mainThread, nullptr);
   auto pb = MakeUnique<ProfileBuffer>(buffer_size);
   int test_size = 43;
   for (int i = 0; i < test_size; i++) {
