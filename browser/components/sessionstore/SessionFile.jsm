@@ -451,7 +451,11 @@ var SessionFileInternal = {
   },
 
   wipe() {
-    return this._postToWorker("wipe");
+    return this._postToWorker("wipe").then(() => {
+      // After a wipe, we need to make sure to re-initialize upon the next read(),
+      // because the state variables as sent to the worker have changed.
+      this._initializationStarted = false;
+    });
   },
 
   _recordTelemetry(telemetry) {
