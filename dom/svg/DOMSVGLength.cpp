@@ -22,6 +22,8 @@
 
 namespace mozilla {
 
+using namespace dom;
+
 static nsSVGAttrTearoffTable<nsSVGLength2, DOMSVGLength>
   sBaseSVGLengthTearOffTable,
   sAnimSVGLengthTearOffTable;
@@ -100,7 +102,7 @@ DOMSVGLength::DOMSVGLength(DOMSVGLengthList *aList,
   , mListIndex(aListIndex)
   , mAttrEnum(aAttrEnum)
   , mIsAnimValItem(aIsAnimValItem)
-  , mUnit(nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER)
+  , mUnit(SVGLengthBinding::SVG_LENGTHTYPE_NUMBER)
   , mValue(0.0f)
   , mVal(nullptr)
 {
@@ -118,7 +120,7 @@ DOMSVGLength::DOMSVGLength()
   , mListIndex(0)
   , mAttrEnum(0)
   , mIsAnimValItem(false)
-  , mUnit(nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER)
+  , mUnit(SVGLengthBinding::SVG_LENGTHTYPE_NUMBER)
   , mValue(0.0f)
   , mVal(nullptr)
 {
@@ -130,7 +132,7 @@ DOMSVGLength::DOMSVGLength(nsSVGLength2* aVal, nsSVGElement* aSVGElement,
   , mListIndex(0)
   , mAttrEnum(0)
   , mIsAnimValItem(aAnimVal)
-  , mUnit(nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER)
+  , mUnit(SVGLengthBinding::SVG_LENGTHTYPE_NUMBER)
   , mValue(0.0f)
   , mVal(aVal)
   , mSVGElement(aSVGElement)
@@ -232,8 +234,8 @@ DOMSVGLength::GetValue(ErrorResult& aRv)
       aRv.Throw(NS_ERROR_FAILURE);
     }
     return value;
-  } else if (mUnit == nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER ||
-             mUnit == nsIDOMSVGLength::SVG_LENGTHTYPE_PX) {
+  } else if (mUnit == SVGLengthBinding::SVG_LENGTHTYPE_NUMBER ||
+             mUnit == SVGLengthBinding::SVG_LENGTHTYPE_PX) {
     return mValue;
   }
   // else [SVGWG issue] Can't convert this length's value to user units
@@ -274,8 +276,8 @@ DOMSVGLength::SetValue(float aUserUnitValue, ErrorResult& aRv)
         return;
       }
     }
-  } else if (mUnit == nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER ||
-             mUnit == nsIDOMSVGLength::SVG_LENGTHTYPE_PX) {
+  } else if (mUnit == SVGLengthBinding::SVG_LENGTHTYPE_NUMBER ||
+             mUnit == SVGLengthBinding::SVG_LENGTHTYPE_PX) {
     mValue = aUserUnitValue;
     return;
   }
@@ -454,7 +456,7 @@ DOMSVGLength::ConvertToSpecifiedUnits(uint16_t aUnit, ErrorResult& aRv)
 JSObject*
 DOMSVGLength::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::SVGLengthBinding::Wrap(aCx, this, aGivenProto);
+  return SVGLengthBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void
