@@ -5114,6 +5114,26 @@ class LBinarySharedStub : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIEC
     static const size_t RhsInput = BOX_PIECES;
 };
 
+class LUnaryCache : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(UnaryCache)
+
+    explicit LUnaryCache(const LBoxAllocation& input) {
+        setBoxOperand(Input, input);
+    }
+
+    const MUnaryCache* mir() const {
+        return mir_->toUnaryCache();
+    }
+
+    const LAllocation* input() {
+        return getOperand(Input);
+    }
+
+    static const size_t Input = 0;
+};
+
 class LNullarySharedStub : public LCallInstructionHelper<BOX_PIECES, 0, 0>
 {
   public:
