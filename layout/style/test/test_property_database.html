@@ -42,8 +42,7 @@ for (var idx in gLonghandProperties) {
   if (prop.pref && !IsCSSPropertyPrefEnabled(prop.pref)) {
     continue;
   }
-  // FIXME(Bug 1207734).
-  if (// !SpecialPowers.DOMWindowUtils.isStyledByServo &&
+  if (!SpecialPowers.DOMWindowUtils.isStyledByServo &&
       gServoOnlyProperties.includes(prop.name)) {
     continue;
   }
