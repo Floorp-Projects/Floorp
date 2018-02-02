@@ -13,7 +13,6 @@ info: |
   exception.
   ...
 
-includes: [propertyHelper.js]
 features: [Symbol]
 ---*/
 

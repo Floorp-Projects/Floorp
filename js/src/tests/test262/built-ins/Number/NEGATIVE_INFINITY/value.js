@@ -10,7 +10,6 @@ info: |
   Number.NEGATIVE_INFINITY
 
   The value of Number.NEGATIVE_INFINITY is -∞.
-includes: [propertyHelper.js]
 ---*/
 
 assert.sameValue(Number.NEGATIVE_INFINITY, -Infinity);

@@ -2,7 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 author: Sathya Gunasekaran
-description: finally calls the SpeciesConstructor
+description: finally calls the SpeciesConstructor and creates the right amount of promises
 esid: sec-promise.prototype.finally
 features: [Promise.prototype.finally]
 flags: [async]
@@ -22,4 +22,4 @@ new FooPromise(r => r())
   .then(() => {
     assert.sameValue(count, 6, "6 new promises were created");
     $DONE();
-});
+  }, $ERROR);

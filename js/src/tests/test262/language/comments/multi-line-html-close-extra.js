@@ -3,7 +3,6 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-html-like-comments
-esid: sec-html-like-comments
 description: >
     Arbitrary character sequence not permitted before HTMLCloseComment token
 info: |
