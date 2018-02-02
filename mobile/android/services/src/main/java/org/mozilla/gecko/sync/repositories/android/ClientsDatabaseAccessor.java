@@ -50,7 +50,7 @@ public class ClientsDatabaseAccessor {
   }
 
   public void store(String accountGUID, Command command) throws NullCursorException {
-    db.store(accountGUID, command.commandType, command.args.toJSONString());
+    db.store(accountGUID, command.commandType, command.args.toJSONString(), command.flowID);
   }
 
   public ClientRecord fetchClient(String accountGUID) throws NullCursorException {
@@ -195,9 +195,10 @@ public class ClientsDatabaseAccessor {
   }
 
   protected static Command commandFromCursor(Cursor cur) {
-    String commandType = RepoUtils.getStringFromCursor(cur, ClientsDatabase.COL_COMMAND);
-    JSONArray commandArgs = RepoUtils.getJSONArrayFromCursor(cur, ClientsDatabase.COL_ARGS);
-    return new Command(commandType, commandArgs);
+    final String commandType = RepoUtils.getStringFromCursor(cur, ClientsDatabase.COL_COMMAND);
+    final JSONArray commandArgs = RepoUtils.getJSONArrayFromCursor(cur, ClientsDatabase.COL_ARGS);
+    final String flowID = RepoUtils.optStringFromCursor(cur, ClientsDatabase.COL_FLOW_ID);
+    return new Command(commandType, commandArgs, flowID);
   }
 
   public int clientsCount() {
