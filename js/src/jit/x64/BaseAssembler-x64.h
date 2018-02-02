@@ -553,20 +553,21 @@ class BaseAssemblerX64 : public BaseAssembler
 
     // Various move ops:
 
-    void cmovzq_rr(RegisterID src, RegisterID dst)
+    void cmovCCq_rr(Condition cond, RegisterID src, RegisterID dst)
     {
-        spew("cmovz     %s, %s", GPReg16Name(src), GPReg32Name(dst));
-        m_formatter.twoByteOp64(OP2_CMOVZ_GvEv, src, dst);
+        spew("cmov%s     %s, %s", CCName(cond), GPReg64Name(src), GPReg64Name(dst));
+        m_formatter.twoByteOp64(cmovccOpcode(cond), src, dst);
     }
-    void cmovzq_mr(int32_t offset, RegisterID base, RegisterID dst)
+    void cmovCCq_mr(Condition cond, int32_t offset, RegisterID base, RegisterID dst)
     {
-        spew("cmovz     " MEM_ob ", %s", ADDR_ob(offset, base), GPReg32Name(dst));
-        m_formatter.twoByteOp64(OP2_CMOVZ_GvEv, offset, base, dst);
+        spew("cmov%s     " MEM_ob ", %s", CCName(cond), ADDR_ob(offset, base), GPReg64Name(dst));
+        m_formatter.twoByteOp64(cmovccOpcode(cond), offset, base, dst);
     }
-    void cmovzq_mr(int32_t offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
+    void cmovCCq_mr(Condition cond, int32_t offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
     {
-        spew("cmovz     " MEM_obs ", %s", ADDR_obs(offset, base, index, scale), GPReg32Name(dst));
-        m_formatter.twoByteOp64(OP2_CMOVZ_GvEv, offset, base, index, scale, dst);
+        spew("cmov%s     " MEM_obs ", %s", CCName(cond), ADDR_obs(offset, base, index, scale),
+             GPReg64Name(dst));
+        m_formatter.twoByteOp64(cmovccOpcode(cond), offset, base, index, scale, dst);
     }
 
     void cmpxchgq(RegisterID src, int32_t offset, RegisterID base)

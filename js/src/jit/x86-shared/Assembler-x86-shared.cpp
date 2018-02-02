@@ -366,8 +366,14 @@ CPUInfo::SetSSEVersion()
         avxPresent = (xcr0EAX & xcr0SSEBit) && (xcr0EAX & xcr0AVXBit);
     }
 
-    static const int POPCNTBit = 1 << 23;
+    // CMOV instruction are supposed to be supported by all CPU which have SSE2
+    // enabled. While this might be true, this is not guaranteed by any
+    // documentation, nor AMD, nor Intel.
+    static const int CMOVBit = 1 << 15;
+    MOZ_RELEASE_ASSERT(flagsEDX & CMOVBit,
+                       "CMOVcc instruction is not recognized by this CPU.");
 
+    static const int POPCNTBit = 1 << 23;
     popcntPresent = (flagsECX & POPCNTBit);
 
     // Check if we need to work around an AMD CPU bug (see bug 1281759).
