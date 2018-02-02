@@ -19,7 +19,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  expect = 'SyntaxError: illegal character';
+  expect = 'SyntaxError';
 
   try
   {
@@ -29,7 +29,7 @@ function test()
   }
   catch(ex)
   {
-    actual = ex + '';
+    actual = ex.constructor.name;
   }
 
   reportCompare(expect, actual, summary);
