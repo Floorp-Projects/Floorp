@@ -23,6 +23,9 @@ ChromeUtils.defineModuleGetter(this, "PageThumbs",
 ChromeUtils.defineModuleGetter(this, "BinarySearch",
   "resource://gre/modules/BinarySearch.jsm");
 
+ChromeUtils.defineModuleGetter(this, "pktApi",
+  "chrome://pocket/content/pktApi.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "gCryptoHash", function() {
   return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
 });
@@ -955,6 +958,11 @@ var ActivityStreamProvider = {
     // the original link object. We must wait until all favicons for the array
     // of links are computed before returning
     return Promise.all(aLinks.map(link => new Promise(async resolve => {
+      // Never add favicon data for pocket items
+      if (link.type === "pocket") {
+        resolve(link);
+        return;
+      }
       let iconData;
       try {
         const linkUri = Services.io.newURI(link.url);
@@ -972,6 +980,67 @@ var ActivityStreamProvider = {
       // Add the icon data to the link if we have any
       resolve(Object.assign(link, iconData || {}));
     })));
+  },
+
+  /**
+   * Helper function which makes the call to the Pocket API to fetch the user's
+   * saved Pocket items.
+   */
+  fetchSavedPocketItems(requestData) {
+    if (!pktApi.isUserLoggedIn()) {
+      return Promise.resolve(null);
+    }
+    return new Promise((resolve, reject) => {
+      pktApi.retrieve(requestData, {
+        success(data) {
+          resolve(data);
+        },
+        error(error) {
+          reject(error);
+        }
+      });
+    });
+  },
+
+  /**
+   * Get the most recently Pocket-ed items from a user's Pocket list. See:
+   * https://getpocket.com/developer/docs/v3/retrieve for details
+   *
+   * @param {Object} aOptions
+   *   {int} numItems: The max number of pocket items to fetch
+   */
+  async getRecentlyPocketed(aOptions) {
+    const pocketSecondsAgo = Math.floor(Date.now() / 1000) - ACTIVITY_STREAM_DEFAULT_RECENT;
+    const requestData = {
+      detailType: "complete",
+      count: aOptions.numItems,
+      since: pocketSecondsAgo
+    };
+    let data;
+    try {
+      data = await this.fetchSavedPocketItems(requestData);
+      if (!data) {
+        return [];
+      }
+    } catch (e) {
+      Cu.reportError(e);
+      return [];
+    }
+    /* Extract relevant parts needed to show this card as a highlight:
+     * url, preview image, title, description, and the unique item_id
+     * necessary for Pocket to identify the item
+     */
+    let items = Object.values(data.list)
+                  // status "0" means not archived or deleted
+                  .filter(item => item.status === "0")
+                  .map(item => ({
+                    description: item.excerpt,
+                    preview_image_url: item.has_image === "1" && item.image.src,
+                    title: item.resolved_title,
+                    url: item.resolved_url,
+                    item_id: item.item_id
+                  }));
+    return this._processHighlights(items, aOptions, "pocket");
   },
 
   /**
@@ -1296,6 +1365,7 @@ var ActivityStreamLinks = {
    * @param {Object} aOptions
    *   {bool} excludeBookmarks: Don't add bookmark items.
    *   {bool} excludeHistory: Don't add history items.
+   *   {bool} excludePocket: Don't add Pocket items.
    *   {bool} withFavicons: Add favicon data: URIs, when possible.
    *   {int}  numItems: Maximum number of (bookmark or history) items to return.
    *
@@ -1308,6 +1378,11 @@ var ActivityStreamLinks = {
     // First get bookmarks if we want them
     if (!aOptions.excludeBookmarks) {
       results.push(...await ActivityStreamProvider.getRecentBookmarks(aOptions));
+    }
+
+    // Add the Pocket items if we need more and want them
+    if (aOptions.numItems - results.length > 0 && !aOptions.excludePocket) {
+      results.push(...await ActivityStreamProvider.getRecentlyPocketed(aOptions));
     }
 
     // Add in history if we need more and want them

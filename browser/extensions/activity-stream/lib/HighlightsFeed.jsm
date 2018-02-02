@@ -87,7 +87,8 @@ this.HighlightsFeed = class HighlightsFeed {
 
     // Request more than the expected length to allow for items being removed by
     // deduping against Top Sites or multiple history from the same domain, etc.
-    const manyPages = await this.linksCache.request({numItems: MANY_EXTRA_LENGTH});
+    // Until bug 1425496 lands, do not include saved Pocket items in highlights
+    const manyPages = await this.linksCache.request({numItems: MANY_EXTRA_LENGTH, excludePocket: true});
 
     // Remove adult highlights if we need to
     const checkedAdult = this.store.getState().Prefs.values.filterAdult ?
