@@ -166,6 +166,7 @@ describe("PlacesFeed", () => {
       assert.equal(url, "foo.com");
       assert.equal(where, "current");
       assert.propertyVal(params, "private", false);
+      assert.propertyVal(params, "triggeringPrincipal", undefined);
     });
     it("should open link with referrer on OPEN_LINK", () => {
       const openLinkIn = sinon.stub();

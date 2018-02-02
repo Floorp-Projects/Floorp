@@ -247,7 +247,10 @@ class PlacesFeed {
    * Open a link in a desired destination defaulting to action's event.
    */
   openLink(action, where = "", isPrivate = false) {
-    const params = {private: isPrivate};
+    const params = {
+      private: isPrivate,
+      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})
+    };
 
     // Always include the referrer (even for http links) if we have one
     const {event, referrer} = action.data;
