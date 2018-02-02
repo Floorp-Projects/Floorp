@@ -462,20 +462,27 @@ class Assembler : public AssemblerX86Shared
         masm.movq_rr(src.encoding(), dest.encoding());
     }
 
-    void cmovzq(const Operand& src, Register dest) {
+    void cmovCCq(Condition cond, const Operand& src, Register dest) {
+        X86Encoding::Condition cc = static_cast<X86Encoding::Condition>(cond);
         switch (src.kind()) {
           case Operand::REG:
-            masm.cmovzq_rr(src.reg(), dest.encoding());
+            masm.cmovCCq_rr(cc, src.reg(), dest.encoding());
             break;
           case Operand::MEM_REG_DISP:
-            masm.cmovzq_mr(src.disp(), src.base(), dest.encoding());
+            masm.cmovCCq_mr(cc, src.disp(), src.base(), dest.encoding());
             break;
           case Operand::MEM_SCALE:
-            masm.cmovzq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.encoding());
+            masm.cmovCCq_mr(cc, src.disp(), src.base(), src.index(), src.scale(), dest.encoding());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
         }
+    }
+    void cmovzq(const Operand& src, Register dest) {
+        cmovCCq(Condition::Zero, src, dest);
+    }
+    void cmovnzq(const Operand& src, Register dest) {
+        cmovCCq(Condition::NonZero, src, dest);
     }
 
     template<typename T>

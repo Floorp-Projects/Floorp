@@ -338,7 +338,7 @@ CodeGeneratorX86Shared::visitWasmSelect(LWasmSelect* ins)
     if (mirType == MIRType::Int32) {
         Register out = ToRegister(ins->output());
         MOZ_ASSERT(ToRegister(ins->trueExpr()) == out, "true expr input is reused for output");
-        masm.cmovz(falseExpr, out);
+        masm.cmovzl(falseExpr, out);
         return;
     }
 
