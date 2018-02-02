@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global PaymentStateSubscriberMixin, PaymentRequest */
+/* global PaymentStateSubscriberMixin, paymentRequest */
 
 "use strict";
 
@@ -55,11 +55,11 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
   }
 
   cancelRequest() {
-    PaymentRequest.cancel();
+    paymentRequest.cancel();
   }
 
   pay() {
-    PaymentRequest.pay({
+    paymentRequest.pay({
       methodName: "basic-card",
       methodData: {
         cardholderName: "John Doe",

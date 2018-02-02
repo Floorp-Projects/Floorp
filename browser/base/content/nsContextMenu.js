@@ -452,7 +452,7 @@ nsContextMenu.prototype = {
     var haveSetDesktopBackground = false;
 
     if (AppConstants.HAVE_SHELL_SERVICE &&
-        Services.policies.isAllowed("set_desktop_background")) {
+        Services.policies.isAllowed("setDesktopBackground")) {
       // Only enable Set as Desktop Background if we can get the shell service.
       var shell = getShellService();
       if (shell)
@@ -1019,7 +1019,7 @@ nsContextMenu.prototype = {
                                onMessage);
 
       if (message.data.disable ||
-          !Services.policies.isAllowed("set_desktop_background")) {
+          !Services.policies.isAllowed("setDesktopBackground")) {
         return;
       }
 

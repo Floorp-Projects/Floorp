@@ -144,6 +144,10 @@ let ADDRESSES_1 = {
 };
 
 let buttonActions = {
+  debugFrame() {
+    window.parent.paymentRequest.sendMessageToChrome("debugFrame");
+  },
+
   delete1Address() {
     let savedAddresses = Object.assign({}, requestStore.getState().savedAddresses);
     delete savedAddresses[Object.keys(savedAddresses)[0]];
@@ -189,4 +193,14 @@ window.addEventListener("click", function onButtonClick(evt) {
   }
 
   buttonActions[id]();
+});
+
+window.addEventListener("DOMContentLoaded", function onDCL() {
+  if (window.location.protocol == "resource:") {
+    // Only show the debug frame button if we're running from a resource URI
+    // so it doesn't show during development over file: or http: since it won't work.
+    // Note that the button still won't work if resource://payments/paymentRequest.xhtml
+    // is manually loaded in a tab but will be shown.
+    document.getElementById("debugFrame").hidden = false;
+  }
 });

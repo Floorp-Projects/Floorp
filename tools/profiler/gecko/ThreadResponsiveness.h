@@ -12,11 +12,12 @@
 #include "mozilla/TimeStamp.h"
 
 class CheckResponsivenessTask;
+class nsIEventTarget;
 
 // This class should only be used for the main thread.
 class ThreadResponsiveness {
 public:
-  explicit ThreadResponsiveness();
+  explicit ThreadResponsiveness(nsIEventTarget* aThread, bool aIsMainThread);
 
   ~ThreadResponsiveness();
 

@@ -1,9 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // Tests that the appcache commands works as they should
 
-const TEST_URI = "http://sub1.test2.example.com/browser/devtools/client/" +
+const TEST_URI = "https://sub1.test2.example.com/browser/devtools/client/" +
                  "commandline/test/browser_cmd_appcache_valid_index.html";
 
 function test() {
@@ -110,7 +111,7 @@ function* spawnTest() {
       setup: "appcache validate " + TEST_URI,
       check: {
         input:  "appcache validate " + TEST_URI,
-              // appcache validate http://sub1.test2.example.com/browser/devtools/client/commandline/test/browser_cmd_appcache_valid_index.html
+              // appcache validate https://sub1.test2.example.com/browser/devtools/client/commandline/test/browser_cmd_appcache_valid_index.html
         markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV",
         status: "VALID",
         args: {
@@ -160,7 +161,7 @@ function* spawnTest() {
       setup: "appcache viewentry --key " + TEST_URI,
       check: {
         input:  "appcache viewentry --key " + TEST_URI,
-              // appcache viewentry --key http://sub1.test2.example.com/browser/devtools/client/commandline/test/browser_cmd_appcache_valid_index.html
+              // appcache viewentry --key https://sub1.test2.example.com/browser/devtools/client/commandline/test/browser_cmd_appcache_valid_index.html
         markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV",
         status: "VALID",
         args: {}

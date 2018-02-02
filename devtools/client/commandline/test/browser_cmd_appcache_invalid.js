@@ -1,10 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // Tests that the appcache validate works as they should with an invalid
 // manifest.
 
-const TEST_URI = "http://sub1.test1.example.com/browser/devtools/client/commandline/" +
+const TEST_URI = "https://sub1.test1.example.com/browser/devtools/client/commandline/" +
                  "test/browser_cmd_appcache_invalid_index.html";
 
 function test() {
@@ -36,26 +37,26 @@ function* spawnTest() {
     "test.png points to a resource that is not available at line 25.",
     "/main/features.js points to a resource that is not available at line 27.",
     "/main/settings/index.css points to a resource that is not available at line 28.",
-    "http://example.com/scene.jpg points to a resource that is not available at line 29.",
+    "https://example.com/scene.jpg points to a resource that is not available at line 29.",
     "/section1/blockedbyfallback.html points to a resource that is not available at line 30.",
-    "http://example.com/images/world.jpg points to a resource that is not available at line 31.",
+    "https://example.com/images/world.jpg points to a resource that is not available at line 31.",
     "/section2/blockedbyfallback.html points to a resource that is not available at line 32.",
     "/main/home points to a resource that is not available at line 34.",
     "main/app.js points to a resource that is not available at line 35.",
     "/settings/home points to a resource that is not available at line 37.",
     "/settings/app.js points to a resource that is not available at line 38.",
-    "The file http://sub1.test1.example.com/browser/devtools/client/" +
+    "The file https://sub1.test1.example.com/browser/devtools/client/" +
       "commandline/test/browser_cmd_appcache_invalid_page3.html was modified " +
-      "after http://sub1.test1.example.com/browser/devtools/client/" +
+      "after https://sub1.test1.example.com/browser/devtools/client/" +
       "commandline/test/browser_cmd_appcache_invalid_appcache.appcache. Unless " +
       "the text in the manifest file is changed the cached version will be used " +
       "instead at line 39.",
     "browser_cmd_appcache_invalid_page3.html has cache-control set to no-store. " +
       "This will prevent the application cache from storing the file at line 39.",
-    "http://example.com/logo.png points to a resource that is not available at line 40.",
-    "http://example.com/check.png points to a resource that is not available at line 41.",
+    "https://example.com/logo.png points to a resource that is not available at line 40.",
+    "https://example.com/check.png points to a resource that is not available at line 41.",
     "Spaces in URIs need to be replaced with %20 at line 42.",
-    "http://example.com/cr oss.png points to a resource that is not available at line 42.",
+    "https://example.com/cr oss.png points to a resource that is not available at line 42.",
     "Asterisk (*) incorrectly used in the CACHE section at line 43. If a line " +
       "in the NETWORK section contains only a single asterisk character, then " +
       "any URI not listed in the manifest will be treated as if the URI was " +
