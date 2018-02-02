@@ -33,7 +33,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=790732
   //is(Ci.nsIDOMSimpleGestureEvent, SimpleGestureEvent);
   is(Ci.nsIDOMUIEvent, UIEvent);
   is(Ci.nsIDOMHTMLMediaElement, HTMLMediaElement);
-  is(Ci.nsIDOMOfflineResourceList, OfflineResourceList);
+  // We can't test this here as it's been restricted to secure contexts in non release
+  //is(Ci.nsIDOMOfflineResourceList, OfflineResourceList);
   is(Ci.nsIDOMRange, Range);
   is(Ci.nsIDOMNodeFilter, NodeFilter);
   is(Ci.nsIDOMXPathResult, XPathResult);
