@@ -8,11 +8,13 @@ package org.mozilla.gecko.telemetry.pingbuilders;
 
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import org.json.simple.JSONArray;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.NonArrayJSONException;
 import org.mozilla.gecko.telemetry.TelemetryOutgoingPing;
 import org.mozilla.gecko.telemetry.TelemetryPing;
 import org.mozilla.gecko.telemetry.stores.TelemetryPingStore;
@@ -33,8 +35,6 @@ import java.util.TimeZone;
  *
  * This builder takes two stores ('sync' and 'event') and produces a single "sync ping".
  *
- * Note that until Bug 1363924, event telemetry will be ignored.
- *
  * Sample result will look something like:
  * {
  *     "syncs": [list of syncs, as produced by the SyncBuilder],
@@ -42,6 +42,8 @@ import java.util.TimeZone;
  * }
  */
 public class TelemetrySyncPingBundleBuilder extends TelemetryPingBuilder {
+    public static final String LOG_TAG = "SyncPingBundleBuilder";
+
     private static final String PING_TYPE = "sync";
     private static final int PING_BUNDLE_VERSION = 4; // Bug 1410145
     private static final int PING_SYNC_DATA_FORMAT_VERSION = 1; // Bug 1374758
@@ -128,12 +130,27 @@ public class TelemetrySyncPingBundleBuilder extends TelemetryPingBuilder {
             syncs.add(ping.getPayload());
         }
 
-        pingData.put("syncs", syncs);
+        if (syncs.size() > 0) {
+            pingData.put("syncs", syncs);
+        }
         return this;
     }
-
-    // Event telemetry will be implemented in Bug 1363924.
+    @SuppressWarnings("unchecked")
     public TelemetrySyncPingBundleBuilder setSyncEventStore(TelemetryPingStore store) {
+        final JSONArray events = new JSONArray();
+        List<TelemetryPing> pings = store.getAllPings();
+
+        for (TelemetryPing ping : pings) {
+            try {
+                events.add(ping.getPayload().getArray("event"));
+            } catch (NonArrayJSONException ex) {
+                Log.e(LOG_TAG, "Invalid state: Non JSONArray for event payload.");
+            }
+        }
+
+        if (events.size() > 0) {
+            pingData.put("events", events);
+        }
         return this;
     }
 }

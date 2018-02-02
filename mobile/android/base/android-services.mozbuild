@@ -1087,6 +1087,7 @@ sync_java_files = [TOPSRCDIR + '/mobile/android/services/src/main/java/org/mozil
     'sync/SynchronizerConfiguration.java',
     'sync/telemetry/TelemetryCollector.java',
     'sync/telemetry/TelemetryContract.java',
+    'sync/telemetry/TelemetryEventCollector.java',
     'sync/telemetry/TelemetryStageCollector.java',
     'sync/ThreadPool.java',
     'sync/UnexpectedJSONException.java',
