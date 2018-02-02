@@ -307,7 +307,6 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "security.sandbox.logging.enabled",
   "security.sandbox.mac.track.violations",
   "security.sandbox.windows.log.stackTraceDepth",
-  "signed.applets.codebase_principal_support",
   "svg.disabled",
   "svg.display-lists.hit-testing.enabled",
   "svg.display-lists.painting.enabled",

@@ -34,6 +34,14 @@
       "enum": [true]
     },
 
+    "DisableFirefoxScreenshots": {
+      "description": "Prevents usage of the Firefox Screenshots feature.",
+      "first_available": "60.0",
+
+      "type": "boolean",
+      "enum": [true]
+    },
+
     "dont_check_default_browser": {
       "description": "Don't check for the default browser on startup.",
       "first_available": "60.0",

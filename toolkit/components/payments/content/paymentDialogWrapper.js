@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyGetter(this, "profileStorage", () => {
   return profileStorage;
 });
 
-var PaymentDialog = {
+var paymentDialogWrapper = {
   componentsLoaded: new Map(),
   frame: null,
   mm: null,
@@ -206,6 +206,21 @@ var PaymentDialog = {
     Services.obs.addObserver(this, "formautofill-storage-changed", true);
   },
 
+  debugFrame() {
+    // To avoid self-XSS-type attacks, ensure that Browser Chrome debugging is enabled.
+    if (!Services.prefs.getBoolPref("devtools.chrome.enabled", false)) {
+      Cu.reportError("devtools.chrome.enabled must be enabled to debug the frame");
+      return;
+    }
+    let chromeWindow = Services.wm.getMostRecentWindow(null);
+    let {
+      gDevToolsBrowser,
+    } = ChromeUtils.import("resource://devtools/client/framework/gDevTools.jsm", {});
+    gDevToolsBrowser.openContentProcessToolbox({
+      selectedBrowser: chromeWindow.document.getElementById("paymentRequestFrame").frameLoader,
+    });
+  },
+
   onPaymentCancel() {
     const showResponse = this.createShowResponse({
       acceptStatus: Ci.nsIPaymentActionResponse.PAYMENT_REJECTED,
@@ -255,6 +270,10 @@ var PaymentDialog = {
     let {messageType} = data;
 
     switch (messageType) {
+      case "debugFrame": {
+        this.debugFrame();
+        break;
+      }
       case "initializeRequest": {
         this.initializeFrame();
         break;
@@ -275,5 +294,5 @@ if ("document" in this) {
   // Running in a browser, not a unit test
   let frame = document.getElementById("paymentRequestFrame");
   let requestId = (new URLSearchParams(window.location.search)).get("requestId");
-  PaymentDialog.init(requestId, frame);
+  paymentDialogWrapper.init(requestId, frame);
 }
