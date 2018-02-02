@@ -6,6 +6,8 @@
   window.addEventListener("load", () => {
     const hasAppcache = document.getElementById("hasAppcache");
     hasAppcache.textContent = "applicationCache" in window ? "yes" : "no";
+    const hasOfflineResourceList = document.getElementById("hasOfflineResourceList");
+    hasOfflineResourceList.textContent = "OfflineResourceList" in window ? "yes" : "no";
   });
 </script>
 <script type="text/javascript" src="http://example.com/tests/dom/tests/mochitest/ajax/offline/offlineTests.js"></script>
@@ -14,6 +16,7 @@
 <body>
 Offline testing<br />
 We have AppCache: <span id="hasAppcache"></span><br />
+We have OfflineResourceList: <span id="hasOfflineResourceList"></span><br />
 
 <iframe id="childframe" src="http://example.com/browser/dom/tests/mochitest/ajax/offline/file_testFile.sjs" ></iframe>
 </body>
