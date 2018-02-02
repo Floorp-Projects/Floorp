@@ -14,7 +14,7 @@ const PREF_MAX_UPGRADE_BACKUPS = "browser.sessionstore.upgradeBackup.maxUpgradeB
  * build where the last backup was created and creating arbitrary JSON data
  * for a new backup.
  */
-function prepareTest() {
+var prepareTest = async function() {
   let result = {};
 
   result.buildID = Services.appinfo.platformBuildID;
@@ -22,12 +22,12 @@ function prepareTest() {
   result.contents = JSON.stringify({"browser_upgrade_backup.js": Math.random()});
 
   return result;
-}
+};
 
 /**
  * Retrieves all upgrade backups and returns them in an array.
  */
-async function getUpgradeBackups() {
+var getUpgradeBackups = async function() {
   let iterator;
   let backups = [];
 
@@ -50,17 +50,17 @@ async function getUpgradeBackups() {
 
   // return results
   return backups;
-}
+};
 
 add_task(async function init() {
   // Wait until initialization is complete
   await SessionStore.promiseInitialized;
+  await SessionFile.wipe();
 });
 
 add_task(async function test_upgrade_backup() {
-  let test = prepareTest();
+  let test = await prepareTest();
   info("Let's check if we create an upgrade backup");
-  await SessionFile.wipe();
   await OS.File.writeAtomic(Paths.clean, test.contents, {encoding: "utf-8", compression: "lz4"});
   await SessionFile.read(); // First call to read() initializes the SessionWorker
   await SessionFile.write(""); // First call to write() triggers the backup
@@ -82,11 +82,9 @@ add_task(async function test_upgrade_backup() {
 });
 
 add_task(async function test_upgrade_backup_removal() {
-  let test = prepareTest();
+  let test = await prepareTest();
   let maxUpgradeBackups = Preferences.get(PREF_MAX_UPGRADE_BACKUPS, 3);
   info("Let's see if we remove backups if there are too many");
-  await SessionFile.wipe();
-  await OS.File.makeDir(Paths.backups);
   await OS.File.writeAtomic(Paths.clean, test.contents, {encoding: "utf-8", compression: "lz4"});
 
   // if the nextUpgradeBackup already exists (from another test), remove it
