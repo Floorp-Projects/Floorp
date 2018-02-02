@@ -3831,6 +3831,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
           nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell));
 
       DisplayListChecker beforeMergeChecker;
+      DisplayListChecker toBeMergedChecker;
       DisplayListChecker afterMergeChecker;
 
       // Attempt to do a partial build and merge into the existing list.
@@ -3842,7 +3843,8 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
         if (gfxPrefs::LayoutVerifyRetainDisplayList()) {
           beforeMergeChecker.Set(&list, "BM");
         }
-        merged = retainedBuilder->AttemptPartialUpdate(aBackstop);
+        merged = retainedBuilder->AttemptPartialUpdate(
+          aBackstop, beforeMergeChecker ? &toBeMergedChecker : nullptr);
         if (merged && beforeMergeChecker) {
           afterMergeChecker.Set(&list, "AM");
         }
@@ -3881,6 +3883,8 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
             nonRetainedChecker.Dump(ss);
             ss << "\n\n*** before-merge retained display items:";
             beforeMergeChecker.Dump(ss);
+            ss << "\n\n*** to-be-merged retained display items:";
+            toBeMergedChecker.Dump(ss);
             ss << "\n\n*** after-merge retained display items:";
             afterMergeChecker.Dump(ss);
             fprintf(stderr, "%s\n\n", ss.str().c_str());
