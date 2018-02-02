@@ -601,6 +601,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
+    <emItem blockID="2104a522-bb2f-4b04-ad0d-b0c571644552" id="{ed352072-ddf0-4cb4-9cb6-d8aa3741c2de}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
     <emItem blockID="510bbd9b-b883-4837-90ab-8e353e27e1be" id="{3B4DE07A-DE43-4DBC-873F-05835FF67DCE}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>

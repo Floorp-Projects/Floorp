@@ -83,6 +83,11 @@ html {
   text-align: left;
 }
 
+.bottom-border td {
+  border-bottom: thin solid;
+  border-color: black;
+}
+
 .trickled {
   background-color: #bdf;
 }
