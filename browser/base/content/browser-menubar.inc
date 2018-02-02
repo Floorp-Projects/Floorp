@@ -263,7 +263,14 @@
                     <menuseparator/>
                   </menupopup>
                 </menu>
-#include browser-charsetmenu.inc
+                <menu id="charsetMenu"
+                    label="&charsetMenu2.label;"
+                    accesskey="&charsetMenu2.accesskey;"
+                    oncommand="BrowserSetForcedCharacterSet(event.target.getAttribute('charset'));"
+                    onpopupshowing="CharsetMenu.build(event.target); UpdateCurrentCharset(this);">
+                  <menupopup>
+                  </menupopup>
+                </menu>
                 <menuseparator/>
 #ifdef XP_MACOSX
                 <menuitem id="enterFullScreenItem"
