@@ -421,6 +421,8 @@ public:
 
   void ToDomPref(dom::Pref* aDomPref)
   {
+    MOZ_ASSERT(XRE_IsParentProcess());
+
     aDomPref->name() = mName;
 
     aDomPref->isLocked() = mIsLocked;
@@ -449,6 +451,7 @@ public:
 
   void FromDomPref(const dom::Pref& aDomPref, bool* aValueChanged)
   {
+    MOZ_ASSERT(!XRE_IsParentProcess());
     MOZ_ASSERT(strcmp(mName, aDomPref.name().get()) == 0);
 
     mIsLocked = aDomPref.isLocked();
@@ -492,6 +495,8 @@ public:
 
   bool HasAdvisablySizedValues()
   {
+    MOZ_ASSERT(XRE_IsParentProcess());
+
     if (!IsTypeString()) {
       return true;
     }
@@ -709,6 +714,8 @@ NotifyCallbacks(const char* aPrefName);
 static PrefSaveData
 pref_savePrefs()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   PrefSaveData savedPrefs(gHashTable->EntryCount());
 
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
@@ -1981,6 +1988,8 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
   NS_ENSURE_ARG_POINTER(aCount);
   NS_ENSURE_ARG_POINTER(aChildArray);
 
+  MOZ_ASSERT(NS_IsMainThread());
+
   *aChildArray = nullptr;
   *aCount = 0;
 
@@ -3223,6 +3232,7 @@ void
 Preferences::GetPreferences(InfallibleTArray<dom::Pref>* aDomPrefs)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
 
   aDomPrefs->SetCapacity(gHashTable->EntryCount());
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
