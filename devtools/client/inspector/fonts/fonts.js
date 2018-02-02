@@ -139,13 +139,15 @@ class FontInspector {
     let { fontOptions } = this.store.getState();
     let { showAllFonts, previewText } = fontOptions;
 
-    // Clear the list of fonts if the currently selected node is not connected or an
-    // element node unless all fonts are supposed to be shown.
+    // Clear the list of fonts if the currently selected node is not connected or a text
+    // or element node unless all fonts are supposed to be shown.
+    let isElementOrTextNode = this.inspector.selection.isElementNode() ||
+                              this.inspector.selection.isTextNode();
     if (!showAllFonts &&
         (!node ||
          !this.isPanelVisible() ||
          !this.inspector.selection.isConnected() ||
-         !this.inspector.selection.isElementNode())) {
+         !isElementOrTextNode)) {
       this.store.dispatch(updateFonts(fonts));
       return;
     }
