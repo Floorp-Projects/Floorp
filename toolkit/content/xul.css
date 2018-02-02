@@ -571,16 +571,8 @@ listcell[type="checkbox"] {
   -moz-binding: url("chrome://global/content/bindings/listbox.xml#listitem-iconic");
 }
 
-listitem[type="checkbox"].listitem-iconic {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listitem-checkbox-iconic");
-}
-
 .listcell-iconic {
   -moz-binding: url("chrome://global/content/bindings/listbox.xml#listcell-iconic");
-}
-
-listcell[type="checkbox"].listcell-iconic {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listcell-checkbox-iconic");
 }
 
 listbox {
