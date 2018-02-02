@@ -6410,7 +6410,6 @@ class LCompareExchangeTypedArrayElement : public LInstructionHelper<1, 4, 4>
   public:
     LIR_HEADER(CompareExchangeTypedArrayElement)
 
-    // ARM, ARM64, x86, x64
     LCompareExchangeTypedArrayElement(const LAllocation& elements, const LAllocation& index,
                                       const LAllocation& oldval, const LAllocation& newval,
                                       const LDefinition& temp)
@@ -6421,7 +6420,6 @@ class LCompareExchangeTypedArrayElement : public LInstructionHelper<1, 4, 4>
         setOperand(3, newval);
         setTemp(0, temp);
     }
-    // MIPS32, MIPS64
     LCompareExchangeTypedArrayElement(const LAllocation& elements, const LAllocation& index,
                                       const LAllocation& oldval, const LAllocation& newval,
                                       const LDefinition& temp, const LDefinition& valueTemp,
@@ -6474,7 +6472,6 @@ class LAtomicExchangeTypedArrayElement : public LInstructionHelper<1, 3, 4>
   public:
     LIR_HEADER(AtomicExchangeTypedArrayElement)
 
-    // ARM, ARM64, x86, x64
     LAtomicExchangeTypedArrayElement(const LAllocation& elements, const LAllocation& index,
                                      const LAllocation& value, const LDefinition& temp)
     {
@@ -6483,7 +6480,6 @@ class LAtomicExchangeTypedArrayElement : public LInstructionHelper<1, 3, 4>
         setOperand(2, value);
         setTemp(0, temp);
     }
-    // MIPS32, MIPS64
     LAtomicExchangeTypedArrayElement(const LAllocation& elements, const LAllocation& index,
                                      const LAllocation& value, const LDefinition& temp,
                                      const LDefinition& valueTemp, const LDefinition& offsetTemp,
@@ -6534,7 +6530,6 @@ class LAtomicTypedArrayElementBinop : public LInstructionHelper<1, 3, 5>
 
     static const int32_t valueOp = 2;
 
-    // ARM, ARM64, x86, x64
     LAtomicTypedArrayElementBinop(const LAllocation& elements, const LAllocation& index,
                                   const LAllocation& value, const LDefinition& temp1,
                                   const LDefinition& temp2)
@@ -6545,16 +6540,15 @@ class LAtomicTypedArrayElementBinop : public LInstructionHelper<1, 3, 5>
         setTemp(0, temp1);
         setTemp(1, temp2);
     }
-    // MIPS32, MIPS64
     LAtomicTypedArrayElementBinop(const LAllocation& elements, const LAllocation& index,
-                                  const LAllocation& value, const LDefinition& temp2,
-                                  const LDefinition& valueTemp, const LDefinition& offsetTemp,
-                                  const LDefinition& maskTemp)
+                                  const LAllocation& value, const LDefinition& temp1,
+                                  const LDefinition& temp2, const LDefinition& valueTemp,
+                                  const LDefinition& offsetTemp, const LDefinition& maskTemp)
     {
         setOperand(0, elements);
         setOperand(1, index);
         setOperand(2, value);
-        setTemp(0, LDefinition::BogusTemp());
+        setTemp(0, temp1);
         setTemp(1, temp2);
         setTemp(2, valueTemp);
         setTemp(3, offsetTemp);
@@ -6600,7 +6594,6 @@ class LAtomicTypedArrayElementBinopForEffect : public LInstructionHelper<0, 3, 4
   public:
     LIR_HEADER(AtomicTypedArrayElementBinopForEffect)
 
-    // ARM, ARM64, x86, x64
     LAtomicTypedArrayElementBinopForEffect(const LAllocation& elements, const LAllocation& index,
                                            const LAllocation& value,
                                            const LDefinition& flagTemp = LDefinition::BogusTemp())
@@ -6610,15 +6603,15 @@ class LAtomicTypedArrayElementBinopForEffect : public LInstructionHelper<0, 3, 4
         setOperand(2, value);
         setTemp(0, flagTemp);
     }
-    // MIPS32, MIPS64
     LAtomicTypedArrayElementBinopForEffect(const LAllocation& elements, const LAllocation& index,
-                                           const LAllocation& value, const LDefinition& valueTemp,
-                                           const LDefinition& offsetTemp, const LDefinition& maskTemp)
+                                           const LAllocation& value, const LDefinition& flagTemp,
+                                           const LDefinition& valueTemp, const LDefinition& offsetTemp,
+                                           const LDefinition& maskTemp)
     {
         setOperand(0, elements);
         setOperand(1, index);
         setOperand(2, value);
-        setTemp(0, LDefinition::BogusTemp());
+        setTemp(0, flagTemp);
         setTemp(1, valueTemp);
         setTemp(2, offsetTemp);
         setTemp(3, maskTemp);
@@ -8739,15 +8732,16 @@ class LWasmAtomicBinopHeap : public LInstructionHelper<1, 3, 6>
     }
     // MIPS32, MIPS64
     LWasmAtomicBinopHeap(const LAllocation& ptr, const LAllocation& value,
+                         const LDefinition& temp, const LDefinition& flagTemp,
                          const LDefinition& valueTemp, const LDefinition& offsetTemp,
                          const LDefinition& maskTemp)
     {
         setOperand(0, ptr);
         setOperand(1, value);
         setOperand(2, LAllocation());
-        setTemp(0, LDefinition::BogusTemp());
+        setTemp(0, temp);
         setTemp(1, LDefinition::BogusTemp());
-        setTemp(2, LDefinition::BogusTemp());
+        setTemp(2, flagTemp);
         setTemp(3, valueTemp);
         setTemp(4, offsetTemp);
         setTemp(5, maskTemp);
@@ -8812,14 +8806,14 @@ class LWasmAtomicBinopHeapForEffect : public LInstructionHelper<0, 3, 5>
     }
     // MIPS32, MIPS64
     LWasmAtomicBinopHeapForEffect(const LAllocation& ptr, const LAllocation& value,
-                                  const LDefinition& valueTemp, const LDefinition& offsetTemp,
-                                  const LDefinition& maskTemp)
+                                  const LDefinition& flagTemp, const LDefinition& valueTemp,
+                                  const LDefinition& offsetTemp, const LDefinition& maskTemp)
     {
         setOperand(0, ptr);
         setOperand(1, value);
         setOperand(2, LAllocation());
         setTemp(0, LDefinition::BogusTemp());
-        setTemp(1, LDefinition::BogusTemp());
+        setTemp(1, flagTemp);
         setTemp(2, valueTemp);
         setTemp(3, offsetTemp);
         setTemp(4, maskTemp);
