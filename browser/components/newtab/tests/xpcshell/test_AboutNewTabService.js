@@ -129,6 +129,11 @@ add_task(async function test_default_url() {
   cleanup();
 });
 
+add_task(function test_locale() {
+  Assert.equal(aboutNewTabService.activityStreamLocale, "en-US",
+    "The locale for testing should be en-US");
+});
+
 /**
  * Tests reponse to updates to prefs
  */

@@ -166,13 +166,7 @@ AboutNewTabService.prototype = {
   updatePrerenderedPath() {
     // Debug files are specially packaged in a non-localized directory
     this._activityStreamPath = `${this._activityStreamDebug ? "static" :
-      // Pick the best available locale to match the app locales
-      Services.locale.negotiateLanguages(
-        Services.locale.getAppLocalesAsLangTags(),
-        ACTIVITY_STREAM_LOCALES,
-        // defaultLocale's strings aren't necessarily packaged, but en-US' are
-        "en-US"
-      )[0]}/`;
+      this.activityStreamLocale}/`;
   },
 
   /*
@@ -230,6 +224,16 @@ AboutNewTabService.prototype = {
 
   get activityStreamDebug() {
     return this._activityStreamDebug;
+  },
+
+  get activityStreamLocale() {
+    // Pick the best available locale to match the app locales
+    return Services.locale.negotiateLanguages(
+      Services.locale.getAppLocalesAsLangTags(),
+      ACTIVITY_STREAM_LOCALES,
+      // defaultLocale's strings aren't necessarily packaged, but en-US' are
+      "en-US"
+    )[0];
   },
 
   resetNewTabURL() {
