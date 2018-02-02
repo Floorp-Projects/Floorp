@@ -647,7 +647,7 @@ class LcovFileRewriter(object):
                     lcov_file.print_file(out_fh, rewrite_source, self.pp_rewriter.rewrite_record)
 
         if not found_valid[0]:
-            print("WARNING: No valid records found in %s" % in_path)
+            print("WARNING: No valid records found in %s" % in_paths)
             return
 
 

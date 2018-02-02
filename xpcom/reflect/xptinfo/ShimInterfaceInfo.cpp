@@ -59,7 +59,6 @@
 #include "nsIDOMSerializer.h"
 #include "nsIDOMSimpleGestureEvent.h"
 #include "nsIDOMSVGElement.h"
-#include "nsIDOMSVGLength.h"
 #include "nsIDOMText.h"
 #include "nsIDOMTimeEvent.h"
 #include "nsIDOMTimeRanges.h"
@@ -153,7 +152,6 @@
 #include "mozilla/dom/StyleSheetBinding.h"
 #include "mozilla/dom/StyleSheetListBinding.h"
 #include "mozilla/dom/SVGElementBinding.h"
-#include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/TextBinding.h"
 #include "mozilla/dom/TimeEventBinding.h"
 #include "mozilla/dom/TimeRangesBinding.h"
@@ -283,7 +281,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMSerializer, XMLSerializer),
   DEFINE_SHIM(SimpleGestureEvent),
   DEFINE_SHIM(SVGElement),
-  DEFINE_SHIM(SVGLength),
   DEFINE_SHIM(Text),
   DEFINE_SHIM(TimeEvent),
   DEFINE_SHIM(TimeRanges),
