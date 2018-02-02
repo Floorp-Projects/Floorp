@@ -11,8 +11,8 @@
   /* These hover and active colors should work on both light and dark
      backgrounds. We'll later set colors that cater for light and dark
      backgrounds specifically when we can detect them. */
-  --toolbarbutton-hover-background: hsla(0,0%,70%,.4);
-  --toolbarbutton-active-background: hsla(0,0%,70%,.6);
+  --toolbarbutton-hover-background: var(--lwt-toolbarbutton-hover-background, hsla(0,0%,70%,.4));
+  --toolbarbutton-active-background: var(--lwt-toolbarbutton-active-background, hsla(0,0%,70%,.6));
 
   --backbutton-background: hsla(0,100%,100%,.8);
   --backbutton-hover-background: var(--backbutton-background);
@@ -37,14 +37,14 @@
    [brighttext] to cater for OS themes where :-moz-lwtheme-* doesn't apply. */
 :root:-moz-lwtheme-darktext,
 toolbar:not([brighttext]) {
-  --toolbarbutton-hover-background: hsla(240,5%,5%,.1);
-  --toolbarbutton-active-background: hsla(240,5%,5%,.15);
+  --toolbarbutton-hover-background: var(--lwt-toolbarbutton-hover-background, hsla(240,5%,5%,.1));
+  --toolbarbutton-active-background: var(--lwt-toolbarbutton-active-background, hsla(240,5%,5%,.15));
 }
 
 :root:-moz-lwtheme-brighttext,
 toolbar[brighttext] {
-  --toolbarbutton-hover-background: hsla(0,0%,100%,.2);
-  --toolbarbutton-active-background: hsla(0,0%,100%,.3);
+  --toolbarbutton-hover-background: var(--lwt-toolbarbutton-hover-background, hsla(0,0%,100%,.2));
+  --toolbarbutton-active-background: var(--lwt-toolbarbutton-active-background, hsla(0,0%,100%,.3));
 
   --backbutton-background: var(--toolbarbutton-hover-background);
   --backbutton-hover-background: var(--toolbarbutton-active-background);
@@ -166,6 +166,18 @@ toolbar .toolbaritem-combined-buttons:not(:hover) > separator {
 
 toolbar[brighttext] .toolbaritem-combined-buttons > separator {
   opacity: .3;
+}
+
+#PersonalToolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active),
+.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled=true]),
+.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled=true]),
+.findbar-button:not(:-moz-any([checked="true"],[disabled="true"])) > .toolbarbutton-text,
+toolbarbutton.bookmark-item:not(.subviewbutton):not([disabled="true"]):not([open]),
+toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active) > .toolbarbutton-icon,
+toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active) > .toolbarbutton-text,
+toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active) > .toolbarbutton-badge-stack {
+  background-color: var(--lwt-toolbarbutton-background, transparent);
+  color: inherit;
 }
 
 #PersonalToolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover,
