@@ -11,6 +11,7 @@
 #include "nsIDOMSVGLength.h"
 #include "nsMathUtils.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/dom/SVGLengthBinding.h"
 
 class nsSVGElement;
 
@@ -35,7 +36,7 @@ public:
   SVGLength()
 #ifdef DEBUG
     : mValue(0.0f)
-    , mUnit(nsIDOMSVGLength::SVG_LENGTHTYPE_UNKNOWN) // caught by IsValid()
+    , mUnit(dom::SVGLengthBinding::SVG_LENGTHTYPE_UNKNOWN) // caught by IsValid()
 #endif
   {}
 
@@ -120,12 +121,12 @@ public:
                                 uint8_t aAxis) const;
 
   bool IsPercentage() const {
-    return mUnit == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE;
+    return mUnit == dom::SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE;
   }
 
   static bool IsValidUnitType(uint16_t unit) {
-    return unit > nsIDOMSVGLength::SVG_LENGTHTYPE_UNKNOWN &&
-           unit <= nsIDOMSVGLength::SVG_LENGTHTYPE_PC;
+    return unit > dom::SVGLengthBinding::SVG_LENGTHTYPE_UNKNOWN &&
+           unit <= dom::SVGLengthBinding::SVG_LENGTHTYPE_PC;
   }
 
   /**

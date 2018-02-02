@@ -8,6 +8,7 @@
 #include "mozilla/gfx/2D.h"
 #include "nsGkAtoms.h"
 #include "mozilla/dom/SVGCircleElementBinding.h"
+#include "mozilla/dom/SVGLengthBinding.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Circle)
 
@@ -24,9 +25,9 @@ SVGCircleElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 
 nsSVGElement::LengthInfo SVGCircleElement::sLengthInfo[3] =
 {
-  { &nsGkAtoms::cx, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { &nsGkAtoms::cy, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
-  { &nsGkAtoms::r, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::XY }
+  { &nsGkAtoms::cx, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
+  { &nsGkAtoms::cy, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
+  { &nsGkAtoms::r, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::XY }
 };
 
 //----------------------------------------------------------------------

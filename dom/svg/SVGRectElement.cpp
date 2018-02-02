@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/SVGRectElement.h"
 #include "nsGkAtoms.h"
+#include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGRectElementBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Matrix.h"
@@ -30,12 +31,12 @@ SVGRectElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 
 nsSVGElement::LengthInfo SVGRectElement::sLengthInfo[6] =
 {
-  { &nsGkAtoms::x, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { &nsGkAtoms::y, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
-  { &nsGkAtoms::width, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { &nsGkAtoms::height, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
-  { &nsGkAtoms::rx, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { &nsGkAtoms::ry, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y }
+  { &nsGkAtoms::x, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
+  { &nsGkAtoms::y, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
+  { &nsGkAtoms::width, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
+  { &nsGkAtoms::height, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
+  { &nsGkAtoms::rx, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
+  { &nsGkAtoms::ry, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y }
 };
 
 //----------------------------------------------------------------------
