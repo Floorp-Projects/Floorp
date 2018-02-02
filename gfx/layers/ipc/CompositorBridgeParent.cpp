@@ -324,7 +324,6 @@ CompositorBridgeParent::CompositorBridgeParent(CompositorManagerParent* aManager
   , mWidget(nullptr)
   , mScale(aScale)
   , mVsyncRate(aVsyncRate)
-  , mIsTesting(false)
   , mPendingTransaction(0)
   , mPaused(false)
   , mUseExternalSurfaceSize(aUseExternalSurfaceSize)
@@ -1015,7 +1014,7 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
 
   mCompositionManager->ComputeRotation();
 
-  TimeStamp time = mIsTesting ? mTestTime : mCompositorScheduler->GetLastComposeTime();
+  TimeStamp time = mTestTime.valueOr(mCompositorScheduler->GetLastComposeTime());
   bool requestNextFrame = mCompositionManager->TransformShadowTree(time, mVsyncRate);
   if (requestNextFrame) {
     ScheduleComposition();
@@ -1285,8 +1284,7 @@ CompositorBridgeParent::SetTestSampleTime(const uint64_t& aId,
     return false;
   }
 
-  mIsTesting = true;
-  mTestTime = aTime;
+  mTestTime = Some(aTime);
 
   if (mWrBridge) {
     mWrBridge->FlushRendering();
@@ -1314,14 +1312,14 @@ CompositorBridgeParent::SetTestSampleTime(const uint64_t& aId,
 void
 CompositorBridgeParent::LeaveTestMode(const uint64_t& aId)
 {
-  mIsTesting = false;
+  mTestTime = Nothing();
 }
 
 void
 CompositorBridgeParent::ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
 {
-  // NOTE: This should only be used for testing. For example, when mIsTesting is
-  // true or when called from test-only methods like
+  // NOTE: This should only be used for testing. For example, when mTestTime is
+  // non-empty, or when called from test-only methods like
   // LayerTransactionParent::RecvGetAnimationTransform.
 
   // Synchronously update the layer tree
@@ -1329,7 +1327,7 @@ CompositorBridgeParent::ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
     AutoResolveRefLayers resolve(mCompositionManager);
     SetShadowProperties(mLayerManager->GetRoot());
 
-    TimeStamp time = mIsTesting ? mTestTime : mCompositorScheduler->GetLastComposeTime();
+    TimeStamp time = mTestTime.valueOr(mCompositorScheduler->GetLastComposeTime());
     bool requestNextFrame =
       mCompositionManager->TransformShadowTree(time, mVsyncRate,
         AsyncCompositionManager::TransformsToSkip::APZ);
@@ -1773,7 +1771,7 @@ CompositorBridgeParent::GetWebRenderBridgeParent() const
 Maybe<TimeStamp>
 CompositorBridgeParent::GetTestingTimeStamp() const
 {
-  return mIsTesting ? Some(mTestTime) : Nothing();
+  return mTestTime;
 }
 
 void
