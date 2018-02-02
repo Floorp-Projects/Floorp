@@ -10,7 +10,6 @@
 #ifndef mozilla_css_ImageLoader_h___
 #define mozilla_css_ImageLoader_h___
 
-#include "CORSMode.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
@@ -66,7 +65,7 @@ public:
   void ClearFrames(nsPresContext* aPresContext);
 
   void LoadImage(nsIURI* aURI, nsIPrincipal* aPrincipal, nsIURI* aReferrer,
-                 Image* aCSSValue, CORSMode aCorsMode);
+                 Image* aCSSValue);
 
   void DestroyRequest(imgIRequest* aRequest);
 

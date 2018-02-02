@@ -22,7 +22,6 @@
 #include "js/RootingAPI.h"
 #include "mozilla/dom/FromParser.h"
 #include "mozilla/BasicEvents.h"
-#include "mozilla/CORSMode.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/TaskCategory.h"
@@ -825,14 +824,6 @@ public:
    * Returns true if objects in aDocument shouldn't initiate image loads.
    */
   static bool DocumentInactiveForImageLoads(nsIDocument* aDocument);
-
-  /**
-   * Convert a CORSMode into the corresponding imgILoader flags for
-   * passing to LoadImage.
-   * @param aMode CORS mode to convert
-   * @return a bitfield suitable to bitwise OR with other nsIRequest flags
-   */
-  static int32_t CORSModeToLoadImageFlags(mozilla::CORSMode aMode);
 
   /**
    * Method to start an image load.  This does not do any security checks.
