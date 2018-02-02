@@ -293,7 +293,7 @@ public:
   bool ScheduleResumeOnCompositorThread();
   bool ScheduleResumeOnCompositorThread(int width, int height);
 
-  virtual void ScheduleComposition();
+  void ScheduleComposition();
   void NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint,
       const FocusTarget& aFocusTarget,
       bool aScheduleComposite, uint32_t aPaintSequenceNumber,
