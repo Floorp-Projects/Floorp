@@ -11,7 +11,6 @@
 #include "SVGAnimatedLengthList.h"
 #include "nsSVGElement.h"
 #include "nsSVGLength2.h"
-#include "nsIDOMSVGLength.h"
 #include "nsError.h"
 #include "nsMathUtils.h"
 #include "mozilla/dom/SVGLengthBinding.h"
@@ -57,7 +56,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGLength)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGLength)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(mozilla::DOMSVGLength) // pseudo-interface
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLength)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
