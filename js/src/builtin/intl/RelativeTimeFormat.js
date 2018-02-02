@@ -175,7 +175,7 @@ function Intl_RelativeTimeFormat_format(value, unit) {
         ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "RelativeTimeFormat", "format", "RelativeTimeFormat");
 
     // Ensure the RelativeTimeFormat internals are resolved.
-    getRelativeTimeFormatInternals(relativeTimeFormat);
+    var internals = getRelativeTimeFormatInternals(relativeTimeFormat);
 
     // Step 3.
     let t = ToNumber(value);
@@ -198,7 +198,7 @@ function Intl_RelativeTimeFormat_format(value, unit) {
     }
 
     // Step 5.
-    return intl_FormatRelativeTime(relativeTimeFormat, t, u);
+    return intl_FormatRelativeTime(relativeTimeFormat, t, u, internals.type);
 }
 
 /**
