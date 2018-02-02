@@ -26,8 +26,8 @@ const kCSSVarsMap = new Map([
   ["--tabs-border-color", "toolbar_top_separator"],
   ["--toolbox-border-bottom-color", "toolbar_bottom_separator"],
   ["--urlbar-separator-color", "toolbar_vertical_separator"],
-  ["--lwt-toolbarbutton-icon-fill", "icons"],
-  ["--lwt-toolbarbutton-icon-fill-attention", "icons_attention"],
+  ["--lwt-toolbarbutton-icon-fill", "icon_color"],
+  ["--lwt-toolbarbutton-icon-fill-attention", "icon_attention_color"],
 ]);
 
 this.LightweightThemeConsumer =
