@@ -365,7 +365,7 @@ DrawTargetCaptureImpl::ContainsOnlyColoredGlyphs(RefPtr<ScaledFont>& aScaledFont
 
     if (command->GetType() == CommandType::SETTRANSFORM) {
       SetTransformCommand* transform = static_cast<SetTransformCommand*>(command);
-      if (transform->mTransform != Matrix()) {
+      if (!transform->mTransform.IsIdentity()) {
         return false;
       }
       continue;

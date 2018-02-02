@@ -68,7 +68,7 @@ public:
   {
     dt->PrepareForDrawing(ctx);
     cairo_save(mCtx);
-    MOZ_ASSERT(cairo_status(mCtx) || dt->GetTransform() == GetTransform());
+    MOZ_ASSERT(cairo_status(mCtx) || dt->GetTransform().FuzzyEquals(GetTransform()));
   }
 
   AutoPrepareForDrawing(DrawTargetCairo* dt, cairo_t* ctx, const Path* path)
@@ -76,7 +76,7 @@ public:
   {
     dt->PrepareForDrawing(ctx, path);
     cairo_save(mCtx);
-    MOZ_ASSERT(cairo_status(mCtx) || dt->GetTransform() == GetTransform());
+    MOZ_ASSERT(cairo_status(mCtx) || dt->GetTransform().FuzzyEquals(GetTransform()));
   }
 
   ~AutoPrepareForDrawing()
