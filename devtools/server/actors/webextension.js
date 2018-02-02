@@ -11,7 +11,7 @@ const { ChromeActor } = require("./chrome");
 const makeDebugger = require("./utils/make-debugger");
 
 loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
-loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/script", true);
+loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/thread", true);
 loader.lazyRequireGetter(this, "ChromeUtils");
 
 const FALLBACK_DOC_MESSAGE = "Your addon does not have any document opened yet.";
