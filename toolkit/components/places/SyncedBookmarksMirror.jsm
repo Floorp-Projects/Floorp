@@ -3269,7 +3269,20 @@ class BookmarkMerger {
   }
 
   /**
-   * Merges a remote child node into a merged folder node.
+   * Merges a remote child node into a merged folder node. This handles the
+   * following cases:
+   *
+   * - The remote child is locally deleted. We recursively move all of its
+   *   descendants that don't exist locally to the merged folder.
+   * - The remote child doesn't exist locally, but has a content match in the
+   *   corresponding local folder. We dedupe the local child to the remote
+   *   child.
+   * - The remote child exists locally, but in a different folder. We compare
+   *   merge flags and timestamps to decide where to keep the child.
+   * - The remote child exists locally, and in the same folder. We merge the
+   *   local and remote children.
+   *
+   * This is the inverse of `mergeLocalChildIntoMergedNode`.
    *
    * @param  {MergedBookmarkNode} mergedNode
    *         The merged folder node.
@@ -3293,16 +3306,16 @@ class BookmarkMerger {
                     "${remoteParentNode} into ${mergedNode}",
                     { remoteChildNode, remoteParentNode, mergedNode });
 
-    // Make sure the remote child isn't locally deleted. If it is, we need
-    // to move all descendants that aren't also remotely deleted to the
-    // merged node. This handles the case where a user deletes a folder
-    // on this device, and adds a bookmark to the same folder on another
-    // device. We want to keep the folder deleted, but we also don't want
-    // to lose the new bookmark, so we move the bookmark to the deleted
-    // folder's parent.
-    let locallyMovedOrDeleted = this.checkForLocalMoveOrDeletionOfRemoteNode(
-      mergedNode, remoteChildNode);
-    if (locallyMovedOrDeleted) {
+    // Make sure the remote child isn't locally deleted.
+    let structureChange = this.checkForLocalStructureChangeOfRemoteNode(
+      mergedNode, remoteParentNode, remoteChildNode);
+    if (structureChange == BookmarkMerger.STRUCTURE.DELETED) {
+      // If the remote child is locally deleted, we need to move all descendants
+      // that aren't also remotely deleted to the merged node. This handles the
+      // case where a user deletes a folder on this device, and adds a bookmark
+      // to the same folder on another device. We want to keep the folder
+      // deleted, but we also don't want to lose the new bookmark, so we move
+      // the bookmark to the deleted folder's parent.
       return true;
     }
 
@@ -3399,6 +3412,8 @@ class BookmarkMerger {
   /**
    * Merges a local child node into a merged folder node.
    *
+   * This is the inverse of `mergeRemoteChildIntoMergedNode`.
+   *
    * @param  {MergedBookmarkNode} mergedNode
    *         The merged folder node.
    * @param  {BookmarkNode} localParentNode
@@ -3424,11 +3439,12 @@ class BookmarkMerger {
 
     // Now, we know we haven't seen the local child before, and it's not in
     // this folder on the server. Check if the child is remotely deleted.
-    // If so, we need to move any new local descendants to the merged node,
-    // just as we did for new remote descendants of locally deleted parents.
-    let remotelyMovedOrDeleted = this.checkForRemoteMoveOrDeletionOfLocalNode(
-      mergedNode, localChildNode);
-    if (remotelyMovedOrDeleted) {
+    let structureChange = this.checkForRemoteStructureChangeOfLocalNode(
+      mergedNode, localParentNode, localChildNode);
+    if (structureChange == BookmarkMerger.STRUCTURE.DELETED) {
+      // If the child is remotely deleted, we need to move any new local
+      // descendants to the merged node, just as we did for new remote
+      // descendants of locally deleted children.
       return true;
     }
 
@@ -3578,20 +3594,38 @@ class BookmarkMerger {
 
   /**
    * Checks if a remote node is locally moved or deleted, and reparents any
-   * descendants that aren't also remotely deleted to the merged node. Returns
-   * `true` if `remoteNode` is locally moved or deleted; `false` if `remoteNode`
-   * is not deleted or doesn't exist locally.
+   * descendants that aren't also remotely deleted to the merged node.
    *
-   * This is the inverse of `checkForRemoteMoveOrDeletionOfLocalNode`.
+   * This is the inverse of `checkForRemoteStructureChangeOfLocalNode`.
+   *
+   * @param  {MergedBookmarkNode} mergedNode
+   *         The merged folder node to hold relocated remote orphans.
+   * @param  {BookmarkNode} remoteParentNode
+   *         The remote parent of the potentially deleted child node.
+   * @param  {BookmarkNode} remoteNode
+   *         The remote potentially deleted child node.
+   * @return {BookmarkMerger.STRUCTURE}
+   *         A structure change type: `UNCHANGED` if the remote node is not
+   *         deleted or doesn't exist locally, `MOVED` if the node is moved
+   *         locally, or `DELETED` if the node is deleted locally.
    */
-  checkForLocalMoveOrDeletionOfRemoteNode(mergedNode, remoteNode) {
-    if (this.mergedGuids.has(remoteNode.guid)) {
-      // Already merged, so must be locally moved.
-      return true;
-    }
-
+  checkForLocalStructureChangeOfRemoteNode(mergedNode, remoteParentNode,
+                                          remoteNode) {
     if (!this.localTree.isDeleted(remoteNode.guid)) {
-      return false;
+      let localNode = this.localTree.nodeForGuid(remoteNode.guid);
+      if (!localNode) {
+        return BookmarkMerger.STRUCTURE.UNCHANGED;
+      }
+      let localParentNode = this.localTree.parentNodeFor(localNode);
+      if (!localParentNode) {
+        // Should never happen. The local tree must be complete.
+        throw new SyncedBookmarksMirror.ConsistencyError(
+          "Can't check for structure changes of local orphan");
+      }
+      if (localParentNode.guid != remoteParentNode.guid) {
+        return BookmarkMerger.STRUCTURE.MOVED;
+      }
+      return BookmarkMerger.STRUCTURE.UNCHANGED;
     }
 
     if (remoteNode.needsMerge) {
@@ -3632,25 +3666,43 @@ class BookmarkMerger {
     MirrorLog.trace("Relocating remote orphans ${mergedOrphanNodes} to " +
                     "${mergedNode}", { mergedOrphanNodes, mergedNode });
 
-    return true;
+    return BookmarkMerger.STRUCTURE.DELETED;
   }
 
   /**
    * Checks if a local node is remotely moved or deleted, and reparents any
-   * descendants that aren't also locally deleted to the merged node. Returns
-   * `true` if `localNode` is moved or deleted remotely; `false` if `localNode`
-   * is not deleted or doesn't exist locally.
+   * descendants that aren't also locally deleted to the merged node.
    *
-   * This is the inverse of `checkForLocalMoveOrDeletionOfRemoteNode`.
+   * This is the inverse of `checkForLocalStructureChangeOfRemoteNode`.
+   *
+   * @param  {MergedBookmarkNode} mergedNode
+   *         The merged folder node to hold relocated local orphans.
+   * @param  {BookmarkNode} localParentNode
+   *         The local parent of the potentially deleted child node.
+   * @param  {BookmarkNode} localNode
+   *         The local potentially deleted child node.
+   * @return {BookmarkMerger.STRUCTURE}
+   *         A structure change type: `UNCHANGED` if the local node is not
+   *         deleted or doesn't exist remotely, `MOVED` if the node is moved
+   *         remotely, or `DELETED` if the node is deleted remotely.
    */
-  checkForRemoteMoveOrDeletionOfLocalNode(mergedNode, localNode) {
-    if (this.mergedGuids.has(localNode.guid)) {
-      // Already merged, so must be remotely moved.
-      return true;
-    }
-
+  checkForRemoteStructureChangeOfLocalNode(mergedNode, localParentNode,
+                                          localNode) {
     if (!this.remoteTree.isDeleted(localNode.guid)) {
-      return false;
+      let remoteNode = this.remoteTree.nodeForGuid(localNode.guid);
+      if (!remoteNode) {
+        return BookmarkMerger.STRUCTURE.UNCHANGED;
+      }
+      let remoteParentNode = this.remoteTree.parentNodeFor(remoteNode);
+      if (!remoteParentNode) {
+        // Should never happen. The remote tree must be complete.
+        throw new SyncedBookmarksMirror.ConsistencyError(
+          "Can't check for structure changes of remote orphan");
+      }
+      if (remoteParentNode.guid != localParentNode.guid) {
+        return BookmarkMerger.STRUCTURE.MOVED;
+      }
+      return BookmarkMerger.STRUCTURE.UNCHANGED;
     }
 
     if (localNode.needsMerge) {
@@ -3685,7 +3737,7 @@ class BookmarkMerger {
     MirrorLog.trace("Relocating local orphans ${mergedOrphanNodes} to " +
                     "${mergedNode}", { mergedOrphanNodes, mergedNode });
 
-    return true;
+    return BookmarkMerger.STRUCTURE.DELETED;
   }
 
   /**
@@ -3698,11 +3750,12 @@ class BookmarkMerger {
     let remoteOrphanNodes = [];
 
     for (let remoteChildNode of remoteNode.children) {
-      let locallyMovedOrDeleted = this.checkForLocalMoveOrDeletionOfRemoteNode(
-        mergedNode, remoteChildNode);
-      if (locallyMovedOrDeleted) {
-        // The remote child doesn't exist locally, or is already moved or
-        // deleted locally, so we can safely ignore it.
+      let structureChange = this.checkForLocalStructureChangeOfRemoteNode(
+        mergedNode, remoteNode, remoteChildNode);
+      if (structureChange == BookmarkMerger.STRUCTURE.MOVED ||
+          structureChange == BookmarkMerger.STRUCTURE.DELETED) {
+        // The remote child is already moved or deleted locally, so we should
+        // ignore it instead of treating it as a remote orphan.
         continue;
       }
       remoteOrphanNodes.push(remoteChildNode);
@@ -3732,11 +3785,12 @@ class BookmarkMerger {
 
     let localOrphanNodes = [];
     for (let localChildNode of localNode.children) {
-      let remotelyMovedOrDeleted = this.checkForRemoteMoveOrDeletionOfLocalNode(
-        mergedNode, localChildNode);
-      if (remotelyMovedOrDeleted) {
-        // The local child doesn't exist remotely, or is already moved or
-        // deleted remotely, so we can safely ignore it.
+      let structureChange = this.checkForRemoteStructureChangeOfLocalNode(
+        mergedNode, localNode, localChildNode);
+      if (structureChange == BookmarkMerger.STRUCTURE.MOVED ||
+          structureChange == BookmarkMerger.STRUCTURE.DELETED) {
+        // The local child is already moved or deleted remotely, so we should
+        // ignore it instead of treating it as a local orphan.
         continue;
       }
       localOrphanNodes.push(localChildNode);
@@ -3759,7 +3813,9 @@ class BookmarkMerger {
    * them along with their new parent on the next sync.
    *
    * @param {MergedBookmarkNode} mergedNode
+   *        The closest surviving ancestor.
    * @param {MergedBookmarkNode[]} mergedOrphanNodes
+   *        Merged orphans to relocate to the surviving ancestor.
    */
   relocateOrphansTo(mergedNode, mergedOrphanNodes) {
     for (let mergedOrphanNode of mergedOrphanNodes) {
@@ -3854,6 +3910,16 @@ class BookmarkMerger {
     return infos;
   }
 }
+
+/**
+ * Structure change types, used to indicate if a node on one side is moved
+ * or deleted on the other.
+ */
+BookmarkMerger.STRUCTURE = {
+  UNCHANGED: 1,
+  MOVED: 2,
+  DELETED: 3,
+};
 
 /**
  * Determines if two new local and remote nodes are of the same kind, and have
