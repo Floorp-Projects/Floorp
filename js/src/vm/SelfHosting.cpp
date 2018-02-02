@@ -2499,7 +2499,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_patternForSkeleton", intl_patternForSkeleton, 2,0),
     JS_FN("intl_patternForStyle", intl_patternForStyle, 3,0),
     JS_FN("intl_PluralRules_availableLocales", intl_PluralRules_availableLocales, 0,0),
-    JS_FN("intl_GetPluralCategories", intl_GetPluralCategories, 2, 0),
+    JS_FN("intl_GetPluralCategories", intl_GetPluralCategories, 1, 0),
     JS_FN("intl_SelectPluralRule", intl_SelectPluralRule, 2,0),
     JS_FN("intl_RelativeTimeFormat_availableLocales", intl_RelativeTimeFormat_availableLocales, 0,0),
     JS_FN("intl_FormatRelativeTime", intl_FormatRelativeTime, 3,0),

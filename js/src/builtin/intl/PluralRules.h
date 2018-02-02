@@ -25,7 +25,8 @@ class PluralRulesObject : public NativeObject
 
     static constexpr uint32_t INTERNALS_SLOT = 0;
     static constexpr uint32_t UPLURAL_RULES_SLOT = 1;
-    static constexpr uint32_t SLOT_COUNT = 2;
+    static constexpr uint32_t UNUMBER_FORMAT_SLOT = 2;
+    static constexpr uint32_t SLOT_COUNT = 3;
 
     static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
                   "INTERNALS_SLOT must match self-hosting define for internals object slot");
@@ -64,14 +65,14 @@ extern MOZ_MUST_USE bool
 intl_SelectPluralRule(JSContext* cx, unsigned argc, JS::Value* vp);
 
 /**
- * Returns an array of plural rules categories for a given
- * locale and type.
+ * Returns an array of plural rules categories for a given pluralRules object.
  *
- * Usage: categories = intl_GetPluralCategories(locale, type)
+ * Usage: categories = intl_GetPluralCategories(pluralRules)
  *
  * Example:
  *
- * intl_getPluralCategories('pl', 'cardinal'); // ['one', 'few', 'many', 'other']
+ * pluralRules = new Intl.PluralRules('pl', {type: 'cardinal'});
+ * intl_getPluralCategories(pluralRules); // ['one', 'few', 'many', 'other']
  */
 extern MOZ_MUST_USE bool
 intl_GetPluralCategories(JSContext* cx, unsigned argc, JS::Value* vp);
