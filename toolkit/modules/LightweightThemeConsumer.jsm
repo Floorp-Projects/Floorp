@@ -22,9 +22,10 @@ const kCSSVarsMap = new Map([
   ["--url-and-searchbar-background-color", "toolbar_field"],
   ["--url-and-searchbar-color", "toolbar_field_text"],
   ["--lwt-toolbar-field-border-color", "toolbar_field_border"],
+  ["--urlbar-separator-color", "toolbar_field_separator"],
   ["--tabs-border-color", "toolbar_top_separator"],
   ["--toolbox-border-bottom-color", "toolbar_bottom_separator"],
-  ["--urlbar-separator-color", "toolbar_vertical_separator"],
+  ["--lwt-toolbar-vertical-separator", "toolbar_vertical_separator"],
 ]);
 
 this.LightweightThemeConsumer =
