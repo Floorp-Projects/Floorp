@@ -1289,7 +1289,7 @@ CompositorBridgeParent::SetTestSampleTime(const uint64_t& aId,
   mTestTime = aTime;
 
   if (mWrBridge) {
-    mWrBridge->FlushRenderingAsync();
+    mWrBridge->FlushRendering();
     return true;
   }
 
