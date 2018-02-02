@@ -35,6 +35,8 @@ SimpleTest.waitForFocus(function() {
 const defaultMinimum = "NaN";
 const defaultMaximum = "NaN";
 const defaultStep = 1;
+const kStrictKeyPressEvents =
+  SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
 
 // Helpers:
 // For the sake of simplicity, we do not currently support fractional value,
@@ -141,7 +143,7 @@ function expectedValueAfterStepUpOrDown(stepFactor, element) {
 }
 
 function expectedValAfterKeyEvent(key, element) {
-  return expectedValueAfterStepUpOrDown(key == "VK_UP" ? 1 : -1, element);
+  return expectedValueAfterStepUpOrDown(key == "KEY_ArrowUp" ? 1 : -1, element);
 }
 
 function test() {
@@ -154,7 +156,7 @@ function test() {
   var defaultValue = 0;
   var oldVal, expectedVal;
 
-  for (key of ["VK_UP", "VK_DOWN"]) {
+  for (key of ["KEY_ArrowUp", "KEY_ArrowDown"]) {
     // Start at middle:
     oldVal = elem.value = -1;
     expectedVal = expectedValAfterKeyEvent(key, elem);
@@ -189,10 +191,9 @@ function test() {
     is(elem.value, String(expectedVal), "Test repeat of " + key + " for number control");
 
     // Test preventDefault():
-    elem.addEventListener("keypress", function(evt) {
+    elem.addEventListener(kStrictKeyPressEvents ? "keydown" : "keypress", function(evt) {
       evt.preventDefault();
-      elem.removeEventListener("keypress", arguments.callee);
-    });
+    }, {once: true});
     oldVal = elem.value = 0;
     expectedVal = 0;
     synthesizeKey(key, {});
