@@ -1,14 +1,14 @@
 {
   "name": "sorted-es6",
   "version": "1.0.0",
-  "description": "",
+  "description": "Rebuild assets for sourcemaps3 test",
   "main": "sorted.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MPL-2.0",
   "dependencies": {},
   "devDependencies": {
     "babel-core": "^6.26.0",

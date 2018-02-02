@@ -43,15 +43,15 @@ public:
   mozilla::StyleSheet* GetSheet() const { return mStyleSheet; }
 
   // nsIStyleSheetLinkingElement
-  NS_IMETHOD SetStyleSheet(mozilla::StyleSheet* aStyleSheet) override;
-  NS_IMETHOD_(mozilla::StyleSheet*) GetStyleSheet() override;
-  NS_IMETHOD InitStyleLinkElement(bool aDontLoadStyle) override;
-  NS_IMETHOD UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
-                              bool* aWillNotify,
-                              bool* aIsAlternate,
-                              bool aForceReload) override;
-  NS_IMETHOD SetEnableUpdates(bool aEnableUpdates) override;
-  NS_IMETHOD GetCharset(nsAString& aCharset) override;
+  void SetStyleSheet(mozilla::StyleSheet* aStyleSheet) override;
+  mozilla::StyleSheet* GetStyleSheet() override;
+  void InitStyleLinkElement(bool aDontLoadStyle) override;
+  nsresult UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
+                            bool* aWillNotify,
+                            bool* aIsAlternate,
+                            bool aForceReload) override;
+  void SetEnableUpdates(bool aEnableUpdates) override;
+  void GetCharset(nsAString& aCharset) override;
 
   virtual void OverrideBaseURI(nsIURI* aNewBaseURI) override;
   virtual void SetLineNumber(uint32_t aLineNumber) override;

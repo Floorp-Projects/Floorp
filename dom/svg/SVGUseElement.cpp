@@ -8,6 +8,7 @@
 #include "mozilla/ErrorResult.h"
 
 #include "mozilla/dom/SVGUseElement.h"
+#include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGUseElementBinding.h"
 #include "nsGkAtoms.h"
 #include "mozilla/dom/SVGSVGElement.h"
@@ -36,10 +37,10 @@ SVGUseElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 
 nsSVGElement::LengthInfo SVGUseElement::sLengthInfo[4] =
 {
-  { &nsGkAtoms::x, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { &nsGkAtoms::y, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
-  { &nsGkAtoms::width, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { &nsGkAtoms::height, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
+  { &nsGkAtoms::x, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
+  { &nsGkAtoms::y, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
+  { &nsGkAtoms::width, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
+  { &nsGkAtoms::height, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
 };
 
 nsSVGElement::StringInfo SVGUseElement::sStringInfo[2] =
@@ -350,7 +351,7 @@ SVGUseElement::SyncWidthOrHeight(nsAtom* aName)
     // need to set the value to 100%
     nsSVGLength2 length;
     length.Init(SVGContentUtils::XY, 0xff,
-                100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
+                100, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE);
     target->SetLength(aName, length);
     return;
   }

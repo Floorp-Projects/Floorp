@@ -28,14 +28,14 @@ public:
    * @param aStyleSheet the style sheet associated with this
    *                    element.
    */
-  NS_IMETHOD SetStyleSheet(mozilla::StyleSheet* aStyleSheet) = 0;
+  virtual void SetStyleSheet(mozilla::StyleSheet* aStyleSheet) = 0;
 
   /**
    * Used to obtain the style sheet linked in by this element.
    *
    * @return the style sheet associated with this element.
    */
-  NS_IMETHOD_(mozilla::StyleSheet*) GetStyleSheet() = 0;
+  virtual mozilla::StyleSheet* GetStyleSheet() = 0;
 
   /**
    * Initialize the stylesheet linking element. If aDontLoadStyle is
@@ -43,7 +43,7 @@ public:
    * element that would cause a stylesheet to be loaded. Subsequent
    * modifications to the element will not be ignored.
    */
-  NS_IMETHOD InitStyleLinkElement(bool aDontLoadStyle) = 0;
+  virtual void InitStyleLinkElement(bool aDontLoadStyle) = 0;
 
   /**
    * Tells this element to update the stylesheet.
@@ -61,10 +61,10 @@ public:
    * @param aForceUpdate whether we wand to force the update, flushing the
    *                     cached version if any.
    */
-  NS_IMETHOD UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
-                              bool *aWillNotify,
-                              bool *aIsAlternate,
-                              bool aForceUpdate = false) = 0;
+  virtual nsresult UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
+                                    bool *aWillNotify,
+                                    bool *aIsAlternate,
+                                    bool aForceUpdate = false) = 0;
 
   /**
    * Tells this element whether to update the stylesheet when the
@@ -72,14 +72,16 @@ public:
    *
    * @param aEnableUpdates update on changes or not.
    */
-  NS_IMETHOD SetEnableUpdates(bool aEnableUpdates) = 0;
+  virtual void SetEnableUpdates(bool aEnableUpdates) = 0;
 
   /**
-   * Gets the charset that the element claims the style sheet is in
+   * Gets the charset that the element claims the style sheet is in.
+   * Can return empty string to indicate that we have no charset
+   * information.
    *
    * @param aCharset the charset
    */
-  NS_IMETHOD GetCharset(nsAString& aCharset) = 0;
+  virtual void GetCharset(nsAString& aCharset) = 0;
 
   /**
    * Tells this element to use a different base URI. This is used for

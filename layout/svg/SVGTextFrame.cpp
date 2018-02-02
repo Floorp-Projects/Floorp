@@ -25,7 +25,6 @@
 #include "nsCaret.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMSVGLength.h"
 #include "nsISelection.h"
 #include "nsQuickSort.h"
 #include "SVGObserverUtils.h"
