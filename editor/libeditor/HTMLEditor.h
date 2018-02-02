@@ -487,7 +487,7 @@ public:
                                   StyleSheet* aStyleSheet);
   nsresult RemoveStyleSheetFromList(const nsAString &aURL);
 
-  bool IsCSSEnabled()
+  bool IsCSSEnabled() const
   {
     // TODO: removal of mCSSAware and use only the presence of mCSSEditUtils
     return mCSSAware && mCSSEditUtils && mCSSEditUtils->IsCSSPrefChecked();

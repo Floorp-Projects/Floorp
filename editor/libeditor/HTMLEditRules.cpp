@@ -878,13 +878,13 @@ HTMLEditRules::GetAlignment(bool* aMixed,
   NS_ENSURE_TRUE(blockParent, NS_ERROR_FAILURE);
 
   if (htmlEditor->IsCSSEnabled() &&
-      htmlEditor->mCSSEditUtils->IsCSSEditableProperty(blockParent, nullptr,
-                                                       nsGkAtoms::align)) {
+      CSSEditUtils::IsCSSEditableProperty(blockParent, nullptr,
+                                          nsGkAtoms::align)) {
     // We are in CSS mode and we know how to align this element with CSS
     nsAutoString value;
     // Let's get the value(s) of text-align or margin-left/margin-right
-    htmlEditor->mCSSEditUtils->GetCSSEquivalentToHTMLInlineStyleSet(
-        blockParent, nullptr, nsGkAtoms::align, value, CSSEditUtils::eComputed);
+    CSSEditUtils::GetCSSEquivalentToHTMLInlineStyleSet(
+      blockParent, nullptr, nsGkAtoms::align, value, CSSEditUtils::eComputed);
     if (value.EqualsLiteral("center") ||
         value.EqualsLiteral("-moz-center") ||
         value.EqualsLiteral("auto auto")) {
@@ -916,12 +916,12 @@ HTMLEditRules::GetAlignment(bool* aMixed,
       return NS_OK;
     }
 
-    if (htmlEditor->mCSSEditUtils->IsCSSEditableProperty(nodeToExamine, nullptr,
-                                                         nsGkAtoms::align)) {
+    if (CSSEditUtils::IsCSSEditableProperty(nodeToExamine, nullptr,
+                                            nsGkAtoms::align)) {
       nsAutoString value;
-      htmlEditor->mCSSEditUtils->GetSpecifiedProperty(*nodeToExamine,
-                                                      *nsGkAtoms::textAlign,
-                                                      value);
+      CSSEditUtils::GetSpecifiedProperty(*nodeToExamine,
+                                         *nsGkAtoms::textAlign,
+                                         value);
       if (!value.IsEmpty()) {
         if (value.EqualsLiteral("center")) {
           *aAlign = nsIHTMLEditor::eCenter;
@@ -968,11 +968,11 @@ HTMLEditRules::GetAlignment(bool* aMixed,
   return NS_OK;
 }
 
-static nsAtom& MarginPropertyAtomForIndent(CSSEditUtils& aHTMLCSSUtils,
-                                            nsINode& aNode)
+static nsAtom&
+MarginPropertyAtomForIndent(nsINode& aNode)
 {
   nsAutoString direction;
-  aHTMLCSSUtils.GetComputedProperty(aNode, *nsGkAtoms::direction, direction);
+  CSSEditUtils::GetComputedProperty(aNode, *nsGkAtoms::direction, direction);
   return direction.EqualsLiteral("rtl") ?
     *nsGkAtoms::marginRight : *nsGkAtoms::marginLeft;
 }
@@ -1009,19 +1009,14 @@ HTMLEditRules::GetIndentState(bool* aCanIndent,
       break;
     } else if (useCSS) {
       // we are in CSS mode, indentation is done using the margin-left (or margin-right) property
-      NS_ENSURE_STATE(mHTMLEditor);
-      nsAtom& marginProperty =
-        MarginPropertyAtomForIndent(*mHTMLEditor->mCSSEditUtils, curNode);
+      nsAtom& marginProperty = MarginPropertyAtomForIndent(curNode);
       nsAutoString value;
       // retrieve its specified value
-      NS_ENSURE_STATE(mHTMLEditor);
-      mHTMLEditor->mCSSEditUtils->GetSpecifiedProperty(*curNode,
-                                                       marginProperty, value);
+      CSSEditUtils::GetSpecifiedProperty(*curNode, marginProperty, value);
       float f;
       RefPtr<nsAtom> unit;
       // get its number part and its unit
-      NS_ENSURE_STATE(mHTMLEditor);
-      mHTMLEditor->mCSSEditUtils->ParseLength(value, &f, getter_AddRefs(unit));
+      CSSEditUtils::ParseLength(value, &f, getter_AddRefs(unit));
       // if the number part is strictly positive, outdent is possible
       if (0 < f) {
         *aCanOutdent = true;
@@ -4548,17 +4543,12 @@ HTMLEditRules::WillOutdent(Selection& aSelection,
       }
       // Is it a block with a 'margin' property?
       if (useCSS && IsBlockNode(curNode)) {
-        nsAtom& marginProperty =
-          MarginPropertyAtomForIndent(*htmlEditor->mCSSEditUtils, curNode);
+        nsAtom& marginProperty = MarginPropertyAtomForIndent(curNode);
         nsAutoString value;
-        htmlEditor->mCSSEditUtils->GetSpecifiedProperty(curNode,
-                                                         marginProperty,
-                                                         value);
+        CSSEditUtils::GetSpecifiedProperty(curNode, marginProperty, value);
         float f;
         RefPtr<nsAtom> unit;
-        NS_ENSURE_STATE(htmlEditor);
-        htmlEditor->mCSSEditUtils->ParseLength(value, &f,
-                                               getter_AddRefs(unit));
+        CSSEditUtils::ParseLength(value, &f, getter_AddRefs(unit));
         if (f > 0) {
           ChangeIndentation(*curNode->AsElement(), Change::minus);
           continue;
@@ -4627,14 +4617,12 @@ HTMLEditRules::WillOutdent(Selection& aSelection,
           lastBQChild = curNode;
           break;
         } else if (useCSS) {
-          nsAtom& marginProperty =
-            MarginPropertyAtomForIndent(*htmlEditor->mCSSEditUtils, curNode);
+          nsAtom& marginProperty = MarginPropertyAtomForIndent(curNode);
           nsAutoString value;
-          htmlEditor->mCSSEditUtils->GetSpecifiedProperty(*n, marginProperty,
-                                                           value);
+          CSSEditUtils::GetSpecifiedProperty(*n, marginProperty, value);
           float f;
           RefPtr<nsAtom> unit;
-          htmlEditor->mCSSEditUtils->ParseLength(value, &f, getter_AddRefs(unit));
+          CSSEditUtils::ParseLength(value, &f, getter_AddRefs(unit));
           if (f > 0 && !(HTMLEditUtils::IsList(curParent) &&
                          HTMLEditUtils::IsList(curNode))) {
             curBlockQuote = n->AsElement();
@@ -7767,8 +7755,8 @@ HTMLEditRules::JoinNodesSmart(nsIContent& aNodeLeft,
       mHTMLEditor->AreNodesSameType(lastLeft, firstRight) &&
       (lastLeft->GetAsText() || !mHTMLEditor ||
        (lastLeft->IsElement() && firstRight->IsElement() &&
-        mHTMLEditor->mCSSEditUtils->ElementsSameStyle(lastLeft->AsElement(),
-                                                  firstRight->AsElement())))) {
+        CSSEditUtils::ElementsSameStyle(lastLeft->AsElement(),
+                                        firstRight->AsElement())))) {
     if (NS_WARN_IF(!mHTMLEditor)) {
       return EditorDOMPoint();
     }
@@ -7841,8 +7829,7 @@ HTMLEditRules::GetInlineStyles(nsINode* aNode,
                                                       nullptr,
                                                       &outValue);
     } else {
-      NS_ENSURE_STATE(mHTMLEditor);
-      isSet = mHTMLEditor->mCSSEditUtils->IsCSSEquivalentToHTMLInlineStyleSet(
+      isSet = CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
                 aNode, aStyleCache[j].tag, aStyleCache[j].attr, outValue,
                 CSSEditUtils::eComputed);
     }
@@ -7900,10 +7887,9 @@ HTMLEditRules::ReapplyCachedStyles()
       nsAutoString curValue;
       if (useCSS) {
         // check computed style first in css case
-        NS_ENSURE_STATE(mHTMLEditor);
-        bAny = mHTMLEditor->mCSSEditUtils->IsCSSEquivalentToHTMLInlineStyleSet(
-          selNode, mCachedStyles[i].tag, mCachedStyles[i].attr, curValue,
-          CSSEditUtils::eComputed);
+        bAny = CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
+                 selNode, mCachedStyles[i].tag, mCachedStyles[i].attr, curValue,
+                 CSSEditUtils::eComputed);
       }
       if (!bAny) {
         // then check typeinstate and html style
@@ -9181,17 +9167,15 @@ HTMLEditRules::ChangeIndentation(Element& aElement,
   NS_ENSURE_STATE(mHTMLEditor);
   RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
 
-  nsAtom& marginProperty =
-    MarginPropertyAtomForIndent(*htmlEditor->mCSSEditUtils, aElement);
+  nsAtom& marginProperty = MarginPropertyAtomForIndent(aElement);
   nsAutoString value;
-  htmlEditor->mCSSEditUtils->GetSpecifiedProperty(aElement, marginProperty,
-                                                  value);
+  CSSEditUtils::GetSpecifiedProperty(aElement, marginProperty, value);
   float f;
   RefPtr<nsAtom> unit;
-  htmlEditor->mCSSEditUtils->ParseLength(value, &f, getter_AddRefs(unit));
+  CSSEditUtils::ParseLength(value, &f, getter_AddRefs(unit));
   if (!f) {
     nsAutoString defaultLengthUnit;
-    htmlEditor->mCSSEditUtils->GetDefaultLengthUnit(defaultLengthUnit);
+    CSSEditUtils::GetDefaultLengthUnit(defaultLengthUnit);
     unit = NS_Atomize(defaultLengthUnit);
   }
   int8_t multiplier = aChange == Change::plus ? +1 : -1;
