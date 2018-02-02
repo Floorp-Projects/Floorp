@@ -1724,9 +1724,9 @@ HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
     // Make sure to not walk off onto the Document node
     do {
       // retrieve the computed style of background-color for blockParent
-      mCSSEditUtils->GetComputedProperty(*blockParent,
-                                         *nsGkAtoms::backgroundColor,
-                                         aOutColor);
+      CSSEditUtils::GetComputedProperty(*blockParent,
+                                        *nsGkAtoms::backgroundColor,
+                                        aOutColor);
       blockParent = blockParent->GetParentElement();
       // look at parent if the queried color is transparent and if the node to
       // examine is not the root of the document
@@ -1735,7 +1735,7 @@ HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
       // we have hit the root of the document and the color is still transparent !
       // Grumble... Let's look at the default background color because that's the
       // color we are looking for
-      mCSSEditUtils->GetDefaultBackgroundColor(aOutColor);
+      CSSEditUtils::GetDefaultBackgroundColor(aOutColor);
     }
   }
   else {
@@ -1757,9 +1757,9 @@ HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
       } else {
         // no, it's not; let's retrieve the computed style of background-color for the
         // node to examine
-        mCSSEditUtils->GetComputedProperty(*nodeToExamine,
-                                           *nsGkAtoms::backgroundColor,
-                                           aOutColor);
+        CSSEditUtils::GetComputedProperty(*nodeToExamine,
+                                          *nsGkAtoms::backgroundColor,
+                                          aOutColor);
         if (!aOutColor.EqualsLiteral("transparent")) {
           break;
         }
@@ -4313,9 +4313,13 @@ HTMLEditor::AreNodesSameType(nsIContent* aNode1,
     return true;
   }
 
+  if (!aNode1->IsElement() || !aNode2->IsElement()) {
+    return false;
+  }
+
   // If CSS is enabled, we are stricter about span nodes.
-  return mCSSEditUtils->ElementsSameStyle(aNode1->AsDOMNode(),
-                                          aNode2->AsDOMNode());
+  return CSSEditUtils::ElementsSameStyle(aNode1->AsElement(),
+                                         aNode2->AsElement());
 }
 
 nsresult
