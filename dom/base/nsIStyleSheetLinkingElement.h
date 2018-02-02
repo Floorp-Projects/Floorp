@@ -75,11 +75,13 @@ public:
   virtual void SetEnableUpdates(bool aEnableUpdates) = 0;
 
   /**
-   * Gets the charset that the element claims the style sheet is in
+   * Gets the charset that the element claims the style sheet is in.
+   * Can return empty string to indicate that we have no charset
+   * information.
    *
    * @param aCharset the charset
    */
-  NS_IMETHOD GetCharset(nsAString& aCharset) = 0;
+  virtual void GetCharset(nsAString& aCharset) = 0;
 
   /**
    * Tells this element to use a different base URI. This is used for

@@ -103,11 +103,10 @@ nsStyleLinkElement::SetEnableUpdates(bool aEnableUpdates)
   mUpdatesEnabled = aEnableUpdates;
 }
 
-NS_IMETHODIMP
+void
 nsStyleLinkElement::GetCharset(nsAString& aCharset)
 {
-  // descendants have to implement this themselves
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aCharset.Truncate();
 }
 
 /* virtual */ void

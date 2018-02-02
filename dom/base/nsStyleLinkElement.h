@@ -51,7 +51,7 @@ public:
                               bool* aIsAlternate,
                               bool aForceReload) override;
   void SetEnableUpdates(bool aEnableUpdates) override;
-  NS_IMETHOD GetCharset(nsAString& aCharset) override;
+  void GetCharset(nsAString& aCharset) override;
 
   virtual void OverrideBaseURI(nsIURI* aNewBaseURI) override;
   virtual void SetLineNumber(uint32_t aLineNumber) override;
