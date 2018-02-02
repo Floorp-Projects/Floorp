@@ -9,29 +9,12 @@
 
 #include "jsapi.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/Mutex.h"
-#include "nsAutoPtr.h"
-#include "nsCOMPtr.h"
-#include "nsString.h"
-#include "nsTArray.h"
-
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 
-class nsIGlobalObject;
 class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
-
-// If you change this, the corresponding list in nsIWorkerDebugger.idl needs to
-// be updated too.
-enum WorkerType
-{
-  WorkerTypeDedicated,
-  WorkerTypeShared,
-  WorkerTypeService
-};
 
 class WorkerPrivate;
 
