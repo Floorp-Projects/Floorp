@@ -165,6 +165,13 @@ private:
     }
     return mCommands.Append<T>();
   }
+  template<typename T>
+  T* ReuseOrAppendToCommandList() {
+    if (T::AffectsSnapshot) {
+      MarkChanged();
+    }
+    return mCommands.ReuseOrAppend<T>();
+  }
 
   RefPtr<DrawTarget> mRefDT;
   IntSize mSize;
