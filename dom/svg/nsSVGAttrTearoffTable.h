@@ -13,7 +13,7 @@
 
 /**
  * Global hashmap to associate internal SVG data types (e.g. nsSVGLength2) with
- * DOM tear-off objects (e.g. nsIDOMSVGLength). This allows us to always return
+ * DOM tear-off objects (e.g. DOMSVGLength). This allows us to always return
  * the same object for subsequent requests for DOM objects.
  *
  * We don't keep an owning reference to the tear-off objects so they are
