@@ -1010,7 +1010,14 @@ MacroAssembler::storeFloat32x3(FloatRegister src, const BaseIndex& dest)
 void
 MacroAssembler::memoryBarrier(MemoryBarrierBits barrier)
 {
-    as_sync();
+    if (barrier == MembarLoadLoad)
+        as_sync(19);
+    else if (barrier == MembarStoreStore)
+        as_sync(4);
+    else if (barrier & MembarSynchronizing)
+        as_sync();
+    else if (barrier)
+        as_sync(16);
 }
 
 // ===============================================================
