@@ -6,7 +6,7 @@
 const { ActorPool, appendExtraActors, createExtraActors } =
   require("devtools/server/actors/common");
 const { RootActor } = require("devtools/server/actors/root");
-const { ThreadActor } = require("devtools/server/actors/script");
+const { ThreadActor } = require("devtools/server/actors/thread");
 const { DebuggerServer } = require("devtools/server/main");
 const promise = require("promise");
 
