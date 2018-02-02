@@ -140,6 +140,18 @@
               "icons_attention": {
                 "$ref": "ThemeColor",
                 "optional": true
+              },
+              "button_background": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
+              "button_background_hover": {
+               "$ref": "ThemeColor",
+               "optional": true
+              },
+              "button_background_active": {
+                "$ref": "ThemeColor",
+                "optional": true
               }
             },
             "additionalProperties": { "$ref": "UnrecognizedProperty" }
