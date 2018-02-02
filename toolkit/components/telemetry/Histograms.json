@@ -10361,9 +10361,9 @@
   },
   "MIXED_CONTENT_OBJECT_SUBREQUEST": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "jkt@mozilla.com"],
     "bug_numbers": [1244116],
-    "expires_in_version": "60",
+    "expires_in_version": "67",
     "kind": "enumerated",
     "n_values": 10,
     "description": "How often objects load insecure content on secure pages (counting pages, not objects). 0=pages with no mixed object subrequests, 1=pages with mixed object subrequests"

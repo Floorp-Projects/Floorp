@@ -26,11 +26,14 @@ struct MiscContainer final
   // Note eStringBase and eAtomBase is used also to handle the type of
   // mStringBits.
   //
-  // Note that we use a relaxed atomic here so that we can use Compare-And-Swap
+  // Note that we use an atomic here so that we can use Compare-And-Swap
   // to cache the serialization during the parallel servo traversal. This case
   // (which happens when the main thread is blocked) is the only case where
-  // mStringBits is mutated off-main-thread.
-  mozilla::Atomic<uintptr_t, mozilla::Relaxed> mStringBits;
+  // mStringBits is mutated off-main-thread. The Atomic needs to be
+  // ReleaseAcquire so that the pointer to the serialization does not become
+  // observable to other threads before the initialization of the pointed-to
+  // memory is also observable.
+  mozilla::Atomic<uintptr_t, mozilla::ReleaseAcquire> mStringBits;
   union {
     struct {
       union {

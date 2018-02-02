@@ -124,6 +124,7 @@ reftest:
         by-test-platform:
             linux64-qr/.*: 1
             windows10-64-asan.*: 3
+            windows10-64-ccov.*: 3
             default: default
 
 reftest-gpu:

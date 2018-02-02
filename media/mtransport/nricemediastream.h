@@ -126,6 +126,7 @@ struct NrIceCandidatePair {
   NrIceCandidate remote;
   // TODO(bcampen@mozilla.com): Is it important to put the foundation in here?
   std::string codeword;
+  uint64_t component_id;
 
   // for RTCIceCandidatePairStats
   uint64_t bytes_sent;

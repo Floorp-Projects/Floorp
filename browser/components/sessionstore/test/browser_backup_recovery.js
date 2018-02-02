@@ -22,6 +22,11 @@ function promiseRead(path) {
   return File.read(path, {encoding: "utf-8", compression: "lz4"});
 }
 
+async function reInitSessionFile() {
+  await SessionFile.wipe();
+  await SessionFile.read();
+}
+
 add_task(async function init() {
   // Make sure that we are not racing with SessionSaver's time based
   // saves.
@@ -40,8 +45,7 @@ add_task(async function test_creation() {
   await File.writeAtomic(OLD_BACKUP, "sessionstore.bak");
   await File.writeAtomic(OLD_UPGRADE_BACKUP, "sessionstore upgrade backup");
 
-  await SessionFile.wipe();
-  await SessionFile.read(); // Reinitializes SessionFile
+  await reInitSessionFile();
 
   // Ensure none of the sessionstore files and backups exists
   for (let k of Paths.loadOrder) {
@@ -63,7 +67,8 @@ add_task(async function test_creation() {
   ok((await File.exists(Paths.recovery)), "After write, recovery sessionstore file exists again");
   ok(!(await File.exists(Paths.recoveryBackup)), "After write, recoveryBackup sessionstore doesn't exist");
   ok((await promiseRead(Paths.recovery)).includes(URL), "Recovery sessionstore file contains the required tab");
-  ok(!(await File.exists(Paths.clean)), "After first write, clean shutdown sessionstore doesn't exist, since we haven't shutdown yet");
+  ok(!(await File.exists(Paths.clean)), "After first write, clean shutdown " +
+    "sessionstore doesn't exist, since we haven't shutdown yet");
 
   // Open a second tab, save session, ensure that the correct files exist.
   info("Testing situation after a second write");
@@ -79,17 +84,20 @@ add_task(async function test_creation() {
   let backup = await promiseRead(Paths.recoveryBackup);
   ok(!backup.includes(URL2), "Recovery backup doesn't contain the latest url");
   ok(backup.includes(URL), "Recovery backup contains the original url");
-  ok(!(await File.exists(Paths.clean)), "After first write, clean shutdown sessinstore doesn't exist, since we haven't shutdown yet");
+  ok(!(await File.exists(Paths.clean)), "After first write, clean shutdown " +
+    "sessionstore doesn't exist, since we haven't shutdown yet");
 
   info("Reinitialize, ensure that we haven't leaked sensitive files");
   await SessionFile.read(); // Reinitializes SessionFile
   await SessionSaver.run();
-  ok(!(await File.exists(Paths.clean)), "After second write, clean shutdown sessonstore doesn't exist, since we haven't shutdown yet");
-  ok(!(await File.exists(Paths.upgradeBackup)), "After second write, clean shutdwn sessionstore doesn't exist, since we haven't shutdown yet");
-  ok(!(await File.exists(Paths.nextUpgradeBackup)), "After second write, clean sutdown sessionstore doesn't exist, since we haven't shutdown yet");
+  ok(!(await File.exists(Paths.clean)), "After second write, clean shutdown " +
+    "sessionstore doesn't exist, since we haven't shutdown yet");
+  ok(!(await File.exists(Paths.upgradeBackup)), "After second write, clean " +
+    "shutdown sessionstore doesn't exist, since we haven't shutdown yet");
+  ok(!(await File.exists(Paths.nextUpgradeBackup)), "After second write, clean " +
+    "shutdown sessionstore doesn't exist, since we haven't shutdown yet");
 
   gBrowser.removeTab(tab);
-  await SessionFile.wipe();
 });
 
 var promiseSource = async function(name) {
@@ -107,8 +115,7 @@ var promiseSource = async function(name) {
 };
 
 add_task(async function test_recovery() {
-  // Remove all files.
-  await SessionFile.wipe();
+  await reInitSessionFile();
   info("Attempting to recover from the recovery file");
 
   // Create Paths.recovery, ensure that we can recover from it.
@@ -116,7 +123,6 @@ add_task(async function test_recovery() {
   await File.makeDir(Paths.backups);
   await File.writeAtomic(Paths.recovery, SOURCE, {encoding: "utf-8", compression: "lz4"});
   is((await SessionFile.read()).source, SOURCE, "Recovered the correct source from the recovery file");
-  await SessionFile.wipe();
 
   info("Corrupting recovery file, attempting to recover from recovery backup");
   SOURCE = await promiseSource("Paths.recoveryBackup");
@@ -124,7 +130,6 @@ add_task(async function test_recovery() {
   await File.writeAtomic(Paths.recoveryBackup, SOURCE, {encoding: "utf-8", compression: "lz4"});
   await File.writeAtomic(Paths.recovery, "<Invalid JSON>", {encoding: "utf-8", compression: "lz4"});
   is((await SessionFile.read()).source, SOURCE, "Recovered the correct source from the recovery file");
-  await SessionFile.wipe();
 });
 
 add_task(async function test_recovery_inaccessible() {
@@ -133,6 +138,7 @@ add_task(async function test_recovery_inaccessible() {
     return;
   }
 
+  await reInitSessionFile();
   info("Making recovery file inaccessible, attempting to recover from recovery backup");
   let SOURCE_RECOVERY = await promiseSource("Paths.recovery");
   let SOURCE = await promiseSource("Paths.recoveryBackup");
@@ -148,12 +154,13 @@ add_task(async function test_recovery_inaccessible() {
 });
 
 add_task(async function test_clean() {
-  await SessionFile.wipe();
+  await reInitSessionFile();
   let SOURCE = await promiseSource("Paths.clean");
   await File.writeAtomic(Paths.clean, SOURCE, {encoding: "utf-8", compression: "lz4"});
   await SessionFile.read();
   await SessionSaver.run();
-  is((await promiseRead(Paths.cleanBackup)), SOURCE, "After first read/write, clean shutdown file has been moved to cleanBackup");
+  is((await promiseRead(Paths.cleanBackup)), SOURCE, "After first read/write, " +
+    "clean shutdown file has been moved to cleanBackup");
 });
 
 
@@ -180,6 +187,7 @@ add_task(async function test_version() {
  * Tests fallback to previous backups if format version is unknown.
  */
 add_task(async function test_version_fallback() {
+  await reInitSessionFile();
   info("Preparing data, making sure that it has a version number");
   let SOURCE = await promiseSource("Paths.clean");
   let BACKUP_SOURCE = await promiseSource("Paths.cleanBackup");
@@ -205,5 +213,5 @@ add_task(async function test_version_fallback() {
 });
 
 add_task(async function cleanup() {
-  await SessionFile.wipe();
+  await reInitSessionFile();
 });
