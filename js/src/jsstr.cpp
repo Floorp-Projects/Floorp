@@ -2575,17 +2575,17 @@ js::str_endsWith(JSContext* cx, unsigned argc, Value* vp)
 
 template <typename CharT>
 static void
-TrimString(const CharT* chars, bool trimLeft, bool trimRight, size_t length,
+TrimString(const CharT* chars, bool trimStart, bool trimEnd, size_t length,
            size_t* pBegin, size_t* pEnd)
 {
     size_t begin = 0, end = length;
 
-    if (trimLeft) {
+    if (trimStart) {
         while (begin < length && unicode::IsSpace(chars[begin]))
             ++begin;
     }
 
-    if (trimRight) {
+    if (trimEnd) {
         while (end > begin && unicode::IsSpace(chars[end - 1]))
             --end;
     }
@@ -2595,7 +2595,7 @@ TrimString(const CharT* chars, bool trimLeft, bool trimRight, size_t length,
 }
 
 static bool
-TrimString(JSContext* cx, const CallArgs& args, bool trimLeft, bool trimRight)
+TrimString(JSContext* cx, const CallArgs& args, bool trimStart, bool trimEnd)
 {
     JSString* str = ToStringForStringFunction(cx, args.thisv());
     if (!str)
@@ -2609,10 +2609,10 @@ TrimString(JSContext* cx, const CallArgs& args, bool trimLeft, bool trimRight)
     size_t begin, end;
     if (linear->hasLatin1Chars()) {
         AutoCheckCannotGC nogc;
-        TrimString(linear->latin1Chars(nogc), trimLeft, trimRight, length, &begin, &end);
+        TrimString(linear->latin1Chars(nogc), trimStart, trimEnd, length, &begin, &end);
     } else {
         AutoCheckCannotGC nogc;
-        TrimString(linear->twoByteChars(nogc), trimLeft, trimRight, length, &begin, &end);
+        TrimString(linear->twoByteChars(nogc), trimStart, trimEnd, length, &begin, &end);
     }
 
     JSLinearString* result = NewDependentString(cx, linear, begin, end - begin);
@@ -2631,14 +2631,14 @@ js::str_trim(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-js::str_trimLeft(JSContext* cx, unsigned argc, Value* vp)
+js::str_trimStart(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return TrimString(cx, args, true, false);
 }
 
 bool
-js::str_trimRight(JSContext* cx, unsigned argc, Value* vp)
+js::str_trimEnd(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return TrimString(cx, args, false, true);
@@ -3323,8 +3323,13 @@ static const JSFunctionSpec string_methods[] = {
     JS_FN("startsWith",        str_startsWith,        1,0),
     JS_FN("endsWith",          str_endsWith,          1,0),
     JS_FN("trim",              str_trim,              0,0),
-    JS_FN("trimLeft",          str_trimLeft,          0,0),
-    JS_FN("trimRight",         str_trimRight,         0,0),
+#ifdef NIGHTLY_BUILD
+    JS_FN("trimStart",         str_trimStart,         0,0),
+    JS_FN("trimEnd",           str_trimEnd,           0,0),
+#else
+    JS_FN("trimLeft",          str_trimStart,         0,0),
+    JS_FN("trimRight",         str_trimEnd,           0,0),
+#endif
 #if EXPOSE_INTL_API
     JS_SELF_HOSTED_FN("toLocaleLowerCase", "String_toLocaleLowerCase", 0,0),
     JS_SELF_HOSTED_FN("toLocaleUpperCase", "String_toLocaleUpperCase", 0,0),
@@ -3682,6 +3687,27 @@ js::InitStringClass(JSContext* cx, HandleObject obj)
     {
         return nullptr;
     }
+
+#ifdef NIGHTLY_BUILD
+    // Create "trimLeft" as an alias for "trimStart".
+    RootedValue trimFn(cx);
+    RootedId trimId(cx, NameToId(cx->names().trimStart));
+    RootedId trimAliasId(cx, NameToId(cx->names().trimLeft));
+    if (!NativeGetProperty(cx, protoObj, trimId, &trimFn) ||
+        !NativeDefineDataProperty(cx, protoObj, trimAliasId, trimFn, 0))
+    {
+        return nullptr;
+    }
+
+    // Create "trimRight" as an alias for "trimEnd".
+    trimId = NameToId(cx->names().trimEnd);
+    trimAliasId = NameToId(cx->names().trimRight);
+    if (!NativeGetProperty(cx, protoObj, trimId, &trimFn) ||
+        !NativeDefineDataProperty(cx, protoObj, trimAliasId, trimFn, 0))
+    {
+        return nullptr;
+    }
+#endif
 
     /*
      * Define escape/unescape, the URI encode/decode functions, and maybe

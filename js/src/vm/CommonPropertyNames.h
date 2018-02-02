@@ -397,6 +397,10 @@
     macro(timestamp, timestamp, "timestamp") \
     macro(timeZone, timeZone, "timeZone") \
     macro(timeZoneName, timeZoneName, "timeZoneName") \
+    macro(trimEnd, trimEnd, "trimEnd") \
+    macro(trimLeft, trimLeft, "trimLeft") \
+    macro(trimRight, trimRight, "trimRight") \
+    macro(trimStart, trimStart, "trimStart") \
     macro(toGMTString, toGMTString, "toGMTString") \
     macro(toISOString, toISOString, "toISOString") \
     macro(toJSON, toJSON, "toJSON") \
