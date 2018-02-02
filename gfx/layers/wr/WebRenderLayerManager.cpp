@@ -602,7 +602,7 @@ WebRenderLayerManager::SendInvalidRegion(const nsIntRegion& aRegion)
 void
 WebRenderLayerManager::ScheduleComposite()
 {
-  WrBridge()->SendForceComposite();
+  WrBridge()->SendScheduleComposite();
 }
 
 void

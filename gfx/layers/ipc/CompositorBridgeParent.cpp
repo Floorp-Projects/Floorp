@@ -1269,7 +1269,7 @@ CompositorBridgeParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
 }
 
 void
-CompositorBridgeParent::ForceComposite(LayerTransactionParent* aLayerTree)
+CompositorBridgeParent::ScheduleComposite(LayerTransactionParent* aLayerTree)
 {
   ScheduleComposition();
 }
