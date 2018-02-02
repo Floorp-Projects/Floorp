@@ -75,7 +75,7 @@
 
 #appMenuRecentlyClosedTabs,
 #appMenu-library-remotetabs-button {
-  list-style-image: url("chrome://browser/skin/synced-tabs.svg");
+  list-style-image: url("chrome://browser/skin/tab.svg");
 }
 
 #PanelUI-remotetabs-syncnow {

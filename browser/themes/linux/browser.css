@@ -385,6 +385,11 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 %include ../shared/autocomplete.inc.css
 %include ../shared/urlbar-autocomplete.inc.css
 
+:root {
+  --urlbar-popup-url-color: -moz-nativehyperlinktext;
+  --urlbar-popup-action-color: -moz-nativehyperlinktext;
+}
+
 #PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
   border-top: 1px solid ThreeDShadow;
 }
@@ -398,79 +403,6 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 .ac-action,
 .ac-tags {
   font-size: 0.9em;
-}
-
-html|span.ac-tag {
-  background-color: MenuText;
-  color: Menu;
-  border-radius: 2px;
-  border: 1px solid transparent;
-  padding: 0 1px;
-}
-
-.ac-separator:not([selected=true]),
-.ac-url:not([selected=true]),
-.ac-action:not([selected=true]) {
-  color: -moz-nativehyperlinktext;
-}
-
-.ac-tags-text[selected] > html|span.ac-tag {
-  background-color: HighlightText;
-  color: Highlight;
-}
-
-html|span.ac-emphasize-text-title,
-html|span.ac-emphasize-text-tag,
-html|span.ac-emphasize-text-url {
-  font-weight: 600;
-}
-
-.ac-type-icon[type=bookmark] {
-  list-style-image: url("chrome://browser/skin/bookmark.svg");
-  -moz-context-properties: fill;
-  fill: #b2b2b2;
-}
-
-.ac-type-icon[type=bookmark][selected][current] {
-  fill: white;
-}
-
-.ac-type-icon[type=keyword],
-.ac-site-icon[type=searchengine] {
-  list-style-image: url(chrome://browser/skin/search-glass.svg);
-  -moz-context-properties: fill;
-  fill: GrayText;
-}
-
-.ac-type-icon[type=keyword][selected],
-.ac-site-icon[type=searchengine][selected] {
-  fill: highlighttext;
-}
-
-.ac-type-icon[type=switchtab],
-.ac-type-icon[type=remotetab] {
-  list-style-image: url("chrome://browser/skin/urlbar-tab.svg");
-  -moz-context-properties: fill;
-  fill: #b2b2b2;
-}
-
-.ac-type-icon[type=switchtab][selected],
-.ac-type-icon[type=remotetab][selected] {
-  fill: white;
-}
-
-.autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {
-  color: GrayText;
-}
-
-.autocomplete-treebody::-moz-tree-cell-text(suggesthint, treecolAutoCompleteComment),
-.autocomplete-treebody::-moz-tree-cell-text(suggestfirst, treecolAutoCompleteComment) {
-  color: GrayText;
-  font-size: smaller;
-}
-
-.autocomplete-treebody::-moz-tree-cell(suggesthint) {
-  border-top: 1px solid GrayText;
 }
 
 /* Bookmarking panel */
