@@ -273,7 +273,11 @@ nsWaylandDisplay::GetShm()
     wl_registry_add_listener(registry, &registry_listener, this);
 
     wl_proxy_set_queue((struct wl_proxy *)registry, mEventQueue);
-    wl_display_roundtrip_queue(mDisplay, mEventQueue);
+    if (mEventQueue) {
+      wl_display_roundtrip_queue(mDisplay, mEventQueue);
+    } else {
+      wl_display_roundtrip(mDisplay);
+    }
 
     MOZ_RELEASE_ASSERT(mShm, "Wayland registry query failed!");
   }
