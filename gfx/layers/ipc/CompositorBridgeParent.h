@@ -107,7 +107,7 @@ public:
 
   virtual void NotifyClearCachedResources(LayerTransactionParent* aLayerTree) { }
 
-  virtual void ForceComposite(LayerTransactionParent* aLayerTree) { }
+  virtual void ScheduleComposite(LayerTransactionParent* aLayerTree) { }
   virtual bool SetTestSampleTime(const uint64_t& aId,
                                  const TimeStamp& aTime) { return true; }
   virtual void LeaveTestMode(const uint64_t& aId) { }
@@ -236,7 +236,7 @@ public:
   void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
                            const TransactionInfo& aInfo,
                            bool aHitTestUpdate) override;
-  void ForceComposite(LayerTransactionParent* aLayerTree) override;
+  void ScheduleComposite(LayerTransactionParent* aLayerTree) override;
   bool SetTestSampleTime(const uint64_t& aId,
                          const TimeStamp& aTime) override;
   void LeaveTestMode(const uint64_t& aId) override;
