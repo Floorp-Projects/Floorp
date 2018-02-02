@@ -12,7 +12,6 @@
 #include "nsIContentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDocumentLoaderFactory.h"
-#include "nsIDOMSVGLength.h"
 #include "nsIHttpChannel.h"
 #include "nsIObserverService.h"
 #include "nsIParser.h"

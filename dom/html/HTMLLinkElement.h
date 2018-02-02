@@ -150,11 +150,9 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::type, aType, aRv);
   }
-  // Requires nsresult return for nsStyleLinkElement override.
-  NS_IMETHODIMP GetCharset(nsAString& aValue) override
+  void GetCharset(nsAString& aValue) override
   {
     GetHTMLAttr(nsGkAtoms::charset, aValue);
-    return NS_OK;
   }
   void SetCharset(const nsAString& aCharset, ErrorResult& aRv)
   {

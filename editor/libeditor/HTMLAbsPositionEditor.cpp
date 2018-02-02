@@ -51,8 +51,8 @@ using namespace dom;
 
 #define  BLACK_BG_RGB_TRIGGER 0xd0
 
-NS_IMETHODIMP
-HTMLEditor::AbsolutePositionSelection(bool aEnabled)
+nsresult
+HTMLEditor::SetSelectionToAbsoluteOrStatic(bool aEnabled)
 {
   AutoPlaceholderBatch beginBatching(this);
   AutoRules beginRulesSniffing(this,
@@ -78,21 +78,6 @@ HTMLEditor::AbsolutePositionSelection(bool aEnabled)
   return rules->DidDoAction(selection, &ruleInfo, rv);
 }
 
-NS_IMETHODIMP
-HTMLEditor::GetAbsolutelyPositionedSelectionContainer(nsIDOMElement** _retval)
-{
-  RefPtr<Element> container =
-    GetAbsolutelyPositionedSelectionContainer();
-  if (NS_WARN_IF(!container)) {
-    *_retval = nullptr;
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIDOMElement> domContainer = do_QueryInterface(container);
-  domContainer.forget(_retval);
-  return NS_OK;
-}
-
 already_AddRefed<Element>
 HTMLEditor::GetAbsolutelyPositionedSelectionContainer()
 {
@@ -115,14 +100,6 @@ HTMLEditor::GetAbsolutelyPositionedSelectionContainer()
 }
 
 NS_IMETHODIMP
-HTMLEditor::GetSelectionContainerAbsolutelyPositioned(
-              bool* aIsSelectionContainerAbsolutelyPositioned)
-{
-  *aIsSelectionContainerAbsolutelyPositioned = (mAbsolutelyPositionedObject != nullptr);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 HTMLEditor::GetAbsolutePositioningEnabled(bool* aIsEnabled)
 {
   *aIsEnabled = AbsolutePositioningEnabled();
@@ -136,43 +113,35 @@ HTMLEditor::SetAbsolutePositioningEnabled(bool aIsEnabled)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLEditor::RelativeChangeElementZIndex(nsIDOMElement* aElement,
-                                          int32_t aChange,
-                                          int32_t* aReturn)
+nsresult
+HTMLEditor::RelativeChangeElementZIndex(Element& aElement,
+                                        int32_t aChange,
+                                        int32_t* aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aElement);
   NS_ENSURE_ARG_POINTER(aReturn);
   if (!aChange) // early way out, no change
     return NS_OK;
 
-  int32_t zIndex;
-  nsresult rv = GetElementZIndex(aElement, &zIndex);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  int32_t zIndex = GetZIndex(aElement);
   zIndex = std::max(zIndex + aChange, 0);
-  SetElementZIndex(aElement, zIndex);
+  SetZIndex(aElement, zIndex);
   *aReturn = zIndex;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLEditor::SetElementZIndex(nsIDOMElement* aElement,
-                             int32_t aZindex)
+void
+HTMLEditor::SetZIndex(Element& aElement,
+                      int32_t aZindex)
 {
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  NS_ENSURE_ARG_POINTER(element);
-
   nsAutoString zIndexStr;
   zIndexStr.AppendInt(aZindex);
 
-  mCSSEditUtils->SetCSSProperty(*element, *nsGkAtoms::z_index, zIndexStr);
-  return NS_OK;
+  mCSSEditUtils->SetCSSProperty(aElement, *nsGkAtoms::z_index, zIndexStr);
 }
 
-NS_IMETHODIMP
-HTMLEditor::RelativeChangeZIndex(int32_t aChange)
+nsresult
+HTMLEditor::AddZIndex(int32_t aChange)
 {
   AutoPlaceholderBatch beginBatching(this);
   AutoRules beginRulesSniffing(this,
@@ -197,56 +166,48 @@ HTMLEditor::RelativeChangeZIndex(int32_t aChange)
   return rules->DidDoAction(selection, &ruleInfo, rv);
 }
 
-NS_IMETHODIMP
-HTMLEditor::GetElementZIndex(nsIDOMElement* aElement,
-                             int32_t* aZindex)
+int32_t
+HTMLEditor::GetZIndex(Element& aElement)
 {
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  return GetElementZIndex(element, aZindex);
-}
-
-nsresult
-HTMLEditor::GetElementZIndex(Element* aElement,
-                             int32_t* aZindex)
-{
-  if (NS_WARN_IF(!aElement)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   nsAutoString zIndexStr;
-  *aZindex = 0;
 
   nsresult rv =
-    mCSSEditUtils->GetSpecifiedProperty(*aElement, *nsGkAtoms::z_index,
+    mCSSEditUtils->GetSpecifiedProperty(aElement, *nsGkAtoms::z_index,
                                         zIndexStr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return 0;
+  }
   if (zIndexStr.EqualsLiteral("auto")) {
     // we have to look at the positioned ancestors
     // cf. CSS 2 spec section 9.9.1
-    nsCOMPtr<nsINode> node = aElement->GetParentNode();
+    nsCOMPtr<nsINode> node = aElement.GetParentNode();
     nsAutoString positionStr;
     while (node && zIndexStr.EqualsLiteral("auto") &&
            !node->IsHTMLElement(nsGkAtoms::body)) {
       rv = mCSSEditUtils->GetComputedProperty(*node, *nsGkAtoms::position,
                                               positionStr);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return 0;
+      }
       if (positionStr.EqualsLiteral("absolute")) {
         // ah, we found one, what's its z-index ? If its z-index is auto,
         // we have to continue climbing the document's tree
         rv = mCSSEditUtils->GetComputedProperty(*node, *nsGkAtoms::z_index,
                                                 zIndexStr);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return 0;
+        }
       }
       node = node->GetParentNode();
     }
   }
 
-  if (!zIndexStr.EqualsLiteral("auto")) {
-    nsresult errorCode;
-    *aZindex = zIndexStr.ToInteger(&errorCode);
+  if (zIndexStr.EqualsLiteral("auto")) {
+    return 0;
   }
 
-  return NS_OK;
+  nsresult errorCode;
+  return zIndexStr.ToInteger(&errorCode);
 }
 
 ManualNACPtr
@@ -292,16 +253,20 @@ HTMLEditor::RefreshGrabber()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 HTMLEditor::HideGrabber()
 {
   nsresult rv = mAbsolutelyPositionedObject->UnsetAttr(kNameSpaceID_None,
                                                        nsGkAtoms::_moz_abspos,
                                                        true);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 
   mAbsolutelyPositionedObject = nullptr;
-  NS_ENSURE_TRUE(mGrabber, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!mGrabber)) {
+    return;
+  }
 
   // get the presshell's document observer interface.
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
@@ -311,20 +276,10 @@ HTMLEditor::HideGrabber()
 
   DeleteRefToAnonymousNode(Move(mGrabber), ps);
   DeleteRefToAnonymousNode(Move(mPositioningShadow), ps);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLEditor::ShowGrabberOnElement(nsIDOMElement* aElement)
-{
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  NS_ENSURE_ARG_POINTER(element);
-  return ShowGrabberOnElement(*element);
 }
 
 nsresult
-HTMLEditor::ShowGrabberOnElement(Element& aElement)
+HTMLEditor::ShowGrabber(Element& aElement)
 {
   if (NS_WARN_IF(!IsDescendantOfEditorRoot(&aElement))) {
     return NS_ERROR_UNEXPECTED;
@@ -498,81 +453,89 @@ HTMLEditor::AddPositioningOffset(int32_t& aX,
   aY += positioningOffset;
 }
 
-NS_IMETHODIMP
-HTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
-                                      bool aEnabled)
+nsresult
+HTMLEditor::SetPositionToAbsoluteOrStatic(Element& aElement,
+                                          bool aEnabled)
 {
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  NS_ENSURE_ARG_POINTER(element);
-
   nsAutoString positionStr;
-  mCSSEditUtils->GetComputedProperty(*element, *nsGkAtoms::position,
+  mCSSEditUtils->GetComputedProperty(aElement, *nsGkAtoms::position,
                                      positionStr);
   bool isPositioned = (positionStr.EqualsLiteral("absolute"));
 
   // nothing to do if the element is already in the state we want
-  if (isPositioned == aEnabled)
+  if (isPositioned == aEnabled) {
     return NS_OK;
-
-  AutoPlaceholderBatch batchIt(this);
+  }
 
   if (aEnabled) {
-    int32_t x, y;
-    GetElementOrigin(*element, x, y);
+    return SetPositionToAbsolute(aElement);
+  }
 
-    mCSSEditUtils->SetCSSProperty(*element, *nsGkAtoms::position,
-                                  NS_LITERAL_STRING("absolute"));
+  return SetPositionToStatic(aElement);
+}
 
-    AddPositioningOffset(x, y);
-    SnapToGrid(x, y);
-    SetElementPosition(*element, x, y);
+nsresult
+HTMLEditor::SetPositionToAbsolute(Element& aElement)
+{
+  AutoPlaceholderBatch batchIt(this);
 
-    // we may need to create a br if the positioned element is alone in its
-    // container
-    nsCOMPtr<nsINode> element = do_QueryInterface(aElement);
-    NS_ENSURE_STATE(element);
+  int32_t x, y;
+  GetElementOrigin(aElement, x, y);
 
-    nsINode* parentNode = element->GetParentNode();
-    if (parentNode->GetChildCount() == 1) {
-      RefPtr<Selection> selection = GetSelection();
-      if (NS_WARN_IF(!selection)) {
-        return NS_ERROR_FAILURE;
-      }
-      RefPtr<Element> newBRElement =
-        CreateBRImpl(*selection, EditorRawDOMPoint(parentNode, 0), eNone);
-      if (NS_WARN_IF(!newBRElement)) {
-        return NS_ERROR_FAILURE;
-      }
+  mCSSEditUtils->SetCSSProperty(aElement, *nsGkAtoms::position,
+                                NS_LITERAL_STRING("absolute"));
+
+  AddPositioningOffset(x, y);
+  SnapToGrid(x, y);
+  SetTopAndLeft(aElement, x, y);
+
+  // we may need to create a br if the positioned element is alone in its
+  // container
+  nsINode* parentNode = aElement.GetParentNode();
+  if (parentNode->GetChildCount() == 1) {
+    RefPtr<Selection> selection = GetSelection();
+    if (NS_WARN_IF(!selection)) {
+      return NS_ERROR_FAILURE;
+    }
+    RefPtr<Element> newBRElement =
+      CreateBRImpl(*selection, EditorRawDOMPoint(parentNode, 0), eNone);
+    if (NS_WARN_IF(!newBRElement)) {
+      return NS_ERROR_FAILURE;
     }
   }
-  else {
-    mCSSEditUtils->RemoveCSSProperty(*element, *nsGkAtoms::position,
-                                     EmptyString());
-    mCSSEditUtils->RemoveCSSProperty(*element, *nsGkAtoms::top,
-                                     EmptyString());
-    mCSSEditUtils->RemoveCSSProperty(*element, *nsGkAtoms::left,
-                                     EmptyString());
-    mCSSEditUtils->RemoveCSSProperty(*element, *nsGkAtoms::z_index,
-                                     EmptyString());
+  return NS_OK;
+}
 
-    if (!HTMLEditUtils::IsImage(aElement)) {
-      mCSSEditUtils->RemoveCSSProperty(*element, *nsGkAtoms::width,
-                                       EmptyString());
-      mCSSEditUtils->RemoveCSSProperty(*element, *nsGkAtoms::height,
-                                       EmptyString());
-    }
+nsresult
+HTMLEditor::SetPositionToStatic(Element& aElement)
+{
+  AutoPlaceholderBatch batchIt(this);
 
-    nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
-    if (element && element->IsHTMLElement(nsGkAtoms::div) &&
-        !HasStyleOrIdOrClass(element)) {
-      RefPtr<HTMLEditRules> htmlRules =
-        static_cast<HTMLEditRules*>(mRules.get());
-      NS_ENSURE_TRUE(htmlRules, NS_ERROR_FAILURE);
-      nsresult rv = htmlRules->MakeSureElemStartsOrEndsOnCR(*element);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = RemoveContainer(element);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+  mCSSEditUtils->RemoveCSSProperty(aElement, *nsGkAtoms::position,
+                                   EmptyString());
+  mCSSEditUtils->RemoveCSSProperty(aElement, *nsGkAtoms::top,
+                                   EmptyString());
+  mCSSEditUtils->RemoveCSSProperty(aElement, *nsGkAtoms::left,
+                                   EmptyString());
+  mCSSEditUtils->RemoveCSSProperty(aElement, *nsGkAtoms::z_index,
+                                   EmptyString());
+
+  if (!HTMLEditUtils::IsImage(&aElement)) {
+    mCSSEditUtils->RemoveCSSProperty(aElement, *nsGkAtoms::width,
+                                     EmptyString());
+    mCSSEditUtils->RemoveCSSProperty(aElement, *nsGkAtoms::height,
+                                     EmptyString());
+  }
+
+  if (aElement.IsHTMLElement(nsGkAtoms::div) &&
+      !HasStyleOrIdOrClass(&aElement)) {
+    RefPtr<HTMLEditRules> htmlRules =
+      static_cast<HTMLEditRules*>(mRules.get());
+    NS_ENSURE_TRUE(htmlRules, NS_ERROR_FAILURE);
+    nsresult rv = htmlRules->MakeSureElemStartsOrEndsOnCR(aElement);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = RemoveContainer(&aElement);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
 }
@@ -606,22 +569,10 @@ HTMLEditor::GetGridSize(uint32_t* aSize)
 }
 
 // self-explanatory
-NS_IMETHODIMP
-HTMLEditor::SetElementPosition(nsIDOMElement* aElement,
-                               int32_t aX,
-                               int32_t aY)
-{
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  NS_ENSURE_STATE(element);
-
-  SetElementPosition(*element, aX, aY);
-  return NS_OK;
-}
-
 void
-HTMLEditor::SetElementPosition(Element& aElement,
-                               int32_t aX,
-                               int32_t aY)
+HTMLEditor::SetTopAndLeft(Element& aElement,
+                          int32_t aX,
+                          int32_t aY)
 {
   AutoPlaceholderBatch batchIt(this);
   mCSSEditUtils->SetCSSPropertyPixels(aElement, *nsGkAtoms::left, aX);

@@ -396,8 +396,7 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection* aSelection)
 
   if (mIsAbsolutelyPositioningEnabled && mAbsolutelyPositionedObject &&
       absPosElement != mAbsolutelyPositionedObject) {
-    nsresult rv = HideGrabber();
-    NS_ENSURE_SUCCESS(rv, rv);
+    HideGrabber();
     NS_ASSERTION(!mAbsolutelyPositionedObject, "HideGrabber failed");
   }
 
@@ -444,7 +443,7 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection* aSelection)
         return rv;
       }
     } else {
-      nsresult rv = ShowGrabberOnElement(*absPosElement);
+      nsresult rv = ShowGrabber(*absPosElement);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
