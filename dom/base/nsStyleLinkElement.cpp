@@ -305,7 +305,7 @@ nsStyleLinkElement::CheckPreloadAttrs(const nsAttrValue& aAs,
   return false;
 }
 
-NS_IMETHODIMP
+nsresult
 nsStyleLinkElement::UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
                                      bool* aWillNotify,
                                      bool* aIsAlternate,

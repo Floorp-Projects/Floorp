@@ -46,10 +46,10 @@ public:
   void SetStyleSheet(mozilla::StyleSheet* aStyleSheet) override;
   mozilla::StyleSheet* GetStyleSheet() override;
   void InitStyleLinkElement(bool aDontLoadStyle) override;
-  NS_IMETHOD UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
-                              bool* aWillNotify,
-                              bool* aIsAlternate,
-                              bool aForceReload) override;
+  nsresult UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
+                            bool* aWillNotify,
+                            bool* aIsAlternate,
+                            bool aForceReload) override;
   void SetEnableUpdates(bool aEnableUpdates) override;
   void GetCharset(nsAString& aCharset) override;
 
