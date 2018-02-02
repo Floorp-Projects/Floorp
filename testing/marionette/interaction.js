@@ -425,15 +425,18 @@ interaction.flushEventLoop = async function(el) {
  *     Element to potential move the caret in.
  */
 interaction.moveCaretToEnd = function(el) {
-  if (!element.isDOMElement(el) ||
-      el.localName != "textarea" ||
-      (el.localName != "input" && el.type == "text")) {
+  if (!element.isDOMElement(el)) {
     return;
   }
 
-  if (el.selectionEnd == 0) {
-    let len = el.value.length;
-    el.setSelectionRange(len, len);
+  let isTextarea = el.localName == "textarea";
+  let isInputText = el.localName == "input" && el.type == "text";
+
+  if (isTextarea || isInputText) {
+    if (el.selectionEnd == 0) {
+      let len = el.value.length;
+      el.setSelectionRange(len, len);
+    }
   }
 };
 
