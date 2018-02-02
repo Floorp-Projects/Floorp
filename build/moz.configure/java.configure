@@ -95,8 +95,9 @@ option(env='PROGUARD_JAR', nargs=1, default=proguard_jar_default,
 def valid_proguard(java, proguard_jar):
     if not proguard_jar or not path.isfile(proguard_jar[0]):
         die('proguard.jar 5.3.3 or higher is required (looked for {}). '
-            'Run |mach artifact install --from-build proguard-jar| or add '
-            '`export PROGUARD_JAR=/path/to/proguard.jar` to your mozconfig.'
+            'Run |mach artifact toolchain --from-build proguard-jar && mv '
+            'proguard ~/.mozbuild/| or add `export PROGUARD_JAR=/path/to/'
+            'proguard.jar` to your mozconfig.'
             .format(proguard_jar[0]))
 
     try:
