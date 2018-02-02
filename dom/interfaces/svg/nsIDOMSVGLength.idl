@@ -20,9 +20,6 @@ interface nsIDOMSVGLength : nsISupports
   const unsigned short SVG_LENGTHTYPE_IN         = 8;
   const unsigned short SVG_LENGTHTYPE_PT         = 9;
   const unsigned short SVG_LENGTHTYPE_PC         = 10;
-
-  attribute DOMString      valueAsString;
-  // raises DOMException on setting
 };
 
 
