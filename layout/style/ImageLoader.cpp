@@ -244,8 +244,7 @@ ImageLoader::ClearFrames(nsPresContext* aPresContext)
 
 void
 ImageLoader::LoadImage(nsIURI* aURI, nsIPrincipal* aOriginPrincipal,
-                       nsIURI* aReferrer, ImageLoader::Image* aImage,
-                       CORSMode aCorsMode)
+                       nsIURI* aReferrer, ImageLoader::Image* aImage)
 {
   NS_ASSERTION(aImage->mRequests.Count() == 0, "Huh?");
 
@@ -255,14 +254,11 @@ ImageLoader::LoadImage(nsIURI* aURI, nsIPrincipal* aOriginPrincipal,
     return;
   }
 
-  int32_t loadFlags = nsIRequest::LOAD_NORMAL |
-                      nsContentUtils::CORSModeToLoadImageFlags(aCorsMode);
-
   RefPtr<imgRequestProxy> request;
   nsresult rv = nsContentUtils::LoadImage(aURI, mDocument, mDocument,
                                           aOriginPrincipal, 0, aReferrer,
                                           mDocument->GetReferrerPolicy(),
-                                          nullptr, loadFlags,
+                                          nullptr, nsIRequest::LOAD_NORMAL,
                                           NS_LITERAL_STRING("css"),
                                           getter_AddRefs(request));
 
