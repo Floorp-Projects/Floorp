@@ -12,8 +12,11 @@
 #include "nsSVGAttrTearoffTable.h"
 #include "nsSMILValue.h"
 #include "SVGLengthListSMILType.h"
+#include "mozilla/dom/SVGLengthBinding.h"
 
 namespace mozilla {
+
+using namespace dom;
 
 nsresult
 SVGAnimatedLengthList::SetBaseValueString(const nsAString& aValue)
@@ -160,9 +163,9 @@ SVGAnimatedLengthList::
     aPreventCachingOfSandwich = false;
     for (uint32_t i = 0; i < llai->Length(); ++i) {
       uint8_t unit = (*llai)[i].GetUnit();
-      if (unit == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE ||
-          unit == nsIDOMSVGLength::SVG_LENGTHTYPE_EMS ||
-          unit == nsIDOMSVGLength::SVG_LENGTHTYPE_EXS) {
+      if (unit == SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE ||
+          unit == SVGLengthBinding::SVG_LENGTHTYPE_EMS ||
+          unit == SVGLengthBinding::SVG_LENGTHTYPE_EXS) {
         aPreventCachingOfSandwich = true;
         break;
       }

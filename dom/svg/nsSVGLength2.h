@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/SVGLengthBinding.h"
 #include "nsCoord.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
@@ -97,7 +98,8 @@ public:
   void Init(uint8_t aCtxType = SVGContentUtils::XY,
             uint8_t aAttrEnum = 0xff,
             float aValue = 0,
-            uint8_t aUnitType = nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER) {
+            uint8_t aUnitType =
+              mozilla::dom::SVGLengthBinding::SVG_LENGTHTYPE_NUMBER) {
     mAnimVal = mBaseVal = aValue;
     mSpecifiedUnitType = aUnitType;
     mAttrEnum = aAttrEnum;
@@ -136,7 +138,8 @@ public:
   uint8_t GetCtxType() const { return mCtxType; }
   uint8_t GetSpecifiedUnitType() const { return mSpecifiedUnitType; }
   bool IsPercentage() const
-    { return mSpecifiedUnitType == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE; }
+    { return mSpecifiedUnitType ==
+        mozilla::dom::SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE; }
   float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
   float GetBaseValInSpecifiedUnits() const { return mBaseVal; }
 
