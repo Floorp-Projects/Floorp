@@ -805,11 +805,7 @@ WebRenderBridgeParent::RecvGetSnapshot(PTextureParent* aTexture)
 
   mForceRendering = true;
 
-  if (mCompositorScheduler->NeedsComposite()) {
-    mCompositorScheduler->CancelCurrentCompositeTask();
-    mCompositorScheduler->ForceComposeToTarget(nullptr, nullptr);
-  }
-
+  mCompositorScheduler->FlushPendingComposite();
   mApi->Readback(size, buffer, buffer_size);
 
   mForceRendering = false;
@@ -1348,15 +1344,11 @@ WebRenderBridgeParent::FlushRendering(bool aIsSync)
     return;
   }
 
-  if (!mCompositorScheduler->NeedsComposite()) {
-    return;
-  }
-
   mForceRendering = true;
-  mCompositorScheduler->CancelCurrentCompositeTask();
-  mCompositorScheduler->ForceComposeToTarget(nullptr, nullptr);
-  if (aIsSync) {
-    mApi->WaitFlushed();
+  if (mCompositorScheduler->FlushPendingComposite()) {
+    if (aIsSync) {
+      mApi->WaitFlushed();
+    }
   }
   mForceRendering = false;
 }
