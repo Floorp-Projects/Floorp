@@ -717,8 +717,8 @@ MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input, Register output,
 }
 
 void
-MacroAssembler::outOfLineWasmTruncateDoubleToInt32(FloatRegister input, bool isUnsigned,
-                                                   wasm::BytecodeOffset off, Label* rejoin)
+MacroAssembler::oolWasmTruncateCheckF64ToI32(FloatRegister input, bool isUnsigned,
+                                             wasm::BytecodeOffset off, Label* rejoin)
 {
     AutoHandleWasmTruncateToIntErrors traps(*this, off);
 
@@ -740,8 +740,8 @@ MacroAssembler::outOfLineWasmTruncateDoubleToInt32(FloatRegister input, bool isU
 }
 
 void
-MacroAssembler::outOfLineWasmTruncateFloat32ToInt32(FloatRegister input, bool isUnsigned,
-                                                    wasm::BytecodeOffset off, Label* rejoin)
+MacroAssembler::oolWasmTruncateCheckF32ToI32(FloatRegister input, bool isUnsigned,
+                                             wasm::BytecodeOffset off, Label* rejoin)
 {
     AutoHandleWasmTruncateToIntErrors traps(*this, off);
 
@@ -761,8 +761,8 @@ MacroAssembler::outOfLineWasmTruncateFloat32ToInt32(FloatRegister input, bool is
 }
 
 void
-MacroAssembler::outOfLineWasmTruncateDoubleToInt64(FloatRegister input, bool isUnsigned,
-                                                   wasm::BytecodeOffset off, Label* rejoin)
+MacroAssembler::oolWasmTruncateCheckF64ToI64(FloatRegister input, bool isUnsigned,
+                                             wasm::BytecodeOffset off, Label* rejoin)
 {
     AutoHandleWasmTruncateToIntErrors traps(*this, off);
 
@@ -788,8 +788,8 @@ MacroAssembler::outOfLineWasmTruncateDoubleToInt64(FloatRegister input, bool isU
 }
 
 void
-MacroAssembler::outOfLineWasmTruncateFloat32ToInt64(FloatRegister input, bool isUnsigned,
-                                                    wasm::BytecodeOffset off, Label* rejoin)
+MacroAssembler::oolWasmTruncateCheckF32ToI64(FloatRegister input, bool isUnsigned,
+                                             wasm::BytecodeOffset off, Label* rejoin)
 {
     AutoHandleWasmTruncateToIntErrors traps(*this, off);
 

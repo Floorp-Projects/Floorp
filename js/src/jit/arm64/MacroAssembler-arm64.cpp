@@ -929,6 +929,34 @@ MacroAssembler::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 outp
     MOZ_CRASH("NYI");
 }
 
+void
+MacroAssembler::oolWasmTruncateCheckF32ToI32(FloatRegister input, bool isUnsigned,
+                                             wasm::BytecodeOffset off, Label* rejoin)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::oolWasmTruncateCheckF64ToI32(FloatRegister input, bool isUnsigned,
+                                             wasm::BytecodeOffset off, Label* rejoin)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::oolWasmTruncateCheckF32ToI64(FloatRegister input, bool isUnsigned,
+                                             wasm::BytecodeOffset off, Label* rejoin)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::oolWasmTruncateCheckF64ToI64(FloatRegister input, bool isUnsigned,
+                                             wasm::BytecodeOffset off, Label* rejoin)
+{
+    MOZ_CRASH("NYI");
+}
+
 // ========================================================================
 // Convert floating point.
 
