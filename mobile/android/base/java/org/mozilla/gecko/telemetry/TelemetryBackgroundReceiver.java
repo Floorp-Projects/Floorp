@@ -171,9 +171,7 @@ public class TelemetryBackgroundReceiver extends BroadcastReceiver {
                     case TelemetryContract.KEY_TYPE_EVENT:
                         telemetryStore = syncEventTelemetryStore;
                         localPing = new TelemetrySyncEventPingBuilder()
-                                .fromEventTelemetry(
-                                        (Bundle) intent.getParcelableExtra(
-                                                TelemetryContract.KEY_TELEMETRY))
+                                .fromEventTelemetry(telemetryBundle)
                                 .build();
                         break;
                     default:
