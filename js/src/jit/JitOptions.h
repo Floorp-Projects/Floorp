@@ -94,8 +94,12 @@ struct DefaultJitOptions
     mozilla::Maybe<uint32_t> forcedDefaultIonSmallFunctionWarmUpThreshold;
     mozilla::Maybe<IonRegisterAllocator> forcedRegisterAllocator;
 
+    // Spectre mitigation flags. Each mitigation has its own flag in order to
+    // measure the effectiveness of each mitigation with various proof of
+    // concept.
     bool spectreIndexMasking;
     bool spectreStringMitigations;
+    bool spectreValueMasking;
 
     // The options below affect the rest of the VM, and not just the JIT.
     bool disableUnboxedObjects;
