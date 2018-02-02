@@ -136,9 +136,6 @@ var PocketPageAction = {
             BrowserPageActions.doCommandForAction(this, event, wrapper);
           });
         },
-        onPlacedInPanel(panelNode, urlbarNode) {
-          PocketOverlay.onWindowOpened(panelNode.ownerGlobal);
-        },
         onIframeShowing(iframe, panel) {
           Pocket.onShownInPhotonPageActionPanel(panel, iframe);
 
@@ -402,6 +399,7 @@ var PocketOverlay = {
     this._cachedSheet = styleSheetService.preloadSheet(gPocketStyleURI,
                                                        this._sheetType);
     Services.ppmm.loadProcessScript(PROCESS_SCRIPT, true);
+    Services.obs.addObserver(this, "browser-delayed-startup-finished");
     PocketReader.startup();
     PocketPageAction.init();
     PocketContextMenu.init();
@@ -413,6 +411,7 @@ var PocketOverlay = {
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
                  .getService(Ci.nsIMessageBroadcaster);
     ppmm.broadcastAsyncMessage("PocketShuttingDown");
+    Services.obs.removeObserver(this, "browser-delayed-startup-finished");
     // Although the ppmm loads the scripts into the chrome process as well,
     // we need to manually unregister here anyway to ensure these aren't part
     // of the chrome process and avoid errors.
@@ -438,6 +437,11 @@ var PocketOverlay = {
 
     PocketContextMenu.shutdown();
     PocketReader.shutdown();
+  },
+  observe(subject, topic, detail) {
+    if (topic == "browser-delayed-startup-finished") {
+      this.onWindowOpened(subject);
+    }
   },
   onWindowOpened(window) {
     if (window.hasOwnProperty("pktUI"))
