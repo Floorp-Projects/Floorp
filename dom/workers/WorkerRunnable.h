@@ -280,7 +280,7 @@ class WorkerControlRunnable : public WorkerRunnable
 
 protected:
   WorkerControlRunnable(WorkerPrivate* aWorkerPrivate,
-                        TargetAndBusyBehavior aBehavior = WorkerThreadModifyBusyCount)
+                        TargetAndBusyBehavior aBehavior)
 #ifdef DEBUG
   ;
 #else

@@ -10,6 +10,7 @@
 #include "mozilla/dom/SVGDocument.h"
 #include "mozilla/dom/SVGForeignObjectElement.h"
 #include "mozilla/dom/SVGForeignObjectElementBinding.h"
+#include "mozilla/dom/SVGLengthBinding.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(ForeignObject)
 
@@ -24,10 +25,10 @@ SVGForeignObjectElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenPr
 
 nsSVGElement::LengthInfo SVGForeignObjectElement::sLengthInfo[4] =
 {
-  { &nsGkAtoms::x, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { &nsGkAtoms::y, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
-  { &nsGkAtoms::width, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { &nsGkAtoms::height, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
+  { &nsGkAtoms::x, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
+  { &nsGkAtoms::y, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
+  { &nsGkAtoms::width, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
+  { &nsGkAtoms::height, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
 };
 
 //----------------------------------------------------------------------
