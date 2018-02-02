@@ -4,12 +4,27 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
+:root {
+  --autocomplete-popup-background: -moz-field;
+  --autocomplete-popup-color: -moz-fieldtext;
+  --autocomplete-popup-highlight-background: Highlight;
+  --autocomplete-popup-highlight-color: HighlightText;
+}
+
 #treecolAutoCompleteImage {
   max-width: 36px;
 }
 
+#PopupAutoCompleteRichResult,
+#PopupSearchAutoComplete {
+  background: var(--autocomplete-popup-background);
+  color: var(--autocomplete-popup-color);
+}
+
 #PopupAutoCompleteRichResult .autocomplete-richlistbox {
   padding: 4px 3px;
+  background: transparent;
+  color: inherit;
 }
 
 #PopupAutoCompleteRichResult .autocomplete-richlistitem {
@@ -24,6 +39,74 @@
   border-inline-end: var(--item-padding-end) solid transparent;
 }
 
+#PopupAutoCompleteRichResult .autocomplete-richlistitem[selected],
+.search-panel-tree > .autocomplete-treebody::-moz-tree-row(selected) {
+  background: var(--autocomplete-popup-highlight-background);
+  color: var(--autocomplete-popup-highlight-color);
+}
+
+.search-panel-tree > .autocomplete-treebody::-moz-tree-cell-text(selected) {
+  color: var(--autocomplete-popup-highlight-color) !important;
+}
+
 :root[uidensity=touch] #PopupAutoCompleteRichResult .autocomplete-richlistitem {
   min-height: 40px;
+}
+
+/* Awesomebar popup items */
+
+.ac-separator:not([selected=true]) {
+  color: GrayText;
+}
+
+.ac-url:not([selected=true]) {
+  color: var(--urlbar-popup-url-color);
+}
+
+.ac-action:not([selected=true]) {
+  color: var(--urlbar-popup-action-color);
+}
+
+html|span.ac-tag {
+  background-color: var(--arrowpanel-dimmed);
+  border-radius: 2px;
+  border: 1px solid var(--panel-separator-color);
+  padding: 0 1px;
+}
+
+.ac-tags-text[selected] > html|span.ac-tag {
+  background-color: var(--autocomplete-popup-highlight-color);
+  color: var(--autocomplete-popup-highlight-background);
+}
+
+html|span.ac-emphasize-text-title,
+html|span.ac-emphasize-text-tag,
+html|span.ac-emphasize-text-url {
+  font-weight: 600;
+}
+
+.ac-site-icon,
+.ac-type-icon {
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.6;
+}
+
+.ac-site-icon[selected],
+.ac-type-icon[selected] {
+  fill-opacity: 1;
+}
+
+.ac-type-icon[type=bookmark] {
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+.ac-type-icon[type=keyword],
+.ac-site-icon[type=searchengine] {
+  list-style-image: url(chrome://browser/skin/search-glass.svg);
+}
+
+.ac-type-icon[type=switchtab],
+.ac-type-icon[type=remotetab] {
+  list-style-image: url("chrome://browser/skin/tab.svg");
 }

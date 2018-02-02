@@ -15,6 +15,7 @@ sys.path.insert(0, SCRIPT_DIR)
 from argparse import Namespace
 from collections import defaultdict
 from contextlib import closing
+from distutils import spawn
 import copy
 import ctypes
 import glob
@@ -744,20 +745,29 @@ def findTestMediaDevices(log):
         return None
 
     # Feed it a frame of output so it has something to display
-    subprocess.check_call(['/usr/bin/gst-launch-0.10', 'videotestsrc',
+    gst01 = spawn.find_executable("gst-launch-0.1")
+    gst10 = spawn.find_executable("gst-launch-1.0")
+    if gst01:
+        gst = gst01
+    else:
+        gst = gst10
+    subprocess.check_call([gst, 'videotestsrc',
                            'pattern=green', 'num-buffers=1', '!',
                            'v4l2sink', 'device=%s' % device])
     info['video'] = name
 
+    pactl = spawn.find_executable("pactl")
+    pacmd = spawn.find_executable("pacmd")
+
     # Use pactl to see if the PulseAudio module-null-sink module is loaded.
     def null_sink_loaded():
         o = subprocess.check_output(
-            ['/usr/bin/pactl', 'list', 'short', 'modules'])
+            [pactl, 'list', 'short', 'modules'])
         return filter(lambda x: 'module-null-sink' in x, o.splitlines())
 
     if not null_sink_loaded():
         # Load module-null-sink
-        subprocess.check_call(['/usr/bin/pactl', 'load-module',
+        subprocess.check_call([pactl, 'load-module',
                                'module-null-sink'])
 
     if not null_sink_loaded():
@@ -765,7 +775,7 @@ def findTestMediaDevices(log):
         return None
 
     # Whether it was loaded or not make it the default output
-    subprocess.check_call(['/usr/bin/pacmd', 'set-default-sink', 'null'])
+    subprocess.check_call([pacmd, 'set-default-sink', 'null'])
 
     # Hardcode the name since it's always the same.
     info['audio'] = 'Monitor of Null Output'
