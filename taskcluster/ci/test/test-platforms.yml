@@ -296,8 +296,9 @@ android-4.2-x86/opt:
     test-sets:
         - android-x86-tests
 
+# android-4.3-arm7-api-16-gradle/opt actually uses the non-gradle build
+# which is tier 2, and requires only a smoketest, like robocop
 android-4.3-arm7-api-16-gradle/opt:
     build-platform: android-api-16-gradle/opt
     test-sets:
-        - android-common-tests
         - android-opt-tests
