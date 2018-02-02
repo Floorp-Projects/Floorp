@@ -9,15 +9,23 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
+import android.util.Log;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
+import org.mozilla.gecko.sync.telemetry.TelemetryEventCollector;
 
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -133,8 +141,20 @@ public class CommandProcessor {
       Logger.debug(LOG_TAG, "Command \"" + command.commandType + "\" not registered and will not be processed.");
       return;
     }
-
+    try {
+      recordProcessCommandTelemetryEvent(session.getContext(), command);
+    } catch (Exception e) {
+      Log.e(LOG_TAG, "Could not record telemetry event.");
+    }
     executableCommand.executeCommand(session, command.getArgsList());
+  }
+
+  private static void recordProcessCommandTelemetryEvent(Context context, Command command) {
+    final HashMap<String, String> extra = new HashMap<>();
+    if (command.flowID != null) {
+      extra.put("flowID", command.flowID);
+    }
+    TelemetryEventCollector.recordEvent(context, "processcommand", command.commandType, null, extra);
   }
 
   /**
@@ -230,8 +250,39 @@ public class CommandProcessor {
     }
   }
 
+  private static void recordSendCommandTelemetryEvent(Context context, Command command, String clientID) {
+    final AndroidFxAccount fxAccount = AndroidFxAccount.fromContext(context);
+    if (fxAccount == null) {
+      Log.e(LOG_TAG, "Can't record telemetry event: FxAccount doesn't exist.");
+      return;
+    }
+    final String hashedFxAUID = fxAccount.getCachedHashedFxAUID();
+    if (TextUtils.isEmpty(hashedFxAUID)) {
+      Log.e(LOG_TAG, "Can't record telemetry event: The hashed FxA UID is empty");
+      return;
+    }
+
+    HashMap<String, String> extra = new HashMap<>();
+    if (!TextUtils.isEmpty(command.flowID)) {
+      extra.put("flowID", command.flowID);
+    }
+    try {
+      extra.put("deviceID", Utils.byte2Hex(Utils.sha256(clientID.concat(hashedFxAUID).getBytes("UTF-8"))));
+    } catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
+      // Should not happen.
+      Log.e(LOG_TAG, "Either UTF-8 or SHA-256 are not supported", e);
+    }
+
+    TelemetryEventCollector.recordEvent(context, "sendcommand", command.commandType, null, extra);
+  }
+
   protected void sendCommandToClient(String clientID, Command command, Context context) {
     Logger.info(LOG_TAG, "Sending " + command.commandType + " to " + clientID);
+    try {
+      recordSendCommandTelemetryEvent(context, command, clientID);
+    } catch (Exception e) {
+      Log.e(LOG_TAG, "Could not record telemetry event.");
+    }
 
     ClientsDatabaseAccessor db = new ClientsDatabaseAccessor(context);
     try {
