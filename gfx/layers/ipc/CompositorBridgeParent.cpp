@@ -745,7 +745,7 @@ CompositorBridgeParent::ResumeComposition()
   mPaused = false;
 
   Invalidate();
-  mCompositorScheduler->ResumeComposition();
+  mCompositorScheduler->ForceComposeToTarget(nullptr, nullptr);
 
   // if anyone's waiting to make sure that composition really got resumed, tell them
   lock.NotifyAll();
@@ -951,15 +951,6 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread(),
              "Composite can only be called on the compositor thread");
   TimeStamp start = TimeStamp::Now();
-
-#ifdef COMPOSITOR_PERFORMANCE_WARNING
-  TimeDuration scheduleDelta = TimeStamp::Now() - mCompositorScheduler->GetExpectedComposeStartTime();
-  if (scheduleDelta > TimeDuration::FromMilliseconds(2) ||
-      scheduleDelta < TimeDuration::FromMilliseconds(-2)) {
-    printf_stderr("Compositor: Compose starting off schedule by %4.1f ms\n",
-                  scheduleDelta.ToMilliseconds());
-  }
-#endif
 
   if (!CanComposite()) {
     TimeStamp end = TimeStamp::Now();

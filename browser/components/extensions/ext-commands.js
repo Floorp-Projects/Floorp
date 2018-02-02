@@ -117,7 +117,7 @@ this.commands = class extends ExtensionAPI {
    * @returns {Document} The newly created Key element.
    */
   buildKey(doc, name, shortcut) {
-    let keyElement = this.buildKeyFromShortcut(doc, shortcut);
+    let keyElement = this.buildKeyFromShortcut(doc, name, shortcut);
 
     // We need to have the attribute "oncommand" for the "command" listener to fire,
     // and it is currently ignored when set to the empty string.
@@ -154,12 +154,13 @@ this.commands = class extends ExtensionAPI {
    * Builds a XUL Key element from the provided shortcut.
    *
    * @param {Document} doc The XUL document.
+   * @param {string} name The name of the shortcut.
    * @param {string} shortcut The shortcut provided in the manifest.
    *
    * @see https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/key
    * @returns {Document} The newly created Key element.
    */
-  buildKeyFromShortcut(doc, shortcut) {
+  buildKeyFromShortcut(doc, name, shortcut) {
     let keyElement = doc.createElementNS(XUL_NS, "key");
 
     let parts = shortcut.split("+");
@@ -169,6 +170,10 @@ this.commands = class extends ExtensionAPI {
 
     // The modifiers are the remaining elements.
     keyElement.setAttribute("modifiers", this.getModifiersAttribute(parts));
+    if (name == "_execute_sidebar_action") {
+      let id = `ext-key-id-${this.id}-sidebar-action`;
+      keyElement.setAttribute("id", id);
+    }
 
     if (/^[A-Z]$/.test(chromeKey)) {
       // We use the key attribute for all single digits and characters.

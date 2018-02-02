@@ -110,6 +110,7 @@ PYTHON_UNITTEST_MANIFESTS += [
 ]
 
 GENERATED_FILES = [
+    'ScalarArtifactDefinitions.json',
     'TelemetryEventData.h',
     'TelemetryEventEnums.h',
     'TelemetryHistogramData.inc',
@@ -147,6 +148,15 @@ scalar_data.inputs = scalar_files
 scalar_enums = GENERATED_FILES['TelemetryScalarEnums.h']
 scalar_enums.script = 'gen_scalar_enum.py'
 scalar_enums.inputs = scalar_files
+
+# Generate the JSON scalar definitions. They will only be
+# used in artifact or "build faster" builds.
+scalar_json_data = GENERATED_FILES['ScalarArtifactDefinitions.json']
+scalar_json_data.script = 'gen_scalar_data.py:generate_JSON_definitions'
+scalar_json_data.inputs = scalar_files
+
+# Move the scalars JSON file to the directory where the Firefox binary is.
+FINAL_TARGET_FILES += ['!ScalarArtifactDefinitions.json']
 
 # Generate event files.
 event_files = [

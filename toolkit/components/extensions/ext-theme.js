@@ -143,6 +143,12 @@ class Theme {
         case "bookmark_text":
           this.lwtStyles.toolbar_text = cssColor;
           break;
+        case "icons":
+          this.lwtStyles.icon_color = cssColor;
+          break;
+        case "icons_attention":
+          this.lwtStyles.icon_attention_color = cssColor;
+          break;
         case "tab_text":
         case "toolbar_field":
         case "toolbar_field_text":
@@ -150,8 +156,6 @@ class Theme {
         case "toolbar_top_separator":
         case "toolbar_bottom_separator":
         case "toolbar_vertical_separator":
-        case "icons":
-        case "icons_attention":
           this.lwtStyles[color] = cssColor;
           break;
       }
