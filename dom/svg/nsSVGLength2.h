@@ -13,7 +13,6 @@
 #include "nsCoord.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
-#include "nsIDOMSVGLength.h"
 #include "nsISMILAttr.h"
 #include "nsMathUtils.h"
 #include "nsSVGElement.h"

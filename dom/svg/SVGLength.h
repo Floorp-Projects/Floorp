@@ -8,7 +8,6 @@
 #define MOZILLA_SVGLENGTH_H__
 
 #include "nsDebug.h"
-#include "nsIDOMSVGLength.h"
 #include "nsMathUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/dom/SVGLengthBinding.h"
