@@ -15,6 +15,7 @@
 #include "nsSVGElement.h"
 #include "nsTArray.h"
 #include "SVGLength.h"
+#include "mozilla/dom/SVGLengthBinding.h"
 
 namespace mozilla {
 
@@ -337,7 +338,7 @@ public:
 
   bool HasPercentageValueAt(uint32_t aIndex) const {
     const SVGLength& length = (*mList)[aIndex];
-    return length.GetUnit() == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE;
+    return length.GetUnit() == dom::SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE;
   }
 
 private:

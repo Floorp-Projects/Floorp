@@ -69,7 +69,7 @@ nsStyleLinkElement::Traverse(nsCycleCollectionTraversalCallback &cb)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheet);
 }
 
-NS_IMETHODIMP
+void
 nsStyleLinkElement::SetStyleSheet(StyleSheet* aStyleSheet)
 {
   if (mStyleSheet) {
@@ -83,37 +83,30 @@ nsStyleLinkElement::SetStyleSheet(StyleSheet* aStyleSheet)
       mStyleSheet->SetOwningNode(node);
     }
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP_(StyleSheet*)
+StyleSheet*
 nsStyleLinkElement::GetStyleSheet()
 {
   return mStyleSheet;
 }
 
-NS_IMETHODIMP
+void
 nsStyleLinkElement::InitStyleLinkElement(bool aDontLoadStyle)
 {
   mDontLoadStyle = aDontLoadStyle;
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsStyleLinkElement::SetEnableUpdates(bool aEnableUpdates)
 {
   mUpdatesEnabled = aEnableUpdates;
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsStyleLinkElement::GetCharset(nsAString& aCharset)
 {
-  // descendants have to implement this themselves
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aCharset.Truncate();
 }
 
 /* virtual */ void
@@ -312,7 +305,7 @@ nsStyleLinkElement::CheckPreloadAttrs(const nsAttrValue& aAs,
   return false;
 }
 
-NS_IMETHODIMP
+nsresult
 nsStyleLinkElement::UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
                                      bool* aWillNotify,
                                      bool* aIsAlternate,

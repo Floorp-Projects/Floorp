@@ -10,6 +10,7 @@
 
 #include "nsSVGElement.h"
 
+#include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/SVGTests.h"
 #include "nsContentUtils.h"
@@ -1692,12 +1693,12 @@ nsSVGElement::GetAnimatedLengthValues(float *aFirst, ...)
   while (f && i < info.mLengthCount) {
     uint8_t type = info.mLengths[i].GetSpecifiedUnitType();
     if (!ctx) {
-      if (type != nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER &&
-          type != nsIDOMSVGLength::SVG_LENGTHTYPE_PX)
+      if (type != SVGLengthBinding::SVG_LENGTHTYPE_NUMBER &&
+          type != SVGLengthBinding::SVG_LENGTHTYPE_PX)
         ctx = GetCtx();
     }
-    if (type == nsIDOMSVGLength::SVG_LENGTHTYPE_EMS ||
-        type == nsIDOMSVGLength::SVG_LENGTHTYPE_EXS)
+    if (type == SVGLengthBinding::SVG_LENGTHTYPE_EMS ||
+        type == SVGLengthBinding::SVG_LENGTHTYPE_EXS)
       *f = info.mLengths[i++].GetAnimValue(this);
     else
       *f = info.mLengths[i++].GetAnimValue(ctx);

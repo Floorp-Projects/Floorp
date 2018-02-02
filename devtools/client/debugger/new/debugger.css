@@ -1067,11 +1067,15 @@ html .arrow.expanded svg {
   fill: var(--theme-body-color);
 }
 
-.angular svg {
+.angular svg, .source-icon svg {
   width: 15px;
   height: 15px;
   margin-right: 5px;
   vertical-align: sub;
+}
+
+.source-icon svg {
+  fill: var(--theme-body-color);
 }
 
 .theme-dark .angular {
@@ -1565,6 +1569,10 @@ html[dir="rtl"] .arrow svg,
   flex: 1;
 }
 
+.tree-indent {
+  border-inline-start: 0 none;
+}
+
 .source-outline-tabs {
   width: 100%;
   background: var(--theme-body-background);
@@ -1637,6 +1645,10 @@ html[dir="rtl"] .arrow svg,
 
 .theme-dark .sources-list .managed-tree .tree .node.focused img.blackBox {
   background-color: white;
+}
+
+.tree-node[data-expandable="false"] .tree-indent:last-of-type {
+  margin-inline-end: 4px;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -4020,4 +4032,16 @@ html .welcomebox .toggle-button-end.collapsed {
 
 .theme-dark .result-list {
   background-color: var(--theme-body-background);
+}
+.result-item .title .fuzzy-match {
+  font-weight: bold;
+}
+
+.result-item .subtitle .fuzzy-match {
+  color: var(--grey-90);
+}
+
+.theme-dark .result-item .title .fuzzy-match,
+.theme-dark .result-item .subtitle .fuzzy-match {
+  color: white;
 }
