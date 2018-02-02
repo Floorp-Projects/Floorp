@@ -39,16 +39,4 @@ test(() => {
   assert_equals(result.variable, '--bar');
 }, 'CSSVariableReferenceValue.variable can updated to a valid variable name');
 
-test(() => {
-  let result = new CSSVariableReferenceValue('--foo', new CSSUnparsedValue());
-  result.fallback = null;
-  assert_equals(result.fallback, null);
-}, 'CSSVariableReferenceValue.fallback can updated to null');
-
-test(() => {
-  let result = new CSSVariableReferenceValue('--foo');
-  result.fallback = new CSSUnparsedValue('foo');
-  assert_style_value_equals(result.fallback, new CSSUnparsedValue('foo'));
-}, 'CSSVariableReferenceValue.fallback can updated to a CSSUnparsedValue');
-
 </script>
