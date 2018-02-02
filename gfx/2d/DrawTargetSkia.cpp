@@ -2059,6 +2059,7 @@ void
 DrawTargetSkia::PopClip()
 {
   mCanvas->restore();
+  SetTransform(GetTransform());
 }
 
 void
@@ -2182,6 +2183,7 @@ DrawTargetSkia::PopLayer()
     mCanvas->restore();
   }
 
+  SetTransform(GetTransform());
   SetPermitSubpixelAA(layer.mOldPermitSubpixelAA);
 
   mPushedLayers.pop_back();
