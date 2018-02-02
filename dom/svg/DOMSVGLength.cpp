@@ -355,15 +355,7 @@ DOMSVGLength::SetValueAsString(const nsAString& aValue, ErrorResult& aRv)
   mUnit = value.GetUnit();
 }
 
-NS_IMETHODIMP
-DOMSVGLength::SetValueAsString(const nsAString& aValue)
-{
-  ErrorResult rv;
-  SetValueAsString(aValue, rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
+void
 DOMSVGLength::GetValueAsString(nsAString& aValue)
 {
   if (mVal) {
@@ -373,7 +365,7 @@ DOMSVGLength::GetValueAsString(nsAString& aValue)
     } else {
       mVal->GetBaseValueString(aValue);
     }
-    return NS_OK;
+    return;
   }
 
   if (mIsAnimValItem && HasOwner()) {
@@ -381,10 +373,9 @@ DOMSVGLength::GetValueAsString(nsAString& aValue)
   }
   if (HasOwner()) {
     InternalItem().GetValueAsString(aValue);
-    return NS_OK;
+    return;
   }
   SVGLength(mValue, mUnit).GetValueAsString(aValue);
-  return NS_OK;
 }
 
 void
