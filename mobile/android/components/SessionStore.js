@@ -1269,8 +1269,10 @@ SessionStore.prototype = {
     let window = Services.wm.getMostRecentWindow("navigator:browser");
     for (let i = 0; i < aData.urls.length; i++) {
       let url = aData.urls[i];
+      let selected = (i == aData.urls.length - 1);
       let params = {
-        selected: (i == aData.urls.length - 1),
+        selected,
+        delayLoad: !selected,
         isPrivate: false,
         desktopMode: false,
       };
