@@ -6,6 +6,7 @@
 
 #include "DrawTargetCapture.h"
 #include "DrawCommand.h"
+#include "DrawCommands.h"
 #include "gfxPlatform.h"
 #include "SourceSurfaceCapture.h"
 #include "FilterNodeCapture.h"
@@ -115,6 +116,7 @@ DrawTargetCaptureImpl::DetachAllSnapshots()
 }
 
 #define AppendCommand(arg) new (AppendToCommandList<arg>()) arg
+#define ReuseOrAppendCommand(arg) new (ReuseOrAppendToCommandList<arg>()) arg
 
 void
 DrawTargetCaptureImpl::SetPermitSubpixelAA(bool aPermitSubpixelAA)
@@ -124,7 +126,7 @@ DrawTargetCaptureImpl::SetPermitSubpixelAA(bool aPermitSubpixelAA)
     return;
   }
 
-  AppendCommand(SetPermitSubpixelAACommand)(aPermitSubpixelAA);
+  ReuseOrAppendCommand(SetPermitSubpixelAACommand)(aPermitSubpixelAA);
 
   // Have to update mPermitSubpixelAA for this DT
   // because some code paths query the current setting
@@ -320,7 +322,7 @@ DrawTargetCaptureImpl::SetTransform(const Matrix& aTransform)
     return;
   }
 
-  AppendCommand(SetTransformCommand)(aTransform);
+  ReuseOrAppendCommand(SetTransformCommand)(aTransform);
 
   // Have to update the transform for this DT
   // because some code paths query the current transform
