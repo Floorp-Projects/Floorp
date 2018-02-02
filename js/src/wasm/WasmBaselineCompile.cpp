@@ -3578,40 +3578,33 @@ class BaseCompiler final : public BaseCompilerInterface
 #endif
     }
 
-    class OutOfLineTruncateF32OrF64ToI32 : public OutOfLineCode
+    class OutOfLineTruncateCheckF32OrF64ToI32 : public OutOfLineCode
     {
         AnyReg src;
-        RegI32 dest;
         bool isUnsigned;
         BytecodeOffset off;
 
       public:
-        OutOfLineTruncateF32OrF64ToI32(AnyReg src, RegI32 dest, bool isUnsigned, BytecodeOffset off)
+        OutOfLineTruncateCheckF32OrF64ToI32(AnyReg src, bool isUnsigned, BytecodeOffset off)
           : src(src),
-            dest(dest),
             isUnsigned(isUnsigned),
             off(off)
         {}
 
         virtual void generate(MacroAssembler* masm) override {
-            bool isFloat = src.tag == AnyReg::F32;
-            FloatRegister fsrc = isFloat ? static_cast<FloatRegister>(src.f32())
-                                         : static_cast<FloatRegister>(src.f64());
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-            if (isFloat)
-                masm->outOfLineWasmTruncateFloat32ToInt32(fsrc, isUnsigned, off, rejoin());
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || \
+    defined(JS_CODEGEN_ARM64)
+            if (src.tag == AnyReg::F32)
+                masm->oolWasmTruncateCheckF32ToI32(src.f32(), isUnsigned, off, rejoin());
+            else if (src.tag == AnyReg::F64)
+                masm->oolWasmTruncateCheckF64ToI32(src.f64(), isUnsigned, off, rejoin());
             else
-                masm->outOfLineWasmTruncateDoubleToInt32(fsrc, isUnsigned, off, rejoin());
-#elif defined(JS_CODEGEN_ARM)
-            masm->outOfLineWasmTruncateToIntCheck(fsrc,
-                                                  isFloat ? MIRType::Float32 : MIRType::Double,
-                                                  MIRType::Int32, isUnsigned, rejoin(), off);
+                MOZ_CRASH("unexpected type");
 #else
+            (void)src;
             (void)isUnsigned;
             (void)off;
-            (void)isFloat;
-            (void)fsrc;
-            MOZ_CRASH("BaseCompiler platform hook: OutOfLineTruncateF32OrF64ToI32 wasm");
+            MOZ_CRASH("BaseCompiler platform hook: OutOfLineTruncateCheckF32OrF64ToI32 wasm");
 #endif
         }
     };
@@ -3619,10 +3612,9 @@ class BaseCompiler final : public BaseCompilerInterface
     MOZ_MUST_USE bool truncateF32ToI32(RegF32 src, RegI32 dest, bool isUnsigned) {
         BytecodeOffset off = bytecodeOffset();
         OutOfLineCode* ool =
-            addOutOfLineCode(new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src),
-                                                                        dest,
-                                                                        isUnsigned,
-                                                                        off));
+            addOutOfLineCode(new(alloc_) OutOfLineTruncateCheckF32OrF64ToI32(AnyReg(src),
+                                                                             isUnsigned,
+                                                                             off));
         if (!ool)
             return false;
         if (isUnsigned)
@@ -3636,10 +3628,9 @@ class BaseCompiler final : public BaseCompilerInterface
     MOZ_MUST_USE bool truncateF64ToI32(RegF64 src, RegI32 dest, bool isUnsigned) {
         BytecodeOffset off = bytecodeOffset();
         OutOfLineCode* ool =
-            addOutOfLineCode(new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src),
-                                                                        dest,
-                                                                        isUnsigned,
-                                                                        off));
+            addOutOfLineCode(new(alloc_) OutOfLineTruncateCheckF32OrF64ToI32(AnyReg(src),
+                                                                             isUnsigned,
+                                                                             off));
         if (!ool)
             return false;
         if (isUnsigned)
@@ -3649,8 +3640,6 @@ class BaseCompiler final : public BaseCompilerInterface
         masm.bind(ool->rejoin());
         return true;
     }
-
-    // This does not generate a value; if the truncation failed then it traps.
 
     class OutOfLineTruncateCheckF32OrF64ToI64 : public OutOfLineCode
     {
@@ -3666,20 +3655,12 @@ class BaseCompiler final : public BaseCompilerInterface
         {}
 
         virtual void generate(MacroAssembler* masm) override {
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || \
+    defined(JS_CODEGEN_ARM64)
             if (src.tag == AnyReg::F32)
-                masm->outOfLineWasmTruncateFloat32ToInt64(src.f32(), isUnsigned, off, rejoin());
+                masm->oolWasmTruncateCheckF32ToI64(src.f32(), isUnsigned, off, rejoin());
             else if (src.tag == AnyReg::F64)
-                masm->outOfLineWasmTruncateDoubleToInt64(src.f64(), isUnsigned, off, rejoin());
-            else
-                MOZ_CRASH("unexpected type");
-#elif defined(JS_CODEGEN_ARM)
-            if (src.tag == AnyReg::F32)
-                masm->outOfLineWasmTruncateToIntCheck(src.f32(), MIRType::Float32,
-                                                      MIRType::Int64, isUnsigned, rejoin(), off);
-            else if (src.tag == AnyReg::F64)
-                masm->outOfLineWasmTruncateToIntCheck(src.f64(), MIRType::Double, MIRType::Int64,
-                                                      isUnsigned, rejoin(), off);
+                masm->oolWasmTruncateCheckF64ToI64(src.f64(), isUnsigned, off, rejoin());
             else
                 MOZ_CRASH("unexpected type");
 #else
