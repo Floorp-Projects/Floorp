@@ -41,7 +41,7 @@ typedef struct {
   guint source_id;
   int numAxes;
   int numButtons;
-  char idstring[128];
+  char idstring[256];
   char devpath[PATH_MAX];
 } Gamepad;
 

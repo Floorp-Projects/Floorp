@@ -63,12 +63,9 @@ function canQuitApplication() {
 }
 
 function goQuitApplication(waitForSafeBrowsing) {
-  const privs = "UniversalPreferencesRead UniversalPreferencesWrite " +
-    "UniversalXPConnect";
-
   /* eslint-disable mozilla/use-chromeutils-import */
   try {
-    netscape.security.PrivilegeManager.enablePrivilege(privs);
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   } catch (ex) {
     throw ("goQuitApplication: privilege failure " + ex);
   }

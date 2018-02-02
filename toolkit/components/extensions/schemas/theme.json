@@ -117,6 +117,10 @@
                 "$ref": "ThemeColor",
                 "optional": true
               },
+              "toolbar_field_separator": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
               "toolbar_top_separator": {
                 "$ref": "ThemeColor",
                 "optional": true

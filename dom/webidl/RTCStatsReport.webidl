@@ -138,6 +138,8 @@ dictionary RTCIceCandidatePairStats : RTCStats {
   DOMHighResTimeStamp lastPacketSentTimestamp;
   DOMHighResTimeStamp lastPacketReceivedTimestamp;
   boolean selected;
+  [ChromeOnly]
+  unsigned long componentId; // moz
 };
 
 enum RTCStatsIceCandidateType {
