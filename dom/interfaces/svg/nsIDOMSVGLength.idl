@@ -21,16 +21,8 @@ interface nsIDOMSVGLength : nsISupports
   const unsigned short SVG_LENGTHTYPE_PT         = 9;
   const unsigned short SVG_LENGTHTYPE_PC         = 10;
 
-  readonly attribute unsigned short unitType;
-  attribute float          value;
-  // raises DOMException on setting
-  attribute float          valueInSpecifiedUnits;
-  // raises DOMException on setting
   attribute DOMString      valueAsString;
   // raises DOMException on setting
-  
-  void newValueSpecifiedUnits(in unsigned short unitType, in float valueInSpecifiedUnits);
-  void convertToSpecifiedUnits(in unsigned short unitType);
 };
 
 

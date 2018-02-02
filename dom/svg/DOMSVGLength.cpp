@@ -192,7 +192,7 @@ DOMSVGLength::Copy()
     unit = length.GetUnit();
     value = length.GetValueInCurrentUnits();
   }
-  copy->NewValueSpecifiedUnits(unit, value);
+  copy->NewValueSpecifiedUnits(unit, value, IgnoreErrors());
   return copy;
 }
 
@@ -210,13 +210,6 @@ DOMSVGLength::UnitType()
     Element()->FlushAnimations(); // May make HasOwner() == false
   }
   return HasOwner() ? InternalItem().GetUnit() : mUnit;
-}
-
-NS_IMETHODIMP
-DOMSVGLength::GetUnitType(uint16_t* aUnit)
-{
-  *aUnit = UnitType();
-  return NS_OK;
 }
 
 float
@@ -247,14 +240,6 @@ DOMSVGLength::GetValue(ErrorResult& aRv)
   // ReportToConsole
   aRv.Throw(NS_ERROR_FAILURE);
   return 0.0f;
-}
-
-NS_IMETHODIMP
-DOMSVGLength::GetValue(float* aValue)
-{
-  ErrorResult rv;
-  *aValue = GetValue(rv);
-  return rv.StealNSResult();
 }
 
 void
@@ -299,18 +284,6 @@ DOMSVGLength::SetValue(float aUserUnitValue, ErrorResult& aRv)
   aRv.Throw(NS_ERROR_FAILURE);
 }
 
-NS_IMETHODIMP
-DOMSVGLength::SetValue(float aUserUnitValue)
-{
-  if (!IsFinite(aUserUnitValue)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  ErrorResult rv;
-  SetValue(aUserUnitValue, rv);
-  return rv.StealNSResult();
-}
-
 float
 DOMSVGLength::ValueInSpecifiedUnits()
 {
@@ -326,13 +299,6 @@ DOMSVGLength::ValueInSpecifiedUnits()
     Element()->FlushAnimations(); // May make HasOwner() == false
   }
   return HasOwner() ? InternalItem().GetValueInCurrentUnits() : mValue;
-}
-
-NS_IMETHODIMP
-DOMSVGLength::GetValueInSpecifiedUnits(float* aValue)
-{
-  *aValue = ValueInSpecifiedUnits();
-  return NS_OK;
 }
 
 void
@@ -357,18 +323,6 @@ DOMSVGLength::SetValueInSpecifiedUnits(float aValue, ErrorResult& aRv)
     return;
   }
   mValue = aValue;
-}
-
-NS_IMETHODIMP
-DOMSVGLength::SetValueInSpecifiedUnits(float aValue)
-{
-  if (!IsFinite(aValue)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  ErrorResult rv;
-  SetValueInSpecifiedUnits(aValue, rv);
-  return rv.StealNSResult();
 }
 
 void
@@ -464,18 +418,6 @@ DOMSVGLength::NewValueSpecifiedUnits(uint16_t aUnit, float aValue,
   mValue = aValue;
 }
 
-NS_IMETHODIMP
-DOMSVGLength::NewValueSpecifiedUnits(uint16_t aUnit, float aValue)
-{
-  if (!IsFinite(aValue)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  ErrorResult rv;
-  NewValueSpecifiedUnits(aUnit, aValue, rv);
-  return rv.StealNSResult();
-}
-
 void
 DOMSVGLength::ConvertToSpecifiedUnits(uint16_t aUnit, ErrorResult& aRv)
 {
@@ -516,14 +458,6 @@ DOMSVGLength::ConvertToSpecifiedUnits(uint16_t aUnit, ErrorResult& aRv)
   // else [SVGWG issue] Can't convert unit
   // ReportToConsole
   aRv.Throw(NS_ERROR_FAILURE);
-}
-
-NS_IMETHODIMP
-DOMSVGLength::ConvertToSpecifiedUnits(uint16_t aUnit)
-{
-  ErrorResult rv;
-  ConvertToSpecifiedUnits(aUnit, rv);
-  return rv.StealNSResult();
 }
 
 JSObject*
