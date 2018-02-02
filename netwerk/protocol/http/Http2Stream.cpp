@@ -112,10 +112,20 @@ Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
 
 Http2Stream::~Http2Stream()
 {
+  ClearPushSource();
   ClearTransactionsBlockedOnTunnel();
   mStreamID = Http2Session::kDeadStreamID;
 
   LOG3(("Http2Stream::~Http2Stream %p", this));
+}
+
+void
+Http2Stream::ClearPushSource()
+{
+  if (mPushSource) {
+    mPushSource->SetConsumerStream(nullptr);
+    mPushSource = nullptr;
+  }
 }
 
 // ReadSegments() is used to write data down the socket. Generally, HTTP
@@ -1137,6 +1147,10 @@ Http2Stream::ConvertPushHeaders(Http2Decompressor *decompressor,
 void
 Http2Stream::Close(nsresult reason)
 {
+  // In case we are connected to a push, make sure the push knows we are closed,
+  // so it doesn't try to give us any more DATA that comes on it after our close.
+  ClearPushSource();
+
   mTransaction->Close(reason);
 }
 
