@@ -3271,6 +3271,10 @@ IonBuilder::jsop_bitnot()
             return Ok();
     }
 
+    MOZ_TRY(arithTrySharedStub(&emitted, JSOP_BITNOT, nullptr, input));
+    if (emitted)
+        return Ok();
+
     // Not possible to optimize. Do a slow vm call.
     MBitNot* ins = MBitNot::New(alloc(), input);
 
@@ -3533,12 +3537,16 @@ IonBuilder::arithTrySharedStub(bool* emitted, JSOp op,
     if (actualOp == JSOP_POS)
         return Ok();
 
-    // JSOP_NEG and JSOP_BITNOT can't be handled here right now.
-    if (actualOp == JSOP_NEG || actualOp == JSOP_BITNOT)
-        return Ok();
 
     MInstruction* stub = nullptr;
     switch (actualOp) {
+      case JSOP_NEG:
+      case JSOP_BITNOT:
+        MOZ_ASSERT_IF(op == JSOP_MUL,
+                      left->maybeConstantValue() && left->maybeConstantValue()->toInt32() == -1);
+        MOZ_ASSERT_IF(op != JSOP_MUL, !left);
+        stub = MUnaryCache::New(alloc(), right);
+        break;
       case JSOP_ADD:
       case JSOP_SUB:
       case JSOP_MUL:
