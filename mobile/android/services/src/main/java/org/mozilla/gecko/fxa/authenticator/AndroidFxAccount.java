@@ -110,6 +110,13 @@ public class AndroidFxAccount {
   private static final String ACCOUNT_KEY_DEVICE_PUSH_REGISTRATION_ERROR = "devicePushRegistrationError";
   private static final String ACCOUNT_KEY_DEVICE_PUSH_REGISTRATION_ERROR_TIME = "devicePushRegistrationErrorTime";
 
+  // We only see the hashed FxA UID once every sync.
+  // We might need it later for telemetry purposes outside of the context of a sync, which
+  // is why it is persisted.
+  // It is not expected to change during the lifetime of an account, but we set
+  // that value every time we see an FxA token nonetheless.
+  private static final String ACCOUNT_KEY_HASHED_FXA_UID = "hashedFxAUID";
+
   // Account authentication token type for fetching account profile.
   private static final String PROFILE_OAUTH_TOKEN_TYPE = "oauth::profile";
 
@@ -1036,6 +1043,14 @@ public class AndroidFxAccount {
 
   public synchronized void resetDevicePushRegistrationError() {
     setDevicePushRegistrationError(0L, 0l);
+  }
+
+  public synchronized void setCachedHashedFxAUID(final String newHashedFxAUID) {
+    accountManager.setUserData(account, ACCOUNT_KEY_HASHED_FXA_UID, newHashedFxAUID);
+  }
+
+  public synchronized String getCachedHashedFxAUID() {
+    return accountManager.getUserData(account, ACCOUNT_KEY_HASHED_FXA_UID);
   }
 
   @SuppressLint("ParcelCreator") // The CREATOR field is defined in the super class.
