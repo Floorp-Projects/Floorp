@@ -15,6 +15,7 @@
 # include <io.h>
 #endif
 #include "prio.h"
+#include "prlink.h"
 
 #include "mozilla/Scoped.h"
 #include "nsIFile.h"
@@ -118,6 +119,12 @@ void ReadAheadLib(nsIFile* aFile);
 void ReadAheadFile(nsIFile* aFile, const size_t aOffset = 0,
                    const size_t aCount = SIZE_MAX,
                    filedesc_t* aOutFd = nullptr);
+
+/*
+ * Wrappers for PR_GetLibraryName and PR_GetLibraryFilePathname.
+ */
+PathString GetLibraryName(pathstr_t aDirectory, const char* aLib);
+PathString GetLibraryFilePathname(pathstr_t aName, PRFuncPtr aAddr);
 
 #endif // MOZILLA_INTERNAL_API
 
