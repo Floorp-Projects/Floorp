@@ -125,3 +125,51 @@ TEST(cubeb, duplex)
 
   ASSERT_TRUE(stream_state.seen_audio.load());
 }
+
+void device_collection_changed_callback(cubeb * context, void * user)
+{
+  fprintf(stderr, "collection changed callback\n");
+  ASSERT_TRUE(false) << "Error: device collection changed callback"
+                        " called when opening a stream";
+}
+
+TEST(cubeb, duplex_collection_change)
+{
+  cubeb *ctx;
+  cubeb_stream *stream;
+  cubeb_stream_params input_params;
+  cubeb_stream_params output_params;
+  int r;
+  uint32_t latency_frames = 0;
+
+  r = common_init(&ctx, "Cubeb duplex example with collection change");
+  ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb library";
+
+  r = cubeb_register_device_collection_changed(ctx,
+                                               static_cast<cubeb_device_type>(CUBEB_DEVICE_TYPE_INPUT),
+                                               device_collection_changed_callback,
+                                               nullptr);
+  ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb stream";
+
+  std::unique_ptr<cubeb, decltype(&cubeb_destroy)>
+    cleanup_cubeb_at_exit(ctx, cubeb_destroy);
+
+  /* typical user-case: mono input, stereo output, low latency. */
+  input_params.format = STREAM_FORMAT;
+  input_params.rate = 48000;
+  input_params.channels = 1;
+  input_params.layout = CUBEB_LAYOUT_MONO;
+  output_params.format = STREAM_FORMAT;
+  output_params.rate = 48000;
+  output_params.channels = 2;
+  output_params.layout = CUBEB_LAYOUT_STEREO;
+
+  r = cubeb_get_min_latency(ctx, &output_params, &latency_frames);
+  ASSERT_EQ(r, CUBEB_OK) << "Could not get minimal latency";
+
+  r = cubeb_stream_init(ctx, &stream, "Cubeb duplex",
+                        NULL, &input_params, NULL, &output_params,
+                        latency_frames, data_cb_duplex, state_cb_duplex, nullptr);
+  ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb stream";
+  cubeb_stream_destroy(stream);
+}
