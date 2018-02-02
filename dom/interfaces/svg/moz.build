@@ -9,7 +9,6 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     'nsIDOMSVGElement.idl',
-    'nsIDOMSVGLength.idl',
 ]
 
 XPIDL_MODULE = 'dom_svg'

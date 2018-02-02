@@ -2896,7 +2896,7 @@ pp$3.checkUnreserved = function(ref) {
   if (this.isKeyword(name))
     { this.raise(start, ("Unexpected keyword '" + name + "'")); }
   if (this.options.ecmaVersion < 6 &&
-    this.input.slice(start, end).includes("\\")) { return }
+    this.input.slice(start, end).indexOf("\\") != -1) { return }
   var re = this.strict ? this.reservedWordsStrict : this.reservedWords;
   if (re.test(name))
     { this.raiseRecoverable(start, ("The keyword '" + name + "' is reserved")); }
@@ -3661,7 +3661,7 @@ pp$8.readRegexp = function() {
     var validFlags = /^[gim]*$/;
     if (this.options.ecmaVersion >= 6) { validFlags = /^[gimuy]*$/; }
     if (!validFlags.test(mods)) { this.raise(start, "Invalid regular expression flag"); }
-    if (mods.includes("u")) {
+    if (mods.indexOf("u") >= 0) {
       if (regexpUnicodeSupport) {
         tmpFlags = "u";
       } else {
@@ -7285,7 +7285,7 @@ IndexedSourceMapConsumer.prototype.generatedPositionFor =
 
       // Only consider this section if the requested source is in the list of
       // sources of the consumer.
-      if (!section.consumer.sources.includes(util.getArg(aArgs, 'source'))) {
+      if (section.consumer.sources.indexOf(util.getArg(aArgs, 'source')) === -1) {
         continue;
       }
       var generatedPosition = section.consumer.generatedPositionFor(aArgs);

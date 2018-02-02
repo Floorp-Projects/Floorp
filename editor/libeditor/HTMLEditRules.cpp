@@ -9460,11 +9460,14 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
 nsresult
 HTMLEditRules::DidAbsolutePosition()
 {
-  NS_ENSURE_STATE(mHTMLEditor);
-  nsCOMPtr<nsIHTMLAbsPosEditor> absPosHTMLEditor = mHTMLEditor;
-  nsCOMPtr<nsIDOMElement> elt =
-    static_cast<nsIDOMElement*>(GetAsDOMNode(mNewBlock));
-  return absPosHTMLEditor->AbsolutelyPositionElement(elt, true);
+  if (!mNewBlock) {
+    return NS_OK;
+  }
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  RefPtr<HTMLEditor> htmlEditor = mHTMLEditor;
+  return htmlEditor->SetPositionToAbsoluteOrStatic(*mNewBlock, true);
 }
 
 nsresult
@@ -9474,6 +9477,12 @@ HTMLEditRules::WillRemoveAbsolutePosition(Selection* aSelection,
   if (!aSelection || !aCancel || !aHandled) {
     return NS_ERROR_NULL_POINTER;
   }
+
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  RefPtr<HTMLEditor> htmlEditor = mHTMLEditor;
+
   WillInsert(*aSelection, aCancel);
 
   // initialize out param
@@ -9481,18 +9490,15 @@ HTMLEditRules::WillRemoveAbsolutePosition(Selection* aSelection,
   *aCancel = false;
   *aHandled = true;
 
-  nsCOMPtr<nsIDOMElement>  elt;
-  NS_ENSURE_STATE(mHTMLEditor);
-  nsresult rv =
-    mHTMLEditor->GetAbsolutelyPositionedSelectionContainer(getter_AddRefs(elt));
-  NS_ENSURE_SUCCESS(rv, rv);
+  RefPtr<Element> element =
+    htmlEditor->GetAbsolutelyPositionedSelectionContainer();
+  if (NS_WARN_IF(!element)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  NS_ENSURE_STATE(mHTMLEditor);
-  AutoSelectionRestorer selectionRestorer(aSelection, mHTMLEditor);
+  AutoSelectionRestorer selectionRestorer(aSelection, htmlEditor);
 
-  NS_ENSURE_STATE(mHTMLEditor);
-  nsCOMPtr<nsIHTMLAbsPosEditor> absPosHTMLEditor = mHTMLEditor;
-  return absPosHTMLEditor->AbsolutelyPositionElement(elt, false);
+  return htmlEditor->SetPositionToAbsoluteOrStatic(*element, false);
 }
 
 nsresult
@@ -9504,6 +9510,12 @@ HTMLEditRules::WillRelativeChangeZIndex(Selection* aSelection,
   if (!aSelection || !aCancel || !aHandled) {
     return NS_ERROR_NULL_POINTER;
   }
+
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  RefPtr<HTMLEditor> htmlEditor = mHTMLEditor;
+
   WillInsert(*aSelection, aCancel);
 
   // initialize out param
@@ -9511,19 +9523,16 @@ HTMLEditRules::WillRelativeChangeZIndex(Selection* aSelection,
   *aCancel = false;
   *aHandled = true;
 
-  nsCOMPtr<nsIDOMElement>  elt;
-  NS_ENSURE_STATE(mHTMLEditor);
-  nsresult rv =
-    mHTMLEditor->GetAbsolutelyPositionedSelectionContainer(getter_AddRefs(elt));
-  NS_ENSURE_SUCCESS(rv, rv);
+  RefPtr<Element> element =
+    htmlEditor->GetAbsolutelyPositionedSelectionContainer();
+  if (NS_WARN_IF(!element)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  NS_ENSURE_STATE(mHTMLEditor);
-  AutoSelectionRestorer selectionRestorer(aSelection, mHTMLEditor);
+  AutoSelectionRestorer selectionRestorer(aSelection, htmlEditor);
 
-  NS_ENSURE_STATE(mHTMLEditor);
-  nsCOMPtr<nsIHTMLAbsPosEditor> absPosHTMLEditor = mHTMLEditor;
   int32_t zIndex;
-  return absPosHTMLEditor->RelativeChangeElementZIndex(elt, aChange, &zIndex);
+  return htmlEditor->RelativeChangeElementZIndex(*element, aChange, &zIndex);
 }
 
 nsresult

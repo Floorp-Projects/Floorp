@@ -1,14 +1,13 @@
 {
   "name": "sourcemaps-reload",
   "version": "1.0.0",
-  "description": "",
-  "main": "sorted.js",
+  "description": "Rebuild assets for sourcemaps-reload test, see README.md in the same folder",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MPL-2.0",
   "dependencies": {},
   "devDependencies": {
     "babel-core": "^6.26.0",

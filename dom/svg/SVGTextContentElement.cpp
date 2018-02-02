@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/SVGTextContentElement.h"
 
+#include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGIRect.h"
 #include "nsBidiUtils.h"
 #include "nsISVGPoint.h"
@@ -30,7 +31,7 @@ nsSVGElement::EnumInfo SVGTextContentElement::sEnumInfo[1] =
 
 nsSVGElement::LengthInfo SVGTextContentElement::sLengthInfo[1] =
 {
-  { &nsGkAtoms::textLength, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::XY }
+  { &nsGkAtoms::textLength, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::XY }
 };
 
 SVGTextFrame*

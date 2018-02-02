@@ -9,6 +9,7 @@
 #include "DOMSVGPoint.h"
 #include "gfxPlatform.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/dom/SVGLengthBinding.h"
 #include "nsComputedDOMStyle.h"
 #include "nsSVGUtils.h"
 #include "nsSVGLength2.h"
@@ -16,6 +17,7 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
+using namespace mozilla::dom;
 
 nsSVGElement::NumberInfo SVGGeometryElement::sNumberInfo =
 { &nsGkAtoms::pathLength, 0, false };
@@ -76,7 +78,8 @@ SVGGeometryElement::GeometryDependsOnCoordCtx()
   // Check the nsSVGLength2 attribute
   LengthAttributesInfo info = const_cast<SVGGeometryElement*>(this)->GetLengthInfo();
   for (uint32_t i = 0; i < info.mLengthCount; i++) {
-    if (info.mLengths[i].GetSpecifiedUnitType() == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+    if (info.mLengths[i].GetSpecifiedUnitType() ==
+          SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE) {
       return true;
     }
   }
