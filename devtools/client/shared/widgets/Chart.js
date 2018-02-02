@@ -322,6 +322,12 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
  *                      label1: total => l10n.getFormatStr("...", total),  // 5
  *                      label2: total => l10n.getFormatStr("...", total),  // 9
  *                    }
+ *          - header: an object specifying strings to use for table column
+ *                    headers
+ *                    e.g. {
+ *                      label1: l10n.getStr(...),
+ *                      label2: l10n.getStr(...),
+ *                    }
  * @return TableChart
  *         A table chart proxy instance, which emits the following events:
  *           - "mouseover", when the mouse enters a row
@@ -331,6 +337,7 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
 function createTableChart(document, { title, data, strings, totals, header }) {
   strings = strings || {};
   totals = totals || {};
+  header = header || {};
   let isPlaceholder = false;
 
   // If there's no data available, display an empty placeholder.
