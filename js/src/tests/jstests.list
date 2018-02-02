@@ -45,13 +45,17 @@ skip-if(!this.hasOwnProperty("SIMD")) include test262/built-ins/Simd/jstests.lis
 skip-if(!this.hasOwnProperty("SharedArrayBuffer")) script non262/SIMD/load-sab-buffer-compat.js
 skip-if(!this.hasOwnProperty("Atomics")) include test262/built-ins/Atomics/jstests.list
 skip-if(!this.hasOwnProperty("SharedArrayBuffer")) include test262/built-ins/SharedArrayBuffer/jstests.list
-skip-if(!this.hasOwnProperty("SharedArrayBuffer")) script test262/built-ins/ArrayBuffer/prototype/byteLength/this-is-sharedarraybuffer.js
-skip-if(!this.hasOwnProperty("SharedArrayBuffer")) script test262/built-ins/ArrayBuffer/prototype/slice/this-is-sharedarraybuffer.js
-skip-if(!this.hasOwnProperty("SharedArrayBuffer")) script test262/built-ins/TypedArrays/internals/Get/indexed-value-sab.js
 
 # flatMap and flatten are Nightly-only
 skip-if(!Array.prototype.flatMap) include test262/built-ins/Array/prototype/flatMap/jstests.list
 skip-if(!Array.prototype.flatten) include test262/built-ins/Array/prototype/flatten/jstests.list
+
+# trimStart and trimEnd are Nightly-only
+skip-if(!String.prototype.trimStart) include test262/built-ins/String/prototype/trimStart/jstests.list
+skip-if(!String.prototype.trimStart) include test262/annexB/built-ins/String/prototype/trimLeft/jstests.list
+skip-if(!String.prototype.trimEnd) include test262/built-ins/String/prototype/trimEnd/jstests.list
+skip-if(!String.prototype.trimEnd) include test262/annexB/built-ins/String/prototype/trimRight/jstests.list
+
 
 #####################################
 # Test262 tests disabled on browser #
@@ -474,6 +478,3 @@ skip script test262/harness/detachArrayBuffer.js
 ####################################################
 # Tests disabled due to invalid test expectations  #
 ####################################################
-
-# assert.compareArray doesn't perform deep-equality comparison.
-skip script test262/built-ins/Array/prototype/flatMap/depth-always-one.js
