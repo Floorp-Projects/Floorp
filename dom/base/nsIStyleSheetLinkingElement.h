@@ -61,10 +61,10 @@ public:
    * @param aForceUpdate whether we wand to force the update, flushing the
    *                     cached version if any.
    */
-  NS_IMETHOD UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
-                              bool *aWillNotify,
-                              bool *aIsAlternate,
-                              bool aForceUpdate = false) = 0;
+  virtual nsresult UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
+                                    bool *aWillNotify,
+                                    bool *aIsAlternate,
+                                    bool aForceUpdate = false) = 0;
 
   /**
    * Tells this element whether to update the stylesheet when the
