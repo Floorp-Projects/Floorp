@@ -577,10 +577,9 @@ protected:
   RefPtr<AsyncImagePipelineManager> mAsyncImageManager;
   RefPtr<WebRenderBridgeParent> mWrBridge;
   widget::CompositorWidget* mWidget;
-  TimeStamp mTestTime;
+  Maybe<TimeStamp> mTestTime;
   CSSToLayoutDeviceScale mScale;
   TimeDuration mVsyncRate;
-  bool mIsTesting;
 
   uint64_t mPendingTransaction;
   TimeStamp mTxnStartTime;
