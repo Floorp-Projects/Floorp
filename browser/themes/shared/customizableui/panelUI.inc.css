@@ -1516,10 +1516,6 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   display: none !important;
 }
 
-#panelMenu_pocket {
-  display: none;
-}
-
 .subviewbutton.download {
   -moz-box-align: start;
   min-height: 48px;
