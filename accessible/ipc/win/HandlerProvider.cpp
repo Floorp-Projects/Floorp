@@ -10,6 +10,7 @@
 
 #include "Accessible2_3.h"
 #include "AccessibleDocument.h"
+#include "AccessibleRelation.h"
 #include "AccessibleTable.h"
 #include "AccessibleTable2.h"
 #include "AccessibleTableCell.h"
@@ -28,6 +29,7 @@
 #include "mozilla/mscom/Ptr.h"
 #include "mozilla/mscom/StructStream.h"
 #include "mozilla/mscom/Utils.h"
+#include "mozilla/UniquePtr.h"
 #include "nsThreadUtils.h"
 #include "nsTArray.h"
 
@@ -654,6 +656,70 @@ HandlerProvider::get_AllTextInfo(BSTR* aText,
                                  &HandlerProvider::GetAllTextInfoMainThread,
                                  aText, aHyperlinks, aNHyperlinks,
                                  aAttribRuns, aNAttribRuns, &hr)) {
+    return E_FAIL;
+  }
+
+  return hr;
+}
+
+void
+HandlerProvider::GetRelationsInfoMainThread(IARelationData** aRelations,
+                                            long* aNRelations,
+                                            HRESULT* hr)
+{
+  MOZ_ASSERT(aRelations);
+  MOZ_ASSERT(aNRelations);
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mTargetUnk);
+
+  RefPtr<NEWEST_IA2_INTERFACE> acc;
+  *hr = mTargetUnk.get()->QueryInterface(NEWEST_IA2_IID,
+    getter_AddRefs(acc));
+  if (FAILED(*hr)) {
+    return;
+  }
+
+  *hr = acc->get_nRelations(aNRelations);
+  if (FAILED(*hr)) {
+    return;
+  }
+
+  auto rawRels = MakeUnique<IAccessibleRelation*[]>(*aNRelations);
+  *hr = acc->get_relations(*aNRelations, rawRels.get(), aNRelations);
+  if (FAILED(*hr)) {
+    return;
+  }
+
+  *aRelations = static_cast<IARelationData*>(::CoTaskMemAlloc(
+    sizeof(IARelationData) * *aNRelations));
+  for (long index = 0; index < *aNRelations; ++index) {
+    IAccessibleRelation* rawRel = rawRels[index];
+    IARelationData& relData = (*aRelations)[index];
+    *hr = rawRel->get_relationType(&relData.mType);
+    if (FAILED(*hr)) {
+      relData.mType = nullptr;
+    }
+    *hr = rawRel->get_nTargets(&relData.mNTargets);
+    if (FAILED(*hr)) {
+      relData.mNTargets = -1;
+    }
+    rawRel->Release();
+  }
+
+  *hr = S_OK;
+}
+
+HRESULT
+HandlerProvider::get_RelationsInfo(IARelationData** aRelations,
+                                   long* aNRelations)
+{
+  MOZ_ASSERT(mscom::IsCurrentThreadMTA());
+
+  HRESULT hr;
+  if (!mscom::InvokeOnMainThread("HandlerProvider::GetRelationsInfoMainThread",
+                                 this,
+                                 &HandlerProvider::GetRelationsInfoMainThread,
+                                 aRelations, aNRelations, &hr)) {
     return E_FAIL;
   }
 

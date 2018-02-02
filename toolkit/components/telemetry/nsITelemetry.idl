@@ -542,6 +542,17 @@ interface nsITelemetry : nsISupports
   void registerScalars(in ACString aCategoryName, in jsval aScalarData);
 
   /**
+   * Parent process only. Register dynamic builtin scalars. The parameters
+   * have the same meaning as the usual |registerScalars| function.
+   *
+   * This function is only meant to be used to support the "artifact build"/
+   * "built faster" developers by allowing to add new scalars without rebuilding
+   * the C++ components including the headers files.
+   */
+  [implicit_jscontext]
+  void registerBuiltinScalars(in ACString aCategoryName, in jsval aScalarData);
+
+  /**
    * Resets all the stored events. This is intended to be only used in tests.
    */
   void clearEvents();

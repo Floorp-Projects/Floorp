@@ -6,13 +6,9 @@ this.EXPORTED_SYMBOLS = ["OfflineAppCacheHelper"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 this.OfflineAppCacheHelper = {
   clear() {
-    var cacheService = Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(Ci.nsICacheStorageService);
-    var appCacheStorage = cacheService.appCacheStorage(Services.loadContextInfo.default, null);
+    var appCacheStorage = Services.cache2.appCacheStorage(Services.loadContextInfo.default, null);
     try {
       appCacheStorage.asyncEvictStorage(null);
     } catch (er) {}

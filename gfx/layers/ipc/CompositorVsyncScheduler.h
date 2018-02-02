@@ -19,9 +19,6 @@
 #include "nsISupportsImpl.h"
 
 
-class MessageLoop;
-class nsIWidget;
-
 namespace mozilla {
 
 class CancelableRunnable;
@@ -48,43 +45,69 @@ public:
   explicit CompositorVsyncScheduler(CompositorVsyncSchedulerOwner* aVsyncSchedulerOwner,
                                     widget::CompositorWidget* aWidget);
 
+  /**
+   * Notify this class of a vsync. This will trigger a composite if one is
+   * needed. This must be called from the vsync dispatch thread.
+   */
   bool NotifyVsync(TimeStamp aVsyncTimestamp);
-  void SetNeedsComposite();
-  void OnForceComposeToTarget();
 
-  void ScheduleTask(already_AddRefed<CancelableRunnable>, int);
-  void ResumeComposition();
-  void ComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
-  void PostCompositeTask(TimeStamp aCompositeTimestamp);
-  void PostVRTask(TimeStamp aTimestamp);
+  /**
+   * Do cleanup. This must be called on the compositor thread.
+   */
   void Destroy();
+
+  /**
+   * Notify this class that a composition is needed. This will trigger a
+   * composition soon (likely at the next vsync). This must be called on the
+   * compositor thread.
+   */
   void ScheduleComposition();
+
+  /**
+   * Cancel any composite task that has been scheduled but hasn't run yet.
+   */
   void CancelCurrentCompositeTask();
+
+  /**
+   * Check if a composite is pending. This is generally true between a call
+   * to ScheduleComposition() and the time the composite happens.
+   */
   bool NeedsComposite();
-  void Composite(TimeStamp aVsyncTimestamp);
+
+  /**
+   * Force a composite to happen right away, without waiting for the next vsync.
+   * This must be called on the compositor thread.
+   */
   void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect);
 
-  const TimeStamp& GetLastComposeTime()
-  {
-    return mLastCompose;
-  }
-
-#ifdef COMPOSITOR_PERFORMANCE_WARNING
-  const TimeStamp& GetExpectedComposeStartTime()
-  {
-    return mExpectedComposeStartTime;
-  }
-#endif
+  /**
+   * Return the vsync timestamp of the last or ongoing composite. Must be called
+   * on the compositor thread.
+   */
+  const TimeStamp& GetLastComposeTime() const;
 
 private:
   virtual ~CompositorVsyncScheduler();
 
-  void NotifyCompositeTaskExecuted();
+  // Schedule a task to run on the compositor thread.
+  void ScheduleTask(already_AddRefed<CancelableRunnable>);
+
+  // Post a task to run Composite() on the compositor thread, if there isn't
+  // such a task already queued. Can be called from any thread.
+  void PostCompositeTask(TimeStamp aCompositeTimestamp);
+
+  // Post a task to run DispatchVREvents() on the VR thread, if there isn't
+  // such a task already queued. Can be called from any thread.
+  void PostVRTask(TimeStamp aTimestamp);
+
+  // This gets run at vsync time and "does" a composite (which really means
+  // update internal state and call the owner to do the composite).
+  void Composite(TimeStamp aVsyncTimestamp);
+
   void ObserveVsync();
   void UnobserveVsync();
-  void DispatchTouchEvents(TimeStamp aVsyncTimestamp);
+
   void DispatchVREvents(TimeStamp aVsyncTimestamp);
-  void CancelCurrentSetNeedsCompositeTask();
 
   class Observer final : public VsyncObserver
   {
@@ -103,10 +126,6 @@ private:
   CompositorVsyncSchedulerOwner* mVsyncSchedulerOwner;
   TimeStamp mLastCompose;
 
-#ifdef COMPOSITOR_PERFORMANCE_WARNING
-  TimeStamp mExpectedComposeStartTime;
-#endif
-
   bool mAsapScheduling;
   bool mIsObservingVsync;
   uint32_t mNeedsComposite;
@@ -116,9 +135,6 @@ private:
 
   mozilla::Monitor mCurrentCompositeTaskMonitor;
   RefPtr<CancelableRunnable> mCurrentCompositeTask;
-
-  mozilla::Monitor mSetNeedsCompositeMonitor;
-  RefPtr<CancelableRunnable> mSetNeedsCompositeTask;
 
   mozilla::Monitor mCurrentVRListenerTaskMonitor;
   RefPtr<Runnable> mCurrentVRListenerTask;
