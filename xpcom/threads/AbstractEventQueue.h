@@ -35,12 +35,17 @@ enum class EventPriority
 // Since AbstractEventQueue implementations are unsynchronized, they should be
 // wrapped in an outer SynchronizedEventQueue implementation (like
 // ThreadEventQueue).
+//
+// Subclasses should also define a `static const bool SupportsPrioritization`
+// member to indicate whether the subclass cares about runnable priorities
+// implemented through nsIRunnablePriority.
 class AbstractEventQueue
 {
 public:
   // Add an event to the end of the queue. Implementors are free to use
-  // aPriority however they wish. They may ignore it if the runnable has its own
-  // intrinsic priority (via nsIRunnablePriority).
+  // aPriority however they wish.  If the runnable supports nsIRunnablePriority
+  // and the implementing class supports prioritization, aPriority represents
+  // the result of calling nsIRunnablePriority::GetPriority().
   virtual void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
                         EventPriority aPriority,
                         const MutexAutoLock& aProofOfLock) = 0;
