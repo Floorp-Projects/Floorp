@@ -3702,20 +3702,6 @@ nsContentUtils::IsImageInCache(nsIURI* aURI, nsIDocument* aDocument)
 }
 
 // static
-int32_t
-nsContentUtils::CORSModeToLoadImageFlags(mozilla::CORSMode aMode)
-{
-  switch (aMode) {
-  case CORS_ANONYMOUS:
-    return imgILoader::LOAD_CORS_ANONYMOUS;
-  case CORS_USE_CREDENTIALS:
-    return imgILoader::LOAD_CORS_USE_CREDENTIALS;
-  default:
-    return 0;
-  }
-}
-
-// static
 nsresult
 nsContentUtils::LoadImage(nsIURI* aURI, nsINode* aContext,
                           nsIDocument* aLoadingDocument,
