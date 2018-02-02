@@ -1338,7 +1338,7 @@ WebRenderBridgeParent::ScheduleGenerateFrame()
 }
 
 void
-WebRenderBridgeParent::FlushRendering(bool aIsSync)
+WebRenderBridgeParent::FlushRendering()
 {
   if (mDestroyed) {
     return;
@@ -1346,11 +1346,19 @@ WebRenderBridgeParent::FlushRendering(bool aIsSync)
 
   mForceRendering = true;
   if (mCompositorScheduler->FlushPendingComposite()) {
-    if (aIsSync) {
-      mApi->WaitFlushed();
-    }
+    mApi->WaitFlushed();
   }
   mForceRendering = false;
+}
+
+void
+WebRenderBridgeParent::FlushRenderingAsync()
+{
+  if (mDestroyed) {
+    return;
+  }
+
+  mCompositorScheduler->FlushPendingComposite();
 }
 
 void
