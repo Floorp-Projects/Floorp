@@ -8,6 +8,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.annotation.Nullable;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.mozilla.gecko.background.common.log.Logger;
@@ -55,10 +56,12 @@ public class CommandProcessor {
     public final String commandType;
     public final JSONArray args;
     private List<String> argsList;
+    @Nullable public String flowID;
 
-    public Command(String commandType, JSONArray args) {
+    public Command(String commandType, JSONArray args, @Nullable String flowID) {
       this.commandType = commandType;
       this.args = args;
+      this.flowID = flowID;
     }
 
     /**
@@ -88,6 +91,9 @@ public class CommandProcessor {
       JSONObject out = new JSONObject();
       out.put("command", this.commandType);
       out.put("args", this.args);
+      if (this.flowID != null) {
+        out.put("flowID", this.flowID);
+      }
       return out;
     }
   }
@@ -149,8 +155,9 @@ public class CommandProcessor {
       if (unparsedArgs == null) {
         return null;
       }
+      final String flowID = unparsedCommand.getString("flowID");
 
-      return new Command(type, unparsedArgs);
+      return new Command(type, unparsedArgs, flowID);
     } catch (NonArrayJSONException e) {
       Logger.debug(LOG_TAG, "Unable to parse args array. Invalid command");
       return null;
@@ -169,7 +176,8 @@ public class CommandProcessor {
     args.add(sender);
     args.add(title);
 
-    final Command displayURICommand = new Command("displayURI", args);
+    final String flowID = Utils.generateGuid();
+    final Command displayURICommand = new Command("displayURI", args, flowID);
     this.sendCommand(clientID, displayURICommand, context);
   }
 

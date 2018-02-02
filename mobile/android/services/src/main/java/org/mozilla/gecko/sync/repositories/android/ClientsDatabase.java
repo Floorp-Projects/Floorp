@@ -19,7 +19,7 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
 
   // Database Specifications.
   protected static final String DB_NAME = "clients_database";
-  protected static final int SCHEMA_VERSION = 4;
+  protected static final int SCHEMA_VERSION = 5;
 
   // Clients Table.
   public static final String TBL_CLIENTS      = "clients";
@@ -46,8 +46,9 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
   public static final String TBL_COMMANDS = "commands";
   public static final String COL_COMMAND  = "command";
   public static final String COL_ARGS     = "args";
+  public static final String COL_FLOW_ID  = "flow_id";
 
-  public static final String[] TBL_COMMANDS_COLUMNS    = new String[] { COL_ACCOUNT_GUID, COL_COMMAND, COL_ARGS };
+  public static final String[] TBL_COMMANDS_COLUMNS    = new String[] { COL_ACCOUNT_GUID, COL_COMMAND, COL_ARGS, COL_FLOW_ID };
   public static final String   TBL_COMMANDS_KEY        = COL_ACCOUNT_GUID + " = ? AND " +
                                                          COL_COMMAND + " = ? AND " +
                                                          COL_ARGS + " = ?";
@@ -91,6 +92,7 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
         + COL_ACCOUNT_GUID + " TEXT, "
         + COL_COMMAND + " TEXT, "
         + COL_ARGS + " TEXT, "
+        + COL_FLOW_ID + " TEXT, "
         + "PRIMARY KEY (" + COL_ACCOUNT_GUID + ", " + COL_COMMAND + ", " + COL_ARGS + "), "
         + "FOREIGN KEY (" + COL_ACCOUNT_GUID + ") REFERENCES " + TBL_CLIENTS + " (" + COL_ACCOUNT_GUID + "))";
     db.execSQL(createCommandsTableSql);
@@ -119,6 +121,10 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
     if (oldVersion < 4 && newVersion >= 4) {
       db.execSQL("ALTER TABLE " + TBL_CLIENTS + " ADD COLUMN " + COL_FXA_DEVICE_ID + " TEXT");
       db.execSQL("CREATE INDEX idx_fxa_device_id ON " + TBL_CLIENTS + "(" + COL_FXA_DEVICE_ID + ")");
+    }
+
+    if (oldVersion < 5 && newVersion >= 5) {
+      db.execSQL("ALTER TABLE " + TBL_COMMANDS + " ADD COLUMN " + COL_FLOW_ID + " TEXT");
     }
   }
 
@@ -189,9 +195,10 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
    * @param accountGUID
    * @param command - The command type
    * @param args - A JSON string of args
+   * @param flowID - Optional - The flowID
    * @throws NullCursorException
    */
-  public void store(String accountGUID, String command, String args) throws NullCursorException {
+  public void store(String accountGUID, String command, String args, String flowID) throws NullCursorException {
     if (Logger.LOG_PERSONAL_INFORMATION) {
       Logger.pii(LOG_TAG, "Storing command " + command + " with args " + args);
     } else {
@@ -206,6 +213,9 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
       cv.put(COL_ARGS, "[]");
     } else {
       cv.put(COL_ARGS, args);
+    }
+    if (flowID != null) {
+      cv.put(COL_FLOW_ID, flowID);
     }
 
     Cursor cur = this.fetchSpecificCommand(accountGUID, command, args);
@@ -229,6 +239,8 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
     return queryHelper.safeQuery(db, ".fetchClientsCursor", TBL_CLIENTS, TBL_CLIENTS_COLUMNS, TBL_CLIENTS_KEY, args);
   }
 
+  // This method does not check flowID on purpose because we do not want to take it into account
+  // when de-duping commands.
   public Cursor fetchSpecificCommand(String accountGUID, String command, String commandArgs) throws NullCursorException {
     String[] args = new String[] { accountGUID, command, commandArgs };
     SQLiteDatabase db = this.getCachedReadableDatabase();
