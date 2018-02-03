@@ -3534,9 +3534,9 @@ class BookmarkMerger {
    * remote folder node.
    *
    * @param {MergedBookmarkNode} mergedNode
-   *        The merged folder state. This method mutates the merged node to
-   *        append merged children, and change the node's merge state to new
-   *        if needed.
+   *        The merged folder node. This method mutates the merged node to
+   *        append local and remote children, and sets a new merge state
+   *        state if needed.
    * @param {BookmarkNode?} localNode
    *        The local folder node. May be `null` if the folder only exists
    *        remotely.
@@ -3547,30 +3547,40 @@ class BookmarkMerger {
   mergeChildListsIntoMergedNode(mergedNode, localNode, remoteNode) {
     let mergeStateChanged = false;
 
-    // Walk and merge remote children first.
-    MirrorLog.trace("Merging remote children of ${remoteNode} into " +
-                    "${mergedNode}", { remoteNode, mergedNode });
-    if (remoteNode) {
-      for (let remoteChildNode of remoteNode.children) {
-        let remoteChildrenChanged = this.mergeRemoteChildIntoMergedNode(
-          mergedNode, remoteNode, remoteChildNode);
-        if (remoteChildrenChanged) {
+    if (localNode && remoteNode) {
+      if (localNode.newerThan(remoteNode)) {
+        // The folder exists locally and remotely, and the local node is newer.
+        // Walk and merge local children first, followed by remaining unmerged
+        // remote children.
+        if (this.mergeLocalChildrenIntoMergedNode(mergedNode, localNode)) {
+          mergeStateChanged = true;
+        }
+        if (this.mergeRemoteChildrenIntoMergedNode(mergedNode, remoteNode)) {
+          mergeStateChanged = true;
+        }
+      } else {
+        // The folder exists locally and remotely, and the remote node is newer.
+        // Merge remote children first, then remaining local children.
+        if (this.mergeRemoteChildrenIntoMergedNode(mergedNode, remoteNode)) {
+          mergeStateChanged = true;
+        }
+        if (this.mergeLocalChildrenIntoMergedNode(mergedNode, localNode)) {
           mergeStateChanged = true;
         }
       }
-    }
-
-    // Now walk and merge any local children that we haven't already merged.
-    MirrorLog.trace("Merging local children of ${localNode} into " +
-                    "${mergedNode}", { localNode, mergedNode });
-    if (localNode) {
-      for (let localChildNode of localNode.children) {
-        let remoteChildrenChanged = this.mergeLocalChildIntoMergedNode(
-          mergedNode, localNode, localChildNode);
-        if (remoteChildrenChanged) {
-          mergeStateChanged = true;
-        }
+    } else if (localNode) {
+      // The folder only exists locally, so no remote children to merge.
+      if (this.mergeLocalChildrenIntoMergedNode(mergedNode, localNode)) {
+        mergeStateChanged = true;
       }
+    } else if (remoteNode) {
+      // The folder only exists remotely, so local children to merge.
+      if (this.mergeRemoteChildrenIntoMergedNode(mergedNode, remoteNode)) {
+        mergeStateChanged = true;
+      }
+    } else {
+      // Should never happen.
+      throw new TypeError("Can't merge children for two nonexistent nodes");
     }
 
     // Update the merge state if we moved children orphaned on one side by a
@@ -3590,6 +3600,60 @@ class BookmarkMerger {
       });
       mergedNode.mergeState = newMergeState;
     }
+  }
+
+  /**
+   * Recursively merges the children of a remote folder node.
+   *
+   * @param  {MergedBookmarkNode} mergedNode
+   *         The merged folder node. This method mutates the merged node to
+   *         append remote children.
+   * @param  {BookmarkNode} remoteNode
+   *         The remote folder node.
+   * @return {Boolean}
+   *         `true` if the merge produced a new structure that should be
+   *         reuploaded to the server; `false` otherwise.
+   */
+  mergeRemoteChildrenIntoMergedNode(mergedNode, remoteNode) {
+    MirrorLog.trace("Merging remote children of ${remoteNode} into " +
+                    "${mergedNode}", { remoteNode, mergedNode });
+
+    let mergeStateChanged = false;
+    for (let remoteChildNode of remoteNode.children) {
+      let remoteChildrenChanged = this.mergeRemoteChildIntoMergedNode(
+        mergedNode, remoteNode, remoteChildNode);
+      if (remoteChildrenChanged) {
+        mergeStateChanged = true;
+      }
+    }
+    return mergeStateChanged;
+  }
+
+  /**
+   * Recursively merges the children of a local folder node.
+   *
+   * @param  {MergedBookmarkNode} mergedNode
+   *         The merged folder node. This method mutates the merged node to
+   *         append local children.
+   * @param  {BookmarkNode} localNode
+   *         The local folder node.
+   * @return {Boolean}
+   *         `true` if the merge produced a new structure that should be
+   *         reuploaded to the server; `false` otherwise.
+   */
+  mergeLocalChildrenIntoMergedNode(mergedNode, localNode) {
+    MirrorLog.trace("Merging local children of ${localNode} into " +
+                    "${mergedNode}", { localNode, mergedNode });
+
+    let mergeStateChanged = false;
+    for (let localChildNode of localNode.children) {
+      let remoteChildrenChanged = this.mergeLocalChildIntoMergedNode(
+        mergedNode, localNode, localChildNode);
+      if (remoteChildrenChanged) {
+        mergeStateChanged = true;
+      }
+    }
+    return mergeStateChanged;
   }
 
   /**
