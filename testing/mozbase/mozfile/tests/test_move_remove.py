@@ -45,7 +45,7 @@ class FileOpenCloseThread(threading.Thread):
         if self.delete:
             try:
                 os.remove(self.path)
-            except:
+            except Exception:
                 pass
 
 

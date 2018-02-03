@@ -376,9 +376,17 @@ add_task(async function addFavicons() {
   Assert.equal(nonHttps[0].faviconLength, links[0].faviconLength, "Got the same favicon length");
   Assert.equal(nonHttps[0].faviconSize, links[0].faviconSize, "Got the same favicon size");
   Assert.equal(nonHttps[0].mimeType, links[0].mimeType, "Got the same mime type");
+
+  // Check that we do not collect favicons for pocket items
+  const pocketItems = [{url: links[0].url}, {url: "https://mozilla1.com", type: "pocket"}];
+  await provider._addFavicons(pocketItems);
+  Assert.equal(provider._faviconBytesToDataURI(pocketItems)[0].favicon, base64URL, "Added favicon data only to the non-pocket item");
+  Assert.equal(pocketItems[1].favicon, null, "Did not add a favicon to the pocket item");
+  Assert.equal(pocketItems[1].mimeType, null, "Did not add mimeType to the pocket item");
+  Assert.equal(pocketItems[1].faviconSize, null, "Did not add a faviconSize to the pocket item");
 });
 
-add_task(async function getHighlights() {
+add_task(async function getHighlightsWithoutPocket() {
   const addMetadata = url => PlacesUtils.history.update({
     description: "desc",
     previewImageURL: "https://image/",
@@ -497,6 +505,79 @@ add_task(async function getHighlights() {
   Assert.equal(links[0].favicon, image1x1, "Link 1 should contain a favicon");
   Assert.equal(links[1].favicon, null, "Link 2 has no favicon data");
   Assert.equal(links[2].favicon, null, "Link 3 has no favicon data");
+});
+
+add_task(async function getHighlightsWithPocketSuccess() {
+  await setUpActivityStreamTest();
+
+  const fakeResponse = {
+    list: {
+      "12345": {
+        image: {src: "foo.com/img.png"},
+        excerpt: "A description for foo",
+        resolved_title: "A title for foo",
+        resolved_url: "http://www.foo.com",
+        item_id: "12345",
+        status: "0",
+        has_image: "1"
+      },
+      "56789": {
+        item_id: "56789",
+        status: "2",
+      }
+    }
+  };
+
+  // Add a bookmark
+  let bookmark = {
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      title: "foo",
+      description: "desc",
+      preview_image_url: "foo.com/img.png",
+      url: "https://mozilla1.com/"
+  };
+  await PlacesUtils.bookmarks.insert(bookmark);
+  await PlacesTestUtils.addVisits(bookmark.url);
+
+  NewTabUtils.activityStreamProvider.fetchSavedPocketItems = () => fakeResponse;
+  let provider = NewTabUtils.activityStreamLinks;
+  let links = await provider.getHighlights();
+
+  // We should have 1 bookmark followed by 1 pocket story in highlights
+  // We should not have stored the second pocket item since it was deleted
+  Assert.equal(links.length, 2, "Should have 2 links in highlights");
+
+  // First highlight should be a bookmark
+  Assert.equal(links[0].url, bookmark.url, "The first link is the bookmark");
+
+  // Second highlight should be a Pocket item with the correct fields to display
+  Assert.equal(links[1].url, fakeResponse.list["12345"].resolved_url, "Correct Pocket item");
+  Assert.equal(links[1].type, "pocket", "Attached the correct type");
+  Assert.equal(links[1].preview_image_url, fakeResponse.list["12345"].image.src, "Correct preview image was added");
+  Assert.equal(links[1].title, fakeResponse.list["12345"].resolved_title, "Correct title was added");
+  Assert.equal(links[1].description, fakeResponse.list["12345"].excerpt, "Correct description was added");
+  Assert.equal(links[1].item_id, fakeResponse.list["12345"].item_id, "item_id was preserved");
+});
+
+add_task(async function getHighlightsWithPocketFailure() {
+  await setUpActivityStreamTest();
+
+  NewTabUtils.activityStreamProvider.fetchSavedPocketItems = function() {
+    throw new Error();
+  };
+  let provider = NewTabUtils.activityStreamLinks;
+  let links = await provider.getHighlights();
+  Assert.equal(links.length, 0, "Return empty links if we reject the promise");
+});
+
+add_task(async function getHighlightsWithPocketNoData() {
+  await setUpActivityStreamTest();
+
+  NewTabUtils.activityStreamProvider.fetchSavedPocketItems = () => {};
+
+  let provider = NewTabUtils.activityStreamLinks;
+  let links = await provider.getHighlights();
+  Assert.equal(links.length, 0, "Return empty links if we got no data back from the response");
 });
 
 add_task(async function getTopFrecentSites() {

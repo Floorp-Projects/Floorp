@@ -523,7 +523,8 @@ const PanelUI = {
       // As per bug 1402023, hard-coded limit, until Activity Stream develops a
       // richer list.
       numItems: 6,
-      withFavicons: true
+      withFavicons: true,
+      excludePocket: true
     }).catch(ex => {
       // Just hide the section if we can't retrieve the items from the database.
       Cu.reportError(ex);

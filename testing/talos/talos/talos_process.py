@@ -156,7 +156,7 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
             return_code = context.kill_process()
             if return_code is None:
                 return_code = proc.wait(1)
-        except:
+        except Exception:
             # Maybe killed by kill_and_get_minidump(), maybe ended?
             LOG.info("Unable to kill process")
             LOG.info(traceback.format_exc())
