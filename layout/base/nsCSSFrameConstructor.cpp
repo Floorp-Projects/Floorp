@@ -6095,6 +6095,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   }
 
   bool isPopup = false;
+  bool foundMathMLData = false;
   // Try to find frame construction data for this content
   const FrameConstructionData* data;
   if (isText) {
@@ -6124,6 +6125,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     }
     if (!data) {
       data = FindMathMLData(element, aTag, aNameSpaceID, styleContext);
+      foundMathMLData = !!data;
     }
     if (!data) {
       data = FindSVGData(element, aTag, aNameSpaceID, aParentFrame,
@@ -6189,7 +6191,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   //
   // Figure out what should happen for display: contents in MathML.
   if (display->mDisplay == StyleDisplay::Contents &&
-      !aContent->IsMathMLElement()) {
+      !foundMathMLData) {
     if (!GetDisplayContentsStyleFor(aContent)) {
       MOZ_ASSERT(styleContext->GetPseudo() || !isGeneratedContent,
                  "Should have had pseudo type");

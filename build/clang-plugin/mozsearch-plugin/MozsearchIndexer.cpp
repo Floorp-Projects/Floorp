@@ -310,6 +310,10 @@ private:
 
   std::string getMangledName(clang::MangleContext *Ctx,
                              const clang::NamedDecl *Decl) {
+    if (isa<FunctionDecl>(Decl) && cast<FunctionDecl>(Decl)->isExternC()) {
+      return cast<FunctionDecl>(Decl)->getNameAsString();
+    }
+
     if (isa<FunctionDecl>(Decl) || isa<VarDecl>(Decl)) {
       const DeclContext *DC = Decl->getDeclContext();
       if (isa<TranslationUnitDecl>(DC) || isa<NamespaceDecl>(DC) ||
@@ -809,7 +813,8 @@ public:
   }
 
   enum {
-    NoCrossref = 1,
+    NoCrossref = 1 << 0,
+    OperatorToken = 1 << 1,
   };
 
   // This is the only function that emits analysis JSON data. It should be
@@ -832,11 +837,13 @@ public:
     std::string RangeStr = locationToString(Loc, EndOffset - StartOffset);
     std::string PeekRangeStr;
 
-    // Get the token's characters so we can make sure it's a valid token.
-    const char *StartChars = SM.getCharacterData(Loc);
-    std::string Text(StartChars, EndOffset - StartOffset);
-    if (!isValidIdentifier(Text)) {
-      return;
+    if (!(Flags & OperatorToken)) {
+      // Get the token's characters so we can make sure it's a valid token.
+      const char *StartChars = SM.getCharacterData(Loc);
+      std::string Text(StartChars, EndOffset - StartOffset);
+      if (!isValidIdentifier(Text)) {
+        return;
+      }
     }
 
     FileInfo *F = getFileInfo(Loc);
@@ -1180,6 +1187,7 @@ public:
     }
 
     std::string Mangled = getMangledName(CurMangleContext, NamedCallee);
+    int Flags = 0;
 
     Expr *CalleeExpr = E->getCallee()->IgnoreParenImpCasts();
 
@@ -1187,6 +1195,7 @@ public:
       // Just take the first token.
       CXXOperatorCallExpr *Op = dyn_cast<CXXOperatorCallExpr>(E);
       Loc = Op->getOperatorLoc();
+      Flags |= OperatorToken;
     } else if (MemberExpr::classof(CalleeExpr)) {
       MemberExpr *Member = dyn_cast<MemberExpr>(CalleeExpr);
       Loc = Member->getMemberLoc();
@@ -1204,7 +1213,7 @@ public:
     }
 
     visitIdentifier("use", "function", getQualifiedName(NamedCallee), Loc, Mangled,
-                    getContext(Loc));
+                    getContext(Loc), Flags);
 
     return true;
   }
