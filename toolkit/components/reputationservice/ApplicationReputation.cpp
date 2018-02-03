@@ -426,6 +426,11 @@ static const char* const kBinaryFileExtensions[] = {
     ".bat", // Windows shell
     //".bhx",
     //".bin",
+    ".btapp", // uTorrent and Transmission
+    ".btinstall", // uTorrent and Transmission
+    ".btkey", // uTorrent and Transmission
+    ".btsearch", // uTorrent and Transmission
+    ".btskin", // uTorrent and Transmission
     ".bz", // Linux archive (bzip)
     ".bz2", // Linux archive (bzip2)
     ".bzip2", // Linux archive (bzip2)
@@ -448,6 +453,9 @@ static const char* const kBinaryFileExtensions[] = {
     ".dc42", // Apple DiskCopy Image
     ".deb", // Linux package
     ".dex", // Android
+    ".dhtml", // HTML
+    ".dhtm", // HTML
+    ".dht", // HTML
     ".diskcopy42", // Apple DiskCopy Image
     ".dll", // Windows executable
     ".dmg", // Mac disk image
@@ -619,6 +627,9 @@ static const char* const kBinaryFileExtensions[] = {
     ".shar", // Linux shell
     ".shb", // Windows
     ".shs", // Windows shell
+    ".shtml", // HTML
+    ".shtm", // HTML
+    ".sht", // HTML
     //".sldm", // MS PowerPoint
     //".sldx", // MS PowerPoint
     ".slp", // Linux package
@@ -638,7 +649,7 @@ static const char* const kBinaryFileExtensions[] = {
     ".tcsh", // Linux shell
     ".tgz", // Linux archive (gzip)
     //".toast", // Roxio disk image
-    //".torrent", // Bittorrent
+    ".torrent", // Bittorrent
     ".tpz", // Linux archive (gzip)
     ".txz", // Linux archive (xz)
     ".tz", // Linux archive (gzip)
@@ -652,14 +663,23 @@ static const char* const kBinaryFileExtensions[] = {
     ".vbe", // Visual Basic script
     ".vbs", // Visual Basic script
     //".vbscript", // Visual Basic script
+    ".vdx", // MS Visio
     ".vhd", // Windows virtual hard drive
     ".vhdx", // Windows virtual hard drive
     ".vmdk", // VMware virtual disk
     ".vsd", // MS Visio
+    ".vsdm", // MS Visio
+    ".vsdx", // MS Visio
     ".vsmacros", // MS Visual Studio
     ".vss", // MS Visio
+    ".vssm", // MS Visio
+    ".vssx", // MS Visio
     ".vst", // MS Visio
+    ".vstm", // MS Visio
+    ".vstx", // MS Visio
     ".vsw", // MS Visio
+    ".vsx", // MS Visio
+    ".vtx", // MS Visio
     ".website",  // Windows
     ".wim", // Windows Imaging
     //".workflow", // Mac Automator
