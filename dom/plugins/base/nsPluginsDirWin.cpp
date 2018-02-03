@@ -26,41 +26,6 @@
 #include "nsIFile.h"
 #include "nsUnicharUtils.h"
 
-#include <shlwapi.h>
-#define SHOCKWAVE_BASE_FILENAME L"np32dsw"
-/**
- * Determines whether or not SetDllDirectory should be called for this plugin.
- *
- * @param pluginFilePath The full path of the plugin file
- * @return true if SetDllDirectory can be called for the plugin
- */
-bool
-ShouldProtectPluginCurrentDirectory(char16ptr_t pluginFilePath)
-{
-  LPCWSTR passedInFilename = PathFindFileName(pluginFilePath);
-  if (!passedInFilename) {
-    return true;
-  }
-
-  // Somewhere in the middle of 11.6 version of Shockwave, naming of the DLL
-  // after its version number is introduced.
-  if (!wcsicmp(passedInFilename, SHOCKWAVE_BASE_FILENAME L".dll")) {
-    return false;
-  }
-
-  // Shockwave versions before 1202122 will break if you call SetDllDirectory
-  const uint64_t kFixedShockwaveVersion = 1202122;
-  uint64_t version;
-  int found = swscanf(passedInFilename, SHOCKWAVE_BASE_FILENAME L"_%llu.dll",
-                      &version);
-  if (found && version < kFixedShockwaveVersion) {
-    return false;
-  }
-
-  // We always want to call SetDllDirectory otherwise
-  return true;
-}
-
 using namespace mozilla;
 
 /* Local helper functions */
@@ -283,12 +248,8 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
   if (!mPlugin)
     return NS_ERROR_NULL_POINTER;
 
-  bool protectCurrentDirectory = true;
-
   nsAutoString pluginFilePath;
   mPlugin->GetPath(pluginFilePath);
-  protectCurrentDirectory =
-    ShouldProtectPluginCurrentDirectory(pluginFilePath.BeginReading());
 
   nsAutoString pluginFolderPath = pluginFilePath;
   int32_t idx = pluginFilePath.RFindChar('\\');
@@ -304,17 +265,14 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
     NS_ASSERTION(restoreOrigDir, "Error in Loading plugin");
   }
 
-  if (protectCurrentDirectory) {
-    SetDllDirectory(nullptr);
-  }
+  // Temporarily add the current directory back to the DLL load path.
+  SetDllDirectory(nullptr);
 
   nsresult rv = mPlugin->Load(outLibrary);
   if (NS_FAILED(rv))
       *outLibrary = nullptr;
 
-  if (protectCurrentDirectory) {
-    SetDllDirectory(L"");
-  }
+  SetDllDirectory(L"");
 
   if (restoreOrigDir) {
     DebugOnly<BOOL> bCheck = SetCurrentDirectoryW(aOrigDir);

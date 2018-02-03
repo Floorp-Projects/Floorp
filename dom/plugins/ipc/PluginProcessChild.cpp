@@ -23,7 +23,6 @@ extern "C" CGError CGSSetDebugOptions(int options);
 #endif
 
 #ifdef XP_WIN
-bool ShouldProtectPluginCurrentDirectory(char16ptr_t pluginFilePath);
 #if defined(MOZ_SANDBOX)
 #include "mozilla/sandboxTarget.h"
 #endif
@@ -111,10 +110,8 @@ PluginProcessChild::Init(int aArgc, char* aArgv[])
         CommandLine::ForCurrentProcess()->GetLooseValues();
     MOZ_ASSERT(values.size() >= 1, "not enough loose args");
 
-    if (ShouldProtectPluginCurrentDirectory(values[0].c_str())) {
-        SanitizeEnvironmentVariables();
-        SetDllDirectory(L"");
-    }
+    SanitizeEnvironmentVariables();
+    SetDllDirectory(L"");
 
     pluginFilename = WideToUTF8(values[0]);
 
