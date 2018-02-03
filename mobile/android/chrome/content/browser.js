@@ -4715,10 +4715,6 @@ Tab.prototype = {
             BrowserApp.contentDocumentChanged();
           }
           this.contentDocumentIsDisplayed = true;
-
-          if (contentDocument instanceof Ci.nsIImageDocument) {
-            contentDocument.shrinkToFit();
-          }
         }
         break;
 

@@ -2028,9 +2028,11 @@ NewVarScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc
     bool allBindingsClosedOver = pc->sc()->allBindingsClosedOver();
 
     for (BindingIter bi = scope.bindings(pc); bi; bi++) {
-        BindingName binding(bi.name(), allBindingsClosedOver || bi.closedOver());
-        if (!vars.append(binding))
-            return Nothing();
+        if (bi.kind() == BindingKind::Var) {
+            BindingName binding(bi.name(), allBindingsClosedOver || bi.closedOver());
+            if (!vars.append(binding))
+                return Nothing();
+        }
     }
 
     VarScope::Data* bindings = nullptr;

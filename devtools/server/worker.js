@@ -30,7 +30,7 @@ loadSubScript("resource://devtools/shared/worker/loader.js");
 
 var defer = worker.require("devtools/shared/defer");
 var { ActorPool } = worker.require("devtools/server/actors/common");
-var { ThreadActor } = worker.require("devtools/server/actors/script");
+var { ThreadActor } = worker.require("devtools/server/actors/thread");
 var { WebConsoleActor } = worker.require("devtools/server/actors/webconsole");
 var { TabSources } = worker.require("devtools/server/actors/utils/TabSources");
 var makeDebugger = worker.require("devtools/server/actors/utils/make-debugger");
