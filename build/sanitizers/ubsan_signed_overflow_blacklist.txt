@@ -50,15 +50,6 @@ src:*/mfbt/double-conversion/source/bignum.cc
 # Exclude anything within gtests
 src:*/gtest/*
 
-# The JS engine has a lot of code doing all sorts of overflows. This code
-# is pretty well tested though and excluding it here will allow us to go
-# for other, less tested code. Ideally, we would include the JS engine here
-# at some point.
-src:*/js/src/*
-src:*/js/public/*
-src:*/js/*.h
-src:*/jsfriendapi.h
-
 # Atomics can overflow, but without a full stack we can't trace these back
 # to what is actually causing the overflow. Ignoring these for now, as it will
 # be too much effort to determine every single source here.
