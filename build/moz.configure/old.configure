@@ -223,6 +223,7 @@ def old_configure_options(*options):
     '--enable-tasktracer',
     '--enable-thread-sanitizer',
     '--enable-ubsan-int-overflow',
+    '--enable-ubsan-uint-overflow',
     '--enable-universalchardet',
     '--enable-updater',
     '--enable-valgrind',
