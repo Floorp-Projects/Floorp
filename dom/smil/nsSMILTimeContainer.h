@@ -276,7 +276,7 @@ protected:
 
   struct MilestoneEntry
   {
-    MilestoneEntry(nsSMILMilestone aMilestone,
+    MilestoneEntry(const nsSMILMilestone& aMilestone,
                    mozilla::dom::SVGAnimationElement& aElement)
       : mMilestone(aMilestone), mTimebase(&aElement)
     { }
