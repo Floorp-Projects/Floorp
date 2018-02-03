@@ -370,7 +370,7 @@ def run_test_harness(parser, options):
             retVal = mochitest.verifyTests(options)
         else:
             retVal = mochitest.runTests(options)
-    except:
+    except Exception:
         log.error("Automation Error: Exception caught while running tests")
         traceback.print_exc()
         mochitest.stopServers()

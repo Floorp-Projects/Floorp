@@ -51,6 +51,14 @@ var TalosPowersParent;
         });
       });
     },
+
+    goQuitApplication(waitForSafeBrowsing) {
+      var event = new CustomEvent("TalosPowersGoQuitApplication", {
+        bubbles: true,
+        detail: waitForSafeBrowsing,
+      });
+      document.dispatchEvent(event);
+    },
   };
 
   /**

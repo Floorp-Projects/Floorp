@@ -84,7 +84,7 @@ def check_for_crashes(dump_directory,
     if test_name is None:
         try:
             test_name = os.path.basename(sys._getframe(1).f_code.co_filename)
-        except:
+        except Exception:
             test_name = "unknown"
 
     crash_info = CrashInfo(dump_directory, symbols_path, dump_save_path=dump_save_path,
@@ -348,7 +348,7 @@ def check_for_java_exception(logcat, test_name=None, quiet=False):
     if test_name is None:
         try:
             test_name = os.path.basename(sys._getframe(1).f_code.co_filename)
-        except:
+        except Exception:
             test_name = "unknown"
 
     found_exception = False
@@ -562,7 +562,7 @@ def cleanup_pending_crash_reports():
         try:
             mozfile.remove(location)
             logger.info("Removed pending crash reports at '%s'" % location)
-        except:
+        except Exception:
             pass
 
 

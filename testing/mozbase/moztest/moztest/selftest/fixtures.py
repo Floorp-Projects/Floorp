@@ -98,7 +98,7 @@ def binary():
     """Return a Firefox binary"""
     try:
         return build.get_binary_path()
-    except:
+    except Exception:
         pass
 
     app = 'firefox'
@@ -106,7 +106,7 @@ def binary():
     if os.path.isdir(bindir):
         try:
             return mozinstall.get_binary(bindir, app_name=app)
-        except:
+        except Exception:
             pass
 
     if 'GECKO_INSTALLER_URL' in os.environ:
