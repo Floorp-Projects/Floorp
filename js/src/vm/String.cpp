@@ -474,6 +474,9 @@ JSRope::flattenInternal(JSContext* maybecx)
         JSExtensibleString& left = leftMostRope->leftChild()->asExtensible();
         size_t capacity = left.capacity();
         if (capacity >= wholeLength && left.hasTwoByteChars() == IsSame<CharT, char16_t>::value) {
+            wholeChars = const_cast<CharT*>(left.nonInlineChars<CharT>(nogc));
+            wholeCapacity = capacity;
+
             /*
              * Simulate a left-most traversal from the root to leftMost->leftChild()
              * via first_visit_node
@@ -487,7 +490,7 @@ JSRope::flattenInternal(JSContext* maybecx)
                 JSString* child = str->d.s.u2.left;
                 js::BarrierMethods<JSString*>::postBarrier(&str->d.s.u2.left, child, nullptr);
                 MOZ_ASSERT(child->isRope());
-                str->setNonInlineChars(left.nonInlineChars<CharT>(nogc));
+                str->setNonInlineChars(wholeChars);
                 child->d.u1.flattenData = uintptr_t(str) | Tag_VisitRightChild;
                 str = child;
             }
@@ -495,9 +498,7 @@ JSRope::flattenInternal(JSContext* maybecx)
                 JSString::writeBarrierPre(str->d.s.u2.left);
                 JSString::writeBarrierPre(str->d.s.u3.right);
             }
-            str->setNonInlineChars(left.nonInlineChars<CharT>(nogc));
-            wholeCapacity = capacity;
-            wholeChars = const_cast<CharT*>(left.nonInlineChars<CharT>(nogc));
+            str->setNonInlineChars(wholeChars);
             pos = wholeChars + left.d.u1.length;
             if (IsSame<CharT, char16_t>::value)
                 left.d.u1.flags = DEPENDENT_FLAGS;
@@ -505,9 +506,14 @@ JSRope::flattenInternal(JSContext* maybecx)
                 left.d.u1.flags = DEPENDENT_FLAGS | LATIN1_CHARS_BIT;
             left.d.s.u3.base = (JSLinearString*)this;  /* will be true on exit */
             BarrierMethods<JSString*>::postBarrier((JSString**)&left.d.s.u3.base, nullptr, this);
+            Nursery& nursery = zone()->group()->nursery();
+            if (isTenured() && !left.isTenured())
+                nursery.removeMallocedBuffer(wholeChars);
+            else if (!isTenured() && left.isTenured())
+                nursery.registerMallocedBuffer(wholeChars);
             goto visit_right_child;
         }
-   }
+    }
 
     if (!AllocChars(this, wholeLength, &wholeChars, &wholeCapacity)) {
         if (maybecx)
@@ -515,9 +521,9 @@ JSRope::flattenInternal(JSContext* maybecx)
         return nullptr;
     }
 
-    if (!isTenured() && maybecx) {
-        JSRuntime* rt = maybecx->runtime();
-        if (!rt->gc.nursery().registerMallocedBuffer(wholeChars)) {
+    if (!isTenured()) {
+        Nursery& nursery = zone()->group()->nursery();
+        if (!nursery.registerMallocedBuffer(wholeChars)) {
             js_free(wholeChars);
             ReportOutOfMemory(maybecx);
             return nullptr;
@@ -699,6 +705,14 @@ JSDependentString::undependInternal(JSContext* cx)
     CharT* s = cx->pod_malloc<CharT>(n + 1);
     if (!s)
         return nullptr;
+
+    if (!isTenured()) {
+        if (!cx->runtime()->gc.nursery().registerMallocedBuffer(s)) {
+            js_free(s);
+            ReportOutOfMemory(cx);
+            return nullptr;
+        }
+    }
 
     AutoCheckCannotGC nogc;
     PodCopy(s, nonInlineChars<CharT>(nogc), n);
@@ -1101,6 +1115,14 @@ JSExternalString::ensureFlat(JSContext* cx)
     char16_t* s = cx->pod_malloc<char16_t>(n + 1);
     if (!s)
         return nullptr;
+
+    if (!isTenured()) {
+        if (!cx->runtime()->gc.nursery().registerMallocedBuffer(s)) {
+            js_free(s);
+            ReportOutOfMemory(cx);
+            return nullptr;
+        }
+    }
 
     // Copy the chars before finalizing the string.
     {

@@ -3263,9 +3263,11 @@ js::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src, AllocKind 
     MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(size));
     js_memcpy(dst, src, size);
 
-    if (src->isLinear() && !src->isInline() && !src->hasBase()) {
-        void* chars = src->asLinear().nonInlineCharsRaw();
-        nursery().removeMallocedBuffer(chars);
+    if (!src->isInline() && src->isLinear()) {
+        if (src->isUndepended() || !src->hasBase()) {
+            void* chars = src->asLinear().nonInlineCharsRaw();
+            nursery().removeMallocedBuffer(chars);
+        }
     }
 
     return size;
