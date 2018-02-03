@@ -115,8 +115,11 @@ class FormAutofillSection {
    *
    * @param {Object} profile
    *        A profile for pre-processing before filling values.
+   * @returns {boolean} Whether the profile should be filled.
    */
-  async prepareFillingProfile(profile) {}
+  async prepareFillingProfile(profile) {
+    return true;
+  }
 
   /*
    * Override this methid if any data for `createRecord` is needed to be
@@ -248,7 +251,10 @@ class FormAutofillSection {
       throw new Error("No fieldDetail for the focused input.");
     }
 
-    await this.prepareFillingProfile(profile);
+    if (!await this.prepareFillingProfile(profile)) {
+      log.debug("profile cannot be filled", profile);
+      return;
+    }
     log.debug("profile in autofillFields:", profile);
 
     this.filledRecordGUID = profile.guid;
@@ -853,6 +859,7 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
    *
    * @param {Object} profile
    *        A profile for pre-processing before filling values.
+   * @returns {boolean} Whether the profile should be filled.
    * @override
    */
   async prepareFillingProfile(profile) {
@@ -865,11 +872,12 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
 
       if (!decrypted) {
         // Early return if the decrypted is empty or undefined
-        return;
+        return false;
       }
 
       profile["cc-number"] = decrypted;
     }
+    return true;
   }
 }
 
