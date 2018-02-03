@@ -6,6 +6,8 @@
 #ifndef _mozilla_dom_ServiceWorkerDescriptor_h
 #define _mozilla_dom_ServiceWorkerDescriptor_h
 
+#include "nsString.h"
+
 class nsIPrincipal;
 
 namespace mozilla {
