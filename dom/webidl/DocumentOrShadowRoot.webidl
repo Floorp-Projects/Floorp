@@ -22,8 +22,7 @@ interface DocumentOrShadowRoot {
   readonly attribute Element? activeElement;
   readonly attribute StyleSheetList styleSheets;
 
-  // Not implemented yet: bug 1430303.
-  // readonly attribute Element? pointerLockElement;
+  readonly attribute Element? pointerLockElement;
   // Not implemented yet: bug 1430305.
   // readonly attribute Element? fullscreenElement;
 };
