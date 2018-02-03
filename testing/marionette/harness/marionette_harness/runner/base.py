@@ -912,7 +912,7 @@ class BaseMarionetteTestRunner(object):
             # we want to display current test results.
             # so we keep the exception to raise it later.
             interrupted = sys.exc_info()
-        except:
+        except Exception:
             # For any other exception we return immediately and have to
             # cleanup running processes
             self.cleanup()
@@ -929,7 +929,7 @@ class BaseMarionetteTestRunner(object):
                 self.logger.info("Using shuffle seed: %d" % self.shuffle_seed)
 
             self.logger.suite_end()
-        except:
+        except Exception:
             # raise only the exception if we were not interrupted
             if not interrupted:
                 raise

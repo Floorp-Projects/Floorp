@@ -73,7 +73,7 @@ class TestDirectoryConversion(unittest.TestCase):
 
 """  # noqa
             self.assertEqual(str(manifest), out_tmpl % dict(stub=stub))
-        except:
+        except BaseException:
             raise
         finally:
             shutil.rmtree(stub)  # cleanup
@@ -96,7 +96,7 @@ class TestDirectoryConversion(unittest.TestCase):
             parser.read(os.path.join(stub, 'subdir', 'manifest.ini'))
             self.assertEqual(len(parser.tests), 1)
             self.assertEqual(parser.tests[0]['name'], 'subfile')
-        except:
+        except BaseException:
             raise
         finally:
             shutil.rmtree(stub)
@@ -113,7 +113,7 @@ class TestDirectoryConversion(unittest.TestCase):
             self.assertEqual([i['name'] for i in parser.tests],
                              ['bar', 'fleem', 'foo'])
             self.assertFalse(os.path.exists(os.path.join(stub, 'subdir', 'manifest.ini')))
-        except:
+        except BaseException:
             raise
         finally:
             shutil.rmtree(stub)
@@ -131,7 +131,7 @@ class TestDirectoryConversion(unittest.TestCase):
             parser = convert([stub], pattern=('f*', 's*'), relative_to=stub)
             self.assertEqual([i['name'] for i in parser.tests],
                              ['fleem', 'foo', 'subdir/subfile'])
-        except:
+        except BaseException:
             raise
         finally:
             shutil.rmtree(stub)

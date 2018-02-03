@@ -122,7 +122,7 @@ class DataType(object):
 
         try:
             return self.convert(value)
-        except:
+        except Exception:
             raise ValueError("Failed to convert value %s of type %s for field %s to type %s" %
                              (value, type(value).__name__, self.name, self.__class__.__name__))
 

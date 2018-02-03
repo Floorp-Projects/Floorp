@@ -126,7 +126,7 @@ def search_path(mozilla_dir, packages_txt):
             try:
                 for path in handle_package(package[1:]):
                     yield path
-            except:
+            except Exception:
                 pass
 
         if package[0] == 'packages.txt':

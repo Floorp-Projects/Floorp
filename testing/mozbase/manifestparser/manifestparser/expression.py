@@ -306,7 +306,7 @@ class ExpressionParser(object):
             self.iter = self._tokenize()
             self.token = self.iter.next()
             return self.expression()
-        except:
+        except Exception:
             extype, ex, tb = sys.exc_info()
             formatted = ''.join(traceback.format_exception_only(extype, ex))
             reraise(ParseError("could not parse: %s\nexception: %svariables: %s" %

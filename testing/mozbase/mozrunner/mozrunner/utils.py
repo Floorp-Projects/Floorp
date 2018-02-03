@@ -202,7 +202,7 @@ def test_environment(xrePath, env=None, crashreporter=True, debugger=False,
         except OSError as err:
             log.info("Failed determine available memory, disabling ASan"
                      " low-memory configuration: %s" % err.strerror)
-        except:
+        except Exception:
             log.info("Failed determine available memory, disabling ASan"
                      " low-memory configuration")
         else:

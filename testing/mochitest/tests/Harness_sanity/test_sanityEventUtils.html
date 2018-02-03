@@ -30,6 +30,9 @@
 <p>blah blah blah blah</p>
 </div>
 <script class="testbody" type="text/javascript">
+const kStrictKeyPressEvents =
+  SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
+
 info("\nProfile::EventUtilsLoadTime: " + (loadTime - start) + "\n");
 function starttest() {
   SimpleTest.waitForFocus(
@@ -44,7 +47,7 @@ function starttest() {
       is(check, true, 'sendMouseEvent should dispatch click event');
       
       check = false;
-      $("testKeyEvent").addEventListener("keypress", function() { check = true; });
+      $("testKeyEvent").addEventListener("keypress", function() { check = true; }, {once: true});
       $("testKeyEvent").focus();
       sendChar("x");
       is($("testKeyEvent").value, "x", "sendChar should work");
@@ -56,10 +59,18 @@ function starttest() {
       is($("testStrEvent").value, "string", "sendString should work");
       $("testStrEvent").value = "";
     
-      check = false;
+      var keydown = false;
+      var keypress = false;
       $("testKeyEvent").focus();
+      $("testKeyEvent").addEventListener("keydown", function() { keydown = true; }, {once: true});
+      $("testKeyEvent").addEventListener("keypress", function() { keypress = true; }, {once: true});
       sendKey("DOWN");
-      is(check, true, "sendKey should dispatch keyPress");
+      ok(keydown, "sendKey should dispatch keyDown");
+      if (kStrictKeyPressEvents) {
+        ok(!keypress, "sendKey shouldn't dispatch keyPress for non-printable key");
+      } else {
+        ok(keypress, "sendKey should dispatch keyPress even for non-printable key");
+      }
     
       /* test synthesizeMouse* */
       //focus trick enables us to run this in iframes

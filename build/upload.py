@@ -166,7 +166,7 @@ def GetFileHashAndSize(filename):
             sha512Hash = shaObj.hexdigest()
 
         size = os.path.getsize(filename)
-    except:
+    except Exception:
         raise Exception("Unable to get filesize/hash from file: %s" % filename)
 
     return (sha512Hash, size)
