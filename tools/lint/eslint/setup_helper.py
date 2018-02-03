@@ -397,5 +397,5 @@ def have_winrm():
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT)
         return p.wait() == 1 and p.stdout.read().startswith('winrm')
-    except:
+    except Exception:
         return False

@@ -149,6 +149,7 @@ class Theme {
         case "icons_attention":
           this.lwtStyles.icon_attention_color = cssColor;
           break;
+        case "tab_loading":
         case "tab_text":
         case "toolbar_field":
         case "toolbar_field_text":

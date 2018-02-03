@@ -479,7 +479,7 @@ class RobocopTestRunner(MochitestDesktop):
                 # terse.
                 if self.options.log_mach is None:
                     self.printDeviceInfo(printLogcat=True)
-        except:
+        except Exception:
             self.log.error(
                 "Automation Error: Exception caught while running tests")
             traceback.print_exc()
@@ -567,7 +567,7 @@ def run_test_harness(parser, options):
     except KeyboardInterrupt:
         robocop.log.info("runrobocop.py | Received keyboard interrupt")
         runResult = -1
-    except:
+    except Exception:
         traceback.print_exc()
         robocop.log.error(
             "runrobocop.py | Received unexpected exception while running tests")

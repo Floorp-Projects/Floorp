@@ -120,7 +120,7 @@ class ConfigTest(BaseScript):
                 local_dict = {}
                 try:
                     execfile(config_file, global_dict, local_dict)
-                except:
+                except Exception:
                     self.add_summary("%s is invalid python." % config_file,
                                      level="error")
                     self.error(pprint.pformat(sys.exc_info()[1]))

@@ -494,6 +494,13 @@
         ]
       }
     },
+    "meh": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo-espanol", "bing", "amazondotcom", "twitter", "wikipedia-es"
+        ]
+      }
+    },
     "ml": {
       "default": {
         "visibleDefaultEngines": [

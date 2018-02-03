@@ -8,6 +8,97 @@
 
 var { interfaces: Ci, utils: Cu } = Components;
 
+function canQuitApplication() {
+  var os = Components.classes["@mozilla.org/observer-service;1"]
+    .getService(Components.interfaces.nsIObserverService);
+  if (!os) {
+    return true;
+  }
+
+  try {
+    var cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
+      .createInstance(Components.interfaces.nsISupportsPRBool);
+    os.notifyObservers(cancelQuit, "quit-application-requested");
+
+    // Something aborted the quit process.
+    if (cancelQuit.data) {
+      return false;
+    }
+  } catch (ex) {
+  }
+  os.notifyObservers(null, "quit-application-granted");
+  return true;
+}
+
+function goQuitApplication(waitForSafeBrowsing) {
+  var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]
+                 .getService(Components.interfaces.nsIXULRuntime);
+  if (xulRuntime.processType == xulRuntime.PROCESS_TYPE_CONTENT) {
+    // If we're running in a remote browser, emit an event for a
+    // frame script to pick up to quit the whole browser.
+    var event = new content.CustomEvent("TalosQuitApplication", {bubbles: true, detail: {waitForSafeBrowsing}});
+    content.document.dispatchEvent(event);
+    return false;
+  }
+
+  if (waitForSafeBrowsing) {
+    var SafeBrowsing = ChromeUtils.import("resource://gre/modules/SafeBrowsing.jsm", {}).SafeBrowsing;
+
+    var whenDone = () => {
+      goQuitApplication(false);
+    };
+
+    SafeBrowsing.addMozEntriesFinishedPromise.then(whenDone, whenDone);
+    // Speed things up in case nobody else called this:
+    SafeBrowsing.init();
+    return false;
+  }
+
+  if (!canQuitApplication()) {
+    return false;
+  }
+
+  const kAppStartup = "@mozilla.org/toolkit/app-startup;1";
+  const kAppShell   = "@mozilla.org/appshell/appShellService;1";
+  var appService;
+
+  if (kAppStartup in Components.classes) {
+    appService = Components.classes[kAppStartup].
+      getService(Components.interfaces.nsIAppStartup);
+
+  } else if (kAppShell in Components.classes) {
+    appService = Components.classes[kAppShell].
+      getService(Components.interfaces.nsIAppShellService);
+  } else {
+    throw "goQuitApplication: no AppStartup/appShell";
+  }
+
+  var windowManager = Components.
+    classes["@mozilla.org/appshell/window-mediator;1"].getService();
+
+  var windowManagerInterface = windowManager.
+    QueryInterface(Components.interfaces.nsIWindowMediator);
+
+  var enumerator = windowManagerInterface.getEnumerator(null);
+
+  while (enumerator.hasMoreElements()) {
+    var domWindow = enumerator.getNext();
+    if (("tryToClose" in domWindow) && !domWindow.tryToClose()) {
+      return false;
+    }
+    domWindow.close();
+  }
+
+  try {
+    appService.quit(appService.eForceQuit);
+  } catch (ex) {
+    throw ("goQuitApplication: " + ex);
+  }
+
+  return true;
+}
+
+
 /**
  * Content that wants to quit the whole session should
  * fire the TalosQuitApplication custom event. This will
@@ -83,6 +174,10 @@ addEventListener("TalosPowersContentGetStartupInfo", (e) => {
       new content.CustomEvent("TalosPowersContentGetStartupInfoResult",
                               event));
   });
+});
+
+addEventListener("TalosPowersGoQuitApplication", (e) => {
+  goQuitApplication(e.detail);
 });
 
 /* *

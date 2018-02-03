@@ -8,6 +8,9 @@ const kKeyList = [
   { code: "VK_F11",    suppressed: false},
 ];
 
+const kStrictKeyPressEvents =
+  SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
+
 function frameScript() {
   let doc = content.document;
   addMessageListener("Test:RequestFullscreen", () => {
@@ -82,14 +85,14 @@ async function temporaryRemoveUnexpectedKeyEventCapture(callback) {
     "Test:KeyReceived", captureUnexpectedKeyEvent);
 }
 
-function receiveExpectedKeyEvents(keyCode) {
+function receiveExpectedKeyEvents(aKeyCode, aTrusted) {
   return new Promise(resolve => {
-    let events = ["keydown", "keypress", "keyup"];
+    let events = kStrictKeyPressEvents && aTrusted ? ["keydown", "keyup"] : ["keydown", "keypress", "keyup"];
     function listener({ data }) {
       let expected = events.shift();
       is(data.type, expected, `Should receive a ${expected} event`);
-      is(data.keyCode, keyCode,
-         `Should receive the event with key code ${keyCode}`);
+      is(data.keyCode, aKeyCode,
+         `Should receive the event with key code ${aKeyCode}`);
       if (!events.length) {
         gMessageManager.removeMessageListener("Test:KeyReceived", listener);
         resolve();
@@ -148,7 +151,7 @@ add_task(async function() {
 
     info("Dispatch untrusted key events from content");
     await temporaryRemoveUnexpectedKeyEventCapture(async function() {
-      let promiseExpectedKeyEvents = receiveExpectedKeyEvents(keyCode);
+      let promiseExpectedKeyEvents = receiveExpectedKeyEvents(keyCode, false);
       gMessageManager.sendAsyncMessage("Test:DispatchUntrustedKeyEvents", code);
       await promiseExpectedKeyEvents;
     });
@@ -157,7 +160,7 @@ add_task(async function() {
     await temporaryRemoveUnexpectedFullscreenChangeCapture(async function() {
       await temporaryRemoveUnexpectedKeyEventCapture(async function() {
         let promiseExpectedKeyEvents = suppressed ?
-          Promise.resolve() : receiveExpectedKeyEvents(keyCode);
+          Promise.resolve() : receiveExpectedKeyEvents(keyCode, true);
         EventUtils.synthesizeKey(code, {});
         await promiseExpectedKeyEvents;
         let state = await promiseOneMessage("Test:FullscreenChanged");
