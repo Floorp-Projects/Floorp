@@ -79,7 +79,7 @@ struct AlignasHelper
  * AlignedElem<N> is a structure whose alignment is guaranteed to be at least N
  * bytes.
  *
- * We support 1, 2, 4, 8, and 16-bit alignment.
+ * We support 1, 2, 4, 8, and 16-byte alignment.
  */
 template<size_t Align>
 struct AlignedElem;

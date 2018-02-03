@@ -6,7 +6,7 @@
 
 // Test the functionality of the BreakpointActorMap object.
 
-const { BreakpointActorMap } = require("devtools/server/actors/script");
+const { BreakpointActorMap } = require("devtools/server/actors/utils/breakpoint-actor-map");
 
 function run_test() {
   test_get_actor();

@@ -20,6 +20,7 @@
 #include "nsStringFlags.h"
 #include "nsTStringRepr.h"
 #include "nsTSubstring.h"
+#include "nsTSubstringTuple.h"
 
 /**
  * ASCII case-insensitive comparator.  (for Unicode case-insensitive
@@ -47,10 +48,5 @@ public:
     return aStrA.Equals(aStrB, nsCaseInsensitiveCStringComparator());
   }
 };
-
-// included here for backwards compatibility
-#ifndef nsSubstringTuple_h___
-#include "nsSubstringTuple.h"
-#endif
 
 #endif // !defined(nsAString_h___)

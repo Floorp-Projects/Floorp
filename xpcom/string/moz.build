@@ -23,7 +23,6 @@ EXPORTS += [
     'nsStringFwd.h',
     'nsStringIterator.h',
     'nsSubstring.h',
-    'nsSubstringTuple.h',
     'nsTDependentString.h',
     'nsTDependentSubstring.h',
     'nsTextFormatter.h',
@@ -46,8 +45,8 @@ UNIFIED_SOURCES += [
     'nsStringComparator.cpp',
     'nsStringObsolete.cpp',
     'nsSubstring.cpp',
-    'nsSubstringTuple.cpp',
     'nsTextFormatter.cpp',
+    'nsTSubstringTuple.cpp',
     'precompiled_templates.cpp',
 ]
 
