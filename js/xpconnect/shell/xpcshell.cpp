@@ -20,7 +20,6 @@
 #include <shlobj.h>
 
 // we want a wmain entry point
-#define XRE_DONT_PROTECT_DLL_LOAD
 #define XRE_WANT_ENVIRON
 #include "nsWindowsWMain.cpp"
 #ifdef MOZ_SANDBOX

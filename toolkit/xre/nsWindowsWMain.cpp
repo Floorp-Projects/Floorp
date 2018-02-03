@@ -11,13 +11,11 @@
 #endif
 
 #include "mozilla/Char16.h"
+#include "nsSetDllDirectory.h"
 #include "nsUTF8Utils.h"
+
 #include <intrin.h>
 #include <math.h>
-
-#ifndef XRE_DONT_PROTECT_DLL_LOAD
-#include "nsSetDllDirectory.h"
-#endif
 
 #ifdef __MINGW32__
 
@@ -79,10 +77,8 @@ FreeAllocStrings(int argc, char **argv)
 
 int wmain(int argc, WCHAR **argv)
 {
-#ifndef XRE_DONT_PROTECT_DLL_LOAD
   mozilla::SanitizeEnvironmentVariables();
   SetDllDirectoryW(L"");
-#endif
 
   char **argvConverted = new char*[argc + 1];
   if (!argvConverted)

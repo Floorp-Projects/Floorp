@@ -31,7 +31,6 @@ extern "C" CGError CGSSetDebugOptions(int options);
 using mozilla::ipc::IOThreadChild;
 
 #ifdef OS_WIN
-#include "nsSetDllDirectory.h"
 #include <algorithm>
 #endif
 
@@ -109,9 +108,6 @@ PluginProcessChild::Init(int aArgc, char* aArgv[])
     std::vector<std::wstring> values =
         CommandLine::ForCurrentProcess()->GetLooseValues();
     MOZ_ASSERT(values.size() >= 1, "not enough loose args");
-
-    SanitizeEnvironmentVariables();
-    SetDllDirectory(L"");
 
     pluginFilename = WideToUTF8(values[0]);
 
