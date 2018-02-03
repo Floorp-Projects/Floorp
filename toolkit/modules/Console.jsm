@@ -292,6 +292,7 @@ const LOG_LEVELS = {
   "trace": 3,
   "timeEnd": 3,
   "time": 3,
+  "assert": 3,
   "group": 3,
   "groupEnd": 3,
   "profile": 3,
@@ -643,6 +644,7 @@ ConsoleAPI.prototype = {
    */
   _maxLogLevel: null,
   debug: createMultiLineDumper("debug"),
+  assert: createDumper("assert"),
   log: createDumper("log"),
   info: createDumper("info"),
   warn: createDumper("warn"),
