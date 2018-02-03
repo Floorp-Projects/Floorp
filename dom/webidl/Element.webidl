@@ -268,6 +268,10 @@ partial interface Element {
   ShadowRoot attachShadow(ShadowRootInit shadowRootInitDict);
   [BinaryName="shadowRootByMode", Func="nsDocument::IsShadowDOMEnabled"]
   readonly attribute ShadowRoot? shadowRoot;
+
+  [ChromeOnly, Func="nsDocument::IsShadowDOMEnabled", BinaryName="shadowRoot"]
+  readonly attribute ShadowRoot? openOrClosedShadowRoot;
+
   [BinaryName="assignedSlotByMode", Func="nsDocument::IsShadowDOMEnabled"]
   readonly attribute HTMLSlotElement? assignedSlot;
   [CEReactions, Unscopable, SetterThrows, Func="nsDocument::IsShadowDOMEnabled"]
