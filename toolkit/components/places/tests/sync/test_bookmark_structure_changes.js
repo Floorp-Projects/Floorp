@@ -740,3 +740,242 @@ add_task(async function test_complex_move_with_additions() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
+
+add_task(async function test_reorder_and_insert() {
+  let buf = await openMirror("reorder_and_insert");
+
+  info("Set up mirror");
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [{
+      guid: "bookmarkAAAA",
+      url: "http://example.com/a",
+      title: "A",
+    }, {
+      guid: "bookmarkBBBB",
+      url: "http://example.com/b",
+      title: "B",
+    }, {
+      guid: "bookmarkCCCC",
+      url: "http://example.com/c",
+      title: "C",
+    }],
+  });
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.toolbarGuid,
+    children: [{
+      guid: "bookmarkDDDD",
+      url: "http://example.com/d",
+      title: "D",
+    }, {
+      guid: "bookmarkEEEE",
+      url: "http://example.com/e",
+      title: "E",
+    }, {
+      guid: "bookmarkFFFF",
+      url: "http://example.com/f",
+      title: "F",
+    }],
+  });
+  await buf.store(shuffle([{
+    id: "menu",
+    type: "folder",
+    title: "Bookmarks Menu",
+    children: ["bookmarkAAAA", "bookmarkBBBB", "bookmarkCCCC"],
+  }, {
+    id: "bookmarkAAAA",
+    type: "bookmark",
+    title: "A",
+    bmkUri: "http://example.com/a",
+  }, {
+    id: "bookmarkBBBB",
+    type: "bookmark",
+    title: "B",
+    bmkUri: "http://example.com/b",
+  }, {
+    id: "bookmarkCCCC",
+    type: "bookmark",
+    title: "C",
+    bmkUri: "http://example.com/c",
+  }, {
+    id: "toolbar",
+    type: "folder",
+    title: "Bookmarks Toolbar",
+    children: ["bookmarkDDDD", "bookmarkEEEE", "bookmarkFFFF"],
+  }, {
+    id: "bookmarkDDDD",
+    type: "bookmark",
+    title: "D",
+    bmkUri: "http://example.com/d",
+  }, {
+    id: "bookmarkEEEE",
+    type: "bookmark",
+    title: "E",
+    bmkUri: "http://example.com/e",
+  }, {
+    id: "bookmarkFFFF",
+    type: "bookmark",
+    title: "F",
+    bmkUri: "http://example.com/f",
+  }]), { needsMerge: false });
+  await PlacesTestUtils.markBookmarksAsSynced();
+
+  let now = Date.now();
+
+  info("Make local changes: Reorder Menu, Toolbar > (G H)");
+  await PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.menuGuid, [
+    "bookmarkCCCC", "bookmarkAAAA", "bookmarkBBBB"]);
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.toolbarGuid,
+    children: [{
+      guid: "bookmarkGGGG",
+      url: "http://example.com/g",
+      title: "G",
+      dateAdded: new Date(now),
+      lastModified: new Date(now),
+    }, {
+      guid: "bookmarkHHHH",
+      url: "http://example.com/h",
+      title: "H",
+      dateAdded: new Date(now),
+      lastModified: new Date(now),
+    }],
+  });
+
+  info("Make remote changes: Reorder Toolbar, Menu > (I J)");
+  await buf.store(shuffle([{
+    // The server has a newer toolbar, so we should use the remote order (F D E)
+    // as the base, then append (G H).
+    id: "toolbar",
+    type: "folder",
+    title: "Bookmarks Toolbar",
+    children: ["bookmarkFFFF", "bookmarkDDDD", "bookmarkEEEE"],
+    modified: now / 1000 + 5,
+  }, {
+    // The server has an older menu, so we should use the local order (C A B)
+    // as the base, then append (I J).
+    id: "menu",
+    type: "folder",
+    title: "Bookmarks Menu",
+    children: ["bookmarkAAAA", "bookmarkBBBB", "bookmarkCCCC", "bookmarkIIII",
+               "bookmarkJJJJ"],
+    modified: now / 1000 - 5,
+  }, {
+    id: "bookmarkIIII",
+    type: "bookmark",
+    title: "I",
+    bmkUri: "http://example.com/i",
+  }, {
+    id: "bookmarkJJJJ",
+    type: "bookmark",
+    title: "J",
+    bmkUri: "http://example.com/j",
+  }]));
+
+  info("Apply remote");
+  let changesToUpload = await buf.apply({
+    remoteTimeSeconds: now / 1000,
+    localTimeSeconds: now / 1000,
+  });
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+
+  let idsToUpload = inspectChangeRecords(changesToUpload);
+  deepEqual(idsToUpload, {
+    updated: ["bookmarkGGGG", "bookmarkHHHH", "menu", "toolbar"],
+    deleted: [],
+  }, "Should upload records for merged and new local items");
+
+  await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
+    guid: PlacesUtils.bookmarks.rootGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    index: 0,
+    title: "",
+    children: [{
+      guid: PlacesUtils.bookmarks.menuGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 0,
+      title: "Bookmarks Menu",
+      children: [{
+        guid: "bookmarkCCCC",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 0,
+        url: "http://example.com/c",
+        title: "C",
+      }, {
+        guid: "bookmarkAAAA",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 1,
+        url: "http://example.com/a",
+        title: "A",
+      }, {
+        guid: "bookmarkBBBB",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 2,
+        url: "http://example.com/b",
+        title: "B",
+      }, {
+        guid: "bookmarkIIII",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 3,
+        url: "http://example.com/i",
+        title: "I",
+      }, {
+        guid: "bookmarkJJJJ",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 4,
+        url: "http://example.com/j",
+        title: "J",
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.toolbarGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 1,
+      title: "Bookmarks Toolbar",
+      children: [{
+        guid: "bookmarkFFFF",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 0,
+        url: "http://example.com/f",
+        title: "F",
+      }, {
+        guid: "bookmarkDDDD",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 1,
+        url: "http://example.com/d",
+        title: "D",
+      }, {
+        guid: "bookmarkEEEE",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 2,
+        url: "http://example.com/e",
+        title: "E",
+      }, {
+        guid: "bookmarkGGGG",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 3,
+        url: "http://example.com/g",
+        title: "G",
+      }, {
+        guid: "bookmarkHHHH",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 4,
+        url: "http://example.com/h",
+        title: "H",
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.unfiledGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 3,
+      title: "Other Bookmarks",
+    }, {
+      guid: PlacesUtils.bookmarks.mobileGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 4,
+      title: "mobile",
+    }],
+  }, "Should use timestamps to decide base folder order");
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
