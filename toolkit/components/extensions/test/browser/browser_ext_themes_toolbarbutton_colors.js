@@ -1,0 +1,65 @@
+"use strict";
+
+Cu.importGlobalProperties(["InspectorUtils"]);
+
+// This test checks whether applied WebExtension themes that attempt to change
+// the button background color properties are applied correctly.
+
+add_task(async function test_button_background_properties() {
+  const BUTTON_BACKGROUND = "#DEDEDE";
+  const BUTTON_BACKGROUND_ACTIVE = "#FFFFFF";
+  const BUTTON_BACKGROUND_HOVER = "#59CBE8";
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "theme": {
+        "images": {
+          "headerURL": "image1.png",
+        },
+        "colors": {
+          "accentcolor": ACCENT_COLOR,
+          "textcolor": TEXT_COLOR,
+          "button_background": BUTTON_BACKGROUND,
+          "button_background_active": BUTTON_BACKGROUND_ACTIVE,
+          "button_background_hover": BUTTON_BACKGROUND_HOVER,
+        },
+      },
+    },
+    files: {
+      "image1.png": BACKGROUND,
+    },
+
+  });
+
+  await extension.startup();
+
+  let toolbarButton = document.querySelector("#home-button");
+  let toolbarButtonIcon = document.getAnonymousElementByAttribute(toolbarButton, "class", "toolbarbutton-icon");
+  let toolbarButtonIconCS = window.getComputedStyle(toolbarButtonIcon);
+
+  Assert.equal(
+    toolbarButtonIconCS.getPropertyValue("background-color"),
+    `rgb(${hexToRGB(BUTTON_BACKGROUND).join(", ")})`,
+    "Toolbar button background is set."
+  );
+
+  InspectorUtils.addPseudoClassLock(toolbarButton, ":hover");
+
+  Assert.equal(
+    toolbarButtonIconCS.getPropertyValue("background-color"),
+    `rgb(${hexToRGB(BUTTON_BACKGROUND_HOVER).join(", ")})`,
+    "Toolbar button hover background is set."
+  );
+
+  InspectorUtils.addPseudoClassLock(toolbarButton, ":active");
+
+  Assert.equal(
+    toolbarButtonIconCS.getPropertyValue("background-color"),
+    `rgb(${hexToRGB(BUTTON_BACKGROUND_ACTIVE).join(", ")})`,
+    "Toolbar button active background is set!"
+  );
+
+  InspectorUtils.clearPseudoClassLocks(toolbarButton);
+
+  await extension.unload();
+});
