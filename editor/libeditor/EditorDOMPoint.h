@@ -497,8 +497,10 @@ public:
       MOZ_ASSERT(mOffset.isSome());
       MOZ_ASSERT(!mChild);
       if (NS_WARN_IF(!mOffset.value()) ||
-          NS_WARN_IF(mOffset.value() >= mParent->Length())) {
-        // We're already referring the start of the container.
+          NS_WARN_IF(mOffset.value() > mParent->Length())) {
+        // We're already referring the start of the container or
+        // the offset is invalid since perhaps, the offset was set before
+        // the last DOM tree change.
         return false;
       }
       mOffset = mozilla::Some(mOffset.value() - 1);
