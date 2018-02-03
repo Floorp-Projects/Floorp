@@ -37,7 +37,6 @@ using mozilla::ipc::IOThreadChild;
 namespace mozilla {
 namespace plugins {
 
-
 bool
 PluginProcessChild::Init(int aArgc, char* aArgv[])
 {
