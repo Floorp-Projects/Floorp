@@ -10,7 +10,7 @@ import logging
 import os
 try:
     import hashlib
-except:
+except ImportError:
     hashlib = None
 
 

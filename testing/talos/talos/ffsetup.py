@@ -275,7 +275,7 @@ class FFSetup(object):
         try:
             if not self.debug_mode and self.test_config['name'] != "damp":
                 self._run_profile()
-        except:
+        except BaseException:
             self.clean()
             raise
         self._init_gecko_profile()

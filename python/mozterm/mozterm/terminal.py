@@ -18,7 +18,7 @@ class NullTerminal(object):
         self.stream = stream or sys.__stdout__
         try:
             self.is_a_tty = os.isatty(self.stream.fileno())
-        except:
+        except Exception:
             self.is_a_tty = False
 
     class NullCallableString(unicode):

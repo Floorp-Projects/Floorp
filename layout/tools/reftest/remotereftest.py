@@ -134,7 +134,7 @@ class ReftestServer:
                 rtncode = self._process.poll()
                 if (rtncode is None):
                     self._process.terminate()
-            except:
+            except Exception:
                 self.automation.log.info("Failed to shutdown server at %s" %
                                          self.shutdownURL)
                 traceback.print_exc()
@@ -255,7 +255,7 @@ class RemoteReftest(RefTest):
                             self.log.info("Failed to kill process %d: %s" % (proc.pid, str(e)))
                     else:
                         self.log.info("NOT killing %s (not an orphan?)" % procd)
-            except:
+            except Exception:
                 # may not be able to access process info for all processes
                 continue
 
@@ -367,7 +367,7 @@ class RemoteReftest(RefTest):
             try:
                 os.remove(self.pidFile)
                 os.remove(self.pidFile + ".xpcshell.pid")
-            except:
+            except Exception:
                 print ("Warning: cleaning up pidfile '%s' was unsuccessful "
                        "from the test harness" % self.pidFile)
 
@@ -453,7 +453,7 @@ def run_test_harness(parser, options):
             retVal = reftest.verifyTests(options.tests, options)
         else:
             retVal = reftest.runTests(options.tests, options)
-    except:
+    except Exception:
         print "Automation Error: Exception caught while running tests"
         traceback.print_exc()
         retVal = 1

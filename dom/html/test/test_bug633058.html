@@ -22,41 +22,46 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633058
 
 SimpleTest.waitForExplicitFinish();
 
-// Turn off Spatial Navigation so that the 'keypress' event fires.
+const kStrictKeyPressEvents =
+  SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
+
+// Turn off Spatial Navigation so that the 'keypress' event fires in traditional behavior.
 SimpleTest.waitForFocus(function() {
   SpecialPowers.pushPrefEnv({"set":[['snav.enabled', false]]}, startTest);
 });
 function startTest() {
-  var nbExpectedKeyPress = 8;
+  var nbExpectedKeyDown = 8;
+  var nbExpectedKeyPress = kStrictKeyPressEvents ? 1 : 8;
   var inputGotKeyPress = 0;
+  var inputGotKeyDown = 0;
   var divGotKeyPress = 0;
+  var divGotKeyDown = 0;
 
   var input = document.getElementsByTagName('input')[0];
   var content = document.getElementById('content');
 
-  content.addEventListener('keypress', function() {
-    divGotKeyPress++;
-
-    if (divGotKeyPress == nbExpectedKeyPress) {
-      is(inputGotKeyPress, nbExpectedKeyPress, "input got all keypress events");
-      is(divGotKeyPress, nbExpectedKeyPress, "div got all keypress events");
-      SimpleTest.finish();
-    }
-  });
-
-  input.addEventListener('keypress', function() {
-    inputGotKeyPress++;
-  });
+  content.addEventListener("keydown", () => { divGotKeyDown++; });
+  content.addEventListener("keypress", () => { divGotKeyPress++; });
+  input.addEventListener("keydown", () => { inputGotKeyDown++; });
+  input.addEventListener("keypress", () => { inputGotKeyPress++; });
 
   input.addEventListener('focus', function() {
-    synthesizeKey('VK_UP', {});
-    synthesizeKey('VK_LEFT', {});
-    synthesizeKey('VK_RIGHT', {});
-    synthesizeKey('VK_DOWN', {});
-    synthesizeKey('VK_BACK_SPACE', {});
-    synthesizeKey('VK_DELETE', {});
-    synthesizeKey('VK_ESCAPE', {});
-    synthesizeKey('VK_RETURN', {});
+    SimpleTest.executeSoon(() => {
+      synthesizeKey('KEY_ArrowUp', {});
+      synthesizeKey('KEY_ArrowLeft', {});
+      synthesizeKey('KEY_ArrowRight', {});
+      synthesizeKey('KEY_ArrowDown', {});
+      synthesizeKey('KEY_Backspace', {});
+      synthesizeKey('KEY_Delete', {});
+      synthesizeKey('KEY_Escape', {});
+      synthesizeKey('KEY_Enter', {});  // Will dispatch keypress event even in strict behavior.
+
+      is(inputGotKeyDown, nbExpectedKeyDown, "input got all keydown events");
+      is(inputGotKeyPress, nbExpectedKeyPress, "input got all keypress events");
+      is(divGotKeyDown, nbExpectedKeyDown, "div got all keydown events");
+      is(divGotKeyPress, nbExpectedKeyPress, "div got all keypress events");
+      SimpleTest.finish();
+    });
   }, {once: true});
   input.focus();
 }

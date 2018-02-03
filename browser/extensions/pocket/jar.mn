@@ -4,25 +4,7 @@
 
 [features/firefox@getpocket.com] chrome.jar:
 % content pocket %content/ contentaccessible=yes
-% skin pocket classic/1.0 %skin/linux/ os=LikeUnix
-% skin pocket classic/1.0 %skin/osx/ os=Darwin
-% skin pocket classic/1.0 %skin/windows/ os=WINNT
 % skin pocket-shared classic/1.0 %skin/shared/
   content/  (content/*)
   skin/shared (skin/shared/*)
-#ifdef XP_WIN
-  skin/windows/ (skin/windows/*.png)
-#elifdef XP_MACOSX
-  skin/osx/ (skin/osx/*.png)
-#else
-  skin/linux/ (skin/linux/*.png)
-#endif
-
-# windows overrides
-% override chrome://pocket/skin/menuPanel.png             chrome://pocket/skin/menuPanel-aero.png            os=WINNT osversion=6
-% override chrome://pocket/skin/menuPanel.png             chrome://pocket/skin/menuPanel-aero.png            os=WINNT osversion=6.1
-% override chrome://pocket/skin/menuPanel@2x.png          chrome://pocket/skin/menuPanel-aero@2x.png         os=WINNT osversion=6
-% override chrome://pocket/skin/menuPanel@2x.png          chrome://pocket/skin/menuPanel-aero@2x.png         os=WINNT osversion=6.1
-% override chrome://pocket/skin/menuPanel.png             chrome://pocket/skin/menuPanel-yosemite.png        os=Darwin osversion>=10.10
-% override chrome://pocket/skin/menuPanel@2x.png          chrome://pocket/skin/menuPanel-yosemite@2x.png     os=Darwin osversion>=10.10
 

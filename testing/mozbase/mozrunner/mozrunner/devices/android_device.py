@@ -296,7 +296,7 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False, v
                             proc.wait()
                             if proc.proc.returncode == 0:
                                 git_pull_complete = True
-                        except:
+                        except Exception:
                             if proc.poll() is None:
                                 proc.kill(signal.SIGTERM)
                         if not git_pull_complete:
@@ -586,7 +586,7 @@ class AndroidEmulator(object):
         """
         try:
             self.proc.wait()
-        except:
+        except Exception:
             if self.proc.poll() is None:
                 self.cleanup()
         return self.proc.poll()
@@ -650,7 +650,7 @@ class AndroidEmulator(object):
                     telnet_ok = True
                 else:
                     _log_warning("Unable to connect to port 5554")
-            except:
+            except Exception:
                 _log_warning("Trying again after unexpected exception")
             finally:
                 if tn is not None:
@@ -739,7 +739,7 @@ def _find_sdk_exe(substs, exe, tools):
         try:
             creation_time = os.path.getctime(exe_path)
             _log_debug("  ...with creation time %s" % time.ctime(creation_time))
-        except:
+        except Exception:
             _log_warning("Could not get creation time for %s" % exe_path)
 
         prop_path = os.path.join(os.path.dirname(exe_path), "source.properties")
@@ -815,7 +815,7 @@ def _tooltool_fetch():
     proc.run()
     try:
         proc.wait()
-    except:
+    except Exception:
         if proc.poll() is None:
             proc.kill(signal.SIGTERM)
 
@@ -845,7 +845,7 @@ def _get_device_platform(substs):
         output = dm.shellCheckOutput(cmd, timeout=10)
         if output:
             sdk_level = int(output)
-    except:
+    except Exception:
         _log_warning("unable to determine Android sdk level")
     pie = ''
     if sdk_level and sdk_level >= 21:

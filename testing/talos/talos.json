@@ -22,6 +22,9 @@
             "talos_options": ["--disable-stylo"],
             "tests": ["dromaeo_css", "kraken"]
         },
+        "flex-e10s": {
+            "tests": ["tart_flex", "ts_paint_flex"]
+        },
         "other-e10s": {
             "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_many_windows", "sessionrestore_no_auto_restore", "tabpaint", "cpstartup"]
         },

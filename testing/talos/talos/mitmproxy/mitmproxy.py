@@ -21,7 +21,7 @@ LOG = get_proxy_logger()
 try:
     DEFAULT_CERT_PATH = os.path.join(os.getenv('HOME'),
                                      '.mitmproxy', 'mitmproxy-ca-cert.cer')
-except:
+except Exception:
     DEFAULT_CERT_PATH = os.path.join(os.getenv('HOMEDRIVE'), os.getenv('HOMEPATH'),
                                      '.mitmproxy', 'mitmproxy-ca-cert.cer')
 
@@ -85,7 +85,7 @@ def is_mitmproxy_cert_installed(browser_install):
             LOG.info("Firefox autoconfig file contents:")
             LOG.info(contents)
             return False
-    except:
+    except Exception:
         LOG.info("Failed to read Firefox autoconfig file, when verifying CA certificate install")
         return False
     return True

@@ -754,7 +754,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 try:
                     for nc in psutil.net_connections():
                         f.write("  %s\n" % str(nc))
-                except:
+                except Exception:
                     f.write("Exception getting network info: %s\n" % sys.exc_info()[0])
                 f.write("\nProcesses:\n")
                 try:
@@ -762,9 +762,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                         ctime = str(datetime.fromtimestamp(p.create_time()))
                         f.write("  PID %d %s %s created at %s\n" %
                                 (p.pid, p.name(), str(p.cmdline()), ctime))
-                except:
+                except Exception:
                     f.write("Exception getting process info: %s\n" % sys.exc_info()[0])
-        except:
+        except Exception:
             # psutil throws a variety of intermittent exceptions
             self.info("Unable to complete system-info.log: %s" % sys.exc_info()[0])
 

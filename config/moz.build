@@ -16,7 +16,6 @@ DIST_INSTALL = False
 NoVisibilityFlags()
 
 CONFIGURE_SUBST_FILES += [
-    'doxygen.cfg',
     'makefiles/test/Makefile',
     'tests/src-simple/Makefile',
 ]

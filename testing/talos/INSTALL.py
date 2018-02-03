@@ -15,7 +15,7 @@ import urllib2
 
 try:
     from subprocess import check_call as call
-except:
+except ImportError:
     from subprocess import call
 
 # globals

@@ -105,7 +105,7 @@ class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin)
         dirs = self.query_abs_dirs()
         try:
             test_dir = self.config["suite_definitions"][self.test_suite]["testsdir"]
-        except:
+        except Exception:
             test_dir = self.test_suite
         return os.path.join(dirs['abs_test_install_dir'], test_dir)
 
@@ -179,7 +179,7 @@ class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin)
             try:
                 os.remove(AUTH_FILE)
                 self.info("deleted %s" % AUTH_FILE)
-            except:
+            except Exception:
                 self.warning("failed to remove %s" % AUTH_FILE)
 
         avd_path = os.path.join(avd_home_dir, 'avd')
@@ -776,7 +776,7 @@ class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin)
 
             try:
                 cwd = self._query_tests_dir()
-            except:
+            except Exception:
                 self.fatal("Don't know how to run --test-suite '%s'!" % self.test_suite)
             env = self.query_env()
             if minidump:

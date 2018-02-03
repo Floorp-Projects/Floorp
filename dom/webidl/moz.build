@@ -265,9 +265,6 @@ with Files("SVG*"):
 with Files("ScriptProcessorNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
-# TODO: SettingChangeNotification
-# are FirefoxOS::*, leaving as Core::DOM
-
 with Files("Selection.webidl"):
     BUG_COMPONENT = ("Core", "Selection")
 
@@ -766,7 +763,6 @@ WEBIDL_FILES = [
     'ServiceWorkerContainer.webidl',
     'ServiceWorkerGlobalScope.webidl',
     'ServiceWorkerRegistration.webidl',
-    'SettingChangeNotification.webidl',
     'ShadowRoot.webidl',
     'SharedWorker.webidl',
     'SharedWorkerGlobalScope.webidl',

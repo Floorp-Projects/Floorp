@@ -202,7 +202,7 @@ class WinCounterManager(CounterManager):
                         )
                     self.registeredCounters[counter][1].append((newhc,
                                                                 expandedPath))
-                except:
+                except Exception:
                     continue
 
         if oldCounterListLength != len(self.registeredCounters[counter][1]):

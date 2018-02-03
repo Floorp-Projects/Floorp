@@ -4,7 +4,7 @@
 
 try:
     from setuptools import setup
-except:
+except ImportError:
     from distutils.core import setup
 
 

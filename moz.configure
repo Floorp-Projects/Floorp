@@ -444,7 +444,6 @@ def watchman_hg(hg_version, hg_config, watchman):
 
 # Miscellaneous programs
 # ==============================================================
-check_prog('DOXYGEN', ('doxygen',), allow_missing=True)
 check_prog('XARGS', ('xargs',))
 
 @depends(target)

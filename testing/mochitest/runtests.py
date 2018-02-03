@@ -519,7 +519,7 @@ class MochitestServer(object):
                 # https://bugzilla.mozilla.org/show_bug.cgi?id=912285
                 # self._process.terminate()
                 self._process.proc.terminate()
-        except:
+        except Exception:
             self._log.info("Failed to stop web server on %s" % self.shutdownURL)
             traceback.print_exc()
             self._process.kill()
@@ -1173,7 +1173,7 @@ class MochitestDesktop(object):
                 sock = socket.create_connection(("127.0.0.1", 8191))
                 sock.close()
                 break
-            except:
+            except Exception:
                 time.sleep(0.1)
         else:
             self.log.error("runtests.py | Timed out while waiting for "
@@ -1964,7 +1964,7 @@ toolbar#nav-bar {
                 os.remove(options.pidFile)
                 if os.path.exists(options.pidFile + ".xpcshell.pid"):
                     os.remove(options.pidFile + ".xpcshell.pid")
-            except:
+            except Exception:
                 self.log.warning(
                     "cleaning up pidfile '%s' was unsuccessful from the test harness" %
                     options.pidFile)
@@ -2072,7 +2072,7 @@ toolbar#nav-bar {
                 try:
                     if 'firefox' in proc.name():
                         firefoxes = "%s%s\n" % (firefoxes, proc.as_dict(attrs=attrs))
-                except:
+                except Exception:
                     # may not be able to access process info for all processes
                     continue
         if len(firefoxes) > 0:
@@ -2784,7 +2784,7 @@ toolbar#nav-bar {
         except KeyboardInterrupt:
             self.log.info("runtests.py | Received keyboard interrupt.\n")
             status = -1
-        except:
+        except Exception:
             traceback.print_exc()
             self.log.error(
                 "Automation Error: Received unexpected exception while running application\n")
@@ -2837,12 +2837,12 @@ toolbar#nav-bar {
         if HAVE_PSUTIL:
             try:
                 browser_proc = [psutil.Process(browser_pid)]
-            except:
+            except Exception:
                 self.log.info('Failed to get proc for pid %d' % browser_pid)
                 browser_proc = []
             try:
                 child_procs = [psutil.Process(pid) for pid in child_pids]
-            except:
+            except Exception:
                 self.log.info('Failed to get child procs')
                 child_procs = []
             for pid in child_pids:

@@ -73,7 +73,7 @@ class TestRunner(object):
         except TestAssertion as e:
             status = "FAIL"
             message = e.message
-        except:
+        except Exception:
             status = "ERROR"
             message = traceback.format_exc()
         else:
@@ -97,7 +97,7 @@ def main():
     runner = TestRunner()
     try:
         runner.run()
-    except:
+    except Exception:
         logger.critical("Error during test run:\n%s" % traceback.format_exc())
 
 

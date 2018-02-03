@@ -162,6 +162,11 @@ class ts_paint_heavy(ts_paint):
 
 
 @register_test()
+class ts_paint_flex(ts_paint):
+    preferences = {'layout.css.emulate-moz-box-with-flex': True}
+
+
+@register_test()
 class sessionrestore(TsBase):
     """
     A start up test measuring the time it takes to load a sessionstore.js file.
@@ -396,6 +401,11 @@ class tart(PageloaderTest):
                    'dom.send_after_paint_to_content': False}
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
     unit = 'ms'
+
+
+@register_test()
+class tart_flex(tart):
+    preferences = {'layout.css.emulate-moz-box-with-flex': True}
 
 
 @register_test()
