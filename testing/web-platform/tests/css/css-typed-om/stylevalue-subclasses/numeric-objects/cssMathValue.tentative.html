@@ -59,15 +59,6 @@ for (const {subclass, operator} of gUnaryMathValueSubclasses) {
     let result = new subclass(CSS.number(1));
     assert_throws(new TypeError(), () => result.operator = 'foo');
   }, subclass.name + '.operator is readonly');
-
-  test(() => {
-    let result = new subclass(0);
-    result.value = CSS.number(1);
-    assert_style_value_equals(result.value, CSS.number(1));
-
-    result.value = 2;
-    assert_style_value_equals(result.value, CSS.number(2));
-  }, subclass.name + '.value can be updated with a numberish value');
 }
 
 </script>

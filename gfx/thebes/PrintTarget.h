@@ -134,10 +134,9 @@ public:
   /**
    * Returns a reference DrawTarget. Unlike MakeDrawTarget, this method is not
    * restricted to being called between BeginPage()/EndPage() calls, and the
-   * returned DrawTarget it is still valid to use after EndPage() has been
-   * called.
+   * returned DrawTarget is still valid to use after EndPage() has been called.
    */
-  virtual already_AddRefed<DrawTarget> GetReferenceDrawTarget(DrawEventRecorder* aRecorder);
+  virtual already_AddRefed<DrawTarget> GetReferenceDrawTarget();
 
   /**
    * If IsSyncPagePrinting returns true, then a user can assume the content of
@@ -170,18 +169,10 @@ protected:
   cairo_surface_t* mCairoSurface;
   RefPtr<DrawTarget> mRefDT; // reference DT
 
-  // Early on during printing we expect to be called without a recorder in
-  // order to gather metrics for reflow.  However, in a content process, once
-  // we go on to paint we then expect to be called with a recorder.  Hence why
-  // we have this separate recording reference DrawTarget (which wraps mRefDT).
-  RefPtr<DrawTarget> mRecordingRefDT;
-
   IntSize mSize;
   bool mIsFinished;
 #ifdef DEBUG
   bool mHasActivePage;
-  // owned by mRecordingRefDT, so kept alive for our entire lifetime if set:
-  DrawEventRecorder* mRecorder;
 #endif
 
   PageDoneCallback mPageDoneCallback;
