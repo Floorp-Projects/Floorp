@@ -1,20 +1,40 @@
 # This file contains an extensive compile-time blacklist for silencing highly
-# frequent signed and unsigned integer overflows in our codebase, found by the
-# use of -fsanitize=integer. All of the overflows that caused an entry in this
-# list are highly frequent in our test suites (> 500 times per run) and therefore
-# unlikely to be bugs. Nevertheless, the slow down this test mode significantly
-# if left active. Without this list, the -fsanitize=integer test mode is unusable
-# both because of performance and the large number of results to check.
+# frequent *un*signed integer overflows in our codebase, found by the use of
+# -fsanitize=unsigned-integer-overflow.  Such overflows are not necessarily
+# bugs -- unsigned integer overflow has well-defined semantics in C/C++.  But
+# overflow may still be *unexpected* and incorrectly handled, so we try to
+# annotate those places where unsigned overflow is correct and desired.
 #
-# Some of the entries on this list are more aggressive to get the build into a
-# state that allows any testing to happen at all. This is not an optimal solution
-# and it would be good if we could refine the tool and shorten this list over
-# the time. Source code annotations can also help with this.
+# The rules in this file are applied at compile time; changes to this list
+# usually require a full rebuild to apply. If you can modify the source in
+# question to exempt individual functions using MOZ_NO_SANITIZE_UINT_OVERFLOW,
+# do that instead.
 #
-# The rules in this file are only applied at compile time. If you can modify the
-# source in question, consider function attributes to disable instrumentation.
+# The extensive number of entries below is for two reasons.
+#
+# First, compiler instrumentation for unsigned integer overflows has a cost, at
+# compile time and at runtime.  In places where code expects and depends upon
+# overflow behavior -- and especially in performance-critical code -- it makes
+# sense to turn off overflow detection to avoid both costs.  (Indeed,
+# -fsanitize=signed-integer-overflow is unusably slow without this.)
+#
+# Second, many entries here are overly aggressive to get the build into a state
+# that allows any testing to happen at all.  Some of the entries here are for
+# issues that are highly frequent in our test suites -- over 500 times per run.
+# Aggressive entries now let us start using this mode, without having to first
+# fix wide swaths of existing code.
+#
+# Entries should be removed 1) as issues are fixed; and 2) as blacklist entries
+# can be moved out of this centralized file, into source-level blacklist
+# attributes on individual functions.
 
-# Ignore common overflows in the C++ std headers
+# All entries in this file are to suppress unsigned-integer-overflow problems.
+# Blacklists for other reasons should go in separate blacklist files.
+[unsigned-integer-overflow]
+
+# Overflows in the C++ std headers aren't necessarily bugs, because code inside
+# a language implementation can depend on compiler-specific behavior where C/C++
+# leave the behavior undefined.
 src:*bits/basic_string.h
 
 # Assume everything running through CheckedInt.h is ok. The CheckedInt class
