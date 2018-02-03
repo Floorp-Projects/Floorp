@@ -19,14 +19,14 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  expect = 'SyntaxError';
+  expect = 'SyntaxError: unterminated string literal';
   try
   {
     eval('new Function("setter/*\n");');
   }
   catch(ex)
   {
-    actual = ex.constructor.name;
+    actual = ex + '';
   }
   reportCompare(expect, actual, 'new Function("setter/*\n");');
 
@@ -36,7 +36,7 @@ function test()
   }
   catch(ex)
   {
-    actual = ex.constructor.name;
+    actual = ex + '';
   }
   reportCompare(expect, actual, 'new Function("setter/*\n*/");');
 }
