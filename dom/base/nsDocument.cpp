@@ -11640,7 +11640,7 @@ GetPointerLockError(Element* aElement, Element* aCurrentLock,
     return "PointerLockDeniedInUse";
   }
 
-  if (!aElement->IsInUncomposedDoc()) {
+  if (!aElement->IsInComposedDoc()) {
     return "PointerLockDeniedNotInDocument";
   }
 
@@ -11691,11 +11691,11 @@ ChangePointerLockedElement(Element* aElement, nsIDocument* aDocument,
   MOZ_ASSERT(aDocument);
   MOZ_ASSERT(aElement != aPointerLockedElement);
   if (aPointerLockedElement) {
-    MOZ_ASSERT(aPointerLockedElement->GetUncomposedDoc() == aDocument);
+    MOZ_ASSERT(aPointerLockedElement->GetComposedDoc() == aDocument);
     aPointerLockedElement->ClearPointerLock();
   }
   if (aElement) {
-    MOZ_ASSERT(aElement->GetUncomposedDoc() == aDocument);
+    MOZ_ASSERT(aElement->GetComposedDoc() == aDocument);
     aElement->SetPointerLock();
     EventStateManager::sPointerLockedElement = do_GetWeakReference(aElement);
     EventStateManager::sPointerLockedDoc = do_GetWeakReference(aDocument);
@@ -11719,9 +11719,9 @@ PointerLockRequest::Run()
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
   nsDocument* d = static_cast<nsDocument*>(doc.get());
   const char* error = nullptr;
-  if (!e || !d || !e->GetUncomposedDoc()) {
+  if (!e || !d || !e->GetComposedDoc()) {
     error = "PointerLockDeniedNotInDocument";
-  } else if (e->GetUncomposedDoc() != d) {
+  } else if (e->GetComposedDoc() != d) {
     error = "PointerLockDeniedMovedDocument";
   }
   if (!error) {
@@ -11870,25 +11870,6 @@ void
 nsIDocument::UnlockPointer(nsIDocument* aDoc)
 {
   nsDocument::UnlockPointer(aDoc);
-}
-
-Element*
-nsIDocument::GetPointerLockElement()
-{
-  nsCOMPtr<Element> pointerLockedElement =
-    do_QueryReferent(EventStateManager::sPointerLockedElement);
-  if (!pointerLockedElement) {
-    return nullptr;
-  }
-
-  // Make sure pointer locked element is in the same document.
-  nsCOMPtr<nsIDocument> pointerLockedDoc =
-    do_QueryReferent(EventStateManager::sPointerLockedDoc);
-  if (pointerLockedDoc != this) {
-    return nullptr;
-  }
-
-  return pointerLockedElement;
 }
 
 void
