@@ -18,6 +18,8 @@ namespace mozilla {
 class EventQueue final : public AbstractEventQueue
 {
 public:
+  static const bool SupportsPrioritization = false;
+
   EventQueue() {}
   explicit EventQueue(EventPriority aPriority);
 

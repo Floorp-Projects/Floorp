@@ -1847,11 +1847,6 @@ AC_CHECK_FUNCS(posix_fadvise posix_fallocate)
 dnl Set various defines and substitutions
 dnl ========================================================
 
-if test "$MOZ_DEBUG"; then
-    AC_DEFINE(MOZ_REFLOW_PERF)
-    AC_DEFINE(MOZ_REFLOW_PERF_DSP)
-fi
-
 AC_SUBST(MOZ_DEV_EDITION)
 if test -n "$MOZ_DEV_EDITION"; then
     AC_DEFINE(MOZ_DEV_EDITION)

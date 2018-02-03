@@ -10,10 +10,8 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "nsDOMNavigationTiming.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIEventTarget.h"
-#include "nsThreadUtils.h"
 #include "nsTObserverArray.h"
 
 #include "mozilla/dom/WorkerHolder.h"
@@ -30,6 +28,15 @@ class nsIThreadInternal;
 
 namespace mozilla {
 namespace dom {
+
+// If you change this, the corresponding list in nsIWorkerDebugger.idl needs
+// to be updated too.
+enum WorkerType
+{
+  WorkerTypeDedicated,
+  WorkerTypeShared,
+  WorkerTypeService
+};
 
 class ClientInfo;
 class ClientSource;
