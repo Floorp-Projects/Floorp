@@ -13,7 +13,7 @@ PACKAGE_VERSION = '0.3'
 try:
     pwd = os.path.dirname(os.path.abspath(__file__))
     description = open(os.path.join(pwd, 'README.rst')).read()
-except:
+except Exception:
     description = ''
 
 setup(

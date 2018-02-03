@@ -213,7 +213,7 @@ class TTest(object):
                     debugger=browser_config['debugger'],
                     debugger_args=browser_config['debugger_args']
                 )
-            except:
+            except Exception:
                 self.check_for_crashes(browser_config, minidump_dir,
                                        test_config['name'])
                 raise

@@ -279,7 +279,7 @@ class DeviceManagerADB(DeviceManager):
                                retryLimit=retryLimit, timeout=self.short_timeout)
                 if re.search("unzip: exiting", data) or re.search("Operation not permitted", data):
                     raise Exception("unzip failed, or permissions error")
-            except:
+            except Exception:
                 self._logger.warning(traceback.format_exc())
                 self._logger.warning("zip/unzip failure: falling back to normal push")
                 self._useZip = False
@@ -305,7 +305,7 @@ class DeviceManagerADB(DeviceManager):
                                   retryLimit=retryLimit, timeout=timeout):
                     raise DMError("failed to push %s (copy of %s) to %s" %
                                   (newLocal, localDir, remoteDir))
-            except:
+            except BaseException:
                 raise
             finally:
                 mozfile.remove(tempParent)
@@ -450,7 +450,7 @@ class DeviceManagerADB(DeviceManager):
         if not native and not sig:
             try:
                 self.shellCheckOutput(["am", "force-stop", appname], timeout=self.short_timeout)
-            except:
+            except Exception:
                 # no problem - will kill it instead
                 self._logger.info("killProcess failed force-stop of %s" % appname)
 
@@ -589,7 +589,7 @@ class DeviceManagerADB(DeviceManager):
                 try:
                     self.mkDir(root)
                     return root
-                except:
+                except Exception:
                     pass
 
         raise DMError("Unable to set up device root using paths: [%s]"
@@ -869,7 +869,7 @@ class DeviceManagerADB(DeviceManager):
             proc = ProcessHandler(["zip", "-?"], storeOutput=False, processOutputLine=_noOutput)
             proc.run()
             proc.wait()
-        except:
+        except Exception:
             return False
         return True
 

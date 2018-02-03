@@ -1728,7 +1728,7 @@ class ADBDevice(ADBCommand):
         """
         # remove trailing /
         local = os.path.normpath(local)
-        remote = os.path.normpath(remote)
+        remote = posixpath.normpath(remote)
         copy_required = False
         if os.path.isdir(local):
             copy_required = True
@@ -1748,7 +1748,7 @@ class ADBDevice(ADBCommand):
                 remote = '/'.join(remote.rstrip('/').split('/')[:-1])
         try:
             self.command_output(["push", local, remote], timeout=timeout)
-        except:
+        except BaseException:
             raise
         finally:
             if copy_required:
@@ -1773,7 +1773,7 @@ class ADBDevice(ADBCommand):
         """
         # remove trailing /
         local = os.path.normpath(local)
-        remote = os.path.normpath(remote)
+        remote = posixpath.normpath(remote)
         copy_required = False
         original_local = local
         if self._adb_version >= '1.0.36' and \
@@ -1801,7 +1801,7 @@ class ADBDevice(ADBCommand):
                 local = '/'.join(local.rstrip('/').split('/')[:-1])
         try:
             self.command_output(["pull", remote, local], timeout=timeout)
-        except:
+        except BaseException:
             raise
         finally:
             if copy_required:

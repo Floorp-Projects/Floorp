@@ -201,7 +201,7 @@ class GeckoviewTestRunner:
         finally:
             try:
                 shutil.rmtree(dump_dir)
-            except:
+            except Exception:
                 self.log.warn("unable to remove directory: %s" % dump_dir)
         return crashed
 
@@ -233,7 +233,7 @@ def run_test_harness(log, parser, options):
     except KeyboardInterrupt:
         log.info("rungeckoview.py | Received keyboard interrupt")
         result = -1
-    except:
+    except Exception:
         traceback.print_exc()
         log.error(
             "rungeckoview.py | Received unexpected exception while running tests")

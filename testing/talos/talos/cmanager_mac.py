@@ -21,7 +21,7 @@ def GetProcessData(pid):
                                   universal_newlines=True, shell=True)
         handle.wait()
         data = handle.stdout.readlines()
-    except:
+    except Exception:
         print("Unexpected error executing '%s': %s", (command, sys.exc_info()))
         raise
 

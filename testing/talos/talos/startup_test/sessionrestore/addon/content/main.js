@@ -31,7 +31,7 @@ addEventListener("load", function() {
       dumpLog("__startTimestamp" +
               Date.now() + // eslint-disable-line mozilla/avoid-Date-timing
               "__endTimestamp\n\n");
-      goQuitApplication();
+      TalosPowersContent.goQuitApplication();
   });
 
   // In case the add-on has broadcasted the message before we were loaded,

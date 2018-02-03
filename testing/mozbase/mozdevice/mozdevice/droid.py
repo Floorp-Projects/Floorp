@@ -163,7 +163,7 @@ class DroidADB(DeviceManagerADB, DroidMixin):
             # Increased timeout to 60 seconds after intermittent timeouts at 30.
             data = self.shellCheckOutput(
                 ["dumpsys", "window", "windows"], timeout=60)
-        except:
+        except Exception:
             # dumpsys seems to intermittently fail (seen on 4.3 emulator), producing
             # no output.
             return ""

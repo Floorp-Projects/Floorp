@@ -120,7 +120,7 @@ def valid_windows_sdk_dir(compiler, windows_sdk_dir, target_version,
                 maxver = result.splitlines()[-1]
                 try:
                     maxver = int(maxver, 0)
-                except:
+                except Exception:
                     pass
                 else:
                     sdks[d] = maxver, sdk

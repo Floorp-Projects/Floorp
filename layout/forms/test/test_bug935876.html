@@ -51,6 +51,9 @@ const kIsWin = navigator.platform.indexOf("Win") == 0;
 const kIsMac = navigator.platform.indexOf("Mac") == 0;
 const kIsAndroid = navigator.appVersion.indexOf("Android") != 0;
 
+const kStrictKeyPressEvents =
+  SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
+
 function runTests()
 {
   var doPreventDefault = false;
@@ -85,7 +88,7 @@ function runTests()
     keyDownEventConsumed = false;
   }
 
-  function check(aExpectingKeydownConsumed, aDescription)
+  function check(aExpectingKeydownConsumed, aIsPrintableKey, aDescription)
   {
     if (doPreventDefault) {
       ok(!keyPressEventFired, "keypress event shouldn't be fired for " + aDescription +
@@ -99,7 +102,15 @@ function runTests()
       ok(!keyDownEventConsumedByJS, "keydown event of " + aDescription + " shouldn't be consumed in content level");
       ok(keyDownEventConsumed, "keydown event of " + aDescription + " should be consumed in system level");
     } else {
-      ok(keyPressEventFired, "keypress event should be fired for " + aDescription);
+      if (aIsPrintableKey) {
+        ok(keyPressEventFired, "keypress event should be fired for printable key, " + aDescription);
+      } else {
+        if (kStrictKeyPressEvents) {
+          ok(!keyPressEventFired, "keypress event shouldn't be fired for non-printable key, " + aDescription);
+        } else {
+          ok(keyPressEventFired, "keypress event should be fired even for non-printable key, " + aDescription);
+        }
+      }
       ok(!keyDownEventConsumedByJS, "keydown event of " + aDescription + " shouldn't be consumed in content level");
       ok(!keyDownEventConsumed, "keydown event of " + aDescription + " should be consumed in system level");
     }
@@ -116,67 +127,67 @@ function runTests()
     doPreventDefault = consume;
     for (var i = 0; i < listbox.options.length + 1; i++) {
       reset()
-      synthesizeKey("VK_DOWN", {});
-      check(true, "DownArrow key on listbox #" + i);
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      check(true, false, "DownArrow key on listbox #" + i);
     }
 
     for (var i = 0; i < listbox.options.length + 1; i++) {
       reset()
-      synthesizeKey("VK_UP", {});
-      check(true, "UpArrow key on listbox #" + i);
+      synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"});
+      check(true, false, "'ArrowUp' key on listbox #" + i);
     }
 
     for (var i = 0; i < listbox.options.length + 1; i++) {
       reset()
-      synthesizeKey("VK_RIGHT", {});
-      check(true, "RightArrow key on listbox #" + i);
+      synthesizeKey("KEY_ArrowRight", {code: "ArrowRight"});
+      check(true, false, "'ArrowRight' key on listbox #" + i);
     }
 
     for (var i = 0; i < listbox.options.length + 1; i++) {
       reset()
-      synthesizeKey("VK_LEFT", {});
-      check(true, "LeftArrow key on listbox #" + i);
+      synthesizeKey("KEY_ArrowLeft", {code: "ArrowLeft"});
+      check(true, false, "'ArrowLeft' key on listbox #" + i);
     }
 
     for (var i = 0; i < 4; i++) {
       reset()
-      synthesizeKey("VK_PAGE_DOWN", {});
-      check(true, "PageDown key on listbox #" + i);
+      synthesizeKey("KEY_PageDown", {code: "PageDown"});
+      check(true, false, "'PageDown' key on listbox #" + i);
     }
 
     for (var i = 0; i < 4; i++) {
       reset()
-      synthesizeKey("VK_PAGE_UP", {});
-      check(true, "PageUp key on listbox #" + i);
+      synthesizeKey("KEY_PageUp", {code: "PageUp"});
+      check(true, false, "'PageUp' key on listbox #" + i);
     }
 
     for (var i = 0; i < 2; i++) {
       reset()
-      synthesizeKey("VK_END", {});
-      check(true, "End key on listbox #" + i);
+      synthesizeKey("KEY_End", {code: "End"});
+      check(true, false, "'End' key on listbox #" + i);
     }
 
     for (var i = 0; i < 2; i++) {
       reset()
-      synthesizeKey("VK_HOME", {});
-      check(true, "Home key on listbox #" + i);
+      synthesizeKey("KEY_Home", {code: "Home"});
+      check(true, false, "'Home' key on listbox #" + i);
     }
 
     reset()
-    synthesizeKey("VK_RETURN", {});
-    check(false, "Enter key on listbox");
+    synthesizeKey("KEY_Enter", {code: "Enter"});
+    check(false, true, "'Enter' key on listbox");
 
     reset()
-    synthesizeKey("VK_ESCAPE", {});
-    check(false, "Esc key on listbox");
+    synthesizeKey("KEY_Escape", {code: "Escape"});
+    check(false, false, "'Escape' key on listbox");
 
     reset()
-    synthesizeKey("VK_F4", {});
-    check(false, "F4 key on listbox");
+    synthesizeKey("KEY_F4", {code: "F4"});
+    check(false, false, "F4 key on listbox");
 
     reset()
-    synthesizeKey("a", {});
-    check(false, "'A' key on listbox");
+    synthesizeKey("a", {code: "KeyA"});
+    check(false, true, "'A' key on listbox");
   });
 
   listbox.removeEventListener("keydown", onKeydown);
@@ -196,67 +207,67 @@ function runTests()
     doPreventDefault = consume;
     for (var i = 0; i < multipleListbox.options.length + 1; i++) {
       reset()
-      synthesizeKey("VK_DOWN", {});
-      check(true, "DownArrow key on multiple listbox #" + i);
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      check(true, false, "'ArrowDown' key on multiple listbox #" + i);
     }
 
     for (var i = 0; i < multipleListbox.options.length + 1; i++) {
       reset()
-      synthesizeKey("VK_UP", {});
-      check(true, "UpArrow key on multiple listbox #" + i);
+      synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"});
+      check(true, false, "'ArrowUp' key on multiple listbox #" + i);
     }
 
     for (var i = 0; i < multipleListbox.options.length + 1; i++) {
       reset()
-      synthesizeKey("VK_RIGHT", {});
-      check(true, "RightArrow key on multiple listbox #" + i);
+      synthesizeKey("KEY_ArrowRight", {code: "ArrowRight"});
+      check(true, false, "'ArrowRight' key on multiple listbox #" + i);
     }
 
     for (var i = 0; i < multipleListbox.options.length + 1; i++) {
       reset()
-      synthesizeKey("VK_LEFT", {});
-      check(true, "LeftArrow key on multiple listbox #" + i);
+      synthesizeKey("KEY_ArrowLeft", {code: "ArrowLeft"});
+      check(true, false, "'ArrowLeft' key on multiple listbox #" + i);
     }
 
     for (var i = 0; i < 4; i++) {
       reset()
-      synthesizeKey("VK_PAGE_DOWN", {});
-      check(true, "PageDown key on multiple listbox #" + i);
+      synthesizeKey("KEY_PageDown", {code: "PageDown"});
+      check(true, false, "'PageDown' key on multiple listbox #" + i);
     }
 
     for (var i = 0; i < 4; i++) {
       reset()
-      synthesizeKey("VK_PAGE_UP", {});
-      check(true, "PageUp key on multiple listbox #" + i);
+      synthesizeKey("KEY_PageUp", {code: "PageUp"});
+      check(true, false, "'PageUp' key on multiple listbox #" + i);
     }
 
     for (var i = 0; i < 2; i++) {
       reset()
-      synthesizeKey("VK_END", {});
-      check(true, "End key on multiple listbox #" + i);
+      synthesizeKey("KEY_End", {code: "End"});
+      check(true, false, "'End' key on multiple listbox #" + i);
     }
 
     for (var i = 0; i < 2; i++) {
       reset()
-      synthesizeKey("VK_HOME", {});
-      check(true, "Home key on multiple listbox #" + i);
+      synthesizeKey("KEY_Home", {code: "Home"});
+      check(true, false, "'Home' key on multiple listbox #" + i);
     }
 
     reset()
-    synthesizeKey("VK_RETURN", {});
-    check(true, "Enter key on multiple listbox");
+    synthesizeKey("KEY_Enter", {code: "Enter"});
+    check(true, true, "'Enter' key on multiple listbox");
 
     reset()
-    synthesizeKey("VK_ESCAPE", {});
-    check(false, "Esc key on multiple listbox");
+    synthesizeKey("KEY_Escape", {code: "Escape"});
+    check(false, false, "'Escape' key on multiple listbox");
 
     reset()
-    synthesizeKey("VK_F4", {});
-    check(false, "F4 key on multiple listbox");
+    synthesizeKey("KEY_F4", {code: "F4"});
+    check(false, false, "'F4' key on multiple listbox");
 
     reset()
-    synthesizeKey("a", {});
-    check(false, "'A' key on multiple listbox");
+    synthesizeKey("a", {code: "KeyA"});
+    check(false, true, "'A' key on multiple listbox");
   });
 
   multipleListbox.removeEventListener("keydown", onKeydown);
@@ -277,14 +288,14 @@ function runTests()
     if (!kIsMac) {
       for (var i = 0; i < combobox.options.length + 1; i++) {
         reset()
-        synthesizeKey("VK_DOWN", {});
-        check(true, "DownArrow key on combobox #" + i);
+        synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+        check(true, false, "'ArrowDown' key on combobox #" + i);
       }
 
       for (var i = 0; i < combobox.options.length + 1; i++) {
         reset()
-        synthesizeKey("VK_UP", {});
-        check(true, "UpArrow key on combobox #" + i);
+        synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"});
+        check(true, false, "'ArrowUp' key on combobox #" + i);
       }
     } else {
       todo(false, "Make this test work on OSX");
@@ -292,57 +303,57 @@ function runTests()
 
     for (var i = 0; i < combobox.options.length + 1; i++) {
       reset()
-      synthesizeKey("VK_RIGHT", {});
-      check(true, "RightArrow key on combobox #" + i);
+      synthesizeKey("KEY_ArrowRight", {code: "ArrowRight"});
+      check(true, false, "'ArrowRight' key on combobox #" + i);
     }
 
     for (var i = 0; i < combobox.options.length + 1; i++) {
       reset()
-      synthesizeKey("VK_LEFT", {});
-      check(true, "LeftArrow key on combobox #" + i);
+      synthesizeKey("KEY_ArrowLeft", {code: "ArrowLeft"});
+      check(true, false, "'ArrowLeft' key on combobox #" + i);
     }
 
     for (var i = 0; i < 4; i++) {
       reset()
-      synthesizeKey("VK_PAGE_DOWN", {});
-      check(true, "PageDown key on combobox #" + i);
+      synthesizeKey("KEY_PageDown", {code: "PageDown"});
+      check(true, false, "'PageDown' key on combobox #" + i);
     }
 
     for (var i = 0; i < 4; i++) {
       reset()
-      synthesizeKey("VK_PAGE_UP", {});
-      check(true, "PageUp key on combobox #" + i);
+      synthesizeKey("KEY_PageUp", {code: "PageUp"});
+      check(true, false, "'PageUp' key on combobox #" + i);
     }
 
     for (var i = 0; i < 2; i++) {
       reset()
-      synthesizeKey("VK_END", {});
-      check(true, "End key on combobox #" + i);
+      synthesizeKey("KEY_End", {code: "End"});
+      check(true, false, "'End' key on combobox #" + i);
     }
 
     for (var i = 0; i < 2; i++) {
       reset()
-      synthesizeKey("VK_HOME", {});
-      check(true, "Home key on combobox #" + i);
+      synthesizeKey("KEY_Home", {code: "Home"});
+      check(true, false, "'Home' key on combobox #" + i);
     }
 
     reset()
-    synthesizeKey("VK_RETURN", {});
-    check(false, "Enter key on combobox");
+    synthesizeKey("KEY_Enter", {code: "Enter"});
+    check(false, true, "'Enter' key on combobox");
 
     reset()
-    synthesizeKey("VK_ESCAPE", {});
-    check(true, "Esc key on combobox");
+    synthesizeKey("KEY_Escape", {code: "Escape"});
+    check(true, false, "'Escape' key on combobox");
 
     if (!kIsWin) {
       reset()
-      synthesizeKey("VK_F4", {});
-      check(false, "F4 key on combobox");
+      synthesizeKey("KEY_F4", {code: "F4"});
+      check(false, false, "'F4' key on combobox");
     }
 
     reset()
-    synthesizeKey("a", {});
-    check(false, "'A' key on combobox");
+    synthesizeKey("a", {code: "KeyA"});
+    check(false, true, "'A' key on combobox");
   });
 
   function finish()
@@ -365,74 +376,74 @@ function runTests()
   {
     testOpenDropDown(function () {
       reset()
-      synthesizeKey("VK_DOWN", { altKey: true });
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown", altKey: true});
     }, function () {
-      check(true, "Alt + DownArrow key on combobox at opening dropdown");
+      check(true, false, "Alt + DownArrow key on combobox at opening dropdown");
 
       for (var i = 0; i < combobox.options.length + 1; i++) {
         reset()
-        synthesizeKey("VK_DOWN", {});
-        check(true, "DownArrow key on combobox during dropdown open #" + i);
+        synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+        check(true, false, "'ArrowDown' key on combobox during dropdown open #" + i);
       }
 
       for (var i = 0; i < combobox.options.length + 1; i++) {
         reset()
-        synthesizeKey("VK_UP", {});
-        check(true, "UpArrow key on combobox during dropdown open #" + i);
+        synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"});
+        check(true, false, "'ArrowUp' key on combobox during dropdown open #" + i);
       }
 
       for (var i = 0; i < combobox.options.length + 1; i++) {
         reset()
-        synthesizeKey("VK_RIGHT", {});
-        check(true, "RightArrow key on combobox during dropdown open #" + i);
+        synthesizeKey("KEY_ArrowRight", {code: "ArrowRight"});
+        check(true, false, "'ArrowRight' key on combobox during dropdown open #" + i);
       }
 
       for (var i = 0; i < combobox.options.length + 1; i++) {
         reset()
-        synthesizeKey("VK_LEFT", {});
-        check(true, "LeftArrow key on combobox during dropdown open #" + i);
+        synthesizeKey("KEY_ArrowLeft", {code: "ArrowLeft"});
+        check(true, false, "'ArrowLeft' key on combobox during dropdown open #" + i);
       }
 
       for (var i = 0; i < 4; i++) {
         reset()
-        synthesizeKey("VK_PAGE_DOWN", {});
-        check(true, "PageDown key on combobox during dropdown open #" + i);
+        synthesizeKey("KEY_PageDown", {code: "PageDown"});
+        check(true, false, "'PageDown' key on combobox during dropdown open #" + i);
       }
 
       for (var i = 0; i < 4; i++) {
         reset()
-        synthesizeKey("VK_PAGE_UP", {});
-        check(true, "PageUp key on combobox during dropdown open #" + i);
+        synthesizeKey("KEY_PageUp", {code: "PageUp"});
+        check(true, false, "'PageUp' key on combobox during dropdown open #" + i);
       }
 
       for (var i = 0; i < 2; i++) {
         reset()
-        synthesizeKey("VK_END", {});
-        check(true, "End key on combobox during dropdown open #" + i);
+        synthesizeKey("KEY_End", {code: "End"});
+        check(true, false, "'End' key on combobox during dropdown open #" + i);
       }
 
       for (var i = 0; i < 2; i++) {
         reset()
-        synthesizeKey("VK_HOME", {});
-        check(true, "Home key on combobox during dropdown open #" + i);
+        synthesizeKey("KEY_Home", {code: "Home"});
+        check(true, false, "'Home' key on combobox during dropdown open #" + i);
       }
 
       testCloseDropDown(function () {
         reset()
-        synthesizeKey("VK_RETURN", {});
+        synthesizeKey("KEY_Enter", {code: "Enter"});
       }, function () {
         testOpenDropDown(function () {
-          check(true, "Enter key on combobox at closing dropdown");
+          check(true, true, "'Enter' key on combobox at closing dropdown");
 
-          synthesizeKey("VK_UP", { altKey: true });
+          synthesizeKey("KEY_ArrowUp", {code: "ArrowUp", altKey: true});
         }, function () {
-          check(true, "Alt + UpArrow key on combobox at opening dropdown");
+          check(true, false, "'Alt' + 'ArrowUp' key on combobox at opening dropdown");
 
           testCloseDropDown(function () {
             reset()
-            synthesizeKey("VK_ESCAPE", {});
+            synthesizeKey("KEY_Escape", {code: "Escape"});
           }, function () {
-            check(true, "Esc key on combobox at closing dropdown");
+            check(true, false, "'Escape' key on combobox at closing dropdown");
 
             // F4 key opens/closes dropdown only on Windows. So, other platforms
             // don't need to do anymore.
@@ -443,15 +454,15 @@ function runTests()
 
             testOpenDropDown(function () {
               reset()
-              synthesizeKey("VK_F4", {});
+              synthesizeKey("KEY_F4", {code: "F4"});
             }, function () {
-              check(true, "F4 key on combobox at opening dropdown on Windows");
+              check(true, false, "'F4' key on combobox at opening dropdown on Windows");
 
               testCloseDropDown(function () {
                 reset()
-                synthesizeKey("VK_F4", {});
+                synthesizeKey("KEY_F4", {code: "F4"});
               }, function () {
-                check(true, "F4 key on combobox at closing dropdown on Windows");
+                check(true, false, "'F4' key on combobox at closing dropdown on Windows");
 
                 aCallback();
                 return;

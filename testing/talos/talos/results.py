@@ -52,7 +52,7 @@ class TalosResults(object):
                     'file://%s' % os.path.join(os.getcwd(), 'results.out'),
                     results
                 )
-            except:
+            except Exception:
                 pass
             print('\nFAIL: %s' % str(e).replace('\n', '\nRETURN:'))
             raise e
@@ -503,7 +503,7 @@ class BrowserLogResults(object):
             contents = open(filename).read()
             counter_results.setdefault('mainthreadio', []).append(contents)
             self.using_xperf = True
-        except:
+        except Exception:
             # silent failure is fine here as we will only see this on tp5n runs
             pass
 
