@@ -651,7 +651,7 @@ PlacesTreeView.prototype = {
 
   // nsINavHistoryResultObserver
   nodeInserted: function PTV_nodeInserted(aParentNode, aNode, aNewIndex) {
-    NS_ASSERT(this._result, "Got a notification but have no result!");
+    console.assert(this._result, "Got a notification but have no result!");
     if (!this._tree || !this._result)
       return;
 
@@ -725,7 +725,7 @@ PlacesTreeView.prototype = {
    * change for visits, and date sorting is the only time things are collapsed.
    */
   nodeRemoved: function PTV_nodeRemoved(aParentNode, aNode, aOldIndex) {
-    NS_ASSERT(this._result, "Got a notification but have no result!");
+    console.assert(this._result, "Got a notification but have no result!");
     if (!this._tree || !this._result)
       return;
 
@@ -780,7 +780,7 @@ PlacesTreeView.prototype = {
 
   nodeMoved:
   function PTV_nodeMoved(aNode, aOldParent, aOldIndex, aNewParent, aNewIndex) {
-    NS_ASSERT(this._result, "Got a notification but have no result!");
+    console.assert(this._result, "Got a notification but have no result!");
     if (!this._tree || !this._result)
       return;
 
@@ -829,7 +829,7 @@ PlacesTreeView.prototype = {
 
   _invalidateCellValue: function PTV__invalidateCellValue(aNode,
                                                           aColumnType) {
-    NS_ASSERT(this._result, "Got a notification but have no result!");
+    console.assert(this._result, "Got a notification but have no result!");
     if (!this._tree || !this._result)
       return;
 
@@ -976,7 +976,7 @@ PlacesTreeView.prototype = {
   },
 
   invalidateContainer: function PTV_invalidateContainer(aContainer) {
-    NS_ASSERT(this._result, "Need to have a result to update");
+    console.assert(this._result, "Need to have a result to update");
     if (!this._tree)
       return;
 

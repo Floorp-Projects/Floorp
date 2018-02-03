@@ -42,7 +42,6 @@
   "CrashManagerTest.jsm": ["configureLogging", "getManager", "sleep", "TestingCrashManager"],
   "dbg-client.jsm": ["DebuggerTransport", "DebuggerClient", "RootClient", "LongStringClient", "EnvironmentClient", "ObjectClient"],
   "dbg-server.jsm": ["DebuggerServer", "ActorPool", "OriginalLocation"],
-  "debug.js": ["NS_ASSERT"],
   "declined.js": ["DeclinedEngines"],
   "dispatcher.js": ["dispatcher"],
   "distribution.js": ["DistributionCustomizer"],

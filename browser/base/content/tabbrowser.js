@@ -2695,7 +2695,7 @@ window._gBrowser = {
     setTimeout(function(tab, tabbrowser) {
       if (tab.parentNode &&
           window.getComputedStyle(tab).maxWidth == "0.1px") {
-        NS_ASSERT(false, "Giving up waiting for the tab closing animation to finish (bug 608589)");
+        console.assert(false, "Giving up waiting for the tab closing animation to finish (bug 608589)");
         tabbrowser._endRemoveTab(tab);
       }
     }, 3000, aTab, this);
