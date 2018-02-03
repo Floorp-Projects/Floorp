@@ -310,6 +310,10 @@ private:
 
   std::string getMangledName(clang::MangleContext *Ctx,
                              const clang::NamedDecl *Decl) {
+    if (isa<FunctionDecl>(Decl) && cast<FunctionDecl>(Decl)->isExternC()) {
+      return cast<FunctionDecl>(Decl)->getNameAsString();
+    }
+
     if (isa<FunctionDecl>(Decl) || isa<VarDecl>(Decl)) {
       const DeclContext *DC = Decl->getDeclContext();
       if (isa<TranslationUnitDecl>(DC) || isa<NamespaceDecl>(DC) ||
