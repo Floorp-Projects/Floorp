@@ -84,6 +84,9 @@ pref("browser.cache.offline.enable", true);
 pref("browser.cache.offline.capacity", 5120); // kilobytes
 pref("offline-apps.quota.warn", 1024); // kilobytes
 
+// Automatically shrink-to-fit image documents.
+pref("browser.enable_automatic_image_resizing", true);
+
 // cache compression turned off for now - see bug #715198
 pref("browser.cache.compression_level", 0);
 

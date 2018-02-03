@@ -176,6 +176,11 @@ struct AutoSignalHandler
 #  define RSP_sig(p) ((p)->uc_mcontext.gregs[29])
 #  define R31_sig(p) ((p)->uc_mcontext.gregs[31])
 # endif
+# if defined(__linux__) && (defined(__sparc__) && defined(__arch64__))
+#  define PC_sig(p) ((p)->uc_mcontext.mc_gregs[MC_PC])
+#  define FP_sig(p) ((p)->uc_mcontext.mc_fp)
+#  define SP_sig(p) ((p)->uc_mcontext.mc_i7)
+# endif
 #elif defined(__NetBSD__)
 # define XMM_sig(p,i) (((struct fxsave64*)(p)->uc_mcontext.__fpregs)->fx_xmm[i])
 # define EIP_sig(p) ((p)->uc_mcontext.__gregs[_REG_EIP])
@@ -423,7 +428,7 @@ struct macos_arm_context {
 # define LR_sig(p) R31_sig(p)
 #endif
 
-#if defined(FP_sig) && defined(SP_sig) && defined(SP_sig)
+#if defined(PC_sig) && defined(FP_sig) && defined(SP_sig)
 # define KNOWS_MACHINE_STATE
 #endif
 

@@ -32,6 +32,7 @@
 #include "nscore.h"
 #include "nsString.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Move.h"
 #include "nsTArray.h"
 #include "nsISupportsImpl.h"
@@ -607,7 +608,7 @@ class IgnoredErrorResult :
 // so:
 //
 //    foo->Bar(IgnoreErrors());
-class IgnoreErrors {
+class MOZ_TEMPORARY_CLASS IgnoreErrors {
 public:
   operator ErrorResult&() && { return mInner; }
 private:

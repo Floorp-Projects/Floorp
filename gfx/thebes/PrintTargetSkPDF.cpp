@@ -122,7 +122,7 @@ PrintTargetSkPDF::MakeDrawTarget(const IntSize& aSize,
 }
 
 already_AddRefed<DrawTarget>
-PrintTargetSkPDF::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
+PrintTargetSkPDF::GetReferenceDrawTarget()
 {
   if (!mRefDT) {
     SkDocument::PDFMetadata metadata;
@@ -143,27 +143,6 @@ PrintTargetSkPDF::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
       return nullptr;
     }
     mRefDT = dt.forget();
-  }
-
-  if (aRecorder) {
-    if (!mRecordingRefDT) {
-      RefPtr<DrawTarget> dt = CreateWrapAndRecordDrawTarget(aRecorder, mRefDT);
-      if (!dt || !dt->IsValid()) {
-        return nullptr;
-      }
-      mRecordingRefDT = dt.forget();
-#ifdef DEBUG
-      mRecorder = aRecorder;
-#endif
-    }
-#ifdef DEBUG
-    else {
-      MOZ_ASSERT(aRecorder == mRecorder,
-                 "Caching mRecordingRefDT assumes the aRecorder is an invariant");
-    }
-#endif
-
-    return do_AddRef(mRecordingRefDT);
   }
 
   return do_AddRef(mRefDT);

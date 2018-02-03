@@ -13,8 +13,8 @@ var { ConsoleAPIListener } = require("devtools/server/actors/webconsole/listener
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { assert, update } = DevToolsUtils;
 
-loader.lazyRequireGetter(this, "AddonThreadActor", "devtools/server/actors/script", true);
-loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/script", true);
+loader.lazyRequireGetter(this, "AddonThreadActor", "devtools/server/actors/thread", true);
+loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/thread", true);
 loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
 loader.lazyRequireGetter(this, "WebConsoleActor", "devtools/server/actors/webconsole", true);
 

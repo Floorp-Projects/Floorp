@@ -38,15 +38,6 @@ PrioritizedEventQueue<InnerQueueT>::PutEvent(already_AddRefed<nsIRunnable>&& aEv
   // Double check the priority with a QI.
   RefPtr<nsIRunnable> event(aEvent);
   EventPriority priority = aPriority;
-  if (nsCOMPtr<nsIRunnablePriority> runnablePrio = do_QueryInterface(event)) {
-    uint32_t prio = nsIRunnablePriority::PRIORITY_NORMAL;
-    runnablePrio->GetPriority(&prio);
-    if (prio == nsIRunnablePriority::PRIORITY_HIGH) {
-      priority = EventPriority::High;
-    } else if (prio == nsIRunnablePriority::PRIORITY_INPUT) {
-      priority = EventPriority::Input;
-    }
-  }
 
   if (priority == EventPriority::Input && mInputQueueState == STATE_DISABLED) {
     priority = EventPriority::Normal;

@@ -40,7 +40,6 @@
 #include "nsStringFwd.h"
 #include "nsStringIterator.h"
 #include "nsStyledElement.h"
-#include "nsSubstringTuple.h"
 #include "nsUnicharUtils.h"
 
 namespace mozilla {

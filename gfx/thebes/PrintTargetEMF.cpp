@@ -158,7 +158,7 @@ PrintTargetEMF::MakeDrawTarget(const IntSize& aSize,
 }
 
 already_AddRefed<DrawTarget>
-PrintTargetEMF::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
+PrintTargetEMF::GetReferenceDrawTarget()
 {
   if (!mRefTarget) {
     auto dummy = MakeUnique<SkNullWStream>();
@@ -166,7 +166,7 @@ PrintTargetEMF::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
   }
 
   if (!mRefDT) {
-    mRefDT = mRefTarget->GetReferenceDrawTarget(aRecorder);
+    mRefDT = mRefTarget->GetReferenceDrawTarget();
   }
 
   return mRefDT.forget();
