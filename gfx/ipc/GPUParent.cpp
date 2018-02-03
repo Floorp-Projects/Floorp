@@ -191,6 +191,8 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
     DeviceManagerDx::Get()->CreateCompositorDevices();
   }
   if (gfxVars::UseWebRender()) {
+    // Ensure to initialize GfxInfo
+    services::GetGfxInfo();
     Factory::EnsureDWriteFactory();
   }
 #endif
