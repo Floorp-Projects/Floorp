@@ -78,10 +78,10 @@ CacheIRSpewer::beginCache(LockGuard<Mutex>&, const IRGenerator& gen)
 {
     MOZ_ASSERT(enabled());
     JSONPrinter& j = json.ref();
-
+    const char* filename = gen.script_->filename();
     j.beginObject();
     j.property("name", CacheKindNames[uint8_t(gen.cacheKind_)]);
-    j.property("file", gen.script_->filename());
+    j.property("file", filename ? filename : "null");
     j.property("mode", int(gen.mode_));
     if (jsbytecode* pc = gen.pc_) {
         unsigned column;
