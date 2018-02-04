@@ -29,7 +29,6 @@ interfaces = [
     'offline',
     'geolocation',
     'notification',
-    'svg',
     'smil',
     'push',
     'payments',

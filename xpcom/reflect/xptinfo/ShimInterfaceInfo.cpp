@@ -58,7 +58,6 @@
 #include "nsIDOMScrollAreaEvent.h"
 #include "nsIDOMSerializer.h"
 #include "nsIDOMSimpleGestureEvent.h"
-#include "nsIDOMSVGElement.h"
 #include "nsIDOMText.h"
 #include "nsIDOMTimeEvent.h"
 #include "nsIDOMTimeRanges.h"
@@ -280,7 +279,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIScrollBoxObject, ScrollBoxObject),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMSerializer, XMLSerializer),
   DEFINE_SHIM(SimpleGestureEvent),
-  DEFINE_SHIM(SVGElement),
   DEFINE_SHIM(Text),
   DEFINE_SHIM(TimeEvent),
   DEFINE_SHIM(TimeRanges),

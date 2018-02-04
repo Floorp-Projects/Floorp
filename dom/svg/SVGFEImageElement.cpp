@@ -43,7 +43,7 @@ nsSVGElement::StringInfo SVGFEImageElement::sStringInfo[3] =
 // nsISupports methods
 
 NS_IMPL_ISUPPORTS_INHERITED(SVGFEImageElement, SVGFEImageElementBase,
-                            nsIDOMNode, nsIDOMElement, nsIDOMSVGElement,
+                            nsIDOMNode, nsIDOMElement,
                             imgINotificationObserver, nsIImageLoadingContent)
 
 //----------------------------------------------------------------------
