@@ -842,7 +842,7 @@
 
           let suggestionsHidden =
             popup.richlistbox.getAttribute("collapsed") == "true";
-          let numItems = suggestionsHidden ? 0 : this.popup._matchCount;
+          let numItems = suggestionsHidden ? 0 : this.popup.matchCount;
           this.popup.oneOffButtons.handleKeyPress(aEvent, numItems, true);
         ]]></body>
       </method>
@@ -1116,7 +1116,7 @@
           // The autocomplete binding itself will take care of uncollapsing later,
           // if we currently have no rows but end up having some in the future
           // when the search string changes
-          this.richlistbox.collapsed = (this._matchCount == 0);
+          this.richlistbox.collapsed = (this.matchCount == 0);
         }
 
         // Show the current default engine in the top header of the panel.

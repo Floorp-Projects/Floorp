@@ -97,7 +97,7 @@ this.Panel.prototype = {
     let controller = this.p.mInput.controller;
     for (let i = 0; i < this.p.maxResults; i++) {
       let idx = this._currentIndex;
-      if (idx >= this.p._matchCount) {
+      if (idx >= this.p.matchCount) {
         break;
       }
       let url = controller.getValueAt(idx);
