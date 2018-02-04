@@ -541,13 +541,7 @@ TagAutoCompleteResult.prototype = {
    * Get the style hint for the result at the given index
    */
   getStyleAt: function PTACR_getStyleAt(index) {
-    if (!this._comments[index])
-      return null; // not a category label, so no special styling
-
-    if (index == 0)
-      return "suggestfirst"; // category label on first line of results
-
-    return "suggesthint"; // category label on any other line of results
+    return null;
   },
 
   /**

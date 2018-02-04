@@ -501,9 +501,9 @@
                 if (aEvent.metaKey)
                   aEvent.preventDefault();
               }
-              if (this.mController.selection) {
+              if (this.popup.selectedIndex >= 0) {
                 this._selectionDetails = {
-                  index: this.mController.selection.currentIndex,
+                  index: this.popup.selectedIndex,
                   kind: "key"
                 };
               }

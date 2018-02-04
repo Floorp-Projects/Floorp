@@ -742,8 +742,8 @@
             }
 
             popup.mInput = this;
-            popup.view = this.controller.QueryInterface(Ci.nsITreeView);
-            popup.invalidate();
+            // clear any previous selection, see bugs 400671 and 488357
+            popup.selectedIndex = -1;
 
             popup.showCommentColumn = this.showCommentColumn;
             popup.showImageColumn = this.showImageColumn;
@@ -758,6 +758,9 @@
                         innerRect.right - outerRect.left :
                         outerRect.right - innerRect.left;
             popup.setAttribute("width", width > 100 ? width : 100);
+
+            // invalidate() depends on the width attribute
+            popup._invalidate();
 
             var yOffset = outerRect.bottom - innerRect.bottom;
             popup.openPopup(this.inputField, "after_start", 0, yOffset, false, false);
@@ -808,8 +811,7 @@
             }
             engine = oneOff.engine;
           }
-          if (this._selectionDetails &&
-              this._selectionDetails.currentIndex != -1) {
+          if (this._selectionDetails) {
             BrowserSearch.searchBar.telemetrySearchDetails = this._selectionDetails;
             this._selectionDetails = null;
           }
@@ -839,8 +841,8 @@
             return;
 
           let suggestionsHidden =
-            popup.tree.getAttribute("collapsed") == "true";
-          let numItems = suggestionsHidden ? 0 : this.popup.view.rowCount;
+            popup.richlistbox.getAttribute("collapsed") == "true";
+          let numItems = suggestionsHidden ? 0 : this.popup._matchCount;
           this.popup.oneOffButtons.handleKeyPress(aEvent, numItems, true);
         ]]></body>
       </method>
@@ -927,7 +929,7 @@
     </handlers>
   </binding>
 
-  <binding id="browser-search-autocomplete-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-result-popup">
+  <binding id="browser-search-autocomplete-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup">
     <resources>
       <stylesheet src="chrome://browser/content/search/searchbarBindings.css"/>
       <stylesheet src="chrome://browser/skin/searchbar.css"/>
@@ -939,14 +941,7 @@
         <xul:label anonid="searchbar-engine-name" flex="1" crop="end"
                    role="presentation"/>
       </xul:hbox>
-      <xul:tree anonid="tree" flex="1"
-                class="autocomplete-tree plain search-panel-tree"
-                hidecolumnpicker="true" seltype="single">
-        <xul:treecols anonid="treecols">
-          <xul:treecol id="treecolAutoCompleteValue" class="autocomplete-treecol" flex="1" overflow="true"/>
-        </xul:treecols>
-        <xul:treechildren class="autocomplete-treebody searchbar-treebody" noSelectOnMouseMove="true"/>
-      </xul:tree>
+      <xul:richlistbox anonid="richlistbox" class="autocomplete-richlistbox search-panel-tree" flex="1"/>
       <xul:vbox anonid="search-one-off-buttons" class="search-one-offs"/>
     </content>
     <implementation>
@@ -976,7 +971,7 @@
           var popupForSearchBar = searchBar && searchBar.textbox == this.mInput;
           if (popupForSearchBar) {
             searchBar.telemetrySearchDetails = {
-              index: controller.selection.currentIndex,
+              index: this.selectedIndex,
               kind: "mouse"
             };
           }
@@ -1114,14 +1109,14 @@
 
           // Setting this with an xbl-inherited attribute gets overridden the
           // second time the user clicks the glass icon for some reason...
-          this.tree.collapsed = true;
+          this.richlistbox.collapsed = true;
         } else {
           this.removeAttribute("showonlysettings");
-          // Uncollapse as long as we have a tree with a view which has >= 1 row.
+          // Uncollapse as long as we have a view which has >= 1 row.
           // The autocomplete binding itself will take care of uncollapsing later,
           // if we currently have no rows but end up having some in the future
           // when the search string changes
-          this.tree.collapsed = !this.tree.view || !this.tree.view.rowCount;
+          this.richlistbox.collapsed = (this._matchCount == 0);
         }
 
         // Show the current default engine in the top header of the panel.
