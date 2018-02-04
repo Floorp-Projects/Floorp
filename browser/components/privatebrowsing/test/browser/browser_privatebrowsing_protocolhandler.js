@@ -8,7 +8,7 @@
 
 add_task(async function test() {
   let notificationValue = "Protocol Registration: testprotocol";
-  let testURI = "http://example.com/browser/" +
+  let testURI = "https://example.com/browser/" +
     "browser/components/privatebrowsing/test/browser/browser_privatebrowsing_protocolhandler_page.html";
 
   let doTest = async function(aIsPrivateMode, aWindow) {
