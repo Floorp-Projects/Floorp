@@ -1871,10 +1871,9 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     // Make sure to not process observers which might have been removed
     // during previous iterations.
     nsIPresShell* shell = observers[i - 1];
-    if (!mResizeEventFlushObservers.Contains(shell)) {
+    if (!mResizeEventFlushObservers.RemoveElement(shell)) {
       continue;
     }
-    mResizeEventFlushObservers.RemoveElement(shell);
     shell->FireResizeEvent();
   }
 
