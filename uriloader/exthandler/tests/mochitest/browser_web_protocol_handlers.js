@@ -1,4 +1,4 @@
-let testURL = "http://example.com/browser/" +
+let testURL = "https://example.com/browser/" +
   "uriloader/exthandler/tests/mochitest/protocolHandler.html";
 
 add_task(async function() {
