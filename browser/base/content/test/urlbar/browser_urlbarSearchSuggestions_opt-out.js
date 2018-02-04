@@ -44,7 +44,7 @@ add_task(async function focus() {
   Assert.ok(gURLBar.popup.popupOpen, "popup should be open");
   assertVisible(true);
   assertFooterVisible(false);
-  Assert.equal(gURLBar.popup._matchCount, 0, "popup should have no results");
+  Assert.equal(gURLBar.popup.matchCount, 0, "popup should have no results");
 
   // Start searching.
   EventUtils.synthesizeKey("r", {});
@@ -83,7 +83,7 @@ add_task(async function click_on_focused() {
   Assert.ok(gURLBar.popup.popupOpen, "popup should be open");
   assertVisible(true);
   assertFooterVisible(false);
-  Assert.equal(gURLBar.popup._matchCount, 0, "popup should have no results");
+  Assert.equal(gURLBar.popup.matchCount, 0, "popup should have no results");
   gURLBar.blur();
   Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
 });
