@@ -262,7 +262,6 @@ partial interface Document {
 // https://w3c.github.io/pointerlock/#extensions-to-the-document-interface
 // https://w3c.github.io/pointerlock/#extensions-to-the-documentorshadowroot-mixin
 partial interface Document {
-  readonly attribute Element? pointerLockElement;
   void exitPointerLock();
 
   // Event handlers
