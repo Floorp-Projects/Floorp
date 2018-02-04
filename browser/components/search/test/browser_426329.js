@@ -33,16 +33,10 @@ function checkMenuEntries(expectedValues) {
 }
 
 function getMenuEntries() {
-  var entries = [];
-  var autocompleteMenu = searchBar.textbox.popup;
   // Could perhaps pull values directly from the controller, but it seems
-  // more reliable to test the values that are actually in the tree?
-  var column = autocompleteMenu.tree.columns[0];
-  var numRows = autocompleteMenu.tree.view.rowCount;
-  for (var i = 0; i < numRows; i++) {
-    entries.push(autocompleteMenu.tree.view.getValueAt(i, column));
-  }
-  return entries;
+  // more reliable to test the values that are actually in the richlistbox?
+  return Array.map(searchBar.textbox.popup.richlistbox.children,
+                   item => item.getAttribute("ac-value"));
 }
 
 function countEntries(name, value) {
