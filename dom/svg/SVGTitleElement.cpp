@@ -23,7 +23,6 @@ SVGTitleElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 
 NS_IMPL_ISUPPORTS_INHERITED(SVGTitleElement, SVGTitleElementBase,
                             nsIDOMNode, nsIDOMElement,
-                            nsIDOMSVGElement,
                             nsIMutationObserver)
 
 //----------------------------------------------------------------------
