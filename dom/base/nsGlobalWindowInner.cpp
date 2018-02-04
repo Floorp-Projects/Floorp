@@ -2988,6 +2988,13 @@ nsGlobalWindowInner::IsRequestIdleCallbackEnabled(JSContext* aCx, JSObject* aObj
          nsContentUtils::IsSystemCaller(aCx);
 }
 
+/* static */ bool
+nsGlobalWindowInner::RegisterProtocolHandlerAllowedForContext(JSContext* aCx, JSObject* aObj)
+{
+  return IsSecureContextOrObjectIsFromSecureContext(aCx, aObj) ||
+         Preferences::GetBool("dom.registerProtocolHandler.insecure.enabled");
+}
+
 nsIDOMOfflineResourceList*
 nsGlobalWindowInner::GetApplicationCache(ErrorResult& aError)
 {

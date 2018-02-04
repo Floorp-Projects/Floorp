@@ -36,7 +36,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=402788
 
   async function tests() {
     await SpecialPowers.pushPrefEnv({
-      set: [["dom.registerContentHandler.enabled", true]]
+      set: [
+        ["dom.registerContentHandler.enabled", true],
+        ["dom.registerProtocolHandler.insecure.enabled", true],
+      ]
     });
     ok(navigator.registerContentHandler, "navigator.registerContentHandler should be defined");
 
