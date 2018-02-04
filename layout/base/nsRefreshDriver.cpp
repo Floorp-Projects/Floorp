@@ -1862,7 +1862,8 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   observers.AppendElements(mResizeEventFlushObservers);
   for (nsIPresShell* shell : Reversed(observers)) {
     if (!mPresContext || !mPresContext->GetPresShell()) {
-      break;
+      StopTimer();
+      return;
     }
     // Make sure to not process observers which might have been removed
     // during previous iterations.
