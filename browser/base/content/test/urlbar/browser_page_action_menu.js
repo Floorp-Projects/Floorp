@@ -560,10 +560,10 @@ add_task(async function sendToDevice_inUrlbar() {
     Assert.notEqual(urlbarButton, null, "The urlbar button should exist");
     Assert.ok(!urlbarButton.disabled,
               "The urlbar button should not be disabled");
-    let panelPromise =
-      promisePanelShown(BrowserPageActions._activatedActionPanelID);
     EventUtils.synthesizeMouseAtCenter(urlbarButton, {});
-    await panelPromise;
+    // The panel element for _activatedActionPanelID is created synchronously
+    // only after the associated button has been clicked.
+    await promisePanelShown(BrowserPageActions._activatedActionPanelID);
     Assert.equal(urlbarButton.getAttribute("open"), "true",
       "Button has open attribute");
 
