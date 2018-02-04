@@ -676,7 +676,7 @@ class TestChecksConfigure(unittest.TestCase):
              checking for javac... %s
              checking for javac version... 1.8
              checking for proguard.jar version... 
-             ERROR: proguard.jar 5.3.3 or higher is required (looked for %s). Run |mach artifact install --from-build proguard-jar| or add `export PROGUARD_JAR=/path/to/proguard.jar` to your mozconfig.
+             ERROR: proguard.jar 5.3.3 or higher is required (looked for %s). Run |mach artifact toolchain --from-build proguard-jar && mv proguard ~/.mozbuild/| or add `export PROGUARD_JAR=/path/to/proguard.jar` to your mozconfig.
         ''' % (java, javah, jar, jarsigner, keytool, javac, old_proguard_jar)))
         self.assertEqual(status, 1)
         self.assertEqual(config, {
