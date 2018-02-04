@@ -703,7 +703,6 @@
 
 ; svg
 @RESPATH@/res/svg.css
-@RESPATH@/components/dom_svg.xpt
 @RESPATH@/components/dom_smil.xpt
 
 ; [Personal Security Manager]
