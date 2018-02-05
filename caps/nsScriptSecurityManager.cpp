@@ -1209,7 +1209,7 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
                                           nsISupports *aObj,
                                           nsIClassInfo *aClassInfo)
 {
-// XXX Special case for nsIXPCException ?
+// XXX Special case for Exception ?
 
     uint32_t flags;
     if (aClassInfo && NS_SUCCEEDED(aClassInfo->GetFlags(&flags)) &&
