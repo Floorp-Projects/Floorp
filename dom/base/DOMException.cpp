@@ -177,7 +177,6 @@ Exception::Exception(const nsACString& aMessage,
   , mResult(aResult)
   , mName(aName)
   , mData(aData)
-  , mInitialized(true)
   , mHoldingJSVal(false)
 {
   if (aLocation) {
@@ -232,8 +231,6 @@ Exception::StowJSVal(JS::Value& aVp)
 NS_IMETHODIMP
 Exception::GetMessageMoz(nsACString& aMessage)
 {
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
-
   aMessage.Assign(mMessage);
   return NS_OK;
 }
@@ -242,7 +239,6 @@ NS_IMETHODIMP
 Exception::GetResult(nsresult* aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
 
   *aResult = mResult;
   return NS_OK;
@@ -251,8 +247,6 @@ Exception::GetResult(nsresult* aResult)
 NS_IMETHODIMP
 Exception::GetName(nsACString& aName)
 {
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
-
   if (!mName.IsEmpty()) {
     aName.Assign(mName);
   } else {
@@ -272,8 +266,6 @@ Exception::GetName(nsACString& aName)
 NS_IMETHODIMP
 Exception::GetFilename(JSContext* aCx, nsAString& aFilename)
 {
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
-
   if (mLocation) {
     return mLocation->GetFilename(aCx, aFilename);
   }
@@ -286,7 +278,6 @@ NS_IMETHODIMP
 Exception::GetLineNumber(JSContext* aCx, uint32_t *aLineNumber)
 {
   NS_ENSURE_ARG_POINTER(aLineNumber);
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
 
   if (mLocation) {
     int32_t lineno;
@@ -303,7 +294,6 @@ NS_IMETHODIMP
 Exception::GetColumnNumber(uint32_t* aColumnNumber)
 {
   NS_ENSURE_ARG_POINTER(aColumnNumber);
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
 
   *aColumnNumber = 0;
   return NS_OK;
@@ -313,7 +303,6 @@ NS_IMETHODIMP
 Exception::GetLocation(nsIStackFrame** aLocation)
 {
   NS_ENSURE_ARG_POINTER(aLocation);
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsIStackFrame> location = mLocation;
   location.forget(aLocation);
@@ -324,7 +313,6 @@ NS_IMETHODIMP
 Exception::GetData(nsISupports** aData)
 {
   NS_ENSURE_ARG_POINTER(aData);
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsISupports> data = mData;
   data.forget(aData);
@@ -334,8 +322,6 @@ Exception::GetData(nsISupports** aData)
 NS_IMETHODIMP
 Exception::ToString(JSContext* aCx, nsACString& _retval)
 {
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
-
   static const char defaultMsg[] = "<no message>";
   static const char defaultLocation[] = "<unknown>";
   static const char format[] =
