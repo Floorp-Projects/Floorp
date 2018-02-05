@@ -68,9 +68,6 @@ interface nsIStackFrame : nsISupports
 [scriptable, builtinclass, uuid(4371b5bf-6845-487f-8d9d-3f1e4a9badd2)]
 interface nsIException : nsISupports
 {
-    // The nsresult associated with this exception.
-    readonly attribute nsresult                result;
-
     // A stack trace, if available.
     readonly attribute nsIStackFrame           location;
 

@@ -57,6 +57,10 @@ public:
   {
     return mMessage;
   }
+  nsresult GetResult() const
+  {
+    return mResult;
+  }
 
   // Cruft used by XPConnect for exceptions originating in JS implemented
   // components.
