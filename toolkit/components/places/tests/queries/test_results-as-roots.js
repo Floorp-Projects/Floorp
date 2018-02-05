@@ -87,15 +87,6 @@ add_task(async function test_results_as_root_remove_mobile_dynamic() {
   // Now un-set the pref, and poke the database to update the query.
   Services.prefs.clearUserPref(MOBILE_BOOKMARKS_PREF);
 
-  // We've un-set the pref, but we still expect the mobile folder to be there
-  // until the database is poked.
-  assertExpectedChildren(root, expectedRootsWithMobile);
-
-  await PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    url: "http://example.com",
-  });
-
   assertExpectedChildren(root, expectedRoots);
 
   root.containerOpen = false;
