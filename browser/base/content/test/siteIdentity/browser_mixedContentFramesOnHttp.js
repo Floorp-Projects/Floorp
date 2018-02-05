@@ -16,7 +16,8 @@ add_task(async function() {
   await SpecialPowers.pushPrefEnv({
     "set": [
       ["security.mixed_content.block_active_content", true],
-      ["security.mixed_content.block_display_content", false]
+      ["security.mixed_content.block_display_content", false],
+      ["security.mixed_content.upgrade_display_content", false]
     ]});
 
   await BrowserTestUtils.withNewTab(TEST_URL, async function(browser) {
