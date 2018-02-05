@@ -372,7 +372,7 @@ WebConsoleCommands._registerOriginal("$x", function (owner, xPath, context) {
   context = context || doc;
 
   let results = doc.evaluate(xPath, context, null,
-                             Ci.nsIDOMXPathResult.ANY_TYPE, null);
+                             owner.window.XPathResult.ANY_TYPE, null);
   let node;
   while ((node = results.iterateNext())) {
     nodes.push(node);

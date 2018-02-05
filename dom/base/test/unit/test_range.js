@@ -4,7 +4,7 @@
 
 const C_i = Components.interfaces;
 
-const UNORDERED_TYPE = C_i.nsIDOMXPathResult.ANY_UNORDERED_NODE_TYPE;
+const UNORDERED_TYPE = 8; // XPathResult.ANY_UNORDERED_NODE_TYPE
 
 /**
  * Determine if the data node has only ignorable white-space.

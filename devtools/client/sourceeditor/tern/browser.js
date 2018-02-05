@@ -1430,7 +1430,7 @@ module.exports = {
       "numberValue": {
         "!type": "number",
         "!url": "https://developer.mozilla.org/en/docs/XPathResult",
-        "!doc": "Refer to nsIDOMXPathResult for more detail."
+        "!doc": "Refer to XPathResult for more detail."
       },
       "resultType": {
         "!type": "number",
@@ -1445,7 +1445,7 @@ module.exports = {
       "snapshotLength": {
         "!type": "number",
         "!url": "https://developer.mozilla.org/en/docs/XPathResult",
-        "!doc": "Refer to nsIDOMXPathResult for more detail."
+        "!doc": "Refer to XPathResult for more detail."
       },
       "stringValue": {
         "!type": "string",
@@ -1473,7 +1473,7 @@ module.exports = {
       "FIRST_ORDERED_NODE_TYPE": "number"
     },
     "!url": "https://developer.mozilla.org/en/docs/XPathResult",
-    "!doc": "Refer to nsIDOMXPathResult for more detail."
+    "!doc": "Refer to XPathResult for more detail."
   },
   "ClientRect": {
     "!type": "fn()",

@@ -66,7 +66,6 @@
 #include "nsIDOMWheelEvent.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMXPathEvaluator.h"
-#include "nsIDOMXPathResult.h"
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIDOMXULElement.h"
 #include "nsIFrameLoader.h"
@@ -163,7 +162,6 @@
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/dom/XMLSerializerBinding.h"
 #include "mozilla/dom/XPathEvaluatorBinding.h"
-#include "mozilla/dom/XPathResultBinding.h"
 #include "mozilla/dom/XULCommandEventBinding.h"
 #include "mozilla/dom/XULDocumentBinding.h"
 #include "mozilla/dom/XULElementBinding.h"
@@ -290,7 +288,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIXMLHttpRequestEventTarget, XMLHttpRequestEventTarget),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIXMLHttpRequestUpload, XMLHttpRequestUpload),
   DEFINE_SHIM(XPathEvaluator),
-  DEFINE_SHIM(XPathResult),
   DEFINE_SHIM(XULCommandEvent),
   DEFINE_SHIM(XULElement),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsISelection, Selection),
