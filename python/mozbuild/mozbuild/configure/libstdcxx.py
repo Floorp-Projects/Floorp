@@ -62,9 +62,15 @@ def find_version(args):
     args +=  ['-shared', '-Wl,-t']
     p = subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
     candidates = [x for x in p.stdout if 'libstdc++.so' in x]
+    candidates = [x for x in candidates if 'skipping incompatible' not in x]
     if not candidates:
         return ''
-    assert len(candidates) == 1
+    if len(candidates) != 1:
+        raise Exception('''Too many libstdc++ candidates!
+command line: %s
+candidates:
+%s''' % (args, '\n'.join(candidates)))
+
     libstdcxx = parse_ld_line(candidates[-1])
 
     p = subprocess.Popen(['readelf', '-V', libstdcxx], stdout=subprocess.PIPE)
