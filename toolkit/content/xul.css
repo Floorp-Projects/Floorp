@@ -282,7 +282,7 @@ menulist {
 /******* toolbar *******/
 
 toolbox {
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbox");
+  -moz-appearance: toolbox;
   -moz-box-orient: vertical;
 }
 
