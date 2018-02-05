@@ -1729,6 +1729,9 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       if (hint & nsChangeHint_UpdateTableCellSpans) {
         frameConstructor->UpdateTableCellSpans(content);
       }
+      if (hint & nsChangeHint_VisibilityChange) {
+        frame->UpdateVisibleDescendantsState();
+      }
     }
   }
 
