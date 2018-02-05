@@ -4,6 +4,7 @@
 
 
 const PREF_DISPLAY = "security.mixed_content.block_display_content";
+const PREF_DISPLAY_UPGRADE = "security.mixed_content.upgrade_display_content";
 const PREF_ACTIVE = "security.mixed_content.block_active_content";
 
 // We alternate for even and odd test cases to simulate different hosts
@@ -14,6 +15,7 @@ var gTestBrowser = null;
 
 add_task(async function test() {
   await SpecialPowers.pushPrefEnv({ set: [[ PREF_DISPLAY, true ],
+                                          [ PREF_DISPLAY_UPGRADE, false ],
                                           [ PREF_ACTIVE, true  ]] });
 
   var newTab = BrowserTestUtils.addTab(gBrowser);

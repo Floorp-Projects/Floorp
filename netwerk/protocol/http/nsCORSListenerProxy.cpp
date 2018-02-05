@@ -878,7 +878,8 @@ CheckUpgradeInsecureRequestsPreventsCORS(nsIPrincipal* aRequestingPrincipal,
 
   // lets see if the loadInfo indicates that the request will
   // be upgraded before fetching any data from the netwerk.
-  return loadInfo->GetUpgradeInsecureRequests();
+  return loadInfo->GetUpgradeInsecureRequests() ||
+         loadInfo->GetBrowserUpgradeInsecureRequests();
 }
 
 

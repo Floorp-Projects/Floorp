@@ -55,6 +55,7 @@ function pushPrefEnv() {
   let deferred = defer();
   let options = {"set":
       [["security.mixed_content.block_active_content", false],
+       ["security.mixed_content.upgrade_display_content", false],
        ["security.mixed_content.block_display_content", false]
   ]};
   SpecialPowers.pushPrefEnv(options, deferred.resolve);

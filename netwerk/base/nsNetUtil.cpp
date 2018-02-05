@@ -2981,7 +2981,8 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
       // the CSP directive 'upgrade-insecure-requests', then it's time to fulfill
       // the promise to CSP and mixed content blocking to upgrade the channel
       // from http to https.
-      if (aLoadInfo->GetUpgradeInsecureRequests()) {
+      if (aLoadInfo->GetUpgradeInsecureRequests() ||
+          aLoadInfo->GetBrowserUpgradeInsecureRequests()) {
         // let's log a message to the console that we are upgrading a request
         nsAutoCString scheme;
         aURI->GetScheme(scheme);
@@ -2990,18 +2991,41 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
         NS_ConvertUTF8toUTF16 reportSpec(aURI->GetSpecOrDefault());
         NS_ConvertUTF8toUTF16 reportScheme(scheme);
 
-        const char16_t* params[] = { reportSpec.get(), reportScheme.get() };
-        uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
-        CSP_LogLocalizedStr("upgradeInsecureRequest",
-                            params, ArrayLength(params),
-                            EmptyString(), // aSourceFile
-                            EmptyString(), // aScriptSample
-                            0, // aLineNumber
-                            0, // aColumnNumber
-                            nsIScriptError::warningFlag, "CSP",
-                            innerWindowId);
+        if (aLoadInfo->GetUpgradeInsecureRequests()) {
+          const char16_t* params[] = { reportSpec.get(), reportScheme.get() };
+          uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
+          CSP_LogLocalizedStr("upgradeInsecureRequest",
+                              params, ArrayLength(params),
+                              EmptyString(), // aSourceFile
+                              EmptyString(), // aScriptSample
+                              0, // aLineNumber
+                              0, // aColumnNumber
+                              nsIScriptError::warningFlag, "CSP",
+                              innerWindowId);
+          Telemetry::AccumulateCategorical(Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::CSP);
+        } else {
+          nsCOMPtr<nsIDocument> doc;
+          nsINode* node = aLoadInfo->LoadingNode();
+          if (node) {
+            doc = node->OwnerDoc();
+          }
 
-        Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 4);
+          nsAutoString brandName;
+          nsresult rv =
+            nsContentUtils::GetLocalizedString(nsContentUtils::eBRAND_PROPERTIES,
+                                               "brandShortName", brandName);
+          if (NS_SUCCEEDED(rv)) {
+            const char16_t* params[] = { brandName.get(), reportSpec.get(), reportScheme.get() };
+            nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                            NS_LITERAL_CSTRING("DATA_URI_BLOCKED"),
+                                            doc,
+                                            nsContentUtils::eSECURITY_PROPERTIES,
+                                            "BrowserUpgradeInsecureDisplayRequest",
+                                            params, ArrayLength(params));
+          }
+          Telemetry::AccumulateCategorical(Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::BrowserDisplay);
+        }
+
         aShouldUpgrade = true;
         return NS_OK;
       }
@@ -3025,7 +3049,7 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
     if (isStsHost) {
       LOG(("nsHttpChannel::Connect() STS permissions found\n"));
       if (aAllowSTS) {
-        Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 3);
+        Telemetry::AccumulateCategorical(Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::STS);
         aShouldUpgrade = true;
         switch (hstsSource) {
           case nsISiteSecurityService::SOURCE_PRELOAD_LIST:
@@ -3042,13 +3066,13 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
         }
         return NS_OK;
       } else {
-        Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 2);
+        Telemetry::AccumulateCategorical(Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::PrefBlockedSTS);
       }
     } else {
-      Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 1);
+      Telemetry::AccumulateCategorical(Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::NoReasonToUpgrade);
     }
   } else {
-    Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 0);
+    Telemetry::AccumulateCategorical(Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::AlreadyHTTPS);
   }
   aShouldUpgrade = false;
   return NS_OK;
