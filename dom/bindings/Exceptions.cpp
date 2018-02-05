@@ -618,11 +618,19 @@ JSStackFrame::GetCaller(JSContext* aCx)
   return caller.forget();
 }
 
-NS_IMETHODIMP JSStackFrame::GetFormattedStack(JSContext* aCx, nsAString& aStack)
+NS_IMETHODIMP
+JSStackFrame::GetFormattedStackXPCOM(JSContext* aCx, nsAString& aStack)
+{
+  GetFormattedStack(aCx, aStack);
+  return NS_OK;
+}
+
+void
+JSStackFrame::GetFormattedStack(JSContext* aCx, nsAString& aStack)
 {
   if (!mStack) {
     aStack.Truncate();
-    return NS_OK;
+    return;
   }
 
   // Sadly we can't use GetValueIfNotCached here, because our getter
@@ -636,7 +644,7 @@ NS_IMETHODIMP JSStackFrame::GetFormattedStack(JSContext* aCx, nsAString& aStack)
     js::GetContextCompartment(aCx) == js::GetObjectCompartment(mStack);
   if (canCache && mFormattedStackInitialized) {
     aStack = mFormattedStack;
-    return NS_OK;
+    return;
   }
 
   JS::Rooted<JSObject*> stack(aCx, mStack);
@@ -645,14 +653,14 @@ NS_IMETHODIMP JSStackFrame::GetFormattedStack(JSContext* aCx, nsAString& aStack)
   if (!JS::BuildStackString(aCx, stack, &formattedStack)) {
     JS_ClearPendingException(aCx);
     aStack.Truncate();
-    return NS_OK;
+    return;
   }
 
   nsAutoJSString str;
   if (!str.init(aCx, formattedStack)) {
     JS_ClearPendingException(aCx);
     aStack.Truncate();
-    return NS_OK;
+    return;
   }
 
   aStack = str;
@@ -661,8 +669,6 @@ NS_IMETHODIMP JSStackFrame::GetFormattedStack(JSContext* aCx, nsAString& aStack)
     mFormattedStack = str;
     mFormattedStackInitialized = true;
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP JSStackFrame::GetNativeSavedFrame(JS::MutableHandle<JS::Value> aSavedFrame)

@@ -34,7 +34,7 @@ interface nsIStackFrame : nsISupports
     // Returns a formatted stack string that looks like the sort of
     // string that would be returned by .stack on JS Error objects.
     // Only works on JS-language stack frames.
-    [implicit_jscontext]
+    [implicit_jscontext, binaryname(FormattedStackXPCOM)]
     readonly attribute AString                 formattedStack;
 
     // Returns the underlying SavedFrame object for native JavaScript stacks,
@@ -59,6 +59,8 @@ interface nsIStackFrame : nsISupports
     StackFrameRef getAsyncCaller(in JSContext aCx);
     [notxpcom, nostdcall]
     StackFrameRef getCaller(in JSContext aCx);
+    [notxpcom, nostdcall]
+    void getFormattedStack(in JSContext aCx, out AString aFormattedStack);
 };
 
 [scriptable, builtinclass, uuid(4371b5bf-6845-487f-8d9d-3f1e4a9badd2)]
