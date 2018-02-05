@@ -267,7 +267,8 @@ NS_IMETHODIMP
 Exception::GetFilename(JSContext* aCx, nsAString& aFilename)
 {
   if (mLocation) {
-    return mLocation->GetFilename(aCx, aFilename);
+    mLocation->GetFilename(aCx, aFilename);
+    return NS_OK;
   }
 
   aFilename.Truncate();

@@ -997,11 +997,11 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                 xpc_exception->
                                     GetLocation(getter_AddRefs(location));
                                 if (location) {
-                                    // Get line number w/o checking; 0 is ok.
+                                    // Get line number.
                                     location->GetLineNumber(cx, &lineNumber);
 
                                     // get a filename.
-                                    rv = location->GetFilename(cx, sourceName);
+                                    location->GetFilename(cx, sourceName);
                                 }
 
                                 rv = scriptError->InitWithWindowID(NS_ConvertUTF8toUTF16(newMessage),
