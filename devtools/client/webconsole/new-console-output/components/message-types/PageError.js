@@ -29,6 +29,7 @@ function PageError(props) {
     dispatch,
     message,
     open,
+    repeat,
     serviceContainer,
     timestampsVisible,
   } = props;
@@ -39,7 +40,6 @@ function PageError(props) {
     type,
     level,
     messageText,
-    repeat,
     stacktrace,
     frame,
     exceptionDocURL,
