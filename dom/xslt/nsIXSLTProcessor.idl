@@ -11,15 +11,6 @@ interface nsIVariant;
 interface nsIXSLTProcessor : nsISupports
 {
     /**
-     * Transforms the node source applying the stylesheet given by the
-     * importStylesheet() function.
-     *
-     * @param source The node to be transformed
-     * @return Document The result of the transformation
-     */
-    nsIDOMDocument transformToDocument(in nsIDOMNode source);
-
-    /**
      * Sets a parameter to be used in subsequent transformations with this
      * nsIXSLTProcessor. If the parameter doesn't exist in the stylesheet the
      * parameter will be ignored.

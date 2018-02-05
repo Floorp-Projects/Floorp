@@ -138,7 +138,7 @@ public:
         return mSource;
     }
 
-    nsresult TransformToDoc(nsIDOMDocument **aResult,
+    nsresult TransformToDoc(nsIDocument **aResult,
                             bool aCreateDataDocument);
 
     bool IsLoadDisabled()
