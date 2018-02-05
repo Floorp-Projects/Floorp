@@ -24,7 +24,6 @@ toolkit.jar:
   skin/classic/mozapps/profile/profileicon-selected.png           (profile/profileicon-selected.png)
   skin/classic/mozapps/update/buttons.png                         (update/buttons.png)
 * skin/classic/mozapps/update/updates.css                         (update/updates.css)
-  skin/classic/mozapps/viewsource/viewsource.css                  (viewsource/viewsource.css)
   skin/classic/mozapps/xpinstall/xpinstallConfirm.css             (extensions/xpinstallConfirm.css)
   skin/classic/mozapps/handling/handling.css                      (handling/handling.css)
 
