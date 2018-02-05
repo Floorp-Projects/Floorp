@@ -257,16 +257,6 @@ Exception::GetFilename(JSContext* aCx, nsAString& aFilename)
 }
 
 NS_IMETHODIMP
-Exception::GetLocation(nsIStackFrame** aLocation)
-{
-  NS_ENSURE_ARG_POINTER(aLocation);
-
-  nsCOMPtr<nsIStackFrame> location = mLocation;
-  location.forget(aLocation);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 Exception::GetData(nsISupports** aData)
 {
   NS_ENSURE_ARG_POINTER(aData);
