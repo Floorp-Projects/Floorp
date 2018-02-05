@@ -7,6 +7,7 @@
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { translateNodeFrontToGrip } = require("devtools/client/inspector/shared/utils");
 
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const { Rep } = REPS;
@@ -27,7 +28,6 @@ class ComputedProperty extends PureComponent {
   constructor(props) {
     super(props);
     this.renderReferenceElementPreview = this.renderReferenceElementPreview.bind(this);
-    this.translateNodeFrontToGrip = this.translateNodeFrontToGrip.bind(this);
     this.onFocus = this.onFocus.bind(this);
   }
 
@@ -52,45 +52,12 @@ class ComputedProperty extends PureComponent {
       Rep({
         defaultRep: referenceElement,
         mode: MODE.TINY,
-        object: this.translateNodeFrontToGrip(referenceElement),
+        object: translateNodeFrontToGrip(referenceElement),
         onInspectIconClick: () => setSelectedNode(referenceElement, "box-model"),
         onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(referenceElement),
         onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
       })
     );
-  }
-
-  /**
-   * While waiting for a reps fix in https://github.com/devtools-html/reps/issues/92,
-   * translate nodeFront to a grip-like object that can be used with an ElementNode rep.
-   *
-   * @param  {NodeFront} nodeFront
-   *         The NodeFront for which we want to create a grip-like object.
-   * @return {Object} a grip-like object that can be used with Reps.
-   */
-  translateNodeFrontToGrip(nodeFront) {
-    let {
-      attributes
-    } = nodeFront;
-
-    // The main difference between NodeFront and grips is that attributes are treated as
-    // a map in grips and as an array in NodeFronts.
-    let attributesMap = {};
-    for (let { name, value } of attributes) {
-      attributesMap[name] = value;
-    }
-
-    return {
-      actor: nodeFront.actorID,
-      preview: {
-        attributes: attributesMap,
-        attributesLength: attributes.length,
-        // nodeName is already lowerCased in Node grips
-        nodeName: nodeFront.nodeName.toLowerCase(),
-        nodeType: nodeFront.nodeType,
-        isConnected: true,
-      }
-    };
   }
 
   onFocus() {
