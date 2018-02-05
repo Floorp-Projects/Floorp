@@ -48,12 +48,12 @@ ServoDeclarationBlock::GetPropertyIsImportant(const nsAString& aProperty) const
   return Servo_DeclarationBlock_GetPropertyIsImportant(mRaw, &property);
 }
 
-void
+bool
 ServoDeclarationBlock::RemoveProperty(const nsAString& aProperty)
 {
   AssertMutable();
   NS_ConvertUTF16toUTF8 property(aProperty);
-  Servo_DeclarationBlock_RemoveProperty(mRaw, &property);
+  return Servo_DeclarationBlock_RemoveProperty(mRaw, &property);
 }
 
 bool
