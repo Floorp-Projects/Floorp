@@ -34,6 +34,7 @@
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/HangDetails.h"
 #include "nsDebugImpl.h"
+#include "nsIGfxInfo.h"
 #include "nsThreadManager.h"
 #include "prenv.h"
 #include "ProcessUtils.h"
