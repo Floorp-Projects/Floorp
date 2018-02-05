@@ -1174,7 +1174,7 @@ StackFrameToStackEntry(JSContext* aCx, nsIStackFrame* aStackFrame,
   }
 }
 
-nsresult
+void
 ReifyStack(JSContext* aCx, nsIStackFrame* aStack,
            nsTArray<ConsoleStackEntry>& aRefiedStack)
 {
@@ -1184,18 +1184,13 @@ ReifyStack(JSContext* aCx, nsIStackFrame* aStack,
     ConsoleStackEntry& data = *aRefiedStack.AppendElement();
     StackFrameToStackEntry(aCx, stack, data);
 
-    nsCOMPtr<nsIStackFrame> caller;
-    nsresult rv = stack->GetCaller(aCx, getter_AddRefs(caller));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIStackFrame> caller = stack->GetCaller(aCx);
 
     if (!caller) {
-      rv = stack->GetAsyncCaller(aCx, getter_AddRefs(caller));
-      NS_ENSURE_SUCCESS(rv, rv);
+      caller = stack->GetAsyncCaller(aCx);
     }
     stack.swap(caller);
   }
-
-  return NS_OK;
 }
 
 } // anonymous namespace
@@ -1297,10 +1292,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
     // nsIStackFrame is not threadsafe, so we need to snapshot it now,
     // before we post our runnable to the main thread.
     callData->mReifiedStack.emplace();
-    nsresult rv = ReifyStack(aCx, stack, *callData->mReifiedStack);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
+    ReifyStack(aCx, stack, *callData->mReifiedStack);
   }
 
   DOMHighResTimeStamp monotonicTimer;
@@ -1403,11 +1395,7 @@ LazyStackGetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 
   nsIStackFrame* stack = reinterpret_cast<nsIStackFrame*>(v.toPrivate());
   nsTArray<ConsoleStackEntry> reifiedStack;
-  nsresult rv = ReifyStack(aCx, stack, reifiedStack);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    Throw(aCx, rv);
-    return false;
-  }
+  ReifyStack(aCx, stack, reifiedStack);
 
   JS::Rooted<JS::Value> stackVal(aCx);
   if (NS_WARN_IF(!ToJSValue(aCx, reifiedStack, &stackVal))) {
@@ -2690,13 +2678,10 @@ Console::MaybeExecuteDumpFunctionForTrace(JSContext* aCx, nsIStackFrame* aStack)
     message.Append(filename);
     message.AppendLiteral("\n");
 
-    nsCOMPtr<nsIStackFrame> caller;
-    nsresult rv = stack->GetCaller(aCx, getter_AddRefs(caller));
-    NS_ENSURE_SUCCESS_VOID(rv);
+    nsCOMPtr<nsIStackFrame> caller = stack->GetCaller(aCx);
 
     if (!caller) {
-      rv = stack->GetAsyncCaller(aCx, getter_AddRefs(caller));
-      NS_ENSURE_SUCCESS_VOID(rv);
+      caller = stack->GetAsyncCaller(aCx);
     }
 
     stack.swap(caller);
