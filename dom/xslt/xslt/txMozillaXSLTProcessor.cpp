@@ -377,12 +377,12 @@ nsresult
 txMozillaXSLTProcessor::SetSourceContentModel(nsIDocument* aDocument,
                                               const nsTArray<nsCOMPtr<nsIContent>>& aSource)
 {
+    mSource = aDocument->CreateDocumentFragment();
+
     if (NS_FAILED(mTransformResult)) {
         notifyError();
         return NS_OK;
     }
-
-    mSource = aDocument->CreateDocumentFragment();
 
     ErrorResult rv;
     for (nsIContent* child : aSource) {
