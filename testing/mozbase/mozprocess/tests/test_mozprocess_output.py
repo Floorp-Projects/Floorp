@@ -16,6 +16,20 @@ here = os.path.dirname(os.path.abspath(__file__))
 class ProcTestOutput(proctest.ProcTest):
     """ Class to test operations related to output handling """
 
+    def test_process_output_twice(self):
+        """
+        Process is started, then processOutput is called a second time explicitly
+        """
+        p = processhandler.ProcessHandler([self.python, self.proclaunch,
+                                           "process_waittimeout_10s_python.ini"],
+                                          cwd=here)
+
+        p.run()
+        p.processOutput(timeout=5)
+        p.wait()
+
+        self.determine_status(p, False, ())
+
     def test_process_output_nonewline(self):
         """
         Process is started, outputs data with no newline
