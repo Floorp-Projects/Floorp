@@ -1,0 +1,23 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>CSS Basic User Interface Test: dynamic appearance switching</title>
+<link rel="author" title="Emilio Cobos Álvarez" href="mailto:emilio@crisal.io">
+<link rel="help" href="https://drafts.csswg.org/css-ui-4/#appearance-switching">
+<link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1435658">
+<link rel="match" href="appearance-dynamic-001-ref.html">
+
+<p>Should see form controls with their default styling</p>
+
+<input style="-moz-appearance: none; appearance: none;" type="checkbox">
+<input style="-moz-appearance: none; appearance: none;" type="radio">
+<input style="-moz-appearance: none; appearance: none;" type="text">
+<input style="-moz-appearance: none; appearance: none;" type="number">
+<input style="-moz-appearance: none; appearance: none;" type="date">
+
+<script>
+  document.body.offsetTop;
+  for (const el of Array.from(document.querySelectorAll('input'))) {
+    el.style.appearance = "";
+    el.style.MozAppearance = "";
+  }
+</script>
