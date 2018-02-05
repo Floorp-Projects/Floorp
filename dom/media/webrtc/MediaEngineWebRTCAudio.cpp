@@ -444,11 +444,11 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
          return NS_ERROR_FAILURE;
       }
       mAudioInput->SetUserChannelCount(prefs.mChannels);
-      if (!AllocChannel()) {
-        FreeChannel();
-        LOG(("Audio device is not initalized"));
-        return NS_ERROR_FAILURE;
+      {
+        MutexAutoLock lock(mMutex);
+        mState = kAllocated;
       }
+      sChannelsOpen++;
       LOG(("Audio device %d allocated", mCapIndex));
       {
         // Update with the actual applied channelCount in order
@@ -613,7 +613,11 @@ MediaEngineWebRTCMicrophoneSource::Deallocate(const RefPtr<const AllocationHandl
     // If empty, no callbacks to deliver data should be occuring
     MOZ_ASSERT(mState != kReleased, "Source not allocated");
     MOZ_ASSERT(mState != kStarted, "Source not stopped");
-    FreeChannel();
+    MOZ_ASSERT(sChannelsOpen > 0);
+    --sChannelsOpen;
+
+    MutexAutoLock lock(mMutex);
+    mState = kReleased;
     LOG(("Audio device %d deallocated", mCapIndex));
   } else {
     LOG(("Audio device %d deallocated but still in use", mCapIndex));
@@ -1128,26 +1132,6 @@ MediaEngineWebRTCMicrophoneSource::DeviceChanged()
   ResetProcessingIfNeeded(noise_suppression);
 }
 
-// mState records if a channel is allocated (slightly redundantly to mChannel)
-void
-MediaEngineWebRTCMicrophoneSource::FreeChannel()
-{
-  if (mState != kReleased) {
-    mState = kReleased;
-
-    MOZ_ASSERT(sChannelsOpen > 0);
-    --sChannelsOpen;
-  }
-}
-
-bool
-MediaEngineWebRTCMicrophoneSource::AllocChannel()
-{
-  mState = kAllocated;
-  sChannelsOpen++;
-  return true;
-}
-
 void
 MediaEngineWebRTCMicrophoneSource::Shutdown()
 {
@@ -1171,7 +1155,6 @@ MediaEngineWebRTCMicrophoneSource::Shutdown()
 
   while (!mAllocations.IsEmpty()) {
     MOZ_ASSERT(mState == kAllocated || mState == kStopped);
-    // on last Deallocate(), FreeChannel()s and DeInit()s if all channels are released
     Deallocate(mAllocations[0].mHandle);
   }
   MOZ_ASSERT(mState == kReleased);
