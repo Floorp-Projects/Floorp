@@ -9,6 +9,7 @@
 #include "nsISupports.idl"
 
 [ptr] native JSContext(JSContext);
+native StackFrameRef(already_AddRefed<nsIStackFrame>);
 
 [scriptable, builtinclass, uuid(28bfb2a2-5ea6-4738-918b-049dc4d51f0b)]
 interface nsIStackFrame : nsISupports
@@ -25,9 +26,9 @@ interface nsIStackFrame : nsISupports
     readonly attribute AUTF8String             sourceLine;
     [implicit_jscontext, binaryname(AsyncCauseXPCOM)]
     readonly attribute AString                 asyncCause;
-    [implicit_jscontext]
+    [implicit_jscontext, binaryname(AsyncCallerXPCOM)]
     readonly attribute nsIStackFrame           asyncCaller;
-    [implicit_jscontext]
+    [implicit_jscontext, binaryname(CallerXPCOM)]
     readonly attribute nsIStackFrame           caller;
 
     // Returns a formatted stack string that looks like the sort of
@@ -54,6 +55,10 @@ interface nsIStackFrame : nsISupports
     int32_t getColumnNumber(in JSContext aCx);
     [notxpcom, nostdcall]
     void getAsyncCause(in JSContext aCx, out AString aAsyncCause);
+    [notxpcom, nostdcall]
+    StackFrameRef getAsyncCaller(in JSContext aCx);
+    [notxpcom, nostdcall]
+    StackFrameRef getCaller(in JSContext aCx);
 };
 
 [scriptable, builtinclass, uuid(4371b5bf-6845-487f-8d9d-3f1e4a9badd2)]

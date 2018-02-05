@@ -546,12 +546,19 @@ JSStackFrame::GetAsyncCause(JSContext* aCx,
   }
 }
 
-NS_IMETHODIMP JSStackFrame::GetAsyncCaller(JSContext* aCx,
-                                           nsIStackFrame** aAsyncCaller)
+NS_IMETHODIMP
+JSStackFrame::GetAsyncCallerXPCOM(JSContext* aCx,
+                                  nsIStackFrame** aAsyncCaller)
+{
+  *aAsyncCaller = GetAsyncCaller(aCx).take();
+  return NS_OK;
+}
+
+already_AddRefed<nsIStackFrame>
+JSStackFrame::GetAsyncCaller(JSContext* aCx)
 {
   if (!mStack) {
-    *aAsyncCaller = nullptr;
-    return NS_OK;
+    return nullptr;
   }
 
   JS::Rooted<JSObject*> asyncCallerObj(aCx);
@@ -561,27 +568,33 @@ NS_IMETHODIMP JSStackFrame::GetAsyncCaller(JSContext* aCx,
                       &asyncCallerObj);
 
   if (useCachedValue) {
-    NS_IF_ADDREF(*aAsyncCaller = mAsyncCaller);
-    return NS_OK;
+    nsCOMPtr<nsIStackFrame> asyncCaller = mAsyncCaller;
+    return asyncCaller.forget();
   }
 
   nsCOMPtr<nsIStackFrame> asyncCaller =
     asyncCallerObj ? new JSStackFrame(asyncCallerObj) : nullptr;
-  asyncCaller.forget(aAsyncCaller);
 
   if (canCache) {
-    mAsyncCaller = *aAsyncCaller;
+    mAsyncCaller = asyncCaller;
     mAsyncCallerInitialized = true;
   }
 
+  return asyncCaller.forget();
+}
+
+NS_IMETHODIMP
+JSStackFrame::GetCallerXPCOM(JSContext* aCx, nsIStackFrame** aCaller)
+{
+  *aCaller = GetCaller(aCx).take();
   return NS_OK;
 }
 
-NS_IMETHODIMP JSStackFrame::GetCaller(JSContext* aCx, nsIStackFrame** aCaller)
+already_AddRefed<nsIStackFrame>
+JSStackFrame::GetCaller(JSContext* aCx)
 {
   if (!mStack) {
-    *aCaller = nullptr;
-    return NS_OK;
+    return nullptr;
   }
 
   JS::Rooted<JSObject*> callerObj(aCx);
@@ -590,20 +603,19 @@ NS_IMETHODIMP JSStackFrame::GetCaller(JSContext* aCx, nsIStackFrame** aCaller)
                       &canCache, &useCachedValue, &callerObj);
 
   if (useCachedValue) {
-    NS_IF_ADDREF(*aCaller = mCaller);
-    return NS_OK;
+    nsCOMPtr<nsIStackFrame> caller = mCaller;
+    return caller.forget();
   }
 
   nsCOMPtr<nsIStackFrame> caller =
     callerObj ? new JSStackFrame(callerObj) : nullptr;
-  caller.forget(aCaller);
 
   if (canCache) {
-    mCaller = *aCaller;
+    mCaller = caller;
     mCallerInitialized = true;
   }
 
-  return NS_OK;
+  return caller.forget();
 }
 
 NS_IMETHODIMP JSStackFrame::GetFormattedStack(JSContext* aCx, nsAString& aStack)
