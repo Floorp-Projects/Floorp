@@ -24,18 +24,6 @@ interface nsIXSLTProcessor : nsISupports
     void importStylesheet(in nsIDOMNode style);
 
     /**
-     * Transforms the node source applying the stylesheet given by
-     * the importStylesheet() function. The owner document of the output node
-     * owns the returned document fragment.
-     *
-     * @param source The node to be transformed
-     * @param output This document is used to generate the output
-     * @return DocumentFragment The result of the transformation
-     */
-    nsIDOMDocumentFragment transformToFragment(in nsIDOMNode source,
-                                               in nsIDOMDocument output);
-
-    /**
      * Transforms the node source applying the stylesheet given by the
      * importStylesheet() function.
      *

@@ -40,6 +40,7 @@
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/XSLTProcessorBinding.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
@@ -703,40 +704,42 @@ txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument **aResult,
     return rv;
 }
 
-NS_IMETHODIMP
-txMozillaXSLTProcessor::TransformToFragment(nsIDOMNode *aSource,
-                                            nsIDOMDocument *aOutput,
-                                            nsIDOMDocumentFragment **aResult)
+already_AddRefed<DocumentFragment>
+txMozillaXSLTProcessor::TransformToFragment(nsINode& aSource,
+                                            nsIDocument& aOutput,
+                                            ErrorResult& aRv)
 {
-    NS_ENSURE_ARG(aSource);
-    NS_ENSURE_ARG(aOutput);
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_SUCCESS(mCompileResult, mCompileResult);
+    if (NS_WARN_IF(NS_FAILED(mCompileResult))) {
+        aRv.Throw(mCompileResult);
+        return nullptr;
+    }
 
-    nsCOMPtr<nsINode> node = do_QueryInterface(aSource);
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aOutput);
-    NS_ENSURE_TRUE(node && doc, NS_ERROR_DOM_SECURITY_ERR);
     nsIPrincipal* subject = nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
-    if (!subject->Subsumes(node->NodePrincipal()) ||
-        !subject->Subsumes(doc->NodePrincipal()))
+    if (!subject->Subsumes(aSource.NodePrincipal()) ||
+        !subject->Subsumes(aOutput.NodePrincipal()))
     {
-        return NS_ERROR_DOM_SECURITY_ERR;
+        aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        return nullptr;
     }
 
     nsresult rv = ensureStylesheet();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        aRv.Throw(rv);
+        return nullptr;
+    }
 
-    nsAutoPtr<txXPathNode> sourceNode(txXPathNativeNode::createXPathNode(aSource));
+    nsAutoPtr<txXPathNode> sourceNode(txXPathNativeNode::createXPathNode(&aSource));
     if (!sourceNode) {
-        return NS_ERROR_OUT_OF_MEMORY;
+        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return nullptr;
     }
 
     txExecutionState es(mStylesheet, IsLoadDisabled());
 
     // XXX Need to add error observers
 
-    *aResult = doc->CreateDocumentFragment().take();
-    txToFragmentHandlerFactory handlerFactory(*aResult);
+    RefPtr<DocumentFragment> frag = aOutput.CreateDocumentFragment();
+    txToFragmentHandlerFactory handlerFactory(frag);
     es.mOutputHandlerFactory = &handlerFactory;
 
     rv = es.init(*sourceNode, &mVariables);
@@ -751,7 +754,12 @@ txMozillaXSLTProcessor::TransformToFragment(nsIDOMNode *aSource,
       rv = endRv;
     }
 
-    return rv;
+    if (NS_FAILED(rv)) {
+        aRv.Throw(rv);
+        return nullptr;
+    }
+
+    return frag.forget();
 }
 
 NS_IMETHODIMP
@@ -1279,21 +1287,6 @@ txMozillaXSLTProcessor::ImportStylesheet(nsINode& stylesheet,
                                          mozilla::ErrorResult& aRv)
 {
     aRv = ImportStylesheet(stylesheet.AsDOMNode());
-}
-
-already_AddRefed<DocumentFragment>
-txMozillaXSLTProcessor::TransformToFragment(nsINode& source,
-                                            nsIDocument& docVal,
-                                            mozilla::ErrorResult& aRv)
-{
-    nsCOMPtr<nsIDOMDocumentFragment> fragment;
-    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(&docVal);
-    if (!domDoc) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return nullptr;
-    }
-    aRv = TransformToFragment(source.AsDOMNode(), domDoc, getter_AddRefs(fragment));
-    return fragment.forget().downcast<DocumentFragment>();
 }
 
 already_AddRefed<nsIDocument>
