@@ -8,6 +8,7 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
+const { translateNodeFrontToGrip } = require("devtools/client/inspector/shared/utils");
 
 // Reps
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
@@ -32,7 +33,6 @@ class GridItem extends PureComponent {
   constructor(props) {
     super(props);
     this.setGridColor = this.setGridColor.bind(this);
-    this.translateNodeFrontToGrip = this.translateNodeFrontToGrip.bind(this);
     this.onGridCheckboxClick = this.onGridCheckboxClick.bind(this);
     this.onGridInspectIconClick = this.onGridInspectIconClick.bind(this);
   }
@@ -63,38 +63,6 @@ class GridItem extends PureComponent {
   setGridColor() {
     let color = findDOMNode(this).querySelector(".grid-color-value").textContent;
     this.props.onSetGridOverlayColor(this.props.grid.nodeFront, color);
-  }
-
-  /**
-   * While waiting for a reps fix in https://github.com/devtools-html/reps/issues/92,
-   * translate nodeFront to a grip-like object that can be used with an ElementNode rep.
-   *
-   * @params  {NodeFront} nodeFront
-   *          The NodeFront for which we want to create a grip-like object.
-   * @returns {Object} a grip-like object that can be used with Reps.
-   */
-  translateNodeFrontToGrip(nodeFront) {
-    let { attributes } = nodeFront;
-
-    // The main difference between NodeFront and grips is that attributes are treated as
-    // a map in grips and as an array in NodeFronts.
-    let attributesMap = {};
-    for (let {name, value} of attributes) {
-      attributesMap[name] = value;
-    }
-
-    return {
-      actor: nodeFront.actorID,
-      preview: {
-        attributes: attributesMap,
-        attributesLength: attributes.length,
-        // All the grid containers are assumed to be in the DOM tree.
-        isConnected: true,
-        // nodeName is already lowerCased in Node grips
-        nodeName: nodeFront.nodeName.toLowerCase(),
-        nodeType: nodeFront.nodeType,
-      }
-    };
   }
 
   onGridCheckboxClick(e) {
@@ -145,7 +113,7 @@ class GridItem extends PureComponent {
           {
             defaultRep: ElementNode,
             mode: MODE.TINY,
-            object: this.translateNodeFrontToGrip(nodeFront),
+            object: translateNodeFrontToGrip(nodeFront),
             onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
             onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
             onInspectIconClick: () => this.onGridInspectIconClick(nodeFront),
