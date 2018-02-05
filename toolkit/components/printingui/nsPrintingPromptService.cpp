@@ -141,8 +141,7 @@ nsPrintingPromptService::ShowProgress(
 
 NS_IMETHODIMP
 nsPrintingPromptService::ShowPageSetup(mozIDOMWindowProxy* parent,
-                                       nsIPrintSettings* printSettings,
-                                       nsIObserver* aObs)
+                                       nsIPrintSettings* printSettings)
 {
   NS_ENSURE_ARG(printSettings);
 

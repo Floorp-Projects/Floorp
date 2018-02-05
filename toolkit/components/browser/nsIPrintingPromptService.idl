@@ -129,13 +129,9 @@ interface nsIPrintingPromptService : nsISupports
    *
    *  @param parent - a DOM windows the dialog will be parented to (required)
    *  @param printSettings - PrintSettings for page setup (required)
-   *  @param aObs - An observer to know if the contents of the Print Settings 
-   *                object has changed while the dialog is being shown. 
-   *                For example, some platforms may implement an "Apply" button (not required)
    */
   void showPageSetup(in mozIDOMWindowProxy parent,
-                     in nsIPrintSettings printSettings,
-                     in nsIObserver aObs);
+                     in nsIPrintSettings printSettings);
 
 };
 
