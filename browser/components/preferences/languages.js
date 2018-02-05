@@ -319,24 +319,24 @@ var gLanguagesDialog = {
       return false;
     }
 
-    var spoofEnglish = document.getElementById("privacy.spoof_english").value;
+    var spoofEnglish = Preferences.get("privacy.spoof_english").value;
     var activeLanguages = this._activeLanguages;
     var availableLanguages = this._availableLanguages;
     checkbox.hidden = false;
     switch (spoofEnglish) {
-    case 1: // don't spoof intl.accept_lanauges
+    case 1: // don't spoof intl.accept_languages
       activeLanguages.disabled = false;
       activeLanguages.selectItem(activeLanguages.firstChild);
       availableLanguages.disabled = false;
       this.onAvailableLanguageSelect();
       return false;
-    case 2: // spoof intl.accept_lanauges
+    case 2: // spoof intl.accept_languages
       activeLanguages.clearSelection();
       activeLanguages.disabled = true;
       availableLanguages.disabled = true;
       this.onAvailableLanguageSelect();
       return true;
-    default: // will prompt for spoofing intl.accept_lanauges if resisting fingerprinting
+    default: // will prompt for spoofing intl.accept_languages if resisting fingerprinting
       return false;
     }
   },
@@ -345,3 +345,8 @@ var gLanguagesDialog = {
     return document.getElementById("spoofEnglish").checked ? 2 : 1;
   }
 };
+
+// These focus and resize handlers hack around XUL bug 1194844
+// by triggering extra reflow (see bug 1194346).
+window.addEventListener("focus", () => gLanguagesDialog.forceReflow());
+window.addEventListener("resize", () => gLanguagesDialog.forceReflow());
