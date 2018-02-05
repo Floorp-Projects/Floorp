@@ -9,8 +9,6 @@
 #include "nsAutoPtr.h"
 #include "nsStubMutationObserver.h"
 #include "nsIDocumentTransformer.h"
-#include "nsIXSLTProcessor.h"
-#include "nsIXSLTProcessorPrivate.h"
 #include "txExpandedNameMap.h"
 #include "txNamespaceMap.h"
 #include "nsCycleCollectionParticipant.h"
@@ -44,9 +42,7 @@ class GlobalObject;
 /**
  * txMozillaXSLTProcessor is a front-end to the XSLT Processor.
  */
-class txMozillaXSLTProcessor final : public nsIXSLTProcessor,
-                                     public nsIXSLTProcessorPrivate,
-                                     public nsIDocumentTransformer,
+class txMozillaXSLTProcessor final : public nsIDocumentTransformer,
                                      public nsStubMutationObserver,
                                      public nsWrapperCache
 {
@@ -59,13 +55,7 @@ public:
     // nsISupports interface
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(txMozillaXSLTProcessor,
-                                                           nsIXSLTProcessor)
-
-    // nsIXSLTProcessor interface
-    NS_DECL_NSIXSLTPROCESSOR
-
-    // nsIXSLTProcessorPrivate interface
-    NS_DECL_NSIXSLTPROCESSORPRIVATE
+                                                           nsIDocumentTransformer)
 
     // nsIDocumentTransformer interface
     NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver) override;
