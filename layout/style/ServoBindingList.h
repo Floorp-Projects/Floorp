@@ -467,7 +467,7 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetPropertyById, bool,
                    mozilla::ParsingMode parsing_mode,
                    nsCompatibility quirks_mode,
                    mozilla::css::Loader* loader)
-SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemoveProperty, void,
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemoveProperty, bool,
                    RawServoDeclarationBlockBorrowed declarations,
                    const nsACString* property)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemovePropertyById, bool,

@@ -107,7 +107,7 @@ DeclarationBlock::GetPropertyIsImportant(const nsAString& aProperty) const
   MOZ_STYLO_FORWARD(GetPropertyIsImportant, (aProperty))
 }
 
-void
+bool
 DeclarationBlock::RemoveProperty(const nsAString& aProperty)
 {
   MOZ_STYLO_FORWARD(RemoveProperty, (aProperty))
