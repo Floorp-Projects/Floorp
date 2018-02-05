@@ -772,10 +772,10 @@ txMozillaXSLTProcessor::TransformToFragment(nsINode& aSource,
     return frag.forget();
 }
 
-NS_IMETHODIMP
-txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
-                                     const nsAString & aLocalName,
-                                     nsIVariant *aValue)
+nsresult
+txMozillaXSLTProcessor::SetParameter(const nsAString& aNamespaceURI,
+                                     const nsAString& aLocalName,
+                                     nsIVariant* aValue)
 {
     NS_ENSURE_ARG(aValue);
 
