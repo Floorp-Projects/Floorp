@@ -356,10 +356,9 @@ class BlobURLsReporter final : public nsIMemoryReporter
 
     for (uint32_t i = 0; frame; ++i) {
       nsString fileNameUTF16;
-      int32_t lineNumber = 0;
-
       frame->GetFilename(cx, fileNameUTF16);
-      frame->GetLineNumber(cx, &lineNumber);
+
+      int32_t lineNumber = frame->GetLineNumber(cx);
 
       if (!fileNameUTF16.IsEmpty()) {
         NS_ConvertUTF16toUTF8 fileName(fileNameUTF16);

@@ -1767,9 +1767,8 @@ AssembleSandboxMemoryReporterName(JSContext* cx, nsCString& sandboxName)
     // Append the caller's location information.
     if (frame) {
         nsString location;
-        int32_t lineNumber = 0;
         frame->GetFilename(cx, location);
-        frame->GetLineNumber(cx, &lineNumber);
+        int32_t lineNumber = frame->GetLineNumber(cx);
 
         sandboxName.AppendLiteral(" (from: ");
         sandboxName.Append(NS_ConvertUTF16toUTF8(location));

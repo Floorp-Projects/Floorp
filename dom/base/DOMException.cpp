@@ -281,10 +281,8 @@ Exception::GetLineNumber(JSContext* aCx, uint32_t *aLineNumber)
   NS_ENSURE_ARG_POINTER(aLineNumber);
 
   if (mLocation) {
-    int32_t lineno;
-    nsresult rv = mLocation->GetLineNumber(aCx, &lineno);
-    *aLineNumber = lineno;
-    return rv;
+    *aLineNumber = mLocation->GetLineNumber(aCx);
+    return NS_OK;
   }
 
   *aLineNumber = 0;
@@ -399,11 +397,7 @@ uint32_t
 Exception::LineNumber(JSContext* aCx) const
 {
   if (mLocation) {
-    int32_t lineno;
-    if (NS_SUCCEEDED(mLocation->GetLineNumber(aCx, &lineno))) {
-      return lineno;
-    }
-    return 0;
+    return mLocation->GetLineNumber(aCx);
   }
 
   return 0;
