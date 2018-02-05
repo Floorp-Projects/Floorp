@@ -105,10 +105,6 @@ using namespace mozilla::places;
 #define PREF_FREC_RELOAD_VISIT_BONUS            "places.frecency.reloadVisitBonus"
 #define PREF_FREC_RELOAD_VISIT_BONUS_DEF        0
 
-// This is a hidden pref to determine when to show the mobile bookmarks folder.
-// Note: the name here matches those used elsewhere in the code, for easier searching.
-#define MOBILE_BOOKMARKS_PREF "browser.bookmarks.showMobileBookmarks"
-
 // This is a 'hidden' pref for the purposes of unit tests.
 #define PREF_FREC_DECAY_RATE     "places.frecency.decayRate"
 #define PREF_FREC_DECAY_RATE_DEF 0.975f
@@ -836,10 +832,12 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
   }
 
   if (aOptions->ResultType() ==
-        nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY ||
-      aOptions->ResultType() ==
+        nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
+      return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
+
+  if (aOptions->ResultType() ==
         nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY)
-    return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
+      return QUERYUPDATE_MOBILEPREF;
 
   // Whenever there is a maximum number of results,
   // and we are not a bookmark query we must requery. This
@@ -1958,7 +1956,7 @@ PlacesSQLQueryBuilder::SelectAsRoots()
 
     mobileString = nsPrintfCString(","
       "(null, 'place:folder=MOBILE_BOOKMARKS', '%s', null, null, null, "
-       "null, null, 0, 0, null, null, null, null, 'mobile____v', null) ",
+       "null, null, 0, 0, null, null, null, null, '" MOBILE_BOOKMARKS_VIRTUAL_GUID "', null) ",
       mobileTitle.get());
   }
 

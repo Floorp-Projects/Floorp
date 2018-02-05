@@ -39,6 +39,7 @@
 #define QUERYUPDATE_COMPLEX 2
 #define QUERYUPDATE_COMPLEX_WITH_BOOKMARKS 3
 #define QUERYUPDATE_HOST 4
+#define QUERYUPDATE_MOBILEPREF 5
 
 // Clamp title and URL to generously large, but not too large, length.
 // See bug 319004 for details.
@@ -56,6 +57,13 @@
 
 // Fired after frecency has been updated.
 #define TOPIC_FRECENCY_UPDATED "places-frecency-updated"
+
+// The preference we watch to know when the mobile bookmarks folder is filled by
+// sync.
+#define MOBILE_BOOKMARKS_PREF "browser.bookmarks.showMobileBookmarks"
+
+// The guid of the mobile bookmarks virtual query.
+#define MOBILE_BOOKMARKS_VIRTUAL_GUID "mobile____v"
 
 class nsNavHistory;
 class QueryKeyValuePair;
