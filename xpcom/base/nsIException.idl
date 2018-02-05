@@ -41,7 +41,7 @@ interface nsIStackFrame : nsISupports
     // or null if this is not a native JavaScript stack frame.
     readonly attribute jsval                   nativeSavedFrame;
 
-    [implicit_jscontext]
+    [implicit_jscontext, binaryname(ToStringXPCOM)]
     AUTF8String toString();
 
     // Infallible things to be called from C++.
@@ -61,6 +61,8 @@ interface nsIStackFrame : nsISupports
     StackFrameRef getCaller(in JSContext aCx);
     [notxpcom, nostdcall]
     void getFormattedStack(in JSContext aCx, out AString aFormattedStack);
+    [notxpcom, nostdcall, binaryname(ToString)]
+    void toStringInfallible(in JSContext aCx, out AUTF8String aString);
 };
 
 [scriptable, builtinclass, uuid(4371b5bf-6845-487f-8d9d-3f1e4a9badd2)]
