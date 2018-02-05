@@ -5,116 +5,75 @@
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 
-const WINDOW_TYPE = "navigator:view-source";
-
-function openViewSourceWindow(aURI, aCallback) {
-  let viewSourceWindow = openDialog("chrome://global/content/viewSource.xul", null, null, aURI);
-  viewSourceWindow.addEventListener("pageshow", function pageShowHandler(event) {
-    // Wait for the inner window to load, not viewSourceWindow.
-    if (event.target.location == "view-source:" + aURI) {
-      info("View source window opened: " + event.target.location);
-      viewSourceWindow.removeEventListener("pageshow", pageShowHandler);
-      aCallback(viewSourceWindow);
-    }
-  });
-}
-
-function loadViewSourceWindow(URL) {
-  return new Promise((resolve) => {
-    openViewSourceWindow(URL, resolve);
-  });
-}
-
-function closeViewSourceWindow(aWindow, aCallback) {
-  return new Promise(resolve => {
-    Services.wm.addListener({
-      onCloseWindow() {
-        Services.wm.removeListener(this);
-        if (aCallback) {
-          executeSoon(aCallback);
-        }
-        resolve();
-      }
-    });
-    aWindow.close();
-  });
-}
-
-function testViewSourceWindow(aURI, aTestCallback, aCloseCallback) {
-  openViewSourceWindow(aURI, function(aWindow) {
-    aTestCallback(aWindow);
-    closeViewSourceWindow(aWindow, aCloseCallback);
-  });
-}
-
 /**
- * Wait for view source tab or window after calling given function to open it.
+ * Wait for view source tab after calling given function to open it.
  *
  * @param open - a function to open view source.
- * @returns the new tab or window which shows the source.
+ * @returns the new tab which shows the source.
  */
-async function waitForViewSourceTabOrWindow(open) {
+async function waitForViewSourceTab(open) {
   let sourceLoadedPromise;
-  let tabOrWindowPromise;
-  if (Services.prefs.getBoolPref("view_source.tab")) {
-    tabOrWindowPromise = new Promise(resolve => {
-      gBrowser.tabContainer.addEventListener("TabOpen", event => {
-        let tab = event.target;
-        sourceLoadedPromise = waitForSourceLoaded(tab);
-        resolve(tab);
-      }, { once: true });
-    });
-  } else {
-    tabOrWindowPromise = new Promise(resolve => {
-      let windowListener = {
-        onOpenWindow(xulWindow) {
-          let win = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-              .getInterface(Ci.nsIDOMWindow);
-          win.addEventListener("load", function() {
-            if (win.document.documentElement.getAttribute("windowtype") !=
-                WINDOW_TYPE) {
-              return;
-            }
-            // Found the window
-            sourceLoadedPromise = waitForSourceLoaded(win);
-            resolve(win);
-            Services.wm.removeListener(windowListener);
-          }, {once: true});
-        },
-        onCloseWindow() {},
-      };
-      Services.wm.addListener(windowListener);
-    });
-  }
+  let tabPromise;
+
+  tabPromise = new Promise(resolve => {
+    gBrowser.tabContainer.addEventListener("TabOpen", event => {
+      let tab = event.target;
+      sourceLoadedPromise = waitForSourceLoaded(tab);
+      resolve(tab);
+    }, { once: true });
+  });
 
   await open();
 
-  let tabOrWindow = await tabOrWindowPromise;
+  let tab = await tabPromise;
   await sourceLoadedPromise;
-
-  return tabOrWindow;
+  return tab;
 }
 
 /**
  * Opens view source for a browser.
  *
  * @param browser - the <xul:browser> to open view source for.
- * @returns the new tab or window which shows the source.
+ * @returns the new tab which shows the source.
  */
-function openViewSource(browser) {
-  return waitForViewSourceTabOrWindow(() => {
+function openViewSourceForBrowser(browser) {
+  return waitForViewSourceTab(() => {
     window.BrowserViewSource(browser);
   });
 }
 
 /**
- * Opens a view source tab / window for a selection (View Selection Source)
+ * Opens a view source tab. (View Source)
+ * within the currently selected browser in gBrowser.
+ *
+ * @returns the new tab which shows the source.
+ */
+async function openViewSource() {
+  let contentAreaContextMenuPopup =
+    document.getElementById("contentAreaContextMenu");
+  let popupShownPromise =
+    BrowserTestUtils.waitForEvent(contentAreaContextMenuPopup, "popupshown");
+  await BrowserTestUtils.synthesizeMouseAtCenter("body",
+          { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
+  await popupShownPromise;
+
+  return waitForViewSourceTab(async () => {
+    let popupHiddenPromise =
+        BrowserTestUtils.waitForEvent(contentAreaContextMenuPopup, "popuphidden");
+    let item = document.getElementById("context-viewsource");
+    EventUtils.synthesizeMouseAtCenter(item, {});
+    await popupHiddenPromise;
+  });
+}
+
+/**
+ * Opens a view source tab for a selection (View Selection Source)
  * within the currently selected browser in gBrowser.
  *
  * @param aCSSSelector - used to specify a node within the selection to
  *                       view the source of. It is expected that this node is
  *                       within an existing selection.
- * @returns the new tab / window which shows the source.
+ * @returns the new tab which shows the source.
  */
 async function openViewPartialSource(aCSSSelector) {
   let contentAreaContextMenuPopup =
@@ -125,7 +84,7 @@ async function openViewPartialSource(aCSSSelector) {
           { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
   await popupShownPromise;
 
-  return waitForViewSourceTabOrWindow(async () => {
+  return waitForViewSourceTab(async () => {
     let popupHiddenPromise =
         BrowserTestUtils.waitForEvent(contentAreaContextMenuPopup, "popuphidden");
     let item = document.getElementById("context-viewpartialsource-selection");
@@ -156,7 +115,7 @@ async function openViewFrameSourceTab(aCSSSelector) {
   EventUtils.synthesizeMouseAtCenter(frameContextMenu, {});
   await popupShownPromise;
 
-  return waitForViewSourceTabOrWindow(async () => {
+  return waitForViewSourceTab(async () => {
     let popupHiddenPromise =
         BrowserTestUtils.waitForEvent(frameContextMenu, "popuphidden");
     let item = document.getElementById("context-viewframesource");
@@ -165,21 +124,13 @@ async function openViewFrameSourceTab(aCSSSelector) {
   });
 }
 
-registerCleanupFunction(function() {
-  var windows = Services.wm.getEnumerator(WINDOW_TYPE);
-  ok(!windows.hasMoreElements(), "No remaining view source windows still open");
-  while (windows.hasMoreElements())
-    windows.getNext().close();
-});
-
 /**
- * For a given view source tab / window, wait for the source loading step to
+ * For a given view source tab, wait for the source loading step to
  * complete.
  */
-function waitForSourceLoaded(tabOrWindow) {
+function waitForSourceLoaded(tab) {
   return new Promise(resolve => {
-    let mm = tabOrWindow.messageManager ||
-             tabOrWindow.linkedBrowser.messageManager;
+    let mm = tab.linkedBrowser.messageManager;
     mm.addMessageListener("ViewSource:SourceLoaded", function sourceLoaded() {
       mm.removeMessageListener("ViewSource:SourceLoaded", sourceLoaded);
       setTimeout(resolve, 0);
@@ -194,7 +145,7 @@ function waitForSourceLoaded(tabOrWindow) {
  * @param aURI - url to load
  * @param aCSSSelector - used to specify a node to select. All of this node's
  *                       children will be selected.
- * @returns the new tab / window which shows the source.
+ * @returns the new tab which shows the source.
  */
 async function openDocumentSelect(aURI, aCSSSelector) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, aURI);
@@ -208,6 +159,22 @@ async function openDocumentSelect(aURI, aCSSSelector) {
   });
 
   return openViewPartialSource(aCSSSelector);
+}
+
+/**
+ * Open a new document in a new tab and view the source of whole page.
+ * The document is not closed afterwards.
+ *
+ * @param aURI - url to load
+ * @returns the new tab which shows the source.
+ */
+async function openDocument(aURI) {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, aURI);
+  registerCleanupFunction(function() {
+    gBrowser.removeTab(tab);
+  });
+
+  return openViewSource();
 }
 
 function pushPrefs(...aPrefs) {

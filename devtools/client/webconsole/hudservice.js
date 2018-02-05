@@ -397,17 +397,7 @@ WebConsole.prototype = {
    *        The line number which should be highlighted.
    */
   viewSource(sourceURL, sourceLine) {
-    // Attempt to access view source via a browser first, which may display it in
-    // a tab, if enabled.
-    let browserWin = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
-    if (browserWin && browserWin.BrowserViewSourceOfDocument) {
-      return browserWin.BrowserViewSourceOfDocument({
-        URL: sourceURL,
-        lineNumber: sourceLine
-      });
-    }
-    return this.gViewSourceUtils.viewSource(
-      sourceURL, null, this.iframeWindow.document, sourceLine || 0);
+    this.gViewSourceUtils.viewSource({ URL: sourceURL, lineNumber: sourceLine || 0 });
   },
 
   /**
