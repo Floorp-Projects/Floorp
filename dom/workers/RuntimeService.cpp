@@ -1751,7 +1751,7 @@ RuntimeService::Init()
   rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  rv = obs->AddObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mObserved = true;
@@ -2133,7 +2133,7 @@ RuntimeService::Cleanup()
         NS_WARNING("Failed to unregister for offline notification event!");
       }
       obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID);
-      obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+      obs->RemoveObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
       mObserved = false;
     }
   }
@@ -2610,7 +2610,7 @@ RuntimeService::Observe(nsISupports* aSubject, const char* aTopic,
 {
   AssertIsOnMainThread();
 
-  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+  if (!strcmp(aTopic, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID)) {
     Shutdown();
     return NS_OK;
   }
