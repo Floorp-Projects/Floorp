@@ -228,13 +228,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     let panelView = this.openViews[this.openViews.length - 1];
     return (panelView && panelView.node) || this._mainView;
   }
-  /**
-   * @return {Promise} showSubView() returns a promise, which is kept here for
-   *                   random access.
-   */
-  get currentShowPromise() {
-    return this._currentShowPromise || Promise.resolve();
-  }
 
   constructor(node) {
     super(node);
@@ -273,7 +266,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     // Set CSS-determined attributes now to prevent a layout flush when we do
     // it when transitioning between panels.
     this._dir = cs.direction;
-    this.showMainView();
 
     // Proxy these public properties and methods, as used elsewhere by various
     // parts of the browser, to this instance.
@@ -283,7 +275,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         value: (...args) => this[method](...args)
       });
     });
-    ["current", "currentShowPromise", "showingSubView"].forEach(property => {
+    ["current", "showingSubView"].forEach(property => {
       Object.defineProperty(this.node, property, {
         enumerable: true,
         get: () => this[property]
@@ -407,7 +399,10 @@ this.PanelMultiView = class extends this.AssociatedToNode {
                             " its display turned off by the hidden attribute.");
           }
         }
-        // (The rest of the asynchronous preparation goes here.)
+        // Allow any of the ViewShowing handlers to prevent showing the main view.
+        if (!(await this.showMainView())) {
+          cancelCallback();
+        }
       } catch (ex) {
         cancelCallback();
         throw ex;
@@ -492,7 +487,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
   showMainView() {
     if (!this.node || !this._mainViewId)
-      return Promise.resolve();
+      return Promise.resolve(false);
 
     return this.showSubView(this._mainView);
   }
@@ -524,8 +519,8 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     this.showingSubView = nextPanelView.node.id != this._mainViewId;
   }
 
-  showSubView(aViewId, aAnchor, aPreviousView) {
-    this._currentShowPromise = (async () => {
+  async showSubView(aViewId, aAnchor, aPreviousView) {
+    try {
       // Support passing in the node directly.
       let viewNode = typeof aViewId == "string" ? this.node.querySelector("#" + aViewId) : aViewId;
       if (!viewNode) {
@@ -596,7 +591,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
         if (cancel) {
           this._viewShowing = null;
-          return;
+          return false;
         }
       }
 
@@ -609,8 +604,12 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       } else {
         this.hideAllViewsExcept(nextPanelView);
       }
-    })().catch(e => Cu.reportError(e));
-    return this._currentShowPromise;
+
+      return true;
+    } catch (ex) {
+      Cu.reportError(ex);
+      return false;
+    }
   }
 
   /**
@@ -933,10 +932,14 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       case "popuphidden": {
         // WebExtensions consumers can hide the popup from viewshowing, or
         // mid-transition, which disrupts our state:
+        if (this._viewShowing) {
+          PanelView.forNode(this._viewShowing).dispatchCustomEvent("ViewHiding");
+        }
         this._viewShowing = null;
         this._transitioning = false;
         this.node.removeAttribute("panelopen");
-        this.showMainView();
+        // Raise the ViewHiding event for the current view.
+        this.hideAllViewsExcept(null);
         this.window.removeEventListener("keydown", this);
         this._panel.removeEventListener("mousemove", this);
         this.openViews.forEach(panelView => panelView.clearNavigation());
