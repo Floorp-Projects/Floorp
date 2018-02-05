@@ -71,6 +71,20 @@ class ProcTestKill(proctest.ProcTest):
 
         self.determine_status(p, expectedfail=('returncode',))
 
+    def test_process_kill_broad_delayed(self):
+        """Process is started, we use a broad process tree, we let it spawn
+           for a bit, we kill it"""
+
+        p = processhandler.ProcessHandler([self.python, self.proclaunch,
+                                           "process_normal_broad_python.ini"],
+                                          cwd=here)
+        p.run()
+        # Let the tree spawn a bit, before attempting to kill
+        time.sleep(3)
+        p.kill()
+
+        self.determine_status(p, expectedfail=('returncode',))
+
     @unittest.skipUnless(processhandler.isPosix, "posix only")
     def test_process_kill_with_sigterm(self):
         script = os.path.join(here, 'infinite_loop.py')
