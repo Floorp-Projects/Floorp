@@ -127,7 +127,6 @@
 #include "MainThreadUtils.h"
 
 #include "nsIConsoleService.h"
-#include "nsIException.h"
 
 #include "nsVariant.h"
 #include "nsIPropertyBag.h"
@@ -160,6 +159,12 @@
 #undef GetClassName
 #endif
 #endif /* XP_WIN */
+
+namespace mozilla {
+namespace dom {
+class Exception;
+} // namespace dom
+} // namespace mozilla
 
 /***************************************************************************/
 // default initial sizes for maps (hashtables)
@@ -1846,7 +1851,7 @@ private:
                                       mozilla::dom::AutoEntryScript& aes,
                                       const char * aPropertyName,
                                       const char * anInterfaceName,
-                                      nsIException* aSyntheticException = nullptr);
+                                      mozilla::dom::Exception* aSyntheticException = nullptr);
     virtual ~nsXPCWrappedJSClass();
 
     nsXPCWrappedJSClass() = delete;
@@ -2135,13 +2140,13 @@ public:
     static nsresult JSValToXPCException(JS::MutableHandleValue s,
                                         const char* ifaceName,
                                         const char* methodName,
-                                        nsIException** exception);
+                                        mozilla::dom::Exception** exception);
 
     static nsresult ConstructException(nsresult rv, const char* message,
                                        const char* ifaceName,
                                        const char* methodName,
                                        nsISupports* data,
-                                       nsIException** exception,
+                                       mozilla::dom::Exception** exception,
                                        JSContext* cx,
                                        JS::Value* jsExceptionPtr);
 

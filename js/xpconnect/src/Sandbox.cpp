@@ -14,6 +14,7 @@
 #include "js/StructuredClone.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
+#include "nsIException.h" // for nsIStackFrame
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
