@@ -523,10 +523,6 @@ private:
 
   void SetLastPrefs(const MediaEnginePrefs& aPrefs);
 
-  // These allocate/configure and release the channel
-  bool AllocChannel();
-  void FreeChannel();
-
   bool HasEnabledTrack() const;
 
   template<typename T>
@@ -552,7 +548,7 @@ private:
   // Owning thread only.
   RefPtr<WebRTCAudioDataListener> mListener;
 
-  // Note: shared across all microphone sources
+  // Note: shared across all microphone sources. Owning thread only.
   static int sChannelsOpen;
 
   const RefPtr<mozilla::AudioInput> mAudioInput;
