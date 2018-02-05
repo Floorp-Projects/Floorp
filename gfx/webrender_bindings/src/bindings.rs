@@ -178,7 +178,7 @@ pub struct ByteSlice {
 impl ByteSlice {
     pub fn new(slice: &[u8]) -> ByteSlice {
         ByteSlice {
-            buffer: &slice[0],
+            buffer: slice.as_ptr(),
             len: slice.len(),
         }
     }
@@ -198,7 +198,7 @@ impl MutByteSlice {
     pub fn new(slice: &mut [u8]) -> MutByteSlice {
         let len = slice.len();
         MutByteSlice {
-            buffer: &mut slice[0],
+            buffer: slice.as_mut_ptr(),
             len: len,
         }
     }
