@@ -55,21 +55,12 @@ function addDirToZip(writer, dir, basePath) {
   }
 }
 
-/**
- * Convert an XPConnect result code to its name and message.
- * We have to extract them from an exception per bug 637307 comment 5.
- */
 function getResultText(code) {
-  let regexp =
-    /^\[Exception... "(.*)"  nsresult: "0x[0-9a-fA-F]* \((.*)\)"  location: ".*"  data: .*\]$/; // eslint-disable-line
-  let ex = Cc["@mozilla.org/js/xpc/Exception;1"]
-           .createInstance(Ci.nsIXPCException);
-  ex.initialize(null, code, null, null, null, null);
-  let [, message, name] = regexp.exec(ex.toString());
-  return {
-    name,
-    message
-  };
+  /*
+   * If it ever becomes necessary to convert the nsresult to a useful
+   * string here, we'll need an API for that.
+   */
+  return { name: "Error code", message: code + "" };
 }
 
 function zipDirectory(zipFile, dirToArchive) {
