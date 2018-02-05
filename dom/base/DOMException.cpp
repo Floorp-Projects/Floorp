@@ -257,16 +257,6 @@ Exception::GetFilename(JSContext* aCx, nsAString& aFilename)
 }
 
 NS_IMETHODIMP
-Exception::GetData(nsISupports** aData)
-{
-  NS_ENSURE_ARG_POINTER(aData);
-
-  nsCOMPtr<nsISupports> data = mData;
-  data.forget(aData);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 Exception::ToString(JSContext* aCx, nsACString& _retval)
 {
   static const char defaultMsg[] = "<no message>";
@@ -345,11 +335,10 @@ Exception::GetLocation() const
   return location.forget();
 }
 
-already_AddRefed<nsISupports>
+nsISupports*
 Exception::GetData() const
 {
-  nsCOMPtr<nsISupports> data = mData;
-  return data.forget();
+  return mData;
 }
 
 void
