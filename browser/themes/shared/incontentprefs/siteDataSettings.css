@@ -25,6 +25,7 @@
  */
 #SiteDataRemoveSelectedDialog {
   padding: 16px;
+  min-height: 36em;
 }
 
 #contentContainer {

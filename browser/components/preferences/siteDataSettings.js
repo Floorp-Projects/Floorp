@@ -218,70 +218,23 @@ let gSiteDataSettings = {
     this._updateButtonsState();
   },
 
-  _getBaseDomainFromHost(host) {
-    let result = host;
-    try {
-      result = Services.eTLD.getBaseDomainFromHost(host);
-    } catch (e) {
-      if (e.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS ||
-          e.result == Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
-        // For this 2 expected errors, just take the host as the result.
-        // - NS_ERROR_HOST_IS_IP_ADDRESS: the host is in ipv4/ipv6.
-        // - NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS: not enough domain part to extract.
-        result = host;
-      } else {
-        throw e;
-      }
-    }
-    return result;
-  },
-
   saveChanges() {
-    let allowed = true;
+    // Tracks whether the user confirmed their decision.
+    let allowed = false;
 
-    // Confirm user really wants to remove site data starts
-    let removals = new Set();
-    this._sites = this._sites.filter(site => {
-      if (site.userAction === "remove") {
-        removals.add(site.host);
-        return false;
-      }
-      return true;
-    });
+    let removals = this._sites
+      .filter(site => site.userAction == "remove")
+      .map(site => site.host);
 
-    if (removals.size > 0) {
-      if (this._sites.length == 0) {
-        if (SiteDataManager.promptSiteDataRemoval(window)) {
+    if (removals.length > 0) {
+      if (this._sites.length == removals.length) {
+        allowed = SiteDataManager.promptSiteDataRemoval(window);
+        if (allowed) {
           SiteDataManager.removeAll();
         }
       } else {
-        // User only removes partial sites.
-        // We will remove cookies based on base domain, say, user selects "news.foo.com" to remove.
-        // The cookies under "music.foo.com" will be removed together.
-        // We have to prompt user about this action.
-        let hostsTable = new Map();
-        // Group removed sites by base domain
-        for (let host of removals) {
-          let baseDomain = this._getBaseDomainFromHost(host);
-          let hosts = hostsTable.get(baseDomain);
-          if (!hosts) {
-            hosts = [];
-            hostsTable.set(baseDomain, hosts);
-          }
-          hosts.push(host);
-        }
-
-        // Pick out sites with the same base domain as removed sites
-        for (let site of this._sites) {
-          let baseDomain = this._getBaseDomainFromHost(site.host);
-          let hosts = hostsTable.get(baseDomain);
-          if (hosts) {
-            hosts.push(site.host);
-          }
-        }
-
         let args = {
-          hostsTable,
+          hosts: removals,
           allowed: false
         };
         let features = "centerscreen,chrome,modal,resizable=no";
@@ -299,9 +252,12 @@ let gSiteDataSettings = {
         }
       }
     }
-    // Confirm user really wants to remove site data ends
 
-    this.close();
+    // If the user cancelled the confirm dialog keep the site data window open,
+    // they can still press cancel again to exit.
+    if (allowed) {
+      this.close();
+    }
   },
 
   close() {
