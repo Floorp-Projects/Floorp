@@ -243,9 +243,6 @@ public:
   // aStack must not be null.
   explicit JSStackFrame(JS::Handle<JSObject*> aStack);
 
-protected:
-  int32_t GetColNo(JSContext* aCx);
-
 private:
   virtual ~JSStackFrame();
 
@@ -460,7 +457,7 @@ JSStackFrame::GetLineNumberXPCOM(JSContext* aCx, int32_t* aLineNumber)
 }
 
 int32_t
-JSStackFrame::GetColNo(JSContext* aCx)
+JSStackFrame::GetColumnNumber(JSContext* aCx)
 {
   if (!mStack) {
     return 0;
@@ -483,10 +480,11 @@ JSStackFrame::GetColNo(JSContext* aCx)
   return col;
 }
 
-NS_IMETHODIMP JSStackFrame::GetColumnNumber(JSContext* aCx,
-                                            int32_t* aColumnNumber)
+NS_IMETHODIMP
+JSStackFrame::GetColumnNumberXPCOM(JSContext* aCx,
+                                   int32_t* aColumnNumber)
 {
-  *aColumnNumber = GetColNo(aCx);
+  *aColumnNumber = GetColumnNumber(aCx);
   return NS_OK;
 }
 
