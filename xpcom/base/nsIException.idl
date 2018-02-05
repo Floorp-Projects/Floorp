@@ -73,23 +73,6 @@ interface nsIException : nsISupports
     // The nsresult associated with this exception.
     readonly attribute nsresult                result;
 
-    // Filename location.  This is the location that caused the
-    // error, which may or may not be a source file location.
-    // For example, standard language errors would generally have
-    // the same location as their top stack entry.  File
-    // parsers may put the location of the file they were parsing,
-    // etc.
-
-    // null indicates "no data"
-    [implicit_jscontext]
-    readonly attribute AString                 filename;
-    // Valid line numbers begin at '1'. '0' indicates unknown.
-    [implicit_jscontext]
-    readonly attribute uint32_t                lineNumber;
-    // Valid column numbers begin at 0.
-    // We don't have an unambiguous indicator for unknown.
-    readonly attribute uint32_t                columnNumber;
-
     // A stack trace, if available.
     readonly attribute nsIStackFrame           location;
 

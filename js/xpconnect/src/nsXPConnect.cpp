@@ -250,8 +250,8 @@ xpc::ErrorReport::Init(JSContext* aCx, mozilla::dom::Exception* aException,
     if (mFileName.IsEmpty()) {
       mFileName.SetIsVoid(true);
     }
-    aException->GetLineNumber(aCx, &mLineNumber);
-    aException->GetColumnNumber(&mColumn);
+    mLineNumber = aException->LineNumber(aCx);
+    mColumn = aException->ColumnNumber();
 
     mFlags = JSREPORT_EXCEPTION;
 }
