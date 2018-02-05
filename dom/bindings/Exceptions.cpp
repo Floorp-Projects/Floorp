@@ -387,11 +387,19 @@ JSStackFrame::GetFilename(JSContext* aCx, nsAString& aFilename)
   }
 }
 
-NS_IMETHODIMP JSStackFrame::GetName(JSContext* aCx, nsAString& aFunction)
+NS_IMETHODIMP
+JSStackFrame::GetNameXPCOM(JSContext* aCx, nsAString& aFunction)
+{
+  GetName(aCx, aFunction);
+  return NS_OK;
+}
+
+void
+JSStackFrame::GetName(JSContext* aCx, nsAString& aFunction)
 {
   if (!mStack) {
     aFunction.Truncate();
-    return NS_OK;
+    return;
   }
 
   JS::Rooted<JSString*> name(aCx);
@@ -402,7 +410,7 @@ NS_IMETHODIMP JSStackFrame::GetName(JSContext* aCx, nsAString& aFunction)
 
   if (useCachedValue) {
     aFunction = mFunname;
-    return NS_OK;
+    return;
   }
 
   if (name) {
@@ -410,7 +418,7 @@ NS_IMETHODIMP JSStackFrame::GetName(JSContext* aCx, nsAString& aFunction)
     if (!str.init(aCx, name)) {
       JS_ClearPendingException(aCx);
       aFunction.Truncate();
-      return NS_OK;
+      return;
     }
     aFunction = str;
   } else {
@@ -421,8 +429,6 @@ NS_IMETHODIMP JSStackFrame::GetName(JSContext* aCx, nsAString& aFunction)
     mFunname = aFunction;
     mFunnameInitialized = true;
   }
-
-  return NS_OK;
 }
 
 int32_t
@@ -665,8 +671,7 @@ NS_IMETHODIMP JSStackFrame::ToString(JSContext* aCx, nsACString& _retval)
   }
 
   nsString funname;
-  nsresult rv = GetName(aCx, funname);
-  NS_ENSURE_SUCCESS(rv, rv);
+  GetName(aCx, funname);
 
   if (funname.IsEmpty()) {
     funname.AssignLiteral("<TOP_LEVEL>");
