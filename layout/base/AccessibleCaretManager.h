@@ -49,7 +49,7 @@ class AccessibleCaretManager
 {
 public:
   explicit AccessibleCaretManager(nsIPresShell* aPresShell);
-  virtual ~AccessibleCaretManager() = default;
+  virtual ~AccessibleCaretManager();
 
   // Called by AccessibleCaretEventHub to inform us that PresShell is destroyed.
   void Terminate();
@@ -199,9 +199,13 @@ protected:
 
   void ClearMaintainedSelection() const;
 
-  // Caller is responsible to use IsTerminated() to check whether PresShell is
-  // still valid.
-  void FlushLayout() const;
+  // This method could kill the shell, so callers to methods that call
+  // FlushLayout should ensure the event hub that owns us is still alive.
+  //
+  // See the mRefCnt assertions in AccessibleCaretEventHub.
+  //
+  // Returns whether mPresShell we're holding is still valid.
+  MOZ_MUST_USE bool FlushLayout();
 
   dom::Element* GetEditingHostForFrame(nsIFrame* aFrame) const;
   dom::Selection* GetSelection() const;
@@ -257,7 +261,7 @@ protected:
 
   // This function will flush layout, so caller must ensure the PresShell is
   // still valid after calling this method.
-  virtual void DispatchCaretStateChangedEvent(dom::CaretChangedReason aReason) const;
+  virtual void DispatchCaretStateChangedEvent(dom::CaretChangedReason aReason);
 
   // ---------------------------------------------------------------------------
   // Member variables
@@ -300,6 +304,9 @@ protected:
 
   // Set to true in OnScrollStart() and set to false in OnScrollEnd().
   bool mIsScrollStarted = false;
+
+  // Whether we're flushing layout, used for sanity-checking.
+  bool mFlushingLayout = false;
 
   static const int32_t kAutoScrollTimerDelay = 30;
 
