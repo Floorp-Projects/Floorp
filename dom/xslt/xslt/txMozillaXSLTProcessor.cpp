@@ -974,23 +974,33 @@ txMozillaXSLTProcessor::SetParameter(const nsAString& aNamespaceURI,
     return mVariables.add(varName, var);
 }
 
-NS_IMETHODIMP
+already_AddRefed<nsIVariant>
 txMozillaXSLTProcessor::GetParameter(const nsAString& aNamespaceURI,
                                      const nsAString& aLocalName,
-                                     nsIVariant **aResult)
+                                     ErrorResult& aRv)
 {
     int32_t nsId = kNameSpaceID_Unknown;
     nsresult rv = nsContentUtils::NameSpaceManager()->
         RegisterNameSpace(aNamespaceURI, nsId);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        aRv.Throw(rv);
+        return nullptr;
+    }
     RefPtr<nsAtom> localName = NS_Atomize(aLocalName);
     txExpandedName varName(nsId, localName);
 
     txVariable* var = static_cast<txVariable*>(mVariables.get(varName));
-    if (var) {
-        return var->getValue(aResult);
+    if (!var) {
+        return nullptr;
     }
-    return NS_OK;
+
+    nsCOMPtr<nsIVariant> result;
+    rv = var->getValue(getter_AddRefs(result));
+    if (NS_FAILED(rv)) {
+        aRv.Throw(rv);
+        return nullptr;
+    }
+    return result.forget();
 }
 
 NS_IMETHODIMP
@@ -1306,16 +1316,6 @@ txMozillaXSLTProcessor::SetParameter(JSContext* aCx,
         return;
     }
     aRv = SetParameter(aNamespaceURI, aLocalName, val);
-}
-
-nsIVariant*
-txMozillaXSLTProcessor::GetParameter(const nsAString& aNamespaceURI,
-                                     const nsAString& aLocalName,
-                                     mozilla::ErrorResult& aRv)
-{
-    nsCOMPtr<nsIVariant> val;
-    aRv = GetParameter(aNamespaceURI, aLocalName, getter_AddRefs(val));
-    return val;
 }
 
 /* static*/
