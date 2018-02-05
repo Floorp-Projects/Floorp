@@ -1153,7 +1153,7 @@ Console::Count(const GlobalObject& aGlobal, const nsAString& aLabel)
 
 namespace {
 
-nsresult
+void
 StackFrameToStackEntry(JSContext* aCx, nsIStackFrame* aStackFrame,
                        ConsoleStackEntry& aStackEntry)
 {
@@ -1165,16 +1165,13 @@ StackFrameToStackEntry(JSContext* aCx, nsIStackFrame* aStackFrame,
 
   aStackEntry.mColumnNumber = aStackFrame->GetColumnNumber(aCx);
 
-  nsresult rv = aStackFrame->GetName(aCx, aStackEntry.mFunctionName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aStackFrame->GetName(aCx, aStackEntry.mFunctionName);
 
   nsString cause;
   aStackFrame->GetAsyncCause(aCx, cause);
   if (!cause.IsEmpty()) {
     aStackEntry.mAsyncCause.Construct(cause);
   }
-
-  return NS_OK;
 }
 
 nsresult
@@ -1185,11 +1182,10 @@ ReifyStack(JSContext* aCx, nsIStackFrame* aStack,
 
   while (stack) {
     ConsoleStackEntry& data = *aRefiedStack.AppendElement();
-    nsresult rv = StackFrameToStackEntry(aCx, stack, data);
-    NS_ENSURE_SUCCESS(rv, rv);
+    StackFrameToStackEntry(aCx, stack, data);
 
     nsCOMPtr<nsIStackFrame> caller;
-    rv = stack->GetCaller(aCx, getter_AddRefs(caller));
+    nsresult rv = stack->GetCaller(aCx, getter_AddRefs(caller));
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!caller) {
@@ -1292,11 +1288,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
 
   if (stack) {
     callData->mTopStackFrame.emplace();
-    nsresult rv = StackFrameToStackEntry(aCx, stack,
-                                         *callData->mTopStackFrame);
-    if (NS_FAILED(rv)) {
-      return;
-    }
+    StackFrameToStackEntry(aCx, stack, *callData->mTopStackFrame);
   }
 
   if (NS_IsMainThread()) {
@@ -2693,14 +2685,13 @@ Console::MaybeExecuteDumpFunctionForTrace(JSContext* aCx, nsIStackFrame* aStack)
     message.AppendLiteral(" ");
 
     nsAutoString functionName;
-    nsresult rv = stack->GetName(aCx, functionName);
-    NS_ENSURE_SUCCESS_VOID(rv);
+    stack->GetName(aCx, functionName);
 
     message.Append(filename);
     message.AppendLiteral("\n");
 
     nsCOMPtr<nsIStackFrame> caller;
-    rv = stack->GetCaller(aCx, getter_AddRefs(caller));
+    nsresult rv = stack->GetCaller(aCx, getter_AddRefs(caller));
     NS_ENSURE_SUCCESS_VOID(rv);
 
     if (!caller) {

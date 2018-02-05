@@ -15,7 +15,7 @@ interface nsIStackFrame : nsISupports
 {
     [implicit_jscontext, binaryname(FilenameXPCOM)]
     readonly attribute AString                 filename;
-    [implicit_jscontext]
+    [implicit_jscontext, binaryname(NameXPCOM)]
     readonly attribute AString                 name;
     // Valid line numbers begin at '1'. '0' indicates unknown.
     [implicit_jscontext, binaryname(LineNumberXPCOM)]
@@ -46,6 +46,8 @@ interface nsIStackFrame : nsISupports
     // Infallible things to be called from C++.
     [notxpcom, nostdcall]
     void getFilename(in JSContext aCx, out AString aFilename);
+    [notxpcom, nostdcall]
+    void getName(in JSContext aCx, out AString aName);
     [notxpcom, nostdcall]
     int32_t getLineNumber(in JSContext aCx);
     [notxpcom, nostdcall]
