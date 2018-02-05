@@ -836,7 +836,7 @@ SyncEngine.prototype = {
     if (Array.isArray(json)) {
       // Pre-`JSONFile` storage stored an array, but `JSONFile` defaults to
       // an object, so we wrap the array for consistency.
-      return { ids: json };
+      json = { ids: json };
     }
     if (!json.ids) {
       json.ids = [];
