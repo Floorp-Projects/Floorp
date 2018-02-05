@@ -110,11 +110,9 @@ public:
    */
   void AddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const;
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   void Check() {
     mPool.Check();
   }
-#endif
 
 private:
   void* Allocate(uint32_t aCode, size_t aSize);
