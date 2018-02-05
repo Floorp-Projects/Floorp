@@ -354,11 +354,18 @@ GetValueIfNotCached(JSContext* aCx, const JS::Heap<JSObject*>& aStack,
   aPropGetter(aCx, stack, aValue, JS::SavedFrameSelfHosted::Exclude);
 }
 
-NS_IMETHODIMP JSStackFrame::GetFilename(JSContext* aCx, nsAString& aFilename)
+NS_IMETHODIMP JSStackFrame::GetFilenameXPCOM(JSContext* aCx, nsAString& aFilename)
+{
+  GetFilename(aCx, aFilename);
+  return NS_OK;
+}
+
+void
+JSStackFrame::GetFilename(JSContext* aCx, nsAString& aFilename)
 {
   if (!mStack) {
     aFilename.Truncate();
-    return NS_OK;
+    return;
   }
 
   JS::Rooted<JSString*> filename(aCx);
@@ -368,14 +375,14 @@ NS_IMETHODIMP JSStackFrame::GetFilename(JSContext* aCx, nsAString& aFilename)
                       &canCache, &useCachedValue, &filename);
   if (useCachedValue) {
     aFilename = mFilename;
-    return NS_OK;
+    return;
   }
 
   nsAutoJSString str;
   if (!str.init(aCx, filename)) {
     JS_ClearPendingException(aCx);
     aFilename.Truncate();
-    return NS_OK;
+    return;
   }
   aFilename = str;
 
@@ -383,8 +390,6 @@ NS_IMETHODIMP JSStackFrame::GetFilename(JSContext* aCx, nsAString& aFilename)
     mFilename = str;
     mFilenameInitialized = true;
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP JSStackFrame::GetName(JSContext* aCx, nsAString& aFunction)
@@ -649,15 +654,14 @@ NS_IMETHODIMP JSStackFrame::ToString(JSContext* aCx, nsACString& _retval)
   _retval.Truncate();
 
   nsString filename;
-  nsresult rv = GetFilename(aCx, filename);
-  NS_ENSURE_SUCCESS(rv, rv);
+  GetFilename(aCx, filename);
 
   if (filename.IsEmpty()) {
     filename.AssignLiteral("<unknown filename>");
   }
 
   nsString funname;
-  rv = GetName(aCx, funname);
+  nsresult rv = GetName(aCx, funname);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (funname.IsEmpty()) {
