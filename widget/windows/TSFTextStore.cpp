@@ -1175,9 +1175,11 @@ private:
 
   bool IsATOKActiveInternal() const
   {
-    // FYI: Name of ATOK includes the release year like "ATOK 2015".
+    // FYI: Name of packaged ATOK includes the release year like "ATOK 2015".
+    //      Name of ATOK Passport (subscription) equals "ATOK".
     return StringBeginsWith(mActiveTIPKeyboardDescription,
-                            NS_LITERAL_STRING("ATOK "));
+                            NS_LITERAL_STRING("ATOK ")) ||
+           mActiveTIPKeyboardDescription.EqualsLiteral("ATOK");
   }
 
   bool IsATOK2011ActiveInternal() const
@@ -1242,6 +1244,11 @@ private:
 
   // * ATOK 2017
   //   - {6DBFD8F5-701D-11E6-920F-782BCBA6348F}
+  // * ATOK Passport (confirmed with version 31.1.2)
+  //   - {A38F2FD9-7199-45E1-841C-BE0313D8052F}
+
+  // * Japanist 10
+  //   - {E6D66705-1EDA-4373-8D01-1D0CB2D054C7}
 
   /****************************************************************************
    * Traditional Chinese TIP
