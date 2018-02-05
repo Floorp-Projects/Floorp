@@ -878,11 +878,11 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                        AutoEntryScript& aes,
                                        const char * aPropertyName,
                                        const char * anInterfaceName,
-                                       nsIException* aSyntheticException)
+                                       Exception* aSyntheticException)
 {
     JSContext * cx = ccx.GetJSContext();
     MOZ_ASSERT(cx == aes.cx());
-    nsCOMPtr<nsIException> xpc_exception = aSyntheticException;
+    RefPtr<Exception> xpc_exception = aSyntheticException;
     /* this one would be set by our error reporter */
 
     XPCJSContext* xpccx = ccx.GetContext();
@@ -1305,7 +1305,7 @@ pre_call_clean_up:
 
     MOZ_ASSERT(!aes.HasException());
 
-    nsCOMPtr<nsIException> syntheticException;
+    RefPtr<Exception> syntheticException;
     RootedValue rval(cx);
     if (XPT_MD_IS_GETTER(info->flags)) {
         success = JS_GetProperty(cx, obj, name, &rval);
