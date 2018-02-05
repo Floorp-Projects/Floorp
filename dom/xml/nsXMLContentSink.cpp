@@ -328,9 +328,9 @@ nsXMLContentSink::DidBuildModel(bool aTerminated)
     mIsDocumentObserver = false;
 
     mDocument->EndLoad();
-  }
 
-  DropParserAndPerfHint();
+    DropParserAndPerfHint();
+  }
 
   return NS_OK;
 }
@@ -372,6 +372,13 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
   }
 
   nsCOMPtr<nsIDocument> originalDocument = mDocument;
+  bool blockingOnload = mIsBlockingOnload;
+  if (!mRunsToCompletion) {
+    // This BlockOnload call corresponds to the UnblockOnload call in
+    // nsContentSink::DropParserAndPerfHint.
+    aResultDocument->BlockOnload();
+    mIsBlockingOnload = true;
+  }
   // Transform succeeded, or it failed and we have an error document to display.
   mDocument = aResultDocument;
   nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
@@ -398,6 +405,13 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
   ScrollToRef();
 
   originalDocument->EndLoad();
+  if (blockingOnload) {
+    // This UnblockOnload call corresponds to the BlockOnload call in
+    // nsContentSink::WillBuildModelImpl.
+    originalDocument->UnblockOnload(true);
+  }
+
+  DropParserAndPerfHint();
 
   return NS_OK;
 }
