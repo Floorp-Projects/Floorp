@@ -143,6 +143,7 @@ function evaluateTestScript(script, toolbox) {
   let sandbox = Cu.Sandbox(window);
   sandbox.window = window;
   sandbox.toolbox = toolbox;
+  sandbox.ChromeUtils = ChromeUtils;
   Cu.evalInSandbox(script, sandbox);
 }
 

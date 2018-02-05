@@ -399,9 +399,7 @@ DevToolsUtils.defineLazyGetter(this, "AppConstants", () => {
   if (isWorker) {
     return {};
   }
-  const scope = {};
-  Cu.import("resource://gre/modules/AppConstants.jsm", scope);
-  return scope.AppConstants;
+  return require("resource://gre/modules/AppConstants.jsm").AppConstants;
 });
 
 /**
