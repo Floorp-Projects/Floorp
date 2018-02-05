@@ -33,7 +33,6 @@ namespace mozilla {
 namespace dom {
 
 using namespace mozilla::dom::indexedDB;
-using namespace mozilla::dom::workers;
 using namespace mozilla::ipc;
 
 class IDBTransaction::WorkerHolder final : public mozilla::dom::WorkerHolder

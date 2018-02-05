@@ -61,8 +61,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 struct NotificationStrings
 {
   const nsString mID;

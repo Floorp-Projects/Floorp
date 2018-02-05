@@ -370,7 +370,7 @@ protected:
 
   void GetAlertName(nsAString& aRetval)
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     if (mAlertName.IsEmpty()) {
       SetAlertName();
     }

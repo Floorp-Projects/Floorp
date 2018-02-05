@@ -20,8 +20,6 @@ static NS_DEFINE_CID(kStreamTransportServiceCID,
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 namespace {
 
 class FetchStreamWorkerHolder final : public WorkerHolder

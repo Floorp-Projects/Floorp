@@ -406,7 +406,7 @@ public:
   nsIScriptContext*
   GetScriptContext() const
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     return mLoadInfo.mScriptContext;
   }
 
@@ -455,7 +455,7 @@ public:
   nsIURI*
   GetBaseURI() const
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     return mLoadInfo.mBaseURI;
   }
 
@@ -465,7 +465,7 @@ public:
   nsIURI*
   GetResolvedScriptURI() const
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     return mLoadInfo.mResolvedScriptURI;
   }
 
@@ -473,7 +473,7 @@ public:
   ServiceWorkerCacheName() const
   {
     MOZ_DIAGNOSTIC_ASSERT(IsServiceWorker());
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     return mLoadInfo.mServiceWorkerCacheName;
   }
 
@@ -508,7 +508,7 @@ public:
   void
   SetChannelInfo(const ChannelInfo& aChannelInfo)
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     MOZ_ASSERT(!mLoadInfo.mChannelInfo.IsInitialized());
     MOZ_ASSERT(aChannelInfo.IsInitialized());
     mLoadInfo.mChannelInfo = aChannelInfo;
@@ -569,14 +569,14 @@ public:
   nsIPrincipal*
   GetPrincipal() const
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     return mLoadInfo.mPrincipal;
   }
 
   nsIPrincipal*
   GetLoadingPrincipal() const
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     return mLoadInfo.mLoadingPrincipal;
   }
 
@@ -588,7 +588,7 @@ public:
   nsILoadGroup*
   GetLoadGroup() const
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     return mLoadInfo.mLoadGroup;
   }
 
@@ -630,7 +630,7 @@ public:
   already_AddRefed<nsIChannel>
   ForgetWorkerChannel()
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     return mLoadInfo.mChannel.forget();
   }
 
@@ -639,14 +639,14 @@ public:
   nsPIDOMWindowInner*
   GetWindow()
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     return mLoadInfo.mWindow;
   }
 
   nsIContentSecurityPolicy*
   GetCSP() const
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     return mLoadInfo.mCSP;
   }
 
@@ -1007,7 +1007,7 @@ public:
   bool
   IsDebuggerRegistered()
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
 
     // No need to lock here since this is only ever modified by the same thread.
     return mDebuggerRegistered;
@@ -1016,7 +1016,7 @@ public:
   void
   SetIsDebuggerRegistered(bool aDebuggerRegistered)
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
 
     MutexAutoLock lock(mMutex);
 
@@ -1043,7 +1043,7 @@ public:
   WorkerDebugger*
   Debugger() const
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
 
     MOZ_ASSERT(mDebugger);
     return mDebugger;
@@ -1052,7 +1052,7 @@ public:
   void
   SetDebugger(WorkerDebugger* aDebugger)
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
 
     MOZ_ASSERT(mDebugger != aDebugger);
     mDebugger = aDebugger;

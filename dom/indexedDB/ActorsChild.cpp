@@ -72,8 +72,6 @@ using ipc::PrincipalInfo;
 
 namespace dom {
 
-using namespace workers;
-
 namespace indexedDB {
 
 /*******************************************************************************

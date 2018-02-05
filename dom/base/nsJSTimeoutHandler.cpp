@@ -23,7 +23,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::dom::workers;
 
 // Our JS nsIScriptTimeoutHandler implementation.
 class nsJSScriptTimeoutHandler final : public nsIScriptTimeoutHandler
