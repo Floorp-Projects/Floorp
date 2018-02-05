@@ -1288,6 +1288,17 @@ public:
   }
 
   /**
+   * Create a similar DrawTarget whose requested size may be clipped based
+   * on this DrawTarget's rect transformed to the new target's space.
+   */
+  virtual RefPtr<DrawTarget> CreateClippedDrawTarget(const IntSize& aMaxSize,
+                                                     const Matrix& aTransform,
+                                                     SurfaceFormat aFormat) const
+  {
+    return CreateSimilarDrawTarget(aMaxSize, aFormat);
+  }
+
+  /**
    * Create a similar draw target, but if the draw target is not backed by a
    * raster backend (for example, it is capturing or recording), force it to
    * create a raster target instead. This is intended for code that wants to
