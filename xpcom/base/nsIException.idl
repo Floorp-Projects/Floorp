@@ -65,10 +65,11 @@ interface nsIStackFrame : nsISupports
     void toStringInfallible(in JSContext aCx, out AUTF8String aString);
 };
 
+// This interface only exists because of all the JS consumers doing
+// "instanceof Ci.nsIException".  We should switch them to something else and
+// get rid of it; bug 1435856 tracks that.  C++ code should NOT use this; use
+// mozilla::dom::Exception instead.
 [scriptable, builtinclass, uuid(4371b5bf-6845-487f-8d9d-3f1e4a9badd2)]
 interface nsIException : nsISupports
 {
-    // A generic formatter - make it suitable to print, etc.
-    [implicit_jscontext]
-    AUTF8String toString();
 };
