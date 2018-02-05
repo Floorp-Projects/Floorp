@@ -600,7 +600,10 @@ MediaEngineWebRTCMicrophoneSource::Deallocate(const RefPtr<const AllocationHandl
   MOZ_ASSERT(i != mAllocations.NoIndex);
   MOZ_ASSERT(!mAllocations[i].mEnabled,
              "Source should be stopped for the track before removing");
-  mAllocations[i].mStream->EndTrack(mAllocations[i].mTrackID);
+  if (mAllocations[i].mStream && IsTrackIDExplicit(mAllocations[i].mTrackID)) {
+    mAllocations[i].mStream->EndTrack(mAllocations[i].mTrackID);
+  }
+
   {
     MutexAutoLock lock(mMutex);
     mAllocations.RemoveElementAt(i);
