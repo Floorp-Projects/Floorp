@@ -46,7 +46,7 @@ interface XSLTProcessor {
 
     /**
      * Sets a parameter to be used in subsequent transformations with this
-     * nsIXSLTProcessor. If the parameter doesn't exist in the stylesheet the
+     * XSLTProcessor. If the parameter doesn't exist in the stylesheet the
      * parameter will be ignored.
      *
      * @param namespaceURI The namespaceURI of the XSLT parameter
@@ -81,14 +81,14 @@ interface XSLTProcessor {
                          DOMString localName);
 
     /**
-     * Removes all set parameters from this nsIXSLTProcessor. This will make
+     * Removes all set parameters from this XSLTProcessor. This will make
      * the processor use the default-value for all parameters as specified in
      * the stylesheet.
      */
     void clearParameters();
 
     /**
-     * Remove all parameters and stylesheets from this nsIXSLTProcessor.
+     * Remove all parameters and stylesheets from this XSLTProcessor.
      */
     void reset();
 
