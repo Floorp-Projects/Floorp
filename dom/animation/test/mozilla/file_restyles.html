@@ -668,9 +668,9 @@ waitForAllPaints(() => {
 
     var markers = await observeStyling(5);
 
-    todo_is(markers.length, 0,
-            'Bug 1237454: Animations running on the compositor in ' +
-            'visibility hidden element should never cause restyles');
+    is(markers.length, 0,
+       'Animations running on the compositor in visibility hidden element ' +
+       'should never cause restyles');
     await ensureElementRemoval(div);
   });
 
@@ -728,6 +728,33 @@ waitForAllPaints(() => {
   });
 
   add_task(
+    async function restyling_animations_on_visibility_changed_element_having_child() {
+      var div = addDiv(null,
+       { style: 'animation: background-color 100s;' });
+      var childElement = addDiv(null);
+      div.appendChild(childElement);
+
+      var animation = div.getAnimations()[0];
+
+      await animation.ready;
+
+      // We don't check the animation causes restyles here since we already
+      // check it in the first test case.
+
+      div.style.visibility = 'hidden';
+      await waitForNextFrame();
+
+      var markers = await observeStyling(5);
+      todo_is(markers.length, 0,
+              'Animations running on visibility hidden element which ' +
+              'has a child whose visiblity is inherited from the element and ' +
+              'the element was initially visible');
+
+      await ensureElementRemoval(div);
+    }
+  );
+
+  add_task(
     async function restyling_animations_on_visibility_hidden_element_which_gets_visible() {
       var div = addDiv(null,
        { style: 'animation: background-color 100s; visibility: hidden' });
@@ -737,9 +764,9 @@ waitForAllPaints(() => {
       await animation.ready;
       var markers = await observeStyling(5);
 
-      todo_is(markers.length, 0,
-              'Animations running on visibility hidden element should never ' +
-              'cause restyles');
+      is(markers.length, 0,
+         'Animations running on visibility hidden element should never ' +
+         'cause restyles');
 
       div.style.visibility = 'visible';
       await waitForNextFrame();
@@ -763,9 +790,9 @@ waitForAllPaints(() => {
     await animation.ready;
     var markers = await observeStyling(5);
 
-    todo_is(markers.length, 0,
-            'Animations running in visibility hidden parent should never cause ' +
-            'restyles');
+    is(markers.length, 0,
+       'Animations running in visibility hidden parent should never cause ' +
+       'restyles');
 
     parentDiv.style.visibility = 'visible';
     await waitForNextFrame();
@@ -779,9 +806,9 @@ waitForAllPaints(() => {
     await waitForNextFrame();
 
     var markers = await observeStyling(5);
-    todo_is(markers.length, 0,
-            'Animations that the parent element became visible should throttle ' +
-            'restyling again');
+    is(markers.length, 0,
+       'Animations that the parent element became visible should throttle ' +
+       'restyling again');
 
     await ensureElementRemoval(parentDiv);
   });
@@ -795,9 +822,9 @@ waitForAllPaints(() => {
       await animation.ready;
       var markers = await observeStyling(5);
 
-      todo_is(markers.length, 0,
-              'Animations on visibility hidden element having no visible children ' +
-              'should never cause restyles');
+      is(markers.length, 0,
+         'Animations on visibility hidden element having no visible children ' +
+         'should never cause restyles');
 
       var childElement = addDiv(null, { style: 'visibility: visible' });
       div.appendChild(childElement);
@@ -837,6 +864,33 @@ waitForAllPaints(() => {
   );
 
   add_task(
+    async function restyling_animations_on_visiblity_hidden_element_having_oof_child() {
+      var div = addDiv(null,
+        { style: 'animation: background-color 100s; position: absolute' });
+      var childElement = addDiv(null,
+        { style: 'float: left; visibility: hidden' });
+      div.appendChild(childElement);
+
+      var animation = div.getAnimations()[0];
+
+      await animation.ready;
+
+      // We don't check the animation causes restyles here since we already
+      // check it in the first test case.
+
+      div.style.visibility = 'hidden';
+      await waitForNextFrame();
+
+      var markers = await observeStyling(5);
+      is(markers.length, 0,
+         'Animations running on visibility hidden element which has an ' +
+         'out-of-flow child should throttle restyling');
+
+      await ensureElementRemoval(div);
+    }
+  );
+
+  add_task(
     async function restyling_animations_on_visibility_hidden_element_having_grandchild() {
       // element tree:
       //
@@ -868,9 +922,9 @@ waitForAllPaints(() => {
 
       await animation.ready;
       var markers = await observeStyling(5);
-      todo_is(markers.length, 0,
-              'Animations on visibility hidden element having no visible ' +
-              'descendants should never cause restyles');
+      is(markers.length, 0,
+         'Animations on visibility hidden element having no visible ' +
+         'descendants should never cause restyles');
 
       childA.style.visibility = 'visible';
       grandchildAA.style.visibility = 'visible';
