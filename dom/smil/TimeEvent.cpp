@@ -38,19 +38,7 @@ TimeEvent::TimeEvent(EventTarget* aOwner,
 NS_IMPL_CYCLE_COLLECTION_INHERITED(TimeEvent, Event,
                                    mView)
 
-NS_IMPL_ADDREF_INHERITED(TimeEvent, Event)
-NS_IMPL_RELEASE_INHERITED(TimeEvent, Event)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TimeEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMTimeEvent)
-NS_INTERFACE_MAP_END_INHERITING(Event)
-
-NS_IMETHODIMP
-TimeEvent::GetDetail(int32_t* aDetail)
-{
-  *aDetail = mDetail;
-  return NS_OK;
-}
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(TimeEvent, Event)
 
 void
 TimeEvent::InitTimeEvent(const nsAString& aType, nsGlobalWindowInner* aView,
