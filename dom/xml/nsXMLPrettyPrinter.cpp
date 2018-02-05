@@ -8,7 +8,6 @@
 #include "nsICSSDeclaration.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsIObserver.h"
-#include "nsIXSLTProcessor.h"
 #include "nsSyncLoadService.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
