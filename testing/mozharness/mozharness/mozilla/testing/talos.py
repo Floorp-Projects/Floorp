@@ -257,6 +257,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             return self.abs_dirs
         abs_dirs = super(Talos, self).query_abs_dirs()
         abs_dirs['abs_blob_upload_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'blobber_upload_dir')
+        abs_dirs['abs_test_install_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tests')
         self.abs_dirs = abs_dirs
         return self.abs_dirs
 
@@ -378,7 +379,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
     def populate_webroot(self):
         """Populate the production test slaves' webroots"""
         self.talos_path = os.path.join(
-            self.query_abs_dirs()['abs_work_dir'], 'tests', 'talos'
+            self.query_abs_dirs()['abs_test_install_dir'], 'talos'
         )
 
         # need to determine if talos pageset is required to be downloaded
@@ -577,8 +578,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
         # install mozbase first, so we use in-tree versions
         if not self.run_local:
             mozbase_requirements = os.path.join(
-                self.query_abs_dirs()['abs_work_dir'],
-                'tests',
+                self.query_abs_dirs()['abs_test_install_dir'],
                 'config',
                 'mozbase_requirements.txt'
             )
