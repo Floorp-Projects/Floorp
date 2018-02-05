@@ -143,8 +143,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Exception)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(Exception)
   NS_INTERFACE_MAP_ENTRY(nsIException)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCException)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIException)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Exception)
@@ -169,18 +168,27 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Exception)
   tmp->mThrownJSVal.setNull();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CI_INTERFACE_GETTER(Exception, nsIXPCException)
-
 Exception::Exception(const nsACString& aMessage,
                      nsresult aResult,
                      const nsACString& aName,
                      nsIStackFrame *aLocation,
                      nsISupports *aData)
-: mResult(NS_OK),
-  mInitialized(false),
-  mHoldingJSVal(false)
+  : mMessage(aMessage)
+  , mResult(aResult)
+  , mName(aName)
+  , mData(aData)
+  , mInitialized(true)
+  , mHoldingJSVal(false)
 {
-  Initialize(aMessage, aResult, aName, aLocation, aData);
+  if (aLocation) {
+    mLocation = aLocation;
+  } else {
+    mLocation = GetCurrentJSStack();
+    // it is legal for there to be no active JS stack, if C++ code
+    // is operating on a JS-implemented interface pointer without
+    // having been called in turn by JS.  This happens in the JS
+    // component loader.
+  }
 }
 
 Exception::~Exception()
@@ -361,33 +369,6 @@ Exception::ToString(JSContext* aCx, nsACString& _retval)
   _retval.Truncate();
   _retval.AppendPrintf(format, msg, static_cast<uint32_t>(mResult), resultName,
                        location.get(), data);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Exception::Initialize(const nsACString& aMessage, nsresult aResult,
-                      const nsACString& aName, nsIStackFrame *aLocation,
-                      nsISupports *aData)
-{
-  NS_ENSURE_FALSE(mInitialized, NS_ERROR_ALREADY_INITIALIZED);
-
-  mMessage = aMessage;
-  mName = aName;
-  mResult = aResult;
-
-  if (aLocation) {
-    mLocation = aLocation;
-  } else {
-    mLocation = GetCurrentJSStack();
-    // it is legal for there to be no active JS stack, if C++ code
-    // is operating on a JS-implemented interface pointer without
-    // having been called in turn by JS.  This happens in the JS
-    // component loader.
-  }
-
-  mData = aData;
-
-  mInitialized = true;
   return NS_OK;
 }
 
