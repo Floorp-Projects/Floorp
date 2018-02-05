@@ -113,10 +113,13 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
 
     // Transform the document
     RefPtr<txMozillaXSLTProcessor> transformer = new txMozillaXSLTProcessor();
-    rv = transformer->ImportStylesheet(xslDocument);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     ErrorResult err;
+    nsCOMPtr<nsIDocument> xslDoc = do_QueryInterface(xslDocument);
+    transformer->ImportStylesheet(*xslDoc, err);
+    if (NS_WARN_IF(err.Failed())) {
+        return err.StealNSResult();
+    }
+
     RefPtr<DocumentFragment> resultFragment =
         transformer->TransformToFragment(*aDocument, *aDocument, err);
     if (NS_WARN_IF(err.Failed())) {
