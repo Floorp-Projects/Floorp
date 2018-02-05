@@ -191,17 +191,10 @@ function toASCIIUpperCase(s) {
  *
  * Spec: ECMAScript Internationalization API Specification, 6.3.1.
  */
-function getIsWellFormedCurrencyCodeRE() {
-    return internalIntlRegExps.isWellFormedCurrencyCodeRE ||
-           (internalIntlRegExps.isWellFormedCurrencyCodeRE = RegExpCreate("[^A-Z]"));
-}
-
 function IsWellFormedCurrencyCode(currency) {
-    var c = ToString(currency);
-    var normalized = toASCIIUpperCase(c);
-    if (normalized.length !== 3)
-        return false;
-    return !regexp_test_no_statics(getIsWellFormedCurrencyCodeRE(), normalized);
+    assert(typeof currency === "string", "currency is a string value");
+
+    return currency.length === 3 && IsASCIIAlphaString(currency);
 }
 
 /**
@@ -339,13 +332,10 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
  *
  * Spec: ECMAScript Internationalization API Specification, 11.1.1.
  */
-function getCurrencyDigitsRE() {
-    return internalIntlRegExps.currencyDigitsRE ||
-           (internalIntlRegExps.currencyDigitsRE = RegExpCreate("^[A-Z]{3}$"));
-}
 function CurrencyDigits(currency) {
-    assert(typeof currency === "string", "CurrencyDigits");
-    assert(regexp_test_no_statics(getCurrencyDigitsRE(), currency), "CurrencyDigits");
+    assert(typeof currency === "string", "currency is a string value");
+    assert(IsWellFormedCurrencyCode(currency), "currency is well-formed");
+    assert(currency == toASCIIUpperCase(currency), "currency is all upper-case");
 
     if (hasOwn(currency, currencyDigits))
         return currencyDigits[currency];
