@@ -1161,14 +1161,10 @@ StackFrameToStackEntry(JSContext* aCx, nsIStackFrame* aStackFrame,
 
   aStackFrame->GetFilename(aCx, aStackEntry.mFilename);
 
-  int32_t lineNumber;
-  nsresult rv = aStackFrame->GetLineNumber(aCx, &lineNumber);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aStackEntry.mLineNumber = lineNumber;
+  aStackEntry.mLineNumber = aStackFrame->GetLineNumber(aCx);
 
   int32_t columnNumber;
-  rv = aStackFrame->GetColumnNumber(aCx, &columnNumber);
+  nsresult rv = aStackFrame->GetColumnNumber(aCx, &columnNumber);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aStackEntry.mColumnNumber = columnNumber;
@@ -2698,15 +2694,11 @@ Console::MaybeExecuteDumpFunctionForTrace(JSContext* aCx, nsIStackFrame* aStack)
     message.Append(filename);
     message.AppendLiteral(" ");
 
-    int32_t lineNumber;
-    nsresult rv = stack->GetLineNumber(aCx, &lineNumber);
-    NS_ENSURE_SUCCESS_VOID(rv);
-
-    message.AppendInt(lineNumber);
+    message.AppendInt(stack->GetLineNumber(aCx));
     message.AppendLiteral(" ");
 
     nsAutoString functionName;
-    rv = stack->GetName(aCx, functionName);
+    nsresult rv = stack->GetName(aCx, functionName);
     NS_ENSURE_SUCCESS_VOID(rv);
 
     message.Append(filename);

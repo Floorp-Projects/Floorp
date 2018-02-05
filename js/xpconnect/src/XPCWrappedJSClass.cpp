@@ -998,7 +998,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                     GetLocation(getter_AddRefs(location));
                                 if (location) {
                                     // Get line number.
-                                    location->GetLineNumber(cx, &lineNumber);
+                                    lineNumber = location->GetLineNumber(cx);
 
                                     // get a filename.
                                     location->GetFilename(cx, sourceName);
