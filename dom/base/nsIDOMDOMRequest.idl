@@ -35,7 +35,6 @@ interface nsIDOMRequestService : nsISupports
 
   void fireSuccess(in nsIDOMDOMRequest request, in jsval result);
   void fireError(in nsIDOMDOMRequest request, in DOMString error);
-  void fireDetailedError(in nsIDOMDOMRequest request, in nsISupports error);
   void fireSuccessAsync(in nsIDOMDOMRequest request, in jsval result);
   void fireErrorAsync(in nsIDOMDOMRequest request, in DOMString error);
   void fireDone(in nsIDOMDOMCursor cursor);
