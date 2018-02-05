@@ -595,44 +595,41 @@ txMozillaXSLTProcessor::DoTransform()
     return rv;
 }
 
-NS_IMETHODIMP
-txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
+void
+txMozillaXSLTProcessor::ImportStylesheet(nsINode& aStyle,
+                                         mozilla::ErrorResult& aRv)
 {
-    NS_ENSURE_TRUE(aStyle, NS_ERROR_NULL_POINTER);
-
     // We don't support importing multiple stylesheets yet.
-    NS_ENSURE_TRUE(!mStylesheetDocument && !mStylesheet,
-                   NS_ERROR_NOT_IMPLEMENTED);
-
-    nsCOMPtr<nsINode> node = do_QueryInterface(aStyle);
-    if (!node || !nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller()->Subsumes(node->NodePrincipal())) {
-        return NS_ERROR_DOM_SECURITY_ERR;
+    if (NS_WARN_IF(mStylesheetDocument || mStylesheet)) {
+        aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+        return;
     }
 
-    nsCOMPtr<nsINode> styleNode = do_QueryInterface(aStyle);
-    NS_ENSURE_TRUE(styleNode &&
-                   (styleNode->IsElement() ||
-                    styleNode->IsNodeOfType(nsINode::eDOCUMENT)),
-                   NS_ERROR_INVALID_ARG);
+    if (!nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller()->Subsumes(aStyle.NodePrincipal())) {
+        aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        return;
+    }
 
-    nsresult rv = TX_CompileStylesheet(styleNode, this,
+    if (NS_WARN_IF(!aStyle.IsElement() &&
+                   !aStyle.IsNodeOfType(nsINode::eDOCUMENT))) {
+        aRv.Throw(NS_ERROR_INVALID_ARG);
+        return;
+    }
+
+    nsresult rv = TX_CompileStylesheet(&aStyle, this,
                                        getter_AddRefs(mStylesheet));
     // XXX set up exception context, bug 204658
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (styleNode->IsElement()) {
-        mStylesheetDocument = styleNode->OwnerDoc();
-        NS_ENSURE_TRUE(mStylesheetDocument, NS_ERROR_UNEXPECTED);
-
-        mEmbeddedStylesheetRoot = static_cast<nsIContent*>(styleNode.get());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        aRv.Throw(rv);
+        return;
     }
-    else {
-        mStylesheetDocument = static_cast<nsIDocument*>(styleNode.get());
+
+    mStylesheetDocument = aStyle.OwnerDoc();
+    if (aStyle.IsElement()) {
+        mEmbeddedStylesheetRoot = aStyle.AsElement();
     }
 
     mStylesheetDocument->AddMutationObserver(this);
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1280,13 +1277,6 @@ txMozillaXSLTProcessor::Constructor(const GlobalObject& aGlobal,
     RefPtr<txMozillaXSLTProcessor> processor =
         new txMozillaXSLTProcessor(aGlobal.GetAsSupports());
     return processor.forget();
-}
-
-void
-txMozillaXSLTProcessor::ImportStylesheet(nsINode& stylesheet,
-                                         mozilla::ErrorResult& aRv)
-{
-    aRv = ImportStylesheet(stylesheet.AsDOMNode());
 }
 
 already_AddRefed<nsIDocument>
