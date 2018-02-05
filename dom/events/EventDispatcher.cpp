@@ -919,7 +919,7 @@ EventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
     if (!dontResetTrusted) {
       //Check security state to determine if dispatcher is trusted
       bool trusted = NS_IsMainThread() ? nsContentUtils::LegacyIsCallerChromeOrNativeCode()
-                                       : mozilla::dom::workers::IsCurrentThreadRunningChromeWorker();
+                                       : IsCurrentThreadRunningChromeWorker();
       aDOMEvent->SetTrusted(trusted);
     }
 

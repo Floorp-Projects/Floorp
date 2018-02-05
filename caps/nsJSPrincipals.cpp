@@ -15,7 +15,7 @@
 #include "nsStringBuffer.h"
 
 #include "mozilla/dom/StructuredCloneTags.h"
-// for mozilla::dom::workers::kJSPrincipalsDebugToken
+// for mozilla::dom::workerinternals::kJSPrincipalsDebugToken
 #include "mozilla/dom/workerinternals/JSSettings.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 

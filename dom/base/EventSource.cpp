@@ -50,8 +50,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 static LazyLogModule gEventSourceLog("EventSource");
 
 #define SPACE_CHAR           (char16_t)0x0020

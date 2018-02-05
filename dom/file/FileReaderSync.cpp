@@ -441,7 +441,7 @@ FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
     return rv;
   }
 
-  WorkerPrivate* workerPrivate = workers::GetCurrentThreadWorkerPrivate();
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
   AutoSyncLoopHolder syncLoop(workerPrivate, Closing);

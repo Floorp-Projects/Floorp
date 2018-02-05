@@ -32,9 +32,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-using workers::AssertIsOnMainThread;
-
 namespace {
 
 nsresult
