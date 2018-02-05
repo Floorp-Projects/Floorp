@@ -37,6 +37,7 @@
 
 #include "nsIConsoleAPIStorage.h"
 #include "nsIDOMWindowUtils.h"
+#include "nsIException.h" // for nsIStackFrame
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadContext.h"
 #include "nsISensitiveInfoHiddenURI.h"

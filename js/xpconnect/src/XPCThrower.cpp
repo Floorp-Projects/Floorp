@@ -10,6 +10,7 @@
 #include "XPCWrapper.h"
 #include "jsprf.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/Exceptions.h"
 #include "nsString.h"
 
@@ -50,7 +51,7 @@ Throw(JSContext* cx, nsresult rv)
 bool
 XPCThrower::CheckForPendingException(nsresult result, JSContext* cx)
 {
-    nsCOMPtr<nsIException> e = XPCJSContext::Get()->GetPendingException();
+    RefPtr<Exception> e = XPCJSContext::Get()->GetPendingException();
     if (!e)
         return false;
     XPCJSContext::Get()->SetPendingException(nullptr);

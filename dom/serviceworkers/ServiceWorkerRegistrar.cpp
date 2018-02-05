@@ -6,6 +6,7 @@
 
 #include "ServiceWorkerRegistrar.h"
 #include "mozilla/dom/ServiceWorkerRegistrarTypes.h"
+#include "mozilla/dom/DOMException.h"
 #include "mozilla/net/MozURL.h"
 
 #include "nsIEventTarget.h"
@@ -1135,7 +1136,7 @@ ServiceWorkerRegistrar::GetState(nsIPropertyBag**)
     if (NS_FAILED(rv)) {                                                       \
       if (rv == NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS) {                  \
         if (auto* context = CycleCollectedJSContext::Get()) {                  \
-          if (nsCOMPtr<nsIException> exn = context->GetPendingException()) {   \
+          if (RefPtr<Exception> exn = context->GetPendingException()) {        \
             nsAutoCString msg;                                                 \
             if (NS_SUCCEEDED(exn->GetMessageMoz(msg))) {                       \
               MOZ_CRASH_UNSAFE_PRINTF("Failed to get " name ": %s", msg.get());\

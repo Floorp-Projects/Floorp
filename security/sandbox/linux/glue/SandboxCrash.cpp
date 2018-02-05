@@ -15,11 +15,12 @@
 #include <unistd.h>
 #include <sys/syscall.h>
 
+#include "mozilla/StackWalk.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Exceptions.h"
 #include "nsContentUtils.h"
 #include "nsExceptionHandler.h"
-#include "mozilla/StackWalk.h"
+#include "nsIException.h" // for nsIStackFrame
 #include "nsString.h"
 #include "nsThreadUtils.h"
 
