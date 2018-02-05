@@ -82,8 +82,7 @@ public:
     CreateErrorMessage(name, message, aRetVal);
   }
 
-  // The XPCOM GetFilename does the right thing.  It might throw, but we want to
-  // return an empty filename in that case anyway, instead of throwing.
+  void GetFilename(JSContext* aCx, nsAString& aFilename);
 
   uint32_t LineNumber(JSContext* aCx) const;
 

@@ -261,39 +261,15 @@ Exception::GetName(nsAString& aName)
   }
 }
 
-NS_IMETHODIMP
+void
 Exception::GetFilename(JSContext* aCx, nsAString& aFilename)
 {
   if (mLocation) {
     mLocation->GetFilename(aCx, aFilename);
-    return NS_OK;
+    return;
   }
 
   aFilename.Truncate();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Exception::GetLineNumber(JSContext* aCx, uint32_t *aLineNumber)
-{
-  NS_ENSURE_ARG_POINTER(aLineNumber);
-
-  if (mLocation) {
-    *aLineNumber = mLocation->GetLineNumber(aCx);
-    return NS_OK;
-  }
-
-  *aLineNumber = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Exception::GetColumnNumber(uint32_t* aColumnNumber)
-{
-  NS_ENSURE_ARG_POINTER(aColumnNumber);
-
-  *aColumnNumber = 0;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
