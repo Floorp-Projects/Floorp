@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * THIS MODULE IS DEPRECATED. IMPORT "Promise.jsm" INSTEAD.
+ * THIS MODULE IS DEPRECATED. Use DOM Promises instead.
  */
 
 /* eslint-disable */
@@ -12,11 +12,7 @@
 
 this.Promise = {};
 
-if (typeof (require) === "function") {
-  module.exports = Promise;
-} else {
-  this.EXPORTED_SYMBOLS = ["Promise"];
-}
+module.exports = Promise;
 
 function fulfilled(value) {
   return { then: function then(fulfill) { fulfill(value); } };
