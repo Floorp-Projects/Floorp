@@ -61,6 +61,9 @@ public:
   {
     return mResult;
   }
+  // DOMException wants different ToString behavior, so allow it to override.
+  virtual void ToString(JSContext* aCx, nsACString& aReturn);
+
 
   // Cruft used by XPConnect for exceptions originating in JS implemented
   // components.
@@ -151,9 +154,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMDOMEXCEPTION
 
-  // nsIException overrides
-  NS_IMETHOD ToString(JSContext* aCx, nsACString& aReturn) override;
-
   // nsWrapperCache overrides
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
     override;
@@ -170,6 +170,9 @@ public:
 
   // Intentionally shadow the Exception version.
   void GetName(nsString& retval);
+
+  // Exception overrides
+  void ToString(JSContext* aCx, nsACString& aReturn) override;
 
   virtual void GetErrorMessage(nsAString& aRetVal) override
   {

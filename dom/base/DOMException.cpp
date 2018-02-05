@@ -256,7 +256,7 @@ Exception::GetFilename(JSContext* aCx, nsAString& aFilename)
   aFilename.Truncate();
 }
 
-NS_IMETHODIMP
+void
 Exception::ToString(JSContext* aCx, nsACString& _retval)
 {
   static const char defaultMsg[] = "<no message>";
@@ -291,7 +291,6 @@ Exception::ToString(JSContext* aCx, nsACString& _retval)
   _retval.Truncate();
   _retval.AppendPrintf(format, msg, static_cast<uint32_t>(mResult), resultName,
                        location.get(), data);
-  return NS_OK;
 }
 
 JSObject*
@@ -353,11 +352,7 @@ void
 Exception::Stringify(JSContext* aCx, nsString& retval)
 {
   nsCString str;
-#ifdef DEBUG
-  DebugOnly<nsresult> rv =
-#endif
   ToString(aCx, str);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
   CopyUTF8toUTF16(str, retval);
 }
 
@@ -392,7 +387,7 @@ DOMException::GetCode(uint16_t* aCode)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 DOMException::ToString(JSContext* aCx, nsACString& aReturn)
 {
   aReturn.Truncate();
@@ -414,8 +409,6 @@ DOMException::ToString(JSContext* aCx, nsACString& aReturn)
 
   aReturn.AppendPrintf(format, msg, mCode, static_cast<uint32_t>(mResult), resultName,
                        location.get());
-
-  return NS_OK;
 }
 
 void
