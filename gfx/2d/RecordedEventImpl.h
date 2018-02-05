@@ -146,6 +146,38 @@ private:
   MOZ_IMPLICIT RecordedCreateSimilarDrawTarget(S &aStream);
 };
 
+class RecordedCreateClippedDrawTarget : public RecordedEventDerived<RecordedCreateClippedDrawTarget> {
+public:
+  RecordedCreateClippedDrawTarget(ReferencePtr aRefPtr, const IntSize& aMaxSize, const Matrix& aTransform, SurfaceFormat aFormat)
+    : RecordedEventDerived(CREATECLIPPEDDRAWTARGET)
+    , mRefPtr(aRefPtr)
+    , mMaxSize(aMaxSize)
+    , mTransform(aTransform)
+    , mFormat(aFormat)
+  {
+  }
+
+  virtual bool PlayEvent(Translator *aTranslator) const override;
+
+  template<class S>
+  void Record(S &aStream) const;
+  virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
+
+  virtual std::string GetName() const override { return "CreateClippedDrawTarget"; }
+  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+
+  ReferencePtr mRefPtr;
+  IntSize mMaxSize;
+  Matrix mTransform;
+  SurfaceFormat mFormat;
+
+private:
+  friend class RecordedEvent;
+
+  template<class S>
+  MOZ_IMPLICIT RecordedCreateClippedDrawTarget(S &aStream);
+};
+
 class RecordedFillRect : public RecordedDrawingEvent<RecordedFillRect> {
 public:
   RecordedFillRect(DrawTarget *aDT, const Rect &aRect, const Pattern &aPattern, const DrawOptions &aOptions)
@@ -1670,6 +1702,60 @@ inline void
 RecordedCreateSimilarDrawTarget::OutputSimpleEventInfo(std::stringstream &aStringStream) const
 {
   aStringStream << "[" << mRefPtr << "] CreateSimilarDrawTarget (Size: " << mSize.width << "x" << mSize.height << ")";
+}
+
+inline bool
+RecordedCreateClippedDrawTarget::PlayEvent(Translator *aTranslator) const
+{
+  const IntRect baseRect = aTranslator->GetReferenceDrawTarget()->GetRect();
+  const IntRect transformedRect = RoundedToInt(mTransform.Inverse().TransformBounds(IntRectToRect(baseRect)));
+  const IntRect intersection = IntRect(IntPoint(0, 0), mMaxSize).Intersect(transformedRect);
+
+  RefPtr<DrawTarget> newDT = aTranslator->GetReferenceDrawTarget()->CreateSimilarDrawTarget(intersection.Size(), SurfaceFormat::A8);
+  // It's overkill to use a TiledDrawTarget for a single tile
+  // but it was the easiest way to get the offset handling working
+  gfx::TileSet tileset;
+  gfx::Tile tile;
+  tile.mDrawTarget = newDT;
+  tile.mTileOrigin = gfx::IntPoint(intersection.X(), intersection.Y());
+  tileset.mTiles = &tile;
+  tileset.mTileCount = 1;
+  newDT = gfx::Factory::CreateTiledDrawTarget(tileset);
+
+  // If we couldn't create a DrawTarget this will probably cause us to crash
+  // with nullptr later in the playback, so return false to abort.
+  if (!newDT) {
+    return false;
+  }
+
+  aTranslator->AddDrawTarget(mRefPtr, newDT);
+  return true;
+}
+
+template<class S>
+void
+RecordedCreateClippedDrawTarget::Record(S &aStream) const
+{
+  WriteElement(aStream, mRefPtr);
+  WriteElement(aStream, mMaxSize);
+  WriteElement(aStream, mTransform);
+  WriteElement(aStream, mFormat);
+}
+
+template<class S>
+RecordedCreateClippedDrawTarget::RecordedCreateClippedDrawTarget(S &aStream)
+  : RecordedEventDerived(CREATECLIPPEDDRAWTARGET)
+{
+  ReadElement(aStream, mRefPtr);
+  ReadElement(aStream, mMaxSize);
+  ReadElement(aStream, mTransform);
+  ReadElement(aStream, mFormat);
+}
+
+inline void
+RecordedCreateClippedDrawTarget::OutputSimpleEventInfo(std::stringstream &aStringStream) const
+{
+  aStringStream << "[" << mRefPtr << "] CreateClippedDrawTarget ()";
 }
 
 struct GenericPattern
@@ -3321,6 +3407,7 @@ RecordedFilterNodeSetInput::OutputSimpleEventInfo(std::stringstream &aStringStre
     f(FILTERNODESETATTRIBUTE, RecordedFilterNodeSetAttribute); \
     f(FILTERNODESETINPUT, RecordedFilterNodeSetInput); \
     f(CREATESIMILARDRAWTARGET, RecordedCreateSimilarDrawTarget); \
+    f(CREATECLIPPEDDRAWTARGET, RecordedCreateClippedDrawTarget); \
     f(FONTDATA, RecordedFontData); \
     f(FONTDESC, RecordedFontDescriptor); \
     f(PUSHLAYER, RecordedPushLayer); \
