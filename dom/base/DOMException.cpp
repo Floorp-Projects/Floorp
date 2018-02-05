@@ -183,13 +183,6 @@ Exception::Exception(const nsACString& aMessage,
   Initialize(aMessage, aResult, aName, aLocation, aData);
 }
 
-Exception::Exception()
-  : mResult(NS_OK),
-    mInitialized(false),
-    mHoldingJSVal(false)
-{
-}
-
 Exception::~Exception()
 {
   if (mHoldingJSVal) {
