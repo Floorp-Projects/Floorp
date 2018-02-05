@@ -22,7 +22,6 @@ interfaces = [
     'sidebar',
     'range',
     'xbl',
-    'xpath',
     'xul',
     'security',
     'storage',

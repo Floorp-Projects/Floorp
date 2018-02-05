@@ -1811,7 +1811,6 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIMutationObserver)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIApplicationCacheContainer)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMXPathEvaluator)
   NS_INTERFACE_TABLE_END
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsDocument)
 NS_INTERFACE_MAP_END
@@ -1972,7 +1971,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
 #ifdef MOZ_OLD_STYLE
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleAttrStyleSheet)
 #endif
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mXPathEvaluator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLayoutHistoryState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnloadBlocker)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFirstBaseNodeWithHref)
@@ -2065,7 +2063,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   tmp->UnlinkOriginalDocumentIfStatic();
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mXPathEvaluator)
   tmp->mCachedRootElement = nullptr; // Avoid a dangling pointer
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFirstBaseNodeWithHref)
@@ -12161,15 +12158,6 @@ nsIDocument::Evaluate(JSContext* aCx, const nsAString& aExpression,
                                     aType, aResult, rv);
 }
 
-NS_IMETHODIMP
-nsDocument::Evaluate(const nsAString& aExpression, nsIDOMNode* aContextNode,
-                     nsIDOMNode* aResolver, uint16_t aType,
-                     nsISupports* aInResult, nsISupports** aResult)
-{
-  return XPathEvaluator()->Evaluate(aExpression, aContextNode, aResolver, aType,
-                                    aInResult, aResult);
-}
-
 nsIDocument*
 nsIDocument::GetTopLevelContentDocument()
 {
@@ -12513,9 +12501,9 @@ XPathEvaluator*
 nsIDocument::XPathEvaluator()
 {
   if (!mXPathEvaluator) {
-    mXPathEvaluator = new dom::XPathEvaluator(this);
+    mXPathEvaluator.reset(new dom::XPathEvaluator(this));
   }
-  return mXPathEvaluator;
+  return mXPathEvaluator.get();
 }
 
 already_AddRefed<nsIDocumentEncoder>

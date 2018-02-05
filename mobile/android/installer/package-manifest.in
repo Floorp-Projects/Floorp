@@ -147,7 +147,6 @@
 #endif
 @BINPATH@/components/dom_xbl.xpt
 @BINPATH@/components/dom_xhr.xpt
-@BINPATH@/components/dom_xpath.xpt
 @BINPATH@/components/dom_xul.xpt
 @BINPATH@/components/dom_presentation.xpt
 @BINPATH@/components/downloads.xpt
