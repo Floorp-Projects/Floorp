@@ -244,11 +244,11 @@ Exception::GetResult(nsresult* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-Exception::GetName(nsACString& aName)
+void
+Exception::GetName(nsAString& aName)
 {
   if (!mName.IsEmpty()) {
-    aName.Assign(mName);
+    CopyUTF8toUTF16(mName, aName);
   } else {
     aName.Truncate();
 
@@ -256,11 +256,9 @@ Exception::GetName(nsACString& aName)
     nsXPCException::NameAndFormatForNSResult(mResult, &name, nullptr);
 
     if (name) {
-      aName.Assign(name);
+      CopyUTF8toUTF16(name, aName);
     }
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -378,18 +376,6 @@ uint32_t
 Exception::Result() const
 {
   return (uint32_t)mResult;
-}
-
-void
-Exception::GetName(nsString& retval)
-{
-  nsCString str;
-#ifdef DEBUG
-  DebugOnly<nsresult> rv =
-#endif
-  GetName(str);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  CopyUTF8toUTF16(str, retval);
 }
 
 uint32_t
