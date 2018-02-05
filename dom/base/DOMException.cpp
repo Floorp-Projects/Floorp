@@ -228,15 +228,6 @@ Exception::StowJSVal(JS::Value& aVp)
   }
 }
 
-NS_IMETHODIMP
-Exception::GetResult(nsresult* aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  *aResult = mResult;
-  return NS_OK;
-}
-
 void
 Exception::GetName(nsAString& aName)
 {

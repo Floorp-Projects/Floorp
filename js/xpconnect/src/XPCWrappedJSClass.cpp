@@ -250,7 +250,6 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
             RootedValue jsexception(cx, NullValue());
 
             if (JS_GetPendingException(cx, &jsexception)) {
-                nsresult rv;
                 if (jsexception.isObject()) {
                     // XPConnect may have constructed an object to represent a
                     // C++ QI failure. See if that is the case.
@@ -258,12 +257,11 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
                     Exception* e = nullptr;
                     UNWRAP_OBJECT(Exception, &exceptionObj, e);
 
-                    if (e &&
-                        NS_SUCCEEDED(e->GetResult(&rv)) &&
-                        rv == NS_NOINTERFACE) {
+                    if (e && e->GetResult() == NS_NOINTERFACE) {
                         JS_ClearPendingException(cx);
                     }
                 } else if (jsexception.isNumber()) {
+                    nsresult rv;
                     // JS often throws an nsresult.
                     if (jsexception.isDouble())
                         // Visual Studio 9 doesn't allow casting directly from
@@ -913,118 +911,116 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
     aes.ClearException();
 
     if (xpc_exception) {
-        nsresult e_result;
-        if (NS_SUCCEEDED(xpc_exception->GetResult(&e_result))) {
-            // Figure out whether or not we should report this exception.
-            bool reportable = xpc_IsReportableErrorCode(e_result);
-            if (reportable) {
-                // Ugly special case for GetInterface. It's "special" in the
-                // same way as QueryInterface in that a failure is not
-                // exceptional and shouldn't be reported. We have to do this
-                // check here instead of in xpcwrappedjs (like we do for QI) to
-                // avoid adding extra code to all xpcwrappedjs objects.
-                if (e_result == NS_ERROR_NO_INTERFACE &&
-                    !strcmp(anInterfaceName, "nsIInterfaceRequestor") &&
-                    !strcmp(aPropertyName, "getInterface")) {
-                    reportable = false;
-                }
-
-                // More special case, see bug 877760.
-                if (e_result == NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED) {
-                    reportable = false;
-                }
-            }
-
-            // Try to use the error reporter set on the context to handle this
-            // error if it came from a JS exception.
-            if (reportable && is_js_exception)
-            {
-                // Note that we cleared the exception above, so we need to set it again,
-                // just so that we can tell the JS engine to pass it back to us via the
-                // error reporting callback. This is all very dumb.
-                JS_SetPendingException(cx, js_exception);
-                aes.ReportException();
+        nsresult e_result = xpc_exception->GetResult();
+        // Figure out whether or not we should report this exception.
+        bool reportable = xpc_IsReportableErrorCode(e_result);
+        if (reportable) {
+            // Ugly special case for GetInterface. It's "special" in the
+            // same way as QueryInterface in that a failure is not
+            // exceptional and shouldn't be reported. We have to do this
+            // check here instead of in xpcwrappedjs (like we do for QI) to
+            // avoid adding extra code to all xpcwrappedjs objects.
+            if (e_result == NS_ERROR_NO_INTERFACE &&
+                !strcmp(anInterfaceName, "nsIInterfaceRequestor") &&
+                !strcmp(aPropertyName, "getInterface")) {
                 reportable = false;
             }
 
-            if (reportable) {
-                if (DOMPrefs::DumpEnabled()) {
-                    static const char line[] =
-                        "************************************************************\n";
-                    static const char preamble[] =
-                        "* Call to xpconnect wrapped JSObject produced this error:  *\n";
-                    static const char cant_get_text[] =
-                        "FAILED TO GET TEXT FROM EXCEPTION\n";
+            // More special case, see bug 877760.
+            if (e_result == NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED) {
+                reportable = false;
+            }
+        }
 
-                    fputs(line, stdout);
-                    fputs(preamble, stdout);
-                    nsCString text;
-                    if (NS_SUCCEEDED(xpc_exception->ToString(cx, text)) &&
-                        !text.IsEmpty()) {
-                        fputs(text.get(), stdout);
-                        fputs("\n", stdout);
-                    } else
-                        fputs(cant_get_text, stdout);
-                    fputs(line, stdout);
-                }
+        // Try to use the error reporter set on the context to handle this
+        // error if it came from a JS exception.
+        if (reportable && is_js_exception)
+        {
+            // Note that we cleared the exception above, so we need to set it again,
+            // just so that we can tell the JS engine to pass it back to us via the
+            // error reporting callback. This is all very dumb.
+            JS_SetPendingException(cx, js_exception);
+            aes.ReportException();
+            reportable = false;
+        }
 
-                // Log the exception to the JS Console, so that users can do
-                // something with it.
-                nsCOMPtr<nsIConsoleService> consoleService
-                    (do_GetService(XPC_CONSOLE_CONTRACTID));
-                if (nullptr != consoleService) {
-                    nsresult rv;
-                    nsCOMPtr<nsIScriptError> scriptError;
-                    nsCOMPtr<nsISupports> errorData;
-                    rv = xpc_exception->GetData(getter_AddRefs(errorData));
-                    if (NS_SUCCEEDED(rv))
-                        scriptError = do_QueryInterface(errorData);
+        if (reportable) {
+            if (DOMPrefs::DumpEnabled()) {
+                static const char line[] =
+                    "************************************************************\n";
+                static const char preamble[] =
+                    "* Call to xpconnect wrapped JSObject produced this error:  *\n";
+                static const char cant_get_text[] =
+                    "FAILED TO GET TEXT FROM EXCEPTION\n";
 
-                    if (nullptr == scriptError) {
-                        // No luck getting one from the exception, so
-                        // try to cook one up.
-                        scriptError = do_CreateInstance(XPC_SCRIPT_ERROR_CONTRACTID);
-                        if (nullptr != scriptError) {
-                            nsCString newMessage;
-                            rv = xpc_exception->ToString(cx, newMessage);
-                            if (NS_SUCCEEDED(rv)) {
-                                // try to get filename, lineno from the first
-                                // stack frame location.
-                                int32_t lineNumber = 0;
-                                nsString sourceName;
+                fputs(line, stdout);
+                fputs(preamble, stdout);
+                nsCString text;
+                if (NS_SUCCEEDED(xpc_exception->ToString(cx, text)) &&
+                    !text.IsEmpty()) {
+                    fputs(text.get(), stdout);
+                    fputs("\n", stdout);
+                } else
+                    fputs(cant_get_text, stdout);
+                fputs(line, stdout);
+            }
 
-                                nsCOMPtr<nsIStackFrame> location;
-                                xpc_exception->
-                                    GetLocation(getter_AddRefs(location));
-                                if (location) {
-                                    // Get line number.
-                                    lineNumber = location->GetLineNumber(cx);
+            // Log the exception to the JS Console, so that users can do
+            // something with it.
+            nsCOMPtr<nsIConsoleService> consoleService
+                (do_GetService(XPC_CONSOLE_CONTRACTID));
+            if (nullptr != consoleService) {
+                nsresult rv;
+                nsCOMPtr<nsIScriptError> scriptError;
+                nsCOMPtr<nsISupports> errorData;
+                rv = xpc_exception->GetData(getter_AddRefs(errorData));
+                if (NS_SUCCEEDED(rv))
+                    scriptError = do_QueryInterface(errorData);
 
-                                    // get a filename.
-                                    location->GetFilename(cx, sourceName);
-                                }
+                if (nullptr == scriptError) {
+                    // No luck getting one from the exception, so
+                    // try to cook one up.
+                    scriptError = do_CreateInstance(XPC_SCRIPT_ERROR_CONTRACTID);
+                    if (nullptr != scriptError) {
+                        nsCString newMessage;
+                        rv = xpc_exception->ToString(cx, newMessage);
+                        if (NS_SUCCEEDED(rv)) {
+                            // try to get filename, lineno from the first
+                            // stack frame location.
+                            int32_t lineNumber = 0;
+                            nsString sourceName;
 
-                                rv = scriptError->InitWithWindowID(NS_ConvertUTF8toUTF16(newMessage),
-                                                                   sourceName,
-                                                                   EmptyString(),
-                                                                   lineNumber, 0, 0,
-                                                                   "XPConnect JavaScript",
-                                                                   nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
-                                if (NS_FAILED(rv))
-                                    scriptError = nullptr;
+                            nsCOMPtr<nsIStackFrame> location;
+                            xpc_exception->
+                                GetLocation(getter_AddRefs(location));
+                            if (location) {
+                                // Get line number.
+                                lineNumber = location->GetLineNumber(cx);
+
+                                // get a filename.
+                                location->GetFilename(cx, sourceName);
                             }
+
+                            rv = scriptError->InitWithWindowID(NS_ConvertUTF8toUTF16(newMessage),
+                                                               sourceName,
+                                                               EmptyString(),
+                                                               lineNumber, 0, 0,
+                                                               "XPConnect JavaScript",
+                                                               nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
+                            if (NS_FAILED(rv))
+                                scriptError = nullptr;
                         }
                     }
-                    if (nullptr != scriptError)
-                        consoleService->LogMessage(scriptError);
                 }
+                if (nullptr != scriptError)
+                    consoleService->LogMessage(scriptError);
             }
-            // Whether or not it passes the 'reportable' test, it might
-            // still be an error and we have to do the right thing here...
-            if (NS_FAILED(e_result)) {
-                xpccx->SetPendingException(xpc_exception);
-                return e_result;
-            }
+        }
+        // Whether or not it passes the 'reportable' test, it might
+        // still be an error and we have to do the right thing here...
+        if (NS_FAILED(e_result)) {
+            xpccx->SetPendingException(xpc_exception);
+            return e_result;
         }
     } else {
         // see if JS code signaled failure result without throwing exception
