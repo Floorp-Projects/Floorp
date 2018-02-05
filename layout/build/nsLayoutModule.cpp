@@ -78,7 +78,6 @@
 #include "nsIControllerContext.h"
 #include "nsZipArchive.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMRequest.h"
 #include "mozilla/dom/LocalStorageManager.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
@@ -231,7 +230,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(XMLHttpRequestMainThread, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(FormData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHostObjectURI)
 NS_GENERIC_FACTORY_CONSTRUCTOR(DOMParser)
-NS_GENERIC_FACTORY_CONSTRUCTOR(Exception)
 NS_GENERIC_FACTORY_CONSTRUCTOR(LocalStorageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(SessionStorageManager)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(DOMRequestService,
@@ -853,7 +851,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_HOSTOBJECTURI_CID, false, nullptr, nsHostObjectURIConstructor },
   { &kNS_XMLHTTPREQUEST_CID, false, nullptr, XMLHttpRequestMainThreadConstructor },
   { &kNS_DOMPARSER_CID, false, nullptr, DOMParserConstructor },
-  { &kNS_XPCEXCEPTION_CID, false, nullptr, ExceptionConstructor },
   { &kNS_DOMSESSIONSTORAGEMANAGER_CID, false, nullptr, SessionStorageManagerConstructor },
   { &kNS_DOMLOCALSTORAGEMANAGER_CID, false, nullptr, LocalStorageManagerConstructor },
   { &kNS_TEXTEDITOR_CID, false, nullptr, TextEditorConstructor },
@@ -970,7 +967,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_FORMDATA_CONTRACTID, &kNS_FORMDATA_CID },
   { NS_XMLHTTPREQUEST_CONTRACTID, &kNS_XMLHTTPREQUEST_CID },
   { NS_DOMPARSER_CONTRACTID, &kNS_DOMPARSER_CID },
-  { XPC_EXCEPTION_CONTRACTID, &kNS_XPCEXCEPTION_CID },
   { "@mozilla.org/dom/localStorage-manager;1", &kNS_DOMLOCALSTORAGEMANAGER_CID },
   // Keeping the old ContractID for backward compatibility
   { "@mozilla.org/dom/storagemanager;1", &kNS_DOMLOCALSTORAGEMANAGER_CID },

@@ -1535,13 +1535,7 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
 {
     nsXPConnect* xpc = nsXPConnect::XPConnect();
 
-    // Do the security check if necessary
-
-    if (NS_FAILED(nsXPConnect::SecurityManager()->CanCreateInstance(cx, Exception::GetCID()))) {
-        // the security manager vetoed. It should have set an exception.
-        *_retval = false;
-        return NS_OK;
-    }
+    MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::IsCallerChrome());
 
     // Parse the arguments to the Exception constructor.
     ExceptionArgParser parser(cx, xpc);
