@@ -192,13 +192,10 @@ PlacesTreeView.prototype = {
         throw new Error("Invisible node passed to _getRowForNode");
     }
 
-    // Non-plain containers, and non-Roots queries are initially built with their
-    // contents.
+    // Non-plain containers are initially built with their contents.
     let parent = aNode.parent;
     let parentIsPlain = this._isPlainContainer(parent);
-    if (!parentIsPlain &&
-        parent.queryOptions.resultType !=
-        Ci.nsINavHistoryQueryOptions.RESULTS_AS_ROOTS_QUERY) {
+    if (!parentIsPlain) {
       if (parent == this._rootNode) {
         return this._rows.indexOf(aNode);
       }
