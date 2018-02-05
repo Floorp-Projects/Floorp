@@ -21,7 +21,7 @@ class ProcTestOutput(proctest.ProcTest):
         Process is started, then processOutput is called a second time explicitly
         """
         p = processhandler.ProcessHandler([self.python, self.proclaunch,
-                                           "process_waittimeout_10s_python.ini"],
+                                           "process_waittimeout_10s.ini"],
                                           cwd=here)
 
         p.run()
@@ -34,7 +34,7 @@ class ProcTestOutput(proctest.ProcTest):
         """
         Process is started, outputs data with no newline
         """
-        p = processhandler.ProcessHandler([self.python, "procnonewline.py"],
+        p = processhandler.ProcessHandler([self.python, "scripts", "procnonewline.py"],
                                           cwd=here)
 
         p.run()
@@ -52,7 +52,8 @@ class ProcTestOutput(proctest.ProcTest):
         stream = io.BytesIO()
         buf = io.BufferedRandom(stream)
 
-        p = processhandler.ProcessHandler([self.python, "proccountfive.py"],
+        p = processhandler.ProcessHandler([self.python,
+                                           os.path.join("scripts", "proccountfive.py")],
                                           cwd=here,
                                           stream=buf)
 
