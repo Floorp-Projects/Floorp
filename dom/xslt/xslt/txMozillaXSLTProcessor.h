@@ -116,9 +116,9 @@ public:
                       const nsAString& aLocalName,
                       JS::Handle<JS::Value> aValue,
                       mozilla::ErrorResult& aRv);
-    nsIVariant* GetParameter(const nsAString& aNamespaceURI,
-                             const nsAString& aLocalName,
-                             mozilla::ErrorResult& aRv);
+    already_AddRefed<nsIVariant> GetParameter(const nsAString& aNamespaceURI,
+                                              const nsAString& aLocalName,
+                                              mozilla::ErrorResult& aRv);
     void RemoveParameter(const nsAString& aNamespaceURI,
                          const nsAString& aLocalName,
                          mozilla::ErrorResult& aRv)
