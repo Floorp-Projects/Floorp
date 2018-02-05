@@ -1021,15 +1021,13 @@ txMozillaXSLTProcessor::RemoveParameter(const nsAString& aNamespaceURI,
     mVariables.remove(varName);
 }
 
-NS_IMETHODIMP
+void
 txMozillaXSLTProcessor::ClearParameters()
 {
     mVariables.clear();
-
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 txMozillaXSLTProcessor::Reset()
 {
     if (mStylesheetDocument) {
@@ -1040,8 +1038,6 @@ txMozillaXSLTProcessor::Reset()
     mEmbeddedStylesheetRoot = nullptr;
     mCompileResult = NS_OK;
     mVariables.clear();
-
-    return NS_OK;
 }
 
 void
