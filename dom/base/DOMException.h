@@ -53,6 +53,11 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIEXCEPTION
 
+  const nsCString& GetMessageMoz() const
+  {
+    return mMessage;
+  }
+
   // Cruft used by XPConnect for exceptions originating in JS implemented
   // components.
   bool StealJSVal(JS::Value* aVp);
@@ -72,14 +77,12 @@ public:
 
   virtual void GetErrorMessage(nsAString& aRetVal)
   {
-    // Since GetName and GetMessageMoz are non-virtual and they deal with
-    // different member variables in Exception vs. DOMException, have a
-    // virtual method to ensure the right error message creation.
+    // Since GetName is non non-virtual and deals with different
+    // member variables in Exception vs. DOMException, have a virtual
+    // method to ensure the right error message creation.
     nsAutoString name;
-    nsAutoString message;
     GetName(name);
-    GetMessageMoz(message);
-    CreateErrorMessage(name, message, aRetVal);
+    CreateErrorMessage(name, aRetVal);
   }
 
   void GetFilename(JSContext* aCx, nsAString& aFilename);
@@ -105,18 +108,17 @@ public:
 protected:
   virtual ~Exception();
 
-  void CreateErrorMessage(const nsAString& aName, const nsAString& aMessage,
-                          nsAString& aRetVal)
+  void CreateErrorMessage(const nsAString& aName, nsAString& aRetVal)
   {
     // Create similar error message as what ErrorReport::init does in jsexn.cpp.
-    if (!aName.IsEmpty() && !aMessage.IsEmpty()) {
+    if (!aName.IsEmpty() && !mMessage.IsEmpty()) {
       aRetVal.Assign(aName);
       aRetVal.AppendLiteral(": ");
-      aRetVal.Append(aMessage);
+      AppendUTF8toUTF16(mMessage, aRetVal);
     } else if (!aName.IsEmpty()) {
       aRetVal.Assign(aName);
-    } else if (!aMessage.IsEmpty()) {
-      aRetVal.Assign(aMessage);
+    } else if (!mMessage.IsEmpty()) {
+      CopyUTF8toUTF16(mMessage, aRetVal);
     } else {
       aRetVal.Truncate();
     }
@@ -163,17 +165,14 @@ public:
   }
 
   // Intentionally shadow the Exception version.
-  void GetMessageMoz(nsString& retval);
   void GetName(nsString& retval);
 
   virtual void GetErrorMessage(nsAString& aRetVal) override
   {
     // See the comment in Exception::GetErrorMessage.
     nsAutoString name;
-    nsAutoString message;
     GetName(name);
-    GetMessageMoz(message);
-    CreateErrorMessage(name, message, aRetVal);
+    CreateErrorMessage(name, aRetVal);
   }
 
   static already_AddRefed<DOMException>
@@ -185,9 +184,6 @@ public:
 protected:
 
   virtual ~DOMException() {}
-
-  nsCString mName;
-  nsCString mMessage;
 
   uint16_t mCode;
 };
