@@ -177,7 +177,6 @@ function getParsedDocument(aPath) {
 
 function processParsedDocument(doc) {
   Assert.ok(doc.documentElement.localName != "parsererror");
-  Assert.ok(doc instanceof C_i.nsIDOMXPathEvaluator);
   Assert.ok(doc instanceof C_i.nsIDOMDocument);
 
   // Clean out whitespace.

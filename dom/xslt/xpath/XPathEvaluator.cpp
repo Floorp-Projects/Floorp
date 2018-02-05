@@ -66,8 +66,6 @@ private:
     bool mIsCaseSensitive;
 };
 
-NS_IMPL_ISUPPORTS(XPathEvaluator, nsIDOMXPathEvaluator)
-
 XPathEvaluator::XPathEvaluator(nsIDocument* aDocument)
     : mDocument(do_GetWeakReference(aDocument))
 {
@@ -75,40 +73,6 @@ XPathEvaluator::XPathEvaluator(nsIDocument* aDocument)
 
 XPathEvaluator::~XPathEvaluator()
 {
-}
-
-NS_IMETHODIMP
-XPathEvaluator::Evaluate(const nsAString & aExpression,
-                         nsIDOMNode *aContextNode,
-                         nsIDOMNode *aResolver,
-                         uint16_t aType,
-                         nsISupports *aInResult,
-                         nsISupports **aResult)
-{
-    nsCOMPtr<nsINode> resolver = do_QueryInterface(aResolver);
-    ErrorResult rv;
-    nsAutoPtr<XPathExpression> expression(CreateExpression(aExpression,
-                                                           resolver, rv));
-    if (rv.Failed()) {
-        return rv.StealNSResult();
-    }
-
-    nsCOMPtr<nsINode> node = do_QueryInterface(aContextNode);
-    if (!node) {
-        return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIXPathResult> inResult = do_QueryInterface(aInResult);
-    RefPtr<XPathResult> result =
-        expression->Evaluate(*node, aType,
-                             static_cast<XPathResult*>(inResult.get()), rv);
-    if (rv.Failed()) {
-        return rv.StealNSResult();
-    }
-
-    *aResult = ToSupports(result.forget().take());
-
-    return NS_OK;
 }
 
 XPathExpression*
@@ -164,13 +128,11 @@ XPathEvaluator::WrapObject(JSContext* aCx,
     return dom::XPathEvaluatorBinding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
-/* static */
-already_AddRefed<XPathEvaluator>
+/* static */ XPathEvaluator*
 XPathEvaluator::Constructor(const GlobalObject& aGlobal,
                             ErrorResult& rv)
 {
-    RefPtr<XPathEvaluator> newObj = new XPathEvaluator(nullptr);
-    return newObj.forget();
+    return new XPathEvaluator(nullptr);
 }
 
 already_AddRefed<XPathResult>
