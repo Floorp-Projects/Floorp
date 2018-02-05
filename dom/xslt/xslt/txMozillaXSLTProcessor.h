@@ -122,6 +122,8 @@ public:
     void RemoveParameter(const nsAString& aNamespaceURI,
                          const nsAString& aLocalName,
                          mozilla::ErrorResult& aRv);
+    void ClearParameters();
+    void Reset();
 
     uint32_t Flags(mozilla::dom::SystemCallerGuarantee);
     void SetFlags(uint32_t aFlags, mozilla::dom::SystemCallerGuarantee);

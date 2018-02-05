@@ -10,15 +10,4 @@ interface nsIVariant;
 [scriptable, uuid(4a91aeb3-4100-43ee-a21e-9866268757c5)]
 interface nsIXSLTProcessor : nsISupports
 {
-    /**
-     * Removes all set parameters from this nsIXSLTProcessor. This will make
-     * the processor use the default-value for all parameters as specified in
-     * the stylesheet.
-     */
-    void clearParameters();
-
-    /**
-     * Remove all parameters and stylesheets from this nsIXSLTProcessor.
-     */
-    void reset();
 };
