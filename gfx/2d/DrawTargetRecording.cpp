@@ -251,9 +251,6 @@ DrawTargetRecording::DrawTargetRecording(const DrawTargetRecording *aDT,
   , mFinalDT(aDT->mFinalDT)
   , mSize(aSize)
 {
-  mRecorder->RecordEvent(RecordedCreateSimilarDrawTarget(this,
-                                                         aSize,
-                                                         aFormat));
   mFormat = aFormat;
 }
 
@@ -568,7 +565,18 @@ already_AddRefed<DrawTarget>
 DrawTargetRecording::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
 {
   RefPtr<DrawTarget> similarDT = new DrawTargetRecording(this, aSize, aFormat);
+  mRecorder->RecordEvent(RecordedCreateSimilarDrawTarget(similarDT.get(),
+                                                         aSize,
+                                                         aFormat));
   return similarDT.forget();
+}
+
+RefPtr<DrawTarget>
+DrawTargetRecording::CreateClippedDrawTarget(const IntSize& aMaxSize, const Matrix& aTransform, SurfaceFormat aFormat) const
+{
+  RefPtr<DrawTarget> similarDT = new DrawTargetRecording(this, aMaxSize, aFormat);
+  mRecorder->RecordEvent(RecordedCreateClippedDrawTarget(similarDT.get(), aMaxSize, aTransform, aFormat));
+  return similarDT;
 }
 
 already_AddRefed<PathBuilder>
