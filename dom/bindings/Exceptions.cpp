@@ -677,7 +677,15 @@ NS_IMETHODIMP JSStackFrame::GetNativeSavedFrame(JS::MutableHandle<JS::Value> aSa
   return NS_OK;
 }
 
-NS_IMETHODIMP JSStackFrame::ToString(JSContext* aCx, nsACString& _retval)
+NS_IMETHODIMP
+JSStackFrame::ToStringXPCOM(JSContext* aCx, nsACString& _retval)
+{
+  ToString(aCx, _retval);
+  return NS_OK;
+}
+
+void
+JSStackFrame::ToString(JSContext* aCx, nsACString& _retval)
 {
   _retval.Truncate();
 
@@ -702,7 +710,6 @@ NS_IMETHODIMP JSStackFrame::ToString(JSContext* aCx, nsACString& _retval)
                        NS_ConvertUTF16toUTF8(filename).get(),
                        NS_ConvertUTF16toUTF8(funname).get(),
                        lineno);
-  return NS_OK;
 }
 
 already_AddRefed<nsIStackFrame>
