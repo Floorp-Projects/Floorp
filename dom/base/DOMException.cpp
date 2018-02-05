@@ -424,10 +424,10 @@ Exception::GetData() const
 }
 
 void
-Exception::GetStack(JSContext* aCx, nsAString& aStack, ErrorResult& aRv) const
+Exception::GetStack(JSContext* aCx, nsAString& aStack) const
 {
   if (mLocation) {
-    aRv = mLocation->GetFormattedStack(aCx, aStack);
+    mLocation->GetFormattedStack(aCx, aStack);
   }
 }
 

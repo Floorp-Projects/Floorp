@@ -93,7 +93,7 @@ public:
 
   already_AddRefed<nsISupports> GetData() const;
 
-  void GetStack(JSContext* aCx, nsAString& aStack, ErrorResult& aRv) const;
+  void GetStack(JSContext* aCx, nsAString& aStack) const;
 
   void Stringify(JSContext* aCx, nsString& retval);
 
