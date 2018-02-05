@@ -494,12 +494,21 @@ NS_IMETHODIMP JSStackFrame::GetSourceLine(nsACString& aSourceLine)
   return NS_OK;
 }
 
-NS_IMETHODIMP JSStackFrame::GetAsyncCause(JSContext* aCx,
-                                          nsAString& aAsyncCause)
+NS_IMETHODIMP
+JSStackFrame::GetAsyncCauseXPCOM(JSContext* aCx,
+                                 nsAString& aAsyncCause)
+{
+  GetAsyncCause(aCx, aAsyncCause);
+  return NS_OK;
+}
+
+void
+JSStackFrame::GetAsyncCause(JSContext* aCx,
+                            nsAString& aAsyncCause)
 {
   if (!mStack) {
     aAsyncCause.Truncate();
-    return NS_OK;
+    return;
   }
 
   JS::Rooted<JSString*> asyncCause(aCx);
@@ -510,7 +519,7 @@ NS_IMETHODIMP JSStackFrame::GetAsyncCause(JSContext* aCx,
 
   if (useCachedValue) {
     aAsyncCause = mAsyncCause;
-    return NS_OK;
+    return;
   }
 
   if (asyncCause) {
@@ -518,7 +527,7 @@ NS_IMETHODIMP JSStackFrame::GetAsyncCause(JSContext* aCx,
     if (!str.init(aCx, asyncCause)) {
       JS_ClearPendingException(aCx);
       aAsyncCause.Truncate();
-      return NS_OK;
+      return;
     }
     aAsyncCause = str;
   } else {
@@ -529,8 +538,6 @@ NS_IMETHODIMP JSStackFrame::GetAsyncCause(JSContext* aCx,
     mAsyncCause = aAsyncCause;
     mAsyncCauseInitialized = true;
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP JSStackFrame::GetAsyncCaller(JSContext* aCx,
