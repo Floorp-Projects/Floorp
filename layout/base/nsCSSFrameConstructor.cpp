@@ -3889,9 +3889,6 @@ nsCSSFrameConstructor::FindInputData(Element* aElement,
   // radio and checkbox inputs with appearance:none should be constructed
   // by display type.  (Note that we're not checking that appearance is
   // not (respectively) NS_THEME_RADIO and NS_THEME_CHECKBOX.)
-  //
-  // If this block ever goes away, then NS_THEME_NONE can be removed from
-  // AppearanceValueChangeReconstructsFrames.
   if ((controlType == NS_FORM_INPUT_CHECKBOX ||
        controlType == NS_FORM_INPUT_RADIO) &&
       aStyleContext->StyleDisplay()->mAppearance == NS_THEME_NONE) {
