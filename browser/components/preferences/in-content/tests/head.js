@@ -193,7 +193,7 @@ function assertSitesListed(doc, hosts) {
     let site = sitesList.querySelector(`richlistitem[host="${host}"]`);
     ok(site, `Should list the site of ${host}`);
   });
-  is(removeBtn.disabled, false, "Should enable the removeSelected button");
+  is(removeBtn.disabled, true, "Should disable the removeSelected button");
   is(removeAllBtn.disabled, false, "Should enable the removeAllBtn button");
 }
 

@@ -244,7 +244,9 @@ add_task(async function() {
       let site = sitesList.querySelector(`richlistitem[host="${host}"]`);
       if (site) {
         site.click();
+        is(removeBtn.disabled, false, "Should enable the removeSelected button");
         removeBtn.doCommand();
+        is(removeBtn.disabled, true, "Should disable the removeSelected button");
       } else {
         ok(false, `Should not select and remove inexistent site of ${host}`);
       }
