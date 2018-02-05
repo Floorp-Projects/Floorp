@@ -1003,19 +1003,22 @@ txMozillaXSLTProcessor::GetParameter(const nsAString& aNamespaceURI,
     return result.forget();
 }
 
-NS_IMETHODIMP
+void
 txMozillaXSLTProcessor::RemoveParameter(const nsAString& aNamespaceURI,
-                                        const nsAString& aLocalName)
+                                        const nsAString& aLocalName,
+                                        ErrorResult& aRv)
 {
     int32_t nsId = kNameSpaceID_Unknown;
     nsresult rv = nsContentUtils::NameSpaceManager()->
         RegisterNameSpace(aNamespaceURI, nsId);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        aRv.Throw(rv);
+        return;
+    }
     RefPtr<nsAtom> localName = NS_Atomize(aLocalName);
     txExpandedName varName(nsId, localName);
 
     mVariables.remove(varName);
-    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -121,10 +121,7 @@ public:
                                               mozilla::ErrorResult& aRv);
     void RemoveParameter(const nsAString& aNamespaceURI,
                          const nsAString& aLocalName,
-                         mozilla::ErrorResult& aRv)
-    {
-        aRv = RemoveParameter(aNamespaceURI, aLocalName);
-    }
+                         mozilla::ErrorResult& aRv);
 
     uint32_t Flags(mozilla::dom::SystemCallerGuarantee);
     void SetFlags(uint32_t aFlags, mozilla::dom::SystemCallerGuarantee);

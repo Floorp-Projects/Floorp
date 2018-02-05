@@ -11,16 +11,6 @@ interface nsIVariant;
 interface nsIXSLTProcessor : nsISupports
 {
     /**
-     * Removes a parameter, if set. This will make the processor use the
-     * default-value for the parameter as specified in the stylesheet.
-     *
-     * @param namespaceURI The namespaceURI of the XSLT parameter
-     * @param localName    The local name of the XSLT parameter
-     */
-    void removeParameter(in DOMString namespaceURI,
-                         in DOMString localName);
-
-    /**
      * Removes all set parameters from this nsIXSLTProcessor. This will make
      * the processor use the default-value for all parameters as specified in
      * the stylesheet.
