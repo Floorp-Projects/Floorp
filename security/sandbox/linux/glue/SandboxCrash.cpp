@@ -67,10 +67,7 @@ SandboxLogJSStack(void)
                         lineNumber);
     }
 
-    nsCOMPtr<nsIStackFrame> nextFrame;
-    nsresult rv = frame->GetCaller(cx, getter_AddRefs(nextFrame));
-    NS_ENSURE_SUCCESS_VOID(rv);
-    frame = nextFrame;
+    frame = frame->GetCaller(cx);
   }
 }
 
