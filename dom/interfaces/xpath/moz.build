@@ -9,7 +9,6 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     'nsIDOMXPathEvaluator.idl',
-    'nsIDOMXPathResult.idl',
 ]
 
 XPIDL_MODULE = 'dom_xpath'
