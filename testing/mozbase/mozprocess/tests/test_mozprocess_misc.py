@@ -16,19 +16,25 @@ here = os.path.dirname(os.path.abspath(__file__))
 class ProcTestMisc(proctest.ProcTest):
     """ Class to test misc operations """
 
-    def test_process_output_twice(self):
+    def test_process_timeout_no_kill(self):
+        """ Process is started, runs but we time out waiting on it
+            to complete. Process should not be killed.
         """
-        Process is started, then processOutput is called a second time explicitly
-        """
+        p = None
+
+        def timeout_handler():
+            self.assertEqual(p.proc.poll(), None)
+            p.kill()
         p = processhandler.ProcessHandler([self.python, self.proclaunch,
-                                           "process_waittimeout_10s_python.ini"],
-                                          cwd=here)
-
-        p.run()
-        p.processOutput(timeout=5)
+                                           "process_waittimeout_python.ini"],
+                                          cwd=here,
+                                          onTimeout=(timeout_handler,),
+                                          kill_on_timeout=False)
+        p.run(timeout=1)
         p.wait()
+        self.assertTrue(p.didTimeout)
 
-        self.determine_status(p, False, ())
+        self.determine_status(p, False, ['returncode', 'didtimeout'])
 
     def test_unicode_in_environment(self):
         env = {
