@@ -1137,10 +1137,8 @@ ServiceWorkerRegistrar::GetState(nsIPropertyBag**)
       if (rv == NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS) {                  \
         if (auto* context = CycleCollectedJSContext::Get()) {                  \
           if (RefPtr<Exception> exn = context->GetPendingException()) {        \
-            nsAutoCString msg;                                                 \
-            if (NS_SUCCEEDED(exn->GetMessageMoz(msg))) {                       \
-              MOZ_CRASH_UNSAFE_PRINTF("Failed to get " name ": %s", msg.get());\
-            }                                                                  \
+            MOZ_CRASH_UNSAFE_PRINTF("Failed to get " name ": %s",              \
+                                    exn->GetMessageMoz().get());               \
           }                                                                    \
         }                                                                      \
       }                                                                        \
