@@ -369,6 +369,9 @@ public:
 
   virtual SurfaceType GetType() const = 0;
   virtual IntSize GetSize() const = 0;
+  virtual IntRect GetRect() const {
+    return IntRect(IntPoint(0, 0), GetSize());
+  }
   virtual SurfaceFormat GetFormat() const = 0;
 
   /** This returns false if some event has made this source surface invalid for
@@ -938,6 +941,9 @@ public:
   virtual already_AddRefed<SourceSurface> IntoLuminanceSource(LuminanceType aLuminanceType,
                                                               float aOpacity);
   virtual IntSize GetSize() const = 0;
+  virtual IntRect GetRect() const {
+    return IntRect(IntPoint(0, 0), GetSize());
+  }
 
   /**
    * If possible returns the bits to this DrawTarget for direct manipulation. While
