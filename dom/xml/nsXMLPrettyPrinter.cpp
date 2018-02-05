@@ -23,6 +23,7 @@
 #include "nsIDocument.h"
 #include "nsVariant.h"
 #include "mozilla/dom/CustomEvent.h"
+#include "mozilla/dom/txMozillaXSLTProcessor.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -111,10 +112,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Transform the document
-    nsCOMPtr<nsIXSLTProcessor> transformer =
-        do_CreateInstance("@mozilla.org/document-transformer;1?type=xslt", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    RefPtr<txMozillaXSLTProcessor> transformer = new txMozillaXSLTProcessor();
     rv = transformer->ImportStylesheet(xslDocument);
     NS_ENSURE_SUCCESS(rv, rv);
 
