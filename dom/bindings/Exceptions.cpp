@@ -87,9 +87,8 @@ ThrowExceptionObject(JSContext* aCx, Exception* aException)
     // create the right sort of Exception or DOMException, with the right
     // global.
     if (thrown.isNumber()) {
-      nsresult exceptionResult;
-      if (NS_SUCCEEDED(aException->GetResult(&exceptionResult)) &&
-          double(exceptionResult) == thrown.toNumber()) {
+      nsresult exceptionResult = aException->GetResult();
+      if (double(exceptionResult) == thrown.toNumber()) {
         Throw(aCx, exceptionResult);
         return;
       }
@@ -131,9 +130,7 @@ Throw(JSContext* aCx, nsresult aRv, const nsACString& aMessage)
 
   // Ignore the pending exception if we have a non-default message passed in.
   if (aMessage.IsEmpty() && existingException) {
-    nsresult nr;
-    if (NS_SUCCEEDED(existingException->GetResult(&nr)) &&
-        aRv == nr) {
+    if (aRv == existingException->GetResult()) {
       // Reuse the existing exception.
       ThrowExceptionObject(aCx, existingException);
       return false;

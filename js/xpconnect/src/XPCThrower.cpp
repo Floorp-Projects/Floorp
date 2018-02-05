@@ -56,8 +56,7 @@ XPCThrower::CheckForPendingException(nsresult result, JSContext* cx)
         return false;
     XPCJSContext::Get()->SetPendingException(nullptr);
 
-    nsresult e_result;
-    if (NS_FAILED(e->GetResult(&e_result)) || e_result != result)
+    if (e->GetResult() != result)
         return false;
 
     ThrowExceptionObject(cx, e);
