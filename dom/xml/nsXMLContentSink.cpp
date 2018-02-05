@@ -59,6 +59,7 @@
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/ScriptLoader.h"
+#include "mozilla/dom/txMozillaXSLTProcessor.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -626,12 +627,7 @@ nsXMLContentSink::AddContentAsLeaf(nsIContent *aContent)
 nsresult
 nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
 {
-  nsCOMPtr<nsIDocumentTransformer> processor =
-    do_CreateInstance("@mozilla.org/document-transformer;1?type=xslt");
-  if (!processor) {
-    // No XSLT processor available, continue normal document loading
-    return NS_OK;
-  }
+  nsCOMPtr<nsIDocumentTransformer> processor = new txMozillaXSLTProcessor();
 
   processor->SetTransformObserver(this);
 
