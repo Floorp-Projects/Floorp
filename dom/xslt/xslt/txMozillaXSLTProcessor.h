@@ -160,6 +160,11 @@ private:
     void notifyError();
     nsresult ensureStylesheet();
 
+    // Helper method for the WebIDL SetParameter.
+    nsresult SetParameter(const nsAString& aNamespaceURI,
+                          const nsAString& aLocalName,
+                          nsIVariant* aValue);
+
     nsCOMPtr<nsISupports> mOwner;
 
     RefPtr<txStylesheet> mStylesheet;
