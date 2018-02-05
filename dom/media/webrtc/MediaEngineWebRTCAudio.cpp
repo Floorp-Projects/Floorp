@@ -597,9 +597,10 @@ MediaEngineWebRTCMicrophoneSource::Deallocate(const RefPtr<const AllocationHandl
   AssertIsOnOwningThread();
 
   size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
-  MOZ_ASSERT(i != mAllocations.NoIndex);
-  MOZ_ASSERT(!mAllocations[i].mEnabled,
-             "Source should be stopped for the track before removing");
+  MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex);
+  MOZ_DIAGNOSTIC_ASSERT(!mAllocations[i].mEnabled,
+                        "Source should be stopped for the track before removing");
+
   if (mAllocations[i].mStream && IsTrackIDExplicit(mAllocations[i].mTrackID)) {
     mAllocations[i].mStream->EndTrack(mAllocations[i].mTrackID);
   }
@@ -645,7 +646,10 @@ MediaEngineWebRTCMicrophoneSource::SetTrack(const RefPtr<const AllocationHandle>
   }
 
   size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
-  MOZ_ASSERT(i != mAllocations.NoIndex);
+  MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex);
+  MOZ_ASSERT(!mAllocations[i].mStream);
+  MOZ_ASSERT(mAllocations[i].mTrackID == TRACK_NONE);
+  MOZ_ASSERT(mAllocations[i].mPrincipal == PRINCIPAL_HANDLE_NONE);
   {
     MutexAutoLock lock(mMutex);
     mAllocations[i].mStream = aStream;
@@ -678,7 +682,8 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>& a
   }
 
   size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
-  MOZ_ASSERT(i != mAllocations.NoIndex, "Can't start track that hasn't been added");
+  MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex,
+                        "Can't start track that hasn't been added");
   Allocation& allocation = mAllocations[i];
 
   MOZ_ASSERT(!allocation.mEnabled, "Source already started");
@@ -710,7 +715,8 @@ MediaEngineWebRTCMicrophoneSource::Stop(const RefPtr<const AllocationHandle>& aH
   AssertIsOnOwningThread();
 
   size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
-  MOZ_ASSERT(i != mAllocations.NoIndex, "Cannot stop track that we don't know about");
+  MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex,
+                        "Cannot stop track that we don't know about");
   Allocation& allocation = mAllocations[i];
 
   if (!allocation.mEnabled) {
