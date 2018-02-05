@@ -8,7 +8,6 @@ Runs the reftest test harness.
 
 import collections
 import copy
-import itertools
 import json
 import multiprocessing
 import os
@@ -227,8 +226,6 @@ class ReftestResolver(object):
 
 
 class RefTest(object):
-    TEST_SEEN_INITIAL = 'reftest'
-    TEST_SEEN_FINAL = 'Main app process exited normally'
     oldcwd = os.getcwd()
     parse_manifest = True
     resolver_cls = ReftestResolver
@@ -236,7 +233,7 @@ class RefTest(object):
 
     def __init__(self):
         update_mozinfo()
-        self.lastTestSeen = self.TEST_SEEN_INITIAL
+        self.lastTestSeen = None
         self.haveDumpedScreen = False
         self.resolver = self.resolver_cls()
         self.log = None
@@ -265,8 +262,7 @@ class RefTest(object):
         return os.path.normpath(os.path.join(self.oldcwd, os.path.expanduser(path)))
 
     def createReftestProfile(self, options, tests=None, manifests=None,
-                             server='localhost', port=0, profile_to_clone=None,
-                             startAfter=None, prefs=None):
+                             server='localhost', port=0, profile_to_clone=None, prefs=None):
         """Sets up a profile for reftest.
 
         :param options: Object containing command line options
@@ -276,7 +272,6 @@ class RefTest(object):
         :param server: Server name to use for http tests
         :param profile_to_clone: Path to a profile to use as the basis for the
                                  test profile
-        :param startAfter: Start running tests after the specified test id
         :param prefs: Extra preferences to set in the profile
         """
         locations = mozprofile.permissions.ServerLocations()
@@ -305,10 +300,6 @@ class RefTest(object):
         prefs['reftest.focusFilterMode'] = options.focusFilterMode
         prefs['reftest.logLevel'] = options.log_tbpl_level or 'info'
         prefs['reftest.suite'] = options.suite
-
-        if startAfter not in (None, self.TEST_SEEN_INITIAL, self.TEST_SEEN_FINAL):
-            self.log.info("Setting reftest.startAfter to %s" % startAfter)
-            prefs['reftest.startAfter'] = startAfter
 
         # Unconditionally update the e10s pref.
         if options.e10s:
@@ -782,11 +773,9 @@ class RefTest(object):
 
         if status:
             msg = "TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s" % \
-                (self.lastTestSeen, status)
+                    (self.lastTestSeen, status)
             # use process_output so message is logged verbatim
             self.log.process_output(None, msg)
-        else:
-            self.lastTestSeen = self.TEST_SEEN_FINAL
 
         crashed = mozcrash.log_crashes(self.log, os.path.join(profile.profile, 'minidumps'),
                                        symbolsPath, test=self.lastTestSeen)
@@ -801,7 +790,7 @@ class RefTest(object):
             raise exc, value, tb
 
         self.log.info("Process mode: {}".format('e10s' if options.e10s else 'non-e10s'))
-        return status, self.lastTestSeen, outputHandler.results
+        return status, outputHandler.results
 
     def getActiveTests(self, manifests, options, testDumpFile=None):
         # These prefs will cause reftest.jsm to parse the manifests,
@@ -811,7 +800,7 @@ class RefTest(object):
             'reftest.manifests.dumpTests': testDumpFile or self.testDumpFile,
         }
         cmdargs = []  # ['-headless']
-        status, _, _ = self.runApp(options, cmdargs=cmdargs, prefs=prefs)
+        status, _ = self.runApp(options, cmdargs=cmdargs, prefs=prefs)
 
         with open(self.testDumpFile, 'r') as fh:
             tests = json.load(fh)
@@ -846,57 +835,29 @@ class RefTest(object):
             ids = [t['identifier'] for t in tests]
             self.log.suite_start(ids, name=options.suite)
 
-        startAfter = None  # When the previous run crashed, we skip the tests we ran before
-        prevStartAfter = None
-        for i in itertools.count():
-            status, startAfter, results = self.runApp(
-                options,
-                tests=tests,
-                manifests=manifests,
-                cmdargs=cmdargs,
-                # We generally want the JS harness or marionette
-                # to handle timeouts if they can.
-                # The default JS harness timeout is currently
-                # 300 seconds (default options.timeout).
-                # The default Marionette socket timeout is
-                # currently 360 seconds.
-                # Give the JS harness extra time to deal with
-                # its own timeouts and try to usually exceed
-                # the 360 second marionette socket timeout.
-                # See bug 479518 and bug 1414063.
-                timeout=options.timeout + 70.0,
-                symbolsPath=options.symbolsPath,
-                debuggerInfo=debuggerInfo
-            )
-            mozleak.process_leak_log(self.leakLogFile,
-                                     leak_thresholds=options.leakThresholds,
-                                     stack_fixer=get_stack_fixer_function(options.utilityPath,
-                                                                          options.symbolsPath))
-
-            if status == 0:
-                break
-
-            if startAfter == self.TEST_SEEN_FINAL:
-                self.log.info("Finished running all tests, skipping resume "
-                              "despite non-zero status code: %s" % status)
-                break
-
-            if startAfter is not None and options.shuffle:
-                self.log.error("Can not resume from a crash with --shuffle "
-                               "enabled. Please consider disabling --shuffle")
-                break
-            if startAfter is not None and options.maxRetries <= i:
-                self.log.error("Hit maximum number of allowed retries ({}) "
-                               "in the test run".format(options.maxRetries))
-                break
-            if startAfter == prevStartAfter:
-                # If the test stuck on the same test, or there the crashed
-                # test appeared more then once, stop
-                self.log.error("Force stop because we keep running into "
-                               "test \"{}\"".format(startAfter))
-                break
-            prevStartAfter = startAfter
-            # TODO: we need to emit an SUITE-END log if it crashed
+        status, results = self.runApp(
+            options,
+            tests=tests,
+            manifests=manifests,
+            cmdargs=cmdargs,
+            # We generally want the JS harness or marionette
+            # to handle timeouts if they can.
+            # The default JS harness timeout is currently
+            # 300 seconds (default options.timeout).
+            # The default Marionette socket timeout is
+            # currently 360 seconds.
+            # Give the JS harness extra time to deal with
+            # its own timeouts and try to usually exceed
+            # the 360 second marionette socket timeout.
+            # See bug 479518 and bug 1414063.
+            timeout=options.timeout + 70.0,
+            symbolsPath=options.symbolsPath,
+            debuggerInfo=debuggerInfo
+        )
+        mozleak.process_leak_log(self.leakLogFile,
+                                 leak_thresholds=options.leakThresholds,
+                                 stack_fixer=get_stack_fixer_function(options.utilityPath,
+                                                                      options.symbolsPath))
 
         if self.parse_manifest:
             self.log.suite_end(extra={'results': results})
