@@ -7,6 +7,10 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
+BROWSER_CHROME_MANIFESTS += [
+  'test/browser.ini',
+]
+
 MOCHITEST_MANIFESTS += [
     'test/mochitest.ini',
     'test/pointerevents/mochitest.ini',
