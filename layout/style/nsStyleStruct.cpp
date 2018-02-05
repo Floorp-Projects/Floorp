@@ -3755,33 +3755,6 @@ CompareTransformValues(const RefPtr<nsCSSValueSharedList>& aList,
   return result;
 }
 
-static bool
-AppearanceValueChangeReconstructsFrames(const nsStyleDisplay& aDisplay)
-{
-  if (aDisplay.mAppearance == NS_THEME_TEXTFIELD) {
-    // This is for <input type=number> where we allow authors to specify a
-    // |-moz-appearance:textfield| to get a control without a spinner. (The
-    // spinner is present for |-moz-appearance:number-input| but also other
-    // values such as 'none'.) We need to reframe since we want to use
-    // nsTextControlFrame instead of nsNumberControlFrame if the author
-    // specifies 'textfield'.
-    return true;
-  }
-
-  if (aDisplay.mAppearance == NS_THEME_NONE) {
-    // This is for checkboxes / radio buttons. Changing their appearance value
-    // to none makes them non-replaced elements, and thus we need to reconstruct
-    // the frame.
-    //
-    // TODO(emilio): It's kind of unfortunate that we can't be more granular
-    // about this so it really only applies to the inputs, but I guess it's not
-    // a huge deal.
-    return true;
-  }
-
-  return false;
-}
-
 nsChangeHint
 nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
 {
@@ -3803,10 +3776,16 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
     return nsChangeHint_ReconstructFrame;
   }
 
-  // See if we need to reframe due to our appearance changing.
-  if (mAppearance != aNewData.mAppearance &&
-      (AppearanceValueChangeReconstructsFrames(*this) ||
-       AppearanceValueChangeReconstructsFrames(aNewData))) {
+  if ((mAppearance == NS_THEME_TEXTFIELD &&
+       aNewData.mAppearance != NS_THEME_TEXTFIELD) ||
+      (mAppearance != NS_THEME_TEXTFIELD &&
+       aNewData.mAppearance == NS_THEME_TEXTFIELD)) {
+    // This is for <input type=number> where we allow authors to specify a
+    // |-moz-appearance:textfield| to get a control without a spinner. (The
+    // spinner is present for |-moz-appearance:number-input| but also other
+    // values such as 'none'.) We need to reframe since we want to use
+    // nsTextControlFrame instead of nsNumberControlFrame if the author
+    // specifies 'textfield'.
     return nsChangeHint_ReconstructFrame;
   }
 
