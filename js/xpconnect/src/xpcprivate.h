@@ -118,7 +118,6 @@
 #include "XPCForwards.h"
 #include "XPCLog.h"
 #include "xpccomponents.h"
-#include "xpcexception.h"
 #include "xpcjsid.h"
 #include "prenv.h"
 #include "prcvar.h"

@@ -1254,7 +1254,7 @@ nsXPCComponents_ID::HasInstance(nsIXPConnectWrappedNative* wrapper,
 }
 
 /***************************************************************************/
-// JavaScript Constructor for nsIXPCException objects (Components.Exception)
+// JavaScript Constructor for Exception objects (Components.Exception)
 
 class nsXPCComponents_Exception final :
   public nsIXPCComponents_Exception,
@@ -1542,14 +1542,14 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
     if (!parser.parse(args))
         return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
 
-    nsCOMPtr<nsIException> e = new Exception(nsCString(parser.eMsg),
-                                             parser.eResult,
-                                             EmptyCString(),
-                                             parser.eStack,
-                                             parser.eData);
+    RefPtr<Exception> e = new Exception(nsCString(parser.eMsg),
+                                        parser.eResult,
+                                        EmptyCString(),
+                                        parser.eStack,
+                                        parser.eData);
 
     RootedObject newObj(cx);
-    if (NS_FAILED(xpc->WrapNative(cx, obj, e, NS_GET_IID(nsIXPCException), newObj.address())) || !newObj) {
+    if (NS_FAILED(xpc->WrapNative(cx, obj, e, NS_GET_IID(nsIException), newObj.address())) || !newObj) {
         return ThrowAndFail(NS_ERROR_XPC_CANT_CREATE_WN, cx, _retval);
     }
 

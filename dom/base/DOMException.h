@@ -20,7 +20,7 @@
 #include "nsID.h"
 #include "nsIDOMDOMException.h"
 #include "nsWrapperCache.h"
-#include "xpcexception.h"
+#include "nsIException.h"
 #include "nsString.h"
 #include "mozilla/dom/BindingDeclarations.h"
 
@@ -42,7 +42,7 @@ class GlobalObject;
 { 0x55eda557, 0xeba0, 0x4fe3, \
   { 0xae, 0x2e, 0xf3, 0x94, 0x49, 0x23, 0x62, 0xd6 } }
 
-class Exception : public nsIXPCException,
+class Exception : public nsIException,
                   public nsWrapperCache
 {
 public:
@@ -52,7 +52,6 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIEXCEPTION
-  NS_DECL_NSIXPCEXCEPTION
 
   // Cruft used by XPConnect for exceptions originating in JS implemented
   // components.
