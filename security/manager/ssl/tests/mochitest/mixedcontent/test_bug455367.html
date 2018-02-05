@@ -16,6 +16,9 @@
 
   function runTest()
   {
+    SpecialPowers.pushPrefEnv(
+      {"set": [["security.mixed_content.upgrade_display_content", false]]},
+      null);
     isSecurityState("broken", "broken");
     finish();
   }
