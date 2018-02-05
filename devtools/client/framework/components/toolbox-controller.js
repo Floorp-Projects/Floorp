@@ -23,7 +23,7 @@ class ToolboxController extends Component {
       focusedButton: ELEMENT_PICKER_ID,
       currentToolId: null,
       canRender: false,
-      highlightedTool: "",
+      highlightedTools: new Set(),
       areDockButtonsEnabled: true,
       panelDefinitions: [],
       hostTypes: [],
@@ -118,12 +118,16 @@ class ToolboxController extends Component {
   }
 
   highlightTool(highlightedTool) {
-    this.setState({ highlightedTool });
+    let { highlightedTools } = this.state;
+    highlightedTools.add(highlightedTool);
+    this.setState({ highlightedTools });
   }
 
   unhighlightTool(id) {
-    if (this.state.highlightedTool === id) {
-      this.setState({ highlightedTool: "" });
+    let { highlightedTools } = this.state;
+    if (highlightedTools.has(id)) {
+      highlightedTools.delete(id);
+      this.setState({ highlightedTools });
     }
   }
 
