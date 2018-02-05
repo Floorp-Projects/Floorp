@@ -1163,13 +1163,9 @@ StackFrameToStackEntry(JSContext* aCx, nsIStackFrame* aStackFrame,
 
   aStackEntry.mLineNumber = aStackFrame->GetLineNumber(aCx);
 
-  int32_t columnNumber;
-  nsresult rv = aStackFrame->GetColumnNumber(aCx, &columnNumber);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aStackEntry.mColumnNumber = aStackFrame->GetColumnNumber(aCx);
 
-  aStackEntry.mColumnNumber = columnNumber;
-
-  rv = aStackFrame->GetName(aCx, aStackEntry.mFunctionName);
+  nsresult rv = aStackFrame->GetName(aCx, aStackEntry.mFunctionName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsString cause;
