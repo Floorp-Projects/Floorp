@@ -38,13 +38,6 @@ class GlobalObject;
 } // namespace dom
 } // namespace mozilla
 
-/* bacd8ad0-552f-11d3-a9f7-000064657374 */
-#define TRANSFORMIIX_XSLT_PROCESSOR_CID   \
-{ 0x618ee71d, 0xd7a7, 0x41a1, {0xa3, 0xfb, 0xc2, 0xbe, 0xdc, 0x6a, 0x21, 0x7e} }
-
-#define TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID \
-"@mozilla.org/document-transformer;1?type=xslt"
-
 #define XSLT_MSGS_URL  "chrome://global/locale/xslt/xslt.properties"
 
 /**
