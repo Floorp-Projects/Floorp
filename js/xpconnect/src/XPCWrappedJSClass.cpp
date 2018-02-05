@@ -990,9 +990,8 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                             int32_t lineNumber = 0;
                             nsString sourceName;
 
-                            nsCOMPtr<nsIStackFrame> location;
-                            xpc_exception->
-                                GetLocation(getter_AddRefs(location));
+                            nsCOMPtr<nsIStackFrame> location =
+                                xpc_exception->GetLocation();
                             if (location) {
                                 // Get line number.
                                 lineNumber = location->GetLineNumber(cx);
