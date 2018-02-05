@@ -259,17 +259,13 @@ class RemoteReftest(RefTest):
                 # may not be able to access process info for all processes
                 continue
 
-    def createReftestProfile(self, options, startAfter=None, **kwargs):
+    def createReftestProfile(self, options, **kwargs):
         profile = RefTest.createReftestProfile(self,
                                                options,
                                                server=options.remoteWebServer,
                                                port=options.httpPort,
                                                **kwargs)
-        if startAfter is not None:
-            print ("WARNING: Continuing after a crash is not supported for remote "
-                   "reftest yet.")
         profileDir = profile.profile
-
         prefs = {}
         prefs["app.update.url.android"] = ""
         prefs["browser.firstrun.show.localepicker"] = False
@@ -353,21 +349,18 @@ class RemoteReftest(RefTest):
         env = self.buildBrowserEnv(options, profile.profile)
 
         self.log.info("Running with e10s: {}".format(options.e10s))
-        status, lastTestSeen = self.automation.runApp(None, env,
-                                                      binary,
-                                                      profile.profile,
-                                                      cmdargs,
-                                                      utilityPath=options.utilityPath,
-                                                      xrePath=options.xrePath,
-                                                      debuggerInfo=debuggerInfo,
-                                                      symbolsPath=symbolsPath,
-                                                      timeout=timeout)
-        if status == 1:
-            # when max run time exceeded, avoid restart
-            lastTestSeen = RefTest.TEST_SEEN_FINAL
+        status, self.lastTestSeen = self.automation.runApp(None, env,
+                                                           binary,
+                                                           profile.profile,
+                                                           cmdargs,
+                                                           utilityPath=options.utilityPath,
+                                                           xrePath=options.xrePath,
+                                                           debuggerInfo=debuggerInfo,
+                                                           symbolsPath=symbolsPath,
+                                                           timeout=timeout)
 
         self.cleanup(profile.profile)
-        return status, lastTestSeen, self.outputHandler.results
+        return status, self.outputHandler.results
 
     def cleanup(self, profileDir):
         # Pull results back from device
