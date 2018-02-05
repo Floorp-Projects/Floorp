@@ -1159,11 +1159,10 @@ StackFrameToStackEntry(JSContext* aCx, nsIStackFrame* aStackFrame,
 {
   MOZ_ASSERT(aStackFrame);
 
-  nsresult rv = aStackFrame->GetFilename(aCx, aStackEntry.mFilename);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aStackFrame->GetFilename(aCx, aStackEntry.mFilename);
 
   int32_t lineNumber;
-  rv = aStackFrame->GetLineNumber(aCx, &lineNumber);
+  nsresult rv = aStackFrame->GetLineNumber(aCx, &lineNumber);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aStackEntry.mLineNumber = lineNumber;
@@ -2694,14 +2693,13 @@ Console::MaybeExecuteDumpFunctionForTrace(JSContext* aCx, nsIStackFrame* aStack)
 
   while (stack) {
     nsAutoString filename;
-    nsresult rv = stack->GetFilename(aCx, filename);
-    NS_ENSURE_SUCCESS_VOID(rv);
+    stack->GetFilename(aCx, filename);
 
     message.Append(filename);
     message.AppendLiteral(" ");
 
     int32_t lineNumber;
-    rv = stack->GetLineNumber(aCx, &lineNumber);
+    nsresult rv = stack->GetLineNumber(aCx, &lineNumber);
     NS_ENSURE_SUCCESS_VOID(rv);
 
     message.AppendInt(lineNumber);
