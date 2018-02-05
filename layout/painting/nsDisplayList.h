@@ -709,9 +709,7 @@ public:
   void RecomputeCurrentAnimatedGeometryRoot();
 
   void Check() {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     mPool.Check();
-#endif
   }
 
   /**
