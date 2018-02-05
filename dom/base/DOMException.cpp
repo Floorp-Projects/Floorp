@@ -229,13 +229,6 @@ Exception::StowJSVal(JS::Value& aVp)
 }
 
 NS_IMETHODIMP
-Exception::GetMessageMoz(nsACString& aMessage)
-{
-  aMessage.Assign(mMessage);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 Exception::GetResult(nsresult* aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -339,13 +332,7 @@ Exception::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 void
 Exception::GetMessageMoz(nsString& retval)
 {
-  nsCString str;
-#ifdef DEBUG
-  DebugOnly<nsresult> rv =
-#endif
-  GetMessageMoz(str);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  CopyUTF8toUTF16(str, retval);
+  CopyUTF8toUTF16(mMessage, retval);
 }
 
 uint32_t
@@ -412,9 +399,7 @@ NS_INTERFACE_MAP_END_INHERITING(Exception)
 
 DOMException::DOMException(nsresult aRv, const nsACString& aMessage,
                            const nsACString& aName, uint16_t aCode)
-  : Exception(EmptyCString(), aRv, EmptyCString(), nullptr, nullptr),
-    mName(aName),
-    mMessage(aMessage),
+  : Exception(aMessage, aRv, aName, nullptr, nullptr),
     mCode(aCode)
 {
 }
@@ -467,12 +452,6 @@ void
 DOMException::GetName(nsString& retval)
 {
   CopyUTF8toUTF16(mName, retval);
-}
-
-void
-DOMException::GetMessageMoz(nsString& retval)
-{
-  CopyUTF8toUTF16(mMessage, retval);
 }
 
 already_AddRefed<DOMException>
