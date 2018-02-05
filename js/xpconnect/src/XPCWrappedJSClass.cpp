@@ -956,8 +956,8 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                 fputs(line, stdout);
                 fputs(preamble, stdout);
                 nsCString text;
-                if (NS_SUCCEEDED(xpc_exception->ToString(cx, text)) &&
-                    !text.IsEmpty()) {
+                xpc_exception->ToString(cx, text);
+                if (!text.IsEmpty()) {
                     fputs(text.get(), stdout);
                     fputs("\n", stdout);
                 } else
@@ -970,7 +970,6 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
             nsCOMPtr<nsIConsoleService> consoleService
                 (do_GetService(XPC_CONSOLE_CONTRACTID));
             if (nullptr != consoleService) {
-                nsresult rv;
                 nsCOMPtr<nsIScriptError> scriptError =
                     do_QueryInterface(xpc_exception->GetData());
 
@@ -980,32 +979,31 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                     scriptError = do_CreateInstance(XPC_SCRIPT_ERROR_CONTRACTID);
                     if (nullptr != scriptError) {
                         nsCString newMessage;
-                        rv = xpc_exception->ToString(cx, newMessage);
-                        if (NS_SUCCEEDED(rv)) {
-                            // try to get filename, lineno from the first
-                            // stack frame location.
-                            int32_t lineNumber = 0;
-                            nsString sourceName;
+                        xpc_exception->ToString(cx, newMessage);
+                        // try to get filename, lineno from the first
+                        // stack frame location.
+                        int32_t lineNumber = 0;
+                        nsString sourceName;
 
-                            nsCOMPtr<nsIStackFrame> location =
-                                xpc_exception->GetLocation();
-                            if (location) {
-                                // Get line number.
-                                lineNumber = location->GetLineNumber(cx);
+                        nsCOMPtr<nsIStackFrame> location =
+                            xpc_exception->GetLocation();
+                        if (location) {
+                            // Get line number.
+                            lineNumber = location->GetLineNumber(cx);
 
-                                // get a filename.
-                                location->GetFilename(cx, sourceName);
-                            }
-
-                            rv = scriptError->InitWithWindowID(NS_ConvertUTF8toUTF16(newMessage),
-                                                               sourceName,
-                                                               EmptyString(),
-                                                               lineNumber, 0, 0,
-                                                               "XPConnect JavaScript",
-                                                               nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
-                            if (NS_FAILED(rv))
-                                scriptError = nullptr;
+                            // get a filename.
+                            location->GetFilename(cx, sourceName);
                         }
+
+                        nsresult rv =
+                            scriptError->InitWithWindowID(NS_ConvertUTF8toUTF16(newMessage),
+                                                          sourceName,
+                                                          EmptyString(),
+                                                          lineNumber, 0, 0,
+                                                          "XPConnect JavaScript",
+                                                          nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
+                        if (NS_FAILED(rv))
+                            scriptError = nullptr;
                     }
                 }
                 if (nullptr != scriptError)
