@@ -25,7 +25,7 @@ var { Toolbox } = require("devtools/client/framework/toolbox");
 const chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
 
 // Override promise with deprecated-sync-thenables
-promise = Cu.import("resource://devtools/shared/deprecated-sync-thenables.js", {}).Promise;
+promise = require("devtools/shared/deprecated-sync-thenables");
 
 const EXAMPLE_URL = "http://example.com/browser/devtools/client/debugger/test/mochitest/";
 const FRAME_SCRIPT_URL = getRootDirectory(gTestPath) + "code_frame-script.js";
