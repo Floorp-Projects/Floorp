@@ -30,8 +30,8 @@ function run_test() {
 
   // serialNumber
   deepEqual(certificate.tbsCertificate.serialNumber,
-            [ 0x2d, 0xb0, 0x79, 0x13, 0x99, 0xaa, 0xf8, 0x1f, 0x3e, 0xce, 0xac,
-              0xb7, 0x53, 0xc9, 0xc1, 0x09, 0x12, 0x9e, 0x95, 0x18 ],
+            [ 0x59, 0xb5, 0x8b, 0x4f, 0x02, 0xc1, 0xbd, 0xfc, 0x1c, 0xa2, 0x25,
+              0x3b, 0x23, 0xc9, 0x43, 0xcf, 0xdb, 0x27, 0x7d, 0x48 ],
             "default-ee.pem should have expected serialNumber");
 
   deepEqual(certificate.tbsCertificate.signature.algorithm._values,
@@ -49,10 +49,10 @@ function run_test() {
             "default-ee.pem should have issuer 'Test CA'");
 
   equal(certificate.tbsCertificate.validity.notBefore.time.getTime(),
-        Date.parse("2015-11-28T00:00:00.000Z"),
+        Date.parse("2016-11-27T00:00:00.000Z"),
         "default-ee.pem should have the correct value for notBefore");
   equal(certificate.tbsCertificate.validity.notAfter.time.getTime(),
-        Date.parse("2018-02-05T00:00:00.000Z"),
+        Date.parse("2019-02-05T00:00:00.000Z"),
         "default-ee.pem should have the correct value for notAfter");
 
   equal(certificate.tbsCertificate.subject.rdns.length, 1,
