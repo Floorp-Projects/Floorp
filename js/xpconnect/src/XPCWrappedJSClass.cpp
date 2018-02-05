@@ -971,11 +971,8 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                 (do_GetService(XPC_CONSOLE_CONTRACTID));
             if (nullptr != consoleService) {
                 nsresult rv;
-                nsCOMPtr<nsIScriptError> scriptError;
-                nsCOMPtr<nsISupports> errorData;
-                rv = xpc_exception->GetData(getter_AddRefs(errorData));
-                if (NS_SUCCEEDED(rv))
-                    scriptError = do_QueryInterface(errorData);
+                nsCOMPtr<nsIScriptError> scriptError =
+                    do_QueryInterface(xpc_exception->GetData());
 
                 if (nullptr == scriptError) {
                     // No luck getting one from the exception, so

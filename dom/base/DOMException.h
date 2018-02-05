@@ -97,7 +97,7 @@ public:
 
   already_AddRefed<nsIStackFrame> GetLocation() const;
 
-  already_AddRefed<nsISupports> GetData() const;
+  nsISupports* GetData() const;
 
   void GetStack(JSContext* aCx, nsAString& aStack) const;
 
