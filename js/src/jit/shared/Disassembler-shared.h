@@ -165,15 +165,16 @@ class DisassemblerSpew
     const char* targetIndent_;
     uint32_t spewNext_;
     Node* nodes_;
+    uint32_t tag_;
 
-    // This global tracks the nesting level of assemblers, see comments in
-    // spew() in Disassembler-shared.cpp for why this is desirable.
+    // This global is used to disambiguate concurrently live assemblers, see
+    // comments in Disassembler-shared.cpp for why this is desirable.
     //
     // The variable is atomic to avoid any kind of complaint from thread
-    // sanitizers etc, (it could also be thread-local).  However, trying to look
-    // at disassembly without using --no-threads is basically insane, so you can
-    // ignore the multi-threading implications here.
-    static mozilla::Atomic<uint32_t> live_;
+    // sanitizers etc.  However, trying to look at disassembly without using
+    // --no-threads is basically insane, so you can ignore the multi-threading
+    // implications here.
+    static mozilla::Atomic<uint32_t> counter_;
 #endif
 };
 
