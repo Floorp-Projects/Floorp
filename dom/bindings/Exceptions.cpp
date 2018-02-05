@@ -244,8 +244,6 @@ public:
   explicit JSStackFrame(JS::Handle<JSObject*> aStack);
 
 protected:
-  int32_t GetLineno(JSContext* aCx);
-
   int32_t GetColNo(JSContext* aCx);
 
 private:
@@ -431,7 +429,7 @@ NS_IMETHODIMP JSStackFrame::GetName(JSContext* aCx, nsAString& aFunction)
 }
 
 int32_t
-JSStackFrame::GetLineno(JSContext* aCx)
+JSStackFrame::GetLineNumber(JSContext* aCx)
 {
   if (!mStack) {
     return 0;
@@ -454,9 +452,10 @@ JSStackFrame::GetLineno(JSContext* aCx)
   return line;
 }
 
-NS_IMETHODIMP JSStackFrame::GetLineNumber(JSContext* aCx, int32_t* aLineNumber)
+NS_IMETHODIMP
+JSStackFrame::GetLineNumberXPCOM(JSContext* aCx, int32_t* aLineNumber)
 {
-  *aLineNumber = GetLineno(aCx);
+  *aLineNumber = GetLineNumber(aCx);
   return NS_OK;
 }
 
@@ -668,7 +667,7 @@ NS_IMETHODIMP JSStackFrame::ToString(JSContext* aCx, nsACString& _retval)
     funname.AssignLiteral("<TOP_LEVEL>");
   }
 
-  int32_t lineno = GetLineno(aCx);
+  int32_t lineno = GetLineNumber(aCx);
 
   static const char format[] = "JS frame :: %s :: %s :: line %d";
   _retval.AppendPrintf(format,
