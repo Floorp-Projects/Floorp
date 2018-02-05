@@ -59,7 +59,6 @@
 #include "nsIDOMSerializer.h"
 #include "nsIDOMSimpleGestureEvent.h"
 #include "nsIDOMText.h"
-#include "nsIDOMTimeEvent.h"
 #include "nsIDOMTimeRanges.h"
 #include "nsIDOMTransitionEvent.h"
 #include "nsIDOMUIEvent.h"
@@ -280,7 +279,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMSerializer, XMLSerializer),
   DEFINE_SHIM(SimpleGestureEvent),
   DEFINE_SHIM(Text),
-  DEFINE_SHIM(TimeEvent),
   DEFINE_SHIM(TimeRanges),
   DEFINE_SHIM(TransitionEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsITreeBoxObject, TreeBoxObject),
