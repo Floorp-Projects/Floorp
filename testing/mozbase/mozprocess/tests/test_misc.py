@@ -26,7 +26,7 @@ class ProcTestMisc(proctest.ProcTest):
             self.assertEqual(p.proc.poll(), None)
             p.kill()
         p = processhandler.ProcessHandler([self.python, self.proclaunch,
-                                           "process_waittimeout_python.ini"],
+                                           "process_waittimeout.ini"],
                                           cwd=here,
                                           onTimeout=(timeout_handler,),
                                           kill_on_timeout=False)
@@ -41,7 +41,7 @@ class ProcTestMisc(proctest.ProcTest):
             'FOOBAR': 'ʘ',
         }
         p = processhandler.ProcessHandler([self.python, self.proclaunch,
-                                           "process_normal_finish_python.ini"],
+                                           "process_normal_finish.ini"],
                                           cwd=here, env=env)
         # passes if no exceptions are raised
         p.run()
