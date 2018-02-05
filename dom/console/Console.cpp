@@ -1169,8 +1169,7 @@ StackFrameToStackEntry(JSContext* aCx, nsIStackFrame* aStackFrame,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsString cause;
-  rv = aStackFrame->GetAsyncCause(aCx, cause);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aStackFrame->GetAsyncCause(aCx, cause);
   if (!cause.IsEmpty()) {
     aStackEntry.mAsyncCause.Construct(cause);
   }
