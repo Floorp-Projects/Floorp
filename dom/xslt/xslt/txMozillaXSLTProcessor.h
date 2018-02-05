@@ -18,6 +18,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/XSLTProcessorBinding.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
 class nsINode;
@@ -142,7 +143,7 @@ public:
 
     bool IsLoadDisabled()
     {
-        return (mFlags & DISABLE_ALL_LOADS) != 0;
+        return (mFlags & mozilla::dom::XSLTProcessorBinding::DISABLE_ALL_LOADS) != 0;
     }
 
     static nsresult Startup();
