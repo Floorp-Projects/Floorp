@@ -68,9 +68,6 @@ interface nsIStackFrame : nsISupports
 [scriptable, builtinclass, uuid(4371b5bf-6845-487f-8d9d-3f1e4a9badd2)]
 interface nsIException : nsISupports
 {
-    // Arbitary data for the implementation.
-    readonly attribute nsISupports             data;
-
     // A generic formatter - make it suitable to print, etc.
     [implicit_jscontext]
     AUTF8String toString();
