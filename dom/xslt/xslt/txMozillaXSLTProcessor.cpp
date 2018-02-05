@@ -632,28 +632,39 @@ txMozillaXSLTProcessor::ImportStylesheet(nsINode& aStyle,
     mStylesheetDocument->AddMutationObserver(this);
 }
 
-NS_IMETHODIMP
-txMozillaXSLTProcessor::TransformToDocument(nsIDOMNode *aSource,
-                                            nsIDOMDocument **aResult)
+already_AddRefed<nsIDocument>
+txMozillaXSLTProcessor::TransformToDocument(nsINode& aSource,
+                                            ErrorResult& aRv)
 {
-    NS_ENSURE_ARG(aSource);
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_SUCCESS(mCompileResult, mCompileResult);
+    if (NS_WARN_IF(NS_FAILED(mCompileResult))) {
+        aRv.Throw(mCompileResult);
+        return nullptr;
+    }
 
-    if (!nsContentUtils::CanCallerAccess(aSource)) {
-        return NS_ERROR_DOM_SECURITY_ERR;
+    if (!nsContentUtils::CanCallerAccess(&aSource)) {
+        aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        return nullptr;
     }
 
     nsresult rv = ensureStylesheet();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        aRv.Throw(rv);
+        return nullptr;
+    }
 
-    mSource = do_QueryInterface(aSource);
+    mSource = &aSource;
 
-    return TransformToDoc(aResult, true);
+    nsCOMPtr<nsIDocument> doc;
+    rv = TransformToDoc(getter_AddRefs(doc), true);
+    if (NS_FAILED(rv)) {
+        aRv.Throw(rv);
+        return nullptr;
+    }
+    return doc.forget();
 }
 
 nsresult
-txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument **aResult,
+txMozillaXSLTProcessor::TransformToDoc(nsIDocument **aResult,
                                        bool aCreateDataDocument)
 {
     nsAutoPtr<txXPathNode> sourceNode(txXPathNativeNode::createXPathNode(mSource));
@@ -686,11 +697,13 @@ txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument **aResult,
         if (aResult) {
             txAOutputXMLEventHandler* handler =
                 static_cast<txAOutputXMLEventHandler*>(es.mOutputHandler);
-            handler->getOutputDocument(aResult);
-            nsCOMPtr<nsIDocument> doc = do_QueryInterface(*aResult);
+            nsCOMPtr<nsIDOMDocument> result;
+            handler->getOutputDocument(getter_AddRefs(result));
+            nsCOMPtr<nsIDocument> doc = do_QueryInterface(result);
             MOZ_ASSERT(doc->GetReadyStateEnum() ==
                        nsIDocument::READYSTATE_INTERACTIVE, "Bad readyState");
             doc->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
+            doc.forget(aResult);
         }
     }
     else if (mObserver) {
@@ -1277,16 +1290,6 @@ txMozillaXSLTProcessor::Constructor(const GlobalObject& aGlobal,
     RefPtr<txMozillaXSLTProcessor> processor =
         new txMozillaXSLTProcessor(aGlobal.GetAsSupports());
     return processor.forget();
-}
-
-already_AddRefed<nsIDocument>
-txMozillaXSLTProcessor::TransformToDocument(nsINode& source,
-                                            mozilla::ErrorResult& aRv)
-{
-    nsCOMPtr<nsIDOMDocument> document;
-    aRv = TransformToDocument(source.AsDOMNode(), getter_AddRefs(document));
-    nsCOMPtr<nsIDocument> domDoc = do_QueryInterface(document);
-    return domDoc.forget();
 }
 
 void
