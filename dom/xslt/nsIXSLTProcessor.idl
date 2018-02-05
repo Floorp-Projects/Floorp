@@ -11,16 +11,6 @@ interface nsIVariant;
 interface nsIXSLTProcessor : nsISupports
 {
     /**
-     * Gets a parameter if previously set by setParameter. Returns null
-     * otherwise.
-     *
-     * @param namespaceURI The namespaceURI of the XSLT parameter
-     * @param localName    The local name of the XSLT parameter
-     * @return nsIVariant  The value of the XSLT parameter
-     */
-    nsIVariant getParameter(in DOMString namespaceURI,
-                            in DOMString localName);
-    /**
      * Removes a parameter, if set. This will make the processor use the
      * default-value for the parameter as specified in the stylesheet.
      *
