@@ -63,7 +63,6 @@
 #define STORAGE_MAX_EVENTS 1000
 
 using namespace mozilla::dom::exceptions;
-using namespace mozilla::dom::workers;
 
 namespace mozilla {
 namespace dom {

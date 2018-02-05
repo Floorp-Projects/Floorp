@@ -64,8 +64,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 // Forward declare GetConstructorObject methods.
 #define HTML_TAG(_tag, _classname, _interfacename)                             \
 namespace HTML##_interfacename##ElementBinding {                               \

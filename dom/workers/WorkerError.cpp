@@ -100,7 +100,7 @@ public:
             UNWRAP_OBJECT(WorkerDebuggerGlobalScope, &global, globalScope);
 
             MOZ_ASSERT_IF(globalScope, globalScope->GetWrapperPreserveColor() == global);
-            if (globalScope || IsDebuggerSandbox(global)) {
+            if (globalScope || IsWorkerDebuggerSandbox(global)) {
               aWorkerPrivate->ReportErrorToDebugger(aReport.mFilename, aReport.mLineNumber,
                                                     aReport.mMessage);
               return;
@@ -356,7 +356,7 @@ WorkerErrorReport::ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
           UNWRAP_OBJECT(WorkerDebuggerGlobalScope, &global, globalScope);
 
           MOZ_ASSERT_IF(globalScope, globalScope->GetWrapperPreserveColor() == global);
-          if (globalScope || IsDebuggerSandbox(global)) {
+          if (globalScope || IsWorkerDebuggerSandbox(global)) {
             aWorkerPrivate->ReportErrorToDebugger(aReport.mFilename, aReport.mLineNumber,
                                                   aReport.mMessage);
             return;

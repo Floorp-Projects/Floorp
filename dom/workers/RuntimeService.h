@@ -173,14 +173,14 @@ public:
   static void
   GetDefaultJSSettings(workerinternals::JSSettings& aSettings)
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     aSettings = sDefaultJSSettings;
   }
 
   static void
   SetDefaultContextOptions(const JS::ContextOptions& aContextOptions)
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     sDefaultJSSettings.contextOptions = aContextOptions;
   }
 
@@ -202,7 +202,7 @@ public:
   static void
   SetDefaultJSGCSettings(JSGCParamKey aKey, uint32_t aValue)
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     sDefaultJSSettings.ApplyGCSetting(aKey, aValue);
   }
 
@@ -213,7 +213,7 @@ public:
   static void
   SetDefaultGCZeal(uint8_t aGCZeal, uint32_t aFrequency)
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     sDefaultJSSettings.gcZeal = aGCZeal;
     sDefaultJSSettings.gcZealFrequency = aFrequency;
   }

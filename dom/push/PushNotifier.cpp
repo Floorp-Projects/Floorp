@@ -24,8 +24,6 @@
 namespace mozilla {
 namespace dom {
 
-using workers::AssertIsOnMainThread;
-
 PushNotifier::PushNotifier()
 {}
 
