@@ -216,10 +216,10 @@ MediaEngineRemoteVideoSource::Deallocate(const RefPtr<const AllocationHandle>& a
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kStopped || mState == kAllocated);
-  MOZ_ASSERT(mStream);
-  MOZ_ASSERT(IsTrackIDExplicit(mTrackID));
 
-  mStream->EndTrack(mTrackID);
+  if (mStream && IsTrackIDExplicit(mTrackID)) {
+    mStream->EndTrack(mTrackID);
+  }
 
   {
     MutexAutoLock lock(mMutex);
