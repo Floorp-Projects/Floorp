@@ -72,8 +72,6 @@ interface nsIException : nsISupports
     [binaryname(MessageMoz)] readonly attribute AUTF8String message;
     // The nsresult associated with this exception.
     readonly attribute nsresult                result;
-    // The name of the error code (ie, a string repr of |result|)
-    readonly attribute AUTF8String             name;
 
     // Filename location.  This is the location that caused the
     // error, which may or may not be a source file location.
