@@ -1669,7 +1669,7 @@ nsDisplayListBuilder::CopyWholeChain(const DisplayItemClipChain* aClipChain)
 
 const nsIFrame*
 nsDisplayListBuilder::FindReferenceFrameFor(const nsIFrame *aFrame,
-                                            nsPoint* aOffset)
+                                            nsPoint* aOffset) const
 {
   if (aFrame == mCurrentFrame) {
     if (aOffset) {
