@@ -5,15 +5,15 @@
 use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayList, ClipAndScrollInfo};
 use api::{ClipId, ColorF, ColorU, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, Epoch, ExtendMode};
-use api::{ExternalScrollId, FontRenderMode, GlyphInstance, GlyphOptions, GradientStop};
-use api::{HitTestFlags, HitTestItem, HitTestResult, ImageKey, ImageRendering, ItemRange, ItemTag};
-use api::{LayerPoint, LayerPrimitiveInfo, LayerRect, LayerSize, LayerTransform, LayerVector2D};
-use api::{LayoutTransform, LayoutVector2D, LineOrientation, LineStyle, LocalClip, PipelineId};
-use api::{PremultipliedColorF, PropertyBinding, RepeatMode, ScrollSensitivity, Shadow, TexelRect};
-use api::{TileOffset, TransformStyle, WorldPoint, WorldToLayerTransform, YuvColorSpace, YuvData};
+use api::{ExternalScrollId, FontRenderMode, GlyphInstance, GlyphOptions, GradientStop, ImageKey};
+use api::{ImageRendering, ItemRange, LayerPoint, LayerPrimitiveInfo, LayerRect, LayerSize};
+use api::{LayerTransform, LayerVector2D, LayoutTransform, LayoutVector2D, LineOrientation};
+use api::{LineStyle, LocalClip, PipelineId, PremultipliedColorF, PropertyBinding, RepeatMode};
+use api::{ScrollSensitivity, Shadow, TexelRect, TileOffset, TransformStyle, WorldPoint};
+use api::{WorldToLayerTransform, YuvColorSpace, YuvData};
 use app_units::Au;
 use border::ImageBorderSegment;
-use clip::{ClipRegion, ClipSource, ClipSources, ClipStore, Contains};
+use clip::{ClipRegion, ClipSource, ClipSources, ClipStore};
 use clip_scroll_node::{ClipScrollNode, NodeType};
 use clip_scroll_tree::ClipScrollTree;
 use euclid::{SideOffsets2D, vec2};
@@ -21,6 +21,7 @@ use frame::FrameId;
 use glyph_rasterizer::FontInstance;
 use gpu_cache::GpuCache;
 use gpu_types::{ClipChainRectIndex, ClipScrollNodeData, PictureType};
+use hit_test::{HitTester, HitTestingItem, HitTestingRun};
 use internal_types::{FastHashMap, FastHashSet, RenderPassIndex};
 use picture::{ContentOrigin, PictureCompositeMode, PictureKind, PicturePrimitive, PictureSurface};
 use prim_store::{BrushKind, BrushPrimitive, ImageCacheKey, YuvImagePrimitiveCpu};
@@ -61,9 +62,10 @@ struct StackingContext {
     /// CSS transform-style property.
     transform_style: TransformStyle,
 
-    /// The primitive index for the root Picture primitive
-    /// that this stacking context is mapped to.
-    pic_prim_index: PrimitiveIndex,
+    /// If Some(..), this stacking context establishes a new
+    /// 3d rendering context, and the value is the primitive
+    // index of the 3d context container.
+    rendering_context_3d_prim_index: Option<PrimitiveIndex>,
 }
 
 #[derive(Clone, Copy)]
@@ -76,25 +78,6 @@ pub struct FrameBuilderConfig {
     pub dual_source_blending_is_supported: bool,
     pub dual_source_blending_is_enabled: bool,
 }
-
-#[derive(Debug)]
-pub struct HitTestingItem {
-    rect: LayerRect,
-    clip: LocalClip,
-    tag: ItemTag,
-}
-
-impl HitTestingItem {
-    fn new(tag: ItemTag, info: &LayerPrimitiveInfo) -> HitTestingItem {
-        HitTestingItem {
-            rect: info.rect,
-            clip: info.local_clip,
-            tag: tag,
-        }
-    }
-}
-
-pub struct HitTestingRun(Vec<HitTestingItem>, ClipAndScrollInfo);
 
 /// A builder structure for `tiling::Frame`
 pub struct FrameBuilder {
@@ -412,28 +395,72 @@ impl FrameBuilder {
             None => TransformStyle::Flat,
         };
 
-        // If either the parent or this stacking context is preserve-3d
-        // then we are in a 3D context.
-        let is_in_3d_context = composite_ops.count() == 0 &&
-                               (parent_transform_style == TransformStyle::Preserve3D ||
-                                transform_style == TransformStyle::Preserve3D);
+        // If this is preserve-3d *or* the parent is, then this stacking
+        // context is participating in the 3d rendering context. In that
+        // case, hoist the picture up to the 3d rendering context
+        // container, so that it's rendered as a sibling with other
+        // elements in this context.
+        let participating_in_3d_context =
+            composite_ops.count() == 0 &&
+            (parent_transform_style == TransformStyle::Preserve3D ||
+             transform_style == TransformStyle::Preserve3D);
 
-        // TODO(gw): For now, we don't handle filters and mix-blend-mode when there
-        //           is a 3D rendering context. We can easily do this in the future
-        //           by creating a chain of pictures for the effects, and ensuring
-        //           that the last composited picture is what's used as the input to
-        //           the plane splitting code.
-        let mut parent_pic_prim_index = if is_in_3d_context {
+        // If this is participating in a 3d context *and* the
+        // parent was not a 3d context, then this must be the
+        // element that establishes a new 3d context.
+        let establishes_3d_context =
+            participating_in_3d_context &&
+            parent_transform_style == TransformStyle::Flat;
+
+        let rendering_context_3d_prim_index = if establishes_3d_context {
+            // If establishing a 3d context, we need to add a picture
+            // that will be the container for all the planes and any
+            // un-transformed content.
+            let container = PicturePrimitive::new_image(
+                None,
+                false,
+                pipeline_id,
+                current_reference_frame_id,
+                None,
+            );
+
+            let clip_sources = self.clip_store.insert(ClipSources::new(Vec::new()));
+
+            let prim_index = self.prim_store.add_primitive(
+                &LayerRect::zero(),
+                &max_clip,
+                is_backface_visible,
+                clip_sources,
+                None,
+                PrimitiveContainer::Picture(container),
+            );
+
+            let parent_pic_prim_index = *self.picture_stack.last().unwrap();
+            let pic_prim_index = self.prim_store.cpu_metadata[parent_pic_prim_index.0].cpu_prim_index;
+            let pic = &mut self.prim_store.cpu_pictures[pic_prim_index.0];
+            pic.add_primitive(
+                prim_index,
+                clip_and_scroll,
+            );
+
+            self.picture_stack.push(prim_index);
+
+            Some(prim_index)
+        } else {
+            None
+        };
+
+        let mut parent_pic_prim_index = if !establishes_3d_context && participating_in_3d_context {
             // If we're in a 3D context, we will parent the picture
-            // to the first stacking context we find in the stack that
-            // is transform-style: flat. This follows the spec
+            // to the first stacking context we find that is a
+            // 3D rendering context container. This follows the spec
             // by hoisting these items out into the same 3D context
             // for plane splitting.
             self.sc_stack
                 .iter()
                 .rev()
-                .find(|sc| sc.transform_style == TransformStyle::Flat)
-                .map(|sc| sc.pic_prim_index)
+                .find(|sc| sc.rendering_context_3d_prim_index.is_some())
+                .map(|sc| sc.rendering_context_3d_prim_index.unwrap())
                 .unwrap()
         } else {
             *self.picture_stack.last().unwrap()
@@ -513,7 +540,7 @@ impl FrameBuilder {
             frame_output_pipeline_id = Some(pipeline_id);
         }
 
-        if is_in_3d_context {
+        if participating_in_3d_context {
             // TODO(gw): For now, as soon as this picture is in
             //           a 3D context, we draw it to an intermediate
             //           surface and apply plane splitting. However,
@@ -527,7 +554,7 @@ impl FrameBuilder {
         // Add picture for this actual stacking context contents to render into.
         let sc_prim = PicturePrimitive::new_image(
             composite_mode,
-            is_in_3d_context,
+            participating_in_3d_context,
             pipeline_id,
             current_reference_frame_id,
             frame_output_pipeline_id,
@@ -566,9 +593,7 @@ impl FrameBuilder {
             pipeline_id,
             allow_subpixel_aa,
             transform_style,
-            // TODO(gw): This is not right when filters are present (but we
-            //           don't handle that right now, per comment above).
-            pic_prim_index: sc_prim_index,
+            rendering_context_3d_prim_index,
         };
 
         self.sc_stack.push(sc);
@@ -577,11 +602,18 @@ impl FrameBuilder {
     pub fn pop_stacking_context(&mut self) {
         let sc = self.sc_stack.pop().unwrap();
 
-        // Remove the picture for this stacking contents.
-        self.picture_stack.pop().expect("bug");
+        // Always pop at least the main picture for this stacking context.
+        let mut pop_count = 1;
 
         // Remove the picture for any filter/mix-blend-mode effects.
-        for _ in 0 .. sc.composite_ops.count() {
+        pop_count += sc.composite_ops.count();
+
+        // Remove the 3d context container if created
+        if sc.rendering_context_3d_prim_index.is_some() {
+            pop_count += 1;
+        }
+
+        for _ in 0 .. pop_count {
             self.picture_stack.pop().expect("bug: mismatched picture stack");
         }
 
@@ -1543,75 +1575,6 @@ impl FrameBuilder {
         );
     }
 
-    pub fn hit_test(
-        &self,
-        clip_scroll_tree: &ClipScrollTree,
-        pipeline_id: Option<PipelineId>,
-        point: WorldPoint,
-        flags: HitTestFlags
-    ) -> HitTestResult {
-        let point = if flags.contains(HitTestFlags::POINT_RELATIVE_TO_PIPELINE_VIEWPORT) {
-            let point = LayerPoint::new(point.x, point.y);
-            clip_scroll_tree.make_node_relative_point_absolute(pipeline_id, &point)
-        } else {
-            point
-        };
-
-        let mut node_cache = FastHashMap::default();
-        let mut result = HitTestResult::default();
-        for &HitTestingRun(ref items, ref clip_and_scroll) in self.hit_testing_runs.iter().rev() {
-            let scroll_node = &clip_scroll_tree.nodes[&clip_and_scroll.scroll_node_id];
-            match (pipeline_id, scroll_node.pipeline_id) {
-                (Some(id), node_id) if node_id != id => continue,
-                _ => {},
-            }
-
-            let transform = scroll_node.world_content_transform;
-            let point_in_layer = match transform.inverse() {
-                Some(inverted) => inverted.transform_point2d(&point),
-                None => continue,
-            };
-
-            let mut clipped_in = false;
-            for item in items.iter().rev() {
-                if !item.rect.contains(&point_in_layer) || !item.clip.contains(&point_in_layer) {
-                    continue;
-                }
-
-                let clip_id = &clip_and_scroll.clip_node_id();
-                if !clipped_in {
-                    clipped_in = clip_scroll_tree.is_point_clipped_in_for_node(point,
-                                                                               clip_id,
-                                                                               &mut node_cache,
-                                                                               &self.clip_store);
-                    if !clipped_in {
-                        break;
-                    }
-                }
-
-                let root_pipeline_reference_frame_id =
-                    ClipId::root_reference_frame(clip_id.pipeline_id());
-                let point_in_viewport = match node_cache.get(&root_pipeline_reference_frame_id) {
-                    Some(&Some(point)) => point,
-                    _ => unreachable!("Hittest target's root reference frame not hit."),
-                };
-
-                result.items.push(HitTestItem {
-                    pipeline: clip_and_scroll.clip_node_id().pipeline_id(),
-                    tag: item.tag,
-                    point_in_viewport,
-                    point_relative_to_item: point_in_layer - item.rect.origin.to_vector(),
-                });
-                if !flags.contains(HitTestFlags::FIND_ALL) {
-                    return result;
-                }
-            }
-        }
-
-        result.items.dedup();
-        result
-    }
-
     /// Compute the contribution (bounding rectangles, and resources) of layers and their
     /// primitives in screen space.
     fn build_layer_screen_rects_and_cull_layers(
@@ -1863,5 +1826,13 @@ impl FrameBuilder {
             has_been_rendered: false,
             has_texture_cache_tasks,
         }
+    }
+
+    pub fn create_hit_tester(&mut self, clip_scroll_tree: &ClipScrollTree) -> HitTester {
+        HitTester::new(
+            &self.hit_testing_runs,
+            &clip_scroll_tree,
+            &self.clip_store
+        )
     }
 }
