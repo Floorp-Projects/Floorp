@@ -38,7 +38,7 @@ tests.push({
     Assert.equal(rootNode.childCount, 6);
 
     // add a tag
-    this._testURI = PlacesUtils._uri("http://test");
+    this._testURI = Services.io.newURI("http://test");
     this._tags = ["a", "b"];
     PlacesUtils.tagging.tagURI(this._testURI, this._tags);
 
@@ -111,7 +111,7 @@ tests.push({
         node.QueryInterface(Ci.nsINavHistoryContainerResultNode).containerOpen = true;
         Assert.equal(node.childCount, 1);
         var child = node.getChild(0);
-        Assert.ok(PlacesUtils._uri(child.uri).equals(this._testURI));
+        Assert.ok(Services.io.newURI(child.uri).equals(this._testURI));
 
         // clean up
         node.containerOpen = false;

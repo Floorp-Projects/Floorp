@@ -6,6 +6,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import copy
 import logging
 import requests
 import os
@@ -105,7 +106,8 @@ def update_parent(task, graph):
     return task
 
 
-def create_tasks(to_run, full_task_graph, label_to_taskid, params, decision_task_id=None):
+def create_tasks(to_run, full_task_graph, label_to_taskid,
+                 params, decision_task_id=None, suffix=''):
     """Create new tasks.  The task definition will have {relative-datestamp':
     '..'} rendered just like in a decision task.  Action callbacks should use
     this function to create new tasks,
@@ -113,7 +115,14 @@ def create_tasks(to_run, full_task_graph, label_to_taskid, params, decision_task
     This builds up all required tasks to run in order to run the tasks requested.
 
     If you wish to create the tasks in a new group, leave out decision_task_id."""
+    if suffix != '':
+        suffix = '-{}'.format(suffix)
     to_run = set(to_run)
+
+    #  Copy to avoid side-effects later
+    full_task_graph = copy.deepcopy(full_task_graph)
+    label_to_taskid = label_to_taskid.copy()
+
     target_graph = full_task_graph.graph.transitive_closure(to_run)
     target_task_graph = TaskGraph(
         {l: full_task_graph[l] for l in target_graph.nodes},
@@ -123,7 +132,7 @@ def create_tasks(to_run, full_task_graph, label_to_taskid, params, decision_task
                                                                 params,
                                                                 to_run,
                                                                 label_to_taskid)
-    write_artifact('task-graph.json', optimized_task_graph.to_json())
-    write_artifact('label-to-taskid.json', label_to_taskid)
-    write_artifact('to-run.json', list(to_run))
+    write_artifact('task-graph{}.json'.format(suffix), optimized_task_graph.to_json())
+    write_artifact('label-to-taskid{}.json'.format(suffix), label_to_taskid)
+    write_artifact('to-run{}.json'.format(suffix), list(to_run))
     create.create_tasks(optimized_task_graph, label_to_taskid, params, decision_task_id)

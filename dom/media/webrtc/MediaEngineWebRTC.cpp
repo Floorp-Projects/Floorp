@@ -129,7 +129,8 @@ MediaEngineWebRTC::SetFakeDeviceChangeEvents()
 }
 
 void
-MediaEngineWebRTC::EnumerateDevices(dom::MediaSourceEnum aMediaSource,
+MediaEngineWebRTC::EnumerateDevices(uint64_t aWindowId,
+                                    dom::MediaSourceEnum aMediaSource,
                                     nsTArray<RefPtr<MediaEngineSource> >* aSources)
 {
   if (MediaEngineSource::IsVideo(aMediaSource)) {
@@ -237,15 +238,20 @@ MediaEngineWebRTC::EnumerateDevices(dom::MediaSourceEnum aMediaSource,
       }
 
       NS_ConvertUTF8toUTF16 uuid(uniqueId);
-      RefPtr<MediaEngineSource> vSource = mVideoSources.Get(uuid);
-      if (vSource && vSource->RequiresSharing()) {
+      RefPtr<MediaEngineSource> vSource;
+
+      nsRefPtrHashtable<nsStringHashKey, MediaEngineSource>*
+        devicesForThisWindow = mVideoSources.LookupOrAdd(aWindowId);
+
+      if (devicesForThisWindow->Get(uuid, getter_AddRefs(vSource)) &&
+          vSource->RequiresSharing()) {
         // We've already seen this shared device, just refresh and append.
         static_cast<MediaEngineRemoteVideoSource*>(vSource.get())->Refresh(i);
         aSources->AppendElement(vSource.get());
       } else {
         vSource = new MediaEngineRemoteVideoSource(i, capEngine, aMediaSource,
                                                    scaryKind || scarySource);
-        mVideoSources.Put(uuid, vSource);
+        devicesForThisWindow->Put(uuid, vSource);
         aSources->AppendElement(vSource);
       }
     }
@@ -299,9 +305,15 @@ MediaEngineWebRTC::EnumerateDevices(dom::MediaSourceEnum aMediaSource,
         strcpy(uniqueId, deviceName); // safe given assert and initialization/error-check
       }
 
+
+      RefPtr<MediaEngineSource> aSource;
       NS_ConvertUTF8toUTF16 uuid(uniqueId);
-      RefPtr<MediaEngineSource> aSource = mAudioSources.Get(uuid);
-      if (aSource && aSource->RequiresSharing()) {
+
+      nsRefPtrHashtable<nsStringHashKey, MediaEngineSource>*
+        devicesForThisWindow = mAudioSources.LookupOrAdd(aWindowId);
+
+      if (devicesForThisWindow->Get(uuid, getter_AddRefs(aSource)) &&
+          aSource->RequiresSharing()) {
         // We've already seen this device, just append.
         aSources->AppendElement(aSource.get());
       } else {
@@ -309,7 +321,7 @@ MediaEngineWebRTC::EnumerateDevices(dom::MediaSourceEnum aMediaSource,
             new mozilla::AudioInputCubeb(i),
             i, deviceName, uniqueId,
             mDelayAgnostic, mExtendedFilter);
-        mAudioSources.Put(uuid, aSource); // Hashtable takes ownership.
+        devicesForThisWindow->Put(uuid, aSource);
         aSources->AppendElement(aSource);
       }
     }
@@ -320,6 +332,53 @@ bool
 MediaEngineWebRTC::SupportsDuplex()
 {
   return mFullDuplex;
+}
+
+void
+MediaEngineWebRTC::ReleaseResourcesForWindow(uint64_t aWindowId)
+{
+  {
+    nsRefPtrHashtable<nsStringHashKey, MediaEngineSource>*
+      audioDevicesForThisWindow = mAudioSources.Get(aWindowId);
+
+    if (audioDevicesForThisWindow) {
+      for (auto iter = audioDevicesForThisWindow->Iter(); !iter.Done();
+           iter.Next()) {
+        iter.UserData()->Shutdown();
+      }
+
+      // This makes audioDevicesForThisWindow invalid.
+      mAudioSources.Remove(aWindowId);
+    }
+  }
+
+  {
+    nsRefPtrHashtable<nsStringHashKey, MediaEngineSource>*
+      videoDevicesForThisWindow = mVideoSources.Get(aWindowId);
+    if (videoDevicesForThisWindow) {
+      for (auto iter = videoDevicesForThisWindow->Iter(); !iter.Done();
+           iter.Next()) {
+        iter.UserData()->Shutdown();
+      }
+
+      // This makes videoDevicesForThisWindow invalid.
+      mVideoSources.Remove(aWindowId);
+    }
+  }
+}
+
+namespace {
+template<typename T>
+void ShutdownSources(T& aHashTable)
+{
+  for (auto iter = aHashTable.Iter(); !iter.Done(); iter.Next()) {
+    for (auto iterInner = iter.UserData()->Iter(); !iterInner.Done();
+         iterInner.Next()) {
+      MediaEngineSource* source = iterInner.UserData();
+      source->Shutdown();
+    }
+  }
+}
 }
 
 void
@@ -336,20 +395,8 @@ MediaEngineWebRTC::Shutdown()
   LOG(("%s", __FUNCTION__));
   // Shutdown all the sources, since we may have dangling references to the
   // sources in nsDOMUserMediaStreams waiting for GC/CC
-  for (auto iter = mVideoSources.Iter(); !iter.Done(); iter.Next()) {
-    MediaEngineSource* source = iter.UserData();
-    if (source) {
-      source->Shutdown();
-    }
-  }
-  for (auto iter = mAudioSources.Iter(); !iter.Done(); iter.Next()) {
-    MediaEngineSource* source = iter.UserData();
-    if (source) {
-      source->Shutdown();
-    }
-  }
-  mVideoSources.Clear();
-  mAudioSources.Clear();
+  ShutdownSources(mVideoSources);
+  ShutdownSources(mAudioSources);
 
   mozilla::camera::Shutdown();
   AudioInputCubeb::CleanupGlobalData();

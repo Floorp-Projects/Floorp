@@ -9,6 +9,7 @@ flat varying vec4 vUvBounds;
 flat varying float vAmount;
 flat varying int vOp;
 flat varying mat4 vColorMat;
+flat varying vec4 vColorOffset;
 
 #ifdef WR_VERTEX_SHADER
 void main(void) {
@@ -50,6 +51,7 @@ void main(void) {
                              vec4(lumG - lumG * oneMinusAmount, lumG + oneMinusLumG * oneMinusAmount, lumG - lumG * oneMinusAmount, 0.0),
                              vec4(lumB - lumB * oneMinusAmount, lumB - lumB * oneMinusAmount, lumB + oneMinusLumB * oneMinusAmount, 0.0),
                              vec4(0.0, 0.0, 0.0, 1.0));
+            vColorOffset = vec4(0.0);
             break;
         }
         case 3: {
@@ -60,6 +62,7 @@ void main(void) {
                             vec4(lumG - lumG * c - lumG * s, lumG + oneMinusLumG * c + 0.140 * s, lumG - lumG * c + lumG * s, 0.0),
                             vec4(lumB - lumB * c + oneMinusLumB * s, lumB - lumB * c - 0.283 * s, lumB + oneMinusLumB * c + lumB * s, 0.0),
                             vec4(0.0, 0.0, 0.0, 1.0));
+            vColorOffset = vec4(0.0);
             break;
         }
         case 5: {
@@ -68,6 +71,7 @@ void main(void) {
                              vec4(oneMinusAmount * lumG, oneMinusAmount * lumG + vAmount, oneMinusAmount * lumG, 0.0),
                              vec4(oneMinusAmount * lumB, oneMinusAmount * lumB, oneMinusAmount * lumB + vAmount, 0.0),
                              vec4(0.0, 0.0, 0.0, 1.0));
+            vColorOffset = vec4(0.0);
             break;
         }
         case 6: {
@@ -76,7 +80,18 @@ void main(void) {
                              vec4(0.769 - 0.769 * oneMinusAmount, 0.686 + 0.314 * oneMinusAmount, 0.534 - 0.534 * oneMinusAmount, 0.0),
                              vec4(0.189 - 0.189 * oneMinusAmount, 0.168 - 0.168 * oneMinusAmount, 0.131 + 0.869 * oneMinusAmount, 0.0),
                              vec4(0.0, 0.0, 0.0, 1.0));
+            vColorOffset = vec4(0.0);
             break;
+        }
+        case 10: {
+          // Color Matrix
+          const int dataOffset = 2; // Offset in GPU cache where matrix starts
+          vec4 data[8] = fetch_from_resource_cache_8(ci.user_data2);
+
+          vColorMat = mat4(data[dataOffset], data[dataOffset + 1],
+                           data[dataOffset + 2], data[dataOffset + 3]);
+          vColorOffset = data[dataOffset + 4];
+          break;
         }
     }
 
@@ -137,7 +152,7 @@ void main(void) {
             oFragColor = Opacity(Cs, vAmount);
             break;
         default:
-            oFragColor = vColorMat * Cs;
+            oFragColor = vColorMat * Cs + vColorOffset;
     }
 
     // Pre-multiply the alpha into the output value.

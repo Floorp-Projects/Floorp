@@ -208,18 +208,7 @@ let gSiteDataSettings = {
 
     if (removals.size > 0) {
       if (this._sites.length == 0) {
-        // User selects all sites so equivalent to clearing all data
-        let flags =
-          Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
-          Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1 +
-          Services.prompt.BUTTON_POS_0_DEFAULT;
-        let prefStrBundle = document.getElementById("bundlePreferences");
-        let title = prefStrBundle.getString("clearSiteDataPromptTitle");
-        let text = prefStrBundle.getString("clearSiteDataPromptText");
-        let btn0Label = prefStrBundle.getString("clearSiteDataNow");
-        let result = Services.prompt.confirmEx(window, title, text, flags, btn0Label, null, null, null, {});
-        allowed = result == 0;
-        if (allowed) {
+        if (SiteDataManager.promptSiteDataRemoval(window)) {
           SiteDataManager.removeAll();
         }
       } else {

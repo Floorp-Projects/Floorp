@@ -158,6 +158,16 @@ fn make_rotation(
     pre_transform.pre_mul(&transform).pre_mul(&post_transform)
 }
 
+pub fn make_perspective(
+    origin: LayoutPoint,
+    perspective: f32,
+) -> LayoutTransform {
+    let pre_transform = LayoutTransform::create_translation(origin.x, origin.y, 0.0);
+    let post_transform = LayoutTransform::create_translation(-origin.x, -origin.y, -0.0);
+    let transform = LayoutTransform::create_perspective(perspective);
+    pre_transform.pre_mul(&transform).pre_mul(&post_transform)
+}
+
 // Create a skew matrix, specified in degrees.
 fn make_skew(
     skew_x: f32,
@@ -559,6 +569,12 @@ impl YamlHelper for Yaml {
                     Some(FilterOp::DropShadow(yaml["offset"].as_vector().unwrap(),
                                               yaml["blur-radius"].as_f32().unwrap(),
                                               yaml["color"].as_colorf().unwrap()))
+                }
+                ("color-matrix", ref args, _) if args.len() == 20 => {
+                    let m: Vec<f32> = args.iter().map(|f| f.parse().unwrap()).collect();
+                    let mut matrix: [f32; 20] = [0.0; 20];
+                    matrix.clone_from_slice(&m);
+                    Some(FilterOp::ColorMatrix(matrix))
                 }
                 (_, _, _) => None,
             }

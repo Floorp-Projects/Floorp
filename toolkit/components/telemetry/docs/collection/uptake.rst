@@ -1,3 +1,5 @@
+.. _telemetry/collection/uptake:
+
 ================
 Uptake Telemetry
 ================
