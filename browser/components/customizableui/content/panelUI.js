@@ -6,6 +6,8 @@ ChromeUtils.defineModuleGetter(this, "AppMenuNotifications",
                                "resource://gre/modules/AppMenuNotifications.jsm");
 ChromeUtils.defineModuleGetter(this, "NewTabUtils",
                                "resource://gre/modules/NewTabUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PanelMultiView",
+                               "resource:///modules/PanelMultiView.jsm");
 ChromeUtils.defineModuleGetter(this, "ScrollbarSampler",
                                "resource:///modules/ScrollbarSampler.jsm");
 
@@ -215,7 +217,9 @@ const PanelUI = {
         }, {once: true});
 
         anchor = this._getPanelAnchor(anchor);
-        this.panel.openPopup(anchor, { triggerEvent: domEvent });
+        PanelMultiView.openPopup(this.panel, anchor, {
+          triggerEvent: domEvent,
+        }).catch(Cu.reportError);
       }, (reason) => {
         console.error("Error showing the PanelUI menu", reason);
       });
@@ -230,7 +234,7 @@ const PanelUI = {
       return;
     }
 
-    this.panel.hidePopup();
+    PanelMultiView.hidePopup(this.panel);
   },
 
   observe(subject, topic, status) {
@@ -467,10 +471,10 @@ const PanelUI = {
         anchor.setAttribute("consumeanchor", aAnchor.id);
       }
 
-      tempPanel.openPopup(anchor, {
+      PanelMultiView.openPopup(tempPanel, anchor, {
         position: "bottomcenter topright",
         triggerEvent: domEvent,
-      });
+      }).catch(Cu.reportError);
     }
   },
 
@@ -620,9 +624,7 @@ const PanelUI = {
       this.navbar.setAttribute("nonemptyoverflow", "true");
       this.overflowPanel.setAttribute("hasfixeditems", "true");
     } else if (!hasKids && this.navbar.hasAttribute("nonemptyoverflow")) {
-      if (this.overflowPanel.state != "closed") {
-        this.overflowPanel.hidePopup();
-      }
+      PanelMultiView.hidePopup(this.overflowPanel);
       this.overflowPanel.removeAttribute("hasfixeditems");
       this.navbar.removeAttribute("nonemptyoverflow");
     }

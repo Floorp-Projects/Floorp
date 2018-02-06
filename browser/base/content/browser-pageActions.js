@@ -187,22 +187,25 @@ var BrowserPageActions = {
   togglePanelForAction(action, panelNode = null) {
     let aaPanelNode = this.activatedActionPanelNode;
     if (panelNode) {
+      // Note that this particular code path will not prevent the panel from
+      // opening later if PanelMultiView.showPopup was called but the panel has
+      // not been opened yet.
       if (panelNode.state != "closed") {
-        panelNode.hidePopup();
+        PanelMultiView.hidePopup(panelNode);
         return;
       }
       if (aaPanelNode) {
-        aaPanelNode.hidePopup();
+        PanelMultiView.hidePopup(aaPanelNode);
       }
     } else if (aaPanelNode) {
-      aaPanelNode.hidePopup();
+      PanelMultiView.hidePopup(aaPanelNode);
       return;
     } else {
       panelNode = this._makeActivatedActionPanelForAction(action);
     }
 
     // Hide the main panel before showing the action's panel.
-    this.panelNode.hidePopup();
+    PanelMultiView.hidePopup(this.panelNode);
 
     let anchorNode = this.panelAnchorNodeForAction(action);
     anchorNode.setAttribute("open", "true");
@@ -210,7 +213,8 @@ var BrowserPageActions = {
       anchorNode.removeAttribute("open");
     }, { once: true });
 
-    panelNode.openPopup(anchorNode, "bottomcenter topright");
+    PanelMultiView.openPopup(panelNode, anchorNode, "bottomcenter topright")
+                  .catch(Cu.reportError);
   },
 
   _makeActivatedActionPanelForAction(action) {
@@ -554,7 +558,7 @@ var BrowserPageActions = {
       return;
     }
     // Otherwise, hide the main popup in case it was open:
-    this.panelNode.hidePopup();
+    PanelMultiView.hidePopup(this.panelNode);
 
     // Toggle the activated action's panel if necessary
     if (action.subview || action.wantsIframe) {
@@ -694,12 +698,12 @@ var BrowserPageActions = {
     // close it.
     let panelNode = this.activatedActionPanelNode;
     if (panelNode && panelNode.anchorNode.id == this.mainButtonNode.id) {
-      panelNode.hidePopup();
+      PanelMultiView.hidePopup(panelNode);
       return;
     }
 
     if (this.panelNode.state == "open") {
-      this.panelNode.hidePopup();
+      PanelMultiView.hidePopup(this.panelNode);
     } else if (this.panelNode.state == "closed") {
       this.showPanel(event);
     }
@@ -723,10 +727,10 @@ var BrowserPageActions = {
       this.mainButtonNode.removeAttribute("open");
     }, {once: true});
     this.mainButtonNode.setAttribute("open", "true");
-    this.panelNode.openPopup(this.mainButtonNode, {
+    PanelMultiView.openPopup(this.panelNode, this.mainButtonNode, {
       position: "bottomcenter topright",
       triggerEvent: event,
-    });
+    }).catch(Cu.reportError);
   },
 
   /**
@@ -881,10 +885,10 @@ var BrowserPageActionFeedback = {
     this.panelNode.hidden = false;
 
     let anchor = BrowserPageActions.panelAnchorNodeForAction(action, event);
-    this.panelNode.openPopup(anchor, {
+    PanelMultiView.openPopup(this.panelNode, anchor, {
       position: "bottomcenter topright",
       triggerEvent: event,
-    });
+    }).catch(Cu.reportError);
 
     this.panelNode.addEventListener("popupshown", () => {
       this.feedbackAnimationBox.setAttribute("animate", "true");
@@ -912,7 +916,7 @@ BrowserPageActions.bookmark = {
   },
 
   onCommand(event, buttonNode) {
-    BrowserPageActions.panelNode.hidePopup();
+    PanelMultiView.hidePopup(BrowserPageActions.panelNode);
     BookmarkingUI.onStarCommand(event);
   },
 };
@@ -925,7 +929,7 @@ BrowserPageActions.copyURL = {
   },
 
   onCommand(event, buttonNode) {
-    BrowserPageActions.panelNode.hidePopup();
+    PanelMultiView.hidePopup(BrowserPageActions.panelNode);
     Cc["@mozilla.org/widget/clipboardhelper;1"]
       .getService(Ci.nsIClipboardHelper)
       .copyString(gURLBar.makeURIReadable(gBrowser.selectedBrowser.currentURI).displaySpec);
@@ -942,7 +946,7 @@ BrowserPageActions.emailLink = {
   },
 
   onCommand(event, buttonNode) {
-    BrowserPageActions.panelNode.hidePopup();
+    PanelMultiView.hidePopup(BrowserPageActions.panelNode);
     MailIntegration.sendLinkForBrowser(gBrowser.selectedBrowser);
   },
 };
@@ -992,7 +996,7 @@ BrowserPageActions.sendToDevice = {
 
       item.addEventListener("command", event => {
         if (panelNode) {
-          panelNode.hidePopup();
+          PanelMultiView.hidePopup(panelNode);
         }
         // There are items in the subview that don't represent devices: "Sign
         // in", "Learn about Sync", etc.  Device items will be .sendtab-target.
