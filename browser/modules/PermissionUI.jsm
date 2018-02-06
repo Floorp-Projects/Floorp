@@ -743,7 +743,7 @@ MIDIPermissionPrompt.prototype = {
   },
 
   get anchorID() {
-    return "";
+    return "midi-notification-icon";
   },
 
   get message() {
