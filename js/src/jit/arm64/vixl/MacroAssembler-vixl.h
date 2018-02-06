@@ -142,6 +142,21 @@ enum BranchType {
 
 enum DiscardMoveMode { kDontDiscardForSameWReg, kDiscardForSameWReg };
 
+// The macro assembler supports moving automatically pre-shifted immediates for
+// arithmetic and logical instructions, and then applying a post shift in the
+// instruction to undo the modification, in order to reduce the code emitted for
+// an operation. For example:
+//
+//  Add(x0, x0, 0x1f7de) => movz x16, 0xfbef; add x0, x0, x16, lsl #1.
+//
+// This optimisation can be only partially applied when the stack pointer is an
+// operand or destination, so this enumeration is used to control the shift.
+enum PreShiftImmMode {
+  kNoShift,          // Don't pre-shift.
+  kLimitShiftForSP,  // Limit pre-shift for add/sub extend use.
+  kAnyShift          // Allow any pre-shift.
+};
+
 
 class MacroAssembler : public js::jit::Assembler {
  public:
@@ -272,7 +287,9 @@ class MacroAssembler : public js::jit::Assembler {
   // into dst is not necessarily equal to imm; it may have had a shifting
   // operation applied to it that will be subsequently undone by the shift
   // applied in the Operand.
-  Operand MoveImmediateForShiftedOp(const Register& dst, int64_t imm);
+  Operand MoveImmediateForShiftedOp(const Register& dst,
+		                    int64_t imm,
+				    PreShiftImmMode mode);
 
   // Synthesises the address represented by a MemOperand into a register.
   void ComputeAddress(const Register& dst, const MemOperand& mem_op);
