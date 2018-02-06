@@ -389,6 +389,7 @@ opaque-types = [
     "mozilla::dom::Optional",
     "mozilla::dom::OwningNodeOrString_Value",
     "mozilla::dom::Nullable",
+    "mozilla::external::AtomicRefCounted",
     "RefPtr_Proxy",
     "RefPtr_Proxy_member_function",
     "nsAutoPtr_Proxy",
