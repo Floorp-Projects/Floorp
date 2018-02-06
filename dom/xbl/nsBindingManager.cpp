@@ -764,7 +764,8 @@ nsBindingManager::WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
 #endif
 
 bool
-nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext)
+nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
+                                        mozilla::MediaFeatureChangeReason aReason)
 {
   bool rulesChanged = false;
   RefPtr<nsPresContext> presContext = aPresContext;
@@ -784,7 +785,7 @@ nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext)
           // It's safe to check whether medium features changed.
           bool viewportUnitsUsed = false;
           styleSetChanged =
-            styleSet->MediumFeaturesChangedRules(&viewportUnitsUsed);
+            styleSet->MediumFeaturesChangedRules(&viewportUnitsUsed, aReason);
           MOZ_ASSERT(!viewportUnitsUsed,
                      "Non-master stylesets shouldn't get flagged as using "
                      "viewport units!");

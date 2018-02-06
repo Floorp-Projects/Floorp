@@ -2150,14 +2150,10 @@ nsPresContext::FlushPendingMediaFeatureValuesChanged()
   MediaFeatureChange change = *mPendingMediaFeatureValuesChange;
   mPendingMediaFeatureValuesChange.reset();
 
-  const bool viewportChanged =
-    bool(change.mReason & MediaFeatureChangeReason::ViewportChange);
-
-
   // MediumFeaturesChanged updates the applied rules, so it always gets called.
   if (mShell) {
     change.mRestyleHint |=
-      mShell->StyleSet()->MediumFeaturesChanged(viewportChanged);
+      mShell->StyleSet()->MediumFeaturesChanged(change.mReason);
   }
 
   if (change.mRestyleHint || change.mChangeHint) {
