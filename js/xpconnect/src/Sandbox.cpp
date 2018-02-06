@@ -964,11 +964,11 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
         } else if (!strcmp(name.ptr(), "caches")) {
             caches = true;
         } else if (!strcmp(name.ptr(), "FileReader")) {
-            fileReader = true;
+            FileReader = true;
         } else if (!strcmp(name.ptr(), "MessageChannel")) {
-            messageChannel = true;
+            MessageChannel = true;
         } else if (!strcmp(name.ptr(), "InspectorUtils")) {
-            inspectorUtils = true;
+            InspectorUtils = true;
         } else if (!strcmp(name.ptr(), "ChromeUtils")) {
             ChromeUtils = true;
         } else {
@@ -1048,15 +1048,15 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
     if (caches && !dom::cache::CacheStorage::DefineCaches(cx, obj))
         return false;
 
-    if (fileReader && !dom::FileReaderBinding::GetConstructorObject(cx))
+    if (FileReader && !dom::FileReaderBinding::GetConstructorObject(cx))
         return false;
 
-    if (messageChannel &&
+    if (MessageChannel &&
         (!dom::MessageChannelBinding::GetConstructorObject(cx) ||
          !dom::MessagePortBinding::GetConstructorObject(cx)))
         return false;
 
-    if (inspectorUtils &&
+    if (InspectorUtils &&
         !dom::InspectorUtilsBinding::GetConstructorObject(cx))
         return false;
 
