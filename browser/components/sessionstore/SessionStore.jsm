@@ -6,11 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["SessionStore"];
 
-const Cu = Components.utils;
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
 // Current version of the format used by Session Restore.
 const FORMAT_VERSION = 1;
 

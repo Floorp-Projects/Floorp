@@ -1,7 +1,5 @@
 "use strict";
 
-const {utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 

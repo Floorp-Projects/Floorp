@@ -17,11 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=789773
   <!-- test code goes here -->
   <script type="application/javascript">
   <![CDATA[
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
-  const Cr = Components.results;
-  const Cu = Components.utils;
-
   /* Test for Bug 789773.
    *
    * See comment 50 for the situation we're testing against here.

@@ -8,7 +8,6 @@
  * An API for being informed of slow tabs (content process scripts).
  */
 
-const { utils: Cu, classes: Cc, interfaces: Ci } = Components;
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 /**

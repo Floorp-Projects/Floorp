@@ -12,8 +12,6 @@ this.EXPORTED_SYMBOLS = [
   "PromiseTestUtils",
 ];
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://testing-common/Assert.jsm", this);
 

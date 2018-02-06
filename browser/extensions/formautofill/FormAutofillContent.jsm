@@ -12,7 +12,7 @@
 
 this.EXPORTED_SYMBOLS = ["FormAutofillContent"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr, manager: Cm} = Components;
+const Cm = Components.manager;
 
 ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

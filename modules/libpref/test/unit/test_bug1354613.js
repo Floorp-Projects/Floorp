@@ -2,9 +2,6 @@
  * http://creativecommons.org/licenses/publicdomain/  */
 
 function run_test() {
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
-  const Cr = Components.results;
   const BRANCH = "foo.";
   const PREF_NAME = "testPref";
   const FULL_PREF_NAME = BRANCH + PREF_NAME;

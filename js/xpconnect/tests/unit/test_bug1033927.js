@@ -1,4 +1,3 @@
-const Cu = Components.utils;
 function run_test() {
   var sb = Cu.Sandbox('http://www.example.com', { wantGlobalProperties: ['XMLHttpRequest']});
   var xhr = Cu.evalInSandbox('new XMLHttpRequest()', sb);

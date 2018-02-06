@@ -11,9 +11,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1139964
   <label value="Mozilla Bug 1139964"/>
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
-
   var ppm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
               .getService(Ci.nsIMessageBroadcaster);
 

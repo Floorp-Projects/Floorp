@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["Log"];
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-
 const ONE_BYTE = 1;
 const ONE_KILOBYTE = 1024 * ONE_BYTE;
 const ONE_MEGABYTE = 1024 * ONE_KILOBYTE;

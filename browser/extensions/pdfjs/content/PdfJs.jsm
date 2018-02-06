@@ -17,11 +17,7 @@
 
 var EXPORTED_SYMBOLS = ["PdfJs"];
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
 const Cm = Components.manager;
-const Cu = Components.utils;
 
 const PREF_PREFIX = "pdfjs";
 const PREF_DISABLED = PREF_PREFIX + ".disabled";

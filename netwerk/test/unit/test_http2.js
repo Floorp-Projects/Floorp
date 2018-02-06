@@ -1,8 +1,5 @@
 // test HTTP/2
 
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-
 // Generate a small and a large post with known pre-calculated md5 sums
 function generateContent(size) {
   var content = "";

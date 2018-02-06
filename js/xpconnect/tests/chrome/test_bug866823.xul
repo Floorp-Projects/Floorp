@@ -19,7 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=866823
   <![CDATA[
   /** Test for Bug 866823 **/
   SimpleTest.waitForExplicitFinish();
-  const Cu = Components.utils;
 
   function go() {
     var iwin = $('ifr').contentWindow;

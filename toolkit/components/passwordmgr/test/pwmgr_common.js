@@ -347,7 +347,6 @@ function runChecksAfterCommonInit(aFunction = null) {
 
 // Code to run when loaded as a chrome script in tests via loadChromeScript
 if (this.addMessageListener) {
-  const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
   var SpecialPowers = { Cc, Ci, Cr, Cu, };
   var ok, is;
   // Ignore ok/is in commonInit since they aren't defined in a chrome script.
@@ -427,7 +426,6 @@ if (this.addMessageListener) {
   SimpleTest.registerCleanupFunction(() => {
     SpecialPowers.popPrefEnv();
     runInParent(function cleanupParent() {
-      const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
       ChromeUtils.import("resource://gre/modules/Services.jsm");
       ChromeUtils.import("resource://gre/modules/LoginManagerParent.jsm");
 

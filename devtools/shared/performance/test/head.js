@@ -5,6 +5,4 @@
 
 "use strict";
 
-var { utils: Cu } = Components;
-
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});

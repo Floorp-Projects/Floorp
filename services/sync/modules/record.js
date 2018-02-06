@@ -10,11 +10,6 @@ this.EXPORTED_SYMBOLS = [
   "Collection",
 ];
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cr = Components.results;
-var Cu = Components.utils;
-
 const CRYPTO_COLLECTION = "crypto";
 const KEYS_WBO = "keys";
 

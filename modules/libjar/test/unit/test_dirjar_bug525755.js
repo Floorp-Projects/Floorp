@@ -6,8 +6,6 @@
 
 // Check that we refuse to open weird files
 function run_test() {
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
   // open a bogus file
   var file = do_get_file("/");
 

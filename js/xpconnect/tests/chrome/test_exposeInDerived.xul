@@ -18,8 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=804630
   <script type="application/javascript">
   <![CDATA[
   /** Test to make sure that COWed objects can't expose properties from their prototypes. **/
-  const Cu = Components.utils;
-
   // Set up the sandbox.
   var sb = new Cu.Sandbox('http://www.example.com');
   sb.ok = ok;

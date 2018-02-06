@@ -27,8 +27,6 @@ except Exception:
 
 MITMPROXY_SETTINGS = '''// Start with a comment
 // Load up mitmproxy cert
-var Cc = Components.classes;
-var Ci = Components.interfaces;
 var certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509CertDB);
 var certdb2 = certdb;
 

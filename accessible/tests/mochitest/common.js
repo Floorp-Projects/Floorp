@@ -698,7 +698,6 @@ function relationTypeToString(aRelationType) {
 }
 
 function getLoadContext() {
-  const Ci = Components.interfaces;
   return window.QueryInterface(Ci.nsIInterfaceRequestor)
                .getInterface(Ci.nsIWebNavigation)
                .QueryInterface(Ci.nsILoadContext);

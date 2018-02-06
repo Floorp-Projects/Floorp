@@ -1,5 +1,3 @@
-let { classes: Cc, utils: Cu, interfaces: Ci } = Components;
-
 let cs = Cc["@mozilla.org/cookiemanager;1"]
            .getService(Ci.nsICookieManager);
 

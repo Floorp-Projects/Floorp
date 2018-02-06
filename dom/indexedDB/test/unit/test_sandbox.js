@@ -59,7 +59,6 @@ function exerciseInterface() {
 function run_test() {
   do_get_profile();
 
-  let Cu = Components.utils;
   let sb = new Cu.Sandbox("https://www.example.com",
                           { wantGlobalProperties: ["indexedDB"] });
 

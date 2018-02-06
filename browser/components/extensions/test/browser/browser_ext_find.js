@@ -5,7 +5,6 @@
 function frameScript() {
   function getSelectedText() {
     let frame = this.content.frames[0].frames[1];
-    let {interfaces: Ci, utils: Cu} = Components;
     let docShell = frame.QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIWebNavigation)
                         .QueryInterface(Ci.nsIDocShell);

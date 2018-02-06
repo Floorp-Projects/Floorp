@@ -8,7 +8,6 @@ this.EXPORTED_SYMBOLS = [ "LoginManagerContent",
                           "LoginFormFactory",
                           "UserAutoCompleteResult" ];
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
 const AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS = 400;
 

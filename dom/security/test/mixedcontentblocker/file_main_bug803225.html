@@ -95,7 +95,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
 
   // Test 6: mailto protocol
   let mm = SpecialPowers.loadChromeScript(function launchHandler() {
-    var { classes: Cc, interfaces: Ci } = Components;
     var ioService = Cc["@mozilla.org/network/io-service;1"].
                       getService(Ci.nsIIOService);
 

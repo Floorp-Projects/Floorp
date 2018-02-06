@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
 ChromeUtils.import("resource:///modules/AboutNewTab.jsm");
 ChromeUtils.import("resource://gre/modules/RemotePageManager.jsm");
 

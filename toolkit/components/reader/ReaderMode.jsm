@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["ReaderMode"];
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 // Constants for telemetry.
 const DOWNLOAD_SUCCESS = 0;
 const DOWNLOAD_ERROR_XHR = 1;

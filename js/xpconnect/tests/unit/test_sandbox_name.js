@@ -1,7 +1,5 @@
 "use strict";
 
-const { utils: Cu, interfaces: Ci, classes: Cc } = Components;
-
 /**
  * Test that the name of a sandbox contains the name of all principals.
  */

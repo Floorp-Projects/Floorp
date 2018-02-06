@@ -7,7 +7,6 @@ const PREF_BRANCH = "extensions.screenshots.";
 const USER_DISABLE_PREF = "extensions.screenshots.disabled";
 const HISTORY_ENABLED_PREF = "places.history.enabled";
 
-const { interfaces: Ci, utils: Cu } = Components;
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");

@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 this.EXPORTED_SYMBOLS = ["Snackbars"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

@@ -11,8 +11,6 @@
  * between ExtensionParent.jsm and ExtensionChild.jsm.
  */
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 /* exported ExtensionCommon */
 
 this.EXPORTED_SYMBOLS = ["ExtensionCommon"];

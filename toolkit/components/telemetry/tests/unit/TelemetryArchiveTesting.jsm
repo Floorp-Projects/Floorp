@@ -1,4 +1,3 @@
-const {utils: Cu} = Components;
 ChromeUtils.import("resource://gre/modules/TelemetryArchive.jsm");
 ChromeUtils.import("resource://testing-common/Assert.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

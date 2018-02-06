@@ -9,8 +9,6 @@
 
 var EXPORTED_SYMBOLS = ["Logger"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var Logger = {

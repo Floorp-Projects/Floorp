@@ -5,9 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 

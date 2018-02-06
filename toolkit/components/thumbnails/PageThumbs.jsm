@@ -6,10 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["PageThumbs", "PageThumbsStorage"];
 
-const Cu = Components.utils;
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 const PREF_STORAGE_VERSION = "browser.pagethumbnails.storage_version";
 const LATEST_STORAGE_VERSION = 3;
 

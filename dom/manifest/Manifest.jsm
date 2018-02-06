@@ -11,10 +11,6 @@
 
 "use strict";
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cc = Components.classes;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const { ManifestObtainer } =

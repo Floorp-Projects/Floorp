@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
-
 Cu.importGlobalProperties(["URL"]);
 
 this.EXPORTED_SYMBOLS = ["navigate"];

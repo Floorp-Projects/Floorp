@@ -11,9 +11,6 @@ this.EXPORTED_SYMBOLS = [
   "TestIntegration",
 ];
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
-
 this.TestIntegration = {
   value: "value",
 

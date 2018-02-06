@@ -15,8 +15,6 @@ this.EXPORTED_SYMBOLS = [
   "TelemetrySend",
 ];
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/ClientID.jsm");

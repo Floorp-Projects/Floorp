@@ -6,8 +6,6 @@
 
 "use strict";
 
-const {classes: Cc, utils: Cu, interfaces: Ci} = Components;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Services", // jshint ignore:line
   "resource://gre/modules/Services.jsm");

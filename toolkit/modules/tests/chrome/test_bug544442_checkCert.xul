@@ -17,10 +17,6 @@
 <script type="application/javascript">
 <![CDATA[
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cr = Components.results;
-
 SimpleTest.waitForExplicitFinish();
 
 ChromeUtils.import("resource://gre/modules/CertUtils.jsm");

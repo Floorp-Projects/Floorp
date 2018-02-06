@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["Buttons"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource:///modules/CustomizableUI.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 

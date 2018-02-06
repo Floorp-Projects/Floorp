@@ -1,5 +1,3 @@
-var {utils: Cu, interfaces: Ci, classes: Cc} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const URI = Services.io.newURI("http://example.org/");

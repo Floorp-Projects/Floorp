@@ -14,8 +14,6 @@ cpm.addMessageListener("cpm-async",
     cpm.sendAsyncMessage("ppm-async");
   });
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
 var dshell = content.QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIWebNavigation)
                     .QueryInterface(Ci.nsIDocShellTreeItem)

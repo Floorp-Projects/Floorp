@@ -6,7 +6,6 @@
 
 "use strict";
 
-const { utils: Cu } = Components;
 const BrowserLoaderModule = {};
 Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
 const { require } = BrowserLoaderModule.BrowserLoader({

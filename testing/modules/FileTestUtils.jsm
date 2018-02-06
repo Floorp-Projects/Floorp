@@ -12,8 +12,6 @@ this.EXPORTED_SYMBOLS = [
   "FileTestUtils",
 ];
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm", this);
 ChromeUtils.import("resource://gre/modules/DownloadPaths.jsm", this);
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm", this);

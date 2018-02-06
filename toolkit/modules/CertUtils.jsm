@@ -5,9 +5,6 @@
 this.EXPORTED_SYMBOLS = [ "BadCertHandler", "checkCert", "readCertPrefs", "validateCert" ];
 
 const Ce = Components.Exception;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-const Cu = Components.utils;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 

@@ -22,8 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=524674
   var els = Components.classes["@mozilla.org/eventlistenerservice;1"]
                       .getService(Components.interfaces.nsIEventListenerService);
 
-  const Ci = Components.interfaces;
-
   function dummyListener() {}
 
   var runningTest = null;

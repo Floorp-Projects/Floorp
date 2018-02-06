@@ -19,7 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=853283
   <![CDATA[
   /** Test nsNavigatorSH::Resolve in conjunction with Xrays.**/
   SimpleTest.waitForExplicitFinish();
-  const Cu = Components.utils;
 
   function go() {
     // This chrome document already has Xrays to the content scope, but we use a

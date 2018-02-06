@@ -15,9 +15,6 @@ this.EXPORTED_SYMBOLS = [
   "parseKeyValuePairsFromFileAsync"
 ];
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 this.parseKeyValuePairsFromLines = function(lines) {
   let data = {};
   for (let line of lines) {

@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {interfaces: Ci, results: Cr} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.import("chrome://marionette/content/assert.js");

@@ -1,5 +1,3 @@
-const Cu = Components.utils;
-
 function testStrict(sb) {
   "use strict";
   Assert.equal(sb.eval("typeof wrappedCtor()"), "string");

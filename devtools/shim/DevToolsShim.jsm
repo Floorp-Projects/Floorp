@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});

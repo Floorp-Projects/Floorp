@@ -7,8 +7,6 @@
 
 this.EXPORTED_SYMBOLS = ["MulticastDNS"];
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 

@@ -11,8 +11,6 @@
 
 this.EXPORTED_SYMBOLS = ["DeclinedEngines"];
 
-var {utils: Cu} = Components;
-
 ChromeUtils.import("resource://services-sync/constants.js");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://services-common/utils.js");

@@ -10,9 +10,6 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script class="testbody" type="application/javascript">
   <![CDATA[
-    let Cc = Components.classes;
-    let Ci = Components.interfaces;
-    let Cu = Components.utils;
     ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
     
     let TP = Ci.nsITaskbarProgress;

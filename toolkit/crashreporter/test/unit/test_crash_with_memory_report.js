@@ -13,9 +13,6 @@ function run_test() {
       // Delay crashing so that the memory report has time to complete.
       shouldDelay = true;
 
-      let Cc = Components.classes;
-      let Ci = Components.interfaces;
-
       let env = Cc["@mozilla.org/process/environment;1"]
                   .getService(Ci.nsIEnvironment);
       let profd = env.get("XPCSHELL_TEST_PROFILE_DIR");

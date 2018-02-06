@@ -10,7 +10,6 @@
 
 /* exported init, loadHomepage */
 
-var Cu = Components.utils;
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 
 function init() {

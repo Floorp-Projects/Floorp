@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { utils: Cu } = Components;
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 
 /**

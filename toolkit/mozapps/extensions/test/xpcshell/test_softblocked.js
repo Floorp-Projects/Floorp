@@ -2,8 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const { utils: Cu, interfaces: Ci, classes: Cc, results: Cr } = Components;
-
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");

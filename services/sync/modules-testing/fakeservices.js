@@ -11,8 +11,6 @@ this.EXPORTED_SYMBOLS = [
   "fakeSHA256HMAC",
 ];
 
-var {utils: Cu} = Components;
-
 ChromeUtils.import("resource://services-sync/main.js");
 ChromeUtils.import("resource://services-sync/record.js");
 ChromeUtils.import("resource://services-sync/util.js");

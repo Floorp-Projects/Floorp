@@ -4,8 +4,6 @@
  */
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 const { AppConstants } =
   ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
 const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm", {});

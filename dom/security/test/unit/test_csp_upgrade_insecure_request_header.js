@@ -1,7 +1,3 @@
-var Cu = Components.utils;
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

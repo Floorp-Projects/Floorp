@@ -11,8 +11,6 @@ this.EXPORTED_SYMBOLS = [
   "RotaryTracker",
 ];
 
-var {utils: Cu} = Components;
-
 ChromeUtils.import("resource://services-sync/engines.js");
 ChromeUtils.import("resource://services-sync/record.js");
 ChromeUtils.import("resource://services-sync/util.js");

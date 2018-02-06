@@ -5,10 +5,6 @@
 
 this.EXPORTED_SYMBOLS = ["RemoteSecurityUI"];
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function RemoteSecurityUI() {

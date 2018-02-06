@@ -26,10 +26,6 @@
 
   "use strict";
 
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
-  const Cr = Components.results;
-
   const NONHEAP = Ci.nsIMemoryReporter.KIND_NONHEAP;
   const HEAP    = Ci.nsIMemoryReporter.KIND_HEAP;
   const OTHER   = Ci.nsIMemoryReporter.KIND_OTHER;

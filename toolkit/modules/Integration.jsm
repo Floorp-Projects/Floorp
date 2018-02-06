@@ -110,8 +110,6 @@ this.EXPORTED_SYMBOLS = [
   "Integration",
 ];
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /**

@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
 Cu.importGlobalProperties(["crypto"]);
 
 this.EXPORTED_SYMBOLS = ["capture"];

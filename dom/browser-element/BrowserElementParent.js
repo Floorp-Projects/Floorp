@@ -4,11 +4,6 @@
 
 "use strict";
 
-var Cu = Components.utils;
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-var Cr = Components.results;
-
 /* BrowserElementParent injects script to listen for certain events in the
  * child.  We then listen to messages from the child script and take
  * appropriate action here in the parent.
