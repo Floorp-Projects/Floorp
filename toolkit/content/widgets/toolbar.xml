@@ -15,14 +15,6 @@
     </resources>
   </binding>
 
-  <binding id="toolbox" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
-    <implementation>
-      <field name="palette">
-        null
-      </field>
-    </implementation>
-  </binding>
-
   <binding id="toolbar" role="xul:toolbar"
            extends="chrome://global/content/bindings/toolbar.xml#toolbar-base" />
 
