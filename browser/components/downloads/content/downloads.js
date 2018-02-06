@@ -114,25 +114,13 @@ var DownloadsPanel = {
   },
 
   /**
-   * Location of the panel overlay.
-   */
-  get kDownloadsOverlay() {
-    return "chrome://browser/content/downloads/downloadsOverlay.xul";
-  },
-
-  /**
    * Starts loading the download data in background, without opening the panel.
    * Use showPanel instead to load the data and open the panel at the same time.
-   *
-   * @param aCallback
-   *        Called when initialization is complete.
    */
-  initialize(aCallback) {
+  initialize() {
     DownloadsCommon.log("Attempting to initialize DownloadsPanel for a window.");
     if (this._state != this.kStateUninitialized) {
       DownloadsCommon.log("DownloadsPanel is already initialized.");
-      DownloadsOverlayLoader.ensureOverlayLoaded(this.kDownloadsOverlay,
-                                                 aCallback);
       return;
     }
     this._state = this.kStateHidden;
@@ -145,19 +133,17 @@ var DownloadsPanel = {
 
     // Now that data loading has eventually started, load the required XUL
     // elements and initialize our views.
-    DownloadsCommon.log("Ensuring DownloadsPanel overlay loaded.");
-    DownloadsOverlayLoader.ensureOverlayLoaded(this.kDownloadsOverlay, () => {
-      DownloadsViewController.initialize();
-      DownloadsCommon.log("Attaching DownloadsView...");
-      DownloadsCommon.getData(window).addView(DownloadsView);
-      DownloadsCommon.getSummary(window, DownloadsView.kItemCountLimit)
-                     .addView(DownloadsSummary);
-      DownloadsCommon.log("DownloadsView attached - the panel for this window",
-                          "should now see download items come in.");
-      DownloadsPanel._attachEventListeners();
-      DownloadsCommon.log("DownloadsPanel initialized.");
-      aCallback();
-    });
+
+    this.panel.hidden = false;
+    DownloadsViewController.initialize();
+    DownloadsCommon.log("Attaching DownloadsView...");
+    DownloadsCommon.getData(window).addView(DownloadsView);
+    DownloadsCommon.getSummary(window, DownloadsView.kItemCountLimit)
+                   .addView(DownloadsSummary);
+    DownloadsCommon.log("DownloadsView attached - the panel for this window",
+                        "should now see download items come in.");
+    DownloadsPanel._attachEventListeners();
+    DownloadsCommon.log("DownloadsPanel initialized.");
   },
 
   /**
@@ -192,18 +178,11 @@ var DownloadsPanel = {
   // Panel interface
 
   /**
-   * Main panel element in the browser window, or null if the panel overlay
-   * hasn't been loaded yet.
+   * Main panel element in the browser window.
    */
   get panel() {
-    // If the downloads panel overlay hasn't loaded yet, just return null
-    // without resetting this.panel.
-    let downloadsPanel = document.getElementById("downloadsPanel");
-    if (!downloadsPanel)
-      return null;
-
     delete this.panel;
-    return this.panel = downloadsPanel;
+    return this.panel = document.getElementById("downloadsPanel");
   },
 
   /**
@@ -224,13 +203,12 @@ var DownloadsPanel = {
     // As a belt-and-suspenders check, ensure the button is not hidden.
     DownloadsButton.unhide();
 
-    this.initialize(() => {
-      // Delay displaying the panel because this function will sometimes be
-      // called while another window is closing (like the window for selecting
-      // whether to save or open the file), and that would cause the panel to
-      // close immediately.
-      setTimeout(() => this._openPopupIfDataReady(), 0);
-    });
+    this.initialize();
+    // Delay displaying the panel because this function will sometimes be
+    // called while another window is closing (like the window for selecting
+    // whether to save or open the file), and that would cause the panel to
+    // close immediately.
+    setTimeout(() => this._openPopupIfDataReady(), 0);
 
     DownloadsCommon.log("Waiting for the downloads panel to appear.");
     this._state = this.kStateWaitingData;
