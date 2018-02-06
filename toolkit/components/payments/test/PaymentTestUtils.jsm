@@ -22,6 +22,12 @@ this.PaymentTestUtils = {
       };
     },
 
+    addShippingChangeHandler: ({details}) => {
+      content.rq.onshippingaddresschange = ev => {
+        ev.updateWith(details);
+      };
+    },
+
     /**
      * Create a new payment request and cache it as `rq`.
      *
@@ -51,6 +57,43 @@ this.PaymentTestUtils = {
   },
 
   DialogContentTasks: {
+    getShippingOptions: () => {
+      let select = content.document.querySelector("shipping-option-picker > rich-select");
+      let popupBox = Cu.waiveXrays(select).popupBox;
+      let selectedOptionIndex = Array.from(popupBox.children)
+                                     .findIndex(item => item.hasAttribute("selected"));
+      let selectedOption = popupBox.children[selectedOptionIndex];
+      let currencyAmount = selectedOption.querySelector("currency-amount");
+      return {
+        optionCount: popupBox.children.length,
+        selectedOptionIndex,
+        selectedOptionValue: selectedOption.getAttribute("value"),
+        selectedOptionLabel: selectedOption.getAttribute("label"),
+        selectedOptionCurrency: currencyAmount.getAttribute("currency"),
+        selectedOptionAmount: currencyAmount.getAttribute("amount"),
+      };
+    },
+
+    selectShippingAddressByCountry: country => {
+      let doc = content.document;
+      let addressPicker =
+        doc.querySelector("address-picker[selected-state-key='selectedShippingAddress']");
+      let select = addressPicker.querySelector("rich-select");
+      let option = select.querySelector(`[country="${country}"]`);
+      select.click();
+      option.click();
+    },
+
+    selectShippingOptionById: value => {
+      let doc = content.document;
+      let optionPicker =
+        doc.querySelector("shipping-option-picker");
+      let select = optionPicker.querySelector("rich-select");
+      let option = select.querySelector(`[value="${value}"]`);
+      select.click();
+      option.click();
+    },
+
     /**
      * Click the cancel button
      *
@@ -97,9 +140,41 @@ this.PaymentTestUtils = {
    */
   Details: {
     total60USD: {
+      shippingOptions: [
+        {
+          id: "standard",
+          label: "Ground Shipping (2 days)",
+          amount: { currency: "USD", value: "5.00" },
+          selected: true,
+        },
+        {
+          id: "drone",
+          label: "Drone Express (2 hours)",
+          amount: { currency: "USD", value: "25.00" },
+        },
+      ],
       total: {
         label: "Total due",
         amount: { currency: "USD", value: "60.00" },
+      },
+    },
+    total60EUR: {
+      shippingOptions: [
+        {
+          id: "standard",
+          label: "Ground Shipping (4 days)",
+          amount: { currency: "EUR", value: "7.00" },
+          selected: true,
+        },
+        {
+          id: "drone",
+          label: "Drone Express (8 hours)",
+          amount: { currency: "EUR", value: "29.00" },
+        },
+      ],
+      total: {
+        label: "Total due",
+        amount: { currency: "EUR", value: "75.00" },
       },
     },
     twoDisplayItems: {
@@ -133,6 +208,25 @@ this.PaymentTestUtils = {
           id: "2",
           label: "Premium Slow Shipping",
           amount: { currency: "USD", value: "2" },
+          selected: true,
+        },
+      ],
+    },
+    twoShippingOptionsEUR: {
+      total: {
+        label: "Total due",
+        amount: { currency: "EUR", value: "1.75" },
+      },
+      shippingOptions: [
+        {
+          id: "1",
+          label: "Sloth Shipping",
+          amount: { currency: "EUR", value: "1.01" },
+        },
+        {
+          id: "2",
+          label: "Velociraptor Shipping",
+          amount: { currency: "EUR", value: "63545.65" },
           selected: true,
         },
       ],
@@ -179,6 +273,12 @@ this.PaymentTestUtils = {
           },
         },
       ],
+    },
+  },
+
+  Options: {
+    requestShippingOption: {
+      requestShipping: true,
     },
   },
 };
