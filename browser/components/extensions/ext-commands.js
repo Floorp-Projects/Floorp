@@ -13,6 +13,10 @@ ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
 
 var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+const EXECUTE_PAGE_ACTION = "_execute_page_action";
+const EXECUTE_BROWSER_ACTION = "_execute_browser_action";
+const EXECUTE_SIDEBAR_ACTION = "_execute_sidebar_action";
+
 function normalizeShortcut(shortcut) {
   return shortcut ? shortcut.replace(/\s+/g, "") : null;
 }
@@ -154,13 +158,20 @@ this.commands = class extends ExtensionAPI {
     if (this.keysetsMap.has(window)) {
       this.keysetsMap.get(window).remove();
     }
+    let sidebarKey;
     commands.forEach((command, name) => {
       if (command.shortcut) {
         let keyElement = this.buildKey(doc, name, command.shortcut);
         keyset.appendChild(keyElement);
+        if (name == EXECUTE_SIDEBAR_ACTION) {
+          sidebarKey = keyElement;
+        }
       }
     });
     doc.documentElement.appendChild(keyset);
+    if (sidebarKey) {
+      window.SidebarUI.updateShortcut({key: sidebarKey});
+    }
     this.keysetsMap.set(window, keyset);
   }
 
@@ -187,11 +198,11 @@ this.commands = class extends ExtensionAPI {
     // therefore the listeners for these elements will be garbage collected.
     keyElement.addEventListener("command", (event) => {
       let action;
-      if (name == "_execute_page_action") {
+      if (name == EXECUTE_PAGE_ACTION) {
         action = pageActionFor(this.extension);
-      } else if (name == "_execute_browser_action") {
+      } else if (name == EXECUTE_BROWSER_ACTION) {
         action = browserActionFor(this.extension);
-      } else if (name == "_execute_sidebar_action") {
+      } else if (name == EXECUTE_SIDEBAR_ACTION) {
         action = sidebarActionFor(this.extension);
       } else {
         this.extension.tabManager
@@ -229,7 +240,7 @@ this.commands = class extends ExtensionAPI {
 
     // The modifiers are the remaining elements.
     keyElement.setAttribute("modifiers", this.getModifiersAttribute(parts));
-    if (name == "_execute_sidebar_action") {
+    if (name == EXECUTE_SIDEBAR_ACTION) {
       let id = `ext-key-id-${this.id}-sidebar-action`;
       keyElement.setAttribute("id", id);
     }

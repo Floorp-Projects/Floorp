@@ -151,7 +151,7 @@ this.sidebarAction = class extends ExtensionAPI {
   }
 
   createMenuItem(window, details) {
-    let {document} = window;
+    let {document, SidebarUI} = window;
 
     // Use of the broadcaster allows browser-sidebar.js to properly manage the
     // checkmarks in the menus.
@@ -190,6 +190,7 @@ this.sidebarAction = class extends ExtensionAPI {
     document.getElementById("viewSidebarMenu").appendChild(menuitem);
     let separator = document.getElementById("sidebar-extensions-separator");
     separator.parentNode.insertBefore(toolbarbutton, separator);
+    SidebarUI.updateShortcut({button: toolbarbutton});
 
     return menuitem;
   }
