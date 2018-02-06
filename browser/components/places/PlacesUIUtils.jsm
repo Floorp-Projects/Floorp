@@ -452,7 +452,7 @@ this.PlacesUIUtils = {
     if (PlacesUtils.nodeIsBookmark(aURINode))
       return true;
 
-    var uri = PlacesUtils._uri(aURINode.uri);
+    var uri = Services.io.newURI(aURINode.uri);
     if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
       const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
       var brandShortName = Services.strings.
@@ -804,9 +804,9 @@ this.PlacesUIUtils = {
     var title;
     if (!aNode.title && PlacesUtils.nodeIsURI(aNode)) {
       // if node title is empty, try to set the label using host and filename
-      // PlacesUtils._uri() will throw if aNode.uri is not a valid URI
+      // Services.io.newURI will throw if aNode.uri is not a valid URI
       try {
-        var uri = PlacesUtils._uri(aNode.uri);
+        var uri = Services.io.newURI(aNode.uri);
         var host = uri.host;
         var fileName = uri.QueryInterface(Ci.nsIURL).fileName;
         // if fileName is empty, use path to distinguish labels
@@ -988,7 +988,7 @@ this.PlacesUIUtils = {
       // Helper to create an organizer special query.
       create_query: function CB_create_query(aQueryName, aParentId, aQueryUrl) {
         let itemId = bs.insertBookmark(aParentId,
-                                       PlacesUtils._uri(aQueryUrl),
+                                       Services.io.newURI(aQueryUrl),
                                        bs.DEFAULT_INDEX,
                                        queries[aQueryName].title);
         // Mark as special organizer query.
