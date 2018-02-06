@@ -3088,8 +3088,6 @@ Preferences::ResetPrefs()
 {
   ENSURE_PARENT_PROCESS("Preferences::ResetPrefs", "all prefs");
 
-  NotifyServiceObservers(NS_PREFSERVICE_RESET_TOPIC_ID);
-
   gHashTable->ClearAndPrepareForLength(PREF_HASHTABLE_INITIAL_LENGTH);
   gPrefNameArena.Clear();
 
