@@ -170,7 +170,7 @@ add_task(async function() {
       return URLBar.controller.searchStatus >=
         Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
     });
-    let matchCount = URLBar.popup._matchCount;
+    let matchCount = URLBar.popup.matchCount;
     await BrowserTestUtils.waitForCondition(() => {
       return URLBar.popup.richlistbox.childNodes.length == matchCount;
     });

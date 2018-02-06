@@ -6,8 +6,6 @@ info: |
  Symbol.species is retained on subclassing
 author: Sam Mikes
 description: Symbol.species is retained on subclassing
-includes:
-  - propertyHelper.js
 features: [Symbol.species]
 ---*/
 

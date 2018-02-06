@@ -10,7 +10,6 @@ info: |
   Number.POSITIVE_INFINITY
 
   The value of Number.POSITIVE_INFINITY is +∞.
-includes: [propertyHelper.js]
 ---*/
 
 assert.sameValue(Number.POSITIVE_INFINITY, Infinity);

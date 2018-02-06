@@ -13,7 +13,6 @@ info: |
 
   The length property initially has the attributes { [[Writable]]: true,
   [[Enumerable]]: false, [[Configurable]]: false }.
-includes: [propertyHelper.js]
 ---*/
 
 class Ar extends Array {}

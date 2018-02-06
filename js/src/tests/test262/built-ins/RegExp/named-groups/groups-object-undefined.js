@@ -18,7 +18,7 @@ info: |
 
 const re = /./;
 const result = re.exec("a");
-assert.sameValue(result.__proto__, Array.prototype);
+assert.sameValue(Object.getPrototypeOf(result), Array.prototype);
 assert(result.hasOwnProperty("groups"));
 assert.sameValue("a", result[0]);
 assert.sameValue(0, result.index);
