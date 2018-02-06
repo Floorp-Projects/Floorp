@@ -478,14 +478,6 @@ BaselineCacheIRCompiler::emitGuardFunctionPrototype()
 }
 
 bool
-BaselineCacheIRCompiler::emitLoadValueResult()
-{
-    AutoOutputRegister output(*this);
-    masm.loadValue(stubAddress(reader.stubOffset()), output.valueReg());
-    return true;
-}
-
-bool
 BaselineCacheIRCompiler::emitLoadFixedSlotResult()
 {
     AutoOutputRegister output(*this);
@@ -2100,9 +2092,6 @@ BaselineCacheIRCompiler::init(CacheKind kind)
     AllocatableGeneralRegisterSet available(ICStubCompiler::availableGeneralRegs(numInputsInRegs));
 
     switch (kind) {
-      case CacheKind::GetIntrinsic:
-        MOZ_ASSERT(numInputs == 0);
-        break;
       case CacheKind::GetProp:
       case CacheKind::TypeOf:
       case CacheKind::GetIterator:

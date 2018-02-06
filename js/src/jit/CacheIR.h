@@ -142,7 +142,6 @@ class TypedOperandId : public OperandId
     _(GetName)              \
     _(GetPropSuper)         \
     _(GetElemSuper)         \
-    _(GetIntrinsic)         \
     _(SetProp)              \
     _(SetElem)              \
     _(BindName)             \
@@ -276,7 +275,6 @@ extern const char* CacheKindNames[];
     _(LoadDoubleTruthyResult)             \
     _(LoadStringTruthyResult)             \
     _(LoadObjectTruthyResult)             \
-    _(LoadValueResult)                    \
                                           \
     _(CallStringSplitResult)              \
                                           \
@@ -1036,10 +1034,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void loadObjectTruthyResult(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::LoadObjectTruthyResult, obj);
     }
-    void loadValueResult(Value val) {
-        writeOp(CacheOp::LoadValueResult);
-        addStubField(val.asRawBits(), StubField::Type::Value);
-    }
     void callStringSplitResult(StringOperandId str, StringOperandId sep, ObjectGroup* group) {
         writeOp(CacheOp::CallStringSplitResult);
         writeOperandId(str);
@@ -1644,20 +1638,6 @@ class MOZ_RAII ToBoolIRGenerator : public IRGenerator
   public:
     ToBoolIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode,
                       HandleValue val);
-
-    bool tryAttachStub();
-};
-
-class MOZ_RAII GetIntrinsicIRGenerator : public IRGenerator
-{
-    HandleValue val_;
-
-    void trackAttached(const char* name);
-    void trackNotAttached();
-
-  public:
-    GetIntrinsicIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode,
-                            HandleValue val);
 
     bool tryAttachStub();
 };
