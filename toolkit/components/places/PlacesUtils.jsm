@@ -1923,10 +1923,12 @@ XPCOMUtils.defineLazyGetter(this, "gAsyncDBWrapperPromised",
 
 /**
  * Keywords management API.
- * Sooner or later these keywords will merge with search keywords, this is an
+ * Sooner or later these keywords will merge with search aliases, this is an
  * interim API that should then be replaced by a unified one.
  * Keywords are associated with URLs and can have POST data.
- * A single URL can have multiple keywords, provided they differ by POST data.
+ * The relations between URLs and keywords are the following:
+ *  - 1 keyword can only point to 1 URL
+ *  - 1 URL can have multiple keywords, iff they differ by POST data (included the empty one).
  */
 var Keywords = {
   /**
@@ -2010,6 +2012,7 @@ var Keywords = {
    *            Defaults to nsINavBookmarksService::SOURCE_DEFAULT.
    *        }
    * @note Do not define a postData property if there isn't any POST data.
+   *       Defining an empty string for POST data is equivalent to not having it.
    * @resolves when the addition is complete.
    */
   insert(keywordEntry) {
@@ -2020,7 +2023,7 @@ var Keywords = {
         typeof(keywordEntry.keyword) != "string")
       throw new Error("Invalid keyword");
     if (("postData" in keywordEntry) && keywordEntry.postData &&
-                                        typeof(keywordEntry.postData) != "string")
+        typeof(keywordEntry.postData) != "string")
       throw new Error("Invalid POST data");
     if (!("url" in keywordEntry))
       throw new Error("undefined is not a valid URL");
@@ -2030,17 +2033,17 @@ var Keywords = {
     }
     let { keyword, url, source } = keywordEntry;
     keyword = keyword.trim().toLowerCase();
-    let postData = keywordEntry.postData || null;
+    let postData = keywordEntry.postData || "";
     // This also checks href for validity
     url = new URL(url);
 
-    return PlacesUtils.withConnectionWrapper("Keywords.insert", async function(db) {
+    return PlacesUtils.withConnectionWrapper("Keywords.insert", async db => {
         let cache = await gKeywordsCachePromise;
 
         // Trying to set the same keyword is a no-op.
         let oldEntry = cache.get(keyword);
         if (oldEntry && oldEntry.url.href == url.href &&
-                        oldEntry.postData == keywordEntry.postData) {
+            (oldEntry.postData || "") == postData) {
           return;
         }
 
@@ -2060,7 +2063,7 @@ var Keywords = {
         } else {
           // An entry for the given page could be missing, in such a case we need to
           // create it.  The IGNORE conflict can trigger on `guid`.
-          await db.executeTransaction(async function() {
+          await db.executeTransaction(async () => {
             await db.executeCached(
               `INSERT OR IGNORE INTO moz_places (url, url_hash, rev_host, hidden, frecency, guid)
                VALUES (:url, hash(:url), :rev_host, 0, :frecency,
@@ -2069,6 +2072,23 @@ var Keywords = {
               `, { url: url.href, rev_host: PlacesUtils.getReversedHost(url),
                    frecency: url.protocol == "place:" ? 0 : -1 });
             await db.executeCached("DELETE FROM moz_updatehostsinsert_temp");
+
+            // A new keyword could be assigned to an url that already has one,
+            // then we must replace the old keyword with the new one.
+            let oldKeywords = [];
+            for (let entry of cache.values()) {
+              if (entry.url.href == url.href && (entry.postData || "") == postData)
+                oldKeywords.push(entry.keyword);
+            }
+            if (oldKeywords.length) {
+              for (let oldKeyword of oldKeywords) {
+                await db.executeCached(
+                  `DELETE FROM moz_keywords WHERE keyword = :oldKeyword`,
+                  { oldKeyword });
+                cache.delete(oldKeyword);
+              }
+            }
+
             await db.executeCached(
               `INSERT INTO moz_keywords (keyword, place_id, post_data)
                VALUES (:keyword, (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url), :post_data)
@@ -2079,7 +2099,7 @@ var Keywords = {
         await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
           db, url, PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source));
 
-        cache.set(keyword, { keyword, url, postData });
+        cache.set(keyword, { keyword, url, postData: postData || null });
 
         // In any case, notify about the new keyword.
         await notifyKeywordChange(url.href, keyword, source);
@@ -2236,7 +2256,7 @@ XPCOMUtils.defineLazyGetter(this, "gKeywordsCachePromise", () =>
         try {
           let entry = { keyword,
                         url: new URL(row.getResultByName("url")),
-                        postData: row.getResultByName("post_data") };
+                        postData: row.getResultByName("post_data") || null };
           cache.set(keyword, entry);
         } catch (ex) {
           // The url is invalid, don't load the keyword and remove it, or it
