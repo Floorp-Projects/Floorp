@@ -5,7 +5,6 @@
 // sjs for remote about:newtab (bug 1226928)
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.importGlobalProperties(["URLSearchParams"]);
