@@ -455,6 +455,8 @@ JitCompartment::initialize(JSContext* cx)
         return false;
     }
 
+    stringsCanBeInNursery = cx->nursery().canAllocateStrings();
+
     return true;
 }
 
