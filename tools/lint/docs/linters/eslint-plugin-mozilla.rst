@@ -186,6 +186,19 @@ object is assigned to another variable e.g.:
     var b = gBrowser;
     b.content // Would not be detected as a CPOW.
 
+no-define-cc-etc
+----------------
+
+This disallows statements such as:
+
+.. code-block:: js
+
+   var Cc = Components.classes;
+   var Ci = Components.interfaces;
+   var {Ci: interfaces, Cc: classes, Cu: utils} = Components;
+
+These used to be necessary but have now been defined globally for all chrome
+contexts.
 
 no-single-arg-cu-import
 -----------------------
@@ -255,6 +268,13 @@ object is assigned to another variable e.g.:
 
    var b = gBrowser;
    b.content // Would not be detected as a CPOW.
+
+use-cc-etc
+----------
+
+This requires using ``Cc`` rather than ``Components.classes``, and the same for
+``Components.interfaces``, ``Components.results`` and ``Components.utils``. This has
+a slight performance advantage by avoiding the use of the dot.
 
 use-chromeutils-import
 ----------------------
