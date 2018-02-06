@@ -6,8 +6,6 @@ ChromeUtils.defineModuleGetter(this, "AppMenuNotifications",
                                "resource://gre/modules/AppMenuNotifications.jsm");
 ChromeUtils.defineModuleGetter(this, "NewTabUtils",
                                "resource://gre/modules/NewTabUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PanelMultiView",
-                               "resource:///modules/PanelMultiView.jsm");
 ChromeUtils.defineModuleGetter(this, "ScrollbarSampler",
                                "resource:///modules/ScrollbarSampler.jsm");
 
@@ -217,9 +215,7 @@ const PanelUI = {
         }, {once: true});
 
         anchor = this._getPanelAnchor(anchor);
-        PanelMultiView.openPopup(this.panel, anchor, {
-          triggerEvent: domEvent,
-        }).catch(Cu.reportError);
+        this.panel.openPopup(anchor, { triggerEvent: domEvent });
       }, (reason) => {
         console.error("Error showing the PanelUI menu", reason);
       });
@@ -234,7 +230,7 @@ const PanelUI = {
       return;
     }
 
-    PanelMultiView.hidePopup(this.panel);
+    this.panel.hidePopup();
   },
 
   observe(subject, topic, status) {
@@ -422,6 +418,10 @@ const PanelUI = {
         await oldMultiView.showMainView();
       }
 
+      let viewShown = false;
+      let listener = () => viewShown = true;
+      viewNode.addEventListener("ViewShown", listener, {once: true});
+
       let multiView = document.createElement("panelmultiview");
       multiView.setAttribute("id", "customizationui-widget-multiview");
       multiView.setAttribute("viewCacheId", "appMenu-viewCache");
@@ -431,7 +431,6 @@ const PanelUI = {
       tempPanel.appendChild(multiView);
       viewNode.classList.add("cui-widget-panelview");
 
-      let viewShown = false;
       let panelRemover = () => {
         viewNode.classList.remove("cui-widget-panelview");
         if (viewShown) {
@@ -446,6 +445,18 @@ const PanelUI = {
         tempPanel.remove();
       };
 
+      // Wait until all the tasks needed to show a view are done.
+      await multiView.currentShowPromise;
+
+      if (!viewShown) {
+        viewNode.removeEventListener("ViewShown", listener);
+        panelRemover();
+        return;
+      }
+
+      CustomizableUI.addPanelCloseListeners(tempPanel);
+      tempPanel.addEventListener("popuphidden", panelRemover);
+
       if (aAnchor.parentNode.id == "PersonalToolbar") {
         tempPanel.classList.add("bookmarks-toolbar");
       }
@@ -456,21 +467,10 @@ const PanelUI = {
         anchor.setAttribute("consumeanchor", aAnchor.id);
       }
 
-      try {
-        viewShown = await PanelMultiView.openPopup(tempPanel, anchor, {
-          position: "bottomcenter topright",
-          triggerEvent: domEvent,
-        });
-      } catch (ex) {
-        Cu.reportError(ex);
-      }
-
-      if (viewShown) {
-        CustomizableUI.addPanelCloseListeners(tempPanel);
-        tempPanel.addEventListener("popuphidden", panelRemover);
-      } else {
-        panelRemover();
-      }
+      tempPanel.openPopup(anchor, {
+        position: "bottomcenter topright",
+        triggerEvent: domEvent,
+      });
     }
   },
 
@@ -620,7 +620,9 @@ const PanelUI = {
       this.navbar.setAttribute("nonemptyoverflow", "true");
       this.overflowPanel.setAttribute("hasfixeditems", "true");
     } else if (!hasKids && this.navbar.hasAttribute("nonemptyoverflow")) {
-      PanelMultiView.hidePopup(this.overflowPanel);
+      if (this.overflowPanel.state != "closed") {
+        this.overflowPanel.hidePopup();
+      }
       this.overflowPanel.removeAttribute("hasfixeditems");
       this.navbar.removeAttribute("nonemptyoverflow");
     }

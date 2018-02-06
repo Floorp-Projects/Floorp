@@ -431,7 +431,7 @@ add_task(async function withSubview() {
   Assert.notEqual(panelViewButtonNodeUrlbar, null, "panelViewButtonNodeUrlbar");
   onButtonCommandExpectedButtonID = panelViewButtonIDUrlbar;
   EventUtils.synthesizeMouseAtCenter(panelViewButtonNodeUrlbar, {});
-  assertActivatedPageActionPanelHidden();
+  await promisePanelHidden(BrowserPageActions._activatedActionPanelID);
   Assert.equal(onButtonCommandCallCount, 2,
                "onButtonCommandCallCount should be inc'ed");
 
@@ -532,7 +532,7 @@ add_task(async function withIframe() {
   Assert.notEqual(aaPanel, null, "activated-action panel");
   Assert.equal(aaPanel.anchorNode.id, urlbarButtonID, "aaPanel.anchorNode.id");
   EventUtils.synthesizeMouseAtCenter(urlbarButtonNode, {});
-  assertActivatedPageActionPanelHidden();
+  await promisePanelHidden(BrowserPageActions._activatedActionPanelID);
 
   // Click the action's urlbar button.
   EventUtils.synthesizeMouseAtCenter(urlbarButtonNode, {});
@@ -546,7 +546,7 @@ add_task(async function withIframe() {
   Assert.notEqual(aaPanel, null, "aaPanel");
   Assert.equal(aaPanel.anchorNode.id, urlbarButtonID, "aaPanel.anchorNode.id");
   EventUtils.synthesizeMouseAtCenter(urlbarButtonNode, {});
-  assertActivatedPageActionPanelHidden();
+  await promisePanelHidden(BrowserPageActions._activatedActionPanelID);
 
   // Hide the action's button in the urlbar.
   action.pinnedToUrlbar = false;
@@ -567,7 +567,7 @@ add_task(async function withIframe() {
   Assert.equal(aaPanel.anchorNode.id, BrowserPageActions.mainButtonNode.id,
                "aaPanel.anchorNode.id");
   EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
-  assertActivatedPageActionPanelHidden();
+  await promisePanelHidden(BrowserPageActions._activatedActionPanelID);
 
   // Remove the action.
   action.remove();
@@ -1416,10 +1416,6 @@ add_task(async function contextMenu() {
 });
 
 
-function assertActivatedPageActionPanelHidden() {
-  Assert.ok(!document.getElementById(BrowserPageActions._activatedActionPanelID));
-}
-
 function promisePageActionPanelOpen() {
   let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
                   .getInterface(Ci.nsIDOMWindowUtils);
@@ -1463,14 +1459,10 @@ function promisePanelHidden(panelIDOrNode) {
 
 function promisePanelEvent(panelIDOrNode, eventType) {
   return new Promise(resolve => {
-    let panel = panelIDOrNode;
-    if (typeof panel == "string") {
-      panel = document.getElementById(panelIDOrNode);
-      if (!panel) {
-        throw new Error(`Panel with ID "${panelIDOrNode}" does not exist.`);
-      }
-    }
-    if ((eventType == "popupshown" && panel.state == "open") ||
+    let panel = typeof(panelIDOrNode) != "string" ? panelIDOrNode :
+                document.getElementById(panelIDOrNode);
+    if (!panel ||
+        (eventType == "popupshown" && panel.state == "open") ||
         (eventType == "popuphidden" && panel.state == "closed")) {
       executeSoon(resolve);
       return;
