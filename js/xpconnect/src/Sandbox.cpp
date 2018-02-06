@@ -41,6 +41,7 @@
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/MessageChannelBinding.h"
 #include "mozilla/dom/MessagePortBinding.h"
+#include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/ResponseBinding.h"
@@ -945,6 +946,8 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
             InspectorUtils = true;
         } else if (!strcmp(name.ptr(), "MessageChannel")) {
             MessageChannel = true;
+        } else if (!strcmp(name.ptr(), "NodeFilter")) {
+            NodeFilter = true;
         } else if (!strcmp(name.ptr(), "TextDecoder")) {
             TextDecoder = true;
         } else if (!strcmp(name.ptr(), "TextEncoder")) {
@@ -1019,6 +1022,9 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
     if (MessageChannel &&
         (!dom::MessageChannelBinding::GetConstructorObject(cx) ||
          !dom::MessagePortBinding::GetConstructorObject(cx)))
+        return false;
+
+    if (NodeFilter && !dom::NodeFilterBinding::GetConstructorObject(cx))
         return false;
 
     if (TextDecoder &&
