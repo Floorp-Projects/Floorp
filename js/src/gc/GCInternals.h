@@ -188,6 +188,23 @@ struct MOZ_RAII AutoAssertNoNurseryAlloc
 #endif
 };
 
+// Note that this class does not suppress buffer allocation/reallocation in the
+// nursery, only Cells themselves.
+class MOZ_RAII AutoSuppressNurseryCellAlloc
+{
+    JSContext* cx_;
+
+  public:
+
+    explicit AutoSuppressNurseryCellAlloc(JSContext* cx) : cx_(cx) {
+        cx_->nurserySuppressions_++;
+    }
+    ~AutoSuppressNurseryCellAlloc() {
+        cx_->nurserySuppressions_--;
+    }
+};
+
+
 /*
  * There are a couple of classes here that serve mostly as "tokens" indicating
  * that a condition holds. Some functions force the caller to possess such a
