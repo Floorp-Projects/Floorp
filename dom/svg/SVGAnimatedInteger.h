@@ -27,7 +27,7 @@ public:
   }
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-    override final;
+    final;
 
   virtual int32_t BaseVal() = 0;
   virtual void SetBaseVal(int32_t aBaseVal) = 0;

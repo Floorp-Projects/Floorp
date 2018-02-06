@@ -1262,7 +1262,7 @@ public:
   }
 
   virtual bool writeNode(const JS::ubi::Node& ubiNode,
-                         EdgePolicy includeEdges) override final {
+                         EdgePolicy includeEdges) final {
     // NB: de-duplicated string properties must be written in the same order
     // here as they are read in `HeapSnapshot::saveNode` or else indices in
     // references to already serialized strings will be off.

@@ -184,8 +184,8 @@ protected:
   virtual void CallCallback(nsresult rv) final;
 
 private:
-  NS_IMETHOD Run() override final;
-  nsresult Cancel() override final;
+  NS_IMETHOD Run() final;
+  nsresult Cancel() final;
 
   class InternalWorkerHolder;
 

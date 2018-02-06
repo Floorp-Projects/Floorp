@@ -349,9 +349,9 @@ public:
 
   // Outer windows only.
   virtual nsresult SetFullscreenInternal(
-    FullscreenReason aReason, bool aIsFullscreen) override final;
-  virtual void FullscreenWillChange(bool aIsFullscreen) override final;
-  virtual void FinishFullscreenChange(bool aIsFullscreen) override final;
+    FullscreenReason aReason, bool aIsFullscreen) final;
+  virtual void FullscreenWillChange(bool aIsFullscreen) final;
+  virtual void FinishFullscreenChange(bool aIsFullscreen) final;
   bool SetWidgetFullscreen(FullscreenReason aReason, bool aIsFullscreen,
                            nsIWidget* aWidget, nsIScreen* aScreen);
   bool FullScreen() const;

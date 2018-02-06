@@ -76,14 +76,14 @@ public:
     return result;
   }
 
-  UnscaledFont* LookupUnscaledFont(ReferencePtr aRefPtr) override final
+  UnscaledFont* LookupUnscaledFont(ReferencePtr aRefPtr) final
   {
     UnscaledFont* result = mUnscaledFonts.GetWeak(aRefPtr);
     MOZ_ASSERT(result);
     return result;
   }
 
-  virtual UnscaledFont* LookupUnscaledFontByIndex(size_t index) override final
+  virtual UnscaledFont* LookupUnscaledFontByIndex(size_t index) final
   {
     UnscaledFont* result = mUnscaledFontTable[index];
     return result;

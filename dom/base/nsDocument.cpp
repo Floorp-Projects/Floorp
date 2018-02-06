@@ -10536,7 +10536,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run() override final
+  NS_IMETHOD Run() final
   {
     if (!mDoc) {
       FullscreenRoots::ForEach(&AskWindowToExitFullscreen);

@@ -27,10 +27,10 @@ public:
   void AppendCSSValue(already_AddRefed<CSSValue> aValue);
 
   virtual void GetCssText(nsString& aText, mozilla::ErrorResult& aRv)
-    override final;
+    final;
   virtual void SetCssText(const nsAString& aText,
-                          mozilla::ErrorResult& aRv) override final;
-  virtual uint16_t CssValueType() const override final;
+                          mozilla::ErrorResult& aRv) final;
+  virtual uint16_t CssValueType() const final;
 
   void GetCssText(nsAString& aText);
 

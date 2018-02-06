@@ -88,7 +88,7 @@ public:
   }
 
   virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-    override final;
+    final;
 
 protected:
   virtual ~nsDOMCaretPosition();
