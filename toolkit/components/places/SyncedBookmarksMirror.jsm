@@ -3353,18 +3353,6 @@ class BookmarkMerger {
                     "${localParentNode} and remotely in ${remoteParentNode}",
                     { remoteChildNode, localParentNode, remoteParentNode });
 
-    if (this.remoteTree.isDeleted(localParentNode.guid)) {
-      MirrorLog.trace("Unconditionally taking remote move for " +
-                      "${remoteChildNode} to ${remoteParentNode} because " +
-                      "local parent ${localParentNode} is deleted remotely",
-                      { remoteChildNode, remoteParentNode, localParentNode });
-
-      let mergedChildNode = this.mergeNode(localChildNode.guid,
-                                           localChildNode, remoteChildNode);
-      mergedNode.mergedChildren.push(mergedChildNode);
-      return false;
-    }
-
     if (localParentNode.needsMerge) {
       if (remoteParentNode.needsMerge) {
         MirrorLog.trace("Local ${localParentNode} and remote " +
@@ -3487,18 +3475,6 @@ class BookmarkMerger {
     MirrorLog.trace("Local child ${localChildNode} exists locally in " +
                     "${localParentNode} and remotely in ${remoteParentNode}",
                     { localChildNode, localParentNode, remoteParentNode });
-
-    if (this.localTree.isDeleted(remoteParentNode.guid)) {
-      MirrorLog.trace("Unconditionally taking local move for " +
-                      "${localChildNode} to ${localParentNode} because " +
-                      "remote parent ${remoteParentNode} is deleted locally",
-                      { localChildNode, localParentNode, remoteParentNode });
-
-      let mergedChildNode = this.mergeNode(localChildNode.guid,
-                                           localChildNode, remoteChildNode);
-      mergedNode.mergedChildren.push(mergedChildNode);
-      return true;
-    }
 
     if (localParentNode.needsMerge) {
       if (remoteParentNode.needsMerge) {
