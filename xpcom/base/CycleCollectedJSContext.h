@@ -21,7 +21,6 @@
 #include "nsTArray.h"
 
 class nsCycleCollectionNoteRootCallback;
-class nsIException;
 class nsIRunnable;
 class nsThread;
 class nsWrapperCache;
@@ -30,6 +29,10 @@ namespace mozilla {
 class AutoSlowOperation;
 
 class CycleCollectedJSRuntime;
+
+namespace dom {
+class Exception;
+} // namespace dom
 
 // Contains various stats about the cycle collection.
 struct CycleCollectorResults
@@ -136,8 +139,8 @@ public:
     return mRuntime;
   }
 
-  already_AddRefed<nsIException> GetPendingException() const;
-  void SetPendingException(nsIException* aException);
+  already_AddRefed<dom::Exception> GetPendingException() const;
+  void SetPendingException(dom::Exception* aException);
 
   std::queue<nsCOMPtr<nsIRunnable>>& GetPromiseMicroTaskQueue();
   std::queue<nsCOMPtr<nsIRunnable>>& GetDebuggerPromiseMicroTaskQueue();
@@ -275,7 +278,7 @@ private:
 
   JSContext* mJSContext;
 
-  nsCOMPtr<nsIException> mPendingException;
+  nsCOMPtr<dom::Exception> mPendingException;
   nsThread* mOwningThread; // Manual refcounting to avoid include hell.
 
   struct RunInMetastableStateData

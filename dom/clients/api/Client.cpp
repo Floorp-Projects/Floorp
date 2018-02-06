@@ -19,7 +19,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
 using mozilla::dom::ipc::StructuredCloneData;
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(mozilla::dom::Client);

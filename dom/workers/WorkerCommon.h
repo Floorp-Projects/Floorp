@@ -18,18 +18,7 @@ namespace dom {
 
 class WorkerPrivate;
 
-namespace workers {
-
 // All of these are implemented in RuntimeService.cpp
-
-#ifdef DEBUG
-void
-AssertIsOnMainThread();
-#else
-inline void
-AssertIsOnMainThread()
-{ }
-#endif
 
 WorkerPrivate*
 GetWorkerPrivateFromContext(JSContext* aCx);
@@ -41,7 +30,7 @@ bool
 IsCurrentThreadRunningChromeWorker();
 
 JSContext*
-GetCurrentThreadJSContext();
+GetCurrentWorkerThreadJSContext();
 
 JSObject*
 GetCurrentThreadWorkerGlobal();
@@ -67,12 +56,11 @@ bool
 IsWorkerGlobal(JSObject* global);
 
 bool
-IsDebuggerGlobal(JSObject* global);
+IsWorkerDebuggerGlobal(JSObject* global);
 
 bool
-IsDebuggerSandbox(JSObject* object);
+IsWorkerDebuggerSandbox(JSObject* object);
 
-} // workers namespace
 } // dom namespace
 } // mozilla namespace
 

@@ -86,8 +86,8 @@ HTMLEditor::GetAbsolutelyPositionedSelectionContainer()
 
   while (element && !element->IsHTMLElement(nsGkAtoms::html)) {
     nsresult rv =
-      mCSSEditUtils->GetComputedProperty(*element, *nsGkAtoms::position,
-                                         positionStr);
+      CSSEditUtils::GetComputedProperty(*element, *nsGkAtoms::position,
+                                        positionStr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
@@ -172,8 +172,8 @@ HTMLEditor::GetZIndex(Element& aElement)
   nsAutoString zIndexStr;
 
   nsresult rv =
-    mCSSEditUtils->GetSpecifiedProperty(aElement, *nsGkAtoms::z_index,
-                                        zIndexStr);
+    CSSEditUtils::GetSpecifiedProperty(aElement, *nsGkAtoms::z_index,
+                                       zIndexStr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return 0;
   }
@@ -184,16 +184,16 @@ HTMLEditor::GetZIndex(Element& aElement)
     nsAutoString positionStr;
     while (node && zIndexStr.EqualsLiteral("auto") &&
            !node->IsHTMLElement(nsGkAtoms::body)) {
-      rv = mCSSEditUtils->GetComputedProperty(*node, *nsGkAtoms::position,
-                                              positionStr);
+      rv = CSSEditUtils::GetComputedProperty(*node, *nsGkAtoms::position,
+                                             positionStr);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return 0;
       }
       if (positionStr.EqualsLiteral("absolute")) {
         // ah, we found one, what's its z-index ? If its z-index is auto,
         // we have to continue climbing the document's tree
-        rv = mCSSEditUtils->GetComputedProperty(*node, *nsGkAtoms::z_index,
-                                                zIndexStr);
+        rv = CSSEditUtils::GetComputedProperty(*node, *nsGkAtoms::z_index,
+                                               zIndexStr);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return 0;
         }
@@ -458,8 +458,8 @@ HTMLEditor::SetPositionToAbsoluteOrStatic(Element& aElement,
                                           bool aEnabled)
 {
   nsAutoString positionStr;
-  mCSSEditUtils->GetComputedProperty(aElement, *nsGkAtoms::position,
-                                     positionStr);
+  CSSEditUtils::GetComputedProperty(aElement, *nsGkAtoms::position,
+                                    positionStr);
   bool isPositioned = (positionStr.EqualsLiteral("absolute"));
 
   // nothing to do if the element is already in the state we want
@@ -607,8 +607,8 @@ HTMLEditor::GetTemporaryStyleForFocusedPositionedElement(Element& aElement,
 
   nsAutoString bgImageStr;
   nsresult rv =
-    mCSSEditUtils->GetComputedProperty(aElement, *nsGkAtoms::background_image,
-                                       bgImageStr);
+    CSSEditUtils::GetComputedProperty(aElement, *nsGkAtoms::background_image,
+                                      bgImageStr);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!bgImageStr.EqualsLiteral("none")) {
     return NS_OK;
@@ -616,15 +616,15 @@ HTMLEditor::GetTemporaryStyleForFocusedPositionedElement(Element& aElement,
 
   nsAutoString bgColorStr;
   rv =
-    mCSSEditUtils->GetComputedProperty(aElement, *nsGkAtoms::backgroundColor,
-                                       bgColorStr);
+    CSSEditUtils::GetComputedProperty(aElement, *nsGkAtoms::backgroundColor,
+                                      bgColorStr);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!bgColorStr.EqualsLiteral("transparent")) {
     return NS_OK;
   }
 
   RefPtr<nsComputedDOMStyle> cssDecl =
-    mCSSEditUtils->GetComputedStyle(&aElement);
+    CSSEditUtils::GetComputedStyle(&aElement);
   NS_ENSURE_STATE(cssDecl);
 
   // from these declarations, get the one we want and that one only

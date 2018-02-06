@@ -1422,7 +1422,8 @@ NewMaybeExternalString(JSContext* cx, unsigned argc, Value* vp)
     if (!res)
         return false;
 
-    mozilla::Unused << buf.release();
+    if (allocatedExternal)
+        mozilla::Unused << buf.release();
     args.rval().setString(res);
     return true;
 }

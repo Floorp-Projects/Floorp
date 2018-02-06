@@ -84,7 +84,6 @@ using namespace ipc;
 
 namespace dom {
 
-using namespace workers;
 using namespace workerinternals;
 
 namespace workerinternals {
@@ -135,7 +134,7 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
   PR_BEGIN_MACRO                                                               \
     AssertIsOnMainThread();                                                    \
                                                                                \
-    AutoTArray<WorkerPrivate*, 100> workers;                                 \
+    AutoTArray<WorkerPrivate*, 100> workers;                                   \
     {                                                                          \
       MutexAutoLock lock(mMutex);                                              \
                                                                                \
@@ -935,14 +934,16 @@ JSObject*
 Wrap(JSContext *cx, JS::HandleObject existing, JS::HandleObject obj)
 {
   JSObject* targetGlobal = JS::CurrentGlobalOrNull(cx);
-  if (!IsDebuggerGlobal(targetGlobal) && !IsDebuggerSandbox(targetGlobal)) {
+  if (!IsWorkerDebuggerGlobal(targetGlobal) &&
+      !IsWorkerDebuggerSandbox(targetGlobal)) {
     MOZ_CRASH("There should be no edges from the debuggee to the debugger.");
   }
 
   JSObject* originGlobal = js::GetGlobalForObjectCrossCompartment(obj);
 
   const js::Wrapper* wrapper = nullptr;
-  if (IsDebuggerGlobal(originGlobal) || IsDebuggerSandbox(originGlobal)) {
+  if (IsWorkerDebuggerGlobal(originGlobal) ||
+      IsWorkerDebuggerSandbox(originGlobal)) {
     wrapper = &js::CrossCompartmentWrapper::singleton;
   } else {
     wrapper = &js::OpaqueCrossCompartmentWrapper::singleton;
@@ -1123,7 +1124,7 @@ public:
 
     std::queue<nsCOMPtr<nsIRunnable>>* microTaskQueue = nullptr;
 
-    JSContext* cx = GetCurrentThreadJSContext();
+    JSContext* cx = GetCurrentWorkerThreadJSContext();
     NS_ASSERTION(cx, "This should never be null!");
 
     JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
@@ -1136,7 +1137,8 @@ public:
     if (IsWorkerGlobal(global)) {
       microTaskQueue = &mPromiseMicroTaskQueue;
     } else {
-      MOZ_ASSERT(IsDebuggerGlobal(global) || IsDebuggerSandbox(global));
+      MOZ_ASSERT(IsWorkerDebuggerGlobal(global) ||
+                 IsWorkerDebuggerSandbox(global));
 
       microTaskQueue = &mDebuggerPromiseMicroTaskQueue;
     }
@@ -2812,8 +2814,6 @@ WorkerThreadPrimaryRunnable::FinishedRunnable::Run()
 
 } // workerinternals namespace
 
-namespace workers {
-
 void
 CancelWorkersForWindow(nsPIDOMWindowInner* aWindow)
 {
@@ -2906,7 +2906,7 @@ IsCurrentThreadRunningChromeWorker()
 }
 
 JSContext*
-GetCurrentThreadJSContext()
+GetCurrentWorkerThreadJSContext()
 {
   WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
   if (!wp) {
@@ -2928,18 +2928,6 @@ GetCurrentThreadWorkerGlobal()
   }
   return scope->GetGlobalJSObject();
 }
-
-#ifdef DEBUG
-
-void
-AssertIsOnMainThread()
-{
-  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-}
-
-#endif
-
-} // workers namespace
 
 } // dom namespace
 } // mozilla namespace

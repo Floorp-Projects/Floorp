@@ -984,7 +984,7 @@ WorkerDebuggerGlobalScope::LoadSubScript(JSContext* aCx,
   Maybe<JSAutoCompartment> ac;
   if (aSandbox.WasPassed()) {
     JS::Rooted<JSObject*> sandbox(aCx, js::CheckedUnwrap(aSandbox.Value()));
-    if (!IsDebuggerSandbox(sandbox)) {
+    if (!IsWorkerDebuggerSandbox(sandbox)) {
       aRv.Throw(NS_ERROR_INVALID_ARG);
       return;
     }
@@ -1117,8 +1117,6 @@ WorkerDebuggerGlobalScope::AbstractMainThreadFor(TaskCategory aCategory)
   MOZ_CRASH("AbstractMainThreadFor not supported for workers.");
 }
 
-namespace workers {
-
 bool
 IsWorkerGlobal(JSObject* object)
 {
@@ -1126,18 +1124,17 @@ IsWorkerGlobal(JSObject* object)
 }
 
 bool
-IsDebuggerGlobal(JSObject* object)
+IsWorkerDebuggerGlobal(JSObject* object)
 {
   return IS_INSTANCE_OF(WorkerDebuggerGlobalScope, object);
 }
 
 bool
-IsDebuggerSandbox(JSObject* object)
+IsWorkerDebuggerSandbox(JSObject* object)
 {
   return SimpleGlobalObject::SimpleGlobalType(object) ==
     SimpleGlobalObject::GlobalType::WorkerDebuggerSandbox;
 }
 
-} // workers namespace
 } // dom namespace
 } // mozilla namespace
