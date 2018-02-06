@@ -20,7 +20,7 @@
 #include "nsXULAppAPI.h"
 #include "nsWindowsHelpers.h"
 
-#include <Tlhelp32.h>
+#include <tlhelp32.h>
 
 namespace mozilla {
 
