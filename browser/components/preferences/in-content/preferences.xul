@@ -108,8 +108,6 @@
           src="chrome://global/content/preferencesBindings.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/preferences/in-content/preferences.js"/>
-  <script type="application/javascript"
-          src="chrome://browser/content/preferences/in-content/extensionControlled.js"/>
   <script src="chrome://browser/content/preferences/in-content/findInPage.js"/>
   <script src="chrome://browser/content/preferences/in-content/subdialogs.js"/>
 
