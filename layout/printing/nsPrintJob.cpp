@@ -1934,7 +1934,11 @@ nsPrintJob::SetupToPrintContent()
 
   PR_PL(("****************** Begin Document ************************\n"));
 
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    NS_WARNING_ASSERTION(rv == NS_ERROR_ABORT,
+                         "Failed to begin document for printing");
+    return rv;
+  }
 
   // This will print the docshell document
   // when it completes asynchronously in the DonePrintingPages method
@@ -2041,7 +2045,8 @@ nsPrintJob::AfterNetworkPrint(bool aHandleError)
 
   /* cleaup on failure + notify user */
   if (aHandleError && NS_FAILED(rv)) {
-    NS_WARNING("nsPrintJob::AfterNetworkPrint failed");
+    NS_WARNING_ASSERTION(rv == NS_ERROR_ABORT,
+                         "nsPrintJob::AfterNetworkPrint failed");
     CleanupOnFailure(rv, !mIsDoingPrinting);
   }
 
