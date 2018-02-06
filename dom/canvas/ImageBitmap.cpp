@@ -548,6 +548,7 @@ ImageBitmap::Close()
 {
   mData = nullptr;
   mSurface = nullptr;
+  mDataWrapper = nullptr;
   mPictureRect.SetEmpty();
 }
 
@@ -1572,7 +1573,10 @@ ImageBitmapFormat
 ImageBitmap::FindOptimalFormat(const Optional<Sequence<ImageBitmapFormat>>& aPossibleFormats,
                                ErrorResult& aRv)
 {
-  MOZ_ASSERT(mDataWrapper, "No ImageBitmapFormatUtils functionalities.");
+  if (!mDataWrapper) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return ImageBitmapFormat::EndGuard_;
+  }
 
   ImageBitmapFormat platformFormat = mDataWrapper->GetFormat();
 
@@ -1596,7 +1600,10 @@ ImageBitmap::FindOptimalFormat(const Optional<Sequence<ImageBitmapFormat>>& aPos
 int32_t
 ImageBitmap::MappedDataLength(ImageBitmapFormat aFormat, ErrorResult& aRv)
 {
-  MOZ_ASSERT(mDataWrapper, "No ImageBitmapFormatUtils functionalities.");
+  if (!mDataWrapper) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return 0;
+  }
 
   if (aFormat == mDataWrapper->GetFormat()) {
     return mDataWrapper->GetBufferLength();
@@ -1631,6 +1638,12 @@ protected:
   void DoMapDataIntoBufferSource()
   {
     ErrorResult error;
+
+    if (!mImageBitmap->mDataWrapper) {
+      error.ThrowWithCustomCleanup(NS_ERROR_NOT_AVAILABLE);
+      mPromise->MaybeReject(error);
+      return;
+    }
 
     // Prepare destination buffer.
     uint8_t* bufferData = nullptr;
@@ -1784,13 +1797,18 @@ ImageBitmap::MapDataInto(JSContext* aCx,
                          const ArrayBufferViewOrArrayBuffer& aBuffer,
                          int32_t aOffset, ErrorResult& aRv)
 {
-  MOZ_ASSERT(mDataWrapper, "No ImageBitmapFormatUtils functionalities.");
   MOZ_ASSERT(aCx, "No JSContext while calling ImageBitmap::MapDataInto().");
 
   RefPtr<Promise> promise = Promise::Create(mParent, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
+  }
+
+  if (!mDataWrapper) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return promise.forget();
+
   }
 
   // Check for cases that should throws.
