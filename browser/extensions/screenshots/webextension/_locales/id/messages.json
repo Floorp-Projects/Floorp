@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "“Jangan pernah ingat riwayat” diaktifkan."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Anda menggunakan Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Unduhan dinonaktifkan."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Tautan Disalin"
   },

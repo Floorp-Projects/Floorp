@@ -29,6 +29,21 @@
   "downloadScreenshot": {
     "message": "Baixa"
   },
+  "downloadOnlyNotice": {
+    "message": "Actualment esteu en mode de només baixada."
+  },
+  "downloadOnlyDetails": {
+    "message": "El Firefox Screenshots canvia automàticament al mode de només baixada en aquestes situacions:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "En una finestra de navegació privada."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "S'han desactivat les galetes de tercers."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "S'ha activat l'opció «No recordarà mai l'historial»."
+  },
   "notificationLinkCopiedTitle": {
     "message": "S'ha copiat l'enllaç"
   },
@@ -36,6 +51,28 @@
     "message": "L'enllaç de la captura s'ha copiat al porta-retalls. Premeu $META_KEY$-V per enganxar-lo.",
     "placeholders": {
       "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Copia"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "S'ha copiat la captura"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "La captura s'ha copiat al porta-retalls. Premeu $META_KEY$-V per enganxar-la.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCroppedWarning": {
+    "message": "Aquesta imatge s'ha retallat a $PIXELS$ px.",
+    "placeholders": {
+      "pixels": {
         "content": "$1"
       }
     }

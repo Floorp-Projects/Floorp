@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "Al estar activado \"Nunca recordar el historial\"."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Estás usando Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Las subidas han sido desactivadas."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Enlace copiado"
   },
