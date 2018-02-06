@@ -292,6 +292,11 @@ ICStub::trace(JSTracer* trc)
         TraceEdge(trc, &updateStub->group(), "baseline-update-group");
         break;
       }
+      case ICStub::GetIntrinsic_Constant: {
+        ICGetIntrinsic_Constant* constantStub = toGetIntrinsic_Constant();
+        TraceEdge(trc, &constantStub->value(), "baseline-getintrinsic-constant-value");
+        break;
+      }
       case ICStub::NewArray_Fallback: {
         ICNewArray_Fallback* stub = toNewArray_Fallback();
         TraceNullableEdge(trc, &stub->templateObject(), "baseline-newarray-template");

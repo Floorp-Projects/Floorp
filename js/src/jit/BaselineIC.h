@@ -499,6 +499,41 @@ class ICGetIntrinsic_Fallback : public ICMonitoredFallbackStub
     };
 };
 
+// Stub that loads the constant result of a GETINTRINSIC operation.
+class ICGetIntrinsic_Constant : public ICStub
+{
+    friend class ICStubSpace;
+
+    GCPtrValue value_;
+
+    ICGetIntrinsic_Constant(JitCode* stubCode, const Value& value);
+    ~ICGetIntrinsic_Constant();
+
+  public:
+    GCPtrValue& value() {
+        return value_;
+    }
+    static size_t offsetOfValue() {
+        return offsetof(ICGetIntrinsic_Constant, value_);
+    }
+
+    class Compiler : public ICStubCompiler {
+        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
+
+        HandleValue value_;
+
+      public:
+        Compiler(JSContext* cx, HandleValue value)
+          : ICStubCompiler(cx, ICStub::GetIntrinsic_Constant, Engine::Baseline),
+            value_(value)
+        {}
+
+        ICStub* getStub(ICStubSpace* space) override {
+            return newStub<ICGetIntrinsic_Constant>(space, getStubCode(), value_);
+        }
+    };
+};
+
 // SetProp
 //     JSOP_SETPROP
 //     JSOP_SETNAME
