@@ -82,39 +82,30 @@ EnterprisePoliciesManager.prototype = {
       return;
     }
 
-    let provider = this._chooseProvider();
+    this._file = new JSONFileReader(getConfigurationFile());
+    this._file.readData();
 
-    if (!provider) {
+    if (!this._file.exists) {
       this.status = Ci.nsIEnterprisePolicies.INACTIVE;
       return;
     }
 
-    if (provider.failed) {
+    if (this._file.failed) {
       this.status = Ci.nsIEnterprisePolicies.FAILED;
       return;
     }
 
     this.status = Ci.nsIEnterprisePolicies.ACTIVE;
-    this._activatePolicies(provider.policies);
+    this._activatePolicies();
   },
 
-  _chooseProvider() {
-    // TODO: Bug 1433136 - Add GPO provider with higher precendence here
-
-    let jsonProvider = new JSONPoliciesProvider();
-    if (jsonProvider.hasPolicies) {
-      return jsonProvider;
-    }
-
-    return null;
-  },
-
-  _activatePolicies(unparsedPolicies) {
+  _activatePolicies() {
     let { schema } = ChromeUtils.import("resource:///modules/policies/schema.jsm", {});
+    let json = this._file.json;
 
-    for (let policyName of Object.keys(unparsedPolicies)) {
+    for (let policyName of Object.keys(json.policies)) {
       let policySchema = schema.properties[policyName];
-      let policyParameters = unparsedPolicies[policyName];
+      let policyParameters = json.policies[policyName];
 
       if (!policySchema) {
         log.error(`Unknown policy: ${policyName}`);
@@ -284,75 +275,84 @@ EnterprisePoliciesManager.prototype = {
 
 let DisallowedFeatures = {};
 
+function JSONFileReader(file) {
+  this._file = file;
+  this._data = {
+    exists: null,
+    failed: false,
+    json: null,
+  };
+}
 
-/*
- * JSON PROVIDER OF POLICIES
- *
- * This is a platform-agnostic provider which looks for
- * policies specified through a policies.json file stored
- * in the installation's distribution folder.
- */
-
-class JSONPoliciesProvider {
-  constructor() {
-    this._policies = null;
-    this._failed = false;
-    this._readData();
-  }
-
-  get hasPolicies() {
-    return this._policies !== null || this._failed;
-  }
-
-  get policies() {
-    return this._policies;
-  }
-
-  get failed() {
-    return this._failed;
-  }
-
-  _getConfigurationFile() {
-    let configFile = Services.dirsvc.get("XREAppDist", Ci.nsIFile);
-    configFile.append(POLICIES_FILENAME);
-
-    let alternatePath = Services.prefs.getStringPref(PREF_ALTERNATE_PATH, "");
-
-    if (alternatePath && !configFile.exists()) {
-      // We only want to use the alternate file path if the file on the install
-      // folder doesn't exist. Otherwise it'd be possible for a user to override
-      // the admin-provided policies by changing the user-controlled prefs.
-      // This pref is only meant for tests, so it's fine to use this extra
-      // synchronous configFile.exists() above.
-      configFile = Cc["@mozilla.org/file/local;1"]
-                     .createInstance(Ci.nsIFile);
-      configFile.initWithPath(alternatePath);
+JSONFileReader.prototype = {
+  get exists() {
+    if (this._data.exists === null) {
+      this.readData();
     }
 
-    return configFile;
-  }
+    return this._data.exists;
+  },
 
-  _readData() {
+  get failed() {
+    return this._data.failed;
+  },
+
+  get json() {
+    if (this._data.failed) {
+      return null;
+    }
+
+    if (this._data.json === null) {
+      this.readData();
+    }
+
+    return this._data.json;
+  },
+
+  readData() {
     try {
-      let data = Cu.readUTF8File(this._getConfigurationFile());
+      let data = Cu.readUTF8File(this._file);
       if (data) {
-        this._policies = JSON.parse(data).policies;
+        this._data.exists = true;
+        this._data.json = JSON.parse(data);
+      } else {
+        this._data.exists = false;
       }
     } catch (ex) {
       if (ex instanceof Components.Exception &&
           ex.result == Cr.NS_ERROR_FILE_NOT_FOUND) {
-        // Do nothing, _policies will remain null
+        this._data.exists = false;
       } else if (ex instanceof SyntaxError) {
         log.error("Error parsing JSON file");
-        this._failed = true;
+        this._data.failed = true;
       } else {
         log.error("Error reading file");
-        this._failed = true;
+        this._data.failed = true;
       }
     }
   }
-}
+};
 
+function getConfigurationFile() {
+  let configFile = Services.dirsvc.get("XREAppDist", Ci.nsIFile);
+  configFile.append(POLICIES_FILENAME);
+
+  let prefType = Services.prefs.getPrefType(PREF_ALTERNATE_PATH);
+
+  if ((prefType == Services.prefs.PREF_STRING) && !configFile.exists()) {
+    // We only want to use the alternate file path if the file on the install
+    // folder doesn't exist. Otherwise it'd be possible for a user to override
+    // the admin-provided policies by changing the user-controlled prefs.
+    // This pref is only meant for tests, so it's fine to use this extra
+    // synchronous configFile.exists() above.
+    configFile = Cc["@mozilla.org/file/local;1"]
+                   .createInstance(Ci.nsIFile);
+    let alternatePath = Services.prefs.getStringPref(PREF_ALTERNATE_PATH);
+    configFile.initWithPath(alternatePath);
+  }
+
+  return configFile;
+}
 
 var components = [EnterprisePoliciesManager];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

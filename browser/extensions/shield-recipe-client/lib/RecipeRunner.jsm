@@ -149,12 +149,6 @@ this.RecipeRunner = {
       return;
     }
 
-    if (!Services.policies.isAllowed("Shield")) {
-      log.debug("Disabling Shield because it's blocked by policy.");
-      this.disable();
-      return;
-    }
-
     const apiUrl = Services.prefs.getCharPref(API_URL_PREF);
     if (!apiUrl || !apiUrl.startsWith("https://")) {
       log.warn(`Disabling shield because ${API_URL_PREF} is not an HTTPS url: ${apiUrl}.`);
