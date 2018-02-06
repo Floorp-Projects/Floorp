@@ -4302,6 +4302,16 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
     return E_INVALIDARG;
   }
 
+  // According to MSDN, ITextStoreACP::GetTextExt() should return
+  // TS_E_INVALIDARG when acpStart and acpEnd are same (i.e., collapsed range).
+  // https://msdn.microsoft.com/en-us/library/windows/desktop/ms538435(v=vs.85).aspx
+  // > TS_E_INVALIDARG: The specified start and end character positions are
+  // >                  equal.
+  // However, some TIPs (including Microsoft's Chinese TIPs!) call this with
+  // collapsed range and if we return TS_E_INVALIDARG, they stops showing their
+  // owning window or shows it but odd position.  So, we should just return
+  // error only when acpStart and/or acpEnd are really odd.
+
   if (acpStart < 0 || acpEnd < acpStart) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
       ("0x%p   TSFTextStore::GetTextExt() FAILED due to "
@@ -4451,6 +4461,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
            this, mContentForTSF.MinOffsetOfLayoutChanged()));
         return E_FAIL;
       }
+      bool collapsed = acpStart == acpEnd;
       // Note that even if all characters in the editor or the composition
       // string was modified, 0 or start offset of the composition string is
       // useful because it may return caret rect or old character's rect which
@@ -4459,21 +4470,45 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
         static_cast<int32_t>(mContentForTSF.MinOffsetOfLayoutChanged());
       LONG lastUnmodifiedOffset = std::max(firstModifiedOffset - 1, 0);
       if (mContentForTSF.IsLayoutChangedAt(acpStart)) {
-        // If TSF queries text rect in composition string, we should return
-        // rect at start of the composition even if its layout is changed.
         if (acpStart >= mContentForTSF.LatestCompositionStartOffset()) {
-          acpStart = mContentForTSF.LatestCompositionStartOffset();
+          // If mContentForTSF has last composition string and current
+          // composition string, we can assume that ContentCacheInParent has
+          // cached rects of composition string at least length of current
+          // composition string.  Otherwise, we can assume that rect for
+          // first character of composition string is stored since it was
+          // selection start or caret position.
+          LONG maxCachedOffset = mContentForTSF.LatestCompositionEndOffset();
+          if (mContentForTSF.WasLastComposition()) {
+            maxCachedOffset =
+              std::min(maxCachedOffset,
+                       mContentForTSF.LastCompositionStringEndOffset());
+          }
+          acpStart = std::min(acpStart, maxCachedOffset);
         }
-        // Otherwise, use first character's rect.  Even if there is no
-        // characters, the query event will return caret rect instead.
+        // Otherwise, we don't know which character rects are cached.  So, we
+        // need to use first unmodified character's rect in this case.  Even
+        // if there is no character, the query event will return caret rect
+        // instead.
         else {
           acpStart = lastUnmodifiedOffset;
         }
         MOZ_ASSERT(acpStart <= acpEnd);
       }
-      if (mContentForTSF.IsLayoutChangedAt(acpEnd)) {
-        // Use max larger offset of last unmodified offset or acpStart which
-        // may be the first character offset of the composition string.
+      // If TIP requests caret rect with collapsed range, we should keep
+      // collapsing the range.
+      if (collapsed) {
+        acpEnd = acpStart;
+      }
+      // Let's set acpEnd to larger offset of last unmodified offset or
+      // acpStart which may be the first character offset of the composition
+      // string.  However, some TIPs may want to know the right edge of the
+      // range.  Therefore, if acpEnd is in composition string and active TIP
+      // doesn't retrieve caret rect (i.e., the range isn't collapsed), we
+      // should keep using the original acpEnd.  Otherwise, we should set
+      // acpEnd to larger value of acpStart and lastUnmodifiedOffset.
+      else if (mContentForTSF.IsLayoutChangedAt(acpEnd) &&
+               (acpEnd < mContentForTSF.LatestCompositionStartOffset() ||
+                acpEnd > mContentForTSF.LatestCompositionEndOffset())) {
         acpEnd = std::max(acpStart, lastUnmodifiedOffset);
       }
       MOZ_LOG(sTextStoreLog, LogLevel::Debug,
@@ -5955,6 +5990,9 @@ TSFTextStore::OnUpdateCompositionInternal()
   if (mDestroyed) {
     return NS_OK;
   }
+
+  // Update cached data now because all pending events have been handled now.
+  mContentForTSF.OnCompositionEventsHandled();
 
   // If composition is completely finished both in TSF/TIP and the focused
   // editor which may be in a remote process, we can clear the cache and don't
