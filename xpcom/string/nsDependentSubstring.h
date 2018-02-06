@@ -7,7 +7,7 @@
 #ifndef nsDependentSubstring_h___
 #define nsDependentSubstring_h___
 
-#include "nsSubstring.h"
+#include "nsAString.h"
 #include "nsTDependentSubstring.h"
 
 #endif /* !defined(nsDependentSubstring_h___) */
