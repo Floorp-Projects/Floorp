@@ -785,6 +785,7 @@ protected:
     {
       mText.Truncate();
       mLastCompositionString.Truncate();
+      mLastCompositionStart = -1;
       mInitialized = false;
     }
 
@@ -795,8 +796,10 @@ protected:
       mText = aText;
       if (mComposition.IsComposing()) {
         mLastCompositionString = mComposition.mString;
+        mLastCompositionStart = mComposition.mStart;
       } else {
         mLastCompositionString.Truncate();
+        mLastCompositionStart = -1;
       }
       mMinTextModifiedOffset = NOT_MODIFIED;
       mLatestCompositionStartOffset = mLatestCompositionEndOffset = LONG_MAX;
@@ -806,6 +809,23 @@ protected:
     void OnLayoutChanged()
     {
       mMinTextModifiedOffset = NOT_MODIFIED;
+    }
+
+    // OnCompositionEventsHandled() is called when all pending composition
+    // events are handled in the focused content which may be in a remote
+    // process.
+    void OnCompositionEventsHandled()
+    {
+      if (!mInitialized) {
+        return;
+      }
+      if (mComposition.IsComposing()) {
+        mLastCompositionString = mComposition.mString;
+        mLastCompositionStart = mComposition.mStart;
+      } else {
+        mLastCompositionString.Truncate();
+        mLastCompositionStart = -1;
+      }
     }
 
     const nsDependentSubstring GetSelectedText() const;
@@ -845,6 +865,17 @@ protected:
     {
       MOZ_ASSERT(mInitialized);
       return mLastCompositionString;
+    }
+    LONG LastCompositionStringEndOffset() const
+    {
+      MOZ_ASSERT(mInitialized);
+      MOZ_ASSERT(WasLastComposition());
+      return mLastCompositionStart + mLastCompositionString.Length();
+    }
+    bool WasLastComposition() const
+    {
+      MOZ_ASSERT(mInitialized);
+      return mLastCompositionStart >= 0;
     }
     uint32_t MinTextModifiedOffset() const
     {
@@ -899,6 +930,10 @@ protected:
     nsString mLastCompositionString;
     TSFTextStore::Composition& mComposition;
     TSFTextStore::Selection& mSelection;
+
+    // mLastCompositionStart stores the start offset of composition when
+    // mLastCompositionString is set.
+    LONG mLastCompositionStart;
 
     // The latest composition's start and end offset.  If composition hasn't
     // been started since this instance is initialized, they are LONG_MAX.
