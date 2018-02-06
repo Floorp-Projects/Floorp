@@ -1413,27 +1413,7 @@ nsPrefBranch::GetPrefType(const char* aPrefName, int32_t* aRetVal)
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& prefName = GetPrefName(aPrefName);
-  Pref* pref;
-  if (gHashTable && (pref = pref_HashTableLookup(prefName.get()))) {
-    switch (pref->Type()) {
-      case PrefType::String:
-        *aRetVal = PREF_STRING;
-        break;
-
-      case PrefType::Int:
-        *aRetVal = PREF_INT;
-        break;
-
-      case PrefType::Bool:
-        *aRetVal = PREF_BOOL;
-        break;
-
-      default:
-        MOZ_CRASH();
-    }
-  } else {
-    *aRetVal = PREF_INVALID;
-  }
+  *aRetVal = Preferences::GetType(prefName.get());
   return NS_OK;
 }
 
@@ -3823,8 +3803,7 @@ Preferences::InitInitialObjects()
   // has MOZ_TELEMETRY_ON_BY_DEFAULT *or* we're on the beta channel, telemetry
   // is on by default, otherwise not. This is necessary so that beta users who
   // are testing final release builds don't flipflop defaults.
-  if (Preferences::GetType(kTelemetryPref, PrefValueKind::Default) ==
-      nsIPrefBranch::PREF_INVALID) {
+  if (Preferences::GetType(kTelemetryPref) == nsIPrefBranch::PREF_INVALID) {
     bool prerelease = false;
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
     prerelease = true;
@@ -4166,13 +4145,28 @@ Preferences::HasUserValue(const char* aPrefName)
 }
 
 /* static */ int32_t
-Preferences::GetType(const char* aPrefName, PrefValueKind aKind)
+Preferences::GetType(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), nsIPrefBranch::PREF_INVALID);
-  int32_t result;
-  return NS_SUCCEEDED(GetRootBranch(aKind)->GetPrefType(aPrefName, &result))
-           ? result
-           : nsIPrefBranch::PREF_INVALID;
+
+  Pref* pref;
+  if (!gHashTable || !(pref = pref_HashTableLookup(aPrefName))) {
+    return PREF_INVALID;
+  }
+
+  switch (pref->Type()) {
+    case PrefType::String:
+      return PREF_STRING;
+
+    case PrefType::Int:
+      return PREF_INT;
+
+    case PrefType::Bool:
+      return PREF_BOOL;
+
+    default:
+      MOZ_CRASH();
+  }
 }
 
 /* static */ nsresult
