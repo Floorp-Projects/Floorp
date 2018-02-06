@@ -45,7 +45,7 @@ available. -->
 
 <!ENTITY networkProxy.label              "Network Proxy">
 
-<!ENTITY connectionSettingsLearnMore.label "Learn more">
+<!ENTITY connectionDesc.label            "Configure how &brandShortName; connects to the Internet">
 <!ENTITY connectionSettings.label        "Settings…">
 <!ENTITY connectionSettings.accesskey    "e">
 
