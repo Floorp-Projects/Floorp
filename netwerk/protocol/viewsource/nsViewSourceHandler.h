@@ -15,11 +15,13 @@ class nsILoadInfo;
 namespace mozilla {
 namespace net {
 
-class nsViewSourceHandler final : public nsIProtocolHandler
+class nsViewSourceHandler final : public nsIProtocolHandlerWithDynamicFlags
+                                , public nsIProtocolHandler
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
+    NS_DECL_NSIPROTOCOLHANDLERWITHDYNAMICFLAGS
 
     nsViewSourceHandler();
 
