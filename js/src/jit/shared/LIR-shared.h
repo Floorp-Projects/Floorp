@@ -8995,7 +8995,8 @@ class LWasmCallBase : public LInstruction
   public:
 
     LWasmCallBase(LAllocation* operands, uint32_t numOperands, bool needsBoundsCheck)
-      : operands_(operands),
+      : LInstruction(/* numTemps = */ 0),
+        operands_(operands),
         numOperands_(numOperands),
         needsBoundsCheck_(needsBoundsCheck)
     {
@@ -9026,9 +9027,6 @@ class LWasmCallBase : public LInstruction
     void setOperand(size_t index, const LAllocation& a) override {
         MOZ_ASSERT(index < numOperands_);
         operands_[index] = a;
-    }
-    size_t numTemps() const override {
-        return 0;
     }
     LDefinition* getTemp(size_t index) override {
         MOZ_CRASH("no temps");
