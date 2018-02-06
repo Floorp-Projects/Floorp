@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "‘Nooit geschiedenis onthouden’ is ingeschakeld."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "U gebruikt Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Uploads zijn uitgeschakeld."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Koppeling gekopieerd"
   },
@@ -141,7 +147,7 @@
     "message": "Zoals u wilt"
   },
   "tourBodyDownloadUpload": {
-    "message": "Sla uw bijgesneden afbeeldingen op op het web voor makkelijker delen, of download ze naar uw computer. U kunt ook op de knop Mijn afbeeldingen klikken om al uw gemaakte afbeeldingen te vinden."
+    "message": "Bewaar uw bijgesneden afbeeldingen op het web voor makkelijker delen, of download ze naar uw computer. U kunt ook op de knop Mijn afbeeldingen klikken om al uw gemaakte afbeeldingen te vinden."
   },
   "tourSkip": {
     "message": "Overslaan"

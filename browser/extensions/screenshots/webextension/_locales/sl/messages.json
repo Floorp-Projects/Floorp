@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "Ko je Firefox nastavljen, naj ne shranjuje zgodovine."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Uporabljate Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Nalaganje je onemogočeno."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Povezava kopirana"
   },

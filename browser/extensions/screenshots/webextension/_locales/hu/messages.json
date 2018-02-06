@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "A „Soha ne jegyezze meg az előzményeket” engedélyezett."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Firefox ESR-t használ."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "A feltöltések le lettek tiltva."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Hivatkozás másolva"
   },

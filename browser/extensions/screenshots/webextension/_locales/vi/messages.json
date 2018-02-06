@@ -29,11 +29,46 @@
   "downloadScreenshot": {
     "message": "Tải xuống"
   },
+  "downloadOnlyNotice": {
+    "message": "Bạn hiện đang ở chế độ chỉ tải về."
+  },
+  "downloadOnlyDetails": {
+    "message": "Ảnh chụp màn hình của Firefox sẽ tự động chuyển sang chế độ chỉ tải về trong các tình huống:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Trong một cửa sổ duyệt web riêng tư."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Cookies của bên thứ ba đã bị vô hiệu hóa."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Không bao giờ ghi nhớ lược sử” đã được kích hoạt."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Bạn đang sử dụng Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Tải lên đã bị vô hiệu hóa."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Đã sao chép liên kết"
   },
   "notificationLinkCopiedDetails": {
     "message": "Liên kết ảnh chụp màn hình của bạn đã được sao chép vào clipboard. Nhấn $META_KEY$-V để dán.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Sao chép"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Ảnh chụp màn hình đã được sao chép"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Ảnh chụp màn hình của bạn đã được sao chép vào clipboard. Nhấn $META_KEY$-V để dán.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
@@ -84,6 +119,9 @@
   "genericErrorTitle": {
     "message": "Whoa! Ảnh chụp màn hình của Firefox đã bị hoãn."
   },
+  "genericErrorDetails": {
+    "message": "Chúng tôi không chắc những gì vừa xảy ra. Thử lại hoặc chụp một trang khác?"
+  },
   "tourBodyIntro": {
     "message": "Tạo, lưu và chia sẻ ảnh chụp màn hình mà không rời khỏi Firefox."
   },
@@ -98,6 +136,9 @@
   },
   "tourBodyClickAndDrag": {
     "message": "Nhấp và kéo để chụp một phần của một trang. Bạn cũng có thể di chuột để làm nổi bật lựa chọn của bạn."
+  },
+  "tourHeaderFullPage": {
+    "message": "Chụp Windows hoặc Toàn bộ trang"
   },
   "tourBodyFullPage": {
     "message": "Chọn các nút ở phía trên bên phải để chụp khu vực nhìn thấy được trong cửa sổ hoặc để chụp toàn bộ trang."
