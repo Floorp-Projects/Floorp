@@ -609,25 +609,6 @@ var Utils = {
    * reset when we drop sync credentials, etc.
    */
   getSyncCredentialsHosts() {
-    let result = new Set(this.getSyncCredentialsHostsLegacy());
-    for (let host of this.getSyncCredentialsHostsFxA()) {
-      result.add(host);
-    }
-    return result;
-  },
-
-  /*
-   * Get the "legacy" identity hosts.
-   */
-  getSyncCredentialsHostsLegacy() {
-    // the legacy sync host
-    return new Set([PWDMGR_HOST]);
-  },
-
-  /*
-   * Get the FxA identity hosts.
-   */
-  getSyncCredentialsHostsFxA() {
     let result = new Set();
     // the FxA host
     result.add(FxAccountsCommon.FXA_PWDMGR_HOST);
