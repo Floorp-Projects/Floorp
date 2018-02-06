@@ -1632,9 +1632,6 @@ class AddonInstall {
 
     this.addon._repositoryAddon = repoAddon;
     this.name = this.name || this.addon._repositoryAddon.name;
-    this.addon.compatibilityOverrides = repoAddon ?
-      repoAddon.compatibilityOverrides :
-      null;
     this.addon.appDisabled = !isUsableAddon(this.addon);
     return undefined;
   }
@@ -2726,7 +2723,7 @@ UpdateChecker.prototype = {
    * @param  updates
    *         The list of update details for the add-on
    */
-  onUpdateCheckComplete(aUpdates) {
+  async onUpdateCheckComplete(aUpdates) {
     XPIProvider.done(this.addon._updateCheck);
     this.addon._updateCheck = null;
     let AUC = AddonUpdateChecker;
@@ -2784,8 +2781,8 @@ UpdateChecker.prototype = {
     }
 
     let compatOverrides = AddonManager.strictCompatibility ?
-                            null :
-                            this.addon.compatibilityOverrides;
+                          null :
+                          await AddonRepository.getCompatibilityOverrides(this.addon.id);
 
     let update = AUC.getNewestCompatibleUpdate(aUpdates,
                                            this.appVersion,

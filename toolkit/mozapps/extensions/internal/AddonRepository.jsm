@@ -406,6 +406,40 @@ var AddonRepository = {
   },
 
   /**
+   * Get any compatibility override information for the given add-on id.
+   *
+   * @param aId
+   *        The id of the add-on to fetch compatibiltiy override data for.
+   * @returns Promise
+   *          A Promise which resolves with the compatibility override
+   *          data for the given add-on, if any is available.
+   */
+  async getCompatibilityOverrides(aId) {
+    let addon = await new Promise(resolve => this.getCachedAddonByID(aId, resolve));
+    return addon ? addon.compatibilityOverrides : null;
+  },
+
+  /**
+   * Synchronously get any compatibility override information for
+   * the given add-on id.
+   *
+   * @param aId
+   *        The id of the add-on to fetch compatibiltiy override data for.
+   * @returns object
+   *          Compatibility override data for the given add-on, if any is
+   *          available.  Note that this method does not do any I/O so if
+   *          the database has not been read and cacheAddons() has not been
+   *          called for the given id, this may return null even when there
+   *          is a compatibility override for the addon.
+   */
+  getCompatibilityOverridesSync(aId) {
+    if (this._addons == null || !this._addons.has(aId)) {
+      return null;
+    }
+    return this._addons.get(aId).compatibilityOverrides;
+  },
+
+  /**
    * Asynchronously get a cached add-on by id. The add-on (or null if the
    * add-on is not found) is passed to the specified callback. If caching is
    * disabled, null is passed to the specified callback.
