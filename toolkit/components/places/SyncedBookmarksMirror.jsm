@@ -1016,15 +1016,16 @@ class SyncedBookmarksMirror {
       INSERT OR IGNORE INTO moz_places(url, url_hash, rev_host, hidden,
                                        frecency, guid)
       SELECT u.url, u.hash, u.revHost, 0,
-             (CASE SUBSTR(u.url, 1, 6) WHEN 'place:' THEN 0 ELSE -1 END),
-             IFNULL(h.guid, u.guid)
+             (CASE v.kind WHEN :queryKind THEN 0 ELSE -1 END),
+             IFNULL((SELECT h.guid FROM moz_places h
+                     WHERE h.url_hash = u.hash AND
+                           h.url = u.url), u.guid)
       FROM items v
       JOIN urls u ON u.id = v.urlId
-      LEFT JOIN moz_places h ON h.url_hash = u.hash AND
-                                h.url = u.url
       JOIN mergeStates r ON r.mergedGuid = v.guid
       WHERE r.valueState = :valueState`,
-      { valueState: BookmarkMergeState.TYPE.REMOTE });
+      { queryKind: SyncedBookmarksMirror.KIND.QUERY,
+        valueState: BookmarkMergeState.TYPE.REMOTE });
     await this.db.execute(`DELETE FROM moz_updatehostsinsert_temp`);
 
     // Deleting from `newRemoteItems` fires the `insertNewLocalItems` and
