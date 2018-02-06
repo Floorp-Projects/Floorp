@@ -427,7 +427,11 @@ void MacroAssembler::LogicalMacro(const Register& rd,
     } else {
       // Immediate can't be encoded: synthesize using move immediate.
       Register temp = temps.AcquireSameSizeAs(rn);
-      Operand imm_operand = MoveImmediateForShiftedOp(temp, immediate);
+
+      // If the left-hand input is the stack pointer, we can't pre-shift the
+      // immediate, as the encoding won't allow the subsequent post shift.
+      PreShiftImmMode mode = rn.IsSP() ? kNoShift : kAnyShift;
+      Operand imm_operand = MoveImmediateForShiftedOp(temp, immediate, mode);
 
       // VIXL can acquire temp registers. Assert that the caller is aware.
       VIXL_ASSERT(!temp.Is(rd) && !temp.Is(rn));
@@ -965,7 +969,8 @@ bool MacroAssembler::TryOneInstrMoveImmediate(const Register& dst,
 
 
 Operand MacroAssembler::MoveImmediateForShiftedOp(const Register& dst,
-                                                  int64_t imm) {
+                                                  int64_t imm,
+                                                  PreShiftImmMode mode) {
   int reg_size = dst.size();
 
   // Encode the immediate in a single move instruction, if possible.
@@ -974,6 +979,14 @@ Operand MacroAssembler::MoveImmediateForShiftedOp(const Register& dst,
   } else {
     // Pre-shift the immediate to the least-significant bits of the register.
     int shift_low = CountTrailingZeros(imm, reg_size);
+    if (mode == kLimitShiftForSP) {
+      // When applied to the stack pointer, the subsequent arithmetic operation
+      // can use the extend form to shift left by a maximum of four bits. Right
+      // shifts are not allowed, so we filter them out later before the new
+      // immediate is tested.
+      shift_low = std::min(shift_low, 4);
+    }
+
     int64_t imm_low = imm >> shift_low;
 
     // Pre-shift the immediate to the most-significant bits of the register,
@@ -981,11 +994,11 @@ Operand MacroAssembler::MoveImmediateForShiftedOp(const Register& dst,
     int shift_high = CountLeadingZeros(imm, reg_size);
     int64_t imm_high = (imm << shift_high) | ((INT64_C(1) << shift_high) - 1);
 
-    if (TryOneInstrMoveImmediate(dst, imm_low)) {
+    if ((mode != kNoShift) && TryOneInstrMoveImmediate(dst, imm_low)) {
       // The new immediate has been moved into the destination's low bits:
       // return a new leftward-shifting operand.
       return Operand(dst, LSL, shift_low);
-    } else if (TryOneInstrMoveImmediate(dst, imm_high)) {
+    } else if ((mode == kAnyShift) && TryOneInstrMoveImmediate(dst, imm_high)) {
       // The new immediate has been moved into the destination's high bits:
       // return a new rightward-shifting operand.
       return Operand(dst, LSR, shift_high);
@@ -1037,19 +1050,27 @@ void MacroAssembler::AddSubMacro(const Register& rd,
   }
 
   if ((operand.IsImmediate() && !IsImmAddSub(operand.immediate())) ||
-      (rn.IsZero() && !operand.IsShiftedRegister())                ||
+      (rn.IsZero() && !operand.IsShiftedRegister()) ||
       (operand.IsShiftedRegister() && (operand.shift() == ROR))) {
     UseScratchRegisterScope temps(this);
     Register temp = temps.AcquireSameSizeAs(rn);
-
-    // VIXL can acquire temp registers. Assert that the caller is aware.
-    VIXL_ASSERT(!temp.Is(rd) && !temp.Is(rn));
-    VIXL_ASSERT(!temp.Is(operand.maybeReg()));
-
     if (operand.IsImmediate()) {
+      PreShiftImmMode mode = kAnyShift;
+
+      // If the destination or source register is the stack pointer, we can
+      // only pre-shift the immediate right by values supported in the add/sub
+      // extend encoding.
+      if (rd.IsSP()) {
+        // If the destination is SP and flags will be set, we can't pre-shift
+        // the immediate at all. 
+        mode = (S == SetFlags) ? kNoShift : kLimitShiftForSP;
+      } else if (rn.IsSP()) {
+        mode = kLimitShiftForSP;
+      } 
+
       Operand imm_operand =
-          MoveImmediateForShiftedOp(temp, operand.immediate());
-      AddSub(rd, rn, imm_operand, S, op);
+          MoveImmediateForShiftedOp(temp, operand.immediate(), mode);
+      AddSub(rd, rn, imm_operand, S, op); 
     } else {
       Mov(temp, operand);
       AddSub(rd, rn, temp, S, op);
