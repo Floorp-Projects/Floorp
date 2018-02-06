@@ -4,11 +4,7 @@
 const URL = "http://mochi.test:8888/";
 const URL_COPY = URL + "#copy";
 
-XPCOMUtils.defineLazyGetter(this, "Sanitizer", function() {
-  let tmp = {};
-  Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tmp);
-  return tmp.Sanitizer;
-});
+const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm", {});
 
 /**
  * These tests ensure that the thumbnail storage is working as intended.
@@ -72,30 +68,13 @@ async function promiseClearFile(aFile, aURL) {
 }
 
 function promiseClearHistory(aUseRange) {
-  let s = new Sanitizer();
-  s.prefDomain = "privacy.cpd.";
-
-  let prefs = Services.prefs.getBranch(s.prefDomain);
-  prefs.setBoolPref("history", true);
-  prefs.setBoolPref("downloads", false);
-  prefs.setBoolPref("cache", false);
-  prefs.setBoolPref("cookies", false);
-  prefs.setBoolPref("formdata", false);
-  prefs.setBoolPref("offlineApps", false);
-  prefs.setBoolPref("passwords", false);
-  prefs.setBoolPref("sessions", false);
-  prefs.setBoolPref("siteSettings", false);
-
+  let options = {};
   if (aUseRange) {
     let usec = Date.now() * 1000;
-    s.range = [usec - 10 * 60 * 1000 * 1000, usec];
-    s.ignoreTimespan = false;
+    options.range = [usec - 10 * 60 * 1000 * 1000, usec];
+    options.ignoreTimespan = false;
   }
-
-  return s.sanitize().then(() => {
-    s.range = null;
-    s.ignoreTimespan = true;
-  });
+  return Sanitizer.sanitize(["history"], options);
 }
 
 function promiseCreateThumbnail() {

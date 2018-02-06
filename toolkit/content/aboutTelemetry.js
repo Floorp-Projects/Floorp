@@ -515,6 +515,8 @@ var PingPicker = {
           first = false;
         }
         option.hidden = (type != this.TYPE_ALL) && (option.dataset.type != type);
+        // Arrow keys should only iterate over visible options
+        option.disabled = option.hidden;
       });
     });
     this._updateArchivedPingData();

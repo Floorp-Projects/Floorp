@@ -81,6 +81,13 @@ public:
   void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect);
 
   /**
+   * If a composite is pending, force it to trigger right away. This must be
+   * called on the compositor thread. Returns true if there was a composite
+   * flushed.
+   */
+  bool FlushPendingComposite();
+
+  /**
    * Return the vsync timestamp of the last or ongoing composite. Must be called
    * on the compositor thread.
    */

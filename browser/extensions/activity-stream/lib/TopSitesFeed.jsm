@@ -8,7 +8,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 const {TippyTopProvider} = ChromeUtils.import("resource://activity-stream/lib/TippyTopProvider.jsm", {});
-const {insertPinned, TOP_SITES_SHOWMORE_LENGTH} = ChromeUtils.import("resource://activity-stream/common/Reducers.jsm", {});
+const {insertPinned, TOP_SITES_DEFAULT_ROWS, TOP_SITES_MAX_SITES_PER_ROW} = ChromeUtils.import("resource://activity-stream/common/Reducers.jsm", {});
 const {Dedupe} = ChromeUtils.import("resource://activity-stream/common/Dedupe.jsm", {});
 const {shortURL} = ChromeUtils.import("resource://activity-stream/lib/ShortURL.jsm", {});
 
@@ -74,9 +74,8 @@ this.TopSitesFeed = class TopSitesFeed {
   }
 
   async getLinksWithDefaults(action) {
-    // Get at least SHOWMORE amount so toggling between 1 and 2 rows has sites
-    const numItems = Math.max(this.store.getState().Prefs.values.topSitesCount,
-      TOP_SITES_SHOWMORE_LENGTH);
+    // Get at least TOP_SITES_DEFAULT_ROWS (2) amount so toggling between 1 and 2 rows has sites
+    const numItems = Math.max(this.store.getState().Prefs.values.topSitesRows, TOP_SITES_DEFAULT_ROWS) * TOP_SITES_MAX_SITES_PER_ROW;
     const frecent = (await this.frecentCache.request({
       numItems,
       topsiteFrecency: FRECENCY_THRESHOLD
@@ -159,7 +158,7 @@ this.TopSitesFeed = class TopSitesFeed {
       this.store.dispatch(ac.BroadcastToContent(newAction));
     } else {
       // Don't broadcast only update the state and update the preloaded tab.
-      this.store.dispatch(ac.SendToPreloaded(newAction));
+      this.store.dispatch(ac.AlsoToPreloaded(newAction));
     }
   }
 
@@ -226,8 +225,13 @@ this.TopSitesFeed = class TopSitesFeed {
    */
   pin(action) {
     const {site, index} = action.data;
-    this._pinSiteAt(site, index);
-    this._broadcastPinnedSitesUpdated();
+    // If valid index provided, pin at that position
+    if (index >= 0) {
+      this._pinSiteAt(site, index);
+      this._broadcastPinnedSitesUpdated();
+    } else {
+      this.insert(action);
+    }
   }
 
   /**
@@ -246,7 +250,7 @@ this.TopSitesFeed = class TopSitesFeed {
     // Don't insert any pins past the end of the visible top sites. Otherwise,
     // we can end up with a bunch of pinned sites that can never be unpinned again
     // from the UI.
-    const {topSitesCount} = this.store.getState().Prefs.values;
+    const topSitesCount = this.store.getState().Prefs.values.topSitesRows * TOP_SITES_MAX_SITES_PER_ROW;
     if (index >= topSitesCount) {
       return;
     }
@@ -285,11 +289,17 @@ this.TopSitesFeed = class TopSitesFeed {
    * Handle an insert (drop/add) action of a site.
    */
   insert(action) {
+    let {index} = action.data;
+    // Treat invalid pin index values (e.g., -1, undefined) as insert in the first position
+    if (!(index > 0)) {
+      index = 0;
+    }
+
     // Inserting a top site pins it in the specified slot, pushing over any link already
     // pinned in the slot (unless it's the last slot, then it replaces).
     this._insertPin(
-      action.data.site, action.data.index || 0,
-      action.data.draggedFromIndex !== undefined ? action.data.draggedFromIndex : this.store.getState().Prefs.values.topSitesCount);
+      action.data.site, index,
+      action.data.draggedFromIndex !== undefined ? action.data.draggedFromIndex : this.store.getState().Prefs.values.topSitesRows * TOP_SITES_MAX_SITES_PER_ROW);
     this._broadcastPinnedSitesUpdated();
   }
 

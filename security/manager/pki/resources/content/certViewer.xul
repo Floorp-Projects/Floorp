@@ -7,9 +7,6 @@
 
 <!DOCTYPE dialog SYSTEM "chrome://pippki/locale/certManager.dtd">
 
-<?xul-overlay href="chrome://pippki/content/viewCertDetails.xul"?>
-<?xul-overlay href="chrome://pippki/content/certDump.xul"?>
-
 <dialog id="certDetails"
   title="&certmgr.certdetail.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -32,8 +29,131 @@
            accesskey="&certmgr.detail.prettyprint_tab.accesskey;"/>
     </tabs>
     <tabpanels flex="1">
-      <vbox id="general_info"/>
-      <vbox id="certPrettyPrint"/>
+      <vbox class="box-padded" id="general_info">
+        <vbox id="verify_info_box">
+          <label id="verify_pending" value="&certmgr.pending.label;"/>
+          <label class="header" id="verified"/>
+        </vbox>
+        <separator class="groove"/>
+        <vbox flex="1">
+          <grid>
+            <columns>
+              <column/>
+              <column flex="1"/>
+            </columns>
+            <rows>
+              <row>
+                <label class="header" value="&certmgr.subjectinfo.label;"/>
+                <spacer/>
+                <spacer/>
+              </row>
+              <row>
+                <label value="&certmgr.certdetail.cn;"/>
+                <textbox id="commonname" class="plain" readonly="true"/>
+              </row>
+              <row>
+                <label value="&certmgr.certdetail.o;"/>
+                <textbox id="organization" class="plain" readonly="true"/>
+              </row>
+              <row>
+                <label value="&certmgr.certdetail.ou;"/>
+                <textbox id="orgunit" class="plain" readonly="true"/>
+              </row>
+              <row>
+                <label value="&certmgr.certdetail.serialnumber;"/>
+                <textbox id="serialnumber" class="plain" readonly="true"/>
+              </row>
+              <row>
+                <separator class="thin"/>
+                <spacer/>
+              </row>
+              <row>
+                <label class="header" value="&certmgr.issuerinfo.label;"/>
+                <spacer/>
+              </row>
+              <row>
+                <label value="&certmgr.certdetail.cn;"/>
+                <textbox id="issuercommonname" class="plain" readonly="true"/>
+              </row>
+              <row>
+                <label value="&certmgr.certdetail.o;"/>
+                <textbox id="issuerorganization" class="plain" readonly="true"/>
+              </row>
+              <row>
+                <label value="&certmgr.certdetail.ou;"/>
+                <textbox id="issuerorgunit" class="plain" readonly="true"/>
+              </row>
+              <row>
+                <separator class="thin"/>
+                <spacer/>
+              </row>
+              <row>
+                <label class ="header" value="&certmgr.periodofvalidity.label;"/>
+                <spacer/>
+              </row>
+              <row>
+                <label value="&certmgr.begins;"/>
+                <textbox id="validitystart" class="plain" readonly="true"/>
+              </row>
+              <row>
+                <label value="&certmgr.expires;"/>
+                <textbox id="validityend" class="plain" readonly="true"/>
+              </row>
+              <row>
+                <separator class="thin"/>
+                <spacer/>
+              </row>
+              <row>
+                <label class="header" value="&certmgr.fingerprints.label;"/>
+                <spacer/>
+              </row>
+              <row>
+                <label value="&certmgr.certdetail.sha256fingerprint;"/>
+                <hbox>
+                  <textbox id="sha256fingerprint" class="plain" readonly="true" multiline="true"
+                           style="height: 6ex; width: 48ch; font-family: monospace;"/>
+                </hbox>
+              </row>
+              <row>
+                <label value="&certmgr.certdetail.sha1fingerprint;"/>
+                <textbox id="sha1fingerprint" class="plain" readonly="true" style="min-width:34em;"/>
+              </row>
+            </rows>
+          </grid>
+        </vbox>
+      </vbox>
+      <vbox class="box-padded" id="certPrettyPrint" flex="1">
+        <label class="header" value="&certmgr.hierarchy.label;"
+               control="treesetDump" accesskey="&certmgr.hierarchy.accesskey2;"/>
+        <tree id="treesetDump" onselect="updateCertDump();" flex="1"
+              hidecolumnpicker="true" style="height: 8em;">
+          <treecols>
+            <treecol id="dumpCol" flex="1" primary="true" hideheader="true"/>
+          </treecols>
+        </tree>
+
+        <label class="header" value="&certmgr.details.label;"
+               control="prettyDumpTree" accesskey="&certmgr.details.accesskey;"/>
+        <tree id="prettyDumpTree" style="height: 15em" treelines="true" flex="1"
+                  onselect="displaySelected();" hidecolumnpicker="true">
+          <treecols>
+            <treecol flex="1" id="certDataCol" primary="true" hideheader="true"/>
+          </treecols>
+          <treechildren/>
+        </tree>
+
+        <label class="header" value="&certmgr.fields.label;"
+               control="certDumpVal" accesskey="&certmgr.fields.accesskey;"/>
+        <textbox id="certDumpVal" multiline="true" flex="1"
+                 readonly="true" style="height: 11em; font-family: -moz-fixed;"/>
+
+        <separator class="thin"/>
+        <hbox>
+          <button id="export_cert" class="normal" label="&certmgr.export.label;"
+                  accesskey="&certmgr.export.accesskey;"
+                  oncommand="exportToFile(window, getCurrentCert());"/>
+        </hbox>
+      </vbox>
     </tabpanels>
   </tabbox>
 

@@ -136,14 +136,14 @@ def run_process(config, cmd):
         proc.kill()
 
 
-def lint(paths, config, **lintargs):
-
+def setup(root):
     if not reinstall_flake8():
         print(FLAKE8_INSTALL_ERROR)
         return 1
 
-    binary = get_flake8_binary()
 
+def lint(paths, config, **lintargs):
+    binary = get_flake8_binary()
     cmdargs = [
         binary,
         '--format', '{"path":"%(path)s","lineno":%(row)s,'

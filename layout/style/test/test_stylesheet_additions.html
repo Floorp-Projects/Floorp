@@ -30,10 +30,14 @@ const TESTS = [
   { selector: "#idScope", restyle: true },
   { selector: "#nonexistentIdScope", restyle: false },
   { selector: "#nonexistentIdScope div + bar", restyle: false },
+  { selector: "baz", restyle: false },
+  { cssText: " ", restyle: false },
+  { cssText: "@keyframes foo { from { color: green } to { color: red } } #whatever { animation-name: foo; }", restyle: false },
 ];
 
 for (const test of TESTS) {
-  target.innerHTML = test.selector + " { color: green; }";
+  let cssText = test.cssText ? test.cssText : (test.selector + " { color: green; }");
+  target.innerHTML = cssText;
 
   document.body.offsetWidth;
   const prevGeneration = utils.restyleGeneration;
@@ -42,19 +46,22 @@ for (const test of TESTS) {
 
   document.body.offsetWidth;
   (test.restyle ? isnot : is)(utils.restyleGeneration, prevGeneration,
-     `Stylesheet removal with ${test.selector} should ${test.restyle ? "have" : "not have"} caused a restyle`);
+     `Stylesheet removal with ${cssText} should ${test.restyle ? "have" : "not have"} caused a restyle`);
 
   target.disabled = false; // Make the stylesheet effective.
 
-  let element = document.querySelector(test.selector);
-  if (element) {
-    is(test.restyle, true, "How could we not expect a restyle?");
-    is(getComputedStyle(element).color, "rgb(0, 128, 0)",
-       "Element style should've changed appropriately");
+  if (test.selector) {
+    let element = document.querySelector(test.selector);
+    if (element) {
+      is(test.restyle, true, "How could we not expect a restyle?");
+      is(getComputedStyle(element).color, "rgb(0, 128, 0)",
+         "Element style should've changed appropriately");
+    }
   }
+
   document.body.offsetWidth;
   (test.restyle ? isnot : is)(utils.restyleGeneration, prevGeneration,
-     `Stylesheet addition with ${test.selector} should ${test.restyle ? "have" : "not have"} caused a restyle`);
+     `Stylesheet addition with ${cssText} should ${test.restyle ? "have" : "not have"} caused a restyle`);
 }
 
 SimpleTest.finish();
