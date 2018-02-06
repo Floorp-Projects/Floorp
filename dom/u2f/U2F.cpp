@@ -35,6 +35,12 @@ static mozilla::LazyLogModule gU2FLog("u2fmanager");
 NS_NAMED_LITERAL_STRING(kFinishEnrollment, "navigator.id.finishEnrollment");
 NS_NAMED_LITERAL_STRING(kGetAssertion, "navigator.id.getAssertion");
 
+// Bug #1436078 - Permit Google Accounts. Remove in Bug #1436085 in Jan 2023.
+NS_NAMED_LITERAL_STRING(kGoogleAccountsAppId1,
+  "https://www.gstatic.com/securitykey/origins.json");
+NS_NAMED_LITERAL_STRING(kGoogleAccountsAppId2,
+  "https://www.gstatic.com/securitykey/a/google.com/origins.json");
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(U2F)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -122,9 +128,15 @@ RegisteredKeysToScopedCredentialList(const nsAString& aAppId,
   }
 }
 
+enum class U2FOperation
+{
+  Register,
+  Sign
+};
+
 static ErrorCode
 EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
-              /* in/out */ nsString& aAppId)
+              const U2FOperation& aOp, /* in/out */ nsString& aAppId)
 {
   // Facet is the specification's way of referring to the web origin.
   nsAutoCString facetString = NS_ConvertUTF16toUTF8(aOrigin);
@@ -205,6 +217,15 @@ EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
 
   if (html->IsRegistrableDomainSuffixOfOrEqualTo(NS_ConvertUTF8toUTF16(lowestFacetHost),
                                                  appIdHost)) {
+    return ErrorCode::OK;
+  }
+
+  // Bug #1436078 - Permit Google Accounts. Remove in Bug #1436085 in Jan 2023.
+  if (aOp == U2FOperation::Sign && lowestFacetHost.EqualsLiteral("google.com") &&
+      (aAppId.Equals(kGoogleAccountsAppId1) ||
+       aAppId.Equals(kGoogleAccountsAppId2))) {
+    MOZ_LOG(gU2FLog, LogLevel::Debug,
+            ("U2F permitted for Google Accounts via Bug #1436085"));
     return ErrorCode::OK;
   }
 
@@ -356,7 +377,8 @@ U2F::Register(const nsAString& aAppId,
   // Evaluate the AppID
   nsString adjustedAppId;
   adjustedAppId.Assign(aAppId);
-  ErrorCode appIdResult = EvaluateAppID(mParent, mOrigin, adjustedAppId);
+  ErrorCode appIdResult = EvaluateAppID(mParent, mOrigin, U2FOperation::Register,
+                                        adjustedAppId);
   if (appIdResult != ErrorCode::OK) {
     RegisterResponse response;
     response.mErrorCode.Construct(static_cast<uint32_t>(appIdResult));
@@ -518,7 +540,8 @@ U2F::Sign(const nsAString& aAppId,
   // Evaluate the AppID
   nsString adjustedAppId;
   adjustedAppId.Assign(aAppId);
-  ErrorCode appIdResult = EvaluateAppID(mParent, mOrigin, adjustedAppId);
+  ErrorCode appIdResult = EvaluateAppID(mParent, mOrigin, U2FOperation::Sign,
+                                        adjustedAppId);
   if (appIdResult != ErrorCode::OK) {
     SignResponse response;
     response.mErrorCode.Construct(static_cast<uint32_t>(appIdResult));
