@@ -6,8 +6,6 @@
  * Server side http server script for application update tests.
  */
 
-const { classes: Cc, interfaces: Ci } = Components;
-
 function getTestDataFile(aFilename) {
   let file = Cc["@mozilla.org/file/directory_service;1"].
             getService(Ci.nsIProperties).get("CurWorkD", Ci.nsIFile);

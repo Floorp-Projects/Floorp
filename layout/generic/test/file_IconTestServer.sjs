@@ -1,5 +1,3 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 const TIMEOUT_INTERVAL_MS = 100;
 
 function handleRequest(request, response) {

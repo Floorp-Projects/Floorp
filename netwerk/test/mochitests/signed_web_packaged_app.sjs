@@ -1,7 +1,3 @@
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 function handleRequest(request, response)
 {
   response.setHeader("Content-Type", "application/package", false);

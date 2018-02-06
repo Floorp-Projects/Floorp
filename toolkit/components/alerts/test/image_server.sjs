@@ -1,4 +1,4 @@
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr, Constructor: CC } = Components;
+const CC = Components.Constructor;
 
 Cu.import("resource://gre/modules/Timer.jsm");
 
