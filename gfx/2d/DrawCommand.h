@@ -14,6 +14,7 @@
 #include "Filters.h"
 #include <vector>
 #include "FilterNodeCapture.h"
+#include "Logging.h"
 
 namespace mozilla {
 namespace gfx {
@@ -55,6 +56,7 @@ public:
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aTransform = nullptr) const = 0;
   virtual bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const { return false; }
   virtual void CloneInto(CaptureCommandList* aList) = 0;
+  virtual void Log(TreeLog& aLog) const = 0;
 
   CommandType GetType() { return mType; }
 

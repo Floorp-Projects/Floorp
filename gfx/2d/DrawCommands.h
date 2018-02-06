@@ -16,6 +16,7 @@
 #include "CaptureCommandList.h"
 #include "DrawCommand.h"
 #include "FilterNodeCapture.h"
+#include "Logging.h"
 
 namespace mozilla {
 namespace gfx {
@@ -81,6 +82,16 @@ public:
     reinterpret_cast<Pattern*>(mPattern)->~Pattern();
   }
 
+  Pattern* Get()
+  {
+    return reinterpret_cast<Pattern*>(mPattern);
+  }
+
+  const Pattern* Get() const
+  {
+    return reinterpret_cast<const Pattern*>(mPattern);
+  }
+
   operator Pattern&()
   {
     return *reinterpret_cast<Pattern*>(mPattern);
@@ -135,6 +146,16 @@ public:
     aDT->DrawSurface(mSurface, mDest, mSource, mSurfOptions, mOptions);
   }
 
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[DrawSurface surf=" << mSurface;
+    aStream << " dest=" << mDest;
+    aStream << " src=" << mSource;
+    aStream << " surfOpt=" << mSurfOptions;
+    aStream << " opt=" << mOptions;
+    aStream << "]";
+  }
+
   static const bool AffectsSnapshot = true;
   static const CommandType Type = CommandType::DRAWSURFACE;
 
@@ -175,6 +196,17 @@ public:
     aDT->DrawSurfaceWithShadow(mSurface, mDest, mColor, mOffset, mSigma, mOperator);
   }
 
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[DrawSurfaceWithShadow surf=" << mSurface;
+    aStream << " dest=" << mDest;
+    aStream << " color=" << mColor;
+    aStream << " offset=" << mOffset;
+    aStream << " sigma=" << mSigma;
+    aStream << " op=" << mOperator;
+    aStream << "]";
+  }
+
   static const bool AffectsSnapshot = true;
   static const CommandType Type = CommandType::DRAWSURFACEWITHSHADOW;
 
@@ -212,6 +244,15 @@ public:
     aDT->DrawFilter(filter, mSourceRect, mDestPoint, mOptions);
   }
 
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[DrawFilter surf=" << mFilter;
+    aStream << " src=" << mSourceRect;
+    aStream << " dest=" << mDestPoint;
+    aStream << " opt=" << mOptions;
+    aStream << "]";
+  }
+
   static const bool AffectsSnapshot = true;
   static const CommandType Type = CommandType::DRAWFILTER;
 
@@ -239,6 +280,11 @@ public:
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->ClearRect(mRect);
+  }
+
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[ClearRect rect=" << mRect << "]";
   }
 
   static const bool AffectsSnapshot = true;
@@ -274,6 +320,14 @@ public:
       dest = aTransform->TransformPoint(dest);
     }
     aDT->CopySurface(mSurface, mSourceRect, IntPoint(uint32_t(dest.x), uint32_t(dest.y)));
+  }
+
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[CopySurface surf=" << mSurface;
+    aStream << " src=" << mSourceRect;
+    aStream << " dest=" << mDestination;
+    aStream << "]";
   }
 
   static const bool AffectsSnapshot = true;
@@ -314,6 +368,14 @@ public:
     return true;
   }
 
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[FillRect rect=" << mRect;
+    aStream << " pattern=" << mPattern.Get();
+    aStream << " opt=" << mOptions;
+    aStream << "]";
+  }
+
   static const bool AffectsSnapshot = true;
   static const CommandType Type = CommandType::FILLRECT;
 
@@ -345,6 +407,14 @@ public:
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->StrokeRect(mRect, mPattern, mStrokeOptions, mOptions);
+  }
+
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[StrokeRect rect=" << mRect;
+    aStream << " pattern=" << mPattern.Get();
+    aStream << " opt=" << mOptions;
+    aStream << "]";
   }
 
   static const bool AffectsSnapshot = true;
@@ -380,6 +450,15 @@ public:
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->StrokeLine(mStart, mEnd, mPattern, mStrokeOptions, mOptions);
+  }
+
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[StrokeLine start=" << mStart;
+    aStream << " end=" << mEnd;
+    aStream << " pattern=" << mPattern.Get();
+    aStream << " opt=" << mOptions;
+    aStream << "]";
   }
 
   static const bool AffectsSnapshot = true;
@@ -419,6 +498,14 @@ public:
   {
     aDeviceRect = mPath->GetBounds(aTransform);
     return true;
+  }
+
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[FillCommand path=" << mPath;
+    aStream << " pattern=" << mPattern.Get();
+    aStream << " opt=" << mOptions;
+    aStream << "]";
   }
 
   static const bool AffectsSnapshot = true;
@@ -501,6 +588,14 @@ public:
     return true;
   }
 
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[Stroke path=" << mPath;
+    aStream << " pattern=" << mPattern.Get();
+    aStream << " opt=" << mOptions;
+    aStream << "]";
+  }
+
   static const bool AffectsSnapshot = true;
   static const CommandType Type = CommandType::STROKE;
 
@@ -542,6 +637,15 @@ public:
     buf.mNumGlyphs = mGlyphs.size();
     buf.mGlyphs = &mGlyphs.front();
     aDT->FillGlyphs(mFont, buf, mPattern, mOptions);
+  }
+
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[FillGlyphs font=" << mFont;
+    aStream << " glyphCount=" << mGlyphs.size();
+    aStream << " pattern=" << mPattern.Get();
+    aStream << " opt=" << mOptions;
+    aStream << "]";
   }
 
   static const bool AffectsSnapshot = true;
@@ -589,6 +693,15 @@ public:
     aDT->StrokeGlyphs(mFont, buf, mPattern, mStrokeOptions, mOptions);
   }
 
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[StrokeGlyphs font=" << mFont;
+    aStream << " glyphCount=" << mGlyphs.size();
+    aStream << " pattern=" << mPattern.Get();
+    aStream << " opt=" << mOptions;
+    aStream << "]";
+  }
+
   static const bool AffectsSnapshot = true;
   static const CommandType Type = CommandType::STROKEGLYPHS;
 
@@ -620,6 +733,14 @@ public:
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->Mask(mSource, mMask, mOptions);
+  }
+
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[Mask source=" << mSource.Get();
+    aStream << " mask=" << mMask.Get();
+    aStream << " opt=" << mOptions;
+    aStream << "]";
   }
 
   static const bool AffectsSnapshot = true;
@@ -656,6 +777,15 @@ public:
     aDT->MaskSurface(mSource, mMask, mOffset, mOptions);
   }
 
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[Mask source=" << mSource.Get();
+    aStream << " mask=" << mMask;
+    aStream << " offset=" << &mOffset;
+    aStream << " opt=" << mOptions;
+    aStream << "]";
+  }
+
   static const bool AffectsSnapshot = true;
   static const CommandType Type = CommandType::MASKSURFACE;
 
@@ -685,6 +815,11 @@ public:
     aDT->PushClip(mPath);
   }
 
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[PushClip path=" << mPath << "]";
+  }
+
   static const bool AffectsSnapshot = false;
   static const CommandType Type = CommandType::PUSHCLIP;
 
@@ -709,6 +844,11 @@ public:
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->PushClipRect(mRect);
+  }
+
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[PushClipRect rect=" << mRect << "]";
   }
 
   static const bool AffectsSnapshot = false;
@@ -748,6 +888,17 @@ public:
                    mMaskTransform, mBounds, mCopyBackground);
   }
 
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[PushLayer opaque=" << mOpaque;
+    aStream << " opacity=" << mOpacity;
+    aStream << " mask=" << mMask;
+    aStream << " maskTransform=" << mMaskTransform;
+    aStream << " bounds=" << mBounds;
+    aStream << " copyBackground=" << mCopyBackground;
+    aStream << "]";
+  }
+
   static const bool AffectsSnapshot = false;
   static const CommandType Type = CommandType::PUSHLAYER;
 
@@ -778,6 +929,11 @@ public:
     aDT->PopClip();
   }
 
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[PopClip]";
+  }
+
   static const bool AffectsSnapshot = false;
   static const CommandType Type = CommandType::POPCLIP;
 };
@@ -798,6 +954,11 @@ public:
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->PopLayer();
+  }
+
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[PopLayer]";
   }
 
   static const bool AffectsSnapshot = true;
@@ -828,6 +989,11 @@ public:
     }
   }
 
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[SetTransform transform=" << mTransform << "]";
+  }
+
   static const bool AffectsSnapshot = false;
   static const CommandType Type = CommandType::SETTRANSFORM;
 
@@ -855,6 +1021,11 @@ public:
     aDT->SetPermitSubpixelAA(mPermitSubpixelAA);
   }
 
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[SetPermitSubpixelAA permitSubpixelAA=" << mPermitSubpixelAA << "]";
+  }
+
   static const bool AffectsSnapshot = false;
   static const CommandType Type = CommandType::SETPERMITSUBPIXELAA;
 
@@ -880,6 +1051,11 @@ public:
     aDT->Flush();
   }
 
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[Flush]";
+  }
+
   static const bool AffectsSnapshot = false;
   static const CommandType Type = CommandType::FLUSH;
 };
@@ -900,6 +1076,11 @@ public:
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->Blur(mBlur);
+  }
+
+  void Log(TreeLog& aStream) const override
+  {
+    aStream << "[Blur]";
   }
 
   static const bool AffectsSnapshot = true;
