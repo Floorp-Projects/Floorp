@@ -7,6 +7,7 @@
 #ifndef __NSCLIENTAUTHREMEMBER_H__
 #define __NSCLIENTAUTHREMEMBER_H__
 
+#include "mozilla/HashFunctions.h"
 #include "mozilla/Move.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsTHashtable.h"
@@ -95,7 +96,7 @@ class nsClientAuthRememberEntry final : public PLDHashEntryHdr
 
     static PLDHashNumber HashKey(KeyTypePointer aKey)
     {
-      return PLDHashTable::HashStringKey(aKey);
+      return mozilla::HashString(aKey);
     }
 
     enum { ALLOW_MEMMOVE = false };
