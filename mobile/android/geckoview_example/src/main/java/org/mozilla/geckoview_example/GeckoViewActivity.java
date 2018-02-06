@@ -54,7 +54,6 @@ public class GeckoViewActivity extends Activity {
         if (BuildConfig.DEBUG) {
             // In debug builds, we want to load JavaScript resources fresh with each build.
             geckoArgs = "-purgecaches";
-
         }
 
         if (!TextUtils.isEmpty(intentArgs)) {
@@ -176,11 +175,6 @@ public class GeckoViewActivity extends Activity {
         }
 
         @Override
-        public void onFocusRequest(GeckoSession session) {
-            Log.i(LOGTAG, "Content requesting focus");
-        }
-
-        @Override
         public void onFullScreen(final GeckoSession session, final boolean fullScreen) {
             getWindow().setFlags(fullScreen ? WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
                                  WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -188,6 +182,18 @@ public class GeckoViewActivity extends Activity {
                 getActionBar().hide();
             } else {
                 getActionBar().show();
+            }
+        }
+
+        @Override
+        public void onFocusRequest(final GeckoSession session) {
+            Log.i(LOGTAG, "Content requesting focus");
+        }
+
+        @Override
+        public void onCloseRequest(final GeckoSession session) {
+            if (session != mGeckoSession) {
+                session.closeWindow();
             }
         }
 

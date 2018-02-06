@@ -357,6 +357,11 @@ public class WebAppActivity extends AppCompatActivity
     }
 
     @Override // GeckoSession.ContentListener
+    public void onCloseRequest(GeckoSession session) {
+        // Ignore
+    }
+
+    @Override // GeckoSession.ContentListener
     public void onContextMenu(GeckoSession session, int screenX, int screenY,
                               String uri, String elementSrc) {
         final String content = uri != null ? uri : elementSrc != null ? elementSrc : "";
