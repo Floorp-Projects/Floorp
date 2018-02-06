@@ -656,17 +656,23 @@ class LElementVisitor;
 // The common base class for LPhi and LInstruction.
 class LNode
 {
-    uint32_t id_;
-    LBlock* block_;
-
   protected:
     MDefinition* mir_;
 
+  private:
+    LBlock* block_;
+    uint32_t id_;
+
+  protected:
+    // Bitfields below are all uint32_t to make sure MSVC packs them correctly.
+    uint32_t isCall_ : 1;
+
   public:
     LNode()
-      : id_(0),
+      : mir_(nullptr),
         block_(nullptr),
-        mir_(nullptr)
+        id_(0),
+        isCall_(false)
     { }
 
     enum Opcode {
@@ -725,8 +731,8 @@ class LNode
     virtual MBasicBlock* getSuccessor(size_t i) const = 0;
     virtual void setSuccessor(size_t i, MBasicBlock* successor) = 0;
 
-    virtual bool isCall() const {
-        return false;
+    bool isCall() const {
+        return isCall_;
     }
 
     // Does this call preserve the given register?
@@ -817,6 +823,10 @@ class LInstruction
         fixReuseMoves_(nullptr),
         movesAfter_(nullptr)
     { }
+
+    void setIsCall() {
+        isCall_ = true;
+    }
 
   public:
     LSnapshot* snapshot() const {
@@ -1191,8 +1201,8 @@ template <size_t Defs, size_t Operands, size_t Temps>
 class LCallInstructionHelper : public LInstructionHelper<Defs, Operands, Temps>
 {
   public:
-    virtual bool isCall() const override {
-        return true;
+    LCallInstructionHelper() {
+        this->setIsCall();
     }
 };
 
