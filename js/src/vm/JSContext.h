@@ -37,6 +37,10 @@ class JitContext;
 class DebugModeOSRVolatileJitFrameIter;
 } // namespace jit
 
+namespace gc {
+class AutoSuppressNurseryCellAlloc;
+}
+
 typedef HashSet<Shape*> ShapeSet;
 
 /* Detects cycles when traversing an object graph. */
@@ -108,6 +112,9 @@ struct JSContext : public JS::RootingContext,
 
     // The thread on which this context is running, if this is performing a parse task.
     js::ThreadLocalData<js::HelperThread*> helperThread_;
+
+    friend class js::gc::AutoSuppressNurseryCellAlloc;
+    js::ThreadLocalData<size_t> nurserySuppressions_;
 
     js::ThreadLocalData<JS::ContextOptions> options_;
 
@@ -226,6 +233,10 @@ struct JSContext : public JS::RootingContext,
 
     void setHelperThread(js::HelperThread* helperThread);
     js::HelperThread* helperThread() const { return helperThread_; }
+
+    bool isNurseryAllocSuppressed() const {
+        return nurserySuppressions_;
+    }
 
     // Threads may freely access any data in their compartment and zone.
     JSCompartment* compartment() const {
