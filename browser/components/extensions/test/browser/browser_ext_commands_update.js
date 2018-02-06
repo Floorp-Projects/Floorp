@@ -236,3 +236,72 @@ add_task(async function test_update_defined_command() {
   // Shortcut is unchanged since it was previously updated.
   checkKey(extension.id, "P", "alt shift");
 });
+
+add_task(async function updateSidebarCommand() {
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      commands: {
+        _execute_sidebar_action: {
+          suggested_key: {
+            default: "Ctrl+Shift+E",
+          },
+        },
+      },
+      sidebar_action: {
+        default_panel: "sidebar.html",
+      },
+    },
+    background() {
+      browser.test.onMessage.addListener(async (msg, data) => {
+        if (msg == "updateShortcut") {
+          await browser.commands.update(data);
+          return browser.test.sendMessage("done");
+        }
+        throw new Error("Unknown message");
+      });
+    },
+    files: {
+      "sidebar.html": `
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="utf-8"/>
+        <script src="sidebar.js"></script>
+        </head>
+        <body>
+        A Test Sidebar
+        </body></html>
+      `,
+
+      "sidebar.js": function() {
+        window.onload = () => {
+          browser.test.sendMessage("sidebar");
+        };
+      },
+    },
+  });
+  await extension.startup();
+  await extension.awaitMessage("sidebar");
+
+  // Show and hide the switcher panel to generate the initial shortcuts.
+  let switcherShown = promisePopupShown(SidebarUI._switcherPanel);
+  SidebarUI.showSwitcherPanel();
+  await switcherShown;
+  let switcherHidden = promisePopupHidden(SidebarUI._switcherPanel);
+  SidebarUI.hideSwitcherPanel();
+  await switcherHidden;
+
+  let buttonId = `button_${makeWidgetId(extension.id)}-sidebar-action`;
+  let button = document.getElementById(buttonId);
+  let shortcut = button.getAttribute("shortcut");
+  ok(shortcut.endsWith("E"), "The button has the shortcut set");
+
+  extension.sendMessage(
+    "updateShortcut", {name: "_execute_sidebar_action", shortcut: "Ctrl+Shift+M"});
+  await extension.awaitMessage("done");
+
+  shortcut = button.getAttribute("shortcut");
+  ok(shortcut.endsWith("M"), "The button shortcut has been updated");
+
+  await extension.unload();
+});
