@@ -131,11 +131,15 @@ js::PluralRulesObject::finalize(FreeOp* fop, JSObject* obj)
     PluralRulesObject* pluralRules = &obj->as<PluralRulesObject>();
 
     const Value& prslot = pluralRules->getReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT);
-    if (UPluralRules* pr = static_cast<UPluralRules*>(prslot.toPrivate()))
-        uplrules_close(pr);
+    UPluralRules* pr = static_cast<UPluralRules*>(prslot.toPrivate());
 
     const Value& nfslot = pluralRules->getReservedSlot(PluralRulesObject::UNUMBER_FORMAT_SLOT);
-    if (UNumberFormat* nf = static_cast<UNumberFormat*>(nfslot.toPrivate()))
+    UNumberFormat* nf = static_cast<UNumberFormat*>(nfslot.toPrivate());
+
+    if (pr)
+        uplrules_close(pr);
+
+    if (nf)
         unum_close(nf);
 }
 
