@@ -74,6 +74,7 @@
   skin/classic/browser/notification-icons/screen-blocked.svg                (../shared/notification-icons/screen-blocked.svg)
   skin/classic/browser/notification-icons/screen.svg                        (../shared/notification-icons/screen.svg)
   skin/classic/browser/notification-icons/update.svg                        (../shared/notification-icons/update.svg)
+  skin/classic/browser/notification-icons/midi.svg                          (../shared/notification-icons/midi.svg)
 
   skin/classic/browser/tracking-protection-16.svg              (../shared/identity-block/tracking-protection-16.svg)
   skin/classic/browser/newtab/close.png                        (../shared/newtab/close.png)

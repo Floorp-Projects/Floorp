@@ -25,3 +25,7 @@
 .desktop-notification-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/desktop-notification.svg);
 }
+
+.midi-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/midi.svg);
+}
