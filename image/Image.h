@@ -249,7 +249,7 @@ public:
   }
 
   void SetProgressTracker(
-                       ProgressTracker* aProgressTracker) override final
+                       ProgressTracker* aProgressTracker) final
   {
     MOZ_ASSERT(aProgressTracker);
     MOZ_ASSERT(!mProgressTracker);

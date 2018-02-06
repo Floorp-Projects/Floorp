@@ -54,7 +54,7 @@ protected:
   virtual ~HTMLTitleElement();
 
   virtual JSObject* WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
-    override final;
+    final;
 
 private:
   void SendTitleChangeEvent(bool aBound);

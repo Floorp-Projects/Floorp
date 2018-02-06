@@ -535,7 +535,7 @@ private:
   { }
 
   virtual bool
-  PreDispatch(WorkerPrivate* /* unused */) override final;
+  PreDispatch(WorkerPrivate* /* unused */) final;
 
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;

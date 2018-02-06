@@ -91,10 +91,10 @@ protected:
 
   // get the current state (on or off) for this style or block format
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
-                                   nsICommandParams* aParams) override final;
+                                   nsICommandParams* aParams) final;
 
   // add/remove the style
-  virtual nsresult ToggleState(mozilla::HTMLEditor* aHTMLEditor) override final;
+  virtual nsresult ToggleState(mozilla::HTMLEditor* aHTMLEditor) final;
 };
 
 
@@ -123,10 +123,10 @@ protected:
 
   // get the current state (on or off) for this style or block format
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
-                                   nsICommandParams* aParams) override final;
+                                   nsICommandParams* aParams) final;
 
   // add/remove the style
-  virtual nsresult ToggleState(mozilla::HTMLEditor* aHTMLEditor) override final;
+  virtual nsresult ToggleState(mozilla::HTMLEditor* aHTMLEditor) final;
 };
 
 class nsListItemCommand final : public nsBaseStateUpdatingCommand
@@ -138,10 +138,10 @@ protected:
 
   // get the current state (on or off) for this style or block format
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
-                                   nsICommandParams* aParams) override final;
+                                   nsICommandParams* aParams) final;
 
   // add/remove the style
-  virtual nsresult ToggleState(mozilla::HTMLEditor* aHTMLEditor) override final;
+  virtual nsresult ToggleState(mozilla::HTMLEditor* aHTMLEditor) final;
 };
 
 // Base class for commands whose state consists of a string (e.g. para format)
@@ -173,9 +173,9 @@ public:
 protected:
 
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
-                                   nsICommandParams* aParams) override final;
+                                   nsICommandParams* aParams) final;
   virtual nsresult SetState(mozilla::HTMLEditor* aHTMLEditor,
-                            nsString& newState) override final;
+                            nsString& newState) final;
 };
 
 class nsFontFaceStateCommand final : public nsMultiStateCommand
@@ -186,9 +186,9 @@ public:
 protected:
 
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
-                                   nsICommandParams* aParams) override final;
+                                   nsICommandParams* aParams) final;
   virtual nsresult SetState(mozilla::HTMLEditor* aHTMLEditor,
-                            nsString& newState) override final;
+                            nsString& newState) final;
 };
 
 class nsFontSizeStateCommand final : public nsMultiStateCommand
@@ -199,9 +199,9 @@ public:
 protected:
 
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
-                                   nsICommandParams* aParams) override final;
+                                   nsICommandParams* aParams) final;
   virtual nsresult SetState(mozilla::HTMLEditor* aHTMLEditor,
-                            nsString& newState) override final;
+                            nsString& newState) final;
 };
 
 class nsHighlightColorStateCommand final : public nsMultiStateCommand
@@ -213,11 +213,11 @@ protected:
 
   NS_IMETHOD IsCommandEnabled(const char* aCommandName,
                               nsISupports* aCommandRefCon,
-                              bool* _retval) override final;
+                              bool* _retval) final;
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
-                                   nsICommandParams* aParams) override final;
+                                   nsICommandParams* aParams) final;
   virtual nsresult SetState(mozilla::HTMLEditor* aHTMLEditor,
-                            nsString& newState) override final;
+                            nsString& newState) final;
 
 };
 
@@ -229,9 +229,9 @@ public:
 protected:
 
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
-                                   nsICommandParams* aParams) override final;
+                                   nsICommandParams* aParams) final;
   virtual nsresult SetState(mozilla::HTMLEditor* aHTMLEditor,
-                            nsString& newState) override final;
+                            nsString& newState) final;
 };
 
 class nsAlignCommand final : public nsMultiStateCommand
@@ -242,9 +242,9 @@ public:
 protected:
 
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
-                                   nsICommandParams* aParams) override final;
+                                   nsICommandParams* aParams) final;
   virtual nsresult SetState(mozilla::HTMLEditor* aHTMLEditor,
-                            nsString& newState) override final;
+                            nsString& newState) final;
 };
 
 class nsBackgroundColorStateCommand final : public nsMultiStateCommand
@@ -255,9 +255,9 @@ public:
 protected:
 
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
-                                   nsICommandParams* aParams) override final;
+                                   nsICommandParams* aParams) final;
   virtual nsresult SetState(mozilla::HTMLEditor* aHTMLEditor,
-                            nsString& newState) override final;
+                            nsString& newState) final;
 };
 
 class nsAbsolutePositioningCommand final : public nsBaseStateUpdatingCommand
@@ -269,10 +269,10 @@ protected:
 
   NS_IMETHOD IsCommandEnabled(const char* aCommandName,
                               nsISupports* aCommandRefCon,
-                              bool* _retval) override final;
+                              bool* _retval) final;
   virtual nsresult GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
-                                   nsICommandParams* aParams) override final;
-  virtual nsresult ToggleState(mozilla::HTMLEditor* aHTMLEditor) override final;
+                                   nsICommandParams* aParams) final;
+  virtual nsresult ToggleState(mozilla::HTMLEditor* aHTMLEditor) final;
 };
 
 // composer commands
