@@ -694,6 +694,11 @@ public class CustomTabsActivity extends AppCompatActivity
     }
 
     @Override
+    public void onCloseRequest(GeckoSession session) {
+        // Ignore
+    }
+
+    @Override
     public void onFullScreen(GeckoSession session, boolean fullScreen) {
         ActivityUtils.setFullScreen(this, fullScreen);
         if (fullScreen) {

@@ -84,6 +84,7 @@ public class GeckoSession extends LayerSession
                 "GeckoView:ContextMenu",
                 "GeckoView:DOMTitleChanged",
                 "GeckoView:DOMWindowFocus",
+                "GeckoView:DOMWindowClose",
                 "GeckoView:FullScreenEnter",
                 "GeckoView:FullScreenExit"
             }
@@ -105,6 +106,8 @@ public class GeckoSession extends LayerSession
                                            message.getString("title"));
                 } else if ("GeckoView:DOMWindowFocus".equals(event)) {
                     listener.onFocusRequest(GeckoSession.this);
+                } else if ("GeckoView:DOMWindowClose".equals(event)) {
+                    listener.onCloseRequest(GeckoSession.this);
                 } else if ("GeckoView:FullScreenEnter".equals(event)) {
                     listener.onFullScreen(GeckoSession.this, true);
                 } else if ("GeckoView:FullScreenExit".equals(event)) {
@@ -1303,6 +1306,12 @@ public class GeckoSession extends LayerSession
         * @param session The GeckoSession that initiated the callback.
         */
         void onFocusRequest(GeckoSession session);
+
+        /**
+        * A page has requested to close
+        * @param session The GeckoSession that initiated the callback.
+        */
+        void onCloseRequest(GeckoSession session);
 
         /**
          * A page has entered or exited full screen mode. Typically, the implementation
