@@ -8,8 +8,8 @@ import os
 
 import yaml
 
-from .types import supported_types
 from .errors import LinterNotFound, LinterParseError
+from .types import supported_types
 
 
 class Parser(object):
@@ -42,6 +42,12 @@ class Parser(object):
                                    not all(isinstance(a, basestring) for a in linter[attr])):
                 raise LinterParseError(linter['path'], "The {} directive must be a "
                                                        "list of strings!".format(attr))
+
+        if 'setup' in linter:
+            if linter['setup'].count(':') != 1:
+                raise LinterParseError(linter['path'], "The setup attribute '{!r}' must have the "
+                                                       "form 'module:object'".format(
+                                                           linter['setup']))
 
         if 'extensions' in linter:
             linter['extensions'] = [e.strip('.') for e in linter['extensions']]

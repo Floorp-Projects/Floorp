@@ -377,6 +377,8 @@ testing/talos/talos/tests/canvasmark/**
 testing/talos/talos/tests/dromaeo/**
 testing/talos/talos/tests/v8_7/**
 testing/talos/talos/tests/kraken/**
+# Runing Talos may extract data here, see bug 1435677.
+testing/talos/talos/tests/tp5n/**
 
 testing/web-platform/**
 testing/xpcshell/moz-http2/**

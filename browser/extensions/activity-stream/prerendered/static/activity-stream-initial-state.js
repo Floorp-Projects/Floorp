@@ -3,10 +3,7 @@ window.gActivityStreamPrerenderedState = {
   "TopSites": {
     "initialized": false,
     "rows": [],
-    "editForm": {
-      "visible": false,
-      "index": -1
-    }
+    "editForm": null
   },
   "App": {
     "initialized": false,
@@ -21,7 +18,7 @@ window.gActivityStreamPrerenderedState = {
       "migrationExpired": true,
       "showTopSites": true,
       "showSearch": true,
-      "topSitesCount": 12,
+      "topSitesRows": 2,
       "collapseTopSites": false,
       "section.highlights.collapsed": false,
       "section.topstories.collapsed": false,

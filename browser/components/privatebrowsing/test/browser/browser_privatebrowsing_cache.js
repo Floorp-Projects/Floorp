@@ -8,55 +8,19 @@
 
 var tmp = {};
 
-Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tmp);
-
-var Sanitizer = tmp.Sanitizer;
+const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm", {});
 
 function test() {
 
   waitForExplicitFinish();
 
-  sanitizeCache();
+  Sanitizer.sanitize(["cache"], {ignoreTimespan: false});
 
   getStorageEntryCount("regular", function(nrEntriesR1) {
     is(nrEntriesR1, 0, "Disk cache reports 0KB and has no entries");
 
     get_cache_for_private_window();
   });
-}
-
-function cleanup() {
-  let prefs = Services.prefs.getBranch("privacy.cpd.");
-
-  prefs.clearUserPref("history");
-  prefs.clearUserPref("downloads");
-  prefs.clearUserPref("cache");
-  prefs.clearUserPref("cookies");
-  prefs.clearUserPref("formdata");
-  prefs.clearUserPref("offlineApps");
-  prefs.clearUserPref("passwords");
-  prefs.clearUserPref("sessions");
-  prefs.clearUserPref("siteSettings");
-}
-
-function sanitizeCache() {
-
-  let s = new Sanitizer();
-  s.ignoreTimespan = false;
-  s.prefDomain = "privacy.cpd.";
-
-  let prefs = Services.prefs.getBranch(s.prefDomain);
-  prefs.setBoolPref("history", false);
-  prefs.setBoolPref("downloads", false);
-  prefs.setBoolPref("cache", true);
-  prefs.setBoolPref("cookies", false);
-  prefs.setBoolPref("formdata", false);
-  prefs.setBoolPref("offlineApps", false);
-  prefs.setBoolPref("passwords", false);
-  prefs.setBoolPref("sessions", false);
-  prefs.setBoolPref("siteSettings", false);
-
-  s.sanitize();
 }
 
 function getStorageEntryCount(device, goon) {
@@ -109,8 +73,6 @@ function get_cache_for_private_window() {
 
             getStorageEntryCount("regular", function(nrEntriesR2) {
               is(nrEntriesR2, 0, "Disk cache reports 0KB and has no entries");
-
-              cleanup();
 
               win.close();
               finish();

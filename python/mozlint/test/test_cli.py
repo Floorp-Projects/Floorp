@@ -59,5 +59,23 @@ def test_cli_run_with_edit(run, parser, capfd):
         parser.parse_args(['--edit'])
 
 
+def test_cli_run_with_setup(run, capfd):
+    # implicitly call setup
+    ret = run(['-l', 'setup', '-l', 'setupfailed', '-l', 'setupraised'])
+    out, err = capfd.readouterr()
+    assert 'setup passed' in out
+    assert 'setup failed' in out
+    assert 'setup raised' in out
+    assert ret == 1
+
+    # explicitly call setup
+    ret = run(['-l', 'setup', '-l', 'setupfailed', '-l', 'setupraised', '--setup'])
+    out, err = capfd.readouterr()
+    assert 'setup passed' in out
+    assert 'setup failed' in out
+    assert 'setup raised' in out
+    assert ret == 1
+
+
 if __name__ == '__main__':
     mozunit.main()

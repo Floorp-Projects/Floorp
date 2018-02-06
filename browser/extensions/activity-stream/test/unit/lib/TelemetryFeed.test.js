@@ -290,7 +290,7 @@ describe("TelemetryFeed", () => {
       it("should create a valid event", async () => {
         const portID = "foo";
         const data = {source: "TOP_SITES", event: "CLICK"};
-        const action = ac.SendToMain(ac.UserEvent(data), portID);
+        const action = ac.AlsoToMain(ac.UserEvent(data), portID);
         const session = instance.addSession(portID);
 
         const ping = await instance.createUserEvent(action);
@@ -315,7 +315,7 @@ describe("TelemetryFeed", () => {
       it("should create a valid event with a session", async () => {
         const portID = "foo";
         const data = {source: "TOP_SITES", event: "MISSING_IMAGE", value: 10};
-        const action = ac.SendToMain(ac.UndesiredEvent(data), portID);
+        const action = ac.AlsoToMain(ac.UndesiredEvent(data), portID);
         const session = instance.addSession(portID);
 
         const ping = await instance.createUndesiredEvent(action);
@@ -575,7 +575,7 @@ describe("TelemetryFeed", () => {
     it("should call .handleNewTabInit on a NEW_TAB_INIT action", () => {
       sandbox.spy(instance, "handleNewTabInit");
 
-      instance.onAction(ac.SendToMain({
+      instance.onAction(ac.AlsoToMain({
         type: at.NEW_TAB_INIT,
         data: {url: "about:newtab", browser}
       }));
@@ -586,7 +586,7 @@ describe("TelemetryFeed", () => {
       const stub = sandbox.stub(instance, "addSession").returns({perf: {}});
       sandbox.stub(instance, "setLoadTriggerInfo");
 
-      instance.onAction(ac.SendToMain({
+      instance.onAction(ac.AlsoToMain({
         type: at.NEW_TAB_INIT,
         data: {url: "about:monkeys", browser}
       }, "port123"));
@@ -597,7 +597,7 @@ describe("TelemetryFeed", () => {
     it("should call .endSession() on a NEW_TAB_UNLOAD action", () => {
       const stub = sandbox.stub(instance, "endSession");
 
-      instance.onAction(ac.SendToMain({type: at.NEW_TAB_UNLOAD}, "port123"));
+      instance.onAction(ac.AlsoToMain({type: at.NEW_TAB_UNLOAD}, "port123"));
 
       assert.calledWith(stub, "port123");
     });
@@ -606,7 +606,7 @@ describe("TelemetryFeed", () => {
       const data = {some_ts: 10};
       const action = {type: at.SAVE_SESSION_PERF_DATA, data};
 
-      instance.onAction(ac.SendToMain(action, "port123"));
+      instance.onAction(ac.AlsoToMain(action, "port123"));
 
       assert.calledWith(stub, "port123", data);
     });
@@ -655,7 +655,7 @@ describe("TelemetryFeed", () => {
       sandbox.stub(instance.sessions, "get").returns(session);
       sandbox.spy(instance, "handlePagePrerendered");
 
-      instance.onAction(ac.SendToMain({type: at.PAGE_PRERENDERED}));
+      instance.onAction(ac.AlsoToMain({type: at.PAGE_PRERENDERED}));
 
       assert.calledOnce(instance.handlePagePrerendered);
       assert.ok(session.perf.is_prerendered);
@@ -669,7 +669,7 @@ describe("TelemetryFeed", () => {
       const session = {perf: {}};
       sandbox.stub(instance.sessions, "get").returns(session);
 
-      instance.onAction(ac.SendToMain({type: at.PAGE_PRERENDERED}));
+      instance.onAction(ac.AlsoToMain({type: at.PAGE_PRERENDERED}));
 
       assert.ok(session.perf.is_prerendered);
     });
@@ -680,7 +680,7 @@ describe("TelemetryFeed", () => {
       let preloadedBrowser = {getAttribute() { return "preloaded"; }};
       sandbox.stub(instance, "addSession").returns(session);
 
-      instance.onAction(ac.SendToMain({
+      instance.onAction(ac.AlsoToMain({
         type: at.NEW_TAB_INIT,
         data: {url: "about:newtab", browser: preloadedBrowser}
       }));
@@ -692,7 +692,7 @@ describe("TelemetryFeed", () => {
       let nonPreloadedBrowser = {getAttribute() { return ""; }};
       sandbox.stub(instance, "addSession").returns(session);
 
-      instance.onAction(ac.SendToMain({
+      instance.onAction(ac.AlsoToMain({
         type: at.NEW_TAB_INIT,
         data: {url: "about:newtab", browser: nonPreloadedBrowser}
       }));

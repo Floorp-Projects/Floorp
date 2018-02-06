@@ -269,7 +269,7 @@ nsJARURI::Mutator::SetFileName(const nsACString& aFileName, nsIURIMutator** aMut
         nsCOMPtr<nsIURIMutator> mutator = this;
         mutator.forget(aMutator);
     }
-    return mURI->SetFileName(aFileName);
+    return mURI->SetFileNameInternal(aFileName);
 }
 
 NS_IMETHODIMP
@@ -282,7 +282,7 @@ nsJARURI::Mutator::SetFileBaseName(const nsACString& aFileBaseName, nsIURIMutato
         nsCOMPtr<nsIURIMutator> mutator = this;
         mutator.forget(aMutator);
     }
-    return mURI->SetFileBaseName(aFileBaseName);
+    return mURI->SetFileBaseNameInternal(aFileBaseName);
 }
 
 NS_IMETHODIMP
@@ -295,7 +295,7 @@ nsJARURI::Mutator::SetFileExtension(const nsACString& aFileExtension, nsIURIMuta
         nsCOMPtr<nsIURIMutator> mutator = this;
         mutator.forget(aMutator);
     }
-    return mURI->SetFileExtension(aFileExtension);
+    return mURI->SetFileExtensionInternal(aFileExtension);
 }
 
 NS_IMETHODIMP
@@ -707,20 +707,13 @@ nsJARURI::GetDirectory(nsACString& directory)
 }
 
 NS_IMETHODIMP
-nsJARURI::SetDirectory(const nsACString& directory)
-{
-    MOZ_ASSERT_UNREACHABLE("SetDirectory");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsJARURI::GetFileName(nsACString& fileName)
 {
     return mJAREntry->GetFileName(fileName);
 }
 
-NS_IMETHODIMP
-nsJARURI::SetFileName(const nsACString& fileName)
+nsresult
+nsJARURI::SetFileNameInternal(const nsACString& fileName)
 {
     return NS_MutateURI(mJAREntry)
              .Apply<nsIURLMutator>(&nsIURLMutator::SetFileName,
@@ -735,8 +728,8 @@ nsJARURI::GetFileBaseName(nsACString& fileBaseName)
     return mJAREntry->GetFileBaseName(fileBaseName);
 }
 
-NS_IMETHODIMP
-nsJARURI::SetFileBaseName(const nsACString& fileBaseName)
+nsresult
+nsJARURI::SetFileBaseNameInternal(const nsACString& fileBaseName)
 {
     return NS_MutateURI(mJAREntry)
              .Apply<nsIURLMutator>(&nsIURLMutator::SetFileBaseName,
@@ -751,8 +744,8 @@ nsJARURI::GetFileExtension(nsACString& fileExtension)
     return mJAREntry->GetFileExtension(fileExtension);
 }
 
-NS_IMETHODIMP
-nsJARURI::SetFileExtension(const nsACString& fileExtension)
+nsresult
+nsJARURI::SetFileExtensionInternal(const nsACString& fileExtension)
 {
     return NS_MutateURI(mJAREntry)
              .Apply<nsIURLMutator>(&nsIURLMutator::SetFileExtension,

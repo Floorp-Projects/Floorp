@@ -4,13 +4,8 @@
 const NOW = Date.now() * 1000;
 const URL = "http://fake-site.com/";
 
-var tmp = {};
-Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tmp);
-
-var {Sanitizer} = tmp;
-
 add_task(async function() {
-  await promiseSanitizeHistory();
+  await Sanitizer.sanitize(["history"]);
   await promiseAddFakeVisits();
   await addNewTabPageTab();
 
@@ -18,7 +13,7 @@ add_task(async function() {
   is(cellUrl, URL, "first site is our fake site");
 
   let updatedPromise = whenPagesUpdated();
-  await promiseSanitizeHistory();
+  await Sanitizer.sanitize(["history"]);
   await updatedPromise;
 
   let isGone = await performOnCell(0, cell => { return cell.site == null; });
@@ -50,22 +45,4 @@ function promiseAddFakeVisits() {
       }
     });
   });
-}
-
-function promiseSanitizeHistory() {
-  let s = new Sanitizer();
-  s.prefDomain = "privacy.cpd.";
-
-  let prefs = Services.prefs.getBranch(s.prefDomain);
-  prefs.setBoolPref("history", true);
-  prefs.setBoolPref("downloads", false);
-  prefs.setBoolPref("cache", false);
-  prefs.setBoolPref("cookies", false);
-  prefs.setBoolPref("formdata", false);
-  prefs.setBoolPref("offlineApps", false);
-  prefs.setBoolPref("passwords", false);
-  prefs.setBoolPref("sessions", false);
-  prefs.setBoolPref("siteSettings", false);
-
-  return s.sanitize();
 }

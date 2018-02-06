@@ -5,7 +5,7 @@ describe("NewTabInit", () => {
   let instance;
   let store;
   let STATE;
-  const requestFromTab = portID => instance.onAction(ac.SendToMain(
+  const requestFromTab = portID => instance.onAction(ac.AlsoToMain(
     {type: at.NEW_TAB_STATE_REQUEST}, portID));
   beforeEach(() => {
     STATE = {};
@@ -16,7 +16,7 @@ describe("NewTabInit", () => {
   it("should reply with a copy of the state immediately", () => {
     requestFromTab(123);
 
-    const resp = ac.SendToContent({type: at.NEW_TAB_INITIAL_STATE, data: STATE}, 123);
+    const resp = ac.AlsoToOneContent({type: at.NEW_TAB_INITIAL_STATE, data: STATE}, 123);
     assert.calledWith(store.dispatch, resp);
   });
   describe("early / simulated new tabs", () => {
@@ -30,7 +30,7 @@ describe("NewTabInit", () => {
     it("should dispatch if not replied yet", () => {
       requestFromTab("foo");
 
-      assert.calledWith(store.dispatch, ac.SendToContent({type: at.NEW_TAB_INITIAL_STATE, data: STATE}, "foo"));
+      assert.calledWith(store.dispatch, ac.AlsoToOneContent({type: at.NEW_TAB_INITIAL_STATE, data: STATE}, "foo"));
     });
     it("should dispatch once for multiple requests", () => {
       requestFromTab("foo");
@@ -54,11 +54,11 @@ describe("NewTabInit", () => {
       });
       it("should clean up when tabs close", () => {
         assert.propertyVal(instance._repliedEarlyTabs, "size", 2);
-        instance.onAction(ac.SendToMain({type: at.NEW_TAB_UNLOAD}, "foo"));
+        instance.onAction(ac.AlsoToMain({type: at.NEW_TAB_UNLOAD}, "foo"));
         assert.propertyVal(instance._repliedEarlyTabs, "size", 1);
-        instance.onAction(ac.SendToMain({type: at.NEW_TAB_UNLOAD}, "foo"));
+        instance.onAction(ac.AlsoToMain({type: at.NEW_TAB_UNLOAD}, "foo"));
         assert.propertyVal(instance._repliedEarlyTabs, "size", 1);
-        instance.onAction(ac.SendToMain({type: at.NEW_TAB_UNLOAD}, "bar"));
+        instance.onAction(ac.AlsoToMain({type: at.NEW_TAB_UNLOAD}, "bar"));
         assert.propertyVal(instance._repliedEarlyTabs, "size", 0);
       });
     });

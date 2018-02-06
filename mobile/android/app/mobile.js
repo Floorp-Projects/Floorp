@@ -390,6 +390,9 @@ pref("font.size.inflation.minTwips", 0);
 // When true, zooming will be enabled on all sites, even ones that declare user-scalable=no.
 pref("browser.ui.zoom.force-user-scalable", false);
 
+// With the typical screen sizes on mobile devices, we want to wrap page sources by default.
+pref("view_source.wrap_long_lines", true);
+
 // When removing this Nightly flag, also remember to remove the flags surrounding this feature
 // in GeckoPreferences and BrowserApp (see bug 1245930).
 #ifdef NIGHTLY_BUILD

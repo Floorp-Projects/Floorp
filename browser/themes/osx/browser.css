@@ -13,9 +13,6 @@
 %include ../shared/browser.inc.css
 
 :root {
-  --tabs-border-color: rgba(0,0,0,.3);
-  --tab-line-color: #0a84ff;
-
   --toolbar-non-lwt-bgcolor: #f9f9fa;
   --toolbar-non-lwt-textcolor: #0c0c0d;
   --toolbar-non-lwt-bgimage: none;
@@ -41,6 +38,14 @@
   --toolbar-bgimage: none;
 
   --toolbox-border-bottom-color: rgba(0,0,0,.3);
+}
+
+#navigator-toolbox {
+  --tabs-border-color: rgba(0,0,0,.3);
+}
+
+#tabbrowser-tabs {
+  --tab-line-color: #0a84ff;
 }
 
 #navigator-toolbox toolbarbutton:-moz-lwtheme {
@@ -132,10 +137,10 @@
 /* Always draw a border on Yosemite to ensure the border is well-defined there
  * (the default border is too light). */
 @media (-moz-mac-yosemite-theme) {
-  :root:not(:-moz-lwtheme) {
+  #navigator-toolbox:not(:-moz-lwtheme) {
     --tabs-border-color: rgba(0,0,0,.2);
   }
-  :root:not(:-moz-lwtheme):-moz-window-inactive {
+  #navigator-toolbox:not(:-moz-lwtheme):-moz-window-inactive {
     --tabs-border-color: rgba(0,0,0,.05);
   }
 

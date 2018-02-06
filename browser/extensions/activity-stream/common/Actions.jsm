@@ -85,7 +85,9 @@ for (const type of [
   "TOP_SITES_PIN",
   "TOP_SITES_UNPIN",
   "TOP_SITES_UPDATED",
-  "UNINIT"
+  "UNINIT",
+  "WEBEXT_CLICK",
+  "WEBEXT_DISMISS"
 ]) {
   actionTypes[type] = type;
 }
@@ -99,7 +101,7 @@ function _RouteMessage(action, options) {
   }
   // For each of these fields, if they are passed as an option,
   // add them to the action. If they are not defined, remove them.
-  ["from", "to", "toTarget", "fromTarget", "skipOrigin"].forEach(o => {
+  ["from", "to", "toTarget", "fromTarget", "skipMain", "skipLocal"].forEach(o => {
     if (typeof options[o] !== "undefined") {
       meta[o] = options[o];
     } else if (meta[o]) {
@@ -110,23 +112,37 @@ function _RouteMessage(action, options) {
 }
 
 /**
- * SendToMain - Creates a message that will be sent to the Main process.
+ * AlsoToMain - Creates a message that will be dispatched locally and also sent to the Main process.
+ *
+ * @param  {object} action Any redux action (required)
+ * @param  {object} options
+ * @param  {bool}   skipLocal Used by OnlyToMain to skip the main reducer
+ * @param  {string} fromTarget The id of the content port from which the action originated. (optional)
+ * @return {object} An action with added .meta properties
+ */
+function AlsoToMain(action, fromTarget, skipLocal) {
+  return _RouteMessage(action, {
+    from: CONTENT_MESSAGE_TYPE,
+    to: MAIN_MESSAGE_TYPE,
+    fromTarget,
+    skipLocal
+  });
+}
+
+/**
+ * OnlyToMain - Creates a message that will be sent to the Main process and skip the local reducer.
  *
  * @param  {object} action Any redux action (required)
  * @param  {object} options
  * @param  {string} fromTarget The id of the content port from which the action originated. (optional)
  * @return {object} An action with added .meta properties
  */
-function SendToMain(action, fromTarget) {
-  return _RouteMessage(action, {
-    from: CONTENT_MESSAGE_TYPE,
-    to: MAIN_MESSAGE_TYPE,
-    fromTarget
-  });
+function OnlyToMain(action, fromTarget) {
+  return AlsoToMain(action, fromTarget, true);
 }
 
 /**
- * BroadcastToContent - Creates a message that will be sent to ALL content processes.
+ * BroadcastToContent - Creates a message that will be dispatched to main and sent to ALL content processes.
  *
  * @param  {object} action Any redux action (required)
  * @return {object} An action with added .meta properties
@@ -139,30 +155,45 @@ function BroadcastToContent(action) {
 }
 
 /**
- * SendToContent - Creates a message that will be sent to a particular Content process.
+ * AlsoToOneContent - Creates a message that will be will be dispatched to the main store
+ *                    and also sent to a particular Content process.
+ *
+ * @param  {object} action Any redux action (required)
+ * @param  {string} target The id of a content port
+ * @param  {bool} skipMain Used by OnlyToOneContent to skip the main process
+ * @return {object} An action with added .meta properties
+ */
+function AlsoToOneContent(action, target, skipMain) {
+  if (!target) {
+    throw new Error("You must provide a target ID as the second parameter of AlsoToOneContent. If you want to send to all content processes, use BroadcastToContent");
+  }
+  return _RouteMessage(action, {
+    from: MAIN_MESSAGE_TYPE,
+    to: CONTENT_MESSAGE_TYPE,
+    toTarget: target,
+    skipMain
+  });
+}
+
+/**
+ * OnlyToOneContent - Creates a message that will be sent to a particular Content process
+ *                    and skip the main reducer.
  *
  * @param  {object} action Any redux action (required)
  * @param  {string} target The id of a content port
  * @return {object} An action with added .meta properties
  */
-function SendToContent(action, target) {
-  if (!target) {
-    throw new Error("You must provide a target ID as the second parameter of SendToContent. If you want to send to all content processes, use BroadcastToContent");
-  }
-  return _RouteMessage(action, {
-    from: MAIN_MESSAGE_TYPE,
-    to: CONTENT_MESSAGE_TYPE,
-    toTarget: target
-  });
+function OnlyToOneContent(action, target) {
+  return AlsoToOneContent(action, target, true);
 }
 
 /**
- * SendToPreloaded - Creates a message that will be sent to the preloaded tab.
+ * AlsoToPreloaded - Creates a message that dispatched to the main reducer and also sent to the preloaded tab.
  *
  * @param  {object} action Any redux action (required)
  * @return {object} An action with added .meta properties
  */
-function SendToPreloaded(action) {
+function AlsoToPreloaded(action) {
   return _RouteMessage(action, {
     from: MAIN_MESSAGE_TYPE,
     to: PRELOAD_MESSAGE_TYPE
@@ -174,10 +205,10 @@ function SendToPreloaded(action) {
  *                   be sent from the UI during a user session.
  *
  * @param  {object} data Fields to include in the ping (source, etc.)
- * @return {object} An SendToMain action
+ * @return {object} An AlsoToMain action
  */
 function UserEvent(data) {
-  return SendToMain({
+  return AlsoToMain({
     type: actionTypes.TELEMETRY_USER_EVENT,
     data
   });
@@ -188,14 +219,14 @@ function UserEvent(data) {
  *
  * @param  {object} data Fields to include in the ping (value, etc.)
  * @param  {int} importContext (For testing) Override the import context for testing.
- * @return {object} An action. For UI code, a SendToMain action.
+ * @return {object} An action. For UI code, a AlsoToMain action.
  */
 function UndesiredEvent(data, importContext = globalImportContext) {
   const action = {
     type: actionTypes.TELEMETRY_UNDESIRED_EVENT,
     data
   };
-  return importContext === UI_CODE ? SendToMain(action) : action;
+  return importContext === UI_CODE ? AlsoToMain(action) : action;
 }
 
 /**
@@ -203,14 +234,14 @@ function UndesiredEvent(data, importContext = globalImportContext) {
  *
  * @param  {object} data Fields to include in the ping (value, etc.)
  * @param  {int} importContext (For testing) Override the import context for testing.
- * @return {object} An action. For UI code, a SendToMain action.
+ * @return {object} An action. For UI code, a AlsoToMain action.
  */
 function PerfEvent(data, importContext = globalImportContext) {
   const action = {
     type: actionTypes.TELEMETRY_PERFORMANCE_EVENT,
     data
   };
-  return importContext === UI_CODE ? SendToMain(action) : action;
+  return importContext === UI_CODE ? AlsoToMain(action) : action;
 }
 
 /**
@@ -218,19 +249,27 @@ function PerfEvent(data, importContext = globalImportContext) {
  *
  * @param  {object} data Fields to include in the ping
  * @param  {int} importContext (For testing) Override the import context for testing.
- * #return {object} An action. For UI code, a SendToMain action.
+ * #return {object} An action. For UI code, a AlsoToMain action.
  */
 function ImpressionStats(data, importContext = globalImportContext) {
   const action = {
     type: actionTypes.TELEMETRY_IMPRESSION_STATS,
     data
   };
-  return importContext === UI_CODE ? SendToMain(action) : action;
+  return importContext === UI_CODE ? AlsoToMain(action) : action;
 }
 
 function SetPref(name, value, importContext = globalImportContext) {
   const action = {type: actionTypes.SET_PREF, data: {name, value}};
-  return importContext === UI_CODE ? SendToMain(action) : action;
+  return importContext === UI_CODE ? AlsoToMain(action) : action;
+}
+
+function WebExtEvent(type, data, importContext = globalImportContext) {
+  if (!data || !data.source) {
+    throw new Error("WebExtEvent actions should include a property \"source\", the id of the webextension that should receive the event.");
+  }
+  const action = {type, data};
+  return importContext === UI_CODE ? AlsoToMain(action) : action;
 }
 
 this.actionTypes = actionTypes;
@@ -241,10 +280,13 @@ this.actionCreators = {
   UndesiredEvent,
   PerfEvent,
   ImpressionStats,
-  SendToContent,
-  SendToMain,
-  SendToPreloaded,
-  SetPref
+  AlsoToOneContent,
+  OnlyToOneContent,
+  AlsoToMain,
+  OnlyToMain,
+  AlsoToPreloaded,
+  SetPref,
+  WebExtEvent
 };
 
 // These are helpers to test for certain kinds of actions
@@ -264,7 +306,7 @@ this.actionUtils = {
     }
     return false;
   },
-  isSendToContent(action) {
+  isSendToOneContent(action) {
     if (!action.meta) {
       return false;
     }

@@ -31,7 +31,7 @@ def test_roll_successful(lint, linters, files):
 
     result = lint.roll(files)
     assert len(result) == 1
-    assert lint.failed == []
+    assert lint.failed == set([])
 
     path = result.keys()[0]
     assert os.path.basename(path) == 'foobar.js'
@@ -63,23 +63,23 @@ def test_roll_with_excluded_path(lint, linters, files):
     result = lint.roll(files)
 
     assert len(result) == 0
-    assert lint.failed == []
+    assert lint.failed == set([])
 
 
 def test_roll_with_invalid_extension(lint, lintdir, filedir):
     lint.read(os.path.join(lintdir, 'external.yml'))
     result = lint.roll(os.path.join(filedir, 'foobar.py'))
     assert len(result) == 0
-    assert lint.failed == []
+    assert lint.failed == set([])
 
 
 def test_roll_with_failure_code(lint, lintdir, files):
     lint.read(os.path.join(lintdir, 'badreturncode.yml'))
 
-    assert lint.failed is None
+    assert lint.failed == set([])
     result = lint.roll(files, num_procs=1)
     assert len(result) == 0
-    assert lint.failed == ['BadReturnCodeLinter']
+    assert lint.failed == set(['BadReturnCodeLinter'])
 
 
 def fake_run_linters(config, paths, **lintargs):
@@ -117,6 +117,23 @@ def test_max_paths_per_job(monkeypatch, lint, linters, files, max_paths, expecte
     lint.read(linters)
     num_jobs = len(lint.roll(files, num_procs=2)['count'])
     assert num_jobs == expected_jobs
+
+
+linters = ('setup.yml', 'setupfailed.yml', 'setupraised.yml')
+
+
+def test_setup(lint, linters, filedir, capfd):
+    with pytest.raises(LintersNotConfigured):
+        lint.setup()
+
+    lint.read(linters)
+    lint.setup()
+    out, err = capfd.readouterr()
+    assert 'setup passed' in out
+    assert 'setup failed' in out
+    assert 'setup raised' in out
+    assert 'error: problem with lint setup, skipping' in out
+    assert lint.failed == set(['SetupFailedLinter', 'SetupRaisedLinter'])
 
 
 if __name__ == '__main__':

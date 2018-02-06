@@ -1315,6 +1315,11 @@ void
 nsHtml5TreeBuilder::StartPlainTextViewSource(const nsAutoString& aTitle)
 {
   MOZ_ASSERT(!mBuilder, "Must not view source with builder.");
+
+  startTag(nsHtml5ElementName::ELT_META,
+           nsHtml5ViewSourceUtils::NewMetaViewportAttributes(),
+           false);
+
   startTag(nsHtml5ElementName::ELT_TITLE,
            nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES,
            false);

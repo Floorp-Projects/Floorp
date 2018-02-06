@@ -172,7 +172,8 @@ public:
   void UpdateAPZ(bool aUpdateHitTestingTree);
   const WebRenderScrollData& GetScrollData() const;
 
-  void FlushRendering(bool aIsSync);
+  void FlushRendering();
+  void FlushRenderingAsync();
 
   /**
    * Schedule generating WebRender frame definitely at next composite timing.

@@ -35,18 +35,14 @@ describe("Reducers", () => {
       const nextState = TopSites(undefined, {type: at.TOP_SITES_UPDATED});
       assert.equal(nextState, INITIAL_STATE.TopSites);
     });
-    it("should set editForm.visible to true on TOP_SITES_EDIT", () => {
-      const nextState = TopSites(undefined, {type: at.TOP_SITES_EDIT, data: {index: 3}});
-      assert.isTrue(nextState.editForm.visible);
-    });
     it("should set editForm.site to action.data on TOP_SITES_EDIT", () => {
       const data = {index: 7};
       const nextState = TopSites(undefined, {type: at.TOP_SITES_EDIT, data});
       assert.equal(nextState.editForm.index, data.index);
     });
-    it("should set editForm.visible to false on TOP_SITES_CANCEL_EDIT", () => {
+    it("should set editForm to null on TOP_SITES_CANCEL_EDIT", () => {
       const nextState = TopSites(undefined, {type: at.TOP_SITES_CANCEL_EDIT});
-      assert.isFalse(nextState.editForm.visible);
+      assert.isNull(nextState.editForm);
     });
     it("should add screenshots for SCREENSHOT_UPDATED", () => {
       const oldState = {rows: [{url: "foo.com"}, {url: "bar.com"}]};

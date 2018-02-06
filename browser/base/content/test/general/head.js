@@ -296,22 +296,6 @@ function promiseTabLoaded(aTab) {
   });
 }
 
-/**
- * Ensures that the specified URIs are either cleared or not.
- *
- * @param aURIs
- *        Array of page URIs
- * @param aShouldBeCleared
- *        True if each visit to the URI should be cleared, false otherwise
- */
-async function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
-  for (let uri of aURIs) {
-    let visited = await PlacesUtils.history.hasVisits(uri);
-    Assert.equal(visited, !aShouldBeCleared,
-      `history visit ${uri.spec} should ${aShouldBeCleared ? "no longer" : "still"} exist`);
-  }
-}
-
 var FullZoomHelper = {
 
   selectTabAndWaitForLocationChange: function selectTabAndWaitForLocationChange(tab) {

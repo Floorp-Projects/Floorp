@@ -805,11 +805,7 @@ WebRenderBridgeParent::RecvGetSnapshot(PTextureParent* aTexture)
 
   mForceRendering = true;
 
-  if (mCompositorScheduler->NeedsComposite()) {
-    mCompositorScheduler->CancelCurrentCompositeTask();
-    mCompositorScheduler->ForceComposeToTarget(nullptr, nullptr);
-  }
-
+  mCompositorScheduler->FlushPendingComposite();
   mApi->Readback(size, buffer, buffer_size);
 
   mForceRendering = false;
@@ -1199,6 +1195,11 @@ WebRenderBridgeParent::SampleAnimations(nsTArray<wr::WrOpacityProperty>& aOpacit
 void
 WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
+  // The two arguments are part of the CompositorVsyncSchedulerOwner API but in
+  // this implementation they should never be non-null.
+  MOZ_ASSERT(aTarget == nullptr);
+  MOZ_ASSERT(aRect == nullptr);
+
   AUTO_PROFILER_TRACING("Paint", "CompositeToTraget");
   if (mPaused) {
     return;
@@ -1337,23 +1338,27 @@ WebRenderBridgeParent::ScheduleGenerateFrame()
 }
 
 void
-WebRenderBridgeParent::FlushRendering(bool aIsSync)
+WebRenderBridgeParent::FlushRendering()
 {
   if (mDestroyed) {
     return;
   }
 
-  if (!mCompositorScheduler->NeedsComposite()) {
-    return;
-  }
-
   mForceRendering = true;
-  mCompositorScheduler->CancelCurrentCompositeTask();
-  mCompositorScheduler->ForceComposeToTarget(nullptr, nullptr);
-  if (aIsSync) {
+  if (mCompositorScheduler->FlushPendingComposite()) {
     mApi->WaitFlushed();
   }
   mForceRendering = false;
+}
+
+void
+WebRenderBridgeParent::FlushRenderingAsync()
+{
+  if (mDestroyed) {
+    return;
+  }
+
+  mCompositorScheduler->FlushPendingComposite();
 }
 
 void

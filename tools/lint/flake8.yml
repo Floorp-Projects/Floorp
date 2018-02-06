@@ -47,3 +47,4 @@ flake8:
     extensions: ['configure', 'py']
     type: external
     payload: python.flake8:lint
+    setup: python.flake8:setup

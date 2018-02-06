@@ -185,6 +185,10 @@ private:
                   const char *charset, nsIURI *baseURI);
     nsresult SetDefaultPort(int32_t aNewDefaultPort);
 
+    nsresult SetFileNameInternal(const nsACString &input);
+    nsresult SetFileBaseNameInternal(const nsACString &input);
+    nsresult SetFileExtensionInternal(const nsACString &input);
+
     int32_t  Port() { return mPort == -1 ? mDefaultPort : mPort; }
 
     void     ReplacePortInSpec(int32_t aNewPort);
@@ -406,7 +410,7 @@ public:
                 nsCOMPtr<nsIURIMutator> mutator = this;
                 mutator.forget(aMutator);
             }
-            return BaseURIMutator<T>::mURI->SetFileName(aFileName);
+            return BaseURIMutator<T>::mURI->SetFileNameInternal(aFileName);
         }
 
         MOZ_MUST_USE NS_IMETHOD
@@ -419,7 +423,7 @@ public:
                 nsCOMPtr<nsIURIMutator> mutator = this;
                 mutator.forget(aMutator);
             }
-            return BaseURIMutator<T>::mURI->SetFileBaseName(aFileBaseName);
+            return BaseURIMutator<T>::mURI->SetFileBaseNameInternal(aFileBaseName);
         }
 
         MOZ_MUST_USE NS_IMETHOD
@@ -432,7 +436,7 @@ public:
                 nsCOMPtr<nsIURIMutator> mutator = this;
                 mutator.forget(aMutator);
             }
-            return BaseURIMutator<T>::mURI->SetFileExtension(aFileExtension);
+            return BaseURIMutator<T>::mURI->SetFileExtensionInternal(aFileExtension);
         }
 
         MOZ_MUST_USE NS_IMETHOD
@@ -450,7 +454,7 @@ public:
             if (NS_FAILED(rv)) {
                 return rv;
             }
-            BaseURIMutator<T>::mURI = uri;
+            BaseURIMutator<T>::mURI.swap(uri);
             return NS_OK;
         }
 

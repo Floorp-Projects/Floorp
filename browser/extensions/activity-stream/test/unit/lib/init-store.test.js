@@ -59,10 +59,25 @@ describe("initStore", () => {
     store.dispatch({type: MERGE_STORE_ACTION, data: {number: 42}});
     assert.deepEqual(store.getState(), {number: 42});
   });
-  it("should send out SendToMain actions", () => {
-    const action = ac.SendToMain({type: "FOO"});
+  it("should call .send and update the local store if an AlsoToMain action is dispatched", () => {
+    const subscriber = sinon.spy();
+    const action = ac.AlsoToMain({type: "FOO"});
+
+    store.subscribe(subscriber);
     store.dispatch(action);
+
     assert.calledWith(global.sendAsyncMessage, OUTGOING_MESSAGE_NAME, action);
+    assert.calledOnce(subscriber);
+  });
+  it("should call .send but not update the local store if an OnlyToMain action is dispatched", () => {
+    const subscriber = sinon.spy();
+    const action = ac.OnlyToMain({type: "FOO"});
+
+    store.subscribe(subscriber);
+    store.dispatch(action);
+
+    assert.calledWith(global.sendAsyncMessage, OUTGOING_MESSAGE_NAME, action);
+    assert.notCalled(subscriber);
   });
   it("should not send out other types of actions", () => {
     store.dispatch({type: "FOO"});
@@ -70,13 +85,13 @@ describe("initStore", () => {
   });
   describe("rehydrationMiddleware", () => {
     it("should allow NEW_TAB_STATE_REQUEST to go through", () => {
-      const action = ac.SendToMain({type: at.NEW_TAB_STATE_REQUEST});
+      const action = ac.AlsoToMain({type: at.NEW_TAB_STATE_REQUEST});
       const next = sinon.spy();
       rehydrationMiddleware(store)(next)(action);
       assert.calledWith(next, action);
     });
     it("should dispatch an additional NEW_TAB_STATE_REQUEST if INIT was received after a request", () => {
-      const requestAction = ac.SendToMain({type: at.NEW_TAB_STATE_REQUEST});
+      const requestAction = ac.AlsoToMain({type: at.NEW_TAB_STATE_REQUEST});
       const next = sinon.spy();
 
       rehydrationMiddleware(store)(next)(requestAction);
@@ -95,7 +110,7 @@ describe("initStore", () => {
       const next = sinon.spy();
 
       rehydrationMiddleware(store)(next)(ac.BroadcastToContent({type: "FOO"}));
-      rehydrationMiddleware(store)(next)(ac.SendToContent({type: "FOO"}, 123));
+      rehydrationMiddleware(store)(next)(ac.AlsoToOneContent({type: "FOO"}, 123));
 
       assert.notCalled(next);
     });
@@ -110,7 +125,7 @@ describe("initStore", () => {
       rehydrationMiddleware(store)(next)({type: MERGE_STORE_ACTION});
       next.reset();
 
-      const action = ac.SendToContent({type: "FOO"}, 123);
+      const action = ac.AlsoToOneContent({type: "FOO"}, 123);
       rehydrationMiddleware(store)(next)(action);
       assert.calledWith(next, action);
     });
@@ -125,7 +140,7 @@ describe("initStore", () => {
       assert.calledWith(next, action);
     });
     it("should allow action to main that does not belong to EARLY_QUEUED_ACTIONS to go through", () => {
-      const action = ac.SendToMain({type: "FOO"});
+      const action = ac.AlsoToMain({type: "FOO"});
       const next = sinon.spy();
 
       queueEarlyMessageMiddleware(store)(next)(action);
@@ -136,8 +151,8 @@ describe("initStore", () => {
       EARLY_QUEUED_ACTIONS.forEach(actionType => {
         const testStore = initStore({number: addNumberReducer});
         const next = sinon.spy();
-        const action = ac.SendToMain({type: actionType});
-        const fromMainAction = ac.SendToContent({type: "FOO"}, 123);
+        const action = ac.AlsoToMain({type: actionType});
+        const fromMainAction = ac.AlsoToOneContent({type: "FOO"}, 123);
 
         // Early actions should be added to the queue
         queueEarlyMessageMiddleware(testStore)(next)(action);

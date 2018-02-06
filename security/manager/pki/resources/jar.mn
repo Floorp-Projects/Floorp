@@ -8,7 +8,6 @@ pippki.jar:
     content/pippki/MineOverlay.xul           (content/MineOverlay.xul)
     content/pippki/OthersOverlay.xul         (content/OthersOverlay.xul)
     content/pippki/WebSitesOverlay.xul       (content/WebSitesOverlay.xul)
-    content/pippki/certDump.xul              (content/certDump.xul)
     content/pippki/certManager.js            (content/certManager.js)
     content/pippki/certManager.xul           (content/certManager.xul)
     content/pippki/certViewer.js             (content/certViewer.js)
@@ -40,4 +39,3 @@ pippki.jar:
     content/pippki/resetpassword.xul         (content/resetpassword.xul)
     content/pippki/setp12password.js         (content/setp12password.js)
     content/pippki/setp12password.xul        (content/setp12password.xul)
-    content/pippki/viewCertDetails.xul       (content/viewCertDetails.xul)

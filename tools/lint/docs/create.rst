@@ -160,16 +160,60 @@ let's call the file ``flake8_lint.py``:
 
 Now here is the linter definition that would call it:
 
-.. code-block::
+.. code-block:: yml
 
     flake8:
         description: Python linter
         include:
             - '**/*.py'
         type: external
-        payload: flake8_lint:lint
+        payload: py.flake8:lint
 
-Notice the payload has two parts, delimited by ':'. The first is the module path, which
-``mozlint`` will attempt to import (e.g, the name of a function to call). The second is
-the object path within that module. It is up to consumers of ``mozlint`` to ensure the
-module is in ``sys.path``. Structured log linters use the same import mechanism.
+Notice the payload has two parts, delimited by ':'. The first is the module
+path, which ``mozlint`` will attempt to import. The second is the object path
+within that module (e.g, the name of a function to call). It is up to consumers
+of ``mozlint`` to ensure the module is in ``sys.path``. Structured log linters
+use the same import mechanism.
+
+
+Bootstrapping Dependencies
+--------------------------
+
+Many linters, especially 3rd party ones, will require a set of dependencies. It
+could be as simple as installing a binary from a package manager, or as
+complicated as pulling a whole graph of tools, plugins and their dependencies.
+
+Either way, to reduce the burden on users, linters should strive to provide
+automated bootstrapping of all their dependencies. To help with this,
+``mozlint`` allows linters to define a ``setup`` config, which has the same
+path object format as an external payload. For example:
+
+.. code-block:: yml
+
+    flake8:
+        description: Python linter
+        include:
+            - '**/*.py'
+        type: external
+        payload: py.flake8:lint
+        setup: py.flake8:setup
+
+The setup function takes a single argument, the root of the repository being
+linted. In the case of ``flake8``, it might look like:
+
+.. code-block:: python
+
+    import subprocess
+    from distutils.spawn import find_executable
+
+    def setup(root):
+        if not find_executable('flake8'):
+            subprocess.call(['pip', 'install', 'flake8'])
+
+The setup function will be called implicitly before running the linter. This
+means it should return fast and not produce any output if there is no setup to
+be performed.
+
+The setup functions can also be called explicitly by running ``mach lint
+--setup``. This will only perform setup and not perform any linting. It is
+mainly useful for other tools like ``mach bootstrap`` to call into.

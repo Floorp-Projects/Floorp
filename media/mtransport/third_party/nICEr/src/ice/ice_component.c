@@ -532,9 +532,14 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         if (ctx->turn_servers[j].turn_server.transport != IPPROTO_TCP)
           continue;
 
+        /* Create relay candidate */
+        if ((r=nr_transport_addr_copy(&addr, &addrs[i].addr)))
+          ABORT(r);
+        addr.protocol = IPPROTO_TCP;
+
         if (ctx->turn_servers[j].turn_server.type == NR_ICE_STUN_SERVER_TYPE_ADDR) {
           if (nr_transport_addr_check_compatibility(
-                &addrs[i].addr,
+                &addr,
                 &ctx->turn_servers[j].turn_server.u.addr)) {
             r_log(LOG_ICE,LOG_INFO,"ICE(%s): Skipping TURN server because of link local mis-match",ctx->label);
             continue;
@@ -563,11 +568,6 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
             cand=0;
           }
         }
-
-        /* Create relay candidate */
-        if ((r=nr_transport_addr_copy(&addr, &addrs[i].addr)))
-          ABORT(r);
-        addr.protocol = IPPROTO_TCP;
 
         /* If we're going to use TLS, make sure that's recorded */
         if (ctx->turn_servers[j].turn_server.tls) {

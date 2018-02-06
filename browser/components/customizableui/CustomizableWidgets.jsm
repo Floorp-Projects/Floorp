@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
   CharsetMenu: "resource://gre/modules/CharsetMenu.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  Sanitizer: "resource:///modules/Sanitizer.jsm",
   SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
 });
 
@@ -897,25 +898,9 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
     id: "panic-button",
     type: "view",
     viewId: "PanelUI-panicView",
-    _sanitizer: null,
-    _ensureSanitizer() {
-      if (!this.sanitizer) {
-        let scope = {};
-        Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js",
-                                            scope);
-        this._Sanitizer = scope.Sanitizer;
-        this._sanitizer = new scope.Sanitizer();
-        this._sanitizer.ignoreTimespan = false;
-      }
-    },
-    _getSanitizeRange(aDocument) {
-      let group = aDocument.getElementById("PanelUI-panic-timeSpan");
-      return this._Sanitizer.getClearRange(+group.value);
-    },
+
     forgetButtonCalled(aEvent) {
       let doc = aEvent.target.ownerDocument;
-      this._ensureSanitizer();
-      this._sanitizer.range = this._getSanitizeRange(doc);
       let group = doc.getElementById("PanelUI-panic-timeSpan");
       BrowserUITelemetry.countPanicEvent(group.selectedItem.id);
       group.selectedItem = doc.getElementById("PanelUI-panic-5min");
@@ -924,8 +909,11 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
       ];
       let newWindowPrivateState = PrivateBrowsingUtils.isWindowPrivate(doc.defaultView) ?
                                   "private" : "non-private";
-      this._sanitizer.items.openWindows.privateStateForNewWindow = newWindowPrivateState;
-      let promise = this._sanitizer.sanitize(itemsToClear);
+      let promise = Sanitizer.sanitize(itemsToClear, {
+        ignoreTimespan: false,
+        range: Sanitizer.getClearRange(+group.value),
+        privateStateForNewWindow: newWindowPrivateState,
+      });
       promise.then(function() {
         let otherWindow = Services.wm.getMostRecentWindow("navigator:browser");
         if (otherWindow.closed) {

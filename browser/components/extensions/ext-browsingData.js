@@ -27,14 +27,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "quotaManagerService",
 */
 const YIELD_PERIOD = 10;
 
-const PREF_DOMAIN = "privacy.cpd.";
-
-XPCOMUtils.defineLazyGetter(this, "sanitizer", () => {
-  let sanitizer = new Sanitizer();
-  sanitizer.prefDomain = PREF_DOMAIN;
-  return sanitizer;
-});
-
 const makeRange = options => {
   return (options.since == null) ?
     null :
@@ -43,12 +35,12 @@ const makeRange = options => {
 
 const clearCache = () => {
   // Clearing the cache does not support timestamps.
-  return sanitizer.items.cache.clear();
+  return Sanitizer.items.cache.clear();
 };
 
 const clearCookies = async function(options) {
   let cookieMgr = Services.cookies;
-  // This code has been borrowed from sanitize.js.
+  // This code has been borrowed from Sanitizer.jsm.
   let yieldCounter = 0;
 
   if (options.since || options.hostnames) {
@@ -72,15 +64,15 @@ const clearCookies = async function(options) {
 };
 
 const clearDownloads = options => {
-  return sanitizer.items.downloads.clear(makeRange(options));
+  return Sanitizer.items.downloads.clear(makeRange(options));
 };
 
 const clearFormData = options => {
-  return sanitizer.items.formdata.clear(makeRange(options));
+  return Sanitizer.items.formdata.clear(makeRange(options));
 };
 
 const clearHistory = options => {
-  return sanitizer.items.history.clear(makeRange(options));
+  return Sanitizer.items.history.clear(makeRange(options));
 };
 
 const clearIndexedDB = async function(options) {
@@ -150,7 +142,7 @@ const clearPasswords = async function(options) {
 };
 
 const clearPluginData = options => {
-  return sanitizer.items.pluginData.clear(makeRange(options));
+  return Sanitizer.items.pluginData.clear(makeRange(options));
 };
 
 const clearServiceWorkers = async function() {

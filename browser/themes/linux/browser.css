@@ -12,9 +12,6 @@
 %include ../shared/browser.inc.css
 
 :root {
-  --tabs-border-color: rgba(0,0,0,.3);
-  --tab-line-color: highlight;
-
   --toolbar-non-lwt-bgcolor: -moz-dialog;
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
   --toolbar-non-lwt-bgimage: linear-gradient(rgba(255,255,255,.15), rgba(255,255,255,.15));
@@ -33,6 +30,14 @@
   --urlbar-separator-color: ThreeDShadow;
 
   --toolbox-border-bottom-color: ThreeDShadow;
+}
+
+#navigator-toolbox {
+  --tabs-border-color: rgba(0,0,0,.3);
+}
+
+#tabbrowser-tabs {
+  --tab-line-color: highlight;
 }
 
 :root:-moz-lwtheme {

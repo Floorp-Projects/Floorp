@@ -9,30 +9,38 @@
  * See bug 480169.
  *
  * The purpose of this test is not to fully flex the sanitize timespan code;
- * browser/base/content/test/general/browser_sanitize-timespans.js does that.  This
+ * browser/base/content/test/sanitize/browser_sanitize-timespans.js does that.  This
  * test checks the UI of the dialog and makes sure it's correctly connected to
  * the sanitize timespan code.
  *
  * Some of this code, especially the history creation parts, was taken from
- * browser/base/content/test/general/browser_sanitize-timespans.js.
+ * browser/base/content/test/sanitize/browser_sanitize-timespans.js.
  */
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "FormHistory",
-                               "resource://gre/modules/FormHistory.jsm");
-ChromeUtils.defineModuleGetter(this, "Downloads",
-                               "resource://gre/modules/Downloads.jsm");
 ChromeUtils.defineModuleGetter(this, "Timer",
                                "resource://gre/modules/Timer.jsm");
 ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
                                "resource://testing-common/PlacesTestUtils.jsm");
 
-var tempScope = {};
-Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tempScope);
-var Sanitizer = tempScope.Sanitizer;
-
 const kMsecPerMin = 60 * 1000;
 const kUsecPerMin = 60 * 1000000;
+
+/**
+ * Ensures that the specified URIs are either cleared or not.
+ *
+ * @param aURIs
+ *        Array of page URIs
+ * @param aShouldBeCleared
+ *        True if each visit to the URI should be cleared, false otherwise
+ */
+async function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
+  for (let uri of aURIs) {
+    let visited = await PlacesUtils.history.hasVisits(uri);
+    Assert.equal(visited, !aShouldBeCleared,
+      `history visit ${uri.spec} should ${aShouldBeCleared ? "no longer" : "still"} exist`);
+  }
+}
 
 add_task(async function init() {
   requestLongerTimeout(3);
@@ -859,7 +867,7 @@ WindowHelper.prototype = {
 };
 
 function promiseSanitizationComplete() {
-  return promiseTopicObserved("sanitizer-sanitization-complete");
+  return TestUtils.topicObserved("sanitizer-sanitization-complete");
 }
 
 /**

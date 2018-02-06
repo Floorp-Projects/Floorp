@@ -1,5 +1,5 @@
 "use strict";
-import {CONTENT_MESSAGE_TYPE, MAIN_MESSAGE_TYPE, PRELOAD_MESSAGE_TYPE} from "common/Actions.jsm";
+import {actionCreators as ac, actionTypes as at, CONTENT_MESSAGE_TYPE, MAIN_MESSAGE_TYPE, PRELOAD_MESSAGE_TYPE} from "common/Actions.jsm";
 import {EventEmitter, GlobalOverrider} from "test/unit/utils";
 import {SectionsFeed, SectionsManager} from "lib/SectionsManager.jsm";
 
@@ -206,6 +206,27 @@ describe("SectionsManager", () => {
       const spy = sinon.spy();
       SectionsManager.on(SectionsManager.UPDATE_SECTION_CARD, spy);
       SectionsManager.updateSectionCard(FAKE_ID, FAKE_URL, FAKE_CARD_OPTIONS, true);
+      assert.notCalled(spy);
+    });
+  });
+  describe("#removeSectionCard", () => {
+    it("should dispatch an SECTION_UPDATE action in which cards corresponding to the given url are removed", () => {
+      const rows = [{url: "foo.com"}, {url: "bar.com"}];
+
+      SectionsManager.addSection(FAKE_ID, Object.assign({}, FAKE_OPTIONS, {rows}));
+      const spy = sinon.spy();
+      SectionsManager.on(SectionsManager.UPDATE_SECTION, spy);
+      SectionsManager.removeSectionCard(FAKE_ID, "foo.com");
+
+      assert.calledOnce(spy);
+      assert.equal(spy.firstCall.args[1], FAKE_ID);
+      assert.deepEqual(spy.firstCall.args[2].rows, [{url: "bar.com"}]);
+    });
+    it("should do nothing if the section doesn't exist", () => {
+      SectionsManager.removeSection(FAKE_ID);
+      const spy = sinon.spy();
+      SectionsManager.on(SectionsManager.UPDATE_SECTION, spy);
+      SectionsManager.removeSectionCard(FAKE_ID, "bar.com");
       assert.notCalled(spy);
     });
   });
@@ -463,6 +484,14 @@ describe("SectionsFeed", () => {
       feed.onAction({type: "PLACES_BOOKMARK_ADDED", data: {}});
 
       assert.calledOnce(stub);
+    });
+    it("should call SectionManager.removeSectionCard on WEBEXT_DISMISS", () => {
+      const stub = sinon.stub(SectionsManager, "removeSectionCard");
+
+      feed.onAction(ac.WebExtEvent(at.WEBEXT_DISMISS, {source: "Foo", url: "bar.com"}));
+
+      assert.calledOnce(stub);
+      assert.calledWith(stub, "Foo", "bar.com");
     });
   });
 });
