@@ -189,7 +189,8 @@ this.pageAction = class extends ExtensionAPI {
 
         if (menu.id === "pageActionContextMenu" &&
             trigger &&
-            trigger.getAttribute("actionid") === this.browserPageAction.id) {
+            trigger.getAttribute("actionid") === this.browserPageAction.id &&
+            !this.browserPageAction.getDisabled(trigger.ownerGlobal)) {
           global.actionContextMenu({
             extension: this.extension,
             onPageAction: true,
