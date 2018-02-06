@@ -146,6 +146,12 @@ struct FontSizePrefs
   nscoord mDefaultFantasySize;
 };
 
+struct MediumFeaturesChangedResult {
+  bool mAffectsDocumentRules;
+  bool mAffectsNonDocumentRules;
+  bool mUsesViewportUnits;
+};
+
 // DOM Traversal.
 void Gecko_RecordTraversalStatistics(uint32_t total, uint32_t parallel,
                                      uint32_t total_t, uint32_t parallel_t,
