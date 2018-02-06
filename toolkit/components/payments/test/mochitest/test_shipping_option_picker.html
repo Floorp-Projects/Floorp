@@ -1,0 +1,179 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the shipping-option-picker component
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the shipping-option-picker component</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="payments_common.js"></script>
+  <script src="custom-elements.min.js"></script>
+  <script src="PaymentsStore.js"></script>
+  <script src="ObservedPropertiesMixin.js"></script>
+  <script src="PaymentStateSubscriberMixin.js"></script>
+  <script src="rich-select.js"></script>
+  <script src="shipping-option-picker.js"></script>
+  <script src="rich-option.js"></script>
+  <script src="shipping-option.js"></script>
+  <script src="currency-amount.js"></script>
+  <link rel="stylesheet" type="text/css" href="rich-select.css"/>
+  <link rel="stylesheet" type="text/css" href="shipping-option.css"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <p id="display">
+    <shipping-option-picker id="picker1"></shipping-option-picker>
+  </p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+/** Test the shipping-option-picker component **/
+
+/* import-globals-from payments_common.js */
+/* import-globals-from ../../res/components/shipping-option.js */
+
+let picker1 = document.getElementById("picker1");
+
+add_task(async function test_empty() {
+  ok(picker1, "Check picker1 exists");
+  let state = picker1.requestStore.getState();
+  let {shippingOptions} = state && state.request && state.request.paymentDetails;
+  is(Object.keys(shippingOptions).length, 0, "Check empty initial state");
+  is(picker1.dropdown.popupBox.children.length, 0, "Check dropdown is empty");
+});
+
+add_task(async function test_initialSet() {
+  picker1.requestStore.setState({
+    request: {
+      paymentDetails: {
+        shippingOptions: [
+          {
+            id: "123",
+            label: "Carrier Pigeon",
+            amount: {
+              currency: "USD",
+              value: 10,
+            },
+            selected: false,
+          },
+          {
+            id: "456",
+            label: "Lightspeed (default)",
+            amount: {
+              currency: "USD",
+              value: 20,
+            },
+            selected: true,
+          },
+        ],
+      },
+    },
+    selectedShippingOption: "456",
+  });
+  await asyncElementRendered();
+  let options = picker1.dropdown.popupBox.children;
+  is(options.length, 2, "Check dropdown has both options");
+  ok(options[0].textContent.includes("Carrier Pigeon"), "Check first option");
+  is(options[0].querySelector(".amount").getAttribute("currency"), "USD", "Check currency");
+  ok(options[1].textContent.includes("Lightspeed (default)"), "Check second option");
+  is(picker1.dropdown.selectedOption, options[1], "Lightspeed selected by default");
+});
+
+add_task(async function test_update() {
+  picker1.requestStore.setState({
+    request: {
+      paymentDetails: {
+        shippingOptions: [
+          {
+            id: "123",
+            label: "Tortoise",
+            amount: {
+              currency: "CAD",
+              value: 10,
+            },
+            selected: false,
+          },
+          {
+            id: "456",
+            label: "Lightspeed (default)",
+            amount: {
+              currency: "USD",
+              value: 20,
+            },
+            selected: true,
+          },
+        ],
+      },
+    },
+    selectedShippingOption: "456",
+  });
+
+  await promiseStateChange(picker1.requestStore);
+  let options = picker1.dropdown.popupBox.children;
+  is(options.length, 2, "Check dropdown still has both options");
+  ok(options[0].textContent.includes("Tortoise"), "Check updated first option");
+  is(options[0].querySelector(".amount").getAttribute("currency"), "CAD", "Check currency");
+  ok(options[1].textContent.includes("Lightspeed (default)"), "Check second option is the same");
+  is(picker1.dropdown.selectedOption, options[1], "Lightspeed selected by default");
+});
+
+add_task(async function test_change_selected_option() {
+  let options = picker1.dropdown.popupBox.children;
+  let selectedOption = picker1.dropdown.selectedOption;
+  is(options[1], selectedOption, "Should default to Lightspeed option");
+  is(selectedOption.value, "456", "Selected option should have correct ID");
+  let state = picker1.requestStore.getState();
+  let selectedOptionFromState = state.selectedShippingOption;
+  is(selectedOption.value, selectedOptionFromState,
+     "store's selected option should match selected element");
+
+  let stateChangedPromise = promiseStateChange(picker1.requestStore);
+  picker1.dropdown.click();
+  options[0].click();
+  state = await stateChangedPromise;
+
+  selectedOption = picker1.dropdown.selectedOption;
+  is(selectedOption, options[0], "Selected option should now be the first option");
+  is(selectedOption.value, "123", "Selected option should have correct ID");
+  selectedOptionFromState = state.selectedShippingOption;
+  is(selectedOptionFromState, "123", "store should have first option selected");
+});
+
+add_task(async function test_delete() {
+  let stateChangedPromise = promiseStateChange(picker1.requestStore);
+  picker1.requestStore.setState({
+    request: {
+      paymentDetails: {
+        shippingOptions: [
+          {
+            id: "123",
+            label: "Tortoise",
+            amount: {
+              currency: "CAD",
+              value: 10,
+            },
+            selected: false,
+          },
+          // 456 / Lightspeed was deleted
+        ],
+      },
+    },
+    selectedShippingOption: "123",
+  });
+
+  await stateChangedPromise;
+  let options = picker1.dropdown.popupBox.children;
+  is(options.length, 1, "Check dropdown has one remaining address");
+  ok(options[0].textContent.includes("Tortoise"), "Check remaining address");
+  is(picker1.dropdown.selectedOption, options[0], "Tortoise selected by default");
+});
+</script>
+
+</body>
+</html>
