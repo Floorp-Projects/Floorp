@@ -269,16 +269,19 @@ JSTerm.prototype = {
         !Services.prefs.getBoolPref("devtools.chrome.enabled")) {
       inputContainer.style.display = "none";
     } else {
+      this.inputNode.addEventListener("keypress", this._keyPress);
+      this.inputNode.addEventListener("input", this._inputEventHandler);
+      this.inputNode.addEventListener("keyup", this._inputEventHandler);
+      this.inputNode.addEventListener("focus", this._focusEventHandler);
+    }
+
+    if (!this.hud.isBrowserConsole) {
       let okstring = l10n.getStr("selfxss.okstring");
       let msg = l10n.getFormatStr("selfxss.msg", [okstring]);
       this._onPaste = WebConsoleUtils.pasteHandlerGen(this.inputNode,
           this.getNotificationBox(), msg, okstring);
-      this.inputNode.addEventListener("keypress", this._keyPress);
       this.inputNode.addEventListener("paste", this._onPaste);
       this.inputNode.addEventListener("drop", this._onPaste);
-      this.inputNode.addEventListener("input", this._inputEventHandler);
-      this.inputNode.addEventListener("keyup", this._inputEventHandler);
-      this.inputNode.addEventListener("focus", this._focusEventHandler);
     }
 
     this.hud.window.addEventListener("blur", this._blurEventHandler);

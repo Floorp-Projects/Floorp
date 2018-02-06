@@ -46,7 +46,7 @@ function test() {
   // Add an history entry.
   ok(PlacesUtils, "checking PlacesUtils, running in chrome context?");
   PlacesTestUtils.addVisits(
-    {uri: PlacesUtils._uri(TEST_URI), visitDate: Date.now() * 1000,
+    {uri: Services.io.newURI(TEST_URI), visitDate: Date.now() * 1000,
       transition: PlacesUtils.history.TRANSITION_TYPED}
     ).then(() => {
       openLibrary(onLibraryReady);

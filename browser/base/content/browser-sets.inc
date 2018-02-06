@@ -98,8 +98,7 @@
     <command id="Tools:Search" oncommand="BrowserSearch.webSearch();"/>
     <command id="Tools:Downloads" oncommand="BrowserDownloadsUI();"/>
     <command id="Tools:Addons" oncommand="BrowserOpenAddonsMgr();"/>
-    <command id="Tools:Sanitize"
-     oncommand="Cc['@mozilla.org/browser/browserglue;1'].getService(Ci.nsIBrowserGlue).sanitize(window);"/>
+    <command id="Tools:Sanitize" oncommand="Sanitizer.showUI(window);"/>
     <command id="Tools:PrivateBrowsing"
       oncommand="OpenBrowserWindow({private: true});"/>
     <command id="History:UndoCloseTab" oncommand="undoCloseTab();"/>
@@ -185,6 +184,8 @@
                  command="View:PageSource">
       <observes element="canViewSource" attribute="disabled"/>
     </broadcaster>
+    <broadcaster id="reportPhishingBroadcaster" disabled="true"/>
+    <broadcaster id="reportPhishingErrorBroadcaster" disabled="true"/>
   </broadcasterset>
 
   <keyset id="mainKeyset">

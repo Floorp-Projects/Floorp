@@ -6,9 +6,9 @@ use api::{ApiMsg, BuiltDisplayList, ClearCache, DebugCommand};
 #[cfg(feature = "debugger")]
 use api::{BuiltDisplayListIter, SpecificDisplayItem};
 use api::{DeviceIntPoint, DevicePixelScale, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
-use api::{DocumentId, DocumentLayer, DocumentMsg, HitTestFlags, HitTestResult};
-use api::{IdNamespace, PipelineId, RenderNotifier, WorldPoint};
-use api::channel::{MsgReceiver, MsgSender, PayloadReceiver, PayloadReceiverHelperMethods};
+use api::{DocumentId, DocumentLayer, DocumentMsg, HitTestResult, IdNamespace, PipelineId};
+use api::RenderNotifier;
+use api::channel::{MsgReceiver, PayloadReceiver, PayloadReceiverHelperMethods};
 use api::channel::{PayloadSender, PayloadSenderHelperMethods};
 #[cfg(feature = "capture")]
 use api::CaptureBits;
@@ -19,6 +19,7 @@ use debug_server;
 use frame::FrameContext;
 use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use gpu_cache::GpuCache;
+use hit_test::HitTester;
 use internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
 use profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
 use record::ApiRecordingReceiver;
@@ -82,6 +83,10 @@ struct Document {
     // hit-tests produce inconsistent results because the clip_scroll_tree
     // is out of sync with the display list.
     render_on_hittest: bool,
+
+    /// A data structure to allow hit testing against rendered frames. This is updated
+    /// every time we produce a fully rendered frame.
+    hit_tester: Option<HitTester>,
 }
 
 impl Document {
@@ -113,12 +118,13 @@ impl Document {
             output_pipelines: FastHashSet::default(),
             render_on_scroll,
             render_on_hittest: false,
+            hit_tester: None,
         }
     }
 
     fn build_scene(&mut self, resource_cache: &mut ResourceCache) {
         // this code is why we have `Option`, which is never `None`
-        let frame_builder = self.frame_ctx.create(
+        let frame_builder = self.frame_ctx.create_frame_builder(
             self.frame_builder.take().unwrap(),
             &self.scene,
             resource_cache,
@@ -138,7 +144,7 @@ impl Document {
     ) -> RenderedDocument {
         let accumulated_scale_factor = self.view.accumulated_scale_factor();
         let pan = self.view.pan.to_f32() / accumulated_scale_factor;
-        self.frame_ctx.build_rendered_document(
+        let (hit_tester, rendered_document) = self.frame_ctx.build_rendered_document(
             self.frame_builder.as_mut().unwrap(),
             resource_cache,
             gpu_cache,
@@ -149,18 +155,19 @@ impl Document {
             &mut resource_profile.texture_cache,
             &mut resource_profile.gpu_cache,
             &self.scene.properties,
-        )
+        );
+
+        self.hit_tester = Some(hit_tester);
+
+        rendered_document
     }
 }
-
-type HitTestQuery = (Option<PipelineId>, WorldPoint, HitTestFlags, MsgSender<HitTestResult>);
 
 struct DocumentOps {
     scroll: bool,
     build: bool,
     render: bool,
     composite: bool,
-    queries: Vec<HitTestQuery>,
 }
 
 impl DocumentOps {
@@ -170,7 +177,6 @@ impl DocumentOps {
             build: false,
             render: false,
             composite: false,
-            queries: vec![],
         }
     }
 
@@ -181,12 +187,11 @@ impl DocumentOps {
         }
     }
 
-    fn combine(&mut self, mut other: Self) {
+    fn combine(&mut self, other: Self) {
         self.scroll = self.scroll || other.scroll;
         self.build = self.build || other.build;
         self.render = self.render || other.render;
         self.composite = self.composite || other.composite;
-        self.queries.extend(other.queries.drain(..));
     }
 }
 
@@ -412,16 +417,14 @@ impl RenderBackend {
                 }
             }
             DocumentMsg::HitTest(pipeline_id, point, flags, tx) => {
-                // note that we render without compositing here; we only
-                // need to render so we have an updated clip-scroll tree
-                // for handling the hit-test queries. Doing a composite
-                // here (without having being explicitly requested) causes
-                // Gecko assertion failures.
-                DocumentOps {
-                    render: doc.render_on_hittest,
-                    queries: vec![(pipeline_id, point, flags, tx)],
-                    ..DocumentOps::nop()
-                }
+
+                let result = match doc.hit_tester {
+                    Some(ref hit_tester) => hit_tester.hit_test(pipeline_id, point, flags),
+                    None => HitTestResult { items: Vec::new() },
+                };
+
+                tx.send(result).unwrap();
+                DocumentOps::nop()
             }
             DocumentMsg::ScrollNodeWithId(origin, id, clamp) => {
                 profile_scope!("ScrollNodeWithScrollId");
@@ -728,16 +731,6 @@ impl RenderBackend {
         if op.render || op.scroll {
             self.notifier.new_document_ready(document_id, op.scroll, op.composite);
         }
-
-        for (pipeline_id, point, flags, tx) in op.queries {
-            profile_scope!("HitTest");
-            let cst = doc.frame_ctx.get_clip_scroll_tree();
-            let result = doc.frame_builder
-                .as_ref()
-                .unwrap()
-                .hit_test(cst, pipeline_id, point, flags);
-            tx.send(result).unwrap();
-        }
     }
 
     #[cfg(not(feature = "debugger"))]
@@ -983,6 +976,7 @@ impl RenderBackend {
                 output_pipelines: FastHashSet::default(),
                 render_on_scroll: None,
                 render_on_hittest: false,
+                hit_tester: None,
             };
 
             let frame_name = format!("frame-{}-{}", (id.0).0, id.1);

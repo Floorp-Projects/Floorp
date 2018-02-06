@@ -3803,6 +3803,25 @@ nsWindow::Create(nsIWidget* aParent,
               cairo_region_destroy(region);
             }
         }
+
+#ifdef MOZ_X11
+        // Set window manager hint to keep fullscreen windows composited.
+        //
+        // If the window were to get unredirected, there could be visible
+        // tearing because Gecko does not align its framebuffer updates with
+        // vblank.
+        if (mIsX11Display) {
+            gulong value = 2; // Opt out of unredirection
+            GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
+            gdk_property_change(gtk_widget_get_window(mShell),
+                                gdk_atom_intern("_NET_WM_BYPASS_COMPOSITOR", FALSE),
+                                cardinal_atom,
+                                32, // format
+                                GDK_PROP_MODE_REPLACE,
+                                (guchar*)&value,
+                                1);
+        }
+#endif
     }
         break;
 

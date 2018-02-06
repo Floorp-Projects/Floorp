@@ -8,12 +8,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: toolbox ::::: */
-
-toolbox {
-  -moz-appearance: toolbox;
-}
-
 /* ::::: toolbar & menubar ::::: */
 
 toolbar, menubar {
@@ -30,7 +24,7 @@ toolbar:first-child, menubar {
 }
 
 /* ::::: lightweight theme ::::: */
- 
+
 menubar:-moz-lwtheme,
 toolbox:-moz-lwtheme,
 toolbar:-moz-lwtheme {

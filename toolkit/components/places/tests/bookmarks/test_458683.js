@@ -33,7 +33,7 @@ function validateResults() {
   toolbar.containerOpen = false;
 
   // test for our tag
-  var tags = PlacesUtils.tagging.getTagsForURI(PlacesUtils._uri(ITEM_URL));
+  var tags = PlacesUtils.tagging.getTagsForURI(Services.io.newURI(ITEM_URL));
   Assert.equal(tags.length, 1);
   Assert.equal(tags[0], TAG_NAME);
 }
@@ -49,7 +49,7 @@ add_task(async function() {
   });
 
   // create a tag
-  PlacesUtils.tagging.tagURI(PlacesUtils._uri(ITEM_URL), [TAG_NAME]);
+  PlacesUtils.tagging.tagURI(Services.io.newURI(ITEM_URL), [TAG_NAME]);
   // get tag folder id
   var options = PlacesUtils.history.getNewQueryOptions();
   var query = PlacesUtils.history.getNewQuery();
@@ -85,7 +85,7 @@ add_task(async function() {
   await BookmarkJSONUtils.exportToFile(jsonFile);
 
   // clean
-  PlacesUtils.tagging.untagURI(PlacesUtils._uri(ITEM_URL), [TAG_NAME]);
+  PlacesUtils.tagging.untagURI(Services.io.newURI(ITEM_URL), [TAG_NAME]);
   await PlacesUtils.bookmarks.remove(item);
 
   // restore json file

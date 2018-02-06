@@ -144,9 +144,9 @@ function search(aFolderId, aSearchStr, aExpectedScopeButtonId) {
 add_task(async function test() {
   // Add visits, a bookmark and a tag.
   await PlacesTestUtils.addVisits(
-    [{ uri: PlacesUtils._uri(TEST_URL), visitDate: Date.now() * 1000,
+    [{ uri: Services.io.newURI(TEST_URL), visitDate: Date.now() * 1000,
        transition: PlacesUtils.history.TRANSITION_TYPED },
-     { uri: PlacesUtils._uri(TEST_DOWNLOAD_URL), visitDate: Date.now() * 1000,
+     { uri: Services.io.newURI(TEST_DOWNLOAD_URL), visitDate: Date.now() * 1000,
        transition: PlacesUtils.history.TRANSITION_DOWNLOAD }]
     );
 
@@ -156,7 +156,7 @@ add_task(async function test() {
     url: TEST_URL,
   });
 
-  PlacesUtils.tagging.tagURI(PlacesUtils._uri(TEST_URL), ["dummyTag"]);
+  PlacesUtils.tagging.tagURI(Services.io.newURI(TEST_URL), ["dummyTag"]);
 
   gLibrary = await promiseLibrary();
 
@@ -165,7 +165,7 @@ add_task(async function test() {
   await promiseLibraryClosed(gLibrary);
 
   // Cleanup.
-  PlacesUtils.tagging.untagURI(PlacesUtils._uri(TEST_URL), ["dummyTag"]);
+  PlacesUtils.tagging.untagURI(Services.io.newURI(TEST_URL), ["dummyTag"]);
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();

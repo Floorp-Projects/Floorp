@@ -17,6 +17,14 @@ this.EXPORTED_SYMBOLS = [
   "SiteDataManager"
 ];
 
+XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
+  return Services.strings.createBundle("chrome://browser/locale/siteData.properties");
+});
+
+XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
+  return Services.strings.createBundle("chrome://branding/locale/brand.properties");
+});
+
 this.SiteDataManager = {
 
   _qms: Services.qms,
@@ -32,6 +40,10 @@ this.SiteDataManager = {
   //   - appCacheList: an array of app cache; instances of nsIApplicationCache
   _sites: new Map(),
 
+  _getCacheSizeObserver: null,
+
+  _getCacheSizePromise: null,
+
   _getQuotaUsagePromise: null,
 
   _quotaUsageRequest: null,
@@ -41,6 +53,46 @@ this.SiteDataManager = {
     await this._getQuotaUsage();
     this._updateAppCache();
     Services.obs.notifyObservers(null, "sitedatamanager:sites-updated");
+  },
+
+  /**
+   * Retrieves the amount of space currently used by disk cache.
+   *
+   * You can use DownloadUtils.convertByteUnits to convert this to
+   * a user-understandable size/unit combination.
+   *
+   * @returns a Promise that resolves with the cache size on disk in bytes.
+   */
+  getCacheSize() {
+    if (this._getCacheSizePromise) {
+      return this._getCacheSizePromise;
+    }
+
+    this._getCacheSizePromise = new Promise((resolve, reject) => {
+      // Needs to root the observer since cache service keeps only a weak reference.
+      this._getCacheSizeObserver = {
+        onNetworkCacheDiskConsumption: consumption => {
+          resolve(consumption);
+          this._getCacheSizePromise = null;
+          this._getCacheSizeObserver = null;
+        },
+
+        QueryInterface: XPCOMUtils.generateQI([
+          Components.interfaces.nsICacheStorageConsumptionObserver,
+          Components.interfaces.nsISupportsWeakReference
+        ])
+      };
+
+      try {
+        Services.cache2.asyncGetDiskConsumption(this._getCacheSizeObserver);
+      } catch (e) {
+        reject(e);
+        this._getCacheSizePromise = null;
+        this._getCacheSizeObserver = null;
+      }
+    });
+
+    return this._getCacheSizePromise;
   },
 
   _getQuotaUsage() {
@@ -278,8 +330,57 @@ this.SiteDataManager = {
     }
   },
 
+  /**
+   * In the specified window, shows a prompt for removing
+   * all site data, warning the user that this may log them
+   * out of websites.
+   *
+   * @param {mozIDOMWindowProxy} a parent DOM window to host the dialog.
+   * @returns a boolean whether the user confirmed the prompt.
+   */
+  promptSiteDataRemoval(win) {
+    let brandName = gBrandBundle.GetStringFromName("brandShortName");
+    let flags =
+      Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
+      Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1 +
+      Services.prompt.BUTTON_POS_0_DEFAULT;
+    let title = gStringBundle.GetStringFromName("clearSiteDataPromptTitle");
+    let text = gStringBundle.formatStringFromName("clearSiteDataPromptText", [brandName], 1);
+    let btn0Label = gStringBundle.GetStringFromName("clearSiteDataNow");
+
+    let result = Services.prompt.confirmEx(
+      win, title, text, flags, btn0Label, null, null, null, {});
+    return result == 0;
+  },
+
+  /**
+   * Clears all site data and cache
+   *
+   * @returns a Promise that resolves when the data is cleared.
+   */
   async removeAll() {
+    this.removeCache();
+    return this.removeSiteData();
+  },
+
+  /**
+   * Clears the entire network cache.
+   */
+  removeCache() {
     Services.cache2.clear();
+  },
+
+  /**
+   * Clears all site data, which currently means
+   *   - Cookies
+   *   - AppCache
+   *   - ServiceWorkers
+   *   - Quota Managed Storage
+   *   - persistent-storage permissions
+   *
+   * @returns a Promise that resolves with the cache size on disk in bytes
+   */
+  async removeSiteData() {
     Services.cookies.removeAll();
     OfflineAppCacheHelper.clear();
 
