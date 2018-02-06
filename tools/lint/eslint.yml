@@ -7,3 +7,4 @@ eslint:
     extensions: ['js', 'jsm', 'jsx', 'xml', 'html', 'xhtml']
     type: external
     payload: eslint:lint
+    setup: eslint:setup

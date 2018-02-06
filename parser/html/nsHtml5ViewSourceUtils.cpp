@@ -54,3 +54,15 @@ nsHtml5ViewSourceUtils::NewLinkAttributes()
   linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_HREF, href, -1);
   return linkAttrs;
 }
+
+// static
+nsHtml5HtmlAttributes*
+nsHtml5ViewSourceUtils::NewMetaViewportAttributes()
+{
+  nsHtml5HtmlAttributes* metaVpAttrs = new nsHtml5HtmlAttributes(0);
+  nsHtml5String name = nsHtml5Portability::newStringFromLiteral("viewport");
+  metaVpAttrs->addAttribute(nsHtml5AttributeName::ATTR_NAME, name, -1);
+  nsHtml5String content = nsHtml5Portability::newStringFromLiteral("width=device-width");
+  metaVpAttrs->addAttribute(nsHtml5AttributeName::ATTR_CONTENT, content, -1);
+  return metaVpAttrs;
+}

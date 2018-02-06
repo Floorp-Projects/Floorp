@@ -542,7 +542,7 @@ mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRendering()
 {
   if (mOptions.UseWebRender()) {
-    mWrBridge->FlushRendering(/* aIsSync */ true);
+    mWrBridge->FlushRendering();
     return IPC_OK();
   }
 
@@ -557,7 +557,7 @@ mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRenderingAsync()
 {
   if (mOptions.UseWebRender()) {
-    mWrBridge->FlushRendering(/* aIsSync */ false);
+    mWrBridge->FlushRenderingAsync();
     return IPC_OK();
   }
 
@@ -1289,7 +1289,7 @@ CompositorBridgeParent::SetTestSampleTime(const uint64_t& aId,
   mTestTime = aTime;
 
   if (mWrBridge) {
-    mWrBridge->FlushRendering(/*aIsSync*/ false);
+    mWrBridge->FlushRendering();
     return true;
   }
 

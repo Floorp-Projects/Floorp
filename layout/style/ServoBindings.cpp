@@ -367,6 +367,14 @@ Gecko_NoteAnimationOnlyDirtyElement(RawGeckoElementBorrowed aElement)
   const_cast<Element*>(aElement)->NoteAnimationOnlyDirtyForServo();
 }
 
+bool Gecko_AnimationNameMayBeReferencedFromStyle(
+  RawGeckoPresContextBorrowed aPresContext,
+  nsAtom* aName)
+{
+  MOZ_ASSERT(aPresContext);
+  return aPresContext->AnimationManager()->AnimationMayBeReferenced(aName);
+}
+
 CSSPseudoElementType
 Gecko_GetImplementedPseudo(RawGeckoElementBorrowed aElement)
 {

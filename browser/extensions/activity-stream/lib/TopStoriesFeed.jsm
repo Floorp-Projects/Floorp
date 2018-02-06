@@ -317,8 +317,8 @@ this.TopStoriesFeed = class TopStoriesFeed {
         rows.splice(2, 0, spocs[0]);
 
         // Send a content update to the target tab
-        const action = {type: at.SECTION_UPDATE, meta: {skipMain: true}, data: Object.assign({rows}, {id: SECTION_ID})};
-        this.store.dispatch(ac.SendToContent(action, target));
+        const action = {type: at.SECTION_UPDATE, data: Object.assign({rows}, {id: SECTION_ID})};
+        this.store.dispatch(ac.OnlyToOneContent(action, target));
         return false;
       };
 

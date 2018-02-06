@@ -3070,22 +3070,15 @@ nsStandardURL::SetRef(const nsACString &input)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsStandardURL::SetDirectory(const nsACString &input)
-{
-    MOZ_ASSERT_UNREACHABLE("SetDirectory");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsStandardURL::SetFileName(const nsACString &input)
+nsresult
+nsStandardURL::SetFileNameInternal(const nsACString &input)
 {
     ENSURE_MUTABLE();
 
     const nsPromiseFlatCString &flat = PromiseFlatCString(input);
     const char *filename = flat.get();
 
-    LOG(("nsStandardURL::SetFileName [filename=%s]\n", filename));
+    LOG(("nsStandardURL::SetFileNameInternal [filename=%s]\n", filename));
 
     if (mPath.mLen < 0)
         return SetPathQueryRef(flat);
@@ -3176,8 +3169,8 @@ nsStandardURL::SetFileName(const nsACString &input)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsStandardURL::SetFileBaseName(const nsACString &input)
+nsresult
+nsStandardURL::SetFileBaseNameInternal(const nsACString &input)
 {
     nsAutoCString extension;
     nsresult rv = GetFileExtension(extension);
@@ -3190,11 +3183,11 @@ nsStandardURL::SetFileBaseName(const nsACString &input)
         newFileName.Append(extension);
     }
 
-    return SetFileName(newFileName);
+    return SetFileNameInternal(newFileName);
 }
 
-NS_IMETHODIMP
-nsStandardURL::SetFileExtension(const nsACString &input)
+nsresult
+nsStandardURL::SetFileExtensionInternal(const nsACString &input)
 {
     nsAutoCString newFileName;
     nsresult rv = GetFileBaseName(newFileName);
@@ -3205,7 +3198,7 @@ nsStandardURL::SetFileExtension(const nsACString &input)
         newFileName.Append(input);
     }
 
-    return SetFileName(newFileName);
+    return SetFileNameInternal(newFileName);
 }
 
 //----------------------------------------------------------------------------

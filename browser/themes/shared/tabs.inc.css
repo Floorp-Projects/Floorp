@@ -6,9 +6,13 @@
 %filter substitution
 %define horizontalTabPadding 9px
 
+/* This can't live on the tabbrowser because it's used for the titlebar height, too. */
 :root {
-  --tabs-top-border-width: 0px;
   --tab-min-height: 33px;
+}
+
+#tabbrowser-tabs {
+  --tabs-top-border-width: 0px;
   --tab-min-width: 76px;
   --tab-loading-fill: #0A84FF;
 }
@@ -21,7 +25,7 @@
   --tab-min-height: 41px;
 }
 
-:root:-moz-lwtheme {
+#tabbrowser-tabs:-moz-lwtheme {
   --tab-line-color: var(--lwt-accent-color);
 }
 
