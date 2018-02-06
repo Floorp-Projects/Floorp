@@ -89,6 +89,11 @@ nsHtml5Highlighter::Start(const nsAutoString& aTitle)
   // <head> uses NS_NewHTMLSharedElement creator
   Push(nsGkAtoms::head, nullptr, NS_NewHTMLSharedElement);
 
+  Push(nsGkAtoms::meta,
+       nsHtml5ViewSourceUtils::NewMetaViewportAttributes(),
+       NS_NewHTMLMetaElement);
+  Pop(); // meta
+
   Push(nsGkAtoms::title, nullptr, NS_NewHTMLTitleElement);
   // XUL will add the "Source of: " prefix.
   uint32_t length = aTitle.Length();

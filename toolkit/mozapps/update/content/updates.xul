@@ -15,6 +15,10 @@
 %brandDTD;
 ]>
 
+#if defined(XP_MACOSX) && MOZ_BUILD_APP == browser
+<?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
+#endif
+
 <wizard id="updates"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&updateWizard.title;"
@@ -28,6 +32,10 @@
 
   <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/javascript" src="chrome://mozapps/content/update/updates.js"/>
+
+#if defined(XP_MACOSX) && MOZ_BUILD_APP == browser
+#include ../../../../browser/base/content/browserMountPoints.inc
+#endif
 
   <stringbundleset id="updateSet">
     <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>

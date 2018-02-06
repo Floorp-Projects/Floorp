@@ -395,6 +395,10 @@ void Gecko_NoteDirtyElement(RawGeckoElementBorrowed element);
 void Gecko_NoteDirtySubtreeForInvalidation(RawGeckoElementBorrowed element);
 void Gecko_NoteAnimationOnlyDirtyElement(RawGeckoElementBorrowed element);
 
+bool Gecko_AnimationNameMayBeReferencedFromStyle(
+  RawGeckoPresContextBorrowed pres_context,
+  nsAtom* name);
+
 // Incremental restyle.
 mozilla::CSSPseudoElementType Gecko_GetImplementedPseudo(RawGeckoElementBorrowed element);
 // We'd like to return `nsChangeHint` here, but bindgen bitfield enums don't

@@ -6,10 +6,7 @@ const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 
 const TEST_DOMAIN = "http://example.net/";
 
-let tempScope = {};
-Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js",
-                                    tempScope);
-let Sanitizer = tempScope.Sanitizer;
+const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm", {});
 
 function setCookies(aBrowser) {
   ContentTask.spawn(aBrowser, null, function() {
@@ -77,8 +74,7 @@ IsolationTestTools.runTests(TEST_DOMAIN, setCookies, () => true);
 add_task(checkCacheExists(true));
 
 add_task(async function sanitize() {
-  let sanitizer = new Sanitizer();
-  await sanitizer.sanitize(["cookies", "cache"]);
+  await Sanitizer.sanitize(["cookies", "cache"]);
 });
 
 add_task(checkCacheExists(false));

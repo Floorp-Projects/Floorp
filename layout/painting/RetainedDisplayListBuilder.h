@@ -10,6 +10,10 @@
 #include "nsDisplayList.h"
 #include "mozilla/Maybe.h"
 
+namespace mozilla {
+class DisplayListChecker;
+} // namespace mozilla
+
 struct RetainedDisplayListBuilder {
   RetainedDisplayListBuilder(nsIFrame* aReferenceFrame,
                              nsDisplayListBuilderMode aMode,
@@ -25,7 +29,8 @@ struct RetainedDisplayListBuilder {
 
   nsDisplayList* List() { return &mList; }
 
-  bool AttemptPartialUpdate(nscolor aBackstop);
+  bool AttemptPartialUpdate(nscolor aBackstop,
+                            mozilla::DisplayListChecker* aChecker);
 
   /**
    * Iterates through the display list builder reference frame document and

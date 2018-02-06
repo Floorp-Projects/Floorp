@@ -286,6 +286,18 @@ CompositorVsyncScheduler::NeedsComposite()
   return mNeedsComposite;
 }
 
+bool
+CompositorVsyncScheduler::FlushPendingComposite()
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  if (mNeedsComposite) {
+    CancelCurrentCompositeTask();
+    ForceComposeToTarget(nullptr, nullptr);
+    return true;
+  }
+  return false;
+}
+
 void
 CompositorVsyncScheduler::ObserveVsync()
 {
