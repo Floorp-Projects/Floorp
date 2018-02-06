@@ -547,6 +547,7 @@ IonCacheIRCompiler::init()
       case CacheKind::Compare:
       case CacheKind::TypeOf:
       case CacheKind::ToBool:
+      case CacheKind::GetIntrinsic:
         MOZ_CRASH("Unsupported IC");
     }
 
@@ -886,6 +887,13 @@ IonCacheIRCompiler::emitGuardFunctionPrototype()
 
     return true;
 }
+
+bool
+IonCacheIRCompiler::emitLoadValueResult()
+{
+   MOZ_CRASH("Baseline-specific op");
+}
+
 
 bool
 IonCacheIRCompiler::emitLoadFixedSlotResult()
