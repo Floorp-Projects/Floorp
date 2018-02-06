@@ -78,9 +78,6 @@ function getRepositoryAddon(aAddon, aCallback) {
   }
   function completeAddon(aRepositoryAddon) {
     aAddon._repositoryAddon = aRepositoryAddon;
-    aAddon.compatibilityOverrides = aRepositoryAddon ?
-                                      aRepositoryAddon.compatibilityOverrides :
-                                      null;
     aCallback(aAddon);
   }
   AddonRepository.getCachedAddonByID(aAddon.id, completeAddon);
