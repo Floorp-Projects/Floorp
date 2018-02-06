@@ -232,7 +232,7 @@ public:
   }
   void ToString(nsAString& aSource);
 
-  virtual void NodeInfoChanged(nsIDocument* aOldDoc) final override
+  virtual void NodeInfoChanged(nsIDocument* aOldDoc) final
   {
     ClearHasPendingLinkUpdate();
     nsGenericHTMLElement::NodeInfoChanged(aOldDoc);

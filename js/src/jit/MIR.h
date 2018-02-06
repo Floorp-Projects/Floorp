@@ -1283,10 +1283,10 @@ class MAryInstruction : public MInstruction
     mozilla::Array<MUse, Arity> operands_;
 
   protected:
-    MUse* getUseFor(size_t index) final override {
+    MUse* getUseFor(size_t index) final {
         return &operands_[index];
     }
-    const MUse* getUseFor(size_t index) const final override {
+    const MUse* getUseFor(size_t index) const final {
         return &operands_[index];
     }
     void initOperand(size_t index, MDefinition* operand) {
@@ -1294,21 +1294,21 @@ class MAryInstruction : public MInstruction
     }
 
   public:
-    MDefinition* getOperand(size_t index) const final override {
+    MDefinition* getOperand(size_t index) const final {
         return operands_[index].producer();
     }
-    size_t numOperands() const final override {
+    size_t numOperands() const final {
         return Arity;
     }
 #ifdef DEBUG
     static const size_t staticNumOperands = Arity;
 #endif
-    size_t indexOf(const MUse* u) const final override {
+    size_t indexOf(const MUse* u) const final {
         MOZ_ASSERT(u >= &operands_[0]);
         MOZ_ASSERT(u <= &operands_[numOperands() - 1]);
         return u - &operands_[0];
     }
-    void replaceOperand(size_t index, MDefinition* operand) final override {
+    void replaceOperand(size_t index, MDefinition* operand) final {
         operands_[index].replaceProducer(operand);
     }
 
@@ -1463,27 +1463,27 @@ class MVariadicT : public T
         // FixedList doesn't initialize its elements, so do an unchecked init.
         operands_[index].initUnchecked(operand, this);
     }
-    MUse* getUseFor(size_t index) final override {
+    MUse* getUseFor(size_t index) final {
         return &operands_[index];
     }
-    const MUse* getUseFor(size_t index) const final override {
+    const MUse* getUseFor(size_t index) const final {
         return &operands_[index];
     }
 
   public:
     // Will assert if called before initialization.
-    MDefinition* getOperand(size_t index) const final override {
+    MDefinition* getOperand(size_t index) const final {
         return operands_[index].producer();
     }
-    size_t numOperands() const final override {
+    size_t numOperands() const final {
         return operands_.length();
     }
-    size_t indexOf(const MUse* u) const final override {
+    size_t indexOf(const MUse* u) const final {
         MOZ_ASSERT(u >= &operands_[0]);
         MOZ_ASSERT(u <= &operands_[numOperands() - 1]);
         return u - &operands_[0];
     }
-    void replaceOperand(size_t index, MDefinition* operand) final override {
+    void replaceOperand(size_t index, MDefinition* operand) final {
         operands_[index].replaceProducer(operand);
     }
 };
@@ -3030,12 +3030,12 @@ class MTableSwitch final
         return 1;
     }
 
-    size_t indexOf(const MUse* u) const final override {
+    size_t indexOf(const MUse* u) const final {
         MOZ_ASSERT(u == getUseFor(0));
         return 0;
     }
 
-    void replaceOperand(size_t index, MDefinition* operand) final override {
+    void replaceOperand(size_t index, MDefinition* operand) final {
         MOZ_ASSERT(index == 0);
         operand_.replaceProducer(operand);
     }
@@ -3057,10 +3057,10 @@ class MAryControlInstruction : public MControlInstruction
         successors_[index] = successor;
     }
 
-    MUse* getUseFor(size_t index) final override {
+    MUse* getUseFor(size_t index) final {
         return &operands_[index];
     }
-    const MUse* getUseFor(size_t index) const final override {
+    const MUse* getUseFor(size_t index) const final {
         return &operands_[index];
     }
     void initOperand(size_t index, MDefinition* operand) {
@@ -3068,27 +3068,27 @@ class MAryControlInstruction : public MControlInstruction
     }
 
   public:
-    MDefinition* getOperand(size_t index) const final override {
+    MDefinition* getOperand(size_t index) const final {
         return operands_[index].producer();
     }
-    size_t numOperands() const final override {
+    size_t numOperands() const final {
         return Arity;
     }
-    size_t indexOf(const MUse* u) const final override {
+    size_t indexOf(const MUse* u) const final {
         MOZ_ASSERT(u >= &operands_[0]);
         MOZ_ASSERT(u <= &operands_[numOperands() - 1]);
         return u - &operands_[0];
     }
-    void replaceOperand(size_t index, MDefinition* operand) final override {
+    void replaceOperand(size_t index, MDefinition* operand) final {
         operands_[index].replaceProducer(operand);
     }
-    size_t numSuccessors() const final override {
+    size_t numSuccessors() const final {
         return Successors;
     }
-    MBasicBlock* getSuccessor(size_t i) const final override {
+    MBasicBlock* getSuccessor(size_t i) const final {
         return successors_[i];
     }
-    void replaceSuccessor(size_t i, MBasicBlock* succ) final override {
+    void replaceSuccessor(size_t i, MBasicBlock* succ) final {
         successors_[i] = succ;
     }
 };
@@ -7919,12 +7919,12 @@ class MPhi final
     size_t numOperands() const override {
         return inputs_.length();
     }
-    size_t indexOf(const MUse* u) const final override {
+    size_t indexOf(const MUse* u) const final {
         MOZ_ASSERT(u >= &inputs_[0]);
         MOZ_ASSERT(u <= &inputs_[numOperands() - 1]);
         return u - &inputs_[0];
     }
-    void replaceOperand(size_t index, MDefinition* operand) final override {
+    void replaceOperand(size_t index, MDefinition* operand) final {
         inputs_[index].replaceProducer(operand);
     }
     bool hasBackedgeType() const {
@@ -11361,26 +11361,26 @@ class MDispatchInstruction
     }
 
   protected:
-    MUse* getUseFor(size_t index) final override {
+    MUse* getUseFor(size_t index) final {
         MOZ_ASSERT(index == 0);
         return &operand_;
     }
-    const MUse* getUseFor(size_t index) const final override {
+    const MUse* getUseFor(size_t index) const final {
         MOZ_ASSERT(index == 0);
         return &operand_;
     }
-    MDefinition* getOperand(size_t index) const final override {
+    MDefinition* getOperand(size_t index) const final {
         MOZ_ASSERT(index == 0);
         return operand_.producer();
     }
-    size_t numOperands() const final override {
+    size_t numOperands() const final {
         return 1;
     }
-    size_t indexOf(const MUse* u) const final override {
+    size_t indexOf(const MUse* u) const final {
         MOZ_ASSERT(u == getUseFor(0));
         return 0;
     }
-    void replaceOperand(size_t index, MDefinition* operand) final override {
+    void replaceOperand(size_t index, MDefinition* operand) final {
         MOZ_ASSERT(index == 0);
         operand_.replaceProducer(operand);
     }
@@ -11393,13 +11393,13 @@ class MDispatchInstruction
         else
             map_[i].block = successor;
     }
-    size_t numSuccessors() const final override {
+    size_t numSuccessors() const final {
         return map_.length() + (fallback_ ? 1 : 0);
     }
-    void replaceSuccessor(size_t i, MBasicBlock* successor) final override {
+    void replaceSuccessor(size_t i, MBasicBlock* successor) final {
         setSuccessor(i, successor);
     }
-    MBasicBlock* getSuccessor(size_t i) const final override {
+    MBasicBlock* getSuccessor(size_t i) const final {
         MOZ_ASSERT(i < numSuccessors());
         if (i == map_.length())
             return fallback_;
@@ -13553,7 +13553,7 @@ class MResumePoint final :
     size_t numOperands() const override {
         return numAllocatedOperands();
     }
-    size_t indexOf(const MUse* u) const final override {
+    size_t indexOf(const MUse* u) const final {
         MOZ_ASSERT(u >= &operands_[0]);
         MOZ_ASSERT(u <= &operands_[numOperands() - 1]);
         return u - &operands_[0];
@@ -13562,7 +13562,7 @@ class MResumePoint final :
         // FixedList doesn't initialize its elements, so do an unchecked init.
         operands_[index].initUnchecked(operand, this);
     }
-    void replaceOperand(size_t index, MDefinition* operand) final override {
+    void replaceOperand(size_t index, MDefinition* operand) final {
         operands_[index].replaceProducer(operand);
     }
 
