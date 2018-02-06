@@ -8994,8 +8994,9 @@ class LWasmCallBase : public LInstruction
 
   public:
 
-    LWasmCallBase(LAllocation* operands, uint32_t numOperands, bool needsBoundsCheck)
-      : LInstruction(/* numTemps = */ 0),
+    LWasmCallBase(LAllocation* operands, uint32_t numOperands, uint32_t numDefs,
+                  bool needsBoundsCheck)
+      : LInstruction(numDefs, /* numTemps = */ 0),
         operands_(operands),
         numOperands_(numOperands),
         needsBoundsCheck_(needsBoundsCheck)
@@ -9055,15 +9056,12 @@ class LWasmCall : public LWasmCallBase
   public:
     LIR_HEADER(WasmCall);
 
-    LWasmCall(LAllocation* operands, uint32_t numOperands, bool needsBoundsCheck)
-      : LWasmCallBase(operands, numOperands, needsBoundsCheck),
+    LWasmCall(LAllocation* operands, uint32_t numOperands, uint32_t numDefs, bool needsBoundsCheck)
+      : LWasmCallBase(operands, numOperands, numDefs, needsBoundsCheck),
         def_(LDefinition::BogusTemp())
     {}
 
     // LInstruction interface
-    size_t numDefs() const override {
-        return def_.isBogusTemp() ? 0 : 1;
-    }
     LDefinition* getDef(size_t index) override {
         MOZ_ASSERT(numDefs() == 1);
         MOZ_ASSERT(index == 0);
@@ -9083,16 +9081,13 @@ class LWasmCallI64 : public LWasmCallBase
     LIR_HEADER(WasmCallI64);
 
     LWasmCallI64(LAllocation* operands, uint32_t numOperands, bool needsBoundsCheck)
-      : LWasmCallBase(operands, numOperands, needsBoundsCheck)
+      : LWasmCallBase(operands, numOperands, INT64_PIECES, needsBoundsCheck)
     {
         for (size_t i = 0; i < numDefs(); i++)
             defs_[i] = LDefinition::BogusTemp();
     }
 
     // LInstruction interface
-    size_t numDefs() const override {
-        return INT64_PIECES;
-    }
     LDefinition* getDef(size_t index) override {
         MOZ_ASSERT(index < numDefs());
         return &defs_[index];

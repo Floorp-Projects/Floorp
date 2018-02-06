@@ -666,16 +666,19 @@ class LNode
   protected:
     // Bitfields below are all uint32_t to make sure MSVC packs them correctly.
     uint32_t isCall_ : 1;
+    uint32_t numDefs_ : 4;
     uint32_t numTemps_ : 4;
 
   public:
-    explicit LNode(uint32_t numTemps)
+    LNode(uint32_t numDefs, uint32_t numTemps)
       : mir_(nullptr),
         block_(nullptr),
         id_(0),
         isCall_(false),
+        numDefs_(numDefs),
         numTemps_(numTemps)
     {
+        MOZ_ASSERT(numDefs_ == numDefs, "numDefs must fit in bitfield");
         MOZ_ASSERT(numTemps_ == numTemps, "numTemps must fit in bitfield");
     }
 
@@ -713,7 +716,9 @@ class LNode
 
     // Returns the number of outputs of this instruction. If an output is
     // unallocated, it is an LDefinition, defining a virtual register.
-    virtual size_t numDefs() const = 0;
+    size_t numDefs() const {
+        return numDefs_;
+    }
     virtual LDefinition* getDef(size_t index) = 0;
     virtual void setDef(size_t index, const LDefinition& def) = 0;
 
@@ -822,8 +827,8 @@ class LInstruction
     LMoveGroup* movesAfter_;
 
   protected:
-    explicit LInstruction(uint32_t numTemps)
-      : LNode(numTemps),
+    LInstruction(uint32_t numDefs, uint32_t numTemps)
+      : LNode(numDefs, numTemps),
         snapshot_(nullptr),
         safepoint_(nullptr),
         inputMoves_(nullptr),
@@ -932,15 +937,12 @@ class LPhi final : public LNode
     LIR_HEADER(Phi)
 
     LPhi(MPhi* ins, LAllocation* inputs)
-      : LNode(/* numTemps = */ 0),
+      : LNode(/* numDefs = */ 1, /* numTemps = */ 0),
         inputs_(inputs)
     {
         setMir(ins);
     }
 
-    size_t numDefs() const override {
-        return 1;
-    }
     LDefinition* getDef(size_t index) override {
         MOZ_ASSERT(index == 0);
         return &def_;
@@ -1083,13 +1085,10 @@ namespace details {
 
       protected:
         LInstructionFixedDefsTempsHelper()
-          : LInstruction(Temps)
+          : LInstruction(Defs, Temps)
         {}
 
       public:
-        size_t numDefs() const final override {
-            return Defs;
-        }
         LDefinition* getDef(size_t index) final override {
             return &defs_[index];
         }
