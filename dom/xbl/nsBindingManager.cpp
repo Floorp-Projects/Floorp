@@ -767,47 +767,24 @@ bool
 nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
                                         mozilla::MediaFeatureChangeReason aReason)
 {
+  MOZ_ASSERT(!mDocument->IsStyledByServo());
+#ifdef MOZ_OLD_STYLE
   bool rulesChanged = false;
   RefPtr<nsPresContext> presContext = aPresContext;
-  bool isStyledByServo = mDocument->IsStyledByServo();
-
   EnumerateBoundContentBindings([=, &rulesChanged](nsXBLBinding* aBinding) {
-    if (isStyledByServo) {
-      ServoStyleSet* styleSet = aBinding->PrototypeBinding()->GetServoStyleSet();
-      if (styleSet) {
-        bool styleSetChanged = false;
-
-        if (styleSet->IsPresContextChanged(presContext)) {
-          styleSetChanged = styleSet->SetPresContext(presContext);
-        } else {
-          // PresContext is not changed. This means aPresContext is still
-          // alive since the last time it initialized this XBL styleset.
-          // It's safe to check whether medium features changed.
-          bool viewportUnitsUsed = false;
-          styleSetChanged =
-            styleSet->MediumFeaturesChangedRules(&viewportUnitsUsed, aReason);
-          MOZ_ASSERT(!viewportUnitsUsed,
-                     "Non-master stylesets shouldn't get flagged as using "
-                     "viewport units!");
-        }
-        rulesChanged = rulesChanged || styleSetChanged;
-      }
-    } else {
-#ifdef MOZ_OLD_STYLE
-      nsIStyleRuleProcessor* ruleProcessor =
-        aBinding->PrototypeBinding()->GetRuleProcessor();
-      if (ruleProcessor) {
-        bool thisChanged = ruleProcessor->MediumFeaturesChanged(presContext);
-        rulesChanged = rulesChanged || thisChanged;
-      }
-#else
-      MOZ_CRASH("old style system disabled");
-#endif
+    nsIStyleRuleProcessor* ruleProcessor =
+      aBinding->PrototypeBinding()->GetRuleProcessor();
+    if (ruleProcessor) {
+      bool thisChanged = ruleProcessor->MediumFeaturesChanged(presContext);
+      rulesChanged = rulesChanged || thisChanged;
     }
     return true;
   });
-
   return rulesChanged;
+#else
+  MOZ_CRASH("old style system disabled");
+  return false;
+#endif
 }
 
 void
