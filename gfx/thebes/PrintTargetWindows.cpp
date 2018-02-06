@@ -76,8 +76,21 @@ PrintTargetWindows::BeginPrinting(const nsAString& aTitle,
   docinfo.lpszDatatype = nullptr;
   docinfo.fwType = 0;
 
-  ::StartDocW(mDC, &docinfo);
-
+  // If the user selected Microsoft Print to PDF or XPS Document Printer, then
+  // the following StartDoc call will put up a dialog window to prompt the
+  // user to provide the name and location of the file to be saved.  A zero or
+  // negative return value indicates failure.  In that case we want to check
+  // whether that is because the user hit Cancel, since we want to treat that
+  // specially to avoid notifying the user that the print "failed" in that
+  // case.
+  // XXX We should perhaps introduce a new NS_ERROR_USER_CANCELLED errer.
+  int result = ::StartDocW(mDC, &docinfo);
+  if (result <= 0) {
+    if (::GetLastError() == ERROR_CANCELLED) {
+      return NS_ERROR_ABORT;
+    }
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
