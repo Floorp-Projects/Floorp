@@ -1862,6 +1862,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="646e2384-f894-41bf-b7fc-8879e0095109" id="/^(https|youtube)@vietbacsecurity\.com$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
     <emItem blockID="i521" id="/^({66b103a7-d772-4fcd-ace4-16f79a9056e0}|{6926c7f7-6006-42d1-b046-eba1b3010315}|{72cabc40-64b2-46ed-8648-26d831761150}|{73ee2cf2-7b76-4c49-b659-c3d8cf30825d}|{ca6446a5-73d5-4c35-8aa1-c71dc1024a18}|{5373a31d-9410-45e2-b299-4f61428f0be4})$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
