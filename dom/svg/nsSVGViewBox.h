@@ -135,10 +135,10 @@ public:
       return mVal->GetBaseValue().height;
     }
 
-    void SetX(float aX, mozilla::ErrorResult& aRv) final override;
-    void SetY(float aY, mozilla::ErrorResult& aRv) final override;
-    void SetWidth(float aWidth, mozilla::ErrorResult& aRv) final override;
-    void SetHeight(float aHeight, mozilla::ErrorResult& aRv) final override;
+    void SetX(float aX, mozilla::ErrorResult& aRv) final;
+    void SetY(float aY, mozilla::ErrorResult& aRv) final;
+    void SetWidth(float aWidth, mozilla::ErrorResult& aRv) final;
+    void SetHeight(float aHeight, mozilla::ErrorResult& aRv) final;
 
     virtual nsIContent* GetParentObject() const override
     {
@@ -189,22 +189,22 @@ public:
       return mVal->GetAnimValue().height;
     }
 
-    void SetX(float aX, mozilla::ErrorResult& aRv) final override
+    void SetX(float aX, mozilla::ErrorResult& aRv) final
     {
       aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     }
 
-    void SetY(float aY, mozilla::ErrorResult& aRv) final override
+    void SetY(float aY, mozilla::ErrorResult& aRv) final
     {
       aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     }
 
-    void SetWidth(float aWidth, mozilla::ErrorResult& aRv) final override
+    void SetWidth(float aWidth, mozilla::ErrorResult& aRv) final
     {
       aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     }
 
-    void SetHeight(float aHeight, mozilla::ErrorResult& aRv) final override
+    void SetHeight(float aHeight, mozilla::ErrorResult& aRv) final
     {
       aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     }

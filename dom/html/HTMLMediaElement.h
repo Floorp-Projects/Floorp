@@ -169,48 +169,48 @@ public:
   // etc.
   virtual void MetadataLoaded(
     const MediaInfo* aInfo,
-    UniquePtr<const MetadataTags> aTags) final override;
+    UniquePtr<const MetadataTags> aTags) final;
 
   // Called by the decoder object, on the main thread,
   // when it has read the first frame of the video or audio.
-  virtual void FirstFrameLoaded() final override;
+  virtual void FirstFrameLoaded() final;
 
   // Called by the video decoder object, on the main thread,
   // when the resource has a network error during loading.
-  virtual void NetworkError(const MediaResult& aError) final override;
+  virtual void NetworkError(const MediaResult& aError) final;
 
   // Called by the video decoder object, on the main thread, when the
   // resource has a decode error during metadata loading or decoding.
-  virtual void DecodeError(const MediaResult& aError) final override;
+  virtual void DecodeError(const MediaResult& aError) final;
 
   // Called by the decoder object, on the main thread, when the
   // resource has a decode issue during metadata loading or decoding, but can
   // continue decoding.
-  virtual void DecodeWarning(const MediaResult& aError) final override;
+  virtual void DecodeWarning(const MediaResult& aError) final;
 
   // Return true if error attribute is not null.
-  virtual bool HasError() const final override;
+  virtual bool HasError() const final;
 
   // Called by the video decoder object, on the main thread, when the
   // resource load has been cancelled.
-  virtual void LoadAborted() final override;
+  virtual void LoadAborted() final;
 
   // Called by the video decoder object, on the main thread,
   // when the video playback has ended.
-  virtual void PlaybackEnded() final override;
+  virtual void PlaybackEnded() final;
 
   // Called by the video decoder object, on the main thread,
   // when the resource has started seeking.
-  virtual void SeekStarted() final override;
+  virtual void SeekStarted() final;
 
   // Called by the video decoder object, on the main thread,
   // when the resource has completed seeking.
-  virtual void SeekCompleted() final override;
+  virtual void SeekCompleted() final;
 
   // Called by the media stream, on the main thread, when the download
   // has been suspended by the cache or because the element itself
   // asked the decoder to suspend the download.
-  virtual void DownloadSuspended() final override;
+  virtual void DownloadSuspended() final;
 
   // Called by the media stream, on the main thread, when the download
   // has been resumed by the cache or because the element itself
@@ -218,11 +218,11 @@ public:
   void DownloadResumed();
 
   // Called to indicate the download is progressing.
-  virtual void DownloadProgressed() final override;
+  virtual void DownloadProgressed() final;
 
   // Called by the media decoder to indicate whether the media cache has
   // suspended the channel.
-  virtual void NotifySuspendedByCache(bool aSuspendedByCache) final override;
+  virtual void NotifySuspendedByCache(bool aSuspendedByCache) final;
 
   bool IsActive() const;
 
@@ -230,7 +230,7 @@ public:
 
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
-  virtual VideoFrameContainer* GetVideoFrameContainer() final override;
+  virtual VideoFrameContainer* GetVideoFrameContainer() final;
   layers::ImageContainer* GetImageContainer();
 
   /**
@@ -251,7 +251,7 @@ public:
     const PrincipalHandle& aNewPrincipalHandle) override;
 
   // Dispatch events
-  virtual void DispatchAsyncEvent(const nsAString& aName) final override;
+  virtual void DispatchAsyncEvent(const nsAString& aName) final;
 
   // Triggers a recomputation of readyState.
   void UpdateReadyState() override { UpdateReadyStateInternal(); }
@@ -296,7 +296,7 @@ public:
   already_AddRefed<nsIPrincipal> GetCurrentVideoPrincipal();
 
   // called to notify that the principal of the decoder's media resource has changed.
-  void NotifyDecoderPrincipalChanged() final override;
+  void NotifyDecoderPrincipalChanged() final;
 
   void GetEMEInfo(nsString& aEMEInfo);
 
@@ -427,7 +427,7 @@ public:
    * last 250ms, as required by the spec when the current time is periodically
    * increasing during playback.
    */
-  virtual void FireTimeUpdate(bool aPeriodic) final override;
+  virtual void FireTimeUpdate(bool aPeriodic) final;
 
   /**
    * This will return null if mSrcStream is null, or if mSrcStream is not
@@ -472,11 +472,11 @@ public:
     return mNetworkState;
   }
 
-  void NotifyXPCOMShutdown() final override;
+  void NotifyXPCOMShutdown() final;
 
   // Called by media decoder when the audible state changed or when input is
   // a media stream.
-  virtual void SetAudibleState(bool aAudible) final override;
+  virtual void SetAudibleState(bool aAudible) final;
 
   // Notify agent when the MediaElement changes its audible state.
   void NotifyAudioPlaybackChanged(AudibleChangedReasons aReason);
@@ -787,7 +787,7 @@ public:
 
   void SetMediaInfo(const MediaInfo& aInfo);
 
-  virtual AbstractThread* AbstractMainThread() const final override;
+  virtual AbstractThread* AbstractMainThread() const final;
 
   // Telemetry: to record the usage of a {visible / invisible} video element as
   // the source of {drawImage(), createPattern(), createImageBitmap() and
@@ -1241,13 +1241,13 @@ protected:
 
   // Get the HTMLMediaElement object if the decoder is being used from an
   // HTML media element, and null otherwise.
-  virtual HTMLMediaElement* GetMediaElement() final override
+  virtual HTMLMediaElement* GetMediaElement() final
   {
     return this;
   }
 
   // Return true if decoding should be paused
-  virtual bool GetPaused() final override
+  virtual bool GetPaused() final
   {
     return Paused();
   }

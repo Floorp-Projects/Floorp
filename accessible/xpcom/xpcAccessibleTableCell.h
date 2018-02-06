@@ -30,14 +30,14 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessibleTableCell
-  NS_IMETHOD GetTable(nsIAccessibleTable** aTable) final override;
-  NS_IMETHOD GetColumnIndex(int32_t* aColIdx) final override;
-  NS_IMETHOD GetRowIndex(int32_t* aRowIdx) final override;
-  NS_IMETHOD GetColumnExtent(int32_t* aExtent) final override;
-  NS_IMETHOD GetRowExtent(int32_t* aExtent) final override;
-  NS_IMETHOD GetColumnHeaderCells(nsIArray** aHeaderCells) final override;
-  NS_IMETHOD GetRowHeaderCells(nsIArray** aHeaderCells) final override;
-  NS_IMETHOD IsSelected(bool* aSelected) final override;
+  NS_IMETHOD GetTable(nsIAccessibleTable** aTable) final;
+  NS_IMETHOD GetColumnIndex(int32_t* aColIdx) final;
+  NS_IMETHOD GetRowIndex(int32_t* aRowIdx) final;
+  NS_IMETHOD GetColumnExtent(int32_t* aExtent) final;
+  NS_IMETHOD GetRowExtent(int32_t* aExtent) final;
+  NS_IMETHOD GetColumnHeaderCells(nsIArray** aHeaderCells) final;
+  NS_IMETHOD GetRowHeaderCells(nsIArray** aHeaderCells) final;
+  NS_IMETHOD IsSelected(bool* aSelected) final;
 
 protected:
   virtual ~xpcAccessibleTableCell() {}

@@ -20,7 +20,7 @@ protected:
   virtual ~CSSMozDocumentRule() {}
 
 public:
-  int32_t GetType() const final override { return css::Rule::DOCUMENT_RULE; }
+  int32_t GetType() const final { return css::Rule::DOCUMENT_RULE; }
 
   static bool Match(nsIDocument* aDoc,
                     nsIURI* aDocURI,
@@ -29,7 +29,7 @@ public:
                     css::URLMatchingFunction aUrlMatchingFunction);
 
   // WebIDL interface
-  uint16_t Type() const final override { return CSSRuleBinding::DOCUMENT_RULE; }
+  uint16_t Type() const final { return CSSRuleBinding::DOCUMENT_RULE; }
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;

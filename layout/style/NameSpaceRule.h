@@ -42,13 +42,13 @@ public:
 #endif
   virtual already_AddRefed<Rule> Clone() const override;
 
-  nsAtom* GetPrefix() const final override { return mPrefix; }
-  void GetURLSpec(nsString& aURLSpec) const final override { aURLSpec = mURLSpec; }
+  nsAtom* GetPrefix() const final { return mPrefix; }
+  void GetURLSpec(nsString& aURLSpec) const final { aURLSpec = mURLSpec; }
 
   // WebIDL interface
   void GetCssText(nsAString& aCssText) const override;
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final override;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
 private:
   RefPtr<nsAtom> mPrefix;
