@@ -559,7 +559,7 @@ public:
    * establishes the coordinate system for the child display items.
    */
   const nsIFrame* FindReferenceFrameFor(const nsIFrame *aFrame,
-                                        nsPoint* aOffset = nullptr);
+                                        nsPoint* aOffset = nullptr) const;
 
   /**
    * @return the root of the display list's frame (sub)tree, whose origin
@@ -576,7 +576,8 @@ public:
    * aFrame->GetOffsetToCrossDoc(ReferenceFrame()). The returned point is in
    * the appunits of aFrame.
    */
-  const nsPoint ToReferenceFrame(const nsIFrame* aFrame) {
+  const nsPoint ToReferenceFrame(const nsIFrame* aFrame) const
+  {
     nsPoint result;
     FindReferenceFrameFor(aFrame, &result);
     return result;
