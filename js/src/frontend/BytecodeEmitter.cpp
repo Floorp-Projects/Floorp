@@ -65,7 +65,16 @@ class TryFinallyControl;
 static bool
 ParseNodeRequiresSpecialLineNumberNotes(ParseNode* pn)
 {
-    return pn->getKind() == ParseNodeKind::While || pn->getKind() == ParseNodeKind::For;
+    // The few node types listed below are exceptions to the usual
+    // location-source-note-emitting code in BytecodeEmitter::emitTree().
+    // Single-line `while` loops and C-style `for` loops require careful
+    // handling to avoid strange stepping behavior.
+    // Functions usually shouldn't have location information (bug 1431202).
+
+    ParseNodeKind kind = pn->getKind();
+    return kind == ParseNodeKind::While ||
+           kind == ParseNodeKind::For ||
+           kind == ParseNodeKind::Function;
 }
 
 // A cache that tracks superfluous TDZ checks.
@@ -7826,6 +7835,8 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             return emit1(JSOP_DEFFUN);
         }
 
+        // This is a FunctionExpression, ArrowFunctionExpression, or class
+        // constructor. Emit the single instruction (without location info).
         return emitIndex32(pn->getOp(), index);
     }
 
@@ -7867,8 +7878,6 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
                     return false;
             }
             if (!emit1(JSOP_DEFFUN))
-                return false;
-            if (!updateSourceCoordNotes(pn->pn_pos.begin))
                 return false;
             switchToMain();
         }

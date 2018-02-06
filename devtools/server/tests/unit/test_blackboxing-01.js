@@ -128,8 +128,6 @@ const runTest = Task.async(function* (onSteppedLocation, onDebuggerStatementFram
   Assert.equal(packet.why.type, "breakpoint");
 
   yield stepIn(gClient, gThreadClient);
-  yield stepIn(gClient, gThreadClient);
-  yield stepIn(gClient, gThreadClient);
 
   const location = yield getCurrentLocation();
   onSteppedLocation(location);
