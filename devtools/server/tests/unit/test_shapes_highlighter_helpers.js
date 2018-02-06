@@ -13,6 +13,7 @@ const {
   evalCalcExpression,
   shapeModeToCssPropertyName,
   getCirclePath,
+  getDecimalPrecision,
   getUnit
 } = require("devtools/server/actors/highlighters/shapes");
 
@@ -22,6 +23,7 @@ function run_test() {
   test_eval_calc_expression();
   test_shape_mode_to_css_property_name();
   test_get_circle_path();
+  test_get_decimal_precision();
   test_get_unit();
   run_next_test();
 }
@@ -125,6 +127,29 @@ function test_get_circle_path() {
 
   for (let { desc, size, cx, cy, width, height, zoom, expected } of tests) {
     equal(getCirclePath(size, cx, cy, width, height, zoom), expected, desc);
+  }
+}
+
+function test_get_decimal_precision() {
+  const tests = [{
+    desc: "getDecimalPrecision with px",
+    expr: "px", expected: 0
+  }, {
+    desc: "getDecimalPrecision with %",
+    expr: "%", expected: 2
+  }, {
+    desc: "getDecimalPrecision with em",
+    expr: "em", expected: 2
+  }, {
+    desc: "getDecimalPrecision with undefined",
+    expr: undefined, expected: 0
+  }, {
+    desc: "getDecimalPrecision with empty string",
+    expr: "", expected: 0
+  }];
+
+  for (let { desc, expr, expected } of tests) {
+    equal(getDecimalPrecision(expr), expected, desc);
   }
 }
 
