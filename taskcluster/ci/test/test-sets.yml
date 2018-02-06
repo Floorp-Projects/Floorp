@@ -265,7 +265,6 @@ macosx64-talos:
     - talos-tp6-stylo-threads
     - talos-speedometer
     - talos-h1
-    - talos-h2
 
 macosx64-talos-stylo-disabled:
     - talos-chrome-stylo-disabled
