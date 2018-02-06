@@ -24,6 +24,7 @@
 #include "nsError.h"
 #include "nsHostObjectURI.h"
 #include "nsIAsyncShutdown.h"
+#include "nsIException.h" // for nsIStackFrame
 #include "nsIMemoryReporter.h"
 #include "nsIPrincipal.h"
 #include "nsIUUIDGenerator.h"
@@ -356,10 +357,9 @@ class BlobURLsReporter final : public nsIMemoryReporter
 
     for (uint32_t i = 0; frame; ++i) {
       nsString fileNameUTF16;
-      int32_t lineNumber = 0;
-
       frame->GetFilename(cx, fileNameUTF16);
-      frame->GetLineNumber(cx, &lineNumber);
+
+      int32_t lineNumber = frame->GetLineNumber(cx);
 
       if (!fileNameUTF16.IsEmpty()) {
         NS_ConvertUTF16toUTF8 fileName(fileNameUTF16);
@@ -386,10 +386,7 @@ class BlobURLsReporter final : public nsIMemoryReporter
         stack += ")/";
       }
 
-      nsCOMPtr<nsIStackFrame> caller;
-      nsresult rv = frame->GetCaller(cx, getter_AddRefs(caller));
-      NS_ENSURE_SUCCESS_VOID(rv);
-      caller.swap(frame);
+      frame = frame->GetCaller(cx);
     }
   }
 

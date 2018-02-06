@@ -40,6 +40,7 @@ LOCAL_INCLUDES += [
     '/caps',
     '/dom/base',
     '/dom/html',
+    '/dom/xslt/base',
     '/dom/xul',
     '/layout/style',
 ]

@@ -80,8 +80,6 @@ using mozilla::ipc::PrincipalInfo;
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 namespace {
 
 nsIURI*

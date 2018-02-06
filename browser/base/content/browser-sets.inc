@@ -387,7 +387,7 @@
 #ifdef NIGHTLY_BUILD
     <key id="key_wrCaptureCmd"
 #ifdef XP_MACOSX
-    keycode="3" modifiers="control,shift"
+    key="3" modifiers="control,shift"
 #else
     key="#" modifiers="control"
 #endif

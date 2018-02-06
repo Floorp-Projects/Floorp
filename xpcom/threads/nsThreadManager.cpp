@@ -78,6 +78,20 @@ NS_UnsetMainThread()
   gTlsCurrentVirtualThread.set(nullptr);
 }
 
+#ifdef DEBUG
+
+namespace mozilla {
+
+void
+AssertIsOnMainThread()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+}
+
+} // mozilla namespace
+
+#endif
+
 typedef nsTArray<NotNull<RefPtr<nsThread>>> nsThreadArray;
 
 //-----------------------------------------------------------------------------

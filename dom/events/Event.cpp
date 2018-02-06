@@ -334,7 +334,7 @@ bool
 Event::Init(mozilla::dom::EventTarget* aGlobal)
 {
   if (!mIsMainThreadEvent) {
-    return workers::IsCurrentThreadRunningChromeWorker();
+    return IsCurrentThreadRunningChromeWorker();
   }
   bool trusted = false;
   nsCOMPtr<nsPIDOMWindowInner> w = do_QueryInterface(aGlobal);
@@ -1118,7 +1118,7 @@ Event::TimeStampImpl() const
     return perf->GetDOMTiming()->TimeStampToDOMHighRes(mEvent->mTimeStamp);
   }
 
-  WorkerPrivate* workerPrivate = workers::GetCurrentThreadWorkerPrivate();
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
   return workerPrivate->TimeStampToDOMHighRes(mEvent->mTimeStamp);

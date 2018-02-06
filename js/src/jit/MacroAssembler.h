@@ -1520,15 +1520,15 @@ class MacroAssembler : public MacroAssemblerSpecific
     // wasm specific methods, used in both the wasm baseline compiler and ion.
     void wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry) PER_ARCH;
     void wasmTruncateDoubleToInt32(FloatRegister input, Register output, Label* oolEntry) PER_SHARED_ARCH;
-    void outOfLineWasmTruncateDoubleToInt32(FloatRegister input, bool isUnsigned,
-                                            wasm::BytecodeOffset off, Label* rejoin)
-        DEFINED_ON(x86_shared);
+    void oolWasmTruncateCheckF64ToI32(FloatRegister input, bool isUnsigned,
+                                      wasm::BytecodeOffset off, Label* rejoin)
+        DEFINED_ON(arm, arm64, x86_shared);
 
     void wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, Label* oolEntry) PER_ARCH;
     void wasmTruncateFloat32ToInt32(FloatRegister input, Register output, Label* oolEntry) PER_SHARED_ARCH;
-    void outOfLineWasmTruncateFloat32ToInt32(FloatRegister input, bool isUnsigned,
-                                             wasm::BytecodeOffset off, Label* rejoin)
-        DEFINED_ON(x86_shared);
+    void oolWasmTruncateCheckF32ToI32(FloatRegister input, bool isUnsigned,
+                                      wasm::BytecodeOffset off, Label* rejoin)
+        DEFINED_ON(arm, arm64, x86_shared);
 
     void wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                    Label* oolRejoin, FloatRegister tempDouble)
@@ -1536,9 +1536,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     void wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                     Label* oolRejoin, FloatRegister tempDouble)
         DEFINED_ON(arm64, x86, x64);
-    void outOfLineWasmTruncateDoubleToInt64(FloatRegister input, bool isUnsigned,
-                                            wasm::BytecodeOffset off, Label* rejoin)
-        DEFINED_ON(x86_shared);
+    void oolWasmTruncateCheckF64ToI64(FloatRegister input, bool isUnsigned,
+                                      wasm::BytecodeOffset off, Label* rejoin)
+        DEFINED_ON(arm, arm64, x86_shared);
 
     void wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                     Label* oolRejoin, FloatRegister tempDouble)
@@ -1546,9 +1546,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     void wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
                                      Label* oolRejoin, FloatRegister tempDouble)
         DEFINED_ON(arm64, x86, x64);
-    void outOfLineWasmTruncateFloat32ToInt64(FloatRegister input, bool isUnsigned,
-                                             wasm::BytecodeOffset off, Label* rejoin)
-        DEFINED_ON(x86_shared);
+    void oolWasmTruncateCheckF32ToI64(FloatRegister input, bool isUnsigned,
+                                      wasm::BytecodeOffset off, Label* rejoin)
+        DEFINED_ON(arm, arm64, x86_shared);
 
     // This function takes care of loading the callee's TLS and pinned regs but
     // it is the caller's responsibility to save/restore TLS or pinned regs.
