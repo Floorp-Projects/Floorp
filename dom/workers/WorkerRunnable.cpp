@@ -284,7 +284,7 @@ WorkerRunnable::Run()
   MOZ_ASSERT(isMainThread == NS_IsMainThread());
   RefPtr<WorkerPrivate> kungFuDeathGrip;
   if (targetIsWorkerThread) {
-    JSContext* cx = GetCurrentThreadJSContext();
+    JSContext* cx = GetCurrentWorkerThreadJSContext();
     if (NS_WARN_IF(!cx)) {
       return NS_ERROR_FAILURE;
     }
@@ -473,7 +473,7 @@ MainThreadStopSyncLoopRunnable::MainThreadStopSyncLoopRunnable(
                                bool aResult)
 : WorkerSyncRunnable(aWorkerPrivate, Move(aSyncLoopTarget)), mResult(aResult)
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
 #ifdef DEBUG
   mWorkerPrivate->AssertValidSyncLoop(mSyncLoopTarget);
 #endif
@@ -607,7 +607,7 @@ WorkerMainThreadRunnable::Dispatch(WorkerStatus aFailStatus,
 NS_IMETHODIMP
 WorkerMainThreadRunnable::Run()
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
 
   bool runResult = MainThreadRun();
 
@@ -699,7 +699,7 @@ WorkerProxyToMainThreadRunnable::Dispatch()
 NS_IMETHODIMP
 WorkerProxyToMainThreadRunnable::Run()
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
   RunOnMainThread();
   PostDispatchOnMainThread();
   return NS_OK;

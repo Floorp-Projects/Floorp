@@ -224,6 +224,11 @@ var WebProgressListener = {
     json.state = aState;
     json.status = SecurityUI.getSSLStatusAsString();
 
+    json.matchedList = null;
+    if (aRequest && aRequest instanceof Ci.nsIClassifiedChannel) {
+      json.matchedList = aRequest.matchedList;
+    }
+
     this._send("Content:SecurityChange", json, objects);
   },
 

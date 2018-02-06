@@ -30,6 +30,20 @@ extern nsIThread* NS_GetCurrentThread();
 #ifdef MOZILLA_INTERNAL_API
 bool NS_IsMainThreadTLSInitialized();
 bool NS_IsMainThread();
+
+namespace mozilla {
+
+#ifdef DEBUG
+void
+AssertIsOnMainThread();
+#else
+inline void
+AssertIsOnMainThread()
+{ }
+#endif
+
+} // mozilla namespace
+
 #endif
 
 #endif // MainThreadUtils_h_

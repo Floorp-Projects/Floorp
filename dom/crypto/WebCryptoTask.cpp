@@ -153,7 +153,7 @@ public:
   Create()
   {
     MOZ_ASSERT(!NS_IsMainThread());
-    WorkerPrivate* workerPrivate = workers::GetCurrentThreadWorkerPrivate();
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
     RefPtr<InternalWorkerHolder> ref = new InternalWorkerHolder();
     if (NS_WARN_IF(!ref->HoldWorker(workerPrivate, Canceling))) {

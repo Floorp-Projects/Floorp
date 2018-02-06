@@ -541,7 +541,7 @@ Performance::IsObserverEnabled(JSContext* aCx, JSObject* aGlobal)
     return Preferences::GetBool("dom.enable_performance_observer", false);
   }
 
-  WorkerPrivate* workerPrivate = workers::GetCurrentThreadWorkerPrivate();
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 

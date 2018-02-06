@@ -1028,8 +1028,8 @@ let PDFViewerApplication = {
     if (viewerPrefs['pdfBugEnabled']) {
       let hash = document.location.hash.substring(1);
       let hashParams = (0, _ui_utils.parseQueryString)(hash);
-      if ('disableworker' in hashParams) {
-        _pdfjsLib.PDFJS.disableWorker = hashParams['disableworker'] === 'true';
+      if ('disableworker' in hashParams && hashParams['disableworker'] === 'true') {
+        waitOn.push(loadFakeWorker());
       }
       if ('disablerange' in hashParams) {
         _pdfjsLib.PDFJS.disableRange = hashParams['disablerange'] === 'true';
@@ -1860,6 +1860,19 @@ let PDFViewerApplication = {
 };
 let validateFileURL;
 ;
+function loadFakeWorker() {
+  return new Promise(function (resolve, reject) {
+    let script = document.createElement('script');
+    script.src = _pdfjsLib.PDFWorker.getWorkerSrc();
+    script.onload = function () {
+      resolve();
+    };
+    script.onerror = function () {
+      reject(new Error(`Cannot load fake worker at: ${script.src}`));
+    };
+    (document.head || document.documentElement).appendChild(script);
+  });
+}
 function loadAndEnablePDFBug(enabledTabs) {
   return new Promise(function (resolve, reject) {
     let appConfig = PDFViewerApplication.appConfig;

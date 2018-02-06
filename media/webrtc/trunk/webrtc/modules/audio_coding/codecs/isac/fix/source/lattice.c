@@ -209,8 +209,9 @@ void WebRtcIsacfix_NormLatticeFilterMa(size_t orderCoef,
 // Left shift of an int32_t that's allowed to overflow. (It's still undefined
 // behavior, so not a good idea; this just makes UBSan ignore the violation, so
 // that our old code can continue to do what it's always been doing.)
-static inline int32_t OverflowingLShiftS32(int32_t x, int shift)
-    RTC_NO_SANITIZE("shift") {
+static inline int32_t RTC_NO_SANITIZE("shift")
+OverflowingLShiftS32(int32_t x, int shift)
+{
   return x << shift;
 }
 

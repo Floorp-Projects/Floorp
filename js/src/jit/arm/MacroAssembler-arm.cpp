@@ -4919,6 +4919,38 @@ MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input, Register output,
 }
 
 void
+MacroAssembler::oolWasmTruncateCheckF32ToI32(FloatRegister input, bool isUnsigned,
+                                             wasm::BytecodeOffset off, Label* rejoin)
+{
+    outOfLineWasmTruncateToIntCheck(input, MIRType::Float32, MIRType::Int32, isUnsigned,
+                                    rejoin, off);
+}
+
+void
+MacroAssembler::oolWasmTruncateCheckF64ToI32(FloatRegister input, bool isUnsigned,
+                                             wasm::BytecodeOffset off, Label* rejoin)
+{
+    outOfLineWasmTruncateToIntCheck(input, MIRType::Double, MIRType::Int32, isUnsigned,
+                                    rejoin, off);
+}
+
+void
+MacroAssembler::oolWasmTruncateCheckF32ToI64(FloatRegister input, bool isUnsigned,
+                                             wasm::BytecodeOffset off, Label* rejoin)
+{
+    outOfLineWasmTruncateToIntCheck(input, MIRType::Float32, MIRType::Int64, isUnsigned,
+                                    rejoin, off);
+}
+
+void
+MacroAssembler::oolWasmTruncateCheckF64ToI64(FloatRegister input, bool isUnsigned,
+                                             wasm::BytecodeOffset off, Label* rejoin)
+{
+    outOfLineWasmTruncateToIntCheck(input, MIRType::Double, MIRType::Int64, isUnsigned,
+                                    rejoin, off);
+}
+
+void
 MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
                          Register ptrScratch, AnyRegister output)
 {

@@ -371,6 +371,27 @@ private:
   nsTHashtable<EntryType>& operator=(nsTHashtable<EntryType>& aToEqual) = delete;
 };
 
+namespace mozilla {
+namespace detail {
+
+// Like PLDHashTable::MoveEntryStub, but specialized for fixed N (i.e. the size
+// of the entries in the hashtable).  Saves a memory read to figure out the size
+// from the table and gives the compiler the opportunity to inline the memcpy.
+//
+// We define this outside of nsTHashtable so only one copy exists for every N,
+// rather than separate copies for every EntryType used with nsTHashtable.
+template<size_t N>
+static void
+FixedSizeEntryMover(PLDHashTable*,
+                    const PLDHashEntryHdr* aFrom,
+                    PLDHashEntryHdr* aTo)
+{
+  memcpy(aTo, aFrom, N);
+}
+
+} // namespace detail
+} // namespace mozilla
+
 //
 // template definitions
 //
@@ -397,7 +418,7 @@ nsTHashtable<EntryType>::Ops()
   {
     s_HashKey,
     s_MatchEntry,
-    EntryType::ALLOW_MEMMOVE ? PLDHashTable::MoveEntryStub : s_CopyEntry,
+    EntryType::ALLOW_MEMMOVE ? mozilla::detail::FixedSizeEntryMover<sizeof(EntryType)> : s_CopyEntry,
     s_ClearEntry,
     s_InitEntry
   };

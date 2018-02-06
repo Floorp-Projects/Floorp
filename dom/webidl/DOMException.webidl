@@ -47,7 +47,7 @@ interface ExceptionMembers
   readonly attribute nsISupports?            data;
 
   // Formatted exception stack
-  [Throws, Replaceable]
+  [Replaceable]
   readonly attribute DOMString               stack;
 };
 

@@ -317,19 +317,20 @@ public:
     return *this;
   }
 
+  /**
+   * Please explicitly use either FuzzyEquals or ExactlyEquals.
+   */
+  bool operator==(const BaseMatrix<T>& other) const = delete;
+  bool operator!=(const BaseMatrix<T>& other) const = delete;
+
   /* Returns true if the other matrix is fuzzy-equal to this matrix.
    * Note that this isn't a cheap comparison!
    */
-  bool operator==(const BaseMatrix<T>& other) const
+  bool FuzzyEquals(const BaseMatrix<T>& o) const
   {
-    return FuzzyEqual(_11, other._11) && FuzzyEqual(_12, other._12) &&
-           FuzzyEqual(_21, other._21) && FuzzyEqual(_22, other._22) &&
-           FuzzyEqual(_31, other._31) && FuzzyEqual(_32, other._32);
-  }
-
-  bool operator!=(const BaseMatrix<T>& other) const
-  {
-    return !(*this == other);
+    return FuzzyEqual(_11, o._11) && FuzzyEqual(_12, o._12) &&
+           FuzzyEqual(_21, o._21) && FuzzyEqual(_22, o._22) &&
+           FuzzyEqual(_31, o._31) && FuzzyEqual(_32, o._32);
   }
 
   bool ExactlyEquals(const BaseMatrix<T>& o) const

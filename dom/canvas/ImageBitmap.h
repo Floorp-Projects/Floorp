@@ -39,10 +39,6 @@ class Image;
 namespace dom {
 class OffscreenCanvas;
 
-namespace workers {
-class WorkerStructuredCloneClosure;
-}
-
 class ArrayBufferViewOrArrayBuffer;
 class CanvasRenderingContext2D;
 struct ChannelPixelLayout;

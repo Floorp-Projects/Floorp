@@ -58,8 +58,8 @@ namespace InspectorUtils {
   [NewObject] NodeList getChildrenForNode(Node node,
                                           boolean showingAnonymousContent);
   sequence<DOMString> getBindingURLs(Element element);
-  [Throws] void setContentState(Element element, unsigned long long state);
-  [Throws] void removeContentState(
+  [Throws] boolean setContentState(Element element, unsigned long long state);
+  [Throws] boolean removeContentState(
       Element element,
       unsigned long long state,
       optional boolean clearActiveDocument = false);

@@ -32,7 +32,6 @@ using namespace ipc;
 
 namespace dom {
 
-using namespace workers;
 using namespace ipc;
 
 class BroadcastChannelMessage final : public StructuredCloneDataNoTransfers

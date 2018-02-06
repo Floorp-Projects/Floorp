@@ -68,7 +68,6 @@
 #define CLOSE_EVENT_STRING NS_LITERAL_STRING("close")
 
 using namespace mozilla::net;
-using namespace mozilla::dom::workers;
 
 namespace mozilla {
 namespace dom {
