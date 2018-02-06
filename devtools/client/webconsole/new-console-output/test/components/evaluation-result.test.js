@@ -49,6 +49,22 @@ describe("EvaluationResult component:", () => {
     expect(wrapper.find(".message.error").length).toBe(1);
   });
 
+  it("renders thrown empty string", () => {
+    const message = stubPreparedMessages.get(`eval throw ""`);
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe("Error");
+    expect(wrapper.find(".message.error").length).toBe(1);
+  });
+
+  it("renders thrown string", () => {
+    const message = stubPreparedMessages.get(`eval throw "tomato"`);
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe("Error: tomato");
+    expect(wrapper.find(".message.error").length).toBe(1);
+  });
+
   it("renders an inspect command result", () => {
     const message = stubPreparedMessages.get("inspect({a: 1})");
     const wrapper = render(EvaluationResult({ message, serviceContainer }));
