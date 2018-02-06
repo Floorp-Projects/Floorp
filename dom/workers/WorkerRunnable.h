@@ -145,13 +145,14 @@ protected:
   // parent global (which is the compartment reflector would have been in), or
   // in the null compartment if there is no parent global.  For other mBehavior
   // values, we're running on the worker thread and aCx is in whatever
-  // compartment GetCurrentThreadJSContext() was in when nsIRunnable::Run() got
-  // called.  This is actually important for cases when a runnable spins a
-  // syncloop and wants everything that happens during the syncloop to happen in
-  // the compartment that runnable set up (which may, for example, be a debugger
-  // sandbox compartment!).  If aCx wasn't in a compartment to start with, aCx
-  // will be in either the debugger global's compartment or the worker's
-  // global's compartment depending on whether IsDebuggerRunnable() is true.
+  // compartment GetCurrentWorkerThreadJSContext() was in when
+  // nsIRunnable::Run() got called.  This is actually important for cases when a
+  // runnable spins a syncloop and wants everything that happens during the
+  // syncloop to happen in the compartment that runnable set up (which may, for
+  // example, be a debugger sandbox compartment!).  If aCx wasn't in a
+  // compartment to start with, aCx will be in either the debugger global's
+  // compartment or the worker's global's compartment depending on whether
+  // IsDebuggerRunnable() is true.
   //
   // Immediately after WorkerRun returns, the caller will assert that either it
   // returns false or there is no exception pending on aCx.  Then it will report
@@ -201,7 +202,7 @@ private:
   virtual bool
   PreDispatch(WorkerPrivate* aWorkerPrivate) override final
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
 
     return true;
   }
@@ -243,14 +244,14 @@ protected:
                                nsIEventTarget* aSyncLoopTarget)
   : WorkerSyncRunnable(aWorkerPrivate, aSyncLoopTarget)
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
   }
 
   MainThreadWorkerSyncRunnable(WorkerPrivate* aWorkerPrivate,
                                already_AddRefed<nsIEventTarget>&& aSyncLoopTarget)
   : WorkerSyncRunnable(aWorkerPrivate, Move(aSyncLoopTarget))
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
   }
 
   virtual ~MainThreadWorkerSyncRunnable()
@@ -260,7 +261,7 @@ private:
   virtual bool
   PreDispatch(WorkerPrivate* aWorkerPrivate) override
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     return true;
   }
 
@@ -313,7 +314,7 @@ protected:
   explicit MainThreadWorkerRunnable(WorkerPrivate* aWorkerPrivate)
   : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
   }
 
   virtual ~MainThreadWorkerRunnable()
@@ -322,7 +323,7 @@ protected:
   virtual bool
   PreDispatch(WorkerPrivate* aWorkerPrivate) override
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     return true;
   }
 
@@ -330,7 +331,7 @@ protected:
   PostDispatch(WorkerPrivate* aWorkerPrivate,
                bool aDispatchResult) override
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
   }
 };
 
@@ -349,7 +350,7 @@ protected:
   virtual bool
   PreDispatch(WorkerPrivate* aWorkerPrivate) override
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     return true;
   }
 
@@ -357,7 +358,7 @@ protected:
   PostDispatch(WorkerPrivate* aWorkerPrivate,
                bool aDispatchResult) override
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
   }
 };
 
@@ -505,7 +506,7 @@ private:
   virtual bool
   PreDispatch(WorkerPrivate* aWorkerPrivate) override final
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     return true;
   }
 

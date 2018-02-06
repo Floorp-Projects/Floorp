@@ -70,14 +70,9 @@ using mozilla::dom::MessagePortParent;
 using mozilla::dom::PMessagePortParent;
 using mozilla::dom::UDPSocketParent;
 using mozilla::dom::WebAuthnTransactionParent;
+using mozilla::AssertIsOnMainThread;
 
 namespace {
-
-void
-AssertIsOnMainThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-}
 
 class TestParent final : public mozilla::ipc::PBackgroundTestParent
 {

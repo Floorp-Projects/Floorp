@@ -7,6 +7,9 @@ ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
 
 /**
  * Wait for url's page info (non-null description and preview url) to be set.
+ * Because there is debounce logic in ContentLinkHandler.jsm to only make one
+ * single SQL update, we have to wait for some time before checking that the page
+ * info was stored.
  */
 async function waitForPageInfo(url) {
   let pageInfo;

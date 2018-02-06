@@ -23,8 +23,6 @@ using namespace ipc;
 
 namespace dom {
 
-using namespace workers;
-
 BroadcastChannelChild::BroadcastChannelChild(const nsACString& aOrigin)
   : mBC(nullptr)
   , mActorDestroyed(false)

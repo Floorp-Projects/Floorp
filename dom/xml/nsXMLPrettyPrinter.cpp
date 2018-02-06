@@ -8,14 +8,12 @@
 #include "nsICSSDeclaration.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsIObserver.h"
-#include "nsIXSLTProcessor.h"
 #include "nsSyncLoadService.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "mozilla/dom/Element.h"
-#include "nsIDOMDocumentFragment.h"
 #include "nsBindingManager.h"
 #include "nsXBLService.h"
 #include "nsIScriptSecurityManager.h"
@@ -23,6 +21,8 @@
 #include "nsIDocument.h"
 #include "nsVariant.h"
 #include "mozilla/dom/CustomEvent.h"
+#include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/dom/txMozillaXSLTProcessor.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -111,18 +111,19 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Transform the document
-    nsCOMPtr<nsIXSLTProcessor> transformer =
-        do_CreateInstance("@mozilla.org/document-transformer;1?type=xslt", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    RefPtr<txMozillaXSLTProcessor> transformer = new txMozillaXSLTProcessor();
+    ErrorResult err;
+    nsCOMPtr<nsIDocument> xslDoc = do_QueryInterface(xslDocument);
+    transformer->ImportStylesheet(*xslDoc, err);
+    if (NS_WARN_IF(err.Failed())) {
+        return err.StealNSResult();
+    }
 
-    rv = transformer->ImportStylesheet(xslDocument);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDOMDocumentFragment> resultFragment;
-    nsCOMPtr<nsIDOMDocument> sourceDocument = do_QueryInterface(aDocument);
-    rv = transformer->TransformToFragment(sourceDocument, sourceDocument,
-                                          getter_AddRefs(resultFragment));
-    NS_ENSURE_SUCCESS(rv, rv);
+    RefPtr<DocumentFragment> resultFragment =
+        transformer->TransformToFragment(*aDocument, *aDocument, err);
+    if (NS_WARN_IF(err.Failed())) {
+        return err.StealNSResult();
+    }
 
     //
     // Apply the prettprint XBL binding.
@@ -170,7 +171,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
       NS_NewDOMCustomEvent(rootElement, nullptr, nullptr);
     MOZ_ASSERT(event);
     nsCOMPtr<nsIWritableVariant> resultFragmentVariant = new nsVariant();
-    rv = resultFragmentVariant->SetAsISupports(resultFragment);
+    rv = resultFragmentVariant->SetAsISupports(ToSupports(resultFragment.get()));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     rv = event->InitCustomEvent(NS_LITERAL_STRING("prettyprint-dom-created"),
                                 /* bubbles = */ false, /* cancelable = */ false,

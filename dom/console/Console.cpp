@@ -37,6 +37,7 @@
 
 #include "nsIConsoleAPIStorage.h"
 #include "nsIDOMWindowUtils.h"
+#include "nsIException.h" // for nsIStackFrame
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadContext.h"
 #include "nsISensitiveInfoHiddenURI.h"
@@ -63,7 +64,6 @@
 #define STORAGE_MAX_EVENTS 1000
 
 using namespace mozilla::dom::exceptions;
-using namespace mozilla::dom::workers;
 
 namespace mozilla {
 namespace dom {
@@ -1154,41 +1154,28 @@ Console::Count(const GlobalObject& aGlobal, const nsAString& aLabel)
 
 namespace {
 
-nsresult
+void
 StackFrameToStackEntry(JSContext* aCx, nsIStackFrame* aStackFrame,
                        ConsoleStackEntry& aStackEntry)
 {
   MOZ_ASSERT(aStackFrame);
 
-  nsresult rv = aStackFrame->GetFilename(aCx, aStackEntry.mFilename);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aStackFrame->GetFilename(aCx, aStackEntry.mFilename);
 
-  int32_t lineNumber;
-  rv = aStackFrame->GetLineNumber(aCx, &lineNumber);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aStackEntry.mLineNumber = aStackFrame->GetLineNumber(aCx);
 
-  aStackEntry.mLineNumber = lineNumber;
+  aStackEntry.mColumnNumber = aStackFrame->GetColumnNumber(aCx);
 
-  int32_t columnNumber;
-  rv = aStackFrame->GetColumnNumber(aCx, &columnNumber);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aStackEntry.mColumnNumber = columnNumber;
-
-  rv = aStackFrame->GetName(aCx, aStackEntry.mFunctionName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aStackFrame->GetName(aCx, aStackEntry.mFunctionName);
 
   nsString cause;
-  rv = aStackFrame->GetAsyncCause(aCx, cause);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aStackFrame->GetAsyncCause(aCx, cause);
   if (!cause.IsEmpty()) {
     aStackEntry.mAsyncCause.Construct(cause);
   }
-
-  return NS_OK;
 }
 
-nsresult
+void
 ReifyStack(JSContext* aCx, nsIStackFrame* aStack,
            nsTArray<ConsoleStackEntry>& aRefiedStack)
 {
@@ -1196,21 +1183,15 @@ ReifyStack(JSContext* aCx, nsIStackFrame* aStack,
 
   while (stack) {
     ConsoleStackEntry& data = *aRefiedStack.AppendElement();
-    nsresult rv = StackFrameToStackEntry(aCx, stack, data);
-    NS_ENSURE_SUCCESS(rv, rv);
+    StackFrameToStackEntry(aCx, stack, data);
 
-    nsCOMPtr<nsIStackFrame> caller;
-    rv = stack->GetCaller(aCx, getter_AddRefs(caller));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIStackFrame> caller = stack->GetCaller(aCx);
 
     if (!caller) {
-      rv = stack->GetAsyncCaller(aCx, getter_AddRefs(caller));
-      NS_ENSURE_SUCCESS(rv, rv);
+      caller = stack->GetAsyncCaller(aCx);
     }
     stack.swap(caller);
   }
-
-  return NS_OK;
 }
 
 } // anonymous namespace
@@ -1303,11 +1284,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
 
   if (stack) {
     callData->mTopStackFrame.emplace();
-    nsresult rv = StackFrameToStackEntry(aCx, stack,
-                                         *callData->mTopStackFrame);
-    if (NS_FAILED(rv)) {
-      return;
-    }
+    StackFrameToStackEntry(aCx, stack, *callData->mTopStackFrame);
   }
 
   if (NS_IsMainThread()) {
@@ -1316,10 +1293,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
     // nsIStackFrame is not threadsafe, so we need to snapshot it now,
     // before we post our runnable to the main thread.
     callData->mReifiedStack.emplace();
-    nsresult rv = ReifyStack(aCx, stack, *callData->mReifiedStack);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
+    ReifyStack(aCx, stack, *callData->mReifiedStack);
   }
 
   DOMHighResTimeStamp monotonicTimer;
@@ -1422,11 +1396,7 @@ LazyStackGetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 
   nsIStackFrame* stack = reinterpret_cast<nsIStackFrame*>(v.toPrivate());
   nsTArray<ConsoleStackEntry> reifiedStack;
-  nsresult rv = ReifyStack(aCx, stack, reifiedStack);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    Throw(aCx, rv);
-    return false;
-  }
+  ReifyStack(aCx, stack, reifiedStack);
 
   JS::Rooted<JS::Value> stackVal(aCx);
   if (NS_WARN_IF(!ToJSValue(aCx, reifiedStack, &stackVal))) {
@@ -2695,33 +2665,24 @@ Console::MaybeExecuteDumpFunctionForTrace(JSContext* aCx, nsIStackFrame* aStack)
 
   while (stack) {
     nsAutoString filename;
-    nsresult rv = stack->GetFilename(aCx, filename);
-    NS_ENSURE_SUCCESS_VOID(rv);
+    stack->GetFilename(aCx, filename);
 
     message.Append(filename);
     message.AppendLiteral(" ");
 
-    int32_t lineNumber;
-    rv = stack->GetLineNumber(aCx, &lineNumber);
-    NS_ENSURE_SUCCESS_VOID(rv);
-
-    message.AppendInt(lineNumber);
+    message.AppendInt(stack->GetLineNumber(aCx));
     message.AppendLiteral(" ");
 
     nsAutoString functionName;
-    rv = stack->GetName(aCx, functionName);
-    NS_ENSURE_SUCCESS_VOID(rv);
+    stack->GetName(aCx, functionName);
 
     message.Append(filename);
     message.AppendLiteral("\n");
 
-    nsCOMPtr<nsIStackFrame> caller;
-    rv = stack->GetCaller(aCx, getter_AddRefs(caller));
-    NS_ENSURE_SUCCESS_VOID(rv);
+    nsCOMPtr<nsIStackFrame> caller = stack->GetCaller(aCx);
 
     if (!caller) {
-      rv = stack->GetAsyncCaller(aCx, getter_AddRefs(caller));
-      NS_ENSURE_SUCCESS_VOID(rv);
+      caller = stack->GetAsyncCaller(aCx);
     }
 
     stack.swap(caller);

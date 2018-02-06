@@ -7,6 +7,7 @@
 #ifndef nsCertOverrideService_h
 #define nsCertOverrideService_h
 
+#include "mozilla/HashFunctions.h"
 #include "mozilla/Move.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TypedEnumBits.h"
@@ -113,7 +114,7 @@ class nsCertOverrideEntry final : public PLDHashEntryHdr
 
     static PLDHashNumber HashKey(KeyTypePointer aKey)
     {
-      return PLDHashTable::HashStringKey(aKey);
+      return mozilla::HashString(aKey);
     }
 
     enum { ALLOW_MEMMOVE = false };

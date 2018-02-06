@@ -16,8 +16,8 @@ mozilla.prettyprinters.clear_module_printers(__name__)
 class JSStringTypeCache(object):
     def __init__(self, cache):
         dummy = gdb.Value(0).cast(cache.JSString_ptr_t)
-        self.ROPE_FLAGS = dummy['ROPE_FLAGS']
         self.ATOM_BIT = dummy['ATOM_BIT']
+        self.LINEAR_BIT = dummy['LINEAR_BIT']
         self.INLINE_CHARS_BIT = dummy['INLINE_CHARS_BIT']
         self.TYPE_FLAGS_MASK = dummy['TYPE_FLAGS_MASK']
         self.LATIN1_CHARS_BIT = dummy['LATIN1_CHARS_BIT']
@@ -47,7 +47,7 @@ class JSStringPtr(Common):
             for ch in "<CORRUPT:%s>" % corrupt:
                 yield ch
             return
-        is_rope = ((flags & self.stc.TYPE_FLAGS_MASK) == self.stc.ROPE_FLAGS)
+        is_rope = (flags & self.stc.LINEAR_BIT) == 0
         if is_rope:
             for c in JSStringPtr(d['s']['u2']['left'], self.cache).chars():
                 yield c

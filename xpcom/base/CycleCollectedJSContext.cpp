@@ -18,6 +18,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/DebuggerOnGCRunnable.h"
 #include "mozilla/dom/DOMJSClass.h"
+#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseBinding.h"
@@ -37,7 +38,6 @@
 #include "nsWrapperCache.h"
 #include "nsStringBuffer.h"
 
-#include "nsIException.h"
 #include "nsIPlatformInfo.h"
 #include "nsThread.h"
 #include "nsThreadUtils.h"
@@ -266,17 +266,17 @@ CycleCollectedJSContext::PromiseRejectionTrackerCallback(JSContext* aCx,
   }
 }
 
-already_AddRefed<nsIException>
+already_AddRefed<Exception>
 CycleCollectedJSContext::GetPendingException() const
 {
   MOZ_ASSERT(mJSContext);
 
-  nsCOMPtr<nsIException> out = mPendingException;
+  nsCOMPtr<Exception> out = mPendingException;
   return out.forget();
 }
 
 void
-CycleCollectedJSContext::SetPendingException(nsIException* aException)
+CycleCollectedJSContext::SetPendingException(Exception* aException)
 {
   MOZ_ASSERT(mJSContext);
   mPendingException = aException;

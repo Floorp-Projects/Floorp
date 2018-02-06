@@ -143,8 +143,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Exception)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(Exception)
   NS_INTERFACE_MAP_ENTRY(nsIException)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCException)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIException)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Exception)
@@ -169,25 +168,26 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Exception)
   tmp->mThrownJSVal.setNull();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CI_INTERFACE_GETTER(Exception, nsIXPCException)
-
 Exception::Exception(const nsACString& aMessage,
                      nsresult aResult,
                      const nsACString& aName,
                      nsIStackFrame *aLocation,
                      nsISupports *aData)
-: mResult(NS_OK),
-  mInitialized(false),
-  mHoldingJSVal(false)
+  : mMessage(aMessage)
+  , mResult(aResult)
+  , mName(aName)
+  , mData(aData)
+  , mHoldingJSVal(false)
 {
-  Initialize(aMessage, aResult, aName, aLocation, aData);
-}
-
-Exception::Exception()
-  : mResult(NS_OK),
-    mInitialized(false),
-    mHoldingJSVal(false)
-{
+  if (aLocation) {
+    mLocation = aLocation;
+  } else {
+    mLocation = GetCurrentJSStack();
+    // it is legal for there to be no active JS stack, if C++ code
+    // is operating on a JS-implemented interface pointer without
+    // having been called in turn by JS.  This happens in the JS
+    // component loader.
+  }
 }
 
 Exception::~Exception()
@@ -228,32 +228,11 @@ Exception::StowJSVal(JS::Value& aVp)
   }
 }
 
-NS_IMETHODIMP
-Exception::GetMessageMoz(nsACString& aMessage)
+void
+Exception::GetName(nsAString& aName)
 {
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
-
-  aMessage.Assign(mMessage);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Exception::GetResult(nsresult* aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
-
-  *aResult = mResult;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Exception::GetName(nsACString& aName)
-{
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
-
   if (!mName.IsEmpty()) {
-    aName.Assign(mName);
+    CopyUTF8toUTF16(mName, aName);
   } else {
     aName.Truncate();
 
@@ -261,80 +240,25 @@ Exception::GetName(nsACString& aName)
     nsXPCException::NameAndFormatForNSResult(mResult, &name, nullptr);
 
     if (name) {
-      aName.Assign(name);
+      CopyUTF8toUTF16(name, aName);
     }
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 Exception::GetFilename(JSContext* aCx, nsAString& aFilename)
 {
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
-
   if (mLocation) {
-    return mLocation->GetFilename(aCx, aFilename);
+    mLocation->GetFilename(aCx, aFilename);
+    return;
   }
 
   aFilename.Truncate();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-Exception::GetLineNumber(JSContext* aCx, uint32_t *aLineNumber)
-{
-  NS_ENSURE_ARG_POINTER(aLineNumber);
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
-
-  if (mLocation) {
-    int32_t lineno;
-    nsresult rv = mLocation->GetLineNumber(aCx, &lineno);
-    *aLineNumber = lineno;
-    return rv;
-  }
-
-  *aLineNumber = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Exception::GetColumnNumber(uint32_t* aColumnNumber)
-{
-  NS_ENSURE_ARG_POINTER(aColumnNumber);
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
-
-  *aColumnNumber = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Exception::GetLocation(nsIStackFrame** aLocation)
-{
-  NS_ENSURE_ARG_POINTER(aLocation);
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
-
-  nsCOMPtr<nsIStackFrame> location = mLocation;
-  location.forget(aLocation);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Exception::GetData(nsISupports** aData)
-{
-  NS_ENSURE_ARG_POINTER(aData);
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
-
-  nsCOMPtr<nsISupports> data = mData;
-  data.forget(aData);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 Exception::ToString(JSContext* aCx, nsACString& _retval)
 {
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
-
   static const char defaultMsg[] = "<no message>";
   static const char defaultLocation[] = "<unknown>";
   static const char format[] =
@@ -344,8 +268,7 @@ Exception::ToString(JSContext* aCx, nsACString& _retval)
 
   if (mLocation) {
     // we need to free this if it does not fail
-    nsresult rv = mLocation->ToString(aCx, location);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mLocation->ToString(aCx, location);
   }
 
   if (location.IsEmpty()) {
@@ -368,34 +291,6 @@ Exception::ToString(JSContext* aCx, nsACString& _retval)
   _retval.Truncate();
   _retval.AppendPrintf(format, msg, static_cast<uint32_t>(mResult), resultName,
                        location.get(), data);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Exception::Initialize(const nsACString& aMessage, nsresult aResult,
-                      const nsACString& aName, nsIStackFrame *aLocation,
-                      nsISupports *aData)
-{
-  NS_ENSURE_FALSE(mInitialized, NS_ERROR_ALREADY_INITIALIZED);
-
-  mMessage = aMessage;
-  mName = aName;
-  mResult = aResult;
-
-  if (aLocation) {
-    mLocation = aLocation;
-  } else {
-    mLocation = GetCurrentJSStack();
-    // it is legal for there to be no active JS stack, if C++ code
-    // is operating on a JS-implemented interface pointer without
-    // having been called in turn by JS.  This happens in the JS
-    // component loader.
-  }
-
-  mData = aData;
-
-  mInitialized = true;
-  return NS_OK;
 }
 
 JSObject*
@@ -407,13 +302,7 @@ Exception::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 void
 Exception::GetMessageMoz(nsString& retval)
 {
-  nsCString str;
-#ifdef DEBUG
-  DebugOnly<nsresult> rv =
-#endif
-  GetMessageMoz(str);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  CopyUTF8toUTF16(str, retval);
+  CopyUTF8toUTF16(mMessage, retval);
 }
 
 uint32_t
@@ -422,27 +311,11 @@ Exception::Result() const
   return (uint32_t)mResult;
 }
 
-void
-Exception::GetName(nsString& retval)
-{
-  nsCString str;
-#ifdef DEBUG
-  DebugOnly<nsresult> rv =
-#endif
-  GetName(str);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  CopyUTF8toUTF16(str, retval);
-}
-
 uint32_t
 Exception::LineNumber(JSContext* aCx) const
 {
   if (mLocation) {
-    int32_t lineno;
-    if (NS_SUCCEEDED(mLocation->GetLineNumber(aCx, &lineno))) {
-      return lineno;
-    }
-    return 0;
+    return mLocation->GetLineNumber(aCx);
   }
 
   return 0;
@@ -461,18 +334,17 @@ Exception::GetLocation() const
   return location.forget();
 }
 
-already_AddRefed<nsISupports>
+nsISupports*
 Exception::GetData() const
 {
-  nsCOMPtr<nsISupports> data = mData;
-  return data.forget();
+  return mData;
 }
 
 void
-Exception::GetStack(JSContext* aCx, nsAString& aStack, ErrorResult& aRv) const
+Exception::GetStack(JSContext* aCx, nsAString& aStack) const
 {
   if (mLocation) {
-    aRv = mLocation->GetFormattedStack(aCx, aStack);
+    mLocation->GetFormattedStack(aCx, aStack);
   }
 }
 
@@ -480,11 +352,7 @@ void
 Exception::Stringify(JSContext* aCx, nsString& retval)
 {
   nsCString str;
-#ifdef DEBUG
-  DebugOnly<nsresult> rv =
-#endif
   ToString(aCx, str);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
   CopyUTF8toUTF16(str, retval);
 }
 
@@ -496,9 +364,7 @@ NS_INTERFACE_MAP_END_INHERITING(Exception)
 
 DOMException::DOMException(nsresult aRv, const nsACString& aMessage,
                            const nsACString& aName, uint16_t aCode)
-  : Exception(EmptyCString(), aRv, EmptyCString(), nullptr, nullptr),
-    mName(aName),
-    mMessage(aMessage),
+  : Exception(aMessage, aRv, aName, nullptr, nullptr),
     mCode(aCode)
 {
 }
@@ -521,7 +387,7 @@ DOMException::GetCode(uint16_t* aCode)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 DOMException::ToString(JSContext* aCx, nsACString& aReturn)
 {
   aReturn.Truncate();
@@ -543,20 +409,12 @@ DOMException::ToString(JSContext* aCx, nsACString& aReturn)
 
   aReturn.AppendPrintf(format, msg, mCode, static_cast<uint32_t>(mResult), resultName,
                        location.get());
-
-  return NS_OK;
 }
 
 void
 DOMException::GetName(nsString& retval)
 {
   CopyUTF8toUTF16(mName, retval);
-}
-
-void
-DOMException::GetMessageMoz(nsString& retval)
-{
-  CopyUTF8toUTF16(mMessage, retval);
 }
 
 already_AddRefed<DOMException>

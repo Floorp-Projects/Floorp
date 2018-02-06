@@ -26,8 +26,6 @@ using namespace mozilla::layers;
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ImageBitmap, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ImageBitmap)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ImageBitmap)

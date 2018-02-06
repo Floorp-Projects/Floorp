@@ -32,8 +32,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsContentUtils.h"
 
-using namespace mozilla::dom::workers;
-
 namespace mozilla {
 namespace dom {
 

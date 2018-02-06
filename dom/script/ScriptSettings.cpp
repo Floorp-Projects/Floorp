@@ -544,7 +544,7 @@ WarningOnlyErrorReporter(JSContext* aCx, JSErrorReport* aRep)
     // That said, it feels like we should be able to short-circuit things a bit
     // here by posting an appropriate runnable to the main thread directly...
     // Worth looking into sometime.
-    WorkerPrivate* worker = workers::GetWorkerPrivateFromContext(aCx);
+    WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
     MOZ_ASSERT(worker);
 
     worker->ReportError(aCx, JS::ConstUTF8CharsZ(), aRep);
@@ -581,7 +581,7 @@ AutoJSAPI::ReportException()
     if (mIsMainThread) {
       errorGlobal = xpc::PrivilegedJunkScope();
     } else {
-      errorGlobal = workers::GetCurrentThreadWorkerGlobal();
+      errorGlobal = GetCurrentThreadWorkerGlobal();
     }
   }
   JSAutoCompartment ac(cx(), errorGlobal);
@@ -617,7 +617,7 @@ AutoJSAPI::ReportException()
       // bother with xpc::ErrorReport.  This will ensure that all the right
       // events (which are a lot more complicated than in the window case) get
       // fired.
-      WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
+      WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
       MOZ_ASSERT(worker);
       MOZ_ASSERT(worker->GetJSContext() == cx());
       // Before invoking ReportError, put the exception back on the context,

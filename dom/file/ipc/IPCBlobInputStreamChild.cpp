@@ -15,8 +15,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 namespace {
 
 // This runnable is used in case the last stream is forgotten on the 'wrong'

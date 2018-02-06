@@ -109,7 +109,7 @@ function testDetailedError() {
     runTest();
   });
   ok(promise instanceof Promise, "then() should return a Promise");
-  reqserv.fireDetailedError(req, new DOMException("detailedError"));
+  SpecialPowers.wrwp(req).fireDetailedError(new DOMException("detailedError"));
   ok(ev, "got error event");
   is(ev.type, "error", "correct type during error");
   is(ev.target, req, "correct target during error");
@@ -194,7 +194,7 @@ function testDetailedError() {
     runTest();
   });
   ok(promise instanceof Promise, "then() should return a Promise");
-  reqserv.fireDetailedError(req, new DOMException("detailedError"));
+  SpecialPowers.wrap(req).fireDetailedError(new DOMException("detailedError"));
   ok(ev, "got error event");
   is(ev.type, "error", "correct type during error");
   is(ev.target, req, "correct target during error");

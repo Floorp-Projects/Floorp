@@ -1268,7 +1268,7 @@ nsGlobalWindowInner::FreeInnerObjects()
   mInnerObjectsFreed = true;
 
   // Kill all of the workers for this window.
-  mozilla::dom::workers::CancelWorkersForWindow(this);
+  CancelWorkersForWindow(this);
 
   if (mTimeoutManager) {
     mTimeoutManager->ClearAllTimeouts();
@@ -6100,7 +6100,7 @@ nsGlobalWindowInner::Suspend()
   DisableGamepadUpdates();
   DisableVRUpdates();
 
-  mozilla::dom::workers::SuspendWorkersForWindow(this);
+  SuspendWorkersForWindow(this);
 
   SuspendIdleRequests();
 
@@ -6162,7 +6162,7 @@ nsGlobalWindowInner::Resume()
   // Resume all of the workers for this window.  We must do this
   // after timeouts since workers may have queued events that can trigger
   // a setTimeout().
-  mozilla::dom::workers::ResumeWorkersForWindow(this);
+  ResumeWorkersForWindow(this);
 }
 
 bool
@@ -6195,7 +6195,7 @@ nsGlobalWindowInner::FreezeInternal()
     return;
   }
 
-  mozilla::dom::workers::FreezeWorkersForWindow(this);
+  FreezeWorkersForWindow(this);
 
   mTimeoutManager->Freeze();
   if (mClientSource) {
@@ -6234,7 +6234,7 @@ nsGlobalWindowInner::ThawInternal()
   }
   mTimeoutManager->Thaw();
 
-  mozilla::dom::workers::ThawWorkersForWindow(this);
+  ThawWorkersForWindow(this);
 
   NotifyDOMWindowThawed(this);
 }

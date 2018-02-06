@@ -124,7 +124,7 @@ void
 SVGTransformableElement::SetAnimateMotionTransform(const gfx::Matrix* aMatrix)
 {
   if ((!aMatrix && !mAnimateMotionTransform) ||
-      (aMatrix && mAnimateMotionTransform && *aMatrix == *mAnimateMotionTransform)) {
+      (aMatrix && mAnimateMotionTransform && aMatrix->FuzzyEquals(*mAnimateMotionTransform))) {
     return;
   }
   bool transformSet = mTransforms && mTransforms->IsExplicitlySet();
