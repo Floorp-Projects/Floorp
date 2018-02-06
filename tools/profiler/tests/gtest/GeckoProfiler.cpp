@@ -194,7 +194,7 @@ TEST(GeckoProfiler, EnsureStarted)
     PR_Sleep(PR_MillisecondsToInterval(500));
 
     Maybe<ProfilerBufferInfo> info1 = profiler_get_buffer_info();
-    ASSERT_TRUE(info1->mGeneration > 0 || info1->mWritePosition > 0);
+    ASSERT_TRUE(info1->mRangeEnd > 0);
 
     // Call profiler_ensure_started with the same settings as before.
     // This operation must not clear our buffer!
@@ -207,9 +207,7 @@ TEST(GeckoProfiler, EnsureStarted)
     // Check that our position in the buffer stayed the same or advanced.
     // In particular, it shouldn't have reverted to the start.
     Maybe<ProfilerBufferInfo> info2 = profiler_get_buffer_info();
-    ASSERT_TRUE(info2->mGeneration >= info1->mGeneration);
-    ASSERT_TRUE(info2->mGeneration > info1->mGeneration ||
-                info2->mWritePosition >= info1->mWritePosition);
+    ASSERT_TRUE(info2->mRangeEnd >= info1->mRangeEnd);
   }
 
   {
@@ -229,9 +227,7 @@ TEST(GeckoProfiler, EnsureStarted)
                       differentFeatures, filters, MOZ_ARRAY_LENGTH(filters));
 
     Maybe<ProfilerBufferInfo> info2 = profiler_get_buffer_info();
-    ASSERT_TRUE(info2->mGeneration <= info1->mGeneration);
-    ASSERT_TRUE(info2->mGeneration < info1->mGeneration ||
-                info2->mWritePosition < info1->mWritePosition);
+    ASSERT_TRUE(info2->mRangeEnd < info1->mRangeEnd);
   }
 
   {
@@ -384,7 +380,7 @@ TEST(GeckoProfiler, Pause)
   Maybe<ProfilerBufferInfo> info1 = profiler_get_buffer_info();
   PR_Sleep(PR_MillisecondsToInterval(500));
   Maybe<ProfilerBufferInfo> info2 = profiler_get_buffer_info();
-  ASSERT_TRUE(info1->mWritePosition != info2->mWritePosition);
+  ASSERT_TRUE(info1->mRangeEnd != info2->mRangeEnd);
 
   profiler_pause();
 
@@ -394,7 +390,7 @@ TEST(GeckoProfiler, Pause)
   info1 = profiler_get_buffer_info();
   PR_Sleep(PR_MillisecondsToInterval(500));
   info2 = profiler_get_buffer_info();
-  ASSERT_TRUE(info1->mWritePosition == info2->mWritePosition);
+  ASSERT_TRUE(info1->mRangeEnd == info2->mRangeEnd);
 
   profiler_resume();
 

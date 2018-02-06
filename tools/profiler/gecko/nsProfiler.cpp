@@ -496,9 +496,9 @@ nsProfiler::GetBufferInfo(uint32_t* aCurrentPosition, uint32_t* aTotalSize,
   MOZ_ASSERT(aGeneration);
   Maybe<ProfilerBufferInfo> info = profiler_get_buffer_info();
   if (info) {
-    *aCurrentPosition = info->mWritePosition;
+    *aCurrentPosition = info->mRangeEnd % info->mEntryCount;
     *aTotalSize = info->mEntryCount;
-    *aGeneration = info->mGeneration;
+    *aGeneration = info->mRangeEnd / info->mEntryCount;
   } else {
     *aCurrentPosition = 0;
     *aTotalSize = 0;
