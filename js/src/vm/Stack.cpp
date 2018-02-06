@@ -1901,9 +1901,9 @@ ActivationIterator::operator++()
 }
 
 JS::ProfilingFrameIterator::ProfilingFrameIterator(JSContext* cx, const RegisterState& state,
-                                                   uint32_t sampleBufferGen)
+                                                   const Maybe<uint64_t>& samplePositionInProfilerBuffer)
   : cx_(cx),
-    sampleBufferGen_(sampleBufferGen),
+    samplePositionInProfilerBuffer_(samplePositionInProfilerBuffer),
     activation_(nullptr)
 {
     if (!cx->runtime()->geckoProfiler().enabled())
@@ -2082,8 +2082,9 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(jit::JitcodeGlobalEntry* en
     // Look up an entry for the return address.
     void* returnAddr = jsJitIter().returnAddressToFp();
     jit::JitcodeGlobalTable* table = cx_->runtime()->jitRuntime()->getJitcodeGlobalTable();
-    if (hasSampleBufferGen())
-        *entry = table->lookupForSamplerInfallible(returnAddr, cx_->runtime(), sampleBufferGen_);
+    if (samplePositionInProfilerBuffer_)
+        *entry = table->lookupForSamplerInfallible(returnAddr, cx_->runtime(),
+                                                   *samplePositionInProfilerBuffer_);
     else
         *entry = table->lookupInfallible(returnAddr);
 
