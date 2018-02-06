@@ -14,9 +14,6 @@
 :root {
   --titlebar-text-color: currentColor;
 
-  --tabs-border-color: threedshadow;
-  --tab-line-color: highlight;
-
   --toolbar-non-lwt-bgcolor: -moz-dialog;
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
   --toolbar-non-lwt-bgimage: linear-gradient(rgba(255,255,255,.15), rgba(255,255,255,.15));
@@ -37,11 +34,16 @@
   --toolbox-border-bottom-color: ThreeDShadow;
 }
 
+#navigator-toolbox {
+  --tabs-border-color: threedshadow;
+}
+
+#tabbrowser-tabs {
+  --tab-line-color: highlight;
+}
+
 @media (-moz-windows-default-theme) {
   :root {
-    --tabs-border-color: rgba(0,0,0,.3);
-    --tab-line-color: #0a84ff;
-
     --toolbar-non-lwt-bgcolor: #f9f9fa;
     --toolbar-non-lwt-textcolor: #0c0c0d;
     --toolbar-non-lwt-bgimage: none;
@@ -52,15 +54,25 @@
 
     --toolbox-border-bottom-color: #e1e1e2;
   }
+
+  #navigator-toolbox {
+    --tabs-border-color: rgba(0,0,0,.3);
+  }
+
+  #tabbrowser-tabs {
+    --tab-line-color: #0a84ff;
+  }
 }
 
 :root:-moz-lwtheme {
-  --tabs-border-color: rgba(0,0,0,.3);
-
   --toolbar-bgcolor: rgba(255,255,255,.4);
   --toolbar-bgimage: none;
 
   --toolbox-border-bottom-color: rgba(0,0,0,.3);
+}
+
+#navigator-toolbox:-moz-lwtheme {
+  --tabs-border-color: rgba(0,0,0,.3);
 }
 
 #menubar-items {
@@ -113,7 +125,7 @@
  */
 @media (-moz-os-version: windows-win7) {
   @media (-moz-windows-default-theme) {
-    :root:not(:-moz-lwtheme) {
+    #navigator-toolbox:not(:-moz-lwtheme) {
       --tabs-border-color: @glassShadowColor@;
     }
 

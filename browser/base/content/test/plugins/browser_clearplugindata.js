@@ -2,20 +2,17 @@ var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content
 var gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
 var gTestBrowser = null;
 
-// Test clearing plugin data using sanitize.js.
+// Test clearing plugin data using Sanitizer.jsm.
 const testURL1 = gTestRoot + "browser_clearplugindata.html";
 const testURL2 = gTestRoot + "browser_clearplugindata_noage.html";
 
-var tempScope = {};
-Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tempScope);
-var Sanitizer = tempScope.Sanitizer;
+const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm", {});
 
 const pluginHostIface = Ci.nsIPluginHost;
 var pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 pluginHost.QueryInterface(pluginHostIface);
 
 var pluginTag = getTestPlugin();
-var sanitizer = null;
 
 function stored(needles) {
   let something = pluginHost.siteHasData(this.pluginTag, null);
@@ -53,10 +50,7 @@ add_task(async function() {
 });
 
 function setPrefs(cookies, pluginData) {
-  sanitizer = new Sanitizer();
-  sanitizer.ignoreTimespan = false;
-  sanitizer.prefDomain = "privacy.cpd.";
-  let itemPrefs = Services.prefs.getBranch(sanitizer.prefDomain);
+  let itemPrefs = Services.prefs.getBranch("privacy.cpd.");
   itemPrefs.setBoolPref("history", false);
   itemPrefs.setBoolPref("downloads", false);
   itemPrefs.setBoolPref("cache", false);
@@ -86,8 +80,8 @@ async function testClearingData(url) {
   // NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED, which should result in us
   // clearing all data regardless of age.
   let now_uSec = Date.now() * 1000;
-  sanitizer.range = [now_uSec - 20 * 1000000, now_uSec];
-  await sanitizer.sanitize();
+  let range = [now_uSec - 20 * 1000000, now_uSec];
+  await Sanitizer.sanitize(null, {range, ignoreTimespan: false});
 
   if (url == testURL1) {
     ok(stored(["bar.com", "qux.com"]), "Data stored for sites");
@@ -95,8 +89,7 @@ async function testClearingData(url) {
     ok(!stored(["baz.com"]), "Data cleared for baz.com");
 
     // Clear everything.
-    sanitizer.range = null;
-    await sanitizer.sanitize();
+    await Sanitizer.sanitize(null, {ignoreTimespan: false});
   }
 
   ok(!stored(null), "All data cleared");
@@ -106,12 +99,12 @@ async function testClearingData(url) {
 }
 
 add_task(async function() {
-  // Test when santizing cookies.
+  // Test when sanitizing cookies.
   await setPrefs(true, false);
   await testClearingData(testURL1);
   await testClearingData(testURL2);
 
-  // Test when santizing pluginData.
+  // Test when sanitizing pluginData.
   await setPrefs(false, true);
   await testClearingData(testURL1);
   await testClearingData(testURL2);

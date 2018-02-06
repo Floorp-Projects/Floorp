@@ -1,3 +1,54 @@
+activity_stream:
+  event:
+    objects: [
+      "CLICK",
+      "SEARCH",
+      "BLOCK",
+      "DELETE",
+      "DELETE_CONFIRM",
+      "DIALOG_CANCEL",
+      "DIALOG_OPEN",
+      "OPEN_NEW_WINDOW",
+      "OPEN_PRIVATE_WINDOW",
+      "OPEN_NEWTAB_PREFS",
+      "CLOSE_NEWTAB_PREFS",
+      "BOOKMARK_DELETE",
+      "BOOKMARK_ADD",
+      "PIN",
+      "UNPIN",
+      "SAVE_TO_POCKET"]
+    release_channel_collection: opt-out
+    record_in_processes: ["main"]
+    description: >
+      This is recorded with every user interaction on Activity Stream elements.
+    bug_numbers: [1429497, 1429489]
+    notification_emails:
+      - "najiang@mozilla.com"
+      - "msamuel@mozilla.com"
+    expiry_version: never
+    extra_keys:
+      addon_version: The Activity Stream addon version.
+      session_id: The ID of the Activity Stream session in which the event occurred
+      page: about:home or about_newtab - the page where the event occurred
+      user_prefs: An integer representaing a user's A-S settings.
+      action_position: The index of card receiving interactions.
+  end:
+    objects: ["session"]
+    release_channel_collection: opt-out
+    record_in_processes: ["main"]
+    description: >
+      This is recorded with every session ended in Activity Stream.
+    bug_numbers: [1429497, 1429489]
+    notification_emails:
+      - "najiang@mozilla.com"
+      - "msamuel@mozilla.com"
+    expiry_version: never
+    extra_keys:
+      addon_version: The Activity Stream addon version.
+      session_id: The ID of the Activity Stream session in which the event occurred
+      page: about:home or about_newtab - the page where the event occurred
+      user_prefs: An integer representaing a user's A-S settings.
+
 navigation:
   search:
     objects: ["about_home", "about_newtab", "contextmenu", "oneoff",

@@ -106,9 +106,9 @@ const PREFS_CONFIG = new Map([
     title: "Collapse the Top Sites section",
     value: false
   }],
-  ["topSitesCount", {
-    title: "Number of Top Sites to display",
-    value: 12
+  ["topSitesRows", {
+    title: "Number of rows of Top Sites to display",
+    value: 2
   }],
   ["telemetry", {
     title: "Enable system error and usage data collection",

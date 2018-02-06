@@ -6,8 +6,8 @@
 const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 const {Dedupe} = ChromeUtils.import("resource://activity-stream/common/Dedupe.jsm", {});
 
-const TOP_SITES_DEFAULT_LENGTH = 6;
-const TOP_SITES_SHOWMORE_LENGTH = 12;
+const TOP_SITES_DEFAULT_ROWS = 2;
+const TOP_SITES_MAX_SITES_PER_ROW = 6;
 
 const dedupe = new Dedupe(site => site && site.url);
 
@@ -24,12 +24,8 @@ const INITIAL_STATE = {
     initialized: false,
     // The history (and possibly default) links
     rows: [],
-    // Used in content only to dispatch action from
-    // context menu to TopSitesEdit.
-    editForm: {
-      visible: false,
-      index: -1
-    }
+    // Used in content only to dispatch action to TopSiteForm.
+    editForm: null
   },
   Prefs: {
     initialized: false,
@@ -95,9 +91,9 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
       }
       return Object.assign({}, prevState, {initialized: true, rows: action.data});
     case at.TOP_SITES_EDIT:
-      return Object.assign({}, prevState, {editForm: {visible: true, index: action.data.index}});
+      return Object.assign({}, prevState, {editForm: {index: action.data.index}});
     case at.TOP_SITES_CANCEL_EDIT:
-      return Object.assign({}, prevState, {editForm: {visible: false}});
+      return Object.assign({}, prevState, {editForm: null});
     case at.SCREENSHOT_UPDATED:
       newRows = prevState.rows.map(row => {
         if (row && row.url === action.data.url) {
@@ -323,10 +319,10 @@ function PreferencesPane(prevState = INITIAL_STATE.PreferencesPane, action) {
 }
 
 this.INITIAL_STATE = INITIAL_STATE;
-this.TOP_SITES_DEFAULT_LENGTH = TOP_SITES_DEFAULT_LENGTH;
-this.TOP_SITES_SHOWMORE_LENGTH = TOP_SITES_SHOWMORE_LENGTH;
+this.TOP_SITES_DEFAULT_ROWS = TOP_SITES_DEFAULT_ROWS;
+this.TOP_SITES_MAX_SITES_PER_ROW = TOP_SITES_MAX_SITES_PER_ROW;
 
 this.reducers = {TopSites, App, Snippets, Prefs, Dialog, Sections, PreferencesPane};
 this.insertPinned = insertPinned;
 
-this.EXPORTED_SYMBOLS = ["reducers", "INITIAL_STATE", "insertPinned", "TOP_SITES_DEFAULT_LENGTH", "TOP_SITES_SHOWMORE_LENGTH"];
+this.EXPORTED_SYMBOLS = ["reducers", "INITIAL_STATE", "insertPinned", "TOP_SITES_DEFAULT_ROWS", "TOP_SITES_MAX_SITES_PER_ROW"];

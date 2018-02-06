@@ -408,7 +408,7 @@ PeerConnection.prototype = {
   renderHeading() {
     let pcInfo = this.getPCInfo(this._report);
     let heading = document.createElement("h3");
-    let now = new Date(this._report.timestamp).toTimeString();
+    let now = new Date(this._report.timestamp).toString();
     heading.textContent =
       `[ ${pcInfo.id} ] ${pcInfo.url} ${pcInfo.closed ? `(${getString("connection_closed")})` : ""} ${now}`;
     return heading;

@@ -300,7 +300,7 @@ protected:
       return;
     }
 
-    nsTArray<RefPtr<nsRefreshDriver> > drivers(aDrivers);
+    nsTArray<RefPtr<nsRefreshDriver>> drivers(aDrivers);
     for (nsRefreshDriver* driver : drivers) {
       // don't poke this driver if it's in test mode
       if (driver->IsTestControllingRefreshesEnabled()) {
@@ -345,8 +345,8 @@ protected:
   TimeStamp mLastFireTime;
   TimeStamp mTargetTime;
 
-  nsTArray<RefPtr<nsRefreshDriver> > mContentRefreshDrivers;
-  nsTArray<RefPtr<nsRefreshDriver> > mRootRefreshDrivers;
+  nsTArray<RefPtr<nsRefreshDriver>> mContentRefreshDrivers;
+  nsTArray<RefPtr<nsRefreshDriver>> mRootRefreshDrivers;
 
   // useful callback for nsITimer-based derived classes, here
   // bacause of c++ protected shenanigans
@@ -951,7 +951,7 @@ protected:
     mLastFireTime = now;
     mLastFireSkipped = false;
 
-    nsTArray<RefPtr<nsRefreshDriver> > drivers(mContentRefreshDrivers);
+    nsTArray<RefPtr<nsRefreshDriver>> drivers(mContentRefreshDrivers);
     drivers.AppendElements(mRootRefreshDrivers);
     size_t index = mNextDriverIndex;
 
@@ -1424,8 +1424,8 @@ uint32_t
 nsRefreshDriver::ObserverCount() const
 {
   uint32_t sum = 0;
-  for (uint32_t i = 0; i < ArrayLength(mObservers); ++i) {
-    sum += mObservers[i].Length();
+  for (const ObserverArray& array : mObservers) {
+    sum += array.Length();
   }
 
   // Even while throttled, we need to process layout and style changes.  Style
@@ -1447,8 +1447,8 @@ nsRefreshDriver::ObserverCount() const
 bool
 nsRefreshDriver::HasObservers() const
 {
-  for (uint32_t i = 0; i < ArrayLength(mObservers); ++i) {
-    if (!mObservers[i].IsEmpty()) {
+  for (const ObserverArray& array : mObservers) {
+    if (!array.IsEmpty()) {
       return true;
     }
   }
@@ -1637,12 +1637,8 @@ nsRefreshDriver::DispatchAnimationEvents()
   // Hold all AnimationEventDispatcher in mAnimationEventFlushObservers as
   // a RefPtr<> array since each AnimationEventDispatcher might be destroyed
   // during processing the previous dispatcher.
-  size_t len = mAnimationEventFlushObservers.Length();
   AutoTArray<RefPtr<AnimationEventDispatcher>, 16> dispatchers;
-  RefPtr<AnimationEventDispatcher>* elems = dispatchers.AppendElements(len);
-  for (size_t i = 0; i < len; i++) {
-    elems[i] = mAnimationEventFlushObservers[i];
-  }
+  dispatchers.AppendElements(mAnimationEventFlushObservers);
   mAnimationEventFlushObservers.Clear();
 
   for (auto& dispatcher : dispatchers) {
@@ -1856,25 +1852,23 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 
   AutoTArray<nsCOMPtr<nsIRunnable>, 16> earlyRunners;
   earlyRunners.SwapElements(mEarlyRunners);
-  for (uint32_t i = 0; i < earlyRunners.Length(); ++i) {
-    earlyRunners[i]->Run();
+  for (auto& runner : earlyRunners) {
+    runner->Run();
   }
 
   // Resize events should be fired before layout flushes or
   // calling animation frame callbacks.
   AutoTArray<nsIPresShell*, 16> observers;
   observers.AppendElements(mResizeEventFlushObservers);
-  for (uint32_t i = observers.Length(); i; --i) {
+  for (nsIPresShell* shell : Reversed(observers)) {
     if (!mPresContext || !mPresContext->GetPresShell()) {
       break;
     }
     // Make sure to not process observers which might have been removed
     // during previous iterations.
-    nsIPresShell* shell = observers[i - 1];
-    if (!mResizeEventFlushObservers.Contains(shell)) {
+    if (!mResizeEventFlushObservers.RemoveElement(shell)) {
       continue;
     }
-    mResizeEventFlushObservers.RemoveElement(shell);
     shell->FireResizeEvent();
   }
 
@@ -1978,8 +1972,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 #ifdef MOZ_XUL
   // Update any popups that may need to be moved or hidden due to their
   // anchor changing.
-  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm) {
+  if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
     pm->UpdatePopupPositions(this);
   }
 #endif
@@ -2104,9 +2097,9 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   if (dispatchRunnablesAfterTick && sPendingIdleRunnables) {
     AutoTArray<RunnableWithDelay, 8>* runnables = sPendingIdleRunnables;
     sPendingIdleRunnables = nullptr;
-    for (uint32_t i = 0; i < runnables->Length(); ++i) {
-      NS_IdleDispatchToCurrentThread((*runnables)[i].mRunnable.forget(),
-                                     (*runnables)[i].mDelay);
+    for (RunnableWithDelay& runnableWithDelay : *runnables) {
+      NS_IdleDispatchToCurrentThread(runnableWithDelay.mRunnable.forget(),
+                                     runnableWithDelay.mDelay);
     }
     delete runnables;
   }

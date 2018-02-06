@@ -6,6 +6,8 @@
  */
 
 #include "RetainedDisplayListBuilder.h"
+
+#include "DisplayListChecker.h"
 #include "nsPlaceholderFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "nsViewManager.h"
@@ -999,7 +1001,9 @@ RetainedDisplayListBuilder::ClearFramesWithProps()
 }
 
 bool
-RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
+RetainedDisplayListBuilder::AttemptPartialUpdate(
+  nscolor aBackstop,
+  mozilla::DisplayListChecker* aChecker)
 {
   mBuilder.RemoveModifiedWindowRegions();
   mBuilder.ClearWindowOpaqueRegion();
@@ -1064,6 +1068,10 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
       // PreProcessDisplayList didn't end up changing anything
       // Invariant: display items should have their original state here.
       // printf_stderr("Skipping display list building since nothing needed to be done\n");
+    }
+
+    if (aChecker) {
+      aChecker->Set(&modifiedDL, "TM");
     }
 
     // |modifiedDL| can sometimes be empty here. We still perform the
