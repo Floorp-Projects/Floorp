@@ -4,8 +4,6 @@
 
 /* See https://bugzilla.mozilla.org/show_bug.cgi?id=780370 */
 
-const Cu = Components.utils;
-
 // Use a COW to expose a function from a standard prototype, and make we deny
 // access to it.
 

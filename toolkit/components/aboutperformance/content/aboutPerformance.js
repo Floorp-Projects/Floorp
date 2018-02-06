@@ -6,8 +6,6 @@
 
 "use strict";
 
-var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 const { PerformanceStats } = ChromeUtils.import("resource://gre/modules/PerformanceStats.jsm", {});
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm", {});

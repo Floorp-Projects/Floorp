@@ -7,10 +7,6 @@ this.EXPORTED_SYMBOLS = ["BookmarksEngine", "PlacesItem", "Bookmark",
                          "Livemark", "BookmarkSeparator",
                          "BufferedBookmarksEngine"];
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://services-common/async.js");

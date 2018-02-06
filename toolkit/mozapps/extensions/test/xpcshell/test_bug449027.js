@@ -4,9 +4,6 @@
  */
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 

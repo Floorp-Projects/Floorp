@@ -8,8 +8,6 @@
 
 (function() {
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 const MSG_JAR_FLUSH = "AddonJarFlush";

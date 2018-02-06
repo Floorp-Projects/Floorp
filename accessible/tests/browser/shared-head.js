@@ -13,8 +13,6 @@
             CURRENT_CONTENT_DIR, loadScripts, loadFrameScripts, snippetToURL,
             Cc, Cu, arrayFromChildren, forceGC */
 
-const { interfaces: Ci, utils: Cu, classes: Cc } = Components;
-
 /**
  * Current browser test directory path used to load subscripts.
  */

@@ -22,7 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=937317
   /** Test for the script settings stack. **/
   SimpleTest.waitForExplicitFinish();
   addLoadEvent(function() {
-    const Cu = Components.utils;
     ChromeUtils.import("resource://gre/modules/Promise.jsm");
     iwin = window[0];
 

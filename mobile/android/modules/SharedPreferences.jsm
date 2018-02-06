@@ -7,8 +7,6 @@
 
 this.EXPORTED_SYMBOLS = ["SharedPreferences"];
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 // For adding observers.
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");

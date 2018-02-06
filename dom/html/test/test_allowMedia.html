@@ -18,8 +18,6 @@ addLoadEvent(runNextTest);
 var SJS = "http://mochi.test:8888/tests/dom/html/test/allowMedia.sjs";
 var TEST_PAGE = "data:text/html,<audio src='" + SJS + "?audio'></audio>";
 
-var Ci = Components.interfaces;
-
 function runNextTest() {
   var test = tests.shift();
   if (!test) {

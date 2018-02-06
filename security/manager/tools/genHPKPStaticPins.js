@@ -19,8 +19,6 @@ if (arguments.length != 3) {
                   "<absolute path to StaticHPKPins.h>");
 }
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
 var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});

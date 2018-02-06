@@ -4,8 +4,6 @@
 "use strict";
 this.EXPORTED_SYMBOLS = ["FxAccountsConfig"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://services-common/rest.js");
 ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

@@ -6,7 +6,7 @@
 
 /* global Pipe, ScriptableInputStream, uneval */
 
-const {Constructor: CC, classes: Cc, results: Cr} = Components;
+const CC = Components.Constructor;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");

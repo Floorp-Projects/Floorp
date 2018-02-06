@@ -6,8 +6,6 @@
 
 "use strict";
 
-const { interfaces: Ci, utils: Cu, classes: Cc } = Components;
-
 const TOPIC_PRESENTATION_RECEIVER_LAUNCH = "presentation-receiver:launch";
 const TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE = "presentation-receiver:launch:response";
 

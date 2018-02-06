@@ -1,8 +1,6 @@
 /*
  * Bug 1270678 - A test case to test does the favicon obey originAttributes.
  */
-let { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 let {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js", {});

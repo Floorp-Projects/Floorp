@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { classes: Cc, interfaces: Ci, results: Cr } = Components;
-
 const SECURE_CONTAINER_URL = "https://example.com/browser/browser/components/safebrowsing/content/test/empty_file.html";
 
 add_task(async function testNormalBrowsing() {

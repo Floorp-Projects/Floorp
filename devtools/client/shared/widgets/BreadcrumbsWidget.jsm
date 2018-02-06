@@ -5,8 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Cu = Components.utils;
-
 const ENSURE_SELECTION_VISIBLE_DELAY = 50; // ms
 
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});

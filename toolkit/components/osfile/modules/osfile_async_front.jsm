@@ -21,9 +21,6 @@
 
 this.EXPORTED_SYMBOLS = ["OS"];
 
-const Cu = Components.utils;
-const Ci = Components.interfaces;
-
 var SharedAll = {};
 ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);

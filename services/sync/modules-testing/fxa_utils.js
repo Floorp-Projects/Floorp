@@ -4,8 +4,6 @@ this.EXPORTED_SYMBOLS = [
   "initializeIdentityWithTokenServerResponse",
 ];
 
-var {utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://services-sync/main.js");
 ChromeUtils.import("resource://services-sync/browserid_identity.js");

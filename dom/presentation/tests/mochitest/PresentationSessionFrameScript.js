@@ -52,7 +52,7 @@ function loadPrivilegedScriptTest() {
     };
   }
 
-  const { classes: Cc, interfaces: Ci, manager: Cm, utils: Cu, results: Cr } = Components;
+  const Cm = Components.manager;
 
   const mockedChannelDescription = {
     QueryInterface : function (iid) {

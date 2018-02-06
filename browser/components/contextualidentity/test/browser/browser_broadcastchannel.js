@@ -1,5 +1,3 @@
-let { classes: Cc, interfaces: Ci } = Components;
-
 const BASE_ORIGIN = "http://example.com";
 const URI = BASE_ORIGIN +
   "/browser/browser/components/contextualidentity/test/browser/empty_file.html";

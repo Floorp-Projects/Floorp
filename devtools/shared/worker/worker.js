@@ -14,7 +14,6 @@
     factory.call(this, require, exports, module, { Cc, Ci, Cu }, ChromeWorker, dumpn);
   } else {
     // Cu.import
-    const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
     const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
     this.isWorker = false;
     this.Promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;

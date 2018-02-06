@@ -2,8 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 // There are shutdown issues for which multiple rejections are left uncaught.
 // This bug should be fixed, but for the moment devtools are whitelisted.
 //

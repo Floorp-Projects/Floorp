@@ -4,8 +4,6 @@
 
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 addEventListener("load", function(event) {

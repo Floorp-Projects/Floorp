@@ -4,9 +4,6 @@
 
 "use strict";
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 const TEXT_NODE = 3;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

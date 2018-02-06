@@ -12,9 +12,6 @@ const kAutoStartPref = "browser.privatebrowsing.autostart";
 // line for the current session.
 var gTemporaryAutoStartMode = false;
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 this.PrivateBrowsingUtils = {
   // Rather than passing content windows to this function, please use
   // isBrowserPrivate since it works with e10s.

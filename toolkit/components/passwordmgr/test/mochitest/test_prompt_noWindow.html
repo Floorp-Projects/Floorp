@@ -24,7 +24,6 @@ isTabModal = false;
 let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
 
 runInParent(() => {
-  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
   ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   let login = Cc["@mozilla.org/login-manager/loginInfo;1"].

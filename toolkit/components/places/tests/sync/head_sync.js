@@ -1,5 +1,3 @@
-const { utils: Cu, interfaces: Ci, classes: Cc, results: Cr } = Components;
-
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");

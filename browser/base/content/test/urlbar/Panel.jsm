@@ -6,8 +6,6 @@ this.EXPORTED_SYMBOLS = [
   "Panel",
 ];
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 this.Panel = function(panelElt, iframeURL) {

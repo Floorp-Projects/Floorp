@@ -184,10 +184,6 @@ class TestMemoryUsage(MarionetteTestCase):
         # NB: we could do this w/ a signal or the fifo queue too
         self.logger.info("starting gc...")
         gc_script = """
-            const Cu = Components.utils;
-            const Cc = Components.classes;
-            const Ci = Components.interfaces;
-
             Cu.import("resource://gre/modules/Services.jsm");
             Services.obs.notifyObservers(null, "child-mmu-request", null);
 
@@ -231,9 +227,6 @@ class TestMemoryUsage(MarionetteTestCase):
                                replace('/', '\\\\'))
 
         checkpoint_script = r"""
-            const Cc = Components.classes;
-            const Ci = Components.interfaces;
-
             let dumper = Cc["@mozilla.org/memory-info-dumper;1"].getService(Ci.nsIMemoryInfoDumper);
             dumper.dumpMemoryReportsToNamedFile(
                 "%s",
@@ -287,9 +280,6 @@ class TestMemoryUsage(MarionetteTestCase):
         # and for the memory report:
         #   unified-memory-report-<checkpoint>-<iteration>.json.gz
         dmd_script = r"""
-            const Cc = Components.classes;
-            const Ci = Components.interfaces;
-
             let dumper = Cc["@mozilla.org/memory-info-dumper;1"].getService(Ci.nsIMemoryInfoDumper);
             dumper.dumpMemoryInfoToTempDir(
                 "%s",

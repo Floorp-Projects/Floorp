@@ -6,7 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["LoginRecipesContent", "LoginRecipesParent"];
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const REQUIRED_KEYS = ["hosts"];
 const OPTIONAL_KEYS = [
   "description",

@@ -22,10 +22,6 @@
   <script type="application/javascript">
   <![CDATA[
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cr = Components.results;
-
 let tests = [
   {
     desc: "moz-anno URI with no data in the database loads default icon",

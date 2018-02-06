@@ -1,6 +1,3 @@
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
 var Cm = Components.manager;
 
 const kBlocklistServiceUUID = "{66354bc9-7ed1-4692-ae1d-8da97d6b205e}";

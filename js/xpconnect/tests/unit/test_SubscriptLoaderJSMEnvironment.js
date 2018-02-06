@@ -1,5 +1,3 @@
-const {utils: Cu} = Components;
-
 let tgt_load = {};
 let tgt_check = {};
 const a = ChromeUtils.import("resource://test/environment_loadscript.jsm", tgt_load);

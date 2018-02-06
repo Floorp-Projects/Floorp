@@ -1,9 +1,5 @@
 // Should report file not found on non-existent files
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const path = "data/test_bug333423.zip";
 

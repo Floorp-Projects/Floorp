@@ -7,7 +7,7 @@
  * This file tests the DirectoryLinksProvider singleton in the DirectoryLinksProvider.jsm module.
  */
 
-var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu, Constructor: CC } = Components;
+var CC = Components.Constructor;
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource:///modules/DirectoryLinksProvider.jsm");
 ChromeUtils.import("resource://gre/modules/Promise.jsm");

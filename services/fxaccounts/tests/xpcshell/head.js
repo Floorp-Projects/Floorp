@@ -4,8 +4,6 @@
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
 /* import-globals-from ../../../common/tests/unit/head_http.js */
 
-var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");

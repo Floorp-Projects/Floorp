@@ -4,10 +4,6 @@
 
 "use strict";
 
-var Cu = Components.utils;
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 

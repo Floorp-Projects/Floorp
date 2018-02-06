@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["StartupPerformance"];
 
-const { utils: Cu, classes: Cc, interfaces: Ci } = Components;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 ChromeUtils.defineModuleGetter(this, "Services",

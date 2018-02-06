@@ -1,7 +1,5 @@
 /* exported startup, shutdown, install, uninstall */
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource:///modules/experiments/Experiments.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 

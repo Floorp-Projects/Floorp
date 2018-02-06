@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["ResponsivenessMonitor"];
 
-const { classes: Cc, interfaces: Ci } = Components;
-
 function ResponsivenessMonitor(intervalMS = 100) {
   this._intervalMS = intervalMS;
   this._prevTimestamp = Date.now();

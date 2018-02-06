@@ -3,8 +3,6 @@
 
 /* eslint-env mozilla/frame-script */
 
-var { utils: Cu, interfaces: Ci, classes: Cc } = Components;
-
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm", this);
 ChromeUtils.import("resource://gre/modules/PerformanceWatcher.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
@@ -55,7 +53,6 @@ CPUBurner.frameScript = function() {
   try {
     "use strict";
 
-    const { utils: Cu, classes: Cc, interfaces: Ci } = Components;
     let sandboxes = new Map();
     let getSandbox = function(addonId) {
       let sandbox = sandboxes.get(addonId);

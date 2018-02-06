@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const history = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);

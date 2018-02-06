@@ -1,5 +1,3 @@
-const {utils: Cu} = Components;
-
 const {Context} = ChromeUtils.import("chrome://marionette/content/browser.js", {});
 
 add_test(function test_Context() {

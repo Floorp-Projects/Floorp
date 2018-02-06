@@ -5,8 +5,6 @@
 // Test that side-loaded extensions with invalid install.rdf files are
 // not initialized at startup.
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 const APP_ID = "xpcshell@tests.mozilla.org";
 
 Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_USER);

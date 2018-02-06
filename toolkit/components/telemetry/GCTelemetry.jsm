@@ -20,8 +20,6 @@
  * recorded. The data is cleared for each new subsession.
  */
 
-const Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 

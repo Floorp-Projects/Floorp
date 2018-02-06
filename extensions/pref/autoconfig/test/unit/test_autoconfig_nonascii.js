@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var {classes: Cc, interfaces: Ci, results: Cr} = Components;
-
 /* eslint no-unsafe-finally: "off"*/
 /* Turning off this rule to allow control flow operations in finally block
  * http://eslint.org/docs/rules/no-unsafe-finally  */

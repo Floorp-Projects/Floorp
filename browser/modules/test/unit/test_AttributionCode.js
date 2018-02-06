@@ -3,8 +3,6 @@
  */
 "use strict";
 
-const {interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource:///modules/AttributionCode.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");

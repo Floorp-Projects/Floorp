@@ -4,11 +4,6 @@
 
 this.EXPORTED_SYMBOLS = ["CommonDialog"];
 
-const Ci = Components.interfaces;
-const Cr = Components.results;
-const Cc = Components.classes;
-const Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "EnableDelayHelper",

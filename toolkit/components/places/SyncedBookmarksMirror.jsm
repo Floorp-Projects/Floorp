@@ -51,8 +51,6 @@
 
 this.EXPORTED_SYMBOLS = ["SyncedBookmarksMirror"];
 
-const { utils: Cu, interfaces: Ci } = Components;
-
 Cu.importGlobalProperties(["URL"]);
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");

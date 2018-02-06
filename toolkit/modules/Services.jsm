@@ -6,10 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["Services"];
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cr = Components.results;
-
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

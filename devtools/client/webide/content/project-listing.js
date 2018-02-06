@@ -4,7 +4,6 @@
 
 /* eslint-env browser */
 
-var Cu = Components.utils;
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const ProjectList = require("devtools/client/webide/modules/project-list");
 

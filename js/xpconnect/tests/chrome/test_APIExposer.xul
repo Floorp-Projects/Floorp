@@ -18,8 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=634156
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-      const Cu = Components.utils;
-
       var sandbox = new Cu.Sandbox("about:blank");
       sandbox.ok = ok;
       sandbox.is = is;

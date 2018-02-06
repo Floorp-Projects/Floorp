@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { utils: Cu } = Components;
-
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 const PREFS = {

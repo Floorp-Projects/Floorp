@@ -1,6 +1,4 @@
 function run_test() {
-  var Cu = Components.utils;
-
   var handler = {
       get: function(target, name){
           return name in target?

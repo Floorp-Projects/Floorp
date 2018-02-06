@@ -8,8 +8,6 @@
 
 this.EXPORTED_SYMBOLS = ["ContextMenu"];
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 Cu.importGlobalProperties(["URL"]);
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");

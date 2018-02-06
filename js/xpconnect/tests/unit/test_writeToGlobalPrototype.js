@@ -1,7 +1,5 @@
 var G = 3;
 
-const Cu = Components.utils;
-
 function run_test()
 {
   let s = Cu.Sandbox(this, {sandboxPrototype: this, writeToGlobalPrototype: true});

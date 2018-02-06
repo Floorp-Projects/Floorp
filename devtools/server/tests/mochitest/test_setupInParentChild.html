@@ -14,10 +14,6 @@ Bug 1181100 - Test DebuggerServerConnection.setupInParent and DebuggerServer.set
 <script type="application/javascript">
 "use strict";
 
-let Cu = Components.utils;
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-
 let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 let {DebuggerClient} = require("devtools/shared/client/debugger-client");
 let {DebuggerServer} = require("devtools/server/main");

@@ -4,8 +4,6 @@
 
 "use strict";
 
-var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 // Creates a new PageListener for this process. This will listen for page loads
 // and for those that match URLs provided by the parent process will set up
 // a dedicated message port and notify the parent process.

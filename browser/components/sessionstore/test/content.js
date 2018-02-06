@@ -6,9 +6,6 @@
 
 "use strict";
 
-var Cu = Components.utils;
-var Ci = Components.interfaces;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function executeSoon(callback) {

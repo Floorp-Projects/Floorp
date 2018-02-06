@@ -4,11 +4,6 @@
 
 "use strict";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-const Cu = Components.utils;
-
 // Cannot use Services.appinfo here, or else xpcshell-tests will blow up, as
 // most tests later register different nsIAppInfo implementations, which
 // wouldn't be reflected in Services.appinfo anymore, as the lazy getter

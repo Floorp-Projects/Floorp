@@ -38,9 +38,6 @@
 
 "use strict";
 
-const Cu = Components.utils;
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 

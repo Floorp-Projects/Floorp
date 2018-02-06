@@ -4,11 +4,6 @@
 
 this.EXPORTED_SYMBOLS = ["HistoryEngine", "HistoryRec"];
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-var Cr = Components.results;
-
 const HISTORY_TTL = 5184000; // 60 days in milliseconds
 const THIRTY_DAYS_IN_MS = 2592000000; // 30 days in milliseconds
 

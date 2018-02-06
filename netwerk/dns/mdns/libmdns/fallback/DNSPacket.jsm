@@ -8,8 +8,6 @@
 
 this.EXPORTED_SYMBOLS = ['DNSPacket'];
 
-const { utils: Cu } = Components;
-
 ChromeUtils.import('resource://gre/modules/Services.jsm');
 
 ChromeUtils.import('resource://gre/modules/DataReader.jsm');

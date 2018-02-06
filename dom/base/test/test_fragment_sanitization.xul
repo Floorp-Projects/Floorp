@@ -11,8 +11,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1432966
 
   <script type="application/javascript"><![CDATA[
 
-var { classes: Cc, interfaces: Ci } = Components;
-
 const NS_HTML = "http://www.w3.org/1999/xhtml";
 
 function awaitLoad(frame) {

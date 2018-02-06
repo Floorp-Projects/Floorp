@@ -1,4 +1,3 @@
-const Cu = Components.utils;
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var ns = {};

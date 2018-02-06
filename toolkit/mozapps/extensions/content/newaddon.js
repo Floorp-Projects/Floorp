@@ -4,10 +4,6 @@
 
 /* exported cancelClicked, continueClicked, initialize, restartClicked, unload */
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 

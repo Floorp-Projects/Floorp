@@ -18,8 +18,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 Components.utils.importGlobalProperties(["File"]);
 
 if (typeof(Cc) == "undefined") {
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
 }
 
 const CHILD_SCRIPT = "chrome://specialpowers/content/specialpowers.js";

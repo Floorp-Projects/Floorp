@@ -8,11 +8,6 @@ const EXPORTED_SYMBOLS = ["WebRequestUpload"];
 
 /* exported WebRequestUpload */
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 Cu.importGlobalProperties(["TextEncoder"]);
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

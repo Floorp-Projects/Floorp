@@ -4,8 +4,6 @@
 
 "use strict";
 
-var { utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
 

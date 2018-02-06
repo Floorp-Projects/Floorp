@@ -6,7 +6,6 @@
 
 "use strict";
 
-var Cu = Components.utils;
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {findOptimalTimeInterval} = require("devtools/client/animationinspector/utils");
 

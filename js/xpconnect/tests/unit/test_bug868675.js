@@ -1,4 +1,3 @@
-const Cu = Components.utils;
 function run_test() {
 
   // Make sure we don't throw for primitive values.

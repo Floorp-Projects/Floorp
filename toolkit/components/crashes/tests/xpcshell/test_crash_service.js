@@ -3,8 +3,6 @@
 
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/Timer.jsm");

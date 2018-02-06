@@ -1,4 +1,3 @@
-var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.importGlobalProperties(["File"]);
 
 function createFileWithData(fileData) {

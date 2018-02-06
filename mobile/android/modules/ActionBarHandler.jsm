@@ -4,8 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 this.EXPORTED_SYMBOLS = ["ActionBarHandler"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

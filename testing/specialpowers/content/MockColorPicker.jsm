@@ -4,10 +4,7 @@
 
 this.EXPORTED_SYMBOLS = ["MockColorPicker"];
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 const Cm = Components.manager;
-const Cu = Components.utils;
 
 const CONTRACT_ID = "@mozilla.org/colorpicker;1";
 

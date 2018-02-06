@@ -1,7 +1,5 @@
 "use strict";
 
-var { interfaces: Ci, classes: Cc, utils: Cu, results: Cr } = Components;
-
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 var {WebRequest} = ChromeUtils.import("resource://gre/modules/WebRequest.jsm", {});

@@ -131,7 +131,6 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         target_y = rect['y'] + (y if y is not None else rect['height'] // 2)
 
         self.marionette.execute_script('''
-            let Ci = Components.interfaces;
             let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIDOMWindowUtils);
             utils.sendTouchEventToWindow('touchstart', [0],

@@ -8,9 +8,6 @@
 // Test that VariablesView._doSearch() works even without an attached
 // VariablesViewController (bug 1196341).
 
-var Cu = Components.utils;
-var Cc = Components.classes;
-var Ci = Components.interfaces;
 const DOMParser = Cc["@mozilla.org/xmlextras/domparser;1"]
                     .createInstance(Ci.nsIDOMParser);
 const { VariablesView } =

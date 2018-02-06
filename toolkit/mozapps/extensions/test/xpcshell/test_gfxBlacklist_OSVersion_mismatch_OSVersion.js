@@ -3,8 +3,6 @@
  */
 
 // This should eventually be moved to head_addons.js
-var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 // Test whether old OS versions are not matched when the blacklist contains
 // only new OS versions.
 // Uses test_gfxBlacklist_OS.xml

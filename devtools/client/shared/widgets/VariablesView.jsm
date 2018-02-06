@@ -5,9 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 const DBG_STRINGS_URI = "devtools/client/locales/debugger.properties";
 const LAZY_EMPTY_DELAY = 150; // ms
 const SCROLL_PAGE_SIZE_DEFAULT = 0;

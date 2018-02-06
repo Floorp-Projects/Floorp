@@ -4,8 +4,6 @@
 
 "use strict";
 
-var { utils: Cu } = Components;
-
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 var { Task } = require("devtools/shared/task");

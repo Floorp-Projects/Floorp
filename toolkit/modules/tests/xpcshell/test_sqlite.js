@@ -1,7 +1,5 @@
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 do_get_profile();
 
 ChromeUtils.import("resource://gre/modules/Promise.jsm");

@@ -1,7 +1,5 @@
 // Bits and pieces copied from toolkit/components/search/tests/xpcshell/head_search.js
 
-var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Task.jsm");
 

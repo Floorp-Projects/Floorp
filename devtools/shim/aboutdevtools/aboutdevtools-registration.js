@@ -6,9 +6,6 @@
 
 // Register the about:devtools URL, that is opened whenever a user attempts to open
 // DevTools for the first time.
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 

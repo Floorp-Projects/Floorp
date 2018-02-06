@@ -12,7 +12,6 @@
 </body>
 
 <script>
-var Ci = Components.interfaces;
 var chromeWindowInterface = Ci.nsIDOMChromeWindow;
 
 SimpleTest.waitForExplicitFinish();

@@ -4,8 +4,6 @@
 
 ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 
-var Ci = Components.interfaces;
-
 // This verifies that duplicate plugins are coalesced and maintain their ID
 // across restarts.
 

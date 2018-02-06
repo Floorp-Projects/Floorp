@@ -17,11 +17,6 @@ this.EXPORTED_SYMBOLS = ["ExtensionChild"];
  * Don't put contentscript logic here, use ExtensionContent.jsm instead.
  */
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

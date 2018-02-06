@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["FinderIterator"];
 
-const { interfaces: Ci, classes: Cc, utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

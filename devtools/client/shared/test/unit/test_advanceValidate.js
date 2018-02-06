@@ -7,7 +7,6 @@
 
 // Tests the advanceValidate function from rule-view.js.
 
-const {utils: Cu, interfaces: Ci} = Components;
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {advanceValidate} = require("devtools/client/inspector/shared/utils");
 

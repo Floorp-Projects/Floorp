@@ -7,8 +7,6 @@
 
 try {
   if (Cc === undefined) {
-    var Cc = Components.classes;
-    var Ci = Components.interfaces;
   }
 } catch (ex) {}
 

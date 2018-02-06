@@ -5,8 +5,6 @@
 "use strict";
 /* global XPCNativeWrapper */
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("chrome://marionette/content/assert.js");
 ChromeUtils.import("chrome://marionette/content/atom.js");
 const {

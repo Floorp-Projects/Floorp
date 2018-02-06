@@ -4,8 +4,6 @@
 // Regression test for bug 345529 - crash removing an observer during an
 // nsPref:changed notification.
 function run_test() {
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
   const PREF_NAME = "testPref";
 
   var prefs = Cc["@mozilla.org/preferences-service;1"]

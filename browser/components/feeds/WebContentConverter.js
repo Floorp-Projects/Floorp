@@ -8,10 +8,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
 function LOG(str) {
   // dump("*** " + str + "\n");
 }

@@ -2,7 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
-  let Cu = Components.utils;
   let sb = new Cu.Sandbox('https://www.example.com',
                           { wantGlobalProperties: ['rtcIdentityProvider'] });
 

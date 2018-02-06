@@ -19,7 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=812415
   <![CDATA[
   /** Test for Bug 812415 and Bug 823348 **/
 
-  const Cu = Components.utils;
   SimpleTest.waitForExplicitFinish();
 
   function testWaiving(iwin, sb) {

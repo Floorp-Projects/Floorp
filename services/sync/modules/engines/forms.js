@@ -4,10 +4,6 @@
 
 this.EXPORTED_SYMBOLS = ["FormEngine", "FormRec", "FormValidator"];
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://services-sync/engines.js");
 ChromeUtils.import("resource://services-sync/record.js");

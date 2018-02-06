@@ -4,8 +4,6 @@
 
 this.EXPORTED_SYMBOLS = ["FxAccountsClient"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://services-common/utils.js");

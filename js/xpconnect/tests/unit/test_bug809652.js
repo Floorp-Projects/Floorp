@@ -4,7 +4,6 @@
 
 /* See https://bugzilla.mozilla.org/show_bug.cgi?id=813901 */
 
-const Cu = Components.utils;
 const TypedArrays = [ Int8Array, Uint8Array, Int16Array, Uint16Array,
                       Int32Array, Uint32Array, Float32Array, Float64Array,
                       Uint8ClampedArray ];

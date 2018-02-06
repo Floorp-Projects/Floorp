@@ -6,10 +6,6 @@
 
 /* exported logger */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 this.EXPORTED_SYMBOLS = [];
 
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");

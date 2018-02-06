@@ -10,7 +10,6 @@
  */
 
 window.addEventListener("load", function () {
-  const { utils: Cu } = Components;
   const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
   // Timeout for the subscribe XHR.

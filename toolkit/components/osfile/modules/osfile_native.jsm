@@ -10,8 +10,6 @@
 
 this.EXPORTED_SYMBOLS = ["read"];
 
-var {results: Cr, utils: Cu, interfaces: Ci} = Components;
-
 var SharedAll = ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", {});
 
 var SysAll = {};

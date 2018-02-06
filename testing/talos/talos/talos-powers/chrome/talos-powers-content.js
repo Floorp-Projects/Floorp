@@ -6,8 +6,6 @@
 
 /* globals docShell */
 
-var { interfaces: Ci, utils: Cu } = Components;
-
 function canQuitApplication() {
   var os = Components.classes["@mozilla.org/observer-service;1"]
     .getService(Components.interfaces.nsIObserverService);

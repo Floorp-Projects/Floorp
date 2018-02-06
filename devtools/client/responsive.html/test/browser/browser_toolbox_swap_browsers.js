@@ -10,7 +10,6 @@ const TEST_URL = "http://example.com/";
 function getServerConnections(browser) {
   ok(browser.isRemoteBrowser, "Content browser is remote");
   return ContentTask.spawn(browser, {}, async function () {
-    const Cu = Components.utils;
     const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
     const { DebuggerServer } = require("devtools/server/main");
     if (!DebuggerServer._connections) {

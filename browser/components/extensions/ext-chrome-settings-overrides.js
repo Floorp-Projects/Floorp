@@ -6,8 +6,6 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 ChromeUtils.defineModuleGetter(this, "ExtensionPreferencesManager",
                                "resource://gre/modules/ExtensionPreferencesManager.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",

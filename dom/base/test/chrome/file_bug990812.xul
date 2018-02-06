@@ -16,8 +16,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
     var FRAME_SCRIPT_WINDOW = "data:,sendSyncMessage('test', 'window')";
     var FRAME_SCRIPT_GROUP  = "data:,sendSyncMessage('test', 'group')";
 
-    var Cc = Components.classes;
-    var Ci = Components.interfaces;
     var globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
                      .getService(Ci.nsIMessageListenerManager);
 

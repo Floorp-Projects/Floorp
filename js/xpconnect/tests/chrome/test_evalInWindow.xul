@@ -17,7 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=877673
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
       SimpleTest.waitForExplicitFinish();
-      const Cu = Components.utils;
       var sb = new Cu.Sandbox("http://example.org", {wantExportHelpers: true});
       sb.ok = ok;
 

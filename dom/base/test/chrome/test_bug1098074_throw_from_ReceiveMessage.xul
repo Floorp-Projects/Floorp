@@ -21,8 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1098074
   // with SimpleTest.finish as a continuation function.
   SimpleTest.monitorConsole(SimpleTest.finish, [{errorMessage: new RegExp('acopia')}]);
 
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
   var globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
                    .getService(Ci.nsIMessageListenerManager);
   globalMM.addMessageListener("flimfniffle", function onMessage(msg) {

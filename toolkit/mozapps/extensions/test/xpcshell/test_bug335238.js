@@ -6,9 +6,6 @@
 // Disables security checking our updates which haven't been signed
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 

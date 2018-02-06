@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var Ci = Components.interfaces;
-var Cu = Components.utils;
 const PREF_DEPRECATION_WARNINGS = "devtools.errorconsole.deprecation_warnings";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);

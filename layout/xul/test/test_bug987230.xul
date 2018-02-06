@@ -51,9 +51,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=987230
 
   SimpleTest.requestCompleteLog();
 
-  const Ci = Components.interfaces;
-  const Cc = Components.classes;
-
   let platform = navigator.platform.toLowerCase();
   let isWindows = platform.startsWith("win");
   let mouseDown = isWindows ? 2 : 1;

@@ -1,5 +1,3 @@
-const {utils: Cu} = Components;
-
 const {
   ContentEventObserverService,
   WebElementEventTarget,

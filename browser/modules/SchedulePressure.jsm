@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["SchedulePressure"];
 
-const Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
   "resource://gre/modules/TelemetryStopwatch.jsm");

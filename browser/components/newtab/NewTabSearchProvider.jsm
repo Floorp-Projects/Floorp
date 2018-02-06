@@ -2,7 +2,6 @@
 
 this.EXPORTED_SYMBOLS = ["NewTabSearchProvider"];
 
-const {utils: Cu, interfaces: Ci} = Components;
 const CURRENT_ENGINE = "browser-search-engine-modified";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

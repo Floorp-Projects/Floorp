@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = [ "Deprecated" ];
 
-const Cu = Components.utils;
-const Ci = Components.interfaces;
 const PREF_DEPRECATION_WARNINGS = "devtools.errorconsole.deprecation_warnings";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");

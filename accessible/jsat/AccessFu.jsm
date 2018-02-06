@@ -6,8 +6,6 @@
 
 "use strict";
 
-const {utils: Cu, interfaces: Ci} = Components;
-
 this.EXPORTED_SYMBOLS = ["AccessFu"]; // jshint ignore:line
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");

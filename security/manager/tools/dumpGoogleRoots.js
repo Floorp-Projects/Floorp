@@ -13,9 +13,6 @@
 // 4. [paste the output into the appropriate section in
 //     security/manager/tools/PreloadedHPKPins.json]
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-
 function downloadRoots() {
   let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
               .createInstance(Ci.nsIXMLHttpRequest);

@@ -3,8 +3,6 @@
  */
 
 // This should eventually be moved to head_addons.js
-var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 // Test whether blocklists specifying new OSeswcorrectly don't block if driver
 // versions are appropriately up-to-date.
 // Uses test_gfxBlacklist_OS.xml

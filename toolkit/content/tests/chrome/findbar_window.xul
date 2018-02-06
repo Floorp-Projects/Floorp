@@ -20,7 +20,6 @@
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
   <script type="application/javascript"><![CDATA[
-    const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
     ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
     ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
     ChromeUtils.import("resource://testing-common/ContentTask.jsm");

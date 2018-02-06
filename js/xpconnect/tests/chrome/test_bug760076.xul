@@ -32,7 +32,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=760076
   }
 
   // Set up the sandbox.
-  const Cu = Components.utils;
   var sb = new Cu.Sandbox('http://www.example.com');
 
   // Import the functions it needs.

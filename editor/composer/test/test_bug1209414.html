@@ -43,7 +43,6 @@ var onSpellCheck =
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   script = SpecialPowers.loadChromeScript(function() {
-    const Ci = Components.interfaces;
     var chromeWin = browserElement.ownerDocument.defaultView
                     .QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIWebNavigation)

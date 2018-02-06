@@ -29,9 +29,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
   // Chrome script that adds handles for inserting substitutions and
   // resolving symlinked paths in the parent process.
   var script = SpecialPowers.loadChromeScript(() => {
-    const Ci = Components.interfaces;
-    const Cc = Components.classes;
-    const Cu = Components.utils;
     ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     // Sets up a substitution in the parent process

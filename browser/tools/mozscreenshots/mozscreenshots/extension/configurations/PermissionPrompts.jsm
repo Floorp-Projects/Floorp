@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["PermissionPrompts"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
 ChromeUtils.import("resource://testing-common/ContentTask.jsm");

@@ -90,11 +90,6 @@
 
 this.EXPORTED_SYMBOLS = [ "XPCOMUtils" ];
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-const Cu = Components.utils;
-
 this.XPCOMUtils = {
   /**
    * Generate a QueryInterface implementation. The returned function must be

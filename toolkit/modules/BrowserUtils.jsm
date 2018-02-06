@@ -7,8 +7,6 @@
 
 this.EXPORTED_SYMBOLS = [ "BrowserUtils" ];
 
-const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",

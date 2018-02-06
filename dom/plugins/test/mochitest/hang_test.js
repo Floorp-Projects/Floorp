@@ -1,9 +1,6 @@
 
 ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-
 var success = false;
 var observerFired = false;
 

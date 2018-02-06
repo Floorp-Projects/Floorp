@@ -211,8 +211,6 @@ function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerURI
 function openLinkIn(url, where, params) {
   if (!where || !url)
     return;
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
 
   var aFromChrome           = params.fromChrome;
   var aAllowThirdPartyFixup = params.allowThirdPartyFixup;
@@ -774,8 +772,6 @@ function openPreferences(paneID, extraArgs) {
   let newLoad = true;
   let browser = null;
   if (!win) {
-    const Cc = Components.classes;
-    const Ci = Components.interfaces;
     let windowArguments = Cc["@mozilla.org/array;1"]
       .createInstance(Ci.nsIMutableArray);
     let supportsStringPrefURL = Cc["@mozilla.org/supports-string;1"]

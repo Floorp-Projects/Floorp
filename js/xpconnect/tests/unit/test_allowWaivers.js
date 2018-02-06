@@ -1,4 +1,3 @@
-const Cu = Components.utils;
 function checkWaivers(from, allowed) {
   var sb = new Cu.Sandbox('http://example.com');
   from.test = sb.eval('var o = {prop: 2, f: function() {return 42;}}; o');

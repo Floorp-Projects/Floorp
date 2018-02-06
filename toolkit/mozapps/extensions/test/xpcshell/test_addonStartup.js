@@ -1,7 +1,5 @@
 "use strict";
 
-const Cr = Components.results;
-
 add_task(async function test_XPIStates_invalid_paths() {
   let {path} = gAddonStartup;
 

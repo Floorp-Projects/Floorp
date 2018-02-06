@@ -3,7 +3,6 @@
 
 "use strict";
 
-var Cu = Components.utils;
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {escapeCSSComment, _unescapeCSSComment} = require("devtools/shared/css/parsing-utils");
 

@@ -73,7 +73,6 @@ add_task(async function test_suspend() {
 // listener are correctly resumed.
 add_task(async function test_error_resume() {
   let chromeScript = SpecialPowers.loadChromeScript(() => {
-    const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
     ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     let observer = channel => {
@@ -171,8 +170,6 @@ add_task(async function test_set_responseHeaders() {
   await new Promise(resolve => setTimeout(resolve, 0));
 
   let chromeScript = SpecialPowers.loadChromeScript(() => {
-    const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
     ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
     ChromeUtils.import("resource://gre/modules/Services.jsm");
     ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

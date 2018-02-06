@@ -8,7 +8,6 @@ this.EXPORTED_SYMBOLS = [
   "SelectParentHelper"
 ];
 
-const {utils: Cu} = Components;
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 

@@ -19,9 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668855
   <![CDATA[
   /** Test for Bug 668855 **/
 
-  let Cu = Components.utils;
-  let Ci = Components.interfaces;
-
   /* Create a weak reference, with a single-element weak map. */
   let make_weak_ref = function (obj) {
     let m = new WeakMap;

@@ -14,8 +14,6 @@
 
 this.EXPORTED_SYMBOLS = ["ExtensionTestCommon", "MockExtension"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 Cu.importGlobalProperties(["TextEncoder"]);
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");

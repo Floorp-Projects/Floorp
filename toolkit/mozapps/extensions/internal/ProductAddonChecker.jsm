@@ -6,8 +6,6 @@
 
 /* exported ProductAddonChecker */
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 const LOCAL_EME_SOURCES = [{
   "id": "gmp-gmpopenh264",
   "src": "chrome://global/content/gmp-sources/openh264.json"

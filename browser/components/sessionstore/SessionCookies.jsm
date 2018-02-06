@@ -6,9 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["SessionCookies"];
 
-const Cu = Components.utils;
-const Ci = Components.interfaces;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 

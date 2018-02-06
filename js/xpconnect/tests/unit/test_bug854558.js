@@ -1,4 +1,3 @@
-const Cu = Components.utils;
 function run_test() {
 
   var chromeSB = new Cu.Sandbox(this);

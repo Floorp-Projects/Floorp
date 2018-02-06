@@ -4,11 +4,6 @@
 
 this.EXPORTED_SYMBOLS = ["Status"];
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cr = Components.results;
-var Cu = Components.utils;
-
 ChromeUtils.import("resource://services-sync/constants.js");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://services-sync/browserid_identity.js");

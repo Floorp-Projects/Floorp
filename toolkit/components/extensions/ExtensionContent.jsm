@@ -9,8 +9,6 @@ this.EXPORTED_SYMBOLS = ["ExtensionContent"];
 
 /* globals ExtensionContent */
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

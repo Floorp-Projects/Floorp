@@ -8,8 +8,6 @@ this.EXPORTED_SYMBOLS = [
   "TelemetryUtils"
 ];
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;

@@ -24,7 +24,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
   <![CDATA[
 
   /** Test for Bug 741267 **/
-    const Cu = Components.utils;
     function isXrayWrapper(x) {
       return Components.utils.isXrayWrapper(x);
     }

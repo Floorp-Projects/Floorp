@@ -17,7 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=996069
   <!-- test code goes here -->
   <script type="application/javascript">
   <![CDATA[
-  const Cu = Components.utils;
   /** Test for Bug 996069 **/
   SimpleTest.waitForExplicitFinish();
 

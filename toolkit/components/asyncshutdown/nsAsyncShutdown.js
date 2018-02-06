@@ -8,11 +8,6 @@
 
 "use strict";
 
-const Cu = Components.utils;
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cr = Components.results;
-
 var XPCOMUtils = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {}).XPCOMUtils;
 ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
   "resource://gre/modules/AsyncShutdown.jsm");

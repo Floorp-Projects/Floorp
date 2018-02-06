@@ -240,7 +240,6 @@ add_task(async function test_webRequest_auth_nonblocking_forwardAuthProvider() {
   // if the authorization is not handled by the onAuthRequired handler.
 
   let chromeScript = SpecialPowers.loadChromeScript(() => {
-    const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
     ChromeUtils.import("resource://gre/modules/Services.jsm");
     ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -301,7 +300,6 @@ add_task(async function test_webRequest_auth_nonblocking_forwardAuthPrompt2() {
   // if the authorization is not handled by the onAuthRequired handler.
 
   let chromeScript = SpecialPowers.loadChromeScript(() => {
-    const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
     ChromeUtils.import("resource://gre/modules/Services.jsm");
     ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

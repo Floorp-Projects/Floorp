@@ -8,8 +8,6 @@ this.EXPORTED_SYMBOLS = [
   "FxAccountsStorageManager",
 ];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");

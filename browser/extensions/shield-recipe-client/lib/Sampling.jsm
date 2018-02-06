@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
 Cu.importGlobalProperties(["crypto", "TextEncoder"]);
 
 this.EXPORTED_SYMBOLS = ["Sampling"];

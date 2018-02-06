@@ -9,8 +9,6 @@ this.EXPORTED_SYMBOLS = ["FindContent"];
 
 /* exported FindContent */
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-
 class FindContent {
   constructor(docShell) {
     const {Finder} = ChromeUtils.import("resource://gre/modules/Finder.jsm", {});

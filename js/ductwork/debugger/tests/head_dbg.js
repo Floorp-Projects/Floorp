@@ -2,10 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
 
 function testGlobal(aName) {
   let systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]

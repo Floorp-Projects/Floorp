@@ -20,8 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=884693
     const SERVER_URL = "http://mochi.test:8888/tests/dom/base/test/chrome/bug884693.sjs";
     const INVALID_XML = "InvalidXML";
 
-    var { classes: Cc, interfaces: Ci } = Components;
-
     let consoleService = Cc["@mozilla.org/consoleservice;1"].
                          getService(Ci.nsIConsoleService)
 

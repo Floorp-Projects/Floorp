@@ -6,10 +6,6 @@
  * and are CC licensed by https://www.flickr.com/photos/legofenris/.
  */
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 // Enumerate the directory tree and store results in entryList as
 //
 //  { path: 'a/b/c', file: <nsIFile> }

@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const myScope = this;
 
 ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");

@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
-
 // Fired by TelemetryController when async telemetry data should be collected.
 const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
 

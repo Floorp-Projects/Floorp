@@ -27,7 +27,6 @@ function frameScript() {
   try {
     "use strict";
 
-    const { utils: Cu, classes: Cc, interfaces: Ci } = Components;
     ChromeUtils.import("resource://gre/modules/PerformanceStats.jsm");
     ChromeUtils.import("resource://gre/modules/Services.jsm");
 

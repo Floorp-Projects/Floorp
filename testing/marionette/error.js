@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {interfaces: Ci, utils: Cu} = Components;
-
 const {pprint} = ChromeUtils.import("chrome://marionette/content/format.js", {});
 
 const ERRORS = new Set([

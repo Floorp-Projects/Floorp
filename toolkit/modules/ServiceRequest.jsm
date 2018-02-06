@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-
 /**
   * This module consolidates various code and data update requests, so flags
   * can be set, Telemetry collected, etc. in a central place.

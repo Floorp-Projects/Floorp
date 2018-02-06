@@ -8,10 +8,6 @@ var gLanguageBundle;
 var gRegionBundle;
 const MAX_UNDO_STACK_DEPTH = 1;
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 this.InlineSpellChecker = function InlineSpellChecker(aEditor) {

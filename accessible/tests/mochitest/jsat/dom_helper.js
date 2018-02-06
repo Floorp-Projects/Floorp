@@ -2,9 +2,6 @@
 
 /* exported loadJSON, eventMap */
 
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/Geometry.jsm");
 
 var win = getMainChromeWindow(window);

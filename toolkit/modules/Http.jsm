@@ -4,8 +4,6 @@
 
 const EXPORTED_SYMBOLS = ["httpRequest", "percentEncode"];
 
-const {classes: Cc, interfaces: Ci} = Components;
-
 // Strictly follow RFC 3986 when encoding URI components.
 // Accepts a unescaped string and returns the URI encoded string for use in
 // an HTTP request.

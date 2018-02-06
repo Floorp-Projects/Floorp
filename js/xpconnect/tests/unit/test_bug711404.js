@@ -1,6 +1,3 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 function run_test()
 {
   var p = Cc["@mozilla.org/hash-property-bag;1"].

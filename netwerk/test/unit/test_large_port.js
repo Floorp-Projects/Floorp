@@ -6,9 +6,6 @@
 
 "use strict";
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-
 function run_test()
 {
     let mutator = Cc["@mozilla.org/network/standard-url-mutator;1"]

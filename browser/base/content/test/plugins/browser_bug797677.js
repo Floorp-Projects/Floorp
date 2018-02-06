@@ -2,9 +2,6 @@ var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content
 var gTestBrowser = null;
 var gConsoleErrors = 0;
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-
 add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();

@@ -3,8 +3,6 @@
 
 /* eslint-env mozilla/frame-script */
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]

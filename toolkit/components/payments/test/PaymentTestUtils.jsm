@@ -2,8 +2,6 @@
 
 this.EXPORTED_SYMBOLS = ["PaymentTestUtils"];
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-
 this.PaymentTestUtils = {
   /**
    * Common content tasks functions to be used with ContentTask.spawn.

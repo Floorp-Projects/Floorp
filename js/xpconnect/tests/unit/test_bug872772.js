@@ -1,4 +1,3 @@
-const Cu = Components.utils;
 function run_test() {
 
   // Make a content sandbox with an Xrayable object.

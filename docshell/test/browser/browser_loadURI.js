@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-
 const gPostData = "postdata=true";
 
 function test() {

@@ -4,11 +4,6 @@
 
 "use strict";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 const kLoginsKey = "Software\\Microsoft\\Internet Explorer\\IntelliForms\\Storage2";
 const kMainKey = "Software\\Microsoft\\Internet Explorer\\Main";
 

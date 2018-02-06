@@ -18,7 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <script type="application/javascript">
   <![CDATA[
   /** Test for Bug  **/
-  let Ci = Components.interfaces;
   var obs = Components.classes["@mozilla.org/observer-service;1"]
                       .getService(Ci.nsIObserverService);
   var didCall = false;

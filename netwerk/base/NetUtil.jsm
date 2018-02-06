@@ -15,11 +15,6 @@ this.EXPORTED_SYMBOLS = [
 ////////////////////////////////////////////////////////////////////////////////
 //// Constants
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cr = Components.results;
-const Cu = Components.utils;
-
 const PR_UINT32_MAX = 0xffffffff;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

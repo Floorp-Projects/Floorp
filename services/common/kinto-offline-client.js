@@ -58,8 +58,6 @@ var _utils = require("../src/utils");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 Cu.importGlobalProperties(["fetch"]);
 const { EventEmitter } = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm", {});

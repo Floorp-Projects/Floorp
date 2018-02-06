@@ -11,8 +11,6 @@ function dumpLog(msg) {
 
 
 if (Cc === undefined) {
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
 }
 
 const FOSTREAM_CID = "@mozilla.org/network/file-output-stream;1";

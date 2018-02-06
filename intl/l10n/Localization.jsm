@@ -21,10 +21,6 @@
 /* eslint no-console: ["error", { allow: ["warn", "error"] }] */
 /* global console */
 
-const Cu = Components.utils;
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 const { L10nRegistry } = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
 const LocaleService = Cc["@mozilla.org/intl/localeservice;1"].getService(Ci.mozILocaleService);
 const ObserverService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);

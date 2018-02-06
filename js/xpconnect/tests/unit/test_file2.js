@@ -4,8 +4,6 @@
 
 Components.utils.importGlobalProperties(['File']);
 
-const Ci = Components.interfaces;
-
 add_task(async function() {
   // throw if anything goes wrong
 

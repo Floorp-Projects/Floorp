@@ -19,7 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1355109
   <![CDATA[
 
   SimpleTest.waitForExplicitFinish();
-  const Cu = Components.utils;
 
   // Import our test JSM. We first strip the filename off
   // the chrome url, then append the jsm filename.

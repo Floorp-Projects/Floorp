@@ -1,5 +1,3 @@
-const Cu = Components.utils;
-
 function run_test() {
   var sb = new Cu.Sandbox('http://www.example.com');
   var obj = Cu.evalInSandbox('this.obj = {foo: 2}; obj', sb);

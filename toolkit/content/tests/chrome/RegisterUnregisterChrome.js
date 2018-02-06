@@ -3,11 +3,6 @@
 const NS_CHROME_MANIFESTS_FILE_LIST = "ChromeML";
 const XUL_CACHE_PREF = "nglayout.debug.disable_xul_cache";
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cr = Components.results;
-var Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var gChromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].

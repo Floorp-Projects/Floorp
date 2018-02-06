@@ -7,8 +7,6 @@
 
 /* eslint-disable mozilla/use-chromeutils-import */
 
-var Cu = Components.utils;
-
 Cu.import("resource://gre/modules/Messaging.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 

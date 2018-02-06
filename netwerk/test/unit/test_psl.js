@@ -4,8 +4,6 @@ var etld = Cc["@mozilla.org/network/effective-tld-service;1"]
 var idna = Cc["@mozilla.org/network/idn-service;1"]
            .getService(Ci.nsIIDNService);
 
-var Cr = Components.results;
-
 function run_test()
 {
   var file = do_get_file("data/test_psl.txt");

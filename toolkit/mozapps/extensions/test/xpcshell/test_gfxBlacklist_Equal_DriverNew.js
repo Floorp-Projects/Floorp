@@ -3,8 +3,6 @@
  */
 
 // This should eventually be moved to head_addons.js
-var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 // Test whether a machine which is newer than the equal
 // blacklist entry is allowed.
 // Uses test_gfxBlacklist.xml

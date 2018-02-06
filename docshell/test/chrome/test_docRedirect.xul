@@ -14,9 +14,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1342989
   <![CDATA[
   SimpleTest.waitForExplicitFinish();
 
-  var Ci = Components.interfaces;
-  var Cc = Components.classes;
-
   const WEB_PROGRESS_LISTENER_FLAGS =
       Object.keys(Ci.nsIWebProgressListener).filter(
     propName => propName.startsWith("STATE_")

@@ -3,8 +3,6 @@
 
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 var {CrashStore, CrashManager} = ChromeUtils.import("resource://gre/modules/CrashManager.jsm", {});
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);

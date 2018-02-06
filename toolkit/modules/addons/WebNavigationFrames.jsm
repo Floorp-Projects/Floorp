@@ -6,8 +6,6 @@
 
 const EXPORTED_SYMBOLS = ["WebNavigationFrames"];
 
-var Ci = Components.interfaces;
-
 /* exported WebNavigationFrames */
 
 /**

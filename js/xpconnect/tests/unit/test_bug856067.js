@@ -1,5 +1,3 @@
-const Cu = Components.utils;
-
 function run_test() {
   var sb = new Cu.Sandbox('http://www.example.com');
   let w = Cu.evalInSandbox('var w = new WeakMap(); w.__proto__ = new Set(); w.foopy = 12; w', sb);
