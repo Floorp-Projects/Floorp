@@ -352,7 +352,7 @@ class AutocompleteResults(UIBaseLib):
 
         :returns: The list of visible results.
         """
-        match_count = self.element.get_property('_matchCount')
+        match_count = self.element.get_property('matchCount')
 
         return self.marionette.execute_script("""
           let rv = [];

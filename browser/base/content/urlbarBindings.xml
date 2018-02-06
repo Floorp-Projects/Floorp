@@ -73,6 +73,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         Services.prefs.addObserver("browser.search.suggest.enabled", this);
         this.browserSearchSuggestEnabled = Services.prefs.getBoolPref("browser.search.suggest.enabled");
 
+        this.openInTab = this._prefs.getBoolPref("openintab");
         this.clickSelectsAll = this._prefs.getBoolPref("clickSelectsAll");
         this.doubleClickSelectsAll = this._prefs.getBoolPref("doubleClickSelectsAll");
         this.completeDefaultIndex = this._prefs.getBoolPref("autoFill");
@@ -315,9 +316,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             return true;
           }
           let maxResultsRemaining =
-            this.popup.maxResults - this.popup._matchCount;
+            this.popup.maxResults - this.popup.matchCount;
           let lastResultSelected =
-            this.popup.selectedIndex + 1 == this.popup._matchCount;
+            this.popup.selectedIndex + 1 == this.popup.matchCount;
           return maxResultsRemaining > 0 && lastResultSelected;
         ]]></body>
       </method>
@@ -518,6 +519,33 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
+      <method name="_whereToOpen">
+        <parameter name="event"/>
+        <body><![CDATA[
+          let isMouseEvent = event instanceof MouseEvent;
+          let reuseEmpty = !isMouseEvent;
+          let where = undefined;
+          if (isMouseEvent) {
+            where = whereToOpenLink(event, false, false);
+          } else {
+            let altEnter = event && event.altKey;
+            where = altEnter ? "tab" : "current";
+          }
+          if (this.openInTab) {
+            if (where == "current") {
+              where = "tab";
+            } else if (where == "tab") {
+              where = "current";
+            }
+            reuseEmpty = true;
+          }
+          if (where == "tab" && reuseEmpty && isTabEmpty(gBrowser.selectedTab)) {
+            where = "current";
+          }
+          return where;
+        ]]></body>
+      </method>
+
       <!--
         This is ultimately called by the autocomplete controller as the result
         of handleEnter when the Return key is pressed in the textbox.  Since
@@ -566,19 +594,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             return;
           }
 
-          let where = openUILinkWhere;
-          if (!where) {
-            if (isMouseEvent) {
-              where = whereToOpenLink(event, false, false);
-            } else {
-              // If the current tab is empty, ignore Alt+Enter (reuse this tab)
-              let altEnter = !isMouseEvent &&
-                             event &&
-                             event.altKey &&
-                             !isTabEmpty(gBrowser.selectedTab);
-              where = altEnter ? "tab" : "current";
-            }
-          }
+          let where = openUILinkWhere || this._whereToOpen(event);
 
           let url = this.value;
           if (!url) {
@@ -1118,6 +1134,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 break;
               case "speculativeConnect.enabled":
                 this.speculativeConnectEnabled = this._prefs.getBoolPref(aData);
+                break;
+              case "openintab":
+                this.openInTab = this._prefs.getBoolPref(aData);
                 break;
               case "browser.search.suggest.enabled":
                 this.browserSearchSuggestEnabled = Services.prefs.getBoolPref(aData);
@@ -2017,8 +2036,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           this.classList.add("showSearchSuggestionsNotification");
           // Don't show the one-off buttons if we are showing onboarding and
           // there's no result, since it would be ugly and pointless.
-          this.footer.collapsed = this._matchCount == 0;
-          this.input.tabScrolling = this._matchCount != 0;
+          this.footer.collapsed = this.matchCount == 0;
+          this.input.tabScrolling = this.matchCount != 0;
 
           // This event allows accessibility APIs to see the notification.
           if (!this.popupOpen) {
@@ -2037,7 +2056,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           this.richlistbox.flex = 1;
           this.removeAttribute("dontanimate");
           this.searchSuggestionsNotification.removeAttribute("animate");
-          if (this._matchCount) {
+          if (this.matchCount) {
             // Update popup height.
             this._invalidate();
           } else {
@@ -2072,7 +2091,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <method name="handleKeyPress">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          this.oneOffSearchButtons.handleKeyPress(aEvent, this._matchCount,
+          this.oneOffSearchButtons.handleKeyPress(aEvent, this.matchCount,
                                                   !this._isFirstResultHeuristic,
                                                   gBrowser.userTypedValue);
           return aEvent.defaultPrevented && !aEvent.urlbarDeferred;
