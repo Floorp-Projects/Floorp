@@ -326,8 +326,11 @@ def read_fail_list():
             if not line or line.startswith("#"):
                 continue
             items = line.split()
+            refpat = None
+            if items[-1].startswith("ref:"):
+                refpat = re.compile(fnmatch.translate(items.pop()[4:]))
             pat = re.compile(fnmatch.translate(items.pop()))
-            gFailList.append((pat, items))
+            gFailList.append((pat, refpat, items))
 
 def main():
     global gDestPath, gLog, gTestfiles, gTestFlags, gFailList
@@ -364,9 +367,11 @@ def main():
         test[key] = to_unix_path_sep(test[key])
         test[key + 1] = to_unix_path_sep(test[key + 1])
         testKey = test[key]
+        refKey = test[key + 1]
         fail = []
-        for pattern, failureType in gFailList:
-            if pattern.match(testKey):
+        for pattern, refpattern, failureType in gFailList:
+            if (refpattern is None or refpattern.match(refKey)) and \
+               pattern.match(testKey):
                 fail = failureType
         test = fail + test
         listfile.write(" ".join(test) + "\n")
