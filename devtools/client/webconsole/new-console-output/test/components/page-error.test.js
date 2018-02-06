@@ -69,6 +69,20 @@ describe("PageError component:", () => {
     expect(text.startsWith("Error: Long error Long error")).toBe(true);
   });
 
+  it("renders thrown empty string", () => {
+    const message = stubPreparedMessages.get(`throw ""`);
+    const wrapper = render(PageError({ message, serviceContainer }));
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe("uncaught exception: ");
+  });
+
+  it("renders thrown string", () => {
+    const message = stubPreparedMessages.get(`throw "tomato"`);
+    const wrapper = render(PageError({ message, serviceContainer }));
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe(`uncaught exception: tomato`);
+  });
+
   it("displays a [Learn more] link", () => {
     const store = setupStore();
 
