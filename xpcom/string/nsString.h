@@ -11,7 +11,7 @@
 
 #include "nsStringFwd.h"
 
-#include "nsSubstring.h"
+#include "nsAString.h"
 #include "nsDependentSubstring.h"
 #include "nsReadableUtils.h"
 

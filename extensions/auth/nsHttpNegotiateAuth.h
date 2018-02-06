@@ -8,7 +8,6 @@
 
 #include "nsIHttpAuthenticator.h"
 #include "nsIURI.h"
-#include "nsSubstring.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/LazyIdleThread.h"
 
