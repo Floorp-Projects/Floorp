@@ -111,7 +111,7 @@ enum Role {
 
   /**
    * Represents a document window. A document window is always contained within
-   * an application window. It is used for role="document".
+   * an application window. For role="document", see NON_NATIVE_DOCUMENT.
    */
   DOCUMENT = 15,
 
@@ -643,13 +643,12 @@ enum Role {
   CAPTION = 103,
 
   /**
-   * A visual frame or container which contains a view of document content.
-   * Document frames may occur within another Document instance, in which case
-   * the second document may be said to be embedded in the containing instance.
-   * HTML frames are often DOCUMENT_FRAME. Either this object, or a
-   * singleton descendant, should implement the Document interface.
+   * An element containing content that assistive technology users may want to
+   * browse in a reading mode, rather than a focus/interactive/application mode.
+   * This role is used for role="document". For the container which holds the
+   * content of a web page, see DOCUMENT.
    */
-  DOCUMENT_FRAME = 104,
+  NON_NATIVE_DOCUMENT = 104,
 
   /**
    * Heading.
