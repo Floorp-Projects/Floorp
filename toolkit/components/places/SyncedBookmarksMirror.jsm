@@ -1211,8 +1211,7 @@ class SyncedBookmarksMirror {
       FROM guidsChanged c
       JOIN moz_bookmarks b ON b.id = c.itemId
       JOIN moz_bookmarks p ON p.id = b.parent
-      JOIN mergeStates r ON r.mergedGuid = b.guid
-      ORDER BY r.level, p.id, b.position`);
+      ORDER BY c.level, p.id, b.position`);
     for (let row of changedGuidRows) {
       let info = {
         id: row.getResultByName("id"),
@@ -1227,9 +1226,6 @@ class SyncedBookmarksMirror {
     }
 
     MirrorLog.debug("Recording observer notifications for new items");
-    // We `LEFT JOIN` to `mergeStates` because `itemsAdded` may include tag
-    // folders and entries, which are not part of the merged tree structure, and
-    // so don't exist in `mergeStates`.
     let newItemRows = await this.db.execute(`
       SELECT b.id, p.id AS parentId, b.position, b.type, h.url,
              IFNULL(b.title, "") AS title, b.dateAdded, b.guid,
@@ -1238,8 +1234,7 @@ class SyncedBookmarksMirror {
       JOIN moz_bookmarks b ON b.guid = n.guid
       JOIN moz_bookmarks p ON p.id = b.parent
       LEFT JOIN moz_places h ON h.id = b.fk
-      LEFT JOIN mergeStates r ON r.mergedGuid = b.guid
-      ORDER BY r.level, p.id, b.position`);
+      ORDER BY n.level, p.id, b.position`);
     for (let row of newItemRows) {
       let info = {
         id: row.getResultByName("id"),
@@ -1264,8 +1259,7 @@ class SyncedBookmarksMirror {
       FROM itemsMoved c
       JOIN moz_bookmarks b ON b.id = c.itemId
       JOIN moz_bookmarks p ON p.id = b.parent
-      JOIN mergeStates r ON r.mergedGuid = b.guid
-      ORDER BY r.level, newParentId, newPosition`);
+      ORDER BY c.level, newParentId, newPosition`);
     for (let row of movedItemRows) {
       let info = {
         id: row.getResultByName("id"),
@@ -1291,10 +1285,9 @@ class SyncedBookmarksMirror {
       FROM itemsChanged c
       JOIN moz_bookmarks b ON b.id = c.itemId
       JOIN moz_bookmarks p ON p.id = b.parent
-      JOIN mergeStates r ON r.mergedGuid = b.guid
       LEFT JOIN moz_places h ON h.id = b.fk
       LEFT JOIN moz_places i ON i.id = c.oldPlaceId
-      ORDER BY r.level, p.id, b.position`);
+      ORDER BY c.level, p.id, b.position`);
     for (let row of changedItemRows) {
       let info = {
         id: row.getResultByName("id"),
@@ -1905,12 +1898,12 @@ async function initializeTempMirrorEntities(db) {
   // that Places uses to maintain schema coherency.
   await db.execute(`
     CREATE TEMP VIEW newRemoteItems(localId, remoteId, localGuid, mergedGuid,
-                                    needsUpdate, type, dateAdded, title,
-                                    oldPlaceId, newPlaceId, newKeyword,
+                                    mergedLevel, needsUpdate, type, dateAdded,
+                                    title, oldPlaceId, newPlaceId, newKeyword,
                                     description, loadInSidebar,
                                     smartBookmarkName, feedURL, siteURL,
                                     syncChangeCounter) AS
-    SELECT b.id, v.id, r.localGuid, r.mergedGuid,
+    SELECT b.id, v.id, r.localGuid, r.mergedGuid, r.level,
            r.valueState = ${BookmarkMergeState.TYPE.REMOTE},
            (CASE WHEN v.kind IN (${[
                         SyncedBookmarksMirror.KIND.BOOKMARK,
@@ -1955,8 +1948,8 @@ async function initializeTempMirrorEntities(db) {
             guid = OLD.localGuid;
 
       /* Record item changed notifications for the updated GUIDs. */
-      INSERT INTO guidsChanged(itemId, oldGuid)
-      SELECT OLD.localId, OLD.localGuid
+      INSERT INTO guidsChanged(itemId, oldGuid, level)
+      SELECT OLD.localId, OLD.localGuid, OLD.mergedLevel
       WHERE OLD.localGuid <> OLD.mergedGuid;
 
       DELETE FROM moz_bookmarks_deleted WHERE guid = OLD.mergedGuid;
@@ -2018,8 +2011,8 @@ async function initializeTempMirrorEntities(db) {
              OLD.syncChangeCounter);
 
       /* Record an item added notification for the new item. */
-      INSERT INTO itemsAdded(guid)
-      VALUES(OLD.mergedGuid);
+      INSERT INTO itemsAdded(guid, level)
+      VALUES(OLD.mergedGuid, OLD.mergedLevel);
 
       /* Insert new keywords after the item, so that "noteKeywordAdded" can find
          the new item by Place ID. */
@@ -2074,8 +2067,8 @@ async function initializeTempMirrorEntities(db) {
                                              OLD.localId NOT NULL
     BEGIN
       /* Record item changed notifications for the title and URL. */
-      INSERT INTO itemsChanged(itemId, oldTitle, oldPlaceId)
-      SELECT id, title, OLD.oldPlaceId FROM moz_bookmarks
+      INSERT INTO itemsChanged(itemId, oldTitle, oldPlaceId, level)
+      SELECT id, title, OLD.oldPlaceId, OLD.mergedLevel FROM moz_bookmarks
       WHERE id = OLD.localId;
 
       UPDATE moz_bookmarks SET
@@ -2192,8 +2185,8 @@ async function initializeTempMirrorEntities(db) {
   // structure to the server.
   await db.execute(`
     CREATE TEMP VIEW newRemoteStructure(localId, oldParentId, newParentId,
-                                        oldPosition, newPosition) AS
-    SELECT b.id, b.parent, p.id, b.position, r.position
+                                        oldPosition, newPosition, newLevel) AS
+    SELECT b.id, b.parent, p.id, b.position, r.position, r.level
     FROM moz_bookmarks b
     JOIN mergeStates r ON r.mergedGuid = b.guid
     JOIN moz_bookmarks p ON p.guid = r.parentGuid
@@ -2217,8 +2210,10 @@ async function initializeTempMirrorEntities(db) {
       /* Record observer notifications for moved items. We ignore items that
          didn't move, and items with placeholder parents and positions of "-1",
          since they're new. */
-      INSERT INTO itemsMoved(itemId, oldParentId, oldParentGuid, oldPosition)
-      SELECT OLD.localId, OLD.oldParentId, p.guid, OLD.oldPosition
+      INSERT INTO itemsMoved(itemId, oldParentId, oldParentGuid, oldPosition,
+                             level)
+      SELECT OLD.localId, OLD.oldParentId, p.guid, OLD.oldPosition,
+             OLD.newLevel
       FROM moz_bookmarks p
       WHERE p.id = OLD.oldParentId AND
             -1 NOT IN (OLD.oldParentId, OLD.oldPosition) AND
@@ -2332,26 +2327,30 @@ async function initializeTempMirrorEntities(db) {
   // bookmark observers for new, updated, moved, and deleted items.
   await db.execute(`CREATE TEMP TABLE itemsAdded(
     guid TEXT PRIMARY KEY,
-    isTagging BOOLEAN NOT NULL DEFAULT 0
+    isTagging BOOLEAN NOT NULL DEFAULT 0,
+    level INTEGER NOT NULL DEFAULT -1
   ) WITHOUT ROWID`);
 
   await db.execute(`CREATE TEMP TABLE guidsChanged(
     itemId INTEGER NOT NULL,
     oldGuid TEXT NOT NULL,
+    level INTEGER NOT NULL DEFAULT -1,
     PRIMARY KEY(itemId, oldGuid)
   ) WITHOUT ROWID`);
 
   await db.execute(`CREATE TEMP TABLE itemsChanged(
     itemId INTEGER PRIMARY KEY,
     oldTitle TEXT,
-    oldPlaceId INTEGER
+    oldPlaceId INTEGER,
+    level INTEGER NOT NULL DEFAULT -1
   )`);
 
   await db.execute(`CREATE TEMP TABLE itemsMoved(
     itemId INTEGER PRIMARY KEY,
     oldParentId INTEGER NOT NULL,
     oldParentGuid TEXT NOT NULL,
-    oldPosition INTEGER NOT NULL
+    oldPosition INTEGER NOT NULL,
+    level INTEGER NOT NULL DEFAULT -1
   )`);
 
   await db.execute(`CREATE TEMP TABLE itemsRemoved(
