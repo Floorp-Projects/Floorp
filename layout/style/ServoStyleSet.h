@@ -11,6 +11,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/MediaFeatureChange.h"
 #include "mozilla/PostTraversalTask.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoElementSnapshot.h"
@@ -148,7 +149,7 @@ public:
     return StylistNeedsUpdate();
   }
 
-  nsRestyleHint MediumFeaturesChanged(bool aViewportChanged);
+  nsRestyleHint MediumFeaturesChanged(MediaFeatureChangeReason);
 
   // Evaluates a given SourceSizeList, returning the optimal viewport width in
   // app units.
@@ -160,7 +161,7 @@ public:
   }
 
   // aViewportChanged outputs whether any viewport units is used.
-  bool MediumFeaturesChangedRules(bool* aViewportUnitsUsed);
+  bool MediumFeaturesChangedRules(bool* aViewportUnitsUsed, MediaFeatureChangeReason);
 
   void InvalidateStyleForCSSRuleChanges();
 

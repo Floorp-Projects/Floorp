@@ -18,6 +18,7 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/MediaFeatureChange.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/SheetType.h"
@@ -413,7 +414,7 @@ class nsStyleSet final
    * the characteristics of the medium, and return restyle hint needed
    * for the change.
    */
-  nsRestyleHint MediumFeaturesChanged(bool aViewportChanged);
+  nsRestyleHint MediumFeaturesChanged(mozilla::MediaFeatureChangeReason);
 
   // APIs to manipulate the style sheet lists.  The sheets in each
   // list are stored with the most significant sheet last.
