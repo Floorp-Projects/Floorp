@@ -519,11 +519,6 @@ var DebuggerServer = {
       constructor: "CSSUsageActor",
       type: { tab: true }
     });
-    this.registerModule("devtools/server/actors/monitor", {
-      prefix: "monitor",
-      constructor: "MonitorActor",
-      type: { tab: true }
-    });
     this.registerModule("devtools/server/actors/timeline", {
       prefix: "timeline",
       constructor: "TimelineActor",
