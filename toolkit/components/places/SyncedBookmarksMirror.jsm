@@ -2034,8 +2034,8 @@ async function initializeTempMirrorEntities(db) {
 
       /* Insert new keywords after the item, so that "noteKeywordAdded" can find
          the new item by Place ID. */
-      INSERT INTO moz_keywords(keyword, place_id)
-      SELECT OLD.newKeyword, OLD.newPlaceId
+      INSERT OR IGNORE INTO moz_keywords(keyword, place_id, post_data)
+      SELECT OLD.newKeyword, OLD.newPlaceId, ''
       WHERE OLD.newKeyword NOT NULL;
 
       /* Record item changed notifications for the new keyword. */
@@ -2137,8 +2137,8 @@ async function initializeTempMirrorEntities(db) {
             id IN (OLD.oldPlaceId, OLD.newPlaceId);
 
       /* Insert a new keyword for the new URL, if one is set. */
-      INSERT INTO moz_keywords(keyword, place_id)
-      SELECT OLD.newKeyword, OLD.newPlaceId
+      INSERT OR IGNORE INTO moz_keywords(keyword, place_id, post_data)
+      SELECT OLD.newKeyword, OLD.newPlaceId, ''
       WHERE OLD.newKeyword NOT NULL;
 
       /* Record an item changed notification for the new keyword. */

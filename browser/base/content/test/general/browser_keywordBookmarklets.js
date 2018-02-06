@@ -1,24 +1,23 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
 add_task(async function test_keyword_bookmarklet() {
-  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                title: "bookmarklet",
-                                                url: "javascript:'1';" });
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  let bm = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "bookmarklet",
+    url: "javascript:'1';"
+  });
+
   registerCleanupFunction(async function() {
-    gBrowser.removeTab(tab);
+    await BrowserTestUtils.removeTab(tab);
     await PlacesUtils.bookmarks.remove(bm);
   });
-  await promisePageShow();
+
   let originalPrincipal = gBrowser.contentPrincipal;
-
-  function getPrincipalURI() {
-    return ContentTask.spawn(tab.linkedBrowser, null, function() {
-      return content.document.nodePrincipal.URI.spec;
-    });
-  }
-
-  let originalPrincipalURI = await getPrincipalURI();
+  let originalPrincipalURI = await getPrincipalURI(tab.linkedBrowser);
 
   await PlacesUtils.keywords.insert({ keyword: "bm", url: "javascript:'1';" });
 
@@ -27,9 +26,9 @@ add_task(async function test_keyword_bookmarklet() {
   gURLBar.focus();
   EventUtils.synthesizeKey("VK_RETURN", {});
 
-  await promisePageShow();
+  await BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "pageshow");
 
-  let newPrincipalURI = await getPrincipalURI();
+  let newPrincipalURI = await getPrincipalURI(tab.linkedBrowser);
   is(newPrincipalURI, originalPrincipalURI, "content has the same principal");
 
   // In e10s, null principals don't round-trip so the same null principal sent
@@ -44,6 +43,8 @@ add_task(async function test_keyword_bookmarklet() {
   }
 });
 
-function promisePageShow() {
-  return BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "pageshow");
+function getPrincipalURI(browser) {
+  return ContentTask.spawn(browser, null, function() {
+    return content.document.nodePrincipal.URI.spec;
+  });
 }
