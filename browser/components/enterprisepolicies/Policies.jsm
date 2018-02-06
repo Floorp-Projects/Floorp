@@ -29,7 +29,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 this.EXPORTED_SYMBOLS = ["Policies"];
 
 this.Policies = {
-  "block_about_config": {
+  "BlockAboutConfig": {
     onBeforeUIStartup(manager, param) {
       if (param) {
         manager.disallowFeature("about:config", true);

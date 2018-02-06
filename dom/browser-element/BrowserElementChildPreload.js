@@ -1512,6 +1512,9 @@ BrowserElementChild.prototype = {
           case Cr.NS_ERROR_CORRUPTED_CONTENT :
             sendAsyncMsg('error', { type: 'corruptedContentErrorv2' });
             return;
+          case Cr.NS_ERROR_BLOCKED_BY_POLICY :
+            sendAsyncMsg('error', { type: 'blockedByPolicyTemp' });
+            return;
 
           default:
             // getErrorClass() will throw if the error code passed in is not a NSS

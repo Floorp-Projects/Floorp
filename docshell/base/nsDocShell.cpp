@@ -4822,6 +4822,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
         error = "inadequateSecurityError";
         addHostPort = true;
         break;
+      case NS_ERROR_BLOCKED_BY_POLICY:
+        // Page blocked by policy
+        error = "blockedByPolicyTemp";
+        break;
       default:
         break;
     }
@@ -7546,7 +7550,8 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     if ((aStatus == NS_ERROR_UNKNOWN_HOST ||
          aStatus == NS_ERROR_CONNECTION_REFUSED ||
          aStatus == NS_ERROR_UNKNOWN_PROXY_HOST ||
-         aStatus == NS_ERROR_PROXY_CONNECTION_REFUSED) &&
+         aStatus == NS_ERROR_PROXY_CONNECTION_REFUSED ||
+         aStatus == NS_ERROR_BLOCKED_BY_POLICY) &&
         (isTopFrame || UseErrorPages())) {
       DisplayLoadError(aStatus, url, nullptr, aChannel);
     } else if (aStatus == NS_ERROR_NET_TIMEOUT ||
