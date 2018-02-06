@@ -272,33 +272,6 @@ New_HTMLTableHeaderCellIfScope(nsIContent* aContent, Accessible* aContext)
   return nullptr;
 }
 
-#ifdef MOZ_XUL
-static Accessible*
-New_MaybeImageOrToolbarButtonAccessible(nsIContent* aContent,
-                                        Accessible* aContext)
-{
-  if (aContent->IsElement() &&
-      aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::onclick)) {
-    return new XULToolbarButtonAccessible(aContent, aContext->Document());
-  }
-
-  // Don't include nameless images in accessible tree.
-  if (!aContent->IsElement() ||
-      !aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext)) {
-    return nullptr;
-  }
-
-  return new ImageAccessibleWrap(aContent, aContext->Document());
-}
-static Accessible*
-New_MenuSeparator(nsIContent* aContent, Accessible* aContext)
-  { return new XULMenuSeparatorAccessible(aContent, aContext->Document()); }
-
-static Accessible*
-New_StatusBarAccessible(nsIContent* aContent, Accessible* aContext)
-  { return new XULStatusBarAccessible(aContent, aContext->Document()); }
-#endif
-
 /**
  * Cached value of the PREF_ACCESSIBILITY_FORCE_DISABLED preference.
  */
@@ -323,22 +296,31 @@ static const HTMLMarkupMapInfo sHTMLMarkupMapList[] = {
   #include "MarkupMap.h"
 };
 
+#undef MARKUPMAP
+
 #ifdef MOZ_XUL
 #define XULMAP(atom, new_func) \
   { &nsGkAtoms::atom, new_func },
 
+#define XULMAP_TYPE(atom, new_type) \
+XULMAP( \
+  atom, \
+  [](nsIContent* aContent, Accessible* aContext) -> Accessible* { \
+    return new new_type(aContent, aContext->Document()); \
+  } \
+)
+
 static const XULMarkupMapInfo sXULMarkupMapList[] = {
   #include "XULMap.h"
 };
+
+#undef XULMAP_TYPE
+#undef XULMAP
 #endif
 
 #undef Attr
 #undef AttrFromDOM
 #undef AttrFromDOMIf
-#undef MARKUPMAP
-#ifdef MOZ_XUL
-#undef XULMAP
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService
