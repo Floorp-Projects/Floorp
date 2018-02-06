@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
 const Services = require("Services");
 const promise = require("devtools/shared/deprecated-sync-thenables");
 

@@ -15,7 +15,7 @@ const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
 const CURRENT_THEME_SCALAR = "devtools.current_theme";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-var {Ci, Cu, Cc} = require("chrome");
+var {Ci, Cc} = require("chrome");
 var promise = require("promise");
 var defer = require("devtools/shared/defer");
 var Services = require("Services");
