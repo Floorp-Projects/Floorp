@@ -12,8 +12,12 @@ assert.compareArray([1, 2].flatMap(function(e) {
   return [e, e * 2];
 }), [1, 2, 2, 4], 'array depth is 1');
 
-assert.compareArray([1, 2, 3].flatMap(function(ele) {
+var result = [1, 2, 3].flatMap(function(ele) {
   return [[ele * 2]];
-}), [[2], [4], [6]], 'array depth is more than 1');
+});
+assert.sameValue(result.length, 3, 'array depth is more than 1 - length');
+assert.compareArray(result[0], [2], 'array depth is more than 1 - 1st element');
+assert.compareArray(result[1], [4], 'array depth is more than 1 - 2nd element');
+assert.compareArray(result[2], [6], 'array depth is more than 1 - 3rd element');
 
 reportCompare(0, 0);

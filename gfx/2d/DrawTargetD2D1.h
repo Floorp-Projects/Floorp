@@ -173,6 +173,8 @@ public:
 private:
   friend class SourceSurfaceD2D1;
 
+  void FlushInternal(bool aHasDependencyMutex = false);
+
   typedef std::unordered_set<DrawTargetD2D1*> TargetSet;
 
   // This function will mark the surface as changing, and make sure any

@@ -1211,3 +1211,16 @@ def idl_roots(build_env):
 
 set_config('WEBIDL_ROOT', idl_roots.webidl_root)
 set_config('IPDL_ROOT', idl_roots.ipdl_root)
+
+# Proxy bypass protection
+# ==============================================================
+
+option('--enable-proxy-bypass-protection',
+       help='Prevent suspected or confirmed proxy bypasses')
+
+@depends_if('--enable-proxy-bypass-protection')
+def proxy_bypass_protection(_):
+    return True
+
+set_config('MOZ_PROXY_BYPASS_PROTECTION', proxy_bypass_protection)
+set_define('MOZ_PROXY_BYPASS_PROTECTION', proxy_bypass_protection)

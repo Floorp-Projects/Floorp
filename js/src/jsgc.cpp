@@ -7934,7 +7934,7 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
                 JSObject* targetProto = global->getPrototypeForOffThreadPlaceholder(obj);
                 MOZ_ASSERT(targetProto->isDelegate());
                 group->setProtoUnchecked(TaggedProto(targetProto));
-                if (targetProto->isNewGroupUnknown())
+                if (targetProto->isNewGroupUnknown() && !group->unknownProperties())
                     group->markUnknown(cx);
             }
         }

@@ -48,9 +48,7 @@ function resolvePluralRulesInternals(lazyPluralRulesData) {
     internalProps.locale = r.locale;
     internalProps.type = lazyPluralRulesData.type;
 
-    internalProps.pluralCategories = intl_GetPluralCategories(
-        internalProps.locale,
-        internalProps.type);
+    internalProps.pluralCategories = null;
 
     internalProps.minimumIntegerDigits = lazyPluralRulesData.minimumIntegerDigits;
     internalProps.minimumFractionDigits = lazyPluralRulesData.minimumFractionDigits;
@@ -215,6 +213,9 @@ function Intl_PluralRules_resolvedOptions() {
     var internals = getPluralRulesInternals(this);
 
     var internalsPluralCategories = internals.pluralCategories;
+    if (internalsPluralCategories === null)
+        internals.pluralCategories = internalsPluralCategories = intl_GetPluralCategories(this);
+
     var pluralCategories = [];
     for (var i = 0; i < internalsPluralCategories.length; i++)
         _DefineDataProperty(pluralCategories, i, internalsPluralCategories[i]);

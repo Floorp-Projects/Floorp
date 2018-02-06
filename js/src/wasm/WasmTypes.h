@@ -1531,7 +1531,7 @@ static_assert(offsetof(TlsData, globalArea) % TlsDataAlign == 0, "aligned");
 
 struct TlsDataDeleter
 {
-    void operator()(TlsData* tlsData) { js_free(tlsData); }
+    void operator()(TlsData* tlsData) { js_free(tlsData->allocatedBase); }
 };
 
 typedef UniquePtr<TlsData, TlsDataDeleter> UniqueTlsData;

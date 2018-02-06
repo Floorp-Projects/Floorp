@@ -106,7 +106,8 @@ RelativeTimeFormat(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     relativeTimeFormat->setReservedSlot(RelativeTimeFormatObject::INTERNALS_SLOT, NullValue());
-    relativeTimeFormat->setReservedSlot(RelativeTimeFormatObject::URELATIVE_TIME_FORMAT_SLOT, PrivateValue(nullptr));
+    relativeTimeFormat->setReservedSlot(RelativeTimeFormatObject::URELATIVE_TIME_FORMAT_SLOT,
+                                        PrivateValue(nullptr));
 
     HandleValue locales = args.get(0);
     HandleValue options = args.get(1);
@@ -127,8 +128,8 @@ js::RelativeTimeFormatObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->onActiveCooperatingThread());
 
-    const Value& slot =
-        obj->as<RelativeTimeFormatObject>().getReservedSlot(RelativeTimeFormatObject::URELATIVE_TIME_FORMAT_SLOT);
+    constexpr auto RT_FORMAT_SLOT = RelativeTimeFormatObject::URELATIVE_TIME_FORMAT_SLOT;
+    const Value& slot = obj->as<RelativeTimeFormatObject>().getReservedSlot(RT_FORMAT_SLOT);
     if (URelativeDateTimeFormatter* rtf = static_cast<URelativeDateTimeFormatter*>(slot.toPrivate()))
         ureldatefmt_close(rtf);
 }
@@ -208,6 +209,55 @@ js::intl_RelativeTimeFormat_availableLocales(JSContext* cx, unsigned argc, Value
     return true;
 }
 
+/**
+ * Returns a new URelativeDateTimeFormatter with the locale and options of the
+ * given RelativeTimeFormatObject.
+ */
+static URelativeDateTimeFormatter*
+NewURelativeDateTimeFormatter(JSContext* cx, Handle<RelativeTimeFormatObject*> relativeTimeFormat)
+{
+    RootedObject internals(cx, intl::GetInternalsObject(cx, relativeTimeFormat));
+    if (!internals)
+        return nullptr;
+
+    RootedValue value(cx);
+
+    if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
+        return nullptr;
+    JSAutoByteString locale(cx, value.toString());
+    if (!locale)
+        return nullptr;
+
+    if (!GetProperty(cx, internals, internals, cx->names().style, &value))
+        return nullptr;
+
+    UDateRelativeDateTimeFormatterStyle relDateTimeStyle;
+    {
+        JSLinearString* style = value.toString()->ensureLinear(cx);
+        if (!style)
+            return nullptr;
+
+        if (StringEqualsAscii(style, "short")) {
+            relDateTimeStyle = UDAT_STYLE_SHORT;
+        } else if (StringEqualsAscii(style, "narrow")) {
+            relDateTimeStyle = UDAT_STYLE_NARROW;
+        } else {
+            MOZ_ASSERT(StringEqualsAscii(style, "long"));
+            relDateTimeStyle = UDAT_STYLE_LONG;
+        }
+    }
+
+    UErrorCode status = U_ZERO_ERROR;
+    URelativeDateTimeFormatter* rtf =
+        ureldatefmt_open(IcuLocale(locale.ptr()), nullptr, relDateTimeStyle,
+                         UDISPCTX_CAPITALIZATION_FOR_STANDALONE, &status);
+    if (U_FAILURE(status)) {
+        intl::ReportInternalError(cx);
+        return nullptr;
+    }
+    return rtf;
+}
+
 enum class RelativeTimeType
 {
     /**
@@ -225,58 +275,27 @@ bool
 js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 3);
+    MOZ_ASSERT(args.length() == 4);
 
-    RootedObject relativeTimeFormat(cx, &args[0].toObject());
+    Rooted<RelativeTimeFormatObject*> relativeTimeFormat(cx);
+    relativeTimeFormat = &args[0].toObject().as<RelativeTimeFormatObject>();
 
     double t = args[1].toNumber();
 
-    RootedObject internals(cx, intl::GetInternalsObject(cx, relativeTimeFormat));
-    if (!internals)
-        return false;
+    // ICU doesn't handle -0 well: work around this by converting it to +0.
+    // See: http://bugs.icu-project.org/trac/ticket/12936
+    if (IsNegativeZero(t))
+        t = +0.0;
 
-    RootedValue value(cx);
-
-    if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
-        return false;
-    JSAutoByteString locale(cx, value.toString());
-    if (!locale)
-        return false;
-
-    if (!GetProperty(cx, internals, internals, cx->names().style, &value))
-        return false;
-
-    UDateRelativeDateTimeFormatterStyle relDateTimeStyle;
-    {
-        JSLinearString* style = value.toString()->ensureLinear(cx);
-        if (!style)
+    // Obtain a cached URelativeDateTimeFormatter object.
+    constexpr auto RT_FORMAT_SLOT = RelativeTimeFormatObject::URELATIVE_TIME_FORMAT_SLOT;
+    void* priv = relativeTimeFormat->getReservedSlot(RT_FORMAT_SLOT).toPrivate();
+    URelativeDateTimeFormatter* rtf = static_cast<URelativeDateTimeFormatter*>(priv);
+    if (!rtf) {
+        rtf = NewURelativeDateTimeFormatter(cx, relativeTimeFormat);
+        if (!rtf)
             return false;
-
-        if (StringEqualsAscii(style, "short")) {
-            relDateTimeStyle = UDAT_STYLE_SHORT;
-        } else if (StringEqualsAscii(style, "narrow")) {
-            relDateTimeStyle = UDAT_STYLE_NARROW;
-        } else {
-            MOZ_ASSERT(StringEqualsAscii(style, "long"));
-            relDateTimeStyle = UDAT_STYLE_LONG;
-        }
-    }
-
-    if (!GetProperty(cx, internals, internals, cx->names().type, &value))
-        return false;
-
-    RelativeTimeType relDateTimeType;
-    {
-        JSLinearString* type = value.toString()->ensureLinear(cx);
-        if (!type)
-            return false;
-
-        if (StringEqualsAscii(type, "text")) {
-            relDateTimeType = RelativeTimeType::Text;
-        } else {
-            MOZ_ASSERT(StringEqualsAscii(type, "numeric"));
-            relDateTimeType = RelativeTimeType::Numeric;
-        }
+        relativeTimeFormat->setReservedSlot(RT_FORMAT_SLOT, PrivateValue(rtf));
     }
 
     URelativeDateTimeUnit relDateTimeUnit;
@@ -305,21 +324,19 @@ js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    // ICU doesn't handle -0 well: work around this by converting it to +0.
-    // See: http://bugs.icu-project.org/trac/ticket/12936
-    if (IsNegativeZero(t))
-        t = +0.0;
+    RelativeTimeType relDateTimeType;
+    {
+        JSLinearString* type = args[3].toString()->ensureLinear(cx);
+        if (!type)
+            return false;
 
-    UErrorCode status = U_ZERO_ERROR;
-    URelativeDateTimeFormatter* rtf =
-        ureldatefmt_open(IcuLocale(locale.ptr()), nullptr, relDateTimeStyle,
-                         UDISPCTX_CAPITALIZATION_FOR_STANDALONE, &status);
-    if (U_FAILURE(status)) {
-        intl::ReportInternalError(cx);
-        return false;
+        if (StringEqualsAscii(type, "text")) {
+            relDateTimeType = RelativeTimeType::Text;
+        } else {
+            MOZ_ASSERT(StringEqualsAscii(type, "numeric"));
+            relDateTimeType = RelativeTimeType::Numeric;
+        }
     }
-
-    ScopedICUObject<URelativeDateTimeFormatter, ureldatefmt_close> closeRelativeTimeFormat(rtf);
 
     JSString* str =
         CallICU(cx, [rtf, t, relDateTimeUnit, relDateTimeType](UChar* chars, int32_t size,

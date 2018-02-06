@@ -15,7 +15,6 @@ info: |
        a. Let hasNameProperty be HasOwnProperty(propValue, "name").
        b. ReturnIfAbrupt(hasNameProperty).
        c. If hasNameProperty is false, perform SetFunctionName(propValue, propKey).
-includes: [propertyHelper.js]
 ---*/
 
 var o;

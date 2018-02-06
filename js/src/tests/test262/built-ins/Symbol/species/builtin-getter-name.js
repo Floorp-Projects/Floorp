@@ -7,8 +7,6 @@ info: |
 es6id: 21.2.4.2, 22.1.2.5, 22.2.2.4, 23.1.2.2, 23.2.2.2
 author: Sam Mikes
 description: Symbol.species getters have defined names
-includes: 
-  - propertyHelper.js
 features: [Symbol.species]
 ---*/
 

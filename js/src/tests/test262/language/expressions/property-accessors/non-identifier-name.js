@@ -13,7 +13,7 @@ description: >
 
 negative:
   type: SyntaxError
-  phase: early
+  phase: parse
 ---*/
 
 throw "Test262: This statement should not be evaluated.";

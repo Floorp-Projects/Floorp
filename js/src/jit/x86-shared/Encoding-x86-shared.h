@@ -183,7 +183,7 @@ enum TwoByteOpcodeID {
     OP2_CVTSI2SD_VsdEd  = 0x2A,
     OP2_CVTTSD2SI_GdWsd = 0x2C,
     OP2_UCOMISD_VsdWsd  = 0x2E,
-    OP2_CMOVZ_GvEv      = 0x44,
+    OP2_CMOVCC_GvEv     = 0x40,
     OP2_MOVMSKPD_EdVd   = 0x50,
     OP2_ANDPS_VpsWps    = 0x54,
     OP2_ANDNPS_VpsWps   = 0x55,
@@ -346,6 +346,10 @@ inline TwoByteOpcodeID jccRel32(Condition cond)
 inline TwoByteOpcodeID setccOpcode(Condition cond)
 {
     return TwoByteOpcodeID(OP_SETCC + cond);
+}
+inline TwoByteOpcodeID cmovccOpcode(Condition cond)
+{
+    return TwoByteOpcodeID(OP2_CMOVCC_GvEv + cond);
 }
 
 enum GroupOpcodeID {

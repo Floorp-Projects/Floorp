@@ -8,7 +8,7 @@ description: >
   Strict Mode - SyntaxError is thrown if the identifier 'arguments' appears
   as the LeftHandSideExpression of simple assignment(=) under strict mode
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 flags: [onlyStrict]
 ---*/
