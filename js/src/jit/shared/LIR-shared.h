@@ -4064,12 +4064,10 @@ class LModD : public LBinaryMath<1>
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp);
+        setIsCall();
     }
     const LDefinition* temp() {
         return getTemp(0);
-    }
-    bool isCall() const override {
-        return true;
     }
     MMod* mir() const {
         return mir_->toMod();
@@ -9000,15 +8998,14 @@ class LWasmCallBase : public LInstruction
       : operands_(operands),
         numOperands_(numOperands),
         needsBoundsCheck_(needsBoundsCheck)
-    {}
+    {
+        setIsCall();
+    }
 
     MWasmCall* mir() const {
         return mir_->toWasmCall();
     }
 
-    bool isCall() const override {
-        return true;
-    }
     bool isCallPreserved(AnyRegister reg) const override {
         // All MWasmCalls preserve the TLS register:
         //  - internal/indirect calls do by the internal wasm ABI
