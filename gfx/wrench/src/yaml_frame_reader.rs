@@ -15,7 +15,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use webrender::api::*;
 use wrench::{FontDescriptor, Wrench, WrenchThing};
-use yaml_helper::{StringEnum, YamlHelper};
+use yaml_helper::{StringEnum, YamlHelper, make_perspective};
 use yaml_rust::{Yaml, YamlLoader};
 use {BLACK_COLOR, PLATFORM_DEFAULT_FACE_NAME, WHITE_COLOR};
 
@@ -1420,19 +1420,27 @@ impl YamlFrameReader {
         let default_bounds = LayoutRect::new(LayoutPoint::zero(), wrench.window_size_f32());
         let bounds = yaml["bounds"].as_rect().unwrap_or(default_bounds);
 
-        // TODO(gw): Add support for specifying the transform origin in yaml.
-        let transform_origin = LayoutPoint::new(
+        let default_transform_origin = LayoutPoint::new(
             bounds.origin.x + bounds.size.width * 0.5,
             bounds.origin.y + bounds.size.height * 0.5,
         );
+
+        let transform_origin = yaml["transform-origin"]
+            .as_point()
+            .unwrap_or(default_transform_origin);
+
+        let perspective_origin = yaml["perspective-origin"]
+            .as_point()
+            .unwrap_or(default_transform_origin);
 
         let transform = yaml["transform"]
             .as_transform(&transform_origin)
             .map(|transform| transform.into());
 
-        // TODO(gw): Support perspective-origin.
         let perspective = match yaml["perspective"].as_f32() {
-            Some(value) if value != 0.0 => Some(LayoutTransform::create_perspective(value as f32)),
+            Some(value) if value != 0.0 => {
+                Some(make_perspective(perspective_origin, value as f32))
+            }
             Some(_) => None,
             _ => yaml["perspective"].as_matrix4d(),
         };

@@ -13,7 +13,7 @@ class TaskGraph(object):
     Representation of a task graph.
 
     A task graph is a combination of a Graph and a dictionary of tasks indexed
-    by label.  TaskGraph instances should be treated as immutable.
+    by label. TaskGraph instances should be treated as immutable.
     """
 
     def __init__(self, tasks, graph):

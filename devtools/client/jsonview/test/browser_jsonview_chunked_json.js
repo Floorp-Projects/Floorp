@@ -41,8 +41,8 @@ add_task(async function () {
   await selectJsonViewContentTab("rawdata");
   await checkText();
 
-  // Another text check.
-  await write("]");
+  // Add an array, when counting rows we will ensure it has been expanded automatically.
+  await write(",[3]]");
   await checkText();
 
   // Close the connection.
@@ -52,8 +52,8 @@ add_task(async function () {
 
   is(await getElementCount(".json.is-active"), 1, "The JSON tab is selected.");
 
-  is(await getElementCount(".jsonPanelBox .treeTable .treeRow"), 2,
-    "There is a tree with 2 rows.");
+  is(await getElementCount(".jsonPanelBox .treeTable .treeRow"), 4,
+    "There is a tree with 4 rows.");
 
   await selectJsonViewContentTab("rawdata");
   await checkText();

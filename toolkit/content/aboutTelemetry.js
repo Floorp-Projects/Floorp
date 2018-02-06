@@ -237,7 +237,7 @@ var Settings = {
   },
 
   convertStringToLink(string) {
-    return "<a href=\"\" class=\"change-data-choices-link\">" + string + "</a>";
+    return "<a href=\"#\" class=\"change-data-choices-link\">" + string + "</a>";
   },
 };
 

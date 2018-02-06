@@ -22,10 +22,6 @@ import os
 
 
 # constants {{{1
-GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
-VERSION_PATH = os.path.join(GECKO, "browser", "config", "version_display.txt")
-APP_VERSION_PATH = os.path.join(GECKO, "browser", "config", "version.txt")
-
 """Map signing scope aliases to sets of projects.
 
 Currently m-c and DevEdition on m-b use nightly signing; Beta on m-b and m-r
@@ -473,12 +469,8 @@ def get_release_config(config):
         if release_config['platforms'] == "[]":
             del release_config['platforms']
 
-    with open(VERSION_PATH, "r") as fh:
-        version = fh.readline().rstrip()
-    release_config['version'] = version
-    with open(APP_VERSION_PATH, "r") as fh:
-        appVersion = fh.readline().rstrip()
-    release_config['appVersion'] = appVersion
+    release_config['version'] = str(config.params['version'])
+    release_config['appVersion'] = str(config.params['app_version'])
 
     release_config['next_version'] = str(config.params['next_version'])
     release_config['build_number'] = config.params['build_number']

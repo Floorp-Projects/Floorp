@@ -215,6 +215,9 @@ fn write_sc(parent: &mut Table, sc: &StackingContext, properties: &SceneProperti
                                                   blur,
                                                   color_to_string(color))))
             }
+            FilterOp::ColorMatrix(matrix) => {
+                filters.push(Yaml::String(format!("color-matrix({:?})", matrix)))
+            }
         }
     }
 

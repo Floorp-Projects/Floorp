@@ -139,7 +139,7 @@ NewConsoleOutputWrapper.prototype = {
 
         // Emit the "menu-open" event for testing.
         menu.once("open", () => this.emit("menu-open"));
-        menu.popup(screenX, screenY, this.toolbox);
+        menu.popup(screenX, screenY, { doc: this.owner.chromeWindow.document });
 
         return menu;
       };

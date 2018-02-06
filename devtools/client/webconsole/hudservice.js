@@ -213,20 +213,24 @@ HUD_SERVICE.prototype =
     function openWindow(aTarget)
     {
       target = aTarget;
-      let deferred = defer();
-      // Using the old frontend for now in the browser console.  This can be switched to
-      // Tools.webConsole.url to use whatever is preffed on.
-      let url = Tools.webConsole.oldWebConsoleURL;
-      let win = Services.ww.openWindow(null, url, "_blank",
-                                       BROWSER_CONSOLE_WINDOW_FEATURES, null);
-      win.addEventListener("DOMContentLoaded", function () {
+      return new Promise(resolve => {
+        let browserConsoleURL = Tools.webConsole.browserConsoleURL;
+        let win = Services.ww.openWindow(null, browserConsoleURL, "_blank",
+                                         BROWSER_CONSOLE_WINDOW_FEATURES, null);
+        win.addEventListener("DOMContentLoaded", () => {
           win.document.title = l10n.getStr("browserConsole.title");
-        deferred.resolve(win);
-      }, {once: true});
-      return deferred.promise;
+          if (browserConsoleURL === Tools.webConsole.oldWebConsoleURL) {
+            resolve({iframeWindow: win, chromeWindow: win});
+          } else {
+            win.document.querySelector("iframe").addEventListener("DOMContentLoaded", (e) => {
+              resolve({iframeWindow: e.target.defaultView, chromeWindow: win});
+            }, { once: true });
+          }
+        }, {once: true});
+      });
     }
-    connect().then(getTarget).then(openWindow).then((aWindow) => {
-      return this.openBrowserConsole(target, aWindow, aWindow)
+    connect().then(getTarget).then(openWindow).then(({iframeWindow, chromeWindow}) => {
+      return this.openBrowserConsole(target, iframeWindow, chromeWindow)
         .then((aBrowserConsole) => {
           this._browserConsoleDefer.resolve(aBrowserConsole);
           this._browserConsoleDefer = null;
