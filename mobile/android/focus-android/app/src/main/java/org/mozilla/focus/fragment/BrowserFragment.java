@@ -453,6 +453,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             public void onEnterFullScreen(@NonNull final IWebView.FullscreenCallback callback, @Nullable View view) {
                 fullscreenCallback = callback;
 
+                // View is passed in as null for GeckoView fullscreen
                 if (view != null) {
                     // Hide browser UI and web content
                     browserContainer.setVisibility(View.INVISIBLE);
@@ -463,6 +464,11 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                     videoContainer.addView(view, params);
                     videoContainer.setVisibility(View.VISIBLE);
 
+                    // Switch to immersive mode: Hide system bars other UI controls
+                    switchToImmersiveMode();
+                } else {
+                    // Hide status bar when entering fullscreen with GeckoView
+                    statusBar.setVisibility(View.GONE);
                     // Switch to immersive mode: Hide system bars other UI controls
                     switchToImmersiveMode();
                 }
@@ -476,6 +482,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                 // Show browser UI and web content again
                 browserContainer.setVisibility(View.VISIBLE);
+
+                // Show status bar again (hidden in GeckoView versions)
+                statusBar.setVisibility(View.VISIBLE);
 
                 exitImmersiveModeIfNeeded();
 
