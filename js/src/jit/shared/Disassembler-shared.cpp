@@ -13,8 +13,20 @@
 using namespace js::jit;
 
 #ifdef JS_DISASM_SUPPORTED
-// See comments in spew(), below.
-mozilla::Atomic<uint32_t> DisassemblerSpew::live_(0);
+// Concurrent assemblers are disambiguated by prefixing every disassembly with a
+// tag that is quasi-unique, and certainly unique enough in realistic cases
+// where we are debugging and looking at disassembler output.  The tag is a
+// letter or digit between brackets prefixing the disassembly, eg, [X]. This
+// wraps around every 62 assemblers.
+//
+// When running with --no-threads we can still have concurrent assemblers in the
+// form of nested assemblers, as when an IC stub is created by one assembler
+// while a JS compilation is going on and producing output in another assembler.
+//
+// We generate the tag for an assembler by incrementing a global mod-2^32
+// counter every time a new disassembler is created.
+
+mozilla::Atomic<uint32_t> DisassemblerSpew::counter_(0);
 #endif
 
 DisassemblerSpew::DisassemblerSpew()
@@ -24,11 +36,12 @@ DisassemblerSpew::DisassemblerSpew()
     labelIndent_(""),
     targetIndent_(""),
     spewNext_(1000),
-    nodes_(nullptr)
+    nodes_(nullptr),
+    tag_(0)
 #endif
 {
 #ifdef JS_DISASM_SUPPORTED
-    live_++;
+    tag_ = counter_++;
 #endif
 }
 
@@ -41,7 +54,6 @@ DisassemblerSpew::~DisassemblerSpew()
         p = p->next;
         js_free(victim);
     }
-    live_--;
 #endif
 }
 
@@ -60,33 +72,24 @@ DisassemblerSpew::isDisabled()
 void
 DisassemblerSpew::spew(const char* fmt, ...)
 {
-    // Nested assemblers are handled by prefixing the output with '>..> ' where
-    // the number of '>' is the nesting level, and the outermost assembler is
-    // taken as being at nesting level zero (and does not require the trailing
-    // space character).  This markup disambiguates eg the output of an IC
-    // compilation that happens as a subtask of a normal compilation from the
-    // output of the normal compilation.
-    //
-    // We track the nesting level globally, on the assumption that anyone
-    // wanting to look at disassembly is running with --no-threads.  If this
-    // turns out to be wrong then live_ can be made thread-local.
-
 #ifdef JS_DISASM_SUPPORTED
+    static const char prefix_chars[] = "0123456789"
+                                       "abcdefghijklmnopqrstuvwxyz"
+                                       "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    static const char prefix_fmt[] = "[%c] ";
+
     char fmt2[1024];
-    MOZ_RELEASE_ASSERT(sizeof(fmt2) >= strlen(fmt) + live_ + 1);
-    uint32_t i;
-    for (i = 0; i < live_-1; i++ )
-        fmt2[i] = '>';
-    if (live_ > 1)
-        fmt2[i++] = ' ';
-    strcpy(fmt2 + i, fmt);
-#else
-    const char* fmt2 = fmt;
+    if (sizeof(fmt2) >= strlen(fmt) + sizeof(prefix_fmt)) {
+        snprintf(fmt2, sizeof(prefix_fmt), prefix_fmt,
+                 prefix_chars[tag_ % (sizeof(prefix_chars) - 1)]);
+        strcat(fmt2, fmt);
+        fmt = fmt2;
+    }
 #endif
 
     va_list args;
     va_start(args, fmt);
-    spewVA(fmt2, args);
+    spewVA(fmt, args);
     va_end(args);
 }
 

@@ -8,8 +8,6 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "XSLT")
 
 XPIDL_SOURCES += [
-    'nsIXSLTProcessor.idl',
-    'nsIXSLTProcessorPrivate.idl',
     'txIEXSLTRegExFunctions.idl',
     'txIFunctionEvaluationContext.idl',
     'txINodeSet.idl',

@@ -15,11 +15,12 @@
 #include <unistd.h>
 #include <sys/syscall.h>
 
+#include "mozilla/StackWalk.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Exceptions.h"
 #include "nsContentUtils.h"
 #include "nsExceptionHandler.h"
-#include "mozilla/StackWalk.h"
+#include "nsIException.h" // for nsIStackFrame
 #include "nsString.h"
 #include "nsThreadUtils.h"
 
@@ -53,11 +54,10 @@ SandboxLogJSStack(void)
 
     // Don't stop unwinding if an attribute can't be read.
     fileName.SetIsVoid(true);
-    Unused << frame->GetFilename(cx, fileName);
-    lineNumber = 0;
-    Unused << frame->GetLineNumber(cx, &lineNumber);
+    frame->GetFilename(cx, fileName);
+    lineNumber = frame->GetLineNumber(cx);
     funName.SetIsVoid(true);
-    Unused << frame->GetName(cx, funName);
+    frame->GetName(cx, funName);
 
     if (!funName.IsVoid() || !fileName.IsVoid()) {
       SANDBOX_LOG_ERROR("JS frame %d: %s %s line %d", i,
@@ -68,10 +68,7 @@ SandboxLogJSStack(void)
                         lineNumber);
     }
 
-    nsCOMPtr<nsIStackFrame> nextFrame;
-    nsresult rv = frame->GetCaller(cx, getter_AddRefs(nextFrame));
-    NS_ENSURE_SUCCESS_VOID(rv);
-    frame = nextFrame;
+    frame = frame->GetCaller(cx);
   }
 }
 

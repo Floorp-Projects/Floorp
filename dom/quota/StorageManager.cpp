@@ -19,8 +19,6 @@
 #include "nsIQuotaRequests.h"
 #include "nsPIDOMWindow.h"
 
-using namespace mozilla::dom::workers;
-
 namespace mozilla {
 namespace dom {
 

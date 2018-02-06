@@ -15,49 +15,6 @@ const {throttle} = require("devtools/shared/throttle");
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
- * Create a child element with a set of attributes.
- *
- * @param {Element} parent
- *        The parent node.
- * @param {string} tagName
- *        The tag name.
- * @param {object} attributes
- *        A set of attributes to set on the node.
- */
-function createChild(parent, tagName, attributes = {}) {
-  let elt = parent.ownerDocument.createElementNS(HTML_NS, tagName);
-  for (let attr in attributes) {
-    if (attributes.hasOwnProperty(attr)) {
-      if (attr === "textContent") {
-        elt.textContent = attributes[attr];
-      } else if (attr === "child") {
-        elt.appendChild(attributes[attr]);
-      } else {
-        elt.setAttribute(attr, attributes[attr]);
-      }
-    }
-  }
-  parent.appendChild(elt);
-  return elt;
-}
-
-exports.createChild = createChild;
-
-/**
- * Append a text node to an element.
- *
- * @param {Element} parent
- *        The parent node.
- * @param {string} text
- *        The text content for the text node.
- */
-function appendText(parent, text) {
-  parent.appendChild(parent.ownerDocument.createTextNode(text));
-}
-
-exports.appendText = appendText;
-
-/**
  * Called when a character is typed in a value editor.  This decides
  * whether to advance or not, first by checking to see if ";" was
  * typed, and then by lexing the input and seeing whether the ";"
@@ -98,7 +55,17 @@ function advanceValidate(keyCode, value, insertionPoint) {
   return false;
 }
 
-exports.advanceValidate = advanceValidate;
+/**
+ * Append a text node to an element.
+ *
+ * @param {Element} parent
+ *        The parent node.
+ * @param {string} text
+ *        The text content for the text node.
+ */
+function appendText(parent, text) {
+  parent.appendChild(parent.ownerDocument.createTextNode(text));
+}
 
 /**
  * Event handler that causes a blur on the target if the input has
@@ -115,7 +82,32 @@ function blurOnMultipleProperties(cssProperties) {
   };
 }
 
-exports.blurOnMultipleProperties = blurOnMultipleProperties;
+/**
+ * Create a child element with a set of attributes.
+ *
+ * @param {Element} parent
+ *        The parent node.
+ * @param {string} tagName
+ *        The tag name.
+ * @param {object} attributes
+ *        A set of attributes to set on the node.
+ */
+function createChild(parent, tagName, attributes = {}) {
+  let elt = parent.ownerDocument.createElementNS(HTML_NS, tagName);
+  for (let attr in attributes) {
+    if (attributes.hasOwnProperty(attr)) {
+      if (attr === "textContent") {
+        elt.textContent = attributes[attr];
+      } else if (attr === "child") {
+        elt.appendChild(attributes[attr]);
+      } else {
+        elt.setAttribute(attr, attributes[attr]);
+      }
+    }
+  }
+  parent.appendChild(elt);
+  return elt;
+}
 
 /**
  * Log the provided error to the console and return a rejected Promise for
@@ -130,5 +122,42 @@ function promiseWarn(error) {
   return promise.reject(error);
 }
 
+/**
+ * While waiting for a reps fix in https://github.com/devtools-html/reps/issues/92,
+ * translate nodeFront to a grip-like object that can be used with an ElementNode rep.
+ *
+ * @params  {NodeFront} nodeFront
+ *          The NodeFront for which we want to create a grip-like object.
+ * @returns {Object} a grip-like object that can be used with Reps.
+ */
+function translateNodeFrontToGrip(nodeFront) {
+  const { attributes } = nodeFront;
+
+  // The main difference between NodeFront and grips is that attributes are treated as
+  // a map in grips and as an array in NodeFronts.
+  let attributesMap = {};
+  for (let {name, value} of attributes) {
+    attributesMap[name] = value;
+  }
+
+  return {
+    actor: nodeFront.actorID,
+    preview: {
+      attributes: attributesMap,
+      attributesLength: attributes.length,
+      // All the grid containers are assumed to be in the DOM tree.
+      isConnected: true,
+      // nodeName is already lowerCased in Node grips
+      nodeName: nodeFront.nodeName.toLowerCase(),
+      nodeType: nodeFront.nodeType,
+    }
+  };
+}
+
+exports.advanceValidate = advanceValidate;
+exports.appendText = appendText;
+exports.blurOnMultipleProperties = blurOnMultipleProperties;
+exports.createChild = createChild;
 exports.promiseWarn = promiseWarn;
 exports.throttle = throttle;
+exports.translateNodeFrontToGrip = translateNodeFrontToGrip;

@@ -161,7 +161,7 @@ public:
   void
   Reset()
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
 
     if (mUploadEventListenersAttached) {
       AddRemoveEventListeners(true, false);
@@ -171,7 +171,7 @@ public:
   already_AddRefed<nsIEventTarget>
   GetEventTarget()
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
 
     nsCOMPtr<nsIEventTarget> target = mSyncEventResponseTarget ?
                                       mSyncEventResponseTarget :
@@ -372,7 +372,7 @@ private:
   NS_IMETHOD
   Run() override
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
 
     // This means the XHR was GC'd, so we can't be pinned, and we don't need to
     // try to unpin.
@@ -449,7 +449,7 @@ public:
     , mChannelId(mProxy->mInnerChannelId)
     , mReceivedLoadStart(false)
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
     CopyASCIItoUTF16(sEventStrings[STRING_loadstart], mEventType);
   }
 
@@ -460,7 +460,7 @@ public:
   bool
   RegisterAndDispatch()
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
 
     if (NS_FAILED(mXHR->AddEventListener(mEventType, this, false, false, 2))) {
       NS_WARNING("Failed to add event listener!");
@@ -473,7 +473,7 @@ public:
 private:
   ~LoadStartDetectionRunnable()
   {
-    workers::AssertIsOnMainThread();
+    AssertIsOnMainThread();
   }
 };
 
@@ -852,7 +852,7 @@ public:
 bool
 Proxy::Init()
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
   MOZ_ASSERT(mWorkerPrivate);
 
   if (mXHR) {
@@ -895,7 +895,7 @@ Proxy::Init()
 void
 Proxy::Teardown(bool aSendUnpin)
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
 
   if (mXHR) {
     Reset();
@@ -945,7 +945,7 @@ Proxy::Teardown(bool aSendUnpin)
 bool
 Proxy::AddRemoveEventListeners(bool aUpload, bool aAdd)
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
 
   NS_ASSERTION(!aUpload ||
                (mUploadEventListenersAttached && !aAdd) ||
@@ -985,7 +985,7 @@ NS_IMPL_ISUPPORTS(Proxy, nsIDOMEventListener)
 NS_IMETHODIMP
 Proxy::HandleEvent(nsIDOMEvent* aEvent)
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
 
   if (!mWorkerPrivate || !mXMLHttpRequestPrivate) {
     NS_ERROR("Shouldn't get here!");
@@ -1066,7 +1066,7 @@ NS_IMPL_ISUPPORTS_INHERITED(LoadStartDetectionRunnable, Runnable,
 NS_IMETHODIMP
 LoadStartDetectionRunnable::Run()
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
 
   if (NS_FAILED(mXHR->RemoveEventListener(mEventType, this, false))) {
     NS_WARNING("Failed to remove event listener!");
@@ -1098,7 +1098,7 @@ LoadStartDetectionRunnable::Run()
 NS_IMETHODIMP
 LoadStartDetectionRunnable::HandleEvent(nsIDOMEvent* aEvent)
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
 
 #ifdef DEBUG
   {
@@ -1119,7 +1119,7 @@ LoadStartDetectionRunnable::HandleEvent(nsIDOMEvent* aEvent)
 bool
 EventRunnable::PreDispatch(WorkerPrivate* /* unused */)
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
 
   AutoJSAPI jsapi;
   DebugOnly<bool> ok = jsapi.Init(xpc::NativeGlobal(mScopeObj));
@@ -1374,7 +1374,7 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 bool
 WorkerThreadProxySyncRunnable::MainThreadRun()
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
 
   nsCOMPtr<nsIEventTarget> tempTarget = mSyncLoopTarget;
 
@@ -1589,7 +1589,7 @@ XMLHttpRequestWorker::Construct(const GlobalObject& aGlobal,
                                 ErrorResult& aRv)
 {
   JSContext* cx = aGlobal.Context();
-  WorkerPrivate* workerPrivate = workers::GetWorkerPrivateFromContext(cx);
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
   MOZ_ASSERT(workerPrivate);
 
   RefPtr<XMLHttpRequestWorker> xhr = new XMLHttpRequestWorker(workerPrivate);

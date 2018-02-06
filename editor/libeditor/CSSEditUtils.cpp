@@ -315,6 +315,8 @@ CSSEditUtils::~CSSEditUtils()
 
 // Answers true if we have some CSS equivalence for the HTML style defined
 // by aProperty and/or aAttribute for the node aNode
+
+// static
 bool
 CSSEditUtils::IsCSSEditableProperty(nsINode* aNode,
                                     nsAtom* aProperty,
@@ -489,6 +491,7 @@ CSSEditUtils::RemoveCSSProperty(Element& aElement,
   return htmlEditor->DoTransaction(transaction);
 }
 
+// static
 nsresult
 CSSEditUtils::GetSpecifiedProperty(nsINode& aNode,
                                    nsAtom& aProperty,
@@ -497,6 +500,7 @@ CSSEditUtils::GetSpecifiedProperty(nsINode& aNode,
   return GetCSSInlinePropertyBase(&aNode, &aProperty, aValue, eSpecified);
 }
 
+// static
 nsresult
 CSSEditUtils::GetComputedProperty(nsINode& aNode,
                                   nsAtom& aProperty,
@@ -505,6 +509,7 @@ CSSEditUtils::GetComputedProperty(nsINode& aNode,
   return GetCSSInlinePropertyBase(&aNode, &aProperty, aValue, eComputed);
 }
 
+// static
 nsresult
 CSSEditUtils::GetCSSInlinePropertyBase(nsINode* aNode,
                                        nsAtom* aProperty,
@@ -545,6 +550,7 @@ CSSEditUtils::GetCSSInlinePropertyBase(nsINode* aNode,
   return NS_OK;
 }
 
+// static
 already_AddRefed<nsComputedDOMStyle>
 CSSEditUtils::GetComputedStyle(Element* aElement)
 {
@@ -586,6 +592,8 @@ CSSEditUtils::RemoveCSSInlineStyle(nsINode& aNode,
 
 // Answers true if the property can be removed by setting a "none" CSS value
 // on a node
+
+// static
 bool
 CSSEditUtils::IsCSSInvertible(nsAtom& aProperty,
                               nsAtom* aAttribute)
@@ -594,6 +602,8 @@ CSSEditUtils::IsCSSInvertible(nsAtom& aProperty,
 }
 
 // Get the default browser background color if we need it for GetCSSBackgroundColorState
+
+// static
 void
 CSSEditUtils::GetDefaultBackgroundColor(nsAString& aColor)
 {
@@ -621,6 +631,8 @@ CSSEditUtils::GetDefaultBackgroundColor(nsAString& aColor)
 }
 
 // Get the default length unit used for CSS Indent/Outdent
+
+// static
 void
 CSSEditUtils::GetDefaultLengthUnit(nsAString& aLengthUnit)
 {
@@ -635,6 +647,8 @@ CSSEditUtils::GetDefaultLengthUnit(nsAString& aLengthUnit)
 // Unfortunately, CSSStyleDeclaration::GetPropertyCSSValue is not yet
 // implemented... We need then a way to determine the number part and the unit
 // from aString, aString being the result of a GetPropertyValue query...
+
+// static
 void
 CSSEditUtils::ParseLength(const nsAString& aString,
                           float* aValue,
@@ -684,6 +698,7 @@ CSSEditUtils::ParseLength(const nsAString& aString,
   *aUnit = NS_Atomize(StringTail(aString, j-i)).take();
 }
 
+// static
 void
 CSSEditUtils::GetCSSPropertyAtom(nsCSSEditableProperty aProperty,
                                  nsAtom** aAtom)
@@ -755,6 +770,8 @@ CSSEditUtils::GetCSSPropertyAtom(nsCSSEditableProperty aProperty,
 
 // Populate aProperty and aValueArray with the CSS declarations equivalent to the
 // value aValue according to the equivalence table aEquivTable
+
+// static
 void
 CSSEditUtils::BuildCSSDeclarations(nsTArray<nsAtom*>& aPropertyArray,
                                    nsTArray<nsString>& aValueArray,
@@ -798,6 +815,8 @@ CSSEditUtils::BuildCSSDeclarations(nsTArray<nsAtom*>& aPropertyArray,
 
 // Populate cssPropertyArray and cssValueArray with the declarations equivalent
 // to aHTMLProperty/aAttribute/aValue for the node aNode
+
+// static
 void
 CSSEditUtils::GenerateCSSDeclarationsFromHTMLStyle(
                 Element* aElement,
@@ -950,6 +969,8 @@ CSSEditUtils::RemoveCSSEquivalentToHTMLStyle(Element* aElement,
 // the HTML style aHTMLProperty/aAttribute/aValueString for the node aNode;
 // the value of aStyleType controls the styles we retrieve : specified or
 // computed.
+
+// static
 nsresult
 CSSEditUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
                                                    nsAtom* aHTMLProperty,
@@ -996,6 +1017,8 @@ CSSEditUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
 //
 // The nsIContent variant returns aIsSet instead of using an out parameter, and
 // does not modify aValue.
+
+// static
 bool
 CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
                                                   nsAtom* aProperty,
@@ -1009,6 +1032,7 @@ CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
                                              value, aStyleType);
 }
 
+// static
 bool
 CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
                                                   nsAtom* aProperty,
@@ -1023,6 +1047,7 @@ CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
                                              aValue, aStyleType);
 }
 
+// static
 bool
 CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
                 nsINode* aNode,
@@ -1214,7 +1239,7 @@ CSSEditUtils::SetCSSEnabled(bool aIsCSSPrefChecked)
 }
 
 bool
-CSSEditUtils::IsCSSPrefChecked()
+CSSEditUtils::IsCSSPrefChecked() const
 {
   return mIsCSSPrefChecked ;
 }
@@ -1222,20 +1247,8 @@ CSSEditUtils::IsCSSPrefChecked()
 // ElementsSameStyle compares two elements and checks if they have the same
 // specified CSS declarations in the STYLE attribute
 // The answer is always negative if at least one of them carries an ID or a class
-bool
-CSSEditUtils::ElementsSameStyle(nsIDOMNode* aFirstNode,
-                                nsIDOMNode* aSecondNode)
-{
-  nsCOMPtr<Element> firstElement  = do_QueryInterface(aFirstNode);
-  nsCOMPtr<Element> secondElement = do_QueryInterface(aSecondNode);
 
-  NS_ASSERTION((firstElement && secondElement), "Non element nodes passed to ElementsSameStyle.");
-  NS_ENSURE_TRUE(firstElement, false);
-  NS_ENSURE_TRUE(secondElement, false);
-
-  return ElementsSameStyle(firstElement, secondElement);
-}
-
+// static
 bool
 CSSEditUtils::ElementsSameStyle(Element* aFirstElement,
                                 Element* aSecondElement)
@@ -1312,6 +1325,7 @@ CSSEditUtils::ElementsSameStyle(Element* aFirstElement,
   return true;
 }
 
+// static
 nsresult
 CSSEditUtils::GetInlineStyles(Element* aElement,
                               nsICSSDeclaration** aCssDecl,
@@ -1330,6 +1344,7 @@ CSSEditUtils::GetInlineStyles(Element* aElement,
   return NS_OK;
 }
 
+// static
 Element*
 CSSEditUtils::GetElementContainerOrSelf(nsINode* aNode)
 {
