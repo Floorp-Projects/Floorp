@@ -133,6 +133,10 @@ ServoStyleSet::CreateXBLServoStyleSet(
   set->ReplaceSheets(SheetType::Doc, aNewSheets);
 
   // Update stylist immediately.
+  //
+  // NOTE(emilio): that this _needs_ to be the only call to UpdateStylist for
+  // XBL bindings, otherwise the Servo-side Device may have stale pres context
+  // pointers and such, which are not great.
   set->UpdateStylist();
 
   // XBL resources are shared for a given URL, even across documents, so we
@@ -162,8 +166,6 @@ ServoStyleSet::Init(nsPresContext* aPresContext)
 {
   mDocument = aPresContext->Document();
   MOZ_ASSERT(GetPresContext() == aPresContext);
-
-  mLastPresContextUsesXBLStyleSet = aPresContext;
 
   mRawSet.reset(Servo_StyleSet_Init(aPresContext));
 
@@ -209,24 +211,6 @@ ServoStyleSet::InvalidateStyleForCSSRuleChanges()
   }
 }
 
-bool
-ServoStyleSet::SetPresContext(nsPresContext* aPresContext)
-{
-  MOZ_ASSERT(IsForXBL(), "Only XBL styleset can set PresContext!");
-
-  mLastPresContextUsesXBLStyleSet = aPresContext;
-
-  const OriginFlags rulesChanged = static_cast<OriginFlags>(
-    Servo_StyleSet_SetDevice(mRawSet.get(), aPresContext));
-
-  if (rulesChanged != OriginFlags(0)) {
-    MarkOriginsDirty(rulesChanged);
-    return true;
-  }
-
-  return false;
-}
-
 void
 ServoStyleSet::InvalidateStyleForDocumentStateChanges(EventStates aStatesChanged)
 {
@@ -264,33 +248,6 @@ ServoStyleSet::InvalidateStyleForDocumentStateChanges(EventStates aStatesChanged
     root, &styleSets, aStatesChanged.ServoValue());
 }
 
-nsRestyleHint
-ServoStyleSet::MediumFeaturesChanged(MediaFeatureChangeReason aReason)
-{
-  bool viewportUnitsUsed = false;
-  bool rulesChanged = MediumFeaturesChangedRules(&viewportUnitsUsed, aReason);
-
-  if (nsPresContext* pc = GetPresContext()) {
-    if (mDocument->BindingManager()->MediumFeaturesChanged(pc, aReason)) {
-      // TODO(emilio): We could technically just restyle the bound elements.
-      SetStylistXBLStyleSheetsDirty();
-      rulesChanged = true;
-    }
-  }
-
-  if (rulesChanged) {
-    return eRestyle_Subtree;
-  }
-
-  const bool viewportChanged =
-    bool(aReason & MediaFeatureChangeReason::ViewportChange);
-  if (viewportUnitsUsed && viewportChanged) {
-    return eRestyle_ForceDescendants;
-  }
-
-  return nsRestyleHint(0);
-}
-
 static const MediaFeatureChangeReason kMediaFeaturesAffectingDefaultStyle =
   // Zoom changes change the meaning of em units.
   MediaFeatureChangeReason::ZoomChange |
@@ -303,26 +260,51 @@ static const MediaFeatureChangeReason kMediaFeaturesAffectingDefaultStyle =
   // the pres context (bug 1418159).
   MediaFeatureChangeReason::ResolutionChange;
 
-bool
-ServoStyleSet::MediumFeaturesChangedRules(
-  bool* aViewportUnitsUsed,
-  MediaFeatureChangeReason aReason)
+nsRestyleHint
+ServoStyleSet::MediumFeaturesChanged(MediaFeatureChangeReason aReason)
 {
-  MOZ_ASSERT(aViewportUnitsUsed);
+  AutoTArray<ServoStyleSet*, 20> nonDocumentStyleSets;
+  // FIXME(emilio): When bug 1425759 is fixed we need to enumerate ShadowRoots
+  // too.
+  //
+  // FIXME(emilio): This is broken for XBL. See bug 1406875.
+  mDocument->BindingManager()->EnumerateBoundContentBindings(
+    [&](nsXBLBinding* aBinding) {
+      if (ServoStyleSet* set = aBinding->PrototypeBinding()->GetServoStyleSet()) {
+        nonDocumentStyleSets.AppendElement(set);
+      }
+      return true;
+    });
 
   bool mayAffectDefaultStyle =
     bool(aReason & kMediaFeaturesAffectingDefaultStyle);
 
-  const OriginFlags rulesChanged = static_cast<OriginFlags>(
+  const MediumFeaturesChangedResult result =
     Servo_StyleSet_MediumFeaturesChanged(
-      mRawSet.get(), aViewportUnitsUsed, mayAffectDefaultStyle));
+      mRawSet.get(), &nonDocumentStyleSets, mayAffectDefaultStyle);
 
-  if (rulesChanged != OriginFlags(0)) {
-    MarkOriginsDirty(rulesChanged);
-    return true;
+  const bool rulesChanged =
+    result.mAffectsDocumentRules || result.mAffectsNonDocumentRules;
+
+  if (result.mAffectsDocumentRules) {
+    SetStylistStyleSheetsDirty();
   }
 
-  return false;
+  if (result.mAffectsNonDocumentRules) {
+    SetStylistXBLStyleSheetsDirty();
+  }
+
+  if (rulesChanged) {
+    return eRestyle_Subtree;
+  }
+
+  const bool viewportChanged =
+    bool(aReason & MediaFeatureChangeReason::ViewportChange);
+  if (result.mUsesViewportUnits && viewportChanged) {
+    return eRestyle_ForceDescendants;
+  }
+
+  return nsRestyleHint(0);
 }
 
 MOZ_DEFINE_MALLOC_SIZE_OF(ServoStyleSetMallocSizeOf)
@@ -1125,6 +1107,10 @@ ServoStyleSet::MarkOriginsDirty(OriginFlags aChangedOrigins)
 void
 ServoStyleSet::SetStylistStyleSheetsDirty()
 {
+  // Note that there's another hidden mutator of mStylistState for XBL style
+  // sets in MediumFeaturesChanged...
+  //
+  // We really need to stop using a full-blown StyleSet there...
   mStylistState |= StylistState::StyleSheetsDirty;
 
   // We need to invalidate cached style in getComputedStyle for undisplayed
@@ -1468,6 +1454,9 @@ ServoStyleSet::UpdateStylist()
   if (MOZ_UNLIKELY(mStylistState & StylistState::XBLStyleSheetsDirty)) {
     MOZ_ASSERT(IsMaster(), "Only master styleset can mark XBL stylesets dirty!");
     MOZ_ASSERT(GetPresContext(), "How did they get dirty?");
+    // NOTE(emilio): This right now rebuilds the stylist in the prototype
+    // binding. That is fine, and if we wanted to be more incremental, which we
+    // probably should, we need to move away from using a StyleSet for XBL.
     mDocument->BindingManager()->UpdateBoundContentBindingsForServo(GetPresContext());
   }
 

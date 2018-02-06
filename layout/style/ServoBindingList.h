@@ -86,14 +86,14 @@ SERVO_BINDING_FUNC(Servo_StyleSet_RebuildCachedData, void,
 // We'd like to return `OriginFlags` here, but bindgen bitfield enums don't
 // work as return values with the Linux 32-bit ABI at the moment because
 // they wrap the value in a struct.
-SERVO_BINDING_FUNC(Servo_StyleSet_MediumFeaturesChanged, uint8_t,
-                   RawServoStyleSetBorrowed set, bool* viewport_units_used,
+SERVO_BINDING_FUNC(Servo_StyleSet_MediumFeaturesChanged,
+                   MediumFeaturesChangedResult,
+                   RawServoStyleSetBorrowed document_set,
+                   const nsTArray<mozilla::ServoStyleSet*>* non_document_sets,
                    bool may_affect_default_style)
 // We'd like to return `OriginFlags` here, but bindgen bitfield enums don't
 // work as return values with the Linux 32-bit ABI at the moment because
 // they wrap the value in a struct.
-SERVO_BINDING_FUNC(Servo_StyleSet_SetDevice, uint8_t,
-                   RawServoStyleSetBorrowed set, RawGeckoPresContextOwned pres_context)
 SERVO_BINDING_FUNC(Servo_StyleSet_Drop, void, RawServoStyleSetOwned set)
 SERVO_BINDING_FUNC(Servo_StyleSet_CompatModeChanged, void,
                    RawServoStyleSetBorrowed raw_data)
