@@ -87,7 +87,8 @@ SERVO_BINDING_FUNC(Servo_StyleSet_RebuildCachedData, void,
 // work as return values with the Linux 32-bit ABI at the moment because
 // they wrap the value in a struct.
 SERVO_BINDING_FUNC(Servo_StyleSet_MediumFeaturesChanged, uint8_t,
-                   RawServoStyleSetBorrowed set, bool* viewport_units_used)
+                   RawServoStyleSetBorrowed set, bool* viewport_units_used,
+                   bool may_affect_default_style)
 // We'd like to return `OriginFlags` here, but bindgen bitfield enums don't
 // work as return values with the Linux 32-bit ABI at the moment because
 // they wrap the value in a struct.
