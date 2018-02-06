@@ -6,6 +6,7 @@
 
 #include "DrawTargetCapture.h"
 #include "DrawCommand.h"
+#include "DrawCommands.h"
 #include "gfxPlatform.h"
 #include "SourceSurfaceCapture.h"
 #include "FilterNodeCapture.h"
@@ -115,11 +116,17 @@ DrawTargetCaptureImpl::DetachAllSnapshots()
 }
 
 #define AppendCommand(arg) new (AppendToCommandList<arg>()) arg
+#define ReuseOrAppendCommand(arg) new (ReuseOrAppendToCommandList<arg>()) arg
 
 void
 DrawTargetCaptureImpl::SetPermitSubpixelAA(bool aPermitSubpixelAA)
 {
-  AppendCommand(SetPermitSubpixelAACommand)(aPermitSubpixelAA);
+  // Save memory by eliminating state changes with no effect
+  if (mPermitSubpixelAA == aPermitSubpixelAA) {
+    return;
+  }
+
+  ReuseOrAppendCommand(SetPermitSubpixelAACommand)(aPermitSubpixelAA);
 
   // Have to update mPermitSubpixelAA for this DT
   // because some code paths query the current setting
@@ -310,7 +317,12 @@ DrawTargetCaptureImpl::PopClip()
 void
 DrawTargetCaptureImpl::SetTransform(const Matrix& aTransform)
 {
-  AppendCommand(SetTransformCommand)(aTransform);
+  // Save memory by eliminating state changes with no effect
+  if (mTransform.ExactlyEquals(aTransform)) {
+    return;
+  }
+
+  ReuseOrAppendCommand(SetTransformCommand)(aTransform);
 
   // Have to update the transform for this DT
   // because some code paths query the current transform
@@ -353,7 +365,7 @@ DrawTargetCaptureImpl::ContainsOnlyColoredGlyphs(RefPtr<ScaledFont>& aScaledFont
 
     if (command->GetType() == CommandType::SETTRANSFORM) {
       SetTransformCommand* transform = static_cast<SetTransformCommand*>(command);
-      if (transform->mTransform != Matrix()) {
+      if (!transform->mTransform.IsIdentity()) {
         return false;
       }
       continue;

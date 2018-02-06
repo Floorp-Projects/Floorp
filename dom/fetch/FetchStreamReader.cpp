@@ -16,8 +16,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace workers;
-
 namespace {
 
 class FetchStreamReaderWorkerHolder final : public WorkerHolder

@@ -194,12 +194,12 @@ HTMLEditor::SetAllResizersPosition()
   nsAutoString value;
   float resizerWidth, resizerHeight;
   RefPtr<nsAtom> dummyUnit;
-  mCSSEditUtils->GetComputedProperty(*mTopLeftHandle, *nsGkAtoms::width,
-                                     value);
-  mCSSEditUtils->ParseLength(value, &resizerWidth, getter_AddRefs(dummyUnit));
-  mCSSEditUtils->GetComputedProperty(*mTopLeftHandle, *nsGkAtoms::height,
-                                     value);
-  mCSSEditUtils->ParseLength(value, &resizerHeight, getter_AddRefs(dummyUnit));
+  CSSEditUtils::GetComputedProperty(*mTopLeftHandle, *nsGkAtoms::width,
+                                    value);
+  CSSEditUtils::ParseLength(value, &resizerWidth, getter_AddRefs(dummyUnit));
+  CSSEditUtils::GetComputedProperty(*mTopLeftHandle, *nsGkAtoms::height,
+                                    value);
+  CSSEditUtils::ParseLength(value, &resizerHeight, getter_AddRefs(dummyUnit));
 
   int32_t rw  = (int32_t)((resizerWidth + 1) / 2);
   int32_t rh =  (int32_t)((resizerHeight+ 1) / 2);

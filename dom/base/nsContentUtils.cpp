@@ -2444,9 +2444,9 @@ nsContentUtils::CalcRoundedWindowSizeForResistingFingerprinting(int32_t  aChrome
 bool
 nsContentUtils::ThreadsafeIsCallerChrome()
 {
-  return NS_IsMainThread() ?
-    IsCallerChrome() :
-    workers::IsCurrentThreadRunningChromeWorker();
+  return NS_IsMainThread()
+           ? IsCallerChrome()
+           : IsCurrentThreadRunningChromeWorker();
 }
 
 bool
@@ -2485,7 +2485,7 @@ nsContentUtils::ThreadsafeIsSystemCaller(JSContext* aCx)
     return IsSystemCaller(aCx);
   }
 
-  return workers::GetWorkerPrivateFromContext(aCx)->UsesSystemPrincipal();
+  return GetWorkerPrivateFromContext(aCx)->UsesSystemPrincipal();
 }
 
 // static
@@ -6144,7 +6144,7 @@ nsContentUtils::GetCurrentJSContextForThread()
   if (MOZ_LIKELY(NS_IsMainThread())) {
     return GetCurrentJSContext();
   }
-  return workers::GetCurrentThreadJSContext();
+  return GetCurrentWorkerThreadJSContext();
 }
 
 template<typename StringType, typename CharType>

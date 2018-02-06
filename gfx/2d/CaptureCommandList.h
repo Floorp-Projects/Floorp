@@ -11,23 +11,28 @@
 #include "mozilla/PodOperations.h"
 #include <vector>
 
+#include "DrawCommand.h"
+
 namespace mozilla {
 namespace gfx {
-
-class DrawingCommand;
 
 class CaptureCommandList
 {
 public:
   CaptureCommandList()
+    : mLastCommand(nullptr)
   {}
   CaptureCommandList(CaptureCommandList&& aOther)
-   : mStorage(Move(aOther.mStorage))
-  {}
+   : mStorage(Move(aOther.mStorage)), mLastCommand(aOther.mLastCommand)
+  {
+    aOther.mLastCommand = nullptr;
+  }
   ~CaptureCommandList();
 
   CaptureCommandList& operator =(CaptureCommandList&& aOther) {
     mStorage = Move(aOther.mStorage);
+    mLastCommand = aOther.mLastCommand;
+    aOther.mLastCommand = nullptr;
     return *this;
   }
 
@@ -37,7 +42,18 @@ public:
     mStorage.resize(mStorage.size() + sizeof(T) + sizeof(uint32_t));
     uint8_t* nextDrawLocation = &mStorage.front() + oldSize;
     *(uint32_t*)(nextDrawLocation) = sizeof(T) + sizeof(uint32_t);
-    return reinterpret_cast<T*>(nextDrawLocation + sizeof(uint32_t));
+    T* newCommand = reinterpret_cast<T*>(nextDrawLocation + sizeof(uint32_t));
+    mLastCommand = newCommand;
+    return newCommand;
+  }
+
+  template <typename T>
+  T* ReuseOrAppend() {
+    if (mLastCommand != nullptr &&
+      mLastCommand->GetType() == T::Type) {
+      return reinterpret_cast<T*>(mLastCommand);
+    }
+    return Append<T>();
   }
 
   class iterator
@@ -77,6 +93,7 @@ private:
 
 private:
   std::vector<uint8_t> mStorage;
+  DrawingCommand* mLastCommand;
 };
 
 } // namespace gfx

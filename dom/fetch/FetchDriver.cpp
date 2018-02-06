@@ -198,7 +198,7 @@ NS_IMETHODIMP
 AlternativeDataStreamListener::OnStartRequest(nsIRequest* aRequest,
                                               nsISupports* aContext)
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
   MOZ_ASSERT(!mAlternativeDataType.IsEmpty());
   // Checking the alternative data type is the same between we asked and the
   // saved in the channel.
@@ -274,7 +274,7 @@ AlternativeDataStreamListener::OnStopRequest(nsIRequest* aRequest,
                                              nsISupports* aContext,
                                              nsresult aStatusCode)
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
 
   // Alternative data loading is going to finish, breaking the reference cycle
   // here by taking the ownership to a loacl variable.
@@ -363,7 +363,7 @@ FetchDriver::~FetchDriver()
 nsresult
 FetchDriver::Fetch(AbortSignal* aSignal, FetchDriverObserver* aObserver)
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
 #ifdef DEBUG
   MOZ_ASSERT(!mFetchCalled);
   mFetchCalled = true;
@@ -771,7 +771,7 @@ FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse,
 void
 FetchDriver::FailWithNetworkError(nsresult rv)
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
   RefPtr<InternalResponse> error = InternalResponse::NetworkError(rv);
   if (mObserver) {
     mObserver->OnResponseAvailable(error);
@@ -789,7 +789,7 @@ NS_IMETHODIMP
 FetchDriver::OnStartRequest(nsIRequest* aRequest,
                             nsISupports* aContext)
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
 
   // Note, this can be called multiple times if we are doing an opaqueredirect.
   // In that case we will get a simulated OnStartRequest() and then the real
@@ -1151,7 +1151,7 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest,
                            nsISupports* aContext,
                            nsresult aStatusCode)
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
 
   MOZ_DIAGNOSTIC_ASSERT(!mOnStopRequestCalled);
   mOnStopRequestCalled = true;
@@ -1217,7 +1217,7 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest,
 nsresult
 FetchDriver::FinishOnStopRequest(AlternativeDataStreamListener* aAltDataListener)
 {
-  workers::AssertIsOnMainThread();
+  AssertIsOnMainThread();
   // OnStopRequest is not called from channel, that means the main data loading
   // does not finish yet. Reaching here since alternative data loading finishes.
   if (!mOnStopRequestCalled) {

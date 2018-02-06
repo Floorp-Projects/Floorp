@@ -234,7 +234,6 @@
 using namespace mozilla;
 using namespace mozilla::docshell;
 using namespace mozilla::dom::ipc;
-using namespace mozilla::dom::workers;
 using namespace mozilla::media;
 using namespace mozilla::embedding;
 using namespace mozilla::gmp;

@@ -111,7 +111,7 @@ gfxPattern::GetPattern(const DrawTarget *aTarget,
   Matrix patternToUser = mPatternToUserSpace;
 
   if (aOriginalUserToDevice &&
-      *aOriginalUserToDevice != aTarget->GetTransform()) {
+      !aOriginalUserToDevice->FuzzyEquals(aTarget->GetTransform())) {
     // mPatternToUserSpace maps from pattern space to the original user space,
     // but aTarget now has a transform to a different user space.  In order for
     // the Pattern* that we return to be usable in aTarget's new user space we

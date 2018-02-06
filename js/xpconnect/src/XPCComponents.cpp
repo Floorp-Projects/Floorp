@@ -36,6 +36,7 @@
 #include "nsDOMClassInfo.h"
 #include "ShimInterfaceInfo.h"
 #include "nsIAddonInterposition.h"
+#include "nsIException.h"
 #include "nsIScriptError.h"
 #include "nsISimpleEnumerator.h"
 #include "nsPIDOMWindow.h"
@@ -1254,7 +1255,7 @@ nsXPCComponents_ID::HasInstance(nsIXPConnectWrappedNative* wrapper,
 }
 
 /***************************************************************************/
-// JavaScript Constructor for nsIXPCException objects (Components.Exception)
+// JavaScript Constructor for Exception objects (Components.Exception)
 
 class nsXPCComponents_Exception final :
   public nsIXPCComponents_Exception,
@@ -1535,27 +1536,21 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
 {
     nsXPConnect* xpc = nsXPConnect::XPConnect();
 
-    // Do the security check if necessary
-
-    if (NS_FAILED(nsXPConnect::SecurityManager()->CanCreateInstance(cx, Exception::GetCID()))) {
-        // the security manager vetoed. It should have set an exception.
-        *_retval = false;
-        return NS_OK;
-    }
+    MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::IsCallerChrome());
 
     // Parse the arguments to the Exception constructor.
     ExceptionArgParser parser(cx, xpc);
     if (!parser.parse(args))
         return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
 
-    nsCOMPtr<nsIException> e = new Exception(nsCString(parser.eMsg),
-                                             parser.eResult,
-                                             EmptyCString(),
-                                             parser.eStack,
-                                             parser.eData);
+    RefPtr<Exception> e = new Exception(nsCString(parser.eMsg),
+                                        parser.eResult,
+                                        EmptyCString(),
+                                        parser.eStack,
+                                        parser.eData);
 
     RootedObject newObj(cx);
-    if (NS_FAILED(xpc->WrapNative(cx, obj, e, NS_GET_IID(nsIXPCException), newObj.address())) || !newObj) {
+    if (NS_FAILED(xpc->WrapNative(cx, obj, e, NS_GET_IID(nsIException), newObj.address())) || !newObj) {
         return ThrowAndFail(NS_ERROR_XPC_CANT_CREATE_WN, cx, _retval);
     }
 
@@ -2143,7 +2138,7 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext* cx)
         nsCOMPtr<nsIStackFrame> frame = dom::GetCurrentJSStack();
         if (frame) {
             frame->GetFilename(cx, fileName);
-            frame->GetLineNumber(cx, &lineNo);
+            lineNo = frame->GetLineNumber(cx);
             JS::Rooted<JS::Value> stack(cx);
             nsresult rv = frame->GetNativeSavedFrame(&stack);
             if (NS_SUCCEEDED(rv) && stack.isObject()) {
@@ -2225,7 +2220,7 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
             nsString frameFile;
             frame->GetFilename(cx, frameFile);
             CopyUTF16toUTF8(frameFile, filename);
-            frame->GetLineNumber(cx, &lineNo);
+            lineNo = frame->GetLineNumber(cx);
         }
     }
 
