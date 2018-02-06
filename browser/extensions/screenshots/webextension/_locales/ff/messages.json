@@ -4,5 +4,34 @@
   },
   "addonAuthorsList": {
     "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "downloadOnlyNotice": {
+    "message": "Ngonɗaa e oo sahaa ko e mbaydi Aawto-Tan."
+  },
+  "downloadOnlyDetails": {
+    "message": "Leƴƴande kuurgal Firefox ina wayla ɗoon e ɗoon e mbaydi Aawto-Tan e ɗii ngonkaaji:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Nder henorde Banngogol Suturo."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Cuukiije jiggaaɗe ɗee ndaaƴaama."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Woto siiftor aslol abadaa” hurminaama."
+  },
+  "copyScreenshot": {
+    "message": "Natto"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Natto ngoo nattaama"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Natto maa nattaama e ɗakkitorde ndee. Ñoƴƴu $META_KEY$-V ngam ɗakkude.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
   }
 }

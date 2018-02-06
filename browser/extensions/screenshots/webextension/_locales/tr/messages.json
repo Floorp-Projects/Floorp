@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "“Geçmişi asla hatırlama” devredeyken"
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Firefox ESR kullanıyorsunuz."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Gönderme işlemi devre dışı bırakılmıştır."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Bağlantı kopyalandı"
   },

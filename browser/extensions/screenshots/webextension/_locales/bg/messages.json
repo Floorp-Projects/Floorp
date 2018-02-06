@@ -44,11 +44,31 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "настройката „Не помни история“ е включена"
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Използвате Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Качването на снимки е изключено."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Препратката е копирана"
   },
   "notificationLinkCopiedDetails": {
     "message": "Препратка към снимката е копирана в системния буфер. За да я поставите натиснете $META_KEY$-V.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Копиране"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Снимката е копирана"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Снимката е копирана в системния буфер. За да я поставите натиснете $META_KEY$-V.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

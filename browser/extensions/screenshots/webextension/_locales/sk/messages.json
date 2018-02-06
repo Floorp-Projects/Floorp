@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "Máte úplne zakázané ukladanie histórie prehliadania."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Používate Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Nahrávanie bolo zakázané."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Odkaz bol skopírovaný"
   },

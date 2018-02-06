@@ -29,6 +29,21 @@
   "downloadScreenshot": {
     "message": "Telechargiar"
   },
+  "downloadOnlyNotice": {
+    "message": "Ti es actualmain en il modus che permetta mo da telechargiar."
+  },
+  "downloadOnlyDetails": {
+    "message": "En suandantas situaziuns permetta Firefox Screenshots mo da telechargiar:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Sche ti navigheschas en il modus privat."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Sche cookies da terzs èn deactivads."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Sche l'opziun «Mai memorisar la cronologia» è activada."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Copià la colliaziun"
   },
@@ -36,6 +51,28 @@
     "message": "La colliaziun tar tes maletg da visur è vegnida copiada en l'archiv provisoric. Smatga $META_KEY$-V per l'encollar.",
     "placeholders": {
       "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Copiar"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Copià il maletg"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Tes maletg dal visur è vegnì copià en l'archiv provisoric. Smatga $META_KEY$-V per l'encollar.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCroppedWarning": {
+    "message": "Quest maletg è vegnì retaglià a $PIXELS$px.",
+    "placeholders": {
+      "pixels": {
         "content": "$1"
       }
     }
@@ -81,6 +118,12 @@
   },
   "tourBodyIntro": {
     "message": "Far, memorisar e cundivider maletgs da visur senza bandunar Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Ina nova pussaivladad da memorisar"
+  },
+  "tourBodyPageAction": {
+    "message": "Vuls far in maletg dal visur? Avra il menu da las «Acziuns da pagina» en la trav d'adressas."
   },
   "tourHeaderClickAndDrag": {
     "message": "Far maletgs da visur da tut che vi vuls"

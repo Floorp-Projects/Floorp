@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "開啟「永不保留瀏覽紀錄」時。"
   },
+  "downloadOnlyDetailsESR": {
+    "message": "您使用的是 Firefox ESR 版本。"
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "已停用上傳。"
+  },
   "notificationLinkCopiedTitle": {
     "message": "已複製鏈結"
   },

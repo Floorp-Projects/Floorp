@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "“Nunca recordar historial” está habilitado."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Está usando Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Las cargas de archivos están desactivadas."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Enlace copiado"
   },

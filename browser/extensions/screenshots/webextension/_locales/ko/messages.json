@@ -36,7 +36,7 @@
     "message": "Firefox Screenshots은 다음과 같은 경우에만 다운로드 전용 모드로 전환됩니다:"
   },
   "downloadOnlyDetailsPrivate": {
-    "message": "개인정보 모호 창에 있을 때"
+    "message": "개인정보 보호 창에 있을 때"
   },
   "downloadOnlyDetailsThirdParty": {
     "message": "제 3자 쿠키가 비활성화되어 있을 때"
