@@ -76,7 +76,6 @@ DrawTargetD2D1::~DrawTargetD2D1()
     mDC->EndDraw();
   }
 
-  StaticMutexAutoLock lock(Factory::mDTDependencyLock);
   // Targets depending on us can break that dependency, since we're obviously not going to
   // be modified in the future.
   for (auto iter = mDependentTargets.begin();
@@ -172,8 +171,7 @@ DrawTargetD2D1::Flush()
       mDC->Flush();
     }
   }
- 
-  StaticMutexAutoLock lock(Factory::mDTDependencyLock);
+
   // We no longer depend on any target.
   for (TargetSet::iterator iter = mDependingOnTargets.begin();
        iter != mDependingOnTargets.end(); iter++) {
@@ -1287,8 +1285,6 @@ DrawTargetD2D1::MarkChanged()
       MOZ_ASSERT(!mSnapshot);
     }
   }
-
-  StaticMutexAutoLock lock(Factory::mDTDependencyLock);
   if (mDependentTargets.size()) {
     // Copy mDependentTargets since the Flush()es below will modify it.
     TargetSet tmpTargets = mDependentTargets;
@@ -1468,11 +1464,6 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
 void
 DrawTargetD2D1::AddDependencyOnSource(SourceSurfaceD2D1* aSource)
 {
-  StaticMutexAutoLock lock(Factory::mDTDependencyLock);
-
-  // We grab the SnapshotLock as well, this guaranteeds aSource->mDrawTarget
-  // cannot be cleared in between the if statement and the dereference.
-  MutexAutoLock snapshotLock(*aSource->mSnapshotLock);
   if (aSource->mDrawTarget && !mDependingOnTargets.count(aSource->mDrawTarget)) {
     aSource->mDrawTarget->mDependentTargets.insert(this);
     mDependingOnTargets.insert(aSource->mDrawTarget);
