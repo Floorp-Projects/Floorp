@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
-
 ChromeUtils.import("chrome://marionette/content/action.js");
 const {ContentWebElement} = ChromeUtils.import("chrome://marionette/content/element.js", {});
 ChromeUtils.import("chrome://marionette/content/error.js");

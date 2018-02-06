@@ -1,5 +1,3 @@
-const {utils: Cu} = Components;
-
 let tgt = {};
 const a = ChromeUtils.import("resource://test/environment_script.js", tgt);
 const b = ChromeUtils.import("resource://test/environment_checkscript.jsm", tgt);

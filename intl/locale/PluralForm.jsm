@@ -31,9 +31,6 @@ this.EXPORTED_SYMBOLS = [ "PluralForm" ];
  * Note: Basically, makeGetter returns 2 functions that do "get" and "numForm"
  */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 const kIntlProperties = "chrome://global/locale/intl.properties";
 
 // These are the available plural functions that give the appropriate index

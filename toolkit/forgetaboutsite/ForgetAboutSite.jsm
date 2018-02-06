@@ -38,10 +38,6 @@ function hasRootDomain(str, aDomain) {
          (prevChar == "." || prevChar == "/");
 }
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 this.ForgetAboutSite = {
   async removeDataFromDomain(aDomain) {
     PlacesUtils.history.removePagesFromHost(aDomain, true);

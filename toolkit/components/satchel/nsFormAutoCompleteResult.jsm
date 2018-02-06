@@ -4,8 +4,6 @@
 
 this.EXPORTED_SYMBOLS = ["FormAutoCompleteResult"];
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.FormAutoCompleteResult = function FormAutoCompleteResult(searchString,

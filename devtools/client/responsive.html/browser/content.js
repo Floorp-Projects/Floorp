@@ -15,7 +15,6 @@ var global = this;
     return;
   }
 
-  const Ci = Components.interfaces;
   const gDeviceSizeWasPageSize = docShell.deviceSizeIsPageSize;
   const gFloatingScrollbarsStylesheet = Services.io.newURI("chrome://devtools/skin/floating-scrollbars-responsive-design.css");
 

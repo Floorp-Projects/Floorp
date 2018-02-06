@@ -5,8 +5,6 @@
 
 "use strict";
 
-var Cu = Components.utils;
-
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 const {colorUtils} = require("devtools/shared/css/color");

@@ -1,10 +1,6 @@
 // Test calling SavedFrame getters across wrappers from privileged and
 // un-privileged globals.
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 

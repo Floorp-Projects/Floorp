@@ -1,6 +1,3 @@
-let { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
-
 let swm = Cc["@mozilla.org/serviceworkers/manager;1"].
           getService(Ci.nsIServiceWorkerManager);
 

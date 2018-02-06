@@ -19,10 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=673468
   <![CDATA[
   /** Test for Bug 673468 **/
 
-  let Cc = Components.classes;
-  let Cu = Components.utils;
-  let Ci = Components.interfaces;
-
   SpecialPowers.DOMWindowUtils.garbageCollect();
 
   let get_live_dom = function () {

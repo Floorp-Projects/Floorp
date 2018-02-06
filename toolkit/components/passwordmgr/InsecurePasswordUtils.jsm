@@ -7,7 +7,6 @@
 
 this.EXPORTED_SYMBOLS = [ "InsecurePasswordUtils" ];
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const STRINGS_URI = "chrome://global/locale/security/security.properties";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");

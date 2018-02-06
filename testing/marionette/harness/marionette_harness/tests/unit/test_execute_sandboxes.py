@@ -24,7 +24,6 @@ class TestExecuteSandboxes(MarionetteTestCase):
         # Test that "system" sandbox has elevated privileges in
         # execute_async_script.
         result = self.marionette.execute_async_script("""
-            const Ci = Components.interfaces;
             let result = Ci.nsIPermissionManager.ALLOW_ACTION;
             marionetteScriptFinished(result);""",
             sandbox="system")

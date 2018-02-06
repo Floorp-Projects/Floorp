@@ -11,8 +11,6 @@
  * to be proxied from ExtensionChild.jsm.
  */
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 /* exported ExtensionParent */
 
 this.EXPORTED_SYMBOLS = ["ExtensionParent"];

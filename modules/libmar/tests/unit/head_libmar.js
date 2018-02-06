@@ -3,7 +3,6 @@
 
 'use strict';
 
-const { classes: Cc, interfaces: Ci } = Components;
 const BIN_SUFFIX = mozinfo.bin_suffix;
 const tempDir = do_get_tempdir();
 

@@ -1,5 +1,3 @@
-const Cu = Components.utils;
-
 function run_test() {
   var sb1 = Cu.Sandbox("http://www.blah.com");
   var sb2 = Cu.Sandbox("http://www.blah.com");

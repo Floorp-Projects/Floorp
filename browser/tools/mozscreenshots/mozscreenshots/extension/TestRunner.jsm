@@ -6,7 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["TestRunner"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
 const APPLY_CONFIG_TIMEOUT_MS = 60 * 1000;
 const HOME_PAGE = "chrome://mozscreenshots/content/lib/mozscreenshots.html";

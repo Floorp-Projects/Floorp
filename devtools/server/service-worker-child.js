@@ -6,7 +6,6 @@
 
 "use strict";
 
-let { classes: Cc, interfaces: Ci } = Components;
 let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
   .getService(Ci.nsIServiceWorkerManager);
 

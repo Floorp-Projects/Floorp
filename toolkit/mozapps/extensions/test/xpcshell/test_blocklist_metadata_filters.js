@@ -5,8 +5,6 @@
 // Tests blocking of extensions by ID, name, creator, homepageURL, updateURL
 // and RegExps for each. See bug 897735.
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
 ChromeUtils.import("resource://testing-common/httpd.js");

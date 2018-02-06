@@ -5,7 +5,6 @@
 /* globals  APP_STARTUP, ADDON_INSTALL */
 "use strict";
 
-const {utils: Cu, interfaces: Ci} = Components;
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   OnboardingTourType: "resource://onboarding/modules/OnboardingTourType.jsm",

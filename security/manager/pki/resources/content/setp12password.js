@@ -22,8 +22,6 @@
  *           |confirmedPassword| is not true.
  */
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 /**
  * onload() handler.
  */

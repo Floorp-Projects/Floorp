@@ -1,6 +1,5 @@
 "use strict";
 
-var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const { loadSubScript } = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                           getService(Ci.mozIJSSubScriptLoader);
 

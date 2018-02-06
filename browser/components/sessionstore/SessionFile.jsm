@@ -25,11 +25,6 @@ this.EXPORTED_SYMBOLS = ["SessionFile"];
  * This implementation uses OS.File, which guarantees property 1.
  */
 
-const Cu = Components.utils;
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");

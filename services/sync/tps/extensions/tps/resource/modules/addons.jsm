@@ -5,8 +5,6 @@
 
 var EXPORTED_SYMBOLS = ["Addon", "STATE_ENABLED", "STATE_DISABLED"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");

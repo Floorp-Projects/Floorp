@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci} = Components;
-
 const {
   error,
   TimeoutError,

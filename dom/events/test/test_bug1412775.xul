@@ -17,8 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1412775
   <![CDATA[
 
   /** Test for Bug 1412775 **/
-  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
   var win;
   function init() {
     SimpleTest.waitForExplicitFinish();

@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["ProfileAge"];
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://services-common/utils.js");

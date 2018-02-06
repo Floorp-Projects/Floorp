@@ -8,7 +8,7 @@ this.EXPORTED_SYMBOLS = [
   "MockRegistrar",
 ];
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr, manager: Cm} = Components;
+const Cm = Components.manager;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");

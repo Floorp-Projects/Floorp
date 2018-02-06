@@ -4,8 +4,6 @@
 "use strict";
 requestLongerTimeout(3);
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 /* import-globals-from classifierHelper.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/components/url-classifier/tests/browser/classifierHelper.js",

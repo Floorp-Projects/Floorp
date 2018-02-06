@@ -20,7 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=616992
 
   /** Test for Bug 616992 **/
 
-  const Cu = Components.utils;
   var sandbox = new Cu.Sandbox(window);
   sandbox.w = window;
   var actual = Cu.evalInSandbox("Object.keys(w.NodeFilter)", sandbox).sort().toString();

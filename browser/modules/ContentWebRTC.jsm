@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-
 this.EXPORTED_SYMBOLS = [ "ContentWebRTC" ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");

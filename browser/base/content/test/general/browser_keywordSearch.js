@@ -40,8 +40,6 @@ function test() {
   // the request. For everything else, we can do the work in the
   // parent, since it's easier.
   ContentTask.spawn(gBrowser.selectedBrowser, null, function* gen() {
-    const Ci = Components.interfaces;
-
     let listener = {
       onStateChange: function onLocationChange(webProgress, req, flags, status) {
         let docStart = Ci.nsIWebProgressListener.STATE_IS_DOCUMENT |

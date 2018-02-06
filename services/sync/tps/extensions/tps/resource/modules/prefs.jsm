@@ -9,8 +9,6 @@
 
 var EXPORTED_SYMBOLS = ["Preference"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 const WEAVE_PREF_PREFIX = "services.sync.prefs.sync.";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");

@@ -14,11 +14,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 if (typeof(Ci) == "undefined") {
-  var Ci = Components.interfaces;
 }
 
 if (typeof(Cc) == "undefined") {
-  var Cc = Components.classes;
 }
 
 this.SpecialPowersError = function(aMsg) {

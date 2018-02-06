@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let { classes: Cc, interfaces: Ci } = Components;
-
 const USER_CONTEXTS = ["default", "personal", "work"];
 
 const COOKIE_NAMES = ["cookie0", "cookie1", "cookie2"];

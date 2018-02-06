@@ -53,7 +53,6 @@ add_task(async function test_protocolHandler() {
   // Ensure that the protocol handler is configured, and set it as default to
   // bypass the dialog.
   let chromeScript = SpecialPowers.loadChromeScript(() => {
-    const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
     addMessageListener("setup", () => {
       let data = {};
       const protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
@@ -97,7 +96,6 @@ add_task(async function test_protocolHandler() {
   // Shutdown the addon, then ensure the protocol was removed.
   await extension.unload();
   chromeScript = SpecialPowers.loadChromeScript(() => {
-    const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
     addMessageListener("setup", () => {
       const protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
                          .getService(Ci.nsIExternalProtocolService);
@@ -223,7 +221,6 @@ add_task(async function test_protocolHandler_duplicate() {
 
   // Get the count of handlers installed.
   let chromeScript = SpecialPowers.loadChromeScript(() => {
-    const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
     addMessageListener("setup", () => {
       const protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
                          .getService(Ci.nsIExternalProtocolService);

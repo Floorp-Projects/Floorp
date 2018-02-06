@@ -20,10 +20,6 @@
   <script type="application/javascript"><![CDATA[
     // TODO: Bug 406371.
     // A bunch of browser code depends on us defining these, sad but true :(
-    var Cc = Components.classes;
-    var Ci = Components.interfaces;
-    var Cr = Components.results;
-    var Cu = Components.utils;
 
     ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
     ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");

@@ -13,7 +13,6 @@ Test swapFrameLoaders with different frame types and remoteness
   ["SimpleTest", "SpecialPowers", "info", "is", "ok"].forEach(key => {
     window[key] = window.opener[key];
   })
-  const { interfaces: Ci } = Components;
 
   const NS = {
     xul: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",

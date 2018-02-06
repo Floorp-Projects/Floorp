@@ -57,8 +57,6 @@ var _base2 = _interopRequireDefault(_base);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 Cu.importGlobalProperties(['fetch']);
 const { EventEmitter } = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm", {});

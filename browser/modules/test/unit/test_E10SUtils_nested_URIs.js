@@ -1,8 +1,6 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 
-const {utils: Cu, interfaces: Ci} = Components;
-
 ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 

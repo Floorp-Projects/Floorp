@@ -26,7 +26,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448587.xul
 
 
   /** Test for Bug 448587 **/
-  const Cu = Components.utils;
   var sandbox = new Cu.Sandbox("about:blank");
   var fwrapper = Cu.evalInSandbox("function f() {} f", sandbox);
   is(Cu.unwaiveXrays(Cu.waiveXrays(fwrapper).prototype), Cu.evalInSandbox("f.prototype", sandbox),

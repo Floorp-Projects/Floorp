@@ -7,8 +7,6 @@
 
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 var {CrashManager, CrashStore, dateToDays} = ChromeUtils.import("resource://gre/modules/CrashManager.jsm", {});
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 

@@ -1,5 +1,3 @@
-let { classes: Cc, interfaces: Ci } = Components;
-
 var gObs;
 
 function info(s) {

@@ -104,8 +104,6 @@
 
     function createStandaloneNativeMenu(menuNode) {
       try {
-        let Cc = Components.classes;
-        let Ci = Components.interfaces;
         let menu = Cc["@mozilla.org/widget/standalonenativemenu;1"].createInstance(Ci.nsIStandaloneNativeMenu);
         menu.init(menuNode);
         return menu;

@@ -17,8 +17,6 @@
 
   <script type="application/javascript">
   <![CDATA[
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 const UCT_URI = "chrome://mozapps/content/downloads/unknownContentType.xul";
 
 let testIndex = -1;

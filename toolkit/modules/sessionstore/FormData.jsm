@@ -6,9 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["FormData"];
 
-const Cu = Components.utils;
-const Ci = Components.interfaces;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 /**
  * Returns whether the given URL very likely has input

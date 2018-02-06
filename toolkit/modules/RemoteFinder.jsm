@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["RemoteFinder", "RemoteFinderListener"];
 
-const { interfaces: Ci, classes: Cc, utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Geometry.jsm");
 

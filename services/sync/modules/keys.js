@@ -8,8 +8,6 @@ this.EXPORTED_SYMBOLS = [
   "BulkKeyBundle",
 ];
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 ChromeUtils.import("resource://services-common/utils.js");
 ChromeUtils.import("resource://services-sync/constants.js");
 ChromeUtils.import("resource://gre/modules/Log.jsm");

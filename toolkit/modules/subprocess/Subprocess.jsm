@@ -16,8 +16,6 @@ var EXPORTED_SYMBOLS = ["Subprocess"];
 
 /* exported Subprocess */
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 Cu.importGlobalProperties(["TextEncoder"]);
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");

@@ -1,8 +1,3 @@
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
-
 function run_test() {
   var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
   prefs.setBoolPref("geo.wifi.scan", false);

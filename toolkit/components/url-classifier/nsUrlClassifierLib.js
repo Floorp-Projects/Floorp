@@ -6,9 +6,6 @@
 // the common JS files used by safebrowsing and url-classifier into a
 // single component.
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
 const G_GDEBUG = false;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

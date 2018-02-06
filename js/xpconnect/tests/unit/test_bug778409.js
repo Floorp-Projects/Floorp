@@ -1,5 +1,4 @@
 function run_test() {
-  var Cu = Components.utils;
   var sb1 = Cu.Sandbox('http://example.com');
   var sb2 = Cu.Sandbox('http://example.org');
   var chromeObj = {foo: 2};

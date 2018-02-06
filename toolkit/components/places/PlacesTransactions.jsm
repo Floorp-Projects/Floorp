@@ -174,8 +174,6 @@ this.EXPORTED_SYMBOLS = ["PlacesTransactions"];
  * Note that when a new entry is created, all redo entries are removed.
  */
 
-const { utils: Cu, classes: Cc, interfaces: Ci } = Components;
-
 const TRANSACTIONS_QUEUE_TIMEOUT_MS = 240000; // 4 Mins.
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

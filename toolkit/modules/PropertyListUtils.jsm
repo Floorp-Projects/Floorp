@@ -57,10 +57,6 @@
 
 this.EXPORTED_SYMBOLS = ["PropertyListUtils"];
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 Cu.importGlobalProperties(["File", "FileReader"]);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

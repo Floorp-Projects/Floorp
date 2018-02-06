@@ -19,7 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=601277
   <![CDATA[
   /** Tests for document.domain. **/
 
-  const Cu = Components.utils;
   SimpleTest.waitForExplicitFinish();
 
   // Wait for the frames to load.

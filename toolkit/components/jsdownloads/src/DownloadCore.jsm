@@ -20,8 +20,6 @@ this.EXPORTED_SYMBOLS = [
   "DownloadPDFSaver",
 ];
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 ChromeUtils.import("resource://gre/modules/Integration.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

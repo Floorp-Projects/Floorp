@@ -1,10 +1,5 @@
 this.EXPORTED_SYMBOLS = [ "PromptUtils", "EnableDelayHelper" ];
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-const Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 this.PromptUtils = {

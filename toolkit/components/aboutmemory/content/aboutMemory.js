@@ -18,9 +18,6 @@
 
 // ---------------------------------------------------------------------------
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
 var CC = Components.Constructor;
 
 const KIND_NONHEAP           = Ci.nsIMemoryReporter.KIND_NONHEAP;

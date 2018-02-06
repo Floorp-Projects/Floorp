@@ -4,10 +4,6 @@
 
 this.EXPORTED_SYMBOLS = ["PrefsEngine", "PrefRec"];
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 const PREF_SYNC_PREFS_PREFIX = "services.sync.prefs.sync.";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

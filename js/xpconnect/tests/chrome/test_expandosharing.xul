@@ -20,7 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758415
 
   /** Test for Cross-Origin Xray Expando Sharing. **/
   SimpleTest.waitForExplicitFinish();
-  const Cu = Components.utils;
 
   // Import our test JSM. We first strip the filename off
   // the chrome url, then append the jsm filename.

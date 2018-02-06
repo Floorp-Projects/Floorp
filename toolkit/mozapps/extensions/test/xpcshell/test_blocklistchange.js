@@ -23,11 +23,6 @@
 // set to true and stay userDisabled. This add-on is not used in tests that
 // start with add-ons blocked as it would be identical to softblock3
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-var Cr = Components.results;
-
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");

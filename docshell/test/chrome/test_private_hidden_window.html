@@ -18,7 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829383
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
-const Ci = Components.interfaces;
 var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIWebNavigation)
                        .QueryInterface(Ci.nsIDocShellTreeItem)

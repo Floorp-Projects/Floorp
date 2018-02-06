@@ -237,8 +237,6 @@
       messageManager.loadFrameScript("data:,addEventListener('MozAfterPaint', function(e) { sendAsyncMessage('MozAfterPaint'); },true);", false);
     }
 
-   var Ci = Components.interfaces;
-   var Cu = Components.utils;
    Cu.import("resource://gre/modules/XPCOMUtils.jsm");
   </script>
 

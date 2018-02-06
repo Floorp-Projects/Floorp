@@ -5,7 +5,7 @@
 
 "use strict";
 
-const { classes: Cc, interfaces: Ci, manager: Cm, results: Cr, utils: Cu } = Components;
+const Cm = Components.manager;
 
 ChromeUtils.import("resource://gre/modules/Promise.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

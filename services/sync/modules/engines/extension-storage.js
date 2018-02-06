@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["ExtensionStorageEngine"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://services-sync/constants.js");
 ChromeUtils.import("resource://services-sync/engines.js");

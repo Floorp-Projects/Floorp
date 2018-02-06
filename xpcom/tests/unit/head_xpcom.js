@@ -1,4 +1,4 @@
-let {Constructor: CC, classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
+let CC = Components.Constructor;
 
 function get_test_program(prog) {
   var progPath = do_get_cwd();

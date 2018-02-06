@@ -1,9 +1,3 @@
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-var Cr = Components.results;
-
-
 function successCallback() {
   Assert.ok(false);
   do_test_finished();

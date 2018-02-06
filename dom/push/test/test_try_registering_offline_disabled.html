@@ -91,7 +91,6 @@ http://creativecommons.org/licenses/publicdomain/
   // Load chrome script to change offline status in the
   // parent process.
   var chromeScript = SpecialPowers.loadChromeScript(_ => {
-    var { classes: Cc, interfaces: Ci } = Components;
     var ioService = Cc["@mozilla.org/network/io-service;1"]
                       .getService(Ci.nsIIOService);
     addMessageListener("change-status", function(offline) {

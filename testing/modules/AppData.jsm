@@ -8,8 +8,6 @@ this.EXPORTED_SYMBOLS = [
   "makeFakeAppDir",
 ];
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/Promise.jsm");
 

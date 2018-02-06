@@ -5,7 +5,6 @@
 
 "use strict";
 
-const Cu = Components.utils;
 const {require, loader} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {DebuggerClient} = require("devtools/shared/client/debugger-client");
 const {DebuggerServer} = require("devtools/server/main");

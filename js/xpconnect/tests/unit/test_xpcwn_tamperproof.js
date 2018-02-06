@@ -1,9 +1,6 @@
 // Test that it's not possible to create expando properties on XPCWNs.
 // See <https://bugzilla.mozilla.org/show_bug.cgi?id=1143810#c5>.
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 function check_throws(f) {
   try {
     f();

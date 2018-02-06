@@ -48,7 +48,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=732665
     return inner();
   }
 
-  const Cu = Components.utils;
   var contentSb = new Cu.Sandbox('http://www.example.com');
   var chromeSb = new Cu.Sandbox(window);
   chromeSb.ok = contentSb.ok = ok;

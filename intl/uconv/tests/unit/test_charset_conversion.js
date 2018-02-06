@@ -1,6 +1,3 @@
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-
 const NS_ERROR_ILLEGAL_VALUE = Components.results.NS_ERROR_ILLEGAL_VALUE;
 
 var BIS, BOS, _Pipe, COS, FIS, _SS, CIS;

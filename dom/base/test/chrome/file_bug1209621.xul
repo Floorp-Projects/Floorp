@@ -11,10 +11,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1209621
   <label value="Mozilla Bug 1209621"/>
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
-  var Cr = Components.results;
-  var Cu = Components.utils;
   function ok(cond, msg) {
     opener.wrappedJSObject.ok(cond, msg);
   }
