@@ -265,13 +265,13 @@ ServoStyleSet::InvalidateStyleForDocumentStateChanges(EventStates aStatesChanged
 }
 
 nsRestyleHint
-ServoStyleSet::MediumFeaturesChanged(bool aViewportChanged)
+ServoStyleSet::MediumFeaturesChanged(MediaFeatureChangeReason aReason)
 {
   bool viewportUnitsUsed = false;
-  bool rulesChanged = MediumFeaturesChangedRules(&viewportUnitsUsed);
+  bool rulesChanged = MediumFeaturesChangedRules(&viewportUnitsUsed, aReason);
 
   if (nsPresContext* pc = GetPresContext()) {
-    if (mDocument->BindingManager()->MediumFeaturesChanged(pc)) {
+    if (mDocument->BindingManager()->MediumFeaturesChanged(pc, aReason)) {
       // TODO(emilio): We could technically just restyle the bound elements.
       SetStylistXBLStyleSheetsDirty();
       rulesChanged = true;
@@ -282,7 +282,9 @@ ServoStyleSet::MediumFeaturesChanged(bool aViewportChanged)
     return eRestyle_Subtree;
   }
 
-  if (viewportUnitsUsed && aViewportChanged) {
+  const bool viewportChanged =
+    bool(aReason & MediaFeatureChangeReason::ViewportChange);
+  if (viewportUnitsUsed && viewportChanged) {
     return eRestyle_ForceDescendants;
   }
 
@@ -290,7 +292,9 @@ ServoStyleSet::MediumFeaturesChanged(bool aViewportChanged)
 }
 
 bool
-ServoStyleSet::MediumFeaturesChangedRules(bool* aViewportUnitsUsed)
+ServoStyleSet::MediumFeaturesChangedRules(
+  bool* aViewportUnitsUsed,
+  MediaFeatureChangeReason aReason)
 {
   MOZ_ASSERT(aViewportUnitsUsed);
 
