@@ -518,6 +518,9 @@ var date_2000_start = 946684800000;
 var date_2099_end = 4102444799999;
 var date_2100_start = 4102444800000;
 
+var start_of_time = -8.64e15;
+var end_of_time = 8.64e15;
+
 // file: decimalToHexString.js
 // Copyright (C) 2017 André Bargull. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.

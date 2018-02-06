@@ -380,6 +380,9 @@ intrinsic_CreateModuleSyntaxError(JSContext* cx, unsigned argc, Value* vp)
 
     RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
     RootedString filename(cx, JS_NewStringCopyZ(cx, module->script()->filename()));
+    if (!filename)
+        return false;
+
     RootedString message(cx, args[3].toString());
 
     RootedValue error(cx);
@@ -2496,10 +2499,10 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_patternForSkeleton", intl_patternForSkeleton, 2,0),
     JS_FN("intl_patternForStyle", intl_patternForStyle, 3,0),
     JS_FN("intl_PluralRules_availableLocales", intl_PluralRules_availableLocales, 0,0),
-    JS_FN("intl_GetPluralCategories", intl_GetPluralCategories, 2, 0),
+    JS_FN("intl_GetPluralCategories", intl_GetPluralCategories, 1, 0),
     JS_FN("intl_SelectPluralRule", intl_SelectPluralRule, 2,0),
     JS_FN("intl_RelativeTimeFormat_availableLocales", intl_RelativeTimeFormat_availableLocales, 0,0),
-    JS_FN("intl_FormatRelativeTime", intl_FormatRelativeTime, 3,0),
+    JS_FN("intl_FormatRelativeTime", intl_FormatRelativeTime, 4,0),
     JS_FN("intl_toLocaleLowerCase", intl_toLocaleLowerCase, 2,0),
     JS_FN("intl_toLocaleUpperCase", intl_toLocaleUpperCase, 2,0),
 

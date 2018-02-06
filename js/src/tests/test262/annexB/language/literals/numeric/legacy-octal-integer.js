@@ -2,7 +2,6 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-additional-syntax-numeric-literals
-esid: sec-additional-syntax-numeric-literals
 description: Mathematical value for LegacyOctalIntegerLiteral
 info: |
     NumericLiteral ::

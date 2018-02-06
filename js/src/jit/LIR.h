@@ -656,18 +656,31 @@ class LElementVisitor;
 // The common base class for LPhi and LInstruction.
 class LNode
 {
-    uint32_t id_;
-    LBlock* block_;
-
   protected:
     MDefinition* mir_;
 
+  private:
+    LBlock* block_;
+    uint32_t id_;
+
+  protected:
+    // Bitfields below are all uint32_t to make sure MSVC packs them correctly.
+    uint32_t isCall_ : 1;
+    uint32_t numDefs_ : 4;
+    uint32_t numTemps_ : 4;
+
   public:
-    LNode()
-      : id_(0),
+    LNode(uint32_t numDefs, uint32_t numTemps)
+      : mir_(nullptr),
         block_(nullptr),
-        mir_(nullptr)
-    { }
+        id_(0),
+        isCall_(false),
+        numDefs_(numDefs),
+        numTemps_(numTemps)
+    {
+        MOZ_ASSERT(numDefs_ == numDefs, "numDefs must fit in bitfield");
+        MOZ_ASSERT(numTemps_ == numTemps, "numTemps must fit in bitfield");
+    }
 
     enum Opcode {
 #   define LIROP(name) LOp_##name,
@@ -703,7 +716,9 @@ class LNode
 
     // Returns the number of outputs of this instruction. If an output is
     // unallocated, it is an LDefinition, defining a virtual register.
-    virtual size_t numDefs() const = 0;
+    size_t numDefs() const {
+        return numDefs_;
+    }
     virtual LDefinition* getDef(size_t index) = 0;
     virtual void setDef(size_t index, const LDefinition& def) = 0;
 
@@ -715,7 +730,9 @@ class LNode
     // Returns information about temporary registers needed. Each temporary
     // register is an LDefinition with a fixed or virtual register and
     // either GENERAL, FLOAT32, or DOUBLE type.
-    virtual size_t numTemps() const = 0;
+    size_t numTemps() const {
+        return numTemps_;
+    }
     virtual LDefinition* getTemp(size_t index) = 0;
     virtual void setTemp(size_t index, const LDefinition& a) = 0;
 
@@ -725,8 +742,8 @@ class LNode
     virtual MBasicBlock* getSuccessor(size_t i) const = 0;
     virtual void setSuccessor(size_t i, MBasicBlock* successor) = 0;
 
-    virtual bool isCall() const {
-        return false;
+    bool isCall() const {
+        return isCall_;
     }
 
     // Does this call preserve the given register?
@@ -810,13 +827,18 @@ class LInstruction
     LMoveGroup* movesAfter_;
 
   protected:
-    LInstruction()
-      : snapshot_(nullptr),
+    LInstruction(uint32_t numDefs, uint32_t numTemps)
+      : LNode(numDefs, numTemps),
+        snapshot_(nullptr),
         safepoint_(nullptr),
         inputMoves_(nullptr),
         fixReuseMoves_(nullptr),
         movesAfter_(nullptr)
     { }
+
+    void setIsCall() {
+        isCall_ = true;
+    }
 
   public:
     LSnapshot* snapshot() const {
@@ -915,14 +937,12 @@ class LPhi final : public LNode
     LIR_HEADER(Phi)
 
     LPhi(MPhi* ins, LAllocation* inputs)
-        : inputs_(inputs)
+      : LNode(/* numDefs = */ 1, /* numTemps = */ 0),
+        inputs_(inputs)
     {
         setMir(ins);
     }
 
-    size_t numDefs() const override {
-        return 1;
-    }
     LDefinition* getDef(size_t index) override {
         MOZ_ASSERT(index == 0);
         return &def_;
@@ -941,9 +961,6 @@ class LPhi final : public LNode
     void setOperand(size_t index, const LAllocation& a) override {
         MOZ_ASSERT(index < numOperands());
         inputs_[index] = a;
-    }
-    size_t numTemps() const override {
-        return 0;
     }
     LDefinition* getTemp(size_t index) override {
         MOZ_CRASH("no temps");
@@ -1066,15 +1083,14 @@ namespace details {
         mozilla::Array<LDefinition, Defs> defs_;
         mozilla::Array<LDefinition, Temps> temps_;
 
+      protected:
+        LInstructionFixedDefsTempsHelper()
+          : LInstruction(Defs, Temps)
+        {}
+
       public:
-        size_t numDefs() const final override {
-            return Defs;
-        }
         LDefinition* getDef(size_t index) final override {
             return &defs_[index];
-        }
-        size_t numTemps() const final override {
-            return Temps;
         }
         LDefinition* getTemp(size_t index) final override {
             return &temps_[index];
@@ -1191,8 +1207,8 @@ template <size_t Defs, size_t Operands, size_t Temps>
 class LCallInstructionHelper : public LInstructionHelper<Defs, Operands, Temps>
 {
   public:
-    virtual bool isCall() const override {
-        return true;
+    LCallInstructionHelper() {
+        this->setIsCall();
     }
 };
 

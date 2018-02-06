@@ -4,7 +4,7 @@
 
 /*---
 author: Caitlin Potter <caitp@igalia.com>
-esid: 12.1.1
+esid: sec-identifiers
 description: >
   `await` is a reserved keyword within async generator function bodies and may
   not be used as a label.
