@@ -8049,10 +8049,13 @@ JitCompartment::generateStringConcatStub(JSContext* cx)
     masm.newGCString(output, temp3, &failure);
 
     // Store rope length and flags. temp1 still holds the result of AND'ing the
-    // lhs and rhs flags, so we just have to clear the other flags to get our
-    // rope flags (Latin1 if both lhs and rhs are Latin1).
-    static_assert(JSString::INIT_ROPE_FLAGS == 0, "Rope type flags must be 0");
+    // lhs and rhs flags, so we just have to clear the other flags and set
+    // NON_ATOM_BIT to get our rope flags (Latin1 if both lhs and rhs are
+    // Latin1).
+    static_assert(JSString::INIT_ROPE_FLAGS == JSString::NON_ATOM_BIT,
+                  "Rope type flags must be NON_ATOM_BIT only");
     masm.and32(Imm32(JSString::LATIN1_CHARS_BIT), temp1);
+    masm.or32(Imm32(JSString::NON_ATOM_BIT), temp1);
     masm.store32(temp1, Address(output, JSString::offsetOfFlags()));
     masm.store32(temp2, Address(output, JSString::offsetOfLength()));
 

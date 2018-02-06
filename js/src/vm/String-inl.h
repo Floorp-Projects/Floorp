@@ -205,7 +205,7 @@ MOZ_ALWAYS_INLINE void
 JSFlatString::init(const char16_t* chars, size_t length)
 {
     d.u1.length = length;
-    d.u1.flags = LINEAR_BIT;
+    d.u1.flags = INIT_FLAT_FLAGS;
     d.s.u2.nonInlineCharsTwoByte = chars;
 }
 
@@ -213,7 +213,7 @@ MOZ_ALWAYS_INLINE void
 JSFlatString::init(const JS::Latin1Char* chars, size_t length)
 {
     d.u1.length = length;
-    d.u1.flags = LINEAR_BIT | LATIN1_CHARS_BIT;
+    d.u1.flags = INIT_FLAT_FLAGS | LATIN1_CHARS_BIT;
     d.s.u2.nonInlineCharsLatin1 = chars;
 }
 
