@@ -250,7 +250,7 @@ var DownloadsPanel = {
       return;
     }
 
-    PanelMultiView.hidePopup(this.panel);
+    this.panel.hidePopup();
 
     // Ensure that we allow the panel to be reopened.  Note that, if the popup
     // was open, then the onPopupHidden event handler has already updated the
@@ -570,8 +570,7 @@ var DownloadsPanel = {
       }
 
       DownloadsCommon.log("Opening downloads panel popup.");
-      PanelMultiView.openPopup(this.panel, anchor, "bottomcenter topright",
-                               0, 0, false, null).catch(Cu.reportError);
+      this.panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, null);
     });
   },
 };
