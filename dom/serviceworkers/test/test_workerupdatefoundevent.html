@@ -22,6 +22,17 @@
     registration = await navigator.serviceWorker.register("worker_updatefoundevent.js",
                                                           { scope: "./updatefoundevent.html" })
     await waitForState(registration.installing, 'activated');
+
+    content = document.getElementById("content");
+    iframe = document.createElement("iframe");
+    content.appendChild(iframe);
+    iframe.setAttribute("src", "./updatefoundevent.html");
+
+    await new Promise(function(resolve) { iframe.onload = resolve; });
+    ok(iframe.contentWindow.navigator.serviceWorker.controller, "Controlled client.");
+
+    return Promise.resolve();
+
   }
 
   function startWaitForUpdateFound() {
@@ -37,11 +48,6 @@
         }
       }
     });
-
-    content = document.getElementById("content");
-    iframe = document.createElement("iframe");
-    content.appendChild(iframe);
-    iframe.setAttribute("src", "./updatefoundevent.html");
 
     return Promise.resolve();
   }

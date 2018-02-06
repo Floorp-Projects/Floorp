@@ -107,6 +107,7 @@ PluralRules(JSContext* cx, unsigned argc, Value* vp)
 
     pluralRules->setReservedSlot(PluralRulesObject::INTERNALS_SLOT, NullValue());
     pluralRules->setReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT, PrivateValue(nullptr));
+    pluralRules->setReservedSlot(PluralRulesObject::UNUMBER_FORMAT_SLOT, PrivateValue(nullptr));
 
     HandleValue locales = args.get(0);
     HandleValue options = args.get(1);
@@ -127,10 +128,19 @@ js::PluralRulesObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->onActiveCooperatingThread());
 
-    const Value& slot =
-        obj->as<PluralRulesObject>().getReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT);
-    if (UPluralRules* pr = static_cast<UPluralRules*>(slot.toPrivate()))
+    PluralRulesObject* pluralRules = &obj->as<PluralRulesObject>();
+
+    const Value& prslot = pluralRules->getReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT);
+    UPluralRules* pr = static_cast<UPluralRules*>(prslot.toPrivate());
+
+    const Value& nfslot = pluralRules->getReservedSlot(PluralRulesObject::UNUMBER_FORMAT_SLOT);
+    UNumberFormat* nf = static_cast<UNumberFormat*>(nfslot.toPrivate());
+
+    if (pr)
         uplrules_close(pr);
+
+    if (nf)
+        unum_close(nf);
 }
 
 JSObject*
@@ -252,6 +262,51 @@ NewUNumberFormatForPluralRules(JSContext* cx, Handle<PluralRulesObject*> pluralR
     return toClose.forget();
 }
 
+/**
+ * Returns a new UPluralRules with the locale and type options of the given
+ * PluralRules.
+ */
+static UPluralRules*
+NewUPluralRules(JSContext* cx, Handle<PluralRulesObject*> pluralRules)
+{
+    RootedObject internals(cx, intl::GetInternalsObject(cx, pluralRules));
+    if (!internals)
+        return nullptr;
+
+    RootedValue value(cx);
+
+    if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
+        return nullptr;
+    JSAutoByteString locale(cx, value.toString());
+    if (!locale)
+        return nullptr;
+
+    if (!GetProperty(cx, internals, internals, cx->names().type, &value))
+        return nullptr;
+
+    UPluralType category;
+    {
+        JSLinearString* type = value.toString()->ensureLinear(cx);
+        if (!type)
+            return nullptr;
+
+        if (StringEqualsAscii(type, "cardinal")) {
+            category = UPLURAL_TYPE_CARDINAL;
+        } else {
+            MOZ_ASSERT(StringEqualsAscii(type, "ordinal"));
+            category = UPLURAL_TYPE_ORDINAL;
+        }
+    }
+
+    UErrorCode status = U_ZERO_ERROR;
+    UPluralRules* pr = uplrules_openForType(IcuLocale(locale.ptr()), category, &status);
+    if (U_FAILURE(status)) {
+        intl::ReportInternalError(cx);
+        return nullptr;
+    }
+    return pr;
+}
+
 bool
 js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -262,49 +317,25 @@ js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp)
 
     double x = args[1].toNumber();
 
-    UNumberFormat* nf = NewUNumberFormatForPluralRules(cx, pluralRules);
-    if (!nf)
-        return false;
-
-    ScopedICUObject<UNumberFormat, unum_close> closeNumberFormat(nf);
-
-    RootedObject internals(cx, intl::GetInternalsObject(cx, pluralRules));
-    if (!internals)
-        return false;
-
-    RootedValue value(cx);
-
-    if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
-        return false;
-    JSAutoByteString locale(cx, value.toString());
-    if (!locale)
-        return false;
-
-    if (!GetProperty(cx, internals, internals, cx->names().type, &value))
-        return false;
-
-    UPluralType category;
-    {
-        JSLinearString* type = value.toString()->ensureLinear(cx);
-        if (!type)
+    // Obtain a cached UPluralRules object.
+    void* priv = pluralRules->getReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT).toPrivate();
+    UPluralRules* pr = static_cast<UPluralRules*>(priv);
+    if (!pr) {
+        pr = NewUPluralRules(cx, pluralRules);
+        if (!pr)
             return false;
-
-        if (StringEqualsAscii(type, "cardinal")) {
-            category = UPLURAL_TYPE_CARDINAL;
-        } else {
-            MOZ_ASSERT(StringEqualsAscii(type, "ordinal"));
-            category = UPLURAL_TYPE_ORDINAL;
-        }
+        pluralRules->setReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT, PrivateValue(pr));
     }
 
-    // TODO: Cache UPluralRules in PluralRulesObject::UPluralRulesSlot.
-    UErrorCode status = U_ZERO_ERROR;
-    UPluralRules* pr = uplrules_openForType(IcuLocale(locale.ptr()), category, &status);
-    if (U_FAILURE(status)) {
-        intl::ReportInternalError(cx);
-        return false;
+    // Obtain a cached UNumberFormat object.
+    priv = pluralRules->getReservedSlot(PluralRulesObject::UNUMBER_FORMAT_SLOT).toPrivate();
+    UNumberFormat* nf = static_cast<UNumberFormat*>(priv);
+    if (!nf) {
+        nf = NewUNumberFormatForPluralRules(cx, pluralRules);
+        if (!nf)
+            return false;
+        pluralRules->setReservedSlot(PluralRulesObject::UNUMBER_FORMAT_SLOT, PrivateValue(nf));
     }
-    ScopedICUObject<UPluralRules, uplrules_close> closePluralRules(pr);
 
     JSString* str = CallICU(cx, [pr, x, nf](UChar* chars, int32_t size, UErrorCode* status) {
         return uplrules_selectWithFormat(pr, x, nf, chars, size, status);
@@ -320,32 +351,21 @@ bool
 js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(args.length() == 1);
 
-    JSAutoByteString locale(cx, args[0].toString());
-    if (!locale)
-        return false;
+    Rooted<PluralRulesObject*> pluralRules(cx, &args[0].toObject().as<PluralRulesObject>());
 
-    JSLinearString* type = args[1].toString()->ensureLinear(cx);
-    if (!type)
-        return false;
-
-    UPluralType category;
-    if (StringEqualsAscii(type, "cardinal")) {
-        category = UPLURAL_TYPE_CARDINAL;
-    } else {
-        MOZ_ASSERT(StringEqualsAscii(type, "ordinal"));
-        category = UPLURAL_TYPE_ORDINAL;
+    // Obtain a cached UPluralRules object.
+    void* priv = pluralRules->getReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT).toPrivate();
+    UPluralRules* pr = static_cast<UPluralRules*>(priv);
+    if (!pr) {
+        pr = NewUPluralRules(cx, pluralRules);
+        if (!pr)
+            return false;
+        pluralRules->setReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT, PrivateValue(pr));
     }
 
     UErrorCode status = U_ZERO_ERROR;
-    UPluralRules* pr = uplrules_openForType(IcuLocale(locale.ptr()), category, &status);
-    if (U_FAILURE(status)) {
-        intl::ReportInternalError(cx);
-        return false;
-    }
-    ScopedICUObject<UPluralRules, uplrules_close> closePluralRules(pr);
-
     UEnumeration* ue = uplrules_getKeywords(pr, &status);
     if (U_FAILURE(status)) {
         intl::ReportInternalError(cx);

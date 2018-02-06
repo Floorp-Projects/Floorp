@@ -539,5 +539,40 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //BRH:1
 });
 
+// These tests are not included in ../debug/Script-getOffsetsCoverage-01.js
+// because we're specifically testing a feature of Lcov output that
+// Debugger.Script doesn't have (the aggregation of hits that are on the
+// same line but in different functions).
+{
+    checkLcov(function () { //FN:$,top-level //FNDA:1,%
+        function f() { return 0; } var l = f(); //DA:$,2
+        //FNF:2
+        //FNH:2
+        //LF:1
+        //LH:1
+    });
+
+    // A single line has two functions on it, and both hit.
+    checkLcov(function () { //FN:$,top-level //FNDA:1,%
+        function f() { return 0; } function g() { return 1; } //DA:$,2
+        var v = f() + g(); //DA:$,1
+        //FNF:3
+        //FNH:3
+        //LF:2
+        //LH:2
+    });
+
+    // A line has both function code and toplevel code, and only one of them hits.
+    checkLcov(function () { //FN:$,top-level //FNDA:1,%
+        if (1 === 2)  //DA:$,1
+            throw "0 hits here"; function f() { return "1 hit here"; } //DA:$,1
+        f();  //DA:$,1
+        //FNF:2
+        //FNH:2
+        //LF:3
+        //LH:3
+    });
+}
+
 // If you add a test case here, do the same in
 // jit-test/tests/debug/Script-getOffsetsCoverage-01.js
