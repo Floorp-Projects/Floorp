@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {CC, Ci, Cu, Cc} = require("chrome");
+const {CC, Ci, Cc} = require("chrome");
 
 const ArrayBufferInputStream = CC("@mozilla.org/io/arraybuffer-input-stream;1",
                                   "nsIArrayBufferInputStream");
