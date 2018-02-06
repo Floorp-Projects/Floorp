@@ -156,7 +156,7 @@ public:
     void OnSocketReady(PRFileDesc *, int16_t outFlags) override;
     void OnSocketDetached(PRFileDesc *) override;
     void IsLocal(bool *aIsLocal) override;
-    void OnKeepaliveEnabledPrefChange(bool aEnabled) override final;
+    void OnKeepaliveEnabledPrefChange(bool aEnabled) final;
 
     // called when a socket event is handled
     void OnSocketEvent(uint32_t type, nsresult status, nsISupports *param);

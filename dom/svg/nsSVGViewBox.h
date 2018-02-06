@@ -115,22 +115,22 @@ public:
     nsSVGViewBox* mVal; // kept alive because it belongs to content
     RefPtr<nsSVGElement> mSVGElement;
 
-    float X() const override final
+    float X() const final
     {
       return mVal->GetBaseValue().x;
     }
 
-    float Y() const override final
+    float Y() const final
     {
       return mVal->GetBaseValue().y;
     }
 
-    float Width() const override final
+    float Width() const final
     {
       return mVal->GetBaseValue().width;
     }
 
-    float Height() const override final
+    float Height() const final
     {
       return mVal->GetBaseValue().height;
     }
@@ -165,25 +165,25 @@ public:
 
     // Script may have modified animation parameters or timeline -- DOM getters
     // need to flush any resample requests to reflect these modifications.
-    float X() const override final
+    float X() const final
     {
       mSVGElement->FlushAnimations();
       return mVal->GetAnimValue().x;
     }
 
-    float Y() const override final
+    float Y() const final
     {
       mSVGElement->FlushAnimations();
       return mVal->GetAnimValue().y;
     }
 
-    float Width() const override final
+    float Width() const final
     {
       mSVGElement->FlushAnimations();
       return mVal->GetAnimValue().width;
     }
 
-    float Height() const override final
+    float Height() const final
     {
       mSVGElement->FlushAnimations();
       return mVal->GetAnimValue().height;

@@ -46,7 +46,7 @@ public:
 
   virtual void PrintDiagnostics (nsCString &log) = 0;
 
-  bool ResponseTimeoutEnabled() const override final {
+  bool ResponseTimeoutEnabled() const final {
     return true;
   }
 

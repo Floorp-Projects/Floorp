@@ -195,7 +195,7 @@ class OffThreadPromiseTask : public JS::Dispatchable
     virtual bool resolve(JSContext* cx, Handle<PromiseObject*> promise) = 0;
 
     // JS::Dispatchable implementation. Ends with 'delete this'.
-    void run(JSContext* cx, MaybeShuttingDown maybeShuttingDown) override final;
+    void run(JSContext* cx, MaybeShuttingDown maybeShuttingDown) final;
 
   public:
     ~OffThreadPromiseTask() override;
