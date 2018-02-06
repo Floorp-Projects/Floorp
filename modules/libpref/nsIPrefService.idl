@@ -6,15 +6,6 @@
 #include "nsISupports.idl"
 #include "nsIPrefBranch.idl"
 
-%{C++
-struct PrefTuple;
-#include "nsTArrayForwardDeclare.h"
-%}
-
-[ptr] native nsPreferencesArrayPtr(nsTArray<PrefTuple>);
-[ptr] native nsPreferencePtr(PrefTuple);
-[ptr] native nsPreferencePtrConst(const PrefTuple);
-
 interface nsIFile;
 
 /**
