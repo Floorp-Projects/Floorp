@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for seamless loop of HTMLMediaElements</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  var tone_frequency = 440;
+  // Set DEBUG to true to add a canvas with a little drawing of what is going
+  // on, and actually outputs the audio to the speakers.
+  var DEBUG = false;
+  var again = true;
+
+  function doAnalysis(buf, ctxSampleRate) {
+    // The size of an FFT is twice the number of bins in its output.
+    var fftSize = 2 * buf.length;
+    // first find a peak where we expect one.
+    var binIndexTone = 1 + Math.round(tone_frequency * fftSize / ctxSampleRate);
+    ok(buf[binIndexTone] > -25,
+       `Could not find a peak: ${buf[binIndexTone]} db at ${tone_frequency}Hz`);
+
+    // check that the energy some octaves higher is very low.
+    var binIndexOutsidePeak = 1 + Math.round(tone_frequency * 4 * buf.length / ctxSampleRate);
+    ok(buf[binIndexOutsidePeak] < -110,
+       `Found unexpected high frequency content: ${buf[binIndexOutsidePeak]}db at ${tone_frequency * 4}Hz`);
+  }
+  window.onload = function () {
+    // Generate the sine in floats, then convert, for simplicity.
+    var channels = 1;
+    var sampleRate = 44100;
+    var buffer = new Float32Array(sampleRate * channels);
+    var phase = 0;
+    const TAU = 2 * Math.PI;
+    for (var i = 0; i < buffer.length; i++) {
+      // Adjust the gain a little so we're sure it's not going to clip. This is
+      // important because we're converting to 16bit integer right after, and
+      // clipping will clearly introduce a discontinuity that will be
+      // mischaracterized as a looping click.
+      buffer[i] = Math.sin(phase) * 0.99;
+      phase += TAU * tone_frequency / 44100;
+      if (phase > 2 * TAU) {
+        phase -= TAU;
+      }
+    }
+
+    // Make a RIFF header, it's 23 bytes
+    var buf = new Int16Array(buffer.length + 23);
+    buf[0] = 0x4952;
+    buf[1] = 0x4646;
+    buf[2] = (2 * buffer.length + 15) & 0x0000ffff;
+    buf[3] = ((2 * buffer.length + 15) & 0xffff0000) >> 16;
+    buf[4] = 0x4157;
+    buf[5] = 0x4556;
+    buf[6] = 0x6d66;
+    buf[7] = 0x2074;
+    buf[8] = 0x0012;
+    buf[9] = 0x0000;
+    buf[10] = 0x0001;
+    buf[11] = 1;
+    buf[12] = 44100 & 0x0000ffff;
+    buf[13] = (44100 & 0xffff0000) >> 16;
+    buf[14] = (2 * channels * sampleRate) & 0x0000ffff;
+    buf[15] = ((2 * channels * sampleRate) & 0xffff0000) >> 16;
+    buf[16] = 0x0004;
+    buf[17] = 0x0010;
+    buf[18] = 0x0000;
+    buf[19] = 0x6164;
+    buf[20] = 0x6174;
+    buf[21] = (2 * buffer.length) & 0x0000ffff;
+    buf[22] = ((2 * buffer.length) & 0xffff0000) >> 16;
+
+    // convert to int16 and copy.
+    for (var i = 0; i < buffer.length; i++) {
+      buf[i + 23] = Math.round(buffer[i] * (1 << 15));
+    }
+
+    var b = new Blob([buf], { type: 'audio/wav' });
+
+    var media = document.createElement("audio");
+    media.src = URL.createObjectURL(b);
+    media.controls = true;
+    media.loop = true;
+    document.body.appendChild(media);
+
+    var ac = new AudioContext();
+
+    var analyser = ac.createAnalyser();
+    var frequencyBuf = new Float32Array(analyser.frequencyBinCount);
+    analyser.smoothingTimeConstant = 0;
+    analyser.fftSize = 2048; // 1024 bins
+
+    var source = ac.createMediaElementSource(media);
+    source.connect(analyser);
+
+    if (DEBUG) {
+      analyser.connect(ac.destination);
+      var timeDomainBuf = new Float32Array(analyser.frequencyBinCount);
+      var cvs = document.querySelector("canvas");
+      var c = cvs.getContext("2d");
+      var w = cvs.width;
+      var h = cvs.height;
+    }
+
+
+    // We count the number of times we've played this media.
+    var loopCount = 0;
+    media.onseeked = function () {
+      loopCount++;
+      if (loopCount > 10) {
+        again = false;
+        media.onseeked = null;
+        SimpleTest.finish();
+      }
+    }
+
+    function analysisCallback() {
+      if (!again) {
+        return;
+      }
+      analyser.getFloatFrequencyData(frequencyBuf);
+      // There is an unrelated click at start, skip it.
+      if (loopCount != 0) {
+        doAnalysis(frequencyBuf, ac.sampleRate);
+      }
+
+      if (DEBUG) {
+        c.clearRect(0, 0, w, h);
+        analyser.getFloatTimeDomainData(timeDomainBuf);
+        for (var i = 0; i < frequencyBuf.length; i++) {
+          c.fillRect(i, h, 1, -frequencyBuf[i] + analyser.minDecibels);
+        }
+
+        for (var i = 0; i < timeDomainBuf.length; i++) {
+          c.fillRect(i, h / 2, 1, -timeDomainBuf[i] * h / 2);
+        }
+      }
+
+      requestAnimationFrame(analysisCallback);
+    }
+
+    media.play();
+    analysisCallback();
+  }
+
+</script>
+</pre>
+</body>
+</html>
