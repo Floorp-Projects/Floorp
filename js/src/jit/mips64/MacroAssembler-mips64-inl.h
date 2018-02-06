@@ -769,32 +769,6 @@ MacroAssembler::branchTruncateFloat32MaybeModUint32(FloatRegister src, Register 
 }
 
 // ========================================================================
-// Memory access primitives.
-void
-MacroAssembler::storeUncanonicalizedDouble(FloatRegister src, const Address& addr)
-{
-    ma_sd(src, addr);
-}
-void
-MacroAssembler::storeUncanonicalizedDouble(FloatRegister src, const BaseIndex& addr)
-{
-    MOZ_ASSERT(addr.offset == 0);
-    ma_sd(src, addr);
-}
-
-void
-MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src, const Address& addr)
-{
-    ma_ss(src, addr);
-}
-void
-MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src, const BaseIndex& addr)
-{
-    MOZ_ASSERT(addr.offset == 0);
-    ma_ss(src, addr);
-}
-
-// ========================================================================
 // wasm support
 
 template <class L>
@@ -809,7 +783,7 @@ void
 MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit, L label)
 {
     SecondScratchRegisterScope scratch2(*this);
-    load32(boundsCheckLimit,SecondScratchReg);
+    load32(boundsCheckLimit, SecondScratchReg);
     ma_b(index, SecondScratchReg, label, cond);
 }
 
