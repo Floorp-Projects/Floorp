@@ -464,7 +464,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Notify(nsITimer* aTimer) final override
+  NS_IMETHOD Notify(nsITimer* aTimer) final
   {
     if (!mContent->IsInUncomposedDoc())
       return NS_OK;
@@ -488,7 +488,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD GetName(nsACString& aName) final override
+  NS_IMETHOD GetName(nsACString& aName) final
   {
     aName.AssignLiteral("PluginTimerCallBack");
     return NS_OK;

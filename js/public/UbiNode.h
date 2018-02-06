@@ -1064,9 +1064,9 @@ class JS_PUBLIC_API(Concrete<JSScript>) : TracerConcreteWithCompartment<JSScript
   public:
     static void construct(void *storage, JSScript *ptr) { new (storage) Concrete(ptr); }
 
-    CoarseType coarseType() const final override { return CoarseType::Script; }
+    CoarseType coarseType() const final { return CoarseType::Script; }
     Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
-    const char* scriptFilename() const final override;
+    const char* scriptFilename() const final;
 
     const char16_t* typeName() const override { return concreteTypeName; }
     static const char16_t concreteTypeName[];
@@ -1091,7 +1091,7 @@ class JS_PUBLIC_API(Concrete<JSObject>) : public TracerConcreteWithCompartment<J
     bool hasAllocationStack() const override;
     StackFrame allocationStack() const override;
 
-    CoarseType coarseType() const final override { return CoarseType::Object; }
+    CoarseType coarseType() const final { return CoarseType::Object; }
 
     const char16_t* typeName() const override { return concreteTypeName; }
     static const char16_t concreteTypeName[];
@@ -1108,7 +1108,7 @@ class JS_PUBLIC_API(Concrete<JSString>) : TracerConcrete<JSString> {
 
     Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
 
-    CoarseType coarseType() const final override { return CoarseType::String; }
+    CoarseType coarseType() const final { return CoarseType::String; }
 
     const char16_t* typeName() const override { return concreteTypeName; }
     static const char16_t concreteTypeName[];
@@ -1122,7 +1122,7 @@ class JS_PUBLIC_API(Concrete<void>) : public Base {
     js::UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames) const override;
     JS::Zone* zone() const override;
     JSCompartment* compartment() const override;
-    CoarseType coarseType() const final override;
+    CoarseType coarseType() const final;
 
     explicit Concrete(void* ptr) : Base(ptr) { }
 

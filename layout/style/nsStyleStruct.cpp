@@ -2091,7 +2091,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run() final override
+  NS_IMETHOD Run() final
   {
     MOZ_ASSERT(!mRequestProxy || NS_IsMainThread(),
                "If mRequestProxy is non-null, we need to run on main thread!");
@@ -2274,7 +2274,7 @@ CachedBorderImageData::GetCachedSVGViewportSize()
 struct PurgeCachedImagesTask : mozilla::Runnable
 {
   PurgeCachedImagesTask() : mozilla::Runnable("PurgeCachedImagesTask") {}
-  NS_IMETHOD Run() final override
+  NS_IMETHOD Run() final
   {
     mSubImages.Clear();
     return NS_OK;

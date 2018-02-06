@@ -29,21 +29,21 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServoKeyframeRule,
                                            dom::CSSKeyframeRule)
 
-  bool IsCCLeaf() const final override;
+  bool IsCCLeaf() const final;
 #ifdef DEBUG
-  void List(FILE* out = stdout, int32_t aIndent = 0) const final override;
+  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
-  already_AddRefed<mozilla::css::Rule> Clone() const final override;
+  already_AddRefed<mozilla::css::Rule> Clone() const final;
 
   RawServoKeyframe* Raw() const { return mRaw; }
 
   // WebIDL interface
-  void GetCssText(nsAString& aCssText) const final override;
-  void GetKeyText(nsAString& aKeyText) final override;
-  void SetKeyText(const nsAString& aKeyText) final override;
-  nsICSSDeclaration* Style() final override;
+  void GetCssText(nsAString& aCssText) const final;
+  void GetKeyText(nsAString& aKeyText) final;
+  void SetKeyText(const nsAString& aKeyText) final;
+  nsICSSDeclaration* Style() final;
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final override;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
 
 private:
   virtual ~ServoKeyframeRule();

@@ -188,7 +188,7 @@ public:
     GetHref(aResult);
   }
 
-  virtual void NodeInfoChanged(nsIDocument* aOldDoc) final override
+  virtual void NodeInfoChanged(nsIDocument* aOldDoc) final
   {
     ClearHasPendingLinkUpdate();
     nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
