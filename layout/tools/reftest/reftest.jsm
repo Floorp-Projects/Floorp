@@ -379,6 +379,7 @@ function ReadTests() {
         }
 
         if (testList) {
+            logger.debug("Reading test objects from: " + testList);
             let promise = OS.File.read(testList).then(function onSuccess(array) {
                 let decoder = new TextDecoder();
                 g.urls = JSON.parse(decoder.decode(array)).map(CreateUrls);
@@ -386,6 +387,10 @@ function ReadTests() {
             });
         } else if (manifests) {
             // Parse reftest manifests
+            // XXX There is a race condition in the manifest parsing code which
+            // sometimes shows up on Android jsreftests (bug 1416125). It seems
+            // adding/removing log statements can change its frequency.
+            logger.debug("Reading " + manifests.length + " manifests");
             manifests = JSON.parse(manifests);
             g.urlsFilterRegex = manifests[null];
 
@@ -402,6 +407,7 @@ function ReadTests() {
             });
 
             if (dumpTests) {
+                logger.debug("Dumping test objects to file: " + dumpTests);
                 let encoder = new TextEncoder();
                 let tests = encoder.encode(JSON.stringify(g.urls));
                 OS.File.writeAtomic(dumpTests, tests, {flush: true}).then(
@@ -414,6 +420,7 @@ function ReadTests() {
                   }
                 )
             } else {
+                logger.debug("Running " + g.urls.length + " test objects");
                 g.manageSuite = true;
                 g.urls = g.urls.map(CreateUrls);
                 StartTests();
