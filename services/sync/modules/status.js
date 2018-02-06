@@ -19,7 +19,6 @@ var Status = {
       return this.__authManager;
     }
     this.__authManager = new BrowserIDManager();
-    this.__authManager.initialize();
     return this.__authManager;
   },
 
@@ -92,13 +91,12 @@ var Status = {
   },
 
   checkSetup: function checkSetup() {
-    let result = this._authManager.currentAuthState;
-    if (result == STATUS_OK) {
-      Status.service = result;
-      return result;
+    if (!this._authManager.username) {
+      Status.login = LOGIN_FAILED_NO_USERNAME;
+      Status.service = CLIENT_NOT_CONFIGURED;
+    } else if (Status.login == STATUS_OK) {
+      Status.service = STATUS_OK;
     }
-
-    Status.login = result;
     return Status.service;
   },
 
