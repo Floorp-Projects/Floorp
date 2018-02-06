@@ -345,10 +345,23 @@ public:
     return false;
   }
 
+  bool AnimationMayBeReferenced(nsAtom* aName) const
+  {
+    return mMaybeReferencedAnimations.Contains(aName);
+  }
+
 protected:
   ~nsAnimationManager() override = default;
 
 private:
+  // This includes all animation names referenced regardless of whether a
+  // corresponding `@keyframes` rule is available.
+  //
+  // It may contain names which are no longer referenced, but it should always
+  // contain names which are currently referenced, so that it is usable for
+  // style invalidation.
+  nsTHashtable<nsRefPtrHashKey<nsAtom>> mMaybeReferencedAnimations;
+
   template<class BuilderType>
   void DoUpdateAnimations(
     const mozilla::NonOwningAnimationTarget& aTarget,

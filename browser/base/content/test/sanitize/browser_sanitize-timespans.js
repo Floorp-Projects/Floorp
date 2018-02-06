@@ -1,6 +1,3 @@
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 requestLongerTimeout(2);
 
 // Bug 453440 - Test the timespan-based logic of the sanitizer code
@@ -9,13 +6,6 @@ var now_uSec = now_mSec * 1000;
 
 const kMsecPerMin = 60 * 1000;
 const kUsecPerMin = 60 * 1000000;
-
-var tempScope = {};
-Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tempScope);
-var Sanitizer = tempScope.Sanitizer;
-
-var FormHistory = (ChromeUtils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
-var Downloads = (ChromeUtils.import("resource://gre/modules/Downloads.jsm", {})).Downloads;
 
 function promiseFormHistoryRemoved() {
   return new Promise(resolve => {
@@ -79,10 +69,7 @@ async function onHistoryReady() {
   // Should test cookies here, but nsICookieManager/nsICookieService
   // doesn't let us fake creation times.  bug 463127
 
-  let s = new Sanitizer();
-  s.ignoreTimespan = false;
-  s.prefDomain = "privacy.cpd.";
-  var itemPrefs = Services.prefs.getBranch(s.prefDomain);
+  var itemPrefs = Services.prefs.getBranch("privacy.cpd.");
   itemPrefs.setBoolPref("history", true);
   itemPrefs.setBoolPref("downloads", true);
   itemPrefs.setBoolPref("cache", false);
@@ -98,9 +85,8 @@ async function onHistoryReady() {
   let formHistoryPromise = promiseFormHistoryRemoved();
 
   // Clear 10 minutes ago
-  s.range = [now_uSec - 10 * 60 * 1000000, now_uSec];
-  await s.sanitize();
-  s.range = null;
+  let range = [now_uSec - 10 * 60 * 1000000, now_uSec];
+  await Sanitizer.sanitize(null, {range, ignoreTimespan: false});
 
   await formHistoryPromise;
   await downloadPromise;
@@ -156,8 +142,8 @@ async function onHistoryReady() {
   formHistoryPromise = promiseFormHistoryRemoved();
 
   // Clear 1 hour
-  Sanitizer.prefs.setIntPref("timeSpan", 1);
-  await s.sanitize();
+  Services.prefs.setIntPref(Sanitizer.PREF_TIMESPAN, 1);
+  await Sanitizer.sanitize(null, {ignoreTimespan: false});
 
   await formHistoryPromise;
   await downloadPromise;
@@ -206,9 +192,8 @@ async function onHistoryReady() {
   formHistoryPromise = promiseFormHistoryRemoved();
 
   // Clear 1 hour 10 minutes
-  s.range = [now_uSec - 70 * 60 * 1000000, now_uSec];
-  await s.sanitize();
-  s.range = null;
+  range = [now_uSec - 70 * 60 * 1000000, now_uSec];
+  await Sanitizer.sanitize(null, {range, ignoreTimespan: false});
 
   await formHistoryPromise;
   await downloadPromise;
@@ -252,8 +237,8 @@ async function onHistoryReady() {
   formHistoryPromise = promiseFormHistoryRemoved();
 
   // Clear 2 hours
-  Sanitizer.prefs.setIntPref("timeSpan", 2);
-  await s.sanitize();
+  Services.prefs.setIntPref(Sanitizer.PREF_TIMESPAN, 2);
+  await Sanitizer.sanitize(null, {ignoreTimespan: false});
 
   await formHistoryPromise;
   await downloadPromise;
@@ -293,9 +278,8 @@ async function onHistoryReady() {
   formHistoryPromise = promiseFormHistoryRemoved();
 
   // Clear 2 hours 10 minutes
-  s.range = [now_uSec - 130 * 60 * 1000000, now_uSec];
-  await s.sanitize();
-  s.range = null;
+  range = [now_uSec - 130 * 60 * 1000000, now_uSec];
+  await Sanitizer.sanitize(null, {range, ignoreTimespan: false});
 
   await formHistoryPromise;
   await downloadPromise;
@@ -331,8 +315,8 @@ async function onHistoryReady() {
   formHistoryPromise = promiseFormHistoryRemoved();
 
   // Clear 4 hours
-  Sanitizer.prefs.setIntPref("timeSpan", 3);
-  await s.sanitize();
+  Services.prefs.setIntPref(Sanitizer.PREF_TIMESPAN, 3);
+  await Sanitizer.sanitize(null, {ignoreTimespan: false});
 
   await formHistoryPromise;
   await downloadPromise;
@@ -364,9 +348,8 @@ async function onHistoryReady() {
   formHistoryPromise = promiseFormHistoryRemoved();
 
   // Clear 4 hours 10 minutes
-  s.range = [now_uSec - 250 * 60 * 1000000, now_uSec];
-  await s.sanitize();
-  s.range = null;
+  range = [now_uSec - 250 * 60 * 1000000, now_uSec];
+  await Sanitizer.sanitize(null, {range, ignoreTimespan: false});
 
   await formHistoryPromise;
   await downloadPromise;
@@ -400,8 +383,8 @@ async function onHistoryReady() {
   }
 
   // Clear Today
-  Sanitizer.prefs.setIntPref("timeSpan", 4);
-  await s.sanitize();
+  Services.prefs.setIntPref(Sanitizer.PREF_TIMESPAN, 4);
+  await Sanitizer.sanitize(null, {ignoreTimespan: false});
 
   await formHistoryPromise;
   await downloadPromise;
@@ -429,8 +412,8 @@ async function onHistoryReady() {
   formHistoryPromise = promiseFormHistoryRemoved();
 
   // Choose everything
-  Sanitizer.prefs.setIntPref("timeSpan", 0);
-  await s.sanitize();
+  Services.prefs.setIntPref(Sanitizer.PREF_TIMESPAN, 0);
+  await Sanitizer.sanitize(null, {ignoreTimespan: false});
 
   await formHistoryPromise;
   await downloadPromise;

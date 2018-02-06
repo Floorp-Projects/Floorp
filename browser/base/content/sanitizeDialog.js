@@ -44,9 +44,6 @@ var gSanitizePromptDialog = {
     // This is used by selectByTimespan() to determine if the window has loaded.
     this._inited = true;
 
-    var s = new Sanitizer();
-    s.prefDomain = "privacy.cpd.";
-
     document.documentElement.getButton("accept").label =
       this.bundleBrowser.getString("sanitizeButtonOK");
 
@@ -91,11 +88,6 @@ var gSanitizePromptDialog = {
   sanitize() {
     // Update pref values before handing off to the sanitizer (bug 453440)
     this.updatePrefs();
-    var s = new Sanitizer();
-    s.prefDomain = "privacy.cpd.";
-
-    s.range = Sanitizer.getClearRange(this.selectedTimespan);
-    s.ignoreTimespan = !s.range;
 
     // As the sanitize is async, we disable the buttons, update the label on
     // the 'accept' button to indicate things are happening and return false -
@@ -109,9 +101,16 @@ var gSanitizePromptDialog = {
     docElt.getButton("cancel").disabled = true;
 
     try {
-      s.sanitize().catch(Components.utils.reportError)
-                  .then(() => window.close())
-                  .catch(Components.utils.reportError);
+      let range = Sanitizer.getClearRange(this.selectedTimespan);
+      let options = {
+        prefDomain: "privacy.cpd.",
+        ignoreTimespan: !range,
+        range,
+      };
+      Sanitizer.sanitize(null, options)
+        .catch(Components.utils.reportError)
+        .then(() => window.close())
+        .catch(Components.utils.reportError);
       return false;
     } catch (er) {
       Components.utils.reportError("Exception during sanitize: " + er);
@@ -181,7 +180,7 @@ var gSanitizePromptDialog = {
    * from their corresponding preference elements.
    */
   updatePrefs() {
-    Sanitizer.prefs.setIntPref("timeSpan", this.selectedTimespan);
+    Services.prefs.setIntPref(Sanitizer.PREF_TIMESPAN, this.selectedTimespan);
 
     // Keep the pref for the download history in sync with the history pref.
     Preferences.get("privacy.cpd.downloads").value =

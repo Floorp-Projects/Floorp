@@ -5921,8 +5921,7 @@
       <field name="_tabMinWidthLimit">50</field>
       <property name="tabMinWidth">
         <setter><![CDATA[
-          let root = document.documentElement;
-          root.style.setProperty("--tab-min-width", val + "px");
+          this.tabContainer.style.setProperty("--tab-min-width", val + "px");
           return val;
         ]]></setter>
       </property>

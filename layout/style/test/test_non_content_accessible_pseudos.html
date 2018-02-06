@@ -1,0 +1,57 @@
+<!doctype html>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<style id="sheet"></style>
+<script>
+const NON_CONTENT_ACCESIBLE_PSEUDOS = [
+  "::-moz-number-wrapper",
+  "::-moz-number-spin-up",
+  "::-moz-number-spin-down",
+  "::-moz-number-spin-box",
+  "::-moz-number-text",
+  // FIXME: probably ::-moz-math-anonymous should be on this list...
+
+  ":-moz-native-anonymous",
+  ":-moz-use-shadow-tree-root",
+  ":-moz-table-border-nonzero",
+  ":-moz-browser-frame",
+  ":-moz-devtools-highlighted",
+  ":-moz-styleeditor-transitioning",
+  ":-moz-user-disabled",
+  ":-moz-handler-clicktoplay",
+  ":-moz-handler-vulnerable-updatable",
+  ":-moz-handler-vulnerable-no-update",
+  ":-moz-handler-disabled",
+  ":-moz-handler-blocked",
+  ":-moz-handler-chrased",
+  ":-moz-has-dir-attr",
+  ":-moz-dir-attr-ltr",
+  ":-moz-dir-attr-rtl",
+  ":-moz-dir-attr-like-auto",
+  ":-moz-autofill",
+  ":-moz-autofill-preview",
+];
+
+test(function() {
+  sheet.textContent = `div { color: initial }`;
+  assert_equals(sheet.sheet.cssRules.length, 1);
+}, "sanity");
+
+for (const pseudo of NON_CONTENT_ACCESIBLE_PSEUDOS) {
+  test(function() {
+    sheet.textContent = `${pseudo} { color: blue; }`;
+    assert_equals(sheet.sheet.cssRules.length, 0,
+      pseudo + " shouldn't be accessible to content");
+    // FIXME(emilio, bug 1433439): This test should pass!
+    //
+    // if (pseudo.indexOf("::") === 0) {
+    //   let pseudoStyle = getComputedStyle(document.documentElement, pseudo);
+    //   let elementStyle = getComputedStyle(document.documentElement);
+    //   for (prop of pseudoStyle) {
+    //     assert_equals(pseudoStyle[prop], elementStyle[prop],
+    //                   pseudo + " styles shouldn't be visible from getComputedStyle");
+    //   }
+    // }
+  }, pseudo);
+}
+</script>

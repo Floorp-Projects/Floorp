@@ -34,6 +34,7 @@
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/HangDetails.h"
 #include "nsDebugImpl.h"
+#include "nsIGfxInfo.h"
 #include "nsThreadManager.h"
 #include "prenv.h"
 #include "ProcessUtils.h"
@@ -192,7 +193,9 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
   }
   if (gfxVars::UseWebRender()) {
     // Ensure to initialize GfxInfo
-    services::GetGfxInfo();
+    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+    Unused << gfxInfo;
+
     Factory::EnsureDWriteFactory();
   }
 #endif
