@@ -3938,7 +3938,6 @@ var XPIProvider = {
           if (aRepoAddon) {
             logger.debug("updateAddonRepositoryData got info for " + addon.id);
             addon._repositoryAddon = aRepoAddon;
-            addon.compatibilityOverrides = aRepoAddon.compatibilityOverrides;
             this.updateAddonDisabledState(addon);
           }
 
@@ -4999,13 +4998,13 @@ AddonInternal.prototype = {
 
       // The repository can specify compatibility overrides.
       // Note: For now, only blacklisting is supported by overrides.
-      if (this._repositoryAddon &&
-          this._repositoryAddon.compatibilityOverrides) {
-        let overrides = this._repositoryAddon.compatibilityOverrides;
+      let overrides = AddonRepository.getCompatibilityOverridesSync(this.id);
+      if (overrides) {
         let override = AddonRepository.findMatchingCompatOverride(this.version,
                                                                   overrides);
-        if (override && override.type == "incompatible")
+        if (override) {
           return false;
+        }
       }
 
       // Extremely old extensions should not be compatible by default.
@@ -5746,7 +5745,7 @@ function defineAddonWrapperProperty(name, getter) {
 ["id", "syncGUID", "version", "isCompatible", "isPlatformCompatible",
  "providesUpdatesSecurely", "blocklistState", "blocklistURL", "appDisabled",
  "softDisabled", "skinnable", "size", "foreignInstall", "hasBinaryComponents",
- "strictCompatibility", "compatibilityOverrides", "updateURL", "dependencies",
+ "strictCompatibility", "updateURL", "dependencies",
  "getDataDirectory", "multiprocessCompatible", "signedState", "mpcOptedOut",
  "isCorrectlySigned"].forEach(function(aProp) {
    defineAddonWrapperProperty(aProp, function() {
