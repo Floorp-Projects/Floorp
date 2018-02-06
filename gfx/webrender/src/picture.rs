@@ -595,9 +595,21 @@ impl PicturePrimitive {
 
     pub fn write_gpu_blocks(&self, request: &mut GpuDataRequest) {
         match self.kind {
-            PictureKind::TextShadow { .. } |
-            PictureKind::Image { .. } => {
-                request.push([0.0; 4]);
+            PictureKind::TextShadow { .. } => {
+                request.push([0.0; 4])
+            }
+            PictureKind::Image { composite_mode, .. } => {
+                match composite_mode {
+                    Some(PictureCompositeMode::Filter(FilterOp::ColorMatrix(m))) => {
+                        // When we start pushing Image pictures through the brush path
+                        // this may need to change as the number of GPU blocks written will
+                        // need to be determinate.
+                        for i in 0..5 {
+                            request.push([m[i], m[i+5], m[i+10], m[i+15]]);
+                        }
+                    },
+                    _ => request.push([0.0; 4]),
+                }
             }
             PictureKind::BoxShadow { color, .. } => {
                 request.push(color.premultiplied());
