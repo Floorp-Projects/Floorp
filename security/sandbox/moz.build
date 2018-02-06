@@ -154,11 +154,6 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         SOURCES += [
             'chromium/sandbox/win/src/resolver_32.cc',
             'chromium/sandbox/win/src/service_resolver_32.cc',
-            'chromium/sandbox/win/src/sidestep/ia32_modrm_map.cpp',
-            'chromium/sandbox/win/src/sidestep/ia32_opcode_map.cpp',
-            'chromium/sandbox/win/src/sidestep/mini_disassembler.cpp',
-            'chromium/sandbox/win/src/sidestep/preamble_patcher_with_stub.cpp',
-            'chromium/sandbox/win/src/sidestep_resolver.cc',
         ]
 
     for var in ('UNICODE', '_UNICODE', 'NS_NO_XPCOM', 'SANDBOX_EXPORTS',

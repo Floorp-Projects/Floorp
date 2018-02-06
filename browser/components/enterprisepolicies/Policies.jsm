@@ -92,6 +92,14 @@ this.Policies = {
     }
   },
 
+  "DisableFirefoxStudies": {
+    onBeforeAddons(manager, param) {
+      if (param == true) {
+        manager.disallowFeature("Shield");
+      }
+    }
+  },
+
   "dont_check_default_browser": {
     onBeforeUIStartup(manager, param) {
       setAndLockPref("browser.shell.checkDefaultBrowser", false);

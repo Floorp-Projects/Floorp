@@ -5,7 +5,6 @@
 /*---
 description: >
   Test the groups object with matched and unmatched named captures.
-includes: [propertyHelper.js]
 esid: sec-regexpbuiltinexec
 features: [regexp-named-groups]
 info: |
@@ -19,7 +18,7 @@ info: |
 
 const re = /(?<a>a).|(?<x>x)/;
 const result = re.exec("ab");
-assert.sameValue(result.__proto__, Array.prototype);
+assert.sameValue(Object.getPrototypeOf(result), Array.prototype);
 assert(result.hasOwnProperty("groups"));
 assert.sameValue("ab", result[0]);
 assert.sameValue("a", result[1]);

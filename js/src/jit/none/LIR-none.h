@@ -43,10 +43,10 @@ class LTableSwitchV : public LInstruction
     static const size_t InputValue = 0;
 };
 
-class LWasmUint32ToFloat32 : public LInstruction
+class LWasmUint32ToFloat32 : public LInstructionHelper<1, 1, 0>
 {
   public:
-    LWasmUint32ToFloat32(const LAllocation& ) { MOZ_CRASH(); }
+    LWasmUint32ToFloat32(const LAllocation&) { MOZ_CRASH(); }
 };
 
 class LUnbox : public LInstructionHelper<1, 2, 0>

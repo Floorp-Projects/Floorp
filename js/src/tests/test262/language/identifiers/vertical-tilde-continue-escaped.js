@@ -9,7 +9,7 @@ info: |
   VERTICAL TILDE is in General Category 'Lm' and [:Pattern_Syntax:].
 negative:
   type: SyntaxError
-  phase: early
+  phase: parse
 ---*/
 
 throw "Test262: This statement should not be evaluated.";

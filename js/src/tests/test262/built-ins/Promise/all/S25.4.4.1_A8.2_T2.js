@@ -7,7 +7,6 @@ info: |
 es6id: S25.4.4.1_A8.2_T2
 author: Sam Mikes
 description: Promise.all() rejects when second promise in array rejects
-includes: [promiseHelper.js]
 flags: [async]
 ---*/
 

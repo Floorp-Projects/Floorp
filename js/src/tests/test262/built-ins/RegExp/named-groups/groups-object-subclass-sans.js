@@ -5,7 +5,6 @@
 /*---
 description: >
   Test the groups object on RegExp subclass results that do not have their own.
-includes: [propertyHelper.js]
 esid: sec-regexpbuiltinexec
 features: [regexp-named-groups]
 info: |
@@ -28,11 +27,11 @@ class FakeRegExp extends RegExp {
 
 const re = new FakeRegExp();
 const result = re.exec("ab");
-assert.sameValue(result.__proto__, Array.prototype);
+assert.sameValue(Object.getPrototypeOf(result), Array.prototype);
 assert.sameValue(false, result.hasOwnProperty("groups"));
 
 Array.prototype.groups = { a: "b" };
-Array.prototype.groups.__proto__.b = "c";
+Object.getPrototypeOf(Array.prototype.groups).b = "c";
 assert.sameValue("b", "ab".replace(re, "$<a>"));
 assert.sameValue("c", "ab".replace(re, "$<b>"));
 Array.prototype.groups = undefined;
