@@ -1755,6 +1755,9 @@ protected:
   // This guards access to the singleton devices above, as well as the
   // singleton devices in DrawTargetD2D1.
   static StaticMutex mDeviceLock;
+  // This synchronizes access between different D2D drawtargets and their
+  // implied dependency graph.
+  static StaticMutex mDTDependencyLock;
 
   friend class DrawTargetD2D1;
 #endif
