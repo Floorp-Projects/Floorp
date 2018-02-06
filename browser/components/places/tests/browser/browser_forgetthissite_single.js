@@ -17,7 +17,7 @@ add_task(async function() {
 
   let places = [];
   let transition = PlacesUtils.history.TRANSITION_TYPED;
-  TEST_URIs.forEach(uri => places.push({uri: PlacesUtils._uri(uri), transition}));
+  TEST_URIs.forEach(uri => places.push({uri: Services.io.newURI(uri), transition}));
 
   await PlacesTestUtils.addVisits(places);
   await testForgetThisSiteVisibility(1);

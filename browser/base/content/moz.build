@@ -158,9 +158,6 @@ with Files("hiddenWindow.xul"):
 with Files("macBrowserOverlay.xul"):
     BUG_COMPONENT = ("Firefox", "Shell Integration")
 
-with Files("report-phishing-overlay.xul"):
-    BUG_COMPONENT = ("Toolkit", "Safe Browsing")
-
 with Files("tabbrowser*"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 

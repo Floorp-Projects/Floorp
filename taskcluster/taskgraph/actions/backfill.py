@@ -89,6 +89,7 @@ def backfill_action(parameters, input, task_group_id, task_id, task):
 
         if label in full_task_graph.tasks.keys():
             create_tasks(
-                    [label], full_task_graph, label_to_taskid, push_params, push_decision_task_id)
+                    [label], full_task_graph, label_to_taskid,
+                    push_params, push_decision_task_id, push)
         else:
             logging.info('Could not find {} on {}. Skipping.'.format(label, push))

@@ -47,12 +47,6 @@ MIDL_LIBRARIES = \
   IA2Typelib.idl \
   $(NULL)
 
-CSRCS = \
-  dlldata.c \
-  $(MIDL_INTERFACES:%.idl=%_p.c) \
-  $(MIDL_INTERFACES:%.idl=%_i.c) \
-  $(NULL)
-
 MIDL_GENERATED_FILES = \
   dlldata.c \
   $(MIDL_ENUMS:%.idl=%.h) \

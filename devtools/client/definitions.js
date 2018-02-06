@@ -100,6 +100,12 @@ Tools.webConsole = {
   ordinal: 2,
   oldWebConsoleURL: "chrome://devtools/content/webconsole/webconsole.xul",
   newWebConsoleURL: "chrome://devtools/content/webconsole/webconsole.html",
+  get browserConsoleURL() {
+    if (Services.prefs.getBoolPref("devtools.browserconsole.new-frontend-enabled")) {
+      return "chrome://devtools/content/webconsole/browserconsole.xul";
+    }
+    return Tools.webConsole.oldWebConsoleURL;
+  },
   icon: "chrome://devtools/skin/images/tool-webconsole.svg",
   label: l10n("ToolboxTabWebconsole.label"),
   menuLabel: l10n("MenuWebconsole.label"),

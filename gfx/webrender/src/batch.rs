@@ -1043,6 +1043,7 @@ impl AlphaBatcher {
                                                     FilterOp::Brightness(amount) => (7, amount),
                                                     FilterOp::Opacity(_, amount) => (8, amount),
                                                     FilterOp::DropShadow(..) => unreachable!(),
+                                                    FilterOp::ColorMatrix(_) => (10, 0.0),
                                                 };
 
                                                 let amount = (amount * 65535.0).round() as i32;
@@ -1055,7 +1056,7 @@ impl AlphaBatcher {
                                                     filter_mode,
                                                     amount,
                                                     z,
-                                                    0,
+                                                    prim_cache_address.as_int(),
                                                     0,
                                                 );
 

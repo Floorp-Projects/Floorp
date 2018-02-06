@@ -820,3 +820,177 @@ add_task(async function test_clear_folder_then_delete() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
+
+add_task(async function test_newer_move_to_deleted() {
+  let buf = await openMirror("test_newer_move_to_deleted");
+
+  info("Set up mirror");
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [{
+      guid: "folderAAAAAA",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      title: "A",
+      children: [{
+        guid: "bookmarkBBBB",
+        url: "http://example.com/b",
+        title: "B",
+      }],
+    }, {
+      guid: "folderCCCCCC",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      title: "C",
+      children: [{
+        guid: "bookmarkDDDD",
+        url: "http://example.com/d",
+        title: "D",
+      }],
+    }],
+  });
+  await buf.store([{
+    id: "menu",
+    type: "folder",
+    title: "Bookmarks Menu",
+    children: ["folderAAAAAA", "folderCCCCCC"],
+  }, {
+    id: "folderAAAAAA",
+    type: "folder",
+    title: "A",
+    children: ["bookmarkBBBB"],
+  }, {
+    id: "bookmarkBBBB",
+    type: "bookmark",
+    title: "B",
+    bmkUri: "http://example.com/b",
+  }, {
+    id: "folderCCCCCC",
+    type: "folder",
+    title: "C",
+    children: ["bookmarkDDDD"],
+  }, {
+    id: "bookmarkDDDD",
+    type: "bookmark",
+    title: "D",
+    bmkUri: "http://example.com/d",
+  }], { needsMerge: false });
+  await PlacesTestUtils.markBookmarksAsSynced();
+
+  let now = Date.now();
+
+  // A will have a newer local timestamp. However, we should *not* revert
+  // remotely moving B to the toolbar. (Locally, B exists in A, but we
+  // deleted the now-empty A remotely).
+  info("Make local changes: A > E, Toolbar > D, delete C");
+  await PlacesUtils.bookmarks.insert({
+    guid: "bookmarkEEEE",
+    parentGuid: "folderAAAAAA",
+    title: "E",
+    url: "http://example.com/e",
+    dateAdded: new Date(now),
+    lastModified: new Date(now),
+  });
+  await PlacesUtils.bookmarks.update({
+    guid: "bookmarkDDDD",
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    index: 0,
+    lastModified: new Date(now),
+  });
+  await PlacesUtils.bookmarks.remove("folderCCCCCC");
+
+  // C will have a newer remote timestamp. However, we should *not* revert
+  // locally moving D to the toolbar. (Locally, D exists in C, but we
+  // deleted the now-empty C locally).
+  info("Make remote changes: C > F, Toolbar > B, delete A");
+  await buf.store([{
+    id: "folderCCCCCC",
+    type: "folder",
+    title: "C",
+    children: ["bookmarkDDDD", "bookmarkFFFF"],
+    modified: (now / 1000) + 5,
+  }, {
+    id: "bookmarkFFFF",
+    type: "bookmark",
+    title: "F",
+    bmkUri: "http://example.com/f",
+  }, {
+    id: "toolbar",
+    type: "folder",
+    title: "Bookmarks Toolbar",
+    children: ["bookmarkBBBB"],
+    modified: (now / 1000) - 5,
+  }, {
+    id: "folderAAAAAA",
+    deleted: true,
+  }]);
+
+  info("Apply remote");
+  let changesToUpload = await buf.apply({
+    localTimeSeconds: now / 1000,
+    remoteTimeSeconds: now / 1000,
+  });
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+
+  let idsToUpload = inspectChangeRecords(changesToUpload);
+  deepEqual(idsToUpload, {
+    updated: ["bookmarkDDDD", "bookmarkEEEE", "bookmarkFFFF", "menu", "toolbar"],
+    deleted: ["folderCCCCCC"],
+  }, "Should upload new and moved items");
+
+  await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
+    guid: PlacesUtils.bookmarks.rootGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    index: 0,
+    title: "",
+    children: [{
+      guid: PlacesUtils.bookmarks.menuGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 0,
+      title: "Bookmarks Menu",
+      children: [{
+        guid: "bookmarkEEEE",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 0,
+        title: "E",
+        url: "http://example.com/e",
+      }, {
+        guid: "bookmarkFFFF",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 1,
+        title: "F",
+        url: "http://example.com/f",
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.toolbarGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 1,
+      title: "Bookmarks Toolbar",
+      children: [{
+        guid: "bookmarkDDDD",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 0,
+        title: "D",
+        url: "http://example.com/d",
+      }, {
+        guid: "bookmarkBBBB",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 1,
+        title: "B",
+        url: "http://example.com/b",
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.unfiledGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 3,
+      title: "Other Bookmarks",
+    }, {
+      guid: PlacesUtils.bookmarks.mobileGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 4,
+      title: "mobile",
+    }],
+  }, "Should not decide to keep newly moved items in deleted parents");
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
