@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/TimeStamp.h"
 #include "nsServiceManagerUtils.h"
 #include "ProfileJSONWriter.h"
 
@@ -43,6 +44,8 @@ private:
   RefPtr<GatheringPromise> StartGathering(double aSinceTime);
   void FinishGathering();
   void ResetGathering();
+
+  void ClearExpiredExitProfiles();
 
   bool mLockedForPrivateBrowsing;
 
