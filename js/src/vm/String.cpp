@@ -207,7 +207,7 @@ JSString::dumpRepresentationHeader(js::GenericPrinter& out, int indent, const ch
     if (flags & LINEAR_BIT)             out.put(" LINEAR");
     if (flags & HAS_BASE_BIT)           out.put(" HAS_BASE");
     if (flags & INLINE_CHARS_BIT)       out.put(" INLINE_CHARS");
-    if (flags & ATOM_BIT)               out.put(" ATOM");
+    if (flags & NON_ATOM_BIT)           out.put(" NON_ATOM");
     if (isPermanentAtom())              out.put(" PERMANENT");
     if (flags & LATIN1_CHARS_BIT)       out.put(" LATIN1");
     if (flags & INDEX_VALUE_BIT)        out.printf(" INDEX_VALUE(%u)", getIndexValue());
@@ -1103,7 +1103,7 @@ JSExternalString::ensureFlat(JSContext* cx)
 
     // Transform the string into a non-external, flat string.
     setNonInlineChars<char16_t>(s);
-    d.u1.flags = LINEAR_BIT;
+    d.u1.flags = INIT_FLAT_FLAGS;
 
     return &this->asFlat();
 }

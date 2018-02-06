@@ -1349,9 +1349,9 @@ MacroAssembler::compareStrings(JSOp op, Register left, Register right, Register 
 
     Label notAtom;
     // Optimize the equality operation to a pointer compare for two atoms.
-    Imm32 atomBit(JSString::ATOM_BIT);
-    branchTest32(Assembler::Zero, Address(left, JSString::offsetOfFlags()), atomBit, &notAtom);
-    branchTest32(Assembler::Zero, Address(right, JSString::offsetOfFlags()), atomBit, &notAtom);
+    Imm32 nonAtomBit(JSString::NON_ATOM_BIT);
+    branchTest32(Assembler::NonZero, Address(left, JSString::offsetOfFlags()), nonAtomBit, &notAtom);
+    branchTest32(Assembler::NonZero, Address(right, JSString::offsetOfFlags()), nonAtomBit, &notAtom);
 
     cmpPtrSet(JSOpToCondition(MCompare::Compare_String, op), left, right, result);
     jump(&done);

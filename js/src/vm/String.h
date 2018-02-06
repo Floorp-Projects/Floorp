@@ -221,28 +221,28 @@ class JSString : public js::gc::Cell
      *   String        Instance     Subtype
      *   type          encoding     predicate
      *   ------------------------------------
-     *   Rope          000000       xxxxx0
-     *   Linear        -            xxxxx1
-     *   HasBase       -            xxxx1x
-     *   Dependent     000011       000011
-     *   External      100001       100001
+     *   Rope          000001       xxxx0x
+     *   Linear        -            xxxx1x
+     *   HasBase       -            xxx1xx
+     *   Dependent     000111       000111
+     *   External      100011       100011
      *   Flat          -            Linear && !Dependent && !External
-     *   Undepended    010011       010011
-     *   Extensible    010001       010001
-     *   Inline        000101       xxx1xx
-     *   FatInline     010101       x1x1xx
-     *   Atom          001001       xx1xxx
-     *   PermanentAtom 101001       1x1xxx
-     *   InlineAtom    -            xx11xx
-     *   FatInlineAtom -            x111xx
+     *   Undepended    010111       010111
+     *   Extensible    010011       010011
+     *   Inline        001011       xx1xxx
+     *   FatInline     011011       x11xxx
+     *   NormalAtom    000010       xxxxx0
+     *   PermanentAtom 100010       1xxxx0
+     *   InlineAtom    -            xx1xx0
+     *   FatInlineAtom -            x11xx0
      *
      * Note that the first 4 flag bits (from right to left in the previous table)
      * have the following meaning and can be used for some hot queries:
      *
-     *   Bit 0: IsLinear
-     *   Bit 1: HasBase (Dependent, Undepended)
-     *   Bit 2: IsInline (Inline, FatInline)
-     *   Bit 3: IsAtom (Atom, PermanentAtom)
+     *   Bit 0: !IsAtom (Atom, PermanentAtom)
+     *   Bit 1: IsLinear
+     *   Bit 2: HasBase (Dependent, Undepended)
+     *   Bit 3: IsInline (Inline, FatInline)
      *
      *  "HasBase" here refers to the two string types that have a 'base' field:
      *  JSDependentString and JSUndependedString.
@@ -250,27 +250,37 @@ class JSString : public js::gc::Cell
      *  to be null-terminated.  In such cases, the string must keep marking its base since
      *  there may be any number of *other* JSDependentStrings transitively depending on it.
      *
+     * The atom bit (NON_ATOM_BIT) is inverted so that objects and strings can
+     * be differentiated in the nursery: atoms are never in the nursery, so
+     * this bit is always 1 for a nursery string. For an object on a
+     * little-endian architecture, this is the low-order bit of the ObjectGroup
+     * pointer in a JSObject, which will always be zero. A 64-bit big-endian
+     * architecture will need to do something else (the ObjectGroup* is in the
+     * same place as a string's struct { uint32_t flags; uint32_t length; }).
+     *
      * If the INDEX_VALUE_BIT is set the upper 16 bits of the flag word hold the integer
      * index.
      */
 
-    static const uint32_t LINEAR_BIT             = JS_BIT(0);
-    static const uint32_t HAS_BASE_BIT           = JS_BIT(1);
-    static const uint32_t INLINE_CHARS_BIT       = JS_BIT(2);
-    static const uint32_t ATOM_BIT               = JS_BIT(3);
+    static const uint32_t NON_ATOM_BIT           = JS_BIT(0);
+    static const uint32_t LINEAR_BIT             = JS_BIT(1);
+    static const uint32_t HAS_BASE_BIT           = JS_BIT(2);
+    static const uint32_t INLINE_CHARS_BIT       = JS_BIT(3);
 
-    static const uint32_t DEPENDENT_FLAGS        = LINEAR_BIT | HAS_BASE_BIT;
-    static const uint32_t UNDEPENDED_FLAGS       = LINEAR_BIT | HAS_BASE_BIT | JS_BIT(4);
-    static const uint32_t EXTENSIBLE_FLAGS       = LINEAR_BIT | JS_BIT(4);
-    static const uint32_t EXTERNAL_FLAGS         = LINEAR_BIT | JS_BIT(5);
+    static const uint32_t DEPENDENT_FLAGS        = NON_ATOM_BIT | LINEAR_BIT | HAS_BASE_BIT;
+    static const uint32_t UNDEPENDED_FLAGS       = NON_ATOM_BIT | LINEAR_BIT | HAS_BASE_BIT | JS_BIT(4);
+    static const uint32_t EXTENSIBLE_FLAGS       = NON_ATOM_BIT | LINEAR_BIT | JS_BIT(4);
+    static const uint32_t EXTERNAL_FLAGS         = NON_ATOM_BIT | LINEAR_BIT | JS_BIT(5);
 
     static const uint32_t FAT_INLINE_MASK        = INLINE_CHARS_BIT | JS_BIT(4);
-    static const uint32_t PERMANENT_ATOM_MASK    = ATOM_BIT | JS_BIT(5);
+    static const uint32_t PERMANENT_ATOM_MASK    = NON_ATOM_BIT | JS_BIT(5);
+    static const uint32_t PERMANENT_ATOM_FLAGS   = JS_BIT(5);
 
     /* Initial flags for thin inline and fat inline strings. */
-    static const uint32_t INIT_THIN_INLINE_FLAGS = LINEAR_BIT | INLINE_CHARS_BIT;
-    static const uint32_t INIT_FAT_INLINE_FLAGS  = LINEAR_BIT | FAT_INLINE_MASK;
-    static const uint32_t INIT_ROPE_FLAGS        = 0;
+    static const uint32_t INIT_THIN_INLINE_FLAGS = NON_ATOM_BIT | LINEAR_BIT | INLINE_CHARS_BIT;
+    static const uint32_t INIT_FAT_INLINE_FLAGS  = NON_ATOM_BIT | LINEAR_BIT | FAT_INLINE_MASK;
+    static const uint32_t INIT_ROPE_FLAGS        = NON_ATOM_BIT;
+    static const uint32_t INIT_FLAT_FLAGS        = NON_ATOM_BIT | LINEAR_BIT;
 
     static const uint32_t TYPE_FLAGS_MASK        = JS_BIT(6) - 1;
 
@@ -317,6 +327,8 @@ class JSString : public js::gc::Cell
                       "shadow::String inlineStorage offset must match JSString");
         static_assert(offsetof(JSString, d.inlineStorageTwoByte) == offsetof(String, inlineStorageTwoByte),
                       "shadow::String inlineStorage offset must match JSString");
+        static_assert(NON_ATOM_BIT == String::NON_ATOM_BIT,
+                      "shadow::String::NON_ATOM_BIT must match JSString::NON_ATOM_BIT");
         static_assert(LINEAR_BIT == String::LINEAR_BIT,
                       "shadow::String::LINEAR_BIT must match JSString::LINEAR_BIT");
         static_assert(INLINE_CHARS_BIT == String::INLINE_CHARS_BIT,
@@ -472,18 +484,26 @@ class JSString : public js::gc::Cell
 
     MOZ_ALWAYS_INLINE
     bool isAtom() const {
-        return d.u1.flags & ATOM_BIT;
+        return !(d.u1.flags & NON_ATOM_BIT);
     }
 
     MOZ_ALWAYS_INLINE
     bool isPermanentAtom() const {
-        return (d.u1.flags & PERMANENT_ATOM_MASK) == PERMANENT_ATOM_MASK;
+        return (d.u1.flags & PERMANENT_ATOM_MASK) == PERMANENT_ATOM_FLAGS;
     }
 
     MOZ_ALWAYS_INLINE
     JSAtom& asAtom() const {
         MOZ_ASSERT(isAtom());
         return *(JSAtom*)this;
+    }
+
+    // Used for distinguishing strings from objects in the nursery. 'cell' must
+    // be in the nursery.
+    MOZ_ALWAYS_INLINE
+    static bool nurseryCellIsString(js::gc::Cell* cell) {
+        MOZ_ASSERT(!cell->isTenured());
+        return !static_cast<JSString*>(cell)->isAtom();
     }
 
     // Fills |array| with various strings that represent the different string
@@ -1091,7 +1111,8 @@ class JSAtom : public JSFlatString
     // Transform this atom into a permanent atom. This is only done during
     // initialization of the runtime.
     MOZ_ALWAYS_INLINE void morphIntoPermanentAtom() {
-        d.u1.flags |= PERMANENT_ATOM_MASK;
+        MOZ_ASSERT(static_cast<JSString*>(this)->isAtom());
+        d.u1.flags |= PERMANENT_ATOM_FLAGS;
     }
 
     inline js::HashNumber hash() const;
@@ -1170,7 +1191,8 @@ JSAtom::initHash(js::HashNumber hash)
 MOZ_ALWAYS_INLINE JSAtom*
 JSFlatString::morphAtomizedStringIntoAtom(js::HashNumber hash)
 {
-    d.u1.flags |= ATOM_BIT;
+    MOZ_ASSERT(!isAtom());
+    d.u1.flags &= ~NON_ATOM_BIT;
     JSAtom* atom = &asAtom();
     atom->initHash(hash);
     return atom;
@@ -1179,7 +1201,9 @@ JSFlatString::morphAtomizedStringIntoAtom(js::HashNumber hash)
 MOZ_ALWAYS_INLINE JSAtom*
 JSFlatString::morphAtomizedStringIntoPermanentAtom(js::HashNumber hash)
 {
-    d.u1.flags |= PERMANENT_ATOM_MASK;
+    MOZ_ASSERT(!isAtom());
+    d.u1.flags |= PERMANENT_ATOM_FLAGS;
+    d.u1.flags &= ~NON_ATOM_BIT;
     JSAtom* atom = &asAtom();
     atom->initHash(hash);
     return atom;
