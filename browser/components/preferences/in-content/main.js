@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* import-globals-from extensionControlled.js */
 /* import-globals-from preferences.js */
 /* import-globals-from ../../../../toolkit/mozapps/preferences/fontbuilder.js */
 /* import-globals-from ../../../base/content/aboutDialog-appUpdater.js */
@@ -367,13 +366,6 @@ var gMainPane = {
     window.addEventListener("unload", () => {
       Services.obs.removeObserver(newTabObserver, "newtab-url-changed");
     });
-
-    let connectionSettingsLink = document.getElementById("connectionSettingsLearnMore");
-    let connectionSettingsUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") +
-                                "prefs-connection-settings";
-    connectionSettingsLink.setAttribute("href", connectionSettingsUrl);
-    this.updateProxySettingsUI();
-    initializeProxyUI(gMainPane);
 
     if (AppConstants.platform == "win") {
       // Functionality for "Show tabs in taskbar" on Windows 7 and up.
@@ -1098,28 +1090,7 @@ var gMainPane = {
    * Displays a dialog in which proxy settings may be changed.
    */
   showConnections() {
-    gSubDialog.open("chrome://browser/content/preferences/connection.xul",
-                    null, null, this.updateProxySettingsUI.bind(this));
-  },
-
-  // Update the UI to show the proper description depending on whether an
-  // extension is in control or not.
-  async updateProxySettingsUI() {
-    let controllingExtension = await getControllingExtension(PREF_SETTING_TYPE, PROXY_KEY);
-    let fragment = controllingExtension ?
-      getControllingExtensionFragment(PROXY_KEY, controllingExtension, this._brandShortName) :
-      BrowserUtils.getLocalizedFragment(
-        document,
-        this._prefsBundle.getString("connectionDesc.label"),
-        this._brandShortName);
-    let description = document.getElementById("connectionSettingsDescription");
-
-    // Remove the old content from the description.
-    while (description.firstChild) {
-      description.firstChild.remove();
-    }
-
-    description.appendChild(fragment);
+    gSubDialog.open("chrome://browser/content/preferences/connection.xul");
   },
 
   checkBrowserContainers(event) {
