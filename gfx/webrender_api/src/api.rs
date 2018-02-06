@@ -254,7 +254,7 @@ impl Transaction {
     pub fn scroll_node_with_id(
         &mut self,
         origin: LayoutPoint,
-        id: IdType,
+        id: ScrollNodeIdType,
         clamp: ScrollClamping,
     ) {
         self.ops.push(DocumentMsg::ScrollNodeWithId(origin, id, clamp));
@@ -384,7 +384,7 @@ pub enum DocumentMsg {
         device_pixel_ratio: f32,
     },
     Scroll(ScrollLocation, WorldPoint, ScrollEventPhase),
-    ScrollNodeWithId(LayoutPoint, IdType, ScrollClamping),
+    ScrollNodeWithId(LayoutPoint, ScrollNodeIdType, ScrollClamping),
     TickScrollingBounce,
     GetScrollNodeState(MsgSender<Vec<ScrollNodeState>>),
     GenerateFrame,
@@ -392,9 +392,27 @@ pub enum DocumentMsg {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub enum IdType {
+pub enum ScrollNodeIdType {
     ExternalScrollId(ExternalScrollId),
     ClipId(ClipId),
+}
+
+impl From<ExternalScrollId> for ScrollNodeIdType {
+    fn from(id: ExternalScrollId) -> Self {
+        ScrollNodeIdType::ExternalScrollId(id)
+    }
+}
+
+impl From<ClipId> for ScrollNodeIdType {
+    fn from(id: ClipId) -> Self {
+        ScrollNodeIdType::ClipId(id)
+    }
+}
+
+impl<'a> From<&'a ClipId> for ScrollNodeIdType {
+    fn from(id: &'a ClipId) -> Self {
+        ScrollNodeIdType::ClipId(*id)
+    }
 }
 
 impl fmt::Debug for DocumentMsg {
