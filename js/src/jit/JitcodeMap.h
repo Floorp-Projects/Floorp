@@ -143,17 +143,22 @@ class JitcodeGlobalEntry
 
     struct BaseEntry
     {
+        static const uint64_t kNoSampleInBuffer = UINT64_MAX;
+
         JitCode* jitcode_;
         void* nativeStartAddr_;
         void* nativeEndAddr_;
-        uint32_t gen_;
+        // If this entry is referenced from the profiler buffer, this is the
+        // position where the most recent sample that references it starts.
+        // Otherwise set to kNoSampleInBuffer.
+        uint64_t samplePositionInBuffer_;
         Kind kind_ : 7;
 
         void init() {
             jitcode_ = nullptr;
             nativeStartAddr_ = nullptr;
             nativeEndAddr_ = nullptr;
-            gen_ = UINT32_MAX;
+            samplePositionInBuffer_ = kNoSampleInBuffer;
             kind_ = INVALID;
         }
 
@@ -167,21 +172,20 @@ class JitcodeGlobalEntry
             jitcode_ = code;
             nativeStartAddr_ = nativeStartAddr;
             nativeEndAddr_ = nativeEndAddr;
-            gen_ = UINT32_MAX;
+            samplePositionInBuffer_ = kNoSampleInBuffer;
             kind_ = kind;
         }
 
-        uint32_t generation() const {
-            return gen_;
+        void setSamplePositionInBuffer(uint64_t bufferWritePos) {
+            samplePositionInBuffer_ = bufferWritePos;
         }
-        void setGeneration(uint32_t gen) {
-            gen_ = gen;
+        void setAsExpired() {
+            samplePositionInBuffer_ = kNoSampleInBuffer;
         }
-        bool isSampled(uint32_t currentGen, uint32_t lapCount) {
-            if (gen_ == UINT32_MAX || currentGen == UINT32_MAX)
+        bool isSampled(uint64_t bufferRangeStart) {
+            if (samplePositionInBuffer_ == kNoSampleInBuffer)
                 return false;
-            MOZ_ASSERT(currentGen >= gen_);
-            return (currentGen - gen_) <= lapCount;
+            return bufferRangeStart <= samplePositionInBuffer_;
         }
 
         Kind kind() const {
@@ -637,17 +641,14 @@ class JitcodeGlobalEntry
         return base_.nativeEndAddr();
     }
 
-    uint32_t generation() const {
-        return baseEntry().generation();
-    }
-    void setGeneration(uint32_t gen) {
-        baseEntry().setGeneration(gen);
+    void setSamplePositionInBuffer(uint64_t samplePositionInBuffer) {
+        baseEntry().setSamplePositionInBuffer(samplePositionInBuffer);
     }
     void setAsExpired() {
-        baseEntry().setGeneration(UINT32_MAX);
+        baseEntry().setAsExpired();
     }
-    bool isSampled(uint32_t currentGen, uint32_t lapCount) {
-        return baseEntry().isSampled(currentGen, lapCount);
+    bool isSampled(uint64_t bufferRangeStart) {
+        return baseEntry().isSampled(bufferRangeStart);
     }
 
     bool startsBelowPointer(void* ptr) const {
@@ -1053,7 +1054,7 @@ class JitcodeGlobalTable
     }
 
     const JitcodeGlobalEntry& lookupForSamplerInfallible(void* ptr, JSRuntime* rt,
-                                                         uint32_t sampleBufferGen);
+                                                         uint64_t samplePosInBuffer);
 
     MOZ_MUST_USE bool addEntry(const JitcodeGlobalEntry::IonEntry& entry, JSRuntime* rt) {
         return addEntry(JitcodeGlobalEntry(entry), rt);

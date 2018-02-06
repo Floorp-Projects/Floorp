@@ -49,6 +49,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 #include "ThreadInfo.h"
@@ -777,13 +778,15 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
   // like the native stack, the JS stack is iterated youngest-to-oldest and we
   // need to iterate oldest-to-youngest when adding entries to aInfo.
 
-  // Synchronous sampling reports an invalid buffer generation to
-  // ProfilingFrameIterator to avoid incorrectly resetting the generation of
-  // sampled JIT entries inside the JS engine. See note below concerning 'J'
-  // entries.
-  uint32_t startBufferGen = UINT32_MAX;
-  if (!aIsSynchronous && aCollector.Generation().isSome()) {
-    startBufferGen = *aCollector.Generation();
+  // Non-periodic sampling passes Nothing() as the buffer write position to
+  // ProfilingFrameIterator to avoid incorrectly resetting the buffer position
+  // of sampled JIT entries inside the JS engine.
+  Maybe<uint64_t> samplePosInBuffer;
+  if (!aIsSynchronous) {
+    // aCollector.SamplePositionInBuffer() will return Nothing() when
+    // profiler_suspend_and_sample_thread is called from the background hang
+    // reporter.
+    samplePosInBuffer = aCollector.SamplePositionInBuffer();
   }
   uint32_t jsCount = 0;
   JS::ProfilingFrameIterator::Frame jsFrames[MAX_JS_FRAMES];
@@ -800,10 +803,8 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
       registerState.lr = aRegs.mLR;
       registerState.fp = aRegs.mFP;
 
-      JS::ProfilingFrameIterator jsIter(context, registerState,
-                                        startBufferGen);
+      JS::ProfilingFrameIterator jsIter(context, registerState, samplePosInBuffer);
       for (; jsCount < maxFrames && !jsIter.done(); ++jsIter) {
-        // See note below regarding 'J' entries.
         if (aIsSynchronous || jsIter.isWasm()) {
           uint32_t extracted =
             jsIter.extractStack(jsFrames, jsCount, maxFrames);
@@ -950,14 +951,13 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
 
   // Update the JS context with the current profile sample buffer generation.
   //
-  // Do not do this for synchronous samples, which use their own
-  // ProfileBuffers instead of the global one in CorePS.
-  if (!aIsSynchronous && context && aCollector.Generation().isSome()) {
-    MOZ_ASSERT(*aCollector.Generation() >= startBufferGen);
-    uint32_t lapCount = *aCollector.Generation() - startBufferGen;
-    JS::UpdateJSContextProfilerSampleBufferGen(context,
-                                               *aCollector.Generation(),
-                                               lapCount);
+  // Only do this for periodic samples. We don't want to do this for
+  // synchronous samples, and we also don't want to do it for calls to
+  // profiler_suspend_and_sample_thread() from the background hang reporter -
+  // in that case, aCollector.BufferRangeStart() will return Nothing().
+  if (!aIsSynchronous && context && aCollector.BufferRangeStart()) {
+    uint64_t bufferRangeStart = *aCollector.BufferRangeStart();
+    JS::SetJSContextProfilerSampleBufferRangeStart(context, bufferRangeStart);
   }
 }
 
@@ -1275,19 +1275,23 @@ DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
 static inline void
 DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
                ThreadInfo& aThreadInfo, const TimeStamp& aNow,
-               const Registers& aRegs, ProfileBuffer::LastSample* aLS,
+               const Registers& aRegs, Maybe<uint64_t>* aLastSample,
                ProfileBuffer& aBuffer)
 {
   // WARNING: this function runs within the profiler's "critical section".
 
   MOZ_RELEASE_ASSERT(ActivePS::Exists(aLock));
 
-  aBuffer.AddThreadIdEntry(aThreadInfo.ThreadId(), aLS);
+  uint64_t samplePos = aBuffer.AddThreadIdEntry(aThreadInfo.ThreadId());
+  if (aLastSample) {
+    *aLastSample = Some(samplePos);
+  }
 
   TimeDuration delta = aNow - CorePS::ProcessStartTime();
   aBuffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
-  ProfileBufferCollector collector(aBuffer, ActivePS::Features(aLock));
+  ProfileBufferCollector collector(aBuffer, ActivePS::Features(aLock),
+                                   samplePos);
   NativeStack nativeStack;
 #if defined(HAVE_NATIVE_UNWIND)
   if (ActivePS::FeatureStackWalk(aLock)) {
@@ -2696,9 +2700,8 @@ profiler_get_buffer_info()
   }
 
   return Some(ProfilerBufferInfo {
-    ActivePS::Buffer(lock).mWritePos,
-    ActivePS::Buffer(lock).mReadPos,
-    ActivePS::Buffer(lock).mGeneration,
+    ActivePS::Buffer(lock).mRangeStart,
+    ActivePS::Buffer(lock).mRangeEnd,
     ActivePS::Entries(lock)
   });
 }

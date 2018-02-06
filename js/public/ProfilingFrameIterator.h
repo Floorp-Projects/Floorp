@@ -54,7 +54,7 @@ class MOZ_NON_PARAM JS_PUBLIC_API(ProfilingFrameIterator)
 
   private:
     JSContext* cx_;
-    uint32_t sampleBufferGen_;
+    mozilla::Maybe<uint64_t> samplePositionInProfilerBuffer_;
     js::Activation* activation_;
     Kind kind_;
 
@@ -90,10 +90,6 @@ class MOZ_NON_PARAM JS_PUBLIC_API(ProfilingFrameIterator)
     void settleFrames();
     void settle();
 
-    bool hasSampleBufferGen() const {
-        return sampleBufferGen_ != UINT32_MAX;
-    }
-
   public:
     struct RegisterState
     {
@@ -105,7 +101,7 @@ class MOZ_NON_PARAM JS_PUBLIC_API(ProfilingFrameIterator)
     };
 
     ProfilingFrameIterator(JSContext* cx, const RegisterState& state,
-                           uint32_t sampleBufferGen = UINT32_MAX);
+                           const mozilla::Maybe<uint64_t>& samplePositionInProfilerBuffer = mozilla::Nothing());
     ~ProfilingFrameIterator();
     void operator++();
     bool done() const { return !activation_; }
@@ -153,16 +149,15 @@ JS_FRIEND_API(bool)
 IsProfilingEnabledForContext(JSContext* cx);
 
 /**
- * After each sample run, this method should be called with the latest sample
- * buffer generation, and the lapCount.  It will update corresponding fields on
- * JSRuntime.
+ * After each sample run, this method should be called with the current buffer
+ * position at which the buffer contents start. This will update the
+ * corresponding field on the JSRuntime.
  *
- * See fields |profilerSampleBufferGen|, |profilerSampleBufferLapCount| on
- * JSRuntime for documentation about what these values are used for.
+ * See the field |profilerSampleBufferRangeStart| on JSRuntime for documentation
+ * about what this value is used for.
  */
 JS_FRIEND_API(void)
-UpdateJSContextProfilerSampleBufferGen(JSContext* cx, uint32_t generation,
-                                       uint32_t lapCount);
+SetJSContextProfilerSampleBufferRangeStart(JSContext* cx, uint64_t rangeStart);
 
 struct ForEachProfiledFrameOp
 {
