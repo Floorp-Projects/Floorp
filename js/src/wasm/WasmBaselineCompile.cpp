@@ -1191,7 +1191,7 @@ class BaseStackFrame
 
     static const size_t StackSizeOfPtr    = sizeof(intptr_t);
     static const size_t StackSizeOfInt64  = sizeof(int64_t);
-#ifdef JS_CODEGEN_ARM
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32)
     static const size_t StackSizeOfFloat  = sizeof(float);
 #else
     static const size_t StackSizeOfFloat  = sizeof(double);

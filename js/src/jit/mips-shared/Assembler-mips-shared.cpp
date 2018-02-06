@@ -1217,35 +1217,35 @@ AssemblerMIPSShared::as_dextu(Register rt, Register rs, uint16_t pos, uint16_t s
 
 // FP instructions
 BufferOffset
-AssemblerMIPSShared::as_ld(FloatRegister fd, Register base, int32_t off)
+AssemblerMIPSShared::as_ldc1(FloatRegister ft, Register base, int32_t off)
 {
     MOZ_ASSERT(Imm16::IsInSignedRange(off));
-    spew("ldc1   %3s, (0x%x)%2s", fd.name(), off, base.name());
-    return writeInst(InstImm(op_ldc1, base, fd, Imm16(off)).encode());
+    spew("ldc1   %3s, (0x%x)%2s", ft.name(), off, base.name());
+    return writeInst(InstImm(op_ldc1, base, ft, Imm16(off)).encode());
 }
 
 BufferOffset
-AssemblerMIPSShared::as_sd(FloatRegister fd, Register base, int32_t off)
+AssemblerMIPSShared::as_sdc1(FloatRegister ft, Register base, int32_t off)
 {
     MOZ_ASSERT(Imm16::IsInSignedRange(off));
-    spew("sdc1   %3s, (0x%x)%2s", fd.name(), off, base.name());
-    return writeInst(InstImm(op_sdc1, base, fd, Imm16(off)).encode());
+    spew("sdc1   %3s, (0x%x)%2s", ft.name(), off, base.name());
+    return writeInst(InstImm(op_sdc1, base, ft, Imm16(off)).encode());
 }
 
 BufferOffset
-AssemblerMIPSShared::as_ls(FloatRegister fd, Register base, int32_t off)
+AssemblerMIPSShared::as_lwc1(FloatRegister ft, Register base, int32_t off)
 {
     MOZ_ASSERT(Imm16::IsInSignedRange(off));
-    spew("lwc1   %3s, (0x%x)%2s", fd.name(), off, base.name());
-    return writeInst(InstImm(op_lwc1, base, fd, Imm16(off)).encode());
+    spew("lwc1   %3s, (0x%x)%2s", ft.name(), off, base.name());
+    return writeInst(InstImm(op_lwc1, base, ft, Imm16(off)).encode());
 }
 
 BufferOffset
-AssemblerMIPSShared::as_ss(FloatRegister fd, Register base, int32_t off)
+AssemblerMIPSShared::as_swc1(FloatRegister ft, Register base, int32_t off)
 {
     MOZ_ASSERT(Imm16::IsInSignedRange(off));
-    spew("swc1   %3s, (0x%x)%2s", fd.name(), off, base.name());
-    return writeInst(InstImm(op_swc1, base, fd, Imm16(off)).encode());
+    spew("swc1   %3s, (0x%x)%2s", ft.name(), off, base.name());
+    return writeInst(InstImm(op_swc1, base, ft, Imm16(off)).encode());
 }
 
 BufferOffset

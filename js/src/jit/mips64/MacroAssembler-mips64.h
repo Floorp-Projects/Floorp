@@ -51,6 +51,8 @@ class MacroAssemblerMIPS64 : public MacroAssemblerMIPSShared
     using MacroAssemblerMIPSShared::ma_li;
     using MacroAssemblerMIPSShared::ma_ss;
     using MacroAssemblerMIPSShared::ma_sd;
+    using MacroAssemblerMIPSShared::ma_ls;
+    using MacroAssemblerMIPSShared::ma_ld;
     using MacroAssemblerMIPSShared::ma_load;
     using MacroAssemblerMIPSShared::ma_store;
     using MacroAssemblerMIPSShared::ma_cmp_set;
@@ -133,13 +135,13 @@ class MacroAssemblerMIPS64 : public MacroAssemblerMIPSShared
     void ma_mv(FloatRegister src, ValueOperand dest);
     void ma_mv(ValueOperand src, FloatRegister dest);
 
-    void ma_ls(FloatRegister fd, Address address);
-    void ma_ld(FloatRegister fd, Address address);
-    void ma_sd(FloatRegister fd, Address address);
-    void ma_ss(FloatRegister fd, Address address);
+    void ma_ls(FloatRegister ft, Address address);
+    void ma_ld(FloatRegister ft, Address address);
+    void ma_sd(FloatRegister ft, Address address);
+    void ma_ss(FloatRegister ft, Address address);
 
-    void ma_pop(FloatRegister fs);
-    void ma_push(FloatRegister fs);
+    void ma_pop(FloatRegister f);
+    void ma_push(FloatRegister f);
 
     void ma_cmp_set(Register dst, Register lhs, ImmWord imm, Condition c);
     void ma_cmp_set(Register dst, Register lhs, ImmPtr imm, Condition c);
@@ -660,17 +662,8 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void storeUnalignedSimd128Float(FloatRegister src, Address addr) { MOZ_CRASH("NYI"); }
     void storeUnalignedSimd128Float(FloatRegister src, BaseIndex addr) { MOZ_CRASH("NYI"); }
 
-    void loadDouble(const Address& addr, FloatRegister dest);
-    void loadDouble(const BaseIndex& src, FloatRegister dest);
     void loadUnalignedDouble(const wasm::MemoryAccessDesc& access, const BaseIndex& src,
                              Register temp, FloatRegister dest);
-
-    // Load a float value into a register, then expand it to a double.
-    void loadFloatAsDouble(const Address& addr, FloatRegister dest);
-    void loadFloatAsDouble(const BaseIndex& src, FloatRegister dest);
-
-    void loadFloat32(const Address& addr, FloatRegister dest);
-    void loadFloat32(const BaseIndex& src, FloatRegister dest);
     void loadUnalignedFloat32(const wasm::MemoryAccessDesc& access, const BaseIndex& src,
                               Register temp, FloatRegister dest);
 
