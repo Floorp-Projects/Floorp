@@ -4,9 +4,6 @@
 
 /* eslint-disable no-unused-vars */
 
-const Cu = Components.utils;
-const Ci = Components.interfaces;
-
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
 const DELAY = AppConstants.DEBUG ? 4000 : 800;

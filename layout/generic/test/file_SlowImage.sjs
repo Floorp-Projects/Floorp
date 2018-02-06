@@ -1,6 +1,4 @@
 "use strict";
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 
 const IMG_BYTES = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAA" +
