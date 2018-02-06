@@ -28,7 +28,7 @@ class ProcTestKill(proctest.ProcTest):
         """Process is started, we kill it"""
 
         p = processhandler.ProcessHandler([self.python, self.proclaunch,
-                                           "process_normal_finish_python.ini"],
+                                           "process_normal_finish.ini"],
                                           cwd=here)
         p.run()
         p.kill()
@@ -39,7 +39,7 @@ class ProcTestKill(proctest.ProcTest):
         """Process is started, we kill it, we use a deep process tree"""
 
         p = processhandler.ProcessHandler([self.python, self.proclaunch,
-                                           "process_normal_deep_python.ini"],
+                                           "process_normal_deep.ini"],
                                           cwd=here)
         p.run()
         p.kill()
@@ -51,7 +51,7 @@ class ProcTestKill(proctest.ProcTest):
            for a bit, we kill it"""
 
         p = processhandler.ProcessHandler([self.python, self.proclaunch,
-                                           "process_normal_deep_python.ini"],
+                                           "process_normal_deep.ini"],
                                           cwd=here)
         p.run()
         # Let the tree spawn a bit, before attempting to kill
@@ -64,7 +64,7 @@ class ProcTestKill(proctest.ProcTest):
         """Process is started, we kill it, we use a broad process tree"""
 
         p = processhandler.ProcessHandler([self.python, self.proclaunch,
-                                           "process_normal_broad_python.ini"],
+                                           "process_normal_broad.ini"],
                                           cwd=here)
         p.run()
         p.kill()
@@ -76,7 +76,7 @@ class ProcTestKill(proctest.ProcTest):
            for a bit, we kill it"""
 
         p = processhandler.ProcessHandler([self.python, self.proclaunch,
-                                           "process_normal_broad_python.ini"],
+                                           "process_normal_broad.ini"],
                                           cwd=here)
         p.run()
         # Let the tree spawn a bit, before attempting to kill
@@ -87,7 +87,7 @@ class ProcTestKill(proctest.ProcTest):
 
     @unittest.skipUnless(processhandler.isPosix, "posix only")
     def test_process_kill_with_sigterm(self):
-        script = os.path.join(here, 'infinite_loop.py')
+        script = os.path.join(here, 'scripts', 'infinite_loop.py')
         p = processhandler.ProcessHandler([self.python, script])
 
         p.run()
@@ -97,7 +97,7 @@ class ProcTestKill(proctest.ProcTest):
 
     @unittest.skipUnless(processhandler.isPosix, "posix only")
     def test_process_kill_with_sigint_if_needed(self):
-        script = os.path.join(here, 'infinite_loop.py')
+        script = os.path.join(here, 'scripts', 'infinite_loop.py')
         p = processhandler.ProcessHandler([self.python, script, 'deadlock'])
 
         p.run()

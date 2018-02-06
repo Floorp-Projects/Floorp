@@ -66,9 +66,9 @@ gTests.push({
     Assert.ok(this._bookmark, "Correctly added a bookmark");
 
     // Add a tag to this bookmark.
-    PlacesUtils.tagging.tagURI(PlacesUtils._uri(TEST_URL),
+    PlacesUtils.tagging.tagURI(Services.io.newURI(TEST_URL),
                                ["testTag"]);
-    var tags = PlacesUtils.tagging.getTagsForURI(PlacesUtils._uri(TEST_URL));
+    var tags = PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL));
     Assert.equal(tags[0], "testTag", "Correctly added a tag");
   },
 
@@ -144,11 +144,11 @@ gTests.push({
 
   async cleanup() {
     // Check tags have not changed.
-    var tags = PlacesUtils.tagging.getTagsForURI(PlacesUtils._uri(TEST_URL));
+    var tags = PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL));
     Assert.ok(tags[0], "testTag", "Tag on node has not changed");
 
     // Cleanup.
-    PlacesUtils.tagging.untagURI(PlacesUtils._uri(TEST_URL), ["testTag"]);
+    PlacesUtils.tagging.untagURI(Services.io.newURI(TEST_URL), ["testTag"]);
     await PlacesUtils.bookmarks.remove(this._bookmark);
     let bm = await PlacesUtils.bookmarks.fetch(this._bookmark.guid);
     Assert.ok(!bm, "should have been removed");
@@ -173,9 +173,9 @@ gTests.push({
     Assert.ok(this._bookmark, "Correctly added a bookmark");
 
     // Add a tag to this bookmark.
-    PlacesUtils.tagging.tagURI(PlacesUtils._uri(TEST_URL),
+    PlacesUtils.tagging.tagURI(Services.io.newURI(TEST_URL),
                                ["testTag"]);
-    var tags = PlacesUtils.tagging.getTagsForURI(PlacesUtils._uri(TEST_URL));
+    var tags = PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL));
     Assert.equal(tags[0], "testTag", "Correctly added a tag");
   },
 
@@ -247,11 +247,11 @@ gTests.push({
 
   async cleanup() {
     // Check tags have not changed.
-    var tags = PlacesUtils.tagging.getTagsForURI(PlacesUtils._uri(TEST_URL));
+    var tags = PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL));
     Assert.equal(tags[0], "testTag", "Tag on node has not changed");
 
     // Cleanup.
-    PlacesUtils.tagging.untagURI(PlacesUtils._uri(TEST_URL),
+    PlacesUtils.tagging.untagURI(Services.io.newURI(TEST_URL),
                                  ["testTag"]);
     await PlacesUtils.bookmarks.remove(this._bookmark);
     let bm = await PlacesUtils.bookmarks.fetch(this._bookmark.guid);

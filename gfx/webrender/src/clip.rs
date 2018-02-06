@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ClipMode, ComplexClipRegion, DeviceIntRect, ImageMask, ImageRendering};
-use api::{LayerPoint, LayerRect, LayoutPoint, LayoutVector2D, LocalClip};
-use api::{DevicePixelScale, LayerToWorldTransform};
+use api::{BorderRadius, ClipMode, ComplexClipRegion, DeviceIntRect, DevicePixelScale, ImageMask};
+use api::{ImageRendering, LayerRect, LayerToWorldTransform, LayoutPoint, LayoutVector2D};
+use api::LocalClip;
 use border::{BorderCornerClipSource, ensure_no_corner_overlap};
 use ellipse::Ellipse;
 use freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
@@ -112,22 +112,6 @@ impl ClipSource {
             clip_mode,
         )
     }
-
-    pub fn contains(&self, point: &LayerPoint) -> bool {
-        // We currently do not handle all BorderCorners, because they aren't used for
-        // ClipScrollNodes and this method is only used during hit testing.
-        match self {
-            &ClipSource::Rectangle(ref rectangle) => rectangle.contains(point),
-            &ClipSource::RoundedRectangle(rect, radii, ClipMode::Clip) =>
-                rounded_rectangle_contains_point(point, &rect, &radii),
-            &ClipSource::RoundedRectangle(rect, radii, ClipMode::ClipOut) =>
-                !rounded_rectangle_contains_point(point, &rect, &radii),
-            &ClipSource::Image(mask) => mask.rect.contains(point),
-            &ClipSource::BorderCorner(_) =>
-                unreachable!("Tried to call contains on a BorderCornerr."),
-        }
-    }
-
 }
 
 #[derive(Debug)]
@@ -322,10 +306,10 @@ impl Contains for ComplexClipRegion {
     }
 }
 
-fn rounded_rectangle_contains_point(point: &LayoutPoint,
-                                    rect: &LayerRect,
-                                    radii: &BorderRadius)
-                                    -> bool {
+pub fn rounded_rectangle_contains_point(point: &LayoutPoint,
+                                        rect: &LayerRect,
+                                        radii: &BorderRadius)
+                                        -> bool {
     if !rect.contains(point) {
         return false;
     }

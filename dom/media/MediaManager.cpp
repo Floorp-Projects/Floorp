@@ -1484,14 +1484,16 @@ private:
 // Source getter returning full list
 
 static void
-GetSources(MediaEngine *engine, MediaSourceEnum aSrcType,
+GetSources(MediaEngine *engine,
+           uint64_t aWindowId,
+           MediaSourceEnum aSrcType,
            nsTArray<RefPtr<MediaDevice>>& aResult,
            const char* media_device_name = nullptr)
 {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
 
   nsTArray<RefPtr<MediaEngineSource>> sources;
-  engine->EnumerateDevices(aSrcType, &sources);
+  engine->EnumerateDevices(aWindowId, aSrcType, &sources);
 
   /*
    * We're allowing multiple tabs to access the same camera for parity
@@ -1893,7 +1895,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
 
     if (hasVideo) {
       nsTArray<RefPtr<MediaDevice>> videos;
-      GetSources(fakeCams? fakeBackend : realBackend, aVideoType,
+      GetSources(fakeCams? fakeBackend : realBackend, aWindowId, aVideoType,
                  videos, videoLoopDev.get());
       for (auto& source : videos) {
         result->AppendElement(source);
@@ -1901,7 +1903,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
     }
     if (hasAudio) {
       nsTArray<RefPtr<MediaDevice>> audios;
-      GetSources(fakeMics? fakeBackend : realBackend, aAudioType,
+      GetSources(fakeMics? fakeBackend : realBackend, aWindowId, aAudioType,
                  audios, audioLoopDev.get());
       for (auto& source : audios) {
         result->AppendElement(source);
@@ -3141,6 +3143,11 @@ MediaManager::OnNavigation(uint64_t aWindowID)
   MOZ_ASSERT(!GetWindowListener(aWindowID));
 
   RemoveMediaDevicesCallback(aWindowID);
+
+  RefPtr<MediaManager> self = this;
+  MediaManager::PostTask(NewTaskFrom([self, aWindowID]() {
+    self->GetBackend()->ReleaseResourcesForWindow(aWindowID);
+  }));
 }
 
 void

@@ -522,11 +522,7 @@ impl Wrench {
 
         let mut txn = Transaction::new();
         for (id, offset) in scroll_offsets {
-            txn.scroll_node_with_id(
-                *offset,
-                IdType::ClipId(*id),
-                ScrollClamping::NoClamping,
-            );
+            txn.scroll_node_with_id(*offset, id.into(), ScrollClamping::NoClamping);
         }
         // TODO(nical) - Wrench does not notify frames when there was scrolling
         // in the transaction (See RenderNotifier implementations). If we don't

@@ -5,17 +5,18 @@
 
 use api::{BuiltDisplayListIter, ClipAndScrollInfo, ClipId, ColorF, ComplexClipRegion};
 use api::{DevicePixelScale, DeviceUintRect, DeviceUintSize, DisplayItemRef, DocumentLayer, Epoch};
-use api::{ExternalScrollId, FilterOp, IdType, ImageDisplayItem, ItemRange, LayerPoint};
-use api::{LayerPrimitiveInfo, LayerRect, LayerSize, LayerVector2D, LayoutSize, LocalClip};
-use api::{PipelineId, ScrollClamping, ScrollEventPhase, ScrollLocation, ScrollNodeState};
-use api::{ScrollPolicy, ScrollSensitivity, SpecificDisplayItem, StackingContext, TileOffset};
-use api::{TransformStyle, WorldPoint};
+use api::{ExternalScrollId, FilterOp, ImageDisplayItem, ItemRange, LayerPoint, LayerPrimitiveInfo};
+use api::{LayerRect, LayerSize, LayerVector2D, LayoutSize, LocalClip, PipelineId, ScrollClamping};
+use api::{ScrollEventPhase, ScrollLocation, ScrollNodeIdType, ScrollNodeState, ScrollPolicy};
+use api::{ScrollSensitivity, SpecificDisplayItem, StackingContext, TileOffset, TransformStyle};
+use api::WorldPoint;
 use clip::ClipRegion;
 use clip_scroll_node::StickyFrameInfo;
 use clip_scroll_tree::{ClipScrollTree, ScrollStates};
 use euclid::rect;
 use frame_builder::{FrameBuilder, FrameBuilderConfig, ScrollbarInfo};
 use gpu_cache::GpuCache;
+use hit_test::HitTester;
 use internal_types::{FastHashMap, FastHashSet, RenderedDocument};
 use profiler::{GpuCacheProfileCounters, TextureCacheProfileCounters};
 use resource_cache::{FontInstanceMap,ResourceCache, TiledImageMap};
@@ -981,6 +982,7 @@ impl FrameContext {
         self.clip_scroll_tree.drain()
     }
 
+    #[cfg(feature = "debugger")]
     pub fn get_clip_scroll_tree(&self) -> &ClipScrollTree {
         &self.clip_scroll_tree
     }
@@ -990,7 +992,12 @@ impl FrameContext {
     }
 
     /// Returns true if the node actually changed position or false otherwise.
-    pub fn scroll_node(&mut self, origin: LayerPoint, id: IdType, clamp: ScrollClamping) -> bool {
+    pub fn scroll_node(
+        &mut self,
+        origin: LayerPoint,
+        id: ScrollNodeIdType,
+        clamp: ScrollClamping
+    ) -> bool {
         self.clip_scroll_tree.scroll_node(origin, id, clamp)
     }
 
@@ -1013,7 +1020,7 @@ impl FrameContext {
             .discard_frame_state_for_pipeline(pipeline_id);
     }
 
-    pub fn create(
+    pub fn create_frame_builder(
         &mut self,
         old_builder: FrameBuilder,
         scene: &Scene,
@@ -1119,8 +1126,8 @@ impl FrameContext {
         pan: WorldPoint,
         texture_cache_profile: &mut TextureCacheProfileCounters,
         gpu_cache_profile: &mut GpuCacheProfileCounters,
-		scene_properties: &SceneProperties,
-    ) -> RenderedDocument {
+        scene_properties: &SceneProperties,
+    ) -> (HitTester, RenderedDocument) {
         let frame = frame_builder.build(
             resource_cache,
             gpu_cache,
@@ -1135,6 +1142,9 @@ impl FrameContext {
             gpu_cache_profile,
             scene_properties,
         );
-        self.make_rendered_document(frame)
+
+        let hit_tester = frame_builder.create_hit_tester(&self.clip_scroll_tree);
+
+        (hit_tester, self.make_rendered_document(frame))
     }
 }

@@ -21,7 +21,7 @@
         let db = e.target.result;
         let tx = db.transaction("TestStore", "readwrite");
         let store = tx.objectStore("TestStore");
-        tx.oncomplete = () => window.dispatchEvent(new Event("test-indexedDB-done"));
+        tx.oncomplete = () => document.dispatchEvent(new CustomEvent("test-indexedDB-done", {bubbles: true, cancelable: false}));
         store.put({ id: "test_id", description: "Site Data Test"});
       };
     </script>

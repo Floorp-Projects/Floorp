@@ -179,7 +179,7 @@ var BookmarkPropertiesPanel = {
                             this._uri.spec;
             }
           } else {
-            this._uri = PlacesUtils._uri("about:blank");
+            this._uri = Services.io.newURI("about:blank");
             this._title = this._strings.getString("newBookmarkDefault");
             this._dummyItem = true;
           }

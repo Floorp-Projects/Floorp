@@ -178,7 +178,7 @@ pub struct ByteSlice {
 impl ByteSlice {
     pub fn new(slice: &[u8]) -> ByteSlice {
         ByteSlice {
-            buffer: &slice[0],
+            buffer: slice.as_ptr(),
             len: slice.len(),
         }
     }
@@ -198,7 +198,7 @@ impl MutByteSlice {
     pub fn new(slice: &mut [u8]) -> MutByteSlice {
         let len = slice.len();
         MutByteSlice {
-            buffer: &mut slice[0],
+            buffer: slice.as_mut_ptr(),
             len: len,
         }
     }
@@ -989,7 +989,7 @@ pub extern "C" fn wr_transaction_scroll_layer(
     new_scroll_origin: LayoutPoint
 ) {
     assert!(unsafe { is_in_compositor_thread() });
-    let scroll_id = IdType::ExternalScrollId(ExternalScrollId(scroll_id, pipeline_id));
+    let scroll_id = ScrollNodeIdType::from(ExternalScrollId(scroll_id, pipeline_id));
     txn.scroll_node_with_id(new_scroll_origin, scroll_id, ScrollClamping::NoClamping);
 }
 

@@ -548,7 +548,8 @@ MediaEngineDefaultAudioSource::Pull(const RefPtr<const AllocationHandle>& aHandl
 }
 
 void
-MediaEngineDefault::EnumerateDevices(dom::MediaSourceEnum aMediaSource,
+MediaEngineDefault::EnumerateDevices(uint64_t aWindowId,
+                                     dom::MediaSourceEnum aMediaSource,
                                      nsTArray<RefPtr<MediaEngineSource>>* aSources)
 {
   AssertIsOnOwningThread();
@@ -561,13 +562,17 @@ MediaEngineDefault::EnumerateDevices(dom::MediaSourceEnum aMediaSource,
       // re-use that. This is no longer possible since the resolution gets set
       // in Allocate().
 
+      nsTArray<RefPtr<MediaEngineSource>>*
+        devicesForThisWindow = mVSources.LookupOrAdd(aWindowId);
       auto newSource = MakeRefPtr<MediaEngineDefaultVideoSource>();
-      mVSources.AppendElement(newSource);
+      devicesForThisWindow->AppendElement(newSource);
       aSources->AppendElement(newSource);
       return;
     }
     case dom::MediaSourceEnum::Microphone: {
-      for (const RefPtr<MediaEngineDefaultAudioSource>& source : mASources) {
+      nsTArray<RefPtr<MediaEngineDefaultAudioSource>>*
+        devicesForThisWindow = mASources.LookupOrAdd(aWindowId);
+      for (const RefPtr<MediaEngineDefaultAudioSource>& source : *devicesForThisWindow) {
         if (source->IsAvailable()) {
           aSources->AppendElement(source);
         }
@@ -576,7 +581,7 @@ MediaEngineDefault::EnumerateDevices(dom::MediaSourceEnum aMediaSource,
       if (aSources->IsEmpty()) {
         // All streams are currently busy, just make a new one.
         auto newSource = MakeRefPtr<MediaEngineDefaultAudioSource>();
-        mASources.AppendElement(newSource);
+        devicesForThisWindow->AppendElement(newSource);
         aSources->AppendElement(newSource);
       }
       return;
@@ -588,15 +593,51 @@ MediaEngineDefault::EnumerateDevices(dom::MediaSourceEnum aMediaSource,
 }
 
 void
+MediaEngineDefault::ReleaseResourcesForWindow(uint64_t aWindowId)
+{
+  nsTArray<RefPtr<MediaEngineDefaultAudioSource>>* audioDevicesForThisWindow =
+   mASources.Get(aWindowId);
+
+  if (audioDevicesForThisWindow) {
+    for (const RefPtr<MediaEngineDefaultAudioSource>& source :
+         *audioDevicesForThisWindow) {
+      source->Shutdown();
+    }
+  }
+
+  mASources.Remove(aWindowId);
+
+  nsTArray<RefPtr<MediaEngineSource>>* videoDevicesForThisWindow =
+    mVSources.Get(aWindowId);
+
+  if (videoDevicesForThisWindow) {
+    for (const RefPtr<MediaEngineSource>& source :
+         *videoDevicesForThisWindow) {
+      source->Shutdown();
+    }
+  }
+
+  mVSources.Remove(aWindowId);
+}
+
+void
 MediaEngineDefault::Shutdown()
 {
   AssertIsOnOwningThread();
 
-  for (RefPtr<MediaEngineDefaultVideoSource>& source : mVSources) {
-    source->Shutdown();
+  for (auto iter = mVSources.Iter(); !iter.Done(); iter.Next()) {
+    for (const RefPtr<MediaEngineSource>& source : *iter.UserData()) {
+      if (source) {
+        source->Shutdown();
+      }
+    }
   }
-  for (RefPtr<MediaEngineDefaultAudioSource>& source : mASources) {
-    source->Shutdown();
+  for (auto iter = mASources.Iter(); !iter.Done(); iter.Next()) {
+    for (const RefPtr<MediaEngineDefaultAudioSource>& source : *iter.UserData()) {
+      if (source) {
+        source->Shutdown();
+      }
+    }
   }
   mVSources.Clear();
   mASources.Clear();

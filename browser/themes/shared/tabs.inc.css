@@ -6,23 +6,25 @@
 %filter substitution
 %define horizontalTabPadding 9px
 
-/* This can't live on the tabbrowser because it's used for the titlebar height, too. */
-:root {
+#titlebar,
+#tabbrowser-tabs {
   --tab-min-height: 33px;
+}
+
+:root[uidensity=compact] #titlebar,
+:root[uidensity=compact] #tabbrowser-tabs {
+  --tab-min-height: 29px;
+}
+
+:root[uidensity=touch] #titlebar,
+:root[uidensity=touch] #tabbrowser-tabs {
+  --tab-min-height: 41px;
 }
 
 #tabbrowser-tabs {
   --tabs-top-border-width: 0px;
   --tab-min-width: 76px;
   --tab-loading-fill: #0A84FF;
-}
-
-:root[uidensity=compact] {
-  --tab-min-height: 29px;
-}
-
-:root[uidensity=touch] {
-  --tab-min-height: 41px;
 }
 
 #tabbrowser-tabs:-moz-lwtheme {

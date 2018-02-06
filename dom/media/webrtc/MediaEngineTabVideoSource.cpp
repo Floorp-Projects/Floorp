@@ -197,7 +197,9 @@ MediaEngineTabVideoSource::Deallocate(const RefPtr<const AllocationHandle>& aHan
   MOZ_ASSERT(!aHandle);
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
 
-  MOZ_ASSERT(IsTrackIDExplicit(mTrackID));
+  if (mStream && IsTrackIDExplicit(mTrackID)) {
+    mStream->EndTrack(mTrackID);
+  }
 
   NS_DispatchToMainThread(do_AddRef(new DestroyRunnable(this)));
 

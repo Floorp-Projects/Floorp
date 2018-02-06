@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ClipId, DevicePixelScale, ExternalScrollId, IdType, LayerPixel, LayerPoint, LayerRect};
+use api::{ClipId, DevicePixelScale, ExternalScrollId, LayerPixel, LayerPoint, LayerRect};
 use api::{LayerSize, LayerToWorldTransform, LayerTransform, LayerVector2D, LayoutTransform};
 use api::{LayoutVector2D, PipelineId, PropertyBinding, ScrollClamping, ScrollEventPhase};
-use api::{ScrollLocation, ScrollSensitivity, StickyOffsetBounds, WorldPoint};
+use api::{ScrollLocation, ScrollNodeIdType, ScrollSensitivity, StickyOffsetBounds, WorldPoint};
 use clip::{ClipSourcesHandle, ClipStore};
 use clip_scroll_tree::{CoordinateSystemId, TransformUpdateState};
 use euclid::SideOffsets2D;
@@ -768,10 +768,10 @@ impl ClipScrollNode {
         }
     }
 
-    pub fn matches_id(&self, node_id: ClipId, id_to_match: IdType) -> bool {
+    pub fn matches_id(&self, node_id: ClipId, id_to_match: ScrollNodeIdType) -> bool {
         let external_id = match id_to_match {
-            IdType::ExternalScrollId(id) => id,
-            IdType::ClipId(clip_id) => return node_id == clip_id,
+            ScrollNodeIdType::ExternalScrollId(id) => id,
+            ScrollNodeIdType::ClipId(clip_id) => return node_id == clip_id,
         };
 
         match self.node_type {

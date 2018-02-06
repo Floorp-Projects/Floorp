@@ -84,6 +84,10 @@ GENERATED_FILES += [
     'IA2Typelib.tlb',
 ]
 
+SOURCES += [
+    '!%s' % p for p in GENERATED_FILES if p.endswith('.c')
+]
+
 RCINCLUDE = 'IA2Marshal.rc'
 
 # The Windows MIDL code generator creates things like:

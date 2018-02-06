@@ -444,11 +444,11 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
          return NS_ERROR_FAILURE;
       }
       mAudioInput->SetUserChannelCount(prefs.mChannels);
-      if (!AllocChannel()) {
-        FreeChannel();
-        LOG(("Audio device is not initalized"));
-        return NS_ERROR_FAILURE;
+      {
+        MutexAutoLock lock(mMutex);
+        mState = kAllocated;
       }
+      sChannelsOpen++;
       LOG(("Audio device %d allocated", mCapIndex));
       {
         // Update with the actual applied channelCount in order
@@ -597,10 +597,14 @@ MediaEngineWebRTCMicrophoneSource::Deallocate(const RefPtr<const AllocationHandl
   AssertIsOnOwningThread();
 
   size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
-  MOZ_ASSERT(i != mAllocations.NoIndex);
-  MOZ_ASSERT(!mAllocations[i].mEnabled,
-             "Source should be stopped for the track before removing");
-  mAllocations[i].mStream->EndTrack(mAllocations[i].mTrackID);
+  MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex);
+  MOZ_DIAGNOSTIC_ASSERT(!mAllocations[i].mEnabled,
+                        "Source should be stopped for the track before removing");
+
+  if (mAllocations[i].mStream && IsTrackIDExplicit(mAllocations[i].mTrackID)) {
+    mAllocations[i].mStream->EndTrack(mAllocations[i].mTrackID);
+  }
+
   {
     MutexAutoLock lock(mMutex);
     mAllocations.RemoveElementAt(i);
@@ -610,7 +614,11 @@ MediaEngineWebRTCMicrophoneSource::Deallocate(const RefPtr<const AllocationHandl
     // If empty, no callbacks to deliver data should be occuring
     MOZ_ASSERT(mState != kReleased, "Source not allocated");
     MOZ_ASSERT(mState != kStarted, "Source not stopped");
-    FreeChannel();
+    MOZ_ASSERT(sChannelsOpen > 0);
+    --sChannelsOpen;
+
+    MutexAutoLock lock(mMutex);
+    mState = kReleased;
     LOG(("Audio device %d deallocated", mCapIndex));
   } else {
     LOG(("Audio device %d deallocated but still in use", mCapIndex));
@@ -637,23 +645,16 @@ MediaEngineWebRTCMicrophoneSource::SetTrack(const RefPtr<const AllocationHandle>
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  Allocation* allocation = nullptr;
-  for (Allocation& a : mAllocations) {
-    if (!a.mStream) {
-      // This assumes Allocate() is always followed by Start() before another
-      // Allocate(). But this is changing in one of the coming patches anyway.
-      allocation = &a;
-      break;
-    }
-  }
-  MOZ_ASSERT(allocation);
-  // size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
-  // MOZ_ASSERT(i != mAllocations.NoIndex);
+  size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
+  MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex);
+  MOZ_ASSERT(!mAllocations[i].mStream);
+  MOZ_ASSERT(mAllocations[i].mTrackID == TRACK_NONE);
+  MOZ_ASSERT(mAllocations[i].mPrincipal == PRINCIPAL_HANDLE_NONE);
   {
     MutexAutoLock lock(mMutex);
-    allocation->mStream = aStream;
-    allocation->mTrackID = aTrackID;
-    allocation->mPrincipal = aPrincipal;
+    mAllocations[i].mStream = aStream;
+    mAllocations[i].mTrackID = aTrackID;
+    mAllocations[i].mPrincipal = aPrincipal;
   }
 
   AudioSegment* segment = new AudioSegment();
@@ -681,7 +682,8 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>& a
   }
 
   size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
-  MOZ_ASSERT(i != mAllocations.NoIndex, "Can't start track that hasn't been added");
+  MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex,
+                        "Can't start track that hasn't been added");
   Allocation& allocation = mAllocations[i];
 
   MOZ_ASSERT(!allocation.mEnabled, "Source already started");
@@ -700,11 +702,7 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>& a
     // Must be *before* StartSend() so it will notice we selected external input (full_duplex)
     mAudioInput->StartRecording(allocation.mStream, mListener);
 
-    if (mState == kStarted) {
-      return NS_OK;
-    }
-    MOZ_ASSERT(mState == kAllocated || mState == kStopped);
-
+    MOZ_ASSERT(mState != kReleased);
     mState = kStarted;
   }
 
@@ -717,7 +715,8 @@ MediaEngineWebRTCMicrophoneSource::Stop(const RefPtr<const AllocationHandle>& aH
   AssertIsOnOwningThread();
 
   size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
-  MOZ_ASSERT(i != mAllocations.NoIndex, "Cannot stop track that we don't know about");
+  MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex,
+                        "Cannot stop track that we don't know about");
   Allocation& allocation = mAllocations[i];
 
   if (!allocation.mEnabled) {
@@ -1125,26 +1124,6 @@ MediaEngineWebRTCMicrophoneSource::DeviceChanged()
   ResetProcessingIfNeeded(noise_suppression);
 }
 
-// mState records if a channel is allocated (slightly redundantly to mChannel)
-void
-MediaEngineWebRTCMicrophoneSource::FreeChannel()
-{
-  if (mState != kReleased) {
-    mState = kReleased;
-
-    MOZ_ASSERT(sChannelsOpen > 0);
-    --sChannelsOpen;
-  }
-}
-
-bool
-MediaEngineWebRTCMicrophoneSource::AllocChannel()
-{
-  mState = kAllocated;
-  sChannelsOpen++;
-  return true;
-}
-
 void
 MediaEngineWebRTCMicrophoneSource::Shutdown()
 {
@@ -1168,7 +1147,6 @@ MediaEngineWebRTCMicrophoneSource::Shutdown()
 
   while (!mAllocations.IsEmpty()) {
     MOZ_ASSERT(mState == kAllocated || mState == kStopped);
-    // on last Deallocate(), FreeChannel()s and DeInit()s if all channels are released
     Deallocate(mAllocations[0].mHandle);
   }
   MOZ_ASSERT(mState == kReleased);
