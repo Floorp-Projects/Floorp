@@ -2686,6 +2686,7 @@ struct GlobalProperties {
     bool FileReader: 1;
     bool InspectorUtils : 1;
     bool MessageChannel: 1;
+    bool NodeFilter : 1;
     bool TextDecoder : 1;
     bool TextEncoder : 1;
     bool URL : 1;
