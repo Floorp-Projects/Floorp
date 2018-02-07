@@ -5505,7 +5505,8 @@ CodeGenerator::generateBody()
         TrackedOptimizations* last = nullptr;
 
 #if defined(JS_ION_PERF)
-        perfSpewer->startBasicBlock(current->mir(), masm);
+        if (!perfSpewer->startBasicBlock(current->mir(), masm))
+            return false;
 #endif
 
         for (LInstructionIterator iter = current->begin(); iter != current->end(); iter++) {
