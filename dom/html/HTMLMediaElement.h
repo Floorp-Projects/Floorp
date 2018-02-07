@@ -813,7 +813,6 @@ protected:
   class StreamListener;
   class StreamSizeListener;
   class ShutdownObserver;
-  class ForceReloadListener;
 
   MediaDecoderOwner::NextFrameStatus NextFrameStatus();
 
@@ -1403,7 +1402,6 @@ protected:
   RefPtr<VideoStreamTrack> mSelectedVideoStreamTrack;
 
   const RefPtr<ShutdownObserver> mShutdownObserver;
-  RefPtr<ForceReloadListener> mForceReloadListener;
 
   // Holds a reference to the MediaSource, if any, referenced by the src
   // attribute on the media element.
