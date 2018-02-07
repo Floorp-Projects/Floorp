@@ -50,6 +50,14 @@
       "enum": [true]
     },
 
+    "DisableFormHistory": {
+      "description": "Don't remember search and form history.",
+      "first_available": "60.0",
+
+      "type": "boolean",
+      "enum": [true]
+    },
+
     "dont_check_default_browser": {
       "description": "Don't check for the default browser on startup.",
       "first_available": "60.0",
