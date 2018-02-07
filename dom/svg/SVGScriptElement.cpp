@@ -33,7 +33,6 @@ nsSVGElement::StringInfo SVGScriptElement::sStringInfo[2] =
 
 NS_IMPL_ISUPPORTS_INHERITED(SVGScriptElement, SVGScriptElementBase,
                             nsIDOMNode, nsIDOMElement,
-                            nsIDOMSVGElement,
                             nsIScriptLoaderObserver,
                             nsIScriptElement, nsIMutationObserver)
 
