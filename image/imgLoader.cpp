@@ -1768,7 +1768,7 @@ imgLoader::ValidateRequestWithNewChannel(imgRequest* request,
       // In the mean time, we must defer notifications because we are added to
       // the imgRequest's proxy list, and we can get extra notifications
       // resulting from methods such as StartDecoding(). See bug 579122.
-      proxy->SetNotificationsDeferred(true);
+      proxy->MarkValidating();
 
       // Attach the proxy without notifying
       request->GetValidator()->AddProxy(proxy);
@@ -1834,7 +1834,7 @@ imgLoader::ValidateRequestWithNewChannel(imgRequest* request,
   // In the mean time, we must defer notifications because we are added to
   // the imgRequest's proxy list, and we can get extra notifications
   // resulting from methods such as StartDecoding(). See bug 579122.
-  req->SetNotificationsDeferred(true);
+  req->MarkValidating();
 
   // Add the proxy without notifying
   hvc->AddProxy(req);
@@ -2936,13 +2936,45 @@ imgCacheValidator::AddProxy(imgRequestProxy* aProxy)
   // the network.
   aProxy->AddToLoadGroup();
 
-  mProxies.AppendObject(aProxy);
+  mProxies.AppendElement(aProxy);
 }
 
 void
 imgCacheValidator::RemoveProxy(imgRequestProxy* aProxy)
 {
-  mProxies.RemoveObject(aProxy);
+  mProxies.RemoveElement(aProxy);
+}
+
+void
+imgCacheValidator::UpdateProxies()
+{
+  // We have finished validating the request, so we can safely take ownership
+  // of the proxy list. imgRequestProxy::SyncNotifyListener can mutate the list
+  // if imgRequestProxy::CancelAndForgetObserver is called by its owner. Note
+  // that any potential notifications should still be suppressed in
+  // imgRequestProxy::ChangeOwner because we haven't cleared the validating
+  // flag yet, and thus they will remain deferred.
+  AutoTArray<RefPtr<imgRequestProxy>, 4> proxies(Move(mProxies));
+
+  for (auto& proxy : proxies) {
+    // First update the state of all proxies before notifying any of them
+    // to ensure a consistent state (e.g. in case the notification causes
+    // other proxies to be touched indirectly.)
+    MOZ_ASSERT(proxy->IsValidating());
+    MOZ_ASSERT(proxy->NotificationsDeferred(),
+               "Proxies waiting on cache validation should be "
+               "deferring notifications!");
+    if (mNewRequest) {
+      proxy->ChangeOwner(mNewRequest);
+    }
+    proxy->ClearValidating();
+  }
+
+  for (auto& proxy : proxies) {
+    // Notify synchronously, because we're already in OnStartRequest, an
+    // asynchronously-called function.
+    proxy->SyncNotifyListener();
+  }
 }
 
 /** nsIRequestObserver methods **/
@@ -2982,25 +3014,11 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
     }
 
     if (isFromCache && sameURI) {
-      uint32_t count = mProxies.Count();
-      for (int32_t i = count-1; i>=0; i--) {
-        imgRequestProxy* proxy = static_cast<imgRequestProxy*>(mProxies[i]);
-
-        // Proxies waiting on cache validation should be deferring
-        // notifications. Undefer them.
-        MOZ_ASSERT(proxy->NotificationsDeferred(),
-                   "Proxies waiting on cache validation should be "
-                   "deferring notifications!");
-        proxy->SetNotificationsDeferred(false);
-
-        // Notify synchronously, because we're already in OnStartRequest, an
-        // asynchronously-called function.
-        proxy->SyncNotifyListener();
-      }
-
       // We don't need to load this any more.
       aRequest->Cancel(NS_BINDING_ABORTED);
 
+      // Clear the validator before updating the proxies. The notifications may
+      // clone an existing request, and its state could be inconsistent.
       mRequest->SetLoadId(context);
       mRequest->SetValidator(nullptr);
 
@@ -3009,6 +3027,7 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
       mNewRequest = nullptr;
       mNewEntry = nullptr;
 
+      UpdateProxies();
       return NS_OK;
     }
   }
@@ -3035,6 +3054,8 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
   // Doom the old request's cache entry
   mRequest->RemoveFromCache();
 
+  // Clear the validator before updating the proxies. The notifications may
+  // clone an existing request, and its state could be inconsistent.
   mRequest->SetValidator(nullptr);
   mRequest = nullptr;
 
@@ -3055,17 +3076,7 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
   // changes the caching behaviour for imgRequests.
   mImgLoader->PutIntoCache(mNewRequest->CacheKey(), mNewEntry);
 
-  uint32_t count = mProxies.Count();
-  for (int32_t i = count-1; i>=0; i--) {
-    imgRequestProxy* proxy = static_cast<imgRequestProxy*>(mProxies[i]);
-    proxy->ChangeOwner(mNewRequest);
-
-    // Notify synchronously, because we're already in OnStartRequest, an
-    // asynchronously-called function.
-    proxy->SetNotificationsDeferred(false);
-    proxy->SyncNotifyListener();
-  }
-
+  UpdateProxies();
   mNewRequest = nullptr;
   mNewEntry = nullptr;
 
