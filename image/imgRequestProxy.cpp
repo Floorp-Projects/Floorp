@@ -120,7 +120,7 @@ imgRequestProxy::imgRequestProxy() :
   mForceDispatchLoadGroup(false),
   mListenerIsStrongRef(false),
   mDecodeRequested(false),
-  mDeferNotifications(false),
+  mPendingNotify(false),
   mValidating(false),
   mHadListener(false),
   mHadDispatch(false)
