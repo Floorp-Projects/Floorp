@@ -30,6 +30,7 @@
     {0x8f, 0x65, 0x9c, 0x46, 0x2e, 0xe2, 0xbc, 0x95} \
 }
 
+class imgCacheValidator;
 class imgINotificationObserver;
 class imgStatusNotifyRunnable;
 class ProxyBehaviour;
@@ -111,15 +112,21 @@ public:
   virtual void SetHasImage() override;
 
   // Whether we want notifications from ProgressTracker to be deferred until
-  // an event it has scheduled has been fired.
+  // an event it has scheduled has been fired and/or validation is complete.
   virtual bool NotificationsDeferred() const override
   {
-    return mDeferNotifications;
+    return IsValidating() || mDeferNotifications;
   }
   virtual void SetNotificationsDeferred(bool aDeferNotifications) override
   {
     mDeferNotifications = aDeferNotifications;
   }
+  bool IsValidating() const
+  {
+    return mValidating;
+  }
+  void MarkValidating();
+  void ClearValidating();
 
   bool IsOnEventTarget() const;
   already_AddRefed<nsIEventTarget> GetEventTarget() const override;
@@ -194,6 +201,7 @@ protected:
   already_AddRefed<Image> GetImage() const;
   bool HasImage() const;
   imgRequest* GetOwner() const;
+  imgCacheValidator* GetValidator() const;
 
   nsresult PerformClone(imgINotificationObserver* aObserver,
                         nsIDocument* aLoadingDocument,
@@ -212,6 +220,7 @@ private:
   friend class imgCacheValidator;
 
   void AddToOwner(nsIDocument* aLoadingDocument);
+  void RemoveFromOwner(nsresult aStatus);
 
   nsresult DispatchWithTargetIfAvailable(already_AddRefed<nsIRunnable> aEvent);
   void DispatchWithTarget(already_AddRefed<nsIRunnable> aEvent);
@@ -242,6 +251,7 @@ private:
   // Whether we want to defer our notifications by the non-virtual Observer
   // interfaces as image loads proceed.
   bool mDeferNotifications : 1;
+  bool mValidating : 1;
   bool mHadListener : 1;
   bool mHadDispatch : 1;
 };

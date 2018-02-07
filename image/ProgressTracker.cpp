@@ -171,6 +171,11 @@ ProgressTracker::Notify(IProgressObserver* aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (aObserver->NotificationsDeferred()) {
+    // There is a pending notification, or the observer isn't ready yet.
+    return;
+  }
+
   if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
     RefPtr<Image> image = GetImage();
     if (image && image->GetURI()) {
@@ -240,6 +245,11 @@ void
 ProgressTracker::NotifyCurrentState(IProgressObserver* aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (aObserver->NotificationsDeferred()) {
+    // There is a pending notification, or the observer isn't ready yet.
+    return;
+  }
 
   if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
     RefPtr<Image> image = GetImage();
