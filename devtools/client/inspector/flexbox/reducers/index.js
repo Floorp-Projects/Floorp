@@ -4,4 +4,4 @@
 
 "use strict";
 
-exports.flexbox = require("./flexbox");
+exports.flexboxes = require("./flexboxes");
