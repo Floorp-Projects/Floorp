@@ -719,10 +719,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 
     void enterAtomic64Region(Register addr, Register spinlock, Register tmp);
     void exitAtomic64Region(Register spinlock);
-    void wasmLoadI64Impl(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
-                         Register ptrScratch, Register64 output, Register tmp);
-    void wasmStoreI64Impl(const wasm::MemoryAccessDesc& access, Register64 value, Register memoryBase,
-                          Register ptr, Register ptrScratch, Register tmp);
 
   public:
     CodeOffset labelForPatch() {
