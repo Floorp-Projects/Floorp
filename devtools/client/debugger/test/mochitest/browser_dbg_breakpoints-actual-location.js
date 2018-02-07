@@ -33,7 +33,7 @@ function test() {
          "There are no breakpoints in the editor");
 
       const response = yield actions.addBreakpoint({
-        actor: gSources.selectedValue, line: 4
+        actor: gSources.selectedValue, line: 5
       });
 
       ok(response.actualLocation, "has an actualLocation");
@@ -42,7 +42,7 @@ function test() {
       is(queries.getBreakpoints(gController.getState()).length, 1,
          "There is only one breakpoint in the editor");
 
-      ok(!queries.getBreakpoint(gController.getState(), { actor: gSources.selectedValue, line: 4 }),
+      ok(!queries.getBreakpoint(gController.getState(), { actor: gSources.selectedValue, line: 5 }),
          "There isn't any breakpoint added on an invalid line.");
       ok(queries.getBreakpoint(gController.getState(), { actor: gSources.selectedValue, line: 6 }),
          "There isn't any breakpoint added on an invalid line.");

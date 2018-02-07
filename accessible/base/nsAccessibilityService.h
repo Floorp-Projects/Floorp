@@ -61,7 +61,7 @@ struct MarkupAttrInfo {
   nsStaticAtom** DOMAttrValue;
 };
 
-struct MarkupMapInfo {
+struct HTMLMarkupMapInfo {
   nsStaticAtom** tag;
   New_Accessible* new_func;
   a11y::role role;
@@ -243,8 +243,8 @@ public:
 
   mozilla::a11y::role MarkupRole(const nsIContent* aContent) const
   {
-    const mozilla::a11y::MarkupMapInfo* markupMap =
-      mMarkupMaps.Get(aContent->NodeInfo()->NameAtom());
+    const mozilla::a11y::HTMLMarkupMapInfo* markupMap =
+      mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
     return markupMap ? markupMap->role : mozilla::a11y::roles::NOTHING;
   }
 
@@ -348,9 +348,9 @@ private:
    */
   static uint32_t gConsumers;
 
-  nsDataHashtable<nsPtrHashKey<const nsAtom>, const mozilla::a11y::MarkupMapInfo*> mMarkupMaps;
+  nsDataHashtable<nsPtrHashKey<const nsAtom>, const mozilla::a11y::HTMLMarkupMapInfo*> mHTMLMarkupMap;
 #ifdef MOZ_XUL
-  nsDataHashtable<nsPtrHashKey<const nsAtom>, const mozilla::a11y::XULMarkupMapInfo*> mXULMarkupMaps;
+  nsDataHashtable<nsPtrHashKey<const nsAtom>, const mozilla::a11y::XULMarkupMapInfo*> mXULMarkupMap;
 #endif
 
   friend nsAccessibilityService* GetAccService();
