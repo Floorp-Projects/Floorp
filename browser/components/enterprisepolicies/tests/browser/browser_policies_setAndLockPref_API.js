@@ -3,10 +3,6 @@
 
 "use strict";
 
-add_task(async function test_clean_slate() {
-  await startWithCleanSlate();
-});
-
 let { Policies, setAndLockPref } = ChromeUtils.import("resource:///modules/policies/Policies.jsm", {});
 
 function checkPref(prefName, expectedValue) {
