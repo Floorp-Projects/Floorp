@@ -1039,6 +1039,7 @@ AudioCallbackDriver::StateCallback(cubeb_state aState)
   LOG(LogLevel::Debug, ("AudioCallbackDriver State: %d", aState));
 
   if (aState == CUBEB_STATE_ERROR && mShouldFallbackIfError) {
+    mShouldFallbackIfError = false;
     MonitorAutoLock lock(GraphImpl()->GetMonitor());
     RemoveCallback();
     FallbackToSystemClockDriver();
