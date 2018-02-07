@@ -323,6 +323,10 @@ class RtpRtcp : public Module {
       uint32_t ssrc,
       struct RtpPacketLossStats* loss_stats) const = 0;
 
+  // Returns packet count and octet count from RTCP sender report.
+  virtual void RemoteRTCPSenderInfo(uint32_t* packet_count,
+                                    uint32_t* octet_count) const = 0;
+
   // Returns received RTCP report block.
   // Returns -1 on failure else 0.
   virtual int32_t RemoteRTCPStat(

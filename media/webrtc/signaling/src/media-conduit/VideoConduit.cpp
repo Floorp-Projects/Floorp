@@ -1292,16 +1292,15 @@ WebrtcVideoConduit::GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
   ASSERT_ON_THREAD(mStsThread);
 
   CSFLogVerbose(LOGTAG, "%s for VideoConduit:%p", __FUNCTION__, this);
-  webrtc::RTCPSenderInfo senderInfo;
-  {
-    MutexAutoLock lock(mMutex);
-    if (!mRecvStream || !mRecvStream->GetRemoteRTCPSenderInfo(&senderInfo)) {
-      return false;
-    }
+
+  if (!mRecvStream) {
+    return false;
   }
+
+  webrtc::VideoReceiveStream::Stats stats = mRecvStream->GetStats();
   *timestamp = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
-  *packetsSent = senderInfo.sendPacketCount;
-  *bytesSent = senderInfo.sendOctetCount;
+  *packetsSent = stats.rtcp_sender_packets_sent;
+  *bytesSent = stats.rtcp_sender_octets_sent;
   return true;
 }
 
