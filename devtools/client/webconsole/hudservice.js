@@ -9,9 +9,6 @@ const {extend} = require("devtools/shared/extend");
 var {TargetFactory} = require("devtools/client/framework/target");
 var {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
 var {Tools} = require("devtools/client/definitions");
-const { Task } = require("devtools/shared/task");
-var promise = require("promise");
-const defer = require("devtools/shared/defer");
 var Services = require("Services");
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(this, "WebConsoleFrame", "devtools/client/webconsole/webconsole", true);
@@ -39,7 +36,7 @@ function HUD_SERVICE() {
 HUD_SERVICE.prototype =
 {
   _browserConsoleID: null,
-  _browserConsoleDefer: null,
+  _browserConsoleInitializing: null,
 
   /**
    * Keeps a reference for each Web Console / Browser Console that is created.
@@ -163,19 +160,17 @@ HUD_SERVICE.prototype =
   /**
    * Toggle the Browser Console.
    */
-  toggleBrowserConsole() {
+  async toggleBrowserConsole() {
     if (this._browserConsoleID) {
       let hud = this.getHudReferenceById(this._browserConsoleID);
       return hud.destroy();
     }
 
-    if (this._browserConsoleDefer) {
-      return this._browserConsoleDefer.promise;
+    if (this._browserConsoleInitializing) {
+      return this._browserConsoleInitializing;
     }
 
-    this._browserConsoleDefer = defer();
-
-    function connect() {
+    async function connect() {
       // Ensure that the root actor and the tab actors have been registered on the
       // DebuggerServer, so that the Browser Console can retrieve the console actors.
       // (See Bug 1416105 for rationale).
@@ -185,46 +180,47 @@ HUD_SERVICE.prototype =
       DebuggerServer.allowChromeProcess = true;
 
       let client = new DebuggerClient(DebuggerServer.connectPipe());
-      return client.connect()
-        .then(() => client.getProcess())
-        .then(response => {
-          // Use a TabActor in order to ensure calling `attach` to the ChromeActor
-          return { form: response.form, client, chrome: true, isTabActor: true };
-        });
+      await client.connect();
+      let response = await client.getProcess();
+      return { form: response.form, client, chrome: true, isTabActor: true };
     }
 
-    let target;
-    function getTarget(connection) {
-      return TargetFactory.forRemoteTab(connection);
-    }
-    function openWindow(t) {
-      target = t;
-      return new Promise(resolve => {
-        let browserConsoleURL = Tools.webConsole.browserConsoleURL;
-        let win = Services.ww.openWindow(null, browserConsoleURL, "_blank",
-                                         BC_WINDOW_FEATURES, null);
-        win.addEventListener("DOMContentLoaded", () => {
-          win.document.title = l10n.getStr("browserConsole.title");
-          if (browserConsoleURL === Tools.webConsole.oldWebConsoleURL) {
-            resolve({iframeWindow: win, chromeWindow: win});
-          } else {
-            win.document.querySelector("iframe").addEventListener("DOMContentLoaded",
-              e => resolve({iframeWindow: e.target.defaultView, chromeWindow: win}),
-              { once: true }
-            );
-          }
-        }, {once: true});
+    async function openWindow(t) {
+      let browserConsoleURL = Tools.webConsole.browserConsoleURL;
+      let win = Services.ww.openWindow(null, browserConsoleURL, "_blank",
+                                       BC_WINDOW_FEATURES, null);
+      await new Promise(resolve => {
+        win.addEventListener("DOMContentLoaded", resolve, {once: true});
       });
-    }
-    connect().then(getTarget).then(openWindow).then(({iframeWindow, chromeWindow}) => {
-      return this.openBrowserConsole(target, iframeWindow, chromeWindow)
-        .then(browserConsole => {
-          this._browserConsoleDefer.resolve(browserConsole);
-          this._browserConsoleDefer = null;
-        });
-    }, console.error.bind(console));
 
-    return this._browserConsoleDefer.promise;
+      win.document.title = l10n.getStr("browserConsole.title");
+
+      if (browserConsoleURL === Tools.webConsole.oldWebConsoleURL) {
+        return {iframeWindow: win, chromeWindow: win};
+      }
+
+      let iframe = win.document.querySelector("iframe");
+      await new Promise(resolve => {
+        iframe.addEventListener("DOMContentLoaded", resolve, {once: true});
+      });
+
+      return {iframeWindow: iframe.contentWindow, chromeWindow: win};
+    }
+
+    // Temporarily cache the async startup sequence so that if toggleBrowserConsole
+    // gets called again we can return this console instead of opening another one.
+    this._browserConsoleInitializing = (async () => {
+      let connection = await connect();
+      let target = await TargetFactory.forRemoteTab(connection);
+      let {iframeWindow, chromeWindow} = await openWindow(target);
+      let browserConsole =
+        await this.openBrowserConsole(target, iframeWindow, chromeWindow);
+      return browserConsole;
+    })();
+
+    let browserConsole = await this._browserConsoleInitializing;
+    this._browserConsoleInitializing = null;
+    return browserConsole;
   },
 
   /**
@@ -234,7 +230,7 @@ HUD_SERVICE.prototype =
     let hud = this.getBrowserConsole();
     if (hud) {
       hud.iframeWindow.focus();
-      return promise.resolve(hud);
+      return Promise.resolve(hud);
     }
 
     return this.toggleBrowserConsole();
@@ -539,28 +535,30 @@ WebConsole.prototype = {
    * @return object
    *         A promise object that is resolved once the Web Console is closed.
    */
-  destroy() {
+  async destroy() {
     if (this._destroyer) {
-      return this._destroyer.promise;
+      return this._destroyer;
     }
 
-    HUDService.consoles.delete(this.hudId);
+    this._destroyer = (async () => {
+      HUDService.consoles.delete(this.hudId);
 
-    this._destroyer = defer();
-
-    // The document may already be removed
-    if (this.chromeUtilsWindow && this.mainPopupSet) {
-      let popupset = this.mainPopupSet;
-      let panels = popupset.querySelectorAll("panel[hudId=" + this.hudId + "]");
-      for (let panel of panels) {
-        panel.hidePopup();
+      // The document may already be removed
+      if (this.chromeUtilsWindow && this.mainPopupSet) {
+        let popupset = this.mainPopupSet;
+        let panels = popupset.querySelectorAll("panel[hudId=" + this.hudId + "]");
+        for (let panel of panels) {
+          panel.hidePopup();
+        }
       }
-    }
 
-    let onDestroy = Task.async(function* () {
+      if (this.ui) {
+        await this.ui.destroy();
+      }
+
       if (!this._browserConsole) {
         try {
-          yield this.target.activeTab.focus();
+          await this.target.activeTab.focus();
         } catch (ex) {
           // Tab focus can fail if the tab or target is closed.
         }
@@ -568,16 +566,9 @@ WebConsole.prototype = {
 
       let id = WebConsoleUtils.supportsString(this.hudId);
       Services.obs.notifyObservers(id, "web-console-destroyed");
-      this._destroyer.resolve(null);
-    }.bind(this));
+    })();
 
-    if (this.ui) {
-      this.ui.destroy().then(onDestroy);
-    } else {
-      onDestroy();
-    }
-
-    return this._destroyer.promise;
+    return this._destroyer;
   },
 };
 
@@ -659,22 +650,18 @@ BrowserConsole.prototype = extend(WebConsole.prototype, {
    */
   destroy() {
     if (this._bcDestroyer) {
-      return this._bcDestroyer.promise;
+      return this._bcDestroyer;
     }
 
-    this._telemetry.toolClosed("browserconsole");
+    this._bcDestroyer = (async () => {
+      this._telemetry.toolClosed("browserconsole");
+      await this.$destroy();
+      await this.target.client.close();
+      HUDService._browserConsoleID = null;
+      this.chromeWindow.close();
+    })();
 
-    this._bcDestroyer = defer();
-
-    let chromeWindow = this.chromeWindow;
-    this.$destroy().then(() =>
-      this.target.client.close().then(() => {
-        HUDService._browserConsoleID = null;
-        chromeWindow.close();
-        this._bcDestroyer.resolve(null);
-      }));
-
-    return this._bcDestroyer.promise;
+    return this._bcDestroyer;
   },
 });
 
