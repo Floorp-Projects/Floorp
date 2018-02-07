@@ -120,7 +120,8 @@ imgRequestProxy::imgRequestProxy() :
   mForceDispatchLoadGroup(false),
   mListenerIsStrongRef(false),
   mDecodeRequested(false),
-  mDeferNotifications(false),
+  mPendingNotify(false),
+  mValidating(false),
   mHadListener(false),
   mHadDispatch(false)
 {
@@ -163,15 +164,13 @@ imgRequestProxy::~imgRequestProxy()
   // above assert.
   NullOutListener();
 
-  if (GetOwner()) {
-    /* Call RemoveProxy with a successful status.  This will keep the
-       channel, if still downloading data, from being canceled if 'this' is
-       the last observer.  This allows the image to continue to download and
-       be cached even if no one is using it currently.
-    */
-    mCanceled = true;
-    GetOwner()->RemoveProxy(this, NS_OK);
-  }
+  /* Call RemoveProxy with a successful status.  This will keep the
+     channel, if still downloading data, from being canceled if 'this' is
+     the last observer.  This allows the image to continue to download and
+     be cached even if no one is using it currently.
+  */
+  mCanceled = true;
+  RemoveFromOwner(NS_OK);
 
   RemoveFromLoadGroup();
   LOG_FUNC(gImgLog, "imgRequestProxy::~imgRequestProxy");
@@ -237,6 +236,7 @@ imgRequestProxy::ChangeOwner(imgRequest* aNewOwner)
   GetOwner()->RemoveProxy(this, NS_OK);
 
   mBehaviour->SetOwner(aNewOwner);
+  MOZ_ASSERT(!GetValidator(), "New owner cannot be validating!");
 
   // If we were locked, apply the locks here
   for (uint32_t i = 0; i < oldLockCount; i++) {
@@ -251,14 +251,29 @@ imgRequestProxy::ChangeOwner(imgRequest* aNewOwner)
   }
 
   AddToOwner(nullptr);
+  return NS_OK;
+}
+
+void
+imgRequestProxy::MarkValidating()
+{
+  MOZ_ASSERT(GetValidator());
+  mValidating = true;
+}
+
+void
+imgRequestProxy::ClearValidating()
+{
+  MOZ_ASSERT(mValidating);
+  MOZ_ASSERT(!GetValidator());
+  mValidating = false;
 
   // If we'd previously requested a synchronous decode, request a decode on the
   // new image.
   if (mDecodeRequested) {
+    mDecodeRequested = false;
     StartDecoding(imgIContainer::FLAG_NONE);
   }
-
-  return NS_OK;
 }
 
 bool
@@ -351,11 +366,28 @@ imgRequestProxy::AddToOwner(nsIDocument* aLoadingDocument)
     mEventTarget = do_GetMainThread();
   }
 
-  if (!GetOwner()) {
+  imgRequest* owner = GetOwner();
+  if (!owner) {
     return;
   }
 
-  GetOwner()->AddProxy(this);
+  owner->AddProxy(this);
+}
+
+void
+imgRequestProxy::RemoveFromOwner(nsresult aStatus)
+{
+  imgRequest* owner = GetOwner();
+  if (owner) {
+    if (mValidating) {
+      imgCacheValidator* validator = owner->GetValidator();
+      MOZ_ASSERT(validator);
+      validator->RemoveProxy(this);
+      mValidating = false;
+    }
+
+    owner->RemoveProxy(this, aStatus);
+  }
 }
 
 void
@@ -494,10 +526,7 @@ imgRequestProxy::Cancel(nsresult status)
 void
 imgRequestProxy::DoCancel(nsresult status)
 {
-  if (GetOwner()) {
-    GetOwner()->RemoveProxy(this, status);
-  }
-
+  RemoveFromOwner(status);
   RemoveFromLoadGroup();
   NullOutListener();
 }
@@ -519,17 +548,7 @@ imgRequestProxy::CancelAndForgetObserver(nsresult aStatus)
 
   mCanceled = true;
   mForceDispatchLoadGroup = true;
-
-  imgRequest* owner = GetOwner();
-  if (owner) {
-    imgCacheValidator* validator = owner->GetValidator();
-    if (validator) {
-      validator->RemoveProxy(this);
-    }
-
-    owner->RemoveProxy(this, aStatus);
-  }
-
+  RemoveFromOwner(aStatus);
   RemoveFromLoadGroup();
   mForceDispatchLoadGroup = false;
 
@@ -541,8 +560,11 @@ imgRequestProxy::CancelAndForgetObserver(nsresult aStatus)
 NS_IMETHODIMP
 imgRequestProxy::StartDecoding(uint32_t aFlags)
 {
-  // Flag this, so we know to transfer the request if our owner changes
-  mDecodeRequested = true;
+  // Flag this, so we know to request after validation if pending.
+  if (IsValidating()) {
+    mDecodeRequested = true;
+    return NS_OK;
+  }
 
   RefPtr<Image> image = GetImage();
   if (image) {
@@ -559,8 +581,11 @@ imgRequestProxy::StartDecoding(uint32_t aFlags)
 bool
 imgRequestProxy::StartDecodingWithResult(uint32_t aFlags)
 {
-  // Flag this, so we know to transfer the request if our owner changes
-  mDecodeRequested = true;
+  // Flag this, so we know to request after validation if pending.
+  if (IsValidating()) {
+    mDecodeRequested = true;
+    return false;
+  }
 
   RefPtr<Image> image = GetImage();
   if (image) {
@@ -717,8 +742,16 @@ imgRequestProxy::GetImage(imgIContainer** aImage)
 NS_IMETHODIMP
 imgRequestProxy::GetImageStatus(uint32_t* aStatus)
 {
-  RefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-  *aStatus = progressTracker->GetImageStatus();
+  if (IsValidating()) {
+    // We are currently validating the image, and so our status could revert if
+    // we discard the cache. We should also be deferring notifications, such
+    // that the caller will be notified when validation completes. Rather than
+    // risk misleading the caller, return nothing.
+    *aStatus = imgIRequest::STATUS_NONE;
+  } else {
+    RefPtr<ProgressTracker> progressTracker = GetProgressTracker();
+    *aStatus = progressTracker->GetImageStatus();
+  }
 
   return NS_OK;
 }
@@ -859,15 +892,16 @@ imgRequestProxy::PerformClone(imgINotificationObserver* aObserver,
   // surprised.
   NS_ADDREF(*aClone = clone);
 
-  if (GetOwner() && GetOwner()->GetValidator()) {
+  imgCacheValidator* validator = GetValidator();
+  if (validator) {
     // Note that if we have a validator, we don't want to issue notifications at
     // here because we want to defer until that completes. AddProxy will add us
     // to the load group; we cannot avoid that in this case, because we don't
     // know when the validation will complete, and if it will cause us to
     // discard our cached state anyways. We are probably already blocked by the
     // original LoadImage(WithChannel) request in any event.
-    clone->SetNotificationsDeferred(true);
-    GetOwner()->GetValidator()->AddProxy(clone);
+    clone->MarkValidating();
+    validator->AddProxy(clone);
   } else {
     // We only want to add the request to the load group of the owning document
     // if it is still in progress. Some callers cannot handle a supurious load
@@ -1268,6 +1302,16 @@ imgRequest*
 imgRequestProxy::GetOwner() const
 {
   return mBehaviour->GetOwner();
+}
+
+imgCacheValidator*
+imgRequestProxy::GetValidator() const
+{
+  imgRequest* owner = GetOwner();
+  if (!owner) {
+    return nullptr;
+  }
+  return owner->GetValidator();
 }
 
 ////////////////// imgRequestProxyStatic methods

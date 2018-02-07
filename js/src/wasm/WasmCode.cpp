@@ -139,6 +139,14 @@ StaticallyUnlink(uint8_t* base, const LinkDataTier& linkData)
     }
 }
 
+#ifdef JS_ION_PERF
+static bool
+AppendToString(const char* str, UTF8Bytes* bytes)
+{
+    return bytes->append(str, strlen(str)) && bytes->append('\0');
+}
+#endif
+
 static void
 SendCodeRangesToProfiler(const CodeSegment& cs, const Bytes& bytecode, const Metadata& metadata)
 {
@@ -153,17 +161,14 @@ SendCodeRangesToProfiler(const CodeSegment& cs, const Bytes& bytecode, const Met
         return;
 
     for (const CodeRange& codeRange : metadata.metadata(cs.tier()).codeRanges) {
-        if (!codeRange.isFunction())
+        if (!codeRange.hasFuncIndex())
             continue;
 
         uintptr_t start = uintptr_t(cs.base() + codeRange.begin());
-        uintptr_t end = uintptr_t(cs.base() + codeRange.end());
-        uintptr_t size = end - start;
+        uintptr_t size = codeRange.end() - codeRange.begin();
 
         UTF8Bytes name;
         if (!metadata.getFuncName(&bytecode, codeRange.funcIndex(), &name))
-            return;
-        if (!name.append('\0'))
             return;
 
         // Avoid "unused" warnings
@@ -173,14 +178,36 @@ SendCodeRangesToProfiler(const CodeSegment& cs, const Bytes& bytecode, const Met
 #ifdef JS_ION_PERF
         if (PerfFuncEnabled()) {
             const char* file = metadata.filename.get();
-            unsigned line = codeRange.funcLineOrBytecode();
-            unsigned column = 0;
-            writePerfSpewerWasmFunctionMap(start, size, file, line, column, name.begin());
+            if (codeRange.isFunction()) {
+                if (!name.append('\0'))
+                    return;
+                unsigned line = codeRange.funcLineOrBytecode();
+                writePerfSpewerWasmFunctionMap(start, size, file, line, name.begin());
+            } else if (codeRange.isInterpEntry()) {
+                if (!AppendToString(" slow entry", &name))
+                    return;
+                writePerfSpewerWasmMap(start, size, file, name.begin());
+            } else if (codeRange.isImportInterpExit()) {
+                if (!AppendToString(" slow exit", &name))
+                    return;
+                writePerfSpewerWasmMap(start, size, file, name.begin());
+            } else if (codeRange.isImportJitExit()) {
+                if (!AppendToString(" fast exit", &name))
+                    return;
+                writePerfSpewerWasmMap(start, size, file, name.begin());
+            } else {
+                MOZ_CRASH("unhandled perf hasFuncIndex type");
+            }
         }
 #endif
 #ifdef MOZ_VTUNE
-        if (vtune::IsProfilingActive())
-            vtune::MarkWasm(vtune::GenerateUniqueMethodID(), name.begin(), (void*)start, size);
+        if (!vtune::IsProfilingActive())
+            continue;
+        if (!codeRange.isFunction())
+            continue;
+        if (!name.append('\0'))
+            return;
+        vtune::MarkWasm(vtune::GenerateUniqueMethodID(), name.begin(), (void*)start, size);
 #endif
     }
 }
