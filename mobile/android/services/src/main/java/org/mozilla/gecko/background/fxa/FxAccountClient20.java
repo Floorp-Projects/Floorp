@@ -24,6 +24,7 @@ import org.mozilla.gecko.sync.net.HawkAuthHeaderProvider;
 import org.mozilla.gecko.sync.net.Resource;
 import org.mozilla.gecko.sync.net.SyncResponse;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
+import org.mozilla.gecko.util.StringUtils;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -647,7 +648,7 @@ public class FxAccountClient20 implements FxAccountClient {
         if (getKeys) {
           keyFetchToken = Utils.hex2Byte(body.getString(JSON_KEY_KEYFETCHTOKEN));
         }
-        LoginResponse loginResponse = new LoginResponse(new String(emailUTF8, "UTF-8"), uid, verified, sessionToken, keyFetchToken);
+        LoginResponse loginResponse = new LoginResponse(new String(emailUTF8, StringUtils.UTF_8), uid, verified, sessionToken, keyFetchToken);
 
         delegate.handleSuccess(loginResponse);
       }
@@ -697,7 +698,7 @@ public class FxAccountClient20 implements FxAccountClient {
         if (getKeys) {
           keyFetchToken = Utils.hex2Byte(body.getString(JSON_KEY_KEYFETCHTOKEN));
         }
-        LoginResponse loginResponse = new LoginResponse(new String(emailUTF8, "UTF-8"), uid, verified, sessionToken, keyFetchToken);
+        LoginResponse loginResponse = new LoginResponse(new String(emailUTF8, StringUtils.UTF_8), uid, verified, sessionToken, keyFetchToken);
 
         delegate.handleSuccess(loginResponse);
       }
@@ -736,7 +737,7 @@ public class FxAccountClient20 implements FxAccountClient {
                     final RequestDelegate<LoginResponse> delegate) {
     byte[] quickStretchedPW;
     try {
-      FxAccountUtils.pii(LOG_TAG, "Trying user provided email: '" + new String(emailUTF8, "UTF-8") + "'" );
+      FxAccountUtils.pii(LOG_TAG, "Trying user provided email: '" + new String(emailUTF8, StringUtils.UTF_8) + "'" );
       quickStretchedPW = stretcher.getQuickStretchedPW(emailUTF8);
     } catch (Exception e) {
       delegate.handleError(e);
@@ -768,7 +769,7 @@ public class FxAccountClient20 implements FxAccountClient {
         try {
           // Nota bene: this is not recursive, since we call the fixed password
           // signature here, which invokes a non-retrying version.
-          byte[] alternateEmailUTF8 = alternateEmail.getBytes("UTF-8");
+          byte[] alternateEmailUTF8 = alternateEmail.getBytes(StringUtils.UTF_8);
           byte[] alternateQuickStretchedPW = stretcher.getQuickStretchedPW(alternateEmailUTF8);
           login(alternateEmailUTF8, alternateQuickStretchedPW, getKeys, queryParameters, delegate);
         } catch (Exception innerException) {

@@ -20,6 +20,7 @@ import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.HKDF;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.crypto.PBKDF2;
+import org.mozilla.gecko.util.StringUtils;
 
 import android.content.Context;
 
@@ -49,21 +50,21 @@ public class FxAccountUtils {
     }
   }
 
-  public static String bytes(String string) throws UnsupportedEncodingException {
-    return Utils.byte2Hex(string.getBytes("UTF-8"));
+  public static String bytes(String string) {
+    return Utils.byte2Hex(string.getBytes(StringUtils.UTF_8));
   }
 
-  public static byte[] KW(String name) throws UnsupportedEncodingException {
+  public static byte[] KW(String name) {
     return Utils.concatAll(
-        KW_VERSION_STRING.getBytes("UTF-8"),
-        name.getBytes("UTF-8"));
+        KW_VERSION_STRING.getBytes(StringUtils.UTF_8),
+        name.getBytes(StringUtils.UTF_8));
   }
 
-  public static byte[] KWE(String name, byte[] emailUTF8) throws UnsupportedEncodingException {
+  public static byte[] KWE(String name, byte[] emailUTF8) {
     return Utils.concatAll(
-        KW_VERSION_STRING.getBytes("UTF-8"),
-        name.getBytes("UTF-8"),
-        ":".getBytes("UTF-8"),
+        KW_VERSION_STRING.getBytes(StringUtils.UTF_8),
+        name.getBytes(StringUtils.UTF_8),
+        ":".getBytes(StringUtils.UTF_8),
         emailUTF8);
   }
 
@@ -71,8 +72,8 @@ public class FxAccountUtils {
    * Calculate the SRP verifier <tt>x</tt> value.
    */
   public static BigInteger srpVerifierLowercaseX(byte[] emailUTF8, byte[] srpPWBytes, byte[] srpSaltBytes)
-      throws NoSuchAlgorithmException, UnsupportedEncodingException {
-    byte[] inner = Utils.sha256(Utils.concatAll(emailUTF8, ":".getBytes("UTF-8"), srpPWBytes));
+      throws NoSuchAlgorithmException {
+    byte[] inner = Utils.sha256(Utils.concatAll(emailUTF8, ":".getBytes(StringUtils.UTF_8), srpPWBytes));
     byte[] outer = Utils.sha256(Utils.concatAll(srpSaltBytes, inner));
     return new BigInteger(1, outer);
   }

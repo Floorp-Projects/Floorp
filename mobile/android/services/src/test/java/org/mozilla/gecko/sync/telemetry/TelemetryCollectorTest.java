@@ -18,6 +18,7 @@ import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.repositories.FetchFailedException;
 import org.mozilla.gecko.sync.repositories.StoreFailedException;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
+import org.mozilla.gecko.util.StringUtils;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.ArrayList;
@@ -51,7 +52,7 @@ public class TelemetryCollectorTest {
         assertEquals(uid, bundle.get("uid"));
         // Expect device ID to be hashed with the UID.
         assertEquals(
-                Utils.byte2Hex(Utils.sha256(deviceID.concat(uid).getBytes("UTF-8"))),
+                Utils.byte2Hex(Utils.sha256(deviceID.concat(uid).getBytes(StringUtils.UTF_8))),
                 bundle.get("deviceID")
         );
     }
@@ -79,7 +80,7 @@ public class TelemetryCollectorTest {
         ArrayList<Bundle> devices = data.getParcelableArrayList("devices");
         assertEquals(1, devices.size());
         assertEquals(
-                Utils.byte2Hex(Utils.sha256("client1-guid".concat("hashed-uid").getBytes("UTF-8"))),
+                Utils.byte2Hex(Utils.sha256("client1-guid".concat("hashed-uid").getBytes(StringUtils.UTF_8))),
                 devices.get(0).getString("id")
         );
         assertEquals("iOS", devices.get(0).getString("os"));
@@ -98,14 +99,14 @@ public class TelemetryCollectorTest {
         assertEquals("iOS", devices.get(0).getString("os"));
         assertEquals("1.33.7", devices.get(0).getString("version"));
         assertEquals(
-                Utils.byte2Hex(Utils.sha256("client1-guid".concat("hashed-uid").getBytes("UTF-8"))),
+                Utils.byte2Hex(Utils.sha256("client1-guid".concat("hashed-uid").getBytes(StringUtils.UTF_8))),
                 devices.get(0).getString("id")
         );
 
         assertEquals("Android", devices.get(1).getString("os"));
         assertEquals("55.0a1", devices.get(1).getString("version"));
         assertEquals(
-                Utils.byte2Hex(Utils.sha256("client2-guid".concat("hashed-uid").getBytes("UTF-8"))),
+                Utils.byte2Hex(Utils.sha256("client2-guid".concat("hashed-uid").getBytes(StringUtils.UTF_8))),
                 devices.get(1).getString("id")
         );
     }
