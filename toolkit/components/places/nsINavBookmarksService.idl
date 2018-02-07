@@ -562,19 +562,6 @@ interface nsINavBookmarksService : nsISupports
                            [optional] in unsigned short aSource);
 
   /**
-   * Get the last modified time for an item.
-   *
-   * @param aItemId
-   *        the id of the item whose last modified time should be retrieved.
-   *
-   * @return the date added value in microseconds.
-   *
-   * @note When an item is added lastModified is set to the same value as
-   *       dateAdded.
-   */
-  PRTime getItemLastModified(in long long aItemId);
-
-  /**
    * Get the URI for a bookmark item.
    */
   nsIURI getBookmarkURI(in long long aItemId);
