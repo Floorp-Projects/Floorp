@@ -555,6 +555,7 @@ class TreeMetadataEmitter(LoggingMixin):
                         'rpath': False,
                         'debug-assertions': False,
                         'panic': 'abort',
+                        'codegen-units': 1,
                     }
 
                 if profile != expected_profile:
