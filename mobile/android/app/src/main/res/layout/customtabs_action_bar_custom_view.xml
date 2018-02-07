@@ -52,7 +52,7 @@
             android:singleLine="true"
             android:textColor="?android:textColorPrimary"
             android:textSize="10sp"
-            android:ellipsize="middle"
+            android:ellipsize="start"
             android:scrollHorizontally="true"
             tools:text="https://mozilla.org"/>
 
