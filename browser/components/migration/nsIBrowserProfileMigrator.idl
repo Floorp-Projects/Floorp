@@ -65,12 +65,6 @@ interface nsIBrowserProfileMigrator : nsISupports
    */
   jsval getSourceProfiles();
 
-  /**
-   * The import source homepage.  Returns null if not present/available
-   * @return a promise that resolves with a string or null.
-   */
-  jsval getSourceHomePageURL();
-
 
   /**
    * Whether the source browser data is locked/in-use meaning migration likely

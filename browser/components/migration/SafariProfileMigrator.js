@@ -380,15 +380,6 @@ Object.defineProperty(SafariProfileMigrator.prototype, "mainPreferencesPropertyL
   },
 });
 
-SafariProfileMigrator.prototype.getSourceHomePageURL = async function SM_getSourceHomePageURL() {
-  if (this.mainPreferencesPropertyList) {
-    let dict = await new Promise(resolve => this.mainPreferencesPropertyList.read(resolve));
-    if (dict.has("HomePage"))
-      return dict.get("HomePage");
-  }
-  return "";
-};
-
 SafariProfileMigrator.prototype.classDescription = "Safari Profile Migrator";
 SafariProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=safari";
 SafariProfileMigrator.prototype.classID = Components.ID("{4b609ecf-60b2-4655-9df4-dc149e474da1}");

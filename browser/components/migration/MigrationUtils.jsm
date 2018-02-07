@@ -81,9 +81,7 @@ function getMigrationBundle() {
  * 4. If the migrator supports multiple profiles, override the sourceProfiles
  *    Here we default for single-profile migrator.
  * 5. Implement getResources(aProfile) (see below).
- * 6. If the migrator supports reading the home page of the source browser,
- *    override |getSourceHomePageURL| getter.
- * 7. For startup-only migrators, override |startupOnlyMigrator|.
+ * 6. For startup-only migrators, override |startupOnlyMigrator|.
  */
 this.MigratorPrototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserProfileMigrator]),
@@ -181,14 +179,6 @@ this.MigratorPrototype = {
    */
   get startupOnlyMigrator() {
     return false;
-  },
-
-  /**
-   * OVERRIDE IF AND ONLY IF your migrator supports importing the homepage.
-   * @see nsIBrowserProfileMigrator
-   */
-  getSourceHomePageURL() {
-    return "";
   },
 
   /**
