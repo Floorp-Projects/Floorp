@@ -328,10 +328,16 @@ template <typename L>
 void
 MacroAssemblerMIPSShared::ma_addTestCarry(Register rd, Register rs, Register rt, L overflow)
 {
-    MOZ_ASSERT_IF(rd == rs, rt != rd);
-    as_addu(rd, rs, rt);
-    as_sltu(SecondScratchReg, rd, rd == rs? rt : rs);
-    ma_b(SecondScratchReg, SecondScratchReg, overflow, Assembler::NonZero);
+    if (rd != rs) {
+        as_addu(rd, rs, rt);
+        as_sltu(SecondScratchReg, rd, rs);
+        ma_b(SecondScratchReg, SecondScratchReg, overflow, Assembler::NonZero);
+    } else {
+        ma_move(SecondScratchReg, rs);
+        as_addu(rd, rs, rt);
+        as_sltu(SecondScratchReg, rd, SecondScratchReg);
+        ma_b(SecondScratchReg, SecondScratchReg, overflow, Assembler::NonZero);
+    }
 }
 
 template void
@@ -1537,51 +1543,20 @@ MacroAssembler::call(JitCode* c)
 CodeOffset
 MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc)
 {
-    CodeOffset offset(currentOffset());
-                // MIPS32   //MIPS64
-    as_nop();   // lui      // lui
-    as_nop();   // ori      // ori
-    as_nop();   // jalr     // drotr32
-    as_nop();               // ori
-#ifdef JS_CODEGEN_MIPS64
-    as_nop();               //jalr
-    as_nop();
-#endif
-    append(desc, CodeOffset(currentOffset()));
-    return offset;
+    MOZ_CRASH("NYI");
+    return CodeOffset();
 }
 
 void
 MacroAssembler::patchNopToCall(uint8_t* call, uint8_t* target)
 {
-#ifdef JS_CODEGEN_MIPS64
-    Instruction* inst = (Instruction*) call - 6 /* six nops */;
-    Assembler::WriteLoad64Instructions(inst, ScratchRegister, (uint64_t) target);
-    inst[4] = InstReg(op_special, ScratchRegister, zero, ra, ff_jalr);
-#else
-    Instruction* inst = (Instruction*) call - 4 /* four nops */;
-    Assembler::WriteLuiOriInstructions(inst, &inst[1], ScratchRegister, (uint32_t) target);
-    inst[2] = InstReg(op_special, ScratchRegister, zero, ra, ff_jalr);
-#endif
+    MOZ_CRASH("NYI");
 }
 
 void
 MacroAssembler::patchCallToNop(uint8_t* call)
 {
-#ifdef JS_CODEGEN_MIPS64
-    Instruction* inst = (Instruction*) call - 6 /* six nops */;
-#else
-    Instruction* inst = (Instruction*) call - 4 /* four nops */;
-#endif
-
-    inst[0].makeNop();
-    inst[1].makeNop();
-    inst[2].makeNop();
-    inst[3].makeNop();
-#ifdef JS_CODEGEN_MIPS64
-    inst[4].makeNop();
-    inst[5].makeNop();
-#endif
+    MOZ_CRASH("NYI");
 }
 
 void
