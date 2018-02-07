@@ -17,7 +17,7 @@
     </resources>
   </binding>
 
-  <binding id="menulist" display="xul:menu" role="xul:menulist"
+  <binding id="menulist" display="xul:menu"
            extends="chrome://global/content/bindings/menulist.xml#menulist-base">
     <content sizetopopup="pref">
       <xul:hbox class="menulist-label-box" flex="1">
