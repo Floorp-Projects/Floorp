@@ -45,6 +45,7 @@ opt-level = 2
 rpath = false
 debug-assertions = false
 panic = "abort"
+codegen-units = 1
 
 [patch.crates-io]
 libudev-sys = { path = "../../../../dom/webauthn/libudev-sys" }
