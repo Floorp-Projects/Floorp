@@ -211,9 +211,9 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
     // extra conservative. Note, podResizeToFit calls at the end will trim off
     // unneeded capacity.
 
-    uint32_t codeSectionSize = env_->codeSection ? env_->codeSection->size : 0;
-
-    if (!masm_.reserve(size_t(1.2 * EstimateCompiledCodeSize(tier(), codeSectionSize))))
+    size_t codeSectionSize = env_->codeSection ? env_->codeSection->size : 0;
+    size_t estimatedCodeSize = 1.2 * EstimateCompiledCodeSize(tier(), codeSectionSize);
+    if (!masm_.reserve(Min(estimatedCodeSize, MaxCodeBytesPerProcess)))
         return false;
 
     if (!metadataTier_->codeRanges.reserve(2 * env_->numFuncDefs()))
@@ -782,7 +782,7 @@ ModuleGenerator::compileFuncDef(uint32_t funcIndex, uint32_t lineOrBytecode,
     }
 
     batchedBytecode_ += funcBytecodeLength;
-    MOZ_ASSERT(batchedBytecode_ <= MaxModuleBytes);
+    MOZ_ASSERT(batchedBytecode_ <= MaxCodeSectionBytes);
     return batchedBytecode_ <= threshold || launchBatchCompile();
 }
 

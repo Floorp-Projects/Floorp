@@ -55,8 +55,7 @@ dictionary PublicKeyCredentialCreationOptions {
     sequence<PublicKeyCredentialDescriptor>      excludeCredentials = [];
     AuthenticatorSelectionCriteria               authenticatorSelection;
     AttestationConveyancePreference              attestation = "none";
-    // Extensions are not supported yet.
-    // AuthenticationExtensions                  extensions; // Add in Bug 1406458
+    AuthenticationExtensionsClientInputs         extensions;
 };
 
 dictionary PublicKeyCredentialEntity {
@@ -102,11 +101,16 @@ dictionary PublicKeyCredentialRequestOptions {
     USVString                            rpId;
     sequence<PublicKeyCredentialDescriptor> allowCredentials = [];
     UserVerificationRequirement          userVerification = "preferred";
-    // Extensions are not supported yet.
-    // AuthenticationExtensions             extensions; // Add in Bug 1406458
+    AuthenticationExtensionsClientInputs extensions;
 };
 
-typedef record<DOMString, any>       AuthenticationExtensions;
+dictionary AuthenticationExtensionsClientInputs {
+};
+
+dictionary AuthenticationExtensionsClientOutputs {
+};
+
+typedef record<DOMString, DOMString> AuthenticationExtensionsAuthenticatorInputs;
 
 dictionary CollectedClientData {
     required DOMString           type;
@@ -114,9 +118,8 @@ dictionary CollectedClientData {
     required DOMString           origin;
     required DOMString           hashAlgorithm;
     DOMString                    tokenBindingId;
-    // Extensions are not supported yet.
-    // AuthenticationExtensions     clientExtensions; // Add in Bug 1406458
-    // AuthenticationExtensions     authenticatorExtensions; // Add in Bug 1406458
+    AuthenticationExtensionsClientInputs clientExtensions;
+    AuthenticationExtensionsAuthenticatorInputs authenticatorExtensions;
 };
 
 enum PublicKeyCredentialType {
