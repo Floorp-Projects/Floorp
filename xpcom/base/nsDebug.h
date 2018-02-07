@@ -79,9 +79,9 @@ inline MOZ_MUST_USE bool NS_warn_if_impl(bool aCondition, const char* aExpr,
     if (!(_expr)) {                                           \
       NS_DebugBreak(NS_DEBUG_WARNING, _msg, #_expr, __FILE__, __LINE__); \
     }                                                         \
-  } while(0)
+  } while(false)
 #else
-#define NS_WARNING_ASSERTION(_expr, _msg)  do { /* nothing */ } while(0)
+#define NS_WARNING_ASSERTION(_expr, _msg)  do { /* nothing */ } while(false)
 #endif
 
 /**
@@ -186,13 +186,13 @@ inline void MOZ_PretendNoReturn()
   do {                                               \
     __attribute__((assume_static(#COND), unused))    \
     int STATIC_PASTE1(assume_static_, __COUNTER__);  \
-  } while(0)
+  } while(false)
 
 #define STATIC_ASSERT_RUNTIME(COND)                         \
   do {                                                      \
     __attribute__((assert_static_runtime(#COND), unused))   \
     int STATIC_PASTE1(assert_static_runtime_, __COUNTER__); \
-  } while(0)
+  } while(false)
 
 #else /* XGILL_PLUGIN */
 
@@ -203,8 +203,8 @@ inline void MOZ_PretendNoReturn()
 #define STATIC_INVARIANT(COND)             /* nothing */
 #define STATIC_INVARIANT_ASSUME(COND)      /* nothing */
 
-#define STATIC_ASSUME(COND)          do { /* nothing */ } while(0)
-#define STATIC_ASSERT_RUNTIME(COND)  do { /* nothing */ } while(0)
+#define STATIC_ASSUME(COND)          do { /* nothing */ } while(false)
+#define STATIC_ASSERT_RUNTIME(COND)  do { /* nothing */ } while(false)
 
 #endif /* XGILL_PLUGIN */
 
@@ -229,7 +229,7 @@ inline void MOZ_PretendNoReturn()
        NS_WARNING("NS_ENSURE_TRUE(" #x ") failed");           \
        return ret;                                            \
     }                                                         \
-  } while(0)
+  } while(false)
 
 #define NS_ENSURE_FALSE(x, ret)                               \
   NS_ENSURE_TRUE(!(x), ret)
@@ -240,7 +240,7 @@ inline void MOZ_PretendNoReturn()
        NS_WARNING("NS_ENSURE_TRUE(" #x ") failed");           \
        return;                                                \
     }                                                         \
-  } while(0)
+  } while(false)
 
 #define NS_ENSURE_FALSE_VOID(x)                               \
   NS_ENSURE_TRUE_VOID(!(x))
@@ -280,7 +280,7 @@ inline void MOZ_PretendNoReturn()
       NS_ENSURE_SUCCESS_BODY(res, ret)                                    \
       return ret;                                                         \
     }                                                                     \
-  } while(0)
+  } while(false)
 
 #define NS_ENSURE_SUCCESS_VOID(res)                                       \
   do {                                                                    \
@@ -289,7 +289,7 @@ inline void MOZ_PretendNoReturn()
       NS_ENSURE_SUCCESS_BODY_VOID(res)                                    \
       return;                                                             \
     }                                                                     \
-  } while(0)
+  } while(false)
 
 /******************************************************************************
 ** Macros for checking state and arguments upon entering interface boundaries
