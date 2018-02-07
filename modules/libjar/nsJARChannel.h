@@ -95,8 +95,6 @@ private:
         uint32_t suspendCount;
     }                               mPendingEvent;
 
-    bool                            mIsUnsafe;
-
     nsCOMPtr<nsIInputStreamPump>    mPump;
     // mRequest is only non-null during OnStartRequest, so we'll have a pointer
     // to the request if we get called back via RetargetDeliveryTo.
