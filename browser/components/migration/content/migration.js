@@ -323,7 +323,7 @@ var MigrationWizard = { /* exported MigrationWizard */
     // semi-wallpaper for crash when multiple profiles exist, since we haven't initialized mSourceProfile in places
     this.spinResolve(this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate));
 
-    var oldHomePageURL = this.spinResolve(this._migrator.getSourceHomePageURL());
+    var oldHomePageURL = null;
 
     if (oldHomePageURL && appName) {
       var oldHomePageLabel =
