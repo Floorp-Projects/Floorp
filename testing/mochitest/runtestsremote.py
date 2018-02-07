@@ -296,6 +296,10 @@ class MochiRemote(MochitestDesktop):
         kwargs.pop('marionette_args', None)
 
         ret, _ = self._automation.runApp(*args, **kwargs)
+        self.countpass += self.counts['pass']
+        self.countfail += self.counts['fail']
+        self.counttodo += self.counts['todo']
+
         return ret, None
 
 
@@ -303,7 +307,8 @@ def run_test_harness(parser, options):
     parser.validate(options)
 
     message_logger = MessageLogger(logger=None)
-    process_args = {'messageLogger': message_logger}
+    counts = dict()
+    process_args = {'messageLogger': message_logger, 'counts': counts}
     auto = RemoteAutomation(None, "fennec", processArgs=process_args)
 
     if options is None:
@@ -323,6 +328,7 @@ def run_test_harness(parser, options):
     log = mochitest.log
     message_logger.logger = log
     mochitest.message_logger = message_logger
+    mochitest.counts = counts
 
     # Check that Firefox is installed
     expected = options.app.split('/')[-1]
