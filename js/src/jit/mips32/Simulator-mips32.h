@@ -156,6 +156,8 @@ class Simulator {
     Simulator();
     ~Simulator();
 
+    static bool supportsAtomics() { return true; }
+
     // The currently executing Simulator instance. Potentially there can be one
     // for each native thread.
     static Simulator* Current();

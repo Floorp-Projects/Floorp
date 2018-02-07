@@ -421,6 +421,8 @@ public:
 
   void ToDomPref(dom::Pref* aDomPref)
   {
+    MOZ_ASSERT(XRE_IsParentProcess());
+
     aDomPref->name() = mName;
 
     aDomPref->isLocked() = mIsLocked;
@@ -449,6 +451,7 @@ public:
 
   void FromDomPref(const dom::Pref& aDomPref, bool* aValueChanged)
   {
+    MOZ_ASSERT(!XRE_IsParentProcess());
     MOZ_ASSERT(strcmp(mName, aDomPref.name().get()) == 0);
 
     mIsLocked = aDomPref.isLocked();
@@ -492,6 +495,8 @@ public:
 
   bool HasAdvisablySizedValues()
   {
+    MOZ_ASSERT(XRE_IsParentProcess());
+
     if (!IsTypeString()) {
       return true;
     }
@@ -709,6 +714,8 @@ NotifyCallbacks(const char* aPrefName);
 static PrefSaveData
 pref_savePrefs()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   PrefSaveData savedPrefs(gHashTable->EntryCount());
 
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
@@ -1406,27 +1413,7 @@ nsPrefBranch::GetPrefType(const char* aPrefName, int32_t* aRetVal)
   NS_ENSURE_ARG(aPrefName);
 
   const PrefName& prefName = GetPrefName(aPrefName);
-  Pref* pref;
-  if (gHashTable && (pref = pref_HashTableLookup(prefName.get()))) {
-    switch (pref->Type()) {
-      case PrefType::String:
-        *aRetVal = PREF_STRING;
-        break;
-
-      case PrefType::Int:
-        *aRetVal = PREF_INT;
-        break;
-
-      case PrefType::Bool:
-        *aRetVal = PREF_BOOL;
-        break;
-
-      default:
-        MOZ_CRASH();
-    }
-  } else {
-    *aRetVal = PREF_INVALID;
-  }
+  *aRetVal = Preferences::GetType(prefName.get());
   return NS_OK;
 }
 
@@ -1980,6 +1967,8 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
   NS_ENSURE_ARG(aStartingAt);
   NS_ENSURE_ARG_POINTER(aCount);
   NS_ENSURE_ARG_POINTER(aChildArray);
+
+  MOZ_ASSERT(NS_IsMainThread());
 
   *aChildArray = nullptr;
   *aCount = 0;
@@ -3079,8 +3068,6 @@ Preferences::ResetPrefs()
 {
   ENSURE_PARENT_PROCESS("Preferences::ResetPrefs", "all prefs");
 
-  NotifyServiceObservers(NS_PREFSERVICE_RESET_TOPIC_ID);
-
   gHashTable->ClearAndPrepareForLength(PREF_HASHTABLE_INITIAL_LENGTH);
   gPrefNameArena.Clear();
 
@@ -3223,6 +3210,7 @@ void
 Preferences::GetPreferences(InfallibleTArray<dom::Pref>* aDomPrefs)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
 
   aDomPrefs->SetCapacity(gHashTable->EntryCount());
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
@@ -3815,8 +3803,7 @@ Preferences::InitInitialObjects()
   // has MOZ_TELEMETRY_ON_BY_DEFAULT *or* we're on the beta channel, telemetry
   // is on by default, otherwise not. This is necessary so that beta users who
   // are testing final release builds don't flipflop defaults.
-  if (Preferences::GetType(kTelemetryPref, PrefValueKind::Default) ==
-      nsIPrefBranch::PREF_INVALID) {
+  if (Preferences::GetType(kTelemetryPref) == nsIPrefBranch::PREF_INVALID) {
     bool prerelease = false;
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
     prerelease = true;
@@ -4158,13 +4145,28 @@ Preferences::HasUserValue(const char* aPrefName)
 }
 
 /* static */ int32_t
-Preferences::GetType(const char* aPrefName, PrefValueKind aKind)
+Preferences::GetType(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), nsIPrefBranch::PREF_INVALID);
-  int32_t result;
-  return NS_SUCCEEDED(GetRootBranch(aKind)->GetPrefType(aPrefName, &result))
-           ? result
-           : nsIPrefBranch::PREF_INVALID;
+
+  Pref* pref;
+  if (!gHashTable || !(pref = pref_HashTableLookup(aPrefName))) {
+    return PREF_INVALID;
+  }
+
+  switch (pref->Type()) {
+    case PrefType::String:
+      return PREF_STRING;
+
+    case PrefType::Int:
+      return PREF_INT;
+
+    case PrefType::Bool:
+      return PREF_BOOL;
+
+    default:
+      MOZ_CRASH();
+  }
 }
 
 /* static */ nsresult

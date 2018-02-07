@@ -92,8 +92,7 @@ public:
   }
 
   // Gets the type of the pref.
-  static int32_t GetType(const char* aPrefName,
-                         PrefValueKind aKind = PrefValueKind::User);
+  static int32_t GetType(const char* aPrefName);
 
   // Fallible value getters.
   static nsresult GetBool(const char* aPrefName,

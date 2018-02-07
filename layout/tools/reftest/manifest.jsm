@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ReadTopManifest", "CreateUrls"];
+this.EXPORTED_SYMBOLS = ["ReadTopManifest"];
 
 var CC = Components.classes;
 const CI = Components.interfaces;
@@ -296,15 +296,25 @@ function ReadManifest(aURL, aFilter)
                                                  CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
                 ReadManifest(incURI, aFilter);
             }
-        } else if (items[0] == TYPE_LOAD || items[0] == TYPE_SCRIPT) {
+        } else if (items[0] == TYPE_LOAD) {
             if (items.length != 2)
-                throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": incorrect number of arguments to " + items[0];
-            if (items[0] == TYPE_LOAD && expected_status != EXPECTED_PASS && expected_status != EXPECTED_DEATH)
+                throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": incorrect number of arguments to load";
+            if (expected_status != EXPECTED_PASS &&
+                expected_status != EXPECTED_DEATH)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": incorrect known failure type for load test";
+            var [testURI] = runHttp
+                            ? ServeFiles(principal, httpDepth,
+                                         listURL, [items[1]])
+                            : [g.ioService.newURI(items[1], null, listURL)];
+            var prettyPath = runHttp
+                           ? g.ioService.newURI(items[1], null, listURL).spec
+                           : testURI.spec;
+            secMan.checkLoadURIWithPrincipal(principal, testURI,
+                                             CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             AddTestItem({ type: TYPE_LOAD,
                           expected: expected_status,
-                          manifest: aURL.spec,
                           allowSilentFail: allow_silent_fail,
+                          prettyPath: prettyPath,
                           minAsserts: minAsserts,
                           maxAsserts: maxAsserts,
                           needsFocus: needs_focus,
@@ -315,9 +325,36 @@ function ReadManifest(aURL, aFilter)
                           fuzzyMaxDelta: fuzzy_delta.max,
                           fuzzyMinPixels: fuzzy_pixels.min,
                           fuzzyMaxPixels: fuzzy_pixels.max,
-                          runHttp: runHttp,
-                          httpDepth: httpDepth,
-                          url1: items[1],
+                          url1: testURI,
+                          url2: null,
+                          chaosMode: chaosMode }, aFilter);
+        } else if (items[0] == TYPE_SCRIPT) {
+            if (items.length != 2)
+                throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": incorrect number of arguments to script";
+            var [testURI] = runHttp
+                            ? ServeFiles(principal, httpDepth,
+                                         listURL, [items[1]])
+                            : [g.ioService.newURI(items[1], null, listURL)];
+            var prettyPath = runHttp
+                           ? g.ioService.newURI(items[1], null, listURL).spec
+                           : testURI.spec;
+            secMan.checkLoadURIWithPrincipal(principal, testURI,
+                                             CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+            AddTestItem({ type: TYPE_SCRIPT,
+                          expected: expected_status,
+                          allowSilentFail: allow_silent_fail,
+                          prettyPath: prettyPath,
+                          minAsserts: minAsserts,
+                          maxAsserts: maxAsserts,
+                          needsFocus: needs_focus,
+                          slow: slow,
+                          prefSettings1: testPrefSettings,
+                          prefSettings2: refPrefSettings,
+                          fuzzyMinDelta: fuzzy_delta.min,
+                          fuzzyMaxDelta: fuzzy_delta.max,
+                          fuzzyMinPixels: fuzzy_pixels.min,
+                          fuzzyMaxPixels: fuzzy_pixels.max,
+                          url1: testURI,
                           url2: null,
                           chaosMode: chaosMode }, aFilter);
         } else if (items[0] == TYPE_REFTEST_EQUAL || items[0] == TYPE_REFTEST_NOTEQUAL || items[0] == TYPE_PRINT) {
@@ -330,9 +367,22 @@ function ReadManifest(aURL, aFilter)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": minimum fuzz must be zero for tests of type " + items[0];
             }
 
+            var [testURI, refURI] = runHttp
+                                  ? ServeFiles(principal, httpDepth,
+                                               listURL, [items[1], items[2]])
+                                  : [g.ioService.newURI(items[1], null, listURL),
+                                     g.ioService.newURI(items[2], null, listURL)];
+            var prettyPath = runHttp
+                           ? g.ioService.newURI(items[1], null, listURL).spec
+                           : testURI.spec;
+            secMan.checkLoadURIWithPrincipal(principal, testURI,
+                                             CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+            secMan.checkLoadURIWithPrincipal(principal, refURI,
+                                             CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             var type = items[0];
             if (g.compareStyloToGecko || g.compareRetainedDisplayLists) {
                 type = TYPE_REFTEST_EQUAL;
+                refURI = testURI;
 
                 // We expect twice as many assertion failures when running in
                 // styloVsGecko mode because we run each test twice: once in
@@ -352,8 +402,8 @@ function ReadManifest(aURL, aFilter)
 
             AddTestItem({ type: type,
                           expected: expected_status,
-                          manifest: aURL.spec,
                           allowSilentFail: allow_silent_fail,
+                          prettyPath: prettyPath,
                           minAsserts: minAsserts,
                           maxAsserts: maxAsserts,
                           needsFocus: needs_focus,
@@ -364,10 +414,8 @@ function ReadManifest(aURL, aFilter)
                           fuzzyMaxDelta: fuzzy_delta.max,
                           fuzzyMinPixels: fuzzy_pixels.min,
                           fuzzyMaxPixels: fuzzy_pixels.max,
-                          runHttp: runHttp,
-                          httpDepth: httpDepth,
-                          url1: items[1],
-                          url2: items[2],
+                          url1: testURI,
+                          url2: refURI,
                           chaosMode: chaosMode }, aFilter);
         } else {
             throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": unknown test type " + items[0];
@@ -644,7 +692,7 @@ function ExtractRange(matches, startIndex, defaultMin = 0) {
     };
 }
 
-function ServeTestBase(aURL, depth) {
+function ServeFiles(manifestPrincipal, depth, aURL, files) {
     var listURL = aURL.QueryInterface(CI.nsIFileURL);
     var directory = listURL.file.parent;
 
@@ -669,51 +717,33 @@ function ServeTestBase(aURL, depth) {
 
     // Give the testbase URI access to XUL and XBL
     Services.perms.add(testbase, "allowXULXBL", Services.perms.ALLOW_ACTION);
-    return testbase;
-}
-
-function CreateUrls(test) {
-    let secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
-                    .getService(CI.nsIScriptSecurityManager);
-
-    let manifestURL = g.ioService.newURI(test.manifest);
-    let principal = secMan.createCodebasePrincipal(manifestURL, {});
-
-    let testbase = manifestURL;
-    if (test.runHttp)
-        testbase = ServeTestBase(manifestURL, test.httpDepth)
 
     function FileToURI(file)
     {
-        if (file === null)
-            return file;
-
+        // Only serve relative URIs via the HTTP server, not absolute
+        // ones like about:blank.
         var testURI = g.ioService.newURI(file, null, testbase);
-        secMan.checkLoadURIWithPrincipal(principal, testURI,
+
+        // XXX necessary?  manifestURL guaranteed to be file, others always HTTP
+        secMan.checkLoadURIWithPrincipal(manifestPrincipal, testURI,
                                          CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+
         return testURI;
     }
 
-    let files = [test.url1, test.url2];
-    [test.url1, test.url2] = files.map(FileToURI);
-    if (test.url2 && g.compareStyloToGecko)
-        test.url2 = test.url1;
-
-    return test;
+    return files.map(FileToURI);
 }
 
 function AddTestItem(aTest, aFilter) {
     if (!aFilter)
         aFilter = [null, [], false];
 
-    var {url1, url2} = CreateUrls(Object.assign({}, aTest));
-
     var globalFilter = aFilter[0];
     var manifestFilter = aFilter[1];
     var invertManifest = aFilter[2];
-    if ((globalFilter && !globalFilter.test(url1.spec)) ||
+    if ((globalFilter && !globalFilter.test(aTest.url1.spec)) ||
         (manifestFilter &&
-         !(invertManifest ^ manifestFilter.test(url1.spec))))
+         !(invertManifest ^ manifestFilter.test(aTest.url1.spec))))
         return;
     if (g.focusFilterMode == FOCUS_FILTER_NEEDS_FOCUS_TESTS &&
         !aTest.needsFocus)
@@ -722,9 +752,10 @@ function AddTestItem(aTest, aFilter) {
         aTest.needsFocus)
         return;
 
-    if (url2 !== null)
-        aTest.identifier = [url1.spec, aTest.type, url2.spec];
+    if (aTest.url2 !== null)
+        aTest.identifier = [aTest.prettyPath, aTest.type, aTest.url2.spec];
     else
-        aTest.identifier = url1.spec;
+        aTest.identifier = aTest.prettyPath;
+
     g.urls.push(aTest);
 }

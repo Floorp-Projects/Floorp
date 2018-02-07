@@ -286,7 +286,7 @@ GetPropIRGenerator::tryAttachIdempotentStub()
         return true;
 
     // Object lengths are supported only if int32 results are allowed.
-    if ((resultFlags_ & GetPropertyResultFlags::AllowInt32) && tryAttachObjectLength(obj, objId, id))
+    if (tryAttachObjectLength(obj, objId, id))
         return true;
 
     // Also support native data properties on DOMProxy prototypes.
@@ -1433,6 +1433,9 @@ GetPropIRGenerator::tryAttachObjectLength(HandleObject obj, ObjOperandId objId, 
     if (!JSID_IS_ATOM(id, cx_->names().length))
         return false;
 
+    if (!(resultFlags_ & GetPropertyResultFlags::AllowInt32))
+        return false;
+
     if (obj->is<ArrayObject>()) {
         // Make sure int32 is added to the TypeSet before we attach a stub, so
         // the stub can return int32 values without monitoring the result.
@@ -1695,6 +1698,9 @@ GetPropIRGenerator::tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId o
                                                 uint32_t index, Int32OperandId indexId)
 {
     if (!obj->is<ArgumentsObject>() || obj->as<ArgumentsObject>().hasOverriddenElement())
+        return false;
+
+    if (!(resultFlags_ & GetPropertyResultFlags::Monitored))
         return false;
 
     if (obj->is<MappedArgumentsObject>()) {
