@@ -16,6 +16,8 @@ webide.jar:
     content/runtimedetails.xhtml      (runtimedetails.xhtml)
     content/prefs.js                  (prefs.js)
     content/prefs.xhtml               (prefs.xhtml)
+    content/monitor.xhtml             (monitor.xhtml)
+    content/monitor.js                (monitor.js)
     content/devicepreferences.js      (devicepreferences.js)
     content/devicepreferences.xhtml   (devicepreferences.xhtml)
     content/wifi-auth.js              (wifi-auth.js)

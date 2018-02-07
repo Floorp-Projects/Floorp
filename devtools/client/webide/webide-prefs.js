@@ -9,6 +9,7 @@ pref("devtools.webide.restoreLastProject", true);
 pref("devtools.webide.enableLocalRuntime", false);
 pref("devtools.webide.adbAddonURL", "https://ftp.mozilla.org/pub/mozilla.org/labs/fxos-simulator/adb-helper/#OS#/adbhelper-#OS#-latest.xpi");
 pref("devtools.webide.adbAddonID", "adbhelper@mozilla.org");
+pref("devtools.webide.monitorWebSocketURL", "ws://localhost:9000");
 pref("devtools.webide.lastConnectedRuntime", "");
 pref("devtools.webide.lastSelectedProject", "");
 pref("devtools.webide.zoom", "1");
