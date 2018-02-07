@@ -108,6 +108,8 @@ function BrowserLoaderBuilder({ baseURI, window, useOnlyShared, commonLibRequire
       "resource://devtools/client/shared/vendor/react-dom-server-dev";
     dynamicPaths["devtools/client/shared/vendor/react-prop-types"] =
       "resource://devtools/client/shared/vendor/react-prop-types-dev";
+    dynamicPaths["devtools/client/shared/vendor/react-dom-test-utils"] =
+      "resource://devtools/client/shared/vendor/react-dom-test-utils-dev";
   }
 
   const opts = {
