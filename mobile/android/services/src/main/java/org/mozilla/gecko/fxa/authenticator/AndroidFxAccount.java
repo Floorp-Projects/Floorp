@@ -44,7 +44,6 @@ import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.Constants;
-import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.io.IOException;
@@ -482,7 +481,11 @@ public class AndroidFxAccount {
   public ExtendedJSONObject toJSONObject() {
     ExtendedJSONObject o = unbundle();
     o.put("email", account.name);
-    o.put("emailUTF8", Utils.byte2Hex(account.name.getBytes(StringUtils.UTF_8)));
+    try {
+      o.put("emailUTF8", Utils.byte2Hex(account.name.getBytes("UTF-8")));
+    } catch (UnsupportedEncodingException e) {
+      // Ignore.
+    }
     o.put("fxaDeviceId", getDeviceId());
     o.put("fxaDeviceRegistrationVersion", getDeviceRegistrationVersion());
     o.put("fxaDeviceRegistrationTimestamp", getDeviceRegistrationTimestamp());

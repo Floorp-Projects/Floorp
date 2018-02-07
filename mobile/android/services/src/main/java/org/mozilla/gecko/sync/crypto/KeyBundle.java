@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.sync.crypto;
 
+import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -13,7 +14,6 @@ import javax.crypto.Mac;
 
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.util.StringUtils;
 
 public class KeyBundle {
     private static final String KEY_ALGORITHM_SPEC = "AES";
@@ -44,7 +44,7 @@ public class KeyBundle {
       // Hash appropriately.
       try {
         username = Utils.usernameFromAccount(username);
-      } catch (NoSuchAlgorithmException e) {
+      } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
         throw new IllegalArgumentException("Invalid username.");
       }
 
@@ -77,9 +77,9 @@ public class KeyBundle {
      *
      * @return A KeyBundle with the specified keys.
      */
-    public static KeyBundle fromBase64EncodedKeys(String base64EncryptionKey, String base64HmacKey) {
-      return new KeyBundle(Base64.decodeBase64(base64EncryptionKey.getBytes(StringUtils.UTF_8)),
-                           Base64.decodeBase64(base64HmacKey.getBytes(StringUtils.UTF_8)));
+    public static KeyBundle fromBase64EncodedKeys(String base64EncryptionKey, String base64HmacKey) throws UnsupportedEncodingException {
+      return new KeyBundle(Base64.decodeBase64(base64EncryptionKey.getBytes("UTF-8")),
+                           Base64.decodeBase64(base64HmacKey.getBytes("UTF-8")));
     }
 
     /**

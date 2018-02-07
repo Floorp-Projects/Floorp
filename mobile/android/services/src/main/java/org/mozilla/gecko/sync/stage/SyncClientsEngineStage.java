@@ -11,6 +11,7 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -671,6 +672,8 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
         return null;
       }
       return cryptoRecord.encrypt();
+    } catch (UnsupportedEncodingException e) {
+      doAbort(e, encryptionFailure + " Unsupported encoding.");
     } catch (CryptoException e) {
       doAbort(e, encryptionFailure);
     }

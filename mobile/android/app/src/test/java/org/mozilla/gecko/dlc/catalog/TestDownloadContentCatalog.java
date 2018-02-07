@@ -14,7 +14,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
-import org.mozilla.gecko.utils.StringUtils;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -38,7 +37,7 @@ public class TestDownloadContentCatalog {
     @Test
     public void testUntouchedCatalogHasNotChangedAndWillNotBePersisted() throws Exception {
         AtomicFile file = mock(AtomicFile.class);
-        doReturn("{content:[]}".getBytes(StringUtils.UTF_8)).when(file).readFully();
+        doReturn("{content:[]}".getBytes("UTF-8")).when(file).readFully();
 
         DownloadContentCatalog catalog = spy(new DownloadContentCatalog(file));
         catalog.loadFromDisk();
