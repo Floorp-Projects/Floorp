@@ -291,6 +291,7 @@ enum Opcode {
     op_ll       = 48 << OpcodeShift,
     op_lwc1     = 49 << OpcodeShift,
     op_lwc2     = 50 << OpcodeShift,
+    op_lld      = 52 << OpcodeShift,
     op_ldc1     = 53 << OpcodeShift,
     op_ldc2     = 54 << OpcodeShift,
     op_ld       = 55 << OpcodeShift,
@@ -298,6 +299,7 @@ enum Opcode {
     op_sc       = 56 << OpcodeShift,
     op_swc1     = 57 << OpcodeShift,
     op_swc2     = 58 << OpcodeShift,
+    op_scd      = 60 << OpcodeShift,
     op_sdc1     = 61 << OpcodeShift,
     op_sdc2     = 62 << OpcodeShift,
     op_sd       = 63 << OpcodeShift,
@@ -1064,6 +1066,7 @@ class AssemblerMIPSShared : public AssemblerShared
     BufferOffset as_lwl(Register rd, Register rs, int16_t off);
     BufferOffset as_lwr(Register rd, Register rs, int16_t off);
     BufferOffset as_ll(Register rd, Register rs, int16_t off);
+    BufferOffset as_lld(Register rd, Register rs, int16_t off);
     BufferOffset as_ld(Register rd, Register rs, int16_t off);
     BufferOffset as_ldl(Register rd, Register rs, int16_t off);
     BufferOffset as_ldr(Register rd, Register rs, int16_t off);
@@ -1073,6 +1076,7 @@ class AssemblerMIPSShared : public AssemblerShared
     BufferOffset as_swl(Register rd, Register rs, int16_t off);
     BufferOffset as_swr(Register rd, Register rs, int16_t off);
     BufferOffset as_sc(Register rd, Register rs, int16_t off);
+    BufferOffset as_scd(Register rd, Register rs, int16_t off);
     BufferOffset as_sd(Register rd, Register rs, int16_t off);
     BufferOffset as_sdl(Register rd, Register rs, int16_t off);
     BufferOffset as_sdr(Register rd, Register rs, int16_t off);

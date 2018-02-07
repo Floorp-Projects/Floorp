@@ -2056,99 +2056,6 @@ MacroAssemblerMIPS64Compat::handleFailureWithHandlerTail(void* handler, Label* p
     ret();
 }
 
-template<typename T>
-void
-MacroAssemblerMIPS64Compat::compareExchangeToTypedIntArray(Scalar::Type arrayType, const T& mem,
-                                                           Register oldval, Register newval,
-                                                           Register temp, Register valueTemp,
-                                                           Register offsetTemp, Register maskTemp,
-                                                           AnyRegister output)
-{
-    switch (arrayType) {
-      case Scalar::Int8:
-        compareExchange8SignExtend(mem, oldval, newval, valueTemp, offsetTemp, maskTemp, output.gpr());
-        break;
-      case Scalar::Uint8:
-        compareExchange8ZeroExtend(mem, oldval, newval, valueTemp, offsetTemp, maskTemp, output.gpr());
-        break;
-      case Scalar::Int16:
-        compareExchange16SignExtend(mem, oldval, newval, valueTemp, offsetTemp, maskTemp, output.gpr());
-        break;
-      case Scalar::Uint16:
-        compareExchange16ZeroExtend(mem, oldval, newval, valueTemp, offsetTemp, maskTemp, output.gpr());
-        break;
-      case Scalar::Int32:
-        compareExchange32(mem, oldval, newval, valueTemp, offsetTemp, maskTemp, output.gpr());
-        break;
-      case Scalar::Uint32:
-        // At the moment, the code in MCallOptimize.cpp requires the output
-        // type to be double for uint32 arrays.  See bug 1077305.
-        MOZ_ASSERT(output.isFloat());
-        compareExchange32(mem, oldval, newval, valueTemp, offsetTemp, maskTemp, temp);
-        convertUInt32ToDouble(temp, output.fpu());
-        break;
-      default:
-        MOZ_CRASH("Invalid typed array type");
-    }
-}
-
-template void
-MacroAssemblerMIPS64Compat::compareExchangeToTypedIntArray(Scalar::Type arrayType, const Address& mem,
-                                                           Register oldval, Register newval, Register temp,
-                                                           Register valueTemp, Register offsetTemp, Register maskTemp,
-                                                           AnyRegister output);
-template void
-MacroAssemblerMIPS64Compat::compareExchangeToTypedIntArray(Scalar::Type arrayType, const BaseIndex& mem,
-                                                           Register oldval, Register newval, Register temp,
-                                                           Register valueTemp, Register offsetTemp, Register maskTemp,
-                                                           AnyRegister output);
-
-template<typename T>
-void
-MacroAssemblerMIPS64Compat::atomicExchangeToTypedIntArray(Scalar::Type arrayType, const T& mem,
-                                                          Register value, Register temp, Register valueTemp,
-                                                          Register offsetTemp, Register maskTemp,
-                                                          AnyRegister output)
-{
-    switch (arrayType) {
-      case Scalar::Int8:
-        atomicExchange8SignExtend(mem, value, valueTemp, offsetTemp, maskTemp, output.gpr());
-        break;
-      case Scalar::Uint8:
-        atomicExchange8ZeroExtend(mem, value, valueTemp, offsetTemp, maskTemp, output.gpr());
-        break;
-      case Scalar::Int16:
-        atomicExchange16SignExtend(mem, value, valueTemp, offsetTemp, maskTemp, output.gpr());
-        break;
-      case Scalar::Uint16:
-        atomicExchange16ZeroExtend(mem, value, valueTemp, offsetTemp, maskTemp, output.gpr());
-        break;
-      case Scalar::Int32:
-        atomicExchange32(mem, value, valueTemp, offsetTemp, maskTemp, output.gpr());
-        break;
-      case Scalar::Uint32:
-        // At the moment, the code in MCallOptimize.cpp requires the output
-        // type to be double for uint32 arrays.  See bug 1077305.
-        MOZ_ASSERT(output.isFloat());
-        atomicExchange32(mem, value, valueTemp, offsetTemp, maskTemp, temp);
-        convertUInt32ToDouble(temp, output.fpu());
-        break;
-      default:
-        MOZ_CRASH("Invalid typed array type");
-    }
-}
-
-template void
-MacroAssemblerMIPS64Compat::atomicExchangeToTypedIntArray(Scalar::Type arrayType, const Address& mem,
-                                                          Register value, Register temp, Register valueTemp,
-                                                          Register offsetTemp, Register maskTemp,
-                                                          AnyRegister output);
-template void
-MacroAssemblerMIPS64Compat::atomicExchangeToTypedIntArray(Scalar::Type arrayType, const BaseIndex& mem,
-                                                          Register value, Register temp, Register valueTemp,
-                                                          Register offsetTemp, Register maskTemp,
-                                                          AnyRegister output);
-
 CodeOffset
 MacroAssemblerMIPS64Compat::toggledJump(Label* label)
 {
@@ -2536,6 +2443,135 @@ MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output
     moveFromFloat32(ScratchDoubleReg, output);
     ma_b(ScratchRegister, Imm32(0), oolEntry, Assembler::NotEqual);
 
+}
+
+template <typename T>
+static void
+CompareExchange64(MacroAssembler& masm, const Synchronization& sync, const T& mem,
+                  Register64 expect, Register64 replace, Register64 output)
+{
+    masm.computeEffectiveAddress(mem, SecondScratchReg);
+
+    Label tryAgain;
+    Label exit;
+
+    masm.memoryBarrierBefore(sync);
+
+    masm.bind(&tryAgain);
+
+    masm.as_lld(output.reg, SecondScratchReg, 0);
+    masm.ma_b(output.reg, expect.reg, &exit, Assembler::NotEqual, ShortJump);
+    masm.movePtr(replace.reg, ScratchRegister);
+    masm.as_scd(ScratchRegister, SecondScratchReg, 0);
+    masm.ma_b(ScratchRegister, ScratchRegister, &tryAgain, Assembler::Zero, ShortJump);
+
+    masm.memoryBarrierAfter(sync);
+
+    masm.bind(&exit);
+}
+
+void
+MacroAssembler::compareExchange64(const Synchronization& sync, const Address& mem,
+                                  Register64 expect, Register64 replace, Register64 output)
+{
+    CompareExchange64(*this, sync, mem, expect, replace, output);
+}
+
+void
+MacroAssembler::compareExchange64(const Synchronization& sync, const BaseIndex& mem,
+                                  Register64 expect, Register64 replace, Register64 output)
+{
+    CompareExchange64(*this, sync, mem, expect, replace, output);
+}
+
+template <typename T>
+static void
+AtomicExchange64(MacroAssembler& masm, const Synchronization& sync, const T& mem,
+                 Register64 src, Register64 output)
+{
+    masm.computeEffectiveAddress(mem, SecondScratchReg);
+
+    Label tryAgain;
+
+    masm.memoryBarrierBefore(sync);
+
+    masm.bind(&tryAgain);
+
+    masm.as_lld(output.reg, SecondScratchReg, 0);
+    masm.movePtr(src.reg, ScratchRegister);
+    masm.as_scd(ScratchRegister, SecondScratchReg, 0);
+    masm.ma_b(ScratchRegister, ScratchRegister, &tryAgain, Assembler::Zero, ShortJump);
+
+    masm.memoryBarrierAfter(sync);
+}
+
+void
+MacroAssembler::atomicExchange64(const Synchronization& sync, const Address& mem, Register64 src,
+                                 Register64 output)
+{
+    AtomicExchange64(*this, sync, mem, src, output);
+}
+
+void
+MacroAssembler::atomicExchange64(const Synchronization& sync, const BaseIndex& mem, Register64 src,
+                                 Register64 output)
+{
+    AtomicExchange64(*this, sync, mem, src, output);
+}
+
+template<typename T>
+static void
+AtomicFetchOp64(MacroAssembler& masm, const Synchronization& sync, AtomicOp op, Register64 value,
+                const T& mem, Register64 temp, Register64 output)
+{
+    masm.computeEffectiveAddress(mem, SecondScratchReg);
+
+    Label tryAgain;
+
+    masm.memoryBarrierBefore(sync);
+
+    masm.bind(&tryAgain);
+
+    masm.as_lld(output.reg, SecondScratchReg, 0);
+
+    switch(op) {
+      case AtomicFetchAddOp:
+        masm.as_daddu(temp.reg, output.reg, value.reg);
+        break;
+      case AtomicFetchSubOp:
+        masm.as_dsubu(temp.reg, output.reg, value.reg);
+        break;
+      case AtomicFetchAndOp:
+        masm.as_and(temp.reg, output.reg, value.reg);
+        break;
+      case AtomicFetchOrOp:
+        masm.as_or(temp.reg, output.reg, value.reg);
+        break;
+      case AtomicFetchXorOp:
+        masm.as_xor(temp.reg, output.reg, value.reg);
+        break;
+      default:
+        MOZ_CRASH();
+    }
+
+    masm.as_scd(temp.reg, SecondScratchReg, 0);
+    masm.ma_b(temp.reg, temp.reg, &tryAgain, Assembler::Zero, ShortJump);
+
+    masm.memoryBarrierAfter(sync);
+}
+
+void
+MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op, Register64 value,
+                                const Address& mem, Register64 temp, Register64 output)
+{
+    AtomicFetchOp64(*this, sync, op, value, mem, temp, output);
+}
+
+void
+MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op, Register64 value,
+                                const BaseIndex& mem, Register64 temp, Register64 output)
+{
+    AtomicFetchOp64(*this, sync, op, value, mem, temp, output);
 }
 
 // ========================================================================

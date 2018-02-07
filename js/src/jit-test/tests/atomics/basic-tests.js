@@ -486,7 +486,7 @@ function runTests() {
     if (is_little)
 	assertEq(t2[0], 37);
     else
-	assertEq(t2[0], 37 << 16);
+	assertEq(t2[0], 37 << 8);
     t1[0] = 0;
 
     // Test that invoking as Atomics.whatever() works, on correct arguments.

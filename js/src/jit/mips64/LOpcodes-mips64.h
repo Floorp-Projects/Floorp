@@ -19,6 +19,9 @@
     _(WasmUnalignedLoadI64)     \
     _(WasmUnalignedStoreI64)    \
     _(WasmTruncateToInt64)      \
-    _(Int64ToFloatingPoint)
+    _(Int64ToFloatingPoint)     \
+    _(WasmCompareExchangeI64)   \
+    _(WasmAtomicExchangeI64)    \
+    _(WasmAtomicBinopI64)       \
 
 #endif // jit_mips64_LOpcodes_mips64_h__
