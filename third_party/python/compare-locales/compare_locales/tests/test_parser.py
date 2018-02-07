@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import textwrap
 import unittest
 
 from compare_locales import parser
@@ -45,4 +46,23 @@ third line
         self.assertDictEqual(
             _map,
             {}
+        )
+
+
+class TestOffsetComment(unittest.TestCase):
+    def test_offset(self):
+        ctx = parser.Parser.Context(textwrap.dedent('''\
+            #foo
+            #bar
+            # baz
+            '''
+        ))  # noqa
+        offset_comment = parser.OffsetComment(ctx, (0, len(ctx.contents)))
+        self.assertEqual(
+            offset_comment.val,
+            textwrap.dedent('''\
+                foo
+                bar
+                 baz
+            ''')
         )

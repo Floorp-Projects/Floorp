@@ -43,7 +43,7 @@ class ParserStream():
 
         self.index += 1
 
-        if self.ch == None:
+        if self.ch is None:
             self.iter_end = True
             self.peek_end = True
 
@@ -104,9 +104,14 @@ class ParserStream():
 
         return ret == ch
 
-    def reset_peek(self):
-        self.peek_index = self.index
-        self.peek_end = self.iter_end
+    def reset_peek(self, pos=False):
+        if pos:
+            if pos < self.peek_index:
+                self.peek_end = False
+            self.peek_index = pos
+        else:
+            self.peek_index = self.index
+            self.peek_end = self.iter_end
 
     def skip_to_peek(self):
         diff = self.peek_index - self.index

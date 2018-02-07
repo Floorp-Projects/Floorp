@@ -6,6 +6,12 @@
 import unittest
 
 from compare_locales.tests import ParserTestMixin
+from compare_locales.parser import (
+    Comment,
+    DefinesInstruction,
+    Junk,
+    Whitespace,
+)
 
 
 mpl2 = '''\
@@ -31,16 +37,16 @@ class TestDefinesParser(ParserTestMixin, unittest.TestCase):
 #unfilter emptyLines
 
 ''', (
-            ('Comment', mpl2),
-            ('Whitespace', '\n'),
-            ('DefinesInstruction', 'filter emptyLines'),
-            ('Whitespace', '\n\n'),
+            (Comment, mpl2),
+            (Whitespace, '\n'),
+            (DefinesInstruction, 'filter emptyLines'),
+            (Whitespace, '\n\n'),
             ('MOZ_LANGPACK_CREATOR', 'mozilla.org'),
-            ('Whitespace', '\n\n'),
-            ('Comment', '#define'),
-            ('Whitespace', '\n\n'),
-            ('DefinesInstruction', 'unfilter emptyLines'),
-            ('Junk', '\n\n')))
+            (Whitespace, '\n\n'),
+            (Comment, '#define'),
+            (Whitespace, '\n\n'),
+            (DefinesInstruction, 'unfilter emptyLines'),
+            (Junk, '\n\n')))
 
     def testBrowserWithContributors(self):
         self._test(mpl2 + '''
@@ -55,19 +61,19 @@ class TestDefinesParser(ParserTestMixin, unittest.TestCase):
 #unfilter emptyLines
 
 ''', (
-            ('Comment', mpl2),
-            ('Whitespace', '\n'),
-            ('DefinesInstruction', 'filter emptyLines'),
-            ('Whitespace', '\n\n'),
+            (Comment, mpl2),
+            (Whitespace, '\n'),
+            (DefinesInstruction, 'filter emptyLines'),
+            (Whitespace, '\n\n'),
             ('MOZ_LANGPACK_CREATOR', 'mozilla.org'),
-            ('Whitespace', '\n\n'),
-            ('Comment', 'non-English'),
-            ('Whitespace', '\n'),
+            (Whitespace, '\n\n'),
+            (Comment, 'non-English'),
+            (Whitespace, '\n'),
             ('MOZ_LANGPACK_CONTRIBUTORS',
              '<em:contributor>Joe Solon</em:contributor>'),
-            ('Whitespace', '\n\n'),
-            ('DefinesInstruction', 'unfilter emptyLines'),
-            ('Junk', '\n\n')))
+            (Whitespace, '\n\n'),
+            (DefinesInstruction, 'unfilter emptyLines'),
+            (Junk, '\n\n')))
 
     def testCommentWithNonAsciiCharacters(self):
         self._test(mpl2 + '''
@@ -79,25 +85,25 @@ class TestDefinesParser(ParserTestMixin, unittest.TestCase):
 #unfilter emptyLines
 
 ''', (
-            ('Comment', mpl2),
-            ('Whitespace', '\n'),
-            ('DefinesInstruction', 'filter emptyLines'),
-            ('Whitespace', '\n\n'),
-            ('Comment', u'češtině'),
-            ('Whitespace', '\n'),
+            (Comment, mpl2),
+            (Whitespace, '\n'),
+            (DefinesInstruction, 'filter emptyLines'),
+            (Whitespace, '\n\n'),
+            (Comment, u'češtině'),
+            (Whitespace, '\n'),
             ('seamonkey_l10n_long', ''),
-            ('Whitespace', '\n\n'),
-            ('DefinesInstruction', 'unfilter emptyLines'),
-            ('Junk', '\n\n')))
+            (Whitespace, '\n\n'),
+            (DefinesInstruction, 'unfilter emptyLines'),
+            (Junk, '\n\n')))
 
     def test_no_empty_lines(self):
         self._test('''#define MOZ_LANGPACK_CREATOR mozilla.org
 #define MOZ_LANGPACK_CREATOR mozilla.org
 ''', (
             ('MOZ_LANGPACK_CREATOR', 'mozilla.org'),
-            ('Whitespace', '\n'),
+            (Whitespace, '\n'),
             ('MOZ_LANGPACK_CREATOR', 'mozilla.org'),
-            ('Whitespace', '\n')))
+            (Whitespace, '\n')))
 
     def test_empty_line_between(self):
         self._test('''#define MOZ_LANGPACK_CREATOR mozilla.org
@@ -105,20 +111,20 @@ class TestDefinesParser(ParserTestMixin, unittest.TestCase):
 #define MOZ_LANGPACK_CREATOR mozilla.org
 ''', (
             ('MOZ_LANGPACK_CREATOR', 'mozilla.org'),
-            ('Junk', '\n'),
+            (Junk, '\n'),
             ('MOZ_LANGPACK_CREATOR', 'mozilla.org'),
-            ('Whitespace', '\n')))
+            (Whitespace, '\n')))
 
     def test_empty_line_at_the_beginning(self):
         self._test('''
 #define MOZ_LANGPACK_CREATOR mozilla.org
 #define MOZ_LANGPACK_CREATOR mozilla.org
 ''', (
-            ('Junk', '\n'),
+            (Junk, '\n'),
             ('MOZ_LANGPACK_CREATOR', 'mozilla.org'),
-            ('Whitespace', '\n'),
+            (Whitespace, '\n'),
             ('MOZ_LANGPACK_CREATOR', 'mozilla.org'),
-            ('Whitespace', '\n')))
+            (Whitespace, '\n')))
 
     def test_filter_empty_lines(self):
         self._test('''#filter emptyLines
@@ -126,13 +132,13 @@ class TestDefinesParser(ParserTestMixin, unittest.TestCase):
 #define MOZ_LANGPACK_CREATOR mozilla.org
 #define MOZ_LANGPACK_CREATOR mozilla.org
 #unfilter emptyLines''', (
-            ('DefinesInstruction', 'filter emptyLines'),
-            ('Whitespace', '\n\n'),
+            (DefinesInstruction, 'filter emptyLines'),
+            (Whitespace, '\n\n'),
             ('MOZ_LANGPACK_CREATOR', 'mozilla.org'),
-            ('Whitespace', '\n'),
+            (Whitespace, '\n'),
             ('MOZ_LANGPACK_CREATOR', 'mozilla.org'),
-            ('Whitespace', '\n'),
-            ('DefinesInstruction', 'unfilter emptyLines')))
+            (Whitespace, '\n'),
+            (DefinesInstruction, 'unfilter emptyLines')))
 
     def test_unfilter_empty_lines_with_trailing(self):
         self._test('''#filter emptyLines
@@ -141,20 +147,20 @@ class TestDefinesParser(ParserTestMixin, unittest.TestCase):
 #define MOZ_LANGPACK_CREATOR mozilla.org
 #unfilter emptyLines
 ''', (
-            ('DefinesInstruction', 'filter emptyLines'),
-            ('Whitespace', '\n\n'),
+            (DefinesInstruction, 'filter emptyLines'),
+            (Whitespace, '\n\n'),
             ('MOZ_LANGPACK_CREATOR', 'mozilla.org'),
-            ('Whitespace', '\n'),
+            (Whitespace, '\n'),
             ('MOZ_LANGPACK_CREATOR', 'mozilla.org'),
-            ('Whitespace', '\n'),
-            ('DefinesInstruction', 'unfilter emptyLines'),
-            ('Whitespace', '\n')))
+            (Whitespace, '\n'),
+            (DefinesInstruction, 'unfilter emptyLines'),
+            (Whitespace, '\n')))
 
     def testToolkit(self):
         self._test('''#define MOZ_LANG_TITLE English (US)
 ''', (
             ('MOZ_LANG_TITLE', 'English (US)'),
-            ('Whitespace', '\n')))
+            (Whitespace, '\n')))
 
     def testToolkitEmpty(self):
         self._test('', tuple())
@@ -165,9 +171,9 @@ class TestDefinesParser(ParserTestMixin, unittest.TestCase):
         defines.inc are interesting that way, as their
         content is added to the generated file.
         '''
-        self._test('\n', (('Junk', '\n'),))
-        self._test('\n\n', (('Junk', '\n\n'),))
-        self._test(' \n\n', (('Junk', ' \n\n'),))
+        self._test('\n', ((Junk, '\n'),))
+        self._test('\n\n', ((Junk, '\n\n'),))
+        self._test(' \n\n', ((Junk, ' \n\n'),))
 
     def test_whitespace_value(self):
         '''Test that there's only one whitespace between key and value
@@ -180,11 +186,11 @@ class TestDefinesParser(ParserTestMixin, unittest.TestCase):
 #define tre   \n\
 ''', (
             ('one', ''),
-            ('Whitespace', '\n'),
+            (Whitespace, '\n'),
             ('two', ' '),
-            ('Whitespace', '\n'),
+            (Whitespace, '\n'),
             ('tre', '  '),
-            ('Whitespace', '\n'),))
+            (Whitespace, '\n'),))
 
 
 if __name__ == '__main__':

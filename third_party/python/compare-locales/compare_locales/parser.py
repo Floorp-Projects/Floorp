@@ -126,13 +126,36 @@ class Comment(EntityBase):
         self.ctx = ctx
         self.span = span
         self.val_span = None
+        self._val_cache = None
 
     @property
     def key(self):
         return None
 
+    @property
+    def val(self):
+        if self._val_cache is None:
+            self._val_cache = self.all
+        return self._val_cache
+
     def __repr__(self):
         return self.all
+
+
+class OffsetComment(Comment):
+    '''Helper for file formats that have a constant number of leading
+    chars to strip from comments.
+    Offset defaults to 1
+    '''
+    comment_offset = 1
+
+    @property
+    def val(self):
+        if self._val_cache is None:
+            self._val_cache = ''.join((
+                l[self.comment_offset:] for l in self.all.splitlines(True)
+            ))
+        return self._val_cache
 
 
 class Junk(object):
@@ -189,6 +212,7 @@ class Whitespace(EntityBase):
 class Parser(object):
     capabilities = CAN_SKIP | CAN_MERGE
     reWhitespace = re.compile('\s+', re.M)
+    Comment = Comment
 
     class Context(object):
         "Fixture for content and line numbers"
@@ -268,7 +292,7 @@ class Parser(object):
             return self.createEntity(ctx, m)
         m = self.reComment.match(ctx.contents, offset)
         if m:
-            self.last_comment = Comment(ctx, m.span())
+            self.last_comment = self.Comment(ctx, m.span())
             return self.last_comment
         return self.getJunk(ctx, offset, self.reKey, self.reComment)
 
@@ -361,6 +385,14 @@ class DTDParser(Parser):
                       u'%' + Name + ';'
                       u'(?:[ \t]*(?:' + XmlComment + u'\s*)*\n?)?')
 
+    class Comment(Comment):
+        @property
+        def val(self):
+            if self._val_cache is None:
+                # Strip "<!--" and "-->" to comment contents
+                self._val_cache = self.all[4:-3]
+            return self._val_cache
+
     def getNext(self, ctx, offset):
         '''
         Overload Parser.getNext to special-case ParsedEntities.
@@ -408,6 +440,9 @@ class PropertiesEntity(Entity):
 
 
 class PropertiesParser(Parser):
+
+    Comment = OffsetComment
+
     def __init__(self):
         self.reKey = re.compile(
             '(?P<key>[^#!\s\n][^=:\n]*?)\s*[:=][ \t]*', re.M)
@@ -426,7 +461,7 @@ class PropertiesParser(Parser):
 
         m = self.reComment.match(contents, offset)
         if m:
-            self.last_comment = Comment(ctx, m.span())
+            self.last_comment = self.Comment(ctx, m.span())
             return self.last_comment
 
         m = self.reKey.match(contents, offset)
@@ -484,6 +519,9 @@ class DefinesParser(Parser):
     EMPTY_LINES = 1 << 0
     PAST_FIRST_LINE = 1 << 1
 
+    class Comment(OffsetComment):
+        comment_offset = 2
+
     def __init__(self):
         self.reComment = re.compile('(?:^# .*?\n)*(?:^# [^\n]*)', re.M)
         # corresponds to
@@ -510,7 +548,7 @@ class DefinesParser(Parser):
 
         m = self.reComment.match(contents, offset)
         if m:
-            self.last_comment = Comment(ctx, m.span())
+            self.last_comment = self.Comment(ctx, m.span())
             return self.last_comment
         m = self.reKey.match(contents, offset)
         if m:
@@ -549,6 +587,9 @@ class IniParser(Parser):
     string=value
     ...
     '''
+
+    Comment = OffsetComment
+
     def __init__(self):
         self.reComment = re.compile('(?:^[;#][^\n]*\n)*(?:^[;#][^\n]*)', re.M)
         self.reSection = re.compile('\[(?P<val>.*?)\]', re.M)
@@ -562,7 +603,7 @@ class IniParser(Parser):
             return Whitespace(ctx, m.span())
         m = self.reComment.match(contents, offset)
         if m:
-            self.last_comment = Comment(ctx, m.span())
+            self.last_comment = self.Comment(ctx, m.span())
             return self.last_comment
         m = self.reSection.match(contents, offset)
         if m:
@@ -592,7 +633,7 @@ class FluentAttribute(EntityBase):
 
 class FluentEntity(Entity):
     # Fields ignored when comparing two entities.
-    ignored_fields = ['comment', 'span', 'tags']
+    ignored_fields = ['comment', 'span']
 
     def __init__(self, ctx, entry):
         start = entry.span.start
@@ -616,6 +657,14 @@ class FluentEntity(Entity):
         # are not separate Comment instances.
         self.pre_comment = None
 
+    @property
+    def root_node(self):
+        '''AST node at which to start traversal for count_words.
+
+        By default we count words in the value and in all attributes.
+        '''
+        return self.entry
+
     _word_count = None
 
     def count_words(self):
@@ -627,7 +676,7 @@ class FluentEntity(Entity):
                     self._word_count += len(node.value.split())
                 return node
 
-            self.entry.traverse(count_words)
+            self.root_node.traverse(count_words)
 
         return self._word_count
 
@@ -646,14 +695,28 @@ class FluentEntity(Entity):
             yield FluentAttribute(self, attr_node)
 
 
-class FluentSection(EntityBase):
-    def __init__(self, ctx, entry):
-        self.entry = entry
-        self.ctx = ctx
+class FluentMessage(FluentEntity):
+    pass
 
-        self.span = (entry.span.start, entry.span.end)
-        self.key_span = self.val_span = (
-            entry.name.span.start, entry.name.span.end)
+
+class FluentTerm(FluentEntity):
+    # Fields ignored when comparing two terms.
+    ignored_fields = ['attributes', 'comment', 'span']
+
+    @property
+    def root_node(self):
+        '''AST node at which to start traversal for count_words.
+
+        In Fluent Terms we only count words in the value. Attributes are
+        private and do not count towards the word total.
+        '''
+        return self.entry.value
+
+
+class FluentComment(Comment):
+    def __init__(self, ctx, span, entry):
+        super(FluentComment, self).__init__(ctx, span)
+        self._val_cache = entry.content
 
 
 class FluentParser(Parser):
@@ -670,18 +733,7 @@ class FluentParser(Parser):
 
         resource = self.ftl_parser.parse(self.ctx.contents)
 
-        if resource.comment:
-            last_span_end = resource.comment.span.end
-
-            if not only_localizable:
-                if 0 < resource.comment.span.start:
-                    yield Whitespace(
-                        self.ctx, (0, resource.comment.span.start))
-                yield Comment(
-                    self.ctx,
-                    (resource.comment.span.start, resource.comment.span.end))
-        else:
-            last_span_end = 0
+        last_span_end = 0
 
         for entry in resource.body:
             if not only_localizable:
@@ -690,7 +742,9 @@ class FluentParser(Parser):
                         self.ctx, (last_span_end, entry.span.start))
 
             if isinstance(entry, ftl.Message):
-                yield FluentEntity(self.ctx, entry)
+                yield FluentMessage(self.ctx, entry)
+            elif isinstance(entry, ftl.Term):
+                yield FluentTerm(self.ctx, entry)
             elif isinstance(entry, ftl.Junk):
                 start = entry.span.start
                 end = entry.span.end
@@ -700,11 +754,9 @@ class FluentParser(Parser):
                 ws, we = re.search('\s*$', entry.content).span()
                 end -= we - ws
                 yield Junk(self.ctx, (start, end))
-            elif isinstance(entry, ftl.Comment) and not only_localizable:
+            elif isinstance(entry, ftl.BaseComment) and not only_localizable:
                 span = (entry.span.start, entry.span.end)
-                yield Comment(self.ctx, span)
-            elif isinstance(entry, ftl.Section) and not only_localizable:
-                yield FluentSection(self.ctx, entry)
+                yield FluentComment(self.ctx, span, entry)
 
             last_span_end = entry.span.end
 

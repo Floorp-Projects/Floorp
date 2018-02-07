@@ -147,9 +147,15 @@ class AddRemove(object):
 
 class Observer(object):
 
-    def __init__(self, filter=None, file_stats=False):
+    def __init__(self, quiet=0, filter=None, file_stats=False):
+        '''Create Observer
+        For quiet=1, skip per-entity missing and obsolete strings,
+        for quiet=2, skip missing and obsolete files. For quiet=3,
+        skip warnings and errors.
+        '''
         self.summary = defaultdict(lambda: defaultdict(int))
         self.details = Tree(list)
+        self.quiet = quiet
         self.filter = filter
         self.file_stats = None
         if file_stats:
@@ -217,7 +223,7 @@ class Observer(object):
         if category in ['missingFile', 'obsoleteFile']:
             if self.filter is not None:
                 rv = self.filter(file)
-            if rv != "ignore":
+            if rv != "ignore" and self.quiet < 2:
                 self.details[file].append({category: rv})
             return rv
         if category in ['missingEntity', 'obsoleteEntity']:
@@ -225,9 +231,10 @@ class Observer(object):
                 rv = self.filter(file, data)
             if rv == "ignore":
                 return rv
-            self.details[file].append({category: data})
+            if self.quiet < 1:
+                self.details[file].append({category: data})
             return rv
-        if category in ('error', 'warning'):
+        if category in ('error', 'warning') and self.quiet < 3:
             self.details[file].append({category: data})
             self.summary[file.locale][category + 's'] += 1
         return rv
@@ -586,14 +593,23 @@ class ContentComparer:
         pass
 
 
-def compareProjects(project_configs, stat_observer=None,
-                    file_stats=False,
-                    merge_stage=None, clobber_merge=False):
+def compareProjects(
+            project_configs,
+            stat_observer=None,
+            file_stats=False,
+            merge_stage=None,
+            clobber_merge=False,
+            quiet=0,
+        ):
     locales = set()
     observers = []
     for project in project_configs:
         observers.append(
-            Observer(filter=project.filter, file_stats=file_stats))
+            Observer(
+                quiet=quiet,
+                filter=project.filter,
+                file_stats=file_stats,
+            ))
         locales.update(project.locales)
     if stat_observer is not None:
         stat_observers = [stat_observer]
