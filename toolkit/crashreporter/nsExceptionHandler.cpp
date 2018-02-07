@@ -25,7 +25,6 @@
 #include "nsXULAppAPI.h"
 #include "jsfriendapi.h"
 #include "ThreadAnnotation.h"
-#include "private/pprio.h"
 
 #if defined(XP_WIN32)
 #ifdef WIN32_LEAN_AND_MEAN
@@ -243,7 +242,6 @@ static bool sIncludeContextHeap = false;
 
 // OOP crash reporting
 static CrashGenerationServer* crashServer; // chrome process has this
-static std::map<ProcessId, PRFileDesc*> processToCrashFd;
 
 static std::terminate_handler oldTerminateHandler = nullptr;
 
@@ -581,8 +579,6 @@ public:
                          nullptr);
   }
 
-  void OpenHandle(HANDLE aHandle) { mHandle = aHandle; }
-
   bool Valid() {
     return mHandle != INVALID_HANDLE_VALUE;
   }
@@ -628,8 +624,6 @@ public:
   void Open(const char* path) {
     mFD = sys_open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
   }
-
-  void OpenHandle(int aFd) { mFD = aFd; }
 
   bool Valid() {
     return mFD != -1;
@@ -1267,18 +1261,45 @@ BuildTempPath(PathStringT& aResult)
 }
 
 static void
-PrepareChildExceptionTimeAnnotations(void* context)
+PrepareChildExceptionTimeAnnotations()
 {
   MOZ_ASSERT(!XRE_IsParentProcess());
+  static XP_CHAR tempPath[XP_PATH_MAX] = {0};
 
-  FileHandle f;
-#ifdef XP_WIN
-  f = static_cast<HANDLE>(context);
+  // Get the temp path
+  size_t charsAvailable = XP_PATH_MAX;
+  XP_CHAR* p = tempPath;
+#if (defined(XP_MACOSX) || defined(XP_WIN))
+  if (!childProcessTmpDir || childProcessTmpDir->empty()) {
+    return;
+  }
+  p = Concat(p, childProcessTmpDir->c_str(), &charsAvailable);
+  // Ensure that this path ends with a path separator
+  if (p > tempPath && *(p - 1) != XP_PATH_SEPARATOR_CHAR) {
+    p = Concat(p, XP_PATH_SEPARATOR, &charsAvailable);
+  }
 #else
-  f = GetAnnotationTimeCrashFd();
+  size_t tempPathLen = BuildTempPath(tempPath);
+  if (!tempPathLen) {
+    return;
+  }
+  p += tempPathLen;
+  charsAvailable -= tempPathLen;
 #endif
+
+  // Generate and append the file name
+  p = Concat(p, childCrashAnnotationBaseName, &charsAvailable);
+  XP_CHAR pidBuffer[32] = XP_TEXT("");
+#if defined(XP_WIN32)
+  _ui64tow(GetCurrentProcessId(), pidBuffer, 10);
+#else
+  XP_STOA(getpid(), pidBuffer, 10);
+#endif
+  p = Concat(p, pidBuffer, &charsAvailable);
+
+  // Now open the file...
   PlatformWriter apiData;
-  apiData.OpenHandle(f);
+  OpenAPIData(apiData, tempPath);
 
   // ...and write out any annotations. These must be escaped if necessary
   // (but don't call EscapeAnnotation here, because it touches the heap).
@@ -1374,7 +1395,7 @@ ChildFPEFilter(void* context, EXCEPTION_POINTERS* exinfo,
 {
   bool result = FPEFilter(context, exinfo, assertion);
   if (result) {
-    PrepareChildExceptionTimeAnnotations(context);
+    PrepareChildExceptionTimeAnnotations();
   }
   return result;
 }
@@ -1440,7 +1461,7 @@ ChildFilter(void* context)
 {
   bool result = Filter(context);
   if (result) {
-    PrepareChildExceptionTimeAnnotations(context);
+    PrepareChildExceptionTimeAnnotations();
   }
   return result;
 }
@@ -3036,6 +3057,50 @@ AppendExtraData(nsIFile* extraFile, const AnnotationTable& data)
 }
 
 static bool
+GetExtraFileForChildPid(uint32_t aPid, nsIFile** aExtraFile)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  nsCOMPtr<nsIFile> extraFile;
+  nsresult rv;
+
+#if defined(XP_WIN) || defined(XP_MACOSX)
+  if (!childProcessTmpDir) {
+    return false;
+  }
+  CreateFileFromPath(*childProcessTmpDir, getter_AddRefs(extraFile));
+  if (!extraFile) {
+    return false;
+  }
+#elif defined(XP_UNIX)
+  rv = NS_NewLocalFile(NS_LITERAL_STRING("/tmp"), false,
+                       getter_AddRefs(extraFile));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+#else
+#error "Implement this for your platform"
+#endif
+
+  nsAutoString leafName;
+#if defined(XP_WIN)
+  leafName.AppendPrintf("%S%u%S", childCrashAnnotationBaseName, aPid,
+                        extraFileExtension);
+#else
+  leafName.AppendPrintf("%s%u%s", childCrashAnnotationBaseName, aPid,
+                        extraFileExtension);
+#endif
+
+  rv = extraFile->Append(leafName);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  extraFile.forget(aExtraFile);
+  return true;
+}
+
+static bool
 IsDataEscaped(char* aData)
 {
   if (strchr(aData, '\n')) {
@@ -3109,27 +3174,19 @@ WriteExtraForMinidump(nsIFile* minidump,
     return false;
   }
 
-  if (pid && processToCrashFd.count(pid)) {
-    PRFileDesc* prFd = processToCrashFd[pid];
-    processToCrashFd.erase(pid);
-    FILE* fd;
-#if defined(XP_WIN)
-    int nativeFd = _open_osfhandle(PR_FileDesc2NativeHandle(prFd), 0);
-    if (nativeFd == -1) {
+  nsCOMPtr<nsIFile> exceptionTimeExtra;
+  FILE* fd;
+  if (pid && GetExtraFileForChildPid(pid, getter_AddRefs(exceptionTimeExtra)) &&
+      NS_SUCCEEDED(exceptionTimeExtra->OpenANSIFileDesc("r", &fd))) {
+    AnnotationTable exceptionTimeAnnotations;
+    ReadAndValidateExceptionTimeAnnotations(fd, exceptionTimeAnnotations);
+    fclose(fd);
+    if (!AppendExtraData(extra, exceptionTimeAnnotations)) {
       return false;
     }
-    fd = fdopen(nativeFd, "r");
-#else
-    fd = fdopen(PR_FileDesc2NativeHandle(prFd), "r");
-#endif
-    if (fd) {
-      AnnotationTable exceptionTimeAnnotations;
-      ReadAndValidateExceptionTimeAnnotations(fd, exceptionTimeAnnotations);
-      PR_Close(prFd);
-      if (!AppendExtraData(extra, exceptionTimeAnnotations)) {
-        return false;
-      }
-    }
+  }
+  if (exceptionTimeExtra) {
+    exceptionTimeExtra->Remove(false);
   }
 
   extra.forget(extraFile);
@@ -3481,35 +3538,30 @@ UnregisterInjectorCallback(DWORD processID)
 
 #endif // MOZ_CRASHREPORTER_INJECTOR
 
-#if !defined(XP_WIN)
-int
-GetAnnotationTimeCrashFd()
-{
-  return 7;
-}
-#endif
-
+#if defined(XP_WIN) || defined(XP_MACOSX)
 void
-RegisterChildCrashAnnotationFileDescriptor(ProcessId aProcess, PRFileDesc* aFd)
+InitChildProcessTmpDir(nsIFile* aDirOverride)
 {
-  processToCrashFd[aProcess] = aFd;
-}
+  MOZ_ASSERT(!XRE_IsParentProcess());
+  if (aDirOverride) {
+    childProcessTmpDir = CreatePathFromFile(aDirOverride);
+    return;
+  }
 
-void
-DeregisterChildCrashAnnotationFileDescriptor(ProcessId aProcess)
-{
-  auto it = processToCrashFd.find(aProcess);
-  if (it != processToCrashFd.end()) {
-    PR_Close(it->second);
-    processToCrashFd.erase(it);
+  // When retrieved by the child process, this will always resolve to the
+  // correct directory regardless of sandbox level.
+  nsCOMPtr<nsIFile> tmpDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpDir));
+  if (NS_SUCCEEDED(rv)) {
+    childProcessTmpDir = CreatePathFromFile(tmpDir);
   }
 }
+#endif // defined(XP_WIN) || defined(XP_MACOSX)
 
 #if defined(XP_WIN)
 // Child-side API
 bool
-SetRemoteExceptionHandler(const nsACString& crashPipe,
-                          uintptr_t aCrashTimeAnnotationFile)
+SetRemoteExceptionHandler(const nsACString& crashPipe)
 {
   // crash reporting is disabled
   if (crashPipe.Equals(kNullNotifyPipe))
@@ -3517,15 +3569,15 @@ SetRemoteExceptionHandler(const nsACString& crashPipe,
 
   MOZ_ASSERT(!gExceptionHandler, "crash client already init'd");
 
-  gExceptionHandler = new google_breakpad::ExceptionHandler(
-    L"",
-    ChildFPEFilter,
-    nullptr, // no minidump callback
-    reinterpret_cast<void*>(aCrashTimeAnnotationFile),
-    google_breakpad::ExceptionHandler::HANDLER_ALL,
-    GetMinidumpType(),
-    NS_ConvertASCIItoUTF16(crashPipe).get(),
-    nullptr);
+  gExceptionHandler = new google_breakpad::
+    ExceptionHandler(L"",
+                     ChildFPEFilter,
+                     nullptr,    // no minidump callback
+                     nullptr,    // no callback context
+                     google_breakpad::ExceptionHandler::HANDLER_ALL,
+                     GetMinidumpType(),
+                     NS_ConvertASCIItoUTF16(crashPipe).get(),
+                     nullptr);
   gExceptionHandler->set_handle_debug_exceptions(true);
   RunAndCleanUpDelayedNotes();
 

@@ -282,17 +282,9 @@ XRE_TakeMinidumpForChild(uint32_t aChildPid, nsIFile** aDump,
 }
 
 bool
-#if defined(XP_WIN)
-XRE_SetRemoteExceptionHandler(const char* aPipe /*= 0*/,
-                              uintptr_t aCrashTimeAnnotationFile)
-#else
-XRE_SetRemoteExceptionHandler(const char* aPipe /*= 0*/)
-#endif
+XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
 {
-#if defined(XP_WIN)
-  return CrashReporter::SetRemoteExceptionHandler(nsDependentCString(aPipe),
-                                                  aCrashTimeAnnotationFile);
-#elif defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_MACOSX)
   return CrashReporter::SetRemoteExceptionHandler(nsDependentCString(aPipe));
 #else
   return CrashReporter::SetRemoteExceptionHandler();
@@ -487,32 +479,18 @@ XRE_InitChildProcess(int aArgc,
   SetupErrorHandling(aArgv[0]);
 
   if (!CrashReporter::IsDummy()) {
-#if defined(XP_WIN)
     if (aArgc < 1) {
       return NS_ERROR_FAILURE;
     }
-    const char* const crashTimeAnnotationArg = aArgv[--aArgc];
-    uintptr_t crashTimeAnnotationFile =
-      static_cast<uintptr_t>(std::stoul(std::string(crashTimeAnnotationArg)));
-#endif
 
-    if (aArgc < 1)
-      return NS_ERROR_FAILURE;
     const char* const crashReporterArg = aArgv[--aArgc];
 
-#if defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_MACOSX)
     // on windows and mac, |crashReporterArg| is the named pipe on which the
     // server is listening for requests, or "-" if crash reporting is
     // disabled.
     if (0 != strcmp("-", crashReporterArg) &&
         !XRE_SetRemoteExceptionHandler(crashReporterArg)) {
-      // Bug 684322 will add better visibility into this condition
-      NS_WARNING("Could not setup crash reporting\n");
-    }
-#elif defined(XP_WIN)
-    if (0 != strcmp("-", crashReporterArg) &&
-        !XRE_SetRemoteExceptionHandler(crashReporterArg,
-                                       crashTimeAnnotationFile)) {
       // Bug 684322 will add better visibility into this condition
       NS_WARNING("Could not setup crash reporting\n");
     }
@@ -693,6 +671,10 @@ XRE_InitChildProcess(int aArgc,
       if (!process->Init(aArgc, aArgv)) {
         return NS_ERROR_FAILURE;
       }
+
+#if defined(XP_WIN) || defined(XP_MACOSX)
+      CrashReporter::InitChildProcessTmpDir(crashReportTmpDir);
+#endif
 
 #if defined(XP_WIN)
       // Set child processes up such that they will get killed after the
