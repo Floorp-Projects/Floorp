@@ -10,7 +10,6 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.UnexpectedJSONException.BadRequiredFieldJSONException;
-import org.mozilla.gecko.util.StringUtils;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -139,7 +138,7 @@ public class ExtendedJSONObject implements Cloneable {
    */
   public static ExtendedJSONObject parseUTF8AsJSONObject(byte[] in)
       throws NonObjectJSONException, IOException {
-    return new ExtendedJSONObject(new String(in, StringUtils.UTF_8));
+    return new ExtendedJSONObject(new String(in, "UTF-8"));
   }
 
   public ExtendedJSONObject() {

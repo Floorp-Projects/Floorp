@@ -5,6 +5,7 @@
 package org.mozilla.gecko.sync;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import org.json.simple.JSONObject;
 import org.mozilla.apache.commons.codec.binary.Base64;
@@ -55,10 +56,11 @@ public class CryptoRecord extends Record {
    * Input: JSONObject containing a valid payload (cipherText, IV, HMAC),
    * KeyBundle with keys for decryption. Output: byte[] clearText
    * @throws CryptoException
+   * @throws UnsupportedEncodingException
    */
-  private static byte[] decryptPayload(ExtendedJSONObject payload, KeyBundle keybundle) throws CryptoException {
-    byte[] ciphertext = Base64.decodeBase64(((String) payload.get(KEY_CIPHERTEXT)).getBytes(StringUtils.UTF_8));
-    byte[] iv         = Base64.decodeBase64(((String) payload.get(KEY_IV)).getBytes(StringUtils.UTF_8));
+  private static byte[] decryptPayload(ExtendedJSONObject payload, KeyBundle keybundle) throws CryptoException, UnsupportedEncodingException {
+    byte[] ciphertext = Base64.decodeBase64(((String) payload.get(KEY_CIPHERTEXT)).getBytes("UTF-8"));
+    byte[] iv         = Base64.decodeBase64(((String) payload.get(KEY_IV)).getBytes("UTF-8"));
     byte[] hmac       = Utils.hex2Byte((String) payload.get(KEY_HMAC));
 
     return CryptoInfo.decrypt(ciphertext, iv, hmac, keybundle).getMessage();
@@ -129,7 +131,7 @@ public class CryptoRecord extends Record {
    */
   public static CryptoRecord fromJSONRecord(String jsonRecord)
       throws NonObjectJSONException, IOException, RecordParseException {
-    byte[] bytes = jsonRecord.getBytes(StringUtils.UTF_8);
+    byte[] bytes = jsonRecord.getBytes("UTF-8");
     ExtendedJSONObject object = ExtendedJSONObject.parseUTF8AsJSONObject(bytes);
 
     return CryptoRecord.fromJSONRecord(object);
@@ -199,7 +201,7 @@ public class CryptoRecord extends Record {
     return this;
   }
 
-  public CryptoRecord encrypt() throws CryptoException {
+  public CryptoRecord encrypt() throws CryptoException, UnsupportedEncodingException {
     if (this.keyBundle == null) {
       throw new NoKeyBundleException();
     }
