@@ -9,8 +9,8 @@ import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
+import org.mozilla.gecko.util.StringUtils;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(TestRunner.class)
 public class TestKeyBundle {
   @Test
-  public void testCreateKeyBundle() throws UnsupportedEncodingException, CryptoException {
+  public void testCreateKeyBundle() throws CryptoException {
     String username              = "smqvooxj664hmrkrv6bw4r4vkegjhkns";
     String friendlyBase32SyncKey = "gbh7teqqcgyzd65svjgibd7tqy";
     String base64EncryptionKey   = "069EnS3EtDK4y1tZ1AyKX+U7WEsWRp9b" +
@@ -30,8 +30,8 @@ public class TestKeyBundle {
                                    "dKj0O+b0fwI=";
 
     KeyBundle keys = new KeyBundle(username, friendlyBase32SyncKey);
-    assertArrayEquals(keys.getEncryptionKey(), Base64.decodeBase64(base64EncryptionKey.getBytes("UTF-8")));
-    assertArrayEquals(keys.getHMACKey(), Base64.decodeBase64(base64HmacKey.getBytes("UTF-8")));
+    assertArrayEquals(keys.getEncryptionKey(), Base64.decodeBase64(base64EncryptionKey.getBytes(StringUtils.UTF_8)));
+    assertArrayEquals(keys.getHMACKey(), Base64.decodeBase64(base64HmacKey.getBytes(StringUtils.UTF_8)));
   }
 
   /*

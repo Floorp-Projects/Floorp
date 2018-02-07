@@ -43,6 +43,7 @@ import org.mozilla.gecko.sync.SynchronizerConfiguration;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;
 import org.mozilla.gecko.util.FileUtils;
+import org.mozilla.gecko.util.StringUtils;
 
 import static org.mozilla.gecko.db.DBUtils.qualifyColumn;
 
@@ -1782,18 +1783,13 @@ public class BrowserDatabaseHelper extends SQLiteOpenHelper {
     @RobocopTarget
     public static String getReaderCacheFileNameForURL(String url) {
         try {
-            // On KitKat and above we can use java.nio.charset.StandardCharsets.UTF_8 in place of "UTF8"
-            // which avoids having to handle UnsupportedCodingException
-            byte[] utf8 = url.getBytes("UTF8");
+            byte[] utf8 = url.getBytes(StringUtils.UTF_8);
 
             final MessageDigest digester = MessageDigest.getInstance("MD5");
             byte[] hash = digester.digest(utf8);
 
             final String hashString = new Base32().encodeAsString(hash);
             return hashString.substring(0, hashString.indexOf('=')) + ".json";
-        } catch (UnsupportedEncodingException e) {
-            // This should never happen
-            throw new IllegalStateException("UTF8 encoding not available - can't process readercache filename");
         } catch (NoSuchAlgorithmException e) {
             // This should also never happen
             throw new IllegalStateException("MD5 digester unavailable - can't process readercache filename");
