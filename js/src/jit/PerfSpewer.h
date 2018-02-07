@@ -12,6 +12,10 @@
 # include "jit/MacroAssembler.h"
 #endif
 
+namespace {
+    struct MOZ_RAII AutoLockPerfMap;
+}
+
 namespace js {
 namespace jit {
 
@@ -67,10 +71,14 @@ class PerfSpewer
 
   public:
     virtual MOZ_MUST_USE bool startBasicBlock(MBasicBlock* blk, MacroAssembler& masm);
-    virtual MOZ_MUST_USE bool endBasicBlock(MacroAssembler& masm);
-    MOZ_MUST_USE bool noteEndInlineCode(MacroAssembler& masm);
+    virtual void endBasicBlock(MacroAssembler& masm);
+    void noteEndInlineCode(MacroAssembler& masm);
 
     void writeProfile(JSScript* script, JitCode* code, MacroAssembler& masm);
+
+    static void WriteEntry(const AutoLockPerfMap&, uintptr_t address, size_t size,
+                           const char* fmt, ...)
+        MOZ_FORMAT_PRINTF(4, 5);
 };
 
 void writePerfSpewerBaselineProfile(JSScript* script, JitCode* code);
@@ -81,7 +89,7 @@ class WasmPerfSpewer : public PerfSpewer
 {
   public:
     MOZ_MUST_USE bool startBasicBlock(MBasicBlock* blk, MacroAssembler& masm) { return true; }
-    MOZ_MUST_USE bool endBasicBlock(MacroAssembler& masm) { return true; }
+    void endBasicBlock(MacroAssembler& masm) { }
 };
 
 void writePerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size, const char* filename,
