@@ -3843,7 +3843,7 @@ HTMLMediaElement::AddMediaElementToURITable()
 }
 
 void
-HTMLMediaElement::RemoveMediaElementFromURITable(bool aFroceClearEntry)
+HTMLMediaElement::RemoveMediaElementFromURITable()
 {
   if (!mDecoder || !mLoadingSrc || !gElementTable) {
     return;
@@ -3852,17 +3852,13 @@ HTMLMediaElement::RemoveMediaElementFromURITable(bool aFroceClearEntry)
   if (!entry) {
     return;
   }
-  if (aFroceClearEntry) {
+  entry->mElements.RemoveElement(this);
+  if (entry->mElements.IsEmpty()) {
     gElementTable->RemoveEntry(entry);
-  } else {
-    entry->mElements.RemoveElement(this);
-    if (entry->mElements.IsEmpty()) {
-      gElementTable->RemoveEntry(entry);
+    if (gElementTable->Count() == 0) {
+      delete gElementTable;
+      gElementTable = nullptr;
     }
-  }
-  if (gElementTable->Count() == 0) {
-    delete gElementTable;
-    gElementTable = nullptr;
   }
   NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 0,
     "After remove, should no longer have an entry in element table");
@@ -3991,7 +3987,6 @@ public:
         uint32_t loadType;
         shell->GetLoadType(&loadType);
         if (LOAD_RELOAD_BYPASS_PROXY_AND_CACHE == loadType && mWeak->mDecoder) {
-          mWeak->RemoveMediaElementFromURITable(true);
           mWeak->ShutdownDecoder();
         }
       }
