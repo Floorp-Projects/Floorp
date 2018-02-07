@@ -435,7 +435,7 @@ public:
   // is empty.
   Maybe<wr::WrClipId> TopmostClipId();
   // Same as TopmostClipId() but for scroll layers.
-  Maybe<wr::WrScrollId> TopmostScrollId();
+  wr::WrScrollId TopmostScrollId();
   // If the topmost item on the stack is a clip or a scroll layer
   bool TopmostIsClip();
 
