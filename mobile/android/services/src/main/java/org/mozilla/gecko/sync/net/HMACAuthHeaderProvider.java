@@ -16,6 +16,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.StringUtils;
 
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
@@ -197,11 +198,10 @@ public class HMACAuthHeaderProvider implements AuthHeaderProvider {
    * @return signature as base-64 encoded string.
    * @throws InvalidKeyException
    * @throws NoSuchAlgorithmException
-   * @throws UnsupportedEncodingException
    */
   protected static String getSignature(String requestString, String key)
-      throws InvalidKeyException, NoSuchAlgorithmException, UnsupportedEncodingException {
-    String macString = Base64.encodeBase64String(sha1(requestString.getBytes("UTF-8"), key.getBytes("UTF-8")));
+      throws InvalidKeyException, NoSuchAlgorithmException {
+    String macString = Base64.encodeBase64String(sha1(requestString.getBytes(StringUtils.UTF_8), key.getBytes(StringUtils.UTF_8)));
 
     return macString;
   }

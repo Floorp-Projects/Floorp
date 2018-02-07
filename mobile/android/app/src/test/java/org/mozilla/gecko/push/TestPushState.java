@@ -7,6 +7,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.util.StringUtils;
 import org.robolectric.RuntimeEnvironment;
 
 import java.io.File;
@@ -57,7 +58,7 @@ public class TestPushState {
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(file);
-            fos.write("}".getBytes("UTF-8"));
+            fos.write("}".getBytes(StringUtils.UTF_8));
         } finally {
             if (fos != null) {
                 fos.close();

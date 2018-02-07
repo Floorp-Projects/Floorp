@@ -19,6 +19,7 @@ import org.mozilla.gecko.sync.net.BaseResourceDelegate;
 import org.mozilla.gecko.sync.net.HawkAuthHeaderProvider;
 import org.mozilla.gecko.sync.net.Resource;
 import org.mozilla.gecko.sync.net.SyncResponse;
+import org.mozilla.gecko.util.StringUtils;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -39,7 +40,7 @@ public class TestLiveHawkAuth {
   public void testHawkUsage() throws Exception {
     // Id and credentials are hard-coded in example/usage.js.
     final String id = "dh37fgj492je";
-    final byte[] key = "werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn".getBytes("UTF-8");
+    final byte[] key = "werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn".getBytes(StringUtils.UTF_8);
     final BaseResource resource = new BaseResource("http://localhost:8000/", false);
 
     // Basic GET.
