@@ -25,7 +25,7 @@ add_task(async function() {
   await PlacesTestUtils.addVisits("http://www.mozilla.org/");
 
   // open all bookmarks node
-  PO.selectLeftPaneBuiltIn("AllBookmarks");
+  PO.selectLeftPaneQuery("AllBookmarks");
   isnot(PO._places.selectedNode, null,
         "Correctly selected all bookmarks node.");
   checkInfoBoxSelected();
@@ -34,7 +34,7 @@ add_task(async function() {
   checkAddInfoFieldsCollapsed(PO);
 
   // open history node
-  PO.selectLeftPaneBuiltIn("History");
+  PO.selectLeftPaneQuery("History");
   isnot(PO._places.selectedNode, null, "Correctly selected history node.");
   checkInfoBoxSelected();
   ok(infoBoxExpanderWrapper.hidden,
@@ -64,7 +64,7 @@ add_task(async function() {
   historyNode.containerOpen = false;
 
   // open bookmarks menu node
-  PO.selectLeftPaneBuiltIn("BookmarksMenu");
+  PO.selectLeftPaneQuery("BookmarksMenu");
   isnot(PO._places.selectedNode, null,
         "Correctly selected bookmarks menu node.");
   checkInfoBoxSelected();
@@ -157,3 +157,4 @@ function getAndCheckElmtById(id) {
   isnot(elmt, null, "Correctly got element: #" + id);
   return elmt;
 }
+

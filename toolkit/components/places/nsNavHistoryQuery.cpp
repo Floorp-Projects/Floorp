@@ -1359,12 +1359,11 @@ nsNavHistoryQueryOptions::GetResultType(uint16_t* aType)
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetResultType(uint16_t aType)
 {
-  if (aType > RESULTS_AS_ROOTS_QUERY)
+  if (aType > RESULTS_AS_TAG_CONTENTS)
     return NS_ERROR_INVALID_ARG;
-  // Tag queries, containers and the roots query are bookmarks related, so we
-  // set the QueryType accordingly.
-  if (aType == RESULTS_AS_TAG_QUERY || aType == RESULTS_AS_TAG_CONTENTS ||
-      aType == RESULTS_AS_ROOTS_QUERY)
+  // Tag queries and containers are bookmarks related, so we set the QueryType
+  // accordingly.
+  if (aType == RESULTS_AS_TAG_QUERY || aType == RESULTS_AS_TAG_CONTENTS)
     mQueryType = QUERY_TYPE_BOOKMARKS;
   mResultType = aType;
   return NS_OK;

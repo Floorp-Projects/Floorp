@@ -85,16 +85,15 @@ add_task(async function() {
 
     info("Test that special folders and cannot be moved but other shortcuts can.");
     let roots = [
-      PlacesUtils.bookmarks.menuGuid,
-      PlacesUtils.bookmarks.unfiledGuid,
-      PlacesUtils.bookmarks.toolbarGuid,
+      PlacesUtils.bookmarksMenuFolderId,
+      PlacesUtils.unfiledBookmarksFolderId,
+      PlacesUtils.toolbarFolderId,
     ];
 
-    for (let guid of roots) {
-      tree.selectItems([guid]);
+    for (let id of roots) {
+      selectShortcutForRootId(tree, id);
       Assert.ok(!PlacesControllerDragHelper.canMoveNode(tree.selectedNode, tree),
                 "shouldn't be able to move default shortcuts to roots");
-      let id = await PlacesUtils.promiseItemId(guid);
       let s = await PlacesUtils.bookmarks.insert({
         parentGuid: root.guid,
         title: "bar",
@@ -108,3 +107,14 @@ add_task(async function() {
     }
   });
 });
+
+function selectShortcutForRootId(tree, id) {
+  for (let i = 0; i < tree.result.root.childCount; ++i) {
+    let child = tree.result.root.getChild(i);
+    if (PlacesUtils.getConcreteItemId(child) == id) {
+      tree.selectItems([child.itemId]);
+      return;
+    }
+  }
+  Assert.ok(false, "Cannot find shortcut to root");
+}

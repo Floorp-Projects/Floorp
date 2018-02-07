@@ -584,20 +584,20 @@ var PlacesCommandHook = {
 
   /**
    * Opens the Places Organizer.
-   * @param {String} item The item to select in the organizer window,
-   *                      options are (case sensitive):
-   *                      BookmarksMenu, BookmarksToolbar, UnfiledBookmarks,
-   *                      AllBookmarks, History, Downloads.
+   * @param   aLeftPaneRoot
+   *          The query to select in the organizer window - options
+   *          are: History, AllBookmarks, BookmarksMenu, BookmarksToolbar,
+   *          UnfiledBookmarks, Tags and Downloads.
    */
-  showPlacesOrganizer(item) {
+  showPlacesOrganizer: function PCH_showPlacesOrganizer(aLeftPaneRoot) {
     var organizer = Services.wm.getMostRecentWindow("Places:Organizer");
     // Due to bug 528706, getMostRecentWindow can return closed windows.
     if (!organizer || organizer.closed) {
       // No currently open places window, so open one with the specified mode.
       openDialog("chrome://browser/content/places/places.xul",
-                 "", "chrome,toolbar=yes,dialog=no,resizable", item);
+                 "", "chrome,toolbar=yes,dialog=no,resizable", aLeftPaneRoot);
     } else {
-      organizer.PlacesOrganizer.selectLeftPaneContainerByHierarchy(item);
+      organizer.PlacesOrganizer.selectLeftPaneContainerByHierarchy(aLeftPaneRoot);
       organizer.focus();
     }
   },
