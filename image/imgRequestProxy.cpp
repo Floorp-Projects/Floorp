@@ -560,8 +560,11 @@ imgRequestProxy::CancelAndForgetObserver(nsresult aStatus)
 NS_IMETHODIMP
 imgRequestProxy::StartDecoding(uint32_t aFlags)
 {
-  // Flag this, so we know to transfer the request if our owner changes
-  mDecodeRequested = true;
+  // Flag this, so we know to request after validation if pending.
+  if (IsValidating()) {
+    mDecodeRequested = true;
+    return NS_OK;
+  }
 
   RefPtr<Image> image = GetImage();
   if (image) {
@@ -578,8 +581,11 @@ imgRequestProxy::StartDecoding(uint32_t aFlags)
 bool
 imgRequestProxy::StartDecodingWithResult(uint32_t aFlags)
 {
-  // Flag this, so we know to transfer the request if our owner changes
-  mDecodeRequested = true;
+  // Flag this, so we know to request after validation if pending.
+  if (IsValidating()) {
+    mDecodeRequested = true;
+    return false;
+  }
 
   RefPtr<Image> image = GetImage();
   if (image) {
@@ -736,8 +742,16 @@ imgRequestProxy::GetImage(imgIContainer** aImage)
 NS_IMETHODIMP
 imgRequestProxy::GetImageStatus(uint32_t* aStatus)
 {
-  RefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-  *aStatus = progressTracker->GetImageStatus();
+  if (IsValidating()) {
+    // We are currently validating the image, and so our status could revert if
+    // we discard the cache. We should also be deferring notifications, such
+    // that the caller will be notified when validation completes. Rather than
+    // risk misleading the caller, return nothing.
+    *aStatus = imgIRequest::STATUS_NONE;
+  } else {
+    RefPtr<ProgressTracker> progressTracker = GetProgressTracker();
+    *aStatus = progressTracker->GetImageStatus();
+  }
 
   return NS_OK;
 }
