@@ -642,6 +642,7 @@
                 aMaxTotalProgress);
             },
 
+            /* eslint-disable complexity */
             onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
               if (!aRequest)
                 return;
@@ -843,6 +844,7 @@
               this.mStateFlags = aStateFlags;
               this.mStatus = aStatus;
             },
+            /* eslint-enable complexity */
 
             onLocationChange(aWebProgress, aRequest, aLocation,
                              aFlags) {
