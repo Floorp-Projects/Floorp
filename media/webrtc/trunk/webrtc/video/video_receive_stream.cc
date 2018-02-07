@@ -253,7 +253,16 @@ void VideoReceiveStream::Stop() {
 }
 
 VideoReceiveStream::Stats VideoReceiveStream::GetStats() const {
-  return stats_proxy_.GetStats();
+  auto stats = stats_proxy_.GetStats();
+  stats.rtcp_sender_packets_sent = 0;
+  stats.rtcp_sender_octets_sent = 0;
+  RtpRtcp* rtp_rtcp = rtp_video_stream_receiver_.rtp_rtcp();
+  if (rtp_rtcp) {
+    rtp_rtcp->RemoteRTCPSenderInfo(&stats.rtcp_sender_packets_sent,
+                                   &stats.rtcp_sender_octets_sent);
+  }
+
+  return stats;
 }
 
 void VideoReceiveStream::EnableEncodedFrameRecording(rtc::PlatformFile file,
@@ -458,11 +467,6 @@ bool VideoReceiveStream::Decode() {
     }
   }
   return true;
-}
-
-bool
-VideoReceiveStream::GetRemoteRTCPSenderInfo(RTCPSenderInfo* sender_info) const {
-  return -1 != rtp_stream_receiver_.rtp_rtcp()->RemoteRTCPStat(sender_info);
 }
 
 }  // namespace internal
