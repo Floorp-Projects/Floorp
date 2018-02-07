@@ -101,10 +101,15 @@ dafsa_data.script = '../../ds/make_dafsa.py'
 dafsa_data.inputs = ['dafsa_test_1.dat']
 
 TEST_HARNESS_FILES.gtest += [
+    'wikipedia/ar.txt',
+    'wikipedia/de-edit.txt',
     'wikipedia/de.txt',
     'wikipedia/ja.txt',
+    'wikipedia/ko.txt',
     'wikipedia/ru.txt',
     'wikipedia/th.txt',
+    'wikipedia/tr.txt',
+    'wikipedia/vi.txt',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
