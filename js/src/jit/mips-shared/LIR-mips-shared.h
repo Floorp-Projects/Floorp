@@ -388,6 +388,78 @@ class LWasmUnalignedStoreI64 : public details::LWasmUnalignedStoreBase<1 + INT64
     }
 };
 
+class LWasmCompareExchangeI64 : public LInstructionHelper<INT64_PIECES, 1 + INT64_PIECES + INT64_PIECES, 0>
+{
+  public:
+    LIR_HEADER(WasmCompareExchangeI64);
+
+    LWasmCompareExchangeI64(const LAllocation& ptr, const LInt64Allocation& oldValue, const LInt64Allocation& newValue)
+    {
+        setOperand(0, ptr);
+        setInt64Operand(1, oldValue);
+        setInt64Operand(1 + INT64_PIECES, newValue);
+    }
+
+    const LAllocation* ptr() {
+        return getOperand(0);
+    }
+    const LInt64Allocation oldValue() {
+        return getInt64Operand(1);
+    }
+    const LInt64Allocation newValue() {
+        return getInt64Operand(1 + INT64_PIECES);
+    }
+    const MWasmCompareExchangeHeap* mir() const {
+        return mir_->toWasmCompareExchangeHeap();
+    }
+};
+
+class LWasmAtomicExchangeI64 : public LInstructionHelper<INT64_PIECES, 1 + INT64_PIECES, 0>
+{
+  public:
+    LIR_HEADER(WasmAtomicExchangeI64);
+
+    LWasmAtomicExchangeI64(const LAllocation& ptr, const LInt64Allocation& value)
+    {
+        setOperand(0, ptr);
+        setInt64Operand(1, value);
+    }
+
+    const LAllocation* ptr() {
+        return getOperand(0);
+    }
+    const LInt64Allocation value() {
+        return getInt64Operand(1);
+    }
+    const MWasmAtomicExchangeHeap* mir() const {
+        return mir_->toWasmAtomicExchangeHeap();
+    }
+};
+
+class LWasmAtomicBinopI64 : public LInstructionHelper<INT64_PIECES, 1 + INT64_PIECES, 2>
+{
+  public:
+    LIR_HEADER(WasmAtomicBinopI64);
+
+    LWasmAtomicBinopI64(const LAllocation& ptr, const LInt64Allocation& value)
+    {
+        setOperand(0, ptr);
+        setInt64Operand(1, value);
+    }
+
+    const LAllocation* ptr() {
+        return getOperand(0);
+    }
+    const LInt64Allocation value() {
+        return getInt64Operand(1);
+    }
+
+    const MWasmAtomicBinopHeap* mir() const {
+        return mir_->toWasmAtomicBinopHeap();
+    }
+};
+
+
 } // namespace jit
 } // namespace js
 

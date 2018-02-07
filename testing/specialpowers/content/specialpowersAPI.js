@@ -26,7 +26,7 @@ ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 // but this whole file is in strict mode.  So instead fall back on
 // returning "this" from indirect eval, which returns the global.
 if (!(function() { var e = eval; return e("this"); })().File) { // eslint-disable-line no-eval
-    Cu.importGlobalProperties(["File", "InspectorUtils"]);
+    Cu.importGlobalProperties(["File", "InspectorUtils", "NodeFilter"]);
 }
 
 // Allow stuff from this scope to be accessed from non-privileged scopes. This
@@ -2191,7 +2191,7 @@ SpecialPowersAPI.prototype = {
     let walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"].
                  createInstance(Ci.inIDeepTreeWalker);
     walker.showAnonymousContent = showAnonymousContent;
-    walker.init(node.ownerDocument, 0xFFFFFFFF /* NodeFilter.SHOW_ALL */);
+    walker.init(node.ownerDocument, NodeFilter.SHOW_ALL);
     walker.currentNode = node;
     return {
       get firstChild() {

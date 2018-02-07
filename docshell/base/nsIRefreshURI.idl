@@ -19,9 +19,8 @@ interface nsIRefreshURI : nsISupports {
       *
       * @param aUri The uri to refresh.
       * @param aPrincipal The triggeringPrincipal for the refresh load
-      *   May be null, in which case a principal will be built based on the
-      *   referrer URI of the previous docshell load, or will use the system
-      *   principal when there is no referrer.
+      *   May be null, in which case the principal of current document will be
+      *   applied.
       * @param aMillis The number of milliseconds to wait.
       * @param aRepeat Flag to indicate if the uri is to be 
       *                repeatedly refreshed every aMillis milliseconds.
@@ -36,9 +35,8 @@ interface nsIRefreshURI : nsISupports {
       *
       * @param aURI The URI to refresh.
       * @param aPrincipal The triggeringPrincipal for the refresh load
-      *   May be null, in which case a principal will be built based on the
-      *   referrer URI of the previous docshell load, or will use the system
-      *   principal when there is no referrer.
+      *   May be null, in which case the principal of current document will be
+      *   applied.
       * @param aMillis The number of milliseconds by which this refresh would
       *                be delayed if it were not being forced.
       * @param aMetaRefresh Flag to indicate if this is a meta refresh.
@@ -68,9 +66,8 @@ interface nsIRefreshURI : nsISupports {
       *
       * @param aBaseURI base URI to resolve refresh uri with.
       * @param aPrincipal The triggeringPrincipal for the refresh load
-      *   May be null, in which case a principal will be built based on the
-      *   referrer URI of the previous docshell load, or will use the system
-      *   principal when there is no referrer.
+      *   May be null, in which case the principal of current document will be
+      *   applied.
       * @param aHeader  The meta refresh header string.
       */
     void setupRefreshURIFromHeader(in nsIURI aBaseURI,

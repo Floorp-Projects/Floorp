@@ -249,7 +249,7 @@
             // which would blow away our list.
 
             var iterator = doc.createTreeWalker(this,
-						1 /* NodeFilter.SHOW_ELEMENT */,
+                                                NodeFilter.SHOW_ELEMENT,
                                                 this._filterRadioGroup);
             while (iterator.nextNode())
               radioChildren.push(iterator.currentNode);

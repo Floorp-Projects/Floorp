@@ -341,7 +341,13 @@ AtomicOperations::isLockfreeJS(int32_t size)
 // participate in the memory exclusivity monitors implemented by the simulator.
 // Such a solution is likely to be difficult.
 
-#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
+#if defined(JS_SIMULATOR_MIPS32)
+# if defined(__clang__) || defined(__GNUC__)
+#  include "jit/mips-shared/AtomicOperations-mips-shared.h"
+# else
+#  error "No AtomicOperations support for this platform+compiler combination"
+# endif
+#elif defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
 # if defined(__clang__) || defined(__GNUC__)
 #  include "jit/x86-shared/AtomicOperations-x86-shared-gcc.h"
 # elif defined(_MSC_VER)
