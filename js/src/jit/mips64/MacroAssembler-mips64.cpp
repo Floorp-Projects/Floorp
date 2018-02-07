@@ -640,14 +640,8 @@ MacroAssemblerMIPS64::ma_push(Register r)
 void
 MacroAssemblerMIPS64::ma_b(Register lhs, ImmWord imm, Label* label, Condition c, JumpKind jumpKind)
 {
-    MOZ_ASSERT(c != Overflow);
-    if (imm.value == 0) {
-        if (c == Always || c == AboveOrEqual)
-            ma_b(label, jumpKind);
-        else if (c == Below)
-            ; // This condition is always false. No branch required.
-        else
-            branchWithCode(getBranchCode(lhs, c), label, jumpKind);
+    if (imm.value <= INT32_MAX) {
+        ma_b(lhs, Imm32(uint32_t(imm.value)), label, c, jumpKind);
     } else {
         MOZ_ASSERT(lhs != ScratchRegister);
         ma_li(ScratchRegister, imm);
@@ -809,15 +803,18 @@ MacroAssemblerMIPS64::branchWithCode(InstImm code, Label* label, JumpKind jumpKi
 void
 MacroAssemblerMIPS64::ma_cmp_set(Register rd, Register rs, ImmWord imm, Condition c)
 {
-    ma_li(ScratchRegister, imm);
-    ma_cmp_set(rd, rs, ScratchRegister, c);
+    if (imm.value <= INT32_MAX) {
+        ma_cmp_set(rd, rs, Imm32(uint32_t(imm.value)), c);
+    } else {
+        ma_li(ScratchRegister, imm);
+        ma_cmp_set(rd, rs, ScratchRegister, c);
+    }
 }
 
 void
 MacroAssemblerMIPS64::ma_cmp_set(Register rd, Register rs, ImmPtr imm, Condition c)
 {
-    ma_li(ScratchRegister, ImmWord(uintptr_t(imm.value)));
-    ma_cmp_set(rd, rs, ScratchRegister, c);
+    ma_cmp_set(rd, rs, ImmWord(uintptr_t(imm.value)), c);
 }
 
 // fp instructions

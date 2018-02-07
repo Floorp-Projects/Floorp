@@ -788,9 +788,17 @@ MacroAssemblerMIPSShared::ma_b(Register lhs, Imm32 imm, Label* label, Condition 
         else
             asMasm().branchWithCode(getBranchCode(lhs, c), label, jumpKind);
     } else {
-        MOZ_ASSERT(lhs != ScratchRegister);
-        ma_li(ScratchRegister, imm);
-        ma_b(lhs, ScratchRegister, label, c, jumpKind);
+      switch (c) {
+        case Equal:
+        case NotEqual:
+          MOZ_ASSERT(lhs != ScratchRegister);
+          ma_li(ScratchRegister, imm);
+          ma_b(lhs, ScratchRegister, label, c, jumpKind);
+          break;
+        default:
+          Condition cond = ma_cmp(ScratchRegister, lhs, imm, c);
+          asMasm().branchWithCode(getBranchCode(ScratchRegister, cond), label, jumpKind);
+        }
     }
 }
 
@@ -886,20 +894,59 @@ MacroAssemblerMIPSShared::ma_cmp(Register scratch, Register lhs, Register rhs, C
         //   beq at,$zero,offs
         as_slt(scratch, rhs, lhs);
         return Equal;
-      case Equal :
-      case NotEqual:
-      case Zero:
-      case NonZero:
-      case Always:
-      case Signed:
-      case NotSigned:
-        MOZ_CRASH("There is a better way to compare for equality.");
-        break;
-      case Overflow:
-        MOZ_CRASH("Overflow condition not supported for MIPS.");
-        break;
       default:
-        MOZ_CRASH("Invalid condition for branch.");
+        MOZ_CRASH("Invalid condition.");
+    }
+    return Always;
+}
+
+Assembler::Condition
+MacroAssemblerMIPSShared::ma_cmp(Register scratch, Register lhs, Imm32 imm, Condition c)
+{
+    switch (c) {
+      case Above:
+      case BelowOrEqual:
+        if (Imm16::IsInSignedRange(imm.value + 1) && imm.value != -1) {
+          // lhs <= rhs via lhs < rhs + 1 if rhs + 1 does not overflow
+          as_sltiu(scratch, lhs, imm.value + 1);
+
+          return (c == BelowOrEqual ? NotEqual : Equal);
+        } else {
+          ma_li(scratch, imm);
+          as_sltu(scratch, scratch, lhs);
+          return (c == BelowOrEqual ? Equal : NotEqual);
+        }
+      case AboveOrEqual:
+      case Below:
+        if (Imm16::IsInSignedRange(imm.value)) {
+          as_sltiu(scratch, lhs, imm.value);
+        } else {
+          ma_li(scratch, imm);
+          as_sltu(scratch, lhs, scratch);
+        }
+        return (c == AboveOrEqual ? Equal : NotEqual);
+      case GreaterThan:
+      case LessThanOrEqual:
+        if (Imm16::IsInSignedRange(imm.value + 1)) {
+          // lhs <= rhs via lhs < rhs + 1.
+          as_slti(scratch, lhs, imm.value + 1);
+          return (c == LessThanOrEqual ? NotEqual : Equal);
+        } else {
+          ma_li(scratch, imm);
+          as_slt(scratch, scratch, lhs);
+          return (c == LessThanOrEqual ? Equal : NotEqual);
+        }
+      case GreaterThanOrEqual:
+      case LessThan:
+        if (Imm16::IsInSignedRange(imm.value)) {
+          as_slti(scratch, lhs, imm.value);
+        } else {
+          ma_li(scratch, imm);
+          as_slt(scratch, lhs, scratch);
+        }
+        return (c == GreaterThanOrEqual ? Equal : NotEqual);
+      default:
+        MOZ_CRASH("Invalid condition.");
     }
     return Always;
 }
@@ -971,22 +1018,21 @@ MacroAssemblerMIPSShared::ma_cmp_set(Register rd, Register rs, Register rt, Cond
       case Zero:
         MOZ_ASSERT(rs == rt);
         // seq d,s,$zero =>
-        //   xor d,s,$zero
-        //   sltiu d,d,1
-        as_xor(rd, rs, zero);
-        as_sltiu(rd, rd, 1);
+        //   sltiu d,s,1
+        as_sltiu(rd, rs, 1);
         break;
       case NonZero:
+        MOZ_ASSERT(rs == rt);
         // sne d,s,$zero =>
-        //   xor d,s,$zero
-        //   sltu d,$zero,d
-        as_xor(rd, rs, zero);
-        as_sltu(rd, zero, rd);
+        //   sltu d,$zero,s
+        as_sltu(rd, zero, rs);
         break;
       case Signed:
+        MOZ_ASSERT(rs == rt);
         as_slt(rd, rs, zero);
         break;
       case NotSigned:
+        MOZ_ASSERT(rs == rt);
         // sge d,s,$zero =>
         //   slt d,s,$zero
         //   xori d,d,1
@@ -994,7 +1040,7 @@ MacroAssemblerMIPSShared::ma_cmp_set(Register rd, Register rs, Register rt, Cond
         as_xori(rd, rd, 1);
         break;
       default:
-        MOZ_CRASH("Invalid condition for ma_cmp_set.");
+        MOZ_CRASH("Invalid condition.");
     }
 }
 
@@ -1069,39 +1115,102 @@ void
 MacroAssemblerMIPSShared::ma_cmp_set_double(Register dest, FloatRegister lhs, FloatRegister rhs,
                                             DoubleCondition c)
 {
-    ma_li(dest, Imm32(0));
-    ma_li(ScratchRegister, Imm32(1));
-
     FloatTestKind moveCondition;
     compareFloatingPoint(DoubleFloat, lhs, rhs, c, &moveCondition);
 
+    ma_li(dest, Imm32(1));
+
     if (moveCondition == TestForTrue)
-        as_movt(dest, ScratchRegister);
+        as_movf(dest, zero);
     else
-        as_movf(dest, ScratchRegister);
+        as_movt(dest, zero);
 }
 
 void
 MacroAssemblerMIPSShared::ma_cmp_set_float32(Register dest, FloatRegister lhs, FloatRegister rhs,
                                              DoubleCondition c)
 {
-    ma_li(dest, Imm32(0));
-    ma_li(ScratchRegister, Imm32(1));
-
     FloatTestKind moveCondition;
     compareFloatingPoint(SingleFloat, lhs, rhs, c, &moveCondition);
 
+    ma_li(dest, Imm32(1));
+
     if (moveCondition == TestForTrue)
-        as_movt(dest, ScratchRegister);
+        as_movf(dest, zero);
     else
-        as_movf(dest, ScratchRegister);
+        as_movt(dest, zero);
 }
 
 void
 MacroAssemblerMIPSShared::ma_cmp_set(Register rd, Register rs, Imm32 imm, Condition c)
 {
-    ma_li(ScratchRegister, imm);
-    ma_cmp_set(rd, rs, ScratchRegister, c);
+    if (imm.value == 0) {
+        switch (c) {
+          case Equal :
+          case BelowOrEqual:
+            as_sltiu(rd, rs, 1);
+            break;
+          case NotEqual:
+          case Above:
+            as_sltu(rd, zero, rs);
+            break;
+          case AboveOrEqual:
+          case Below:
+            as_ori(rd, zero, c == AboveOrEqual ? 1: 0);
+            break;
+          case GreaterThan:
+          case LessThanOrEqual:
+            as_slt(rd, zero, rs);
+            if (c == LessThanOrEqual)
+                as_xori(rd, rd, 1);
+            break;
+          case LessThan:
+          case GreaterThanOrEqual:
+            as_slt(rd, rs, zero);
+            if (c == GreaterThanOrEqual)
+                as_xori(rd, rd, 1);
+            break;
+          case Zero:
+            as_sltiu(rd, rs, 1);
+            break;
+          case NonZero:
+            as_sltu(rd, zero, rs);
+            break;
+          case Signed:
+            as_slt(rd, rs, zero);
+            break;
+          case NotSigned:
+            as_slt(rd, rs, zero);
+            as_xori(rd, rd, 1);
+            break;
+          default:
+            MOZ_CRASH("Invalid condition.");
+        }
+        return;
+    }
+
+    switch (c) {
+      case Equal:
+      case NotEqual:
+        MOZ_ASSERT(rs != ScratchRegister);
+        ma_xor(rd, rs, imm);
+        if (c == Equal)
+            as_sltiu(rd, rd, 1);
+        else
+            as_sltu(rd, zero, rd);
+        break;
+      case Zero:
+      case NonZero:
+      case Signed:
+      case NotSigned:
+        MOZ_CRASH("Invalid condition.");
+      default:
+        Condition cond = ma_cmp(rd, rs, imm, c);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
+
+        if(cond == Equal)
+            as_xori(rd, rd, 1);
+    }
 }
 
 // fp instructions
