@@ -570,6 +570,13 @@ A helpful trick is that it is possible to bind to 0 to get the system
 to atomically assign a free port.
 
 
+#### <code>--jsdebugger</code>
+
+Attach [browser toolbox] debugger when Firefox starts.  This is
+useful for debugging [Marionette] internals.
+
+[browser toolbox]: https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox
+
 #### <code>-v<var>[v]</var></code>
 
 Increases the logging verbosity by to debug level when passing a single
