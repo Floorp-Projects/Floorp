@@ -8,6 +8,7 @@ package org.mozilla.focus.web;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 import org.mozilla.focus.session.Session;
@@ -59,10 +60,8 @@ public class WebViewProvider {
             geckoSession.setContentListener(createContentListener());
             geckoSession.setProgressListener(createProgressListener());
             geckoSession.setNavigationListener(createNavigationListener());
-
+            geckoSession.setTrackingProtectionDelegate(createTrackingProtectionDelegate());
             setSession(geckoSession);
-
-            // TODO: set long press listener, call through to callback.onLinkLongPress()
         }
 
         @Override
@@ -126,6 +125,7 @@ public class WebViewProvider {
         @Override
         public void setBlockingEnabled(boolean enabled) {
             getSettings().setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, enabled);
+            callback.onBlockingStateChanged(enabled);
         }
 
         private ContentListener createContentListener() {
@@ -151,6 +151,16 @@ public class WebViewProvider {
 
                 @Override
                 public void onContextMenu(GeckoSession session, int screenX, int screenY, String uri, String elementSrc) {
+                    if (elementSrc != null) {
+                        callback.onLongPress(new HitTarget(false, null, true, elementSrc));
+                    } else if (uri != null) {
+                        callback.onLongPress(new HitTarget(true, uri, false, null));
+                    }
+                }
+
+                @Override
+                public void onFocusRequest(GeckoSession geckoSession) {
+
                 }
             };
         }
@@ -161,6 +171,7 @@ public class WebViewProvider {
                 public void onPageStart(GeckoSession session, String url) {
                     if (callback != null) {
                         callback.onPageStarted(url);
+                        callback.resetBlockedTrackers();
                         callback.onProgress(25);
                         isSecure = false;
                     }
@@ -213,6 +224,18 @@ public class WebViewProvider {
 
                     // Otherwise allow the load to continue normally
                     return false;
+                }
+            };
+        }
+
+        public TrackingProtectionDelegate createTrackingProtectionDelegate() {
+           return new TrackingProtectionDelegate() {
+                @Override
+                public void onTrackerBlocked(GeckoSession geckoSession, String s, int i) {
+                    Log.v("Tracker" ,"blocked");
+                    if (callback != null) {
+                        callback.countBlockedTracker();
+                    }
                 }
             };
         }
