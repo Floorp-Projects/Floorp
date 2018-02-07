@@ -32,7 +32,7 @@ var gLibrary;
 
 var testCases = [
   function allBookmarksScope() {
-    let defScope = getDefaultScope(PlacesUIUtils.leftPaneQueries.AllBookmarks);
+    let defScope = getDefaultScope(PlacesUIUtils.allBookmarksFolderId);
     search(PlacesUIUtils.allBookmarksFolderId, "dummy", defScope);
   },
 

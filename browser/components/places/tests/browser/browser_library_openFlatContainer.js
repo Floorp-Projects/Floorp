@@ -20,14 +20,16 @@ add_task(async function() {
     }],
   });
 
-  let library = await promiseLibrary("UnfiledBookmarks");
+  let library = await promiseLibrary("AllBookmarks");
   registerCleanupFunction(async function() {
     await promiseLibraryClosed(library);
     await PlacesUtils.bookmarks.eraseEverything();
   });
 
-  // Ensure the container is closed.
-  library.PlacesOrganizer._places.selectedNode.containerOpen = false;
+  // Select unfiled later, to ensure it's closed.
+  library.PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
+  ok(!library.PlacesOrganizer._places.selectedNode.containerOpen,
+     "Unfiled container is closed");
 
   let folderNode = library.ContentTree.view.view.nodeForTreeIndex(0);
   is(folderNode.bookmarkGuid, bookmarks[0].guid,

@@ -31,7 +31,7 @@ var testForgetThisSiteVisibility = async function(selectionCount) {
   let organizer = await promiseLibrary();
 
   // Select History in the left pane.
-  organizer.PlacesOrganizer.selectLeftPaneBuiltIn("History");
+  organizer.PlacesOrganizer.selectLeftPaneQuery("History");
   let PO = organizer.PlacesOrganizer;
   let histContainer = PO._places.selectedNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
   histContainer.containerOpen = true;

@@ -1377,8 +1377,7 @@ var PlacesControllerDragHelper = {
    * @return True if the node can be moved, false otherwise.
    */
   canMoveUnwrappedNode(unwrappedNode) {
-    if ((unwrappedNode.concreteGuid && PlacesUtils.isRootItem(unwrappedNode.concreteGuid)) ||
-        unwrappedNode.id <= 0 || PlacesUtils.isRootItem(unwrappedNode.id)) {
+    if (unwrappedNode.id <= 0 || PlacesUtils.isRootItem(unwrappedNode.id)) {
       return false;
     }
     let parentId = unwrappedNode.parent;
@@ -1393,7 +1392,8 @@ var PlacesControllerDragHelper = {
     // them first, especially because isCommandEnabled may be called way
     // before the left pane folder is even necessary.
     if (typeof Object.getOwnPropertyDescriptor(PlacesUIUtils, "leftPaneFolderId").get != "function" &&
-        (parentId == PlacesUIUtils.leftPaneFolderId)) {
+        (parentId == PlacesUIUtils.leftPaneFolderId ||
+          parentId == PlacesUIUtils.allBookmarksFolderId)) {
       return false;
     }
     return true;
