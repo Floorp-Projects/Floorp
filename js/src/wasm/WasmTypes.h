@@ -1126,8 +1126,14 @@ class CodeRange
     bool isFunction() const {
         return kind() == Function;
     }
+    bool isInterpEntry() const {
+        return kind() == InterpEntry;
+    }
     bool isImportExit() const {
         return kind() == ImportJitExit || kind() == ImportInterpExit || kind() == BuiltinThunk;
+    }
+    bool isImportInterpExit() const {
+        return kind() == ImportInterpExit;
     }
     bool isImportJitExit() const {
         return kind() == ImportJitExit;

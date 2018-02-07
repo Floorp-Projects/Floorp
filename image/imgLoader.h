@@ -568,6 +568,7 @@ public:
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
 private:
+  void UpdateProxies();
   virtual ~imgCacheValidator();
 
   nsCOMPtr<nsIStreamListener> mDestListener;
@@ -576,7 +577,7 @@ private:
   nsCOMPtr<nsIChannel> mRedirectChannel;
 
   RefPtr<imgRequest> mRequest;
-  nsCOMArray<imgIRequest> mProxies;
+  AutoTArray<RefPtr<imgRequestProxy>, 4> mProxies;
 
   RefPtr<imgRequest> mNewRequest;
   RefPtr<imgCacheEntry> mNewEntry;

@@ -29,13 +29,13 @@ add_task(async function() {
   await waitForSources(dbg, "simple1", "simple2", "nested-source", "long.js");
 
   // Expand nodes and make sure more sources appear.
-  assertSourceCount(dbg, 2);
+  await assertSourceCount(dbg, 2);
   await clickElement(dbg, "sourceArrow", 2);
 
-  assertSourceCount(dbg, 7);
+  await assertSourceCount(dbg, 7);
   await clickElement(dbg, "sourceArrow", 3);
 
-  assertSourceCount(dbg, 8);
+  await assertSourceCount(dbg, 8);
 
   // Select a source.
   ok(
