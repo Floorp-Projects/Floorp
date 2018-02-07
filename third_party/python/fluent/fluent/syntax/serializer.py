@@ -16,52 +16,70 @@ def contain_new_line(elems):
 
 
 class FluentSerializer(object):
+    HAS_ENTRIES = 1
+
     def __init__(self, with_junk=False):
         self.with_junk = with_junk
 
     def serialize(self, resource):
+        if not isinstance(resource, ast.Resource):
+            raise Exception('Unknown resource type: {}'.format(type(resource)))
+
+        state = 0
+
         parts = []
-        if resource.comment:
-            parts.append(
-                "{}\n\n".format(
-                    serialize_comment(resource.comment)
-                )
-            )
         for entry in resource.body:
             if not isinstance(entry, ast.Junk) or self.with_junk:
-                parts.append(self.serialize_entry(entry))
+                parts.append(self.serialize_entry(entry, state))
+                if not state & self.HAS_ENTRIES:
+                    state |= self.HAS_ENTRIES
 
         return "".join(parts)
 
-    def serialize_entry(self, entry):
+    def serialize_entry(self, entry, state=0):
         if isinstance(entry, ast.Message):
             return serialize_message(entry)
-        if isinstance(entry, ast.Section):
-            return serialize_section(entry)
+        if isinstance(entry, ast.Term):
+            return serialize_message(entry)
         if isinstance(entry, ast.Comment):
-            return "\n{}\n\n".format(serialize_comment(entry))
+            if state & self.HAS_ENTRIES:
+                return "\n{}\n\n".format(serialize_comment(entry))
+            return "{}\n\n".format(serialize_comment(entry))
+        if isinstance(entry, ast.GroupComment):
+            if state & self.HAS_ENTRIES:
+                return "\n{}\n\n".format(serialize_group_comment(entry))
+            return "{}\n\n".format(serialize_group_comment(entry))
+        if isinstance(entry, ast.ResourceComment):
+            if state & self.HAS_ENTRIES:
+                return "\n{}\n\n".format(serialize_resource_comment(entry))
+            return "{}\n\n".format(serialize_resource_comment(entry))
         if isinstance(entry, ast.Junk):
             return serialize_junk(entry)
-        raise Exception('Unknown entry type: {}'.format(entry.type))
+        raise Exception('Unknown entry type: {}'.format(type(entry)))
+
+    def serialize_expression(self, expr):
+        return serialize_expression(expr)
 
 
 def serialize_comment(comment):
-    return "".join([
-        "{}{}".format("// ", line)
-        for line in comment.content.splitlines(True)
+    return "\n".join([
+        "#" if len(line) == 0 else "# {}".format(line)
+        for line in comment.content.splitlines(False)
     ])
 
 
-def serialize_section(section):
-    if section.comment:
-        return "\n\n{}\n[[ {} ]]\n\n".format(
-            serialize_comment(section.comment),
-            serialize_symbol(section.name)
-        )
-    else:
-        return "\n\n[[ {} ]]\n\n".format(
-            serialize_symbol(section.name)
-        )
+def serialize_group_comment(comment):
+    return "\n".join([
+        "##" if len(line) == 0 else "## {}".format(line)
+        for line in comment.content.splitlines(False)
+    ])
+
+
+def serialize_resource_comment(comment):
+    return "\n".join([
+        "###" if len(line) == 0 else "### {}".format(line)
+        for line in comment.content.splitlines(False)
+    ])
 
 
 def serialize_junk(junk):
@@ -76,14 +94,10 @@ def serialize_message(message):
         parts.append("\n")
 
     parts.append(serialize_identifier(message.id))
+    parts.append(" =")
 
     if message.value:
-        parts.append(" =")
         parts.append(serialize_value(message.value))
-
-    if message.tags:
-        for tag in message.tags:
-            parts.append(serialize_tag(tag))
 
     if message.attributes:
         for attribute in message.attributes:
@@ -92,12 +106,6 @@ def serialize_message(message):
     parts.append("\n")
 
     return ''.join(parts)
-
-
-def serialize_tag(tag):
-    return "\n    #{}".format(
-        serialize_symbol(tag.name),
-    )
 
 
 def serialize_attribute(attribute):
@@ -127,7 +135,7 @@ def serialize_element(element):
         return serialize_text_element(element)
     if isinstance(element, ast.Placeable):
         return serialize_placeable(element)
-    raise Exception('Unknown element type: {}'.format(element.type))
+    raise Exception('Unknown element type: {}'.format(type(element)))
 
 
 def serialize_text_element(text):
@@ -138,14 +146,18 @@ def serialize_placeable(placeable):
     expr = placeable.expression
 
     if isinstance(expr, ast.Placeable):
-        return "{{{}}}".format(
-            serialize_placeable(expr))
+        return "{{{}}}".format(serialize_placeable(expr))
     if isinstance(expr, ast.SelectExpression):
-        return "{{{}}}".format(
-            serialize_select_expression(expr))
+        # Special-case select expressions to control the withespace around the
+        # opening and the closing brace.
+        if expr.expression is not None:
+            # A select expression with a selector.
+            return "{{ {}}}".format(serialize_select_expression(expr))
+        else:
+            # A variant list without a selector.
+            return "{{{}}}".format(serialize_select_expression(expr))
     if isinstance(expr, ast.Expression):
-        return "{{ {} }}".format(
-            serialize_expression(expr))
+        return "{{ {} }}".format(serialize_expression(expr))
 
 
 def serialize_expression(expression):
@@ -163,7 +175,9 @@ def serialize_expression(expression):
         return serialize_variant_expression(expression)
     if isinstance(expression, ast.CallExpression):
         return serialize_call_expression(expression)
-    raise Exception('Unknown expression type: {}'.format(expression.type))
+    if isinstance(expression, ast.SelectExpression):
+        return serialize_select_expression(expression)
+    raise Exception('Unknown expression type: {}'.format(type(expression)))
 
 
 def serialize_string_expression(expr):
@@ -186,7 +200,7 @@ def serialize_select_expression(expr):
     parts = []
 
     if expr.expression:
-        selector = " {} ->".format(
+        selector = "{} ->".format(
             serialize_expression(expr.expression)
         )
         parts.append(selector)
@@ -250,23 +264,23 @@ def serialize_argument_value(argval):
         return serialize_string_expression(argval)
     if isinstance(argval, ast.NumberExpression):
         return serialize_number_expression(argval)
-    raise Exception('Unknown argument type: {}'.format(argval.type))
+    raise Exception('Unknown argument type: {}'.format(type(argval)))
 
 
 def serialize_identifier(identifier):
     return identifier.name
 
 
-def serialize_symbol(symbol):
+def serialize_variant_name(symbol):
     return symbol.name
 
 
 def serialize_variant_key(key):
-    if isinstance(key, ast.Symbol):
-        return serialize_symbol(key)
+    if isinstance(key, ast.VariantName):
+        return serialize_variant_name(key)
     if isinstance(key, ast.NumberExpression):
         return serialize_number_expression(key)
-    raise Exception('Unknown variant key type: {}'.format(key.type))
+    raise Exception('Unknown variant key type: {}'.format(type(key)))
 
 
 def serialize_function(function):

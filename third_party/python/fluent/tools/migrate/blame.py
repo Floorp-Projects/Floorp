@@ -1,19 +1,22 @@
 import argparse
 import json
+import os
+
+from compare_locales.parser import getParser, Junk
 import hglib
 from hglib.util import b, cmdbuilder
-from compare_locales.parser import getParser, Junk
 
 
 class Blame(object):
-    def __init__(self, repopath):
-        self.client = hglib.open(repopath)
+    def __init__(self, client):
+        self.client = client
         self.users = []
         self.blame = {}
 
-    def main(self):
+    def attribution(self, file_paths):
         args = cmdbuilder(
-            b('annotate'), self.client.root(), d=True, u=True, T='json')
+            b('annotate'), *map(b, file_paths), template='json',
+            date=True, user=True, cwd=self.client.root())
         blame_json = ''.join(self.client.rawcommand(args))
         file_blames = json.loads(blame_json)
 
@@ -24,16 +27,16 @@ class Blame(object):
                 'blame': self.blame}
 
     def handleFile(self, file_blame):
-        abspath = file_blame['abspath']
+        path = file_blame['path']
 
         try:
-            parser = getParser(abspath)
+            parser = getParser(path)
         except UserWarning:
             return
 
-        self.blame[abspath] = {}
+        self.blame[path] = {}
 
-        parser.readFile(file_blame['path'])
+        parser.readFile(os.path.join(self.client.root(), path))
         entities, emap = parser.parse()
         for e in entities:
             if isinstance(e, Junk):
@@ -49,12 +52,13 @@ class Blame(object):
             if user not in self.users:
                 self.users.append(user)
             userid = self.users.index(user)
-            self.blame[abspath][e.key] = [userid, timestamp]
+            self.blame[path][e.key] = [userid, timestamp]
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("repopath")
+    parser.add_argument('repo_path')
+    parser.add_argument('file_path', nargs='+')
     args = parser.parse_args()
-    blame = Blame(args.repopath)
-    blimey = blame.main()
-    print(json.dumps(blimey, indent=4, separators=(',', ': ')))
+    blame = Blame(hglib.open(args.repo_path))
+    attrib = blame.attribution(args.file_path)
+    print(json.dumps(attrib, indent=4, separators=(',', ': ')))
