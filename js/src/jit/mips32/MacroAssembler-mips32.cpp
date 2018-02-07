@@ -616,19 +616,6 @@ MacroAssemblerMIPS::branchWithCode(InstImm code, Label* label, JumpKind jumpKind
         as_nop();
 }
 
-void
-MacroAssemblerMIPS::ma_cmp_set(Register rd, Register rs, Address addr, Condition c)
-{
-    ma_lw(ScratchRegister, addr);
-    ma_cmp_set(rd, rs, ScratchRegister, c);
-}
-
-void
-MacroAssemblerMIPS::ma_cmp_set(Register dst, Address lhs, Register rhs, Condition c)
-{
-    ma_lw(ScratchRegister, lhs);
-    ma_cmp_set(dst, ScratchRegister, rhs, c);
-}
 
 void
 MacroAssemblerMIPSCompat::cmp64Set(Condition cond, Register64 lhs, Imm64 val, Register dest) {
