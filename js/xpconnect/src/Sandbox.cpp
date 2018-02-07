@@ -41,6 +41,7 @@
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/MessageChannelBinding.h"
 #include "mozilla/dom/MessagePortBinding.h"
+#include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/ResponseBinding.h"
@@ -927,50 +928,52 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
         JSAutoByteString name;
         if (!name.encodeUtf8(cx, nameStr))
             return false;
-        if (!strcmp(name.ptr(), "CSS")) {
+        if (!strcmp(name.ptr(), "Blob")) {
+            Blob = true;
+        } else if (!strcmp(name.ptr(), "ChromeUtils")) {
+            ChromeUtils = true;
+        } else if (!strcmp(name.ptr(), "CSS")) {
             CSS = true;
         } else if (!strcmp(name.ptr(), "CSSRule")) {
             CSSRule = true;
-        } else if (!strcmp(name.ptr(), "indexedDB")) {
-            indexedDB = true;
-        } else if (!strcmp(name.ptr(), "XMLHttpRequest")) {
-            XMLHttpRequest = true;
-        } else if (!strcmp(name.ptr(), "TextEncoder")) {
-            TextEncoder = true;
-        } else if (!strcmp(name.ptr(), "TextDecoder")) {
-            TextDecoder = true;
-        } else if (!strcmp(name.ptr(), "URL")) {
-            URL = true;
-        } else if (!strcmp(name.ptr(), "URLSearchParams")) {
-            URLSearchParams = true;
-        } else if (!strcmp(name.ptr(), "atob")) {
-            atob = true;
-        } else if (!strcmp(name.ptr(), "btoa")) {
-            btoa = true;
-        } else if (!strcmp(name.ptr(), "Blob")) {
-            Blob = true;
         } else if (!strcmp(name.ptr(), "Directory")) {
             Directory = true;
         } else if (!strcmp(name.ptr(), "File")) {
             File = true;
+        } else if (!strcmp(name.ptr(), "FileReader")) {
+            FileReader = true;
+        } else if (!strcmp(name.ptr(), "InspectorUtils")) {
+            InspectorUtils = true;
+        } else if (!strcmp(name.ptr(), "MessageChannel")) {
+            MessageChannel = true;
+        } else if (!strcmp(name.ptr(), "NodeFilter")) {
+            NodeFilter = true;
+        } else if (!strcmp(name.ptr(), "TextDecoder")) {
+            TextDecoder = true;
+        } else if (!strcmp(name.ptr(), "TextEncoder")) {
+            TextEncoder = true;
+        } else if (!strcmp(name.ptr(), "URL")) {
+            URL = true;
+        } else if (!strcmp(name.ptr(), "URLSearchParams")) {
+            URLSearchParams = true;
+        } else if (!strcmp(name.ptr(), "XMLHttpRequest")) {
+            XMLHttpRequest = true;
+        } else if (!strcmp(name.ptr(), "atob")) {
+            atob = true;
+        } else if (!strcmp(name.ptr(), "btoa")) {
+            btoa = true;
+        } else if (!strcmp(name.ptr(), "caches")) {
+            caches = true;
         } else if (!strcmp(name.ptr(), "crypto")) {
             crypto = true;
+        } else if (!strcmp(name.ptr(), "fetch")) {
+            fetch = true;
+        } else if (!strcmp(name.ptr(), "indexedDB")) {
+            indexedDB = true;
 #ifdef MOZ_WEBRTC
         } else if (!strcmp(name.ptr(), "rtcIdentityProvider")) {
             rtcIdentityProvider = true;
 #endif
-        } else if (!strcmp(name.ptr(), "fetch")) {
-            fetch = true;
-        } else if (!strcmp(name.ptr(), "caches")) {
-            caches = true;
-        } else if (!strcmp(name.ptr(), "FileReader")) {
-            fileReader = true;
-        } else if (!strcmp(name.ptr(), "MessageChannel")) {
-            messageChannel = true;
-        } else if (!strcmp(name.ptr(), "InspectorUtils")) {
-            inspectorUtils = true;
-        } else if (!strcmp(name.ptr(), "ChromeUtils")) {
-            ChromeUtils = true;
         } else {
             JS_ReportErrorUTF8(cx, "Unknown property name: %s", name.ptr());
             return false;
@@ -988,42 +991,17 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
     // This function holds common properties not exposed automatically but able
     // to be requested either in |Cu.importGlobalProperties| or
     // |wantGlobalProperties| of a sandbox.
+    if (Blob &&
+        !dom::BlobBinding::GetConstructorObject(cx))
+        return false;
+
+    if (ChromeUtils && !dom::ChromeUtilsBinding::GetConstructorObject(cx))
+        return false;
+
     if (CSS && !dom::CSSBinding::GetConstructorObject(cx))
         return false;
 
     if (CSSRule && !dom::CSSRuleBinding::GetConstructorObject(cx))
-        return false;
-
-    if (XMLHttpRequest &&
-        !dom::XMLHttpRequestBinding::GetConstructorObject(cx))
-        return false;
-
-    if (TextEncoder &&
-        !dom::TextEncoderBinding::GetConstructorObject(cx))
-        return false;
-
-    if (TextDecoder &&
-        !dom::TextDecoderBinding::GetConstructorObject(cx))
-        return false;
-
-    if (URL &&
-        !dom::URLBinding::GetConstructorObject(cx))
-        return false;
-
-    if (URLSearchParams &&
-        !dom::URLSearchParamsBinding::GetConstructorObject(cx))
-        return false;
-
-    if (atob &&
-        !JS_DefineFunction(cx, obj, "atob", Atob, 1, 0))
-        return false;
-
-    if (btoa &&
-        !JS_DefineFunction(cx, obj, "btoa", Btoa, 1, 0))
-        return false;
-
-    if (Blob &&
-        !dom::BlobBinding::GetConstructorObject(cx))
         return false;
 
     if (Directory &&
@@ -1034,34 +1012,62 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
         !dom::FileBinding::GetConstructorObject(cx))
         return false;
 
+    if (FileReader && !dom::FileReaderBinding::GetConstructorObject(cx))
+        return false;
+
+    if (InspectorUtils &&
+        !dom::InspectorUtilsBinding::GetConstructorObject(cx))
+        return false;
+
+    if (MessageChannel &&
+        (!dom::MessageChannelBinding::GetConstructorObject(cx) ||
+         !dom::MessagePortBinding::GetConstructorObject(cx)))
+        return false;
+
+    if (NodeFilter && !dom::NodeFilterBinding::GetConstructorObject(cx))
+        return false;
+
+    if (TextDecoder &&
+        !dom::TextDecoderBinding::GetConstructorObject(cx))
+        return false;
+
+    if (TextEncoder &&
+        !dom::TextEncoderBinding::GetConstructorObject(cx))
+        return false;
+
+    if (URL &&
+        !dom::URLBinding::GetConstructorObject(cx))
+        return false;
+
+    if (URLSearchParams &&
+        !dom::URLSearchParamsBinding::GetConstructorObject(cx))
+        return false;
+
+    if (XMLHttpRequest &&
+        !dom::XMLHttpRequestBinding::GetConstructorObject(cx))
+        return false;
+
+    if (atob &&
+        !JS_DefineFunction(cx, obj, "atob", Atob, 1, 0))
+        return false;
+
+    if (btoa &&
+        !JS_DefineFunction(cx, obj, "btoa", Btoa, 1, 0))
+        return false;
+
+    if (caches && !dom::cache::CacheStorage::DefineCaches(cx, obj))
+        return false;
+
     if (crypto && !SandboxCreateCrypto(cx, obj))
+        return false;
+
+    if (fetch && !SandboxCreateFetch(cx, obj))
         return false;
 
 #ifdef MOZ_WEBRTC
     if (rtcIdentityProvider && !SandboxCreateRTCIdentityProvider(cx, obj))
         return false;
 #endif
-
-    if (fetch && !SandboxCreateFetch(cx, obj))
-        return false;
-
-    if (caches && !dom::cache::CacheStorage::DefineCaches(cx, obj))
-        return false;
-
-    if (fileReader && !dom::FileReaderBinding::GetConstructorObject(cx))
-        return false;
-
-    if (messageChannel &&
-        (!dom::MessageChannelBinding::GetConstructorObject(cx) ||
-         !dom::MessagePortBinding::GetConstructorObject(cx)))
-        return false;
-
-    if (inspectorUtils &&
-        !dom::InspectorUtilsBinding::GetConstructorObject(cx))
-        return false;
-
-    if (ChromeUtils && !dom::ChromeUtilsBinding::GetConstructorObject(cx))
-        return false;
 
     return true;
 }

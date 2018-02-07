@@ -27,4 +27,3 @@ interface SVGGradientElement : SVGElement {
 };
 
 SVGGradientElement implements SVGURIReference;
-SVGGradientElement implements SVGUnitTypeValues;

@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Components.utils.importGlobalProperties(["NodeFilter"]);
+
 const C_i = Components.interfaces;
 
 const UNORDERED_TYPE = 8; // XPathResult.ANY_UNORDERED_NODE_TYPE
@@ -14,8 +16,8 @@ const UNORDERED_TYPE = 8; // XPathResult.ANY_UNORDERED_NODE_TYPE
  */
 function isWhitespace(aNode) {
   return ((/\S/).test(aNode.nodeValue)) ?
-         3 /* NodeFilter.FILTER_SKIP */ :
-         1 /* NodeFilter.FILTER_ACCEPT */;
+         NodeFilter.FILTER_SKIP :
+         NodeFilter.FILTER_ACCEPT;
 }
 
 /**
@@ -82,23 +84,23 @@ function evalXPathInDocumentFragment(aContextNode, aPath) {
     prefix = prefix.substr(0, bracketIndex);
   }
 
-  var targetType = 1 /* NodeFilter.SHOW_ELEMENT */;
+  var targetType = NodeFilter.SHOW_ELEMENT;
   var targetNodeName = prefix;
   if (prefix.indexOf("processing-instruction(") == 0) {
-    targetType = 0x40 /* NodeFilter.SHOW_PROCESSING_INSTRUCTION */;
+    targetType = NodeFilter.SHOW_PROCESSING_INSTRUCTION;
     targetNodeName = prefix.substring(prefix.indexOf("(") + 2, prefix.indexOf(")") - 1);
   }
   switch (prefix) {
     case "text()":
-      targetType = 4 | 8 /* NodeFilter.SHOW_TEXT | NodeFilter.SHOW_CDATA_SECTION*/;
+      targetType = NodeFilter.SHOW_TEXT | NodeFilter.SHOW_CDATA_SECTION;
       targetNodeName = null;
       break;
     case "comment()":
-      targetType = 0x80 /* NodeFilter.SHOW_COMMENT */;
+      targetType = NodeFilter.SHOW_COMMENT;
       targetNodeName = null;
       break;
     case "node()":
-      targetType = 0xFFFFFFFF /* NodeFilter.SHOW_ALL */;
+      targetType = NodeFilter.SHOW_ALL;
       targetNodeName = null;
   }
 
@@ -109,19 +111,19 @@ function evalXPathInDocumentFragment(aContextNode, aPath) {
     acceptNode: function acceptNode(aNode) {
       if (aNode.parentNode != aContextNode) {
         // Don't bother looking at kids either.
-        return 2 /* NodeFilter.FILTER_REJECT */;
+        return NodeFilter.FILTER_REJECT;
       }
 
       if (targetNodeName && targetNodeName != aNode.nodeName) {
-        return 3 /* NodeFilter.FILTER_SKIP */;
+        return NodeFilter.FILTER_SKIP;
       }
 
       this.count++;
       if (this.count != childIndex) {
-        return 3 /* NodeFilter.FILTER_SKIP */;
+        return NodeFilter.FILTER_SKIP;
       }
 
-      return 1 /* NodeFilter.FILTER_ACCEPT */;
+      return NodeFilter.FILTER_ACCEPT;
     }
   };
 
@@ -181,8 +183,8 @@ function processParsedDocument(doc) {
 
   // Clean out whitespace.
   var walker = doc.createTreeWalker(doc,
-                                    4 | 8 /* NodeFilter.SHOW_TEXT |
-					     NodeFilter.SHOW_CDATA_SECTION */,
+                                    NodeFilter.SHOW_TEXT |
+                                    NodeFilter.SHOW_CDATA_SECTION,
                                     isWhitespace);
   while (walker.nextNode()) {
     var parent = walker.currentNode.parentNode;
@@ -276,8 +278,8 @@ function do_extract_test(doc) {
 
     dump("Ensure the original nodes weren't extracted - test " + i + "\n\n");
     var walker = doc.createTreeWalker(baseFrag,
-				      0xFFFFFFFF /* NodeFilter.SHOW_ALL */,
-				      null);
+                                      NodeFilter.SHOW_ALL,
+                                      null);
     var foundStart = false;
     var foundEnd = false;
     do {
@@ -309,7 +311,7 @@ function do_extract_test(doc) {
 
     dump("Ensure the original nodes weren't deleted - test " + i + "\n\n");
     walker = doc.createTreeWalker(baseFrag,
-                                  0xFFFFFFFF /* NodeFilter.SHOW_ALL */,
+                                  NodeFilter.SHOW_ALL,
                                   null);
     foundStart = false;
     foundEnd = false;

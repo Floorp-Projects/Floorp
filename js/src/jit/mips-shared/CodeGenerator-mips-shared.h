@@ -251,6 +251,10 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
                                     const T& mem, Register flagTemp, Register valueTemp,
                                     Register offsetTemp, Register maskTemp);
 
+    void visitWasmCompareExchangeI64(LWasmCompareExchangeI64* lir);
+    void visitWasmAtomicExchangeI64(LWasmAtomicExchangeI64* lir);
+    void visitWasmAtomicBinopI64(LWasmAtomicBinopI64* lir);
+
   protected:
     void visitEffectiveAddress(LEffectiveAddress* ins);
     void visitUDivOrMod(LUDivOrMod* ins);

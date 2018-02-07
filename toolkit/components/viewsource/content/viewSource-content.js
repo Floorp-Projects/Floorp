@@ -10,6 +10,8 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm");
 
+Cu.importGlobalProperties(["NodeFilter"]);
+
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const BUNDLE_URL = "chrome://global/locale/viewSource.properties";
 
@@ -538,7 +540,7 @@ var ViewSourceContent = {
 
     // Walk through each of the text nodes and count newlines.
     let treewalker = content.document
-        .createTreeWalker(pre, 4 /* NodeFilter.SHOW_TEXT */, null);
+        .createTreeWalker(pre, NodeFilter.SHOW_TEXT, null);
 
     // The column number of the first character in the current text node.
     let firstCol = 1;
