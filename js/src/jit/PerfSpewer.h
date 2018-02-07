@@ -92,8 +92,10 @@ class WasmPerfSpewer : public PerfSpewer
     void endBasicBlock(MacroAssembler& masm) { }
 };
 
+void writePerfSpewerWasmMap(uintptr_t base, uintptr_t size, const char* filename,
+                            const char* annotation);
 void writePerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size, const char* filename,
-                                    unsigned lineno, unsigned colIndex, const char* funcName);
+                                    unsigned lineno, const char* funcName);
 
 #endif // JS_ION_PERF
 
