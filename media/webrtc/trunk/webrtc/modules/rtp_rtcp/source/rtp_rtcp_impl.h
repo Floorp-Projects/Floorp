@@ -190,6 +190,9 @@ class ModuleRtpRtcpImpl : public RtpRtcp, public RTCPReceiver::ModuleRtpRtcp {
       uint32_t ssrc,
       struct RtpPacketLossStats* loss_stats) const override;
 
+  void RemoteRTCPSenderInfo(uint32_t* packet_count,
+                            uint32_t* octet_count) const override;
+
   // Get received RTCP report, report block.
   int32_t RemoteRTCPStat(
       std::vector<RTCPReportBlock>* receive_blocks) const override;

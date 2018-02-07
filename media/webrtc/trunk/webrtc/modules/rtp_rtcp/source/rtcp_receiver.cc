@@ -87,8 +87,6 @@ struct RTCPReceiver::TmmbrInformation {
 struct RTCPReceiver::ReportBlockWithRtt {
   RTCPReportBlock report_block;
 
-  uint32_t remotePacketsReceived = 0;
-  uint64_t remoteOctetsReceived = 0;
   uint32_t lastReceivedRRNTPsecs = 0;
   uint32_t lastReceivedRRNTPfrac = 0;
 
@@ -125,6 +123,8 @@ RTCPReceiver::RTCPReceiver(
       main_ssrc_(0),
       remote_ssrc_(0),
       remote_sender_rtp_time_(0),
+      remote_sender_packet_count_(0),
+      remote_sender_octet_count_(0),
       xr_rrtr_status_(false),
       xr_rr_rtt_ms_(0),
       oldest_tmmbr_info_ms_(0),
@@ -252,6 +252,12 @@ bool RTCPReceiver::NTP(uint32_t* received_ntp_secs,
     *rtcp_arrival_time_frac = last_received_sr_ntp_.fractions();
 
   return true;
+}
+
+void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
+                                        uint32_t* octet_count) const {
+  *packet_count = remote_sender_packet_count_;
+  *octet_count = remote_sender_octet_count_;
 }
 
 bool RTCPReceiver::LastReceivedXrReferenceTimeInfo(
@@ -410,13 +416,15 @@ void RTCPReceiver::HandleSenderReport(const CommonHeader& rtcp_block,
     remote_sender_ntp_time_ = sender_report.ntp();
     remote_sender_rtp_time_ = sender_report.rtp_timestamp();
     last_received_sr_ntp_ = clock_->CurrentNtpTime();
+    remote_sender_packet_count_ = sender_report.sender_packet_count();
+    remote_sender_octet_count_ = sender_report.sender_octet_count();
   } else {
     // We will only store the send report from one source, but
     // we will store all the receive blocks.
     packet_information->packet_type_flags |= kRtcpRr;
   }
 
-  for (const rtcp::ReportBlock report_block : sender_report.report_blocks())
+  for (const rtcp::ReportBlock& report_block : sender_report.report_blocks())
     HandleReportBlock(report_block, packet_information, remote_ssrc);
 }
 
@@ -458,16 +466,6 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
   // Filter out all report blocks that are not for us.
   if (registered_ssrcs_.count(report_block.source_ssrc()) == 0)
     return;
-
-  // To avoid problem with acquiring _criticalSectionRTCPSender while holding
-  // _criticalSectionRTCPReceiver.
-  rtcp_receiver_lock_.Leave();
-  uint64_t sendTimeMS = 0;
-  uint32_t sentPackets = 0;
-  uint64_t sentOctets = 0;
-  rtp_rtcp_->GetSendReportMetadata(report_block.last_sr(),
-                                   &sendTimeMS, &sentPackets, &sentOctets);
-  rtcp_receiver_lock_.Enter();
 
   last_received_rb_ms_ = clock_->TimeInMilliseconds();
 
