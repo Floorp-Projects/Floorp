@@ -33263,7 +33263,24 @@ let symbolDeclarations = new Map();
 
 function getFunctionParameterNames(path) {
   if (path.node.params != null) {
-    return path.node.params.map(param => param.name);
+    return path.node.params.map(param => {
+      if (param.type !== "AssignmentPattern") {
+        return param.name;
+      }
+
+      // Parameter with default value
+      if (param.left.type === "Identifier" && param.right.type === "Identifier") {
+        return `${param.left.name} = ${param.right.name}`;
+      } else if (param.left.type === "Identifier" && param.right.type === "StringLiteral") {
+        return `${param.left.name} = ${param.right.value}`;
+      } else if (param.left.type === "Identifier" && param.right.type === "ObjectExpression") {
+        return `${param.left.name} = {}`;
+      } else if (param.left.type === "Identifier" && param.right.type === "ArrayExpression") {
+        return `${param.left.name} = []`;
+      } else if (param.left.type === "Identifier" && param.right.type === "NullLiteral") {
+        return `${param.left.name} = null`;
+      }
+    });
   }
   return [];
 }
@@ -33861,7 +33878,7 @@ self.onmessage = workerHandler({
   getNextStep: _steps.getNextStep,
   getEmptyLines: _getEmptyLines2.default,
   hasSyntaxError: _validate.hasSyntaxError,
-  isReactComponent: _frameworks.isReactComponent
+  getFramework: _frameworks.getFramework
 });
 
 /***/ }),
@@ -34598,7 +34615,7 @@ module.exports = findLastIndex;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.isReactComponent = isReactComponent;
+exports.getFramework = getFramework;
 
 var _getSymbols = __webpack_require__(1457);
 
@@ -34606,12 +34623,18 @@ var _getSymbols2 = _interopRequireDefault(_getSymbols);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function isReactComponent(sourceId) {
-  const { imports, classes, callExpressions } = (0, _getSymbols2.default)(sourceId);
-  return (importsReact(imports) || requiresReact(callExpressions)) && extendsComponent(classes);
+function getFramework(sourceId) {
+  if (isReactComponent(sourceId)) {
+    return "React";
+  }
 } /* This Source Code Form is subject to the terms of the Mozilla Public
    * License, v. 2.0. If a copy of the MPL was not distributed with this
    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function isReactComponent(sourceId) {
+  const { imports, classes, callExpressions } = (0, _getSymbols2.default)(sourceId);
+  return (importsReact(imports) || requiresReact(callExpressions)) && extendsComponent(classes);
+}
 
 function importsReact(imports) {
   return imports.some(importObj => importObj.source === "react" && importObj.specifiers.some(specifier => specifier === "React"));
@@ -35266,6 +35289,20 @@ var _getFunctionName2 = _interopRequireDefault(_getFunctionName);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * "implicit"
+ * Variables added automaticly like "this" and "arguments"
+ *
+ * "var"
+ * Variables declared with "var" or non-block function declarations
+ *
+ * "let"
+ * Variables declared with "let".
+ *
+ * "const"
+ * Variables declared with "const", imported bindings, or added as const
+ * bindings like inner function expressions and inner class names.
+ */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -35289,7 +35326,7 @@ function isNode(node, type) {
   return node ? node.type === type : false;
 }
 
-function getFunctionScope(scope) {
+function getVarScope(scope) {
   let s = scope;
   while (s.type !== "function" && s.type !== "module") {
     if (!s.parent) {
@@ -35361,29 +35398,22 @@ function toParsedScopes(children, sourceId) {
     return undefined;
   }
   return children.map(scope => {
-    // Removing unneed information from TempScope such as parent reference and
-    // name types. We also need to convert BabelLocation to the Location type.
+    // Removing unneed information from TempScope such as parent reference.
+    // We also need to convert BabelLocation to the Location type.
     const bindings = Object.keys(scope.names).reduce((_bindings, n) => {
       const nameRefs = scope.names[n];
-      switch (nameRefs.type) {
-        case "var":
-        case "let":
-        case "const":
-        case "param":
-        case "fn":
-        case "import":
-          _bindings[n] = {
-            declarations: nameRefs.declarations.map(({ start, end }) => ({
-              start: fromBabelLocation(start, sourceId),
-              end: fromBabelLocation(end, sourceId)
-            })),
-            refs: nameRefs.refs.map(({ start, end }) => ({
-              start: fromBabelLocation(start, sourceId),
-              end: fromBabelLocation(end, sourceId)
-            }))
-          };
-          break;
-      }
+
+      _bindings[n] = {
+        type: nameRefs.type,
+        declarations: nameRefs.declarations.map(({ start, end }) => ({
+          start: fromBabelLocation(start, sourceId),
+          end: fromBabelLocation(end, sourceId)
+        })),
+        refs: nameRefs.refs.map(({ start, end }) => ({
+          start: fromBabelLocation(start, sourceId),
+          end: fromBabelLocation(end, sourceId)
+        }))
+      };
       return _bindings;
     }, Object.create(null));
     return {
@@ -35391,7 +35421,7 @@ function toParsedScopes(children, sourceId) {
       end: fromBabelLocation(scope.loc.end, sourceId),
       type: scope.type === "module" ? "block" : scope.type,
       displayName: scope.displayName,
-      bindings,
+      bindings: bindings,
       children: toParsedScopes(scope.children, sourceId)
     };
   });
@@ -35449,6 +35479,11 @@ function createParseJSScopeVisitor(sourceId) {
         parent = createTempScope("block", "Lexical Global", parent, location);
 
         parent = createTempScope("module", "Module", parent, location);
+        parent.names.this = {
+          type: "implicit",
+          declarations: [],
+          refs: []
+        };
         return;
       }
       if (path.isFunction()) {
@@ -35470,17 +35505,52 @@ function createParseJSScopeVisitor(sourceId) {
           end: location.end
         });
         if (path.isFunctionDeclaration() && isNode(tree.id, "Identifier")) {
-          const functionName = {
-            type: "fn",
+          // This ignores Annex B function declaration hoisting, which
+          // is probably a fine assumption.
+          const fnScope = getVarScope(parent);
+          scope.names[tree.id.name] = {
+            type: fnScope === scope ? "var" : "let",
             declarations: [tree.id.loc],
             refs: []
           };
-          getFunctionScope(parent).names[tree.id.name] = functionName;
-          scope.names[tree.id.name] = functionName;
         }
-        tree.params.forEach(param => parseDeclarator(param, scope, "param"));
+        tree.params.forEach(param => parseDeclarator(param, scope, "var"));
+
+        if (!path.isArrowFunctionExpression()) {
+          scope.names.this = {
+            type: "implicit",
+            declarations: [],
+            refs: []
+          };
+          scope.names.arguments = {
+            type: "implicit",
+            declarations: [],
+            refs: []
+          };
+        }
+
         parent = scope;
         return;
+      }
+      if (path.isClass()) {
+        if (path.isClassDeclaration() && path.get("id").isIdentifier()) {
+          parent.names[tree.id.name] = {
+            type: "let",
+            declarations: [tree.id.loc],
+            refs: []
+          };
+        }
+
+        if (path.get("id").isIdentifier()) {
+          savedParents.set(path, parent);
+          parent = createTempScope("block", "Class", parent, location);
+
+          parent.names[tree.id.name] = {
+            type: "const",
+            declarations: [tree.id.loc],
+            refs: []
+          };
+        }
       }
       if (path.isForXStatement() || path.isForStatement()) {
         const init = tree.init || tree.left;
@@ -35499,7 +35569,7 @@ function createParseJSScopeVisitor(sourceId) {
       if (path.isCatchClause()) {
         savedParents.set(path, parent);
         parent = createTempScope("block", "Catch", parent, location);
-        parseDeclarator(tree.param, parent, "param");
+        parseDeclarator(tree.param, parent, "var");
         return;
       }
       if (path.isBlockStatement()) {
@@ -35510,9 +35580,11 @@ function createParseJSScopeVisitor(sourceId) {
         }
         return;
       }
-      if (path.isVariableDeclaration()) {
+      if (path.isVariableDeclaration() && (path.node.kind === "var" ||
+      // Lexical declarations in for statements are handled above.
+      !path.parentPath.isForStatement({ init: tree }) || !path.parentPath.isXStatement({ left: tree }))) {
         // Finds right lexical environment
-        const hoistAt = !isLetOrConst(tree) ? getFunctionScope(parent) : parent;
+        const hoistAt = !isLetOrConst(tree) ? getVarScope(parent) : parent;
         tree.declarations.forEach(declarator => {
           parseDeclarator(declarator.id, hoistAt, tree.kind);
         });
@@ -35523,7 +35595,7 @@ function createParseJSScopeVisitor(sourceId) {
 
         path.get("specifiers").forEach(spec => {
           parent.names[spec.node.local.name] = {
-            type: "import",
+            type: "const",
             declarations: [spec.node.local.loc],
             refs: []
           };
@@ -35542,10 +35614,26 @@ function createParseJSScopeVisitor(sourceId) {
         }
         return;
       }
+      if (path.isThisExpression()) {
+        const scope = findIdentifierInScopes(parent, "this");
+        if (scope) {
+          scope.names.this.refs.push(tree.loc);
+        }
+      }
 
       if (path.parentPath.isClassProperty({ value: tree })) {
         savedParents.set(path, parent);
         parent = createTempScope("block", "Class Field", parent, location);
+        parent.names.this = {
+          type: "implicit",
+          declarations: [],
+          refs: []
+        };
+        parent.names.arguments = {
+          type: "implicit",
+          declarations: [],
+          refs: []
+        };
         return;
       }
 
