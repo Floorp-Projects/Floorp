@@ -44,7 +44,7 @@ dictionary PublicKeyCredentialParameters {
     required COSEAlgorithmIdentifier  alg;
 };
 
-dictionary MakePublicKeyCredentialOptions {
+dictionary PublicKeyCredentialCreationOptions {
     required PublicKeyCredentialRpEntity   rp;
     required PublicKeyCredentialUserEntity user;
 
