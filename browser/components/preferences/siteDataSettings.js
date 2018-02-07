@@ -47,6 +47,7 @@ let gSiteDataSettings = {
     let settingsDescription = document.getElementById("settingsDescription");
     settingsDescription.textContent = this._prefStrBundle.getFormattedString("siteDataSettings2.description", [brandShortName]);
 
+    setEventListener("sitesList", "select", this.onSelect);
     setEventListener("hostCol", "click", this.onClickTreeCol);
     setEventListener("usageCol", "click", this.onClickTreeCol);
     setEventListener("statusCol", "click", this.onClickTreeCol);
@@ -61,8 +62,8 @@ let gSiteDataSettings = {
     let items = this._list.getElementsByTagName("richlistitem");
     let removeSelectedBtn = document.getElementById("removeSelected");
     let removeAllBtn = document.getElementById("removeAll");
-    removeSelectedBtn.disabled = items.length == 0;
-    removeAllBtn.disabled = removeSelectedBtn.disabled;
+    removeSelectedBtn.disabled = this._list.selectedItems.length == 0;
+    removeAllBtn.disabled = items.length == 0;
 
     let removeAllBtnLabelStringID = "removeAllSiteData.label";
     let removeAllBtnAccesskeyStringID = "removeAllSiteData.accesskey";
@@ -270,6 +271,7 @@ let gSiteDataSettings = {
 
   onCommandSearch() {
     this._buildSitesList(this._sites);
+    this._list.clearSelection();
   },
 
   onClickRemoveSelected() {
@@ -277,6 +279,7 @@ let gSiteDataSettings = {
     if (selected) {
       this._removeSiteItems([selected]);
     }
+    this._list.clearSelection();
   },
 
   onClickRemoveAll() {
@@ -290,5 +293,9 @@ let gSiteDataSettings = {
     if (e.keyCode == KeyEvent.DOM_VK_ESCAPE) {
       this.close();
     }
+  },
+
+  onSelect() {
+    this._updateButtonsState();
   }
 };
