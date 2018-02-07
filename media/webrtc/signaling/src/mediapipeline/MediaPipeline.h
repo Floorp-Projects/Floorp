@@ -266,6 +266,8 @@ protected:
                       const unsigned char* aData,
                       size_t aLen);
 
+  void SetDescription_s(const std::string& description);
+
   const DirectionType mDirection;
   size_t mLevel;
   RefPtr<MediaSessionConduit> mConduit; // Our conduit. Written on the main
