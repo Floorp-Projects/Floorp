@@ -3711,7 +3711,7 @@ protected:
 
   uint32_t mInSyncOperationCount;
 
-  RefPtr<mozilla::dom::XPathEvaluator> mXPathEvaluator;
+  mozilla::UniquePtr<mozilla::dom::XPathEvaluator> mXPathEvaluator;
 
   nsTArray<RefPtr<mozilla::dom::AnonymousContent>> mAnonymousContents;
 

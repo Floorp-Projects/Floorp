@@ -29,7 +29,7 @@ function queryElement(data) {
   }
 
   if (data.hasOwnProperty("xpath")) {
-    let xptype = Ci.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE;
+    let xptype = doc.defaultView.XPathResult.FIRST_ORDERED_NODE_TYPE;
     return doc.evaluate(data.xpath, doc, null, xptype, null).singleNodeValue;
   }
 

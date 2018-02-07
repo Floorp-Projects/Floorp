@@ -89,7 +89,7 @@ public:
 
   // SVGTests
   virtual bool IsInChromeDoc() const override;
-
+  nsSVGElement* AsSVGElement() final { return this; }
 
  protected:
   // nsSVGElement overrides
