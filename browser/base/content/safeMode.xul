@@ -28,7 +28,6 @@
             ondialogextra1="return onExtra1()"
             onload="onLoad()">
 
-  <script type="application/javascript" src="chrome://global/content/resetProfile.js"/>
   <script type="application/javascript" src="chrome://browser/content/safeMode.js"/>
 
   <vbox id="autoSafeMode" hidden="true">
