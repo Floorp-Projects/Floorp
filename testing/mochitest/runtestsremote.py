@@ -33,6 +33,7 @@ class MochiRemote(MochitestDesktop):
 
         self._automation = automation
         self._dm = devmgr
+        self.chromePushed = False
         self.environment = self._automation.environment
         self.remoteProfile = os.path.join(options.remoteTestRoot, "profile/")
         self.remoteModulesDir = os.path.join(options.remoteTestRoot, "modules/")
@@ -56,21 +57,24 @@ class MochiRemote(MochitestDesktop):
         # move necko cache to a location that can be cleaned up
         options.extraPrefs += ["browser.cache.disk.parent_directory=%s" % self.remoteCache]
 
-    def cleanup(self, options):
-        if self._dm.fileExists(self.remoteLog):
-            self._dm.getFile(self.remoteLog, self.localLog)
-            self._dm.removeFile(self.remoteLog)
+    def cleanup(self, options, final=False):
+        if final:
+            self._dm.removeDir(self.remoteChromeTestDir)
+            self.chromePushed = False
+            blobberUploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
+            if blobberUploadDir:
+                self._dm.getDirectory(self.remoteMozLog, blobberUploadDir)
         else:
-            self.log.warning(
-                "Unable to retrieve log file (%s) from remote device" %
-                self.remoteLog)
-        self._dm.removeDir(self.remoteChromeTestDir)
+            if self._dm.fileExists(self.remoteLog):
+                self._dm.getFile(self.remoteLog, self.localLog)
+                self._dm.removeFile(self.remoteLog)
+            else:
+                self.log.warning(
+                    "Unable to retrieve log file (%s) from remote device" %
+                    self.remoteLog)
         self._dm.removeDir(self.remoteProfile)
         self._dm.removeDir(self.remoteCache)
-        blobberUploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
-        if blobberUploadDir:
-            self._dm.getDirectory(self.remoteMozLog, blobberUploadDir)
-        MochitestDesktop.cleanup(self, options)
+        MochitestDesktop.cleanup(self, options, final)
         self.localProfile = None
 
     def findPath(self, paths, filename=None):
@@ -230,11 +234,12 @@ class MochiRemote(MochitestDesktop):
 
     def getChromeTestDir(self, options):
         local = super(MochiRemote, self).getChromeTestDir(options)
-        local = os.path.join(local, "chrome")
         remote = self.remoteChromeTestDir
-        if options.flavor == 'chrome':
+        if options.flavor == 'chrome' and not self.chromePushed:
             self.log.info("pushing %s to %s on device..." % (local, remote))
+            local = os.path.join(local, "chrome")
             self._dm.pushDir(local, remote)
+            self.chromePushed = True
         return remote
 
     def getLogFilePath(self, logFile):
