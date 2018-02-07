@@ -3,10 +3,6 @@
 
 "use strict";
 
-add_task(async function test_clean_slate() {
-  await startWithCleanSlate();
-});
-
 add_task(async function test_broken_json() {
   await setupPolicyEngineWithJson("config_broken_json.json");
 

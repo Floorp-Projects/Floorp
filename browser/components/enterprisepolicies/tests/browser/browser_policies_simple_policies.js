@@ -3,10 +3,6 @@
 
 "use strict";
 
-add_task(async function test_clean_slate() {
-  await startWithCleanSlate();
-});
-
 add_task(async function test_simple_policies() {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     // Initialize the service in the content process, in case it hasn't
