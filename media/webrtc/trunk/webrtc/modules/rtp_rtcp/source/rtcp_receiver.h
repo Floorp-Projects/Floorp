@@ -82,6 +82,10 @@ class RTCPReceiver {
            uint32_t* rtcp_arrival_time_frac,
            uint32_t* rtcp_timestamp) const;
 
+  // Get received sender packet and octet counts
+  void RemoteRTCPSenderInfo(uint32_t* packet_count,
+                            uint32_t* octet_count) const;
+
   bool LastReceivedXrReferenceTimeInfo(rtcp::ReceiveTimeInfo* info) const;
 
   // Get rtt.
@@ -228,6 +232,8 @@ class RTCPReceiver {
   // Received sender report.
   NtpTime remote_sender_ntp_time_ RTC_GUARDED_BY(rtcp_receiver_lock_);
   uint32_t remote_sender_rtp_time_ RTC_GUARDED_BY(rtcp_receiver_lock_);
+  uint32_t remote_sender_packet_count_ RTC_GUARDED_BY(rtcp_receiver_lock_);
+  uint32_t remote_sender_octet_count_ RTC_GUARDED_BY(rtcp_receiver_lock_);
   // When did we receive the last send report.
   NtpTime last_received_sr_ntp_ RTC_GUARDED_BY(rtcp_receiver_lock_);
 
