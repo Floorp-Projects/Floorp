@@ -8,9 +8,12 @@ Unreleased
 
 ### Added
 
+- New `--jsdebugger` flag to open the Browser Toolbox when Firefox
+  launches.  This is useful for debugging Marionette internals.
+
 - Introduced the temporary, boolean capability
-  `moz:useNonSpecCompliantPointerOrigin` to
-  disable the WebDriver conforming behavior of calculating the Pointer Origin.
+  `moz:useNonSpecCompliantPointerOrigin` to disable the WebDriver
+  conforming behavior of calculating the Pointer Origin.
 
 ### Changed
 
