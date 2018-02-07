@@ -13,6 +13,7 @@ import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.util.StringUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -46,7 +47,7 @@ public class PushState {
         file = new AtomicFile(new File(context.getApplicationInfo().dataDir, fileName));
         synchronized (file) {
             try {
-                final String s = new String(file.readFully(), "UTF-8");
+                final String s = new String(file.readFully(), StringUtils.UTF_8);
                 final JSONObject temp = new JSONObject(s);
                 if (temp.optLong("version", 0L) != VERSION) {
                     throw new JSONException("Unknown version!");
@@ -91,7 +92,7 @@ public class PushState {
             FileOutputStream fileOutputStream = null;
             try {
                 fileOutputStream = file.startWrite();
-                fileOutputStream.write(toJSONObject().toString().getBytes("UTF-8"));
+                fileOutputStream.write(toJSONObject().toString().getBytes(StringUtils.UTF_8));
                 file.finishWrite(fileOutputStream);
                 return true;
             } catch (JSONException | IOException e) {

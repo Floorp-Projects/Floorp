@@ -16,6 +16,7 @@ import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine.LoginStateMachineD
 import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.Transition;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.StringUtils;
 import org.robolectric.RobolectricTestRunner;
 
 import java.security.NoSuchAlgorithmException;
@@ -39,10 +40,10 @@ public class TestFxAccountLoginStateMachine {
   @Before
   public void setUp() throws Exception {
     if (TEST_EMAIL_UTF8 == null) {
-      TEST_EMAIL_UTF8 = TEST_EMAIL.getBytes("UTF-8");
+      TEST_EMAIL_UTF8 = TEST_EMAIL.getBytes(StringUtils.UTF_8);
     }
     if (TEST_PASSWORD_UTF8 == null) {
-      TEST_PASSWORD_UTF8 = TEST_PASSWORD.getBytes("UTF-8");
+      TEST_PASSWORD_UTF8 = TEST_PASSWORD.getBytes(StringUtils.UTF_8);
     }
     if (TEST_QUICK_STRETCHED_PW == null) {
       TEST_QUICK_STRETCHED_PW = FxAccountUtils.generateQuickStretchedPW(TEST_EMAIL_UTF8, TEST_PASSWORD_UTF8);

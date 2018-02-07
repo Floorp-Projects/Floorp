@@ -21,6 +21,7 @@ import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.net.BaseResource;
+import org.mozilla.gecko.util.StringUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
@@ -126,10 +127,10 @@ public class TelemetryEventCollector {
         final ClientsDataDelegate clientsDataDelegate = new SharedPreferencesClientsDataDelegate(sharedPrefs, context);
         try {
             final String hashedDeviceID = Utils.byte2Hex(Utils.sha256(
-                    clientsDataDelegate.getAccountGUID().concat(hashedFxAUID).getBytes("UTF-8")
+                    clientsDataDelegate.getAccountGUID().concat(hashedFxAUID).getBytes(StringUtils.UTF_8)
             ));
             event.putString(TelemetryContract.KEY_LOCAL_DEVICE_ID, hashedDeviceID);
-        } catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException e) {
             // Should not happen.
             Log.e(LOG_TAG, "Either UTF-8 or SHA-256 are not supported", e);
             return false;
