@@ -17,12 +17,12 @@ add_task(async function copy_toolbar_shortcut() {
     PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
   });
 
-  library.PlacesOrganizer.selectLeftPaneQuery("BookmarksToolbar");
+  library.PlacesOrganizer.selectLeftPaneBuiltIn("BookmarksToolbar");
 
   await promiseClipboard(function() { library.PlacesOrganizer._places.controller.copy(); },
                          PlacesUtils.TYPE_X_MOZ_PLACE);
 
-  library.PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
+  library.PlacesOrganizer.selectLeftPaneBuiltIn("UnfiledBookmarks");
 
   await library.ContentTree.view.controller.paste();
 
@@ -32,7 +32,7 @@ add_task(async function copy_toolbar_shortcut() {
      "copy is still a folder shortcut");
 
   PlacesUtils.bookmarks.removeItem(toolbarCopyNode.itemId);
-  library.PlacesOrganizer.selectLeftPaneQuery("BookmarksToolbar");
+  library.PlacesOrganizer.selectLeftPaneBuiltIn("BookmarksToolbar");
   is(library.PlacesOrganizer._places.selectedNode.type,
      Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT,
      "original is still a folder shortcut");
@@ -41,12 +41,12 @@ add_task(async function copy_toolbar_shortcut() {
 add_task(async function copy_history_query() {
   let library = await promiseLibrary();
 
-  library.PlacesOrganizer.selectLeftPaneQuery("History");
+  library.PlacesOrganizer.selectLeftPaneBuiltIn("History");
 
   await promiseClipboard(function() { library.PlacesOrganizer._places.controller.copy(); },
                          PlacesUtils.TYPE_X_MOZ_PLACE);
 
-  library.PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
+  library.PlacesOrganizer.selectLeftPaneBuiltIn("UnfiledBookmarks");
   await library.ContentTree.view.controller.paste();
 
   let historyCopyNode = library.ContentTree.view.view.nodeForTreeIndex(0);
@@ -55,7 +55,7 @@ add_task(async function copy_history_query() {
      "copy is still a query");
 
   PlacesUtils.bookmarks.removeItem(historyCopyNode.itemId);
-  library.PlacesOrganizer.selectLeftPaneQuery("History");
+  library.PlacesOrganizer.selectLeftPaneBuiltIn("History");
   is(library.PlacesOrganizer._places.selectedNode.type,
      Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY,
      "original is still a query");

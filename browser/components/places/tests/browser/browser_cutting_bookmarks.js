@@ -46,7 +46,7 @@ add_task(async function() {
   }, PlacesUtils.TYPE_X_MOZ_PLACE);
 
   info("Selecting UnfiledBookmarks in the left pane");
-  PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
+  PlacesOrganizer.selectLeftPaneBuiltIn("UnfiledBookmarks");
   info("Pasting clipboard");
   await ContentTree.view.controller.paste();
 
@@ -57,7 +57,7 @@ var selectBookmarksIn = async function(organizer, bookmarks, aLeftPaneQuery) {
   let PlacesOrganizer = organizer.PlacesOrganizer;
   let ContentTree = organizer.ContentTree;
   info("Selecting " + aLeftPaneQuery + " in the left pane");
-  PlacesOrganizer.selectLeftPaneQuery(aLeftPaneQuery);
+  PlacesOrganizer.selectLeftPaneBuiltIn(aLeftPaneQuery);
 
   for (let {guid} of bookmarks) {
     let bookmark = await PlacesUtils.bookmarks.fetch(guid);

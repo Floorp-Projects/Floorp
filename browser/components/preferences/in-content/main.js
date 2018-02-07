@@ -683,7 +683,6 @@ var gMainPane = {
           revertCheckbox();
           return;
         case CONFIRM_RESTART_PROMPT_RESTART_NOW:
-          const Cc = Components.classes, Ci = Components.interfaces;
           let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
             .createInstance(Ci.nsISupportsPRBool);
           Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
@@ -886,11 +885,8 @@ var gMainPane = {
   },
 
   _getTabsForHomePage() {
-    var win;
     var tabs = [];
-
-    const Cc = Components.classes, Ci = Components.interfaces;
-    win = Services.wm.getMostRecentWindow("navigator:browser");
+    var win = Services.wm.getMostRecentWindow("navigator:browser");
 
     if (win && win.document.documentElement
       .getAttribute("windowtype") == "navigator:browser") {

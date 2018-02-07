@@ -2888,16 +2888,9 @@ add_task(async function test_migrateOldTrackerEntries() {
 });
 
 add_task(async function test_ensureMobileQuery() {
-  info("Ensure we correctly create the mobile query");
-
-  let PlacesUIUtils;
-  try {
-    PlacesUIUtils = ChromeUtils.import("resource:///modules/PlacesUIUtils.jsm", {}).PlacesUIUtils;
-    PlacesUIUtils.maybeRebuildLeftPane();
-  } catch (ex) {
-    info("Can't build left pane roots; skipping test");
-    return;
-  }
+  info("Ensure we correctly set the showMobileBookmarks preference");
+  const mobilePref = "browser.bookmarks.showMobileBookmarks";
+  Services.prefs.clearUserPref(mobilePref);
 
   await PlacesUtils.bookmarks.insert({
     guid: "bookmarkAAAA",
@@ -2913,65 +2906,18 @@ add_task(async function test_ensureMobileQuery() {
     title: "B",
   });
 
-  // Creates the organizer queries as a side effect.
-  let leftPaneId = PlacesUIUtils.leftPaneFolderId;
-  info(`Left pane root ID: ${leftPaneId}`);
-
-  let allBookmarksGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
-    "PlacesOrganizer/OrganizerQuery", "AllBookmarks");
-  equal(allBookmarksGuids.length, 1, "Should create folder with all bookmarks queries");
-  let allBookmarkGuid = allBookmarksGuids[0];
-
-  info("Try creating query after organizer is ready");
   await PlacesSyncUtils.bookmarks.ensureMobileQuery();
-  let queryGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
-    "PlacesOrganizer/OrganizerQuery", "MobileBookmarks");
-  equal(queryGuids.length, 1, "Should create query because we have bookmarks A and B");
 
-  let queryGuid = queryGuids[0];
-
-  let queryInfo = await PlacesUtils.bookmarks.fetch(queryGuid);
-  equal(queryInfo.url, `place:folder=MOBILE_BOOKMARKS`, "Query should point to mobile root");
-  equal(queryInfo.title, "Mobile Bookmarks", "Query title should be localized");
-  equal(queryInfo.parentGuid, allBookmarkGuid, "Should append mobile query to all bookmarks queries");
-
-  info("Rename root and query, then recreate");
-  await PlacesUtils.bookmarks.update({
-    guid: PlacesUtils.bookmarks.mobileGuid,
-    title: "renamed root",
-  });
-  await PlacesUtils.bookmarks.update({
-    guid: queryGuid,
-    title: "renamed query",
-  });
-  await PlacesSyncUtils.bookmarks.ensureMobileQuery();
-  let rootInfo = await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.mobileGuid);
-  equal(rootInfo.title, "Mobile Bookmarks", "Should fix root title");
-  queryInfo = await PlacesUtils.bookmarks.fetch(queryGuid);
-  equal(queryInfo.title, "Mobile Bookmarks", "Should fix query title");
-
-  info("Point query to different folder");
-  await PlacesUtils.bookmarks.update({
-    guid: queryGuid,
-    url: "place:folder=BOOKMARKS_MENU",
-  });
-  await PlacesSyncUtils.bookmarks.ensureMobileQuery();
-  queryInfo = await PlacesUtils.bookmarks.fetch(queryGuid);
-  equal(queryInfo.url.href, `place:folder=MOBILE_BOOKMARKS`,
-    "Should fix query URL to point to mobile root");
-
-  info("We shouldn't track the query or the left pane root");
-
-  let changes = await PlacesSyncUtils.bookmarks.pullChanges();
-  ok(!(queryGuid in changes), "Should not track mobile query");
+  Assert.ok(Services.prefs.getBoolPref(mobilePref),
+            "Pref should be true where there are bookmarks in the folder.");
 
   await PlacesUtils.bookmarks.remove("bookmarkAAAA");
   await PlacesUtils.bookmarks.remove("bookmarkBBBB");
+
   await PlacesSyncUtils.bookmarks.ensureMobileQuery();
 
-  queryGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
-    "PlacesOrganizer/OrganizerQuery", "MobileBookmarks");
-  equal(queryGuids.length, 0, "Should delete query since there are no bookmarks");
+  Assert.ok(!Services.prefs.getBoolPref(mobilePref),
+            "Pref should be false where there are no bookmarks in the folder.");
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();

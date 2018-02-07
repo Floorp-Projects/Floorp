@@ -392,7 +392,7 @@ CrossProcessCompositorBridgeParent::DidCompositeLocked(
 }
 
 void
-CrossProcessCompositorBridgeParent::ForceComposite(LayerTransactionParent* aLayerTree)
+CrossProcessCompositorBridgeParent::ScheduleComposite(LayerTransactionParent* aLayerTree)
 {
   uint64_t id = aLayerTree->GetId();
   MOZ_ASSERT(id != 0);
@@ -402,7 +402,7 @@ CrossProcessCompositorBridgeParent::ForceComposite(LayerTransactionParent* aLaye
     parent = sIndirectLayerTrees[id].mParent;
   }
   if (parent) {
-    parent->ForceComposite(aLayerTree);
+    parent->ScheduleComposite(aLayerTree);
   }
 }
 

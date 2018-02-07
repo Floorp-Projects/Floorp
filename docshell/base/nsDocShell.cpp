@@ -25,6 +25,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/Logging.h"
+#include "mozilla/MediaFeatureChange.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
@@ -4179,7 +4180,8 @@ nsDocShell::SetDeviceSizeIsPageSize(bool aValue)
     RefPtr<nsPresContext> presContext;
     GetPresContext(getter_AddRefs(presContext));
     if (presContext) {
-      presContext->MediaFeatureValuesChanged(nsRestyleHint(0));
+      presContext->MediaFeatureValuesChanged({
+        MediaFeatureChangeReason::DeviceSizeIsPageSizeChange });
     }
   }
   return NS_OK;
@@ -14423,7 +14425,8 @@ nsDocShell::SetDisplayMode(uint32_t aDisplayMode)
 
     RefPtr<nsPresContext> presContext;
     if (NS_SUCCEEDED(GetPresContext(getter_AddRefs(presContext)))) {
-      presContext->MediaFeatureValuesChangedAllDocuments(nsRestyleHint(0));
+      presContext->MediaFeatureValuesChangedAllDocuments({
+        MediaFeatureChangeReason::DisplayModeChange });
     }
   }
 

@@ -110,7 +110,7 @@ parent:
   async ClearCachedResources();
 
   // Schedule a composite if one isn't already scheduled.
-  async ForceComposite();
+  async ScheduleComposite();
 
   // Get a copy of the compositor-side APZ test data instance for this
   // layers id.

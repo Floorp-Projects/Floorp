@@ -235,7 +235,7 @@ with Files("tests/css/css-paint-api/**"):
     BUG_COMPONENT = ("Core", "Layout: Web Painting")
 
 with Files("tests/css/css-scoping/**"):
-    BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
 with Files("tests/css/css-timing/**"):
     BUG_COMPONENT = ("Core", "Layout")
@@ -250,7 +250,7 @@ with Files("tests/css/cssom-view/**"):
     BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
 
 with Files("tests/css/selectors/**"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
 with Files("tests/custom-elements/**"):
     BUG_COMPONENT = ("Core", "DOM")

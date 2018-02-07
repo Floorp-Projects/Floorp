@@ -6453,6 +6453,10 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     case eCSSUnit_Element: {
       auto shapeImage = MakeUnique<nsStyleImage>();
       SetStyleImage(aContext, *shapeOutsideValue, *shapeImage, conditions);
+      if (shapeImage->GetType() == eStyleImageType_Image) {
+        shapeImage->GetImageRequest()->GetImageValue()->SetCORSMode(
+          CORSMode::CORS_ANONYMOUS);
+      }
       display->mShapeOutside = StyleShapeSource();
       display->mShapeOutside.SetShapeImage(Move(shapeImage));
       break;

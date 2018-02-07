@@ -49,9 +49,6 @@ const { SOURCE_SYNC } = Ci.nsINavBookmarksService;
 const MICROSECONDS_PER_SECOND = 1000000;
 const SQLITE_MAX_VARIABLE_NUMBER = 999;
 
-const ORGANIZER_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
-const ORGANIZER_ALL_BOOKMARKS_ANNO_VALUE = "AllBookmarks";
-const ORGANIZER_MOBILE_QUERY_ANNO_VALUE = "MobileBookmarks";
 const MOBILE_BOOKMARKS_PREF = "browser.bookmarks.showMobileBookmarks";
 
 // These are defined as lazy getters to defer initializing the bookmarks
@@ -1061,70 +1058,15 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
 
     Services.prefs.setBoolPref(MOBILE_BOOKMARKS_PREF, hasMobileBookmarks);
     if (hasMobileBookmarks) {
-      await this.upsertMobileQuery(db);
-    } else {
-      await this.removeMobileQuery(db);
-    }
-  },
+      let mobileTitle = PlacesUtils.getString("MobileBookmarksFolderTitle");
 
-  async upsertMobileQuery(db) {
-    let maybeAllBookmarksGuids = await fetchGuidsWithAnno(db,
-      ORGANIZER_QUERY_ANNO, ORGANIZER_ALL_BOOKMARKS_ANNO_VALUE);
-    if (!maybeAllBookmarksGuids.length) {
-      return;
-    }
-
-    let allBookmarksGuid = maybeAllBookmarksGuids[0];
-    let mobileTitle = PlacesUtils.getString("MobileBookmarksFolderTitle");
-
-    let maybeMobileQueryGuids = await fetchGuidsWithAnno(db,
-      ORGANIZER_QUERY_ANNO, ORGANIZER_MOBILE_QUERY_ANNO_VALUE);
-    if (maybeMobileQueryGuids.length) {
-      let mobileQueryGuid = maybeMobileQueryGuids[0];
-      // We have a left pane query for mobile bookmarks, make sure the
-      // query title is correct.
+      // Make sure the mobile root title matches the query.
       await PlacesUtils.bookmarks.update({
-        guid: mobileQueryGuid,
-        url: "place:folder=MOBILE_BOOKMARKS",
+        guid: PlacesUtils.bookmarks.mobileGuid,
         title: mobileTitle,
         source: SOURCE_SYNC,
       });
-    } else {
-      // We have no left pane query. Create the query.
-      let mobileQuery = await PlacesUtils.bookmarks.insert({
-        parentGuid: allBookmarksGuid,
-        url: "place:folder=MOBILE_BOOKMARKS",
-        title: mobileTitle,
-        source: SOURCE_SYNC,
-      });
-
-      let mobileQueryId = await PlacesUtils.promiseItemId(mobileQuery.guid);
-
-      PlacesUtils.annotations.setItemAnnotation(mobileQueryId,
-        ORGANIZER_QUERY_ANNO, ORGANIZER_MOBILE_QUERY_ANNO_VALUE, 0,
-        PlacesUtils.annotations.EXPIRE_NEVER, SOURCE_SYNC);
-      PlacesUtils.annotations.setItemAnnotation(mobileQueryId,
-        PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO, 1, 0,
-        PlacesUtils.annotations.EXPIRE_NEVER, SOURCE_SYNC);
     }
-
-    // Make sure the mobile root title matches the query.
-    await PlacesUtils.bookmarks.update({
-      guid: PlacesUtils.bookmarks.mobileGuid,
-      title: mobileTitle,
-      source: SOURCE_SYNC,
-    });
-  },
-
-  async removeMobileQuery(db) {
-    let maybeMobileQueryGuids = await fetchGuidsWithAnno(db,
-      ORGANIZER_QUERY_ANNO, ORGANIZER_MOBILE_QUERY_ANNO_VALUE);
-    if (!maybeMobileQueryGuids.length) {
-      BookmarkSyncLog.warn("Trying to remove non-existent mobile query");
-      return;
-    }
-    let mobileQueryGuid = maybeMobileQueryGuids[0];
-    await PlacesUtils.bookmarks.remove(mobileQueryGuid);
   },
 
   /**

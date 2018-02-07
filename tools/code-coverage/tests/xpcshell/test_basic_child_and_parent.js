@@ -7,7 +7,7 @@ function run_test() {
   do_test_pending();
 
   sendCommand("let v = 'test';", function() {
-      let codeCoverage = Components.classes["@mozilla.org/tools/code-coverage;1"].getService(Components.interfaces.nsICodeCoverage);
+      let codeCoverage = Cc["@mozilla.org/tools/code-coverage;1"].getService(Ci.nsICodeCoverage);
 
       codeCoverage.dumpCounters();
       codeCoverage.resetCounters();

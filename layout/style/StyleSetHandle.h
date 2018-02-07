@@ -9,6 +9,7 @@
 
 #include "mozilla/AtomArray.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/MediaFeatureChange.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/SheetType.h"
@@ -194,7 +195,7 @@ public:
     inline void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot);
     inline bool StyleSheetsHaveChanged() const;
     inline void InvalidateStyleForCSSRuleChanges();
-    inline nsRestyleHint MediumFeaturesChanged(bool aViewportChanged);
+    inline nsRestyleHint MediumFeaturesChanged(mozilla::MediaFeatureChangeReason);
     inline already_AddRefed<nsStyleContext>
     ProbePseudoElementStyle(dom::Element* aParentElement,
                             mozilla::CSSPseudoElementType aType,

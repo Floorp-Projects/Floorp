@@ -832,8 +832,12 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
   }
 
   if (aOptions->ResultType() ==
-      nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
-    return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
+        nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
+      return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
+
+  if (aOptions->ResultType() ==
+        nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY)
+      return QUERYUPDATE_MOBILEPREF;
 
   // Whenever there is a maximum number of results,
   // and we are not a bookmark query we must requery. This
@@ -1390,7 +1394,8 @@ bool NeedToFilterResultSet(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                              nsNavHistoryQueryOptions *aOptions)
 {
   uint16_t resultType = aOptions->ResultType();
-  return resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS;
+  return resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS ||
+         aOptions->ExcludeQueries();
 }
 
 // ** Helper class for ConstructQueryString **/
@@ -1414,6 +1419,7 @@ private:
   nsresult SelectAsDay();
   nsresult SelectAsSite();
   nsresult SelectAsTag();
+  nsresult SelectAsRoots();
 
   nsresult Where();
   nsresult GroupBy();
@@ -1512,6 +1518,11 @@ PlacesSQLQueryBuilder::Select()
 
     case nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY:
       rv = SelectAsTag();
+      NS_ENSURE_SUCCESS(rv, rv);
+      break;
+
+    case nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY:
+      rv = SelectAsRoots();
       NS_ENSURE_SUCCESS(rv, rv);
       break;
 
@@ -1920,6 +1931,49 @@ PlacesSQLQueryBuilder::SelectAsTag()
     history->GetTagsFolder()
   );
 
+  return NS_OK;
+}
+
+nsresult
+PlacesSQLQueryBuilder::SelectAsRoots()
+{
+  nsNavHistory *history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_STATE(history);
+
+  nsAutoCString toolbarTitle;
+  nsAutoCString menuTitle;
+  nsAutoCString unfiledTitle;
+
+  history->GetStringFromName("BookmarksToolbarFolderTitle", toolbarTitle);
+  history->GetStringFromName("BookmarksMenuFolderTitle", menuTitle);
+  history->GetStringFromName("OtherBookmarksFolderTitle", unfiledTitle);
+
+  nsAutoCString mobileString;
+
+  if (Preferences::GetBool(MOBILE_BOOKMARKS_PREF, false)) {
+    nsAutoCString mobileTitle;
+    history->GetStringFromName("MobileBookmarksFolderTitle", mobileTitle);
+
+    mobileString = nsPrintfCString(","
+      "(null, 'place:folder=MOBILE_BOOKMARKS', '%s', null, null, null, "
+       "null, null, 0, 0, null, null, null, null, '" MOBILE_BOOKMARKS_VIRTUAL_GUID "', null) ",
+      mobileTitle.get());
+  }
+
+  mQueryString = nsPrintfCString(
+    "SELECT * FROM ("
+        "VALUES(null, 'place:folder=TOOLBAR', '%s', null, null, null, "
+               "null, null, 0, 0, null, null, null, null, 'toolbar____v', null), "
+              "(null, 'place:folder=BOOKMARKS_MENU', '%s', null, null, null, "
+               "null, null, 0, 0, null, null, null, null, 'menu_______v', null), "
+              "(null, 'place:folder=UNFILED_BOOKMARKS', '%s', null, null, null, "
+               "null, null, 0, 0, null, null, null, null, 'unfiled___v', null) "
+              " %s "
+    ")",
+    toolbarTitle.get(),
+    menuTitle.get(),
+    unfiledTitle.get(),
+    mobileString.get());
   return NS_OK;
 }
 
@@ -3157,7 +3211,9 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
                                   nsCString* aClause)
 {
   bool hasIt;
-  bool excludeQueries = aOptions->ExcludeQueries();
+  // We don't use the value from options here - we post filter if that
+  // is set.
+  bool excludeQueries = false;
 
   ConditionBuilder clause(aQueryIndex);
 
@@ -3306,7 +3362,7 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
   }
 
   if (excludeQueries) {
-    // Serching by terms implicitly exclude queries.
+    // Serching by terms implicitly exclude queries and folder shortcuts.
     clause.Condition("NOT h.url_hash BETWEEN hash('place', 'prefix_lo') AND "
                                             "hash('place', 'prefix_hi')");
   }
@@ -3556,25 +3612,29 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
   ParseSearchTermsFromQueries(aQueries, &terms);
 
   uint16_t resultType = aOptions->ResultType();
+  bool excludeQueries = aOptions->ExcludeQueries();
   for (int32_t nodeIndex = 0; nodeIndex < aSet.Count(); nodeIndex++) {
-    // exclude-queries is implicit when searching, we're only looking at
-    // plan URI nodes
-    if (!aSet[nodeIndex]->IsURI())
+    if (excludeQueries && aSet[nodeIndex]->IsQuery()) {
       continue;
+    }
 
     // RESULTS_AS_TAG_CONTENTS returns a set ordered by place_id and
-    // lastModified. So, to remove duplicates, we can retain the first result
-    // for each uri.
+    // lastModified. The set may contain duplicate, and to remove them we can
+    // just retain the first result.
     if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS &&
-        nodeIndex > 0 && aSet[nodeIndex]->mURI == aSet[nodeIndex-1]->mURI)
+        (!aSet[nodeIndex]->IsURI() ||
+         (nodeIndex > 0 && aSet[nodeIndex]->mURI == aSet[nodeIndex-1]->mURI))) {
       continue;
+    }
 
     if (aSet[nodeIndex]->mItemId != -1 && aQueryNode &&
         aQueryNode->mItemId == aSet[nodeIndex]->mItemId) {
       continue;
     }
 
-    // Append the node only if it matches one of the queries.
+    // If there are search terms, we are already getting only uri nodes,
+    // thus we don't need to filter node types. Though, we must check for
+    // matching terms.
     bool appendNode = false;
     for (int32_t queryIndex = 0;
          queryIndex < aQueries.Count() && !appendNode; queryIndex++) {
@@ -3784,6 +3844,11 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
+    if (aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY) {
+      rv = aRow->GetUTF8String(kGetInfoIndex_Guid, guid);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     RefPtr<nsNavHistoryResultNode> resultNode;
     rv = QueryRowToResult(itemId, guid, url, title, accessCount, time,
                           getter_AddRefs(resultNode));
@@ -3884,8 +3949,11 @@ nsNavHistory::QueryRowToResult(int64_t itemId,
                                PRTime aTime,
                                nsNavHistoryResultNode** aNode)
 {
-  MOZ_ASSERT((itemId != -1 && !aBookmarkGuid.IsEmpty()) ||
-             (itemId == -1 && aBookmarkGuid.IsEmpty()));
+  // Only assert if the itemId is set. In some cases (e.g. virtual queries), we
+  // have a guid, but not an itemId.
+  if (itemId != -1) {
+    MOZ_ASSERT(!aBookmarkGuid.IsEmpty());
+  }
 
   nsCOMArray<nsNavHistoryQuery> queries;
   nsCOMPtr<nsNavHistoryQueryOptions> options;

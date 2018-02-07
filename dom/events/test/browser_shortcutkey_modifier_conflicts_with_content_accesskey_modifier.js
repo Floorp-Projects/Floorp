@@ -46,12 +46,17 @@ add_task(async function() {
         resolve();
         return;
       }
-      info("Waiting selectionchange event...");
-      gURLBar.addEventListener("selectionchange", () => {
-        ok(isAllTextSelected(), "All text of the URL bar should be selected");
+      info("Waiting selection changes...");
+      function tryToCheckItLater() {
+        if (!isAllTextSelected()) {
+          SimpleTest.executeSoon(tryToCheckItLater);
+          return;
+        }
+        ok(true, "All text of the URL bar should be selected");
         isnot(gURLBar.inputField.value, "", "The URL bar should have non-empty text");
         resolve();
-      }, {once: true});
+      }
+      SimpleTest.executeSoon(tryToCheckItLater);
     });
   }
 

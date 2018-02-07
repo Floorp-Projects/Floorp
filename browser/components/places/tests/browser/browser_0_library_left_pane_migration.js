@@ -78,7 +78,7 @@ add_task(async function() {
      "Left pane version has been correctly upgraded");
 
   // Check left pane is populated.
-  organizer.PlacesOrganizer.selectLeftPaneQuery("History");
+  organizer.PlacesOrganizer.selectLeftPaneBuiltIn("History");
   is(organizer.PlacesOrganizer._places.selectedNode.itemId,
      PlacesUIUtils.leftPaneQueries.History,
      "Library left pane is populated and working");

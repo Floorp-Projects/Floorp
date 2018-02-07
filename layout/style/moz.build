@@ -92,6 +92,7 @@ EXPORTS.mozilla += [
     'GenericSpecifiedValues.h',
     'GenericSpecifiedValuesInlines.h',
     'LayerAnimationInfo.h',
+    'MediaFeatureChange.h',
     'PostTraversalTask.h',
     'PreloadedStyleSheet.h',
     'RuleNodeCacheConditions.h',

@@ -113,7 +113,11 @@ function serializeNode(aNode, aIsLivemark) {
   data.instanceId = PlacesUtils.instanceId;
 
   let guid = aNode.bookmarkGuid;
-  if (guid) {
+  // Some nodes, e.g. the unfiled/menu/toolbar ones can have a virtual guid, so
+  // we ignore any that are a folder shortcut. These will be handled below.
+  if (guid && !PlacesUtils.bookmarks.isVirtualRootItem(guid)) {
+    // TODO: Really guid should be set on everything, however currently this upsets
+    // the drag 'n' drop / cut/copy/paste operations.
     data.itemGuid = guid;
     if (aNode.parent)
       data.parent = aNode.parent.itemId;
@@ -155,6 +159,7 @@ function serializeNode(aNode, aIsLivemark) {
         data.type = PlacesUtils.TYPE_X_MOZ_PLACE;
         data.uri = aNode.uri;
         data.concreteId = concreteId;
+        data.concreteGuid = PlacesUtils.getConcreteItemGuid(aNode);
       } else {
         // This is a bookmark folder.
         data.type = PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER;
@@ -430,6 +435,18 @@ this.PlacesUtils = {
                 let bucket = v.split(":");
                 return [ bucket[0].trim().toLowerCase(), Number(bucket[1]) ];
               });
+  },
+
+  /**
+   * Determines if a folder is generated from a query.
+   * @param aNode a result true.
+   * @returns true if the node is a folder generated from a query.
+   */
+  isQueryGeneratedFolder(node) {
+    if (!node.parent) {
+      return false;
+    }
+    return this.nodeIsFolder(node) && this.nodeIsQuery(node.parent);
   },
 
   /**

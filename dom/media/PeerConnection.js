@@ -847,6 +847,7 @@ class RTCPeerConnection {
 
   async _createOffer(options) {
     this._checkClosed();
+    this._syncTransceivers();
     let origin = Cu.getWebIDLCallerPrincipal().origin;
     return this._chain(async () => {
       let haveAssertion;
@@ -878,6 +879,7 @@ class RTCPeerConnection {
 
   async _createAnswer(options) {
     this._checkClosed();
+    this._syncTransceivers();
     let origin = Cu.getWebIDLCallerPrincipal().origin;
     return this._chain(async () => {
       // We give up line-numbers in errors by doing this here, but do all

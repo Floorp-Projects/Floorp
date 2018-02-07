@@ -35,6 +35,7 @@
 #include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for PlaybackDirection
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/ImageTracker.h"
+#include "mozilla/CORSMode.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Likely.h"
 #include "nsIURI.h"
@@ -3731,6 +3732,13 @@ nsStyleDisplay::FinishStyle(nsPresContext* aPresContext)
   if (mShapeOutside.GetType() == StyleShapeSourceType::Image) {
     const UniquePtr<nsStyleImage>& shapeImage = mShapeOutside.GetShapeImage();
     if (shapeImage) {
+      // Bug 1434963: The CORS mode should instead be set when the
+      // ImageValue is created, in both Gecko and Stylo. That will
+      // avoid doing a mutation here.
+      if (shapeImage->GetType() == eStyleImageType_Image) {
+        shapeImage->GetImageRequest()->GetImageValue()->SetCORSMode(
+          CORSMode::CORS_ANONYMOUS);
+      }
       shapeImage->ResolveImage(aPresContext);
     }
   }

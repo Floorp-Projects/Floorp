@@ -317,9 +317,9 @@ StyleSetHandle::Ptr::StyleSheetsHaveChanged() const
   FORWARD(StyleSheetsHaveChanged, ());
 }
 nsRestyleHint
-StyleSetHandle::Ptr::MediumFeaturesChanged(bool aViewportChanged)
+StyleSetHandle::Ptr::MediumFeaturesChanged(mozilla::MediaFeatureChangeReason aReason)
 {
-  FORWARD(MediumFeaturesChanged, (aViewportChanged));
+  FORWARD(MediumFeaturesChanged, (aReason));
 }
 void
 StyleSetHandle::Ptr::InvalidateStyleForCSSRuleChanges()

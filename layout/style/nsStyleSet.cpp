@@ -2655,7 +2655,7 @@ nsStyleSet::HasAttributeDependentStyle(Element*       aElement,
 }
 
 nsRestyleHint
-nsStyleSet::MediumFeaturesChanged(bool aViewportChanged)
+nsStyleSet::MediumFeaturesChanged(mozilla::MediaFeatureChangeReason aReason)
 {
   NS_ASSERTION(mBatching == 0, "rule processors out of date");
 
@@ -2676,14 +2676,17 @@ nsStyleSet::MediumFeaturesChanged(bool aViewportChanged)
 
   if (mBindingManager) {
     bool thisChanged =
-      mBindingManager->MediumFeaturesChanged(presContext);
+      mBindingManager->MediumFeaturesChanged(presContext, aReason);
     stylesChanged = stylesChanged || thisChanged;
   }
 
   if (stylesChanged) {
     return eRestyle_Subtree;
   }
-  if (aViewportChanged && mUsesViewportUnits) {
+  const bool viewportChanged =
+    bool(aReason & MediaFeatureChangeReason::ViewportChange);
+
+  if (viewportChanged && mUsesViewportUnits) {
     // Rebuild all style data without rerunning selector matching.
     return eRestyle_ForceDescendants;
   }

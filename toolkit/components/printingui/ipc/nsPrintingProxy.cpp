@@ -182,8 +182,7 @@ nsPrintingProxy::ShowProgress(mozIDOMWindowProxy*      parent,
 
 NS_IMETHODIMP
 nsPrintingProxy::ShowPageSetup(mozIDOMWindowProxy *parent,
-                               nsIPrintSettings *printSettings,
-                               nsIObserver *aObs)
+                               nsIPrintSettings *printSettings)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

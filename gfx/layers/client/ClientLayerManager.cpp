@@ -501,7 +501,7 @@ ClientLayerManager::FlushAsyncPaints()
 void
 ClientLayerManager::ScheduleComposite()
 {
-  mForwarder->Composite();
+  mForwarder->ScheduleComposite();
 }
 
 void

@@ -10,6 +10,7 @@
 #define nsPresContext_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/MediaFeatureChange.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
@@ -17,6 +18,7 @@
 #include "nsCoord.h"
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
+#include "nsIPresShellInlines.h"
 #include "nsRect.h"
 #include "nsStringFwd.h"
 #include "nsFont.h"
@@ -224,12 +226,10 @@ public:
 
   mozilla::StyleSetHandle StyleSet() const { return GetPresShell()->StyleSet(); }
 
-#ifdef DEBUG
   bool HasPendingMediaQueryUpdates() const
   {
-    return mPendingMediaFeatureValuesChanged;
+    return !!mPendingMediaFeatureValuesChange;
   }
-#endif
 
   nsFrameManager* FrameManager()
     { return PresShell()->FrameManager(); }
@@ -273,6 +273,7 @@ public:
   void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
                                     nsRestyleHint aRestyleHint);
 
+
   /**
    * Handle changes in the values of media features (used in media
    * queries).
@@ -293,22 +294,28 @@ public:
    * a nonzero aChangeHint forces rebuilding style data even if
    * nsRestyleHint(0) is passed.)
    */
-  void MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
-                                 nsChangeHint aChangeHint = nsChangeHint(0));
+  void MediaFeatureValuesChanged(const mozilla::MediaFeatureChange& aChange)
+  {
+    if (mShell) {
+      mShell->EnsureStyleFlush();
+    }
+
+    if (!mPendingMediaFeatureValuesChange) {
+      mPendingMediaFeatureValuesChange.emplace(aChange);
+      return;
+    }
+
+    *mPendingMediaFeatureValuesChange |= aChange;
+  }
+
+  void FlushPendingMediaFeatureValuesChanged();
+
   /**
    * Calls MediaFeatureValuesChanged for this pres context and all descendant
    * subdocuments that have a pres context. This should be used for media
    * features that must be updated in all subdocuments e.g. display-mode.
    */
-  void MediaFeatureValuesChangedAllDocuments(nsRestyleHint aRestyleHint,
-                                             nsChangeHint aChangeHint = nsChangeHint(0));
-
-  void PostMediaFeatureValuesChangedEvent();
-  void HandleMediaFeatureValuesChangedEvent();
-  void FlushPendingMediaFeatureValuesChanged() {
-    if (mPendingMediaFeatureValuesChanged)
-      MediaFeatureValuesChanged(nsRestyleHint(0));
-  }
+  void MediaFeatureValuesChangedAllDocuments(const mozilla::MediaFeatureChange&);
 
   /**
    * Updates the size mode on all remote children and recursively notifies this
@@ -466,8 +473,9 @@ public:
       mVisibleArea = r;
       // Visible area does not affect media queries when paginated.
       if (!IsPaginated() && HasCachedStyleData()) {
-        mPendingViewportChange = true;
-        PostMediaFeatureValuesChangedEvent();
+        MediaFeatureValuesChanged({
+          mozilla::MediaFeatureChangeReason::ViewportChange
+        });
       }
     }
   }
@@ -618,8 +626,11 @@ public:
     if (HasCachedStyleData()) {
       // Media queries could have changed, since we changed the meaning
       // of 'em' units in them.
-      MediaFeatureValuesChanged(eRestyle_ForceDescendants,
-                                NS_STYLE_HINT_REFLOW);
+      MediaFeatureValuesChanged({
+        eRestyle_ForceDescendants,
+        NS_STYLE_HINT_REFLOW,
+        mozilla::MediaFeatureChangeReason::MinFontSizeChange
+      });
     }
   }
 
@@ -1455,7 +1466,6 @@ protected:
   unsigned              mPendingSysColorChanged : 1;
   unsigned              mPendingThemeChanged : 1;
   unsigned              mPendingUIResolutionChanged : 1;
-  unsigned              mPendingMediaFeatureValuesChanged : 1;
   unsigned              mPrefChangePendingNeedsReflow : 1;
   unsigned              mIsEmulatingMedia : 1;
 
@@ -1466,9 +1476,6 @@ protected:
   unsigned              mUsesRootEMUnits : 1;
   // Does the associated document use ex or ch units?
   unsigned              mUsesExChUnits : 1;
-
-  // Has there been a change to the viewport's dimensions?
-  unsigned              mPendingViewportChange : 1;
 
   // Is the current mCounterStyleManager valid?
   unsigned              mCounterStylesDirty : 1;
@@ -1514,6 +1521,7 @@ protected:
   unsigned mInitialized : 1;
 #endif
 
+  mozilla::Maybe<mozilla::MediaFeatureChange> mPendingMediaFeatureValuesChange;
 
 protected:
 

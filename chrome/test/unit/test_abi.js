@@ -8,8 +8,8 @@ updateAppInfo({
 
 registerManifests([do_get_file("data/test_abi.manifest")]);
 
-const catman = Components.classes["@mozilla.org/categorymanager;1"].
-  getService(Components.interfaces.nsICategoryManager);
+const catman = Cc["@mozilla.org/categorymanager;1"].
+  getService(Ci.nsICategoryManager);
 
 function is_registered(name) {
   try {

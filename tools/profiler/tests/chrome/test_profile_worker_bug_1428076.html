@@ -13,56 +13,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1428076
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1428076">Mozilla Bug 1428076</a>
 
 <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="profiler_test_utils.js"></script>
 <script type="application/javascript">
-
 /** Test for Bug 1428076 **/
+
+/* globals runTest */
+
 "use strict";
-ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-function startProfiler() {
-  const settings = {
-    entries: 1000000, // 9MB
-    interval: 1, // ms
-    features: ["js", "threads", "leaf", "stackwalk"],
-    threads: ["GeckoMain", "Compositor", "Worker"] // most common combination
-  };
-
-  Services.profiler.StartProfiler(
-    settings.entries,
-    settings.interval,
-    settings.features,
-    settings.features.length,
-    settings.threads,
-    settings.threads.length
-  );
-
-  info("Profiler has started");
-}
-
-function getProfile() {
-  const profile = Services.profiler.getProfileData();
-  info("We got a profile");
-
-  // Run the mochitest with `--keep-open true` to see the logged profile in the
-  // Web console.
-  console.log(profile);
-
-  return profile;
-}
-
-function stopProfiler() {
-  Services.profiler.StopProfiler();
-  info("Profiler has stopped");
-}
-
-function end(error) {
-  if (error) {
-    ok(false, `We got an error: ${error}`);
-  } else {
-    ok(true, "We ran the whole process");
-  }
-  SimpleTest.finish();
-}
+const settings = {
+  entries: 1000000, // 9MB
+  interval: 1, // ms
+  features: ["js", "threads", "leaf", "stackwalk"],
+  threads: ["GeckoMain", "Compositor", "Worker"] // most common combination
+};
 
 function workload() {
   // We use a Blob for the worker content to avoid an external JS file, and data
@@ -87,21 +51,7 @@ function workload() {
   });
 }
 
-SimpleTest.waitForExplicitFinish();
-(async function() {
-  try {
-    await startProfiler();
-    await workload();
-    await getProfile();
-    await stopProfiler();
-    await end();
-  } catch (e) {
-    // By catching and handling the error, we're being nice to mochitest
-    // runners: instead of waiting for the timeout, we fail right away.
-    await end(e);
-  }
-})();
-
+runTest(settings, workload);
 
 </script>
 </body>

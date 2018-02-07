@@ -119,7 +119,7 @@ protected:
   mozilla::ipc::IPCResult RecvReleaseCompositable(const CompositableHandle& aHandle) override;
 
   mozilla::ipc::IPCResult RecvClearCachedResources() override;
-  mozilla::ipc::IPCResult RecvForceComposite() override;
+  mozilla::ipc::IPCResult RecvScheduleComposite() override;
   mozilla::ipc::IPCResult RecvSetTestSampleTime(const TimeStamp& aTime) override;
   mozilla::ipc::IPCResult RecvLeaveTestMode() override;
   mozilla::ipc::IPCResult RecvGetAnimationOpacity(const uint64_t& aCompositorAnimationsId,
