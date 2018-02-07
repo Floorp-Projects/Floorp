@@ -4723,6 +4723,9 @@ extern JS_PUBLIC_API(JSString*)
 JS_AtomizeAndPinString(JSContext* cx, const char* s);
 
 extern JS_PUBLIC_API(JSString*)
+JS_NewLatin1String(JSContext* cx, JS::Latin1Char* chars, size_t length);
+
+extern JS_PUBLIC_API(JSString*)
 JS_NewUCString(JSContext* cx, char16_t* chars, size_t length);
 
 extern JS_PUBLIC_API(JSString*)
