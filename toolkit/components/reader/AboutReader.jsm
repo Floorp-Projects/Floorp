@@ -4,8 +4,6 @@
 
 "use strict";
 
-var Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
-
 this.EXPORTED_SYMBOLS = [ "AboutReader" ];
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
