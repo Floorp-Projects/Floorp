@@ -304,7 +304,7 @@ class StructuredLogger(object):
         if not self._ensure_suite_state('suite_end', data):
             return
 
-        self._log_data("suite_end", data)
+        self._log_data("suite_end")
 
     @log_action(TestId("test"),
                 Unicode("path", default=None, optional=True))
