@@ -415,6 +415,8 @@ class RemoteAutomation(Automation):
                         slowLog = True
                     if hasOutput:
                         noOutputTimer = 0
+                    if self.counts and 'pass' in self.counts and self.counts['pass'] > 0:
+                        interval = 0.5
                 time.sleep(interval)
                 timer += interval
                 noOutputTimer += interval
