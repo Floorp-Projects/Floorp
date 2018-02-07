@@ -4,18 +4,44 @@
 
 from __future__ import absolute_import
 
+import urllib
+
 from marionette_driver.by import By
 
 from marionette_harness import MarionetteTestCase
 
 
+def inline(doc):
+    return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
+
 class TestPosition(MarionetteTestCase):
-
     def test_should_get_element_position_back(self):
-        test_url = self.marionette.absolute_url('rectangles.html')
-        self.marionette.navigate(test_url)
+        doc = """
+        <head>
+            <title>Rectangles</title>
+            <style>
+                div {
+                    position: absolute;
+                    margin: 0;
+                    border: 0;
+                    padding: 0;
+                }
+                #r {
+                    background-color: red;
+                    left: 11px;
+                    top: 10px;
+                    width: 48.666666667px;
+                    height: 49.333333333px;
+                }
+            </style>
+        </head>
+        <body>
+            <div id="r">r</div>
+        </body>
+        """
+        self.marionette.navigate(inline(doc))
 
-        r2 = self.marionette.find_element(By.ID, "r2")
+        r2 = self.marionette.find_element(By.ID, "r")
         location = r2.rect
         self.assertEqual(11, location['x'])
         self.assertEqual(10, location['y'])
