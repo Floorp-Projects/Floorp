@@ -1,9 +1,8 @@
 # coding=utf8
 
 import fluent.syntax.ast as FTL
-from fluent.migrate import (
-    CONCAT, EXTERNAL_ARGUMENT, MESSAGE_REFERENCE, COPY, REPLACE
-)
+from fluent.migrate import CONCAT, COPY, REPLACE
+from fluent.migrate.helpers import EXTERNAL_ARGUMENT, MESSAGE_REFERENCE
 
 
 def migrate(ctx):

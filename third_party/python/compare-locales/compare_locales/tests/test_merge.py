@@ -389,12 +389,12 @@ class TestFluent(unittest.TestCase):
         self.reference("""\
 foo = fooVal
 bar = barVal
-eff = effVal
+-eff = effVal
 """)
         self.localized("""\
 foo = lFoo
 bar = lBar
-eff = lEff
+-eff = lEff
 """)
         cc = ContentComparer([Observer()])
         cc.compare(File(self.ref, "en-reference.ftl", ""),
@@ -420,6 +420,7 @@ eff = lEff
         self.reference("""\
 foo = fooVal
 bar = barVal
+-baz = bazVal
 eff = effVal
 """)
         self.localized("""\
@@ -436,15 +437,16 @@ eff = lEff
             {
                 'details': {
                     'l10n.ftl': [
-                        {'missingEntity': u'bar'}
+                        {'missingEntity': u'bar'},
+                        {'missingEntity': u'-baz'},
                     ],
                 },
                 'summary': {
                     None: {
                         'changed': 2,
                         'changed_w': 2,
-                        'missing': 1,
-                        'missing_w': 1
+                        'missing': 2,
+                        'missing_w': 2,
                     }
                 }
             }
@@ -517,6 +519,92 @@ eff = lEff {
         l10n_foo = l10n_entities[l10n_map['foo']]
         self.assertTrue(merged_foo.equals(l10n_foo))
 
+    def testMatchingReferences(self):
+        self.reference("""\
+foo = Reference { bar }
+""")
+        self.localized("""\
+foo = Localized { bar }
+""")
+        cc = ContentComparer([Observer()])
+        cc.compare(File(self.ref, "en-reference.ftl", ""),
+                   File(self.l10n, "l10n.ftl", ""),
+                   mozpath.join(self.tmp, "merge", "l10n.ftl"))
+
+        self.assertDictEqual(
+            cc.observers[0].toJSON(),
+            {
+                'details': {},
+                'summary': {
+                    None: {
+                        'changed': 1,
+                        'changed_w': 1
+                    }
+                }
+            }
+        )
+
+        # validate merge results
+        mergepath = mozpath.join(self.tmp, "merge", "l10n.ftl")
+        self.assert_(not os.path.exists(mergepath))
+
+    def testMismatchingReferences(self):
+        self.reference("""\
+foo = Reference { bar }
+bar = Reference { baz }
+baz = Reference
+""")
+        self.localized("""\
+foo = Localized { qux }
+bar = Localized
+baz = Localized { qux }
+""")
+        cc = ContentComparer([Observer()])
+        cc.compare(File(self.ref, "en-reference.ftl", ""),
+                   File(self.l10n, "l10n.ftl", ""),
+                   mozpath.join(self.tmp, "merge", "l10n.ftl"))
+
+        self.assertDictEqual(
+            cc.observers[0].toJSON(),
+            {
+                'details': {
+                    'l10n.ftl': [
+                            {
+                                'warning':
+                                    u'Missing message reference: bar '
+                                    u'at line 1, column 1 for foo'
+                            },
+                            {
+                                'warning':
+                                    u'Obsolete message reference: qux '
+                                    u'at line 1, column 19 for foo'
+                            },
+                            {
+                                'warning':
+                                    u'Missing message reference: baz '
+                                    u'at line 2, column 1 for bar'
+                            },
+                            {
+                                'warning':
+                                    u'Obsolete message reference: qux '
+                                    u'at line 3, column 19 for baz'
+                            },
+                    ],
+                },
+                'summary': {
+                    None: {
+                        'changed': 3,
+                        'changed_w': 3,
+                        'warnings': 4
+                    }
+                }
+            }
+        )
+
+        # validate merge results
+        mergepath = mozpath.join(self.tmp, "merge", "l10n.ftl")
+        self.assert_(not os.path.exists(mergepath))
+
     def testMismatchingAttributes(self):
         self.reference("""
 foo = Foo
@@ -574,6 +662,53 @@ eff = lEff
         l10n_eff = l10n_entities[l10n_map['eff']]
         self.assertTrue(merged_eff.equals(l10n_eff))
 
+    def test_term_attributes(self):
+        self.reference("""
+-foo = Foo
+-bar = Bar
+-baz = Baz
+    .attr = Baz Attribute
+-qux = Qux
+    .attr = Qux Attribute
+-missing = Missing
+    .attr = An Attribute
+""")
+        self.localized("""\
+-foo = Localized Foo
+-bar = Localized Bar
+    .attr = Locale-specific Bar Attribute
+-baz = Localized Baz
+-qux = Localized Qux
+    .other = Locale-specific Qux Attribute
+""")
+        cc = ContentComparer([Observer()])
+        cc.compare(File(self.ref, "en-reference.ftl", ""),
+                   File(self.l10n, "l10n.ftl", ""),
+                   mozpath.join(self.tmp, "merge", "l10n.ftl"))
+
+        self.assertDictEqual(
+            cc.observers[0].toJSON(),
+            {
+                'details': {
+                    'l10n.ftl': [
+                        {'missingEntity': u'-missing'},
+                    ],
+                },
+                'summary': {
+                    None: {
+                        'changed': 4,
+                        'changed_w': 4,
+                        'missing': 1,
+                        'missing_w': 1,
+                    }
+                }
+            }
+        )
+
+        # validate merge results
+        mergepath = mozpath.join(self.tmp, "merge", "l10n.ftl")
+        self.assert_(not os.path.exists(mergepath))
+
     def testMismatchingValues(self):
         self.reference("""
 foo = Foo
@@ -622,11 +757,11 @@ bar = lBar
         merged_entities, _ = p.parse()
         self.assertEqual([e.key for e in merged_entities], [])
 
-    def testMissingSection(self):
+    def testMissingGroupComment(self):
         self.reference("""\
 foo = fooVal
 
-[[ Section ]]
+## Group Comment
 bar = barVal
 """)
         self.localized("""\
@@ -659,7 +794,7 @@ bar = lBar
         self.reference("""\
 foo = fooVal
 
-// Attached Comment
+# Attached Comment
 bar = barVal
 """)
         self.localized("""\
@@ -698,7 +833,7 @@ bar = barVal
         self.localized("""\
 foo = lFoo
 
-// Standalone Comment
+# Standalone Comment
 
 bar = lBar
 """)
@@ -785,54 +920,6 @@ bar = duplicated bar
                       u'at line 4, column 5 for foo'
                       }]
                 }
-             })
-        mergefile = mozpath.join(self.tmp, "merge", "l10n.ftl")
-        self.assertFalse(os.path.isfile(mergefile))
-
-    def test_unmatched_tags(self):
-        self.assertTrue(os.path.isdir(self.tmp))
-        self.reference("""foo = fooVal
-    #yes
-""")
-        self.localized("""foo = fooVal
-    #no
-""")
-        cc = ContentComparer([Observer()])
-        cc.compare(File(self.ref, "en-reference.ftl", ""),
-                   File(self.l10n, "l10n.ftl", ""),
-                   mozpath.join(self.tmp, "merge", "l10n.ftl"))
-        self.assertDictEqual(
-            cc.observers[0].toJSON(),
-            {'summary':
-                {None: {
-                    'unchanged': 1,
-                    'unchanged_w': 1
-                }},
-             'details': {}
-             })
-        mergefile = mozpath.join(self.tmp, "merge", "l10n.ftl")
-        self.assertFalse(os.path.isfile(mergefile))
-
-    def test_matching_tags(self):
-        self.assertTrue(os.path.isdir(self.tmp))
-        self.reference("""foo = fooVal
-    #yes
-""")
-        self.localized("""foo = fooVal
-    #yes
-""")
-        cc = ContentComparer([Observer()])
-        cc.compare(File(self.ref, "en-reference.ftl", ""),
-                   File(self.l10n, "l10n.ftl", ""),
-                   mozpath.join(self.tmp, "merge", "l10n.ftl"))
-        self.assertDictEqual(
-            cc.observers[0].toJSON(),
-            {'summary':
-                {None: {
-                    'unchanged': 1,
-                    'unchanged_w': 1
-                }},
-             'details': {}
              })
         mergefile = mozpath.join(self.tmp, "merge", "l10n.ftl")
         self.assertFalse(os.path.isfile(mergefile))

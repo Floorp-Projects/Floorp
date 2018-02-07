@@ -30,10 +30,13 @@ or the all-locales file referenced by the application\'s l10n.ini."""
         parser = ArgumentParser(description=self.__doc__)
         parser.add_argument('--version', action='version',
                             version='%(prog)s ' + version)
-        parser.add_argument('-v', '--verbose', action='count', dest='v',
+        parser.add_argument('-v', '--verbose', action='count',
                             default=0, help='Make more noise')
-        parser.add_argument('-q', '--quiet', action='count', dest='q',
-                            default=0, help='Make less noise')
+        parser.add_argument('-q', '--quiet', action='count',
+                            default=0, help='''Show less data.
+Specified once, doesn't record entities. Specified twice, also drops
+missing and obsolete files. Specify thrice to hide errors and warnings and
+just show stats''')
         parser.add_argument('-m', '--merge',
                             help='''Use this directory to stage merged files,
 use {ab_CD} to specify a different directory for each locale''')
@@ -82,17 +85,16 @@ data in a json useful for Exhibit
         self.parser = self.get_parser()
         args = self.parser.parse_args()
         # log as verbose or quiet as we want, warn by default
+        logging_level = logging.WARNING - (args.verbose - args.quiet) * 10
         logging.basicConfig()
-        logging.getLogger().setLevel(logging.WARNING -
-                                     (args.v - args.q) * 10)
+        logging.getLogger().setLevel(logging_level)
         kwargs = vars(args)
         # strip handeld arguments
-        kwargs.pop('q')
-        kwargs.pop('v')
+        kwargs.pop('verbose')
         return self.handle(**kwargs)
 
     def handle(self, config_paths, l10n_base_dir, locales,
-               merge=None, defines=None, unified=False, full=False,
+               merge=None, defines=None, unified=False, full=False, quiet=0,
                clobber=False, data='text'):
         # using nargs multiple times in argparser totally screws things
         # up, repair that.
@@ -139,9 +141,10 @@ data in a json useful for Exhibit
         try:
             unified_observer = None
             if unified:
-                unified_observer = Observer()
+                unified_observer = Observer(quiet=quiet)
             observers = compareProjects(
                 configs,
+                quiet=quiet,
                 stat_observer=unified_observer,
                 merge_stage=merge, clobber_merge=clobber)
         except (OSError, IOError), exc:

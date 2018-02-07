@@ -42,10 +42,12 @@ def to_json(merged_iter):
     }
 
 
+LOCALIZABLE_ENTRIES = (FTL.Message, FTL.Term)
+
 def get_message(body, ident):
     """Get message called `ident` from the `body` iterable."""
     for entity in body:
-        if isinstance(entity, FTL.Message) and entity.id.name == ident:
+        if isinstance(entity, LOCALIZABLE_ENTRIES) and entity.id.name == ident:
             return entity
 
 
