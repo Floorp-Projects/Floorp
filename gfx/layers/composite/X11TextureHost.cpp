@@ -23,9 +23,10 @@ X11TextureHost::X11TextureHost(TextureFlags aFlags,
                                const SurfaceDescriptorX11& aDescriptor)
  : TextureHost(aFlags)
 {
-  mSurface = aDescriptor.OpenForeign();
+  RefPtr<gfxXlibSurface> surface = aDescriptor.OpenForeign();
+  mSurface = surface.get();
 
-  if (mSurface && !(aFlags & TextureFlags::DEALLOCATE_CLIENT)) {
+  if (!(aFlags & TextureFlags::DEALLOCATE_CLIENT)) {
     mSurface->TakePixmap();
   }
 }
@@ -33,7 +34,7 @@ X11TextureHost::X11TextureHost(TextureFlags aFlags,
 bool
 X11TextureHost::Lock()
 {
-  if (!mCompositor || !mSurface) {
+  if (!mCompositor) {
     return false;
   }
 
@@ -74,9 +75,6 @@ X11TextureHost::SetTextureSourceProvider(TextureSourceProvider* aProvider)
 SurfaceFormat
 X11TextureHost::GetFormat() const
 {
-  if (!mSurface) {
-    return SurfaceFormat::UNKNOWN;
-  }
   gfxContentType type = mSurface->GetContentType();
 #ifdef GL_PROVIDER_GLX
   if (mCompositor->GetBackendType() == LayersBackend::LAYERS_OPENGL) {
@@ -89,9 +87,6 @@ X11TextureHost::GetFormat() const
 IntSize
 X11TextureHost::GetSize() const
 {
-  if (!mSurface) {
-    return IntSize();
-  }
   return mSurface->GetSize();
 }
 
