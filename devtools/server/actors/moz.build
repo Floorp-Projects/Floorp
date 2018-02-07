@@ -40,6 +40,7 @@ DevToolsModules(
     'highlighters.js',
     'layout.js',
     'memory.js',
+    'monitor.js',
     'object.js',
     'pause-scoped.js',
     'perf.js',

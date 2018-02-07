@@ -177,6 +177,9 @@ var UI = {
         this.updateTitle();
         this.updateCommands();
         break;
+      case "install-progress":
+        this.updateProgress(Math.round(100 * details.bytesSent / details.totalBytes));
+        break;
       case "runtime-targets":
         this.autoSelectProject();
         break;
@@ -209,6 +212,13 @@ var UI = {
   _busyTimeout: null,
   _busyOperationDescription: null,
   _busyPromise: null,
+
+  updateProgress: function (percent) {
+    let progress = document.querySelector("#action-busy-determined");
+    progress.mode = "determined";
+    progress.value = percent;
+    this.setupBusyTimeout();
+  },
 
   busy: function () {
     let win = document.querySelector("window");
@@ -379,6 +389,7 @@ var UI = {
     }
 
     // Runtime commands
+    let monitorCmd = document.querySelector("#cmd_showMonitor");
     let screenshotCmd = document.querySelector("#cmd_takeScreenshot");
     let detailsCmd = document.querySelector("#cmd_showRuntimeDetails");
     let disconnectCmd = document.querySelector("#cmd_disconnectRuntime");
@@ -387,6 +398,7 @@ var UI = {
 
     if (AppManager.connected) {
       if (AppManager.deviceFront) {
+        monitorCmd.removeAttribute("disabled");
         detailsCmd.removeAttribute("disabled");
         screenshotCmd.removeAttribute("disabled");
       }
@@ -395,6 +407,7 @@ var UI = {
       }
       disconnectCmd.removeAttribute("disabled");
     } else {
+      monitorCmd.setAttribute("disabled", "true");
       detailsCmd.setAttribute("disabled", "true");
       screenshotCmd.setAttribute("disabled", "true");
       disconnectCmd.setAttribute("disabled", "true");
@@ -876,6 +889,10 @@ var Cmds = {
 
   showDevicePrefs: function () {
     UI.selectDeckPanel("devicepreferences");
+  },
+
+  showMonitor: function () {
+    UI.selectDeckPanel("monitor");
   },
 
   play: Task.async(function* () {
