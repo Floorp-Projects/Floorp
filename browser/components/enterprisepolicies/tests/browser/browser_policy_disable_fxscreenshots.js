@@ -13,9 +13,6 @@ async function checkScreenshots(shouldBeEnabled) {
 
 add_task(async function test_disable_firefox_screenshots() {
   await BrowserTestUtils.withNewTab("data:text/html,Test", async function() {
-    await setupPolicyEngineWithJson("");
-    is(Services.policies.status, Services.policies.INACTIVE, "Start with no policies");
-
     // Firefox Screenshots are disabled in tests, so make sure we enable
     // it first to ensure that the test is valid.
     Services.prefs.setBoolPref(PREF_DISABLE_FX_SCREENSHOTS, false);
