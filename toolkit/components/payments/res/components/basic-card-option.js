@@ -13,34 +13,34 @@
 class BasicCardOption extends ObservedPropertiesMixin(RichOption) {
   static get observedAttributes() {
     return RichOption.observedAttributes.concat([
-      "expiration",
+      "cc-exp",
+      "cc-name",
+      "cc-number",
       "guid",
-      "number",
-      "owner",
-      "type",
+      "type", // XXX Bug 1429181.
     ]);
   }
 
   constructor() {
     super();
 
-    for (let name of ["owner", "number", "expiration", "type"]) {
+    for (let name of ["cc-name", "cc-number", "cc-exp", "type"]) {
       this[`_${name}`] = document.createElement("span");
       this[`_${name}`].classList.add(name);
     }
   }
 
   connectedCallback() {
-    for (let name of ["owner", "number", "expiration", "type"]) {
+    for (let name of ["cc-name", "cc-number", "cc-exp", "type"]) {
       this.appendChild(this[`_${name}`]);
     }
     super.connectedCallback();
   }
 
   render() {
-    this._owner.textContent = this.owner;
-    this._number.textContent = this.number;
-    this._expiration.textContent = this.expiration;
+    this["_cc-name"].textContent = this.ccName;
+    this["_cc-number"].textContent = this.ccNumber;
+    this["_cc-exp"].textContent = this.ccExp;
     this._type.textContent = this.type;
   }
 }

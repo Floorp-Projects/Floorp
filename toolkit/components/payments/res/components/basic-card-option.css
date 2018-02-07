@@ -6,39 +6,39 @@ basic-card-option {
   grid-row-gap: 5px;
   grid-column-gap: 10px;
   grid-template-areas:
-    "owner  type"
-    "number ...";
+    "cc-name  type"
+    "cc-number ...";
 }
 
 rich-select[open] > .rich-select-popup-box > basic-card-option {
   grid-template-areas:
-    "owner   type"
-    "number  expiration";
+    "cc-name   type"
+    "cc-number  cc-exp";
 }
 
-basic-card-option > .number {
-  grid-area: number;
+basic-card-option > .cc-number {
+  grid-area: cc-number;
 }
 
-basic-card-option > .owner {
-  grid-area: owner;
+basic-card-option > .cc-name {
+  grid-area: cc-name;
 }
 
-basic-card-option > .expiration {
-  grid-area: expiration;
+basic-card-option > .cc-exp {
+  grid-area: cc-exp;
 }
 
 basic-card-option > .type {
   grid-area: type;
 }
 
-basic-card-option > .number,
-basic-card-option > .owner,
-basic-card-option > .expiration,
+basic-card-option > .cc-number,
+basic-card-option > .cc-name,
+basic-card-option > .cc-exp,
 basic-card-option > .type {
   white-space: nowrap;
 }
 
-rich-select > .rich-select-selected-clone > .expiration {
+rich-select > .rich-select-selected-clone > .cc-exp {
   display: none;
 }
