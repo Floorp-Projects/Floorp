@@ -47,6 +47,14 @@ function validateAndParseParamRecursive(param, properties) {
       return validateAndParseSimpleParam(param, properties.type);
 
     case "array":
+      if (param === undefined) {
+        // Accept a missing array as valid. Policies that use
+        // arrays should still check before iterating through
+        // the array, unless it is marked as "required" in the
+        // schema (but "required" is not implemented yet).
+        return [true, undefined];
+      }
+
       if (!Array.isArray(param)) {
         log.error("Array expected but not received");
         return [false, null];

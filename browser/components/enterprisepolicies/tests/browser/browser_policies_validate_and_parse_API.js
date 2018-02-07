@@ -235,3 +235,34 @@ add_task(async function test_array_of_objects() {
   is(parsed[0].title, "Foo", "Correct title for bookmark 1");
   is(parsed[1].title, "Bar", "Correct title for bookmark 2");
 });
+
+add_task(async function test_missing_arrays_inside_objects() {
+  let schema = {
+    type: "object",
+    properties: {
+      allow: {
+        type: "array",
+        items: {
+          type: "boolean"
+        }
+      },
+      block: {
+        type: "array",
+        items: {
+          type: "boolean"
+        }
+      }
+
+    }
+  };
+
+  let valid, parsed;
+  [valid, parsed] = PoliciesValidator.validateAndParseParameters({
+    allow: [true, true, true]
+  }, schema);
+
+  ok(valid, "Object is valid");
+  is(parsed.allow.length, 3, "Allow array is correct.");
+  is(parsed.block, undefined, "Block array is undefined, as expected.");
+});
+
