@@ -200,7 +200,6 @@ nsJARChannel::nsJARChannel()
     , mIsPending(false)
     , mEnableOMT(true)
     , mPendingEvent()
-    , mIsUnsafe(true)
 {
     LOG(("nsJARChannel::nsJARChannel [this=%p]\n", this));
     // hold an owning reference to the jar handler
@@ -433,9 +432,6 @@ nsJARChannel::OpenLocalFile()
     MOZ_ASSERT(mWorker);
     MOZ_ASSERT(mIsPending);
     MOZ_ASSERT(mJarFile);
-
-    // Local files are always considered safe.
-    mIsUnsafe = false;
 
     nsresult rv;
 
@@ -940,7 +936,6 @@ nsJARChannel::Open(nsIInputStream **stream)
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
 
     mJarFile = nullptr;
-    mIsUnsafe = true;
 
     nsresult rv = LookupFile();
     if (NS_FAILED(rv))
@@ -959,8 +954,6 @@ nsJARChannel::Open(nsIInputStream **stream)
 
     input.forget(stream);
     mOpened = true;
-    // local files are always considered safe
-    mIsUnsafe = false;
     return NS_OK;
 }
 
@@ -990,7 +983,6 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
 
     mJarFile = nullptr;
-    mIsUnsafe = true;
 
     // Initialize mProgressSink
     NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mProgressSink);
@@ -1044,13 +1036,6 @@ nsJARChannel::AsyncOpen2(nsIStreamListener *aListener)
 //-----------------------------------------------------------------------------
 // nsIJARChannel
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP
-nsJARChannel::GetIsUnsafe(bool *isUnsafe)
-{
-    *isUnsafe = mIsUnsafe;
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsJARChannel::GetJarFile(nsIFile **aFile)
 {
