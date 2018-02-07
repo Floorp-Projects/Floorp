@@ -141,24 +141,6 @@ SetRestartArgs(int argc, char** argv)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#if !defined(XP_WIN)
-int
-GetAnnotationTimeCrashFd()
-{
-  return 7;
-}
-#endif
-
-void
-RegisterChildCrashAnnotationFileDescriptor(ProcessId aProcess, PRFileDesc* aFd)
-{
-}
-
-void
-DeregisterChildCrashAnnotationFileDescriptor(ProcessId aProcess)
-{
-}
-
 #ifdef XP_WIN32
 nsresult
 WriteMinidumpForException(EXCEPTION_POINTERS* aExceptionInfo)
@@ -316,10 +298,16 @@ GetLastRunCrashID(nsAString& id)
   return false;
 }
 
+#if defined(XP_WIN) || defined(XP_MACOSX)
+void
+InitChildProcessTmpDir(nsIFile* aDirOverride)
+{
+}
+#endif // defined(XP_WIN) || defined(XP_MACOSX)
+
 #if defined(XP_WIN)
 bool
-SetRemoteExceptionHandler(const nsACString& crashPipe,
-                          uintptr_t aCrashTimeAnnotationFile)
+SetRemoteExceptionHandler(const nsACString& crashPipe)
 {
   return false;
 }
