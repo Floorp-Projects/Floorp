@@ -644,8 +644,6 @@ MediaPipeline::~MediaPipeline()
 void
 MediaPipeline::Shutdown_m()
 {
-  CSFLogInfo(LOGTAG, "%s in %s", mDescription.c_str(), __FUNCTION__);
-
   Stop();
   DetachMedia();
 
@@ -659,6 +657,8 @@ void
 MediaPipeline::DetachTransport_s()
 {
   ASSERT_ON_THREAD(mStsThread);
+
+  CSFLogInfo(LOGTAG, "%s in %s", mDescription.c_str(), __FUNCTION__);
 
   disconnect_all();
   mTransport->Detach();
@@ -830,8 +830,6 @@ ToString(MediaPipeline::RtpType type)
 nsresult
 MediaPipeline::TransportReady_s(TransportInfo& aInfo)
 {
-  MOZ_ASSERT(!mDescription.empty());
-
   // TODO(ekr@rtfm.com): implement some kind of notification on
   // failure. bug 852665.
   if (aInfo.mState != StateType::MP_CONNECTING) {
@@ -1522,23 +1520,37 @@ MediaPipelineTransmit::~MediaPipelineTransmit()
 }
 
 void
+MediaPipeline::SetDescription_s(const std::string& description)
+{
+  mDescription = description;
+}
+
+void
 MediaPipelineTransmit::SetDescription()
 {
-  mDescription = mPc + "| ";
-  mDescription += mConduit->type() == MediaSessionConduit::AUDIO
+  std::string description;
+  description = mPc + "| ";
+  description += mConduit->type() == MediaSessionConduit::AUDIO
                     ? "Transmit audio["
                     : "Transmit video[";
 
   if (!mDomTrack) {
-    mDescription += "no track]";
+    description += "no track]";
     return;
   }
 
   nsString nsTrackId;
   mDomTrack->GetId(nsTrackId);
   std::string trackId(NS_ConvertUTF16toUTF8(nsTrackId).get());
-  mDescription += trackId;
-  mDescription += "]";
+  description += trackId;
+  description += "]";
+
+  RUN_ON_THREAD(
+    mStsThread,
+    WrapRunnable(RefPtr<MediaPipeline>(this),
+                 &MediaPipelineTransmit::SetDescription_s,
+                 description),
+    NS_DISPATCH_NORMAL);
 }
 
 void
@@ -1677,8 +1689,7 @@ MediaPipelineTransmit::ReplaceTrack(RefPtr<MediaStreamTrack>& aDomTrack)
     std::string track_id(NS_ConvertUTF16toUTF8(nsTrackId).get());
     CSFLogDebug(
       LOGTAG,
-      "Reattaching pipeline %s to track %p track %s conduit type: %s",
-      mDescription.c_str(),
+      "Reattaching pipeline to track %p track %s conduit type: %s",
       &aDomTrack,
       track_id.c_str(),
       (mConduit->type() == MediaSessionConduit::AUDIO ? "audio" : "video"));
