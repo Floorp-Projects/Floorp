@@ -16,7 +16,7 @@ var EventEmitter = require("devtools/shared/event-emitter");
 // The code in the document above leaves an uncaught rejection. This is only
 // reported to the testing framework if the code is loaded in the main process.
 if (!gMultiProcessBrowser) {
-  Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
+  ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
   PromiseTestUtils.expectUncaughtRejection(/hello/);
 }
 

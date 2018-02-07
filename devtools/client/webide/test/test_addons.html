@@ -18,7 +18,7 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        const {Devices} = Cu.import("resource://devtools/shared/apps/Devices.jsm");
+        const {Devices} = ChromeUtils.import("resource://devtools/shared/apps/Devices.jsm");
 
         let adbAddonsInstalled;
 

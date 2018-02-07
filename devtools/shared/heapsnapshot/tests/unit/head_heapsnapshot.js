@@ -11,11 +11,11 @@
 
 var CC = Components.Constructor;
 
-const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const { Match } = Cu.import("resource://test/Match.jsm", {});
-const { Census } = Cu.import("resource://test/Census.jsm", {});
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const { Match } = ChromeUtils.import("resource://test/Match.jsm", {});
+const { Census } = ChromeUtils.import("resource://test/Census.jsm", {});
 const { addDebuggerToGlobal } =
-  Cu.import("resource://gre/modules/jsdebugger.jsm", {});
+  ChromeUtils.import("resource://gre/modules/jsdebugger.jsm", {});
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const flags = require("devtools/shared/flags");

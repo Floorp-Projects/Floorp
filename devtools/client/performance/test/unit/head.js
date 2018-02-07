@@ -3,7 +3,7 @@
 "use strict";
 /* exported Cc, Ci, Cu, Cr, Services, console, PLATFORM_DATA_PREF, getFrameNodePath,
    synthesizeProfileForTest */
-var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 var Services = require("Services");
 var { console } = require("resource://gre/modules/Console.jsm");
 const RecordingUtils = require("devtools/shared/performance/recording-utils");

@@ -7,7 +7,7 @@
 "use strict";
 
 const { Ci, Cu } = require("chrome");
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const { Services } = require("resource://gre/modules/Services.jsm");
 
 var systemAppOrigin = (function () {
   let systemOrigin = "_";

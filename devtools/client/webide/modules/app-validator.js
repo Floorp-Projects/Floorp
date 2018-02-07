@@ -5,7 +5,7 @@
 
 var {Ci, Cu, CC} = require("chrome");
 
-const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
+const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
 const Services = require("Services");
 const {Task} = require("devtools/shared/task");
 var XMLHttpRequest = CC("@mozilla.org/xmlextras/xmlhttprequest;1");

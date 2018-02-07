@@ -10,7 +10,7 @@
 
 function test() {
   let { Parser, ParserHelpers, SyntaxTreeVisitor } =
-    Cu.import("resource://devtools/shared/Parser.jsm", {});
+    ChromeUtils.import("resource://devtools/shared/Parser.jsm", {});
 
   function verify(source, predicate, [sline, scol], [eline, ecol]) {
     let ast = Parser.reflectionAPI.parse(source);

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 
 this.EXPORTED_SYMBOLS = ["SimpleListWidget"];

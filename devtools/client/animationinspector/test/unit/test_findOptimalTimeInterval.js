@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const {findOptimalTimeInterval} = require("devtools/client/animationinspector/utils");
 
 // This test array contains objects that are used to test the

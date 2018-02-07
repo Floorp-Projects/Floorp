@@ -5,7 +5,7 @@
 
 "use strict";
 
-var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
 const {colorUtils} = require("devtools/shared/css/color");
 const {cssColors} = require("devtools/shared/css/color-db");

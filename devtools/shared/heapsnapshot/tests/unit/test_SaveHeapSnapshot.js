@@ -4,7 +4,7 @@
 // Test the ChromeUtils interface.
 // eslint-disable-next-line
 if (typeof Debugger != "function") {
-  const { addDebuggerToGlobal } = Cu.import("resource://gre/modules/jsdebugger.jsm", {});
+  const { addDebuggerToGlobal } = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm", {});
   addDebuggerToGlobal(this);
 }
 

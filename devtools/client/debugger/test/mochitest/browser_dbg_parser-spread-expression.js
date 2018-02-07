@@ -11,7 +11,7 @@
 
 function test() {
   let { Parser, SyntaxTreeVisitor } =
-    Cu.import("resource://devtools/shared/Parser.jsm", {});
+    ChromeUtils.import("resource://devtools/shared/Parser.jsm", {});
 
   const SCRIPTS = ["[...a]", "foo(...a)"];
 

@@ -10,7 +10,7 @@
 var CC = Components.Constructor;
 
 const { require } =
-  Cu.import("resource://devtools/shared/Loader.jsm", {});
+  ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");

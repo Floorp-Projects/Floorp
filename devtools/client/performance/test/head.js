@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { require, loader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { require, loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
 /* exported loader, either, click, dblclick, mousedown, rightMousedown, key */
 // All tests are asynchronous.

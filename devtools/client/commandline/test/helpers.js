@@ -22,7 +22,7 @@ var { helpers, assert } = (function () {
 
   var helpers = {};
 
-  var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
   var { TargetFactory } = require("devtools/client/framework/target");
   var { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
   var Services = require("Services");

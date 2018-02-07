@@ -14,7 +14,7 @@ var gAttached = promise.defer();
 var gNewGlobal = promise.defer();
 var gNewChromeSource = promise.defer();
 
-var { DevToolsLoader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var { DevToolsLoader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 var customLoader = new DevToolsLoader();
 customLoader.invisibleToDebugger = true;
 var { DebuggerServer } = customLoader.require("devtools/server/main");

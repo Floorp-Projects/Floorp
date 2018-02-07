@@ -4,9 +4,9 @@
 
 "use strict";
 
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
-const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
 XPCOMUtils.defineLazyGetter(this, "DevtoolsStartup", () => {
   return Cc["@mozilla.org/devtools/startup-clh;1"]
             .getService(Ci.nsICommandLineHandler)

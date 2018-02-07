@@ -21,7 +21,7 @@
     <script type="application/javascript">
       "use strict";
 
-      const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
       const promise = require("promise");
       const EventEmitter = require("devtools/shared/old-event-emitter");
       const { Task } = require("devtools/shared/task");

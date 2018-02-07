@@ -6,7 +6,7 @@
 (function (exports) {
   const CC = Components.Constructor;
 
-  const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
   const { fetch } = require("devtools/shared/DevToolsUtils");
   const { Task } = require("devtools/shared/task");
 

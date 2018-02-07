@@ -48,7 +48,7 @@ add_task(async function () {
 
     const doc = content.document;
 
-    const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     const {getAdjustedQuads} = require("devtools/shared/layout/utils");
 
     ok(typeof getAdjustedQuads === "function", "getAdjustedQuads is defined");

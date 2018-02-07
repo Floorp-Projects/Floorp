@@ -12,7 +12,7 @@ const TEST_URL = "data:text/html;charset=utf-8,CanvasFrameAnonymousContentHelper
 add_task(async function () {
   let browser = await addTab(TEST_URL);
   await ContentTask.spawn(browser, null, async function () {
-    const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     const {HighlighterEnvironment} = require("devtools/server/actors/highlighters");
     const {
       CanvasFrameAnonymousContentHelper
