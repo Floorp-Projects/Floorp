@@ -310,6 +310,16 @@ const REQUESTS_WATERFALL = {
   LABEL_WIDTH: 50, // px
 };
 
+const TIMING_KEYS = [
+  "blocked",
+  "dns",
+  "connect",
+  "ssl",
+  "send",
+  "wait",
+  "receive",
+];
+
 const general = {
   ACTIVITY_TYPE,
   EVENTS,
@@ -321,6 +331,7 @@ const general = {
   FILTER_TAGS,
   REQUESTS_WATERFALL,
   PANELS,
+  TIMING_KEYS,
 };
 
 // flatten constants

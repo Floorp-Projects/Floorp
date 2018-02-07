@@ -6,6 +6,7 @@ DevToolsModules(
     'App.js',
     'CookiesPanel.js',
     'CustomRequestPanel.js',
+    'DropHarHandler.js',
     'HeadersPanel.js',
     'HtmlPreview.js',
     'MdnLink.js',
