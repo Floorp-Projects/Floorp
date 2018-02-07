@@ -9,7 +9,7 @@ var CC = Components.Constructor;
 // Populate AppInfo before anything (like the shared loader) accesses
 // System.appinfo, which is a lazy getter.
 const _appInfo = {};
-Cu.import("resource://testing-common/AppInfo.jsm", _appInfo);
+ChromeUtils.import("resource://testing-common/AppInfo.jsm", _appInfo);
 _appInfo.updateAppInfo({
   ID: "devtools@tests.mozilla.org",
   name: "devtools-tests",
@@ -18,8 +18,8 @@ _appInfo.updateAppInfo({
   crashReporter: true,
 });
 
-const { require, loader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const { worker } = Cu.import("resource://devtools/shared/worker/loader.js", {});
+const { require, loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const { worker } = ChromeUtils.import("resource://devtools/shared/worker/loader.js", {});
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const { Task } = require("devtools/shared/task");
@@ -40,7 +40,7 @@ const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const ObjectClient = require("devtools/shared/client/object-client");
 const { MemoryFront } = require("devtools/shared/fronts/memory");
 
-const { addDebuggerToGlobal } = Cu.import("resource://gre/modules/jsdebugger.jsm", {});
+const { addDebuggerToGlobal } = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm", {});
 
 const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
                         .createInstance(Ci.nsIPrincipal);

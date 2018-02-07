@@ -3,7 +3,7 @@
 
 "use strict";
 
-var { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
+var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
 
 function run_test() {
   initTestDebuggerServer();

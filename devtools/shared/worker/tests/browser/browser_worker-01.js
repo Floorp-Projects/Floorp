@@ -23,7 +23,7 @@ const DURATION = 1000;
 add_task(function* () {
   // Test both CJS and JSM versions
 
-  yield testWorker("JSM", () => Cu.import("resource://devtools/shared/worker/worker.js", {}));
+  yield testWorker("JSM", () => ChromeUtils.import("resource://devtools/shared/worker/worker.js", {}));
   yield testWorker("CommonJS", () => require("devtools/shared/worker/worker"));
 });
 

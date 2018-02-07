@@ -7,7 +7,7 @@
 
 const CC = Components.Constructor;
 
-const { HttpServer } = Cu.import("resource://testing-common/httpd.js", {});
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js", {});
 const BinaryOutputStream = CC("@mozilla.org/binaryoutputstream;1",
                               "nsIBinaryOutputStream", "setOutputStream");
 

@@ -7,7 +7,7 @@
 const {Cu} = require("chrome");
 const Services = require("Services");
 
-const {DevToolsShim} = Cu.import("chrome://devtools-shim/content/DevToolsShim.jsm", {});
+const {DevToolsShim} = require("chrome://devtools-shim/content/DevToolsShim.jsm");
 
 // Load gDevToolsBrowser toolbox lazily as they need gDevTools to be fully initialized
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
@@ -143,7 +143,7 @@ DevTools.prototype = {
       toolId = tool;
       tool = this._tools.get(tool);
     } else {
-      let {Deprecated} = Cu.import("resource://gre/modules/Deprecated.jsm", {});
+      let {Deprecated} = require("resource://gre/modules/Deprecated.jsm");
       Deprecated.warning("Deprecation WARNING: gDevTools.unregisterTool(tool) is " +
         "deprecated. You should unregister a tool using its toolId: " +
         "gDevTools.unregisterTool(toolId).");

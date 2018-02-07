@@ -127,7 +127,7 @@ add_task(async function () {
 
   let { client, actorID } = await connectAndAttachTab();
   await ContentTask.spawn(browser, [actorID], async function (actorId) {
-    const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     const { DebuggerServer } = require("devtools/server/main");
     const EventEmitter = require("devtools/shared/event-emitter");
 

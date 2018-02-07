@@ -8,8 +8,8 @@
 // workers and tabs by launching a dedicated DevTools toolbox for the selected target.
 // If DevTools are not installed, this about page will display a shim landing page
 // encouraging the user to download and install DevTools.
-const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 const { nsIAboutModule } = Ci;
 

@@ -21,7 +21,7 @@ add_task(async function () {
 });
 
 function setupObserver() {
-  const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+  const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
   const observer = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),

@@ -7,7 +7,7 @@
  * Tests that a chrome debugger can be created in a new process.
  */
 
-const { BrowserToolboxProcess } = Cu.import(
+const { BrowserToolboxProcess } = ChromeUtils.import(
   "resource://devtools/client/framework/ToolboxProcess.jsm",
   {}
 );

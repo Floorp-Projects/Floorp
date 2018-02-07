@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1323700
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
 
-let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+let { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const CssLogic = require("devtools/shared/inspector/css-logic");
 
 var _tests = [];
