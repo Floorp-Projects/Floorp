@@ -1801,13 +1801,25 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
     }
     *aHandled = result.Handled();
     *aCancel = result.Canceled();
-    // Fall through, we may not have handled it in ReturnInParagraph()
+    if (result.Handled()) {
+      // Now, atStartOfSelection may be invalid because the left paragraph
+      // may have less children than its offset.  For avoiding warnings of
+      // validation of EditorDOMPoint, we should not touch it anymore.
+      lockOffset.Cancel();
+      return NS_OK;
+    }
+    // Fall through, if ReturnInParagraph() didn't handle it.
+    MOZ_ASSERT(!*aCancel, "ReturnInParagraph canceled this edit action, "
+                          "WillInsertBreak() needs to handle such case");
   }
 
-  // If not already handled then do the standard thing
-  if (!(*aHandled)) {
-    *aHandled = true;
-    return InsertBRElement(aSelection, atStartOfSelection);
+  // If nobody handles this edit action, let's insert new <br> at the selection.
+  MOZ_ASSERT(!*aHandled, "Reached last resort of WillInsertBreak() "
+                         "after the edit action is handled");
+  nsresult rv = InsertBRElement(aSelection, atStartOfSelection);
+  *aHandled = true;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
   return NS_OK;
 }
