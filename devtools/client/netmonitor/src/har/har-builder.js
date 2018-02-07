@@ -113,6 +113,10 @@ HarBuilder.prototype = {
     entry.cache = this.buildCache(file);
     entry.timings = eventTimings ? eventTimings.timings : {};
 
+    // Security state isn't part of HAR spec, and so create
+    // custom field that needs to use '_' prefix.
+    entry._securityState = file.securityState;
+
     if (file.remoteAddress) {
       entry.serverIPAddress = file.remoteAddress;
     }
@@ -215,7 +219,7 @@ HarBuilder.prototype = {
       return [];
     }
 
-    return this.buildNameValuePairs(input.cookies);
+    return this.buildNameValuePairs(input.cookies || input);
   },
 
   buildNameValuePairs: function (entries) {

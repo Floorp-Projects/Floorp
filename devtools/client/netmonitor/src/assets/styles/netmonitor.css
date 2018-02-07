@@ -43,3 +43,34 @@ body,
 .split-box {
   overflow: hidden;
 }
+
+/* Drag and drop HAR files */
+
+.network-monitor > div {
+  height: 100%;
+}
+
+.network-monitor .dropHarFiles {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  text-align: center;
+  top: 25px;
+  right: 25px;
+  bottom: 25px;
+  left: 25px;
+  z-index: 100;
+  font-size: 3.5rem;
+  color: gray;
+  border: 4px dashed gray;
+  pointer-events: none;
+}
+
+.network-monitor > div[dragging="true"] .dropHarFiles {
+  display: flex;
+}
+
+.network-monitor > div[dragging="true"] {
+  filter: opacity(50%);
+}

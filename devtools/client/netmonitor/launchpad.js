@@ -82,6 +82,6 @@ bootstrap(React, ReactDOM).then((connection) => {
     return;
   }
 
-  renderRoot(React, ReactDOM, App, store, {connector});
+  renderRoot(React, ReactDOM, App, store, {actions, connector});
   connector.connect(connection, actions, store.getState);
 });

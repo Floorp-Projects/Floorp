@@ -10,15 +10,16 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { L10N } = require("../utils/l10n");
 const { getNetMonitorTimingsURL } = require("../utils/mdn-utils");
 const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
+const { TIMING_KEYS } = require("../constants");
 
 // Components
 const MDNLink = require("./MdnLink");
 
 const { div, span } = dom;
-const types = ["blocked", "dns", "connect", "ssl", "send", "wait", "receive"];
+
 const TIMINGS_END_PADDING = "80px";
 
-/*
+/**
  * Timings panel component
  * Display timeline bars that shows the total wait time for various stages
  */
@@ -41,17 +42,25 @@ class TimingsPanel extends Component {
   }
 
   render() {
-    const { eventTimings } = this.props.request;
+    const {
+      eventTimings,
+      totalTime,
+    } = this.props.request;
+
     if (!eventTimings) {
       return null;
     }
 
-    const { timings, totalTime, offsets } = eventTimings;
-    const timelines = types.map((type, idx) => {
+    const { timings, offsets } = eventTimings;
+    const timelines = TIMING_KEYS.map((type, idx) => {
       // Determine the relative offset for each timings box. For example, the
       // offset of third timings box will be 0 + blocked offset + dns offset
+      // If offsets sent from the backend aren't available calculate it
+      // from the timing info.
+      let offset = offsets ? offsets[type] : TIMING_KEYS.slice(0, idx)
+        .reduce((acc, cur) => (acc + timings[cur] || 0), 0);
 
-      const offsetScale = offsets[type] / totalTime || 0;
+      const offsetScale = offset / totalTime || 0;
       const timelineScale = timings[type] / totalTime || 0;
 
       return div({

@@ -41,6 +41,7 @@ const actions = bindActionCreators(require("./src/actions/index"), store.dispatc
 // Inject to global window for testing
 window.store = store;
 window.connector = connector;
+window.actions = actions;
 
 /**
  * Global Netmonitor object in this panel. This object can be consumed
@@ -67,12 +68,24 @@ window.Netmonitor = {
       top.openUILinkIn(link, "tab");
     };
 
+    const openSplitConsole = (err) => {
+      toolbox.openSplitConsole().then(() => {
+        toolbox.target.logErrorInPage(err, "har");
+      });
+    };
+
     this.onRequestAdded = this.onRequestAdded.bind(this);
     window.on(EVENTS.REQUEST_ADDED, this.onRequestAdded);
 
     // Render the root Application component.
     const sourceMapService = toolbox.sourceMapURLService;
-    const app = App({ connector, openLink, sourceMapService });
+    const app = App({
+      actions,
+      connector,
+      openLink,
+      openSplitConsole,
+      sourceMapService
+    });
     render(Provider({ store }, app), this.mount);
 
     // Connect to the Firefox backend by default.
