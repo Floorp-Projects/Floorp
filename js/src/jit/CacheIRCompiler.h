@@ -51,6 +51,8 @@ namespace jit {
     _(LoadInt32ArrayLengthResult)         \
     _(Int32NegationResult)                \
     _(Int32NotResult)                     \
+    _(DoubleNegationResult)               \
+    _(TruncateDoubleToUInt32)             \
     _(LoadArgumentsObjectLengthResult)    \
     _(LoadFunctionLengthResult)           \
     _(LoadStringLengthResult)             \
