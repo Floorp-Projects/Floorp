@@ -41,7 +41,7 @@ AnnotateMozCrashReason(const char* reason)
 }
 #  define MOZ_CRASH_ANNOTATE(...) AnnotateMozCrashReason(__VA_ARGS__)
 #else
-#  define MOZ_CRASH_ANNOTATE(...) do { /* nothing */ } while (0)
+#  define MOZ_CRASH_ANNOTATE(...) do { /* nothing */ } while (false)
 #endif
 
 #include <stddef.h>
@@ -219,20 +219,20 @@ MOZ_NoReturn(int aLine)
      do { \
        __debugbreak(); \
        MOZ_NoReturn(line); \
-     } while (0)
+     } while (false)
 #else
 #  ifdef __cplusplus
 #    define MOZ_REALLY_CRASH(line) \
        do { \
          *((volatile int*) NULL) = line; \
          ::abort(); \
-       } while (0)
+       } while (false)
 #  else
 #    define MOZ_REALLY_CRASH(line) \
        do { \
          *((volatile int*) NULL) = line; \
          abort(); \
-       } while (0)
+       } while (false)
 #  endif
 #endif
 
@@ -262,14 +262,14 @@ MOZ_NoReturn(int aLine)
      do { \
        MOZ_CRASH_ANNOTATE("MOZ_CRASH(" __VA_ARGS__ ")"); \
        MOZ_REALLY_CRASH(__LINE__); \
-     } while (0)
+     } while (false)
 #else
 #  define MOZ_CRASH(...) \
      do { \
        MOZ_ReportCrash("" __VA_ARGS__, __FILE__, __LINE__); \
        MOZ_CRASH_ANNOTATE("MOZ_CRASH(" __VA_ARGS__ ")"); \
        MOZ_REALLY_CRASH(__LINE__); \
-     } while (0)
+     } while (false)
 #endif
 
 /*
@@ -333,7 +333,7 @@ MOZ_CrashPrintf(const char* aFilename, int aLine, const char* aFormat, ...);
      static_assert(sizeof(format) <= sPrintfCrashReasonSize, \
        "The supplied format string is too long!"); \
      MOZ_CALL_CRASH_PRINTF("" format, __VA_ARGS__); \
-   } while (0)
+   } while (false)
 
 MOZ_END_EXTERN_C
 
@@ -423,7 +423,7 @@ struct AssertionConditionType
 #if defined(DEBUG) || defined(MOZ_ASAN)
 #  define MOZ_REPORT_ASSERTION_FAILURE(...) MOZ_ReportAssertionFailure(__VA_ARGS__)
 #else
-#  define MOZ_REPORT_ASSERTION_FAILURE(...) do { /* nothing */ } while (0)
+#  define MOZ_REPORT_ASSERTION_FAILURE(...) do { /* nothing */ } while (false)
 #endif
 
 /* First the single-argument form. */
@@ -435,7 +435,7 @@ struct AssertionConditionType
       MOZ_CRASH_ANNOTATE("MOZ_RELEASE_ASSERT(" #expr ")"); \
       MOZ_REALLY_CRASH(__LINE__); \
     } \
-  } while (0)
+  } while (false)
 /* Now the two-argument form. */
 #define MOZ_ASSERT_HELPER2(expr, explain) \
   do { \
@@ -445,7 +445,7 @@ struct AssertionConditionType
       MOZ_CRASH_ANNOTATE("MOZ_RELEASE_ASSERT(" #expr ") (" explain ")"); \
       MOZ_REALLY_CRASH(__LINE__); \
     } \
-  } while (0)
+  } while (false)
 
 #define MOZ_RELEASE_ASSERT_GLUE(a, b) a b
 #define MOZ_RELEASE_ASSERT(...) \
@@ -456,7 +456,7 @@ struct AssertionConditionType
 #ifdef DEBUG
 #  define MOZ_ASSERT(...) MOZ_RELEASE_ASSERT(__VA_ARGS__)
 #else
-#  define MOZ_ASSERT(...) do { } while (0)
+#  define MOZ_ASSERT(...) do { } while (false)
 #endif /* DEBUG */
 
 #if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
@@ -484,9 +484,9 @@ struct AssertionConditionType
        if (cond) { \
          MOZ_ASSERT(expr); \
        } \
-     } while (0)
+     } while (false)
 #else
-#  define MOZ_ASSERT_IF(cond, expr)  do { } while (0)
+#  define MOZ_ASSERT_IF(cond, expr)  do { } while (false)
 #endif
 
 /*
@@ -560,7 +560,7 @@ struct AssertionConditionType
    do { \
      MOZ_ASSERT_UNREACHABLE(reason); \
      MOZ_ASSUME_UNREACHABLE_MARKER(); \
-   } while (0)
+   } while (false)
 
 /**
  * MOZ_FALLTHROUGH_ASSERT is an annotation to suppress compiler warnings about
@@ -569,7 +569,7 @@ struct AssertionConditionType
  * unexpected values.
  *
  * Why do we need MOZ_FALLTHROUGH_ASSERT in addition to MOZ_FALLTHROUGH? In
- * release builds, the MOZ_ASSERT(false) will expand to `do { } while (0)`,
+ * release builds, the MOZ_ASSERT(false) will expand to `do { } while (false)`,
  * requiring a MOZ_FALLTHROUGH annotation to suppress a -Wimplicit-fallthrough
  * warning. In debug builds, the MOZ_ASSERT(false) will expand to something like
  * `if (true) { MOZ_CRASH(); }` and the MOZ_FALLTHROUGH annotation will cause
@@ -615,7 +615,7 @@ struct AssertionConditionType
        } else { \
          MOZ_ASSERT(false, #expr); \
        } \
-     } while (0)
+     } while (false)
 #  define MOZ_ALWAYS_FALSE(expr) \
      do { \
        if ((expr)) { \
@@ -623,7 +623,7 @@ struct AssertionConditionType
        } else { \
          /* Do nothing. */ \
        } \
-     } while (0)
+     } while (false)
 #  define MOZ_ALWAYS_OK(expr)        MOZ_ASSERT((expr).isOk())
 #  define MOZ_ALWAYS_ERR(expr)       MOZ_ASSERT((expr).isErr())
 #else
@@ -632,25 +632,25 @@ struct AssertionConditionType
        if ((expr)) { \
           /* Silence MOZ_MUST_USE. */ \
        } \
-     } while (0)
+     } while (false)
 #  define MOZ_ALWAYS_FALSE(expr) \
      do { \
        if ((expr)) { \
          /* Silence MOZ_MUST_USE. */ \
        } \
-     } while (0)
+     } while (false)
 #  define MOZ_ALWAYS_OK(expr) \
      do { \
        if ((expr).isOk()) { \
          /* Silence MOZ_MUST_USE. */ \
        } \
-     } while (0)
+     } while (false)
 #  define MOZ_ALWAYS_ERR(expr) \
      do { \
        if ((expr).isErr()) { \
          /* Silence MOZ_MUST_USE. */ \
        } \
-     } while (0)
+     } while (false)
 #endif
 
 #undef MOZ_DUMP_ASSERTION_STACK
