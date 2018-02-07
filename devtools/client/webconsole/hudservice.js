@@ -4,12 +4,12 @@
 
 "use strict";
 
-var WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
-const {extend} = require("devtools/shared/extend");
-var {TargetFactory} = require("devtools/client/framework/target");
-var {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
-var {Tools} = require("devtools/client/definitions");
 var Services = require("Services");
+loader.lazyRequireGetter(this, "Utils", "devtools/client/webconsole/utils", true);
+loader.lazyRequireGetter(this, "extend", "devtools/shared/extend", true);
+loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
+loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
+loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(this, "WebConsoleFrame", "devtools/client/webconsole/webconsole", true);
 loader.lazyRequireGetter(this, "NewWebConsoleFrame", "devtools/client/webconsole/new-webconsole", true);
@@ -18,15 +18,13 @@ loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/debugger-client", true);
 loader.lazyRequireGetter(this, "showDoorhanger", "devtools/client/shared/doorhanger", true);
 loader.lazyRequireGetter(this, "viewSource", "devtools/client/shared/view-source");
-const l10n = require("devtools/client/webconsole/webconsole-l10n");
+loader.lazyRequireGetter(this, "l10n", "devtools/client/webconsole/webconsole-l10n");
 const BC_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
 // The preference prefix for all of the Browser Console filters.
 const BC_FILTER_PREFS_PREFIX = "devtools.browserconsole.filter.";
 
 var gHudId = 0;
-
-// The HUD service
 
 function HUD_SERVICE() {
   this.consoles = new Map();
@@ -348,17 +346,6 @@ WebConsole.prototype = {
   },
 
   /**
-   * Retrieve the Web Console panel title.
-   *
-   * @return string
-   *         The Web Console panel title.
-   */
-  getPanelTitle() {
-    let url = this.ui ? this.ui.contentLocation : "";
-    return l10n.getFormatStr("webConsoleWindowTitleAndURL", [url]);
-  },
-
-  /**
    * The JSTerm object that manages the console's input.
    * @see webconsole.js::JSTerm
    * @type object
@@ -564,7 +551,7 @@ WebConsole.prototype = {
         }
       }
 
-      let id = WebConsoleUtils.supportsString(this.hudId);
+      let id = Utils.supportsString(this.hudId);
       Services.obs.notifyObservers(id, "web-console-destroyed");
     })();
 
@@ -621,12 +608,10 @@ BrowserConsole.prototype = extend(WebConsole.prototype, {
 
     // Make sure that the closing of the Browser Console window destroys this
     // instance.
-    let onClose = () => {
-      window.removeEventListener("unload", onClose);
+    window.addEventListener("unload", () => {
       window.removeEventListener("focus", onFocus);
       this.destroy();
-    };
-    window.addEventListener("unload", onClose);
+    }, {once: true});
 
     this._telemetry.toolOpened("browserconsole");
 
