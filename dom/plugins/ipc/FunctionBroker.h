@@ -1264,18 +1264,24 @@ protected:
   bool PostToDispatchThread(uint32_t& aWinError, ResultType& aRet, ParamTypes&... aParameters) const;
 
   static void
-  PostToDispatchHelper(const SelfType* bmhi, Monitor* monitor, bool* ok, uint32_t* winErr, ResultType* r, ParamTypes*... p)
+  PostToDispatchHelper(const SelfType* bmhi, Monitor* monitor, bool* notified,
+                       bool* ok, uint32_t* winErr, ResultType* r, ParamTypes*... p)
   {
     // Note: p is also non-null... its just hard to assert that.
-    MOZ_ASSERT(bmhi && monitor && ok && winErr && r);
+    MOZ_ASSERT(bmhi && monitor && notified && ok && winErr && r);
+    MOZ_ASSERT(*notified == false);
     *ok = bmhi->BrokerCallClient(*winErr, *r, *p...);
-    {
-      // By grabbing (and freeing) the lock, we make sure that Wait() has been
-      // called in PostToDispatchThread.  We need that since we wake it with
-      // Notify().
-      MonitorAutoLock lock(*monitor);
-    }
-    *ok &= NS_SUCCEEDED(monitor->Notify());
+
+    // We need to grab the lock to make sure that Wait() has been
+    // called in PostToDispatchThread.  We need that since we wake it with
+    // Notify().
+    // We also need to keep the lock until _after_ Notify() has been called
+    // since, after we set notified to true, a spurious wakeup could lead
+    // the other thread to wake and proceed -- and one of its first acts would
+    // be to destroy the Monitor.
+    MonitorAutoLock lock(*monitor);
+    *notified = true;
+    monitor->Notify();
   };
 
   template<typename ... VarParams>
@@ -1446,11 +1452,17 @@ PostToDispatchThread(uint32_t& aWinError, ResultType& aRet,
   Monitor monitor("FunctionDispatchThread Lock");
   MonitorAutoLock lock(monitor);
   bool success = false;
+  bool notified = false;
   FunctionBrokerChild::GetInstance()->PostToDispatchThread(
     NewRunnableFunction("FunctionDispatchThreadRunnable", &PostToDispatchHelper,
-                        this, &monitor, &success, &aWinError, &aRet,
+                        this, &monitor, &notified, &success, &aWinError, &aRet,
                         &aParameters...));
-  monitor.Wait();
+
+  // We wait to be notified, testing that notified was actually set to make
+  // sure this isn't a spurious wakeup.
+  while (!notified) {
+    monitor.Wait();
+  }
   return success;
 }
 
