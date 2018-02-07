@@ -29,8 +29,6 @@ job-defaults:
          - echo "Dummy task"
    notifications:
       completed:
-         subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"
-         message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"
          plugins: ["ses"]
          emails:
             by-project:
@@ -55,7 +53,15 @@ jobs:
       shipping-product: firefox
       index:
          product: firefox
+      notifications:
+         completed:
+            subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} updates are ready for signoff in Balrog!"
+            message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} updates are ready for signoff in Balrog!"
    fennec-rc:
       shipping-product: fennec
       index:
          product: fennec
+      notifications:
+         completed:
+            subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"
+            message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"
