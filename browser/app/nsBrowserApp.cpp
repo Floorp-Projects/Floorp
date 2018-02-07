@@ -28,7 +28,6 @@
 #ifdef MOZ_SANDBOX
 #include "mozilla/sandboxing/SandboxInitialization.h"
 #endif
-#include "mozilla/WindowsDllBlocklist.h"
 #endif
 #include "BinaryPath.h"
 
@@ -36,6 +35,7 @@
 
 #include "mozilla/Sprintf.h"
 #include "mozilla/StartupTimeline.h"
+#include "mozilla/WindowsDllBlocklist.h"
 
 #ifdef LIBFUZZER
 #include "FuzzerDefs.h"
