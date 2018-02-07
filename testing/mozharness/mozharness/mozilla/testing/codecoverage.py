@@ -14,7 +14,11 @@ from mozharness.base.script import (
     PreScriptAction,
     PostScriptAction,
 )
-from mozharness.mozilla.tooltool import TooltoolMixin
+
+_here = os.path.abspath(os.path.dirname(__file__))
+_tooltool_path = os.path.normpath(os.path.join(_here, '..', '..', '..',
+                                               'external_tools',
+                                               'tooltool.py'))
 
 code_coverage_config_options = [
     [["--code-coverage"],
@@ -122,8 +126,7 @@ class CodeCoverageMixin(object):
         manifest = os.path.join(dirs.get('abs_test_install_dir', os.path.join(dirs['abs_work_dir'], 'tests')), \
             'config/tooltool-manifests/%s/ccov.manifest' % platform)
 
-        tooltool_path = self._fetch_tooltool_py()
-        cmd = [sys.executable, tooltool_path, '--url', 'https://tooltool.mozilla-releng.net/', 'fetch', \
+        cmd = [sys.executable, _tooltool_path, '--url', 'https://tooltool.mozilla-releng.net/', 'fetch', \
             '-m', manifest, '-o', '-c', '/builds/worker/tooltool-cache']
         self.run_command(cmd, cwd=self.grcov_dir)
 

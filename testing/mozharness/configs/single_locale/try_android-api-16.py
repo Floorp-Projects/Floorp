@@ -22,9 +22,6 @@ config = {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/" + MOZILLA_DIR,
     },
-    "exes": {
-        'tooltool.py': '/builds/tooltool.py',
-    },
     "update_gecko_source_to_enUS": False,
     "nightly_build": True,
     "repos": [{
@@ -89,7 +86,6 @@ config = {
         ("/home/cltbld/.ssh", "/home/mock_mozilla/.ssh"),
         ('/home/cltbld/.hgrc', '/builds/.hgrc'),
         ('/builds/relengapi.tok', '/builds/relengapi.tok'),
-        ('/tools/tooltool.py', '/builds/tooltool.py'),
         ('/usr/local/lib/hgext', '/usr/local/lib/hgext'),
     ],
 }

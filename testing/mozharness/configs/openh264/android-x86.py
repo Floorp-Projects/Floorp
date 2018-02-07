@@ -22,7 +22,6 @@ config = {
     'tooltool_cache': "/builds/tooltool_cache",
     'exes': {
         'gittool.py': [os.path.join(external_tools_path, 'gittool.py')],
-        'tooltool.py': "/builds/tooltool.py",
         'python2.7': "/tools/python27/bin/python2.7",
     },
     'avoid_avx2': True,
@@ -38,7 +37,6 @@ config = {
     'mock_files': [
         ('/home/cltbld/.ssh', '/home/mock_mozilla/.ssh'),
         ('/builds/relengapi.tok', '/builds/relengapi.tok'),
-        ('/tools/tooltool.py', '/builds/tooltool.py'),
     ],
     'operating_system': 'android',
     'partial_env': {
