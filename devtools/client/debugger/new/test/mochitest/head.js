@@ -285,9 +285,15 @@ function assertNotPaused(dbg) {
  * @static
  */
 function assertPausedLocation(dbg) {
-  const { selectors: { getSelectedSource, getVisibleSelectedFrame }, getState } = dbg;
+  const {
+    selectors: { getSelectedSource, getVisibleSelectedFrame },
+    getState
+  } = dbg;
 
-  ok(isSelectedFrameSelected(dbg, getState()), "top frame's source is selected");
+  ok(
+    isSelectedFrameSelected(dbg, getState()),
+    "top frame's source is selected"
+  );
 
   // Check the pause location
   const frame = getVisibleSelectedFrame(getState());
@@ -447,7 +453,7 @@ async function waitForMappedScopes(dbg) {
   await waitForState(
     dbg,
     state => {
-      const scopes = dbg.selectors.getScopes(state);
+      const scopes = dbg.selectors.getSelectedScope(state);
       return scopes && scopes.sourceBindings;
     },
     "mapped scopes"
@@ -949,14 +955,14 @@ const selectors = {
   sourceMapLink: ".source-footer .mapped-source",
   sourcesFooter: ".sources-panel .source-footer",
   editorFooter: ".editor-pane .source-footer",
-  sourceNode: i => `.sources-list .tree-node:nth-child(${i})`,
+  sourceNode: i => `.sources-list .tree-node:nth-child(${i}) .node`,
   sourceNodes: ".sources-list .tree-node",
   sourceArrow: i => `.sources-list .tree-node:nth-child(${i}) .arrow`,
   resultItems: ".result-list .result-item",
   fileMatch: ".managed-tree .result",
   popup: ".popover",
   tooltip: ".tooltip",
-  outlineItem: i => `.outline-list__element:nth-child(${i})`,
+  outlineItem: i => `.outline-list__element:nth-child(${i}) .function-signature`,
   outlineItems: ".outline-list__element"
 };
 
@@ -1081,4 +1087,18 @@ function toggleObjectInspectorNode(node) {
 function getCM(dbg) {
   const el = dbg.win.document.querySelector(".CodeMirror");
   return el.CodeMirror;
+}
+
+// NOTE: still experimental, the screenshots might not be exactly correct
+async function takeScreenshot(dbg) {
+  let canvas = dbg.win.document.createElementNS(
+    "http://www.w3.org/1999/xhtml",
+    "html:canvas"
+  );
+  let context = canvas.getContext("2d");
+  canvas.width = dbg.win.innerWidth;
+  canvas.height = dbg.win.innerHeight;
+  context.drawWindow(dbg.win, 0, 0, canvas.width, canvas.height, "white");
+  await waitForTime(1000);
+  dump(`[SCREENSHOT] ${canvas.toDataURL()}\n`);
 }

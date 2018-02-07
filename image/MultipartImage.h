@@ -59,7 +59,8 @@ public:
   virtual void OnLoadComplete(bool aLastPart) override;
   virtual void SetHasImage() override;
   virtual bool NotificationsDeferred() const override;
-  virtual void SetNotificationsDeferred(bool aDeferNotifications) override;
+  virtual void MarkPendingNotify() override;
+  virtual void ClearPendingNotify() override;
 
 protected:
   virtual ~MultipartImage();
@@ -76,7 +77,7 @@ private:
   RefPtr<ProgressTracker> mTracker;
   RefPtr<NextPartObserver> mNextPartObserver;
   RefPtr<Image> mNextPart;
-  bool mDeferNotifications : 1;
+  bool mPendingNotify : 1;
 };
 
 } // namespace image
