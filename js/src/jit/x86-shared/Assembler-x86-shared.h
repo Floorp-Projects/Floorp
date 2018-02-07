@@ -469,6 +469,10 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void cmovCCl(Condition cond, Register src, Register dest) {
+        X86Encoding::Condition cc = static_cast<X86Encoding::Condition>(cond);
+        masm.cmovCCl_rr(cc, src.encoding(), dest.encoding());
+    }
     void cmovzl(const Operand& src, Register dest) {
         cmovCCl(Condition::Zero, src, dest);
     }
