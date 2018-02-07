@@ -438,6 +438,7 @@ class SyncedBookmarksMirror {
       async function(db) {
         await db.executeTransaction(async function() {
           await db.execute(`DELETE FROM meta`);
+          await db.execute(`DELETE FROM structure`);
           await db.execute(`DELETE FROM items`);
           await db.execute(`DELETE FROM urls`);
 
@@ -1389,13 +1390,13 @@ class SyncedBookmarksMirror {
         SELECT b.id, s.level + 1 AS level FROM moz_bookmarks b
         JOIN syncedItems s ON s.id = b.parent
       )
-      INSERT INTO itemsToUpload(guid, syncChangeCounter, parentGuid,
+      INSERT INTO itemsToUpload(id, guid, syncChangeCounter, parentGuid,
                                 parentTitle, dateAdded, type, title, isQuery,
                                 url, tags, description, loadInSidebar,
                                 smartBookmarkName, keyword, feedURL, siteURL,
                                 position)
-      SELECT b.guid, b.syncChangeCounter, p.guid, p.title, b.dateAdded, b.type,
-             b.title, IFNULL(SUBSTR(h.url, 1, 6) = 'place:', 0), h.url,
+      SELECT b.id, b.guid, b.syncChangeCounter, p.guid, p.title, b.dateAdded,
+             b.type, b.title, IFNULL(SUBSTR(h.url, 1, 6) = 'place:', 0), h.url,
              (SELECT GROUP_CONCAT(t.title, ',') FROM moz_bookmarks e
               JOIN moz_bookmarks t ON t.id = e.parent
               JOIN moz_bookmarks r ON r.id = t.parent
@@ -1451,7 +1452,7 @@ class SyncedBookmarksMirror {
     // is inefficient, but queries aren't common today, and we can remove this
     // logic entirely once bug 1293445 lands.
     let queryRows = await this.db.execute(`
-      SELECT guid, url FROM itemsToUpload
+      SELECT id, url FROM itemsToUpload
       WHERE isQuery`);
 
     let tagFolderNameParams = [];
@@ -1464,7 +1465,7 @@ class SyncedBookmarksMirror {
       }
       let tagFolderId = Number(tagQueryParams.get("folder"));
       tagFolderNameParams.push({
-        guid: row.getResultByName("guid"),
+        id: row.getResultByName("id"),
         tagFolderId,
         folderType: PlacesUtils.bookmarks.TYPE_FOLDER,
       });
@@ -1476,16 +1477,15 @@ class SyncedBookmarksMirror {
           tagFolderName = (SELECT b.title FROM moz_bookmarks b
                            WHERE b.id = :tagFolderId AND
                                  b.type = :folderType)
-        WHERE guid = :guid`);
+        WHERE id = :id`);
     }
 
     // Record the child GUIDs of locally changed folders, which we use to
     // populate the `children` array in the record.
     await this.db.execute(`
-      INSERT INTO structureToUpload(guid, parentGuid, position)
-      SELECT b.guid, p.guid, b.position FROM moz_bookmarks b
-      JOIN moz_bookmarks p ON p.id = b.parent
-      JOIN itemsToUpload o ON o.guid = p.guid`);
+      INSERT INTO structureToUpload(guid, parentId, position)
+      SELECT b.guid, b.parent, b.position FROM moz_bookmarks b
+      JOIN itemsToUpload o ON o.id = b.parent`);
 
     // Finally, stage tombstones for deleted items. Ignore conflicts if we have
     // tombstones for undeleted items; Places Maintenance should clean these up.
@@ -1506,7 +1506,7 @@ class SyncedBookmarksMirror {
     let changeRecords = {};
 
     let itemRows = await this.db.execute(`
-      SELECT syncChangeCounter, guid, isDeleted, type, isQuery,
+      SELECT id, syncChangeCounter, guid, isDeleted, type, isQuery,
              smartBookmarkName, IFNULL(tagFolderName, "") AS tagFolderName,
              loadInSidebar, keyword, tags, url, IFNULL(title, "") AS title,
              description, feedURL, siteURL, position, parentGuid,
@@ -1639,9 +1639,9 @@ class SyncedBookmarksMirror {
           }
           let childGuidRows = await this.db.executeCached(`
             SELECT guid FROM structureToUpload
-            WHERE parentGuid = :guid
+            WHERE parentId = :id
             ORDER BY position`,
-            { guid });
+            { id: row.getResultByName("id") });
           folderCleartext.children = childGuidRows.map(row => {
             let childGuid = row.getResultByName("guid");
             return PlacesSyncUtils.bookmarks.guidToRecordId(childGuid);
@@ -2412,7 +2412,8 @@ async function initializeTempMirrorEntities(db) {
   // Stores locally changed items staged for upload. See `stageItemsToUpload`
   // for an explanation of why these tables exists.
   await db.execute(`CREATE TEMP TABLE itemsToUpload(
-    guid TEXT PRIMARY KEY,
+    id INTEGER PRIMARY KEY,
+    guid TEXT UNIQUE NOT NULL,
     syncChangeCounter INTEGER NOT NULL,
     isDeleted BOOLEAN NOT NULL DEFAULT 0,
     parentGuid TEXT,
@@ -2431,12 +2432,12 @@ async function initializeTempMirrorEntities(db) {
     feedURL TEXT,
     siteURL TEXT,
     position INTEGER
-  ) WITHOUT ROWID`);
+  )`);
 
   await db.execute(`CREATE TEMP TABLE structureToUpload(
     guid TEXT PRIMARY KEY,
-    parentGuid TEXT NOT NULL REFERENCES itemsToUpload(guid)
-                             ON DELETE CASCADE,
+    parentId INTEGER NOT NULL REFERENCES itemsToUpload(id)
+                              ON DELETE CASCADE,
     position INTEGER NOT NULL
   ) WITHOUT ROWID`);
 }
