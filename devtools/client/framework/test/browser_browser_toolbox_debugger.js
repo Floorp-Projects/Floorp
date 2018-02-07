@@ -84,14 +84,14 @@ add_task(function* runTest() {
 
     const registerCleanupFunction = () => {};
 
-    const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-    const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-    const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+    const { Task } = ChromeUtils.import("resource://gre/modules/Task.jsm", {});
+    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
     // Copied from shared-head.js:
     // test_browser_toolbox_debugger.js uses waitForPaused, which relies on waitUntil
     // which is normally provided by shared-head.js
-    const { setTimeout } = Cu.import("resource://gre/modules/Timer.jsm", {});
+    const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
     function waitUntil(predicate, interval = 10) {
       if (predicate()) {
         return Promise.resolve(true);
@@ -126,7 +126,7 @@ add_task(function* runTest() {
     env.set("MOZ_TOOLBOX_TEST_SCRIPT", "");
   });
 
-  let { BrowserToolboxProcess } = Cu.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
+  let { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
   // Use two promises, one for each BrowserToolboxProcess.init callback
   // arguments, to ensure that we wait for toolbox run and close events.
   let closePromise;

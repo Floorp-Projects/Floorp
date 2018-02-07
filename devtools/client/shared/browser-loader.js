@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const loaders = Cu.import("resource://devtools/shared/base-loader.js", {});
-const { devtools } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const loaders = ChromeUtils.import("resource://devtools/shared/base-loader.js", {});
+const { devtools } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const { joinURI } = devtools.require("devtools/shared/path");
 const { assert } = devtools.require("devtools/shared/DevToolsUtils");
 const { AppConstants } = devtools.require("resource://gre/modules/AppConstants.jsm");

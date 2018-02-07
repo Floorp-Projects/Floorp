@@ -36,7 +36,7 @@ function test() {
     is(sources[2].label, "testxul.js", "correct label for addon tab code");
 
     // Load a new module and tab and check they appear in the list of sources
-    Cu.import("resource://browser_dbg_addon5/test2.jsm", {});
+    ChromeUtils.import("resource://browser_dbg_addon5/test2.jsm", {});
     let tab2 = yield addTab("chrome://browser_dbg_addon5/content/test2.xul");
 
     groups = yield addonDebugger.getSourceGroups();

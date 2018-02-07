@@ -11,7 +11,7 @@ const ADDON_MANIFEST_PATH = "addons/test-devtools-webextension/manifest.json";
 
 const {
   BrowserToolboxProcess
-} = Cu.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
+} = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
 
 /**
  * This test file ensures that the webextension addon developer toolbox:

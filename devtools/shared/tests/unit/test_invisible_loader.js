@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { addDebuggerToGlobal } = Cu.import("resource://gre/modules/jsdebugger.jsm", {});
+const { addDebuggerToGlobal } = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm", {});
 addDebuggerToGlobal(this);
 
 /**
@@ -32,7 +32,7 @@ function visible_loader() {
 
   // Check that for common loader used for tabs, promise modules is Promise.jsm
   // Which is required to support unhandled promises rejection in mochitests
-  const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+  const promise = ChromeUtils.import("resource://gre/modules/Promise.jsm", {}).Promise;
   Assert.equal(loader.require("promise"), promise);
 }
 

@@ -7,7 +7,7 @@
 
 this.EXPORTED_SYMBOLS = ["StyleSheetEditor"];
 
-const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const Editor = require("devtools/client/sourceeditor/editor");
 const promise = require("promise");
 const {shortSource, prettifyCSS} = require("devtools/shared/inspector/css-logic");
@@ -17,7 +17,7 @@ const EventEmitter = require("devtools/shared/old-event-emitter");
 const {Task} = require("devtools/shared/task");
 const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
 const {NetUtil} = require("resource://gre/modules/NetUtil.jsm");
-const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 const {
   getString,
   showFilePicker,

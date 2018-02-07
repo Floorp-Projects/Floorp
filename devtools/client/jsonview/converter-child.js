@@ -7,7 +7,7 @@
 "use strict";
 
 const {Cc, Ci, Cu, CC} = require("chrome");
-const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const Services = require("Services");
 
 loader.lazyRequireGetter(this, "NetworkHelper",

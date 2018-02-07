@@ -3,7 +3,7 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/osfile.jsm", {});
+ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
 add_task(function* () {
   let fileContent = yield generateCssMessageStubs();

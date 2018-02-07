@@ -6,7 +6,7 @@
 /* exported defer, DebuggerClient, initTestDebuggerServer */
 
 const { require } =
-  Cu.import("resource://devtools/shared/Loader.jsm", {});
+  ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const xpcInspector = require("xpcInspector");

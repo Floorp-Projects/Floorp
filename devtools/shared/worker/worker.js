@@ -14,10 +14,10 @@
     factory.call(this, require, exports, module, { Cc, Ci, Cu }, ChromeWorker, dumpn);
   } else {
     // Cu.import
-    const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     this.isWorker = false;
-    this.Promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
-    this.console = Cu.import("resource://gre/modules/Console.jsm", {}).console;
+    this.Promise = require("resource://gre/modules/Promise.jsm").Promise;
+    this.console = require("resource://gre/modules/Console.jsm").console;
     factory.call(
       this, require, this, { exports: this },
       { Cc, Ci, Cu }, ChromeWorker, null

@@ -18,7 +18,7 @@ loader.lazyServiceGetter(this, "gActivityDistributor",
                          "nsIHttpActivityDistributor");
 
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
-const {setTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
+const {setTimeout} = require("resource://gre/modules/Timer.jsm");
 
 /**
  * Construct a new nsIStreamListener that buffers data and provides a

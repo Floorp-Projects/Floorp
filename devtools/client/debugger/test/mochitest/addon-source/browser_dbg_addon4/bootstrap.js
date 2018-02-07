@@ -9,13 +9,13 @@ function notify() {
 }
 
 function startup(aParams, aReason) {
-  const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
   let res = Services.io.getProtocolHandler("resource")
                        .QueryInterface(Ci.nsIResProtocolHandler);
   res.setSubstitution("browser_dbg_addon4", aParams.resourceURI);
 
   // Load a JS module
-  Cu.import("resource://browser_dbg_addon4/test.jsm"); // eslint-disable-line mozilla/no-single-arg-cu-import
+  ChromeUtils.import("resource://browser_dbg_addon4/test.jsm"); // eslint-disable-line mozilla/no-single-arg-cu-import
   // Log objects so makeDebuggeeValue can get the global to use
   console.log({ msg: "Hello from the test add-on" });
 

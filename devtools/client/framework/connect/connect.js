@@ -6,7 +6,7 @@
 
 "use strict";
 
-var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 var Services = require("Services");
 var {gDevTools} = require("devtools/client/framework/devtools");
 var {TargetFactory} = require("devtools/client/framework/target");

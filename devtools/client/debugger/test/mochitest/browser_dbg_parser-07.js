@@ -9,7 +9,7 @@
  */
 
 function test() {
-  let { ParserHelpers } = Cu.import("resource://devtools/shared/Parser.jsm", {});
+  let { ParserHelpers } = ChromeUtils.import("resource://devtools/shared/Parser.jsm", {});
 
   let node1 = { loc: {
     start: { line: 1, column: 10 },

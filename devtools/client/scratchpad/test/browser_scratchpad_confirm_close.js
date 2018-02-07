@@ -4,8 +4,8 @@
 /* Bug 653427 */
 
 var tempScope = {};
-Cu.import("resource://gre/modules/NetUtil.jsm", tempScope);
-Cu.import("resource://gre/modules/FileUtils.jsm", tempScope);
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm", tempScope);
+ChromeUtils.import("resource://gre/modules/FileUtils.jsm", tempScope);
 var NetUtil = tempScope.NetUtil;
 var FileUtils = tempScope.FileUtils;
 

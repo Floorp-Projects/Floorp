@@ -14,8 +14,8 @@
  */
 
 const { Cu, CC, Cc, Ci } = require("chrome");
-const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
-const jsmScope = Cu.import("resource://gre/modules/Services.jsm", {});
+const promise = require("resource://gre/modules/Promise.jsm").Promise;
+const jsmScope = require("resource://gre/modules/Services.jsm");
 const { Services } = jsmScope;
 // Steal various globals only available in JSM scope (and not Sandbox one)
 const { PromiseDebugging, ChromeUtils, HeapSnapshot,
@@ -119,7 +119,7 @@ function defineLazyModuleGetter(object, name, resource, symbol,
   defineLazyGetter(object, name, function () {
     let temp = {};
     try {
-      Cu.import(resource, temp);
+      ChromeUtils.import(resource, temp);
 
       if (typeof (postLambda) === "function") {
         postLambda.apply(proxy);
@@ -199,7 +199,7 @@ defineLazyGetter(exports.modules, "Debugger", () => {
 });
 
 defineLazyGetter(exports.modules, "Timer", () => {
-  let {setTimeout, clearTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
+  let {setTimeout, clearTimeout} = require("resource://gre/modules/Timer.jsm");
   // Do not return Cu.import result, as SDK loader would freeze Timer.jsm globals...
   return {
     setTimeout,
@@ -279,19 +279,19 @@ function lazyGlobal(name, getter) {
 // Lazily define a few things so that the corresponding jsms are only loaded
 // when used.
 lazyGlobal("console", () => {
-  return Cu.import("resource://gre/modules/Console.jsm", {}).console;
+  return require("resource://gre/modules/Console.jsm").console;
 });
 lazyGlobal("clearTimeout", () => {
-  return Cu.import("resource://gre/modules/Timer.jsm", {}).clearTimeout;
+  return require("resource://gre/modules/Timer.jsm").clearTimeout;
 });
 lazyGlobal("setTimeout", () => {
-  return Cu.import("resource://gre/modules/Timer.jsm", {}).setTimeout;
+  return require("resource://gre/modules/Timer.jsm").setTimeout;
 });
 lazyGlobal("clearInterval", () => {
-  return Cu.import("resource://gre/modules/Timer.jsm", {}).clearInterval;
+  return require("resource://gre/modules/Timer.jsm").clearInterval;
 });
 lazyGlobal("setInterval", () => {
-  return Cu.import("resource://gre/modules/Timer.jsm", {}).setInterval;
+  return require("resource://gre/modules/Timer.jsm").setInterval;
 });
 lazyGlobal("DOMParser", () => {
   return CC("@mozilla.org/xmlextras/domparser;1", "nsIDOMParser");

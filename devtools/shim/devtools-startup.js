@@ -32,7 +32,7 @@ const TOOLBAR_VISIBLE_PREF = "devtools.toolbar.visible";
 
 const DEVTOOLS_ENABLED_PREF = "devtools.enabled";
 
-const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "AppConstants",
@@ -368,7 +368,7 @@ DevToolsStartup.prototype = {
         let developerItems = doc.getElementById("PanelUI-developerItems");
         // Import private helpers from CustomizableWidgets
         let { clearSubview, fillSubviewFromMenuItems } =
-          Cu.import("resource:///modules/CustomizableWidgets.jsm", {});
+          ChromeUtils.import("resource:///modules/CustomizableWidgets.jsm", {});
         clearSubview(developerItems);
         fillSubviewFromMenuItems(itemsToDisplay, developerItems);
       },
@@ -598,7 +598,7 @@ DevToolsStartup.prototype = {
     }
 
     this.initialized = true;
-    let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    let { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     // Ensure loading main devtools module that hooks up into browser UI
     // and initialize all devtools machinery.
     require("devtools/client/framework/devtools-browser");
@@ -660,7 +660,7 @@ DevToolsStartup.prototype = {
     if (!window) {
       let require = this.initDevTools("CommandLine");
       let { HUDService } = require("devtools/client/webconsole/hudservice");
-      let { console } = Cu.import("resource://gre/modules/Console.jsm", {});
+      let { console } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
       HUDService.toggleBrowserConsole().catch(console.error);
     } else {
       // the Browser Console was already open
@@ -688,14 +688,14 @@ DevToolsStartup.prototype = {
         return Services.prefs.getBoolPref(pref);
       });
     } catch (ex) {
-      let { console } = Cu.import("resource://gre/modules/Console.jsm", {});
+      let { console } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
       console.error(ex);
       return false;
     }
     if (!remoteDebuggingEnabled) {
       let errorMsg = "Could not run chrome debugger! You need the following " +
                      "prefs to be set to true: " + kDebuggerPrefs.join(", ");
-      let { console } = Cu.import("resource://gre/modules/Console.jsm", {});
+      let { console } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
       console.error(new Error(errorMsg));
       // Dump as well, as we're doing this from a commandline, make sure people
       // don't miss it:
@@ -719,7 +719,7 @@ DevToolsStartup.prototype = {
       Services.obs.addObserver(observe, "devtools-thread-resumed");
     }
 
-    const { BrowserToolboxProcess } = Cu.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
+    const { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
     BrowserToolboxProcess.init();
 
     if (pauseOnStartup) {
@@ -772,7 +772,7 @@ DevToolsStartup.prototype = {
     }
 
     let { DevToolsLoader } =
-      Cu.import("resource://devtools/shared/Loader.jsm", {});
+      ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
     try {
       // Create a separate loader instance, so that we can be sure to receive

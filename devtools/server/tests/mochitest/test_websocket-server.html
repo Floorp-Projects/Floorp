@@ -13,7 +13,7 @@
 
 window.onload = function () {
   const CC = Components.Constructor;
-  const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
   const { Task } = require("devtools/shared/task");
   const WebSocketServer = require("devtools/server/websocket-server");
 
