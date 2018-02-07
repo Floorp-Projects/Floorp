@@ -109,12 +109,6 @@ menucaption > .menu-iconic-text {
   font-weight: bold;
 }
 
-.menu-description {
-  font-style: italic;
-  color: GrayText;
-  margin-inline-start: 1ex !important;
-}
-
 .menu-accel,
 .menu-iconic-accel {
   margin-top: 0px !important;
