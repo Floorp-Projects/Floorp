@@ -120,11 +120,9 @@ public:
   void AddHistoryObserver(nsNavHistoryQueryResultNode* aNode);
   void AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode, int64_t aFolder);
   void AddAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode);
-  void AddMobilePrefsObserver(nsNavHistoryQueryResultNode* aNode);
   void RemoveHistoryObserver(nsNavHistoryQueryResultNode* aNode);
   void RemoveBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode, int64_t aFolder);
   void RemoveAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode);
-  void RemoveMobilePrefsObserver(nsNavHistoryQueryResultNode* aNode);
   void StopObserving();
 
   nsresult OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
@@ -159,12 +157,10 @@ public:
   bool mIsHistoryObserver;
   bool mIsBookmarkFolderObserver;
   bool mIsAllBookmarksObserver;
-  bool mIsMobilePrefObserver;
 
   typedef nsTArray< RefPtr<nsNavHistoryQueryResultNode> > QueryObserverList;
   QueryObserverList mHistoryObservers;
   QueryObserverList mAllBookmarksObservers;
-  QueryObserverList mMobilePrefObservers;
 
   typedef nsTArray< RefPtr<nsNavHistoryFolderResultNode> > FolderObserverList;
   nsDataHashtable<nsTrimInt64HashKey, FolderObserverList*> mBookmarkFolderObservers;
@@ -184,10 +180,6 @@ public:
 
   ContainerObserverList mRefreshParticipants;
   void requestRefresh(nsNavHistoryContainerResultNode* aContainer);
-
-  void OnMobilePrefChanged();
-
-  static void OnMobilePrefChangedCallback(const char* prefName, void* closure);
 
 protected:
   virtual ~nsNavHistoryResult();
@@ -297,10 +289,6 @@ public:
                            const nsACString& aParentGUID,
                            const nsACString &aOldValue,
                            uint16_t aSource);
-
-  virtual nsresult OnMobilePrefChanged(bool newValue) {
-    return NS_OK;
-  };
 
 protected:
   virtual ~nsNavHistoryResultNode() {}
@@ -582,9 +570,6 @@ public:
   int32_t FindChild(nsNavHistoryResultNode* aNode)
     { return mChildren.IndexOf(aNode); }
 
-  nsNavHistoryResultNode* FindChildByGuid(const nsACString& guid,
-                                          int32_t* nodeIndex);
-
   nsresult InsertChildAt(nsNavHistoryResultNode* aNode, int32_t aIndex);
   nsresult InsertSortedChild(nsNavHistoryResultNode* aNode,
                              bool aIgnoreDuplicates = false);
@@ -650,8 +635,6 @@ public:
   NS_FORWARD_CONTAINERNODE_EXCEPT_HASCHILDREN
   NS_IMETHOD GetHasChildren(bool* aHasChildren) override;
   NS_DECL_NSINAVHISTORYQUERYRESULTNODE
-
-  virtual nsresult OnMobilePrefChanged(bool newValue) override;
 
   bool CanExpand();
   bool IsContainersQuery();

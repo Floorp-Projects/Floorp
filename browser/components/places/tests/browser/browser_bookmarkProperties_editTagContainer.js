@@ -19,7 +19,7 @@ add_task(async function() {
     await promiseLibraryClosed(library);
   });
 
-  PlacesOrganizer.selectLeftPaneBuiltIn("Tags");
+  PlacesOrganizer.selectLeftPaneQuery("Tags");
   let tree = PlacesOrganizer._places;
   let tagsContainer = tree.selectedNode;
   tagsContainer.containerOpen = true;
