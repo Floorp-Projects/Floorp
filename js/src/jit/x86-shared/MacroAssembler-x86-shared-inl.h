@@ -1094,6 +1094,58 @@ MacroAssembler::branchTestMagicImpl(Condition cond, const T& t, L label)
     j(cond, label);
 }
 
+void
+MacroAssembler::cmp32Move32(Condition cond, Register lhs, Register rhs, Register src,
+                            Register dest)
+{
+    cmp32(lhs, rhs);
+    cmovCCl(cond, src, dest);
+}
+
+void
+MacroAssembler::cmp32Move32(Condition cond, Register lhs, const Address& rhs, Register src,
+                            Register dest)
+{
+    cmp32(lhs, Operand(rhs));
+    cmovCCl(cond, src, dest);
+}
+
+void
+MacroAssembler::boundsCheck32ForLoad(Register index, Register length, Register scratch,
+                                     Label* failure)
+{
+    MOZ_ASSERT(index != length);
+    MOZ_ASSERT(length != scratch);
+    MOZ_ASSERT(index != scratch);
+
+    if (JitOptions.spectreIndexMasking)
+        move32(Imm32(0), scratch);
+
+    cmp32(index, length);
+    j(Assembler::AboveOrEqual, failure);
+
+    if (JitOptions.spectreIndexMasking)
+        cmovCCl(Assembler::AboveOrEqual, scratch, index);
+}
+
+void
+MacroAssembler::boundsCheck32ForLoad(Register index, const Address& length, Register scratch,
+                                     Label* failure)
+{
+    MOZ_ASSERT(index != length.base);
+    MOZ_ASSERT(length.base != scratch);
+    MOZ_ASSERT(index != scratch);
+
+    if (JitOptions.spectreIndexMasking)
+        move32(Imm32(0), scratch);
+
+    cmp32(index, Operand(length));
+    j(Assembler::AboveOrEqual, failure);
+
+    if (JitOptions.spectreIndexMasking)
+        cmovCCl(Assembler::AboveOrEqual, scratch, index);
+}
+
 // ========================================================================
 // Canonicalization primitives.
 void
