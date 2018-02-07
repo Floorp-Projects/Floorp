@@ -222,7 +222,7 @@
     </implementation>
   </binding>
 
-  <binding id="tabs" role="xul:tabs"
+  <binding id="tabs"
            extends="chrome://global/content/bindings/general.xml#basecontrol">
     <resources>
       <stylesheet src="chrome://global/skin/tabbox.css"/>
@@ -581,7 +581,7 @@
 #endif
   </binding>
 
-  <binding id="tabpanels" role="xul:tabpanels"
+  <binding id="tabpanels"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <implementation implements="nsIDOMXULRelatedElement">
       <!-- nsIDOMXULRelatedElement -->
@@ -692,7 +692,7 @@
     </implementation>
   </binding>
 
-  <binding id="tab" display="xul:button" role="xul:tab"
+  <binding id="tab" display="xul:button"
            extends="chrome://global/content/bindings/general.xml#basetext">
     <resources>
       <stylesheet src="chrome://global/skin/tabbox.css"/>

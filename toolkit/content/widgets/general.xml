@@ -132,7 +132,7 @@
     </implementation>
   </binding>
 
-  <binding id="dropmarker" extends="xul:button" role="xul:dropmarker">
+  <binding id="dropmarker" extends="xul:button">
     <resources>
       <stylesheet src="chrome://global/skin/dropmarker.css"/>
     </resources>
