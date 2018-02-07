@@ -22,10 +22,12 @@ this.Memory = {
    *   "parent": {
    *     uss: <int>,
    *     rss: <int>,
+   *     ghosts: <int>,
    *   },
    *   <pid>: {
    *     uss: <int>,
    *     rss: <int>,
+   *     ghosts: <int>,
    *   },
    *   ...
    * }
@@ -65,7 +67,8 @@ this.Memory = {
                    .getService(Ci.nsIMemoryReporterManager);
     let rss = memMgr.resident;
     let uss = memMgr.residentUnique;
-    this._summaries.Parent = { uss, rss };
+    let ghosts = memMgr.ghostWindows;
+    this._summaries.Parent = { uss, rss, ghosts };
     this._pendingResolve(this._summaries);
     this._pendingResolve = null;
     this._summaries = null;
