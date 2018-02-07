@@ -331,6 +331,10 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
     return this.pseudoClassLocks.some(locked => locked === pseudo);
   },
 
+  get displayType() {
+    return this._form.displayType;
+  },
+
   get isDisplayed() {
     // The NodeActor's form contains the isDisplayed information as a boolean
     // starting from FF32. Before that, the property is missing
