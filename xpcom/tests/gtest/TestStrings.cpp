@@ -19,6 +19,16 @@
 #include "gtest/BlackBox.h"
 #include "nsBidiUtils.h"
 
+#define CONVERSION_ITERATIONS 50000
+
+#define CONVERSION_BENCH(name, func, src, dstType) \
+MOZ_GTEST_BENCH_F(Strings, name, [this] { \
+    for (int i = 0; i < CONVERSION_ITERATIONS; i++) { \
+      dstType dst; \
+      func(*BlackBox(&src), *BlackBox(&dst)); \
+    } \
+}); \
+
 namespace TestStrings {
 
 using mozilla::fallible;
@@ -33,15 +43,6 @@ using mozilla::BlackBox;
 #define TestExample4 " Donec feugiat volutpat massa. Cras ornare lacinia porta. Fusce in feugiat nunc. Praesent non felis varius diam feugiat ultrices ultricies a risus. Donec maximus nisi nisl, non consectetur nulla eleifend in. Nulla in massa interdum, eleifend orci a, vestibulum est. Mauris aliquet, massa et convallis mollis, felis augue vestibulum augue, in lobortis metus eros a quam. Nam              ac diam ornare, vestibulum elit sit amet, consectetur ante. Praesent massa mauris, pulvinar sit amet sapien vel, tempus gravida neque. Praesent id quam sit amet est maximus molestie eget at turpis. Nunc sit amet orci id arcu dapibus fermentum non eu erat.\f\tSuspendisse commodo nunc sem, eu congue eros condimentum vel. Nullam sit amet posuere arcu. Nulla facilisi. Mauris dapibus iaculis massa sed gravida. Nullam vitae urna at tortor feugiat auctor ut sit amet dolor. Proin rutrum at nunc et faucibus. Quisque suscipit id nibh a aliquet. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam a dapibus erat, id imperdiet mauris. Nulla blandit libero non magna dapibus tristique. Integer hendrerit imperdiet lorem, quis facilisis lacus semper ut. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae Nullam dignissim elit in congue ultricies. Quisque erat odio, maximus mollis laoreet id, iaculis at turpis. "
 
 #define TestExample5 "Donec id risus urna. Nunc consequat lacinia urna id bibendum. Nulla faucibus faucibus enim. Cras ex risus, ultrices id semper vitae, luctus ut nulla. Sed vehicula tellus sed purus imperdiet efficitur. Suspendisse feugiat\n\n\n     imperdiet odio, sed porta lorem feugiat nec. Curabitur laoreet massa venenatis\r\n risus ornare\r\n, vitae feugiat tortor accumsan. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas id scelerisque mauris, eget facilisis erat. Ut nec pulvinar risus, sed iaculis ante. Mauris tincidunt, risus et pretium elementum, leo nisi consectetur ligula, tincidunt suscipit erat velit eget libero. Sed ac est tempus, consequat dolor mattis, mattis mi. "
-
-// Setup overhead test
-#define OneASCII "a"
-
-// Maximal non-SIMD legth
-#define FifteenASCII "Lorem ipsum dol"
-
-// Around hundred is common length for IsUTF8 check
-#define HundredASCII "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ac tellus eget velit viverra viverra i"
 
 // Originally ReadVPXFile in TestVPXDecoding.cpp
 static void
@@ -72,23 +73,28 @@ protected:
   void SetUp() override {
     // Intentionally AssignASCII and not AssignLiteral
     // to simulate the usual heap case.
-    mOneAsciiUtf8.AssignASCII(OneASCII);
-    mFifteenAsciiUtf8.AssignASCII(FifteenASCII);
-    mHundredAsciiUtf8.AssignASCII(HundredASCII);
     mExample1Utf8.AssignASCII(TestExample1);
     mExample2Utf8.AssignASCII(TestExample2);
     mExample3Utf8.AssignASCII(TestExample3);
     mExample4Utf8.AssignASCII(TestExample4);
     mExample5Utf8.AssignASCII(TestExample5);
 
+    // Use span to make the resulting string as ordinary as possible
+    mAsciiOneUtf8.Append(MakeSpan(mExample3Utf8).To(1));
+    mAsciiThreeUtf8.Append(MakeSpan(mExample3Utf8).To(3));
+    mAsciiFifteenUtf8.Append(MakeSpan(mExample3Utf8).To(15));
+    mAsciiHundredUtf8.Append(MakeSpan(mExample3Utf8).To(100));
+    mAsciiThousandUtf8.Append(MakeSpan(mExample3Utf8).To(1000));
+
+    ReadFile("ar.txt", mArUtf8);
     ReadFile("de.txt", mDeUtf8);
+    ReadFile("de-edit.txt", mDeEditUtf8);
     ReadFile("ru.txt", mRuUtf8);
     ReadFile("th.txt", mThUtf8);
+    ReadFile("ko.txt", mKoUtf8);
     ReadFile("ja.txt", mJaUtf8);
-
-    CopyASCIItoUTF16(mOneAsciiUtf8, mOneAsciiUtf16);
-    CopyASCIItoUTF16(mFifteenAsciiUtf8, mFifteenAsciiUtf16);
-    CopyASCIItoUTF16(mHundredAsciiUtf8, mHundredAsciiUtf16);
+    ReadFile("tr.txt", mTrUtf8);
+    ReadFile("vi.txt", mViUtf8);
 
     CopyASCIItoUTF16(mExample1Utf8, mExample1Utf16);
     CopyASCIItoUTF16(mExample2Utf8, mExample2Utf16);
@@ -96,37 +102,287 @@ protected:
     CopyASCIItoUTF16(mExample4Utf8, mExample4Utf16);
     CopyASCIItoUTF16(mExample5Utf8, mExample5Utf16);
 
+    CopyASCIItoUTF16(mAsciiOneUtf8, mAsciiOneUtf16);
+    CopyASCIItoUTF16(mAsciiFifteenUtf8, mAsciiFifteenUtf16);
+    CopyASCIItoUTF16(mAsciiHundredUtf8, mAsciiHundredUtf16);
+    CopyASCIItoUTF16(mAsciiThousandUtf8, mAsciiThousandUtf16);
+
+    CopyUTF8toUTF16(mArUtf8, mArUtf16);
     CopyUTF8toUTF16(mDeUtf8, mDeUtf16);
+    CopyUTF8toUTF16(mDeEditUtf8, mDeEditUtf16);
     CopyUTF8toUTF16(mRuUtf8, mRuUtf16);
     CopyUTF8toUTF16(mThUtf8, mThUtf16);
     CopyUTF8toUTF16(mJaUtf8, mJaUtf16);
+    CopyUTF8toUTF16(mKoUtf8, mKoUtf16);
+    CopyUTF8toUTF16(mTrUtf8, mTrUtf16);
+    CopyUTF8toUTF16(mViUtf8, mViUtf16);
+
+    LossyCopyUTF16toASCII(mDeEditUtf16, mDeEditLatin1);
+
+    // Use span to make the resulting string as ordinary as possible
+    mArOneUtf16.Append(MakeSpan(mArUtf16).To(1));
+    mDeOneUtf16.Append(MakeSpan(mDeUtf16).To(1));
+    mDeEditOneUtf16.Append(MakeSpan(mDeEditUtf16).To(1));
+    mRuOneUtf16.Append(MakeSpan(mRuUtf16).To(1));
+    mThOneUtf16.Append(MakeSpan(mThUtf16).To(1));
+    mJaOneUtf16.Append(MakeSpan(mJaUtf16).To(1));
+    mKoOneUtf16.Append(MakeSpan(mKoUtf16).To(1));
+    mTrOneUtf16.Append(MakeSpan(mTrUtf16).To(1));
+    mViOneUtf16.Append(MakeSpan(mViUtf16).To(1));
+
+    mDeEditOneLatin1.Append(MakeSpan(mDeEditLatin1).To(1));
+
+    mArThreeUtf16.Append(MakeSpan(mArUtf16).To(3));
+    mDeThreeUtf16.Append(MakeSpan(mDeUtf16).To(3));
+    mDeEditThreeUtf16.Append(MakeSpan(mDeEditUtf16).To(3));
+    mRuThreeUtf16.Append(MakeSpan(mRuUtf16).To(3));
+    mThThreeUtf16.Append(MakeSpan(mThUtf16).To(3));
+    mJaThreeUtf16.Append(MakeSpan(mJaUtf16).To(3));
+    mKoThreeUtf16.Append(MakeSpan(mKoUtf16).To(3));
+    mTrThreeUtf16.Append(MakeSpan(mTrUtf16).To(3));
+    mViThreeUtf16.Append(MakeSpan(mViUtf16).To(3));
+
+    mDeEditThreeLatin1.Append(MakeSpan(mDeEditLatin1).To(3));
+
+    mArFifteenUtf16.Append(MakeSpan(mArUtf16).To(15));
+    mDeFifteenUtf16.Append(MakeSpan(mDeUtf16).To(15));
+    mDeEditFifteenUtf16.Append(MakeSpan(mDeEditUtf16).To(15));
+    mRuFifteenUtf16.Append(MakeSpan(mRuUtf16).To(15));
+    mThFifteenUtf16.Append(MakeSpan(mThUtf16).To(15));
+    mJaFifteenUtf16.Append(MakeSpan(mJaUtf16).To(15));
+    mKoFifteenUtf16.Append(MakeSpan(mKoUtf16).To(15));
+    mTrFifteenUtf16.Append(MakeSpan(mTrUtf16).To(15));
+    mViFifteenUtf16.Append(MakeSpan(mViUtf16).To(15));
+
+    mDeEditFifteenLatin1.Append(MakeSpan(mDeEditLatin1).To(15));
+
+    mArHundredUtf16.Append(MakeSpan(mArUtf16).To(100));
+    mDeHundredUtf16.Append(MakeSpan(mDeUtf16).To(100));
+    mDeEditHundredUtf16.Append(MakeSpan(mDeEditUtf16).To(100));
+    mRuHundredUtf16.Append(MakeSpan(mRuUtf16).To(100));
+    mThHundredUtf16.Append(MakeSpan(mThUtf16).To(100));
+    mJaHundredUtf16.Append(MakeSpan(mJaUtf16).To(100));
+    mKoHundredUtf16.Append(MakeSpan(mKoUtf16).To(100));
+    mTrHundredUtf16.Append(MakeSpan(mTrUtf16).To(100));
+    mViHundredUtf16.Append(MakeSpan(mViUtf16).To(100));
+
+    mDeEditHundredLatin1.Append(MakeSpan(mDeEditLatin1).To(100));
+
+    mArThousandUtf16.Append(MakeSpan(mArUtf16).To(1000));
+    mDeThousandUtf16.Append(MakeSpan(mDeUtf16).To(1000));
+    mDeEditThousandUtf16.Append(MakeSpan(mDeEditUtf16).To(1000));
+    mRuThousandUtf16.Append(MakeSpan(mRuUtf16).To(1000));
+    mThThousandUtf16.Append(MakeSpan(mThUtf16).To(1000));
+    mJaThousandUtf16.Append(MakeSpan(mJaUtf16).To(1000));
+    mKoThousandUtf16.Append(MakeSpan(mKoUtf16).To(1000));
+    mTrThousandUtf16.Append(MakeSpan(mTrUtf16).To(1000));
+    mViThousandUtf16.Append(MakeSpan(mViUtf16).To(1000));
+
+    mDeEditThousandLatin1.Append(MakeSpan(mDeEditLatin1).To(1000));
+
+    CopyUTF16toUTF8(mArOneUtf16, mArOneUtf8);
+    CopyUTF16toUTF8(mDeOneUtf16, mDeOneUtf8);
+    CopyUTF16toUTF8(mDeEditOneUtf16, mDeEditOneUtf8);
+    CopyUTF16toUTF8(mRuOneUtf16, mRuOneUtf8);
+    CopyUTF16toUTF8(mThOneUtf16, mThOneUtf8);
+    CopyUTF16toUTF8(mJaOneUtf16, mJaOneUtf8);
+    CopyUTF16toUTF8(mKoOneUtf16, mKoOneUtf8);
+    CopyUTF16toUTF8(mTrOneUtf16, mTrOneUtf8);
+    CopyUTF16toUTF8(mViOneUtf16, mViOneUtf8);
+
+    CopyUTF16toUTF8(mArThreeUtf16, mArThreeUtf8);
+    CopyUTF16toUTF8(mDeThreeUtf16, mDeThreeUtf8);
+    CopyUTF16toUTF8(mDeEditThreeUtf16, mDeEditThreeUtf8);
+    CopyUTF16toUTF8(mRuThreeUtf16, mRuThreeUtf8);
+    CopyUTF16toUTF8(mThThreeUtf16, mThThreeUtf8);
+    CopyUTF16toUTF8(mJaThreeUtf16, mJaThreeUtf8);
+    CopyUTF16toUTF8(mKoThreeUtf16, mKoThreeUtf8);
+    CopyUTF16toUTF8(mTrThreeUtf16, mTrThreeUtf8);
+    CopyUTF16toUTF8(mViThreeUtf16, mViThreeUtf8);
+
+    CopyUTF16toUTF8(mArFifteenUtf16, mArFifteenUtf8);
+    CopyUTF16toUTF8(mDeFifteenUtf16, mDeFifteenUtf8);
+    CopyUTF16toUTF8(mDeEditFifteenUtf16, mDeEditFifteenUtf8);
+    CopyUTF16toUTF8(mRuFifteenUtf16, mRuFifteenUtf8);
+    CopyUTF16toUTF8(mThFifteenUtf16, mThFifteenUtf8);
+    CopyUTF16toUTF8(mJaFifteenUtf16, mJaFifteenUtf8);
+    CopyUTF16toUTF8(mKoFifteenUtf16, mKoFifteenUtf8);
+    CopyUTF16toUTF8(mTrFifteenUtf16, mTrFifteenUtf8);
+    CopyUTF16toUTF8(mViFifteenUtf16, mViFifteenUtf8);
+
+    CopyUTF16toUTF8(mArHundredUtf16, mArHundredUtf8);
+    CopyUTF16toUTF8(mDeHundredUtf16, mDeHundredUtf8);
+    CopyUTF16toUTF8(mDeEditHundredUtf16, mDeEditHundredUtf8);
+    CopyUTF16toUTF8(mRuHundredUtf16, mRuHundredUtf8);
+    CopyUTF16toUTF8(mThHundredUtf16, mThHundredUtf8);
+    CopyUTF16toUTF8(mJaHundredUtf16, mJaHundredUtf8);
+    CopyUTF16toUTF8(mKoHundredUtf16, mKoHundredUtf8);
+    CopyUTF16toUTF8(mTrHundredUtf16, mTrHundredUtf8);
+    CopyUTF16toUTF8(mViHundredUtf16, mViHundredUtf8);
+
+    CopyUTF16toUTF8(mArThousandUtf16, mArThousandUtf8);
+    CopyUTF16toUTF8(mDeThousandUtf16, mDeThousandUtf8);
+    CopyUTF16toUTF8(mDeEditThousandUtf16, mDeEditThousandUtf8);
+    CopyUTF16toUTF8(mRuThousandUtf16, mRuThousandUtf8);
+    CopyUTF16toUTF8(mThThousandUtf16, mThThousandUtf8);
+    CopyUTF16toUTF8(mJaThousandUtf16, mJaThousandUtf8);
+    CopyUTF16toUTF8(mKoThousandUtf16, mKoThousandUtf8);
+    CopyUTF16toUTF8(mTrThousandUtf16, mTrThousandUtf8);
+    CopyUTF16toUTF8(mViThousandUtf16, mViThousandUtf8);
   }
 public:
-  nsCString mOneAsciiUtf8;
-  nsCString mFifteenAsciiUtf8;
-  nsCString mHundredAsciiUtf8;
+  nsCString mAsciiOneUtf8;
+  nsCString mAsciiThreeUtf8;
+  nsCString mAsciiFifteenUtf8;
+  nsCString mAsciiHundredUtf8;
+  nsCString mAsciiThousandUtf8;
   nsCString mExample1Utf8;
   nsCString mExample2Utf8;
   nsCString mExample3Utf8;
   nsCString mExample4Utf8;
   nsCString mExample5Utf8;
+  nsCString mArUtf8;
   nsCString mDeUtf8;
+  nsCString mDeEditUtf8;
   nsCString mRuUtf8;
   nsCString mThUtf8;
   nsCString mJaUtf8;
+  nsCString mKoUtf8;
+  nsCString mTrUtf8;
+  nsCString mViUtf8;
 
-  nsString mOneAsciiUtf16;
-  nsString mFifteenAsciiUtf16;
-  nsString mHundredAsciiUtf16;
+  nsString mAsciiOneUtf16;
+  nsString mAsciiThreeUtf16;
+  nsString mAsciiFifteenUtf16;
+  nsString mAsciiHundredUtf16;
+  nsString mAsciiThousandUtf16;
   nsString mExample1Utf16;
   nsString mExample2Utf16;
   nsString mExample3Utf16;
   nsString mExample4Utf16;
   nsString mExample5Utf16;
+  nsString mArUtf16;
   nsString mDeUtf16;
+  nsString mDeEditUtf16;
   nsString mRuUtf16;
   nsString mThUtf16;
-  nsString mJaUtf16;  
+  nsString mJaUtf16;
+  nsString mKoUtf16;
+  nsString mTrUtf16;
+  nsString mViUtf16;
+
+  nsCString mDeEditLatin1;
+
+  nsString mArOneUtf16;
+  nsString mDeOneUtf16;
+  nsString mDeEditOneUtf16;
+  nsString mRuOneUtf16;
+  nsString mThOneUtf16;
+  nsString mJaOneUtf16;
+  nsString mKoOneUtf16;
+  nsString mTrOneUtf16;
+  nsString mViOneUtf16;
+
+  nsCString mDeEditOneLatin1;
+
+  nsCString mArOneUtf8;
+  nsCString mDeOneUtf8;
+  nsCString mDeEditOneUtf8;
+  nsCString mRuOneUtf8;
+  nsCString mThOneUtf8;
+  nsCString mJaOneUtf8;
+  nsCString mKoOneUtf8;
+  nsCString mTrOneUtf8;
+  nsCString mViOneUtf8;
+
+  nsString mArThreeUtf16;
+  nsString mDeThreeUtf16;
+  nsString mDeEditThreeUtf16;
+  nsString mRuThreeUtf16;
+  nsString mThThreeUtf16;
+  nsString mJaThreeUtf16;
+  nsString mKoThreeUtf16;
+  nsString mTrThreeUtf16;
+  nsString mViThreeUtf16;
+
+  nsCString mDeEditThreeLatin1;
+
+  nsCString mArThreeUtf8;
+  nsCString mDeThreeUtf8;
+  nsCString mDeEditThreeUtf8;
+  nsCString mRuThreeUtf8;
+  nsCString mThThreeUtf8;
+  nsCString mJaThreeUtf8;
+  nsCString mKoThreeUtf8;
+  nsCString mTrThreeUtf8;
+  nsCString mViThreeUtf8;
+
+  nsString mArFifteenUtf16;
+  nsString mDeFifteenUtf16;
+  nsString mDeEditFifteenUtf16;
+  nsString mRuFifteenUtf16;
+  nsString mThFifteenUtf16;
+  nsString mJaFifteenUtf16;
+  nsString mKoFifteenUtf16;
+  nsString mTrFifteenUtf16;
+  nsString mViFifteenUtf16;
+
+  nsCString mDeEditFifteenLatin1;
+
+  nsCString mArFifteenUtf8;
+  nsCString mDeFifteenUtf8;
+  nsCString mDeEditFifteenUtf8;
+  nsCString mRuFifteenUtf8;
+  nsCString mThFifteenUtf8;
+  nsCString mJaFifteenUtf8;
+  nsCString mKoFifteenUtf8;
+  nsCString mTrFifteenUtf8;
+  nsCString mViFifteenUtf8;
+
+  nsString mArHundredUtf16;
+  nsString mDeHundredUtf16;
+  nsString mDeEditHundredUtf16;
+  nsString mRuHundredUtf16;
+  nsString mThHundredUtf16;
+  nsString mJaHundredUtf16;
+  nsString mKoHundredUtf16;
+  nsString mTrHundredUtf16;
+  nsString mViHundredUtf16;
+
+  nsCString mDeEditHundredLatin1;
+
+  nsCString mArHundredUtf8;
+  nsCString mDeHundredUtf8;
+  nsCString mDeEditHundredUtf8;
+  nsCString mRuHundredUtf8;
+  nsCString mThHundredUtf8;
+  nsCString mJaHundredUtf8;
+  nsCString mKoHundredUtf8;
+  nsCString mTrHundredUtf8;
+  nsCString mViHundredUtf8;
+
+  nsString mArThousandUtf16;
+  nsString mDeThousandUtf16;
+  nsString mDeEditThousandUtf16;
+  nsString mRuThousandUtf16;
+  nsString mThThousandUtf16;
+  nsString mJaThousandUtf16;
+  nsString mKoThousandUtf16;
+  nsString mTrThousandUtf16;
+  nsString mViThousandUtf16;
+
+  nsCString mDeEditThousandLatin1;
+
+  nsCString mArThousandUtf8;
+  nsCString mDeThousandUtf8;
+  nsCString mDeEditThousandUtf8;
+  nsCString mRuThousandUtf8;
+  nsCString mThThousandUtf8;
+  nsCString mJaThousandUtf8;
+  nsCString mKoThousandUtf8;
+  nsCString mTrThousandUtf8;
+  nsCString mViThousandUtf8;
+
 };
 
 void test_assign_helper(const nsACString& in, nsACString &_retval)
@@ -1527,21 +1783,21 @@ MOZ_GTEST_BENCH_F(Strings, PerfStripCharsCRLF, [this] {
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsUTF8One, [this] {
     for (int i = 0; i < 200000; i++) {
-      bool b = IsUTF8(*BlackBox(&mOneAsciiUtf8));
+      bool b = IsUTF8(*BlackBox(&mAsciiOneUtf8));
       BlackBox(&b);
     }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsUTF8Fifteen, [this] {
     for (int i = 0; i < 200000; i++) {
-      bool b = IsUTF8(*BlackBox(&mFifteenAsciiUtf8));
+      bool b = IsUTF8(*BlackBox(&mAsciiFifteenUtf8));
       BlackBox(&b);
     }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsUTF8Hundred, [this] {
     for (int i = 0; i < 200000; i++) {
-      bool b = IsUTF8(*BlackBox(&mHundredAsciiUtf8));
+      bool b = IsUTF8(*BlackBox(&mAsciiHundredUtf8));
       BlackBox(&b);
     }
 });
@@ -1555,21 +1811,21 @@ MOZ_GTEST_BENCH_F(Strings, PerfIsUTF8Example3, [this] {
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsASCII8One, [this] {
     for (int i = 0; i < 200000; i++) {
-      bool b = IsASCII(*BlackBox(&mOneAsciiUtf8));
+      bool b = IsASCII(*BlackBox(&mAsciiOneUtf8));
       BlackBox(&b);
     }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsASCIIFifteen, [this] {
     for (int i = 0; i < 200000; i++) {
-      bool b = IsASCII(*BlackBox(&mFifteenAsciiUtf8));
+      bool b = IsASCII(*BlackBox(&mAsciiFifteenUtf8));
       BlackBox(&b);
     }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfIsASCIIHundred, [this] {
     for (int i = 0; i < 200000; i++) {
-      bool b = IsASCII(*BlackBox(&mHundredAsciiUtf8));
+      bool b = IsASCII(*BlackBox(&mAsciiHundredUtf8));
       BlackBox(&b);
     }
 });
@@ -1615,5 +1871,225 @@ MOZ_GTEST_BENCH_F(Strings, PerfHasRTLCharsJA, [this] {
       BlackBox(&b);
     }
 });
+
+CONVERSION_BENCH(PerfUTF16toLatin1ASCIIOne, LossyCopyUTF16toASCII, mAsciiOneUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toLatin1ASCIIThree, LossyCopyUTF16toASCII, mAsciiThreeUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toLatin1ASCIIFifteen, LossyCopyUTF16toASCII, mAsciiFifteenUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toLatin1ASCIIHundred, LossyCopyUTF16toASCII, mAsciiHundredUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toLatin1ASCIIThousand, LossyCopyUTF16toASCII, mAsciiThousandUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toLatin1DEOne, LossyCopyUTF16toASCII, mDeEditOneUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toLatin1DEThree, LossyCopyUTF16toASCII, mDeEditThreeUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toLatin1DEFifteen, LossyCopyUTF16toASCII, mDeEditFifteenUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toLatin1DEHundred, LossyCopyUTF16toASCII, mDeEditHundredUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toLatin1DEThousand, LossyCopyUTF16toASCII, mDeEditThousandUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfLatin1toUTF16AsciiOne, CopyASCIItoUTF16, mAsciiOneUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfLatin1toUTF16AsciiThree, CopyASCIItoUTF16, mAsciiThreeUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfLatin1toUTF16AsciiFifteen, CopyASCIItoUTF16, mAsciiFifteenUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfLatin1toUTF16AsciiHundred, CopyASCIItoUTF16, mAsciiHundredUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfLatin1toUTF16AsciiThousand, CopyASCIItoUTF16, mAsciiThousandUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfLatin1toUTF16DEOne, CopyASCIItoUTF16, mDeEditOneLatin1, nsAutoString);
+
+CONVERSION_BENCH(PerfLatin1toUTF16DEThree, CopyASCIItoUTF16, mDeEditThreeLatin1, nsAutoString);
+
+CONVERSION_BENCH(PerfLatin1toUTF16DEFifteen, CopyASCIItoUTF16, mDeEditFifteenLatin1, nsAutoString);
+
+CONVERSION_BENCH(PerfLatin1toUTF16DEHundred, CopyASCIItoUTF16, mDeEditHundredLatin1, nsAutoString);
+
+CONVERSION_BENCH(PerfLatin1toUTF16DEThousand, CopyASCIItoUTF16, mDeEditThousandLatin1, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8AsciiOne, CopyUTF16toUTF8, mAsciiOneUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8AsciiThree, CopyUTF16toUTF8, mAsciiThreeUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8AsciiFifteen, CopyUTF16toUTF8, mAsciiFifteenUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8AsciiHundred, CopyUTF16toUTF8, mAsciiHundredUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8AsciiThousand, CopyUTF16toUTF8, mAsciiThousandUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16AsciiOne, CopyUTF8toUTF16, mAsciiOneUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16AsciiThree, CopyUTF8toUTF16, mAsciiThreeUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16AsciiFifteen, CopyUTF8toUTF16, mAsciiFifteenUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16AsciiHundred, CopyUTF8toUTF16, mAsciiHundredUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16AsciiThousand, CopyUTF8toUTF16, mAsciiThousandUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8AROne, CopyUTF16toUTF8, mArOneUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8ARThree, CopyUTF16toUTF8, mArThreeUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8ARFifteen, CopyUTF16toUTF8, mArFifteenUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8ARHundred, CopyUTF16toUTF8, mArHundredUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8ARThousand, CopyUTF16toUTF8, mArThousandUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16AROne, CopyUTF8toUTF16, mArOneUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16ARThree, CopyUTF8toUTF16, mArThreeUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16ARFifteen, CopyUTF8toUTF16, mArFifteenUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16ARHundred, CopyUTF8toUTF16, mArHundredUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16ARThousand, CopyUTF8toUTF16, mArThousandUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8DEOne, CopyUTF16toUTF8, mDeOneUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8DEThree, CopyUTF16toUTF8, mDeThreeUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8DEFifteen, CopyUTF16toUTF8, mDeFifteenUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8DEHundred, CopyUTF16toUTF8, mDeHundredUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8DEThousand, CopyUTF16toUTF8, mDeThousandUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16DEOne, CopyUTF8toUTF16, mDeOneUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16DEThree, CopyUTF8toUTF16, mDeThreeUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16DEFifteen, CopyUTF8toUTF16, mDeFifteenUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16DEHundred, CopyUTF8toUTF16, mDeHundredUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16DEThousand, CopyUTF8toUTF16, mDeThousandUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8RUOne, CopyUTF16toUTF8, mRuOneUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8RUThree, CopyUTF16toUTF8, mRuThreeUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8RUFifteen, CopyUTF16toUTF8, mRuFifteenUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8RUHundred, CopyUTF16toUTF8, mRuHundredUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8RUThousand, CopyUTF16toUTF8, mRuThousandUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16RUOne, CopyUTF8toUTF16, mRuOneUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16RUThree, CopyUTF8toUTF16, mRuThreeUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16RUFifteen, CopyUTF8toUTF16, mRuFifteenUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16RUHundred, CopyUTF8toUTF16, mRuHundredUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16RUThousand, CopyUTF8toUTF16, mRuThousandUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8THOne, CopyUTF16toUTF8, mThOneUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8THThree, CopyUTF16toUTF8, mThThreeUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8THFifteen, CopyUTF16toUTF8, mThFifteenUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8THHundred, CopyUTF16toUTF8, mThHundredUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8THThousand, CopyUTF16toUTF8, mThThousandUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16THOne, CopyUTF8toUTF16, mThOneUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16THThree, CopyUTF8toUTF16, mThThreeUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16THFifteen, CopyUTF8toUTF16, mThFifteenUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16THHundred, CopyUTF8toUTF16, mThHundredUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16THThousand, CopyUTF8toUTF16, mThThousandUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8JAOne, CopyUTF16toUTF8, mJaOneUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8JAThree, CopyUTF16toUTF8, mJaThreeUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8JAFifteen, CopyUTF16toUTF8, mJaFifteenUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8JAHundred, CopyUTF16toUTF8, mJaHundredUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8JAThousand, CopyUTF16toUTF8, mJaThousandUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16JAOne, CopyUTF8toUTF16, mJaOneUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16JAThree, CopyUTF8toUTF16, mJaThreeUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16JAFifteen, CopyUTF8toUTF16, mJaFifteenUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16JAHundred, CopyUTF8toUTF16, mJaHundredUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16JAThousand, CopyUTF8toUTF16, mJaThousandUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8KOOne, CopyUTF16toUTF8, mKoOneUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8KOThree, CopyUTF16toUTF8, mKoThreeUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8KOFifteen, CopyUTF16toUTF8, mKoFifteenUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8KOHundred, CopyUTF16toUTF8, mKoHundredUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8KOThousand, CopyUTF16toUTF8, mKoThousandUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16KOOne, CopyUTF8toUTF16, mKoOneUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16KOThree, CopyUTF8toUTF16, mKoThreeUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16KOFifteen, CopyUTF8toUTF16, mKoFifteenUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16KOHundred, CopyUTF8toUTF16, mKoHundredUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16KOThousand, CopyUTF8toUTF16, mKoThousandUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8TROne, CopyUTF16toUTF8, mTrOneUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8TRThree, CopyUTF16toUTF8, mTrThreeUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8TRFifteen, CopyUTF16toUTF8, mTrFifteenUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8TRHundred, CopyUTF16toUTF8, mTrHundredUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8TRThousand, CopyUTF16toUTF8, mTrThousandUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16TROne, CopyUTF8toUTF16, mTrOneUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16TRThree, CopyUTF8toUTF16, mTrThreeUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16TRFifteen, CopyUTF8toUTF16, mTrFifteenUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16TRHundred, CopyUTF8toUTF16, mTrHundredUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16TRThousand, CopyUTF8toUTF16, mTrThousandUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8VIOne, CopyUTF16toUTF8, mViOneUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8VIThree, CopyUTF16toUTF8, mViThreeUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8VIFifteen, CopyUTF16toUTF8, mViFifteenUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8VIHundred, CopyUTF16toUTF8, mViHundredUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF16toUTF8VIThousand, CopyUTF16toUTF8, mViThousandUtf16, nsAutoCString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16VIOne, CopyUTF8toUTF16, mViOneUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16VIThree, CopyUTF8toUTF16, mViThreeUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16VIFifteen, CopyUTF8toUTF16, mViFifteenUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16VIHundred, CopyUTF8toUTF16, mViHundredUtf8, nsAutoString);
+
+CONVERSION_BENCH(PerfUTF8toUTF16VIThousand, CopyUTF8toUTF16, mViThousandUtf8, nsAutoString);
 
 } // namespace TestStrings
