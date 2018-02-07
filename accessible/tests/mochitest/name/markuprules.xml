@@ -234,6 +234,17 @@
                   title="no name from title"/>
     </markup>
 
+    <!--
+      Disabled due to intermittent failures (bug 1436323) which became more
+      frequent due to the landing of bug 1383682. The latter bug made loading
+      of images from cache much more consistent, which appears to have impacted
+      the timing for this test case. If the image is switched to a unique
+      image (e.g. always decoding since there is no cache), the failure rate
+      increases, presumably because the test is dependent on a specific ordering
+      of events, and implicitly assumes the image is loaded immediately.
+    -->
+
+    <!--
     <markup id="HTMLInputImageTest"
             ref="html:input" ruleset="HTMLInputImage">
       <html:span id="l1" textequiv="test2">test2</html:span>
@@ -249,6 +260,7 @@
                   data="no name from data"
                   title="name from title"/>
     </markup>
+    -->
 
     <markup id="HTMLInputImageNoValidSrcTest"
             ref="html:input" ruleset="HTMLInputImageNoValidSrc">
