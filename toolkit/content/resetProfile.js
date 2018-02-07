@@ -4,16 +4,6 @@
 
 "use strict";
 
-// NB: this file can be loaded from aboutSupport.xhtml or from the
-// resetProfile.xul dialog, and so Cu may or may not exist already.
-// Proceed with caution:
-if (!("Cu" in window)) {
-  window.Cu = Components.utils;
-}
-
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/ResetProfile.jsm");
-
 function onResetProfileAccepted() {
   let retVals = window.arguments[0];
   retVals.reset = true;
