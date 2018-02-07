@@ -59,96 +59,74 @@ foo = Foo 1
     .attr = Attr 1
 """)
 
-    def test_tag_in_first(self):
+    def test_group_comment_in_first(self):
         channels = (b"""
+## Group Comment 1
 foo = Foo 1
-    #tag
 """, b"""
 foo = Foo 2
 """)
         self.assertEqual(
             merge_channels(self.name, *channels), b"""
-foo = Foo 1
-    #tag
-""")
-
-    def test_tag_in_last(self):
-        channels = (b"""
-foo = Foo 1
-""", b"""
-foo = Foo 2
-    #tag
-""")
-        self.assertEqual(
-            merge_channels(self.name, *channels), b"""
+## Group Comment 1
 foo = Foo 1
 """)
 
-    def test_tag_changed(self):
+    def test_group_comment_in_last(self):
         channels = (b"""
 foo = Foo 1
-    #tag1
 """, b"""
-foo = Foo 2
-    #tag2
-""")
-        self.assertEqual(
-            merge_channels(self.name, *channels), b"""
-foo = Foo 1
-    #tag1
-""")
-
-    def test_section_in_first(self):
-        channels = (b"""
-[[ Section 1 ]]
-foo = Foo 1
-""", b"""
+## Group Comment 2
 foo = Foo 2
 """)
         self.assertEqual(
             merge_channels(self.name, *channels), b"""
-[[ Section 1 ]]
+## Group Comment 2
 foo = Foo 1
 """)
 
-    def test_section_in_last(self):
+    def test_group_comment_changed(self):
         channels = (b"""
+## Group Comment 1
 foo = Foo 1
 """, b"""
-[[ Section 2 ]]
+## Group Comment 2
 foo = Foo 2
 """)
         self.assertEqual(
             merge_channels(self.name, *channels), b"""
-[[ Section 2 ]]
+## Group Comment 2
+## Group Comment 1
 foo = Foo 1
 """)
 
-    def test_section_changed(self):
+    def test_group_comment_and_section(self):
         channels = (b"""
-[[ Section 1 ]]
+## Group Comment
 foo = Foo 1
 """, b"""
-[[ Section 2 ]]
+// Section Comment
+[[ Section ]]
 foo = Foo 2
 """)
         self.assertEqual(
             merge_channels(self.name, *channels), b"""
-[[ Section 2 ]]
-[[ Section 1 ]]
+// Section Comment
+[[ Section ]]
+## Group Comment
 foo = Foo 1
 """)
 
     def test_message_comment_in_first(self):
         channels = (b"""
-// Comment 1
+# Comment 1
 foo = Foo 1
 """, b"""
 foo = Foo 2
 """)
         self.assertEqual(
             merge_channels(self.name, *channels), b"""
-// Comment 1
+# Comment 1
 foo = Foo 1
 """)
 
@@ -156,7 +134,7 @@ foo = Foo 1
         channels = (b"""
 foo = Foo 1
 """, b"""
-// Comment 2
+# Comment 2
 foo = Foo 2
 """)
         self.assertEqual(
@@ -166,62 +144,23 @@ foo = Foo 1
 
     def test_message_comment_changed(self):
         channels = (b"""
-// Comment 1
+# Comment 1
 foo = Foo 1
 """, b"""
-// Comment 2
+# Comment 2
 foo = Foo 2
 """)
         self.assertEqual(
             merge_channels(self.name, *channels), b"""
-// Comment 1
+# Comment 1
 foo = Foo 1
-""")
-
-    def test_section_comment_in_first(self):
-        channels = (b"""
-// Comment 1
-[[ Section ]]
-""", b"""
-[[ Section ]]
-""")
-        self.assertEqual(
-            merge_channels(self.name, *channels), b"""
-// Comment 1
-[[ Section ]]
-""")
-
-    def test_section_comment_in_last(self):
-        channels = (b"""
-[[ Section ]]
-""", b"""
-// Comment 2
-[[ Section ]]
-""")
-        self.assertEqual(
-            merge_channels(self.name, *channels), b"""
-[[ Section ]]
-""")
-
-    def test_section_comment_changed(self):
-        channels = (b"""
-// Comment 1
-[[ Section ]]
-""", b"""
-// Comment 2
-[[ Section ]]
-""")
-        self.assertEqual(
-            merge_channels(self.name, *channels), b"""
-// Comment 1
-[[ Section ]]
 """)
 
     def test_standalone_comment_in_first(self):
         channels = (b"""
 foo = Foo 1
 
-// Comment 1
+# Comment 1
 """, b"""
 foo = Foo 2
 """)
@@ -229,7 +168,7 @@ foo = Foo 2
             merge_channels(self.name, *channels), b"""
 foo = Foo 1
 
-// Comment 1
+# Comment 1
 """)
 
     def test_standalone_comment_in_last(self):
@@ -238,37 +177,37 @@ foo = Foo 1
 """, b"""
 foo = Foo 2
 
-// Comment 2
+# Comment 2
 """)
         self.assertEqual(
             merge_channels(self.name, *channels), b"""
 foo = Foo 1
 
-// Comment 2
+# Comment 2
 """)
 
     def test_standalone_comment_changed(self):
         channels = (b"""
 foo = Foo 1
 
-// Comment 1
+# Comment 1
 """, b"""
 foo = Foo 2
 
-// Comment 2
+# Comment 2
 """)
         self.assertEqual(
             merge_channels(self.name, *channels), b"""
 foo = Foo 1
 
-// Comment 2
+# Comment 2
 
-// Comment 1
+# Comment 1
 """)
 
     def test_resource_comment_in_first(self):
         channels = (b"""
-// Resource Comment 1
+### Resource Comment 1
 
 foo = Foo 1
 """, b"""
@@ -276,7 +215,7 @@ foo = Foo 2
 """)
         self.assertEqual(
             merge_channels(self.name, *channels), b"""
-// Resource Comment 1
+### Resource Comment 1
 
 foo = Foo 1
 """)
@@ -285,32 +224,70 @@ foo = Foo 1
         channels = (b"""
 foo = Foo 1
 """, b"""
-// Resource Comment 1
+### Resource Comment 1
 
 foo = Foo 2
 """)
         self.assertEqual(
             merge_channels(self.name, *channels), b"""
-// Resource Comment 1
+### Resource Comment 1
 
 foo = Foo 1
 """)
 
     def test_resource_comment_changed(self):
         channels = (b"""
-// Resource Comment 1
+### Resource Comment 1
 
 foo = Foo 1
 """, b"""
-// Resource Comment 2
+### Resource Comment 2
 
 foo = Foo 2
 """)
         self.assertEqual(
             merge_channels(self.name, *channels), b"""
-// Resource Comment 2
+### Resource Comment 2
 
-// Resource Comment 1
+### Resource Comment 1
 
 foo = Foo 1
+""")
+
+    def test_cross_grammar(self):
+        channels = (b"""
+# Comment 1
+foo =
+    .attr = Attribute 1
+""", b"""
+// Comment 2
+foo
+    .attr = Attribute 2
+""")
+        self.assertEqual(
+            merge_channels(self.name, *channels), b"""
+# Comment 1
+foo =
+    .attr = Attribute 1
+""")
+
+    def test_cross_grammar_standalone_comment(self):
+        '''This is in particular going to be triggered for license headers.'''
+        channels = (b"""
+# Same comment
+
+foo =
+    .attr = Attribute 1
+""", b"""
+// Same comment
+
+foo
+    .attr = Attribute 2
+""")
+        self.assertEqual(
+            merge_channels(self.name, *channels), b"""
+# Same comment
+
+foo =
+    .attr = Attribute 1
 """)
