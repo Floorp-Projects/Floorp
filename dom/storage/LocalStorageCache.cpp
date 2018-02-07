@@ -263,7 +263,7 @@ public:
 
   ~TelemetryAutoTimer()
   {
-    Telemetry::AccumulateDelta_impl<Telemetry::Millisecond>::compute(id, start);
+    Telemetry::AccumulateTimeDelta(id, start);
   }
 
 private:
