@@ -286,7 +286,7 @@ Damp.prototype = {
   reloadPage(onReload) {
     return new Promise(resolve => {
       let browser = gBrowser.selectedBrowser;
-      if (typeof (onReload) == "function") {
+      if (typeof(onReload) == "function") {
         onReload().then(resolve);
       } else {
         browser.addEventListener("load", resolve, {capture: true, once: true});
