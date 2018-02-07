@@ -2173,14 +2173,18 @@ choose_arena(size_t size)
   // library version, libc's malloc is used by TLS allocation, which
   // introduces a bootstrapping issue.
 
-  // Only use a thread local arena for quantum and tiny sizes.
-  if (size <= kMaxQuantumClass) {
+  if (size > kMaxQuantumClass) {
+    // Force the default arena for larger allocations.
+    ret = gArenas.GetDefault();
+  } else {
+    // Check TLS to see if our thread has requested a pinned arena.
     ret = thread_arena.get();
+    if (!ret) {
+      // Nothing in TLS. Pin this thread to the default arena.
+      ret = thread_local_arena(false);
+    }
   }
 
-  if (!ret) {
-    ret = thread_local_arena(false);
-  }
   MOZ_DIAGNOSTIC_ASSERT(ret);
   return ret;
 }
