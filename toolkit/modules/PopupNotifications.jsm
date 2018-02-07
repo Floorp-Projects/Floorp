@@ -4,8 +4,6 @@
 
 this.EXPORTED_SYMBOLS = ["PopupNotifications"];
 
-var Cc = Components.classes, Ci = Components.interfaces, Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");

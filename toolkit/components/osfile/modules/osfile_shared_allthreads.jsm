@@ -22,12 +22,6 @@
 // Boilerplate used to be able to import this module both from the main
 // thread and from worker threads.
 
-// Since const is lexically scoped, hoist the
-// conditionally-useful definition ourselves.
-const Cu = typeof Components != "undefined" ? Components.utils : undefined;
-const Ci = typeof Components != "undefined" ? Components.interfaces : undefined;
-const Cc = typeof Components != "undefined" ? Components.classes : undefined;
-
 /**
  * A constructor for messages that require transfers instead of copies.
  *
