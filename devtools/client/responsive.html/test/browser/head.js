@@ -191,8 +191,7 @@ function getElRect(selector, win) {
  * the rect of the dragged element as it was before drag.
  */
 function dragElementBy(selector, x, y, win) {
-  let ReactDOM = win.require("devtools/client/shared/vendor/react-dom");
-  let { Simulate } = ReactDOM.TestUtils;
+  let { Simulate } = win.require("devtools/client/shared/vendor/react-dom-test-utils");
   let rect = getElRect(selector, win);
   let startPoint = {
     clientX: Math.floor(rect.left + rect.width / 2),
@@ -228,8 +227,7 @@ async function testViewportResize(ui, selector, moveBy,
 
 function openDeviceModal({ toolWindow }) {
   let { document } = toolWindow;
-  let ReactDOM = toolWindow.require("devtools/client/shared/vendor/react-dom");
-  let { Simulate } = ReactDOM.TestUtils;
+  let { Simulate } = toolWindow.require("devtools/client/shared/vendor/react-dom-test-utils");
   let select = document.querySelector(".viewport-device-selector");
   let modal = document.querySelector("#device-modal-wrapper");
 
@@ -246,8 +244,8 @@ function openDeviceModal({ toolWindow }) {
 
 function changeSelectValue({ toolWindow }, selector, value) {
   let { document } = toolWindow;
-  let ReactDOM = toolWindow.require("devtools/client/shared/vendor/react-dom");
-  let { Simulate } = ReactDOM.TestUtils;
+  let { Simulate } =
+    toolWindow.require("devtools/client/shared/vendor/react-dom-test-utils");
 
   info(`Selecting ${value} in ${selector}.`);
 
@@ -387,8 +385,8 @@ async function testUserAgentFromBrowser(browser, expected) {
  * function adds `device` via the form, saves it, and waits for it to appear in the store.
  */
 function addDeviceInModal(ui, device) {
-  let ReactDOM = ui.toolWindow.require("devtools/client/shared/vendor/react-dom");
-  let { Simulate } = ReactDOM.TestUtils;
+  let { Simulate } =
+    ui.toolWindow.require("devtools/client/shared/vendor/react-dom-test-utils");
   let { store, document } = ui.toolWindow;
 
   let nameInput = document.querySelector("#device-adder-name input");
