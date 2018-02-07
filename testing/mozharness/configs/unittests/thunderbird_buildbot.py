@@ -17,5 +17,4 @@ config = {
 if platform.system() == "Linux":
     config["exes"] = {
         "python": "/tools/buildbot/bin/python",
-        "tooltool.py": "/tools/tooltool.py",
     }

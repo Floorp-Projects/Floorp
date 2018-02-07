@@ -1,6 +1,5 @@
 # This is a template config file for marionette production on Windows.
 import os
-import sys
 
 config = {
     # marionette options
@@ -14,7 +13,6 @@ config = {
         'hg': 'c:/mozilla-build/hg/hg',
         'mozinstall': ['%s/build/venv/scripts/python' % os.getcwd(),
                        '%s/build/venv/scripts/mozinstall-script.py' % os.getcwd()],
-        'tooltool.py': [sys.executable, 'C:/mozilla-build/tooltool.py'],
     },
 
     "find_links": [
