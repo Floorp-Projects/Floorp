@@ -21,9 +21,16 @@ add_task(async function test_boolean_values() {
   [valid, parsed] = PoliciesValidator.validateAndParseParameters(false, schema);
   ok(valid && parsed === false, "Parsed boolean value correctly");
 
+  [valid, parsed] = PoliciesValidator.validateAndParseParameters(0, schema);
+  ok(valid && parsed === false, "0 parsed as false correctly");
+
+  [valid, parsed] = PoliciesValidator.validateAndParseParameters(1, schema);
+  ok(valid && parsed === true, "1 parsed as true correctly");
+
   // Invalid values:
   ok(!PoliciesValidator.validateAndParseParameters("0", schema)[0], "No type coercion");
   ok(!PoliciesValidator.validateAndParseParameters("true", schema)[0], "No type coercion");
+  ok(!PoliciesValidator.validateAndParseParameters(2, schema)[0], "Other number values are not valid");
   ok(!PoliciesValidator.validateAndParseParameters(undefined, schema)[0], "Invalid value");
   ok(!PoliciesValidator.validateAndParseParameters({}, schema)[0], "Invalid value");
   ok(!PoliciesValidator.validateAndParseParameters(null, schema)[0], "Invalid value");
