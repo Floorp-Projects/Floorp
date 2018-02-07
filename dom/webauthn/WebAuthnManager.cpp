@@ -539,6 +539,13 @@ WebAuthnManager::GetAssertion(const PublicKeyCredentialRequestOptions& aOptions,
     return promise.forget();
   }
 
+  // Note: we only support U2F-style authentication for now, so we effectively
+  // require an AllowList.
+  if (aOptions.mAllowCredentials.Length() < 1) {
+    promise->MaybeReject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+    return promise.forget();
+  }
+
   nsTArray<WebAuthnScopedCredential> allowList;
   for (const auto& s: aOptions.mAllowCredentials) {
     if (s.mType == PublicKeyCredentialType::Public_key) {
