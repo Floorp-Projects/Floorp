@@ -22,12 +22,13 @@ const layoutSpec = generateActorSpec({
   typeName: "layout",
 
   methods: {
-    getCurrentFlexbox: {
+    getAllFlexbox: {
       request: {
-        node: Arg(0, "domnode"),
+        rootNode: Arg(0, "domnode"),
+        traverseFrames: Arg(1, "nullable:boolean")
       },
       response: {
-        flexbox: RetVal("nullable:flexbox")
+        flexboxes: RetVal("array:flexbox")
       }
     },
 

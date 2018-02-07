@@ -112,7 +112,7 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/inspector",
   },
   {
-    types: ["flexbox", "grid", "layout"],
+    types: ["grid", "layout"],
     spec: "devtools/shared/specs/layout",
     front: "devtools/shared/fronts/layout",
   },
