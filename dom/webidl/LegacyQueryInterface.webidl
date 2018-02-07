@@ -91,4 +91,3 @@ Window implements LegacyQueryInterface;
 XMLHttpRequest implements LegacyQueryInterface;
 XMLHttpRequestUpload implements LegacyQueryInterface;
 XMLSerializer implements LegacyQueryInterface;
-XPathEvaluator implements LegacyQueryInterface;

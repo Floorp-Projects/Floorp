@@ -24,6 +24,7 @@ MediaQueryList::MediaQueryList(nsIDocument* aDocument,
                                const nsAString& aMediaQueryList,
                                CallerType aCallerType)
   : mDocument(aDocument)
+  , mMatches(false)
   , mMatchesValid(false)
 {
   mMediaList =
@@ -138,6 +139,8 @@ MediaQueryList::Disconnect()
 void
 MediaQueryList::RecomputeMatches()
 {
+  mMatches = false;
+
   if (!mDocument) {
     return;
   }

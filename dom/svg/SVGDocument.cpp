@@ -16,7 +16,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsLiteralString.h"
-#include "nsIDOMSVGElement.h"
 #include "mozilla/dom/Element.h"
 #include "nsSVGElement.h"
 #include "mozilla/StyleSheet.h"

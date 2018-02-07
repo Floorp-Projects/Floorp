@@ -41,7 +41,7 @@ function test() {
 
   function getElementByXPath(aTab, aQuery) {
     let doc = aTab.linkedBrowser.contentDocument;
-    let xptype = Ci.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE;
+    let xptype = doc.defaultView.XPathResult.FIRST_ORDERED_NODE_TYPE;
     return doc.evaluate(aQuery, doc, null, xptype, null).singleNodeValue;
   }
 

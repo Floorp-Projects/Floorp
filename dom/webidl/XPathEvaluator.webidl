@@ -6,7 +6,6 @@
 
 [Constructor]
 interface XPathEvaluator {
-  // Based on nsIDOMXPathEvaluator
   [NewObject, Throws]
   XPathExpression createExpression(DOMString expression,
                                    optional XPathNSResolver? resolver = null);

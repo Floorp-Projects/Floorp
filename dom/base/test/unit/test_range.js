@@ -6,7 +6,7 @@ Components.utils.importGlobalProperties(["NodeFilter"]);
 
 const C_i = Components.interfaces;
 
-const UNORDERED_TYPE = C_i.nsIDOMXPathResult.ANY_UNORDERED_NODE_TYPE;
+const UNORDERED_TYPE = 8; // XPathResult.ANY_UNORDERED_NODE_TYPE
 
 /**
  * Determine if the data node has only ignorable white-space.
@@ -179,7 +179,6 @@ function getParsedDocument(aPath) {
 
 function processParsedDocument(doc) {
   Assert.ok(doc.documentElement.localName != "parsererror");
-  Assert.ok(doc instanceof C_i.nsIDOMXPathEvaluator);
   Assert.ok(doc instanceof C_i.nsIDOMDocument);
 
   // Clean out whitespace.

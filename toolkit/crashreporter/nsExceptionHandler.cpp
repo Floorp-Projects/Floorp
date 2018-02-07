@@ -42,7 +42,6 @@
 #include "nsDirectoryServiceUtils.h"
 
 #include "nsWindowsDllInterceptor.h"
-#include "mozilla/WindowsDllBlocklist.h"
 #include "mozilla/WindowsVersion.h"
 #elif defined(XP_MACOSX)
 #include "breakpad-client/mac/crash_generation/client_info.h"
@@ -92,6 +91,7 @@ using mozilla::InjectCrashRunnable;
 
 #include "mozilla/IOInterposer.h"
 #include "mozilla/mozalloc_oom.h"
+#include "mozilla/WindowsDllBlocklist.h"
 
 #if defined(XP_MACOSX)
 CFStringRef reporterClientAppID = CFSTR("org.mozilla.crashreporter");

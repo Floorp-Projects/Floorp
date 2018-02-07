@@ -25,10 +25,9 @@ this.EXPORTED_SYMBOLS = [
   "WebElement",
 ];
 
-const {
-  FIRST_ORDERED_NODE_TYPE,
-  ORDERED_NODE_ITERATOR_TYPE,
-} = Ci.nsIDOMXPathResult;
+const ORDERED_NODE_ITERATOR_TYPE = 5;
+const FIRST_ORDERED_NODE_TYPE = 9;
+
 const ELEMENT_NODE = 1;
 const DOCUMENT_NODE = 9;
 
