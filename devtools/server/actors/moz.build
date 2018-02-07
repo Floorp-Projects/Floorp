@@ -40,7 +40,6 @@ DevToolsModules(
     'highlighters.js',
     'layout.js',
     'memory.js',
-    'monitor.js',
     'object.js',
     'pause-scoped.js',
     'perf.js',
@@ -86,9 +85,6 @@ with Files('csscoverage.js'):
 
 with Files('memory.js'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Memory')
-
-with Files('monitor.js'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools')
 
 with Files('performance*'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Performance Tools (Profiler/Timeline)')

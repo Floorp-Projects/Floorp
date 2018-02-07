@@ -1113,15 +1113,6 @@
     </handlers>
   </binding>
 
-  <binding id="listitem-checkbox-iconic"
-           extends="chrome://global/content/bindings/listbox.xml#listitem-checkbox">
-    <content>
-      <children>
-        <xul:listcell type="checkbox" class="listcell-iconic" xbl:inherits="label,image,crop,checked,disabled,flexlabel"/>
-      </children>
-    </content>
-  </binding>
-
   <binding id="listcell" role="xul:listcell"
            extends="chrome://global/content/bindings/general.xml#basecontrol">
 
@@ -1151,17 +1142,6 @@
     <content>
       <children>
         <xul:image class="listcell-check" xbl:inherits="checked,disabled"/>
-        <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
-      </children>
-    </content>
-  </binding>
-
-  <binding id="listcell-checkbox-iconic"
-           extends="chrome://global/content/bindings/listbox.xml#listcell-checkbox">
-    <content>
-      <children>
-        <xul:image class="listcell-check" xbl:inherits="checked,disabled"/>
-        <xul:image class="listcell-icon" xbl:inherits="src=image"/>
         <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
       </children>
     </content>

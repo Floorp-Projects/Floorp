@@ -68,7 +68,7 @@ parent:
   async SetLayerObserverEpoch(uint64_t layerObserverEpoch);
   async ClearCachedResources();
   // Schedule a composite if one isn't already scheduled.
-  async ForceComposite();
+  async ScheduleComposite();
   // Save the frame capture to disk
   async Capture();
 

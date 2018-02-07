@@ -147,10 +147,25 @@ DocumentNeedsRestyle(
   if (!shell) {
     return true;
   }
+
+  nsPresContext* presContext = shell->GetPresContext();
+  MOZ_ASSERT(presContext);
+
   // Unfortunately we don't know if the sheet change affects mContent or not, so
   // just assume it will and that we need to flush normally.
   StyleSetHandle styleSet = shell->StyleSet();
   if (styleSet->StyleSheetsHaveChanged()) {
+    return true;
+  }
+
+  // Pending media query updates can definitely change style on the element. For
+  // example, if you change the zoom factor and then call getComputedStyle, you
+  // should be able to observe the style with the new media queries.
+  //
+  // TODO(emilio): Does this need to also check the user font set? (it affects
+  // ch / ex units).
+  if (presContext->HasPendingMediaQueryUpdates()) {
+    // So gotta flush.
     return true;
   }
 
@@ -167,7 +182,6 @@ DocumentNeedsRestyle(
     }
   }
 
-  nsPresContext* presContext = shell->GetPresContext();
   if (styleSet->IsServo()) {
     // For Servo, we need to process the restyle-hint-invalidations first, to
     // expand LaterSiblings hint, so that we can look whether ancestors need

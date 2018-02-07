@@ -879,9 +879,9 @@ LayerTransactionParent::RecvClearCachedResources()
 }
 
 mozilla::ipc::IPCResult
-LayerTransactionParent::RecvForceComposite()
+LayerTransactionParent::RecvScheduleComposite()
 {
-  mCompositorBridge->ForceComposite(this);
+  mCompositorBridge->ScheduleComposite(this);
   return IPC_OK();
 }
 

@@ -278,7 +278,7 @@ public:
 
   void ClearCachedResources();
 
-  void Composite();
+  void ScheduleComposite();
 
   /**
    * True if this is forwarding to a LayerManagerComposite.

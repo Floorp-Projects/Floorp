@@ -11,6 +11,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/MediaFeatureChange.h"
 #include "mozilla/PostTraversalTask.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoElementSnapshot.h"
@@ -148,7 +149,7 @@ public:
     return StylistNeedsUpdate();
   }
 
-  nsRestyleHint MediumFeaturesChanged(bool aViewportChanged);
+  nsRestyleHint MediumFeaturesChanged(MediaFeatureChangeReason);
 
   // Evaluates a given SourceSizeList, returning the optimal viewport width in
   // app units.
@@ -158,9 +159,6 @@ public:
   nscoord EvaluateSourceSizeList(const RawServoSourceSizeList* aSourceSizeList) const {
     return Servo_SourceSizeList_Evaluate(mRawSet.get(), aSourceSizeList);
   }
-
-  // aViewportChanged outputs whether any viewport units is used.
-  bool MediumFeaturesChangedRules(bool* aViewportUnitsUsed);
 
   void InvalidateStyleForCSSRuleChanges();
 
@@ -447,15 +445,6 @@ public:
   // Returns the style rule map.
   ServoStyleRuleMap* StyleRuleMap();
 
-  // Return whether this is the last PresContext which uses this XBL styleset.
-  bool IsPresContextChanged(nsPresContext* aPresContext) const {
-    return aPresContext != mLastPresContextUsesXBLStyleSet;
-  }
-
-  // Set PresContext (i.e. Device) for mRawSet. This should be called only
-  // by XBL stylesets. Returns true if there is any rule changing.
-  bool SetPresContext(nsPresContext* aPresContext);
-
   /**
    * Returns true if a modification to an an attribute with the specified
    * local name might require us to restyle the element.
@@ -606,13 +595,6 @@ private:
    * have an associated pres shell.
    */
   nsPresContext* GetPresContext();
-
-  // Because XBL style set could be used by multiple PresContext, we need to
-  // store the last PresContext pointer which uses this XBL styleset for
-  // computing medium rule changes.
-  //
-  // FIXME(emilio): This is a hack, and is broken. See bug 1406875.
-  void* MOZ_NON_OWNING_REF mLastPresContextUsesXBLStyleSet = nullptr;
 
   UniquePtr<RawServoStyleSet> mRawSet;
   EnumeratedArray<SheetType, SheetType::Count,

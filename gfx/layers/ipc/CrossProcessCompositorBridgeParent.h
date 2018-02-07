@@ -89,7 +89,7 @@ public:
   void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
                            const TransactionInfo& aInfo,
                            bool aHitTestUpdate) override;
-  void ForceComposite(LayerTransactionParent* aLayerTree) override;
+  void ScheduleComposite(LayerTransactionParent* aLayerTree) override;
   void NotifyClearCachedResources(LayerTransactionParent* aLayerTree) override;
   bool SetTestSampleTime(const uint64_t& aId,
                          const TimeStamp& aTime) override;

@@ -998,7 +998,7 @@ WebRenderBridgeParent::UpdateWebRender(CompositorVsyncScheduler* aScheduler,
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvForceComposite()
+WebRenderBridgeParent::RecvScheduleComposite()
 {
   if (mDestroyed) {
     return IPC_OK();

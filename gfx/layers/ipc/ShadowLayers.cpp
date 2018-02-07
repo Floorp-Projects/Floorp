@@ -941,12 +941,12 @@ void ShadowLayerForwarder::ClearCachedResources()
   mShadowManager->SendClearCachedResources();
 }
 
-void ShadowLayerForwarder::Composite()
+void ShadowLayerForwarder::ScheduleComposite()
 {
   if (!IPCOpen()) {
     return;
   }
-  mShadowManager->SendForceComposite();
+  mShadowManager->SendScheduleComposite();
 }
 
 bool

@@ -1074,6 +1074,14 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short RESULTS_AS_TAG_CONTENTS = 7;
 
   /**
+   * This returns nsINavHistoryQueryResultNode nodes for each top-level bookmark
+   * root.
+   *
+   * @note Setting this resultType will force queryType to QUERY_TYPE_BOOKMARKS.
+   */
+  const unsigned short RESULTS_AS_ROOTS_QUERY = 8;
+
+  /**
    * The sorting mode to be used for this query.
    * mode is one of SORT_BY_*
    */

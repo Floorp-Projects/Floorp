@@ -1303,6 +1303,29 @@ nsNavHistoryContainerResultNode::FindChildURI(const nsACString& aSpec,
 }
 
 /**
+ * Searches this folder for a node with the given guid/target-folder-guid.
+ *
+ * @return the node if found, null otherwise.
+ * @note Does not addref the node!
+ */
+nsNavHistoryResultNode*
+nsNavHistoryContainerResultNode::FindChildByGuid(const nsACString& guid,
+    int32_t* nodeIndex)
+{
+  *nodeIndex = -1;
+  for (int32_t i = 0; i < mChildren.Count(); ++i) {
+    if (mChildren[i]->mBookmarkGuid == guid ||
+        mChildren[i]->mPageGuid == guid ||
+        (mChildren[i]->IsFolder() &&
+         mChildren[i]->GetAsFolder()->mTargetFolderGuid == guid)) {
+      *nodeIndex = i;
+      return mChildren[i];
+    }
+  }
+  return nullptr;
+}
+
+/**
  * This does the work of adding a child to the container.  The child can be
  * either a container or or a single item that may even be collapsed with the
  * adjacent ones.
@@ -1789,6 +1812,8 @@ nsNavHistoryQueryResultNode::~nsNavHistoryQueryResultNode() {
     mResult->RemoveAllBookmarksObserver(this);
   if (mResult && mResult->mHistoryObservers.Contains(this))
     mResult->RemoveHistoryObserver(this);
+  if (mResult && mResult->mMobilePrefObservers.Contains(this))
+    mResult->RemoveMobilePrefsObserver(this);
 }
 
 /**
@@ -1828,7 +1853,8 @@ nsNavHistoryQueryResultNode::IsContainersQuery()
   return resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY ||
          resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_SITE_QUERY ||
          resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY ||
-         resultType == nsINavHistoryQueryOptions::RESULTS_AS_SITE_QUERY;
+         resultType == nsINavHistoryQueryOptions::RESULTS_AS_SITE_QUERY ||
+         resultType == nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY;
 }
 
 
@@ -1899,7 +1925,9 @@ nsNavHistoryQueryResultNode::GetHasChildren(bool* aHasChildren)
   uint16_t resultType = mOptions->ResultType();
 
   // Tags are always populated, otherwise they are removed.
-  if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS) {
+  if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS ||
+      // AllBookmarks also always has children.
+      resultType == nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY) {
     *aHasChildren = true;
     return NS_OK;
   }
@@ -2147,6 +2175,10 @@ nsNavHistoryQueryResultNode::FillChildren()
     result->AddAllBookmarksObserver(this);
   }
 
+  if (mLiveUpdate == QUERYUPDATE_MOBILEPREF) {
+    result->AddMobilePrefsObserver(this);
+  }
+
   mContentsValid = true;
   return NS_OK;
 }
@@ -2174,6 +2206,7 @@ nsNavHistoryQueryResultNode::ClearChildren(bool aUnregister)
     if (result) {
       result->RemoveHistoryObserver(this);
       result->RemoveAllBookmarksObserver(this);
+      result->RemoveMobilePrefsObserver(this);
     }
   }
   mContentsValid = false;
@@ -2363,6 +2396,10 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
 
   switch(mLiveUpdate) {
+    case QUERYUPDATE_MOBILEPREF: {
+      return NS_OK;
+    }
+
     case QUERYUPDATE_HOST: {
       // For these simple yet common cases we can check the host ourselves
       // before doing the overhead of creating a new result node.
@@ -2792,7 +2829,9 @@ nsNavHistoryQueryResultNode::OnItemAdded(int64_t aItemId,
                                          uint16_t aSource)
 {
   if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK &&
-      mLiveUpdate != QUERYUPDATE_SIMPLE &&  mLiveUpdate != QUERYUPDATE_TIME) {
+      mLiveUpdate != QUERYUPDATE_SIMPLE &&
+      mLiveUpdate != QUERYUPDATE_TIME &&
+      mLiveUpdate != QUERYUPDATE_MOBILEPREF) {
     nsresult rv = Refresh();
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -2811,7 +2850,9 @@ nsNavHistoryQueryResultNode::OnItemRemoved(int64_t aItemId,
                                            uint16_t aSource)
 {
   if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK &&
-      mLiveUpdate != QUERYUPDATE_SIMPLE && mLiveUpdate != QUERYUPDATE_TIME) {
+      mLiveUpdate != QUERYUPDATE_SIMPLE &&
+      mLiveUpdate != QUERYUPDATE_TIME &&
+      mLiveUpdate != QUERYUPDATE_MOBILEPREF) {
     nsresult rv = Refresh();
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -3600,6 +3641,27 @@ nsNavHistoryFolderResultNode::OnItemAdded(int64_t aItemId,
   return InsertSortedChild(node);
 }
 
+nsresult
+nsNavHistoryQueryResultNode::OnMobilePrefChanged(bool newValue)
+{
+  RESTART_AND_RETURN_IF_ASYNC_PENDING();
+
+  if (newValue) {
+    // If the folder is being added, simply refresh the query as that is
+    // simpler than re-inserting just the mobile folder.
+    return Refresh();
+  }
+
+  // We're removing the mobile folder, so find it.
+  int32_t existingIndex;
+  FindChildByGuid(NS_LITERAL_CSTRING(MOBILE_BOOKMARKS_VIRTUAL_GUID), &existingIndex);
+
+  if (existingIndex == -1) {
+    return NS_OK;
+  }
+
+  return RemoveChildAt(existingIndex);
+}
 
 NS_IMETHODIMP
 nsNavHistoryFolderResultNode::OnItemRemoved(int64_t aItemId,
@@ -3956,6 +4018,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsNavHistoryResult)
     delete it.Data();
     it.Remove();
   }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMobilePrefObservers)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAllBookmarksObservers)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHistoryObservers)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -3972,6 +4035,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNavHistoryResult)
       cb.NoteXPCOMChild(node);
     }
   }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobilePrefObservers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAllBookmarksObservers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHistoryObservers)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -3994,6 +4058,7 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistoryContainerResultNode* aRoot)
   , mIsHistoryObserver(false)
   , mIsBookmarkFolderObserver(false)
   , mIsAllBookmarksObserver(false)
+  , mIsMobilePrefObserver(false)
   , mBookmarkFolderObservers(64)
   , mBatchInProgress(false)
   , mSuppressNotifications(false)
@@ -4020,6 +4085,12 @@ nsNavHistoryResult::StopObserving()
       mIsBookmarkFolderObserver = false;
       mIsAllBookmarksObserver = false;
     }
+  }
+  if (mIsMobilePrefObserver) {
+    Preferences::UnregisterCallback(OnMobilePrefChangedCallback,
+                                    MOBILE_BOOKMARKS_PREF,
+                                    this);
+    mIsMobilePrefObserver = false;
   }
   if (mIsHistoryObserver) {
     nsNavHistory* history = nsNavHistory::GetHistoryService();
@@ -4135,6 +4206,24 @@ nsNavHistoryResult::AddAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode)
 
 
 void
+nsNavHistoryResult::AddMobilePrefsObserver(nsNavHistoryQueryResultNode* aNode)
+{
+  if (!mIsMobilePrefObserver) {
+    Preferences::RegisterCallback(OnMobilePrefChangedCallback,
+                                  MOBILE_BOOKMARKS_PREF,
+                                  this);
+    mIsMobilePrefObserver = true;
+  }
+  // Don't add duplicate observers.  In some case we don't unregister when
+  // children are cleared (see ClearChildren) and the next FillChildren call
+  // will try to add the observer again.
+  if (mMobilePrefObservers.IndexOf(aNode) == mMobilePrefObservers.NoIndex) {
+    mMobilePrefObservers.AppendElement(aNode);
+  }
+}
+
+
+void
 nsNavHistoryResult::AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode,
                                               int64_t aFolder)
 {
@@ -4168,6 +4257,13 @@ void
 nsNavHistoryResult::RemoveAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode)
 {
   mAllBookmarksObservers.RemoveElement(aNode);
+}
+
+
+void
+nsNavHistoryResult::RemoveMobilePrefsObserver(nsNavHistoryQueryResultNode* aNode)
+{
+  mMobilePrefObservers.RemoveElement(aNode);
 }
 
 
@@ -4351,6 +4447,8 @@ nsNavHistoryResult::requestRefresh(nsNavHistoryContainerResultNode* aContainer)
   ENUMERATE_QUERY_OBSERVERS(_functionCall, mAllBookmarksObservers, IsQuery())
 #define ENUMERATE_HISTORY_OBSERVERS(_functionCall) \
   ENUMERATE_QUERY_OBSERVERS(_functionCall, mHistoryObservers, IsQuery())
+#define ENUMERATE_MOBILE_PREF_OBSERVERS(_functionCall) \
+  ENUMERATE_QUERY_OBSERVERS(_functionCall, mMobilePrefObservers, IsQuery())
 
 #define NOTIFY_REFRESH_PARTICIPANTS() \
   PR_BEGIN_MACRO \
@@ -4779,4 +4877,21 @@ nsNavHistoryResult::OnDeleteVisits(nsIURI* aURI,
   ENUMERATE_HISTORY_OBSERVERS(OnDeleteVisits(aURI, aVisitTime, aGUID, aReason,
                                              aTransitionType));
   return NS_OK;
+}
+
+void
+nsNavHistoryResult::OnMobilePrefChanged()
+{
+  ENUMERATE_MOBILE_PREF_OBSERVERS(OnMobilePrefChanged(Preferences::GetBool(MOBILE_BOOKMARKS_PREF, false)));
+}
+
+
+void
+nsNavHistoryResult::OnMobilePrefChangedCallback(const char *prefName,
+                                                void *closure)
+{
+  MOZ_ASSERT(!strcmp(prefName, MOBILE_BOOKMARKS_PREF),
+    "We only expected Mobile Bookmarks pref change.");
+
+  static_cast<nsNavHistoryResult*>(closure)->OnMobilePrefChanged();
 }

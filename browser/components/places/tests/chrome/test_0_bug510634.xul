@@ -46,8 +46,7 @@
     function runTest() {
       // We need to cache and restore the getters in order to simulate
       // Bug 510634.
-      let leftPaneGetters = new Map([["leftPaneFolderId", null],
-                               ["allBookmarksFolderId", null]]);
+      let leftPaneGetters = new Map([["leftPaneFolderId", null]]);
       for (let [key, val] of leftPaneGetters) {
         if (!val) {
           let getter = Object.getOwnPropertyDescriptor(PlacesUIUtils, key).get;
@@ -78,20 +77,34 @@
       // Open All Bookmarks
       tree.selectItems([PlacesUIUtils.leftPaneQueries["AllBookmarks"]]);
       PlacesUtils.asContainer(tree.selectedNode).containerOpen = true;
-      is(PlacesUIUtils.allBookmarksFolderId, tree.selectedNode.itemId,
+      is(tree.selectedNode.uri,
+         "place:type=" + Ci.nsINavHistoryQueryOptions.RESULTS_AS_ROOTS_QUERY +
+         "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS,
          "Opened All Bookmarks");
 
-      ["History", "Downloads", "Tags", "AllBookmarks", "BookmarksToolbar",
-       "BookmarksMenu", "UnfiledBookmarks"].forEach(
-        function(aQueryName, aRow) {
-          let found = false;
-          for (let i = 0; i < tree.view.rowCount && !found; i++) {
-            rowProperties = tree.view.getCellProperties(i, titleColumn).split(" ");
-            found = rowProperties.includes("OrganizerQuery_" + aQueryName);
-          }
-          ok(found, "OrganizerQuery_" + aQueryName + " is set");
+      for (let queryName of ["History", "Downloads", "Tags", "AllBookmarks"]) {
+        let found = false;
+        for (let i = 0; i < tree.view.rowCount && !found; i++) {
+          rowProperties = tree.view.getCellProperties(i, titleColumn).split(" ");
+          found = rowProperties.includes("OrganizerQuery_" + queryName);
         }
-      );
+        ok(found, "OrganizerQuery_" + queryName + " is set");
+      }
+
+      const folderGuids = [
+        PlacesUtils.bookmarks.toolbarGuid,
+        PlacesUtils.bookmarks.menuGuid,
+        PlacesUtils.bookmarks.unfiledGuid,
+      ];
+
+      for (let guid of folderGuids) {
+        let found = false;
+        for (let i = 0; i < tree.view.rowCount && !found; i++) {
+          rowProperties = tree.view.getCellProperties(i, titleColumn).split(" ");
+          found = rowProperties.includes("queryFolder_" + guid);
+        }
+        ok(found, "queryFolder_" + guid + " is set");
+      }
 
       // Close the root node
       tree.result.root.containerOpen = false;
