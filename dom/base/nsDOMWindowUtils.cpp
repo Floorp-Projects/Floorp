@@ -1819,17 +1819,14 @@ nsDOMWindowUtils::GetIMEStatus(uint32_t *aState)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetFocusedInputType(char** aType)
+nsDOMWindowUtils::GetFocusedInputType(nsAString& aType)
 {
-  NS_ENSURE_ARG_POINTER(aType);
-
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
     return NS_ERROR_FAILURE;
   }
 
-  InputContext context = widget->GetInputContext();
-  *aType = ToNewCString(context.mHTMLInputType);
+  aType = widget->GetInputContext().mHTMLInputType;
   return NS_OK;
 }
 
