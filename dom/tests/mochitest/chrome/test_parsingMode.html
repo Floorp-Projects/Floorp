@@ -7,9 +7,6 @@
 <script type="application/javascript">
   SimpleTest.waitForExplicitFinish();
   function run() {
-    const Cc = Components.classes;
-    const Ci = Components.interfaces;
-
     const sss = Cc["@mozilla.org/content/style-sheet-service;1"]
       .getService(Ci.nsIStyleSheetService);
     const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)

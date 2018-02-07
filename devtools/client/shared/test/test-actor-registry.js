@@ -4,7 +4,6 @@
 "use strict";
 
 (function (exports) {
-  const Cu = Components.utils;
   const CC = Components.Constructor;
 
   const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});

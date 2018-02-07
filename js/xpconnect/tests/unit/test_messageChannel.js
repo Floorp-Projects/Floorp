@@ -2,7 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function() {
-  let Cu = Components.utils;
   let sb = new Cu.Sandbox('http://www.example.com',
                           { wantGlobalProperties: ["MessageChannel"] });
   sb.ok = ok;

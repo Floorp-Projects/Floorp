@@ -4,8 +4,6 @@
 
 this.EXPORTED_SYMBOLS = ["Utils", "Svc", "SerializableSet"];
 
-var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-
 ChromeUtils.import("resource://services-common/observers.js");
 ChromeUtils.import("resource://services-common/utils.js");
 ChromeUtils.import("resource://services-crypto/utils.js");

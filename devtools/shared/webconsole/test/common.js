@@ -10,7 +10,6 @@
    closeDebugger, checkConsoleAPICalls, checkRawHeaders, runTests, nextTest, Ci, Cc,
    withActiveServiceWorker, Services */
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 // This gives logging to stdout for tests
 const {console} = Cu.import("resource://gre/modules/Console.jsm", {});
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});

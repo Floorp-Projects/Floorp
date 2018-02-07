@@ -1,7 +1,3 @@
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cr = Components.results;
-
 const GCONF_BG_COLOR_KEY = "/desktop/gnome/background/primary_color";
 
 var gShell;

@@ -1,7 +1,5 @@
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_task(async function test_executeScriptAfterNuked() {

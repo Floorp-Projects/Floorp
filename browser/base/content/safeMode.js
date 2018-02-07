@@ -5,10 +5,6 @@
 
 /* import-globals-from ../../../toolkit/content/resetProfile.js */
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 const appStartup = Services.startup;
 
 ChromeUtils.import("resource://gre/modules/ResetProfile.jsm");

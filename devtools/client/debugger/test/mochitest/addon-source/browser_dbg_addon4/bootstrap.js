@@ -3,8 +3,6 @@
 
 "use strict";
 
-var { interfaces: Ci, utils: Cu } = Components;
-
 function notify() {
   // Log objects so makeDebuggeeValue can get the global to use
   console.log({ msg: "Hello again" });

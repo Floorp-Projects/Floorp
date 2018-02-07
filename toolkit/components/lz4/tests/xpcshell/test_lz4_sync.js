@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const Cu = Components.utils;
 ChromeUtils.import("resource://gre/modules/lz4.js");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 

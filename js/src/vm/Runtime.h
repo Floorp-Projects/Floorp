@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DoublyLinkedList.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
@@ -348,59 +349,30 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     void endSingleThreadedExecution(JSContext* cx);
 
     /*
-     * The profiler sampler generation after the latest sample.
-     *
-     * The lapCount indicates the number of largest number of 'laps'
-     * (wrapping from high to low) that occurred when writing entries
-     * into the sample buffer.  All JitcodeGlobalMap entries referenced
-     * from a given sample are assigned the generation of the sample buffer
-     * at the START of the run.  If multiple laps occur, then some entries
-     * (towards the end) will be written out with the "wrong" generation.
-     * The lapCount indicates the required fudge factor to use to compare
-     * entry generations with the sample buffer generation.
+     * The start of the range stored in the profiler sample buffer, as measured
+     * after the most recent sample.
+     * All JitcodeGlobalMap entries referenced from a given sample are assigned
+     * the buffer position of the START of the sample. The buffer entries that
+     * reference the JitcodeGlobalMap entries will only ever be read from the
+     * buffer while the entire sample is still inside the buffer; if some
+     * buffer entries at the start of the sample have left the buffer, the
+     * entire sample will be considered inaccessible.
+     * This means that, once profilerSampleBufferRangeStart_ advances beyond
+     * the sample position that's stored on a JitcodeGlobalMap entry, the buffer
+     * entries that reference this JitcodeGlobalMap entry will be considered
+     * inaccessible, and those JitcodeGlobalMap entry can be disposed of.
      */
-    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> profilerSampleBufferGen_;
-    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> profilerSampleBufferLapCount_;
+    mozilla::Atomic<uint64_t, mozilla::ReleaseAcquire> profilerSampleBufferRangeStart_;
 
-    uint32_t profilerSampleBufferGen() {
-        return profilerSampleBufferGen_;
-    }
-    void resetProfilerSampleBufferGen() {
-        profilerSampleBufferGen_ = 0;
-    }
-    void setProfilerSampleBufferGen(uint32_t gen) {
-        // May be called from sampler thread or signal handler; use
-        // compareExchange to make sure we have monotonic increase.
-        for (;;) {
-            uint32_t curGen = profilerSampleBufferGen_;
-            if (curGen >= gen)
-                break;
-
-            if (profilerSampleBufferGen_.compareExchange(curGen, gen))
-                break;
+    mozilla::Maybe<uint64_t> profilerSampleBufferRangeStart() {
+        if (beingDestroyed_ || !geckoProfiler().enabled()) {
+            return mozilla::Nothing();
         }
+        uint64_t rangeStart = profilerSampleBufferRangeStart_;
+        return mozilla::Some(rangeStart);
     }
-
-    uint32_t profilerSampleBufferLapCount() {
-        MOZ_ASSERT(profilerSampleBufferLapCount_ > 0);
-        return profilerSampleBufferLapCount_;
-    }
-    void resetProfilerSampleBufferLapCount() {
-        profilerSampleBufferLapCount_ = 1;
-    }
-    void updateProfilerSampleBufferLapCount(uint32_t lapCount) {
-        MOZ_ASSERT(profilerSampleBufferLapCount_ > 0);
-
-        // May be called from sampler thread or signal handler; use
-        // compareExchange to make sure we have monotonic increase.
-        for (;;) {
-            uint32_t curLapCount = profilerSampleBufferLapCount_;
-            if (curLapCount >= lapCount)
-                break;
-
-            if (profilerSampleBufferLapCount_.compareExchange(curLapCount, lapCount))
-                break;
-        }
+    void setProfilerSampleBufferRangeStart(uint64_t rangeStart) {
+        profilerSampleBufferRangeStart_ = rangeStart;
     }
 
     /* Call this to accumulate telemetry data. */

@@ -6,10 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["PlacesBackups"];
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cc = Components.classes;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 

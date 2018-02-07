@@ -41,7 +41,6 @@ var testSwitchToTab = async function(url, options) {
 
   // Check that we didn't lose any history entries.
   await ContentTask.spawn(browser, null, async function() {
-    let Ci = Components.interfaces;
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory.QueryInterface(Ci.nsISHistoryInternal);
     Assert.equal(history && history.count, 3, "three history entries");

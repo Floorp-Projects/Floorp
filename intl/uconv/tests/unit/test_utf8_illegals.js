@@ -1,8 +1,6 @@
 // Tests illegal UTF-8 sequences
 
 var Cc = Components.Constructor;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 

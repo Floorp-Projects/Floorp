@@ -6,9 +6,6 @@
 // Non-string preferences are not tested here, because their behavior
 // should not be affected by this filtering.
 
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-
 function isParentProcess() {
     let appInfo = Cc["@mozilla.org/xre/app-info;1"];
     return (!appInfo || appInfo.getService(Ci.nsIXULRuntime).processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT);

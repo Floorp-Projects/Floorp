@@ -202,8 +202,6 @@ Tart.prototype = {
     var timeoutId = 0;
     var detector; // will be assigned after calling trigger.
     var rAF = window.requestAnimationFrame || window.mozRequestAnimationFrame;
-    const Ci = Components.interfaces;
-    const Cc = Components.classes;
 
     var _recording = [];
     var _abortRecording = false;
@@ -685,7 +683,6 @@ Tart.prototype = {
     };
     this._config = config;
 
-    const Ci = Components.interfaces;
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
     this._win = wm.getMostRecentWindow("navigator:browser");
     this._tartTab = this._win.gBrowser.selectedTab;

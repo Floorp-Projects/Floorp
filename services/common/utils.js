@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 this.EXPORTED_SYMBOLS = ["CommonUtils"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");

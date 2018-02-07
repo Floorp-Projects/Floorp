@@ -13,7 +13,6 @@ Login Manager test: html5 input types (email, tel, url, etc.)
 runChecksAfterCommonInit(() => startTest());
 
 runInParent(function setup() {
-  const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
   const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
   login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].
            createInstance(Ci.nsILoginInfo);

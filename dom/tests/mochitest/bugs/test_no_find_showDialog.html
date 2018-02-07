@@ -12,8 +12,6 @@
   function checkForFindDialog() {
     let chromeScript = SpecialPowers.loadChromeScript(_ => {
       addMessageListener("test:check", () => {
-        const { utils: Cu } = Components;
-
         ChromeUtils.import("resource://gre/modules/Services.jsm");
 
         let sawFind = false;

@@ -11,8 +11,6 @@ this.EXPORTED_SYMBOLS = [
   "TokenServerClientServerError",
 ];
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://services-common/rest.js");

@@ -5,8 +5,6 @@
 
 this.EXPORTED_SYMBOLS = ["Finder", "GetClipboardSearchString"];
 
-const { interfaces: Ci, classes: Cc, utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Geometry.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

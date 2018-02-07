@@ -4,9 +4,6 @@
 
 this.EXPORTED_SYMBOLS = ["Prefetcher"];
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 

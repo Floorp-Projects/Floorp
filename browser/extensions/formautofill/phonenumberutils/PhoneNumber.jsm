@@ -9,8 +9,6 @@
 
 this.EXPORTED_SYMBOLS = ["PhoneNumber"];
 
-const Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PHONE_NUMBER_META_DATA",
                                "resource://formautofill/phonenumberutils/PhoneNumberMetaData.jsm");

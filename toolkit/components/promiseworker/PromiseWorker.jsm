@@ -19,9 +19,6 @@
 
 this.EXPORTED_SYMBOLS = ["BasePromiseWorker"];
 
-const Cu = Components.utils;
-const Ci = Components.interfaces;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 ChromeUtils.defineModuleGetter(this, "PromiseUtils",

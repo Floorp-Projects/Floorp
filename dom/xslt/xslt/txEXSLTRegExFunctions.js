@@ -10,8 +10,6 @@ const EXSLT_REGEXP_CONTRACTID = "@mozilla.org/exslt/regexp;1";
 
 const NODESET_CONTRACTID = "@mozilla.org/transformiix-nodeset;1";
 
-const Ci = Components.interfaces;
-
 function txEXSLTRegExFunctions()
 {
 }

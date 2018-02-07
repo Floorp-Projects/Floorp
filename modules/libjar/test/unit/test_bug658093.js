@@ -2,9 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // Check that we don't crash on reading a directory entry signature

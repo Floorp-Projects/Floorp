@@ -6,7 +6,6 @@
 "use strict";
 
 function run_test() {
-  let Cu = Components.utils;
   const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   const MDN_URL = "https://developer.mozilla.org/docs/";
   const GTM_PARAMS_NM = "?utm_source=mozilla" +

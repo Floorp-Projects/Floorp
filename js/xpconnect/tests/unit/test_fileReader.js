@@ -2,7 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
-  var Cu = Components.utils;
   var sb = new Cu.Sandbox('http://www.example.com',
                           { wantGlobalProperties: ["FileReader"] });
   sb.ok = ok;

@@ -6,7 +6,6 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const AUTOFILL_BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
 const REGIONS_BUNDLE_URI = "chrome://global/locale/regionNames.properties";
 

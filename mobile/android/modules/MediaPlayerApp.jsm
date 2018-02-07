@@ -7,8 +7,6 @@
 
 this.EXPORTED_SYMBOLS = ["MediaPlayerApp"];
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 var log = ChromeUtils.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.d.bind(null, "MediaPlayerApp");

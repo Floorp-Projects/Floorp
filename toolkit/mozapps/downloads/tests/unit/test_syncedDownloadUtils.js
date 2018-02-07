@@ -8,7 +8,6 @@
  * "last time".
  */
 
-var Cu = Components.utils;
 ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
 
 function run_test() {

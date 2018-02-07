@@ -19,7 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=654370
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
 
-var Cu = Components.utils;
 var sandbox = new Cu.Sandbox(window);
 var script = "(function (obj, type) { return obj instanceof type; })";
 var instanceOf = Cu.evalInSandbox(script, sandbox, "1.8", "Test", 1);

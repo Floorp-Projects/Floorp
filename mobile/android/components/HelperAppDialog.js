@@ -5,8 +5,6 @@
 
 /* globals ContentAreaUtils */
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 const APK_MIME_TYPE = "application/vnd.android.package-archive";
 
 const OMA_DOWNLOAD_DESCRIPTOR_MIME_TYPE = "application/vnd.oma.dd+xml";

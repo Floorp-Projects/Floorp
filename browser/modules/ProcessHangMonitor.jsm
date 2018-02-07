@@ -5,10 +5,6 @@
 
 "use strict";
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 this.EXPORTED_SYMBOLS = ["ProcessHangMonitor"];
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");

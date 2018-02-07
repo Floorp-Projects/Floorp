@@ -176,7 +176,7 @@ void profiler_shutdown();
 //   "aInterval" the sampling interval, measured in millseconds.
 //   "aFeatures" is the feature set. Features unsupported by this
 //               platform/configuration are ignored.
-void profiler_start(int aEntries, double aInterval, uint32_t aFeatures,
+void profiler_start(uint32_t aEntries, double aInterval, uint32_t aFeatures,
                     const char** aFilters, uint32_t aFilterCount);
 
 // Stop the profiler and discard the profile without saving it. A no-op if the
@@ -188,7 +188,7 @@ void profiler_stop();
 // the state change are performed while the profiler state is locked.
 // The only difference to profiler_start is that the current buffer contents are
 // not discarded if the profiler is already running with the requested settings.
-void profiler_ensure_started(int aEntries, double aInterval,
+void profiler_ensure_started(uint32_t aEntries, double aInterval,
                              uint32_t aFeatures, const char** aFilters,
                              uint32_t aFilterCount);
 
@@ -307,7 +307,8 @@ public:
   // Some collectors need to worry about possibly overwriting previous
   // generations of data. If that's not an issue, this can return Nothing,
   // which is the default behaviour.
-  virtual mozilla::Maybe<uint32_t> Generation() { return mozilla::Nothing(); }
+  virtual mozilla::Maybe<uint64_t> SamplePositionInBuffer() { return mozilla::Nothing(); }
+  virtual mozilla::Maybe<uint64_t> BufferRangeStart() { return mozilla::Nothing(); }
 
   // This method will be called once if the thread being suspended is the main
   // thread. Default behaviour is to do nothing.
@@ -347,30 +348,20 @@ using UniqueProfilerBacktrace =
 // if the profiler is inactive or in privacy mode.
 UniqueProfilerBacktrace profiler_get_backtrace();
 
-// Get information about the current buffer status. A no-op when the profiler
-// is inactive. Do not call this function; call profiler_get_buffer_info()
-// instead.
-void profiler_get_buffer_info_helper(uint32_t* aCurrentPosition,
-                                     uint32_t* aEntries,
-                                     uint32_t* aGeneration);
+struct ProfilerBufferInfo
+{
+  uint64_t mRangeStart;
+  uint64_t mRangeEnd;
+  uint32_t mEntryCount;
+};
 
-// Get information about the current buffer status. Returns (via outparams) the
-// current write position in the buffer, the total size of the buffer, and the
-// generation of the buffer. Returns zeroes if the profiler is inactive.
+// Get information about the current buffer status.
+// Returns Nothing() if the profiler is inactive.
 //
 // This information may be useful to a user-interface displaying the current
 // status of the profiler, allowing the user to get a sense for how fast the
 // buffer is being written to, and how much data is visible.
-static inline void profiler_get_buffer_info(uint32_t* aCurrentPosition,
-                                            uint32_t* aEntries,
-                                            uint32_t* aGeneration)
-{
-  *aCurrentPosition = 0;
-  *aEntries = 0;
-  *aGeneration = 0;
-
-  profiler_get_buffer_info_helper(aCurrentPosition, aEntries, aGeneration);
-}
+mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 
 // Get the current thread's PseudoStack.
 PseudoStack* profiler_get_pseudo_stack();
@@ -501,8 +492,7 @@ mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0,
 // Returns false if the profiler is inactive.
 bool profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
                                            double aSinceTime = 0,
-                                           bool aIsShuttingDown = false,
-                                           mozilla::TimeStamp* aOutFirstSampleTime = nullptr);
+                                           bool aIsShuttingDown = false);
 
 // Get the profile and write it into a file. A no-op if the profile is
 // inactive.

@@ -15,7 +15,6 @@
 // Test the asynchronous live-updating of bookmarks query results
 SimpleTest.waitForExplicitFinish();
 
-var {utils: Cu, interfaces: Ci} = Components;
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 

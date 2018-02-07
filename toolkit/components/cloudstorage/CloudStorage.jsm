@@ -15,8 +15,6 @@
 
 this.EXPORTED_SYMBOLS = ["CloudStorage"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 Cu.importGlobalProperties(["fetch"]);
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

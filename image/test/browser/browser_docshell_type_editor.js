@@ -1,7 +1,6 @@
 
 "use strict";
 
-const Ci = Components.interfaces;
 const SIMPLE_HTML = "data:text/html,<html><head></head><body></body></html>";
 
 /**

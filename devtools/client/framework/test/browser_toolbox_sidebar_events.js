@@ -4,7 +4,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function test() {
-  const Cu = Components.utils;
   const { ToolSidebar } = require("devtools/client/framework/sidebar");
 
   const tab1URL = "data:text/html;charset=utf8,<title>1</title><p>1</p>";

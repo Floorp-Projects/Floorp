@@ -8,8 +8,6 @@
 
 this.EXPORTED_SYMBOLS = ['DNSResourceRecord'];
 
-const { utils: Cu } = Components;
-
 ChromeUtils.import('resource://gre/modules/Services.jsm');
 ChromeUtils.import('resource://gre/modules/DataReader.jsm');
 ChromeUtils.import('resource://gre/modules/DataWriter.jsm');

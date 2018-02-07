@@ -1,5 +1,4 @@
 function run_test() {
-  var Cu = Components.utils;
   var epsb = new Cu.Sandbox(["http://example.com", "http://example.org"], { wantExportHelpers: true });
   var subsb = new Cu.Sandbox("http://example.com", { wantGlobalProperties: ["XMLHttpRequest"] });
   var subsb2 = new Cu.Sandbox("http://example.com", { wantGlobalProperties: ["XMLHttpRequest"] });

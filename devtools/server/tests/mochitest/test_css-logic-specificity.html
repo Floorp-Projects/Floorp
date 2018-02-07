@@ -13,8 +13,6 @@ Test that css-logic calculates CSS specificity properly
   "use strict";
 
   window.onload = function () {
-    const {utils: Cu} = Components;
-
     const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
     const {CssLogic, CssSelector} = require("devtools/server/css-logic");
     const InspectorUtils = SpecialPowers.InspectorUtils;

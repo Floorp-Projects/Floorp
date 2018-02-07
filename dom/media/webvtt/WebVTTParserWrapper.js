@@ -5,8 +5,6 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/vtt.jsm");
 
-var Ci = Components.interfaces;
-
 var WEBVTTPARSERWRAPPER_CID = "{acf6e493-0092-4b26-b172-241e375c57ab}";
 var WEBVTTPARSERWRAPPER_CONTRACTID = "@mozilla.org/webvttParserWrapper;1";
 

@@ -6,7 +6,6 @@
 
 #include "jit/JitcodeMap.h"
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Sprintf.h"
@@ -434,17 +433,17 @@ JitcodeGlobalTable::Enum::removeFront()
 }
 
 const JitcodeGlobalEntry&
-JitcodeGlobalTable::lookupForSamplerInfallible(void* ptr, JSRuntime* rt, uint32_t sampleBufferGen)
+JitcodeGlobalTable::lookupForSamplerInfallible(void* ptr, JSRuntime* rt, uint64_t samplePosInBuffer)
 {
     JitcodeGlobalEntry* entry = lookupInternal(ptr);
     MOZ_ASSERT(entry);
 
-    entry->setGeneration(sampleBufferGen);
+    entry->setSamplePositionInBuffer(samplePosInBuffer);
 
     // IonCache entries must keep their corresponding Ion entries alive.
     if (entry->isIonCache()) {
         JitcodeGlobalEntry& rejoinEntry = RejoinEntry(rt, entry->ionCacheEntry(), ptr);
-        rejoinEntry.setGeneration(sampleBufferGen);
+        rejoinEntry.setSamplePositionInBuffer(samplePosInBuffer);
     }
 
     // JitcodeGlobalEntries are marked at the end of the mark phase. A read
@@ -570,9 +569,10 @@ void
 JitcodeGlobalTable::releaseEntry(JitcodeGlobalEntry& entry, JitcodeGlobalEntry** prevTower,
                                  JSRuntime* rt)
 {
-    mozilla::DebugOnly<uint32_t> gen = rt->profilerSampleBufferGen();
-    mozilla::DebugOnly<uint32_t> lapCount = rt->profilerSampleBufferLapCount();
-    MOZ_ASSERT_IF(gen != UINT32_MAX, !entry.isSampled(gen, lapCount));
+#ifdef DEBUG
+    Maybe<uint64_t> rangeStart = rt->profilerSampleBufferRangeStart();
+    MOZ_ASSERT_IF(rangeStart, !entry.isSampled(*rangeStart));
+#endif
     removeEntry(entry, prevTower, rt);
 }
 
@@ -795,25 +795,23 @@ JitcodeGlobalTable::markIteratively(GCMarker* marker)
     MOZ_ASSERT(!JS::CurrentThreadIsHeapMinorCollecting());
 
     AutoSuppressProfilerSampling suppressSampling(TlsContext.get());
-    uint32_t gen = marker->runtime()->profilerSampleBufferGen();
-    uint32_t lapCount = marker->runtime()->profilerSampleBufferLapCount();
 
-    // If the profiler is off, all entries are considered to be expired.
-    if (!marker->runtime()->geckoProfiler().enabled())
-        gen = UINT32_MAX;
+    // If the profiler is off, rangeStart will be Nothing() and all entries are
+    // considered to be expired.
+    Maybe<uint64_t> rangeStart = marker->runtime()->profilerSampleBufferRangeStart();
 
     bool markedAny = false;
     for (Range r(*this); !r.empty(); r.popFront()) {
         JitcodeGlobalEntry* entry = r.front();
 
-        // If an entry is not sampled, reset its generation to the invalid
-        // generation, and conditionally mark the rest of the entry if its
+        // If an entry is not sampled, reset its buffer position to the invalid
+        // position, and conditionally mark the rest of the entry if its
         // JitCode is not already marked. This conditional marking ensures
         // that so long as the JitCode *may* be sampled, we keep any
         // information that may be handed out to the sampler, like tracked
         // types used by optimizations and scripts used for pc to line number
         // mapping, alive as well.
-        if (!entry->isSampled(gen, lapCount)) {
+        if (!rangeStart || !entry->isSampled(*rangeStart)) {
             if (entry->canHoldNurseryPointers())
                 removeFromNurseryList(&entry->ionEntry());
             entry->setAsExpired();

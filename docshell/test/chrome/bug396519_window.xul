@@ -17,9 +17,6 @@
 
     const LISTEN_EVENTS = ["pageshow"];
 
-    const Cc = Components.classes;
-    const Ci = Components.interfaces;
-
     var gBrowser;
     var gTestCount = 0;
     var gTestsIterator;

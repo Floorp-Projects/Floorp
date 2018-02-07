@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["Accounts"];
 
-const { utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/Deprecated.jsm"); /* global Deprecated */
 ChromeUtils.import("resource://gre/modules/Messaging.jsm"); /* global Messaging */
 ChromeUtils.import("resource://gre/modules/Promise.jsm"); /* global Promise */

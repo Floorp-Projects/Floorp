@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu, manager: Cm} = Components;
+var Cm = Components.manager;
 const URL_HOST = "http://localhost";
 
 var GMPScope = ChromeUtils.import("resource://gre/modules/GMPInstallManager.jsm", {});

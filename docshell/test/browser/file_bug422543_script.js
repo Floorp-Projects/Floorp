@@ -1,4 +1,3 @@
-const { utils: Cu, interfaces: Ci } = Components;
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function SHistoryListener() {

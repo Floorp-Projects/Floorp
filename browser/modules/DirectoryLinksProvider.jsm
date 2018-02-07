@@ -6,7 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["DirectoryLinksProvider"];
 
-const Cu = Components.utils;
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

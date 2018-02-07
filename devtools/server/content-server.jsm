@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { utils: Cu, interfaces: Ci } = Components;
-
 /* exported init */
 this.EXPORTED_SYMBOLS = ["init"];
 

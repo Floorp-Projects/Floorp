@@ -3,7 +3,6 @@
 
 /* globals APP_SHUTDOWN */
 
-var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Promise.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -139,8 +138,6 @@ function loadTPSContentScript(browser) {
     // Here's our utility script. We'll serialize this and send it down
     // to run in the content process for this browser.
     let script = function() {
-      let Cu = Components.utils;
-      let Ci = Components.interfaces;
       ChromeUtils.import("resource://gre/modules/Services.jsm");
 
       /**

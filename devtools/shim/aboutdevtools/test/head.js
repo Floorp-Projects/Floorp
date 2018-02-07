@@ -5,7 +5,6 @@
 
 "use strict";
 
-const { utils: Cu } = Components;
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 // All test are asynchronous

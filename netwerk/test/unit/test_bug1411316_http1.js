@@ -16,8 +16,6 @@ ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
 var server = new HttpServer();
 server.start(-1);
 var baseURL = "http://localhost:" + server.identity.primaryPort + "/";

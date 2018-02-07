@@ -1,5 +1,3 @@
-const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // ================================================

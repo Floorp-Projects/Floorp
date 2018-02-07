@@ -12,8 +12,6 @@ this.EXPORTED_SYMBOLS = [
   "TelemetryHealthPing",
 ];
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 ChromeUtils.defineModuleGetter(this, "TelemetryController", "resource://gre/modules/TelemetryController.jsm");

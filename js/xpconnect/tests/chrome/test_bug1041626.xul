@@ -19,7 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1041626
   <![CDATA[
   /** Test for Bug 1041626 **/
   SimpleTest.waitForExplicitFinish();
-  const Cu = Components.utils;
   function go() {
 
     //

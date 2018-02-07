@@ -1,6 +1,5 @@
 /* eslint-env mozilla/frame-script */
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 

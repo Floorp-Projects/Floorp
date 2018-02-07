@@ -7,8 +7,6 @@
 
 this.EXPORTED_SYMBOLS = ["NativeManifests"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {

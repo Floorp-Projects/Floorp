@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-
 const PERMISSION_SAVE_LOGINS = "login-saving";
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");

@@ -6,7 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["MigrationUtils", "MigratorPrototype"];
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const TOPIC_WILL_IMPORT_BOOKMARKS = "initial-migration-will-import-default-bookmarks";
 const TOPIC_DID_IMPORT_BOOKMARKS = "initial-migration-did-import-default-bookmarks";
 const TOPIC_PLACES_DEFAULTS_FINISHED = "places-browser-init-complete";

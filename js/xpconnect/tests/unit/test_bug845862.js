@@ -1,5 +1,3 @@
-const Cu = Components.utils;
-
 function run_test() {
   // We rely on the crazy "wantXrays:false also causes values return from the
   // sandbox to be waived" behavior, because it's the simplest way to get

@@ -4,8 +4,6 @@
 
 "use strict";
 
-var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 // This is only usable from the parent process, even for doing simple stuff like
 // serializing a cert.
 var gCertMaker = Cc["@mozilla.org/security/x509certdb;1"].

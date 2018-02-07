@@ -3,7 +3,6 @@
 
 "use strict";
 
-const { utils: Cu } = Components;
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 function run_test() {

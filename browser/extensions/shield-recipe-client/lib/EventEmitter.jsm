@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {utils: Cu} = Components;
 ChromeUtils.import("resource://shield-recipe-client/lib/LogManager.jsm");
 
 this.EXPORTED_SYMBOLS = ["EventEmitter"];

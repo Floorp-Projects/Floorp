@@ -3,8 +3,6 @@
 
 "use strict";
 
-var {utils: Cu, interfaces: Ci} = Components;
-
 var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
 // Bug 1014484 can only be reproduced by loading OS.File first from the

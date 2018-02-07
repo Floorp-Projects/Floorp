@@ -15,9 +15,6 @@
 
   <script type="application/javascript">
   <![CDATA[
-    const Cc = Components.classes;
-    const Cu = Components.utils;
-    const Ci = Components.interfaces;
     ChromeUtils.import("resource://gre/modules/DOMRequestHelper.jsm");
     let obs = Cc["@mozilla.org/observer-service;1"].
               getService(Ci.nsIObserverService);

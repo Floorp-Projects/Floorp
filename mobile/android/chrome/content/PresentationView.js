@@ -5,8 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 const TOPIC_PRESENTATION_VIEW_READY = "presentation-view-ready";
 const TOPIC_PRESENTATION_RECEIVER_LAUNCH = "presentation-receiver:launch";
 const TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE = "presentation-receiver:launch:response";

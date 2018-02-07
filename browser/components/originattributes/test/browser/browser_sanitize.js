@@ -2,7 +2,7 @@
  * Bug 1270338 - Add a mochitest to ensure Sanitizer clears data for all containers
  */
 
-const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
+const CC = Components.Constructor;
 
 const TEST_DOMAIN = "http://example.net/";
 

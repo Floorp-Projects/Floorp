@@ -18,7 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=726949
   <script type="application/javascript">
   <![CDATA[
   /** Test for Bug 726949 **/
-      var Cu = Components.utils;
       var s = new Cu.Sandbox(window, { sandboxPrototype: window } );
       var t;
       var desc;

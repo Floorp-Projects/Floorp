@@ -56,7 +56,6 @@
           this.mm.sendAsyncMessage("testRemoteContentPrefs:info", { note });
         };
 
-      var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
       var cps = Cc["@mozilla.org/content-pref/service;1"]
                   .getService(Ci.nsIContentPrefService2);
 

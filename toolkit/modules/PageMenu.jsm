@@ -4,8 +4,6 @@
 
 this.EXPORTED_SYMBOLS = ["PageMenuParent", "PageMenuChild"];
 
-var {interfaces: Ci} = Components;
-
 this.PageMenu = function PageMenu() {
 };
 

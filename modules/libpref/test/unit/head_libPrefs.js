@@ -4,11 +4,6 @@
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-var Cr = Components.results;
-var Cu = Components.utils;
-
 function do_check_throws(f, result, stack)
 {
   if (!stack)

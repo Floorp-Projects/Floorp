@@ -84,7 +84,6 @@ add_task(function* runTest() {
 
     const registerCleanupFunction = () => {};
 
-    const Cu = Components.utils;
     const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
     const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
     const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});

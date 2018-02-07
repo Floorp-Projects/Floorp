@@ -12,9 +12,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1180921
   <script type="application/javascript">
 
   /** Test for Bug 1180921 **/
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
-  const Cu = Components.utils;
   let module = Cu.getGlobalForObject(ChromeUtils.import("resource://gre/modules/Services.jsm", window));
   let ssm = Services.scriptSecurityManager;
 

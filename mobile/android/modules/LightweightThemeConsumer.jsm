@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var EXPORTED_SYMBOLS = ["LightweightThemeConsumer"];
-var Cc = Components.classes;
-var Ci = Components.interfaces;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");

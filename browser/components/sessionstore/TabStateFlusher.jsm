@@ -6,9 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["TabStateFlusher"];
 
-const Cu = Components.utils;
-
-
 /**
  * A module that enables async flushes. Updates from frame scripts are
  * throttled to be sent only once per second. If an action wants a tab's latest

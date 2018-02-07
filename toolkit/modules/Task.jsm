@@ -87,11 +87,6 @@ this.EXPORTED_SYMBOLS = [
 
 // Globals
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 // For now, we're worried about add-ons using Tasks with CPOWs, so we'll
 // permit them in this scope, but this support will go away soon.
 Cu.permitCPOWsInScope(this);

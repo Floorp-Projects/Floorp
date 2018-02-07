@@ -17,9 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=995943
   <!-- test code goes here -->
   <script type="application/javascript">
   <![CDATA[
-  const Cu = Components.utils;
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
   ChromeUtils.import("resource://gre/modules/Services.jsm");
   function debug(msg) { info(msg); }
 

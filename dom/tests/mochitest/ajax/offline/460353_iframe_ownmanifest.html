@@ -17,8 +17,6 @@ applicationCache.oncached = function() {
 
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-  var Ci = Components.interfaces;
-
   var getter1 = window.QueryInterface(Ci.nsIInterfaceRequestor);
   var webnav = getter1.getInterface(Ci.nsIWebNavigation);
   var getter2 = webnav.QueryInterface(Ci.nsIInterfaceRequestor);

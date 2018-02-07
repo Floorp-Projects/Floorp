@@ -33,9 +33,6 @@
 
 this.EXPORTED_SYMBOLS = [ "CrashMonitor" ];
 
-const Cu = Components.utils;
-const Cr = Components.results;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");

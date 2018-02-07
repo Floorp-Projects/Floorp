@@ -1,4 +1,4 @@
-const {classes: Cc, interfaces: Ci, manager: Cm} = Components;
+const Cm = Components.manager;
 
 function waitForEvent(elem, event) {
   return new Promise(resolve => {

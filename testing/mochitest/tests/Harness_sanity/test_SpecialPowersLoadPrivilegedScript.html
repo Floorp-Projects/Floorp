@@ -13,8 +13,6 @@
 SimpleTest.waitForExplicitFinish();
 
 function loadPrivilegedScriptTest() {
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
   function isMainProcess() {
     return Cc["@mozilla.org/xre/app-info;1"].
              getService(Ci.nsIXULRuntime).

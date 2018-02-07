@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["ScrollPosition"];
 
-const Ci = Components.interfaces;
-
 /**
  * It provides methods to collect scroll positions from single frames and to
  * restore scroll positions for frame trees.

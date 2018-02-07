@@ -7,10 +7,6 @@
 const DEBUG = false;
 function debug(s) { dump("-*- NotificationStorage.js: " + s + "\n"); }
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const NOTIFICATIONSTORAGE_CID = "{37f819b0-0b5c-11e3-8ffd-0800200c9a66}";

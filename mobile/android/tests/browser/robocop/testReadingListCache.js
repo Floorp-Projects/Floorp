@@ -7,8 +7,6 @@
 
 /* eslint-disable mozilla/use-chromeutils-import */
 
-var { utils: Cu } = Components;
-
 Cu.import("resource://gre/modules/ReaderMode.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");

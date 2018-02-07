@@ -6,7 +6,6 @@
 
 "use strict";
 
-var Cu = Components.utils;
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var Services = require("Services");
 var {gDevTools} = require("devtools/client/framework/devtools");

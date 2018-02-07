@@ -12,9 +12,6 @@
 SimpleTest.waitForExplicitFinish();
 
 var script = SpecialPowers.loadChromeScript(() => {
-  const Ci = Components.interfaces;
-  const Cc = Components.classes;
-  const Cu = Components.utils;
   ChromeUtils.import('resource://gre/modules/Services.jsm');
 
   Services.obs.addObserver(function onExamResp(subject, topic, data) {
