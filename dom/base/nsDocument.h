@@ -66,7 +66,6 @@
 #include "nsDataHashtable.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
-#include "nsIDOMXPathEvaluator.h"
 #include "jsfriendapi.h"
 #include "mozilla/LinkedList.h"
 #include "CustomElementRegistry.h"
@@ -328,8 +327,7 @@ class nsDocument : public nsIDocument,
                    public nsIScriptObjectPrincipal,
                    public nsIRadioGroupContainer,
                    public nsIApplicationCacheContainer,
-                   public nsStubMutationObserver,
-                   public nsIDOMXPathEvaluator
+                   public nsStubMutationObserver
 {
   friend class nsIDocument;
 
@@ -659,8 +657,6 @@ public:
 
   // nsIApplicationCacheContainer
   NS_DECL_NSIAPPLICATIONCACHECONTAINER
-
-  NS_DECL_NSIDOMXPATHEVALUATOR
 
   virtual nsresult Init();
 

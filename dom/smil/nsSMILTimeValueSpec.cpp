@@ -6,6 +6,7 @@
 
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/SVGAnimationElement.h"
+#include "mozilla/dom/TimeEvent.h"
 #include "nsSMILTimeValueSpec.h"
 #include "nsSMILInterval.h"
 #include "nsSMILTimeContainer.h"
@@ -14,7 +15,6 @@
 #include "nsSMILInstanceTime.h"
 #include "nsSMILParserUtils.h"
 #include "nsIDOMKeyEvent.h"
-#include "nsIDOMTimeEvent.h"
 #include "nsString.h"
 #include <limits>
 
@@ -372,14 +372,13 @@ nsSMILTimeValueSpec::HandleEvent(nsIDOMEvent* aEvent)
 bool
 nsSMILTimeValueSpec::CheckRepeatEventDetail(nsIDOMEvent *aEvent)
 {
-  nsCOMPtr<nsIDOMTimeEvent> timeEvent = do_QueryInterface(aEvent);
+  TimeEvent* timeEvent = aEvent->InternalDOMEvent()->AsTimeEvent();
   if (!timeEvent) {
     NS_WARNING("Received a repeat event that was not a DOMTimeEvent");
     return false;
   }
 
-  int32_t detail;
-  timeEvent->GetDetail(&detail);
+  int32_t detail = timeEvent->Detail();
   return detail > 0 && (uint32_t)detail == mParams.mRepeatIteration;
 }
 

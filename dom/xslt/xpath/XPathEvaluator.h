@@ -6,7 +6,7 @@
 #ifndef mozilla_dom_XPathEvaluator_h
 #define mozilla_dom_XPathEvaluator_h
 
-#include "nsIDOMXPathEvaluator.h"
+#include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "nsIWeakReference.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
@@ -29,17 +29,11 @@ class XPathResult;
 /**
  * A class for evaluating an XPath expression string
  */
-class XPathEvaluator final : public nsIDOMXPathEvaluator
+class XPathEvaluator final : public NonRefcountedDOMObject
 {
-    ~XPathEvaluator();
-
 public:
     explicit XPathEvaluator(nsIDocument* aDocument = nullptr);
-
-    NS_DECL_ISUPPORTS
-
-    // nsIDOMXPathEvaluator interface
-    NS_DECL_NSIDOMXPATHEVALUATOR
+    ~XPathEvaluator();
 
     // WebIDL API
     bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
@@ -48,7 +42,7 @@ public:
         nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
         return doc;
     }
-    static already_AddRefed<XPathEvaluator>
+    static XPathEvaluator*
         Constructor(const GlobalObject& aGlobal, ErrorResult& rv);
     XPathExpression*
         CreateExpression(const nsAString& aExpression,
@@ -77,16 +71,6 @@ private:
     nsWeakPtr mDocument;
     RefPtr<txResultRecycler> mRecycler;
 };
-
-inline nsISupports*
-ToSupports(XPathEvaluator* e)
-{
-    return static_cast<nsIDOMXPathEvaluator*>(e);
-}
-
-/* d0a75e02-b5e7-11d5-a7f2-df109fb8a1fc */
-#define TRANSFORMIIX_XPATH_EVALUATOR_CID   \
-{ 0xd0a75e02, 0xb5e7, 0x11d5, { 0xa7, 0xf2, 0xdf, 0x10, 0x9f, 0xb8, 0xa1, 0xfc } }
 
 } // namespace dom
 } // namespace mozilla

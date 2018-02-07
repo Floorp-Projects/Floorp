@@ -24,7 +24,7 @@
 #include "nsISupportsImpl.h"
 #include "nsStyledElement.h"
 #include "nsSVGClass.h"
-#include "nsIDOMSVGElement.h"
+#include "nsIDOMElement.h"
 #include "SVGContentUtils.h"
 #include "gfxMatrix.h"
 
@@ -70,7 +70,7 @@ struct nsSVGEnumMapping;
 typedef nsStyledElement nsSVGElementBase;
 
 class nsSVGElement : public nsSVGElementBase    // nsIContent
-                   , public nsIDOMSVGElement
+                   , public nsIDOMElement
 {
 protected:
   explicit nsSVGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
@@ -136,7 +136,7 @@ public:
   static const MappedAttributeEntry sLightingEffectsMap[];
   static const MappedAttributeEntry sMaskMap[];
 
-  NS_DECL_NSIDOMSVGELEMENT
+  NS_DECL_NSIDOMELEMENT
 
   NS_IMPL_FROMCONTENT(nsSVGElement, kNameSpaceID_SVG)
 

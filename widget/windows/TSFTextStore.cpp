@@ -1096,6 +1096,7 @@ public:
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsATOK2014Active)
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsATOK2015Active)
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsATOK2016Active)
+  DECL_AND_IMPL_IS_TIP_ACTIVE(IsJapanist10Active)
 
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSBopomofoActive)
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSChangJieActive)
@@ -1247,8 +1248,15 @@ private:
   // * ATOK Passport (confirmed with version 31.1.2)
   //   - {A38F2FD9-7199-45E1-841C-BE0313D8052F}
 
-  // * Japanist 10
-  //   - {E6D66705-1EDA-4373-8D01-1D0CB2D054C7}
+  bool IsJapanist10ActiveInternal() const
+  {
+    // {E6D66705-1EDA-4373-8D01-1D0CB2D054C7}
+    static const GUID kGUID = {
+      0xE6D66705, 0x1EDA, 0x4373,
+        { 0x8D, 0x01, 0x1D, 0x0C, 0xB2, 0xD0, 0x54, 0xC7 }
+    };
+    return mActiveTIPGUID == kGUID;
+  }
 
   /****************************************************************************
    * Traditional Chinese TIP
@@ -1705,6 +1713,10 @@ public:
   DECL_AND_IMPL_BOOL_PREF(
     "intl.tsf.hack.atok.do_not_return_no_layout_error_of_composition_string",
     DoNotReturnNoLayoutErrorToATOKOfCompositionString, true)
+  DECL_AND_IMPL_BOOL_PREF(
+    "intl.tsf.hack.japanist10."
+    "do_not_return_no_layout_error_of_composition_string",
+    DoNotReturnNoLayoutErrorToJapanist10OfCompositionString, true)
   DECL_AND_IMPL_BOOL_PREF(
     "intl.tsf.hack.ms_simplified_chinese.do_not_return_no_layout_error",
     DoNotReturnNoLayoutErrorToMSSimplifiedTIP, true)
@@ -3360,7 +3372,7 @@ TSFTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
   // Perhaps, we can ignore the difference change because it must not be
   // important for following edit.
   if (selectionForTSF.EqualsExceptDirection(*pSelection)) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+    MOZ_LOG(sTextStoreLog, LogLevel::Warning,
       ("0x%p   TSFTextStore::SetSelectionInternal() Succeeded but "
        "did nothing because the selection range isn't changing", this));
     selectionForTSF.SetSelection(*pSelection);
@@ -4253,8 +4265,20 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
     ("0x%p TSFTextStore::GetTextExt(vcView=%ld, "
      "acpStart=%ld, acpEnd=%ld, prc=0x%p, pfClipped=0x%p), "
+     "IsHandlingComposition()=%s, "
+     "mContentForTSF={ MinOffsetOfLayoutChanged()=%u, "
+     "LatestCompositionStartOffset()=%d, LatestCompositionEndOffset()=%d }, "
+     "mComposition= { IsComposing()=%s, mStart=%d, EndOffset()=%d }, "
      "mDeferNotifyingTSF=%s, mWaitingQueryLayout=%s",
      this, vcView, acpStart, acpEnd, prc, pfClipped,
+     GetBoolName(IsHandlingComposition()),
+     mContentForTSF.MinOffsetOfLayoutChanged(),
+     mContentForTSF.HasOrHadComposition() ?
+       mContentForTSF.LatestCompositionStartOffset() : -1,
+     mContentForTSF.HasOrHadComposition() ?
+       mContentForTSF.LatestCompositionEndOffset() : -1,
+     GetBoolName(mComposition.IsComposing()),
+     mComposition.mStart, mComposition.EndOffset(),
      GetBoolName(mDeferNotifyingTSF), GetBoolName(mWaitingQueryLayout)));
 
   if (!IsReadLocked()) {
@@ -4277,6 +4301,16 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
        "null argument", this));
     return E_INVALIDARG;
   }
+
+  // According to MSDN, ITextStoreACP::GetTextExt() should return
+  // TS_E_INVALIDARG when acpStart and acpEnd are same (i.e., collapsed range).
+  // https://msdn.microsoft.com/en-us/library/windows/desktop/ms538435(v=vs.85).aspx
+  // > TS_E_INVALIDARG: The specified start and end character positions are
+  // >                  equal.
+  // However, some TIPs (including Microsoft's Chinese TIPs!) call this with
+  // collapsed range and if we return TS_E_INVALIDARG, they stops showing their
+  // owning window or shows it but odd position.  So, we should just return
+  // error only when acpStart and/or acpEnd are really odd.
 
   if (acpStart < 0 || acpEnd < acpStart) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
@@ -4378,6 +4412,19 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
              mContentForTSF.LatestCompositionEndOffset() == acpEnd) {
       dontReturnNoLayoutError = true;
     }
+    // Japanist 10 fails to handle TS_E_NOLAYOUT when it decides the position of
+    // candidate window.  In such case, Japanist shows candidate window at
+    // top-left of the screen.  So, we should return the nearest caret rect
+    // where we know.
+    else if (
+      TSFPrefs::DoNotReturnNoLayoutErrorToJapanist10OfCompositionString() &&
+      TSFStaticSink::IsJapanist10Active() &&
+      acpStart >= mContentForTSF.LatestCompositionStartOffset() &&
+      acpStart <= mContentForTSF.LatestCompositionEndOffset() &&
+      acpEnd >= mContentForTSF.LatestCompositionStartOffset() &&
+      acpEnd <= mContentForTSF.LatestCompositionEndOffset()) {
+      dontReturnNoLayoutError = true;
+    }
     // Free ChangJie 2010 doesn't handle ITfContextView::GetTextExt() properly.
     // Prehaps, it's due to the bug of TSF.  We need to check if this is
     // necessary on Windows 10 before disabling this on Windows 10.
@@ -4414,6 +4461,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
            this, mContentForTSF.MinOffsetOfLayoutChanged()));
         return E_FAIL;
       }
+      bool collapsed = acpStart == acpEnd;
       // Note that even if all characters in the editor or the composition
       // string was modified, 0 or start offset of the composition string is
       // useful because it may return caret rect or old character's rect which
@@ -4422,21 +4470,45 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
         static_cast<int32_t>(mContentForTSF.MinOffsetOfLayoutChanged());
       LONG lastUnmodifiedOffset = std::max(firstModifiedOffset - 1, 0);
       if (mContentForTSF.IsLayoutChangedAt(acpStart)) {
-        // If TSF queries text rect in composition string, we should return
-        // rect at start of the composition even if its layout is changed.
         if (acpStart >= mContentForTSF.LatestCompositionStartOffset()) {
-          acpStart = mContentForTSF.LatestCompositionStartOffset();
+          // If mContentForTSF has last composition string and current
+          // composition string, we can assume that ContentCacheInParent has
+          // cached rects of composition string at least length of current
+          // composition string.  Otherwise, we can assume that rect for
+          // first character of composition string is stored since it was
+          // selection start or caret position.
+          LONG maxCachedOffset = mContentForTSF.LatestCompositionEndOffset();
+          if (mContentForTSF.WasLastComposition()) {
+            maxCachedOffset =
+              std::min(maxCachedOffset,
+                       mContentForTSF.LastCompositionStringEndOffset());
+          }
+          acpStart = std::min(acpStart, maxCachedOffset);
         }
-        // Otherwise, use first character's rect.  Even if there is no
-        // characters, the query event will return caret rect instead.
+        // Otherwise, we don't know which character rects are cached.  So, we
+        // need to use first unmodified character's rect in this case.  Even
+        // if there is no character, the query event will return caret rect
+        // instead.
         else {
           acpStart = lastUnmodifiedOffset;
         }
         MOZ_ASSERT(acpStart <= acpEnd);
       }
-      if (mContentForTSF.IsLayoutChangedAt(acpEnd)) {
-        // Use max larger offset of last unmodified offset or acpStart which
-        // may be the first character offset of the composition string.
+      // If TIP requests caret rect with collapsed range, we should keep
+      // collapsing the range.
+      if (collapsed) {
+        acpEnd = acpStart;
+      }
+      // Let's set acpEnd to larger offset of last unmodified offset or
+      // acpStart which may be the first character offset of the composition
+      // string.  However, some TIPs may want to know the right edge of the
+      // range.  Therefore, if acpEnd is in composition string and active TIP
+      // doesn't retrieve caret rect (i.e., the range isn't collapsed), we
+      // should keep using the original acpEnd.  Otherwise, we should set
+      // acpEnd to larger value of acpStart and lastUnmodifiedOffset.
+      else if (mContentForTSF.IsLayoutChangedAt(acpEnd) &&
+               (acpEnd < mContentForTSF.LatestCompositionStartOffset() ||
+                acpEnd > mContentForTSF.LatestCompositionEndOffset())) {
         acpEnd = std::max(acpStart, lastUnmodifiedOffset);
       }
       MOZ_LOG(sTextStoreLog, LogLevel::Debug,
@@ -5918,6 +5990,9 @@ TSFTextStore::OnUpdateCompositionInternal()
   if (mDestroyed) {
     return NS_OK;
   }
+
+  // Update cached data now because all pending events have been handled now.
+  mContentForTSF.OnCompositionEventsHandled();
 
   // If composition is completely finished both in TSF/TIP and the focused
   // editor which may be in a remote process, we can clear the cache and don't
