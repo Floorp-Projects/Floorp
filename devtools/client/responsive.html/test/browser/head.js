@@ -277,7 +277,6 @@ const selectNetworkThrottling = (ui, value) => Promise.all([
 function getSessionHistory(browser) {
   return ContentTask.spawn(browser, {}, async function () {
     /* eslint-disable no-undef */
-    let { utils: Cu } = Components;
     const { SessionHistory } =
       Cu.import("resource://gre/modules/sessionstore/SessionHistory.jsm", {});
     return SessionHistory.collect(docShell);

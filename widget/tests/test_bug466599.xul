@@ -24,7 +24,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=466599
   /** Test for Bug 466599 **/
 
 function getLoadContext() {
-  const Ci = Components.interfaces;
   return window.QueryInterface(Ci.nsIInterfaceRequestor)
                .getInterface(Ci.nsIWebNavigation)
                .QueryInterface(Ci.nsILoadContext);

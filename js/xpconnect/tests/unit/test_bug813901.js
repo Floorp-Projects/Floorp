@@ -4,8 +4,6 @@
 
 /* See https://bugzilla.mozilla.org/show_bug.cgi?id=813901 */
 
-const Cu = Components.utils;
-
 // Make sure that we can't inject __exposedProps__ via the proto of a COW-ed object.
 
 function checkThrows(expression, sb, regexp) {

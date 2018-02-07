@@ -494,7 +494,16 @@ nsProfiler::GetBufferInfo(uint32_t* aCurrentPosition, uint32_t* aTotalSize,
   MOZ_ASSERT(aCurrentPosition);
   MOZ_ASSERT(aTotalSize);
   MOZ_ASSERT(aGeneration);
-  profiler_get_buffer_info(aCurrentPosition, aTotalSize, aGeneration);
+  Maybe<ProfilerBufferInfo> info = profiler_get_buffer_info();
+  if (info) {
+    *aCurrentPosition = info->mRangeEnd % info->mEntryCount;
+    *aTotalSize = info->mEntryCount;
+    *aGeneration = info->mRangeEnd / info->mEntryCount;
+  } else {
+    *aCurrentPosition = 0;
+    *aTotalSize = 0;
+    *aGeneration = 0;
+  }
   return NS_OK;
 }
 
@@ -530,30 +539,25 @@ nsProfiler::GatheredOOPProfile(const nsACString& aProfile)
   }
 }
 
-// When a subprocess exits before we've gathered profiles, we'll store profiles
-// for those processes until gathering starts. We'll only store up to
-// MAX_SUBPROCESS_EXIT_PROFILES. The buffer is circular, so as soon as we
-// receive another exit profile, we'll bump the oldest one out of the buffer.
-static const uint32_t MAX_SUBPROCESS_EXIT_PROFILES = 5;
-
 void
 nsProfiler::ReceiveShutdownProfile(const nsCString& aProfile)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  if (!profiler_is_active()) {
+  Maybe<ProfilerBufferInfo> bufferInfo = profiler_get_buffer_info();
+  if (!bufferInfo) {
+    // The profiler is not running. Discard the profile.
     return;
   }
 
-  // Append the exit profile to mExitProfiles so that it can be picked up the
-  // next time a profile is requested. If we're currently gathering a profile,
-  // do not add this exit profile to it; chances are that we already have a
-  // profile from the exiting process and we don't want another one.
-  // We only keep around at most MAX_SUBPROCESS_EXIT_PROFILES exit profiles.
-  if (mExitProfiles.Length() >= MAX_SUBPROCESS_EXIT_PROFILES) {
-    mExitProfiles.RemoveElementAt(0);
-  }
-  mExitProfiles.AppendElement(ExitProfile{ aProfile, TimeStamp::Now() });
+  // Append the exit profile to mExitProfiles so that it can be picked up when
+  // a profile is requested.
+  uint64_t bufferPosition = bufferInfo->mRangeEnd;
+  mExitProfiles.AppendElement(ExitProfile{ aProfile, bufferPosition });
+
+  // This is a good time to clear out exit profiles whose time ranges have no
+  // overlap with this process's profile buffer contents any more.
+  ClearExpiredExitProfiles();
 }
 
 RefPtr<nsProfiler::GatheringPromise>
@@ -580,13 +584,10 @@ nsProfiler::StartGathering(double aSinceTime)
 
   mWriter.emplace();
 
-  TimeStamp thisProcessFirstSampleTime;
-
   // Start building up the JSON result and grab the profile from this process.
   mWriter->Start();
   if (!profiler_stream_json_for_this_process(*mWriter, aSinceTime,
-                                             /* aIsShuttingDown */ false,
-                                             &thisProcessFirstSampleTime)) {
+                                             /* aIsShuttingDown */ false)) {
     // The profiler is inactive. This either means that it was inactive even
     // at the time that ProfileGatherer::Start() was called, or that it was
     // stopped on a different thread since that call. Either way, we need to
@@ -596,20 +597,14 @@ nsProfiler::StartGathering(double aSinceTime)
 
   mWriter->StartArrayProperty("processes");
 
-  // If we have any process exit profiles, add them immediately, and clear
-  // mExitProfiles.
+  ClearExpiredExitProfiles();
+
+  // If we have any process exit profiles, add them immediately.
   for (auto& exitProfile : mExitProfiles) {
-    if (thisProcessFirstSampleTime &&
-        exitProfile.mGatherTime < thisProcessFirstSampleTime) {
-      // Don't include exit profiles that have no overlap with the profile
-      // from our own process.
-      continue;
-    }
     if (!exitProfile.mJSON.IsEmpty()) {
       mWriter->Splice(exitProfile.mJSON.get());
     }
   }
-  mExitProfiles.Clear();
 
   mPromiseHolder.emplace();
   RefPtr<GatheringPromise> promise = mPromiseHolder->Ensure(__func__);
@@ -664,4 +659,16 @@ nsProfiler::ResetGathering()
   mPendingProfiles = 0;
   mGathering = false;
   mWriter.reset();
+}
+
+void
+nsProfiler::ClearExpiredExitProfiles()
+{
+  Maybe<ProfilerBufferInfo> bufferInfo = profiler_get_buffer_info();
+  MOZ_RELEASE_ASSERT(bufferInfo, "the profiler should be running at the moment");
+  uint64_t bufferRangeStart = bufferInfo->mRangeStart;
+  // Discard any exit profiles that were gathered before bufferRangeStart.
+  mExitProfiles.RemoveElementsBy([bufferRangeStart](ExitProfile& aExitProfile){
+    return aExitProfile.mBufferPositionAtGatherTime < bufferRangeStart;
+  });
 }

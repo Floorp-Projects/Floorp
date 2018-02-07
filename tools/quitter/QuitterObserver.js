@@ -5,9 +5,6 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 const CHILD_SCRIPT = "chrome://quitter/content/contentscript.js";
 
 /* XPCOM gunk */

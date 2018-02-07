@@ -8,10 +8,6 @@
 
 "use strict";
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 this.EXPORTED_SYMBOLS = [ "FormValidationHandler" ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");

@@ -22,7 +22,6 @@
 
 this.EXPORTED_SYMBOLS = ["ExtensionPreferencesManager"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

@@ -6,7 +6,6 @@
 
 /* exported startup, shutdown, install, uninstall */
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 const STYLESHEET_URI = "chrome://formautofill/content/formautofill.css";
 const CACHED_STYLESHEETS = new WeakMap();
 

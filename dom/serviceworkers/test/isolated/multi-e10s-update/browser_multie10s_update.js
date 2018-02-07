@@ -1,7 +1,5 @@
 "use strict";
 
-const { classes: Cc, interfaces: Ci, results: Cr } = Components;
-
 // Testing if 2 child processes are correctly managed when they both try to do
 // an SW update.
 

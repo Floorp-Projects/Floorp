@@ -4,9 +4,6 @@
  *
  */
 
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const test = [

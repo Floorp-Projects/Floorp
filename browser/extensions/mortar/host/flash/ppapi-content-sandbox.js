@@ -9,8 +9,6 @@
  * loaded the plugin lives. It communicates with the process where the PPAPI
  * implementation lives.
  */
-const { utils: Cu } = Components;
-
 let mm = pluginElement.frameLoader.messageManager;
 let containerWindow = pluginElement.ownerGlobal;
 

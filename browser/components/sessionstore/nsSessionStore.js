@@ -16,9 +16,6 @@
  * the nsSessionStartup service.
  */
 
-const Cu = Components.utils;
-const Ci = Components.interfaces;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource:///modules/sessionstore/SessionStore.jsm");
 

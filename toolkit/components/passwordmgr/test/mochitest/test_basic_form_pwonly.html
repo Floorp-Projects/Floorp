@@ -12,7 +12,6 @@ Login Manager test: forms and logins without a username.
 <script>
 runChecksAfterCommonInit(() => startTest());
 runInParent(() => {
-  const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
   const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
   var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo);
 

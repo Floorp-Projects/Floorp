@@ -9,8 +9,6 @@
 
 var EXPORTED_SYMBOLS = ["ACTIONS", "TPS"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 var module = this;
 
 // Global modules

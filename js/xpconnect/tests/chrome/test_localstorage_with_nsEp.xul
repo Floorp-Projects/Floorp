@@ -20,7 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=980023
 
   /** Test for localstorage access with expanded principal. **/
   SimpleTest.waitForExplicitFinish();
-  const Cu = Components.utils;
 
   function go() {
     var iwin = document.getElementById('ifr').contentWindow;

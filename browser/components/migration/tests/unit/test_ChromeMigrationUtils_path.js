@@ -1,7 +1,5 @@
 "use strict";
 
-var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource:///modules/ChromeMigrationUtils.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");

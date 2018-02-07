@@ -8,6 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox", "General")
 
 SPHINX_TREES['sslerrorreport'] = 'content/docs/sslerrorreport'
+SPHINX_TREES['tabbrowser'] = 'content/docs/tabbrowser'
 
 with Files('content/docs/sslerrorreport/**'):
     SCHEDULES.exclusive = ['docs']

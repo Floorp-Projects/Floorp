@@ -15,8 +15,6 @@
       let opener = window.opener;
       let SimpleTest = opener.wrappedJSObject.SimpleTest;
 
-      let Ci = Components.interfaces;
-
       function getDocShellType(frame) {
         return frame.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                                   .getInterface(Ci.nsIDocShell)

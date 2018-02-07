@@ -6,8 +6,6 @@
 
 "use strict";
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-
 const S100NS_FROM1601TO1970 = 0x19DB1DED53E8000;
 const S100NS_PER_MS = 10;
 

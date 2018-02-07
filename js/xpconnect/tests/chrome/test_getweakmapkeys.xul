@@ -19,8 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=688277
   <![CDATA[
   /** Test for Bug 688277 **/
 
-  let Cu = Components.utils;
-
   /* Fail gracefully if junk is passed in. */
   is(ChromeUtils.nondeterministicGetWeakMapKeys(11), undefined,
     "nondeterministicGetWeakMapKeys should return undefined for non-objects");

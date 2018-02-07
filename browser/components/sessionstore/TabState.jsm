@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["TabState"];
 
-const Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 ChromeUtils.defineModuleGetter(this, "PrivacyFilter",

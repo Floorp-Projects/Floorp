@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 // Cu.import loads jsm files based on ISO-Latin-1 for now (see bug 530257).
 // However, the references about name parts include multi-byte characters.
 // Thus, we use |loadSubScript| to load the references instead.

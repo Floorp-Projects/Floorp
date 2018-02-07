@@ -20,9 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=624883
   <script type="application/javascript">
   <![CDATA[
 
-  const Ci = Components.interfaces;
-  const Cu = Components.utils;
-
   ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
   SimpleTest.waitForExplicitFinish();

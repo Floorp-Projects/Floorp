@@ -10,8 +10,6 @@
   <script type="application/javascript">
     "use strict";
 
-    const Cu = Components.utils;
-
     var sb = new Cu.Sandbox('https://example.com', { wantGlobalProperties: [ 'Blob', 'URL' ] });
     Cu.evalInSandbox('var u = URL.createObjectURL(new Blob(["text"], { type: "text/plain" }));', sb);
     Cu.nukeSandbox(sb);

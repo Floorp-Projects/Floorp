@@ -3,8 +3,6 @@
 
 "use strict";
 
-var {utils: Cu, classes: Cc, interfaces: Ci} = Components;
-
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
 const { gDevTools } = require("devtools/client/framework/devtools");

@@ -101,8 +101,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     startingSingleThreadedExecution_(false),
     beginSingleThreadedExecutionCallback(nullptr),
     endSingleThreadedExecutionCallback(nullptr),
-    profilerSampleBufferGen_(0),
-    profilerSampleBufferLapCount_(1),
+    profilerSampleBufferRangeStart_(0),
     telemetryCallback(nullptr),
     consumeStreamCallback(nullptr),
     readableStreamDataRequestCallback(nullptr),
@@ -315,9 +314,6 @@ JSRuntime::destroyRuntime()
 
         /* Allow the GC to release scripts that were being profiled. */
         profilingScripts = false;
-
-        /* Set the profiler sampler buffer generation to invalid. */
-        profilerSampleBufferGen_ = UINT32_MAX;
 
         JS::PrepareForFullGC(cx);
         gc.gc(GC_NORMAL, JS::gcreason::DESTROY_RUNTIME);
@@ -929,11 +925,9 @@ js::CurrentThreadIsPerformingGC()
 #endif
 
 JS_FRIEND_API(void)
-JS::UpdateJSContextProfilerSampleBufferGen(JSContext* cx, uint32_t generation,
-                                           uint32_t lapCount)
+JS::SetJSContextProfilerSampleBufferRangeStart(JSContext* cx, uint64_t rangeStart)
 {
-    cx->runtime()->setProfilerSampleBufferGen(generation);
-    cx->runtime()->updateProfilerSampleBufferLapCount(lapCount);
+    cx->runtime()->setProfilerSampleBufferRangeStart(rangeStart);
 }
 
 JS_FRIEND_API(bool)

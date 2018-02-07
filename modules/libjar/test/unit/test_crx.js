@@ -15,9 +15,6 @@ function wrapInputStream(input)
 
 // Make sure that we can read from CRX files as if they were ZIP files.
 function run_test() {
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
-
   // Note: test_crx_dummy.crx is a dummy crx file created for this test. The
   // public key and signature fields in the header are both empty.
   let file = do_get_file("data/test_crx_dummy.crx");

@@ -26,8 +26,6 @@ if (runtime.processType == runtime.PROCESS_TYPE_DEFAULT) {
 
 const topWindowURI = NetUtil.newURI("http://www.itisatrap.org/");
 
-var Ci = Components.interfaces;
-
 function listener(tracking, priority, nextTest) {
   this._tracking = tracking;
   this._priority = priority;

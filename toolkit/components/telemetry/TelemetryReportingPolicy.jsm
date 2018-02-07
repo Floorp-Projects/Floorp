@@ -8,8 +8,6 @@ this.EXPORTED_SYMBOLS = [
   "TelemetryReportingPolicy"
 ];
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/Log.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/Timer.jsm", this);

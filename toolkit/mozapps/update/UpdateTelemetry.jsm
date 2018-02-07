@@ -8,8 +8,6 @@ this.EXPORTED_SYMBOLS = [
   "AUSTLMY"
 ];
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
 this.AUSTLMY = {

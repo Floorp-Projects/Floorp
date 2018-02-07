@@ -26,8 +26,6 @@
 
 this.EXPORTED_SYMBOLS = ["HawkClient"];
 
-var {interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://services-crypto/utils.js");
 ChromeUtils.import("resource://services-common/hawkrequest.js");
 ChromeUtils.import("resource://services-common/observers.js");

@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const { utils: Cu } = Components;
 const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm", {});
 const { Kinto } = ChromeUtils.import("resource://services-common/kinto-offline-client.js", {});
 

@@ -3,8 +3,6 @@
  *               of nsICookieManager.
  */
 
-var {utils: Cu, interfaces: Ci, classes: Cc} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const BASE_URL = "http://example.org/";

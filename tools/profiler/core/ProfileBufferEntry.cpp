@@ -573,22 +573,25 @@ static void WriteSample(SpliceableJSONWriter& aWriter, ProfileSample& aSample)
 class EntryGetter
 {
 public:
-  explicit EntryGetter(const ProfileBuffer& aBuffer)
-    : mEntries(aBuffer.mEntries.get())
-    , mReadPos(aBuffer.mReadPos)
-    , mWritePos(aBuffer.mWritePos)
-    , mEntrySize(aBuffer.mEntrySize)
-  {}
+  explicit EntryGetter(const ProfileBuffer& aBuffer,
+                       uint64_t aInitialReadPos = 0)
+    : mBuffer(aBuffer)
+    , mReadPos(aBuffer.mRangeStart)
+  {
+    if (aInitialReadPos != 0) {
+      MOZ_RELEASE_ASSERT(aInitialReadPos >= aBuffer.mRangeStart &&
+                         aInitialReadPos <= aBuffer.mRangeEnd);
+      mReadPos = aInitialReadPos;
+    }
+  }
 
-  bool Has() const { return mReadPos != mWritePos; }
-  const ProfileBufferEntry& Get() const { return mEntries[mReadPos]; }
-  void Next() { mReadPos = (mReadPos + 1) % mEntrySize; }
+  bool Has() const { return mReadPos != mBuffer.mRangeEnd; }
+  const ProfileBufferEntry& Get() const { return mBuffer.GetEntry(mReadPos); }
+  void Next() { mReadPos++; }
 
 private:
-  const ProfileBufferEntry* const mEntries;
-  int mReadPos;
-  const int mWritePos;
-  const int mEntrySize;
+  const ProfileBuffer& mBuffer;
+  uint64_t mReadPos;
 };
 
 // The following grammar shows legal sequences of profile buffer entries.
@@ -704,7 +707,6 @@ private:
 bool
 ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                                    double aSinceTime,
-                                   double* aOutFirstSampleTime,
                                    JSContext* aContext,
                                    UniqueStacks& aUniqueStacks) const
 {
@@ -721,7 +723,6 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
     }
 
   EntryGetter e(*this);
-  bool seenFirstSample = false;
   bool haveSamples = false;
 
   for (;;) {
@@ -771,13 +772,6 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
       // Ignore samples that are too old.
       if (sample.mTime < aSinceTime) {
         continue;
-      }
-
-      if (!seenFirstSample) {
-        if (aOutFirstSampleTime) {
-          *aOutFirstSampleTime = sample.mTime;
-        }
-        seenFirstSample = true;
       }
     } else {
       ERROR_AND_CONTINUE("expected a Time entry");
@@ -1000,58 +994,33 @@ ProfileBuffer::StreamPausedRangesToJSON(SpliceableJSONWriter& aWriter,
   }
 }
 
-int
-ProfileBuffer::FindLastSampleOfThread(int aThreadId, const LastSample& aLS)
-  const
-{
-  // |aLS| has a valid generation number if either it matches the buffer's
-  // generation, or is one behind the buffer's generation, since the buffer's
-  // generation is incremented on wraparound.  There's no ambiguity relative to
-  // ProfileBuffer::reset, since that increments mGeneration by two.
-  if (aLS.mGeneration == mGeneration ||
-      (mGeneration > 0 && aLS.mGeneration == mGeneration - 1)) {
-    int ix = aLS.mPos;
-
-    if (ix == -1) {
-      // There's no record of |aLS|'s thread ever having recorded a sample in
-      // the buffer.
-      return -1;
-    }
-
-    // It might be that the sample has since been overwritten, so check that it
-    // is still valid.
-    MOZ_RELEASE_ASSERT(0 <= ix && ix < mEntrySize);
-    ProfileBufferEntry& entry = mEntries[ix];
-    bool isStillValid = entry.IsThreadId() && entry.u.mInt == aThreadId;
-    return isStillValid ? ix : -1;
-  }
-
-  // |aLS| denotes a sample which is older than either two wraparounds or one
-  // call to ProfileBuffer::reset.  In either case it is no longer valid.
-  MOZ_ASSERT(aLS.mGeneration <= mGeneration - 2);
-  return -1;
-}
-
 bool
 ProfileBuffer::DuplicateLastSample(int aThreadId,
                                    const TimeStamp& aProcessStartTime,
-                                   LastSample& aLS)
+                                   Maybe<uint64_t>& aLastSample)
 {
-  int lastSampleStartPos = FindLastSampleOfThread(aThreadId, aLS);
-  if (lastSampleStartPos == -1) {
+  if (aLastSample && *aLastSample < mRangeStart) {
+    // The last sample is no longer within the buffer range, so we cannot use
+    // it. Reset the stored buffer position to Nothing().
+    aLastSample.reset();
+  }
+
+  if (!aLastSample) {
     return false;
   }
 
-  MOZ_ASSERT(mEntries[lastSampleStartPos].IsThreadId() &&
-             mEntries[lastSampleStartPos].u.mInt == aThreadId);
+  uint64_t lastSampleStartPos = *aLastSample;
 
-  AddThreadIdEntry(aThreadId, &aLS);
+  MOZ_RELEASE_ASSERT(GetEntry(lastSampleStartPos).IsThreadId() &&
+                     GetEntry(lastSampleStartPos).u.mInt == aThreadId);
+
+  aLastSample = Some(AddThreadIdEntry(aThreadId));
+
+  EntryGetter e(*this, lastSampleStartPos + 1);
 
   // Go through the whole entry and duplicate it, until we find the next one.
-  for (int readPos = (lastSampleStartPos + 1) % mEntrySize;
-       readPos != mWritePos;
-       readPos = (readPos + 1) % mEntrySize) {
-    switch (mEntries[readPos].GetKind()) {
+  while (e.Has()) {
+    switch (e.Get().GetKind()) {
       case ProfileBufferEntry::Kind::Pause:
       case ProfileBufferEntry::Kind::Resume:
       case ProfileBufferEntry::Kind::CollectionStart:
@@ -1067,11 +1036,14 @@ ProfileBuffer::DuplicateLastSample(int aThreadId,
       case ProfileBufferEntry::Kind::Marker:
         // Don't copy markers
         break;
-      default:
+      default: {
         // Copy anything else we don't know about.
-        AddEntry(mEntries[readPos]);
+        ProfileBufferEntry entry = e.Get();
+        AddEntry(entry);
         break;
+      }
     }
+    e.Next();
   }
   return true;
 }

@@ -49,6 +49,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 #include "ThreadInfo.h"
@@ -349,7 +350,7 @@ private:
     return aFeatures;
   }
 
-  ActivePS(PSLockRef aLock, int aEntries, double aInterval,
+  ActivePS(PSLockRef aLock, uint32_t aEntries, double aInterval,
            uint32_t aFeatures, const char** aFilters, uint32_t aFilterCount)
     : mGeneration(sNextGeneration++)
     , mEntries(aEntries)
@@ -432,7 +433,7 @@ private:
   }
 
 public:
-  static void Create(PSLockRef aLock, int aEntries, double aInterval,
+  static void Create(PSLockRef aLock, uint32_t aEntries, double aInterval,
                      uint32_t aFeatures,
                      const char** aFilters, uint32_t aFilterCount)
   {
@@ -452,7 +453,7 @@ public:
   static bool Exists(PSLockRef) { return !!sInstance; }
 
   static bool Equals(PSLockRef,
-                     int aEntries, double aInterval, uint32_t aFeatures,
+                     uint32_t aEntries, double aInterval, uint32_t aFeatures,
                      const char** aFilters, uint32_t aFilterCount)
   {
     if (sInstance->mEntries != aEntries ||
@@ -489,7 +490,7 @@ public:
 
   PS_GET(uint32_t, Generation)
 
-  PS_GET(int, Entries)
+  PS_GET(uint32_t, Entries)
 
   PS_GET(double, Interval)
 
@@ -540,7 +541,7 @@ private:
   static uint32_t sNextGeneration;
 
   // The number of entries in mBuffer.
-  const int mEntries;
+  const uint32_t mEntries;
 
   // The interval between samples, measured in milliseconds.
   const double mInterval;
@@ -777,13 +778,15 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
   // like the native stack, the JS stack is iterated youngest-to-oldest and we
   // need to iterate oldest-to-youngest when adding entries to aInfo.
 
-  // Synchronous sampling reports an invalid buffer generation to
-  // ProfilingFrameIterator to avoid incorrectly resetting the generation of
-  // sampled JIT entries inside the JS engine. See note below concerning 'J'
-  // entries.
-  uint32_t startBufferGen = UINT32_MAX;
-  if (!aIsSynchronous && aCollector.Generation().isSome()) {
-    startBufferGen = *aCollector.Generation();
+  // Non-periodic sampling passes Nothing() as the buffer write position to
+  // ProfilingFrameIterator to avoid incorrectly resetting the buffer position
+  // of sampled JIT entries inside the JS engine.
+  Maybe<uint64_t> samplePosInBuffer;
+  if (!aIsSynchronous) {
+    // aCollector.SamplePositionInBuffer() will return Nothing() when
+    // profiler_suspend_and_sample_thread is called from the background hang
+    // reporter.
+    samplePosInBuffer = aCollector.SamplePositionInBuffer();
   }
   uint32_t jsCount = 0;
   JS::ProfilingFrameIterator::Frame jsFrames[MAX_JS_FRAMES];
@@ -800,10 +803,8 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
       registerState.lr = aRegs.mLR;
       registerState.fp = aRegs.mFP;
 
-      JS::ProfilingFrameIterator jsIter(context, registerState,
-                                        startBufferGen);
+      JS::ProfilingFrameIterator jsIter(context, registerState, samplePosInBuffer);
       for (; jsCount < maxFrames && !jsIter.done(); ++jsIter) {
-        // See note below regarding 'J' entries.
         if (aIsSynchronous || jsIter.isWasm()) {
           uint32_t extracted =
             jsIter.extractStack(jsFrames, jsCount, maxFrames);
@@ -950,14 +951,13 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
 
   // Update the JS context with the current profile sample buffer generation.
   //
-  // Do not do this for synchronous samples, which use their own
-  // ProfileBuffers instead of the global one in CorePS.
-  if (!aIsSynchronous && context && aCollector.Generation().isSome()) {
-    MOZ_ASSERT(*aCollector.Generation() >= startBufferGen);
-    uint32_t lapCount = *aCollector.Generation() - startBufferGen;
-    JS::UpdateJSContextProfilerSampleBufferGen(context,
-                                               *aCollector.Generation(),
-                                               lapCount);
+  // Only do this for periodic samples. We don't want to do this for
+  // synchronous samples, and we also don't want to do it for calls to
+  // profiler_suspend_and_sample_thread() from the background hang reporter -
+  // in that case, aCollector.BufferRangeStart() will return Nothing().
+  if (!aIsSynchronous && context && aCollector.BufferRangeStart()) {
+    uint64_t bufferRangeStart = *aCollector.BufferRangeStart();
+    JS::SetJSContextProfilerSampleBufferRangeStart(context, bufferRangeStart);
   }
 }
 
@@ -1275,19 +1275,23 @@ DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
 static inline void
 DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
                ThreadInfo& aThreadInfo, const TimeStamp& aNow,
-               const Registers& aRegs, ProfileBuffer::LastSample* aLS,
+               const Registers& aRegs, Maybe<uint64_t>* aLastSample,
                ProfileBuffer& aBuffer)
 {
   // WARNING: this function runs within the profiler's "critical section".
 
   MOZ_RELEASE_ASSERT(ActivePS::Exists(aLock));
 
-  aBuffer.AddThreadIdEntry(aThreadInfo.ThreadId(), aLS);
+  uint64_t samplePos = aBuffer.AddThreadIdEntry(aThreadInfo.ThreadId());
+  if (aLastSample) {
+    *aLastSample = Some(samplePos);
+  }
 
   TimeDuration delta = aNow - CorePS::ProcessStartTime();
   aBuffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
-  ProfileBufferCollector collector(aBuffer, ActivePS::Features(aLock));
+  ProfileBufferCollector collector(aBuffer, ActivePS::Features(aLock),
+                                   samplePos);
   NativeStack nativeStack;
 #if defined(HAVE_NATIVE_UNWIND)
   if (ActivePS::FeatureStackWalk(aLock)) {
@@ -1639,7 +1643,7 @@ BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
 }
 #endif
 
-static TimeStamp
+static void
 locked_profiler_stream_json_for_this_process(PSLockRef aLock,
                                              SpliceableJSONWriter& aWriter,
                                              double aSinceTime,
@@ -1672,8 +1676,6 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
     aWriter.EndObject();
   }
 
-  double firstSampleTime = INFINITY;
-
   // Lists the samples for each thread profile
   aWriter.StartArrayProperty("threads");
   {
@@ -1683,20 +1685,14 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
       if (!info->IsBeingProfiled()) {
         continue;
       }
-      double thisThreadFirstSampleTime =
-        info->StreamJSON(buffer, aWriter,
-                         CorePS::ProcessStartTime(), aSinceTime);
-      firstSampleTime = std::min(thisThreadFirstSampleTime, firstSampleTime);
+      info->StreamJSON(buffer, aWriter, CorePS::ProcessStartTime(), aSinceTime);
     }
 
     const CorePS::ThreadVector& deadThreads = CorePS::DeadThreads(aLock);
     for (size_t i = 0; i < deadThreads.size(); i++) {
       ThreadInfo* info = deadThreads.at(i);
       MOZ_ASSERT(info->IsBeingProfiled());
-      double thisThreadFirstSampleTime =
-        info->StreamJSON(buffer, aWriter,
-                         CorePS::ProcessStartTime(), aSinceTime);
-      firstSampleTime = std::min(thisThreadFirstSampleTime, firstSampleTime);
+      info->StreamJSON(buffer, aWriter, CorePS::ProcessStartTime(), aSinceTime);
     }
 
 #if defined(GP_OS_android)
@@ -1730,20 +1726,12 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
   // been overwritten due to buffer wraparound by then).
   buffer.AddEntry(ProfileBufferEntry::CollectionStart(collectionStart));
   buffer.AddEntry(ProfileBufferEntry::CollectionEnd(collectionEnd));
-
-  if (firstSampleTime != INFINITY) {
-    return CorePS::ProcessStartTime() +
-           TimeDuration::FromMilliseconds(firstSampleTime);
-  }
-
-  return TimeStamp();
 }
 
 bool
 profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
                                       double aSinceTime,
-                                      bool aIsShuttingDown,
-                                      TimeStamp* aOutFirstSampleTime)
+                                      bool aIsShuttingDown)
 {
   LOG("profiler_stream_json_for_this_process");
 
@@ -1755,13 +1743,8 @@ profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
     return false;
   }
 
-  TimeStamp firstSampleTime =
-    locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime,
-                                                 aIsShuttingDown);
-
-  if (aOutFirstSampleTime) {
-    *aOutFirstSampleTime = firstSampleTime;
-  }
+  locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime,
+                                               aIsShuttingDown);
 
   return true;
 }
@@ -2243,7 +2226,7 @@ NotifyProfilerStarted(const int aEntries, double aInterval, uint32_t aFeatures,
 }
 
 static void
-locked_profiler_start(PSLockRef aLock, const int aEntries, double aInterval,
+locked_profiler_start(PSLockRef aLock, uint32_t aEntries, double aInterval,
                       uint32_t aFeatures,
                       const char** aFilters, uint32_t aFilterCount);
 
@@ -2684,25 +2667,22 @@ profiler_get_available_features()
   return features;
 }
 
-void
-profiler_get_buffer_info_helper(uint32_t* aCurrentPosition,
-                                uint32_t* aEntries,
-                                uint32_t* aGeneration)
+Maybe<ProfilerBufferInfo>
+profiler_get_buffer_info()
 {
-  // This function is called by profiler_get_buffer_info(), which has already
-  // zeroed the outparams.
-
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
 
   if (!ActivePS::Exists(lock)) {
-    return;
+    return Nothing();
   }
 
-  *aCurrentPosition = ActivePS::Buffer(lock).mWritePos;
-  *aEntries = ActivePS::Entries(lock);
-  *aGeneration = ActivePS::Buffer(lock).mGeneration;
+  return Some(ProfilerBufferInfo {
+    ActivePS::Buffer(lock).mRangeStart,
+    ActivePS::Buffer(lock).mRangeEnd,
+    ActivePS::Entries(lock)
+  });
 }
 
 static void
@@ -2746,7 +2726,7 @@ TriggerPollJSSamplingOnMainThread()
 }
 
 static void
-locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
+locked_profiler_start(PSLockRef aLock, uint32_t aEntries, double aInterval,
                       uint32_t aFeatures,
                       const char** aFilters, uint32_t aFilterCount)
 {
@@ -2776,7 +2756,7 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
 #endif
 
   // Fall back to the default values if the passed-in values are unreasonable.
-  int entries = aEntries > 0 ? aEntries : PROFILER_DEFAULT_ENTRIES;
+  uint32_t entries = aEntries > 0 ? aEntries : PROFILER_DEFAULT_ENTRIES;
   double interval = aInterval > 0 ? aInterval : PROFILER_DEFAULT_INTERVAL;
 
   ActivePS::Create(aLock, entries, interval, aFeatures, aFilters, aFilterCount);
@@ -2832,7 +2812,7 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
 }
 
 void
-profiler_start(int aEntries, double aInterval, uint32_t aFeatures,
+profiler_start(uint32_t aEntries, double aInterval, uint32_t aFeatures,
                const char** aFilters, uint32_t aFilterCount)
 {
   LOG("profiler_start");
@@ -2868,7 +2848,7 @@ profiler_start(int aEntries, double aInterval, uint32_t aFeatures,
 }
 
 void
-profiler_ensure_started(int aEntries, double aInterval, uint32_t aFeatures,
+profiler_ensure_started(uint32_t aEntries, double aInterval, uint32_t aFeatures,
                         const char** aFilters, uint32_t aFilterCount)
 {
   LOG("profiler_ensure_started");

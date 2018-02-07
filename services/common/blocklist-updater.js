@@ -4,7 +4,7 @@
 
 this.EXPORTED_SYMBOLS = ["checkVersions", "addTestBlocklistClient"];
 
-const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
+const CC = Components.Constructor;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

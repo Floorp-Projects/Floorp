@@ -6,8 +6,6 @@
 // behavior specific to RegExp entries - general behavior is already tested
 // in test_blocklistchange.js.
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
 ChromeUtils.import("resource://testing-common/httpd.js");

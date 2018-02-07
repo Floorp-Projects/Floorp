@@ -2,8 +2,6 @@
 
 this.EXPORTED_SYMBOLS = ["UrlClassifierTestUtils"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 const TRACKING_TABLE_NAME = "mochitest-track-simple";
 const TRACKING_TABLE_PREF = "urlclassifier.trackingTable";
 const WHITELIST_TABLE_NAME = "mochitest-trackwhite-simple";

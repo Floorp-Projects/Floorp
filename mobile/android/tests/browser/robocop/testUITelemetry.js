@@ -5,10 +5,6 @@
 
 /* eslint-disable mozilla/use-chromeutils-import */
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 Cu.import("resource://gre/modules/Services.jsm");
 
 const EVENT_TEST1 = "_test_event_1.1";

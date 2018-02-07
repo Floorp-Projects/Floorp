@@ -15,8 +15,6 @@
 /* exported IndexedDB */
 var EXPORTED_SYMBOLS = ["IndexedDB"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 Cu.importGlobalProperties(["indexedDB"]);
 
 /**

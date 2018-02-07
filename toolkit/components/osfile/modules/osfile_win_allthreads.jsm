@@ -23,7 +23,6 @@
 
 var SharedAll;
 if (typeof Components != "undefined") {
-  let Cu = Components.utils;
   // Module is opened as a jsm module
   ChromeUtils.import("resource://gre/modules/ctypes.jsm", this);
 

@@ -1,5 +1,3 @@
-const Cu = Components.utils;
-
 function checkThrows(f, rgxp) { try { f(); do_check_false(); } catch (e) { Assert.ok(rgxp.test(e)); } }
 
 var o = { foo: 42, bar : { tick: 'tock' } };

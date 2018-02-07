@@ -14,7 +14,6 @@
     var test_node = null;
     var reentered = false;
     var savedMM = null;
-    const Cu = Components.utils;
 
     function info(message) {
       return opener.wrappedJSObject.info(message);

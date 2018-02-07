@@ -13,7 +13,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=667388
   <![CDATA[
 
   // Setup.
-  const Cu = Components.utils;
   SimpleTest.waitForExplicitFinish();
   window.testObject = { myNumber: 42,
                         myDomain: window.location.domain };

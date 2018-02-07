@@ -59,7 +59,6 @@ function waitForLoad(win) {
 /* exported loadChromeScript */
 function loadChromeScript(fn) {
   let wrapper = `
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 (${fn.toString()})();`;
 

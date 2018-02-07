@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var { utils: Cu, interfaces: Ci, classes: Cc } = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
 function promiseContentResponse(browser, name, message) {

@@ -19,8 +19,6 @@
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
 
   <script type="application/javascript"><![CDATA[
-    var Ci = Components.interfaces;
-    var Cc = Components.classes;
     ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
     // Define the generator-iterator for the tests.

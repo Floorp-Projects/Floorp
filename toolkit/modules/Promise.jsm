@@ -89,9 +89,6 @@ var EXPORTED_SYMBOLS = [
  * -----------------------------------------------------------------------------
  */
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-
 // eslint-disable-next-line mozilla/use-services
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(Ci.mozIJSSubScriptLoader)

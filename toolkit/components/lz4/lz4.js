@@ -7,7 +7,6 @@
 var SharedAll;
 var Primitives;
 if (typeof Components != "undefined") {
-  let Cu = Components.utils;
   SharedAll = {};
   ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
   ChromeUtils.import("resource://gre/modules/lz4_internal.js");

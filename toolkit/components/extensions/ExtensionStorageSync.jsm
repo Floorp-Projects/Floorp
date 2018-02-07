@@ -12,10 +12,6 @@
 
 this.EXPORTED_SYMBOLS = ["ExtensionStorageSync", "extensionStorageSync"];
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
-const Cr = Components.results;
 const global = this;
 
 Cu.importGlobalProperties(["atob", "btoa"]);

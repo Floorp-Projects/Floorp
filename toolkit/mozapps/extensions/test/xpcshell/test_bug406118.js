@@ -8,8 +8,6 @@ var addonIDs = ["test_bug393285_1@tests.mozilla.org",
                 "test_bug393285_3a@tests.mozilla.org",
                 "test_bug393285_4@tests.mozilla.org"];
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
 ChromeUtils.import("resource://testing-common/httpd.js");

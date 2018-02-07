@@ -20,7 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123516
    <![CDATA[
 
      /** Test for Bug 1123516 **/
-     const Cu = Components.utils;
      function doTest() {
        var win = $("t").contentWindow;
        var sandbox = Components.utils.Sandbox(win, { sandboxPrototype: win });

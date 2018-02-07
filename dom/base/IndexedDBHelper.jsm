@@ -12,10 +12,6 @@ if (DEBUG) {
   debug = function (s) {}
 }
 
-const Cu = Components.utils;
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 this.EXPORTED_SYMBOLS = ["IndexedDBHelper"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

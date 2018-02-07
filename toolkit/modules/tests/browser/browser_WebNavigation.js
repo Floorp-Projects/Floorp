@@ -1,7 +1,5 @@
 "use strict";
 
-var { interfaces: Ci, classes: Cc, utils: Cu, results: Cr } = Components;
-
 var {WebNavigation} = ChromeUtils.import("resource://gre/modules/WebNavigation.jsm", {});
 
 const BASE = "http://example.com/browser/toolkit/modules/tests/browser";

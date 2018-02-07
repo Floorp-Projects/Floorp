@@ -21,9 +21,6 @@
 
   SimpleTest.expectAssertions(27);
 
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
-  const Cr = Components.results;
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
 

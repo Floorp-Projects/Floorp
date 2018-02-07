@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/narrate/VoiceSelect.jsm");
 ChromeUtils.import("resource://gre/modules/narrate/Narrator.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

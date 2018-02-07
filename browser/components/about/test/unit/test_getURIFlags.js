@@ -1,5 +1,3 @@
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const contract = "@mozilla.org/network/protocol/about;1?what=newtab";

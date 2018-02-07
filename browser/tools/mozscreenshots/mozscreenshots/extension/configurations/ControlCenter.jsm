@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["ControlCenter"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");

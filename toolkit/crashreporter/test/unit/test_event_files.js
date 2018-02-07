@@ -3,8 +3,6 @@
 
 "use strict";
 
-var {utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://testing-common/AppData.jsm", this);
 

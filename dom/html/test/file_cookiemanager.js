@@ -1,4 +1,3 @@
-let { classes: Cc, interfaces: Ci } = Components;
 addMessageListener("getCookieFromManager", ({ host, path }) => {
   let cm = Cc["@mozilla.org/cookiemanager;1"]
              .getService(Ci.nsICookieManager);

@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {utils: Cu, results: Cr} = Components;
-
 Cu.importGlobalProperties(['fetch']);
 ChromeUtils.import("resource://testing-common/httpd.js");
 

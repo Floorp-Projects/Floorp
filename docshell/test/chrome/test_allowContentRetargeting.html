@@ -11,8 +11,6 @@ addLoadEvent(runNextTest);
 
 var TEST_URL = "http://mochi.test:8888/tests/docshell/test/chrome/allowContentRetargeting.sjs";
 
-var Ci = Components.interfaces;
-
 function runNextTest() {
   var test = tests.shift();
   if (!test) {

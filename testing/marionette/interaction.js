@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 ChromeUtils.import("chrome://marionette/content/accessibility.js");

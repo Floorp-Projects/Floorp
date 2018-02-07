@@ -6,8 +6,6 @@
 
 "use strict";
 
-const {utils: Cu, interfaces: Ci} = Components;
-
 const INCLUDE_DESC = 0x01;
 const INCLUDE_NAME = 0x02;
 const INCLUDE_VALUE = 0x04;

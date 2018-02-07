@@ -7,8 +7,6 @@
 /* globals Components, dump */
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 // globals XPCOMUtils
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 // globals Services

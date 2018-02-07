@@ -25,8 +25,6 @@
 
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 var { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});

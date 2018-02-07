@@ -3,9 +3,6 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "10.0");
 
 var prefService = Services.prefs;

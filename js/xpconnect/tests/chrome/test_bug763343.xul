@@ -19,10 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=763343
   <![CDATA[
 
   /** Test for Cross-compartment nsIClassInfo singleton wrapping. **/
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
-  const Cu = Components.utils;
-
   // We need an object here that has singleton classinfo.  For now, the console
   // service works.
   var singleton = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIClassInfo);

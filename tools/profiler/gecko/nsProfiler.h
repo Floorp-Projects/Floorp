@@ -45,11 +45,13 @@ private:
   void FinishGathering();
   void ResetGathering();
 
+  void ClearExpiredExitProfiles();
+
   bool mLockedForPrivateBrowsing;
 
   struct ExitProfile {
     nsCString mJSON;
-    mozilla::TimeStamp mGatherTime;
+    uint64_t mBufferPositionAtGatherTime;
   };
 
   // These fields are all related to profile gathering.

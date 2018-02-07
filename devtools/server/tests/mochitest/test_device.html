@@ -15,9 +15,6 @@ Bug 895360 - [app manager] Device meta data actor
 "use strict";
 
 window.onload = function () {
-  const Cu = Components.utils;
-  const Ci = Components.interfaces;
-
   const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   const {DebuggerClient} = require("devtools/shared/client/debugger-client");
   const {DebuggerServer} = require("devtools/server/main");

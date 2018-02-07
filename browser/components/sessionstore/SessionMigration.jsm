@@ -6,7 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["SessionMigration"];
 
-const Cu = Components.utils;
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 

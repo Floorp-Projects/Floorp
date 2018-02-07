@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["AutoMigrate"];
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-
 const kAutoMigrateEnabledPref = "browser.migrate.automigrate.enabled";
 const kUndoUIEnabledPref = "browser.migrate.automigrate.ui.enabled";
 

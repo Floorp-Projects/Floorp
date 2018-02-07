@@ -7,10 +7,6 @@
 
 this.EXPORTED_SYMBOLS = [ "ContentPrefServiceChild" ];
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/ContentPrefUtils.jsm");

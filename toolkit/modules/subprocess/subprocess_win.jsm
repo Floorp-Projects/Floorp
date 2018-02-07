@@ -9,8 +9,6 @@
 
 /* exported SubprocessImpl */
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 var EXPORTED_SYMBOLS = ["SubprocessImpl"];
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");

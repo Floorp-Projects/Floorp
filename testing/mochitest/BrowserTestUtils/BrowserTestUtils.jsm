@@ -15,8 +15,6 @@ this.EXPORTED_SYMBOLS = [
   "BrowserTestUtils",
 ];
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -1197,7 +1195,6 @@ this.BrowserTestUtils = {
     // a bad pointer. The crash should happen immediately upon loading this
     // frame script.
     let frame_script = () => {
-      const Cu = Components.utils;
       ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 
       let dies = function() {
