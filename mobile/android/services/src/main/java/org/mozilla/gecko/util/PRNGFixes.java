@@ -22,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.SecureRandom;
@@ -329,6 +330,10 @@ public final class PRNGFixes {
         if (serial != null) {
             result.append(serial);
         }
-        return result.toString().getBytes(StringUtils.UTF_8);
+        try {
+            return result.toString().getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("UTF-8 encoding not supported");
+        }
     }
 }

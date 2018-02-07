@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.util.StringUtils;
 
 public class QuickPasswordStretcher implements PasswordStretcher {
   protected final String password;
@@ -27,7 +26,7 @@ public class QuickPasswordStretcher implements PasswordStretcher {
     }
     String key = Utils.byte2Hex(emailUTF8);
     if (!cache.containsKey(key)) {
-      byte[] value = FxAccountUtils.generateQuickStretchedPW(emailUTF8, password.getBytes(StringUtils.UTF_8));
+      byte[] value = FxAccountUtils.generateQuickStretchedPW(emailUTF8, password.getBytes("UTF-8"));
       cache.put(key, Utils.byte2Hex(value));
       return value;
     }

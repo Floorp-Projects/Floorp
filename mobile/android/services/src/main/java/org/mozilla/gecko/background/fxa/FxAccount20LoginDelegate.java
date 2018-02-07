@@ -6,7 +6,6 @@ package org.mozilla.gecko.background.fxa;
 
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.util.StringUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
@@ -24,10 +23,14 @@ public class FxAccount20LoginDelegate {
     this.authPW = FxAccountUtils.generateAuthPW(quickStretchedPW);
   }
 
-  public ExtendedJSONObject getCreateBody() {
+  public ExtendedJSONObject getCreateBody() throws FxAccountClientException {
     final ExtendedJSONObject body = new ExtendedJSONObject();
-    body.put("email", new String(emailUTF8, StringUtils.UTF_8));
-    body.put("authPW", Utils.byte2Hex(authPW));
-    return body;
+    try {
+      body.put("email", new String(emailUTF8, "UTF-8"));
+      body.put("authPW", Utils.byte2Hex(authPW));
+      return body;
+    } catch (UnsupportedEncodingException e) {
+      throw new FxAccountClientException(e);
+    }
   }
 }

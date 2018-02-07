@@ -54,7 +54,6 @@ import org.mozilla.gecko.tokenserver.TokenServerClient;
 import org.mozilla.gecko.tokenserver.TokenServerClientDelegate;
 import org.mozilla.gecko.tokenserver.TokenServerException;
 import org.mozilla.gecko.tokenserver.TokenServerToken;
-import org.mozilla.gecko.util.StringUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -405,7 +404,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
           // so we explicitly do not send payload verification hashes to the
           // Sync storage endpoint.
           final boolean includePayloadVerificationHash = false;
-          final AuthHeaderProvider authHeaderProvider = new HawkAuthHeaderProvider(token.id, token.key.getBytes(StringUtils.UTF_8), includePayloadVerificationHash, storageServerSkew);
+          final AuthHeaderProvider authHeaderProvider = new HawkAuthHeaderProvider(token.id, token.key.getBytes("UTF-8"), includePayloadVerificationHash, storageServerSkew);
 
           final Context context = getContext();
           final SyncConfiguration syncConfig = new SyncConfiguration(token.uid, authHeaderProvider, sharedPrefs, syncKeyBundle);
