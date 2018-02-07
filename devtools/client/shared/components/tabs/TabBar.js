@@ -199,11 +199,11 @@ class Tabbar extends Component {
   onTabChanged(index) {
     this.setState({
       activeTab: index
+    }, () => {
+      if (this.props.onSelect) {
+        this.props.onSelect(this.state.tabs[index].id);
+      }
     });
-
-    if (this.props.onSelect) {
-      this.props.onSelect(this.state.tabs[index].id);
-    }
   }
 
   onAllTabsMenuClick(event) {
