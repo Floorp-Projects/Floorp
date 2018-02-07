@@ -195,7 +195,7 @@ WebAuthnManager::~WebAuthnManager()
 }
 
 already_AddRefed<Promise>
-WebAuthnManager::MakeCredential(const MakePublicKeyCredentialOptions& aOptions,
+WebAuthnManager::MakeCredential(const PublicKeyCredentialCreationOptions& aOptions,
                                 const Optional<OwningNonNull<AbortSignal>>& aSignal)
 {
   MOZ_ASSERT(NS_IsMainThread());

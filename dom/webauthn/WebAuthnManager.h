@@ -103,7 +103,7 @@ public:
   { }
 
   already_AddRefed<Promise>
-  MakeCredential(const MakePublicKeyCredentialOptions& aOptions,
+  MakeCredential(const PublicKeyCredentialCreationOptions& aOptions,
                  const Optional<OwningNonNull<AbortSignal>>& aSignal);
 
   already_AddRefed<Promise>
