@@ -983,12 +983,9 @@ WebConsoleFrame.prototype = {
     let attribute = !WORKERTYPES_PREFKEYS.includes(prefKey)
                       ? "filter" : "workerType";
 
-    let xpath = ".//*[contains(@class, 'message') and " +
-      "@" + attribute + "='" + prefKey + "']";
-    let result = doc.evaluate(xpath, outputNode, null,
-      Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-    for (let i = 0; i < result.snapshotLength; i++) {
-      let node = result.snapshotItem(i);
+    let selector = "[" + attribute + "='" + prefKey + "'].message";
+    let result = outputNode.querySelectorAll(selector);
+    for (let node of result) {
       if (state) {
         node.classList.remove("filtered-by-type");
       } else {

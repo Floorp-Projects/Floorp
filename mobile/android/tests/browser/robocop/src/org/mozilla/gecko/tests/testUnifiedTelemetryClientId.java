@@ -7,20 +7,14 @@ package org.mozilla.gecko.tests;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
 
 import android.util.Log;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.GeckoProfile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
 
 public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
     private static final String TEST_JS = "testUnifiedTelemetryClientId.js";
-
     private static final String CLIENT_ID_PATH = "datareporting/state.json";
-    private static final String FHR_DIR_PATH = "healthreport/";
-    private static final String FHR_CLIENT_ID_PATH = FHR_DIR_PATH + "state.json";
 
     private GeckoProfile profile;
     private File profileDir;
@@ -32,8 +26,6 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
         profileDir = profile.getDir(); // Assumes getDir is tested.
         filesToDeleteOnReset = new File[] {
                 getClientIdFile(),
-                getFHRClientIdFile(),
-                getFHRClientIdParentDir(),
         };
     }
 
@@ -83,9 +75,6 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
         deleteClientIDFiles();
         testJsCreatesClientId(); // leaves cache filled.
         deleteClientIDFiles();
-        testJavaMigratesFromHealthReport(); // leaves cache filled.
-        deleteClientIDFiles();
-        testJsMigratesFromHealthReport(); // leaves cache filled.
 
         getJS().syncCall("endTest");
     }
@@ -144,70 +133,6 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
         fAssertEquals("Same client ID retrieved from Java", clientIdFromJS, clientIdFromJavaAgain);
     }
 
-    /**
-     * Scenario: Java migrates client ID from FHR client ID file.
-     *   * FHR file already exists.
-     *   * Fennec starts on fresh profile
-     *   * Java code merges client ID to datareporting/state.json from healthreport/state.json
-     *   * Js accesses client ID from the same file
-     *   * Assert the client IDs are the same
-     */
-    private void testJavaMigratesFromHealthReport() throws Exception {
-        Log.d(LOGTAG, "testJavaMigratesFromHealthReport: start");
-
-        fAssertFalse("Client id file does not exist yet", getClientIdFile().exists());
-        fAssertFalse("Health report file does not exist yet", getFHRClientIdFile().exists());
-
-        final String expectedClientId = UUID.randomUUID().toString();
-        createFHRClientIdFile(expectedClientId);
-
-        final String clientIdFromJava = getClientIdFromJava();
-        fAssertEquals("Health report client ID merged by Java", expectedClientId, clientIdFromJava);
-        resetJSCache();
-        final String clientIdFromJS = getClientIdFromJS();
-        fAssertEquals("Merged client ID read by JS", expectedClientId, clientIdFromJS);
-
-        final String clientIdFromJavaAgain = getClientIdFromJava();
-        final String clientIdFromJSCache = getClientIdFromJS();
-        resetJSCache();
-        final String clientIdFromJSFileAgain = getClientIdFromJS();
-        fAssertEquals("Same client ID retrieved from Java", expectedClientId, clientIdFromJavaAgain);
-        fAssertEquals("Same client ID retrieved from JS cache", expectedClientId, clientIdFromJSCache);
-        fAssertEquals("Same client ID retrieved from JS file", expectedClientId, clientIdFromJSFileAgain);
-    }
-
-    /**
-     * Scenario: JS merges client ID from FHR client ID file.
-     *   * FHR file already exists.
-     *   * Fennec starts on a fresh profile
-     *   * Js merges the client ID to datareporting/state.json from healthreport/state.json
-     *   * Java access the client ID from the same file
-     *   * Assert the client IDs are the same
-     */
-    private void testJsMigratesFromHealthReport() throws Exception {
-        Log.d(LOGTAG, "testJsMigratesFromHealthReport: start");
-
-        fAssertFalse("Client id file does not exist yet", getClientIdFile().exists());
-        fAssertFalse("Health report file does not exist yet", getFHRClientIdFile().exists());
-
-        final String expectedClientId = UUID.randomUUID().toString();
-        createFHRClientIdFile(expectedClientId);
-
-        resetJSCache();
-        final String clientIdFromJS = getClientIdFromJS();
-        fAssertEquals("Health report client ID merged by JS", expectedClientId, clientIdFromJS);
-        final String clientIdFromJava = getClientIdFromJava();
-        fAssertEquals("Merged client ID read by Java", expectedClientId, clientIdFromJava);
-
-        final String clientIdFromJavaAgain = getClientIdFromJava();
-        final String clientIdFromJSCache = getClientIdFromJS();
-        resetJSCache();
-        final String clientIdFromJSFileAgain = getClientIdFromJS();
-        fAssertEquals("Same client ID retrieved from Java", expectedClientId, clientIdFromJavaAgain);
-        fAssertEquals("Same client ID retrieved from JS cache", expectedClientId, clientIdFromJSCache);
-        fAssertEquals("Same client ID retrieved from JS file", expectedClientId, clientIdFromJSFileAgain);
-    }
-
     private String getClientIdFromJava() throws IOException {
         // This assumes implementation details: it assumes the client ID
         // file is created when Java attempts to retrieve it if it does not exist.
@@ -244,22 +169,5 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
 
     private File getClientIdFile() {
         return new File(profileDir, CLIENT_ID_PATH);
-    }
-
-    private File getFHRClientIdParentDir() {
-        return new File(profileDir, FHR_DIR_PATH);
-    }
-
-    private File getFHRClientIdFile() {
-        return new File(profileDir, FHR_CLIENT_ID_PATH);
-    }
-
-    private void createFHRClientIdFile(final String clientId) throws JSONException {
-        fAssertTrue("FHR directory created", getFHRClientIdParentDir().mkdirs());
-
-        final JSONObject obj = new JSONObject();
-        obj.put("clientID", clientId);
-        profile.writeFile(FHR_CLIENT_ID_PATH, obj.toString());
-        fAssertTrue("FHR client ID file exists after writing", getFHRClientIdFile().exists());
     }
 }

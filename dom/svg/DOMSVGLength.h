@@ -183,7 +183,7 @@ public:
 
   nsISupports* GetParentObject() const {
     auto svgElement = mList ? Element() : mSVGElement.get();
-    return static_cast<nsIDOMSVGElement*> (svgElement);
+    return static_cast<nsIDOMElement*>(svgElement);
   }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

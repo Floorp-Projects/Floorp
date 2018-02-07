@@ -58,17 +58,13 @@
 #include "nsIDOMScrollAreaEvent.h"
 #include "nsIDOMSerializer.h"
 #include "nsIDOMSimpleGestureEvent.h"
-#include "nsIDOMSVGElement.h"
 #include "nsIDOMText.h"
-#include "nsIDOMTimeEvent.h"
 #include "nsIDOMTimeRanges.h"
 #include "nsIDOMTransitionEvent.h"
 #include "nsIDOMUIEvent.h"
 #include "nsIDOMValidityState.h"
 #include "nsIDOMWheelEvent.h"
 #include "nsIDOMXMLDocument.h"
-#include "nsIDOMXPathEvaluator.h"
-#include "nsIDOMXPathResult.h"
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIDOMXULElement.h"
 #include "nsIFrameLoader.h"
@@ -164,8 +160,6 @@
 #include "mozilla/dom/XMLHttpRequestEventTargetBinding.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/dom/XMLSerializerBinding.h"
-#include "mozilla/dom/XPathEvaluatorBinding.h"
-#include "mozilla/dom/XPathResultBinding.h"
 #include "mozilla/dom/XULCommandEventBinding.h"
 #include "mozilla/dom/XULDocumentBinding.h"
 #include "mozilla/dom/XULElementBinding.h"
@@ -280,9 +274,7 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIScrollBoxObject, ScrollBoxObject),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMSerializer, XMLSerializer),
   DEFINE_SHIM(SimpleGestureEvent),
-  DEFINE_SHIM(SVGElement),
   DEFINE_SHIM(Text),
-  DEFINE_SHIM(TimeEvent),
   DEFINE_SHIM(TimeRanges),
   DEFINE_SHIM(TransitionEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsITreeBoxObject, TreeBoxObject),
@@ -293,8 +285,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(XMLDocument),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIXMLHttpRequestEventTarget, XMLHttpRequestEventTarget),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIXMLHttpRequestUpload, XMLHttpRequestUpload),
-  DEFINE_SHIM(XPathEvaluator),
-  DEFINE_SHIM(XPathResult),
   DEFINE_SHIM(XULCommandEvent),
   DEFINE_SHIM(XULElement),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsISelection, Selection),

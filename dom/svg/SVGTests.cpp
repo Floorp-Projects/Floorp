@@ -30,28 +30,22 @@ SVGTests::SVGTests()
 already_AddRefed<DOMSVGStringList>
 SVGTests::RequiredFeatures()
 {
-  nsCOMPtr<nsIDOMSVGElement> elem = do_QueryInterface(this);
-  nsSVGElement* element = static_cast<nsSVGElement*>(elem.get());
   return DOMSVGStringList::GetDOMWrapper(
-           &mStringListAttributes[FEATURES], element, true, FEATURES);
+           &mStringListAttributes[FEATURES], AsSVGElement(), true, FEATURES);
 }
 
 already_AddRefed<DOMSVGStringList>
 SVGTests::RequiredExtensions()
 {
-  nsCOMPtr<nsIDOMSVGElement> elem = do_QueryInterface(this);
-  nsSVGElement* element = static_cast<nsSVGElement*>(elem.get());
   return DOMSVGStringList::GetDOMWrapper(
-           &mStringListAttributes[EXTENSIONS], element, true, EXTENSIONS);
+           &mStringListAttributes[EXTENSIONS], AsSVGElement(), true, EXTENSIONS);
 }
 
 already_AddRefed<DOMSVGStringList>
 SVGTests::SystemLanguage()
 {
-  nsCOMPtr<nsIDOMSVGElement> elem = do_QueryInterface(this);
-  nsSVGElement* element = static_cast<nsSVGElement*>(elem.get());
   return DOMSVGStringList::GetDOMWrapper(
-           &mStringListAttributes[LANGUAGE], element, true, LANGUAGE);
+           &mStringListAttributes[LANGUAGE], AsSVGElement(), true, LANGUAGE);
 }
 
 bool
@@ -224,10 +218,7 @@ SVGTests::GetAttrValue(uint8_t aAttrEnum, nsAttrValue& aValue) const
 void
 SVGTests::MaybeInvalidate()
 {
-  nsCOMPtr<nsIDOMSVGElement> elem = do_QueryInterface(this);
-  nsSVGElement* element = static_cast<nsSVGElement*>(elem.get());
-
-  nsIContent* parent = element->GetFlattenedTreeParent();
+  nsIContent* parent = AsSVGElement()->GetFlattenedTreeParent();
 
   if (parent &&
       parent->NodeInfo()->Equals(nsGkAtoms::svgSwitch, kNameSpaceID_SVG)) {
