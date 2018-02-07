@@ -74,12 +74,6 @@ menucaption > .menu-iconic-text {
   padding-inline-start: 0 !important;
 }
 
-.menu-description {
-  font-style: italic;
-  color: GrayText;
-  margin-inline-start: 1ex !important;
-}
-
 .menu-accel,
 .menu-iconic-accel {
   color: inherit;

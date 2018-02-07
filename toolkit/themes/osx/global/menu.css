@@ -43,12 +43,6 @@ menucaption > .menu-iconic-text {
   font-weight: bold;
 }
 
-.menu-description {
-  font-style: italic;
-  color: -moz-mac-menutextdisable;
-  margin-inline-start: 1ex !important;
-}
-
 .menu-iconic-icon {
   height: 16px;
   margin-top: -2px;
