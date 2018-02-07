@@ -352,10 +352,8 @@ bool LaunchApp(const std::wstring& cmdline,
   // Per the comment in CreateThreadAttributeList, lpAttributeList will contain
   // a pointer to handlesToInherit, so make sure they have the same lifetime.
   LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList = NULL;
-  std::vector<HANDLE> handlesToInherit;
-  for (HANDLE h : options.handles_to_inherit) {
-    handlesToInherit.push_back(h);
-  }
+  HANDLE handlesToInherit[2];
+  int handleCount = 0;
 
   // setup our handle array first - if we end up with no handles that can
   // be inherited we can avoid trying to do the ThreadAttributeList dance...
@@ -363,12 +361,12 @@ bool LaunchApp(const std::wstring& cmdline,
   HANDLE stdErr = ::GetStdHandle(STD_ERROR_HANDLE);
 
   if (IsInheritableHandle(stdOut))
-    handlesToInherit.push_back(stdOut);
+    handlesToInherit[handleCount++] = stdOut;
   if (stdErr != stdOut && IsInheritableHandle(stdErr))
-    handlesToInherit.push_back(stdErr);
+    handlesToInherit[handleCount++] = stdErr;
 
-  if (!handlesToInherit.empty()) {
-    lpAttributeList = CreateThreadAttributeList(handlesToInherit.data(), handlesToInherit.size());
+  if (handleCount) {
+    lpAttributeList = CreateThreadAttributeList(handlesToInherit, handleCount);
     if (lpAttributeList) {
       // it's safe to inherit handles, so arrange for that...
       startup_info.cb = sizeof(startup_info_ex);

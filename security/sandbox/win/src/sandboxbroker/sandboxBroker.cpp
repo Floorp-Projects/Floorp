@@ -1136,12 +1136,6 @@ SandboxBroker::AddTargetPeer(HANDLE aPeerProcess)
 }
 
 void
-SandboxBroker::AddHandleToShare(HANDLE aHandle)
-{
-  mPolicy->AddHandleToShare(aHandle);
-}
-
-void
 SandboxBroker::ApplyLoggingPolicy()
 {
   MOZ_ASSERT(mPolicy);
