@@ -43,7 +43,8 @@ public:
   // Other, internal-only methods:
   virtual void SetHasImage() = 0;
   virtual bool NotificationsDeferred() const = 0;
-  virtual void SetNotificationsDeferred(bool aDeferNotifications) = 0;
+  virtual void MarkPendingNotify() = 0;
+  virtual void ClearPendingNotify() = 0;
 
   virtual already_AddRefed<nsIEventTarget> GetEventTarget() const
   {

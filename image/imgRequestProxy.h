@@ -115,11 +115,15 @@ public:
   // an event it has scheduled has been fired and/or validation is complete.
   virtual bool NotificationsDeferred() const override
   {
-    return IsValidating() || mDeferNotifications;
+    return IsValidating() || mPendingNotify;
   }
-  virtual void SetNotificationsDeferred(bool aDeferNotifications) override
+  virtual void MarkPendingNotify() override
   {
-    mDeferNotifications = aDeferNotifications;
+    mPendingNotify = true;
+  }
+  virtual void ClearPendingNotify() override
+  {
+    mPendingNotify = false;
   }
   bool IsValidating() const
   {
@@ -250,7 +254,7 @@ private:
 
   // Whether we want to defer our notifications by the non-virtual Observer
   // interfaces as image loads proceed.
-  bool mDeferNotifications : 1;
+  bool mPendingNotify : 1;
   bool mValidating : 1;
   bool mHadListener : 1;
   bool mHadDispatch : 1;
