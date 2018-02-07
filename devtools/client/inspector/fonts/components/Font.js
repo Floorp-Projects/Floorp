@@ -18,25 +18,11 @@ class Font extends PureComponent {
 
   constructor(props) {
     super(props);
-    this.getSectionClasses = this.getSectionClasses.bind(this);
     this.renderFontCSS = this.renderFontCSS.bind(this);
     this.renderFontCSSCode = this.renderFontCSSCode.bind(this);
     this.renderFontFormatURL = this.renderFontFormatURL.bind(this);
     this.renderFontName = this.renderFontName.bind(this);
     this.renderFontPreview = this.renderFontPreview.bind(this);
-  }
-
-  getSectionClasses() {
-    let { font } = this.props;
-
-    let classes = ["font"];
-    classes.push((font.URI) ? "is-remote" : "is-local");
-
-    if (font.rule) {
-      classes.push("has-code");
-    }
-
-    return classes.join(" ");
   }
 
   renderFontCSS(cssFamilyName) {
@@ -59,12 +45,12 @@ class Font extends PureComponent {
     );
   }
 
-  renderFontCSSCode(rule, ruleText) {
+  renderFontCSSCode(ruleText) {
     return dom.pre(
       {
         className: "font-css-code"
       },
-      rule ? ruleText : null
+      ruleText
     );
   }
 
@@ -134,32 +120,16 @@ class Font extends PureComponent {
       URI,
     } = font;
 
-    return dom.section(
+    return dom.li(
       {
-        className: this.getSectionClasses(),
+        className: "font",
       },
       this.renderFontPreview(previewUrl),
-      dom.div(
-        {
-          className: "font-info",
-        },
-        this.renderFontName(name),
-        dom.span(
-          {
-            className: "font-is-local",
-          },
-          " " + getStr("fontinspector.system")
-        ),
-        dom.span(
-          {
-            className: "font-is-remote",
-          },
-          " " + getStr("fontinspector.remote")
-        ),
-        this.renderFontFormatURL(URI, format),
-        this.renderFontCSS(CSSFamilyName),
-        this.renderFontCSSCode(rule, ruleText)
-      )
+      this.renderFontName(name),
+      " " + (URI ? getStr("fontinspector.remote") : getStr("fontinspector.system")),
+      URI ? this.renderFontFormatURL(URI, format) : null,
+      this.renderFontCSS(CSSFamilyName),
+      rule ? this.renderFontCSSCode(ruleText) : null
     );
   }
 }
