@@ -33,7 +33,6 @@ class nsInputStreamPump;
 //-----------------------------------------------------------------------------
 
 class nsJARChannel final : public nsIJARChannel
-                         , public mozilla::net::MemoryDownloader::IObserver
                          , public nsIStreamListener
                          , public nsIThreadRetargetableRequest
                          , public nsIThreadRetargetableStreamListener
@@ -66,12 +65,6 @@ private:
     nsresult CheckPendingEvents();
     void NotifyError(nsresult aError);
     void FireOnProgress(uint64_t aProgress);
-    virtual void OnDownloadComplete(mozilla::net::MemoryDownloader* aDownloader,
-                                    nsIRequest* aRequest,
-                                    nsISupports* aCtxt,
-                                    nsresult aStatus,
-                                    mozilla::net::MemoryDownloader::Data aData)
-        override;
 
     nsCString                       mSpec;
 
@@ -90,10 +83,6 @@ private:
     nsCOMPtr<nsISupports>           mListenerContext;
     nsCString                       mContentType;
     nsCString                       mContentCharset;
-    nsCString                       mContentDispositionHeader;
-    /* mContentDisposition is uninitialized if mContentDispositionHeader is
-     * empty */
-    uint32_t                        mContentDisposition;
     int64_t                         mContentLength;
     uint32_t                        mLoadFlags;
     nsresult                        mStatus;
@@ -108,7 +97,6 @@ private:
 
     bool                            mIsUnsafe;
 
-    mozilla::net::MemoryDownloader::Data mTempMem;
     nsCOMPtr<nsIInputStreamPump>    mPump;
     // mRequest is only non-null during OnStartRequest, so we'll have a pointer
     // to the request if we get called back via RetargetDeliveryTo.
@@ -122,9 +110,6 @@ private:
 
     // use StreamTransportService as background thread
     nsCOMPtr<nsIEventTarget>        mWorker;
-
-    // True if this channel should not download any remote files.
-    bool                            mBlockRemoteFiles;
 };
 
 #endif // nsJARChannel_h__
