@@ -47,6 +47,12 @@ this.ShieldRecipeClient = {
     log = LogManager.getLogger("bootstrap");
 
     try {
+      TelemetryEvents.init();
+    } catch (err) {
+      log.error("Failed to initialize telemetry events:", err);
+    }
+
+    try {
       await AboutPages.init();
     } catch (err) {
       log.error("Failed to initialize about pages:", err);
@@ -68,12 +74,6 @@ this.ShieldRecipeClient = {
       ShieldPreferences.init();
     } catch (err) {
       log.error("Failed to initialize preferences UI:", err);
-    }
-
-    try {
-      TelemetryEvents.init();
-    } catch (err) {
-      log.error("Failed to initialize telemetry events:", err);
     }
 
     await RecipeRunner.init();
