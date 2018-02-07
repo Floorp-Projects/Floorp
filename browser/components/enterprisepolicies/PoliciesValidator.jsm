@@ -43,6 +43,7 @@ function validateAndParseParamRecursive(param, properties) {
     case "integer":
     case "string":
     case "URL":
+    case "URLorEmpty":
     case "origin":
       return validateAndParseSimpleParam(param, properties.type);
 
@@ -143,7 +144,13 @@ function validateAndParseSimpleParam(param, type) {
       break;
 
     case "URL":
+    case "URLorEmpty":
       if (typeof(param) != "string") {
+        break;
+      }
+
+      if (type == "URLorEmpty" && param === "") {
+        valid = true;
         break;
       }
 

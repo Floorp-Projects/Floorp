@@ -99,10 +99,38 @@ add_task(async function test_URL_values() {
   is(parsed.pathQueryRef, "/foo#bar", "pathQueryRef is correct");
 
   // Invalid values:
+  ok(!PoliciesValidator.validateAndParseParameters("", schema)[0], "Empty string is not accepted for URL");
   ok(!PoliciesValidator.validateAndParseParameters("www.example.com", schema)[0], "Scheme is required for URL");
   ok(!PoliciesValidator.validateAndParseParameters("https://:!$%", schema)[0], "Invalid URL");
   ok(!PoliciesValidator.validateAndParseParameters({}, schema)[0], "Invalid value");
 });
+
+add_task(async function test_URLorEmpty_values() {
+  let schema = {
+    type: "URLorEmpty"
+  };
+
+  let valid, parsed;
+  [valid, parsed] = PoliciesValidator.validateAndParseParameters("https://www.example.com/foo#bar", schema);
+  ok(valid, "URL is valid");
+  ok(parsed instanceof Ci.nsIURI, "parsed is a nsIURI");
+  is(parsed.prePath, "https://www.example.com", "prePath is correct");
+  is(parsed.pathQueryRef, "/foo#bar", "pathQueryRef is correct");
+
+  // Test that this type also accept empty strings
+  [valid, parsed] = PoliciesValidator.validateAndParseParameters("", schema);
+  ok(valid, "URLorEmpty is valid");
+  ok(!parsed, "parsed value is falsy");
+  is(typeof(parsed), "string", "parsed is a string");
+  is(parsed, "", "parsed is an empty string");
+
+  // Invalid values:
+  ok(!PoliciesValidator.validateAndParseParameters(" ", schema)[0], "Non-empty string is not accepted");
+  ok(!PoliciesValidator.validateAndParseParameters("www.example.com", schema)[0], "Scheme is required for URL");
+  ok(!PoliciesValidator.validateAndParseParameters("https://:!$%", schema)[0], "Invalid URL");
+  ok(!PoliciesValidator.validateAndParseParameters({}, schema)[0], "Invalid value");
+});
+
 
 add_task(async function test_origin_values() {
   // Origin is a URL that doesn't contain a path/query string (i.e., it's only scheme + host + port)
