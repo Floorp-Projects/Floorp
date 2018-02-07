@@ -220,6 +220,23 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(EditorBase, nsIEditor)
 
+  /**
+   * Init is to tell the implementation of nsIEditor to begin its services
+   * @param aDoc          The dom document interface being observed
+   * @param aRoot         This is the root of the editable section of this
+   *                      document. If it is null then we get root
+   *                      from document body.
+   * @param aSelCon       this should be used to get the selection location
+   *                      (will be null for HTML editors)
+   * @param aFlags        A bitmask of flags for specifying the behavior
+   *                      of the editor.
+   */
+  virtual nsresult Init(nsIDocument& doc,
+                        Element* aRoot,
+                        nsISelectionController* aSelCon,
+                        uint32_t aFlags,
+                        const nsAString& aInitialValue);
+
   bool IsInitialized() const { return !!mDocument; }
   already_AddRefed<nsIDOMDocument> GetDOMDocument();
   already_AddRefed<nsIDocument> GetDocument();
@@ -458,6 +475,11 @@ public:
   void EndIMEComposition();
 
   /**
+   * Get preferred IME status of current widget.
+   */
+  virtual nsresult GetPreferredIMEState(widget::IMEState* aState);
+
+  /**
    * Commit composition if there is.
    * Note that when there is a composition, this requests to commit composition
    * to native IME.  Therefore, when there is composition, this can do anything.
@@ -469,6 +491,11 @@ public:
   void SwitchTextDirectionTo(uint32_t aDirection);
 
   RangeUpdater& RangeUpdaterRef() { return mRangeUpdater; }
+
+  /**
+   * Finalizes selection and caret for the editor.
+   */
+  nsresult FinalizeSelection();
 
 protected:
   nsresult DetermineCurrentDirection();
@@ -1287,6 +1314,17 @@ public:
   bool Destroyed() const
   {
     return mDidPreDestroy;
+  }
+
+  /**
+   * Returns true if markNodeDirty() has any effect.  Returns false if
+   * markNodeDirty() is a no-op.
+   */
+  bool OutputsMozDirty() const
+  {
+    // Return true for Composer (!IsInteractionAllowed()) or mail
+    // (IsMailEditor()), but false for webpages.
+    return !IsInteractionAllowed() || IsMailEditor();
   }
 
   /**
