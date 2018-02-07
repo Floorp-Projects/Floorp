@@ -141,7 +141,7 @@ class AsyncNotifyRunnable : public Runnable
       MOZ_ASSERT(NS_IsMainThread(), "Should be running on the main thread");
       MOZ_ASSERT(mTracker, "mTracker should not be null");
       for (uint32_t i = 0; i < mObservers.Length(); ++i) {
-        mObservers[i]->SetNotificationsDeferred(false);
+        mObservers[i]->ClearPendingNotify();
         mTracker->SyncNotify(mObservers[i]);
       }
 
@@ -171,6 +171,11 @@ ProgressTracker::Notify(IProgressObserver* aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (aObserver->NotificationsDeferred()) {
+    // There is a pending notification, or the observer isn't ready yet.
+    return;
+  }
+
   if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
     RefPtr<Image> image = GetImage();
     if (image && image->GetURI()) {
@@ -185,7 +190,7 @@ ProgressTracker::Notify(IProgressObserver* aObserver)
     }
   }
 
-  aObserver->SetNotificationsDeferred(true);
+  aObserver->MarkPendingNotify();
 
   // If we have an existing runnable that we can use, we just append this
   // observer to its list of observers to be notified. This ensures we don't
@@ -221,7 +226,7 @@ class AsyncNotifyCurrentStateRunnable : public Runnable
     NS_IMETHOD Run() override
     {
       MOZ_ASSERT(NS_IsMainThread(), "Should be running on the main thread");
-      mObserver->SetNotificationsDeferred(false);
+      mObserver->ClearPendingNotify();
 
       mProgressTracker->SyncNotify(mObserver);
       return NS_OK;
@@ -241,6 +246,11 @@ ProgressTracker::NotifyCurrentState(IProgressObserver* aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (aObserver->NotificationsDeferred()) {
+    // There is a pending notification, or the observer isn't ready yet.
+    return;
+  }
+
   if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
     RefPtr<Image> image = GetImage();
     nsAutoCString spec;
@@ -251,7 +261,7 @@ ProgressTracker::NotifyCurrentState(IProgressObserver* aObserver)
                         "ProgressTracker::NotifyCurrentState", "uri", spec.get());
   }
 
-  aObserver->SetNotificationsDeferred(true);
+  aObserver->MarkPendingNotify();
 
   nsCOMPtr<nsIRunnable> ev = new AsyncNotifyCurrentStateRunnable(this,
                                                                  aObserver);
@@ -516,7 +526,7 @@ ProgressTracker::RemoveObserver(IProgressObserver* aObserver)
 
   if (aObserver->NotificationsDeferred() && runnable) {
     runnable->RemoveObserver(aObserver);
-    aObserver->SetNotificationsDeferred(false);
+    aObserver->ClearPendingNotify();
   }
 
   return removed;

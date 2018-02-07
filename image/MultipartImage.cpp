@@ -95,7 +95,8 @@ public:
   // Other notifications are ignored.
   virtual void SetHasImage() override { }
   virtual bool NotificationsDeferred() const override { return false; }
-  virtual void SetNotificationsDeferred(bool) override { }
+  virtual void MarkPendingNotify() override { }
+  virtual void ClearPendingNotify() override { }
 
 private:
   virtual ~NextPartObserver() { }
@@ -122,7 +123,7 @@ private:
 
 MultipartImage::MultipartImage(Image* aFirstPart)
   : ImageWrapper(aFirstPart)
-  , mDeferNotifications(false)
+  , mPendingNotify(false)
 {
   mNextPartObserver = new NextPartObserver(this);
 }
@@ -333,13 +334,19 @@ MultipartImage::SetHasImage()
 bool
 MultipartImage::NotificationsDeferred() const
 {
-  return mDeferNotifications;
+  return mPendingNotify;
 }
 
 void
-MultipartImage::SetNotificationsDeferred(bool aDeferNotifications)
+MultipartImage::MarkPendingNotify()
 {
-  mDeferNotifications = aDeferNotifications;
+  mPendingNotify = true;
+}
+
+void
+MultipartImage::ClearPendingNotify()
+{
+  mPendingNotify = false;
 }
 
 } // namespace image
