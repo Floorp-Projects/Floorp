@@ -13,7 +13,7 @@
 #endif
 
 namespace {
-    struct MOZ_RAII AutoLockPerfMap;
+    struct AutoLockPerfMap;
 }
 
 namespace js {
