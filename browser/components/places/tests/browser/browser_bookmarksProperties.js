@@ -104,21 +104,18 @@ gTests.push({
             self.window.document.documentElement.cancelDialog();
             break;
           case "popupshown":
-            (async function() {
-              tagsField.popup.removeEventListener("popupshown", this, true);
-              // In case this test fails the window will close, the test will fail
-              // since we didn't set _cleanShutdown.
-              var tree = tagsField.popup.tree;
-              // Focus and select first result.
-              Assert.notEqual(tree, null, "Autocomplete results tree exists");
-              Assert.equal(tree.view.rowCount, 1, "We have 1 autocomplete result");
-              tagsField.popup.selectedIndex = 0;
-              Assert.equal(tree.view.selection.count, 1,
-                 "We have selected a tag from the autocomplete popup");
-              info("About to focus the autocomplete results tree");
-              tree.focus();
-              EventUtils.synthesizeKey("VK_RETURN", {}, self.window);
-            })();
+            tagsField.popup.removeEventListener("popupshown", this, true);
+            // In case this test fails the window will close, the test will fail
+            // since we didn't set _cleanShutdown.
+            let richlistbox = tagsField.popup.richlistbox;
+            // Focus and select first result.
+            Assert.equal(richlistbox.itemCount, 1, "We have 1 autocomplete result");
+            tagsField.popup.selectedIndex = 0;
+            Assert.equal(richlistbox.selectedItems.length, 1,
+               "We have selected a tag from the autocomplete popup");
+            info("About to focus the autocomplete results");
+            richlistbox.focus();
+            EventUtils.synthesizeKey("VK_RETURN", {}, self.window);
             break;
           default:
             Assert.ok(false, "unknown event: " + aEvent.type);
@@ -214,15 +211,14 @@ gTests.push({
             tagsField.popup.removeEventListener("popupshown", this, true);
             // In case this test fails the window will close, the test will fail
             // since we didn't set _cleanShutdown.
-            var tree = tagsField.popup.tree;
+            let richlistbox = tagsField.popup.richlistbox;
             // Focus and select first result.
-            Assert.notEqual(tree, null, "Autocomplete results tree exists");
-            Assert.ok(tree.view.rowCount, 1, "We have 1 autocomplete result");
+            Assert.ok(richlistbox.itemCount, 1, "We have 1 autocomplete result");
             tagsField.popup.selectedIndex = 0;
-            Assert.ok(tree.view.selection.count, 1,
+            Assert.ok(richlistbox.selectedItems.length, 1,
                "We have selected a tag from the autocomplete popup");
-            info("About to focus the autocomplete results tree");
-            tree.focus();
+            info("About to focus the autocomplete results");
+            richlistbox.focus();
             EventUtils.synthesizeKey("VK_ESCAPE", {}, self.window);
             break;
           default:
