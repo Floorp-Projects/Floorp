@@ -7,7 +7,7 @@
 ## Getting the Source
 
 ```bash
-git clone git@github.com:facebook/prop-types.git
+git clone the latest version from https://github.com/facebook/prop-types
 cd prop-types
 ```
 
@@ -19,13 +19,6 @@ NODE_ENV=development browserify index.js -t envify --standalone PropTypes -o rea
 NODE_ENV=production browserify index.js -t envify --standalone PropTypes -o react-prop-types.js
 ```
 
-## Copying files to your Firefox repo
-
-```bash
-mv react-prop-types.js /firefox/repo/devtools/client/shared/vendor/react-prop-types-dev.js
-mv react-prop-types-dev.js /firefox/repo/devtools/client/shared/vendor/react-prop-types-dev.js
-```
-
 ## Adding Version Info
 
 Add the version to the top of `react-prop-types.js` and `react-prop-types-dev.js`.
@@ -34,4 +27,11 @@ Add the version to the top of `react-prop-types.js` and `react-prop-types-dev.js
  /**
   * react-prop-types v15.6.0
   */
+```
+
+## Copying files to your Firefox repo
+
+```bash
+mv react-prop-types.js /firefox/repo/devtools/client/shared/vendor/react-prop-types-dev.js
+mv react-prop-types-dev.js /firefox/repo/devtools/client/shared/vendor/react-prop-types-dev.js
 ```
