@@ -4,9 +4,7 @@ ChromeUtils.defineModuleGetter(this, "FormHistory",
 
 function expectedURL(aSearchTerms) {
   const ENGINE_HTML_BASE = "http://mochi.test:8888/browser/browser/components/search/test/test.html";
-  var textToSubURI = Cc["@mozilla.org/intl/texttosuburi;1"].
-                     getService(Ci.nsITextToSubURI);
-  var searchArg = textToSubURI.ConvertAndEscape("utf-8", aSearchTerms);
+  var searchArg = Services.textToSubURI.ConvertAndEscape("utf-8", aSearchTerms);
   return ENGINE_HTML_BASE + "?test=" + searchArg;
 }
 

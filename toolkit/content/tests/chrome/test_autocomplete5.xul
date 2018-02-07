@@ -20,6 +20,8 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 const ACR = Components.interfaces.nsIAutoCompleteResult;
 
 // This result can't be constructed in-line, because otherwise we leak memory.
