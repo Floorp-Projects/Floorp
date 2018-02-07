@@ -107,17 +107,21 @@ nsRFPService::IsResistFingerprintingEnabled()
 
 /* static */
 bool
-nsRFPService::IsTimerPrecisionReductionEnabled()
+nsRFPService::IsTimerPrecisionReductionEnabled(TimerPrecisionType aType)
 {
+  if (aType == TimerPrecisionType::RFPOnly) {
+    return IsResistFingerprintingEnabled();
+  }
+
   return (sPrivacyTimerPrecisionReduction || IsResistFingerprintingEnabled()) &&
          TimerResolution() != 0;
 }
 
 /* static */
 double
-nsRFPService::ReduceTimePrecisionAsMSecs(double aTime)
+nsRFPService::ReduceTimePrecisionAsMSecs(double aTime, TimerPrecisionType aType /* = TimerPrecisionType::All */)
 {
-  if (!IsTimerPrecisionReductionEnabled()) {
+  if (!IsTimerPrecisionReductionEnabled(aType)) {
     return aTime;
   }
   const double resolutionMSec = TimerResolution() / 1000.0;
@@ -132,9 +136,9 @@ nsRFPService::ReduceTimePrecisionAsMSecs(double aTime)
 
 /* static */
 double
-nsRFPService::ReduceTimePrecisionAsUSecs(double aTime)
+nsRFPService::ReduceTimePrecisionAsUSecs(double aTime, TimerPrecisionType aType /* = TimerPrecisionType::All */)
 {
-  if (!IsTimerPrecisionReductionEnabled()) {
+  if (!IsTimerPrecisionReductionEnabled(aType)) {
     return aTime;
   }
   double resolutionUSec = TimerResolution();
@@ -157,9 +161,9 @@ nsRFPService::CalculateTargetVideoResolution(uint32_t aVideoQuality)
 
 /* static */
 double
-nsRFPService::ReduceTimePrecisionAsSecs(double aTime)
+nsRFPService::ReduceTimePrecisionAsSecs(double aTime, TimerPrecisionType aType /* = TimerPrecisionType::All */)
 {
-  if (!IsTimerPrecisionReductionEnabled()) {
+  if (!IsTimerPrecisionReductionEnabled(aType)) {
     return aTime;
   }
   double resolutionUSec = TimerResolution();
