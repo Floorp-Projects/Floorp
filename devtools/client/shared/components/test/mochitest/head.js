@@ -26,10 +26,10 @@ var { require: browserRequire } = BrowserLoader({
   window
 });
 
-let React = browserRequire("devtools/client/shared/vendor/react");
-let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
-let dom = browserRequire("devtools/client/shared/vendor/react-dom-factories");
-let TestUtils = ReactDOM.TestUtils;
+const React = browserRequire("devtools/client/shared/vendor/react");
+const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+const dom = browserRequire("devtools/client/shared/vendor/react-dom-factories");
+const TestUtils = browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
 
 var EXAMPLE_URL = "http://example.com/browser/browser/devtools/shared/test/";
 
