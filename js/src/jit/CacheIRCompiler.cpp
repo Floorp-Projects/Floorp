@@ -18,6 +18,7 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::Maybe;
+using mozilla::BitwiseCast;
 
 ValueOperand
 CacheRegisterAllocator::useValueRegister(MacroAssembler& masm, ValOperandId op)
@@ -1826,6 +1827,65 @@ CacheIRCompiler::emitInt32NotResult()
     Register val = allocator.useRegister(masm, reader.int32OperandId());
     masm.not32(val);
     masm.tagValue(JSVAL_TYPE_INT32, val, output.valueReg());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitDoubleNegationResult()
+{
+    AutoOutputRegister output(*this);
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // If we're compiling a Baseline IC, FloatReg0 is always available.
+    Label failurePopReg, done;
+    if (mode_ != Mode::Baseline)
+        masm.push(FloatReg0);
+
+    masm.ensureDouble(val, FloatReg0, (mode_ != Mode::Baseline) ? &failurePopReg : failure->label());
+    masm.negateDouble(FloatReg0);
+    masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+
+    if (mode_ != Mode::Baseline) {
+        masm.pop(FloatReg0);
+        masm.jump(&done);
+
+        masm.bind(&failurePopReg);
+        masm.pop(FloatReg0);
+        masm.jump(failure->label());
+    }
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitTruncateDoubleToUInt32()
+{
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    Register res = allocator.defineRegister(masm, reader.int32OperandId());
+
+    Label doneTruncate,  truncateABICall;
+    if (mode_ != Mode::Baseline)
+        masm.push(FloatReg0);
+
+    masm.unboxDouble(val, FloatReg0);
+    masm.branchTruncateDoubleMaybeModUint32(FloatReg0, res, &truncateABICall);
+    masm.jump(&doneTruncate);
+
+    masm.bind(&truncateABICall);
+    masm.setupUnalignedABICall(res);
+    masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+    masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32),
+                     MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+    masm.storeCallInt32Result(res);
+
+    masm.bind(&doneTruncate);
+    if (mode_ != Mode::Baseline)
+        masm.pop(FloatReg0);
     return true;
 }
 
