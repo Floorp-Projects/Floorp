@@ -1534,16 +1534,33 @@ KeyframeEffectReadOnly::CanThrottleTransformChanges(const nsIFrame& aFrame) cons
 bool
 KeyframeEffectReadOnly::CanThrottleTransformChangesForCompositor(nsIFrame& aFrame) const
 {
+  // If the target element is not associated with any documents, we don't care
+  // it.
+  nsIDocument* doc = GetRenderedDocument();
+  if (!doc) {
+    return true;
+  }
+
+  bool hasIntersectionObservers = doc->HasIntersectionObservers();
+
   // If we know that the animation cannot cause overflow,
   // we can just disable flushes for this animation.
 
-  // If we don't show scrollbars, we don't care about overflow.
-  if (LookAndFeel::GetInt(LookAndFeel::eIntID_ShowHideScrollbars) == 0) {
+  // If we don't show scrollbars and have no intersection observers, we don't
+  // care about overflow.
+  if (LookAndFeel::GetInt(LookAndFeel::eIntID_ShowHideScrollbars) == 0 &&
+      !hasIntersectionObservers) {
     return true;
   }
 
   if (CanThrottleTransformChanges(aFrame)) {
     return true;
+  }
+
+  // If we have any intersection observers, we unthrottle this transform
+  // animation periodically.
+  if (hasIntersectionObservers) {
+    return false;
   }
 
   // If the nearest scrollable ancestor has overflow:hidden,

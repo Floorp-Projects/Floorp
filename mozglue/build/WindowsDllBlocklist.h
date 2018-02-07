@@ -26,12 +26,14 @@ MFBT_API bool DllBlocklist_CheckStatus();
 
 // Forward declaration
 namespace mozilla {
+namespace glue {
 namespace detail {
 class DllServicesBase;
 } // namespace detail
+} // namespace glue
 } // namespace mozilla
 
-MFBT_API void DllBlocklist_SetDllServices(mozilla::detail::DllServicesBase* aSvc);
+MFBT_API void DllBlocklist_SetDllServices(mozilla::glue::detail::DllServicesBase* aSvc);
 
 #endif // defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
 #endif // mozilla_windowsdllblocklist_h
