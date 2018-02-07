@@ -990,7 +990,7 @@ protected:
   /**
    * Call this before modifying mLoadingSrc.
    */
-  void RemoveMediaElementFromURITable(bool aFroceClearEntry = false);
+  void RemoveMediaElementFromURITable();
   /**
    * Call this to find a media element with the same NodePrincipal and mLoadingSrc
    * set to aURI, and with a decoder on which Load() has been called.
