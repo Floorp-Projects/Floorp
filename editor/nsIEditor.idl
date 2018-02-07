@@ -25,13 +25,8 @@ namespace mozilla {
 class EditorBase;
 class HTMLEditor;
 class TextEditor;
-namespace widget {
-struct IMEState;
-} // namespace widget
 } // namespace mozilla
 %}
-
-native IMEState(mozilla::widget::IMEState);
 
 [scriptable, builtinclass, uuid(094be624-f0bf-400f-89e2-6a84baab9474)]
 interface nsIEditor  : nsISupports
@@ -52,28 +47,6 @@ interface nsIEditor  : nsISupports
   const short eNoStrip = 1;
 
   readonly attribute nsISelection selection;
-
-  /**
-   * Finalizes selection and caret for the editor.
-   */
-  [noscript] void finalizeSelection();
-
-  /**
-   * Init is to tell the implementation of nsIEditor to begin its services
-   * @param aDoc          The dom document interface being observed
-   * @param aRoot         This is the root of the editable section of this
-   *                      document. If it is null then we get root
-   *                      from document body.
-   * @param aSelCon       this should be used to get the selection location
-   *                      (will be null for HTML editors)
-   * @param aFlags        A bitmask of flags for specifying the behavior
-   *                      of the editor.
-   */
-  [noscript] void init(in nsIDOMDocument doc,
-                       in nsIContent aRoot,
-                       in nsISelectionController aSelCon,
-                       in unsigned long aFlags,
-                       in AString initialValue);
 
   void setAttributeOrEquivalent(in nsIDOMElement element,
                                 in AString sourceAttrName,
@@ -479,12 +452,6 @@ interface nsIEditor  : nsISupports
   void deleteNode(in nsIDOMNode child);
 
   /**
-   * Returns true if markNodeDirty() has any effect.  Returns false if
-   * markNodeDirty() is a no-op.
-   */
-  [notxpcom] boolean outputsMozDirty();
-
-  /**
    * markNodeDirty() sets a special dirty attribute on the node.
    * Usually this will be called immediately after creating a new node.
    * @param aNode      The node for which to insert formatting.
@@ -550,28 +517,13 @@ interface nsIEditor  : nsISupports
   /* Run unit tests. Noop in optimized builds */
   void debugUnitTests(out long outNumTests, out long  outNumTestsFailed);
 
-  /* checks if a node is read-only or not */
-  [notxpcom] boolean isModifiableNode(in nsIDOMNode aNode);
-
   /* Set true if you want to suppress dispatching input event. */
   attribute boolean suppressDispatchingInputEvent;
-
-  /**
-   * True if an edit action is being handled (in other words, between calls of
-   * nsIEditorObserver::BeforeEditAction() and nsIEditorObserver::EditAction()
-   * or nsIEditorObserver::CancelEditAction().  Otherwise, false.
-   */
-  [noscript] readonly attribute boolean isInEditAction;
 
   /**
    * forceCompositionEnd() force the composition end
    */
   void forceCompositionEnd();
-
-  /**
-   * Get preferred IME status of current widget.
-   */
-  [noscript] IMEState getPreferredIMEState();
 
   /**
    * whether this editor has active IME transaction
