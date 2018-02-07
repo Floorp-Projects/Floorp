@@ -11,6 +11,7 @@ apps:
     desktop: distribution/firefox.desktop
     environment:
       DISABLE_WAYLAND: 1
+      HOME: "$SNAP_USER_COMMON"
     plugs:
       - avahi-observe
       - browser-sandbox
