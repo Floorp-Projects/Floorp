@@ -10,21 +10,6 @@ add_task(async function setup() {
   ]});
 });
 
-function testBorderColor(element, expected) {
-  Assert.equal(window.getComputedStyle(element).borderLeftColor,
-               hexToCSS(expected),
-               "Field left border color should be set.");
-  Assert.equal(window.getComputedStyle(element).borderRightColor,
-               hexToCSS(expected),
-               "Field right border color should be set.");
-  Assert.equal(window.getComputedStyle(element).borderTopColor,
-               hexToCSS(expected),
-               "Field top border color should be set.");
-  Assert.equal(window.getComputedStyle(element).borderBottomColor,
-               hexToCSS(expected),
-               "Field bottom border color should be set.");
-}
-
 add_task(async function test_support_toolbar_field_properties() {
   const TOOLBAR_FIELD_BACKGROUND = "#ff00ff";
   const TOOLBAR_FIELD_COLOR = "#00ff00";
