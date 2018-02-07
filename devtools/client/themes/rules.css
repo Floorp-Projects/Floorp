@@ -402,7 +402,6 @@
 }
 
 .ruleview-newproperty {
-  /* (enable checkbox width: 12px) + (expander width: 15px) */
   margin-inline-start: -10px;
 }
 
