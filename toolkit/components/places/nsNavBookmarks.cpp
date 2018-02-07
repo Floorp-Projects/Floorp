@@ -1743,21 +1743,6 @@ nsNavBookmarks::SetItemLastModified(int64_t aItemId, PRTime aLastModified,
 }
 
 
-NS_IMETHODIMP
-nsNavBookmarks::GetItemLastModified(int64_t aItemId, PRTime* _lastModified)
-{
-  NS_ENSURE_ARG_MIN(aItemId, 1);
-  NS_ENSURE_ARG_POINTER(_lastModified);
-
-  BookmarkData bookmark;
-  nsresult rv = FetchItemInfo(aItemId, bookmark);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *_lastModified = bookmark.lastModified;
-  return NS_OK;
-}
-
-
 nsresult
 nsNavBookmarks::AddSyncChangesForBookmarksWithURL(const nsACString& aURL,
                                                   int64_t aSyncChangeDelta)

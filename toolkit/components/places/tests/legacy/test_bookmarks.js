@@ -134,7 +134,8 @@ add_task(async function test_bookmarks() {
   Assert.ok(is_time_ordered(beforeInsert, dateAdded));
 
   // after just inserting, modified should not be set
-  let lastModified = bs.getItemLastModified(newId);
+  let lastModified = PlacesUtils.toPRTime((await PlacesUtils.bookmarks.fetch(
+    await PlacesUtils.promiseItemGuid(newId))).lastModified);
   Assert.equal(lastModified, dateAdded);
 
   // The time before we set the title, in microseconds.
@@ -159,7 +160,8 @@ add_task(async function test_bookmarks() {
   Assert.equal(dateAdded2, dateAdded);
 
   // check lastModified after we set the title
-  let lastModified2 = bs.getItemLastModified(newId);
+  let lastModified2 = PlacesUtils.toPRTime((await PlacesUtils.bookmarks.fetch(
+    await PlacesUtils.promiseItemGuid(newId))).lastModified);
   info("test setItemTitle");
   info("dateAdded = " + dateAdded);
   info("beforeSetTitle = " + beforeSetTitle);
@@ -415,7 +417,8 @@ add_task(async function test_bookmarks() {
                                   bs.DEFAULT_INDEX, "");
   dateAdded = bs.getItemDateAdded(newId10);
   // after just inserting, modified should not be set
-  lastModified = bs.getItemLastModified(newId10);
+  lastModified = PlacesUtils.toPRTime((await PlacesUtils.bookmarks.fetch(
+    await PlacesUtils.promiseItemGuid(newId10))).lastModified);
   Assert.equal(lastModified, dateAdded);
 
   // Workaround possible VM timers issues moving lastModified and dateAdded
@@ -544,10 +547,12 @@ add_task(async function test_bookmarks() {
   let newId14 = bs.insertBookmark(testRoot, uri("http://bar.tld/"),
                                   bs.DEFAULT_INDEX, "");
   dateAdded = bs.getItemDateAdded(newId14);
-  lastModified = bs.getItemLastModified(newId14);
+  lastModified = PlacesUtils.toPRTime((await PlacesUtils.bookmarks.fetch(
+    await PlacesUtils.promiseItemGuid(newId14))).lastModified);
   Assert.equal(lastModified, dateAdded);
   bs.setItemLastModified(newId14, 1234000000000000);
-  let fakeLastModified = bs.getItemLastModified(newId14);
+  let fakeLastModified = PlacesUtils.toPRTime((await PlacesUtils.bookmarks.fetch(
+    await PlacesUtils.promiseItemGuid(newId14))).lastModified);
   Assert.equal(fakeLastModified, 1234000000000000);
   bs.setItemDateAdded(newId14, 4321000000000000);
   let fakeDateAdded = bs.getItemDateAdded(newId14);
