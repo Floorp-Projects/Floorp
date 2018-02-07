@@ -1335,6 +1335,24 @@ class MacroAssembler : public MacroAssemblerSpecific
         DEFINED_ON(arm, arm64, x86_shared);
 
   public:
+
+    inline void cmp32Move32(Condition cond, Register lhs, Register rhs, Register src,
+                            Register dest)
+        DEFINED_ON(arm, arm64, x86_shared);
+
+    inline void cmp32Move32(Condition cond, Register lhs, const Address& rhs, Register src,
+                            Register dest)
+        DEFINED_ON(arm, arm64, x86_shared);
+
+    // Performs a bounds check and zeroes the index register if out-of-bounds
+    // (to mitigate Spectre).
+    inline void boundsCheck32ForLoad(Register index, Register length, Register scratch,
+                                     Label* failure)
+        DEFINED_ON(arm, arm64, x86_shared);
+    inline void boundsCheck32ForLoad(Register index, const Address& length, Register scratch,
+                                     Label* failure)
+        DEFINED_ON(arm, arm64, x86_shared);
+
     // ========================================================================
     // Canonicalization primitives.
     inline void canonicalizeDouble(FloatRegister reg);
@@ -1894,28 +1912,12 @@ class MacroAssembler : public MacroAssemblerSpecific
             store32(Imm32(key.constant()), dest);
     }
 
-  private:
-    template <typename T>
-    void computeSpectreIndexMaskGeneric(Register index, const T& length, Register output);
-
-    void computeSpectreIndexMask(Register index, Register length, Register output);
-
-    template <typename T>
-    void computeSpectreIndexMask(int32_t index, const T& length, Register output);
-
-  public:
-    void spectreMaskIndex(int32_t index, Register length, Register output);
-    void spectreMaskIndex(int32_t index, const Address& length, Register output);
     void spectreMaskIndex(Register index, Register length, Register output);
     void spectreMaskIndex(Register index, const Address& length, Register output);
 
     // The length must be a power of two. Performs a bounds check and Spectre index
     // masking.
     void boundsCheck32PowerOfTwo(Register index, uint32_t length, Label* failure);
-
-    // Performs a bounds check and Spectre index masking.
-    void boundsCheck32ForLoad(Register index, Register length, Register scratch, Label* failure);
-    void boundsCheck32ForLoad(Register index, const Address& length, Register scratch, Label* failure);
 
     template <typename T>
     void guardedCallPreBarrier(const T& address, MIRType type) {

@@ -3424,101 +3424,28 @@ MacroAssembler::debugAssertIsObject(const ValueOperand& val)
 #endif
 }
 
-template <typename T>
-void
-MacroAssembler::computeSpectreIndexMaskGeneric(Register index, const T& length, Register output)
-{
-    MOZ_ASSERT(JitOptions.spectreIndexMasking);
-    MOZ_ASSERT(index != output);
-
-    // mask := ((index - length) & ~index) >> 31
-    mov(index, output);
-    sub32(length, output);
-    not32(index);
-    and32(index, output);
-    not32(index); // Restore index register to its original value.
-    rshift32Arithmetic(Imm32(31), output);
-}
-
-template <typename T>
-void
-MacroAssembler::computeSpectreIndexMask(int32_t index, const T& length, Register output)
-{
-    MOZ_ASSERT(JitOptions.spectreIndexMasking);
-
-    // mask := ((index - length) & ~index) >> 31
-    move32(Imm32(index), output);
-    sub32(length, output);
-    and32(Imm32(~index), output);
-    rshift32Arithmetic(Imm32(31), output);
-}
-
-void
-MacroAssembler::computeSpectreIndexMask(Register index, Register length, Register output)
-{
-    MOZ_ASSERT(JitOptions.spectreIndexMasking);
-    MOZ_ASSERT(index != length);
-    MOZ_ASSERT(length != output);
-    MOZ_ASSERT(index != output);
-
-#if JS_BITS_PER_WORD == 64
-    // On 64-bit platforms, we can use a faster algorithm:
-    //
-    //   mask := (uint64_t(index) - uint64_t(length)) >> 32
-    //
-    // mask is 0x11…11 if index < length, 0 otherwise.
-    move32(index, output);
-    subPtr(length, output);
-    rshiftPtr(Imm32(32), output);
-#else
-    computeSpectreIndexMaskGeneric(index, length, output);
-#endif
-}
-
-void
-MacroAssembler::spectreMaskIndex(int32_t index, Register length, Register output)
-{
-    MOZ_ASSERT(length != output);
-    if (index == 0) {
-        move32(Imm32(index), output);
-    } else {
-        computeSpectreIndexMask(index, length, output);
-        and32(Imm32(index), output);
-    }
-}
-
-void
-MacroAssembler::spectreMaskIndex(int32_t index, const Address& length, Register output)
-{
-    MOZ_ASSERT(length.base != output);
-    if (index == 0) {
-        move32(Imm32(index), output);
-    } else {
-        computeSpectreIndexMask(index, length, output);
-        and32(Imm32(index), output);
-    }
-}
-
 void
 MacroAssembler::spectreMaskIndex(Register index, Register length, Register output)
 {
+    MOZ_ASSERT(JitOptions.spectreIndexMasking);
     MOZ_ASSERT(index != length);
     MOZ_ASSERT(length != output);
     MOZ_ASSERT(index != output);
 
-    computeSpectreIndexMask(index, length, output);
-    and32(index, output);
+    move32(Imm32(0), output);
+    cmp32Move32(Assembler::Below, index, length, index, output);
 }
 
 void
 MacroAssembler::spectreMaskIndex(Register index, const Address& length, Register output)
 {
+    MOZ_ASSERT(JitOptions.spectreIndexMasking);
     MOZ_ASSERT(index != length.base);
     MOZ_ASSERT(length.base != output);
     MOZ_ASSERT(index != output);
 
-    computeSpectreIndexMaskGeneric(index, length, output);
-    and32(index, output);
+    move32(Imm32(0), output);
+    cmp32Move32(Assembler::Below, index, length, index, output);
 }
 
 void
@@ -3531,38 +3458,6 @@ MacroAssembler::boundsCheck32PowerOfTwo(Register index, uint32_t length, Label* 
     // only affects speculative execution.
     if (JitOptions.spectreIndexMasking)
         and32(Imm32(length - 1), index);
-}
-
-void
-MacroAssembler::boundsCheck32ForLoad(Register index, Register length, Register scratch,
-                                     Label* failure)
-{
-    MOZ_ASSERT(index != length);
-    MOZ_ASSERT(length != scratch);
-    MOZ_ASSERT(index != scratch);
-
-    branch32(Assembler::AboveOrEqual, index, length, failure);
-
-    if (JitOptions.spectreIndexMasking) {
-        computeSpectreIndexMask(index, length, scratch);
-        and32(scratch, index);
-    }
-}
-
-void
-MacroAssembler::boundsCheck32ForLoad(Register index, const Address& length, Register scratch,
-                                     Label* failure)
-{
-    MOZ_ASSERT(index != length.base);
-    MOZ_ASSERT(length.base != scratch);
-    MOZ_ASSERT(index != scratch);
-
-    branch32(Assembler::BelowOrEqual, length, index, failure);
-
-    if (JitOptions.spectreIndexMasking) {
-        computeSpectreIndexMaskGeneric(index, length, scratch);
-        and32(scratch, index);
-    }
 }
 
 namespace js {
