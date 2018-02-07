@@ -296,12 +296,22 @@ js::jit::writePerfSpewerJitCodeProfile(JitCode* code, const char* msg)
         PerfSpewer::WriteEntry(lock, reinterpret_cast<uintptr_t>(code->raw()), size,
                                "%s (%p 0x%zx)", msg, code->raw(), size);
     }
+}
 
+void
+js::jit::writePerfSpewerWasmMap(uintptr_t base, uintptr_t size, const char* filename,
+                                const char* annotation)
+{
+    if (!PerfFuncEnabled() || size == 0U)
+        return;
+
+    AutoLockPerfMap lock;
+    PerfSpewer::WriteEntry(lock, base, size, "%s: Function %s", filename, annotation);
 }
 
 void
 js::jit::writePerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size,
-                                         const char* filename, unsigned lineno, unsigned colIndex,
+                                         const char* filename, unsigned lineno,
                                          const char* funcName)
 {
     if (!PerfFuncEnabled() || size == 0U)
