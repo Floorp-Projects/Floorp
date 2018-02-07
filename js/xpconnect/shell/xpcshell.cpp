@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 
+#include "mozilla/WindowsDllBlocklist.h"
 #include "mozilla/Bootstrap.h"
 
 #include "nsXULAppAPI.h"
@@ -25,7 +26,6 @@
 #ifdef MOZ_SANDBOX
 #include "mozilla/sandboxing/SandboxInitialization.h"
 #endif
-#include "mozilla/WindowsDllBlocklist.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK
