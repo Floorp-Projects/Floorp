@@ -360,6 +360,7 @@ DrawTargetRecording::FillGlyphs(ScaledFont *aFont,
 	}
 	mRecorder->AddStoredObject(unscaledFont);
       }
+      mRecorder->RecordEvent(RecordedScaledFontCreation(aFont, unscaledFont));
     }
     RecordingFontUserData *userData = new RecordingFontUserData;
     userData->refPtr = aFont;
