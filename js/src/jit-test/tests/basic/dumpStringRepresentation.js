@@ -10,6 +10,9 @@ dumpStringRepresentation("");
 print("\nResult of coercion to string:");
 dumpStringRepresentation();
 
+print("\nString with an index value:");
+dumpStringRepresentation((12345).toString());
+
 print("\ns = Simple short atom:");
 var s = "xxxxxxxx";
 dumpStringRepresentation(s);
