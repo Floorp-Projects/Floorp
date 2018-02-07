@@ -124,11 +124,6 @@ class nsIDocumentLoaderFactory;
   0x0DE2FBFA, 0x6B7F, 0x11D7, {0xBB, 0xBA, 0x00, 0x03, 0x93, 0x8A, 0x9D, 0x96} }
 
 #include "nsIBoxObject.h"
-
-#ifdef MOZ_XUL
-#include "inDOMView.h"
-#endif /* MOZ_XUL */
-
 #include "inDeepTreeWalker.h"
 
 #ifdef MOZ_XUL
@@ -377,9 +372,6 @@ MAKE_CTOR(CreateNewScrollBoxObject,     nsIBoxObject,           NS_NewScrollBoxO
 MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
 #endif // MOZ_XUL
 
-#ifdef MOZ_XUL
-NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMView)
-#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDeepTreeWalker)
 
 MAKE_CTOR2(CreateContentViewer,           nsIContentViewer,            NS_NewContentViewer)
@@ -522,9 +514,6 @@ NS_DEFINE_NAMED_CID(NS_POPUPBOXOBJECT_CID);
 NS_DEFINE_NAMED_CID(NS_SCROLLBOXOBJECT_CID);
 NS_DEFINE_NAMED_CID(NS_TREEBOXOBJECT_CID);
 #endif // MOZ_XUL
-#ifdef MOZ_XUL
-NS_DEFINE_NAMED_CID(IN_DOMVIEW_CID);
-#endif
 NS_DEFINE_NAMED_CID(IN_DEEPTREEWALKER_CID);
 NS_DEFINE_NAMED_CID(NS_CONTENT_VIEWER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLDOCUMENT_CID);
@@ -768,9 +757,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_SCROLLBOXOBJECT_CID, false, nullptr, CreateNewScrollBoxObject },
   { &kNS_TREEBOXOBJECT_CID, false, nullptr, CreateNewTreeBoxObject },
 #endif // MOZ_XUL
-#ifdef MOZ_XUL
-  { &kIN_DOMVIEW_CID, false, nullptr, inDOMViewConstructor },
-#endif
   { &kIN_DEEPTREEWALKER_CID, false, nullptr, inDeepTreeWalkerConstructor },
   { &kNS_CONTENT_VIEWER_CID, false, nullptr, CreateContentViewer },
   { &kNS_HTMLDOCUMENT_CID, false, nullptr, CreateHTMLDocument },
@@ -880,9 +866,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/layout/xul-boxobject-scrollbox;1", &kNS_SCROLLBOXOBJECT_CID },
   { "@mozilla.org/layout/xul-boxobject-tree;1", &kNS_TREEBOXOBJECT_CID },
 #endif // MOZ_XUL
-#ifdef MOZ_XUL
-  { "@mozilla.org/inspector/dom-view;1", &kIN_DOMVIEW_CID },
-#endif
   { "@mozilla.org/inspector/deep-tree-walker;1", &kIN_DEEPTREEWALKER_CID },
   { "@mozilla.org/xml/xml-document;1", &kNS_XMLDOCUMENT_CID },
   { "@mozilla.org/svg/svg-document;1", &kNS_SVGDOCUMENT_CID },

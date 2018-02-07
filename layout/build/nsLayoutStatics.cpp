@@ -79,8 +79,6 @@
 #include "nsXULPrototypeCache.h"
 #include "nsXULTooltipListener.h"
 
-#include "inDOMView.h"
-
 #include "nsMenuBarListener.h"
 #endif
 
