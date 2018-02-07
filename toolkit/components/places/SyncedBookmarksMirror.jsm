@@ -412,6 +412,7 @@ class SyncedBookmarksMirror {
       await this.db.execute(`DELETE FROM itemsMoved`);
       await this.db.execute(`DELETE FROM annosChanged`);
       await this.db.execute(`DELETE FROM keywordsChanged`);
+      await this.db.execute(`DELETE FROM itemsToWeaklyReupload`);
       await this.db.execute(`DELETE FROM itemsToUpload`);
 
       return changeRecords;
@@ -1366,10 +1367,19 @@ class SyncedBookmarksMirror {
    * items again on the next sync.
    */
   async stageItemsToUpload() {
-    // Stage all locally changed items for upload, along with any remotely
-    // changed records with older local creation dates. These are tracked
-    // "weakly", in the in-memory table only. If the upload is interrupted
-    // or fails, we won't reupload the record on the next sync.
+    // Stage remotely changed items with older local creation dates. These are
+    // tracked "weakly": if the upload is interrupted or fails, we won't
+    // reupload the record on the next sync.
+    await this.db.execute(`
+      INSERT INTO itemsToWeaklyReupload(id)
+      SELECT b.id FROM moz_bookmarks b
+      JOIN mergeStates r ON r.mergedGuid = b.guid
+      JOIN items v ON v.guid = r.mergedGuid
+      WHERE r.valueState = :valueState AND
+            b.dateAdded < v.dateAdded`,
+      { valueState: BookmarkMergeState.TYPE.REMOTE });
+
+    // Stage remaining locally changed items for upload.
     await this.db.execute(`
       WITH RECURSIVE
       syncedItems(id, level) AS (
@@ -1378,10 +1388,6 @@ class SyncedBookmarksMirror {
         UNION ALL
         SELECT b.id, s.level + 1 AS level FROM moz_bookmarks b
         JOIN syncedItems s ON s.id = b.parent
-      ),
-      annos(itemId, name, content) AS (
-        SELECT a.item_id, n.name, a.content FROM moz_items_annos a
-        JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
       )
       INSERT INTO itemsToUpload(guid, syncChangeCounter, parentGuid,
                                 parentTitle, dateAdded, type, title, isQuery,
@@ -1393,40 +1399,53 @@ class SyncedBookmarksMirror {
              (SELECT GROUP_CONCAT(t.title, ',') FROM moz_bookmarks e
               JOIN moz_bookmarks t ON t.id = e.parent
               JOIN moz_bookmarks r ON r.id = t.parent
-              WHERE r.guid = :tagsGuid AND
+              WHERE b.type = :bookmarkType AND
+                    r.guid = :tagsGuid AND
                     e.fk = h.id),
-             (SELECT content FROM annos WHERE itemId = b.id AND
-                                              name = :descriptionAnno),
-             IFNULL((SELECT content FROM annos WHERE itemId = b.id AND
-                                                     name = :sidebarAnno), 0),
-             (SELECT content FROM annos WHERE itemId = b.id AND
-                                              name = :smartBookmarkAnno),
+             (SELECT a.content FROM moz_items_annos a
+              JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
+              WHERE b.type IN (:bookmarkType, :folderType) AND
+                    a.item_id = b.id AND
+                    n.name = :descriptionAnno),
+             IFNULL((SELECT a.content FROM moz_items_annos a
+                     JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
+                     WHERE a.item_id = b.id AND
+                           n.name = :sidebarAnno), 0),
+             (SELECT a.content FROM moz_items_annos a
+              JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
+              WHERE a.item_id = b.id AND
+                    n.name = :smartBookmarkAnno),
              (SELECT keyword FROM moz_keywords WHERE place_id = h.id),
-             (SELECT content FROM annos WHERE itemId = b.id AND
-                                              name = :feedURLAnno),
-             (SELECT content FROM annos WHERE itemId = b.id AND
-                                              name = :siteURLAnno),
+             (SELECT a.content FROM moz_items_annos a
+              JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
+              WHERE b.type = :folderType AND
+                    a.item_id = b.id AND
+                    n.name = :feedURLAnno),
+             (SELECT a.content FROM moz_items_annos a
+              JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
+              WHERE b.type = :folderType AND
+                    a.item_id = b.id AND
+                    n.name = :siteURLAnno),
              b.position
       FROM moz_bookmarks b
       JOIN moz_bookmarks p ON p.id = b.parent
       JOIN syncedItems s ON s.id = b.id
       LEFT JOIN moz_places h ON h.id = b.fk
-      JOIN mergeStates r ON r.mergedGuid = b.guid
-      LEFT JOIN items v ON v.guid = r.mergedGuid
+      LEFT JOIN itemsToWeaklyReupload w ON w.id = b.id
       WHERE b.syncChangeCounter >= 1 OR
-            (r.valueState = :valueState AND
-              b.dateAdded < v.dateAdded)`,
+            w.id NOT NULL`,
       { menuGuid: PlacesUtils.bookmarks.menuGuid,
         toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
         unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
         mobileGuid: PlacesUtils.bookmarks.mobileGuid,
+        bookmarkType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         tagsGuid: PlacesUtils.bookmarks.tagsGuid,
         descriptionAnno: PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO,
         sidebarAnno: PlacesSyncUtils.bookmarks.SIDEBAR_ANNO,
         smartBookmarkAnno: PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO,
+        folderType: PlacesUtils.bookmarks.TYPE_FOLDER,
         feedURLAnno: PlacesUtils.LMANNO_FEEDURI,
-        siteURLAnno: PlacesUtils.LMANNO_SITEURI,
-        valueState: BookmarkMergeState.TYPE.REMOTE });
+        siteURLAnno: PlacesUtils.LMANNO_SITEURI });
 
     // Record tag folder names for tag queries. Parsing query URLs one by one
     // is inefficient, but queries aren't common today, and we can remove this
@@ -2384,6 +2403,10 @@ async function initializeTempMirrorEntities(db) {
     itemId INTEGER NOT NULL,
     placeId INTEGER NOT NULL,
     keyword TEXT
+  )`);
+
+  await db.execute(`CREATE TEMP TABLE itemsToWeaklyReupload(
+    id INTEGER PRIMARY KEY
   )`);
 
   // Stores locally changed items staged for upload. See `stageItemsToUpload`
@@ -4085,6 +4108,7 @@ class BookmarkObserverRecorder {
   }
 
   async updateFrecencies() {
+    MirrorLog.debug("Recalculating frecencies for new URLs");
     await this.db.execute(`
       UPDATE moz_places SET
         frecency = CALCULATE_FRECENCY(id)
