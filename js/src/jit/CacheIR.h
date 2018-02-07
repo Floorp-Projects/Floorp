@@ -209,6 +209,8 @@ extern const char* CacheKindNames[];
     _(LoadEnclosingEnvironment)           \
     _(LoadWrapperTarget)                  \
                                           \
+    _(TruncateDoubleToUInt32)             \
+                                          \
     _(MegamorphicLoadSlotResult)          \
     _(MegamorphicLoadSlotByValueResult)   \
     _(MegamorphicStoreSlot)               \
@@ -276,6 +278,7 @@ extern const char* CacheKindNames[];
     _(LoadTypeOfObjectResult)             \
     _(Int32NotResult)                     \
     _(Int32NegationResult)                \
+    _(DoubleNegationResult)               \
     _(LoadInt32TruthyResult)              \
     _(LoadDoubleTruthyResult)             \
     _(LoadStringTruthyResult)             \
@@ -725,6 +728,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         return res;
     }
 
+    Int32OperandId truncateDoubleToUInt32(ValOperandId val) {
+        Int32OperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::TruncateDoubleToUInt32, val);
+        writeOperandId(res);
+        return res;
+    }
+
     ValOperandId loadDOMExpandoValue(ObjOperandId obj) {
         ValOperandId res(nextOperandId_++);
         writeOpWithOperandId(CacheOp::LoadDOMExpandoValue, obj);
@@ -914,6 +924,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     }
     void int32NegationResult(Int32OperandId id) {
         writeOpWithOperandId(CacheOp::Int32NegationResult, id);
+    }
+    void doubleNegationResult(ValOperandId val) {
+        writeOpWithOperandId(CacheOp::DoubleNegationResult, val);
     }
     void loadBooleanResult(bool val) {
         writeOp(CacheOp::LoadBooleanResult);
@@ -1676,6 +1689,7 @@ class MOZ_RAII UnaryArithIRGenerator : public IRGenerator
     HandleValue res_;
 
     bool tryAttachInt32();
+    bool tryAttachNumber();
 
     void trackAttached(const char* name);
 
