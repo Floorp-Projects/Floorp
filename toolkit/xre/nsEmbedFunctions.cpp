@@ -26,7 +26,6 @@
 #include <process.h>
 #include <shobjidl.h>
 #include "mozilla/ipc/WindowsMessageLoop.h"
-#include "mozilla/WindowsDllBlocklist.h"
 #endif
 
 #include "nsAppDirectoryServiceDefs.h"
@@ -74,6 +73,7 @@
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/Scheduler.h"
+#include "mozilla/WindowsDllBlocklist.h"
 
 #include "GMPProcessChild.h"
 #include "mozilla/gfx/GPUProcessImpl.h"
