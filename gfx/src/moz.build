@@ -23,6 +23,7 @@ EXPORTS += [
     'nsColorNameList.h',
     'nsColorNames.h',
     'nsCoord.h',
+    'nsCoordBox.h',
     'nsDeviceContext.h',
     'nsFont.h',
     'nsFontMetrics.h',
