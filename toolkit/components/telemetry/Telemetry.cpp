@@ -1987,10 +1987,27 @@ AccumulateCategorical(HistogramID id, const nsTArray<nsCString>& labels)
 void
 AccumulateTimeDelta(HistogramID aHistogram, TimeStamp start, TimeStamp end)
 {
+  if (start > end) {
+    Accumulate(aHistogram, 0);
+    return;
+  }
   Accumulate(aHistogram,
              static_cast<uint32_t>((end - start).ToMilliseconds()));
 }
 
+void
+AccumulateTimeDelta(HistogramID aHistogram,
+                    const nsCString& key,
+                    TimeStamp start,
+                    TimeStamp end)
+{
+  if (start > end) {
+    Accumulate(aHistogram, key, 0);
+    return;
+  }
+  Accumulate(
+    aHistogram, key, static_cast<uint32_t>((end - start).ToMilliseconds()));
+}
 const char*
 GetHistogramName(HistogramID id)
 {

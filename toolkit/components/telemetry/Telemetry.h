@@ -40,11 +40,6 @@ struct ScalarAction;
 struct KeyedScalarAction;
 struct ChildEventData;
 
-enum TimerResolution {
-  Millisecond,
-  Microsecond
-};
-
 /**
  * Initialize the Telemetry service on the main thread at startup.
  */
@@ -213,9 +208,24 @@ void AccumulateCategorical(HistogramID id, const nsTArray<nsCString>& labels);
 void AccumulateTimeDelta(HistogramID id, TimeStamp start, TimeStamp end = TimeStamp::Now());
 
 /**
+ * Adds time delta in milliseconds to a keyed histogram defined in
+ * TelemetryHistogramEnums.h
+ *
+ * @param id - histogram id
+ * @param key - the string key
+ * @param start - start time
+ * @param end - end time
+ */
+void
+AccumulateTimeDelta(HistogramID id,
+                    const nsCString& key,
+                    TimeStamp start,
+                    TimeStamp end = TimeStamp::Now());
+
+/**
  * Enable/disable recording for this histogram in this process at runtime.
- * Recording is enabled by default, unless listed at kRecordingInitiallyDisabledIDs[].
- * id must be a valid telemetry enum, otherwise an assertion is triggered.
+ * Recording is enabled by default, unless listed at
+ * kRecordingInitiallyDisabledIDs[]. id must be a valid telemetry enum,
  *
  * @param id - histogram id
  * @param enabled - whether or not to enable recording from now on.
@@ -224,58 +234,9 @@ void SetHistogramRecordingEnabled(HistogramID id, bool enabled);
 
 const char* GetHistogramName(HistogramID id);
 
-/**
- * Those wrappers are needed because the VS versions we use do not support free
- * functions with default template arguments.
- */
-template<TimerResolution res>
-struct AccumulateDelta_impl
+template<HistogramID id>
+class MOZ_RAII AutoTimer
 {
-  static void compute(HistogramID id, TimeStamp start, TimeStamp end = TimeStamp::Now());
-  static void compute(HistogramID id, const nsCString& key, TimeStamp start, TimeStamp end = TimeStamp::Now());
-};
-
-template<>
-struct AccumulateDelta_impl<Millisecond>
-{
-  static void compute(HistogramID id, TimeStamp start, TimeStamp end = TimeStamp::Now()) {
-    if (start > end) {
-      Accumulate(id, 0);
-      return;
-    }
-    Accumulate(id, static_cast<uint32_t>((end - start).ToMilliseconds()));
-  }
-  static void compute(HistogramID id, const nsCString& key, TimeStamp start, TimeStamp end = TimeStamp::Now()) {
-    if (start > end) {
-      Accumulate(id, key, 0);
-      return;
-    }
-    Accumulate(id, key, static_cast<uint32_t>((end - start).ToMilliseconds()));
-  }
-};
-
-template<>
-struct AccumulateDelta_impl<Microsecond>
-{
-  static void compute(HistogramID id, TimeStamp start, TimeStamp end = TimeStamp::Now()) {
-    if (start > end) {
-      Accumulate(id, 0);
-      return;
-    }
-    Accumulate(id, static_cast<uint32_t>((end - start).ToMicroseconds()));
-  }
-  static void compute(HistogramID id, const nsCString& key, TimeStamp start, TimeStamp end = TimeStamp::Now()) {
-    if (start > end) {
-      Accumulate(id, key, 0);
-      return;
-    }
-    Accumulate(id, key, static_cast<uint32_t>((end - start).ToMicroseconds()));
-  }
-};
-
-
-template<HistogramID id, TimerResolution res = Millisecond>
-class MOZ_RAII AutoTimer {
 public:
   explicit AutoTimer(TimeStamp aStart = TimeStamp::Now() MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
      : start(aStart)
@@ -293,9 +254,9 @@ public:
 
   ~AutoTimer() {
     if (key.IsEmpty()) {
-      AccumulateDelta_impl<res>::compute(id, start);
+      AccumulateTimeDelta(id, start);
     } else {
-      AccumulateDelta_impl<res>::compute(id, key, start);
+      AccumulateTimeDelta(id, key, start);
     }
   }
 
