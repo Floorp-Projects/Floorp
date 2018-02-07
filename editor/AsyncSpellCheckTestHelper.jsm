@@ -9,8 +9,6 @@ this.EXPORTED_SYMBOLS = [
 const SPELL_CHECK_ENDED_TOPIC = "inlineSpellChecker-spellCheck-ended";
 const SPELL_CHECK_STARTED_TOPIC = "inlineSpellChecker-spellCheck-started";
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 /**
  * Waits until spell checking has stopped on the given element.
  *

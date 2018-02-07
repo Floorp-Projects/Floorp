@@ -12,8 +12,6 @@ this.EXPORTED_SYMBOLS = [
   "ObjectUtils"
 ];
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 // Used only to cause test failures.

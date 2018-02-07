@@ -142,7 +142,6 @@ for (let [key, val] of Object.entries({
 
     startAfter: undefined,
     suiteStarted: false,
-    manageSuite: false,
 
     // The enabled-state of the test-plugins, stored so they can be reset later
     testPluginEnabledStates: null,

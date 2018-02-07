@@ -4,11 +4,6 @@
 
 "use strict";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-const Cu = Components.utils;
-
 this.EXPORTED_SYMBOLS = ["XPIProvider", "XPIInternal"];
 
 /* globals WebExtensionPolicy */

@@ -1,5 +1,4 @@
 function run_test() {
-  var Cu = Components.utils;
   sb = new Cu.Sandbox('http://www.example.com',
                       { wantGlobalProperties: ["TextDecoder", "TextEncoder"] });
   sb.equal = equal;

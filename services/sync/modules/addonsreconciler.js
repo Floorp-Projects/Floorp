@@ -17,8 +17,6 @@
 
 "use strict";
 
-var Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://services-common/async.js");
 ChromeUtils.import("resource://services-sync/util.js");

@@ -7,8 +7,6 @@
 
 /* eslint-disable mozilla/use-chromeutils-import */
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 Cu.import("resource://gre/modules/Services.jsm");
 
 add_test(function filepicker_open() {

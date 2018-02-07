@@ -1,7 +1,4 @@
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-
 function run_test() {
   var dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties); 
   var tmpDir = dirService.get("TmpD", Ci.nsIFile); 

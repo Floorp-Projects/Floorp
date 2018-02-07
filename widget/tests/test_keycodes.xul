@@ -87,8 +87,6 @@ function isModifierKeyEvent(aEvent)
  */
 function clearInfobars()
 {
-  var Ci = Components.interfaces;
-
   var browser = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
                   .getInterface(Ci.nsIWebNavigation)
                   .QueryInterface(Ci.nsIDocShell).chromeEventHandler;

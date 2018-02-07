@@ -23,9 +23,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=543854
 
   SimpleTest.waitForExplicitFinish();
 
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
-
   const ASCIIName = "myprofile";
   const UnicodeName = "\u09A0\u09BE\u0995\u09C1\u09B0"; // A Bengali name
 

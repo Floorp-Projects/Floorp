@@ -7,9 +7,6 @@
 // Register about:devtools-toolbox which allows to open a devtools toolbox
 // in a Firefox tab or a custom html iframe in browser.html
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 

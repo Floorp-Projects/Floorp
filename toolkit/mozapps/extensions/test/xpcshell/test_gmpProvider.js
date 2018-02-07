@@ -3,7 +3,6 @@
 
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 var GMPScope = ChromeUtils.import("resource://gre/modules/addons/GMPProvider.jsm", {});
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");

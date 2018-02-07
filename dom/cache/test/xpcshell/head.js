@@ -6,10 +6,6 @@
  * and are CC licensed by https://www.flickr.com/photos/legofenris/.
  */
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 // services required be initialized in order to run CacheStorage
 var ss = Cc['@mozilla.org/storage/service;1']
          .createInstance(Ci.mozIStorageService);

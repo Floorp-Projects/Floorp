@@ -12,10 +12,6 @@
   */
 this.EXPORTED_SYMBOLS = ["GetBattery", "Battery"];
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 // Load Services, for the BatteryManager API

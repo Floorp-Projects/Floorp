@@ -1,8 +1,5 @@
 String.prototype.has = function(s) { return this.includes(s); }
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-
 function dt(locale) {
   var date = new Date("2008-06-30T13:56:34");
   const dtOptions = { year: 'numeric', month: 'long', day: 'numeric',

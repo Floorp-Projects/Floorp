@@ -4,8 +4,6 @@
 
 this.EXPORTED_SYMBOLS = ["WebCompatReporter"];
 
-let { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -24,7 +22,6 @@ XPCOMUtils.defineLazyPreferenceGetter(prefs, "gfx.webrender.all", "gfx.webrender
 XPCOMUtils.defineLazyPreferenceGetter(prefs, "gfx.webrender.blob-images", "gfx.webrender.blob-images", 1);
 XPCOMUtils.defineLazyPreferenceGetter(prefs, "gfx.webrender.enabled", "gfx.webrender.enabled", false);
 XPCOMUtils.defineLazyPreferenceGetter(prefs, "image.mem.shared", "image.mem.shared", 2);
-XPCOMUtils.defineLazyPreferenceGetter(prefs, "layout.css.servo.enabled", "layout.css.servo.enabled", false);
 
 if (AppConstants.platform == "linux") {
   XPCOMUtils.defineLazyPreferenceGetter(prefs, "layers.acceleration.force-enabled", "layers.acceleration.force-enabled", false);
@@ -95,10 +92,6 @@ let WebCompatReporter = {
     params.append("url", `${tabData.url}`);
     params.append("src", "desktop-reporter");
     params.append("details", JSON.stringify(prefs));
-
-    if (prefs["layout.css.servo.enabled"]) {
-      params.append("label", "type-stylo");
-    }
 
     if (prefs["gfx.webrender.all"] || prefs["gfx.webrender.enabled"]) {
       params.append("label", "type-webrender-enabled");

@@ -1,6 +1,3 @@
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
-
 ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/TestUtils.jsm", this);

@@ -16,8 +16,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1331680
 
 SimpleTest.waitForExplicitFinish();
 
-let {utils: Cu, classes: Cc, interfaces: Ci } = Components;
-
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('file_1331680.js'));
 
 gScript.addMessageListener("cookieName", confirmCookieName);

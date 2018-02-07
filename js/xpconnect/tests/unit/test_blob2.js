@@ -4,8 +4,6 @@
 
 Components.utils.importGlobalProperties(['Blob', 'File']);
 
-const Ci = Components.interfaces;
-
 function run_test() {
   // throw if anything goes wrong
   let testContent = "<a id=\"a\"><b id=\"b\">hey!<\/b><\/a>";

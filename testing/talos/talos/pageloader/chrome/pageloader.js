@@ -5,13 +5,6 @@
 /* import-globals-from report.js */
 /* eslint mozilla/avoid-Date-timing: "off" */
 
-try {
-  if (Cc === undefined) {
-    var Cc = Components.classes;
-    var Ci = Components.interfaces;
-  }
-} catch (ex) {}
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
 

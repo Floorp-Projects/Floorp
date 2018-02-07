@@ -1,8 +1,3 @@
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cr = Components.results;
-var Cu = Components.utils;
-
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

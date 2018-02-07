@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["FormAutofillUtils", "AddressDataLoader"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 const ADDRESS_METADATA_PATH = "resource://formautofill/addressmetadata/";
 const ADDRESS_REFERENCES = "addressReferences.js";
 const ADDRESS_REFERENCES_EXT = "addressReferencesExt.js";

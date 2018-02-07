@@ -2,7 +2,7 @@
  * Bug 1238183 - Test cases for forgetAboutSite with userContextId.
  */
 
-const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
+const CC = Components.Constructor;
 
 ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

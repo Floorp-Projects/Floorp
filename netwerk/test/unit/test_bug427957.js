@@ -2,8 +2,6 @@
  * Test for Bidi restrictions on IDNs from RFC 3454
  */
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
 var idnService;
 
 function expected_pass(inputIDN)

@@ -15,7 +15,6 @@
 const chromeScript = runChecksAfterCommonInit(false);
 
 runInParent(function addLogins() {
-  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
   ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   // Create some logins just for this form, since we'll be deleting them.

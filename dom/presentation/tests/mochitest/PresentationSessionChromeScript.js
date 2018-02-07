@@ -3,7 +3,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 'use strict';
 
-const { classes: Cc, interfaces: Ci, manager: Cm, utils: Cu, results: Cr } = Components;
+const Cm = Components.manager;
 
 ChromeUtils.import('resource://gre/modules/XPCOMUtils.jsm');
 ChromeUtils.import('resource://gre/modules/Services.jsm');

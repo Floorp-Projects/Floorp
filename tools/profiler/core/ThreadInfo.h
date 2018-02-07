@@ -200,7 +200,7 @@ public:
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  ProfileBuffer::LastSample& LastSample() { return mLastSample; }
+  mozilla::Maybe<uint64_t>& LastSample() { return mLastSample; }
 
 private:
   mozilla::UniqueFreePtr<char> mName;
@@ -224,10 +224,9 @@ private:
   //
 
 public:
-  // Returns the time of the first sample.
-  double StreamJSON(const ProfileBuffer& aBuffer, SpliceableJSONWriter& aWriter,
-                    const mozilla::TimeStamp& aProcessStartTime,
-                    double aSinceTime);
+  void StreamJSON(const ProfileBuffer& aBuffer, SpliceableJSONWriter& aWriter,
+                  const mozilla::TimeStamp& aProcessStartTime,
+                  double aSinceTime);
 
   // Call this method when the JS entries inside the buffer are about to
   // become invalid, i.e., just before JS shutdown.
@@ -320,7 +319,6 @@ private:
   // FlushSamplesAndMarkers should be called to save them. These are spliced
   // into the final stream.
   mozilla::UniquePtr<char[]> mSavedStreamedSamples;
-  double mFirstSavedStreamedSampleTime;
   mozilla::UniquePtr<char[]> mSavedStreamedMarkers;
   mozilla::Maybe<UniqueStacks> mUniqueStacks;
 
@@ -380,9 +378,10 @@ private:
     INACTIVE_REQUESTED = 3,
   } mJSSampling;
 
-  // When sampling, this holds the generation number and offset in
-  // ActivePS::mBuffer of the most recent sample for this thread.
-  ProfileBuffer::LastSample mLastSample;
+  // When sampling, this holds the position in ActivePS::mBuffer of the most
+  // recent sample for this thread, or Nothing() if there is no sample for this
+  // thread in the buffer.
+  mozilla::Maybe<uint64_t> mLastSample;
 };
 
 void
@@ -393,10 +392,8 @@ StreamSamplesAndMarkers(const char* aName, int aThreadId,
                         const TimeStamp& aRegisterTime,
                         const TimeStamp& aUnregisterTime,
                         double aSinceTime,
-                        double* aOutFirstSampleTime,
                         JSContext* aContext,
                         char* aSavedStreamedSamples,
-                        double aFirstSavedStreamedSampleTime,
                         char* aSavedStreamedMarkers,
                         UniqueStacks& aUniqueStacks);
 

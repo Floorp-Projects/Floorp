@@ -2,9 +2,6 @@
  * http://creativecommons.org/licenses/publicdomain/  */
 
 function run_test() {
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
-  const Cr = Components.results;
   const PREF_NAME = "testPref";
 
   var ps = Cc["@mozilla.org/preferences-service;1"]

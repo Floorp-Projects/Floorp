@@ -6,8 +6,6 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci} = Components;
-
 ChromeUtils.import("chrome://marionette/content/assert.js");
 const {element} = ChromeUtils.import("chrome://marionette/content/element.js", {});
 const {

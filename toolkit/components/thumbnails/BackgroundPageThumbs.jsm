@@ -17,8 +17,6 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 const ABOUT_NEWTAB_SEGREGATION_PREF = "privacy.usercontext.about_newtab_segregation.enabled";
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/PageThumbs.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

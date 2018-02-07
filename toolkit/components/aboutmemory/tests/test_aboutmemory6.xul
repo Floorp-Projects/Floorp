@@ -18,9 +18,6 @@
   <![CDATA[
   "use strict";
 
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
-
   function onFocus() {
     let frame = document.getElementById("amFrame");
     frame.focus();

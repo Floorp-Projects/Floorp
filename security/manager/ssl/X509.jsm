@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Cu = Components.utils;
 // Until DER.jsm is actually used in production code, this is where we have to
 // import it from.
 var { DER } = ChromeUtils.import("resource://testing-common/psm/DER.jsm", {});

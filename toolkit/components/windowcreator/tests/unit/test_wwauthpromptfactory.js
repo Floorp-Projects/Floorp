@@ -1,6 +1,3 @@
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-
 var authPromptRequestReceived;
 
 const tPFCID = Components.ID("{749e62f4-60ae-4569-a8a2-de78b649660f}");

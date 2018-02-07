@@ -14,8 +14,6 @@
 
   <script type="application/javascript">
   <![CDATA[
-  let Cu = Components.utils;
-
   ChromeUtils.import("resource://gre/modules/Integration.jsm");
   ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
 

@@ -15,8 +15,6 @@
 
 this.EXPORTED_SYMBOLS = [ "gDevTools", "gDevToolsBrowser" ];
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 const { loader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 /**

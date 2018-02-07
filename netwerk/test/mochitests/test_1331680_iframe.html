@@ -17,8 +17,6 @@ SimpleTest.waitForExplicitFinish();
 const IFRAME_COOKIE_NAMES = ["if1", "if2_1", "if2_2"];
 const ID = ["if_1", "if_2", "if_3"];
 
-let {utils: Cu, classes: Cc, interfaces: Ci } = Components;
-
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('file_1331680.js'));
 
 /* Test iframe

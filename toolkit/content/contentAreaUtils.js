@@ -187,8 +187,6 @@ function saveBrowser(aBrowser, aSkipPrompt, aOuterWindowID = 0) {
 // unavailable.  This is a temporary measure for the "Save Frame As"
 // command (bug 1141337) and pre-e10s add-ons.
 function saveDocument(aDocument, aSkipPrompt) {
-  const Ci = Components.interfaces;
-
   if (!aDocument)
     throw "Must have a document when calling saveDocument";
 
@@ -892,8 +890,6 @@ function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, 
 }
 
 function getPostData(aDocument) {
-  const Ci = Components.interfaces;
-
   if (aDocument instanceof Ci.nsIWebBrowserPersistDocument) {
     return aDocument.postData;
   }

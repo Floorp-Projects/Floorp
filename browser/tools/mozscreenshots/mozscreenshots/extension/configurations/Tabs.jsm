@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["Tabs"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 const CUST_TAB = "chrome://browser/skin/customize.svg";
 const PREFS_TAB = "chrome://browser/skin/settings.svg";
 const DEFAULT_FAVICON_TAB = `data:text/html,<meta%20charset="utf-8"><title>No%20favicon</title>`;

@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 this.EXPORTED_SYMBOLS = [ "TranslationDocument" ];
 
 const TEXT_NODE = Ci.nsIDOMNode.TEXT_NODE;

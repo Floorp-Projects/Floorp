@@ -27,11 +27,6 @@
           src="chrome://mochikit/content/tests/SimpleTest/setup.js" />
   <script type="application/javascript"><![CDATA[
 
-if (Cc === undefined) {
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
-}
-
 function loadTests()
 {
   window.removeEventListener("load", loadTests, false);

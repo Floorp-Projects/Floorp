@@ -6,8 +6,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.importGlobalProperties(['File']);
 
 
-const Ci = Components.interfaces;
-
 const Assert = {
   ok(cond, text) {
     // we don't have the test harness' utilities in this scope, so we need this

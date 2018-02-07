@@ -24,8 +24,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
   /** Test for all the different ways that script can be disabled for a given global. **/
 
   SimpleTest.waitForExplicitFinish();
-  const Cu = Components.utils;
-  const Ci = Components.interfaces;
   ChromeUtils.import("resource://gre/modules/Services.jsm");
   const ssm = Services.scriptSecurityManager;
   function makeURI(uri) { return Services.io.newURI(uri); }

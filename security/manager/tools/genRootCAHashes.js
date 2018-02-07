@@ -9,11 +9,6 @@
 // 3. run `[path to]/run-mozilla.sh [path to]/xpcshell genRootCAHashes.js \
 //                                  [absolute path to]/RootHashes.inc'
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-var Cr = Components.results;
-
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 const CertDb = Components.classes[nsX509CertDB].getService(Ci.nsIX509CertDB);
 

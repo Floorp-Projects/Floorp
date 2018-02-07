@@ -5,9 +5,6 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 // This component is used for handling dragover and drop of urls.
 //
 // It checks to see whether a drop of a url is allowed. For instance, a url

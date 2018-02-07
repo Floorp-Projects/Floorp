@@ -34,7 +34,6 @@
 
     SimpleTest.waitForExplicitFinish();
 
-    var Ci = Components.interfaces;
     var frame = document.getElementById("f");
     var fl = frame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     is(fl.clipSubdocument, true, "clipSubdocument should default to true");

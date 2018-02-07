@@ -17,10 +17,6 @@ this.EXPORTED_SYMBOLS = [
   "showFilePicker"
 ];
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 const PROPERTIES_URL = "chrome://devtools/locale/styleeditor.properties";
 
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});

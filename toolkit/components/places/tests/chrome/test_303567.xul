@@ -18,10 +18,6 @@
 //   * the feed's site URI is substituted for each item's link.
 SimpleTest.waitForExplicitFinish();
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cr = Components.results;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");

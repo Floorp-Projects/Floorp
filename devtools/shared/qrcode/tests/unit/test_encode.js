@@ -6,7 +6,6 @@
  * Test encoding a simple message.
  */
 
-var { utils: Cu } = Components;
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 const QR = require("devtools/shared/qrcode/index");

@@ -15,8 +15,6 @@ SimpleTest.waitForExplicitFinish();
 var gPrevEnabled = SpecialPowers.getBoolPref("full-screen-api.enabled");
 var gPrevTrusted = SpecialPowers.getBoolPref("full-screen-api.allow-trusted-requests-only");
 var newwindow;
-var Cc = Components.classes;
-var Ci = Components.interfaces;
 
 function make_uri(url) {
   var ios = Cc["@mozilla.org/network/io-service;1"].

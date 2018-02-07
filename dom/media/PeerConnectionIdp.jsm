@@ -5,8 +5,6 @@
 
 this.EXPORTED_SYMBOLS = ["PeerConnectionIdp"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "IdpSandbox",

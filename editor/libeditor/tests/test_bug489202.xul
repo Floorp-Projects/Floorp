@@ -29,8 +29,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=489202
   <script class="testbody" type="application/javascript">
   <![CDATA[
   var utils = SpecialPowers.getDOMWindowUtils(window);
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
 
 function getLoadContext() {
   return window.QueryInterface(Ci.nsIInterfaceRequestor)

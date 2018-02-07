@@ -1,5 +1,3 @@
-const Cu = Components.utils;
-
 function run_test() {
   // Make sure Components.utils gets its |this| fixed up.
   var isXrayWrapper = Components.utils.isXrayWrapper;

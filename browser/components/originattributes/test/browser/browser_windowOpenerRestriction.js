@@ -2,7 +2,7 @@
  * Bug 1339336 - A test case for testing pref 'privacy.firstparty.isolate.restrict_opener_access'
  */
 
-const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
+const CC = Components.Constructor;
 
 const FIRST_PARTY_OPENER = "example.com";
 const FIRST_PARTY_TARGET = "example.org";

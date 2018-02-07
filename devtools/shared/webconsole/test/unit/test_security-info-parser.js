@@ -17,7 +17,6 @@ Object.defineProperty(this, "NetworkHelper", {
   enumerable: true
 });
 
-var Ci = Components.interfaces;
 const wpl = Ci.nsIWebProgressListener;
 const MockCertificate = {
   commonName: "cn",

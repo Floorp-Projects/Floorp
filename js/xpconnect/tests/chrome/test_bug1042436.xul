@@ -19,7 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1042436
   <![CDATA[
   /** Test for Bug 1042436 **/
   SimpleTest.waitForExplicitFinish();
-  const Cu = Components.utils;
 
   var contentSb = Cu.Sandbox('http://www.example.com');
   var nonXrayableObj = new contentSb.WeakMap();

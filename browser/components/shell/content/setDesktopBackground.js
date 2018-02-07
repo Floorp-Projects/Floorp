@@ -5,8 +5,6 @@
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var Ci = Components.interfaces;
-
 var gSetBackground = {
   _position: AppConstants.platform == "macosx" ? "STRETCH" : "",
   _backgroundColor: AppConstants.platform != "macosx" ? 0 : undefined,

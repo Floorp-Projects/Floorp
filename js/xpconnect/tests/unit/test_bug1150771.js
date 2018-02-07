@@ -1,5 +1,4 @@
 function run_test() {
-let Cu = Components.utils;
 let sandbox1 = new Cu.Sandbox(null);
 let sandbox2 = new Cu.Sandbox(null);
 let arg = Cu.evalInSandbox('({ buf: new ArrayBuffer(2) })', sandbox1);

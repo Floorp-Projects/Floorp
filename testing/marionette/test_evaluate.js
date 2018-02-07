@@ -1,5 +1,3 @@
-const {utils: Cu} = Components;
-
 const {element, WebElement} = ChromeUtils.import("chrome://marionette/content/element.js", {});
 const {evaluate} = ChromeUtils.import("chrome://marionette/content/evaluate.js", {});
 

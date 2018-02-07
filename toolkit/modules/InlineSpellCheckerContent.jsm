@@ -5,8 +5,6 @@
 
 "use strict";
 
-var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 var { InlineSpellChecker, SpellCheckHelper } =
   ChromeUtils.import("resource://gre/modules/InlineSpellChecker.jsm", {});
 

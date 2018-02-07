@@ -1,6 +1,5 @@
 this.EXPORTED_SYMBOLS = ["Test"];
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.importGlobalProperties(["URL"]);
 
 this.Test = {

@@ -3,9 +3,6 @@
  *
  */
 
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-
 // There are 3 types of valid icon URIs:
 // 1. moz-icon:[valid URL]
 // 2. moz-icon://[file name]

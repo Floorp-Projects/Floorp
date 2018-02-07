@@ -4,8 +4,6 @@
 
 'use strict';
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 // When handling Bookmark View, we use Cartesian coordinate system which is
 // different from PDFium engine. Our origin is at bottom-left of every page,
 // while PDFium counts y position continuously from the top of page 1.

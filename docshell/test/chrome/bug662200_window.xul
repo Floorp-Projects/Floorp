@@ -87,7 +87,6 @@
       doPageNavigation(navData);
       yield undefined;
 
-      var Ci = Components.interfaces;
       var docshell = TestWindow.getWindow()
                                .QueryInterface(Ci.nsIInterfaceRequestor)
                                .getInterface(Ci.nsIWebNavigation)

@@ -42,8 +42,6 @@
 
 this.EXPORTED_SYMBOLS = ["PerformanceWatcher"];
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 let { PerformanceStats, performanceStatsService } = ChromeUtils.import("resource://gre/modules/PerformanceStats.jsm", {});
 let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 

@@ -6,8 +6,6 @@
 
 "use strict";
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);

@@ -19,7 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=801241
   <![CDATA[
   /** Test for Bug 801241 **/
   SimpleTest.waitForExplicitFinish();
-  const Cu = Components.utils;
 
   // This is decompiled and run inside the sandbox;
   function sbCode() {

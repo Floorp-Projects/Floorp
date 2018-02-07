@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {utils: Cu} = Components;
-
 const {ActivityStreamMessageChannel} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamMessageChannel.jsm", {});
 const {Prefs} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
 const {reducers} = ChromeUtils.import("resource://activity-stream/common/Reducers.jsm", {});

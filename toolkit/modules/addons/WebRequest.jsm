@@ -10,11 +10,6 @@ const EXPORTED_SYMBOLS = ["WebRequest"];
 
 /* globals ChannelWrapper */
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 const {nsIHttpActivityObserver, nsISocketTransport} = Ci;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");

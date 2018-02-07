@@ -19,7 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990353
   <![CDATA[
   /** Test for Bug 990353 **/
   SimpleTest.waitForExplicitFinish();
-  const Cu = Components.utils;
 
   function canary() {
     var someBitOfSource = 42;

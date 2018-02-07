@@ -26,9 +26,8 @@ TEST(ThreadProfile, InsertOneEntry) {
   ThreadInfo info("testThread", tid, true, mainThread, nullptr);
   auto pb = MakeUnique<ProfileBuffer>(10);
   pb->AddEntry(ProfileBufferEntry::Time(123.1));
-  ASSERT_TRUE(pb->mEntries != nullptr);
-  ASSERT_TRUE(pb->mEntries[pb->mReadPos].IsTime());
-  ASSERT_TRUE(pb->mEntries[pb->mReadPos].u.mDouble == 123.1);
+  ASSERT_TRUE(pb->GetEntry(pb->mRangeStart).IsTime());
+  ASSERT_TRUE(pb->GetEntry(pb->mRangeStart).u.mDouble == 123.1);
 }
 
 // See if we can insert some entries
@@ -42,38 +41,36 @@ TEST(ThreadProfile, InsertEntriesNoWrap) {
   for (int i = 0; i < test_size; i++) {
     pb->AddEntry(ProfileBufferEntry::Time(i));
   }
-  ASSERT_TRUE(pb->mEntries != nullptr);
-  int readPos = pb->mReadPos;
-  while (readPos != pb->mWritePos) {
-    ASSERT_TRUE(pb->mEntries[readPos].IsTime());
-    ASSERT_TRUE(pb->mEntries[readPos].u.mDouble == readPos);
-    readPos = (readPos + 1) % pb->mEntrySize;
+  uint64_t readPos = pb->mRangeStart;
+  while (readPos != pb->mRangeEnd) {
+    ASSERT_TRUE(pb->GetEntry(readPos).IsTime());
+    ASSERT_TRUE(pb->GetEntry(readPos).u.mDouble == readPos);
+    readPos++;
   }
 }
 
-// See if wrapping works as it should in the basic case
+// See if evicting works as it should in the basic case
 TEST(ThreadProfile, InsertEntriesWrap) {
   int tid = 1000;
-  // we can fit only 24 entries in this buffer because of the empty slot
-  int entries = 24;
-  int buffer_size = entries + 1;
+  int entries = 32;
   nsCOMPtr<nsIThread> mainThread;
   NS_GetMainThread(getter_AddRefs(mainThread));
   ThreadInfo info("testThread", tid, true, mainThread, nullptr);
-  auto pb = MakeUnique<ProfileBuffer>(buffer_size);
+  auto pb = MakeUnique<ProfileBuffer>(entries);
+  ASSERT_TRUE(pb->mRangeStart == 0);
+  ASSERT_TRUE(pb->mRangeEnd == 0);
   int test_size = 43;
   for (int i = 0; i < test_size; i++) {
     pb->AddEntry(ProfileBufferEntry::Time(i));
   }
-  ASSERT_TRUE(pb->mEntries != nullptr);
-  int readPos = pb->mReadPos;
-  int ctr = 0;
-  while (readPos != pb->mWritePos) {
-    ASSERT_TRUE(pb->mEntries[readPos].IsTime());
-    // the first few entries were discarded when we wrapped
-    ASSERT_TRUE(pb->mEntries[readPos].u.mDouble == ctr + (test_size - entries));
-    ctr++;
-    readPos = (readPos + 1) % pb->mEntrySize;
+  // We inserted 11 more entries than fit in the buffer, so the first 11 entries
+  // should have been evicted, and the range start should have increased to 11.
+  ASSERT_TRUE(pb->mRangeStart == 11);
+  uint64_t readPos = pb->mRangeStart;
+  while (readPos != pb->mRangeEnd) {
+    ASSERT_TRUE(pb->GetEntry(readPos).IsTime());
+    ASSERT_TRUE(pb->GetEntry(readPos).u.mDouble == readPos);
+    readPos++;
   }
 }
 

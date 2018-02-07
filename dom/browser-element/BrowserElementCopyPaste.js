@@ -12,8 +12,6 @@ function debug(msg) {
 
 debug("loaded");
 
-var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu }  = Components;
-
 var CopyPasteAssistent = {
   COMMAND_MAP: {
     'cut': 'cmd_cut',

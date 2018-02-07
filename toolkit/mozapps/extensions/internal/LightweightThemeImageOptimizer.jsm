@@ -6,10 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["LightweightThemeImageOptimizer"];
 
-const Cc = Components.classes;
-const Cu = Components.utils;
-const Ci = Components.interfaces;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "Services",

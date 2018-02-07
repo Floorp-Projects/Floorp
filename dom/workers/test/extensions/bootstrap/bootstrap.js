@@ -3,9 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

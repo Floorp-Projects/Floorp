@@ -20,7 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=865948
 
   /** Test for Bug 865948 **/
   SimpleTest.waitForExplicitFinish();
-  const Cu = Components.utils;
   function go() {
     $('ifr').onload = null;
     var sb = Cu.Sandbox(['http://example.com', 'http://example.org']);

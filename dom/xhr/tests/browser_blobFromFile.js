@@ -1,5 +1,3 @@
-let { classes: Cc, interfaces: Ci } = Components;
-
 add_task(async function test() {
   await SpecialPowers.pushPrefEnv(
     {set: [["browser.tabs.remote.separateFileUriProcess", true]]}

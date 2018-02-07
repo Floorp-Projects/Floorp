@@ -4,10 +4,6 @@
 
 "use strict";
 
-var Cc = Components.classes;
-var Cu = Components.utils;
-var Ci = Components.interfaces;
-
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const Services = require("Services");

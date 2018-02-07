@@ -3,8 +3,6 @@
  */
 
 // This should eventually be moved to head_addons.js
-var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 // Test whether a new-enough driver bypasses the blacklist, even if the rest of
 // the attributes match the blacklist entry.
 // Uses test_gfxBlacklist.xml

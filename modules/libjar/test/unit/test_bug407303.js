@@ -1,9 +1,6 @@
 // Regression test for bug 407303 - A failed channel should not be checked
 // for an unsafe content type.
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 

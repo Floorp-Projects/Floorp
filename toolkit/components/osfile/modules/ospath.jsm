@@ -29,7 +29,6 @@ if (typeof Components == "undefined") {
   }
   module.exports = Path;
 } else {
-  let Cu = Components.utils;
   let Scope = {};
   ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", Scope);
 

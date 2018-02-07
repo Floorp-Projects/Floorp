@@ -2,8 +2,6 @@
 
 /* eslint-env mozilla/frame-script */
 
-var {interfaces: Ci} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 Services.console.registerListener(function listener(message) {

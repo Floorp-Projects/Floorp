@@ -4,8 +4,6 @@
 
 /* See https://bugzilla.mozilla.org/show_bug.cgi?id=1354733 */
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 const global = this;
 
 function run_test()

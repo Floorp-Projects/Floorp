@@ -5,7 +5,6 @@
 
 /* exported defer, DebuggerClient, initTestDebuggerServer */
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const { require } =
   Cu.import("resource://devtools/shared/Loader.jsm", {});
 const defer = require("devtools/shared/defer");

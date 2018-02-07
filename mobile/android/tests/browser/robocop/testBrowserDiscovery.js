@@ -7,8 +7,6 @@
 
 /* eslint-disable mozilla/use-chromeutils-import */
 
-var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
 Cu.import("resource://gre/modules/Services.jsm");
 
 // We use a global variable to track the <browser> where the tests are happening

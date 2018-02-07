@@ -6,9 +6,6 @@
 
 "use strict";
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 this.EXPORTED_SYMBOLS = ["TraversalRules", "TraversalHelper"]; // jshint ignore:line
 
 ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");

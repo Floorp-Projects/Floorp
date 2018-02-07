@@ -8,8 +8,6 @@ this.EXPORTED_SYMBOLS = [
   "Authentication",
 ];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");

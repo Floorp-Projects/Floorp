@@ -13,7 +13,6 @@ Login Manager test: form with JS submit action
 runChecksAfterCommonInit(() => startTest());
 
 runInParent(function setup() {
-  const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
   ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   let jslogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);

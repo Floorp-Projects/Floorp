@@ -6,9 +6,6 @@
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 // A global value that is used to identify each menu item. It is
 // incremented with each one that is found.
 var gGeneratedId = 1;

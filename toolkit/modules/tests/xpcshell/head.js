@@ -1,4 +1,3 @@
-var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 ChromeUtils.import("resource://gre/modules/NewTabUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

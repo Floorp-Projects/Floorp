@@ -4,10 +4,6 @@
 
 "use strict";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 this.EXPORTED_SYMBOLS = [];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

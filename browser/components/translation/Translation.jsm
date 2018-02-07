@@ -9,8 +9,6 @@ this.EXPORTED_SYMBOLS = [
   "TranslationTelemetry",
 ];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 const TRANSLATION_PREF_SHOWUI = "browser.translation.ui.show";
 const TRANSLATION_PREF_DETECT_LANG = "browser.translation.detectLanguage";
 

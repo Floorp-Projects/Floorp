@@ -4,8 +4,6 @@
 
 this.EXPORTED_SYMBOLS = ["Async"];
 
-var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-
 // Constants for makeSyncCallback, waitForSyncCallback.
 const CB_READY = {};
 const CB_COMPLETE = {};

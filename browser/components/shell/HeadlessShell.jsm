@@ -10,8 +10,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-const Ci = Components.interfaces;
-
 // Refrences to the progress listeners to keep them from being gc'ed
 // before they are called.
 const progressListeners = new Map();

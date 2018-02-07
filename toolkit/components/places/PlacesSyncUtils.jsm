@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["PlacesSyncUtils"];
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-
 Cu.importGlobalProperties(["URL", "URLSearchParams"]);
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");

@@ -1,7 +1,5 @@
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 function getFileURI(path) {
   let file = do_get_file(".");
   file.append(path);

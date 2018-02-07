@@ -9,8 +9,6 @@
 
 var EXPORTED_SYMBOLS = ["FormData"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://tps/logger.jsm");
 
 ChromeUtils.import("resource://gre/modules/FormHistory.jsm");

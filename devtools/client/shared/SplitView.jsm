@@ -5,7 +5,6 @@
 
 "use strict";
 
-const Cu = Components.utils;
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 

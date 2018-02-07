@@ -5,7 +5,7 @@
 
 /* global ADDON_ENABLE:false, ADDON_DISABLE:false, APP_SHUTDOWN: false */
 
-const {classes: Cc, interfaces: Ci, utils: Cu, manager: Cm} = Components;
+const Cm = Components.manager;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://services-common/utils.js");

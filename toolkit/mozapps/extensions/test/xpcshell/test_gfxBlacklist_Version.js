@@ -2,8 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 // Test whether a machine which exactly matches the blacklist entry is
 // successfully blocked.
 // Uses test_gfxBlacklist_AllOS.xml

@@ -13,14 +13,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-if (typeof(Ci) == "undefined") {
-  var Ci = Components.interfaces;
-}
-
-if (typeof(Cc) == "undefined") {
-  var Cc = Components.classes;
-}
-
 this.SpecialPowersError = function(aMsg) {
   Error.call(this);
   // let {stack} = new Error();

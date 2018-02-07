@@ -4,8 +4,6 @@
 
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const TELEMETRY_RESULT_ENUM = {

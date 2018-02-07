@@ -1,5 +1,3 @@
-const Cu = Components.utils;
-
 function run_test() {
   // Existing module.
   Assert.ok(Cu.isModuleLoaded("resource://gre/modules/NetUtil.jsm"),

@@ -21,8 +21,6 @@ this.EXPORTED_SYMBOLS = [
   "syncTestLogging",
 ];
 
-var {utils: Cu} = Components;
-
 ChromeUtils.import("resource://services-sync/status.js");
 ChromeUtils.import("resource://services-common/utils.js");
 ChromeUtils.import("resource://services-crypto/utils.js");

@@ -2,8 +2,6 @@
 
 /* exported gProfD, promiseMigration, registerFakePath */
 
-var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-
 Cu.importGlobalProperties([ "URL" ]);
 
 ChromeUtils.import("resource:///modules/MigrationUtils.jsm");

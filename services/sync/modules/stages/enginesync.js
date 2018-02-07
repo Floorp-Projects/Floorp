@@ -8,8 +8,6 @@
 
 this.EXPORTED_SYMBOLS = ["EngineSynchronizer"];
 
-var {utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://services-sync/constants.js");

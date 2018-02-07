@@ -3,9 +3,6 @@
 
 "use strict";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 // Test the basic functionality of the nsIJSInspector component.
 var gCount = 0;
 const MAX = 10;

@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["AddonUtils"];
 
-var {interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://services-sync/util.js");

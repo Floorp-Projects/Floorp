@@ -1,7 +1,5 @@
 "use strict";
 
-const { classes: Cc, interfaces: Ci, results: Cr } = Components;
-
 const BASE_URI =
   "http://mochi.test:8888/browser/dom/serviceworkers/test/";
 const emptyDoc = BASE_URI + "empty.html";

@@ -9,10 +9,6 @@
 
 "use strict";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 this.EXPORTED_SYMBOLS = [ "AddonUpdateChecker" ];
 
 const TIMEOUT               = 60 * 1000;

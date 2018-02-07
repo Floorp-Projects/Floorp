@@ -8,8 +8,6 @@ this.EXPORTED_SYMBOLS = [
   "Sqlite",
 ];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 // The time to wait before considering a transaction stuck and rejecting it.
 const TRANSACTIONS_QUEUE_TIMEOUT_MS = 240000; // 4 minutes
 

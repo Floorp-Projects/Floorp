@@ -4,8 +4,6 @@
 // Functions that are automatically loaded as frame scripts for
 // timeline tests.
 
-var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 // Functions that look like mochitest functions but forward to the

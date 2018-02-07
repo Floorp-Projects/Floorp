@@ -21,8 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=777385
   <![CDATA[
   /** Test for Bug 777385 **/
 
-  let Cu = Components.utils;
-
   let live_map = new WeakMap;
 
   let get_div_style = function () {

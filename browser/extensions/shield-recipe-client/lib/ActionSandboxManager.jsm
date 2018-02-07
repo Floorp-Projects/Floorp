@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
 ChromeUtils.import("resource://shield-recipe-client/lib/NormandyDriver.jsm");
 ChromeUtils.import("resource://shield-recipe-client/lib/SandboxManager.jsm");
 ChromeUtils.import("resource://shield-recipe-client/lib/LogManager.jsm");

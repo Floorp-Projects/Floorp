@@ -8,7 +8,6 @@
  * Manages the base loader (base-loader.js) instance used to load the developer tools.
  */
 
-var { utils: Cu } = Components;
 var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 var { Loader, Require, resolveURI, unload } =
   Cu.import("resource://devtools/shared/base-loader.js", {});

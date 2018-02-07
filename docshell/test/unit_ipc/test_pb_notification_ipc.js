@@ -1,6 +1,3 @@
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-
 function run_test() {
   var notifications = 0;
   var obs = {

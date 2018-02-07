@@ -193,9 +193,8 @@ TEST(GeckoProfiler, EnsureStarted)
     // First, write some samples into the buffer.
     PR_Sleep(PR_MillisecondsToInterval(500));
 
-    uint32_t currPos1, entries1, generation1;
-    profiler_get_buffer_info(&currPos1, &entries1, &generation1);
-    ASSERT_TRUE(generation1 > 0 || currPos1 > 0);
+    Maybe<ProfilerBufferInfo> info1 = profiler_get_buffer_info();
+    ASSERT_TRUE(info1->mRangeEnd > 0);
 
     // Call profiler_ensure_started with the same settings as before.
     // This operation must not clear our buffer!
@@ -207,17 +206,14 @@ TEST(GeckoProfiler, EnsureStarted)
 
     // Check that our position in the buffer stayed the same or advanced.
     // In particular, it shouldn't have reverted to the start.
-    uint32_t currPos2, entries2, generation2;
-    profiler_get_buffer_info(&currPos2, &entries2, &generation2);
-    ASSERT_TRUE(generation2 >= generation1);
-    ASSERT_TRUE(generation2 > generation1 || currPos2 >= currPos1);
+    Maybe<ProfilerBufferInfo> info2 = profiler_get_buffer_info();
+    ASSERT_TRUE(info2->mRangeEnd >= info1->mRangeEnd);
   }
 
   {
     // Active -> Active with *different* settings
 
-    uint32_t currPos1, entries1, generation1;
-    profiler_get_buffer_info(&currPos1, &entries1, &generation1);
+    Maybe<ProfilerBufferInfo> info1 = profiler_get_buffer_info();
 
     // Call profiler_ensure_started with a different feature set than the one it's
     // currently running with. This is supposed to stop and restart the
@@ -230,10 +226,8 @@ TEST(GeckoProfiler, EnsureStarted)
     ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                       differentFeatures, filters, MOZ_ARRAY_LENGTH(filters));
 
-    uint32_t currPos2, entries2, generation2;
-    profiler_get_buffer_info(&currPos2, &entries2, &generation2);
-    ASSERT_TRUE(generation2 <= generation1);
-    ASSERT_TRUE(generation2 < generation1 || currPos2 < currPos1);
+    Maybe<ProfilerBufferInfo> info2 = profiler_get_buffer_info();
+    ASSERT_TRUE(info2->mRangeEnd < info1->mRangeEnd);
   }
 
   {
@@ -382,24 +376,21 @@ TEST(GeckoProfiler, Pause)
 
   ASSERT_TRUE(!profiler_is_paused());
 
-  uint32_t currPos1, entries1, generation1;
-  uint32_t currPos2, entries2, generation2;
-
   // Check that we are writing samples while not paused.
-  profiler_get_buffer_info(&currPos1, &entries1, &generation1);
+  Maybe<ProfilerBufferInfo> info1 = profiler_get_buffer_info();
   PR_Sleep(PR_MillisecondsToInterval(500));
-  profiler_get_buffer_info(&currPos2, &entries2, &generation2);
-  ASSERT_TRUE(currPos1 != currPos2);
+  Maybe<ProfilerBufferInfo> info2 = profiler_get_buffer_info();
+  ASSERT_TRUE(info1->mRangeEnd != info2->mRangeEnd);
 
   profiler_pause();
 
   ASSERT_TRUE(profiler_is_paused());
 
   // Check that we are not writing samples while paused.
-  profiler_get_buffer_info(&currPos1, &entries1, &generation1);
+  info1 = profiler_get_buffer_info();
   PR_Sleep(PR_MillisecondsToInterval(500));
-  profiler_get_buffer_info(&currPos2, &entries2, &generation2);
-  ASSERT_TRUE(currPos1 == currPos2);
+  info2 = profiler_get_buffer_info();
+  ASSERT_TRUE(info1->mRangeEnd == info2->mRangeEnd);
 
   profiler_resume();
 

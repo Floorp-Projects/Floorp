@@ -8,11 +8,6 @@
  * Interface to a dedicated thread handling I/O
  */
 
-const Cu = Components.utils;
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
 ChromeUtils.import("resource://gre/modules/PromiseWorker.jsm", this);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 

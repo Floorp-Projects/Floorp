@@ -3,8 +3,6 @@
 
 /* eslint-disable block-spacing */
 
-var {utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 

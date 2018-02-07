@@ -110,12 +110,10 @@ GeckoProfilerRuntime::enable(bool enabled)
 
     // This function is called when the Gecko profiler makes a new Sampler
     // (and thus, a new circular buffer). Set all current entries in the
-    // JitcodeGlobalTable as expired and reset the buffer generation and lap
-    // count.
+    // JitcodeGlobalTable as expired and reset the buffer range start.
     if (rt->hasJitRuntime() && rt->jitRuntime()->hasJitcodeGlobalTable())
         rt->jitRuntime()->getJitcodeGlobalTable()->setAllEntriesAsExpired(rt);
-    rt->resetProfilerSampleBufferGen();
-    rt->resetProfilerSampleBufferLapCount();
+    rt->setProfilerSampleBufferRangeStart(0);
 
     // Ensure that lastProfilingFrame is null for all threads before 'enabled' becomes true.
     for (const CooperatingContext& target : rt->cooperatingContexts()) {

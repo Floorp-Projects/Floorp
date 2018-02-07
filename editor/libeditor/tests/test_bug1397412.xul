@@ -28,9 +28,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1397412
   </body>
   <script class="testbody" type="application/javascript">
   <![CDATA[
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
-
 function runTest() {
   var initialHTML1 = "xx<br><br>";
   var expectedHTML1 = "xx<br>t<br>";

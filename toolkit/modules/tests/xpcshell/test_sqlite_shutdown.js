@@ -3,8 +3,6 @@
 
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 do_get_profile();
 
 ChromeUtils.import("resource://gre/modules/osfile.jsm");

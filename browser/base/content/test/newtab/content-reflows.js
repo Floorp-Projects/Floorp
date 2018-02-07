@@ -7,8 +7,6 @@
 (function() {
   "use strict";
 
-  const Ci = Components.interfaces;
-
   docShell.addWeakReflowObserver({
     reflow() {
       // Gather information about the current code path.

@@ -4,8 +4,6 @@
 
 /* eslint-env mozilla/frame-script */
 
-var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-
 Cu.importGlobalProperties(["Blob", "FileReader"]);
 
 ChromeUtils.import("resource://gre/modules/PageThumbUtils.jsm");

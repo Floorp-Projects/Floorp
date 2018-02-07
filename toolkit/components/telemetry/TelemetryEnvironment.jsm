@@ -8,7 +8,6 @@ this.EXPORTED_SYMBOLS = [
   "TelemetryEnvironment",
 ];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const myScope = this;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);

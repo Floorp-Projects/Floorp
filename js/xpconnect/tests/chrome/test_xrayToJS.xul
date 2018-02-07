@@ -20,9 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
   /** Test for ES constructors on Xrayed globals. **/
   SimpleTest.waitForExplicitFinish();
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
-  const Cu = Components.utils;
   let global = Cu.getGlobalForObject.bind(Cu);
 
   function checkThrows(f, rgxp, msg) {

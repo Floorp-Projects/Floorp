@@ -13,8 +13,6 @@
   <script type="application/javascript"><![CDATA[
 
   /** Test for StringEncoding API. **/
-  const Cu = Components.utils;
-
   // Import our test JSM. We first strip the filename off
   // the chrome url, then append the jsm filename.
   var base = /.*\//.exec(window.location.href)[0];

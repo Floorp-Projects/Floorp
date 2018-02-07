@@ -9,8 +9,6 @@
 
 /* exported SubprocessImpl */
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 Cu.importGlobalProperties(["TextDecoder"]);
 
 var EXPORTED_SYMBOLS = ["SubprocessImpl"];

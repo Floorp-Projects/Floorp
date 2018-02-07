@@ -1,6 +1,3 @@
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-
 var pb = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
 // This pref is chosen somewhat arbitrarily --- we just need one

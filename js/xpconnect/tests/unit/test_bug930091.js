@@ -1,5 +1,3 @@
-const Cu = Components.utils;
-
 function checkThrows(fn) {
   try {
     fn();

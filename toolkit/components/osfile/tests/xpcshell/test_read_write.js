@@ -3,8 +3,6 @@
 
 "use strict";
 
-var {utils: Cu} = Components;
-
 var SHARED_PATH;
 
 var EXISTING_FILE = do_get_file("xpcshell.ini").path;

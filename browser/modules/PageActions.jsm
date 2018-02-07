@@ -14,8 +14,6 @@ this.EXPORTED_SYMBOLS = [
   // PageActions.ACTION_ID_BUILT_IN_SEPARATOR
 ];
 
-const { utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

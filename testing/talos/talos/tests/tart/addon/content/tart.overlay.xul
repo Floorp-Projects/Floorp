@@ -6,8 +6,6 @@
 <script type="application/x-javascript">
 
 (function(){
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
   var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
   const TART_PREFIX = "tart@mozilla.org:";

@@ -5,5 +5,4 @@
 
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 
-const { utils: Cu } = Components;
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});

@@ -7,10 +7,6 @@ this.EXPORTED_SYMBOLS = [ "FileUtils" ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
 XPCOMUtils.defineLazyServiceGetter(this, "gDirService",
                                    "@mozilla.org/file/directory_service;1",
                                    "nsIProperties");

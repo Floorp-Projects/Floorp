@@ -12,10 +12,6 @@
 
 var global = this;
 
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-var Cu = Components.utils;
-
 ChromeUtils.import("chrome://specialpowers/content/MockFilePicker.jsm");
 ChromeUtils.import("chrome://specialpowers/content/MockColorPicker.jsm");
 ChromeUtils.import("chrome://specialpowers/content/MockPermissionPrompt.jsm");

@@ -42,7 +42,7 @@
  *      usedTags:         All used tags from within the extension sorted by recency
  */
 
-const {classes: Cc, interfaces: Ci, utils: Cu, manager: Cm} = Components;
+const Cm = Components.manager;
 this.EXPORTED_SYMBOLS = ["pktApi"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

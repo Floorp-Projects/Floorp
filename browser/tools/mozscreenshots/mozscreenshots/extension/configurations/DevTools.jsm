@@ -6,8 +6,6 @@
 
 this.EXPORTED_SYMBOLS = ["DevTools"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 ChromeUtils.import("resource://devtools/client/framework/gDevTools.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");

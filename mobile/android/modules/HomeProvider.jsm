@@ -7,8 +7,6 @@
 
 this.EXPORTED_SYMBOLS = [ "HomeProvider" ];
 
-const { utils: Cu, classes: Cc, interfaces: Ci } = Components;
-
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/Promise.jsm");

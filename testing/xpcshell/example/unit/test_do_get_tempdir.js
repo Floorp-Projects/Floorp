@@ -5,8 +5,6 @@
 
 /* This tests that do_get_tempdir returns a directory that we can write to. */
 
-var Ci = Components.interfaces;
-
 function run_test() {
   let tmpd = do_get_tempdir();
   Assert.ok(tmpd.exists());

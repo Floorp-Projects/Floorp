@@ -1,7 +1,5 @@
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=1273251
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");

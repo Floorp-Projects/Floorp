@@ -43,10 +43,6 @@
  */
 this.EXPORTED_SYMBOLS = ["AeroPeek"];
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
 ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
