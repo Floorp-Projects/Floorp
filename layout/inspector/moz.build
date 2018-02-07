@@ -10,7 +10,6 @@ if CONFIG['ENABLE_TESTS']:
 
 XPIDL_SOURCES += [
     'inIDeepTreeWalker.idl',
-    'inIDOMView.idl',
 ]
 
 XPIDL_MODULE = 'inspector'
@@ -31,11 +30,6 @@ UNIFIED_SOURCES += [
     'InspectorUtils.cpp',
     'ServoStyleRuleMap.cpp',
 ]
-
-if CONFIG['MOZ_XUL']:
-    UNIFIED_SOURCES += [
-        'inDOMView.cpp',
-    ]
 
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
