@@ -20,6 +20,13 @@ const TelemetryEvents = {
         record_on_release: true,
       },
 
+      enroll_failure: {
+        methods: ["enrollFailed"],
+        objects: ["addon_study"],
+        extra_keys: ["reason"],
+        record_on_release: true,
+      },
+
       unenroll: {
         methods: ["unenroll"],
         objects: ["preference_study", "addon_study"],
