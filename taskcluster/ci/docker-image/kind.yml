@@ -29,6 +29,7 @@ jobs:
       BASE_TAG: '20171210'
       SNAPSHOT: '20171210T214726Z'
     packages:
+      - deb7-gdb
       - deb7-git
       - deb7-make
       - deb7-mercurial
