@@ -2518,7 +2518,7 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
             if (extraBytes)
                 envBytes_.shrinkTo(codeSection_.start);
 
-            if (codeSection_.size > MaxModuleBytes)
+            if (codeSection_.size > MaxCodeSectionBytes)
                 return rejectAndDestroyBeforeHelperThreadStarted(JSMSG_OUT_OF_MEMORY);
 
             if (!codeBytes_.resize(codeSection_.size))
