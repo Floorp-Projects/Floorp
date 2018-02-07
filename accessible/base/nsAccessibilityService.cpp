@@ -1460,14 +1460,8 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
   RefPtr<Accessible> accessible;
 #ifdef MOZ_XUL
   // XUL controls
-  if (role.EqualsLiteral("xul:alert")) {
-    accessible = new XULAlertAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:button")) {
+  if (role.EqualsLiteral("xul:button")) {
     accessible = new XULButtonAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:checkbox")) {
-    accessible = new XULCheckboxAccessible(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:colorpicker")) {
     accessible = new XULColorPickerAccessible(aContent, aDoc);
@@ -1478,52 +1472,8 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
   } else if (role.EqualsLiteral("xul:combobox")) {
     accessible = new XULComboboxAccessible(aContent, aDoc);
 
-  } else if (role.EqualsLiteral("xul:tabpanels")) {
-      accessible = new XULTabpanelsAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:dropmarker")) {
-      accessible = new XULDropmarkerAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:groupbox")) {
-      accessible = new XULGroupboxAccessible(aContent, aDoc);
-
   } else if (role.EqualsLiteral("xul:link")) {
     accessible = new XULLinkAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:listbox")) {
-      accessible = new XULListboxAccessibleWrap(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:listcell")) {
-    // Only create cells if there's more than one per row.
-    nsIContent* listItem = aContent->GetParent();
-    if (!listItem)
-      return nullptr;
-
-    for (nsIContent* child = listItem->GetFirstChild(); child;
-         child = child->GetNextSibling()) {
-      if (child->IsXULElement(nsGkAtoms::listcell) && child != aContent) {
-        accessible = new XULListCellAccessibleWrap(aContent, aDoc);
-        break;
-      }
-    }
-
-  } else if (role.EqualsLiteral("xul:listhead")) {
-    accessible = new XULColumAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:listheader")) {
-    accessible = new XULColumnItemAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:listitem")) {
-    accessible = new XULListitemAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:menubar")) {
-    accessible = new XULMenubarAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:menulist")) {
-    accessible = new XULComboboxAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:menuitem")) {
-    accessible = new XULMenuitemAccessibleWrap(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:menupopup")) {
 #ifdef MOZ_ACCESSIBILITY_ATK
@@ -1551,23 +1501,8 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
     else
       accessible = new EnumRoleAccessible<roles::PANE>(aContent, aDoc);
 
-  } else if (role.EqualsLiteral("xul:progressmeter")) {
-    accessible = new XULProgressMeterAccessible(aContent, aDoc);
-
   } else if (role.EqualsLiteral("xul:scale")) {
     accessible = new XULSliderAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:radiobutton")) {
-    accessible = new XULRadioButtonAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:radiogroup")) {
-    accessible = new XULRadioGroupAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:tab")) {
-    accessible = new XULTabAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:tabs")) {
-    accessible = new XULTabsAccessible(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:text")) {
     accessible = new XULLabelAccessible(aContent, aDoc);
@@ -1577,24 +1512,6 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 
   } else if (role.EqualsLiteral("xul:thumb")) {
     accessible = new XULThumbAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:tree")) {
-    accessible = CreateAccessibleForXULTree(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:treecolumns")) {
-    accessible = new XULTreeColumAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:treecolumnitem")) {
-    accessible = new XULColumnItemAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:toolbar")) {
-    accessible = new XULToolbarAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:toolbarseparator")) {
-    accessible = new XULToolbarSeparatorAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:tooltip")) {
-    accessible = new XULTooltipAccessible(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:toolbarbutton")) {
     accessible = new XULToolbarButtonAccessible(aContent, aDoc);
@@ -1830,38 +1747,6 @@ nsAccessibilityService::HasAccessible(nsIDOMNode* aDOMNode)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService private (DON'T put methods here)
-
-#ifdef MOZ_XUL
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateAccessibleForXULTree(nsIContent* aContent,
-                                                   DocAccessible* aDoc)
-{
-  nsIContent* child = nsTreeUtils::GetDescendantChild(aContent,
-                                                      nsGkAtoms::treechildren);
-  if (!child)
-    return nullptr;
-
-  nsTreeBodyFrame* treeFrame = do_QueryFrame(child->GetPrimaryFrame());
-  if (!treeFrame)
-    return nullptr;
-
-  RefPtr<nsTreeColumns> treeCols = treeFrame->Columns();
-  int32_t count = 0;
-  treeCols->GetCount(&count);
-
-  // Outline of list accessible.
-  if (count == 1) {
-    RefPtr<Accessible> accessible =
-      new XULTreeAccessible(aContent, aDoc, treeFrame);
-    return accessible.forget();
-  }
-
-  // Table or tree table accessible.
-  RefPtr<Accessible> accessible =
-    new XULTreeGridAccessibleWrap(aContent, aDoc, treeFrame);
-  return accessible.forget();
-}
-#endif
 
 void
 nsAccessibilityService::SetConsumers(uint32_t aConsumers) {
