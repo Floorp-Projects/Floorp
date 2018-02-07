@@ -232,7 +232,7 @@ DefaultJitOptions::DefaultJitOptions()
             Warn(forcedRegisterAllocatorEnv, env);
     }
 
-    SET_DEFAULT(spectreIndexMasking, false);
+    SET_DEFAULT(spectreIndexMasking, true);
 
     // Toggles whether unboxed plain objects can be created by the VM.
     SET_DEFAULT(disableUnboxedObjects, false);
