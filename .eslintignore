@@ -145,7 +145,6 @@ devtools/client/webaudioeditor/**
 devtools/client/webconsole/net/**
 devtools/client/webconsole/new-console-output/test/mochitest/**
 devtools/client/webconsole/test/**
-devtools/client/webconsole/hudservice.js
 devtools/client/webconsole/webconsole-connection-proxy.js
 devtools/client/webconsole/webconsole.js
 devtools/client/webide/**
