@@ -9,9 +9,6 @@ config = {
     "test_manifest": "unit-tests.ini",
 
     "vcs_share_base": HG_SHARE_BASE_DIR,
-    "exes": {
-        'tooltool.py': "/tools/tooltool.py",
-    },
 
     "find_links": [
         "http://pypi.pvt.build.mozilla.org/pub",

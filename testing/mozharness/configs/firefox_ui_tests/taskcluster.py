@@ -4,10 +4,6 @@
 config = {
     "vcs_share_base": "/builds/hg-shared",
 
-    "exes": {
-        'tooltool.py': "/tools/tooltool.py",
-    },
-
     "find_links": [
         "http://pypi.pub.build.mozilla.org/pub",
     ],

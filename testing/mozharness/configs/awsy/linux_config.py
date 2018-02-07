@@ -16,7 +16,6 @@ INSTALLER_PATH = os.path.join(ABS_WORK_DIR, "installer.tar.bz2")
 config = {
     "log_name": "awsy",
     "binary_path": BINARY_PATH,
-    "download_tooltool": True,
     "installer_path": INSTALLER_PATH,
     "virtualenv_path": VENV_PATH,
     "find_links": [
