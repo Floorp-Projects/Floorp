@@ -124,13 +124,14 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
   // nested ScrollingLayersHelper may rely on things like TopmostScrollId and
   // TopmostClipId, so now we need to push at most two things onto the stack.
 
-  Maybe<wr::WrScrollId> leafmostId = ids.first;
+  wr::WrScrollId rootId = wr::WrScrollId { 0 };
+  wr::WrScrollId leafmostId = ids.first.valueOr(rootId);
+
   FrameMetrics::ViewID viewId = aItem->GetActiveScrolledRoot()
       ? aItem->GetActiveScrolledRoot()->GetViewId()
       : FrameMetrics::NULL_SCROLL_ID;
-  Maybe<wr::WrScrollId> scrollId =
-      mBuilder->GetScrollIdForDefinedScrollLayer(viewId);
-  MOZ_ASSERT(scrollId.isSome());
+  wr::WrScrollId scrollId =
+      mBuilder->GetScrollIdForDefinedScrollLayer(viewId).valueOr(rootId);
 
   // If the leafmost ASR is not the same as the item's ASR then we are dealing
   // with a case where the item's clip chain is scrolled by something other than
@@ -146,7 +147,7 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
       mBuilder->TopmostScrollId() == scrollId &&
       !mBuilder->TopmostIsClip()) {
     if (auto cs = EnclosingClipAndScroll()) {
-      MOZ_ASSERT(cs->first == *scrollId);
+      MOZ_ASSERT(cs->first == scrollId);
       needClipAndScroll = true;
     }
   }
@@ -155,7 +156,7 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
   // the scroll stack
   if (!needClipAndScroll && mBuilder->TopmostScrollId() != scrollId) {
     MOZ_ASSERT(leafmostId == scrollId); // because !needClipAndScroll
-    clips.mScrollId = scrollId;
+    clips.mScrollId = Some(scrollId);
   }
   // And ensure the leafmost clip, if scrolled by that ASR, is at the top of the
   // stack.
@@ -174,7 +175,7 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
       clipId = mBuilder->TopmostClipId();
     }
 
-    clips.mClipAndScroll = Some(std::make_pair(*scrollId, clipId));
+    clips.mClipAndScroll = Some(std::make_pair(scrollId, clipId));
   }
 
   clips.Apply(mBuilder);
@@ -299,7 +300,9 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
   } else {
     MOZ_ASSERT(!ancestorIds.second);
     FrameMetrics::ViewID viewId = aChain->mASR ? aChain->mASR->GetViewId() : FrameMetrics::NULL_SCROLL_ID;
-    auto scrollId = mBuilder->GetScrollIdForDefinedScrollLayer(viewId);
+
+    wr::WrScrollId rootId = wr::WrScrollId { 0 };
+    auto scrollId = mBuilder->GetScrollIdForDefinedScrollLayer(viewId).valueOr(rootId);
     if (mBuilder->TopmostScrollId() == scrollId) {
       if (mBuilder->TopmostIsClip()) {
         // If aChain->mASR is already the topmost scroll layer on the stack, but
@@ -328,7 +331,7 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
         // (S, D) for this item. This hunk of code ensures that we define D
         // as a child of C, and when we set the needClipAndScroll flag elsewhere
         // in this file we make sure to set it for this scenario.
-        MOZ_ASSERT(Some(cs->first) == scrollId);
+        MOZ_ASSERT(cs->first == scrollId);
         ancestorIds.first = Nothing();
         ancestorIds.second = cs->second;
       }
