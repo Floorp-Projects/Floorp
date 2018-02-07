@@ -1419,12 +1419,10 @@ EditorBase::CreateNode(nsAtom* aTag,
   MOZ_ASSERT(aTag);
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
-  EditorRawDOMPoint pointToInsert(aPointToInsert);
-
   // XXX We need offset at new node for mRangeUpdater.  Therefore, we need
   //     to compute the offset now but this is expensive.  So, if it's possible,
   //     we need to redesign mRangeUpdater as avoiding using indices.
-  int32_t offset = static_cast<int32_t>(pointToInsert.Offset());
+  Unused << aPointToInsert.Offset();
 
   AutoRules beginRulesSniffing(this, EditAction::createNode, nsIEditor::eNext);
 
@@ -1432,35 +1430,42 @@ EditorBase::CreateNode(nsAtom* aTag,
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->WillCreateNode(nsDependentAtomString(aTag),
-                               GetAsDOMNode(pointToInsert.GetChild()));
+                               GetAsDOMNode(aPointToInsert.GetChild()));
     }
   }
 
-  nsCOMPtr<Element> ret;
+  RefPtr<Element> newElement;
 
   RefPtr<CreateElementTransaction> transaction =
-    CreateElementTransaction::Create(*this, *aTag, pointToInsert);
+    CreateElementTransaction::Create(*this, *aTag, aPointToInsert);
   nsresult rv = DoTransaction(transaction);
-  if (NS_SUCCEEDED(rv)) {
-    ret = transaction->GetNewNode();
-    MOZ_ASSERT(ret);
-    // Now, aPointToInsert may be invalid.  I.e., GetChild() keeps
-    // referring the next sibling of new node but Offset() refers the
-    // new node.  Let's make refer the new node.
-    pointToInsert.Set(ret, offset);
-  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // XXX Why do we do this even when DoTransaction() returned error?
+    mRangeUpdater.SelAdjCreateNode(aPointToInsert);
+  } else {
+    newElement = transaction->GetNewNode();
+    MOZ_ASSERT(newElement);
 
-  mRangeUpdater.SelAdjCreateNode(pointToInsert.AsRaw());
+    // If we succeeded to create and insert new element, we need to adjust
+    // ranges in mRangeUpdater.  It currently requires offset of the new node.
+    // So, let's call it with original offset.  Note that if aPointToInsert
+    // stores child node, it may not be at the offset since new element must
+    // be inserted before the old child.  Although, mutation observer can do
+    // anything, but currently, we don't check it.
+    mRangeUpdater.SelAdjCreateNode(
+                    EditorRawDOMPoint(aPointToInsert.GetContainer(),
+                                      aPointToInsert.Offset()));
+  }
 
   {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->DidCreateNode(nsDependentAtomString(aTag),
-                              GetAsDOMNode(ret), rv);
+                              GetAsDOMNode(newElement), rv);
     }
   }
 
-  return ret.forget();
+  return newElement.forget();
 }
 
 NS_IMETHODIMP
