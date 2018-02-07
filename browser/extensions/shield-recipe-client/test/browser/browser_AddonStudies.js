@@ -142,19 +142,31 @@ decorate_task(
 
 decorate_task(
   withStub(Addons, "applyInstall"),
+  withStub(TelemetryEvents, "sendEvent"),
   withWebExtension(),
-  async function testStartAddonCleanup(applyInstallStub, [addonId, addonFile]) {
-    applyInstallStub.rejects(new Error("Fake failure"));
+  async function testStartAddonCleanup(applyInstallStub, sendEventStub, [addonId, addonFile]) {
+    const fakeError = new Error("Fake failure");
+    fakeError.fileName = "fake/filename.js";
+    fakeError.lineNumber = 42;
+    fakeError.columnNumber = 54;
+    applyInstallStub.rejects(fakeError);
 
     const addonUrl = Services.io.newFileURI(addonFile).spec;
+    const args = startArgsFactory({addonUrl});
     await Assert.rejects(
-      AddonStudies.start(startArgsFactory({addonUrl})),
+      AddonStudies.start(args),
       /Fake failure/,
       "start rejects when the Addons.applyInstall function rejects"
     );
 
     const addon = await Addons.get(addonId);
     ok(!addon, "If something fails during start after the add-on is installed, it is uninstalled.");
+
+    Assert.deepEqual(
+      sendEventStub.getCall(0).args,
+      ["enrollFailed", "addon_study", args.name, {reason: "fake/filename.js:42:54 Error"}],
+      "AddonStudies.start() should send an enroll-failed event when applyInstall rejects",
+    );
   }
 );
 
