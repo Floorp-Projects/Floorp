@@ -20,6 +20,12 @@ const POLICIES_FILENAME = "policies.json";
 // and set PREF_ALTERNATE_PATH in firefox.js as:
 // /your/repo/browser/components/enterprisepolicies/helpers/sample.json
 const PREF_ALTERNATE_PATH     = "browser.policies.alternatePath";
+// For testing, we may want to set PREF_ALTERNATE_PATH to point to a file
+// relative to the test root directory. In order to enable this, the string
+// below may be placed at the beginning of that preference value and it will
+// be replaced with the path to the test root directory.
+const MAGIC_TEST_ROOT_PREFIX  = "<test-root>";
+const PREF_TEST_ROOT          = "mochitest.testRoot";
 
 // This pref is meant to be temporary: it will only be used while we're
 // testing this feature without rolling it out officially. When the
@@ -319,6 +325,18 @@ class JSONPoliciesProvider {
       // the admin-provided policies by changing the user-controlled prefs.
       // This pref is only meant for tests, so it's fine to use this extra
       // synchronous configFile.exists() above.
+      if (alternatePath.startsWith(MAGIC_TEST_ROOT_PREFIX)) {
+        // Intentionally not using a default value on this pref lookup. If no
+        // test root is set, we are not currently testing and this function
+        // should throw rather than returning something.
+        let testRoot = Services.prefs.getStringPref(PREF_TEST_ROOT);
+        let relativePath = alternatePath.substring(MAGIC_TEST_ROOT_PREFIX.length);
+        if (AppConstants.platform == "win") {
+          relativePath = relativePath.replace(/\//g, "\\");
+        }
+        alternatePath = testRoot + relativePath;
+      }
+
       configFile = Cc["@mozilla.org/file/local;1"]
                      .createInstance(Ci.nsIFile);
       configFile.initWithPath(alternatePath);
