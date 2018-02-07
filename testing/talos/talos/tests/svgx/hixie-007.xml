@@ -1,4 +1,4 @@
-<svg viewBox="0 0 800 400" width="800" xmlns="http://www.w3.org/2000/svg" xmlns:country="http://example.com/">
+<svg viewBox="0 0 800 400" width="800" xmlns="http://www.w3.org/2000/svg" xmlns:country="http://example.com/" xmlns:xlink="http://www.w3.org/1999/xlink" >
 <!--
 This test attempts to test how fast an implementation can repaint for changes
 to the "width" attributes of a root-<svg> with a viewBox and that
@@ -275,20 +275,10 @@ contains many 'path' elements with fill and stroke.
     }
   }
   addEventListener("load", function() {
-    try {
-      // Outside of talos, this throws a security exception which no-op this file.
-      // (It's not required nor allowed for addons since Firefox 17)
-      // It's used inside talos from non-privileged pages (like during tscroll),
-      // and it works because talos disables all/most security measures.
-      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    } catch (e) {}
-
-    Components.utils.import("resource://gre/modules/Services.jsm");
-    Services.scriptloader.loadSubScript("chrome://talos-powers-content/content/TalosContentProfiler.js");
-
     TalosContentProfiler.resume("hixie-007.xml loaded", true).then(() => {
       rAF(runTest);
     });
   });
  ]]></script>
+ <script type="text/javascript" xlink:href="chrome://talos-powers-content/content/TalosContentProfiler.js"></script>
 </svg>
