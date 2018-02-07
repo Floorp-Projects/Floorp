@@ -227,7 +227,9 @@
   <div id="c6">This <abbr title="accessibility">a11y</abbr> test</div>
   <div id="c7">This <acronym title="personal computer">PC</acronym> is broken</div>
 
-  <!-- only whitespace between images should be exposed -->
-  <div id="c8">   <img src="../moz.png">   <img src="../moz.png">   </div>
+  <!-- Whitespace between images should be exposed. Whitespace between the
+       div and img tags will be inconsistent depending on the image cache
+       state and what optimizations layout was able to apply. -->
+  <div id="c8"><img src="../moz.png">   <img src="../moz.png"></div>
 </body>
 </html>

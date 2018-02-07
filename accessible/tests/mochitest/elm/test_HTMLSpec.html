@@ -1510,10 +1510,11 @@
     <input />
   </fieldset>
 
-  <figure id="figure">
-    <img src="../moz.png" alt="An awesome picture">
-    <figcaption id="figcaption">Caption for the awesome picture</figcaption>
-  </figure>
+  <!-- Depending on whether or not the image is cached, layout may be able to
+       optimize away spaces between the figure, img and figcaption tags. As
+       such, we should keep everything on one line to get consistent results.
+  -->
+  <figure id="figure"><img src="../moz.png" alt="An awesome picture"><figcaption id="figcaption">Caption for the awesome picture</figcaption></figure>
 
   <footer id="footer">Some copyright info</footer>
   <article>

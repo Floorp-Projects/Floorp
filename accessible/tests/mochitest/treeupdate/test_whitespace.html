@@ -170,8 +170,11 @@
   <pre id="test">
   </pre>
 
-  <div id="container1">  <img src="../moz.png">  <img id="img1" src="../moz.png">  <img src="../moz.png">  </div>
-  <div> <a id="container2"></a> <a><img src="../moz.png"></a> </div>
+  <!-- Whitespace between the div and img tags will be inconsistent depending
+       on the image cache state and what optimizations layout was able to
+       apply. -->
+  <div id="container1"><img src="../moz.png">  <img id="img1" src="../moz.png">  <img src="../moz.png"></div>
+  <div><a id="container2"></a> <a><img src="../moz.png"></a></div>
 
   <div id="eventdump"></div>
 </body>
