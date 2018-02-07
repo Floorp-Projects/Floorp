@@ -6,6 +6,11 @@
 import unittest
 
 from compare_locales.tests import ParserTestMixin
+from compare_locales.parser import (
+    Comment,
+    Junk,
+    Whitespace,
+)
 
 
 class TestPropertiesParser(ParserTestMixin, unittest.TestCase):
@@ -22,15 +27,15 @@ two_lines_triple = This line is one of two and ends in \\\
 and still has another line coming
 ''', (
             ('one_line', 'This is one line'),
-            ('Whitespace', '\n'),
+            (Whitespace, '\n'),
             ('two_line', u'This is the first of two lines'),
-            ('Whitespace', '\n'),
+            (Whitespace, '\n'),
             ('one_line_trailing', u'This line ends in \\'),
-            ('Whitespace', '\n'),
-            ('Junk', 'and has junk\n'),
+            (Whitespace, '\n'),
+            (Junk, 'and has junk\n'),
             ('two_lines_triple', 'This line is one of two and ends in \\'
              'and still has another line coming'),
-            ('Whitespace', '\n')))
+            (Whitespace, '\n')))
 
     def testProperties(self):
         # port of netwerk/test/PropertiesTest.cpp
@@ -68,10 +73,10 @@ and an end''', (('bar', 'one line with a # part that looks like a comment '
 
 foo=value
 ''', (
-            ('Comment', 'MPL'),
-            ('Whitespace', '\n\n'),
+            (Comment, 'MPL'),
+            (Whitespace, '\n\n'),
             ('foo', 'value'),
-            ('Whitespace', '\n')))
+            (Whitespace, '\n')))
 
     def test_escapes(self):
         self.parser.readContents(r'''
@@ -97,18 +102,18 @@ second = string
 #commented out
 ''', (
             ('first', 'string'),
-            ('Whitespace', '\n'),
+            (Whitespace, '\n'),
             ('second', 'string'),
-            ('Whitespace', '\n\n'),
-            ('Comment', 'commented out'),
-            ('Whitespace', '\n')))
+            (Whitespace, '\n\n'),
+            (Comment, 'commented out'),
+            (Whitespace, '\n')))
 
     def test_trailing_newlines(self):
         self._test('''\
 foo = bar
 
 \x20\x20
-  ''', (('foo', 'bar'), ('Whitespace', '\n\n\x20\x20\n ')))
+  ''', (('foo', 'bar'), (Whitespace, '\n\n\x20\x20\n ')))
 
     def test_just_comments(self):
         self._test('''\
@@ -119,10 +124,10 @@ foo = bar
 # LOCALIZATION NOTE These strings are used inside the Promise debugger
 # which is available as a panel in the Debugger.
 ''', (
-            ('Comment', 'MPL'),
-            ('Whitespace', '\n\n'),
-            ('Comment', 'LOCALIZATION NOTE'),
-            ('Whitespace', '\n')))
+            (Comment, 'MPL'),
+            (Whitespace, '\n\n'),
+            (Comment, 'LOCALIZATION NOTE'),
+            (Whitespace, '\n')))
 
     def test_just_comments_without_trailing_newline(self):
         self._test('''\
@@ -132,9 +137,9 @@ foo = bar
 
 # LOCALIZATION NOTE These strings are used inside the Promise debugger
 # which is available as a panel in the Debugger.''', (
-            ('Comment', 'MPL'),
-            ('Whitespace', '\n\n'),
-            ('Comment', 'LOCALIZATION NOTE')))
+            (Comment, 'MPL'),
+            (Whitespace, '\n\n'),
+            (Comment, 'LOCALIZATION NOTE')))
 
     def test_trailing_comment_and_newlines(self):
         self._test('''\
@@ -144,14 +149,14 @@ foo = bar
 
 
 ''',  (
-            ('Comment', 'LOCALIZATION NOTE'),
-            ('Whitespace', '\n\n\n')))
+            (Comment, 'LOCALIZATION NOTE'),
+            (Whitespace, '\n\n\n')))
 
     def test_empty_file(self):
         self._test('', tuple())
-        self._test('\n', (('Whitespace', '\n'),))
-        self._test('\n\n', (('Whitespace', '\n\n'),))
-        self._test(' \n\n', (('Whitespace', '\n\n'),))
+        self._test('\n', ((Whitespace, '\n'),))
+        self._test('\n\n', ((Whitespace, '\n\n'),))
+        self._test(' \n\n', ((Whitespace, '\n\n'),))
 
     def test_positions(self):
         self.parser.readContents('''\

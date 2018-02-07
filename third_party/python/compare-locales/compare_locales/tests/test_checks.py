@@ -90,6 +90,35 @@ downloadsTitleFiles=#1 file - Downloads;#1 files - #2;#1 #3
                    (('error', 0, 'unreplaced variables in l10n', 'plural'),))
 
 
+class TestPluralForms(BaseHelper):
+    file = File('foo.properties', 'foo.properties', locale='en-GB')
+    refContent = '''\
+# LOCALIZATION NOTE (downloadsTitleFiles): Semi-colon list of plural forms.
+# See: http://developer.mozilla.org/en/docs/Localization_and_Plurals
+# #1 number of files
+# example: 111 files - Downloads
+downloadsTitleFiles=#1 file;#1 files
+'''
+
+    def test_matching_forms(self):
+        self._test('''\
+downloadsTitleFiles=#1 fiiilee;#1 fiiilees
+''',
+                   tuple())
+
+    def test_lacking_forms(self):
+        self._test('''\
+downloadsTitleFiles=#1 fiiilee
+''',
+                   (('warning', 0, 'expecting 2 plurals, found 1', 'plural'),))
+
+    def test_excess_forms(self):
+        self._test('''\
+downloadsTitleFiles=#1 fiiilee;#1 fiiilees;#1 fiiilees
+''',
+                   (('warning', 0, 'expecting 2 plurals, found 3', 'plural'),))
+
+
 class TestDTDs(BaseHelper):
     file = File('foo.dtd', 'foo.dtd')
     refContent = '''<!ENTITY foo "This is &apos;good&apos;">
@@ -228,19 +257,16 @@ class TestAndroid(unittest.TestCase):
     quot_msg = u"Quotes in Android DTDs need escaping with \\\" or " + \
                u"\\u0022, or put string in apostrophes."
 
-    def getEntity(self, v):
+    def getNext(self, v):
         ctx = Parser.Context(v)
         return DTDEntity(
-            ctx, '', (0, len(v)), (), (), (), (0, len(v)), ())
+            ctx, '', (0, len(v)), (), (0, len(v)))
 
     def getDTDEntity(self, v):
         v = v.replace('"', '&quot;')
         ctx = Parser.Context('<!ENTITY foo "%s">' % v)
         return DTDEntity(
-            ctx,
-            '',
-            (0, len(v) + 16), (), (), (9, 12),
-            (14, len(v) + 14), ())
+            ctx, '', (0, len(v) + 16), (9, 12), (14, len(v) + 14))
 
     def test_android_dtd(self):
         """Testing the actual android checks. The logic is involved,
@@ -326,23 +352,23 @@ class TestAndroid(unittest.TestCase):
                  "embedding/android")
         checker = getChecker(f, extra_tests=['android-dtd'])
         # good plain string
-        ref = self.getEntity("plain string")
-        l10n = self.getEntity("plain localized string")
+        ref = self.getNext("plain string")
+        l10n = self.getNext("plain localized string")
         self.assertEqual(tuple(checker.check(ref, l10n)),
                          ())
         # no dtd warning
-        ref = self.getEntity("plain string")
-        l10n = self.getEntity("plain localized string &ref;")
+        ref = self.getNext("plain string")
+        l10n = self.getNext("plain localized string &ref;")
         self.assertEqual(tuple(checker.check(ref, l10n)),
                          ())
         # no report on stray ampersand
-        ref = self.getEntity("plain string")
-        l10n = self.getEntity("plain localized string with apos: '")
+        ref = self.getNext("plain string")
+        l10n = self.getNext("plain localized string with apos: '")
         self.assertEqual(tuple(checker.check(ref, l10n)),
                          ())
         # report on bad printf
-        ref = self.getEntity("string with %s")
-        l10n = self.getEntity("string with %S")
+        ref = self.getNext("string with %s")
+        l10n = self.getNext("string with %S")
         self.assertEqual(tuple(checker.check(ref, l10n)),
                          (('error', 0, 'argument 1 `S` should be `s`',
                            'printf'),))

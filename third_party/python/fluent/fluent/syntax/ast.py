@@ -8,6 +8,8 @@ def to_json(value):
         return value.to_json()
     if isinstance(value, list):
         return list(map(to_json, value))
+    if isinstance(value, tuple):
+        return list(map(to_json, value))
     else:
         return value
 
@@ -64,12 +66,10 @@ class BaseNode(object):
             else:
                 return fun(value)
 
+        # Use all attributes found on the node as kwargs to the constructor.
+        kwargs = vars(self).items()
         node = self.__class__(
-            **{
-                name: visit(value)
-                for name, value in vars(self).items()
-            }
-        )
+            **{name: visit(value) for name, value in kwargs})
 
         return fun(node)
 
@@ -77,7 +77,7 @@ class BaseNode(object):
         """Compare two nodes.
 
         Nodes are deeply compared on a field by field basis. If possible, False
-        is returned early. When comparing attributes, tags and variants in
+        is returned early. When comparing attributes and variants in
         SelectExpressions, the order doesn't matter. By default, spans are not
         taken into account.
         """
@@ -98,7 +98,7 @@ class BaseNode(object):
             field2 = getattr(other, key)
 
             # List-typed nodes are compared item-by-item.  When comparing
-            # attributes, tags and variants, the order of items doesn't matter.
+            # attributes and variants, the order of items doesn't matter.
             if isinstance(field1, list) and isinstance(field2, list):
                 if len(field1) != len(field2):
                     return False
@@ -108,7 +108,6 @@ class BaseNode(object):
                 # can't be keyed on any of their fields reliably.
                 field_sorting = {
                     'attributes': lambda elem: elem.id.name,
-                    'tags': lambda elem: elem.name.name,
                     'variants': lambda elem: elem.key.name,
                 }
 
@@ -152,10 +151,9 @@ class SyntaxNode(BaseNode):
 
 
 class Resource(SyntaxNode):
-    def __init__(self, body=None, comment=None, **kwargs):
+    def __init__(self, body=None, **kwargs):
         super(Resource, self).__init__(**kwargs)
         self.body = body or []
-        self.comment = comment
 
 
 class Entry(SyntaxNode):
@@ -168,13 +166,21 @@ class Entry(SyntaxNode):
 
 
 class Message(Entry):
-    def __init__(self, id, value=None, attributes=None, tags=None,
+    def __init__(self, id, value=None, attributes=None,
                  comment=None, **kwargs):
         super(Message, self).__init__(**kwargs)
         self.id = id
         self.value = value
         self.attributes = attributes or []
-        self.tags = tags or []
+        self.comment = comment
+
+class Term(Entry):
+    def __init__(self, id, value, attributes=None,
+                 comment=None, **kwargs):
+        super(Term, self).__init__(**kwargs)
+        self.id = id
+        self.value = value
+        self.attributes = attributes or []
         self.comment = comment
 
 class Pattern(SyntaxNode):
@@ -182,12 +188,15 @@ class Pattern(SyntaxNode):
         super(Pattern, self).__init__(**kwargs)
         self.elements = elements
 
-class TextElement(SyntaxNode):
+class PatternElement(SyntaxNode):
+    pass
+
+class TextElement(PatternElement):
     def __init__(self, value, **kwargs):
         super(TextElement, self).__init__(**kwargs)
         self.value = value
 
-class Placeable(SyntaxNode):
+class Placeable(PatternElement):
     def __init__(self, expression, **kwargs):
         super(Placeable, self).__init__(**kwargs)
         self.expression = expression
@@ -235,21 +244,16 @@ class VariantExpression(Expression):
         self.key = key
 
 class CallExpression(Expression):
-    def __init__(self, callee, args, **kwargs):
+    def __init__(self, callee, args=None, **kwargs):
         super(CallExpression, self).__init__(**kwargs)
         self.callee = callee
-        self.args = args
+        self.args = args or []
 
 class Attribute(SyntaxNode):
     def __init__(self, id, value, **kwargs):
         super(Attribute, self).__init__(**kwargs)
         self.id = id
         self.value = value
-
-class Tag(SyntaxNode):
-    def __init__(self, name, **kwargs):
-        super(Tag, self).__init__(**kwargs)
-        self.name = name
 
 class Variant(SyntaxNode):
     def __init__(self, key, value, default=False, **kwargs):
@@ -269,20 +273,31 @@ class Identifier(SyntaxNode):
         super(Identifier, self).__init__(**kwargs)
         self.name = name
 
-class Symbol(Identifier):
+class VariantName(Identifier):
     def __init__(self, name, **kwargs):
-        super(Symbol, self).__init__(name, **kwargs)
+        super(VariantName, self).__init__(name, **kwargs)
 
-class Comment(Entry):
+
+class BaseComment(Entry):
     def __init__(self, content=None, **kwargs):
-        super(Comment, self).__init__(**kwargs)
+        super(BaseComment, self).__init__(**kwargs)
         self.content = content
 
-class Section(Entry):
-    def __init__(self, name, comment=None, **kwargs):
-        super(Section, self).__init__(**kwargs)
-        self.name = name
-        self.comment = comment
+
+class Comment(BaseComment):
+    def __init__(self, content=None, **kwargs):
+        super(Comment, self).__init__(content, **kwargs)
+
+
+class GroupComment(BaseComment):
+    def __init__(self, content=None, **kwargs):
+        super(GroupComment, self).__init__(content, **kwargs)
+
+
+class ResourceComment(BaseComment):
+    def __init__(self, content=None, **kwargs):
+        super(ResourceComment, self).__init__(content, **kwargs)
+
 
 class Function(Identifier):
     def __init__(self, name, **kwargs):

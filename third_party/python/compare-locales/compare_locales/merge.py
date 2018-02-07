@@ -35,10 +35,10 @@ def merge_channels(name, *resources):
 
     def get_key_value(entity, counter):
         if isinstance(entity, cl.Comment):
-            counter[entity.all] += 1
+            counter[entity.val] += 1
             # Use the (value, index) tuple as the key. AddRemove will
             # de-deplicate identical comments at the same index.
-            return ((entity.all, counter[entity.all]), entity)
+            return ((entity.val, counter[entity.val]), entity)
 
         if isinstance(entity, cl.Whitespace):
             # Use the Whitespace instance as the key so that it's always
