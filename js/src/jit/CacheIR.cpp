@@ -4862,6 +4862,8 @@ UnaryArithIRGenerator::tryAttachStub()
 {
     if (tryAttachInt32())
         return true;
+    if (tryAttachNumber())
+        return true;
 
     trackAttached(IRGenerator::NotAttached);
     return false;
@@ -4887,6 +4889,33 @@ UnaryArithIRGenerator::tryAttachInt32()
         break;
       default:
         MOZ_CRASH("Unexected OP");
+    }
+
+    writer.returnFromIC();
+    return true;
+}
+
+bool
+UnaryArithIRGenerator::tryAttachNumber()
+{
+    if (!val_.isNumber() || !res_.isNumber() || !cx_->runtime()->jitSupportsFloatingPoint)
+        return false;
+
+    ValOperandId valId(writer.setInputOperandId(0));
+    writer.guardType(valId, JSVAL_TYPE_DOUBLE);
+    Int32OperandId truncatedId;
+    switch (op_) {
+      case JSOP_BITNOT:
+        truncatedId = writer.truncateDoubleToUInt32(valId);
+        writer.int32NotResult(truncatedId);
+        trackAttached("UnaryArith.DoubleNot");
+        break;
+      case JSOP_NEG:
+        writer.doubleNegationResult(valId);
+        trackAttached("UnaryArith.DoubleNeg");
+        break;
+      default:
+        MOZ_CRASH("Unexpected OP");
     }
 
     writer.returnFromIC();
