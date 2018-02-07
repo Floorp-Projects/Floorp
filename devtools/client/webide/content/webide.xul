@@ -44,6 +44,7 @@
       <command id="cmd_showProjectPanel" oncommand="Cmds.showProjectPanel()"/>
       <command id="cmd_showRuntimePanel" oncommand="Cmds.showRuntimePanel()"/>
       <command id="cmd_disconnectRuntime" oncommand="Cmds.disconnectRuntime()" label="&runtimeMenu_disconnect_label;"/>
+      <command id="cmd_showMonitor" oncommand="Cmds.showMonitor()" label="&runtimeMenu_showMonitor_label;"/>
       <command id="cmd_showRuntimeDetails" oncommand="Cmds.showRuntimeDetails()" label="&runtimeMenu_showDetails_label;"/>
       <command id="cmd_takeScreenshot" oncommand="Cmds.takeScreenshot()" label="&runtimeMenu_takeScreenshot_label;"/>
       <command id="cmd_showAddons" oncommand="Cmds.showAddons()"/>
@@ -79,6 +80,7 @@
 
     <menu id="menu-runtime" label="&runtimeMenu_label;" accesskey="&runtimeMenu_accesskey;">
       <menupopup id="menu-runtime-popup">
+        <menuitem command="cmd_showMonitor" accesskey="&runtimeMenu_showMonitor_accesskey;"/>
         <menuitem command="cmd_takeScreenshot" accesskey="&runtimeMenu_takeScreenshot_accesskey;"/>
         <menuitem command="cmd_showRuntimeDetails" accesskey="&runtimeMenu_showDetails_accesskey;"/>
         <menuitem command="cmd_showDevicePrefs" accesskey="&runtimeMenu_showDevicePrefs_accesskey;"/>
@@ -149,6 +151,7 @@
         <iframe id="deck-panel-addons" flex="1" src="addons.xhtml"/>
         <iframe id="deck-panel-prefs" flex="1" src="prefs.xhtml"/>
         <iframe id="deck-panel-runtimedetails" flex="1" lazysrc="runtimedetails.xhtml"/>
+        <iframe id="deck-panel-monitor" flex="1" lazysrc="monitor.xhtml"/>
         <iframe id="deck-panel-devicepreferences" flex="1" lazysrc="devicepreferences.xhtml"/>
       </deck>
       <splitter class="devtools-side-splitter" id="runtime-listing-splitter"/>

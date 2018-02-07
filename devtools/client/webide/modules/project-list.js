@@ -42,6 +42,7 @@ ProjectList.prototype = {
     // See AppManager.update() for descriptions of what these events mean.
     switch (what) {
       case "project-removed":
+      case "runtime-apps-icons":
       case "runtime-targets":
       case "connection":
         this.update(details);
