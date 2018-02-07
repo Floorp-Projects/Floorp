@@ -7,7 +7,7 @@ let ReactDOM = require("devtools/client/shared/vendor/react-dom");
 let React = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { createElement } = React;
-const TestUtils = ReactDOM.TestUtils;
+const TestUtils = require("devtools/client/shared/vendor/react-dom-test-utils");
 
 const reduxActions = require("devtools/client/webconsole/new-console-output/actions/index");
 const { configureStore } = require("devtools/client/webconsole/new-console-output/store");

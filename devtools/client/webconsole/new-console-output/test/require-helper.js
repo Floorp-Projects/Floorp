@@ -11,12 +11,8 @@ requireHacker.global_hook("default", path => {
       return `const ReactDOM = require('devtools/client/shared/vendor/react-dom'); module.exports = ReactDOM`;
     case "react-dom/server":
       return `const ReactDOMServer = require('devtools/client/shared/vendor/react-dom-server'); module.exports = ReactDOMServer`;
-    // TODO: Enzyme uses the require paths to choose which adapters are
-    // needed... we need to use react-addons-test-utils instead of
-    // react-dom/test-utils as the path until we upgrade to React 16+
-    // https://bugzil.la/1416824
     case "react-addons-test-utils":
-      return `const ReactDOM = require('devtools/client/shared/vendor/react-dom'); module.exports = ReactDOM.TestUtils`;
+      return `const TestUtils = require('devtools/client/shared/vendor/react-dom-test-utils'); module.exports = TestUtils`;
     case "react-redux":
       return `const ReactRedux = require('devtools/client/shared/vendor/react-redux'); module.exports = ReactRedux`;
     // Use react-dev. This would be handled by browserLoader in Firefox.
