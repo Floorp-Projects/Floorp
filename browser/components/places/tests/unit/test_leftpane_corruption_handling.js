@@ -10,7 +10,6 @@
 
 // Used to store the original leftPaneFolderId getter.
 var gLeftPaneFolderIdGetter;
-var gAllBookmarksFolderIdGetter;
 // Used to store the original left Pane status as a JSON string.
 var gReferenceHierarchy;
 var gLeftPaneFolderId;
@@ -25,8 +24,6 @@ add_task(async function() {
   // Check getters.
   gLeftPaneFolderIdGetter = Object.getOwnPropertyDescriptor(PlacesUIUtils, "leftPaneFolderId");
   Assert.equal(typeof(gLeftPaneFolderIdGetter.get), "function");
-  gAllBookmarksFolderIdGetter = Object.getOwnPropertyDescriptor(PlacesUIUtils, "allBookmarksFolderId");
-  Assert.equal(typeof(gAllBookmarksFolderIdGetter.get), "function");
 
   registerCleanupFunction(() => PlacesUtils.bookmarks.eraseEverything());
 });
@@ -52,12 +49,11 @@ add_task(async function() {
 
   while (gTests.length) {
     // Run current test.
-    await gTests.shift();
+    await gTests.shift()();
 
     // Regenerate getters.
     Object.defineProperty(PlacesUIUtils, "leftPaneFolderId", gLeftPaneFolderIdGetter);
     gLeftPaneFolderId = PlacesUIUtils.leftPaneFolderId;
-    Object.defineProperty(PlacesUIUtils, "allBookmarksFolderId", gAllBookmarksFolderIdGetter);
 
     // Check the new left pane folder.
     let leftPaneHierarchy = folderIdToHierarchy(gLeftPaneFolderId);
@@ -89,13 +85,7 @@ var gTests = [
   },
 
   async function test4() {
-    print("4. Delete AllBookmarks.");
-    let guid = await PlacesUtils.promiseItemGuid(PlacesUIUtils.allBookmarksFolderId);
-    await PlacesUtils.bookmarks.remove(guid);
-  },
-
-  async function test5() {
-    print("5. Create a duplicated left pane folder.");
+    print("4. Create a duplicated left pane folder.");
     let folder = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       title: "PlacesRoot",
@@ -109,8 +99,8 @@ var gTests = [
                                               PlacesUtils.annotations.EXPIRE_NEVER);
   },
 
-  async function test6() {
-    print("6. Create a duplicated left pane query.");
+  async function test5() {
+    print("5. Create a duplicated left pane query.");
     let folder = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       title: "AllBookmarks",
@@ -124,25 +114,11 @@ var gTests = [
                                               PlacesUtils.annotations.EXPIRE_NEVER);
   },
 
-  function test7() {
-    print("7. Remove the left pane folder annotation.");
+  function test6() {
+    print("6. Remove the left pane folder annotation.");
     PlacesUtils.annotations.removeItemAnnotation(gLeftPaneFolderId,
                                                  ORGANIZER_FOLDER_ANNO);
   },
-
-  function test8() {
-    print("8. Remove a left pane query annotation.");
-    PlacesUtils.annotations.removeItemAnnotation(PlacesUIUtils.allBookmarksFolderId,
-                                                 ORGANIZER_QUERY_ANNO);
-  },
-
-  async function test9() {
-    print("9. Remove a child of AllBookmarks.");
-    let guid = await PlacesUtils.promiseItemGuid(PlacesUIUtils.allBookmarksFolderId);
-    let bm = await PlacesUtils.bookmarks.fetch({parentGuid: guid, index: 0});
-    await PlacesUtils.bookmarks.remove(bm.guid);
-  }
-
 ];
 
 /**

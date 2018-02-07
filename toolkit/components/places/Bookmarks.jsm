@@ -135,22 +135,42 @@ var Bookmarks = Object.freeze({
    * Special GUIDs associated with bookmark roots.
    * It's guaranteed that the roots will always have these guids.
    */
+  rootGuid:    "root________",
+  menuGuid:    "menu________",
+  toolbarGuid: "toolbar_____",
+  unfiledGuid: "unfiled_____",
+  mobileGuid:  "mobile______",
 
-   rootGuid:    "root________",
-   menuGuid:    "menu________",
-   toolbarGuid: "toolbar_____",
-   unfiledGuid: "unfiled_____",
-   mobileGuid:  "mobile______",
+  // With bug 424160, tags will stop being bookmarks, thus this root will
+  // be removed.  Do not rely on this, rather use the tagging service API.
+  tagsGuid:    "tags________",
 
-   // With bug 424160, tags will stop being bookmarks, thus this root will
-   // be removed.  Do not rely on this, rather use the tagging service API.
-   tagsGuid:    "tags________",
+  /**
+   * The GUIDs of the user content root folders that we support, for easy access
+   * as a set.
+   */
+  userContentRoots: ["toolbar_____", "menu________", "unfiled_____", "mobile______"],
 
-   /**
-    * The GUIDs of the user content root folders that we support, for easy access
-    * as a set.
-    */
-   userContentRoots: ["toolbar_____", "menu________", "unfiled_____", "mobile______"],
+  /**
+   * GUIDs associated with virtual queries that are used for display in the left
+   * pane.
+   */
+  virtualMenuGuid: "menu_______v",
+  virtualToolbarGuid: "toolbar____v",
+  virtualUnfiledGuid: "unfiled___v",
+  virtualMobileGuid: "mobile____v",
+
+  /**
+   * Checks if a guid is a virtual root.
+   *
+   * @param {String} guid The guid of the item to look for.
+   * @returns {Boolean} true if guid is a virtual root, false otherwise.
+   */
+  isVirtualRootItem(guid) {
+    return guid == PlacesUtils.bookmarks.virtualMenuGuid ||
+           guid == PlacesUtils.bookmarks.virtualToolbarGuid ||
+           guid == PlacesUtils.bookmarks.virtualUnfiledGuid;
+  },
 
   /**
    * Inserts a bookmark-item into the bookmarks tree.

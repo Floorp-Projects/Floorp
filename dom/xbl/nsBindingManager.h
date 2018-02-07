@@ -18,6 +18,7 @@
 #include "nsXBLBinding.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
+#include "mozilla/MediaFeatureChange.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/EventStates.h"
 
@@ -138,7 +139,8 @@ public:
   // characteristics of the medium, and return whether this rule processor's
   // rules or the servo style set have changed (e.g., because of media
   // queries).
-  bool MediumFeaturesChanged(nsPresContext* aPresContext);
+  bool MediumFeaturesChanged(nsPresContext* aPresContext,
+                             mozilla::MediaFeatureChangeReason);
 
   // Update the content bindings in mBoundContentSet due to medium features
   // changed.

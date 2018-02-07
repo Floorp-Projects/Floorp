@@ -10,6 +10,7 @@
 #define nsCSSValue_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/CORSMode.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/SheetType.h"
@@ -204,10 +205,16 @@ protected:
   // confused by the non-standard-layout packing of the variable up into
   // URLValueData.
   bool mLoadedImage = false;
+  CORSMode mCORSMode = CORSMode::CORS_NONE;
 
   virtual ~URLValueData();
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+public:
+  void SetCORSMode(CORSMode aCORSMode) {
+    mCORSMode = aCORSMode;
+  }
 
 private:
   URLValueData(const URLValueData& aOther) = delete;
@@ -237,7 +244,9 @@ struct URLValue final : public URLValueData
 
 struct ImageValue final : public URLValueData
 {
-  static ImageValue* CreateFromURLValue(URLValue* url, nsIDocument* aDocument);
+  static ImageValue* CreateFromURLValue(URLValue* url,
+                                        nsIDocument* aDocument,
+                                        CORSMode aCORSMode);
 
   // Not making the constructor and destructor inline because that would
   // force us to include imgIRequest.h, which leads to REQUIRES hell, since
@@ -246,22 +255,26 @@ struct ImageValue final : public URLValueData
   // This constructor is only safe to call from the main thread.
   ImageValue(nsIURI* aURI, const nsAString& aString,
              already_AddRefed<URLExtraData> aExtraData,
-             nsIDocument* aDocument);
+             nsIDocument* aDocument,
+             CORSMode aCORSMode);
 
   // This constructor is only safe to call from the main thread.
   ImageValue(nsIURI* aURI, ServoRawOffsetArc<RustString> aString,
              already_AddRefed<URLExtraData> aExtraData,
-             nsIDocument* aDocument);
+             nsIDocument* aDocument,
+             CORSMode aCORSMode);
 
   // This constructor is safe to call from any thread, but Initialize
   // must be called later for the object to be useful.
   ImageValue(const nsAString& aString,
-             already_AddRefed<URLExtraData> aExtraData);
+             already_AddRefed<URLExtraData> aExtraData,
+             CORSMode aCORSMode);
 
   // This constructor is safe to call from any thread, but Initialize
   // must be called later for the object to be useful.
   ImageValue(ServoRawOffsetArc<RustString> aURIString,
-             already_AddRefed<URLExtraData> aExtraData);
+             already_AddRefed<URLExtraData> aExtraData,
+             CORSMode aCORSMode);
 
   ImageValue(const ImageValue&) = delete;
   ImageValue& operator=(const ImageValue&) = delete;
@@ -971,7 +984,8 @@ public:
   void AdoptListValue(mozilla::UniquePtr<nsCSSValueList> aValue);
   void AdoptPairListValue(mozilla::UniquePtr<nsCSSValuePairList> aValue);
 
-  void StartImageLoad(nsIDocument* aDocument) const;  // Only pretend const
+  void StartImageLoad(nsIDocument* aDocument,
+                      mozilla::CORSMode aCORSMode) const;  // Only pretend const
 
   // Initializes as a function value with the specified function id.
   Array* InitFunction(nsCSSKeyword aFunctionId, uint32_t aNumArgs);

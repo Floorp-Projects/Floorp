@@ -5,7 +5,7 @@
 
 function init() {
   document.getElementById("bookmarks-view").place =
-    "place:queryType=1&folder=" + window.top.PlacesUIUtils.allBookmarksFolderId;
+    "place:type=" + Ci.nsINavHistoryQueryOptions.RESULTS_AS_ROOTS_QUERY;
 }
 
 function searchBookmarks(aSearchString) {

@@ -14,6 +14,7 @@
 #include "CSSVariableImageTable.h"
 #include "mozilla/css/Declaration.h"
 #include "mozilla/css/ImageLoader.h"
+#include "mozilla/CORSMode.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/WritingModes.h"
 #include "nsAutoPtr.h"
@@ -94,7 +95,11 @@ TryToStartImageLoadOnValue(const nsCSSValue& aValue, nsIDocument* aDocument,
       }
     }
 
-    aValue.StartImageLoad(aDocument);
+    CORSMode mode =
+      nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_LOAD_USE_CORS) ?
+      CORSMode::CORS_ANONYMOUS :
+      CORSMode::CORS_NONE;
+    aValue.StartImageLoad(aDocument, mode);
     if (aForTokenStream && aContext) {
       CSSVariableImageTable::Add(aContext, aProperty,
                                  aValue.GetImageStructValue());

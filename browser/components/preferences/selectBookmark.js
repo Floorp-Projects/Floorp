@@ -19,7 +19,7 @@
 var SelectBookmarkDialog = {
   init: function SBD_init() {
     document.getElementById("bookmarks").place =
-      "place:queryType=1&folder=" + PlacesUIUtils.allBookmarksFolderId;
+      "place:type=" + Ci.nsINavHistoryQueryOptions.RESULTS_AS_ROOTS_QUERY;
 
     // Initial update of the OK button.
     this.selectionChanged();

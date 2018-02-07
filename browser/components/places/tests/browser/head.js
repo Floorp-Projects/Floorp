@@ -6,8 +6,7 @@ ChromeUtils.defineModuleGetter(this, "TestUtils",
   "resource://testing-common/TestUtils.jsm");
 
 // We need to cache these before test runs...
-let leftPaneGetters = new Map([["leftPaneFolderId", null],
-                               ["allBookmarksFolderId", null]]);
+let leftPaneGetters = new Map([["leftPaneFolderId", null]]);
 for (let [key, val] of leftPaneGetters) {
   if (!val) {
     let getter = Object.getOwnPropertyDescriptor(PlacesUIUtils, key).get;
