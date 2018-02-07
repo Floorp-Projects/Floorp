@@ -95,6 +95,15 @@ function validateAndParseSimpleParam(param, type) {
 
   switch (type) {
     case "boolean":
+      if (typeof(param) == "boolean") {
+        valid = true;
+      } else if (typeof(param) == "number" &&
+                 (param == 0 || param == 1)) {
+        valid = true;
+        parsedParam = !!param;
+      }
+      break;
+
     case "number":
     case "string":
       valid = (typeof(param) == type);
