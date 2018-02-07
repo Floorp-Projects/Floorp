@@ -41,10 +41,6 @@ require.config({
       JSONView.debug
       ? "resource://devtools-client-shared/vendor/react-prop-types-dev"
       : "resource://devtools-client-shared/vendor/react-prop-types",
-    "devtools/client/shared/vendor/react-dom-test-utils":
-      JSONView.debug
-      ? "resource://devtools-client-shared/vendor/react-dom-test-utils-dev"
-      : "resource://devtools-client-shared/vendor/react-dom-test-utils",
   }
 });
 
