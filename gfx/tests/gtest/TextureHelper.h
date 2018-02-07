@@ -140,6 +140,7 @@ CreateTextureClientWithBackend(LayersBackend aLayersBackend)
  */
 already_AddRefed<TextureHost>
 CreateTextureHostWithBackend(TextureClient* aClient,
+                             ISurfaceAllocator* aDeallocator,
                              LayersBackend& aLayersBackend)
 {
   if (!aClient) {
@@ -153,7 +154,7 @@ CreateTextureHostWithBackend(TextureClient* aClient,
   aClient->ToSurfaceDescriptor(descriptor);
 
   wr::MaybeExternalImageId id = Nothing();
-  return TextureHost::Create(descriptor, nullptr, aLayersBackend,
+  return TextureHost::Create(descriptor, aDeallocator, aLayersBackend,
                              aClient->GetFlags(), id);
 }
 
