@@ -85,6 +85,8 @@ class CodeGeneratorMIPS : public CodeGeneratorMIPSShared
     void visitBoxFloatingPoint(LBoxFloatingPoint* box);
     void visitUnbox(LUnbox* unbox);
     void setReturnDoubleRegs(LiveRegisterSet* regs);
+    void visitWasmAtomicLoadI64(LWasmAtomicLoadI64* lir);
+    void visitWasmAtomicStoreI64(LWasmAtomicStoreI64* lir);
 };
 
 typedef CodeGeneratorMIPS CodeGeneratorSpecific;

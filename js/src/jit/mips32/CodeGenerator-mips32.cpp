@@ -822,3 +822,28 @@ CodeGeneratorMIPS::setReturnDoubleRegs(LiveRegisterSet* regs)
     regs->add(ReturnFloat32Reg);
     regs->add(ReturnDoubleReg);
 }
+
+void
+CodeGeneratorMIPS::visitWasmAtomicLoadI64(LWasmAtomicLoadI64* lir)
+{
+    Register ptr = ToRegister(lir->ptr());
+    Register64 output = ToOutRegister64(lir);
+    uint32_t offset = lir->mir()->access().offset();
+
+    BaseIndex addr(HeapReg, ptr, TimesOne, offset);
+
+    masm.atomicLoad64(Synchronization::Full(), addr, Register64::Invalid(), output);
+}
+
+void
+CodeGeneratorMIPS::visitWasmAtomicStoreI64(LWasmAtomicStoreI64* lir)
+{
+    Register ptr = ToRegister(lir->ptr());
+    Register64 value = ToRegister64(lir->value());
+    Register tmp = ToRegister(lir->tmp());
+    uint32_t offset = lir->mir()->access().offset();
+
+    BaseIndex addr(HeapReg, ptr, TimesOne, offset);
+
+    masm.atomicStore64(addr, tmp, value);
+}

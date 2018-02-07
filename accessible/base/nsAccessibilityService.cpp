@@ -272,33 +272,6 @@ New_HTMLTableHeaderCellIfScope(nsIContent* aContent, Accessible* aContext)
   return nullptr;
 }
 
-#ifdef MOZ_XUL
-static Accessible*
-New_MaybeImageOrToolbarButtonAccessible(nsIContent* aContent,
-                                        Accessible* aContext)
-{
-  if (aContent->IsElement() &&
-      aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::onclick)) {
-    return new XULToolbarButtonAccessible(aContent, aContext->Document());
-  }
-
-  // Don't include nameless images in accessible tree.
-  if (!aContent->IsElement() ||
-      !aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext)) {
-    return nullptr;
-  }
-
-  return new ImageAccessibleWrap(aContent, aContext->Document());
-}
-static Accessible*
-New_MenuSeparator(nsIContent* aContent, Accessible* aContext)
-  { return new XULMenuSeparatorAccessible(aContent, aContext->Document()); }
-
-static Accessible*
-New_StatusBarAccessible(nsIContent* aContent, Accessible* aContext)
-  { return new XULStatusBarAccessible(aContent, aContext->Document()); }
-#endif
-
 /**
  * Cached value of the PREF_ACCESSIBILITY_FORCE_DISABLED preference.
  */
@@ -319,26 +292,35 @@ static int32_t sPlatformDisabledState = 0;
 #define MARKUPMAP(atom, new_func, r, ... ) \
   { &nsGkAtoms::atom, new_func, static_cast<a11y::role>(r), { __VA_ARGS__ } },
 
-static const MarkupMapInfo sMarkupMapList[] = {
+static const HTMLMarkupMapInfo sHTMLMarkupMapList[] = {
   #include "MarkupMap.h"
 };
+
+#undef MARKUPMAP
 
 #ifdef MOZ_XUL
 #define XULMAP(atom, new_func) \
   { &nsGkAtoms::atom, new_func },
 
-static const XULMarkupMapInfo sXULMapList[] = {
+#define XULMAP_TYPE(atom, new_type) \
+XULMAP( \
+  atom, \
+  [](nsIContent* aContent, Accessible* aContext) -> Accessible* { \
+    return new new_type(aContent, aContext->Document()); \
+  } \
+)
+
+static const XULMarkupMapInfo sXULMarkupMapList[] = {
   #include "XULMap.h"
 };
+
+#undef XULMAP_TYPE
+#undef XULMAP
 #endif
 
 #undef Attr
 #undef AttrFromDOM
 #undef AttrFromDOMIf
-#undef MARKUPMAP
-#ifdef MOZ_XUL
-#undef XULMAP
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService
@@ -350,9 +332,9 @@ xpcAccessibleApplication* nsAccessibilityService::gXPCApplicationAccessible = nu
 uint32_t nsAccessibilityService::gConsumers = 0;
 
 nsAccessibilityService::nsAccessibilityService() :
-  DocManager(), FocusManager(), mMarkupMaps(ArrayLength(sMarkupMapList))
+  DocManager(), FocusManager(), mHTMLMarkupMap(ArrayLength(sHTMLMarkupMapList))
 #ifdef MOZ_XUL
-  , mXULMarkupMaps(ArrayLength(sXULMapList))
+  , mXULMarkupMap(ArrayLength(sXULMarkupMapList))
 #endif
 {
 }
@@ -1170,8 +1152,8 @@ nsAccessibilityService::CreateAccessible(nsINode* aNode,
         frame->AccessibleType() == eHTMLTableRowType ||
         frame->AccessibleType() == eHTMLTableType) {
       // Prefer to use markup to decide if and what kind of accessible to create,
-      const MarkupMapInfo* markupMap =
-        mMarkupMaps.Get(content->NodeInfo()->NameAtom());
+      const HTMLMarkupMapInfo* markupMap =
+        mHTMLMarkupMap.Get(content->NodeInfo()->NameAtom());
       if (markupMap && markupMap->new_func)
         newAcc = markupMap->new_func(content, aContext);
 
@@ -1234,7 +1216,7 @@ nsAccessibilityService::CreateAccessible(nsINode* aNode,
 #ifdef MOZ_XUL
     // Prefer to use XUL to decide if and what kind of accessible to create.
     const XULMarkupMapInfo* xulMap =
-      mXULMarkupMaps.Get(content->NodeInfo()->NameAtom());
+      mXULMarkupMap.Get(content->NodeInfo()->NameAtom());
     if (xulMap && xulMap->new_func) {
       newAcc = xulMap->new_func(content, aContext);
     }
@@ -1271,8 +1253,8 @@ nsAccessibilityService::CreateAccessible(nsINode* aNode,
       }
 
     } else if (content->IsMathMLElement()) {
-      const MarkupMapInfo* markupMap =
-        mMarkupMaps.Get(content->NodeInfo()->NameAtom());
+      const HTMLMarkupMapInfo* markupMap =
+        mHTMLMarkupMap.Get(content->NodeInfo()->NameAtom());
       if (markupMap && markupMap->new_func)
         newAcc = markupMap->new_func(content, aContext);
 
@@ -1350,12 +1332,12 @@ nsAccessibilityService::Init()
 
   eventListenerService->AddListenerChangeListener(this);
 
-  for (uint32_t i = 0; i < ArrayLength(sMarkupMapList); i++)
-    mMarkupMaps.Put(*sMarkupMapList[i].tag, &sMarkupMapList[i]);
+  for (uint32_t i = 0; i < ArrayLength(sHTMLMarkupMapList); i++)
+    mHTMLMarkupMap.Put(*sHTMLMarkupMapList[i].tag, &sHTMLMarkupMapList[i]);
 
 #ifdef MOZ_XUL
-  for (uint32_t i = 0; i < ArrayLength(sXULMapList); i++)
-    mXULMarkupMaps.Put(*sXULMapList[i].tag, &sXULMapList[i]);
+  for (uint32_t i = 0; i < ArrayLength(sXULMarkupMapList); i++)
+    mXULMarkupMap.Put(*sXULMarkupMapList[i].tag, &sXULMarkupMapList[i]);
 #endif
 
 #ifdef A11Y_LOG
@@ -1765,8 +1747,8 @@ void
 nsAccessibilityService::MarkupAttributes(const nsIContent* aContent,
                                          nsIPersistentProperties* aAttributes) const
 {
-  const mozilla::a11y::MarkupMapInfo* markupMap =
-    mMarkupMaps.Get(aContent->NodeInfo()->NameAtom());
+  const mozilla::a11y::HTMLMarkupMapInfo* markupMap =
+    mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
   if (!markupMap)
     return;
 

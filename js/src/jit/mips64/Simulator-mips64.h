@@ -160,6 +160,8 @@ class Simulator {
     Simulator();
     ~Simulator();
 
+    static bool supportsAtomics() { return true; }
+
     // The currently executing Simulator instance. Potentially there can be one
     // for each native thread.
     static Simulator* Current();
@@ -276,6 +278,12 @@ class Simulator {
     inline double readD(uint64_t addr, SimInstruction* instr);
     inline void writeD(uint64_t addr, double value, SimInstruction* instr);
 
+    inline int32_t loadLinkedW(uint64_t addr, SimInstruction* instr);
+    inline int storeConditionalW(uint64_t addr, int32_t value, SimInstruction* instr);
+
+    inline int64_t loadLinkedD(uint64_t addr, SimInstruction* instr);
+    inline int storeConditionalD(uint64_t addr, int64_t value, SimInstruction* instr);
+
     // Helper function for decodeTypeRegister.
     void configureTypeRegister(SimInstruction* instr,
                                int64_t& alu_out,
@@ -308,6 +316,8 @@ class Simulator {
     void handleWasmInterrupt();
     void startInterrupt(JitActivation* act);
 
+    // Handle any wasm faults, returning true if the fault was handled.
+    bool handleWasmFault(uint64_t addr, unsigned numBytes);
     bool handleWasmTrapFault();
 
     // Executes one instruction.
@@ -349,6 +359,10 @@ class Simulator {
     int64_t FPUregisters_[kNumFPURegisters];
     // FPU control register.
     uint32_t FCSR_;
+
+    bool LLBit_;
+    uintptr_t LLAddr_;
+    int64_t lastLLValue_;
 
     // Simulator support.
     char* stack_;

@@ -824,6 +824,13 @@ AssemblerMIPSShared::as_ll(Register rd, Register rs, int16_t off)
 }
 
 BufferOffset
+AssemblerMIPSShared::as_lld(Register rd, Register rs, int16_t off)
+{
+    spew("lld     %3s, (0x%x)%2s", rd.name(), off, rs.name());
+    return writeInst(InstImm(op_lld, rs, rd, Imm16(off)).encode());
+}
+
+BufferOffset
 AssemblerMIPSShared::as_ld(Register rd, Register rs, int16_t off)
 {
     spew("ld     %3s, (0x%x)%2s", rd.name(), off, rs.name());
@@ -885,6 +892,14 @@ AssemblerMIPSShared::as_sc(Register rd, Register rs, int16_t off)
     spew("sc     %3s, (0x%x)%2s", rd.name(), off, rs.name());
     return writeInst(InstImm(op_sc, rs, rd, Imm16(off)).encode());
 }
+
+BufferOffset
+AssemblerMIPSShared::as_scd(Register rd, Register rs, int16_t off)
+{
+    spew("scd     %3s, (0x%x)%2s", rd.name(), off, rs.name());
+    return writeInst(InstImm(op_scd, rs, rd, Imm16(off)).encode());
+}
+
 
 BufferOffset
 AssemblerMIPSShared::as_sd(Register rd, Register rs, int16_t off)
@@ -1926,8 +1941,6 @@ void
 AssemblerMIPSShared::as_sync(uint32_t stype)
 {
     MOZ_ASSERT(stype <= 31);
-    if (isLoongson())
-        stype = 0;
     spew("sync %d", stype);
     writeInst(InstReg(op_special, zero, zero, zero, stype, ff_sync).encode());
 }

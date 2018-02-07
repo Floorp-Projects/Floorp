@@ -482,8 +482,6 @@ CodeGeneratorMIPS64::emitWasmStoreI64(T* lir)
 {
     const MWasmStore* mir = lir->mir();
 
-    MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
-
     uint32_t offset = mir->access().offset();
     MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
