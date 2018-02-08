@@ -31,7 +31,6 @@ add_task(async function test_value_structure_conflict() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["folderAAAAAA", "folderDDDDDD"],
     modified: Date.now() / 1000 - 60,
   }, {
@@ -219,12 +218,10 @@ add_task(async function test_move() {
   await buf.store(shuffle([{
     id: "unfiled",
     type: "folder",
-    title: "Other Bookmarks",
     children: ["mozFolder___"],
   }, {
     id: "toolbar",
     type: "folder",
-    title: "Bookmarks Toolbar",
     children: ["devFolder___"],
   }, {
     id: "devFolder___",
@@ -452,7 +449,6 @@ add_task(async function test_move_into_parent_sibling() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["folderAAAAAA"],
   }, {
     id: "folderAAAAAA",
@@ -471,7 +467,6 @@ add_task(async function test_move_into_parent_sibling() {
   await buf.store([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["folderAAAAAA", "folderCCCCCC"],
   }, {
     id: "folderAAAAAA",
@@ -572,7 +567,6 @@ add_task(async function test_complex_move_with_additions() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["folderAAAAAA"],
   }, {
     id: "folderAAAAAA",
@@ -604,12 +598,10 @@ add_task(async function test_complex_move_with_additions() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["bookmarkCCCC"],
   }, {
     id: "toolbar",
     type: "folder",
-    title: "Bookmarks Toolbar",
     children: ["folderAAAAAA"],
   }, {
     id: "folderAAAAAA",
@@ -780,7 +772,6 @@ add_task(async function test_reorder_and_insert() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["bookmarkAAAA", "bookmarkBBBB", "bookmarkCCCC"],
   }, {
     id: "bookmarkAAAA",
@@ -800,7 +791,6 @@ add_task(async function test_reorder_and_insert() {
   }, {
     id: "toolbar",
     type: "folder",
-    title: "Bookmarks Toolbar",
     children: ["bookmarkDDDD", "bookmarkEEEE", "bookmarkFFFF"],
   }, {
     id: "bookmarkDDDD",
@@ -848,7 +838,6 @@ add_task(async function test_reorder_and_insert() {
     // as the base, then append (G H).
     id: "toolbar",
     type: "folder",
-    title: "Bookmarks Toolbar",
     children: ["bookmarkFFFF", "bookmarkDDDD", "bookmarkEEEE"],
     modified: now / 1000 + 5,
   }, {
@@ -856,7 +845,6 @@ add_task(async function test_reorder_and_insert() {
     // as the base, then append (I J).
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["bookmarkAAAA", "bookmarkBBBB", "bookmarkCCCC", "bookmarkIIII",
                "bookmarkJJJJ"],
     modified: now / 1000 - 5,

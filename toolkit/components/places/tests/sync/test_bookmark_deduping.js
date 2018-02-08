@@ -20,7 +20,6 @@ add_task(async function test_duping() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["folderAAAAAA"],
   }, {
     id: "folderAAAAAA",
@@ -85,7 +84,6 @@ add_task(async function test_duping() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["folderAAAAAA", "folderB11111", "folderA11111",
                "separatorE11", "queryD111111"],
   }, {
@@ -252,7 +250,6 @@ add_task(async function test_applying_two_empty_folders_doesnt_smush() {
   await buf.store(shuffle([{
     id: "mobile",
     type: "folder",
-    title: "mobile",
     children: ["emptyempty01", "emptyempty02"],
   }, {
     id: "emptyempty01",
@@ -321,7 +318,6 @@ add_task(async function test_applying_two_empty_folders_matches_only_one() {
   await buf.store(shuffle([{
     id: "mobile",
     type: "folder",
-    title: "mobile",
     children: ["emptyempty01", "emptyempty02", "emptyempty03"],
   }, {
     id: "emptyempty01",
@@ -343,7 +339,7 @@ add_task(async function test_applying_two_empty_folders_matches_only_one() {
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload, {
-    updated: [],
+    updated: ["mobile"],
     deleted: [],
   }, "Should not upload records after applying empty folders");
 
@@ -400,7 +396,6 @@ add_task(async function test_duping_mobile_bookmarks() {
   await buf.store(shuffle([{
     id: "mobile",
     type: "folder",
-    title: "Mobile Bookmarks",
     children: ["bookmarkAAAA"],
   }, {
     id: "bookmarkAAAA",
@@ -415,7 +410,7 @@ add_task(async function test_duping_mobile_bookmarks() {
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload, {
-    updated: [],
+    updated: ["mobile"],
     deleted: [],
   }, "Should not upload records after applying deduped mobile bookmark");
 
@@ -423,7 +418,7 @@ add_task(async function test_duping_mobile_bookmarks() {
     guid: PlacesUtils.bookmarks.mobileGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     index: 4,
-    title: "Mobile Bookmarks",
+    title: "Favoritos do celular",
     children: [{
       guid: "bookmarkAAAA",
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
