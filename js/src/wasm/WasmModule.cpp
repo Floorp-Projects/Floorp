@@ -297,18 +297,16 @@ Module::finishTier2(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
 
     // And we update the jump vector.
 
-    void** jumpTable = code().jumpTable();
     uint8_t* base = code().segment(Tier::Ion).base();
-
     for (auto cr : metadata(Tier::Ion).codeRanges) {
-        if (!cr.isFunction())
-            continue;
-
-        // This is a racy write that we just want to be visible, atomically,
+        // These are racy writes that we just want to be visible, atomically,
         // eventually.  All hardware we care about will do this right.  But
-        // we depend on the compiler not splitting the store.
-
-        jumpTable[cr.funcIndex()] = base + cr.funcTierEntry();
+        // we depend on the compiler not splitting the stores hidden inside the
+        // set*Entry functions.
+        if (cr.isFunction())
+            code().setTieringEntry(cr.funcIndex(), base + cr.funcTierEntry());
+        else if (cr.isJitEntry())
+            code().setJitEntry(cr.funcIndex(), base + cr.begin());
     }
 }
 
@@ -1179,8 +1177,11 @@ Module::instantiate(JSContext* cx,
                 return false;
             }
 
-            UniqueJumpTable maybeJumpTable;
-            code = js_new<Code>(Move(codeSegment), metadata(), Move(maybeJumpTable));
+            JumpTables jumpTables;
+            if (!jumpTables.init(CompileMode::Once, *codeSegment, metadata(Tier::Baseline).codeRanges))
+                return false;
+
+            code = js_new<Code>(Move(codeSegment), metadata(), Move(jumpTables));
             if (!code) {
                 ReportOutOfMemory(cx);
                 return false;

@@ -293,7 +293,7 @@ class Simulator
 
     // Handle a wasm interrupt triggered by an async signal handler.
     void handleWasmInterrupt();
-    void startWasmInterrupt(JitActivation* act);
+    bool startWasmInterrupt(JitActivation* act);
 
     // Handle any wasm faults, returning true if the fault was handled.
     bool handleWasmSegFault(int32_t addr, unsigned numBytes);

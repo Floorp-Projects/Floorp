@@ -29,6 +29,7 @@ namespace js {
 namespace jit {
 class MacroAssembler;
 struct Register;
+class Label;
 } // namespace jit
 
 namespace wasm {
@@ -69,6 +70,7 @@ class WasmFrameIter
     const CodeRange* codeRange_;
     unsigned lineOrBytecode_;
     Frame* fp_;
+    uint8_t* unwoundIonCallerFP_;
     Unwind unwind_;
     void** unwoundAddressOfReturnAddress_;
 
@@ -91,6 +93,7 @@ class WasmFrameIter
     void** unwoundAddressOfReturnAddress() const;
     bool debugEnabled() const;
     DebugFrame* debugFrame() const;
+    uint8_t* unwoundIonCallerFP() const { return unwoundIonCallerFP_; }
 };
 
 enum class SymbolicAddress;
@@ -164,6 +167,7 @@ class ProfilingFrameIterator
     Frame* callerFP_;
     void* callerPC_;
     void* stackAddress_;
+    uint8_t* unwoundIonCallerFP_;
     ExitReason exitReason_;
 
     void initFromExitFP(const Frame* fp);
@@ -188,6 +192,7 @@ class ProfilingFrameIterator
     bool done() const { return !codeRange_; }
 
     void* stackAddress() const { MOZ_ASSERT(!done()); return stackAddress_; }
+    uint8_t* unwoundIonCallerFP() const { MOZ_ASSERT(done()); return unwoundIonCallerFP_; }
     const char* label() const;
 };
 
@@ -204,10 +209,15 @@ GenerateExitPrologue(jit::MacroAssembler& masm, unsigned framePushed, ExitReason
 void
 GenerateExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed, ExitReason reason,
                      CallableOffsets* offsets);
+
 void
 GenerateJitExitPrologue(jit::MacroAssembler& masm, unsigned framePushed, CallableOffsets* offsets);
 void
 GenerateJitExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed, CallableOffsets* offsets);
+
+void
+GenerateJitEntryPrologue(jit::MacroAssembler& masm, Offsets* offsets);
+
 void
 GenerateFunctionPrologue(jit::MacroAssembler& masm, unsigned framePushed, const SigIdDesc& sigId,
                          FuncOffsets* offsets, CompileMode mode = CompileMode::Once,
