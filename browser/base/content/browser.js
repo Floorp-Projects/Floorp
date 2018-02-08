@@ -1246,6 +1246,12 @@ var gBrowserInit = {
     gBrowser.updateBrowserRemoteness(initBrowser, isRemote, {
       remoteType, sameProcessAsFrameLoader
     });
+
+    gUIDensity.init();
+
+    if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
+      gDragSpaceObserver.init();
+    }
   },
 
   onLoad() {
@@ -1299,12 +1305,6 @@ var gBrowserInit = {
     // restore tabs into windows AFTER important parts like gMultiProcessBrowser
     // have been initialized.
     Services.obs.notifyObservers(window, "browser-window-before-show");
-
-    gUIDensity.init();
-
-    if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
-      gDragSpaceObserver.init();
-    }
 
     if (!window.toolbar.visible) {
       // adjust browser UI for popups
@@ -1767,6 +1767,12 @@ var gBrowserInit = {
   },
 
   onUnload() {
+    gUIDensity.uninit();
+
+    if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
+      gDragSpaceObserver.uninit();
+    }
+
     // In certain scenarios it's possible for unload to be fired before onload,
     // (e.g. if the window is being closed after browser.js loads but before the
     // load completes). In that case, there's nothing to do here.
@@ -1789,12 +1795,6 @@ var gBrowserInit = {
     gExtensionsNotifications.uninit();
 
     Services.obs.removeObserver(gPluginHandler.NPAPIPluginCrashed, "plugin-crashed");
-
-    gUIDensity.uninit();
-
-    if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
-      gDragSpaceObserver.uninit();
-    }
 
     try {
       gBrowser.removeProgressListener(window.XULBrowserWindow);
