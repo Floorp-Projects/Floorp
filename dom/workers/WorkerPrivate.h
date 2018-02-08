@@ -151,14 +151,9 @@ private:
   // thread as SharedWorkers are always top-level).
   nsTArray<RefPtr<SharedWorker>> mSharedWorkers;
 
-  // This is touched on parent thread only, but it can be read on a different
-  // thread before crashing because hanging.
-  Atomic<uint64_t> mBusyCount;
-
   // SharedWorkers may have multiple windows paused, so this must be
   // a count instead of just a boolean.
   uint32_t mParentWindowPausedDepth;
-  WorkerStatus mParentStatus;
   bool mParentFrozen;
   bool mIsChromeWorker;
   bool mMainThreadObjectsForgotten;
@@ -305,9 +300,6 @@ public:
   Close();
 
   bool
-  ModifyBusyCount(bool aIncrease);
-
-  bool
   ProxyReleaseMainThreadObjects();
 
   void
@@ -372,30 +364,6 @@ public:
   {
     AssertIsOnParentThread();
     return mParentWindowPausedDepth > 0;
-  }
-
-  bool
-  IsAcceptingEvents()
-  {
-    AssertIsOnParentThread();
-
-    MutexAutoLock lock(mMutex);
-    return mParentStatus < Terminating;
-  }
-
-  WorkerStatus
-  ParentStatusProtected()
-  {
-    AssertIsOnParentThread();
-    MutexAutoLock lock(mMutex);
-    return mParentStatus;
-  }
-
-  WorkerStatus
-  ParentStatus() const
-  {
-    mMutex.AssertCurrentThreadOwns();
-    return mParentStatus;
   }
 
   nsIScriptContext*
@@ -854,14 +822,6 @@ public:
   bool
   PrincipalIsValid() const;
 #endif
-
-  // This method is used by RuntimeService to know what is going wrong the
-  // shutting down.
-  uint32_t
-  BusyCount()
-  {
-    return mBusyCount;
-  }
 };
 
 class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
@@ -944,6 +904,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   TimeStamp mKillTime;
   uint32_t mErrorHandlerRecursionCount;
   uint32_t mNextTimeoutId;
+  WorkerStatus mParentStatus;
   WorkerStatus mStatus;
   UniquePtr<ClientSource> mClientSource;
   bool mFrozen;
@@ -956,6 +917,10 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   bool mWorkerScriptExecutedSuccessfully;
   bool mFetchHandlerWasAdded;
   bool mOnLine;
+
+  // This is touched on parent thread only, but it can be read on a different
+  // thread before crashing because hanging.
+  Atomic<uint64_t> mBusyCount;
 
 protected:
   ~WorkerPrivate();
@@ -1371,6 +1336,30 @@ public:
   PerformanceStorage*
   GetPerformanceStorage();
 
+  bool
+  IsAcceptingEvents()
+  {
+    AssertIsOnParentThread();
+
+    MutexAutoLock lock(mMutex);
+    return mParentStatus < Terminating;
+  }
+
+  WorkerStatus
+  ParentStatusProtected()
+  {
+    AssertIsOnParentThread();
+    MutexAutoLock lock(mMutex);
+    return mParentStatus;
+  }
+
+  WorkerStatus
+  ParentStatus() const
+  {
+    mMutex.AssertCurrentThreadOwns();
+    return mParentStatus;
+  }
+
   Worker*
   ParentEventTargetRef() const
   {
@@ -1384,6 +1373,17 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(aParentEventTargetRef);
     MOZ_DIAGNOSTIC_ASSERT(!mParentEventTargetRef);
     mParentEventTargetRef = aParentEventTargetRef;
+  }
+
+  bool
+  ModifyBusyCount(bool aIncrease);
+
+  // This method is used by RuntimeService to know what is going wrong the
+  // shutting down.
+  uint32_t
+  BusyCount()
+  {
+    return mBusyCount;
   }
 
 private:
