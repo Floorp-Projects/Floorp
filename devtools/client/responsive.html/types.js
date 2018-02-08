@@ -10,12 +10,40 @@ const { createEnum } = require("devtools/client/shared/enum");
 // React PropTypes are used to describe the expected "shape" of various common
 // objects that get passed down as props to components.
 
+/* ENUMS */
+
+/**
+ * An enum containing the possible states for loadable things.
+ */
+exports.loadableState = createEnum([
+  "INITIALIZED",
+  "LOADING",
+  "LOADED",
+  "ERROR",
+]);
+
 /* GLOBAL */
 
 /**
  * The location of the document displayed in the viewport(s).
  */
 exports.location = PropTypes.string;
+
+/**
+ * Whether to reload the page automatically when certain actions occur.
+ */
+exports.reloadConditions = {
+
+  // Whether to reload when touch simulation is toggled
+  touchSimulation: PropTypes.bool,
+
+  // Whether to reload when user agent is changed
+  userAgent: PropTypes.bool,
+
+  // Loaded state of these conditions
+  state: PropTypes.oneOf(Object.keys(exports.loadableState)),
+
+};
 
 /* DEVICE */
 
@@ -49,16 +77,6 @@ const device = {
   displayed: PropTypes.bool,
 
 };
-
-/**
- * An enum containing the possible states for loadable things.
- */
-exports.loadableState = createEnum([
-  "INITIALIZED",
-  "LOADING",
-  "LOADED",
-  "ERROR",
-]);
 
 /**
  * A list of devices and their types that can be displayed in the viewport.
