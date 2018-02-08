@@ -436,8 +436,7 @@ def get_browser_config(config):
                 'xperf_path': None,
                 'error_filename': None,
                 'no_upload_results': False,
-                'enable_stylo': False,
-                'disable_stylo': False,
+                'enable_stylo': True,
                 'stylothreads': 0,
                 'subtests': None,
                 }
