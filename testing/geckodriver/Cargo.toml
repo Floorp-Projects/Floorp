@@ -14,16 +14,12 @@ chrono = "^0.2"
 clap = { version = "^2.19", default-features = false, features = ["suggestions", "wrap_help"] }
 hyper = "0.10"
 lazy_static = "0.1"
-log = "0.3"
+log = { version = "0.4", features = ["std"] }
 mozprofile = { path = "../mozbase/rust/mozprofile" }
 mozrunner = { path = "../mozbase/rust/mozrunner" }
 mozversion = { path = "../mozbase/rust/mozversion" }
 regex = "0.2"
 rustc-serialize = "0.3"
-slog = "1"
-slog-atomic = "0.4"
-slog-stdlog = "1"
-slog-stream = "1"
 uuid = "0.1.18"
 webdriver = { path = "../webdriver" }
 zip = "0.1"

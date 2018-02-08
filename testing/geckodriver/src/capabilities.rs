@@ -1,4 +1,4 @@
-use logging::LogLevel;
+use logging::Level;
 use marionette::LogOptions;
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
@@ -200,11 +200,10 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
                                         let level = try_opt!(log_value.as_string(),
                                                              ErrorStatus::InvalidArgument,
                                                              "log level is not a string");
-                                        if LogLevel::from_str(level).is_err() {
+                                        if Level::from_str(level).is_err() {
                                             return Err(WebDriverError::new(
                                                 ErrorStatus::InvalidArgument,
-                                                format!("{} is not a valid log level",
-                                                        level)))
+                                                format!("Not a valid log level: {}", level)))
                                         }
                                     }
                                     x => return Err(WebDriverError::new(
@@ -342,25 +341,26 @@ impl FirefoxOptions {
 
     fn load_log(options: &Capabilities) -> WebDriverResult<LogOptions> {
         if let Some(json) = options.get("log") {
-            let log = try!(json.as_object()
-                               .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                          "Log section is not an object")));
+            let log = json.as_object().ok_or(WebDriverError::new(
+                ErrorStatus::InvalidArgument,
+                "Log section is not an object",
+            ))?;
 
             let level = match log.get("level") {
                 Some(json) => {
-                    let s = try!(json.as_string()
-                                     .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                                "Log level is not a string")));
-                    Some(try!(LogLevel::from_str(s)
-                                  .ok()
-                                  .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                             "Log level is unknown"))))
+                    let s = json.as_string().ok_or(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        "Log level is not a string",
+                    ))?;
+                    Some(Level::from_str(s).ok().ok_or(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        "Log level is unknown",
+                    ))?)
                 }
                 None => None,
             };
 
-            Ok(LogOptions { level: level })
-
+            Ok(LogOptions { level })
         } else {
             Ok(Default::default())
         }
