@@ -1356,6 +1356,8 @@ extern void wr_notifier_new_frame_ready(WrWindowId aWindowId);
 extern void wr_notifier_new_scroll_frame_ready(WrWindowId aWindowId,
                                                bool aCompositeNeeded);
 
+extern void wr_notifier_wake_up(WrWindowId aWindowId);
+
 WR_INLINE
 void wr_program_cache_delete(WrProgramCache *aProgramCache)
 WR_DESTRUCTOR_SAFE_FUNC;

@@ -463,6 +463,12 @@ static void NewFrameReady(mozilla::wr::WrWindowId aWindowId)
   mozilla::wr::RenderThread::Get()->NewFrameReady(mozilla::wr::WindowId(aWindowId));
 }
 
+void wr_notifier_wake_up(mozilla::wr::WrWindowId aWindowId)
+{
+  //TODO?
+  mozilla::Unused << aWindowId;
+}
+
 void wr_notifier_new_frame_ready(mozilla::wr::WrWindowId aWindowId)
 {
   NewFrameReady(aWindowId);
