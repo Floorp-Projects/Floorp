@@ -124,6 +124,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
 toolbar .toolbarbutton-1 > .toolbarbutton-icon {
   /* horizontal padding + actual icon width */
   width: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
+  height: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
 }
 
 .bookmark-item > .toolbarbutton-menu-dropmarker,
@@ -233,6 +234,7 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
   border: 1px solid var(--backbutton-border-color);
   border-radius: 10000px;
   width: 34px;
+  height: 34px;
   padding: 8px;
   transition-property: box-shadow;
   transition-duration: var(--toolbarbutton-hover-transition-duration);
@@ -246,6 +248,7 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
 
 :root[uidensity=touch] #back-button > .toolbarbutton-icon {
   width: 38px;
+  height: 38px;
   padding: 10px;
 }
 
