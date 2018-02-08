@@ -91,7 +91,6 @@ class JSFunction : public js::NativeObject
         NATIVE_CTOR = NATIVE_FUN | CONSTRUCTOR,
         NATIVE_CLASS_CTOR = NATIVE_FUN | CONSTRUCTOR | CLASSCONSTRUCTOR_KIND,
         ASMJS_CTOR = ASMJS_KIND | NATIVE_CTOR,
-        ASMJS_OPT_CTOR = ASMJS_CTOR | WASM_OPTIMIZED,
         ASMJS_LAMBDA_CTOR = ASMJS_KIND | NATIVE_CTOR | LAMBDA,
         WASM_FUN = NATIVE_FUN | WASM_OPTIMIZED,
         INTERPRETED_METHOD = INTERPRETED | METHOD_KIND,
@@ -123,8 +122,13 @@ class JSFunction : public js::NativeObject
         class {
             friend class JSFunction;
             js::Native func_;          /* native method pointer or null */
-            const JSJitInfo* jitinfo_; /* Information about this function to be
-                                          used by the JIT; use the accessor! */
+            union {
+                // Information about this function to be used by the JIT, only
+                // used if isBuiltinNative(); use the accessor!
+                const JSJitInfo* jitInfo_;
+                // asm.js function index, only used if isAsmJSNative().
+                size_t asmJSFuncIndex_;
+            } extra;
         } native;
         struct {
             JSObject* env_;            /* environment for new activations */
@@ -193,9 +197,8 @@ class JSFunction : public js::NativeObject
 
     /* Possible attributes of a native function: */
     bool isAsmJSNative()            const { return kind() == AsmJS; }
-    bool isAsmJSNonOptimizedCtor()  const { return isAsmJSNative() && isConstructor() && !isWasmOptimized(); }
     bool isWasmOptimized()          const { return (flags() & WASM_OPTIMIZED); }
-    bool isBuiltinNative()          const { return isNative() && !isAsmJSNative() && !isWasmOptimized(); }
+    bool isBuiltinNative()          const { return isNativeWithCppEntry() && !isAsmJSNative(); }
 
     // May be called from the JIT with the jitEntry_ field.
     bool isNativeWithJitEntry()     const { return isNative() && isWasmOptimized(); }
@@ -587,24 +590,23 @@ class JSFunction : public js::NativeObject
         return isInterpreted() ? nullptr : native();
     }
 
-    void initNative(js::Native native, const JSJitInfo* jitinfo) {
+    void initNative(js::Native native, const JSJitInfo* jitInfo) {
         MOZ_ASSERT(isNativeWithCppEntry());
+        MOZ_ASSERT_IF(jitInfo, isBuiltinNative());
         MOZ_ASSERT(native);
         u.native.func_ = native;
-        u.native.jitinfo_ = jitinfo;
+        u.native.extra.jitInfo_ = jitInfo;
     }
     bool hasJitInfo() const {
-        return isNativeWithCppEntry() &&
-               u.native.jitinfo_ &&
-               !isAsmJSNonOptimizedCtor();
+        return isBuiltinNative() && u.native.extra.jitInfo_;
     }
     const JSJitInfo* jitInfo() const {
         MOZ_ASSERT(hasJitInfo());
-        return u.native.jitinfo_;
+        return u.native.extra.jitInfo_;
     }
     void setJitInfo(const JSJitInfo* data) {
-        MOZ_ASSERT(isNativeWithCppEntry());
-        u.native.jitinfo_ = data;
+        MOZ_ASSERT(isBuiltinNative());
+        u.native.extra.jitInfo_ = data;
     }
 
     // Wasm natives are optimized and have a jit entry.
@@ -626,21 +628,20 @@ class JSFunction : public js::NativeObject
         return u.wasm.jitEntry_;
     }
 
-    // AsmJS non optimized ctor store the func index in the jitinfo slot, since
-    // asm.js functions don't have a jit info associated.
-    void setAsmJSCtorFuncIndex(uint32_t funcIndex) {
-        MOZ_ASSERT(isAsmJSNonOptimizedCtor());
-        MOZ_ASSERT(!u.native.jitinfo_);
-        static_assert(offsetof(U, native.jitinfo_) == offsetof(U, wasm.jitEntry_),
+    // AsmJS functions store the func index in the jitinfo slot, since these
+    // don't have a jit info associated.
+    void setAsmJSIndex(uint32_t funcIndex) {
+        MOZ_ASSERT(isAsmJSNative());
+        MOZ_ASSERT(!isWasmOptimized());
+        MOZ_ASSERT(!u.native.extra.asmJSFuncIndex_);
+        static_assert(offsetof(U, native.extra.asmJSFuncIndex_) == offsetof(U, wasm.jitEntry_),
                       "asm.js func index and wasm jit entry pointer must be at the same location");
-        u.native.jitinfo_ = (const JSJitInfo*)uintptr_t((funcIndex << 1) | 0x1);
+        u.native.extra.asmJSFuncIndex_ = funcIndex;
     }
-    bool hasWasmFuncIndex() const {
-        return isAsmJSNonOptimizedCtor();
-    }
-    uint32_t wasmFuncIndex() const {
-        MOZ_ASSERT(hasWasmFuncIndex());
-        return uint32_t(uintptr_t(u.native.jitinfo_) >> 1);
+    uint32_t asmJSFuncIndex() const {
+        MOZ_ASSERT(isAsmJSNative());
+        MOZ_ASSERT(!isWasmOptimized());
+        return u.native.extra.asmJSFuncIndex_;
     }
 
     bool isDerivedClassConstructor();
@@ -667,7 +668,7 @@ class JSFunction : public js::NativeObject
     }
 
     static unsigned offsetOfJitInfo() {
-        return offsetof(JSFunction, u.native.jitinfo_);
+        return offsetof(JSFunction, u.native.extra.jitInfo_);
     }
 
     inline void trace(JSTracer* trc);

@@ -36,9 +36,6 @@ extern bool
 GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& imports,
               const FuncExportVector& exports, CompiledCode* code);
 
-extern bool
-CanBeJitOptimized(const Sig& sig);
-
 } // namespace wasm
 } // namespace js
 
