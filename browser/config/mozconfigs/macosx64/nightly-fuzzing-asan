@@ -1,0 +1,2 @@
+. "$topsrcdir/browser/config/mozconfigs/macosx64/nightly-asan"
+ac_add_options --enable-fuzzing
