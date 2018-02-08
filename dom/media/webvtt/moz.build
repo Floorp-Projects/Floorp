@@ -19,3 +19,5 @@ EXTRA_COMPONENTS += [
 EXTRA_JS_MODULES += [
   'vtt.jsm',
 ]
+
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
