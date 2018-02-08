@@ -3582,6 +3582,7 @@ nsStyleDisplay::nsStyleDisplay(const nsPresContext* aContext)
   , mAnimationFillModeCount(1)
   , mAnimationPlayStateCount(1)
   , mAnimationIterationCountCount(1)
+  , mShapeMargin(0, nsStyleCoord::CoordConstructor)
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
 
@@ -3655,6 +3656,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mAnimationPlayStateCount(aSource.mAnimationPlayStateCount)
   , mAnimationIterationCountCount(aSource.mAnimationIterationCountCount)
   , mShapeImageThreshold(aSource.mShapeImageThreshold)
+  , mShapeMargin(aSource.mShapeMargin)
   , mShapeOutside(aSource.mShapeOutside)
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
@@ -3803,11 +3805,12 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
   }
 
   if (mShapeOutside != aNewData.mShapeOutside ||
+      mShapeMargin != aNewData.mShapeMargin ||
       mShapeImageThreshold != aNewData.mShapeImageThreshold) {
     if (aNewData.mFloat != StyleFloat::None) {
-      // If we are floating, and our shape-outside or shape-image-threshold
-      // are changed, our descendants are not impacted, but our ancestor and
-      // siblings are.
+      // If we are floating, and our shape-outside, shape-margin, or
+      // shape-image-threshold are changed, our descendants are not impacted,
+      // but our ancestor and siblings are.
       //
       // This is similar to a float-only change, but since the ISize of the
       // float area changes arbitrarily along its block axis, more is required
@@ -3820,8 +3823,8 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
       hint |= nsChangeHint_ReflowHintsForFloatAreaChange |
               nsChangeHint_CSSOverflowChange;
     } else {
-      // shape-outside or shape-image-threshold changed, but we don't need
-      // to reflow because we're not floating.
+      // shape-outside or shape-margin or shape-image-threshold changed,
+      // but we don't need to reflow because we're not floating.
       hint |= nsChangeHint_NeutralChange;
     }
   }
