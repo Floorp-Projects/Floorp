@@ -1369,17 +1369,41 @@ MacroAssembler::compareStrings(JSOp op, Register left, Register right, Register 
 void
 MacroAssembler::loadStringChars(Register str, Register dest)
 {
-    Label isInline, done;
-    branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
-                 Imm32(JSString::INLINE_CHARS_BIT), &isInline);
+    MOZ_ASSERT(str != dest);
 
-    loadPtr(Address(str, JSString::offsetOfNonInlineChars()), dest);
-    jump(&done);
+    // First, if the string is a rope, zero the |str| register. The code below
+    // depends on str->flags so this should block speculative execution.
+    if (JitOptions.spectreStringMitigations) {
+        movePtr(ImmWord(0), dest);
+        test32MovePtr(Assembler::Zero,
+                      Address(str, JSString::offsetOfFlags()), Imm32(JSString::LINEAR_BIT),
+                      dest, str);
+    }
 
-    bind(&isInline);
+    // Load the inline chars.
     computeEffectiveAddress(Address(str, JSInlineString::offsetOfInlineStorage()), dest);
 
-    bind(&done);
+    // If it's not an inline string, load the non-inline chars. Use a
+    // conditional move to prevent speculative execution.
+    test32LoadPtr(Assembler::Zero,
+                  Address(str, JSString::offsetOfFlags()), Imm32(JSString::INLINE_CHARS_BIT),
+                  Address(str, JSString::offsetOfNonInlineChars()), dest);
+}
+
+void
+MacroAssembler::loadRopeLeftChild(Register str, Register dest)
+{
+    MOZ_ASSERT(str != dest);
+
+    if (JitOptions.spectreStringMitigations) {
+        // Zero the output register if the input was not a rope.
+        movePtr(ImmWord(0), dest);
+        test32LoadPtr(Assembler::Zero,
+                      Address(str, JSString::offsetOfFlags()), Imm32(JSString::LINEAR_BIT),
+                      Address(str, JSRope::offsetOfLeft()), dest);
+    } else {
+        loadPtr(Address(str, JSRope::offsetOfLeft()), dest);
+    }
 }
 
 void
@@ -1397,8 +1421,7 @@ MacroAssembler::loadStringChar(Register str, Register index, Register output, Re
     Label notRope;
     branchIfNotRope(str, &notRope);
 
-    // Load leftChild.
-    loadPtr(Address(str, JSRope::offsetOfLeft()), output);
+    loadRopeLeftChild(str, output);
 
     // Check if the index is contained in the leftChild.
     // Todo: Handle index in the rightChild.
@@ -1409,18 +1432,17 @@ MacroAssembler::loadStringChar(Register str, Register index, Register output, Re
 
     bind(&notRope);
 
+    loadStringChars(output, scratch);
+
     Label isLatin1, done;
     // We have to check the left/right side for ropes,
     // because a TwoByte rope might have a Latin1 child.
     branchLatin1String(output, &isLatin1);
-
-    loadStringChars(output, output);
-    load16ZeroExtend(BaseIndex(output, index, TimesTwo), output);
+    load16ZeroExtend(BaseIndex(scratch, index, TimesTwo), output);
     jump(&done);
 
     bind(&isLatin1);
-    loadStringChars(output, output);
-    load8ZeroExtend(BaseIndex(output, index, TimesOne), output);
+    load8ZeroExtend(BaseIndex(scratch, index, TimesOne), output);
 
     bind(&done);
 }

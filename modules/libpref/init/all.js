@@ -1552,6 +1552,7 @@ pref("javascript.options.dump_stack_on_debuggee_would_run", false);
 
 // Spectre security vulnerability mitigations.
 pref("javascript.options.spectre.index_masking", true);
+pref("javascript.options.spectre.string_mitigations", false);
 
 // Streams API
 pref("javascript.options.streams", false);
