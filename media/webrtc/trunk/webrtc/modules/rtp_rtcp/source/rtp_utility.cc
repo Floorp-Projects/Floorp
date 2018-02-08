@@ -180,7 +180,8 @@ bool RtpHeaderParser::ParseRtcp(RTPHeader* header) const {
 }
 
 bool RtpHeaderParser::Parse(RTPHeader* header,
-                            RtpHeaderExtensionMap* ptrExtensionMap) const {
+                            RtpHeaderExtensionMap* ptrExtensionMap,
+                            bool secured) const {
   const ptrdiff_t length = _ptrRTPDataEnd - _ptrRTPDataBegin;
   if (length < kRtpMinParseLength) {
     return false;
@@ -224,7 +225,8 @@ bool RtpHeaderParser::Parse(RTPHeader* header,
   header->headerLength   = 12 + (CC * 4);
   // not a full validation, just safety against underflow.  Padding must
   // start after the header.  We can have 0 payload bytes left, note.
-  if (header->paddingLength + header->headerLength > (size_t) length) {
+  if (!secured &&
+      (header->paddingLength + header->headerLength > (size_t) length)) {
     return false;
   }
 
