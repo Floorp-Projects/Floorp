@@ -1551,8 +1551,7 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
                                            const nsACString& aServiceWorkerScope,
                                            WorkerLoadInfo& aLoadInfo)
 : mMutex("WorkerPrivateParent Mutex"),
-  mCondVar(mMutex, "WorkerPrivateParent CondVar"),
-  mParentWindowPausedDepth(0)
+  mCondVar(mMutex, "WorkerPrivateParent CondVar")
 {
 }
 
@@ -1817,11 +1816,11 @@ WorkerPrivateParent<Derived>::NotifyPrivate(WorkerStatus aStatus)
     return true;
   }
 
-  NS_ASSERTION(aStatus != Terminating || mQueuedRunnables.IsEmpty(),
+  NS_ASSERTION(aStatus != Terminating || self->mQueuedRunnables.IsEmpty(),
                "Shouldn't have anything queued!");
 
   // Anything queued will be discarded.
-  mQueuedRunnables.Clear();
+  self->mQueuedRunnables.Clear();
 
   RefPtr<NotifyRunnable> runnable =
     new NotifyRunnable(ParentAsWorkerPrivate(), aStatus);
@@ -1942,11 +1941,11 @@ WorkerPrivateParent<Derived>::Thaw(nsPIDOMWindowInner* aWindow)
 
   // Execute queued runnables before waking up the worker, otherwise the worker
   // could post new messages before we run those that have been queued.
-  if (!IsParentWindowPaused() && !mQueuedRunnables.IsEmpty()) {
+  if (!self->IsParentWindowPaused() && !self->mQueuedRunnables.IsEmpty()) {
     MOZ_ASSERT(self->IsDedicatedWorker());
 
     nsTArray<nsCOMPtr<nsIRunnable>> runnables;
-    mQueuedRunnables.SwapElements(runnables);
+    self->mQueuedRunnables.SwapElements(runnables);
 
     for (uint32_t index = 0; index < runnables.Length(); index++) {
       runnables[index]->Run();
@@ -1962,25 +1961,21 @@ WorkerPrivateParent<Derived>::Thaw(nsPIDOMWindowInner* aWindow)
   return true;
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::ParentWindowPaused()
+WorkerPrivate::ParentWindowPaused()
 {
   AssertIsOnMainThread();
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-  MOZ_ASSERT_IF(self->IsDedicatedWorker(), mParentWindowPausedDepth == 0);
+  MOZ_ASSERT_IF(IsDedicatedWorker(), mParentWindowPausedDepth == 0);
   mParentWindowPausedDepth += 1;
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::ParentWindowResumed()
+WorkerPrivate::ParentWindowResumed()
 {
   AssertIsOnMainThread();
-  WorkerPrivate* self = ParentAsWorkerPrivate();
 
   MOZ_ASSERT(mParentWindowPausedDepth > 0);
-  MOZ_ASSERT_IF(self->IsDedicatedWorker(), mParentWindowPausedDepth == 1);
+  MOZ_ASSERT_IF(IsDedicatedWorker(), mParentWindowPausedDepth == 1);
   mParentWindowPausedDepth -= 1;
   if (mParentWindowPausedDepth > 0) {
     return;
@@ -1989,15 +1984,15 @@ WorkerPrivateParent<Derived>::ParentWindowResumed()
   {
     MutexAutoLock lock(mMutex);
 
-    if (self->mParentStatus >= Terminating) {
+    if (mParentStatus >= Terminating) {
       return;
     }
   }
 
   // Execute queued runnables before waking up, otherwise the worker could post
   // new messages before we run those that have been queued.
-  if (!self->IsFrozen() && !mQueuedRunnables.IsEmpty()) {
-    MOZ_ASSERT(self->IsDedicatedWorker());
+  if (!IsFrozen() && !mQueuedRunnables.IsEmpty()) {
+    MOZ_ASSERT(IsDedicatedWorker());
 
     nsTArray<nsCOMPtr<nsIRunnable>> runnables;
     mQueuedRunnables.SwapElements(runnables);
@@ -2725,6 +2720,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
                                                    WorkerEventTarget::Behavior::Hybrid))
   , mErrorHandlerRecursionCount(0)
   , mNextTimeoutId(1)
+  , mParentWindowPausedDepth(0)
   , mParentStatus(Pending)
   , mStatus(Pending)
   , mFrozen(false)
