@@ -2155,6 +2155,25 @@ MacroAssembler::cmp32Move32(Condition cond, Register lhs, const Address& rhs, Re
 }
 
 void
+MacroAssembler::test32LoadPtr(Condition cond, const Address& addr, Imm32 mask, const Address& src,
+                              Register dest)
+{
+    MOZ_ASSERT(cond == Assembler::Zero || cond == Assembler::NonZero);
+    test32(addr, mask);
+    ScratchRegisterScope scratch(*this);
+    ma_ldr(src, dest, scratch, Offset, cond);
+}
+
+void
+MacroAssembler::test32MovePtr(Condition cond, const Address& addr, Imm32 mask, Register src,
+                              Register dest)
+{
+    MOZ_ASSERT(cond == Assembler::Zero || cond == Assembler::NonZero);
+    test32(addr, mask);
+    ma_mov(src, dest, LeaveCC, cond);
+}
+
+void
 MacroAssembler::boundsCheck32ForLoad(Register index, Register length, Register scratch,
                                      Label* failure)
 {
