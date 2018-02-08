@@ -280,8 +280,6 @@ private:
                            nsACString& _guid,
                            int64_t* _parentId);
 
-  nsresult GetLastChildId(int64_t aFolder, int64_t* aItemId);
-
   nsresult AddSyncChangesForBookmarksWithURL(const nsACString& aURL,
                                              int64_t aSyncChangeDelta);
 
