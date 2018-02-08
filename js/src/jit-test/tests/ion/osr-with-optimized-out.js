@@ -4,6 +4,7 @@
 // Ion compilation, such that we can garantee that we would OSR into the inner
 // loop before we reach the end of the loop.
 setJitCompilerOption("ion.warmup.trigger", 30);
+gcPreserveCode();
 
 function f (n) {
     while (!inIon()) {
