@@ -567,6 +567,15 @@ public:
   // visibility:collapse.
   bool IsStrut() const             { return mIsStrut; }
 
+  // Returns true if this item's inline axis is parallel (or antiparallel)
+  // to the container's main axis. Otherwise (i.e. if this item's inline axis
+  // is orthogonal to the container's main axis), this function returns false.
+  bool IsInlineAxisMainAxis() const { return mIsInlineAxisMainAxis; }
+
+  // Same as above, but for cross axis. Equivalent to !IsInlineAxisMainAxis().
+  // This just exists for convenience/readability at callsites.
+  bool IsInlineAxisCrossAxis() const { return !mIsInlineAxisMainAxis; }
+
   WritingMode GetWritingMode() const { return mWM; }
   uint8_t GetAlignSelf() const     { return mAlignSelf; }
 
@@ -849,6 +858,7 @@ protected:
   bool mIsStretched; // See IsStretched() documentation
   bool mIsStrut;     // Is this item a "strut" left behind by an element
                      // with visibility:collapse?
+  const bool mIsInlineAxisMainAxis; // See IsInlineAxisMainAxis() documentation
 
   // Does this item need to resolve a min-[width|height]:auto (in main-axis).
   bool mNeedsMinSizeAutoResolution;
@@ -1801,7 +1811,9 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput,
     mHadMaxViolation(false),
     mHadMeasuringReflow(false),
     mIsStretched(false),
-    mIsStrut(false)
+    mIsStrut(false),
+    mIsInlineAxisMainAxis(aAxisTracker.IsRowOriented() !=
+                          aAxisTracker.GetWritingMode().IsOrthogonalTo(mWM))
     // mNeedsMinSizeAutoResolution is initialized in CheckForMinSizeAuto()
     // mAlignSelf, see below
 {
@@ -1899,6 +1911,7 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
     mHadMeasuringReflow(false),
     mIsStretched(false),
     mIsStrut(true), // (this is the constructor for making struts, after all)
+    mIsInlineAxisMainAxis(true), // (doesn't matter b/c we're not doing layout)
     mNeedsMinSizeAutoResolution(false),
     mAlignSelf(NS_STYLE_ALIGN_FLEX_START)
 {
