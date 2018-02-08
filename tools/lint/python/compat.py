@@ -30,18 +30,28 @@ class PyCompatProcess(ProcessHandlerMixin):
         try:
             res = json.loads(line)
         except ValueError:
-            print('Non JSON output from linter, will not be processed: {}'.format(line))
+            print('Non JSON output from {} linter: {}'.format(self.config['name'], line))
             return
 
         res['level'] = 'error'
         results.append(result.from_config(self.config, **res))
 
 
+def setup(python):
+    """Setup doesn't currently do any bootstrapping. For now, this function
+    is only used to print the warning message.
+    """
+    binary = find_executable(python)
+    if not binary:
+        # TODO Bootstrap python2/python3 if not available
+        print('warning: {} not detected, skipping py-compat check'.format(python))
+
+
 def run_linter(python, paths, config, **lintargs):
     binary = find_executable(python)
     if not binary:
-        # TODO bootstrap python3 if not available
-        print('error: {} not detected, aborting py-compat check'.format(python))
+        # If we're in automation, this is fatal. Otherwise, the warning in the
+        # setup method was already printed.
         if 'MOZ_AUTOMATION' in os.environ:
             return 1
         return []
@@ -77,8 +87,16 @@ def run_linter(python, paths, config, **lintargs):
     return results
 
 
+def setuppy2(root):
+    return setup('python2')
+
+
 def lintpy2(*args, **kwargs):
     return run_linter('python2', *args, **kwargs)
+
+
+def setuppy3(root):
+    return setup('python3')
 
 
 def lintpy3(*args, **kwargs):
