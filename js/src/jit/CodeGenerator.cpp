@@ -1580,7 +1580,7 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
         newStartIndexAddress.offset += 2 * sizeof(void*);
 
         // Load chars pointer for the new string.
-        masm.addPtr(ImmWord(JSInlineString::offsetOfInlineStorage()), string);
+        masm.loadInlineStringCharsForStore(string, string);
 
         // Load the source characters pointer.
         masm.loadStringChars(base, temp2);
@@ -1614,14 +1614,14 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
         masm.store32(Imm32(flags), Address(string, JSString::offsetOfFlags()));
         masm.store32(temp1, Address(string, JSString::offsetOfLength()));
 
-        masm.loadPtr(Address(base, JSString::offsetOfNonInlineChars()), temp1);
+        masm.loadNonInlineStringChars(base, temp1);
         masm.load32(startIndexAddress, temp2);
         if (latin1)
             masm.addPtr(temp2, temp1);
         else
             masm.computeEffectiveAddress(BaseIndex(temp1, temp2, TimesTwo), temp1);
-        masm.storePtr(temp1, Address(string, JSString::offsetOfNonInlineChars()));
-        masm.storePtr(base, Address(string, JSDependentString::offsetOfBase()));
+        masm.storeNonInlineStringChars(temp1, string);
+        masm.storeDependentStringBase(base, string);
 
         // Follow any base pointer if the input is itself a dependent string.
         // Watch for undepended strings, which have a base pointer but don't
@@ -1630,8 +1630,8 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
         masm.load32(Address(base, JSString::offsetOfFlags()), temp1);
         masm.and32(Imm32(JSString::TYPE_FLAGS_MASK), temp1);
         masm.branch32(Assembler::NotEqual, temp1, Imm32(JSString::DEPENDENT_FLAGS), &noBase);
-        masm.loadPtr(Address(base, JSDependentString::offsetOfBase()), temp1);
-        masm.storePtr(temp1, Address(string, JSDependentString::offsetOfBase()));
+        masm.loadDependentStringBase(base, temp1);
+        masm.storeDependentStringBase(temp1, string);
         masm.bind(&noBase);
     }
 
@@ -7829,7 +7829,7 @@ ConcatInlineString(MacroAssembler& masm, Register lhs, Register rhs, Register ou
     masm.store32(temp2, Address(output, JSString::offsetOfLength()));
 
     // Load chars pointer in temp2.
-    masm.computeEffectiveAddress(Address(output, JSInlineString::offsetOfInlineStorage()), temp2);
+    masm.loadInlineStringCharsForStore(output, temp2);
 
     {
         // Copy lhs chars. Note that this advances temp2 to point to the next
@@ -7910,19 +7910,17 @@ CodeGenerator::visitSubstr(LSubstr* lir)
     masm.branchTest32(Assembler::Zero, stringFlags, Imm32(JSString::INLINE_CHARS_BIT), &notInline);
     masm.newGCFatInlineString(output, temp, slowPath);
     masm.store32(length, Address(output, JSString::offsetOfLength()));
-    Address stringStorage(string, JSInlineString::offsetOfInlineStorage());
-    Address outputStorage(output, JSInlineString::offsetOfInlineStorage());
 
     masm.branchLatin1String(string, &isInlinedLatin1);
     {
         masm.store32(Imm32(JSString::INIT_FAT_INLINE_FLAGS),
                      Address(output, JSString::offsetOfFlags()));
-        masm.computeEffectiveAddress(stringStorage, temp);
+        masm.loadInlineStringChars(string, temp);
         if (temp2 == string)
             masm.push(string);
         BaseIndex chars(temp, begin, ScaleFromElemWidth(sizeof(char16_t)));
         masm.computeEffectiveAddress(chars, temp2);
-        masm.computeEffectiveAddress(outputStorage, temp);
+        masm.loadInlineStringCharsForStore(output, temp);
         CopyStringChars(masm, temp, temp2, length, temp3, sizeof(char16_t), sizeof(char16_t));
         masm.load32(Address(output, JSString::offsetOfLength()), length);
         masm.store16(Imm32(0), Address(temp, 0));
@@ -7936,10 +7934,10 @@ CodeGenerator::visitSubstr(LSubstr* lir)
                      Address(output, JSString::offsetOfFlags()));
         if (temp2 == string)
             masm.push(string);
-        masm.computeEffectiveAddress(stringStorage, temp2);
+        masm.loadInlineStringChars(string, temp2);
         static_assert(sizeof(char) == 1, "begin index shouldn't need scaling");
         masm.addPtr(begin, temp2);
-        masm.computeEffectiveAddress(outputStorage, temp);
+        masm.loadInlineStringCharsForStore(output, temp);
         CopyStringChars(masm, temp, temp2, length, temp3, sizeof(char), sizeof(char));
         masm.load32(Address(output, JSString::offsetOfLength()), length);
         masm.store8(Imm32(0), Address(temp, 0));
@@ -7952,25 +7950,25 @@ CodeGenerator::visitSubstr(LSubstr* lir)
     masm.bind(&notInline);
     masm.newGCString(output, temp, slowPath);
     masm.store32(length, Address(output, JSString::offsetOfLength()));
-    masm.storePtr(string, Address(output, JSDependentString::offsetOfBase()));
+    masm.storeDependentStringBase(string, output);
 
     masm.branchLatin1String(string, &isLatin1);
     {
         masm.store32(Imm32(JSString::DEPENDENT_FLAGS), Address(output, JSString::offsetOfFlags()));
-        masm.loadPtr(Address(string, JSString::offsetOfNonInlineChars()), temp);
+        masm.loadNonInlineStringChars(string, temp);
         BaseIndex chars(temp, begin, ScaleFromElemWidth(sizeof(char16_t)));
         masm.computeEffectiveAddress(chars, temp);
-        masm.storePtr(temp, Address(output, JSString::offsetOfNonInlineChars()));
+        masm.storeNonInlineStringChars(temp, output);
         masm.jump(done);
     }
     masm.bind(&isLatin1);
     {
         masm.store32(Imm32(JSString::DEPENDENT_FLAGS | JSString::LATIN1_CHARS_BIT),
                      Address(output, JSString::offsetOfFlags()));
-        masm.loadPtr(Address(string, JSString::offsetOfNonInlineChars()), temp);
+        masm.loadNonInlineStringChars(string, temp);
         static_assert(sizeof(char) == 1, "begin index shouldn't need scaling");
         masm.addPtr(begin, temp);
-        masm.storePtr(temp, Address(output, JSString::offsetOfNonInlineChars()));
+        masm.storeNonInlineStringChars(temp, output);
         masm.jump(done);
     }
 
@@ -8042,8 +8040,7 @@ JitCompartment::generateStringConcatStub(JSContext* cx)
     masm.store32(temp2, Address(output, JSString::offsetOfLength()));
 
     // Store left and right nodes.
-    masm.storePtr(lhs, Address(output, JSRope::offsetOfLeft()));
-    masm.storePtr(rhs, Address(output, JSRope::offsetOfRight()));
+    masm.storeRopeChildren(lhs, rhs, output);
     masm.ret();
 
     masm.bind(&leftEmpty);
@@ -8340,8 +8337,7 @@ CodeGenerator::visitFromCodePoint(LFromCodePoint* lir)
             masm.store32(Imm32(1), Address(output, JSString::offsetOfLength()));
 
             // Load chars pointer in temp1.
-            masm.computeEffectiveAddress(Address(output, JSInlineString::offsetOfInlineStorage()),
-                                         temp1);
+            masm.loadInlineStringCharsForStore(output, temp1);
 
             masm.store16(codePoint, Address(temp1, 0));
 
@@ -8356,8 +8352,7 @@ CodeGenerator::visitFromCodePoint(LFromCodePoint* lir)
             masm.store32(Imm32(2), Address(output, JSString::offsetOfLength()));
 
             // Load chars pointer in temp1.
-            masm.computeEffectiveAddress(Address(output, JSInlineString::offsetOfInlineStorage()),
-                                         temp1);
+            masm.loadInlineStringCharsForStore(output, temp1);
 
             // Inlined unicode::LeadSurrogate(uint32_t).
             masm.move32(codePoint, temp2);
