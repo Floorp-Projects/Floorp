@@ -265,15 +265,6 @@ add_task(async function test_bookmarks() {
   bs.setItemTitle(newId6, "Google Sites");
   Assert.equal(bookmarksObserver._itemChangedProperty, "title");
 
-  // test getIdForItemAt
-  Assert.equal(bs.getIdForItemAt(testRoot, 0), workFolder);
-  // wrong parent, should return -1
-  Assert.equal(bs.getIdForItemAt(1337, 0), -1);
-  // wrong index, should return -1
-  Assert.equal(bs.getIdForItemAt(testRoot, 1337), -1);
-  // wrong parent and index, should return -1
-  Assert.equal(bs.getIdForItemAt(1337, 1337), -1);
-
   // move folder, appending, to different folder
   let oldParentCC = getChildCount(testRoot);
   bs.moveItem(workFolder, homeFolder, bs.DEFAULT_INDEX);
@@ -287,15 +278,6 @@ add_task(async function test_bookmarks() {
   Assert.equal(bs.getItemIndex(workFolder), 1);
   Assert.equal(bs.getFolderIdForItem(workFolder), homeFolder);
 
-  // try to get index of the item from within the old parent folder
-  // check that it has been really removed from there
-  Assert.notEqual(bs.getIdForItemAt(testRoot, 0), workFolder);
-  // check the last item from within the old parent folder
-  Assert.notEqual(bs.getIdForItemAt(testRoot, -1), workFolder);
-  // check the index of the item within the new parent folder
-  Assert.equal(bs.getIdForItemAt(homeFolder, 1), workFolder);
-  // try to get index of the last item within the new parent folder
-  Assert.equal(bs.getIdForItemAt(homeFolder, -1), workFolder);
   // XXX expose FolderCount, and check that the old parent has one less child?
   Assert.equal(getChildCount(testRoot), oldParentCC - 1);
 

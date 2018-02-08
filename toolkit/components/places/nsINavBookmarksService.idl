@@ -478,17 +478,6 @@ interface nsINavBookmarksService : nsISupports
                             [optional] in unsigned short aSource);
 
   /**
-   * Get the itemId given the containing folder and the index.
-   *  @param aParentId
-   *         The id of the diret parent folder of the item
-   *  @param aIndex
-   *         The index of the item within the parent folder.
-   *         Pass DEFAULT_INDEX for the last item.
-   *  @return The ID of the found item, -1 if the item does not exists.
-   */
-  long long getIdForItemAt(in long long aParentId, in long aIndex);
-
-  /**
    * Set the title for an item.
    *  @param aItemId
    *         The id of the item whose title should be updated.
