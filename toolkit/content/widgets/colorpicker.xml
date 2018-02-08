@@ -231,7 +231,7 @@
             if (aTarget.hasAttribute("on" + aEventName)) {
               var fn = new Function("event", aTarget.getAttribute("on" + aEventName));
               var rv = fn.call(aTarget, event);
-              if (rv == false)
+              if (!rv)
                 cancel = true;
             }
             return !cancel;
@@ -486,7 +486,7 @@
             if (aTarget.hasAttribute("on" + aEventName)) {
               var fn = new Function("event", aTarget.getAttribute("on" + aEventName));
               var rv = fn.call(aTarget, event);
-              if (rv == false)
+              if (!rv)
                 cancel = true;
             }
             return !cancel;

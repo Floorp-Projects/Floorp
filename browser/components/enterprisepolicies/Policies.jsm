@@ -39,7 +39,7 @@ this.Policies = {
 
   "DisableAppUpdate": {
     onBeforeAddons(manager, param) {
-      if (param == true) {
+      if (param) {
         manager.disallowFeature("appUpdate");
       }
     }
@@ -97,7 +97,7 @@ this.Policies = {
 
   "DisableFirefoxStudies": {
     onBeforeAddons(manager, param) {
-      if (param == true) {
+      if (param) {
         manager.disallowFeature("Shield");
       }
     }
@@ -105,7 +105,7 @@ this.Policies = {
 
   "DisableFormHistory": {
     onBeforeUIStartup(manager, param) {
-      if (param == true) {
+      if (param) {
         setAndLockPref("browser.formfill.enable", false);
       }
     }

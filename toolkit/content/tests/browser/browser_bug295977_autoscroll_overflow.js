@@ -97,7 +97,7 @@ body > div > div {width: 1000px;height: 1000px;}\
       continue;
      }
 
-    let prefsChanged = (test.middlemousepastepref == false || test.middlemousepastepref == true);
+    let prefsChanged = "middlemousepastepref" in test;
     if (prefsChanged) {
       await pushPrefs([["middlemouse.paste", test.middlemousepastepref]]);
     }

@@ -26,7 +26,7 @@ BlocklistPrompt.prototype = {
         Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
 
         // If nothing aborted, quit the app
-        if (cancelQuit.data == false) {
+        if (!cancelQuit.data) {
           let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
           appStartup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
         }
