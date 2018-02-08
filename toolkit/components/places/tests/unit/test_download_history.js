@@ -120,7 +120,7 @@ add_test(function test_dh_addMultiRemoveDownload() {
         Assert.ok(aDeletedURI.equals(DOWNLOAD_URI));
         Assert.ok(!!page_in_database(DOWNLOAD_URI));
 
-        PlacesTestUtils.clearHistory().then(run_next_test);
+        PlacesUtils.history.clear().then(run_next_test);
       });
       gDownloadHistory.removeAllDownloads();
     });
@@ -145,7 +145,7 @@ add_task(async function test_dh_addBookmarkRemoveDownload() {
         Assert.ok(aDeletedURI.equals(DOWNLOAD_URI));
         Assert.ok(!!page_in_database(DOWNLOAD_URI));
 
-        PlacesTestUtils.clearHistory().then(resolve);
+        PlacesUtils.history.clear().then(resolve);
       });
       gDownloadHistory.removeAllDownloads();
     });
@@ -167,7 +167,7 @@ add_test(function test_dh_addDownload_referrer() {
       // Verify that the URI is already available in results at this time.
       Assert.ok(!!page_in_database(DOWNLOAD_URI));
 
-      PlacesTestUtils.clearHistory().then(run_next_test);
+      PlacesUtils.history.clear().then(run_next_test);
     });
 
     gDownloadHistory.addDownload(DOWNLOAD_URI, REFERRER_URI, Date.now() * 1000);
@@ -195,7 +195,7 @@ add_test(function test_dh_addDownload_disabledHistory() {
     Assert.ok(!!page_in_database(DOWNLOAD_URI));
     Assert.ok(!page_in_database(PRIVATE_URI));
 
-    PlacesTestUtils.clearHistory().then(run_next_test);
+    PlacesUtils.history.clear().then(run_next_test);
   });
 
   Services.prefs.setBoolPref("places.history.enabled", false);
@@ -228,7 +228,7 @@ add_test(function test_dh_details() {
       PlacesUtils.annotations.removeObserver(annoObserver);
       PlacesUtils.history.removeObserver(historyObserver);
 
-      PlacesTestUtils.clearHistory().then(run_next_test);
+      PlacesUtils.history.clear().then(run_next_test);
     }
   }
 

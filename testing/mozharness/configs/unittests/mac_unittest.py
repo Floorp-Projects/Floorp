@@ -9,9 +9,6 @@ ADJUST_MOUSE_AND_SCREEN = False
 #####
 config = {
     "buildbot_json_path": "buildprops.json",
-    "exes": {
-        'tooltool.py': "/tools/tooltool.py",
-    },
     "find_links": [
         "http://pypi.pvt.build.mozilla.org/pub",
         "http://pypi.pub.build.mozilla.org/pub",

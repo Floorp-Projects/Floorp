@@ -75,7 +75,7 @@ add_task(async function test_bookmarks_query() {
 
 function cleanupTest() {
   return Promise.all([
-    PlacesTestUtils.clearHistory(),
+    PlacesUtils.history.clear(),
     PlacesUtils.bookmarks.eraseEverything()
   ]);
 }

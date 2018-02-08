@@ -76,7 +76,7 @@ add_task(async function() {
   await BrowserTestUtils.synthesizeMouseAtCenter("#clickme", { }, gBrowser.selectedBrowser);
   await visitUriPromise;
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   gBrowser.removeCurrentTab();
 });

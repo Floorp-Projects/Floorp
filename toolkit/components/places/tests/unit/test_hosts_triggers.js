@@ -121,7 +121,7 @@ add_task(async function test_bookmark_changes() {
     url: NEW_URL,
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   let newUri = NetUtil.newURI(NEW_URL);
   Assert.ok(isHostInMozPlaces(newUri));
@@ -137,7 +137,7 @@ add_task(async function test_bookmark_removal() {
     unfiledBookmarksRoot.getChild(unfiledBookmarksRoot.childCount - 1).bookmarkGuid;
 
   await PlacesUtils.bookmarks.remove(itemGuid);
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   checkHostNotInMozHosts(Services.io.newURI(NEW_URL), false, null);
 });
@@ -155,7 +155,7 @@ add_task(async function test_moz_hosts_typed_update() {
   await PlacesTestUtils.addVisits(places);
 
   checkHostInMozHosts(TEST_URI, true, null);
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_moz_hosts_www_remove() {
@@ -184,7 +184,7 @@ add_task(async function test_moz_hosts_www_remove() {
   const TEST_WWW_URI = NetUtil.newURI("http://www.rem.mozilla.com");
   await test_removal(TEST_URI, TEST_WWW_URI);
   await test_removal(TEST_WWW_URI, TEST_URI);
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_moz_hosts_ftp_matchall() {

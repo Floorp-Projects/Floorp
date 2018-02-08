@@ -10,7 +10,7 @@ Cu.importGlobalProperties(["URL"]);
 
 // Test removing a single page
 add_task(async function test_remove_single() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 
 
@@ -131,12 +131,12 @@ add_task(async function test_remove_single() {
       }
     }
   } finally {
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
   }
 });
 
 add_task(async function cleanup() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 });
 

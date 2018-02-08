@@ -1407,33 +1407,11 @@ pref("browser.uiCustomization.debug", false);
 // CustomizableUI state of the browser's user interface
 pref("browser.uiCustomization.state", "");
 
-// The remote content URL shown for FxA signup. Must use HTTPS.
-pref("identity.fxaccounts.remote.signup.uri", "https://accounts.firefox.com/signup?service=sync&context=fx_desktop_v3");
+// The remote FxA root content URL. Must use HTTPS.
+pref("identity.fxaccounts.remote.root", "https://accounts.firefox.com/");
 
-// The URL where remote content that forces re-authentication for Firefox Accounts
-// should be fetched.  Must use HTTPS.
-pref("identity.fxaccounts.remote.force_auth.uri", "https://accounts.firefox.com/force_auth?service=sync&context=fx_desktop_v3");
-
-// The remote content URL shown for signin in. Must use HTTPS.
-pref("identity.fxaccounts.remote.signin.uri", "https://accounts.firefox.com/signin?service=sync&context=fx_desktop_v3");
-
-// The remote content URL shown for the email (FxA determines if we show sign-in or sign-up) endpoint. Must use HTTPS.
-pref("identity.fxaccounts.remote.email.uri", "https://accounts.firefox.com/?service=sync&context=fx_desktop_v3&action=email");
-
-// The remote content URL where FxAccountsWebChannel messages originate.
-pref("identity.fxaccounts.remote.webchannel.uri", "https://accounts.firefox.com/");
-
-// The value of the context query parameter passed in some fxa requests when config
-// discovery is enabled.
+// The value of the context query parameter passed in fxa requests.
 pref("identity.fxaccounts.contextParam", "fx_desktop_v3");
-
-// The URL we take the user to when they opt to "manage" their Firefox Account.
-// Note that this will always need to be in the same TLD as the
-// "identity.fxaccounts.remote.signup.uri" pref.
-pref("identity.fxaccounts.settings.uri", "https://accounts.firefox.com/settings?service=sync&context=fx_desktop_v3");
-
-// The URL of the FxA device manager page
-pref("identity.fxaccounts.settings.devices.uri", "https://accounts.firefox.com/settings/clients?service=sync&context=fx_desktop_v3");
 
 // The remote URL of the FxA Profile Server
 pref("identity.fxaccounts.remote.profile.uri", "https://profile.accounts.firefox.com/v1");
@@ -1444,8 +1422,6 @@ pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com
 // Token server used by the FxA Sync identity.
 pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sync/1.5");
 
-// The URL to a page that explains how to connect another device to Sync.
-pref("identity.fxaccounts.remote.connectdevice.uri", "https://accounts.firefox.com/connect_another_device?service=sync&context=fx_desktop_v3");
 // URLs for promo links to mobile browsers. Note that consumers are expected to
 // append a value for utm_campaign.
 pref("identity.mobilepromo.android", "https://www.mozilla.org/firefox/android/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=");

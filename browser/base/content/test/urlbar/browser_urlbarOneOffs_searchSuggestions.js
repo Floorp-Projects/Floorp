@@ -1,7 +1,7 @@
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 add_task(async function init() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.oneOffSearches", true],
           ["browser.urlbar.suggest.searches", true]],
@@ -13,7 +13,7 @@ add_task(async function init() {
   registerCleanupFunction(async function() {
     Services.search.currentEngine = oldCurrentEngine;
 
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
     // Make sure the popup is closed for the next test.
     gURLBar.blur();
     Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
@@ -48,7 +48,7 @@ add_task(async function oneOffReturnAfterSuggestion() {
   EventUtils.synthesizeKey("VK_RETURN", {});
   await resultsPromise;
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await BrowserTestUtils.removeTab(tab);
 });
 
@@ -76,7 +76,7 @@ add_task(async function oneOffClickAfterSuggestion() {
   EventUtils.synthesizeMouseAtCenter(oneOffs[0], {});
   await resultsPromise;
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await BrowserTestUtils.removeTab(tab);
 });
 

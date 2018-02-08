@@ -36,7 +36,7 @@ async function cleanup() {
   }
   Services.prefs.clearUserPref("browser.search.suggest.enabled");
   await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 }
 registerCleanupFunction(cleanup);
 

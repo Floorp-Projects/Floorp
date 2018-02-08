@@ -9,7 +9,7 @@ registerCleanupFunction(async function() {
   sandbox.restore();
   delete window.sinon;
   await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 let bookmarks; // Bookmarks added via insertTree.

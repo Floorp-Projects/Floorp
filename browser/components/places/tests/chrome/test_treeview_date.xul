@@ -58,7 +58,7 @@
       }
 
       (async function() {
-        await PlacesTestUtils.clearHistory();
+        await PlacesUtils.history.clear();
 
         let midnight = new Date();
         midnight.setHours(0);
@@ -151,7 +151,7 @@
 
         // Cleanup.
         await PlacesUtils.bookmarks.remove(bm.guid);
-        await PlacesTestUtils.clearHistory();
+        await PlacesUtils.history.clear();
       })().then(SimpleTest.finish);
     }
   ]]>

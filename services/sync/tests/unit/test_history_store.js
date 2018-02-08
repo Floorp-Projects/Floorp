@@ -103,7 +103,7 @@ add_task(async function test_store() {
     date: new Date(TIMESTAMP1 / 1000),
     transition: Ci.nsINavHistoryService.TRANSITION_LINK,
   }]);
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_store_create() {
@@ -129,7 +129,7 @@ add_task(async function test_store_create() {
     date: new Date(TIMESTAMP3 / 1000),
     transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
   }]);
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_null_title() {
@@ -153,7 +153,7 @@ add_task(async function test_null_title() {
     date: new Date(TIMESTAMP3 / 1000),
     transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
   }]);
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_invalid_records() {
@@ -436,7 +436,7 @@ add_task(async function test_getAllIDs_filters_file_uris() {
 
   do_check_attribute_count(await store.getAllIDs(), 0);
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_applyIncomingBatch_filters_file_uris() {
@@ -458,5 +458,5 @@ add_task(async function test_applyIncomingBatch_filters_file_uris() {
 
 add_task(async function cleanup() {
   _("Clean up.");
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });

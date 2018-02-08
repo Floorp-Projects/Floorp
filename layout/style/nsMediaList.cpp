@@ -164,9 +164,9 @@ nsMediaExpression::Matches(nsPresContext* aPresContext,
       break;
     case nsMediaFeature::eIdent:
       {
-        NS_ASSERTION(actual.GetUnit() == eCSSUnit_Ident,
+        NS_ASSERTION(actual.GetUnit() == eCSSUnit_AtomIdent,
                      "bad actual value");
-        NS_ASSERTION(required.GetUnit() == eCSSUnit_Ident,
+        NS_ASSERTION(required.GetUnit() == eCSSUnit_AtomIdent,
                      "bad required value");
         NS_ASSERTION(mFeature->mRangeType == nsMediaFeature::eMinMaxNotAllowed,
                      "bad range");
@@ -447,9 +447,7 @@ nsMediaQuery::AppendToString(nsAString& aString) const
               aString);
           break;
         case nsMediaFeature::eIdent:
-          NS_ASSERTION(expr.mValue.GetUnit() == eCSSUnit_Ident,
-                       "bad unit");
-          aString.Append(expr.mValue.GetStringBufferValue());
+          expr.mValue.AppendToString(eCSSProperty_DOM, aString);
           break;
       }
     }

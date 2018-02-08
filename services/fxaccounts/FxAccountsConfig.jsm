@@ -15,44 +15,85 @@ ChromeUtils.defineModuleGetter(this, "fxAccounts",
 ChromeUtils.defineModuleGetter(this, "EnsureFxAccountsWebChannel",
                                "resource://gre/modules/FxAccountsWebChannel.jsm");
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "ROOT_URL",
+                                      "identity.fxaccounts.remote.root");
+XPCOMUtils.defineLazyPreferenceGetter(this, "CONTEXT_PARAM",
+                                      "identity.fxaccounts.contextParam");
+XPCOMUtils.defineLazyPreferenceGetter(this, "REQUIRES_HTTPS",
+                                      // Also used in FxAccountsOAuthGrantClient.jsm.
+                                      "identity.fxaccounts.allowHttp", false,
+                                      null, val => !val);
+
 const CONFIG_PREFS = [
+  "identity.fxaccounts.remote.root",
   "identity.fxaccounts.auth.uri",
   "identity.fxaccounts.remote.oauth.uri",
   "identity.fxaccounts.remote.profile.uri",
   "identity.sync.tokenserver.uri",
-  "identity.fxaccounts.remote.webchannel.uri",
-  "identity.fxaccounts.settings.uri",
-  "identity.fxaccounts.settings.devices.uri",
-  "identity.fxaccounts.remote.signup.uri",
-  "identity.fxaccounts.remote.signin.uri",
-  "identity.fxaccounts.remote.email.uri",
-  "identity.fxaccounts.remote.connectdevice.uri",
-  "identity.fxaccounts.remote.force_auth.uri",
 ];
 
 this.FxAccountsConfig = {
+  async promiseSignUpURI(entrypoint) {
+    return this._buildURL("signup", {entrypoint});
+  },
 
-  async _getPrefURL(prefName) {
+  async promiseSignInURI(entrypoint) {
+    return this._buildURL("signin", {entrypoint});
+  },
+
+  async promiseEmailURI(email, entrypoint) {
+    return this._buildURL("", {entrypoint, email});
+  },
+
+  async promiseForceSigninURI(entrypoint) {
+    return this._buildURL("force_auth", {entrypoint}, true);
+  },
+
+  async promiseManageURI(entrypoint) {
+    return this._buildURL("settings", {entrypoint}, true);
+  },
+
+  async promiseChangeAvatarURI(entrypoint) {
+    return this._buildURL("settings/avatar/change", {entrypoint}, true);
+  },
+
+  async promiseManageDevicesURI(entrypoint) {
+    return this._buildURL("settings/clients", {entrypoint}, true);
+  },
+
+  async promiseConnectDeviceURI(entrypoint) {
+    return this._buildURL("connect_another_device", {entrypoint}, true);
+  },
+
+  get defaultParams() {
+    return {service: "sync", context: CONTEXT_PARAM};
+  },
+
+  /**
+   * @param path should be parsable by the URL constructor first parameter.
+   * @param {Object.<string, string>} [extraParams] Additionnal search params.
+   * @param {bool} [addCredentials] if true we add the current logged-in user
+   *                                uid and email to the search params.
+   */
+  async _buildURL(path, extraParams, addCredentials = false) {
     await this.ensureConfigured();
-    let url = Services.urlFormatter.formatURLPref(prefName);
-    if (fxAccounts.requiresHttps() && !/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
+    const url = new URL(path, ROOT_URL);
+    if (REQUIRES_HTTPS && url.protocol != "https:") {
       throw new Error("Firefox Accounts server must use HTTPS");
     }
-    return url;
-  },
-
-  // Returns a promise that resolves with the URI of the remote UI flows.
-  promiseAccountsSignUpURI() {
-    return this._getPrefURL("identity.fxaccounts.remote.signup.uri");
-  },
-
-  // Returns a promise that resolves with the URI of the remote UI flows.
-  promiseAccountsSignInURI() {
-    return this._getPrefURL("identity.fxaccounts.remote.signin.uri");
-  },
-
-  promiseAccountsEmailURI() {
-    return this._getPrefURL("identity.fxaccounts.remote.email.uri");
+    const params = {...this.defaultParams, ...extraParams};
+    for (let [k, v] of Object.entries(params)) {
+      url.searchParams.append(k, v);
+    }
+    if (addCredentials) {
+      const accountData = await this.getSignedInUser();
+      if (!accountData) {
+        return null;
+      }
+      url.searchParams.append("uid", accountData.uid);
+      url.searchParams.append("email", accountData.email);
+    }
+    return url.href;
   },
 
   resetConfigURLs() {
@@ -83,9 +124,45 @@ this.FxAccountsConfig = {
   },
 
   async ensureConfigured() {
-    let isSignedIn = !!(await fxAccounts.getSignedInUser());
+    await this.tryPrefsMigration();
+    let isSignedIn = !!(await this.getSignedInUser());
     if (!isSignedIn) {
       await this.fetchConfigURLs();
+    }
+  },
+
+  // In bug 1427674 we migrated a set of preferences with a shared origin
+  // to a single preference (identity.fxaccounts.remote.root).
+  // This whole function should be removed in version 65 or later once
+  // everyone had a chance to migrate.
+  async tryPrefsMigration() {
+    // If this pref is set, there is a very good chance the user is running
+    // a custom FxA content server.
+    if (!Services.prefs.prefHasUserValue("identity.fxaccounts.remote.signin.uri")) {
+      return;
+    }
+
+    if (Services.prefs.prefHasUserValue("identity.fxaccounts.autoconfig.uri")) {
+      await this.fetchConfigURLs();
+    } else {
+      // Best effort.
+      const signinURI = Services.prefs.getCharPref("identity.fxaccounts.remote.signin.uri");
+      Services.prefs.setCharPref("identity.fxaccounts.remote.root",
+        signinURI.slice(0, signinURI.lastIndexOf("/signin")) + "/");
+    }
+
+    const migratedPrefs = [
+      "identity.fxaccounts.remote.webchannel.uri",
+      "identity.fxaccounts.settings.uri",
+      "identity.fxaccounts.settings.devices.uri",
+      "identity.fxaccounts.remote.signup.uri",
+      "identity.fxaccounts.remote.signin.uri",
+      "identity.fxaccounts.remote.email.uri",
+      "identity.fxaccounts.remote.connectdevice.uri",
+      "identity.fxaccounts.remote.force_auth.uri",
+    ];
+    for (const pref of migratedPrefs) {
+      Services.prefs.clearUserPref(pref);
     }
   },
 
@@ -133,19 +210,7 @@ this.FxAccountsConfig = {
       Services.prefs.setCharPref("identity.fxaccounts.remote.oauth.uri", config.oauth_server_base_url + "/v1");
       Services.prefs.setCharPref("identity.fxaccounts.remote.profile.uri", config.profile_server_base_url + "/v1");
       Services.prefs.setCharPref("identity.sync.tokenserver.uri", config.sync_tokenserver_base_url + "/1.0/sync/1.5");
-      // Update the prefs that are based off of the autoconfig url
-
-      let contextParam = encodeURIComponent(
-        Services.prefs.getCharPref("identity.fxaccounts.contextParam"));
-
-      Services.prefs.setCharPref("identity.fxaccounts.remote.webchannel.uri", rootURL);
-      Services.prefs.setCharPref("identity.fxaccounts.settings.uri", rootURL + "/settings?service=sync&context=" + contextParam);
-      Services.prefs.setCharPref("identity.fxaccounts.settings.devices.uri", rootURL + "/settings/clients?service=sync&context=" + contextParam);
-      Services.prefs.setCharPref("identity.fxaccounts.remote.signup.uri", rootURL + "/signup?service=sync&context=" + contextParam);
-      Services.prefs.setCharPref("identity.fxaccounts.remote.signin.uri", rootURL + "/signin?service=sync&context=" + contextParam);
-      Services.prefs.setCharPref("identity.fxaccounts.remote.email.uri", rootURL + "/?service=sync&context=" + contextParam + "&action=email");
-      Services.prefs.setCharPref("identity.fxaccounts.remote.connectdevice.uri", rootURL + "/connect_another_device?service=sync&context=" + contextParam);
-      Services.prefs.setCharPref("identity.fxaccounts.remote.force_auth.uri", rootURL + "/force_auth?service=sync&context=" + contextParam);
+      Services.prefs.setCharPref("identity.fxaccounts.remote.root", rootURL);
 
       // Ensure the webchannel is pointed at the correct uri
       EnsureFxAccountsWebChannel();
@@ -154,5 +219,10 @@ this.FxAccountsConfig = {
       throw e;
     }
   },
+
+  // For test purposes, returns a Promise.
+  getSignedInUser() {
+    return fxAccounts.getSignedInUser();
+  }
 
 };

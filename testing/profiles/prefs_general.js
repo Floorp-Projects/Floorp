@@ -268,12 +268,8 @@ user_pref("toolkit.telemetry.test.pref2", false);
 // resolves and accepts requests, even if they all fail.
 user_pref("identity.fxaccounts.auth.uri", "https://%(server)s/fxa-dummy/");
 
-// Ditto for all the other Firefox accounts URIs used for about:accounts et al.:
-user_pref("identity.fxaccounts.remote.signup.uri", "https://%(server)s/fxa-signup");
-user_pref("identity.fxaccounts.remote.force_auth.uri", "https://%(server)s/fxa-force-auth");
-user_pref("identity.fxaccounts.remote.signin.uri", "https://%(server)s/fxa-signin");
-user_pref("identity.fxaccounts.settings.uri", "https://%(server)s/fxa-settings");
-user_pref("identity.fxaccounts.remote.webchannel.uri", "https://%(server)s/");
+// Ditto for all the FxA content root URI.
+user_pref("identity.fxaccounts.remote.root", "https://%(server)s/");
 
 // We don't want browser tests to perform FxA device registration.
 user_pref("identity.fxaccounts.skipDeviceRegistration", true);

@@ -16,10 +16,6 @@ config = {
         "--certutil-binary=%(test_install_path)s/bin/certutil",
     ],
 
-    "exes": {
-        'tooltool.py': "/tools/tooltool.py",
-    },
-
     "find_links": [
         "http://pypi.pvt.build.mozilla.org/pub",
         "http://pypi.pub.build.mozilla.org/pub",
@@ -36,8 +32,6 @@ config = {
     "blob_uploader_auth_file" : os.path.join(os.getcwd(), "oauth.txt"),
 
     "download_minidump_stackwalk": True,
-
-    "download_tooltool": True,
 
     # this would normally be in "exes", but "exes" is clobbered by remove_executables
     "geckodriver": "%(abs_test_bin_dir)s/geckodriver",

@@ -24,9 +24,6 @@ config = {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/" + MOZILLA_DIR,
     },
-    "exes": {
-        'tooltool.py': '/builds/tooltool.py',
-    },
     "repos": [{
         "repo": "https://hg.mozilla.org/%(user_repo_override)s/mozilla-beta",
         "branch": "default",
@@ -85,7 +82,6 @@ config = {
         ("/home/cltbld/.ssh", "/home/mock_mozilla/.ssh"),
         ('/home/cltbld/.hgrc', '/builds/.hgrc'),
         ('/builds/relengapi.tok', '/builds/relengapi.tok'),
-        ('/tools/tooltool.py', '/builds/tooltool.py'),
         ('/usr/local/lib/hgext', '/usr/local/lib/hgext'),
         ('/builds/mozilla-fennec-geoloc-api.key', '/builds/mozilla-fennec-geoloc-api.key'),
         ('/builds/adjust-sdk-beta.token', '/builds/adjust-sdk-beta.token'),

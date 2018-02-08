@@ -65,7 +65,7 @@
       SimpleTest.waitForExplicitFinish();
 
       (async function() {
-        await PlacesTestUtils.clearHistory();
+        await PlacesUtils.history.clear();
 
         // Add some visits.
         let timeInMicroseconds = PlacesUtils.toPRTime(Date.now() - 10000);
@@ -134,7 +134,7 @@
         }
 
         // Cleanup.
-        await PlacesTestUtils.clearHistory();
+        await PlacesUtils.history.clear();
       })().then(() => SimpleTest.finish());
     }
   ]]></script>

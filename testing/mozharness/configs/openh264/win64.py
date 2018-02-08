@@ -14,7 +14,6 @@ config = {
    'exes': {
         'gittool.py': [sys.executable, os.path.join(external_tools_path, 'gittool.py')],
         'python2.7': 'c:\\mozilla-build\\python27\\python2.7.exe',
-        'tooltool.py': [sys.executable, "c:\\mozilla-build\\tooltool.py"],
    },
    'dump_syms_binary': 'dump_syms.exe',
    'arch': 'x64',

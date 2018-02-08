@@ -146,6 +146,6 @@ add_task(async function test_history_insert() {
       }
     }
   } finally {
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
   }
 });

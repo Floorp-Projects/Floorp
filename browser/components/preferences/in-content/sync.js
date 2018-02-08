@@ -5,14 +5,12 @@
 /* import-globals-from preferences.js */
 
 ChromeUtils.import("resource://services-sync/main.js");
+ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
   return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js", {});
 });
-
-ChromeUtils.defineModuleGetter(this, "fxAccounts",
-  "resource://gre/modules/FxAccounts.jsm");
 
 ChromeUtils.defineModuleGetter(this, "UIState",
   "resource://services-sync/UIState.jsm");
@@ -146,18 +144,18 @@ var gSyncPane = {
     document.getElementById("fxaMobilePromo-ios").setAttribute("href", url);
 
     // Links for mobile devices shown after the user is logged in.
-    fxAccounts.promiseAccountsConnectDeviceURI(this._getEntryPoint()).then(connectURI => {
+    FxAccounts.config.promiseConnectDeviceURI(this._getEntryPoint()).then(connectURI => {
       document.getElementById("mobilePromo-singledevice").setAttribute("href", connectURI);
     });
 
-    fxAccounts.promiseAccountsManageDevicesURI(this._getEntryPoint()).then(manageURI => {
+    FxAccounts.config.promiseManageDevicesURI(this._getEntryPoint()).then(manageURI => {
       document.getElementById("mobilePromo-multidevice").setAttribute("href", manageURI);
     });
 
     document.getElementById("tosPP-small-ToS").setAttribute("href", Weave.Svc.Prefs.get("fxa.termsURL"));
     document.getElementById("tosPP-small-PP").setAttribute("href", Weave.Svc.Prefs.get("fxa.privacyURL"));
 
-    fxAccounts.promiseAccountsSignUpURI(this._getEntryPoint()).then(signUpURI => {
+    FxAccounts.config.promiseSignUpURI(this._getEntryPoint()).then(signUpURI => {
       document.getElementById("noFxaSignUp").setAttribute("href", signUpURI);
     });
 
@@ -326,7 +324,7 @@ var gSyncPane = {
     }
     // The "manage account" link embeds the uid, so we need to update this
     // if the account state changes.
-    fxAccounts.promiseAccountsManageURI(this._getEntryPoint()).then(accountsManageURI => {
+    FxAccounts.config.promiseManageURI(this._getEntryPoint()).then(accountsManageURI => {
       document.getElementById("verifiedManage").setAttribute("href", accountsManageURI);
     });
     let isUnverified = state.status == UIState.STATUS_NOT_VERIFIED;
@@ -362,7 +360,7 @@ var gSyncPane = {
   },
 
   async signIn() {
-    const url = await fxAccounts.promiseAccountsSignInURI(this._getEntryPoint());
+    const url = await FxAccounts.config.promiseSignInURI(this._getEntryPoint());
     this.replaceTabWithUrl(url);
   },
 
@@ -372,8 +370,8 @@ var gSyncPane = {
     // URL embeds account info and the server endpoint complains if we don't
     // supply it - So we just use the regular "sign in" URL in that case.
     let entryPoint = this._getEntryPoint();
-    const url = (await fxAccounts.promiseAccountsForceSigninURI(entryPoint)) ||
-                (await fxAccounts.promiseAccountsSignInURI(entryPoint));
+    const url = (await FxAccounts.config.promiseForceSigninURI(entryPoint)) ||
+                (await FxAccounts.config.promiseSignInURI(entryPoint));
     this.replaceTabWithUrl(url);
   },
 
@@ -388,7 +386,7 @@ var gSyncPane = {
 
   openChangeProfileImage(event) {
     if (this.clickOrSpaceOrEnterPressed(event)) {
-      fxAccounts.promiseAccountsChangeProfileURI(this._getEntryPoint(), "avatar")
+      FxAccounts.config.promiseChangeAvatarURI(this._getEntryPoint())
         .then(url => {
           this.openContentInBrowser(url, {
             replaceQueryString: true,
@@ -409,7 +407,7 @@ var gSyncPane = {
   },
 
   manageFirefoxAccount() {
-    fxAccounts.promiseAccountsManageURI(this._getEntryPoint())
+    FxAccounts.config.promiseManageURI(this._getEntryPoint())
       .then(url => {
         this.openContentInBrowser(url, {
           replaceQueryString: true,

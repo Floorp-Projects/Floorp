@@ -126,7 +126,7 @@ add_task(async function setup() {
   registerCleanupFunction(function() {
     return new Promise(resolve => {
       function cleanupAndFinish() {
-        PlacesTestUtils.clearHistory().then(() => {
+        PlacesUtils.history.clear().then(() => {
           whenPagesUpdated().then(resolve);
           NewTabUtils.restore();
         });
@@ -194,7 +194,7 @@ function setLinks(aLinks) {
     // given entries and call populateCache() now again to make sure the cache
     // has the desired contents.
     NewTabUtils.links.populateCache(function() {
-      PlacesTestUtils.clearHistory().then(() => {
+      PlacesUtils.history.clear().then(() => {
         fillHistory(links).then(() => {
           NewTabUtils.links.populateCache(function() {
             NewTabUtils.allPages.update();

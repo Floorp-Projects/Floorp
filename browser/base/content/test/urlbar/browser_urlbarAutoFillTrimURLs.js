@@ -8,7 +8,7 @@ add_task(async function setup() {
   registerCleanupFunction(async function() {
     Services.prefs.clearUserPref(PREF_TRIMURL);
     Services.prefs.clearUserPref(PREF_AUTOFILL);
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
     gURLBar.handleRevert();
   });
   Services.prefs.setBoolPref(PREF_TRIMURL, true);

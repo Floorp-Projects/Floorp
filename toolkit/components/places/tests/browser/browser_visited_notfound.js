@@ -7,7 +7,7 @@ add_task(async function test() {
   registerCleanupFunction(async function() {
     Services.prefs.clearUserPref("places.frecency.decayRate");
     await BrowserTestUtils.removeTab(tab);
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
   });
 
   // First add a visit to the page, this will ensure that later we skip

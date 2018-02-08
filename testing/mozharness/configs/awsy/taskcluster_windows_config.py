@@ -13,7 +13,6 @@ config = {
     "exes": {
         'python': sys.executable,
         'mozinstall': ['build/venv/scripts/python', 'build/venv/scripts/mozinstall-script.py'],
-        'tooltool.py': [sys.executable, os.path.join(os.environ['MOZILLABUILD'], 'tooltool.py')],
         'hg': os.path.join(os.environ['PROGRAMFILES'], 'Mercurial', 'hg')
     },
     "proxxy": {},

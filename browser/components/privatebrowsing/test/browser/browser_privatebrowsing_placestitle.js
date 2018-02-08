@@ -15,7 +15,7 @@ add_task(async function test() {
     // delete all cookies
     cm.removeAll();
     // delete all history items
-    return PlacesTestUtils.clearHistory();
+    return PlacesUtils.history.clear();
   }
 
   await cleanup();

@@ -28,17 +28,6 @@ Services.prefs.setCharPref("identity.fxaccounts.loglevel", "Trace");
 Log.repository.getLogger("FirefoxAccounts").level = Log.Level.Trace;
 Services.prefs.setCharPref("services.crypto.jwcrypto.log.level", "Debug");
 
-// The oauth server is mocked, but set these prefs to pass param checks
-Services.prefs.setCharPref("identity.fxaccounts.remote.oauth.uri", "https://example.com/v1");
-Services.prefs.setCharPref("identity.fxaccounts.oauth.client_id", "abc123");
-
-
-const PROFILE_SERVER_URL = "http://example.com/v1";
-const CONTENT_URL = "http://accounts.example.com/";
-
-Services.prefs.setCharPref("identity.fxaccounts.remote.profile.uri", PROFILE_SERVER_URL);
-Services.prefs.setCharPref("identity.fxaccounts.settings.uri", CONTENT_URL);
-
 /*
  * The FxAccountsClient communicates with the remote Firefox
  * Accounts auth server.  Mock the server calls, with a little
@@ -187,28 +176,6 @@ function MakeFxAccounts(internal = {}) {
   }
   return new FxAccounts(internal);
 }
-
-add_task(async function test_non_https_remote_server_uri_with_requireHttps_false() {
-  Services.prefs.setBoolPref(
-    "identity.fxaccounts.allowHttp",
-    true);
-  Services.prefs.setCharPref(
-    "identity.fxaccounts.remote.signup.uri",
-    "http://example.com/browser/browser/base/content/test/general/accounts_testRemoteCommands.html");
-  Assert.equal(await fxAccounts.promiseAccountsSignUpURI(),
-               "http://example.com/browser/browser/base/content/test/general/accounts_testRemoteCommands.html");
-
-  Services.prefs.clearUserPref("identity.fxaccounts.remote.signup.uri");
-  Services.prefs.clearUserPref("identity.fxaccounts.allowHttp");
-});
-
-add_task(async function test_non_https_remote_server_uri() {
-  Services.prefs.setCharPref(
-    "identity.fxaccounts.remote.signup.uri",
-    "http://example.com/browser/browser/base/content/test/general/accounts_testRemoteCommands.html");
-  Assert.rejects(fxAccounts.promiseAccountsSignUpURI(), null, "Firefox Accounts server must use HTTPS");
-  Services.prefs.clearUserPref("identity.fxaccounts.remote.signup.uri");
-});
 
 add_task(async function test_get_signed_in_user_initially_unset() {
   _("Check getSignedInUser initially and after signout reports no user");

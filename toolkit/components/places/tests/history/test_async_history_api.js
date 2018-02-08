@@ -1087,7 +1087,7 @@ add_task(async function test_callbacks_not_supplied() {
 
 // Test that we don't wrongly overwrite typed and hidden when adding new visits.
 add_task(async function test_typed_hidden_not_overwritten() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   let places = [
     { uri: NetUtil.newURI("http://mozilla.org/"),
       title: "test",
@@ -1117,7 +1117,7 @@ add_task(async function test_typed_hidden_not_overwritten() {
 });
 
 add_task(async function test_omit_frecency_notifications() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   let places = [
     { uri: NetUtil.newURI("http://mozilla.org/"),
       title: "test",
@@ -1150,7 +1150,7 @@ add_task(async function test_omit_frecency_notifications() {
 });
 
 add_task(async function test_ignore_errors() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   // This test ensures that trying to add a visit, with a guid already found in
   // another visit, fails - but doesn't report if we told it not to.
   let place = {
@@ -1191,7 +1191,7 @@ add_task(async function test_ignore_errors() {
 });
 
 add_task(async function test_ignore_results() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   let place = {
     uri: NetUtil.newURI("http://mozilla.org/"),
     title: "test",
@@ -1210,7 +1210,7 @@ add_task(async function test_ignore_results() {
 });
 
 add_task(async function test_ignore_results_and_errors() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   // This test ensures that trying to add a visit, with a guid already found in
   // another visit, fails - but doesn't report if we told it not to.
   let place = {

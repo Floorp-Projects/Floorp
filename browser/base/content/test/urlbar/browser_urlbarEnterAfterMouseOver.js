@@ -19,10 +19,10 @@ let gMaxResults;
 
 add_task(async function() {
   registerCleanupFunction(async function() {
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   gMaxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
 

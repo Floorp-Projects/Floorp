@@ -100,6 +100,8 @@ ChromeUtils.defineModuleGetter(this, "OS",
 if (AppConstants.MOZ_DEV_EDITION) {
   ChromeUtils.defineModuleGetter(this, "fxAccounts",
     "resource://gre/modules/FxAccounts.jsm");
+  ChromeUtils.defineModuleGetter(this, "FxAccounts",
+    "resource://gre/modules/FxAccounts.jsm");
 }
 
 Preferences.addAll([
@@ -723,7 +725,7 @@ var gMainPane = {
       win.openUILinkIn("about:preferences#sync", "current");
       return;
     }
-    let url = await fxAccounts.promiseAccountsSignInURI("dev-edition-setup");
+    let url = await FxAccounts.config.promiseSignInURI("dev-edition-setup");
     let accountsTab = win.gBrowser.addTab(url);
     win.gBrowser.selectedTab = accountsTab;
   },

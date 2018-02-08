@@ -390,7 +390,7 @@ add_task(async function test_adaptive() {
       Services.prefs.clearUserPref("browser.urlbar.suggest." + type);
     }
 
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
 
     let resultsCompletedPromise = promiseResultsCompleted();
     await test();

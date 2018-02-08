@@ -24,7 +24,7 @@ add_task(async function() {
   await testForgetThisSiteVisibility(2);
 
   // Cleanup.
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 var testForgetThisSiteVisibility = async function(selectionCount) {

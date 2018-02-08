@@ -4,7 +4,7 @@ const kBlue = "rgb(0, 0, 255)";
 const prefix = "http://example.com/tests/toolkit/components/places/tests/browser/461710_";
 
 add_task(async function() {
-  registerCleanupFunction(PlacesTestUtils.clearHistory);
+  registerCleanupFunction(PlacesUtils.history.clear);
   let contentPage = prefix + "iframe.html";
 
   let normalWindow = await BrowserTestUtils.openNewBrowserWindow();

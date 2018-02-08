@@ -113,7 +113,7 @@ add_task(async function step_7() {
 add_task(async function cleanup() {
   info("Cleaning up");
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 function loadTab(tab, url) {

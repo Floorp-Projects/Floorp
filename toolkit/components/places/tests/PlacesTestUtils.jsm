@@ -131,19 +131,6 @@ this.PlacesTestUtils = Object.freeze({
   },
 
   /**
-   * Clear all history.
-   *
-   * @return {Promise}
-   * @resolves When history was cleared successfully.
-   * @rejects JavaScript exception.
-   *
-   * @deprecated New consumers should directly use PlacesUtils.history.clear().
-   */
-  clearHistory() {
-    return PlacesUtils.history.clear();
-  },
-
-  /**
    * Waits for all pending async statements on the default connection.
    *
    * @return {Promise}

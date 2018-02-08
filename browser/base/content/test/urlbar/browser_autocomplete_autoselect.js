@@ -33,7 +33,7 @@ add_task(async function() {
   Services.prefs.setBoolPref(ONEOFF_URLBAR_PREF, true);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
   registerCleanupFunction(async function() {
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
     Services.prefs.clearUserPref(ONEOFF_URLBAR_PREF);
     await BrowserTestUtils.removeTab(tab);
   });

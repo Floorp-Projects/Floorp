@@ -20,7 +20,7 @@
 
 add_task(async function test_removeByFilter() {
   // Cleanup
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 
   // Adding a witness URI

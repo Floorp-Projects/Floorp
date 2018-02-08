@@ -336,7 +336,7 @@ gTests.push({
     delete this._removeObserver;
     await PlacesTestUtils.promiseAsyncUpdates();
 
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
   }
 });
 
