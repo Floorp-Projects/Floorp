@@ -69,17 +69,45 @@ function removeUnicodeExtensions(locale) {
     return combined;
 }
 
+/* eslint-disable complexity */
 /**
- * Verifies that the given string is a well-formed BCP 47 language tag
- * with no duplicate variant or singleton subtags.
+ * Parser for BCP 47 language tags.
  *
- * Spec: ECMAScript Internationalization API Specification, 6.2.2.
+ * Returns null if |locale| can't be parsed as a Language-Tag. If the input is
+ * an irregular grandfathered language tag, the object
+ *
+ *   {
+ *     locale: locale.toLowerCase(),
+ *     grandfathered: true,
+ *   }
+ *
+ * is returned. Otherwise the returned object has the following structure:
+ *
+ *   {
+ *     locale: locale.toLowerCase(),
+ *     language: language subtag without extlang / undefined,
+ *     extlang1: first extlang subtag / undefined,
+ *     extlang2: second extlang subtag / undefined,
+ *     extlang3: third extlang subtag / undefined,
+ *     script: script subtag / undefined,
+ *     region: region subtag / undefined,
+ *     variants: array of variant subtags,
+ *     extensions: array of extension subtags,
+ *     privateuse: privateuse subtag / undefined,
+ *   }
+ *
+ * All language tag subtags are returned in lower-case:
+ *
+ *   var langtag = parseLanguageTag("en-Latn-US");
+ *   assertEq("en-latn-us", langtag.locale);
+ *   assertEq("en", langtag.language);
+ *   assertEq("latn", langtag.script);
+ *   assertEq("us", langtag.region);
+ *
+ * Spec: RFC 5646 section 2.1.
  */
-function IsStructurallyValidLanguageTag(locale) {
+function parseLanguageTag(locale) {
     assert(typeof locale === "string", "locale is a string");
-
-    // Parser for BCP 47 language tags.
-    // Spec: RFC 5646 section 2.1.
 
     // Current parse index in |locale|.
     var index = 0;
@@ -140,30 +168,49 @@ function IsStructurallyValidLanguageTag(locale) {
         return true;
     }
 
+    // Language tags are compared and processed case-insensitively, so
+    // technically it's not necessary to adjust case. But for easier processing,
+    // and because the canonical form for most subtags is lower case, we start
+    // with lower case for all.
+    //
+    // Note that the tokenizer function keeps using the original input string
+    // to properly detect non-ASCII characters. The lower-case string can't be
+    // used to detect those characters, because some non-ASCII characters
+    // lower-case map into ASCII characters, e.g. U+212A (KELVIN SIGN) lower-
+    // case maps to U+006B (LATIN SMALL LETTER K).
+    var localeLowercase = callFunction(std_String_toLowerCase, locale);
+
     // Returns the code unit of the first character at the current token
-    // position. If the character is an ASCII upper-case character, the
-    // code unit of its lower-case form is returned.
+    // position. Always returns the lower-case form of an alphabetical
+    // character.
     function tokenStartCodeUnitLower() {
-        var c = callFunction(std_String_charCodeAt, locale, tokenStart);
-        if (UPPER_A <= c && c <= UPPER_Z)
-            c |= 0x20;
+        var c = callFunction(std_String_charCodeAt, localeLowercase, tokenStart);
         assert((DIGIT_ZERO <= c && c <= DIGIT_NINE) || (LOWER_A <= c && c <= LOWER_Z),
                "unexpected code unit");
         return c;
+    }
+
+    // Returns the current token part transformed to lower-case.
+    function tokenStringLower() {
+        return Substring(localeLowercase, tokenStart, tokenLength);
     }
 
     // Language-Tag = langtag           ; normal language tags
     //              / privateuse        ; private use tag
     //              / grandfathered     ; grandfathered tags
     if (!nextToken())
-        return false;
+        return null;
 
     // All Language-Tag productions start with the ALPHA token and contain
     // less-or-equal to eight characters.
     if (token !== ALPHA || tokenLength > 8)
-        return false;
+        return null;
 
     assert(tokenLength > 0, "token length is not zero if type is ALPHA");
+
+    var language, extlang1, extlang2, extlang3, script, region, privateuse;
+    var variants = [];
+    var extensions = [];
 
     // langtag = language
     //           ["-" script]
@@ -178,40 +225,47 @@ function IsStructurallyValidLanguageTag(locale) {
         //          / 4ALPHA            ; or reserved for future use
         //          / 5*8ALPHA          ; or registered language subtag
         if (tokenLength <= 3) {
+            language = tokenStringLower();
             if (!nextToken())
-                return false;
+                return null;
 
             // extlang = 3ALPHA         ; selected ISO 639 codes
             //           *2("-" 3ALPHA) ; permanently reserved
             if (token === ALPHA && tokenLength === 3) {
+                extlang1 = tokenStringLower();
                 if (!nextToken())
-                    return false;
+                    return null;
                 if (token === ALPHA && tokenLength === 3) {
+                    extlang2 = tokenStringLower();
                     if (!nextToken())
-                        return false;
+                        return null;
                     if (token === ALPHA && tokenLength === 3) {
+                        extlang3 = tokenStringLower();
                         if (!nextToken())
-                            return false;
+                            return null;
                     }
                 }
             }
         } else {
             assert(4 <= tokenLength && tokenLength <= 8, "reserved/registered language subtags");
+            language = tokenStringLower();
             if (!nextToken())
-                return false;
+                return null;
         }
 
         // script = 4ALPHA              ; ISO 15924 code
         if (tokenLength === 4 && token === ALPHA) {
+            script = tokenStringLower();
             if (!nextToken())
-                return false;
+                return null;
         }
 
         // region = 2ALPHA              ; ISO 3166-1 code
         //        / 3DIGIT              ; UN M.49 code
         if ((tokenLength === 2 && token === ALPHA) || (tokenLength === 3 && token === DIGIT)) {
+            region = tokenStringLower();
             if (!nextToken())
-                return false;
+                return null;
         }
 
         // variant = 5*8alphanum        ; registered variants
@@ -219,24 +273,19 @@ function IsStructurallyValidLanguageTag(locale) {
         //
         // RFC 5646 section 2.1
         // alphanum = (ALPHA / DIGIT)   ; letters and numbers
-        var seenVariants = [];
         while ((5 <= tokenLength && tokenLength <= 8) ||
                (tokenLength === 4 && tokenStartCodeUnitLower() <= DIGIT_NINE))
         {
             assert(!(tokenStartCodeUnitLower() <= DIGIT_NINE) ||
                    tokenStartCodeUnitLower() >= DIGIT_ZERO,
                    "token-start-code-unit <= '9' implies token-start-code-unit is in '0'..'9'");
-            var variant = Substring(locale, tokenStart, tokenLength);
 
             // Language tags are case insensitive (RFC 5646 section 2.1.1).
-            // Compare all seen variants ignoring case differences by first
-            // converting the variant to its lower-case form. This step is
-            // necessary to detect and reject variant repetition with
-            // differing case, e.g. "en-variant-Variant". (Note that there's
-            // no worry about case transformation generating invalid
-            // characters here: we have already verified the variant is
-            // alphanumeric ASCII.)
-            variant = callFunction(std_String_toLowerCase, variant);
+            // All seen variants are compared ignoring case differences by
+            // using the lower-case form. This allows to properly detect and
+            // reject variant repetitions with differing case, e.g.
+            // "en-variant-Variant".
+            var variant = tokenStringLower();
 
             // Reject the language tag if a duplicate variant was found.
             //
@@ -244,12 +293,12 @@ function IsStructurallyValidLanguageTag(locale) {
             // subtag checking is potentially quadratic, but we're okay doing
             // that because language tags are unlikely to be deliberately
             // pathological.
-            if (callFunction(ArrayIndexOf, seenVariants, variant) !== -1)
-                return false;
-            _DefineDataProperty(seenVariants, seenVariants.length, variant);
+            if (callFunction(ArrayIndexOf, variants, variant) !== -1)
+                return null;
+            _DefineDataProperty(variants, variants.length, variant);
 
             if (!nextToken())
-                return false;
+                return null;
         }
 
         // extension = singleton 1*("-" (2*8alphanum))
@@ -260,6 +309,7 @@ function IsStructurallyValidLanguageTag(locale) {
         //           / %x79-7A          ; y - z
         var seenSingletons = [];
         while (tokenLength === 1) {
+            var extensionStart = tokenStart;
             var singleton = tokenStartCodeUnitLower();
             if (singleton === LOWER_X)
                 break;
@@ -277,60 +327,79 @@ function IsStructurallyValidLanguageTag(locale) {
             // but given that there are only 35 possible singletons the
             // quadratic runtime is negligible.
             if (callFunction(ArrayIndexOf, seenSingletons, singleton) !== -1)
-                return false;
+                return null;
             _DefineDataProperty(seenSingletons, seenSingletons.length, singleton);
 
             if (!nextToken())
-                return false;
+                return null;
 
             if (!(2 <= tokenLength && tokenLength <= 8))
-                return false;
+                return null;
             do {
                 if (!nextToken())
-                    return false;
+                    return null;
             } while (2 <= tokenLength && tokenLength <= 8);
+
+            var extension = Substring(localeLowercase, extensionStart,
+                                      (tokenStart - 1 - extensionStart));
+            _DefineDataProperty(extensions, extensions.length, extension);
         }
     }
 
-    // Either trailing privateuse component of the language production or
+    // Either trailing privateuse component of the langtag production or
     // standalone privateuse tag.
     //
     // privateuse = "x" 1*("-" (1*8alphanum))
     if (tokenLength === 1 && tokenStartCodeUnitLower() === LOWER_X) {
+        var privateuseStart = tokenStart;
         if (!nextToken())
-            return false;
+            return null;
 
         if (!(1 <= tokenLength && tokenLength <= 8))
-            return false;
+            return null;
         do {
             if (!nextToken())
-                return false;
+                return null;
         } while (1 <= tokenLength && tokenLength <= 8);
+
+        privateuse = Substring(localeLowercase, privateuseStart,
+                               localeLowercase.length - privateuseStart);
     }
 
     // Return if the complete input was successfully parsed. That means it is
     // either a langtag or privateuse-only language tag, or it is a regular
     // grandfathered language tag.
-    if (token === NONE)
-        return true;
+    if (token === NONE) {
+        return {
+            locale: localeLowercase,
+            language,
+            extlang1,
+            extlang2,
+            extlang3,
+            script,
+            region,
+            variants,
+            extensions,
+            privateuse,
+        };
+    }
 
-    // Ensure any remaining parts are alphanum-only ASCII characters.
+    // Before we can compare the lower-case form of locale to the list of
+    // grandfathered language tags, we need to ensure any remaining parts are
+    // alphanum-only ASCII characters. This step is necessary because locale
+    // could include other characters which lower-case map into ASCII
+    // characters.
+    // For example we need to reject "i-ha\u212A" (U+212A KELVIN SIGN) even
+    // though its lower-case form "i-hak" matches a grandfathered language
+    // tag.
     do {
         if (!nextToken())
-            return false;
+            return null;
     } while (token !== NONE);
-
-    // Convert locale to its lower-case form and compare it to the list of
-    // grandfathered language tags. Because we have just verified the input
-    // contains only ASCII characters, we don't have to worry about case
-    // transformations generating invalid characters here. For example
-    // "i-ha\u212A" (U+212A KELVIN SIGN) is correctly rejected, even though
-    // its lower-case form "i-hak" matches a grandfathered language tag.
-    locale = callFunction(std_String_toLowerCase, locale);
 
     // grandfathered = irregular        ; non-redundant tags registered
     //               / regular          ; during the RFC 3066 era
-    switch (locale) {
+    switch (localeLowercase) {
 #ifdef DEBUG
       // regular = "art-lojban"         ; these tags match the 'langtag'
       //         / "cel-gaulish"        ; production, but their subtags
@@ -387,10 +456,10 @@ function IsStructurallyValidLanguageTag(locale) {
       case "sgn-be-fr":
       case "sgn-be-nl":
       case "sgn-ch-de":
-        return true;
+        return { locale: localeLowercase, grandfathered: true };
 
       default:
-        return false;
+        return null;
     }
 
     #undef NONE
@@ -405,24 +474,154 @@ function IsStructurallyValidLanguageTag(locale) {
     #undef LOWER_X
     #undef LOWER_Z
 }
+/* eslint-enable complexity */
 
 /**
- * Joins the array elements in the given range with the supplied separator.
+ * Verifies that the given string is a well-formed BCP 47 language tag
+ * with no duplicate variant or singleton subtags.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 6.2.2.
  */
-function ArrayJoinRange(array, separator, from, to = array.length) {
-    assert(typeof separator === "string", "|separator| is a string value");
-    assert(typeof from === "number", "|from| is a number value");
-    assert(typeof to === "number", "|to| is a number value");
-    assert(0 <= from && from <= to && to <= array.length, "|from| and |to| form a valid range");
+function IsStructurallyValidLanguageTag(locale) {
+    return parseLanguageTag(locale) !== null;
+}
 
-    if (from === to)
-        return "";
+/**
+ * Canonicalizes the given structurally valid BCP 47 language tag, including
+ * regularized case of subtags. For example, the language tag
+ * Zh-NAN-haNS-bu-variant2-Variant1-u-ca-chinese-t-Zh-laTN-x-PRIVATE, where
+ *
+ *     Zh             ; 2*3ALPHA
+ *     -NAN           ; ["-" extlang]
+ *     -haNS          ; ["-" script]
+ *     -bu            ; ["-" region]
+ *     -variant2      ; *("-" variant)
+ *     -Variant1
+ *     -u-ca-chinese  ; *("-" extension)
+ *     -t-Zh-laTN
+ *     -x-PRIVATE     ; ["-" privateuse]
+ *
+ * becomes nan-Hans-mm-variant2-variant1-t-zh-latn-u-ca-chinese-x-private
+ *
+ * Spec: ECMAScript Internationalization API Specification, 6.2.3.
+ * Spec: RFC 5646, section 4.5.
+ */
+function CanonicalizeLanguageTagFromObject(localeObj) {
+    assert(IsObject(localeObj), "CanonicalizeLanguageTagFromObject");
 
-    var result = array[from];
-    for (var i = from + 1; i < to; i++) {
-        result += separator + array[i];
+    var {locale} = localeObj;
+    assert(locale === callFunction(std_String_toLowerCase, locale),
+           "expected lower-case form for locale string");
+
+    // Handle mappings for complete tags.
+    if (hasOwn(locale, langTagMappings))
+        return langTagMappings[locale];
+
+    assert(!hasOwn("grandfathered", localeObj),
+           "grandfathered tags should be mapped completely");
+
+    var {
+        language,
+        extlang1,
+        extlang2,
+        extlang3,
+        script,
+        region,
+        variants,
+        extensions,
+        privateuse,
+    } = localeObj;
+
+    // Be careful of a Language-Tag that is entirely privateuse.
+    if (!language) {
+        assert(typeof privateuse === "string", "language or privateuse subtag required");
+        return privateuse;
     }
-    return result;
+
+    // Replace deprecated language tags with their preferred values.
+    // "in" -> "id"
+    // Note that the script generating langSubtagMappings makes sure
+    // that no regular subtag mapping will replace an extlang code.
+    if (hasOwn(language, langSubtagMappings))
+        language = langSubtagMappings[language];
+
+    var canonical = language;
+
+    if (extlang1) {
+        // Replace deprecated extlang subtags with their preferred values,
+        // and remove the preceding subtag if it's a redundant prefix.
+        // "zh-nan" -> "nan"
+        // Note that the script generating extlangMappings makes sure that
+        // no extlang mapping will replace a normal language code.
+        // The preferred value for all current deprecated extlang subtags
+        // is equal to the extlang subtag, so we only need remove the
+        // redundant prefix to get the preferred value.
+        if (hasOwn(extlang1, extlangMappings) && extlangMappings[extlang1] === language)
+            canonical = extlang1;
+        else
+            canonical += "-" + extlang1;
+    }
+
+    if (extlang2) {
+        assert(!(hasOwn(extlang2, extlangMappings) && extlangMappings[extlang2] === canonical),
+               "unexpected extlang2 replacement");
+        canonical += "-" + extlang2;
+    }
+
+    if (extlang3) {
+        assert(!(hasOwn(extlang3, extlangMappings) && extlangMappings[extlang3] === canonical),
+               "unexpected extlang3 replacement");
+        canonical += "-" + extlang3;
+    }
+
+    if (script) {
+        // The first character of a script code needs to be capitalized.
+        // "hans" -> "Hans"
+        script = callFunction(std_String_toUpperCase, script[0]) +
+                 Substring(script, 1, script.length - 1);
+
+        assert(!hasOwn(script, langSubtagMappings), "unexpected script replacement");
+
+        canonical += "-" + script;
+    }
+
+    if (region) {
+        // Region codes need to be in upper-case. "bu" -> "BU"
+        region = callFunction(std_String_toUpperCase, region);
+
+        // Replace deprecated subtags with their preferred values.
+        // "BU" -> "MM"
+        // This has to come after we capitalize region codes because
+        // otherwise some language and region codes could be confused.
+        // For example, "in" is an obsolete language code for Indonesian,
+        // but "IN" is the country code for India.
+        if (hasOwn(region, langSubtagMappings))
+            region = langSubtagMappings[region];
+
+        canonical += "-" + region;
+    }
+
+    if (variants.length > 0) {
+#ifdef DEBUG
+        for (var i = 0; i < variants.length; i++)
+            assert(!hasOwn(variants[i], langSubtagMappings), "unexpected variant replacement");
+#endif
+        canonical += "-" + callFunction(std_Array_join, variants, "-");
+    }
+
+    if (extensions.length > 0) {
+        // Extension sequences are sorted by their singleton characters.
+        // "u-ca-chinese-t-zh-latn" -> "t-zh-latn-u-ca-chinese"
+        callFunction(ArraySort, extensions);
+
+        canonical += "-" + callFunction(std_Array_join, extensions, "-");
+    }
+
+    // Private use sequences are left as is. "x-private"
+    if (privateuse)
+        canonical += "-" + privateuse;
+
+    return canonical;
 }
 
 /**
@@ -446,119 +645,10 @@ function ArrayJoinRange(array, separator, from, to = array.length) {
  * Spec: RFC 5646, section 4.5.
  */
 function CanonicalizeLanguageTag(locale) {
-    assert(IsStructurallyValidLanguageTag(locale), "CanonicalizeLanguageTag");
+    var localeObj = parseLanguageTag(locale);
+    assert(localeObj !== null, "CanonicalizeLanguageTag");
 
-    // The input
-    // "Zh-NAN-haNS-bu-variant2-Variant1-u-ca-chinese-t-Zh-laTN-x-PRIVATE"
-    // will be used throughout this method to illustrate how it works.
-
-    // Language tags are compared and processed case-insensitively, so
-    // technically it's not necessary to adjust case. But for easier processing,
-    // and because the canonical form for most subtags is lower case, we start
-    // with lower case for all.
-    // "Zh-NAN-haNS-bu-variant2-Variant1-u-ca-chinese-t-Zh-laTN-x-PRIVATE" ->
-    // "zh-nan-hans-bu-variant2-variant1-u-ca-chinese-t-zh-latn-x-private"
-    locale = callFunction(std_String_toLowerCase, locale);
-
-    // Handle mappings for complete tags.
-    if (hasOwn(locale, langTagMappings))
-        return langTagMappings[locale];
-
-    var subtags = StringSplitString(locale, "-");
-    var i = 0;
-
-    // Handle the standard part: All subtags before the first singleton or "x".
-    // "zh-nan-hans-bu-variant2-variant1"
-    while (i < subtags.length) {
-        var subtag = subtags[i];
-
-        // If we reach the start of an extension sequence or private use part,
-        // we're done with this loop. We have to check for i > 0 because for
-        // irregular language tags, such as i-klingon, the single-character
-        // subtag "i" is not the start of an extension sequence.
-        // In the example, we break at "u".
-        if (subtag.length === 1 && (i > 0 || subtag === "x"))
-            break;
-
-        if (i !== 0) {
-            if (subtag.length === 4) {
-                // 4-character subtags that are not in initial position are
-                // script codes; their first character needs to be capitalized.
-                // "hans" -> "Hans"
-                subtag = callFunction(std_String_toUpperCase, subtag[0]) +
-                         callFunction(String_substring, subtag, 1);
-            } else if (subtag.length === 2) {
-                // 2-character subtags that are not in initial position are
-                // region codes; they need to be upper case. "bu" -> "BU"
-                subtag = callFunction(std_String_toUpperCase, subtag);
-            }
-        }
-        if (hasOwn(subtag, langSubtagMappings)) {
-            // Replace deprecated subtags with their preferred values.
-            // "BU" -> "MM"
-            // This has to come after we capitalize region codes because
-            // otherwise some language and region codes could be confused.
-            // For example, "in" is an obsolete language code for Indonesian,
-            // but "IN" is the country code for India.
-            // Note that the script generating langSubtagMappings makes sure
-            // that no regular subtag mapping will replace an extlang code.
-            subtag = langSubtagMappings[subtag];
-        } else if (hasOwn(subtag, extlangMappings)) {
-            // Replace deprecated extlang subtags with their preferred values,
-            // and remove the preceding subtag if it's a redundant prefix.
-            // "zh-nan" -> "nan"
-            // Note that the script generating extlangMappings makes sure that
-            // no extlang mapping will replace a normal language code.
-            // The preferred value for all current deprecated extlang subtags
-            // is equal to the extlang subtag, so we only need remove the
-            // redundant prefix to get the preferred value.
-            if (i === 1 && extlangMappings[subtag] === subtags[0]) {
-                callFunction(std_Array_shift, subtags);
-                i--;
-            }
-        }
-        subtags[i] = subtag;
-        i++;
-    }
-
-    // Directly return when the language tag doesn't contain any extension or
-    // private use sub-tags.
-    if (i === subtags.length)
-        return callFunction(std_Array_join, subtags, "-");
-
-    var normal = ArrayJoinRange(subtags, "-", 0, i);
-
-    // Extension sequences are sorted by their singleton characters.
-    // "u-ca-chinese-t-zh-latn" -> "t-zh-latn-u-ca-chinese"
-    var extensions = [];
-    while (i < subtags.length && subtags[i] !== "x") {
-        var extensionStart = i;
-        i++;
-        while (i < subtags.length && subtags[i].length > 1)
-            i++;
-        var extension = ArrayJoinRange(subtags, "-", extensionStart, i);
-        _DefineDataProperty(extensions, extensions.length, extension);
-    }
-    callFunction(ArraySort, extensions);
-
-    // Private use sequences are left as is. "x-private"
-    var privateUse = "";
-    if (i < subtags.length)
-        privateUse = ArrayJoinRange(subtags, "-", i);
-
-    // Put everything back together.
-    var canonical = normal;
-    if (extensions.length > 0)
-        canonical += "-" + callFunction(std_Array_join, extensions, "-");
-    if (privateUse.length > 0) {
-        // Be careful of a Language-Tag that is entirely privateuse.
-        if (canonical.length > 0)
-            canonical += "-" + privateUse;
-        else
-            canonical = privateUse;
-    }
-
-    return canonical;
+    return CanonicalizeLanguageTagFromObject(localeObj);
 }
 
 /**
@@ -609,10 +699,11 @@ function ValidateAndCanonicalizeLanguageTag(locale) {
         return locale;
     }
 
-    if (!IsStructurallyValidLanguageTag(locale))
+    var localeObj = parseLanguageTag(locale);
+    if (localeObj === null)
         ThrowRangeError(JSMSG_INVALID_LANGUAGE_TAG, locale);
 
-    return CanonicalizeLanguageTag(locale);
+    return CanonicalizeLanguageTagFromObject(localeObj);
 }
 
 function localeContainsNoUnicodeExtensions(locale) {
@@ -677,11 +768,11 @@ function DefaultLocaleIgnoringAvailableLocales() {
 
     // If we didn't get a cache hit, compute the candidate default locale and
     // cache it.  Fall back on the last-ditch locale when necessary.
-    var candidate;
-    if (!IsStructurallyValidLanguageTag(runtimeDefaultLocale)) {
+    var candidate = parseLanguageTag(runtimeDefaultLocale);
+    if (candidate === null) {
         candidate = lastDitchLocale();
     } else {
-        candidate = CanonicalizeLanguageTag(runtimeDefaultLocale);
+        candidate = CanonicalizeLanguageTagFromObject(candidate);
 
         // The default locale must be in [[availableLocales]], and that list
         // must not contain any locales with Unicode extension sequences, so
@@ -779,11 +870,8 @@ function addSpecialMissingLanguageTags(availableLocales) {
 function CanonicalizeLocaleList(locales) {
     if (locales === undefined)
         return [];
-    if (typeof locales === "string") {
-        if (!IsStructurallyValidLanguageTag(locales))
-            ThrowRangeError(JSMSG_INVALID_LANGUAGE_TAG, locales);
-        return [CanonicalizeLanguageTag(locales)];
-    }
+    if (typeof locales === "string")
+        return [ValidateAndCanonicalizeLanguageTag(locales)];
     var seen = [];
     var O = ToObject(locales);
     var len = ToLength(O.length);
@@ -796,9 +884,7 @@ function CanonicalizeLocaleList(locales) {
             if (!(typeof kValue === "string" || IsObject(kValue)))
                 ThrowTypeError(JSMSG_INVALID_LOCALES_ELEMENT);
             var tag = ToString(kValue);
-            if (!IsStructurallyValidLanguageTag(tag))
-                ThrowRangeError(JSMSG_INVALID_LANGUAGE_TAG, tag);
-            tag = CanonicalizeLanguageTag(tag);
+            tag = ValidateAndCanonicalizeLanguageTag(tag);
             if (callFunction(ArrayIndexOf, seen, tag) === -1)
                 _DefineDataProperty(seen, seen.length, tag);
         }
