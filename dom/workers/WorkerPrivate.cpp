@@ -1539,26 +1539,6 @@ WorkerPrivate::SetReferrerPolicyFromHeaderValue(const nsACString& aReferrerPolic
   SetReferrerPolicy(policy);
 }
 
-template <class Derived>
-WorkerPrivateParent<Derived>::WorkerPrivateParent(
-                                           WorkerPrivate* aParent,
-                                           const nsAString& aScriptURL,
-                                           bool aIsChromeWorker,
-                                           WorkerType aWorkerType,
-                                           const nsAString& aWorkerName,
-                                           const nsACString& aServiceWorkerScope,
-                                           WorkerLoadInfo& aLoadInfo)
-: mMutex("WorkerPrivateParent Mutex"),
-  mCondVar(mMutex, "WorkerPrivateParent CondVar")
-{
-}
-
-template <class Derived>
-WorkerPrivateParent<Derived>::~WorkerPrivateParent()
-{
-  DropJSObjects(this);
-}
-
 void
 WorkerPrivate::Traverse(nsCycleCollectionTraversalCallback& aCb)
 {
@@ -2600,10 +2580,8 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
                              const nsAString& aWorkerName,
                              const nsACString& aServiceWorkerScope,
                              WorkerLoadInfo& aLoadInfo)
-  : WorkerPrivateParent<WorkerPrivate>(aParent, aScriptURL,
-                                       aIsChromeWorker, aWorkerType,
-                                       aWorkerName, aServiceWorkerScope,
-                                       aLoadInfo)
+  : mMutex("WorkerPrivate Mutex")
+  , mCondVar(mMutex, "WorkerPrivate CondVar")
   , mParent(aParent)
   , mScriptURL(aScriptURL)
   , mWorkerName(aWorkerName)
@@ -2739,6 +2717,8 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
 
 WorkerPrivate::~WorkerPrivate()
 {
+  DropJSObjects(this);
+
   mWorkerControlEventTarget->ForgetWorkerPrivate(this);
 
   // We force the hybrid event target to forget the thread when we
@@ -5372,9 +5352,6 @@ WorkerPrivate::EventTarget::IsOnCurrentThreadInfallible()
 
   return mWorkerPrivate->IsOnCurrentThread();
 }
-
-// Force instantiation.
-template class WorkerPrivateParent<WorkerPrivate>;
 
 } // dom namespace
 } // mozilla namespace
