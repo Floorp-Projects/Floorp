@@ -2145,6 +2145,14 @@ MacroAssembler::cmp32Move32(Condition cond, Register lhs, Register rhs, Register
 }
 
 void
+MacroAssembler::cmp32MovePtr(Condition cond, Register lhs, Imm32 rhs, Register src,
+                             Register dest)
+{
+    cmp32(lhs, rhs);
+    ma_mov(src, dest, LeaveCC, cond);
+}
+
+void
 MacroAssembler::cmp32Move32(Condition cond, Register lhs, const Address& rhs, Register src,
                             Register dest)
 {
