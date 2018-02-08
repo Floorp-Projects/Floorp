@@ -58,32 +58,32 @@ static const nsCSSProps::KTableEntry kDisplayModeKeywords[] = {
 
 #ifdef XP_WIN
 struct WindowsThemeName {
-  LookAndFeel::WindowsTheme id;
-  const wchar_t* name;
+  LookAndFeel::WindowsTheme mId;
+  nsStaticAtom** mName;
 };
 
 // Windows theme identities used in the -moz-windows-theme media query.
-const WindowsThemeName themeStrings[] = {
-  { LookAndFeel::eWindowsTheme_Aero,       L"aero" },
-  { LookAndFeel::eWindowsTheme_AeroLite,   L"aero-lite" },
-  { LookAndFeel::eWindowsTheme_LunaBlue,   L"luna-blue" },
-  { LookAndFeel::eWindowsTheme_LunaOlive,  L"luna-olive" },
-  { LookAndFeel::eWindowsTheme_LunaSilver, L"luna-silver" },
-  { LookAndFeel::eWindowsTheme_Royale,     L"royale" },
-  { LookAndFeel::eWindowsTheme_Zune,       L"zune" },
-  { LookAndFeel::eWindowsTheme_Generic,    L"generic" }
+const WindowsThemeName kThemeStrings[] = {
+  { LookAndFeel::eWindowsTheme_Aero,       &nsGkAtoms::aero },
+  { LookAndFeel::eWindowsTheme_AeroLite,   &nsGkAtoms::aero_lite },
+  { LookAndFeel::eWindowsTheme_LunaBlue,   &nsGkAtoms::luna_blue },
+  { LookAndFeel::eWindowsTheme_LunaOlive,  &nsGkAtoms::luna_olive },
+  { LookAndFeel::eWindowsTheme_LunaSilver, &nsGkAtoms::luna_silver },
+  { LookAndFeel::eWindowsTheme_Royale,     &nsGkAtoms::royale },
+  { LookAndFeel::eWindowsTheme_Zune,       &nsGkAtoms::zune },
+  { LookAndFeel::eWindowsTheme_Generic,    &nsGkAtoms::generic_ }
 };
 
 struct OperatingSystemVersionInfo {
-  LookAndFeel::OperatingSystemVersion id;
-  const wchar_t* name;
+  LookAndFeel::OperatingSystemVersion mId;
+  nsStaticAtom** mName;
 };
 
 // Os version identities used in the -moz-os-version media query.
-const OperatingSystemVersionInfo osVersionStrings[] = {
-  { LookAndFeel::eOperatingSystemVersion_Windows7,      L"windows-win7" },
-  { LookAndFeel::eOperatingSystemVersion_Windows8,      L"windows-win8" },
-  { LookAndFeel::eOperatingSystemVersion_Windows10,     L"windows-win10" }
+const OperatingSystemVersionInfo kOsVersionStrings[] = {
+  { LookAndFeel::eOperatingSystemVersion_Windows7,  &nsGkAtoms::windows_win7 },
+  { LookAndFeel::eOperatingSystemVersion_Windows8,  &nsGkAtoms::windows_win8 },
+  { LookAndFeel::eOperatingSystemVersion_Windows10, &nsGkAtoms::windows_win10 }
 };
 #endif
 
@@ -486,10 +486,9 @@ GetWindowsTheme(nsIDocument* aDocument, const nsMediaFeature* aFeature,
     return;
 
   // Look up the appropriate theme string
-  for (size_t i = 0; i < ArrayLength(themeStrings); ++i) {
-    if (windowsThemeId == themeStrings[i].id) {
-      aResult.SetStringValue(nsDependentString(themeStrings[i].name),
-                             eCSSUnit_Ident);
+  for (const auto& theme : kThemeStrings) {
+    if (windowsThemeId == theme.mId) {
+      aResult.SetAtomIdentValue((*theme.mName)->ToAddRefed());
       break;
     }
   }
@@ -512,10 +511,9 @@ GetOperatingSystemVersion(nsIDocument* aDocument, const nsMediaFeature* aFeature
   if (NS_SUCCEEDED(
         LookAndFeel::GetInt(LookAndFeel::eIntID_OperatingSystemVersionIdentifier,
                             &metricResult))) {
-    for (size_t i = 0; i < ArrayLength(osVersionStrings); ++i) {
-      if (metricResult == osVersionStrings[i].id) {
-        aResult.SetStringValue(nsDependentString(osVersionStrings[i].name),
-                               eCSSUnit_Ident);
+    for (const auto& osVersion : kOsVersionStrings) {
+      if (metricResult == osVersion.mId) {
+        aResult.SetAtomIdentValue((*osVersion.mName)->ToAddRefed());
         break;
       }
     }
