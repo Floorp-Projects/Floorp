@@ -131,8 +131,6 @@ protected:
 
 private:
 
-  Atomic<bool> mLoadingWorkerScript;
-
   // Only used for top level workers.
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
 
@@ -143,7 +141,6 @@ private:
   // SharedWorkers may have multiple windows paused, so this must be
   // a count instead of just a boolean.
   uint32_t mParentWindowPausedDepth;
-  WorkerType mWorkerType;
 
 protected:
   WorkerPrivateParent(WorkerPrivate* aParent,
@@ -300,29 +297,6 @@ public:
     return mParentWindowPausedDepth > 0;
   }
 
-  // This is used to handle importScripts(). When the worker is first loaded
-  // and executed, it happens in a sync loop. At this point it sets
-  // mLoadingWorkerScript to true. importScripts() calls that occur during the
-  // execution run in nested sync loops and so this continues to return true,
-  // leading to these scripts being cached offline.
-  // mLoadingWorkerScript is set to false when the top level loop ends.
-  // importScripts() in function calls or event handlers are always fetched
-  // from the network.
-  bool
-  LoadScriptAsPartOfLoadingServiceWorkerScript()
-  {
-    MOZ_ASSERT(IsServiceWorker());
-    return mLoadingWorkerScript;
-  }
-
-  void
-  SetLoadingWorkerScript(bool aLoadingWorkerScript)
-  {
-    // any thread
-    MOZ_ASSERT(IsServiceWorker());
-    mLoadingWorkerScript = aLoadingWorkerScript;
-  }
-
   nsresult
   SetPrincipalOnMainThread(nsIPrincipal* aPrincipal, nsILoadGroup* aLoadGroup);
 
@@ -338,52 +312,6 @@ public:
 #endif
 
   nsIDocument* GetDocument() const;
-
-  WorkerType
-  Type() const
-  {
-    return mWorkerType;
-  }
-
-  bool
-  IsDedicatedWorker() const
-  {
-    return mWorkerType == WorkerTypeDedicated;
-  }
-
-  bool
-  IsSharedWorker() const
-  {
-    return mWorkerType == WorkerTypeShared;
-  }
-
-  bool
-  IsServiceWorker() const
-  {
-    return mWorkerType == WorkerTypeService;
-  }
-
-  nsContentPolicyType
-  ContentPolicyType() const
-  {
-    return ContentPolicyType(mWorkerType);
-  }
-
-  static nsContentPolicyType
-  ContentPolicyType(WorkerType aWorkerType)
-  {
-    switch (aWorkerType) {
-    case WorkerTypeDedicated:
-      return nsIContentPolicy::TYPE_INTERNAL_WORKER;
-    case WorkerTypeShared:
-      return nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER;
-    case WorkerTypeService:
-      return nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Invalid worker type");
-      return nsIContentPolicy::TYPE_INVALID;
-    }
-  }
 
   void
   GetAllSharedWorkers(nsTArray<RefPtr<SharedWorker>>& aSharedWorkers);
@@ -451,6 +379,8 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 
   // This is the worker name for shared workers and dedicated workers.
   nsString mWorkerName;
+
+  WorkerType mWorkerType;
 
   // The worker is owned by its thread, which is represented here.  This is set
   // in Constructor() and emptied by WorkerFinishedRunnable, and conditionally
@@ -563,6 +493,8 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   // This is touched on parent thread only, but it can be read on a different
   // thread before crashing because hanging.
   Atomic<uint64_t> mBusyCount;
+
+  Atomic<bool> mLoadingWorkerScript;
 
   TimeStamp mCreationTimeStamp;
   DOMHighResTimeStamp mCreationTimeHighRes;
@@ -1124,6 +1056,52 @@ public:
     return mWorkerName;
   }
 
+  WorkerType
+  Type() const
+  {
+    return mWorkerType;
+  }
+
+  bool
+  IsDedicatedWorker() const
+  {
+    return mWorkerType == WorkerTypeDedicated;
+  }
+
+  bool
+  IsSharedWorker() const
+  {
+    return mWorkerType == WorkerTypeShared;
+  }
+
+  bool
+  IsServiceWorker() const
+  {
+    return mWorkerType == WorkerTypeService;
+  }
+
+  nsContentPolicyType
+  ContentPolicyType() const
+  {
+    return ContentPolicyType(mWorkerType);
+  }
+
+  static nsContentPolicyType
+  ContentPolicyType(WorkerType aWorkerType)
+  {
+    switch (aWorkerType) {
+    case WorkerTypeDedicated:
+      return nsIContentPolicy::TYPE_INTERNAL_WORKER;
+    case WorkerTypeShared:
+      return nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER;
+    case WorkerTypeService:
+      return nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid worker type");
+      return nsIContentPolicy::TYPE_INVALID;
+    }
+  }
+
   nsIScriptContext*
   GetScriptContext() const
   {
@@ -1390,6 +1368,29 @@ public:
   StealLoadFailedAsyncRunnable()
   {
     return mLoadInfo.mLoadFailedAsyncRunnable.forget();
+  }
+
+  // This is used to handle importScripts(). When the worker is first loaded
+  // and executed, it happens in a sync loop. At this point it sets
+  // mLoadingWorkerScript to true. importScripts() calls that occur during the
+  // execution run in nested sync loops and so this continues to return true,
+  // leading to these scripts being cached offline.
+  // mLoadingWorkerScript is set to false when the top level loop ends.
+  // importScripts() in function calls or event handlers are always fetched
+  // from the network.
+  bool
+  LoadScriptAsPartOfLoadingServiceWorkerScript()
+  {
+    MOZ_ASSERT(IsServiceWorker());
+    return mLoadingWorkerScript;
+  }
+
+  void
+  SetLoadingWorkerScript(bool aLoadingWorkerScript)
+  {
+    // any thread
+    MOZ_ASSERT(IsServiceWorker());
+    mLoadingWorkerScript = aLoadingWorkerScript;
   }
 
 private:
