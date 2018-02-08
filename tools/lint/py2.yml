@@ -61,3 +61,4 @@ py2:
     extensions: ['py']
     type: external
     payload: python.compat:lintpy2
+    setup: python.compat:setuppy2
