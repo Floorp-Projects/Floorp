@@ -1719,9 +1719,8 @@ WorkerPrivateParent<Derived>::DispatchDebuggerRunnable(
   return NS_OK;
 }
 
-template <class Derived>
 already_AddRefed<WorkerRunnable>
-WorkerPrivateParent<Derived>::MaybeWrapAsWorkerRunnable(already_AddRefed<nsIRunnable> aRunnable)
+WorkerPrivate::MaybeWrapAsWorkerRunnable(already_AddRefed<nsIRunnable> aRunnable)
 {
   // May be called on any thread!
 
@@ -1739,8 +1738,7 @@ WorkerPrivateParent<Derived>::MaybeWrapAsWorkerRunnable(already_AddRefed<nsIRunn
     MOZ_CRASH("All runnables destined for a worker thread must be cancelable!");
   }
 
-  workerRunnable =
-    new ExternalRunnableWrapper(ParentAsWorkerPrivate(), runnable);
+  workerRunnable = new ExternalRunnableWrapper(this, runnable);
   return workerRunnable.forget();
 }
 
@@ -2022,26 +2020,22 @@ WorkerPrivate::ModifyBusyCount(bool aIncrease)
   return true;
 }
 
-template <class Derived>
 bool
-WorkerPrivateParent<Derived>::ProxyReleaseMainThreadObjects()
+WorkerPrivate::ProxyReleaseMainThreadObjects()
 {
   AssertIsOnParentThread();
-
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-  MOZ_ASSERT(!self->mMainThreadObjectsForgotten);
+  MOZ_ASSERT(!mMainThreadObjectsForgotten);
 
   nsCOMPtr<nsILoadGroup> loadGroupToCancel;
   // If we're not overriden, then do nothing here.  Let the load group get
   // handled in ForgetMainThreadObjects().
-  if (self->mLoadInfo.mInterfaceRequestor) {
-    self->mLoadInfo.mLoadGroup.swap(loadGroupToCancel);
+  if (mLoadInfo.mInterfaceRequestor) {
+    mLoadInfo.mLoadGroup.swap(loadGroupToCancel);
   }
 
-  bool result = self->mLoadInfo.ProxyReleaseMainThreadObjects(self,
-                                                              loadGroupToCancel);
+  bool result = mLoadInfo.ProxyReleaseMainThreadObjects(this, loadGroupToCancel);
 
-  self->mMainThreadObjectsForgotten = true;
+  mMainThreadObjectsForgotten = true;
 
   return result;
 }
