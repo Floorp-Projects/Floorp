@@ -1837,23 +1837,23 @@ WorkerPrivateParent<Derived>::Freeze(nsPIDOMWindowInner* aWindow)
   // Shared workers are only frozen if all of their owning documents are
   // frozen. It can happen that mSharedWorkers is empty but this thread has
   // not been unregistered yet.
-  if ((self->IsSharedWorker() || self->IsServiceWorker()) && !mSharedWorkers.IsEmpty()) {
+  if ((self->IsSharedWorker() || self->IsServiceWorker()) && !self->mSharedWorkers.IsEmpty()) {
     AssertIsOnMainThread();
 
     bool allFrozen = true;
 
-    for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
-      if (aWindow && mSharedWorkers[i]->GetOwner() == aWindow) {
+    for (uint32_t i = 0; i < self->mSharedWorkers.Length(); ++i) {
+      if (aWindow && self->mSharedWorkers[i]->GetOwner() == aWindow) {
         // Calling Freeze() may change the refcount, ensure that the worker
         // outlives this call.
-        RefPtr<SharedWorker> kungFuDeathGrip = mSharedWorkers[i];
+        RefPtr<SharedWorker> kungFuDeathGrip = self->mSharedWorkers[i];
 
         kungFuDeathGrip->Freeze();
       } else {
-        MOZ_ASSERT_IF(mSharedWorkers[i]->GetOwner() && aWindow,
-                      !SameCOMIdentity(mSharedWorkers[i]->GetOwner(),
+        MOZ_ASSERT_IF(self->mSharedWorkers[i]->GetOwner() && aWindow,
+                      !SameCOMIdentity(self->mSharedWorkers[i]->GetOwner(),
                                        aWindow));
-        if (!mSharedWorkers[i]->IsFrozen()) {
+        if (!self->mSharedWorkers[i]->IsFrozen()) {
           allFrozen = false;
         }
       }
@@ -1897,24 +1897,24 @@ WorkerPrivateParent<Derived>::Thaw(nsPIDOMWindowInner* aWindow)
   // Shared workers are resumed if any of their owning documents are thawed.
   // It can happen that mSharedWorkers is empty but this thread has not been
   // unregistered yet.
-  if ((self->IsSharedWorker() || self->IsServiceWorker()) && !mSharedWorkers.IsEmpty()) {
+  if ((self->IsSharedWorker() || self->IsServiceWorker()) && !self->mSharedWorkers.IsEmpty()) {
     AssertIsOnMainThread();
 
     bool anyRunning = false;
 
-    for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
-      if (aWindow && mSharedWorkers[i]->GetOwner() == aWindow) {
+    for (uint32_t i = 0; i < self->mSharedWorkers.Length(); ++i) {
+      if (aWindow && self->mSharedWorkers[i]->GetOwner() == aWindow) {
         // Calling Thaw() may change the refcount, ensure that the worker
         // outlives this call.
-        RefPtr<SharedWorker> kungFuDeathGrip = mSharedWorkers[i];
+        RefPtr<SharedWorker> kungFuDeathGrip = self->mSharedWorkers[i];
 
         kungFuDeathGrip->Thaw();
         anyRunning = true;
       } else {
-        MOZ_ASSERT_IF(mSharedWorkers[i]->GetOwner() && aWindow,
-                      !SameCOMIdentity(mSharedWorkers[i]->GetOwner(),
+        MOZ_ASSERT_IF(self->mSharedWorkers[i]->GetOwner() && aWindow,
+                      !SameCOMIdentity(self->mSharedWorkers[i]->GetOwner(),
                                        aWindow));
-        if (!mSharedWorkers[i]->IsFrozen()) {
+        if (!self->mSharedWorkers[i]->IsFrozen()) {
           anyRunning = true;
         }
       }
@@ -2238,21 +2238,17 @@ WorkerPrivateParent<Derived>::MemoryPressure(bool aDummy)
   Unused << NS_WARN_IF(!runnable->Dispatch());
 }
 
-template <class Derived>
 bool
-WorkerPrivateParent<Derived>::RegisterSharedWorker(SharedWorker* aSharedWorker,
-                                                   MessagePort* aPort)
+WorkerPrivate::RegisterSharedWorker(SharedWorker* aSharedWorker,
+                                    MessagePort* aPort)
 {
   AssertIsOnMainThread();
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-
   MOZ_ASSERT(aSharedWorker);
-  MOZ_ASSERT(self->IsSharedWorker());
+  MOZ_ASSERT(IsSharedWorker());
   MOZ_ASSERT(!mSharedWorkers.Contains(aSharedWorker));
 
-  if (self->IsSharedWorker()) {
-    RefPtr<MessagePortRunnable> runnable =
-      new MessagePortRunnable(ParentAsWorkerPrivate(), aPort);
+  if (IsSharedWorker()) {
+    RefPtr<MessagePortRunnable> runnable = new MessagePortRunnable(this, aPort);
     if (!runnable->Dispatch()) {
       return false;
     }
@@ -2262,19 +2258,18 @@ WorkerPrivateParent<Derived>::RegisterSharedWorker(SharedWorker* aSharedWorker,
 
   // If there were other SharedWorker objects attached to this worker then they
   // may all have been frozen and this worker would need to be thawed.
-  if (mSharedWorkers.Length() > 1 && self->IsFrozen() && !Thaw(nullptr)) {
+  if (mSharedWorkers.Length() > 1 && IsFrozen() && !Thaw(nullptr)) {
     return false;
   }
 
   return true;
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
-                                                    JSContext* aCx,
-                                                    const WorkerErrorReport* aReport,
-                                                    bool aIsErrorEvent)
+WorkerPrivate::BroadcastErrorToSharedWorkers(
+                                     JSContext* aCx,
+                                     const WorkerErrorReport* aReport,
+                                     bool aIsErrorEvent)
 {
   AssertIsOnMainThread();
 
@@ -2405,14 +2400,11 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
   }
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::GetAllSharedWorkers(
-                               nsTArray<RefPtr<SharedWorker>>& aSharedWorkers)
+WorkerPrivate::GetAllSharedWorkers(nsTArray<RefPtr<SharedWorker>>& aSharedWorkers)
 {
   AssertIsOnMainThread();
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-  MOZ_ASSERT(self->IsSharedWorker() || self->IsServiceWorker());
+  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
 
   if (!aSharedWorkers.IsEmpty()) {
     aSharedWorkers.Clear();
@@ -2423,14 +2415,11 @@ WorkerPrivateParent<Derived>::GetAllSharedWorkers(
   }
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::CloseSharedWorkersForWindow(
-                                                    nsPIDOMWindowInner* aWindow)
+WorkerPrivate::CloseSharedWorkersForWindow(nsPIDOMWindowInner* aWindow)
 {
   AssertIsOnMainThread();
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-  MOZ_ASSERT(self->IsSharedWorker() || self->IsServiceWorker());
+  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
   MOZ_ASSERT(aWindow);
 
   bool someRemoved = false;
@@ -2441,8 +2430,7 @@ WorkerPrivateParent<Derived>::CloseSharedWorkersForWindow(
       mSharedWorkers.RemoveElementAt(i);
       someRemoved = true;
     } else {
-      MOZ_ASSERT(!SameCOMIdentity(mSharedWorkers[i]->GetOwner(),
-                                  aWindow));
+      MOZ_ASSERT(!SameCOMIdentity(mSharedWorkers[i]->GetOwner(), aWindow));
       ++i;
     }
   }
@@ -2462,13 +2450,11 @@ WorkerPrivateParent<Derived>::CloseSharedWorkersForWindow(
   }
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::CloseAllSharedWorkers()
+WorkerPrivate::CloseAllSharedWorkers()
 {
   AssertIsOnMainThread();
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-  MOZ_ASSERT(self->IsSharedWorker() || self->IsServiceWorker());
+  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
 
   for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
     mSharedWorkers[i]->Close();
@@ -2601,10 +2587,8 @@ WorkerPrivateParent<Derived>::UpdateOverridenLoadGroup(nsILoadGroup* aBaseLoadGr
   self->mLoadInfo.mInterfaceRequestor->MaybeAddTabChild(aBaseLoadGroup);
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::FlushReportsToSharedWorkers(
-                                           nsIConsoleReportCollector* aReporter)
+WorkerPrivate::FlushReportsToSharedWorkers(nsIConsoleReportCollector* aReporter)
 {
   AssertIsOnMainThread();
 
