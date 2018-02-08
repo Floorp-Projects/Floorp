@@ -12,5 +12,6 @@ addIntlExtras(Intl);
 rtf = new Intl.RelativeTimeFormat("en-us");
 assertEq(rtf.resolvedOptions().locale, "en-US");
 assertEq(rtf.resolvedOptions().style, "long");
+assertEq(rtf.resolvedOptions().numeric, "always");
 
 reportCompare(0, 0, 'ok');
