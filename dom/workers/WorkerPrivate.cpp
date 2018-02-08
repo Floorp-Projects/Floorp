@@ -1744,19 +1744,16 @@ WorkerPrivateParent<Derived>::MaybeWrapAsWorkerRunnable(already_AddRefed<nsIRunn
   return workerRunnable.forget();
 }
 
-template <class Derived>
 bool
-WorkerPrivateParent<Derived>::Start()
+WorkerPrivate::Start()
 {
   // May be called on any thread!
   {
     MutexAutoLock lock(mMutex);
-    WorkerPrivate* self = ParentAsWorkerPrivate();
+    NS_ASSERTION(mParentStatus != Running, "How can this be?!");
 
-    NS_ASSERTION(self->mParentStatus != Running, "How can this be?!");
-
-    if (self->mParentStatus == Pending) {
-      self->mParentStatus = Running;
+    if (mParentStatus == Pending) {
+      mParentStatus = Running;
       return true;
     }
   }
@@ -1765,30 +1762,28 @@ WorkerPrivateParent<Derived>::Start()
 }
 
 // aCx is null when called from the finalizer
-template <class Derived>
 bool
-WorkerPrivateParent<Derived>::NotifyPrivate(WorkerStatus aStatus)
+WorkerPrivate::NotifyPrivate(WorkerStatus aStatus)
 {
   AssertIsOnParentThread();
-  WorkerPrivate* self = ParentAsWorkerPrivate();
 
   bool pending;
   {
     MutexAutoLock lock(mMutex);
 
-    if (self->mParentStatus >= aStatus) {
+    if (mParentStatus >= aStatus) {
       return true;
     }
 
-    pending = self->mParentStatus == Pending;
-    self->mParentStatus = aStatus;
+    pending = mParentStatus == Pending;
+    mParentStatus = aStatus;
   }
 
-  if (self->IsSharedWorker()) {
+  if (IsSharedWorker()) {
     RuntimeService* runtime = RuntimeService::GetService();
     MOZ_ASSERT(runtime);
 
-    runtime->ForgetSharedWorker(ParentAsWorkerPrivate());
+    runtime->ForgetSharedWorker(this);
   }
 
   if (pending) {
@@ -1799,25 +1794,24 @@ WorkerPrivateParent<Derived>::NotifyPrivate(WorkerStatus aStatus)
       nsIThread* currentThread = NS_GetCurrentThread();
       MOZ_ASSERT(currentThread);
 
-      MOZ_ASSERT(!self->mPRThread);
-      self->mPRThread = PRThreadFromThread(currentThread);
-      MOZ_ASSERT(self->mPRThread);
+      MOZ_ASSERT(!mPRThread);
+      mPRThread = PRThreadFromThread(currentThread);
+      MOZ_ASSERT(mPRThread);
     }
 #endif
 
     // Worker never got a chance to run, go ahead and delete it.
-    self->ScheduleDeletion(WorkerPrivate::WorkerNeverRan);
+    ScheduleDeletion(WorkerPrivate::WorkerNeverRan);
     return true;
   }
 
-  NS_ASSERTION(aStatus != Terminating || self->mQueuedRunnables.IsEmpty(),
+  NS_ASSERTION(aStatus != Terminating || mQueuedRunnables.IsEmpty(),
                "Shouldn't have anything queued!");
 
   // Anything queued will be discarded.
-  self->mQueuedRunnables.Clear();
+  mQueuedRunnables.Clear();
 
-  RefPtr<NotifyRunnable> runnable =
-    new NotifyRunnable(ParentAsWorkerPrivate(), aStatus);
+  RefPtr<NotifyRunnable> runnable = new NotifyRunnable(this, aStatus);
   return runnable->Dispatch();
 }
 
@@ -1989,15 +1983,12 @@ WorkerPrivate::ParentWindowResumed()
   }
 }
 
-template <class Derived>
 bool
-WorkerPrivateParent<Derived>::Close()
+WorkerPrivate::Close()
 {
   mMutex.AssertCurrentThreadOwns();
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-
-  if (self->mParentStatus < Closing) {
-    self->mParentStatus = Closing;
+  if (mParentStatus < Closing) {
+    mParentStatus = Closing;
   }
 
   return true;

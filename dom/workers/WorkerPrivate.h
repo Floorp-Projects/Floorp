@@ -143,15 +143,6 @@ private:
     return static_cast<Derived*>(const_cast<WorkerPrivateParent*>(this));
   }
 
-  bool
-  NotifyPrivate(WorkerStatus aStatus);
-
-  bool
-  TerminatePrivate()
-  {
-    return NotifyPrivate(Terminating);
-  }
-
 public:
   NS_INLINE_DECL_REFCOUNTING(WorkerPrivateParent)
 
@@ -166,39 +157,6 @@ public:
 
   already_AddRefed<WorkerRunnable>
   MaybeWrapAsWorkerRunnable(already_AddRefed<nsIRunnable> aRunnable);
-
-  // May be called on any thread...
-  bool
-  Start();
-
-  // Called on the parent thread.
-  bool
-  Notify(WorkerStatus aStatus)
-  {
-    return NotifyPrivate(aStatus);
-  }
-
-  bool
-  Cancel()
-  {
-    return Notify(Canceling);
-  }
-
-  bool
-  Kill()
-  {
-    return Notify(Killing);
-  }
-
-  bool
-  Terminate()
-  {
-    AssertIsOnParentThread();
-    return TerminatePrivate();
-  }
-
-  bool
-  Close();
 
   bool
   ProxyReleaseMainThreadObjects();
@@ -470,6 +428,39 @@ public:
     mParentEventTargetRef = nullptr;
     mSelfRef = nullptr;
   }
+
+  // May be called on any thread...
+  bool
+  Start();
+
+  // Called on the parent thread.
+  bool
+  Notify(WorkerStatus aStatus)
+  {
+    return NotifyPrivate(aStatus);
+  }
+
+  bool
+  Cancel()
+  {
+    return Notify(Canceling);
+  }
+
+  bool
+  Kill()
+  {
+    return Notify(Killing);
+  }
+
+  bool
+  Terminate()
+  {
+    AssertIsOnParentThread();
+    return TerminatePrivate();
+  }
+
+  bool
+  Close();
 
   // The passed principal must be the Worker principal in case of a
   // ServiceWorker and the loading principal for any other type.
@@ -1401,6 +1392,15 @@ private:
   nsresult
   DispatchPrivate(already_AddRefed<WorkerRunnable> aRunnable,
                   nsIEventTarget* aSyncLoopTarget);
+
+  bool
+  NotifyPrivate(WorkerStatus aStatus);
+
+  bool
+  TerminatePrivate()
+  {
+    return NotifyPrivate(Terminating);
+  }
 
   bool
   MayContinueRunning()
