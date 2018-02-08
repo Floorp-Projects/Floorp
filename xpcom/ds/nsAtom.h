@@ -116,6 +116,10 @@ public:
   MozExternalRefCountType AddRef() = delete;
   MozExternalRefCountType Release() = delete;
 
+  already_AddRefed<nsAtom> ToAddRefed() {
+    return already_AddRefed<nsAtom>(static_cast<nsAtom*>(this));
+  }
+
 private:
   friend class nsAtomFriend;
 
