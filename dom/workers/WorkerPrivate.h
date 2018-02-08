@@ -102,20 +102,6 @@ public:
 
 class WorkerPrivate
 {
-  class EventTarget;
-  friend class EventTarget;
-  friend class mozilla::dom::WorkerHolder;
-  friend class AutoSyncLoopHolder;
-
-  struct TimeoutInfo;
-
-  class MemoryReporter;
-  friend class MemoryReporter;
-
-  friend class mozilla::dom::WorkerThread;
-
-  typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
-
 public:
   struct LocationInfo
   {
@@ -130,162 +116,6 @@ public:
     nsString mOrigin;
   };
 
-private:
-  enum GCTimerMode
-  {
-    PeriodicTimer = 0,
-    IdleTimer,
-    NoTimer
-  };
-
-  SharedMutex mMutex;
-  mozilla::CondVar mCondVar;
-
-  WorkerPrivate* mParent;
-
-  nsString mScriptURL;
-
-  // This is the worker name for shared workers and dedicated workers.
-  nsString mWorkerName;
-
-  WorkerType mWorkerType;
-
-  // The worker is owned by its thread, which is represented here.  This is set
-  // in Constructor() and emptied by WorkerFinishedRunnable, and conditionally
-  // traversed by the cycle collector if the busy count is zero.
-  //
-  // There are 4 ways a worker can be terminated:
-  // 1. GC/CC - When the worker is in idle state (busycount == 0), it allows to
-  //    traverse the 'hidden' mParentEventTargetRef pointer. This is the exposed
-  //    Worker webidl object. Doing this, CC will be able to detect a cycle and
-  //    Unlink is called. In Unlink, Worker calls Terminate().
-  // 2. Worker::Terminate() is called - the shutdown procedure starts
-  //    immediately.
-  // 3. WorkerScope::Close() is called - Similar to point 2.
-  // 4. xpcom-shutdown notification - We call Kill().
-  RefPtr<Worker> mParentEventTargetRef;
-  RefPtr<WorkerPrivate> mSelfRef;
-
-  // The lifetime of these objects within LoadInfo is managed explicitly;
-  // they do not need to be cycle collected.
-  WorkerLoadInfo mLoadInfo;
-  LocationInfo mLocationInfo;
-
-  // Protected by mMutex.
-  workerinternals::JSSettings mJSSettings;
-
-  bool mDebuggerRegistered;
-  WorkerDebugger* mDebugger;
-
-  workerinternals::Queue<WorkerControlRunnable*, 4> mControlQueue;
-  workerinternals::Queue<WorkerRunnable*, 4> mDebuggerQueue;
-
-  // Touched on multiple threads, protected with mMutex.
-  JSContext* mJSContext;
-  RefPtr<WorkerThread> mThread;
-  PRThread* mPRThread;
-
-  // Things touched on worker thread only.
-  RefPtr<WorkerGlobalScope> mScope;
-  RefPtr<WorkerDebuggerGlobalScope> mDebuggerScope;
-  nsTArray<WorkerPrivate*> mChildWorkers;
-  nsTObserverArray<WorkerHolder*> mHolders;
-  uint32_t mNumHoldersPreventingShutdownStart;
-  nsTArray<nsAutoPtr<TimeoutInfo>> mTimeouts;
-  uint32_t mDebuggerEventLoopLevel;
-  RefPtr<ThrottledEventQueue> mMainThreadThrottledEventQueue;
-  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
-  RefPtr<WorkerEventTarget> mWorkerControlEventTarget;
-  RefPtr<WorkerEventTarget> mWorkerHybridEventTarget;
-
-  struct SyncLoopInfo
-  {
-    explicit SyncLoopInfo(EventTarget* aEventTarget);
-
-    RefPtr<EventTarget> mEventTarget;
-    bool mCompleted;
-    bool mResult;
-#ifdef DEBUG
-    bool mHasRun;
-#endif
-  };
-
-  // This is only modified on the worker thread, but in DEBUG builds
-  // AssertValidSyncLoop function iterates it on other threads. Therefore
-  // modifications are done with mMutex held *only* in DEBUG builds.
-  nsTArray<nsAutoPtr<SyncLoopInfo>> mSyncLoopStack;
-
-  nsCOMPtr<nsITimer> mTimer;
-  nsCOMPtr<nsITimerCallback> mTimerRunnable;
-
-  nsCOMPtr<nsITimer> mGCTimer;
-
-  RefPtr<MemoryReporter> mMemoryReporter;
-
-  // fired on the main thread if the worker script fails to load
-  nsCOMPtr<nsIRunnable> mLoadFailedRunnable;
-
-  RefPtr<PerformanceStorage> mPerformanceStorage;
-
-  // Only used for top level workers.
-  nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
-
-  // Protected by mMutex.
-  nsTArray<RefPtr<WorkerRunnable>> mPreStartRunnables;
-
-  // Only touched on the parent thread (currently this is always the main
-  // thread as SharedWorkers are always top-level).
-  nsTArray<RefPtr<SharedWorker>> mSharedWorkers;
-
-  JS::UniqueChars mDefaultLocale; // nulled during worker JSContext init
-  TimeStamp mKillTime;
-  uint32_t mErrorHandlerRecursionCount;
-  uint32_t mNextTimeoutId;
-
-  // SharedWorkers may have multiple windows paused, so this must be
-  // a count instead of just a boolean.
-  uint32_t mParentWindowPausedDepth;
-
-  WorkerStatus mParentStatus;
-  WorkerStatus mStatus;
-  UniquePtr<ClientSource> mClientSource;
-  bool mFrozen;
-  bool mTimerRunning;
-  bool mRunningExpiredTimeouts;
-  bool mPendingEventQueueClearing;
-  bool mCancelAllPendingRunnables;
-  bool mPeriodicGCTimerRunning;
-  bool mIdleGCTimerRunning;
-  bool mWorkerScriptExecutedSuccessfully;
-  bool mFetchHandlerWasAdded;
-  bool mOnLine;
-  bool mMainThreadObjectsForgotten;
-  bool mIsChromeWorker;
-  bool mParentFrozen;
-
-  // mIsSecureContext is set once in our constructor; after that it can be read
-  // from various threads.  We could make this const if we were OK with setting
-  // it in the initializer list via calling some function that takes all sorts
-  // of state (loadinfo, worker type, parent).
-  //
-  // It's a bit unfortunate that we have to have an out-of-band boolean for
-  // this, but we need access to this state from the parent thread, and we can't
-  // use our global object's secure state there.
-  bool mIsSecureContext;
-
-  // This is touched on parent thread only, but it can be read on a different
-  // thread before crashing because hanging.
-  Atomic<uint64_t> mBusyCount;
-
-  Atomic<bool> mLoadingWorkerScript;
-
-  TimeStamp mCreationTimeStamp;
-  DOMHighResTimeStamp mCreationTimeHighRes;
-
-protected:
-  ~WorkerPrivate();
-
-public:
   NS_INLINE_DECL_REFCOUNTING(WorkerPrivate)
 
   static already_AddRefed<WorkerPrivate>
@@ -1094,7 +924,7 @@ public:
     return mLoadInfo.mPrincipalIsSystem;
   }
 
-  const PrincipalInfo&
+  const mozilla::ipc::PrincipalInfo&
   GetPrincipalInfo() const
   {
     return *mLoadInfo.mPrincipalInfo;
@@ -1366,6 +1196,8 @@ private:
                 const nsACString& aServiceWorkerScope,
                 WorkerLoadInfo& aLoadInfo);
 
+  ~WorkerPrivate();
+
   nsresult
   DispatchPrivate(already_AddRefed<WorkerRunnable> aRunnable,
                   nsIEventTarget* aSyncLoopTarget);
@@ -1451,6 +1283,13 @@ private:
   void
   InitializeGCTimers();
 
+  enum GCTimerMode
+  {
+    PeriodicTimer = 0,
+    IdleTimer,
+    NoTimer
+  };
+
   void
   SetGCTimerMode(GCTimerMode aMode);
 
@@ -1472,6 +1311,166 @@ private:
     return !(mChildWorkers.IsEmpty() && mTimeouts.IsEmpty() &&
              mHolders.IsEmpty());
   }
+
+  class EventTarget;
+  friend class EventTarget;
+  friend class mozilla::dom::WorkerHolder;
+  friend class AutoSyncLoopHolder;
+
+  struct TimeoutInfo;
+
+  class MemoryReporter;
+  friend class MemoryReporter;
+
+  friend class mozilla::dom::WorkerThread;
+
+  SharedMutex mMutex;
+  mozilla::CondVar mCondVar;
+
+  WorkerPrivate* mParent;
+
+  nsString mScriptURL;
+
+  // This is the worker name for shared workers and dedicated workers.
+  nsString mWorkerName;
+
+  WorkerType mWorkerType;
+
+  // The worker is owned by its thread, which is represented here.  This is set
+  // in Constructor() and emptied by WorkerFinishedRunnable, and conditionally
+  // traversed by the cycle collector if the busy count is zero.
+  //
+  // There are 4 ways a worker can be terminated:
+  // 1. GC/CC - When the worker is in idle state (busycount == 0), it allows to
+  //    traverse the 'hidden' mParentEventTargetRef pointer. This is the exposed
+  //    Worker webidl object. Doing this, CC will be able to detect a cycle and
+  //    Unlink is called. In Unlink, Worker calls Terminate().
+  // 2. Worker::Terminate() is called - the shutdown procedure starts
+  //    immediately.
+  // 3. WorkerScope::Close() is called - Similar to point 2.
+  // 4. xpcom-shutdown notification - We call Kill().
+  RefPtr<Worker> mParentEventTargetRef;
+  RefPtr<WorkerPrivate> mSelfRef;
+
+  // The lifetime of these objects within LoadInfo is managed explicitly;
+  // they do not need to be cycle collected.
+  WorkerLoadInfo mLoadInfo;
+  LocationInfo mLocationInfo;
+
+  // Protected by mMutex.
+  workerinternals::JSSettings mJSSettings;
+
+  WorkerDebugger* mDebugger;
+
+  workerinternals::Queue<WorkerControlRunnable*, 4> mControlQueue;
+  workerinternals::Queue<WorkerRunnable*, 4> mDebuggerQueue;
+
+  // Touched on multiple threads, protected with mMutex.
+  JSContext* mJSContext;
+  RefPtr<WorkerThread> mThread;
+  PRThread* mPRThread;
+
+  // Things touched on worker thread only.
+  RefPtr<WorkerGlobalScope> mScope;
+  RefPtr<WorkerDebuggerGlobalScope> mDebuggerScope;
+  nsTArray<WorkerPrivate*> mChildWorkers;
+  nsTObserverArray<WorkerHolder*> mHolders;
+  nsTArray<nsAutoPtr<TimeoutInfo>> mTimeouts;
+  RefPtr<ThrottledEventQueue> mMainThreadThrottledEventQueue;
+  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
+  RefPtr<WorkerEventTarget> mWorkerControlEventTarget;
+  RefPtr<WorkerEventTarget> mWorkerHybridEventTarget;
+
+  struct SyncLoopInfo
+  {
+    explicit SyncLoopInfo(EventTarget* aEventTarget);
+
+    RefPtr<EventTarget> mEventTarget;
+    bool mCompleted;
+    bool mResult;
+#ifdef DEBUG
+    bool mHasRun;
+#endif
+  };
+
+  // This is only modified on the worker thread, but in DEBUG builds
+  // AssertValidSyncLoop function iterates it on other threads. Therefore
+  // modifications are done with mMutex held *only* in DEBUG builds.
+  nsTArray<nsAutoPtr<SyncLoopInfo>> mSyncLoopStack;
+
+  nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsITimerCallback> mTimerRunnable;
+
+  nsCOMPtr<nsITimer> mGCTimer;
+
+  RefPtr<MemoryReporter> mMemoryReporter;
+
+  // fired on the main thread if the worker script fails to load
+  nsCOMPtr<nsIRunnable> mLoadFailedRunnable;
+
+  RefPtr<PerformanceStorage> mPerformanceStorage;
+
+  // Only used for top level workers.
+  nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
+
+  // Protected by mMutex.
+  nsTArray<RefPtr<WorkerRunnable>> mPreStartRunnables;
+
+  // Only touched on the parent thread (currently this is always the main
+  // thread as SharedWorkers are always top-level).
+  nsTArray<RefPtr<SharedWorker>> mSharedWorkers;
+
+  JS::UniqueChars mDefaultLocale; // nulled during worker JSContext init
+  TimeStamp mKillTime;
+  WorkerStatus mParentStatus;
+  WorkerStatus mStatus;
+  UniquePtr<ClientSource> mClientSource;
+
+  // This is touched on parent thread only, but it can be read on a different
+  // thread before crashing because hanging.
+  Atomic<uint64_t> mBusyCount;
+
+  Atomic<bool> mLoadingWorkerScript;
+
+  TimeStamp mCreationTimeStamp;
+  DOMHighResTimeStamp mCreationTimeHighRes;
+
+  // Things touched on worker thread only.
+  uint32_t mNumHoldersPreventingShutdownStart;
+  uint32_t mDebuggerEventLoopLevel;
+
+  uint32_t mErrorHandlerRecursionCount;
+  uint32_t mNextTimeoutId;
+
+  // SharedWorkers may have multiple windows paused, so this must be
+  // a count instead of just a boolean.
+  uint32_t mParentWindowPausedDepth;
+
+  bool mFrozen;
+  bool mTimerRunning;
+  bool mRunningExpiredTimeouts;
+  bool mPendingEventQueueClearing;
+  bool mCancelAllPendingRunnables;
+  bool mPeriodicGCTimerRunning;
+  bool mIdleGCTimerRunning;
+  bool mWorkerScriptExecutedSuccessfully;
+  bool mFetchHandlerWasAdded;
+  bool mOnLine;
+  bool mMainThreadObjectsForgotten;
+  bool mIsChromeWorker;
+  bool mParentFrozen;
+
+  // mIsSecureContext is set once in our constructor; after that it can be read
+  // from various threads.  We could make this const if we were OK with setting
+  // it in the initializer list via calling some function that takes all sorts
+  // of state (loadinfo, worker type, parent).
+  //
+  // It's a bit unfortunate that we have to have an out-of-band boolean for
+  // this, but we need access to this state from the parent thread, and we can't
+  // use our global object's secure state there.
+  bool mIsSecureContext;
+
+  bool mDebuggerRegistered;
 };
 
 class AutoSyncLoopHolder
