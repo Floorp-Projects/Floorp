@@ -1289,9 +1289,9 @@ uint64_t
 WebRenderBridgeParent::FlushPendingTransactionIds()
 {
   uint64_t id = 0;
-  while (!mPendingTransactionIds.empty()) {
-    id = mPendingTransactionIds.front().mId;
-    mPendingTransactionIds.pop();
+  if (!mPendingTransactionIds.empty()) {
+    id = mPendingTransactionIds.back().mId;
+    std::queue<PendingTransactionId>().swap(mPendingTransactionIds); // clear queue
   }
   return id;
 }
