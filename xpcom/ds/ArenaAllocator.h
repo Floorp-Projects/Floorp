@@ -128,8 +128,8 @@ public:
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   void Check()
   {
-    if (mCurrent) {
-      mCurrent->canary.Check();
+    for (auto arena = mHead.next; arena; arena = arena->next) {
+      arena->canary.Check();
     }
   }
 #endif
