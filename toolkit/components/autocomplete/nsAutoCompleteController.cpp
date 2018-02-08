@@ -154,46 +154,8 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
   // Clear out this reference in case the new input's popup has no tree
   mTree = nullptr;
 
-  // Initialize our list of search objects
-  uint32_t searchCount;
-  input->GetSearchCount(&searchCount);
-  mResults.SetCapacity(searchCount);
-  mSearches.SetCapacity(searchCount);
-  mImmediateSearchesCount = 0;
-
-  const char *searchCID = kAutoCompleteSearchCID;
-
   // Since the controller can be used as a service it's important to reset this.
   mClearingAutoFillSearchesAgain = false;
-
-  for (uint32_t i = 0; i < searchCount; ++i) {
-    // Use the search name to create the contract id string for the search service
-    nsAutoCString searchName;
-    input->GetSearchAt(i, searchName);
-    nsAutoCString cid(searchCID);
-    cid.Append(searchName);
-
-    // Use the created cid to get a pointer to the search service and store it for later
-    nsCOMPtr<nsIAutoCompleteSearch> search = do_GetService(cid.get());
-    if (search) {
-      mSearches.AppendObject(search);
-
-      // Count immediate searches.
-      nsCOMPtr<nsIAutoCompleteSearchDescriptor> searchDesc =
-        do_QueryInterface(search);
-      if (searchDesc) {
-        uint16_t searchType = nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_DELAYED;
-        if (NS_SUCCEEDED(searchDesc->GetSearchType(&searchType)) &&
-            searchType == nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_IMMEDIATE) {
-          mImmediateSearchesCount++;
-        }
-
-        if (!mClearingAutoFillSearchesAgain) {
-          searchDesc->GetClearingAutoFillSearchesAgain(&mClearingAutoFillSearchesAgain);
-        }
-      }
-    }
-  }
 
   return NS_OK;
 }
@@ -1380,11 +1342,51 @@ nsAutoCompleteController::StartSearches()
   if (mTimer || !mInput)
     return NS_OK;
 
+  nsCOMPtr<nsIAutoCompleteInput> input(mInput);
+
+  if (!mSearches.Length()) {
+    // Initialize our list of search objects
+    uint32_t searchCount;
+    input->GetSearchCount(&searchCount);
+    mResults.SetCapacity(searchCount);
+    mSearches.SetCapacity(searchCount);
+    mImmediateSearchesCount = 0;
+
+    const char *searchCID = kAutoCompleteSearchCID;
+
+    for (uint32_t i = 0; i < searchCount; ++i) {
+      // Use the search name to create the contract id string for the search service
+      nsAutoCString searchName;
+      input->GetSearchAt(i, searchName);
+      nsAutoCString cid(searchCID);
+      cid.Append(searchName);
+
+      // Use the created cid to get a pointer to the search service and store it for later
+      nsCOMPtr<nsIAutoCompleteSearch> search = do_GetService(cid.get());
+      if (search) {
+        mSearches.AppendObject(search);
+
+        // Count immediate searches.
+        nsCOMPtr<nsIAutoCompleteSearchDescriptor> searchDesc =
+          do_QueryInterface(search);
+        if (searchDesc) {
+          uint16_t searchType = nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_DELAYED;
+          if (NS_SUCCEEDED(searchDesc->GetSearchType(&searchType)) &&
+              searchType == nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_IMMEDIATE) {
+            mImmediateSearchesCount++;
+          }
+
+          if (!mClearingAutoFillSearchesAgain) {
+            searchDesc->GetClearingAutoFillSearchesAgain(&mClearingAutoFillSearchesAgain);
+          }
+        }
+      }
+    }
+  }
+
   // Check if the current input should be completed with the placeholder string
   // from the last completion until the actual search results come back.
   MaybeCompletePlaceholder();
-
-  nsCOMPtr<nsIAutoCompleteInput> input(mInput);
 
   // Get the timeout for delayed searches.
   uint32_t timeout;
