@@ -6,9 +6,9 @@ from __future__ import absolute_import, print_function
 
 import json
 import os
-import tempfile
 from distutils.spawn import find_executable
 
+import mozfile
 import mozpack.path as mozpath
 from mozpack.files import FileFinder
 from mozprocess import ProcessHandlerMixin
@@ -71,7 +71,7 @@ def run_linter(python, paths, config, **lintargs):
         finder = FileFinder(path, ignore=ignore)
         files.extend([os.path.join(path, p) for p, f in finder.find(pattern)])
 
-    with tempfile.NamedTemporaryFile(mode='w') as fh:
+    with mozfile.NamedTemporaryFile(mode='w') as fh:
         fh.write('\n'.join(files))
         fh.flush()
 
