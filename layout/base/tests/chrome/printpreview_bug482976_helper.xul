@@ -17,8 +17,7 @@ var todo = window.opener.wrappedJSObject.todo;
 var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
 var gWbp;
 function printpreview() {
-  gWbp = window.frames[1].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-             .getInterface(Components.interfaces.nsIWebBrowserPrint);
+  gWbp = window.frames[1].document.docShell.printPreview;
   var listener = {
     onLocationChange: function(webProgress, request, location, flags) { },
     onProgressChange: function(webProgress, request, curSelfProgress, 
@@ -44,8 +43,7 @@ function printpreview() {
 }
 
 function exitprintpreview() {
-  window.frames[1].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-   .getInterface(Components.interfaces.nsIWebBrowserPrint).exitPrintPreview(); 
+  window.frames[1].document.docShell.printPreview.exitPrintPreview();
 }
 
 function finish() {
