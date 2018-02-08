@@ -306,6 +306,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
     "perspective",
     "right",
     "row-gap",
+    "shape-margin",
     "stroke-dashoffset",
     "stroke-width",
     "-moz-tab-size",
