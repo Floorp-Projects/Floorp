@@ -2,18 +2,15 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const MessageRepeat = require("devtools/client/webconsole/new-console-output/components/MessageRepeat");
-
 const expect = require("expect");
-
-const {
-  renderComponent
-} = require("devtools/client/webconsole/new-console-output/test/helpers");
+const { render } = require("enzyme");
+const { createFactory } = require("devtools/client/shared/vendor/react");
+const MessageRepeat = createFactory(require("devtools/client/webconsole/new-console-output/components/MessageRepeat"));
 
 describe("MessageRepeat component:", () => {
   it("renders repeated value correctly", () => {
-    const rendered = renderComponent(MessageRepeat, { repeat: 99 });
-    expect(rendered.classList.contains("message-repeats")).toBe(true);
-    expect(rendered.textContent).toBe("99");
+    const rendered = render(MessageRepeat({ repeat: 99 }));
+    expect(rendered.hasClass("message-repeats")).toBe(true);
+    expect(rendered.text()).toBe("99");
   });
 });
