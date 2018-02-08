@@ -122,8 +122,9 @@ class RemoteValue {
  * Collection of RemoteValue instances used within the page.
  */
 const remoteValues = {
-  StudyList: new RemoteValue("StudyList", []),
-  ShieldLearnMoreHref: new RemoteValue("ShieldLearnMoreHref", ""),
+  studyList: new RemoteValue("StudyList"),
+  shieldLearnMoreHref: new RemoteValue("ShieldLearnMoreHref"),
+  studiesEnabled: new RemoteValue("StudiesEnabled"),
 };
 
 /**
