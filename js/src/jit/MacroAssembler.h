@@ -1963,9 +1963,22 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void loadStringChars(Register str, Register dest);
+
+    void loadNonInlineStringChars(Register str, Register dest);
+    void loadNonInlineStringCharsForStore(Register str, Register dest);
+    void storeNonInlineStringChars(Register chars, Register str);
+
+    void loadInlineStringChars(Register str, Register dest);
+    void loadInlineStringCharsForStore(Register str, Register dest);
+
     void loadStringChar(Register str, Register index, Register output, Register scratch,
                         Label* fail);
+
     void loadRopeLeftChild(Register str, Register dest);
+    void storeRopeChildren(Register left, Register right, Register str);
+
+    void loadDependentStringBase(Register str, Register dest);
+    void storeDependentStringBase(Register base, Register str);
 
     void loadStringIndexValue(Register str, Register dest, Label* fail);
 
