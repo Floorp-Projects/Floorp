@@ -134,7 +134,7 @@ add_task(async function test_addVisitAndCheckGuid() {
   Assert.equal(root.getChild(0).bookmarkGuid, "");
   root.containerOpen = false;
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_addItemsWithInvalidGUIDsFails() {

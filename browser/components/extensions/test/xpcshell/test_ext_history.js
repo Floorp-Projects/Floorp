@@ -61,7 +61,7 @@ add_task(async function test_delete() {
 
   await extension.startup();
   await extension.awaitMessage("ready");
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   let historyClearedCount;
   let visits = [];
@@ -227,7 +227,7 @@ add_task(async function test_search() {
 
   await extension.startup();
   await extension.awaitMessage("ready");
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   await PlacesUtils.history.insertMany(PAGE_INFOS);
 
@@ -254,7 +254,7 @@ add_task(async function test_search() {
 
   await extension.awaitFinish("search");
   await extension.unload();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_add_url() {
@@ -321,7 +321,7 @@ add_task(async function test_add_url() {
     background: `(${background})()`,
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await extension.startup();
   await extension.awaitMessage("ready");
 
@@ -397,7 +397,7 @@ add_task(async function test_get_visits() {
     background: `(${background})()`,
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await extension.startup();
 
   await extension.awaitFinish("get-visits");
@@ -460,7 +460,7 @@ add_task(async function test_transition_types() {
     background,
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await extension.startup();
   await extension.awaitMessage("ready");
 
@@ -540,7 +540,7 @@ add_task(async function test_on_visited() {
     background: `(${background})()`,
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await extension.startup();
   await extension.awaitMessage("ready");
 

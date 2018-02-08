@@ -11,7 +11,7 @@ add_task(async function test_remove_many() {
   // This is set so that we are guaranteed to trigger REMOVE_PAGES_CHUNKLEN.
   const SIZE = 310;
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 
   info("Adding a witness page");
@@ -143,6 +143,6 @@ add_task(async function test_remove_many() {
 });
 
 add_task(async function cleanup() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 });

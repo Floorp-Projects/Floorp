@@ -273,7 +273,7 @@ add_task(async function test_frecency() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.openpage", false);
   for (let test of tests) {
     await PlacesUtils.bookmarks.eraseEverything();
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
 
     await test();
   }

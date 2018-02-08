@@ -562,7 +562,15 @@ GeckoRestyleManager::ProcessPendingRestyles()
   NS_PRECONDITION(PresContext()->Document(), "No document?  Pshaw!");
   NS_PRECONDITION(!nsContentUtils::IsSafeToRunScript(),
                   "Missing a script blocker!");
-  MOZ_ASSERT(!PresContext()->HasPendingMediaQueryUpdates(),
+  // NOTE(emilio): Gecko calls into here from RebuildAllStyleData synchronously,
+  // without ensuring that all the media-query state is up-to-date.
+  //
+  // That is slightly bogus on its own, but it's long-standing and working on
+  // not rebuilding the rule tree synchronously on the old style system at this
+  // point is probably not worth the effort. Note bug 1089417 comment 21, which
+  // may or may not be an issue here.
+  MOZ_ASSERT(!PresContext()->HasPendingMediaQueryUpdates() ||
+             mDoRebuildAllStyleData,
              "Someone forgot to update media queries?");
 
   // First do any queued-up frame creation.  (We should really

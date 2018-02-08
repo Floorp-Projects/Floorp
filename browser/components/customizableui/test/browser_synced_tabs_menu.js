@@ -6,6 +6,7 @@
 
 requestLongerTimeout(2);
 
+ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
 let {SyncedTabs} = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm", {});
 let {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm", {});
 
@@ -40,6 +41,10 @@ let mockedInternal = {
 
 
 add_task(async function setup() {
+  const getSignedInUser = FxAccounts.config.getSignedInUser;
+  FxAccounts.config.getSignedInUser = async () => Promise.resolve({uid: "uid", email: "foo@bar.com"});
+  Services.prefs.setCharPref("identity.fxaccounts.remote.root", "https://example.com/");
+
   let oldInternal = SyncedTabs._internal;
   SyncedTabs._internal = mockedInternal;
 
@@ -51,6 +56,8 @@ add_task(async function setup() {
   gSync.init();
 
   registerCleanupFunction(() => {
+    FxAccounts.config.getSignedInUser = getSignedInUser;
+    Services.prefs.clearUserPref("identity.fxaccounts.remote.root");
     UIState._internal.notifyStateUpdated = origNotifyStateUpdated;
     SyncedTabs._internal = oldInternal;
   });
@@ -59,7 +66,6 @@ add_task(async function setup() {
 // The test expects the about:preferences#sync page to open in the current tab
 async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   info("Check Sync button functionality");
-  Services.prefs.setCharPref("identity.fxaccounts.remote.signup.uri", "https://example.com/");
   CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
   await waitForOverflowButtonShown();
@@ -121,7 +127,6 @@ function hideOverflow() {
 }
 
 async function asyncCleanup() {
-  Services.prefs.clearUserPref("identity.fxaccounts.remote.signup.uri");
   // reset the panel UI to the default state
   await resetCustomization();
   ok(CustomizableUI.inDefaultState, "The panel UI is in default state again.");
@@ -154,34 +159,21 @@ add_task(async function() {
 
 // Test the Connect Another Device button
 add_task(async function() {
-  Services.prefs.setCharPref("identity.fxaccounts.remote.connectdevice.uri", "http://example.com/connectdevice");
-
   gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, email: "foo@bar.com" });
 
   let button = document.getElementById("PanelUI-remotetabs-connect-device-button");
   ok(button, "found the button");
 
   await document.getElementById("nav-bar").overflowable.show();
+  let expectedUrl = "https://example.com/connect_another_device?service=sync&context=" +
+                    "fx_desktop_v3&entrypoint=synced-tabs&uid=uid&email=foo%40bar.com";
+  let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, expectedUrl);
   button.click();
   // the panel should have been closed.
   ok(!isOverflowOpen(), "click closed the panel");
-  // should be a new tab - wait for the load.
-  is(gBrowser.tabs.length, 2, "there's a new tab");
-  await new Promise(resolve => {
-    if (gBrowser.selectedBrowser.currentURI.spec == "about:blank") {
-      BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(resolve);
-      return;
-    }
-    // the new tab has already transitioned away from about:blank so we
-    // are good to go.
-    resolve();
-  });
+  await promiseTabOpened;
 
-  let expectedUrl = `http://example.com/connectdevice?entrypoint=synced-tabs`;
-  is(gBrowser.selectedBrowser.currentURI.spec, expectedUrl, "correct URL");
   gBrowser.removeTab(gBrowser.selectedTab);
-
-  Services.prefs.clearUserPref("identity.fxaccounts.remote.connectdevice.uri");
 });
 
 // Test the "Sync Now" button

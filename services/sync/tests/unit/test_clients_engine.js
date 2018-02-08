@@ -1754,13 +1754,11 @@ add_task(async function device_disconnected_notification_updates_known_stale_cli
 
   Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
                                JSON.stringify({ isLocalDevice: false }));
-  await Service.asyncObserver.promiseObserversComplete();
   ok(spyUpdate.calledOnce, "updateKnownStaleClients should be called");
   spyUpdate.reset();
 
   Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
                                JSON.stringify({ isLocalDevice: true }));
-  await Service.asyncObserver.promiseObserversComplete();
   ok(spyUpdate.notCalled, "updateKnownStaleClients should not be called");
 
   spyUpdate.restore();

@@ -181,7 +181,7 @@ add_task(async function test_fetchURLFrecency() {
   }
 
   // Remove the visits added during this test.
- await PlacesTestUtils.clearHistory();
+ await PlacesUtils.history.clear();
 });
 
 add_task(async function test_determineNonSyncableGuids() {
@@ -215,7 +215,7 @@ add_task(async function test_determineNonSyncableGuids() {
   }
 
   // Remove the visits added during this test.
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_changeGuid() {
@@ -241,7 +241,7 @@ add_task(async function test_changeGuid() {
   }
 
   // Remove the visits added during this test.
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_fetchVisitsForURL() {
@@ -272,7 +272,7 @@ add_task(async function test_fetchVisitsForURL() {
   }
 
   // Remove the visits added during this test.
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_fetchGuidForURL() {
@@ -299,7 +299,7 @@ add_task(async function test_fetchGuidForURL() {
   }
 
   // Remove the visits added during this test.
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_fetchURLInfoForGuid() {
@@ -330,7 +330,7 @@ add_task(async function test_fetchURLInfoForGuid() {
   equal(info, null, "The information object of a non-existent guid should be null.");
 
   // Remove the visits added during this test.
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_getAllURLs() {
@@ -352,7 +352,7 @@ add_task(async function test_getAllURLs() {
   }
 
   // Remove the visits added during this test.
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_order() {

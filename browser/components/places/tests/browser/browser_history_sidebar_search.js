@@ -12,7 +12,7 @@ add_task(async function test() {
   // Number of pages that will be filtered out by the search.
   const FILTERED_COUNT = 1;
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   // Add some visited page.
   let time = Date.now();
@@ -43,7 +43,7 @@ add_task(async function test() {
     check_tree_order(tree, pages);
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 function check_tree_order(tree, pages, aNumberOfRowsDelta = 0) {

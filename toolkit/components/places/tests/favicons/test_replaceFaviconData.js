@@ -83,7 +83,7 @@ add_task(async function test_replaceFaviconData_validHistoryURI() {
       }, systemPrincipal);
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_replaceFaviconData_overrideDefaultFavicon() {
@@ -115,7 +115,7 @@ add_task(async function test_replaceFaviconData_overrideDefaultFavicon() {
       }, systemPrincipal);
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_replaceFaviconData_replaceExisting() {
@@ -152,7 +152,7 @@ add_task(async function test_replaceFaviconData_replaceExisting() {
       }, systemPrincipal);
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_replaceFaviconData_unrelatedReplace() {
@@ -184,7 +184,7 @@ add_task(async function test_replaceFaviconData_unrelatedReplace() {
       }, systemPrincipal);
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_replaceFaviconData_badInputs() {
@@ -205,7 +205,7 @@ add_task(async function test_replaceFaviconData_badInputs() {
     /NS_ERROR_ILLEGAL_VALUE/);
 
   icon.file.remove(false);
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_replaceFaviconData_twiceReplace() {
@@ -240,5 +240,5 @@ add_task(async function test_replaceFaviconData_twiceReplace() {
       }, systemPrincipal);
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });

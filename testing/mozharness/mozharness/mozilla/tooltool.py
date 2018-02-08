@@ -11,13 +11,13 @@ TooltoolErrorList = PythonErrorList + [{
 }]
 
 
-TOOLTOOL_PY_URL = \
-    "https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py"
-
 TOOLTOOL_SERVERS = [
     'https://tooltool.mozilla-releng.net/',
 ]
 
+_here = os.path.abspath(os.path.dirname(__file__))
+_external_tools_path = os.path.normpath(os.path.join(_here, '..', '..',
+                                                     'external_tools'))
 
 class TooltoolMixin(object):
     """Mixin class for handling tooltool manifests.
@@ -50,7 +50,6 @@ class TooltoolMixin(object):
         for d in (output_dir, cache):
             if d is not None and not os.path.exists(d):
                 self.mkdir_p(d)
-        # Use vendored tooltool.py if available.
         if self.topsrcdir:
             cmd = [
                 sys.executable, '-u',
@@ -59,10 +58,11 @@ class TooltoolMixin(object):
                 'toolchain',
                 '-v',
             ]
-        elif self.config.get("download_tooltool"):
-            cmd = [sys.executable, self._fetch_tooltool_py()]
         else:
-            cmd = self.query_exe('tooltool.py', return_type='list')
+            cmd = [
+                sys.executable, '-u',
+                os.path.join(_external_tools_path, 'tooltool.py'),
+            ]
 
         # get the tooltool servers from configuration
         default_urls = self.config.get('tooltool_servers', TOOLTOOL_SERVERS)
@@ -119,17 +119,6 @@ class TooltoolMixin(object):
             error_message="Tooltool %s fetch failed!" % manifest,
             error_level=FATAL,
         )
-
-    def _fetch_tooltool_py(self):
-        """ Retrieve tooltool.py
-        """
-        dirs = self.query_abs_dirs()
-        file_path = os.path.join(dirs['abs_work_dir'], "tooltool.py")
-        self.download_file(TOOLTOOL_PY_URL, file_path)
-        if not os.path.exists(file_path):
-            self.fatal("We can't get tooltool.py")
-        self.chmod(file_path, 0755)
-        return file_path
 
     def create_tooltool_manifest(self, contents, path=None):
         """ Currently just creates a manifest, given the contents.

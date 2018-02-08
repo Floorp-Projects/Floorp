@@ -607,7 +607,7 @@ function addBookmark(aURI) {
  */
 async function task_cleanDatabase(aCallback) {
   await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 }
 
 /**

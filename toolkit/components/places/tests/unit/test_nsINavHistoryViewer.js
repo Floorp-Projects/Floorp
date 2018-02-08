@@ -120,7 +120,7 @@ add_test(function check_history_query() {
         Assert.equal(resultObserver.invalidatedContainer, result.root);
 
         // nsINavHistoryResultObserver.invalidateContainer
-        PlacesTestUtils.clearHistory().then(() => {
+        PlacesUtils.history.clear().then(() => {
           Assert.equal(root.uri, resultObserver.invalidatedContainer.uri);
 
           // nsINavHistoryResultObserver.batching

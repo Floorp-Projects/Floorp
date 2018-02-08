@@ -70,7 +70,7 @@ add_task(async function test_sidebarpanels_click() {
       is(tree.selectedNode.itemId, -1, "The selected node is not bookmarked");
     },
     cleanup(aCallback) {
-      return PlacesTestUtils.clearHistory();
+      return PlacesUtils.history.clear();
     },
     sidebarName: HISTORY_SIDEBAR_ID,
     treeName: HISTORY_SIDEBAR_TREE_ID,

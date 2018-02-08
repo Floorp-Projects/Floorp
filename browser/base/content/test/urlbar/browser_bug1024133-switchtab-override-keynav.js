@@ -15,7 +15,7 @@ add_task(async function test_switchtab_override_keynav() {
       gBrowser.removeTab(tab);
       gBrowser.removeTab(secondTab);
     } catch (ex) { /* tabs may have already been closed in case of failure */ }
-    return PlacesTestUtils.clearHistory();
+    return PlacesUtils.history.clear();
   });
 
   gURLBar.focus();

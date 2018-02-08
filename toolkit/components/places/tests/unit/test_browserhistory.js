@@ -58,7 +58,7 @@ add_task(async function test_removePages() {
 
   // Cleanup.
   await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_removePagesByTimeframe() {
@@ -100,7 +100,7 @@ add_task(async function test_removePagesFromHost_keepSubdomains() {
 });
 
 add_task(async function test_history_clear() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   Assert.equal(0, PlacesUtils.history.hasHistoryEntries);
 });
 

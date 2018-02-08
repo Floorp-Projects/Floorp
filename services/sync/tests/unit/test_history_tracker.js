@@ -53,7 +53,7 @@ async function resetTracker() {
 }
 
 async function cleanup() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
   await resetTracker();
   await tracker.stop();
 }
