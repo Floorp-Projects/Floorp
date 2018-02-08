@@ -616,12 +616,6 @@ nsCSSProps::LookupFontDesc(const nsACString& aFontDesc)
 
   if (which == eCSSFontDesc_Display && !StylePrefs::sFontDisplayEnabled) {
     which = eCSSFontDesc_UNKNOWN;
-  } else if (which == eCSSFontDesc_UNKNOWN) {
-    // check for unprefixed font-feature-settings/font-language-override
-    nsAutoCString prefixedProp;
-    prefixedProp.AppendLiteral("-moz-");
-    prefixedProp.Append(aFontDesc);
-    which = nsCSSFontDesc(gFontDescTable->Lookup(prefixedProp));
   }
   return which;
 }
@@ -634,12 +628,6 @@ nsCSSProps::LookupFontDesc(const nsAString& aFontDesc)
 
   if (which == eCSSFontDesc_Display && !StylePrefs::sFontDisplayEnabled) {
     which = eCSSFontDesc_UNKNOWN;
-  } else if (which == eCSSFontDesc_UNKNOWN) {
-    // check for unprefixed font-feature-settings/font-language-override
-    nsAutoString prefixedProp;
-    prefixedProp.AppendLiteral("-moz-");
-    prefixedProp.Append(aFontDesc);
-    which = nsCSSFontDesc(gFontDescTable->Lookup(prefixedProp));
   }
   return which;
 }
