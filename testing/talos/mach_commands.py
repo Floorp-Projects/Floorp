@@ -71,7 +71,6 @@ class TalosRunner(MozbuildObject):
             },
             'title': socket.gethostname(),
             'default_actions': default_actions,
-            'download_tooltool': True,
             'talos_extra_options': ['--develop'] + self.talos_args,
             'python3_manifest': {
                 'win32': 'python3.manifest',

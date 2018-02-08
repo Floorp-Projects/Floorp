@@ -18,7 +18,7 @@ add_task(async function test_removeVisitsByFilter() {
     info("Remover with options " + JSON.stringify(options));
     let SAMPLE_SIZE = options.sampleSize;
 
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
     await PlacesUtils.bookmarks.eraseEverything();
 
     // Populate the database.
@@ -258,7 +258,7 @@ add_task(async function test_removeVisitsByFilter() {
       await remover(options);
     }
   }
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 // Test the various error cases

@@ -5,18 +5,15 @@ var gContentAPI;
 var gContentWindow;
 
 registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("identity.fxaccounts.remote.signup.uri");
-  Services.prefs.clearUserPref("identity.fxaccounts.remote.email.uri");
+  Services.prefs.clearUserPref("identity.fxaccounts.remote.root");
   Services.prefs.clearUserPref("services.sync.username");
 });
 
 add_task(setup_UITourTest);
 
 add_task(async function setup() {
-  Services.prefs.setCharPref("identity.fxaccounts.remote.signup.uri",
-                             "https://example.com/signup");
-  Services.prefs.setCharPref("identity.fxaccounts.remote.email.uri",
-                             "https://example.com/?action=email");
+  Services.prefs.setCharPref("identity.fxaccounts.remote.root",
+                             "https://example.com");
 });
 
 add_UITour_task(async function test_checkSyncSetup_disabled() {
@@ -63,7 +60,7 @@ add_UITour_task(async function test_firefoxAccountsNoParams() {
   info("Load https://accounts.firefox.com");
   await gContentAPI.showFirefoxAccounts();
   await BrowserTestUtils.browserLoaded(gTestTab.linkedBrowser, false,
-                                       "https://example.com/signup?entrypoint=uitour");
+                                       "https://example.com/signup?service=sync&context=fx_desktop_v3&entrypoint=uitour");
 });
 
 
@@ -71,14 +68,14 @@ add_UITour_task(async function test_firefoxAccountsValidParams() {
   info("Load https://accounts.firefox.com");
   await gContentAPI.showFirefoxAccounts({ utm_foo: "foo", utm_bar: "bar" });
   await BrowserTestUtils.browserLoaded(gTestTab.linkedBrowser, false,
-                                       "https://example.com/signup?entrypoint=uitour&utm_foo=foo&utm_bar=bar");
+                                       "https://example.com/signup?service=sync&context=fx_desktop_v3&entrypoint=uitour&utm_foo=foo&utm_bar=bar");
 });
 
 add_UITour_task(async function test_firefoxAccountsWithEmail() {
   info("Load https://accounts.firefox.com");
   await gContentAPI.showFirefoxAccounts(null, "foo@bar.com");
   await BrowserTestUtils.browserLoaded(gTestTab.linkedBrowser, false,
-                                       "https://example.com/?action=email&email=foo%40bar.com&entrypoint=uitour");
+                                       "https://example.com/?service=sync&context=fx_desktop_v3&entrypoint=uitour&email=foo%40bar.com");
 });
 
 add_UITour_task(async function test_firefoxAccountsNonAlphaValue() {
@@ -91,7 +88,7 @@ add_UITour_task(async function test_firefoxAccountsNonAlphaValue() {
   info("Load https://accounts.firefox.com");
   await gContentAPI.showFirefoxAccounts({ utm_foo: value });
   await BrowserTestUtils.browserLoaded(gTestTab.linkedBrowser, false,
-                                       "https://example.com/signup?entrypoint=uitour&utm_foo=" + expected);
+                                       "https://example.com/signup?service=sync&context=fx_desktop_v3&entrypoint=uitour&utm_foo=" + expected);
 });
 
 // A helper to check the request was ignored due to invalid params.

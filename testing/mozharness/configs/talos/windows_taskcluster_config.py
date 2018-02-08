@@ -22,7 +22,6 @@ config = {
         'mozinstall': ['%s/scripts/python' % VENV_PATH,
                        '%s/scripts/mozinstall-script.py' % VENV_PATH],
         'hg': os.path.join(os.environ['PROGRAMFILES'], 'Mercurial', 'hg'),
-        'tooltool.py': [PYTHON, os.path.join(os.environ['MOZILLABUILD'], 'tooltool.py')],
     },
     "title": socket.gethostname().split('.')[0],
     "default_actions": [

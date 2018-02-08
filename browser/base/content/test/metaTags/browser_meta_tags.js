@@ -19,7 +19,7 @@ add_task(async function test_metadata() {
   is(pageInfo.previewImageURL.href, "https://test.com/og-image-secure-url.jpg", "got the correct preview image");
 
   await BrowserTestUtils.removeTab(tab);
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 /**
@@ -41,5 +41,5 @@ add_task(async function multiple_tabs() {
 
   await BrowserTestUtils.removeTab(tab);
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });

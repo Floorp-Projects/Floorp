@@ -542,7 +542,7 @@ add_task(async function checkUndoVisitsState() {
     last: new Date("2016-04-03").getTime() * 1000,
   });
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function checkUndoVisitsState() {
@@ -675,7 +675,7 @@ add_task(async function checkUndoVisitsState() {
                "2 example.org visits should have persisted (out of 4).");
   Assert.equal(await visitsForURL("http://www.unrelated.org/"), 1,
                "1 unrelated.org visits should have persisted as it's not involved in the import.");
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function checkHistoryRemovalCompletion() {

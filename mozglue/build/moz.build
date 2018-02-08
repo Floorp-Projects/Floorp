@@ -56,12 +56,21 @@ if CONFIG['MOZ_WIDGET_TOOLKIT']:
         if CONFIG['CC_TYPE'] == "msvc":
             SOURCES += ['WindowsCFGStatus.cpp']
         SOURCES += [
+            'Authenticode.cpp',
             'WindowsDllBlocklist.cpp',
         ]
 
         DisableStlWrapping()
         OS_LIBS += [
+            'crypt32',
             'version',
+            'wintrust',
+        ]
+        EXPORTS.mozilla += [
+            'Authenticode.h',
+        ]
+        EXPORTS.mozilla.glue += [
+            'WindowsDllServices.h',
         ]
 
     EXPORTS.mozilla += [
@@ -70,7 +79,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT']:
         'SSE.h',
         'WindowsCFGStatus.h',
         'WindowsDllBlocklist.h',
-        'WindowsDllServices.h',
     ]
 
     if CONFIG['CPU_ARCH'].startswith('x86'):

@@ -20,11 +20,6 @@ const BOGUS_AUTHKEY = "GSsIiaD2Mr83iPqwFNK4rw";
 Services.prefs.setCharPref("identity.fxaccounts.loglevel", "Trace");
 Log.repository.getLogger("FirefoxAccounts").level = Log.Level.Trace;
 
-Services.prefs.setCharPref("identity.fxaccounts.remote.oauth.uri", "https://example.com/v1");
-Services.prefs.setCharPref("identity.fxaccounts.oauth.client_id", "abc123");
-Services.prefs.setCharPref("identity.fxaccounts.remote.profile.uri", "http://example.com/v1");
-Services.prefs.setCharPref("identity.fxaccounts.settings.uri", "http://accounts.example.com/");
-
 const DEVICE_REGISTRATION_VERSION = 42;
 
 function MockStorageManager() {

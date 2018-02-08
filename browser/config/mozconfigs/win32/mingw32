@@ -39,7 +39,6 @@ ac_add_options --disable-warnings-as-errors
 ac_add_options --disable-accessibility # https://sourceforge.net/p/mingw-w64/bugs/648/
 
 # Long story
-ac_add_options --disable-sandbox # Bug 1230910
 ac_add_options --disable-stylo # Bug 1390583
 
 # These aren't supported on mingw at this time

@@ -41,7 +41,7 @@ add_task(async function test_execute() {
   // get charset from bookmarked page
   Assert.equal((await PlacesUtils.getCharsetForURI(TEST_BOOKMARKED_URI)), charset);
 
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   // ensure that charset has gone for not-bookmarked page
   Assert.notEqual((await PlacesUtils.getCharsetForURI(TEST_URI)), charset);

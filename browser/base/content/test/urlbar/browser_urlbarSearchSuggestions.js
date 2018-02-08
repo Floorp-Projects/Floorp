@@ -14,7 +14,7 @@ add_task(async function prepare() {
 
     // Clicking suggestions causes visits to search results pages, so clear that
     // history now.
-    await PlacesTestUtils.clearHistory();
+    await PlacesUtils.history.clear();
 
     // Make sure the popup is closed for the next test.
     gURLBar.blur();
