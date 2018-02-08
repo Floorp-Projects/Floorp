@@ -131,16 +131,9 @@ protected:
 
 private:
 
-  // Only used for top level workers.
-  nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
-
   // Only touched on the parent thread (currently this is always the main
   // thread as SharedWorkers are always top-level).
   nsTArray<RefPtr<SharedWorker>> mSharedWorkers;
-
-  // SharedWorkers may have multiple windows paused, so this must be
-  // a count instead of just a boolean.
-  uint32_t mParentWindowPausedDepth;
 
 protected:
   WorkerPrivateParent(WorkerPrivate* aParent,
@@ -224,15 +217,6 @@ public:
   bool
   Thaw(nsPIDOMWindowInner* aWindow);
 
-  // When we debug a worker, we want to disconnect the window and the worker
-  // communication. This happens calling this method.
-  // Note: this method doesn't suspend the worker! Use Freeze/Thaw instead.
-  void
-  ParentWindowPaused();
-
-  void
-  ParentWindowResumed();
-
   bool
   Terminate()
   {
@@ -282,20 +266,6 @@ public:
 
   void
   WorkerScriptLoaded();
-
-  void
-  QueueRunnable(nsIRunnable* aRunnable)
-  {
-    AssertIsOnParentThread();
-    mQueuedRunnables.AppendElement(aRunnable);
-  }
-
-  bool
-  IsParentWindowPaused() const
-  {
-    AssertIsOnParentThread();
-    return mParentWindowPausedDepth > 0;
-  }
 
   nsresult
   SetPrincipalOnMainThread(nsIPrincipal* aPrincipal, nsILoadGroup* aLoadGroup);
@@ -459,10 +429,18 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 
   RefPtr<PerformanceStorage> mPerformanceStorage;
 
+  // Only used for top level workers.
+  nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
+
   JS::UniqueChars mDefaultLocale; // nulled during worker JSContext init
   TimeStamp mKillTime;
   uint32_t mErrorHandlerRecursionCount;
   uint32_t mNextTimeoutId;
+
+  // SharedWorkers may have multiple windows paused, so this must be
+  // a count instead of just a boolean.
+  uint32_t mParentWindowPausedDepth;
+
   WorkerStatus mParentStatus;
   WorkerStatus mStatus;
   UniquePtr<ClientSource> mClientSource;
@@ -1044,6 +1022,22 @@ public:
     return mParentFrozen;
   }
 
+  bool
+  IsParentWindowPaused() const
+  {
+    AssertIsOnParentThread();
+    return mParentWindowPausedDepth > 0;
+  }
+
+  // When we debug a worker, we want to disconnect the window and the worker
+  // communication. This happens calling this method.
+  // Note: this method doesn't suspend the worker! Use Freeze/Thaw instead.
+  void
+  ParentWindowPaused();
+
+  void
+  ParentWindowResumed();
+
   const nsString&
   ScriptURL() const
   {
@@ -1391,6 +1385,13 @@ public:
     // any thread
     MOZ_ASSERT(IsServiceWorker());
     mLoadingWorkerScript = aLoadingWorkerScript;
+  }
+
+  void
+  QueueRunnable(nsIRunnable* aRunnable)
+  {
+    AssertIsOnParentThread();
+    mQueuedRunnables.AppendElement(aRunnable);
   }
 
 private:
