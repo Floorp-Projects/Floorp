@@ -97,14 +97,15 @@ public class PushService implements BundleEventListener {
     }
 
     @ReflectionTarget
-    public static synchronized void onCreate(Context context) {
+    public static synchronized boolean onCreate(Context context) {
         if (sInstance != null) {
-            return;
+            return false;
         }
         sInstance = new PushService(context);
 
         sInstance.registerGeckoEventListener();
         sInstance.onStartup();
+        return true;
     }
 
     protected final PushManager pushManager;
