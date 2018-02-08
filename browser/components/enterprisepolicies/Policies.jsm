@@ -37,14 +37,6 @@ this.Policies = {
     }
   },
 
-  "DisableAppUpdate": {
-    onBeforeAddons(manager, param) {
-      if (param == true) {
-        manager.disallowFeature("appUpdate");
-      }
-    }
-  },
-
   "display_menu_bar": {
     onBeforeUIStartup(manager, param) {
       if (param == true) {

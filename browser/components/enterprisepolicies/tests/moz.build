@@ -8,6 +8,5 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox", "General")
 
 BROWSER_CHROME_MANIFESTS += [
-    'browser/browser.ini',
-    'browser/disable_app_update/browser.ini'
+    'browser/browser.ini'
 ]
