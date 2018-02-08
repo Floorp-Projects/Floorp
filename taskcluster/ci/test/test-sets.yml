@@ -70,6 +70,7 @@ talos:
     - talos-tp6
     - talos-tp6-stylo-threads
     - talos-speedometer
+    - talos-motionmark
     - talos-h1
     - talos-h2
 
@@ -117,6 +118,7 @@ linux-qr-talos:
     - talos-tp6
     - talos-tp6-stylo-threads
     - talos-speedometer
+    - talos-motionmark
 
 linux-qr-tests:
     - cppunit
@@ -250,6 +252,7 @@ macosx64-talos:
     - talos-tp6
     - talos-tp6-stylo-threads
     - talos-speedometer
+    - talos-motionmark
     - talos-h1
 
 macosx64-talos-profiling:
