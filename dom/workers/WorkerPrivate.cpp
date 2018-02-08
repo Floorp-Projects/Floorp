@@ -1627,29 +1627,23 @@ WorkerPrivate::DispatchPrivate(already_AddRefed<WorkerRunnable> aRunnable,
   return NS_OK;
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::EnableDebugger()
+WorkerPrivate::EnableDebugger()
 {
   AssertIsOnParentThread();
 
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-
-  if (NS_FAILED(RegisterWorkerDebugger(self))) {
+  if (NS_FAILED(RegisterWorkerDebugger(this))) {
     NS_WARNING("Failed to register worker debugger!");
     return;
   }
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::DisableDebugger()
+WorkerPrivate::DisableDebugger()
 {
   AssertIsOnParentThread();
 
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-
-  if (NS_FAILED(UnregisterWorkerDebugger(self))) {
+  if (NS_FAILED(UnregisterWorkerDebugger(this))) {
     NS_WARNING("Failed to unregister worker debugger!");
   }
 }
@@ -1874,7 +1868,7 @@ WorkerPrivateParent<Derived>::Freeze(nsPIDOMWindowInner* aWindow)
     }
   }
 
-  DisableDebugger();
+  self->DisableDebugger();
 
   RefPtr<FreezeRunnable> runnable =
     new FreezeRunnable(ParentAsWorkerPrivate());
@@ -1937,7 +1931,7 @@ WorkerPrivateParent<Derived>::Thaw(nsPIDOMWindowInner* aWindow)
     }
   }
 
-  EnableDebugger();
+  self->EnableDebugger();
 
   // Execute queued runnables before waking up the worker, otherwise the worker
   // could post new messages before we run those that have been queued.
