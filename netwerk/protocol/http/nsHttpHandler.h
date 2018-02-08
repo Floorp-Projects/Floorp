@@ -148,6 +148,8 @@ public:
 
     uint32_t       ThrottlingReadLimit() { return mThrottleVersion == 1 ? 0 : mThrottleReadLimit; }
 
+    bool           AllowPlaintextServerTiming() { return mAllowPlaintextServerTiming; }
+
     // TCP Keepalive configuration values.
 
     // Returns true if TCP keepalive should be enabled for short-lived conns.
@@ -665,6 +667,8 @@ private:
 
     // If true, the transactions from active tab will be dispatched first.
     bool mActiveTabPriority;
+
+    bool mAllowPlaintextServerTiming;
 
 private:
     // For Rate Pacing Certain Network Events. Only assign this pointer on
