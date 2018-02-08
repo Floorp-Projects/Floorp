@@ -85,10 +85,10 @@ this.RecipeRunner = {
   },
 
   disable() {
-    if (!this.enabled) {
-      return;
+    if (this.enabled) {
+      this.unregisterTimer();
     }
-    this.unregisterTimer();
+    // this.enabled may be null, so always set it to false
     this.enabled = false;
   },
 
@@ -156,11 +156,12 @@ this.RecipeRunner = {
 
     const apiUrl = Services.prefs.getCharPref(API_URL_PREF);
     if (!apiUrl || !apiUrl.startsWith("https://")) {
-      log.warn(`Disabling shield because ${API_URL_PREF} is not an HTTPS url: ${apiUrl}.`);
+      log.warn(`Disabling Shield because ${API_URL_PREF} is not an HTTPS url: ${apiUrl}.`);
       this.disable();
       return;
     }
 
+    log.debug(`Enabling Shield`);
     this.enable();
   },
 

@@ -55,6 +55,12 @@ class ShieldFrameListener {
           frameGlobal.AboutPages.aboutStudies.getShieldLearnMoreHref()
         );
         break;
+      case "GetRemoteValue:StudiesEnabled":
+        this.triggerPageCallback(
+          "ReceiveRemoteValue:StudiesEnabled",
+          frameGlobal.AboutPages.aboutStudies.getStudiesEnabled()
+        );
+        break;
       case "NavigateToDataPreferences":
         sendAsyncMessage("Shield:OpenDataPreferences");
         break;
