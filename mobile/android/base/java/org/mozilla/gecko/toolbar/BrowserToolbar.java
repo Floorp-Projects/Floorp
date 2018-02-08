@@ -541,6 +541,11 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         }
     }
 
+    public void onLocaleReady(final String locale) {
+        final Tabs tabs = Tabs.getInstance();
+        tabsCounter.setCount(tabs.getDisplayCount());
+    }
+
     /**
      * Updates the progress bar percentage and hides/shows it depending on the loading state of the
      * currently selected tab.

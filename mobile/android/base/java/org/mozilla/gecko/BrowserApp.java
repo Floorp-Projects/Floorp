@@ -2915,6 +2915,7 @@ public class BrowserApp extends GeckoApp
         super.onLocaleReady(locale);
 
         HomePanelsManager.getInstance().onLocaleReady(locale);
+        mBrowserToolbar.onLocaleReady(locale);
 
         if (mMenu != null) {
             mMenu.clear();
