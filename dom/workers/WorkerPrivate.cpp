@@ -1438,18 +1438,16 @@ WorkerPrivate::SyncLoopInfo::SyncLoopInfo(EventTarget* aEventTarget)
 {
 }
 
-template <class Derived>
 nsIDocument*
-WorkerPrivateParent<Derived>::GetDocument() const
+WorkerPrivate::GetDocument() const
 {
   AssertIsOnMainThread();
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-  if (self->mLoadInfo.mWindow) {
-    return self->mLoadInfo.mWindow->GetExtantDoc();
+  if (mLoadInfo.mWindow) {
+    return mLoadInfo.mWindow->GetExtantDoc();
   }
   // if we don't have a document, we should query the document
   // from the parent in case of a nested worker
-  WorkerPrivate* parent = self->mParent;
+  WorkerPrivate* parent = mParent;
   while (parent) {
     if (parent->mLoadInfo.mWindow) {
       return parent->mLoadInfo.mWindow->GetExtantDoc();
@@ -2040,58 +2038,50 @@ WorkerPrivate::ProxyReleaseMainThreadObjects()
   return result;
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::UpdateContextOptions(
-                                    const JS::ContextOptions& aContextOptions)
+WorkerPrivate::UpdateContextOptions(const JS::ContextOptions& aContextOptions)
 {
   AssertIsOnParentThread();
-  WorkerPrivate* self = ParentAsWorkerPrivate();
 
   {
     MutexAutoLock lock(mMutex);
-    self->mJSSettings.contextOptions = aContextOptions;
+    mJSSettings.contextOptions = aContextOptions;
   }
 
   RefPtr<UpdateContextOptionsRunnable> runnable =
-    new UpdateContextOptionsRunnable(ParentAsWorkerPrivate(), aContextOptions);
+    new UpdateContextOptionsRunnable(this, aContextOptions);
   if (!runnable->Dispatch()) {
     NS_WARNING("Failed to update worker context options!");
   }
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::UpdateLanguages(const nsTArray<nsString>& aLanguages)
+WorkerPrivate::UpdateLanguages(const nsTArray<nsString>& aLanguages)
 {
   AssertIsOnParentThread();
 
   RefPtr<UpdateLanguagesRunnable> runnable =
-    new UpdateLanguagesRunnable(ParentAsWorkerPrivate(), aLanguages);
+    new UpdateLanguagesRunnable(this, aLanguages);
   if (!runnable->Dispatch()) {
     NS_WARNING("Failed to update worker languages!");
   }
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::UpdateJSWorkerMemoryParameter(JSGCParamKey aKey,
-                                                            uint32_t aValue)
+WorkerPrivate::UpdateJSWorkerMemoryParameter(JSGCParamKey aKey, uint32_t aValue)
 {
   AssertIsOnParentThread();
-  WorkerPrivate* self = ParentAsWorkerPrivate();
 
   bool found = false;
 
   {
     MutexAutoLock lock(mMutex);
-    found = self->mJSSettings.ApplyGCSetting(aKey, aValue);
+    found = mJSSettings.ApplyGCSetting(aKey, aValue);
   }
 
   if (found) {
     RefPtr<UpdateJSWorkerMemoryParameterRunnable> runnable =
-      new UpdateJSWorkerMemoryParameterRunnable(ParentAsWorkerPrivate(), aKey,
-                                                aValue);
+      new UpdateJSWorkerMemoryParameterRunnable(this, aKey, aValue);
     if (!runnable->Dispatch()) {
       NS_WARNING("Failed to update memory parameter!");
     }
@@ -2099,63 +2089,56 @@ WorkerPrivateParent<Derived>::UpdateJSWorkerMemoryParameter(JSGCParamKey aKey,
 }
 
 #ifdef JS_GC_ZEAL
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::UpdateGCZeal(uint8_t aGCZeal, uint32_t aFrequency)
+WorkerPrivate::UpdateGCZeal(uint8_t aGCZeal, uint32_t aFrequency)
 {
   AssertIsOnParentThread();
-  WorkerPrivate* self = ParentAsWorkerPrivate();
 
   {
     MutexAutoLock lock(mMutex);
-    self->mJSSettings.gcZeal = aGCZeal;
-    self->mJSSettings.gcZealFrequency = aFrequency;
+    mJSSettings.gcZeal = aGCZeal;
+    mJSSettings.gcZealFrequency = aFrequency;
   }
 
   RefPtr<UpdateGCZealRunnable> runnable =
-    new UpdateGCZealRunnable(ParentAsWorkerPrivate(), aGCZeal, aFrequency);
+    new UpdateGCZealRunnable(this, aGCZeal, aFrequency);
   if (!runnable->Dispatch()) {
     NS_WARNING("Failed to update worker gczeal!");
   }
 }
 #endif
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::GarbageCollect(bool aShrinking)
+WorkerPrivate::GarbageCollect(bool aShrinking)
 {
   AssertIsOnParentThread();
 
   RefPtr<GarbageCollectRunnable> runnable =
-    new GarbageCollectRunnable(ParentAsWorkerPrivate(), aShrinking,
-                               /* collectChildren = */ true);
+    new GarbageCollectRunnable(this, aShrinking, /* collectChildren = */ true);
   if (!runnable->Dispatch()) {
     NS_WARNING("Failed to GC worker!");
   }
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::CycleCollect(bool aDummy)
+WorkerPrivate::CycleCollect(bool aDummy)
 {
   AssertIsOnParentThread();
 
   RefPtr<CycleCollectRunnable> runnable =
-    new CycleCollectRunnable(ParentAsWorkerPrivate(),
-                             /* collectChildren = */ true);
+    new CycleCollectRunnable(this, /* collectChildren = */ true);
   if (!runnable->Dispatch()) {
     NS_WARNING("Failed to CC worker!");
   }
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::OfflineStatusChangeEvent(bool aIsOffline)
+WorkerPrivate::OfflineStatusChangeEvent(bool aIsOffline)
 {
   AssertIsOnParentThread();
 
   RefPtr<OfflineStatusChangeRunnable> runnable =
-    new OfflineStatusChangeRunnable(ParentAsWorkerPrivate(), aIsOffline);
+    new OfflineStatusChangeRunnable(this, aIsOffline);
   if (!runnable->Dispatch()) {
     NS_WARNING("Failed to dispatch offline status change event!");
   }
@@ -2198,14 +2181,12 @@ WorkerPrivate::OfflineStatusChangeEventInternal(bool aIsOffline)
   globalScope->DispatchEvent(event, &dummy);
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::MemoryPressure(bool aDummy)
+WorkerPrivate::MemoryPressure(bool aDummy)
 {
   AssertIsOnParentThread();
 
-  RefPtr<MemoryPressureRunnable> runnable =
-    new MemoryPressureRunnable(ParentAsWorkerPrivate());
+  RefPtr<MemoryPressureRunnable> runnable = new MemoryPressureRunnable(this);
   Unused << NS_WARN_IF(!runnable->Dispatch());
 }
 
@@ -2436,17 +2417,15 @@ WorkerPrivate::CloseAllSharedWorkers()
   Cancel();
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::WorkerScriptLoaded()
+WorkerPrivate::WorkerScriptLoaded()
 {
   AssertIsOnMainThread();
-  WorkerPrivate* self = ParentAsWorkerPrivate();
 
-  if (self->IsSharedWorker() || self->IsServiceWorker()) {
+  if (IsSharedWorker() || IsServiceWorker()) {
     // No longer need to hold references to the window or document we came from.
-    self->mLoadInfo.mWindow = nullptr;
-    self->mLoadInfo.mScriptContext = nullptr;
+    mLoadInfo.mWindow = nullptr;
+    mLoadInfo.mScriptContext = nullptr;
   }
 }
 
@@ -2512,50 +2491,40 @@ WorkerPrivate::SetBaseURI(nsIURI* aBaseURI)
   nsContentUtils::GetUTFOrigin(aBaseURI, mLocationInfo.mOrigin);
 }
 
-template <class Derived>
 nsresult
-WorkerPrivateParent<Derived>::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
-                                                       nsILoadGroup* aLoadGroup)
+WorkerPrivate::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
+                                        nsILoadGroup* aLoadGroup)
 {
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-  return self->mLoadInfo.SetPrincipalOnMainThread(aPrincipal, aLoadGroup);
+  return mLoadInfo.SetPrincipalOnMainThread(aPrincipal, aLoadGroup);
 }
 
-template <class Derived>
 nsresult
-WorkerPrivateParent<Derived>::SetPrincipalFromChannel(nsIChannel* aChannel)
+WorkerPrivate::SetPrincipalFromChannel(nsIChannel* aChannel)
 {
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-  return self->mLoadInfo.SetPrincipalFromChannel(aChannel);
+  return mLoadInfo.SetPrincipalFromChannel(aChannel);
 }
 
-template <class Derived>
 bool
-WorkerPrivateParent<Derived>::FinalChannelPrincipalIsValid(nsIChannel* aChannel)
+WorkerPrivate::FinalChannelPrincipalIsValid(nsIChannel* aChannel)
 {
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-  return self->mLoadInfo.FinalChannelPrincipalIsValid(aChannel);
+  return mLoadInfo.FinalChannelPrincipalIsValid(aChannel);
 }
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-template <class Derived>
 bool
-WorkerPrivateParent<Derived>::PrincipalURIMatchesScriptURL()
+WorkerPrivate::PrincipalURIMatchesScriptURL()
 {
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-  return self->mLoadInfo.PrincipalURIMatchesScriptURL();
+  return mLoadInfo.PrincipalURIMatchesScriptURL();
 }
 #endif
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::UpdateOverridenLoadGroup(nsILoadGroup* aBaseLoadGroup)
+WorkerPrivate::UpdateOverridenLoadGroup(nsILoadGroup* aBaseLoadGroup)
 {
   AssertIsOnMainThread();
 
   // The load group should have been overriden at init time.
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-  self->mLoadInfo.mInterfaceRequestor->MaybeAddTabChild(aBaseLoadGroup);
+  mLoadInfo.mInterfaceRequestor->MaybeAddTabChild(aBaseLoadGroup);
 }
 
 void
