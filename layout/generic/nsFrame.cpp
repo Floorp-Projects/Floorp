@@ -5635,41 +5635,56 @@ nsFrame::ComputeSize(gfxContext*         aRenderingContext,
   bool isFlexItem = parentFrame && parentFrame->IsFlexContainerFrame() &&
     !parentFrame->HasAnyStateBits(NS_STATE_FLEX_IS_EMULATING_LEGACY_BOX) &&
     !HasAnyStateBits(NS_FRAME_OUT_OF_FLOW);
-  bool isInlineFlexItem = false;
+  // This bool only gets set (and used) if isFlexItem is true.
+  // It indicates (for flex items) whether we're using their flex-basis for the
+  // item's own ISize property vs. for its BSize property.
+  bool usingFlexBasisForISize;
   if (isFlexItem) {
     // Flex items use their "flex-basis" property in place of their main-size
     // property (e.g. "width") for sizing purposes, *unless* they have
     // "flex-basis:auto", in which case they use their main-size property after
     // all.
     uint32_t flexDirection = GetParent()->StylePosition()->mFlexDirection;
-    isInlineFlexItem =
+    const bool flexContainerIsRowOriented =
       flexDirection == NS_STYLE_FLEX_DIRECTION_ROW ||
       flexDirection == NS_STYLE_FLEX_DIRECTION_ROW_REVERSE;
+    const bool inlineAxisSameAsParent =
+      !aWM.IsOrthogonalTo(parentFrame->GetWritingMode());
+
+    // If parent is row-oriented, its main axis (i.e. the flex-basis axis) is
+    // its own inline axis. So if it's row oriented and our own inline axis
+    // is the same as our parent's, then we'll be using flex-basis in place
+    // of our _ISize_ sizing property.
+    // Otherwise, we'll be using flex-basis for our _BSize_ sizing property
+    // (unless both conditions are false, in which case we flip back around to
+    // using our ISize sizing property).
+    usingFlexBasisForISize =
+      (flexContainerIsRowOriented == inlineAxisSameAsParent);
 
     // NOTE: The logic here should match the similar chunk for determining
     // inlineStyleCoord and blockStyleCoord in
     // nsFrame::ComputeSizeWithIntrinsicDimensions().
     const nsStyleCoord* flexBasis = &(stylePos->mFlexBasis);
     if (flexBasis->GetUnit() != eStyleUnit_Auto) {
-      if (isInlineFlexItem) {
-        inlineStyleCoord = flexBasis;
-      } else {
-        // One caveat for vertical flex items: We don't support enumerated
-        // values (e.g. "max-content") for height properties yet. So, if our
-        // computed flex-basis is an enumerated value, we'll just behave as if
-        // it were "auto", which means "use the main-size property after all"
-        // (which is "height", in this case).
-        // NOTE: Once we support intrinsic sizing keywords for "height",
-        // we should remove this check.
-        if (flexBasis->GetUnit() != eStyleUnit_Enumerated) {
-          blockStyleCoord = flexBasis;
-        }
+      // One caveat for when flex-basis is stomping on 'height': We don't
+      // support enumerated values (e.g. "max-content") for height yet (that's
+      // bug 567039). So, if our computed flex-basis is an enumerated value,
+      // we'll just behave as if it were "auto", which means "use the main-size
+      // property after all" (which is "height", in this case).  NOTE: Once we
+      // support intrinsic sizing keywords for "height", we should remove this
+      // check.
+      bool usingFlexBasisForHeight =
+        (usingFlexBasisForISize != aWM.IsVertical());
+      if (!usingFlexBasisForHeight ||
+          flexBasis->GetUnit() != eStyleUnit_Enumerated) {
+        // Override whichever coord we're overriding:
+        (usingFlexBasisForISize ? inlineStyleCoord : blockStyleCoord) =
+          flexBasis;
       }
     }
   }
 
   // Compute inline-axis size
-
   if (inlineStyleCoord->GetUnit() != eStyleUnit_Auto) {
     result.ISize(aWM) =
       ComputeISizeValue(aRenderingContext, aCBSize.ISize(aWM),
@@ -5706,7 +5721,7 @@ nsFrame::ComputeSize(gfxContext*         aRenderingContext,
   const nsStyleCoord& maxISizeCoord = stylePos->MaxISize(aWM);
   nscoord maxISize = NS_UNCONSTRAINEDSIZE;
   if (maxISizeCoord.GetUnit() != eStyleUnit_None &&
-      !(isFlexItem && isInlineFlexItem)) {
+      !(isFlexItem && usingFlexBasisForISize)) {
     maxISize =
       ComputeISizeValue(aRenderingContext, aCBSize.ISize(aWM),
                         boxSizingAdjust.ISize(aWM), boxSizingToMarginEdgeISize,
@@ -5717,7 +5732,7 @@ nsFrame::ComputeSize(gfxContext*         aRenderingContext,
   const nsStyleCoord& minISizeCoord = stylePos->MinISize(aWM);
   nscoord minISize;
   if (minISizeCoord.GetUnit() != eStyleUnit_Auto &&
-      !(isFlexItem && isInlineFlexItem)) {
+      !(isFlexItem && usingFlexBasisForISize)) {
     minISize =
       ComputeISizeValue(aRenderingContext, aCBSize.ISize(aWM),
                         boxSizingAdjust.ISize(aWM), boxSizingToMarginEdgeISize,
@@ -5794,7 +5809,7 @@ nsFrame::ComputeSize(gfxContext*         aRenderingContext,
 
   if (result.BSize(aWM) != NS_UNCONSTRAINEDSIZE) {
     if (!nsLayoutUtils::IsAutoBSize(maxBSizeCoord, aCBSize.BSize(aWM)) &&
-        !(isFlexItem && !isInlineFlexItem)) {
+        !(isFlexItem && !usingFlexBasisForISize)) {
       nscoord maxBSize =
         nsLayoutUtils::ComputeBSizeValue(aCBSize.BSize(aWM),
                                          boxSizingAdjust.BSize(aWM),
@@ -5805,7 +5820,7 @@ nsFrame::ComputeSize(gfxContext*         aRenderingContext,
     const nsStyleCoord& minBSizeCoord = stylePos->MinBSize(aWM);
 
     if (!nsLayoutUtils::IsAutoBSize(minBSizeCoord, aCBSize.BSize(aWM)) &&
-        !(isFlexItem && !isInlineFlexItem)) {
+        !(isFlexItem && !usingFlexBasisForISize)) {
       nscoord minBSize =
         nsLayoutUtils::ComputeBSizeValue(aCBSize.BSize(aWM),
                                          boxSizingAdjust.BSize(aWM),
@@ -5866,7 +5881,10 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(gfxContext*          aRenderingConte
   const bool isFlexItem = parentFrame && parentFrame->IsFlexContainerFrame() &&
     !parentFrame->HasAnyStateBits(NS_STATE_FLEX_IS_EMULATING_LEGACY_BOX) &&
     !HasAnyStateBits(NS_FRAME_OUT_OF_FLOW);
-  bool isInlineFlexItem = false;
+  // This bool only gets set (and used) if isFlexItem is true.
+  // It indicates (for flex items) whether we're using their flex-basis for the
+  // item's own ISize property vs. for its BSize property.
+  bool usingFlexBasisForISize;
   Maybe<nsStyleCoord> imposedMainSizeStyleCoord;
 
   // If this is a flex item, and we're measuring its cross size after flexing
@@ -5877,9 +5895,15 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(gfxContext*          aRenderingConte
   if (isFlexItem) {
     uint32_t flexDirection =
       GetParent()->StylePosition()->mFlexDirection;
-    isInlineFlexItem =
+    const bool flexContainerIsRowOriented =
       flexDirection == NS_STYLE_FLEX_DIRECTION_ROW ||
       flexDirection == NS_STYLE_FLEX_DIRECTION_ROW_REVERSE;
+    const bool inlineAxisSameAsParent =
+      !aWM.IsOrthogonalTo(parentFrame->GetWritingMode());
+
+    // (See explanatory comment in similar code within ComputeSize.)
+    usingFlexBasisForISize =
+      (flexContainerIsRowOriented == inlineAxisSameAsParent);
 
     // If FlexItemMainSizeOverride frame-property is set, then that means the
     // flex container is imposing a main-size on this flex item for it to use
@@ -5890,7 +5914,7 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(gfxContext*          aRenderingConte
     if (didImposeMainSize) {
       imposedMainSizeStyleCoord.emplace(imposedMainSize,
                                         nsStyleCoord::CoordConstructor);
-      if (isInlineFlexItem) {
+      if (usingFlexBasisForISize) {
         inlineStyleCoord = imposedMainSizeStyleCoord.ptr();
       } else {
         blockStyleCoord = imposedMainSizeStyleCoord.ptr();
@@ -5905,19 +5929,20 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(gfxContext*          aRenderingConte
       // inlineStyleCoord and blockStyleCoord in nsFrame::ComputeSize().
       const nsStyleCoord* flexBasis = &(stylePos->mFlexBasis);
       if (flexBasis->GetUnit() != eStyleUnit_Auto) {
-        if (isInlineFlexItem) {
-          inlineStyleCoord = flexBasis;
-        } else {
-          // One caveat for vertical flex items: We don't support enumerated
-          // values (e.g. "max-content") for height properties yet. So, if our
-          // computed flex-basis is an enumerated value, we'll just behave as if
-          // it were "auto", which means "use the main-size property after all"
-          // (which is "height", in this case).
-          // NOTE: Once we support intrinsic sizing keywords for "height",
-          // we should remove this check.
-          if (flexBasis->GetUnit() != eStyleUnit_Enumerated) {
-            blockStyleCoord = flexBasis;
-          }
+        // One caveat for when flex-basis is stomping on 'height': We don't
+        // support enumerated values (e.g. "max-content") for height yet
+        // (that's bug 567039). So, if our computed flex-basis is an enumerated
+        // value, we'll just behave as if it were "auto", which means "use the
+        // main-size property after all" (which is "height", in this case).
+        // NOTE: Once we support intrinsic sizing keywords for "height", we
+        // should remove this check.
+        bool usingFlexBasisForHeight =
+          (usingFlexBasisForISize != aWM.IsVertical());
+        if (!usingFlexBasisForHeight ||
+            flexBasis->GetUnit() != eStyleUnit_Enumerated) {
+          // Override whichever coord we're overriding:
+          (usingFlexBasisForISize ? inlineStyleCoord : blockStyleCoord) =
+            flexBasis;
         }
       }
     }
@@ -6030,7 +6055,7 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(gfxContext*          aRenderingConte
   const nsStyleCoord& maxISizeCoord = stylePos->MaxISize(aWM);
 
   if (maxISizeCoord.GetUnit() != eStyleUnit_None &&
-      !(isFlexItem && isInlineFlexItem)) {
+      !(isFlexItem && usingFlexBasisForISize)) {
     maxISize = ComputeISizeValue(aRenderingContext,
                  aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
                  boxSizingToMarginEdgeISize, maxISizeCoord, aFlags);
@@ -6045,7 +6070,7 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(gfxContext*          aRenderingConte
   const nsStyleCoord& minISizeCoord = stylePos->MinISize(aWM);
 
   if (minISizeCoord.GetUnit() != eStyleUnit_Auto &&
-      !(isFlexItem && isInlineFlexItem)) {
+      !(isFlexItem && usingFlexBasisForISize)) {
     minISize = ComputeISizeValue(aRenderingContext,
                  aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
                  boxSizingToMarginEdgeISize, minISizeCoord, aFlags);
@@ -6099,7 +6124,7 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(gfxContext*          aRenderingConte
   const nsStyleCoord& maxBSizeCoord = stylePos->MaxBSize(aWM);
 
   if (!nsLayoutUtils::IsAutoBSize(maxBSizeCoord, aCBSize.BSize(aWM)) &&
-      !(isFlexItem && !isInlineFlexItem)) {
+      !(isFlexItem && !usingFlexBasisForISize)) {
     maxBSize = nsLayoutUtils::ComputeBSizeValue(aCBSize.BSize(aWM),
                   boxSizingAdjust.BSize(aWM), maxBSizeCoord);
   } else {
@@ -6109,7 +6134,7 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(gfxContext*          aRenderingConte
   const nsStyleCoord& minBSizeCoord = stylePos->MinBSize(aWM);
 
   if (!nsLayoutUtils::IsAutoBSize(minBSizeCoord, aCBSize.BSize(aWM)) &&
-      !(isFlexItem && !isInlineFlexItem)) {
+      !(isFlexItem && !usingFlexBasisForISize)) {
     minBSize = nsLayoutUtils::ComputeBSizeValue(aCBSize.BSize(aWM),
                   boxSizingAdjust.BSize(aWM), minBSizeCoord);
   } else {
