@@ -17,79 +17,79 @@ namespace jit {
 void
 MacroAssembler::move64(Register64 src, Register64 dest)
 {
-    movePtr(src.reg, dest.reg);
+    Mov(ARMRegister(dest.reg, 64), ARMRegister(src.reg, 64));
 }
 
 void
 MacroAssembler::move64(Imm64 imm, Register64 dest)
 {
-    movePtr(ImmWord(imm.value), dest.reg);
+    Mov(ARMRegister(dest.reg, 64), imm.value);
 }
 
 void
 MacroAssembler::moveFloat32ToGPR(FloatRegister src, Register dest)
 {
-    MOZ_CRASH("NYI: moveFloat32ToGPR");
+    Fmov(ARMRegister(dest, 32), ARMFPRegister(src, 32));
 }
 
 void
 MacroAssembler::moveGPRToFloat32(Register src, FloatRegister dest)
 {
-    MOZ_CRASH("NYI: moveGPRToFloat32");
+    Fmov(ARMFPRegister(dest, 32), ARMRegister(src, 32));
 }
 
 void
 MacroAssembler::move8SignExtend(Register src, Register dest)
 {
-    MOZ_CRASH("NYI: move8SignExtend");
+    Sxtb(ARMRegister(dest, 32), ARMRegister(src, 32));
 }
 
 void
 MacroAssembler::move16SignExtend(Register src, Register dest)
 {
-    MOZ_CRASH("NYI: move16SignExtend");
+    Sxth(ARMRegister(dest, 32), ARMRegister(src, 32));
 }
 
 void
 MacroAssembler::moveDoubleToGPR64(FloatRegister src, Register64 dest)
 {
-    MOZ_CRASH("NYI: moveDoubleToGPR64");
+    Fmov(ARMRegister(dest.reg, 64), ARMFPRegister(src, 64));
 }
 
 void
 MacroAssembler::moveGPR64ToDouble(Register64 src, FloatRegister dest)
 {
-    MOZ_CRASH("NYI: moveGPR64ToDouble");
+    Fmov(ARMFPRegister(dest, 64), ARMRegister(src.reg, 64));
 }
 
 void
 MacroAssembler::move64To32(Register64 src, Register dest)
 {
-    MOZ_CRASH("NYI: move64To32");
+    Mov(ARMRegister(dest, 32), ARMRegister(src.reg, 32));
 }
 
 void
 MacroAssembler::move32To64ZeroExtend(Register src, Register64 dest)
 {
-    MOZ_CRASH("NYI: move32To64ZeroExtend");
+    Mov(ARMRegister(dest.reg, 32), ARMRegister(src, 32));
 }
 
 void
 MacroAssembler::move8To64SignExtend(Register src, Register64 dest)
 {
-    MOZ_CRASH("NYI: move8To64SignExtend");
+    Sxtb(ARMRegister(dest.reg, 64), ARMRegister(src, 32));
 }
 
 void
 MacroAssembler::move16To64SignExtend(Register src, Register64 dest)
 {
-    MOZ_CRASH("NYI: move16To64SignExtend");
+    Sxth(ARMRegister(dest.reg, 64), ARMRegister(src, 32));
 }
 
 void
 MacroAssembler::move32To64SignExtend(Register src, Register64 dest)
 {
-    MOZ_CRASH("NYI: move32To64SignExtend");
+    Sxtw(ARMRegister(dest.reg, 64), ARMRegister(src, 32));
 }
 
 // ===============================================================
