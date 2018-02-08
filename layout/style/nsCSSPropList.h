@@ -2507,6 +2507,14 @@ CSS_PROP_(
     VARIANT_HN,
     nullptr)
 CSS_PROP_(
+    shape-margin,
+    shape_margin,
+    ShapeMargin,
+    0,
+    "layout.css.shape-outside.enabled",
+    VARIANT_HLP | VARIANT_CALC,
+    nullptr)
+CSS_PROP_(
     shape-outside,
     shape_outside,
     ShapeOutside,
