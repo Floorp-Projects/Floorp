@@ -94,7 +94,7 @@ function run_test() {
     let ind = old_factories_inds[i];
     registrar.unregisterFactory(factory.CID, factory);
 
-    if (ind == true) {
+    if (ind) {
       let old_factory = old_factories[i];
       registrar.registerFactory(old_factory.CID, factory.scheme, factory.contractID, old_factory.factory);
     }
