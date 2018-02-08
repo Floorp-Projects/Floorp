@@ -450,7 +450,49 @@ class Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod
 typedef RefPtr<Metadata> MutableMetadata;
 typedef RefPtr<const Metadata> SharedMetadata;
 
-typedef mozilla::UniquePtr<void*[], JS::FreePolicy> UniqueJumpTable;
+// Jump tables to take tiering into account, when calling either from wasm to
+// wasm (through rabaldr) or from jit to wasm (jit entry).
+
+class JumpTables
+{
+    using TablePointer = mozilla::UniquePtr<void*[], JS::FreePolicy>;
+
+    CompileMode mode_;
+    TablePointer tiering_;
+    TablePointer jit_;
+    size_t numFuncs_;
+
+  public:
+    bool init(CompileMode mode, const CodeSegment& cs, const CodeRangeVector& codeRanges);
+
+    void setJitEntry(size_t i, void* target) const {
+        // See comment in wasm::Module::finishTier2 and JumpTables::init.
+        MOZ_ASSERT(i < numFuncs_);
+        jit_.get()[2 * i] = target;
+        jit_.get()[2 * i + 1] = target;
+    }
+    void** getAddressOfJitEntry(size_t i) const {
+        MOZ_ASSERT(i < numFuncs_);
+        MOZ_ASSERT(jit_.get()[2 * i]);
+        return &jit_.get()[2 * i];
+    }
+
+    void setTieringEntry(size_t i, void* target) const {
+        MOZ_ASSERT(i < numFuncs_);
+        // See comment in wasm::Module::finishTier2.
+        if (mode_ == CompileMode::Tier1)
+            tiering_.get()[i] = target;
+    }
+    void** tiering() const {
+        return tiering_.get();
+    }
+
+    size_t sizeOfMiscIncludingThis(MallocSizeOf mallocSizeOf) const {
+        return mallocSizeOf(this) +
+               2 * sizeof(void*) * numFuncs_ +
+               (tiering_ ? sizeof(void*) : numFuncs_);
+    }
+};
 
 // Code objects own executable code and the metadata that describe it. A single
 // Code object is normally shared between a module and all its instances.
@@ -463,7 +505,7 @@ class Code : public ShareableBase<Code>
     mutable UniqueConstCodeSegment      segment2_; // Access only when hasTier2() is true
     SharedMetadata                      metadata_;
     ExclusiveData<CacheableCharsVector> profilingLabels_;
-    UniqueJumpTable                     jumpTable_;
+    JumpTables                          jumpTables_;
 
     UniqueConstCodeSegment takeOwnership(UniqueCodeSegment segment) const {
         segment->initCode(this);
@@ -472,9 +514,14 @@ class Code : public ShareableBase<Code>
 
   public:
     Code();
-    Code(UniqueCodeSegment tier, const Metadata& metadata, UniqueJumpTable maybeJumpTable);
+    Code(UniqueCodeSegment tier, const Metadata& metadata, JumpTables&& maybeJumpTables);
 
-    void** jumpTable() const { return jumpTable_.get(); }
+    void setTieringEntry(size_t i, void* target) const { jumpTables_.setTieringEntry(i, target); }
+    void** tieringJumpTable() const { return jumpTables_.tiering(); }
+
+    void setJitEntry(size_t i, void* target) const { jumpTables_.setJitEntry(i, target); }
+    void** getAddressOfJitEntry(size_t i) const { return jumpTables_.getAddressOfJitEntry(i); }
+    uint32_t lookupFuncIndex(JSFunction* fun) const;
 
     bool hasTier2() const { return metadata_->hasTier2(); }
     void setTier2(UniqueCodeSegment segment) const;

@@ -2041,6 +2041,7 @@ WrappedFunction::WrappedFunction(JSFunction* fun)
   : fun_(fun),
     nargs_(fun->nargs()),
     isNative_(fun->isNative()),
+    isNativeWithJitEntry_(fun->isNativeWithJitEntry()),
     isConstructor_(fun->isConstructor()),
     isClassConstructor_(fun->isClassConstructor()),
     isSelfHostedBuiltin_(fun->isSelfHostedBuiltin())
