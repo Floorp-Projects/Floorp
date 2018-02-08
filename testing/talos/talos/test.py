@@ -409,39 +409,6 @@ class tart_flex(tart):
 
 
 @register_test()
-class cart(PageloaderTest):
-    """
-    Customize Animation Regression Test
-    Tests Australis customize animations (default DPI scaling). Uses the
-    TART addon but with a different URL.
-    Reports the same animation values as TART (.half/.all/.error).
-    All comments for TART also apply here (e.g. for ASAP+OMTC, etc)
-    Subtests are:
-    1-customize-enter - from triggering customize mode until it's ready for
-    the user
-    2-customize-exit  - exiting customize
-    3-customize-enter-css - only the CSS animation part of entering customize
-    """
-    tpmanifest = '${talos}/tests/tart/cart.manifest'
-    extensions = '${talos}/tests/tart/addon'
-    tpcycles = 1
-    tppagecycles = 25
-    tploadnocache = True
-    tpmozafterpaint = False
-    gecko_profile_interval = 1
-    gecko_profile_entries = 10000000
-    win_counters = w7_counters = linux_counters = mac_counters = None
-    """
-    ASAP mode
-    """
-    preferences = {'layout.frame_rate': 0,
-                   'docshell.event_starvation_delay_hint': 1,
-                   'dom.send_after_paint_to_content': False}
-    filters = filter.ignore_first.prepare(1) + filter.median.prepare()
-    unit = 'ms'
-
-
-@register_test()
 class damp(PageloaderTest):
     """
     Devtools At Maximum Performance
