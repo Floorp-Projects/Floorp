@@ -51,7 +51,7 @@ addIntlExtras(Intl);
 {
   // Text format
   rtf = new Intl.RelativeTimeFormat("en-US", {
-    type: "text"
+    numeric: "auto"
   });
   assertEq(rtf.format(0, "second"), "now");
   assertEq(rtf.format(-0, "second"), "now");
@@ -89,11 +89,11 @@ addIntlExtras(Intl);
   assertEq(rtf.format(1, "year"), "next year");
 }
 
-rtf = new Intl.RelativeTimeFormat("de", {type: "text"});
+rtf = new Intl.RelativeTimeFormat("de", {numeric: "auto"});
 assertEq(rtf.format(-1, "day"), "gestern");
 assertEq(rtf.format(1, "day"), "morgen");
 
-rtf = new Intl.RelativeTimeFormat("ar", {type: "text"});
+rtf = new Intl.RelativeTimeFormat("ar", {numeric: "auto"});
 assertEq(rtf.format(-1, "day"), "أمس");
 assertEq(rtf.format(1, "day"), "غدًا");
 
