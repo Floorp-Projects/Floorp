@@ -52,9 +52,11 @@
         }
       }
 
-      ok(false, "Looming Test Failure, Additional Debugging Info: Expected Precision: " + expectedPrecision + " Measured Value: " + x +
-        " Rounded Vaue: " + rounded + " Fuzzy1: " + Math.abs(rounded - x + expectedPrecision) +
-        " Fuzzy 2: " + Math.abs(rounded - x));
+      // We are temporarily disabling this extra debugging failure because we expect to return false in some instances
+      // When we correct things we will re-enable it for debugging assistance
+      // opener.ok(false, "Looming Test Failure, Additional Debugging Info: Expected Precision: " + expectedPrecision + " Measured Value: " + x +
+      //   " Rounded Vaue: " + rounded + " Fuzzy1: " + Math.abs(rounded - x + expectedPrecision) +
+      //   " Fuzzy 2: " + Math.abs(rounded - x));
 
       return false;
     };
@@ -65,14 +67,24 @@
     waitForCondition(
       () => animation.currentTime > 100,
         () => {
-          opener.ok(isRounded(animation.startTime),
+
+          // We have disabled Time Precision Reduction for CSS Animations, so we expect those tests to fail.
+          // If we are testing that preference, turn failures into successes and successes into failures
+          var maybeInvert = function(value) {
+            if (opener.prefName.includes("privacy.reduceTimerPrecision") &&
+                !opener.prefName.includes("privacy.resistFingerprinting"))
+              return !value;
+            return value;
+          };
+
+          opener.ok(maybeInvert(isRounded(animation.startTime)),
              "pref: " + opener.prefName + " - animation.startTime with precision " + expectedPrecision + " is not rounded: " + animation.startTime);
-          opener.ok(isRounded(animation.currentTime),
+          opener.ok(maybeInvert(isRounded(animation.currentTime)),
              "pref: " + opener.prefName + " - animation.currentTime with precision " + expectedPrecision + " is not rounded: " + animation.currentTime);
-          opener.ok(isRounded(animation.timeline.currentTime),
+          opener.ok(maybeInvert(isRounded(animation.timeline.currentTime)),
              "pref: " + opener.prefName + " - animation.timeline.currentTime with precision " + expectedPrecision + " is not rounded: " + animation.timeline.currentTime);
           if (document.timeline) {
-            opener.ok(isRounded(document.timeline.currentTime),
+            opener.ok(maybeInvert(isRounded(document.timeline.currentTime)),
                "pref: " + opener.prefName + " - document.timeline.currentTime with precision " + expectedPrecision + " is not rounded: " + document.timeline.currentTime);
           }
           opener.done();
