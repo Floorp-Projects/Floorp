@@ -129,12 +129,6 @@ protected:
   // Protected by mMutex.
   nsTArray<RefPtr<WorkerRunnable>> mPreStartRunnables;
 
-private:
-
-  // Only touched on the parent thread (currently this is always the main
-  // thread as SharedWorkers are always top-level).
-  nsTArray<RefPtr<SharedWorker>> mSharedWorkers;
-
 protected:
   WorkerPrivateParent(WorkerPrivate* aParent,
                       const nsAString& aScriptURL, bool aIsChromeWorker,
@@ -256,14 +250,6 @@ public:
   void
   MemoryPressure(bool aDummy);
 
-  bool
-  RegisterSharedWorker(SharedWorker* aSharedWorker, MessagePort* aPort);
-
-  void
-  BroadcastErrorToSharedWorkers(JSContext* aCx,
-                                const WorkerErrorReport* aReport,
-                                bool aIsErrorEvent);
-
   void
   WorkerScriptLoaded();
 
@@ -284,19 +270,7 @@ public:
   nsIDocument* GetDocument() const;
 
   void
-  GetAllSharedWorkers(nsTArray<RefPtr<SharedWorker>>& aSharedWorkers);
-
-  void
-  CloseSharedWorkersForWindow(nsPIDOMWindowInner* aWindow);
-
-  void
-  CloseAllSharedWorkers();
-
-  void
   UpdateOverridenLoadGroup(nsILoadGroup* aBaseLoadGroup);
-
-  void
-  FlushReportsToSharedWorkers(nsIConsoleReportCollector* aReporter);
 
 #ifdef DEBUG
   void
@@ -431,6 +405,10 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 
   // Only used for top level workers.
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
+
+  // Only touched on the parent thread (currently this is always the main
+  // thread as SharedWorkers are always top-level).
+  nsTArray<RefPtr<SharedWorker>> mSharedWorkers;
 
   JS::UniqueChars mDefaultLocale; // nulled during worker JSContext init
   TimeStamp mKillTime;
@@ -1393,6 +1371,26 @@ public:
     AssertIsOnParentThread();
     mQueuedRunnables.AppendElement(aRunnable);
   }
+
+  bool
+  RegisterSharedWorker(SharedWorker* aSharedWorker, MessagePort* aPort);
+
+  void
+  BroadcastErrorToSharedWorkers(JSContext* aCx,
+                                const WorkerErrorReport* aReport,
+                                bool aIsErrorEvent);
+
+  void
+  GetAllSharedWorkers(nsTArray<RefPtr<SharedWorker>>& aSharedWorkers);
+
+  void
+  CloseSharedWorkersForWindow(nsPIDOMWindowInner* aWindow);
+
+  void
+  CloseAllSharedWorkers();
+
+  void
+  FlushReportsToSharedWorkers(nsIConsoleReportCollector* aReporter);
 
 private:
   WorkerPrivate(WorkerPrivate* aParent,
