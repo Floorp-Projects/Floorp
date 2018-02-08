@@ -427,7 +427,7 @@ JS_PUBLIC_API(JSScript*)
 ProfileEntry::script() const
 {
     MOZ_ASSERT(isJs());
-    auto script = reinterpret_cast<JSScript*>(spOrScript);
+    auto script = reinterpret_cast<JSScript*>(spOrScript.operator void*());
     if (!script)
         return nullptr;
 

@@ -256,41 +256,48 @@ this.AddonStudies = {
       throw new Error(`A study for recipe ${recipeId} already exists.`);
     }
 
-    const addonFile = await this.downloadAddonToTemporaryFile(addonUrl);
-    const install = await AddonManager.getInstallForFile(addonFile);
-    const study = {
-      recipeId,
-      name,
-      description,
-      addonId: install.addon.id,
-      addonVersion: install.addon.version,
-      addonUrl,
-      active: true,
-      studyStartDate: new Date(),
-    };
-
-    TelemetryEvents.sendEvent("enroll", "addon_study", name, {
-      addonId: install.addon.id,
-      addonVersion: install.addon.version,
-    });
-
+    let addonFile;
     try {
+      addonFile = await this.downloadAddonToTemporaryFile(addonUrl);
+      const install = await AddonManager.getInstallForFile(addonFile);
+      const study = {
+        recipeId,
+        name,
+        description,
+        addonId: install.addon.id,
+        addonVersion: install.addon.version,
+        addonUrl,
+        active: true,
+        studyStartDate: new Date(),
+      };
+
       await getStore(db).add(study);
       await Addons.applyInstall(install, false);
-      return study;
-    } catch (err) {
-      await getStore(db).delete(recipeId);
 
-      TelemetryEvents.sendEvent("unenroll", "addon_study", name, {
-        reason: "install-failure",
+      TelemetryEvents.sendEvent("enroll", "addon_study", name, {
         addonId: install.addon.id,
         addonVersion: install.addon.version,
       });
 
+      return study;
+    } catch (err) {
+      await getStore(db).delete(recipeId);
+
+      // The actual stack trace and error message could possibly
+      // contain PII, so we don't include them here. Instead include
+      // some information that should still be helpful, and is less
+      // likely to be unsafe.
+      const safeErrorMessage = `${err.fileName}:${err.lineNumber}:${err.columnNumber} ${err.name}`;
+      TelemetryEvents.sendEvent("enrollFailed", "addon_study", name, {
+        reason: safeErrorMessage.slice(0, 80),  // max length is 80 chars
+      });
+
       throw err;
     } finally {
-      Services.obs.notifyObservers(addonFile, "flush-cache-entry");
-      await OS.File.remove(addonFile.path);
+      if (addonFile) {
+        Services.obs.notifyObservers(addonFile, "flush-cache-entry");
+        await OS.File.remove(addonFile.path);
+      }
     }
   },
 

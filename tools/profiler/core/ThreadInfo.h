@@ -193,7 +193,12 @@ public:
   void StopProfiling();
   bool IsBeingProfiled() { return mIsBeingProfiled; }
 
-  void NotifyUnregistered() { mUnregisterTime = TimeStamp::Now(); }
+  void NotifyUnregistered(uint64_t aBufferPosition)
+  {
+    mUnregisterTime = TimeStamp::Now();
+    mBufferPositionWhenUnregistered = mozilla::Some(aBufferPosition);
+  }
+  mozilla::Maybe<uint64_t> BufferPositionWhenUnregistered() { return mBufferPositionWhenUnregistered; }
 
   PlatformData* GetPlatformData() const { return mPlatformData.get(); }
   void* StackTop() const { return mStackTop; }
@@ -206,6 +211,7 @@ private:
   mozilla::UniqueFreePtr<char> mName;
   mozilla::TimeStamp mRegisterTime;
   mozilla::TimeStamp mUnregisterTime;
+  mozilla::Maybe<uint64_t> mBufferPositionWhenUnregistered;
   const bool mIsMainThread;
   nsCOMPtr<nsIEventTarget> mThread;
 
