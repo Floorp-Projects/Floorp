@@ -646,9 +646,13 @@ add_task(async function test_pullChanges_tags() {
 
   info("Create tag");
   PlacesUtils.tagging.tagURI(uri("https://example.org"), ["taggy"]);
-  let tagFolderId = PlacesUtils.bookmarks.getIdForItemAt(
-    PlacesUtils.tagsFolderId, 0);
-  let tagFolderGuid = await PlacesUtils.promiseItemGuid(tagFolderId);
+
+  let tagBm = await PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.tagsGuid,
+    index: 0
+  });
+  let tagFolderGuid = tagBm.guid;
+  let tagFolderId = await PlacesUtils.promiseItemId(tagFolderGuid);
 
   info("Tagged bookmarks should be in changeset");
   {
@@ -705,12 +709,12 @@ add_task(async function test_pullChanges_tags() {
 
   info("Change tag entry URL using Bookmarks.update");
   {
-    let tagGuid = await PlacesUtils.promiseItemGuid(
-      PlacesUtils.bookmarks.getIdForItemAt(tagFolderId, 0));
-    await PlacesUtils.bookmarks.update({
-      guid: tagGuid,
-      url: "https://bugzilla.org",
+    let bm = await PlacesUtils.bookmarks.fetch({
+      parentGuid: tagFolderGuid,
+      index: 0
     });
+    bm.url = "https://bugzilla.org/";
+    await PlacesUtils.bookmarks.update(bm);
     let changes = await PlacesSyncUtils.bookmarks.pullChanges();
     deepEqual(Object.keys(changes).sort(),
       [firstItem.recordId, secondItem.recordId, untaggedItem.recordId].sort(),
@@ -719,10 +723,8 @@ add_task(async function test_pullChanges_tags() {
       "Should remove tag entry for old URI");
     await setChangesSynced(changes);
 
-    await PlacesUtils.bookmarks.update({
-      guid: tagGuid,
-      url: "https://example.com",
-    });
+    bm.url = "https://example.com/";
+    await PlacesUtils.bookmarks.update(bm);
     changes = await PlacesSyncUtils.bookmarks.pullChanges();
     deepEqual(Object.keys(changes).sort(),
       [untaggedItem.recordId].sort(),

@@ -2,9 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Tests that each nsINavBookmarksObserver method gets the correct input.
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-
-const GUID_RE = /^[a-zA-Z0-9\-_]{12}$/;
 
 var gBookmarksObserver = {
   expected: [],
@@ -124,8 +121,8 @@ add_task(async function batch() {
 });
 
 add_task(async function onItemAdded_bookmark() {
-  const TITLE = "Bookmark 1";
-  let uri = NetUtil.newURI("http://1.mozilla.org/");
+  const title = "Bookmark 1";
+  let uri = Services.io.newURI("http://1.mozilla.org/");
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
       "onItemAdded"
@@ -138,16 +135,18 @@ add_task(async function onItemAdded_bookmark() {
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
           { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
-          { name: "title", check: v => v === TITLE },
+          { name: "title", check: v => v === title },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
   ])]);
-  PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                       uri, PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                       TITLE);
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: uri,
+    title
+  });
   await promise;
 });
 
@@ -166,18 +165,20 @@ add_task(async function onItemAdded_separator() {
           { name: "uri", check: v => v === null },
           { name: "title", check: v => v === "" },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
   ])]);
-  PlacesUtils.bookmarks.insertSeparator(PlacesUtils.unfiledBookmarksFolderId,
-                                        PlacesUtils.bookmarks.DEFAULT_INDEX);
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    type: PlacesUtils.bookmarks.TYPE_SEPARATOR
+  });
   await promise;
 });
 
 add_task(async function onItemAdded_folder() {
-  const TITLE = "Folder 1";
+  const title = "Folder 1";
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
       "onItemAdded"
@@ -190,22 +191,27 @@ add_task(async function onItemAdded_folder() {
           { name: "index", check: v => v === 2 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER },
           { name: "uri", check: v => v === null },
-          { name: "title", check: v => v === TITLE },
+          { name: "title", check: v => v === title },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
   ])]);
-  PlacesUtils.bookmarks.createFolder(PlacesUtils.unfiledBookmarksFolderId,
-                                     TITLE,
-                                     PlacesUtils.bookmarks.DEFAULT_INDEX);
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER
+  });
   await promise;
 });
 
 add_task(async function onItemChanged_title_bookmark() {
-  let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
-  const TITLE = "New title";
+  let bm = await PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    index: 0
+  });
+  const title = "New title";
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
       "onItemChanged"
@@ -216,25 +222,26 @@ add_task(async function onItemChanged_title_bookmark() {
           { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
           { name: "property", check: v => v === "title" },
           { name: "isAnno", check: v => v === false },
-          { name: "newValue", check: v => v === TITLE },
+          { name: "newValue", check: v => v === title },
           { name: "lastModified", check: v => typeof(v) == "number" && v > 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
           { name: "parentId", check: v => v === PlacesUtils.unfiledBookmarksFolderId },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "oldValue", check: v => typeof(v) == "string" },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
   ])]);
-  PlacesUtils.bookmarks.setItemTitle(id, TITLE);
+  await PlacesUtils.bookmarks.update({ guid: bm.guid, title });
   await promise;
 });
 
 add_task(async function onItemChanged_tags_bookmark() {
-  let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
-  let guid = await PlacesUtils.promiseItemGuid(id);
-  let url = (await PlacesUtils.bookmarks.fetch(guid)).url;
-  let uri = Services.io.newURI(url);
+  let bm = await PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    index: 0
+  });
+  let uri = Services.io.newURI(bm.url.href);
   const TAG = "tag";
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
@@ -250,8 +257,8 @@ add_task(async function onItemChanged_tags_bookmark() {
           { name: "uri", check: v => v === null },
           { name: "title", check: v => v === TAG },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
       { name: "onItemAdded", // This is the tag.
@@ -263,8 +270,8 @@ add_task(async function onItemChanged_tags_bookmark() {
           { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
           { name: "title", check: v => v === "" },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
       { name: "onItemChanged",
@@ -276,8 +283,8 @@ add_task(async function onItemChanged_tags_bookmark() {
           { name: "lastModified", check: v => typeof(v) == "number" && v > 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
           { name: "parentId", check: v => v === PlacesUtils.unfiledBookmarksFolderId },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "oldValue", check: v => typeof(v) == "string" },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
@@ -288,8 +295,8 @@ add_task(async function onItemChanged_tags_bookmark() {
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
           { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
       { name: "onItemRemoved", // This is the tag folder.
@@ -299,8 +306,8 @@ add_task(async function onItemChanged_tags_bookmark() {
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER },
           { name: "uri", check: v => v === null },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
       { name: "onItemChanged",
@@ -312,8 +319,8 @@ add_task(async function onItemChanged_tags_bookmark() {
           { name: "lastModified", check: v => typeof(v) == "number" && v > 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
           { name: "parentId", check: v => v === PlacesUtils.unfiledBookmarksFolderId },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "oldValue", check: v => typeof(v) == "string" },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
@@ -324,7 +331,10 @@ add_task(async function onItemChanged_tags_bookmark() {
 });
 
 add_task(async function onItemMoved_bookmark() {
-  let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
+  let bm = await PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    index: 0
+  });
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
       "onItemMoved", "onItemMoved"
@@ -338,9 +348,9 @@ add_task(async function onItemMoved_bookmark() {
           { name: "newParentId", check: v => v === PlacesUtils.toolbarFolderId },
           { name: "newIndex", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "oldParentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "newParentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "oldParentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "newParentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
       { name: "onItemMoved",
@@ -351,20 +361,31 @@ add_task(async function onItemMoved_bookmark() {
           { name: "newParentId", check: v => v === PlacesUtils.unfiledBookmarksFolderId },
           { name: "newIndex", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "oldParentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "newParentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "oldParentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "newParentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
   ])]);
-  PlacesUtils.bookmarks.moveItem(id, PlacesUtils.toolbarFolderId, 0);
-  PlacesUtils.bookmarks.moveItem(id, PlacesUtils.unfiledBookmarksFolderId, 0);
+  await PlacesUtils.bookmarks.update({
+    guid: bm.guid,
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    index: 0
+  });
+  await PlacesUtils.bookmarks.update({
+    guid: bm.guid,
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    index: 0
+  });
   await promise;
 });
 
 add_task(async function onItemMoved_bookmark() {
-  let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
-  let uri = PlacesUtils.bookmarks.getBookmarkURI(id);
+  let bm = await PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    index: 0
+  });
+  let uri = Services.io.newURI(bm.url.href);
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
       "onItemVisited"
@@ -378,8 +399,8 @@ add_task(async function onItemMoved_bookmark() {
           { name: "transitionType", check: v => v === PlacesUtils.history.TRANSITION_TYPED },
           { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
           { name: "parentId", check: v => v === PlacesUtils.unfiledBookmarksFolderId },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
         ] },
   ])]);
   await PlacesTestUtils.addVisits({ uri, transition: TRANSITION_TYPED });
@@ -387,10 +408,11 @@ add_task(async function onItemMoved_bookmark() {
 });
 
 add_task(async function onItemRemoved_bookmark() {
-  let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
-  let guid = await PlacesUtils.promiseItemGuid(id);
-  let url = (await PlacesUtils.bookmarks.fetch(guid)).url;
-  let uri = Services.io.newURI(url);
+  let bm = await PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    index: 0
+  });
+  let uri = Services.io.newURI(bm.url.href);
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
       "onItemRemoved"
@@ -403,17 +425,20 @@ add_task(async function onItemRemoved_bookmark() {
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
           { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
   ])]);
-  PlacesUtils.bookmarks.removeItem(id);
+  await PlacesUtils.bookmarks.remove(bm);
   await promise;
 });
 
 add_task(async function onItemRemoved_separator() {
-  let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
+  let bm = await PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    index: 0
+  });
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
       "onItemRemoved"
@@ -426,17 +451,20 @@ add_task(async function onItemRemoved_separator() {
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_SEPARATOR },
           { name: "uri", check: v => v === null },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
   ])]);
-  PlacesUtils.bookmarks.removeItem(id);
+  await PlacesUtils.bookmarks.remove(bm);
   await promise;
 });
 
 add_task(async function onItemRemoved_folder() {
-  let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
+  let bm = await PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    index: 0
+  });
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
       "onItemRemoved"
@@ -449,19 +477,19 @@ add_task(async function onItemRemoved_folder() {
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER },
           { name: "uri", check: v => v === null },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
   ])]);
-  PlacesUtils.bookmarks.removeItem(id);
+  await PlacesUtils.bookmarks.remove(bm);
   await promise;
 });
 
 add_task(async function onItemRemoved_folder_recursive() {
-  const TITLE = "Folder 3";
+  const title = "Folder 3";
   const BMTITLE = "Bookmark 1";
-  let uri = NetUtil.newURI("http://1.mozilla.org/");
+  let uri = Services.io.newURI("http://1.mozilla.org/");
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
       "onItemAdded", "onItemAdded", "onItemAdded", "onItemAdded",
@@ -475,10 +503,10 @@ add_task(async function onItemRemoved_folder_recursive() {
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER },
           { name: "uri", check: v => v === null },
-          { name: "title", check: v => v === TITLE },
+          { name: "title", check: v => v === title },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
       { name: "onItemAdded",
@@ -490,8 +518,8 @@ add_task(async function onItemRemoved_folder_recursive() {
           { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
           { name: "title", check: v => v === BMTITLE },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
       { name: "onItemAdded",
@@ -501,10 +529,10 @@ add_task(async function onItemRemoved_folder_recursive() {
           { name: "index", check: v => v === 1 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER },
           { name: "uri", check: v => v === null },
-          { name: "title", check: v => v === TITLE },
+          { name: "title", check: v => v === title },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
       { name: "onItemAdded",
@@ -516,8 +544,8 @@ add_task(async function onItemRemoved_folder_recursive() {
           { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
           { name: "title", check: v => v === BMTITLE },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
       { name: "onItemRemoved",
@@ -527,8 +555,8 @@ add_task(async function onItemRemoved_folder_recursive() {
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
           { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
       { name: "onItemRemoved",
@@ -538,8 +566,8 @@ add_task(async function onItemRemoved_folder_recursive() {
           { name: "index", check: v => v === 1 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER },
           { name: "uri", check: v => v === null },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
       { name: "onItemRemoved",
@@ -549,8 +577,8 @@ add_task(async function onItemRemoved_folder_recursive() {
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
           { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
       { name: "onItemRemoved",
@@ -560,24 +588,33 @@ add_task(async function onItemRemoved_folder_recursive() {
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER },
           { name: "uri", check: v => v === null },
-          { name: "guid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
-          { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
+          { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
+          { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
   ])]);
-  let folder = PlacesUtils.bookmarks.createFolder(PlacesUtils.unfiledBookmarksFolderId,
-                                                  TITLE,
-                                                  PlacesUtils.bookmarks.DEFAULT_INDEX);
-  PlacesUtils.bookmarks.insertBookmark(folder,
-                                       uri, PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                       BMTITLE);
-  let folder2 = PlacesUtils.bookmarks.createFolder(folder, TITLE,
-                                                   PlacesUtils.bookmarks.DEFAULT_INDEX);
-  PlacesUtils.bookmarks.insertBookmark(folder2,
-                                       uri, PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                       BMTITLE);
+  let folder = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER
+  });
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: folder.guid,
+    url: uri,
+    title: BMTITLE
+  });
+  let folder2 = await PlacesUtils.bookmarks.insert({
+    parentGuid: folder.guid,
+    title,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER
+  });
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: folder2.guid,
+    url: uri,
+    title: BMTITLE
+  });
 
-  PlacesUtils.bookmarks.removeItem(folder);
+  await PlacesUtils.bookmarks.remove(folder);
   await promise;
 });
 
