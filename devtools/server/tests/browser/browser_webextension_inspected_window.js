@@ -45,7 +45,7 @@ function* teardown({client}) {
 function waitForNextTabNavigated(client) {
   return new Promise(resolve => {
     client.addListener("tabNavigated", function tabNavigatedListener(evt, pkt) {
-      if (pkt.state == "stop" && pkt.isFrameSwitching == false) {
+      if (pkt.state == "stop" && !pkt.isFrameSwitching) {
         client.removeListener("tabNavigated", tabNavigatedListener);
         resolve();
       }

@@ -139,7 +139,7 @@ function initializeAutoCompletion(ctx, options = {}) {
 
   let cycle = reverse => {
     if (popup && popup.isOpen) {
-      cycleSuggestions(ed, reverse == true);
+      cycleSuggestions(ed, !!reverse);
       return null;
     }
 

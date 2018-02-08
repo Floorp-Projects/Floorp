@@ -200,7 +200,7 @@ function setVCRangeInvoker(aDocAcc, aTextAccessible, aTextOffsets) {
  */
 function setVCPosInvoker(aDocAcc, aPivotMoveMethod, aRule, aIdOrNameOrAcc,
                          aIsFromUserInput) {
-  var expectMove = (aIdOrNameOrAcc != false);
+  var expectMove = (!!aIdOrNameOrAcc);
   this.invoke = function virtualCursorChangedInvoker_invoke() {
     VCChangedChecker.
       storePreviousPosAndOffset(aDocAcc.virtualCursor);
@@ -260,7 +260,7 @@ function setVCPosInvoker(aDocAcc, aPivotMoveMethod, aRule, aIdOrNameOrAcc,
  */
 function setVCTextInvoker(aDocAcc, aPivotMoveMethod, aBoundary, aTextOffsets,
                           aIdOrNameOrAcc, aIsFromUserInput) {
-  var expectMove = (aIdOrNameOrAcc != false);
+  var expectMove = (!!aIdOrNameOrAcc);
   this.invoke = function virtualCursorChangedInvoker_invoke() {
     VCChangedChecker.storePreviousPosAndOffset(aDocAcc.virtualCursor);
     SimpleTest.info(aDocAcc.virtualCursor.position);
@@ -306,7 +306,7 @@ function setVCTextInvoker(aDocAcc, aPivotMoveMethod, aBoundary, aTextOffsets,
  */
 function moveVCCoordInvoker(aDocAcc, aX, aY, aIgnoreNoMatch,
                             aRule, aIdOrNameOrAcc) {
-  var expectMove = (aIdOrNameOrAcc != false);
+  var expectMove = (!!aIdOrNameOrAcc);
   this.invoke = function virtualCursorChangedInvoker_invoke() {
     VCChangedChecker.
       storePreviousPosAndOffset(aDocAcc.virtualCursor);
