@@ -846,6 +846,9 @@ class ICCacheIR_Regular : public ICStub
         stubInfo_(stubInfo)
     {}
 
+    static ICCacheIR_Regular* Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
+                                    ICCacheIR_Regular& other);
+
     void notePreliminaryObject() {
         extra_ = 1;
     }
