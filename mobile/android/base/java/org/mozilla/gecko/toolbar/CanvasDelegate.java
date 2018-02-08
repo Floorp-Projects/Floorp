@@ -35,6 +35,10 @@ class CanvasDelegate {
     }
 
     void draw(Canvas canvas, Path path, int width, int height) {
+        if (width <= 0 || height <= 0) {
+            return;
+        }
+
         Bitmap offscreen = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas offscreenCanvas = new Canvas(offscreen);
 
