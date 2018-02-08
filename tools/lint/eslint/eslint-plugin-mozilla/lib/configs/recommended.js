@@ -170,6 +170,7 @@ module.exports = {
     "mozilla/avoid-removeChild": "error",
     "mozilla/import-browser-window-globals": "error",
     "mozilla/import-globals": "error",
+    "mozilla/no-compare-against-boolean-literals": "error",
     "mozilla/no-define-cc-etc": "error",
     "mozilla/no-import-into-var-and-global": "error",
     "mozilla/no-useless-parameters": "error",
