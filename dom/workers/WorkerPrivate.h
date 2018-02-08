@@ -14,14 +14,11 @@
 #include "nsIEventTarget.h"
 #include "nsTObserverArray.h"
 
+#include "mozilla/dom/Worker.h"
 #include "mozilla/dom/WorkerHolder.h"
 #include "mozilla/dom/WorkerLoadInfo.h"
 #include "mozilla/dom/workerinternals/JSSettings.h"
 #include "mozilla/dom/workerinternals/Queue.h"
-
-#ifdef XP_WIN
-#undef PostMessage
-#endif
 
 class nsIConsoleReportCollector;
 class nsIThreadInternal;
@@ -51,7 +48,6 @@ class WorkerDebuggerGlobalScope;
 class WorkerErrorReport;
 class WorkerEventTarget;
 class WorkerGlobalScope;
-struct WorkerOptions;
 class WorkerRunnable;
 class WorkerThread;
 
@@ -105,7 +101,7 @@ public:
 };
 
 template <class Derived>
-class WorkerPrivateParent : public DOMEventTargetHelper
+class WorkerPrivateParent
 {
 protected:
   class EventTarget;
@@ -184,8 +180,9 @@ private:
 
 protected:
   // The worker is owned by its thread, which is represented here.  This is set
-  // in Construct() and emptied by WorkerFinishedRunnable, and conditionally
+  // in Constructor() and emptied by WorkerFinishedRunnable, and conditionally
   // traversed by the cycle collector if the busy count is zero.
+  RefPtr<Worker> mParentEventTargetRef;
   RefPtr<WorkerPrivate> mSelfRef;
 
   WorkerPrivateParent(WorkerPrivate* aParent,
@@ -195,7 +192,7 @@ protected:
                       const nsACString& aServiceWorkerScope,
                       WorkerLoadInfo& aLoadInfo);
 
-  ~WorkerPrivateParent();
+  virtual ~WorkerPrivateParent();
 
 private:
   Derived*
@@ -213,21 +210,14 @@ private:
     return NotifyPrivate(Terminating);
   }
 
-  void
-  PostMessageInternal(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                      const Sequence<JSObject*>& aTransferable,
-                      ErrorResult& aRv);
-
   nsresult
   DispatchPrivate(already_AddRefed<WorkerRunnable> aRunnable, nsIEventTarget* aSyncLoopTarget);
 
 public:
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  NS_INLINE_DECL_REFCOUNTING(WorkerPrivateParent)
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(WorkerPrivateParent,
-                                                         DOMEventTargetHelper)
+  void
+  Traverse(nsCycleCollectionTraversalCallback& aCb);
 
   void
   EnableDebugger();
@@ -236,10 +226,11 @@ public:
   DisableDebugger();
 
   void
-  ClearSelfRef()
+  ClearSelfAndParentEventTargetRef()
   {
     AssertIsOnParentThread();
     MOZ_ASSERT(mSelfRef);
+    mParentEventTargetRef = nullptr;
     mSelfRef = nullptr;
   }
 
@@ -319,11 +310,6 @@ public:
   ProxyReleaseMainThreadObjects();
 
   void
-  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-              const Sequence<JSObject*>& aTransferable,
-              ErrorResult& aRv);
-
-  void
   UpdateContextOptions(const JS::ContextOptions& aContextOptions);
 
   void
@@ -394,7 +380,15 @@ public:
 
     MutexAutoLock lock(mMutex);
     return mParentStatus < Terminating;
-    }
+  }
+
+  WorkerStatus
+  ParentStatusProtected()
+  {
+    AssertIsOnParentThread();
+    MutexAutoLock lock(mMutex);
+    return mParentStatus;
+  }
 
   WorkerStatus
   ParentStatus() const
@@ -829,10 +823,6 @@ public:
   void
   FlushReportsToSharedWorkers(nsIConsoleReportCollector* aReporter);
 
-  IMPL_EVENT_HANDLER(message)
-  IMPL_EVENT_HANDLER(messageerror)
-  IMPL_EVENT_HANDLER(error)
-
   // Check whether this worker is a secure context.  For use from the parent
   // thread only; the canonical "is secure context" boolean is stored on the
   // compartment of the worker global.  The only reason we don't
@@ -968,17 +958,6 @@ protected:
   ~WorkerPrivate();
 
 public:
-  static already_AddRefed<WorkerPrivate>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aScriptURL,
-              const WorkerOptions& aOptions,
-              ErrorResult& aRv);
-
-  static already_AddRefed<WorkerPrivate>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aScriptURL,
-              bool aIsChromeWorker, WorkerType aWorkerType,
-              const nsAString& aWorkerName,
-              WorkerLoadInfo* aLoadInfo, ErrorResult& aRv);
-
   static already_AddRefed<WorkerPrivate>
   Constructor(JSContext* aCx, const nsAString& aScriptURL, bool aIsChromeWorker,
               WorkerType aWorkerType, const nsAString& aWorkerName,
@@ -1389,6 +1368,21 @@ public:
   PerformanceStorage*
   GetPerformanceStorage();
 
+  Worker*
+  ParentEventTargetRef() const
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mParentEventTargetRef);
+    return mParentEventTargetRef;
+  }
+
+  void
+  SetParentEventTargetRef(Worker* aParentEventTargetRef)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(aParentEventTargetRef);
+    MOZ_DIAGNOSTIC_ASSERT(!mParentEventTargetRef);
+    mParentEventTargetRef = aParentEventTargetRef;
+  }
+
 private:
   WorkerPrivate(WorkerPrivate* aParent,
                 const nsAString& aScriptURL, bool aIsChromeWorker,
@@ -1489,25 +1483,6 @@ private:
     return !(mChildWorkers.IsEmpty() && mTimeouts.IsEmpty() &&
              mHolders.IsEmpty());
   }
-};
-
-// This class is only used to trick the DOM bindings.  We never create
-// instances of it, and static_casting to it is fine since it doesn't add
-// anything to WorkerPrivate.
-class ChromeWorkerPrivate : public WorkerPrivate
-{
-public:
-  static already_AddRefed<ChromeWorkerPrivate>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aScriptURL,
-              ErrorResult& rv);
-
-  static bool
-  WorkerAvailable(JSContext* aCx, JSObject* /* unused */);
-
-private:
-  ChromeWorkerPrivate() = delete;
-  ChromeWorkerPrivate(const ChromeWorkerPrivate& aRHS) = delete;
-  ChromeWorkerPrivate& operator =(const ChromeWorkerPrivate& aRHS) = delete;
 };
 
 class AutoSyncLoopHolder

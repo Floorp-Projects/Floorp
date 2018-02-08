@@ -35,7 +35,7 @@ public:
   // (if any).
   static void
   ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-              bool aFireAtScope, WorkerPrivate* aTarget,
+              bool aFireAtScope, DOMEventTargetHelper* aTarget,
               const WorkerErrorReport& aReport, uint64_t aInnerWindowId,
               JS::Handle<JS::Value> aException = JS::NullHandleValue)
   {
@@ -177,8 +177,6 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    JS::Rooted<JSObject*> target(aCx, aWorkerPrivate->GetWrapper());
-
     uint64_t innerWindowId;
     bool fireAtScope = true;
 
@@ -236,8 +234,9 @@ private:
       return true;
     }
 
-    ReportError(aCx, parent, fireAtScope, aWorkerPrivate, mReport,
-                innerWindowId);
+    ReportError(aCx, parent, fireAtScope,
+                aWorkerPrivate->ParentEventTargetRef(),
+                mReport, innerWindowId);
     return true;
   }
 };
