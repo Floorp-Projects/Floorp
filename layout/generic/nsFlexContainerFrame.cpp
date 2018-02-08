@@ -1342,21 +1342,26 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
 
 // Static helper-functions for ResolveAutoFlexBasisAndMinSize():
 // -------------------------------------------------------------
-// Indicates whether the cross-size property is set to something definite.
-// The logic here should be similar to the logic for isAutoWidth/isAutoHeight
+// Indicates whether the cross-size property is set to something definite,
+// for the purpose of intrinsic ratio calculations.
+// The logic here should be similar to the logic for isAutoISize/isAutoBSize
 // in nsFrame::ComputeSizeWithIntrinsicDimensions().
 static bool
 IsCrossSizeDefinite(const ReflowInput& aItemReflowInput,
                     const FlexboxAxisTracker& aAxisTracker)
 {
   const nsStylePosition* pos = aItemReflowInput.mStylePosition;
-  if (aAxisTracker.IsCrossAxisHorizontal()) {
-    return pos->mWidth.GetUnit() != eStyleUnit_Auto;
+  const WritingMode containerWM = aAxisTracker.GetWritingMode();
+
+  if (aAxisTracker.IsColumnOriented()) {
+    // Column-oriented means cross axis is container's inline axis.
+    return pos->ISize(containerWM).GetUnit() != eStyleUnit_Auto;
   }
-  // else, vertical. (We need to use IsAutoHeight() to catch e.g. %-height
-  // applied to indefinite-height containing block, which counts as auto.)
-  nscoord cbHeight = aItemReflowInput.mCBReflowInput->ComputedHeight();
-  return !nsLayoutUtils::IsAutoHeight(pos->mHeight, cbHeight);
+  // Else, we're row-oriented, which means cross axis is container's block
+  // axis. We need to use IsAutoBSize() to catch e.g. %-BSize applied to
+  // indefinite container BSize, which counts as auto.
+  nscoord cbBSize = aItemReflowInput.mCBReflowInput->ComputedBSize();
+  return !nsLayoutUtils::IsAutoBSize(pos->BSize(containerWM), cbBSize);
 }
 
 // If aFlexItem has a definite cross size, this function returns it, for usage
