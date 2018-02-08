@@ -460,19 +460,27 @@ Sync11Service.prototype = {
     }
   },
 
-  async _startTracking() {
-    const engines = this.engineManager.getAll();
+  _startTracking() {
+    const engines = [this.clientsEngine, ...this.engineManager.getAll()];
     for (let engine of engines) {
-      engine.startTracking();
+      try {
+        engine.startTracking();
+      } catch (e) {
+        this._log.error(`Could not start ${engine.name} engine tracker`, e);
+      }
     }
     // This is for TPS. We should try to do better.
     Svc.Obs.notify("weave:service:tracking-started");
   },
 
   async _stopTracking() {
-    const engines = this.engineManager.getAll();
+    const engines = [this.clientsEngine, ...this.engineManager.getAll()];
     for (let engine of engines) {
-      await engine.stopTracking();
+      try {
+        await engine.stopTracking();
+      } catch (e) {
+        this._log.error(`Could not stop ${engine.name} engine tracker`, e);
+      }
     }
     Svc.Obs.notify("weave:service:tracking-stopped");
   },
@@ -789,7 +797,8 @@ Sync11Service.prototype = {
     // Deletion doesn't make sense if we aren't set up yet!
     if (this.clusterURL != "") {
       // Clear client-specific data from the server, including disabled engines.
-      for (let engine of [this.clientsEngine].concat(this.engineManager.getAll())) {
+      const engines = [this.clientsEngine, ...this.engineManager.getAll()];
+      for (let engine of engines) {
         try {
           await engine.removeClientData();
         } catch (ex) {
@@ -1298,7 +1307,7 @@ Sync11Service.prototype = {
       // Clear out any service data
       await this.resetService();
 
-      engines = [this.clientsEngine].concat(this.engineManager.getAll());
+      engines = [this.clientsEngine, ...this.engineManager.getAll()];
     } else {
       // Convert the array of names into engines
       engines = this.engineManager.get(engines);
@@ -1372,7 +1381,7 @@ Sync11Service.prototype = {
         // Clear out any service data
         await this.resetService();
 
-        engines = [this.clientsEngine].concat(this.engineManager.getAll());
+        engines = [this.clientsEngine, ...this.engineManager.getAll()];
       } else {
         // Convert the array of names into engines
         engines = this.engineManager.get(engines);
