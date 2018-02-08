@@ -1338,7 +1338,7 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
         masm.branch32(Assembler::AboveOrEqual, lastIndex, temp2, &done);
 
         // Check if input[lastIndex] is trail surrogate.
-        masm.loadStringChars(input, temp2);
+        masm.loadStringChars(input, temp2, CharEncoding::TwoByte);
         masm.computeEffectiveAddress(BaseIndex(temp2, lastIndex, TimesTwo), temp3);
         masm.load16ZeroExtend(Address(temp3, 0), temp3);
 
@@ -1374,20 +1374,22 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
     // the input start/end pointers in the InputOutputData.
     Register codePointer = temp1;
     {
-        masm.loadStringChars(input, temp2);
-        masm.storePtr(temp2, inputStartAddress);
         masm.loadStringLength(input, temp3);
 
         Label isLatin1, done;
         masm.branchLatin1String(input, &isLatin1);
         {
+            masm.loadStringChars(input, temp2, CharEncoding::TwoByte);
+            masm.storePtr(temp2, inputStartAddress);
             masm.lshiftPtr(Imm32(1), temp3);
             masm.loadPtr(Address(temp1, RegExpShared::offsetOfTwoByteJitCode(mode)),
                          codePointer);
+            masm.jump(&done);
         }
-        masm.jump(&done);
+        masm.bind(&isLatin1);
         {
-            masm.bind(&isLatin1);
+            masm.loadStringChars(input, temp2, CharEncoding::Latin1);
+            masm.storePtr(temp2, inputStartAddress);
             masm.loadPtr(Address(temp1, RegExpShared::offsetOfLatin1JitCode(mode)),
                          codePointer);
         }
@@ -1583,7 +1585,8 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
         masm.loadInlineStringCharsForStore(string, string);
 
         // Load the source characters pointer.
-        masm.loadStringChars(base, temp2);
+        masm.loadStringChars(base, temp2,
+                             latin1 ? CharEncoding::Latin1 : CharEncoding::TwoByte);
         masm.load32(newStartIndexAddress, base);
         if (latin1)
             masm.addPtr(temp2, base);
@@ -1614,7 +1617,8 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
         masm.store32(Imm32(flags), Address(string, JSString::offsetOfFlags()));
         masm.store32(temp1, Address(string, JSString::offsetOfLength()));
 
-        masm.loadNonInlineStringChars(base, temp1);
+        masm.loadNonInlineStringChars(base, temp1,
+                                      latin1 ? CharEncoding::Latin1 : CharEncoding::TwoByte);
         masm.load32(startIndexAddress, temp2);
         if (latin1)
             masm.addPtr(temp2, temp1);
@@ -2489,16 +2493,16 @@ CodeGenerator::visitGetFirstDollarIndex(LGetFirstDollarIndex* ins)
     masm.branchIfRope(str, ool->entry());
     masm.loadStringLength(str, len);
 
-    masm.loadStringChars(str, temp0);
-
     Label isLatin1, done;
     masm.branchLatin1String(str, &isLatin1);
     {
+        masm.loadStringChars(str, temp0, CharEncoding::TwoByte);
         FindFirstDollarIndex(masm, str, len, temp0, temp1, output, /* isLatin1 = */ false);
+        masm.jump(&done);
     }
-    masm.jump(&done);
+    masm.bind(&isLatin1);
     {
-        masm.bind(&isLatin1);
+        masm.loadStringChars(str, temp0, CharEncoding::Latin1);
         FindFirstDollarIndex(masm, str, len, temp0, temp1, output, /* isLatin1 = */ true);
     }
     masm.bind(&done);
@@ -7772,15 +7776,16 @@ CopyStringCharsMaybeInflate(MacroAssembler& masm, Register input, Register destC
 
     Label isLatin1, done;
     masm.loadStringLength(input, temp1);
-    masm.loadStringChars(input, temp2);
     masm.branchLatin1String(input, &isLatin1);
     {
+        masm.loadStringChars(input, temp2, CharEncoding::TwoByte);
         masm.movePtr(temp2, input);
         CopyStringChars(masm, destChars, input, temp1, temp2, sizeof(char16_t), sizeof(char16_t));
         masm.jump(&done);
     }
     masm.bind(&isLatin1);
     {
+        masm.loadStringChars(input, temp2, CharEncoding::Latin1);
         masm.movePtr(temp2, input);
         CopyStringChars(masm, destChars, input, temp1, temp2, sizeof(char), sizeof(char16_t));
     }
@@ -7838,7 +7843,7 @@ ConcatInlineString(MacroAssembler& masm, Register lhs, Register rhs, Register ou
             CopyStringCharsMaybeInflate(masm, lhs, temp2, temp1, temp3);
         } else {
             masm.loadStringLength(lhs, temp3);
-            masm.loadStringChars(lhs, temp1);
+            masm.loadStringChars(lhs, temp1, CharEncoding::Latin1);
             masm.movePtr(temp1, lhs);
             CopyStringChars(masm, temp2, lhs, temp3, temp1, sizeof(char), sizeof(char));
         }
@@ -7848,7 +7853,7 @@ ConcatInlineString(MacroAssembler& masm, Register lhs, Register rhs, Register ou
             CopyStringCharsMaybeInflate(masm, rhs, temp2, temp1, temp3);
         } else {
             masm.loadStringLength(rhs, temp3);
-            masm.loadStringChars(rhs, temp1);
+            masm.loadStringChars(rhs, temp1, CharEncoding::Latin1);
             masm.movePtr(temp1, rhs);
             CopyStringChars(masm, temp2, rhs, temp3, temp1, sizeof(char), sizeof(char));
         }
@@ -7915,7 +7920,7 @@ CodeGenerator::visitSubstr(LSubstr* lir)
     {
         masm.store32(Imm32(JSString::INIT_FAT_INLINE_FLAGS),
                      Address(output, JSString::offsetOfFlags()));
-        masm.loadInlineStringChars(string, temp);
+        masm.loadInlineStringChars(string, temp, CharEncoding::TwoByte);
         if (temp2 == string)
             masm.push(string);
         BaseIndex chars(temp, begin, ScaleFromElemWidth(sizeof(char16_t)));
@@ -7934,7 +7939,7 @@ CodeGenerator::visitSubstr(LSubstr* lir)
                      Address(output, JSString::offsetOfFlags()));
         if (temp2 == string)
             masm.push(string);
-        masm.loadInlineStringChars(string, temp2);
+        masm.loadInlineStringChars(string, temp2, CharEncoding::Latin1);
         static_assert(sizeof(char) == 1, "begin index shouldn't need scaling");
         masm.addPtr(begin, temp2);
         masm.loadInlineStringCharsForStore(output, temp);
@@ -7955,7 +7960,7 @@ CodeGenerator::visitSubstr(LSubstr* lir)
     masm.branchLatin1String(string, &isLatin1);
     {
         masm.store32(Imm32(JSString::DEPENDENT_FLAGS), Address(output, JSString::offsetOfFlags()));
-        masm.loadNonInlineStringChars(string, temp);
+        masm.loadNonInlineStringChars(string, temp, CharEncoding::TwoByte);
         BaseIndex chars(temp, begin, ScaleFromElemWidth(sizeof(char16_t)));
         masm.computeEffectiveAddress(chars, temp);
         masm.storeNonInlineStringChars(temp, output);
@@ -7965,7 +7970,7 @@ CodeGenerator::visitSubstr(LSubstr* lir)
     {
         masm.store32(Imm32(JSString::DEPENDENT_FLAGS | JSString::LATIN1_CHARS_BIT),
                      Address(output, JSString::offsetOfFlags()));
-        masm.loadNonInlineStringChars(string, temp);
+        masm.loadNonInlineStringChars(string, temp, CharEncoding::Latin1);
         static_assert(sizeof(char) == 1, "begin index shouldn't need scaling");
         masm.addPtr(begin, temp);
         masm.storeNonInlineStringChars(temp, output);
