@@ -22,7 +22,6 @@ ac_add_options --enable-debug-symbols
 ac_add_options --disable-install-strip
 ac_add_options --disable-jemalloc
 ac_add_options --disable-crashreporter
-ac_add_options --disable-elf-hack
 ac_add_options --disable-profiling
 
 . "$topsrcdir/build/unix/mozconfig.stdcxx"
