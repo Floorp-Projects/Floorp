@@ -1449,7 +1449,7 @@ WorkerPrivateParent<Derived>::GetDocument() const
   }
   // if we don't have a document, we should query the document
   // from the parent in case of a nested worker
-  WorkerPrivate* parent = mParent;
+  WorkerPrivate* parent = self->mParent;
   while (parent) {
     if (parent->mLoadInfo.mWindow) {
       return parent->mLoadInfo.mWindow->GetExtantDoc();
@@ -1552,7 +1552,7 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
                                            WorkerLoadInfo& aLoadInfo)
 : mMutex("WorkerPrivateParent Mutex"),
   mCondVar(mMutex, "WorkerPrivateParent CondVar"),
-  mParent(aParent), mScriptURL(aScriptURL),
+  mScriptURL(aScriptURL),
   mWorkerName(aWorkerName),
   mLoadingWorkerScript(false), mParentWindowPausedDepth(0),
   mWorkerType(aWorkerType)
@@ -2658,8 +2658,9 @@ template <class Derived>
 void
 WorkerPrivateParent<Derived>::AssertIsOnParentThread() const
 {
-  if (GetParent()) {
-    GetParent()->AssertIsOnWorkerThread();
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+  if (self->GetParent()) {
+    self->GetParent()->AssertIsOnWorkerThread();
   }
   else {
     AssertIsOnMainThread();
@@ -2674,7 +2675,7 @@ WorkerPrivateParent<Derived>::AssertInnerWindowIsCorrect() const
   WorkerPrivate* self = ParentAsWorkerPrivate();
 
   // Only care about top level workers from windows.
-  if (mParent || !self->mLoadInfo.mWindow) {
+  if (self->mParent || !self->mLoadInfo.mWindow) {
     return;
   }
 
@@ -2707,6 +2708,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
                                        aIsChromeWorker, aWorkerType,
                                        aWorkerName, aServiceWorkerScope,
                                        aLoadInfo)
+  , mParent(aParent)
   , mDebuggerRegistered(false)
   , mDebugger(nullptr)
   , mJSContext(nullptr)
