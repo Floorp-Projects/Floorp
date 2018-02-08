@@ -1552,10 +1552,8 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
                                            WorkerLoadInfo& aLoadInfo)
 : mMutex("WorkerPrivateParent Mutex"),
   mCondVar(mMutex, "WorkerPrivateParent CondVar"),
-  mLoadingWorkerScript(false), mParentWindowPausedDepth(0),
-  mWorkerType(aWorkerType)
+  mParentWindowPausedDepth(0)
 {
-  MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
 }
 
 template <class Derived>
@@ -1793,7 +1791,7 @@ WorkerPrivateParent<Derived>::NotifyPrivate(WorkerStatus aStatus)
     self->mParentStatus = aStatus;
   }
 
-  if (IsSharedWorker()) {
+  if (self->IsSharedWorker()) {
     RuntimeService* runtime = RuntimeService::GetService();
     MOZ_ASSERT(runtime);
 
@@ -1840,7 +1838,7 @@ WorkerPrivateParent<Derived>::Freeze(nsPIDOMWindowInner* aWindow)
   // Shared workers are only frozen if all of their owning documents are
   // frozen. It can happen that mSharedWorkers is empty but this thread has
   // not been unregistered yet.
-  if ((IsSharedWorker() || IsServiceWorker()) && !mSharedWorkers.IsEmpty()) {
+  if ((self->IsSharedWorker() || self->IsServiceWorker()) && !mSharedWorkers.IsEmpty()) {
     AssertIsOnMainThread();
 
     bool allFrozen = true;
@@ -1900,7 +1898,7 @@ WorkerPrivateParent<Derived>::Thaw(nsPIDOMWindowInner* aWindow)
   // Shared workers are resumed if any of their owning documents are thawed.
   // It can happen that mSharedWorkers is empty but this thread has not been
   // unregistered yet.
-  if ((IsSharedWorker() || IsServiceWorker()) && !mSharedWorkers.IsEmpty()) {
+  if ((self->IsSharedWorker() || self->IsServiceWorker()) && !mSharedWorkers.IsEmpty()) {
     AssertIsOnMainThread();
 
     bool anyRunning = false;
@@ -1945,7 +1943,7 @@ WorkerPrivateParent<Derived>::Thaw(nsPIDOMWindowInner* aWindow)
   // Execute queued runnables before waking up the worker, otherwise the worker
   // could post new messages before we run those that have been queued.
   if (!IsParentWindowPaused() && !mQueuedRunnables.IsEmpty()) {
-    MOZ_ASSERT(IsDedicatedWorker());
+    MOZ_ASSERT(self->IsDedicatedWorker());
 
     nsTArray<nsCOMPtr<nsIRunnable>> runnables;
     mQueuedRunnables.SwapElements(runnables);
@@ -1969,7 +1967,8 @@ void
 WorkerPrivateParent<Derived>::ParentWindowPaused()
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT_IF(IsDedicatedWorker(), mParentWindowPausedDepth == 0);
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+  MOZ_ASSERT_IF(self->IsDedicatedWorker(), mParentWindowPausedDepth == 0);
   mParentWindowPausedDepth += 1;
 }
 
@@ -1981,7 +1980,7 @@ WorkerPrivateParent<Derived>::ParentWindowResumed()
   WorkerPrivate* self = ParentAsWorkerPrivate();
 
   MOZ_ASSERT(mParentWindowPausedDepth > 0);
-  MOZ_ASSERT_IF(IsDedicatedWorker(), mParentWindowPausedDepth == 1);
+  MOZ_ASSERT_IF(self->IsDedicatedWorker(), mParentWindowPausedDepth == 1);
   mParentWindowPausedDepth -= 1;
   if (mParentWindowPausedDepth > 0) {
     return;
@@ -1998,7 +1997,7 @@ WorkerPrivateParent<Derived>::ParentWindowResumed()
   // Execute queued runnables before waking up, otherwise the worker could post
   // new messages before we run those that have been queued.
   if (!self->IsFrozen() && !mQueuedRunnables.IsEmpty()) {
-    MOZ_ASSERT(IsDedicatedWorker());
+    MOZ_ASSERT(self->IsDedicatedWorker());
 
     nsTArray<nsCOMPtr<nsIRunnable>> runnables;
     mQueuedRunnables.SwapElements(runnables);
@@ -2253,10 +2252,10 @@ WorkerPrivateParent<Derived>::RegisterSharedWorker(SharedWorker* aSharedWorker,
   WorkerPrivate* self = ParentAsWorkerPrivate();
 
   MOZ_ASSERT(aSharedWorker);
-  MOZ_ASSERT(IsSharedWorker());
+  MOZ_ASSERT(self->IsSharedWorker());
   MOZ_ASSERT(!mSharedWorkers.Contains(aSharedWorker));
 
-  if (IsSharedWorker()) {
+  if (self->IsSharedWorker()) {
     RefPtr<MessagePortRunnable> runnable =
       new MessagePortRunnable(ParentAsWorkerPrivate(), aPort);
     if (!runnable->Dispatch()) {
@@ -2417,7 +2416,8 @@ WorkerPrivateParent<Derived>::GetAllSharedWorkers(
                                nsTArray<RefPtr<SharedWorker>>& aSharedWorkers)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+  MOZ_ASSERT(self->IsSharedWorker() || self->IsServiceWorker());
 
   if (!aSharedWorkers.IsEmpty()) {
     aSharedWorkers.Clear();
@@ -2434,7 +2434,8 @@ WorkerPrivateParent<Derived>::CloseSharedWorkersForWindow(
                                                     nsPIDOMWindowInner* aWindow)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+  MOZ_ASSERT(self->IsSharedWorker() || self->IsServiceWorker());
   MOZ_ASSERT(aWindow);
 
   bool someRemoved = false;
@@ -2471,7 +2472,8 @@ void
 WorkerPrivateParent<Derived>::CloseAllSharedWorkers()
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+  MOZ_ASSERT(self->IsSharedWorker() || self->IsServiceWorker());
 
   for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
     mSharedWorkers[i]->Close();
@@ -2489,7 +2491,7 @@ WorkerPrivateParent<Derived>::WorkerScriptLoaded()
   AssertIsOnMainThread();
   WorkerPrivate* self = ParentAsWorkerPrivate();
 
-  if (IsSharedWorker() || IsServiceWorker()) {
+  if (self->IsSharedWorker() || self->IsServiceWorker()) {
     // No longer need to hold references to the window or document we came from.
     self->mLoadInfo.mWindow = nullptr;
     self->mLoadInfo.mScriptContext = nullptr;
@@ -2709,6 +2711,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mParent(aParent)
   , mScriptURL(aScriptURL)
   , mWorkerName(aWorkerName)
+  , mWorkerType(aWorkerType)
   , mDebuggerRegistered(false)
   , mDebugger(nullptr)
   , mJSContext(nullptr)
@@ -2739,9 +2742,11 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mParentFrozen(false)
   , mIsSecureContext(false)
   , mBusyCount(0)
+  , mLoadingWorkerScript(false)
   , mCreationTimeStamp(TimeStamp::Now())
   , mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC)
 {
+  MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
   mLoadInfo.StealFrom(aLoadInfo);
 
   if (aParent) {
