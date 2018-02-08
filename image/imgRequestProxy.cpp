@@ -357,7 +357,7 @@ imgRequestProxy::AddToOwner(nsIDocument* aLoadingDocument)
       mTabGroup = docGroup->GetTabGroup();
       MOZ_ASSERT(mTabGroup);
 
-      mEventTarget = mTabGroup->EventTargetFor(mozilla::TaskCategory::Other);
+      mEventTarget = docGroup->EventTargetFor(mozilla::TaskCategory::Other);
       MOZ_ASSERT(mEventTarget);
     }
   }
