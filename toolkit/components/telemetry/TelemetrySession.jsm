@@ -958,7 +958,7 @@ var Impl = {
     let ret = {};
     for (let processName in scalarsSnapshot) {
       for (let name in scalarsSnapshot[processName]) {
-        if (name.startsWith("telemetry.test") && this._testing == false) {
+        if (name.startsWith("telemetry.test") && !this._testing) {
           continue;
         }
         // Finally arrange the data in the returned object.
