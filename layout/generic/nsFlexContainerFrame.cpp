@@ -805,15 +805,11 @@ protected:
   void CheckForMinSizeAuto(const ReflowInput& aFlexItemReflowInput,
                            const FlexboxAxisTracker& aAxisTracker);
 
-  // Our frame:
-  nsIFrame* const mFrame;
-
-  // Values that we already know in constructor: (and are hence mostly 'const')
+  // Values that we already know in constructor (and are hence mostly 'const'):
+  nsIFrame* const mFrame; // The flex item's frame.
   const float mFlexGrow;
   const float mFlexShrink;
-
   const nsSize mIntrinsicRatio;
-
   const nsMargin mBorderPadding;
   nsMargin mMargin; // non-const because we need to resolve auto margins
 
@@ -841,6 +837,8 @@ protected:
   // until after main-size has been resolved. In particular, these could share
   // memory with mMainPosn through mAscent, and mIsStretched.
   float mShareOfWeightSoFar;
+
+  const WritingMode mWM; // The flex item's writing mode.
   bool mIsFrozen;
   bool mHadMinViolation;
   bool mHadMaxViolation;
@@ -855,7 +853,6 @@ protected:
   // Does this item need to resolve a min-[width|height]:auto (in main-axis).
   bool mNeedsMinSizeAutoResolution;
 
-  const WritingMode mWM; // The flex item's writing mode.
   uint8_t mAlignSelf; // My "align-self" computed value (with "auto"
                       // swapped out for parent"s "align-items" value,
                       // in our constructor).
@@ -1798,14 +1795,14 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput,
     mCrossPosn(0),
     mAscent(0),
     mShareOfWeightSoFar(0.0f),
+    mWM(aFlexItemReflowInput.GetWritingMode()),
     mIsFrozen(false),
     mHadMinViolation(false),
     mHadMaxViolation(false),
     mHadMeasuringReflow(false),
     mIsStretched(false),
-    mIsStrut(false),
+    mIsStrut(false)
     // mNeedsMinSizeAutoResolution is initialized in CheckForMinSizeAuto()
-    mWM(aFlexItemReflowInput.GetWritingMode())
     // mAlignSelf, see below
 {
   MOZ_ASSERT(mFrame, "expecting a non-null child frame");
@@ -1893,6 +1890,9 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
     mCrossPosn(0),
     mAscent(0),
     mShareOfWeightSoFar(0.0f),
+    // Struts don't do layout, so its WM doesn't matter at this point. So, we
+    // just share container's WM for simplicity:
+    mWM(aContainerWM),
     mIsFrozen(true),
     mHadMinViolation(false),
     mHadMaxViolation(false),
@@ -1900,7 +1900,6 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
     mIsStretched(false),
     mIsStrut(true), // (this is the constructor for making struts, after all)
     mNeedsMinSizeAutoResolution(false),
-    mWM(aContainerWM),
     mAlignSelf(NS_STYLE_ALIGN_FLEX_START)
 {
   MOZ_ASSERT(mFrame, "expecting a non-null child frame");
