@@ -406,7 +406,7 @@ var plNextPage = async function() {
     doNextPage = true;
   }
 
-  if (doNextPage == true) {
+  if (doNextPage) {
     if (forceCC) {
       var tccstart = new Date();
       window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
@@ -540,7 +540,7 @@ function plWaitForPaintingCapturing() {
                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
   if (utils.isMozAfterPaintPending && useMozAfterPaint) {
-    if (gPaintListener == false)
+    if (!gPaintListener)
       gPaintWindow.addEventListener("MozAfterPaint", plPaintedCapturing, true);
     gPaintListener = true;
     return;
@@ -601,7 +601,7 @@ function waitForPainted() {
     return;
   }
 
-  if (gPaintListener == false)
+  if (!gPaintListener)
     gPaintWindow.addEventListener("MozAfterPaint", plPainted, true);
   gPaintListener = true;
 }
@@ -703,7 +703,7 @@ function plStop(force) {
 
 function plStopAll(force) {
   try {
-    if (force == false) {
+    if (!force) {
       pageIndex = 0;
       pageCycle = 1;
       if (cycle < NUM_CYCLES - 1) {
