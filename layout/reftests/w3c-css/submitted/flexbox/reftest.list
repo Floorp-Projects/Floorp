@@ -223,6 +223,9 @@ fails == flexbox-min-height-auto-002b.html flexbox-min-height-auto-002-ref.html 
 == flexbox-writing-mode-008.html flexbox-writing-mode-008-ref.html
 == flexbox-writing-mode-009.html flexbox-writing-mode-009-ref.html
 fails == flexbox-writing-mode-010.html flexbox-writing-mode-010-ref.html # bug 1267462
+fuzzy(1,16) == flexbox-writing-mode-011.html flexbox-writing-mode-011-ref.html
+== flexbox-writing-mode-012.html flexbox-writing-mode-012-ref.html
+== flexbox-writing-mode-013.html flexbox-writing-mode-013-ref.html
 
 # Single-line size clamping
 == flexbox-single-line-clamp-1.html flexbox-single-line-clamp-1-ref.html
