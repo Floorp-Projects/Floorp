@@ -190,18 +190,6 @@ public:
     return Notify(Killing);
   }
 
-  // We can assume that an nsPIDOMWindow will be available for Freeze, Thaw
-  // as these are only used for globals going in and out of the bfcache.
-  //
-  // XXXbz: This is a bald-faced lie given the uses in RegisterSharedWorker and
-  // CloseSharedWorkersForWindow, which pass null for aWindow to Thaw and Freeze
-  // respectively.  See bug 1251722.
-  bool
-  Freeze(nsPIDOMWindowInner* aWindow);
-
-  bool
-  Thaw(nsPIDOMWindowInner* aWindow);
-
   bool
   Terminate()
   {
@@ -291,7 +279,6 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   friend class EventTarget;
   friend class mozilla::dom::WorkerHolder;
   friend class WorkerPrivateParent<WorkerPrivate>;
-  typedef WorkerPrivateParent<WorkerPrivate> ParentType;
   friend class AutoSyncLoopHolder;
 
   struct TimeoutInfo;
@@ -355,7 +342,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   // Things touched on worker thread only.
   RefPtr<WorkerGlobalScope> mScope;
   RefPtr<WorkerDebuggerGlobalScope> mDebuggerScope;
-  nsTArray<ParentType*> mChildWorkers;
+  nsTArray<WorkerPrivate*> mChildWorkers;
   nsTObserverArray<WorkerHolder*> mHolders;
   uint32_t mNumHoldersPreventingShutdownStart;
   nsTArray<nsAutoPtr<TimeoutInfo>> mTimeouts;
@@ -585,10 +572,10 @@ public:
   ModifyBusyCountFromWorker(bool aIncrease);
 
   bool
-  AddChildWorker(ParentType* aChildWorker);
+  AddChildWorker(WorkerPrivate* aChildWorker);
 
   void
-  RemoveChildWorker(ParentType* aChildWorker);
+  RemoveChildWorker(WorkerPrivate* aChildWorker);
 
   void
   PostMessageToParent(JSContext* aCx,
@@ -1385,6 +1372,18 @@ public:
 
   void
   FlushReportsToSharedWorkers(nsIConsoleReportCollector* aReporter);
+
+  // We can assume that an nsPIDOMWindow will be available for Freeze, Thaw
+  // as these are only used for globals going in and out of the bfcache.
+  //
+  // XXXbz: This is a bald-faced lie given the uses in RegisterSharedWorker and
+  // CloseSharedWorkersForWindow, which pass null for aWindow to Thaw and Freeze
+  // respectively.  See bug 1251722.
+  bool
+  Freeze(nsPIDOMWindowInner* aWindow);
+
+  bool
+  Thaw(nsPIDOMWindowInner* aWindow);
 
   void
   EnableDebugger();
