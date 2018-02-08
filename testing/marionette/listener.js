@@ -1399,7 +1399,7 @@ function switchToFrame(msg) {
     sendSyncMessage("Marionette:switchedToFrame", {frameValue: null});
 
     curContainer.frame = content;
-    if (msg.json.focus == true) {
+    if (msg.json.focus) {
       curContainer.frame.focus();
     }
 
@@ -1464,7 +1464,7 @@ function switchToFrame(msg) {
           sendSyncMessage("Marionette:switchedToFrame", {frameValue: null});
           curContainer.frame = content;
 
-          if (msg.json.focus == true) {
+          if (msg.json.focus) {
             curContainer.frame.focus();
           }
 

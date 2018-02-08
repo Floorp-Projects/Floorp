@@ -152,7 +152,7 @@ add_task(async function test_recording() {
   // Check serializing only opt-out events.
   snapshot = Telemetry.snapshotEvents(OPTOUT, false);
   Assert.ok(("parent" in snapshot), "Should have entry for main process.");
-  let filtered = expected.filter(e => e.optout == true);
+  let filtered = expected.filter(e => !!e.optout);
   checkEvents(snapshot.parent, filtered);
 });
 

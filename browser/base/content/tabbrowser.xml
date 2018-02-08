@@ -499,12 +499,12 @@
           if (!aBrowser)
             aBrowser = this.mCurrentBrowser;
 
-          if (aCallGlobalListeners != false &&
+          if (aCallGlobalListeners &&
               aBrowser == this.mCurrentBrowser) {
             callListeners(this.mProgressListeners, aArguments);
           }
 
-          if (aCallTabsListeners != false) {
+          if (aCallTabsListeners) {
             aArguments.unshift(aBrowser);
 
             callListeners(this.mTabsProgressListeners, aArguments);

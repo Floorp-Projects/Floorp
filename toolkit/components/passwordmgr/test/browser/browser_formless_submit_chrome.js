@@ -88,7 +88,7 @@ add_task(async function test_backButton_forwardButton() {
     }
 
     await BrowserTestUtils.waitForCondition(() => {
-      return forwardButton.disabled == false;
+      return !forwardButton.disabled;
     });
     let forwardPromise = BrowserTestUtils.browserStopped(aBrowser);
     info("click the forward button");
@@ -106,7 +106,7 @@ add_task(async function test_reloadButton() {
                                                      "formless_basic.html");
 
     await BrowserTestUtils.waitForCondition(() => {
-      return reloadButton.disabled == false;
+      return !reloadButton.disabled;
     });
     EventUtils.synthesizeMouseAtCenter(reloadButton, {});
     await loadPromise;
