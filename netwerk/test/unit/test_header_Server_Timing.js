@@ -54,6 +54,11 @@ function contentHandler(metadata, response)
 
 function run_test()
 {
+  Services.prefs.setBoolPref("network.http.allow-plaintext-server-timing", true);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("network.http.allow-plaintext-server-timing");
+  });
+
   httpServer = new HttpServer();
   httpServer.registerPathHandler("/content", contentHandler);
   httpServer.start(-1);
