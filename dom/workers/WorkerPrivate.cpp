@@ -1552,8 +1552,6 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
                                            WorkerLoadInfo& aLoadInfo)
 : mMutex("WorkerPrivateParent Mutex"),
   mCondVar(mMutex, "WorkerPrivateParent CondVar"),
-  mScriptURL(aScriptURL),
-  mWorkerName(aWorkerName),
   mLoadingWorkerScript(false), mParentWindowPausedDepth(0),
   mWorkerType(aWorkerType)
 {
@@ -2709,6 +2707,8 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
                                        aWorkerName, aServiceWorkerScope,
                                        aLoadInfo)
   , mParent(aParent)
+  , mScriptURL(aScriptURL)
+  , mWorkerName(aWorkerName)
   , mDebuggerRegistered(false)
   , mDebugger(nullptr)
   , mJSContext(nullptr)
