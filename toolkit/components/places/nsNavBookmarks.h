@@ -69,8 +69,7 @@ namespace places {
   typedef void (nsNavBookmarks::*ItemChangeMethod)(const ItemChangeData&);
 
   enum BookmarkDate {
-    DATE_ADDED = 0
-  , LAST_MODIFIED
+    LAST_MODIFIED
   };
 
 } // namespace places

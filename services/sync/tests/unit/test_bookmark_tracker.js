@@ -559,28 +559,43 @@ add_task(async function test_onItemChanged_itemDates() {
     await tracker.stop();
 
     _("Insert a bookmark");
-    let fx_id = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      CommonUtils.makeURI("http://getfirefox.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Firefox!");
-    let fx_guid = await PlacesUtils.promiseItemGuid(fx_id);
-    _(`Firefox GUID: ${fx_guid}`);
+    let fx_bm = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      url: "http://getfirefox.com",
+      title: "Get Firefox!"
+    });
+    _(`Firefox GUID: ${fx_bm.guid}`);
 
     await startTracking();
 
-    _("Reset the bookmark's added date");
-    // Convert to microseconds for PRTime.
-    let dateAdded = (Date.now() - DAY_IN_MS) * 1000;
-    PlacesUtils.bookmarks.setItemDateAdded(fx_id, dateAdded);
-    await verifyTrackedItems([fx_guid]);
+    _("Reset the bookmark's added date, should not be tracked");
+    let dateAdded = new Date(Date.now() - DAY_IN_MS);
+    await PlacesUtils.bookmarks.update({
+      guid: fx_bm.guid,
+      dateAdded
+    });
+    await verifyTrackedCount(0);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+
+    await resetTracker();
+
+    _("Reset the bookmark's added date and another property, should be tracked");
+    dateAdded = new Date();
+    await PlacesUtils.bookmarks.update({
+      guid: fx_bm.guid,
+      dateAdded,
+      title: "test"
+    });
+    await verifyTrackedItems([fx_bm.guid]);
+    Assert.equal(tracker.score, 2 * SCORE_INCREMENT_XLARGE);
+
     await resetTracker();
 
     _("Set the bookmark's last modified date");
+    let fx_id = await PlacesUtils.promiseItemId(fx_bm.guid);
     let dateModified = Date.now() * 1000;
     PlacesUtils.bookmarks.setItemLastModified(fx_id, dateModified);
-    await verifyTrackedItems([fx_guid]);
+    await verifyTrackedItems([fx_bm.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");

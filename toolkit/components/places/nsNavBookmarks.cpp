@@ -1505,24 +1505,11 @@ nsNavBookmarks::SetItemDateInternal(enum BookmarkDate aDateType,
 {
   aValue = RoundToMilliseconds(aValue);
 
-  nsCOMPtr<mozIStorageStatement> stmt;
-  if (aDateType == DATE_ADDED) {
-    // lastModified is set to the same value as dateAdded.  We do this for
-    // performance reasons, since it will allow us to use an index to sort items
-    // by date.
-    stmt = mDB->GetStatement(
-      "UPDATE moz_bookmarks SET dateAdded = :date, lastModified = :date, "
-       "syncChangeCounter = syncChangeCounter + :delta "
-      "WHERE id = :item_id"
-    );
-  }
-  else {
-    stmt = mDB->GetStatement(
-      "UPDATE moz_bookmarks SET lastModified = :date, "
-       "syncChangeCounter = syncChangeCounter + :delta "
-      "WHERE id = :item_id"
-    );
-  }
+  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
+    "UPDATE moz_bookmarks SET lastModified = :date, "
+      "syncChangeCounter = syncChangeCounter + :delta "
+    "WHERE id = :item_id"
+  );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
 
@@ -1541,76 +1528,6 @@ nsNavBookmarks::SetItemDateInternal(enum BookmarkDate aDateType,
 
   return NS_OK;
 }
-
-
-NS_IMETHODIMP
-nsNavBookmarks::SetItemDateAdded(int64_t aItemId, PRTime aDateAdded,
-                                 uint16_t aSource)
-{
-  NS_ENSURE_ARG_MIN(aItemId, 1);
-
-  BookmarkData bookmark;
-  nsresult rv = FetchItemInfo(aItemId, bookmark);
-  NS_ENSURE_SUCCESS(rv, rv);
-  int64_t tagsRootId = TagsRootId();
-  bool isTagging = bookmark.grandParentId == tagsRootId;
-  int64_t syncChangeDelta = DetermineSyncChangeDelta(aSource);
-
-  // Round here so that we notify with the right value.
-  bookmark.dateAdded = RoundToMilliseconds(aDateAdded);
-
-  if (isTagging) {
-    // If we're changing a tag, bump the change counter for all tagged
-    // bookmarks. We use a separate code path to avoid a transaction for
-    // non-tags.
-    mozStorageTransaction transaction(mDB->MainConn(), false);
-
-    rv = SetItemDateInternal(DATE_ADDED, syncChangeDelta, bookmark.id,
-                             bookmark.dateAdded);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = AddSyncChangesForBookmarksWithURL(bookmark.url, syncChangeDelta);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = transaction.Commit();
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    rv = SetItemDateInternal(DATE_ADDED, syncChangeDelta, bookmark.id,
-                             bookmark.dateAdded);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Note: mDBSetItemDateAdded also sets lastModified to aDateAdded.
-  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavBookmarkObserver,
-                   OnItemChanged(bookmark.id,
-                                 NS_LITERAL_CSTRING("dateAdded"),
-                                 false,
-                                 nsPrintfCString("%" PRId64, bookmark.dateAdded),
-                                 bookmark.dateAdded,
-                                 bookmark.type,
-                                 bookmark.parentId,
-                                 bookmark.guid,
-                                 bookmark.parentGuid,
-                                 EmptyCString(),
-                                 aSource));
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNavBookmarks::GetItemDateAdded(int64_t aItemId, PRTime* _dateAdded)
-{
-  NS_ENSURE_ARG_MIN(aItemId, 1);
-  NS_ENSURE_ARG_POINTER(_dateAdded);
-
-  BookmarkData bookmark;
-  nsresult rv = FetchItemInfo(aItemId, bookmark);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *_dateAdded = bookmark.dateAdded;
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsNavBookmarks::SetItemLastModified(int64_t aItemId, PRTime aLastModified,
