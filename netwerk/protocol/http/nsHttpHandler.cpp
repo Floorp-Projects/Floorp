@@ -288,6 +288,7 @@ nsHttpHandler::nsHttpHandler()
     , mFastOpenStallsIdleTime(10)
     , mFastOpenStallsTimeout(20)
     , mActiveTabPriority(true)
+    , mAllowPlaintextServerTiming(false)
     , mProcessId(0)
     , mNextChannelId(1)
     , mLastActiveTabLoadOptimizationLock("nsHttpConnectionMgr::LastActiveTabLoadOptimization")
@@ -464,6 +465,7 @@ nsHttpHandler::Init()
         prefBranch->AddObserver(TCP_FAST_OPEN_STALLS_LIMIT, this, true);
         prefBranch->AddObserver(TCP_FAST_OPEN_STALLS_IDLE, this, true);
         prefBranch->AddObserver(TCP_FAST_OPEN_STALLS_TIMEOUT, this, true);
+        prefBranch->AddObserver(HTTP_PREF("allow-plaintext-server-timing"), this, false);
         PrefsChanged(prefBranch, nullptr);
     }
 
@@ -1772,6 +1774,10 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
                 NS_WARNING("Wrong value for focused_window_transaction_ratio");
             }
         }
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("allow-plaintext-server-timing"))) {
+        Unused << prefs->GetBoolPref(HTTP_PREF("allow-plaintext-server-timing"), &mAllowPlaintextServerTiming);
     }
 
     //
