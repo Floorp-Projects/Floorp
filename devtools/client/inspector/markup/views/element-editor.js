@@ -19,6 +19,11 @@ const {parseAttribute} =
       require("devtools/client/shared/node-attribute-parser");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 
+// Global tooltip inspector
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const INSPECTOR_L10N =
+  new LocalizationHelper("devtools/client/locales/inspector.properties");
+
 // Page size for pageup/pagedown
 const COLLAPSE_DATA_URL_REGEX = /^data.+base64/;
 const COLLAPSE_DATA_URL_LENGTH = 60;
@@ -27,12 +32,19 @@ const COLLAPSE_DATA_URL_LENGTH = 60;
 const HTML_VOID_ELEMENTS = [
   "area", "base", "br", "col", "command", "embed",
   "hr", "img", "input", "keygen", "link", "meta", "param", "source",
-  "track", "wbr" ];
+  "track", "wbr"
+];
 
-// Global tooltip inspector
-const {LocalizationHelper} = require("devtools/shared/l10n");
-const INSPECTOR_L10N =
-  new LocalizationHelper("devtools/client/locales/inspector.properties");
+// Contains only valid computed display property types of the node to display in the
+// element markup and their respective title tooltip text.
+const DISPLAY_TYPES = {
+  "flex": INSPECTOR_L10N.getStr("markupView.display.flex.tooltiptext"),
+  "inline-flex": INSPECTOR_L10N.getStr("markupView.display.flex.tooltiptext"),
+  "grid": INSPECTOR_L10N.getStr("markupView.display.grid.tooltiptext"),
+  "inline-grid": INSPECTOR_L10N.getStr("markupView.display.inlineGrid.tooltiptext"),
+  "flow-root": INSPECTOR_L10N.getStr("markupView.display.flowRoot.tooltiptext"),
+  "contents": INSPECTOR_L10N.getStr("markupView.display.contents.tooltiptext"),
+};
 
 /**
  * Creates an editor for an Element node.
@@ -162,6 +174,10 @@ ElementEditor.prototype = {
     this.eventNode.textContent = "ev";
     this.eventNode.title = INSPECTOR_L10N.getStr("markupView.event.tooltiptext");
     this.elt.appendChild(this.eventNode);
+
+    this.displayNode = this.doc.createElement("div");
+    this.displayNode.classList.add("markupview-display");
+    this.elt.appendChild(this.displayNode);
   },
 
   set selected(value) {
@@ -253,8 +269,14 @@ ElementEditor.prototype = {
     }
 
     // Update the event bubble display
-    this.eventNode.style.display = this.node.hasEventListeners ?
-      "inline-block" : "none";
+    this.eventNode.style.display = this.node.hasEventListeners ? "inline-block" : "none";
+
+    // Update the display type node
+    let showDisplayNode = this.node.displayType in DISPLAY_TYPES;
+    this.displayNode.textContent = this.node.displayType;
+    this.displayNode.dataset.display = showDisplayNode ? this.node.displayType : "";
+    this.displayNode.style.display = showDisplayNode ? "inline-block" : "none";
+    this.displayNode.title = showDisplayNode ? DISPLAY_TYPES[this.node.displayType] : "";
 
     this.updateTextEditor();
   },

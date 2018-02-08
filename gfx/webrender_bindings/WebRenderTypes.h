@@ -771,6 +771,10 @@ struct WrScrollId {
   bool operator==(const WrScrollId& other) const {
     return id == other.id;
   }
+
+  bool operator!=(const WrScrollId& other) const {
+    return id != other.id;
+  }
 };
 
 // Corresponds to a clip id for a position:sticky clip in webrender. Similar

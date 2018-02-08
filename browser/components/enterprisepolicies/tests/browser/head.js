@@ -43,7 +43,16 @@ async function setupPolicyEngineWithJson(json, customSchema) {
   return promise;
 }
 
-async function startWithCleanSlate() {
-  await setupPolicyEngineWithJson("");
-  is(Services.policies.status, Ci.nsIEnterprisePolicies.INACTIVE, "Engine is inactive");
-}
+add_task(async function policies_headjs_startWithCleanSlate() {
+  if (Services.policies.status != Ci.nsIEnterprisePolicies.INACTIVE) {
+    await setupPolicyEngineWithJson("");
+  }
+  is(Services.policies.status, Ci.nsIEnterprisePolicies.INACTIVE, "Engine is inactive at the start of the test");
+});
+
+registerCleanupFunction(async function policies_headjs_finishWithCleanSlate() {
+  if (Services.policies.status != Ci.nsIEnterprisePolicies.INACTIVE) {
+    await setupPolicyEngineWithJson("");
+  }
+  is(Services.policies.status, Ci.nsIEnterprisePolicies.INACTIVE, "Engine is inactive at the end of the test");
+});
