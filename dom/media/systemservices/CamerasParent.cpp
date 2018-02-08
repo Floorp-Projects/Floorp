@@ -907,8 +907,6 @@ CamerasParent::RecvStartCapture(const CaptureEngine& aCapEngine,
 
             auto candidateCapabilities = self->mAllCandidateCapabilities.find(
               nsCString(cap.VideoCapture()->CurrentDeviceName()));
-            MOZ_DIAGNOSTIC_ASSERT(candidateCapabilities != self->mAllCandidateCapabilities.end());
-            MOZ_DIAGNOSTIC_ASSERT(!candidateCapabilities->second.empty());
             if ((candidateCapabilities != self->mAllCandidateCapabilities.end()) &&
                 (!candidateCapabilities->second.empty())) {
               int32_t minIdx = -1;
