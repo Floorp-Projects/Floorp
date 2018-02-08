@@ -144,16 +144,6 @@ this.slides = (function() {
       shooter.sendEvent("finish-slides", "done");
       callbacks.onEnd();
     })));
-    // Note: e10s breaks the terms and privacy anchor tags. Work around this by
-    // manually opening the correct URLs on click until bug 1357589 is fixed.
-    doc.querySelector("#terms").addEventListener("click", watchFunction(assertIsTrusted((event) => {
-      event.preventDefault();
-      callBackground("openTermsPage");
-    })));
-    doc.querySelector("#privacy").addEventListener("click", watchFunction(assertIsTrusted((event) => {
-      event.preventDefault();
-      callBackground("openPrivacyPage");
-    })));
     doc.querySelector("#slide-overlay").addEventListener("click", watchFunction(assertIsTrusted((event) => {
       if (event.target == doc.querySelector("#slide-overlay")) {
         shooter.sendEvent("cancel-slides", "background-click");

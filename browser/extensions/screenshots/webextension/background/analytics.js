@@ -6,36 +6,71 @@ this.analytics = (function() {
   let exports = {};
 
   let telemetryPrefKnown = false;
-  let telemetryPref;
+  let telemetryEnabled;
+
+  const EVENT_BATCH_DURATION = 1000; // ms for setTimeout
+  let pendingEvents = [];
+  let pendingTimings = [];
+  let eventsTimeoutHandle, timingsTimeoutHandle;
+  const fetchOptions = {
+    method: "POST",
+    mode: "cors",
+    headers: { "content-type": "application/json" },
+    credentials: "include"
+  };
+
+  function flushEvents() {
+    if (pendingEvents.length === 0) {
+      return;
+    }
+
+    let eventsUrl = `${main.getBackend()}/event`;
+    let deviceId = auth.getDeviceId();
+    let sendTime = Date.now();
+
+    pendingEvents.forEach(event => {
+      event.queueTime = sendTime - event.eventTime
+      log.info(`sendEvent ${event.event}/${event.action}/${event.label || 'none'} ${JSON.stringify(event.options)}`);
+    });
+
+    let body = JSON.stringify({deviceId, events: pendingEvents});
+    let fetchRequest = fetch(eventsUrl, Object.assign({body}, fetchOptions));
+    fetchWatcher(fetchRequest);
+    pendingEvents = [];
+  }
+
+  function flushTimings() {
+    if (pendingTimings.length === 0) {
+      return;
+    }
+
+    let timingsUrl = `${main.getBackend()}/timing`;
+    let deviceId = auth.getDeviceId();
+    let body = JSON.stringify({deviceId, timings: pendingTimings});
+    let fetchRequest = fetch(timingsUrl, Object.assign({body}, fetchOptions));
+    fetchWatcher(fetchRequest);
+    pendingTimings.forEach(t => {
+      log.info(`sendTiming ${t.timingCategory}/${t.timingLabel}/${t.timingVar}: ${t.timingValue}`);
+    });
+    pendingTimings = [];
+  }
 
   function sendTiming(timingLabel, timingVar, timingValue) {
     // sendTiming is only called in response to sendEvent, so no need to check
     // the telemetry pref again here.
     let timingCategory = "addon";
-    return new Promise((resolve, reject) => {
-      let url = main.getBackend() + "/timing";
-      let req = new XMLHttpRequest();
-      req.open("POST", url);
-      req.setRequestHeader("content-type", "application/json");
-      req.onload = catcher.watchFunction(() => {
-        if (req.status >= 300) {
-          let exc = new Error("Bad response from POST /timing");
-          exc.status = req.status;
-          exc.statusText = req.statusText;
-          reject(exc);
-        } else {
-          resolve();
-        }
-      });
-      log.info(`sendTiming ${timingCategory}/${timingLabel}/${timingVar}: ${timingValue}`);
-      req.send(JSON.stringify({
-        deviceId: auth.getDeviceId(),
-        timingCategory,
-        timingLabel,
-        timingVar,
-        timingValue
-      }));
+    pendingTimings.push({
+      timingCategory,
+      timingLabel,
+      timingVar,
+      timingValue
     });
+    if (!timingsTimeoutHandle) {
+      timingsTimeoutHandle = setTimeout(() => {
+        timingsTimeoutHandle = null;
+        flushTimings();
+      }, EVENT_BATCH_DURATION);
+    }
   }
 
   exports.sendEvent = function(action, label, options) {
@@ -44,7 +79,7 @@ this.analytics = (function() {
       log.warn("sendEvent called before we were able to refresh");
       return Promise.resolve();
     }
-    if (!telemetryPref) {
+    if (!telemetryEnabled) {
       log.info(`Cancelled sendEvent ${eventCategory}/${action}/${label || 'none'} ${JSON.stringify(options)}`);
       return Promise.resolve();
     }
@@ -59,61 +94,62 @@ this.analytics = (function() {
       label = undefined;
     }
     options = options || {};
+
+    // Don't send events if in private browsing.
+    if (options.incognito) {
+      return Promise.resolve();
+    }
+
+    // Don't include in event data.
+    delete options.incognito;
+
     let di = deviceInfo();
-    return new Promise((resolve, reject) => {
-      let url = main.getBackend() + "/event";
-      let req = new XMLHttpRequest();
-      req.open("POST", url);
-      req.setRequestHeader("content-type", "application/json");
-      req.onload = catcher.watchFunction(() => {
-        if (req.status >= 300) {
-          let exc = new Error("Bad response from POST /event");
-          exc.status = req.status;
-          exc.statusText = req.statusText;
-          reject(exc);
-        } else {
-          resolve();
-        }
-      });
-      options.applicationName = di.appName;
-      options.applicationVersion = di.addonVersion;
-      let abTests = auth.getAbTests();
-      for (let [gaField, value] of Object.entries(abTests)) {
-        options[gaField] = value;
-      }
-      log.info(`sendEvent ${eventCategory}/${action}/${label || 'none'} ${JSON.stringify(options)}`);
-      req.send(JSON.stringify({
-        deviceId: auth.getDeviceId(),
-        event: eventCategory,
-        action,
-        label,
-        options
-      }));
+    options.applicationName = di.appName;
+    options.applicationVersion = di.addonVersion;
+    let abTests = auth.getAbTests();
+    for (let [gaField, value] of Object.entries(abTests)) {
+      options[gaField] = value;
+    }
+    pendingEvents.push({
+      eventTime: Date.now(),
+      event: eventCategory,
+      action,
+      label,
+      options
     });
+    if (!eventsTimeoutHandle) {
+      eventsTimeoutHandle = setTimeout(() => {
+        eventsTimeoutHandle = null;
+        flushEvents();
+      }, EVENT_BATCH_DURATION);
+    }
+    // This function used to return a Promise that was not used at any of the
+    // call sites; doing this simply maintains that interface.
+    return Promise.resolve();
   };
 
   exports.refreshTelemetryPref = function() {
-    return communication.sendToBootstrap("getTelemetryPref").then((result) => {
+    return communication.sendToBootstrap("isTelemetryEnabled").then((result) => {
       telemetryPrefKnown = true;
       if (result === communication.NO_BOOTSTRAP) {
-        telemetryPref = true;
+        telemetryEnabled = true;
       } else {
-        telemetryPref = result;
+        telemetryEnabled = result;
       }
     }, (error) => {
       // If there's an error reading the pref, we should assume that we shouldn't send data
       telemetryPrefKnown = true;
-      telemetryPref = false;
+      telemetryEnabled = false;
       throw error;
     });
   };
 
-  exports.getTelemetryPrefSync = function() {
+  exports.isTelemetryEnabled = function() {
     catcher.watchPromise(exports.refreshTelemetryPref());
-    return !!telemetryPref;
+    return telemetryEnabled;
   };
 
-  let timingData = {};
+  let timingData = new Map();
 
   // Configuration for filtering the sendEvent stream on start/end events.
   // When start or end events occur, the time is recorded.
@@ -197,7 +233,7 @@ this.analytics = (function() {
   }
 
   function anyMatches(filters, action, label) {
-    return !!filters.find(filter => match(filter, action, label));
+    return filters.some(filter => match(filter, action, label));
   }
 
   function measureTiming(action, label) {
@@ -209,10 +245,22 @@ this.analytics = (function() {
       } else if (timingData[r.name] && match(r.end, action, label)) {
         let endTime = Date.now();
         let elapsed = endTime - timingData[r.name];
-        catcher.watchPromise(sendTiming("perf-response-time", r.name, elapsed), true);
+        sendTiming("perf-response-time", r.name, elapsed);
         delete timingData[r.name];
       }
     });
+  }
+
+  function fetchWatcher(request) {
+    catcher.watchPromise(
+      request.then(response => {
+        if (!response.ok) {
+          throw new Error(`Bad response from ${request.url}: ${response.status} ${response.statusText}`);
+        }
+        return response;
+      }),
+      true
+    );
   }
 
   return exports;
