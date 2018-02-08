@@ -330,7 +330,8 @@ WorkerRunnable::Run()
     cx = jsapi->cx();
   }
 
-  // Note that we can't assert anything about mWorkerPrivate->GetWrapper()
+  // Note that we can't assert anything about
+  // mWorkerPrivate->ParentEventTargetRef()->GetWrapper()
   // existing, since it may in fact have been GCed (and we may be one of the
   // runnables cleaning up the worker as a result).
 
@@ -348,27 +349,31 @@ WorkerRunnable::Run()
   // the compartment of the worker's reflector if there is one.  There might
   // not be one if we're just starting to compile the script for this worker.
   Maybe<JSAutoCompartment> ac;
-  if (!targetIsWorkerThread && mWorkerPrivate->GetWrapper()) {
+  if (!targetIsWorkerThread &&
+      mWorkerPrivate->IsDedicatedWorker() &&
+      mWorkerPrivate->ParentEventTargetRef()->GetWrapper()) {
+    JSObject* wrapper = mWorkerPrivate->ParentEventTargetRef()->GetWrapper();
+
     // If we're on the parent thread and have a reflector and a globalObject,
     // then the compartments of cx, globalObject, and the worker's reflector
     // should all match.
     MOZ_ASSERT_IF(globalObject,
-                  js::GetObjectCompartment(mWorkerPrivate->GetWrapper()) ==
+                  js::GetObjectCompartment(wrapper) ==
                     js::GetContextCompartment(cx));
     MOZ_ASSERT_IF(globalObject,
-                  js::GetObjectCompartment(mWorkerPrivate->GetWrapper()) ==
+                  js::GetObjectCompartment(wrapper) ==
                     js::GetObjectCompartment(globalObject->GetGlobalJSObject()));
 
     // If we're on the parent thread and have a reflector, then our
     // JSContext had better be either in the null compartment (and hence
     // have no globalObject) or in the compartment of our reflector.
     MOZ_ASSERT(!js::GetContextCompartment(cx) ||
-               js::GetObjectCompartment(mWorkerPrivate->GetWrapper()) ==
+               js::GetObjectCompartment(wrapper) ==
                  js::GetContextCompartment(cx),
                "Must either be in the null compartment or in our reflector "
                "compartment");
 
-    ac.emplace(cx, mWorkerPrivate->GetWrapper());
+    ac.emplace(cx, wrapper);
   }
 
   MOZ_ASSERT(!jsapi->HasException());

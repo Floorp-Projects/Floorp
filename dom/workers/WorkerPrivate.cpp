@@ -249,7 +249,7 @@ private:
 
     runtime->UnregisterWorker(mFinishedWorker);
 
-    mFinishedWorker->ClearSelfRef();
+    mFinishedWorker->ClearSelfAndParentEventTargetRef();
     return true;
   }
 };
@@ -287,7 +287,7 @@ private:
       NS_WARNING("Failed to dispatch, going to leak!");
     }
 
-    mFinishedWorker->ClearSelfRef();
+    mFinishedWorker->ClearSelfAndParentEventTargetRef();
     return NS_OK;
   }
 };
@@ -384,13 +384,15 @@ private:
       return true;
     }
 
+    RefPtr<mozilla::dom::EventTarget> parentEventTarget =
+      aWorkerPrivate->ParentEventTargetRef();
     RefPtr<Event> event =
-      Event::Constructor(aWorkerPrivate, NS_LITERAL_STRING("error"),
+      Event::Constructor(parentEventTarget, NS_LITERAL_STRING("error"),
                          EventInit());
     event->SetTrusted(true);
 
     bool dummy;
-    aWorkerPrivate->DispatchEvent(event, &dummy);
+    parentEventTarget->DispatchEvent(event, &dummy);
     return true;
   }
 };
@@ -1546,14 +1548,6 @@ WorkerPrivateParent<Derived>::SetReferrerPolicyFromHeaderValue(
   SetReferrerPolicy(policy);
 }
 
-
-// Can't use NS_IMPL_CYCLE_COLLECTION_CLASS(WorkerPrivateParent) because of the
-// templates.
-template <class Derived>
-typename WorkerPrivateParent<Derived>::cycleCollection
-  WorkerPrivateParent<Derived>::_cycleCollectorGlobal =
-    WorkerPrivateParent<Derived>::cycleCollection();
-
 template <class Derived>
 WorkerPrivateParent<Derived>::WorkerPrivateParent(
                                            WorkerPrivate* aParent,
@@ -1575,11 +1569,6 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC)
 {
   MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
-
-  if (aLoadInfo.mWindow) {
-    AssertIsOnMainThread();
-    BindToOwner(aLoadInfo.mWindow);
-  }
 
   mLoadInfo.StealFrom(aLoadInfo);
 
@@ -1644,23 +1633,23 @@ WorkerPrivateParent<Derived>::~WorkerPrivateParent()
 }
 
 template <class Derived>
-JSObject*
-WorkerPrivateParent<Derived>::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+void
+WorkerPrivateParent<Derived>::Traverse(nsCycleCollectionTraversalCallback& aCb)
 {
-  MOZ_ASSERT(!IsSharedWorker(),
-             "We should never wrap a WorkerPrivate for a SharedWorker");
-
   AssertIsOnParentThread();
 
-  // XXXkhuey this should not need to be rooted, the analysis is dumb.
-  // See bug 980181.
-  JS::Rooted<JSObject*> wrapper(aCx,
-    WorkerBinding::Wrap(aCx, ParentAsWorkerPrivate(), aGivenProto));
-  if (wrapper) {
-    MOZ_ALWAYS_TRUE(TryPreserveWrapper(wrapper));
+  // The WorkerPrivate::mParentEventTargetRef has a reference to the exposed
+  // Worker object, which is really held by the worker thread.  We traverse this
+  // reference if and only if our busy count is zero and we have not released
+  // the main thread reference.  We do not unlink it.  This allows the CC to
+  // break cycles involving the Worker and begin shutting it down (which does
+  // happen in unlink) but ensures that the WorkerPrivate won't be deleted
+  // before we're done shutting down the thread.
+  if (!mBusyCount && !mMainThreadObjectsForgotten) {
+    nsCycleCollectionTraversalCallback& cb = aCb;
+    WorkerPrivateParent<Derived>* tmp = this;
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParentEventTargetRef);
   }
-
-  return wrapper;
 }
 
 template <class Derived>
@@ -2143,76 +2132,6 @@ WorkerPrivateParent<Derived>::ProxyReleaseMainThreadObjects()
   mMainThreadObjectsForgotten = true;
 
   return result;
-}
-
-template <class Derived>
-void
-WorkerPrivateParent<Derived>::PostMessageInternal(JSContext* aCx,
-                                                  JS::Handle<JS::Value> aMessage,
-                                                  const Sequence<JSObject*>& aTransferable,
-                                                  ErrorResult& aRv)
-{
-  AssertIsOnParentThread();
-
-  {
-    MutexAutoLock lock(mMutex);
-    if (mParentStatus > Running) {
-      return;
-    }
-  }
-
-  JS::Rooted<JS::Value> transferable(aCx, JS::UndefinedValue());
-
-  aRv = nsContentUtils::CreateJSValueFromSequenceOfObject(aCx, aTransferable,
-                                                          &transferable);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  RefPtr<MessageEventRunnable> runnable =
-    new MessageEventRunnable(ParentAsWorkerPrivate(),
-                             WorkerRunnable::WorkerThreadModifyBusyCount);
-
-  UniquePtr<AbstractTimelineMarker> start;
-  UniquePtr<AbstractTimelineMarker> end;
-  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-  bool isTimelineRecording = timelines && !timelines->IsEmpty();
-
-  if (isTimelineRecording) {
-    start = MakeUnique<WorkerTimelineMarker>(NS_IsMainThread()
-      ? ProfileTimelineWorkerOperationType::SerializeDataOnMainThread
-      : ProfileTimelineWorkerOperationType::SerializeDataOffMainThread,
-      MarkerTracingType::START);
-  }
-
-  runnable->Write(aCx, aMessage, transferable, JS::CloneDataPolicy(), aRv);
-
-  if (isTimelineRecording) {
-    end = MakeUnique<WorkerTimelineMarker>(NS_IsMainThread()
-      ? ProfileTimelineWorkerOperationType::SerializeDataOnMainThread
-      : ProfileTimelineWorkerOperationType::SerializeDataOffMainThread,
-      MarkerTracingType::END);
-    timelines->AddMarkerForAllObservedDocShells(start);
-    timelines->AddMarkerForAllObservedDocShells(end);
-  }
-
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  if (!runnable->Dispatch()) {
-    aRv.Throw(NS_ERROR_FAILURE);
-  }
-}
-
-template <class Derived>
-void
-WorkerPrivateParent<Derived>::PostMessage(
-                             JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                             const Sequence<JSObject*>& aTransferable,
-                             ErrorResult& aRv)
-{
-  PostMessageInternal(aCx, aMessage, aTransferable, aRv);
 }
 
 template <class Derived>
@@ -2780,48 +2699,6 @@ WorkerPrivateParent<Derived>::FlushReportsToSharedWorkers(
   aReporter->ClearConsoleReports();
 }
 
-template <class Derived>
-NS_IMPL_ADDREF_INHERITED(WorkerPrivateParent<Derived>, DOMEventTargetHelper)
-
-template <class Derived>
-NS_IMPL_RELEASE_INHERITED(WorkerPrivateParent<Derived>, DOMEventTargetHelper)
-
-template <class Derived>
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkerPrivateParent<Derived>)
-NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
-
-template <class Derived>
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(WorkerPrivateParent<Derived>,
-                                                  DOMEventTargetHelper)
-  tmp->AssertIsOnParentThread();
-
-  // The WorkerPrivate::mSelfRef has a reference to itself, which is really
-  // held by the worker thread.  We traverse this reference if and only if our
-  // busy count is zero and we have not released the main thread reference.
-  // We do not unlink it.  This allows the CC to break cycles involving the
-  // WorkerPrivate and begin shutting it down (which does happen in unlink) but
-  // ensures that the WorkerPrivate won't be deleted before we're done shutting
-  // down the thread.
-
-  if (!tmp->mBusyCount && !tmp->mMainThreadObjectsForgotten) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelfRef)
-  }
-
-  // The various strong references in LoadInfo are managed manually and cannot
-  // be cycle collected.
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-template <class Derived>
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WorkerPrivateParent<Derived>,
-                                                DOMEventTargetHelper)
-  tmp->Terminate();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-template <class Derived>
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(WorkerPrivateParent<Derived>,
-                                               DOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
 #ifdef DEBUG
 
 template <class Derived>
@@ -2952,58 +2829,6 @@ WorkerPrivate::~WorkerPrivate()
   // Its possible that we may be created and destroyed without progressing
   // to Killing via some obscure code path.
   mWorkerHybridEventTarget->ForgetWorkerPrivate(this);
-}
-
-// static
-already_AddRefed<WorkerPrivate>
-WorkerPrivate::Constructor(const GlobalObject& aGlobal,
-                           const nsAString& aScriptURL,
-                           const WorkerOptions& aOptions,
-                           ErrorResult& aRv)
-{
-  return WorkerPrivate::Constructor(aGlobal, aScriptURL, false,
-                                    WorkerTypeDedicated,
-                                    aOptions.mName, nullptr, aRv);
-}
-
-// static
-already_AddRefed<ChromeWorkerPrivate>
-ChromeWorkerPrivate::Constructor(const GlobalObject& aGlobal,
-                                 const nsAString& aScriptURL,
-                                 ErrorResult& aRv)
-{
-  return WorkerPrivate::Constructor(aGlobal, aScriptURL, true,
-                                    WorkerTypeDedicated, EmptyString(),
-                                    nullptr, aRv)
-                                    .downcast<ChromeWorkerPrivate>();
-}
-
-// static
-bool
-ChromeWorkerPrivate::WorkerAvailable(JSContext* aCx, JSObject* /* unused */)
-{
-  // Chrome is always allowed to use workers, and content is never
-  // allowed to use ChromeWorker, so all we have to check is the
-  // caller.  However, chrome workers apparently might not have a
-  // system principal, so we have to check for them manually.
-  if (NS_IsMainThread()) {
-    return nsContentUtils::IsSystemCaller(aCx);
-  }
-
-  return GetWorkerPrivateFromContext(aCx)->IsChromeWorker();
-}
-
-// static
-already_AddRefed<WorkerPrivate>
-WorkerPrivate::Constructor(const GlobalObject& aGlobal,
-                           const nsAString& aScriptURL,
-                           bool aIsChromeWorker, WorkerType aWorkerType,
-                           const nsAString& aWorkerName,
-                           WorkerLoadInfo* aLoadInfo, ErrorResult& aRv)
-{
-  JSContext* cx = aGlobal.Context();
-  return Constructor(cx, aScriptURL, aIsChromeWorker, aWorkerType,
-                     aWorkerName, VoidCString(), aLoadInfo, aRv);
 }
 
 // static
