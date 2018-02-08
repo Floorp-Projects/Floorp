@@ -155,12 +155,6 @@ public:
   nsresult
   DispatchDebuggerRunnable(already_AddRefed<WorkerRunnable> aDebuggerRunnable);
 
-  already_AddRefed<WorkerRunnable>
-  MaybeWrapAsWorkerRunnable(already_AddRefed<nsIRunnable> aRunnable);
-
-  bool
-  ProxyReleaseMainThreadObjects();
-
   void
   UpdateContextOptions(const JS::ContextOptions& aContextOptions);
 
@@ -1381,6 +1375,12 @@ public:
 
   void
   DisableDebugger();
+
+  already_AddRefed<WorkerRunnable>
+  MaybeWrapAsWorkerRunnable(already_AddRefed<nsIRunnable> aRunnable);
+
+  bool
+  ProxyReleaseMainThreadObjects();
 
 private:
   WorkerPrivate(WorkerPrivate* aParent,
