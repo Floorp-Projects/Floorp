@@ -1443,8 +1443,9 @@ nsIDocument*
 WorkerPrivateParent<Derived>::GetDocument() const
 {
   AssertIsOnMainThread();
-  if (mLoadInfo.mWindow) {
-    return mLoadInfo.mWindow->GetExtantDoc();
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+  if (self->mLoadInfo.mWindow) {
+    return self->mLoadInfo.mWindow->GetExtantDoc();
   }
   // if we don't have a document, we should query the document
   // from the parent in case of a nested worker
@@ -1459,23 +1460,20 @@ WorkerPrivateParent<Derived>::GetDocument() const
   return nullptr;
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::SetCSP(nsIContentSecurityPolicy* aCSP)
+WorkerPrivate::SetCSP(nsIContentSecurityPolicy* aCSP)
 {
   AssertIsOnMainThread();
   if (!aCSP) {
     return;
   }
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-  aCSP->EnsureEventTarget(self->mMainThreadEventTarget);
+  aCSP->EnsureEventTarget(mMainThreadEventTarget);
   mLoadInfo.mCSP = aCSP;
 }
 
-template <class Derived>
 nsresult
-WorkerPrivateParent<Derived>::SetCSPFromHeaderValues(const nsACString& aCSPHeaderValue,
-                                                     const nsACString& aCSPReportOnlyHeaderValue)
+WorkerPrivate::SetCSPFromHeaderValues(const nsACString& aCSPHeaderValue,
+                                      const nsACString& aCSPReportOnlyHeaderValue)
 {
   AssertIsOnMainThread();
   MOZ_DIAGNOSTIC_ASSERT(!mLoadInfo.mCSP);
@@ -1489,8 +1487,7 @@ WorkerPrivateParent<Derived>::SetCSPFromHeaderValues(const nsACString& aCSPHeade
     return NS_OK;
   }
 
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-  csp->EnsureEventTarget(self->mMainThreadEventTarget);
+  csp->EnsureEventTarget(mMainThreadEventTarget);
 
   // If there's a CSP header, apply it.
   if (!cspHeaderValue.IsEmpty()) {
@@ -1526,10 +1523,8 @@ WorkerPrivateParent<Derived>::SetCSPFromHeaderValues(const nsACString& aCSPHeade
   return NS_OK;
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::SetReferrerPolicyFromHeaderValue(
-                                  const nsACString& aReferrerPolicyHeaderValue)
+WorkerPrivate::SetReferrerPolicyFromHeaderValue(const nsACString& aReferrerPolicyHeaderValue)
 {
   NS_ConvertUTF8toUTF16 headerValue(aReferrerPolicyHeaderValue);
 
@@ -1560,66 +1555,9 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mParent(aParent), mScriptURL(aScriptURL),
   mWorkerName(aWorkerName),
   mLoadingWorkerScript(false), mParentWindowPausedDepth(0),
-  mParentFrozen(false),
-  mIsChromeWorker(aIsChromeWorker),
-  mIsSecureContext(false), mWorkerType(aWorkerType)
+  mWorkerType(aWorkerType)
 {
   MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
-
-  mLoadInfo.StealFrom(aLoadInfo);
-
-  if (aParent) {
-    aParent->AssertIsOnWorkerThread();
-
-    // Note that this copies our parent's secure context state into mJSSettings.
-    aParent->CopyJSSettings(mJSSettings);
-
-    // And manually set our mIsSecureContext, though it's not really relevant to
-    // dedicated workers...
-    mIsSecureContext = aParent->IsSecureContext();
-    MOZ_ASSERT_IF(mIsChromeWorker, mIsSecureContext);
-
-    MOZ_ASSERT(IsDedicatedWorker());
-
-    if (aParent->mParentFrozen) {
-      Freeze(nullptr);
-    }
-  }
-  else {
-    AssertIsOnMainThread();
-
-    RuntimeService::GetDefaultJSSettings(mJSSettings);
-
-    // Our secure context state depends on the kind of worker we have.
-    if (UsesSystemPrincipal() || IsServiceWorker()) {
-      mIsSecureContext = true;
-    } else if (mLoadInfo.mWindow) {
-      // Shared and dedicated workers both inherit the loading window's secure
-      // context state.  Shared workers then prevent windows with a different
-      // secure context state from attaching to them.
-      mIsSecureContext = mLoadInfo.mWindow->IsSecureContext();
-    } else {
-      MOZ_ASSERT_UNREACHABLE("non-chrome worker that is not a service worker "
-                             "that has no parent and no associated window");
-    }
-
-    if (mIsSecureContext) {
-      mJSSettings.chrome.compartmentOptions
-                 .creationOptions().setSecureContext(true);
-      mJSSettings.content.compartmentOptions
-                 .creationOptions().setSecureContext(true);
-    }
-
-    // Our parent can get suspended after it initiates the async creation
-    // of a new worker thread.  In this case suspend the new worker as well.
-    if (mLoadInfo.mWindow && mLoadInfo.mWindow->IsSuspended()) {
-      ParentWindowPaused();
-    }
-
-    if (mLoadInfo.mWindow && mLoadInfo.mWindow->IsFrozen()) {
-      Freeze(mLoadInfo.mWindow);
-    }
-  }
 }
 
 template <class Derived>
@@ -1959,7 +1897,7 @@ WorkerPrivateParent<Derived>::Thaw(nsPIDOMWindowInner* aWindow)
   AssertIsOnParentThread();
   WorkerPrivate* self = ParentAsWorkerPrivate();
 
-  MOZ_ASSERT(mParentFrozen);
+  MOZ_ASSERT(self->mParentFrozen);
 
   // Shared workers are resumed if any of their owning documents are thawed.
   // It can happen that mSharedWorkers is empty but this thread has not been
@@ -1987,14 +1925,14 @@ WorkerPrivateParent<Derived>::Thaw(nsPIDOMWindowInner* aWindow)
       }
     }
 
-    if (!anyRunning || !mParentFrozen) {
+    if (!anyRunning || !self->mParentFrozen) {
       return true;
     }
   }
 
-  MOZ_ASSERT(mParentFrozen);
+  MOZ_ASSERT(self->mParentFrozen);
 
-  mParentFrozen = false;
+  self->mParentFrozen = false;
 
   {
     MutexAutoLock lock(mMutex);
@@ -2061,7 +1999,7 @@ WorkerPrivateParent<Derived>::ParentWindowResumed()
 
   // Execute queued runnables before waking up, otherwise the worker could post
   // new messages before we run those that have been queued.
-  if (!IsFrozen() && !mQueuedRunnables.IsEmpty()) {
+  if (!self->IsFrozen() && !mQueuedRunnables.IsEmpty()) {
     MOZ_ASSERT(IsDedicatedWorker());
 
     nsTArray<nsCOMPtr<nsIRunnable>> runnables;
@@ -2127,12 +2065,12 @@ WorkerPrivateParent<Derived>::ProxyReleaseMainThreadObjects()
   nsCOMPtr<nsILoadGroup> loadGroupToCancel;
   // If we're not overriden, then do nothing here.  Let the load group get
   // handled in ForgetMainThreadObjects().
-  if (mLoadInfo.mInterfaceRequestor) {
-    mLoadInfo.mLoadGroup.swap(loadGroupToCancel);
+  if (self->mLoadInfo.mInterfaceRequestor) {
+    self->mLoadInfo.mLoadGroup.swap(loadGroupToCancel);
   }
 
-  bool result = mLoadInfo.ProxyReleaseMainThreadObjects(ParentAsWorkerPrivate(),
-                                                        loadGroupToCancel);
+  bool result = self->mLoadInfo.ProxyReleaseMainThreadObjects(self,
+                                                              loadGroupToCancel);
 
   self->mMainThreadObjectsForgotten = true;
 
@@ -2145,10 +2083,11 @@ WorkerPrivateParent<Derived>::UpdateContextOptions(
                                     const JS::ContextOptions& aContextOptions)
 {
   AssertIsOnParentThread();
+  WorkerPrivate* self = ParentAsWorkerPrivate();
 
   {
     MutexAutoLock lock(mMutex);
-    mJSSettings.contextOptions = aContextOptions;
+    self->mJSSettings.contextOptions = aContextOptions;
   }
 
   RefPtr<UpdateContextOptionsRunnable> runnable =
@@ -2177,12 +2116,13 @@ WorkerPrivateParent<Derived>::UpdateJSWorkerMemoryParameter(JSGCParamKey aKey,
                                                             uint32_t aValue)
 {
   AssertIsOnParentThread();
+  WorkerPrivate* self = ParentAsWorkerPrivate();
 
   bool found = false;
 
   {
     MutexAutoLock lock(mMutex);
-    found = mJSSettings.ApplyGCSetting(aKey, aValue);
+    found = self->mJSSettings.ApplyGCSetting(aKey, aValue);
   }
 
   if (found) {
@@ -2201,11 +2141,12 @@ void
 WorkerPrivateParent<Derived>::UpdateGCZeal(uint8_t aGCZeal, uint32_t aFrequency)
 {
   AssertIsOnParentThread();
+  WorkerPrivate* self = ParentAsWorkerPrivate();
 
   {
     MutexAutoLock lock(mMutex);
-    mJSSettings.gcZeal = aGCZeal;
-    mJSSettings.gcZealFrequency = aFrequency;
+    self->mJSSettings.gcZeal = aGCZeal;
+    self->mJSSettings.gcZealFrequency = aFrequency;
   }
 
   RefPtr<UpdateGCZealRunnable> runnable =
@@ -2311,6 +2252,8 @@ WorkerPrivateParent<Derived>::RegisterSharedWorker(SharedWorker* aSharedWorker,
                                                    MessagePort* aPort)
 {
   AssertIsOnMainThread();
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+
   MOZ_ASSERT(aSharedWorker);
   MOZ_ASSERT(IsSharedWorker());
   MOZ_ASSERT(!mSharedWorkers.Contains(aSharedWorker));
@@ -2327,7 +2270,7 @@ WorkerPrivateParent<Derived>::RegisterSharedWorker(SharedWorker* aSharedWorker,
 
   // If there were other SharedWorker objects attached to this worker then they
   // may all have been frozen and this worker would need to be thawed.
-  if (mSharedWorkers.Length() > 1 && IsFrozen() && !Thaw(nullptr)) {
+  if (mSharedWorkers.Length() > 1 && self->IsFrozen() && !Thaw(nullptr)) {
     return false;
   }
 
@@ -2546,17 +2489,17 @@ void
 WorkerPrivateParent<Derived>::WorkerScriptLoaded()
 {
   AssertIsOnMainThread();
+  WorkerPrivate* self = ParentAsWorkerPrivate();
 
   if (IsSharedWorker() || IsServiceWorker()) {
     // No longer need to hold references to the window or document we came from.
-    mLoadInfo.mWindow = nullptr;
-    mLoadInfo.mScriptContext = nullptr;
+    self->mLoadInfo.mWindow = nullptr;
+    self->mLoadInfo.mScriptContext = nullptr;
   }
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::SetBaseURI(nsIURI* aBaseURI)
+WorkerPrivate::SetBaseURI(nsIURI* aBaseURI)
 {
   AssertIsOnMainThread();
 
@@ -2622,21 +2565,24 @@ nsresult
 WorkerPrivateParent<Derived>::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
                                                        nsILoadGroup* aLoadGroup)
 {
-  return mLoadInfo.SetPrincipalOnMainThread(aPrincipal, aLoadGroup);
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+  return self->mLoadInfo.SetPrincipalOnMainThread(aPrincipal, aLoadGroup);
 }
 
 template <class Derived>
 nsresult
 WorkerPrivateParent<Derived>::SetPrincipalFromChannel(nsIChannel* aChannel)
 {
-  return mLoadInfo.SetPrincipalFromChannel(aChannel);
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+  return self->mLoadInfo.SetPrincipalFromChannel(aChannel);
 }
 
 template <class Derived>
 bool
 WorkerPrivateParent<Derived>::FinalChannelPrincipalIsValid(nsIChannel* aChannel)
 {
-  return mLoadInfo.FinalChannelPrincipalIsValid(aChannel);
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+  return self->mLoadInfo.FinalChannelPrincipalIsValid(aChannel);
 }
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
@@ -2644,7 +2590,8 @@ template <class Derived>
 bool
 WorkerPrivateParent<Derived>::PrincipalURIMatchesScriptURL()
 {
-  return mLoadInfo.PrincipalURIMatchesScriptURL();
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+  return self->mLoadInfo.PrincipalURIMatchesScriptURL();
 }
 #endif
 
@@ -2655,7 +2602,8 @@ WorkerPrivateParent<Derived>::UpdateOverridenLoadGroup(nsILoadGroup* aBaseLoadGr
   AssertIsOnMainThread();
 
   // The load group should have been overriden at init time.
-  mLoadInfo.mInterfaceRequestor->MaybeAddTabChild(aBaseLoadGroup);
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+  self->mLoadInfo.mInterfaceRequestor->MaybeAddTabChild(aBaseLoadGroup);
 }
 
 template <class Derived>
@@ -2723,16 +2671,17 @@ void
 WorkerPrivateParent<Derived>::AssertInnerWindowIsCorrect() const
 {
   AssertIsOnParentThread();
+  WorkerPrivate* self = ParentAsWorkerPrivate();
 
   // Only care about top level workers from windows.
-  if (mParent || !mLoadInfo.mWindow) {
+  if (mParent || !self->mLoadInfo.mWindow) {
     return;
   }
 
   AssertIsOnMainThread();
 
-  nsPIDOMWindowOuter* outer = mLoadInfo.mWindow->GetOuterWindow();
-  NS_ASSERTION(outer && outer->GetCurrentInnerWindow() == mLoadInfo.mWindow,
+  nsPIDOMWindowOuter* outer = self->mLoadInfo.mWindow->GetOuterWindow();
+  NS_ASSERTION(outer && outer->GetCurrentInnerWindow() == self->mLoadInfo.mWindow,
                "Inner window no longer correct!");
 }
 
@@ -2743,7 +2692,8 @@ template <class Derived>
 bool
 WorkerPrivateParent<Derived>::PrincipalIsValid() const
 {
-  return mLoadInfo.PrincipalIsValid();
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+  return self->mLoadInfo.PrincipalIsValid();
 }
 #endif
 
@@ -2783,16 +2733,69 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mFetchHandlerWasAdded(false)
   , mOnLine(false)
   , mMainThreadObjectsForgotten(false)
+  , mIsChromeWorker(aIsChromeWorker)
+  , mParentFrozen(false)
+  , mIsSecureContext(false)
   , mBusyCount(0)
   , mCreationTimeStamp(TimeStamp::Now())
   , mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC)
 {
+  mLoadInfo.StealFrom(aLoadInfo);
+
   if (aParent) {
     aParent->AssertIsOnWorkerThread();
+
+    // Note that this copies our parent's secure context state into mJSSettings.
+    aParent->CopyJSSettings(mJSSettings);
+
+    // And manually set our mIsSecureContext, though it's not really relevant to
+    // dedicated workers...
+    mIsSecureContext = aParent->IsSecureContext();
+    MOZ_ASSERT_IF(mIsChromeWorker, mIsSecureContext);
+
+    MOZ_ASSERT(IsDedicatedWorker());
+
+    if (aParent->mParentFrozen) {
+      Freeze(nullptr);
+    }
+
     mOnLine = aParent->OnLine();
   }
   else {
     AssertIsOnMainThread();
+
+    RuntimeService::GetDefaultJSSettings(mJSSettings);
+
+    // Our secure context state depends on the kind of worker we have.
+    if (UsesSystemPrincipal() || IsServiceWorker()) {
+      mIsSecureContext = true;
+    } else if (mLoadInfo.mWindow) {
+      // Shared and dedicated workers both inherit the loading window's secure
+      // context state.  Shared workers then prevent windows with a different
+      // secure context state from attaching to them.
+      mIsSecureContext = mLoadInfo.mWindow->IsSecureContext();
+    } else {
+      MOZ_ASSERT_UNREACHABLE("non-chrome worker that is not a service worker "
+                             "that has no parent and no associated window");
+    }
+
+    if (mIsSecureContext) {
+      mJSSettings.chrome.compartmentOptions
+                 .creationOptions().setSecureContext(true);
+      mJSSettings.content.compartmentOptions
+                 .creationOptions().setSecureContext(true);
+    }
+
+    // Our parent can get suspended after it initiates the async creation
+    // of a new worker thread.  In this case suspend the new worker as well.
+    if (mLoadInfo.mWindow && mLoadInfo.mWindow->IsSuspended()) {
+      ParentWindowPaused();
+    }
+
+    if (mLoadInfo.mWindow && mLoadInfo.mWindow->IsFrozen()) {
+      Freeze(mLoadInfo.mWindow);
+    }
+
     mOnLine = !NS_IsOffline();
   }
 

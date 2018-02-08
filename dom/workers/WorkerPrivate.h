@@ -134,18 +134,11 @@ private:
   nsString mScriptURL;
   // This is the worker name for shared workers and dedicated workers.
   nsString mWorkerName;
-  LocationInfo mLocationInfo;
-  // The lifetime of these objects within LoadInfo is managed explicitly;
-  // they do not need to be cycle collected.
-  WorkerLoadInfo mLoadInfo;
 
   Atomic<bool> mLoadingWorkerScript;
 
   // Only used for top level workers.
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
-
-  // Protected by mMutex.
-  workerinternals::JSSettings mJSSettings;
 
   // Only touched on the parent thread (currently this is always the main
   // thread as SharedWorkers are always top-level).
@@ -154,17 +147,6 @@ private:
   // SharedWorkers may have multiple windows paused, so this must be
   // a count instead of just a boolean.
   uint32_t mParentWindowPausedDepth;
-  bool mParentFrozen;
-  bool mIsChromeWorker;
-  // mIsSecureContext is set once in our constructor; after that it can be read
-  // from various threads.  We could make this const if we were OK with setting
-  // it in the initializer list via calling some function that takes all sorts
-  // of state (loadinfo, worker type, parent).
-  //
-  // It's a bit unfortunate that we have to have an out-of-band boolean for
-  // this, but we need access to this state from the parent thread, and we can't
-  // use our global object's secure state there.
-  bool mIsSecureContext;
   WorkerType mWorkerType;
 
 protected:
@@ -322,140 +304,16 @@ public:
   }
 
   bool
-  IsFrozen() const
-  {
-    AssertIsOnParentThread();
-    return mParentFrozen;
-  }
-
-  bool
   IsParentWindowPaused() const
   {
     AssertIsOnParentThread();
     return mParentWindowPausedDepth > 0;
   }
 
-  nsIScriptContext*
-  GetScriptContext() const
-  {
-    AssertIsOnMainThread();
-    return mLoadInfo.mScriptContext;
-  }
-
   const nsString&
   ScriptURL() const
   {
     return mScriptURL;
-  }
-
-  const nsCString&
-  Domain() const
-  {
-    return mLoadInfo.mDomain;
-  }
-
-  bool
-  IsFromWindow() const
-  {
-    return mLoadInfo.mFromWindow;
-  }
-
-  nsLoadFlags
-  GetLoadFlags() const
-  {
-    return mLoadInfo.mLoadFlags;
-  }
-
-  uint64_t
-  WindowID() const
-  {
-    return mLoadInfo.mWindowID;
-  }
-
-  uint64_t
-  ServiceWorkerID() const
-  {
-    return GetServiceWorkerDescriptor().Id();
-  }
-
-  const nsCString&
-  ServiceWorkerScope() const
-  {
-    return GetServiceWorkerDescriptor().Scope();
-  }
-
-  nsIURI*
-  GetBaseURI() const
-  {
-    AssertIsOnMainThread();
-    return mLoadInfo.mBaseURI;
-  }
-
-  void
-  SetBaseURI(nsIURI* aBaseURI);
-
-  nsIURI*
-  GetResolvedScriptURI() const
-  {
-    AssertIsOnMainThread();
-    return mLoadInfo.mResolvedScriptURI;
-  }
-
-  const nsString&
-  ServiceWorkerCacheName() const
-  {
-    MOZ_DIAGNOSTIC_ASSERT(IsServiceWorker());
-    AssertIsOnMainThread();
-    return mLoadInfo.mServiceWorkerCacheName;
-  }
-
-  const ServiceWorkerDescriptor&
-  GetServiceWorkerDescriptor() const
-  {
-    MOZ_DIAGNOSTIC_ASSERT(IsServiceWorker());
-    MOZ_DIAGNOSTIC_ASSERT(mLoadInfo.mServiceWorkerDescriptor.isSome());
-    return mLoadInfo.mServiceWorkerDescriptor.ref();
-  }
-
-  void
-  UpdateServiceWorkerState(ServiceWorkerState aState)
-  {
-    MOZ_DIAGNOSTIC_ASSERT(IsServiceWorker());
-    MOZ_DIAGNOSTIC_ASSERT(mLoadInfo.mServiceWorkerDescriptor.isSome());
-    return mLoadInfo.mServiceWorkerDescriptor.ref().SetState(aState);
-  }
-
-  const Maybe<ServiceWorkerDescriptor>&
-  GetParentController() const
-  {
-    return mLoadInfo.mParentController;
-  }
-
-  const ChannelInfo&
-  GetChannelInfo() const
-  {
-    return mLoadInfo.mChannelInfo;
-  }
-
-  void
-  SetChannelInfo(const ChannelInfo& aChannelInfo)
-  {
-    AssertIsOnMainThread();
-    MOZ_ASSERT(!mLoadInfo.mChannelInfo.IsInitialized());
-    MOZ_ASSERT(aChannelInfo.IsInitialized());
-    mLoadInfo.mChannelInfo = aChannelInfo;
-  }
-
-  void
-  InitChannelInfo(nsIChannel* aChannel)
-  {
-    mLoadInfo.mChannelInfo.InitFromChannel(aChannel);
-  }
-
-  void
-  InitChannelInfo(const ChannelInfo& aChannelInfo)
-  {
-    mLoadInfo.mChannelInfo = aChannelInfo;
   }
 
   // This is used to handle importScripts(). When the worker is first loaded
@@ -481,41 +339,6 @@ public:
     mLoadingWorkerScript = aLoadingWorkerScript;
   }
 
-  nsIPrincipal*
-  GetPrincipal() const
-  {
-    AssertIsOnMainThread();
-    return mLoadInfo.mPrincipal;
-  }
-
-  nsIPrincipal*
-  GetLoadingPrincipal() const
-  {
-    AssertIsOnMainThread();
-    return mLoadInfo.mLoadingPrincipal;
-  }
-
-  const nsAString& Origin() const
-  {
-    return mLoadInfo.mOrigin;
-  }
-
-  nsILoadGroup*
-  GetLoadGroup() const
-  {
-    AssertIsOnMainThread();
-    return mLoadInfo.mLoadGroup;
-  }
-
-  // This method allows the principal to be retrieved off the main thread.
-  // Principals are main-thread objects so the caller must ensure that all
-  // access occurs on the main thread.
-  nsIPrincipal*
-  GetPrincipalDontAssertMainThread() const
-  {
-      return mLoadInfo.mPrincipal;
-  }
-
   nsresult
   SetPrincipalOnMainThread(nsIPrincipal* aPrincipal, nsILoadGroup* aLoadGroup);
 
@@ -530,127 +353,7 @@ public:
   PrincipalURIMatchesScriptURL();
 #endif
 
-  bool
-  UsesSystemPrincipal() const
-  {
-    return mLoadInfo.mPrincipalIsSystem;
-  }
-
-  const PrincipalInfo&
-  GetPrincipalInfo() const
-  {
-    return *mLoadInfo.mPrincipalInfo;
-  }
-
-  already_AddRefed<nsIChannel>
-  ForgetWorkerChannel()
-  {
-    AssertIsOnMainThread();
-    return mLoadInfo.mChannel.forget();
-  }
-
   nsIDocument* GetDocument() const;
-
-  nsPIDOMWindowInner*
-  GetWindow()
-  {
-    AssertIsOnMainThread();
-    return mLoadInfo.mWindow;
-  }
-
-  nsIContentSecurityPolicy*
-  GetCSP() const
-  {
-    AssertIsOnMainThread();
-    return mLoadInfo.mCSP;
-  }
-
-  void
-  SetCSP(nsIContentSecurityPolicy* aCSP);
-
-  nsresult
-  SetCSPFromHeaderValues(const nsACString& aCSPHeaderValue,
-                         const nsACString& aCSPReportOnlyHeaderValue);
-
-  void
-  SetReferrerPolicyFromHeaderValue(const nsACString& aReferrerPolicyHeaderValue);
-
-  net::ReferrerPolicy
-  GetReferrerPolicy() const
-  {
-    return mLoadInfo.mReferrerPolicy;
-  }
-
-  void
-  SetReferrerPolicy(net::ReferrerPolicy aReferrerPolicy)
-  {
-    mLoadInfo.mReferrerPolicy = aReferrerPolicy;
-  }
-
-  bool
-  IsEvalAllowed() const
-  {
-    return mLoadInfo.mEvalAllowed;
-  }
-
-  void
-  SetEvalAllowed(bool aEvalAllowed)
-  {
-    mLoadInfo.mEvalAllowed = aEvalAllowed;
-  }
-
-  bool
-  GetReportCSPViolations() const
-  {
-    return mLoadInfo.mReportCSPViolations;
-  }
-
-  void
-  SetReportCSPViolations(bool aReport)
-  {
-    mLoadInfo.mReportCSPViolations = aReport;
-  }
-
-  bool
-  XHRParamsAllowed() const
-  {
-    return mLoadInfo.mXHRParamsAllowed;
-  }
-
-  void
-  SetXHRParamsAllowed(bool aAllowed)
-  {
-    mLoadInfo.mXHRParamsAllowed = aAllowed;
-  }
-
-  LocationInfo&
-  GetLocationInfo()
-  {
-    return mLocationInfo;
-  }
-
-  void
-  CopyJSSettings(workerinternals::JSSettings& aSettings)
-  {
-    mozilla::MutexAutoLock lock(mMutex);
-    aSettings = mJSSettings;
-  }
-
-  void
-  CopyJSCompartmentOptions(JS::CompartmentOptions& aOptions)
-  {
-    mozilla::MutexAutoLock lock(mMutex);
-    aOptions = IsChromeWorker() ? mJSSettings.chrome.compartmentOptions
-                                : mJSSettings.content.compartmentOptions;
-  }
-
-  // The ability to be a chrome worker is orthogonal to the type of
-  // worker [Dedicated|Shared|Service].
-  bool
-  IsChromeWorker() const
-  {
-    return mIsChromeWorker;
-  }
 
   WorkerType
   Type() const
@@ -704,25 +407,6 @@ public:
     return mWorkerName;
   }
 
-  bool
-  IsStorageAllowed() const
-  {
-    return mLoadInfo.mStorageAllowed;
-  }
-
-  const OriginAttributes&
-  GetOriginAttributes() const
-  {
-    return mLoadInfo.mOriginAttributes;
-  }
-
-  // Determine if the SW testing per-window flag is set by devtools
-  bool
-  ServiceWorkersTestingInWindow() const
-  {
-    return mLoadInfo.mServiceWorkersTestingInWindow;
-  }
-
   void
   GetAllSharedWorkers(nsTArray<RefPtr<SharedWorker>>& aSharedWorkers);
 
@@ -735,24 +419,8 @@ public:
   void
   UpdateOverridenLoadGroup(nsILoadGroup* aBaseLoadGroup);
 
-  already_AddRefed<nsIRunnable>
-  StealLoadFailedAsyncRunnable()
-  {
-    return mLoadInfo.mLoadFailedAsyncRunnable.forget();
-  }
-
   void
   FlushReportsToSharedWorkers(nsIConsoleReportCollector* aReporter);
-
-  // Check whether this worker is a secure context.  For use from the parent
-  // thread only; the canonical "is secure context" boolean is stored on the
-  // compartment of the worker global.  The only reason we don't
-  // AssertIsOnParentThread() here is so we can assert that this value matches
-  // the one on the compartment, which has to be done from the worker thread.
-  bool IsSecureContext() const
-  {
-    return mIsSecureContext;
-  }
 
 #ifdef DEBUG
   void
@@ -814,6 +482,14 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   // 4. xpcom-shutdown notification - We call Kill().
   RefPtr<Worker> mParentEventTargetRef;
   RefPtr<WorkerPrivate> mSelfRef;
+
+  // The lifetime of these objects within LoadInfo is managed explicitly;
+  // they do not need to be cycle collected.
+  WorkerLoadInfo mLoadInfo;
+  LocationInfo mLocationInfo;
+
+  // Protected by mMutex.
+  workerinternals::JSSettings mJSSettings;
 
   bool mDebuggerRegistered;
   WorkerDebugger* mDebugger;
@@ -886,6 +562,18 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   bool mFetchHandlerWasAdded;
   bool mOnLine;
   bool mMainThreadObjectsForgotten;
+  bool mIsChromeWorker;
+  bool mParentFrozen;
+
+  // mIsSecureContext is set once in our constructor; after that it can be read
+  // from various threads.  We could make this const if we were OK with setting
+  // it in the initializer list via calling some function that takes all sorts
+  // of state (loadinfo, worker type, parent).
+  //
+  // It's a bit unfortunate that we have to have an out-of-band boolean for
+  // this, but we need access to this state from the parent thread, and we can't
+  // use our global object's secure state there.
+  bool mIsSecureContext;
 
   // This is touched on parent thread only, but it can be read on a different
   // thread before crashing because hanging.
@@ -1370,6 +1058,16 @@ public:
     return mBusyCount;
   }
 
+  // Check whether this worker is a secure context.  For use from the parent
+  // thread only; the canonical "is secure context" boolean is stored on the
+  // compartment of the worker global.  The only reason we don't
+  // AssertIsOnParentThread() here is so we can assert that this value matches
+  // the one on the compartment, which has to be done from the worker thread.
+  bool IsSecureContext() const
+  {
+    return mIsSecureContext;
+  }
+
   TimeStamp CreationTimeStamp() const
   {
     return mCreationTimeStamp;
@@ -1385,6 +1083,310 @@ public:
     MOZ_ASSERT(!aTimeStamp.IsNull());
     TimeDuration duration = aTimeStamp - mCreationTimeStamp;
     return duration.ToMilliseconds();
+  }
+
+  LocationInfo&
+  GetLocationInfo()
+  {
+    return mLocationInfo;
+  }
+
+  void
+  CopyJSSettings(workerinternals::JSSettings& aSettings)
+  {
+    mozilla::MutexAutoLock lock(mMutex);
+    aSettings = mJSSettings;
+  }
+
+  void
+  CopyJSCompartmentOptions(JS::CompartmentOptions& aOptions)
+  {
+    mozilla::MutexAutoLock lock(mMutex);
+    aOptions = IsChromeWorker() ? mJSSettings.chrome.compartmentOptions
+                                : mJSSettings.content.compartmentOptions;
+  }
+
+  // The ability to be a chrome worker is orthogonal to the type of
+  // worker [Dedicated|Shared|Service].
+  bool
+  IsChromeWorker() const
+  {
+    return mIsChromeWorker;
+  }
+
+  bool
+  IsFrozen() const
+  {
+    AssertIsOnParentThread();
+    return mParentFrozen;
+  }
+
+  nsIScriptContext*
+  GetScriptContext() const
+  {
+    AssertIsOnMainThread();
+    return mLoadInfo.mScriptContext;
+  }
+
+  const nsCString&
+  Domain() const
+  {
+    return mLoadInfo.mDomain;
+  }
+
+  bool
+  IsFromWindow() const
+  {
+    return mLoadInfo.mFromWindow;
+  }
+
+  nsLoadFlags
+  GetLoadFlags() const
+  {
+    return mLoadInfo.mLoadFlags;
+  }
+
+  uint64_t
+  WindowID() const
+  {
+    return mLoadInfo.mWindowID;
+  }
+
+  uint64_t
+  ServiceWorkerID() const
+  {
+    return GetServiceWorkerDescriptor().Id();
+  }
+
+  const nsCString&
+  ServiceWorkerScope() const
+  {
+    return GetServiceWorkerDescriptor().Scope();
+  }
+
+  nsIURI*
+  GetBaseURI() const
+  {
+    AssertIsOnMainThread();
+    return mLoadInfo.mBaseURI;
+  }
+
+  void
+  SetBaseURI(nsIURI* aBaseURI);
+
+  nsIURI*
+  GetResolvedScriptURI() const
+  {
+    AssertIsOnMainThread();
+    return mLoadInfo.mResolvedScriptURI;
+  }
+
+  const nsString&
+  ServiceWorkerCacheName() const
+  {
+    MOZ_DIAGNOSTIC_ASSERT(IsServiceWorker());
+    AssertIsOnMainThread();
+    return mLoadInfo.mServiceWorkerCacheName;
+  }
+
+  const ServiceWorkerDescriptor&
+  GetServiceWorkerDescriptor() const
+  {
+    MOZ_DIAGNOSTIC_ASSERT(IsServiceWorker());
+    MOZ_DIAGNOSTIC_ASSERT(mLoadInfo.mServiceWorkerDescriptor.isSome());
+    return mLoadInfo.mServiceWorkerDescriptor.ref();
+  }
+
+  void
+  UpdateServiceWorkerState(ServiceWorkerState aState)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(IsServiceWorker());
+    MOZ_DIAGNOSTIC_ASSERT(mLoadInfo.mServiceWorkerDescriptor.isSome());
+    return mLoadInfo.mServiceWorkerDescriptor.ref().SetState(aState);
+  }
+
+  const Maybe<ServiceWorkerDescriptor>&
+  GetParentController() const
+  {
+    return mLoadInfo.mParentController;
+  }
+
+  const ChannelInfo&
+  GetChannelInfo() const
+  {
+    return mLoadInfo.mChannelInfo;
+  }
+
+  void
+  SetChannelInfo(const ChannelInfo& aChannelInfo)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(!mLoadInfo.mChannelInfo.IsInitialized());
+    MOZ_ASSERT(aChannelInfo.IsInitialized());
+    mLoadInfo.mChannelInfo = aChannelInfo;
+  }
+
+  void
+  InitChannelInfo(nsIChannel* aChannel)
+  {
+    mLoadInfo.mChannelInfo.InitFromChannel(aChannel);
+  }
+
+  void
+  InitChannelInfo(const ChannelInfo& aChannelInfo)
+  {
+    mLoadInfo.mChannelInfo = aChannelInfo;
+  }
+
+  nsIPrincipal*
+  GetPrincipal() const
+  {
+    AssertIsOnMainThread();
+    return mLoadInfo.mPrincipal;
+  }
+
+  nsIPrincipal*
+  GetLoadingPrincipal() const
+  {
+    AssertIsOnMainThread();
+    return mLoadInfo.mLoadingPrincipal;
+  }
+
+  const nsAString& Origin() const
+  {
+    return mLoadInfo.mOrigin;
+  }
+
+  nsILoadGroup*
+  GetLoadGroup() const
+  {
+    AssertIsOnMainThread();
+    return mLoadInfo.mLoadGroup;
+  }
+
+  // This method allows the principal to be retrieved off the main thread.
+  // Principals are main-thread objects so the caller must ensure that all
+  // access occurs on the main thread.
+  nsIPrincipal*
+  GetPrincipalDontAssertMainThread() const
+  {
+      return mLoadInfo.mPrincipal;
+  }
+
+  bool
+  UsesSystemPrincipal() const
+  {
+    return mLoadInfo.mPrincipalIsSystem;
+  }
+
+  const PrincipalInfo&
+  GetPrincipalInfo() const
+  {
+    return *mLoadInfo.mPrincipalInfo;
+  }
+
+  already_AddRefed<nsIChannel>
+  ForgetWorkerChannel()
+  {
+    AssertIsOnMainThread();
+    return mLoadInfo.mChannel.forget();
+  }
+
+  nsPIDOMWindowInner*
+  GetWindow()
+  {
+    AssertIsOnMainThread();
+    return mLoadInfo.mWindow;
+  }
+
+  nsIContentSecurityPolicy*
+  GetCSP() const
+  {
+    AssertIsOnMainThread();
+    return mLoadInfo.mCSP;
+  }
+
+  void
+  SetCSP(nsIContentSecurityPolicy* aCSP);
+
+  nsresult
+  SetCSPFromHeaderValues(const nsACString& aCSPHeaderValue,
+                         const nsACString& aCSPReportOnlyHeaderValue);
+
+  void
+  SetReferrerPolicyFromHeaderValue(const nsACString& aReferrerPolicyHeaderValue);
+
+  net::ReferrerPolicy
+  GetReferrerPolicy() const
+  {
+    return mLoadInfo.mReferrerPolicy;
+  }
+
+  void
+  SetReferrerPolicy(net::ReferrerPolicy aReferrerPolicy)
+  {
+    mLoadInfo.mReferrerPolicy = aReferrerPolicy;
+  }
+
+  bool
+  IsEvalAllowed() const
+  {
+    return mLoadInfo.mEvalAllowed;
+  }
+
+  void
+  SetEvalAllowed(bool aEvalAllowed)
+  {
+    mLoadInfo.mEvalAllowed = aEvalAllowed;
+  }
+
+  bool
+  GetReportCSPViolations() const
+  {
+    return mLoadInfo.mReportCSPViolations;
+  }
+
+  void
+  SetReportCSPViolations(bool aReport)
+  {
+    mLoadInfo.mReportCSPViolations = aReport;
+  }
+
+  bool
+  XHRParamsAllowed() const
+  {
+    return mLoadInfo.mXHRParamsAllowed;
+  }
+
+  void
+  SetXHRParamsAllowed(bool aAllowed)
+  {
+    mLoadInfo.mXHRParamsAllowed = aAllowed;
+  }
+
+  bool
+  IsStorageAllowed() const
+  {
+    return mLoadInfo.mStorageAllowed;
+  }
+
+  const OriginAttributes&
+  GetOriginAttributes() const
+  {
+    return mLoadInfo.mOriginAttributes;
+  }
+
+  // Determine if the SW testing per-window flag is set by devtools
+  bool
+  ServiceWorkersTestingInWindow() const
+  {
+    return mLoadInfo.mServiceWorkersTestingInWindow;
+  }
+
+  already_AddRefed<nsIRunnable>
+  StealLoadFailedAsyncRunnable()
+  {
+    return mLoadInfo.mLoadFailedAsyncRunnable.forget();
   }
 
 private:
