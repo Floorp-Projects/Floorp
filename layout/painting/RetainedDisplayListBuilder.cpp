@@ -766,6 +766,8 @@ ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
 {
   nsIFrame* currentFrame = aFrame;
 
+  aBuilder.MarkFrameForDisplayIfVisible(aFrame, aBuilder.RootReferenceFrame());
+
   while (currentFrame != aStopAtFrame) {
     CRR_LOG("currentFrame: %p (placeholder=%d), aOverflow: %d %d %d %d\n",
              currentFrame, !aStopAtStackingContext,
@@ -1143,31 +1145,26 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(
     result = PartialUpdateResult::Updated;
   }
 
+  mBuilder.SetDirtyRect(modifiedDirty);
+  mBuilder.SetPartialUpdate(true);
+
   nsDisplayList modifiedDL;
-  if (!modifiedDirty.IsEmpty() || !framesWithProps.IsEmpty()) {
-    mBuilder.SetDirtyRect(modifiedDirty);
-    mBuilder.SetPartialUpdate(true);
-    mBuilder.RootReferenceFrame()->BuildDisplayListForStackingContext(&mBuilder, &modifiedDL);
+  mBuilder.RootReferenceFrame()->BuildDisplayListForStackingContext(&mBuilder, &modifiedDL);
+  if (!modifiedDL.IsEmpty()) {
     nsLayoutUtils::AddExtraBackgroundItems(mBuilder, modifiedDL, mBuilder.RootReferenceFrame(),
                                            nsRect(nsPoint(0, 0), mBuilder.RootReferenceFrame()->GetSize()),
                                            mBuilder.RootReferenceFrame()->GetVisualOverflowRectRelativeToSelf(),
                                            aBackstop);
-    mBuilder.SetPartialUpdate(false);
-
-    //printf_stderr("Painting --- Modified list (dirty %d,%d,%d,%d):\n",
-    //      modifiedDirty.x, modifiedDirty.y, modifiedDirty.width, modifiedDirty.height);
-    //nsFrame::PrintDisplayList(&mBuilder, modifiedDL);
-
-  } else {
-    // TODO: We can also skip layer building and painting if
-    // PreProcessDisplayList didn't end up changing anything
-    // Invariant: display items should have their original state here.
-    // printf_stderr("Skipping display list building since nothing needed to be done\n");
   }
-    
+  mBuilder.SetPartialUpdate(false);
+
   if (aChecker) {
     aChecker->Set(&modifiedDL, "TM");
   }
+
+  //printf_stderr("Painting --- Modified list (dirty %d,%d,%d,%d):\n",
+  //              modifiedDirty.x, modifiedDirty.y, modifiedDirty.width, modifiedDirty.height);
+  //nsFrame::PrintDisplayList(&mBuilder, modifiedDL);
 
   // |modifiedDL| can sometimes be empty here. We still perform the
   // display list merging to prune unused items (for example, items that
