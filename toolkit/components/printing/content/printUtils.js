@@ -133,45 +133,6 @@ var PrintUtils = {
   },
 
   /**
-   * Deprecated.
-   *
-   * Starts the process of printing the contents of window.content.
-   *
-   */
-  print() {
-    if (gBrowser) {
-      return this.printWindow(gBrowser.selectedBrowser.outerWindowID,
-                              gBrowser.selectedBrowser);
-    }
-
-    if (this.usingRemoteTabs) {
-      throw new Error("PrintUtils.print cannot be run in windows running with " +
-                      "remote tabs. Use PrintUtils.printWindow instead.");
-    }
-
-    let domWindow = window.content;
-    let ifReq = domWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    let browser = ifReq.getInterface(Components.interfaces.nsIWebNavigation)
-                       .QueryInterface(Components.interfaces.nsIDocShell)
-                       .chromeEventHandler;
-    if (!browser) {
-      throw new Error("PrintUtils.print could not resolve content window " +
-                      "to a browser.");
-    }
-
-    let windowID = ifReq.getInterface(Components.interfaces.nsIDOMWindowUtils)
-                        .outerWindowID;
-
-    let Deprecated = ChromeUtils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
-    let msg = "PrintUtils.print is now deprecated. Please use PrintUtils.printWindow.";
-    let url = "https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/Printing";
-    Deprecated.warning(msg, url);
-
-    this.printWindow(windowID, browser);
-    return undefined;
-  },
-
-  /**
    * Initializes print preview.
    *
    * @param aListenerObj
@@ -273,54 +234,6 @@ var PrintUtils = {
     }
   },
 
-  /**
-   * Returns the nsIWebBrowserPrint associated with some content window.
-   * This method is being kept here for compatibility reasons, but should not
-   * be called by code hoping to support e10s / remote browsers.
-   *
-   * @param aWindow
-   *        The window from which to get the nsIWebBrowserPrint from.
-   * @return nsIWebBrowserPrint
-   */
-  getWebBrowserPrint(aWindow) {
-    let Deprecated = ChromeUtils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
-    let text = "getWebBrowserPrint is now deprecated, and fully unsupported for " +
-               "multi-process browsers. Please use a frame script to get " +
-               "access to nsIWebBrowserPrint from content.";
-    let url = "https://developer.mozilla.org/en-US/docs/Printing_from_a_XUL_App";
-    Deprecated.warning(text, url);
-
-    if (this.usingRemoteTabs) {
-      return {};
-    }
-
-    var contentWindow = aWindow || window.content;
-    return contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                        .getInterface(Components.interfaces.nsIWebBrowserPrint);
-  },
-
-  /**
-   * Returns the nsIWebBrowserPrint from the print preview browser's docShell.
-   * This method is being kept here for compatibility reasons, but should not
-   * be called by code hoping to support e10s / remote browsers.
-   *
-   * @return nsIWebBrowserPrint
-   */
-  getPrintPreview() {
-    let Deprecated = ChromeUtils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
-    let text = "getPrintPreview is now deprecated, and fully unsupported for " +
-               "multi-process browsers. Please use a frame script to get " +
-               "access to nsIWebBrowserPrint from content.";
-    let url = "https://developer.mozilla.org/en-US/docs/Printing_from_a_XUL_App";
-    Deprecated.warning(text, url);
-
-    if (this.usingRemoteTabs) {
-      return {};
-    }
-
-    return this._currentPPBrowser.docShell.printPreview;
-  },
-
   // "private" methods and members. Don't use them.
 
   _listener: null,
@@ -330,18 +243,6 @@ var PrintUtils = {
   _originalTitle: "",
   _originalURL: "",
   _shouldSimplify: false,
-
-  get usingRemoteTabs() {
-    // We memoize this, since it's highly unlikely to change over the lifetime
-    // of the window.
-    let usingRemoteTabs =
-      window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-            .getInterface(Components.interfaces.nsIWebNavigation)
-            .QueryInterface(Components.interfaces.nsILoadContext)
-            .useRemoteTabs;
-    delete this.usingRemoteTabs;
-    return this.usingRemoteTabs = usingRemoteTabs;
-  },
 
   displayPrintingError(nsresult, isPrinting) {
     // The nsresults from a printing error are mapped to strings that have
