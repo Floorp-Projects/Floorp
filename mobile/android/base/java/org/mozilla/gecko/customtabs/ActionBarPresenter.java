@@ -8,6 +8,7 @@ package org.mozilla.gecko.customtabs;
 import android.content.res.Resources;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.ColorInt;
@@ -237,7 +238,8 @@ public class ActionBarPresenter {
             mUrlView.setVisibility(View.GONE);
         } else {
             mTitleView.setText(title);
-            mUrlView.setText(url);
+            String domain = Uri.parse(url).getHost();
+            mUrlView.setText(domain);
             mUrlView.setVisibility(View.VISIBLE);
         }
     }

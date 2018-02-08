@@ -9,7 +9,9 @@ with Files("**"):
 
 # Public stuff.
 EXPORTS.mozilla.dom += [
+    'ChromeWorker.h',
     'SharedWorker.h',
+    'Worker.h',
     'WorkerCommon.h',
     'WorkerDebugger.h',
     'WorkerDebuggerManager.h',
@@ -38,6 +40,7 @@ XPIDL_SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
+    'ChromeWorker.cpp',
     'ChromeWorkerScope.cpp',
     'MessageEventRunnable.cpp',
     'Principal.cpp',
@@ -45,6 +48,7 @@ UNIFIED_SOURCES += [
     'RuntimeService.cpp',
     'ScriptLoader.cpp',
     'SharedWorker.cpp',
+    'Worker.cpp',
     'WorkerDebugger.cpp',
     'WorkerDebuggerManager.cpp',
     'WorkerError.cpp',

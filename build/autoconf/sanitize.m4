@@ -80,43 +80,44 @@ dnl ========================================================
 dnl = Use UndefinedBehavior Sanitizer to find integer overflows
 dnl ========================================================
 
-MOZ_ARG_ENABLE_BOOL(ubsan-int-overflow,
-[  --enable-ubsan-int-overflow       Enable UndefinedBehavior Sanitizer (Signed Integer Overflow Parts, default=no)],
-   MOZ_UBSAN_INT_OVERFLOW=1,
-   MOZ_UBSAN_INT_OVERFLOW= )
-MOZ_ARG_ENABLE_BOOL(ubsan-uint-overflow,
-[  --enable-ubsan-uint-overflow       Enable UndefinedBehavior Sanitizer (Unsigned Integer Overflow Parts, default=no)],
-   MOZ_UBSAN_UINT_OVERFLOW=1,
-   MOZ_UBSAN_UINT_OVERFLOW= )
+MOZ_ARG_ENABLE_BOOL(signed-overflow-sanitizer,
+[  --enable-signed-overflow-sanitizer       Enable UndefinedBehavior Sanitizer (Signed Integer Overflow Parts, default=no)],
+   MOZ_SIGNED_OVERFLOW_SANITIZE=1,
+   MOZ_SIGNED_OVERFLOW_SANITIZE= )
+MOZ_ARG_ENABLE_BOOL(unsigned-overflow-sanitizer,
+[  --enable-unsigned-overflow-sanitizer       Enable UndefinedBehavior Sanitizer (Unsigned Integer Overflow Parts, default=no)],
+   MOZ_UNSIGNED_OVERFLOW_SANITIZE=1,
+   MOZ_UNSIGNED_OVERFLOW_SANITIZE= )
 
-if test -n "$MOZ_UBSAN_INT_OVERFLOW$MOZ_UBSAN_UINT_OVERFLOW"; then
+if test -n "$MOZ_SIGNED_OVERFLOW_SANITIZE$MOZ_UNSIGNED_OVERFLOW_SANITIZE"; then
     MOZ_LLVM_HACKS=1
     MOZ_UBSAN=1
-    # The blacklist really should be split into separate signed/unsigned
-    # blacklists, but we leave that task for another day.
-    CFLAGS="-fsanitize-blacklist=$_topsrcdir/build/sanitizers/ubsan_blacklist_int.txt $CFLAGS"
-    CXXFLAGS="-fsanitize-blacklist=$_topsrcdir/build/sanitizers/ubsan_blacklist_int.txt $CXXFLAGS"
-    if test -n "$MOZ_UBSAN_INT_OVERFLOW"; then
+    SANITIZER_BLACKLISTS=""
+    if test -n "$MOZ_SIGNED_OVERFLOW_SANITIZE"; then
+        SANITIZER_BLACKLISTS="-fsanitize-blacklist=$_topsrcdir/build/sanitizers/ubsan_signed_overflow_blacklist.txt $SANITIZER_BLACKLISTS"
         CFLAGS="-fsanitize=signed-integer-overflow $CFLAGS"
         CXXFLAGS="-fsanitize=signed-integer-overflow $CXXFLAGS"
         if test -z "$CLANG_CL"; then
             LDFLAGS="-fsanitize=signed-integer-overflow $LDFLAGS"
         fi
-        AC_DEFINE(MOZ_UBSAN_INT_OVERFLOW)
+        AC_DEFINE(MOZ_SIGNED_OVERFLOW_SANITIZE)
     fi
-    if test -n "$MOZ_UBSAN_UINT_OVERFLOW"; then
+    if test -n "$MOZ_UNSIGNED_OVERFLOW_SANITIZE"; then
+        SANITIZER_BLACKLISTS="-fsanitize-blacklist=$_topsrcdir/build/sanitizers/ubsan_unsigned_overflow_blacklist.txt $SANITIZER_BLACKLISTS"
         CFLAGS="-fsanitize=unsigned-integer-overflow $CFLAGS"
         CXXFLAGS="-fsanitize=unsigned-integer-overflow $CXXFLAGS"
         if test -z "$CLANG_CL"; then
             LDFLAGS="-fsanitize=unsigned-integer-overflow $LDFLAGS"
         fi
-        AC_DEFINE(MOZ_UBSAN_UINT_OVERFLOW)
+        AC_DEFINE(MOZ_UNSIGNED_OVERFLOW_SANITIZE)
     fi
+    CFLAGS="$SANITIZER_BLACKLISTS $CFLAGS"
+    CXXFLAGS="$SANITIZER_BLACKLISTS $CXXFLAGS"
     AC_DEFINE(MOZ_UBSAN)
     MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
 fi
-AC_SUBST(MOZ_UBSAN_INT_OVERFLOW)
-AC_SUBST(MOZ_UBSAN_UINT_OVERFLOW)
+AC_SUBST(MOZ_SIGNED_OVERFLOW_SANITIZE)
+AC_SUBST(MOZ_UNSIGNED_OVERFLOW_SANITIZE)
 AC_SUBST(MOZ_UBSAN)
 
 # The LLVM symbolizer is used by all sanitizers

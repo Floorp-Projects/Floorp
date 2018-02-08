@@ -116,39 +116,25 @@
             // xul:menupopup
             role: ROLE_COMBOBOX_LIST,
             children: []
+          },
+          {
+            // xul:richlistbox
+            role: ROLE_COMBOBOX_LIST,
+            children: []
           }
         ]
       };
-
-      function test_AutocompleteControl() {
-        testAccessibleTree("txc_autocomplete", accTree);
-        SimpleTest.finish();
-      }
 
       var txc = document.getElementById("txc_autocomplete");
       SimpleTest.ok(txc, "Testing (New) Toolkit autocomplete widget.");
 
       // Dumb access to trigger popup lazy creation.
       dump("Trigget popup lazy creation");
-      waitForEvent(EVENT_REORDER, txc, test_AutocompleteControl);
+      waitForEvent(EVENT_REORDER, txc, () => {
+        testAccessibleTree("txc_autocomplete", accTree);
+        SimpleTest.finish();
+      });
       txc.popup;
-
-      accTree.children.push(
-        {
-          role: ROLE_LIST,
-          children: [
-            {
-              role: ROLE_LIST,
-              children: [
-                {
-                  role: ROLE_COLUMNHEADER,
-                  children: []
-                }
-              ]
-            }
-          ]
-        }
-      );
     }
 
     SimpleTest.waitForExplicitFinish();

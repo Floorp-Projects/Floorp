@@ -1953,13 +1953,14 @@ toolbar#nav-bar {
 
         return os.pathsep.join(gmp_paths)
 
-    def cleanup(self, options):
+    def cleanup(self, options, final=False):
         """ remove temporary files and profile """
         if hasattr(self, 'manifest') and self.manifest is not None:
-            os.remove(self.manifest)
+            if os.path.exists(self.manifest):
+                os.remove(self.manifest)
         if hasattr(self, 'profile'):
             del self.profile
-        if options.pidFile != "":
+        if options.pidFile != "" and os.path.exists(options.pidFile):
             try:
                 os.remove(options.pidFile)
                 if os.path.exists(options.pidFile + ".xpcshell.pid"):
@@ -2599,6 +2600,9 @@ toolbar#nav-bar {
             if res == -1:
                 break
 
+        if self.manifest is not None:
+            self.cleanup(options, True)
+
         e10s_mode = "e10s" if options.e10s else "non-e10s"
 
         # printing total number of tests
@@ -2814,7 +2818,7 @@ toolbar#nav-bar {
         self.log.info("runtests.py | Running tests: end.")
 
         if self.manifest is not None:
-            self.cleanup(options)
+            self.cleanup(options, False)
 
         return status
 

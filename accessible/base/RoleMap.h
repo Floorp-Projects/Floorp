@@ -129,7 +129,7 @@ ROLE(APPLICATION,
 
 ROLE(DOCUMENT,
      "document",
-     ATK_ROLE_DOCUMENT_FRAME,
+     ATK_ROLE_DOCUMENT_WEB,
      @"AXWebArea",
      ROLE_SYSTEM_DOCUMENT,
      ROLE_SYSTEM_DOCUMENT,
@@ -849,12 +849,12 @@ ROLE(CAPTION,
      IA2_ROLE_CAPTION,
      eNameFromSubtreeIfReqRule)
 
-ROLE(DOCUMENT_FRAME,
-     "document frame",
+ROLE(NON_NATIVE_DOCUMENT,
+     "non-native document",
      ATK_ROLE_DOCUMENT_FRAME,
-     NSAccessibilityScrollAreaRole,
+     NSAccessibilityGroupRole,
      USE_ROLE_STRING,
-     IA2_ROLE_UNKNOWN,
+     ROLE_SYSTEM_DOCUMENT,
      eNoNameRule)
 
 ROLE(HEADING,

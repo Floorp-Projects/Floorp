@@ -311,10 +311,15 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         continue;
       }
 
+      let displayType = actor.displayType;
       let isDisplayed = actor.isDisplayed;
-      if (isDisplayed !== actor.wasDisplayed) {
+
+      if (displayType !== actor.currentDisplayType ||
+          isDisplayed !== actor.wasDisplayed) {
         changes.push(actor);
+
         // Updating the original value
+        actor.currentDisplayType = displayType;
         actor.wasDisplayed = isDisplayed;
       }
     }

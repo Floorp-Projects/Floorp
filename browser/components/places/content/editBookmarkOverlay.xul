@@ -122,10 +122,10 @@
             <textbox id="editBMPanel_tagsField"
                      type="autocomplete"
                      flex="1"
-                     autocompletesearch="places-tag-autocomplete" 
+                     autocompletesearch="places-tag-autocomplete"
+                     autocompletepopup="PopupAutoComplete"
                      completedefaultindex="true"
                      tabscrolling="true"
-                     showcommentcolumn="true"
                      placeholder="&editBookmarkOverlay.tagsEmptyDesc.label;"
                      onchange="gEditItemOverlay.onTagsFieldChange();"/>
             <button id="editBMPanel_tagsSelectorExpander"

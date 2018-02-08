@@ -122,7 +122,7 @@ DecodedSurfaceProvider::LogicalSizeInBytes() const
 {
   // Single frame images are always 32bpp.
   IntSize size = GetSurfaceKey().Size();
-  return size.width * size.height * sizeof(uint32_t);
+  return size_t(size.width) * size_t(size.height) * sizeof(uint32_t);
 }
 
 void

@@ -44,8 +44,9 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     this.rawNode = node;
     this._eventParsers = new EventParsers().parsers;
 
-    // Storing the original display of the node, to track changes when reflows
-    // occur
+    // Store the original display type and whether or not the node is displayed to
+    // track changes when reflows occur.
+    this.currentDisplayType = this.displayType;
     this.wasDisplayed = this.isDisplayed;
   },
 
@@ -100,6 +101,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       displayName: InspectorActorUtils.getNodeDisplayName(this.rawNode),
       numChildren: this.numChildren,
       inlineTextChild: inlineTextChild ? inlineTextChild.form() : undefined,
+      displayType: this.displayType,
 
       // doctype attributes
       name: this.rawNode.name,
@@ -204,7 +206,30 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   },
 
   get computedStyle() {
-    return CssLogic.getComputedStyle(this.rawNode);
+    if (!this._computedStyle) {
+      this._computedStyle = CssLogic.getComputedStyle(this.rawNode);
+    }
+    return this._computedStyle;
+  },
+
+  /**
+   * Returns the computed display style property value of the node.
+   */
+  get displayType() {
+    // Consider all non-element nodes as displayed.
+    if (InspectorActorUtils.isNodeDead(this) ||
+        this.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ||
+        this.isAfterPseudoElement ||
+        this.isBeforePseudoElement) {
+      return null;
+    }
+
+    let style = this.computedStyle;
+    if (!style) {
+      return null;
+    }
+
+    return style.display;
   },
 
   /**
@@ -213,9 +238,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   get isDisplayed() {
     // Consider all non-element nodes as displayed.
     if (InspectorActorUtils.isNodeDead(this) ||
-        this.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ||
-        this.isAfterPseudoElement ||
-        this.isBeforePseudoElement) {
+        this.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
       return true;
     }
 
