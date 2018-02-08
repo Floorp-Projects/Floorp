@@ -1,158 +1,290 @@
+//! Gecko-esque logger implementation for the [`log`] crate.
+//!
+//! The [`log`] crate provides a single logging API that abstracts over the
+//! actual logging implementation.  This module uses the logging API
+//! to provide a log implementation that shares many aesthetical traits with
+//! [Log.jsm] from Gecko.
+//!
+//! Using the [`error!`], [`warn!`], [`info!`], [`debug!`], and
+//! [`trace!`] macros from `log` will output a timestamp field, followed by the
+//! log level, and then the message.  The fields are separated by a tab
+//! character, making the output suitable for further text processing with
+//! `awk(1)`.
+//!
+//! This module shares the same API as `log`, except it provides additional
+//! entry functions [`init`] and [`init_with_level`] and additional log levels
+//! `Level::Fatal` and `Level::Config`.  Converting these into the
+//! [`log::Level`] is lossy so that `Level::Fatal` becomes `log::Level::Error`
+//! and `Level::Config` becomes `log::Level::Debug`.
+//!
+//! [`log`]: https://docs.rs/log/newest/log/
+//! [Log.jsm]: https://developer.mozilla.org/en/docs/Mozilla/JavaScript_code_modules/Log.jsm
+//! [`error!`]: https://docs.rs/log/newest/log/macro.error.html
+//! [`warn!`]: https://docs.rs/log/newest/log/macro.warn.html
+//! [`info!`]: https://docs.rs/log/newest/log/macro.info.html
+//! [`debug!`]: https://docs.rs/log/newest/log/macro.debug.html
+//! [`trace!`]: https://docs.rs/log/newest/log/macro.trace.html
+//! [`init`]: fn.init.html
+//! [`init_with_level`]: fn.init_with_level.html
+
+use chrono;
+use log;
 use std::fmt;
 use std::io;
-use std::str::FromStr;
-use std::sync::atomic::AtomicBool;
-use std::sync::atomic::Ordering::SeqCst;
+use std::io::Write;
+use std::str;
+use std::sync::atomic::{ATOMIC_USIZE_INIT, AtomicUsize, Ordering};
 
-use chrono::{DateTime, Local};
-use slog;
-use slog::DrainExt;
-use slog_atomic::{AtomicSwitch, AtomicSwitchCtrl};
-use slog_stream::{stream, Format, Streamer};
-use slog::Level as SlogLevel;
-use slog::{LevelFilter, Logger};
-use slog::{OwnedKeyValueList, Record};
-use slog_stdlog;
+static MAX_LOG_LEVEL: AtomicUsize = ATOMIC_USIZE_INIT;
 
-lazy_static! {
-    static ref ATOMIC_DRAIN: AtomicSwitchCtrl<io::Error> = AtomicSwitch::new(
-        slog::Discard.map_err(|_| io::Error::new(io::ErrorKind::Other, "should not happen"))
-    ).ctrl();
-    static ref FIRST_RUN: AtomicBool = AtomicBool::new(true);
+/// Logger levels from [Log.jsm].
+///
+/// [Log.jsm]:
+/// https://developer.mozilla.org/en/docs/Mozilla/JavaScript_code_modules/Log.
+/// jsm
+#[repr(usize)]
+#[derive(Clone, Copy, Eq, Debug, Hash, PartialEq)]
+pub enum Level {
+    Fatal = 70,
+    Error = 60,
+    Warn = 50,
+    Info = 40,
+    Config = 30,
+    Debug = 20,
+    Trace = 10,
 }
 
-static DEFAULT_LEVEL: &'static LogLevel = &LogLevel::Info;
-
-/// Logger levels from [Log.jsm]
-/// (https://developer.mozilla.org/en/docs/Mozilla/JavaScript_code_modules/Log.jsm).
-#[derive(Debug, Clone)]
-pub enum LogLevel {
-    Fatal,
-    Error,
-    Warn,
-    Info,
-    Config,
-    Debug,
-    Trace,
+impl From<usize> for Level {
+    fn from(n: usize) -> Level {
+        use self::Level::*;
+        match n {
+            70 => Fatal,
+            60 => Error,
+            50 => Warn,
+            40 => Info,
+            30 => Config,
+            20 => Debug,
+            10 => Trace,
+            _ => Info,
+        }
+    }
 }
 
-impl fmt::Display for LogLevel {
+impl fmt::Display for Level {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use self::Level::*;
         let s = match *self {
-            LogLevel::Fatal => "FATAL",
-            LogLevel::Error => "ERROR",
-            LogLevel::Warn => "WARN",
-            LogLevel::Info => "INFO",
-            LogLevel::Config => "CONFIG",
-            LogLevel::Debug => "DEBUG",
-            LogLevel::Trace => "TRACE",
+            Fatal => "FATAL",
+            Error => "ERROR",
+            Warn => "WARN",
+            Info => "INFO",
+            Config => "CONFIG",
+            Debug => "DEBUG",
+            Trace => "TRACE",
         };
         write!(f, "{}", s)
     }
 }
 
-impl FromStr for LogLevel {
+impl str::FromStr for Level {
     type Err = ();
 
-    fn from_str(s: &str) -> Result<LogLevel, ()> {
-        match s {
-            "fatal" => Ok(LogLevel::Fatal),
-            "error" => Ok(LogLevel::Error),
-            "warn" => Ok(LogLevel::Warn),
-            "info" => Ok(LogLevel::Info),
-            "config" => Ok(LogLevel::Config),
-            "debug" => Ok(LogLevel::Debug),
-            "trace" => Ok(LogLevel::Trace),
+    fn from_str(s: &str) -> Result<Level, ()> {
+        use self::Level::*;
+        match s.to_lowercase().as_ref() {
+            "fatal" => Ok(Fatal),
+            "error" => Ok(Error),
+            "warn" => Ok(Warn),
+            "info" => Ok(Info),
+            "config" => Ok(Config),
+            "debug" => Ok(Debug),
+            "trace" => Ok(Trace),
             _ => Err(()),
         }
     }
 }
 
-trait ToSlogLevel {
-    fn to_slog(&self) -> SlogLevel;
-}
-
-impl ToSlogLevel for LogLevel {
-    fn to_slog(&self) -> SlogLevel {
-        match *self {
-            LogLevel::Fatal => SlogLevel::Critical,
-            LogLevel::Error => SlogLevel::Error,
-            LogLevel::Warn => SlogLevel::Warning,
-            LogLevel::Info => SlogLevel::Info,
-            LogLevel::Config | LogLevel::Debug => SlogLevel::Debug,
-            LogLevel::Trace => SlogLevel::Trace,
+impl Into<log::Level> for Level {
+    fn into(self) -> log::Level {
+        use self::Level::*;
+        match self {
+            Fatal | Error => log::Level::Error,
+            Warn => log::Level::Warn,
+            Info => log::Level::Info,
+            Config | Debug => log::Level::Debug,
+            Trace => log::Level::Trace,
         }
     }
 }
 
-trait ToGeckoLevel {
-    fn to_gecko(&self) -> LogLevel;
-}
-
-impl ToGeckoLevel for SlogLevel {
-    fn to_gecko(&self) -> LogLevel {
-        match *self {
-            SlogLevel::Critical => LogLevel::Fatal,
-            SlogLevel::Error => LogLevel::Error,
-            SlogLevel::Warning => LogLevel::Warn,
-            SlogLevel::Info => LogLevel::Info,
-            SlogLevel::Debug => LogLevel::Debug,
-            SlogLevel::Trace => LogLevel::Trace,
+impl From<log::Level> for Level {
+    fn from(log_level: log::Level) -> Level {
+        use log::Level::*;
+        match log_level {
+            Error => Level::Error,
+            Warn => Level::Warn,
+            Info => Level::Info,
+            Debug => Level::Debug,
+            Trace => Level::Trace,
         }
     }
 }
 
-/// Initialise logger if it has not been already.  The provided `level`
-/// filters out log records below this granularity.
-pub fn init(level: &Option<LogLevel>) {
-    let effective_level = level.as_ref().unwrap_or(DEFAULT_LEVEL);
+struct Logger;
 
-    let drain = filtered_gecko_log(&effective_level);
-    ATOMIC_DRAIN.set(drain);
-
-    let first_run = FIRST_RUN.load(SeqCst);
-    FIRST_RUN.store(false, SeqCst);
-    if first_run {
-        let log = Logger::root(ATOMIC_DRAIN.drain().fuse(), o!());
-        slog_stdlog::set_logger(log.clone()).unwrap();
+impl log::Log for Logger {
+    fn enabled(&self, meta: &log::Metadata) -> bool {
+        meta.level() <= log::max_level()
     }
-}
 
-fn filtered_gecko_log(level: &LogLevel) -> LevelFilter<Streamer<io::Stderr, GeckoFormat>> {
-    let io = stream(io::stderr(), GeckoFormat {});
-    slog::level_filter(level.to_slog(), io)
-}
-
-struct GeckoFormat;
-
-impl Format for GeckoFormat {
-    fn format(&self, io: &mut io::Write, record: &Record, _: &OwnedKeyValueList) -> io::Result<()> {
-        // TODO(ato): Quite sure this is the wrong way to filter records with slog,
-        // but I do not comprehend how slog works.
-        let module = record.module();
-        if module.starts_with("geckodriver") || module.starts_with("webdriver") ||
-           module.starts_with("mozrunner") {
-            let ts = format_ts(Local::now());
-            let level = record.level().to_gecko();
-            let _ = try!(write!(io, "{}\t{}\t{}\t{}\n", ts, module, level, record.msg()));
+    fn log(&self, record: &log::Record) {
+        if self.enabled(record.metadata()) {
+            let ts = format_ts(chrono::Local::now());
+            println!(
+                "{}\t{}\t{}\t{}",
+                ts,
+                record.target(),
+                record.level(),
+                record.args()
+            );
         }
-        Ok(())
     }
+
+    fn flush(&self) {
+        io::stdout().flush().unwrap();
+    }
+}
+
+/// Initialises the logging subsystem with the default log level.
+pub fn init() -> Result<(), log::SetLoggerError> {
+    init_with_level(Level::Info)
+}
+
+/// Initialises the logging subsystem.
+pub fn init_with_level(level: Level) -> Result<(), log::SetLoggerError> {
+    let logger = Logger {};
+    set_max_level(level);
+    log::set_boxed_logger(Box::new(logger))?;
+    Ok(())
+}
+
+/// Returns the current maximum log level.
+pub fn max_level() -> Level {
+    MAX_LOG_LEVEL.load(Ordering::Relaxed).into()
+}
+
+/// Sets the global maximum log level.
+pub fn set_max_level(level: Level) {
+    MAX_LOG_LEVEL.store(level as usize, Ordering::SeqCst);
+
+    let slevel: log::Level = level.into();
+    log::set_max_level(slevel.to_level_filter())
 }
 
 /// Produces a 13-digit Unix Epoch timestamp similar to Gecko.
-fn format_ts(ts: DateTime<Local>) -> String {
+fn format_ts(ts: chrono::DateTime<chrono::Local>) -> String {
     format!("{}{:03}", ts.timestamp(), ts.timestamp_subsec_millis())
 }
 
 #[cfg(test)]
 mod tests {
-    use chrono::Local;
-    use super::format_ts;
+    use super::{Level, format_ts, init, init_with_level, max_level, set_max_level};
+    use chrono;
+    use log;
+    use std::str::FromStr;
+
+    #[test]
+    fn test_level_repr() {
+        assert_eq!(Level::Fatal as usize, 70);
+        assert_eq!(Level::Error as usize, 60);
+        assert_eq!(Level::Warn as usize, 50);
+        assert_eq!(Level::Info as usize, 40);
+        assert_eq!(Level::Config as usize, 30);
+        assert_eq!(Level::Debug as usize, 20);
+        assert_eq!(Level::Trace as usize, 10);
+    }
+
+    #[test]
+    fn test_level_eq() {
+        assert_eq!(Level::Fatal, Level::Fatal);
+        assert_eq!(Level::Error, Level::Error);
+        assert_eq!(Level::Warn, Level::Warn);
+        assert_eq!(Level::Info, Level::Info);
+        assert_eq!(Level::Config, Level::Config);
+        assert_eq!(Level::Debug, Level::Debug);
+        assert_eq!(Level::Trace, Level::Trace);
+    }
+
+    #[test]
+    fn test_level_from_log() {
+        assert_eq!(Level::from(log::Level::Error), Level::Error);
+        assert_eq!(Level::from(log::Level::Warn), Level::Warn);
+        assert_eq!(Level::from(log::Level::Info), Level::Info);
+        assert_eq!(Level::from(log::Level::Debug), Level::Debug);
+        assert_eq!(Level::from(log::Level::Trace), Level::Trace);
+    }
+
+    #[test]
+    fn test_level_into_log() {
+        assert_eq!(Into::<log::Level>::into(Level::Fatal), log::Level::Error);
+        assert_eq!(Into::<log::Level>::into(Level::Error), log::Level::Error);
+        assert_eq!(Into::<log::Level>::into(Level::Warn), log::Level::Warn);
+        assert_eq!(Into::<log::Level>::into(Level::Info), log::Level::Info);
+        assert_eq!(Into::<log::Level>::into(Level::Config), log::Level::Debug);
+        assert_eq!(Into::<log::Level>::into(Level::Debug), log::Level::Debug);
+        assert_eq!(Into::<log::Level>::into(Level::Trace), log::Level::Trace);
+    }
+
+    #[test]
+    fn test_level_from_str() {
+        assert_eq!(Level::from_str("fatal"), Ok(Level::Fatal));
+        assert_eq!(Level::from_str("error"), Ok(Level::Error));
+        assert_eq!(Level::from_str("warn"), Ok(Level::Warn));
+        assert_eq!(Level::from_str("info"), Ok(Level::Info));
+        assert_eq!(Level::from_str("config"), Ok(Level::Config));
+        assert_eq!(Level::from_str("debug"), Ok(Level::Debug));
+        assert_eq!(Level::from_str("trace"), Ok(Level::Trace));
+
+        assert_eq!(Level::from_str("INFO"), Ok(Level::Info));
+
+        assert!(Level::from_str("foo").is_err());
+    }
+
+    #[test]
+    fn test_level_to_str() {
+        assert_eq!(Level::Fatal.to_string(), "FATAL");
+        assert_eq!(Level::Error.to_string(), "ERROR");
+        assert_eq!(Level::Warn.to_string(), "WARN");
+        assert_eq!(Level::Info.to_string(), "INFO");
+        assert_eq!(Level::Config.to_string(), "CONFIG");
+        assert_eq!(Level::Debug.to_string(), "DEBUG");
+        assert_eq!(Level::Trace.to_string(), "TRACE");
+    }
+
+    #[test]
+    fn test_max_level() {
+        set_max_level(Level::Info);
+        assert_eq!(max_level(), Level::Info);
+    }
+
+    #[test]
+    fn test_set_max_level() {
+        set_max_level(Level::Error);
+        assert_eq!(max_level(), Level::Error);
+        set_max_level(Level::Fatal);
+        assert_eq!(max_level(), Level::Fatal);
+    }
+
+    #[test]
+    fn test_init_with_level() {
+        init_with_level(Level::Debug).unwrap();
+        assert_eq!(max_level(), Level::Debug);
+        assert!(init_with_level(Level::Warn).is_err());
+    }
 
     #[test]
     fn test_format_ts() {
-        let ts = Local::now();
+        let ts = chrono::Local::now();
         let s = format_ts(ts);
         assert_eq!(s.len(), 13);
     }
