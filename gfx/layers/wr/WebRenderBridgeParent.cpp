@@ -1301,9 +1301,7 @@ WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, cons
 {
   uint64_t id = 0;
   while (!mPendingTransactionIds.empty()) {
-    int64_t diff =
-      static_cast<int64_t>(aEpoch.mHandle) - static_cast<int64_t>(mPendingTransactionIds.front().mEpoch.mHandle);
-    if (diff < 0) {
+    if (aEpoch.mHandle < mPendingTransactionIds.front().mEpoch.mHandle) {
       break;
     }
 #if defined(ENABLE_FRAME_LATENCY_LOG)
