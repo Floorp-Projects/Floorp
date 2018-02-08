@@ -1773,6 +1773,8 @@ var gBrowserInit = {
       gDragSpaceObserver.uninit();
     }
 
+    TabsInTitlebar.uninit();
+
     // In certain scenarios it's possible for unload to be fired before onload,
     // (e.g. if the window is being closed after browser.js loads but before the
     // load completes). In that case, there's nothing to do here.
@@ -1805,8 +1807,6 @@ var gBrowserInit = {
     PlacesToolbarHelper.uninit();
 
     BookmarkingUI.uninit();
-
-    TabsInTitlebar.uninit();
 
     ToolbarIconColor.uninit();
 
