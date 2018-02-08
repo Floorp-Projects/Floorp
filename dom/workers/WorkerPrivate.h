@@ -156,7 +156,6 @@ private:
   uint32_t mParentWindowPausedDepth;
   bool mParentFrozen;
   bool mIsChromeWorker;
-  bool mMainThreadObjectsForgotten;
   // mIsSecureContext is set once in our constructor; after that it can be read
   // from various threads.  We could make this const if we were OK with setting
   // it in the initializer list via calling some function that takes all sorts
@@ -171,22 +170,6 @@ private:
   DOMHighResTimeStamp mCreationTimeHighRes;
 
 protected:
-  // The worker is owned by its thread, which is represented here.  This is set
-  // in Constructor() and emptied by WorkerFinishedRunnable, and conditionally
-  // traversed by the cycle collector if the busy count is zero.
-  //
-  // There are 4 ways a worker can be terminated:
-  // 1. GC/CC - When the worker is in idle state (busycount == 0), it allows to
-  //    traverse the 'hidden' mParentEventTargetRef pointer. This is the exposed
-  //    Worker webidl object. Doing this, CC will be able to detect a cycle and
-  //    Unlink is called. In Unlink, Worker calls Terminate().
-  // 2. Worker::Terminate() is called - the shutdown procedure starts
-  //    immediately.
-  // 3. WorkerScope::Close() is called - Similar to point 2.
-  // 4. xpcom-shutdown notification - We call Kill().
-  RefPtr<Worker> mParentEventTargetRef;
-  RefPtr<WorkerPrivate> mSelfRef;
-
   WorkerPrivateParent(WorkerPrivate* aParent,
                       const nsAString& aScriptURL, bool aIsChromeWorker,
                       WorkerType aWorkerType,
@@ -216,22 +199,10 @@ public:
   NS_INLINE_DECL_REFCOUNTING(WorkerPrivateParent)
 
   void
-  Traverse(nsCycleCollectionTraversalCallback& aCb);
-
-  void
   EnableDebugger();
 
   void
   DisableDebugger();
-
-  void
-  ClearSelfAndParentEventTargetRef()
-  {
-    AssertIsOnParentThread();
-    MOZ_ASSERT(mSelfRef);
-    mParentEventTargetRef = nullptr;
-    mSelfRef = nullptr;
-  }
 
   nsresult
   Dispatch(already_AddRefed<WorkerRunnable> aRunnable);
@@ -847,6 +818,22 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
     NoTimer
   };
 
+  // The worker is owned by its thread, which is represented here.  This is set
+  // in Constructor() and emptied by WorkerFinishedRunnable, and conditionally
+  // traversed by the cycle collector if the busy count is zero.
+  //
+  // There are 4 ways a worker can be terminated:
+  // 1. GC/CC - When the worker is in idle state (busycount == 0), it allows to
+  //    traverse the 'hidden' mParentEventTargetRef pointer. This is the exposed
+  //    Worker webidl object. Doing this, CC will be able to detect a cycle and
+  //    Unlink is called. In Unlink, Worker calls Terminate().
+  // 2. Worker::Terminate() is called - the shutdown procedure starts
+  //    immediately.
+  // 3. WorkerScope::Close() is called - Similar to point 2.
+  // 4. xpcom-shutdown notification - We call Kill().
+  RefPtr<Worker> mParentEventTargetRef;
+  RefPtr<WorkerPrivate> mSelfRef;
+
   bool mDebuggerRegistered;
   WorkerDebugger* mDebugger;
 
@@ -917,6 +904,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   bool mWorkerScriptExecutedSuccessfully;
   bool mFetchHandlerWasAdded;
   bool mOnLine;
+  bool mMainThreadObjectsForgotten;
 
   // This is touched on parent thread only, but it can be read on a different
   // thread before crashing because hanging.
@@ -944,6 +932,18 @@ public:
               const nsAString& aScriptURL, bool aIsChromeWorker,
               LoadGroupBehavior aLoadGroupBehavior, WorkerType aWorkerType,
               WorkerLoadInfo* aLoadInfo);
+
+  void
+  Traverse(nsCycleCollectionTraversalCallback& aCb);
+
+  void
+  ClearSelfAndParentEventTargetRef()
+  {
+    AssertIsOnParentThread();
+    MOZ_ASSERT(mSelfRef);
+    mParentEventTargetRef = nullptr;
+    mSelfRef = nullptr;
+  }
 
   // The passed principal must be the Worker principal in case of a
   // ServiceWorker and the loading principal for any other type.
