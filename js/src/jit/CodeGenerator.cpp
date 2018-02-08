@@ -1583,12 +1583,12 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
         masm.addPtr(ImmWord(JSInlineString::offsetOfInlineStorage()), string);
 
         // Load the source characters pointer.
-        masm.loadStringChars(base, base);
-        masm.load32(newStartIndexAddress, temp2);
+        masm.loadStringChars(base, temp2);
+        masm.load32(newStartIndexAddress, base);
         if (latin1)
             masm.addPtr(temp2, base);
         else
-            masm.computeEffectiveAddress(BaseIndex(base, temp2, TimesTwo), base);
+            masm.computeEffectiveAddress(BaseIndex(temp2, base, TimesTwo), base);
 
         CopyStringChars(masm, string, base, temp1, temp2, latin1 ? 1 : 2, latin1 ? 1 : 2);
 
@@ -2451,8 +2451,6 @@ static void
 FindFirstDollarIndex(MacroAssembler& masm, Register str, Register len, Register chars,
                      Register temp, Register output, bool isLatin1)
 {
-    masm.loadStringChars(str, chars);
-
     masm.move32(Imm32(0), output);
 
     Label start, done;
@@ -2490,6 +2488,8 @@ CodeGenerator::visitGetFirstDollarIndex(LGetFirstDollarIndex* ins)
 
     masm.branchIfRope(str, ool->entry());
     masm.loadStringLength(str, len);
+
+    masm.loadStringChars(str, temp0);
 
     Label isLatin1, done;
     masm.branchLatin1String(str, &isLatin1);
@@ -7772,15 +7772,16 @@ CopyStringCharsMaybeInflate(MacroAssembler& masm, Register input, Register destC
 
     Label isLatin1, done;
     masm.loadStringLength(input, temp1);
+    masm.loadStringChars(input, temp2);
     masm.branchLatin1String(input, &isLatin1);
     {
-        masm.loadStringChars(input, input);
+        masm.movePtr(temp2, input);
         CopyStringChars(masm, destChars, input, temp1, temp2, sizeof(char16_t), sizeof(char16_t));
         masm.jump(&done);
     }
     masm.bind(&isLatin1);
     {
-        masm.loadStringChars(input, input);
+        masm.movePtr(temp2, input);
         CopyStringChars(masm, destChars, input, temp1, temp2, sizeof(char), sizeof(char16_t));
     }
     masm.bind(&done);
@@ -7837,7 +7838,8 @@ ConcatInlineString(MacroAssembler& masm, Register lhs, Register rhs, Register ou
             CopyStringCharsMaybeInflate(masm, lhs, temp2, temp1, temp3);
         } else {
             masm.loadStringLength(lhs, temp3);
-            masm.loadStringChars(lhs, lhs);
+            masm.loadStringChars(lhs, temp1);
+            masm.movePtr(temp1, lhs);
             CopyStringChars(masm, temp2, lhs, temp3, temp1, sizeof(char), sizeof(char));
         }
 
@@ -7846,7 +7848,8 @@ ConcatInlineString(MacroAssembler& masm, Register lhs, Register rhs, Register ou
             CopyStringCharsMaybeInflate(masm, rhs, temp2, temp1, temp3);
         } else {
             masm.loadStringLength(rhs, temp3);
-            masm.loadStringChars(rhs, rhs);
+            masm.loadStringChars(rhs, temp1);
+            masm.movePtr(temp1, rhs);
             CopyStringChars(masm, temp2, rhs, temp3, temp1, sizeof(char), sizeof(char));
         }
 

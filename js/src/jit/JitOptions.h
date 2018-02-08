@@ -95,6 +95,7 @@ struct DefaultJitOptions
     mozilla::Maybe<IonRegisterAllocator> forcedRegisterAllocator;
 
     bool spectreIndexMasking;
+    bool spectreStringMitigations;
 
     // The options below affect the rest of the VM, and not just the JIT.
     bool disableUnboxedObjects;
