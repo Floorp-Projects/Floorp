@@ -5,7 +5,7 @@
 function test() {
   waitForExplicitFinish();
   let notificationValue = "Protocol Registration: testprotocol";
-  let testURI = "https://example.com/browser/" +
+  let testURI = "http://example.com/browser/" +
     "browser/base/content/test/general/browser_registerProtocolHandler_notification.html";
 
     waitForCondition(function() {

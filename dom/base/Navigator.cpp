@@ -965,10 +965,6 @@ Navigator::RegisterProtocolHandler(const nsAString& aProtocol,
     return;
   }
 
-  if (!mWindow->IsSecureContext() && mWindow->GetDoc()) {
-    mWindow->GetDoc()->WarnOnceAbout(nsIDocument::eRegisterProtocolHandlerInsecure);
-  }
-
   nsCOMPtr<nsIWebContentHandlerRegistrar> registrar =
     do_GetService(NS_WEBCONTENTHANDLERREGISTRAR_CONTRACTID);
   if (!registrar) {

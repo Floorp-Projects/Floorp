@@ -77,7 +77,7 @@ interface NavigatorOnLine {
 [NoInterfaceObject]
 interface NavigatorContentUtils {
   // content handler registration
-  [Throws, Func="nsGlobalWindowInner::RegisterProtocolHandlerAllowedForContext"]
+  [Throws]
   void registerProtocolHandler(DOMString scheme, DOMString url, DOMString title);
   [Pref="dom.registerContentHandler.enabled", Throws]
   void registerContentHandler(DOMString mimeType, DOMString url, DOMString title);

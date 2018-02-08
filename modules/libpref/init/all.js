@@ -124,14 +124,6 @@ pref("dom.registerContentHandler.enabled", false);
 pref("dom.registerContentHandler.enabled", true);
 #endif
 
-// Nightly will have insecure registerProtocolHandler disabled by default
-// Beta and Stable will remain enabled until Firefox 62 providing deprecation stats.
-#ifdef NIGHTLY_BUILD
-pref("dom.registerProtocolHandler.insecure.enabled", false);
-#else
-pref("dom.registerProtocolHandler.insecure.enabled", true);
-#endif
-
 // Whether or not testing features are enabled.
 pref("dom.quotaManager.testing", false);
 

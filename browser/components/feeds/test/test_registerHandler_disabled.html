@@ -20,13 +20,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=402788
 
   async function tests() {
     await SpecialPowers.pushPrefEnv({
-      set: [
-        ["dom.registerContentHandler.enabled", false],
-        ["dom.registerProtocolHandler.insecure.enabled", false],
-      ]
+      set: [["dom.registerContentHandler.enabled", true]]
     });
-    ok(!navigator.registerContentHandler, "navigator.registerContentHandler should be undefined");
-    ok(!navigator.registerProtocolHandler, "navigator.registerProtocolHandler should be undefined");
+    ok(navigator.registerContentHandler, "navigator.registerContentHandler should be defined");
     SimpleTest.finish();
   }
 
