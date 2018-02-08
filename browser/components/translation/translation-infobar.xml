@@ -14,7 +14,7 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
-  <binding id="translationbar" extends="chrome://global/content/bindings/notification.xml#notification" role="xul:alert">
+  <binding id="translationbar" extends="chrome://global/content/bindings/notification.xml#notification">
     <resources>
       <stylesheet src="chrome://global/skin/notification.css"/>
     </resources>

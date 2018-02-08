@@ -15,7 +15,7 @@
     </resources>
   </binding>
 
-  <binding id="groupbox" role="xul:groupbox"
+  <binding id="groupbox"
     extends="chrome://global/content/bindings/groupbox.xml#groupbox-base">
     <content>
       <xul:hbox class="groupbox-title" align="center" pack="start">

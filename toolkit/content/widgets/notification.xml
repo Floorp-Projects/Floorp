@@ -398,7 +398,7 @@
 
   </binding>
 
-  <binding id="notification" role="xul:alert">
+  <binding id="notification">
     <content>
       <xul:hbox anonid="details" align="center" flex="1"
                 oncommand="this.parentNode._doButtonCommand(event);">

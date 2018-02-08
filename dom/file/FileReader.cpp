@@ -9,8 +9,6 @@
 #include "nsIEventTarget.h"
 #include "nsIGlobalObject.h"
 #include "nsITimer.h"
-#include "nsITransport.h"
-#include "nsIStreamTransportService.h"
 
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
@@ -25,7 +23,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMJSUtils.h"
 #include "nsError.h"
-#include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "xpcpublic.h"
 
@@ -40,8 +37,6 @@ namespace dom {
 #define PROGRESS_STR "progress"
 
 const uint64_t kUnknownSize = uint64_t(-1);
-
-static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(FileReader)
 
@@ -410,48 +405,18 @@ FileReader::ReadFileContent(Blob& aBlob,
   mDataFormat = aDataFormat;
   CopyUTF16toUTF8(aCharset, mCharset);
 
-  nsCOMPtr<nsIInputStream> stream;
-  mBlob->CreateInputStream(getter_AddRefs(stream), aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  bool nonBlocking = false;
-  aRv = stream->IsNonBlocking(&nonBlocking);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  mAsyncStream = do_QueryInterface(stream);
-
-  // We want to have a non-blocking nsIAsyncInputStream.
-  if (!mAsyncStream || !nonBlocking) {
-    nsresult rv;
-    nsCOMPtr<nsIStreamTransportService> sts =
-      do_GetService(kStreamTransportServiceCID, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.Throw(rv);
-      return;
-    }
-
-    nsCOMPtr<nsITransport> transport;
-    aRv = sts->CreateInputTransport(stream,
-                                    /* aCloseWhenDone */ true,
-                                    getter_AddRefs(transport));
+  {
+    nsCOMPtr<nsIInputStream> stream;
+    mBlob->CreateInputStream(getter_AddRefs(stream), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
 
-    nsCOMPtr<nsIInputStream> wrapper;
-    aRv = transport->OpenInputStream(/* aFlags */ 0,
-                                     /* aSegmentSize */ 0,
-                                     /* aSegmentCount */ 0,
-                                     getter_AddRefs(wrapper));
+    aRv = NS_MakeAsyncNonBlockingInputStream(stream.forget(),
+                                             getter_AddRefs(mAsyncStream));
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
-
-    mAsyncStream = do_QueryInterface(wrapper);
   }
 
   MOZ_ASSERT(mAsyncStream);
