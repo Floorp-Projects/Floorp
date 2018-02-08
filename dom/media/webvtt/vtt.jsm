@@ -28,8 +28,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
  */
 
 ChromeUtils.import('resource://gre/modules/Services.jsm');
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 (function(global) {
 
@@ -275,8 +274,8 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
     consumeCueSettings(input, cue);
   }
 
-  function onlyContainsWhiteSpaces(input) {
-    return /^[ \f\n\r\t]+$/.test(input);
+  function emptyOrOnlyContainsWhiteSpaces(input) {
+    return input == "" || /^[ \f\n\r\t]+$/.test(input);
   }
 
   function containsTimeDirectionSymbol(input) {
@@ -1127,6 +1126,8 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
   WebVTT.Parser = function(window, decoder) {
     this.window = window;
     this.state = "INITIAL";
+    this.substate = "";
+    this.substatebuffer = "";
     this.buffer = "";
     this.decoder = decoder || new TextDecoder("utf8");
     this.regionList = [];
@@ -1143,20 +1144,19 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
       }
     },
     parse: function (data) {
-      var self = this;
-
       // If there is no data then we won't decode it, but will just try to parse
       // whatever is in buffer already. This may occur in circumstances, for
       // example when flush() is called.
       if (data) {
         // Try to decode the data that we received.
-        self.buffer += self.decoder.decode(data, {stream: true});
+        this.buffer += this.decoder.decode(data, {stream: true});
       }
 
-      function collectNextLine() {
-        var buffer = self.buffer;
+      // This parser is line-based. Let's see if we have a line to parse.
+      while (/\r\n|\n|\r/.test(this.buffer)) {
+        var buffer = this.buffer;
         var pos = 0;
-        while (pos < buffer.length && buffer[pos] !== '\r' && buffer[pos] !== '\n') {
+        while (buffer[pos] !== '\r' && buffer[pos] !== '\n') {
           ++pos;
         }
         var line = buffer.substr(0, pos);
@@ -1167,15 +1167,20 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
         if (buffer[pos] === '\n') {
           ++pos;
         }
-        self.buffer = buffer.substr(pos);
+        this.buffer = buffer.substr(pos);
+
         // Spec defined replacement.
         line = line.replace(/[\u0000]/g, "\uFFFD");
 
-        if (/^NOTE($|[ \t])/.test(line)) {
-          line = null;
+        if (!/^NOTE($|[ \t])/.test(line)) {
+          this.parseLine(line);
         }
-        return line;
       }
+
+      return this;
+    },
+    parseLine: function(line) {
+      var self = this;
 
       function createCueIfNeeded() {
         if (!self.cue) {
@@ -1282,8 +1287,7 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
       // Parsing the WebVTT signature, it contains parsing algo step1 to step9.
       // See spec, https://w3c.github.io/webvtt/#file-parsing
-      function parseSignatureMayThrow(input) {
-        let signature = collectNextLine();
+      function parseSignatureMayThrow(signature) {
         if (!/^WEBVTT([ \t].*)?$/.test(signature)) {
           throw new ParsingError(ParsingError.Errors.BadSignature);
         } else {
@@ -1310,118 +1314,117 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
       //   3. Empty line
       //   4. Cue's timestamp
       // The case 4 happens when there is no line interval between the header
-      // and the cue blocks. In this case, we should preserve the line and
-      // return it for the next phase parsing.
-      function parseHeader() {
-        let line = null;
-        while (self.buffer && self.state === "HEADER") {
-          line = collectNextLine();
-          var tempStr = "";
-          if (/^REGION|^STYLE/.test(line)) {
-            self.substate = /^REGION/.test(line) ? "REGION" : "STYLE";
-
-            while (true) {
-              line = collectNextLine();
-              if (!line || maybeIsTimeStampFormat(line) || onlyContainsWhiteSpaces(line) || containsTimeDirectionSymbol(line)) {
-                // parse the tempStr and break the while loop.
-                parseRegionOrStyle(tempStr);
-                break;
-              } else if (/^REGION|^STYLE/.test(line)) {
-                // The line is another REGION/STYLE, parse tempStr then reset tempStr.
-                // Don't break the while loop to parse the next REGION/STYLE.
-                parseRegionOrStyle(tempStr);
-                self.substate = /^REGION/.test(line) ? "REGION" : "STYLE";
-                tempStr = "";
-              } else {
-                tempStr = tempStr + " " + line;
-              }
-            }
-          }
-
-          if (!line || onlyContainsWhiteSpaces(line)) {
-            // empty line, whitespaces
-            continue;
-          } else if (maybeIsTimeStampFormat(line)) {
-            self.state = "CUE";
-            break;
-          } else if (containsTimeDirectionSymbol(line)) {
-            // string contains "-->"
-            break;
-          } else {
-            //It is an ID.
-            break;
-          }
-        } // self.state === "HEADER"
-
-        // End parsing header part and doesn't see the timestamp.
-        if (self.state === "HEADER") {
-          self.state = "ID";
+      // and the cue blocks. In this case, we should preserve the line for the
+      // next phase parsing, returning "true".
+      function parseHeader(line) {
+        if (!self.substate && /^REGION|^STYLE/.test(line)) {
+          self.substate = /^REGION/.test(line) ? "REGION" : "STYLE";
+          return false;
         }
-        return line;
+
+        if (self.substate === "REGION" || self.substate === "STYLE") {
+          if (maybeIsTimeStampFormat(line) ||
+              emptyOrOnlyContainsWhiteSpaces(line) ||
+              containsTimeDirectionSymbol(line)) {
+            parseRegionOrStyle(self.substatebuffer);
+            self.substatebuffer = "";
+            self.substate = null;
+
+            // This is the end of the region or style state.
+            return parseHeader(line);
+          }
+
+          if (/^REGION|^STYLE/.test(line)) {
+            // The line is another REGION/STYLE, parse and reset substatebuffer.
+            // Don't break the while loop to parse the next REGION/STYLE.
+            parseRegionOrStyle(self.substatebuffer);
+            self.substatebuffer = "";
+            self.substate = /^REGION/.test(line) ? "REGION" : "STYLE";
+            return false;
+          }
+
+          // We weren't able to parse the line as a header. Accumulate and
+          // return.
+          self.substatebuffer += " " + line;
+          return false;
+        }
+
+        if (emptyOrOnlyContainsWhiteSpaces(line)) {
+          // empty line, whitespaces, nothing to do.
+          return false;
+        }
+
+        if (maybeIsTimeStampFormat(line)) {
+          self.state = "CUE";
+          // We want to process the same line again.
+          return true;
+        }
+
+        // string contains "-->" or an ID
+        self.state = "ID";
+        return true;
       }
 
-      // 5.1 WebVTT file parsing.
       try {
+        // 5.1 WebVTT file parsing.
         if (self.state === "INITIAL") {
-          parseSignatureMayThrow();
+          parseSignatureMayThrow(line);
+          return;
         }
 
-        var line;
         if (self.state === "HEADER") {
-          line = parseHeader();
+          // parseHeader returns false if the same line doesn't need to be
+          // parsed again.
+          if (!parseHeader(line)) {
+            return;
+          }
         }
 
-        var nextIteration = false;
-        while (nextIteration || self.buffer) {
-          nextIteration = false;
-          if (!line) {
-            // Since the data receiving is async, we need to wait until the
-            // buffer gets the full line.
-            if (!/\r\n|\n|\r/.test(self.buffer)) {
-              return this;
-            }
-            line = collectNextLine();
+        if (self.state === "ID") {
+          // If there is no cue identifier, read the next line. 
+          if (line == "") {
+            return;
           }
 
-          switch (self.state) {
-          case "ID":
-            // If there is no cue identifier, keep the line and reuse this line
-            // in next iteration.
-            if (!line || !parseCueIdentifier(line)) {
-              nextIteration = true;
-              continue;
-            }
-            break;
-          case "CUE":
-            parseCueMayThrow(line);
-            break;
-          case "CUETEXT":
-            // Report the cue when (1) get an empty line (2) get the "-->""
-            if (!line || containsTimeDirectionSymbol(line)) {
-              // We are done parsing self cue.
-              self.oncue && self.oncue(self.cue);
-              self.cue = null;
-              self.state = "ID";
-              // Keep the line and reuse this line in next iteration.
-              nextIteration = true;
-              continue;
-            }
-            if (self.cue.text) {
-              self.cue.text += "\n";
-            }
-            self.cue.text += line;
-            break;
-          case "BADCUE": // BADCUE
-            // 54-62 - Collect and discard the remaining cue.
-            self.state = "ID";
-            if (line) { // keep this line to ID state.
-              continue;
-            }
-            break;
+          // If there is no cue identifier, parse the line again.
+          if (!parseCueIdentifier(line)) {
+            return self.parseLine(line);
           }
-          // The line was already parsed, empty it to ensure we can get the
-          // new line in next iteration.
-          line = null;
+          return;
+        }
+
+        if (self.state === "CUE") {
+          parseCueMayThrow(line);
+          return;
+        }
+
+        if (self.state === "CUETEXT") {
+          // Report the cue when (1) get an empty line (2) get the "-->""
+          if (emptyOrOnlyContainsWhiteSpaces(line) ||
+              containsTimeDirectionSymbol(line)) {
+            // We are done parsing self cue.
+            self.oncue && self.oncue(self.cue);
+            self.cue = null;
+            self.state = "ID";
+
+            if (emptyOrOnlyContainsWhiteSpaces(line)) {
+              return;
+            }
+
+            // Reuse the same line.
+            return self.parseLine(line);
+          }
+          if (self.cue.text) {
+            self.cue.text += "\n";
+          }
+          self.cue.text += line;
+          return;
+        }
+
+        if (self.state === "BADCUE") {
+          // 54-62 - Collect and discard the remaining cue.
+          self.state = "ID";
+          return self.parseLine(line);
         }
       } catch (e) {
         self.reportOrThrowError(e);
@@ -1442,17 +1445,8 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
       try {
         // Finish decoding the stream.
         self.buffer += self.decoder.decode();
-        // Synthesize the end of the current cue or region.
-        if (self.cue || self.state === "HEADER") {
-          self.buffer += "\n\n";
-          self.parse();
-        }
-        // If we've flushed, parsed, and we're still on the INITIAL state then
-        // that means we don't have enough of the stream to parse the first
-        // line.
-        if (self.state === "INITIAL") {
-          throw new ParsingError(ParsingError.Errors.BadSignature);
-        }
+        self.buffer += "\n\n";
+        self.parse();
       } catch(e) {
         self.reportOrThrowError(e);
       }

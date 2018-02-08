@@ -21,8 +21,13 @@
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
+#include "nsITransport.h"
+#include "nsIStreamTransportService.h"
+#include "NonBlockingAsyncInputStream.h"
 
 using namespace mozilla;
+
+static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 
 //-----------------------------------------------------------------------------
 
@@ -960,5 +965,64 @@ NS_CloneInputStream(nsIInputStream* aSource, nsIInputStream** aCloneOut,
   readerClone.forget(aCloneOut);
   reader.forget(aReplacementOut);
 
+  return NS_OK;
+}
+
+nsresult
+NS_MakeAsyncNonBlockingInputStream(already_AddRefed<nsIInputStream> aSource,
+                                   nsIAsyncInputStream** aAsyncInputStream)
+{
+  nsCOMPtr<nsIInputStream> source = Move(aSource);
+  if (NS_WARN_IF(!aAsyncInputStream)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  bool nonBlocking = false;
+  nsresult rv = source->IsNonBlocking(&nonBlocking);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(source);
+
+  if (nonBlocking && asyncStream) {
+    // This stream is perfect!
+    asyncStream.forget(aAsyncInputStream);
+    return NS_OK;
+  }
+
+  if (nonBlocking) {
+    // If the stream is non-blocking but not async, we wrap it.
+    return NonBlockingAsyncInputStream::Create(source.forget(),
+                                               aAsyncInputStream);
+  }
+
+  nsCOMPtr<nsIStreamTransportService> sts =
+    do_GetService(kStreamTransportServiceCID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsITransport> transport;
+  rv = sts->CreateInputTransport(source,
+                                 /* aCloseWhenDone */ true,
+                                 getter_AddRefs(transport));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIInputStream> wrapper;
+  rv = transport->OpenInputStream(/* aFlags */ 0,
+                                  /* aSegmentSize */ 0,
+                                  /* aSegmentCount */ 0,
+                                  getter_AddRefs(wrapper));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  asyncStream = do_QueryInterface(wrapper);
+  MOZ_ASSERT(asyncStream);
+
+  asyncStream.forget(aAsyncInputStream);
   return NS_OK;
 }

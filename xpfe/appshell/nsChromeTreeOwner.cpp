@@ -466,32 +466,26 @@ nsChromeTreeOwner::OnStateChange(nsIWebProgress* aWebProgress,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::OnLocationChange(nsIWebProgress* aWebProgress,
-                                                  nsIRequest* aRequest,
-                                                  nsIURI* aLocation,
-                                                  uint32_t aFlags)
+NS_IMETHODIMP
+nsChromeTreeOwner::OnLocationChange(nsIWebProgress* aWebProgress,
+                                    nsIRequest* aRequest,
+                                    nsIURI* aLocation,
+                                    uint32_t aFlags)
 {
-  bool itsForYou = true;
+  NS_ENSURE_STATE(mXULWindow);
 
+  // If loading a new root .xul document, then redo chrome.
   if (aWebProgress) {
-    NS_ENSURE_STATE(mXULWindow);
-    nsCOMPtr<mozIDOMWindowProxy> progressWin;
-    aWebProgress->GetDOMWindow(getter_AddRefs(progressWin));
-
     nsCOMPtr<nsIDocShell> docshell;
     mXULWindow->GetDocShell(getter_AddRefs(docshell));
-    // XXXkhuey this is totally wrong, bug 1223303.
-    nsCOMPtr<mozIDOMWindowProxy> ourWin(do_QueryInterface(docshell));
 
-    if (ourWin != progressWin)
-      itsForYou = false;
+    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(docshell));
+    if (webProgress != aWebProgress) {
+      return NS_OK;
+    }
   }
 
-   // If loading a new root .xul document, then redo chrome.
-  if (itsForYou) {
-    NS_ENSURE_STATE(mXULWindow);
-    mXULWindow->mChromeLoaded = false;
-  }
+  mXULWindow->mChromeLoaded = false;
   return NS_OK;
 }
 

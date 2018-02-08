@@ -716,6 +716,13 @@ U2FSoftTokenManager::Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials
                           bool aRequireUserVerification,
                           uint32_t aTimeoutMS)
 {
+  if (!mInitialized) {
+    nsresult rv = Init();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return U2FSignPromise::CreateAndReject(rv, __func__);
+    }
+  }
+
   // The U2F softtoken doesn't support user verification.
   if (aRequireUserVerification) {
     return U2FSignPromise::CreateAndReject(NS_ERROR_DOM_NOT_ALLOWED_ERR, __func__);

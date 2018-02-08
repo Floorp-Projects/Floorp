@@ -541,7 +541,7 @@
     </handlers>
   </binding>
 
-  <binding id="tooltip" role="xul:tooltip"
+  <binding id="tooltip"
            extends="chrome://global/content/bindings/popup.xml#popup-base">
     <content>
       <children>

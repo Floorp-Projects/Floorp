@@ -9,7 +9,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="progressmeter" role="xul:progressmeter">
+  <binding id="progressmeter">
     <resources>
       <stylesheet src="chrome://global/skin/progressmeter.css"/>
     </resources>
