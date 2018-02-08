@@ -217,6 +217,7 @@ public class WebAppActivity extends AppCompatActivity
 
     @Override
     public void onDestroy() {
+        mGeckoSession.closeWindow();
         mTextSelection.destroy();
         mDoorHangerPopup.destroy();
         mPromptService.destroy();
