@@ -163,15 +163,17 @@ public final class DynamicToolbarAnimator {
                     break;
                 }
 
-                final int width = bm.getWidth();
-                final int height = bm.getHeight();
-                final int[] pixels = new int[bm.getByteCount() / 4];
                 try {
+                    final int width = bm.getWidth();
+                    final int height = bm.getHeight();
+                    final int[] pixels = new int[bm.getByteCount() / 4];
                     bm.getPixels(pixels, /* offset */ 0, /* stride */ width,
                                  /* x */ 0, /* y */ 0, width, height);
                     mCompositor.sendToolbarPixelsToCompositor(width, height, pixels);
-                } catch (final Exception e) {
+                } catch (final Throwable e) {
                     Log.e(LOGTAG, "Cannot get toolbar pixels", e);
+                    mCompositor.sendToolbarAnimatorMessage(
+                            LayerSession.TOOLBAR_SNAPSHOT_FAILED);
                 }
                 break;
             }
