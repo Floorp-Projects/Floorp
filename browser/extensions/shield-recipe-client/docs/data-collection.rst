@@ -155,6 +155,19 @@ Enrollment
       addonVersion
          The add-on's version (example: ``"1.2.3"``).
 
+Enroll Failure
+   method
+      The string ``"enrollFailed"``
+   object
+      The string ``"addon_study"``
+   value
+      The name of the study (``recipe.arguments.slug``).
+   reason
+      A string containing the filename and line number of the code
+      that failed, and the name of the error thrown. This information
+      is purposely limited to avoid leaking personally identifiable
+      information. This should be considered a bug.
+
 Unenrollment
    method
       The string ``"unenroll"``.
@@ -186,5 +199,5 @@ Unenrollment
            uninstalled while Shield was inactive. This could be that
            the add-on is no longer compatible, or was manually removed
            from a profile.
-         * ``"unknown"``: A reason was not specificied. This should be
+         * ``"unknown"``: A reason was not specified. This should be
            considered a bug.

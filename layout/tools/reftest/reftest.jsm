@@ -321,10 +321,10 @@ function InitAndStartRefTests()
 
     // Focus the content browser.
     if (g.focusFilterMode != FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS) {
-        g.browser.addEventListener("focus", StartTests, true);
+        g.browser.addEventListener("focus", ReadTests, true);
         g.browser.focus();
     } else {
-        StartTests();
+        ReadTests();
     }
 }
 
@@ -346,13 +346,94 @@ function Shuffle(array)
     }
 }
 
+function ReadTests() {
+    try {
+        if (g.focusFilterMode != FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS) {
+            g.browser.removeEventListener("focus", ReadTests, true);
+        }
+
+        g.urls = [];
+        var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                    getService(Components.interfaces.nsIPrefBranch);
+
+        /* There are three modes implemented here:
+         * 1) reftest.manifests
+         * 2) reftest.manifests and reftest.manifests.dumpTests
+         * 3) reftest.tests
+         *
+         * The first will parse the specified manifests, then immediately
+         * run the tests. The second will parse the manifests, save the test
+         * objects to a file and exit. The third will load a file of test
+         * objects and run them.
+         *
+         * The latter two modes are used to pass test data back and forth
+         * with python harness.
+        */
+        let manifests = prefs.getCharPref("reftest.manifests", null);
+        let dumpTests = prefs.getCharPref("reftest.manifests.dumpTests", null);
+        let testList = prefs.getCharPref("reftest.tests", null);
+
+        if ((testList && manifests) || !(testList || manifests)) {
+            logger.error("Exactly one of reftest.manifests or reftest.tests must be specified.");
+            DoneTests();
+        }
+
+        if (testList) {
+            logger.debug("Reading test objects from: " + testList);
+            let promise = OS.File.read(testList).then(function onSuccess(array) {
+                let decoder = new TextDecoder();
+                g.urls = JSON.parse(decoder.decode(array)).map(CreateUrls);
+                StartTests();
+            });
+        } else if (manifests) {
+            // Parse reftest manifests
+            // XXX There is a race condition in the manifest parsing code which
+            // sometimes shows up on Android jsreftests (bug 1416125). It seems
+            // adding/removing log statements can change its frequency.
+            logger.debug("Reading " + manifests.length + " manifests");
+            manifests = JSON.parse(manifests);
+            g.urlsFilterRegex = manifests[null];
+
+            var globalFilter = manifests.hasOwnProperty("") ? new RegExp(manifests[""]) : null;
+            var manifestURLs = Object.keys(manifests);
+
+            // Ensure we read manifests from higher up the directory tree first so that we
+            // process includes before reading the included manifest again
+            manifestURLs.sort(function(a,b) {return a.length - b.length})
+            manifestURLs.forEach(function(manifestURL) {
+                logger.info("Reading manifest " + manifestURL);
+                var filter = manifests[manifestURL] ? new RegExp(manifests[manifestURL]) : null;
+                ReadTopManifest(manifestURL, [globalFilter, filter, false]);
+            });
+
+            if (dumpTests) {
+                logger.debug("Dumping test objects to file: " + dumpTests);
+                let encoder = new TextEncoder();
+                let tests = encoder.encode(JSON.stringify(g.urls));
+                OS.File.writeAtomic(dumpTests, tests, {flush: true}).then(
+                  function onSuccess() {
+                    DoneTests();
+                  },
+                  function onFailure(reason) {
+                    logger.error("failed to write test data: " + reason);
+                    DoneTests();
+                  }
+                )
+            } else {
+                logger.debug("Running " + g.urls.length + " test objects");
+                g.manageSuite = true;
+                g.urls = g.urls.map(CreateUrls);
+                StartTests();
+            }
+        }
+    } catch(e) {
+        ++g.testResults.Exception;
+        logger.error("EXCEPTION: " + e);
+    }
+}
+
 function StartTests()
 {
-    if (g.focusFilterMode != FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS) {
-        g.browser.removeEventListener("focus", StartTests, true);
-    }
-
-    var manifests;
     /* These prefs are optional, so we don't need to spit an error to the log */
     try {
         var prefs = Components.classes["@mozilla.org/preferences-service;1"].
@@ -388,28 +469,7 @@ function StartTests()
         g.noCanvasCache = true;
     }
 
-    g.urls = [];
-
     try {
-        var manifests = JSON.parse(prefs.getCharPref("reftest.manifests"));
-        g.urlsFilterRegex = manifests[null];
-    } catch(e) {
-        logger.error("Unable to find reftest.manifests pref.  Please ensure your profile is setup properly");
-        DoneTests();
-    }
-
-    try {
-        var globalFilter = manifests.hasOwnProperty("") ? new RegExp(manifests[""]) : null;
-        var manifestURLs = Object.keys(manifests);
-
-        // Ensure we read manifests from higher up the directory tree first so that we
-        // process includes before reading the included manifest again
-        manifestURLs.sort(function(a,b) {return a.length - b.length})
-        manifestURLs.forEach(function(manifestURL) {
-            logger.info("Reading manifest " + manifestURL);
-            var filter = manifests[manifestURL] ? new RegExp(manifests[manifestURL]) : null;
-            ReadTopManifest(manifestURL, [globalFilter, filter, false]);
-        });
         BuildUseCounts();
 
         // Filter tests which will be skipped to get a more even distribution when chunking
@@ -449,7 +509,7 @@ function StartTests()
             g.urls = g.urls.slice(start, end);
         }
 
-        if (g.startAfter === undefined && !g.suiteStarted) {
+        if (g.manageSuite && g.startAfter === undefined && !g.suiteStarted) {
             var ids = g.urls.map(function(obj) {
                 return obj.identifier;
             });
@@ -725,8 +785,12 @@ function StartCurrentURI(aURLTargetType)
 
 function DoneTests()
 {
-    logger.suiteEnd({'results': g.testResults});
-    g.suiteStarted = false
+    if (g.manageSuite) {
+        g.suiteStarted = false
+        logger.suiteEnd({'results': g.testResults});
+    } else {
+        logger._logData('results', {results: g.testResults});
+    }
     logger.info("Slowest test took " + g.slowestTestTime + "ms (" + g.slowestTestURL + ")");
     logger.info("Total canvas count = " + g.recycledCanvases.length);
     if (g.failedUseWidgetLayers) {

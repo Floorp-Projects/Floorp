@@ -43,41 +43,46 @@ add_task(function* () {
   yield testShowAllFonts(inspector, viewDoc);
 });
 
+function isRemote(fontLiEl) {
+  return fontLiEl.querySelectorAll(".font-format-url").length === 1;
+}
+
 function* testBodyFonts(inspector, viewDoc) {
-  let s = viewDoc.querySelectorAll("#all-fonts > section");
-  is(s.length, 5, "Found 5 fonts");
+  let lis = viewDoc.querySelectorAll("#all-fonts > li");
+  is(lis.length, 5, "Found 5 fonts");
 
   for (let i = 0; i < FONTS.length; i++) {
-    let section = s[i];
+    let li = lis[i];
     let font = FONTS[i];
-    is(section.querySelector(".font-name").textContent, font.name,
+    is(li.querySelector(".font-name").textContent, font.name,
        "font " + i + " right font name");
-    is(section.classList.contains("is-remote"), font.remote,
+
+    is(isRemote(li), font.remote,
        "font " + i + " remote value correct");
-    is(section.querySelector(".font-url").value, font.url,
+    is(li.querySelector(".font-url").value, font.url,
        "font " + i + " url correct");
-    is(section.querySelector(".font-format").hidden, !font.format,
+    is(li.querySelector(".font-format").hidden, !font.format,
        "font " + i + " format hidden value correct");
-    is(section.querySelector(".font-format").textContent,
+    is(li.querySelector(".font-format").textContent,
        font.format, "font " + i + " format correct");
-    is(section.querySelector(".font-css-name").textContent,
+    is(li.querySelector(".font-css-name").textContent,
        font.cssName, "font " + i + " css name correct");
   }
 
   // test that the bold and regular fonts have different previews
-  let regSrc = s[0].querySelector(".font-preview").src;
-  let boldSrc = s[1].querySelector(".font-preview").src;
+  let regSrc = lis[0].querySelector(".font-preview").src;
+  let boldSrc = lis[1].querySelector(".font-preview").src;
   isnot(regSrc, boldSrc, "preview for bold font is different from regular");
 
   // test system font
-  let localFontName = s[4].querySelector(".font-name").textContent;
-  let localFontCSSName = s[4].querySelector(".font-css-name").textContent;
+  let localFontName = lis[4].querySelector(".font-name").textContent;
+  let localFontCSSName = lis[4].querySelector(".font-css-name").textContent;
 
   // On Linux test machines, the Arial font doesn't exist.
   // The fallback is "Liberation Sans"
   ok((localFontName == "Arial") || (localFontName == "Liberation Sans"),
      "local font right font name");
-  ok(s[4].classList.contains("is-local"), "local font is local");
+  ok(!isRemote(lis[4]), "local font is local");
   ok((localFontCSSName == "Arial") || (localFontCSSName == "Liberation Sans"),
      "Arial", "local font has right css name");
 }
@@ -87,9 +92,9 @@ function* testDivFonts(inspector, viewDoc) {
   yield selectNode("div", inspector);
   yield updated;
 
-  let sections1 = viewDoc.querySelectorAll("#all-fonts > section");
-  is(sections1.length, 1, "Found 1 font on DIV");
-  is(sections1[0].querySelector(".font-name").textContent,
+  let lis = viewDoc.querySelectorAll("#all-fonts > li");
+  is(lis.length, 1, "Found 1 font on DIV");
+  is(lis[0].querySelector(".font-name").textContent,
      "Ostrich Sans Medium",
      "The DIV font has the right name");
 }
@@ -103,6 +108,6 @@ function* testShowAllFonts(inspector, viewDoc) {
 
   // shouldn't change the node selection
   is(inspector.selection.nodeFront.nodeName, "DIV", "Show all fonts selected");
-  let sections = viewDoc.querySelectorAll("#all-fonts > section");
-  is(sections.length, 6, "Font inspector shows 6 fonts (1 from iframe)");
+  let lis = viewDoc.querySelectorAll("#all-fonts > li");
+  is(lis.length, 6, "Font inspector shows 6 fonts (1 from iframe)");
 }
