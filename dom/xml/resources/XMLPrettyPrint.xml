@@ -8,29 +8,11 @@
 
   <binding id="prettyprint" bindToUntrustedContent="true">
 
-    <content><html:div id='top' class="highlight"/>
+    <content><html:div id="top"/>
       <html:span style="display: none;"><children/></html:span>
     </content>
 
     <handlers>
-      <handler event="click" button="0">
-      <![CDATA[
-        try {
-          var par = event.originalTarget;
-          if (par.nodeName == 'div' && par.className == 'expander') {
-            if (par.parentNode.className == 'expander-closed') {
-              par.parentNode.className = 'expander-open';
-              event.originalTarget.firstChild.data = '\u2212';
-            }
-            else {
-              par.parentNode.className = 'expander-closed';
-              event.originalTarget.firstChild.data = '+';
-            }
-          }
-        } catch (e) {
-        }
-      ]]>
-      </handler>
       <handler event="prettyprint-dom-created" allowuntrusted="false">
         <![CDATA[
           document.getAnonymousNodes(this).item(0).appendChild(event.detail);
