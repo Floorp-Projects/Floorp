@@ -539,7 +539,6 @@ WebRenderAPI::Capture()
   const char* border = "--------------------------\n";
   printf("%s Capturing WR state to: %s\n%s", border, path, border);
   wr_api_capture(mDocHandle, path, bits);
-  RenderThread::Get()->IncPendingFrameCount(GetId());
 }
 
 

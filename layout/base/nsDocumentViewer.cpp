@@ -3946,9 +3946,8 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
                                nsIWebProgressListener* aWebProgressListener)
 {
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
-  NS_WARNING_ASSERTION(
-    IsInitializedForPrintPreview(),
-    "Using docshell.printPreview is the preferred way for print previewing!");
+  MOZ_ASSERT(IsInitializedForPrintPreview(),
+    "For print preview nsIWebBrowserPrint must be from docshell.printPreview!");
 
   NS_ENSURE_ARG_POINTER(aChildDOMWin);
   nsresult rv = NS_OK;

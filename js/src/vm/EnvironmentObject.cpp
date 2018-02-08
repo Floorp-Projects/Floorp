@@ -2715,7 +2715,8 @@ DebugEnvironments::takeFrameSnapshot(JSContext* cx, Handle<DebugEnvironmentProxy
      */
     RootedArrayObject snapshot(cx, NewDenseCopiedArray(cx, vec.length(), vec.begin()));
     if (!snapshot) {
-        cx->recoverFromOutOfMemory();
+        MOZ_ASSERT(cx->isThrowingOutOfMemory() || cx->isThrowingOverRecursed());
+        cx->clearPendingException();
         return;
     }
 

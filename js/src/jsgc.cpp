@@ -1324,24 +1324,21 @@ GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value, const AutoL
         double newGrowth = value / 100.0;
         if (newGrowth <= 0.85 || newGrowth > MaxHeapGrowthFactor)
             return false;
-        highFrequencyHeapGrowthMax_ = newGrowth;
-        MOZ_ASSERT(highFrequencyHeapGrowthMax_ / 0.85 > 1.0);
+        setHighFrequencyHeapGrowthMax(newGrowth);
         break;
       }
       case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN: {
         double newGrowth = value / 100.0;
         if (newGrowth <= 0.85 || newGrowth > MaxHeapGrowthFactor)
             return false;
-        highFrequencyHeapGrowthMin_ = newGrowth;
-        MOZ_ASSERT(highFrequencyHeapGrowthMin_ / 0.85 > 1.0);
+        setHighFrequencyHeapGrowthMin(newGrowth);
         break;
       }
       case JSGC_LOW_FREQUENCY_HEAP_GROWTH: {
         double newGrowth = value / 100.0;
         if (newGrowth <= 0.9 || newGrowth > MaxHeapGrowthFactor)
             return false;
-        lowFrequencyHeapGrowth_ = newGrowth;
-        MOZ_ASSERT(lowFrequencyHeapGrowth_ / 0.9 > 1.0);
+        setLowFrequencyHeapGrowth(newGrowth);
         break;
       }
       case JSGC_DYNAMIC_HEAP_GROWTH:
@@ -1402,6 +1399,33 @@ GCSchedulingTunables::setHighFrequencyHighLimit(uint64_t newLimit)
     if (highFrequencyHighLimitBytes_ <= highFrequencyLowLimitBytes_)
         highFrequencyLowLimitBytes_ = highFrequencyHighLimitBytes_ - 1;
     MOZ_ASSERT(highFrequencyHighLimitBytes_ > highFrequencyLowLimitBytes_);
+}
+
+void
+GCSchedulingTunables::setHighFrequencyHeapGrowthMin(double value)
+{
+    highFrequencyHeapGrowthMin_ = value;
+    if (highFrequencyHeapGrowthMin_ > highFrequencyHeapGrowthMax_)
+        highFrequencyHeapGrowthMax_ = highFrequencyHeapGrowthMin_;
+    MOZ_ASSERT(highFrequencyHeapGrowthMin_ / 0.85 > 1.0);
+    MOZ_ASSERT(highFrequencyHeapGrowthMin_ <= highFrequencyHeapGrowthMax_);
+}
+
+void
+GCSchedulingTunables::setHighFrequencyHeapGrowthMax(double value)
+{
+    highFrequencyHeapGrowthMax_ = value;
+    if (highFrequencyHeapGrowthMax_ < highFrequencyHeapGrowthMin_)
+        highFrequencyHeapGrowthMin_ = highFrequencyHeapGrowthMax_;
+    MOZ_ASSERT(highFrequencyHeapGrowthMax_ / 0.85 > 1.0);
+    MOZ_ASSERT(highFrequencyHeapGrowthMin_ <= highFrequencyHeapGrowthMax_);
+}
+
+void
+GCSchedulingTunables::setLowFrequencyHeapGrowth(double value)
+{
+    lowFrequencyHeapGrowth_ = value;
+    MOZ_ASSERT(lowFrequencyHeapGrowth_ / 0.9 > 1.0);
 }
 
 void
@@ -1491,18 +1515,13 @@ GCSchedulingTunables::resetParameter(JSGCParamKey key, const AutoLockGC& lock)
         setHighFrequencyHighLimit(TuningDefaults::HighFrequencyHighLimitBytes);
         break;
       case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX:
-        highFrequencyHeapGrowthMax_ =
-            TuningDefaults::HighFrequencyHeapGrowthMax;
-        MOZ_ASSERT(highFrequencyHeapGrowthMax_ / 0.85 > 1.0);
+        setHighFrequencyHeapGrowthMax(TuningDefaults::HighFrequencyHeapGrowthMax);
         break;
       case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN:
-        highFrequencyHeapGrowthMin_ =
-            TuningDefaults::HighFrequencyHeapGrowthMin;
-        MOZ_ASSERT(highFrequencyHeapGrowthMin_ / 0.85 > 1.0);
+        setHighFrequencyHeapGrowthMin(TuningDefaults::HighFrequencyHeapGrowthMin);
         break;
       case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
-        lowFrequencyHeapGrowth_ = TuningDefaults::LowFrequencyHeapGrowth;
-        MOZ_ASSERT(lowFrequencyHeapGrowth_ / 0.9 > 1.0);
+        setLowFrequencyHeapGrowth(TuningDefaults::LowFrequencyHeapGrowth);
         break;
       case JSGC_DYNAMIC_HEAP_GROWTH:
         dynamicHeapGrowthEnabled_ = TuningDefaults::DynamicHeapGrowthEnabled;
@@ -1838,11 +1857,13 @@ ZoneHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(size_t lastBytes,
     //   lastBytes > highFrequencyHighLimit: 150%
     //   otherwise: linear interpolation between 300% and 150% based on lastBytes
 
-    // Use shorter names to make the operation comprehensible.
     double minRatio = tunables.highFrequencyHeapGrowthMin();
     double maxRatio = tunables.highFrequencyHeapGrowthMax();
     double lowLimit = tunables.highFrequencyLowLimitBytes();
     double highLimit = tunables.highFrequencyHighLimitBytes();
+
+    MOZ_ASSERT(minRatio <= maxRatio);
+    MOZ_ASSERT(lowLimit < highLimit);
 
     if (lastBytes <= lowLimit)
         return maxRatio;
@@ -1852,6 +1873,7 @@ ZoneHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(size_t lastBytes,
 
     double factor = maxRatio - ((maxRatio - minRatio) * ((lastBytes - lowLimit) /
                                                          (highLimit - lowLimit)));
+
     MOZ_ASSERT(factor >= minRatio);
     MOZ_ASSERT(factor <= maxRatio);
     return factor;
