@@ -1367,17 +1367,35 @@ MacroAssembler::compareStrings(JSOp op, Register left, Register right, Register 
 }
 
 void
-MacroAssembler::loadStringChars(Register str, Register dest)
+MacroAssembler::loadStringChars(Register str, Register dest, CharEncoding encoding)
 {
     MOZ_ASSERT(str != dest);
 
-    // First, if the string is a rope, zero the |str| register. The code below
-    // depends on str->flags so this should block speculative execution.
     if (JitOptions.spectreStringMitigations) {
-        movePtr(ImmWord(0), dest);
-        test32MovePtr(Assembler::Zero,
-                      Address(str, JSString::offsetOfFlags()), Imm32(JSString::LINEAR_BIT),
-                      dest, str);
+        if (encoding == CharEncoding::Latin1) {
+            // If the string is a rope, zero the |str| register. The code below
+            // depends on str->flags so this should block speculative execution.
+            movePtr(ImmWord(0), dest);
+            test32MovePtr(Assembler::Zero,
+                          Address(str, JSString::offsetOfFlags()), Imm32(JSString::LINEAR_BIT),
+                          dest, str);
+        } else {
+            // If we're loading TwoByte chars, there's an additional risk:
+            // if the string has Latin1 chars, we could read out-of-bounds. To
+            // prevent this, we check both the Linear and Latin1 bits. We don't
+            // have a scratch register, so we use these flags also to block
+            // speculative execution, similar to the use of 0 above.
+            MOZ_ASSERT(encoding == CharEncoding::TwoByte);
+            static constexpr uint32_t Mask = JSString::LINEAR_BIT | JSString::LATIN1_CHARS_BIT;
+            static_assert(Mask < 1024,
+                          "Mask should be a small, near-null value to ensure we "
+                          "block speculative execution when it's used as string "
+                          "pointer");
+            move32(Imm32(Mask), dest);
+            and32(Address(str, JSString::offsetOfFlags()), dest);
+            cmp32MovePtr(Assembler::NotEqual, dest, Imm32(JSString::LINEAR_BIT),
+                         dest, str);
+        }
     }
 
     // Load the inline chars.
@@ -1391,27 +1409,36 @@ MacroAssembler::loadStringChars(Register str, Register dest)
 }
 
 void
-MacroAssembler::loadNonInlineStringChars(Register str, Register dest)
+MacroAssembler::loadNonInlineStringChars(Register str, Register dest, CharEncoding encoding)
 {
     MOZ_ASSERT(str != dest);
 
     if (JitOptions.spectreStringMitigations) {
-        movePtr(ImmWord(0), dest);
+        // If the string is a rope, has inline chars, or has a different
+        // character encoding, set str to a near-null value to prevent
+        // speculative execution below (when reading str->nonInlineChars).
 
-        // First, if the string is a rope, zero the |str| register. The code
-        // below depends on str->flags so this should block speculative
-        // execution.
-        test32MovePtr(Assembler::Zero,
-                      Address(str, JSString::offsetOfFlags()), Imm32(JSString::LINEAR_BIT),
-                      dest, str);
+        static constexpr uint32_t Mask =
+            JSString::LINEAR_BIT |
+            JSString::INLINE_CHARS_BIT |
+            JSString::LATIN1_CHARS_BIT;
+        static_assert(Mask < 1024,
+                      "Mask should be a small, near-null value to ensure we "
+                      "block speculative execution when it's used as string "
+                      "pointer");
 
-        // Load non-inline chars if the inline-chars bit is not set.
-        test32LoadPtr(Assembler::Zero,
-                      Address(str, JSString::offsetOfFlags()), Imm32(JSString::INLINE_CHARS_BIT),
-                      Address(str, JSString::offsetOfNonInlineChars()), dest);
-    } else {
-        loadPtr(Address(str, JSString::offsetOfNonInlineChars()), dest);
+        uint32_t expectedBits = JSString::LINEAR_BIT;
+        if (encoding == CharEncoding::Latin1)
+            expectedBits |= JSString::LATIN1_CHARS_BIT;
+
+        move32(Imm32(Mask), dest);
+        and32(Address(str, JSString::offsetOfFlags()), dest);
+
+        cmp32MovePtr(Assembler::NotEqual, dest, Imm32(expectedBits),
+                     dest, str);
     }
+
+    loadPtr(Address(str, JSString::offsetOfNonInlineChars()), dest);
 }
 
 void
@@ -1428,7 +1455,7 @@ MacroAssembler::loadInlineStringCharsForStore(Register str, Register dest)
 }
 
 void
-MacroAssembler::loadInlineStringChars(Register str, Register dest)
+MacroAssembler::loadInlineStringChars(Register str, Register dest, CharEncoding encoding)
 {
     MOZ_ASSERT(str != dest);
 
@@ -1438,7 +1465,7 @@ MacroAssembler::loadInlineStringChars(Register str, Register dest)
         // non-inline is not sufficient: when the index is very large, it would
         // allow reading |nullptr + index|. Just fall back to loadStringChars
         // for now.
-        loadStringChars(str, dest);
+        loadStringChars(str, dest, encoding);
     } else {
         computeEffectiveAddress(Address(str, JSInlineString::offsetOfInlineStorage()), dest);
     }
@@ -1517,16 +1544,16 @@ MacroAssembler::loadStringChar(Register str, Register index, Register output, Re
 
     bind(&notRope);
 
-    loadStringChars(output, scratch);
-
     Label isLatin1, done;
     // We have to check the left/right side for ropes,
     // because a TwoByte rope might have a Latin1 child.
     branchLatin1String(output, &isLatin1);
+    loadStringChars(output, scratch, CharEncoding::TwoByte);
     load16ZeroExtend(BaseIndex(scratch, index, TimesTwo), output);
     jump(&done);
 
     bind(&isLatin1);
+    loadStringChars(output, scratch, CharEncoding::Latin1);
     load8ZeroExtend(BaseIndex(scratch, index, TimesOne), output);
 
     bind(&done);
