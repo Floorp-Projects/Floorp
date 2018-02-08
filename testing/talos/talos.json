@@ -65,6 +65,9 @@
             "talos_options": ["--geckoProfile"],
             "pagesets_name": "tp5n.zip"
         },
+        "motionmark-e10s": {
+            "tests": ["motionmark_animometer", "motionmark_htmlsuite"]
+        },
         "svgr-e10s": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "tsvg_static"]
         },
