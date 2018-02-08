@@ -539,12 +539,15 @@ static void
 CopyPlane(uint8_t *aDst, const uint8_t *aSrc,
           const gfx::IntSize &aSize, int32_t aStride, int32_t aSkip)
 {
+  int32_t height = aSize.height;
+  int32_t width = aSize.width;
+
+  MOZ_RELEASE_ASSERT(width <= aStride);
+
   if (!aSkip) {
     // Fast path: planar input.
-    memcpy(aDst, aSrc, aSize.height * aStride);
+    memcpy(aDst, aSrc, height * aStride);
   } else {
-    int32_t height = aSize.height;
-    int32_t width = aSize.width;
     for (int y = 0; y < height; ++y) {
       const uint8_t *src = aSrc;
       uint8_t *dst = aDst;
@@ -562,13 +565,11 @@ CopyPlane(uint8_t *aDst, const uint8_t *aSrc,
 bool
 RecyclingPlanarYCbCrImage::CopyData(const Data& aData)
 {
-  mData = aData;
-
   // update buffer size
   // Use uint32_t throughout to match AllocateBuffer's param and mBufferSize
   const auto checkedSize =
-    CheckedInt<uint32_t>(mData.mCbCrStride) * mData.mCbCrSize.height * 2 +
-    CheckedInt<uint32_t>(mData.mYStride) * mData.mYSize.height;
+    CheckedInt<uint32_t>(aData.mCbCrStride) * aData.mCbCrSize.height * 2 +
+    CheckedInt<uint32_t>(aData.mYStride) * aData.mYSize.height;
 
   if (!checkedSize.isValid())
     return false;
@@ -583,16 +584,18 @@ RecyclingPlanarYCbCrImage::CopyData(const Data& aData)
   // update buffer size
   mBufferSize = size;
 
+  mData = aData;
   mData.mYChannel = mBuffer.get();
   mData.mCbChannel = mData.mYChannel + mData.mYStride * mData.mYSize.height;
   mData.mCrChannel = mData.mCbChannel + mData.mCbCrStride * mData.mCbCrSize.height;
+  mData.mYSkip = mData.mCbSkip = mData.mCrSkip = 0;
 
   CopyPlane(mData.mYChannel, aData.mYChannel,
-            mData.mYSize, mData.mYStride, mData.mYSkip);
+            aData.mYSize, aData.mYStride, aData.mYSkip);
   CopyPlane(mData.mCbChannel, aData.mCbChannel,
-            mData.mCbCrSize, mData.mCbCrStride, mData.mCbSkip);
+            aData.mCbCrSize, aData.mCbCrStride, aData.mCbSkip);
   CopyPlane(mData.mCrChannel, aData.mCrChannel,
-            mData.mCbCrSize, mData.mCbCrStride, mData.mCrSkip);
+            aData.mCbCrSize, aData.mCbCrStride, aData.mCrSkip);
 
   mSize = aData.mPicSize;
   mOrigin = gfx::IntPoint(aData.mPicX, aData.mPicY);
