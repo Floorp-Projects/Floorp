@@ -205,9 +205,9 @@ public:
     bool mHeightDependsOnAncestorCell : 1;     // Does frame height depend on
                                                // an ancestor table-cell?
     bool mIsColumnBalancing : 1;     // nsColumnSetFrame is balancing columns
-    bool mIsFlexContainerMeasuringHeight : 1;   // nsFlexContainerFrame is
-                                                // reflowing this child to
-                                                // measure its intrinsic height.
+    bool mIsFlexContainerMeasuringBSize : 1;   // nsFlexContainerFrame is
+                                               // reflowing this child to
+                                               // measure its intrinsic BSize.
     bool mDummyParentReflowInput : 1;   // a "fake" reflow state made
                                         // in order to be the parent
                                         // of a real one
