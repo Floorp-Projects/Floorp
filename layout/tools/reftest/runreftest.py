@@ -6,7 +6,6 @@
 Runs the reftest test harness.
 """
 
-import collections
 import copy
 import json
 import multiprocessing
@@ -19,6 +18,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+from collections import defaultdict
 from datetime import datetime, timedelta
 
 SCRIPT_DIRECTORY = os.path.abspath(
@@ -227,17 +227,21 @@ class ReftestResolver(object):
 
 class RefTest(object):
     oldcwd = os.getcwd()
-    parse_manifest = True
     resolver_cls = ReftestResolver
     use_marionette = True
 
-    def __init__(self):
+    def __init__(self, suite):
         update_mozinfo()
         self.lastTestSeen = None
         self.haveDumpedScreen = False
         self.resolver = self.resolver_cls()
         self.log = None
+        self.outputHandler = None
         self.testDumpFile = os.path.join(tempfile.gettempdir(), 'reftests.json')
+
+        self.run_by_manifest = True
+        if suite in ('crashtest', 'jstestbrowser'):
+            self.run_by_manifest = False
 
     def _populate_logger(self, options):
         if self.log:
@@ -306,6 +310,12 @@ class RefTest(object):
             prefs['browser.tabs.remote.autostart'] = True
         else:
             prefs['browser.tabs.remote.autostart'] = False
+
+        if not self.run_by_manifest:
+            if options.totalChunks:
+                prefs['reftest.totalChunks'] = options.totalChunks
+            if options.thisChunk:
+                prefs['reftest.thisChunk'] = options.thisChunk
 
         # Bug 1262954: For winXP + e10s disable acceleration
         if platform.system() in ("Windows", "Microsoft") and \
@@ -523,6 +533,7 @@ class RefTest(object):
     def runTests(self, tests, options, cmdargs=None):
         cmdargs = cmdargs or []
         self._populate_logger(options)
+        self.outputHandler = OutputHandler(self.log, options.utilityPath, options.symbolsPath)
 
         if options.cleanupCrashes:
             mozcrash.cleanup_pending_crash_reports()
@@ -594,7 +605,7 @@ class RefTest(object):
         focusThread.join()
 
         # Output the summaries that the ReftestThread filters suppressed.
-        summaryObjects = [collections.defaultdict(int) for s in summaryLines]
+        summaryObjects = [defaultdict(int) for s in summaryLines]
         for t in threads:
             for (summaryObj, (text, categories)) in zip(summaryObjects, summaryLines):
                 threadMatches = t.summaryMatches[text]
@@ -668,6 +679,7 @@ class RefTest(object):
 
         if cmdargs is None:
             cmdargs = []
+        cmdargs = cmdargs[:]
 
         if self.use_marionette:
             cmdargs.append('-marionette')
@@ -700,19 +712,17 @@ class RefTest(object):
 
         self.log.add_handler(record_last_test)
 
-        outputHandler = OutputHandler(self.log, options.utilityPath, symbolsPath=symbolsPath)
-
         kp_kwargs = {
             'kill_on_timeout': False,
             'cwd': SCRIPT_DIRECTORY,
             'onTimeout': [timeoutHandler],
-            'processOutputLine': [outputHandler],
+            'processOutputLine': [self.outputHandler],
         }
 
         if mozinfo.isWin:
             # Prevents log interleaving on Windows at the expense of losing
             # true log order. See bug 798300 and bug 1324961 for more details.
-            kp_kwargs['processStderrLine'] = [outputHandler]
+            kp_kwargs['processStderrLine'] = [self.outputHandler]
 
         if interactive:
             # If an interactive debugger is attached,
@@ -732,7 +742,7 @@ class RefTest(object):
                      interactive=interactive,
                      outputTimeout=timeout)
         proc = runner.process_handler
-        outputHandler.proc_name = 'GECKO({})'.format(proc.pid)
+        self.outputHandler.proc_name = 'GECKO({})'.format(proc.pid)
 
         # Used to defer a possible IOError exception from Marionette
         marionette_exception = None
@@ -769,7 +779,7 @@ class RefTest(object):
 
         status = runner.wait()
         runner.process_handler = None
-        outputHandler.proc_name = None
+        self.outputHandler.proc_name = None
 
         if status:
             msg = "TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s" % \
@@ -778,7 +788,7 @@ class RefTest(object):
             self.log.process_output(None, msg)
 
         crashed = mozcrash.log_crashes(self.log, os.path.join(profile.profile, 'minidumps'),
-                                       symbolsPath, test=self.lastTestSeen)
+                                       options.symbolsPath, test=self.lastTestSeen)
         if not status and crashed:
             status = 1
 
@@ -790,7 +800,7 @@ class RefTest(object):
             raise exc, value, tb
 
         self.log.info("Process mode: {}".format('e10s' if options.e10s else 'non-e10s'))
-        return status, outputHandler.results
+        return status
 
     def getActiveTests(self, manifests, options, testDumpFile=None):
         # These prefs will cause reftest.jsm to parse the manifests,
@@ -799,8 +809,8 @@ class RefTest(object):
             'reftest.manifests': json.dumps(manifests),
             'reftest.manifests.dumpTests': testDumpFile or self.testDumpFile,
         }
-        cmdargs = []  # ['-headless']
-        status, _ = self.runApp(options, cmdargs=cmdargs, prefs=prefs)
+        cmdargs = []
+        self.runApp(options, cmdargs=cmdargs, prefs=prefs)
 
         with open(self.testDumpFile, 'r') as fh:
             tests = json.load(fh)
@@ -828,40 +838,51 @@ class RefTest(object):
             debuggerInfo = mozdebug.get_debugger_info(options.debugger, options.debuggerArgs,
                                                       options.debuggerInteractive)
 
-        tests = None
-        if self.parse_manifest:
-            tests = self.getActiveTests(manifests, options)
+        def run(**kwargs):
+            status = self.runApp(
+                options,
+                manifests=manifests,
+                cmdargs=cmdargs,
+                # We generally want the JS harness or marionette
+                # to handle timeouts if they can.
+                # The default JS harness timeout is currently
+                # 300 seconds (default options.timeout).
+                # The default Marionette socket timeout is
+                # currently 360 seconds.
+                # Give the JS harness extra time to deal with
+                # its own timeouts and try to usually exceed
+                # the 360 second marionette socket timeout.
+                # See bug 479518 and bug 1414063.
+                timeout=options.timeout + 70.0,
+                debuggerInfo=debuggerInfo,
+                **kwargs)
 
-            ids = [t['identifier'] for t in tests]
-            self.log.suite_start(ids, name=options.suite)
+            mozleak.process_leak_log(self.leakLogFile,
+                                     leak_thresholds=options.leakThresholds,
+                                     stack_fixer=get_stack_fixer_function(options.utilityPath,
+                                                                          options.symbolsPath))
+            return status
 
-        status, results = self.runApp(
-            options,
-            tests=tests,
-            manifests=manifests,
-            cmdargs=cmdargs,
-            # We generally want the JS harness or marionette
-            # to handle timeouts if they can.
-            # The default JS harness timeout is currently
-            # 300 seconds (default options.timeout).
-            # The default Marionette socket timeout is
-            # currently 360 seconds.
-            # Give the JS harness extra time to deal with
-            # its own timeouts and try to usually exceed
-            # the 360 second marionette socket timeout.
-            # See bug 479518 and bug 1414063.
-            timeout=options.timeout + 70.0,
-            symbolsPath=options.symbolsPath,
-            debuggerInfo=debuggerInfo
-        )
-        mozleak.process_leak_log(self.leakLogFile,
-                                 leak_thresholds=options.leakThresholds,
-                                 stack_fixer=get_stack_fixer_function(options.utilityPath,
-                                                                      options.symbolsPath))
+        if not self.run_by_manifest:
+            return run()
 
-        if self.parse_manifest:
-            self.log.suite_end(extra={'results': results})
-        return status
+        tests = self.getActiveTests(manifests, options)
+        tests_by_manifest = defaultdict(list)
+        ids_by_manifest = defaultdict(list)
+        for t in tests:
+            tests_by_manifest[t['manifest']].append(t)
+            ids_by_manifest[t['manifest']].append(t['identifier'])
+
+        self.log.suite_start(ids_by_manifest, name=options.suite)
+
+        overall = 0
+        for manifest, tests in tests_by_manifest.items():
+            self.log.info("Running tests in {}".format(manifest))
+            status = run(tests=tests)
+            overall = overall or status
+
+        self.log.suite_end(extra={'results': self.outputHandler.results})
+        return overall
 
     def copyExtraFilesToProfile(self, options, profile):
         "Copy extra files or dirs specified on the command line to the testing profile."
@@ -889,7 +910,7 @@ class RefTest(object):
 
 
 def run_test_harness(parser, options):
-    reftest = RefTest()
+    reftest = RefTest(options.suite)
     parser.validate(options, reftest)
 
     # We have to validate options.app here for the case when the mach
