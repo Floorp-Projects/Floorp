@@ -454,6 +454,7 @@ struct CppNotifier {
 unsafe impl Send for CppNotifier {}
 
 extern "C" {
+    fn wr_notifier_wake_up(window_id: WrWindowId);
     fn wr_notifier_new_frame_ready(window_id: WrWindowId);
     fn wr_notifier_new_scroll_frame_ready(window_id: WrWindowId,
                                           composite_needed: bool);
@@ -470,7 +471,7 @@ impl RenderNotifier for CppNotifier {
 
     fn wake_up(&self) {
         unsafe {
-            wr_notifier_new_frame_ready(self.window_id);
+            wr_notifier_wake_up(self.window_id);
         }
     }
 
