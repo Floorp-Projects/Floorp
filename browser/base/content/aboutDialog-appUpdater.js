@@ -137,9 +137,8 @@ appUpdater.prototype =
 
   // true when updating is disabled by an administrator.
   get updateDisabledAndLocked() {
-    return (!this.updateEnabled &&
-           Services.prefs.prefIsLocked("app.update.enabled")) ||
-           !Services.policies.isAllowed("appUpdate");
+    return !this.updateEnabled &&
+           Services.prefs.prefIsLocked("app.update.enabled");
   },
 
   // true when updating is enabled.

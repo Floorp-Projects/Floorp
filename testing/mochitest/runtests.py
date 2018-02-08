@@ -1841,10 +1841,6 @@ toolbar#nav-bar {
         # failing connection attempts, and hangs (bug 1397201)
         options.extraPrefs.append("marionette.log.level=%s" % "TRACE")
 
-        options.extraPrefs.append(
-            "mochitest.testRoot=%s" %
-            self.testRootAbs)
-
         # get extensions to install
         extensions = self.getExtensionsToInstall(options)
 
