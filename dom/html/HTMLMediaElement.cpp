@@ -24,7 +24,6 @@
 #include "TimeRanges.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
-#include "nsDocShellLoadTypes.h"
 #include "nsPresContext.h"
 #include "nsIClassOfService.h"
 #include "nsIPresShell.h"
@@ -3818,7 +3817,7 @@ HTMLMediaElement::AddMediaElementToURITable()
 }
 
 void
-HTMLMediaElement::RemoveMediaElementFromURITable(bool aFroceClearEntry)
+HTMLMediaElement::RemoveMediaElementFromURITable()
 {
   if (!mDecoder || !mLoadingSrc || !gElementTable) {
     return;
@@ -3827,17 +3826,13 @@ HTMLMediaElement::RemoveMediaElementFromURITable(bool aFroceClearEntry)
   if (!entry) {
     return;
   }
-  if (aFroceClearEntry) {
+  entry->mElements.RemoveElement(this);
+  if (entry->mElements.IsEmpty()) {
     gElementTable->RemoveEntry(entry);
-  } else {
-    entry->mElements.RemoveElement(this);
-    if (entry->mElements.IsEmpty()) {
-      gElementTable->RemoveEntry(entry);
+    if (gElementTable->Count() == 0) {
+      delete gElementTable;
+      gElementTable = nullptr;
     }
-  }
-  if (gElementTable->Count() == 0) {
-    delete gElementTable;
-    gElementTable = nullptr;
   }
   NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 0,
     "After remove, should no longer have an entry in element table");
@@ -3929,106 +3924,6 @@ private:
 
 NS_IMPL_ISUPPORTS(HTMLMediaElement::ShutdownObserver, nsIObserver)
 
-class HTMLMediaElement::ForceReloadListener : public nsIWebProgressListener
-                                            , public nsSupportsWeakReference
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  void Subscribe(HTMLMediaElement* aPtr, nsIWebProgress* aWebProgress)
-  {
-    MOZ_DIAGNOSTIC_ASSERT(!mWeak);
-    MOZ_DIAGNOSTIC_ASSERT(aWebProgress);
-    mWeak = aPtr;
-    aWebProgress->AddProgressListener(this,
-                                      nsIWebProgress::NOTIFY_STATE_NETWORK);
-  }
-  void Unsubscribe(nsIWebProgress* aWebProgress)
-  {
-    MOZ_DIAGNOSTIC_ASSERT(mWeak);
-    mWeak = nullptr;
-    if (aWebProgress) {
-      aWebProgress->RemoveProgressListener(this);
-    }
-  }
-
-  NS_IMETHODIMP OnStateChange(nsIWebProgress* aWebProgress,
-                              nsIRequest* aRequest,
-                              uint32_t aProgressStateFlags,
-                              nsresult aStatus) override
-  {
-    MOZ_DIAGNOSTIC_ASSERT(mWeak);
-    if ((aProgressStateFlags & STATE_IS_NETWORK) &&
-        (aProgressStateFlags & STATE_START)) {
-      // Query the LoadType to see if it's a ctrl+F5.
-      nsCOMPtr<nsIDocShell> shell(do_QueryInterface(aWebProgress));
-      if (shell) {
-        uint32_t loadType;
-        shell->GetLoadType(&loadType);
-        if (LOAD_RELOAD_BYPASS_PROXY_AND_CACHE == loadType && mWeak->mDecoder) {
-          mWeak->RemoveMediaElementFromURITable(true);
-          mWeak->ShutdownDecoder();
-        }
-      }
-    }
-    return NS_OK;
-  }
-
-  NS_IMETHODIMP
-  OnProgressChange(nsIWebProgress* aProgress,
-                   nsIRequest* aRequest,
-                   int32_t aCurSelfProgress,
-                   int32_t aMaxSelfProgress,
-                   int32_t aCurTotalProgress,
-                   int32_t aMaxTotalProgress) override
-  {
-    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-    return NS_OK;
-  }
-
-  NS_IMETHODIMP
-  OnLocationChange(nsIWebProgress* aWebProgress,
-                   nsIRequest* aRequest,
-                   nsIURI* aLocation,
-                   uint32_t aFlags) override
-  {
-    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-    return NS_OK;
-  }
-
-  NS_IMETHODIMP
-  OnStatusChange(nsIWebProgress* aWebProgress,
-                 nsIRequest* aRequest,
-                 nsresult aStatus,
-                 const char16_t* aMessage) override
-  {
-    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-    return NS_OK;
-  }
-
-  NS_IMETHODIMP
-  OnSecurityChange(nsIWebProgress* aWebProgress,
-                   nsIRequest* aRequest,
-                   uint32_t aState) override
-  {
-    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-    return NS_OK;
-  }
-
-protected:
-  virtual ~ForceReloadListener()
-  {
-    MOZ_DIAGNOSTIC_ASSERT(!mWeak);
-  }
-
-private:
-  HTMLMediaElement* mWeak = nullptr;
-};
-
-NS_IMPL_ISUPPORTS(HTMLMediaElement::ForceReloadListener,
-                  nsIWebProgressListener,
-                  nsISupportsWeakReference)
-
 HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mMainThreadEventTarget(OwnerDoc()->EventTargetFor(TaskCategory::Other)),
@@ -4103,33 +3998,14 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
   NotifyOwnerDocumentActivityChanged();
 
   mShutdownObserver->Subscribe(this);
-  nsIDocShell* docShell = OwnerDoc()->GetDocShell();
-  if (docShell) {
-    nsCOMPtr<nsIDocShellTreeItem> root;
-    docShell->GetSameTypeRootTreeItem(getter_AddRefs(root));
-    nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(root);
-    if (webProgress) {
-      mForceReloadListener = new ForceReloadListener();
-      mForceReloadListener->Subscribe(this, webProgress);
-    }
-  }
 }
 
 HTMLMediaElement::~HTMLMediaElement()
 {
   NS_ASSERTION(!mHasSelfReference,
                "How can we be destroyed if we're still holding a self reference?");
+
   mShutdownObserver->Unsubscribe();
-  nsIDocShell* docShell = OwnerDoc()->GetDocShell();
-  nsCOMPtr<nsIWebProgress> webProgress;
-  if (docShell) {
-    nsCOMPtr<nsIDocShellTreeItem> root;
-    docShell->GetSameTypeRootTreeItem(getter_AddRefs(root));
-    webProgress = do_GetInterface(root);
-  }
-  if (mForceReloadListener) {
-    mForceReloadListener->Unsubscribe(webProgress);
-  }
 
   if (mVideoFrameContainer) {
     mVideoFrameContainer->ForgetElement();
