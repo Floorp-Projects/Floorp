@@ -3626,6 +3626,9 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
       break;
     case nsMediaFeature::eIdent:
       rv = ParseSingleTokenVariant(expr->mValue, VARIANT_IDENTIFIER, nullptr);
+      if (rv) {
+        expr->mValue.AtomizeIdentValue();
+      }
       break;
   }
   if (!rv || !ExpectSymbol(')', true)) {
