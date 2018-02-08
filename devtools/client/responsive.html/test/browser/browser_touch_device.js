@@ -23,6 +23,8 @@ const testDevice = {
 addDeviceForTest(testDevice);
 
 addRDMTask(TEST_URL, async function ({ ui, manager }) {
+  reloadOnTouchChange(true);
+
   await waitStartup(ui);
 
   await testDefaults(ui);
@@ -31,6 +33,8 @@ addRDMTask(TEST_URL, async function ({ ui, manager }) {
   await testEnableTouchSimulation(ui);
   await testResizingViewport(ui, false, true);
   await testDisableTouchSimulation(ui);
+
+  reloadOnTouchChange(false);
 });
 
 async function waitStartup(ui) {
