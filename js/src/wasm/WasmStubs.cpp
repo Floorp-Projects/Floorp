@@ -483,7 +483,8 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
     Label oolCall;
     for (size_t i = 0; i < fe.sig().args().length(); i++) {
         unsigned jitArgOffset = frameSize + JitFrameLayout::offsetOfActualArg(i);
-        masm.loadValue(Address(sp, jitArgOffset), scratchV);
+        Address jitArgAddr(sp, jitArgOffset);
+        masm.loadValue(jitArgAddr, scratchV);
 
         Label next;
         switch (fe.sig().args()[i]) {
@@ -506,8 +507,8 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
             masm.branchTestUndefined(Assembler::Equal, tag, &nullOrUndefined);
             masm.branchTestNull(Assembler::NotEqual, tag, &notNullOrUndefined);
             masm.bind(&nullOrUndefined);
-            masm.mov(ImmWord(0), scratchG);
-            masm.jump(&storeBack);
+            masm.storeValue(Int32Value(0), jitArgAddr);
+            masm.jump(&next);
             masm.bind(&notNullOrUndefined);
 
             // For booleans, store the number value back. Other types (symbol,
@@ -517,8 +518,7 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
             // fallthrough:
 
             masm.bind(&storeBack);
-            masm.boxNonDouble(JSVAL_TYPE_INT32, scratchG, scratchV);
-            masm.storeValue(scratchV, Address(sp, jitArgOffset));
+            masm.storeValue(JSVAL_TYPE_INT32, scratchG, jitArgAddr);
             break;
           }
           case ValType::F32:
@@ -528,7 +528,7 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
             // second loop.
             Register tag = masm.splitTagForTest(scratchV);
 
-            // For double inputs, just skip (to next or coercion).
+            // For double inputs, just skip.
             masm.branchTestDouble(Assembler::Equal, tag, &next);
 
             // For int32 inputs, convert and rebox.
@@ -541,15 +541,15 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
             // For undefined (missing argument), store NaN.
             Label notUndefined;
             masm.branchTestUndefined(Assembler::NotEqual, tag, &notUndefined);
-            masm.loadConstantDouble(JS::GenericNaN(), scratchF);
-            masm.jump(&storeBack);
+            masm.storeValue(DoubleValue(JS::GenericNaN()), jitArgAddr);
+            masm.jump(&next);
             masm.bind(&notUndefined);
 
             // +null is 0.
             Label notNull;
             masm.branchTestNull(Assembler::NotEqual, tag, &notNull);
-            masm.loadConstantDouble(0.0, scratchF);
-            masm.jump(&storeBack);
+            masm.storeValue(DoubleValue(0.), jitArgAddr);
+            masm.jump(&next);
             masm.bind(&notNull);
 
             // For booleans, store the number value back. Other types (symbol,
@@ -559,8 +559,7 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
             // fallthrough:
 
             masm.bind(&storeBack);
-            masm.boxDouble(scratchF, scratchV, scratchF);
-            masm.storeValue(scratchV, Address(sp, jitArgOffset));
+            masm.boxDouble(scratchF, jitArgAddr);
             break;
           }
           default: {
