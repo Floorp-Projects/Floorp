@@ -1,6 +1,4 @@
 use hyper::method::Method;
-use logging;
-use logging::LogLevel;
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
 use mozrunner::runner::{FirefoxRunner, FirefoxProcess, Runner, RunnerProcess};
@@ -53,6 +51,7 @@ use webdriver::server::{WebDriverHandler, Session};
 use webdriver::httpapi::{WebDriverExtensionRoute};
 
 use capabilities::{FirefoxCapabilities, FirefoxOptions};
+use logging;
 use prefs;
 
 const DEFAULT_HOST: &'static str = "localhost";
@@ -373,7 +372,7 @@ impl ToMarionette for AddonUninstallParameters {
 
 #[derive(Default)]
 pub struct LogOptions {
-    pub level: Option<LogLevel>,
+    pub level: Option<logging::Level>,
 }
 
 #[derive(Default)]
@@ -385,27 +384,20 @@ pub struct MarionetteSettings {
     /// Brings up the Browser Toolbox when starting Firefox,
     /// letting you debug internals.
     pub jsdebugger: bool,
-
-    /// Optionally increase Marionette's verbosity by providing a log
-    /// level. The Gecko default is LogLevel::Info for optimised
-    /// builds and LogLevel::Debug for debug builds.
-    pub log_level: Option<LogLevel>,
 }
 
 pub struct MarionetteHandler {
     connection: Mutex<Option<MarionetteConnection>>,
     settings: MarionetteSettings,
     browser: Option<FirefoxProcess>,
-    current_log_level: Option<LogLevel>,
 }
 
 impl MarionetteHandler {
     pub fn new(settings: MarionetteSettings) -> MarionetteHandler {
         MarionetteHandler {
             connection: Mutex::new(None),
-            settings: settings,
+            settings,
             browser: None,
-            current_log_level: None,
         }
     }
 
@@ -427,8 +419,9 @@ impl MarionetteHandler {
             (options, capabilities)
         };
 
-        self.current_log_level = options.log.level.clone().or(self.settings.log_level.clone());
-        logging::init(&self.current_log_level);
+        if let Some(l) = options.log.level {
+            logging::set_max_level(l);
+        }
 
         let port = self.settings.port.unwrap_or(try!(get_free_port()));
         if !self.settings.connect_existing {
@@ -462,7 +455,6 @@ impl MarionetteHandler {
                 WebDriverError::new(ErrorStatus::SessionNotCreated,
                                     format!("Failed to set preferences: {}", e))
             })?;
-
 
         let mut runner = FirefoxRunner::new(&binary, profile);
 
@@ -515,9 +507,7 @@ impl MarionetteHandler {
             prefs.insert("marionette.debugging.clicktostart", Pref::new(true));
         }
 
-        if let Some(ref level) = self.current_log_level {
-            prefs.insert("marionette.log.level", Pref::new(level.to_string()));
-        };
+        prefs.insert("marionette.log.level", Pref::new(logging::max_level().to_string()));
         prefs.insert("marionette.port", Pref::new(port as i64));
 
         prefs.write().map_err(|_| WebDriverError::new(ErrorStatus::UnknownError,
