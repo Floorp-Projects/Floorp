@@ -182,6 +182,16 @@ protected:
   // The worker is owned by its thread, which is represented here.  This is set
   // in Constructor() and emptied by WorkerFinishedRunnable, and conditionally
   // traversed by the cycle collector if the busy count is zero.
+  //
+  // There are 4 ways a worker can be terminated:
+  // 1. GC/CC - When the worker is in idle state (busycount == 0), it allows to
+  //    traverse the 'hidden' mParentEventTargetRef pointer. This is the exposed
+  //    Worker webidl object. Doing this, CC will be able to detect a cycle and
+  //    Unlink is called. In Unlink, Worker calls Terminate().
+  // 2. Worker::Terminate() is called - the shutdown procedure starts
+  //    immediately.
+  // 3. WorkerScope::Close() is called - Similar to point 2.
+  // 4. xpcom-shutdown notification - We call Kill().
   RefPtr<Worker> mParentEventTargetRef;
   RefPtr<WorkerPrivate> mSelfRef;
 
