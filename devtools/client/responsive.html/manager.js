@@ -6,6 +6,7 @@
 
 const { Ci } = require("chrome");
 const promise = require("promise");
+const Services = require("Services");
 const EventEmitter = require("devtools/shared/old-event-emitter");
 
 const TOOL_URL = "chrome://devtools/content/responsive.html/index.xhtml";
@@ -26,6 +27,8 @@ loader.lazyRequireGetter(this, "getStr",
   "devtools/client/responsive.html/utils/l10n", true);
 loader.lazyRequireGetter(this, "EmulationFront",
   "devtools/shared/fronts/emulation", true);
+
+const RELOAD_CONDITION_PREF_PREFIX = "devtools.responsive.reloadConditions.";
 
 function debug(msg) {
   // console.log(`RDM manager: ${msg}`);
@@ -405,10 +408,12 @@ ResponsiveUI.prototype = {
     // settings are left in a customized state.
     if (!isTabContentDestroying) {
       let reloadNeeded = false;
-      reloadNeeded |= await this.updateDPPX();
-      reloadNeeded |= await this.updateNetworkThrottling();
-      reloadNeeded |= await this.updateUserAgent();
-      reloadNeeded |= await this.updateTouchSimulation();
+      await this.updateDPPX();
+      await this.updateNetworkThrottling();
+      reloadNeeded |= await this.updateUserAgent() &&
+                      this.reloadOnChange("userAgent");
+      reloadNeeded |= await this.updateTouchSimulation() &&
+                      this.reloadOnChange("touchSimulation");
       if (reloadNeeded) {
         this.getViewportBrowser().reload();
       }
@@ -448,6 +453,11 @@ ResponsiveUI.prototype = {
     await this.client.connect();
     let { tab } = await this.client.getTab();
     this.emulationFront = EmulationFront(this.client, tab);
+  },
+
+  reloadOnChange(id) {
+    let pref = RELOAD_CONDITION_PREF_PREFIX + id;
+    return Services.prefs.getBoolPref(pref, false);
   },
 
   handleEvent(event) {
@@ -499,10 +509,12 @@ ResponsiveUI.prototype = {
 
   async onChangeDevice(event) {
     let { userAgent, pixelRatio, touch } = event.data.device;
-    // Bug 1428799: Should we reload on UA change as well?
-    await this.updateUserAgent(userAgent);
+    let reloadNeeded = false;
     await this.updateDPPX(pixelRatio);
-    let reloadNeeded = await this.updateTouchSimulation(touch);
+    reloadNeeded |= await this.updateUserAgent(userAgent) &&
+                    this.reloadOnChange("userAgent");
+    reloadNeeded |= await this.updateTouchSimulation(touch) &&
+                    this.reloadOnChange("touchSimulation");
     if (reloadNeeded) {
       this.getViewportBrowser().reload();
     }
@@ -524,7 +536,8 @@ ResponsiveUI.prototype = {
 
   async onChangeTouchSimulation(event) {
     let { enabled } = event.data;
-    let reloadNeeded = await this.updateTouchSimulation(enabled);
+    let reloadNeeded = await this.updateTouchSimulation(enabled) &&
+                       this.reloadOnChange("touchSimulation");
     if (reloadNeeded) {
       this.getViewportBrowser().reload();
     }
@@ -546,10 +559,12 @@ ResponsiveUI.prototype = {
   },
 
   async onRemoveDeviceAssociation(event) {
-    // Bug 1428799: Should we reload on UA change as well?
-    await this.updateUserAgent();
+    let reloadNeeded = false;
     await this.updateDPPX();
-    let reloadNeeded = await this.updateTouchSimulation();
+    reloadNeeded |= await this.updateUserAgent() &&
+                    this.reloadOnChange("userAgent");
+    reloadNeeded |= await this.updateTouchSimulation() &&
+                    this.reloadOnChange("touchSimulation");
     if (reloadNeeded) {
       this.getViewportBrowser().reload();
     }

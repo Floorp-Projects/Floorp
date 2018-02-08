@@ -12,6 +12,7 @@ const { getStr } = require("../utils/l10n");
 const Types = require("../types");
 const DevicePixelRatioSelector = createFactory(require("./DevicePixelRatioSelector"));
 const NetworkThrottlingSelector = createFactory(require("./NetworkThrottlingSelector"));
+const ReloadConditions = createFactory(require("./ReloadConditions"));
 
 class GlobalToolbar extends PureComponent {
   static get propTypes() {
@@ -19,12 +20,14 @@ class GlobalToolbar extends PureComponent {
       devices: PropTypes.shape(Types.devices).isRequired,
       displayPixelRatio: Types.pixelRatio.value.isRequired,
       networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
+      reloadConditions: PropTypes.shape(Types.reloadConditions).isRequired,
       screenshot: PropTypes.shape(Types.screenshot).isRequired,
       selectedDevice: PropTypes.string.isRequired,
       selectedPixelRatio: PropTypes.shape(Types.pixelRatio).isRequired,
       touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
       onChangeNetworkThrottling: PropTypes.func.isRequired,
       onChangePixelRatio: PropTypes.func.isRequired,
+      onChangeReloadCondition: PropTypes.func.isRequired,
       onChangeTouchSimulation: PropTypes.func.isRequired,
       onExit: PropTypes.func.isRequired,
       onScreenshot: PropTypes.func.isRequired,
@@ -36,12 +39,14 @@ class GlobalToolbar extends PureComponent {
       devices,
       displayPixelRatio,
       networkThrottling,
+      reloadConditions,
       screenshot,
       selectedDevice,
       selectedPixelRatio,
       touchSimulation,
       onChangeNetworkThrottling,
       onChangePixelRatio,
+      onChangeReloadCondition,
       onChangeTouchSimulation,
       onExit,
       onScreenshot,
@@ -73,6 +78,10 @@ class GlobalToolbar extends PureComponent {
         selectedDevice,
         selectedPixelRatio,
         onChangePixelRatio,
+      }),
+      ReloadConditions({
+        reloadConditions,
+        onChangeReloadCondition,
       }),
       dom.button({
         id: "global-touch-simulation-button",

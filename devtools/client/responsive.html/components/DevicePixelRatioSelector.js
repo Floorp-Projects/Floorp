@@ -93,7 +93,7 @@ class DevicePixelRatioSelector extends PureComponent {
 
     let state = devices.listState;
     let isDisabled = (state !== Types.loadableState.LOADED) || (selectedDevice !== "");
-    let selectorClass = "";
+    let selectorClass = "toolbar-dropdown";
     let title;
 
     if (isDisabled) {
