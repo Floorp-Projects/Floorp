@@ -7,11 +7,12 @@
 package org.mozilla.gecko.util;
 
 import android.content.Intent;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.mozglue.SafeIntent;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,7 +23,7 @@ import static org.junit.Assert.*;
 /**
  * Tests for the Intent utilities.
  */
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestIntentUtils {
 
     private static final Map<String, String> TEST_ENV_VAR_MAP;

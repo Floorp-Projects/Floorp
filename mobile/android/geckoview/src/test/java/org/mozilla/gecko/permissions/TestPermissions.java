@@ -13,12 +13,11 @@ import android.content.pm.PackageManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
-
-import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import static org.mockito.Mockito.*;
 
-@RunWith(TestRunner.class)
+@RunWith(MockitoJUnitRunner.class)
 public class TestPermissions {
     @Test
     public void testSuccessRunnableIsExecutedIfPermissionsAreGranted() {
