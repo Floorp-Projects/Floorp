@@ -136,45 +136,9 @@ protected:
 
   virtual ~WorkerPrivateParent();
 
-private:
-  Derived*
-  ParentAsWorkerPrivate() const
-  {
-    return static_cast<Derived*>(const_cast<WorkerPrivateParent*>(this));
-  }
-
 public:
   NS_INLINE_DECL_REFCOUNTING(WorkerPrivateParent)
 
-  nsresult
-  Dispatch(already_AddRefed<WorkerRunnable> aRunnable);
-
-  nsresult
-  DispatchControlRunnable(already_AddRefed<WorkerControlRunnable> aWorkerControlRunnable);
-
-  nsresult
-  DispatchDebuggerRunnable(already_AddRefed<WorkerRunnable> aDebuggerRunnable);
-
-#ifdef DEBUG
-  void
-  AssertIsOnParentThread() const;
-
-  void
-  AssertInnerWindowIsCorrect() const;
-#else
-  void
-  AssertIsOnParentThread() const
-  { }
-
-  void
-  AssertInnerWindowIsCorrect() const
-  { }
-#endif
-
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  bool
-  PrincipalIsValid() const;
-#endif
 };
 
 class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
@@ -1381,6 +1345,39 @@ public:
 
   void
   OfflineStatusChangeEvent(bool aIsOffline);
+
+  nsresult
+  Dispatch(already_AddRefed<WorkerRunnable> aRunnable)
+  {
+    return DispatchPrivate(Move(aRunnable), nullptr);
+  }
+
+  nsresult
+  DispatchControlRunnable(already_AddRefed<WorkerControlRunnable> aWorkerControlRunnable);
+
+  nsresult
+  DispatchDebuggerRunnable(already_AddRefed<WorkerRunnable> aDebuggerRunnable);
+
+#ifdef DEBUG
+  void
+  AssertIsOnParentThread() const;
+
+  void
+  AssertInnerWindowIsCorrect() const;
+#else
+  void
+  AssertIsOnParentThread() const
+  { }
+
+  void
+  AssertInnerWindowIsCorrect() const
+  { }
+#endif
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  bool
+  PrincipalIsValid() const;
+#endif
 
 private:
   WorkerPrivate(WorkerPrivate* aParent,

@@ -1646,37 +1646,25 @@ WorkerPrivate::DisableDebugger()
   }
 }
 
-template <class Derived>
 nsresult
-WorkerPrivateParent<Derived>::Dispatch(already_AddRefed<WorkerRunnable> aRunnable)
-{
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-  return self->DispatchPrivate(Move(aRunnable), nullptr);
-}
-
-template <class Derived>
-nsresult
-WorkerPrivateParent<Derived>::DispatchControlRunnable(
-  already_AddRefed<WorkerControlRunnable> aWorkerControlRunnable)
+WorkerPrivate::DispatchControlRunnable(already_AddRefed<WorkerControlRunnable> aWorkerControlRunnable)
 {
   // May be called on any thread!
   RefPtr<WorkerControlRunnable> runnable(aWorkerControlRunnable);
   MOZ_ASSERT(runnable);
 
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-
   {
     MutexAutoLock lock(mMutex);
 
-    if (self->mStatus == Dead) {
+    if (mStatus == Dead) {
       return NS_ERROR_UNEXPECTED;
     }
 
     // Transfer ownership to the control queue.
-    self->mControlQueue.Push(runnable.forget().take());
+    mControlQueue.Push(runnable.forget().take());
 
-    if (JSContext* cx = self->mJSContext) {
-      MOZ_ASSERT(self->mThread);
+    if (JSContext* cx = mJSContext) {
+      MOZ_ASSERT(mThread);
       JS_RequestInterruptCallback(cx);
     }
 
@@ -1686,10 +1674,8 @@ WorkerPrivateParent<Derived>::DispatchControlRunnable(
   return NS_OK;
 }
 
-template <class Derived>
 nsresult
-WorkerPrivateParent<Derived>::DispatchDebuggerRunnable(
-  already_AddRefed<WorkerRunnable> aDebuggerRunnable)
+WorkerPrivate::DispatchDebuggerRunnable(already_AddRefed<WorkerRunnable> aDebuggerRunnable)
 {
   // May be called on any thread!
 
@@ -1697,19 +1683,17 @@ WorkerPrivateParent<Derived>::DispatchDebuggerRunnable(
 
   MOZ_ASSERT(runnable);
 
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-
   {
     MutexAutoLock lock(mMutex);
 
-    if (self->mStatus == Dead) {
+    if (mStatus == Dead) {
       NS_WARNING("A debugger runnable was posted to a worker that is already "
                  "shutting down!");
       return NS_ERROR_UNEXPECTED;
     }
 
     // Transfer ownership to the debugger queue.
-    self->mDebuggerQueue.Push(runnable.forget().take());
+    mDebuggerQueue.Push(runnable.forget().take());
 
     mCondVar.Notify();
   }
@@ -2573,47 +2557,40 @@ WorkerPrivate::FlushReportsToSharedWorkers(nsIConsoleReportCollector* aReporter)
 
 #ifdef DEBUG
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::AssertIsOnParentThread() const
+WorkerPrivate::AssertIsOnParentThread() const
 {
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-  if (self->GetParent()) {
-    self->GetParent()->AssertIsOnWorkerThread();
-  }
-  else {
+  if (GetParent()) {
+    GetParent()->AssertIsOnWorkerThread();
+  } else {
     AssertIsOnMainThread();
   }
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::AssertInnerWindowIsCorrect() const
+WorkerPrivate::AssertInnerWindowIsCorrect() const
 {
   AssertIsOnParentThread();
-  WorkerPrivate* self = ParentAsWorkerPrivate();
 
   // Only care about top level workers from windows.
-  if (self->mParent || !self->mLoadInfo.mWindow) {
+  if (mParent || !mLoadInfo.mWindow) {
     return;
   }
 
   AssertIsOnMainThread();
 
-  nsPIDOMWindowOuter* outer = self->mLoadInfo.mWindow->GetOuterWindow();
-  NS_ASSERTION(outer && outer->GetCurrentInnerWindow() == self->mLoadInfo.mWindow,
+  nsPIDOMWindowOuter* outer = mLoadInfo.mWindow->GetOuterWindow();
+  NS_ASSERTION(outer && outer->GetCurrentInnerWindow() == mLoadInfo.mWindow,
                "Inner window no longer correct!");
 }
 
 #endif
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-template <class Derived>
 bool
-WorkerPrivateParent<Derived>::PrincipalIsValid() const
+WorkerPrivate::PrincipalIsValid() const
 {
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-  return self->mLoadInfo.PrincipalIsValid();
+  return mLoadInfo.PrincipalIsValid();
 }
 #endif
 
