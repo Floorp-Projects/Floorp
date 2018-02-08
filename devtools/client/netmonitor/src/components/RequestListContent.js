@@ -285,7 +285,9 @@ class RequestListContent extends Component {
             className: "requests-list-contents",
             tabIndex: 0,
             onKeyDown: this.onKeyDown,
-            style: { "--timings-scale": scale, "--timings-rev-scale": 1 / scale }
+            // scale is null until the waterfall is initialized
+            style: { "--timings-scale": scale ? scale : 0,
+                     "--timings-rev-scale": (scale ? 1 / scale : 1) }
           },
             RequestListHeader(),
             displayedRequests.map((item, index) => RequestListItem({
