@@ -155,54 +155,6 @@ public:
   nsresult
   DispatchDebuggerRunnable(already_AddRefed<WorkerRunnable> aDebuggerRunnable);
 
-  void
-  UpdateContextOptions(const JS::ContextOptions& aContextOptions);
-
-  void
-  UpdateLanguages(const nsTArray<nsString>& aLanguages);
-
-  void
-  UpdateJSWorkerMemoryParameter(JSGCParamKey key, uint32_t value);
-
-#ifdef JS_GC_ZEAL
-  void
-  UpdateGCZeal(uint8_t aGCZeal, uint32_t aFrequency);
-#endif
-
-  void
-  GarbageCollect(bool aShrinking);
-
-  void
-  CycleCollect(bool aDummy);
-
-  void
-  OfflineStatusChangeEvent(bool aIsOffline);
-
-  void
-  MemoryPressure(bool aDummy);
-
-  void
-  WorkerScriptLoaded();
-
-  nsresult
-  SetPrincipalOnMainThread(nsIPrincipal* aPrincipal, nsILoadGroup* aLoadGroup);
-
-  nsresult
-  SetPrincipalFromChannel(nsIChannel* aChannel);
-
-  bool
-  FinalChannelPrincipalIsValid(nsIChannel* aChannel);
-
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  bool
-  PrincipalURIMatchesScriptURL();
-#endif
-
-  nsIDocument* GetDocument() const;
-
-  void
-  UpdateOverridenLoadGroup(nsILoadGroup* aBaseLoadGroup);
-
 #ifdef DEBUG
   void
   AssertIsOnParentThread() const;
@@ -1381,6 +1333,54 @@ public:
 
   bool
   ProxyReleaseMainThreadObjects();
+
+  void
+  GarbageCollect(bool aShrinking);
+
+  void
+  CycleCollect(bool aDummy);
+
+  nsresult
+  SetPrincipalOnMainThread(nsIPrincipal* aPrincipal, nsILoadGroup* aLoadGroup);
+
+  nsresult
+  SetPrincipalFromChannel(nsIChannel* aChannel);
+
+  bool
+  FinalChannelPrincipalIsValid(nsIChannel* aChannel);
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  bool
+  PrincipalURIMatchesScriptURL();
+#endif
+
+  void
+  UpdateOverridenLoadGroup(nsILoadGroup* aBaseLoadGroup);
+
+  void
+  WorkerScriptLoaded();
+
+  nsIDocument* GetDocument() const;
+
+  void
+  MemoryPressure(bool aDummy);
+
+  void
+  UpdateContextOptions(const JS::ContextOptions& aContextOptions);
+
+  void
+  UpdateLanguages(const nsTArray<nsString>& aLanguages);
+
+  void
+  UpdateJSWorkerMemoryParameter(JSGCParamKey key, uint32_t value);
+
+#ifdef JS_GC_ZEAL
+  void
+  UpdateGCZeal(uint8_t aGCZeal, uint32_t aFrequency);
+#endif
+
+  void
+  OfflineStatusChangeEvent(bool aIsOffline);
 
 private:
   WorkerPrivate(WorkerPrivate* aParent,
