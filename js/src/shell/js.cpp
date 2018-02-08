@@ -8523,15 +8523,12 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
     }
 
     if (const char* str = op.getStringOption("spectre-mitigations")) {
-        if (strcmp(str, "on") == 0) {
+        if (strcmp(str, "on") == 0)
             jit::JitOptions.spectreIndexMasking = true;
-            jit::JitOptions.spectreStringMitigations = true;
-        } else if (strcmp(str, "off") == 0) {
+        else if (strcmp(str, "off") == 0)
             jit::JitOptions.spectreIndexMasking = false;
-            jit::JitOptions.spectreStringMitigations = false;
-        } else {
+        else
             return OptionFailure("spectre-mitigations", str);
-        }
     }
 
     if (const char* str = op.getStringOption("ion-scalar-replacement")) {
