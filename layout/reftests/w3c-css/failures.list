@@ -140,7 +140,7 @@ fails css-writing-modes/table-progression-vlr-00?.html
 fails css-writing-modes/table-progression-vrl-00?.html
       css-writing-modes/table-progression-vrl-001.html
 
-fails css-writing-modes/flexbox_align-items-stretch-writing-modes.html
+css-writing-modes/flexbox_align-items-stretch-writing-modes.html
 
 # Bug 1179952
 fails css-writing-modes/inline-block-alignment-00?.xht
