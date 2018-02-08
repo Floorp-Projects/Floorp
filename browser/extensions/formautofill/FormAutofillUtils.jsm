@@ -602,6 +602,10 @@ this.FormAutofillUtils = {
     let collators = this.getCollators(country);
     for (let metadata of this.getCountryAddressDataWithLocales(country)) {
       let {sub_keys: subKeys, sub_names: subNames, sub_lnames: subLnames} = metadata;
+      if (!subKeys) {
+        // Not all regions have sub_keys. e.g. DE
+        continue;
+      }
       // Apply sub_lnames if sub_names does not exist
       subNames = subNames || subLnames;
 
@@ -665,6 +669,10 @@ this.FormAutofillUtils = {
         }
         for (let dataset of this.getCountryAddressDataWithLocales(country)) {
           let keys = dataset.sub_keys;
+          if (!keys) {
+            // Not all regions have sub_keys. e.g. DE
+            continue;
+          }
           // Apply sub_lnames if sub_names does not exist
           let names = dataset.sub_names || dataset.sub_lnames;
 
