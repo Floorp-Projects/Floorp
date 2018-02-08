@@ -1786,21 +1786,6 @@ add_task(async function test_set_orphan_indices() {
       "Orphaned bookmarks should match before changing indices");
   }
 
-  info("Set synced orphan indices");
-  {
-    let fxId = await recordIdToId(fxBmk.recordId);
-    let tbId = await recordIdToId(tbBmk.recordId);
-    PlacesUtils.bookmarks.runInBatchMode(_ => {
-      PlacesUtils.bookmarks.setItemIndex(fxId, 1);
-      PlacesUtils.bookmarks.setItemIndex(tbId, 0);
-    }, null);
-    await PlacesTestUtils.promiseAsyncUpdates();
-    let orphanGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
-      SYNC_PARENT_ANNO, nonexistentRecordId);
-    deepEqual(orphanGuids, [],
-      "Should remove orphan annos after updating indices");
-  }
-
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
