@@ -8,6 +8,7 @@
 #include "nsCOMPtr.h"
 #include "nsXPCOM.h"
 #include "nsThreadUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "mozilla/Atomics.h"
 #include "gtest/gtest.h"
 
