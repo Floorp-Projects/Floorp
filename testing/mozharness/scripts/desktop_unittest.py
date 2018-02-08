@@ -337,7 +337,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         dirs = self.query_abs_dirs()
 
         self.register_virtualenv_module(name='pip>=1.5')
-        self.register_virtualenv_module('psutil==3.1.1', method='pip')
+        self.register_virtualenv_module('psutil==5.4.3', method='pip')
         self.register_virtualenv_module(name='mock')
         self.register_virtualenv_module(name='simplejson')
 
