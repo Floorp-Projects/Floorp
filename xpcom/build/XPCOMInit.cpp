@@ -959,6 +959,11 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
     moduleLoaders = nullptr;
   }
 
+  // Clear the profiler's JS context before cycle collection. The profiler will
+  // notify the JS engine that it can let go of any data it's holding on to for
+  // profiling purposes.
+  PROFILER_CLEAR_JS_CONTEXT();
+
   bool shutdownCollect;
 #ifdef NS_FREE_PERMANENT_DATA
   shutdownCollect = true;
@@ -984,16 +989,6 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   } else {
     NS_WARNING("Component Manager was never created ...");
   }
-
-  // In optimized builds we don't do shutdown collections by default, so
-  // uncollected (garbage) objects may keep the nsXPConnect singleton alive,
-  // and its XPCJSContext along with it. However, we still destroy various
-  // bits of state in JS_ShutDown(), so we need to make sure the profiler
-  // can't access them when it shuts down. This call nulls out the
-  // JS pseudo-stack's internal reference to the main thread JSContext,
-  // duplicating the call in XPCJSContext::~XPCJSContext() in case that
-  // never fired.
-  PROFILER_CLEAR_JS_CONTEXT();
 
   if (sInitializedJS) {
     // Shut down the JS engine.

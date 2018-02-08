@@ -3381,6 +3381,10 @@ profiler_set_js_context(JSContext* aCx)
   }
 
   info->SetJSContext(aCx);
+
+  // This call is on-thread, so we can call PollJSSampling() to start JS
+  // sampling immediately.
+  info->PollJSSampling();
 }
 
 void
@@ -3403,11 +3407,23 @@ profiler_clear_js_context()
     if (info->IsBeingProfiled()) {
       info->FlushSamplesAndMarkers(CorePS::ProcessStartTime(),
                                    ActivePS::Buffer(lock));
+
+      if (ActivePS::FeatureJS(lock)) {
+        // Notify the JS context that profiling for this context has stopped.
+        // Do this by calling StopJSSampling and PollJSSampling before
+        // nulling out the JSContext.
+        info->StopJSSampling();
+        info->PollJSSampling();
+
+        info->mContext = nullptr;
+
+        // Tell the ThreadInfo that we'd like to have JS sampling on this
+        // thread again, once it gets a new JSContext (if ever).
+        info->StartJSSampling();
+        return;
+      }
     }
   }
-
-  // We don't call info->StopJSSampling() here; there's no point doing that for
-  // a JS thread that is in the process of disappearing.
 
   info->mContext = nullptr;
 }
