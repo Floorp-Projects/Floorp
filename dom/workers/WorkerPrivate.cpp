@@ -1821,57 +1821,53 @@ WorkerPrivateParent<Derived>::NotifyPrivate(WorkerStatus aStatus)
   return runnable->Dispatch();
 }
 
-template <class Derived>
 bool
-WorkerPrivateParent<Derived>::Freeze(nsPIDOMWindowInner* aWindow)
+WorkerPrivate::Freeze(nsPIDOMWindowInner* aWindow)
 {
   AssertIsOnParentThread();
-  WorkerPrivate* self = ParentAsWorkerPrivate();
 
   // Shared workers are only frozen if all of their owning documents are
   // frozen. It can happen that mSharedWorkers is empty but this thread has
   // not been unregistered yet.
-  if ((self->IsSharedWorker() || self->IsServiceWorker()) && !self->mSharedWorkers.IsEmpty()) {
+  if ((IsSharedWorker() || IsServiceWorker()) && !mSharedWorkers.IsEmpty()) {
     AssertIsOnMainThread();
 
     bool allFrozen = true;
 
-    for (uint32_t i = 0; i < self->mSharedWorkers.Length(); ++i) {
-      if (aWindow && self->mSharedWorkers[i]->GetOwner() == aWindow) {
+    for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
+      if (aWindow && mSharedWorkers[i]->GetOwner() == aWindow) {
         // Calling Freeze() may change the refcount, ensure that the worker
         // outlives this call.
-        RefPtr<SharedWorker> kungFuDeathGrip = self->mSharedWorkers[i];
+        RefPtr<SharedWorker> kungFuDeathGrip = mSharedWorkers[i];
 
         kungFuDeathGrip->Freeze();
       } else {
-        MOZ_ASSERT_IF(self->mSharedWorkers[i]->GetOwner() && aWindow,
-                      !SameCOMIdentity(self->mSharedWorkers[i]->GetOwner(),
-                                       aWindow));
-        if (!self->mSharedWorkers[i]->IsFrozen()) {
+        MOZ_ASSERT_IF(mSharedWorkers[i]->GetOwner() && aWindow,
+                      !SameCOMIdentity(mSharedWorkers[i]->GetOwner(), aWindow));
+        if (!mSharedWorkers[i]->IsFrozen()) {
           allFrozen = false;
         }
       }
     }
 
-    if (!allFrozen || self->mParentFrozen) {
+    if (!allFrozen || mParentFrozen) {
       return true;
     }
   }
 
-  self->mParentFrozen = true;
+  mParentFrozen = true;
 
   {
     MutexAutoLock lock(mMutex);
 
-    if (self->mParentStatus >= Terminating) {
+    if (mParentStatus >= Terminating) {
       return true;
     }
   }
 
-  self->DisableDebugger();
+  DisableDebugger();
 
-  RefPtr<FreezeRunnable> runnable =
-    new FreezeRunnable(ParentAsWorkerPrivate());
+  RefPtr<FreezeRunnable> runnable = new FreezeRunnable(this);
   if (!runnable->Dispatch()) {
     return false;
   }
@@ -1879,75 +1875,71 @@ WorkerPrivateParent<Derived>::Freeze(nsPIDOMWindowInner* aWindow)
   return true;
 }
 
-template <class Derived>
 bool
-WorkerPrivateParent<Derived>::Thaw(nsPIDOMWindowInner* aWindow)
+WorkerPrivate::Thaw(nsPIDOMWindowInner* aWindow)
 {
   AssertIsOnParentThread();
-  WorkerPrivate* self = ParentAsWorkerPrivate();
 
-  MOZ_ASSERT(self->mParentFrozen);
+  MOZ_ASSERT(mParentFrozen);
 
   // Shared workers are resumed if any of their owning documents are thawed.
   // It can happen that mSharedWorkers is empty but this thread has not been
   // unregistered yet.
-  if ((self->IsSharedWorker() || self->IsServiceWorker()) && !self->mSharedWorkers.IsEmpty()) {
+  if ((IsSharedWorker() || IsServiceWorker()) && !mSharedWorkers.IsEmpty()) {
     AssertIsOnMainThread();
 
     bool anyRunning = false;
 
-    for (uint32_t i = 0; i < self->mSharedWorkers.Length(); ++i) {
-      if (aWindow && self->mSharedWorkers[i]->GetOwner() == aWindow) {
+    for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
+      if (aWindow && mSharedWorkers[i]->GetOwner() == aWindow) {
         // Calling Thaw() may change the refcount, ensure that the worker
         // outlives this call.
-        RefPtr<SharedWorker> kungFuDeathGrip = self->mSharedWorkers[i];
+        RefPtr<SharedWorker> kungFuDeathGrip = mSharedWorkers[i];
 
         kungFuDeathGrip->Thaw();
         anyRunning = true;
       } else {
-        MOZ_ASSERT_IF(self->mSharedWorkers[i]->GetOwner() && aWindow,
-                      !SameCOMIdentity(self->mSharedWorkers[i]->GetOwner(),
-                                       aWindow));
-        if (!self->mSharedWorkers[i]->IsFrozen()) {
+        MOZ_ASSERT_IF(mSharedWorkers[i]->GetOwner() && aWindow,
+                      !SameCOMIdentity(mSharedWorkers[i]->GetOwner(), aWindow));
+        if (!mSharedWorkers[i]->IsFrozen()) {
           anyRunning = true;
         }
       }
     }
 
-    if (!anyRunning || !self->mParentFrozen) {
+    if (!anyRunning || !mParentFrozen) {
       return true;
     }
   }
 
-  MOZ_ASSERT(self->mParentFrozen);
+  MOZ_ASSERT(mParentFrozen);
 
-  self->mParentFrozen = false;
+  mParentFrozen = false;
 
   {
     MutexAutoLock lock(mMutex);
 
-    if (self->mParentStatus >= Terminating) {
+    if (mParentStatus >= Terminating) {
       return true;
     }
   }
 
-  self->EnableDebugger();
+  EnableDebugger();
 
   // Execute queued runnables before waking up the worker, otherwise the worker
   // could post new messages before we run those that have been queued.
-  if (!self->IsParentWindowPaused() && !self->mQueuedRunnables.IsEmpty()) {
-    MOZ_ASSERT(self->IsDedicatedWorker());
+  if (!IsParentWindowPaused() && !mQueuedRunnables.IsEmpty()) {
+    MOZ_ASSERT(IsDedicatedWorker());
 
     nsTArray<nsCOMPtr<nsIRunnable>> runnables;
-    self->mQueuedRunnables.SwapElements(runnables);
+    mQueuedRunnables.SwapElements(runnables);
 
     for (uint32_t index = 0; index < runnables.Length(); index++) {
       runnables[index]->Run();
     }
   }
 
-  RefPtr<ThawRunnable> runnable =
-    new ThawRunnable(ParentAsWorkerPrivate());
+  RefPtr<ThawRunnable> runnable = new ThawRunnable(this);
   if (!runnable->Dispatch()) {
     return false;
   }
@@ -3982,7 +3974,7 @@ WorkerPrivate::ModifyBusyCountFromWorker(bool aIncrease)
 }
 
 bool
-WorkerPrivate::AddChildWorker(ParentType* aChildWorker)
+WorkerPrivate::AddChildWorker(WorkerPrivate* aChildWorker)
 {
   AssertIsOnWorkerThread();
 
@@ -4008,7 +4000,7 @@ WorkerPrivate::AddChildWorker(ParentType* aChildWorker)
 }
 
 void
-WorkerPrivate::RemoveChildWorker(ParentType* aChildWorker)
+WorkerPrivate::RemoveChildWorker(WorkerPrivate* aChildWorker)
 {
   AssertIsOnWorkerThread();
 
@@ -4084,7 +4076,7 @@ WorkerPrivate::NotifyHolders(JSContext* aCx, WorkerStatus aStatus)
     MOZ_ASSERT(!JS_IsExceptionPending(aCx));
   }
 
-  AutoTArray<ParentType*, 10> children;
+  AutoTArray<WorkerPrivate*, 10> children;
   children.AppendElements(mChildWorkers);
 
   for (uint32_t index = 0; index < children.Length(); index++) {
