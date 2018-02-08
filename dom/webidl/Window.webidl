@@ -23,7 +23,6 @@ interface ApplicationCache;
 interface IID;
 interface nsIBrowserDOMWindow;
 interface nsIMessageBroadcaster;
-interface nsIDOMCrypto;
 interface XULControllers;
 
 // http://www.whatwg.org/specs/web-apps/current-work/
