@@ -693,6 +693,12 @@ MacroAssembler::storeDouble(FloatRegister src, const T& dest)
 template void MacroAssembler::storeDouble(FloatRegister src, const Address& dest);
 template void MacroAssembler::storeDouble(FloatRegister src, const BaseIndex& dest);
 
+void
+MacroAssembler::boxDouble(FloatRegister src, const Address& dest)
+{
+    storeDouble(src, dest);
+}
+
 template<class T> void
 MacroAssembler::storeFloat32(FloatRegister src, const T& dest)
 {

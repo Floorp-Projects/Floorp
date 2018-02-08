@@ -1415,6 +1415,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     template<class T>
     inline void storeDouble(FloatRegister src, const T& dest);
 
+    inline void boxDouble(FloatRegister src, const Address& dest);
+    using MacroAssemblerSpecific::boxDouble;
+
     inline void storeUncanonicalizedFloat32(FloatRegister src, const Address& dest)
         DEFINED_ON(x86_shared, arm, arm64, mips32, mips64);
     inline void storeUncanonicalizedFloat32(FloatRegister src, const BaseIndex& dest)
