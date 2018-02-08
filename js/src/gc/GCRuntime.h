@@ -278,6 +278,9 @@ class GCSchedulingTunables
 private:
     void setHighFrequencyLowLimit(uint64_t value);
     void setHighFrequencyHighLimit(uint64_t value);
+    void setHighFrequencyHeapGrowthMin(double value);
+    void setHighFrequencyHeapGrowthMax(double value);
+    void setLowFrequencyHeapGrowth(double value);
     void setMinEmptyChunkCount(uint32_t value);
     void setMaxEmptyChunkCount(uint32_t value);
 };
