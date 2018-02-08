@@ -307,6 +307,7 @@ public class GeckoApplication extends Application
                 "Share:Text",
                 null);
         EventDispatcher.getInstance().registerBackgroundThreadListener(mListener,
+                "PushServiceAndroidGCM:Configure",
                 "Bookmark:Insert",
                 "Image:SetAs",
                 "Profile:Create",
@@ -330,6 +331,7 @@ public class GeckoApplication extends Application
                 "Share:Text",
                 null);
         EventDispatcher.getInstance().unregisterBackgroundThreadListener(mListener,
+                "PushServiceAndroidGCM:Configure",
                 "Bookmark:Insert",
                 "Image:SetAs",
                 "Profile:Create",
@@ -338,23 +340,27 @@ public class GeckoApplication extends Application
         GeckoService.unregister();
     }
 
+    /* package */ boolean initPushService() {
+        // It's fine to throw GCM initialization onto a background thread; the registration process requires
+        // network access, so is naturally asynchronous.  This, of course, races against Gecko page load of
+        // content requiring GCM-backed services, like Web Push.  There's nothing to be done here.
+        try {
+            final Class<?> clazz = Class.forName("org.mozilla.gecko.push.PushService");
+            final Method onCreate = clazz.getMethod("onCreate", Context.class);
+            return (Boolean) onCreate.invoke(null, getApplicationContext()); // Method is static.
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Got exception during startup; ignoring.", e);
+            return false;
+        }
+    }
+
     public void onDelayedStartup() {
         if (AppConstants.MOZ_ANDROID_GCM) {
             // TODO: only run in main process.
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
-                    // It's fine to throw GCM initialization onto a background thread; the registration process requires
-                    // network access, so is naturally asynchronous.  This, of course, races against Gecko page load of
-                    // content requiring GCM-backed services, like Web Push.  There's nothing to be done here.
-                    try {
-                        final Class<?> clazz = Class.forName("org.mozilla.gecko.push.PushService");
-                        final Method onCreate = clazz.getMethod("onCreate", Context.class);
-                        onCreate.invoke(null, getApplicationContext()); // Method is static.
-                    } catch (Exception e) {
-                        Log.e(LOG_TAG, "Got exception during startup; ignoring.", e);
-                        return;
-                    }
+                    initPushService();
                 }
             });
         }
@@ -535,6 +541,12 @@ public class GeckoApplication extends Application
 
             } else if ("Image:SetAs".equals(event)) {
                 setImageAs(message.getString("url"));
+
+            } else if ("PushServiceAndroidGCM:Configure".equals(event)) {
+                // Init push service and redirect the event to it.
+                if (initPushService()) {
+                    EventDispatcher.getInstance().dispatch(event, message, callback);
+                }
             }
         }
     }
