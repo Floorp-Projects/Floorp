@@ -4,12 +4,12 @@
 
 // Test utils.
 const expect = require("expect");
-const {
-  renderComponent,
-} = require("devtools/client/webconsole/new-console-output/test/helpers");
+const { render } = require("enzyme");
+const { createFactory } = require("devtools/client/shared/vendor/react");
 
 // Components under test.
-const { MessageContainer, getMessageComponent } = require("devtools/client/webconsole/new-console-output/components/MessageContainer");
+let { MessageContainer, getMessageComponent } = require("devtools/client/webconsole/new-console-output/components/MessageContainer");
+MessageContainer = createFactory(MessageContainer);
 const ConsoleApiCall = require("devtools/client/webconsole/new-console-output/components/message-types/ConsoleApiCall");
 const EvaluationResult = require("devtools/client/webconsole/new-console-output/components/message-types/EvaluationResult");
 const PageError = require("devtools/client/webconsole/new-console-output/components/message-types/PageError");
@@ -21,12 +21,12 @@ const serviceContainer = require("devtools/client/webconsole/new-console-output/
 describe("MessageContainer component:", () => {
   it("pipes data to children as expected", () => {
     const message = stubPreparedMessages.get("console.log('foobar', 'test')");
-    const rendered = renderComponent(MessageContainer, {
+    const rendered = render(MessageContainer({
       getMessage: () => message,
       serviceContainer
-    });
+    }));
 
-    expect(rendered.textContent.includes("foobar")).toBe(true);
+    expect(rendered.text().includes("foobar")).toBe(true);
   });
   it("picks correct child component", () => {
     const messageTypes = [
