@@ -15,13 +15,10 @@ add_task(async () => {
 
   store.dispatch(Actions.batchEnable(false));
 
-  async function reloadAndWait() {
-    let wait = waitForNetworkEvents(monitor, 1);
-    tab.linkedBrowser.reload();
-    return wait;
-  }
-
-  await reloadAndWait();
+  let requestsDone = waitForAllRequestsFinished(monitor);
+  let markersDone = waitForTimelineMarkers(monitor);
+  tab.linkedBrowser.reload();
+  await Promise.all([requestsDone, markersDone]);
 
   let statusBar = document.querySelector(".devtools-toolbar-bottom");
   let requestCount = statusBar.querySelector(".requests-list-network-summary-count");
