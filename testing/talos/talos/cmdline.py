@@ -65,7 +65,7 @@ def create_parser(mach_interface=False):
     add_arg('--browserWait', dest='browser_wait', default=5, type=int,
             help="Amount of time allowed for the browser to cleanly close")
     add_arg('-a', '--activeTests',
-            help="List of tests to run, separated by ':' (ex. damp:cart)")
+            help="List of tests to run, separated by ':' (ex. damp:tart)")
     add_arg('--suite',
             help="Suite to use (instead of --activeTests)")
     add_arg('--subtests',
