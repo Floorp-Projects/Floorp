@@ -24,8 +24,7 @@ var file = Components.classes["@mozilla.org/file/directory_service;1"]
 filePath = file.path;
 
 function printpreview() {
-  gWbp = window.frames[1].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-             .getInterface(Components.interfaces.nsIWebBrowserPrint);
+  gWbp = window.frames[1].document.docShell.printPreview;
   var listener = {
     onLocationChange: function(webProgress, request, location, flags) { },
     onProgressChange: function(webProgress, request, curSelfProgress, 
@@ -61,8 +60,7 @@ function printpreview() {
 }
 
 function exitprintpreview() {
-  window.frames[1].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-   .getInterface(Components.interfaces.nsIWebBrowserPrint).exitPrintPreview(); 
+  window.frames[1].document.docShell.printPreview.exitPrintPreview();
 }
 
 function finish() {
