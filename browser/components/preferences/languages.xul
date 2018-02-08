@@ -26,12 +26,7 @@
         onload="gLanguagesDialog.init();"
         helpTopic="prefs-languages"
         ondialoghelp="openPrefsHelp()"
-        style="width: &window.width;"
-        onfocus="gLanguagesDialog.forceReflow()"
-        onresize="gLanguagesDialog.forceReflow()">
-
-<!-- The onfocus and onresize handlers above hack around XUL bug 1194844
-   - by triggering extra reflow (see bug 1194346). -->
+        style="width: &window.width;">
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>

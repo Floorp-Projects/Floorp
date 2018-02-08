@@ -58,7 +58,7 @@ module.exports = {
     "comma-dangle": ["error", "always-multiline"],
 
     // Warn about cyclomatic complexity in functions.
-    "complexity": ["error", {"max": 20}],
+    "complexity": ["error", {"max": 26}],
 
     // Enforce dots on the next line with property name.
     "dot-location": ["error", "property"],

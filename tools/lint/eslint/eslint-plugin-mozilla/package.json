@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-mozilla",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "A collection of rules that help enforce JavaScript coding standard in the Mozilla project.",
   "keywords": [
     "eslint",
@@ -24,8 +24,8 @@
     "sax": "1.2.4"
   },
   "devDependencies": {
-    "eslint": "4.9.0",
-    "mocha": "4.0.1"
+    "eslint": "4.17.0",
+    "mocha": "5.0.0"
   },
   "peerDependencies": {
     "eslint": "^3.0.0 || ^4.0.0",
@@ -37,7 +37,7 @@
   "scripts": {
     "prepack": "node scripts/createExports.js",
     "test": "mocha -R dot --reporter 'reporters/mozilla-format.js' tests",
-    "postpublish": "rm -f lib/modules.json lib/environments/saved-globals.json",
+    "postpublish": "rm -f lib/modules.json lib/environments/saved-globals.json lib/rules/saved-rules-data.json",
     "update-tooltool": "./update.sh"
   },
   "license": "MPL-2.0"

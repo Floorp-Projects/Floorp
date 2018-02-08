@@ -3,7 +3,7 @@
 module.exports = {
   "rules": {
     // Warn about cyclomatic complexity in functions.
-    "complexity": ["error", 42],
+    "complexity": ["error", 47],
 
     // XXX These are rules that are enabled in the recommended configuration, but
     // disabled here due to failures when initially implemented. They should be

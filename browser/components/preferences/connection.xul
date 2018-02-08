@@ -9,6 +9,8 @@
   %preferencesDTD;
   <!ENTITY % connectionDTD SYSTEM "chrome://browser/locale/preferences/connection.dtd">
   %connectionDTD;
+  <!ENTITY % mainDTD SYSTEM "chrome://browser/locale/preferences/main.dtd">
+  %mainDTD;
 ]>
 
 <?xml-stylesheet href="chrome://global/skin/"?>
@@ -35,6 +37,7 @@
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
+  <script type="application/javascript" src="chrome://browser/content/preferences/in-content/extensionControlled.js"/>
 
   <keyset>
     <key key="&windowClose.key;" modifiers="accel" oncommand="Preferences.close(event)"/>
@@ -42,11 +45,19 @@
 
   <vbox id="ConnectionsDialogPane" class="prefpane largeDialogContainer">
 
-    <stringbundle id="preferencesBundle" src="chrome://browser/locale/preferences/preferences.properties"/>
+    <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
+    <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/>
     <script type="application/javascript" src="chrome://browser/content/preferences/connection.js"/>
 
+    <hbox id="proxyExtensionContent" align="top" hidden="true">
+      <description control="disableProxyExtension" flex="1" />
+      <button id="disableProxyExtension"
+              class="extension-controlled-button accessory-button"
+              label="&disableExtension.label;" />
+    </hbox>
+
     <groupbox>
-      <caption><label>&proxyTitle.label;</label></caption>
+      <caption><label>&proxyTitle.label2;</label></caption>
 
       <radiogroup id="networkProxyType" preference="network.proxy.type"
                   onsyncfrompreference="return gConnectionsDialog.readProxyType();">

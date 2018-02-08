@@ -749,7 +749,15 @@
   <caption class="search-header" hidden="true"><label>&networkProxy.label;</label></caption>
 
   <hbox align="center">
-    <description flex="1" control="connectionSettings">&connectionDesc.label;</description>
+    <hbox align="center" flex="1">
+      <description id="connectionSettingsDescription" control="connectionSettings"></description>
+      <spacer width="5"/>
+      <label id="connectionSettingsLearnMore" class="learnMore text-link">
+        &connectionSettingsLearnMore.label;
+      </label>
+      <separator orient="vertical"/>
+    </hbox>
+
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
     <hbox>
       <button id="connectionSettings"
