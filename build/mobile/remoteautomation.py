@@ -278,13 +278,19 @@ class RemoteAutomation(Automation):
         # device manager process
         dm = None
         def __init__(self, dm, cmd, stdout=None, stderr=None, env=None, cwd=None, app=None,
-                     messageLogger=None):
+                     messageLogger=None, counts=None):
             self.dm = dm
             self.stdoutlen = 0
             self.lastTestSeen = "remoteautomation.py"
             self.proc = dm.launchProcess(cmd, stdout, cwd, env, True)
             self.messageLogger = messageLogger
             self.utilityPath = None
+
+            self.counts = counts
+            if self.counts is not None:
+                self.counts['pass'] = 0
+                self.counts['fail'] = 0
+                self.counts['todo'] = 0
 
             if (self.proc is None):
                 if cmd[0] == 'am':
@@ -360,6 +366,22 @@ class RemoteAutomation(Automation):
                 for message in parsed_messages:
                     if isinstance(message, dict) and message.get('action') == 'test_start':
                         self.lastTestSeen = message['test']
+                    if isinstance(message, dict) and message.get('action') == 'log':
+                        line = message['message'].strip()
+                        if self.counts:
+                            m = re.match(".*:\s*(\d*)", line)
+                            if m:
+                                try:
+                                    val = int(m.group(1))
+                                    if "Passed:" in line:
+                                        self.counts['pass'] += val
+                                    elif "Failed:" in line:
+                                        self.counts['fail'] += val
+                                    elif "Todo:" in line:
+                                        self.counts['todo'] += val
+                                except:
+                                    pass
+
             return True
 
         @property
@@ -393,6 +415,8 @@ class RemoteAutomation(Automation):
                         slowLog = True
                     if hasOutput:
                         noOutputTimer = 0
+                    if self.counts and 'pass' in self.counts and self.counts['pass'] > 0:
+                        interval = 0.5
                 time.sleep(interval)
                 timer += interval
                 noOutputTimer += interval

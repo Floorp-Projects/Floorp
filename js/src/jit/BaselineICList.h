@@ -56,7 +56,6 @@ namespace jit {
     _(BindName_Fallback)                         \
                                                  \
     _(GetIntrinsic_Fallback)                     \
-    _(GetIntrinsic_Constant)                     \
                                                  \
     _(SetProp_Fallback)                          \
                                                  \

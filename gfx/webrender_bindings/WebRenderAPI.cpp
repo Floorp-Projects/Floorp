@@ -1311,15 +1311,15 @@ DisplayListBuilder::TopmostClipId()
   return Nothing();
 }
 
-Maybe<wr::WrScrollId>
+wr::WrScrollId
 DisplayListBuilder::TopmostScrollId()
 {
   for (auto it = mClipStack.crbegin(); it != mClipStack.crend(); it++) {
     if (it->is<wr::WrScrollId>()) {
-      return Some(it->as<wr::WrScrollId>());
+      return it->as<wr::WrScrollId>();
     }
   }
-  return Nothing();
+  return wr::WrScrollId { 0 };
 }
 
 bool

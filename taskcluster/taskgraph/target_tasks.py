@@ -333,11 +333,9 @@ def target_tasks_promote_firefox(full_task_graph, parameters, graph_config):
         # 'secondary' update/final verify tasks only run for
         # RCs
         if parameters.get('release_type') != 'rc':
-            if task.kind in ('release-buildbot-update-verify',
-                             'release-update-verify',
+            if task.kind in ('release-secondary-update-verify',
                              'release-secondary-final-verify'):
-                if 'secondary' in task.label:
-                    return False
+                return False
 
         if task.attributes.get('shipping_product') == 'firefox' and \
                 task.attributes.get('shipping_phase') == 'promote':

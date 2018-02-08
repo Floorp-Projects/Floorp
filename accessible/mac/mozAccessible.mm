@@ -917,6 +917,9 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     case roles::ARTICLE:
       return @"AXDocumentArticle";
 
+    case roles::NON_NATIVE_DOCUMENT:
+      return @"AXDocument";
+
     // macOS added an AXSubrole value to distinguish generic AXGroup objects
     // from those which are AXGroups as a result of an explicit ARIA role,
     // such as the non-landmark, non-listitem text containers in DPub ARIA.
