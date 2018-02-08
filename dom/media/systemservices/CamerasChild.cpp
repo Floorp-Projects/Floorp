@@ -34,7 +34,9 @@ CamerasSingleton::CamerasSingleton()
   : mCamerasMutex("CamerasSingleton::mCamerasMutex"),
     mCameras(nullptr),
     mCamerasChildThread(nullptr),
-    mFakeDeviceChangeEventThread(nullptr) {
+    mFakeDeviceChangeEventThread(nullptr),
+    mInShutdown(false)
+{
   LOG(("CamerasSingleton: %p", this));
 }
 
@@ -568,6 +570,9 @@ void
 Shutdown(void)
 {
   OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
+
+  CamerasSingleton::StartShutdown();
+
   CamerasChild* child = CamerasSingleton::Child();
   if (!child) {
     // We don't want to cause everything to get fired up if we're
@@ -728,7 +733,7 @@ CamerasChild::~CamerasChild()
 {
   LOG(("~CamerasChild: %p", this));
 
-  {
+  if (!CamerasSingleton::InShutdown()) {
     OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
     // In normal circumstances we've already shut down and the
     // following does nothing. But on fatal IPC errors we will
