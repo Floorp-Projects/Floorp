@@ -565,8 +565,7 @@ public class GeckoSession extends LayerSession
         ThreadUtils.assertOnUiThread();
 
         if (!isOpen()) {
-            Log.w(LOGTAG, "Attempted to close a GeckoSession that was already closed.")
-            return;
+            throw new IllegalStateException("Session is not open");
         }
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
