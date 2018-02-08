@@ -126,9 +126,6 @@ protected:
   SharedMutex mMutex;
   mozilla::CondVar mCondVar;
 
-  // Protected by mMutex.
-  nsTArray<RefPtr<WorkerRunnable>> mPreStartRunnables;
-
 protected:
   WorkerPrivateParent(WorkerPrivate* aParent,
                       const nsAString& aScriptURL, bool aIsChromeWorker,
@@ -405,6 +402,9 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 
   // Only used for top level workers.
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
+
+  // Protected by mMutex.
+  nsTArray<RefPtr<WorkerRunnable>> mPreStartRunnables;
 
   // Only touched on the parent thread (currently this is always the main
   // thread as SharedWorkers are always top-level).
