@@ -51,9 +51,9 @@ const device = {
 };
 
 /**
- * An enum containing the possible values for the device list state
+ * An enum containing the possible states for loadable things.
  */
-exports.deviceListState = createEnum([
+exports.loadableState = createEnum([
   "INITIALIZED",
   "LOADING",
   "LOADED",
@@ -93,7 +93,7 @@ exports.devices = {
   modalOpenedFromViewport: PropTypes.number,
 
   // Device list state, possible values are exported above in an enum
-  listState: PropTypes.oneOf(Object.keys(exports.deviceListState)),
+  listState: PropTypes.oneOf(Object.keys(exports.loadableState)),
 
 };
 
