@@ -232,26 +232,78 @@
 #  define MOZ_TSAN_BLACKLIST /* nothing */
 #endif
 
-/*
- * The MOZ_NO_SANITIZE_* family of macros is an annotation based on a more recently
- * introduced Clang feature that allows disabling various sanitizer features for
- * the particular function, including those from UndefinedBehaviorSanitizer.
- */
-
 #if defined(__has_attribute)
 #  if __has_attribute(no_sanitize)
 #    define MOZ_HAVE_NO_SANITIZE_ATTR
 #  endif
 #endif
 
+/*
+ * MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW disables *un*signed integer overflow
+ * checking on the function it annotates, in builds configured to perform it.
+ * (Currently this is only Clang using -fsanitize=unsigned-integer-overflow, or
+ * via --enable-unsigned-overflow-sanitizer in Mozilla's build system.)  It has
+ * no effect in other builds.
+ *
+ * Place this attribute at the very beginning of a function declaration.
+ *
+ * Unsigned integer overflow isn't *necessarily* a bug.  It's well-defined in
+ * C/C++, and code may reasonably depend upon it.  For example,
+ *
+ *   MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW inline bool
+ *   IsDecimal(char aChar)
+ *   {
+ *     // For chars less than '0', unsigned integer underflow occurs, to a value
+ *     // much greater than 10, so the overall test is false.
+ *     // For chars greater than '0', no overflow occurs, and only '0' to '9'
+ *     // pass the overall test.
+ *     return static_cast<unsigned int>(aChar) - '0' < 10;
+ *   }
+ *
+ * But even well-defined unsigned overflow often causes bugs when it occurs, so
+ * it should be restricted to functions annotated with this attribute.
+ *
+ * The compiler instrumentation to detect unsigned integer overflow has costs
+ * both at compile time and at runtime.  Functions that are repeatedly inlined
+ * at compile time will also implicitly inline the necessary instrumentation,
+ * increasing compile time.  Similarly, frequently-executed functions that
+ * require large amounts of instrumentation will also notice significant runtime
+ * slowdown to execute that instrumentation.  Use this attribute to eliminate
+ * those costs -- but only after carefully verifying that no overflow can occur.
+ */
 #if defined(MOZ_HAVE_NO_SANITIZE_ATTR)
-#  define MOZ_NO_SANITIZE_UINT_OVERFLOW __attribute__((no_sanitize("unsigned-integer-overflow")))
-#  define MOZ_NO_SANITIZE_INT_OVERFLOW __attribute__((no_sanitize("signed-integer-overflow")))
+#  define MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW __attribute__((no_sanitize("unsigned-integer-overflow")))
 #else
-#  define MOZ_NO_SANITIZE_UINT_OVERFLOW /* nothing */
-#  define MOZ_NO_SANITIZE_INT_OVERFLOW /* nothing */
+#  define MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW /* nothing */
 #endif
 
+/*
+ * MOZ_NO_SANITIZE_SIGNED_OVERFLOW disables *signed* integer overflow checking
+ * on the function it annotates, in builds configured to perform it.  (Currently
+ * this is only Clang using -fsanitize=signed-integer-overflow, or via
+ * --enable-signed-overflow-sanitizer in Mozilla's build system.  GCC support
+ * will probably be added in the future.)  It has no effect in other builds.
+ *
+ * Place this attribute at the very beginning of a function declaration.
+ *
+ * Signed integer overflow is undefined behavior in C/C++: *anything* can happen
+ * when it occurs.  *Maybe* wraparound behavior will occur, but maybe also the
+ * compiler will assume no overflow happens and will adversely optimize the rest
+ * of your code.  Code that contains signed integer overflow needs to be fixed.
+ *
+ * The compiler instrumentation to detect signed integer overflow has costs both
+ * at compile time and at runtime.  Functions that are repeatedly inlined at
+ * compile time will also implicitly inline the necessary instrumentation,
+ * increasing compile time.  Similarly, frequently-executed functions that
+ * require large amounts of instrumentation will also notice significant runtime
+ * slowdown to execute that instrumentation.  Use this attribute to eliminate
+ * those costs -- but only after carefully verifying that no overflow can occur.
+ */
+#if defined(MOZ_HAVE_NO_SANITIZE_ATTR)
+#  define MOZ_NO_SANITIZE_SIGNED_OVERFLOW __attribute__((no_sanitize("signed-integer-overflow")))
+#else
+#  define MOZ_NO_SANITIZE_SIGNED_OVERFLOW /* nothing */
+#endif
 
 #undef MOZ_HAVE_NO_SANITIZE_ATTR
 

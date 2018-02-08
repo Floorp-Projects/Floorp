@@ -368,6 +368,7 @@
 }
 
 .ruleview-ruleclose {
+  clear: both;
   cursor: text;
   padding-right: 20px;
 }
@@ -557,7 +558,7 @@
 
 .ruleview-property {
   border-left: 3px solid transparent;
-  clear: right;
+  clear: both;
   padding-left: 28px;
 }
 
