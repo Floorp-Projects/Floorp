@@ -9,6 +9,7 @@ DevToolsModules(
     'display-pixel-ratio.js',
     'location.js',
     'network-throttling.js',
+    'reload-conditions.js',
     'screenshot.js',
     'touch-simulation.js',
     'viewports.js',
