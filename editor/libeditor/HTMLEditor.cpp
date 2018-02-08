@@ -231,15 +231,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(HTMLEditor)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
 NS_INTERFACE_MAP_END_INHERITING(TextEditor)
 
-NS_IMETHODIMP
-HTMLEditor::Init(nsIDOMDocument* aDoc,
-                 nsIContent* aRoot,
+nsresult
+HTMLEditor::Init(nsIDocument& aDoc,
+                 Element* aRoot,
                  nsISelectionController* aSelCon,
                  uint32_t aFlags,
                  const nsAString& aInitialValue)
 {
-  NS_PRECONDITION(aDoc && !aSelCon, "bad arg");
-  NS_ENSURE_TRUE(aDoc, NS_ERROR_NULL_POINTER);
   MOZ_ASSERT(aInitialValue.IsEmpty(), "Non-empty initial values not supported");
 
   nsresult rulesRv = NS_OK;
@@ -255,8 +253,7 @@ HTMLEditor::Init(nsIDOMDocument* aDoc,
     }
 
     // Init mutation observer
-    nsCOMPtr<nsINode> document = do_QueryInterface(aDoc);
-    document->AddMutationObserverUnlessExists(this);
+    aDoc.AddMutationObserverUnlessExists(this);
 
     if (!mRootElement) {
       UpdateRootElement();
@@ -3089,7 +3086,8 @@ HTMLEditor::DeleteNode(nsIDOMNode* aNode)
 {
   // do nothing if the node is read-only
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  if (NS_WARN_IF(!IsModifiableNode(aNode) && !IsMozEditorBogusNode(content))) {
+  if (NS_WARN_IF(!IsModifiableNode(content) &&
+                 !IsMozEditorBogusNode(content))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -3247,13 +3245,6 @@ HTMLEditor::ContentRemoved(nsIDocument* aDocument,
     RefPtr<TextEditRules> rules(mRules);
     rules->DocumentModified();
   }
-}
-
-NS_IMETHODIMP_(bool)
-HTMLEditor::IsModifiableNode(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  return IsModifiableNode(node);
 }
 
 bool
@@ -4836,7 +4827,7 @@ HTMLEditor::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent)
   return IsActiveInDOMWindow();
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::GetPreferredIMEState(IMEState* aState)
 {
   // HTML editor don't prefer the CSS ime-mode because IE didn't do so too.

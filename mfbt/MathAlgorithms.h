@@ -561,6 +561,10 @@ struct WrapToSignedHelper
   static constexpr UnsignedType MaxValueUnsigned =
     static_cast<UnsignedType>(MaxValue);
 
+  // Overflow-correctness was proven in bug 1432646 and is explained in the
+  // comment below.  This function is very hot, both at compile time and
+  // runtime, so disable all overflow checking in it.
+  MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW MOZ_NO_SANITIZE_SIGNED_OVERFLOW
   static constexpr SignedType compute(UnsignedType aValue)
   {
     // This algorithm was originally provided here:
