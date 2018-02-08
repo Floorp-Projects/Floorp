@@ -150,6 +150,9 @@ public class WebAppActivity extends AppCompatActivity
         mPromptService = new PromptService(this, mGeckoView.getEventDispatcher());
         mDoorHangerPopup = new DoorHangerPopup(this, mGeckoView.getEventDispatcher());
 
+        mFormAssistPopup = (FormAssistPopup) findViewById(R.id.pwa_form_assist_popup);
+        mFormAssistPopup.create(mGeckoView);
+
         mTextSelection = TextSelection.Factory.create(mGeckoView, this);
         mTextSelection.create();
 
@@ -172,12 +175,6 @@ public class WebAppActivity extends AppCompatActivity
         updateFromManifest();
 
         mGeckoSession.loadUri(mManifest.getStartUri().toString());
-
-        mFormAssistPopup = (FormAssistPopup) findViewById(R.id.pwa_form_assist_popup);
-        mFormAssistPopup.create(mGeckoView);
-
-
-
     }
 
     private void fallbackToFennec(String message) {
@@ -218,9 +215,9 @@ public class WebAppActivity extends AppCompatActivity
     @Override
     public void onDestroy() {
         mTextSelection.destroy();
+        mFormAssistPopup.destroy();
         mDoorHangerPopup.destroy();
         mPromptService.destroy();
-        mFormAssistPopup.destroy();
         super.onDestroy();
     }
 
