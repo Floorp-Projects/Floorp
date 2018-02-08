@@ -1561,7 +1561,7 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mWorkerName(aWorkerName),
   mLoadingWorkerScript(false), mParentWindowPausedDepth(0),
   mParentFrozen(false),
-  mIsChromeWorker(aIsChromeWorker), mMainThreadObjectsForgotten(false),
+  mIsChromeWorker(aIsChromeWorker),
   mIsSecureContext(false), mWorkerType(aWorkerType),
   mCreationTimeStamp(TimeStamp::Now()),
   mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC)
@@ -1630,13 +1630,10 @@ WorkerPrivateParent<Derived>::~WorkerPrivateParent()
   DropJSObjects(this);
 }
 
-template <class Derived>
 void
-WorkerPrivateParent<Derived>::Traverse(nsCycleCollectionTraversalCallback& aCb)
+WorkerPrivate::Traverse(nsCycleCollectionTraversalCallback& aCb)
 {
   AssertIsOnParentThread();
-
-  WorkerPrivate* self = ParentAsWorkerPrivate();
 
   // The WorkerPrivate::mParentEventTargetRef has a reference to the exposed
   // Worker object, which is really held by the worker thread.  We traverse this
@@ -1645,9 +1642,9 @@ WorkerPrivateParent<Derived>::Traverse(nsCycleCollectionTraversalCallback& aCb)
   // break cycles involving the Worker and begin shutting it down (which does
   // happen in unlink) but ensures that the WorkerPrivate won't be deleted
   // before we're done shutting down the thread.
-  if (!self->mBusyCount && !mMainThreadObjectsForgotten) {
+  if (!mBusyCount && !mMainThreadObjectsForgotten) {
     nsCycleCollectionTraversalCallback& cb = aCb;
-    WorkerPrivateParent<Derived>* tmp = this;
+    WorkerPrivate* tmp = this;
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParentEventTargetRef);
   }
 }
@@ -2125,7 +2122,9 @@ bool
 WorkerPrivateParent<Derived>::ProxyReleaseMainThreadObjects()
 {
   AssertIsOnParentThread();
-  MOZ_ASSERT(!mMainThreadObjectsForgotten);
+
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+  MOZ_ASSERT(!self->mMainThreadObjectsForgotten);
 
   nsCOMPtr<nsILoadGroup> loadGroupToCancel;
   // If we're not overriden, then do nothing here.  Let the load group get
@@ -2137,7 +2136,7 @@ WorkerPrivateParent<Derived>::ProxyReleaseMainThreadObjects()
   bool result = mLoadInfo.ProxyReleaseMainThreadObjects(ParentAsWorkerPrivate(),
                                                         loadGroupToCancel);
 
-  mMainThreadObjectsForgotten = true;
+  self->mMainThreadObjectsForgotten = true;
 
   return result;
 }
@@ -2785,6 +2784,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mWorkerScriptExecutedSuccessfully(false)
   , mFetchHandlerWasAdded(false)
   , mOnLine(false)
+  , mMainThreadObjectsForgotten(false)
   , mBusyCount(0)
 {
   if (aParent) {
