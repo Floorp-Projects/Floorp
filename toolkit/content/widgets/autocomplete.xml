@@ -613,7 +613,7 @@
         this.onInput(event);
       ]]></handler>
 
-      <handler event="keypress" phase="capturing"
+      <handler event="keypress" phase="capturing" group="system"
                action="return this.onKeyPress(event);"/>
 
       <handler event="compositionstart" phase="capturing"
