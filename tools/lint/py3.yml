@@ -38,7 +38,6 @@ py3:
         - testing/web-platform
         - third_party
         - toolkit
-        - tools/git
         - tools/jprof
         - tools/profiler
         - tools/rb
