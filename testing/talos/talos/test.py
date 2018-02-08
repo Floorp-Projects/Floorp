@@ -787,34 +787,38 @@ class a11yr(PageloaderTest):
     alert_threshold = 5.0
 
 
+class WebkitBenchmark(PageloaderTest):
+    tpcycles = 1
+    tppagecycles = 5
+    tpmozafterpaint = False
+    tpchrome = False
+    format_pagename = False
+    lower_is_better = False
+    unit = 'score'
+
+
 @register_test()
-class speedometer(PageloaderTest):
-    """
-    Speedometer benchmark used by many browser vendors (from webkit)
-    """
+class speedometer(WebkitBenchmark):
+    # Speedometer benchmark used by many browser vendors (from webkit)
     tpmanifest = '${talos}/tests/speedometer/speedometer.manifest'
-    tpcycles = 1
-    tppagecycles = 5
-    tpmozafterpaint = False
-    tpchrome = False
-    format_pagename = False
-    lower_is_better = False
-    unit = 'score'
 
 
 @register_test()
-class stylebench(PageloaderTest):
-    """
-    StyleBench benchmark used by many browser vendors (from webkit)
-    """
+class stylebench(WebkitBenchmark):
+    # StyleBench benchmark used by many browser vendors (from webkit)
     tpmanifest = '${talos}/tests/stylebench/stylebench.manifest'
-    tpcycles = 1
-    tppagecycles = 5
-    tpmozafterpaint = False
-    tpchrome = False
-    format_pagename = False
-    lower_is_better = False
-    unit = 'score'
+
+
+@register_test()
+class motionmark_animometer(WebkitBenchmark):
+    # MotionMark benchmark used by many browser vendors (from webkit)
+    tpmanifest = '${talos}/tests/motionmark/animometer.manifest'
+
+
+@register_test()
+class motionmark_htmlsuite(WebkitBenchmark):
+    # MotionMark benchmark used by many browser vendors (from webkit)
+    tpmanifest = '${talos}/tests/motionmark/htmlsuite.manifest'
 
 
 @register_test()
