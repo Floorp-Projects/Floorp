@@ -130,9 +130,6 @@ protected:
   nsTArray<RefPtr<WorkerRunnable>> mPreStartRunnables;
 
 private:
-  nsString mScriptURL;
-  // This is the worker name for shared workers and dedicated workers.
-  nsString mWorkerName;
 
   Atomic<bool> mLoadingWorkerScript;
 
@@ -303,12 +300,6 @@ public:
     return mParentWindowPausedDepth > 0;
   }
 
-  const nsString&
-  ScriptURL() const
-  {
-    return mScriptURL;
-  }
-
   // This is used to handle importScripts(). When the worker is first loaded
   // and executed, it happens in a sync loop. At this point it sets
   // mLoadingWorkerScript to true. importScripts() calls that occur during the
@@ -394,12 +385,6 @@ public:
     }
   }
 
-  const nsString&
-  WorkerName() const
-  {
-    return mWorkerName;
-  }
-
   void
   GetAllSharedWorkers(nsTArray<RefPtr<SharedWorker>>& aSharedWorkers);
 
@@ -461,6 +446,11 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   };
 
   WorkerPrivate* mParent;
+
+  nsString mScriptURL;
+
+  // This is the worker name for shared workers and dedicated workers.
+  nsString mWorkerName;
 
   // The worker is owned by its thread, which is represented here.  This is set
   // in Constructor() and emptied by WorkerFinishedRunnable, and conditionally
@@ -1120,6 +1110,18 @@ public:
   {
     AssertIsOnParentThread();
     return mParentFrozen;
+  }
+
+  const nsString&
+  ScriptURL() const
+  {
+    return mScriptURL;
+  }
+
+  const nsString&
+  WorkerName() const
+  {
+    return mWorkerName;
   }
 
   nsIScriptContext*
