@@ -126,7 +126,8 @@ MessageEventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
     aWorkerPrivate->AssertInnerWindowIsCorrect();
 
-    return DispatchDOMEvent(aCx, aWorkerPrivate, aWorkerPrivate,
+    return DispatchDOMEvent(aCx, aWorkerPrivate,
+                            aWorkerPrivate->ParentEventTargetRef(),
                             !aWorkerPrivate->GetParent());
   }
 

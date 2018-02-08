@@ -62,9 +62,6 @@ AutoCompleteInput.prototype = {
   minResultsForPopup: 0,
   maxRows: 0,
 
-  showCommentColumn: false,
-  showImageColumn: false,
-
   timeout: 10,
   searchParam: "",
 

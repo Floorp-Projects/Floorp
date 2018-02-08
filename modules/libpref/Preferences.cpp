@@ -3923,7 +3923,7 @@ Preferences::GetLocalizedCString(const char* aPrefName,
                                  PrefValueKind aKind)
 {
   nsAutoString result;
-  nsresult rv = GetLocalizedString(aPrefName, result);
+  nsresult rv = GetLocalizedString(aPrefName, result, aKind);
   if (NS_SUCCEEDED(rv)) {
     CopyUTF16toUTF8(result, aResult);
   }

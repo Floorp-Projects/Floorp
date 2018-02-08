@@ -1874,6 +1874,11 @@ struct Frame
     // effectively the callee's instance.
     TlsData* tls;
 
+#if defined(JS_CODEGEN_MIPS32)
+    // Double word aligned frame ensures correct alignment for wasm locals
+    // on architectures that require the stack alignment to be more than word size.
+    uintptr_t padding_;
+#endif
     // The return address pushed by the call (in the case of ARM/MIPS the return
     // address is pushed by the first instruction of the prologue).
     void* returnAddress;
@@ -1925,8 +1930,10 @@ class DebugFrame
 
     // Avoid -Wunused-private-field warnings.
   protected:
-#if JS_BITS_PER_WORD == 32
-    uint32_t padding_;  // See alignmentStaticAsserts().
+#if JS_BITS_PER_WORD == 32 && !defined(JS_CODEGEN_MIPS32)
+    // See alignmentStaticAsserts().
+    // For MIPS32 padding is already incorporated in the frame.
+    uint32_t padding_;
 #endif
 
   private:

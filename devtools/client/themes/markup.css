@@ -263,11 +263,6 @@ ul.children + .tag-line::before {
   transition: background .5s;
 }
 
-.markupview-events {
-  display: none;
-  cursor: pointer;
-}
-
 .editor {
   /* Make sure the editor still appears above the tag-state */
   position: relative;
@@ -373,6 +368,7 @@ ul.children + .tag-line::before {
   color: var(--theme-highlight-red);
 }
 
+.theme-firebug .markupview-display,
 .theme-firebug .markupview-events {
   font-size: var(--theme-toolbar-font-size);
 }
@@ -414,8 +410,10 @@ ul.children + .tag-line::before {
   color: #787878;
 }
 
-/* Events */
+/* Display and Events Bubble */
+.markupview-display,
 .markupview-events {
+  display: none;
   font-size: 8px;
   font-weight: bold;
   line-height: 10px;
@@ -423,9 +421,10 @@ ul.children + .tag-line::before {
   padding: 0px 2px;
   margin-inline-start: 5px;
   -moz-user-select: none;
+  background-color: var(--theme-body-color-alt);
+  color: var(--theme-body-background);
 }
 
 .markupview-events {
-  background-color: var(--theme-body-color-alt);
-  color: var(--theme-body-background);
+  cursor: pointer;
 }

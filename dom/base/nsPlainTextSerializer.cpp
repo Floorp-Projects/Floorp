@@ -698,7 +698,7 @@ nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag)
 
     }
     else {
-      static char bulletCharArray[] = "*o+#";
+      static const char bulletCharArray[] = "*o+#";
       uint32_t index = mULCount > 0 ? (mULCount - 1) : 3;
       char bulletChar = bulletCharArray[index % 4];
       mInIndentString.Append(char16_t(bulletChar));

@@ -1392,13 +1392,25 @@ DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame, ICGetIntrinsic_Fallb
     if (stub.invalid())
         return true;
 
-    JitSpew(JitSpew_BaselineIC, "  Generating GetIntrinsic optimized stub");
-    ICGetIntrinsic_Constant::Compiler compiler(cx, res);
-    ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
-    if (!newStub)
-        return false;
+    if (stub->state().maybeTransition())
+        stub->discardStubs(cx);
 
-    stub->addNewStub(newStub);
+    if (stub->state().canAttachStub()) {
+        bool attached = false;
+        RootedScript script(cx, frame->script());
+        GetIntrinsicIRGenerator gen(cx, script, pc, stub->state().mode(), res);
+        if (gen.tryAttachStub()) {
+            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        BaselineCacheIRStubKind::Regular,
+                                                        ICStubEngine::Baseline, script, stub,
+                                                        &attached);
+            if (newStub)
+                JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
+        }
+        if (!attached)
+            stub->state().trackNotAttached();
+    }
+
     return true;
 }
 
@@ -1419,17 +1431,6 @@ ICGetIntrinsic_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     pushStubPayload(masm, R0.scratchReg());
 
     return tailCallVM(DoGetIntrinsicFallbackInfo, masm);
-}
-
-bool
-ICGetIntrinsic_Constant::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
-    masm.loadValue(Address(ICStubReg, ICGetIntrinsic_Constant::offsetOfValue()), R0);
-
-    EmitReturnFromIC(masm);
-    return true;
 }
 
 //
@@ -4380,14 +4381,6 @@ ICTypeUpdate_SingleObject::ICTypeUpdate_SingleObject(JitCode* stubCode, JSObject
 ICTypeUpdate_ObjectGroup::ICTypeUpdate_ObjectGroup(JitCode* stubCode, ObjectGroup* group)
   : ICStub(TypeUpdate_ObjectGroup, stubCode),
     group_(group)
-{ }
-
-ICGetIntrinsic_Constant::ICGetIntrinsic_Constant(JitCode* stubCode, const Value& value)
-  : ICStub(GetIntrinsic_Constant, stubCode),
-    value_(value)
-{ }
-
-ICGetIntrinsic_Constant::~ICGetIntrinsic_Constant()
 { }
 
 ICCall_Scripted::ICCall_Scripted(JitCode* stubCode, ICStub* firstMonitorStub,

@@ -216,19 +216,15 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(EditorBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(EditorBase)
 
 
-NS_IMETHODIMP
-EditorBase::Init(nsIDOMDocument* aDOMDocument,
-                 nsIContent* aRoot,
+nsresult
+EditorBase::Init(nsIDocument& aDocument,
+                 Element* aRoot,
                  nsISelectionController* aSelectionController,
                  uint32_t aFlags,
                  const nsAString& aValue)
 {
   MOZ_ASSERT(mAction == EditAction::none,
              "Initializing during an edit action is an error");
-  MOZ_ASSERT(aDOMDocument);
-  if (!aDOMDocument) {
-    return NS_ERROR_NULL_POINTER;
-  }
 
   // First only set flags, but other stuff shouldn't be initialized now.
   // Don't move this call after initializing mDocument.
@@ -240,7 +236,7 @@ EditorBase::Init(nsIDOMDocument* aDOMDocument,
   SetFlags(aFlags);
   NS_ASSERTION(NS_SUCCEEDED(rv), "SetFlags() failed");
 
-  mDocument = do_QueryInterface(aDOMDocument);
+  mDocument = &aDocument;
   // HTML editors currently don't have their own selection controller,
   // so they'll pass null as aSelCon, and we'll get the selection controller
   // off of the presshell.
@@ -256,8 +252,9 @@ EditorBase::Init(nsIDOMDocument* aDOMDocument,
              "Selection controller should be available at this point");
 
   //set up root element if we are passed one.
-  if (aRoot)
-    mRootElement = do_QueryInterface(aRoot);
+  if (aRoot) {
+    mRootElement = aRoot;
+  }
 
   mUpdateCount=0;
 
@@ -1351,14 +1348,6 @@ EditorBase::RemoveAttribute(Element* aElement,
   RefPtr<ChangeAttributeTransaction> transaction =
     ChangeAttributeTransaction::CreateToRemove(*aElement, *aAttribute);
   return DoTransaction(transaction);
-}
-
-bool
-EditorBase::OutputsMozDirty()
-{
-  // Return true for Composer (!IsInteractionAllowed()) or mail
-  // (IsMailEditor()), but false for webpages.
-  return !IsInteractionAllowed() || IsMailEditor();
 }
 
 NS_IMETHODIMP
@@ -2509,7 +2498,7 @@ EditorBase::CommitComposition()
     IMEStateManager::NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, pc) : NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 EditorBase::GetPreferredIMEState(IMEState* aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
@@ -5247,7 +5236,7 @@ private:
   nsCOMPtr<nsISelectionController> mSelectionController;
 };
 
-NS_IMETHODIMP
+nsresult
 EditorBase::FinalizeSelection()
 {
   nsCOMPtr<nsISelectionController> selectionController =
@@ -5415,12 +5404,6 @@ EditorBase::SwitchTextDirectionTo(uint32_t aDirection)
 }
 
 bool
-EditorBase::IsModifiableNode(nsIDOMNode* aNode)
-{
-  return true;
-}
-
-bool
 EditorBase::IsModifiableNode(nsINode* aNode)
 {
   return true;
@@ -5564,16 +5547,6 @@ NS_IMETHODIMP
 EditorBase::SetSuppressDispatchingInputEvent(bool aSuppress)
 {
   mDispatchInputEvent = !aSuppress;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EditorBase::GetIsInEditAction(bool* aIsInEditAction)
-{
-  // NOTE: If you need to override this method, you need to make
-  //       IsInEditAction() virtual.
-  MOZ_ASSERT(aIsInEditAction, "aIsInEditAction must not be null");
-  *aIsInEditAction = IsInEditAction();
   return NS_OK;
 }
 
