@@ -1152,35 +1152,27 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
     const Sig& sig = instance.metadata(tier).lookupFuncExport(funcIndex).sig();
     unsigned numArgs = sig.args().length();
 
-    // asm.js needs to act like a normal JS function which means having the name
-    // from the original source and being callable as a constructor.
-    bool optimized = false;
     if (instance.isAsmJS()) {
+        // asm.js needs to act like a normal JS function which means having the
+        // name from the original source and being callable as a constructor.
         RootedAtom name(cx, instance.getFuncAtom(cx, funcIndex));
         if (!name)
             return false;
-
-        optimized = CanBeJitOptimized(sig);
-        JSFunction::Flags flags = optimized ? JSFunction::ASMJS_OPT_CTOR : JSFunction::ASMJS_CTOR;
         fun.set(NewNativeConstructor(cx, WasmCall, numArgs, name, gc::AllocKind::FUNCTION_EXTENDED,
-                                     SingletonObject, flags));
+                                     SingletonObject, JSFunction::ASMJS_CTOR));
+        if (!fun)
+            return false;
+        fun->setAsmJSIndex(funcIndex);
     } else {
         RootedAtom name(cx, NumberToAtom(cx, funcIndex));
         if (!name)
             return false;
-
-        optimized = true;
         fun.set(NewNativeFunction(cx, WasmCall, numArgs, name, gc::AllocKind::FUNCTION_EXTENDED,
                                   SingletonObject, JSFunction::WASM_FUN));
-    }
-
-    if (!fun)
-        return false;
-
-    if (optimized)
+        if (!fun)
+            return false;
         fun->setWasmJitEntry(instance.code().getAddressOfJitEntry(funcIndex));
-    else
-        fun->setAsmJSCtorFuncIndex(funcIndex);
+    }
 
     fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT, ObjectValue(*instanceObj));
 

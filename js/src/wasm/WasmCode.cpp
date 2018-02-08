@@ -793,8 +793,8 @@ Code::setTier2(UniqueCodeSegment segment) const
 uint32_t
 Code::lookupFuncIndex(JSFunction* fun) const
 {
-    if (fun->hasWasmFuncIndex())
-        return fun->wasmFuncIndex();
+    if (fun->isAsmJSNative())
+        return fun->asmJSFuncIndex();
     return lookupRange(*fun->wasmJitEntry())->funcIndex();
 }
 
