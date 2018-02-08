@@ -179,7 +179,6 @@ public class CustomTabsActivity extends AppCompatActivity
 
     @Override
     public void onDestroy() {
-        mGeckoSession.closeWindow();
         mTextSelection.destroy();
         mFormAssistPopup.destroy();
         mDoorHangerPopup.destroy();
