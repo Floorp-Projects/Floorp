@@ -1562,9 +1562,7 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mLoadingWorkerScript(false), mParentWindowPausedDepth(0),
   mParentFrozen(false),
   mIsChromeWorker(aIsChromeWorker),
-  mIsSecureContext(false), mWorkerType(aWorkerType),
-  mCreationTimeStamp(TimeStamp::Now()),
-  mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC)
+  mIsSecureContext(false), mWorkerType(aWorkerType)
 {
   MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
 
@@ -2786,6 +2784,8 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mOnLine(false)
   , mMainThreadObjectsForgotten(false)
   , mBusyCount(0)
+  , mCreationTimeStamp(TimeStamp::Now())
+  , mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC)
 {
   if (aParent) {
     aParent->AssertIsOnWorkerThread();

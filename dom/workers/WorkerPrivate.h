@@ -166,8 +166,6 @@ private:
   // use our global object's secure state there.
   bool mIsSecureContext;
   WorkerType mWorkerType;
-  TimeStamp mCreationTimeStamp;
-  DOMHighResTimeStamp mCreationTimeHighRes;
 
 protected:
   WorkerPrivateParent(WorkerPrivate* aParent,
@@ -481,23 +479,6 @@ public:
     // any thread
     MOZ_ASSERT(IsServiceWorker());
     mLoadingWorkerScript = aLoadingWorkerScript;
-  }
-
-  TimeStamp CreationTimeStamp() const
-  {
-    return mCreationTimeStamp;
-  }
-
-  DOMHighResTimeStamp CreationTime() const
-  {
-    return mCreationTimeHighRes;
-  }
-
-  DOMHighResTimeStamp TimeStampToDOMHighRes(const TimeStamp& aTimeStamp) const
-  {
-    MOZ_ASSERT(!aTimeStamp.IsNull());
-    TimeDuration duration = aTimeStamp - mCreationTimeStamp;
-    return duration.ToMilliseconds();
   }
 
   nsIPrincipal*
@@ -909,6 +890,9 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   // This is touched on parent thread only, but it can be read on a different
   // thread before crashing because hanging.
   Atomic<uint64_t> mBusyCount;
+
+  TimeStamp mCreationTimeStamp;
+  DOMHighResTimeStamp mCreationTimeHighRes;
 
 protected:
   ~WorkerPrivate();
@@ -1384,6 +1368,23 @@ public:
   BusyCount()
   {
     return mBusyCount;
+  }
+
+  TimeStamp CreationTimeStamp() const
+  {
+    return mCreationTimeStamp;
+  }
+
+  DOMHighResTimeStamp CreationTime() const
+  {
+    return mCreationTimeHighRes;
+  }
+
+  DOMHighResTimeStamp TimeStampToDOMHighRes(const TimeStamp& aTimeStamp) const
+  {
+    MOZ_ASSERT(!aTimeStamp.IsNull());
+    TimeDuration duration = aTimeStamp - mCreationTimeStamp;
+    return duration.ToMilliseconds();
   }
 
 private:
