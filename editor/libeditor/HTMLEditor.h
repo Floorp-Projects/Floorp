@@ -106,15 +106,15 @@ public:
   bool GetReturnInParagraphCreatesNewParagraph();
   Element* GetSelectionContainer();
 
+  // nsIEditor overrides
+  NS_IMETHOD GetPreferredIMEState(widget::IMEState* aState) override;
+
   // nsISelectionListener overrides
   NS_IMETHOD NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
                                     nsISelection* aSelection,
                                     int16_t aReason) override;
 
   // TextEditor overrides
-  virtual nsresult Init(nsIDocument& aDoc, Element* aRoot,
-                        nsISelectionController* aSelCon, uint32_t aFlags,
-                        const nsAString& aValue) override;
   NS_IMETHOD BeginningOfDocument() override;
   virtual nsresult HandleKeyPressEvent(
                      WidgetKeyboardEvent* aKeyboardEvent) override;
@@ -221,9 +221,10 @@ public:
   // Overrides of EditorBase interface methods
   virtual nsresult EndUpdateViewBatch() override;
 
+  NS_IMETHOD Init(nsIDOMDocument* aDoc, nsIContent* aRoot,
+                  nsISelectionController* aSelCon, uint32_t aFlags,
+                  const nsAString& aValue) override;
   NS_IMETHOD PreDestroy(bool aDestroyingFrames) override;
-
-  virtual nsresult GetPreferredIMEState(widget::IMEState* aState) override;
 
   /**
    * @param aElement        Must not be null.
@@ -390,6 +391,7 @@ public:
                  const EditorRawDOMPoint& aPointToInsert,
                  EditorRawDOMPoint* aPointAfterInsertedString =
                    nullptr) override;
+  NS_IMETHOD_(bool) IsModifiableNode(nsIDOMNode* aNode) override;
   virtual bool IsModifiableNode(nsINode* aNode) override;
 
   NS_IMETHOD SelectAll() override;
