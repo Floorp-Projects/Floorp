@@ -155,12 +155,6 @@ private:
 public:
   NS_INLINE_DECL_REFCOUNTING(WorkerPrivateParent)
 
-  void
-  EnableDebugger();
-
-  void
-  DisableDebugger();
-
   nsresult
   Dispatch(already_AddRefed<WorkerRunnable> aRunnable);
 
@@ -1391,6 +1385,12 @@ public:
 
   void
   FlushReportsToSharedWorkers(nsIConsoleReportCollector* aReporter);
+
+  void
+  EnableDebugger();
+
+  void
+  DisableDebugger();
 
 private:
   WorkerPrivate(WorkerPrivate* aParent,
