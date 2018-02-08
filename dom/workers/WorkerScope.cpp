@@ -160,8 +160,7 @@ WorkerGlobalScope::GetCrypto(ErrorResult& aError)
   mWorkerPrivate->AssertIsOnWorkerThread();
 
   if (!mCrypto) {
-    mCrypto = new Crypto();
-    mCrypto->Init(this);
+    mCrypto = new Crypto(this);
   }
 
   return mCrypto;

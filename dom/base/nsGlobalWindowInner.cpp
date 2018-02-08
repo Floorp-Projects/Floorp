@@ -3033,8 +3033,7 @@ Crypto*
 nsGlobalWindowInner::GetCrypto(ErrorResult& aError)
 {
   if (!mCrypto) {
-    mCrypto = new Crypto();
-    mCrypto->Init(this);
+    mCrypto = new Crypto(this);
   }
   return mCrypto;
 }

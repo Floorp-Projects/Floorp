@@ -22,7 +22,6 @@ namespace dom {
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Crypto)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCrypto)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Crypto)
@@ -30,19 +29,13 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(Crypto)
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Crypto, mParent, mSubtle)
 
-Crypto::Crypto()
+Crypto::Crypto(nsIGlobalObject* aParent)
+  : mParent(aParent)
 {
 }
 
 Crypto::~Crypto()
 {
-}
-
-void
-Crypto::Init(nsIGlobalObject* aParent)
-{
-  mParent = do_QueryInterface(aParent);
-  MOZ_ASSERT(mParent);
 }
 
 /* virtual */ JSObject*
