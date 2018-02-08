@@ -1024,8 +1024,6 @@ public:
    * set mCurrentFrame and related state. Also temporarily sets mDirtyRect.
    * aDirtyRect is relative to aForChild.
    */
-  class AutoBuildingDisplayList;
-  friend class AutoBuildingDisplayList;
   class AutoBuildingDisplayList {
   public:
     AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder,
@@ -1117,8 +1115,6 @@ public:
   /**
    * A helper class to temporarily set the value of mInTransform.
    */
-  class AutoInTransformSetter;
-  friend class AutoInTransformSetter;
   class AutoInTransformSetter {
   public:
     AutoInTransformSetter(nsDisplayListBuilder* aBuilder, bool aInTransform)
@@ -1136,8 +1132,6 @@ public:
   /**
    * A helper class to temporarily set the value of mFilterASR.
    */
-  class AutoFilterASRSetter;
-  friend class AutoFilterASRSetter;
   class AutoFilterASRSetter {
   public:
     AutoFilterASRSetter(nsDisplayListBuilder* aBuilder, bool aUsingFilter)
@@ -1155,8 +1149,6 @@ public:
     const ActiveScrolledRoot* mOldValue;
   };
 
-  class AutoSaveRestorePerspectiveIndex;
-  friend class AutoSaveRestorePerspectiveIndex;
   class AutoSaveRestorePerspectiveIndex {
   public:
     AutoSaveRestorePerspectiveIndex(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
@@ -1184,8 +1176,6 @@ public:
   /**
    * A helper class to temporarily set the value of mCurrentScrollParentId.
    */
-  class AutoCurrentScrollParentIdSetter;
-  friend class AutoCurrentScrollParentIdSetter;
   class AutoCurrentScrollParentIdSetter {
   public:
     AutoCurrentScrollParentIdSetter(nsDisplayListBuilder* aBuilder, ViewID aScrollId)
@@ -1230,8 +1220,6 @@ public:
    * Used to update the current active scrolled root on the display list
    * builder, and to create new active scrolled roots.
    */
-  class AutoCurrentActiveScrolledRootSetter;
-  friend class AutoCurrentActiveScrolledRootSetter;
   class AutoCurrentActiveScrolledRootSetter {
   public:
     explicit AutoCurrentActiveScrolledRootSetter(nsDisplayListBuilder* aBuilder)
@@ -1296,8 +1284,6 @@ public:
    * The rule is: all child items of the container item need to have
    * clipped bounds with respect to the container ASR.
    */
-  class AutoContainerASRTracker;
-  friend class AutoContainerASRTracker;
   class AutoContainerASRTracker {
   public:
     explicit AutoContainerASRTracker(nsDisplayListBuilder* aBuilder)
@@ -1329,8 +1315,6 @@ public:
    * A helper class to temporarily set the value of mCurrentScrollbarTarget
    * and mCurrentScrollbarFlags.
    */
-  class AutoCurrentScrollbarInfoSetter;
-  friend class AutoCurrentScrollbarInfoSetter;
   class AutoCurrentScrollbarInfoSetter {
   public:
     AutoCurrentScrollbarInfoSetter(nsDisplayListBuilder* aBuilder, ViewID aScrollTargetID,
@@ -1361,8 +1345,6 @@ public:
    * context root.  The 3D context root computes it's bounds from
    * these transformed bounds.
    */
-  class AutoAccumulateTransform;
-  friend class AutoAccumulateTransform;
   class AutoAccumulateTransform {
   public:
     typedef mozilla::gfx::Matrix4x4 Matrix4x4;
@@ -1402,8 +1384,6 @@ public:
    * transform on the path, but it is not empty for the accumulated
    * transform.
    */
-  class AutoAccumulateRect;
-  friend class AutoAccumulateRect;
   class AutoAccumulateRect {
   public:
     explicit AutoAccumulateRect(nsDisplayListBuilder* aBuilder)
@@ -1686,8 +1666,6 @@ public:
    * the value of mPreserves3DCtx before returning back to the parent.
    * This class do it for the users.
    */
-  class AutoPreserves3DContext;
-  friend class AutoPreserves3DContext;
   class AutoPreserves3DContext {
   public:
     explicit AutoPreserves3DContext(nsDisplayListBuilder* aBuilder)

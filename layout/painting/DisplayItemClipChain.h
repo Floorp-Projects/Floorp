@@ -80,7 +80,7 @@ struct DisplayItemClipChain {
   DisplayItemClip mClip;
   const ActiveScrolledRoot* mASR;
   RefPtr<const DisplayItemClipChain> mParent;
-  mutable uint32_t mRefCount = 0;
+  uint32_t mRefCount = 0;
 #ifdef DEBUG
   bool mOnStack;
 #endif
