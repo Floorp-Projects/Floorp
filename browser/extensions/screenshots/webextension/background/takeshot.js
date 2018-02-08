@@ -1,4 +1,4 @@
-/* globals communication, shot, main, auth, catcher, analytics, buildSettings, blobConverters */
+/* globals communication, shot, main, auth, catcher, analytics, buildSettings, blobConverters, thumbnailGenerator */
 
 "use strict";
 
@@ -13,6 +13,7 @@ this.takeshot = (function() {
     shot.favicon = sender.tab.favIconUrl;
     let capturePromise = Promise.resolve();
     let openedTab;
+    let thumbnailBlob;
     if (!shot.clipNames().length) {
       // canvas.drawWindow isn't available, so we fall back to captureVisibleTab
       capturePromise = screenshotPage(selectedPos, scroll).then((dataUrl) => {
@@ -33,8 +34,9 @@ this.takeshot = (function() {
     }
     let convertBlobPromise = Promise.resolve();
     if (buildSettings.uploadBinary && !imageBlob) {
-      imageBlob = blobConverters.dataUrlToBlob(shot.getClip(shot.clipNames()[0]).image.url);
-      shot.getClip(shot.clipNames()[0]).image.url = "";
+      let clipImage = shot.getClip(shot.clipNames()[0]).image;
+      imageBlob = blobConverters.dataUrlToBlob(clipImage.url);
+      clipImage.url = "";
     } else if (!buildSettings.uploadBinary && imageBlob) {
       convertBlobPromise = blobConverters.blobToDataUrl(imageBlob).then((dataUrl) => {
         shot.getClip(shot.clipNames()[0]).image.url = dataUrl;
@@ -54,13 +56,25 @@ this.takeshot = (function() {
     return catcher.watchPromise(capturePromise.then(() => {
       return convertBlobPromise;
     }).then(() => {
+      if (buildSettings.uploadBinary) {
+        let blobToUrlPromise = blobConverters.blobToDataUrl(imageBlob);
+        return thumbnailGenerator.createThumbnailBlobFromPromise(shot, blobToUrlPromise);
+      }
+      return thumbnailGenerator.createThumbnailUrl(shot);
+    }).then((thumbnailImage) => {
+      if (buildSettings.uploadBinary) {
+        thumbnailBlob = thumbnailImage;
+      } else {
+        shot.thumbnail = thumbnailImage;
+      }
+    }).then(() => {
       return browser.tabs.create({url: shot.creatingUrl})
     }).then((tab) => {
       openedTab = tab;
       sendEvent('internal', 'open-shot-tab');
-      return uploadShot(shot, imageBlob);
+      return uploadShot(shot, imageBlob, thumbnailBlob);
     }).then(() => {
-      return browser.tabs.update(openedTab.id, {url: shot.viewUrl}).then(
+      return browser.tabs.update(openedTab.id, {url: shot.viewUrl, loadReplace: true}).then(
         null,
         (error) => {
           // FIXME: If https://bugzilla.mozilla.org/show_bug.cgi?id=1365718 is resolved,
@@ -73,7 +87,7 @@ this.takeshot = (function() {
         }
       );
     }).then(() => {
-      catcher.watchPromise(communication.sendToBootstrap('incrementUploadCount'));
+      catcher.watchPromise(communication.sendToBootstrap("incrementCount", {scalar: "upload"}));
       return shot.viewUrl;
     }).catch((error) => {
       browser.tabs.remove(openedTab.id);
@@ -131,29 +145,43 @@ this.takeshot = (function() {
   }
 
   /** Creates a multipart TypedArray, given {name: value} fields
-      and {name: blob} files
+      and a files array in the format of
+      [{fieldName: "NAME", filename: "NAME.png", blob: fileBlob}, {...}, ...]
 
       Returns {body, "content-type"}
       */
-  function createMultipart(fields, fileField, fileFilename, blob) {
+  function createMultipart(fields, files) {
     let boundary = "---------------------------ScreenshotBoundary" + Date.now();
-    return blobConverters.blobToArray(blob).then((blobAsBuffer) => {
-      let body = [];
-      for (let name in fields) {
-        body.push("--" + boundary);
-        body.push(`Content-Disposition: form-data; name="${name}"`);
-        body.push("");
-        body.push(fields[name]);
-      }
+    let body = [];
+    for (let name in fields) {
       body.push("--" + boundary);
-      body.push(`Content-Disposition: form-data; name="${fileField}"; filename="${fileFilename}"`);
-      body.push(`Content-Type: ${blob.type}`);
+      body.push(`Content-Disposition: form-data; name="${name}"`);
       body.push("");
-      body.push("");
-      body = body.join("\r\n");
-      let enc = new TextEncoder("utf-8");
-      body = enc.encode(body);
-      body = concatBuffers(body.buffer, blobAsBuffer);
+      body.push(fields[name]);
+    }
+    body.push("");
+    body = body.join("\r\n");
+    let enc = new TextEncoder("utf-8");
+    body = enc.encode(body).buffer;
+
+    let blobToArrayPromises = files.map(f => {
+      return blobConverters.blobToArray(f.blob);
+    });
+
+    return Promise.all(blobToArrayPromises).then(buffers => {
+      for (let i = 0; i < buffers.length; i++) {
+        let filePart = [];
+        filePart.push("--" + boundary);
+        filePart.push(`Content-Disposition: form-data; name="${files[i].fieldName}"; filename="${files[i].filename}"`);
+        filePart.push(`Content-Type: ${files[i].blob.type}`);
+        filePart.push("");
+        filePart.push("");
+        filePart = filePart.join("\r\n");
+        filePart = concatBuffers(enc.encode(filePart).buffer, buffers[i]);
+        body = concatBuffers(body, filePart);
+        body = concatBuffers(body, enc.encode("\r\n").buffer);
+      }
+
       let tail = `\r\n--${boundary}--`;
       tail = enc.encode(tail);
       body = concatBuffers(body, tail.buffer);
@@ -164,14 +192,18 @@ this.takeshot = (function() {
     });
   }
 
-  function uploadShot(shot, blob) {
+  function uploadShot(shot, blob, thumbnail) {
     let headers;
     return auth.authHeaders().then((_headers) => {
       headers = _headers;
       if (blob) {
+        let files = [ {fieldName: "blob", filename: "screenshot.png", blob} ];
+        if (thumbnail) {
+          files.push({fieldName: "thumbnail", filename: "thumbnail.png", blob: thumbnail});
+        }
         return createMultipart(
           {shot: JSON.stringify(shot.asJson())},
-          "blob", "screenshot.png", blob
+          files
         );
       }
       return {

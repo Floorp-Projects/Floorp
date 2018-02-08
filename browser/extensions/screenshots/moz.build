@@ -379,7 +379,8 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["build"] 
   'webextension/build/onboardingCss.js',
   'webextension/build/onboardingHtml.js',
   'webextension/build/raven.js',
-  'webextension/build/shot.js'
+  'webextension/build/shot.js',
+  'webextension/build/thumbnailGenerator.js'
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["icons"] += [
