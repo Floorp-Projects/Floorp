@@ -28,7 +28,7 @@
     </implementation>
   </binding>
 
-  <binding id="tree" extends="chrome://global/content/bindings/tree.xml#tree-base" role="xul:tree">
+  <binding id="tree" extends="chrome://global/content/bindings/tree.xml#tree-base">
     <content hidevscroll="true" hidehscroll="true" clickthrough="never">
       <children includes="treecols"/>
       <xul:stack class="tree-stack" flex="1">
@@ -1025,7 +1025,7 @@
     </handlers>
   </binding>
 
-  <binding id="treecols" role="xul:treecolumns">
+  <binding id="treecols">
     <resources>
       <stylesheet src="chrome://global/skin/tree.css"/>
     </resources>
@@ -1269,7 +1269,7 @@
     </handlers>
   </binding>
 
-  <binding id="treecol-base" role="xul:treecolumnitem"
+  <binding id="treecol-base"
            extends="chrome://global/content/bindings/tree.xml#tree-base">
     <implementation>
       <constructor>
@@ -1487,7 +1487,7 @@
     </content>
   </binding>
 
-  <binding id="columnpicker" display="xul:button" role="xul:button"
+  <binding id="columnpicker" display="xul:button"
            extends="chrome://global/content/bindings/tree.xml#tree-base">
     <content>
       <xul:image class="tree-columnpicker-icon"/>
