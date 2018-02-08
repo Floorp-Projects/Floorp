@@ -5912,7 +5912,8 @@ JS_SetOffthreadIonCompilationEnabled(JSContext* cx, bool enabled);
     Register(JUMP_THRESHOLD, "jump-threshold")                              \
     Register(SIMULATOR_ALWAYS_INTERRUPT, "simulator.always-interrupt")      \
     Register(SPECTRE_INDEX_MASKING, "spectre.index-masking")                \
-    Register(ASMJS_ATOMICS_ENABLE, "asmjs.atomics.enable")                  \
+    Register(SPECTRE_STRING_MITIGATIONS, "spectre.string-mitigations")      \
+Register(ASMJS_ATOMICS_ENABLE, "asmjs.atomics.enable")  \
     Register(WASM_FOLD_OFFSETS, "wasm.fold-offsets")
 
 typedef enum JSJitCompilerOption {
