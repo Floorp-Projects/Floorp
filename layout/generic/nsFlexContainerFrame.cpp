@@ -1660,7 +1660,7 @@ nsFlexContainerFrame::
  * intrinsic size is marked as dirty (due to a style or DOM change).
  *
  * In particular the computed height may change between measuring reflows due to
- * how the mIsFlexContainerMeasuringReflow flag affects size computation (see
+ * how the mIsFlexContainerMeasuringBSize flag affects size computation (see
  * bug 1336708).
  *
  * Caching it prevents us from doing exponential reflows in cases of deeply
@@ -1765,8 +1765,7 @@ nsFlexContainerFrame::
     childRIForMeasuringBSize(aPresContext, aParentReflowInput,
                              aFlexItem.Frame(), availSize,
                              nullptr, ReflowInput::CALLER_WILL_INIT);
-  // XXXdholbert NOTE: Next patch will do s/Height/BSize/ on this flag:
-  childRIForMeasuringBSize.mFlags.mIsFlexContainerMeasuringHeight = true;
+  childRIForMeasuringBSize.mFlags.mIsFlexContainerMeasuringBSize = true;
   childRIForMeasuringBSize.Init(aPresContext);
 
   if (aFlexItem.IsStretched()) {
