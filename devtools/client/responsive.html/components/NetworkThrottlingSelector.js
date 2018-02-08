@@ -48,7 +48,7 @@ class NetworkThrottlingSelector extends PureComponent {
       networkThrottling,
     } = this.props;
 
-    let selectClass = "";
+    let selectClass = "toolbar-dropdown";
     let selectedProfile;
     if (networkThrottling.enabled) {
       selectClass += " selected";

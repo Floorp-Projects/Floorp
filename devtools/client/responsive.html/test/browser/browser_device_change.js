@@ -31,6 +31,8 @@ addDeviceForTest(testDevice);
 addRDMTask(TEST_URL, async function ({ ui }) {
   let { store } = ui.toolWindow;
 
+  reloadOnUAChange(true);
+
   // Wait until the viewport has been added and the device list has been loaded
   await waitUntilState(store, state => state.viewports.length == 1
     && state.devices.listState == Types.loadableState.LOADED);
@@ -72,6 +74,8 @@ addRDMTask(TEST_URL, async function ({ ui }) {
   await testUserAgent(ui, DEFAULT_UA);
   await testDevicePixelRatio(ui, 1);
   await testTouchEventsOverride(ui, false);
+
+  reloadOnUAChange(false);
 });
 
 add_task(async function () {
@@ -79,6 +83,8 @@ add_task(async function () {
   const { ui } = await openRDM(tab);
 
   let { store } = ui.toolWindow;
+
+  reloadOnUAChange(true);
 
   // Wait until the viewport has been added and the device list has been loaded
   await waitUntilState(store, state => state.viewports.length == 1
@@ -102,6 +108,8 @@ add_task(async function () {
   await testUserAgentFromBrowser(tab.linkedBrowser, DEFAULT_UA);
 
   await removeTab(tab);
+
+  reloadOnUAChange(false);
 });
 
 function testViewportDimensions(ui, w, h) {
