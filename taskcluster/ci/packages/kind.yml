@@ -175,3 +175,14 @@ jobs:
         # of devscripts.
         - deb7-devscripts-2.14
         - deb7-dpkg-1.17
+
+  deb7-gdb:
+    description: "gdb for Debian wheezy"
+    treeherder:
+      symbol: Deb7(gdb)
+    run:
+      using: debian-package
+      dsc:
+        url: http://snapshot.debian.org/archive/debian/20170119T152956Z/pool/main/g/gdb/gdb_7.12-6.dsc
+        sha256: 9727dcb3d6b655e4f2a92110f5db076a490aa50b739804be239905ecff3aacc8
+      patch: gdb-wheezy.diff
