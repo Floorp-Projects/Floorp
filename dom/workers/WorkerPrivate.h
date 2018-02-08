@@ -100,10 +100,20 @@ public:
   }
 };
 
-template <class Derived>
-class WorkerPrivateParent
+class WorkerPrivate
 {
-protected:
+  class EventTarget;
+  friend class EventTarget;
+  friend class mozilla::dom::WorkerHolder;
+  friend class AutoSyncLoopHolder;
+
+  struct TimeoutInfo;
+
+  class MemoryReporter;
+  friend class MemoryReporter;
+
+  friend class mozilla::dom::WorkerThread;
+
   typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
 
 public:
@@ -120,48 +130,16 @@ public:
     nsString mOrigin;
   };
 
-protected:
-  typedef mozilla::ErrorResult ErrorResult;
-
-  SharedMutex mMutex;
-  mozilla::CondVar mCondVar;
-
-protected:
-  WorkerPrivateParent(WorkerPrivate* aParent,
-                      const nsAString& aScriptURL, bool aIsChromeWorker,
-                      WorkerType aWorkerType,
-                      const nsAString& aWorkerName,
-                      const nsACString& aServiceWorkerScope,
-                      WorkerLoadInfo& aLoadInfo);
-
-  virtual ~WorkerPrivateParent();
-
-public:
-  NS_INLINE_DECL_REFCOUNTING(WorkerPrivateParent)
-
-};
-
-class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
-{
-  class EventTarget;
-  friend class EventTarget;
-  friend class mozilla::dom::WorkerHolder;
-  friend class WorkerPrivateParent<WorkerPrivate>;
-  friend class AutoSyncLoopHolder;
-
-  struct TimeoutInfo;
-
-  class MemoryReporter;
-  friend class MemoryReporter;
-
-  friend class mozilla::dom::WorkerThread;
-
+private:
   enum GCTimerMode
   {
     PeriodicTimer = 0,
     IdleTimer,
     NoTimer
   };
+
+  SharedMutex mMutex;
+  mozilla::CondVar mCondVar;
 
   WorkerPrivate* mParent;
 
@@ -308,6 +286,8 @@ protected:
   ~WorkerPrivate();
 
 public:
+  NS_INLINE_DECL_REFCOUNTING(WorkerPrivate)
+
   static already_AddRefed<WorkerPrivate>
   Constructor(JSContext* aCx, const nsAString& aScriptURL, bool aIsChromeWorker,
               WorkerType aWorkerType, const nsAString& aWorkerName,
