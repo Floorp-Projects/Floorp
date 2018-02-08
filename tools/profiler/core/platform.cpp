@@ -284,6 +284,22 @@ public:
   PS_GET(ThreadVector&, LiveThreads)
   PS_GET(ThreadVector&, DeadThreads)
 
+  static void DiscardExpiredDeadThreads(PSLockRef, uint64_t aBufferRangeStart)
+  {
+    // Discard any dead threads that were unregistered before aBufferRangeStart.
+    ThreadVector& deadThreads = sInstance->mDeadThreads;
+    for (size_t i = 0; i < deadThreads.size(); i++) {
+      Maybe<uint64_t> bufferPosition =
+        deadThreads.at(i)->BufferPositionWhenUnregistered();
+      MOZ_RELEASE_ASSERT(bufferPosition, "should have unregistered this thread");
+      if (*bufferPosition < aBufferRangeStart) {
+        delete deadThreads.at(i);
+        deadThreads.erase(deadThreads.begin() + i);
+        i--;
+      }
+    }
+  }
+
 #ifdef USE_LUL_STACKWALK
   static lul::LUL* Lul(PSLockRef) { return sInstance->mLul.get(); }
   static void SetLul(PSLockRef, UniquePtr<lul::LUL> aLul)
@@ -1443,6 +1459,7 @@ StreamTaskTracer(PSLockRef aLock, SpliceableJSONWriter& aWriter)
       StreamNameAndThreadId(aWriter, info->Name(), info->ThreadId());
     }
 
+    CorePS::DiscardExpiredDeadThreads(aLock, ActivePS::Buffer(aLock).mRangeStart);
     const CorePS::ThreadVector& deadThreads = CorePS::DeadThreads(aLock);
     for (size_t i = 0; i < deadThreads.size(); i++) {
       ThreadInfo* info = deadThreads.at(i);
@@ -1688,6 +1705,7 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
       info->StreamJSON(buffer, aWriter, CorePS::ProcessStartTime(), aSinceTime);
     }
 
+    CorePS::DiscardExpiredDeadThreads(aLock, ActivePS::Buffer(aLock).mRangeStart);
     const CorePS::ThreadVector& deadThreads = CorePS::DeadThreads(aLock);
     for (size_t i = 0; i < deadThreads.size(); i++) {
       ThreadInfo* info = deadThreads.at(i);
@@ -3095,8 +3113,9 @@ profiler_unregister_thread()
   if (info) {
     DEBUG_LOG("profiler_unregister_thread: %s", info->Name());
     if (ActivePS::Exists(lock) && info->IsBeingProfiled()) {
-      info->NotifyUnregistered();
+      info->NotifyUnregistered(ActivePS::Buffer(lock).mRangeEnd);
       CorePS::DeadThreads(lock).push_back(info);
+      CorePS::DiscardExpiredDeadThreads(lock, ActivePS::Buffer(lock).mRangeStart);
     } else {
       delete info;
     }

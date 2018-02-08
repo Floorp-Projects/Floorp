@@ -9,7 +9,7 @@ module.exports = {
     "block-scoped-var": "error",
     "comma-dangle": ["error", "always-multiline"],
     complexity: ["error", {
-      max: 20,
+      max: 23,
     }],
     curly: ["error", "all"],
     "dot-location": ["error", "property"],

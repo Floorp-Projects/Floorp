@@ -81,7 +81,7 @@ module.exports = {
     // impair readability, but also not required either.
     "comma-dangle": "off",
     // Warn about cyclomatic complexity in functions.
-    "complexity": ["error", 35],
+    "complexity": ["error", 53],
     // Don't warn for inconsistent naming when capturing this (not so important
     // with auto-binding fat arrow functions).
     "consistent-this": "off",
