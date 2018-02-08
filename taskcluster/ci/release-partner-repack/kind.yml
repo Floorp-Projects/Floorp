@@ -150,8 +150,8 @@ jobs:
          properties:
             repack_manifests_url:
                by-project:
-                  mozilla-beta: "https://github.com/mozilla-partners/mozilla-EME-free-manifest"
-                  mozilla-release: "https://github.com/mozilla-partners/mozilla-EME-free-manifest"
+                  mozilla-beta: "git@github.com:mozilla-partners/mozilla-EME-free-manifest"
+                  mozilla-release: "git@github.com:mozilla-partners/mozilla-EME-free-manifest"
                   default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
       run:
          buildername: release-{branch}-firefox-macosx64_partner_repacks
@@ -165,8 +165,8 @@ jobs:
          properties:
             repack_manifests_url:
                by-project:
-                  mozilla-beta: "https://github.com/mozilla-partners/mozilla-EME-free-manifest"
-                  mozilla-release: "https://github.com/mozilla-partners/mozilla-EME-free-manifest"
+                  mozilla-beta: "git@github.com:mozilla-partners/mozilla-EME-free-manifest"
+                  mozilla-release: "git@github.com:mozilla-partners/mozilla-EME-free-manifest"
                   default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
       run:
          buildername: release-{branch}-firefox-win32_partner_repacks
@@ -180,8 +180,8 @@ jobs:
          properties:
             repack_manifests_url:
                by-project:
-                  mozilla-beta: "https://github.com/mozilla-partners/mozilla-EME-free-manifest"
-                  mozilla-release: "https://github.com/mozilla-partners/mozilla-EME-free-manifest"
+                  mozilla-beta: "git@github.com:mozilla-partners/mozilla-EME-free-manifest"
+                  mozilla-release: "git@github.com:mozilla-partners/mozilla-EME-free-manifest"
                   default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
       run:
          buildername: release-{branch}-firefox-win64_partner_repacks
