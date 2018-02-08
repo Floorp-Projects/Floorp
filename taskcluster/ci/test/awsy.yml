@@ -22,17 +22,6 @@ awsy:
             .*-devedition/.*: []  # don't run on devedition
             default: built-projects
 
-awsy-stylo-disabled:
-    description: "Are we slim yet for Stylo disabled"
-    treeherder-symbol: SYsd(sy)
-    run-on-projects:
-        by-test-platform:
-            .*-devedition/.*: []  # don't run on devedition
-            default: built-projects
-    mozharness:
-        extra-options:
-            - --disable-stylo
-
 awsy-stylo-sequential:
     description: "Are we slim yet for Stylo sequential"
     treeherder-symbol: SYss(sy)
