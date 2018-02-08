@@ -201,9 +201,9 @@ using mozilla::FloatingPoint;
 # define OOL_IN_HEADER
 
 #if MOZ_LITTLE_ENDIAN
-#define IMM32_16ADJ(X) X << 16
+#define IMM32_16ADJ(X) (X) << 16
 #else
-#define IMM32_16ADJ(X) X
+#define IMM32_16ADJ(X) (X)
 #endif
 
 namespace js {
@@ -1178,7 +1178,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchLatin1String(Register string, Label* label);
     inline void branchTwoByteString(Register string, Label* label);
 
-    inline void branchIfFunctionHasNoScript(Register fun, Label* label);
+    inline void branchIfFunctionHasNoJitEntry(Register fun, bool isConstructing, Label* label);
     inline void branchIfInterpreted(Register fun, Label* label);
 
     inline void branchFunctionKind(Condition cond, JSFunction::FunctionKind kind, Register fun,

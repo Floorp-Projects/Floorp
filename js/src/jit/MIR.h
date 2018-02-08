@@ -4158,6 +4158,7 @@ class WrappedFunction : public TempObject
     CompilerFunction fun_;
     uint16_t nargs_;
     bool isNative_ : 1;
+    bool isNativeWithJitEntry_ : 1;
     bool isConstructor_ : 1;
     bool isClassConstructor_ : 1;
     bool isSelfHostedBuiltin_ : 1;
@@ -4165,7 +4166,11 @@ class WrappedFunction : public TempObject
   public:
     explicit WrappedFunction(JSFunction* fun);
     size_t nargs() const { return nargs_; }
+
     bool isNative() const { return isNative_; }
+    bool isNativeWithJitEntry() const { return isNativeWithJitEntry_; }
+    bool isNativeWithCppEntry() const { return isNative() && !isNativeWithJitEntry(); }
+
     bool isConstructor() const { return isConstructor_; }
     bool isClassConstructor() const { return isClassConstructor_; }
     bool isSelfHostedBuiltin() const { return isSelfHostedBuiltin_; }

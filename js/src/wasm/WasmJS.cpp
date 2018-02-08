@@ -35,6 +35,7 @@
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmSignalHandlers.h"
+#include "wasm/WasmStubs.h"
 #include "wasm/WasmValidate.h"
 
 #include "jsobjinlines.h"
@@ -1148,31 +1149,43 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
 
     const Instance& instance = instanceObj->instance();
     auto tier = instance.code().stableTier();
-    unsigned numArgs = instance.metadata(tier).lookupFuncExport(funcIndex).sig().args().length();
+    const Sig& sig = instance.metadata(tier).lookupFuncExport(funcIndex).sig();
+    unsigned numArgs = sig.args().length();
 
     // asm.js needs to act like a normal JS function which means having the name
     // from the original source and being callable as a constructor.
+    bool optimized = false;
     if (instance.isAsmJS()) {
         RootedAtom name(cx, instance.getFuncAtom(cx, funcIndex));
         if (!name)
             return false;
 
+        optimized = CanBeJitOptimized(sig);
+        JSFunction::Flags flags = optimized ? JSFunction::ASMJS_OPT_CTOR : JSFunction::ASMJS_CTOR;
         fun.set(NewNativeConstructor(cx, WasmCall, numArgs, name, gc::AllocKind::FUNCTION_EXTENDED,
-                                     SingletonObject, JSFunction::ASMJS_CTOR));
-        if (!fun)
-            return false;
+                                     SingletonObject, flags));
     } else {
         RootedAtom name(cx, NumberToAtom(cx, funcIndex));
         if (!name)
             return false;
 
-        fun.set(NewNativeFunction(cx, WasmCall, numArgs, name, gc::AllocKind::FUNCTION_EXTENDED));
-        if (!fun)
-            return false;
+        optimized = true;
+        fun.set(NewNativeFunction(cx, WasmCall, numArgs, name, gc::AllocKind::FUNCTION_EXTENDED,
+                                  SingletonObject, JSFunction::WASM_FUN));
     }
 
+    if (!fun)
+        return false;
+
+    if (optimized)
+        fun->setWasmJitEntry(instance.code().getAddressOfJitEntry(funcIndex));
+    else
+        fun->setAsmJSCtorFuncIndex(funcIndex);
+
     fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT, ObjectValue(*instanceObj));
-    fun->setExtendedSlot(FunctionExtended::WASM_FUNC_INDEX_SLOT, Int32Value(funcIndex));
+
+    void* tlsData = instanceObj->instance().tlsData();
+    fun->setExtendedSlot(FunctionExtended::WASM_TLSDATA_SLOT, PrivateValue(tlsData));
 
     if (!instanceObj->exports().putNew(funcIndex, fun)) {
         ReportOutOfMemory(cx);
@@ -1273,8 +1286,8 @@ uint32_t
 wasm::ExportedFunctionToFuncIndex(JSFunction* fun)
 {
     MOZ_ASSERT(IsExportedFunction(fun));
-    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_FUNC_INDEX_SLOT);
-    return v.toInt32();
+    Instance& instance = ExportedFunctionToInstanceObject(fun)->instance();
+    return instance.code().lookupFuncIndex(fun);
 }
 
 // ============================================================================
