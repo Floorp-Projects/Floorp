@@ -964,9 +964,7 @@ public:
 NS_IMPL_ISUPPORTS_INHERITED0(TopLevelWorkerFinishedRunnable, Runnable)
 
 
-template <class Derived>
-class WorkerPrivateParent<Derived>::EventTarget final
-  : public nsISerialEventTarget
+class WorkerPrivate::EventTarget final : public nsISerialEventTarget
 {
   // This mutex protects mWorkerPrivate and must be acquired *before* the
   // WorkerPrivate's mutex whenever they must both be held.
@@ -977,14 +975,14 @@ class WorkerPrivateParent<Derived>::EventTarget final
 
 public:
   explicit EventTarget(WorkerPrivate* aWorkerPrivate)
-  : mMutex("WorkerPrivateParent::EventTarget::mMutex"),
+  : mMutex("WorkerPrivate::EventTarget::mMutex"),
     mWorkerPrivate(aWorkerPrivate), mWeakNestedEventTarget(nullptr)
   {
     MOZ_ASSERT(aWorkerPrivate);
   }
 
   EventTarget(WorkerPrivate* aWorkerPrivate, nsIEventTarget* aNestedEventTarget)
-  : mMutex("WorkerPrivateParent::EventTarget::mMutex"),
+  : mMutex("WorkerPrivate::EventTarget::mMutex"),
     mWorkerPrivate(aWorkerPrivate), mWeakNestedEventTarget(aNestedEventTarget),
     mNestedEventTarget(aNestedEventTarget)
   {
@@ -1652,23 +1650,20 @@ WorkerPrivateParent<Derived>::Traverse(nsCycleCollectionTraversalCallback& aCb)
   }
 }
 
-template <class Derived>
 nsresult
-WorkerPrivateParent<Derived>::DispatchPrivate(already_AddRefed<WorkerRunnable> aRunnable,
-                                              nsIEventTarget* aSyncLoopTarget)
+WorkerPrivate::DispatchPrivate(already_AddRefed<WorkerRunnable> aRunnable,
+                               nsIEventTarget* aSyncLoopTarget)
 {
   // May be called on any thread!
   RefPtr<WorkerRunnable> runnable(aRunnable);
 
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-
   {
     MutexAutoLock lock(mMutex);
 
-    MOZ_ASSERT_IF(aSyncLoopTarget, self->mThread);
+    MOZ_ASSERT_IF(aSyncLoopTarget, mThread);
 
-    if (!self->mThread) {
-      if (ParentStatus() == Pending || self->mStatus == Pending) {
+    if (!mThread) {
+      if (ParentStatus() == Pending || mStatus == Pending) {
         mPreStartRunnables.AppendElement(runnable);
         return NS_OK;
       }
@@ -1678,7 +1673,7 @@ WorkerPrivateParent<Derived>::DispatchPrivate(already_AddRefed<WorkerRunnable> a
       return NS_ERROR_UNEXPECTED;
     }
 
-    if (self->mStatus == Dead ||
+    if (mStatus == Dead ||
         (!aSyncLoopTarget && ParentStatus() > Running)) {
       NS_WARNING("A runnable was posted to a worker that is already shutting "
                  "down!");
@@ -1689,7 +1684,7 @@ WorkerPrivateParent<Derived>::DispatchPrivate(already_AddRefed<WorkerRunnable> a
     if (aSyncLoopTarget) {
       rv = aSyncLoopTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
     } else {
-      rv = self->mThread->DispatchAnyThread(WorkerThreadFriendKey(), runnable.forget());
+      rv = mThread->DispatchAnyThread(WorkerThreadFriendKey(), runnable.forget());
     }
 
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1727,6 +1722,14 @@ WorkerPrivateParent<Derived>::DisableDebugger()
   if (NS_FAILED(UnregisterWorkerDebugger(self))) {
     NS_WARNING("Failed to unregister worker debugger!");
   }
+}
+
+template <class Derived>
+nsresult
+WorkerPrivateParent<Derived>::Dispatch(already_AddRefed<WorkerRunnable> aRunnable)
+{
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+  return self->DispatchPrivate(Move(aRunnable), nullptr);
 }
 
 template <class Derived>
@@ -5354,14 +5357,10 @@ WorkerPrivate::GetPerformanceStorage()
 
 NS_IMPL_ISUPPORTS_INHERITED0(ExternalRunnableWrapper, WorkerRunnable)
 
-template <class Derived>
-NS_IMPL_ADDREF(WorkerPrivateParent<Derived>::EventTarget)
+NS_IMPL_ADDREF(WorkerPrivate::EventTarget)
+NS_IMPL_RELEASE(WorkerPrivate::EventTarget)
 
-template <class Derived>
-NS_IMPL_RELEASE(WorkerPrivateParent<Derived>::EventTarget)
-
-template <class Derived>
-NS_INTERFACE_MAP_BEGIN(WorkerPrivateParent<Derived>::EventTarget)
+NS_INTERFACE_MAP_BEGIN(WorkerPrivate::EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsISerialEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -5376,19 +5375,17 @@ NS_INTERFACE_MAP_BEGIN(WorkerPrivateParent<Derived>::EventTarget)
 #endif
 NS_INTERFACE_MAP_END
 
-template <class Derived>
 NS_IMETHODIMP
-WorkerPrivateParent<Derived>::
-EventTarget::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags)
+WorkerPrivate::EventTarget::DispatchFromScript(nsIRunnable* aRunnable,
+                                               uint32_t aFlags)
 {
   nsCOMPtr<nsIRunnable> event(aRunnable);
   return Dispatch(event.forget(), aFlags);
 }
 
-template <class Derived>
 NS_IMETHODIMP
-WorkerPrivateParent<Derived>::
-EventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags)
+WorkerPrivate::EventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
+                                     uint32_t aFlags)
 {
   // May be called on any thread!
   nsCOMPtr<nsIRunnable> event(aRunnable);
@@ -5421,18 +5418,16 @@ EventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags)
   return NS_OK;
 }
 
-template <class Derived>
 NS_IMETHODIMP
-WorkerPrivateParent<Derived>::
-EventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t)
+WorkerPrivate::EventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>,
+                                            uint32_t)
+
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-template <class Derived>
 NS_IMETHODIMP
-WorkerPrivateParent<Derived>::
-EventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
+WorkerPrivate::EventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
 {
   // May be called on any thread!
 
@@ -5449,10 +5444,8 @@ EventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
   return NS_OK;
 }
 
-template <class Derived>
 NS_IMETHODIMP_(bool)
-WorkerPrivateParent<Derived>::
-EventTarget::IsOnCurrentThreadInfallible()
+WorkerPrivate::EventTarget::IsOnCurrentThreadInfallible()
 {
   // May be called on any thread!
 

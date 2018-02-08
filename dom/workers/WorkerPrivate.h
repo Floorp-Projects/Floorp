@@ -104,9 +104,6 @@ template <class Derived>
 class WorkerPrivateParent
 {
 protected:
-  class EventTarget;
-  friend class EventTarget;
-
   typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
 
 public:
@@ -220,9 +217,6 @@ private:
     return NotifyPrivate(Terminating);
   }
 
-  nsresult
-  DispatchPrivate(already_AddRefed<WorkerRunnable> aRunnable, nsIEventTarget* aSyncLoopTarget);
-
 public:
   NS_INLINE_DECL_REFCOUNTING(WorkerPrivateParent)
 
@@ -245,10 +239,7 @@ public:
   }
 
   nsresult
-  Dispatch(already_AddRefed<WorkerRunnable> aRunnable)
-  {
-    return DispatchPrivate(Move(aRunnable), nullptr);
-  }
+  Dispatch(already_AddRefed<WorkerRunnable> aRunnable);
 
   nsresult
   DispatchControlRunnable(already_AddRefed<WorkerControlRunnable> aWorkerControlRunnable);
@@ -875,6 +866,8 @@ public:
 
 class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 {
+  class EventTarget;
+  friend class EventTarget;
   friend class mozilla::dom::WorkerHolder;
   friend class WorkerPrivateParent<WorkerPrivate>;
   typedef WorkerPrivateParent<WorkerPrivate> ParentType;
@@ -1399,6 +1392,10 @@ private:
                 WorkerType aWorkerType, const nsAString& aWorkerName,
                 const nsACString& aServiceWorkerScope,
                 WorkerLoadInfo& aLoadInfo);
+
+  nsresult
+  DispatchPrivate(already_AddRefed<WorkerRunnable> aRunnable,
+                  nsIEventTarget* aSyncLoopTarget);
 
   bool
   MayContinueRunning()
