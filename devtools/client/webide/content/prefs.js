@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 window.addEventListener("load", function () {
   // Listen to preference changes

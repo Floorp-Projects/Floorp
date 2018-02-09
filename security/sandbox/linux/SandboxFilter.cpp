@@ -19,6 +19,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/UniquePtr.h"
+#include "prenv.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -176,7 +177,7 @@ public:
       .Default(InvalidSyscall());
   }
 
-  Maybe<ResultExpr> EvaluateSocketCall(int aCall) const override {
+  Maybe<ResultExpr> EvaluateSocketCall(int aCall, bool aHasArgs) const override {
     switch (aCall) {
     case SYS_RECVMSG:
     case SYS_SENDMSG:
@@ -376,6 +377,7 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
 private:
   SandboxBrokerClient* mBroker;
   ContentProcessSandboxParams mParams;
+  bool mAllowSysV;
 
   bool BelowLevel(int aLevel) const {
     return mParams.mLevel < aLevel;
@@ -385,6 +387,26 @@ private:
   }
   ResultExpr AllowBelowLevel(int aLevel) const {
     return AllowBelowLevel(aLevel, InvalidSyscall());
+  }
+
+  // Returns true if the running kernel supports separate syscalls for
+  // socket operations, or false if it supports only socketcall(2).
+  static bool
+  HasSeparateSocketCalls() {
+#ifdef __NR_socket
+    // If there's no socketcall, then obviously there are separate syscalls.
+#ifdef __NR_socketcall
+    int fd = syscall(__NR_socket, AF_LOCAL, SOCK_STREAM, 0);
+    if (fd < 0) {
+      MOZ_DIAGNOSTIC_ASSERT(errno == ENOSYS);
+      return false;
+    }
+    close(fd);
+#endif // __NR_socketcall
+    return true;
+#else // ifndef __NR_socket
+    return false;
+#endif // __NR_socket
   }
 
   // Trap handlers for filesystem brokering.
@@ -555,6 +577,17 @@ private:
     return ConvertError(socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds));
   }
 
+  static intptr_t SocketpairUnpackTrap(ArgsRef aArgs, void* aux) {
+#ifdef __NR_socketpair
+    auto argsPtr = reinterpret_cast<unsigned long*>(aArgs.args[1]);
+    return DoSyscall(__NR_socketpair, argsPtr[0], argsPtr[1], argsPtr[2],
+                     argsPtr[3]);
+#else
+    MOZ_CRASH("unreachable?");
+    return -ENOSYS;
+#endif
+  }
+
   static intptr_t StatFsTrap(ArgsRef aArgs, void* aux) {
     // Warning: the kernel interface is not the C interface.  The
     // structs are different (<asm/statfs.h> vs. <sys/statfs.h>), and
@@ -594,11 +627,12 @@ public:
                        ContentProcessSandboxParams&& aParams)
     : mBroker(aBroker)
     , mParams(Move(aParams))
+    , mAllowSysV(PR_GetEnv("MOZ_SANDBOX_ALLOW_SYSV") != nullptr)
     { }
 
   ~ContentSandboxPolicy() override = default;
 
-  Maybe<ResultExpr> EvaluateSocketCall(int aCall) const override {
+  Maybe<ResultExpr> EvaluateSocketCall(int aCall, bool aHasArgs) const override {
     switch(aCall) {
     case SYS_RECVFROM:
     case SYS_SENDTO:
@@ -607,8 +641,15 @@ public:
 
     case SYS_SOCKETPAIR: {
       // See bug 1066750.
-      if (!kSocketCallHasArgs) {
-        // We can't filter the args if the platform passes them by pointer.
+      if (!aHasArgs) {
+        // If this is a socketcall(2) platform, but the kernel also
+        // supports separate syscalls (>= 4.2.0), we can unpack the
+        // arguments and filter them.
+        if (HasSeparateSocketCalls()) {
+          return Some(Trap(SocketpairUnpackTrap, nullptr));
+        }
+        // Otherwise, we can't filter the args if the platform passes
+        // them by pointer.
         return Some(Allow());
       }
       Arg<int> domain(0), type(1);
@@ -642,7 +683,7 @@ public:
       return Some(Allow());
 #endif
     default:
-      return SandboxPolicyCommon::EvaluateSocketCall(aCall);
+      return SandboxPolicyCommon::EvaluateSocketCall(aCall, aHasArgs);
     }
   }
 
@@ -660,8 +701,10 @@ public:
     case SEMGET:
     case SEMCTL:
     case SEMOP:
-    case MSGGET:
-      return Some(Allow());
+      if (mAllowSysV) {
+        return Some(Allow());
+      }
+      return SandboxPolicyCommon::EvaluateIpcCall(aCall);
     default:
       return SandboxPolicyCommon::EvaluateIpcCall(aCall);
     }

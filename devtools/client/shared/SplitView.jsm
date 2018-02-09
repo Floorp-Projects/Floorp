@@ -5,7 +5,7 @@
 
 "use strict";
 
-const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 this.EXPORTED_SYMBOLS = ["SplitView"];

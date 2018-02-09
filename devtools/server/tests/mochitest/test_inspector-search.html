@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=835896
 "use strict";
 
 window.onload = function () {
-  const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
   const promise = require("promise");
   const {InspectorFront} = require("devtools/shared/fronts/inspector");
   const {WalkerSearch, WalkerIndex} =

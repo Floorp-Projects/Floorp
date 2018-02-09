@@ -64,6 +64,7 @@ them.
 """
 
 from __future__ import unicode_literals
+import itertools
 
 import fluent.syntax.ast as FTL
 from .errors import NotSupportedError
@@ -88,6 +89,38 @@ def evaluate(ctx, node):
 class Transform(FTL.BaseNode):
     def __call__(self, ctx):
         raise NotImplementedError
+
+    @staticmethod
+    def flatten_elements(elements):
+        '''Flatten a list of FTL nodes into valid Pattern's elements'''
+        flattened = []
+        for element in elements:
+            if isinstance(element, FTL.Pattern):
+                flattened.extend(element.elements)
+            elif isinstance(element, FTL.PatternElement):
+                flattened.append(element)
+            elif isinstance(element, FTL.Expression):
+                flattened.append(FTL.Placeable(element))
+            else:
+                raise RuntimeError(
+                    'Expected Pattern, PatternElement or Expression')
+        return flattened
+
+    @staticmethod
+    def prune_text_elements(elements):
+        '''Join adjacent TextElements and remove empty ones'''
+        pruned = []
+        # Group elements in contiguous sequences of the same type.
+        for elem_type, elems in itertools.groupby(elements, key=type):
+            if elem_type is FTL.TextElement:
+                # Join adjacent TextElements.
+                text = FTL.TextElement(''.join(elem.value for elem in elems))
+                # And remove empty ones.
+                if len(text.value) > 0:
+                    pruned.append(text)
+            else:
+                pruned.extend(elems)
+        return pruned
 
 
 class Source(Transform):
@@ -128,11 +161,11 @@ class COPY(Source):
 
 
 class REPLACE_IN_TEXT(Transform):
-    """Replace various placeables in the translation with FTL placeables.
+    """Replace various placeables in the translation with FTL.
 
     The original placeables are defined as keys on the `replacements` dict.
-    For each key the value is defined as a list of FTL Expressions to be
-    interpolated.
+    For each key the value is defined as a FTL Pattern, Placeable,
+    TextElement or Expressions to be interpolated.
     """
 
     def __init__(self, value, replacements):
@@ -141,7 +174,7 @@ class REPLACE_IN_TEXT(Transform):
 
     def __call__(self, ctx):
 
-        # Only replace placeable which are present in the translation.
+        # Only replace placeables which are present in the translation.
         replacements = {
             key: evaluate(ctx, repl)
             for key, repl in self.replacements.iteritems()
@@ -154,41 +187,25 @@ class REPLACE_IN_TEXT(Transform):
             lambda x, y: self.value.find(x) - self.value.find(y)
         )
 
-        # Used to reduce the `keys_in_order` list.
-        def replace(acc, cur):
-            """Convert original placeables and text into FTL Nodes.
+        # A list of PatternElements built from the legacy translation and the
+        # FTL replacements. It may contain empty or adjacent TextElements.
+        elements = []
+        tail = self.value
 
-            For each original placeable the translation will be partitioned
-            around it and the text before it will be converted into an
-            `FTL.TextElement` and the placeable will be replaced with its
-            replacement. The text following the placebale will be fed again to
-            the `replace` function.
-            """
+        # Convert original placeables and text into FTL Nodes. For each
+        # original placeable the translation will be partitioned around it and
+        # the text before it will be converted into an `FTL.TextElement` and
+        # the placeable will be replaced with its replacement.
+        for key in keys_in_order:
+            before, key, tail = tail.partition(key)
+            elements.append(FTL.TextElement(before))
+            elements.append(replacements[key])
 
-            parts, rest = acc
-            before, key, after = rest.value.partition(cur)
+        # Dont' forget about the tail after the loop ends.
+        elements.append(FTL.TextElement(tail))
 
-            placeable = FTL.Placeable(replacements[key])
-
-            # Return the elements found and converted so far, and the remaining
-            # text which hasn't been scanned for placeables yet.
-            return (
-                parts + [FTL.TextElement(before), placeable],
-                FTL.TextElement(after)
-            )
-
-        def is_non_empty(elem):
-            """Used for filtering empty `FTL.TextElement` nodes out."""
-            return not isinstance(elem, FTL.TextElement) or len(elem.value)
-
-        # Start with an empty list of elements and the original translation.
-        init = ([], FTL.TextElement(self.value))
-        parts, tail = reduce(replace, keys_in_order, init)
-
-        # Explicitly concat the trailing part to get the full list of elements
-        # and filter out the empty ones.
-        elements = filter(is_non_empty, parts + [tail])
-
+        elements = self.flatten_elements(elements)
+        elements = self.prune_text_elements(elements)
         return FTL.Pattern(elements)
 
 
@@ -245,7 +262,7 @@ class PLURALS(Source):
             # variant.  Then evaluate it to a migrated FTL node.
             value = evaluate(ctx, self.foreach(variant))
             return FTL.Variant(
-                key=FTL.Symbol(key),
+                key=FTL.VariantName(key),
                 value=value,
                 default=index == last_index
             )
@@ -260,69 +277,16 @@ class PLURALS(Source):
 
 
 class CONCAT(Transform):
-    """Concatenate elements of many patterns."""
+    """Create a new Pattern from Patterns, PatternElements and Expressions."""
 
-    def __init__(self, *patterns):
-        self.patterns = list(patterns)
+    def __init__(self, *elements, **kwargs):
+        # We want to support both passing elements as *elements in the
+        # migration specs and as elements=[]. The latter is used by
+        # FTL.BaseNode.traverse when it recreates the traversed node using its
+        # attributes as kwargs.
+        self.elements = list(kwargs.get('elements', elements))
 
     def __call__(self, ctx):
-        # Flatten the list of patterns of which each has a list of elements.
-        def concat_elements(acc, cur):
-            if isinstance(cur, FTL.Pattern):
-                acc.extend(cur.elements)
-                return acc
-            elif (isinstance(cur, FTL.TextElement) or
-                  isinstance(cur, FTL.Placeable)):
-                acc.append(cur)
-                return acc
-
-            raise RuntimeError(
-                'CONCAT accepts FTL Patterns, TextElements and Placeables.'
-            )
-
-        # Merge adjecent `FTL.TextElement` nodes.
-        def merge_adjecent_text(acc, cur):
-            if type(cur) == FTL.TextElement and len(acc):
-                last = acc[-1]
-                if type(last) == FTL.TextElement:
-                    last.value += cur.value
-                else:
-                    acc.append(cur)
-            else:
-                acc.append(cur)
-            return acc
-
-        elements = reduce(concat_elements, self.patterns, [])
-        elements = reduce(merge_adjecent_text, elements, [])
+        elements = self.flatten_elements(self.elements)
+        elements = self.prune_text_elements(elements)
         return FTL.Pattern(elements)
-
-    def traverse(self, fun):
-        def visit(value):
-            if isinstance(value, FTL.BaseNode):
-                return value.traverse(fun)
-            if isinstance(value, list):
-                return fun(map(visit, value))
-            else:
-                return fun(value)
-
-        node = self.__class__(
-            *[
-                visit(value) for value in self.patterns
-            ]
-        )
-
-        return fun(node)
-
-    def to_json(self):
-        def to_json(value):
-            if isinstance(value, FTL.BaseNode):
-                return value.to_json()
-            else:
-                return value
-
-        return {
-            'type': self.__class__.__name__,
-            'patterns': [
-                to_json(value) for value in self.patterns
-            ]
-        }

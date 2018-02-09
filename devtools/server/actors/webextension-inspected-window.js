@@ -15,7 +15,7 @@ loader.lazyGetter(this, "NodeActor", () => require("devtools/server/actors/inspe
 
 const {
   XPCOMUtils,
-} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+} = require("resource://gre/modules/XPCOMUtils.jsm");
 
 const {
   webExtensionInspectedWindowSpec,

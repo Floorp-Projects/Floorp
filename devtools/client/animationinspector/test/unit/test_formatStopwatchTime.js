@@ -5,7 +5,7 @@
 
 "use strict";
 
-const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const {formatStopwatchTime} = require("devtools/client/animationinspector/utils");
 
 const TEST_DATA = [{

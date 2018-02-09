@@ -12,8 +12,8 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
   this);
 
-const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
-const { Management } = Cu.import("resource://gre/modules/Extension.jsm", {});
+const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
+const { Management } = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
 
 flags.testing = true;
 registerCleanupFunction(() => {

@@ -5,7 +5,7 @@
 "use strict";
 
 const { require } =
-  Cu.import("resource://devtools/shared/Loader.jsm", {});
+  ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const Services = require("Services");
 const QR = require("devtools/shared/qrcode/index");
 

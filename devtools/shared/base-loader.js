@@ -16,8 +16,8 @@ const { loadSubScript } = Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader);
 const { notifyObservers } = Cc["@mozilla.org/observer-service;1"]
   .getService(Ci.nsIObserverService);
-const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
-const { normalize, dirname } = Cu.import("resource://gre/modules/osfile/ospath_unix.jsm", {});
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
+const { normalize, dirname } = ChromeUtils.import("resource://gre/modules/osfile/ospath_unix.jsm", {});
 
 XPCOMUtils.defineLazyServiceGetter(this, "resProto",
                                    "@mozilla.org/network/protocol;1?name=resource",
@@ -451,7 +451,7 @@ function Require(loader, requirer) {
       module = modules[uri];
     } else if (isJSMURI(uri)) {
       module = modules[uri] = Module(requirement, uri);
-      module.exports = Cu.import(uri, {});
+      module.exports = ChromeUtils.import(uri, {});
     } else if (isJSONURI(uri)) {
       let data;
 

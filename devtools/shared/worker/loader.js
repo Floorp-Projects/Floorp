@@ -489,7 +489,7 @@ var {
 
     let reportError = Cu.reportError;
 
-    let Timer = Cu.import("resource://gre/modules/Timer.jsm", {});
+    let Timer = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
 
     let setImmediate = function (callback) {
       Timer.setTimeout(callback, 0);

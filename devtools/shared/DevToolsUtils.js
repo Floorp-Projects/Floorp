@@ -399,9 +399,7 @@ DevToolsUtils.defineLazyGetter(this, "AppConstants", () => {
   if (isWorker) {
     return {};
   }
-  const scope = {};
-  Cu.import("resource://gre/modules/AppConstants.jsm", scope);
-  return scope.AppConstants;
+  return require("resource://gre/modules/AppConstants.jsm").AppConstants;
 });
 
 /**
@@ -465,17 +463,17 @@ Object.defineProperty(exports, "assert", {
 exports.defineLazyModuleGetter = function (object, name, resource, symbol) {
   this.defineLazyGetter(object, name, function () {
     let temp = {};
-    Cu.import(resource, temp);
+    ChromeUtils.import(resource, temp);
     return temp[symbol || name];
   });
 };
 
 DevToolsUtils.defineLazyGetter(this, "NetUtil", () => {
-  return Cu.import("resource://gre/modules/NetUtil.jsm", {}).NetUtil;
+  return require("resource://gre/modules/NetUtil.jsm").NetUtil;
 });
 
 DevToolsUtils.defineLazyGetter(this, "OS", () => {
-  return Cu.import("resource://gre/modules/osfile.jsm", {}).OS;
+  return require("resource://gre/modules/osfile.jsm").OS;
 });
 
 DevToolsUtils.defineLazyGetter(this, "NetworkHelper", () => {

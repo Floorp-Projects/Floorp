@@ -5,4 +5,4 @@
 
 "use strict";
 
-var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});

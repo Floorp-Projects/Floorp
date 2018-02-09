@@ -122,6 +122,10 @@ public class PayloadUploadDelegateTest {
         }
 
         @Override
+        public void onBatchCommitted() {
+        }
+
+        @Override
         public RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor) {
             return this;
         }

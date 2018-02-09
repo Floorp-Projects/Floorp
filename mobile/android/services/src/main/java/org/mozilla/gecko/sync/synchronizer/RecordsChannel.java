@@ -7,6 +7,7 @@ package org.mozilla.gecko.sync.synchronizer;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -86,6 +87,8 @@ public class RecordsChannel implements
   private final AtomicInteger storeAcceptedCount = new AtomicInteger();
   private final AtomicInteger storeFailedCount = new AtomicInteger();
   private final AtomicInteger storeReconciledCount = new AtomicInteger();
+
+  private final StoreBatchTracker storeTracker = new StoreBatchTracker();
 
   public RecordsChannel(RepositorySession source, RepositorySession sink, RecordsChannelDelegate delegate) {
     this.source    = source;
@@ -185,6 +188,7 @@ public class RecordsChannel implements
     storeAcceptedCount.set(0);
     storeFailedCount.set(0);
     storeReconciledCount.set(0);
+    storeTracker.reset();
     // Start a consumer thread.
     this.consumer = new ConcurrentRecordConsumer(this);
     ThreadPool.run(this.consumer);
@@ -213,12 +217,17 @@ public class RecordsChannel implements
   @Override
   public void store(Record record) {
     storeAttemptedCount.incrementAndGet();
+    storeTracker.onRecordStoreAttempted();
     try {
       sink.store(record);
     } catch (NoStoreDelegateException e) {
       Logger.error(LOG_TAG, "Got NoStoreDelegateException in RecordsChannel.store(). This should not occur. Aborting.", e);
       delegate.onFlowStoreFailed(this, e, record.guid);
     }
+  }
+
+  /* package-local */ ArrayList<StoreBatchTracker.Batch> getStoreBatches() {
+    return this.storeTracker.getStoreBatches();
   }
 
   @Override
@@ -251,10 +260,17 @@ public class RecordsChannel implements
     this.sink.storeFlush();
   }
 
+  // Sent for "store" batches.
+  @Override
+  public void onBatchCommitted() {
+    storeTracker.onBatchFinished();
+  }
+
   @Override
   public void onRecordStoreFailed(Exception ex, String recordGuid) {
     Logger.trace(LOG_TAG, "Failed to store record with guid " + recordGuid);
     storeFailedCount.incrementAndGet();
+    storeTracker.onRecordStoreFailed();
     this.consumer.stored();
     delegate.onFlowStoreFailed(this, ex, recordGuid);
     // TODO: abort?
@@ -264,6 +280,7 @@ public class RecordsChannel implements
   public void onRecordStoreSucceeded(String guid) {
     Logger.trace(LOG_TAG, "Stored record with guid " + guid);
     storeAcceptedCount.incrementAndGet();
+    storeTracker.onRecordStoreSucceeded();
     this.consumer.stored();
   }
 
@@ -315,6 +332,8 @@ public class RecordsChannel implements
     if (ex instanceof ReflowIsNecessaryException) {
       setReflowException((ReflowIsNecessaryException) ex);
     }
+
+    storeTracker.onBatchFailed();
 
     // NB: consumer might or might not be running at this point. There are two cases here:
     // 1) If we're storing records remotely, we might fail due to a 412.
