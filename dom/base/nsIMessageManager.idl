@@ -424,17 +424,6 @@ interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
   [notxpcom] void cacheFrameLoader(in nativeFrameLoader aFrameLoader);
 };
 
-[uuid(6d12e467-2446-46db-9965-e4e93cb87ca5)]
-interface nsIContentProcessMessageManager : nsIMessageManagerGlobal
-{
-  /**
-   * Read out a copy of the object that was initialized in the parent
-   * process via nsIProcessScriptLoader.initialProcessData.
-   */
-  [implicit_jscontext]
-  readonly attribute jsval initialProcessData;
-};
-
 [uuid(bf61446b-ba24-4b1d-88c7-4f94724b9ce1)]
 interface nsIFrameScriptLoader : nsISupports
 {
