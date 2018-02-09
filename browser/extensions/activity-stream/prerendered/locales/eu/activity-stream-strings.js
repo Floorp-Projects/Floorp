@@ -96,7 +96,5 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Egunean zaude jada. Etorri berriro geroago {provider} hornitzailearen istorio ezagun gehiagorako. Ezin duzu itxaron? Hautatu gai ezagun bat webeko istorio gehiago aurkitzeko.",
   "manual_migration_explanation2": "Probatu Firefox beste nabigatzaile batetik ekarritako laster-marka, historia eta pasahitzekin.",
   "manual_migration_cancel_button": "Ez, eskerrik asko",
-  "manual_migration_import_button": "Inportatu orain",
-  "error_fallback_default_info": "Oops, something went wrong loading this content.",
-  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
+  "manual_migration_import_button": "Inportatu orain"
 };
