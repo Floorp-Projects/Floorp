@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "“Jangan sesekali ingat sejarah” didayakan."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Anda sedang menggunakan Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Muat naik telah dinyahdayakan."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Pautan Disalin"
   },

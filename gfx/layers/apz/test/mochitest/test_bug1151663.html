@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
   <title>Test for Bug 1151663</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
@@ -18,11 +19,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
       // root APZC be scrollable. Mochitest pages themselves often run
       // inside an iframe which means we have no control over the root APZC.
       var w = null;
-      window.onload = function() {
-        pushPrefs([["apz.test.logging_enabled", true]]).then(function() {
-          w = window.open("helper_bug1151663.html", "_blank");
-        });
-      };
+      pushPrefs([["apz.test.logging_enabled", true]])
+          .then(waitUntilApzStable)
+          .then(function() {
+            w = window.open("helper_bug1151663.html", "_blank");
+          });
     }
 
     function finishTest() {

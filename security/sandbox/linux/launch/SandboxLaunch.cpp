@@ -434,7 +434,7 @@ ForkWithFlags(int aFlags)
   jmp_buf ctx;
   if (setjmp(ctx) == 0) {
     // In the parent and just called setjmp:
-    return DoClone(aFlags, &ctx);
+    return DoClone(aFlags | SIGCHLD, &ctx);
   }
   // In the child and have longjmp'ed:
   return 0;

@@ -92,6 +92,7 @@ var initTable = {
   domStorageManager: ["@mozilla.org/dom/localStorage-manager;1", "nsIDOMStorageManager"],
   strings: ["@mozilla.org/intl/stringbundle;1", "nsIStringBundleService"],
   telemetry: ["@mozilla.org/base/telemetry;1", "nsITelemetry"],
+  textToSubURI: ["@mozilla.org/intl/texttosuburi;1", "nsITextToSubURI"],
   tm: ["@mozilla.org/thread-manager;1", "nsIThreadManager"],
   urlFormatter: ["@mozilla.org/toolkit/URLFormatterService;1", "nsIURLFormatter"],
   vc: ["@mozilla.org/xpcom/version-comparator;1", "nsIVersionComparator"],

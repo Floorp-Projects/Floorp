@@ -451,6 +451,11 @@ Sync11Service.prototype = {
           return;
         }
         const engine = data.slice((PREFS_BRANCH + "engine.").length);
+        if (engine.includes(".")) {
+          // A sub-preference of the engine was changed. For example
+          // `services.sync.engine.bookmarks.validation.percentageChance`.
+          return;
+        }
         this._handleEngineStatusChanged(engine);
         break;
     }

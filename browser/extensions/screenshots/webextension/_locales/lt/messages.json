@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "kai įjungta „niekada nevesti žurnalo“ nuostata"
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Jūs naudojate „Firefox“ ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Įkėlimai išjungti."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Saitas nukopijuotas"
   },

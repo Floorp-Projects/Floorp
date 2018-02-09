@@ -8572,112 +8572,6 @@ nsContentUtils::GetViewToDispatchEvent(nsPresContext* presContext,
 }
 
 nsresult
-nsContentUtils::SendKeyEvent(nsIWidget* aWidget,
-                             const nsAString& aType,
-                             int32_t aKeyCode,
-                             int32_t aCharCode,
-                             int32_t aModifiers,
-                             uint32_t aAdditionalFlags,
-                             bool* aDefaultActionTaken)
-{
-  // get the widget to send the event to
-  if (!aWidget)
-    return NS_ERROR_FAILURE;
-
-  EventMessage msg;
-  if (aType.EqualsLiteral("keydown"))
-    msg = eKeyDown;
-  else if (aType.EqualsLiteral("keyup"))
-    msg = eKeyUp;
-  else if (aType.EqualsLiteral("keypress"))
-    msg = eKeyPress;
-  else
-    return NS_ERROR_FAILURE;
-
-  WidgetKeyboardEvent event(true, msg, aWidget);
-  event.mModifiers = GetWidgetModifiers(aModifiers);
-
-  if (msg == eKeyPress) {
-    event.mKeyCode = aCharCode ? 0 : aKeyCode;
-    event.mCharCode = aCharCode;
-  } else {
-    event.mKeyCode = aKeyCode;
-    event.mCharCode = 0;
-  }
-
-  uint32_t locationFlag = (aAdditionalFlags &
-    (nsIDOMWindowUtils::KEY_FLAG_LOCATION_STANDARD | nsIDOMWindowUtils::KEY_FLAG_LOCATION_LEFT |
-     nsIDOMWindowUtils::KEY_FLAG_LOCATION_RIGHT | nsIDOMWindowUtils::KEY_FLAG_LOCATION_NUMPAD));
-  switch (locationFlag) {
-    case nsIDOMWindowUtils::KEY_FLAG_LOCATION_STANDARD:
-      event.mLocation = eKeyLocationStandard;
-      break;
-    case nsIDOMWindowUtils::KEY_FLAG_LOCATION_LEFT:
-      event.mLocation = eKeyLocationLeft;
-      break;
-    case nsIDOMWindowUtils::KEY_FLAG_LOCATION_RIGHT:
-      event.mLocation = eKeyLocationRight;
-      break;
-    case nsIDOMWindowUtils::KEY_FLAG_LOCATION_NUMPAD:
-      event.mLocation = eKeyLocationNumpad;
-      break;
-    default:
-      if (locationFlag != 0) {
-        return NS_ERROR_INVALID_ARG;
-      }
-      // If location flag isn't set, choose the location from keycode.
-      switch (aKeyCode) {
-        case KeyboardEventBinding::DOM_VK_NUMPAD0:
-        case KeyboardEventBinding::DOM_VK_NUMPAD1:
-        case KeyboardEventBinding::DOM_VK_NUMPAD2:
-        case KeyboardEventBinding::DOM_VK_NUMPAD3:
-        case KeyboardEventBinding::DOM_VK_NUMPAD4:
-        case KeyboardEventBinding::DOM_VK_NUMPAD5:
-        case KeyboardEventBinding::DOM_VK_NUMPAD6:
-        case KeyboardEventBinding::DOM_VK_NUMPAD7:
-        case KeyboardEventBinding::DOM_VK_NUMPAD8:
-        case KeyboardEventBinding::DOM_VK_NUMPAD9:
-        case KeyboardEventBinding::DOM_VK_MULTIPLY:
-        case KeyboardEventBinding::DOM_VK_ADD:
-        case KeyboardEventBinding::DOM_VK_SEPARATOR:
-        case KeyboardEventBinding::DOM_VK_SUBTRACT:
-        case KeyboardEventBinding::DOM_VK_DECIMAL:
-        case KeyboardEventBinding::DOM_VK_DIVIDE:
-          event.mLocation = eKeyLocationNumpad;
-          break;
-        case KeyboardEventBinding::DOM_VK_SHIFT:
-        case KeyboardEventBinding::DOM_VK_CONTROL:
-        case KeyboardEventBinding::DOM_VK_ALT:
-        case KeyboardEventBinding::DOM_VK_META:
-          event.mLocation = eKeyLocationLeft;
-          break;
-        default:
-          event.mLocation = eKeyLocationStandard;
-          break;
-      }
-      break;
-  }
-
-  event.mRefPoint = LayoutDeviceIntPoint(0, 0);
-  event.mTime = PR_IntervalNow();
-  if (!(aAdditionalFlags & nsIDOMWindowUtils::KEY_FLAG_NOT_SYNTHESIZED_FOR_TESTS)) {
-    event.mFlags.mIsSynthesizedForTests = true;
-  }
-
-  if (aAdditionalFlags & nsIDOMWindowUtils::KEY_FLAG_PREVENT_DEFAULT) {
-    event.PreventDefaultBeforeDispatch();
-  }
-
-  nsEventStatus status;
-  nsresult rv = aWidget->DispatchEvent(&event, status);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aDefaultActionTaken = (status != nsEventStatus_eConsumeNoDefault);
-
-  return NS_OK;
-}
-
-nsresult
 nsContentUtils::SendMouseEvent(const nsCOMPtr<nsIPresShell>& aPresShell,
                                const nsAString& aType,
                                float aX,
@@ -10959,7 +10853,6 @@ nsContentUtils::IsMessageInputEvent(const IPC::Message& aMsg)
       case mozilla::dom::PBrowser::Msg_RealDragEvent__ID:
       case mozilla::dom::PBrowser::Msg_UpdateDimensions__ID:
       case mozilla::dom::PBrowser::Msg_MouseEvent__ID:
-      case mozilla::dom::PBrowser::Msg_KeyEvent__ID:
       case mozilla::dom::PBrowser::Msg_SetDocShellIsActive__ID:
         return true;
     }

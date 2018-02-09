@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "‘Nea skiednis ûnthâlde’ ynskeakele is."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Jo brûke Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Oplaads binne útskeakele."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Keppeling kopiearre"
   },

@@ -32,7 +32,7 @@ window.onload = Task.async(function* () {
   try {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
-    const { Simulate } = ReactDOM.TestUtils;
+    const { Simulate } = browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
     const Tree = createFactory(browserRequire("devtools/client/shared/components/VirtualizedTree"));
 
     TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));

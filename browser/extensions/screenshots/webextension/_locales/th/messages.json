@@ -29,6 +29,15 @@
   "downloadScreenshot": {
     "message": "ดาวน์โหลด"
   },
+  "downloadOnlyNotice": {
+    "message": "คุณกำลังอยู่ในโหมดดาวน์โหลดเท่านั้น"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "ในหน้าต่างการท่องเว็บแบบส่วนตัว"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "คุกกี้บุคคลที่สามถูกปิดการใช้งาน"
+  },
   "notificationLinkCopiedTitle": {
     "message": "คัดลอกลิงก์แล้ว"
   },
@@ -36,6 +45,14 @@
     "message": "คัดลอกลิงก์ไปยังภาพของคุณไปยังคลิปบอร์ดแล้ว กด $META_KEY$-V เพื่อวาง",
     "placeholders": {
       "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCroppedWarning": {
+    "message": "ภาพนี้ถูกตัดเป็น $PIXELS$ พิกเซล",
+    "placeholders": {
+      "pixels": {
         "content": "$1"
       }
     }
@@ -81,6 +98,9 @@
   },
   "tourBodyIntro": {
     "message": "จับ บันทึก และแบ่งปันภาพหน้าจอโดยไม่ต้องออกจาก Firefox"
+  },
+  "tourHeaderPageAction": {
+    "message": "หนทางใหม่ในการบันทึก"
   },
   "tourHeaderClickAndDrag": {
     "message": "จับภาพแค่สิ่งที่คุณต้องการ"

@@ -695,6 +695,7 @@ RecompileBaselineScriptForDebugMode(JSContext* cx, JSScript* script,
 
 #define PATCHABLE_ICSTUB_KIND_LIST(_)           \
     _(CacheIR_Monitored)                        \
+    _(CacheIR_Regular)                          \
     _(CacheIR_Updated)                          \
     _(Call_Scripted)                            \
     _(Call_AnyScripted)                         \

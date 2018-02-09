@@ -11,6 +11,9 @@ createEnum([
   // Update the extension sidebar with an object TreeView.
   "EXTENSION_SIDEBAR_OBJECT_TREEVIEW_UPDATE",
 
+  // Update the extension sidebar with an object value grip preview.
+  "EXTENSION_SIDEBAR_OBJECT_GRIP_VIEW_UPDATE",
+
   // Remove an extension sidebar from the inspector store.
   "EXTENSION_SIDEBAR_REMOVE"
 
