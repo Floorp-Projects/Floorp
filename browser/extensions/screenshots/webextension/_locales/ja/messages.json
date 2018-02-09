@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "「履歴を一切記憶させない」設定が有効になっている場合。"
   },
+  "downloadOnlyDetailsESR": {
+    "message": "あなたは Firefox ESR をお使いです。"
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "アップロードは無効化されています。"
+  },
   "notificationLinkCopiedTitle": {
     "message": "リンクをコピーしました"
   },

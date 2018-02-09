@@ -48,19 +48,41 @@ ResolutionFeasibilityDistance(int32_t candidate, int32_t requested)
   // The purpose of this function is to find a smallest resolution
   // which is larger than all requested capabilities.
   // Then we can use down-scaling to fulfill each request.
-  uint32_t distance;
-  if (candidate >= requested) {
-    distance = (candidate - requested) * 1000 / std::max(candidate, requested);
-  } else {
-    distance = 10000 + (requested - candidate) *
-      1000 / std::max(candidate, requested);
+
+  MOZ_DIAGNOSTIC_ASSERT(candidate >= 0, "Candidate unexpectedly negative");
+  MOZ_DIAGNOSTIC_ASSERT(requested >= 0, "Requested unexpectedly negative");
+
+  if (candidate == 0) {
+    // Treat width|height capability of 0 as "can do any".
+    // This allows for orthogonal capabilities that are not in discrete steps.
+    return 0;
   }
-  return distance;
+
+  uint32_t distance =
+    std::abs(candidate - requested) * 1000 / std::max(candidate, requested);
+  if (candidate > requested) {
+    // This is a good case, the candidate is higher than the requested
+    // resolution which makes it feasible.
+    return distance;
+  }
+
+  // This is a bad case, the candidate is lower than the requested resolution.
+  // This is penalized with an added weight of 10000.
+  return 10000 + distance;
 }
 
 uint32_t
 FeasibilityDistance(int32_t candidate, int32_t requested)
 {
+  MOZ_DIAGNOSTIC_ASSERT(candidate >= 0, "Candidate unexpectedly negative");
+  MOZ_DIAGNOSTIC_ASSERT(requested >= 0, "Requested unexpectedly negative");
+
+  if (candidate == 0) {
+    // Treat maxFPS capability of 0 as "can do any".
+    // This allows for orthogonal capabilities that are not in discrete steps.
+    return 0;
+  }
+
   return std::abs(candidate - requested) * 1000 / std::max(candidate, requested);
 }
 
@@ -885,8 +907,6 @@ CamerasParent::RecvStartCapture(const CaptureEngine& aCapEngine,
 
             auto candidateCapabilities = self->mAllCandidateCapabilities.find(
               nsCString(cap.VideoCapture()->CurrentDeviceName()));
-            MOZ_DIAGNOSTIC_ASSERT(candidateCapabilities != self->mAllCandidateCapabilities.end());
-            MOZ_DIAGNOSTIC_ASSERT(!candidateCapabilities->second.empty());
             if ((candidateCapabilities != self->mAllCandidateCapabilities.end()) &&
                 (!candidateCapabilities->second.empty())) {
               int32_t minIdx = -1;

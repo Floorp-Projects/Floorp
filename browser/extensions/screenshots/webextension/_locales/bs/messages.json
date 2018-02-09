@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "Kada je omogućeno “Nikad ne pamti historiju”."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Koristite Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Prijenosi su onemogućeni."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Link je kopiran"
   },

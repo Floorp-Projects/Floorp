@@ -44,11 +44,31 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "“Majub'ey tinatäx natab'äl” tzijon."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Tajin nawokisaj ri Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "E chupül ri kisamajib'exik taq yakb'äl."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Ximonel Wachib'en"
   },
   "notificationLinkCopiedDetails": {
     "message": "Xwachib'ëx pa molwuj ri ruximonel awachib'al. Tapitz'a' $META_KEY$-V richin natz'äm.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Tiwachib'ëx"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Xwachib'ëx chapoj"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Xwachib'ëx pa molwuj ri ruchapoj awachib'al. Tapitz'a' $META_KEY$-V richin natz'äm.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

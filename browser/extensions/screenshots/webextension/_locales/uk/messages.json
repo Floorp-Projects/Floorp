@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "Активовано налаштування “Ніколи не пам'ятати історії”."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Ви використовуєте Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Вивантаження було вимкнено."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Посилання скопійовано"
   },

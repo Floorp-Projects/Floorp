@@ -99,6 +99,43 @@ add_task(function* test_successfull_inspectedWindowEval_result() {
   yield teardown({client});
 });
 
+add_task(function* test_successfull_inspectedWindowEval_resultAsGrip() {
+  const {client, inspectedWindowFront, form} = yield setup(MAIN_DOMAIN);
+  let result = yield inspectedWindowFront.eval(FAKE_CALLER_INFO, "window", {
+    evalResultAsGrip: true,
+    toolboxConsoleActorID: form.consoleActor
+  });
+
+  ok(result.valueGrip, "Got a result from inspectedWindow eval");
+  ok(result.valueGrip.actor, "Got a object actor as expected");
+  is(result.valueGrip.type, "object", "Got a value grip of type object");
+  is(result.valueGrip.class, "Window", "Got a value grip which is instanceof Location");
+
+  // Test invalid evalResultAsGrip request.
+  result = yield inspectedWindowFront.eval(
+    FAKE_CALLER_INFO, "window", {evalResultAsGrip: true}
+  );
+
+  ok(!result.value && !result.valueGrip,
+     "Got a null result from the invalid inspectedWindow eval call");
+  ok(result.exceptionInfo.isError, "Got an API Error result from inspectedWindow eval");
+  ok(!result.exceptionInfo.isException, "An error isException is false as expected");
+  is(result.exceptionInfo.code, "E_PROTOCOLERROR",
+     "Got the expected 'code' property in the error result");
+  is(result.exceptionInfo.description, "Inspector protocol error: %s - %s",
+     "Got the expected 'description' property in the error result");
+  is(result.exceptionInfo.details.length, 2,
+     "The 'details' array property should contains 1 element");
+  is(result.exceptionInfo.details[0],
+     "Unexpected invalid sidebar panel expression request",
+     "Got the expected content in the error results's details");
+  is(result.exceptionInfo.details[1],
+     "missing toolboxConsoleActorID",
+     "Got the expected content in the error results's details");
+
+  yield teardown({client});
+});
+
 add_task(function* test_error_inspectedWindowEval_result() {
   const {client, inspectedWindowFront} = yield setup(MAIN_DOMAIN);
   const result = yield inspectedWindowFront.eval(FAKE_CALLER_INFO, "window", {});

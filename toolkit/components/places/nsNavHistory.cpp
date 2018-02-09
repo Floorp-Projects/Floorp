@@ -286,7 +286,6 @@ nsNavHistory::nsNavHistory()
   , mLastCachedStartOfDay(INT64_MAX)
   , mLastCachedEndOfDay(0)
   , mCanNotify(true)
-  , mCacheObservers("history-observers")
 #ifdef XP_WIN
   , mCryptoProviderInitialized(false)
 #endif
@@ -536,8 +535,7 @@ nsNavHistory::NotifyOnVisits(nsIVisitData** aVisits, uint32_t aVisitsCount)
     }
   }
 
-  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                   nsINavHistoryObserver,
+  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
                    OnVisits(aVisits, aVisitsCount));
 }
 
@@ -547,8 +545,8 @@ nsNavHistory::NotifyTitleChange(nsIURI* aURI,
                                 const nsACString& aGUID)
 {
   MOZ_ASSERT(!aGUID.IsEmpty());
-  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                   nsINavHistoryObserver, OnTitleChanged(aURI, aTitle, aGUID));
+  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
+                   OnTitleChanged(aURI, aTitle, aGUID));
 }
 
 void
@@ -559,8 +557,7 @@ nsNavHistory::NotifyFrecencyChanged(nsIURI* aURI,
                                     PRTime aLastVisitDate)
 {
   MOZ_ASSERT(!aGUID.IsEmpty());
-  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                   nsINavHistoryObserver,
+  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
                    OnFrecencyChanged(aURI, aNewFrecency, aGUID, aHidden,
                                      aLastVisitDate));
 }
@@ -568,8 +565,7 @@ nsNavHistory::NotifyFrecencyChanged(nsIURI* aURI,
 void
 nsNavHistory::NotifyManyFrecenciesChanged()
 {
-  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                   nsINavHistoryObserver,
+  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
                    OnManyFrecenciesChanged());
 }
 
@@ -2379,9 +2375,6 @@ nsNavHistory::GetObservers(uint32_t* _count,
 
   nsCOMArray<nsINavHistoryObserver> observers;
 
-  // First add the category cache observers.
-  mCacheObservers.GetEntries(observers);
-
   // Then add the other observers.
   for (uint32_t i = 0; i < mObservers.Length(); ++i) {
     const nsCOMPtr<nsINavHistoryObserver> &observer = mObservers.ElementAt(i).GetValue();
@@ -2408,8 +2401,7 @@ nsNavHistory::BeginUpdateBatch()
                                                     mozIStorageConnection::TRANSACTION_DEFERRED,
                                                     true);
 
-    NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                     nsINavHistoryObserver, OnBeginUpdateBatch());
+    NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver, OnBeginUpdateBatch());
   }
   return NS_OK;
 }
@@ -2427,8 +2419,7 @@ nsNavHistory::EndUpdateBatch()
       mBatchDBTransaction = nullptr;
     }
 
-    NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                     nsINavHistoryObserver, OnEndUpdateBatch());
+    NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver, OnEndUpdateBatch());
   }
   return NS_OK;
 }
@@ -2556,8 +2547,7 @@ nsNavHistory::CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString)
     else {
       // Notify that we will delete all visits for this page, but not the page
       // itself, since it's bookmarked or a place: query.
-      NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                       nsINavHistoryObserver,
+      NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
                        OnDeleteVisits(uri, 0, guid, nsINavHistoryObserver::REASON_DELETED, 0));
     }
   }
@@ -2604,8 +2594,7 @@ nsNavHistory::CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString)
 
   // Finally notify about the removed URIs.
   for (int32_t i = 0; i < URIs.Count(); ++i) {
-    NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                     nsINavHistoryObserver,
+    NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
                      OnDeleteURI(URIs[i], GUIDs[i], nsINavHistoryObserver::REASON_DELETED));
   }
 
@@ -2970,13 +2959,12 @@ nsNavHistory::NotifyOnPageExpired(nsIURI *aURI, PRTime aVisitTime,
   MOZ_ASSERT(!aGUID.IsEmpty());
   if (aWholeEntry) {
     // Notify our observers that the page has been removed.
-    NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                     nsINavHistoryObserver, OnDeleteURI(aURI, aGUID, aReason));
+    NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
+                     OnDeleteURI(aURI, aGUID, aReason));
   }
   else {
     // Notify our observers that some visits for the page have been removed.
-    NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                     nsINavHistoryObserver,
+    NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
                      OnDeleteVisits(aURI, aVisitTime, aGUID, aReason,
                                     aTransitionType));
   }
@@ -4171,8 +4159,7 @@ nsNavHistory::SendPageChangedNotification(nsIURI* aURI,
                                           const nsACString& aGUID)
 {
   MOZ_ASSERT(!aGUID.IsEmpty());
-  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                   nsINavHistoryObserver,
+  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
                    OnPageChanged(aURI, aChangedAttribute, aNewValue, aGUID));
 }
 

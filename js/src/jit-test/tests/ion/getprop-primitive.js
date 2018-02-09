@@ -1,3 +1,6 @@
+setJitCompilerOption("ion.warmup.trigger", 50);
+setJitCompilerOption("offthread-compilation.enable", 0);
+gcPreserveCode();
 
 var testSet1 = [1, "", Symbol("a"), true];
 var testSet2 = [1, "", Symbol("a"), true, { bar: 5 }];

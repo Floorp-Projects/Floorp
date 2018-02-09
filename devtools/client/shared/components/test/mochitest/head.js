@@ -26,10 +26,13 @@ var { require: browserRequire } = BrowserLoader({
   window
 });
 
-let React = browserRequire("devtools/client/shared/vendor/react");
-let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
-let dom = browserRequire("devtools/client/shared/vendor/react-dom-factories");
-let TestUtils = ReactDOM.TestUtils;
+const React = browserRequire("devtools/client/shared/vendor/react");
+const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+const dom = browserRequire("devtools/client/shared/vendor/react-dom-factories");
+const TestUtils = browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+
+const ShallowRenderer =
+  browserRequire("devtools/client/shared/vendor/react-test-renderer-shallow");
 
 var EXAMPLE_URL = "http://example.com/browser/browser/devtools/shared/test/";
 
@@ -206,7 +209,7 @@ function renderComponent(component, props) {
 
 function shallowRenderComponent(component, props) {
   const el = React.createElement(component, props);
-  const renderer = TestUtils.createRenderer();
+  const renderer = new ShallowRenderer();
   renderer.render(el, {});
   return renderer.getRenderOutput();
 }

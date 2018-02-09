@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "Cuando está activada la opción “No recordar nunca el historial”."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Estás usando Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Las cargas se han deshabilitado."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Enlace copiado"
   },
@@ -132,10 +138,10 @@
     "message": "Haz clic y arrastra para capturar solo una parte de la página. También puedes pasar por encima para resaltar tu selección."
   },
   "tourHeaderFullPage": {
-    "message": "Haz capturas de Windows o páginas completas"
+    "message": "Haz capturas de ventanas o de páginas completas"
   },
   "tourBodyFullPage": {
-    "message": "Selecciona los botones de la parte superior derecha para capturar el área visible en Windows o la página completa."
+    "message": "Selecciona los botones de la parte superior derecha para capturar el área visible en la ventana o en la página completa."
   },
   "tourHeaderDownloadUpload": {
     "message": "Como más te guste"

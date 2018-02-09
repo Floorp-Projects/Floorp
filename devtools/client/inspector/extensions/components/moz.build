@@ -7,4 +7,5 @@
 DevToolsModules(
     'ExtensionSidebar.js',
     'ObjectTreeView.js',
+    'ObjectValueGripView.js',
 )

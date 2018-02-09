@@ -6,188 +6,129 @@
 
 ## Introduction
 
-We use a version of React that has a few minor tweaks. We want to use an un-minified production version anyway, and because of all of this you need to build React yourself to upgrade it for devtools.
+We use a version of React that has a few minor tweaks. We want to use an un-minified production version anyway so you need to build React yourself.
+
+## First, Upgrade react-prop-types.js
+
+You should start by upgrading our prop-types library to match the latest version of React. Please follow the instructions in `devtools/client/shared/vendor/REACT_PROP_TYPES_UPGRADING.md` before continuing.
 
 ## Getting the Source
 
 ```bash
 git clone https://github.com/facebook/react.git
 cd react
-git checkout v15.6.1 # or the version you are targetting
+git checkout v16.2.0 # or the version you are targetting
 ```
+
+## Preparing to Build
+
+We need to disable minification and tree shaking as they overcomplicate the upgrade process without adding any benefits.
+
+- Open scripts/rollup/build.js
+- Find a method called `function getRollupOutputOptions()`
+- After `sourcemap: false` add `treeshake: false` and `freeze: false`
+- Change this:
+  ```js
+  // Apply dead code elimination and/or minification.
+  isProduction &&
+  ```
+  To this:
+  ```js
+  {
+    transformBundle(source) {
+      return (
+        source.replace(/['"]react['"]/g,
+                        "'devtools/client/shared/vendor/react'")
+              .replace(/createElementNS\(['"]http:\/\/www\.w3\.org\/1999\/xhtml['"], ['"]devtools\/client\/shared\/vendor\/react['"]\)/g,
+                        "createElementNS('http://www.w3.org/1999/xhtml', 'react'")
+              .replace(/['"]react-dom['"]/g,
+                        "'devtools/client/shared/vendor/react-dom'")
+              .replace(/rendererPackageName:\s['"]devtools\/client\/shared\/vendor\/react-dom['"]/g,
+                        "rendererPackageName: 'react-dom'")
+              .replace(/ocument\.createElement\(/g,
+                        "ocument.createElementNS('http://www.w3.org/1999/xhtml', ")
+      );
+    },
+  },
+  // Apply dead code elimination and/or minification.
+  false &&
+  ```
+  - Find `await createBundle` and remove all bundles in that block except for `UMD_DEV`, `UMD_PROD` and `NODE_DEV`.
 
 ## Building
 
 ```bash
-npm install
-grunt build
+npm install --global yarn
+yarn
+yarn build
 ```
 
-If you did not receive any errors go to the section entitled "[Patching (XUL Workarounds)](#patching-xul-workarounds)."
+### Package Testing Utilities
 
-If you receive the following error:
+Go through `build/packages/react-test-renderer` and in each file remove all code meant for a production build e.g.
 
-> Current npm version is not supported for development,
-> expected "x.x.x." to satisfy "2.x || 3.x || 4.x"
+Change this:
 
-Your npm version is too recent. `"2.x || 3.x || 4.x"` is a hint that the React project only supports npm versions 2.x, 3.x and 4.x. To fix this let's start by removing all of your node versions:
+```js
+if (process.env.NODE_ENV === 'production') {
+  module.exports = require('./cjs/react-test-renderer-shallow.production.min.js');
+} else {
+  module.exports = require('./cjs/react-test-renderer-shallow.development.js');
+}
+```
+
+To this:
+```js
+module.exports = require('./cjs/react-test-renderer-shallow.development.js');
+```
+
+**NOTE: Be sure to remove all `process.env` conditions from inside the files in the cjs folder.**
+
+Also in the cjs folder replace the React require paths to point at the current React version:
+
+```js
+var React = require('../../../dist/react.development');
+```
+
+From within `build/packages/react-test-renderer`:
 
 ```bash
-# If you use ubuntu
-sudo apt-get remove --purge nodejs
-# If you use homebrew
-brew uninstall node
-# If yu use macports
-sudo port uninstall nodejs
-# If you use nvm
-LINK="https://github.com/creationix/nvm/issues/298"
-xdg-open $LINK || open $LINK
+browserify shallow.js -o react-test-renderer-shallow.js --standalone ShallowRenderer
 ```
 
-You will need to setup a node version manager. These instructions cover "n" but many people prefer to use "nvm". If you choose to use nvm them you will need to set it up yourself.
-
-Run the n-install script and it will set "n" it up for you:
+### Copy the Files Into your Firefox Repo
 
 ```bash
-curl -L -o /tmp/n-install-script https://git.io/n-install
-bash /tmp/n-install-script -y
-exec $SHELL # To re-initialize the PATH variable
+cd <react repo root>
+cp build/dist/react.production.min.js <gecko-dev>/devtools/client/shared/vendor/react.js
+cp build/dist/react-dom.production.min.js <gecko-dev>/devtools/client/shared/vendor/react-dom.js
+cp build/dist/react-dom-server.browser.production.min.js <gecko-dev>/devtools/client/shared/vendor/react-dom-server.js
+cp build/dist/react-dom-test-utils.production.min.js <gecko-dev>/devtools/client/shared/vendor/react-dom-test-utils.js
+cp build/dist/react.development.js <gecko-dev>/devtools/client/shared/vendor/react-dev.js
+cp build/dist/react-dom.development.js <gecko-dev>/devtools/client/shared/vendor/react-dom-dev.js
+cp build/dist/react-dom-server.browser.development.js <gecko-dev>/devtools/client/shared/vendor/react-dom-server-dev.js
+cp build/dist/react-dom-test-utils.development.js <gecko-dev>/devtools/client/shared/vendor/react-dom-test-utils-dev.js
+cp build/packages/react-test-renderer/react-test-renderer-shallow.js <gecko-dev>/devtools/client/shared/vendor/react-test-renderer-shallow.js
 ```
 
-To match node versions with npm versions see:
-<https://nodejs.org/en/download/releases/>
-
-The latest 4.x version of npm is installed with node 7.10.1 so install that version using `sudo n 7.10.1`.
-
-Running `node --version` should now show v7.10.1 and `npm --version` should show 4.2.0.
-
-Now try again:
-
-```bash
-npm install
-grunt build
-```
+From this point we will no longer need your react repository so feel free to delete it.
 
 ## Patching
 
-### Patching build/react-with-addons.js
+### Patching react-dom
 
-- Open `build/react-with-addons.js`. Search for all `document.createElement` calls and replace them with `document.createElementNS('http://www.w3.org/1999/xhtml', ...)`.
+Open `devtools/client/shared/vendor/react-dom.js` and `devtools/client/shared/vendor/react-dom-dev.js`.
 
-  **Note**: some code may be `ownerDocument.createElement` so don't do a blind search/replace. At the time of writing there was only 1 place to change.
+The following change should be made to **BOTH** files.
 
-- If you are editing the production version then change this:
+To have React's event system working correctly in certain XUL situations, ReactDOM must be monkey patched with a fix.
 
-  ```js
-  if ("production" !== 'production') {
-    exports.getReactPerf = function () {
-      return getReactDOM().__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactPerf;
-    };
-
-    exports.getReactTestUtils = function () {
-      return getReactDOM().__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactTestUtils;
-    };
-  }
-  ```
-
-  To this:
-
-  ```js
-  if ("production" !== 'production') {
-    exports.getReactPerf = function () {
-      return getReactDOM().__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactPerf;
-    };
-  }
-
-  exports.getReactTestUtils = function () {
-    return getReactDOM().__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactTestUtils;
-  };
-  ```
-
-- If you are editing the production version then change this:
-
-  ```js
-  if ("production" !== 'production') {
-    // For the UMD build we get these lazily from the global since they're tied
-    // to the DOM renderer and it hasn't loaded yet.
-    Object.defineProperty(React.addons, 'Perf', {
-      enumerable: true,
-      get: function () {
-        return ReactAddonsDOMDependencies.getReactPerf();
-      }
-    });
-    Object.defineProperty(React.addons, 'TestUtils', {
-      enumerable: true,
-      get: function () {
-        return ReactAddonsDOMDependencies.getReactTestUtils();
-      }
-    });
-  }
-  ```
-
-  To this:
-  ```js
-  if ("production" !== 'production') {
-    // For the UMD build we get these lazily from the global since they're tied
-    // to the DOM renderer and it hasn't loaded yet.
-    Object.defineProperty(React.addons, 'Perf', {
-      enumerable: true,
-      get: function () {
-        return ReactAddonsDOMDependencies.getReactPerf();
-      }
-    });
-  }
-
-  Object.defineProperty(React.addons, 'TestUtils', {
-    enumerable: true,
-    get: function () {
-      return ReactAddonsDOMDependencies.getReactTestUtils();
-    }
-  });
-  ```
-
-### Patching build/react-dom.js
-
-- Open `build/react-dom.js` and replace all of the document.createElement calls as you did for `build/react-with-addons.js`.
-
-- Change `require('react')` near the top of the file to `require('devtools/client/shared/vendor/react')`.
-
-- About four lines below that require there is a `define(['react'], f);`. Change this to the full path e.g.`define(['devtools/client/shared/vendor/react'], f);`
-
-- If you are editing the production version then change this:
-
-  ```js
-  if ("production" !== 'production') {
-    ReactDOMUMDEntry.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
-      // ReactPerf and ReactTestUtils currently only work with the DOM renderer
-      // so we expose them from here, but only in DEV mode.
-      ReactPerf: _dereq_(71),
-      ReactTestUtils: _dereq_(80)
-    };
-  }
-  ```
-
-  Into this:
-
-  ```js
-  if ("production" !== 'production') {
-    ReactDOMUMDEntry.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
-      // ReactPerf and ReactTestUtils currently only work with the DOM renderer
-      // so we expose them from here, but only in DEV mode.
-      ReactPerf: _dereq_(71)
-    };
-  }
-  ReactDOMUMDEntry.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
-    ReactTestUtils: _dereq_(80)
-  }
-  ```
-
-To have React's event system working correctly in certain XUL situations, ReactDOM must be monkey patched with a fix. This fix is currently applied in devtools/client/shared/vendor/react-dom.js. When upgrading, copy and paste the existing block of code into the new file in the same location. It is delimited by a header and footer, and then the monkeyPatchReactDOM() needs to be applied to the returned value.
-
-e.g. Turn this:
+Turn this:
 
 ```js
-module.exports = ReactDOM;
+var ReactDOM$2 = Object.freeze({
+  default: ReactDOM
+});
 ```
 
 Into this:
@@ -227,14 +168,8 @@ function monkeyPatchReactDOM(ReactDOM) {
   // Pass on getting and setting behaviors.
   return new Proxy({}, {
     get: (target, name) => {
-      switch (name) {
-        case "render":
-          return reactDomRender;
-        case "TestUtils":
-          // Bind ReactTestUtils and return it when a request is made for
-          // ReactDOM.TestUtils.
-          let ReactInternals = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-          return lazyFunctionBinding(ReactInternals, "ReactTestUtils");
+      if (name === "render") {
+        return reactDomRender;
       }
       return lazyFunctionBinding(ReactDOM, name);
     },
@@ -360,55 +295,9 @@ function functionLazyBinder() {
 // END MONKEY PATCH
 //--------------------------------------------------------------------------------------
 
-module.exports = monkeyPatchReactDOM(ReactDOM);
+ReactDOM = monkeyPatchReactDOM(ReactDOM);
+
+var ReactDOM$2 = Object.freeze({
+  default: ReactDOM
+});
 ```
-
-### Patching build/react-dom-server.js
-
-- Open `build/react-dom-server.js` and replace all of the document.createElement calls as you did for `build/react-with-addons.js`.
-
-- Change `require('react')` near the top of the file to `require('devtools/client/shared/vendor/react')`.
-
-- About four lines below that require there is a `define(['react'], f);`. Change this to the full path e.g.`define(['devtools/client/shared/vendor/react'], f);`
-
-### Copy the Files Across
-
-- Now we need to copy `react-with-addons.js`, `react-dom.js` and `react-dom-server.js` into our repo (note the destination filenames all have -dev added e.g. `react-dev.js`, these are part of the dev version):
-
-  ```bash
-  cp build/react-with-addons.js
-     <gecko-dev>/devtools/client/shared/vendor/react-dev.js
-  cp build/react-dom.js
-     <gecko-dev>/devtools/client/shared/vendor/react-dom-dev.js
-  cp build/react-dom-server.js
-     <gecko-dev>/devtools/client/shared/vendor/react-dom-server-dev.js
-  ```
-
-### Generate a Production Build
-
-```bash
-NODE_ENV=production grunt build
-
-# Or if using the fish shell:
-
-env NODE_ENV=production grunt build
-```
-
-### More Patching
-
-Unfortunately, you will need to repeat the following sections **(See note below)**:
-
-- [Patching build/react-with-addons.js](#patching-buildreact-with-addonsjs)
-- [Patching build/react-dom.js](#patching-buildreact-domjs)
-- [Patching build/react-dom-server.js](#patching-buildreact-dom-serverjs)
-
-**NOTE**: This time you need to save the files with their original filenames so the commands in the "Copy the Files Across" section become:
-
-  ```bash
-  cp build/react-with-addons.js
-     <gecko-dev>/devtools/client/shared/vendor/react.js
-  cp build/react-dom.js
-     <gecko-dev>/devtools/client/shared/vendor/react-dom.js
-  cp build/react-dom-server.js
-     <gecko-dev>/devtools/client/shared/vendor/react-dom-server.js
-  ```

@@ -710,15 +710,6 @@ child:
 
     async PluginEvent(WidgetPluginEvent aEvent);
 
-    /**
-     * @see nsIDOMWindowUtils sendKeyEvent.
-     */
-    async KeyEvent(nsString aType,
-                   int32_t aKeyCode,
-                   int32_t aCharCode,
-                   int32_t aModifiers,
-                   bool aPreventDefault);
-
     prio(input) async CompositionEvent(WidgetCompositionEvent event);
     async NormalPriorityCompositionEvent(WidgetCompositionEvent event);
 

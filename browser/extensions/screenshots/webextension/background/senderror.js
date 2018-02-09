@@ -88,7 +88,7 @@ this.senderror = (function() {
   };
 
   exports.reportError = function(e) {
-    if (!analytics.getTelemetryPrefSync()) {
+    if (!analytics.isTelemetryEnabled()) {
       log.error("Telemetry disabled. Not sending critical error:", e);
       return;
     }

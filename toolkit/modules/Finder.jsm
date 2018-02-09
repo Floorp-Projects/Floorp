@@ -12,9 +12,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "TextToSubURIService",
-                                         "@mozilla.org/intl/texttosuburi;1",
-                                         "nsITextToSubURI");
 XPCOMUtils.defineLazyServiceGetter(this, "Clipboard",
                                          "@mozilla.org/widget/clipboard;1",
                                          "nsIClipboard");
@@ -97,7 +94,7 @@ Finder.prototype = {
       if (ownerDoc)
         docCharset = ownerDoc.characterSet;
 
-      linkURL = TextToSubURIService.unEscapeURIForUI(docCharset, foundLink.href);
+      linkURL = Services.textToSubURI.unEscapeURIForUI(docCharset, foundLink.href);
     }
 
     options.linkURL = linkURL;

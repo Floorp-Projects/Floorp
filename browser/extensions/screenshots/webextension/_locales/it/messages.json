@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "Se è attiva l’opzione “Non salvare la cronologia”."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Stai usando Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Il caricamento è disattivato."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Link copiato"
   },

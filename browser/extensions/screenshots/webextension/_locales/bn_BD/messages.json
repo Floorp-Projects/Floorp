@@ -29,11 +29,46 @@
   "downloadScreenshot": {
     "message": "ডাউনলোড"
   },
+  "downloadOnlyNotice": {
+    "message": "আপনি বর্তমানে Download-Only মোডে আছেন।"
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screeenshots স্বয়ংক্রিয়ভাবে Download-Only এ পরিবর্তণ হয় যেসব অবস্থায়:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "ব্যক্তিগত ব্রাউজিং উইন্ডোতে।"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "তৃতীয়-পক্ষীয় কুকি নিষ্ক্রিয় আছে।"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“ইতিহাস কখনো মনে রাখবেন না” সক্রিয় হয়েছে।"
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "অাপনি Firefox ESR ব্যবহার করছেন।"
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "আপলোড নিষ্ক্রিয় করা হয়েছে।"
+  },
   "notificationLinkCopiedTitle": {
     "message": "লিঙ্ক কপি করা হয়েছে"
   },
   "notificationLinkCopiedDetails": {
     "message": "আপার সট এর লিংক ক্লিপবোর্ডে কপি করা হয়েছে। পেস্ট করতে $META_KEY$-V চাপুন।",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "অনুলিপি"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "শট অনুলিপি করা হয়েছে"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "আপনার শট ক্লিপবোর্ডে অনুলিপি করা হয়েছে। প্রতিলেপন করতে $META_KEY$-V চাপুন।",
     "placeholders": {
       "meta_key": {
         "content": "$1"

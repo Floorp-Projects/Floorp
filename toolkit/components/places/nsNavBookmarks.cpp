@@ -163,7 +163,6 @@ nsNavBookmarks::nsNavBookmarks()
   , mToolbarRoot(0)
   , mMobileRoot(0)
   , mCanNotify(false)
-  , mCacheObservers("bookmark-observers")
   , mBatching(false)
 {
   NS_ASSERTION(!gBookmarksService,
@@ -628,7 +627,7 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder,
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers,
                              SKIP_TAGS(grandParentId == mTagsRoot),
                              OnItemAdded(*aNewBookmarkId, aFolder, index,
                                          TYPE_BOOKMARK, aURI, title, dateAdded,
@@ -647,8 +646,7 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder,
       // Check that bookmarks doesn't include the current tag itemId.
       MOZ_ASSERT(bookmarks[i].id != *aNewBookmarkId);
 
-      NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                                 DontSkip,
+      NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers, DontSkip,
                                  OnItemChanged(bookmarks[i].id,
                                                NS_LITERAL_CSTRING("tags"),
                                                false,
@@ -758,7 +756,7 @@ nsNavBookmarks::RemoveItem(int64_t aItemId, uint16_t aSource)
     NS_WARNING_ASSERTION(uri, "Invalid URI in RemoveItem");
   }
 
-  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers,
                              SKIP_TAGS(bookmark.parentId == tagsRootId ||
                                        bookmark.grandParentId == tagsRootId),
                              OnItemRemoved(bookmark.id,
@@ -779,8 +777,7 @@ nsNavBookmarks::RemoveItem(int64_t aItemId, uint16_t aSource)
     NS_ENSURE_SUCCESS(rv, rv);
 
     for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
-      NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                                 DontSkip,
+      NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers, DontSkip,
                                  OnItemChanged(bookmarks[i].id,
                                                NS_LITERAL_CSTRING("tags"),
                                                false,
@@ -881,7 +878,7 @@ nsNavBookmarks::CreateContainerWithID(int64_t aItemId,
 
   int64_t tagsRootId = TagsRootId();
 
-  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers,
                              SKIP_TAGS(aParent == tagsRootId),
                              OnItemAdded(*aNewFolder, aParent, index, FOLDER,
                                          nullptr, title, dateAdded, guid,
@@ -937,8 +934,7 @@ nsNavBookmarks::InsertSeparator(int64_t aParent,
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                             DontSkip,
+  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers, DontSkip,
                              OnItemAdded(*aNewItemId, aParent, index, TYPE_SEPARATOR,
                                          nullptr, EmptyCString(), dateAdded, guid,
                                          folderGuid, aSource));
@@ -1211,7 +1207,7 @@ nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId, uint16_t aSource)
       NS_WARNING_ASSERTION(uri, "Invalid URI in RemoveFolderChildren");
     }
 
-    NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+    NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers,
                                ((child.grandParentId == tagsRootId) ? SkipTags : SkipDescendants),
                                OnItemRemoved(child.id,
                                              child.parentId,
@@ -1232,8 +1228,7 @@ nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId, uint16_t aSource)
       NS_ENSURE_SUCCESS(rv, rv);
 
       for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
-        NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                                   DontSkip,
+        NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers, DontSkip,
                                    OnItemChanged(bookmarks[i].id,
                                                  NS_LITERAL_CSTRING("tags"),
                                                  false,
@@ -1418,8 +1413,7 @@ nsNavBookmarks::MoveItem(int64_t aItemId,
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                   nsINavBookmarkObserver,
+  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavBookmarkObserver,
                    OnItemMoved(bookmark.id,
                                bookmark.parentId,
                                bookmark.position,
@@ -1587,8 +1581,7 @@ nsNavBookmarks::SetItemDateAdded(int64_t aItemId, PRTime aDateAdded,
   }
 
   // Note: mDBSetItemDateAdded also sets lastModified to aDateAdded.
-  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                   nsINavBookmarkObserver,
+  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavBookmarkObserver,
                    OnItemChanged(bookmark.id,
                                  NS_LITERAL_CSTRING("dateAdded"),
                                  false,
@@ -1658,8 +1651,7 @@ nsNavBookmarks::SetItemLastModified(int64_t aItemId, PRTime aLastModified,
   }
 
   // Note: mDBSetItemDateAdded also sets lastModified to aDateAdded.
-  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                   nsINavBookmarkObserver,
+  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavBookmarkObserver,
                    OnItemChanged(bookmark.id,
                                  NS_LITERAL_CSTRING("lastModified"),
                                  false,
@@ -1910,8 +1902,7 @@ nsNavBookmarks::SetItemTitle(int64_t aItemId, const nsACString& aTitle,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                             SKIP_TAGS(isChangingTagFolder),
+  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers, SKIP_TAGS(isChangingTagFolder),
                              OnItemChanged(bookmark.id,
                                            NS_LITERAL_CSTRING("title"),
                                            false,
@@ -2457,8 +2448,7 @@ nsNavBookmarks::SetKeywordForBookmark(int64_t aBookmarkId,
     NS_ENSURE_SUCCESS(rv, rv);
 
     for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
-      NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                       nsINavBookmarkObserver,
+      NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavBookmarkObserver,
                        OnItemChanged(bookmarks[i].id,
                                      NS_LITERAL_CSTRING("keyword"),
                                      false,
@@ -2514,8 +2504,7 @@ nsNavBookmarks::SetKeywordForBookmark(int64_t aBookmarkId,
     rv = GetBookmarksForURI(oldUri, bookmarks);
     NS_ENSURE_SUCCESS(rv, rv);
     for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
-      NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                       nsINavBookmarkObserver,
+      NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavBookmarkObserver,
                        OnItemChanged(bookmarks[i].id,
                                      NS_LITERAL_CSTRING("keyword"),
                                      false,
@@ -2585,8 +2574,7 @@ nsNavBookmarks::SetKeywordForBookmark(int64_t aBookmarkId,
 
   // In both cases, notify about the change.
   for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
-    NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                     nsINavBookmarkObserver,
+    NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavBookmarkObserver,
                      OnItemChanged(bookmarks[i].id,
                                    NS_LITERAL_CSTRING("keyword"),
                                    false,
@@ -2698,10 +2686,6 @@ nsNavBookmarks::GetObservers(uint32_t* _count,
 
   nsCOMArray<nsINavBookmarkObserver> observers;
 
-  // First add the category cache observers.
-  mCacheObservers.GetEntries(observers);
-
-  // Then add the other observers.
   for (uint32_t i = 0; i < mObservers.Length(); ++i) {
     const nsCOMPtr<nsINavBookmarkObserver> &observer = mObservers.ElementAt(i).GetValue();
     // Skip nullified weak observers.
@@ -2727,8 +2711,7 @@ nsNavBookmarks::NotifyItemVisited(const ItemVisitData& aData)
   // couldn't gather enough data from the notification.
   // This should be false only if there's a bug in the code preceding us.
   if (uri) {
-    NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                     nsINavBookmarkObserver,
+    NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavBookmarkObserver,
                      OnItemVisited(aData.bookmark.id,
                                    aData.visitId,
                                    aData.time,
@@ -2754,8 +2737,7 @@ nsNavBookmarks::NotifyItemChanged(const ItemChangeData& aData)
       aData.bookmark.id, lastModified));
   }
 
-  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                   nsINavBookmarkObserver,
+  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavBookmarkObserver,
                    OnItemChanged(aData.bookmark.id,
                                  aData.property,
                                  aData.isAnnotation,
@@ -2794,7 +2776,7 @@ nsNavBookmarks::Observe(nsISupports *aSubject, const char *aTopic,
 NS_IMETHODIMP
 nsNavBookmarks::OnBeginUpdateBatch()
 {
-  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+  NOTIFY_OBSERVERS(mCanNotify, mObservers,
                    nsINavBookmarkObserver, OnBeginUpdateBatch());
   return NS_OK;
 }
@@ -2807,7 +2789,7 @@ nsNavBookmarks::OnEndUpdateBatch()
     mBatching = false;
   }
 
-  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+  NOTIFY_OBSERVERS(mCanNotify, mObservers,
                    nsINavBookmarkObserver, OnEndUpdateBatch());
   return NS_OK;
 }

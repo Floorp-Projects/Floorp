@@ -1275,10 +1275,8 @@ nsContextMenu.prototype = {
     // Let's try to unescape it using a character set
     // in case the address is not ASCII.
     try {
-      const textToSubURI = Cc["@mozilla.org/intl/texttosuburi;1"].
-                           getService(Ci.nsITextToSubURI);
-      addresses = textToSubURI.unEscapeURIForUI(gContextMenuContentData.charSet,
-                                                addresses);
+      addresses = Services.textToSubURI.unEscapeURIForUI(gContextMenuContentData.charSet,
+                                                         addresses);
     } catch (ex) {
       // Do nothing.
     }

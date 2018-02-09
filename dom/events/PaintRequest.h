@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_PaintRequest_h_
 #define mozilla_dom_PaintRequest_h_
 
-#include "nsIDOMPaintRequest.h"
 #include "nsPresContext.h"
 #include "nsIDOMEvent.h"
 #include "mozilla/Attributes.h"
@@ -18,7 +17,7 @@ namespace dom {
 
 class DOMRect;
 
-class PaintRequest final : public nsIDOMPaintRequest
+class PaintRequest final : public nsISupports
                          , public nsWrapperCache
 {
 public:
@@ -29,7 +28,6 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PaintRequest)
-  NS_DECL_NSIDOMPAINTREQUEST
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
