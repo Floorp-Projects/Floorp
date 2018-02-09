@@ -13,21 +13,18 @@ NS_IMPL_ADDREF_INHERITED(BeforeUnloadEvent, Event)
 NS_IMPL_RELEASE_INHERITED(BeforeUnloadEvent, Event)
 
 NS_INTERFACE_MAP_BEGIN(BeforeUnloadEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMBeforeUnloadEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
 
-NS_IMETHODIMP
+void
 BeforeUnloadEvent::SetReturnValue(const nsAString& aReturnValue)
 {
   mText = aReturnValue;
-  return NS_OK;  // Don't throw an exception
 }
 
-NS_IMETHODIMP
+void
 BeforeUnloadEvent::GetReturnValue(nsAString& aReturnValue)
 {
   aReturnValue = mText;
-  return NS_OK;  // Don't throw an exception
 }
 
 } // namespace dom
