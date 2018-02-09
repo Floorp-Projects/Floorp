@@ -4111,6 +4111,10 @@ nsStyleVisibility::CalcDifference(const nsStyleVisibility& aNewData) const
               nsChangeHint_RepaintFrame;
     }
     if (mVisible != aNewData.mVisible) {
+      if (mVisible == NS_STYLE_VISIBILITY_VISIBLE ||
+          aNewData.mVisible == NS_STYLE_VISIBILITY_VISIBLE) {
+        hint |= nsChangeHint_VisibilityChange;
+      }
       if ((NS_STYLE_VISIBILITY_COLLAPSE == mVisible) ||
           (NS_STYLE_VISIBILITY_COLLAPSE == aNewData.mVisible)) {
         hint |= NS_STYLE_HINT_REFLOW;
