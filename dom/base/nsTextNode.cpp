@@ -13,7 +13,6 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsIDocument.h"
 #include "nsThreadUtils.h"
 #include "nsStubMutationObserver.h"
