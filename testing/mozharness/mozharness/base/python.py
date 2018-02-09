@@ -25,7 +25,6 @@ from mozharness.base.script import (
 )
 from mozharness.base.errors import VirtualenvErrorList
 from mozharness.base.log import WARNING, FATAL
-from mozharness.mozilla.proxxy import Proxxy
 
 external_tools_path = os.path.join(
     os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__))),
@@ -249,12 +248,8 @@ class VirtualenvMixin(object):
         else:
             self.fatal("install_module() doesn't understand an install_method of %s!" % install_method)
 
-        # Add --find-links pages to look at. Add --trusted-host automatically if
-        # the host isn't secure. This allows modern versions of pip to connect
-        # without requiring an override.
-        proxxy = Proxxy(self.config, self.log_obj)
         trusted_hosts = set()
-        for link in proxxy.get_proxies_and_urls(c.get('find_links', [])):
+        for link in c.get('find_links', []):
             parsed = urlparse.urlparse(link)
 
             try:
