@@ -18,6 +18,7 @@ html|*.numberbox-input {
   text-align: right;
 }
 
-textbox[type="number"][hidespinbuttons="true"] > html|*.numberbox-input {
-  -moz-appearance: textfield !important;
+.numberbox-input-box {
+  -moz-box-align: center;
 }
+

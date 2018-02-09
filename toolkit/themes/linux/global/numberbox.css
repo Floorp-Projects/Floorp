@@ -21,6 +21,13 @@ html|*.numberbox-input {
   text-align: right;
 }
 
-textbox[type="number"][hidespinbuttons="true"] > html|*.numberbox-input {
-  -moz-appearance: textfield !important;
+.numberbox-input-box {
+  -moz-box-align: center;
+  -moz-appearance: spinner-textfield;
+  margin-right: -1px;
+  padding: 3px;
+}
+
+textbox[hidespinbuttons="true"] > .numberbox-input-box {
+  -moz-appearance: textfield;
 }
