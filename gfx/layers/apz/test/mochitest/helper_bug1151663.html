@@ -7,28 +7,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
   <meta charset="utf-8">
   <title>Test for Bug 1151663, helper page</title>
   <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
     // -------------------------------------------------------------------
     // Infrastructure to get the test assertions to run at the right time.
     // -------------------------------------------------------------------
     var SimpleTest = window.opener.SimpleTest;
-
-    window.onload = function() {
-        window.addEventListener("MozAfterPaint", afterPaint);
-    };
     var utils = SpecialPowers.getDOMWindowUtils(window);
-    function afterPaint(e) {
-      // If there is another paint pending, wait for it.
-      if (utils.isMozAfterPaintPending) {
-          return;
-      }
-
-      // Once there are no more paints pending, remove the
-      // MozAfterPaint listener and run the test logic.
-      window.removeEventListener("MozAfterPaint", afterPaint);
-      testBug1151663();
-    }
 
     // --------------------------------------------------------------------
     // The actual logic for testing bug 1151663.
@@ -69,6 +55,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
 
       window.opener.finishTest();
     }
+
+    waitUntilApzStable().then(testBug1151663);
   </script>
 </head>
 <body style="height: 500px; overflow: scroll">
