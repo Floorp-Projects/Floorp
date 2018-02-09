@@ -9,6 +9,7 @@ this.EXPORTED_SYMBOLS = ["ActionBarHandler"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -560,7 +561,7 @@ var ActionBarHandler = {
       },
 
       action: function(element, win) {
-        let selectedText = ActionBarHandler._getSelectedText();
+        let selectedText = BrowserUtils.trimSelection(ActionBarHandler._getSelectedText());
         ActionBarHandler._uninit();
 
         // Set current tab as parent of new tab,
