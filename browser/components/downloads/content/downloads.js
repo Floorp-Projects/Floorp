@@ -248,7 +248,7 @@ var DownloadsPanel = {
       return;
     }
 
-    this.panel.hidePopup();
+    PanelMultiView.hidePopup(this.panel);
 
     // Ensure that we allow the panel to be reopened.  Note that, if the popup
     // was open, then the onPopupHidden event handler has already updated the
@@ -416,9 +416,9 @@ var DownloadsPanel = {
     // navigation, thus enabling focusrings in the panel.  Keyboard navigation
     // is automatically disabled if the user moves the mouse on the panel, or
     // if the panel is closed.
-    if ((aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_TAB ||
-        aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_UP ||
-        aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_DOWN) &&
+    if ((aEvent.keyCode == aEvent.DOM_VK_TAB ||
+         aEvent.keyCode == aEvent.DOM_VK_UP ||
+         aEvent.keyCode == aEvent.DOM_VK_DOWN) &&
         !this.keyFocusing) {
       this.keyFocusing = true;
       // Ensure there's a selection, we will show the focus ring around it and
@@ -430,7 +430,7 @@ var DownloadsPanel = {
       return;
     }
 
-    if (aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_DOWN) {
+    if (aEvent.keyCode == aEvent.DOM_VK_DOWN) {
       // If the last element in the list is selected, or the footer is already
       // focused, focus the footer.
       if (richListBox.selectedItem === richListBox.lastChild ||
@@ -455,7 +455,7 @@ var DownloadsPanel = {
   _onKeyDown(aEvent) {
     // If the footer is focused and the downloads list has at least 1 element
     // in it, focus the last element in the list when going up.
-    if (aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_UP &&
+    if (aEvent.keyCode == aEvent.DOM_VK_UP &&
         document.activeElement.parentNode.id === "downloadsFooter" &&
         DownloadsView.richListBox.firstChild) {
       DownloadsView.richListBox.focus();
@@ -464,7 +464,7 @@ var DownloadsPanel = {
       return;
     }
 
-    let pasting = aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_V &&
+    let pasting = aEvent.keyCode == aEvent.DOM_VK_V &&
                   aEvent.getModifierState("Accel");
 
     if (!pasting) {
@@ -568,7 +568,8 @@ var DownloadsPanel = {
       }
 
       DownloadsCommon.log("Opening downloads panel popup.");
-      this.panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, null);
+      PanelMultiView.openPopup(this.panel, anchor, "bottomcenter topright",
+                               0, 0, false, null).catch(Cu.reportError);
     });
   },
 };

@@ -11,7 +11,6 @@
 #include "nsNodeUtils.h"
 #include "nsAttrName.h"
 #include "nsHtml5TreeBuilder.h"
-#include "nsIDOMMutationEvent.h"
 #include "mozAutoDocUpdate.h"
 #include "nsBindingManager.h"
 #include "nsXBLBinding.h"

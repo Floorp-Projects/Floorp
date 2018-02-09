@@ -7,9 +7,4 @@
 [Func="IsChromeOrXBL"]
 interface CommandEvent : Event {
   readonly attribute DOMString? command;
-
-  void initCommandEvent(DOMString type,
-                        optional boolean canBubble = false,
-                        optional boolean cancelable = false,
-                        optional DOMString? command = null);
 };

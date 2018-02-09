@@ -17,11 +17,11 @@
 #include "nsContentUtils.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/MutationEventBinding.h"
 #include "nsNodeInfoManager.h"
 #include "nsIDateTimeInputArea.h"
 #include "nsIObserverService.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMMutationEvent.h"
 #include "jsapi.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
@@ -422,14 +422,14 @@ nsDateTimeControlFrame::AttributeChanged(int32_t aNameSpaceID,
               &nsIDateTimeInputArea::NotifyInputElementValueChanged));
           }
         } else {
-          if (aModType == nsIDOMMutationEvent::REMOVAL) {
+          if (aModType == MutationEventBinding::REMOVAL) {
             if (inputAreaContent) {
               nsAtomString name(aAttribute);
               inputAreaContent->RemoveEditAttribute(name);
             }
           } else {
-            MOZ_ASSERT(aModType == nsIDOMMutationEvent::ADDITION ||
-                       aModType == nsIDOMMutationEvent::MODIFICATION);
+            MOZ_ASSERT(aModType == MutationEventBinding::ADDITION ||
+                       aModType == MutationEventBinding::MODIFICATION);
             if (inputAreaContent) {
               nsAtomString name(aAttribute);
               nsAutoString value;

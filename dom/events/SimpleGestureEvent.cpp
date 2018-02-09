@@ -37,70 +37,36 @@ NS_IMPL_ADDREF_INHERITED(SimpleGestureEvent, MouseEvent)
 NS_IMPL_RELEASE_INHERITED(SimpleGestureEvent, MouseEvent)
 
 NS_INTERFACE_MAP_BEGIN(SimpleGestureEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSimpleGestureEvent)
 NS_INTERFACE_MAP_END_INHERITING(MouseEvent)
 
 uint32_t
-SimpleGestureEvent::AllowedDirections()
+SimpleGestureEvent::AllowedDirections() const
 {
   return mEvent->AsSimpleGestureEvent()->mAllowedDirections;
 }
 
-NS_IMETHODIMP
-SimpleGestureEvent::GetAllowedDirections(uint32_t* aAllowedDirections)
-{
-  NS_ENSURE_ARG_POINTER(aAllowedDirections);
-  *aAllowedDirections = AllowedDirections();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 SimpleGestureEvent::SetAllowedDirections(uint32_t aAllowedDirections)
 {
   mEvent->AsSimpleGestureEvent()->mAllowedDirections = aAllowedDirections;
-  return NS_OK;
 }
 
 uint32_t
-SimpleGestureEvent::Direction()
+SimpleGestureEvent::Direction() const
 {
   return mEvent->AsSimpleGestureEvent()->mDirection;
 }
 
-NS_IMETHODIMP
-SimpleGestureEvent::GetDirection(uint32_t* aDirection)
-{
-  NS_ENSURE_ARG_POINTER(aDirection);
-  *aDirection = Direction();
-  return NS_OK;
-}
-
 double
-SimpleGestureEvent::Delta()
+SimpleGestureEvent::Delta() const
 {
   return mEvent->AsSimpleGestureEvent()->mDelta;
 }
 
-NS_IMETHODIMP
-SimpleGestureEvent::GetDelta(double* aDelta)
-{
-  NS_ENSURE_ARG_POINTER(aDelta);
-  *aDelta = Delta();
-  return NS_OK;
-}
-
 uint32_t
-SimpleGestureEvent::ClickCount()
+SimpleGestureEvent::ClickCount() const
 {
   return mEvent->AsSimpleGestureEvent()->mClickCount;
-}
-
-NS_IMETHODIMP
-SimpleGestureEvent::GetClickCount(uint32_t* aClickCount)
-{
-  NS_ENSURE_ARG_POINTER(aClickCount);
-  *aClickCount = ClickCount();
-  return NS_OK;
 }
 
 void

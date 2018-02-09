@@ -47,8 +47,6 @@ using mozilla::Unused;
 #include "nsContentUtils.h"
 #include "WidgetUtils.h"
 
-#include "nsIDOMSimpleGestureEvent.h"
-
 #include "nsGkAtoms.h"
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"

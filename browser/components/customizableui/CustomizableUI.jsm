@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SearchWidgetTracker: "resource:///modules/SearchWidgetTracker.jsm",
   CustomizableWidgets: "resource:///modules/CustomizableWidgets.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
+  PanelMultiView: "resource:///modules/PanelMultiView.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
@@ -1776,7 +1777,7 @@ var CustomizableUIInternal = {
   hidePanelForNode(aNode) {
     let panel = this._getPanelForNode(aNode);
     if (panel) {
-      panel.hidePopup();
+      PanelMultiView.hidePopup(panel);
     }
   },
 
@@ -4262,7 +4263,7 @@ OverflowableToolbar.prototype = {
         if (aEvent.target == this._chevron) {
           this._onClickChevron(aEvent);
         } else {
-          this._panel.hidePopup();
+          PanelMultiView.hidePopup(this._panel);
         }
         break;
       case "customizationstarting":
@@ -4274,7 +4275,7 @@ OverflowableToolbar.prototype = {
         }
         break;
       case "dragend":
-        this._panel.hidePopup();
+        PanelMultiView.hidePopup(this._panel);
         break;
       case "popuphiding":
         this._onPanelHiding(aEvent);
@@ -4300,7 +4301,9 @@ OverflowableToolbar.prototype = {
       // Ensure we update the gEditUIVisible flag when opening the popup, in
       // case the edit controls are in it.
       this._panel.addEventListener("popupshowing", () => doc.defaultView.updateEditUIVisibility(), {once: true});
-      this._panel.openPopup(anchor || this._chevron, { triggerEvent: aEvent });
+      PanelMultiView.openPopup(this._panel, anchor || this._chevron, {
+        triggerEvent: aEvent,
+      }).catch(Cu.reportError);
       this._chevron.open = true;
 
       this._panel.addEventListener("popupshown", () => {
@@ -4313,8 +4316,8 @@ OverflowableToolbar.prototype = {
 
   _onClickChevron(aEvent) {
     if (this._chevron.open) {
-      this._panel.hidePopup();
       this._chevron.open = false;
+      PanelMultiView.hidePopup(this._panel);
     } else if (this._panel.state != "hiding" && !this._chevron.disabled) {
       this.show(aEvent);
     }
@@ -4606,7 +4609,7 @@ OverflowableToolbar.prototype = {
       }
       this._hideTimeoutId = window.setTimeout(() => {
         if (!this._panel.firstChild.matches(":hover")) {
-          this._panel.hidePopup();
+          PanelMultiView.hidePopup(this._panel);
         }
       }, OVERFLOW_PANEL_HIDE_DELAY_MS);
     });

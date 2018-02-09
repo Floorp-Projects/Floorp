@@ -14,7 +14,6 @@
 #include "nsSMILTimedElement.h"
 #include "nsSMILInstanceTime.h"
 #include "nsSMILParserUtils.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsString.h"
 #include <limits>
 

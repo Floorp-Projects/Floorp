@@ -620,7 +620,7 @@ var FormAutofillContent = {
     let lastAutoCompleteResult = ProfileAutocomplete.lastProfileAutoCompleteResult;
     let focusedInput = FormAutofillContent.activeInput;
 
-    if (e.keyCode != Ci.nsIDOMKeyEvent.DOM_VK_RETURN || !lastAutoCompleteResult ||
+    if (e.keyCode != e.DOM_VK_RETURN || !lastAutoCompleteResult ||
         !focusedInput || focusedInput != ProfileAutocomplete.lastProfileAutoCompleteFocusedInput) {
       return;
     }
