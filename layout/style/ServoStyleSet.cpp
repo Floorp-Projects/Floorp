@@ -1314,6 +1314,7 @@ void
 ServoStyleSet::CompatibilityModeChanged()
 {
   Servo_StyleSet_CompatModeChanged(mRawSet.get());
+  SetStylistStyleSheetsDirty();
 }
 
 already_AddRefed<ServoStyleContext>
