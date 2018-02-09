@@ -203,7 +203,6 @@ HttpBaseChannel::HttpBaseChannel()
   , mCorsIncludeCredentials(false)
   , mCorsMode(nsIHttpChannelInternal::CORS_MODE_NO_CORS)
   , mRedirectMode(nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW)
-  , mFetchCacheMode(nsIHttpChannelInternal::FETCH_CACHE_MODE_DEFAULT)
   , mOnStartRequestCalled(false)
   , mOnStopRequestCalled(false)
   , mUpgradableToSecure(true)
@@ -2823,12 +2822,6 @@ HttpBaseChannel::GetFetchCacheMode(uint32_t* aFetchCacheMode)
 {
   NS_ENSURE_ARG_POINTER(aFetchCacheMode);
 
-  // If the fetch cache mode is overriden, then use it directly.
-  if (mFetchCacheMode != nsIHttpChannelInternal::FETCH_CACHE_MODE_DEFAULT) {
-    *aFetchCacheMode = mFetchCacheMode;
-    return NS_OK;
-  }
-
   // Otherwise try to guess an appropriate cache mode from the load flags.
   if (ContainsAllFlags(mLoadFlags, INHIBIT_CACHING | LOAD_BYPASS_CACHE)) {
     *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_STORE;
@@ -2852,13 +2845,9 @@ NS_IMETHODIMP
 HttpBaseChannel::SetFetchCacheMode(uint32_t aFetchCacheMode)
 {
   ENSURE_CALLED_BEFORE_CONNECT();
-  MOZ_ASSERT(mFetchCacheMode == nsIHttpChannelInternal::FETCH_CACHE_MODE_DEFAULT,
-             "SetFetchCacheMode() should only be called once per channel");
-
-  mFetchCacheMode = aFetchCacheMode;
 
   // Now, set the load flags that implement each cache mode.
-  switch (mFetchCacheMode) {
+  switch (aFetchCacheMode) {
   case nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_STORE:
     // no-store means don't consult the cache on the way to the network, and
     // don't store the response in the cache even if it's cacheable.
@@ -3632,10 +3621,6 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
 
     // Preserve Redirect mode flag.
     rv = httpInternal->SetRedirectMode(mRedirectMode);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    // Preserve Cache mode flag.
-    rv = httpInternal->SetFetchCacheMode(mFetchCacheMode);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     // Preserve Integrity metadata.
