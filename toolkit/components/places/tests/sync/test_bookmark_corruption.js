@@ -9,7 +9,6 @@ add_task(async function test_missing_children() {
     await buf.store(shuffle([{
       id: "menu",
       type: "folder",
-      title: "Bookmarks Menu",
       children: ["bookmarkBBBB", "bookmarkCCCC", "bookmarkDDDD",
                  "bookmarkEEEE"],
     }, {
@@ -330,7 +329,6 @@ add_task(async function test_new_orphan_without_local_parent() {
   await buf.store([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["folderEEEEEE"],
   }]);
 
@@ -446,7 +444,6 @@ add_task(async function test_move_into_orphaned() {
   await buf.store([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["bookmarkAAAA", "bookmarkBBBB", "folderCCCCCC"],
   }, {
     id: "bookmarkAAAA",
@@ -624,7 +621,6 @@ add_task(async function test_new_orphan_with_local_parent() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["folderAAAAAA"],
   }, {
     id: "folderAAAAAA",
@@ -822,7 +818,6 @@ add_task(async function test_partial_cycle() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["folderAAAAAA"],
   }, {
     id: "folderAAAAAA",
@@ -932,7 +927,6 @@ add_task(async function test_complete_cycle() {
   await buf.store([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["folderAAAAAA"],
   }, {
     id: "folderAAAAAA",

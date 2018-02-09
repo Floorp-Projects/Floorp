@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "امکان «هیچ‌وقت تاریخچه ذخیره نشود» فعال باشد."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "شما از فایرفاکس ESR استفاده می‌کنید."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "بارگیری ها غیرفعال شده اند."
+  },
   "notificationLinkCopiedTitle": {
     "message": "پیوند کپی شد"
   },

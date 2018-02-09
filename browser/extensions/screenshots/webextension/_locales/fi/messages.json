@@ -29,6 +29,27 @@
   "downloadScreenshot": {
     "message": "Lataa"
   },
+  "downloadOnlyNotice": {
+    "message": "Olet vain lataus -tilassa."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots vaihtuu automaattisesti vain lataus -tilaan, kun"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "käytetään yksityisen selaamisen ikkunaa"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "kolmannen osapuolen evästeet ovat estetty"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "”Ei mitään historiatietoja” on valittuna"
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Käytät Firefox ESR:ää."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Verkkoon tallentaminen on poistettu käytöstä."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Linkki kopioitu"
   },
@@ -36,6 +57,28 @@
     "message": "Linkki kuvaasi on kopioitu leikepöydälle. Voit liittää sen painamalla $META_KEY$-V.",
     "placeholders": {
       "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Kopioi"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Kaappaus kopioitu"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Kaappauksesi on kopioitu leikepöydälle. Liitä se painamalla $META_KEY$-V.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCroppedWarning": {
+    "message": "Tämä kuva on rajattu $PIXELS$ kuvapisteeseen.",
+    "placeholders": {
+      "pixels": {
         "content": "$1"
       }
     }
@@ -81,6 +124,12 @@
   },
   "tourBodyIntro": {
     "message": "Ota, tallenna ja jaa kuvakaappaus poistumatta Firefoxista."
+  },
+  "tourHeaderPageAction": {
+    "message": "Uusi tapa tallentaa"
+  },
+  "tourBodyPageAction": {
+    "message": "Avaa osoitepalkissa oleva Sivun toiminnot -valikko milloin vain, kun haluat ottaa kuvakaappauksen."
   },
   "tourHeaderClickAndDrag": {
     "message": "Kaappaa mitä haluat"

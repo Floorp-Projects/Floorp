@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "\"Тарихты ешқашан сақтамау\" іске қосылған."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Сіз Firefox ESR қолданып отырсыз."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Жүктеп жіберу сөндірілген."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Сілтеме көшірілді"
   },

@@ -656,7 +656,6 @@ protected:
 
   // Used to enable and disable the observer notifications
   bool mCanNotify;
-  nsCategoryCache<nsINavHistoryObserver> mCacheObservers;
 
   // Used to cache the call to CryptAcquireContext, which is expensive
   // when called thousands of times

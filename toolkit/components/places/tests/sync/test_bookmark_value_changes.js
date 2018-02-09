@@ -14,7 +14,6 @@ add_task(async function test_value_combo() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["mozBmk______"],
   }, {
     id: "mozBmk______",
@@ -46,7 +45,6 @@ add_task(async function test_value_combo() {
   }, {
     id: "toolbar",
     type: "folder",
-    title: "Bookmarks Toolbar",
     children: ["fxBmk_______", "tFolder_____"],
   }, {
     id: "fxBmk_______",
@@ -72,6 +70,8 @@ add_task(async function test_value_combo() {
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
+  let menuInfo = await PlacesUtils.bookmarks.fetch(
+    PlacesUtils.bookmarks.menuGuid);
   deepEqual(changesToUpload, {
     bzBmk_______: {
       tombstone: false,
@@ -91,7 +91,7 @@ add_task(async function test_value_combo() {
     },
     toolbar: {
       tombstone: false,
-      counter: 1,
+      counter: 2,
       synced: false,
       cleartext: {
         id: "toolbar",
@@ -99,7 +99,7 @@ add_task(async function test_value_combo() {
         parentid: "places",
         hasDupe: false,
         parentName: "",
-        dateAdded: 0,
+        dateAdded: menuInfo.dateAdded.getTime(),
         title: "Bookmarks Toolbar",
         children: ["fxBmk_______", "tFolder_____", "bzBmk_______"],
       },
@@ -254,7 +254,6 @@ add_task(async function test_value_only_changes() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["folderAAAAAA", "folderFFFFFF"],
   }, {
     id: "folderAAAAAA",
@@ -478,7 +477,6 @@ add_task(async function test_keywords() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["bookmarkAAAA", "bookmarkBBBB", "bookmarkCCCC", "bookmarkDDDD"],
   }, {
     id: "bookmarkAAAA",
@@ -616,7 +614,6 @@ add_task(async function test_keywords_complex() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["bookmarkBBBB", "bookmarkCCCC", "bookmarkDDDD", "bookmarkEEEE"],
   }, {
     id: "bookmarkBBBB",
@@ -648,7 +645,6 @@ add_task(async function test_keywords_complex() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["bookmarkAAAA", "bookmarkAAA1", "bookmarkBBBB", "bookmarkCCCC",
                "bookmarkDDDD", "bookmarkEEEE"],
   }, {
@@ -916,7 +912,6 @@ add_task(async function test_tags() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["bookmarkAAAA", "bookmarkBBBB", "bookmarkCCCC", "bookmarkDDDD"],
   }, {
     id: "bookmarkAAAA",
@@ -1013,7 +1008,6 @@ add_task(async function test_rewrite_tag_queries() {
   await buf.store([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["bookmarkAAAA", "bookmarkDDDD"],
   }, {
     id: "bookmarkAAAA",
@@ -1033,7 +1027,6 @@ add_task(async function test_rewrite_tag_queries() {
   await buf.store([{
     id: "toolbar",
     type: "folder",
-    title: "Bookmarks Toolbar",
     children: ["queryBBBBBBB", "queryCCCCCCC", "bookmarkEEEE"],
   }, {
     id: "queryBBBBBBB",
@@ -1123,7 +1116,6 @@ add_task(async function test_date_added() {
   await buf.store([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["bookmarkAAAA", "bookmarkBBBB"],
   }, {
     id: "bookmarkAAAA",

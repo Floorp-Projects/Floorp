@@ -6,6 +6,7 @@
 
 const {
   EXTENSION_SIDEBAR_OBJECT_TREEVIEW_UPDATE,
+  EXTENSION_SIDEBAR_OBJECT_GRIP_VIEW_UPDATE,
   EXTENSION_SIDEBAR_REMOVE,
 } = require("../actions/index");
 
@@ -20,6 +21,20 @@ let reducers = {
       [sidebarId]: {
         viewMode: "object-treeview",
         object,
+      }
+    });
+  },
+
+  [EXTENSION_SIDEBAR_OBJECT_GRIP_VIEW_UPDATE](
+    sidebar, {sidebarId, objectValueGrip, rootTitle}
+  ) {
+    // Update the sidebar to a "object-treeview" which shows
+    // the passed object.
+    return Object.assign({}, sidebar, {
+      [sidebarId]: {
+        viewMode: "object-value-grip-view",
+        objectValueGrip,
+        rootTitle,
       }
     });
   },

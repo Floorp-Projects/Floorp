@@ -1,5 +1,9 @@
 // Test inlining in Ion of fun.apply(..., array).
 
+setJitCompilerOption("ion.warmup.trigger", 50);
+setJitCompilerOption("offthread-compilation.enable", 0);
+gcPreserveCode();
+
 if (!this.getJitCompilerOptions() || !getJitCompilerOptions()['ion.enable'])
     quit(0);
 

@@ -22,7 +22,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyServiceGetters(this, {
-  gTextToSubURI: ["@mozilla.org/intl/texttosuburi;1", "nsITextToSubURI"],
   gEnvironment: ["@mozilla.org/process/environment;1", "nsIEnvironment"],
   gChromeReg: ["@mozilla.org/chrome/chrome-registry;1", "nsIChromeRegistry"],
 });
@@ -2420,10 +2419,10 @@ Engine.prototype = {
     LOG("getSubmission: In data: \"" + aData + "\"; Purpose: \"" + aPurpose + "\"");
     var data = "";
     try {
-      data = gTextToSubURI.ConvertAndEscape(this.queryCharset, aData);
+      data = Services.textToSubURI.ConvertAndEscape(this.queryCharset, aData);
     } catch (ex) {
       LOG("getSubmission: Falling back to default queryCharset!");
-      data = gTextToSubURI.ConvertAndEscape(DEFAULT_QUERY_CHARSET, aData);
+      data = Services.textToSubURI.ConvertAndEscape(DEFAULT_QUERY_CHARSET, aData);
     }
     LOG("getSubmission: Out data: \"" + data + "\"");
     return url.getSubmission(data, this, aPurpose);
@@ -4441,9 +4440,9 @@ SearchService.prototype = {
     // Decode the terms using the charset defined in the search engine.
     let terms;
     try {
-      terms = gTextToSubURI.UnEscapeAndConvert(
-                                       mapEntry.engine.queryCharset,
-                                       encodedTerms.replace(/\+/g, " "));
+      terms = Services.textToSubURI.UnEscapeAndConvert(
+        mapEntry.engine.queryCharset,
+        encodedTerms.replace(/\+/g, " "));
     } catch (ex) {
       // Decoding errors will cause this match to be ignored.
       LOG("Parameter decoding failed. Charset: " +

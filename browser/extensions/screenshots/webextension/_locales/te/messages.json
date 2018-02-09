@@ -23,8 +23,17 @@
   "downloadScreenshot": {
     "message": "దింపుకోండి"
   },
+  "downloadOnlyNotice": {
+    "message": "మీరు ప్రస్తుతం దింపుకోలు-మాత్రమే రీతిలో ఉన్నారు."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "ఎక్కింపులు అచేతమై ఉన్నాయి."
+  },
   "notificationLinkCopiedTitle": {
     "message": "లంకె కాపీ అయింది"
+  },
+  "copyScreenshot": {
+    "message": "కాపీచెయ్యి"
   },
   "requestErrorTitle": {
     "message": "పని చెయుట లేదు."
@@ -51,7 +60,10 @@
     "message": "అయ్యో! Firefox స్క్రీన్షాట్లు haywire వెళ్ళింది."
   },
   "tourBodyIntro": {
-    "message": "Firefox ను వదలకుండా స్క్రీన్షాట్లను తీసుకోండి, సేవ్ చేయండి మరియు పంచండి."
+    "message": "Firefoxను వదలకుండానే తెరపట్లు తీసుకోండి, భద్రపరచుకోండి, పంచుకోండి."
+  },
+  "tourHeaderPageAction": {
+    "message": "భద్రపరచుకోడానికి కొత్త మార్గం"
   },
   "tourHeaderClickAndDrag": {
     "message": ""

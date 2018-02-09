@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "“Werǧin ad tecfuḍ γef umazray” insa."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Aql-ak teseqdaceḍ Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Tuzna n ifayluyen tensa."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Aseγwen yettwanγel"
   },

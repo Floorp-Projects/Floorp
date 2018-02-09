@@ -29,6 +29,27 @@
   "downloadScreenshot": {
     "message": "Descarcă"
   },
+  "downloadOnlyNotice": {
+    "message": "Momentan sunteți în modul descărcare."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots se mută automat în modul descărcare în aceste situații:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "În fereastra de navigare privată."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Atunci când cookie-urile terțe sunt dezactivate."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Atunci când este activată opțiunea „Nu memora istoricul”."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Acum folosești Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Încărcările au fost dezactivate."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Link copiat"
   },
@@ -40,11 +61,48 @@
       }
     }
   },
+  "copyScreenshot": {
+    "message": "Copiază"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Captura copiată"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Captura a fost copiată în clipboard. Apasă $META_KEY$-V pentru a lipi.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCroppedWarning": {
+    "message": "Imaginea a fost decupată la $PIXELS$ px.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Nefuncțional."
   },
+  "requestErrorDetails": {
+    "message": "Ne pare rău! Nu am putut salva captura. Încearcă din nou mai târziu."
+  },
+  "connectionErrorTitle": {
+    "message": "Nu ne putem conecta la capturile tale."
+  },
+  "connectionErrorDetails": {
+    "message": "Verifică conexiunea la internet. Dacă te poți conecta la internet ar putea fi o problemă temporară cu serviciul Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Nu am putut să salvăm captura ta deoarece este o problemă cu serviciul Firefox Screenshots. Încearcă din nou mai târziu."
+  },
   "unshootablePageErrorTitle": {
     "message": "Nu putem realiza o captură de ecran a acestei pagini."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Aceasta este o pagină web standard așa că nu putem lua o captură a acesteia."
   },
   "selfScreenshotErrorTitle": {
     "message": "Nu poți realiza o captură a paginii Firefox Screenshots!"
@@ -55,8 +113,23 @@
   "privateWindowErrorTitle": {
     "message": "Capturile de ecran sunt dezactivate în modul de navigare privată"
   },
+  "privateWindowErrorDetails": {
+    "message": "Ne pare rău pentru inconveniență. Lucrăm să introducem această funcție în versiunile viitoare."
+  },
+  "genericErrorTitle": {
+    "message": "Ups! Firefox Screenshots a întâmpinat o eroare."
+  },
+  "genericErrorDetails": {
+    "message": "Nu știm ce s-a întâmplat. Poți încerca să iei o nouă captură sau o captură de la o altă pagină?"
+  },
+  "tourBodyIntro": {
+    "message": "Preia, salvează și împărtășește capturi de ecran fără a părăsi Firefox."
+  },
   "tourHeaderPageAction": {
     "message": "O nouă modalitate de salvare"
+  },
+  "tourBodyPageAction": {
+    "message": "Extinde meniul de acțiuni ale paginii în bara de adrese oricând dorești să faci o captură."
   },
   "tourHeaderClickAndDrag": {
     "message": "Capturează întocmai ceea ce dorești"
@@ -72,6 +145,9 @@
   },
   "tourHeaderDownloadUpload": {
     "message": "Pe placul tău"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "Salvează capturile decupate pe web pentru a le împărtăși mai ușor, sau descarcă-le pe calculator. Mai poți face clic pe butonul My Shots (capturile mele) pentru a găsi toate capturile luate."
   },
   "tourSkip": {
     "message": "OMITE"

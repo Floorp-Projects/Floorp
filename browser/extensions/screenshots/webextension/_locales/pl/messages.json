@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "Zachowywanie historii jest wyłączone."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Używany jest Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Wysyłanie zostało wyłączone."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Skopiowano odnośnik"
   },
