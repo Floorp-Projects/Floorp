@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "所有文章都讀完啦！晚點再來，{provider} 將提供更多推薦故事。等不及了？選擇熱門主題，看看 Web 上各式精采資訊。",
   "manual_migration_explanation2": "試試將其他瀏覽器的書籤、瀏覽記錄與密碼匯入 Firefox。",
   "manual_migration_cancel_button": "不必了",
-  "manual_migration_import_button": "立即匯入"
+  "manual_migration_import_button": "立即匯入",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

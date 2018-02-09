@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "すべて既読です。また後で戻って {provider} からのおすすめ記事をチェックしてください。もし待ちきれないなら、人気のトピックを選択すれば、他にもウェブ上の優れた記事を見つけられます。",
   "manual_migration_explanation2": "他のブラウザーからブックマークや履歴、パスワードを取り込んで Firefox を使ってみましょう。",
   "manual_migration_cancel_button": "今はしない",
-  "manual_migration_import_button": "今すぐインポート"
+  "manual_migration_import_button": "今すぐインポート",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };
