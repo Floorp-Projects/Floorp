@@ -187,6 +187,10 @@ SendCodeRangesToProfiler(const CodeSegment& cs, const Bytes& bytecode, const Met
                 if (!AppendToString(" slow entry", &name))
                     return;
                 writePerfSpewerWasmMap(start, size, file, name.begin());
+            } else if (codeRange.isJitEntry()) {
+                if (!AppendToString(" fast entry", &name))
+                    return;
+                writePerfSpewerWasmMap(start, size, file, name.begin());
             } else if (codeRange.isImportInterpExit()) {
                 if (!AppendToString(" slow exit", &name))
                     return;
@@ -715,10 +719,60 @@ Metadata::getFuncName(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes*
            name->append(afterFuncIndex, strlen(afterFuncIndex));
 }
 
-Code::Code(UniqueCodeSegment tier, const Metadata& metadata, UniqueJumpTable maybeJumpTable)
+bool
+JumpTables::init(CompileMode mode, const CodeSegment& cs, const CodeRangeVector& codeRanges)
+{
+    // Note a fast jit entry has two addresses, to be compatible with
+    // ion/baseline functions which have the raw vs checked args entries,
+    // both used all over the place in jit calls. This allows the fast entries
+    // to be compatible with jit code pointer loading routines.
+    // We can use the same entry for both kinds of jit entries since a wasm
+    // entry knows how to convert any kind of arguments and doesn't assume
+    // any input types.
+
+    static_assert(JSScript::offsetOfJitCodeRaw() == 0,
+                  "wasm fast jit entry is at (void*) jit[2*funcIndex]");
+    static_assert(JSScript::offsetOfJitCodeSkipArgCheck() == sizeof(void*),
+                  "wasm fast jit entry is also at (void*) jit[2*funcIndex+1]");
+
+    mode_ = mode;
+
+    size_t numFuncs = 0;
+    for (const CodeRange& cr : codeRanges) {
+        if (cr.isFunction())
+            numFuncs++;
+    }
+
+    numFuncs_ = numFuncs;
+
+    if (mode_ == CompileMode::Tier1) {
+        tiering_ = TablePointer(js_pod_calloc<void*>(numFuncs));
+        if (!tiering_)
+            return false;
+    }
+
+    // The number of jit entries is overestimated, but it is simpler when
+    // filling/looking up the jit entries and safe (worst case we'll crash
+    // because of a null deref when trying to call the jit entry of an
+    // unexported function).
+    jit_ = TablePointer(js_pod_calloc<void*>(2 * numFuncs));
+    if (!jit_)
+        return false;
+
+    uint8_t* codeBase = cs.base();
+    for (const CodeRange& cr : codeRanges) {
+        if (cr.isFunction())
+            setTieringEntry(cr.funcIndex(), codeBase + cr.funcTierEntry());
+        else if (cr.isJitEntry())
+            setJitEntry(cr.funcIndex(), codeBase + cr.begin());
+    }
+    return true;
+}
+
+Code::Code(UniqueCodeSegment tier, const Metadata& metadata, JumpTables&& maybeJumpTables)
   : metadata_(&metadata),
     profilingLabels_(mutexid::WasmCodeProfilingLabels, CacheableCharsVector()),
-    jumpTable_(Move(maybeJumpTable))
+    jumpTables_(Move(maybeJumpTables))
 {
     segment1_ = takeOwnership(Move(tier));
 }
@@ -734,6 +788,14 @@ Code::setTier2(UniqueCodeSegment segment) const
     MOZ_RELEASE_ASSERT(segment->tier() == Tier::Ion && segment1_->tier() != Tier::Ion);
     MOZ_RELEASE_ASSERT(!segment2_.get());
     segment2_ = takeOwnership(Move(segment));
+}
+
+uint32_t
+Code::lookupFuncIndex(JSFunction* fun) const
+{
+    if (fun->isAsmJSNative())
+        return fun->asmJSFuncIndex();
+    return lookupRange(*fun->wasmJitEntry())->funcIndex();
 }
 
 Tiers
@@ -986,7 +1048,8 @@ Code::addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
 
     *data += mallocSizeOf(this) +
              metadata().sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenMetadata) +
-             profilingLabels_.lock()->sizeOfExcludingThis(mallocSizeOf);
+             profilingLabels_.lock()->sizeOfExcludingThis(mallocSizeOf) +
+             jumpTables_.sizeOfMiscIncludingThis(mallocSizeOf);
 
     for (auto t : tiers())
         segment(t).addSizeOfMisc(mallocSizeOf, code, data);
@@ -1028,6 +1091,10 @@ Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const Link
 
     segment1_ = takeOwnership(Move(codeSegment));
     metadata_ = &metadata;
+
+    if (!jumpTables_.init(CompileMode::Once, *segment1_,
+                          metadata.metadata(Tier::Serialized).codeRanges))
+        return nullptr;
 
     return cursor;
 }

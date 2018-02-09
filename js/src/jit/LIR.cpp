@@ -484,9 +484,11 @@ LDefinition::dump() const
 void
 LNode::printOperands(GenericPrinter& out)
 {
-    for (size_t i = 0, e = numOperands(); i < e; i++) {
+    size_t numOperands = isPhi() ? toPhi()->numOperands() : toInstruction()->numOperands();
+
+    for (size_t i = 0; i < numOperands; i++) {
         out.printf(" (%s)", getOperand(i)->toString().get());
-        if (i != numOperands() - 1)
+        if (i != numOperands - 1)
             out.printf(",");
     }
 }

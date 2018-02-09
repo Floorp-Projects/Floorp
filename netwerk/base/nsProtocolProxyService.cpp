@@ -6,6 +6,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/AutoRestore.h"
 
 #include "nsProtocolProxyService.h"
 #include "nsProxyInfo.h"
@@ -97,6 +98,26 @@ GetProxyURI(nsIChannel *channel, nsIURI **aOut)
 
 //-----------------------------------------------------------------------------
 
+nsProtocolProxyService::FilterLink::FilterLink(uint32_t p,
+                                               nsIProtocolProxyFilter *f)
+  : position(p), filter(f), channelFilter(nullptr)
+{
+  LOG(("nsProtocolProxyService::FilterLink::FilterLink %p, filter=%p", this, f));
+}
+nsProtocolProxyService::FilterLink::FilterLink(uint32_t p,
+                                               nsIProtocolProxyChannelFilter *cf)
+  : position(p), filter(nullptr), channelFilter(cf)
+{
+  LOG(("nsProtocolProxyService::FilterLink::FilterLink %p, channel-filter=%p", this, cf));
+}
+
+nsProtocolProxyService::FilterLink::~FilterLink()
+{
+  LOG(("nsProtocolProxyService::FilterLink::~FilterLink %p", this));
+}
+
+//-----------------------------------------------------------------------------
+
 // The nsPACManCallback portion of this implementation should be run
 // on the main thread - so call nsPACMan::AsyncGetProxyForURI() with
 // a true mainThreadResponse parameter.
@@ -151,7 +172,94 @@ private:
         }
     }
 
+    // Helper class to loop over all registered asynchronous filters.
+    // There is a cycle between nsAsyncResolveRequest and this class that
+    // is broken after the last filter has called back on this object.
+    class AsyncApplyFilters final
+      : public nsIProxyProtocolFilterResult
+      , public nsIRunnable
+      , public nsICancelable
+    {
+      // The reference counter is thread-safe, but the processing logic is
+      // considered single thread only.  We want the counter be thread safe,
+      // since this class can be released on a background thread.
+      NS_DECL_THREADSAFE_ISUPPORTS
+      NS_DECL_NSIPROXYPROTOCOLFILTERRESULT
+      NS_DECL_NSIRUNNABLE
+      NS_DECL_NSICANCELABLE
+
+      typedef std::function<nsresult(nsAsyncResolveRequest*, nsIProxyInfo*, bool)> Callback;
+
+      explicit AsyncApplyFilters(nsProtocolInfo& aInfo, Callback const& aCallback);
+      // This method starts the processing or filters.  If all of them
+      // answer synchronously (call back from within applyFilters) this method
+      // will return immediately and the returning result will carry return
+      // result of the callback given in constructor.
+      // This method is looping the registered filters (that have been copied
+      // locally) as long as an answer from a filter is obtained synchronously.
+      // Note that filters are processed serially to let them build a list
+      // of proxy info.
+      nsresult AsyncProcess(nsAsyncResolveRequest* aRequest);
+
+    private:
+      typedef nsProtocolProxyService::FilterLink FilterLink;
+
+      virtual ~AsyncApplyFilters();
+      // Processes the next filter and loops until a filter is successfully
+      // called on or it has called back to us.
+      nsresult ProcessNextFilter();
+      // Called after the last filter has been processed (=called back or failed to
+      // be called on)
+      nsresult Finish();
+
+      nsProtocolInfo mInfo;
+      // This is nullified before we call back on the request or when
+      // Cancel() on this object has been called to break the cycle
+      // and signal to stop.
+      RefPtr<nsAsyncResolveRequest> mRequest;
+      Callback mCallback;
+      // A shallow snapshot of filters as they were registered at the moment
+      // we started to process filters for the given resolve request.
+      nsTArray<RefPtr<FilterLink>> mFiltersCopy;
+
+      nsTArray<RefPtr<FilterLink>>::index_type mNextFilterIndex;
+      // true when we are calling ProcessNextFilter() from inside AsyncProcess(),
+      // false otherwise.
+      bool mProcessingInLoop;
+      // true after a filter called back to us with a result, dropped to false
+      // just before we call a filter.
+      bool mFilterCalledBack;
+
+      // This keeps the initial value we pass to the first filter in line and also
+      // collects the result from each filter call.
+      nsCOMPtr<nsIProxyInfo> mProxyInfo;
+
+      // The logic is written as non-thread safe, assert single-thread usage.
+      nsCOMPtr<nsIEventTarget> mProcessingThread;
+    };
+
 public:
+    nsresult ProcessLocally(nsProtocolInfo &info, nsIProxyInfo* pi, bool isSyncOK)
+    {
+        SetResult(NS_OK, pi);
+
+        auto consumeFiltersResult = [isSyncOK]
+                                    (nsAsyncResolveRequest* ctx, nsIProxyInfo* pi, bool aCalledAsync) -> nsresult
+        {
+          ctx->SetResult(NS_OK, pi);
+          if (isSyncOK || aCalledAsync) {
+            ctx->Run();
+            return NS_OK;
+          }
+
+          return ctx->DispatchCallback();
+        };
+
+        mAsyncFilterApplier = new AsyncApplyFilters(info, consumeFiltersResult);
+        // may call consumeFiltersResult() directly
+        return mAsyncFilterApplier->AsyncProcess(this);
+    }
+
     void SetResult(nsresult status, nsIProxyInfo *pi)
     {
         mStatus = status;
@@ -168,6 +276,10 @@ public:
     NS_IMETHOD Cancel(nsresult reason) override
     {
         NS_ENSURE_ARG(NS_FAILED(reason));
+
+        if (mAsyncFilterApplier) {
+            mAsyncFilterApplier->Cancel(reason);
+        }
 
         // If we've already called DoCallback then, nothing more to do.
         if (!mCallback)
@@ -243,18 +355,40 @@ private:
             // Now apply proxy filters
             nsProtocolInfo info;
             mStatus = mPPS->GetProtocolInfo(proxyURI, &info);
-            if (NS_SUCCEEDED(mStatus))
-                mPPS->ApplyFilters(mChannel, info, mProxyInfo);
-            else
-                mProxyInfo = nullptr;
 
-            if(pacAvailable) {
-                // if !pacAvailable, it was already logged above
-                LOG(("pac thread callback %s\n", mPACString.get()));
+            auto consumeFiltersResult = [pacAvailable]
+                                        (nsAsyncResolveRequest* self, nsIProxyInfo* pi, bool async) -> nsresult
+            {
+                LOG(("DoCallback::consumeFiltersResult this=%p, pi=%p, async=%d",
+                     self, pi, async));
+
+                self->mProxyInfo = pi;
+
+                if (pacAvailable) {
+                    // if !pacAvailable, it was already logged above
+                    LOG(("pac thread callback %s\n", self->mPACString.get()));
+                }
+
+                if (NS_SUCCEEDED(self->mStatus)) {
+                    self->mPPS->MaybeDisableDNSPrefetch(self->mProxyInfo);
+                }
+
+                self->mCallback->OnProxyAvailable(self,
+                                                  self->mChannel,
+                                                  self->mProxyInfo,
+                                                  self->mStatus);
+
+                return NS_OK;
+            };
+
+            if (NS_SUCCEEDED(mStatus)) {
+                mAsyncFilterApplier = new AsyncApplyFilters(info, consumeFiltersResult);
+                // This may call consumeFiltersResult() directly.
+                mAsyncFilterApplier->AsyncProcess(this);
+                return;
             }
-            if (NS_SUCCEEDED(mStatus))
-                mPPS->MaybeDisableDNSPrefetch(mProxyInfo);
-            mCallback->OnProxyAvailable(this, mChannel, mProxyInfo, mStatus);
+
+            consumeFiltersResult(this, nullptr, false);
         }
         else if (NS_SUCCEEDED(mStatus) && !mPACURL.IsEmpty()) {
             LOG(("pac thread callback indicates new pac file load\n"));
@@ -299,7 +433,6 @@ private:
     }
 
 private:
-
     nsresult  mStatus;
     nsCString mPACString;
     nsCString mPACURL;
@@ -311,9 +444,200 @@ private:
     nsCOMPtr<nsIChannel>               mChannel;
     nsCOMPtr<nsIProtocolProxyCallback> mCallback;
     nsCOMPtr<nsIProxyInfo>             mProxyInfo;
+
+    RefPtr<AsyncApplyFilters> mAsyncFilterApplier;
 };
 
-NS_IMPL_ISUPPORTS(nsAsyncResolveRequest, nsICancelable, nsIRunnable)
+NS_IMPL_ISUPPORTS(nsAsyncResolveRequest,
+                  nsICancelable,
+                  nsIRunnable)
+
+NS_IMPL_ISUPPORTS(nsAsyncResolveRequest::AsyncApplyFilters,
+                  nsIProxyProtocolFilterResult,
+                  nsICancelable,
+                  nsIRunnable)
+
+nsAsyncResolveRequest::AsyncApplyFilters::AsyncApplyFilters(nsProtocolInfo& aInfo,
+                                                            Callback const& aCallback)
+  : mInfo(aInfo)
+  , mCallback(aCallback)
+  , mNextFilterIndex(0)
+  , mProcessingInLoop(false)
+  , mFilterCalledBack(false)
+{
+  LOG(("AsyncApplyFilters %p", this));
+}
+
+nsAsyncResolveRequest::AsyncApplyFilters::~AsyncApplyFilters()
+{
+  LOG(("~AsyncApplyFilters %p", this));
+
+  MOZ_ASSERT(!mRequest);
+  MOZ_ASSERT(!mProxyInfo);
+  MOZ_ASSERT(!mFiltersCopy.Length());
+}
+
+nsresult
+nsAsyncResolveRequest::AsyncApplyFilters::AsyncProcess(nsAsyncResolveRequest * aRequest)
+{
+  LOG(("AsyncApplyFilters::AsyncProcess %p for req %p", this, aRequest));
+
+  MOZ_ASSERT(!mRequest, "AsyncApplyFilters started more than once!");
+
+  if (!(mInfo.flags & nsIProtocolHandler::ALLOWS_PROXY)) {
+    // Calling the callback directly (not via Finish()) since we
+    // don't want to prune.
+    return mCallback(aRequest, aRequest->mProxyInfo, false);
+  }
+
+  mProcessingThread = NS_GetCurrentThread();
+
+  mRequest = aRequest;
+  mProxyInfo = aRequest->mProxyInfo;
+
+  aRequest->mPPS->CopyFilters(mFiltersCopy);
+
+  // We want to give filters a chance to process in a single loop to prevent
+  // any current-thread dispatch delays when those are not needed.
+  // This code is rather "loopy" than "recursive" to prevent long stack traces.
+  do {
+    MOZ_ASSERT(!mProcessingInLoop);
+
+    mozilla::AutoRestore<bool> restore(mProcessingInLoop);
+    mProcessingInLoop = true;
+
+    nsresult rv = ProcessNextFilter();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  } while (mFilterCalledBack);
+
+  return NS_OK;
+}
+
+nsresult
+nsAsyncResolveRequest::AsyncApplyFilters::ProcessNextFilter()
+{
+  LOG(("AsyncApplyFilters::ProcessNextFilter %p ENTER pi=%p", this, mProxyInfo.get()));
+
+  RefPtr<FilterLink> filter;
+  do {
+    mFilterCalledBack = false;
+
+    if (!mRequest) {
+      // We got canceled
+      LOG(("  canceled"));
+      return NS_OK; // should we let the consumer know?
+    }
+
+    if (mNextFilterIndex == mFiltersCopy.Length()) {
+      return Finish();
+    }
+
+    filter = mFiltersCopy[mNextFilterIndex++];
+
+    // Loop until a call to a filter succeeded.  Other option is to recurse
+    // but that would waste stack trace when a number of filters gets registered
+    // and all from some reason tend to fail.
+    // The !mFilterCalledBack part of the condition is there to protect us from
+    // calling on another filter when the current one managed to call back and
+    // then threw. We already have the result so take it and use it since
+    // the next filter will be processed by the root loop or a call to
+    // ProcessNextFilter has already been dispatched to this thread.
+    LOG(("  calling filter %p pi=%p", filter.get(), mProxyInfo.get()));
+  } while (!mRequest->mPPS->ApplyFilter(filter, mRequest->mChannel, mInfo, mProxyInfo, this) &&
+           !mFilterCalledBack);
+
+  LOG(("AsyncApplyFilters::ProcessNextFilter %p LEAVE pi=%p", this, mProxyInfo.get()));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAsyncResolveRequest::AsyncApplyFilters::OnProxyFilterResult(nsIProxyInfo* aProxyInfo)
+{
+  LOG(("AsyncApplyFilters::OnProxyFilterResult %p pi=%p", this, aProxyInfo));
+
+  MOZ_ASSERT(mProcessingThread && mProcessingThread->IsOnCurrentThread());
+  MOZ_ASSERT(!mFilterCalledBack);
+
+  if (mFilterCalledBack) {
+    LOG(("  duplicate notification?"));
+    return NS_OK;
+  }
+
+  mFilterCalledBack = true;
+  mProxyInfo = aProxyInfo;
+
+  if (mProcessingInLoop) {
+    // No need to call/dispatch ProcessNextFilter(), we are in a control
+    // loop that will do this for us and save recursion/dispatching.
+    LOG(("  in a root loop"));
+    return NS_OK;
+  }
+
+  if (!mRequest) {
+    // We got canceled
+    LOG(("  canceled"));
+    return NS_OK;
+  }
+
+  if (mNextFilterIndex == mFiltersCopy.Length()) {
+    // We are done, all filters have been called on!
+    Finish();
+    return NS_OK;
+  }
+
+  // Redispatch, since we don't want long stacks when filters respond synchronously.
+  LOG(("  redispatching"));
+  NS_DispatchToCurrentThread(this);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAsyncResolveRequest::AsyncApplyFilters::Run()
+{
+  LOG(("AsyncApplyFilters::Run %p", this));
+
+  MOZ_ASSERT(mProcessingThread && mProcessingThread->IsOnCurrentThread());
+
+  ProcessNextFilter();
+  return NS_OK;
+}
+
+nsresult
+nsAsyncResolveRequest::AsyncApplyFilters::Finish()
+{
+  LOG(("AsyncApplyFilters::Finish %p pi=%p", this, mProxyInfo.get()));
+
+  MOZ_ASSERT(mRequest);
+
+  mFiltersCopy.Clear();
+
+  RefPtr<nsAsyncResolveRequest> request;
+  request.swap(mRequest);
+
+  nsCOMPtr<nsIProxyInfo> pi;
+  pi.swap(mProxyInfo);
+
+  request->mPPS->PruneProxyInfo(mInfo, pi);
+  return mCallback(request, pi, !mProcessingInLoop);
+}
+
+NS_IMETHODIMP
+nsAsyncResolveRequest::AsyncApplyFilters::Cancel(nsresult reason)
+{
+  LOG(("AsyncApplyFilters::Cancel %p", this));
+
+  MOZ_ASSERT(mProcessingThread && mProcessingThread->IsOnCurrentThread());
+
+  // This will be called only from inside the request, so don't call
+  // its's callback.  Dropping the members means we simply break the cycle.
+  mFiltersCopy.Clear();
+  mProxyInfo = nullptr;
+  mRequest = nullptr;
+
+  return NS_OK;
+}
 
 // Bug 1366133: make GetPACURI off-main-thread since it may hang on Windows platform
 class AsyncGetPACURIRequest final : public nsIRunnable
@@ -491,7 +815,6 @@ NS_IMPL_CI_INTERFACE_GETTER(nsProtocolProxyService,
 
 nsProtocolProxyService::nsProtocolProxyService()
     : mFilterLocalHosts(false)
-    , mFilters(nullptr)
     , mProxyConfig(PROXYCONFIG_DIRECT)
     , mHTTPProxyPort(-1)
     , mFTPProxyPort(-1)
@@ -510,7 +833,7 @@ nsProtocolProxyService::nsProtocolProxyService()
 nsProtocolProxyService::~nsProtocolProxyService()
 {
     // These should have been cleaned up in our Observe method.
-    NS_ASSERTION(mHostFiltersArray.Length() == 0 && mFilters == nullptr &&
+    NS_ASSERTION(mHostFiltersArray.Length() == 0 && mFilters.Length() == 0 &&
                  mPACMan == nullptr, "what happened to xpcom-shutdown?");
 }
 
@@ -645,13 +968,9 @@ nsProtocolProxyService::Observe(nsISupports     *aSubject,
     if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
         mIsShutdown = true;
         // cleanup
-        if (mHostFiltersArray.Length() > 0) {
-            mHostFiltersArray.Clear();
-        }
-        if (mFilters) {
-            delete mFilters;
-            mFilters = nullptr;
-        }
+        mHostFiltersArray.Clear();
+        mFilters.Clear();
+
         if (mPACMan) {
             mPACMan->Shutdown();
             mPACMan = nullptr;
@@ -1366,16 +1685,10 @@ nsProtocolProxyService::AsyncResolveInternal(nsIChannel *channel, uint32_t flags
 
     if (!usePACThread || !mPACMan) {
         // we can do it locally
-        ApplyFilters(channel, info, pi);
-        ctx->SetResult(NS_OK, pi);
-        if (isSyncOK) {
-            ctx->Run();
-            return NS_OK;
-        }
-
-        rv = ctx->DispatchCallback();
-        if (NS_SUCCEEDED(rv))
+        rv = ctx->ProcessLocally(info, pi, isSyncOK);
+        if (NS_SUCCEEDED(rv) && !isSyncOK) {
             ctx.forget(result);
+        }
         return rv;
     }
 
@@ -1522,36 +1835,43 @@ nsProtocolProxyService::GetFailoverForProxy(nsIProxyInfo  *aProxy,
     return NS_OK;
 }
 
-nsresult
-nsProtocolProxyService::InsertFilterLink(FilterLink *link, uint32_t position)
+namespace { // anon
+
+class ProxyFilterPositionComparator
 {
+  typedef RefPtr<nsProtocolProxyService::FilterLink> FilterLinkRef;
+public:
+  bool Equals(const FilterLinkRef& a, const FilterLinkRef& b) const {
+    return a->position == b->position;
+  }
+  bool LessThan(const FilterLinkRef& a, const FilterLinkRef& b) const {
+    return a->position < b->position;
+  }
+};
+
+class ProxyFilterObjectComparator
+{
+  typedef RefPtr<nsProtocolProxyService::FilterLink> FilterLinkRef;
+public:
+  bool Equals(const FilterLinkRef& link, const nsISupports* obj) const {
+    return obj == nsCOMPtr<nsISupports>(do_QueryInterface(link->filter)) ||
+           obj == nsCOMPtr<nsISupports>(do_QueryInterface(link->channelFilter));
+  }
+};
+
+} // anon
+
+nsresult
+nsProtocolProxyService::InsertFilterLink(RefPtr<FilterLink>&& link)
+{
+    LOG(("nsProtocolProxyService::InsertFilterLink filter=%p", link.get()));
+
     if (mIsShutdown) {
         return NS_ERROR_FAILURE;
     }
 
-    if (!mFilters) {
-        mFilters = link;
-        return NS_OK;
-    }
-
-    // insert into mFilters in sorted order
-    FilterLink *last = nullptr;
-    for (FilterLink *iter = mFilters; iter; iter = iter->next) {
-        if (position < iter->position) {
-            if (last) {
-                link->next = last->next;
-                last->next = link;
-            }
-            else {
-                link->next = mFilters;
-                mFilters = link;
-            }
-            return NS_OK;
-        }
-        last = iter;
-    }
-    // our position is equal to or greater than the last link in the list
-    last->next = link;
+    mFilters.AppendElement(link);
+    mFilters.Sort(ProxyFilterPositionComparator());
     return NS_OK;
 }
 
@@ -1561,15 +1881,8 @@ nsProtocolProxyService::RegisterFilter(nsIProtocolProxyFilter *filter,
 {
     UnregisterFilter(filter); // remove this filter if we already have it
 
-    FilterLink *link = new FilterLink(position, filter);
-    if (!link) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    nsresult rv = InsertFilterLink(link, position);
-    if (NS_FAILED(rv)) {
-        delete link;
-    }
-    return rv;
+    RefPtr<FilterLink> link = new FilterLink(position, filter);
+    return InsertFilterLink(Move(link));
 }
 
 NS_IMETHODIMP
@@ -1578,49 +1891,30 @@ nsProtocolProxyService::RegisterChannelFilter(nsIProtocolProxyChannelFilter *cha
 {
     UnregisterChannelFilter(channelFilter);  // remove this filter if we already have it
 
-    FilterLink *link = new FilterLink(position, channelFilter);
-    if (!link) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    nsresult rv = InsertFilterLink(link, position);
-    if (NS_FAILED(rv)) {
-        delete link;
-    }
-    return rv;
+    RefPtr<FilterLink> link = new FilterLink(position, channelFilter);
+    return InsertFilterLink(Move(link));
 }
 
 nsresult
 nsProtocolProxyService::RemoveFilterLink(nsISupports* givenObject)
 {
-    FilterLink *last = nullptr;
-    for (FilterLink *iter = mFilters; iter; iter = iter->next) {
-        nsCOMPtr<nsISupports> object = do_QueryInterface(iter->filter);
-        nsCOMPtr<nsISupports> object2 = do_QueryInterface(iter->channelFilter);
-        if (object == givenObject || object2 == givenObject) {
-            if (last)
-                last->next = iter->next;
-            else
-                mFilters = iter->next;
-            iter->next = nullptr;
-            delete iter;
-            return NS_OK;
-        }
-        last = iter;
-    }
+    LOG(("nsProtocolProxyService::RemoveFilterLink target=%p", givenObject));
 
-    // No need to throw an exception in this case.
-    return NS_OK;
+    return mFilters.RemoveElement(givenObject, ProxyFilterObjectComparator())
+      ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsProtocolProxyService::UnregisterFilter(nsIProtocolProxyFilter *filter) {
+nsProtocolProxyService::UnregisterFilter(nsIProtocolProxyFilter *filter)
+{
     // QI to nsISupports so we can safely test object identity.
     nsCOMPtr<nsISupports> givenObject = do_QueryInterface(filter);
     return RemoveFilterLink(givenObject);
 }
 
 NS_IMETHODIMP
-nsProtocolProxyService::UnregisterChannelFilter(nsIProtocolProxyChannelFilter *channelFilter) {
+nsProtocolProxyService::UnregisterChannelFilter(nsIProtocolProxyChannelFilter *channelFilter)
+{
     // QI to nsISupports so we can safely test object identity.
     nsCOMPtr<nsISupports> givenObject = do_QueryInterface(channelFilter);
     return RemoveFilterLink(givenObject);
@@ -2110,39 +2404,43 @@ nsProtocolProxyService::MaybeDisableDNSPrefetch(nsIProxyInfo *aProxy)
 }
 
 void
-nsProtocolProxyService::ApplyFilters(nsIChannel *channel,
-                                     const nsProtocolInfo &info,
-                                     nsIProxyInfo **list)
+nsProtocolProxyService::CopyFilters(nsTArray<RefPtr<FilterLink>>& aCopy)
 {
-    if (!(info.flags & nsIProtocolHandler::ALLOWS_PROXY))
-        return;
+    MOZ_ASSERT(aCopy.Length() == 0);
+    aCopy.AppendElements(mFilters);
+}
+
+bool
+nsProtocolProxyService::ApplyFilter(FilterLink const* filterLink,
+                                    nsIChannel *channel,
+                                    const nsProtocolInfo &info,
+                                    nsCOMPtr<nsIProxyInfo> list,
+                                    nsIProxyProtocolFilterResult* callback)
+{
+    nsresult rv;
 
     // We prune the proxy list prior to invoking each filter.  This may be
     // somewhat inefficient, but it seems like a good idea since we want each
     // filter to "see" a valid proxy list.
+    PruneProxyInfo(info, list);
 
-    nsCOMPtr<nsIProxyInfo> result;
+    if (filterLink->filter) {
+      nsCOMPtr<nsIURI> uri;
+      Unused << GetProxyURI(channel, getter_AddRefs(uri));
+      if (!uri) {
+        return false;
+      }
 
-    for (FilterLink *iter = mFilters; iter; iter = iter->next) {
-        PruneProxyInfo(info, list);
-        nsresult rv = NS_OK;
-        if (iter->filter) {
-          nsCOMPtr<nsIURI> uri;
-          rv = GetProxyURI(channel, getter_AddRefs(uri));
-          if (uri) {
-            rv = iter->filter->ApplyFilter(this, uri, *list,
-                                           getter_AddRefs(result));
-          }
-        } else if (iter->channelFilter) {
-          rv = iter->channelFilter->ApplyFilter(this, channel, *list,
-                                                getter_AddRefs(result));
-        }
-        if (NS_FAILED(rv))
-            continue;
-        result.swap(*list);
+      rv = filterLink->filter->ApplyFilter(this, uri, list, callback);
+      return NS_SUCCEEDED(rv);
     }
 
-    PruneProxyInfo(info, list);
+    if (filterLink->channelFilter) {
+      rv = filterLink->channelFilter->ApplyFilter(this, channel, list, callback);
+      return NS_SUCCEEDED(rv);
+    }
+
+    return false;
 }
 
 void
@@ -2151,6 +2449,9 @@ nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo &info,
 {
     if (!*list)
         return;
+
+    LOG(("nsProtocolProxyService::PruneProxyInfo ENTER list=%p", *list));
+
     nsProxyInfo *head = nullptr;
     CallQueryInterface(*list, &head);
     if (!head) {
@@ -2186,8 +2487,9 @@ nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo &info,
                 iter = iter->mNext;
             }
         }
-        if (!head)
+        if (!head) {
             return;
+        }
     }
 
     // Now, scan to see if all remaining proxies are disabled.  If so, then
@@ -2204,9 +2506,9 @@ nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo &info,
         }
     }
 
-    if (allDisabled)
+    if (allDisabled) {
         LOG(("All proxies are disabled, so trying all again"));
-    else {
+    } else {
         // remove any disabled proxies.
         nsProxyInfo *last = nullptr;
         for (iter = head; iter; ) {
@@ -2243,6 +2545,8 @@ nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo &info,
         NS_RELEASE(head);
 
     *list = head;  // Transfer ownership
+
+    LOG(("nsProtocolProxyService::PruneProxyInfo LEAVE list=%p", *list));
 }
 
 } // namespace net

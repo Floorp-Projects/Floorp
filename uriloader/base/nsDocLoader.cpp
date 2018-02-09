@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nspr.h"
-#include "mozilla/dom/TabGroup.h"
 #include "mozilla/Logging.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
@@ -987,10 +986,10 @@ nsDocLoader::GetTarget(nsIEventTarget** aTarget)
   nsresult rv = GetDOMWindow(getter_AddRefs(window));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsPIDOMWindowOuter> piwindow = nsPIDOMWindowOuter::From(window);
-  NS_ENSURE_STATE(piwindow);
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(window);
+  NS_ENSURE_STATE(global);
 
-  nsCOMPtr<nsIEventTarget> target = piwindow->TabGroup()->EventTargetFor(mozilla::TaskCategory::Other);
+  nsCOMPtr<nsIEventTarget> target = global->EventTargetFor(mozilla::TaskCategory::Other);
   target.forget(aTarget);
   return NS_OK;
 }

@@ -78,9 +78,12 @@ static constexpr Register64 ReturnReg64(InvalidReg);
 
 static constexpr Register ABINonArgReg0 { Registers::invalid_reg };
 static constexpr Register ABINonArgReg1 { Registers::invalid_reg };
+static constexpr Register ABINonArgReg2 { Registers::invalid_reg };
 static constexpr Register ABINonArgReturnReg0 { Registers::invalid_reg };
 static constexpr Register ABINonArgReturnReg1 { Registers::invalid_reg };
 static constexpr Register ABINonArgReturnVolatileReg { Registers::invalid_reg };
+
+static constexpr FloatRegister ABINonArgDoubleReg = { FloatRegisters::invalid_reg };
 
 static constexpr Register WasmTableCallScratchReg { Registers::invalid_reg };
 static constexpr Register WasmTableCallSigReg { Registers::invalid_reg };
@@ -320,6 +323,7 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void unboxSymbol(T, Register) { MOZ_CRASH(); }
     template <typename T> void unboxObject(T, Register) { MOZ_CRASH(); }
     template <typename T> void unboxDouble(T, FloatRegister) { MOZ_CRASH(); }
+    template <typename T> void unboxPrivate(T, Register) { MOZ_CRASH(); }
     void unboxValue(const ValueOperand&, AnyRegister, JSValueType) { MOZ_CRASH(); }
     void unboxNonDouble(const ValueOperand&, Register, JSValueType) { MOZ_CRASH();}
     void unboxNonDouble(const Address&, Register, JSValueType) { MOZ_CRASH();}

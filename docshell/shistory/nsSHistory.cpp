@@ -2083,12 +2083,13 @@ nsSHistory::SetRootDocShell(nsIDocShell* aDocShell)
       mHistoryTracker->AgeAllGenerations();
     }
 
-    RefPtr<mozilla::dom::TabGroup> tabGroup = win->TabGroup();
+    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(win);
+
     mHistoryTracker = mozilla::MakeUnique<HistoryTracker>(
       this,
       mozilla::Preferences::GetUint(CONTENT_VIEWER_TIMEOUT_SECONDS,
                                     CONTENT_VIEWER_TIMEOUT_SECONDS_DEFAULT),
-      tabGroup->EventTargetFor(mozilla::TaskCategory::Other));
+      global->EventTargetFor(mozilla::TaskCategory::Other));
   }
 
   return NS_OK;
