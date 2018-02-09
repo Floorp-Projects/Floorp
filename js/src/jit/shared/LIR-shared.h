@@ -3942,7 +3942,7 @@ class LAddI : public LBinaryMath<0>
         return snapshot() ? "OverflowCheck" : nullptr;
     }
 
-    virtual bool recoversInput() const override {
+    bool recoversInput() const {
         return recoversInput_;
     }
     void setRecoversInput() {
@@ -3979,7 +3979,7 @@ class LSubI : public LBinaryMath<0>
         return snapshot() ? "OverflowCheck" : nullptr;
     }
 
-    virtual bool recoversInput() const override {
+    bool recoversInput() const {
         return recoversInput_;
     }
     void setRecoversInput() {
@@ -3989,6 +3989,19 @@ class LSubI : public LBinaryMath<0>
         return mir_->toSub();
     }
 };
+
+inline bool
+LNode::recoversInput() const
+{
+    switch (op()) {
+      case LOp_AddI:
+        return toAddI()->recoversInput();
+      case LOp_SubI:
+        return toSubI()->recoversInput();
+      default:
+        return false;
+    }
+}
 
 class LSubI64 : public LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>
 {
@@ -9017,7 +9030,7 @@ class LWasmCallBase : public LInstruction
         return mir_->toWasmCall();
     }
 
-    bool isCallPreserved(AnyRegister reg) const override {
+    static bool isCallPreserved(AnyRegister reg) {
         // All MWasmCalls preserve the TLS register:
         //  - internal/indirect calls do by the internal wasm ABI
         //  - import calls do by explicitly saving/restoring at the callsite
@@ -9103,6 +9116,18 @@ class LWasmCallI64 : public LWasmCallBase
         defs_[index] = def;
     }
 };
+
+inline bool
+LNode::isCallPreserved(AnyRegister reg) const
+{
+    switch (op()) {
+      case LOp_WasmCallI64:
+      case LOp_WasmCall:
+        return LWasmCallBase::isCallPreserved(reg);
+      default:
+        return false;
+    }
+}
 
 class LAssertRangeI : public LInstructionHelper<0, 1, 0>
 {
