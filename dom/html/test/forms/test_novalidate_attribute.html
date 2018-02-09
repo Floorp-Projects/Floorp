@@ -47,7 +47,7 @@ document.forms[1].addEventListener("submit", function(aEvent) {
   ok(true, "novalidate has been correctly used for second form");
   var c = document.getElementById('c');
   c.focus();
-  synthesizeKey("KEY_Enter", { code: "Enter" });
+  synthesizeKey("KEY_Enter", {});
 }, {once: true});
 
 document.forms[2].addEventListener("submit", function(aEvent) {

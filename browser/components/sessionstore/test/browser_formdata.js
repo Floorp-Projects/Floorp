@@ -114,7 +114,7 @@ add_task(async function test_nested() {
   await promiseBrowserLoaded(browser);
 
   // Modify the input field's value.
-  await BrowserTestUtils.synthesizeKey("m", {code: "KeyM"}, browser);
+  await BrowserTestUtils.synthesizeKey("m", {}, browser);
 
   // Remove the tab and check that we stored form data correctly.
   await promiseRemoveTab(tab);
@@ -151,7 +151,7 @@ add_task(async function test_design_mode() {
   await promiseBrowserLoaded(browser);
 
   // Modify the document content.
-  await BrowserTestUtils.synthesizeKey("m", {code: "KeyM"}, browser);
+  await BrowserTestUtils.synthesizeKey("m", {}, browser);
 
   // Close and restore the tab.
   await promiseRemoveTab(tab);

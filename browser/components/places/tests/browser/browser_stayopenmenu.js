@@ -22,9 +22,9 @@ async function testContextmenu(menuitem) {
   EventUtils.synthesizeMouseAtCenter(menuitem, {type: "contextmenu", button: 2});
   await promiseEvent;
   let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, null);
-  EventUtils.synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  EventUtils.synthesizeKey("KEY_ArrowDown", {});
   BrowserTestUtils.waitForEvent(menuitem, "DOMMenuItemActive");
-  EventUtils.synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  EventUtils.synthesizeKey("KEY_ArrowDown", {});
   BrowserTestUtils.waitForEvent(menuitem, "DOMMenuItemActive");
   EventUtils.sendKey("return");
   let newTab = await promiseTabOpened;

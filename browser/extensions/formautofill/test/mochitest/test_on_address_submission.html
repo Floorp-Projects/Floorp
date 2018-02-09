@@ -75,7 +75,7 @@ add_task(async function check_storage_after_another_address_submitted() {
   ok(matching, "New address saved as expected");
 
   await setInput("#organization", "");
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await expectPopup();
   checkMenuEntries(addressesInMenu.map(address =>
     JSON.stringify({primary: address.organization, secondary: address["street-address"]})
@@ -110,10 +110,10 @@ add_task(async function check_storage_after_form_submitted() {
   TEST_ADDRESSES[1].country = "US";
 
   await setInput("#organization", "Moz");
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await expectPopup();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_ArrowDown", {});
+  synthesizeKey("KEY_Enter", {});
   clickOnElement("input[type=submit]");
 
   let expectedAddresses = TEST_ADDRESSES.slice(0);

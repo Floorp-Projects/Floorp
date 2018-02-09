@@ -105,7 +105,7 @@ function openSelectPopup(selectPopup, mode = "key", selector = "select", win = w
     return Promise.all([popupShownPromise, mousePromise]);
   }
 
-  EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true, code: "ArrowDown" }, win);
+  EventUtils.synthesizeKey("KEY_ArrowDown", {altKey: true}, win);
   return popupShownPromise;
 }
 
@@ -144,15 +144,15 @@ async function doSelectTests(contentType, content) {
   is(selectPopup.childNodes[1].localName, "menuitem", "option is menuitem");
   is(selectPopup.childNodes[1].getAttribute("label"), "One", "option label");
 
-  EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+  EventUtils.synthesizeKey("KEY_ArrowDown", {});
   is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(2), "Select item 2");
   is(menulist.selectedIndex, isWindows ? 2 : 1, "Select item 2 selectedIndex");
 
-  EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+  EventUtils.synthesizeKey("KEY_ArrowDown", {});
   is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(3), "Select item 3");
   is(menulist.selectedIndex, isWindows ? 3 : 1, "Select item 3 selectedIndex");
 
-  EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+  EventUtils.synthesizeKey("KEY_ArrowDown", {});
 
   // On Windows, one can navigate on disabled menuitems
   is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(9),
@@ -163,7 +163,7 @@ async function doSelectTests(contentType, content) {
     is(menulist.getItemAtIndex(i).disabled, i >= 4 && i <= 7, "item " + i + " disabled");
   }
 
-  EventUtils.synthesizeKey("KEY_ArrowUp", { code: "ArrowUp" });
+  EventUtils.synthesizeKey("KEY_ArrowUp", {});
   is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(3), "Select item 3 again");
   is(menulist.selectedIndex, isWindows ? 3 : 1, "Select item 3 selectedIndex");
 
@@ -205,7 +205,7 @@ async function doSelectTests(contentType, content) {
   is((await getClickEvents()), 1, "Tab away from select with no change - number of click events");
 
   await openSelectPopup(selectPopup, "click");
-  EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+  EventUtils.synthesizeKey("KEY_ArrowDown", {});
   await hideSelectPopup(selectPopup, "escape");
   is((await getInputEvents()), isWindows ? 2 : 1, "Open and close with change - number of input events");
   is((await getChangeEvents()), isWindows ? 2 : 1, "Open and close with change - number of change events");
@@ -435,7 +435,7 @@ add_task(async function test_event_order() {
         });
       });
 
-      EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+      EventUtils.synthesizeKey("KEY_ArrowDown", {});
       await hideSelectPopup(selectPopup, mode);
       await eventsPromise;
     }

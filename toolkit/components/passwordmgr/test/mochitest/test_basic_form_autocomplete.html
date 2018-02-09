@@ -228,7 +228,7 @@ add_task(async function test_form1_menuitems() {
   // Trigger autocomplete popup
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   let results = await shownPromise;
 
   let popupState = await getPopupState();
@@ -241,7 +241,7 @@ add_task(async function test_form1_menuitems() {
   checkArrayValues(results, expectedMenuItems, "Check all menuitems are displayed correctly.");
 
   checkACForm("", ""); // value shouldn't update just by selecting
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_Enter", {});
   await spinEventLoop(); // let focus happen
   checkACForm("", "");
 });
@@ -251,15 +251,15 @@ add_task(async function test_form1_first_entry() {
   // Trigger autocomplete popup
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
 
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // first
+  synthesizeKey("KEY_ArrowDown", {}); // first
   checkACForm("", ""); // value shouldn't update just by selecting
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("tempuser1", "temppass1");
 });
@@ -268,12 +268,12 @@ add_task(async function test_form1_second_entry() {
   // Trigger autocomplete popup
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // first
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // second
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_ArrowDown", {}); // first
+  synthesizeKey("KEY_ArrowDown", {}); // second
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("testuser2", "testpass2");
 });
@@ -282,13 +282,13 @@ add_task(async function test_form1_third_entry() {
   // Trigger autocomplete popup
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // first
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // second
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // third
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_ArrowDown", {}); // first
+  synthesizeKey("KEY_ArrowDown", {}); // second
+  synthesizeKey("KEY_ArrowDown", {}); // third
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("testuser3", "testpass3");
 });
@@ -297,14 +297,14 @@ add_task(async function test_form1_fourth_entry() {
   // Trigger autocomplete popup
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // first
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // second
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // third
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // fourth
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_ArrowDown", {}); // first
+  synthesizeKey("KEY_ArrowDown", {}); // second
+  synthesizeKey("KEY_ArrowDown", {}); // third
+  synthesizeKey("KEY_ArrowDown", {}); // fourth
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("zzzuser4", "zzzpass4");
 });
@@ -314,16 +314,16 @@ add_task(async function test_form1_wraparound_first_entry() {
   restoreForm();
   await spinEventLoop(); // let focus happen
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // first
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // second
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // third
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // fourth
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // deselects
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // first
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_ArrowDown", {}); // first
+  synthesizeKey("KEY_ArrowDown", {}); // second
+  synthesizeKey("KEY_ArrowDown", {}); // third
+  synthesizeKey("KEY_ArrowDown", {}); // fourth
+  synthesizeKey("KEY_ArrowDown", {}); // deselects
+  synthesizeKey("KEY_ArrowDown", {}); // first
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("tempuser1", "temppass1");
 });
@@ -332,11 +332,11 @@ add_task(async function test_form1_wraparound_up_last_entry() {
   // Trigger autocomplete popup
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
-  synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"}); // last (fourth)
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_ArrowUp", {}); // last (fourth)
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("zzzuser4", "zzzpass4");
 });
@@ -345,13 +345,13 @@ add_task(async function test_form1_wraparound_down_up_up() {
   // Trigger autocomplete popup
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // select first entry
-  synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"}); // selects nothing!
-  synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"}); // select last entry
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_ArrowDown", {}); // select first entry
+  synthesizeKey("KEY_ArrowUp", {}); // selects nothing!
+  synthesizeKey("KEY_ArrowUp", {}); // select last entry
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("zzzuser4", "zzzpass4");
 });
@@ -359,18 +359,18 @@ add_task(async function test_form1_wraparound_down_up_up() {
 add_task(async function test_form1_wraparound_up_last() {
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
-  synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"}); // deselects
-  synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"}); // last entry
-  synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"});
-  synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"});
-  synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"}); // first entry
-  synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"}); // deselects
-  synthesizeKey("KEY_ArrowUp", {code: "ArrowUp"}); // last entry
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_ArrowDown", {});
+  synthesizeKey("KEY_ArrowUp", {}); // deselects
+  synthesizeKey("KEY_ArrowUp", {}); // last entry
+  synthesizeKey("KEY_ArrowUp", {});
+  synthesizeKey("KEY_ArrowUp", {});
+  synthesizeKey("KEY_ArrowUp", {}); // first entry
+  synthesizeKey("KEY_ArrowUp", {}); // deselects
+  synthesizeKey("KEY_ArrowUp", {}); // last entry
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("zzzuser4", "zzzpass4");
 });
@@ -378,12 +378,12 @@ add_task(async function test_form1_wraparound_up_last() {
 add_task(async function test_form1_fill_username_without_autofill_right() {
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   // Set first entry w/o triggering autocomplete
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // first
-  synthesizeKey("KEY_ArrowRight", {code: "ArrowRight"});
+  synthesizeKey("KEY_ArrowDown", {}); // first
+  synthesizeKey("KEY_ArrowRight", {});
   await spinEventLoop();
   checkACForm("tempuser1", ""); // empty password
 });
@@ -391,26 +391,26 @@ add_task(async function test_form1_fill_username_without_autofill_right() {
 add_task(async function test_form1_fill_username_without_autofill_left() {
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   // Set first entry w/o triggering autocomplete
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // first
-  synthesizeKey("KEY_ArrowLeft", {code: "ArrowLeft"});
+  synthesizeKey("KEY_ArrowDown", {}); // first
+  synthesizeKey("KEY_ArrowLeft", {});
   checkACForm("tempuser1", ""); // empty password
 });
 
 add_task(async function test_form1_pageup_first() {
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   // Check first entry (page up)
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // first
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // second
-  synthesizeKey("KEY_PageUp", {code: "PageUp"}); // first
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_ArrowDown", {}); // first
+  synthesizeKey("KEY_ArrowDown", {}); // second
+  synthesizeKey("KEY_PageUp", {}); // first
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("tempuser1", "temppass1");
 });
@@ -418,14 +418,14 @@ add_task(async function test_form1_pageup_first() {
 add_task(async function test_form1_pagedown_last() {
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   /* test 13 */
   // Check last entry (page down)
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // first
-  synthesizeKey("KEY_PageDown", {code: "PageDown"}); // last
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_ArrowDown", {}); // first
+  synthesizeKey("KEY_PageDown", {}); // last
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("zzzuser4", "zzzpass4");
 });
@@ -445,7 +445,7 @@ add_task(async function test_form1_untrusted_event() {
 add_task(async function test_form1_delete() {
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   // XXX tried sending character "t" before/during dropdown to test
@@ -454,7 +454,7 @@ add_task(async function test_form1_delete() {
   // driver, so I'm not sure what's up.
 
   // Delete the first entry (of 4), "tempuser1"
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   var numLogins;
   numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 5, "Correct number of logins before deleting one");
@@ -463,14 +463,14 @@ add_task(async function test_form1_delete() {
   var deletionPromise = promiseStorageChanged(["removeLogin"]);
   // On OS X, shift-backspace and shift-delete work, just delete does not.
   // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
-  synthesizeKey("KEY_Delete", {code: "Delete", shiftKey: true});
+  synthesizeKey("KEY_Delete", {shiftKey: true});
   await deletionPromise;
 
   checkACForm("", "");
   numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 4, "Correct number of logins after deleting one");
   await countChangedPromise;
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("testuser2", "testpass2");
 });
@@ -478,12 +478,12 @@ add_task(async function test_form1_delete() {
 add_task(async function test_form1_first_after_deletion() {
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   // Check the new first entry (of 3)
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_ArrowDown", {});
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("testuser2", "testpass2");
 });
@@ -491,17 +491,17 @@ add_task(async function test_form1_first_after_deletion() {
 add_task(async function test_form1_delete_second() {
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   // Delete the second entry (of 3), "testuser3"
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
-  synthesizeKey("KEY_Delete", {code: "Delete", shiftKey: true});
+  synthesizeKey("KEY_ArrowDown", {});
+  synthesizeKey("KEY_ArrowDown", {});
+  synthesizeKey("KEY_Delete", {shiftKey: true});
   checkACForm("", "");
   numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 3, "Correct number of logins after deleting one");
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("zzzuser4", "zzzpass4");
 });
@@ -509,12 +509,12 @@ add_task(async function test_form1_delete_second() {
 add_task(async function test_form1_first_after_deletion2() {
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   // Check the new first entry (of 2)
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_ArrowDown", {});
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("testuser2", "testpass2");
 });
@@ -522,18 +522,18 @@ add_task(async function test_form1_first_after_deletion2() {
 add_task(async function test_form1_delete_last() {
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   /* test 54 */
   // Delete the last entry (of 2), "zzzuser4"
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
-  synthesizeKey("KEY_Delete", {code: "Delete", shiftKey: true});
+  synthesizeKey("KEY_ArrowDown", {});
+  synthesizeKey("KEY_ArrowDown", {});
+  synthesizeKey("KEY_Delete", {shiftKey: true});
   checkACForm("", "");
   numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 2, "Correct number of logins after deleting one");
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("testuser2", "testpass2");
 });
@@ -541,12 +541,12 @@ add_task(async function test_form1_delete_last() {
 add_task(async function test_form1_first_after_3_deletions() {
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   // Check the only remaining entry
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_ArrowDown", {});
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("testuser2", "testpass2");
 });
@@ -554,13 +554,13 @@ add_task(async function test_form1_first_after_3_deletions() {
 add_task(async function test_form1_check_only_entry_remaining() {
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   /* test 56 */
   // Delete the only remaining entry, "testuser2"
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
-  synthesizeKey("KEY_Delete", {code: "Delete", shiftKey: true});
+  synthesizeKey("KEY_ArrowDown", {});
+  synthesizeKey("KEY_Delete", {shiftKey: true});
   checkACForm("", "");
   numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 1, "Correct number of logins after deleting one");
@@ -578,13 +578,13 @@ add_task(async function test_form2() {
 
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   // Check first entry
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   checkACForm("", ""); // value shouldn't update
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("singleuser5", "singlepass5");
 });
@@ -595,13 +595,13 @@ add_task(async function test_form3() {
   checkACForm("singleuser5", "singlepass5");
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   // Check first entry
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   checkACForm("", ""); // value shouldn't update
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("singleuser5", "singlepass5");
 });
@@ -612,13 +612,13 @@ add_task(async function test_form4() {
   checkACForm("singleuser5", "singlepass5");
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   // Check first entry
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   checkACForm("", ""); // value shouldn't update
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("singleuser5", "singlepass5");
 });
@@ -629,13 +629,13 @@ add_task(async function test_form5() {
   checkACForm("singleuser5", "singlepass5");
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   // Check first entry
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   checkACForm("", ""); // value shouldn't update
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("singleuser5", "singlepass5");
 });
@@ -652,8 +652,8 @@ add_task(async function test_form6_changeUsername() {
   // Test that the password field remains filled in after changing
   // the username.
   uname.focus();
-  synthesizeKey("KEY_ArrowRight", {code: "ArrowRight"});
-  synthesizeKey("X", {code: "KeyX", shiftKey: true});
+  synthesizeKey("KEY_ArrowRight", {});
+  synthesizeKey("X", {shiftKey: true});
   // Trigger the 'blur' event on uname
   pword.focus();
   await spinEventLoop();
@@ -684,13 +684,13 @@ add_task(async function test_form7() {
 add_task(async function test_form7_2() {
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   // Check first entry
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   checkACForm("", ""); // value shouldn't update
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_Enter", {});
   // The form changes, so we expect the old username field to get the
   // selected autocomplete value, but neither the new username field nor
   // the password field should have any values filled in.
@@ -736,15 +736,15 @@ add_task(async function test_form9_filtering() {
 
   checkACForm("form9userAB", "");
   uname.focus();
-  synthesizeKey("KEY_ArrowLeft", {code: "ArrowLeft"});
+  synthesizeKey("KEY_ArrowLeft", {});
   shownPromise = promiseACShown();
-  synthesizeKey("A", {code: "KeyA", shiftKey: true});
+  synthesizeKey("A", {shiftKey: true});
   let results = await shownPromise;
 
   checkACForm("form9userAAB", "");
   checkArrayValues(results, ["form9userAAB"], "Check dropdown is updated after inserting 'A'");
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_ArrowDown", {});
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("form9userAAB", "form9pass");
 });
@@ -756,14 +756,14 @@ add_task(async function test_form9_autocomplete_cache() {
   setupScript.sendSyncMessage("addLogin", "login8C");
   uname.focus();
   let promise0 = notifyMenuChanged(0);
-  synthesizeKey("z", {code: "KeyZ"});
+  synthesizeKey("z", {});
   await promise0;
   let popupState = await getPopupState();
   is(popupState.open, false, "Check popup shouldn't open");
 
   // check that empty results are cached - bug 496466
   promise0 = notifyMenuChanged(0);
-  synthesizeKey("z", {code: "KeyZ"});
+  synthesizeKey("z", {});
   await promise0;
   popupState = await getPopupState();
   is(popupState.open, false, "Check popup stays closed due to cached empty result");
@@ -776,14 +776,14 @@ add_task(async function test_form11_formless() {
   restoreForm();
   checkACForm("", "");
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   // Trigger autocomplete
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   checkACForm("", ""); // value shouldn't update
   let processedPromise = promiseFormsProcessed();
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_Enter", {});
   await processedPromise;
   checkACForm("testuser", "testpass");
 });
@@ -808,9 +808,9 @@ add_task(async function test_form11_open_on_trusted_focus() {
   synthesizeMouseAtCenter(uname, {});
   await firePrivEventPromise;
   await shownPromise;
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   const processedPromise = promiseFormsProcessed();
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_Enter", {});
   await processedPromise;
   checkACForm("testuser", "testpass");
 });
@@ -834,12 +834,12 @@ add_task(async function test_form12_recipes() {
   restoreForm();
   checkACForm("", "");
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   checkACForm("", ""); // value shouldn't update
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_Enter", {});
   await promiseFormsProcessed();
   checkACForm("testuser10", "testpass10");
 
@@ -848,7 +848,7 @@ add_task(async function test_form12_recipes() {
   checkACForm("", "");
   uname.value = "testuser10";
   checkACForm("testuser10", "");
-  synthesizeKey("KEY_Tab", {code: "Tab"});
+  synthesizeKey("KEY_Tab", {});
   await promiseFormsProcessed();
   checkACForm("testuser10", "testpass10");
   await resetRecipes();
