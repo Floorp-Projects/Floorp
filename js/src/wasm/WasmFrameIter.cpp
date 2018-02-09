@@ -1167,6 +1167,7 @@ ProfilingFrameIterator::label() const
 
     // Use the same string for both time inside and under so that the two
     // entries will be coalesced by the profiler.
+    // Must be kept in sync with /tools/profiler/tests/test_asm.js
     static const char* importJitDescription = "fast exit trampoline (in wasm)";
     static const char* importInterpDescription = "slow exit trampoline (in wasm)";
     static const char* builtinNativeDescription = "fast exit trampoline to native (in wasm)";
