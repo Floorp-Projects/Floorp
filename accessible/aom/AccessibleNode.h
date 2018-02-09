@@ -33,7 +33,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS;
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AccessibleNode);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
   virtual dom::ParentObject GetParentObject() const final;
 
   void GetRole(nsAString& aRole);

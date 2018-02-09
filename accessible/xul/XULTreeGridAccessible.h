@@ -90,7 +90,7 @@ public:
   virtual uint32_t ChildCount() const override;
 
   // XULTreeItemAccessibleBase
-  virtual XULTreeGridCellAccessible* GetCellAccessible(nsITreeColumn* aColumn)
+  XULTreeGridCellAccessible* GetCellAccessible(nsITreeColumn* aColumn)
     const final;
   virtual void RowInvalidated(int32_t aStartColIdx, int32_t aEndColIdx) override;
 

@@ -199,7 +199,7 @@ private:
     return true;
   }
 
-  virtual bool
+  bool
   PreDispatch(WorkerPrivate* aWorkerPrivate) final
   {
     AssertIsOnMainThread();
@@ -482,7 +482,7 @@ protected:
   { }
 
 private:
-  virtual bool
+  bool
   PreDispatch(WorkerPrivate* aWorkerPrivate) final
   {
     AssertIsOnMainThread();
@@ -496,7 +496,7 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
 
-  virtual bool
+  bool
   DispatchInternal() final;
 };
 

@@ -257,9 +257,9 @@ public:
                                              uint16_t aDuration,
                                              nsISupports* aData,
                                              nsIRunnable* aCallback) override;
-    virtual nsresult MakeFullScreen(
+    nsresult MakeFullScreen(
       bool aFullScreen, nsIScreen* aTargetScreen = nullptr) final;
-    virtual nsresult MakeFullScreenWithNativeTransition(
+    nsresult MakeFullScreenWithNativeTransition(
       bool aFullScreen, nsIScreen* aTargetScreen = nullptr) final;
     NSAnimation* FullscreenTransitionAnimation() const { return mFullscreenTransitionAnimation; }
     void ReleaseFullscreenTransitionAnimation()
