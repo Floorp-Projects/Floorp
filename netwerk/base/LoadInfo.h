@@ -114,7 +114,6 @@ private:
            bool aUpgradeInsecureRequests,
            bool aVerifySignedContent,
            bool aEnforceSRI,
-           bool aAllowDocumentToBeAgnosticToCSP,
            bool aForceAllowDataURI,
            bool aForceInheritPrincipalDropped,
            uint64_t aInnerWindowID,
@@ -178,7 +177,6 @@ private:
   bool                             mUpgradeInsecureRequests;
   bool                             mVerifySignedContent;
   bool                             mEnforceSRI;
-  bool                             mAllowDocumentToBeAgnosticToCSP;
   bool                             mForceAllowDataURI;
   bool                             mOriginalFrameSrcLoad;
   bool                             mForceInheritPrincipalDropped;
