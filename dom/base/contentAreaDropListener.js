@@ -114,45 +114,64 @@ ContentAreaDropListener.prototype =
     // uriString is a valid URI, so do the security check.
     let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].
                    getService(Ci.nsIScriptSecurityManager);
-    let sourceNode = dataTransfer.mozSourceNode;
     let flags = secMan.STANDARD;
     if (disallowInherit)
       flags |= secMan.DISALLOW_INHERIT_PRINCIPAL;
 
-    let principal;
-    if (sourceNode) {
-      principal = this._getTriggeringPrincipalFromSourceNode(sourceNode);
-    } else {
-      // Use file:/// as the default uri so that drops of file URIs are always
-      // allowed.
-      principal = secMan.createCodebasePrincipal(ioService.newURI("file:///"), {});
-    }
+    let principal = this._getTriggeringPrincipalFromDataTransfer(dataTransfer, false);
     secMan.checkLoadURIStrWithPrincipal(principal, uriString, flags);
 
     return uriString;
   },
 
-  _getTriggeringPrincipalFromSourceNode: function(aSourceNode)
+  _getTriggeringPrincipalFromDataTransfer: function(aDataTransfer,
+                                                    fallbackToSystemPrincipal)
   {
-    if (aSourceNode.localName == "browser" &&
-        aSourceNode.namespaceURI == "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul") {
-      return aSourceNode.contentPrincipal;
+    let sourceNode = aDataTransfer.mozSourceNode;
+    if (sourceNode &&
+        (sourceNode.localName !== "browser" ||
+         sourceNode.namespaceURI !== "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul")) {
+      // Use sourceNode's principal only if the sourceNode is not browser.
+      //
+      // If sourceNode is browser, the actual triggering principal may be
+      // differ than sourceNode's principal, since sourceNode's principal is
+      // top level document's one and the drag may be triggered from a frame
+      // with different principal.
+      if (sourceNode.nodePrincipal) {
+        return sourceNode.nodePrincipal;
+      }
     }
-    return aSourceNode.nodePrincipal;
+
+    // First, fallback to mozTriggeringPrincipalURISpec that is set when the
+    // drop comes from another content process.
+    let principalURISpec = aDataTransfer.mozTriggeringPrincipalURISpec;
+    if (!principalURISpec) {
+      // Fallback to either system principal or file principal, supposing
+      // the drop comes from outside of the browser, so that drops of file
+      // URIs are always allowed.
+      //
+      // TODO: Investigate and describe the difference between them,
+      //       or use only one principal. (Bug 1367038)
+      if (fallbackToSystemPrincipal) {
+        let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].
+            getService(Ci.nsIScriptSecurityManager);
+        return secMan.getSystemPrincipal();
+      } else {
+        principalURISpec = "file:///";
+      }
+    }
+    let ioService = Cc["@mozilla.org/network/io-service;1"]
+        .getService(Components.interfaces.nsIIOService);
+    let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].
+        getService(Ci.nsIScriptSecurityManager);
+    return secMan.createCodebasePrincipal(ioService.newURI(principalURISpec), {});
   },
 
   getTriggeringPrincipal: function(aEvent)
   {
     let dataTransfer = aEvent.dataTransfer;
-    let sourceNode = dataTransfer.mozSourceNode;
-    if (sourceNode) {
-      return this._getTriggeringPrincipalFromSourceNode(sourceNode, false);
-    }
-    // Bug 1367038: mozSourceNode is null if the drag event originated
-    // in an external application - needs better fallback!
-    let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].
-                   getService(Ci.nsIScriptSecurityManager);
-    return secMan.getSystemPrincipal();
+    return this._getTriggeringPrincipalFromDataTransfer(dataTransfer, true);
+
   },
 
   canDropLink: function(aEvent, aAllowSameDocument)
