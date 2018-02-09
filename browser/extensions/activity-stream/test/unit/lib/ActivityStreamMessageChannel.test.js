@@ -230,16 +230,16 @@ describe("ActivityStreamMessageChannel", () => {
       let sandbox;
       beforeEach(() => {
         sandbox = sinon.sandbox.create();
-        sandbox.spy(global.Cu, "reportError");
+        sandbox.spy(global.Components.utils, "reportError");
       });
       afterEach(() => sandbox.restore());
       it("should report an error if the msg.data is missing", () => {
         mm.onMessage({target: {portID: "foo"}});
-        assert.calledOnce(global.Cu.reportError);
+        assert.calledOnce(global.Components.utils.reportError);
       });
       it("should report an error if the msg.data.type is missing", () => {
         mm.onMessage({target: {portID: "foo"}, data: "foo"});
-        assert.calledOnce(global.Cu.reportError);
+        assert.calledOnce(global.Components.utils.reportError);
       });
       it("should call onActionFromContent", () => {
         sinon.stub(mm, "onActionFromContent");

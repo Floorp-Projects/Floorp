@@ -65,14 +65,14 @@ describe("SectionsManager", () => {
   });
   describe("#addBuiltInSection", () => {
     it("should not report an error if options is undefined", () => {
-      globals.sandbox.spy(global.Cu, "reportError");
+      globals.sandbox.spy(global.Components.utils, "reportError");
       SectionsManager.addBuiltInSection("feeds.section.topstories", undefined);
-      assert.notCalled(Cu.reportError);
+      assert.notCalled(Components.utils.reportError);
     });
     it("should report an error if options is malformed", () => {
-      globals.sandbox.spy(global.Cu, "reportError");
+      globals.sandbox.spy(global.Components.utils, "reportError");
       SectionsManager.addBuiltInSection("feeds.section.topstories", "invalid");
-      assert.calledOnce(Cu.reportError);
+      assert.calledOnce(Components.utils.reportError);
     });
   });
   describe("#addSection", () => {
