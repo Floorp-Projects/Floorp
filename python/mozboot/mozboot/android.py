@@ -50,9 +50,10 @@ Paste the lines between the chevrons (>>> and <<<) into your mozconfig file:
 ac_add_options --enable-application=mobile/android
 ac_add_options --target=arm-linux-androideabi
 
+{extra_lines}
 # With the following Android SDK and NDK:
-ac_add_options --with-android-sdk="%s"
-ac_add_options --with-android-ndk="%s"
+ac_add_options --with-android-sdk="{sdk_path}"
+ac_add_options --with-android-ndk="{ndk_path}"
 >>>
 '''
 
@@ -65,8 +66,9 @@ ac_add_options --enable-application=mobile/android
 ac_add_options --target=arm-linux-androideabi
 ac_add_options --enable-artifact-builds
 
+{extra_lines}
 # With the following Android SDK:
-ac_add_options --with-android-sdk="%s"
+ac_add_options --with-android-sdk="{sdk_path}"
 
 # Write build artifacts to:
 mk_add_options MOZ_OBJDIR=./objdir-frontend
@@ -264,12 +266,29 @@ def ensure_android_packages(sdkmanager_tool, packages=None, no_interactive=False
     print(output)
 
 
-def suggest_mozconfig(os_name, artifact_mode=False):
+def suggest_mozconfig(os_name, artifact_mode=False, java_bin_path=None):
     _mozbuild_path, sdk_path, ndk_path = get_paths(os_name)
+
+    extra_lines = []
+    if java_bin_path:
+        extra_lines += [
+            '# With the following java and javac:',
+            'ac_add_options --with-java-bin-path="{}"'.format(java_bin_path),
+        ]
+    if extra_lines:
+        extra_lines.append('')
+
     if artifact_mode:
-        print(MOBILE_ANDROID_ARTIFACT_MODE_MOZCONFIG_TEMPLATE % (sdk_path))
+        template = MOBILE_ANDROID_ARTIFACT_MODE_MOZCONFIG_TEMPLATE
     else:
-        print(MOBILE_ANDROID_MOZCONFIG_TEMPLATE % (sdk_path, ndk_path))
+        template = MOBILE_ANDROID_MOZCONFIG_TEMPLATE
+
+    kwargs = dict(
+        sdk_path=sdk_path,
+        ndk_path=ndk_path,
+        extra_lines='\n'.join(extra_lines),
+    )
+    print(template.format(**kwargs))
 
 
 def android_ndk_url(os_name, ver=NDK_VERSION):
