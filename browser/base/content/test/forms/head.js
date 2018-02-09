@@ -6,9 +6,9 @@ function hideSelectPopup(selectPopup, mode = "enter", win = window) {
   });
 
   if (mode == "escape") {
-    EventUtils.synthesizeKey("KEY_Escape", { code: "Escape" }, win);
+    EventUtils.synthesizeKey("KEY_Escape", {}, win);
   } else if (mode == "enter") {
-    EventUtils.synthesizeKey("KEY_Enter", { code: "Enter" }, win);
+    EventUtils.synthesizeKey("KEY_Enter", {}, win);
   } else if (mode == "click") {
     EventUtils.synthesizeMouseAtCenter(selectPopup.lastChild, { }, win);
   }

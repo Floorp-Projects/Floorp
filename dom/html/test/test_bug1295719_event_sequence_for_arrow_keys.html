@@ -54,15 +54,15 @@ function runTests() {
   });
 
   number.focus();
-  synthesizeKey("KEY_ArrowDown", {type: "keydown", code: "ArrowDown"});
-  synthesizeKey("KEY_ArrowDown", {type: "keydown", code: "ArrowDown"});
-  synthesizeKey("KEY_ArrowDown", {type: "keyup", code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {type: "keydown"});
+  synthesizeKey("KEY_ArrowDown", {type: "keydown"});
+  synthesizeKey("KEY_ArrowDown", {type: "keyup"});
   number.blur();
   range.focus();
   waiting_event_idx = 0;
-  synthesizeKey("KEY_ArrowDown", {type: "keydown", code: "ArrowDown"});
-  synthesizeKey("KEY_ArrowDown", {type: "keydown", code: "ArrowDown"});
-  synthesizeKey("KEY_ArrowDown", {type: "keyup", code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {type: "keydown"});
+  synthesizeKey("KEY_ArrowDown", {type: "keydown"});
+  synthesizeKey("KEY_ArrowDown", {type: "keyup"});
 
   SimpleTest.finish();
 }

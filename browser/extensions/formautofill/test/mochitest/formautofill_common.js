@@ -119,7 +119,7 @@ function triggerAutofillAndCheckProfile(profile) {
     promises.push(checkFieldAutofilled);
   }
   // Press Enter key and trigger form autofill.
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_Enter", {});
 
   return Promise.all(promises);
 }
@@ -243,10 +243,10 @@ function initPopupListener() {
 
 async function triggerPopupAndHoverItem(fieldSelector, selectIndex) {
   await focusAndWaitForFieldsIdentified(fieldSelector);
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await expectPopup();
   for (let i = 0; i <= selectIndex; i++) {
-    synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+    synthesizeKey("KEY_ArrowDown", {});
   }
   await notifySelectedIndex(selectIndex);
 }

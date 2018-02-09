@@ -77,7 +77,7 @@ if (!navigator.platform.includes("Mac")) {
     let filePopup = document.getElementById("menu_FilePopup");
     popupShown = BrowserTestUtils.waitForEvent(filePopup, "popupshown");
     if (navigator.platform.includes("Win")) {
-      EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+      EventUtils.synthesizeKey("KEY_ArrowDown", {});
     }
     await popupShown;
 

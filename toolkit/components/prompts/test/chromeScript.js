@@ -177,7 +177,7 @@ function dismissPrompt(ui, action) {
     case "ESC":
       // XXX This is assuming tab-modal.
       let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
-      EventUtils.synthesizeKey("KEY_Escape", { code: "Escape" }, browserWin);
+      EventUtils.synthesizeKey("KEY_Escape", {}, browserWin);
       break;
     case "pollOK":
       // Buttons are disabled at the moment, poll until they're reenabled.

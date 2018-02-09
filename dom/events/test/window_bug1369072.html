@@ -84,9 +84,9 @@ async function runTests()
       iframe.contentWindow.addEventListener("scroll", onScroll, { once: true });
 
       if (aVertical) {
-        synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+        synthesizeKey("KEY_ArrowDown", {});
       } else {
-        synthesizeKey("KEY_ArrowRight", { code: "ArrowRight" });
+        synthesizeKey("KEY_ArrowRight", {});
       }
     });
   }
