@@ -1916,7 +1916,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       props.push("key", "charCode", "keyCode");
     } else if (rawObj instanceof Ci.nsIDOMTransitionEvent) {
       props.push("propertyName", "pseudoElement");
-    } else if (rawObj instanceof Ci.nsIDOMAnimationEvent) {
+    } else if (obj.class == "AnimationEvent") {
       props.push("animationName", "pseudoElement");
     } else if (rawObj instanceof Ci.nsIDOMClipboardEvent) {
       props.push("clipboardData");
