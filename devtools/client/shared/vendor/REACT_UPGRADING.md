@@ -53,19 +53,53 @@ We need to disable minification and tree shaking as they overcomplicate the upgr
   // Apply dead code elimination and/or minification.
   false &&
   ```
-  - Find `await createBundle` and remove all bundles in that block except for `UMD_DEV` and `UMD_PROD`.
+  - Find `await createBundle` and remove all bundles in that block except for `UMD_DEV`, `UMD_PROD` and `NODE_DEV`.
 
 ## Building
 
 ```bash
 npm install --global yarn
-yarn install
+yarn
 yarn build
+```
+
+### Package Testing Utilities
+
+Go through `build/packages/react-test-renderer` and in each file remove all code meant for a production build e.g.
+
+Change this:
+
+```js
+if (process.env.NODE_ENV === 'production') {
+  module.exports = require('./cjs/react-test-renderer-shallow.production.min.js');
+} else {
+  module.exports = require('./cjs/react-test-renderer-shallow.development.js');
+}
+```
+
+To this:
+```js
+module.exports = require('./cjs/react-test-renderer-shallow.development.js');
+```
+
+**NOTE: Be sure to remove all `process.env` conditions from inside the files in the cjs folder.**
+
+Also in the cjs folder replace the React require paths to point at the current React version:
+
+```js
+var React = require('../../../dist/react.development');
+```
+
+From within `build/packages/react-test-renderer`:
+
+```bash
+browserify shallow.js -o react-test-renderer-shallow.js --standalone ShallowRenderer
 ```
 
 ### Copy the Files Into your Firefox Repo
 
 ```bash
+cd <react repo root>
 cp build/dist/react.production.min.js <gecko-dev>/devtools/client/shared/vendor/react.js
 cp build/dist/react-dom.production.min.js <gecko-dev>/devtools/client/shared/vendor/react-dom.js
 cp build/dist/react-dom-server.browser.production.min.js <gecko-dev>/devtools/client/shared/vendor/react-dom-server.js
@@ -74,6 +108,7 @@ cp build/dist/react.development.js <gecko-dev>/devtools/client/shared/vendor/rea
 cp build/dist/react-dom.development.js <gecko-dev>/devtools/client/shared/vendor/react-dom-dev.js
 cp build/dist/react-dom-server.browser.development.js <gecko-dev>/devtools/client/shared/vendor/react-dom-server-dev.js
 cp build/dist/react-dom-test-utils.development.js <gecko-dev>/devtools/client/shared/vendor/react-dom-test-utils-dev.js
+cp build/packages/react-test-renderer/react-test-renderer-shallow.js <gecko-dev>/devtools/client/shared/vendor/react-test-renderer-shallow.js
 ```
 
 From this point we will no longer need your react repository so feel free to delete it.
