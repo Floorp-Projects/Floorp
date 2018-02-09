@@ -727,19 +727,31 @@ waitForAllPaints(() => {
     await ensureElementRemoval(parentElement);
   });
 
-  add_task(async function no_restyling_main_thread_animations_in_visibility_hidden_element() {
-    var div = addDiv(null,
-     { style: 'animation: background-color 100s; visibility: hidden' });
-    var animation = div.getAnimations()[0];
+  add_task(
+    async function restyling_animations_on_visibility_hidden_element_which_gets_visible() {
+      var div = addDiv(null,
+       { style: 'animation: background-color 100s; visibility: hidden' });
+      var animation = div.getAnimations()[0];
 
-    await animation.ready;
-    var markers = await observeStyling(5);
 
-    todo_is(markers.length, 0,
-            'Bug 1237454: Animations running on the main-thread in ' +
-            'visibility hidden element should never cause restyles');
-    await ensureElementRemoval(div);
-  });
+      await animation.ready;
+      var markers = await observeStyling(5);
+
+      todo_is(markers.length, 0,
+              'Animations running on visibility hidden element should never ' +
+              'cause restyles');
+
+      div.style.visibility = 'visible';
+      await waitForNextFrame();
+
+      var markers = await observeStyling(5);
+      is(markers.length, 5,
+         'Animations running that was on visibility hidden element which ' +
+         'gets visible should not throttle restyling any more');
+
+      await ensureElementRemoval(div);
+    }
+  );
 
   add_task_if_omta_enabled(async function no_restyling_compositor_animations_after_pause_is_called() {
     var div = addDiv(null, { style: 'animation: opacity 100s' });
