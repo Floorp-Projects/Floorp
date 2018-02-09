@@ -2808,6 +2808,16 @@ HttpBaseChannel::SetRedirectMode(uint32_t aMode)
   return NS_OK;
 }
 
+namespace {
+
+bool
+ContainsAllFlags(uint32_t aLoadFlags, uint32_t aMask)
+{
+  return (aLoadFlags & aMask) == aMask;
+}
+
+} // anonymous namespace
+
 NS_IMETHODIMP
 HttpBaseChannel::GetFetchCacheMode(uint32_t* aFetchCacheMode)
 {
@@ -2820,15 +2830,16 @@ HttpBaseChannel::GetFetchCacheMode(uint32_t* aFetchCacheMode)
   }
 
   // Otherwise try to guess an appropriate cache mode from the load flags.
-  if (mLoadFlags & (INHIBIT_CACHING | LOAD_BYPASS_CACHE)) {
+  if (ContainsAllFlags(mLoadFlags, INHIBIT_CACHING | LOAD_BYPASS_CACHE)) {
     *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_STORE;
-  } else if (mLoadFlags & LOAD_BYPASS_CACHE) {
+  } else if (ContainsAllFlags(mLoadFlags, LOAD_BYPASS_CACHE)) {
     *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_RELOAD;
-  } else if (mLoadFlags & VALIDATE_ALWAYS) {
+  } else if (ContainsAllFlags(mLoadFlags, VALIDATE_ALWAYS)) {
     *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_CACHE;
-  } else if (mLoadFlags & (LOAD_FROM_CACHE | nsICachingChannel::LOAD_ONLY_FROM_CACHE)) {
+  } else if (ContainsAllFlags(mLoadFlags, LOAD_FROM_CACHE |
+                                          nsICachingChannel::LOAD_ONLY_FROM_CACHE)) {
     *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_ONLY_IF_CACHED;
-  } else if (mLoadFlags & LOAD_FROM_CACHE) {
+  } else if (ContainsAllFlags(mLoadFlags, LOAD_FROM_CACHE)) {
     *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_FORCE_CACHE;
   } else {
     *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_DEFAULT;
