@@ -314,5 +314,6 @@ partial interface Navigator {
 // https://w3c.github.io/webdriver/webdriver-spec.html#interface
 [NoInterfaceObject]
 interface NavigatorAutomationInformation {
+  [Pref="dom.webdriver.enabled"]
   readonly attribute boolean webdriver;
 };
