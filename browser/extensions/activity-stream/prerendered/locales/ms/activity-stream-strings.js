@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Anda sudah di sini. Tapi sila datang lagi untuk mendapatkan lebih banyak berita hangat daripada {provider}. Tidak boleh tunggu? Pilih topik untuk mendapatkannya dari serata dunia.",
   "manual_migration_explanation2": "Cuba Firefox dengan tandabuku, sejarah dan kata laluan yang disimpan dalam pelayar lain.",
   "manual_migration_cancel_button": "Tidak, Terima kasih",
-  "manual_migration_import_button": "Import Sekarang"
+  "manual_migration_import_button": "Import Sekarang",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

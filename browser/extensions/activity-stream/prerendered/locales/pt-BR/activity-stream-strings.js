@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Você já viu tudo. Volte mais tarde para mais histórias do {provider}. Não consegue esperar? Escolha um assunto popular para encontrar mais grandes histórias através da web.",
   "manual_migration_explanation2": "Experimente o Firefox com os favoritos, histórico e senhas salvas em outro navegador.",
   "manual_migration_cancel_button": "Não, obrigado",
-  "manual_migration_import_button": "Importar agora"
+  "manual_migration_import_button": "Importar agora",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

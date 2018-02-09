@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Ja esteu al dia. Torneu més tard per veure més articles populars de {provider}. No podeu esperar? Trieu un tema popular per descobrir els articles més interessants de tot el web.",
   "manual_migration_explanation2": "Proveu el Firefox amb les adreces d'interès, l'historial i les contrasenyes d'un altre navegador.",
   "manual_migration_cancel_button": "No, gràcies",
-  "manual_migration_import_button": "Importa-ho ara"
+  "manual_migration_import_button": "Importa-ho ara",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "უკვე ყველაფერი წაკითხული გაქვთ. {provider}-იდან ახალი რჩეული სტატიების მისაღებად, მოგვიანებით შემოიარეთ. თუ ვერ ითმენთ, აირჩიეთ რომელიმე მოთხოვნადი თემა, ახალი საინტერესო სტატიების მოსაძიებლად.",
   "manual_migration_explanation2": "გადმოიტანეთ სხვა ბრაუზერებიდან თქვენი სანიშნები, ისტორია და პაროლები Firefox-ში.",
   "manual_migration_cancel_button": "არა, გმადლობთ",
-  "manual_migration_import_button": "ახლავე გადმოტანა"
+  "manual_migration_import_button": "ახლავე გადმოტანა",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

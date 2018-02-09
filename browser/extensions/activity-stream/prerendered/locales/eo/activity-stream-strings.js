@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Vi legis ĉion. Kontrolu denove poste ĉu estas pli da novaĵon de {provider}. Ĉu vi ne povas atendi? Elektu popularan temon por trovi pli da interesaj artikoloj en la tuta teksaĵo.",
   "manual_migration_explanation2": "Provu Firefox kun la legosignoj, historio kaj pasvortoj de alia retumilo.",
   "manual_migration_cancel_button": "Ne, dankon",
-  "manual_migration_import_button": "Importi nun"
+  "manual_migration_import_button": "Importi nun",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };
