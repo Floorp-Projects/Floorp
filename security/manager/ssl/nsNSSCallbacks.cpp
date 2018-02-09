@@ -119,13 +119,19 @@ nsHTTPDownloadEvent::Run()
   chan->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS |
                      nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
 
-  // For OCSP requests, only the first party domain aspect of origin attributes
-  // is used. This means that OCSP requests are shared across different
-  // containers.
+  // For OCSP requests, only the first party domain and private browsing id
+  // aspects of origin attributes are used. This means that:
+  // a) if first party isolation is enabled, OCSP requests will be isolated
+  // according to the first party domain of the original https request
+  // b) OCSP requests are shared across different containers as long as first
+  // party isolation is not enabled and none of the containers are in private
+  // browsing mode.
   if (mRequestSession->mOriginAttributes != OriginAttributes()) {
     OriginAttributes attrs;
     attrs.mFirstPartyDomain =
       mRequestSession->mOriginAttributes.mFirstPartyDomain;
+    attrs.mPrivateBrowsingId =
+      mRequestSession->mOriginAttributes.mPrivateBrowsingId;
 
     nsCOMPtr<nsILoadInfo> loadInfo = chan->GetLoadInfo();
     if (loadInfo) {
