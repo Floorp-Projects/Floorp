@@ -925,12 +925,16 @@ protected:
    * aDataTransfer - data transfer object that will contain the data to drag
    * aSelection - [out] set to the selection to be dragged
    * aTargetNode - [out] the draggable node, or null if there isn't one
+   * aPrincipalURISpec - [out] set to the URI of the triggering principal of
+   *                           the drag, or an empty string if it's from
+   *                           browser chrome or OS
    */
   void DetermineDragTargetAndDefaultData(nsPIDOMWindowOuter* aWindow,
                                          nsIContent* aSelectionTarget,
                                          dom::DataTransfer* aDataTransfer,
                                          nsISelection** aSelection,
-                                         nsIContent** aTargetNode);
+                                         nsIContent** aTargetNode,
+                                         nsACString& aPrincipalURISpec);
 
   /*
    * Perform the default handling for the dragstart event and set up a
@@ -941,12 +945,15 @@ protected:
    * aDataTransfer - the data transfer that holds the data to be dragged
    * aDragTarget - the target of the drag
    * aSelection - the selection to be dragged
+   * aPrincipalURISpec - the URI of the triggering principal of the drag,
+   *                     or an empty string if it's from browser chrome or OS
    */
   bool DoDefaultDragStart(nsPresContext* aPresContext,
                           WidgetDragEvent* aDragEvent,
                           dom::DataTransfer* aDataTransfer,
                           nsIContent* aDragTarget,
-                          nsISelection* aSelection);
+                          nsISelection* aSelection,
+                          const nsACString& aPrincipalURISpec);
 
   bool IsTrackingDragGesture ( ) const { return mGestureDownContent != nullptr; }
   /**

@@ -19,3 +19,4 @@ skip-if(Android) == 1428993-1.html 1428993-1-ref.html
 needs-focus == 1429027-1.html 1429027-1-ref.html
 == 1432553-1.html 1432553-1-ref.html
 == 1432553-2.html 1432553-2-ref.html
+== 1436189-1.html 1436189-1-ref.html

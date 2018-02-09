@@ -64,6 +64,7 @@ public:
                                            uint32_t aActionType) override;
     // nsIDragService
     NS_IMETHOD InvokeDragSession (nsIDOMNode *aDOMNode,
+                                  const nsACString& aPrincipalURISpec,
                                   nsIArray * anArrayTransferables,
                                   nsIScriptableRegion * aRegion,
                                   uint32_t aActionType,
