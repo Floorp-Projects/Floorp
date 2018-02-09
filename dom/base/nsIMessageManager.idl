@@ -450,28 +450,3 @@ interface nsIFrameScriptLoader : nsISupports
   [implicit_jscontext]
   jsval getDelayedFrameScripts();
 };
-
-[uuid(7e1e1a20-b24f-11e4-ab27-0800200c9a66)]
-interface nsIProcessScriptLoader : nsISupports
-{
-  /**
-   * Load a script in the (possibly remote) process. aURL must be the absolute URL.
-   * data: URLs are also supported. For example data:,dump("foo\n");
-   * If aAllowDelayedLoad is true, script will be loaded when the
-   * remote frame becomes available. Otherwise the script will be loaded
-   * only if the frame is already available.
-   */
-  void loadProcessScript(in AString aURL, in boolean aAllowDelayedLoad);
-
-  /**
-   * Removes aURL from the list of scripts which support delayed load.
-   */
-  void removeDelayedProcessScript(in AString aURL);
-
-  /**
-   * Returns all delayed scripts that will be loaded once a (remote)
-   * frame becomes available. The return value is a list of URLs.
-   */
-  [implicit_jscontext]
-  jsval getDelayedProcessScripts();
-};
