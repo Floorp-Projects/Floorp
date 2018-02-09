@@ -10,6 +10,7 @@
 #include "mozilla/FlushType.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/dom/SimpleGestureEventBinding.h"
 #include "nsAlgorithm.h"
 #include "nsChildView.h"
 #include "UnitTransforms.h"
@@ -70,7 +71,8 @@ SwipeTracker::~SwipeTracker()
 double
 SwipeTracker::SwipeSuccessTargetValue() const
 {
-  return (mSwipeDirection == nsIDOMSimpleGestureEvent::DIRECTION_RIGHT) ? -1.0 : 1.0;
+  return (mSwipeDirection == dom::SimpleGestureEventBinding::DIRECTION_RIGHT) ?
+    -1.0 : 1.0;
 }
 
 double
@@ -78,8 +80,12 @@ SwipeTracker::ClampToAllowedRange(double aGestureAmount) const
 {
   // gestureAmount needs to stay between -1 and 0 when swiping right and
   // between 0 and 1 when swiping left.
-  double min = (mSwipeDirection == nsIDOMSimpleGestureEvent::DIRECTION_RIGHT) ? -1.0 : 0.0;
-  double max = (mSwipeDirection == nsIDOMSimpleGestureEvent::DIRECTION_LEFT) ? 1.0 : 0.0;
+  double min =
+    (mSwipeDirection == dom::SimpleGestureEventBinding::DIRECTION_RIGHT) ?
+      -1.0 : 0.0;
+  double max =
+    (mSwipeDirection == dom::SimpleGestureEventBinding::DIRECTION_LEFT) ?
+      1.0 : 0.0;
   return clamped(aGestureAmount, min, max);
 }
 
