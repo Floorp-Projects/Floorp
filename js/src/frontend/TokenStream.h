@@ -774,19 +774,19 @@ class TokenStreamAnyChars
   public:
     // ErrorReporter API.
 
-    virtual const JS::ReadOnlyCompileOptions& options() const final {
+    const JS::ReadOnlyCompileOptions& options() const final {
         return options_;
     }
 
-    virtual void
+    void
     lineAndColumnAt(size_t offset, uint32_t* line, uint32_t* column) const final;
 
-    virtual void currentLineAndColumn(uint32_t* line, uint32_t* column) const final;
+    void currentLineAndColumn(uint32_t* line, uint32_t* column) const final;
 
-    virtual bool hasTokenizationStarted() const final;
-    virtual void reportErrorNoOffsetVA(unsigned errorNumber, va_list args) final;
+    bool hasTokenizationStarted() const final;
+    void reportErrorNoOffsetVA(unsigned errorNumber, va_list args) final;
 
-    virtual const char* getFilename() const final {
+    const char* getFilename() const final {
         return filename_;
     }
 

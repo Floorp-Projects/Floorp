@@ -1255,13 +1255,13 @@ public:
 
   ~StreamWriter() override { }
 
-  virtual bool writeMetadata(uint64_t timestamp) final {
+  bool writeMetadata(uint64_t timestamp) final {
     protobuf::Metadata metadata;
     metadata.set_timestamp(timestamp);
     return writeMessage(metadata);
   }
 
-  virtual bool writeNode(const JS::ubi::Node& ubiNode,
+  bool writeNode(const JS::ubi::Node& ubiNode,
                          EdgePolicy includeEdges) final {
     // NB: de-duplicated string properties must be written in the same order
     // here as they are read in `HeapSnapshot::saveNode` or else indices in

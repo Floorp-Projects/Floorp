@@ -36,7 +36,7 @@ struct E {
   virtual void e();
 };
 struct F : E {
-  virtual void e() final;
+  void e() final;
 };
 struct G {
   virtual void e() = 0;

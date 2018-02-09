@@ -372,7 +372,7 @@ public:
                                   nsIContent* aContainer);
 
   nsINode* GetParentObject() const { return mOwner; }
-  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) final;
+  JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) final;
   DocGroup* GetDocGroup() const;
 
 private:

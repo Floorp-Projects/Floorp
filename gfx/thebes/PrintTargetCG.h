@@ -24,14 +24,14 @@ public:
                PMPrintSettings aPrintSettings,
                const IntSize& aSize);
 
-  virtual nsresult BeginPrinting(const nsAString& aTitle,
-                                 const nsAString& aPrintToFileName,
-                                 int32_t aStartPage,
-                                 int32_t aEndPage) final;
-  virtual nsresult EndPrinting() final;
-  virtual nsresult AbortPrinting() final;
-  virtual nsresult BeginPage() final;
-  virtual nsresult EndPage() final;
+  nsresult BeginPrinting(const nsAString& aTitle,
+                         const nsAString& aPrintToFileName,
+                         int32_t aStartPage,
+                         int32_t aEndPage) final;
+  nsresult EndPrinting() final;
+  nsresult AbortPrinting() final;
+  nsresult BeginPage() final;
+  nsresult EndPage() final;
 
   virtual already_AddRefed<DrawTarget>
   GetReferenceDrawTarget() final;

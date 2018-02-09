@@ -27,7 +27,7 @@ public:
     return mSVGElement;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
     final;
 
   virtual float BaseVal() = 0;

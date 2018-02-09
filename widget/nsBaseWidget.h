@@ -270,7 +270,7 @@ public:
                           { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual nsresult        ActivateNativeMenuItemAt(const nsAString& indexString) override { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual nsresult        ForceUpdateNativeMenuAt(const nsAString& indexString) override { return NS_ERROR_NOT_IMPLEMENTED; }
-  virtual nsresult        NotifyIME(const IMENotification& aIMENotification)
+  nsresult                NotifyIME(const IMENotification& aIMENotification)
                             final;
   virtual MOZ_MUST_USE nsresult
                           StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
@@ -298,7 +298,7 @@ public:
   virtual void               SetAttachedWidgetListener(nsIWidgetListener* aListener) override;
   virtual nsIWidgetListener* GetPreviouslyAttachedWidgetListener() override;
   virtual void               SetPreviouslyAttachedWidgetListener(nsIWidgetListener* aListener) override;
-  virtual TextEventDispatcher* GetTextEventDispatcher() final;
+  TextEventDispatcher* GetTextEventDispatcher() final;
   virtual TextEventDispatcherListener*
     GetNativeTextEventDispatcherListener() override;
   virtual void ZoomToRect(const uint32_t& aPresShellId,
