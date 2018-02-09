@@ -77,6 +77,9 @@ EXPORTS += [
     'nsGenericDOMDataNode.h',
     'nsGkAtomList.h',
     'nsGkAtoms.h',
+    'nsGlobalWindow.h',  # Because binding headers include it.
+    'nsGlobalWindowInner.h',  # Because binding headers include it.
+    'nsGlobalWindowOuter.h',  # Because binding headers include it.
     'nsIAnimationObserver.h',
     'nsIAttribute.h',
     'nsIContent.h',

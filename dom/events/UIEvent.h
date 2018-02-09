@@ -47,7 +47,9 @@ public:
                                                const UIEventInit& aParam,
                                                ErrorResult& aRv);
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
+  virtual JSObject*
+    WrapObjectInternal(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override
   {
     return UIEventBinding::Wrap(aCx, this, aGivenProto);
   }
