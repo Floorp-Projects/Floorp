@@ -15,8 +15,6 @@ ChromeUtils.defineModuleGetter(this, "perfService",
   "resource://activity-stream/common/PerfService.jsm");
 ChromeUtils.defineModuleGetter(this, "PingCentre",
   "resource:///modules/PingCentre.jsm");
-ChromeUtils.defineModuleGetter(this, "UTEventReporting",
-  "resource://activity-stream/lib/UTEventReporting.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
   "@mozilla.org/uuid-generator;1",
@@ -120,14 +118,6 @@ this.TelemetryFeed = class TelemetryFeed {
   }
 
   /**
-   * Lazily initialize UTEventReporting to send pings
-   */
-  get utEvents() {
-    Object.defineProperty(this, "utEvents", {value: new UTEventReporting()});
-    return this.utEvents;
-  }
-
-  /**
    * Get encoded user preferences, multiple prefs will be combined via bitwise OR operator
    */
   get userPreferences() {
@@ -227,9 +217,7 @@ this.TelemetryFeed = class TelemetryFeed {
       session.session_duration = Math.round(perfService.absNow() - session.perf.visibility_event_rcvd_ts);
     }
 
-    let sessionEndEvent = this.createSessionEndEvent(session);
-    this.sendEvent(sessionEndEvent);
-    this.utEvents.sendSessionEndEvent(sessionEndEvent);
+    this.sendEvent(this.createSessionEndEvent(session));
     this.sessions.delete(portID);
   }
 
@@ -356,9 +344,7 @@ this.TelemetryFeed = class TelemetryFeed {
   }
 
   handleUserEvent(action) {
-    let userEvent = this.createUserEvent(action);
-    this.sendEvent(userEvent);
-    this.utEvents.sendUserEvent(userEvent);
+    this.sendEvent(this.createUserEvent(action));
   }
 
   handleUndesiredEvent(action) {
@@ -443,9 +429,6 @@ this.TelemetryFeed = class TelemetryFeed {
     // Only uninit if the getter has initialized it
     if (Object.prototype.hasOwnProperty.call(this, "pingCentre")) {
       this.pingCentre.uninit();
-    }
-    if (Object.prototype.hasOwnProperty.call(this, "utEvents")) {
-      this.utEvents.uninit();
     }
 
     try {
