@@ -409,39 +409,6 @@ class tart_flex(tart):
 
 
 @register_test()
-class cart(PageloaderTest):
-    """
-    Customize Animation Regression Test
-    Tests Australis customize animations (default DPI scaling). Uses the
-    TART addon but with a different URL.
-    Reports the same animation values as TART (.half/.all/.error).
-    All comments for TART also apply here (e.g. for ASAP+OMTC, etc)
-    Subtests are:
-    1-customize-enter - from triggering customize mode until it's ready for
-    the user
-    2-customize-exit  - exiting customize
-    3-customize-enter-css - only the CSS animation part of entering customize
-    """
-    tpmanifest = '${talos}/tests/tart/cart.manifest'
-    extensions = '${talos}/tests/tart/addon'
-    tpcycles = 1
-    tppagecycles = 25
-    tploadnocache = True
-    tpmozafterpaint = False
-    gecko_profile_interval = 1
-    gecko_profile_entries = 10000000
-    win_counters = w7_counters = linux_counters = mac_counters = None
-    """
-    ASAP mode
-    """
-    preferences = {'layout.frame_rate': 0,
-                   'docshell.event_starvation_delay_hint': 1,
-                   'dom.send_after_paint_to_content': False}
-    filters = filter.ignore_first.prepare(1) + filter.median.prepare()
-    unit = 'ms'
-
-
-@register_test()
 class damp(PageloaderTest):
     """
     Devtools At Maximum Performance
@@ -820,34 +787,38 @@ class a11yr(PageloaderTest):
     alert_threshold = 5.0
 
 
+class WebkitBenchmark(PageloaderTest):
+    tpcycles = 1
+    tppagecycles = 5
+    tpmozafterpaint = False
+    tpchrome = False
+    format_pagename = False
+    lower_is_better = False
+    unit = 'score'
+
+
 @register_test()
-class speedometer(PageloaderTest):
-    """
-    Speedometer benchmark used by many browser vendors (from webkit)
-    """
+class speedometer(WebkitBenchmark):
+    # Speedometer benchmark used by many browser vendors (from webkit)
     tpmanifest = '${talos}/tests/speedometer/speedometer.manifest'
-    tpcycles = 1
-    tppagecycles = 5
-    tpmozafterpaint = False
-    tpchrome = False
-    format_pagename = False
-    lower_is_better = False
-    unit = 'score'
 
 
 @register_test()
-class stylebench(PageloaderTest):
-    """
-    StyleBench benchmark used by many browser vendors (from webkit)
-    """
+class stylebench(WebkitBenchmark):
+    # StyleBench benchmark used by many browser vendors (from webkit)
     tpmanifest = '${talos}/tests/stylebench/stylebench.manifest'
-    tpcycles = 1
-    tppagecycles = 5
-    tpmozafterpaint = False
-    tpchrome = False
-    format_pagename = False
-    lower_is_better = False
-    unit = 'score'
+
+
+@register_test()
+class motionmark_animometer(WebkitBenchmark):
+    # MotionMark benchmark used by many browser vendors (from webkit)
+    tpmanifest = '${talos}/tests/motionmark/animometer.manifest'
+
+
+@register_test()
+class motionmark_htmlsuite(WebkitBenchmark):
+    # MotionMark benchmark used by many browser vendors (from webkit)
+    tpmanifest = '${talos}/tests/motionmark/htmlsuite.manifest'
 
 
 @register_test()

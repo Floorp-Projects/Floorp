@@ -65,7 +65,7 @@ def create_parser(mach_interface=False):
     add_arg('--browserWait', dest='browser_wait', default=5, type=int,
             help="Amount of time allowed for the browser to cleanly close")
     add_arg('-a', '--activeTests',
-            help="List of tests to run, separated by ':' (ex. damp:cart)")
+            help="List of tests to run, separated by ':' (ex. damp:tart)")
     add_arg('--suite',
             help="Suite to use (instead of --activeTests)")
     add_arg('--subtests',
@@ -161,13 +161,6 @@ def create_parser(mach_interface=False):
     add_arg('--no-upload-results', action="store_true",
             dest='no_upload_results',
             help="If given, it disables uploading of talos results.")
-    add_arg('--enable-stylo', action="store_true",
-            dest='enable_stylo',
-            help='If given, enable Stylo via Environment variables and '
-                 'upload results with Stylo options.')
-    add_arg('--disable-stylo', action="store_true",
-            dest='disable_stylo',
-            help='If given, disable Stylo via Environment variables.')
     add_arg('--stylo-threads', type=int,
             dest='stylothreads',
             help='If given, run Stylo with a certain number of threads')
