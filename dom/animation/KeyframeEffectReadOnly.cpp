@@ -1457,7 +1457,9 @@ KeyframeEffectReadOnly::CanThrottle() const
     if (presShell && !presShell->IsActive()) {
       return true;
     }
-    if (frame->IsScrolledOutOfView()) {
+
+    if (!frame->IsVisibleOrMayHaveVisibleDescendants() ||
+        frame->IsScrolledOutOfView()) {
       // If there are transform change hints, unthrottle the animation
       // periodically since it might affect the overflow region.
       if (mCumulativeChangeHint & (nsChangeHint_UpdatePostTransformOverflow |
