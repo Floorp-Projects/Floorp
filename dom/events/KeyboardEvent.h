@@ -10,14 +10,12 @@
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/EventForwards.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsRFPService.h"
 
 namespace mozilla {
 namespace dom {
 
-class KeyboardEvent : public UIEvent,
-                      public nsIDOMKeyEvent
+class KeyboardEvent : public UIEvent
 {
 public:
   KeyboardEvent(EventTarget* aOwner,
@@ -25,12 +23,6 @@ public:
                 WidgetKeyboardEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMKeyEvent Interface
-  NS_DECL_NSIDOMKEYEVENT
-
-  // Forward to base class
-  NS_FORWARD_TO_UIEVENT
 
   virtual KeyboardEvent* AsKeyboardEvent() override
   {

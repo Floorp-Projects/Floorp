@@ -15,7 +15,7 @@
  *   @param codeNameIndex The codeNameIndex of this contorl key.
  *                        See PhysicalKeyCodeNameList.h for details.
  *   @param keyCode       The keyCode of this control key.
- *                        See nsIDOMKeyEvent.idl for details.
+ *                        See KeyEvent.webidl for details.
  *
  * Use KEY to define the key with its modifier states. The key will be spoofed
  * with given modifier states.
@@ -24,7 +24,7 @@
  *   @param codeNameIndex The codeNameIndex of this key.
  *                        See PhysicalKeyCodeNameList.h for details.
  *   @param keyCode       The keyCode of this key.
- *                        See nsIDOMKeyEvent.idl for details.
+ *                        See KeyEvent.webidl for details.
  *   @param modifiers     The spoofing modifier states for this key.
  *                        See BasicEvents.h for details.
  */
