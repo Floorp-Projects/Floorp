@@ -262,11 +262,11 @@ ThreadMain(void*)
       waitCount = 0;
     }
 
-    PRIntervalTime timeout;
+    TimeDuration timeout;
     if (gTimeout <= 0) {
-      timeout = PR_INTERVAL_NO_TIMEOUT;
+      timeout = TimeDuration::Forever();
     } else {
-      timeout = PR_MillisecondsToInterval(gTimeout * 500);
+      timeout = TimeDuration::FromMilliseconds(gTimeout * 500);
     }
     lock.Wait(timeout);
   }

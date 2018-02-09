@@ -49,8 +49,7 @@ public:
 
     { // scope lock
       MonitorAutoLock lock(mVsyncMonitor);
-      PRIntervalTime timeout = PR_MillisecondsToInterval(kVsyncTimeoutMS);
-      lock.Wait(timeout);
+      lock.Wait(TimeDuration::FromMilliseconds(kVsyncTimeoutMS));
     }
   }
 
