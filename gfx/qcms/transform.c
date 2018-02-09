@@ -995,6 +995,10 @@ void qcms_transform_release(qcms_transform *t)
 	free(t->output_gamma_lut_g);
 	free(t->output_gamma_lut_b);
 
+	/* r_clut points to beginning of buffer allocated in qcms_transform_precacheLUT_float */
+	if (t->r_clut)
+		free(t->r_clut);
+
 	transform_free(t);
 }
 
@@ -1191,6 +1195,7 @@ qcms_transform* qcms_transform_precacheLUT_float(qcms_transform *transform, qcms
 
 
 	//XXX: qcms_modular_transform_data may return either the src or dest buffer. If so it must not be free-ed
+	// It will be stored in r_clut, which will be cleaned up in qcms_transform_release.
 	if (src && lut != src) {
 		free(src);
 	}
