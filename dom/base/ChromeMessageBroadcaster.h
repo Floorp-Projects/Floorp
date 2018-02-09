@@ -66,7 +66,7 @@ public:
   }
 
   // GlobalProcessScriptLoader
-  // XPCOM GetInitialProcessData is OK
+  using nsFrameMessageManager::GetInitialProcessData;
 
   // FrameScriptLoader
   using nsFrameMessageManager::LoadFrameScript;
