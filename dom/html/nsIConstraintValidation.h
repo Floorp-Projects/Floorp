@@ -10,8 +10,6 @@
 #include "nsISupports.h"
 #include "nsString.h"
 
-class nsIDOMValidityState;
-
 namespace mozilla {
 class ErrorResult;
 namespace dom {
@@ -81,7 +79,6 @@ protected:
   // You can't instantiate an object from that class.
   nsIConstraintValidation();
 
-  nsresult GetValidity(nsIDOMValidityState** aValidity);
   nsresult CheckValidity(bool* aValidity);
   void     SetCustomValidity(const nsAString& aError);
 
