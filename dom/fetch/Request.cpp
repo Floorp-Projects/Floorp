@@ -142,7 +142,7 @@ ParseURLFromChrome(const nsAString& aInput, ErrorResult& aRv)
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIURI> uri;
   aRv = NS_NewURI(getter_AddRefs(uri), aInput, nullptr, nullptr);
-  if (NS_WARN_IF(aRv.Failed())) {
+  if (aRv.Failed()) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(aInput);
   }
   return uri.forget();
@@ -328,7 +328,7 @@ Request::Constructor(const GlobalObject& aGlobal,
     } else {
       GetRequestURLFromWorker(aGlobal, input, requestURL, fragment, aRv);
     }
-    if (NS_WARN_IF(aRv.Failed())) {
+    if (aRv.Failed()) {
       return nullptr;
     }
     request = new InternalRequest(NS_ConvertUTF16toUTF8(requestURL), fragment);

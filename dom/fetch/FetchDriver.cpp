@@ -718,7 +718,9 @@ FetchDriver::HttpFetch(const nsACString& aPreferredAlternativeDataType)
   } else {
     rv = chan->AsyncOpen2(this);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // Step 4 onwards of "HTTP Fetch" is handled internally by Necko.
 
