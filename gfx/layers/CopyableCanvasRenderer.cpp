@@ -91,6 +91,8 @@ CopyableCanvasRenderer::IsDataValid(const CanvasInitializeData& aData)
 void
 CopyableCanvasRenderer::ClearCachedResources()
 {
+  SetDirty();
+
   if (mBufferProvider) {
     mBufferProvider->ClearCachedResources();
   }
