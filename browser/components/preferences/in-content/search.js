@@ -60,61 +60,74 @@ var gSearchPane = {
     this._initAutocomplete();
 
     let suggestsPref = Preferences.get("browser.search.suggest.enabled");
-    suggestsPref.on("change", this.updateSuggestsCheckbox.bind(this));
-    this.updateSuggestsCheckbox();
-
+    let urlbarSuggestsPref = Preferences.get("browser.urlbar.suggest.searches");
+    let updateSuggestionCheckboxes = this._updateSuggestionCheckboxes.bind(this);
+    suggestsPref.on("change", updateSuggestionCheckboxes);
+    urlbarSuggestsPref.on("change", updateSuggestionCheckboxes);
     this._initShowSearchSuggestionsFirst();
+    this._updateSuggestionCheckboxes();
   },
 
   _initShowSearchSuggestionsFirst() {
-    let pref = Preferences.get("browser.urlbar.matchBuckets");
+    this._urlbarSuggestionsPosPref = Preferences.get("browser.urlbar.matchBuckets");
     let checkbox =
       document.getElementById("showSearchSuggestionsFirstCheckbox");
 
-    pref.on("change", () => {
-      this._syncFromShowSearchSuggestionsFirstPref(checkbox, pref);
+    this._urlbarSuggestionsPosPref.on("change", () => {
+      this._syncFromShowSearchSuggestionsFirstPref(checkbox);
     });
-    this._syncFromShowSearchSuggestionsFirstPref(checkbox, pref);
+    this._syncFromShowSearchSuggestionsFirstPref(checkbox);
 
     checkbox.addEventListener("command", () => {
-      this._syncToShowSearchSuggestionsFirstPref(checkbox.checked, pref);
+      this._syncToShowSearchSuggestionsFirstPref(checkbox.checked);
     });
   },
 
-  _syncFromShowSearchSuggestionsFirstPref(checkbox, pref) {
-    if (!pref.value) {
+  _syncFromShowSearchSuggestionsFirstPref(checkbox) {
+    if (!this._urlbarSuggestionsPosPref.value) {
       // The pref is cleared, meaning search suggestions are shown first.
       checkbox.checked = true;
       return;
     }
     // The pref has a value.  If the first bucket in the pref is search
     // suggestions, then check the checkbox.
-    let buckets = PlacesUtils.convertMatchBucketsStringToArray(pref.value);
+    let buckets = PlacesUtils.convertMatchBucketsStringToArray(this._urlbarSuggestionsPosPref.value);
     checkbox.checked = buckets[0] && buckets[0][0] == "suggestion";
   },
 
-  _syncToShowSearchSuggestionsFirstPref(checked, pref) {
+  _syncToShowSearchSuggestionsFirstPref(checked) {
     if (checked) {
       // Show search suggestions first, so clear the pref since that's the
       // default.
-      pref.reset();
+      this._urlbarSuggestionsPosPref.reset();
       return;
     }
     // Show history first.
-    pref.value = "general:5,suggestion:Infinity";
+    this._urlbarSuggestionsPosPref.value = "general:5,suggestion:Infinity";
   },
 
-  updateSuggestsCheckbox() {
+  _updateSuggestionCheckboxes() {
     let suggestsPref = Preferences.get("browser.search.suggest.enabled");
     let permanentPB =
       Services.prefs.getBoolPref("browser.privatebrowsing.autostart");
     let urlbarSuggests = document.getElementById("urlBarSuggestion");
+    let positionCheckbox =
+      document.getElementById("showSearchSuggestionsFirstCheckbox");
+
     urlbarSuggests.disabled = !suggestsPref.value || permanentPB;
 
     let urlbarSuggestsPref = Preferences.get("browser.urlbar.suggest.searches");
     urlbarSuggests.checked = urlbarSuggestsPref.value;
     if (urlbarSuggests.disabled) {
       urlbarSuggests.checked = false;
+    }
+
+    if (urlbarSuggests.checked) {
+      positionCheckbox.disabled = false;
+      this._syncFromShowSearchSuggestionsFirstPref(positionCheckbox);
+    } else {
+      positionCheckbox.disabled = true;
+      positionCheckbox.checked = false;
     }
 
     let permanentPBLabel =

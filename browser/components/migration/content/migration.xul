@@ -19,8 +19,6 @@
 
   <script type="application/javascript" src="chrome://browser/content/migration/migration.js"/>
 
-  <stringbundle id="brandBundle" src="chrome://branding/locale/brand.properties"/>
-
   <wizardpage id="importSource" pageid="importSource" next="selectProfile"
               label="&importSource.title;"
               onpageadvanced="return MigrationWizard.onImportSourcePageAdvanced();">
@@ -68,7 +66,7 @@
   </wizardpage>
 
   <wizardpage id="importItems" pageid="importItems" label="&importItems.title;"
-              next="homePageImport"
+              next="migrating"
               onpageshow="return MigrationWizard.onImportItemsPageShow();"
               onpagerewound="return MigrationWizard.onImportItemsPageRewound();"
               onpageadvanced="return MigrationWizard.onImportItemsPageAdvanced();"
@@ -76,18 +74,6 @@
     <description control="dataSources">&importItems.label;</description>
 
     <vbox id="dataSources" style="overflow: auto; -moz-appearance: listbox" align="left" flex="1" role="group"/>
-  </wizardpage>
-
-  <wizardpage id="homePageImport" pageid="homePageImport"
-              next="migrating"
-              onpageshow="return MigrationWizard.onHomePageMigrationPageShow();"
-              onpageadvanced="return MigrationWizard.onHomePageMigrationPageAdvanced();">
-
-    <description id="homePageImportDesc" control="homePageRadioGroup"/>
-    <radiogroup id="homePageRadiogroup">
-      <radio id="homePageSingleStart" selected="true" />
-      <radio id="oldHomePage" hidden="true" />
-    </radiogroup>
   </wizardpage>
 
   <wizardpage id="migrating" pageid="migrating" label="&migrating.title;"
