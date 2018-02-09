@@ -31,7 +31,6 @@
 #include "XULDocument.h"
 
 #include "nsIDOMElement.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULLabelElement.h"
@@ -85,6 +84,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/HTMLBodyElement.h"
+#include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/TreeWalker.h"
 
 using namespace mozilla;
@@ -262,13 +262,13 @@ Accessible::AccessKey() const
   switch (Preferences::GetInt("ui.key.generalAccessKey", -1)) {
   case -1:
     break;
-  case nsIDOMKeyEvent::DOM_VK_SHIFT:
+  case dom::KeyboardEventBinding::DOM_VK_SHIFT:
     return KeyBinding(key, KeyBinding::kShift);
-  case nsIDOMKeyEvent::DOM_VK_CONTROL:
+  case dom::KeyboardEventBinding::DOM_VK_CONTROL:
     return KeyBinding(key, KeyBinding::kControl);
-  case nsIDOMKeyEvent::DOM_VK_ALT:
+  case dom::KeyboardEventBinding::DOM_VK_ALT:
     return KeyBinding(key, KeyBinding::kAlt);
-  case nsIDOMKeyEvent::DOM_VK_META:
+  case dom::KeyboardEventBinding::DOM_VK_META:
     return KeyBinding(key, KeyBinding::kMeta);
   default:
     return KeyBinding();

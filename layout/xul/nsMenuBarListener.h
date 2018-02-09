@@ -110,7 +110,7 @@ protected:
   bool mAccessKeyDownCanceled;
   // Does the access key by itself focus the menubar?
   static bool mAccessKeyFocuses;
-  // See nsIDOMKeyEvent.h for sample values.
+  // See KeyboardEvent for sample values (DOM_VK_* constants).
   static int32_t mAccessKey;
   // Modifier mask for the access key.
   static mozilla::Modifiers mAccessKeyMask;

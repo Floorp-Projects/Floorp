@@ -12,6 +12,7 @@
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/KeyboardEvent.h"
+#include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/PageTransitionEvent.h"
 #include "mozilla/Logging.h"
 #include "nsIFormAutoComplete.h"
@@ -1096,15 +1097,15 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
 
   uint32_t k = keyEvent->KeyCode();
   switch (k) {
-  case nsIDOMKeyEvent::DOM_VK_DELETE:
+  case KeyboardEventBinding::DOM_VK_DELETE:
 #ifndef XP_MACOSX
     mController->HandleDelete(&cancel);
     break;
-  case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
+  case KeyboardEventBinding::DOM_VK_BACK_SPACE:
     mController->HandleText(&unused);
     break;
 #else
-  case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
+  case KeyboardEventBinding::DOM_VK_BACK_SPACE:
     {
       if (keyEvent->ShiftKey()) {
         mController->HandleDelete(&cancel);
@@ -1115,8 +1116,8 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
       break;
     }
 #endif
-  case nsIDOMKeyEvent::DOM_VK_PAGE_UP:
-  case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN:
+  case KeyboardEventBinding::DOM_VK_PAGE_UP:
+  case KeyboardEventBinding::DOM_VK_PAGE_DOWN:
     {
       if (keyEvent->CtrlKey() ||
           keyEvent->AltKey() ||
@@ -1125,10 +1126,10 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
       }
     }
     MOZ_FALLTHROUGH;
-  case nsIDOMKeyEvent::DOM_VK_UP:
-  case nsIDOMKeyEvent::DOM_VK_DOWN:
-  case nsIDOMKeyEvent::DOM_VK_LEFT:
-  case nsIDOMKeyEvent::DOM_VK_RIGHT:
+  case KeyboardEventBinding::DOM_VK_UP:
+  case KeyboardEventBinding::DOM_VK_DOWN:
+  case KeyboardEventBinding::DOM_VK_LEFT:
+  case KeyboardEventBinding::DOM_VK_RIGHT:
     {
       // Get the writing-mode of the relevant input element,
       // so that we can remap arrow keys if necessary.
@@ -1141,33 +1142,33 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
       }
       if (wm.IsVertical()) {
         switch (k) {
-        case nsIDOMKeyEvent::DOM_VK_LEFT:
-          k = wm.IsVerticalLR() ? nsIDOMKeyEvent::DOM_VK_UP
-                                : nsIDOMKeyEvent::DOM_VK_DOWN;
+        case KeyboardEventBinding::DOM_VK_LEFT:
+          k = wm.IsVerticalLR() ? KeyboardEventBinding::DOM_VK_UP
+                                : KeyboardEventBinding::DOM_VK_DOWN;
           break;
-        case nsIDOMKeyEvent::DOM_VK_RIGHT:
-          k = wm.IsVerticalLR() ? nsIDOMKeyEvent::DOM_VK_DOWN
-                                : nsIDOMKeyEvent::DOM_VK_UP;
+        case KeyboardEventBinding::DOM_VK_RIGHT:
+          k = wm.IsVerticalLR() ? KeyboardEventBinding::DOM_VK_DOWN
+                                : KeyboardEventBinding::DOM_VK_UP;
           break;
-        case nsIDOMKeyEvent::DOM_VK_UP:
-          k = nsIDOMKeyEvent::DOM_VK_LEFT;
+        case KeyboardEventBinding::DOM_VK_UP:
+          k = KeyboardEventBinding::DOM_VK_LEFT;
           break;
-        case nsIDOMKeyEvent::DOM_VK_DOWN:
-          k = nsIDOMKeyEvent::DOM_VK_RIGHT;
+        case KeyboardEventBinding::DOM_VK_DOWN:
+          k = KeyboardEventBinding::DOM_VK_RIGHT;
           break;
         }
       }
     }
     mController->HandleKeyNavigation(k, &cancel);
     break;
-  case nsIDOMKeyEvent::DOM_VK_ESCAPE:
+  case KeyboardEventBinding::DOM_VK_ESCAPE:
     mController->HandleEscape(&cancel);
     break;
-  case nsIDOMKeyEvent::DOM_VK_TAB:
+  case KeyboardEventBinding::DOM_VK_TAB:
     mController->HandleTab();
     cancel = false;
     break;
-  case nsIDOMKeyEvent::DOM_VK_RETURN:
+  case KeyboardEventBinding::DOM_VK_RETURN:
     mController->HandleEnter(false, aEvent, &cancel);
     break;
   }
@@ -1178,7 +1179,7 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
     // (indicated by cancel=true) so sites don't manually submit forms
     // (e.g. via submit.click()) without the autocompleted value being filled.
     // Bug 286933 will fix this for other key events.
-    if (k == nsIDOMKeyEvent::DOM_VK_RETURN) {
+    if (k == KeyboardEventBinding::DOM_VK_RETURN) {
       aEvent->StopPropagation();
     }
   }
@@ -1244,7 +1245,7 @@ nsFormFillController::ShowPopup()
     // Show the popup with the complete result set.  Can't use HandleText()
     // because it doesn't display the popup if the input is blank.
     bool cancel = false;
-    mController->HandleKeyNavigation(nsIDOMKeyEvent::DOM_VK_DOWN, &cancel);
+    mController->HandleKeyNavigation(KeyboardEventBinding::DOM_VK_DOWN, &cancel);
   }
 
   return NS_OK;
