@@ -284,6 +284,12 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk>
                    "Checked that the baked-in value correspond to computed value");
 
         assertInvariants();
+#if defined(LIFO_HAVE_MEM_CHECKS)
+        // The memory is freshly allocated and marked as undefined by the
+        // allocator of the BumpChunk. Instead, we mark this memory as
+        // no-access, as it has not been allocated within the BumpChunk.
+        LIFO_MAKE_MEM_NOACCESS(bump_, capacity_ - bump_);
+#endif
     }
 
     // Cast |this| into a uint8_t* pointer.
