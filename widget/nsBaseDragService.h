@@ -14,6 +14,7 @@
 #include "nsCOMPtr.h"
 #include "nsRect.h"
 #include "nsPoint.h"
+#include "nsString.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
@@ -159,6 +160,7 @@ protected:
 
   nsSize mTargetSize;
   nsCOMPtr<nsIDOMNode> mSourceNode;
+  nsCString mTriggeringPrincipalURISpec;
   nsCOMPtr<nsIDOMDocument> mSourceDocument;       // the document at the drag source. will be null
                                                   //  if it came from outside the app.
   nsContentPolicyType mContentPolicyType;         // the contentpolicy type passed to the channel

@@ -49,11 +49,13 @@ if (gInContentProcess) {
                      .getService(Ci.nsIMemoryReporterManager);
       let rss = memMgr.resident;
       let uss = memMgr.residentUnique;
+      let ghosts = memMgr.ghostWindows;
       Services.cpmm.sendAsyncMessage("Memory:Summary", {
         pid,
         summary: {
           uss,
           rss,
+          ghosts,
         }
       });
     },
