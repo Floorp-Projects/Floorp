@@ -7,6 +7,8 @@ const CHECKBOX_ID = "showSearchSuggestionsFirstCheckbox";
 
 // Open preferences with search suggestions shown first (the default).
 add_task(async function openWithSearchSuggestionsShownFirst() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.urlbar.suggest.searches", true]]});
+
   // The pref should be cleared initially so that search suggestions are shown
   // first (the default).
   Assert.equal(Services.prefs.getCharPref(PREF_NAME, ""), "",
