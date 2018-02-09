@@ -137,7 +137,11 @@ CanCreateUserNamespace()
     return cached[0] > '0';
   }
 
-  pid_t pid = syscall(__NR_clone, SIGCHLD | CLONE_NEWUSER,
+  // Bug 1434528: In addition to CLONE_NEWUSER, do something that uses
+  // the new capabilities (in this case, cloning another namespace) to
+  // detect AppArmor policies that allow CLONE_NEWUSER but don't allow
+  // doing anything useful with it.
+  pid_t pid = syscall(__NR_clone, SIGCHLD | CLONE_NEWUSER | CLONE_NEWPID,
                       nullptr, nullptr, nullptr, nullptr);
   if (pid == 0) {
     // In the child.  Do as little as possible.
