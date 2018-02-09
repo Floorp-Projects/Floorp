@@ -3710,7 +3710,9 @@ NS_IMETHODIMP nsDocumentViewer::GetInLink(bool* aInLink)
 
   // get the popup link
   nsCOMPtr<nsINode> node = GetPopupLinkNode();
-  NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+  if (!node) {
+    return NS_ERROR_FAILURE;
+  }
 
   // if we made it here, we're in a link
   *aInLink = true;
