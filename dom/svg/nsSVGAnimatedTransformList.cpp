@@ -6,6 +6,7 @@
 
 #include "nsSVGAnimatedTransformList.h"
 
+#include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/SVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/Move.h"
@@ -14,7 +15,6 @@
 #include "nsSMILValue.h"
 #include "SVGContentUtils.h"
 #include "SVGTransformListSMILType.h"
-#include "nsIDOMMutationEvent.h"
 
 namespace mozilla {
 
@@ -124,9 +124,9 @@ nsSVGAnimatedTransformList::SetAnimValue(const SVGTransformList& aValue,
   }
   int32_t modType;
   if(prevSet) {
-    modType = nsIDOMMutationEvent::MODIFICATION;
+    modType = MutationEventBinding::MODIFICATION;
   } else {
-    modType = nsIDOMMutationEvent::ADDITION;
+    modType = MutationEventBinding::ADDITION;
   }
   aElement->DidAnimateTransformList(modType);
   return NS_OK;
@@ -148,9 +148,9 @@ nsSVGAnimatedTransformList::ClearAnimValue(nsSVGElement *aElement)
   mAnimVal = nullptr;
   int32_t modType;
   if (HasTransform() || aElement->GetAnimateMotionTransform()) {
-    modType = nsIDOMMutationEvent::MODIFICATION;
+    modType = MutationEventBinding::MODIFICATION;
   } else {
-    modType = nsIDOMMutationEvent::REMOVAL;
+    modType = MutationEventBinding::REMOVAL;
   }
   aElement->DidAnimateTransformList(modType);
 }

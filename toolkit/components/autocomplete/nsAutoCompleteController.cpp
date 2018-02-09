@@ -17,10 +17,10 @@
 #include "nsITreeBoxObject.h"
 #include "nsITreeColumns.h"
 #include "nsIObserverService.h"
-#include "nsIDOMKeyEvent.h"
 #include "mozilla/Services.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/KeyboardEventBinding.h"
 
 static const char *kAutoCompleteSearchCID = "@mozilla.org/autocomplete/search;1?name=";
 
@@ -291,7 +291,7 @@ nsAutoCompleteController::HandleText(bool *_retval)
     // we should reopen it forcibly even if the value is empty.
     if (popupClosedByCompositionStart && handlingCompositionCommit) {
       bool cancel;
-      HandleKeyNavigation(nsIDOMKeyEvent::DOM_VK_DOWN, &cancel);
+      HandleKeyNavigation(dom::KeyboardEventBinding::DOM_VK_DOWN, &cancel);
       return NS_OK;
     }
     ClosePopup();
@@ -441,10 +441,10 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval)
   input->GetDisableAutoComplete(&disabled);
   NS_ENSURE_TRUE(!disabled, NS_OK);
 
-  if (aKey == nsIDOMKeyEvent::DOM_VK_UP ||
-      aKey == nsIDOMKeyEvent::DOM_VK_DOWN ||
-      aKey == nsIDOMKeyEvent::DOM_VK_PAGE_UP ||
-      aKey == nsIDOMKeyEvent::DOM_VK_PAGE_DOWN)
+  if (aKey == dom::KeyboardEventBinding::DOM_VK_UP ||
+      aKey == dom::KeyboardEventBinding::DOM_VK_DOWN ||
+      aKey == dom::KeyboardEventBinding::DOM_VK_PAGE_UP ||
+      aKey == dom::KeyboardEventBinding::DOM_VK_PAGE_DOWN)
   {
     // Prevent the input from handling up/down events, as it may move
     // the cursor to home/end on some systems
@@ -453,10 +453,10 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval)
     bool isOpen = false;
     input->GetPopupOpen(&isOpen);
     if (isOpen) {
-      bool reverse = aKey == nsIDOMKeyEvent::DOM_VK_UP ||
-                      aKey == nsIDOMKeyEvent::DOM_VK_PAGE_UP ? true : false;
-      bool page = aKey == nsIDOMKeyEvent::DOM_VK_PAGE_UP ||
-                    aKey == nsIDOMKeyEvent::DOM_VK_PAGE_DOWN ? true : false;
+      bool reverse = aKey == dom::KeyboardEventBinding::DOM_VK_UP ||
+                      aKey == dom::KeyboardEventBinding::DOM_VK_PAGE_UP ? true : false;
+      bool page = aKey == dom::KeyboardEventBinding::DOM_VK_PAGE_UP ||
+                    aKey == dom::KeyboardEventBinding::DOM_VK_PAGE_DOWN ? true : false;
 
       // Fill in the value of the textbox with whatever is selected in the popup
       // if the completeSelectedIndex attribute is set.  We check this before
@@ -514,13 +514,13 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval)
       // shortcuts for up and down move to the beginning and end of the field
       // otherwise.
       int32_t start, end;
-      if (aKey == nsIDOMKeyEvent::DOM_VK_UP) {
+      if (aKey == dom::KeyboardEventBinding::DOM_VK_UP) {
         input->GetSelectionStart(&start);
         input->GetSelectionEnd(&end);
         if (start > 0 || start != end)
           *_retval = false;
       }
-      else if (aKey == nsIDOMKeyEvent::DOM_VK_DOWN) {
+      else if (aKey == dom::KeyboardEventBinding::DOM_VK_DOWN) {
         nsAutoString text;
         input->GetTextValue(text);
         input->GetSelectionStart(&start);
@@ -560,10 +560,10 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval)
         }
       }
     }
-  } else if (   aKey == nsIDOMKeyEvent::DOM_VK_LEFT
-             || aKey == nsIDOMKeyEvent::DOM_VK_RIGHT
+  } else if (   aKey == dom::KeyboardEventBinding::DOM_VK_LEFT
+             || aKey == dom::KeyboardEventBinding::DOM_VK_RIGHT
 #ifndef XP_MACOSX
-             || aKey == nsIDOMKeyEvent::DOM_VK_HOME
+             || aKey == dom::KeyboardEventBinding::DOM_VK_HOME
 #endif
             )
   {

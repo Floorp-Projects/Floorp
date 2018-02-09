@@ -9,13 +9,11 @@
 
 #include "mozilla/dom/BeforeUnloadEventBinding.h"
 #include "mozilla/dom/Event.h"
-#include "nsIDOMBeforeUnloadEvent.h"
 
 namespace mozilla {
 namespace dom {
 
-class BeforeUnloadEvent : public Event,
-                          public nsIDOMBeforeUnloadEvent
+class BeforeUnloadEvent : public Event
 {
 public:
   BeforeUnloadEvent(EventTarget* aOwner,
@@ -25,6 +23,11 @@ public:
   {
   }
 
+  virtual BeforeUnloadEvent* AsBeforeUnloadEvent() override
+  {
+    return this;
+  }
+
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
     return BeforeUnloadEventBinding::Wrap(aCx, this, aGivenProto);
@@ -32,11 +35,8 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // Forward to Event
-  NS_FORWARD_TO_EVENT
-
-  // nsIDOMBeforeUnloadEvent Interface
-  NS_DECL_NSIDOMBEFOREUNLOADEVENT
+  void GetReturnValue(nsAString& aReturnValue);
+  void SetReturnValue(const nsAString& aReturnValue);
 
 protected:
   ~BeforeUnloadEvent() {}

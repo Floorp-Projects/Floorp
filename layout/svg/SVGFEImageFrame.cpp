@@ -9,11 +9,11 @@
 #include "nsContentUtils.h"
 #include "nsFrame.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsLiteralString.h"
 #include "SVGObserverUtils.h"
 #include "nsSVGFilters.h"
 #include "mozilla/dom/SVGFEImageElement.h"
+#include "mozilla/dom/MutationEventBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -132,7 +132,7 @@ SVGFEImageFrame::AttributeChanged(int32_t  aNameSpaceID,
   // Currently our SMIL implementation does not modify the DOM attributes. Once
   // we implement the SVG 2 SMIL behaviour this can be removed
   // SVGFEImageElement::AfterSetAttr's implementation will be sufficient.
-  if (aModType == nsIDOMMutationEvent::SMIL &&
+  if (aModType == MutationEventBinding::SMIL &&
       aAttribute == nsGkAtoms::href &&
       (aNameSpaceID == kNameSpaceID_XLink ||
        aNameSpaceID == kNameSpaceID_None)) {

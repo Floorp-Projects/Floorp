@@ -389,7 +389,7 @@ TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
 
 /* This routine is needed to provide a bottleneck for typing for logging
    purposes.  Can't use HandleKeyPress() (above) for that since it takes
-   a nsIDOMKeyEvent* parameter.  So instead we pass enough info through
+   a WidgetKeyboardEvent* parameter.  So instead we pass enough info through
    to TypedText() to determine what action to take, but without passing
    an event.
    */

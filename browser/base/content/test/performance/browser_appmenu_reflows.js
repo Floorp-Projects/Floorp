@@ -14,7 +14,7 @@ const EXPECTED_APPMENU_OPEN_REFLOWS = [
   {
     stack: [
       "openPopup@chrome://global/content/bindings/popup.xml",
-      "show/</<@chrome://browser/content/customizableui/panelUI.js",
+      "openPopup/this._openPopupPromise<@resource:///modules/PanelMultiView.jsm",
     ],
   },
 

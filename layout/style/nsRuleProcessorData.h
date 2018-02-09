@@ -636,7 +636,7 @@ struct MOZ_STACK_CLASS AttributeRuleProcessorData :
   nsAtom* mAttribute; // |HasAttributeDependentStyle| for which attribute?
   // non-null if we have the value.
   const nsAttrValue* mOtherValue;
-  int32_t mModType;    // The type of modification (see nsIDOMMutationEvent).
+  int32_t mModType;    // The type of modification (see MutationEvent.webidl).
   bool mAttrHasChanged; // Whether the attribute has already changed.
 };
 

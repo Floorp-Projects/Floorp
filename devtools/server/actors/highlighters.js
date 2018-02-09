@@ -307,7 +307,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
        */
       switch (event.keyCode) {
         // Wider.
-        case Ci.nsIDOMKeyEvent.DOM_VK_LEFT:
+        case event.DOM_VK_LEFT:
           if (!currentNode.parentElement) {
             return;
           }
@@ -315,7 +315,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
           break;
 
         // Narrower.
-        case Ci.nsIDOMKeyEvent.DOM_VK_RIGHT:
+        case event.DOM_VK_RIGHT:
           if (!currentNode.children.length) {
             return;
           }
@@ -335,16 +335,16 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
           break;
 
         // Select the element.
-        case Ci.nsIDOMKeyEvent.DOM_VK_RETURN:
+        case event.DOM_VK_RETURN:
           this._onPick(event);
           return;
 
         // Cancel pick mode.
-        case Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE:
+        case event.DOM_VK_ESCAPE:
           this.cancelPick();
           this._walker.emit("picker-node-canceled");
           return;
-        case Ci.nsIDOMKeyEvent.DOM_VK_C:
+        case event.DOM_VK_C:
           if ((IS_OSX && event.metaKey && event.altKey) ||
             (!IS_OSX && event.ctrlKey && event.shiftKey)) {
             this.cancelPick();

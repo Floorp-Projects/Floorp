@@ -54,7 +54,7 @@
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/TypedEnumBits.h"
 #include "RuleProcessorCache.h"
-#include "nsIDOMMutationEvent.h"
+#include "mozilla/dom/MutationEventBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2622,7 +2622,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(
         aData->mNameSpaceID == kNameSpaceID_None) {
       const nsAttrValue* otherClasses = aData->mOtherValue;
       NS_ASSERTION(otherClasses ||
-                   aData->mModType == nsIDOMMutationEvent::REMOVAL,
+                   aData->mModType == MutationEventBinding::REMOVAL,
                    "All class values should be StoresOwnData and parsed"
                    "via Element::BeforeSetAttr, so available here");
       // For WillChange, enumerate classes that will be removed to see which

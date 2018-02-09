@@ -28,8 +28,10 @@
 #include "nsUTF8Utils.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/KeyboardEvent.h"
 
 using namespace mozilla;
+using mozilla::dom::KeyboardEvent;
 
 //
 // NS_NewMenuBarFrame
@@ -144,14 +146,13 @@ nsMenuBarFrame::ToggleMenuActiveState()
 }
 
 nsMenuFrame*
-nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool aPeek)
+nsMenuBarFrame::FindMenuWithShortcut(KeyboardEvent* aKeyEvent, bool aPeek)
 {
-  uint32_t charCode;
-  aKeyEvent->GetCharCode(&charCode);
+  uint32_t charCode = aKeyEvent->CharCode();
 
   AutoTArray<uint32_t, 10> accessKeys;
   WidgetKeyboardEvent* nativeKeyEvent =
-    aKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
+    aKeyEvent->WidgetEventPtr()->AsKeyboardEvent();
   if (nativeKeyEvent) {
     nativeKeyEvent->GetAccessKeyCandidates(accessKeys);
   }

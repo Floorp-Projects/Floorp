@@ -12,9 +12,13 @@
  * <panelmultiview> element, although they don't need to be, as views can also
  * be imported into the panel from other panels or popup sets.
  *
- * The main view can be declared using the mainViewId attribute, and specific
- * subviews can slide in using the showSubView method. Backwards navigation can
- * be done using the goBack method or through a button in the subview headers.
+ * The panel should be opened asynchronously using the openPopup static method
+ * on the PanelMultiView object. This will display the view specified using the
+ * mainViewId attribute on the contained <panelmultiview> element.
+ *
+ * Specific subviews can slide in using the showSubView method, and backwards
+ * navigation can be done using the goBack method or through a button in the
+ * subview headers.
  *
  * This diagram shows how <panelview> nodes move during navigation:
  *
@@ -47,6 +51,7 @@ this.EXPORTED_SYMBOLS = [
 ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
@@ -134,6 +139,41 @@ this.AssociatedToNode = class {
  * This is associated to <panelmultiview> elements by the panelUI.xml binding.
  */
 this.PanelMultiView = class extends this.AssociatedToNode {
+  /**
+   * Tries to open the specified <panel> and displays the main view specified
+   * with the "mainViewId" attribute on the <panelmultiview> node it contains.
+   *
+   * If the panel does not contain a <panelmultiview>, it is opened directly.
+   * This allows consumers like page actions to accept different panel types.
+   *
+   * @see The non-static openPopup method for details.
+   */
+  static async openPopup(panelNode, ...args) {
+    let panelMultiViewNode = panelNode.querySelector("panelmultiview");
+    if (panelMultiViewNode) {
+      return this.forNode(panelMultiViewNode).openPopup(...args);
+    }
+    panelNode.openPopup(...args);
+    return true;
+  }
+
+  /**
+   * Closes the specified <panel> which contains a <panelmultiview> node.
+   *
+   * If the panel does not contain a <panelmultiview>, it is closed directly.
+   * This allows consumers like page actions to accept different panel types.
+   *
+   * @see The non-static hidePopup method for details.
+   */
+  static hidePopup(panelNode) {
+    let panelMultiViewNode = panelNode.querySelector("panelmultiview");
+    if (panelMultiViewNode) {
+      this.forNode(panelMultiViewNode).hidePopup();
+    } else {
+      panelNode.hidePopup();
+    }
+  }
+
   get _panel() {
     return this.node.parentNode;
   }
@@ -194,7 +234,14 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     return this._currentShowPromise || Promise.resolve();
   }
 
+  constructor(node) {
+    super(node);
+    this._openPopupPromise = Promise.resolve(false);
+    this._openPopupCancelCallback = () => {};
+  }
+
   connect() {
+    this.connected = true;
     this.knownViews = new Set(Array.from(
       this.node.getElementsByTagName("panelview"),
       node => PanelView.forNode(node)));
@@ -264,8 +311,149 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     this._panel.removeEventListener("popupshown", this);
     this._panel.removeEventListener("popuphidden", this);
     this.window.removeEventListener("keydown", this);
-    this.node = this._viewContainer = this._viewStack = this.__dwu =
+    this.node = this._openPopupPromise = this._openPopupCancelCallback =
+      this._viewContainer = this._viewStack = this.__dwu =
       this._panelViewCache = this._transitionDetails = null;
+  }
+
+  /**
+   * Tries to open the panel associated with this PanelMultiView, and displays
+   * the main view specified with the "mainViewId" attribute.
+   *
+   * The hidePopup method can be called while the operation is in progress to
+   * prevent the panel from being displayed. View events may also cancel the
+   * operation, so there is no guarantee that the panel will become visible.
+   *
+   * The "popuphidden" event will be fired either when the operation is canceled
+   * or when the popup is closed later. This event can be used for example to
+   * reset the "open" state of the anchor or tear down temporary panels.
+   *
+   * If this method is called again before the panel is shown, the result
+   * depends on the operation currently in progress. If the operation was not
+   * canceled, the panel is opened using the arguments from the previous call,
+   * and this call is ignored. If the operation was canceled, it will be
+   * retried again using the arguments from this call.
+   *
+   * It's not necessary for the <panelmultiview> binding to be connected when
+   * this method is called, but the containing panel must have its display
+   * turned on, for example it shouldn't have the "hidden" attribute.
+   *
+   * @param args
+   *        Arguments to be forwarded to the openPopup method of the panel.
+   *
+   * @resolves With true as soon as the request to display the panel has been
+   *           sent, or with false if the operation was canceled. The state of
+   *           the panel at this point is not guaranteed. It may be still
+   *           showing, completely shown, or completely hidden.
+   * @rejects If an exception is thrown at any point in the process before the
+   *          request to display the panel is sent.
+   */
+  async openPopup(...args) {
+    // Set up the function that allows hidePopup or a second call to showPopup
+    // to cancel the specific panel opening operation that we're starting below.
+    // This function must be synchronous, meaning we can't use Promise.race,
+    // because hidePopup wants to dispatch the "popuphidden" event synchronously
+    // even if the panel has not been opened yet.
+    let canCancel = true;
+    let cancelCallback = this._openPopupCancelCallback = () => {
+      // If the cancel callback is called and the panel hasn't been prepared
+      // yet, cancel showing it. Setting canCancel to false will prevent the
+      // popup from opening. If the panel has opened by the time the cancel
+      // callback is called, canCancel will be false already, and we will not
+      // fire the "popuphidden" event.
+      if (canCancel && this.node) {
+        canCancel = false;
+        this.dispatchCustomEvent("popuphidden");
+      }
+    };
+
+    // Create a promise that is resolved with the result of the last call to
+    // this method, where errors indicate that the panel was not opened.
+    let openPopupPromise = this._openPopupPromise.catch(() => {
+      return false;
+    });
+
+    // Make the preparation done before showing the panel non-reentrant. The
+    // promise created here will be resolved only after the panel preparation is
+    // completed, even if a cancellation request is received in the meantime.
+    return this._openPopupPromise = openPopupPromise.then(async wasShown => {
+      // The panel may have been destroyed in the meantime.
+      if (!this.node) {
+        return false;
+      }
+      // If the panel has been already opened there is nothing more to do. We
+      // check the actual state of the panel rather than setting some state in
+      // our handler of the "popuphidden" event because this has a lower chance
+      // of locking indefinitely if events aren't raised in the expected order.
+      if (wasShown && ["open", "showing"].includes(this._panel.state)) {
+        return true;
+      }
+      try {
+        // Most of the panel elements in the browser window have their display
+        // turned off for performance reasons, typically by setting the "hidden"
+        // attribute. If the caller has just turned on the display, the XBL
+        // binding for the <panelmultiview> element may still be disconnected.
+        // In this case, give the layout code a chance to run.
+        if (!this.connected) {
+          await BrowserUtils.promiseLayoutFlushed(this.document, "layout",
+                                                  () => {});
+          // The XBL binding must be connected at this point. If this is not the
+          // case, the calling code should be updated to unhide the panel.
+          if (!this.connected) {
+            throw new Error("The binding for the panelmultiview element isn't" +
+                            " connected. The containing panel may still have" +
+                            " its display turned off by the hidden attribute.");
+          }
+        }
+        // (The rest of the asynchronous preparation goes here.)
+      } catch (ex) {
+        cancelCallback();
+        throw ex;
+      }
+      // If a cancellation request was received there is nothing more to do.
+      if (!canCancel || !this.node) {
+        return false;
+      }
+      // We have to set canCancel to false before opening the popup because the
+      // hidePopup method of PanelMultiView can be re-entered by event handlers.
+      // If the openPopup call fails, however, we still have to dispatch the
+      // "popuphidden" event even if canCancel was set to false.
+      try {
+        canCancel = false;
+        this._panel.openPopup(...args);
+        return true;
+      } catch (ex) {
+        this.dispatchCustomEvent("popuphidden");
+        throw ex;
+      }
+    });
+  }
+
+  /**
+   * Closes the panel associated with this PanelMultiView.
+   *
+   * If the openPopup method was called but the panel has not been displayed
+   * yet, the operation is canceled and the panel will not be displayed, but the
+   * "popuphidden" event is fired synchronously anyways.
+   *
+   * This means that by the time this method returns all the operations handled
+   * by the "popuphidden" event are completed, for example resetting the "open"
+   * state of the anchor, and the panel is already invisible.
+   */
+  hidePopup() {
+    if (!this.node) {
+      return;
+    }
+
+    // If we have already reached the _panel.openPopup call in the openPopup
+    // method, we can call hidePopup. Otherwise, we have to cancel the latest
+    // request to open the panel, which will have no effect if the request has
+    // been canceled already.
+    if (["open", "showing"].includes(this._panel.state)) {
+      this._panel.hidePopup();
+    } else {
+      this._openPopupCancelCallback();
+    }
   }
 
   /**

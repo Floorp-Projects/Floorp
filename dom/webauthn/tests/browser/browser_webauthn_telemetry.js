@@ -68,6 +68,7 @@ add_task(async function test_loopback() {
     Services.prefs.setBoolPref("security.webauth.webauthn", true);
     Services.prefs.setBoolPref("security.webauth.webauthn_enable_softtoken", true);
     Services.prefs.setBoolPref("security.webauth.webauthn_enable_usbtoken", false);
+    Services.prefs.setBoolPref("security.webauth.webauthn_testing_allow_direct_attestation", true);
 
     await executeTestPage(testPage);
 

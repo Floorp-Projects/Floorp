@@ -265,10 +265,14 @@ function promisePanelHidden(panelIDOrNode) {
 
 function promisePanelEvent(panelIDOrNode, eventType) {
   return new Promise(resolve => {
-    let panel = typeof(panelIDOrNode) != "string" ? panelIDOrNode :
-                document.getElementById(panelIDOrNode);
-    if (!panel ||
-        (eventType == "popupshown" && panel.state == "open") ||
+    let panel = panelIDOrNode;
+    if (typeof panel == "string") {
+      panel = document.getElementById(panelIDOrNode);
+      if (!panel) {
+        throw new Error(`Panel with ID "${panelIDOrNode}" does not exist.`);
+      }
+    }
+    if ((eventType == "popupshown" && panel.state == "open") ||
         (eventType == "popuphidden" && panel.state == "closed")) {
       executeSoon(resolve);
       return;
