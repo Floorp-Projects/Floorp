@@ -735,14 +735,11 @@ nsPresContext::AppUnitsPerDevPixelChanged()
     mDeviceContext->FlushFontCache();
   }
 
-  if (HasCachedStyleData()) {
-    // All cached style data must be recomputed.
-    MediaFeatureValuesChanged({
-      eRestyle_ForceDescendants,
-      NS_STYLE_HINT_REFLOW,
-      MediaFeatureChangeReason::ResolutionChange
-    });
-  }
+  MediaFeatureValuesChanged({
+    eRestyle_ForceDescendants,
+    NS_STYLE_HINT_REFLOW,
+    MediaFeatureChangeReason::ResolutionChange
+  });
 
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 }
@@ -1406,18 +1403,13 @@ nsPresContext::UpdateEffectiveTextZoom()
 
   mEffectiveTextZoom = newZoom;
 
-  // In case of servo, stylist.device might have already generated the default
-  // computed values with the previous effective text zoom value even if the
-  // pres shell has not initialized yet.
-  if (mDocument->IsStyledByServo() || HasCachedStyleData()) {
-    // Media queries could have changed, since we changed the meaning
-    // of 'em' units in them.
-    MediaFeatureValuesChanged({
-      eRestyle_ForceDescendants,
-      NS_STYLE_HINT_REFLOW,
-      MediaFeatureChangeReason::ZoomChange
-    });
-  }
+  // Media queries could have changed, since we changed the meaning
+  // of 'em' units in them.
+  MediaFeatureValuesChanged({
+    eRestyle_ForceDescendants,
+    NS_STYLE_HINT_REFLOW,
+    MediaFeatureChangeReason::ZoomChange
+  });
 }
 
 float
@@ -1460,13 +1452,12 @@ nsPresContext::SetOverrideDPPX(float aDPPX)
   // SetOverrideDPPX is called during navigations, including history
   // traversals.  In that case, it's typically called with our current value,
   // and we don't need to actually do anything.
-  if (aDPPX != mOverrideDPPX) {
-    mOverrideDPPX = aDPPX;
-
-    if (HasCachedStyleData()) {
-      MediaFeatureValuesChanged({ MediaFeatureChangeReason::ResolutionChange });
-    }
+  if (aDPPX == mOverrideDPPX) {
+    return;
   }
+
+  mOverrideDPPX = aDPPX;
+  MediaFeatureValuesChanged({ MediaFeatureChangeReason::ResolutionChange });
 }
 
 gfxSize
@@ -2210,10 +2201,6 @@ NotifyTabSizeModeChanged(TabParent* aTab, void* aArg)
 void
 nsPresContext::SizeModeChanged(nsSizeMode aSizeMode)
 {
-  if (!HasCachedStyleData()) {
-    return;
-  }
-
   nsContentUtils::CallOnAllRemoteChildren(mDocument->GetWindow(),
                                           NotifyTabSizeModeChanged,
                                           &aSizeMode);
@@ -2784,27 +2771,6 @@ nsPresContext::NotifyDidPaintForSubtree(uint64_t aTransactionId,
 
   NotifyDidPaintSubdocumentCallbackClosure closure = { aTransactionId, aTimeStamp };
   mDocument->EnumerateSubDocuments(nsPresContext::NotifyDidPaintSubdocumentCallback, &closure);
-}
-
-bool
-nsPresContext::HasCachedStyleData()
-{
-  if (!mShell) {
-    return false;
-  }
-
-  if (mShell->StyleSet()->IsGecko()) {
-#ifdef MOZ_OLD_STYLE
-    return mShell->StyleSet()->AsGecko()->HasCachedStyleData();
-#else
-    MOZ_CRASH("old style system disabled");
-#endif
-  }
-
-  // XXXheycam ServoStyleSets do not use the rule tree, so just assume for now
-  // that we need to restyle when e.g. dppx changes assuming we're sufficiently
-  // bootstrapped.
-  return mShell->DidInitialize();
 }
 
 already_AddRefed<nsITimer>
