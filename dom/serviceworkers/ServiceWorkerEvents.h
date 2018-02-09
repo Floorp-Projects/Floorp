@@ -74,7 +74,6 @@ protected:
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_TO_EVENT
 
   void
   SetKeepAliveHandler(ExtensionsHandler* aExtensionsHandler);
@@ -284,8 +283,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ExtendableMessageEvent,
                                                          ExtendableEvent)
 
-  NS_FORWARD_TO_EVENT
-
   virtual JSObject* WrapObjectInternal(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
@@ -309,16 +306,14 @@ public:
 
   void GetSource(Nullable<OwningClientOrServiceWorkerOrMessagePort>& aValue) const;
 
-  NS_IMETHOD GetOrigin(nsAString& aOrigin)
+  void GetOrigin(nsAString& aOrigin) const
   {
     aOrigin = mOrigin;
-    return NS_OK;
   }
 
-  NS_IMETHOD GetLastEventId(nsAString& aLastEventId)
+  void GetLastEventId(nsAString& aLastEventId) const
   {
     aLastEventId = mLastEventId;
-    return NS_OK;
   }
 
   void GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts);
