@@ -31,6 +31,7 @@ var forceCC = true;
 
 var useMozAfterPaint = false;
 var useFNBPaint = false;
+var isFNBPaintPending = false;
 var useHero = false;
 var gPaintWindow = window;
 var gPaintListener = false;
@@ -311,6 +312,10 @@ function plLoadPage() {
   // record which page we are about to open
   TalosParentProfiler.mark("Opening " + pages[pageIndex].url.pathQueryRef);
 
+  if (useFNBPaint) {
+    isFNBPaintPending = true;
+  }
+
   startAndLoadURI(pageName);
 }
 
@@ -392,6 +397,14 @@ var plNextPage = async function() {
     await waitForIdleCallback();
   }
 
+  if (useFNBPaint) {
+    // don't move to next page until we've received fnbpaint
+    if (isFNBPaintPending) {
+      dumpLine("Waiting for fnbpaint");
+      await waitForFNBPaint();
+    }
+  }
+
   if (profilingInfo) {
     await TalosParentProfiler.finishTest();
   }
@@ -446,6 +459,19 @@ function plIdleCallbackSet() {
 
 function plIdleCallbackReceived() {
   isIdleCallbackPending = false;
+}
+
+function waitForFNBPaint() {
+  return new Promise(resolve => {
+    function checkForFNBPaint() {
+      if (!isFNBPaintPending) {
+        resolve();
+      } else {
+        setTimeout(checkForFNBPaint, 200);
+      }
+    }
+    checkForFNBPaint();
+  });
 }
 
 function forceContentGC() {
@@ -618,6 +644,7 @@ function _loadHandler(paint_time = 0) {
 
   if (paint_time !== 0) {
     // window.performance.timing.timeToNonBlankPaint is a timestamp
+    // this may have a value for hero element (also a timestamp)
     end_time = paint_time;
   } else {
     end_time = Date.now();
@@ -645,7 +672,12 @@ function plLoadHandlerMessage(message) {
   // we can record several times per load.
   if (message.json.time !== undefined) {
       paint_time = message.json.time;
+      if (message.json.name == "fnbpaint") {
+        // we've received fnbpaint; no longer pending for this current pageload
+        isFNBPaintPending = false;
+      }
   }
+
   failTimeout.clear();
 
   if ((plPageFlags() & EXECUTE_SCROLL_TEST)) {
