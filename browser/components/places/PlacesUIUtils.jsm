@@ -885,8 +885,8 @@ this.PlacesUIUtils = {
     // Returns true if item really exists, false otherwise.
     function itemExists(aItemId) {
       try {
-        let index = bs.getItemIndex(aItemId);
-        return index > -1;
+        bs.getFolderIdForItem(aItemId);
+        return true;
       } catch (e) {
         return false;
       }

@@ -530,9 +530,6 @@ interface nsINavBookmarksService : nsISupports
   nsIURI getBookmarkURI(in long long aItemId);
 
   /**
-   * Get the index for an item.
-   */
-  long getItemIndex(in long long aItemId);
 
   /**
    * Get the parent folder's id for an item.
