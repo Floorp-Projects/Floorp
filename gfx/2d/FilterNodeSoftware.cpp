@@ -613,20 +613,45 @@ FilterNodeSoftware::GetOutput(const IntRect &aRect)
     return nullptr;
   }
 
-  if (!mCachedRect.Contains(aRect)) {
-    RequestRect(aRect);
-    mCachedOutput = Render(mRequestedRect);
+  IntRect cachedRect;
+  IntRect requestedRect;
+  RefPtr<DataSourceSurface> cachedOutput;
+
+  // Lock the cache and retrieve a cached surface if we have one and it can
+  // satisfy this request, or else request a rect we will compute and cache
+  {
+    MutexAutoLock lock(mCacheMutex);
+
+    if (!mCachedRect.Contains(aRect)) {
+      RequestRect(aRect);
+      requestedRect = mRequestedRect;
+    } else {
+      MOZ_ASSERT(mCachedOutput, "cached rect but no cached output?");
+      cachedRect = mCachedRect;
+      cachedOutput = mCachedOutput;
+    }
+  }
+
+  if (!cachedOutput) {
+    // Compute the output
+    cachedOutput = Render(requestedRect);
+
+    // Update the cache for future requests
+    MutexAutoLock lock(mCacheMutex);
+
+    mCachedOutput = cachedOutput;
     if (!mCachedOutput) {
       mCachedRect = IntRect();
       mRequestedRect = IntRect();
       return nullptr;
     }
-    mCachedRect = mRequestedRect;
+    mCachedRect = requestedRect;
     mRequestedRect = IntRect();
-  } else {
-    MOZ_ASSERT(mCachedOutput, "cached rect but no cached output?");
+
+    cachedRect = mCachedRect;
   }
-  return GetDataSurfaceInRect(mCachedOutput, mCachedRect, aRect, EDGE_MODE_NONE);
+
+  return GetDataSurfaceInRect(cachedOutput, cachedRect, aRect, EDGE_MODE_NONE);
 }
 
 void
@@ -843,12 +868,18 @@ FilterNodeSoftware::FilterInvalidated(FilterNodeSoftware* aFilter)
 void
 FilterNodeSoftware::Invalidate()
 {
+  MutexAutoLock lock(mCacheMutex);
   mCachedOutput = nullptr;
   mCachedRect = IntRect();
   for (std::vector<FilterInvalidationListener*>::iterator it = mInvalidationListeners.begin();
        it != mInvalidationListeners.end(); it++) {
     (*it)->FilterInvalidated(this);
   }
+}
+
+FilterNodeSoftware::FilterNodeSoftware()
+  : mCacheMutex("FilterNodeSoftware::mCacheMutex")
+{
 }
 
 FilterNodeSoftware::~FilterNodeSoftware()
