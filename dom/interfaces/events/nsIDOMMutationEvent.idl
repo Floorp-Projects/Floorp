@@ -9,11 +9,6 @@
 [builtinclass, uuid(30c9997f-bc4c-4890-b890-febb6ae3051b)]
 interface nsIDOMMutationEvent : nsISupports
 {
-  const unsigned short      MODIFICATION       = 1;
-  const unsigned short      ADDITION           = 2;
-  const unsigned short      REMOVAL            = 3;
-  const unsigned short      SMIL               = 4;
-
   readonly attribute nsIDOMNode       relatedNode;
   readonly attribute DOMString        prevValue;
   readonly attribute DOMString        newValue;

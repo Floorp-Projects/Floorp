@@ -11,7 +11,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/DOMStringMapBinding.h"
-#include "nsIDOMMutationEvent.h"
+#include "mozilla/dom/MutationEventBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -256,8 +256,8 @@ nsDOMStringMap::AttributeChanged(nsIDocument *aDocument, Element* aElement,
                                  int32_t aModType,
                                  const nsAttrValue* aOldValue)
 {
-  if ((aModType == nsIDOMMutationEvent::ADDITION ||
-       aModType == nsIDOMMutationEvent::REMOVAL) &&
+  if ((aModType == MutationEventBinding::ADDITION ||
+       aModType == MutationEventBinding::REMOVAL) &&
       aNameSpaceID == kNameSpaceID_None &&
       StringBeginsWith(nsDependentAtomString(aAttribute),
                        NS_LITERAL_STRING("data-"))) {
