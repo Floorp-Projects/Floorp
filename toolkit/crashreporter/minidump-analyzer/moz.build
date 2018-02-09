@@ -31,6 +31,12 @@ else:
         'minidump-analyzer.h',
     ]
 
+    if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CC_TYPE'] == 'gcc':
+        # This allows us to use wmain as the entry point on mingw
+        LDFLAGS += [
+            '-municode',
+        ]
+
 UNIFIED_SOURCES += [
     'minidump-analyzer.cpp',
 ]
