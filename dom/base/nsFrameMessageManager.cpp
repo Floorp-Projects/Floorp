@@ -160,10 +160,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameMessageManager)
   /* nsIContentFrameMessageManager is accessible only in TabChildGlobal. */
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIContentFrameMessageManager,
                                      !mChrome && !mIsProcessManager)
-
-  /* Frame message managers (non-process message managers) support nsIFrameScriptLoader. */
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFrameScriptLoader,
-                                     mChrome && !mIsProcessManager)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameMessageManager)
@@ -384,8 +380,6 @@ nsFrameMessageManager::RemoveWeakMessageListener(const nsAString& aMessage,
   return NS_OK;
 }
 
-// nsIFrameScriptLoader
-
 void
 nsFrameMessageManager::LoadScript(const nsAString& aURL,
                                   bool aAllowDelayedLoad,
@@ -478,31 +472,6 @@ nsFrameMessageManager::GetDelayedScripts(JSContext* aCx,
   }
 
   return NS_OK;
-}
-
-// nsIFrameScriptLoader
-
-NS_IMETHODIMP
-nsFrameMessageManager::LoadFrameScript(const nsAString& aURL,
-                                       bool aAllowDelayedLoad,
-                                       bool aRunInGlobalScope)
-{
-  ErrorResult rv;
-  LoadScript(aURL, aAllowDelayedLoad, aRunInGlobalScope, rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::RemoveDelayedFrameScript(const nsAString& aURL)
-{
-  RemoveDelayedScript(aURL);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::GetDelayedFrameScripts(JSContext* aCx, JS::MutableHandle<JS::Value> aList)
-{
-  return GetDelayedScripts(aCx, aList);
 }
 
 static bool
@@ -1254,9 +1223,10 @@ nsFrameMessageManager::LoadPendingScripts(nsFrameMessageManager* aManager,
   }
 
   for (uint32_t i = 0; i < aManager->mPendingScripts.Length(); ++i) {
-    aChildMM->LoadFrameScript(aManager->mPendingScripts[i],
-                              false,
-                              aManager->mPendingScriptsGlobalStates[i]);
+    aChildMM->LoadScript(aManager->mPendingScripts[i],
+                         false,
+                         aManager->mPendingScriptsGlobalStates[i],
+                         IgnoreErrors());
   }
 }
 

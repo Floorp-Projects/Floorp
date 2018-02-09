@@ -423,30 +423,3 @@ interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
   [notxpcom] nsIContent getOwnerContent();
   [notxpcom] void cacheFrameLoader(in nativeFrameLoader aFrameLoader);
 };
-
-[uuid(bf61446b-ba24-4b1d-88c7-4f94724b9ce1)]
-interface nsIFrameScriptLoader : nsISupports
-{
-  /**
-   * Load a script in the (remote) frame. aURL must be the absolute URL.
-   * data: URLs are also supported. For example data:,dump("foo\n");
-   * If aAllowDelayedLoad is true, script will be loaded when the
-   * remote frame becomes available. Otherwise the script will be loaded
-   * only if the frame is already available.
-   */
-  void loadFrameScript(in AString aURL, in boolean aAllowDelayedLoad,
-                       [optional] in boolean aRunInGlobalScope);
-
-  /**
-   * Removes aURL from the list of scripts which support delayed load.
-   */
-  void removeDelayedFrameScript(in AString aURL);
-
-  /**
-   * Returns all delayed scripts that will be loaded once a (remote)
-   * frame becomes available. The return value is a list of pairs
-   * [<URL>, <WasLoadedInGlobalScope>].
-   */
-  [implicit_jscontext]
-  jsval getDelayedFrameScripts();
-};
