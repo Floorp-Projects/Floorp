@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 

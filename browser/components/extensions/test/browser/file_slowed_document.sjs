@@ -11,8 +11,6 @@ const URL = "file_slowed_document.sjs";
 
 const DELAY = 2 * 1000; // Delay two seconds before completing the request.
 
-const Ci = Components.interfaces;
-
 let nsTimer = Components.Constructor("@mozilla.org/timer;1", "nsITimer", "initWithCallback");
 
 let timer;

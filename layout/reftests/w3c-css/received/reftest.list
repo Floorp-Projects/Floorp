@@ -718,7 +718,7 @@ fuzzy-if(OSX||winWidget,75,404) == css-writing-modes/direction-vlr-003.xht css-w
 fuzzy-if(OSX||winWidget,75,404) == css-writing-modes/direction-vlr-005.xht reference/ref-filled-green-100px-square.xht
 fuzzy-if(OSX||winWidget,75,404) == css-writing-modes/direction-vrl-002.xht css-writing-modes/direction-vrl-002-ref.xht
 fuzzy-if(OSX||winWidget,75,404) == css-writing-modes/direction-vrl-004.xht css-writing-modes/direction-vrl-004-ref.xht
-fails == css-writing-modes/flexbox_align-items-stretch-writing-modes.html css-writing-modes/flexbox_align-items-stretch-writing-modes-ref.html
+== css-writing-modes/flexbox_align-items-stretch-writing-modes.html css-writing-modes/flexbox_align-items-stretch-writing-modes-ref.html
 == css-writing-modes/float-clear-vlr-003.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/float-clear-vlr-005.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/float-clear-vlr-007.xht reference/ref-filled-green-100px-square.xht

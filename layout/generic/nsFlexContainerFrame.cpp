@@ -567,6 +567,15 @@ public:
   // visibility:collapse.
   bool IsStrut() const             { return mIsStrut; }
 
+  // Returns true if this item's inline axis is parallel (or antiparallel)
+  // to the container's main axis. Otherwise (i.e. if this item's inline axis
+  // is orthogonal to the container's main axis), this function returns false.
+  bool IsInlineAxisMainAxis() const { return mIsInlineAxisMainAxis; }
+
+  // Same as above, but for cross axis. Equivalent to !IsInlineAxisMainAxis().
+  // This just exists for convenience/readability at callsites.
+  bool IsInlineAxisCrossAxis() const { return !mIsInlineAxisMainAxis; }
+
   WritingMode GetWritingMode() const { return mWM; }
   uint8_t GetAlignSelf() const     { return mAlignSelf; }
 
@@ -805,15 +814,11 @@ protected:
   void CheckForMinSizeAuto(const ReflowInput& aFlexItemReflowInput,
                            const FlexboxAxisTracker& aAxisTracker);
 
-  // Our frame:
-  nsIFrame* const mFrame;
-
-  // Values that we already know in constructor: (and are hence mostly 'const')
+  // Values that we already know in constructor (and are hence mostly 'const'):
+  nsIFrame* const mFrame; // The flex item's frame.
   const float mFlexGrow;
   const float mFlexShrink;
-
   const nsSize mIntrinsicRatio;
-
   const nsMargin mBorderPadding;
   nsMargin mMargin; // non-const because we need to resolve auto margins
 
@@ -841,6 +846,8 @@ protected:
   // until after main-size has been resolved. In particular, these could share
   // memory with mMainPosn through mAscent, and mIsStretched.
   float mShareOfWeightSoFar;
+
+  const WritingMode mWM; // The flex item's writing mode.
   bool mIsFrozen;
   bool mHadMinViolation;
   bool mHadMaxViolation;
@@ -851,11 +858,11 @@ protected:
   bool mIsStretched; // See IsStretched() documentation
   bool mIsStrut;     // Is this item a "strut" left behind by an element
                      // with visibility:collapse?
+  const bool mIsInlineAxisMainAxis; // See IsInlineAxisMainAxis() documentation
 
   // Does this item need to resolve a min-[width|height]:auto (in main-axis).
   bool mNeedsMinSizeAutoResolution;
 
-  const WritingMode mWM; // The flex item's writing mode.
   uint8_t mAlignSelf; // My "align-self" computed value (with "auto"
                       // swapped out for parent"s "align-items" value,
                       // in our constructor).
@@ -1335,21 +1342,26 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
 
 // Static helper-functions for ResolveAutoFlexBasisAndMinSize():
 // -------------------------------------------------------------
-// Indicates whether the cross-size property is set to something definite.
-// The logic here should be similar to the logic for isAutoWidth/isAutoHeight
+// Indicates whether the cross-size property is set to something definite,
+// for the purpose of intrinsic ratio calculations.
+// The logic here should be similar to the logic for isAutoISize/isAutoBSize
 // in nsFrame::ComputeSizeWithIntrinsicDimensions().
 static bool
 IsCrossSizeDefinite(const ReflowInput& aItemReflowInput,
                     const FlexboxAxisTracker& aAxisTracker)
 {
   const nsStylePosition* pos = aItemReflowInput.mStylePosition;
-  if (aAxisTracker.IsCrossAxisHorizontal()) {
-    return pos->mWidth.GetUnit() != eStyleUnit_Auto;
+  const WritingMode containerWM = aAxisTracker.GetWritingMode();
+
+  if (aAxisTracker.IsColumnOriented()) {
+    // Column-oriented means cross axis is container's inline axis.
+    return pos->ISize(containerWM).GetUnit() != eStyleUnit_Auto;
   }
-  // else, vertical. (We need to use IsAutoHeight() to catch e.g. %-height
-  // applied to indefinite-height containing block, which counts as auto.)
-  nscoord cbHeight = aItemReflowInput.mCBReflowInput->ComputedHeight();
-  return !nsLayoutUtils::IsAutoHeight(pos->mHeight, cbHeight);
+  // Else, we're row-oriented, which means cross axis is container's block
+  // axis. We need to use IsAutoBSize() to catch e.g. %-BSize applied to
+  // indefinite container BSize, which counts as auto.
+  nscoord cbBSize = aItemReflowInput.mCBReflowInput->ComputedBSize();
+  return !nsLayoutUtils::IsAutoBSize(pos->BSize(containerWM), cbBSize);
 }
 
 // If aFlexItem has a definite cross size, this function returns it, for usage
@@ -1521,9 +1533,10 @@ nsFlexContainerFrame::
                                  const ReflowInput& aItemReflowInput,
                                  const FlexboxAxisTracker& aAxisTracker)
 {
-  // (Note: We should never have a used flex-basis of "auto" if our main axis
-  // is horizontal; width values should always be resolvable without reflow.)
-  const bool isMainSizeAuto = (!aAxisTracker.IsMainAxisHorizontal() &&
+  // (Note: We can guarantee that the flex-basis will have already been
+  // resolved if the main axis is the same is the same as the item's inline
+  // axis. Inline-axis values should always be resolvable without reflow.)
+  const bool isMainSizeAuto = (!aFlexItem.IsInlineAxisMainAxis() &&
                                NS_AUTOHEIGHT == aFlexItem.GetFlexBaseSize());
 
   const bool isMainMinSizeAuto = aFlexItem.NeedsMinSizeAutoResolution();
@@ -1554,10 +1567,14 @@ nsFlexContainerFrame::
                                   flexContainerRI->ComputedISize(),
                                   flexContainerRI->ComputedBSize());
     // Is container's cross size "definite"?
-    // (Container's cross size is definite if cross-axis is horizontal, or if
-    // cross-axis is vertical and the cross-size is not NS_AUTOHEIGHT.)
-    if (aAxisTracker.IsCrossAxisHorizontal() ||
+    // - If it's column-oriented, then "yes", because its cross size is its
+    // inline-size which is always definite from its descendants' perspective.
+    // - Otherwise (if it's row-oriented), then we check the actual size
+    // and call it definite if it's not NS_AUTOHEIGHT.
+    if (aAxisTracker.IsColumnOriented() ||
         containerCrossSize != NS_AUTOHEIGHT) {
+      // Container's cross size is "definite", so we can resolve the item's
+      // stretched cross size using that.
       aFlexItem.ResolveStretchedCrossSize(containerCrossSize, aAxisTracker);
     }
   }
@@ -1590,7 +1607,7 @@ nsFlexContainerFrame::
 
   // Measure content, if needed (w/ intrinsic-width method or a reflow)
   if (minSizeNeedsToMeasureContent || flexBasisNeedsToMeasureContent) {
-    if (aAxisTracker.IsMainAxisHorizontal()) {
+    if (aFlexItem.IsInlineAxisMainAxis()) {
       if (minSizeNeedsToMeasureContent) {
         nscoord frameMinISize =
           aFlexItem.Frame()->GetMinISize(aItemReflowInput.mRenderingContext);
@@ -1601,30 +1618,32 @@ nsFlexContainerFrame::
                    "reflow state, for horizontal flexbox. It shouldn't need "
                    "special handling here");
     } else {
-      // If this item is flexible (vertically), or if we're measuring the
-      // 'auto' min-height and our main-size is something else, then we assume
-      // that the computed-height we're reflowing with now could be different
-      // from the one we'll use for this flex item's "actual" reflow later on.
-      // In that case, we need to be sure the flex item treats this as a
-      // vertical resize, even though none of its ancestors are necessarily
-      // being vertically resized.
-      // (Note: We don't have to do this for width, because InitResizeFlags
-      // will always turn on mHResize on when it sees that the computed width
-      // is different from current width, and that's all we need.)
-      bool forceVerticalResizeForMeasuringReflow =
+      // If this item is flexible (in its block axis)...
+      // OR if we're measuring its 'auto' min-BSize, with its main-size (in its
+      // block axis) being something non-"auto"...
+      // THEN: we assume that the computed BSize that we're reflowing with now
+      // could be different from the one we'll use for this flex item's
+      // "actual" reflow later on.  In that case, we need to be sure the flex
+      // item treats this as a block-axis resize (regardless of whether there
+      // are actually any ancestors being resized in that axis).
+      // (Note: We don't have to do this for the inline axis, because
+      // InitResizeFlags will always turn on mIsIResize on when it sees that
+      // the computed ISize is different from current ISize, and that's all we
+      // need.)
+      bool forceBResizeForMeasuringReflow =
         !aFlexItem.IsFrozen() ||         // Is the item flexible?
         !flexBasisNeedsToMeasureContent; // Are we *only* measuring it for
-                                         // 'min-height:auto'?
+                                         // 'min-block-size:auto'?
 
-      nscoord contentHeight =
-        MeasureFlexItemContentHeight(aPresContext, aFlexItem,
-                                     forceVerticalResizeForMeasuringReflow,
-                                     *flexContainerRI);
+      nscoord contentBSize =
+        MeasureFlexItemContentBSize(aPresContext, aFlexItem,
+                                    forceBResizeForMeasuringReflow,
+                                    *flexContainerRI);
       if (minSizeNeedsToMeasureContent) {
-        resolvedMinSize = std::min(resolvedMinSize, contentHeight);
+        resolvedMinSize = std::min(resolvedMinSize, contentBSize);
       }
       if (flexBasisNeedsToMeasureContent) {
-        aFlexItem.SetFlexBaseSizeAndMainSize(contentHeight);
+        aFlexItem.SetFlexBaseSizeAndMainSize(contentBSize);
       }
     }
   }
@@ -1646,7 +1665,7 @@ nsFlexContainerFrame::
  * intrinsic size is marked as dirty (due to a style or DOM change).
  *
  * In particular the computed height may change between measuring reflows due to
- * how the mIsFlexContainerMeasuringReflow flag affects size computation (see
+ * how the mIsFlexContainerMeasuringBSize flag affects size computation (see
  * bug 1336708).
  *
  * Caching it prevents us from doing exponential reflows in cases of deeply
@@ -1658,27 +1677,27 @@ class nsFlexContainerFrame::CachedMeasuringReflowResult
 {
   // Members that are part of the cache key:
   const LogicalSize mAvailableSize;
-  const nscoord mComputedHeight;
+  const nscoord mComputedBSize;
 
   // Members that are part of the cache value:
-  const nscoord mHeight;
+  const nscoord mBSize;
   const nscoord mAscent;
 
 public:
   CachedMeasuringReflowResult(const ReflowInput& aReflowInput,
                               const ReflowOutput& aDesiredSize)
     : mAvailableSize(aReflowInput.AvailableSize())
-    , mComputedHeight(aReflowInput.ComputedHeight())
-    , mHeight(aDesiredSize.Height())
+    , mComputedBSize(aReflowInput.ComputedBSize())
+    , mBSize(aDesiredSize.BSize(aReflowInput.GetWritingMode()))
     , mAscent(aDesiredSize.BlockStartAscent())
   {}
 
   bool IsValidFor(const ReflowInput& aReflowInput) const {
     return mAvailableSize == aReflowInput.AvailableSize() &&
-      mComputedHeight == aReflowInput.ComputedHeight();
+      mComputedBSize == aReflowInput.ComputedBSize();
   }
 
-  nscoord Height() const { return mHeight; }
+  nscoord BSize() const { return mBSize; }
 
   nscoord Ascent() const { return mAscent; }
 };
@@ -1687,7 +1706,7 @@ NS_DECLARE_FRAME_PROPERTY_DELETABLE(CachedFlexMeasuringReflow,
                                     CachedMeasuringReflowResult);
 
 const CachedMeasuringReflowResult&
-nsFlexContainerFrame::MeasureAscentAndHeightForFlexItem(
+nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
   FlexItem& aItem,
   nsPresContext* aPresContext,
   ReflowInput& aChildReflowInput)
@@ -1738,43 +1757,43 @@ nsFlexContainerFrame::MarkIntrinsicISizesDirty()
 
 nscoord
 nsFlexContainerFrame::
-  MeasureFlexItemContentHeight(nsPresContext* aPresContext,
-                               FlexItem& aFlexItem,
-                               bool aForceVerticalResizeForMeasuringReflow,
-                               const ReflowInput& aParentReflowInput)
+  MeasureFlexItemContentBSize(nsPresContext* aPresContext,
+                              FlexItem& aFlexItem,
+                              bool aForceBResizeForMeasuringReflow,
+                              const ReflowInput& aParentReflowInput)
 {
   // Set up a reflow state for measuring the flex item's auto-height:
   WritingMode wm = aFlexItem.Frame()->GetWritingMode();
   LogicalSize availSize = aParentReflowInput.ComputedSize(wm);
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
   ReflowInput
-    childRIForMeasuringHeight(aPresContext, aParentReflowInput,
-                              aFlexItem.Frame(), availSize,
-                              nullptr, ReflowInput::CALLER_WILL_INIT);
-  childRIForMeasuringHeight.mFlags.mIsFlexContainerMeasuringHeight = true;
-  childRIForMeasuringHeight.Init(aPresContext);
+    childRIForMeasuringBSize(aPresContext, aParentReflowInput,
+                             aFlexItem.Frame(), availSize,
+                             nullptr, ReflowInput::CALLER_WILL_INIT);
+  childRIForMeasuringBSize.mFlags.mIsFlexContainerMeasuringBSize = true;
+  childRIForMeasuringBSize.Init(aPresContext);
 
   if (aFlexItem.IsStretched()) {
-    childRIForMeasuringHeight.SetComputedWidth(aFlexItem.GetCrossSize());
-    childRIForMeasuringHeight.SetHResize(true);
+    childRIForMeasuringBSize.SetComputedISize(aFlexItem.GetCrossSize());
+    childRIForMeasuringBSize.SetIResize(true);
   }
 
-  if (aForceVerticalResizeForMeasuringReflow) {
-    childRIForMeasuringHeight.SetVResize(true);
+  if (aForceBResizeForMeasuringReflow) {
+    childRIForMeasuringBSize.SetBResize(true);
   }
 
   const CachedMeasuringReflowResult& reflowResult =
-    MeasureAscentAndHeightForFlexItem(aFlexItem, aPresContext,
-                                      childRIForMeasuringHeight);
+    MeasureAscentAndBSizeForFlexItem(aFlexItem, aPresContext,
+                                     childRIForMeasuringBSize);
 
   aFlexItem.SetAscent(reflowResult.Ascent());
 
-  // Subtract border/padding in vertical axis, to get _just_
-  // the effective computed value of the "height" property.
-  nscoord childDesiredHeight = reflowResult.Height() -
-    childRIForMeasuringHeight.ComputedPhysicalBorderPadding().TopBottom();
+  // Subtract border/padding in block axis, to get _just_
+  // the effective computed value of the BSize property.
+  nscoord childDesiredBSize = reflowResult.BSize() -
+    childRIForMeasuringBSize.ComputedLogicalBorderPadding().BStartEnd(wm);
 
-  return std::max(0, childDesiredHeight);
+  return std::max(0, childDesiredBSize);
 }
 
 FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput,
@@ -1798,14 +1817,16 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput,
     mCrossPosn(0),
     mAscent(0),
     mShareOfWeightSoFar(0.0f),
+    mWM(aFlexItemReflowInput.GetWritingMode()),
     mIsFrozen(false),
     mHadMinViolation(false),
     mHadMaxViolation(false),
     mHadMeasuringReflow(false),
     mIsStretched(false),
     mIsStrut(false),
+    mIsInlineAxisMainAxis(aAxisTracker.IsRowOriented() !=
+                          aAxisTracker.GetWritingMode().IsOrthogonalTo(mWM))
     // mNeedsMinSizeAutoResolution is initialized in CheckForMinSizeAuto()
-    mWM(aFlexItemReflowInput.GetWritingMode())
     // mAlignSelf, see below
 {
   MOZ_ASSERT(mFrame, "expecting a non-null child frame");
@@ -1893,14 +1914,17 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
     mCrossPosn(0),
     mAscent(0),
     mShareOfWeightSoFar(0.0f),
+    // Struts don't do layout, so its WM doesn't matter at this point. So, we
+    // just share container's WM for simplicity:
+    mWM(aContainerWM),
     mIsFrozen(true),
     mHadMinViolation(false),
     mHadMaxViolation(false),
     mHadMeasuringReflow(false),
     mIsStretched(false),
     mIsStrut(true), // (this is the constructor for making struts, after all)
+    mIsInlineAxisMainAxis(true), // (doesn't matter b/c we're not doing layout)
     mNeedsMinSizeAutoResolution(false),
-    mWM(aContainerWM),
     mAlignSelf(NS_STYLE_ALIGN_FLEX_START)
 {
   MOZ_ASSERT(mFrame, "expecting a non-null child frame");
@@ -2017,15 +2041,28 @@ FlexItem::CanMainSizeInfluenceCrossSize(
     return true;
   }
 
-  if (aAxisTracker.IsCrossAxisHorizontal()) {
-    // If the cross axis is horizontal, then changes to the item's main size
-    // (height) can't influence its cross size (width), if the item is a block
-    // with a horizontal writing-mode.
-    // XXXdholbert This doesn't account for vertical writing-modes, items with
-    // aspect ratios, items that are multicol elements, & items that are
-    // multi-line vertical flex containers. In all of those cases, a change to
-    // the height could influence the width.
-    return false;
+  if (IsInlineAxisCrossAxis()) {
+    // If we get here, this function is really asking: "can changes to this
+    // item's block size have an influence on its inline size"?  For blocks and
+    // tables, the answer is "no".
+    if (mFrame->IsBlockFrame() ||
+        mFrame->IsTableWrapperFrame()) {
+      // XXXdholbert (Maybe use an IsFrameOfType query or something more
+      // general to test this across all frame types? For now, I'm just
+      // optimizing for block and table, since those are common containers that
+      // can contain arbitrarily-large subtrees (and that reliably have ISize
+      // being unaffected by BSize, per CSS2).  So optimizing away needless
+      // relayout is possible & especially valuable for these containers.)
+      return false;
+    }
+    // Other opt-outs can go here, as they're identified as being useful
+    // (particularly for containers where an extra reflow is expensive). But in
+    // general, we have to assume that a flexed BSize *could* influence the
+    // ISize. Some examples where this can definitely happen:
+    // * Intrinsically-sized multicol with fixed-ISize columns, which adds
+    // columns (i.e. grows in inline axis) depending on its block size.
+    // * Intrinsically-sized multi-line column-oriented flex container, which
+    // adds flex lines (i.e. grows in inline axis) depending on its block size.
   }
 
   // Default assumption, if we haven't proven otherwise: the resolved main size
@@ -3997,19 +4034,10 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
   ReflowInput& aChildReflowInput,
   FlexItem& aItem)
 {
-  if (aAxisTracker.IsCrossAxisHorizontal()) {
-    MOZ_ASSERT(aItem.HasIntrinsicRatio(),
-               "For now, caller's CanMainSizeInfluenceCrossSize check should "
-               "only allow us to get here for items with intrinsic ratio");
-    // XXXdholbert When we finish support for vertical writing-modes,
-    // (in bug 1079155 or a dependency), we'll relax the horizontal check in
-    // CanMainSizeInfluenceCrossSize, and this function will need to be able
-    // to measure the baseline & width (given our resolved height)
-    // of vertical-writing-mode flex items here.
-    // For now, we only expect to get here for items with an intrinsic aspect
-    // ratio; and for those items, we can just read the size off of the reflow
-    // state, without performing reflow.
-    aItem.SetCrossSize(aChildReflowInput.ComputedWidth());
+  // If cross axis is the item's inline axis, just use ISize from reflow state,
+  // and don't bother with a full reflow.
+  if (aItem.IsInlineAxisCrossAxis()) {
+    aItem.SetCrossSize(aChildReflowInput.ComputedISize());
     return;
   }
 
@@ -4018,16 +4046,18 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
 
   if (aItem.GetAlignSelf() == NS_STYLE_ALIGN_STRETCH) {
     // This item's got "align-self: stretch", so we probably imposed a
-    // stretched computed height on it during its previous reflow. We're
-    // not imposing that height for *this* measuring reflow, so we need to
-    // tell it to treat this reflow as a vertical resize (regardless of
-    // whether any of its ancestors are being resized).
-    aChildReflowInput.SetVResize(true);
+    // stretched computed cross-size on it during its previous
+    // reflow. We're not imposing that BSize for *this* "measuring" reflow, so
+    // we need to tell it to treat this reflow as a resize in its block axis
+    // (regardless of whether any of its ancestors are actually being resized).
+    // (Note: we know that the cross axis is the item's *block* axis -- if it
+    // weren't, then we would've taken the early-return above.)
+    aChildReflowInput.SetBResize(true);
   }
 
   // Potentially reflow the item, and get the sizing info.
   const CachedMeasuringReflowResult& reflowResult =
-    MeasureAscentAndHeightForFlexItem(aItem, aPresContext, aChildReflowInput);
+    MeasureAscentAndBSizeForFlexItem(aItem, aPresContext, aChildReflowInput);
 
   // Save the sizing info that we learned from this reflow
   // -----------------------------------------------------
@@ -4039,7 +4069,7 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
   // so we don't bother with making aAxisTracker pick the cross-axis component
   // for us.)
   nscoord crossAxisBorderPadding = aItem.GetBorderPadding().TopBottom();
-  if (reflowResult.Height() < crossAxisBorderPadding) {
+  if (reflowResult.BSize() < crossAxisBorderPadding) {
     // Child's requested size isn't large enough for its border/padding!
     // This is OK for the trivial nsFrame::Reflow() impl, but other frame
     // classes should know better. So, if we get here, the child had better be
@@ -4052,7 +4082,7 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
     aItem.SetCrossSize(0);
   } else {
     // (normal case)
-    aItem.SetCrossSize(reflowResult.Height() - crossAxisBorderPadding);
+    aItem.SetCrossSize(reflowResult.BSize() - crossAxisBorderPadding);
   }
 
   aItem.SetAscent(reflowResult.Ascent());

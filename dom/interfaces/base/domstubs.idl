@@ -55,6 +55,3 @@ interface nsIDOMHTMLHeadElement;
 
 // Range
 interface nsIDOMRange;
-
-// Crypto
-interface nsIDOMCrypto;

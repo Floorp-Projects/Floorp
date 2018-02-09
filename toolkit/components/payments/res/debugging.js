@@ -143,6 +143,41 @@ let ADDRESSES_1 = {
   },
 };
 
+let BASIC_CARDS_1 = {
+  "53f9d009aed2": {
+    "cc-number": "************5461",
+    "guid": "53f9d009aed2",
+    "version": 1,
+    "timeCreated": 1505240896213,
+    "timeLastModified": 1515609524588,
+    "timeLastUsed": 0,
+    "timesUsed": 0,
+    "cc-name": "John Smith",
+    "cc-exp-month": 6,
+    "cc-exp-year": 2024,
+    "cc-given-name": "John",
+    "cc-additional-name": "",
+    "cc-family-name": "Smith",
+    "cc-exp": "2024-06",
+  },
+  "9h5d4h6f4d1s": {
+    "cc-number": "************0954",
+    "guid": "9h5d4h6f4d1s",
+    "version": 1,
+    "timeCreated": 1517890536491,
+    "timeLastModified": 1517890564518,
+    "timeLastUsed": 0,
+    "timesUsed": 0,
+    "cc-name": "Jane Doe",
+    "cc-exp-month": 5,
+    "cc-exp-year": 2023,
+    "cc-given-name": "Jane",
+    "cc-additional-name": "",
+    "cc-family-name": "Doe",
+    "cc-exp": "2023-05",
+  },
+};
+
 let buttonActions = {
   debugFrame() {
     window.parent.paymentRequest.sendMessageToChrome("debugFrame");
@@ -155,6 +190,16 @@ let buttonActions = {
     // `selectedShippingAddress` foreign key (FK) reference.
     paymentDialog.setStateFromParent({
       savedAddresses,
+    });
+  },
+
+  delete1Card() {
+    let savedBasicCards = Object.assign({}, requestStore.getState().savedBasicCards);
+    delete savedBasicCards[Object.keys(savedBasicCards)[0]];
+    // Use setStateFromParent since it ensures there is no dangling
+    // `selectedPaymentCard` foreign key (FK) reference.
+    paymentDialog.setStateFromParent({
+      savedBasicCards,
     });
   },
 
@@ -175,6 +220,10 @@ let buttonActions = {
 
   setAddresses1() {
     paymentDialog.setStateFromParent({savedAddresses: ADDRESSES_1});
+  },
+
+  setBasicCards1() {
+    paymentDialog.setStateFromParent({savedBasicCards: BASIC_CARDS_1});
   },
 
   setRequest1() {

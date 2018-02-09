@@ -19,7 +19,6 @@ XPIDL_SOURCES += [
     'nsIDOMClientRect.idl',
     'nsIDOMClientRectList.idl',
     'nsIDOMConstructor.idl',
-    'nsIDOMCrypto.idl',
     'nsIDOMGlobalPropertyInitializer.idl',
     'nsIDOMHistory.idl',
     'nsIDOMModalContentWindow.idl',

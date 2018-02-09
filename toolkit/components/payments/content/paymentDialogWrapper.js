@@ -15,6 +15,9 @@ const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+ChromeUtils.defineModuleGetter(this, "MasterPassword",
+                               "resource://formautofill/MasterPassword.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "profileStorage", () => {
   let profileStorage;
   try {
@@ -40,7 +43,13 @@ var paymentDialogWrapper = {
     Ci.nsISupportsWeakReference,
   ]),
 
-  _convertProfileAddressToPaymentAddress(guid) {
+  /**
+   * Note: This method is async because profileStorage plans to become async.
+   *
+   * @param {string} guid
+   * @returns {nsIPaymentAddress}
+   */
+  async _convertProfileAddressToPaymentAddress(guid) {
     let addressData = profileStorage.addresses.get(guid);
     if (!addressData) {
       throw new Error(`Shipping address not found: ${guid}`);
@@ -58,6 +67,41 @@ var paymentDialogWrapper = {
     });
 
     return address;
+  },
+
+  /**
+   * @param {string} guid The GUID of the basic card record from storage.
+   * @param {string} cardSecurityCode The associated card security code (CVV/CCV/etc.)
+   * @throws if the user cancels entering their master password or an error decrypting
+   * @returns {nsIBasicCardResponseData?} returns response data or null (if the
+   *                                      master password dialog was cancelled);
+   */
+  async _convertProfileBasicCardToPaymentMethodData(guid, cardSecurityCode) {
+    let cardData = profileStorage.creditCards.get(guid);
+    if (!cardData) {
+      throw new Error(`Basic card not found in storage: ${guid}`);
+    }
+
+    let cardNumber;
+    try {
+      cardNumber = await MasterPassword.decrypt(cardData["cc-number-encrypted"], true);
+    } catch (ex) {
+      if (ex.result != Cr.NS_ERROR_ABORT) {
+        throw ex;
+      }
+      // User canceled master password entry
+      return null;
+    }
+
+    let methodData = this.createBasicCardResponseData({
+      cardholderName: cardData["cc-name"],
+      cardNumber,
+      expiryMonth: cardData["cc-exp-month"].toString().padStart(2, "0"),
+      expiryYear: cardData["cc-exp-year"].toString(),
+      cardSecurityCode,
+    });
+
+    return methodData;
   },
 
   init(requestId, frame) {
@@ -248,6 +292,26 @@ var paymentDialogWrapper = {
     window.close();
   },
 
+  async onPay({
+    selectedPaymentCardGUID: paymentCardGUID,
+    selectedPaymentCardSecurityCode: cardSecurityCode,
+  }) {
+    let methodData = await this._convertProfileBasicCardToPaymentMethodData(paymentCardGUID,
+                                                                            cardSecurityCode);
+
+    if (!methodData) {
+      // TODO (Bug 1429265/Bug 1429205): Handle when a user hits cancel on the
+      // Master Password dialog.
+      Cu.reportError("Bug 1429265/Bug 1429205: User canceled master password entry");
+      return;
+    }
+
+    this.pay({
+      methodName: "basic-card",
+      methodData,
+    });
+  },
+
   pay({
     payerName,
     payerEmail,
@@ -255,20 +319,19 @@ var paymentDialogWrapper = {
     methodName,
     methodData,
   }) {
-    let basicCardData = this.createBasicCardResponseData(methodData);
     const showResponse = this.createShowResponse({
       acceptStatus: Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
       payerName,
       payerEmail,
       payerPhone,
       methodName,
-      methodData: basicCardData,
+      methodData,
     });
     paymentSrv.respondPayment(showResponse);
   },
 
-  onChangeShippingAddress({shippingAddressGUID}) {
-    let address = this._convertProfileAddressToPaymentAddress(shippingAddressGUID);
+  async onChangeShippingAddress({shippingAddressGUID}) {
+    let address = await this._convertProfileAddressToPaymentAddress(shippingAddressGUID);
     paymentSrv.changeShippingAddress(this.request.requestId, address);
   },
 
@@ -311,7 +374,7 @@ var paymentDialogWrapper = {
         break;
       }
       case "pay": {
-        this.pay(data);
+        this.onPay(data);
         break;
       }
     }

@@ -12,6 +12,7 @@ var EXPORTED_SYMBOLS = ["ACTIONS", "TPS"];
 var module = this;
 
 // Global modules
+ChromeUtils.import("resource://formautofill/FormAutofillSync.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -37,6 +38,7 @@ ChromeUtils.import("resource://tps/logger.jsm");
 // Module wrappers for tests
 ChromeUtils.import("resource://tps/modules/addons.jsm");
 ChromeUtils.import("resource://tps/modules/bookmarks.jsm");
+ChromeUtils.import("resource://tps/modules/formautofill.jsm");
 ChromeUtils.import("resource://tps/modules/forms.jsm");
 ChromeUtils.import("resource://tps/modules/history.jsm");
 ChromeUtils.import("resource://tps/modules/passwords.jsm");
@@ -571,6 +573,78 @@ var TPS = {
         " on bookmarks");
     } catch (e) {
       await DumpBookmarks();
+      throw (e);
+    }
+  },
+
+  async HandleAddresses(addresses, action) {
+    try {
+      for (let address of addresses) {
+        Logger.logInfo("executing action " + action.toUpperCase() +
+                      " on address " + JSON.stringify(address));
+        let addressOb = new Address(address);
+        switch (action) {
+          case ACTION_ADD:
+            addressOb.Create();
+            break;
+          case ACTION_MODIFY:
+            addressOb.Update();
+            break;
+          case ACTION_VERIFY:
+            Logger.AssertTrue(addressOb.Find(), "address not found");
+            break;
+          case ACTION_VERIFY_NOT:
+            Logger.AssertTrue(!addressOb.Find(),
+              "address found, but it shouldn't exist");
+            break;
+          case ACTION_DELETE:
+            Logger.AssertTrue(addressOb.Find(), "address not found");
+            addressOb.Remove();
+            break;
+          default:
+            Logger.AssertTrue(false, "invalid action: " + action);
+        }
+      }
+      Logger.logPass("executing action " + action.toUpperCase() +
+                     " on addresses");
+    } catch (e) {
+      DumpAddresses();
+      throw (e);
+    }
+  },
+
+  async HandleCreditCards(creditCards, action) {
+    try {
+      for (let creditCard of creditCards) {
+        Logger.logInfo("executing action " + action.toUpperCase() +
+                      " on creditCard " + JSON.stringify(creditCard));
+        let creditCardOb = new CreditCard(creditCard);
+        switch (action) {
+          case ACTION_ADD:
+            creditCardOb.Create();
+            break;
+          case ACTION_MODIFY:
+            creditCardOb.Update();
+            break;
+          case ACTION_VERIFY:
+            Logger.AssertTrue(creditCardOb.Find(), "creditCard not found");
+            break;
+          case ACTION_VERIFY_NOT:
+            Logger.AssertTrue(!creditCardOb.Find(),
+              "creditCard found, but it shouldn't exist");
+            break;
+          case ACTION_DELETE:
+            Logger.AssertTrue(creditCardOb.Find(), "creditCard not found");
+            creditCardOb.Remove();
+            break;
+          default:
+            Logger.AssertTrue(false, "invalid action: " + action);
+        }
+      }
+      Logger.logPass("executing action " + action.toUpperCase() +
+                     " on creditCards");
+    } catch (e) {
+      DumpCreditCards();
       throw (e);
     }
   },
@@ -1191,6 +1265,24 @@ var Addons = {
   }
 };
 
+var Addresses = {
+  async add(addresses) {
+    await this.HandleAddresses(addresses, ACTION_ADD);
+  },
+  async modify(addresses) {
+    await this.HandleAddresses(addresses, ACTION_MODIFY);
+  },
+  async delete(addresses) {
+    await this.HandleAddresses(addresses, ACTION_DELETE);
+  },
+  async verify(addresses) {
+    await this.HandleAddresses(addresses, ACTION_VERIFY);
+  },
+  async verifyNot(addresses) {
+    await this.HandleAddresses(addresses, ACTION_VERIFY_NOT);
+  }
+};
+
 var Bookmarks = {
   async add(bookmarks) {
     await TPS.HandleBookmarks(bookmarks, ACTION_ADD);
@@ -1209,6 +1301,24 @@ var Bookmarks = {
   },
   skipValidation() {
     TPS.shouldValidateBookmarks = false;
+  }
+};
+
+var CreditCards = {
+  async add(creditCards) {
+    await this.HandleCreditCards(creditCards, ACTION_ADD);
+  },
+  async modify(creditCards) {
+    await this.HandleCreditCards(creditCards, ACTION_MODIFY);
+  },
+  async delete(creditCards) {
+    await this.HandleCreditCards(creditCards, ACTION_DELETE);
+  },
+  async verify(creditCards) {
+    await this.HandleCreditCards(creditCards, ACTION_VERIFY);
+  },
+  async verifyNot(creditCards) {
+    await this.HandleCreditCards(creditCards, ACTION_VERIFY_NOT);
   }
 };
 

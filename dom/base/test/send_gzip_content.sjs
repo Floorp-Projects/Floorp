@@ -1,6 +1,3 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 function gzipCompressString(string, obs) {
 
   let scs = Cc["@mozilla.org/streamConverters;1"]

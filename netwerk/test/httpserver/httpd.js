@@ -40,10 +40,6 @@ this.EXPORTED_SYMBOLS = [
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-const Cu = Components.utils;
 const CC = Components.Constructor;
 
 const PR_UINT32_MAX = Math.pow(2, 32) - 1;

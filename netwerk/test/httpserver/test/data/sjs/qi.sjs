@@ -1,5 +1,3 @@
-const Ci = Components.interfaces;
-
 function handleRequest(request, response)
 {
   var exstr, qid;

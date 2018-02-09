@@ -65,7 +65,6 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
     return this.popupBox.querySelector(":scope > [selected]");
   }
 
-
   /**
    * This is the only supported method of changing the selected option. Do not
    * manipulate the `selected` property or attribute on options directly.
@@ -110,13 +109,16 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
     if (event.button != 0) {
       return;
     }
+    // Cache the state of .open since the payment-method-picker change handler
+    // may cause onBlur to change .open to false and cause !this.open to change.
+    let isOpen = this.open;
 
     let option = event.target.closest(".rich-option");
-    if (this.open && option && !option.matches(".rich-select-selected-clone") && !option.selected) {
+    if (isOpen && option && !option.matches(".rich-select-selected-clone") && !option.selected) {
       this.selectedOption = option;
       this._dispatchChangeEvent();
     }
-    this.open = !this.open;
+    this.open = !isOpen;
   }
 
   onKeyDown(event) {
