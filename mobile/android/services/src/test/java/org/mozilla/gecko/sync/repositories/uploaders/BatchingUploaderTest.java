@@ -160,6 +160,10 @@ public class BatchingUploaderTest {
         }
 
         @Override
+        public void onBatchCommitted() {
+        }
+
+        @Override
         public RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor) {
             return this;
         }

@@ -4,8 +4,7 @@
 
 /* globals dump */
 
-const { Cu } = require("chrome");
-const { BrowserTestUtils } = Cu.import("resource://testing-common/BrowserTestUtils.jsm", {});
+const { BrowserTestUtils } = require("resource://testing-common/BrowserTestUtils.jsm");
 const Services = require("Services");
 const { waitForDelayedStartupFinished } = require("devtools/client/performance/test/helpers/wait-utils");
 const { gDevTools } = require("devtools/client/framework/devtools");

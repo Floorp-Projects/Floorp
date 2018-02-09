@@ -12,7 +12,7 @@ function waitForDeviceClosed() {
   info("Checking that getUserMedia streams are no longer in use.");
 
   let temp = {};
-  Cu.import("resource:///modules/webrtcUI.jsm", temp);
+  ChromeUtils.import("resource:///modules/webrtcUI.jsm", temp);
   let webrtcUI = temp.webrtcUI;
 
   if (!webrtcUI.showGlobalIndicator)

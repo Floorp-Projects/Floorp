@@ -6,7 +6,7 @@
  * Test encoding a simple message.
  */
 
-const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
 const QR = require("devtools/shared/qrcode/index");
 

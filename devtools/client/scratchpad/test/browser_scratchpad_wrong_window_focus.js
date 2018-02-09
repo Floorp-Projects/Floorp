@@ -29,7 +29,7 @@ function test()
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
     openScratchpad(function () {
       let sw = gScratchpadWindow;
-      let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+      let {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
       let {TargetFactory} = require("devtools/client/framework/target");
 
       openScratchpad(function () {

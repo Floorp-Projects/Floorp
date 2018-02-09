@@ -3,7 +3,7 @@
 
 "use strict";
 
-var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
+var { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", {});
 var { require } = BrowserLoader({
   baseURI: "resource://devtools/client/memory/",
   window

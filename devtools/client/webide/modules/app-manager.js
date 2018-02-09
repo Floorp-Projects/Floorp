@@ -6,9 +6,9 @@ const {Cu} = require("chrome");
 
 const {TargetFactory} = require("devtools/client/framework/target");
 const Services = require("Services");
-const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
+const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
 const EventEmitter = require("devtools/shared/old-event-emitter");
-const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
+const {OS} = require("resource://gre/modules/osfile.jsm");
 const {AppProjects} = require("devtools/client/webide/modules/app-projects");
 const TabStore = require("devtools/client/webide/modules/tab-store");
 const {AppValidator} = require("devtools/client/webide/modules/app-validator");
@@ -17,7 +17,7 @@ const {getDeviceFront} = require("devtools/shared/fronts/device");
 const {getPreferenceFront} = require("devtools/shared/fronts/preference");
 const {Task} = require("devtools/shared/task");
 const {RuntimeScanners, RuntimeTypes} = require("devtools/client/webide/modules/runtimes");
-const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+const {NetUtil} = require("resource://gre/modules/NetUtil.jsm");
 const Telemetry = require("devtools/client/shared/telemetry");
 
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");

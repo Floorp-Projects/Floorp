@@ -77,8 +77,8 @@ described in the [README] can hold Firefox-specific configuration,
 such as which Firefox binary to use, additional preferences to set,
 and of course which log level to use.
 
-[`moz:firefoxOptions`]: ../README.md#firefox-capabilities
-[README]: ../README.md
+[`moz:firefoxOptions`]: https://searchfox.org/mozilla-central/source/testing/geckodriver/README.md#firefox-capabilities
+[README]: https://searchfox.org/mozilla-central/source/testing/geckodriver/README.md
 
 Each client has its own way of specifying capabilities, and some clients
 include “helpers” for providing browser-specific configuration.

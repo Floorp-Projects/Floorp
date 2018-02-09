@@ -6,7 +6,7 @@
 // into a HeapSnapshot.
 
 if (typeof Debugger != "function") {
-  const { addDebuggerToGlobal } = Cu.import("resource://gre/modules/jsdebugger.jsm", {});
+  const { addDebuggerToGlobal } = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm", {});
   addDebuggerToGlobal(this);
 }
 

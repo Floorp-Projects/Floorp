@@ -9,7 +9,7 @@
 
 // The following rejection should not be left uncaught. This test has been
 // whitelisted until the issue is fixed.
-Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
+ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
 PromiseTestUtils.expectUncaughtRejection(/NS_ERROR_NOT_INITIALIZED/);
 
 const TEST_URL = URL_ROOT + "doc_markup_links.html";

@@ -138,15 +138,15 @@ add_task(async function test_processIncoming_error() {
 
     equal(fullPing.uid, "f".repeat(32)); // as setup by SyncTestingInfrastructure
     deepEqual(pingPayload.failureReason, {
-      name: "othererror",
-      error: "error.engine.reason.record_download_fail"
+      name: "httperror",
+      code: 500,
     });
 
     equal(pingPayload.engines.length, 1);
     equal(pingPayload.engines[0].name, "bookmarks");
     deepEqual(pingPayload.engines[0].failureReason, {
-      name: "othererror",
-      error: "error.engine.reason.record_download_fail"
+      name: "httperror",
+      code: 500,
     });
 
   } finally {
@@ -318,8 +318,8 @@ add_task(async function test_sync_partialUpload() {
     } catch (e) {}
     // It would be nice if we had a more descriptive error for this...
     let uploadFailureError = {
-      name: "othererror",
-      error: "error.engine.reason.record_upload_fail"
+      name: "httperror",
+      code: 500,
     };
 
     ok(!!ping);

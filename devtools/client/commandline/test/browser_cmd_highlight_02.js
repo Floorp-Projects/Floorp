@@ -35,7 +35,7 @@ function test() {
 
 function getHighlighterNumber() {
   return ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
-    const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     return require("devtools/shared/gcli/commands/highlight").highlighters.length;
   });
 }

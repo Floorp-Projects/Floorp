@@ -9,6 +9,11 @@ import unittest
 import re
 
 from compare_locales import parser
+from compare_locales.parser import (
+    Comment,
+    Junk,
+    Whitespace,
+)
 from compare_locales.tests import ParserTestMixin
 
 
@@ -30,17 +35,17 @@ class TestDTD(ParserTestMixin, unittest.TestCase):
 '''
     quoteRef = (
         ('good.one', 'one'),
-        ('Whitespace', '\n'),
-        ('Junk', '<!ENTITY bad.one "bad " quote">\n'),
+        (Whitespace, '\n'),
+        (Junk, '<!ENTITY bad.one "bad " quote">\n'),
         ('good.two', 'two'),
-        ('Whitespace', '\n'),
-        ('Junk', '<!ENTITY bad.two "bad "quoted" word">\n'),
+        (Whitespace, '\n'),
+        (Junk, '<!ENTITY bad.two "bad "quoted" word">\n'),
         ('good.three', 'three'),
-        ('Whitespace', '\n'),
+        (Whitespace, '\n'),
         ('good.four', 'good \' quote'),
-        ('Whitespace', '\n'),
+        (Whitespace, '\n'),
         ('good.five', 'good \'quoted\' word'),
-        ('Whitespace', '\n'),)
+        (Whitespace, '\n'),)
 
     def test_quotes(self):
         self._test(self.quoteContent, self.quoteRef)
@@ -69,17 +74,17 @@ class TestDTD(ParserTestMixin, unittest.TestCase):
 ''',
                    (
                        ('first', 'string'),
-                       ('Whitespace', '\n'),
+                       (Whitespace, '\n'),
                        ('second', 'string'),
-                       ('Whitespace', '\n'),
-                       ('Comment', 'out'),
-                       ('Whitespace', '\n')))
+                       (Whitespace, '\n'),
+                       (Comment, 'out'),
+                       (Whitespace, '\n')))
 
     def test_license_header(self):
         p = parser.getParser('foo.dtd')
         p.readContents(self.resource('triple-license.dtd'))
         entities = list(p.walk())
-        self.assert_(isinstance(entities[0], parser.Comment))
+        self.assertIsInstance(entities[0], parser.Comment)
         self.assertIn('MPL', entities[0].all)
         e = entities[2]
         self.assert_(isinstance(e, parser.Entity))
@@ -107,17 +112,17 @@ class TestDTD(ParserTestMixin, unittest.TestCase):
 
     def test_trailing_whitespace(self):
         self._test('<!ENTITY foo.label "stuff">\n  \n',
-                   (('foo.label', 'stuff'), ('Whitespace', '\n  \n')))
+                   (('foo.label', 'stuff'), (Whitespace, '\n  \n')))
 
     def test_unicode_comment(self):
         self._test('<!-- \xe5\x8f\x96 -->',
-                   (('Comment', u'\u53d6'),))
+                   ((Comment, u'\u53d6'),))
 
     def test_empty_file(self):
         self._test('', tuple())
-        self._test('\n', (('Whitespace', '\n'),))
-        self._test('\n\n', (('Whitespace', '\n\n'),))
-        self._test(' \n\n', (('Whitespace', ' \n\n'),))
+        self._test('\n', ((Whitespace, '\n'),))
+        self._test('\n\n', ((Whitespace, '\n\n'),))
+        self._test(' \n\n', ((Whitespace, ' \n\n'),))
 
     def test_positions(self):
         self.parser.readContents('''\
@@ -176,6 +181,33 @@ escaped value">
         entity = next(entities)
         self.assertEqual(entity.raw_val, '&unknownEntity;')
         self.assertEqual(entity.val, '&unknownEntity;')
+
+    def test_comment_val(self):
+        self.parser.readContents('''\
+<!-- comment
+spanning lines -->  <!--
+-->
+<!-- last line -->
+''')
+        entities = self.parser.walk()
+
+        entity = next(entities)
+        self.assertIsInstance(entity, parser.Comment)
+        self.assertEqual(entity.val, ' comment\nspanning lines ')
+        entity = next(entities)
+        self.assertIsInstance(entity, parser.Whitespace)
+
+        entity = next(entities)
+        self.assertIsInstance(entity, parser.Comment)
+        self.assertEqual(entity.val, '\n')
+        entity = next(entities)
+        self.assertIsInstance(entity, parser.Whitespace)
+
+        entity = next(entities)
+        self.assertIsInstance(entity, parser.Comment)
+        self.assertEqual(entity.val, ' last line ')
+        entity = next(entities)
+        self.assertIsInstance(entity, parser.Whitespace)
 
 
 if __name__ == '__main__':

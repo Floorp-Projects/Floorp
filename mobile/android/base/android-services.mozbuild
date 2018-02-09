@@ -1075,6 +1075,7 @@ sync_java_files = [TOPSRCDIR + '/mobile/android/services/src/main/java/org/mozil
     'sync/synchronizer/ServerLocalSynchronizer.java',
     'sync/synchronizer/ServerLocalSynchronizerSession.java',
     'sync/synchronizer/SessionNotBegunException.java',
+    'sync/synchronizer/StoreBatchTracker.java',
     'sync/synchronizer/Synchronizer.java',
     'sync/synchronizer/SynchronizerDelegate.java',
     'sync/synchronizer/SynchronizerSession.java',

@@ -8,7 +8,7 @@
 // corresponding DOM nodes mutate
 
 // Have to use the same timer functions used by the inspector.
-const {clearTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
+const {clearTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
 
 const TEST_URL = URL_ROOT + "doc_markup_flashing.html";
 

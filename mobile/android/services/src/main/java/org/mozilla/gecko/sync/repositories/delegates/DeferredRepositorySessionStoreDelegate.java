@@ -74,4 +74,14 @@ public class DeferredRepositorySessionStoreDelegate implements
       }
     });
   }
+
+  @Override
+  public void onBatchCommitted() {
+    executor.execute(new Runnable() {
+      @Override
+      public void run() {
+        inner.onBatchCommitted();
+      }
+    });
+  }
 }

@@ -11,7 +11,7 @@ try {
 
   // Encapsulate in its own scope to allows loading this frame script more than once.
   (function () {
-    const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
     const DevToolsUtils = require("devtools/shared/DevToolsUtils");
     const { dumpn } = DevToolsUtils;

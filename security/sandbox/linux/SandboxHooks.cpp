@@ -14,6 +14,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/inotify.h>
+#ifdef MOZ_X11
+#include <X11/Xlib.h>
+#endif
 
 // Signal number used to enable seccomp on each thread.
 extern mozilla::Atomic<int> gSeccompTsyncBroadcastSignum;
@@ -121,3 +124,17 @@ inotify_init1(int flags)
   errno = ENOSYS;
   return -1;
 }
+
+#ifdef MOZ_X11
+// We're already preventing the use of X11 MIT-SHM like this in
+// widget/gtk/mozgtk/mozgtk.c because of bug 1271100, but that's not
+// quite enough: sometimes libXext can be preloaded, so we have to
+// defeat that with our own preload library.  (With just the mozgtk
+// interposition, we saw crashes when we blocked the SysV IPC
+// syscalls; see bug 1376910 comment #14.)
+extern "C" MOZ_EXPORT Bool
+XShmQueryExtension(Display* aDisplay)
+{
+  return False;
+}
+#endif

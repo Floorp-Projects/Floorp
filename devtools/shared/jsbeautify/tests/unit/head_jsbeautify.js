@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
 var beautify = require("devtools/shared/jsbeautify/beautify");
 var SanityTest = require('devtools/shared/jsbeautify/lib/sanitytest');

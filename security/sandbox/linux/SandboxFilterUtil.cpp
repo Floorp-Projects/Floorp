@@ -39,7 +39,7 @@ SandboxPolicyBase::EvaluateSyscall(int aSysno) const {
       Arg<int> call(0);
       UniquePtr<Caser<int>> acc(new Caser<int>(Switch(call)));
       for (int i = SYS_SOCKET; i <= SYS_SENDMMSG; ++i) {
-        auto thisCase = EvaluateSocketCall(i);
+        auto thisCase = EvaluateSocketCall(i, false);
         // Optimize out cases that are equal to the default.
         if (thisCase) {
           acc.reset(new Caser<int>(acc->Case(i, *thisCase)));
@@ -65,7 +65,7 @@ SandboxPolicyBase::EvaluateSyscall(int aSysno) const {
 #endif // __NR_socketcall
 #define DISPATCH_SOCKETCALL(sysnum, socketnum)                       \
     case sysnum:                                                     \
-      return EvaluateSocketCall(socketnum).valueOr(InvalidSyscall())
+      return EvaluateSocketCall(socketnum, true).valueOr(InvalidSyscall())
 #ifdef __NR_socket
       DISPATCH_SOCKETCALL(__NR_socket,      SYS_SOCKET);
       DISPATCH_SOCKETCALL(__NR_bind,        SYS_BIND);
