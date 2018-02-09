@@ -6,8 +6,8 @@
   -->
 <window title="Textbox type='number' test" width="500" height="600"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <hbox>
   <textbox id="n1" type="number" size="4"/>
@@ -47,8 +47,6 @@ function doTests() {
   testValsMinMax(n4, "initial n4", -2, -8, 18);
   testValsMinMax(n5, "initial n5", -10, -10, -3);
   testValsMinMax(n6, "initial n6", 12, 12, 12);
-
-  ok(n1.spinButtons != null && n1.spinButtons.localName == "spinbuttons", "spinButtons set");
 
   // test changing the value
   n1.value = "1700";
@@ -93,67 +91,19 @@ function doTests() {
   n1.max = 22;
   testValsMinMax(n1, "set integer max,", 22, 8, 22);
 
-  // test increase and decrease via the keyboard and the spinbuttons
-  testIncreaseDecrease(n1, "integer", 1, 0, 8, 22);
-
-  // UI tests
-  n1.min = 5;
-  n1.max = 15;
-  n1.value = 5;
-  n1.focus();
-
-  var sb = n1.spinButtons;
-  var sbbottom = sb.getBoundingClientRect().bottom - sb.getBoundingClientRect().top - 2;
-
-  synthesizeKey("VK_UP", {});
-  testVals(n1, "key up", 6);
-
-  synthesizeKey("VK_DOWN", {});
-  testVals(n1, "key down", 5);
-
-  synthesizeMouse(sb, 2, 2, {});
-  testVals(n1, "spinbuttons up", 6);
-  synthesizeMouse(sb, 2, sbbottom, {});
-  testVals(n1, "spinbuttons down", 5);
-
-  n1.value = 15;
-  synthesizeKey("VK_UP", {});
-  testVals(n1, "key up at max", 15);
-  synthesizeMouse(sb, 2, 2, {});
-  testVals(n1, "spinbuttons up at max", 15);
-
-  n1.value = 5;
-  synthesizeKey("VK_DOWN", {});
-  testVals(n1, "key down at min", 5);
-  synthesizeMouse(sb, 2, sbbottom, {});
-  testVals(n1, "spinbuttons down at min", 5);
-
   // check read only state
   n1.readOnly = true;
   n1.min = -10;
   n1.max = 15;
   n1.value = 12;
+  n1.inputField.focus();
   // no events should fire and no changes should occur when the field is read only
   synthesizeKeyExpectEvent("VK_UP", { }, n1, "!change", "key up read only");
   is(n1.value, "12", "key up read only value");
   synthesizeKeyExpectEvent("VK_DOWN", { }, n1, "!change", "key down read only");
   is(n1.value, "12", "key down read only value");
 
-  synthesizeMouseExpectEvent(sb, 2, 2, { }, n1, "!change", "mouse up read only");
-  is(n1.value, "12", "mouse up read only value");
-  synthesizeMouseExpectEvent(sb, 2, sbbottom, { }, n1, "!change", "mouse down read only");
-  is(n1.value, "12", "mouse down read only value");
-
   n1.readOnly = false;
-  n1.disabled = true;
-  synthesizeMouseExpectEvent(sb, 2, 2, { }, n1, "!change", "mouse up disabled");
-  is(n1.value, "12", "mouse up disabled value");
-  synthesizeMouseExpectEvent(sb, 2, sbbottom, { }, n1, "!change", "mouse down disabled");
-  is(n1.value, "12", "mouse down disabled value");
-
-  var nsbrect = $("n8").spinButtons.getBoundingClientRect();
-  ok(nsbrect.left == 0 && nsbrect.top == 0 && nsbrect.right == 0, nsbrect.bottom == 0,
-     "hidespinbuttons");
 
   var n9 = $("n9");
   is(n9.value, "0", "initial value");
@@ -200,38 +150,6 @@ function testValsMinMax(nb, name, valueNumber, min, max, valueFieldNumber) {
   testVals(nb, name, valueNumber, valueFieldNumber);
   SimpleTest.is(nb.min, min, name + " min is " + min);
   SimpleTest.is(nb.max, max, name + " max is " + max);
-}
-
-function testIncreaseDecrease(nb, testid, increment, fixedCount, min, max) {
-  testid += " ";
-
-  nb.focus();
-  nb.value = min;
-
-  // pressing the cursor up and down keys should adjust the value
-  synthesizeKeyExpectEvent("VK_UP", { }, nb, "change", testid + "key up");
-  is(nb.value, String(min + increment), testid + "key up");
-  nb.value = max;
-  synthesizeKeyExpectEvent("VK_UP", { }, nb, "!change", testid + "key up at max");
-  is(nb.value, String(max), testid + "key up at max");
-  synthesizeKeyExpectEvent("VK_DOWN", { }, nb, "change", testid + "key down");
-  is(nb.value, String(max - increment), testid + "key down");
-  nb.value = min;
-  synthesizeKeyExpectEvent("VK_DOWN", { }, nb, "!change", testid + "key down at min");
-  is(nb.value, String(min), testid + "key down at min");
-
-  // check pressing the spinbutton arrows
-  var sb = nb.spinButtons;
-  var sbbottom = sb.getBoundingClientRect().bottom - sb.getBoundingClientRect().top - 2;
-  nb.value = min;
-  synthesizeMouseExpectEvent(sb, 2, 2, { }, nb, "change", testid + "mouse up");
-  is(nb.value, String(min + increment), testid + "mouse up");
-  nb.value = max;
-  synthesizeMouseExpectEvent(sb, 2, 2, { }, nb, "!change", testid + "mouse up at max");
-  synthesizeMouseExpectEvent(sb, 2, sbbottom, { }, nb, "change", testid + "mouse down");
-  is(nb.value, String(max - increment), testid + "mouse down");
-  nb.value = min;
-  synthesizeMouseExpectEvent(sb, 2, sbbottom, { }, nb, "!change", testid + "mouse down at min");
 }
 
 SimpleTest.waitForFocus(doTests);

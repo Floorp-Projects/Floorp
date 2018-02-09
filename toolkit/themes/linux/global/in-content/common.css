@@ -81,10 +81,6 @@ html|input[type="checkbox"]:-moz-focusring + html|label:before {
   outline: 1px dotted;
 }
 
-xul|spinbuttons {
-  -moz-appearance: none;
-}
-
 xul|treechildren::-moz-tree-row(multicol, odd) {
   background-color: var(--in-content-box-background-odd);
 }
