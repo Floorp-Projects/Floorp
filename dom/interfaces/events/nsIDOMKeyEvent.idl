@@ -225,34 +225,8 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
   // for compatibility with the other web browsers on Windows.
   const unsigned long DOM_VK_WIN_OEM_CLEAR  = 0xFE;
 
-  readonly attribute unsigned long    charCode;
-  readonly attribute unsigned long    keyCode;
-
-  readonly attribute boolean          altKey;
-  readonly attribute boolean          ctrlKey;
-  readonly attribute boolean          shiftKey;
-  readonly attribute boolean          metaKey;
-
-  void                      initKeyEvent(in DOMString typeArg,
-                                         in boolean canBubbleArg,
-                                         in boolean cancelableArg,
-                                         in mozIDOMWindow viewArg,
-                                         in boolean ctrlKeyArg,
-                                         in boolean altKeyArg,
-                                         in boolean shiftKeyArg,
-                                         in boolean metaKeyArg,
-                                         in unsigned long keyCodeArg,
-                                         in unsigned long charCodeArg);
-
-  bool getModifierState(in DOMString keyArg);
-
   const unsigned long DOM_KEY_LOCATION_STANDARD = 0x00;
   const unsigned long DOM_KEY_LOCATION_LEFT     = 0x01;
   const unsigned long DOM_KEY_LOCATION_RIGHT    = 0x02;
   const unsigned long DOM_KEY_LOCATION_NUMPAD   = 0x03;
-
-  readonly attribute unsigned long location;
-  readonly attribute boolean       repeat;
-
-  readonly attribute DOMString key;
 };
