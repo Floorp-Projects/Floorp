@@ -39,7 +39,7 @@ async function setupAddressStorage() {
 
 add_task(async function check_autocomplete_on_autofocus_field() {
   await setupAddressStorage();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({primary: address.organization, secondary: address["street-address"]})

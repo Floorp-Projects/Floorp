@@ -46,7 +46,7 @@ add_task(async function test_popup_direction() {
 
     let popupShown = waitForNextPopup();
     input.focus();
-    synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+    synthesizeKey("KEY_ArrowDown", {});
     await popupShown;
 
     let popupState = await new Promise(resolve => getPopupState(resolve));

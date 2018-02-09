@@ -30,7 +30,7 @@ function test() {
   var i = 0;
   while (!window.oTarget && i < 100) {
     ++i;
-    synthesizeKey("KEY_Tab", {code: "Tab"});
+    synthesizeKey("KEY_Tab", {});
   }
 
   if (i >= 100) {

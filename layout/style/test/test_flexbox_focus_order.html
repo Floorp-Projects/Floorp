@@ -60,7 +60,7 @@ function doTest() {
   // And then we advance focus across the focusable things in the flex container
   // and check that we traverse them in the expected order:
   for (let expectedId of gExpectedFocusedIds) {
-    synthesizeKey("KEY_Tab", {code: "Tab"});
+    synthesizeKey("KEY_Tab", {});
     is(document.activeElement, document.getElementById(expectedId),
        "expecting element '#" + expectedId + "' to be focused");
   }

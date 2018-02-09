@@ -101,7 +101,7 @@ add_task(async function downloads_open_invalid_id() {
   let win = window.open(url);
   await extension.awaitMessage("page-ready");
 
-  synthesizeKey("a", {code: "KeyA"}, win);
+  synthesizeKey("a", {}, win);
   let result = await extension.awaitMessage("download-open.result");
 
   is(result.success, false, "Opening download fails.");
