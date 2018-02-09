@@ -658,7 +658,7 @@ waitForAllPaints(() => {
     await ensureElementRemoval(grandParent);
   });
 
-  add_task_if_omta_enabled(async function no_restyling_compositor_animations_in_visiblily_hidden_element() {
+  add_task_if_omta_enabled(async function no_restyling_compositor_animations_in_visibility_hidden_element() {
     var div = addDiv(null,
      { style: 'animation: opacity 100s; visibility: hidden' });
     var animation = div.getAnimations()[0];
@@ -727,7 +727,7 @@ waitForAllPaints(() => {
     await ensureElementRemoval(parentElement);
   });
 
-  add_task(async function no_restyling_main_thread_animations_in_visiblily_hidden_element() {
+  add_task(async function no_restyling_main_thread_animations_in_visibility_hidden_element() {
     var div = addDiv(null,
      { style: 'animation: background-color 100s; visibility: hidden' });
     var animation = div.getAnimations()[0];
