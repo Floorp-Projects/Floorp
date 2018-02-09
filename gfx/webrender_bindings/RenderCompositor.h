@@ -33,7 +33,6 @@ public:
   RenderCompositor(RefPtr<widget::CompositorWidget>&& aWidget);
   virtual ~RenderCompositor();
 
-  virtual bool Destroy() = 0;
   virtual bool BeginFrame() = 0;
   virtual void EndFrame() = 0;
   virtual void Pause() = 0;
