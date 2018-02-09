@@ -12,8 +12,9 @@
   list-style-image: url("chrome://browser/skin/preferences/in-content/no-search-bar.svg");
 }
 
-#searchBarShownRadio {
-  /* Allow a little visual space to separate the radio from the image above it. */
+#searchBarShownRadio,
+#showSearchSuggestionsFirstCheckbox {
+  /* A little space to separate these from the elements above them. */
   margin-top: 10px;
 }
 
