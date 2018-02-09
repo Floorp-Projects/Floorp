@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "आप अंत तक आ गए हैं. {provider} से और शीर्ष घटनाओं के लिए कुछ समय में पुनः आइए. इंतज़ार नहीं कर सकते? वेब से और प्रमुख घटनाएं ढूंढने के लिए एक लोकप्रिय विषय चुनें.",
   "manual_migration_explanation2": "Firefox को किसी अन्य ब्राउज़र के पुस्तचिह्नों, इतिहास और पासवर्डों के साथ आज़माएं.",
   "manual_migration_cancel_button": "नहीं शुक्रिया",
-  "manual_migration_import_button": "अब आयात करें"
+  "manual_migration_import_button": "अब आयात करें",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

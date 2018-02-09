@@ -9,7 +9,7 @@ import {Screenshots} from "lib/Screenshots.jsm";
 const FAKE_FAVICON = "data987";
 const FAKE_FAVICON_SIZE = 128;
 const FAKE_FRECENCY = 200;
-const FAKE_LINKS = new Array(TOP_SITES_DEFAULT_ROWS * TOP_SITES_MAX_SITES_PER_ROW).fill(null).map((v, i) => ({
+const FAKE_LINKS = new Array(2 * TOP_SITES_MAX_SITES_PER_ROW).fill(null).map((v, i) => ({
   frecency: FAKE_FRECENCY,
   url: `http://www.site${i}.com`
 }));
@@ -344,7 +344,7 @@ describe("Top Sites Feed", () => {
 
         const sites = await feed.getLinksWithDefaults();
 
-        assert.lengthOf(sites, TOP_SITES_DEFAULT_ROWS * TOP_SITES_MAX_SITES_PER_ROW);
+        assert.lengthOf(sites, 2 * TOP_SITES_MAX_SITES_PER_ROW);
         assert.equal(sites[0].url, fakeNewTabUtils.pinnedLinks.links[0].url);
         assert.equal(sites[1].url, fakeNewTabUtils.pinnedLinks.links[1].url);
         assert.equal(sites[0].hostname, sites[1].hostname);
@@ -657,17 +657,21 @@ describe("Top Sites Feed", () => {
       const site4 = {url: "example.biz"};
       const site5 = {url: "example.info"};
       const site6 = {url: "example.news"};
-      fakeNewTabUtils.pinnedLinks.links = [site1, site2, site3, site4, site5, site6];
+      const site7 = {url: "example.lol"};
+      const site8 = {url: "example.golf"};
+      fakeNewTabUtils.pinnedLinks.links = [site1, site2, site3, site4, site5, site6, site7, site8];
       feed.store.state.Prefs.values.topSitesRows = 1;
       const site = {url: "foo.bar", label: "foo"};
       feed.insert({data: {site}});
-      assert.equal(fakeNewTabUtils.pinnedLinks.pin.callCount, 6);
+      assert.equal(fakeNewTabUtils.pinnedLinks.pin.callCount, 8);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 0);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site1, 1);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site2, 2);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site3, 3);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site4, 4);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site5, 5);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site6, 6);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site7, 7);
     });
   });
   describe("#pin", () => {

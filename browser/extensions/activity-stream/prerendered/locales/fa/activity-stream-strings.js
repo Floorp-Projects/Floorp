@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "فعلا تموم شد. بعدا دوباره سر بزن تا مطالب جدید از {provider} ببینی. نمی‌تونی صبر کنی؟ یک موضوع محبوب رو انتخاب کن تا مطالب جالب مرتبط از سراسر دنیا رو پیدا کنی.",
   "manual_migration_explanation2": "فایرفاکس را با نشانک‌ها،‌ تاریخچه‌ها و کلمات عبور از سایر مرورگر ها تجربه کنید.",
   "manual_migration_cancel_button": "نه ممنون",
-  "manual_migration_import_button": "هم‌اکنون وارد شوند"
+  "manual_migration_import_button": "هم‌اکنون وارد شوند",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

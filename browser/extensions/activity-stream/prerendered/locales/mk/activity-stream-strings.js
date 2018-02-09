@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Имате видено сѐ! Навратете се подоцна за нови содржини од {provider}. Не можете да чекате? Изберете популарна тема и откријте уште одлични содржини ширум Интернет.",
   "manual_migration_explanation2": "Пробајте го Firefox со обележувачите, историјата и лозинките на друг прелистувач.",
   "manual_migration_cancel_button": "Не, благодарам",
-  "manual_migration_import_button": "Увези сега"
+  "manual_migration_import_button": "Увези сега",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

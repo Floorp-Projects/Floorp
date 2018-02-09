@@ -44,7 +44,7 @@ describe("User Domain Affinity Provider", () => {
         executeQuery: () => ({root: {childCount: 1, getChild: index => ({uri: "www.somedomain.org", accessCount: 1})}})
       }
     });
-    global.Components.classes["@mozilla.org/browser/nav-history-service;1"] = {
+    global.Cc["@mozilla.org/browser/nav-history-service;1"] = {
       getService() {
         return global.PlacesUtils.history;
       }

@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "You’ve caught up. Check back later for more top stories from {provider}. Can’t wait? Select a popular topic to find more great stories from around the web.",
   "manual_migration_explanation2": "Ƴeewndo Firefox wonndude e maantore ɗee, aslol kam e finndeeji iwde e wanngorde woɗnde.",
   "manual_migration_cancel_button": "Alaa, moƴƴii",
-  "manual_migration_import_button": "Jiggo Jooni"
+  "manual_migration_import_button": "Jiggo Jooni",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

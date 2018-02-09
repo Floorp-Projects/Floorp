@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "התעדכנת בכל הסיפורים. כדאי לנסות שוב מאוחר יותר כדי לקבל עוד סיפורים מובילים מאת {provider}. לא רוצה לחכות? ניתן לבחור נושא נפוץ כדי למצוא עוד סיפורים נפלאים מרחבי הרשת.",
   "manual_migration_explanation2": "ניתן להתנסות ב־Firefox עם הסימניות, ההיסטוריה והססמאות מדפדפן אחר.",
   "manual_migration_cancel_button": "לא תודה",
-  "manual_migration_import_button": "ייבוא כעת"
+  "manual_migration_import_button": "ייבוא כעת",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

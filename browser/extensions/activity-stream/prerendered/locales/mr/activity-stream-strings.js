@@ -97,5 +97,7 @@ window.gActivityStreamStrings = {
   "manual_migration_explanation2": "Try Firefox with the bookmarks, history and passwords from another browser.",
   "manual_migration_cancel_button": "No Thanks",
   "manual_migration_import_button": "Import Now",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again.",
   "settings_pane_body": "नवीन टॅब उघडल्यानंतर काय दिसायला हवे ते निवडा."
 };

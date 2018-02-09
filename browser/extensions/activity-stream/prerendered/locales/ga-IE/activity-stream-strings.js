@@ -97,6 +97,8 @@ window.gActivityStreamStrings = {
   "manual_migration_explanation2": "Try Firefox with the bookmarks, history and passwords from another browser.",
   "manual_migration_cancel_button": "No Thanks",
   "manual_migration_import_button": "Import Now",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again.",
   "settings_pane_body": "Roghnaigh na rudaí a fheicfidh tú nuair a osclóidh tú cluaisín nua.",
   "settings_pane_pocketstories_header": "Barrscéalta",
   "settings_pane_pocketstories_body": "Le Pocket, ball de theaghlach Mozilla, beidh tú ábalta teacht ar ábhar den chéad scoth go héasca.",
