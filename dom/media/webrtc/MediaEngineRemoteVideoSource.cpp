@@ -317,6 +317,7 @@ MediaEngineRemoteVideoSource::UpdateSingleSource(
       LOG(("Video device %d allocated", mCaptureIndex));
       break;
 
+    case kAllocated:
     case kStarted:
       {
         size_t index = mHandleIds.NoIndex;
@@ -351,13 +352,15 @@ MediaEngineRemoteVideoSource::UpdateSingleSource(
         LOG(("ChooseCapability(kFeasibility) for mCapability --"));
 
         if (mCapability != mLastCapability) {
-          camera::GetChildAndCall(&camera::CamerasChild::StopCapture,
-                                  mCapEngine, mCaptureIndex);
-          if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture,
-                                      mCapEngine, mCaptureIndex, mCapability,
-                                      this)) {
-            LOG(("StartCapture failed"));
-            return NS_ERROR_FAILURE;
+          if (mState == kStarted) {
+            camera::GetChildAndCall(&camera::CamerasChild::StopCapture,
+                                    mCapEngine, mCaptureIndex);
+            if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture,
+                                        mCapEngine, mCaptureIndex, mCapability,
+                                        this)) {
+              LOG(("StartCapture failed"));
+              return NS_ERROR_FAILURE;
+            }
           }
           SetLastCapability(mCapability);
         }
