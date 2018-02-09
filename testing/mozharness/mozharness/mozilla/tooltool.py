@@ -4,7 +4,6 @@ import sys
 
 from mozharness.base.errors import PythonErrorList
 from mozharness.base.log import ERROR, FATAL
-from mozharness.mozilla.proxxy import Proxxy
 
 TooltoolErrorList = PythonErrorList + [{
     'substr': 'ERROR - ', 'level': ERROR
@@ -72,12 +71,8 @@ class TooltoolMixin(object):
             return url if url.endswith('/') else (url + '/')
         default_urls = [add_slash(u) for u in default_urls]
 
-        # proxxy-ify
-        proxxy = Proxxy(self.config, self.log_obj)
-        proxxy_urls = proxxy.get_proxies_and_urls(default_urls)
-
-        for proxyied_url in proxxy_urls:
-            cmd.extend(['--tooltool-url' if self.topsrcdir else '--url', proxyied_url])
+        for url in default_urls:
+            cmd.extend(['--tooltool-url' if self.topsrcdir else '--url', url])
 
         # handle authentication file, if given
         auth_file = self._get_auth_file()
