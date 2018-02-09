@@ -55,7 +55,6 @@
 #include "nsIDOMSimpleGestureEvent.h"
 #include "nsIDOMText.h"
 #include "nsIDOMTimeRanges.h"
-#include "nsIDOMTransitionEvent.h"
 #include "nsIDOMUIEvent.h"
 #include "nsIDOMValidityState.h"
 #include "nsIDOMWheelEvent.h"
@@ -141,7 +140,6 @@
 #include "mozilla/dom/TextBinding.h"
 #include "mozilla/dom/TimeEventBinding.h"
 #include "mozilla/dom/TimeRangesBinding.h"
-#include "mozilla/dom/TransitionEventBinding.h"
 #include "mozilla/dom/TreeBoxObjectBinding.h"
 #include "mozilla/dom/UIEventBinding.h"
 #include "mozilla/dom/ValidityStateBinding.h"
@@ -261,7 +259,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(SimpleGestureEvent),
   DEFINE_SHIM(Text),
   DEFINE_SHIM(TimeRanges),
-  DEFINE_SHIM(TransitionEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsITreeBoxObject, TreeBoxObject),
   DEFINE_SHIM(UIEvent),
   DEFINE_SHIM(ValidityState),
