@@ -21,3 +21,13 @@ var SubscribeHandler = {
     this._feedWriter.close();
   }
 };
+
+SubscribeHandler.init();
+
+window.onload = function() {
+  SubscribeHandler.writeContent();
+};
+
+window.onunload = function() {
+  SubscribeHandler.uninit();
+};
