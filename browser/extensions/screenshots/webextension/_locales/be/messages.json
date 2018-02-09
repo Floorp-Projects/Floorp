@@ -44,11 +44,31 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "Уключана “не будзе запамінаць гісторыю”."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Вы выкарыстоўваеце Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Зацягванне было выключана."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Спасылка скапіявана"
   },
   "notificationLinkCopiedDetails": {
     "message": "Спасылка на ваш здымак была скапіявана ў буфер абмену. Націсніце $META_KEY$-V для ўстаўкі.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Капіраваць"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Скрыншот скапіраваны"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Скрыншот скапіраваны ў буфер абмену. Націсніце $META_KEY$-V, каб уставіць.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

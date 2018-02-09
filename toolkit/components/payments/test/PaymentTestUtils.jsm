@@ -87,6 +87,9 @@ this.PaymentTestUtils = {
     basicCard: {
       supportedMethods: "basic-card",
     },
+    bobPay: {
+      supportedMethods: "https://www.example.com/bobpay",
+    },
   },
 
   /**
@@ -98,6 +101,84 @@ this.PaymentTestUtils = {
         label: "Total due",
         amount: { currency: "USD", value: "60.00" },
       },
+    },
+    twoDisplayItems: {
+      total: {
+        label: "Total due",
+        amount: { currency: "USD", value: "32.00" },
+      },
+      displayItems: [
+        {
+          label: "First",
+          amount: { currency: "USD", value: "1" },
+        },
+        {
+          label: "Second",
+          amount: { currency: "USD", value: "2" },
+        },
+      ],
+    },
+    twoShippingOptions: {
+      total: {
+        label: "Total due",
+        amount: { currency: "USD", value: "2.00" },
+      },
+      shippingOptions: [
+        {
+          id: "1",
+          label: "Meh Unreliable Shipping",
+          amount: { currency: "USD", value: "1" },
+        },
+        {
+          id: "2",
+          label: "Premium Slow Shipping",
+          amount: { currency: "USD", value: "2" },
+          selected: true,
+        },
+      ],
+    },
+    bobPayPaymentModifier: {
+      total: {
+        label: "Total due",
+        amount: { currency: "USD", value: "2.00" },
+      },
+      displayItems: [
+        {
+          label: "First",
+          amount: { currency: "USD", value: "1" },
+        },
+      ],
+      modifiers: [
+        {
+          additionalDisplayItems: [
+            {
+              label: "Credit card fee",
+              amount: { currency: "USD", value: "0.50" },
+            },
+          ],
+          supportedMethods: "basic-card",
+          total: {
+            label: "Total due",
+            amount: { currency: "USD", value: "2.50" },
+          },
+          data: {
+            supportedTypes: "credit",
+          },
+        },
+        {
+          additionalDisplayItems: [
+            {
+              label: "Bob-pay fee",
+              amount: { currency: "USD", value: "1.50" },
+            },
+          ],
+          supportedMethods: "https://www.example.com/bobpay",
+          total: {
+            label: "Total due",
+            amount: { currency: "USD", value: "3.50" },
+          },
+        },
+      ],
     },
   },
 };

@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "Включено «не будет запоминать историю»."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Вы используете Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Загрузка была отключена."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Ссылка скопирована"
   },

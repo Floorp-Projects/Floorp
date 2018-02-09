@@ -4,35 +4,53 @@
 
 "use strict";
 
-add_task(async function () {
-  const {inspector} = await openInspectorForURL("about:blank");
-  const {toolbox} = inspector;
+ChromeUtils.defineModuleGetter(this, "ContentTaskUtils",
+                               "resource://testing-common/ContentTaskUtils.jsm");
 
-  const sidebarId = "an-extension-sidebar";
-  const sidebarTitle = "Sidebar Title";
+loader.lazyGetter(this, "WebExtensionInspectedWindowFront", () => {
+  return require(
+    "devtools/shared/fronts/webextension-inspected-window"
+  ).WebExtensionInspectedWindowFront;
+}, true);
 
-  const waitSidebarCreated = toolbox.once(`extension-sidebar-created-${sidebarId}`);
+const FAKE_CALLER_INFO = {
+  url: "moz-extension://fake-webextension-uuid/fake-caller-script.js",
+  lineNumber: 1,
+  addonId: "fake-webextension-uuid",
+};
+const SIDEBAR_ID = "an-extension-sidebar";
+const SIDEBAR_TITLE = "Sidebar Title";
 
-  toolbox.registerInspectorExtensionSidebar(sidebarId, {title: sidebarTitle});
+let toolbox;
+let inspector;
 
-  const sidebar = await waitSidebarCreated;
+add_task(async function setupExtensionSidebar() {
+  const res = await openInspectorForURL("about:blank");
+  inspector = res.inspector;
+  toolbox = res.toolbox;
 
-  is(sidebar, inspector.getPanel(sidebarId),
+  const onceSidebarCreated = toolbox.once(`extension-sidebar-created-${SIDEBAR_ID}`);
+  toolbox.registerInspectorExtensionSidebar(SIDEBAR_ID, {title: SIDEBAR_TITLE});
+
+  const sidebar = await onceSidebarCreated;
+
+  // Test sidebar properties.
+  is(sidebar, inspector.getPanel(SIDEBAR_ID),
      "Got an extension sidebar instance equal to the one saved in the inspector");
-
-  is(sidebar.title, sidebarTitle,
+  is(sidebar.title, SIDEBAR_TITLE,
      "Got the expected title in the extension sidebar instance");
-  is(sidebar.provider.props.title, sidebarTitle,
+  is(sidebar.provider.props.title, SIDEBAR_TITLE,
      "Got the expeted title in the provider props");
 
+  // Test sidebar Redux state.
   let inspectorStoreState = inspector.store.getState();
-
   ok("extensionsSidebar" in inspectorStoreState,
      "Got the extensionsSidebar sub-state in the inspector Redux store");
-
   Assert.deepEqual(inspectorStoreState.extensionsSidebar, {},
                    "The extensionsSidebar should be initially empty");
+});
 
+add_task(async function testSidebarSetObject() {
   let object = {
     propertyName: {
       nestedProperty: "propertyValue",
@@ -40,56 +58,184 @@ add_task(async function () {
     },
   };
 
+  let sidebar = inspector.getPanel(SIDEBAR_ID);
   sidebar.setObject(object);
 
-  inspectorStoreState = inspector.store.getState();
-
+  // Test updated sidebar Redux state.
+  let inspectorStoreState = inspector.store.getState();
   is(Object.keys(inspectorStoreState.extensionsSidebar).length, 1,
      "The extensionsSidebar state contains the newly registered extension sidebar state");
-
   Assert.deepEqual(inspectorStoreState.extensionsSidebar, {
-    [sidebarId]: {
+    [SIDEBAR_ID]: {
       viewMode: "object-treeview",
       object,
     },
   }, "Got the expected state for the registered extension sidebar");
 
+  // Select the extension sidebar.
   const waitSidebarSelected = toolbox.once(`inspector-sidebar-select`);
-
-  inspector.sidebar.show(sidebarId);
-
+  inspector.sidebar.show(SIDEBAR_ID);
   await waitSidebarSelected;
 
-  const sidebarPanelContent = inspector.sidebar.getTabPanel(sidebarId);
+  const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
 
+  // Test extension sidebar content.
   ok(sidebarPanelContent, "Got a sidebar panel for the registered extension sidebar");
 
-  is(sidebarPanelContent.querySelectorAll("table.treeTable").length, 1,
-     "The sidebar panel contains a rendered TreeView component");
+  assertTreeView(sidebarPanelContent, {
+    expectedTreeTables: 1,
+    expectedStringCells: 2,
+    expectedNumberCells: 0,
+  });
 
-  is(sidebarPanelContent.querySelectorAll("table.treeTable .stringCell").length, 2,
-     "The TreeView component contains the expected number of string cells.");
-
+  // Test sidebar refreshed on further sidebar.setObject calls.
   info("Change the inspected object in the extension sidebar object treeview");
   sidebar.setObject({aNewProperty: 123});
 
-  is(sidebarPanelContent.querySelectorAll("table.treeTable .stringCell").length, 0,
-     "The TreeView component doesn't contains any string cells anymore.");
+  assertTreeView(sidebarPanelContent, {
+    expectedTreeTables: 1,
+    expectedStringCells: 0,
+    expectedNumberCells: 1,
+  });
+});
 
-  is(sidebarPanelContent.querySelectorAll("table.treeTable .numberCell").length, 1,
-     "The TreeView component contains one number cells.");
+add_task(async function testSidebarSetObjectValueGrip() {
+  const inspectedWindowFront = new WebExtensionInspectedWindowFront(
+    toolbox.target.client, toolbox.target.form
+  );
 
+  const sidebar = inspector.getPanel(SIDEBAR_ID);
+  const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
+
+  info("Testing sidebar.setObjectValueGrip with rootTitle");
+
+  let expression = `
+    var obj = Object.create(null);
+    obj.prop1 = 123;
+    obj[Symbol('sym1')] = 456;
+    obj.cyclic = obj;
+    obj;
+  `;
+
+  let evalResult = await inspectedWindowFront.eval(FAKE_CALLER_INFO, expression, {
+    evalResultAsGrip: true,
+    toolboxConsoleActorID: toolbox.target.form.consoleActor
+  });
+
+  sidebar.setObjectValueGrip(evalResult.valueGrip, "Expected Root Title");
+
+  // Wait the ObjectInspector component to be rendered and test its content.
+  await testSetExpressionSidebarPanel(sidebarPanelContent, {
+    nodesLength: 4,
+    propertiesNames: ["cyclic", "prop1", "Symbol(sym1)"],
+    rootTitle: "Expected Root Title",
+  });
+
+  info("Testing sidebar.setObjectValueGrip without rootTitle");
+
+  sidebar.setObjectValueGrip(evalResult.valueGrip);
+
+  // Wait the ObjectInspector component to be rendered and test its content.
+  await testSetExpressionSidebarPanel(sidebarPanelContent, {
+    nodesLength: 4,
+    propertiesNames: ["cyclic", "prop1", "Symbol(sym1)"],
+  });
+
+  inspectedWindowFront.destroy();
+});
+
+add_task(async function testSidebarDOMNodeHighlighting() {
+  const inspectedWindowFront = new WebExtensionInspectedWindowFront(
+    toolbox.target.client, toolbox.target.form
+  );
+
+  const sidebar = inspector.getPanel(SIDEBAR_ID);
+  const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
+
+  let expression = "({ body: document.body })";
+
+  let evalResult = await inspectedWindowFront.eval(FAKE_CALLER_INFO, expression, {
+    evalResultAsGrip: true,
+    toolboxConsoleActorID: toolbox.target.form.consoleActor
+  });
+
+  sidebar.setObjectValueGrip(evalResult.valueGrip);
+
+  // Wait the DOM node to be rendered inside the component.
+  await waitForObjectInspector(sidebarPanelContent, "node");
+
+  // Get and verify the DOMNode and the "open inspector"" icon
+  // rendered inside the ObjectInspector.
+  assertObjectInspector(sidebarPanelContent, {
+    expectedDOMNodes: 1,
+    expectedOpenInspectors: 1,
+  });
+
+  // Test highlight DOMNode on mouseover.
+  info("Highlight the node by moving the cursor on it");
+
+  let onNodeHighlight = toolbox.once("node-highlight");
+
+  moveMouseOnObjectInspectorDOMNode(sidebarPanelContent);
+
+  let nodeFront = await onNodeHighlight;
+  is(nodeFront.displayName, "body", "The correct node was highlighted");
+
+  // Test unhighlight DOMNode on mousemove.
+  info("Unhighlight the node by moving away from the node");
+  let onNodeUnhighlight = toolbox.once("node-unhighlight");
+
+  moveMouseOnPanelCenter(sidebarPanelContent);
+
+  await onNodeUnhighlight;
+  info("node-unhighlight event was fired when moving away from the node");
+
+  inspectedWindowFront.destroy();
+});
+
+add_task(async function testSidebarDOMNodeOpenInspector() {
+  const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
+
+  // Test DOMNode selected in the inspector when "open inspector"" icon clicked.
+  info("Unselect node in the inspector");
+  let onceNewNodeFront = inspector.selection.once("new-node-front");
+  inspector.selection.setNodeFront(null);
+  let nodeFront = await onceNewNodeFront;
+  is(nodeFront, undefined, "The inspector selection should have been unselected");
+
+  info("Select the ObjectInspector DOMNode in the inspector panel by clicking on it");
+
+  // Once we click the open-inspector icon we expect a new node front to be selected
+  // and the node to have been highlighted and unhighlighted.
+  let onNodeHighlight = toolbox.once("node-highlight");
+  let onNodeUnhighlight = toolbox.once("node-unhighlight");
+  onceNewNodeFront = inspector.selection.once("new-node-front");
+
+  clickOpenInspectorIcon(sidebarPanelContent);
+
+  nodeFront = await onceNewNodeFront;
+  is(nodeFront.displayName, "body", "The correct node has been selected");
+  nodeFront = await onNodeHighlight;
+  is(nodeFront.displayName, "body", "The correct node was highlighted");
+
+  await onNodeUnhighlight;
+});
+
+add_task(async function teardownExtensionSidebar() {
   info("Remove the sidebar instance");
 
-  toolbox.unregisterInspectorExtensionSidebar(sidebarId);
+  toolbox.unregisterInspectorExtensionSidebar(SIDEBAR_ID);
 
-  ok(!inspector.sidebar.getTabPanel(sidebarId),
+  ok(!inspector.sidebar.getTabPanel(SIDEBAR_ID),
      "The rendered extension sidebar has been removed");
 
-  inspectorStoreState = inspector.store.getState();
+  let inspectorStoreState = inspector.store.getState();
 
   Assert.deepEqual(inspectorStoreState.extensionsSidebar, {},
                    "The extensions sidebar Redux store data has been cleared");
 
   await toolbox.destroy();
+
+  toolbox = null;
+  inspector = null;
 });

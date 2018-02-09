@@ -6,6 +6,7 @@
 
 const {
   EXTENSION_SIDEBAR_OBJECT_TREEVIEW_UPDATE,
+  EXTENSION_SIDEBAR_OBJECT_GRIP_VIEW_UPDATE,
   EXTENSION_SIDEBAR_REMOVE,
 } = require("./index");
 
@@ -19,6 +20,18 @@ module.exports = {
       type: EXTENSION_SIDEBAR_OBJECT_TREEVIEW_UPDATE,
       sidebarId,
       object,
+    };
+  },
+
+  /**
+   * Update the sidebar with an object actor preview.
+   */
+  updateObjectValueGripView(sidebarId, objectValueGrip, rootTitle) {
+    return {
+      type: EXTENSION_SIDEBAR_OBJECT_GRIP_VIEW_UPDATE,
+      sidebarId,
+      objectValueGrip,
+      rootTitle,
     };
   },
 

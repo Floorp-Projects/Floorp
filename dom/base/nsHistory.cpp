@@ -34,7 +34,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsHistory)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsHistory)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHistory) // Empty, needed for extension compat
 NS_INTERFACE_MAP_END
 
 nsHistory::nsHistory(nsPIDOMWindowInner* aInnerWindow)

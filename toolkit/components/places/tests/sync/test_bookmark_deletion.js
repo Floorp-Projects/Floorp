@@ -20,7 +20,6 @@ add_task(async function test_complex_orphaning() {
   await buf.store(shuffle([{
     id: "toolbar",
     type: "folder",
-    title: "Bookmarks Toolbar",
     children: ["folderAAAAAA"],
   }, {
     id: "folderAAAAAA",
@@ -53,7 +52,6 @@ add_task(async function test_complex_orphaning() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["folderGGGGGG"],
   }, {
     id: "folderGGGGGG",
@@ -210,7 +208,6 @@ add_task(async function test_locally_modified_remotely_deleted() {
   await buf.store([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["bookmarkAAAA", "folderBBBBBB"],
   }, {
     id: "bookmarkAAAA",
@@ -263,7 +260,6 @@ add_task(async function test_locally_modified_remotely_deleted() {
   await buf.store([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: [],
   }, {
     id: "bookmarkAAAA",
@@ -356,7 +352,6 @@ add_task(async function test_locally_deleted_remotely_modified() {
   await buf.store([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["bookmarkAAAA", "folderBBBBBB"],
   }, {
     id: "bookmarkAAAA",
@@ -488,7 +483,6 @@ add_task(async function test_move_to_new_then_delete() {
   await buf.store(shuffle([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["folderAAAAAA"],
   }, {
     id: "folderAAAAAA",
@@ -687,7 +681,6 @@ add_task(async function test_clear_folder_then_delete() {
   await buf.store([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["folderAAAAAA", "bookmarkDDDD"],
   }, {
     id: "folderAAAAAA",
@@ -739,12 +732,10 @@ add_task(async function test_clear_folder_then_delete() {
   await buf.store([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["bookmarkBBBB", "bookmarkDDDD"],
   }, {
     id: "unfiled",
     type: "folder",
-    title: "Other Bookmarks",
     children: ["bookmarkCCCC"],
   }, {
     id: "folderAAAAAA",
@@ -850,7 +841,6 @@ add_task(async function test_newer_move_to_deleted() {
   await buf.store([{
     id: "menu",
     type: "folder",
-    title: "Bookmarks Menu",
     children: ["folderAAAAAA", "folderCCCCCC"],
   }, {
     id: "folderAAAAAA",
@@ -915,7 +905,6 @@ add_task(async function test_newer_move_to_deleted() {
   }, {
     id: "toolbar",
     type: "folder",
-    title: "Bookmarks Toolbar",
     children: ["bookmarkBBBB"],
     modified: (now / 1000) - 5,
   }, {

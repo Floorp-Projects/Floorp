@@ -176,28 +176,6 @@ this.auth = (function() {
     return registrationInfo.registered;
   };
 
-  exports.setDeviceInfoFromOldAddon = function(newDeviceInfo) {
-    return registrationInfoFetched.then(() => {
-      if (!(newDeviceInfo.deviceId && newDeviceInfo.secret)) {
-        throw new Error("Bad deviceInfo");
-      }
-      if (registrationInfo.deviceId === newDeviceInfo.deviceId &&
-        registrationInfo.secret === newDeviceInfo.secret) {
-        // Probably we already imported the information
-        return Promise.resolve(false);
-      }
-      registrationInfo = {
-        deviceId: newDeviceInfo.deviceId,
-        secret: newDeviceInfo.secret,
-        registered: true
-      };
-      initialized = false;
-      return browser.storage.local.set({registrationInfo}).then(() => {
-        return true;
-      });
-    });
-  };
-
   communication.register("getAuthInfo", (sender, ownershipCheck) => {
     return registrationInfoFetched.then(() => {
       return exports.authHeaders();
