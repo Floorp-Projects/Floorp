@@ -2026,7 +2026,7 @@
             return !!this.selectedButton;
           }
 
-          if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_UP) {
+          if (event.keyCode == KeyboardEvent.DOM_VK_UP) {
             if (event.altKey) {
               // Keep the currently selected result in the list (if any) as a
               // secondary "alt" selection and move the selection up within the
@@ -2074,7 +2074,7 @@
             return true;
           }
 
-          if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_DOWN) {
+          if (event.keyCode == KeyboardEvent.DOM_VK_DOWN) {
             if (event.altKey) {
               // Keep the currently selected result in the list (if any) as a
               // secondary "alt" selection and move the selection down within
@@ -2128,7 +2128,7 @@
             return false;
           }
 
-          if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_LEFT) {
+          if (event.keyCode == KeyboardEvent.DOM_VK_LEFT) {
             if (this.selectedButton &&
                 (this.compact || this.selectedButton.engine)) {
               // Moving left within the buttons.
@@ -2138,7 +2138,7 @@
             return false;
           }
 
-          if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_RIGHT) {
+          if (event.keyCode == KeyboardEvent.DOM_VK_RIGHT) {
             if (this.selectedButton &&
                 (this.compact || this.selectedButton.engine)) {
               // Moving right within the buttons.

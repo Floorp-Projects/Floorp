@@ -206,10 +206,9 @@ function runTests()
       checkValueForDispatchedKeyEvent(inputInEditor, "ABC");
       checkValueForDispatchedKeyEvent(textareaInEditor, "ABC");
 
-      const nsIDOMKeyEvent = Components.interfaces.nsIDOMKeyEvent;
-      dispatchKeyEvent(nsIDOMKeyEvent.DOM_VK_BACK_SPACE, 0, aTarget);
-      dispatchKeyEvent(nsIDOMKeyEvent.DOM_VK_BACK_SPACE, 0, aTarget);
-      dispatchKeyEvent(nsIDOMKeyEvent.DOM_VK_BACK_SPACE, 0, aTarget);
+      dispatchKeyEvent(KeyboardEvent.DOM_VK_BACK_SPACE, 0, aTarget);
+      dispatchKeyEvent(KeyboardEvent.DOM_VK_BACK_SPACE, 0, aTarget);
+      dispatchKeyEvent(KeyboardEvent.DOM_VK_BACK_SPACE, 0, aTarget);
 
       checkValueForDispatchedKeyEvent(staticContent, "");
       checkValueForDispatchedKeyEvent(inputInStatic, "");

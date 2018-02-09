@@ -119,7 +119,7 @@
 <div class="description">
     <p>Returns true if the given key should cause keypress event when widget
 handles the native key event.  Otherwise, false.</p>
-<p>The key code should be one of consts of nsIDOMKeyEvent.DOM<em>VK</em>*,
+<p>The key code should be one of consts of KeyEvent.DOM<em>VK</em>*,
 or a key name begins with &quot;VK_&quot;, or a character.</p>
 </div>
 
@@ -299,7 +299,7 @@ case) and the digits 0-9.</p>
 <div class="description">
     <p>Send the non-character key to the focused element.</p>
 <p>The name of the key should be the part that comes after &quot;DOM<em>VK</em>&quot;
-in the nsIDOMKeyEvent constant name for this key.  No modifiers are
+in the KeyEvent constant name for this key.  No modifiers are
 handled at this point.</p>
 </div>
 

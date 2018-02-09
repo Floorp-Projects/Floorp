@@ -303,6 +303,11 @@ public:
         spew("push       " MEM_ob, ADDR_ob(offset, base));
         m_formatter.oneByteOp(OP_GROUP5_Ev, offset, base, GROUP5_OP_PUSH);
     }
+    void push_m(int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("push       " MEM_obs, ADDR_obs(offset, base, index, scale));
+        m_formatter.oneByteOp(OP_GROUP5_Ev, offset, base, index, scale, GROUP5_OP_PUSH);
+    }
 
     void pop_m(int32_t offset, RegisterID base)
     {
@@ -923,6 +928,12 @@ public:
         m_formatter.oneByteOp(OP_AND_GvEv, offset, base, dst);
     }
 
+    void andl_mr(int32_t offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
+    {
+        spew("andl       " MEM_obs ", %s", ADDR_obs(offset, base, index, scale), GPReg32Name(dst));
+        m_formatter.oneByteOp(OP_AND_GvEv, offset, base, index, scale, dst);
+    }
+
     void andl_rm(RegisterID src, int32_t offset, RegisterID base)
     {
         spew("andl       %s, " MEM_ob, GPReg32Name(src), ADDR_ob(offset, base));
@@ -1230,6 +1241,12 @@ public:
             m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, index, scale, GROUP1_OP_OR);
             m_formatter.immediate16(imm);
         }
+    }
+
+    void sbbl_rr(RegisterID src, RegisterID dst)
+    {
+        spew("sbbl       %s, %s", GPReg32Name(src), GPReg32Name(dst));
+        m_formatter.oneByteOp(OP_SBB_GvEv, src, dst);
     }
 
     void subl_rr(RegisterID src, RegisterID dst)

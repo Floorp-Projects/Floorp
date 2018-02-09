@@ -680,15 +680,67 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movl(ImmType(type), dest.typeReg());
     }
 
-    void unboxNonDouble(const ValueOperand& src, Register dest, JSValueType type) {
-        if (src.payloadReg() != dest)
-            movl(src.payloadReg(), dest);
+    void unboxNonDouble(const ValueOperand& src, Register dest, JSValueType type, Register scratch = InvalidReg) {
+        unboxNonDouble(Operand(src.typeReg()), Operand(src.payloadReg()), dest, type, scratch);
+    }
+    void unboxNonDouble(const Operand& tag, const Operand& payload, Register dest, JSValueType type, Register scratch = InvalidReg) {
+        auto movPayloadToDest = [&]() {
+            if (payload.kind() != Operand::REG || !payload.containsReg(dest))
+                movl(payload, dest);
+        };
+        if (!JitOptions.spectreValueMasking) {
+            movPayloadToDest();
+            return;
+        }
+
+        // Spectre mitigation: We zero the payload if the tag does not match the
+        // expected type and if this is a pointer type.
+        if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
+            movPayloadToDest();
+            return;
+        }
+
+        if (!tag.containsReg(dest) && !payload.containsReg(dest)) {
+            // We zero the destination register and move the payload into it if
+            // the tag corresponds to the given type.
+            xorl(dest, dest);
+            cmpl(Imm32(JSVAL_TYPE_TO_TAG(type)), tag);
+            cmovCCl(Condition::Equal, payload, dest);
+            return;
+        }
+
+        if (scratch == InvalidReg || scratch == dest ||
+            tag.containsReg(scratch) || payload.containsReg(scratch))
+        {
+            // UnboxedLayout::makeConstructorCode calls extractObject with a
+            // scratch register which aliases the tag register, thus we cannot
+            // assert the above condition.
+            scratch = InvalidReg;
+        }
+
+        // The destination register aliases one of the operands. We create a
+        // zero value either in a scratch register or on the stack and use it
+        // to reset the destination register after reading both the tag and the
+        // payload.
+        Operand zero(Address(esp, 0));
+        if (scratch == InvalidReg) {
+            push(Imm32(0));
+        } else {
+            xorl(scratch, scratch);
+            zero = Operand(scratch);
+        }
+        cmpl(Imm32(JSVAL_TYPE_TO_TAG(type)), tag);
+        movPayloadToDest();
+        cmovCCl(Condition::NotEqual, zero, dest);
+        if (scratch == InvalidReg) {
+            addl(Imm32(sizeof(void*)), esp);
+        }
     }
     void unboxNonDouble(const Address& src, Register dest, JSValueType type) {
-        movl(payloadOf(src), dest);
+        unboxNonDouble(tagOf(src), payloadOf(src), dest, type);
     }
     void unboxNonDouble(const BaseIndex& src, Register dest, JSValueType type) {
-        movl(payloadOf(src), dest);
+        unboxNonDouble(tagOf(src), payloadOf(src), dest, type);
     }
     void unboxInt32(const ValueOperand& src, Register dest) {
         unboxNonDouble(src, dest, JSVAL_TYPE_INT32);
@@ -771,17 +823,20 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // Extended unboxing API. If the payload is already in a register, returns
     // that register. Otherwise, provides a move to the given scratch register,
     // and returns that.
-    Register extractObject(const Address& address, Register scratch) {
-        movl(payloadOf(address), scratch);
-        return scratch;
+    Register extractObject(const Address& address, Register dest) {
+        unboxObject(address, dest);
+        return dest;
     }
     Register extractObject(const ValueOperand& value, Register scratch) {
+        unboxNonDouble(value, value.payloadReg(), JSVAL_TYPE_OBJECT, scratch);
         return value.payloadReg();
     }
     Register extractString(const ValueOperand& value, Register scratch) {
+        unboxNonDouble(value, value.payloadReg(), JSVAL_TYPE_STRING, scratch);
         return value.payloadReg();
     }
     Register extractSymbol(const ValueOperand& value, Register scratch) {
+        unboxNonDouble(value, value.payloadReg(), JSVAL_TYPE_SYMBOL, scratch);
         return value.payloadReg();
     }
     Register extractInt32(const ValueOperand& value, Register scratch) {

@@ -6,12 +6,12 @@
 // IWYU pragma: private, include "mozilla/KeyTextEvents.h"
 
 /**
- * This header file defines all DOM keys which are defined in nsIDOMKeyEvent.
+ * This header file defines all DOM keys which are defined in KeyboardEvent.
  * You must define NS_DEFINE_VK macro before including this.
  *
  * It must have two arguments, (aDOMKeyName, aDOMKeyCode)
  * aDOMKeyName is a key name in DOM.
- * aDOMKeyCode is one of nsIDOMKeyEvent::DOM_VK_*.
+ * aDOMKeyCode is one of mozilla::dom::KeyboardEventBinding::DOM_VK_*.
  *
  * Optionally, you can define NS_DISALLOW_SAME_KEYCODE.
  *
@@ -20,11 +20,11 @@
  */
 
 #define DEFINE_VK_INTERNAL(aKeyName) \
-  NS_DEFINE_VK(VK##aKeyName, nsIDOMKeyEvent::DOM_VK##aKeyName)
+  NS_DEFINE_VK(VK##aKeyName, mozilla::dom::KeyboardEventBinding::DOM_VK##aKeyName)
 
-// Some keycode may have different name in nsIDOMKeyEvent from its key name.
+// Some keycode may have different name in KeyboardEvent from its key name.
 #define DEFINE_VK_INTERNAL2(aKeyName, aKeyCodeName) \
-  NS_DEFINE_VK(VK##aKeyName, nsIDOMKeyEvent::DOM_VK##aKeyCodeName)
+  NS_DEFINE_VK(VK##aKeyName, mozilla::dom::KeyboardEventBinding::DOM_VK##aKeyCodeName)
 
 DEFINE_VK_INTERNAL(_CANCEL)
 DEFINE_VK_INTERNAL(_HELP)

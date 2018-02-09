@@ -35,7 +35,6 @@ NS_IMPL_ADDREF_INHERITED(KeyboardEvent, UIEvent)
 NS_IMPL_RELEASE_INHERITED(KeyboardEvent, UIEvent)
 
 NS_INTERFACE_MAP_BEGIN(KeyboardEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMKeyEvent)
 NS_INTERFACE_MAP_END_INHERITING(UIEvent)
 
 bool
@@ -53,14 +52,6 @@ KeyboardEvent::AltKey(CallerType aCallerType)
   return GetSpoofedModifierStates(Modifier::MODIFIER_ALT, altState);
 }
 
-NS_IMETHODIMP
-KeyboardEvent::GetAltKey(bool* aIsDown)
-{
-  NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = AltKey();
-  return NS_OK;
-}
-
 bool
 KeyboardEvent::CtrlKey(CallerType aCallerType)
 {
@@ -75,14 +66,6 @@ KeyboardEvent::CtrlKey(CallerType aCallerType)
   return GetSpoofedModifierStates(Modifier::MODIFIER_CONTROL, ctrlState);
 }
 
-NS_IMETHODIMP
-KeyboardEvent::GetCtrlKey(bool* aIsDown)
-{
-  NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = CtrlKey();
-  return NS_OK;
-}
-
 bool
 KeyboardEvent::ShiftKey(CallerType aCallerType)
 {
@@ -95,26 +78,10 @@ KeyboardEvent::ShiftKey(CallerType aCallerType)
   return GetSpoofedModifierStates(Modifier::MODIFIER_SHIFT, shiftState);
 }
 
-NS_IMETHODIMP
-KeyboardEvent::GetShiftKey(bool* aIsDown)
-{
-  NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = ShiftKey();
-  return NS_OK;
-}
-
 bool
 KeyboardEvent::MetaKey()
 {
   return mEvent->AsKeyboardEvent()->IsMeta();
-}
-
-NS_IMETHODIMP
-KeyboardEvent::GetMetaKey(bool* aIsDown)
-{
-  NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = MetaKey();
-  return NS_OK;
 }
 
 bool
@@ -123,35 +90,16 @@ KeyboardEvent::Repeat()
   return mEvent->AsKeyboardEvent()->mIsRepeat;
 }
 
-NS_IMETHODIMP
-KeyboardEvent::GetRepeat(bool* aIsRepeat)
-{
-  NS_ENSURE_ARG_POINTER(aIsRepeat);
-  *aIsRepeat = Repeat();
-  return NS_OK;
-}
-
 bool
 KeyboardEvent::IsComposing()
 {
   return mEvent->AsKeyboardEvent()->mIsComposing;
 }
 
-NS_IMETHODIMP
-KeyboardEvent::GetModifierState(const nsAString& aKey,
-                                bool* aState)
-{
-  NS_ENSURE_ARG_POINTER(aState);
-
-  *aState = GetModifierState(aKey);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-KeyboardEvent::GetKey(nsAString& aKeyName)
+void
+KeyboardEvent::GetKey(nsAString& aKeyName) const
 {
   mEvent->AsKeyboardEvent()->GetDOMKeyName(aKeyName);
-  return NS_OK;
 }
 
 void
@@ -205,14 +153,6 @@ void KeyboardEvent::GetInitDict(KeyboardEventInit& aParam)
   aParam.mCancelable = internalEvent->mFlags.mCancelable;
 }
 
-NS_IMETHODIMP
-KeyboardEvent::GetCharCode(uint32_t* aCharCode)
-{
-  NS_ENSURE_ARG_POINTER(aCharCode);
-  *aCharCode = CharCode();
-  return NS_OK;
-}
-
 uint32_t
 KeyboardEvent::CharCode()
 {
@@ -234,14 +174,6 @@ KeyboardEvent::CharCode()
     break;
   }
   return 0;
-}
-
-NS_IMETHODIMP
-KeyboardEvent::GetKeyCode(uint32_t* aKeyCode)
-{
-  NS_ENSURE_ARG_POINTER(aKeyCode);
-  *aKeyCode = KeyCode();
-  return NS_OK;
 }
 
 uint32_t
@@ -309,15 +241,6 @@ KeyboardEvent::Which()
   return 0;
 }
 
-NS_IMETHODIMP
-KeyboardEvent::GetLocation(uint32_t* aLocation)
-{
-  NS_ENSURE_ARG_POINTER(aLocation);
-
-  *aLocation = Location();
-  return NS_OK;
-}
-
 uint32_t
 KeyboardEvent::Location()
 {
@@ -371,19 +294,14 @@ KeyboardEvent::InitWithKeyboardEventInit(EventTarget* aOwner,
   }
 }
 
-NS_IMETHODIMP
-KeyboardEvent::InitKeyEvent(const nsAString& aType,
-                            bool aCanBubble,
-                            bool aCancelable,
-                            mozIDOMWindow* aView,
-                            bool aCtrlKey,
-                            bool aAltKey,
-                            bool aShiftKey,
-                            bool aMetaKey,
-                            uint32_t aKeyCode,
-                            uint32_t aCharCode)
+void
+KeyboardEvent::InitKeyEvent(const nsAString& aType, bool aCanBubble,
+                            bool aCancelable, nsGlobalWindowInner* aView,
+                            bool aCtrlKey, bool aAltKey,
+                            bool aShiftKey, bool aMetaKey,
+                            uint32_t aKeyCode, uint32_t aCharCode)
 {
-  NS_ENSURE_TRUE(!mEvent->mFlags.mIsBeingDispatched, NS_OK);
+  NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
 
   UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, 0);
 
@@ -391,8 +309,6 @@ KeyboardEvent::InitKeyEvent(const nsAString& aType,
   keyEvent->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);
   keyEvent->mKeyCode = aKeyCode;
   keyEvent->mCharCode = aCharCode;
-
-  return NS_OK;
 }
 
 void
@@ -452,7 +368,7 @@ KeyboardEvent::ShouldResistFingerprinting(CallerType aCallerType)
       mEvent->mFlags.mInSystemGroup ||
       !nsContentUtils::ShouldResistFingerprinting() ||
       mEvent->AsKeyboardEvent()->mLocation ==
-        nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD) {
+        KeyboardEventBinding::DOM_KEY_LOCATION_NUMPAD) {
     return false;
   }
 

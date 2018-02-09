@@ -20,7 +20,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "nsThemeConstants.h"
 #include "nsIContent.h"
-#include "nsIDOMMutationEvent.h"
+#include "mozilla/dom/MutationEventBinding.h"
 
 using namespace mozilla;
 
@@ -267,7 +267,8 @@ nsScrollbarFrame::MoveToNewPosition()
   }
   content->SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, curposStr, false);
   // notify the nsScrollbarFrame of the change
-  AttributeChanged(kNameSpaceID_None, nsGkAtoms::curpos, nsIDOMMutationEvent::MODIFICATION);
+  AttributeChanged(kNameSpaceID_None, nsGkAtoms::curpos,
+                   dom::MutationEventBinding::MODIFICATION);
   if (!weakFrame.IsAlive()) {
     return curpos;
   }
@@ -279,7 +280,8 @@ nsScrollbarFrame::MoveToNewPosition()
       nsIFrame* f = childFrames.get();
       nsSliderFrame* sliderFrame = do_QueryFrame(f);
       if (sliderFrame) {
-        sliderFrame->AttributeChanged(kNameSpaceID_None, nsGkAtoms::curpos, nsIDOMMutationEvent::MODIFICATION);
+        sliderFrame->AttributeChanged(kNameSpaceID_None, nsGkAtoms::curpos,
+                                      dom::MutationEventBinding::MODIFICATION);
         if (!weakFrame.IsAlive()) {
           return curpos;
         }

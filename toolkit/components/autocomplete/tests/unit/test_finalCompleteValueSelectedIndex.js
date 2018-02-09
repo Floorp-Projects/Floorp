@@ -31,7 +31,9 @@ add_test(function test_handleEnter_key() {
     Assert.equal(aController.getFinalCompleteValueAt(1), "http://www.mozilla.org");
 
     Assert.equal(aController.input.popup.selectedIndex, 0);
-    aController.handleKeyNavigation(Ci.nsIDOMKeyEvent.DOM_VK_DOWN);
+    // Hardcode KeyboardEvent.DOM_VK_DOWN, because we can't easily
+    // include KeyboardEvent here.
+    aController.handleKeyNavigation(0x28 /* KeyboardEvent.DOM_VK_DOWN */);
     Assert.equal(aController.input.popup.selectedIndex, 1);
     // Simulate mouse interaction changing selectedIndex
     // ie NOT keyboard interaction:

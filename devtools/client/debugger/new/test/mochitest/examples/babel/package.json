@@ -1,0 +1,22 @@
+{
+  "name": "babel-sourcemaps",
+  "version": "1.0.0",
+  "description": "Rebuild assets for babel's test fixtures",
+  "scripts": {
+    "build": "webpack",
+    "watch": "webpack -w"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MPL-2.0",
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-preset-env": "^1.6.1",
+    "webpack": "^3.7.1"
+  },
+  "dependencies": {
+    "lodash": "^4.17.5"
+  }
+}

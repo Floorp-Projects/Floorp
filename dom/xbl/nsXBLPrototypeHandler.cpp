@@ -15,7 +15,6 @@
 #include "nsGlobalWindowCommands.h"
 #include "nsIContent.h"
 #include "nsAtom.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsNameSpaceManager.h"
 #include "nsIDocument.h"
@@ -50,6 +49,8 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EventHandlerBinding.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
+#include "mozilla/dom/KeyboardEvent.h"
+#include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/layers/KeyboardMap.h"
 #include "xpcpublic.h"
@@ -240,7 +241,7 @@ nsXBLPrototypeHandler::InitAccessKeys()
 #ifdef XP_MACOSX
   kMenuAccessKey = 0;
 #else
-  kMenuAccessKey = nsIDOMKeyEvent::DOM_VK_ALT;
+  kMenuAccessKey = KeyboardEventBinding::DOM_VK_ALT;
 #endif
 
   // Get the menu access key value from prefs, overriding the default:
@@ -529,7 +530,7 @@ nsXBLPrototypeHandler::DispatchXBLCommand(EventTarget* aTarget, nsIDOMEvent* aEv
   aEvent->PreventDefault();
 
   if (mEventName == nsGkAtoms::keypress &&
-      mDetail == nsIDOMKeyEvent::DOM_VK_SPACE &&
+      mDetail == KeyboardEventBinding::DOM_VK_SPACE &&
       mMisc == 1) {
     // get the focused element so that we can pageDown only at
     // certain times.
@@ -586,7 +587,7 @@ nsXBLPrototypeHandler::DispatchXULKeyCommand(nsIDOMEvent* aEvent)
   aEvent->PreventDefault();
 
   // Copy the modifiers from the key event.
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
+  RefPtr<KeyboardEvent> keyEvent = aEvent->InternalDOMEvent()->AsKeyboardEvent();
   if (!keyEvent) {
     NS_ERROR("Trying to execute a key handler for a non-key event!");
     return NS_ERROR_FAILURE;
@@ -594,14 +595,10 @@ nsXBLPrototypeHandler::DispatchXULKeyCommand(nsIDOMEvent* aEvent)
 
   // XXX We should use mozilla::Modifiers for supporting all modifiers.
 
-  bool isAlt = false;
-  bool isControl = false;
-  bool isShift = false;
-  bool isMeta = false;
-  keyEvent->GetAltKey(&isAlt);
-  keyEvent->GetCtrlKey(&isControl);
-  keyEvent->GetShiftKey(&isShift);
-  keyEvent->GetMetaKey(&isMeta);
+  bool isAlt = keyEvent->AltKey();
+  bool isControl = keyEvent->CtrlKey();
+  bool isShift = keyEvent->ShiftKey();
+  bool isMeta = keyEvent->MetaKey();
 
   nsContentUtils::DispatchXULCommand(handlerElement, true,
                                      nullptr, nullptr,
@@ -710,7 +707,7 @@ nsXBLPrototypeHandler::GetController(EventTarget* aTarget)
 
 bool
 nsXBLPrototypeHandler::KeyEventMatched(
-                         nsIDOMKeyEvent* aKeyEvent,
+                         KeyboardEvent* aKeyEvent,
                          uint32_t aCharCode,
                          const IgnoreModifierState& aIgnoreModifierState)
 {
@@ -722,12 +719,12 @@ nsXBLPrototypeHandler::KeyEventMatched(
       if (aCharCode)
         code = aCharCode;
       else
-        aKeyEvent->GetCharCode(&code);
+        code = aKeyEvent->CharCode();
       if (IS_IN_BMP(code))
         code = ToLowerCase(char16_t(code));
     }
     else
-      aKeyEvent->GetKeyCode(&code);
+      code = aKeyEvent->KeyCode();
 
     if (code != uint32_t(mDetail))
       return false;
@@ -797,16 +794,16 @@ int32_t nsXBLPrototypeHandler::KeyToMask(int32_t key)
 {
   switch (key)
   {
-    case nsIDOMKeyEvent::DOM_VK_META:
+    case KeyboardEventBinding::DOM_VK_META:
       return cMeta | cMetaMask;
 
-    case nsIDOMKeyEvent::DOM_VK_WIN:
+    case KeyboardEventBinding::DOM_VK_WIN:
       return cOS | cOSMask;
 
-    case nsIDOMKeyEvent::DOM_VK_ALT:
+    case KeyboardEventBinding::DOM_VK_ALT:
       return cAlt | cAltMask;
 
-    case nsIDOMKeyEvent::DOM_VK_CONTROL:
+    case KeyboardEventBinding::DOM_VK_CONTROL:
     default:
       return cControl | cControlMask;
   }
@@ -819,13 +816,13 @@ nsXBLPrototypeHandler::AccelKeyMask()
 {
   switch (WidgetInputEvent::AccelModifier()) {
     case MODIFIER_ALT:
-      return KeyToMask(nsIDOMKeyEvent::DOM_VK_ALT);
+      return KeyToMask(KeyboardEventBinding::DOM_VK_ALT);
     case MODIFIER_CONTROL:
-      return KeyToMask(nsIDOMKeyEvent::DOM_VK_CONTROL);
+      return KeyToMask(KeyboardEventBinding::DOM_VK_CONTROL);
     case MODIFIER_META:
-      return KeyToMask(nsIDOMKeyEvent::DOM_VK_META);
+      return KeyToMask(KeyboardEventBinding::DOM_VK_META);
     case MODIFIER_OS:
-      return KeyToMask(nsIDOMKeyEvent::DOM_VK_WIN);
+      return KeyToMask(KeyboardEventBinding::DOM_VK_WIN);
     default:
       MOZ_CRASH("Handle the new result of WidgetInputEvent::AccelModifier()");
       return 0;

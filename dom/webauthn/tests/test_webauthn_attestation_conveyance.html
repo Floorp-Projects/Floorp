@@ -24,6 +24,7 @@
     function getAttestationCertFromAttestationBuffer(aAttestationBuffer) {
       return webAuthnDecodeCBORAttestation(aAttestationBuffer)
       .then((aAttestationObj) => {
+        is("fido-u2f", aAttestationObj.fmt, "Is a FIDO U2F Attestation");
         let attestationCertDER = aAttestationObj.attStmt.x5c[0];
         let certDERBuffer = attestationCertDER.slice(0, attestationCertDER.byteLength).buffer;
         let certAsn1 = org.pkijs.fromBER(certDERBuffer);
@@ -32,9 +33,12 @@
     }
 
     function verifyAnonymizedCertificate(aResult) {
-      // TODO: Update this logic with Bug 1430150.
-      // Until then, all certificates are direct.
-      return verifyDirectCertificate(aResult);
+      return webAuthnDecodeCBORAttestation(aResult.response.attestationObject)
+      .then(({fmt, attStmt}) => {
+        is("none", fmt, "Is a None Attestation");
+        is("object", typeof(attStmt), "attStmt is a map");
+        is(0, Object.keys(attStmt).length, "attStmt is empty");
+      });
     }
 
     function verifyDirectCertificate(aResult) {
@@ -59,6 +63,7 @@
         ["security.webauth.webauthn", true],
         ["security.webauth.webauthn_enable_softtoken", true],
         ["security.webauth.webauthn_enable_usbtoken", false],
+        ["security.webauth.webauthn_testing_allow_direct_attestation", true],
       ]});
     });
 

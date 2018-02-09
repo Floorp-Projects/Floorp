@@ -14,7 +14,10 @@ add_task(async function() {
   await loadBadCertPage("https://expired.example.com");
 
   let { gIdentityHandler } = gBrowser.ownerGlobal;
+  let promisePanelOpen = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popupshown");
   gIdentityHandler._identityBox.click();
+  await promisePanelOpen;
+
   let promiseViewShown = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "ViewShown");
   document.getElementById("identity-popup-security-expander").click();
   await promiseViewShown;

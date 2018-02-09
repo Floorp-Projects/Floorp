@@ -20,8 +20,8 @@
 #include "mozilla/dom/Element.h"
 #include "nsClassHashtable.h"
 #include "nsNodeUtils.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsWrapperCache.h"
+#include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/MutationObserverBinding.h"
 #include "nsIDocument.h"
 #include "mozilla/dom/Animation.h"
@@ -411,7 +411,7 @@ public:
   {
     // We can reuse AttributeWillChange implementation.
     AttributeWillChange(aDocument, aElement, aNameSpaceID, aAttribute,
-                        nsIDOMMutationEvent::MODIFICATION, nullptr);
+                        mozilla::dom::MutationEventBinding::MODIFICATION, nullptr);
   }
 
 protected:

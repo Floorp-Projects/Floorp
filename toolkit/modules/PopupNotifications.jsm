@@ -1254,8 +1254,8 @@ PopupNotifications.prototype = {
       return;
 
     if (type == "keypress" &&
-        !(event.charCode == Ci.nsIDOMKeyEvent.DOM_VK_SPACE ||
-          event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_RETURN))
+        !(event.charCode == event.DOM_VK_SPACE ||
+          event.keyCode == event.DOM_VK_RETURN))
       return;
 
     if (this._currentNotifications.length == 0)

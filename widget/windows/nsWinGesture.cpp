@@ -10,12 +10,12 @@
 #include "nscore.h"
 #include "nsWinGesture.h"
 #include "nsUXThemeData.h"
-#include "nsIDOMSimpleGestureEvent.h"
 #include "nsIDOMWheelEvent.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/dom/SimpleGestureEventBinding.h"
 
 #include <cmath>
 
@@ -207,10 +207,13 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam,
       evt.mDelta = degrees - mRotateIntermediate;
       mRotateIntermediate = degrees;
 
-      if (evt.mDelta > 0)
-        evt.mDirection = nsIDOMSimpleGestureEvent::ROTATION_COUNTERCLOCKWISE;
-      else if (evt.mDelta < 0)
-        evt.mDirection = nsIDOMSimpleGestureEvent::ROTATION_CLOCKWISE;
+      if (evt.mDelta > 0) {
+        evt.mDirection =
+          dom::SimpleGestureEventBinding::ROTATION_COUNTERCLOCKWISE;
+      }
+      else if (evt.mDelta < 0) {
+        evt.mDirection = dom::SimpleGestureEventBinding::ROTATION_CLOCKWISE;
+      }
 
       if (gi.dwFlags & GF_BEGIN) {
         evt.mMessage = eRotateGestureStart;

@@ -34,7 +34,7 @@ var escKeyReceived = false;
 var escKeySent = false;
 
 function keyHandler(event) {
-  if (escKeyReceived == SpecialPowers.Ci.nsIDOMKeyEvent.DOM_VK_ESC) {
+  if (escKeyReceived == KeyboardEvent.DOM_VK_ESC) {
     escKeyReceived = true;
   }
 }
