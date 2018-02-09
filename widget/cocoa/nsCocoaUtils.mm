@@ -876,7 +876,7 @@ static const KeyConversionData gKeyConversions[] = {
 #define KEYCODE_ENTRY(aStr, aCode) \
   {#aStr, sizeof(#aStr) - 1, NS_##aStr, aCode}
 
-// Some keycodes may have different name in nsIDOMKeyEvent from its key name.
+// Some keycodes may have different name in KeyboardEvent from its key name.
 #define KEYCODE_ENTRY2(aStr, aNSName, aCode) \
   {#aStr, sizeof(#aStr) - 1, NS_##aNSName, aCode}
 

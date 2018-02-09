@@ -35281,6 +35281,12 @@ module.exports = {"builtin":{"Array":false,"ArrayBuffer":false,"Boolean":false,"
 "use strict";
 
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createParseJSScopeVisitor = createParseJSScopeVisitor;
+exports.findScopes = findScopes;
+
 var _devtoolsSourceMap = __webpack_require__(1360);
 
 var _getFunctionName = __webpack_require__(1621);
@@ -35376,8 +35382,10 @@ function isLetOrConst(node) {
   return node.kind === "let" || node.kind === "const";
 }
 
-function hasLetOrConst(path) {
-  return path.node.body.some(node => isLexicalVariable(node));
+function hasLexicalDeclaration(path) {
+  const isFunctionBody = path.parentPath.isFunction({ body: path.node });
+
+  return path.node.body.some(node => isLexicalVariable(node) || !isFunctionBody && node.type === "FunctionDeclaration" || node.type === "ClassDeclaration");
 }
 function isLexicalVariable(node) {
   return isNode(node, "VariableDeclaration") && isLetOrConst(node);
@@ -35498,22 +35506,24 @@ function createParseJSScopeVisitor(sourceId) {
           };
         }
 
+        if (path.isFunctionDeclaration() && isNode(tree.id, "Identifier")) {
+          // This ignores Annex B function declaration hoisting, which
+          // is probably a fine assumption.
+          const fnScope = getVarScope(parent);
+          parent.names[tree.id.name] = {
+            type: fnScope === parent ? "var" : "let",
+            declarations: [tree.id.loc],
+            refs: []
+          };
+        }
+
         const scope = createTempScope("function", (0, _getFunctionName2.default)(path), parent, {
           // Being at the start of a function doesn't count as
           // being inside of it.
           start: tree.params[0] ? tree.params[0].loc.start : location.start,
           end: location.end
         });
-        if (path.isFunctionDeclaration() && isNode(tree.id, "Identifier")) {
-          // This ignores Annex B function declaration hoisting, which
-          // is probably a fine assumption.
-          const fnScope = getVarScope(parent);
-          scope.names[tree.id.name] = {
-            type: fnScope === scope ? "var" : "let",
-            declarations: [tree.id.loc],
-            refs: []
-          };
-        }
+
         tree.params.forEach(param => parseDeclarator(param, scope, "var"));
 
         if (!path.isArrowFunctionExpression()) {
@@ -35560,7 +35570,7 @@ function createParseJSScopeVisitor(sourceId) {
           parent = createTempScope("block", "For", parent, {
             // Being at the start of a for loop doesn't count as
             // being inside it.
-            start: init.start,
+            start: init.loc.start,
             end: location.end
           });
         }
@@ -35573,7 +35583,7 @@ function createParseJSScopeVisitor(sourceId) {
         return;
       }
       if (path.isBlockStatement()) {
-        if (hasLetOrConst(path)) {
+        if (hasLexicalDeclaration(path)) {
           // Debugger will create new lexical environment for the block.
           savedParents.set(path, parent);
           parent = createTempScope("block", "Block", parent, location);
@@ -35582,7 +35592,7 @@ function createParseJSScopeVisitor(sourceId) {
       }
       if (path.isVariableDeclaration() && (path.node.kind === "var" ||
       // Lexical declarations in for statements are handled above.
-      !path.parentPath.isForStatement({ init: tree }) || !path.parentPath.isXStatement({ left: tree }))) {
+      !path.parentPath.isForStatement({ init: tree }) || !path.parentPath.isForXStatement({ left: tree }))) {
         // Finds right lexical environment
         const hoistAt = !isLetOrConst(tree) ? getVarScope(parent) : parent;
         tree.declarations.forEach(declarator => {
@@ -35623,7 +35633,7 @@ function createParseJSScopeVisitor(sourceId) {
 
       if (path.parentPath.isClassProperty({ value: tree })) {
         savedParents.set(path, parent);
-        parent = createTempScope("block", "Class Field", parent, location);
+        parent = createTempScope("function", "Class Field", parent, location);
         parent.names.this = {
           type: "implicit",
           declarations: [],
@@ -35729,11 +35739,6 @@ function findScopes(scopes, location) {
     };
   });
 }
-
-module.exports = {
-  createParseJSScopeVisitor,
-  findScopes
-};
 
 /***/ })
 /******/ ]);

@@ -146,13 +146,22 @@ function hexDecode(str) {
   return new Uint8Array(str.match(/../g).map(x => parseInt(x, 16)));
 }
 
+function hasOnlyKeys(obj, ...keys) {
+  let okeys = new Set(Object.keys(obj));
+  return keys.length == okeys.size &&
+         keys.every(k => okeys.has(k));
+}
+
 function webAuthnDecodeCBORAttestation(aCborAttBuf) {
   let attObj = CBOR.decode(aCborAttBuf);
   console.log(":: Attestation CBOR Object ::");
-  if (!("authData" in attObj && "fmt" in attObj && "attStmt" in attObj)) {
+  if (!hasOnlyKeys(attObj, "authData", "fmt", "attStmt")) {
     return Promise.reject("Invalid CBOR Attestation Object");
   }
-  if (!("sig" in attObj.attStmt && "x5c" in attObj.attStmt)) {
+  if (attObj.fmt == "fido-u2f" && !hasOnlyKeys(attObj.attStmt, "sig", "x5c")) {
+    return Promise.reject("Invalid CBOR Attestation Statement");
+  }
+  if (attObj.fmt == "none" && Object.keys(attObj.attStmt).length > 0) {
     return Promise.reject("Invalid CBOR Attestation Statement");
   }
 

@@ -25,7 +25,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsPIDOMWindow.h"
 #include "nsIEditingSession.h"
 #include "nsIFrame.h"
@@ -48,6 +47,7 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/MutationEventBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -719,7 +719,7 @@ DocAccessible::AttributeWillChange(nsIDocument* aDocument,
   // Update dependent IDs cache. Take care of elements that are accessible
   // because dependent IDs cache doesn't contain IDs from non accessible
   // elements.
-  if (aModType != nsIDOMMutationEvent::ADDITION)
+  if (aModType != dom::MutationEventBinding::ADDITION)
     RemoveDependentIDsFor(accessible, aAttribute);
 
   if (aAttribute == nsGkAtoms::id) {
@@ -737,7 +737,7 @@ DocAccessible::AttributeWillChange(nsIDocument* aDocument,
   // need to newly expose it as a toggle button) etc.
   if (aAttribute == nsGkAtoms::aria_checked ||
       aAttribute == nsGkAtoms::aria_pressed) {
-    mARIAAttrOldValue = (aModType != nsIDOMMutationEvent::ADDITION) ?
+    mARIAAttrOldValue = (aModType != dom::MutationEventBinding::ADDITION) ?
       nsAccUtils::GetARIAToken(aElement, aAttribute) : nullptr;
     return;
   }
@@ -794,8 +794,8 @@ DocAccessible::AttributeChanged(nsIDocument* aDocument,
   // its accessible will be created later. It doesn't make sense to keep
   // dependent IDs for non accessible elements. For the second case we'll update
   // dependent IDs cache when its accessible is created.
-  if (aModType == nsIDOMMutationEvent::MODIFICATION ||
-      aModType == nsIDOMMutationEvent::ADDITION) {
+  if (aModType == dom::MutationEventBinding::MODIFICATION ||
+      aModType == dom::MutationEventBinding::ADDITION) {
     AddDependentIDsFor(accessible, aAttribute);
   }
 }

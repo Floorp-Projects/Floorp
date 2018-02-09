@@ -61,7 +61,6 @@
 #include "nsContentList.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MouseEvents.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsPIDOMWindow.h"
 #include "nsJSPrincipals.h"
 #include "nsDOMAttributeMap.h"
@@ -92,6 +91,7 @@
 #include "mozilla/dom/XULElementBinding.h"
 #include "mozilla/dom/BoxObject.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
+#include "mozilla/dom/MutationEventBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1404,8 +1404,8 @@ nsXULElement::GetAttributeChangeHint(const nsAtom* aAttribute,
     nsChangeHint retval(nsChangeHint(0));
 
     if (aAttribute == nsGkAtoms::value &&
-        (aModType == nsIDOMMutationEvent::REMOVAL ||
-         aModType == nsIDOMMutationEvent::ADDITION)) {
+        (aModType == MutationEventBinding::REMOVAL ||
+         aModType == MutationEventBinding::ADDITION)) {
       if (IsAnyOfXULElements(nsGkAtoms::label, nsGkAtoms::description))
         // Label and description dynamically morph between a normal
         // block and a cropping single-line XUL text frame.  If the

@@ -311,6 +311,10 @@ CanonicalizeNaN(double d)
  *   that toString, toObject, toSymbol will return an invalid pointer (because
  *   some high bits will be set) when called on a Value with a different type
  *   tag.
+ *
+ * - On 32-bit platforms,when unboxing an object/string/symbol Value, we use a
+ *   conditional move (not speculated) to zero the payload register if the type
+ *   doesn't match.
  */
 class MOZ_NON_PARAM alignas(8) Value
 {

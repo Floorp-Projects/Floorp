@@ -17,11 +17,11 @@
 
 class nsMenuFrame;
 class nsMenuBarFrame;
-class nsIDOMKeyEvent;
 
 namespace mozilla {
 namespace dom {
 class EventTarget;
+class KeyboardEvent;
 } // namespace dom
 } // namespace mozilla
 
@@ -58,7 +58,7 @@ public:
    * IsAccessKeyPressed() returns true if the modifier state of aEvent matches
    * the modifier state of access key.
    */
-  static bool IsAccessKeyPressed(nsIDOMKeyEvent* aEvent);
+  static bool IsAccessKeyPressed(mozilla::dom::KeyboardEvent* aEvent);
 
 protected:
   virtual ~nsMenuBarListener();
@@ -73,14 +73,15 @@ protected:
 
   static void InitAccessKey();
 
-  static mozilla::Modifiers GetModifiersForAccessKey(nsIDOMKeyEvent* event);
+  static mozilla::Modifiers
+    GetModifiersForAccessKey(mozilla::dom::KeyboardEvent* event);
 
   /**
    * Given a key event for an Alt+shortcut combination,
    * return the menu, if any, that would be opened. If aPeek
    * is false, then play a beep and deactivate the menubar on Windows.
    */
-  nsMenuFrame* GetMenuForKeyEvent(nsIDOMKeyEvent* aKeyEvent, bool aPeek);
+  nsMenuFrame* GetMenuForKeyEvent(mozilla::dom::KeyboardEvent* aKeyEvent, bool aPeek);
 
   /**
    * Call MarkAsReservedByChrome if the user's preferences indicate that
@@ -109,7 +110,7 @@ protected:
   bool mAccessKeyDownCanceled;
   // Does the access key by itself focus the menubar?
   static bool mAccessKeyFocuses;
-  // See nsIDOMKeyEvent.h for sample values.
+  // See KeyboardEvent for sample values (DOM_VK_* constants).
   static int32_t mAccessKey;
   // Modifier mask for the access key.
   static mozilla::Modifiers mAccessKeyMask;

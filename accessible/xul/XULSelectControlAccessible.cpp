@@ -12,13 +12,13 @@
 #include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIMutableArray.h"
 #include "nsIServiceManager.h"
 
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/KeyboardEventBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

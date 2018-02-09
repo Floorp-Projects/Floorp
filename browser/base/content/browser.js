@@ -36,6 +36,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
+  PanelMultiView: "resource:///modules/PanelMultiView.jsm",
   PanelView: "resource:///modules/PanelMultiView.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -7255,7 +7256,7 @@ var gIdentityHandler = {
   handleMoreInfoClick(event) {
     displaySecurityInfo();
     event.stopPropagation();
-    this._identityPopup.hidePopup();
+    PanelMultiView.hidePopup(this._identityPopup);
   },
 
   showSecuritySubView() {
@@ -7277,14 +7278,14 @@ var gIdentityHandler = {
     // Reload the page with the content unblocked
     BrowserReloadWithFlags(
       Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT);
-    this._identityPopup.hidePopup();
+    PanelMultiView.hidePopup(this._identityPopup);
   },
 
   enableMixedContentProtection() {
     gBrowser.selectedBrowser.messageManager.sendAsyncMessage(
       "MixedContent:ReenableProtection", {});
     BrowserReload();
-    this._identityPopup.hidePopup();
+    PanelMultiView.hidePopup(this._identityPopup);
   },
 
   removeCertException() {
@@ -7296,7 +7297,7 @@ var gIdentityHandler = {
     let port = this._uri.port > 0 ? this._uri.port : 443;
     this._overrideService.clearValidityOverride(host, port);
     BrowserReloadSkipCache();
-    this._identityPopup.hidePopup();
+    PanelMultiView.hidePopup(this._identityPopup);
   },
 
   /**
@@ -7362,7 +7363,7 @@ var gIdentityHandler = {
     // Handle a location change while the Control Center is focused
     // by closing the popup (bug 1207542)
     if (shouldHidePopup) {
-      this._identityPopup.hidePopup();
+      PanelMultiView.hidePopup(this._identityPopup);
     }
 
     // NOTE: We do NOT update the identity popup (the control center) when
@@ -7826,7 +7827,8 @@ var gIdentityHandler = {
     this._identityBox.setAttribute("open", "true");
 
     // Now open the popup, anchored off the primary chrome element
-    this._identityPopup.openPopup(this._identityIcon, "bottomcenter topleft");
+    PanelMultiView.openPopup(this._identityPopup, this._identityIcon,
+                             "bottomcenter topleft").catch(Cu.reportError);
   },
 
   onPopupShown(event) {
@@ -7859,7 +7861,7 @@ var gIdentityHandler = {
       // Hide the panel when focusing an element that is
       // neither an ancestor nor descendant unless the panel has
       // @noautohide (e.g. for a tour).
-      this._identityPopup.hidePopup();
+      PanelMultiView.hidePopup(this._identityPopup);
     }
   },
 

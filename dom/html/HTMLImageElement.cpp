@@ -13,7 +13,6 @@
 #include "nsSize.h"
 #include "nsDocument.h"
 #include "nsIDocument.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsIScriptContext.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
@@ -26,6 +25,7 @@
 #include "nsIDOMWindow.h"
 #include "nsFocusManager.h"
 #include "mozilla/dom/HTMLFormElement.h"
+#include "mozilla/dom/MutationEventBinding.h"
 #include "nsAttrValueOrString.h"
 #include "imgLoader.h"
 #include "Image.h"
@@ -266,8 +266,8 @@ HTMLImageElement::GetAttributeChangeHint(const nsAtom* aAttribute,
       aAttribute == nsGkAtoms::ismap) {
     retval |= nsChangeHint_ReconstructFrame;
   } else if (aAttribute == nsGkAtoms::alt) {
-    if (aModType == nsIDOMMutationEvent::ADDITION ||
-        aModType == nsIDOMMutationEvent::REMOVAL) {
+    if (aModType == MutationEventBinding::ADDITION ||
+        aModType == MutationEventBinding::REMOVAL) {
       retval |= nsChangeHint_ReconstructFrame;
     }
   }

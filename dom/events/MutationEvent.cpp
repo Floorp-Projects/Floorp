@@ -23,7 +23,6 @@ MutationEvent::MutationEvent(EventTarget* aOwner,
 }
 
 NS_INTERFACE_MAP_BEGIN(MutationEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMutationEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
 
 NS_IMPL_ADDREF_INHERITED(MutationEvent, Event)
@@ -37,40 +36,28 @@ MutationEvent::GetRelatedNode()
   return n.forget();
 }
 
-NS_IMETHODIMP
-MutationEvent::GetRelatedNode(nsIDOMNode** aRelatedNode)
-{
-  nsCOMPtr<nsINode> relatedNode = GetRelatedNode();
-  nsCOMPtr<nsIDOMNode> relatedDOMNode = relatedNode ? relatedNode->AsDOMNode() : nullptr;
-  relatedDOMNode.forget(aRelatedNode);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MutationEvent::GetPrevValue(nsAString& aPrevValue)
+void
+MutationEvent::GetPrevValue(nsAString& aPrevValue) const
 {
   InternalMutationEvent* mutation = mEvent->AsMutationEvent();
   if (mutation->mPrevAttrValue)
     mutation->mPrevAttrValue->ToString(aPrevValue);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-MutationEvent::GetNewValue(nsAString& aNewValue)
+void
+MutationEvent::GetNewValue(nsAString& aNewValue) const
 {
   InternalMutationEvent* mutation = mEvent->AsMutationEvent();
   if (mutation->mNewAttrValue)
       mutation->mNewAttrValue->ToString(aNewValue);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-MutationEvent::GetAttrName(nsAString& aAttrName)
+void
+MutationEvent::GetAttrName(nsAString& aAttrName) const
 {
   InternalMutationEvent* mutation = mEvent->AsMutationEvent();
   if (mutation->mAttrName)
       mutation->mAttrName->ToString(aAttrName);
-  return NS_OK;
 }
 
 uint16_t
@@ -79,39 +66,30 @@ MutationEvent::AttrChange()
   return mEvent->AsMutationEvent()->mAttrChange;
 }
 
-NS_IMETHODIMP
-MutationEvent::GetAttrChange(uint16_t* aAttrChange)
+void
+MutationEvent::InitMutationEvent(const nsAString& aType,
+                                 bool aCanBubble, bool aCancelable,
+                                 nsINode* aRelatedNode,
+                                 const nsAString& aPrevValue,
+                                 const nsAString& aNewValue,
+                                 const nsAString& aAttrName,
+                                 uint16_t& aAttrChange,
+                                 ErrorResult& aRv)
 {
-  *aAttrChange = AttrChange();
-  return NS_OK;
-}
+  NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
 
-NS_IMETHODIMP
-MutationEvent::InitMutationEvent(const nsAString& aTypeArg,
-                                 bool aCanBubbleArg,
-                                 bool aCancelableArg,
-                                 nsIDOMNode* aRelatedNodeArg,
-                                 const nsAString& aPrevValueArg,
-                                 const nsAString& aNewValueArg,
-                                 const nsAString& aAttrNameArg,
-                                 uint16_t aAttrChangeArg)
-{
-  NS_ENSURE_TRUE(!mEvent->mFlags.mIsBeingDispatched, NS_OK);
-
-  Event::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
+  Event::InitEvent(aType, aCanBubble, aCancelable);
 
   InternalMutationEvent* mutation = mEvent->AsMutationEvent();
-  mutation->mRelatedNode = aRelatedNodeArg;
-  if (!aPrevValueArg.IsEmpty())
-    mutation->mPrevAttrValue = NS_Atomize(aPrevValueArg);
-  if (!aNewValueArg.IsEmpty())
-    mutation->mNewAttrValue = NS_Atomize(aNewValueArg);
-  if (!aAttrNameArg.IsEmpty()) {
-    mutation->mAttrName = NS_Atomize(aAttrNameArg);
+  mutation->mRelatedNode = aRelatedNode ? aRelatedNode->AsDOMNode() : nullptr;
+  if (!aPrevValue.IsEmpty())
+    mutation->mPrevAttrValue = NS_Atomize(aPrevValue);
+  if (!aNewValue.IsEmpty())
+    mutation->mNewAttrValue = NS_Atomize(aNewValue);
+  if (!aAttrName.IsEmpty()) {
+    mutation->mAttrName = NS_Atomize(aAttrName);
   }
-  mutation->mAttrChange = aAttrChangeArg;
-
-  return NS_OK;
+  mutation->mAttrChange = aAttrChange;
 }
 
 } // namespace dom

@@ -31,7 +31,7 @@ dictionary APZBucket {
 };
 
 [Pref="apz.test.logging_enabled"]
-callback interface APZHitResultFlags {
+namespace APZHitResultFlags {
   // These constants should be kept in sync with mozilla::gfx::CompositorHitTestInfo
   const unsigned short INVISIBLE = 0;
   const unsigned short VISIBLE = 0x0001;

@@ -8526,9 +8526,11 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
         if (strcmp(str, "on") == 0) {
             jit::JitOptions.spectreIndexMasking = true;
             jit::JitOptions.spectreStringMitigations = true;
+            jit::JitOptions.spectreValueMasking = true;
         } else if (strcmp(str, "off") == 0) {
             jit::JitOptions.spectreIndexMasking = false;
             jit::JitOptions.spectreStringMitigations = false;
+            jit::JitOptions.spectreValueMasking = false;
         } else {
             return OptionFailure("spectre-mitigations", str);
         }

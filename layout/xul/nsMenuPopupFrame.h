@@ -27,6 +27,12 @@
 
 class nsIWidget;
 
+namespace mozilla {
+namespace dom {
+class KeyboardEvent;
+} // namespace dom
+} // namespace mozilla
+
 // XUL popups can be in several different states. When opening a popup, the
 // state changes as follows:
 //   ePopupClosed - initial state
@@ -339,7 +345,8 @@ public:
   // the Enter key. If doAction is false, the menu should just be highlighted.
   // This method also handles incremental searching in menus so the user can
   // type the first few letters of an item/s name to select it.
-  nsMenuFrame* FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction);
+  nsMenuFrame* FindMenuWithShortcut(mozilla::dom::KeyboardEvent* aKeyEvent,
+                                    bool& doAction);
 
   void ClearIncrementalString() { mIncrementalString.Truncate(); }
   static bool IsWithinIncrementalTime(DOMTimeStamp time) {

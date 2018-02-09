@@ -9,14 +9,12 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/TransitionEventBinding.h"
-#include "nsIDOMTransitionEvent.h"
 #include "nsStringFwd.h"
 
 namespace mozilla {
 namespace dom {
 
-class TransitionEvent : public Event,
-                        public nsIDOMTransitionEvent
+class TransitionEvent : public Event
 {
 public:
   TransitionEvent(EventTarget* aOwner,
@@ -24,8 +22,6 @@ public:
                   InternalTransitionEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_TO_EVENT
-  NS_DECL_NSIDOMTRANSITIONEVENT
 
   static already_AddRefed<TransitionEvent>
   Constructor(const GlobalObject& aGlobal,
@@ -38,9 +34,8 @@ public:
     return TransitionEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
-  // xpidl implementation
-  // GetPropertyName(nsAString& aPropertyName)
-  // GetPseudoElement(nsAString& aPreudoElement)
+  void GetPropertyName(nsAString& aPropertyName) const;
+  void GetPseudoElement(nsAString& aPreudoElement) const;
 
   float ElapsedTime();
 

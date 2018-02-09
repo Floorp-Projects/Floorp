@@ -133,7 +133,9 @@ var gTests = [
 
   function(controller) {
     print("handleKeyNavigation");
-    controller.handleKeyNavigation(Ci.nsIDOMKeyEvent.DOM_VK_UP);
+    // Hardcode KeyboardEvent.DOM_VK_RIGHT, because we can't easily
+    // include KeyboardEvent here.
+    controller.handleKeyNavigation(0x26 /* KeyboardEvent.DOM_VK_UP */);
   },
 ];
 
