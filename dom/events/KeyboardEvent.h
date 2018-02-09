@@ -32,6 +32,11 @@ public:
   // Forward to base class
   NS_FORWARD_TO_UIEVENT
 
+  virtual KeyboardEvent* AsKeyboardEvent() override
+  {
+    return this;
+  }
+
   static already_AddRefed<KeyboardEvent> Constructor(
                                            const GlobalObject& aGlobal,
                                            const nsAString& aType,

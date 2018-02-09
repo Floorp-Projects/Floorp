@@ -7,12 +7,12 @@
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/TextEvents.h"
 
 using namespace mozilla;
@@ -86,12 +86,12 @@ NS_IMPL_ISUPPORTS(nsXBLKeyEventHandler, nsIDOMEventListener)
 
 bool
 nsXBLKeyEventHandler::ExecuteMatchedHandlers(
-                        nsIDOMKeyEvent* aKeyEvent,
+                        KeyboardEvent* aKeyEvent,
                         uint32_t aCharCode,
                         const IgnoreModifierState& aIgnoreModifierState)
 {
-  WidgetEvent* event = aKeyEvent->AsEvent()->WidgetEventPtr();
-  nsCOMPtr<EventTarget> target = aKeyEvent->AsEvent()->InternalDOMEvent()->GetCurrentTarget();
+  WidgetEvent* event = aKeyEvent->WidgetEventPtr();
+  nsCOMPtr<EventTarget> target = aKeyEvent->GetCurrentTarget();
 
   bool executed = false;
   for (uint32_t i = 0; i < mProtoHandlers.Length(); ++i) {
@@ -101,7 +101,7 @@ nsXBLKeyEventHandler::ExecuteMatchedHandlers(
         (hasAllowUntrustedAttr && handler->AllowUntrustedEvents()) ||
         (!hasAllowUntrustedAttr && !mIsBoundToChrome && !mUsingContentXBLScope)) &&
         handler->KeyEventMatched(aKeyEvent, aCharCode, aIgnoreModifierState)) {
-      handler->ExecuteHandler(target, aKeyEvent->AsEvent());
+      handler->ExecuteHandler(target, aKeyEvent);
       executed = true;
     }
   }
@@ -136,9 +136,10 @@ nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
       return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aEvent));
-  if (!key)
+  RefPtr<KeyboardEvent> key = aEvent->InternalDOMEvent()->AsKeyboardEvent();
+  if (!key) {
     return NS_OK;
+  }
 
   WidgetKeyboardEvent* nativeKeyboardEvent =
     aEvent->WidgetEventPtr()->AsKeyboardEvent();
