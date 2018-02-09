@@ -38,17 +38,21 @@ function resolveRelativeTimeFormatInternals(lazyRelativeTimeFormatData) {
 
     var RelativeTimeFormat = relativeTimeFormatInternalProperties;
 
-    // Step 16.
+    // Step 10.
     const r = ResolveLocale(callFunction(RelativeTimeFormat.availableLocales, RelativeTimeFormat),
                             lazyRelativeTimeFormatData.requestedLocales,
                             lazyRelativeTimeFormatData.opt,
                             RelativeTimeFormat.relevantExtensionKeys,
                             RelativeTimeFormat.localeData);
 
-    // Step 17.
+    // Step 11.
     internalProps.locale = r.locale;
+
+    // Step 14.
     internalProps.style = lazyRelativeTimeFormatData.style;
-    internalProps.type = lazyRelativeTimeFormatData.type;
+
+    // Step 16.
+    internalProps.numeric = lazyRelativeTimeFormatData.numeric;
 
     return internalProps;
 }
@@ -95,7 +99,7 @@ function InitializeRelativeTimeFormat(relativeTimeFormat, locales, options) {
     //   {
     //     requestedLocales: List of locales,
     //     style: "long" / "short" / "narrow",
-    //     type: "numeric" / "text",
+    //     numeric: "always" / "auto",
     //
     //     opt: // opt object computer in InitializeRelativeTimeFormat
     //       {
@@ -131,10 +135,9 @@ function InitializeRelativeTimeFormat(relativeTimeFormat, locales, options) {
     const style = GetOption(options, "style", "string", ["long", "short", "narrow"], "long");
     lazyRelativeTimeFormatData.style = style;
 
-    // This option is in the process of being added to the spec.
-    // See: https://github.com/tc39/proposal-intl-relative-time/issues/9
-    const type = GetOption(options, "type", "string", ["numeric", "text"], "numeric");
-    lazyRelativeTimeFormatData.type = type;
+    // Steps 15-16.
+    const numeric = GetOption(options, "numeric", "string", ["always", "auto"], "always");
+    lazyRelativeTimeFormatData.numeric = numeric;
 
     initializeIntlObject(relativeTimeFormat, "RelativeTimeFormat", lazyRelativeTimeFormatData);
 }
@@ -198,7 +201,7 @@ function Intl_RelativeTimeFormat_format(value, unit) {
     }
 
     // Step 5.
-    return intl_FormatRelativeTime(relativeTimeFormat, t, u, internals.type);
+    return intl_FormatRelativeTime(relativeTimeFormat, t, u, internals.numeric);
 }
 
 /**
@@ -218,7 +221,7 @@ function Intl_RelativeTimeFormat_resolvedOptions() {
     var result = {
         locale: internals.locale,
         style: internals.style,
-        type: internals.type,
+        numeric: internals.numeric,
     };
 
     return result;

@@ -1,9 +1,6 @@
 // This returns the content of Chunkfive.otf from a .sjs file, for testing.
 // Accepts query parameters statusCode and statusReason to specify the HTTP response status.
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 const BinaryOutputStream =
   Components.Constructor("@mozilla.org/binaryoutputstream;1",
                          "nsIBinaryOutputStream",

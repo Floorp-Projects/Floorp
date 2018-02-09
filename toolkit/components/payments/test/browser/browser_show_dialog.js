@@ -66,6 +66,18 @@ add_task(async function test_show_completePayment() {
   profileStorage.addresses.add(address);
   await onChanged;
 
+  onChanged = TestUtils.topicObserved("formautofill-storage-changed",
+                                      (subject, data) => data == "add");
+  let card = {
+    "cc-exp-month": 1,
+    "cc-exp-year": 9999,
+    "cc-name": "John Doe",
+    "cc-number": "999999999999",
+  };
+
+  profileStorage.creditCards.add(card);
+  await onChanged;
+
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: BLANK_PAGE_URL,
@@ -83,13 +95,16 @@ add_task(async function test_show_completePayment() {
 
     let frame = await getPaymentFrame(win);
     ok(frame, "Got payment frame");
+    info("entering CSC");
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
+      securityCode: "999",
+    });
     info("clicking pay");
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
 
     // Add a handler to complete the payment above.
     info("acknowledging the completion from the merchant page");
     let result = await ContentTask.spawn(browser, {}, PTU.ContentTasks.addCompletionHandler);
-    is(result.response.methodName, "basic-card", "Check methodName");
 
     let addressLines = address["street-address"].split("\n");
     let actualShippingAddress = result.response.shippingAddress;
@@ -105,9 +120,10 @@ add_task(async function test_show_completePayment() {
        "Recipient country should match");
     is(actualShippingAddress.phone, address.tel, "Phone should match");
 
+    is(result.response.methodName, "basic-card", "Check methodName");
     let methodDetails = result.methodDetails;
     is(methodDetails.cardholderName, "John Doe", "Check cardholderName");
-    is(methodDetails.cardNumber, "9999999999", "Check cardNumber");
+    is(methodDetails.cardNumber, "999999999999", "Check cardNumber");
     is(methodDetails.expiryMonth, "01", "Check expiryMonth");
     is(methodDetails.expiryYear, "9999", "Check expiryYear");
     is(methodDetails.cardSecurityCode, "999", "Check cardSecurityCode");

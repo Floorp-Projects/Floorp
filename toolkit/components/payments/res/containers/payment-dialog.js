@@ -63,15 +63,14 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
   }
 
   pay() {
+    let {
+      selectedPaymentCard,
+      selectedPaymentCardSecurityCode,
+    } = this.requestStore.getState();
+
     paymentRequest.pay({
-      methodName: "basic-card",
-      methodData: {
-        cardholderName: "John Doe",
-        cardNumber: "9999999999",
-        expiryMonth: "01",
-        expiryYear: "9999",
-        cardSecurityCode: "999",
-      },
+      selectedPaymentCardGUID: selectedPaymentCard,
+      selectedPaymentCardSecurityCode,
     });
   }
 
@@ -112,6 +111,7 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
     if (!savedBasicCards[selectedPaymentCard]) {
       this.requestStore.setState({
         selectedPaymentCard: Object.keys(savedBasicCards)[0] || null,
+        selectedPaymentCardSecurityCode: null,
       });
     }
   }

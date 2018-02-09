@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the payment-method-picker component
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the payment-method-picker component</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="payments_common.js"></script>
+  <script src="custom-elements.min.js"></script>
+  <script src="PaymentsStore.js"></script>
+  <script src="ObservedPropertiesMixin.js"></script>
+  <script src="PaymentStateSubscriberMixin.js"></script>
+  <script src="rich-select.js"></script>
+  <script src="payment-method-picker.js"></script>
+  <script src="rich-option.js"></script>
+  <script src="basic-card-option.js"></script>
+  <link rel="stylesheet" type="text/css" href="rich-select.css"/>
+  <link rel="stylesheet" type="text/css" href="basic-card-option.css"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <p id="display">
+    <payment-method-picker id="picker1"
+                           selected-state-key="selectedPaymentCard"></payment-method-picker>
+  </p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+/** Test the payment-method-picker component **/
+
+/* import-globals-from payments_common.js */
+/* import-globals-from ../../res/components/basic-card-option.js */
+
+let picker1 = document.getElementById("picker1");
+
+add_task(async function test_empty() {
+  ok(picker1, "Check picker1 exists");
+  let {savedBasicCards} = picker1.requestStore.getState();
+  is(Object.keys(savedBasicCards).length, 0, "Check empty initial state");
+  is(picker1.dropdown.popupBox.children.length, 0, "Check dropdown is empty");
+});
+
+add_task(async function test_initialSet() {
+  picker1.requestStore.setState({
+    savedBasicCards: {
+      "48bnds6854t": {
+        "cc-exp": "2017-02",
+        "cc-exp-month": 2,
+        "cc-exp-year": 2017,
+        "cc-name": "John Doe",
+        "cc-number": "************9999",
+        "guid": "48bnds6854t",
+      },
+      "68gjdh354j": {
+        "cc-exp": "2017-08",
+        "cc-exp-month": 8,
+        "cc-exp-year": 2017,
+        "cc-name": "J Smith",
+        "cc-number": "***********1234",
+        "guid": "68gjdh354j",
+      },
+    },
+  });
+  await asyncElementRendered();
+  let options = picker1.dropdown.popupBox.children;
+  is(options.length, 2, "Check dropdown has both cards");
+  ok(options[0].textContent.includes("John Doe"), "Check first card");
+  ok(options[1].textContent.includes("J Smith"), "Check second card");
+});
+
+add_task(async function test_update() {
+  picker1.requestStore.setState({
+    savedBasicCards: {
+      "48bnds6854t": {
+        // Same GUID, different values to trigger an update
+        "cc-exp": "2017-09",
+        "cc-exp-month": 9,
+        "cc-exp-year": 2017,
+        "cc-name": "John Edit Doe",
+        "cc-number": "************9876",
+        "guid": "48bnds6854t",
+      },
+      "68gjdh354j": {
+        "cc-exp": "2017-08",
+        "cc-exp-month": 8,
+        "cc-exp-year": 2017,
+        "cc-name": "J Smith",
+        "cc-number": "***********1234",
+        "guid": "68gjdh354j",
+      },
+    },
+  });
+  await asyncElementRendered();
+  let options = picker1.dropdown.popupBox.children;
+  is(options.length, 2, "Check dropdown still has both cards");
+  ok(options[0].textContent.includes("John Edit Doe"), "Check updated first cc-name");
+  ok(options[0].textContent.includes("9876"), "Check updated first cc-number");
+  ok(options[0].textContent.includes("09"), "Check updated first exp-month");
+
+  ok(options[1].textContent.includes("J Smith"), "Check second card is the same");
+});
+
+add_task(async function test_change_selected_card() {
+  let options = picker1.dropdown.popupBox.children;
+  let selectedOption = picker1.dropdown.selectedOption;
+  is(selectedOption, null, "Should default to no selected option");
+  let {
+    selectedPaymentCard,
+    selectedPaymentCardSecurityCode,
+  } = picker1.requestStore.getState();
+  is(selectedPaymentCard, null, "store should have no option selected");
+  is(selectedPaymentCardSecurityCode, null, "store should have no security code");
+
+  await SimpleTest.promiseFocus();
+  let codeFocusPromise = new Promise(resolve => {
+    picker1.securityCodeInput.addEventListener("focus", resolve, {once: true});
+  });
+  picker1.dropdown.click();
+  options[1].click();
+  await asyncElementRendered();
+  await codeFocusPromise;
+  ok(true, "Focused the security code field");
+  ok(!picker1.open, "Picker should be closed");
+
+  selectedOption = picker1.dropdown.selectedOption;
+  is(selectedOption, options[1], "Selected option should now be the second option");
+  selectedPaymentCard = picker1.requestStore.getState().selectedPaymentCard;
+  is(selectedPaymentCard, selectedOption.guid, "store should have second option selected");
+  selectedPaymentCardSecurityCode = picker1.requestStore.getState().selectedPaymentCardSecurityCode;
+  is(selectedPaymentCardSecurityCode, null, "store should have empty security code");
+
+  let stateChangePromise = promiseStateChange(picker1.requestStore);
+
+  // Type in the security code field
+  sendString("836");
+  sendKey("Tab");
+  let state = await stateChangePromise;
+  ok(state.selectedPaymentCardSecurityCode, "836", "Check security code in state");
+});
+
+add_task(async function test_delete() {
+  picker1.requestStore.setState({
+    savedBasicCards: {
+      // 48bnds6854t was deleted
+      "68gjdh354j": {
+        "cc-exp": "2017-08",
+        "cc-exp-month": 8,
+        "cc-exp-year": 2017,
+        "cc-name": "J Smith",
+        "cc-number": "***********1234",
+        "guid": "68gjdh354j",
+      },
+    },
+  });
+  await asyncElementRendered();
+  let options = picker1.dropdown.popupBox.children;
+  is(options.length, 1, "Check dropdown has one remaining card");
+  ok(options[0].textContent.includes("J Smith"), "Check remaining card");
+});
+</script>
+
+</body>
+</html>

@@ -197,6 +197,7 @@ NewConsoleOutputWrapper.prototype = {
       });
 
       let filterBar = FilterBar({
+        hidePersistLogsCheckbox: this.jsterm.hud.isBrowserConsole,
         serviceContainer: {
           attachRefToHud
         }

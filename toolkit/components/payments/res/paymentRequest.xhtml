@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="paymentRequest.css"/>
   <link rel="stylesheet" href="components/rich-select.css"/>
   <link rel="stylesheet" href="components/address-option.css"/>
+  <link rel="stylesheet" href="components/basic-card-option.css"/>
   <link rel="stylesheet" href="components/payment-details-item.css"/>
   <link rel="stylesheet" href="containers/order-details.css"/>
 
@@ -27,6 +28,8 @@
   <script src="components/rich-option.js"></script>
   <script src="components/address-option.js"></script>
   <script src="containers/address-picker.js"></script>
+  <script src="components/basic-card-option.js"></script>
+  <script src="containers/payment-method-picker.js"></script>
   <script src="containers/payment-dialog.js"></script>
 
   <script src="paymentRequest.js"></script>
@@ -50,6 +53,9 @@
         <section>
           <div><label>Shipping Address</label></div>
           <address-picker selected-state-key="selectedShippingAddress"></address-picker>
+
+          <div><label>Payment Method</label></div>
+          <payment-method-picker selected-state-key="selectedPaymentCard"></payment-method-picker>
         </section>
 
         <footer id="controls-container">
