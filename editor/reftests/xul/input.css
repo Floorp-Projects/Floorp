@@ -39,7 +39,21 @@ html|input.num {
   text-align: end;
 }
 
+#mac html|input.num {
+  margin-inline-end: 8px;
+}
+
+#win html|input.num {
+  padding: 0 !important;
+}
+
+#linux html|input.num {
+  margin-inline-end: 3px;
+  padding: 3px 4px;
+}
+
 html|div.plainfield {
   color: -moz-fieldtext;
   white-space: pre;
 }
+

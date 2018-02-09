@@ -127,12 +127,7 @@
         <parameter name="aSelectionStart"/>
         <parameter name="aSelectionEnd"/>
         <body>
-          // According to https://html.spec.whatwg.org/#do-not-apply,
-          // setSelectionRange() is only available on a limited set of input types.
-          if (this.inputField.type == "text" ||
-              this.inputField.tagName == "html:textarea") {
-            this.inputField.setSelectionRange( aSelectionStart, aSelectionEnd );
-          }
+          this.inputField.setSelectionRange( aSelectionStart, aSelectionEnd );
         </body>
       </method>
 
@@ -193,29 +188,26 @@
           if (this.hasAttribute("focused"))
             return;
 
-          let { originalTarget } = event;
-          if (originalTarget == this) {
-            // Forward focus to actual HTML input
-            this.inputField.focus();
-            this.setAttribute("focused", "true");
-            return;
+          switch (event.originalTarget) {
+            case this:
+              // Forward focus to actual HTML input
+              this.inputField.focus();
+              break;
+            case this.inputField:
+              if (this.mIgnoreFocus) {
+                this.mIgnoreFocus = false;
+              } else if (this.clickSelectsAll) {
+                try {
+                  if (!this.editor || !this.editor.composing)
+                    this.editor.selectAll();
+                } catch (e) {}
+              }
+              break;
+            default:
+              // Allow other children (e.g. URL bar buttons) to get focus
+              return;
           }
-
-          // We check for the parent nodes to support input[type=number] where originalTarget may be an
-          // anonymous child input.
-          if (originalTarget == this.inputField ||
-              originalTarget.localName == "input" && originalTarget.parentNode.parentNode == this.inputField) {
-            if (this.mIgnoreFocus) {
-              this.mIgnoreFocus = false;
-            } else if (this.clickSelectsAll) {
-              try {
-                if (!this.editor || !this.editor.composing)
-                  this.editor.selectAll();
-              } catch (e) {}
-            }
-            this.setAttribute("focused", "true");
-          }
-          // Otherwise, allow other children (e.g. URL bar buttons) to get focus
+          this.setAttribute("focused", "true");
         ]]>
       </handler>
 
@@ -237,7 +229,7 @@
 
           if (!this.mIgnoreClick) {
             this.mIgnoreFocus = true;
-            this.setSelectionRange(0, 0);
+            this.inputField.setSelectionRange(0, 0);
             if (event.originalTarget == this ||
                 event.originalTarget == this.inputField.parentNode)
               this.inputField.focus();

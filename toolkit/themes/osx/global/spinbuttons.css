@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+spinbuttons {
+  height: 24px;
+  min-height: 24px;
+  -moz-appearance: spinner;
+  cursor: default;
+}
+
+.spinbuttons-up {
+  -moz-appearance: none;
+  -moz-box-flex: 1;
+  min-width: 1px;
+  min-height: 1px;
+  margin: 0;
+  padding: 0;
+}
+
+.spinbuttons-down {
+  -moz-appearance: none;
+  -moz-box-flex: 1;
+  min-width: 1px;
+  min-height: 1px;
+  margin: 0;
+  padding: 0;
+}
+
