@@ -7,8 +7,6 @@
 package org.mozilla.gecko.util;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -19,7 +17,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * Unit tests for float utilities.
  */
-@RunWith(TestRunner.class)
 public class TestFloatUtils {
 
     @Test

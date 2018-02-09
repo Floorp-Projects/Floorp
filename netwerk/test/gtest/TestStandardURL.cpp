@@ -177,7 +177,7 @@ TEST(TestStandardURL, From_test_standardurldotjs)
 
 #define COUNT 10000
 
-MOZ_GTEST_BENCH(TestStandardURL, Perf, [] {
+MOZ_GTEST_BENCH(TestStandardURL, DISABLED_Perf, [] {
     nsCOMPtr<nsIURL> url( do_CreateInstance(NS_STANDARDURL_CONTRACTID) );
     ASSERT_TRUE(url);
     nsAutoCString out;
@@ -200,7 +200,7 @@ MOZ_GTEST_BENCH(TestStandardURL, Perf, [] {
 });
 
 // Note the five calls in the loop, so divide by 100k
-MOZ_GTEST_BENCH(TestStandardURL, NormalizePerf, [] {
+MOZ_GTEST_BENCH(TestStandardURL, DISABLED_NormalizePerf, [] {
     nsAutoCString result;
     for (int i = 0; i < 20000; i++) {
       nsAutoCString encHost("123.232.12.32");
@@ -219,7 +219,7 @@ MOZ_GTEST_BENCH(TestStandardURL, NormalizePerf, [] {
 // Bug 1394785 - ignore unstable test on OSX
 #ifndef XP_MACOSX
 // Note the five calls in the loop, so divide by 100k
-MOZ_GTEST_BENCH(TestStandardURL, NormalizePerfFails, [] {
+MOZ_GTEST_BENCH(TestStandardURL, DISABLED_NormalizePerfFails, [] {
     nsAutoCString result;
     for (int i = 0; i < 20000; i++) {
       nsAutoCString encHost("123.292.12.32");

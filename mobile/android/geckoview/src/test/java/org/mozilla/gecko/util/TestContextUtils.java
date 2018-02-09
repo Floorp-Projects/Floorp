@@ -10,7 +10,7 @@ import android.content.Context;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import static org.junit.Assert.*;
@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 /**
  * Unit test methods of the ContextUtils class.
  */
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestContextUtils {
 
     private Context context;

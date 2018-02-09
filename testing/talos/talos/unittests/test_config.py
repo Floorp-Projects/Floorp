@@ -218,7 +218,6 @@ class Test_get_config(object):
         cls.argv_tabpaint = '--activeTests tabpaint -e /some/random/path'.split()
         cls.argv_tps = '--activeTests tps -e /some/random/path'.split()
         cls.argv_tart = '--activeTests tart -e /some/random/path'.split()
-        cls.argv_cart = '--activeTests cart -e /some/random/path'.split()
         cls.argv_damp = '--activeTests damp -e /some/random/path'.split()
         cls.argv_glterrain = '--activeTests glterrain -e /some/random/path'.split()
         cls.argv_glvideo = '--activeTests glvideo -e /some/random/path'.split()
@@ -487,30 +486,6 @@ class Test_get_config(object):
         assert test_config['tpmozafterpaint'] is False
         assert test_config['gecko_profile_interval'] == 10
         assert test_config['gecko_profile_entries'] == 1000000
-        assert 'win_counters' not in test_config
-        assert 'w7_counters' not in test_config
-        assert 'linux_counters' not in test_config
-        assert 'mac_counters' not in test_config
-        assert test_config['preferences'] == {
-            'layout.frame_rate': 0,
-            'docshell.event_starvation_delay_hint': 1,
-            'dom.send_after_paint_to_content': False
-        }
-        assert test_config['filters'] is not None
-        assert test_config['unit'] == 'ms'
-
-    def test_cart_has_expected_attributes(self):
-        config = get_config(self.argv_cart)
-        test_config = config['tests'][0]
-
-        assert test_config['name'] == 'cart'
-        assert test_config['tpmanifest'] != '${talos}/tests/tart/cart.manifest'
-        assert test_config['tpcycles'] == 1
-        assert test_config['tppagecycles'] == 25
-        assert test_config['tploadnocache'] is True
-        assert test_config['tpmozafterpaint'] is False
-        assert test_config['gecko_profile_interval'] == 1
-        assert test_config['gecko_profile_entries'] == 10000000
         assert 'win_counters' not in test_config
         assert 'w7_counters' not in test_config
         assert 'linux_counters' not in test_config
