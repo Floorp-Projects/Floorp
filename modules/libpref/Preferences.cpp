@@ -333,6 +333,7 @@ public:
     , mIsLocked(false)
     , mHasDefaultValue(false)
     , mHasUserValue(false)
+    , mHasChangedSinceInit(false)
     , mDefaultValue()
     , mUserValue()
   {
@@ -363,10 +364,40 @@ public:
   // Other properties.
 
   bool IsLocked() const { return mIsLocked; }
-  void SetIsLocked(bool aValue) { mIsLocked = aValue; }
+  void SetIsLocked(bool aValue)
+  {
+    mIsLocked = aValue;
+    mHasChangedSinceInit = true;
+  }
 
   bool HasDefaultValue() const { return mHasDefaultValue; }
   bool HasUserValue() const { return mHasUserValue; }
+
+  // When a content process is created we could tell it about every pref. But
+  // the content process also initializes prefs from file, so we save a lot of
+  // IPC if we only tell it about prefs that have changed since initialization.
+  //
+  // Specifically, we send a pref if any of the following conditions are met.
+  //
+  // - If the pref has changed in any way (default value, user value, or other
+  //   attribute, such as whether it is locked) since being initialized from
+  //   file.
+  //
+  // - If the pref has a user value. (User values are more complicated than
+  //   default values, because they can be loaded from file after
+  //   initialization with Preferences::ReadUserPrefsFromFile(), so we are
+  //   conservative with them.)
+  //
+  // In other words, prefs that only have a default value and haven't changed
+  // need not be sent. One could do better with effort, but it's ok to be
+  // conservative and this still greatly reduces the number of prefs sent.
+  //
+  // Note: This function is only useful in the parent process.
+  bool MustSendToContentProcesses() const
+  {
+    MOZ_ASSERT(XRE_IsParentProcess());
+    return mHasUserValue || mHasChangedSinceInit;
+  }
 
   // Other operations.
 
@@ -507,6 +538,8 @@ public:
       userValueChanged = true;
     }
 
+    mHasChangedSinceInit = true;
+
     if (userValueChanged || (defaultValueChanged && !mHasUserValue)) {
       *aValueChanged = true;
     }
@@ -556,10 +589,12 @@ public:
     }
 
     mHasUserValue = false;
+    mHasChangedSinceInit = true;
   }
 
   nsresult SetDefaultValue(PrefType aType,
                            PrefValue aValue,
+                           bool aFromFile,
                            bool aIsSticky,
                            bool* aValueChanged)
   {
@@ -573,6 +608,9 @@ public:
     if (!IsLocked() && !ValueMatches(PrefValueKind::Default, aType, aValue)) {
       mDefaultValue.Replace(Type(), aType, aValue);
       mHasDefaultValue = true;
+      if (!aFromFile) {
+        mHasChangedSinceInit = true;
+      }
       if (aIsSticky) {
         mIsSticky = true;
       }
@@ -614,6 +652,9 @@ public:
       mUserValue.Replace(Type(), aType, aValue);
       SetType(aType); // needed because we may have changed the type
       mHasUserValue = true;
+      if (!aFromFile) {
+        mHasChangedSinceInit = true;
+      }
       if (!IsLocked()) {
         *aValueChanged = true;
       }
@@ -667,6 +708,7 @@ private:
   uint32_t mIsLocked : 1;
   uint32_t mHasDefaultValue : 1;
   uint32_t mHasUserValue : 1;
+  uint32_t mHasChangedSinceInit : 1;
 
   PrefValue mDefaultValue;
   PrefValue mUserValue;
@@ -884,7 +926,8 @@ pref_SetPref(const char* aPrefName,
   bool valueChanged = false;
   nsresult rv;
   if (aKind == PrefValueKind::Default) {
-    rv = pref->SetDefaultValue(aType, aValue, aIsSticky, &valueChanged);
+    rv =
+      pref->SetDefaultValue(aType, aValue, aFromFile, aIsSticky, &valueChanged);
   } else {
     rv = pref->SetUserValue(aType, aValue, aFromFile, &valueChanged);
   }
@@ -3234,6 +3277,13 @@ Preferences::GetPreferences(InfallibleTArray<dom::Pref>* aDomPrefs)
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
 
+    if (!pref->MustSendToContentProcesses()) {
+      // The pref value hasn't changed since it was initialized at startup.
+      // Don't bother sending it, because the content process will initialize
+      // it the same way.
+      continue;
+    }
+
     if (pref->HasAdvisablySizedValues()) {
       dom::Pref* setting = aDomPrefs->AppendElement();
       pref->ToDomPref(setting);
@@ -4161,6 +4211,15 @@ Preferences::HasUserValue(const char* aPrefName)
 
   Pref* pref = pref_HashTableLookup(aPrefName);
   return pref && pref->HasUserValue();
+}
+
+/* static */ bool
+Preferences::MustSendToContentProcesses(const char* aPrefName)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), false);
+
+  Pref* pref = pref_HashTableLookup(aPrefName);
+  return pref && pref->MustSendToContentProcesses();
 }
 
 /* static */ int32_t
