@@ -1914,7 +1914,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       preview.modifiers = modifiers;
 
       props.push("key", "charCode", "keyCode");
-    } else if (rawObj instanceof Ci.nsIDOMTransitionEvent) {
+    } else if (obj.class == "TransitionEvent") {
       props.push("propertyName", "pseudoElement");
     } else if (obj.class == "AnimationEvent") {
       props.push("animationName", "pseudoElement");
