@@ -40,9 +40,6 @@ const RAF_BEGIN_URL = EXAMPLE_URL + "doc_raf-begin.html";
 var gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.setBoolPref("devtools.debugger.log", false);
 
-var gReduceTimePrecision = Services.prefs.getBoolPref("privacy.reduceTimerPrecision");
-Services.prefs.setBoolPref("privacy.reduceTimerPrecision", false);
-
 // All tests are asynchronous.
 waitForExplicitFinish();
 
@@ -55,7 +52,6 @@ registerCleanupFunction(() => {
   flags.testing = false;
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
   Services.prefs.setBoolPref("devtools.canvasdebugger.enabled", gToolEnabled);
-  Services.prefs.setBoolPref("privacy.reduceTimerPrecision", gReduceTimePrecision);
 
   // Some of yhese tests use a lot of memory due to GL contexts, so force a GC
   // to help fragmentation.
