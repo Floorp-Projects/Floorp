@@ -666,18 +666,24 @@ class LNode
   protected:
     // Bitfields below are all uint32_t to make sure MSVC packs them correctly.
     uint32_t isCall_ : 1;
+    // LPhi::numOperands() may not fit in this bitfield, so we only use this
+    // field for LInstruction.
+    uint32_t nonPhiNumOperands_ : 6;
     uint32_t numDefs_ : 4;
     uint32_t numTemps_ : 4;
 
   public:
-    LNode(uint32_t numDefs, uint32_t numTemps)
+    LNode(uint32_t nonPhiNumOperands, uint32_t numDefs, uint32_t numTemps)
       : mir_(nullptr),
         block_(nullptr),
         id_(0),
         isCall_(false),
+        nonPhiNumOperands_(nonPhiNumOperands),
         numDefs_(numDefs),
         numTemps_(numTemps)
     {
+        MOZ_ASSERT(nonPhiNumOperands_ == nonPhiNumOperands,
+                   "nonPhiNumOperands must fit in bitfield");
         MOZ_ASSERT(numDefs_ == numDefs, "numDefs must fit in bitfield");
         MOZ_ASSERT(numTemps_ == numTemps, "numTemps must fit in bitfield");
     }
@@ -723,7 +729,6 @@ class LNode
     virtual void setDef(size_t index, const LDefinition& def) = 0;
 
     // Returns information about operands.
-    virtual size_t numOperands() const = 0;
     virtual LAllocation* getOperand(size_t index) = 0;
     virtual void setOperand(size_t index, const LAllocation& a) = 0;
 
@@ -827,8 +832,8 @@ class LInstruction
     LMoveGroup* movesAfter_;
 
   protected:
-    LInstruction(uint32_t numDefs, uint32_t numTemps)
-      : LNode(numDefs, numTemps),
+    LInstruction(uint32_t numOperands, uint32_t numDefs, uint32_t numTemps)
+      : LNode(numOperands, numDefs, numTemps),
         snapshot_(nullptr),
         safepoint_(nullptr),
         inputMoves_(nullptr),
@@ -864,6 +869,9 @@ class LInstruction
     }
     void setMovesAfter(LMoveGroup* moves) {
         movesAfter_ = moves;
+    }
+    uint32_t numOperands() const {
+        return nonPhiNumOperands_;
     }
     void assignSnapshot(LSnapshot* snapshot);
     void initSafepoint(TempAllocator& alloc);
@@ -937,7 +945,9 @@ class LPhi final : public LNode
     LIR_HEADER(Phi)
 
     LPhi(MPhi* ins, LAllocation* inputs)
-      : LNode(/* numDefs = */ 1, /* numTemps = */ 0),
+      : LNode(/* nonPhiNumOperands = */ 0,
+              /* numDefs = */ 1,
+              /* numTemps = */ 0),
         inputs_(inputs)
     {
         setMir(ins);
@@ -951,7 +961,7 @@ class LPhi final : public LNode
         MOZ_ASSERT(index == 0);
         def_ = def;
     }
-    size_t numOperands() const override {
+    size_t numOperands() const {
         return mir_->toPhi()->numOperands();
     }
     LAllocation* getOperand(size_t index) override {
@@ -1084,8 +1094,8 @@ namespace details {
         mozilla::Array<LDefinition, Temps> temps_;
 
       protected:
-        LInstructionFixedDefsTempsHelper()
-          : LInstruction(Defs, Temps)
+        explicit LInstructionFixedDefsTempsHelper(uint32_t numOperands)
+          : LInstruction(numOperands, Defs, Temps)
         {}
 
       public:
@@ -1139,10 +1149,12 @@ class LInstructionHelper : public details::LInstructionFixedDefsTempsHelper<Defs
 {
     mozilla::Array<LAllocation, Operands> operands_;
 
+  protected:
+    LInstructionHelper()
+      : details::LInstructionFixedDefsTempsHelper<Defs, Temps>(Operands)
+    {}
+
   public:
-    size_t numOperands() const final override {
-        return Operands;
-    }
     LAllocation* getOperand(size_t index) final override {
         return &operands_[index];
     }
@@ -1180,12 +1192,14 @@ class LVariadicInstruction : public details::LInstructionFixedDefsTempsHelper<De
 {
     FixedList<LAllocation> operands_;
 
+  protected:
+    explicit LVariadicInstruction(size_t numOperands)
+      : details::LInstructionFixedDefsTempsHelper<Defs, Temps>(numOperands)
+    {}
+
   public:
-    MOZ_MUST_USE bool init(TempAllocator& alloc, size_t length) {
-        return operands_.init(alloc, length);
-    }
-    size_t numOperands() const final override {
-        return operands_.length();
+    MOZ_MUST_USE bool init(TempAllocator& alloc) {
+        return operands_.init(alloc, this->nonPhiNumOperands_);
     }
     LAllocation* getOperand(size_t index) final override {
         return &operands_[index];

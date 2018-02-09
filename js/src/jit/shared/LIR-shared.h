@@ -405,7 +405,9 @@ class LSimdSwizzleF : public LSimdSwizzleBase
 class LSimdGeneralShuffleBase : public LVariadicInstruction<1, 1>
 {
   public:
-    explicit LSimdGeneralShuffleBase(const LDefinition& temp) {
+    LSimdGeneralShuffleBase(const LDefinition& temp, uint32_t numOperands)
+      : LVariadicInstruction<1, 1>(numOperands)
+    {
         setTemp(0, temp);
     }
     const LAllocation* vector(unsigned i) {
@@ -428,8 +430,9 @@ class LSimdGeneralShuffleI : public LSimdGeneralShuffleBase
 {
   public:
     LIR_HEADER(SimdGeneralShuffleI);
-    explicit LSimdGeneralShuffleI(const LDefinition& temp)
-      : LSimdGeneralShuffleBase(temp)
+
+    LSimdGeneralShuffleI(const LDefinition& temp, uint32_t numOperands)
+      : LSimdGeneralShuffleBase(temp, numOperands)
     {}
 };
 
@@ -437,8 +440,9 @@ class LSimdGeneralShuffleF : public LSimdGeneralShuffleBase
 {
   public:
     LIR_HEADER(SimdGeneralShuffleF);
-    explicit LSimdGeneralShuffleF(const LDefinition& temp)
-      : LSimdGeneralShuffleBase(temp)
+
+    LSimdGeneralShuffleF(const LDefinition& temp, uint32_t numOperands)
+      : LSimdGeneralShuffleBase(temp, numOperands)
     {}
 };
 
@@ -5824,7 +5828,8 @@ class LLoadElementFromStateV : public LVariadicInstruction<BOX_PIECES, 3>
     LIR_HEADER(LoadElementFromStateV)
 
     LLoadElementFromStateV(const LDefinition& temp0, const LDefinition& temp1,
-                           const LDefinition& tempD)
+                           const LDefinition& tempD, uint32_t numOperands)
+      : LVariadicInstruction<BOX_PIECES, 3>(numOperands)
     {
         setTemp(0, temp0);
         setTemp(1, temp1);
@@ -8995,16 +9000,14 @@ class LWasmStackArgI64 : public LInstructionHelper<0, INT64_PIECES, 0>
 class LWasmCallBase : public LInstruction
 {
     LAllocation* operands_;
-    uint32_t numOperands_;
     uint32_t needsBoundsCheck_;
 
   public:
 
     LWasmCallBase(LAllocation* operands, uint32_t numOperands, uint32_t numDefs,
                   bool needsBoundsCheck)
-      : LInstruction(numDefs, /* numTemps = */ 0),
+      : LInstruction(numOperands, numDefs, /* numTemps = */ 0),
         operands_(operands),
-        numOperands_(numOperands),
         needsBoundsCheck_(needsBoundsCheck)
     {
         setIsCall();
@@ -9024,15 +9027,12 @@ class LWasmCallBase : public LInstruction
     }
 
     // LInstruction interface
-    size_t numOperands() const override {
-        return numOperands_;
-    }
     LAllocation* getOperand(size_t index) override {
-        MOZ_ASSERT(index < numOperands_);
+        MOZ_ASSERT(index < numOperands());
         return &operands_[index];
     }
     void setOperand(size_t index, const LAllocation& a) override {
-        MOZ_ASSERT(index < numOperands_);
+        MOZ_ASSERT(index < numOperands());
         operands_[index] = a;
     }
     LDefinition* getTemp(size_t index) override {
