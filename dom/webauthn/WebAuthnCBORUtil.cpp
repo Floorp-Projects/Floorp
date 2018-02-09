@@ -47,10 +47,10 @@ CBOREncodePublicKeyObj(const CryptoBuffer& aPubKeyBuf,
 }
 
 nsresult
-CBOREncodeAttestationObj(const CryptoBuffer& aAuthDataBuf,
-                         const CryptoBuffer& aAttestationCertBuf,
-                         const CryptoBuffer& aSignatureBuf,
-                         /* out */ CryptoBuffer& aAttestationObj)
+CBOREncodeFidoU2FAttestationObj(const CryptoBuffer& aAuthDataBuf,
+                                const CryptoBuffer& aAttestationCertBuf,
+                                const CryptoBuffer& aSignatureBuf,
+                                /* out */ CryptoBuffer& aAttestationObj)
 {
   /*
   Attestation Object, encoded in CBOR (description is CDDL)
@@ -86,6 +86,40 @@ CBOREncodeAttestationObj(const CryptoBuffer& aAuthDataBuf,
       encoder.write_array(1);
       encoder.write_bytes(aAttestationCertBuf.Elements(), aAttestationCertBuf.Length());
     }
+
+    encoder.write_string("authData");
+    encoder.write_bytes(aAuthDataBuf.Elements(), aAuthDataBuf.Length());
+  }
+
+  if (!aAttestationObj.Assign(cborAttOut.data(), cborAttOut.size())) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
+nsresult
+CBOREncodeNoneAttestationObj(const CryptoBuffer& aAuthDataBuf,
+                             /* out */ CryptoBuffer& aAttestationObj)
+{
+  /*
+  Attestation Object, encoded in CBOR (description is CDDL)
+
+  $$attStmtType //= (
+                          fmt: "none",
+                          attStmt: emptyMap
+                      )
+
+  emptyMap = {}
+  */
+  cbor::output_dynamic cborAttOut;
+  cbor::encoder encoder(cborAttOut);
+  encoder.write_map(3);
+  {
+    encoder.write_string("fmt");
+    encoder.write_string("none");
+
+    encoder.write_string("attStmt");
+    encoder.write_map(0);
 
     encoder.write_string("authData");
     encoder.write_bytes(aAuthDataBuf.Elements(), aAuthDataBuf.Length());
