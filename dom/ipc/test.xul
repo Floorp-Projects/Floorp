@@ -79,7 +79,7 @@
        document.getElementById('page').focus();
        var frameLoader = document.getElementById('page').QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
 
-       var keyCode = Components.interfaces.nsIDOMKeyEvent.DOM_VK_A;
+       var keyCode = KeyboardEvent.DOM_VK_A;
        frameLoader.sendCrossProcessKeyEvent("keydown", keyCode, 0, 0);
        frameLoader.sendCrossProcessKeyEvent("keypress", keyCode, 0, 0);
        frameLoader.sendCrossProcessKeyEvent("keyup", keyCode, 0, 0);
