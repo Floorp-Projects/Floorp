@@ -5,11 +5,13 @@
 
 package org.mozilla.focus.web;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 import org.mozilla.focus.R;
@@ -18,6 +20,7 @@ import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.GeckoSession;
 import org.mozilla.gecko.GeckoSession.*;
 import org.mozilla.gecko.GeckoSessionSettings;
+import org.mozilla.gecko.util.GeckoBundle;
 
 /**
  * WebViewProvider implementation for creating a Gecko based implementation of IWebView.
@@ -56,7 +59,6 @@ public class WebViewProvider {
         public GeckoWebView(Context context, AttributeSet attrs) {
             super(context, attrs);
 
-
             final GeckoSessionSettings settings = new GeckoSessionSettings();
             settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
             // Todo we need to use private mode to not save files but currently gv unexpectedly
@@ -64,18 +66,22 @@ public class WebViewProvider {
             //settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true);
 
             geckoSession = new GeckoSession(settings);
+
+            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            context.getSharedPreferences(context.getResources().getString(R.string.pref_key_privacy_block_social), Context.MODE_PRIVATE);
+            socialTrackersBlocked = prefs.getBoolean(context.getResources().getString(R.string.pref_key_privacy_block_social), true);
+            analyticTrackersBlocked = prefs.getBoolean(context.getResources().getString(R.string.pref_key_privacy_block_analytics), true);
+            adTrackersBlocked = prefs.getBoolean(context.getResources().getString(R.string.pref_key_privacy_block_ads), true);
+            contentTrackersBlocked = prefs.getBoolean(context.getResources().getString(R.string.pref_key_privacy_block_other), false);
+            updateBlocking();
+            prefs.registerOnSharedPreferenceChangeListener(this);
+
             geckoSession.setContentListener(createContentListener());
             geckoSession.setProgressListener(createProgressListener());
             geckoSession.setNavigationListener(createNavigationListener());
             geckoSession.setTrackingProtectionDelegate(createTrackingProtectionDelegate());
+            geckoSession.setPromptDelegate(createPromptDelegate());
             setSession(geckoSession);
-
-            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            socialTrackersBlocked = prefs.getBoolean(context.getString(R.string.pref_key_privacy_block_social), false);
-            analyticTrackersBlocked = prefs.getBoolean(context.getString(R.string.pref_key_privacy_block_analytics), false);
-            adTrackersBlocked = prefs.getBoolean(context.getString(R.string.pref_key_privacy_block_ads), false);
-            contentTrackersBlocked = prefs.getBoolean(context.getString(R.string.pref_key_privacy_block_other), false);
-            PreferenceManager.getDefaultSharedPreferences(context).registerOnSharedPreferenceChangeListener(this);
         }
 
         @Override
@@ -149,13 +155,13 @@ public class WebViewProvider {
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String prefName) {
             if (!prefName.isEmpty()) {
-                if (prefName.equals(getContext().getString(R.string.pref_key_privacy_block_social))) {
-                    socialTrackersBlocked = sharedPreferences.getBoolean(prefName, false);
-                } else if (prefName.equals(getContext().getString(R.string.pref_key_privacy_block_ads))) {
-                    adTrackersBlocked = sharedPreferences.getBoolean(prefName, false);
-                } else if (prefName.equals(getContext().getString(R.string.pref_key_privacy_block_analytics))) {
-                    analyticTrackersBlocked = sharedPreferences.getBoolean(prefName, false);
-                } else if (prefName.equals(getContext().getString(R.string.pref_key_privacy_block_other))) {
+                if (prefName.equals(getContext().getResources().getString(R.string.pref_key_privacy_block_social))) {
+                    socialTrackersBlocked = sharedPreferences.getBoolean(prefName, true);
+                } else if (prefName.equals(getContext().getResources().getString(R.string.pref_key_privacy_block_ads))) {
+                    adTrackersBlocked = sharedPreferences.getBoolean(prefName, true);
+                } else if (prefName.equals(getContext().getResources().getString(R.string.pref_key_privacy_block_analytics))) {
+                    analyticTrackersBlocked = sharedPreferences.getBoolean(prefName, true);
+                } else if (prefName.equals(getContext().getResources().getString(R.string.pref_key_privacy_block_other))) {
                     contentTrackersBlocked = sharedPreferences.getBoolean(prefName, false);
                 }
             }
@@ -279,7 +285,7 @@ public class WebViewProvider {
             };
         }
 
-        public TrackingProtectionDelegate createTrackingProtectionDelegate() {
+        private TrackingProtectionDelegate createTrackingProtectionDelegate() {
            return new TrackingProtectionDelegate() {
                 @Override
                 public void onTrackerBlocked(GeckoSession geckoSession, String s, int i) {
@@ -288,6 +294,10 @@ public class WebViewProvider {
                     }
                 }
             };
+        }
+
+        private PromptDelegate createPromptDelegate() {
+            return new GeckoViewPrompt((Activity) getContext());
         }
 
         @Override
