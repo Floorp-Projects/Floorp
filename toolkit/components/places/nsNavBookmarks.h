@@ -460,7 +460,6 @@ private:
 
   // Used to enable and disable the observer notifications.
   bool mCanNotify;
-  nsCategoryCache<nsINavBookmarkObserver> mCacheObservers;
 
   // Tracks whether we are in batch mode.
   // Note: this is only tracking bookmarks batches, not history ones.
