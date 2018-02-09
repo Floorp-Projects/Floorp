@@ -96,14 +96,6 @@ add_task(async function test() {
   });
   checkOrder(guid1, guid3, guid2);
 
-  // keyword sort
-  info("Sort by keyword asc");
-  result.sortingMode = NHQO.SORT_BY_KEYWORD_ASCENDING;
-  checkOrder(guid3, guid2, guid1); // no keywords set - falling back to title sort
-  await PlacesUtils.keywords.insert({ url: uri1, keyword: "a" });
-  await PlacesUtils.keywords.insert({ url: uri2, keyword: "z" });
-  checkOrder(guid3, guid1, guid2);
-
   // XXXtodo: test history sortings (visit count, visit date)
   // XXXtodo: test different item types once folderId and bookmarkId are merged.
   // XXXtodo: test sortingAnnotation functionality with non-bookmark nodes
