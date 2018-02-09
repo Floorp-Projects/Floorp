@@ -305,6 +305,7 @@ GetGtkWindow(nsIDOMDocument *aDocument)
 
 NS_IMETHODIMP
 nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
+                                 const nsACString& aPrincipalURISpec,
                                  nsIArray * aArrayTransferables,
                                  nsIScriptableRegion * aRegion,
                                  uint32_t aActionType,
@@ -320,7 +321,8 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
     if (mSourceNode)
         return NS_ERROR_NOT_AVAILABLE;
 
-    return nsBaseDragService::InvokeDragSession(aDOMNode, aArrayTransferables,
+    return nsBaseDragService::InvokeDragSession(aDOMNode, aPrincipalURISpec,
+                                                aArrayTransferables,
                                                 aRegion, aActionType,
                                                 aContentPolicyType);
 }

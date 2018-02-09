@@ -63,6 +63,13 @@ interface nsIDragSession : nsISupports
   readonly attribute nsIDOMNode sourceNode;
 
   /**
+   * The URI spec of the triggering principal.  This may be different than
+   * sourceNode's principal when sourceNode is xul:browser and the drag is
+   * triggered in a browsing context inside it.
+   */
+  attribute AUTF8String triggeringPrincipalURISpec;
+
+  /**
    * The data transfer object for the current drag.
    */
   attribute nsIDOMDataTransfer dataTransfer;

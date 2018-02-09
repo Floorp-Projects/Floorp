@@ -516,6 +516,10 @@ class JSString : public js::gc::TenuredCell
         return offsetof(JSString, d.u1.flags);
     }
 
+  private:
+    // To help avoid writing Spectre-unsafe code, we only allow MacroAssembler
+    // to call the method below.
+    friend class js::jit::MacroAssembler;
     static size_t offsetOfNonInlineChars() {
         static_assert(offsetof(JSString, d.s.u2.nonInlineCharsTwoByte) ==
                       offsetof(JSString, d.s.u2.nonInlineCharsLatin1),
@@ -523,6 +527,7 @@ class JSString : public js::gc::TenuredCell
         return offsetof(JSString, d.s.u2.nonInlineCharsTwoByte);
     }
 
+  public:
     static const JS::TraceKind TraceKind = JS::TraceKind::String;
 
 #ifdef DEBUG
@@ -610,16 +615,21 @@ class JSRope : public JSString
 
     void traceChildren(JSTracer* trc);
 
+#ifdef DEBUG
+    void dumpRepresentation(js::GenericPrinter& out, int indent) const;
+#endif
+
+  private:
+    // To help avoid writing Spectre-unsafe code, we only allow MacroAssembler
+    // to call the methods below.
+    friend class js::jit::MacroAssembler;
+
     static size_t offsetOfLeft() {
         return offsetof(JSRope, d.s.u2.left);
     }
     static size_t offsetOfRight() {
         return offsetof(JSRope, d.s.u3.right);
     }
-
-#ifdef DEBUG
-    void dumpRepresentation(js::GenericPrinter& out, int indent) const;
-#endif
 };
 
 static_assert(sizeof(JSRope) == sizeof(JSString),
@@ -742,13 +752,18 @@ class JSDependentString : public JSLinearString
     static inline JSLinearString* new_(JSContext* cx, JSLinearString* base,
                                        size_t start, size_t length);
 
-    inline static size_t offsetOfBase() {
-        return offsetof(JSDependentString, d.s.u3.base);
-    }
-
 #ifdef DEBUG
     void dumpRepresentation(js::GenericPrinter& out, int indent) const;
 #endif
+
+  private:
+    // To help avoid writing Spectre-unsafe code, we only allow MacroAssembler
+    // to call the method below.
+    friend class js::jit::MacroAssembler;
+
+    inline static size_t offsetOfBase() {
+        return offsetof(JSDependentString, d.s.u3.base);
+    }
 };
 
 static_assert(sizeof(JSDependentString) == sizeof(JSString),
@@ -880,13 +895,17 @@ class JSInlineString : public JSFlatString
     template<typename CharT>
     static bool lengthFits(size_t length);
 
-    static size_t offsetOfInlineStorage() {
-        return offsetof(JSInlineString, d.inlineStorageTwoByte);
-    }
-
 #ifdef DEBUG
     void dumpRepresentation(js::GenericPrinter& out, int indent) const;
 #endif
+
+  private:
+    // To help avoid writing Spectre-unsafe code, we only allow MacroAssembler
+    // to call the method below.
+    friend class js::jit::MacroAssembler;
+    static size_t offsetOfInlineStorage() {
+        return offsetof(JSInlineString, d.inlineStorageTwoByte);
+    }
 };
 
 static_assert(sizeof(JSInlineString) == sizeof(JSString),

@@ -1335,9 +1335,11 @@ EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
     nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
     uint32_t dropEffect = nsIDragService::DRAGDROP_ACTION_NONE;
     uint32_t action = nsIDragService::DRAGDROP_ACTION_NONE;
+    nsCString principalURISpec;
     if (dragSession) {
       dragSession->DragEventDispatchedToChildProcess();
       dragSession->GetDragAction(&action);
+      dragSession->GetTriggeringPrincipalURISpec(principalURISpec);
       nsCOMPtr<nsIDOMDataTransfer> initialDataTransfer;
       dragSession->GetDataTransfer(getter_AddRefs(initialDataTransfer));
       if (initialDataTransfer) {
@@ -1345,7 +1347,8 @@ EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
       }
     }
 
-    tabParent->SendRealDragEvent(*aEvent->AsDragEvent(), action, dropEffect);
+    tabParent->SendRealDragEvent(*aEvent->AsDragEvent(), action, dropEffect,
+                                 principalURISpec);
     return;
   }
   case ePluginEventClass: {
@@ -1863,11 +1866,13 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
       nsCOMPtr<nsISelection> selection;
       nsCOMPtr<nsIContent> eventContent, targetContent;
+      nsCString principalURISpec;
       mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(eventContent));
       if (eventContent)
         DetermineDragTargetAndDefaultData(window, eventContent, dataTransfer,
                                           getter_AddRefs(selection),
-                                          getter_AddRefs(targetContent));
+                                          getter_AddRefs(targetContent),
+                                          principalURISpec);
 
       // Stop tracking the drag gesture now. This should stop us from
       // reentering GenerateDragGesture inside DOM event processing.
@@ -1929,7 +1934,8 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
       if (status != nsEventStatus_eConsumeNoDefault) {
         bool dragStarted = DoDefaultDragStart(aPresContext, event, dataTransfer,
-                                              targetContent, selection);
+                                              targetContent, selection,
+                                              principalURISpec);
         if (dragStarted) {
           sActiveESM = nullptr;
           MaybeFirePointerCancel(aEvent);
@@ -1952,7 +1958,8 @@ EventStateManager::DetermineDragTargetAndDefaultData(nsPIDOMWindowOuter* aWindow
                                                      nsIContent* aSelectionTarget,
                                                      DataTransfer* aDataTransfer,
                                                      nsISelection** aSelection,
-                                                     nsIContent** aTargetNode)
+                                                     nsIContent** aTargetNode,
+                                                     nsACString& aPrincipalURISpec)
 {
   *aTargetNode = nullptr;
 
@@ -1967,7 +1974,8 @@ EventStateManager::DetermineDragTargetAndDefaultData(nsPIDOMWindowOuter* aWindow
   nsresult rv = nsContentAreaDragDrop::GetDragData(aWindow, mGestureDownContent,
                                                    aSelectionTarget, wasAlt,
                                                    aDataTransfer, &canDrag, aSelection,
-                                                   getter_AddRefs(dragDataNode));
+                                                   getter_AddRefs(dragDataNode),
+                                                   aPrincipalURISpec);
   if (NS_FAILED(rv) || !canDrag)
     return;
 
@@ -2031,7 +2039,8 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
                                       WidgetDragEvent* aDragEvent,
                                       DataTransfer* aDataTransfer,
                                       nsIContent* aDragTarget,
-                                      nsISelection* aSelection)
+                                      nsISelection* aSelection,
+                                      const nsACString& aPrincipalURISpec)
 {
   nsCOMPtr<nsIDragService> dragService =
     do_GetService("@mozilla.org/widget/dragservice;1");
@@ -2110,7 +2119,9 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   // use InvokeDragSessionWithImage if a custom image was set or something
   // other than a selection is being dragged.
   if (!dragImage && aSelection) {
-    dragService->InvokeDragSessionWithSelection(aSelection, transArray,
+    dragService->InvokeDragSessionWithSelection(aSelection,
+                                                aPrincipalURISpec,
+                                                transArray,
                                                 action, event, dataTransfer);
   }
   else {
@@ -2133,7 +2144,8 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
     }
 #endif
 
-    dragService->InvokeDragSessionWithImage(dragTarget->AsDOMNode(), transArray,
+    dragService->InvokeDragSessionWithImage(dragTarget->AsDOMNode(),
+                                            aPrincipalURISpec, transArray,
                                             region, action,
                                             dragImage ? dragImage->AsDOMNode() :
                                                         nullptr,

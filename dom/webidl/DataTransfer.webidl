@@ -157,6 +157,14 @@ partial interface DataTransfer {
   readonly attribute Node? mozSourceNode;
 
   /**
+   * The URI spec of the triggering principal.  This may be different than
+   * sourceNode's principal when sourceNode is xul:browser and the drag is
+   * triggered in a browsing context inside it.
+   */
+  [ChromeOnly]
+  readonly attribute DOMString mozTriggeringPrincipalURISpec;
+
+  /**
    * Copy the given DataTransfer for the given event. Used by testing code for
    * creating emulated Drag and Drop events in the UI.
    *
