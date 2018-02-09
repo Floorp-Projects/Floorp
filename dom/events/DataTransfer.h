@@ -211,6 +211,8 @@ public:
 
   already_AddRefed<nsINode> GetMozSourceNode();
 
+  void GetMozTriggeringPrincipalURISpec(nsAString& aPrincipalURISpec);
+
   mozilla::dom::Element* GetDragTarget() const
   {
     return mDragTarget;

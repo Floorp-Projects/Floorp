@@ -566,7 +566,8 @@ parent:
     async InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action,
                             OptionalShmem visualData,
                             uint32_t stride, uint8_t format,
-                            LayoutDeviceIntRect dragRect);
+                            LayoutDeviceIntRect dragRect,
+                            nsCString principalURISpec);
 
     // After a compositor reset, it is necessary to reconnect each layers ID to
     // the compositor of the widget that will render those layers. Note that
@@ -705,7 +706,7 @@ child:
      * don't need support RealDragEvent with input priority.
      */
     async RealDragEvent(WidgetDragEvent aEvent, uint32_t aDragAction,
-                        uint32_t aDropEffect);
+                        uint32_t aDropEffect, nsCString aPrincipalURISpec);
 
     async PluginEvent(WidgetPluginEvent aEvent);
 
