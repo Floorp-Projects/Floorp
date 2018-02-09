@@ -74,6 +74,8 @@ public:
 
   NS_DECL_NSIINPROCESSCONTENTFRAMEMESSAGEMANAGER
 
+  void CacheFrameLoader(nsFrameLoader* aFrameLoader);
+
   /**
    * MessageManagerCallback methods that we override.
    */
