@@ -10,10 +10,11 @@
 
   <Description about="urn:mozilla:install-manifest">
     <em:id>webcompat@mozilla.org</em:id>
-    <em:version>1.1</em:version>
+    <em:version>2.0</em:version>
     <em:type>2</em:type>
     <em:bootstrap>true</em:bootstrap>
     <em:multiprocessCompatible>true</em:multiprocessCompatible>
+    <em:hasEmbeddedWebExtension>true</em:hasEmbeddedWebExtension>
 
     <!-- Firefox Desktop -->
     <em:targetApplication>
