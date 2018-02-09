@@ -1013,8 +1013,11 @@ EventSourceImpl::InitChannelAndRequestEventSource()
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
+  // The html spec requires we use fetch cache mode of "no-store".  This
+  // maps to LOAD_BYPASS_CACHE and LOAD_INHIBIT_CACHING in necko.
   nsLoadFlags loadFlags;
-  loadFlags = nsIRequest::LOAD_BACKGROUND | nsIRequest::LOAD_BYPASS_CACHE;
+  loadFlags = nsIRequest::LOAD_BACKGROUND | nsIRequest::LOAD_BYPASS_CACHE
+                                          | nsIRequest::INHIBIT_CACHING;
 
   nsCOMPtr<nsIDocument> doc = mEventSource->GetDocumentIfCurrent();
 
