@@ -50,6 +50,11 @@
       <method name="handleEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
+          // Ignore overflow/underflow events from from nodes inside the toolbar.
+          if (aEvent.target != this.customizationTarget) {
+            return;
+          }
+
           if (aEvent.type == "overflow" && aEvent.detail > 0) {
             if (this.overflowable && this.overflowable.initialized) {
               this.overflowable.onOverflow(aEvent);

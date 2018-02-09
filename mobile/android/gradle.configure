@@ -68,7 +68,7 @@ def gradle_android_build_config():
 
 
 @depends(gradle_android_build_config)
-def gradle_android_app_variant_name(build_config):
+def gradle_android_variant_name(build_config):
     '''Like "officialPhotonDebug".'''
     def uncapitalize(s):
         if s:
@@ -76,9 +76,14 @@ def gradle_android_app_variant_name(build_config):
         else:
             return s
 
-    return uncapitalize(build_config.app.variant.name)
+    return namespace(
+        app=uncapitalize(build_config.app.variant.name),
+        geckoview=uncapitalize(build_config.geckoview.variant.name),
+    )
 
-set_config('GRADLE_ANDROID_APP_VARIANT_NAME', gradle_android_app_variant_name)
+set_config('GRADLE_ANDROID_APP_VARIANT_NAME', gradle_android_variant_name.app)
+
+set_config('GRADLE_ANDROID_GECKOVIEW_VARIANT_NAME', gradle_android_variant_name.geckoview)
 
 
 @depends(gradle_android_build_config)
@@ -138,6 +143,8 @@ def gradle_android_test_tasks(build_config):
     '''Gradle tasks run by |mach android test|.'''
     return [
         'app:test{app.variant.name}UnitTest'.format(app=build_config.app),
+        'geckoview:test{geckoview.variant.name}UnitTest'.format(
+            geckoview=build_config.geckoview),
     ]
 
 set_config('GRADLE_ANDROID_TEST_TASKS', gradle_android_test_tasks)

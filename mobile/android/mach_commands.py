@@ -71,7 +71,16 @@ class MachCommands(MachCommandBase):
     def android_test(self, args):
         ret = self.gradle(self.substs['GRADLE_ANDROID_TEST_TASKS'] + ["--continue"] + args, verbose=True)
 
-        # Findbug produces both HTML and XML reports.  Visit the
+        ret |= self._parse_android_test_results('public/app/unittest', 'gradle/build/mobile/android/app',
+                                                (self.substs['GRADLE_ANDROID_APP_VARIANT_NAME'],))
+
+        ret |= self._parse_android_test_results('public/geckoview/unittest', 'gradle/build/mobile/android/geckoview',
+                                                (self.substs['GRADLE_ANDROID_GECKOVIEW_VARIANT_NAME'],))
+
+        return ret
+
+    def _parse_android_test_results(self, artifactdir, gradledir, variants):
+        # Unit tests produce both HTML and XML reports.  Visit the
         # XML report(s) to report errors and link to the HTML
         # report(s) for human consumption.
         import itertools
@@ -81,14 +90,22 @@ class MachCommands(MachCommandBase):
             FileFinder,
         )
 
-        root_url = self._root_url(
-            artifactdir='public/android/unittest',
-            objdir='gradle/build/mobile/android/app/reports/tests')
+        ret = 0
+        found_reports = False
 
-        reports = (self.substs['GRADLE_ANDROID_APP_VARIANT_NAME'],)
-        for report in reports:
-            finder = FileFinder(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/test-results/', report))
+        root_url = self._root_url(
+            artifactdir=artifactdir,
+            objdir=gradledir + '/reports/tests')
+
+        def capitalize(s):
+            # Can't use str.capitalize because it lower cases trailing letters.
+            return (s[0].upper() + s[1:]) if s else ''
+
+        for variant in variants:
+            report = 'test{}UnitTest'.format(capitalize(variant))
+            finder = FileFinder(os.path.join(self.topobjdir, gradledir + '/test-results/', report))
             for p, _ in finder.find('TEST-*.xml'):
+                found_reports = True
                 f = open(os.path.join(finder.base, p), 'rt')
                 tree = ET.parse(f)
                 root = tree.getroot()
@@ -131,6 +148,10 @@ class MachCommands(MachCommandBase):
                         print('TEST-PASS | {}'.format(name))
 
                 print('SUITE-END | android-test | {} {}'.format(report, root.get('name')))
+
+        if not found_reports:
+            print('TEST-UNEXPECTED-FAIL | android-test | No reports found under {}'.format(gradledir))
+            return 1
 
         return ret
 

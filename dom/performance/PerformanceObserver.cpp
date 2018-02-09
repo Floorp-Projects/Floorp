@@ -191,3 +191,10 @@ PerformanceObserver::Disconnect()
     mConnected = false;
   }
 }
+
+void
+PerformanceObserver::TakeRecords(nsTArray<RefPtr<PerformanceEntry>>& aRetval)
+{
+  MOZ_ASSERT(aRetval.IsEmpty());
+  aRetval.SwapElements(mQueuedEntries);
+}

@@ -57,6 +57,8 @@ public:
 
   void Disconnect();
 
+  void TakeRecords(nsTArray<RefPtr<PerformanceEntry>>& aRetval);
+
   void Notify();
   void QueueEntry(PerformanceEntry* aEntry);
 
