@@ -102,7 +102,7 @@ function testAdvanceCharsFunction(doc) {
   createInplaceEditorAndClick({
     initial: "",
     advanceChars: function (charCode, text, insertionPoint) {
-      if (charCode !== Components.interfaces.nsIDOMKeyEvent.DOM_VK_COLON) {
+      if (charCode !== KeyboardEvent.DOM_VK_COLON) {
         return false;
       }
       if (firstTime) {

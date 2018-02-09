@@ -359,8 +359,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
       <!-- The enter key is always deferred, so it's not included here. -->
       <field name="_keyCodesToDefer">new Set([
-        Ci.nsIDOMKeyEvent.DOM_VK_DOWN,
-        Ci.nsIDOMKeyEvent.DOM_VK_TAB,
+        KeyboardEvent.DOM_VK_DOWN,
+        KeyboardEvent.DOM_VK_TAB,
       ])</field>
       <field name="_deferredKeyEventQueue">[]</field>
       <field name="_deferredKeyEventTimeout">null</field>

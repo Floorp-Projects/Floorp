@@ -1896,7 +1896,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     let props = [];
     if (rawObj instanceof Ci.nsIDOMMouseEvent) {
       props.push("buttons", "clientX", "clientY", "layerX", "layerY");
-    } else if (rawObj instanceof Ci.nsIDOMKeyEvent) {
+    } else if (obj.class == "KeyboardEvent") {
       let modifiers = [];
       if (rawObj.altKey) {
         modifiers.push("Alt");
