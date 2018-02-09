@@ -2250,44 +2250,6 @@ nsNavBookmarks::GetBookmarksForURI(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsNavBookmarks::GetKeywordForBookmark(int64_t aBookmarkId, nsAString& aKeyword)
-{
-  NS_ENSURE_ARG_MIN(aBookmarkId, 1);
-  aKeyword.Truncate(0);
-
-  // We can have multiple keywords for the same uri, here we'll just return the
-  // last created one.
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(NS_LITERAL_CSTRING(
-    "SELECT k.keyword "
-    "FROM moz_bookmarks b "
-    "JOIN moz_keywords k ON k.place_id = b.fk "
-    "WHERE b.id = :item_id "
-    "ORDER BY k.ROWID DESC "
-    "LIMIT 1"
-  ));
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
-
-  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"),
-                             aBookmarkId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool hasMore;
-  if (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) && hasMore) {
-    nsAutoString keyword;
-    rv = stmt->GetString(0, keyword);
-    NS_ENSURE_SUCCESS(rv, rv);
-    aKeyword = keyword;
-    return NS_OK;
-  }
-
-  aKeyword.SetIsVoid(true);
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsNavBookmarks::RunInBatchMode(nsINavHistoryBatchCallback* aCallback,
                                nsISupports* aUserData) {
   AUTO_PROFILER_LABEL("nsNavBookmarks::RunInBatchMode", OTHER);
