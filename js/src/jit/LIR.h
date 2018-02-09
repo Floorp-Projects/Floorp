@@ -753,9 +753,7 @@ class LNode
 
     // Does this call preserve the given register?
     // By default, it is assumed that all registers are clobbered by a call.
-    virtual bool isCallPreserved(AnyRegister reg) const {
-        return false;
-    }
+    inline bool isCallPreserved(AnyRegister reg) const;
 
     uint32_t id() const {
         return id_;
@@ -781,9 +779,7 @@ class LNode
 
     // For an instruction which has a MUST_REUSE_INPUT output, whether that
     // output register will be restored to its original value when bailing out.
-    virtual bool recoversInput() const {
-        return false;
-    }
+    inline bool recoversInput() const;
 
     virtual void dump(GenericPrinter& out);
     void dump();
