@@ -34,12 +34,7 @@ function InjectionsEnablePrefObserver() {
 
 function UAEnablePrefObserver() {
   let isEnabled = Services.prefs.getBoolPref(UA_ENABLE_PREF_NAME);
-  if (isEnabled && !overrider) {
-    overrider = new UAOverrider(UAOverrides);
-    overrider.init();
-  } else if (!isEnabled && overrider) {
-    overrider = null;
-  }
+  overrider.setShouldOverride(isEnabled);
 }
 
 function setDefaultPrefs() {
