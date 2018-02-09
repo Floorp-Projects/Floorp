@@ -538,12 +538,6 @@ public:
   static int32_t SortComparison_VisitCountGreater(nsNavHistoryResultNode* a,
                                                   nsNavHistoryResultNode* b,
                                                   void* closure);
-  static int32_t SortComparison_KeywordLess(nsNavHistoryResultNode* a,
-                                            nsNavHistoryResultNode* b,
-                                            void* closure);
-  static int32_t SortComparison_KeywordGreater(nsNavHistoryResultNode* a,
-                                               nsNavHistoryResultNode* b,
-                                               void* closure);
   static int32_t SortComparison_AnnotationLess(nsNavHistoryResultNode* a,
                                                nsNavHistoryResultNode* b,
                                                void* closure);

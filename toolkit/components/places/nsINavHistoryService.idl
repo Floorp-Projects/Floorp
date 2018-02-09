@@ -1000,8 +1000,6 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short SORT_BY_URI_DESCENDING = 6;
   const unsigned short SORT_BY_VISITCOUNT_ASCENDING = 7;
   const unsigned short SORT_BY_VISITCOUNT_DESCENDING = 8;
-  const unsigned short SORT_BY_KEYWORD_ASCENDING = 9;
-  const unsigned short SORT_BY_KEYWORD_DESCENDING = 10;
   const unsigned short SORT_BY_DATEADDED_ASCENDING = 11;
   const unsigned short SORT_BY_DATEADDED_DESCENDING = 12;
   const unsigned short SORT_BY_LASTMODIFIED_ASCENDING = 13;
