@@ -40,6 +40,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/KeyboardEvent.h"
+#include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/Selection.h"
 #include "mozInlineSpellWordUtil.h"
 #include "mozISpellI18NManager.h"
@@ -1874,16 +1875,18 @@ mozInlineSpellChecker::OnKeyPress(nsIDOMEvent* aKeyEvent)
   // we only care about navigation keys that moved selection
   switch (keyCode)
   {
-    case nsIDOMKeyEvent::DOM_VK_RIGHT:
-    case nsIDOMKeyEvent::DOM_VK_LEFT:
-      HandleNavigationEvent(false, keyCode == nsIDOMKeyEvent::DOM_VK_RIGHT ? 1 : -1);
+    case KeyboardEventBinding::DOM_VK_RIGHT:
+    case KeyboardEventBinding::DOM_VK_LEFT:
+      HandleNavigationEvent(false,
+                            keyCode == KeyboardEventBinding::DOM_VK_RIGHT ?
+                              1 : -1);
       break;
-    case nsIDOMKeyEvent::DOM_VK_UP:
-    case nsIDOMKeyEvent::DOM_VK_DOWN:
-    case nsIDOMKeyEvent::DOM_VK_HOME:
-    case nsIDOMKeyEvent::DOM_VK_END:
-    case nsIDOMKeyEvent::DOM_VK_PAGE_UP:
-    case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN:
+    case KeyboardEventBinding::DOM_VK_UP:
+    case KeyboardEventBinding::DOM_VK_DOWN:
+    case KeyboardEventBinding::DOM_VK_HOME:
+    case KeyboardEventBinding::DOM_VK_END:
+    case KeyboardEventBinding::DOM_VK_PAGE_UP:
+    case KeyboardEventBinding::DOM_VK_PAGE_DOWN:
       HandleNavigationEvent(true /* force a spelling correction */);
       break;
   }

@@ -23,6 +23,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/KeyboardEvent.h"
+#include "mozilla/dom/KeyboardEventBinding.h"
 
 using namespace mozilla;
 using mozilla::dom::KeyboardEvent;
@@ -148,22 +149,32 @@ void nsMenuBarListener::InitAccessKey()
   mAccessKey = 0;
   mAccessKeyMask = 0;
 #else
-  mAccessKey = nsIDOMKeyEvent::DOM_VK_ALT;
+  mAccessKey = dom::KeyboardEventBinding::DOM_VK_ALT;
   mAccessKeyMask = MODIFIER_ALT;
 #endif
 
   // Get the menu access key value from prefs, overriding the default:
   mAccessKey = Preferences::GetInt("ui.key.menuAccessKey", mAccessKey);
-  if (mAccessKey == nsIDOMKeyEvent::DOM_VK_SHIFT)
+  switch (mAccessKey) {
+  case dom::KeyboardEventBinding::DOM_VK_SHIFT:
     mAccessKeyMask = MODIFIER_SHIFT;
-  else if (mAccessKey == nsIDOMKeyEvent::DOM_VK_CONTROL)
+    break;
+  case dom::KeyboardEventBinding::DOM_VK_CONTROL:
     mAccessKeyMask = MODIFIER_CONTROL;
-  else if (mAccessKey == nsIDOMKeyEvent::DOM_VK_ALT)
+    break;
+  case dom::KeyboardEventBinding::DOM_VK_ALT:
     mAccessKeyMask = MODIFIER_ALT;
-  else if (mAccessKey == nsIDOMKeyEvent::DOM_VK_META)
+    break;
+  case dom::KeyboardEventBinding::DOM_VK_META:
     mAccessKeyMask = MODIFIER_META;
-  else if (mAccessKey == nsIDOMKeyEvent::DOM_VK_WIN)
+    break;
+  case dom::KeyboardEventBinding::DOM_VK_WIN:
     mAccessKeyMask = MODIFIER_OS;
+    break;
+  default:
+    // Don't touch mAccessKeyMask.
+    break;
+  }
 }
 
 void

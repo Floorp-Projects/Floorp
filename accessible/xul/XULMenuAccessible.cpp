@@ -19,7 +19,6 @@
 #include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIServiceManager.h"
 #include "nsIPresShell.h"
 #include "nsIContent.h"
@@ -29,6 +28,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/KeyboardEventBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -175,16 +175,16 @@ XULMenuitemAccessible::AccessKey() const
       }
 
       switch (gMenuAccesskeyModifier) {
-        case nsIDOMKeyEvent::DOM_VK_CONTROL:
+        case dom::KeyboardEventBinding::DOM_VK_CONTROL:
           modifierKey = KeyBinding::kControl;
           break;
-        case nsIDOMKeyEvent::DOM_VK_ALT:
+        case dom::KeyboardEventBinding::DOM_VK_ALT:
           modifierKey = KeyBinding::kAlt;
           break;
-        case nsIDOMKeyEvent::DOM_VK_META:
+        case dom::KeyboardEventBinding::DOM_VK_META:
           modifierKey = KeyBinding::kMeta;
           break;
-        case nsIDOMKeyEvent::DOM_VK_WIN:
+        case dom::KeyboardEventBinding::DOM_VK_WIN:
           modifierKey = KeyBinding::kOS;
           break;
       }

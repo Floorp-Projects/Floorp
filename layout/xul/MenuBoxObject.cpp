@@ -8,6 +8,7 @@
 #include "mozilla/dom/MenuBoxObjectBinding.h"
 
 #include "mozilla/dom/KeyboardEvent.h"
+#include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/Element.h"
 #include "nsIFrame.h"
 #include "nsMenuBarFrame.h"
@@ -104,10 +105,10 @@ bool MenuBoxObject::HandleKeyPress(KeyboardEvent& keyEvent)
 
   uint32_t keyCode = keyEvent.KeyCode();
   switch (keyCode) {
-    case nsIDOMKeyEvent::DOM_VK_UP:
-    case nsIDOMKeyEvent::DOM_VK_DOWN:
-    case nsIDOMKeyEvent::DOM_VK_HOME:
-    case nsIDOMKeyEvent::DOM_VK_END:
+    case KeyboardEventBinding::DOM_VK_UP:
+    case KeyboardEventBinding::DOM_VK_DOWN:
+    case KeyboardEventBinding::DOM_VK_HOME:
+    case KeyboardEventBinding::DOM_VK_END:
     {
       nsNavigationDirection theDirection;
       theDirection = NS_DIRECTION_FROM_KEY_CODE(popupFrame, keyCode);
