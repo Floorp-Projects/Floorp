@@ -14,7 +14,6 @@
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
@@ -23,8 +22,10 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/KeyboardEvent.h"
 
 using namespace mozilla;
+using mozilla::dom::KeyboardEvent;
 
 /*
  * nsMenuBarListener implementation
@@ -181,7 +182,8 @@ nsMenuBarListener::ToggleMenuActiveState()
 nsresult
 nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
 {
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
+  RefPtr<KeyboardEvent> keyEvent =
+    aKeyEvent->InternalDOMEvent()->AsKeyboardEvent();
   if (!keyEvent) {
     return NS_OK;
   }
@@ -189,23 +191,18 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
   InitAccessKey();
 
   //handlers shouldn't be triggered by non-trusted events.
-  bool trustedEvent = false;
-  aKeyEvent->GetIsTrusted(&trustedEvent);
-
-  if (!trustedEvent) {
+  if (!keyEvent->IsTrusted()) {
     return NS_OK;
   }
 
   if (mAccessKey && mAccessKeyFocuses)
   {
-    bool defaultPrevented = false;
-    aKeyEvent->GetDefaultPrevented(&defaultPrevented);
+    bool defaultPrevented = keyEvent->DefaultPrevented();
 
     // On a press of the ALT key by itself, we toggle the menu's
     // active/inactive state.
     // Get the ascii key code.
-    uint32_t theChar;
-    keyEvent->GetKeyCode(&theChar);
+    uint32_t theChar = keyEvent->KeyCode();
 
     if (!defaultPrevented && mAccessKeyDown && !mAccessKeyDownCanceled &&
         (int32_t)theChar == mAccessKey)
@@ -237,8 +234,8 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
 
     bool active = !Destroyed() && mMenuBarFrame->IsActive();
     if (active) {
-      aKeyEvent->StopPropagation();
-      aKeyEvent->PreventDefault();
+      keyEvent->StopPropagation();
+      keyEvent->PreventDefault();
       return NS_OK; // I am consuming event
     }
   }
@@ -281,9 +278,9 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
       return NS_OK;
     }
 
-    nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
-    uint32_t keyCode;
-    keyEvent->GetKeyCode(&keyCode);
+    RefPtr<KeyboardEvent> keyEvent =
+      aKeyEvent->InternalDOMEvent()->AsKeyboardEvent();
+    uint32_t keyCode = keyEvent->KeyCode();
 
     // Cancel the access key flag unless we are pressing the access key.
     if (keyCode != (uint32_t)mAccessKey) {
@@ -357,7 +354,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 }
 
 bool
-nsMenuBarListener::IsAccessKeyPressed(nsIDOMKeyEvent* aKeyEvent)
+nsMenuBarListener::IsAccessKeyPressed(KeyboardEvent* aKeyEvent)
 {
   InitAccessKey();
   // No other modifiers are allowed to be down except for Shift.
@@ -369,10 +366,10 @@ nsMenuBarListener::IsAccessKeyPressed(nsIDOMKeyEvent* aKeyEvent)
 }
 
 Modifiers
-nsMenuBarListener::GetModifiersForAccessKey(nsIDOMKeyEvent* aKeyEvent)
+nsMenuBarListener::GetModifiersForAccessKey(KeyboardEvent* aKeyEvent)
 {
   WidgetInputEvent* inputEvent =
-    aKeyEvent->AsEvent()->WidgetEventPtr()->AsInputEvent();
+    aKeyEvent->WidgetEventPtr()->AsInputEvent();
   MOZ_ASSERT(inputEvent);
 
   static const Modifiers kPossibleModifiersForAccessKey =
@@ -382,18 +379,17 @@ nsMenuBarListener::GetModifiersForAccessKey(nsIDOMKeyEvent* aKeyEvent)
 }
 
 nsMenuFrame*
-nsMenuBarListener::GetMenuForKeyEvent(nsIDOMKeyEvent* aKeyEvent, bool aPeek)
+nsMenuBarListener::GetMenuForKeyEvent(KeyboardEvent* aKeyEvent, bool aPeek)
 {
   if (!IsAccessKeyPressed(aKeyEvent)) {
     return nullptr;
   }
 
-  uint32_t charCode;
-  aKeyEvent->GetCharCode(&charCode);
+  uint32_t charCode = aKeyEvent->CharCode();
   bool hasAccessKeyCandidates = charCode != 0;
   if (!hasAccessKeyCandidates) {
     WidgetKeyboardEvent* nativeKeyEvent =
-      aKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
+      aKeyEvent->WidgetEventPtr()->AsKeyboardEvent();
 
     AutoTArray<uint32_t, 10> keys;
     nativeKeyEvent->GetAccessKeyCandidates(keys);
@@ -436,16 +432,15 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
+  RefPtr<KeyboardEvent> keyEvent =
+    aKeyEvent->InternalDOMEvent()->AsKeyboardEvent();
   if (!keyEvent) {
     return NS_OK;
   }
 
-  uint32_t theChar;
-  keyEvent->GetKeyCode(&theChar);
+  uint32_t theChar = keyEvent->KeyCode();
 
-  uint16_t eventPhase;
-  aKeyEvent->GetEventPhase(&eventPhase);
+  uint16_t eventPhase = keyEvent->EventPhase();
   bool capturing = (eventPhase == nsIDOMEvent::CAPTURING_PHASE);
 
 #ifndef XP_MACOSX
