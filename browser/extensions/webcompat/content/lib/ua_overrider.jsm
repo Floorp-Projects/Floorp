@@ -11,6 +11,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "eTLDService", "@mozilla.org/network/ef
 class UAOverrider {
   constructor(overrides) {
     this._overrides = {};
+    this._shouldOverride = true;
 
     this.initOverrides(overrides);
   }
@@ -48,11 +49,26 @@ class UAOverrider {
     }
   }
 
+  /**
+   * Used for disabling overrides when the pref has been flipped to false.
+   *
+   * Since we no longer use our own event handlers, we check this bool in our
+   * override callback and simply return early if we are not supposed to do
+   * anything.
+   */
+  setShouldOverride(newState) {
+    this._shouldOverride = newState;
+  }
+
   init() {
     UserAgentOverrides.addComplexOverride(this.overrideCallback.bind(this));
   }
 
   overrideCallback(channel, defaultUA) {
+    if (!this._shouldOverride) {
+      return false;
+    }
+
     let uaOverride = this.lookupUAOverride(channel.URI, defaultUA);
     if (uaOverride) {
       console.log("The user agent has been overridden for compatibility reasons.");
