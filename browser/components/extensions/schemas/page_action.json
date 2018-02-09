@@ -42,7 +42,7 @@
                 "type": "array",
                 "optional": true,
                 "minItems": 1,
-                "items": { "$ref": "MatchPattern" }
+                "items": { "$ref": "MatchPatternRestricted" }
               }
             },
             "optional": true
