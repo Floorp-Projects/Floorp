@@ -14,8 +14,7 @@ enum RTCDataChannelType {
   "blob"
 };
 
-// XXX This interface is called RTCDataChannel in the spec.
-interface DataChannel : EventTarget
+interface RTCDataChannel : EventTarget
 {
   readonly attribute DOMString label;
   readonly attribute boolean reliable;
@@ -40,7 +39,7 @@ interface DataChannel : EventTarget
 };
 
 // Mozilla extensions.
-partial interface DataChannel
+partial interface RTCDataChannel
 {
   readonly attribute DOMString protocol;
   readonly attribute boolean ordered;
