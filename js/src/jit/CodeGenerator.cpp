@@ -4035,7 +4035,7 @@ CodeGenerator::visitCallNative(LCallNative* call)
 {
     WrappedFunction* target = call->getSingleTarget();
     MOZ_ASSERT(target);
-    MOZ_ASSERT(target->isNative());
+    MOZ_ASSERT(target->isNativeWithCppEntry());
 
     int callargslot = call->argslot();
     int unusedStack = StackOffsetOfPassedArg(callargslot);
@@ -4060,8 +4060,9 @@ CodeGenerator::visitCallNative(LCallNative* call)
     // Allocate space for the outparam, moving the StackPointer to what will be &vp[1].
     masm.adjustStack(unusedStack);
 
-    // Push a Value containing the callee object: natives are allowed to access their callee before
-    // setitng the return value. The StackPointer is moved to &vp[0].
+    // Push a Value containing the callee object: natives are allowed to access
+    // their callee before setting the return value. The StackPointer is moved
+    // to &vp[0].
     masm.Push(ObjectValue(*target->rawJSFunction()));
 
     // Preload arguments into registers.
@@ -4310,16 +4311,17 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
     // Guard that calleereg is actually a function object.
     masm.branchTestObjClass(Assembler::NotEqual, calleereg, nargsreg, &JSFunction::class_, &invoke);
 
-    // Guard that calleereg is an interpreted function with a JSScript.
+    // Guard that calleereg is an interpreted function with a JSScript or a
+    // wasm function.
     // If we are constructing, also ensure the callee is a constructor.
     if (call->mir()->isConstructing()) {
         masm.branchIfNotInterpretedConstructor(calleereg, nargsreg, &invoke);
     } else {
-        masm.branchIfFunctionHasNoScript(calleereg, &invoke);
-        masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor, calleereg, objreg, &invoke);
+        masm.branchIfFunctionHasNoJitEntry(calleereg, /* isConstructing */ false, &invoke);
+        masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor, calleereg, objreg,
+                                &invoke);
     }
 
-    // Knowing that calleereg is a non-native function, load the jit code.
     masm.loadJitCodeRaw(calleereg, objreg);
 
     // Nestle the StackPointer up to the argument vector.
@@ -4404,10 +4406,9 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
     Register objreg    = ToRegister(call->getTempObject());
     uint32_t unusedStack = StackOffsetOfPassedArg(call->argslot());
     WrappedFunction* target = call->getSingleTarget();
-    Label end, uncompiled;
 
-    // Native single targets are handled by LCallNative.
-    MOZ_ASSERT(!target->isNative());
+    // Native single targets (except wasm) are handled by LCallNative.
+    MOZ_ASSERT(!target->isNativeWithCppEntry());
     // Missing arguments must have been explicitly appended by the IonBuilder.
     DebugOnly<unsigned> numNonArgsOnStack = 1 + call->isConstructing();
     MOZ_ASSERT(target->nargs() <= call->mir()->numStackArgs() - numNonArgsOnStack);
@@ -4424,11 +4425,13 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
 
     MOZ_ASSERT_IF(target->isClassConstructor(), call->isConstructing());
 
-    // The calleereg is known to be a non-native function, but might point to
-    // a LazyScript instead of a JSScript.
-    masm.branchIfFunctionHasNoScript(calleereg, &uncompiled);
+    Label uncompiled;
+    if (!target->isNativeWithJitEntry()) {
+        // The calleereg is known to be a non-native function, but might point
+        // to a LazyScript instead of a JSScript.
+        masm.branchIfFunctionHasNoJitEntry(calleereg, call->isConstructing(), &uncompiled);
+    }
 
-    // Load non-native jitcode from the script.
     if (call->mir()->needsArgCheck())
         masm.loadJitCodeRaw(calleereg, objreg);
     else
@@ -4452,17 +4455,22 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
     // The return address has already been removed from the Ion frame.
     int prefixGarbage = sizeof(JitFrameLayout) - sizeof(void*);
     masm.adjustStack(prefixGarbage - unusedStack);
-    masm.jump(&end);
 
-    // Handle uncompiled functions.
-    masm.bind(&uncompiled);
-    if (call->isConstructing() && target->nargs() > call->numActualArgs())
-        emitCallInvokeFunctionShuffleNewTarget(call, calleereg, target->nargs(), unusedStack);
-    else
-        emitCallInvokeFunction(call, calleereg, call->isConstructing(), call->ignoresReturnValue(),
-                               call->numActualArgs(), unusedStack);
+    if (uncompiled.used()) {
+        Label end;
+        masm.jump(&end);
 
-    masm.bind(&end);
+        // Handle uncompiled functions.
+        masm.bind(&uncompiled);
+        if (call->isConstructing() && target->nargs() > call->numActualArgs()) {
+            emitCallInvokeFunctionShuffleNewTarget(call, calleereg, target->nargs(), unusedStack);
+        } else {
+            emitCallInvokeFunction(call, calleereg, call->isConstructing(),
+                                   call->ignoresReturnValue(), call->numActualArgs(), unusedStack);
+        }
+
+        masm.bind(&end);
+    }
 
     // If the return value of the constructing function is Primitive,
     // replace the return value with the Object from CreateThis.
@@ -4716,7 +4724,7 @@ CodeGenerator::emitApplyGeneric(T* apply)
     masm.checkStackAlignment();
 
     // If the function is native, only emit the call to InvokeFunction.
-    if (apply->hasSingleTarget() && apply->getSingleTarget()->isNative()) {
+    if (apply->hasSingleTarget() && apply->getSingleTarget()->isNativeWithCppEntry()) {
         emitCallInvokeFunction(apply, extraStackSpace);
         emitPopArguments(extraStackSpace);
         return;
@@ -4725,13 +4733,13 @@ CodeGenerator::emitApplyGeneric(T* apply)
     Label end, invoke;
 
     // Guard that calleereg is an interpreted function with a JSScript.
-    masm.branchIfFunctionHasNoScript(calleereg, &invoke);
+    masm.branchIfFunctionHasNoJitEntry(calleereg, /* constructing */ false, &invoke);
 
     // Guard that calleereg is not a class constrcuctor
     masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor,
                             calleereg, objreg, &invoke);
 
-    // Knowing that calleereg is a non-native function, load script's jitcode.
+    // Knowing that calleereg is a non-native function, load jitcode.
     masm.loadJitCodeRaw(calleereg, objreg);
 
     // Call with an Ion frame or a rectifier frame.

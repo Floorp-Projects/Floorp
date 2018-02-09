@@ -6,4 +6,5 @@
 
 DevToolsModules(
     'Flexbox.js',
+    'FlexboxItem.js',
 )

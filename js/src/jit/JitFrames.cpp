@@ -821,11 +821,12 @@ ReadAllocation(const JSJitFrameIter& frame, const LAllocation* a)
 static void
 TraceThisAndArguments(JSTracer* trc, const JSJitFrameIter& frame, JitFrameLayout* layout)
 {
-    // Trace |this| and any extra actual arguments for an Ion frame. Tracinging
+    // Trace |this| and any extra actual arguments for an Ion frame. Tracing
     // of formal arguments is taken care of by the frame's safepoint/snapshot,
     // except when the script might have lazy arguments or rest, in which case
     // we trace them as well. We also have to trace formals if we have a
-    // LazyLink frame or an InterpreterStub frame.
+    // LazyLink frame or an InterpreterStub frame or a special JSJit to wasm
+    // frame (since wasm doesn't use snapshots).
 
     if (!CalleeTokenIsFunction(layout->calleeToken()))
         return;
@@ -834,7 +835,8 @@ TraceThisAndArguments(JSTracer* trc, const JSJitFrameIter& frame, JitFrameLayout
     size_t nformals = 0;
 
     JSFunction* fun = CalleeTokenToFunction(layout->calleeToken());
-    if (!frame.isExitFrameLayout<LazyLinkExitFrameLayout>() &&
+    if (frame.type() != JitFrame_JSJitToWasm &&
+        !frame.isExitFrameLayout<LazyLinkExitFrameLayout>() &&
         !frame.isExitFrameLayout<InterpreterStubExitFrameLayout>() &&
         !fun->nonLazyScript()->mayReadFrameArgsDirectly())
     {
@@ -1240,6 +1242,16 @@ TraceRectifierFrame(JSTracer* trc, const JSJitFrameIter& frame)
 }
 
 static void
+TraceJSJitToWasmFrame(JSTracer* trc, const JSJitFrameIter& frame)
+{
+    // This is doing a subset of TraceIonJSFrame, since the callee doesn't
+    // have a script.
+    JitFrameLayout* layout = (JitFrameLayout*)frame.fp();
+    layout->replaceCalleeToken(TraceCalleeToken(trc, layout->calleeToken()));
+    TraceThisAndArguments(trc, frame, layout);
+}
+
+static void
 TraceJitActivation(JSTracer* trc, JitActivation* activation)
 {
 #ifdef CHECK_OSIPOINT_REGISTERS
@@ -1280,8 +1292,12 @@ TraceJitActivation(JSTracer* trc, JitActivation* activation)
                 TraceIonICCallFrame(trc, jitFrame);
                 break;
               case JitFrame_WasmToJSJit:
-                // Ignore: this is a marked used to let the JitFrameIter the
-                // frame above is a wasm frame, handled in the next iteration.
+                // Ignore: this is a special marker used to let the
+                // JitFrameIter know the frame above is a wasm frame, handled
+                // in the next iteration.
+                break;
+              case JitFrame_JSJitToWasm:
+                TraceJSJitToWasmFrame(trc, jitFrame);
                 break;
               default:
                 MOZ_CRASH("unexpected frame type");

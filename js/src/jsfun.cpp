@@ -2002,7 +2002,10 @@ js::NewFunctionWithProto(JSContext* cx, Native native,
     } else {
         MOZ_ASSERT(fun->isNative());
         MOZ_ASSERT(native);
-        fun->initNative(native, nullptr);
+        if (fun->isWasmOptimized())
+            fun->initWasmNative(native);
+        else
+            fun->initNative(native, nullptr);
     }
     if (allocKind == AllocKind::FUNCTION_EXTENDED)
         fun->initializeExtended();

@@ -1201,6 +1201,9 @@ nsDocShell::DispatchToTabGroup(TaskCategory aCategory,
     return NS_ERROR_FAILURE;
   }
 
+  if (win->GetDocGroup()) {
+    return win->GetDocGroup()->Dispatch(aCategory, runnable.forget());
+  }
   RefPtr<mozilla::dom::TabGroup> tabGroup = win->TabGroup();
   return tabGroup->Dispatch(aCategory, runnable.forget());
 }

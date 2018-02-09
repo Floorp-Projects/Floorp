@@ -31,6 +31,18 @@ JSJitFrameIter::JSJitFrameIter(const JitActivation* activation)
     }
 }
 
+JSJitFrameIter::JSJitFrameIter(const JitActivation* activation, uint8_t* fp)
+  : current_(fp),
+    type_(JitFrame_JSJitToWasm),
+    returnAddressToFp_(nullptr),
+    frameSize_(0),
+    cachedSafepointIndex_(nullptr),
+    activation_(activation)
+{
+    MOZ_ASSERT(!activation_->bailoutData());
+    MOZ_ASSERT(!TlsContext.get()->inUnsafeCallWithABI);
+}
+
 bool
 JSJitFrameIter::checkInvalidation() const
 {
@@ -371,6 +383,9 @@ JSJitFrameIter::dump() const
       case JitFrame_Exit:
         fprintf(stderr, " Exit frame\n");
         break;
+      case JitFrame_JSJitToWasm:
+        fprintf(stderr, " Wasm exit frame\n");
+        break;
     };
     fputc('\n', stderr);
 }
@@ -450,8 +465,7 @@ JSJitFrameIter::verifyReturnAddressUsingNativeToBytecodeMap()
 }
 #endif // DEBUG
 
-JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(
-        JSContext* cx, const JS::ProfilingFrameIterator::RegisterState& state)
+JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(JSContext* cx, void* pc)
 {
     // If no profilingActivation is live, initialize directly to
     // end-of-iteration state.
@@ -478,22 +492,21 @@ JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(
 
     // Get the fp from the current profilingActivation
     fp_ = (uint8_t*) act->lastProfilingFrame();
-    void* lastCallSite = act->lastProfilingCallSite();
-
-    JitcodeGlobalTable* table = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
 
     // Profiler sampling must NOT be suppressed if we are here.
     MOZ_ASSERT(cx->isProfilerSamplingEnabled());
 
     // Try initializing with sampler pc
-    if (tryInitWithPC(state.pc))
+    if (tryInitWithPC(pc))
         return;
 
     // Try initializing with sampler pc using native=>bytecode table.
-    if (tryInitWithTable(table, state.pc, cx->runtime(), /* forLastCallSite = */ false))
+    JitcodeGlobalTable* table = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
+    if (tryInitWithTable(table, pc, cx->runtime(), /* forLastCallSite = */ false))
         return;
 
     // Try initializing with lastProfilingCallSite pc
+    void* lastCallSite = act->lastProfilingCallSite();
     if (lastCallSite) {
         if (tryInitWithPC(lastCallSite))
             return;
@@ -519,11 +532,9 @@ GetPreviousRawFrame(CommonFrameLayout* frame)
     return ReturnType((uint8_t*)frame + prevSize);
 }
 
-JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(void* exitFrame)
+JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(CommonFrameLayout* fp)
 {
-    // Skip the exit frame.
-    ExitFrameLayout* frame = (ExitFrameLayout*) exitFrame;
-    moveToNextFrame(frame);
+    moveToNextFrame(fp);
 }
 
 bool

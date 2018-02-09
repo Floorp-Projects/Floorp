@@ -3043,8 +3043,7 @@ void
 MacroAssemblerARMCompat::unboxDouble(const ValueOperand& operand, FloatRegister dest)
 {
     MOZ_ASSERT(dest.isDouble());
-    as_vxfer(operand.payloadReg(), operand.typeReg(),
-             VFPRegister(dest), CoreToFloat);
+    as_vxfer(operand.payloadReg(), operand.typeReg(), VFPRegister(dest), CoreToFloat);
 }
 
 void

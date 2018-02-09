@@ -942,6 +942,8 @@ LIRGeneratorX86Shared::visitSimdGeneralShuffle(MSimdGeneralShuffle* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));
 
+    size_t numOperands = ins->numVectors() + ins->numLanes();
+
     LSimdGeneralShuffleBase* lir;
     if (IsIntegerSimdType(ins->type())) {
 #if defined(JS_CODEGEN_X86)
@@ -955,14 +957,14 @@ LIRGeneratorX86Shared::visitSimdGeneralShuffle(MSimdGeneralShuffle* ins)
 #else
         LDefinition t = temp();
 #endif
-        lir = new (alloc()) LSimdGeneralShuffleI(t);
+        lir = new (alloc()) LSimdGeneralShuffleI(t, numOperands);
     } else if (ins->type() == MIRType::Float32x4) {
-        lir = new (alloc()) LSimdGeneralShuffleF(temp());
+        lir = new (alloc()) LSimdGeneralShuffleF(temp(), numOperands);
     } else {
         MOZ_CRASH("Unknown SIMD kind when doing a shuffle");
     }
 
-    if (!lir->init(alloc(), ins->numVectors() + ins->numLanes()))
+    if (!lir->init(alloc()))
         return;
 
     for (unsigned i = 0; i < ins->numVectors(); i++) {

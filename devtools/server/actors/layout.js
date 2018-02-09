@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { Cu } = require("chrome");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { flexboxSpec, gridSpec, layoutSpec } = require("devtools/shared/specs/layout");
 const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
@@ -30,7 +31,7 @@ const FlexboxActor = ActorClassWithSpec(flexboxSpec, {
    * @param  {LayoutActor} layoutActor
    *         The LayoutActor instance.
    * @param  {DOMNode} containerEl
-   *         The flexbox container element.
+   *         The flex container element.
    */
   initialize(layoutActor, containerEl) {
     Actor.prototype.initialize.call(this, layoutActor.conn);
@@ -136,65 +137,61 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
   },
 
   /**
-   * Returns an array of FlexboxActor objects for all the flexbox containers found by
-   * iterating below the given rootNode.
+   * Returns the flex container found by iterating on the given selected node. The current
+   * node can be a flex container or flex item. If it is a flex item, returns the parent
+   * flex container. Otherwise, return null if the current or parent node is not a flex
+   * container.
    *
-   * @param  {Node|NodeActor} rootNode
-   *         The root node to start iterating at.
-   * @return {Array} An array of FlexboxActor objects.
+   * @param  {Node|NodeActor} node
+   *         The node to start iterating at.
+   * @return {FlexboxActor|Null} The FlexboxActor of the flex container of the give node.
+   * Otherwise, returns null.
    */
-  getFlexbox(rootNode) {
-    let flexboxes = [];
-
-    if (!rootNode) {
-      return flexboxes;
+  getCurrentFlexbox(node) {
+    if (isNodeDead(node)) {
+      return null;
     }
 
-    let treeWalker = this.walker.getDocumentWalker(rootNode,
+    // Given node can either be a Node or a NodeActor.
+    if (node.rawNode) {
+      node = node.rawNode;
+    }
+
+    let treeWalker = this.walker.getDocumentWalker(node,
       nodeFilterConstants.SHOW_ELEMENT);
+    let currentNode = treeWalker.currentNode;
+    let displayType = this.walker.getNode(currentNode).displayType;
 
-    while (treeWalker.nextNode()) {
-      let currentNode = treeWalker.currentNode;
-      let computedStyle = CssLogic.getComputedStyle(currentNode);
+    if (!displayType) {
+      return null;
+    }
 
-      if (!computedStyle) {
-        continue;
+    // Check if the current node is a flex container.
+    if (displayType == "inline-flex" || displayType == "flex") {
+      return new FlexboxActor(this, treeWalker.currentNode);
+    }
+
+    // Otherwise, check if this is a flex item or the parent node is a flex container.
+    while ((currentNode = treeWalker.parentNode())) {
+      if (!currentNode) {
+        break;
       }
 
-      if (computedStyle.display == "inline-flex" || computedStyle.display == "flex") {
-        let flexboxActor = new FlexboxActor(this, currentNode);
-        flexboxes.push(flexboxActor);
+      displayType = this.walker.getNode(currentNode).displayType;
+
+      switch (displayType) {
+        case "inline-flex":
+        case "flex":
+          return new FlexboxActor(this, currentNode);
+        case "contents":
+          // Continue walking up the tree since the parent node is a content element.
+          continue;
       }
+
+      break;
     }
 
-    return flexboxes;
-  },
-
-  /**
-   * Returns an array of FlexboxActor objects for all existing flexbox containers found by
-   * iterating below the given rootNode and optionally including nested frames.
-   *
-   * @param  {NodeActor} rootNode
-   * @param  {Boolean} traverseFrames
-   *         Whether or not we should iterate through nested frames.
-   * @return {Array} An array of FlexboxActor objects.
-   */
-  getAllFlexbox(rootNode, traverseFrames) {
-    let flexboxes = [];
-
-    if (!rootNode) {
-      return flexboxes;
-    }
-
-    if (!traverseFrames) {
-      return this.getFlexbox(rootNode.rawNode);
-    }
-
-    for (let {document} of this.tabActor.windows) {
-      flexboxes = [...flexboxes, ...this.getFlexbox(document.documentElement)];
-    }
-
-    return flexboxes;
+    return null;
   },
 
   /**
@@ -206,7 +203,7 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
    * @return {Array} An array of GridActor objects.
    */
   getGrids(node) {
-    if (!node) {
+    if (isNodeDead(node)) {
       return [];
     }
 
@@ -231,6 +228,10 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
     return gridActors;
   },
 });
+
+function isNodeDead(node) {
+  return !node || (node.rawNode && Cu.isDeadWrapper(node.rawNode));
+}
 
 exports.FlexboxActor = FlexboxActor;
 exports.GridActor = GridActor;

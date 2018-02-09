@@ -351,16 +351,17 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     /*
      * The start of the range stored in the profiler sample buffer, as measured
      * after the most recent sample.
-     * All JitcodeGlobalMap entries referenced from a given sample are assigned
-     * the buffer position of the START of the sample. The buffer entries that
-     * reference the JitcodeGlobalMap entries will only ever be read from the
-     * buffer while the entire sample is still inside the buffer; if some
-     * buffer entries at the start of the sample have left the buffer, the
-     * entire sample will be considered inaccessible.
+     * All JitcodeGlobalTable entries referenced from a given sample are
+     * assigned the buffer position of the START of the sample. The buffer
+     * entries that reference the JitcodeGlobalTable entries will only ever be
+     * read from the buffer while the entire sample is still inside the buffer;
+     * if some buffer entries at the start of the sample have left the buffer,
+     * the entire sample will be considered inaccessible.
      * This means that, once profilerSampleBufferRangeStart_ advances beyond
-     * the sample position that's stored on a JitcodeGlobalMap entry, the buffer
-     * entries that reference this JitcodeGlobalMap entry will be considered
-     * inaccessible, and those JitcodeGlobalMap entry can be disposed of.
+     * the sample position that's stored on a JitcodeGlobalTable entry, the
+     * buffer entries that reference this JitcodeGlobalTable entry will be
+     * considered inaccessible, and those JitcodeGlobalTable entry can be
+     * disposed of.
      */
     mozilla::Atomic<uint64_t, mozilla::ReleaseAcquire> profilerSampleBufferRangeStart_;
 

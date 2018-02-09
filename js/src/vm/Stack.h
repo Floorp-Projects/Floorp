@@ -1667,7 +1667,8 @@ class JitActivation : public Activation
     // simulator) and cleared by WasmHandleExecutionInterrupt or WasmHandleThrow
     // when the interrupt is handled.
 
-    void startWasmInterrupt(const JS::ProfilingFrameIterator::RegisterState& state);
+    // Returns true iff we've entered interrupted state.
+    bool startWasmInterrupt(const JS::ProfilingFrameIterator::RegisterState& state);
     void finishWasmInterrupt();
     bool isWasmInterrupted() const;
     void* wasmInterruptUnwindPC() const;

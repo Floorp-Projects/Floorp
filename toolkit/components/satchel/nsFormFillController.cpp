@@ -158,7 +158,7 @@ nsFormFillController::AttributeChanged(nsIDocument* aDocument,
         this,
         &nsFormFillController::MaybeStartControllingInput,
         focusedInput);
-    NS_DispatchToCurrentThread(event);
+    aDocument->Dispatch(TaskCategory::Other, event.forget());
   }
 
   if (mListNode && mListNode->Contains(aElement)) {
