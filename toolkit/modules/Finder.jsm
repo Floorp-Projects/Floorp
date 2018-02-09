@@ -352,7 +352,7 @@ Finder.prototype = {
     let controller = this._getSelectionController(this._getWindow());
 
     switch (aEvent.keyCode) {
-      case Ci.nsIDOMKeyEvent.DOM_VK_RETURN:
+      case aEvent.DOM_VK_RETURN:
         if (this._fastFind.foundLink) {
           let view = this._fastFind.foundLink.ownerGlobal;
           this._fastFind.foundLink.dispatchEvent(new view.MouseEvent("click", {
@@ -366,23 +366,23 @@ Finder.prototype = {
           }));
         }
         break;
-      case Ci.nsIDOMKeyEvent.DOM_VK_TAB:
+      case aEvent.DOM_VK_TAB:
         let direction = Services.focus.MOVEFOCUS_FORWARD;
         if (aEvent.shiftKey) {
           direction = Services.focus.MOVEFOCUS_BACKWARD;
         }
         Services.focus.moveFocus(this._getWindow(), null, direction, 0);
         break;
-      case Ci.nsIDOMKeyEvent.DOM_VK_PAGE_UP:
+      case aEvent.DOM_VK_PAGE_UP:
         controller.scrollPage(false);
         break;
-      case Ci.nsIDOMKeyEvent.DOM_VK_PAGE_DOWN:
+      case aEvent.DOM_VK_PAGE_DOWN:
         controller.scrollPage(true);
         break;
-      case Ci.nsIDOMKeyEvent.DOM_VK_UP:
+      case aEvent.DOM_VK_UP:
         controller.scrollLine(false);
         break;
-      case Ci.nsIDOMKeyEvent.DOM_VK_DOWN:
+      case aEvent.DOM_VK_DOWN:
         controller.scrollLine(true);
         break;
     }
