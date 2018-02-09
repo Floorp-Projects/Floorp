@@ -1896,7 +1896,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     let props = [];
     if (rawObj instanceof Ci.nsIDOMMouseEvent) {
       props.push("buttons", "clientX", "clientY", "layerX", "layerY");
-    } else if (rawObj instanceof Ci.nsIDOMKeyEvent) {
+    } else if (obj.class == "KeyboardEvent") {
       let modifiers = [];
       if (rawObj.altKey) {
         modifiers.push("Alt");
@@ -1914,9 +1914,9 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       preview.modifiers = modifiers;
 
       props.push("key", "charCode", "keyCode");
-    } else if (rawObj instanceof Ci.nsIDOMTransitionEvent) {
+    } else if (obj.class == "TransitionEvent") {
       props.push("propertyName", "pseudoElement");
-    } else if (rawObj instanceof Ci.nsIDOMAnimationEvent) {
+    } else if (obj.class == "AnimationEvent") {
       props.push("animationName", "pseudoElement");
     } else if (rawObj instanceof Ci.nsIDOMClipboardEvent) {
       props.push("clipboardData");

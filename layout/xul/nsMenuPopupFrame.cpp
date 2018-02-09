@@ -19,7 +19,6 @@
 #include "nsPopupSetFrame.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIDOMScreen.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIPresShell.h"
@@ -56,11 +55,14 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/KeyboardEvent.h"
+#include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/PopupBoxObject.h"
 #include <algorithm>
 
 using namespace mozilla;
 using mozilla::dom::PopupBoxObject;
+using mozilla::dom::KeyboardEvent;
 
 int8_t nsMenuPopupFrame::sDefaultLevelIsTop = -1;
 
@@ -2081,11 +2083,10 @@ nsMenuPopupFrame::Enter(WidgetGUIEvent* aEvent)
 }
 
 nsMenuFrame*
-nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction)
+nsMenuPopupFrame::FindMenuWithShortcut(KeyboardEvent* aKeyEvent, bool& doAction)
 {
-  uint32_t charCode, keyCode;
-  aKeyEvent->GetCharCode(&charCode);
-  aKeyEvent->GetKeyCode(&keyCode);
+  uint32_t charCode = aKeyEvent->CharCode();
+  uint32_t keyCode = aKeyEvent->KeyCode();
 
   doAction = false;
 
@@ -2103,11 +2104,10 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
   bool isMenu = parentContent &&
                   !parentContent->NodeInfo()->Equals(nsGkAtoms::menulist, kNameSpaceID_XUL);
 
-  DOMTimeStamp keyTime;
-  aKeyEvent->AsEvent()->GetTimeStamp(&keyTime);
+  DOMTimeStamp keyTime = aKeyEvent->TimeStamp();
 
   if (charCode == 0) {
-    if (keyCode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE) {
+    if (keyCode == dom::KeyboardEventBinding::DOM_VK_BACK_SPACE) {
       if (!isMenu && !mIncrementalString.IsEmpty()) {
         mIncrementalString.SetLength(mIncrementalString.Length() - 1);
         return nullptr;

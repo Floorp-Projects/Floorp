@@ -18,6 +18,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/ViewportFrame.h"
 #include "mozilla/css/StyleRule.h" // For nsCSSSelector
+#include "mozilla/dom/MutationEventBinding.h"
 #include "nsLayoutUtils.h"
 #include "AnimationCommon.h" // For GetLayerAnimationInfo
 #include "FrameLayerBuilder.h"
@@ -43,7 +44,6 @@
 #include "SVGTextFrame.h"
 #include "StickyScrollContainer.h"
 #include "nsIRootBox.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsContentUtils.h"
 #include "nsIFrameInlines.h"
 #include "ActiveLayerTracker.h"
@@ -400,9 +400,9 @@ GeckoRestyleManager::AttributeChanged(Element* aElement,
   {
     nsIRootBox* rootBox = nsIRootBox::GetRootBox(PresContext()->GetPresShell());
     if (rootBox) {
-      if (aModType == nsIDOMMutationEvent::REMOVAL)
+      if (aModType == MutationEventBinding::REMOVAL)
         rootBox->RemoveTooltipSupport(aElement);
-      if (aModType == nsIDOMMutationEvent::ADDITION)
+      if (aModType == MutationEventBinding::ADDITION)
         rootBox->AddTooltipSupport(aElement);
     }
   }

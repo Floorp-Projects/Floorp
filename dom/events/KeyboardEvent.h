@@ -10,14 +10,12 @@
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/EventForwards.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsRFPService.h"
 
 namespace mozilla {
 namespace dom {
 
-class KeyboardEvent : public UIEvent,
-                      public nsIDOMKeyEvent
+class KeyboardEvent : public UIEvent
 {
 public:
   KeyboardEvent(EventTarget* aOwner,
@@ -26,11 +24,10 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIDOMKeyEvent Interface
-  NS_DECL_NSIDOMKEYEVENT
-
-  // Forward to base class
-  NS_FORWARD_TO_UIEVENT
+  virtual KeyboardEvent* AsKeyboardEvent() override
+  {
+    return this;
+  }
 
   static already_AddRefed<KeyboardEvent> Constructor(
                                            const GlobalObject& aGlobal,
@@ -38,7 +35,9 @@ public:
                                            const KeyboardEventInit& aParam,
                                            ErrorResult& aRv);
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
+  virtual JSObject*
+    WrapObjectInternal(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override
   {
     return KeyboardEventBinding::Wrap(aCx, this, aGivenProto);
   }
@@ -63,6 +62,7 @@ public:
 
   bool Repeat();
   bool IsComposing();
+  void GetKey(nsAString& aKey) const;
   uint32_t CharCode();
   uint32_t KeyCode(CallerType aCallerType = CallerType::System);
   virtual uint32_t Which() override;
@@ -74,12 +74,7 @@ public:
   void InitKeyEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
                     nsGlobalWindowInner* aView, bool aCtrlKey, bool aAltKey,
                     bool aShiftKey, bool aMetaKey,
-                    uint32_t aKeyCode, uint32_t aCharCode)
-  {
-    auto* view = aView ? aView->AsInner() : nullptr;
-    InitKeyEvent(aType, aCanBubble, aCancelable, view, aCtrlKey, aAltKey,
-                 aShiftKey, aMetaKey, aKeyCode, aCharCode);
-  }
+                    uint32_t aKeyCode, uint32_t aCharCode);
 
   void InitKeyboardEvent(const nsAString& aType,
                          bool aCanBubble, bool aCancelable,

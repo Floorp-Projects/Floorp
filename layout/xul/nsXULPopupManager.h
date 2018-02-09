@@ -52,10 +52,15 @@ class nsMenuFrame;
 class nsMenuPopupFrame;
 class nsMenuBarFrame;
 class nsMenuParent;
-class nsIDOMKeyEvent;
 class nsIDocShellTreeItem;
 class nsPIDOMWindowOuter;
 class nsRefreshDriver;
+
+namespace mozilla {
+namespace dom {
+class KeyboardEvent;
+} // namespace dom
+} // namespace mozilla
 
 // when a menu command is executed, the closemenu attribute may be used
 // to define how the menu should be closed up
@@ -123,9 +128,9 @@ static_assert(NS_STYLE_DIRECTION_LTR == 0 && NS_STYLE_DIRECTION_RTL == 1,
  */
 extern const nsNavigationDirection DirectionFromKeyCodeTable[2][6];
 
-#define NS_DIRECTION_FROM_KEY_CODE(frame, keycode)                     \
-  (DirectionFromKeyCodeTable[frame->StyleVisibility()->mDirection]  \
-                            [keycode - nsIDOMKeyEvent::DOM_VK_END])
+#define NS_DIRECTION_FROM_KEY_CODE(frame, keycode)                                      \
+  (DirectionFromKeyCodeTable[frame->StyleVisibility()->mDirection]                      \
+                            [keycode - mozilla::dom::KeyboardEventBinding::DOM_VK_END])
 
 // nsMenuChainItem holds info about an open popup. Items are stored in a
 // doubly linked list. Note that the linked list is stored beginning from
@@ -670,7 +675,7 @@ public:
    * key is handled by that popup, otherwise if aFrame is null, the key is
    * handled by the active popup or menubar.
    */
-  bool HandleShortcutNavigation(nsIDOMKeyEvent* aKeyEvent,
+  bool HandleShortcutNavigation(mozilla::dom::KeyboardEvent* aKeyEvent,
                                 nsMenuPopupFrame* aFrame);
 
   /**
@@ -694,15 +699,15 @@ public:
    * Handles the keyboard event with keyCode value. Returns true if the event
    * has been handled.
    */
-  bool HandleKeyboardEventWithKeyCode(nsIDOMKeyEvent* aKeyEvent,
+  bool HandleKeyboardEventWithKeyCode(mozilla::dom::KeyboardEvent* aKeyEvent,
                                       nsMenuChainItem* aTopVisibleMenuItem);
 
   // Sets mIgnoreKeys of the Top Visible Menu Item
   nsresult UpdateIgnoreKeys(bool aIgnoreKeys);
 
-  nsresult KeyUp(nsIDOMKeyEvent* aKeyEvent);
-  nsresult KeyDown(nsIDOMKeyEvent* aKeyEvent);
-  nsresult KeyPress(nsIDOMKeyEvent* aKeyEvent);
+  nsresult KeyUp(mozilla::dom::KeyboardEvent* aKeyEvent);
+  nsresult KeyDown(mozilla::dom::KeyboardEvent* aKeyEvent);
+  nsresult KeyPress(mozilla::dom::KeyboardEvent* aKeyEvent);
 
 protected:
   nsXULPopupManager();

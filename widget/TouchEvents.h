@@ -11,7 +11,6 @@
 #include "mozilla/dom/Touch.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/RefPtr.h"
-#include "nsIDOMSimpleGestureEvent.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -128,9 +127,9 @@ public:
     return result;
   }
 
-  // See nsIDOMSimpleGestureEvent for values
+  // See SimpleGestureEvent.webidl for values
   uint32_t mAllowedDirections;
-  // See nsIDOMSimpleGestureEvent for values
+  // See SimpleGestureEvent.webidl for values
   uint32_t mDirection;
   // The number of taps for tap events
   uint32_t mClickCount;

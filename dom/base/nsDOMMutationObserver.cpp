@@ -17,7 +17,6 @@
 #include "nsContentUtils.h"
 #include "nsCSSPseudoElements.h"
 #include "nsError.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTextFragment.h"

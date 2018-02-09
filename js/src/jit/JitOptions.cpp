@@ -233,7 +233,8 @@ DefaultJitOptions::DefaultJitOptions()
     }
 
     SET_DEFAULT(spectreIndexMasking, true);
-    SET_DEFAULT(spectreStringMitigations, false);
+    SET_DEFAULT(spectreStringMitigations, true);
+    SET_DEFAULT(spectreValueMasking, true);
 
     // Toggles whether unboxed plain objects can be created by the VM.
     SET_DEFAULT(disableUnboxedObjects, false);

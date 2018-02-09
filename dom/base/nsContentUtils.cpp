@@ -52,6 +52,7 @@
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/IDTracker.h"
+#include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/Promise.h"

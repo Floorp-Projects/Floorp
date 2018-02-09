@@ -7,6 +7,6 @@ const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 add_task(function* () {
   for (let key in KeyCodes) {
-    is(KeyCodes[key], Ci.nsIDOMKeyEvent[key], "checking value for " + key);
+    is(KeyCodes[key], KeyboardEvent[key], "checking value for " + key);
   }
 });

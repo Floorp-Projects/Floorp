@@ -4,23 +4,6 @@
 // Tests loading sourcemapped sources, setting breakpoints, and
 // inspecting restored scopes.
 
-function toggleNode(dbg, index) {
-  clickElement(dbg, "scopeNode", index);
-}
-
-function getLabel(dbg, index) {
-  return findElement(dbg, "scopeNode", index).innerText;
-}
-
-function hasScopeNode(dbg, index) {
-  return !!findElement(dbg, "scopeNode", index);
-}
-
-async function waitForScopeNode(dbg, index) {
-  const selector = getSelector("scopeNode", index);
-  return waitForElementWithSelector(dbg, selector);
-}
-
 // This source map does not have source contents, so it's fetched separately
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
@@ -50,36 +33,27 @@ add_task(async function() {
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
 
-  await waitForDispatch(dbg, "MAP_SCOPES");
+  is(getScopeLabel(dbg, 1), "Block");
+  is(getScopeLabel(dbg, 2), "na");
+  is(getScopeLabel(dbg, 3), "nb");
 
-  is(getLabel(dbg, 1), "Block");
-  is(getLabel(dbg, 2), "<this>");
-  is(getLabel(dbg, 3), "na");
-  is(getLabel(dbg, 4), "nb");
+  is(getScopeLabel(dbg, 4), "Block");
 
-  is(getLabel(dbg, 5), "Block");
-  is(
-    hasScopeNode(dbg, 8) && !hasScopeNode(dbg, 9),
-    true,
-    "scope count before expand"
-  );
-  toggleNode(dbg, 5);
+  await toggleScopeNode(dbg, 4);
 
-  await waitForScopeNode(dbg, 9);
+  is(getScopeLabel(dbg, 5), "ma");
+  is(getScopeLabel(dbg, 6), "mb");
 
-  is(getLabel(dbg, 6), "ma");
-  is(getLabel(dbg, 7), "mb");
+  await toggleScopeNode(dbg, 7);
 
-  is(
-    hasScopeNode(dbg, 10) && !hasScopeNode(dbg, 11),
-    true,
-    "scope count before expand"
-  );
-  toggleNode(dbg, 8);
+  is(getScopeLabel(dbg, 8), "a");
+  is(getScopeLabel(dbg, 9), "b");
 
-  await waitForScopeNode(dbg, 11);
+  is(getScopeLabel(dbg, 10), "Module");
 
-  is(getLabel(dbg, 9), "a");
-  is(getLabel(dbg, 10), "arguments");
-  is(getLabel(dbg, 11), "b");
+  await toggleScopeNode(dbg, 10);
+
+  is(getScopeLabel(dbg, 11), "binaryLookup:o()");
+  is(getScopeLabel(dbg, 12), "comparer:t()");
+  is(getScopeLabel(dbg, 13), "fancySort");
 });

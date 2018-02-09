@@ -17,6 +17,10 @@
 
 namespace mozilla {
 
+namespace dom {
+class KeyboardEvent;
+} // namespace dom
+
 class TextInputProcessor final : public nsITextInputProcessor
                                , public widget::TextEventDispatcherListener
 {
@@ -77,7 +81,7 @@ private:
   bool IsValidEventTypeForComposition(
          const WidgetKeyboardEvent& aKeyboardEvent) const;
   nsresult PrepareKeyboardEventForComposition(
-             nsIDOMKeyEvent* aDOMKeyEvent,
+             dom::KeyboardEvent* aDOMKeyEvent,
              uint32_t& aKeyFlags,
              uint8_t aOptionalArgc,
              WidgetKeyboardEvent*& aKeyboardEvent);

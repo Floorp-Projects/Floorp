@@ -157,7 +157,7 @@ public:
    * @param aAttribute   The name of the changing attribute
    * @param aModType     Whether or not the attribute will be added, changed, or
    *                     removed. The constants are defined in
-   *                     nsIDOMMutationEvent.h.
+   *                     MutationEvent.webidl.
    * @param aNewValue    The new value, IF it has been preparsed by
    *                     BeforeSetAttr, otherwise null.
    *
@@ -183,7 +183,7 @@ public:
    * @param aAttribute   The name of the changed attribute
    * @param aModType     Whether or not the attribute was added, changed, or
    *                     removed. The constants are defined in
-   *                     nsIDOMMutationEvent.h.
+   *                     MutationEvent.webidl.
    * @param aOldValue    The old value, if either the old value or the new
    *                     value are StoresOwnData() (or absent); null otherwise.
    *

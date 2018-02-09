@@ -10,6 +10,7 @@
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
 #include "mozilla/dom/ElementInlines.h"
+#include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsDOMCSSAttrDeclaration.h"
@@ -18,7 +19,6 @@
 #include "mozilla/DeclarationBlockInlines.h"
 #include "nsCSSParser.h"
 #include "mozilla/css/Loader.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsXULElement.h"
 #include "nsContentUtils.h"
 #include "nsStyleUtil.h"
@@ -104,8 +104,8 @@ nsStyledElement::SetInlineStyleDeclaration(DeclarationBlock* aDeclaration,
 
   // XXXbz do we ever end up with ADDITION here?  I doubt it.
   uint8_t modType = modification ?
-    static_cast<uint8_t>(nsIDOMMutationEvent::MODIFICATION) :
-    static_cast<uint8_t>(nsIDOMMutationEvent::ADDITION);
+    static_cast<uint8_t>(MutationEventBinding::MODIFICATION) :
+    static_cast<uint8_t>(MutationEventBinding::ADDITION);
 
   nsIDocument* document = GetComposedDoc();
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);

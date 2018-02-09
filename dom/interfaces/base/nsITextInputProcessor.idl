@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMKeyEvent;
+interface nsIDOMEvent;
 interface mozIDOMWindow;
 interface nsITextInputProcessorCallback;
 
@@ -311,7 +311,7 @@ interface nsITextInputProcessor : nsISupports
    *                        canceled by the web application.
    */
   [optional_argc]
-    boolean startComposition([optional] in nsIDOMKeyEvent aKeyboardEvent,
+    boolean startComposition([optional] in nsIDOMEvent aKeyboardEvent,
                              [optional] in unsigned long aKeyFlags);
 
   /**
@@ -402,7 +402,7 @@ interface nsITextInputProcessor : nsISupports
    */
   [optional_argc]
     boolean flushPendingComposition(
-      [optional] in nsIDOMKeyEvent aKeyboardEvent,
+      [optional] in nsIDOMEvent aKeyboardEvent,
       [optional] in unsigned long aKeyFlags);
 
   /**
@@ -416,7 +416,7 @@ interface nsITextInputProcessor : nsISupports
    * @param aKeyFlags       See KEY_* constants.
    */
   [optional_argc]
-    void commitComposition([optional] in nsIDOMKeyEvent aKeyboardEvent,
+    void commitComposition([optional] in nsIDOMEvent aKeyboardEvent,
                            [optional] in unsigned long aKeyFlags);
 
   /**
@@ -438,7 +438,7 @@ interface nsITextInputProcessor : nsISupports
    */
   [optional_argc]
     boolean commitCompositionWith(in DOMString aCommitString,
-                                  [optional] in nsIDOMKeyEvent aKeyboardEvent,
+                                  [optional] in nsIDOMEvent aKeyboardEvent,
                                   [optional] in unsigned long aKeyFlags);
 
   /**
@@ -457,7 +457,7 @@ interface nsITextInputProcessor : nsISupports
    * @param aKeyFlags       See KEY_* constants.
    */
   [optional_argc]
-    void cancelComposition([optional] in nsIDOMKeyEvent aKeyboardEvent,
+    void cancelComposition([optional] in nsIDOMEvent aKeyboardEvent,
                            [optional] in unsigned long aKeyFlags);
 
   // Specifying KEY_DEFAULT_PREVENTED can dispatch key events whose
@@ -547,14 +547,14 @@ interface nsITextInputProcessor : nsISupports
    *                        default action has been taken).
    */
   [optional_argc]
-    unsigned long keydown(in nsIDOMKeyEvent aKeyboardEvent,
+    unsigned long keydown(in nsIDOMEvent aKeyboardEvent,
                           [optional] in unsigned long aKeyFlags);
 
   /**
    * Similar to keydown(), but this dispatches only a keyup event.
    */
   [optional_argc]
-    boolean keyup(in nsIDOMKeyEvent aKeyboardEvent,
+    boolean keyup(in nsIDOMEvent aKeyboardEvent,
                   [optional] in unsigned long aKeyFlags);
 
   /**

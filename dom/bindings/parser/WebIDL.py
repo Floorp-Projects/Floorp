@@ -1802,6 +1802,11 @@ class IDLNamespace(IDLInterfaceOrNamespace):
                 if not attr.noArguments():
                     raise WebIDLError("[%s] must not have arguments" % identifier,
                                       [attr.location])
+            elif identifier == "Pref":
+                # Known extended attributes that take a string value
+                if not attr.hasValue():
+                    raise WebIDLError("[%s] must have a value" % identifier,
+                                      [attr.location])
             else:
                 raise WebIDLError("Unknown extended attribute %s on namespace" %
                                   identifier,

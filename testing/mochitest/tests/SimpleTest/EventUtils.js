@@ -758,7 +758,7 @@ function _computeKeyCodeFromChar(aChar)
   if (aChar.length != 1) {
     return 0;
   }
-  var KeyEvent = _EU_Ci.nsIDOMKeyEvent;
+  var KeyEvent = _getKeyboardEvent();
   if (aChar >= 'a' && aChar <= 'z') {
     return KeyEvent.DOM_VK_A + aChar.charCodeAt(0) - 'a'.charCodeAt(0);
   }
@@ -1450,7 +1450,7 @@ function _createKeyboardEventDictionary(aKey, aKeyEvent, aWindow = window) {
     keyName = aKey.substr("KEY_".length);
     result.flags |= _EU_Ci.nsITextInputProcessor.KEY_NON_PRINTABLE_KEY;
   } else if (aKey.indexOf("VK_") == 0) {
-    keyCode = _EU_Ci.nsIDOMKeyEvent["DOM_" + aKey];
+    keyCode = _getKeyboardEvent(aWindow)["DOM_" + aKey];
     if (!keyCode) {
       throw "Unknown key: " + aKey;
     }
