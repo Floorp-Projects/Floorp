@@ -840,10 +840,13 @@ public:
 private:
   explicit
   WorkerThreadContextPrivate(WorkerPrivate* aWorkerPrivate)
-    : PerThreadAtomCache{} // Zero out the base class members.
-    , mWorkerPrivate(aWorkerPrivate)
+    : mWorkerPrivate(aWorkerPrivate)
   {
     MOZ_ASSERT(!NS_IsMainThread());
+
+    // Zero out the base class members.
+    memset(this, 0, sizeof(PerThreadAtomCache));
+
     MOZ_ASSERT(mWorkerPrivate);
   }
 
