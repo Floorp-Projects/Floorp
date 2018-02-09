@@ -224,9 +224,4 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
   // OEM specific virtual keyCode of Windows should pass through DOM keyCode
   // for compatibility with the other web browsers on Windows.
   const unsigned long DOM_VK_WIN_OEM_CLEAR  = 0xFE;
-
-  const unsigned long DOM_KEY_LOCATION_STANDARD = 0x00;
-  const unsigned long DOM_KEY_LOCATION_LEFT     = 0x01;
-  const unsigned long DOM_KEY_LOCATION_RIGHT    = 0x02;
-  const unsigned long DOM_KEY_LOCATION_NUMPAD   = 0x03;
 };
