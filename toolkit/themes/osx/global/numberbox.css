@@ -7,7 +7,6 @@
 
 textbox[type="number"] {
   -moz-appearance: none;
-  -moz-box-align: center;
   padding: 0 !important;
   border: none;
   background-color: transparent;
@@ -19,7 +18,6 @@ html|*.numberbox-input {
   padding: 0 1px !important;
 }
 
-.numberbox-input-box {
-  -moz-appearance: textfield;
-  margin-right: 4px;
+textbox[type="number"][hidespinbuttons="true"] > html|*.numberbox-input {
+  -moz-appearance: textfield !important;
 }
