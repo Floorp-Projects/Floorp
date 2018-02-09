@@ -169,6 +169,19 @@ nsBaseDragService::GetSourceNode(nsIDOMNode** aSourceNode)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBaseDragService::GetTriggeringPrincipalURISpec(nsACString& aPrincipalURISpec)
+{
+  aPrincipalURISpec = mTriggeringPrincipalURISpec;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseDragService::SetTriggeringPrincipalURISpec(const nsACString& aPrincipalURISpec)
+{
+  mTriggeringPrincipalURISpec = aPrincipalURISpec;
+  return NS_OK;
+}
 
 //-------------------------------------------------------------------------
 
@@ -205,6 +218,7 @@ nsBaseDragService::SetDataTransfer(nsIDOMDataTransfer* aDataTransfer)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
 nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
+                                     const nsACString& aPrincipalURISpec,
                                      nsIArray* aTransferableArray,
                                      nsIScriptableRegion* aDragRgn,
                                      uint32_t aActionType,
@@ -219,6 +233,7 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   // stash the document of the dom node
   nsCOMPtr<nsINode> node = do_QueryInterface(aDOMNode);
   mSourceDocument = do_QueryInterface(node->OwnerDoc());
+  mTriggeringPrincipalURISpec.Assign(aPrincipalURISpec);
   mSourceNode = aDOMNode;
   mContentPolicyType = aContentPolicyType;
   mEndDragPoint = LayoutDeviceIntPoint(0, 0);
@@ -234,6 +249,7 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
 
   if (NS_FAILED(rv)) {
     mSourceNode = nullptr;
+    mTriggeringPrincipalURISpec.Truncate(0);
     mSourceDocument = nullptr;
   }
 
@@ -242,6 +258,7 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
 
 NS_IMETHODIMP
 nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
+                                              const nsACString& aPrincipalURISpec,
                                               nsIArray* aTransferableArray,
                                               nsIScriptableRegion* aRegion,
                                               uint32_t aActionType,
@@ -265,7 +282,8 @@ nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
   aDragEvent->GetScreenY(&mScreenPosition.y);
   aDragEvent->GetMozInputSource(&mInputSource);
 
-  nsresult rv = InvokeDragSession(aDOMNode, aTransferableArray,
+  nsresult rv = InvokeDragSession(aDOMNode, aPrincipalURISpec,
+                                  aTransferableArray,
                                   aRegion, aActionType,
                                   nsIContentPolicy::TYPE_INTERNAL_IMAGE);
 
@@ -280,6 +298,7 @@ nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
 
 NS_IMETHODIMP
 nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
+                                                  const nsACString& aPrincipalURISpec,
                                                   nsIArray* aTransferableArray,
                                                   uint32_t aActionType,
                                                   nsIDOMDragEvent* aDragEvent,
@@ -306,7 +325,8 @@ nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
   nsCOMPtr<nsIDOMNode> node;
   aSelection->GetFocusNode(getter_AddRefs(node));
 
-  nsresult rv = InvokeDragSession(node, aTransferableArray,
+  nsresult rv = InvokeDragSession(node, aPrincipalURISpec,
+                                  aTransferableArray,
                                   nullptr, aActionType,
                                   nsIContentPolicy::TYPE_OTHER);
 
@@ -422,6 +442,7 @@ nsBaseDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers)
   // release the source we've been holding on to.
   mSourceDocument = nullptr;
   mSourceNode = nullptr;
+  mTriggeringPrincipalURISpec.Truncate(0);
   mSelection = nullptr;
   mDataTransfer = nullptr;
   mHasImage = false;

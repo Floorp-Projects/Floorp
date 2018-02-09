@@ -72,7 +72,8 @@ public:
   nsresult Produce(DataTransfer* aDataTransfer,
                    bool* aCanDrag,
                    nsISelection** aSelection,
-                   nsIContent** aDragNode);
+                   nsIContent** aDragNode,
+                   nsACString& aPrincipalURISpec);
 
 private:
   void AddString(DataTransfer* aDataTransfer,
@@ -119,7 +120,8 @@ nsContentAreaDragDrop::GetDragData(nsPIDOMWindowOuter* aWindow,
                                    DataTransfer* aDataTransfer,
                                    bool* aCanDrag,
                                    nsISelection** aSelection,
-                                   nsIContent** aDragNode)
+                                   nsIContent** aDragNode,
+                                   nsACString& aPrincipalURISpec)
 {
   NS_ENSURE_TRUE(aSelectionTargetNode, NS_ERROR_INVALID_ARG);
 
@@ -127,7 +129,8 @@ nsContentAreaDragDrop::GetDragData(nsPIDOMWindowOuter* aWindow,
 
   DragDataProducer
     provider(aWindow, aTarget, aSelectionTargetNode, aIsAltKeyPressed);
-  return provider.Produce(aDataTransfer, aCanDrag, aSelection, aDragNode);
+  return provider.Produce(aDataTransfer, aCanDrag, aSelection, aDragNode,
+                          aPrincipalURISpec);
 }
 
 
@@ -365,7 +368,8 @@ nsresult
 DragDataProducer::Produce(DataTransfer* aDataTransfer,
                           bool* aCanDrag,
                           nsISelection** aSelection,
-                          nsIContent** aDragNode)
+                          nsIContent** aDragNode,
+                          nsACString& aPrincipalURISpec)
 {
   NS_PRECONDITION(aCanDrag && aSelection && aDataTransfer && aDragNode,
                   "null pointer passed to Produce");
@@ -430,7 +434,7 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
         if (tp) {
           // We have a TabParent, so it may have data for dnd in case the child
           // process started a dnd session.
-          tp->AddInitialDnDDataTo(aDataTransfer);
+          tp->AddInitialDnDDataTo(aDataTransfer, aPrincipalURISpec);
         }
       }
     }

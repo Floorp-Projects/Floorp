@@ -1948,7 +1948,8 @@ TabChild::RecvNormalPriorityRealTouchMoveEvent(
 mozilla::ipc::IPCResult
 TabChild::RecvRealDragEvent(const WidgetDragEvent& aEvent,
                             const uint32_t& aDragAction,
-                            const uint32_t& aDropEffect)
+                            const uint32_t& aDropEffect,
+                            const nsCString& aPrincipalURISpec)
 {
   WidgetDragEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
@@ -1956,6 +1957,7 @@ TabChild::RecvRealDragEvent(const WidgetDragEvent& aEvent,
   nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
   if (dragSession) {
     dragSession->SetDragAction(aDragAction);
+    dragSession->SetTriggeringPrincipalURISpec(aPrincipalURISpec);
     nsCOMPtr<nsIDOMDataTransfer> initialDataTransfer;
     dragSession->GetDataTransfer(getter_AddRefs(initialDataTransfer));
     if (initialDataTransfer) {
