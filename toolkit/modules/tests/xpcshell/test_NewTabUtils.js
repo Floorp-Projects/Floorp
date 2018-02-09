@@ -510,24 +510,6 @@ add_task(async function getHighlightsWithoutPocket() {
 add_task(async function getHighlightsWithPocketSuccess() {
   await setUpActivityStreamTest();
 
-  const fakeResponse = {
-    list: {
-      "12345": {
-        image: {src: "foo.com/img.png"},
-        excerpt: "A description for foo",
-        resolved_title: "A title for foo",
-        resolved_url: "http://www.foo.com",
-        item_id: "12345",
-        status: "0",
-        has_image: "1"
-      },
-      "56789": {
-        item_id: "56789",
-        status: "2",
-      }
-    }
-  };
-
   // Add a bookmark
   let bookmark = {
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -536,6 +518,32 @@ add_task(async function getHighlightsWithPocketSuccess() {
       preview_image_url: "foo.com/img.png",
       url: "https://mozilla1.com/"
   };
+
+  const fakeResponse = {
+    list: {
+      "123": {
+        image: {src: "foo.com/img.png"},
+        excerpt: "A description for foo",
+        resolved_title: "A title for foo",
+        resolved_url: "http://www.foo.com",
+        item_id: "123",
+        status: "0"
+      },
+      "456": {
+        item_id: "456",
+        status: "2",
+      },
+      "789": {
+        resolved_url: bookmark.url,
+        excerpt: bookmark.description,
+        resolved_title: bookmark.title,
+        image: {src: bookmark.preview_image_url},
+        status: "0",
+        item_id: "789"
+      }
+    }
+  };
+
   await PlacesUtils.bookmarks.insert(bookmark);
   await PlacesTestUtils.addVisits(bookmark.url);
 
@@ -543,20 +551,29 @@ add_task(async function getHighlightsWithPocketSuccess() {
   let provider = NewTabUtils.activityStreamLinks;
   let links = await provider.getHighlights();
 
-  // We should have 1 bookmark followed by 1 pocket story in highlights
+  // We should have 1 bookmark followed by 2 pocket stories in highlights
   // We should not have stored the second pocket item since it was deleted
-  Assert.equal(links.length, 2, "Should have 2 links in highlights");
+  Assert.equal(links.length, 3, "Should have 3 links in highlights");
 
   // First highlight should be a bookmark
   Assert.equal(links[0].url, bookmark.url, "The first link is the bookmark");
 
   // Second highlight should be a Pocket item with the correct fields to display
-  Assert.equal(links[1].url, fakeResponse.list["12345"].resolved_url, "Correct Pocket item");
-  Assert.equal(links[1].type, "pocket", "Attached the correct type");
-  Assert.equal(links[1].preview_image_url, fakeResponse.list["12345"].image.src, "Correct preview image was added");
-  Assert.equal(links[1].title, fakeResponse.list["12345"].resolved_title, "Correct title was added");
-  Assert.equal(links[1].description, fakeResponse.list["12345"].excerpt, "Correct description was added");
-  Assert.equal(links[1].item_id, fakeResponse.list["12345"].item_id, "item_id was preserved");
+  let pocketItem = fakeResponse.list["123"];
+  let currentLink = links[1];
+  Assert.equal(currentLink.url, pocketItem.resolved_url, "Correct Pocket item");
+  Assert.equal(currentLink.type, "pocket", "Attached the correct type");
+  Assert.equal(currentLink.preview_image_url, pocketItem.image.src, "Correct preview image was added");
+  Assert.equal(currentLink.title, pocketItem.resolved_title, "Correct title was added");
+  Assert.equal(currentLink.description, pocketItem.excerpt, "Correct description was added");
+  Assert.equal(currentLink.pocket_id, pocketItem.item_id, "item_id was preserved");
+  Assert.equal(currentLink.bookmarkGuid, undefined, "Should not have a bookmarkGuid");
+
+  // Third highlight should still be a Pocket item but since it was bookmarked, it has a bookmarkGuid
+  pocketItem = fakeResponse.list["789"];
+  currentLink = links[2];
+  Assert.equal(currentLink.url, pocketItem.resolved_url, "Correct Pocket item");
+  Assert.ok(currentLink.bookmarkGuid, "Attached a bookmarkGuid for this Pocket item");
 });
 
 add_task(async function getHighlightsWithPocketFailure() {
