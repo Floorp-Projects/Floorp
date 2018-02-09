@@ -175,7 +175,7 @@ private:
 class nsFrameMessageManager : public nsIContentFrameMessageManager,
                               public nsIMessageBroadcaster,
                               public nsIFrameScriptLoader,
-                              public nsIGlobalProcessScriptLoader
+                              public nsIProcessScriptLoader
 {
   friend class mozilla::dom::MessageManagerReporter;
   typedef mozilla::dom::ipc::StructuredCloneData StructuredCloneData;
@@ -260,7 +260,6 @@ public:
   NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
   NS_DECL_NSIFRAMESCRIPTLOADER
   NS_DECL_NSIPROCESSSCRIPTLOADER
-  NS_DECL_NSIGLOBALPROCESSSCRIPTLOADER
 
   static mozilla::dom::ChromeMessageSender*
   NewProcessMessageManager(bool aIsRemote);

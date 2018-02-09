@@ -475,23 +475,3 @@ interface nsIProcessScriptLoader : nsISupports
   [implicit_jscontext]
   jsval getDelayedProcessScripts();
 };
-
-[uuid(5b390753-abb3-49b0-ae3b-b803dab58144)]
-interface nsIGlobalProcessScriptLoader : nsIProcessScriptLoader
-{
-  /**
-   * Allows the parent process to set the initial process data for
-   * new, not-yet-created child processes. This attribute should only
-   * be used by the global parent process message manager. When a new
-   * process is created, it gets a copy of this data (via structured
-   * cloning). It can access the data via the initialProcessData
-   * attribute of its childprocessmessagemanager.
-   *
-   * This value will always be a JS object. Different users are
-   * expected to set properties on this object. The property name
-   * should be unique enough that other Gecko consumers won't
-   * accidentally choose it.
-   */
-  [implicit_jscontext]
-  readonly attribute jsval initialProcessData;
-};
