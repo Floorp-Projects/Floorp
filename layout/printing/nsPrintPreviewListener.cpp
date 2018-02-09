@@ -12,7 +12,6 @@
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIDocument.h"
 #include "nsIDocShell.h"

@@ -15,8 +15,8 @@
 #include "mozilla/FontRange.h"
 #include "mozilla/TextRange.h"
 #include "mozilla/WritingModes.h"
+#include "mozilla/dom/KeyboardEventBinding.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsISelectionController.h"
 #include "nsISelectionListener.h"
 #include "nsITransferable.h"
@@ -43,10 +43,10 @@ namespace mozilla {
 
 enum : uint32_t
 {
-  eKeyLocationStandard = nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD,
-  eKeyLocationLeft     = nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT,
-  eKeyLocationRight    = nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT,
-  eKeyLocationNumpad   = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD
+  eKeyLocationStandard = dom::KeyboardEventBinding::DOM_KEY_LOCATION_STANDARD,
+  eKeyLocationLeft     = dom::KeyboardEventBinding::DOM_KEY_LOCATION_LEFT,
+  eKeyLocationRight    = dom::KeyboardEventBinding::DOM_KEY_LOCATION_RIGHT,
+  eKeyLocationNumpad   = dom::KeyboardEventBinding::DOM_KEY_LOCATION_NUMPAD
 };
 
 const nsCString GetDOMKeyCodeName(uint32_t aKeyCode);

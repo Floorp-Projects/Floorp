@@ -14,7 +14,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsBindingManager.h"
 #include "nsNameSpaceManager.h"
 #include "nsIDocument.h"
@@ -26,6 +25,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/dom/InspectorUtils.h"
 #include "mozilla/dom/NodeFilterBinding.h"
+#include "mozilla/dom/MutationEventBinding.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -653,7 +653,7 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
     domAttr = aElement->GetAttributeNode(attrStr);
   }
 
-  if (aModType == nsIDOMMutationEvent::MODIFICATION) {
+  if (aModType == dom::MutationEventBinding::MODIFICATION) {
     // No fancy stuff here, just invalidate the changed row
     if (!domAttr) {
       return;
@@ -661,7 +661,7 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
     int32_t row = 0;
     NodeToRow(domAttr, &row);
     mTree->InvalidateRange(row, row);
-  } else if (aModType == nsIDOMMutationEvent::ADDITION) {
+  } else if (aModType == dom::MutationEventBinding::ADDITION) {
     if (!domAttr) {
       return;
     }
@@ -700,7 +700,7 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
     }
     InsertNode(newNode, attrRow);
     mTree->RowCountChanged(attrRow, 1);
-  } else if (aModType == nsIDOMMutationEvent::REMOVAL) {
+  } else if (aModType == dom::MutationEventBinding::REMOVAL) {
     // At this point, the attribute is already gone from the DOM, but is still represented
     // in our mRows array.  Search through the content node's children for the corresponding
     // node and remove it.

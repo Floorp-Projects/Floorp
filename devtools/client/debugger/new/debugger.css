@@ -1100,7 +1100,6 @@ html .arrow.expanded svg {
   display: grid;
   grid-template-columns: 1fr;
   align-content: start;
-
 }
 
 .managed-tree .tree button {
@@ -1674,6 +1673,7 @@ html[dir="rtl"] .arrow svg,
   flex: 1 0 100%;
   padding: 10px 0px;
   margin: 0;
+  font-family: var(--monospace-font-family);
 }
 
 .outline-list__class-list {
@@ -1682,11 +1682,31 @@ html[dir="rtl"] .arrow svg,
   padding: 0;
 }
 
+.outline-list__class-list .function-signature .function-name {
+  color: var(--theme-highlight-green);
+}
+
+.outline-list .function-signature .paren {
+  color: inherit;
+}
+
 .outline-list h2 {
   font-weight: normal;
   font-size: 1em;
   margin: 10px 0 10px 10px;
-  color: var(--theme-body-color);
+  color: var(--blue-55);
+}
+
+.outline-list h2:hover {
+  background: var(--theme-toolbar-background-hover);
+}
+
+.theme-dark .outline-list h2 {
+  color: var(--theme-highlight-blue);
+}
+
+.outline-list h2 .keyword {
+  color: var(--theme-highlight-red);
 }
 
 .outline-list__element {
@@ -1771,12 +1791,13 @@ html[dir="rtl"] .arrow svg,
   padding: 5px;
 }
 
-.toggle-button.vertical {
-  padding: 2.5px 2.5px;
+.toggle-button .togglePanes {
+  vertical-align: -2px;
 }
 
 .toggle-button svg {
   fill: var(--theme-comment);
+  vertical-align: 0;
 }
 
 :root.theme-dark .toggle-button svg {
@@ -3770,14 +3791,6 @@ img.ignore-exceptions {
   background-color: var(--theme-body-background);
 }
 
-.alignlabel {
-  display: inline-block;
-}
-
-.welcomebox .normal-layout {
-  display: none;
-}
-
 .welcomebox .command-bar-button {
   position: absolute;
   top: auto;
@@ -3786,45 +3799,44 @@ img.ignore-exceptions {
   bottom: 0;
 }
 
+.alignlabel {
+  display: flex;
+  white-space: nowrap;
+}
+
 .shortcutKeys {
-  text-align: right;
-  float: left;
   font-family: Courier;
+}
+
+.shortcutKey,
+.shortcutLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .shortcutKey {
-  display: inline-block;
-  margin-right: 10px;
+  text-align: right;
+  padding-right: 10px;
   font-family: Courier;
 }
 
-.shortcutFunction {
+.shortcutLabel {
   text-align: left;
-  float: left;
-  margin-left: 25px;
+  padding-left: 10px;
+}
+
+.shortcutFunction {
+  flex: 1;
   color: var(--theme-comment);
+}
+
+.shortcutFunction p {
+  display: flex;
 }
 
 html .welcomebox .toggle-button-end.collapsed {
   bottom: 1px;
-}
-
-@media (max-width: 430px) {
-  .welcomebox .small-size-layout {
-    display: inline-block;
-  }
-
-  .welcomebox .normal-layout {
-    display: none;
-  }
-
-  .shortcutFunction {
-    margin-left: 0;
-  }
-
-  .shortcutKey {
-    display: block;
-  }
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

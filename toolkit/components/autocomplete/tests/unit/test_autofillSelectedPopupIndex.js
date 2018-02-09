@@ -55,7 +55,9 @@ async function runTest(searchStr) {
   });
 
   // Key down to select the second match in the popup.
-  controller.handleKeyNavigation(Ci.nsIDOMKeyEvent.DOM_VK_DOWN);
+  // Hardcode KeyboardEvent.DOM_VK_DOWN, because we can't easily
+  // include KeyboardEvent here.
+  controller.handleKeyNavigation(0x28 /* KeyboardEvent.DOM_VK_DOWN */);
   let expectedValue = matches[1];
   Assert.equal(input.textValue, expectedValue,
                "Should have filled second match");
@@ -67,7 +69,9 @@ async function runTest(searchStr) {
   // Key up to select the first match again.  The input should be restored
   // exactly as it was when the first match was autofilled above: the search
   // string's case should be preserved, and the selection should be preserved.
-  controller.handleKeyNavigation(Ci.nsIDOMKeyEvent.DOM_VK_UP);
+  // Hardcode KeyboardEvent.DOM_VK_UP, because we can't easily
+  // include KeyboardEvent here.
+  controller.handleKeyNavigation(0x26 /* KeyboardEvent.DOM_VK_UP */);
   expectedValue = searchStr + matches[0].substr(searchStr.length);
   Assert.equal(input.textValue, expectedValue,
                "Should have filled first match again");

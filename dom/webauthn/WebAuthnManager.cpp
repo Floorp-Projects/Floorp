@@ -397,9 +397,24 @@ WebAuthnManager::MakeCredential(const PublicKeyCredentialCreationOptions& aOptio
   bool requestDirectAttestation =
     attestation == AttestationConveyancePreference::Direct;
 
-  // In Bug 1430150, if requestDirectAttestation is true, we will need to prompt
-  // the user for permission to proceed. For now, we ignore it.
-  Unused << requestDirectAttestation;
+  // XXX Bug 1430150. Need something that allows direct attestation
+  // for tests until we implement a permission dialog we can click.
+  if (requestDirectAttestation) {
+    nsresult rv;
+    nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIPrefBranch> branch;
+      rv = prefService->GetBranch("security.webauth.", getter_AddRefs(branch));
+
+      if (NS_SUCCEEDED(rv)) {
+        rv = branch->GetBoolPref("webauthn_testing_allow_direct_attestation",
+                                 &requestDirectAttestation);
+      }
+    }
+
+    requestDirectAttestation &= NS_SUCCEEDED(rv);
+  }
 
   // Create and forward authenticator selection criteria.
   WebAuthnAuthenticatorSelection authSelection(selection.mRequireResidentKey,
@@ -425,6 +440,7 @@ WebAuthnManager::MakeCredential(const PublicKeyCredentialCreationOptions& aOptio
   mTransaction = Some(WebAuthnTransaction(promise,
                                           rpIdHash,
                                           clientDataJSON,
+                                          requestDirectAttestation,
                                           signal));
 
   mChild->SendRequestRegister(mTransaction.ref().mId, info);
@@ -604,6 +620,7 @@ WebAuthnManager::GetAssertion(const PublicKeyCredentialRequestOptions& aOptions,
   mTransaction = Some(WebAuthnTransaction(promise,
                                           rpIdHash,
                                           clientDataJSON,
+                                          false /* aDirectAttestation */,
                                           signal));
 
   mChild->SendRequestSign(mTransaction.ref().mId, info);
@@ -653,8 +670,8 @@ WebAuthnManager::FinishMakeCredential(const uint64_t& aTransactionId,
     RejectTransaction(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
-  // TODO: Adjust the AAGUID from all zeroes in Bug 1381575 (if needed)
-  // See https://github.com/w3c/webauthn/issues/506
+  // FIDO U2F devices have no AAGUIDs, so they'll be all zeros until we add
+  // support for CTAP2 devices.
   for (int i=0; i<16; i++) {
     aaguidBuf.AppendElement(0x00, mozilla::fallible);
   }
@@ -730,11 +747,16 @@ WebAuthnManager::FinishMakeCredential(const uint64_t& aTransactionId,
     return;
   }
 
-  // The Authentication Data buffer gets CBOR-encoded with the Cert and
-  // Signature to build the Attestation Object.
+  // Direct attestation might have been requested by the RP. mDirectAttestation
+  // will be true only if the user consented via the permission UI.
   CryptoBuffer attObj;
-  rv = CBOREncodeAttestationObj(authDataBuf, attestationCertBuf, signatureBuf,
-                                attObj);
+  if (mTransaction.ref().mDirectAttestation) {
+    rv = CBOREncodeFidoU2FAttestationObj(authDataBuf, attestationCertBuf,
+                                         signatureBuf, attObj);
+  } else {
+    rv = CBOREncodeNoneAttestationObj(authDataBuf, attObj);
+  }
+
   if (NS_FAILED(rv)) {
     RejectTransaction(rv);
     return;

@@ -13,7 +13,6 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsAtom.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIScriptContext.h"
 

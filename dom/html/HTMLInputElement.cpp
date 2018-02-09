@@ -64,7 +64,6 @@
 #include "nsLayoutUtils.h"
 #include "nsVariant.h"
 
-#include "nsIDOMMutationEvent.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
