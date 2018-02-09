@@ -42,19 +42,19 @@ describe("PlacesFeed", () => {
       }
     });
     globals.set("Pocket", {savePage: sandbox.spy()});
-    global.Components.classes["@mozilla.org/browser/nav-history-service;1"] = {
+    global.Cc["@mozilla.org/browser/nav-history-service;1"] = {
       getService() {
         return global.PlacesUtils.history;
       }
     };
-    global.Components.classes["@mozilla.org/browser/nav-bookmarks-service;1"] = {
+    global.Cc["@mozilla.org/browser/nav-bookmarks-service;1"] = {
       getService() {
         return global.PlacesUtils.bookmarks;
       }
     };
     sandbox.spy(global.Services.obs, "addObserver");
     sandbox.spy(global.Services.obs, "removeObserver");
-    sandbox.spy(global.Components.utils, "reportError");
+    sandbox.spy(global.Cu, "reportError");
 
     feed = new PlacesFeed();
     feed.store = {dispatch: sinon.spy()};
@@ -336,7 +336,7 @@ describe("PlacesFeed", () => {
         const args = [null, "title", null, null, null, TYPE_BOOKMARK, null, FAKE_BOOKMARK.guid];
         await observer.onItemChanged(...args);
 
-        assert.calledWith(global.Components.utils.reportError, e);
+        assert.calledWith(global.Cu.reportError, e);
       });
       it.skip("should ignore events that are not of TYPE_BOOKMARK", async () => {
         await observer.onItemChanged(null, "title", null, null, null, "nottypebookmark");

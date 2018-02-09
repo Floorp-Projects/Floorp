@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Ai ajuns la capăt. Revino mai târziu pentru alte articole de la {provider}. Nu mai vrei să aștepți? Alege un subiect popular și găsește alte articole interesante de pe web.",
   "manual_migration_explanation2": "Încearcă Firefox cu marcajele, istoricul și parolele din alt navigator.",
   "manual_migration_cancel_button": "Nu, mulțumesc",
-  "manual_migration_import_button": "Importă acum"
+  "manual_migration_import_button": "Importă acum",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

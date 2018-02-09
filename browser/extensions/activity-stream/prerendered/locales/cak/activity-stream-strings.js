@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Xaq'i'. Katzolin chik pe richin ye'ak'ül ri utziläj taq rub'anob'al {provider}. ¿La man noyob'en ta? Tacha' jun ütz na'oj richin nawïl ch'aqa' chik taq b'anob'äl e k'o chi rij ri ajk'amaya'l.",
   "manual_migration_explanation2": "Tatojtob'ej Firefox kik'in ri taq ruyaketal, runatab'äl chuqa' taq ewan rutzij jun chik okik'amaya'l.",
   "manual_migration_cancel_button": "Mani matyox",
-  "manual_migration_import_button": "Tijik' pe"
+  "manual_migration_import_button": "Tijik' pe",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

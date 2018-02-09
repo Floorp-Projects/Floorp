@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Вратите се касније за нове вести {provider}. Не можете дочекати? Изаберите популарну тему да пронађете још занимљивих вести из света.",
   "manual_migration_explanation2": "Пробајте FIrefox са коришћењем забелешки, историјата и лозинки из другог прегледача.",
   "manual_migration_cancel_button": "Не, хвала",
-  "manual_migration_import_button": "Увези сада"
+  "manual_migration_import_button": "Увези сада",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

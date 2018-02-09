@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "To na razie wszystko. {provider} później będzie mieć więcej popularnych artykułów. Nie możesz się doczekać? Wybierz popularny temat, aby znaleźć więcej artykułów z całego Internetu.",
   "manual_migration_explanation2": "Używaj Firefoksa z zakładkami, historią i hasłami z innej przeglądarki.",
   "manual_migration_cancel_button": "Nie, dziękuję",
-  "manual_migration_import_button": "Importuj teraz"
+  "manual_migration_import_button": "Importuj teraz",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

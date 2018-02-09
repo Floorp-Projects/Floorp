@@ -121,14 +121,14 @@ describe("Top Stories Feed", () => {
       assert.notCalled(fetchStub);
     });
     it("should report error for invalid configuration", () => {
-      globals.sandbox.spy(global.Components.utils, "reportError");
+      globals.sandbox.spy(global.Cu, "reportError");
       sectionsManagerStub.sections.set("topstories", {options: {api_key_pref: "invalid"}});
       instance.init();
 
-      assert.called(Components.utils.reportError);
+      assert.called(Cu.reportError);
     });
     it("should report error for missing api key", () => {
-      globals.sandbox.spy(global.Components.utils, "reportError");
+      globals.sandbox.spy(global.Cu, "reportError");
       sectionsManagerStub.sections.set("topstories", {
         options: {
           "stories_endpoint": "https://somedomain.org/stories?key=$apiKey",
@@ -137,7 +137,7 @@ describe("Top Stories Feed", () => {
       });
       instance.init();
 
-      assert.called(Components.utils.reportError);
+      assert.called(Cu.reportError);
     });
     it("should load data from cache on init", () => {
       instance.loadCachedData = sinon.spy();
@@ -207,7 +207,7 @@ describe("Top Stories Feed", () => {
     it("should report error for unexpected stories response", async () => {
       let fetchStub = globals.sandbox.stub();
       globals.set("fetch", fetchStub);
-      globals.sandbox.spy(global.Components.utils, "reportError");
+      globals.sandbox.spy(global.Cu, "reportError");
 
       instance.stories_endpoint = "stories-endpoint";
       fetchStub.resolves({ok: false, status: 400});
@@ -216,7 +216,7 @@ describe("Top Stories Feed", () => {
       assert.calledOnce(fetchStub);
       assert.calledWithExactly(fetchStub, instance.stories_endpoint);
       assert.notCalled(sectionsManagerStub.updateSection);
-      assert.called(Components.utils.reportError);
+      assert.called(Cu.reportError);
     });
     it("should exclude blocked (dismissed) URLs", async () => {
       let fetchStub = globals.sandbox.stub();
@@ -283,7 +283,7 @@ describe("Top Stories Feed", () => {
     it("should report error for unexpected topics response", async () => {
       let fetchStub = globals.sandbox.stub();
       globals.set("fetch", fetchStub);
-      globals.sandbox.spy(global.Components.utils, "reportError");
+      globals.sandbox.spy(global.Cu, "reportError");
 
       instance.topics_endpoint = "topics-endpoint";
       fetchStub.resolves({ok: false, status: 400});
@@ -292,7 +292,7 @@ describe("Top Stories Feed", () => {
       assert.calledOnce(fetchStub);
       assert.calledWithExactly(fetchStub, instance.topics_endpoint);
       assert.notCalled(instance.store.dispatch);
-      assert.called(Components.utils.reportError);
+      assert.called(Cu.reportError);
     });
   });
   describe("#personalization", () => {

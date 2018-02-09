@@ -10,7 +10,7 @@ window.gActivityStreamStrings = {
   "header_recommended_by": "Rekomanduar nga {provider}",
   "header_bookmarks_placeholder": "Ende s’keni faqerojtës.",
   "header_stories_from": "nga",
-  "context_menu_button_sr": "Open context menu for {title}",
+  "context_menu_button_sr": "Hapni menu konteksti për {title}",
   "type_label_visited": "Të vizituara",
   "type_label_bookmarked": "Të faqeruajtura",
   "type_label_synced": "Njëkohësuar prej pajisjeje tjetër",
@@ -79,7 +79,7 @@ window.gActivityStreamStrings = {
   "edit_topsites_edit_button": "Përpunoni këtë sajt",
   "edit_topsites_dismiss_button": "Hidhe tej këtë sajt",
   "edit_topsites_add_button": "Shtoni",
-  "edit_topsites_add_button_tooltip": "Add Top Site",
+  "edit_topsites_add_button_tooltip": "Shtoni Sajt Kryesues",
   "topsites_form_add_header": "Sajt i Ri Kryesues",
   "topsites_form_edit_header": "Përpunoni Sajtin Kryesues",
   "topsites_form_title_placeholder": "Jepni një titull",
@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Gjithë ç’kish, e dini. Rikontrolloni më vonë për më tepër histori nga {provider}. S’pritni dot? Përzgjidhni një temë popullore që të gjenden në internet më tepër histori të goditura.",
   "manual_migration_explanation2": "Provojeni Firefox-in me faqerojtës, historik dhe fjalëkalime nga një tjetër shfletues.",
   "manual_migration_cancel_button": "Jo, Faleminderit",
-  "manual_migration_import_button": "Importoje Tani"
+  "manual_migration_import_button": "Importoje Tani",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

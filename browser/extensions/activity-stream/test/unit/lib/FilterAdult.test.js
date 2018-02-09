@@ -10,7 +10,7 @@ describe("filterAdult", () => {
       init: sinon.stub(),
       update: sinon.stub()
     };
-    global.Components.classes["@mozilla.org/security/hash;1"] = {
+    global.Cc["@mozilla.org/security/hash;1"] = {
       createInstance() {
         return hashStub;
       }

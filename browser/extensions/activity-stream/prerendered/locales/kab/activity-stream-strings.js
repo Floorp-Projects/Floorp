@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Ulac wiyaḍ. Uɣal-d ticki s wugar n imagraden seg {provider}. Ur tebɣiḍ ara ad terǧuḍ? Fren asentel seg wid yettwasnen akken ad twaliḍ imagraden yelhan di Web.",
   "manual_migration_explanation2": "Σreḍ Firefox s ticṛaḍ n isebtar, amazray akked awalen uffiren sγur ilinigen nniḍen.",
   "manual_migration_cancel_button": "Ala, tanemmirt",
-  "manual_migration_import_button": "Kter tura"
+  "manual_migration_import_button": "Kter tura",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

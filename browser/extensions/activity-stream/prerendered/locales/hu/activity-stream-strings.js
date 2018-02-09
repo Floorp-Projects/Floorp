@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Már felzárkózott. Nézzen vissza később a legújabb {provider} hírekért. Nem tud várni? Válasszon egy népszerű témát, hogy még több sztorit találjon a weben.",
   "manual_migration_explanation2": "Próbálja ki a Firefoxot másik böngészőből származó könyvjelzőkkel, előzményekkel és jelszavakkal.",
   "manual_migration_cancel_button": "Köszönöm, nem",
-  "manual_migration_import_button": "Importálás most"
+  "manual_migration_import_button": "Importálás most",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Esi vysu izlasiejs. Īej vāļōk, kab redzēt vaira ziņu nu {provider}. Nagribi gaidēt? Izavielej popularu tēmu, kab atrostu vaira interesantu rokstu nu vysa interneta.",
   "manual_migration_explanation2": "Paraugi Firefox ar grōmotzeimem, viesturi un parolem nu cyta porlyuka.",
   "manual_migration_cancel_button": "Nā, paļdis",
-  "manual_migration_import_button": "Importeit"
+  "manual_migration_import_button": "Importeit",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Aet oc'h betek penn. Distroit diwezhatoc'h evit muioc’h a istorioù digant {provider}. N’oc'h ket evit gortoz? Dibabit un danvez brudet evit klask muioc’h a bennadoù dedennus eus pep lec’h er web.",
   "manual_migration_explanation2": "Amprouit Firefox gant sinedoù, roll istor ha gerioù-tremen ur merdeer all.",
   "manual_migration_cancel_button": "N'am bo ket",
-  "manual_migration_import_button": "Emporzhiañ bremañ"
+  "manual_migration_import_button": "Emporzhiañ bremañ",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };
