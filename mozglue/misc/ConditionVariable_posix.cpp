@@ -119,7 +119,7 @@ mozilla::detail::ConditionVariableImpl::wait(MutexImpl& lock)
   MOZ_RELEASE_ASSERT(r == 0);
 }
 
-mozilla::detail::CVStatus
+mozilla::CVStatus
 mozilla::detail::ConditionVariableImpl::wait_for(MutexImpl& lock,
 						 const TimeDuration& a_rel_time)
 {
