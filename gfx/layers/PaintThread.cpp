@@ -291,10 +291,6 @@ PaintThread::PaintContents(CapturedPaintState* aState,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aState);
 
-  if (gfxPrefs::LayersOMTPDumpCapture() && aState->mCapture) {
-    aState->mCapture->Dump();
-  }
-
   RefPtr<CompositorBridgeChild> cbc(CompositorBridgeChild::Get());
   RefPtr<CapturedPaintState> state(aState);
 
@@ -364,10 +360,6 @@ PaintThread::PaintTiledContents(CapturedTiledPaintState* aState)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aState);
-
-  if (gfxPrefs::LayersOMTPDumpCapture() && aState->mCapture) {
-    aState->mCapture->Dump();
-  }
 
   RefPtr<CompositorBridgeChild> cbc(CompositorBridgeChild::Get());
   RefPtr<CapturedTiledPaintState> state(aState);
