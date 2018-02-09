@@ -230,6 +230,8 @@ const char*
 PrefTypeToString(PrefType aType)
 {
   switch (aType) {
+    case PrefType::None:
+      return "none";
     case PrefType::String:
       return "string";
     case PrefType::Int:
@@ -299,11 +301,15 @@ class Pref : public PLDHashEntryHdr
 {
 public:
   explicit Pref(const char* aName)
+    : mType(static_cast<uint32_t>(PrefType::None))
+    , mIsSticky(false)
+    , mIsLocked(false)
+    , mHasDefaultValue(false)
+    , mHasUserValue(false)
+    , mName(ArenaStrdup(aName, gPrefNameArena))
+    , mDefaultValue()
+    , mUserValue()
   {
-    mName = ArenaStrdup(aName, gPrefNameArena);
-
-    // We don't set the other fields because PLDHashTable always zeroes new
-    // entries.
   }
 
   ~Pref()
@@ -323,6 +329,7 @@ public:
   void SetType(PrefType aType) { mType = static_cast<uint32_t>(aType); }
 
   bool IsType(PrefType aType) const { return Type() == aType; }
+  bool IsTypeNone() const { return IsType(PrefType::None); }
   bool IsTypeString() const { return IsType(PrefType::String); }
   bool IsTypeInt() const { return IsType(PrefType::Int); }
   bool IsTypeBool() const { return IsType(PrefType::Bool); }
@@ -351,6 +358,13 @@ public:
     }
 
     return strcmp(pref->mName, key) == 0;
+  }
+
+  static void InitEntry(PLDHashEntryHdr* aEntry, const void* aKey)
+  {
+    auto pref = static_cast<Pref*>(aEntry);
+    auto prefName = static_cast<const char*>(aKey);
+    new (pref) Pref(prefName);
   }
 
   static void ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
@@ -648,8 +662,8 @@ private:
   uint32_t mType : 2;
   uint32_t mIsSticky : 1;
   uint32_t mIsLocked : 1;
-  uint32_t mHasUserValue : 1;
   uint32_t mHasDefaultValue : 1;
+  uint32_t mHasUserValue : 1;
 
   const char* mName; // allocated in gPrefNameArena
 
@@ -700,7 +714,7 @@ static PLDHashTableOps pref_HashTableOps = {
   Pref::MatchEntry,
   PLDHashTable::MoveEntryStub,
   Pref::ClearEntry,
-  nullptr,
+  Pref::InitEntry,
 };
 
 static Pref*
@@ -823,9 +837,8 @@ pref_SetPref(const char* aPrefName,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!pref->Name()) {
-    // New (zeroed) entry. Partially initialize it.
-    new (pref) Pref(aPrefName);
+  if (pref->IsTypeNone()) {
+    // New entry. Set the type.
     pref->SetType(aType);
   }
 
@@ -3163,11 +3176,6 @@ Preferences::SetPreference(const dom::Pref& aDomPref)
   auto pref = static_cast<Pref*>(gHashTable->Add(prefName, fallible));
   if (!pref) {
     return;
-  }
-
-  if (!pref->Name()) {
-    // New (zeroed) entry. Partially initialize it.
-    new (pref) Pref(prefName);
   }
 
   bool valueChanged = false;
