@@ -39,6 +39,7 @@
 #include "mozilla/EditorUtils.h"
 #include "mozilla/Services.h"
 #include "mozilla/TextEditor.h"
+#include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/Selection.h"
 #include "mozInlineSpellWordUtil.h"
 #include "mozISpellI18NManager.h"
@@ -49,7 +50,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMEvent.h"
@@ -1865,11 +1865,11 @@ mozInlineSpellChecker::OnMouseClick(nsIDOMEvent *aMouseEvent)
 nsresult
 mozInlineSpellChecker::OnKeyPress(nsIDOMEvent* aKeyEvent)
 {
-  nsCOMPtr<nsIDOMKeyEvent>keyEvent = do_QueryInterface(aKeyEvent);
+  RefPtr<KeyboardEvent> keyEvent =
+    aKeyEvent->InternalDOMEvent()->AsKeyboardEvent();
   NS_ENSURE_TRUE(keyEvent, NS_OK);
 
-  uint32_t keyCode;
-  keyEvent->GetKeyCode(&keyCode);
+  uint32_t keyCode = keyEvent->KeyCode();
 
   // we only care about navigation keys that moved selection
   switch (keyCode)

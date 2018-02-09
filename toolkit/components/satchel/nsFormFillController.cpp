@@ -11,6 +11,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/PageTransitionEvent.h"
 #include "mozilla/Logging.h"
 #include "nsIFormAutoComplete.h"
@@ -25,7 +26,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
@@ -1085,7 +1085,8 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
+  RefPtr<KeyboardEvent> keyEvent =
+    aEvent->InternalDOMEvent()->AsKeyboardEvent();
   if (!keyEvent) {
     return NS_ERROR_FAILURE;
   }
@@ -1093,8 +1094,7 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
   bool cancel = false;
   bool unused = false;
 
-  uint32_t k;
-  keyEvent->GetKeyCode(&k);
+  uint32_t k = keyEvent->KeyCode();
   switch (k) {
   case nsIDOMKeyEvent::DOM_VK_DELETE:
 #ifndef XP_MACOSX
@@ -1106,10 +1106,7 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
 #else
   case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
     {
-      bool isShift = false;
-      keyEvent->GetShiftKey(&isShift);
-
-      if (isShift) {
+      if (keyEvent->ShiftKey()) {
         mController->HandleDelete(&cancel);
       } else {
         mController->HandleText(&unused);
@@ -1121,11 +1118,9 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
   case nsIDOMKeyEvent::DOM_VK_PAGE_UP:
   case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN:
     {
-      bool isCtrl, isAlt, isMeta;
-      keyEvent->GetCtrlKey(&isCtrl);
-      keyEvent->GetAltKey(&isAlt);
-      keyEvent->GetMetaKey(&isMeta);
-      if (isCtrl || isAlt || isMeta) {
+      if (keyEvent->CtrlKey() ||
+          keyEvent->AltKey() ||
+          keyEvent->MetaKey()) {
         break;
       }
     }
