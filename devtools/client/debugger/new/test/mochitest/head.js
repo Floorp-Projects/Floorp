@@ -442,24 +442,6 @@ function waitForTime(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
 
-/**
- * Waits for the debugger to be fully paused.
- *
- * @memberof mochitest/waits
- * @param {Object} dbg
- * @static
- */
-async function waitForMappedScopes(dbg) {
-  await waitForState(
-    dbg,
-    state => {
-      const scopes = dbg.selectors.getSelectedScope(state);
-      return scopes && scopes.sourceBindings;
-    },
-    "mapped scopes"
-  );
-}
-
 function isSelectedFrameSelected(dbg, state) {
   const frame = dbg.selectors.getVisibleSelectedFrame(state);
 
@@ -962,7 +944,8 @@ const selectors = {
   fileMatch: ".managed-tree .result",
   popup: ".popover",
   tooltip: ".tooltip",
-  outlineItem: i => `.outline-list__element:nth-child(${i}) .function-signature`,
+  outlineItem: i =>
+    `.outline-list__element:nth-child(${i}) .function-signature`,
   outlineItems: ".outline-list__element"
 };
 
@@ -1073,6 +1056,14 @@ function toggleExpressionNode(dbg, index) {
 
 function toggleScopeNode(dbg, index) {
   return toggleObjectInspectorNode(findElement(dbg, "scopeNode", index));
+}
+
+function getScopeLabel(dbg, index) {
+  return findElement(dbg, "scopeNode", index).innerText;
+}
+
+function getScopeValue(dbg, index) {
+  return findElement(dbg, "scopeValue", index).innerText;
 }
 
 function toggleObjectInspectorNode(node) {
