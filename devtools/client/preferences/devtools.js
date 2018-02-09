@@ -362,3 +362,5 @@ pref("devtools.telemetry.tools.opened.version", "{}");
 pref("devtools.responsive.reloadConditions.touchSimulation", false);
 // Whether to reload when user agent is changed
 pref("devtools.responsive.reloadConditions.userAgent", false);
+// Whether to show the notification about reloading to apply emulation
+pref("devtools.responsive.reloadNotification.enabled", true);
