@@ -243,56 +243,54 @@ public:
   };
 
   struct StackKey {
-    mozilla::Maybe<uint32_t> mPrefixHash;
-    mozilla::Maybe<uint32_t> mPrefix;
-    uint32_t mFrame;
+    mozilla::Maybe<uint32_t> mPrefixStackIndex;
+    uint32_t mFrameIndex;
 
     explicit StackKey(uint32_t aFrame)
-     : mFrame(aFrame)
+     : mFrameIndex(aFrame)
+     , mHash(mozilla::HashGeneric(aFrame))
+    {}
+
+    StackKey(const StackKey& aPrefix, uint32_t aPrefixStackIndex, uint32_t aFrame)
+      : mPrefixStackIndex(mozilla::Some(aPrefixStackIndex))
+      , mFrameIndex(aFrame)
+      , mHash(mozilla::AddToHash(aPrefix.mHash, aFrame))
+    {}
+
+    uint32_t Hash() const { return mHash; }
+
+    bool operator==(const StackKey& aOther) const
     {
-      mHash = Hash();
+      return mPrefixStackIndex == aOther.mPrefixStackIndex &&
+             mFrameIndex == aOther.mFrameIndex;
     }
-
-    uint32_t Hash() const;
-    bool operator==(const StackKey& aOther) const;
-    bool operator<(const StackKey& aOther) const {
+    bool operator<(const StackKey& aOther) const
+    {
       return mHash < aOther.mHash;
-    }
-
-    void UpdateHash(uint32_t aPrefixHash, uint32_t aPrefix, uint32_t aFrame) {
-      mPrefixHash = mozilla::Some(aPrefixHash);
-      mPrefix = mozilla::Some(aPrefix);
-      mFrame = aFrame;
-      mHash = Hash();
     }
 
   private:
     uint32_t mHash;
   };
 
-  class Stack {
-  public:
-    Stack(UniqueStacks& aUniqueStacks, const OnStackFrameKey& aRoot);
-
-    void AppendFrame(const OnStackFrameKey& aFrame);
-    uint32_t GetOrAddIndex() const;
-
-  private:
-    UniqueStacks& mUniqueStacks;
-    StackKey mStack;
-  };
-
   explicit UniqueStacks(JSContext* aContext);
 
-  Stack BeginStack(const OnStackFrameKey& aRoot);
+  // Return a StackKey for aFrame as the stack's root frame (no prefix).
+  MOZ_MUST_USE StackKey BeginStack(const OnStackFrameKey& aFrame);
+
+  // Return a new StackKey that is obtained by appending aFrame to aStack.
+  MOZ_MUST_USE StackKey AppendFrame(const StackKey& aStack,
+                                    const OnStackFrameKey& aFrame);
+
+  MOZ_MUST_USE uint32_t GetOrAddFrameIndex(const OnStackFrameKey& aFrame);
+  MOZ_MUST_USE uint32_t GetOrAddStackIndex(const StackKey& aStack);
+
   uint32_t LookupJITFrameDepth(void* aAddr);
   void AddJITFrameDepth(void* aAddr, unsigned depth);
   void SpliceFrameTableElements(SpliceableJSONWriter& aWriter);
   void SpliceStackTableElements(SpliceableJSONWriter& aWriter);
 
 private:
-  uint32_t GetOrAddFrameIndex(const OnStackFrameKey& aFrame);
-  uint32_t GetOrAddStackIndex(const StackKey& aStack);
   void StreamFrame(const OnStackFrameKey& aFrame);
   void StreamStack(const StackKey& aStack);
 
