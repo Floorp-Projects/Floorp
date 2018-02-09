@@ -1,11 +1,11 @@
 {
     "suites": {
         "chromez-e10s": {
-            "tests": ["tresize"]
+            "tests": ["about_preferences_basic", "tresize"]
         },
         "chromez-profiling-e10s": {
             "talos_options": ["--geckoProfile"],
-            "tests": ["tresize"]
+            "tests": [ "about_preferences_basic", "tresize"]
         },
         "dromaeojs-e10s": {
             "tests": ["dromaeo_css", "kraken"]
@@ -150,7 +150,7 @@
         },
         "h1-e10s": {
             "tests": ["ts_paint_heavy"]
-            },
+        },
         "h2-e10s": {
             "tests": ["tp6_google_heavy", "tp6_youtube_heavy", "tp6_amazon_heavy", "tp6_facebook_heavy"],
             "mitmproxy_release_bin_osx": "mitmproxy-2.0.2-osx.tar.gz",
