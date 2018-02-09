@@ -153,7 +153,6 @@ protected:
 
   webrtc::CaptureCapability mCapability;
   webrtc::CaptureCapability mTargetCapability;
-  uint64_t mHandleId;
 
   mutable nsTArray<webrtc::CaptureCapability> mHardcodedCapabilities;
 private:
