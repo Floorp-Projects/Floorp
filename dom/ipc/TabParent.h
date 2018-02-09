@@ -442,7 +442,8 @@ public:
 
   void SendRealDragEvent(WidgetDragEvent& aEvent,
                          uint32_t aDragAction,
-                         uint32_t aDropEffect);
+                         uint32_t aDropEffect,
+                         const nsCString& aPrincipalURISpec);
 
   void SendMouseWheelEvent(WidgetWheelEvent& aEvent);
 
@@ -585,9 +586,11 @@ public:
                         const uint32_t& aAction,
                         const OptionalShmem& aVisualDnDData,
                         const uint32_t& aStride, const uint8_t& aFormat,
-                        const LayoutDeviceIntRect& aDragRect) override;
+                        const LayoutDeviceIntRect& aDragRect,
+                        const nsCString& aPrincipalURISpec) override;
 
-  void AddInitialDnDDataTo(DataTransfer* aDataTransfer);
+  void AddInitialDnDDataTo(DataTransfer* aDataTransfer,
+                           nsACString& aPrincipalURISpec);
 
   bool TakeDragVisualization(RefPtr<mozilla::gfx::SourceSurface>& aSurface,
                              LayoutDeviceIntRect* aDragRect);
@@ -694,6 +697,7 @@ private:
   RefPtr<gfx::DataSourceSurface> mDnDVisualization;
   bool mDragValid;
   LayoutDeviceIntRect mDragRect;
+  nsCString mDragPrincipalURISpec;
 
   // When true, the TabParent is initialized without child side's request.
   // When false, the TabParent is initialized by window.open() from child side.
