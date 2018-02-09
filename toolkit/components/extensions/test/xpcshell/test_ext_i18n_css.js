@@ -8,7 +8,7 @@ server.registerDirectory("/data/", do_get_file("data"));
 
 const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
-const XMLHttpRequest = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest");
+Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 const {
   createAppInfo,

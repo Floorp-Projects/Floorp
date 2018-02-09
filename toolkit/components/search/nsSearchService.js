@@ -1424,8 +1424,7 @@ Engine.prototype = {
    */
   _retrieveSearchXMLData: function SRCH_ENG__retrieveSearchXMLData(aURL) {
     return new Promise(resolve => {
-      let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                      createInstance(Ci.nsIXMLHttpRequest);
+      let request = new XMLHttpRequest();
       request.overrideMimeType("text/xml");
       request.onload = (aEvent) => {
         let responseXML = aEvent.target.responseXML;
@@ -3418,8 +3417,7 @@ SearchService.prototype = {
     let uris = [];
 
     // Read list.json to find the engines we need to load.
-    let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                    createInstance(Ci.nsIXMLHttpRequest);
+    let request = new XMLHttpRequest();
     request.overrideMimeType("text/plain");
     let list = await new Promise(resolve => {
       request.onload = function(aEvent) {

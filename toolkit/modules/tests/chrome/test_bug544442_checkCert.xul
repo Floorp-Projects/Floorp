@@ -24,8 +24,7 @@ ChromeUtils.import("resource://gre/modules/CertUtils.jsm");
 function testStart() {
   ok(true, "Entering testStart");
 
-  var request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                createInstance(Ci.nsIXMLHttpRequest);
+  var request = new XMLHttpRequest();
   request.open("GET", "https://example.com/", true);
   request.channel.notificationCallbacks = new BadCertHandler(true);
   request.onerror = function(event) { testXHRError(event); };

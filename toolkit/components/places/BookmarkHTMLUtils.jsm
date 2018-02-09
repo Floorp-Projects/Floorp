@@ -65,6 +65,8 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 ChromeUtils.defineModuleGetter(this, "PlacesBackups",
   "resource://gre/modules/PlacesBackups.jsm");
 
@@ -1186,8 +1188,7 @@ function insertFaviconsForTree(nodeTree) {
  */
 function fetchData(href) {
   return new Promise((resolve, reject) => {
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                .createInstance(Ci.nsIXMLHttpRequest);
+    let xhr = new XMLHttpRequest();
     xhr.onload = () => {
       resolve(xhr.responseXML);
     };

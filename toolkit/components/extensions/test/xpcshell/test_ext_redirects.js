@@ -3,7 +3,7 @@
 // Tests whether we can redirect to a moz-extension: url.
 ChromeUtils.defineModuleGetter(this, "TestUtils",
                                "resource://testing-common/TestUtils.jsm");
-const XMLHttpRequest = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest");
+Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 const server = createHttpServer();
 const gServerUrl = `http://localhost:${server.identity.primaryPort}`;
