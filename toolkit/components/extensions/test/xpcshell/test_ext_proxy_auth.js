@@ -1,6 +1,6 @@
 "use strict";
 
-const XMLHttpRequest = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest");
+Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 const proxy = createHttpServer();
 

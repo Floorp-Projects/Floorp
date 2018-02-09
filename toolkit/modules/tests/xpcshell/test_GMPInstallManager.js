@@ -735,27 +735,6 @@ xhr.prototype = {
     // eslint-disable-next-line no-eval
     eval("this._on" + aEvent + " = aValue");
   },
-  flags: Ci.nsIClassInfo.SINGLETON,
-  getScriptableHelper: () => null,
-  getInterfaces(aCount) {
-    let interfaces = [Ci.nsISupports];
-    aCount.value = interfaces.length;
-    return interfaces;
-  },
-  classDescription: "XMLHttpRequest",
-  contractID: "@mozilla.org/xmlextras/xmlhttprequest;1",
-  classID: Components.ID("{c9b37f43-4278-4304-a5e0-600991ab08cb}"),
-  createInstance(aOuter, aIID) {
-    if (aOuter == null)
-      return this.QueryInterface(aIID);
-    throw Cr.NS_ERROR_NO_AGGREGATION;
-  },
-  QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsIClassInfo) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
   get wrappedJSObject() { return this; }
 };
 

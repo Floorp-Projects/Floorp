@@ -7,6 +7,8 @@
 
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 add_task(async function() {
   // Removes bookmarks.html if the file already exists.
   let HTMLFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.html");
@@ -36,8 +38,7 @@ add_task(async function() {
 
   // Check there are no unescaped entities in the html file.
   let xml = await new Promise((resolve, reject) => {
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                .createInstance(Ci.nsIXMLHttpRequest);
+    let xhr = new XMLHttpRequest();
     xhr.onload = () => {
       try {
         resolve(xhr.responseXML);

@@ -58,8 +58,7 @@ add_task(async function test_sandbox_xhr() {
   let sandboxConstructor = SpecialPowers.Cu.Sandbox;
   let sandbox = new sandboxConstructor(this, {wantXrays: true});
   function sandboxedRequest(sandboxedUrl) {
-    let req = SpecialPowers.Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                           .createInstance(SpecialPowers.Ci.nsIXMLHttpRequest);
+    let req = new XMLHttpRequest();
     req.open("GET", sandboxedUrl, true);
     req.send(null);
   }

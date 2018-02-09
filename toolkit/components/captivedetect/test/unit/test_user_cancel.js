@@ -19,8 +19,7 @@ function xhr_handler(metadata, response) {
 function fakeUIResponse() {
   Services.obs.addObserver(function observe(subject, topic, data) {
     if (topic === "captive-portal-login") {
-      let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                  .createInstance(Ci.nsIXMLHttpRequest);
+      let xhr = new XMLHttpRequest();
       xhr.open("GET", gServerURL + kCanonicalSitePath, true);
       xhr.send();
       Assert.equal(++step, 2);
