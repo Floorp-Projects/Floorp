@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "మీరు పట్టుబడ్డారు. {provider} నుండి మరింత అగ్ర కథనాల కోసం తరువాత తనిఖీ చేయండి. వేచి ఉండలేరా? జాలములోని అంతటి నుండి మరింత గొప్ప కథనాలను కనుగొనడానికి ప్రసిద్ధ అంశం ఎంచుకోండి.",
   "manual_migration_explanation2": "మరొక విహారిణి లోని ఇష్టాంశాలు, చరిత్ర, సంకేతపదాలతో Firefoxను ప్రయత్నించండి.",
   "manual_migration_cancel_button": "అడిగినందుకు ధన్యవాదాలు, వద్దు",
-  "manual_migration_import_button": "ఇప్పుడే దిగుమతి చేయండి"
+  "manual_migration_import_button": "ఇప్పుడే దిగుమతి చేయండి",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Viss ir apskatīts! Atnāciet atpakaļ nedaudz vēlāk, lai redzētu populāros stāstus no {provider}. Nevarat sagaidīt? Izvēlieties kādu no tēmām jau tagad.",
   "manual_migration_explanation2": "Izmēģiniet Firefox ar grāmatzīmēm, vēsturi un parolēm no cita pārlūka.",
   "manual_migration_cancel_button": "Nē, paldies",
-  "manual_migration_import_button": "Importē tagad"
+  "manual_migration_import_button": "Importē tagad",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

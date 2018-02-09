@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Разгледахте всичко. Проверете по-късно за повече истории от {provider}. Нямате търпение? Изберете популярна тема, за да откриете повече истории из цялата Мрежа.",
   "manual_migration_explanation2": "Опитайте Firefox с отметките, историята и паролите от друг четец.",
   "manual_migration_cancel_button": "Не, благодаря",
-  "manual_migration_import_button": "Внасяне"
+  "manual_migration_import_button": "Внасяне",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

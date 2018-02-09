@@ -13,6 +13,14 @@ export const baseKeys = {
 
 export const BasePing = Joi.object().keys(baseKeys).options({allowUnknown: true});
 
+export const eventsTelemetryExtraKeys = Joi.object().keys({
+  session_id: baseKeys.session_id.required(),
+  page: baseKeys.page.required(),
+  addon_version: baseKeys.addon_version.required(),
+  user_prefs: baseKeys.user_prefs.required(),
+  action_position: Joi.string().optional()
+}).options({allowUnknown: false});
+
 export const UserEventPing = Joi.object().keys(Object.assign({}, baseKeys, {
   session_id: baseKeys.session_id.required(),
   page: baseKeys.page.required(),
@@ -23,6 +31,31 @@ export const UserEventPing = Joi.object().keys(Object.assign({}, baseKeys, {
   highlight_type: Joi.valid(["bookmarks", "recommendation", "history"]),
   recommender_type: Joi.string()
 }));
+
+export const UTUserEventPing = Joi.array().items(
+  Joi.string().required().valid("activity_stream"),
+  Joi.string().required().valid("event"),
+  Joi.string().required().valid([
+    "CLICK",
+    "SEARCH",
+    "BLOCK",
+    "DELETE",
+    "DELETE_CONFIRM",
+    "DIALOG_CANCEL",
+    "DIALOG_OPEN",
+    "OPEN_NEW_WINDOW",
+    "OPEN_PRIVATE_WINDOW",
+    "OPEN_NEWTAB_PREFS",
+    "CLOSE_NEWTAB_PREFS",
+    "BOOKMARK_DELETE",
+    "BOOKMARK_ADD",
+    "PIN",
+    "UNPIN",
+    "SAVE_TO_POCKET"
+  ]),
+  Joi.string().required(),
+  eventsTelemetryExtraKeys
+);
 
 // Use this to validate actions generated from Redux
 export const UserEventAction = Joi.object().keys({
@@ -149,6 +182,14 @@ export const SessionPing = Joi.object().keys(Object.assign({}, baseKeys, {
     is_prerendered: Joi.bool().required()
   }).required()
 }));
+
+export const UTSessionPing = Joi.array().items(
+  Joi.string().required().valid("activity_stream"),
+  Joi.string().required().valid("end"),
+  Joi.string().required().valid("session"),
+  Joi.string().required(),
+  eventsTelemetryExtraKeys
+);
 
 export function chaiAssertions(_chai, utils) {
   const {Assertion} = _chai;
