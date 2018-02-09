@@ -365,6 +365,7 @@ class Linkable(ContextDerived):
         'lib_defines',
         'linked_libraries',
         'linked_system_libs',
+        'sources',
     )
 
     def __init__(self, context):
@@ -373,6 +374,7 @@ class Linkable(ContextDerived):
         self.linked_libraries = []
         self.linked_system_libs = []
         self.lib_defines = Defines(context, {})
+        self.sources = defaultdict(list)
 
     def link_library(self, obj):
         assert isinstance(obj, BaseLibrary)
@@ -403,6 +405,26 @@ class Linkable(ContextDerived):
                     self.config.import_suffix,
                 )
         self.linked_system_libs.append(lib)
+
+    def source_files(self):
+        all_sources = []
+        # This is ordered for reproducibility and consistently w/
+        # config/rules.mk
+        for suffix in ('.c', '.S', '.cpp', '.m', '.mm', '.s'):
+            all_sources += self.sources.get(suffix, [])
+        return all_sources
+
+    @property
+    def objs(self):
+        obj_prefix = ''
+        if self.KIND == 'host':
+            obj_prefix = 'host_'
+
+        return [mozpath.join(self.objdir, '%s%s.%s' % (obj_prefix,
+                                                       mozpath.splitext(mozpath.basename(f))[0],
+                                                       self.config.substs.get('OBJ_SUFFIX', '')))
+                for f in self.source_files()]
+
 
 class BaseProgram(Linkable):
     """Context derived container object for programs, which is a unicode
@@ -452,6 +474,13 @@ class SimpleProgram(BaseProgram):
     """Context derived container object for each program in SIMPLE_PROGRAMS"""
     SUFFIX_VAR = 'BIN_SUFFIX'
     KIND = 'target'
+
+    def source_files(self):
+        for srcs in self.sources.values():
+            for f in srcs:
+                if mozpath.basename(mozpath.splitext(f)[0]) == mozpath.splitext(self.program)[0]:
+                    return [f]
+        return []
 
 
 class HostSimpleProgram(HostMixin, BaseProgram):
