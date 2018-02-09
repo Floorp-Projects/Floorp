@@ -426,6 +426,15 @@
             "enum": ["<all_urls>"]
           },
           {
+            "$ref": "MatchPatternRestricted"
+          }
+        ]
+      },
+      {
+        "id": "MatchPatternRestricted",
+        "description": "Same as MatchPattern above, but excludes <all_urls>",
+        "choices": [
+          {
             "type": "string",
             "pattern": "^(https?|wss?|file|ftp|\\*)://(\\*|\\*\\.[^*/]+|[^*/]+)/.*$"
           },
