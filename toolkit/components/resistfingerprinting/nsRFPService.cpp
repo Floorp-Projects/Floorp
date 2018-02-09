@@ -14,6 +14,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/KeyboardEventBinding.h"
 
 #include "nsCOMPtr.h"
 #include "nsCoord.h"
@@ -620,7 +621,8 @@ nsRFPService::GetSpoofedCode(const nsIDocument* aDoc,
 
   // We need to change the 'Left' with 'Right' if the location indicates
   // it's a right key.
-  if (aKeyboardEvent->mLocation == nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT &&
+  if (aKeyboardEvent->mLocation ==
+        dom::KeyboardEventBinding::DOM_KEY_LOCATION_RIGHT &&
       StringEndsWith(aOut, NS_LITERAL_STRING("Left"))) {
     aOut.ReplaceLiteral(aOut.Length() - 4, 4, u"Right");
   }
