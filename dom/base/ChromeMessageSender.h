@@ -40,13 +40,15 @@ public:
   }
 
   // FrameScriptLoader
-  using nsFrameMessageManager::LoadFrameScript;
   void LoadFrameScript(const nsAString& aUrl, bool aAllowDelayedLoad,
                        bool aRunInGlobalScope, mozilla::ErrorResult& aError)
   {
     LoadScript(aUrl, aAllowDelayedLoad, aRunInGlobalScope, aError);
   }
-  using nsFrameMessageManager::GetDelayedFrameScripts;
+  void RemoveDelayedFrameScript(const nsAString& aURL)
+  {
+    RemoveDelayedScript(aURL);
+  }
   void GetDelayedFrameScripts(JSContext* aCx,
                               nsTArray<nsTArray<JS::Value>>& aScripts,
                               mozilla::ErrorResult& aError)
