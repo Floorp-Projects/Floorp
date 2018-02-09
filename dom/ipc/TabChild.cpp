@@ -2132,19 +2132,6 @@ TabChild::RecvNormalPriorityRealKeyEvent(const WidgetKeyboardEvent& aEvent)
 }
 
 mozilla::ipc::IPCResult
-TabChild::RecvKeyEvent(const nsString& aType,
-                       const int32_t& aKeyCode,
-                       const int32_t& aCharCode,
-                       const int32_t& aModifiers,
-                       const bool& aPreventDefault)
-{
-  bool ignored = false;
-  nsContentUtils::SendKeyEvent(mPuppetWidget, aType, aKeyCode, aCharCode,
-                               aModifiers, aPreventDefault, &ignored);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 TabChild::RecvCompositionEvent(const WidgetCompositionEvent& aEvent)
 {
   WidgetCompositionEvent localEvent(aEvent);

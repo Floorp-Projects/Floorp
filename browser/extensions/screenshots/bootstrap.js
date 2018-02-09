@@ -1,10 +1,9 @@
 /* globals ADDON_DISABLE */
-const OLD_ADDON_PREF_NAME = "extensions.jid1-NeEaf3sAHdKHPA@jetpack.deviceIdInfo";
-const OLD_ADDON_ID = "jid1-NeEaf3sAHdKHPA@jetpack";
 const ADDON_ID = "screenshots@mozilla.org";
 const TELEMETRY_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
 const PREF_BRANCH = "extensions.screenshots.";
 const USER_DISABLE_PREF = "extensions.screenshots.disabled";
+const UPLOAD_DISABLED_PREF = "extensions.screenshots.upload-disabled";
 const HISTORY_ENABLED_PREF = "places.history.enabled";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -209,33 +208,25 @@ function handleMessage(msg, sender, sendReply) {
     return;
   }
 
-  if (msg.funcName === "getTelemetryPref") {
+  if (msg.funcName === "isTelemetryEnabled") {
     let telemetryEnabled = getBoolPref(TELEMETRY_ENABLED_PREF);
     sendReply({type: "success", value: telemetryEnabled});
-  } else if (msg.funcName === "getOldDeviceInfo") {
-    let oldDeviceInfo = prefs.prefHasUserValue(OLD_ADDON_PREF_NAME) && prefs.getCharPref(OLD_ADDON_PREF_NAME);
-    sendReply({type: "success", value: oldDeviceInfo || null});
-  } else if (msg.funcName === "removeOldAddon") {
-    AddonManager.getAddonByID(OLD_ADDON_ID, (addon) => {
-      prefs.clearUserPref(OLD_ADDON_PREF_NAME);
-      if (addon) {
-        addon.uninstall();
-      }
-      sendReply({type: "success", value: !!addon});
-    });
-    return true;
-  } else if (msg.funcName === "getHistoryPref") {
+  } else if (msg.funcName === "isUploadDisabled") {
+    let isESR = AppConstants.MOZ_UPDATE_CHANNEL === 'esr';
+    let uploadDisabled = getBoolPref(UPLOAD_DISABLED_PREF);
+    sendReply({type: "success", value: uploadDisabled || isESR});
+  } else if (msg.funcName === "isHistoryEnabled") {
     let historyEnabled = getBoolPref(HISTORY_ENABLED_PREF);
     sendReply({type: "success", value: historyEnabled});
-  } else if (msg.funcName === "incrementDownloadCount") {
-    Services.telemetry.scalarAdd('screenshots.download', 1);
-    sendReply({type: "success", value: true});
-  } else if (msg.funcName === "incrementUploadCount") {
-    Services.telemetry.scalarAdd('screenshots.upload', 1);
-    sendReply({type: "success", value: true});
-  } else if (msg.funcName === "incrementCopyCount") {
-    Services.telemetry.scalarAdd('screenshots.copy', 1);
-    sendReply({type: "success", value: true});
+  } else if (msg.funcName === "incrementCount") {
+    let allowedScalars = ["download", "upload", "copy"];
+    let scalar = msg.args && msg.args[0] && msg.args[0].scalar;
+    if (!allowedScalars.includes(scalar)) {
+      sendReply({type: "error", name: `incrementCount passed an unrecognized scalar ${scalar}`});
+    } else {
+      Services.telemetry.scalarAdd(`screenshots.${scalar}`, 1);
+      sendReply({type: "success", value: true});
+    }
   }
 }
 

@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "„Se historiju nigda njespomnjeś“ jo zmóžnjone."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Wužywaśo Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Nagraśa su znjemóžnjone."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Wótkaz kopěrowany"
   },

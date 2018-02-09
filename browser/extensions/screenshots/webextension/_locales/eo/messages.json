@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "“Neniam memori historion” estas aktiva."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Vi uzas Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "La alŝutoj estis malaktivigitaj."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Ligilo kopiita"
   },

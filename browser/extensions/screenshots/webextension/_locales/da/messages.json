@@ -29,14 +29,46 @@
   "downloadScreenshot": {
     "message": "Hent"
   },
+  "downloadOnlyNotice": {
+    "message": "Du kan i øjeblikket kun hente skærmbilleder."
+  },
+  "downloadOnlyDetails": {
+    "message": "I følgende situationer lader Firefox Screenshots dig kun hente skærmbilleder:"
+  },
   "downloadOnlyDetailsPrivate": {
     "message": "I et privat browsing-vindue."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Når tredjeparts cookies er deaktiveret."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Når Firefox-indstillingen “Aldrig gemme historik” er valgt."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Du bruger Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Uploads er blevet deaktiveret."
   },
   "notificationLinkCopiedTitle": {
     "message": "Link kopieret"
   },
   "notificationLinkCopiedDetails": {
     "message": "Linket til dit skærmbillede er blevet gemt i udklipsholderen. Tryk på $META_KEY$-V for at sætte ind. ",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Kopier"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Skærmbillede kopieret"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Dit skærmbillede er blevet kopieret til udklipsholderen. Tryk $META_KEY$-V for at indsætte.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "“Oblidar le chronologia” activate."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Tu usa Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Le cargamentos ha essite disactivate."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Ligamine copiate"
   },

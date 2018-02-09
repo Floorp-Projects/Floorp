@@ -1773,17 +1773,11 @@
         </body>
       </method>
 
-      <field name="_textToSubURI">null</field>
       <method name="_unescapeUrl">
         <parameter name="url"/>
         <body>
           <![CDATA[
-          if (!this._textToSubURI) {
-            this._textToSubURI =
-              Components.classes["@mozilla.org/intl/texttosuburi;1"]
-                        .getService(Components.interfaces.nsITextToSubURI);
-          }
-          return this._textToSubURI.unEscapeURIForUI("UTF-8", url);
+          return Services.textToSubURI.unEscapeURIForUI("UTF-8", url);
           ]]>
         </body>
       </method>

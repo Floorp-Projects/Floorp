@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "“Never remember history” is enabled."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "You are using Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Uploads have been disabled."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Link Copied"
   },

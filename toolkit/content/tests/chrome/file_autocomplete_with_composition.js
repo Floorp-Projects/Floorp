@@ -1,6 +1,8 @@
 // nsDoTestsForAutoCompleteWithComposition tests autocomplete with composition.
 // Users must include SimpleTest.js and EventUtils.js.
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 function waitForCondition(condition, nextTest) {
   var tries = 0;
   var interval = setInterval(function() {

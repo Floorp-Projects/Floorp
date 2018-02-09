@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "\"Inte spara någon historik\" är aktiverad."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Du använder Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Uppladdningar har inaktiverats."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Länk kopierad"
   },

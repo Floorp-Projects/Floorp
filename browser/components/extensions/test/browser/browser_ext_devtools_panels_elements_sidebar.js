@@ -9,9 +9,53 @@ ChromeUtils.defineModuleGetter(this, "devtools",
 ChromeUtils.defineModuleGetter(this, "ContentTaskUtils",
                                "resource://testing-common/ContentTaskUtils.jsm");
 
+/* globals getExtensionSidebarActors, expectNoSuchActorIDs, testSetExpressionSidebarPanel */
+
+// Import the shared test helpers from the related devtools tests.
+Services.scriptloader.loadSubScript(
+  new URL("head_devtools_inspector_sidebar.js", gTestPath).href,
+  this);
+
 function isActiveSidebarTabTitle(inspector, expectedTabTitle, message) {
   const actualTabTitle = inspector.panelDoc.querySelector(".tabs-menu-item.is-active").innerText;
   is(actualTabTitle, expectedTabTitle, message);
+}
+
+function testSetObjectSidebarPanel(panel, expectedCellType, expectedTitle) {
+  is(panel.querySelectorAll("table.treeTable").length, 1,
+     "The sidebar panel contains a rendered TreeView component");
+
+  is(panel.querySelectorAll(`table.treeTable .${expectedCellType}Cell`).length, 1,
+     `The TreeView component contains the expected a cell of type ${expectedCellType}`);
+
+  if (expectedTitle) {
+    const panelTree = panel.querySelector("table.treeTable");
+    ok(
+      panelTree.innerText.includes(expectedTitle),
+      "The optional root object title has been included in the object tree"
+    );
+  }
+}
+
+async function testSidebarPanelSelect(extension, inspector, tabId, expected) {
+  const {
+    sidebarShown,
+    sidebarHidden,
+    activeSidebarTabTitle,
+  } = expected;
+
+  inspector.sidebar.show(tabId);
+
+  const shown = await extension.awaitMessage("devtools_sidebar_shown");
+  is(shown, sidebarShown, "Got the shown event on the second extension sidebar");
+
+  if (sidebarHidden) {
+    const hidden = await extension.awaitMessage("devtools_sidebar_hidden");
+    is(hidden, sidebarHidden, "Got the hidden event on the first extension sidebar");
+  }
+
+  isActiveSidebarTabTitle(inspector, activeSidebarTabTitle,
+                          "Got the expected title on the active sidebar tab");
 }
 
 add_task(async function test_devtools_panels_elements_sidebar() {
@@ -34,13 +78,20 @@ add_task(async function test_devtools_panels_elements_sidebar() {
     sidebar2.onHidden.addListener(() => onShownListener("hidden", "sidebar2"));
     sidebar3.onHidden.addListener(() => onShownListener("hidden", "sidebar3"));
 
-    sidebar1.setObject({propertyName: "propertyValue"}, "Optional Root Object Title");
-    sidebar2.setObject({anotherPropertyName: 123});
-
     // Refresh the sidebar content on every inspector selection.
     browser.devtools.panels.elements.onSelectionChanged.addListener(() => {
-      sidebar3.setExpression("$0 && $0.tagName", "Selected Element tagName");
+      const expression = `
+        var obj = Object.create(null);
+        obj.prop1 = 123;
+        obj[Symbol('sym1')] = 456;
+        obj.cyclic = obj;
+        obj;
+      `;
+      sidebar1.setExpression(expression, "sidebar.setExpression rootTitle");
     });
+
+    sidebar2.setObject({anotherPropertyName: 123});
+    sidebar3.setObject({propertyName: "propertyValue"}, "Optional Root Object Title");
 
     browser.test.sendMessage("devtools_page_loaded");
   }
@@ -80,6 +131,8 @@ add_task(async function test_devtools_panels_elements_sidebar() {
 
   const inspector = await toolbox.getPanel("inspector");
 
+  info("Test extension inspector sidebar 1 (sidebar.setExpression)");
+
   inspector.sidebar.show(sidebarIds[0]);
 
   const shownSidebarInstance = await extension.awaitMessage("devtools_sidebar_shown");
@@ -93,69 +146,48 @@ add_task(async function test_devtools_panels_elements_sidebar() {
 
   ok(sidebarPanel1, "Got a rendered sidebar panel for the first registered extension sidebar");
 
-  is(sidebarPanel1.querySelectorAll("table.treeTable").length, 1,
-     "The first sidebar panel contains a rendered TreeView component");
+  info("Waiting for the first panel to be rendered");
 
-  is(sidebarPanel1.querySelectorAll("table.treeTable .stringCell").length, 1,
-     "The TreeView component contains the expected number of string cells.");
+  // Verify that the panel contains an ObjectInspector, with the expected number of nodes
+  // and with the expected property names.
+  await testSetExpressionSidebarPanel(sidebarPanel1, {
+    nodesLength: 4,
+    propertiesNames: ["cyclic", "prop1", "Symbol(sym1)"],
+    rootTitle: "sidebar.setExpression rootTitle",
+  });
 
-  const sidebarPanel1Tree = sidebarPanel1.querySelector("table.treeTable");
-  ok(
-    sidebarPanel1Tree.innerText.includes("Optional Root Object Title"),
-    "The optional root object title has been included in the object tree"
-  );
+  // Retrieve the actors currently rendered into the extension sidebars.
+  const actors = getExtensionSidebarActors(inspector);
 
-  inspector.sidebar.show(sidebarIds[1]);
+  info("Test extension inspector sidebar 2 (sidebar.setObject without a root title)");
 
-  const shownSidebarInstance2 = await extension.awaitMessage("devtools_sidebar_shown");
-  const hiddenSidebarInstance1 = await extension.awaitMessage("devtools_sidebar_hidden");
-
-  is(shownSidebarInstance2, "sidebar2", "Got the shown event on the second extension sidebar");
-  is(hiddenSidebarInstance1, "sidebar1", "Got the hidden event on the first extension sidebar");
-
-  isActiveSidebarTabTitle(inspector, "Test Sidebar 2",
-                          "Got the expected title on the active sidebar tab");
+  await testSidebarPanelSelect(extension, inspector, sidebarIds[1], {
+    sidebarShown: "sidebar2",
+    sidebarHidden: "sidebar1",
+    activeSidebarTabTitle: "Test Sidebar 2",
+  });
 
   const sidebarPanel2 = inspector.sidebar.getTabPanel(sidebarIds[1]);
 
   ok(sidebarPanel2, "Got a rendered sidebar panel for the second registered extension sidebar");
 
-  is(sidebarPanel2.querySelectorAll("table.treeTable").length, 1,
-     "The second sidebar panel contains a rendered TreeView component");
+  testSetObjectSidebarPanel(sidebarPanel2, "number");
 
-  is(sidebarPanel2.querySelectorAll("table.treeTable .numberCell").length, 1,
-     "The TreeView component contains the expected a cell of type number.");
+  info("Test extension inspector sidebar 3 (sidebar.setObject with a root title)");
 
-  inspector.sidebar.show(sidebarIds[2]);
-
-  const shownSidebarInstance3 = await extension.awaitMessage("devtools_sidebar_shown");
-  const hiddenSidebarInstance2 = await extension.awaitMessage("devtools_sidebar_hidden");
-
-  is(shownSidebarInstance3, "sidebar3", "Got the shown event on the third extension sidebar");
-  is(hiddenSidebarInstance2, "sidebar2", "Got the hidden event on the second extension sidebar");
-
-  isActiveSidebarTabTitle(inspector, "Test Sidebar 3",
-                          "Got the expected title on the active sidebar tab");
+  await testSidebarPanelSelect(extension, inspector, sidebarIds[2], {
+    sidebarShown: "sidebar3",
+    sidebarHidden: "sidebar2",
+    activeSidebarTabTitle: "Test Sidebar 3",
+  });
 
   const sidebarPanel3 = inspector.sidebar.getTabPanel(sidebarIds[2]);
 
   ok(sidebarPanel3, "Got a rendered sidebar panel for the third registered extension sidebar");
 
-  info("Waiting for the third panel to be rendered");
-  await ContentTaskUtils.waitForCondition(() => {
-    return sidebarPanel3.querySelectorAll("table.treeTable").length > 0;
-  });
+  testSetObjectSidebarPanel(sidebarPanel3, "string", "Optional Root Object Title");
 
-  is(sidebarPanel3.querySelectorAll("table.treeTable").length, 1,
-     "The third sidebar panel contains a rendered TreeView component");
-
-  const treeViewStringValues = sidebarPanel3.querySelectorAll("table.treeTable .stringCell");
-
-  is(treeViewStringValues.length, 1,
-     "The TreeView component contains the expected content of type string.");
-
-  is(treeViewStringValues[0].innerText, "\"BODY\"",
-     "Got the expected content in the sidebar.setExpression rendered TreeView");
+  info("Unloading the extension and check that all the sidebar have been removed");
 
   await extension.unload();
 
@@ -170,6 +202,8 @@ add_task(async function test_devtools_panels_elements_sidebar() {
 
   is(inspector.sidebar.getTabPanel(sidebarIds[2]), undefined,
      "The third registered sidebar has been removed");
+
+  await expectNoSuchActorIDs(target.client, actors);
 
   await gDevTools.closeToolbox(target);
 

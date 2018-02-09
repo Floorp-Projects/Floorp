@@ -1104,20 +1104,6 @@ TabParent::SendMouseEvent(const nsAString& aType, float aX, float aY,
 }
 
 void
-TabParent::SendKeyEvent(const nsAString& aType,
-                        int32_t aKeyCode,
-                        int32_t aCharCode,
-                        int32_t aModifiers,
-                        bool aPreventDefault)
-{
-  if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
-    return;
-  }
-  Unused << PBrowserParent::SendKeyEvent(nsString(aType), aKeyCode, aCharCode,
-                                         aModifiers, aPreventDefault);
-}
-
-void
 TabParent::SendRealMouseEvent(WidgetMouseEvent& aEvent)
 {
   if (mIsDestroyed) {

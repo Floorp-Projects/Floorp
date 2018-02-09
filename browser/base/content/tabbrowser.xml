@@ -1646,10 +1646,6 @@
                 // Let's try to unescape it using a character set
                 // in case the URI is not ASCII.
                 try {
-                  var characterSet = browser.characterSet;
-                  const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
-                                                 .getService(Components.interfaces.nsITextToSubURI);
-                  title = textToSubURI.unEscapeNonAsciiURI(characterSet, title);
                   // If it's a long data: URI that uses base64 encoding, truncate to
                   // a reasonable length rather than trying to display the entire thing.
                   // We can't shorten arbitrary URIs like this, as bidi etc might mean
@@ -1658,6 +1654,9 @@
                   // (See bug 1408854.)
                   if (title.length > 500 && title.match(/^data:[^,]+;base64,/)) {
                     title = title.substring(0, 500) + "\u2026";
+                  } else {
+                    var characterSet = browser.characterSet;
+                    title = Services.textToSubURI.unEscapeNonAsciiURI(characterSet, title);
                   }
                 } catch (ex) { /* Do nothing. */ }
               } else {

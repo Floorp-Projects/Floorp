@@ -76,6 +76,8 @@ window.inlineSelectionCss = `
       background-color: #ededf0; }
     .button.share.active, .share.active.highlight-button-cancel, .share.active.highlight-button-save, .share.active.highlight-button-download, .share.active.highlight-button-copy, .share.active.preview-button-save, .button.share:active, .share.highlight-button-cancel:active, .share.highlight-button-save:active, .share.highlight-button-download:active, .share.highlight-button-copy:active, .share.preview-button-save:active {
       background-color: #dedede; }
+  .button.share.newicon, .share.newicon.highlight-button-cancel, .share.newicon.highlight-button-save, .share.newicon.highlight-button-download, .share.newicon.highlight-button-copy, .share.newicon.preview-button-save {
+    background-image: url("../img/icon-share-alternate.svg"); }
   .button.trash, .trash.highlight-button-cancel, .trash.highlight-button-save, .trash.highlight-button-download, .trash.highlight-button-copy, .trash.preview-button-save {
     background-image: url("../img/icon-trash.svg"); }
     .button.trash:hover, .trash.highlight-button-cancel:hover, .trash.highlight-button-save:hover, .trash.highlight-button-download:hover, .trash.highlight-button-copy:hover, .trash.preview-button-save:hover {
@@ -480,49 +482,36 @@ window.inlineSelectionCss = `
     left: 5px; }
 
 .highlight-button-cancel {
-  background-image: url("MOZ_EXTENSION/icons/cancel.svg");
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-size: 18px 18px;
   border: 1px solid #dedede;
   margin: 5px;
   width: 40px; }
 
 .highlight-button-save {
-  background-image: url("MOZ_EXTENSION/icons/cloud.svg");
-  background-repeat: no-repeat;
-  background-size: 20px 18px;
   font-size: 18px;
   margin: 5px;
   min-width: 80px; }
-  html[dir="ltr"] .highlight-button-save {
-    background-position: 8px center; }
-  html[dir="rtl"] .highlight-button-save {
-    background-position: right 10px center; }
-  html[dir="ltr"] .highlight-button-save {
-    padding-left: 34px; }
-  html[dir="rtl"] .highlight-button-save {
-    padding-right: 40px; }
+  html[dir="ltr"] .highlight-button-save img {
+    padding-right: 8px; }
+  html[dir="rtl"] .highlight-button-save img {
+    padding-left: 8px; }
 
 .highlight-button-download {
-  background-image: url("MOZ_EXTENSION/icons/download.svg");
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-size: 18px 18px;
   border: 1px solid #dedede;
   display: block;
   margin: 5px;
   width: 40px; }
   .highlight-button-download.download-only-button {
-    width: auto;
-    background-position: 7px;
-    padding-left: 32px; }
+    font-size: 18px;
+    width: auto; }
+    .highlight-button-download.download-only-button img {
+      height: 16px;
+      width: 16px; }
+      html[dir="ltr"] .highlight-button-download.download-only-button img {
+        padding-right: 8px; }
+      html[dir="rtl"] .highlight-button-download.download-only-button img {
+        padding-left: 8px; }
 
 .highlight-button-copy {
-  background-image: url("MOZ_EXTENSION/icons/copy.svg");
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-size: 18px 18px;
   border: 1px solid #dedede;
   display: block;
   margin: 5px;
@@ -542,8 +531,11 @@ window.inlineSelectionCss = `
   align-items: center;
   justify-content: center;
   position: absolute;
-  right: 0;
   top: -2px; }
+  html[dir="rtl"] .preview-buttons {
+    left: 0; }
+  html[dir="ltr"] .preview-buttons {
+    right: 0; }
 
 .preview-image {
   position: relative;
@@ -554,7 +546,7 @@ window.inlineSelectionCss = `
   animation-delay: 50ms;
   animation: bounce-in 300ms forwards ease-in-out; }
 
-.preview-image img {
+.preview-image > img {
   display: block;
   width: auto;
   height: auto;
@@ -564,14 +556,13 @@ window.inlineSelectionCss = `
   border: 1px solid rgba(255, 255, 255, 0.8); }
 
 .preview-button-save {
-  background-image: url("MOZ_EXTENSION/icons/cloud.svg");
-  background-position: 8px center;
-  background-repeat: no-repeat;
-  background-size: 20px 18px;
   font-size: 18px;
   margin: 5px;
-  min-width: 80px;
-  padding-left: 34px; }
+  min-width: 80px; }
+  html[dir="ltr"] .preview-button-save img {
+    padding-right: 8px; }
+  html[dir="rtl"] .preview-button-save img {
+    padding-left: 8px; }
 
 .fixed-container {
   align-items: center;
@@ -637,6 +628,20 @@ window.inlineSelectionCss = `
   padding-top: 20px;
   width: 400px;
   user-select: none; }
+
+.cancel-shot {
+  background-color: transparent;
+  cursor: pointer;
+  outline: none;
+  border-radius: 3px;
+  border: 1px #9b9b9b solid;
+  color: #fff;
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, "segoe ui", "helvetica neue", helvetica, ubuntu, roboto, noto, arial, sans-serif;
+  font-size: 16px;
+  margin-top: 40px;
+  padding: 10px 25px;
+  pointer-events: all; }
 
 .myshots-all-buttons-container {
   display: flex;

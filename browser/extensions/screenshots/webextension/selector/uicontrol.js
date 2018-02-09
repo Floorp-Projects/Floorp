@@ -124,6 +124,15 @@ this.uicontrol = (function() {
 
   let captureType;
 
+  function removeDimensionLimitsOnFullPageShot() {
+    if (captureType === "fullPageTruncated") {
+      captureType = "fullPage";
+      selectedPos = new Selection(
+        0, 0,
+        getDocumentWidth(), getDocumentHeight());
+    }
+  }
+
   let standardDisplayCallbacks = {
     cancel: () => {
       sendEvent("cancel-shot", "overlay-cancel-button");
@@ -143,6 +152,12 @@ this.uicontrol = (function() {
   let standardOverlayCallbacks = {
     cancel: () => {
       sendEvent("cancel-shot", "cancel-preview-button");
+      exports.deactivate();
+    },
+    onClickCancel: e => {
+      sendEvent("cancel-shot", "cancel-selection-button");
+      e.preventDefault();
+      e.stopPropagation();
       exports.deactivate();
     },
     onOpenMyShots: () => {
@@ -185,20 +200,17 @@ this.uicontrol = (function() {
     },
     onDownloadPreview: () => {
       sendEvent(`download-${captureType.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}`, "download-preview-button");
-
       // Downloaded shots don't have dimension limits
-      if (captureType === "fullPageTruncated") {
-        captureType = "fullPage";
-        selectedPos = new Selection(
-          0, 0,
-          getDocumentWidth(), getDocumentHeight());
-      }
-
-      shooter.downloadShot(selectedPos);
+      let previewDataUrl = (captureType === "fullPageTruncated") ? null : dataUrl;
+      removeDimensionLimitsOnFullPageShot();
+      shooter.downloadShot(selectedPos, previewDataUrl);
     },
     onCopyPreview: () => {
       sendEvent(`copy-${captureType.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}`, "copy-preview-button");
-      shooter.copyShot(selectedPos);
+      // Copied shots don't have dimension limits
+      let previewDataUrl = (captureType === "fullPageTruncated") ? null : dataUrl;
+      removeDimensionLimitsOnFullPageShot();
+      shooter.copyShot(selectedPos, previewDataUrl);
     }
   };
 
@@ -368,7 +380,7 @@ this.uicontrol = (function() {
     }
 
     distanceTo(x, y) {
-      return Math.sqrt(Math.pow(this.x - x, 2), Math.pow(this.y - y));
+      return Math.sqrt(Math.pow(this.x - x, 2) + Math.pow(this.y - y, 2));
     }
   }
 
@@ -416,9 +428,12 @@ this.uicontrol = (function() {
       watchPromise(ui.iframe.display(installHandlersOnDocument, standardOverlayCallbacks).then(() => {
         ui.iframe.usePreSelection();
         ui.Box.remove();
-        const handler = watchFunction(assertIsTrusted(keyupHandler));
-        document.addEventListener("keyup", handler);
-        registeredDocumentHandlers.push({name: "keyup", doc: document, handler, useCapture: false});
+        const upHandler = watchFunction(assertIsTrusted(keyupHandler));
+        document.addEventListener("keyup", upHandler);
+        registeredDocumentHandlers.push({name: "keyup", doc: document, upHandler, useCapture: false});
+        const downHandler = watchFunction(assertIsTrusted(keydownHandler));
+        document.addEventListener("keydown", downHandler);
+        registeredDocumentHandlers.push({name: "keydown", doc: document, downHandler, useCapture: false});
       }));
     },
 
@@ -428,6 +443,9 @@ this.uicontrol = (function() {
           (!event.target.classList.contains("preview-overlay"))) {
         // User is hovering over a toolbar button or control
         autoDetectRect = null;
+        if (this.cachedEl) {
+          this.cachedEl = null;
+        }
         ui.HoverBox.hide();
         return;
       }
@@ -870,12 +888,15 @@ this.uicontrol = (function() {
 
   exports.activate = function() {
     if (!document.body) {
-      callBackground("abortNoDocumentBody", document.documentElement.tagName);
+      callBackground("abortStartShot");
+      let tagName = String(document.documentElement.tagName || "").replace(/[^a-z0-9]/ig, "");
+      sendEvent("abort-start-shot", `document-is-${tagName}`);
       selectorLoader.unloadModules();
       return;
     }
     if (isFrameset()) {
-      callBackground("abortFrameset");
+      callBackground("abortStartShot");
+      sendEvent("abort-start-shot", "frame-page");
       selectorLoader.unloadModules();
       return;
     }
@@ -940,6 +961,7 @@ this.uicontrol = (function() {
       primedDocumentHandlers.set(eventName, fn);
     });
     primedDocumentHandlers.set("keyup", watchFunction(assertIsTrusted(keyupHandler)));
+    primedDocumentHandlers.set("keydown", watchFunction(assertIsTrusted(keydownHandler)));
     window.addEventListener('beforeunload', beforeunloadHandler);
   }
 
@@ -965,11 +987,8 @@ this.uicontrol = (function() {
     exports.deactivate();
   }
 
-  function keyupHandler(event) {
-    if (event.shiftKey || event.altKey) {
-      // unused modifier keys
-      return;
-    }
+  function keydownHandler(event) {
+    // In MacOS, the keyup event for 'c' is not fired when performing cmd+c.
     if (event.code === "KeyC" && (event.ctrlKey || event.metaKey)) {
       callBackground("getPlatformOs").then(os => {
         if ((event.ctrlKey && os !== "mac") ||
@@ -981,11 +1000,22 @@ this.uicontrol = (function() {
         // handled by catcher.watchPromise
       });
     }
+  }
+
+  function keyupHandler(event) {
+    if (event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) {
+      // unused modifier keys
+      return;
+    }
     if ((event.key || event.code) === "Escape") {
       sendEvent("cancel-shot", "keyboard-escape");
       exports.deactivate();
     }
-    if ((event.key || event.code) === "Enter" && getState.state === "selected") {
+    // Enter to trigger Save or Download by default. But if the user tabbed to
+    // select another button, then we do not want this.
+    if ((event.key || event.code) === "Enter"
+        && getState.state === "selected"
+        && ui.iframe.document().activeElement.tagName === "BODY") {
       if (ui.isDownloadOnly()) {
         sendEvent("download-shot", "keyboard-enter");
         shooter.downloadShot(selectedPos);

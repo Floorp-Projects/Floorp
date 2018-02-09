@@ -111,15 +111,6 @@ interface nsIFrameLoader : nsISupports
   readonly attribute nsIMessageSender messageManager;
 
   /**
-   * @see nsIDOMWindowUtils sendKeyEvent.
-   */
-  void sendCrossProcessKeyEvent(in AString aType,
-                                in long aKeyCode,
-                                in long aCharCode,
-                                in long aModifiers,
-                                [optional] in boolean aPreventDefault);
-
-  /**
    * Request that the next time a remote layer transaction has been
    * received by the Compositor, a MozAfterRemoteFrame event be sent
    * to the window.

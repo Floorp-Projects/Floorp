@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "«Hugs aldri historikk» er aktivert."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Du brukar Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Opplastingar er slått av."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Lenke kopiert"
   },

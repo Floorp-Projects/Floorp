@@ -58,7 +58,7 @@ this.sitehelper = (function() {
     let shotId = event.detail;
     catcher.watchPromise(callBackground("getAuthInfo", shotId || null).then((info) => {
       sendBackupCookieRequest(info.authHeaders);
-      sendCustomEvent("login-successful", {deviceId: info.deviceId, isOwner: info.isOwner});
+      sendCustomEvent("login-successful", {deviceId: info.deviceId, isOwner: info.isOwner, backupCookieRequest: true});
     }));
   }));
 

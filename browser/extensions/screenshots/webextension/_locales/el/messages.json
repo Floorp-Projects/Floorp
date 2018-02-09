@@ -40,6 +40,12 @@
       }
     }
   },
+  "copyScreenshot": {
+    "message": "Αντιγραφή"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Το στιγμιότυπο αντιγράφηκε"
+  },
   "imageCroppedWarning": {
     "message": "Αυτή η εικόνα έχει περικοπεί σε $PIXELS$px.",
     "placeholders": {

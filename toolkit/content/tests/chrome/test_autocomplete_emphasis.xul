@@ -19,6 +19,8 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 const ACR = Components.interfaces.nsIAutoCompleteResult;
 
 // A global variable to hold the search result for the current search.
