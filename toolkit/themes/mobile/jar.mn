@@ -23,7 +23,6 @@ toolkit.jar:
    skin/classic/global/richlistbox.css                     (global/empty.css)
    skin/classic/global/scale.css                           (global/empty.css)
    skin/classic/global/scrollbox.css                       (global/empty.css)
-   skin/classic/global/spinbuttons.css                     (global/empty.css)
    skin/classic/global/splitter.css                        (global/empty.css)
    skin/classic/global/tabbox.css                          (global/empty.css)
    skin/classic/global/textbox.css                         (global/empty.css)
