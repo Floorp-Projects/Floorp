@@ -92,7 +92,9 @@ MediaEngineRemoteVideoSource::Shutdown()
         }
         source = mSources[0];
       }
-      Stop(source, kVideoTrack); // XXX change to support multiple tracks
+      if (source) {
+        Stop(source, kVideoTrack); // XXX change to support multiple tracks
+      }
     }
     MOZ_ASSERT(mState == kStopped);
   }
@@ -142,6 +144,20 @@ MediaEngineRemoteVideoSource::Allocate(
       LOG(("Video device %d allocated shared", mCaptureIndex));
     }
   }
+
+  // Pre-allocate per-allocation members.
+  MonitorAutoLock lock(mMonitor);
+  MOZ_DIAGNOSTIC_ASSERT(*aOutHandle);
+  mSources.AppendElement();
+  mPrincipalHandles.AppendElement(PRINCIPAL_HANDLE_NONE);
+  mTargetCapabilities.AppendElement(mTargetCapability);
+  mHandleIds.AppendElement((*aOutHandle)->mId); // Key
+  mImages.AppendElement();
+
+  MOZ_DIAGNOSTIC_ASSERT(mSources.Length() == mPrincipalHandles.Length());
+  MOZ_DIAGNOSTIC_ASSERT(mSources.Length() == mTargetCapabilities.Length());
+  MOZ_DIAGNOSTIC_ASSERT(mSources.Length() == mHandleIds.Length());
+  MOZ_DIAGNOSTIC_ASSERT(mSources.Length() == mImages.Length());
   return NS_OK;
 }
 
@@ -165,6 +181,28 @@ MediaEngineRemoteVideoSource::Deallocate(AllocationHandle* aHandle)
   } else {
     LOG(("Video device %d deallocated but still in use", mCaptureIndex));
   }
+
+  MOZ_DIAGNOSTIC_ASSERT(aHandle);
+  size_t i = mHandleIds.IndexOf(aHandle->mId);
+  if (i == mHandleIds.NoIndex) {
+    // Cleaned up by Stop() - this is allowed
+    return NS_OK;
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(!mSources[i],
+                        "A handle id remaining at Deallocate() must not have "
+                        "gotten the source assigned by Start(). "
+                        "It would have been cleaned up by Stop().");
+  MOZ_ASSERT(mSources.Length() == mPrincipalHandles.Length());
+  MOZ_ASSERT(mSources.Length() == mTargetCapabilities.Length());
+  MOZ_ASSERT(mSources.Length() == mHandleIds.Length());
+  MOZ_ASSERT(mSources.Length() == mImages.Length());
+  mSources.RemoveElementAt(i);
+  mPrincipalHandles.RemoveElementAt(i);
+  mTargetCapabilities.RemoveElementAt(i);
+  mHandleIds.RemoveElementAt(i);
+  mImages.RemoveElementAt(i);
+
   return NS_OK;
 }
 
@@ -184,13 +222,18 @@ MediaEngineRemoteVideoSource::Start(SourceMediaStream* aStream, TrackID aID,
       layers::LayerManager::CreateImageContainer(layers::ImageContainer::ASYNCHRONOUS);
   }
 
+  // This is an assumption that this Start() belongs to the first source that
+  // has not yet been assigned.
+  size_t index = mSources.IndexOf(nullptr);
+  if (index == mSources.NoIndex) {
+    MOZ_DIAGNOSTIC_ASSERT(false, "No allocation has happened for this source");
+    return NS_ERROR_FAILURE;
+  }
+
   {
     MonitorAutoLock lock(mMonitor);
-    mSources.AppendElement(aStream);
-    mPrincipalHandles.AppendElement(aPrincipalHandle);
-    mTargetCapabilities.AppendElement(mTargetCapability);
-    mHandleIds.AppendElement(mHandleId);
-    mImages.AppendElement(nullptr);
+    mSources[index] = aStream;
+    mPrincipalHandles[index] = aPrincipalHandle;
 
     MOZ_ASSERT(mSources.Length() == mPrincipalHandles.Length());
     MOZ_ASSERT(mSources.Length() == mTargetCapabilities.Length());
@@ -223,6 +266,7 @@ MediaEngineRemoteVideoSource::Stop(mozilla::SourceMediaStream* aSource,
 {
   LOG((__PRETTY_FUNCTION__));
   AssertIsOnOwningThread();
+  MOZ_DIAGNOSTIC_ASSERT(aSource);
   {
     MonitorAutoLock lock(mMonitor);
 
@@ -297,7 +341,6 @@ MediaEngineRemoteVideoSource::UpdateSingleSource(
   switch (mState) {
     case kReleased:
       MOZ_ASSERT(aHandle);
-      mHandleId = aHandle->mId;
       LOG(("ChooseCapability(kFitness) for mTargetCapability and mCapability ++"));
       if (!ChooseCapability(aNetConstraints, aPrefs, aDeviceId, mCapability, kFitness)) {
         *aOutBadConstraint = FindBadConstraint(aNetConstraints, *this, aDeviceId);
@@ -322,8 +365,7 @@ MediaEngineRemoteVideoSource::UpdateSingleSource(
       {
         size_t index = mHandleIds.NoIndex;
         if (aHandle) {
-          mHandleId = aHandle->mId;
-          index = mHandleIds.IndexOf(mHandleId);
+          index = mHandleIds.IndexOf(aHandle->mId);
         }
 
         LOG(("ChooseCapability(kFitness) for mTargetCapability ++"));
