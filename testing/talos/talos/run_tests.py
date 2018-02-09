@@ -75,9 +75,6 @@ def set_tp_preferences(test, browser_config):
             if _pref_name in test['preferences']:
                 del test['preferences'][_pref_name]
 
-    LOG.info("* RW * preferences are now:")
-    LOG.info(test['preferences'])
-
 
 def setup_webserver(webserver):
     """use mozhttpd to setup a webserver"""
