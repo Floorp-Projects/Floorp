@@ -5954,4 +5954,3 @@ pref("layers.omtp.paint-workers", -1);
 pref("layers.omtp.paint-workers", 1);
 #endif
 pref("layers.omtp.release-capture-on-main-thread", false);
-pref("layers.omtp.dump-capture", false);

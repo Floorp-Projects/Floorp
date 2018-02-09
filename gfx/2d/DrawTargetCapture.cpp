@@ -443,15 +443,5 @@ DrawTargetCaptureImpl::CreateFilter(FilterType aType)
   }
 }
 
-void
-DrawTargetCaptureImpl::Dump()
-{
-  TreeLog output;
-  output << "DrawTargetCapture(" << (void*)(this) << ")\n";
-  TreeAutoIndent indent(output);
-  mCommands.Log(output);
-  output << "\n";
-}
-
 } // namespace gfx
 } // namespace mozilla
