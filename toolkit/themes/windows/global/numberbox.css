@@ -9,16 +9,10 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-textbox[type="number"] {
-  padding: 0 !important;
-  cursor: default;
-}
-
 html|*.numberbox-input {
   text-align: right;
 }
 
-.numberbox-input-box {
-  -moz-box-align: center;
+textbox[type="number"][hidespinbuttons="true"] html|*.numberbox-input {
+  -moz-appearance: textfield !important;
 }
-
