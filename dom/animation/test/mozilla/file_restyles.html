@@ -836,6 +836,133 @@ waitForAllPaints(() => {
     }
   );
 
+  add_task(
+    async function restyling_animations_on_visibility_hidden_element_having_grandchild() {
+      // element tree:
+      //
+      //        root(visibility:hidden)
+      //       /                       \
+      //    childA                   childB
+      //    /     \                 /      \
+      //  AA       AB             BA        BB
+
+      var div = addDiv(null,
+       { style: 'animation: background-color 100s; visibility: hidden' });
+
+      var childA = addDiv(null);
+      div.appendChild(childA);
+      var childB = addDiv(null);
+      div.appendChild(childB);
+
+      var grandchildAA = addDiv(null);
+      childA.appendChild(grandchildAA);
+      var grandchildAB = addDiv(null);
+      childA.appendChild(grandchildAB);
+
+      var grandchildBA = addDiv(null);
+      childB.appendChild(grandchildBA);
+      var grandchildBB = addDiv(null);
+      childB.appendChild(grandchildBB);
+
+      var animation = div.getAnimations()[0];
+
+      await animation.ready;
+      var markers = await observeStyling(5);
+      todo_is(markers.length, 0,
+              'Animations on visibility hidden element having no visible ' +
+              'descendants should never cause restyles');
+
+      childA.style.visibility = 'visible';
+      grandchildAA.style.visibility = 'visible';
+      grandchildAB.style.visibility = 'visible';
+      await waitForNextFrame();
+
+      var markers = await observeStyling(5);
+      is(markers.length, 5,
+         'Animations running on visibility hidden element but the element has ' +
+         'visible children should not throttle restyling');
+
+      // Make childA hidden again but both of grandchildAA and grandchildAB are
+      // still visible.
+      childA.style.visibility = 'hidden';
+      await waitForNextFrame();
+
+      var markers = await observeStyling(5);
+      is(markers.length, 5,
+         'Animations running on visibility hidden element that a child has ' +
+         'become invisible again but there are still visible children should ' +
+         'not throttle restyling');
+
+      // Make grandchildAA hidden but grandchildAB is still visible.
+      grandchildAA.style.visibility = 'hidden';
+      await waitForNextFrame();
+
+      var markers = await observeStyling(5);
+      is(markers.length, 5,
+         'Animations running on visibility hidden element that a grandchild ' +
+         'become invisible again but another grandchild is still visible ' +
+         'should not throttle restyling');
+
+
+      // Make childB and grandchildBA visible.
+      childB.style.visibility = 'visible';
+      grandchildBA.style.visibility = 'visible';
+      await waitForNextFrame();
+
+      var markers = await observeStyling(5);
+      is(markers.length, 5,
+         'Animations running on visibility hidden element but the element has ' +
+         'visible descendants should not throttle restyling');
+
+      // Make childB hidden but grandchildAB and grandchildBA are still visible.
+      childB.style.visibility = 'hidden';
+      await waitForNextFrame();
+
+      var markers = await observeStyling(5);
+      is(markers.length, 5,
+         'Animations running on visibility hidden element but the element has ' +
+         'visible grandchildren should not throttle restyling');
+
+      // Make grandchildAB hidden but grandchildBA is still visible.
+      grandchildAB.style.visibility = 'hidden';
+      await waitForNextFrame();
+
+      var markers = await observeStyling(5);
+      is(markers.length, 5,
+         'Animations running on visibility hidden element but the element has ' +
+         'a visible grandchild should not throttle restyling');
+
+      // Make grandchildBA hidden. Now all descedants are invisible.
+      grandchildBA.style.visibility = 'hidden';
+      await waitForNextFrame();
+
+      var markers = await observeStyling(5);
+      todo_is(markers.length, 0,
+              'Animations on visibility hidden element that all descendants have ' +
+              'become invisible again should never cause restyles');
+
+      // Make childB visible.
+      childB.style.visibility = 'visible';
+      await waitForNextFrame();
+
+      var markers = await observeStyling(5);
+      is(markers.length, 5,
+         'Animations on visibility hidden element that has a visible child ' +
+         'should never cause restyles');
+
+      // Make childB invisible again
+      childB.style.visibility = 'hidden';
+      await waitForNextFrame();
+
+      var markers = await observeStyling(5);
+      todo_is(markers.length, 0,
+              'Animations on visibility hidden element that the visible child ' +
+              'has become invisible again should never cause restyles');
+
+      await ensureElementRemoval(div);
+    }
+  );
+
   add_task_if_omta_enabled(async function no_restyling_compositor_animations_after_pause_is_called() {
     var div = addDiv(null, { style: 'animation: opacity 100s' });
     var animation = div.getAnimations()[0];
