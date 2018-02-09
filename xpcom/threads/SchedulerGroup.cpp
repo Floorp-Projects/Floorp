@@ -11,6 +11,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Move.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/DocGroup.h"
 #include "nsINamed.h"
 #include "nsQueryObject.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -214,10 +215,18 @@ SchedulerGroup::SchedulerGroup()
 }
 
 nsresult
+SchedulerGroup::DispatchWithDocGroup(TaskCategory aCategory,
+                                     already_AddRefed<nsIRunnable>&& aRunnable,
+                                     dom::DocGroup* aDocGroup)
+{
+  return LabeledDispatch(aCategory, Move(aRunnable), aDocGroup);
+}
+
+nsresult
 SchedulerGroup::Dispatch(TaskCategory aCategory,
                          already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  return LabeledDispatch(aCategory, Move(aRunnable));
+  return LabeledDispatch(aCategory, Move(aRunnable), nullptr);
 }
 
 nsISerialEventTarget*
@@ -300,11 +309,12 @@ SchedulerGroup::FromEventTarget(nsIEventTarget* aEventTarget)
 
 nsresult
 SchedulerGroup::LabeledDispatch(TaskCategory aCategory,
-                                already_AddRefed<nsIRunnable>&& aRunnable)
+                                already_AddRefed<nsIRunnable>&& aRunnable,
+                                dom::DocGroup* aDocGroup)
 {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
   if (XRE_IsContentProcess()) {
-    RefPtr<Runnable> internalRunnable = new Runnable(runnable.forget(), this);
+    RefPtr<Runnable> internalRunnable = new Runnable(runnable.forget(), this, aDocGroup);
     return InternalUnlabeledDispatch(aCategory, internalRunnable.forget());
   }
   return UnlabeledDispatch(aCategory, runnable.forget());
@@ -351,10 +361,12 @@ SchedulerGroup::SetValidatingAccess(ValidationType aType)
 }
 
 SchedulerGroup::Runnable::Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
-                                   SchedulerGroup* aGroup)
+                                   SchedulerGroup* aGroup,
+                                   dom::DocGroup* aDocGroup)
   : mozilla::Runnable("SchedulerGroup::Runnable")
   , mRunnable(Move(aRunnable))
   , mGroup(aGroup)
+  , mDocGroup(aDocGroup)
 {
 }
 
@@ -364,6 +376,12 @@ SchedulerGroup::Runnable::GetAffectedSchedulerGroups(SchedulerGroupSet& aGroups)
   aGroups.Clear();
   aGroups.Put(Group());
   return true;
+}
+
+dom::DocGroup*
+SchedulerGroup::Runnable::DocGroup() const
+{
+  return mDocGroup;
 }
 
 NS_IMETHODIMP
