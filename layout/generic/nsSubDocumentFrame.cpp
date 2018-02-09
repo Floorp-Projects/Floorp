@@ -500,7 +500,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
               : aBuilder->GetCurrentScrollParentId());
 
       bool hasDocumentLevelListenersForApzAwareEvents =
-          aBuilder->IsBuildingLayerEventRegions() &&
+          nsDisplayListBuilder::LayerEventRegionsEnabled() &&
           nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell);
 
       aBuilder->SetAncestorHasApzAwareEventHandler(hasDocumentLevelListenersForApzAwareEvents);

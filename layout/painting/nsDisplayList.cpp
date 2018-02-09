@@ -977,6 +977,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     : mReferenceFrame(aReferenceFrame),
       mIgnoreScrollFrame(nullptr),
       mLayerEventRegions(nullptr),
+      mCompositorHitTestInfo(nullptr),
       mCurrentTableItem(nullptr),
       mCurrentActiveScrolledRoot(nullptr),
       mCurrentContainerASR(nullptr),
@@ -1028,10 +1029,13 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
 {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
 
-  mBuildCompositorHitTestInfo = gfxVars::UseWebRender()
-      && gfxPrefs::WebRenderHitTest()
-      && mAsyncPanZoomEnabled
-      && mMode == nsDisplayListBuilderMode::PAINTING;
+  const bool useWRHitTest =
+    gfxPrefs::WebRenderHitTest() && gfxVars::UseWebRender();
+
+  mBuildCompositorHitTestInfo = mAsyncPanZoomEnabled && IsForPainting() &&
+    (useWRHitTest || gfxPrefs::SimpleEventRegionItems());
+
+  mLessEventRegionItems = gfxPrefs::LessEventRegionItems();
 
   nsPresContext* pc = aReferenceFrame->PresContext();
   nsIPresShell *shell = pc->PresShell();
@@ -1069,6 +1073,9 @@ nsDisplayListBuilder::EndFrame()
   FreeClipChains();
   FreeTemporaryItems();
   nsCSSRendering::EndFrameTreesLocked();
+
+  MOZ_ASSERT(!mLayerEventRegions);
+  MOZ_ASSERT(!mCompositorHitTestInfo);
 }
 
 void
@@ -1358,6 +1365,7 @@ DisplayListIsNonBlank(nsDisplayList* aList)
   for (nsDisplayItem* i = aList->GetBottom(); i != nullptr; i = i->GetAbove()) {
     switch (i->GetType()) {
       case DisplayItemType::TYPE_LAYER_EVENT_REGIONS:
+      case DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO:
       case DisplayItemType::TYPE_CANVAS_BACKGROUND_COLOR:
       case DisplayItemType::TYPE_CANVAS_BACKGROUND_IMAGE:
         continue;
@@ -1667,7 +1675,7 @@ nsDisplayListBuilder::CopyWholeChain(const DisplayItemClipChain* aClipChain)
 
 const nsIFrame*
 nsDisplayListBuilder::FindReferenceFrameFor(const nsIFrame *aFrame,
-                                            nsPoint* aOffset)
+                                            nsPoint* aOffset) const
 {
   if (aFrame == mCurrentFrame) {
     if (aOffset) {
@@ -2198,6 +2206,80 @@ nsDisplayListBuilder::AppendNewScrollInfoItemForHoisting(nsDisplayScrollInfoLaye
   mScrollInfoItemsForHoisting->AppendToTop(aScrollInfoItem);
 }
 
+static nsRect
+GetFrameArea(const nsDisplayListBuilder* aBuilder, const nsIFrame* aFrame)
+{
+  nsRect area;
+
+  nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(aFrame);
+  if (scrollFrame) {
+    // If the frame is content of a scrollframe, then we need to pick up the
+    // area corresponding to the overflow rect as well. Otherwise the parts of
+    // the overflow that are not occupied by descendants get skipped and the
+    // APZ code sends touch events to the content underneath instead.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
+    area = aFrame->GetScrollableOverflowRect();
+  } else {
+    area = nsRect(nsPoint(0, 0), aFrame->GetSize());
+  }
+
+  if (!area.IsEmpty()) {
+    return area + aBuilder->ToReferenceFrame(aFrame);
+  }
+
+  return area;
+}
+
+void
+nsDisplayListBuilder::BuildCompositorHitTestInfoIfNeeded(nsIFrame* aFrame,
+                                                         nsDisplayList* aList,
+                                                         const bool aBuildNew)
+{
+  MOZ_ASSERT(aFrame);
+  MOZ_ASSERT(aList);
+
+  if (!BuildCompositorHitTestInfo()) {
+    return;
+  }
+
+  CompositorHitTestInfo info = aFrame->GetCompositorHitTestInfo(this);
+  if (!ShouldBuildCompositorHitTestInfo(aFrame, info, aBuildNew)) {
+    // Either the parent hit test info can be reused, or this frame has no hit
+    // test flags set.
+    return;
+  }
+
+  nsDisplayCompositorHitTestInfo* item =
+    new (this) nsDisplayCompositorHitTestInfo(this, aFrame, info);
+
+  SetCompositorHitTestInfo(item);
+  aList->AppendToTop(item);
+}
+
+bool
+nsDisplayListBuilder::ShouldBuildCompositorHitTestInfo(const nsIFrame* aFrame,
+                                                       const CompositorHitTestInfo& aInfo,
+                                                       const bool aBuildNew) const
+{
+  MOZ_ASSERT(mBuildCompositorHitTestInfo);
+
+  if (aInfo == CompositorHitTestInfo::eInvisibleToHitTest) {
+    return false;
+  }
+
+  if (!mCompositorHitTestInfo || !mLessEventRegionItems || aBuildNew) {
+    return true;
+  }
+
+  if (mCompositorHitTestInfo->HitTestInfo() != aInfo) {
+    // Hit test flags are different.
+    return true;
+  }
+
+  // Create a new item if the parent does not contain the child completely.
+  return !mCompositorHitTestInfo->Area().Contains(GetFrameArea(this, aFrame));
+}
+
 bool
 nsDisplayListBuilder::IsBuildingLayerEventRegions()
 {
@@ -2303,7 +2385,8 @@ TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
   bool snap;
   nsRegion opaque = aItem->GetOpaqueRegion(aBuilder, &snap);
   if (aBuilder->IsForPluginGeometry() &&
-      aItem->GetType() != DisplayItemType::TYPE_LAYER_EVENT_REGIONS)
+      aItem->GetType() != DisplayItemType::TYPE_LAYER_EVENT_REGIONS &&
+      aItem->GetType() != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO)
   {
     // Treat all leaf chrome items as opaque, unless their frames are opacity:0.
     // Since opacity:0 frames generate an nsDisplayOpacity, that item will
@@ -5003,6 +5086,7 @@ nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(nsDisplayListBuil
   : nsDisplayEventReceiver(aBuilder, aFrame)
   , mHitTestInfo(aHitTestInfo)
   , mIndex(aIndex)
+  , mAppUnitsPerDevPixel(mFrame->PresContext()->AppUnitsPerDevPixel())
 {
   MOZ_COUNT_CTOR(nsDisplayCompositorHitTestInfo);
   // We should never even create this display item if we're not building
@@ -5018,32 +5102,10 @@ nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(nsDisplayListBuil
     mScrollTarget = Some(aBuilder->GetCurrentScrollbarTarget());
   }
 
-  nsRect area;
   if (aArea.isSome()) {
-    area = *aArea;
+    mArea = *aArea;
   } else {
-    nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(mFrame);
-    if (scrollFrame) {
-      // If the frame is content of a scrollframe, then we need to pick up the
-      // area corresponding to the overflow rect as well. Otherwise the parts of
-      // the overflow that are not occupied by descendants get skipped and the
-      // APZ code sends touch events to the content underneath instead.
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
-      area = mFrame->GetScrollableOverflowRect();
-    } else {
-      area = nsRect(nsPoint(0, 0), mFrame->GetSize());
-    }
-
-    // Note that it's important to do this call to ToReferenceFrame here in the
-    // nsDisplayCompositorHitTestInfo constructor, because then we'll hit the good
-    // fast path (because aBuilder will already have the info we want cached).
-    // This is as opposed to, say, calling it in CreateWebRenderCommands where
-    // we would not hit the fast path.
-    area += aBuilder->ToReferenceFrame(mFrame);
-  }
-
-  if (!area.IsEmpty()) {
-    mArea = LayoutDeviceRect::FromAppUnits(area, mFrame->PresContext()->AppUnitsPerDevPixel());
+    mArea = GetFrameArea(aBuilder, aFrame);
   }
 }
 
@@ -5073,7 +5135,12 @@ nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(mozilla::wr::DisplayList
 
   // Insert a transparent rectangle with the hit-test info
   aBuilder.SetHitTestInfo(scrollId, mHitTestInfo);
-  wr::LayoutRect rect = aSc.ToRelativeLayoutRect(mArea);
+
+  const LayoutDeviceRect devRect =
+    LayoutDeviceRect::FromAppUnits(mArea, mAppUnitsPerDevPixel);
+
+  const wr::LayoutRect rect = aSc.ToRelativeLayoutRect(devRect);
+
   aBuilder.PushRect(rect, rect, true, wr::ToColorF(gfx::Color()));
   aBuilder.ClearHitTestInfo();
 
@@ -5120,29 +5187,12 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
 
   // XXX Do something clever here for the common case where the border box
   // is obviously entirely inside mHitRegion.
-  nsRect borderBox;
-
-  nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(aFrame);
-  if (scrollFrame) {
-    // If the frame is content of a scrollframe, then we need to pick up the
-    // area corresponding to the overflow rect as well. Otherwise the parts of
-    // the overflow that are not occupied by descendants get skipped and the
-    // APZ code sends touch events to the content underneath instead.
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
-    borderBox = aFrame->GetScrollableOverflowRect();
-  } else {
-    borderBox = nsRect(nsPoint(0, 0), aFrame->GetSize());
-  }
-  if (borderBox.IsEmpty()) {
-    return;
-  }
+  nsRect borderBox = GetFrameArea(aBuilder, aFrame);
 
   if (aFrame != mFrame &&
       aBuilder->IsRetainingDisplayList()) {
     aFrame->AddDisplayItem(this);
   }
-
-  borderBox += aBuilder->ToReferenceFrame(aFrame);
 
   bool borderBoxHasRoundedCorners = false;
 
@@ -6589,6 +6639,7 @@ CollectItemsWithOpacity(nsDisplayList* aList,
     }
 
     if (type == DisplayItemType::TYPE_LAYER_EVENT_REGIONS ||
+        type == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO ||
         type == DisplayItemType::TYPE_WRAP_LIST) {
       continue;
     }

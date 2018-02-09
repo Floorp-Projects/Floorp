@@ -57,6 +57,7 @@ class nsDisplayTableItem;
 class nsISelection;
 class nsIScrollableFrame;
 class nsSubDocumentFrame;
+class nsDisplayCompositorHitTestInfo;
 class nsDisplayLayerEventRegions;
 class nsDisplayScrollInfoLayer;
 class nsCaret;
@@ -559,7 +560,7 @@ public:
    * establishes the coordinate system for the child display items.
    */
   const nsIFrame* FindReferenceFrameFor(const nsIFrame *aFrame,
-                                        nsPoint* aOffset = nullptr);
+                                        nsPoint* aOffset = nullptr) const;
 
   /**
    * @return the root of the display list's frame (sub)tree, whose origin
@@ -576,7 +577,8 @@ public:
    * aFrame->GetOffsetToCrossDoc(ReferenceFrame()). The returned point is in
    * the appunits of aFrame.
    */
-  const nsPoint ToReferenceFrame(const nsIFrame* aFrame) {
+  const nsPoint ToReferenceFrame(const nsIFrame* aFrame) const
+  {
     nsPoint result;
     FindReferenceFrameFor(aFrame, &result);
     return result;
@@ -719,6 +721,26 @@ public:
   {
     mLayerEventRegions = aItem;
   }
+
+  /**
+   * Sets the current compositor hit test info to |aHitTestInfo|.
+   * This is used during display list building to determine if the parent frame
+   * hit test info contains the same information that child frame needs.
+   */
+  void SetCompositorHitTestInfo(nsDisplayCompositorHitTestInfo* aHitTestInfo)
+  {
+    mCompositorHitTestInfo = aHitTestInfo;
+  }
+
+  /**
+   * Builds a new nsDisplayCompositorHitTestInfo for the frame |aFrame| if
+   * needed, and adds it to the top of |aList|. If |aBuildNew| is true, the
+   * previous hit test info will not be reused.
+   */
+  void BuildCompositorHitTestInfoIfNeeded(nsIFrame* aFrame,
+                                          nsDisplayList* aList,
+                                          const bool aBuildNew);
+
   bool IsBuildingLayerEventRegions();
   static bool LayerEventRegionsEnabled();
   bool IsInsidePointerEventsNoneDoc()
@@ -1035,6 +1057,7 @@ public:
         mPrevFrame(aBuilder->mCurrentFrame),
         mPrevReferenceFrame(aBuilder->mCurrentReferenceFrame),
         mPrevLayerEventRegions(aBuilder->mLayerEventRegions),
+        mPrevCompositorHitTestInfo(aBuilder->mCompositorHitTestInfo),
         mPrevOffset(aBuilder->mCurrentOffsetToReferenceFrame),
         mPrevVisibleRect(aBuilder->mVisibleRect),
         mPrevDirtyRect(aBuilder->mDirtyRect),
@@ -1087,6 +1110,7 @@ public:
       mBuilder->mCurrentFrame = mPrevFrame;
       mBuilder->mCurrentReferenceFrame = mPrevReferenceFrame;
       mBuilder->mLayerEventRegions = mPrevLayerEventRegions;
+      mBuilder->mCompositorHitTestInfo = mPrevCompositorHitTestInfo;
       mBuilder->mCurrentOffsetToReferenceFrame = mPrevOffset;
       mBuilder->mVisibleRect = mPrevVisibleRect;
       mBuilder->mDirtyRect = mPrevDirtyRect;
@@ -1102,6 +1126,7 @@ public:
     const nsIFrame*       mPrevFrame;
     const nsIFrame*       mPrevReferenceFrame;
     nsDisplayLayerEventRegions* mPrevLayerEventRegions;
+    nsDisplayCompositorHitTestInfo* mPrevCompositorHitTestInfo;
     nsPoint               mPrevOffset;
     nsRect                mPrevVisibleRect;
     nsRect                mPrevDirtyRect;
@@ -1783,6 +1808,15 @@ private:
    */
   nsIFrame* FindAnimatedGeometryRootFrameFor(nsIFrame* aFrame, bool& aIsAsync);
 
+  /**
+   * Returns true if nsDisplayCompositorHitTestInfo item should be build for
+   * |aFrame|. Otherwise returns false. If |aBuildNew| is true, reusing the
+   * previous hit test info will not be considered.
+   */
+  bool ShouldBuildCompositorHitTestInfo(const nsIFrame* aFrame,
+                                        const mozilla::gfx::CompositorHitTestInfo& aInfo,
+                                        const bool aBuildNew) const;
+
   friend class nsDisplayCanvasBackgroundImage;
   friend class nsDisplayBackgroundImage;
   friend class nsDisplayFixedPosition;
@@ -1850,6 +1884,7 @@ private:
   nsIFrame* const                mReferenceFrame;
   nsIFrame*                      mIgnoreScrollFrame;
   nsDisplayLayerEventRegions*    mLayerEventRegions;
+  nsDisplayCompositorHitTestInfo* mCompositorHitTestInfo;
 
   nsPresArena mPool;
 
@@ -1966,6 +2001,7 @@ private:
   bool                           mIsBuilding;
   bool                           mInInvalidSubtree;
   bool                           mBuildCompositorHitTestInfo;
+  bool                           mLessEventRegionItems;
 };
 
 class nsDisplayItem;
@@ -4543,14 +4579,37 @@ public:
   int32_t ZIndex() const override;
   void SetOverrideZIndex(int32_t aZIndex);
 
+  /**
+   * Returns the hit test area of this item.
+   */
+  const nsRect& Area() const { return mArea; }
+
+  /**
+   * ApplyOpacity() is overriden for opacity flattening.
+   */
+  void ApplyOpacity(nsDisplayListBuilder* aBuilder, float aOpacity,
+                    const DisplayItemClipChain* aClip) override {}
+
+  /**
+   * CanApplyOpacity() is overriden for opacity flattening.
+   */
+  bool CanApplyOpacity() const override { return true; }
+
+  nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override
+  {
+    *aSnap = false;
+    return nsRect();
+  }
+
   NS_DISPLAY_DECL_NAME("CompositorHitTestInfo", TYPE_COMPOSITOR_HITTEST_INFO)
 
 private:
   mozilla::gfx::CompositorHitTestInfo mHitTestInfo;
   mozilla::Maybe<mozilla::layers::FrameMetrics::ViewID> mScrollTarget;
-  mozilla::LayoutDeviceRect mArea;
+  nsRect mArea;
   uint32_t mIndex;
   mozilla::Maybe<int32_t> mOverrideZIndex;
+  int32_t mAppUnitsPerDevPixel;
 };
 
 /**
