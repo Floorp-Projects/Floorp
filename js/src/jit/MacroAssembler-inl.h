@@ -434,16 +434,21 @@ MacroAssembler::branchTwoByteString(Register string, Label* label)
 }
 
 void
-MacroAssembler::branchIfFunctionHasNoScript(Register fun, Label* label)
+MacroAssembler::branchIfFunctionHasNoJitEntry(Register fun, bool isConstructing, Label* label)
 {
     // 16-bit loads are slow and unaligned 32-bit loads may be too so
     // perform an aligned 32-bit load and adjust the bitmask accordingly.
+
     static_assert(JSFunction::offsetOfNargs() % sizeof(uint32_t) == 0,
                   "The code in this function and the ones below must change");
     static_assert(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2,
                   "The code in this function and the ones below must change");
+
     Address address(fun, JSFunction::offsetOfNargs());
-    int32_t bit = IMM32_16ADJ(JSFunction::INTERPRETED);
+    int32_t bit = JSFunction::INTERPRETED;
+    if (!isConstructing)
+        bit |= JSFunction::WASM_OPTIMIZED;
+    bit = IMM32_16ADJ(bit);
     branchTest32(Assembler::Zero, address, Imm32(bit), label);
 }
 
@@ -687,6 +692,12 @@ MacroAssembler::storeDouble(FloatRegister src, const T& dest)
 
 template void MacroAssembler::storeDouble(FloatRegister src, const Address& dest);
 template void MacroAssembler::storeDouble(FloatRegister src, const BaseIndex& dest);
+
+void
+MacroAssembler::boxDouble(FloatRegister src, const Address& dest)
+{
+    storeDouble(src, dest);
+}
 
 template<class T> void
 MacroAssembler::storeFloat32(FloatRegister src, const T& dest)

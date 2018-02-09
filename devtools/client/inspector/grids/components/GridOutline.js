@@ -8,9 +8,9 @@ const Services = require("Services");
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 
 const Types = require("../types");
-const { getStr } = require("../utils/l10n");
 
 // The delay prior to executing the grid cell highlighting.
 const GRID_HIGHLIGHTING_DEBOUNCE = 50;

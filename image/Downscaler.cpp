@@ -27,8 +27,6 @@ Downscaler::Downscaler(const nsIntSize& aTargetSize)
   , mHasAlpha(true)
   , mFlipVertically(false)
 {
-  MOZ_ASSERT(gfxPrefs::ImageDownscaleDuringDecodeEnabled(),
-             "Downscaling even though downscale-during-decode is disabled?");
   MOZ_ASSERT(mTargetSize.width > 0 && mTargetSize.height > 0,
              "Invalid target size");
 }

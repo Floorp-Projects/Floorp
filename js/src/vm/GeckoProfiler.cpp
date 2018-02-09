@@ -76,14 +76,11 @@ GetTopProfilingJitFrame(Activation* act)
         return nullptr;
 
     // Skip wasm frames that might be in the way.
-    JitFrameIter iter(jitActivation);
-    while (!iter.done() && iter.isWasm())
-        ++iter;
-
-    if (!iter.isJSJit())
+    OnlyJSJitFrameIter iter(jitActivation);
+    if (iter.done())
         return nullptr;
 
-    jit::JSJitProfilingFrameIterator jitIter(iter.asJSJit().fp());
+    jit::JSJitProfilingFrameIterator jitIter((jit::CommonFrameLayout*) iter.frame().fp());
     MOZ_ASSERT(!jitIter.done());
     return jitIter.fp();
 }

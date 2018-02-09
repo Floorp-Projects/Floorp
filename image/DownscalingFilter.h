@@ -98,10 +98,7 @@ public:
     , mInputRow(0)
     , mOutputRow(0)
     , mHasAlpha(true)
-  {
-    MOZ_ASSERT(gfxPrefs::ImageDownscaleDuringDecodeEnabled(),
-               "Downscaling even though downscale-during-decode is disabled?");
-  }
+  { }
 
   ~DownscalingFilter()
   {

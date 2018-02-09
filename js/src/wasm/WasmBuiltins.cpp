@@ -177,10 +177,6 @@ wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter)
     // is necessary to prevent a DebugFrame from being observed again after we
     // just called onLeaveFrame (which would lead to the frame being re-added
     // to the map of live frames, right as it becomes trash).
-    //
-    // TODO(bug 1360211): when JitActivation and WasmActivation get merged,
-    // we'll be able to switch to ion / other wasm state from here, and we'll
-    // need to do things differently.
 
     MOZ_ASSERT(CallingActivation() == iter.activation());
     MOZ_ASSERT(!iter.done());
@@ -311,6 +307,13 @@ WasmReportUnalignedAccess()
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_UNALIGNED_ACCESS);
 }
 
+static void
+WasmReportInt64JSCall()
+{
+    JSContext* cx = TlsContext.get();
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_TYPE);
+}
+
 static int32_t
 CoerceInPlace_ToInt32(Value* rawVal)
 {
@@ -340,6 +343,43 @@ CoerceInPlace_ToNumber(Value* rawVal)
     }
 
     *rawVal = DoubleValue(dbl);
+    return true;
+}
+
+static int32_t
+CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData, Value* argv)
+{
+    JSContext* cx = CallingActivation()->cx();
+
+    const Code& code = tlsData->instance->code();
+    const FuncExport& fe = code.metadata(code.stableTier()).funcExports[funcExportIndex];
+
+    for (size_t i = 0; i < fe.sig().args().length(); i++) {
+        HandleValue arg = HandleValue::fromMarkedLocation(&argv[i]);
+        switch (fe.sig().args()[i]) {
+          case ValType::I32: {
+            int32_t i32;
+            if (!ToInt32(cx, arg, &i32))
+                return false;
+            argv[i] = Int32Value(i32);
+            break;
+          }
+          case ValType::F32:
+          case ValType::F64: {
+            double dbl;
+            if (!ToNumber(cx, arg, &dbl))
+                return false;
+            // No need to convert double-to-float for f32, it's done inline
+            // in the wasm stub later.
+            argv[i] = DoubleValue(dbl);
+            break;
+          }
+          default: {
+            MOZ_CRASH("unexpected input argument in CoerceInPlace_JitEntry");
+          }
+        }
+    }
+
     return true;
 }
 
@@ -465,6 +505,9 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
       case SymbolicAddress::ReportUnalignedAccess:
         *abiType = Args_General0;
         return FuncCast(WasmReportUnalignedAccess, *abiType);
+      case SymbolicAddress::ReportInt64JSCall:
+        *abiType = Args_General0;
+        return FuncCast(WasmReportInt64JSCall, *abiType);
       case SymbolicAddress::CallImport_Void:
         *abiType = Args_General4;
         return FuncCast(Instance::callImport_void, *abiType);
@@ -483,6 +526,9 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
       case SymbolicAddress::CoerceInPlace_ToNumber:
         *abiType = Args_General1;
         return FuncCast(CoerceInPlace_ToNumber, *abiType);
+      case SymbolicAddress::CoerceInPlace_JitEntry:
+        *abiType = Args_General3;
+        return FuncCast(CoerceInPlace_JitEntry, *abiType);
       case SymbolicAddress::ToInt32:
         *abiType = Args_Int_Double;
         return FuncCast<int32_t (double)>(JS::ToInt32, *abiType);
@@ -619,7 +665,7 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
       case SymbolicAddress::ReportTrap:               // GenerateTrapExit
       case SymbolicAddress::OldReportTrap:            // GenerateOldTrapExit
       case SymbolicAddress::ReportOutOfBounds:        // GenerateOutOfBoundsExit
-      case SymbolicAddress::ReportUnalignedAccess:    // GeneratesUnalignedExit
+      case SymbolicAddress::ReportUnalignedAccess:    // GenerateUnalignedExit
       case SymbolicAddress::CallImport_Void:          // GenerateImportInterpExit
       case SymbolicAddress::CallImport_I32:
       case SymbolicAddress::CallImport_I64:
@@ -669,6 +715,8 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
       case SymbolicAddress::WaitI32:
       case SymbolicAddress::WaitI64:
       case SymbolicAddress::Wake:
+      case SymbolicAddress::CoerceInPlace_JitEntry:
+      case SymbolicAddress::ReportInt64JSCall:
         return true;
       case SymbolicAddress::Limit:
         break;

@@ -793,7 +793,7 @@ CodeRange::CodeRange(Kind kind, uint32_t funcIndex, Offsets offsets)
     u.func.lineOrBytecode_ = 0;
     u.func.beginToNormalEntry_ = 0;
     u.func.beginToTierEntry_ = 0;
-    MOZ_ASSERT(kind == InterpEntry);
+    MOZ_ASSERT(isEntry());
     MOZ_ASSERT(begin_ <= end_);
 }
 

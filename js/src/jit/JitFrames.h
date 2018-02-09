@@ -477,6 +477,7 @@ enum class ExitFrameType : uint8_t
     IonDOMMethod      = 0x4,
     IonOOLNative      = 0x5,
     IonOOLProxy       = 0x6,
+    WasmJitEntry      = 0x7,
     InterpreterStub   = 0xFC,
     VMFunction        = 0xFD,
     LazyLink          = 0xFE,

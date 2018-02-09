@@ -510,6 +510,9 @@ ModuleGenerator::noteCodeRange(uint32_t codeRangeIndex, const CodeRange& codeRan
       case CodeRange::InterpEntry:
         metadataTier_->lookupFuncExport(codeRange.funcIndex()).initInterpEntryOffset(codeRange.begin());
         break;
+      case CodeRange::JitEntry:
+        // Nothing to do: jit entries are linked in the jump tables.
+        break;
       case CodeRange::ImportJitExit:
         metadataTier_->funcImports[codeRange.funcIndex()].initJitExitOffset(codeRange.begin());
         break;
@@ -972,26 +975,6 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     return CodeSegment::create(tier(), masm_, bytecode, *linkDataTier_, *metadata_);
 }
 
-UniqueJumpTable
-ModuleGenerator::createJumpTable(const CodeSegment& codeSegment)
-{
-    MOZ_ASSERT(mode() == CompileMode::Tier1);
-    MOZ_ASSERT(!isAsmJS());
-
-    uint32_t tableSize = env_->numFuncs();
-    UniqueJumpTable jumpTable(js_pod_calloc<void*>(tableSize));
-    if (!jumpTable)
-        return nullptr;
-
-    uint8_t* codeBase = codeSegment.base();
-    for (const CodeRange& codeRange : metadataTier_->codeRanges) {
-        if (codeRange.isFunction())
-            jumpTable[codeRange.funcIndex()] = codeBase + codeRange.funcTierEntry();
-    }
-
-    return jumpTable;
-}
-
 SharedModule
 ModuleGenerator::finishModule(const ShareableBytes& bytecode)
 {
@@ -1001,12 +984,9 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
     if (!codeSegment)
         return nullptr;
 
-    UniqueJumpTable maybeJumpTable;
-    if (mode() == CompileMode::Tier1) {
-        maybeJumpTable = createJumpTable(*codeSegment);
-        if (!maybeJumpTable)
-            return nullptr;
-    }
+    JumpTables jumpTables;
+    if (!jumpTables.init(mode(), *codeSegment, metadataTier_->codeRanges))
+        return nullptr;
 
     UniqueConstBytes maybeDebuggingBytes;
     if (env_->debugEnabled()) {
@@ -1020,7 +1000,7 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
             return nullptr;
     }
 
-    SharedCode code = js_new<Code>(Move(codeSegment), *metadata_, Move(maybeJumpTable));
+    SharedCode code = js_new<Code>(Move(codeSegment), *metadata_, Move(jumpTables));
     if (!code)
         return nullptr;
 
