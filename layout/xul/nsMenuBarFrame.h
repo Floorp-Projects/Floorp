@@ -21,6 +21,12 @@
 
 class nsIContent;
 
+namespace mozilla {
+namespace dom {
+class KeyboardEvent;
+} // namespace dom
+} // namespace mozilla
+
 nsIFrame* NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 class nsMenuBarFrame final : public nsBoxFrame, public nsMenuParent
@@ -85,7 +91,8 @@ public:
   nsMenuFrame* Enter(mozilla::WidgetGUIEvent* aEvent);
 
   // Used to handle ALT+key combos
-  nsMenuFrame* FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool aPeek);
+  nsMenuFrame* FindMenuWithShortcut(mozilla::dom::KeyboardEvent* aKeyEvent,
+                                    bool aPeek);
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {

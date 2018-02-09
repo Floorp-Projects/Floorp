@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/Element.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIFrame.h"
 #include "nsMenuBarFrame.h"
 #include "nsMenuBarListener.h"

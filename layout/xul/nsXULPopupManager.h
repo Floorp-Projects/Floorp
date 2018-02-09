@@ -52,10 +52,15 @@ class nsMenuFrame;
 class nsMenuPopupFrame;
 class nsMenuBarFrame;
 class nsMenuParent;
-class nsIDOMKeyEvent;
 class nsIDocShellTreeItem;
 class nsPIDOMWindowOuter;
 class nsRefreshDriver;
+
+namespace mozilla {
+namespace dom {
+class KeyboardEvent;
+} // namespace dom
+} // namespace mozilla
 
 // when a menu command is executed, the closemenu attribute may be used
 // to define how the menu should be closed up
@@ -670,7 +675,7 @@ public:
    * key is handled by that popup, otherwise if aFrame is null, the key is
    * handled by the active popup or menubar.
    */
-  bool HandleShortcutNavigation(nsIDOMKeyEvent* aKeyEvent,
+  bool HandleShortcutNavigation(mozilla::dom::KeyboardEvent* aKeyEvent,
                                 nsMenuPopupFrame* aFrame);
 
   /**
@@ -694,15 +699,15 @@ public:
    * Handles the keyboard event with keyCode value. Returns true if the event
    * has been handled.
    */
-  bool HandleKeyboardEventWithKeyCode(nsIDOMKeyEvent* aKeyEvent,
+  bool HandleKeyboardEventWithKeyCode(mozilla::dom::KeyboardEvent* aKeyEvent,
                                       nsMenuChainItem* aTopVisibleMenuItem);
 
   // Sets mIgnoreKeys of the Top Visible Menu Item
   nsresult UpdateIgnoreKeys(bool aIgnoreKeys);
 
-  nsresult KeyUp(nsIDOMKeyEvent* aKeyEvent);
-  nsresult KeyDown(nsIDOMKeyEvent* aKeyEvent);
-  nsresult KeyPress(nsIDOMKeyEvent* aKeyEvent);
+  nsresult KeyUp(mozilla::dom::KeyboardEvent* aKeyEvent);
+  nsresult KeyDown(mozilla::dom::KeyboardEvent* aKeyEvent);
+  nsresult KeyPress(mozilla::dom::KeyboardEvent* aKeyEvent);
 
 protected:
   nsXULPopupManager();
