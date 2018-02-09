@@ -45,16 +45,6 @@ nsIConstraintValidation::Validity()
   return mValidity;
 }
 
-nsresult
-nsIConstraintValidation::GetValidity(nsIDOMValidityState** aValidity)
-{
-  NS_ENSURE_ARG_POINTER(aValidity);
-
-  NS_ADDREF(*aValidity = Validity());
-
-  return NS_OK;
-}
-
 void
 nsIConstraintValidation::GetValidationMessage(nsAString& aValidationMessage,
                                               ErrorResult& aError)
