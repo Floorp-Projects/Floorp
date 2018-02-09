@@ -19,28 +19,16 @@
 
     <content>
       <xul:hbox class="textbox-input-box numberbox-input-box" flex="1" xbl:inherits="context,disabled,focused">
-        <html:input class="numberbox-input textbox-input" anonid="input"
-                    xbl:inherits="value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey"/>
+        <html:input class="numberbox-input textbox-input" type="number" anonid="input"
+                    xbl:inherits="value,min,max,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey"/>
       </xul:hbox>
-      <xul:spinbuttons anonid="buttons" xbl:inherits="disabled,hidden=hidespinbuttons"/>
     </content>
 
     <implementation>
       <field name="_valueEntered">false</field>
-      <field name="_spinButtons">null</field>
       <field name="_value">0</field>
 
-      <property name="spinButtons" readonly="true">
-        <getter>
-          <![CDATA[
-            if (!this._spinButtons)
-              this._spinButtons = document.getAnonymousElementByAttribute(this, "anonid", "buttons");
-            return this._spinButtons;
-          ]]>
-        </getter>
-      </property>
-
-      <property name="value" onget="return '' + this.valueNumber"
+      <property name="value" onget="return String(this.valueNumber)"
                              onset="return this.valueNumber = val;"/>
 
       <property name="valueNumber">
@@ -93,47 +81,6 @@
         </setter>
       </property>
 
-      <method name="_modifyUp">
-        <body>
-          <![CDATA[
-            if (this.disabled || this.readOnly)
-              return;
-            var oldval = this.valueNumber;
-            var newval = this._validateValue(this.valueNumber + 1);
-            this.inputField.select();
-            if (oldval != newval)
-              this._fireChange();
-          ]]>
-        </body>
-      </method>
-      <method name="_modifyDown">
-        <body>
-          <![CDATA[
-            if (this.disabled || this.readOnly)
-              return;
-            var oldval = this.valueNumber;
-            var newval = this._validateValue(this.valueNumber - 1);
-            this.inputField.select();
-            if (oldval != newval)
-              this._fireChange();
-          ]]>
-        </body>
-      </method>
-
-      <method name="_enableDisableButtons">
-        <body>
-          <![CDATA[
-            var buttons = this.spinButtons;
-            if (this.disabled || this.readOnly) {
-              buttons.decreaseDisabled = buttons.increaseDisabled = true;
-            } else {
-              buttons.decreaseDisabled = (this.valueNumber <= this.min);
-              buttons.increaseDisabled = (this.valueNumber >= this.max);
-            }
-          ]]>
-        </body>
-      </method>
-
       <method name="_validateValue">
         <parameter name="aValue"/>
         <body>
@@ -151,8 +98,6 @@
             this._valueEntered = false;
             this._value = Number(aValue);
             this.inputField.value = aValue;
-
-            this._enableDisableButtons();
 
             return aValue;
           ]]>
@@ -194,26 +139,9 @@
         ]]>
       </handler>
 
-      <handler event="keypress" keycode="VK_UP">
-        this._modifyUp();
-      </handler>
-
-      <handler event="keypress" keycode="VK_DOWN">
-        this._modifyDown();
-      </handler>
-
-      <handler event="up" preventdefault="true">
-        this._modifyUp();
-      </handler>
-
-      <handler event="down" preventdefault="true">
-        this._modifyDown();
-      </handler>
-
       <handler event="change">
         if (event.originalTarget == this.inputField) {
-          var newval = this.inputField.value;
-          this._validateValue(newval);
+          this._validateValue(this.inputField.value);
         }
       </handler>
     </handlers>
