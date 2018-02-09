@@ -73,8 +73,6 @@ dictionary RTCOfferOptions : RTCOfferAnswerOptions {
   boolean iceRestart = false;
 };
 
-interface RTCDataChannel;
-
 [Pref="media.peerconnection.enabled",
  JSImplementation="@mozilla.org/dom/peerconnection;1",
  Constructor (optional RTCConfiguration configuration,

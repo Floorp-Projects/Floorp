@@ -29,7 +29,7 @@ interface PeerConnectionObserver
   void onGetStatsError(unsigned long name, DOMString message);
 
   /* Data channel callbacks */
-  void notifyDataChannel(DataChannel channel);
+  void notifyDataChannel(RTCDataChannel channel);
 
   /* Notification of one of several types of state changed */
   void onStateChange(PCObserverStateType state);
