@@ -66,6 +66,12 @@ A lesser possibility is that you stumbled upon a TaskCluster platform bug
 where it fails to use new volumes for tasks.
 '''
 
+# The exit code to use when caches should be purged and the task retried.
+# This is EX_OSFILE (from sysexits.h):
+#     Some system file  does not exist, cannot be opened, or has some
+#     sort of error (e.g., syntax error).
+EXIT_PURGE_CACHE = 72
+
 
 def print_line(prefix, m):
     now = datetime.datetime.utcnow().isoformat()
@@ -109,6 +115,7 @@ def run_and_prefix_output(prefix, args, extra_env=None):
         print_line(prefix, data)
 
     return p.wait()
+
 
 WANTED_DIR_MODE = stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR
 
@@ -421,7 +428,7 @@ def main(args):
                 with open(audit_path, 'rb') as fh:
                     print(fh.read())
 
-                return 1
+                return EXIT_PURGE_CACHE
             else:
                 write_audit_entry(audit_path, 'used')
 
@@ -439,7 +446,7 @@ def main(args):
                   'properly' % cache)
 
             write_audit_entry(audit_path, 'missing .cacherequires')
-            return 1
+            return EXIT_PURGE_CACHE
 
     if 'TASKCLUSTER_VOLUMES' in os.environ:
         volumes = os.environ['TASKCLUSTER_VOLUMES'].split(';')

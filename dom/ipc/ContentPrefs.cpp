@@ -107,6 +107,7 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "intl.charset.fallback.utf8_for_file",
   "intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition",
   "javascript.enabled",
+  "javascript.options.array_prototype_values",
   "javascript.options.asmjs",
   "javascript.options.asyncstack",
   "javascript.options.baselinejit",

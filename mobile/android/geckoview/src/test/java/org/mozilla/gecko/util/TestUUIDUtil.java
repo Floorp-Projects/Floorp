@@ -7,15 +7,12 @@
 package org.mozilla.gecko.util;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 
 import static org.junit.Assert.*;
 
 /**
  * Tests for uuid utils.
  */
-@RunWith(TestRunner.class)
 public class TestUUIDUtil {
     private static final String[] validUUIDs = {
         "904cd9f8-af63-4525-8ce0-b9127e5364fa",

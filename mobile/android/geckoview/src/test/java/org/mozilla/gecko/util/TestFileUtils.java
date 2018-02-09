@@ -15,10 +15,10 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.util.FileUtils.FileLastModifiedComparator;
 import org.mozilla.gecko.util.FileUtils.FilenameRegexFilter;
 import org.mozilla.gecko.util.FileUtils.FilenameWhitelistFilter;
+import org.robolectric.RobolectricTestRunner;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,7 +44,7 @@ import static org.mockito.Mockito.*;
 /**
  * Tests the utilities in {@link FileUtils}.
  */
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestFileUtils {
 
     private static final Charset CHARSET = Charset.forName("UTF-8");

@@ -38,18 +38,6 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCo
           "default": False,
           "help": "Run tests with multiple processes. (Desktop builds only)",
           }],
-        [["--enable-stylo"],
-         {"action": "store_true",
-          "dest": "enable_stylo",
-          "default": False,
-          "help": "Run tests with Stylo enabled.",
-          }],
-        [["--disable-stylo"],
-         {"action": "store_true",
-          "dest": "disable_stylo",
-          "default": False,
-          "help": "Run tests with Stylo disabled.",
-          }],
         [["--single-stylo-traversal"],
          {"action": "store_true",
           "dest": "single_stylo_traversal",
@@ -175,21 +163,13 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCo
         test_file = os.path.join(self.awsy_libdir, 'test_memory_usage.py')
         cmd.append(test_file)
 
-        if self.config['disable_stylo']:
-            if self.config['single_stylo_traversal']:
-                self.fatal("--disable-stylo conflicts with --single-stylo-traversal")
-            if self.config['enable_stylo']:
-                self.fatal("--disable-stylo conflicts with --enable-stylo")
-
         if self.config['single_stylo_traversal']:
             env['STYLO_THREADS'] = '1'
         else:
             env['STYLO_THREADS'] = '4'
 
-        if self.config['enable_stylo']:
-            env['STYLO_FORCE_ENABLED'] = '1'
-        if self.config['disable_stylo']:
-            env['STYLO_FORCE_DISABLED'] = '1'
+        # TODO: consider getting rid of this as stylo is enabled by default
+        env['STYLO_FORCE_ENABLED'] = '1'
 
         env['MOZ_UPLOAD_DIR'] = dirs['abs_blob_upload_dir']
         if not os.path.isdir(env['MOZ_UPLOAD_DIR']):
