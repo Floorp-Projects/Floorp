@@ -179,9 +179,9 @@ protected:
 
   void FailWithError(nsresult aRv);
 
-  virtual nsresult CalculateResult() final;
+  nsresult CalculateResult();
 
-  virtual void CallCallback(nsresult rv) final;
+  void CallCallback(nsresult rv);
 
 private:
   NS_IMETHOD Run() final;

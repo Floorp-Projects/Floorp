@@ -34,7 +34,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AccessibleNode);
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
-  virtual dom::ParentObject GetParentObject() const final;
+  dom::ParentObject GetParentObject() const;
 
   void GetRole(nsAString& aRole);
   void GetStates(nsTArray<nsString>& aStates);

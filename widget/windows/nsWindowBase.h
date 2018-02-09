@@ -25,7 +25,7 @@ public:
   /*
    * Return the HWND or null for this widget.
    */
-  virtual HWND GetWindowHandle() final {
+  HWND GetWindowHandle() {
     return static_cast<HWND>(GetNativeData(NS_NATIVE_WINDOW));
   }
 
