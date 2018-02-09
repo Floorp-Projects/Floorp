@@ -41,6 +41,8 @@ RenderCompositorANGLE::RenderCompositorANGLE(RefPtr<widget::CompositorWidget>&& 
 
 RenderCompositorANGLE::~RenderCompositorANGLE()
 {
+  DestroyEGLSurface();
+  MOZ_ASSERT(!mEGLSurface);
 }
 
 bool
@@ -162,13 +164,6 @@ RenderCompositorANGLE::Initialize()
     return false;
   }
 
-  return true;
-}
-
-bool
-RenderCompositorANGLE::Destroy()
-{
-  DestroyEGLSurface();
   return true;
 }
 

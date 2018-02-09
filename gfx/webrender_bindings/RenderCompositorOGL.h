@@ -22,7 +22,6 @@ public:
                       RefPtr<widget::CompositorWidget>&& aWidget);
   virtual ~RenderCompositorOGL();
 
-  bool Destroy() override;
   bool BeginFrame() override;
   void EndFrame() override;
   void Pause() override;
