@@ -1218,8 +1218,8 @@ add_task(async function test_async_onItemMoved_reorder() {
     await PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.menuGuid,
       [mozBmk.guid, fxBmk.guid, tbBmk.guid]);
 
-    // As with setItemIndex, we should only track the folder if we reorder
-    // its children, but we should bump the score for every changed item.
+    // We only track the folder if we reorder its children, but we should
+    // bump the score for every changed item.
     await verifyTrackedItems(["menu"]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
   } finally {

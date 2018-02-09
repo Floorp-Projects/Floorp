@@ -6260,16 +6260,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Usage of migration for each datatype when migration is run through the post-firstrun flow which allows individual datatypes, keyed by the string description of the browser."
   },
-  "FX_MIGRATION_IMPORTED_HOMEPAGE": {
-    "record_in_processes": ["main", "content"],
-    "bug_numbers": [731025, 1298208],
-    "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "65",
-    "kind": "boolean",
-    "keyed": true,
-    "releaseChannelCollection": "opt-out",
-    "description": "Whether the homepage was imported during browser migration. Only available on release builds during firstrun."
-  },
   "FX_MIGRATION_BOOKMARKS_IMPORT_MS": {
     "record_in_processes": ["main", "content"],
     "bug_numbers": [1289436],

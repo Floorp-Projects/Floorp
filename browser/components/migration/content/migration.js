@@ -172,12 +172,12 @@ var MigrationWizard = { /* exported MigrationWizard */
     // check for more than one source profile
     var sourceProfiles = this.spinResolve(this._migrator.getSourceProfiles());
     if (this._skipImportSourcePage) {
-      this._wiz.currentPage.next = "homePageImport";
+      this._wiz.currentPage.next = "migrating";
     } else if (sourceProfiles && sourceProfiles.length > 1) {
       this._wiz.currentPage.next = "selectProfile";
     } else {
       if (this._autoMigrate)
-        this._wiz.currentPage.next = "homePageImport";
+        this._wiz.currentPage.next = "migrating";
       else
         this._wiz.currentPage.next = "importItems";
 
@@ -233,7 +233,7 @@ var MigrationWizard = { /* exported MigrationWizard */
 
     // If we're automigrating or just doing bookmarks don't show the item selection page
     if (this._autoMigrate)
-      this._wiz.currentPage.next = "homePageImport";
+      this._wiz.currentPage.next = "migrating";
   },
 
   // 3 - ImportItems
@@ -288,66 +288,7 @@ var MigrationWizard = { /* exported MigrationWizard */
     this._wiz.canAdvance = oneChecked;
   },
 
-  // 4 - Home Page Selection
-  onHomePageMigrationPageShow() {
-    // only want this on the first run
-    if (!this._autoMigrate) {
-      this._wiz.advance();
-      return;
-    }
-
-    var brandBundle = document.getElementById("brandBundle");
-    var pageTitle, pageDesc, mainStr;
-    // These strings don't exist when not using official branding. If that's
-    // the case, just skip this page.
-    try {
-      pageTitle = brandBundle.getString("homePageMigrationPageTitle");
-      pageDesc = brandBundle.getString("homePageMigrationDescription");
-      mainStr = brandBundle.getString("homePageSingleStartMain");
-    } catch (e) {
-      this._wiz.advance();
-      return;
-    }
-
-    document.getElementById("homePageImport").setAttribute("label", pageTitle);
-    document.getElementById("homePageImportDesc").setAttribute("value", pageDesc);
-
-    this._wiz._adjustWizardHeader();
-
-    var singleStart = document.getElementById("homePageSingleStart");
-    singleStart.setAttribute("label", mainStr);
-    singleStart.setAttribute("value", "DEFAULT");
-
-    var appName = MigrationUtils.getBrowserName(this._source);
-
-    // semi-wallpaper for crash when multiple profiles exist, since we haven't initialized mSourceProfile in places
-    this.spinResolve(this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate));
-
-    var oldHomePageURL = this.spinResolve(this._migrator.getSourceHomePageURL());
-
-    if (oldHomePageURL && appName) {
-      var oldHomePageLabel =
-        brandBundle.getFormattedString("homePageImport", [appName]);
-      var oldHomePage = document.getElementById("oldHomePage");
-      oldHomePage.setAttribute("label", oldHomePageLabel);
-      oldHomePage.setAttribute("value", oldHomePageURL);
-      oldHomePage.removeAttribute("hidden");
-    } else {
-      // if we don't have at least two options, just advance
-      this._wiz.advance();
-    }
-  },
-
-  onHomePageMigrationPageAdvanced() {
-    // we might not have a selectedItem if we're in fallback mode
-    try {
-      var radioGroup = document.getElementById("homePageRadiogroup");
-
-      this._newHomePage = radioGroup.selectedItem.value;
-    } catch (ex) {}
-  },
-
-  // 5 - Migrating
+  // 4 - Migrating
   onMigratingPageShow() {
     this._wiz.getButton("cancel").disabled = true;
     this._wiz.canRewind = false;
@@ -432,27 +373,6 @@ var MigrationWizard = { /* exported MigrationWizard */
           }
         }
         if (this._autoMigrate) {
-          let hasImportedHomepage = !!(this._newHomePage && this._newHomePage != "DEFAULT");
-          Services.telemetry.getKeyedHistogramById("FX_MIGRATION_IMPORTED_HOMEPAGE")
-                            .add(this._source, hasImportedHomepage);
-          if (this._newHomePage) {
-            try {
-              // set homepage properly
-              if (this._newHomePage == "DEFAULT") {
-                Services.prefs.clearUserPref("browser.startup.homepage");
-              } else {
-                Services.prefs.setStringPref("browser.startup.homepage",
-                                             this._newHomePage);
-              }
-
-              var prefFile = Services.dirsvc.get("ProfDS", Components.interfaces.nsIFile);
-              prefFile.append("prefs.js");
-              Services.prefs.savePrefFile(prefFile);
-            } catch (ex) {
-              dump(ex);
-            }
-          }
-
           // We're done now.
           this._wiz.canAdvance = true;
           this._wiz.advance();

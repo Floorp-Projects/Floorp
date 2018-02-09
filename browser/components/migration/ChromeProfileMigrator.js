@@ -192,23 +192,6 @@ ChromeProfileMigrator.prototype.getSourceProfiles =
     return this.__sourceProfiles;
   };
 
-ChromeProfileMigrator.prototype.getSourceHomePageURL =
-  async function Chrome_getSourceHomePageURL() {
-    let chromeUserDataPath = await this._getChromeUserDataPathIfExists();
-    if (!chromeUserDataPath)
-      return "";
-    let prefsPath = OS.Path.join(chromeUserDataPath, "Preferences");
-    if (await OS.File.exists(prefsPath)) {
-      try {
-        let json = await OS.File.read(prefsPath, {encoding: "UTF-8"});
-        return JSON.parse(json).homepage;
-      } catch (e) {
-        Cu.reportError("Error parsing Chrome's preferences file: " + e);
-      }
-    }
-    return "";
-  };
-
 Object.defineProperty(ChromeProfileMigrator.prototype, "sourceLocked", {
   get: function Chrome_sourceLocked() {
     // There is an exclusive lock on some SQLite databases. Assume they are locked for now.
