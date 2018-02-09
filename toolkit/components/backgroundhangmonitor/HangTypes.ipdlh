@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+using class mozilla::TimeDuration from "mozilla/TimeStamp.h";
+
 namespace mozilla {
 
 // The different kinds of hang entries which we're going to need to handle in
@@ -81,7 +83,7 @@ struct HangAnnotation
 // The information about an individual hang which is sent over IPC.
 struct HangDetails
 {
-    uint32_t duration;
+    TimeDuration duration;
     nsCString process;
     nsString remoteType;
     nsCString threadName;
