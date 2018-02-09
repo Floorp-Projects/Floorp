@@ -204,34 +204,11 @@ nsInProcessTabChildGlobal::GetContent(ErrorResult& aError)
   return content.forget();
 }
 
-NS_IMETHODIMP
-nsInProcessTabChildGlobal::GetContent(mozIDOMWindowProxy** aContent)
-{
-  ErrorResult rv;
-  *aContent = GetContent(rv).take();
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-nsInProcessTabChildGlobal::GetDocShell(nsIDocShell** aDocShell)
-{
-  ErrorResult rv;
-  *aDocShell = GetDocShell(rv).take();
-  return rv.StealNSResult();
-}
-
 already_AddRefed<nsIEventTarget>
 nsInProcessTabChildGlobal::GetTabEventTarget()
 {
   nsCOMPtr<nsIEventTarget> target = GetMainThreadEventTarget();
   return target.forget();
-}
-
-NS_IMETHODIMP
-nsInProcessTabChildGlobal::GetTabEventTarget(nsIEventTarget** aTarget)
-{
-  *aTarget = GetTabEventTarget().take();
-  return NS_OK;
 }
 
 void
