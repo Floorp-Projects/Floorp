@@ -67,8 +67,6 @@ ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PlacesBackups",
   "resource://gre/modules/PlacesBackups.jsm");
-ChromeUtils.defineModuleGetter(this, "Deprecated",
-  "resource://gre/modules/Deprecated.jsm");
 
 const Container_Normal = 0;
 const Container_Toolbar = 1;
@@ -159,16 +157,8 @@ this.BookmarkHTMLUtils = Object.freeze({
    * @return {Promise}
    * @resolves When the new bookmarks have been created.
    * @rejects JavaScript exception.
-   * @deprecated passing an nsIFile is deprecated
    */
   async importFromFile(aFilePath, aInitialImport) {
-    if (aFilePath instanceof Ci.nsIFile) {
-      Deprecated.warning("Passing an nsIFile to BookmarksJSONUtils.importFromFile " +
-                         "is deprecated. Please use an OS.File path string instead.",
-                         "https://developer.mozilla.org/docs/JavaScript_OS.File");
-      aFilePath = aFilePath.path;
-    }
-
     notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN, aInitialImport);
     try {
       if (!(await OS.File.exists(aFilePath))) {
@@ -194,33 +184,24 @@ this.BookmarkHTMLUtils = Object.freeze({
    * @return {Promise}
    * @resolves To the exported bookmarks count when the file has been created.
    * @rejects JavaScript exception.
-   * @deprecated passing an nsIFile is deprecated
    */
-  exportToFile: function BHU_exportToFile(aFilePath) {
-    if (aFilePath instanceof Ci.nsIFile) {
-      Deprecated.warning("Passing an nsIFile to BookmarksHTMLUtils.exportToFile " +
-                         "is deprecated. Please use an OS.File path string instead.",
-                         "https://developer.mozilla.org/docs/JavaScript_OS.File");
-      aFilePath = aFilePath.path;
+  async exportToFile(aFilePath) {
+    let [bookmarks, count] = await PlacesBackups.getBookmarksTree();
+    let startTime = Date.now();
+
+    // Report the time taken to convert the tree to HTML.
+    let exporter = new BookmarkExporter(bookmarks);
+    await exporter.exportToFile(aFilePath);
+
+    try {
+      Services.telemetry
+              .getHistogramById("PLACES_EXPORT_TOHTML_MS")
+              .add(Date.now() - startTime);
+    } catch (ex) {
+      Components.utils.reportError("Unable to report telemetry.");
     }
-    return (async function() {
-      let [bookmarks, count] = await PlacesBackups.getBookmarksTree();
-      let startTime = Date.now();
 
-      // Report the time taken to convert the tree to HTML.
-      let exporter = new BookmarkExporter(bookmarks);
-      await exporter.exportToFile(aFilePath);
-
-      try {
-        Services.telemetry
-                .getHistogramById("PLACES_EXPORT_TOHTML_MS")
-                .add(Date.now() - startTime);
-      } catch (ex) {
-        Components.utils.reportError("Unable to report telemetry.");
-      }
-
-      return count;
-    })();
+    return count;
   },
 
   get defaultPath() {
