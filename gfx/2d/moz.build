@@ -20,6 +20,7 @@ EXPORTS.mozilla.gfx += [
     'BezierUtils.h',
     'Blur.h',
     'BorrowedContext.h',
+    'Box.h',
     'Coord.h',
     'CriticalSection.h',
     'DataSurfaceHelpers.h',
