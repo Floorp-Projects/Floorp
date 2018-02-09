@@ -58,7 +58,6 @@ function buildWave(samples, sample_rate) {
   return header;
 }
 
-const Ci = Components.interfaces;
 const CC = Components.Constructor;
 const Timer = CC("@mozilla.org/timer;1", "nsITimer", "initWithCallback");
 const BinaryOutputStream = CC("@mozilla.org/binaryoutputstream;1",

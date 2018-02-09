@@ -8,7 +8,9 @@ module.exports = {
   globals: {
     // Injected into tests via tps.jsm
     "Addons": false,
+    "Addresses": false,
     "Bookmarks": false,
+    "CreditCards": false,
     "EnableEngines": false,
     "EnsureTracking": false,
     "Formdata": false,

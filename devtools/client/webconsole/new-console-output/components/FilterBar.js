@@ -31,7 +31,14 @@ class FilterBar extends Component {
       }).isRequired,
       filterBarVisible: PropTypes.bool.isRequired,
       persistLogs: PropTypes.bool.isRequired,
+      hidePersistLogsCheckbox: PropTypes.bool.isRequired,
       filteredMessagesCount: PropTypes.object.isRequired,
+    };
+  }
+
+  static get defaultProps() {
+    return {
+      hidePersistLogsCheckbox: false,
     };
   }
 
@@ -220,6 +227,7 @@ class FilterBar extends Component {
       filterBarVisible,
       persistLogs,
       filteredMessagesCount,
+      hidePersistLogsCheckbox,
     } = this.props;
 
     let children = [
@@ -248,7 +256,7 @@ class FilterBar extends Component {
           placeholder: l10n.getStr("webconsole.filterInput.placeholder"),
           onInput: this.onSearchInput
         }),
-        FilterCheckbox({
+        !hidePersistLogsCheckbox && FilterCheckbox({
           label: l10n.getStr("webconsole.enablePersistentLogs.label"),
           title: l10n.getStr("webconsole.enablePersistentLogs.tooltip"),
           onChange: this.onChangePersistToggle,

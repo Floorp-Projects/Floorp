@@ -1,5 +1,3 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 const CC = Components.Constructor;
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",

@@ -37,6 +37,7 @@ let requestStore = new PaymentsStore({
     },
   },
   selectedPaymentCard: null,
+  selectedPaymentCardSecurityCode: null,
   selectedShippingAddress: null,
   savedAddresses: {},
   savedBasicCards: {},
