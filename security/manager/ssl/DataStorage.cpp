@@ -591,10 +591,7 @@ DataStorage::WaitForReady()
 
   MonitorAutoLock readyLock(mReadyMonitor);
   while (!mReady) {
-    nsresult rv = readyLock.Wait();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      break;
-    }
+    readyLock.Wait();
   }
   MOZ_ASSERT(mReady);
 }
