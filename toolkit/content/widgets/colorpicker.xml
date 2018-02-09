@@ -231,7 +231,8 @@
             if (aTarget.hasAttribute("on" + aEventName)) {
               var fn = new Function("event", aTarget.getAttribute("on" + aEventName));
               var rv = fn.call(aTarget, event);
-              if (!rv)
+              // eslint-disable-next-line mozilla/no-compare-against-boolean-literals
+              if (rv == false)
                 cancel = true;
             }
             return !cancel;
@@ -486,7 +487,8 @@
             if (aTarget.hasAttribute("on" + aEventName)) {
               var fn = new Function("event", aTarget.getAttribute("on" + aEventName));
               var rv = fn.call(aTarget, event);
-              if (!rv)
+              // eslint-disable-next-line mozilla/no-compare-against-boolean-literals
+              if (rv == false)
                 cancel = true;
             }
             return !cancel;

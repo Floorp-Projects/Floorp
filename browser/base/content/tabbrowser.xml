@@ -499,12 +499,14 @@
           if (!aBrowser)
             aBrowser = this.mCurrentBrowser;
 
-          if (aCallGlobalListeners &&
+          // eslint-disable-next-line mozilla/no-compare-against-boolean-literals
+          if (aCallGlobalListeners != false &&
               aBrowser == this.mCurrentBrowser) {
             callListeners(this.mProgressListeners, aArguments);
           }
 
-          if (aCallTabsListeners) {
+          // eslint-disable-next-line mozilla/no-compare-against-boolean-literals
+          if (aCallTabsListeners != false) {
             aArguments.unshift(aBrowser);
 
             callListeners(this.mTabsProgressListeners, aArguments);
