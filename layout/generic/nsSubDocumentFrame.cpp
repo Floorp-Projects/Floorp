@@ -41,7 +41,6 @@
 #include "nsContentUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIDOMMutationEvent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/HTMLFrameElement.h"
 

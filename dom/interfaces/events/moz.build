@@ -18,7 +18,6 @@ XPIDL_SOURCES += [
     'nsIDOMFocusEvent.idl',
     'nsIDOMMouseEvent.idl',
     'nsIDOMMouseScrollEvent.idl',
-    'nsIDOMMutationEvent.idl',
     'nsIDOMNotifyPaintEvent.idl',
     'nsIDOMNSEvent.idl',
     'nsIDOMPaintRequest.idl',
