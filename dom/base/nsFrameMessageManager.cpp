@@ -164,10 +164,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameMessageManager)
   /* Frame message managers (non-process message managers) support nsIFrameScriptLoader. */
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFrameScriptLoader,
                                      mChrome && !mIsProcessManager)
-
-  /* Process message managers (process message managers) support nsIProcessScriptLoader. */
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIProcessScriptLoader,
-                                     mChrome && mIsProcessManager)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameMessageManager)
@@ -505,30 +501,6 @@ nsFrameMessageManager::RemoveDelayedFrameScript(const nsAString& aURL)
 
 NS_IMETHODIMP
 nsFrameMessageManager::GetDelayedFrameScripts(JSContext* aCx, JS::MutableHandle<JS::Value> aList)
-{
-  return GetDelayedScripts(aCx, aList);
-}
-
-// nsIProcessScriptLoader
-
-NS_IMETHODIMP
-nsFrameMessageManager::LoadProcessScript(const nsAString& aURL,
-                                         bool aAllowDelayedLoad)
-{
-  ErrorResult rv;
-  LoadScript(aURL, aAllowDelayedLoad, false, rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::RemoveDelayedProcessScript(const nsAString& aURL)
-{
-  RemoveDelayedScript(aURL);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::GetDelayedProcessScripts(JSContext* aCx, JS::MutableHandle<JS::Value> aList)
 {
   return GetDelayedScripts(aCx, aList);
 }
