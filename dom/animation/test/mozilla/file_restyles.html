@@ -753,6 +753,39 @@ waitForAllPaints(() => {
     }
   );
 
+  add_task(async function restyling_animations_in_visibility_changed_parent() {
+    var parentDiv = addDiv(null, { style: 'visibility: hidden' });
+    var div = addDiv(null, { style: 'animation: background-color 100s;' });
+    parentDiv.appendChild(div);
+
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+    var markers = await observeStyling(5);
+
+    todo_is(markers.length, 0,
+            'Animations running in visibility hidden parent should never cause ' +
+            'restyles');
+
+    parentDiv.style.visibility = 'visible';
+    await waitForNextFrame();
+
+    var markers = await observeStyling(5);
+    is(markers.length, 5,
+       'Animations that was in visibility hidden parent should not ' +
+       'throttle restyling any more');
+
+    parentDiv.style.visibility = 'hidden';
+    await waitForNextFrame();
+
+    var markers = await observeStyling(5);
+    todo_is(markers.length, 0,
+            'Animations that the parent element became visible should throttle ' +
+            'restyling again');
+
+    await ensureElementRemoval(parentDiv);
+  });
+
   add_task_if_omta_enabled(async function no_restyling_compositor_animations_after_pause_is_called() {
     var div = addDiv(null, { style: 'animation: opacity 100s' });
     var animation = div.getAnimations()[0];
