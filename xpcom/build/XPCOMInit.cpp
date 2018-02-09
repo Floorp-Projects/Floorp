@@ -1008,15 +1008,14 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   // down, any remaining objects that could be holding NSS resources (should)
   // have been released, so we can safely shut down NSS.
   if (NSS_IsInitialized()) {
-    // It would be nice to enforce that this succeeds, at least on debug builds.
-    // This would alert us to NSS resource leaks. Unfortunately there are some
-    // architectural roadblocks in the way. Some tests (e.g. pkix gtests) need
-    // to be re-worked to release their NSS resources when they're done. In the
-    // meantime, just emit a warning. Chasing down these leaks is tracked in
-    // bug 1230312.
     if (NSS_Shutdown() != SECSuccess) {
-      NS_WARNING("NSS_Shutdown failed - some NSS resources are still in use "
-                 "(see bugs 1417680 and 1230312)");
+      // If you're seeing this crash and/or warning, some NSS resources are
+      // still in use (see bugs 1417680 and 1230312).
+#if defined(DEBUG) && !defined(ANDROID)
+      MOZ_CRASH("NSS_Shutdown failed");
+#else
+      NS_WARNING("NSS_Shutdown failed");
+#endif
     }
   }
 
