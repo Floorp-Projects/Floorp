@@ -10,6 +10,7 @@
 #include "nsCRT.h"
 #include "nsError.h"
 #include "nsString.h"
+#include "nsGlobalWindowInner.h"
 #include "nsReadableUtils.h"
 #include "nsJSProtocolHandler.h"
 #include "nsStringStream.h"
@@ -655,8 +656,9 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
         name = "nsJSChannel::NotifyListener";
     }
 
-    nsresult rv = NS_DispatchToCurrentThread(
-      mozilla::NewRunnableMethod(name, this, method));
+    nsCOMPtr<nsIRunnable> runnable = mozilla::NewRunnableMethod(name, this, method);
+    nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(mOriginalInnerWindow);
+    nsresult rv = window->Dispatch(mozilla::TaskCategory::Other, runnable.forget());
 
     if (NS_FAILED(rv)) {
         loadGroup->RemoveRequest(this, nullptr, rv);

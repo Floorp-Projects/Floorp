@@ -130,6 +130,7 @@ class WasmInstanceObject : public NativeObject
     static const unsigned EXPORTS_SLOT = 2;
     static const unsigned SCOPES_SLOT = 3;
     static const unsigned INSTANCE_SCOPE_SLOT = 4;
+
     static const ClassOps classOps_;
     static bool exportsGetterImpl(JSContext* cx, const CallArgs& args);
     static bool exportsGetter(JSContext* cx, unsigned argc, Value* vp);

@@ -7,13 +7,13 @@
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 
 const GridDisplaySettings = createFactory(require("./GridDisplaySettings"));
 const GridList = createFactory(require("./GridList"));
 const GridOutline = createFactory(require("./GridOutline"));
 
 const Types = require("../types");
-const { getStr } = require("../utils/l10n");
 
 class Grid extends PureComponent {
   static get propTypes() {

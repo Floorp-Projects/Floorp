@@ -1649,10 +1649,6 @@ Simulator::handleWasmInterrupt()
     if (!segment || !segment->containsCodePC(pc))
         return;
 
-    // fp can be null during the prologue/epilogue of the entry function.
-    if (!fp)
-        return;
-
     startInterrupt(activation);
     set_pc(int32_t(segment->interruptCode()));
 }

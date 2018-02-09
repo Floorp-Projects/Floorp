@@ -457,6 +457,10 @@ static constexpr Register ABINonArgReg0 = r8;
 static constexpr Register ABINonArgReg1 = r9;
 static constexpr Register ABINonArgReg2 = r10;
 
+// This register may be volatile or nonvolatile. Avoid d31 which is the
+// ScratchDoubleReg.
+static constexpr FloatRegister ABINonArgDoubleReg = { FloatRegisters::s16, FloatRegisters::Single };
+
 // These registers may be volatile or nonvolatile.
 // Note: these three registers are all guaranteed to be different
 static constexpr Register ABINonArgReturnReg0 = r8;
