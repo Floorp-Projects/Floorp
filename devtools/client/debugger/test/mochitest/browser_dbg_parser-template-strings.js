@@ -11,7 +11,7 @@
 
 function test() {
   let { Parser, SyntaxTreeVisitor } =
-    Cu.import("resource://devtools/shared/Parser.jsm", {});
+    ChromeUtils.import("resource://devtools/shared/Parser.jsm", {});
 
   let ast = Parser.reflectionAPI.parse("`foo${i}bar`");
   let nodes = SyntaxTreeVisitor.filter(ast, e => e.type == "TemplateLiteral");

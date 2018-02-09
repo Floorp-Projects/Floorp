@@ -6,7 +6,7 @@
 "use strict";
 
 function run_test() {
-  const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
   const MDN_URL = "https://developer.mozilla.org/docs/";
   const GTM_PARAMS_NM = "?utm_source=mozilla" +
     "&utm_medium=devtools-netmonitor&utm_campaign=default";

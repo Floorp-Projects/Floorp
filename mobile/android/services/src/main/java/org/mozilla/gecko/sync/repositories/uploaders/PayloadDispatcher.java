@@ -96,6 +96,10 @@ class PayloadDispatcher {
             batchWhiteboard.clearSuccessRecordGuids();
         }
 
+        if (isCommit || !batchWhiteboard.getInBatchingMode()) {
+            uploader.sessionStoreDelegate.onBatchCommitted();
+        }
+
         // If this was our very last commit, we're done storing records.
         // Get Last-Modified timestamp from the response, and pass it upstream.
         if (isLastPayload) {

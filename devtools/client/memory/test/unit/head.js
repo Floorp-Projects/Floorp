@@ -3,8 +3,8 @@
 
 "use strict";
 
-var { console } = Cu.import("resource://gre/modules/Console.jsm", {});
-var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var { console } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
 var Services = require("Services");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");

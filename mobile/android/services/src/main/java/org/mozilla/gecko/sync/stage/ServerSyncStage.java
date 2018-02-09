@@ -44,6 +44,7 @@ import org.mozilla.gecko.sync.telemetry.TelemetryCollector;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
@@ -632,14 +633,12 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
     int outboundCountStored = synchronizerSession.getOutboundCountStored();
     int outboundCountFailed = synchronizerSession.getOutboundCountFailed();
 
+    telemetryStageCollector.outbound = synchronizerSession.getOutboundBatches();
     telemetryStageCollector.finished = stageCompleteTimestamp;
     telemetryStageCollector.inbound = inboundCount;
     telemetryStageCollector.inboundStored = inboundCountStored;
     telemetryStageCollector.inboundFailed = inboundCountFailed;
     telemetryStageCollector.reconciled = inboundCountReconciled;
-    telemetryStageCollector.outbound = outboundCount;
-    telemetryStageCollector.outboundStored = outboundCountStored;
-    telemetryStageCollector.outboundFailed = outboundCountFailed;
 
     Logger.info(LOG_TAG, "Stage " + getEngineName()
             + " received " + inboundCount

@@ -278,7 +278,7 @@ function getSessionHistory(browser) {
   return ContentTask.spawn(browser, {}, async function () {
     /* eslint-disable no-undef */
     const { SessionHistory } =
-      Cu.import("resource://gre/modules/sessionstore/SessionHistory.jsm", {});
+      ChromeUtils.import("resource://gre/modules/sessionstore/SessionHistory.jsm", {});
     return SessionHistory.collect(docShell);
     /* eslint-enable no-undef */
   });

@@ -38,7 +38,6 @@ py3:
         - testing/web-platform
         - third_party
         - toolkit
-        - tools/git
         - tools/jprof
         - tools/profiler
         - tools/rb
@@ -48,3 +47,4 @@ py3:
     extensions: ['py']
     type: external
     payload: python.compat:lintpy3
+    setup: python.compat:setuppy3

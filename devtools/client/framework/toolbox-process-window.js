@@ -6,7 +6,7 @@
 
 "use strict";
 
-var { loader, require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var { loader, require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 // Require this module to setup core modules
 loader.require("devtools/client/framework/devtools-browser");
 
@@ -143,6 +143,7 @@ function evaluateTestScript(script, toolbox) {
   let sandbox = Cu.Sandbox(window);
   sandbox.window = window;
   sandbox.toolbox = toolbox;
+  sandbox.ChromeUtils = ChromeUtils;
   Cu.evalInSandbox(script, sandbox);
 }
 

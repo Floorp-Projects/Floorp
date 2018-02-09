@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
+const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", {});
 
 this.NewConsoleOutput = function (parentNode, jsterm, toolbox, owner, serviceContainer) {
   // Initialize module loader and load all modules of the new inline

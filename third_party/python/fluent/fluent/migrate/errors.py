@@ -2,6 +2,10 @@ class MigrationError(ValueError):
     pass
 
 
+class EmptyLocalizationError(MigrationError):
+    pass
+
+
 class NotSupportedError(MigrationError):
     pass
 

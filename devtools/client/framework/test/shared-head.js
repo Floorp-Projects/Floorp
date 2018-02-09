@@ -15,7 +15,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr, Constructor: CC}
 
 function scopedCuImport(path) {
   const scope = {};
-  Cu.import(path, scope);
+  ChromeUtils.import(path, scope);
   return scope;
 }
 
@@ -696,7 +696,7 @@ function waitForTitleChange(toolbox) {
  * @returns {HttpServer}
  */
 function createTestHTTPServer() {
-  const {HttpServer} = Cu.import("resource://testing-common/httpd.js", {});
+  const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js", {});
   let server = new HttpServer();
 
   registerCleanupFunction(function* cleanup() {

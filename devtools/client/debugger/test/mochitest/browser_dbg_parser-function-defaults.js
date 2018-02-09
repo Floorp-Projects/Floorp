@@ -11,7 +11,7 @@
 
 function test() {
   let { Parser, ParserHelpers, SyntaxTreeVisitor } =
-    Cu.import("resource://devtools/shared/Parser.jsm", {});
+    ChromeUtils.import("resource://devtools/shared/Parser.jsm", {});
 
   function verify(source, predicate, string) {
     let ast = Parser.reflectionAPI.parse(source);

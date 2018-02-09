@@ -9,7 +9,7 @@
 "use strict";
 
 const { PromisesFront } = require("devtools/shared/fronts/promises");
-const { setTimeout } = Cu.import("resource://gre/modules/Timer.jsm", {});
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
 
 var EventEmitter = require("devtools/shared/event-emitter");
 

@@ -50,11 +50,9 @@ py2:
         - third_party
         - toolkit
         - tools/docs
-        - tools/git/eslintvalidate.py
         - tools/jprof/split-profile.py
         - tools/lint
         - tools/mach_commands.py
-        - tools/mercurial/eslintvalidate.py
         - tools/power/mach_commands.py
         - tools/profiler
         - tools/rb
@@ -63,3 +61,4 @@ py2:
     extensions: ['py']
     type: external
     payload: python.compat:lintpy2
+    setup: python.compat:setuppy2

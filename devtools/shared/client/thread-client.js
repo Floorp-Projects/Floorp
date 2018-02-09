@@ -4,8 +4,7 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
-const promise = Cu.import("resource://devtools/shared/deprecated-sync-thenables.js", {}).Promise;
+const promise = require("devtools/shared/deprecated-sync-thenables");
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");

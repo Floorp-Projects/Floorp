@@ -17,7 +17,7 @@ Bug 898485 - [app manager] Implement an abstract connection manager
 window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
-  const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
   const {DebuggerServer} = require("devtools/server/main");
   const Services = require("Services");
 

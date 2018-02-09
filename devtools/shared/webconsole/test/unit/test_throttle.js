@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const defer = require("devtools/shared/defer");
 const { NetworkThrottleManager } =
       require("devtools/shared/webconsole/throttle");

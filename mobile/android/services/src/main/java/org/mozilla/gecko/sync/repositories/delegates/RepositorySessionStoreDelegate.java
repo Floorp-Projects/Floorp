@@ -25,5 +25,7 @@ public interface RepositorySessionStoreDelegate {
   void onRecordStoreSucceeded(String guid);
   void onStoreCompleted();
   void onStoreFailed(Exception e);
+  // Only relevant for store batches, and exists to help us record correct telemetry.
+  void onBatchCommitted();
   RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor);
 }

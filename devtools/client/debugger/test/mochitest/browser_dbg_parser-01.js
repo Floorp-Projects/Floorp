@@ -8,7 +8,7 @@
  */
 
 function test() {
-  let { Parser } = Cu.import("resource://devtools/shared/Parser.jsm", {});
+  let { Parser } = ChromeUtils.import("resource://devtools/shared/Parser.jsm", {});
 
   let source = "let x = 42;";
   let parser = new Parser();

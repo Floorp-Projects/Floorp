@@ -707,10 +707,6 @@ class SyncTelemetryImpl {
       return { name: "unexpectederror", error };
     }
 
-    if (error.failureCode) {
-      return { name: "othererror", error: error.failureCode };
-    }
-
     if (error instanceof AuthenticationError) {
       return { name: "autherror", from: error.source };
     }
@@ -721,6 +717,10 @@ class SyncTelemetryImpl {
 
     if (httpCode) {
       return { name: "httperror", code: httpCode };
+    }
+
+    if (error.failureCode) {
+      return { name: "othererror", error: error.failureCode };
     }
 
     if (error.result) {

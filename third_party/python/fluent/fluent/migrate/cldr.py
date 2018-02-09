@@ -48,7 +48,7 @@ def get_plural_categories(lang):
         fallback_lang, _, _ = lang.rpartition('-')
 
         if fallback_lang == '':
-            raise RuntimeError('Unknown language: {}'.format(lang))
+            raise RuntimeError('Missing plural categories for {}'.format(lang))
 
         return get_plural_categories(fallback_lang)
 

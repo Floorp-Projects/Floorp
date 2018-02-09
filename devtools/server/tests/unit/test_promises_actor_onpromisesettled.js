@@ -8,7 +8,7 @@
 
 "use strict";
 
-Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
+ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
 
 const { PromisesFront } = require("devtools/shared/fronts/promises");
 

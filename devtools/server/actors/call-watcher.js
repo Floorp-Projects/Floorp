@@ -7,7 +7,10 @@
 
 const {Ci, Cu} = require("chrome");
 const protocol = require("devtools/shared/protocol");
-const {serializeStack, parseStack} = Cu.import("resource://devtools/shared/base-loader.js", {});
+const ChromeUtils = require("ChromeUtils");
+// base-loader.js is a JSM without .jsm file extension, so it has to be loaded
+// via ChromeUtils.import and not require() which would consider it as a CommonJS module
+const {serializeStack, parseStack} = ChromeUtils.import("resource://devtools/shared/base-loader.js", {});
 
 const { functionCallSpec, callWatcherSpec } = require("devtools/shared/specs/call-watcher");
 const { CallWatcherFront } = require("devtools/shared/fronts/call-watcher");

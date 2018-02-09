@@ -44,6 +44,11 @@ public class ExpectSuccessRepositorySessionStoreDelegate extends
   }
 
   @Override
+  public void onBatchCommitted() {
+    log("Batch committed");
+  }
+
+  @Override
   public RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor) {
     return this;
   }

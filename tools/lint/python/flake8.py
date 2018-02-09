@@ -6,9 +6,9 @@ import json
 import os
 import signal
 import subprocess
-import sys
 from collections import defaultdict
 
+import which
 from mozprocess import ProcessHandlerMixin
 
 from mozlint import result
@@ -90,12 +90,23 @@ class Flake8Process(ProcessHandlerMixin):
         signal.signal(signal.SIGINT, orig)
 
 
+def get_flake8_binary():
+    """
+    Returns the path of the first flake8 binary available
+    if not found returns None
+    """
+    try:
+        return which.which('flake8')
+    except which.WhichError:
+        return None
+
+
 def _run_pip(*args):
     """
     Helper function that runs pip with subprocess
     """
     try:
-        subprocess.check_output([sys.executable, '-m', 'pip'] + list(args),
+        subprocess.check_output(['pip'] + list(args),
                                 stderr=subprocess.STDOUT)
         return True
     except subprocess.CalledProcessError as e:
@@ -132,8 +143,9 @@ def setup(root):
 
 
 def lint(paths, config, **lintargs):
+    binary = get_flake8_binary()
     cmdargs = [
-        sys.executable, '-m', 'flake8',
+        binary,
         '--format', '{"path":"%(path)s","lineno":%(row)s,'
                     '"column":%(col)s,"rule":"%(code)s","message":"%(text)s"}',
     ]

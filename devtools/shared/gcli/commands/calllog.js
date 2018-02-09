@@ -116,7 +116,7 @@ exports.items = [
 
       if (args.sourceType == "jsm") {
         try {
-          globalObj = Cu.import(args.source, {});
+          globalObj = require(args.source);
         } catch (e) {
           return l10n.lookup("callLogChromeInvalidJSM");
         }

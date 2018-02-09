@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
 
 this.EXPORTED_SYMBOLS = ["DOMHelpers"];

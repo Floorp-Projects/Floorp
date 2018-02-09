@@ -14,7 +14,7 @@ Bug 966991 - Test DebuggerServer.connectToChild
 <script type="application/javascript">
 "use strict";
 
-let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+let { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 let { DebuggerClient } = require("devtools/shared/client/debugger-client");
 let { DebuggerServer } = require("devtools/server/main");
 
@@ -42,7 +42,7 @@ function runTests() {
   // this fake actor is destroyed.
   mm.loadFrameScript("data:text/javascript,new " + function FrameScriptScope() {
     /* eslint-disable no-shadow */
-    const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     const { DebuggerServer } = require("devtools/server/main");
     /* eslint-enable no-shadow */
 

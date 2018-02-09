@@ -19,7 +19,7 @@ function test() {
 function consoleOpened(HUD) {
   let {JSPropertyProvider} = require("devtools/shared/webconsole/js-property-provider");
 
-  let tmp = Cu.import("resource://gre/modules/jsdebugger.jsm", {});
+  let tmp = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm", {});
   tmp.addDebuggerToGlobal(tmp);
   let dbg = new tmp.Debugger();
 

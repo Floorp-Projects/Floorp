@@ -10,7 +10,7 @@
 const ADDON_PATH = "addon-webext-contentscript.xpi";
 const TAB_URL = EXAMPLE_URL + "doc_script_webext_contentscript.html";
 
-const {WebExtensionPolicy} = Cu.getGlobalForObject(Cu.import("resource://gre/modules/Extension.jsm", {}));
+const {WebExtensionPolicy} = Cu.getGlobalForObject(ChromeUtils.import("resource://gre/modules/Extension.jsm", {}));
 
 function test() {
   let gPanel, gDebugger;

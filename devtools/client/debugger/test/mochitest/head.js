@@ -14,18 +14,18 @@ Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtool
 var gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.setBoolPref("devtools.debugger.log", false);
 
-var { BrowserToolboxProcess } = Cu.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
+var { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
 var { DebuggerServer } = require("devtools/server/main");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 var ObjectClient = require("devtools/shared/client/object-client");
-var { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
+var { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
 var EventEmitter = require("devtools/shared/old-event-emitter");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 
 const chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
 
 // Override promise with deprecated-sync-thenables
-promise = Cu.import("resource://devtools/shared/deprecated-sync-thenables.js", {}).Promise;
+promise = require("devtools/shared/deprecated-sync-thenables");
 
 const EXAMPLE_URL = "http://example.com/browser/devtools/client/debugger/test/mochitest/";
 const FRAME_SCRIPT_URL = getRootDirectory(gTestPath) + "code_frame-script.js";

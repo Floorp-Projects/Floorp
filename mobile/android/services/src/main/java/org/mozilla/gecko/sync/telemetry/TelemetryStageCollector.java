@@ -5,6 +5,9 @@
 package org.mozilla.gecko.sync.telemetry;
 
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.synchronizer.StoreBatchTracker;
+
+import java.util.List;
 
 /**
  * Gathers telemetry details about an individual sync stage.
@@ -21,12 +24,10 @@ public class TelemetryStageCollector {
     public volatile int inbound = 0;
     public volatile int inboundStored = 0;
     public volatile int inboundFailed = 0;
-    public volatile int outbound = 0;
-    public volatile int outboundStored = 0;
-    public volatile int outboundFailed = 0;
     public volatile int reconciled = 0;
     public volatile ExtendedJSONObject error = null;
     public volatile ExtendedJSONObject validation = null;
+    public volatile List<StoreBatchTracker.Batch> outbound = null;
 
     public TelemetryStageCollector(TelemetryCollector syncCollector) {
         this.syncCollector = syncCollector;

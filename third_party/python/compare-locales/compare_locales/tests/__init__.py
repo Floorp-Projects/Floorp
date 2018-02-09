@@ -46,5 +46,5 @@ class ParserTestMixin():
                 self.assertEqual(entity.key, ref[0])
                 self.assertEqual(entity.val, ref[1])
             else:
-                self.assertEqual(type(entity).__name__, ref[0])
+                self.assertIsInstance(entity, ref[0])
                 self.assertIn(ref[1], entity.all)

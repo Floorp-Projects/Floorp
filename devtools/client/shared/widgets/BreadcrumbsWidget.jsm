@@ -7,7 +7,7 @@
 
 const ENSURE_SELECTION_VISIBLE_DELAY = 50; // ms
 
-const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const { ViewHelpers, setNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 const EventEmitter = require("devtools/shared/old-event-emitter");
 

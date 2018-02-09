@@ -10,7 +10,7 @@
  */
 
 window.addEventListener("load", function () {
-  const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
   // Timeout for the subscribe XHR.
   const REQUEST_TIMEOUT = 5000;

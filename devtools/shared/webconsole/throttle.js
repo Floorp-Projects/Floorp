@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {CC, Ci, Cu, Cc} = require("chrome");
+const {CC, Ci, Cc} = require("chrome");
 
 const ArrayBufferInputStream = CC("@mozilla.org/io/arraybuffer-input-stream;1",
                                   "nsIArrayBufferInputStream");
@@ -18,7 +18,7 @@ loader.lazyServiceGetter(this, "gActivityDistributor",
                          "nsIHttpActivityDistributor");
 
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
-const {setTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
+const {setTimeout} = require("resource://gre/modules/Timer.jsm");
 
 /**
  * Construct a new nsIStreamListener that buffers data and provides a
