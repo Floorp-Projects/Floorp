@@ -8,6 +8,10 @@
  *
  *   * `baseDomain`, required: The base domain that further checks and user
  *     agents override are applied to. This does not include subdomains.
+ *   * `applications`: Array of applications this override is valid in.
+ *     Defaults to ["firefox"], can be one or more of:
+ *     * `firefox`: Firefox Desktop (regardless of the operating system)
+ *     * `fennec`: Firefox for Android
  *   * `uriMatcher`: Function that gets the requested URI passed in the first
  *     argument and needs to return boolean whether or not the override should
  *     be applied. If not provided, the user agent override will be applied
@@ -18,20 +22,23 @@
  *
  * Examples:
  *
- * Gets applied for all requests to mozilla.org and subdomains:
+ * Gets applied for all requests to mozilla.org and subdomains made on
+ * Firefox Desktop:
  *
  * ```
  *   {
  *     baseDomain: "mozilla.org",
+ *     uriMatcher: (uri) => uri.includes("/app/"),
  *     uaTransformer: (originalUA) => `Ohai Mozilla, it's me, ${originalUA}`
  *   }
  * ```
  *
- * Applies to *.example.com/app/*:
+ * Applies to *.example.com/app/* on Firefox for Android:
  *
  * ```
  *   {
  *     baseDomain: "example.com",
+ *     applications: ["fennec"],
  *     uriMatcher: (uri) => uri.includes("/app/"),
  *     uaTransformer: (originalUA) => originalUA.replace("Firefox", "Otherfox")
  *   }
@@ -49,6 +56,7 @@ const UAOverrides = [
    */
   {
     baseDomain: "schub.io",
+    applications: ["firefox", "fennec"],
     uriMatcher: (uri) => uri.includes("webcompat-ua-dummy.schub.io"),
     uaTransformer: (originalUA) => {
       let prefix = originalUA.substr(0, originalUA.indexOf(")") + 1);
