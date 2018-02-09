@@ -11,7 +11,7 @@ contract @mozilla.org/autocomplete/search;1?name=places-tag-autocomplete {1dcc23
 # nsPlacesExpiration.js
 component {705a423f-2f69-42f3-b9fe-1517e0dee56f} nsPlacesExpiration.js
 contract @mozilla.org/places/expiration;1 {705a423f-2f69-42f3-b9fe-1517e0dee56f}
-category history-observers nsPlacesExpiration @mozilla.org/places/expiration;1
+category places-init-complete nsPlacesExpiration @mozilla.org/places/expiration;1
 
 # PlacesCategoriesStarter.js
 component {803938d5-e26d-4453-bf46-ad4b26e41114} PlacesCategoriesStarter.js
