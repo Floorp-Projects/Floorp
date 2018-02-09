@@ -400,26 +400,10 @@ interface nsIMessageManagerGlobal : nsISyncMessageSender
 [uuid(694e367c-aa25-4446-8499-2c527c4bd838)]
 interface nsIContentFrameMessageManager : nsIMessageManagerGlobal
 {
-  /**
-   * The current top level window in the frame or null.
-   */
-  readonly attribute mozIDOMWindowProxy content;
-
-  /**
-   * The top level docshell or null.
-   */
-  readonly attribute nsIDocShell docShell;
-
-  /**
-   * Returns the SchedulerEventTarget corresponding to the TabGroup
-   * for this frame.
-   */
-  readonly attribute nsIEventTarget tabEventTarget;
 };
 
 [uuid(b39a3324-b574-4f85-8cdb-274d04f807ef)]
 interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
 {
   [notxpcom] nsIContent getOwnerContent();
-  [notxpcom] void cacheFrameLoader(in nativeFrameLoader aFrameLoader);
 };

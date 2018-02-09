@@ -3569,14 +3569,6 @@ TabChildGlobal::GetContent(ErrorResult& aError)
   return window.forget();
 }
 
-NS_IMETHODIMP
-TabChildGlobal::GetContent(mozIDOMWindowProxy** aContent)
-{
-  ErrorResult rv;
-  *aContent = GetContent(rv).take();
-  return rv.StealNSResult();
-}
-
 already_AddRefed<nsIDocShell>
 TabChildGlobal::GetDocShell(ErrorResult& aError)
 {
@@ -3588,26 +3580,11 @@ TabChildGlobal::GetDocShell(ErrorResult& aError)
   return window.forget();
 }
 
-NS_IMETHODIMP
-TabChildGlobal::GetDocShell(nsIDocShell** aDocShell)
-{
-  ErrorResult rv;
-  *aDocShell = GetDocShell(rv).take();
-  return rv.StealNSResult();
-}
-
 already_AddRefed<nsIEventTarget>
 TabChildGlobal::GetTabEventTarget()
 {
   nsCOMPtr<nsIEventTarget> target = EventTargetFor(TaskCategory::Other);
   return target.forget();
-}
-
-NS_IMETHODIMP
-TabChildGlobal::GetTabEventTarget(nsIEventTarget** aTarget)
-{
-  *aTarget = GetTabEventTarget().take();
-  return NS_OK;
 }
 
 nsIPrincipal*

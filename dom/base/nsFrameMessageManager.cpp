@@ -904,27 +904,6 @@ nsFrameMessageManager::PrivateNoteIntentionalCrash()
 }
 
 NS_IMETHODIMP
-nsFrameMessageManager::GetContent(mozIDOMWindowProxy** aContent)
-{
-  *aContent = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::GetDocShell(nsIDocShell** aDocShell)
-{
-  *aDocShell = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::GetTabEventTarget(nsIEventTarget** aTarget)
-{
-  *aTarget = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFrameMessageManager::Btoa(const nsAString& aBinaryData,
                             nsAString& aAsciiBase64String)
 {
