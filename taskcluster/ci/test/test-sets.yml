@@ -70,14 +70,12 @@ talos:
     - talos-tp6
     - talos-tp6-stylo-threads
     - talos-speedometer
+    - talos-motionmark
     - talos-h1
     - talos-h2
 
 awsy:
     - awsy
-
-awsy-stylo-disabled:
-    - awsy-stylo-disabled
 
 awsy-stylo-sequential:
     - awsy-stylo-sequential
@@ -120,6 +118,7 @@ linux-qr-talos:
     - talos-tp6
     - talos-tp6-stylo-threads
     - talos-speedometer
+    - talos-motionmark
 
 linux-qr-tests:
     - cppunit
@@ -164,22 +163,6 @@ jsdcov-code-coverage-tests:
     - mochitest-browser-chrome
     - mochitest-devtools-chrome
     - xpcshell
-
-linux-talos-stylo-disabled:
-    - talos-chrome-stylo-disabled
-    - talos-dromaeojs-stylo-disabled
-    - talos-g1-stylo-disabled
-    - talos-g2-stylo-disabled
-    - talos-g3-stylo-disabled
-    - talos-g4-stylo-disabled
-    - talos-g5-stylo-disabled
-    - talos-other-stylo-disabled
-    - talos-svgr-stylo-disabled
-    - talos-tp5o-stylo-disabled
-    - talos-perf-reftest-stylo-disabled
-    - talos-perf-reftest-singletons-stylo-disabled
-    - talos-tp6-stylo-disabled
-    - talos-speedometer-stylo-disabled
 
 windows-reftest-gpu:
     - reftest-gpu
@@ -228,22 +211,6 @@ windows-talos:
     - talos-tp6-stylo-threads
     - talos-speedometer
 
-windows-talos-stylo-disabled:
-    - talos-chrome-stylo-disabled
-    - talos-dromaeojs-stylo-disabled
-    - talos-g1-stylo-disabled
-    - talos-g2-stylo-disabled
-    - talos-g4-stylo-disabled
-    - talos-g5-stylo-disabled
-    - talos-other-stylo-disabled
-    - talos-perf-reftest-stylo-disabled
-    - talos-perf-reftest-singletons-stylo-disabled
-    - talos-svgr-stylo-disabled
-    - talos-tp5o-stylo-disabled
-    - talos-xperf-stylo-disabled
-    - talos-tp6-stylo-disabled
-    - talos-speedometer-stylo-disabled
-
 macosx64-tests:
     - cppunit
     - crashtest
@@ -285,22 +252,8 @@ macosx64-talos:
     - talos-tp6
     - talos-tp6-stylo-threads
     - talos-speedometer
+    - talos-motionmark
     - talos-h1
-
-macosx64-talos-stylo-disabled:
-    - talos-chrome-stylo-disabled
-    - talos-dromaeojs-stylo-disabled
-    - talos-g1-stylo-disabled
-    - talos-g2-stylo-disabled
-    - talos-g4-stylo-disabled
-    - talos-g5-stylo-disabled
-    - talos-other-stylo-disabled
-    - talos-svgr-stylo-disabled
-    - talos-tp5o-stylo-disabled
-    - talos-perf-reftest-stylo-disabled
-    - talos-perf-reftest-singletons-stylo-disabled
-    - talos-tp6-stylo-disabled
-    - talos-speedometer-stylo-disabled
 
 macosx64-talos-profiling:
     - talos-chrome-profiling

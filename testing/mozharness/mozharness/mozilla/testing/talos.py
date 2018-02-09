@@ -149,18 +149,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             "default": False,
             "help": "we should have --disable-e10s, but instead we assume non-e10s and use --e10s to help"
         }],
-        [["--enable-stylo"], {
-            "action": "store_true",
-            "dest": "enable_stylo",
-            "default": False,
-            "help": "Run tests with Stylo enabled"
-        }],
-        [["--disable-stylo"], {
-            "action": "store_true",
-            "dest": "disable_stylo",
-            "default": False,
-            "help": "Run tests with Stylo disabled"
-        }],
         [["--enable-webrender"], {
             "action": "store_true",
             "dest": "enable_webrender",
@@ -674,13 +662,8 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             env['MOZ_WEBRENDER'] = '1'
             env['MOZ_ACCELERATED'] = '1'
 
-        if self.config['disable_stylo'] and self.config['enable_stylo']:
-            self.fatal("--disable-stylo conflicts with --enable-stylo")
-
-        if self.config['enable_stylo']:
-            env['STYLO_FORCE_ENABLED'] = '1'
-        if self.config['disable_stylo']:
-            env['STYLO_FORCE_DISABLED'] = '1'
+        # TODO: consider getting rid of this as we should be default to stylo now
+        env['STYLO_FORCE_ENABLED'] = '1'
 
         # Remove once Talos is migrated away from buildbot
         if self.buildbot_config:

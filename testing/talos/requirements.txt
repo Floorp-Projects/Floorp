@@ -1,3 +1,4 @@
+jsonschema>=2.5.1
 mozlog>=3.1
 mozcrash>=0.15
 mozfile>=1.2

@@ -7,8 +7,6 @@
 package org.mozilla.gecko.util;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -20,7 +18,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * Unit tests for date utilities.
  */
-@RunWith(TestRunner.class)
 public class TestDateUtil {
     @Test
     public void testGetDateInHTTPFormatGMT() {
