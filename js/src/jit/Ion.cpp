@@ -2767,12 +2767,17 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
 
     for (OnlyJSJitFrameIter iter(activations); !iter.done(); ++iter, ++frameno) {
         const JSJitFrameIter& frame = iter.frame();
-        MOZ_ASSERT_IF(frameno == 1, frame.isExitFrame() || frame.type() == JitFrame_Bailout);
+        MOZ_ASSERT_IF(frameno == 1, frame.isExitFrame() ||
+                                    frame.type() == JitFrame_Bailout ||
+                                    frame.type() == JitFrame_JSJitToWasm);
 
 #ifdef JS_JITSPEW
         switch (frame.type()) {
           case JitFrame_Exit:
             JitSpew(JitSpew_IonInvalidate, "#%zu exit frame @ %p", frameno, frame.fp());
+            break;
+          case JitFrame_JSJitToWasm:
+            JitSpew(JitSpew_IonInvalidate, "#%zu wasm exit frame @ %p", frameno, frame.fp());
             break;
           case JitFrame_BaselineJS:
           case JitFrame_IonJS:

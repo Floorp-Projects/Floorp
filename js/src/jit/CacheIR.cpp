@@ -339,7 +339,7 @@ IsCacheableGetPropCallNative(JSObject* obj, JSObject* holder, Shape* shape)
         return false;
 
     JSFunction& getter = shape->getterValue().toObject().as<JSFunction>();
-    if (!getter.isNative())
+    if (!getter.isNativeWithCppEntry())
         return false;
 
     if (getter.isClassConstructor())
@@ -374,8 +374,12 @@ IsCacheableGetPropCallScripted(JSObject* obj, JSObject* holder, Shape* shape,
         return false;
 
     JSFunction& getter = shape->getterValue().toObject().as<JSFunction>();
-    if (getter.isNative())
+    if (getter.isNativeWithCppEntry())
         return false;
+
+    // Natives with jit entry can use the scripted path.
+    if (getter.isNativeWithJitEntry())
+        return true;
 
     if (!getter.hasScript()) {
         if (isTemporarilyUnoptimizable)
@@ -684,7 +688,7 @@ EmitCallGetterResultNoGuards(CacheIRWriter& writer, JSObject* obj, JSObject* hol
 {
     if (IsCacheableGetPropCallNative(obj, holder, shape)) {
         JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
-        MOZ_ASSERT(target->isNative());
+        MOZ_ASSERT(target->isNativeWithCppEntry());
         writer.callNativeGetterResult(receiverId, target);
         writer.typeMonitorResult();
         return;
@@ -693,7 +697,7 @@ EmitCallGetterResultNoGuards(CacheIRWriter& writer, JSObject* obj, JSObject* hol
     MOZ_ASSERT(IsCacheableGetPropCallScripted(obj, holder, shape));
 
     JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
-    MOZ_ASSERT(target->hasScript());
+    MOZ_ASSERT(target->hasJitEntry());
     writer.callScriptedGetterResult(receiverId, target);
     writer.typeMonitorResult();
 }
@@ -3208,7 +3212,7 @@ IsCacheableSetPropCallNative(JSObject* obj, JSObject* holder, Shape* shape)
         return false;
 
     JSFunction& setter = shape->setterObject()->as<JSFunction>();
-    if (!setter.isNative())
+    if (!setter.isNativeWithCppEntry())
         return false;
 
     if (setter.isClassConstructor())
@@ -3237,8 +3241,12 @@ IsCacheableSetPropCallScripted(JSObject* obj, JSObject* holder, Shape* shape,
         return false;
 
     JSFunction& setter = shape->setterObject()->as<JSFunction>();
-    if (setter.isNative())
+    if (setter.isNativeWithCppEntry())
         return false;
+
+    // Natives with jit entry can use the scripted path.
+    if (setter.isNativeWithJitEntry())
+        return true;
 
     if (!setter.hasScript()) {
         if (isTemporarilyUnoptimizable)
@@ -3283,7 +3291,7 @@ EmitCallSetterNoGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
 {
     if (IsCacheableSetPropCallNative(obj, holder, shape)) {
         JSFunction* target = &shape->setterValue().toObject().as<JSFunction>();
-        MOZ_ASSERT(target->isNative());
+        MOZ_ASSERT(target->isNativeWithCppEntry());
         writer.callNativeSetter(objId, target, rhsId);
         writer.returnFromIC();
         return;
@@ -3292,7 +3300,7 @@ EmitCallSetterNoGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
     MOZ_ASSERT(IsCacheableSetPropCallScripted(obj, holder, shape));
 
     JSFunction* target = &shape->setterValue().toObject().as<JSFunction>();
-    MOZ_ASSERT(target->hasScript());
+    MOZ_ASSERT(target->hasJitEntry());
     writer.callScriptedSetter(objId, target, rhsId);
     writer.returnFromIC();
 }

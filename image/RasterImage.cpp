@@ -1249,10 +1249,29 @@ RasterImage::Decode(const IntSize& aSize,
 
   // Create a decoder.
   RefPtr<IDecodingTask> task;
-  if (mAnimationState && aPlaybackType == PlaybackType::eAnimated) {
-    task = DecoderFactory::CreateAnimationDecoder(mDecoderType, WrapNotNull(this),
-                                                  mSourceBuffer, mSize,
-                                                  decoderFlags, surfaceFlags);
+  nsresult rv;
+  bool animated = mAnimationState && aPlaybackType == PlaybackType::eAnimated;
+  if (animated) {
+    rv = DecoderFactory::CreateAnimationDecoder(mDecoderType, WrapNotNull(this),
+                                                mSourceBuffer, mSize,
+                                                decoderFlags, surfaceFlags,
+                                                getter_AddRefs(task));
+  } else {
+    rv = DecoderFactory::CreateDecoder(mDecoderType, WrapNotNull(this),
+                                       mSourceBuffer, mSize, aSize,
+                                       decoderFlags, surfaceFlags,
+                                       getter_AddRefs(task));
+  }
+
+  if (rv == NS_ERROR_ALREADY_INITIALIZED) {
+    // We raced with an already pending decoder, and it finished before we
+    // managed to insert the new decoder. Pretend we did a sync call to make
+    // the caller lookup in the surface cache again.
+    MOZ_ASSERT(!task);
+    return true;
+  }
+
+  if (animated) {
     // We pass false for aAllowInvalidation because we may be asked to use
     // async notifications. Any potential invalidation here will be sent when
     // RequestRefresh is called, or NotifyDecodeComplete.
@@ -1261,17 +1280,15 @@ RasterImage::Decode(const IntSize& aSize,
 #endif
       mAnimationState->UpdateState(mAnimationFinished, this, mSize, false);
     MOZ_ASSERT(rect.IsEmpty());
-  } else {
-    task = DecoderFactory::CreateDecoder(mDecoderType, WrapNotNull(this),
-                                         mSourceBuffer, mSize, aSize,
-                                         decoderFlags, surfaceFlags);
   }
 
   // Make sure DecoderFactory was able to create a decoder successfully.
-  if (!task) {
+  if (NS_FAILED(rv)) {
+    MOZ_ASSERT(!task);
     return false;
   }
 
+  MOZ_ASSERT(task);
   mDecodeCount++;
 
   // We're ready to decode; start the decoder.

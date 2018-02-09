@@ -248,16 +248,14 @@ void Simulator::handle_wasm_interrupt() {
   if (!js::wasm::InInterruptibleCode(cx_, pc, &cs))
       return;
 
-  // fp can be null during the prologue/epilogue of the entry function.
-  if (!fp)
-      return;
-
   JS::ProfilingFrameIterator::RegisterState state;
   state.pc = pc;
   state.fp = fp;
   state.lr = (uint8_t*) xreg(30);
   state.sp = (uint8_t*) xreg(31);
-  cx_->activation_->asJit()->startWasmInterrupt(state);
+
+  if (!cx_->activation_->asJit()->startWasmInterrupt(state))
+      return;
 
   set_pc((Instruction*)cs->interruptCode());
 }

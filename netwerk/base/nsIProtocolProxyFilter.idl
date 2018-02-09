@@ -12,6 +12,27 @@ interface nsIProxyInfo;
 interface nsIURI;
 
 /**
+ * Recipient of the result of implementers of nsIProtocolProxy(Channel)Filter
+ * allowing the proxyinfo be provided asynchronously.
+ */
+[scriptable, uuid(009E6C3F-FB64-40C5-8093-F1495C64773E)]
+interface nsIProxyProtocolFilterResult : nsISupports
+{
+  /**
+   * It's mandatory to call this method exactly once when the applyFilter()
+   * implementation doesn't throw and to not call it when applyFilter() does
+   * throw.
+   *
+   * It's mandatory to call this method on the same thread as the call to
+   * applyFilter() has been made on.
+   *
+   * Following the above conditions, can be called either from within
+   * applyFilter() or asynchronouly any time later.
+   */
+  void onProxyFilterResult(in nsIProxyInfo aProxy);
+};
+
+/**
  * This interface is used to apply filters to the proxies selected for a given
  * URI.  Use nsIProtocolProxyService::registerFilter to hook up instances of
  * this interface. See also nsIProtocolProxyChannelFilter.
@@ -32,14 +53,19 @@ interface nsIProtocolProxyFilter : nsISupports
    *        The proxy (or list of proxies) that would be used by default for
    *        the given URI.  This may be null.
    *
-   * @return The proxy (or list of proxies) that should be used in place of
-   *         aProxy.  This can be just be aProxy if the filter chooses not to
-   *         modify the proxy.  It can also be null to indicate that a direct
-   *         connection should be used.  Use aProxyService.newProxyInfo to
-   *         construct nsIProxyInfo objects.
+   * @param aCallback
+   *        An object that the implementer is obligated to call on with
+   *        the result (from within applyFilter() or asynchronously) when
+   *        applyFilter didn't throw.  The argument passed to onProxyFilterResult
+   *        is the proxy (or list of proxies) that should be used in place of
+   *        aProxy.  This can be just be aProxy if the filter chooses not to
+   *        modify the proxy.  It can also be null to indicate that a direct
+   *        connection should be used.  Use aProxyService.newProxyInfo to
+   *        construct nsIProxyInfo objects.
    */
-  nsIProxyInfo applyFilter(in nsIProtocolProxyService aProxyService,
-                           in nsIURI aURI, in nsIProxyInfo aProxy);
+  void applyFilter(in nsIProtocolProxyService aProxyService,
+                   in nsIURI aURI, in nsIProxyInfo aProxy,
+                   in nsIProxyProtocolFilterResult aCallback);
 };
 
 /**
@@ -63,12 +89,17 @@ interface nsIProtocolProxyChannelFilter : nsISupports
    *        The proxy (or list of proxies) that would be used by default for
    *        the given channel. This may be null.
    *
-   * @return The proxy (or list of proxies) that should be used in place of
-   *         aProxy. This can be just be aProxy if the filter chooses not to
-   *         modify the proxy. It can also be null to indicate that a direct
-   *         connection should be used.  Use aProxyService.newProxyInfo to
-   *         construct nsIProxyInfo objects.
+   * @param aCallback
+   *        An object that the implementer is obligated to call on with
+   *        the result (from within applyFilter() or asynchronously) when
+   *        applyFilter didn't throw.  The argument passed to onProxyFilterResult
+   *        is the proxy (or list of proxies) that should be used in place of
+   *        aProxy.  This can be just be aProxy if the filter chooses not to
+   *        modify the proxy.  It can also be null to indicate that a direct
+   *        connection should be used.  Use aProxyService.newProxyInfo to
+   *        construct nsIProxyInfo objects.
    */
-  nsIProxyInfo applyFilter(in nsIProtocolProxyService aProxyService,
-                           in nsIChannel aChannel, in nsIProxyInfo aProxy);
+  void applyFilter(in nsIProtocolProxyService aProxyService,
+                   in nsIChannel aChannel, in nsIProxyInfo aProxy,
+                   in nsIProxyProtocolFilterResult aCallback);
 };
