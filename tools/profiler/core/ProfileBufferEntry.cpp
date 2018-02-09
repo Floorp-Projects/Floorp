@@ -276,29 +276,16 @@ bool UniqueStacks::FrameKey::operator==(const FrameKey& aOther) const
          mJITDepth == aOther.mJITDepth;
 }
 
-bool UniqueStacks::StackKey::operator==(const StackKey& aOther) const
+UniqueStacks::StackKey
+UniqueStacks::BeginStack(const OnStackFrameKey& aFrame)
 {
-  MOZ_ASSERT_IF(mPrefix == aOther.mPrefix, mPrefixHash == aOther.mPrefixHash);
-  return mPrefix == aOther.mPrefix && mFrame == aOther.mFrame;
+  return StackKey(GetOrAddFrameIndex(aFrame));
 }
 
-UniqueStacks::Stack::Stack(UniqueStacks& aUniqueStacks, const OnStackFrameKey& aRoot)
- : mUniqueStacks(aUniqueStacks)
- , mStack(aUniqueStacks.GetOrAddFrameIndex(aRoot))
+UniqueStacks::StackKey
+UniqueStacks::AppendFrame(const StackKey& aStack, const OnStackFrameKey& aFrame)
 {
-}
-
-void UniqueStacks::Stack::AppendFrame(const OnStackFrameKey& aFrame)
-{
-  // Compute the prefix hash and index before mutating mStack.
-  uint32_t prefixHash = mStack.Hash();
-  uint32_t prefix = mUniqueStacks.GetOrAddStackIndex(mStack);
-  mStack.UpdateHash(prefixHash, prefix, mUniqueStacks.GetOrAddFrameIndex(aFrame));
-}
-
-uint32_t UniqueStacks::Stack::GetOrAddIndex() const
-{
-  return mUniqueStacks.GetOrAddStackIndex(mStack);
+  return StackKey(aStack, GetOrAddStackIndex(aStack), GetOrAddFrameIndex(aFrame));
 }
 
 uint32_t UniqueStacks::FrameKey::Hash() const
@@ -320,19 +307,6 @@ uint32_t UniqueStacks::FrameKey::Hash() const
     }
   }
   return hash;
-}
-
-uint32_t UniqueStacks::StackKey::Hash() const
-{
-  if (mPrefix.isNothing()) {
-    return mozilla::HashGeneric(mFrame);
-  }
-  return mozilla::AddToHash(*mPrefixHash, mFrame);
-}
-
-UniqueStacks::Stack UniqueStacks::BeginStack(const OnStackFrameKey& aRoot)
-{
-  return Stack(*this, aRoot);
 }
 
 UniqueStacks::UniqueStacks(JSContext* aContext)
@@ -422,10 +396,10 @@ void UniqueStacks::StreamStack(const StackKey& aStack)
   };
 
   AutoArraySchemaWriter writer(mStackTableWriter, mUniqueStrings);
-  if (aStack.mPrefix.isSome()) {
-    writer.IntElement(PREFIX, *aStack.mPrefix);
+  if (aStack.mPrefixStackIndex.isSome()) {
+    writer.IntElement(PREFIX, *aStack.mPrefixStackIndex);
   }
-  writer.IntElement(FRAME, aStack.mFrame);
+  writer.IntElement(FRAME, aStack.mFrameIndex);
 }
 
 void UniqueStacks::StreamFrame(const OnStackFrameKey& aFrame)
@@ -752,7 +726,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
       ERROR_AND_CONTINUE("expected a Time entry");
     }
 
-    UniqueStacks::Stack stack =
+    UniqueStacks::StackKey stack =
       aUniqueStacks.BeginStack(UniqueStacks::OnStackFrameKey("(root)"));
 
     int numFrames = 0;
@@ -765,7 +739,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
         unsigned long long pc = (unsigned long long)(uintptr_t)e.Get().u.mPtr;
         char buf[20];
         SprintfLiteral(buf, "%#llx", pc);
-        stack.AppendFrame(UniqueStacks::OnStackFrameKey(buf));
+        stack = aUniqueStacks.AppendFrame(stack, UniqueStacks::OnStackFrameKey(buf));
         e.Next();
 
       } else if (e.Get().IsLabel()) {
@@ -817,7 +791,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
           e.Next();
         }
 
-        stack.AppendFrame(frameKey);
+        stack = aUniqueStacks.AppendFrame(stack, frameKey);
 
       } else if (e.Get().IsJitReturnAddr()) {
         numFrames++;
@@ -829,7 +803,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
           MOZ_RELEASE_ASSERT(aContext);
           for (JS::ProfiledFrameHandle handle : JS::GetProfiledFrames(aContext, pc)) {
             UniqueStacks::OnStackFrameKey frameKey(pc, depth, handle);
-            stack.AppendFrame(frameKey);
+            stack = aUniqueStacks.AppendFrame(stack, frameKey);
             depth++;
           }
           MOZ_ASSERT(depth > 0);
@@ -837,7 +811,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
         } else {
           for (unsigned i = 0; i < depth; i++) {
             UniqueStacks::OnStackFrameKey inlineFrameKey(pc, i);
-            stack.AppendFrame(inlineFrameKey);
+            stack = aUniqueStacks.AppendFrame(stack, inlineFrameKey);
           }
         }
 
@@ -852,7 +826,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
       ERROR_AND_CONTINUE("expected one or more frame entries");
     }
 
-    sample.mStack = stack.GetOrAddIndex();
+    sample.mStack = aUniqueStacks.GetOrAddStackIndex(stack);
 
     // Skip over the markers. We process them in StreamMarkersToJSON().
     while (e.Has()) {
