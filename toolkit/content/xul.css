@@ -919,6 +919,16 @@ autorepeatbutton {
   -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#autorepeatbutton");
 }
 
+/********** spinbuttons ***********/
+
+spinbuttons {
+  -moz-binding: url("chrome://global/content/bindings/spinbuttons.xml#spinbuttons");
+}
+
+.spinbuttons-button {
+  -moz-user-focus: ignore;
+}
+
 /********** stringbundle **********/
 
 stringbundleset {

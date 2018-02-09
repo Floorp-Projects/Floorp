@@ -75,12 +75,10 @@
 
       accTree =
         { SECTION: [
-          { SPINBUTTON: [
-            { ENTRY: [ { TEXT_LEAF: [] } ] },
-            { PUSHBUTTON: [ ] },
-            { PUSHBUTTON: [ ] }
-          ] },
+          { ENTRY: [ { TEXT_LEAF: [] } ] },
           { MENUPOPUP: [] },
+          { PUSHBUTTON: [] },
+          { PUSHBUTTON: [] }
         ] };
 
       testAccessibleTree("txc_number", accTree);
