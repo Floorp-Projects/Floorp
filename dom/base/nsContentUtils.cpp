@@ -52,6 +52,7 @@
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/IDTracker.h"
+#include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -8626,28 +8627,28 @@ nsContentUtils::SendKeyEvent(nsIWidget* aWidget,
       }
       // If location flag isn't set, choose the location from keycode.
       switch (aKeyCode) {
-        case nsIDOMKeyEvent::DOM_VK_NUMPAD0:
-        case nsIDOMKeyEvent::DOM_VK_NUMPAD1:
-        case nsIDOMKeyEvent::DOM_VK_NUMPAD2:
-        case nsIDOMKeyEvent::DOM_VK_NUMPAD3:
-        case nsIDOMKeyEvent::DOM_VK_NUMPAD4:
-        case nsIDOMKeyEvent::DOM_VK_NUMPAD5:
-        case nsIDOMKeyEvent::DOM_VK_NUMPAD6:
-        case nsIDOMKeyEvent::DOM_VK_NUMPAD7:
-        case nsIDOMKeyEvent::DOM_VK_NUMPAD8:
-        case nsIDOMKeyEvent::DOM_VK_NUMPAD9:
-        case nsIDOMKeyEvent::DOM_VK_MULTIPLY:
-        case nsIDOMKeyEvent::DOM_VK_ADD:
-        case nsIDOMKeyEvent::DOM_VK_SEPARATOR:
-        case nsIDOMKeyEvent::DOM_VK_SUBTRACT:
-        case nsIDOMKeyEvent::DOM_VK_DECIMAL:
-        case nsIDOMKeyEvent::DOM_VK_DIVIDE:
+        case KeyboardEventBinding::DOM_VK_NUMPAD0:
+        case KeyboardEventBinding::DOM_VK_NUMPAD1:
+        case KeyboardEventBinding::DOM_VK_NUMPAD2:
+        case KeyboardEventBinding::DOM_VK_NUMPAD3:
+        case KeyboardEventBinding::DOM_VK_NUMPAD4:
+        case KeyboardEventBinding::DOM_VK_NUMPAD5:
+        case KeyboardEventBinding::DOM_VK_NUMPAD6:
+        case KeyboardEventBinding::DOM_VK_NUMPAD7:
+        case KeyboardEventBinding::DOM_VK_NUMPAD8:
+        case KeyboardEventBinding::DOM_VK_NUMPAD9:
+        case KeyboardEventBinding::DOM_VK_MULTIPLY:
+        case KeyboardEventBinding::DOM_VK_ADD:
+        case KeyboardEventBinding::DOM_VK_SEPARATOR:
+        case KeyboardEventBinding::DOM_VK_SUBTRACT:
+        case KeyboardEventBinding::DOM_VK_DECIMAL:
+        case KeyboardEventBinding::DOM_VK_DIVIDE:
           event.mLocation = eKeyLocationNumpad;
           break;
-        case nsIDOMKeyEvent::DOM_VK_SHIFT:
-        case nsIDOMKeyEvent::DOM_VK_CONTROL:
-        case nsIDOMKeyEvent::DOM_VK_ALT:
-        case nsIDOMKeyEvent::DOM_VK_META:
+        case KeyboardEventBinding::DOM_VK_SHIFT:
+        case KeyboardEventBinding::DOM_VK_CONTROL:
+        case KeyboardEventBinding::DOM_VK_ALT:
+        case KeyboardEventBinding::DOM_VK_META:
           event.mLocation = eKeyLocationLeft;
           break;
         default:
