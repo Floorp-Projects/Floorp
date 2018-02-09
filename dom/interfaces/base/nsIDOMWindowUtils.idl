@@ -778,7 +778,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aType event type
    * @param aX x offset in CSS pixels
    * @param aY y offset in CSS pixels
-   * @param aDirection direction, using constants defined in nsIDOMSimpleGestureEvent
+   * @param aDirection direction, using constants defined in SimpleGestureEvent.webidl
    * @param aDelta  amount of magnification or rotation for magnify and rotation events
    * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
    * @param aClickCount For tap gestures, the number of taps.

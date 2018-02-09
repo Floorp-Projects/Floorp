@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_SimpleGestureEvent_h_
 #define mozilla_dom_SimpleGestureEvent_h_
 
-#include "nsIDOMSimpleGestureEvent.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
 #include "mozilla/EventForwards.h"
@@ -17,8 +16,7 @@ class nsPresContext;
 namespace mozilla {
 namespace dom {
 
-class SimpleGestureEvent : public MouseEvent,
-                           public nsIDOMSimpleGestureEvent
+class SimpleGestureEvent : public MouseEvent
 {
 public:
   SimpleGestureEvent(EventTarget* aOwner,
@@ -27,20 +25,16 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_DECL_NSIDOMSIMPLEGESTUREEVENT
-
-  // Forward to base class
-  NS_FORWARD_TO_MOUSEEVENT
-
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
     return SimpleGestureEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
-  uint32_t AllowedDirections();
-  uint32_t Direction();
-  double Delta();
-  uint32_t ClickCount();
+  uint32_t AllowedDirections() const;
+  void SetAllowedDirections(uint32_t aAllowedDirections);
+  uint32_t Direction() const;
+  double Delta() const;
+  uint32_t ClickCount() const;
 
   void InitSimpleGestureEvent(const nsAString& aType,
                               bool aCanBubble,
