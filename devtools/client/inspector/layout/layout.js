@@ -42,6 +42,12 @@ class LayoutView {
       onToggleGeometryEditor,
     } = this.inspector.getPanel("boxmodel").getComponentProps();
 
+    this.flexboxInspector = new FlexboxInspector(this.inspector,
+      this.inspector.panelWin);
+    let {
+      onToggleFlexboxHighlighter,
+    } = this.flexboxInspector.getComponentProps();
+
     this.gridInspector = new GridInspector(this.inspector, this.inspector.panelWin);
     let {
       getSwatchColorPickerTooltip,
@@ -71,6 +77,7 @@ class LayoutView {
       onShowGridAreaHighlight,
       onShowGridCellHighlight,
       onShowGridLineNamesHighlight,
+      onToggleFlexboxHighlighter,
       onToggleGeometryEditor,
       onToggleGridHighlighter,
       onToggleShowGridAreas,
@@ -93,6 +100,7 @@ class LayoutView {
    * Destruction function called when the inspector is destroyed. Cleans up references.
    */
   destroy() {
+    this.flexboxInspector.destroy();
     this.gridInspector.destroy();
 
     this.document = null;

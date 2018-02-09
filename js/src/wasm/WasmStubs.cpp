@@ -228,7 +228,7 @@ StoreABIReturn(MacroAssembler& masm, const FuncExport& fe, Register argv)
 // The ARM system ABI also includes d15 & s31 in the non volatile float registers.
 // Also exclude lr (a.k.a. r14) as we preserve it manually)
 static const LiveRegisterSet NonVolatileRegs =
-    LiveRegisterSet(GeneralRegisterSet(Registers::NonVolatileMask&
+    LiveRegisterSet(GeneralRegisterSet(Registers::NonVolatileMask &
                                        ~(uint32_t(1) << Registers::lr)),
                     FloatRegisterSet(FloatRegisters::NonVolatileMask
                                      | (1ULL << FloatRegisters::d15)
@@ -366,6 +366,325 @@ GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe, Offsets* offsets
     MOZ_ASSERT(masm.framePushed() == 0);
 
     masm.ret();
+
+    return FinishOffsets(masm, offsets);
+}
+
+#ifdef JS_PUNBOX64
+static const ValueOperand ScratchValIonEntry = ValueOperand(ABINonArgReg0);
+#else
+static const ValueOperand ScratchValIonEntry = ValueOperand(ABINonArgReg0, ABINonArgReg1);
+#endif
+static const Register ScratchIonEntry = ABINonArgReg2;
+
+// Load instance's TLS from the callee.
+static void
+GenerateJitEntryLoadTls(MacroAssembler& masm, unsigned frameSize)
+{
+    // ScratchIonEntry := callee => JSFunction*
+    unsigned offset = frameSize + JitFrameLayout::offsetOfCalleeToken();
+    masm.loadFunctionFromCalleeToken(Address(masm.getStackPointer(), offset), ScratchIonEntry);
+
+    // ScratchValIonEntry := callee->getExtendedSlot(WASM_TLSDATA_SLOT)
+    //                    => Private(TlsData*)
+    offset = FunctionExtended::offsetOfExtendedSlot(FunctionExtended::WASM_TLSDATA_SLOT);
+    masm.loadValue(Address(ScratchIonEntry, offset), ScratchValIonEntry);
+
+    // ScratchIonEntry := ScratchIonEntry->toPrivate() => TlsData*
+    masm.unboxPrivate(ScratchValIonEntry, WasmTlsReg);
+    // \o/
+}
+
+// Creates a JS fake exit frame for wasm, so the frame iterators just use
+// JSJit frame iteration.
+static void
+GenerateJitEntryThrow(MacroAssembler& masm, unsigned frameSize)
+{
+    MOZ_ASSERT(masm.framePushed() == frameSize);
+
+    GenerateJitEntryLoadTls(masm, frameSize);
+
+    masm.freeStack(frameSize);
+
+    masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, cx)), ScratchIonEntry);
+    masm.enterFakeExitFrame(ScratchIonEntry, ScratchIonEntry, ExitFrameType::WasmJitEntry);
+
+    masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, instance)), ScratchIonEntry);
+    masm.loadPtr(Address(ScratchIonEntry, Instance::offsetOfJSJitExceptionHandler()),
+                 ScratchIonEntry);
+    masm.jump(ScratchIonEntry);
+}
+
+// Generate a stub that enters wasm from a jit code caller via the jit ABI.
+static bool
+GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport& fe,
+                 Offsets* offsets)
+{
+    RegisterOrSP sp = masm.getStackPointer();
+
+    GenerateJitEntryPrologue(masm, offsets);
+
+    // The jit caller has set up the following stack layout (sp grows to the
+    // left):
+    // <-- retAddr | descriptor | callee | argc | this | arg1..N
+
+    unsigned normalBytesNeeded = StackArgBytes(fe.sig().args());
+
+    MIRTypeVector coerceArgTypes;
+    MOZ_ALWAYS_TRUE(coerceArgTypes.append(MIRType::Int32));
+    MOZ_ALWAYS_TRUE(coerceArgTypes.append(MIRType::Pointer));
+    MOZ_ALWAYS_TRUE(coerceArgTypes.append(MIRType::Pointer));
+    unsigned oolBytesNeeded = StackArgBytes(coerceArgTypes);
+
+    unsigned bytesNeeded = Max(normalBytesNeeded, oolBytesNeeded);
+
+    // Note the jit caller ensures the stack is aligned *after* the call
+    // instruction.
+    unsigned frameSize = StackDecrementForCall(WasmStackAlignment, 0, bytesNeeded);
+
+    // Reserve stack space for wasm ABI arguments, set up like this:
+    // <-- ABI args | padding
+    masm.reserveStack(frameSize);
+
+    GenerateJitEntryLoadTls(masm, frameSize);
+
+    if (fe.sig().hasI64ArgOrRet()) {
+        masm.call(SymbolicAddress::ReportInt64JSCall);
+        GenerateJitEntryThrow(masm, frameSize);
+        return FinishOffsets(masm, offsets);
+    }
+
+    FloatRegister scratchF = ABINonArgDoubleReg;
+    Register scratchG = ScratchIonEntry;
+    ValueOperand scratchV = ScratchValIonEntry;
+
+    // We do two loops:
+    // - one loop up-front will make sure that all the Value tags fit the
+    // expected signature argument types. If at least one inline conversion
+    // fails, we just jump to the OOL path which will call into C++. Inline
+    // conversions are ordered in the way we expect them to happen the most.
+    // - the second loop will unbox the arguments into the right registers.
+    Label oolCall;
+    for (size_t i = 0; i < fe.sig().args().length(); i++) {
+        unsigned jitArgOffset = frameSize + JitFrameLayout::offsetOfActualArg(i);
+        Address jitArgAddr(sp, jitArgOffset);
+        masm.loadValue(jitArgAddr, scratchV);
+
+        Label next;
+        switch (fe.sig().args()[i]) {
+          case ValType::I32: {
+            Register tag = masm.splitTagForTest(scratchV);
+
+            // For int32 inputs, just skip.
+            masm.branchTestInt32(Assembler::Equal, tag, &next);
+
+            // For double inputs, unbox, truncate and store back.
+            Label storeBack, notDouble;
+            masm.branchTestDouble(Assembler::NotEqual, tag, &notDouble);
+            masm.unboxDouble(scratchV, scratchF);
+            masm.branchTruncateDoubleMaybeModUint32(scratchF, scratchG, &oolCall);
+            masm.jump(&storeBack);
+            masm.bind(&notDouble);
+
+            // For null or undefined, store 0.
+            Label nullOrUndefined, notNullOrUndefined;
+            masm.branchTestUndefined(Assembler::Equal, tag, &nullOrUndefined);
+            masm.branchTestNull(Assembler::NotEqual, tag, &notNullOrUndefined);
+            masm.bind(&nullOrUndefined);
+            masm.storeValue(Int32Value(0), jitArgAddr);
+            masm.jump(&next);
+            masm.bind(&notNullOrUndefined);
+
+            // For booleans, store the number value back. Other types (symbol,
+            // object, strings) go to the C++ call.
+            masm.branchTestBoolean(Assembler::NotEqual, tag, &oolCall);
+            masm.unboxBoolean(scratchV, scratchG);
+            // fallthrough:
+
+            masm.bind(&storeBack);
+            masm.storeValue(JSVAL_TYPE_INT32, scratchG, jitArgAddr);
+            break;
+          }
+          case ValType::F32:
+          case ValType::F64: {
+            // Note we can reuse the same code for f32/f64 here, since for the
+            // case of f32, the conversion of f64 to f32 will happen in the
+            // second loop.
+            Register tag = masm.splitTagForTest(scratchV);
+
+            // For double inputs, just skip.
+            masm.branchTestDouble(Assembler::Equal, tag, &next);
+
+            // For int32 inputs, convert and rebox.
+            Label storeBack, notInt32;
+            masm.branchTestInt32(Assembler::NotEqual, scratchV, &notInt32);
+            masm.int32ValueToDouble(scratchV, scratchF);
+            masm.jump(&storeBack);
+            masm.bind(&notInt32);
+
+            // For undefined (missing argument), store NaN.
+            Label notUndefined;
+            masm.branchTestUndefined(Assembler::NotEqual, tag, &notUndefined);
+            masm.storeValue(DoubleValue(JS::GenericNaN()), jitArgAddr);
+            masm.jump(&next);
+            masm.bind(&notUndefined);
+
+            // +null is 0.
+            Label notNull;
+            masm.branchTestNull(Assembler::NotEqual, tag, &notNull);
+            masm.storeValue(DoubleValue(0.), jitArgAddr);
+            masm.jump(&next);
+            masm.bind(&notNull);
+
+            // For booleans, store the number value back. Other types (symbol,
+            // object, strings) go to the C++ call.
+            masm.branchTestBoolean(Assembler::NotEqual, tag, &oolCall);
+            masm.boolValueToDouble(scratchV, scratchF);
+            // fallthrough:
+
+            masm.bind(&storeBack);
+            masm.boxDouble(scratchF, jitArgAddr);
+            break;
+          }
+          default: {
+            MOZ_CRASH("unexpected argument type when calling from the jit");
+          }
+        }
+        masm.nopAlign(CodeAlignment);
+        masm.bind(&next);
+    }
+
+    Label rejoinBeforeCall;
+    masm.bind(&rejoinBeforeCall);
+
+    // Convert all the expected values to unboxed values on the stack.
+    for (ABIArgValTypeIter iter(fe.sig().args()); !iter.done(); iter++) {
+        unsigned jitArgOffset = frameSize + JitFrameLayout::offsetOfActualArg(iter.index());
+        Address argv(sp, jitArgOffset);
+        bool isStackArg = iter->kind() == ABIArg::Stack;
+        switch (iter.mirType()) {
+          case MIRType::Int32: {
+            Register target = isStackArg ? ScratchIonEntry : iter->gpr();
+            masm.unboxInt32(argv, target);
+            if (isStackArg)
+                masm.storePtr(target, Address(sp, iter->offsetFromArgBase()));
+            break;
+          }
+          case MIRType::Float32: {
+            FloatRegister target = isStackArg ? ABINonArgDoubleReg : iter->fpu();
+            masm.unboxDouble(argv, ABINonArgDoubleReg);
+            masm.convertDoubleToFloat32(ABINonArgDoubleReg, target);
+            if (isStackArg)
+                masm.storeFloat32(target, Address(sp, iter->offsetFromArgBase()));
+            break;
+          }
+          case MIRType::Double: {
+            FloatRegister target = isStackArg ? ABINonArgDoubleReg : iter->fpu();
+            masm.unboxDouble(argv, target);
+            if (isStackArg)
+                masm.storeDouble(target, Address(sp, iter->offsetFromArgBase()));
+            break;
+          }
+          default: {
+            MOZ_CRASH("unexpected input argument when calling from jit");
+          }
+        }
+    }
+
+    // Setup wasm register state.
+    masm.loadWasmPinnedRegsFromTls();
+
+    // Call into the real function. Note that, due to the throw stub, fp, tls
+    // and pinned registers may be clobbered.
+    masm.assertStackAlignment(WasmStackAlignment);
+    masm.call(CallSiteDesc(CallSiteDesc::Func), fe.funcIndex());
+    masm.assertStackAlignment(WasmStackAlignment);
+
+    // If fp is equal to the FailFP magic value (set by the throw stub), then
+    // report the exception to the JIT caller by jumping into the exception
+    // stub; otherwise the FP value is still set to the parent ion frame value.
+    Label exception;
+    masm.branchPtr(Assembler::Equal, FramePointer, Imm32(FailFP), &exception);
+
+    // Pop arguments.
+    masm.freeStack(frameSize);
+
+    // Store the return value in the JSReturnOperand.
+    switch (fe.sig().ret()) {
+      case ExprType::Void:
+        masm.moveValue(UndefinedValue(), JSReturnOperand);
+        break;
+      case ExprType::I32:
+        masm.boxNonDouble(JSVAL_TYPE_INT32, ReturnReg, JSReturnOperand);
+        break;
+      case ExprType::F32:
+        masm.canonicalizeFloat(ReturnFloat32Reg);
+        masm.convertFloat32ToDouble(ReturnFloat32Reg, ReturnDoubleReg);
+        masm.boxDouble(ReturnDoubleReg, JSReturnOperand, ScratchDoubleReg);
+        break;
+      case ExprType::F64:
+        masm.canonicalizeDouble(ReturnDoubleReg);
+        masm.boxDouble(ReturnDoubleReg, JSReturnOperand, ScratchDoubleReg);
+        break;
+      case ExprType::I64:
+      case ExprType::I8x16:
+      case ExprType::I16x8:
+      case ExprType::I32x4:
+      case ExprType::B8x16:
+      case ExprType::B16x8:
+      case ExprType::B32x4:
+      case ExprType::F32x4:
+        MOZ_CRASH("unexpected return type when calling from ion to wasm");
+      case ExprType::Limit:
+        MOZ_CRASH("Limit");
+    }
+
+    MOZ_ASSERT(masm.framePushed() == 0);
+    masm.ret();
+
+    // Generate an OOL call to the C++ conversion path.
+    if (fe.sig().args().length()) {
+        masm.bind(&oolCall);
+        masm.setFramePushed(frameSize);
+
+        ABIArgMIRTypeIter argsIter(coerceArgTypes);
+
+        // argument 0: function export index.
+        if (argsIter->kind() == ABIArg::GPR)
+            masm.movePtr(ImmWord(funcExportIndex), argsIter->gpr());
+        else
+            masm.storePtr(ImmWord(funcExportIndex), Address(sp, argsIter->offsetFromArgBase()));
+        argsIter++;
+
+        // argument 1: tlsData
+        if (argsIter->kind() == ABIArg::GPR)
+            masm.movePtr(WasmTlsReg, argsIter->gpr());
+        else
+            masm.storePtr(WasmTlsReg, Address(sp, argsIter->offsetFromArgBase()));
+        argsIter++;
+
+        // argument 2: effective address of start of argv
+        Address argv(sp, masm.framePushed() + JitFrameLayout::offsetOfActualArg(0));
+        if (argsIter->kind() == ABIArg::GPR) {
+            masm.computeEffectiveAddress(argv, argsIter->gpr());
+        } else {
+            masm.computeEffectiveAddress(argv, ScratchIonEntry);
+            masm.storePtr(ScratchIonEntry, Address(sp, argsIter->offsetFromArgBase()));
+        }
+        argsIter++;
+        MOZ_ASSERT(argsIter.done());
+
+        masm.assertStackAlignment(ABIStackAlignment);
+        masm.call(SymbolicAddress::CoerceInPlace_JitEntry);
+        masm.assertStackAlignment(ABIStackAlignment);
+
+        masm.branchTest32(Assembler::NonZero, ReturnReg, ReturnReg, &rejoinBeforeCall);
+    }
+
+    // Prepare to throw: reload WasmTlsReg from the frame.
+    masm.bind(&exception);
+    masm.setFramePushed(frameSize);
+    GenerateJitEntryThrow(masm, frameSize);
 
     return FinishOffsets(masm, offsets);
 }
@@ -850,7 +1169,7 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
         // Coercion calls use the following stack layout (sp grows to the left):
         //   | args | padding | Value argv[1] | padding | exit Frame |
         MIRTypeVector coerceArgTypes;
-        JS_ALWAYS_TRUE(coerceArgTypes.append(MIRType::Pointer));
+        MOZ_ALWAYS_TRUE(coerceArgTypes.append(MIRType::Pointer));
         unsigned offsetToCoerceArgv = AlignBytes(StackArgBytes(coerceArgTypes), sizeof(Value));
         MOZ_ASSERT(nativeFramePushed >= offsetToCoerceArgv + sizeof(Value));
         AssertStackAlignment(masm, ABIStackAlignment);
@@ -1385,11 +1704,20 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
 
     JitSpew(JitSpew_Codegen, "# Emitting wasm export stubs");
 
-    for (const FuncExport& fe : exports) {
+    for (size_t i = 0; i < exports.length(); i++) {
+        const FuncExport& fe = exports[i];
+
         Offsets offsets;
         if (!GenerateInterpEntry(masm, fe, &offsets))
             return false;
         if (!code->codeRanges.emplaceBack(CodeRange::InterpEntry, fe.funcIndex(), offsets))
+            return false;
+
+        if (env.isAsmJS())
+            continue;
+        if (!GenerateJitEntry(masm, i, fe, &offsets))
+            return false;
+        if (!code->codeRanges.emplaceBack(CodeRange::JitEntry, fe.funcIndex(), offsets))
             return false;
     }
 

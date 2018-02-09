@@ -5041,6 +5041,13 @@ IonBuilder::createThis(JSFunction* target, MDefinition* callee, MDefinition* new
         if (!target->isConstructor())
             return nullptr;
 
+        if (target->isNativeWithJitEntry()) {
+            // Do not bother inlining constructor calls to asm.js, since it is
+            // not used much in practice.
+            MOZ_ASSERT(target->isWasmOptimized());
+            return nullptr;
+        }
+
         MConstant* magic = MConstant::New(alloc(), MagicValue(JS_IS_CONSTRUCTING));
         current->add(magic);
         return magic;
@@ -5525,7 +5532,7 @@ IonBuilder::makeCallHelper(JSFunction* target, CallInfo& callInfo)
 
     // Collect number of missing arguments provided that the target is
     // scripted. Native functions are passed an explicit 'argc' parameter.
-    if (target && !target->isNative())
+    if (target && !target->isNativeWithCppEntry())
         targetArgs = Max<uint32_t>(target->nargs(), callInfo.argc());
 
     bool isDOMCall = false;
@@ -5554,8 +5561,8 @@ IonBuilder::makeCallHelper(JSFunction* target, CallInfo& callInfo)
 
     // Explicitly pad any missing arguments with |undefined|.
     // This permits skipping the argumentsRectifier.
+    MOZ_ASSERT_IF(target && targetArgs > callInfo.argc(), !target->isNativeWithCppEntry());
     for (int i = targetArgs; i > (int)callInfo.argc(); i--) {
-        MOZ_ASSERT_IF(target, !target->isNative());
         MConstant* undef = constant(UndefinedValue());
         if (!alloc().ensureBallast())
             return abort(AbortReason::Alloc);

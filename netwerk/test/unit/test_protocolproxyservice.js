@@ -118,14 +118,14 @@ TestFilter.prototype = {
       return this;
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
-  applyFilter: function(pps, uri, pi) {
+  applyFilter: function(pps, uri, pi, cb) {
     var pi_tail = pps.newProxyInfo(this._type, this._host, this._port,
                                    this._flags, this._timeout, null);
     if (pi)
       pi.failoverProxy = pi_tail;
     else
       pi = pi_tail;
-    return pi;
+    cb.onProxyFilterResult(pi);
   }
 };
 
@@ -137,9 +137,11 @@ BasicFilter.prototype = {
       return this;
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
-  applyFilter: function(pps, uri, pi) {
-    return pps.newProxyInfo("http", "localhost", 8080, 0, 10,
-           pps.newProxyInfo("direct", "", -1, 0, 0, null));
+  applyFilter: function(pps, uri, pi, cb) {
+    cb.onProxyFilterResult(
+      pps.newProxyInfo("http", "localhost", 8080, 0, 10,
+      pps.newProxyInfo("direct", "", -1, 0, 0, null))
+    );
   }
 };
 
@@ -151,9 +153,11 @@ BasicChannelFilter.prototype = {
       return this;
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
-  applyFilter: function(pps, channel, pi) {
-    return pps.newProxyInfo("http", channel.URI.host, 7777, 0, 10,
-           pps.newProxyInfo("direct", "", -1, 0, 0, null));
+  applyFilter: function(pps, channel, pi, cb) {
+    cb.onProxyFilterResult(
+      pps.newProxyInfo("http", channel.URI.host, 7777, 0, 10,
+      pps.newProxyInfo("direct", "", -1, 0, 0, null))
+    );
   }
 };
 

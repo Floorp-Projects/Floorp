@@ -84,6 +84,10 @@ static constexpr Register ABINonArgReg0 = eax;
 static constexpr Register ABINonArgReg1 = ebx;
 static constexpr Register ABINonArgReg2 = ecx;
 
+// This register may be volatile or nonvolatile. Avoid xmm7 which is the
+// ScratchDoubleReg.
+static constexpr FloatRegister ABINonArgDoubleReg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Double);
+
 // These registers may be volatile or nonvolatile.
 // Note: these three registers are all guaranteed to be different
 static constexpr Register ABINonArgReturnReg0 = ecx;
