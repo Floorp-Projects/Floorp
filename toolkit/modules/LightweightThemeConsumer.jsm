@@ -28,7 +28,6 @@ const kCSSVarsMap = [
   ["--toolbox-border-bottom-color", "toolbar_bottom_separator"],
   ["--lwt-toolbarbutton-icon-fill", "icon_color"],
   ["--lwt-toolbarbutton-icon-fill-attention", "icon_attention_color"],
-  ["--lwt-toolbarbutton-background", "button_background"],
   ["--lwt-toolbarbutton-hover-background", "button_background_hover"],
   ["--lwt-toolbarbutton-active-background", "button_background_active"],
 ];

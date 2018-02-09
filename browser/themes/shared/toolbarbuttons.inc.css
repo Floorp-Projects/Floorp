@@ -169,18 +169,6 @@ toolbar[brighttext] .toolbaritem-combined-buttons > separator {
   opacity: .3;
 }
 
-#PersonalToolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active),
-.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled=true]),
-.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled=true]),
-.findbar-button:not(:-moz-any([checked="true"],[disabled="true"])) > .toolbarbutton-text,
-toolbarbutton.bookmark-item:not(.subviewbutton):not([disabled="true"]):not([open]),
-toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active) > .toolbarbutton-icon,
-toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active) > .toolbarbutton-text,
-toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active) > .toolbarbutton-badge-stack {
-  background-color: var(--lwt-toolbarbutton-background, transparent);
-  color: inherit;
-}
-
 #PersonalToolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover,
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled=true]):hover,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled=true]):hover,

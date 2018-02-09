@@ -158,7 +158,6 @@ class Theme {
         case "toolbar_top_separator":
         case "toolbar_bottom_separator":
         case "toolbar_vertical_separator":
-        case "button_background":
         case "button_background_hover":
         case "button_background_active":
           this.lwtStyles[color] = cssColor;
