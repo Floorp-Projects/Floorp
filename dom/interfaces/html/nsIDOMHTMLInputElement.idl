@@ -7,7 +7,6 @@
 
 interface nsIControllers;
 interface nsIDOMFileList;
-interface nsIDOMValidityState;
 interface nsIDOMHTMLFormElement;
 
  /**

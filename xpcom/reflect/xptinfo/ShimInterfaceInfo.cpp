@@ -60,7 +60,6 @@
 #include "nsIDOMTimeRanges.h"
 #include "nsIDOMTransitionEvent.h"
 #include "nsIDOMUIEvent.h"
-#include "nsIDOMValidityState.h"
 #include "nsIDOMWheelEvent.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMXULCommandEvent.h"
@@ -150,7 +149,6 @@
 #include "mozilla/dom/TransitionEventBinding.h"
 #include "mozilla/dom/TreeBoxObjectBinding.h"
 #include "mozilla/dom/UIEventBinding.h"
-#include "mozilla/dom/ValidityStateBinding.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/dom/XMLDocumentBinding.h"
 #include "mozilla/dom/XMLHttpRequestEventTargetBinding.h"
@@ -273,7 +271,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(TransitionEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsITreeBoxObject, TreeBoxObject),
   DEFINE_SHIM(UIEvent),
-  DEFINE_SHIM(ValidityState),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIWebBrowserPersistable, FrameLoader),
   DEFINE_SHIM(WheelEvent),
   DEFINE_SHIM(XMLDocument),

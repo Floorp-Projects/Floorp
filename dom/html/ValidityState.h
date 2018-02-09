@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_ValidityState_h
 #define mozilla_dom_ValidityState_h
 
-#include "nsIDOMValidityState.h"
 #include "nsIConstraintValidation.h"
 #include "nsWrapperCache.h"
 #include "js/TypeDecls.h"
@@ -15,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class ValidityState final : public nsIDOMValidityState,
+class ValidityState final : public nsISupports,
                             public nsWrapperCache
 {
   ~ValidityState() {}
@@ -23,7 +22,6 @@ class ValidityState final : public nsIDOMValidityState,
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ValidityState)
-  NS_DECL_NSIDOMVALIDITYSTATE
 
   friend class ::nsIConstraintValidation;
 
