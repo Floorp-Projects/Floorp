@@ -3,156 +3,47 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
- "use strict";
+"use strict";
 
- function test() {
-   info("Test various cases where the escape key should hide the split console.");
+const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for splitting";
 
-   let toolbox;
-   let hud;
-   let jsterm;
-   let hudMessages;
-   let variablesView;
+add_task(async function () {
+  info("Test various cases where the escape key should hide the split console.");
 
-   Task.spawn(runner).then(finish);
+  let toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
 
-   function* runner() {
-     let {tab} = yield loadTab("data:text/html;charset=utf-8,<p>Web Console " +
-                              "test for splitting");
-     let target = TargetFactory.forTab(tab);
-     toolbox = yield gDevTools.showToolbox(target, "inspector");
+  info("Send ESCAPE key and wait for the split console to be displayed");
 
-     yield testCreateSplitConsoleAfterEscape();
+  let onSplitConsoleReady = toolbox.once("webconsole-ready");
+  toolbox.win.focus();
+  EventUtils.sendKey("ESCAPE", toolbox.win);
+  await onSplitConsoleReady;
 
-     yield showAutoCompletePopoup();
+  let hud = toolbox.getPanel("webconsole").hud;
+  let jsterm = hud.jsterm;
+  ok(toolbox.splitConsole, "Split console is created.");
 
-     yield testHideAutoCompletePopupAfterEscape();
+  info("Wait for the autocomplete to show suggestions for `document.location.`");
+  let popup = jsterm.autocompletePopup;
+  let onPopupShown = popup.once("popup-opened");
+  jsterm.focus();
+  jsterm.setInputValue("document.location.");
+  EventUtils.sendKey("TAB", hud.iframeWindow);
+  await onPopupShown;
 
-     yield executeJS();
-     yield clickMessageAndShowVariablesView();
-     jsterm.focus();
+  info("Send ESCAPE key and check that it only hides the autocomplete suggestions");
 
-     yield testHideVariablesViewAfterEscape();
+  let onPopupClosed = popup.once("popup-closed");
+  EventUtils.sendKey("ESCAPE", toolbox.win);
+  await onPopupClosed;
 
-     yield clickMessageAndShowVariablesView();
-     yield startPropertyEditor();
+  ok(!popup.isOpen, "Auto complete popup is hidden.");
+  ok(toolbox.splitConsole, "Split console is open after hiding the autocomplete popup.");
 
-     yield testCancelPropertyEditorAfterEscape();
-     yield testHideVariablesViewAfterEscape();
-     yield testHideSplitConsoleAfterEscape();
-   }
+  info("Send ESCAPE key again and check that now closes the splitconsole");
+  let onSplitConsoleEvent = toolbox.once("split-console");
+  EventUtils.sendKey("ESCAPE", toolbox.win);
+  await onSplitConsoleEvent;
 
-   function testCreateSplitConsoleAfterEscape() {
-     let result = toolbox.once("webconsole-ready", () => {
-       hud = toolbox.getPanel("webconsole").hud;
-       jsterm = hud.jsterm;
-       ok(toolbox.splitConsole, "Split console is created.");
-     });
-
-     let contentWindow = toolbox.win;
-     contentWindow.focus();
-     EventUtils.sendKey("ESCAPE", contentWindow);
-
-     return result;
-   }
-
-   function testHideSplitConsoleAfterEscape() {
-     let result = toolbox.once("split-console", () => {
-       ok(!toolbox.splitConsole, "Split console is hidden.");
-     });
-     EventUtils.sendKey("ESCAPE", toolbox.win);
-
-     return result;
-   }
-
-   function testHideVariablesViewAfterEscape() {
-     let result = jsterm.once("sidebar-closed", () => {
-       ok(!hud.ui.jsterm.sidebar,
-        "Variables view is hidden.");
-       ok(toolbox.splitConsole,
-        "Split console is open after hiding the variables view.");
-     });
-     EventUtils.sendKey("ESCAPE", toolbox.win);
-
-     return result;
-   }
-
-   function testHideAutoCompletePopupAfterEscape() {
-     let deferred = defer();
-     let popup = jsterm.autocompletePopup;
-
-     popup.once("popup-closed", () => {
-       ok(!popup.isOpen,
-        "Auto complete popup is hidden.");
-       ok(toolbox.splitConsole,
-        "Split console is open after hiding the autocomplete popup.");
-
-       deferred.resolve();
-     });
-
-     EventUtils.sendKey("ESCAPE", toolbox.win);
-
-     return deferred.promise;
-   }
-
-   function testCancelPropertyEditorAfterEscape() {
-     EventUtils.sendKey("ESCAPE", variablesView.window);
-     ok(hud.ui.jsterm.sidebar,
-      "Variables view is open after canceling property editor.");
-     ok(toolbox.splitConsole,
-      "Split console is open after editing.");
-   }
-
-   function* executeJS() {
-     jsterm.execute("var foo = { bar: \"baz\" }; foo;");
-     hudMessages = yield waitForMessages({
-       webconsole: hud,
-       messages: [{
-         text: "Object { bar: \"baz\" }",
-         category: CATEGORY_OUTPUT,
-         objects: true
-       }],
-     });
-   }
-
-   function clickMessageAndShowVariablesView() {
-     let result = jsterm.once("variablesview-fetched", (event, vview) => {
-       variablesView = vview;
-     });
-
-     let clickable = hudMessages[0].clickableElements[0];
-     EventUtils.synthesizeMouse(clickable, 2, 2, {}, hud.iframeWindow);
-
-     return result;
-   }
-
-   function* startPropertyEditor() {
-     let results = yield findVariableViewProperties(variablesView, [
-      {name: "bar", value: "baz"}
-     ], {webconsole: hud});
-     results[0].matchedProp.focus();
-     EventUtils.synthesizeKey("VK_RETURN", variablesView.window);
-   }
-
-   function showAutoCompletePopoup() {
-     let onPopupShown = jsterm.autocompletePopup.once("popup-opened");
-
-     jsterm.focus();
-     jsterm.setInputValue("document.location.");
-     EventUtils.sendKey("TAB", hud.iframeWindow);
-
-     return onPopupShown;
-   }
-
-   function finish() {
-     toolbox.destroy().then(() => {
-       toolbox = null;
-       hud = null;
-       jsterm = null;
-       hudMessages = null;
-       variablesView = null;
-
-       finishTest();
-     });
-   }
- }
+  ok(!toolbox.splitConsole, "Split console is hidden.");
+});
