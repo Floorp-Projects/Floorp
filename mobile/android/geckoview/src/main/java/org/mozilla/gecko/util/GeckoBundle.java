@@ -98,13 +98,14 @@ public final class GeckoBundle implements Parcelable {
     }
 
     /**
-     * Returns whether a mapping exists.
+     * Returns whether a mapping exists. Null String, Bundle, or arrays are treated as
+     * nonexistent.
      *
      * @param key Key to look for.
-     * @return True if the specified key exists.
+     * @return True if the specified key exists and the value is not null.
      */
     public boolean containsKey(final String key) {
-        return mMap.containsKey(key) && mMap.get(key) != null;
+        return mMap.get(key) != null;
     }
 
     /**
@@ -251,10 +252,13 @@ public final class GeckoBundle implements Parcelable {
      * does not exist.
      *
      * @param key Key to look for.
-     * @param defaultValue Value to return if mapping does not exist.
+     * @param defaultValue Value to return if mapping value is null or mapping does not exist.
      * @return String value
      */
     public String getString(final String key, final String defaultValue) {
+        // If the key maps to null, technically we should return null because the mapping
+        // exists and null is a valid string value. However, people expect the default
+        // value to be returned instead, so we make an exception to return the default value.
         final Object value = mMap.get(key);
         return value == null ? defaultValue : (String) value;
     }
@@ -741,8 +745,8 @@ public final class GeckoBundle implements Parcelable {
             } else if (value instanceof GeckoBundle[]) {
                 final GeckoBundle[] array = (GeckoBundle[]) value;
                 final JSONArray jsonArray = new JSONArray();
-                for (int j = 0; j < array.length; j++) {
-                    jsonArray.put(array[j] == null ? JSONObject.NULL : array[j].toJSONObject());
+                for (final GeckoBundle element : array) {
+                    jsonArray.put(element == null ? JSONObject.NULL : element.toJSONObject());
                 }
                 jsonValue = jsonArray;
             } else if (Build.VERSION.SDK_INT >= 19) {
@@ -849,7 +853,9 @@ public final class GeckoBundle implements Parcelable {
     }
 
     private static Object fromJSONValue(Object value) throws JSONException {
-        if (value instanceof JSONObject || value == JSONObject.NULL) {
+        if (value == null || value == JSONObject.NULL) {
+            return null;
+        } else if (value instanceof JSONObject) {
             return fromJSONObject((JSONObject) value);
         }
         if (value instanceof JSONArray) {
@@ -893,7 +899,7 @@ public final class GeckoBundle implements Parcelable {
         if (value instanceof Float || value instanceof Long) {
             return ((Number) value).doubleValue();
         }
-        return value != null ? value.toString() : null;
+        return value.toString();
     }
 
     public static GeckoBundle fromJSONObject(final JSONObject obj) throws JSONException {

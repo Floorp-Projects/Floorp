@@ -23,7 +23,7 @@ job-defaults:
       os: linux
       docker-image: mozillareleases/python-test-runner@sha256:0729c2e6e7bc0d6a4cbccb2e66a78e1d8e8cbb5e44105d56e3c9c610230ebd69
       max-run-time: 7200
-      retry-exit-status: 1
+      retry-exit-status: [1]
       env:
          BUILD_TOOLS_REPO:
             by-project:

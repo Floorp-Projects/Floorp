@@ -405,6 +405,7 @@
   pointer-events: none;
   margin-inline-start: 8px;
   margin-inline-end: 6px;
+  width: 16px;
   fill-opacity: .4;
 }
 

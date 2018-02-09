@@ -265,7 +265,7 @@ test_description_schema = Schema({
         int),
 
     # the exit status code that indicates the task should be retried
-    Optional('retry-exit-status'): int,
+    Optional('retry-exit-status'): [int],
 
     # Whether to perform a gecko checkout.
     Required('checkout'): bool,
@@ -842,7 +842,7 @@ def set_retry_exit_status(config, tests):
     """Set the retry exit status to TBPL_RETRY, the value returned by mozharness
        scripts to indicate a transient failure that should be retried."""
     for test in tests:
-        test['retry-exit-status'] = 4
+        test['retry-exit-status'] = [4]
         yield test
 
 

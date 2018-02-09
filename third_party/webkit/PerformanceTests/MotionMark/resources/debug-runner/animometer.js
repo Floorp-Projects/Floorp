@@ -628,6 +628,19 @@ Utilities.extendObject(window.benchmarkController, {
         }
 
         var score = dashboard.score;
+        var item = dashboard._results['iterationsResults'][0];
+        var fullNames = new Array;
+        var values = new Array;
+        for (var suite in item['testsResults']) {
+            for (var subtest in item['testsResults'][suite.toString()]) {
+                fullNames.push(suite.toString() + "-" + subtest.toString().replace(/ /g, '_'));
+                values.push(item['testsResults'][suite.toString()][subtest.toString()]['controller']['average']);
+           }
+        }
+        if (typeof tpRecordTime !== "undefined") {
+            tpRecordTime(values.join(','), 0, fullNames.join(','));
+        }
+
         var confidence = ((dashboard.scoreLowerBound / score - 1) * 100).toFixed(2) +
             "% / +" + ((dashboard.scoreUpperBound / score - 1) * 100).toFixed(2) + "%";
         sectionsManager.setSectionScore("results", score.toFixed(2), confidence);
