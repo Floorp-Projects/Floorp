@@ -43,7 +43,7 @@ static mozilla::LazyLogModule gResistFingerprintingLog("nsResistFingerprinting")
 #define RESIST_FINGERPRINTING_PREF "privacy.resistFingerprinting"
 #define RFP_TIMER_PREF "privacy.reduceTimerPrecision"
 #define RFP_TIMER_VALUE_PREF "privacy.resistFingerprinting.reduceTimerPrecision.microseconds"
-#define RFP_TIMER_VALUE_DEFAULT 2000
+#define RFP_TIMER_VALUE_DEFAULT 20
 #define RFP_SPOOFED_FRAMES_PER_SEC_PREF "privacy.resistFingerprinting.video_frames_per_sec"
 #define RFP_SPOOFED_DROPPED_RATIO_PREF  "privacy.resistFingerprinting.video_dropped_ratio"
 #define RFP_TARGET_VIDEO_RES_PREF "privacy.resistFingerprinting.target_video_res"
@@ -107,21 +107,17 @@ nsRFPService::IsResistFingerprintingEnabled()
 
 /* static */
 bool
-nsRFPService::IsTimerPrecisionReductionEnabled(TimerPrecisionType aType)
+nsRFPService::IsTimerPrecisionReductionEnabled()
 {
-  if (aType == TimerPrecisionType::RFPOnly) {
-    return IsResistFingerprintingEnabled();
-  }
-
   return (sPrivacyTimerPrecisionReduction || IsResistFingerprintingEnabled()) &&
          TimerResolution() != 0;
 }
 
 /* static */
 double
-nsRFPService::ReduceTimePrecisionAsMSecs(double aTime, TimerPrecisionType aType /* = TimerPrecisionType::All */)
+nsRFPService::ReduceTimePrecisionAsMSecs(double aTime)
 {
-  if (!IsTimerPrecisionReductionEnabled(aType)) {
+  if (!IsTimerPrecisionReductionEnabled()) {
     return aTime;
   }
   const double resolutionMSec = TimerResolution() / 1000.0;
@@ -136,9 +132,9 @@ nsRFPService::ReduceTimePrecisionAsMSecs(double aTime, TimerPrecisionType aType 
 
 /* static */
 double
-nsRFPService::ReduceTimePrecisionAsUSecs(double aTime, TimerPrecisionType aType /* = TimerPrecisionType::All */)
+nsRFPService::ReduceTimePrecisionAsUSecs(double aTime)
 {
-  if (!IsTimerPrecisionReductionEnabled(aType)) {
+  if (!IsTimerPrecisionReductionEnabled()) {
     return aTime;
   }
   double resolutionUSec = TimerResolution();
@@ -161,9 +157,9 @@ nsRFPService::CalculateTargetVideoResolution(uint32_t aVideoQuality)
 
 /* static */
 double
-nsRFPService::ReduceTimePrecisionAsSecs(double aTime, TimerPrecisionType aType /* = TimerPrecisionType::All */)
+nsRFPService::ReduceTimePrecisionAsSecs(double aTime)
 {
-  if (!IsTimerPrecisionReductionEnabled(aType)) {
+  if (!IsTimerPrecisionReductionEnabled()) {
     return aTime;
   }
   double resolutionUSec = TimerResolution();

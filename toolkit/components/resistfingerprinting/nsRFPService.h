@@ -148,11 +148,6 @@ public:
   nsString mKey;
 };
 
-enum TimerPrecisionType {
-  All = 1,
-  RFPOnly = 2
-};
-
 class nsRFPService final : public nsIObserver
 {
 public:
@@ -161,18 +156,12 @@ public:
 
   static nsRFPService* GetOrCreate();
   static bool IsResistFingerprintingEnabled();
-  static bool IsTimerPrecisionReductionEnabled(TimerPrecisionType aType);
+  static bool IsTimerPrecisionReductionEnabled();
 
   // The following Reduce methods can be called off main thread.
-  static double ReduceTimePrecisionAsMSecs(
-    double aTime,
-    TimerPrecisionType aType = TimerPrecisionType::All);
-  static double ReduceTimePrecisionAsUSecs(
-    double aTime,
-    TimerPrecisionType aType = TimerPrecisionType::All);
-  static double ReduceTimePrecisionAsSecs(
-    double aTime,
-    TimerPrecisionType aType = TimerPrecisionType::All);
+  static double ReduceTimePrecisionAsMSecs(double aTime);
+  static double ReduceTimePrecisionAsUSecs(double aTime);
+  static double ReduceTimePrecisionAsSecs(double aTime);
 
   // This method calculates the video resolution (i.e. height x width) based
   // on the video quality (480p, 720p, etc).
