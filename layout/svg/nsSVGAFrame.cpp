@@ -7,8 +7,8 @@
 // Keep in (case-insensitive) order:
 #include "gfxMatrix.h"
 #include "mozilla/dom/SVGAElement.h"
+#include "mozilla/dom/MutationEventBinding.h"
 #include "nsAutoPtr.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
@@ -91,7 +91,7 @@ nsSVGAFrame::AttributeChanged(int32_t         aNameSpaceID,
   // Currently our SMIL implementation does not modify the DOM attributes. Once
   // we implement the SVG 2 SMIL behaviour this can be removed
   // SVGAElement::SetAttr/UnsetAttr's ResetLinkState() call will be sufficient.
-  if (aModType == nsIDOMMutationEvent::SMIL &&
+  if (aModType == dom::MutationEventBinding::SMIL &&
       aAttribute == nsGkAtoms::href &&
       (aNameSpaceID == kNameSpaceID_None ||
        aNameSpaceID == kNameSpaceID_XLink)) {
