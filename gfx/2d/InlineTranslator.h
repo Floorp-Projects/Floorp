@@ -83,7 +83,7 @@ public:
     return result;
   }
 
-  virtual UnscaledFont* LookupUnscaledFontByIndex(size_t index) final
+  UnscaledFont* LookupUnscaledFontByIndex(size_t index) final
   {
     UnscaledFont* result = mUnscaledFontTable[index];
     return result;

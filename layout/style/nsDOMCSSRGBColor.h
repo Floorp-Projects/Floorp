@@ -52,8 +52,7 @@ public:
     return nullptr;
   }
 
-  virtual JSObject *WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
-    final;
+  JSObject *WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) final;
 
 private:
   virtual ~nsDOMCSSRGBColor(void);

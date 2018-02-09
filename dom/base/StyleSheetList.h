@@ -29,7 +29,7 @@ public:
 
   explicit StyleSheetList(DocumentOrShadowRoot& aScope);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
   nsINode* GetParentObject() const
   {
