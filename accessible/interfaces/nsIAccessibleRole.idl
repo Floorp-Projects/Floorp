@@ -338,7 +338,7 @@ interface nsIAccessibleRole : nsISupports
   /**
    * Represents a spin box, which is a control that allows the user to increment
    * or decrement the value displayed in a separate "buddy" control associated
-   * with the spin box. It is used for xul:spinbuttons.
+   * with the spin box. It is used for input[type=number] spin buttons.
    */
   const unsigned long ROLE_SPINBUTTON = 52;
 

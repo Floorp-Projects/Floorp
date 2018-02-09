@@ -345,7 +345,7 @@ enum Role {
   /**
    * Represents a spin box, which is a control that allows the user to increment
    * or decrement the value displayed in a separate "buddy" control associated
-   * with the spin box. It is used for xul:spinbuttons.
+   * with the spin box. It is used for input[type=number] spin buttons.
    */
   SPINBUTTON = 52,
 
