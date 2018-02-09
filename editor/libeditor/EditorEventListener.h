@@ -18,7 +18,6 @@ class nsCaret;
 class nsIContent;
 class nsIDOMDragEvent;
 class nsIDOMEvent;
-class nsIDOMKeyEvent;
 class nsIDOMMouseEvent;
 class nsIPresShell;
 class nsPresContext;

@@ -56,7 +56,6 @@
 #include "nsMenuPopupFrame.h"
 
 #include "nsIDOMXULElement.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIObserverService.h"
 #include "nsIDocShell.h"
 #include "nsIDOMWheelEvent.h"

@@ -74,7 +74,6 @@ class nsIDOMDocument;
 class nsIDOMDocumentFragment;
 class nsIDOMEvent;
 class nsIDOMHTMLInputElement;
-class nsIDOMKeyEvent;
 class nsIDOMNode;
 class nsIDragSession;
 class nsIEventTarget;
