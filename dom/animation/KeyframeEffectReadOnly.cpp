@@ -1458,14 +1458,18 @@ KeyframeEffectReadOnly::CanThrottle() const
       return true;
     }
 
-    if (!frame->IsVisibleOrMayHaveVisibleDescendants() ||
+    const bool isVisibilityHidden =
+      !frame->IsVisibleOrMayHaveVisibleDescendants();
+    if (isVisibilityHidden ||
         frame->IsScrolledOutOfView()) {
       // If there are transform change hints, unthrottle the animation
       // periodically since it might affect the overflow region.
       if (mCumulativeChangeHint & (nsChangeHint_UpdatePostTransformOverflow |
                                    nsChangeHint_AddOrRemoveTransform |
                                    nsChangeHint_UpdateTransformLayer)) {
-        return CanThrottleTransformChanges(*frame);
+        return isVisibilityHidden
+          ? CanThrottleTransformChangesInScrollable(*frame)
+          : CanThrottleTransformChanges(*frame);
       }
       return true;
     }
@@ -1502,7 +1506,7 @@ KeyframeEffectReadOnly::CanThrottle() const
     // If this is a transform animation that affects the overflow region,
     // we should unthrottle the animation periodically.
     if (record.mProperty == eCSSProperty_transform &&
-        !CanThrottleTransformChangesForCompositor(*frame)) {
+        !CanThrottleTransformChangesInScrollable(*frame)) {
       return false;
     }
   }
@@ -1534,7 +1538,7 @@ KeyframeEffectReadOnly::CanThrottleTransformChanges(const nsIFrame& aFrame) cons
 }
 
 bool
-KeyframeEffectReadOnly::CanThrottleTransformChangesForCompositor(nsIFrame& aFrame) const
+KeyframeEffectReadOnly::CanThrottleTransformChangesInScrollable(nsIFrame& aFrame) const
 {
   // If the target element is not associated with any documents, we don't care
   // it.

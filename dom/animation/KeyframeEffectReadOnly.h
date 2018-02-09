@@ -470,7 +470,7 @@ private:
 
   bool CanThrottle() const;
   bool CanThrottleTransformChanges(const nsIFrame& aFrame) const;
-  bool CanThrottleTransformChangesForCompositor(nsIFrame& aFrame) const;
+  bool CanThrottleTransformChangesInScrollable(nsIFrame& aFrame) const;
 
   // Returns true if the computedTiming has changed since the last
   // composition.
