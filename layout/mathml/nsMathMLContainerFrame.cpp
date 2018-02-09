@@ -14,13 +14,13 @@
 #include "nsIPresShell.h"
 #include "nsStyleContext.h"
 #include "nsNameSpaceManager.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsGkAtoms.h"
 #include "nsDisplayList.h"
 #include "mozilla/Likely.h"
 #include "nsIScriptError.h"
 #include "nsContentUtils.h"
 #include "nsMathMLElement.h"
+#include "mozilla/dom/MutationEventBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -740,7 +740,7 @@ nsMathMLContainerFrame::AppendFrames(ChildListID     aListID,
 {
   MOZ_ASSERT(aListID == kPrincipalList);
   mFrames.AppendFrames(this, aFrameList);
-  ChildListChanged(nsIDOMMutationEvent::ADDITION);
+  ChildListChanged(dom::MutationEventBinding::ADDITION);
 }
 
 void
@@ -750,7 +750,7 @@ nsMathMLContainerFrame::InsertFrames(ChildListID     aListID,
 {
   MOZ_ASSERT(aListID == kPrincipalList);
   mFrames.InsertFrames(this, aPrevFrame, aFrameList);
-  ChildListChanged(nsIDOMMutationEvent::ADDITION);
+  ChildListChanged(dom::MutationEventBinding::ADDITION);
 }
 
 void
@@ -759,7 +759,7 @@ nsMathMLContainerFrame::RemoveFrame(ChildListID     aListID,
 {
   MOZ_ASSERT(aListID == kPrincipalList);
   mFrames.DestroyFrame(aOldFrame);
-  ChildListChanged(nsIDOMMutationEvent::REMOVAL);
+  ChildListChanged(dom::MutationEventBinding::REMOVAL);
 }
 
 nsresult

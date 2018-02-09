@@ -26,9 +26,9 @@
 #endif
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsThreadUtils.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/dom/MutationEventBinding.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/AccTypes.h"
@@ -272,11 +272,11 @@ nsNumberControlFrame::AttributeChanged(int32_t  aNameSpaceID,
     if (aAttribute == nsGkAtoms::placeholder ||
         aAttribute == nsGkAtoms::readonly ||
         aAttribute == nsGkAtoms::tabindex) {
-      if (aModType == nsIDOMMutationEvent::REMOVAL) {
+      if (aModType == MutationEventBinding::REMOVAL) {
         mTextField->UnsetAttr(aNameSpaceID, aAttribute, true);
       } else {
-        MOZ_ASSERT(aModType == nsIDOMMutationEvent::ADDITION ||
-                   aModType == nsIDOMMutationEvent::MODIFICATION);
+        MOZ_ASSERT(aModType == MutationEventBinding::ADDITION ||
+                   aModType == MutationEventBinding::MODIFICATION);
         nsAutoString value;
         mContent->AsElement()->GetAttr(aNameSpaceID, aAttribute, value);
         mTextField->SetAttr(aNameSpaceID, aAttribute, value, true);
