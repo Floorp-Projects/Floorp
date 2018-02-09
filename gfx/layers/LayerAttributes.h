@@ -192,8 +192,8 @@ public:
     mFixedPositionData->mSides = aSides;
     return true;
   }
-  bool SetStickyPositionData(FrameMetrics::ViewID aScrollId, LayerRect aOuter,
-                             LayerRect aInner)
+  bool SetStickyPositionData(FrameMetrics::ViewID aScrollId, LayerBox aOuter,
+                             LayerBox aInner)
   {
     if (mStickyPositionData &&
         mStickyPositionData->mOuter.IsEqualEdges(aOuter) &&
@@ -290,10 +290,10 @@ public:
   FrameMetrics::ViewID StickyScrollContainerId() const {
     return mStickyPositionData->mScrollId;
   }
-  const LayerRect& StickyScrollRangeOuter() const {
+  const LayerBox& StickyScrollRangeOuter() const {
     return mStickyPositionData->mOuter;
   }
-  const LayerRect& StickyScrollRangeInner() const {
+  const LayerBox& StickyScrollRangeInner() const {
     return mStickyPositionData->mInner;
   }
 
@@ -337,8 +337,8 @@ private:
 
   struct StickyPositionData {
     FrameMetrics::ViewID mScrollId;
-    LayerRect mOuter;
-    LayerRect mInner;
+    LayerBox mOuter;
+    LayerBox mInner;
   };
   Maybe<StickyPositionData> mStickyPositionData;
 
