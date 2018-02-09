@@ -94,10 +94,6 @@ Converter.prototype = {
     // origin with (other) content.
     request.loadInfo.resetPrincipalToInheritToNullPrincipal();
 
-    // Because the JSON might be served with a CSP, we instrument
-    // the loadinfo so the Document can discard such a CSP.
-    request.loadInfo.allowDocumentToBeAgnosticToCSP = true;
-
     // Start the request.
     this.listener.onStartRequest(request, context);
 
@@ -231,6 +227,8 @@ function initialHTML(doc) {
     os = "linux";
   }
 
+  // The base URI is prepended to all URIs instead of using a <base> element
+  // because the latter can be blocked by a CSP base-uri directive (bug 1316393)
   let baseURI = "resource://devtools-client-jsonview/";
 
   return "<!DOCTYPE html>\n" +
