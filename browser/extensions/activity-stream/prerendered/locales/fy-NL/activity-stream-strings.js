@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Jo binne by. Kom letter werom foar mear ferhalen fan {provider}. Kin jo net wachtsje? Selektearje in populêr ûnderwerp om mear ferhalen fan it ynternet te finen.",
   "manual_migration_explanation2": "Probearje Firefox en ymportearje de blêdwizers, skiednis en wachtwurden fan oare browsers.",
   "manual_migration_cancel_button": "Nee tankewol",
-  "manual_migration_import_button": "No ymportearje"
+  "manual_migration_import_button": "No ymportearje",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

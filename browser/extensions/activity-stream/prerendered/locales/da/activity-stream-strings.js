@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Der er ikke flere nye historier. Kom tilbage senere for at se flere tophistorier fra {provider}. Kan du ikke vente? Vælg et populært emne og find flere spændende historier fra hele verden.",
   "manual_migration_explanation2": "Prøv Firefox med bogmærkerne, historikken og adgangskoderne fra en anden browser.",
   "manual_migration_cancel_button": "Nej tak",
-  "manual_migration_import_button": "Importer nu"
+  "manual_migration_import_button": "Importer nu",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

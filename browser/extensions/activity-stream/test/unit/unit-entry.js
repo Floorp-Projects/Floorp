@@ -1,8 +1,7 @@
 import {EventEmitter, FakePerformance, FakePrefs, GlobalOverrider} from "test/unit/utils";
-import Adapter from "enzyme-adapter-react-15";
+import Adapter from "enzyme-adapter-react-16";
 import {chaiAssertions} from "test/schemas/pings";
 import enzyme from "enzyme";
-
 enzyme.configure({adapter: new Adapter()});
 
 // Cause React warnings to make tests that trigger them fail
@@ -28,23 +27,20 @@ let overrider = new GlobalOverrider();
 
 overrider.set({
   AppConstants: {MOZILLA_OFFICIAL: true},
-  Components: {
-    classes: {},
-    interfaces: {nsIHttpChannel: {REFERRER_POLICY_UNSAFE_URL: 5}},
-    utils: {
-      import() {},
-      importGlobalProperties() {},
-      reportError() {},
-      now: () => window.performance.now()
-    },
-    isSuccessCode: () => true
-  },
   ChromeUtils: {
     defineModuleGetter() {},
     import() {}
   },
+  Components: {isSuccessCode: () => true},
   // eslint-disable-next-line object-shorthand
   ContentSearchUIController: function() {}, // NB: This is a function/constructor
+  Cc: {},
+  Ci: {nsIHttpChannel: {REFERRER_POLICY_UNSAFE_URL: 5}},
+  Cu: {
+    importGlobalProperties() {},
+    now: () => window.performance.now(),
+    reportError() {}
+  },
   dump() {},
   fetch() {},
   // eslint-disable-next-line object-shorthand
@@ -65,6 +61,10 @@ overrider.set({
     obs: {
       addObserver() {},
       removeObserver() {}
+    },
+    telemetry: {
+      setEventRecordingEnabled: () => {},
+      recordEvent: eventDetails => {}
     },
     console: {logStringMessage: () => {}},
     prefs: {
