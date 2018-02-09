@@ -21,7 +21,6 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PaintRequest, mParent)
 
 NS_INTERFACE_TABLE_HEAD(PaintRequest)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
-  NS_INTERFACE_TABLE(PaintRequest, nsIDOMPaintRequest)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(PaintRequest)
 NS_INTERFACE_MAP_END
 
@@ -40,21 +39,6 @@ PaintRequest::ClientRect()
   RefPtr<DOMRect> clientRect = new DOMRect(this);
   clientRect->SetLayoutRect(mRequest);
   return clientRect.forget();
-}
-
-NS_IMETHODIMP
-PaintRequest::GetClientRect(nsIDOMClientRect** aResult)
-{
-  RefPtr<DOMRect> clientRect = ClientRect();
-  clientRect.forget(aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PaintRequest::GetXPCOMReason(nsAString& aResult)
-{
-  GetReason(aResult);
-  return NS_OK;
 }
 
 /******************************************************************************

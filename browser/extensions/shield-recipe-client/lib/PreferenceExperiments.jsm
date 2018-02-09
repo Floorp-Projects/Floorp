@@ -187,7 +187,7 @@ this.PreferenceExperiments = {
         // if not, stop the experiment, and skip the remaining steps
         log.info(`Stopping experiment "${experiment.name}" because its value changed`);
         await this.stop(experiment.name, {
-          didResetValue: false,
+          resetValue: false,
           reason: "user-preference-changed-sideload",
         });
         continue;
@@ -466,7 +466,7 @@ this.PreferenceExperiments = {
    *   experiment has already expired.
    */
   async stop(experimentName, {resetValue = true, reason = "unknown"} = {}) {
-    log.debug(`PreferenceExperiments.stop(${experimentName})`);
+    log.debug(`PreferenceExperiments.stop(${experimentName}, {resetValue: ${resetValue}, reason: ${reason}})`);
     if (reason === "unknown") {
       log.warn(`experiment ${experimentName} ending for unknown reason`);
     }

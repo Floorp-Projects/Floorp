@@ -41,6 +41,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "“कभी इतिहास याद न रखें” सक्षम है."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "आप Firefox ESR का उपयोग कर रहे हैं."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "अपलोड अक्षम कर दिए गए हैं."
+  },
   "notificationLinkCopiedTitle": {
     "message": "लिंक की नक़ल की गयी"
   },

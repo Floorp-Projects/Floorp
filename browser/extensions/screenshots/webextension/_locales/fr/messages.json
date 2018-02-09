@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "lorsque « Ne jamais conserver l’historique » est activé."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Vous utilisez Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "L’envoi de fichiers est désactivé."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Lien copié"
   },

@@ -1030,10 +1030,10 @@ class SyncedBookmarksMirror {
         valueState: BookmarkMergeState.TYPE.REMOTE });
     await this.db.execute(`DELETE FROM moz_updatehostsinsert_temp`);
 
-    // Deleting from `newRemoteItems` fires the `insertNewLocalItems` and
+    // Deleting from `itemsToMerge` fires the `insertNewLocalItems` and
     // `updateExistingLocalItems` triggers.
     MirrorLog.debug("Updating value states for local bookmarks");
-    await this.db.execute(`DELETE FROM newRemoteItems`);
+    await this.db.execute(`DELETE FROM itemsToMerge`);
 
     // Update the structure. The mirror stores structure info in a separate
     // table, like iOS, while Places stores structure info on children. We don't
@@ -1042,7 +1042,7 @@ class SyncedBookmarksMirror {
     // without parents to "unfiled". In that case, we *don't* want to reupload
     // the new local structure to the server.
     MirrorLog.debug("Updating structure states for local bookmarks");
-    await this.db.execute(`DELETE FROM newRemoteStructure`);
+    await this.db.execute(`DELETE FROM structureToMerge`);
 
     MirrorLog.debug("Removing remotely deleted items from Places");
     for (let chunk of PlacesSyncUtils.chunkArray(localDeletions,
@@ -1860,7 +1860,7 @@ async function createMirrorRoots(db) {
  * Creates temporary tables, views, and triggers to apply the mirror to Places.
  *
  * The bulk of the logic to apply all remotely changed items is defined in
- * `INSTEAD OF DELETE` triggers on the `newRemoteItems` and `newRemoteStructure`
+ * `INSTEAD OF DELETE` triggers on the `itemsToMerge` and `structureToMerge`
  * views. When we execute `DELETE FROM newRemote{Items, Structure}`, SQLite
  * fires the triggers for each row in the view. This is equivalent to, but more
  * efficient than, issuing `SELECT * FROM newRemote{Items, Structure}`,
@@ -1879,23 +1879,23 @@ async function initializeTempMirrorEntities(db) {
   // `updateExistingLocalItems` triggers below.
   const syncedAnnoTriggers = [{
     annoName: PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO,
-    columnName: "description",
+    columnName: "newDescription",
     type: PlacesUtils.annotations.TYPE_STRING,
   }, {
     annoName: PlacesSyncUtils.bookmarks.SIDEBAR_ANNO,
-    columnName: "loadInSidebar",
+    columnName: "newLoadInSidebar",
     type: PlacesUtils.annotations.TYPE_INT32,
   }, {
     annoName: PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO,
-    columnName: "smartBookmarkName",
+    columnName: "newSmartBookmarkName",
     type: PlacesUtils.annotations.TYPE_STRING,
   }, {
     annoName: PlacesUtils.LMANNO_FEEDURI,
-    columnName: "feedURL",
+    columnName: "newFeedURL",
     type: PlacesUtils.annotations.TYPE_STRING,
   }, {
     annoName: PlacesUtils.LMANNO_SITEURI,
-    columnName: "siteURL",
+    columnName: "newSiteURL",
     type: PlacesUtils.annotations.TYPE_STRING,
   }];
 
@@ -1916,14 +1916,14 @@ async function initializeTempMirrorEntities(db) {
   // moz_bookmarks`, because `REPLACE` doesn't fire the `AFTER DELETE` triggers
   // that Places uses to maintain schema coherency.
   await db.execute(`
-    CREATE TEMP VIEW newRemoteItems(localId, remoteId, localGuid, mergedGuid,
-                                    mergedLevel, needsUpdate, type, dateAdded,
-                                    title, oldPlaceId, newPlaceId, newKeyword,
-                                    description, loadInSidebar,
-                                    smartBookmarkName, feedURL, siteURL,
-                                    syncChangeCounter) AS
-    SELECT b.id, v.id, r.localGuid, r.mergedGuid, r.level,
-           r.valueState = ${BookmarkMergeState.TYPE.REMOTE},
+    CREATE TEMP VIEW itemsToMerge(localId, remoteId, hasRemoteValue, newLevel,
+                                  oldGuid, newGuid, newType, newDateAdded,
+                                  newTitle, oldPlaceId, newPlaceId, newKeyword,
+                                  newDescription, newLoadInSidebar,
+                                  newSmartBookmarkName, newFeedURL,
+                                  newSiteURL) AS
+    SELECT b.id, v.id, r.valueState = ${BookmarkMergeState.TYPE.REMOTE},
+           r.level, r.localGuid, r.mergedGuid,
            (CASE WHEN v.kind IN (${[
                         SyncedBookmarksMirror.KIND.BOOKMARK,
                         SyncedBookmarksMirror.KIND.QUERY,
@@ -1936,9 +1936,7 @@ async function initializeTempMirrorEntities(db) {
            (CASE WHEN b.dateAdded < v.dateAdded THEN b.dateAdded
                  ELSE v.dateAdded END),
            v.title, h.id, u.newPlaceId, v.keyword, v.description,
-           v.loadInSidebar, v.smartBookmarkName, v.feedURL, v.siteURL,
-           (CASE r.structureState WHEN ${BookmarkMergeState.TYPE.REMOTE} THEN 0
-            ELSE 1 END)
+           v.loadInSidebar, v.smartBookmarkName, v.feedURL, v.siteURL
     FROM items v
     JOIN mergeStates r ON r.mergedGuid = v.guid
     LEFT JOIN moz_bookmarks b ON b.guid = r.localGuid
@@ -1953,37 +1951,38 @@ async function initializeTempMirrorEntities(db) {
 
   // Changes local GUIDs to remote GUIDs, drops local tombstones for revived
   // remote items, and flags remote items as merged. In the trigger body, `OLD`
-  // refers to the row for the unmerged item in `newRemoteItems`.
+  // refers to the row for the unmerged item in `itemsToMerge`.
   await db.execute(`
     CREATE TEMP TRIGGER mergeGuids
-    INSTEAD OF DELETE ON newRemoteItems
+    INSTEAD OF DELETE ON itemsToMerge
     BEGIN
       /* We update GUIDs here, instead of in the "updateExistingLocalItems"
          trigger, because deduped items where we're keeping the local value
          state won't have "needsMerge" set. */
       UPDATE moz_bookmarks SET
-        guid = OLD.mergedGuid
-      WHERE OLD.localGuid <> OLD.mergedGuid AND
-            guid = OLD.localGuid;
+        guid = OLD.newGuid
+      WHERE OLD.oldGuid <> OLD.newGuid AND
+            id = OLD.localId;
 
       /* Record item changed notifications for the updated GUIDs. */
       INSERT INTO guidsChanged(itemId, oldGuid, level)
-      SELECT OLD.localId, OLD.localGuid, OLD.mergedLevel
-      WHERE OLD.localGuid <> OLD.mergedGuid;
+      SELECT OLD.localId, OLD.oldGuid, OLD.newLevel
+      WHERE OLD.oldGuid <> OLD.newGuid;
 
-      DELETE FROM moz_bookmarks_deleted WHERE guid = OLD.mergedGuid;
+      /* Drop local tombstones for revived remote items. */
+      DELETE FROM moz_bookmarks_deleted WHERE guid = OLD.newGuid;
 
       /* Flag the remote item as merged. */
       UPDATE items SET
         needsMerge = 0
       WHERE needsMerge AND
-            guid = OLD.mergedGuid;
+            id = OLD.remoteId;
     END`);
 
   // Inserts items from the mirror that don't exist locally.
   await db.execute(`
     CREATE TEMP TRIGGER insertNewLocalItems
-    INSTEAD OF DELETE ON newRemoteItems WHEN OLD.localId IS NULL
+    INSTEAD OF DELETE ON itemsToMerge WHEN OLD.localId IS NULL
     BEGIN
       /* Sync associates keywords with bookmarks, and doesn't sync POST data;
          Places associates keywords with (URL, POST data) pairs, and multiple
@@ -2024,14 +2023,14 @@ async function initializeTempMirrorEntities(db) {
       INSERT INTO moz_bookmarks(guid, parent, position, type, fk, title,
                                 dateAdded, lastModified, syncStatus,
                                 syncChangeCounter)
-      VALUES(OLD.mergedGuid, -1, -1, OLD.type, OLD.newPlaceId, OLD.title,
-             OLD.dateAdded, STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000,
-             ${PlacesUtils.bookmarks.SYNC_STATUS.NORMAL},
-             OLD.syncChangeCounter);
+      VALUES(OLD.newGuid, -1, -1, OLD.newType, OLD.newPlaceId, OLD.newTitle,
+             OLD.newDateAdded,
+             STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000,
+             ${PlacesUtils.bookmarks.SYNC_STATUS.NORMAL}, 0);
 
       /* Record an item added notification for the new item. */
       INSERT INTO itemsAdded(guid, level)
-      VALUES(OLD.mergedGuid, OLD.mergedLevel);
+      VALUES(OLD.newGuid, OLD.newLevel);
 
       /* Insert new keywords after the item, so that "noteKeywordAdded" can find
          the new item by Place ID. */
@@ -2042,7 +2041,7 @@ async function initializeTempMirrorEntities(db) {
       /* Record item changed notifications for the new keyword. */
       INSERT INTO keywordsChanged(itemId, placeId, keyword)
       SELECT b.id, OLD.newPlaceId, OLD.newKeyword FROM moz_bookmarks b
-      WHERE b.guid = OLD.mergedGuid AND
+      WHERE b.guid = OLD.newGuid AND
             OLD.newKeyword NOT NULL;
 
       /* Insert new tags for the URL. */
@@ -2062,7 +2061,7 @@ async function initializeTempMirrorEntities(db) {
         INSERT INTO moz_items_annos(item_id, anno_attribute_id, content, flags,
                                     expiration, type, lastModified, dateAdded)
         SELECT (SELECT id FROM moz_bookmarks
-                WHERE guid = OLD.mergedGuid),
+                WHERE guid = OLD.newGuid),
                (SELECT id FROM moz_anno_attributes
                 WHERE name = '${annoTrigger.annoName}'),
                OLD.${annoTrigger.columnName}, 0,
@@ -2074,7 +2073,7 @@ async function initializeTempMirrorEntities(db) {
         /* Record an anno set notification for the new synced anno. */
         REPLACE INTO annosChanged(itemId, annoName, wasRemoved)
         SELECT b.id, '${annoTrigger.annoName}', 0 FROM moz_bookmarks b
-        WHERE b.guid = OLD.mergedGuid AND
+        WHERE b.guid = OLD.newGuid AND
               OLD.${annoTrigger.columnName} NOT NULL;
       `).join("")}
     END`);
@@ -2082,20 +2081,20 @@ async function initializeTempMirrorEntities(db) {
   // Updates existing items with new values from the mirror.
   await db.execute(`
     CREATE TEMP TRIGGER updateExistingLocalItems
-    INSTEAD OF DELETE ON newRemoteItems WHEN OLD.needsUpdate AND
-                                             OLD.localId NOT NULL
+    INSTEAD OF DELETE ON itemsToMerge WHEN OLD.hasRemoteValue AND
+                                           OLD.localId NOT NULL
     BEGIN
       /* Record item changed notifications for the title and URL. */
       INSERT INTO itemsChanged(itemId, oldTitle, oldPlaceId, level)
-      SELECT id, title, OLD.oldPlaceId, OLD.mergedLevel FROM moz_bookmarks
+      SELECT id, title, OLD.oldPlaceId, OLD.newLevel FROM moz_bookmarks
       WHERE id = OLD.localId;
 
       UPDATE moz_bookmarks SET
-        title = OLD.title,
-        dateAdded = OLD.dateAdded,
+        title = OLD.newTitle,
+        dateAdded = OLD.newDateAdded,
         lastModified = STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000,
         syncStatus = ${PlacesUtils.bookmarks.SYNC_STATUS.NORMAL},
-        syncChangeCounter = OLD.syncChangeCounter
+        syncChangeCounter = 0
       WHERE id = OLD.localId;
 
       /* Bump the change counter for items with the old URL, new URL, and new
@@ -2194,7 +2193,7 @@ async function initializeTempMirrorEntities(db) {
       `).join("")}
     END`);
 
-  // A view of the new structure state for all items in the merged tree. The
+  // A view of the structure states for all items in the merged tree. The
   // mirror stores structure info in a separate table, like iOS, while Places
   // stores structure info on children. Unlike iOS, we can't simply check the
   // parent's merge state to know if its children changed. This is because our
@@ -2203,18 +2202,20 @@ async function initializeTempMirrorEntities(db) {
   // case, we want to keep syncing, but *don't* want to reupload the new local
   // structure to the server.
   await db.execute(`
-    CREATE TEMP VIEW newRemoteStructure(localId, oldParentId, newParentId,
-                                        oldPosition, newPosition, newLevel) AS
-    SELECT b.id, b.parent, p.id, b.position, r.position, r.level
+    CREATE TEMP VIEW structureToMerge(localId, hasNewStructure, isRoot,
+                                      oldParentId, newParentId, oldPosition,
+                                      newPosition, newLevel) AS
+    SELECT b.id, r.structureState = ${BookmarkMergeState.TYPE.NEW},
+           '${PlacesUtils.bookmarks.rootGuid}' IN (r.mergedGuid, r.parentGuid),
+           b.parent, p.id, b.position, r.position, r.level
     FROM moz_bookmarks b
     JOIN mergeStates r ON r.mergedGuid = b.guid
-    JOIN moz_bookmarks p ON p.guid = r.parentGuid
-    WHERE r.parentGuid <> '${PlacesUtils.bookmarks.rootGuid}'`);
+    JOIN moz_bookmarks p ON p.guid = r.parentGuid`);
 
   // Updates all parents and positions to reflect the merged tree.
   await db.execute(`
     CREATE TEMP TRIGGER updateLocalStructure
-    INSTEAD OF DELETE ON newRemoteStructure
+    INSTEAD OF DELETE ON structureToMerge WHEN NOT OLD.isRoot
     BEGIN
       UPDATE moz_bookmarks SET
         parent = OLD.newParentId
@@ -2238,6 +2239,17 @@ async function initializeTempMirrorEntities(db) {
             -1 NOT IN (OLD.oldParentId, OLD.oldPosition) AND
             (OLD.oldParentId <> OLD.newParentId OR
              OLD.oldPosition <> OLD.newPosition);
+    END`);
+
+  // Bump the change counter for folders with new structure state, so that
+  // they're reuploaded to the server.
+  await db.execute(`
+    CREATE TEMP TRIGGER flagNewStructure
+    INSTEAD OF DELETE ON structureToMerge WHEN OLD.hasNewStructure
+    BEGIN
+      UPDATE moz_bookmarks SET
+        syncChangeCounter = syncChangeCounter + 1
+      WHERE id = OLD.localId;
     END`);
 
   // A view of local bookmark tags. Tags, like keywords, are associated with
@@ -3269,6 +3281,9 @@ class BookmarkMerger {
    *         The two-way merge state.
    */
   resolveTwoWayValueConflict(mergedGuid, localNode, remoteNode) {
+    if (PlacesUtils.bookmarks.userContentRoots.includes(mergedGuid)) {
+      return BookmarkMergeState.local;
+    }
     if (!remoteNode.needsMerge) {
       // The node wasn't changed remotely since the last sync. Keep the local
       // state.

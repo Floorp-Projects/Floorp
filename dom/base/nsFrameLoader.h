@@ -138,13 +138,6 @@ public:
                                   bool aIgnoreRootScrollFrame,
                                   mozilla::ErrorResult& aRv);
 
-  void SendCrossProcessKeyEvent(const nsAString& aType,
-                                int32_t aKeyCode,
-                                int32_t aCharCode,
-                                int32_t aModifiers,
-                                bool aPreventDefault,
-                                mozilla::ErrorResult& aRv);
-
   void ActivateFrameEvent(const nsAString& aType,
                           bool aCapture,
                           mozilla::ErrorResult& aRv);

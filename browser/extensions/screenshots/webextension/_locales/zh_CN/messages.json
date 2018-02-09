@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "已启用“不记录历史记录”。"
   },
+  "downloadOnlyDetailsESR": {
+    "message": "您目前使用 Firefox ESR 版本。"
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "上传已被禁用。"
+  },
   "notificationLinkCopiedTitle": {
     "message": "链接已复制"
   },

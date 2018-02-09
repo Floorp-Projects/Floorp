@@ -20,7 +20,6 @@ add_task(async function test_livemarks() {
     await buf.store(shuffle([{
       id: "menu",
       type: "folder",
-      title: "Bookmarks Menu",
       children: ["livemarkAAAA"],
     }, {
       id: "livemarkAAAA",
@@ -55,12 +54,10 @@ add_task(async function test_livemarks() {
     }, {
       id: "toolbar",
       type: "folder",
-      title: "Bookmarks Toolbar",
       children: ["livemarkCCCC", "livemarkB111"],
     }, {
       id: "unfiled",
       type: "folder",
-      title: "Other Bookmarks",
       children: ["livemarkEEEE"],
     }, {
       id: "livemarkCCCC",
@@ -86,6 +83,8 @@ add_task(async function test_livemarks() {
 
     let menuInfo = await PlacesUtils.bookmarks.fetch(
       PlacesUtils.bookmarks.menuGuid);
+    let toolbarInfo = await PlacesUtils.bookmarks.fetch(
+      PlacesUtils.bookmarks.toolbarGuid);
     deepEqual(changesToUpload, {
       livemarkDDDD: {
         tombstone: false,
@@ -105,7 +104,7 @@ add_task(async function test_livemarks() {
       },
       menu: {
         tombstone: false,
-        counter: 1,
+        counter: 2,
         synced: false,
         cleartext: {
           id: "menu",
@@ -116,6 +115,21 @@ add_task(async function test_livemarks() {
           dateAdded: menuInfo.dateAdded.getTime(),
           title: menuInfo.title,
           children: ["livemarkAAAA", "livemarkDDDD"],
+        },
+      },
+      toolbar: {
+        tombstone: false,
+        counter: 1,
+        synced: false,
+        cleartext: {
+          id: "toolbar",
+          type: "folder",
+          parentid: "places",
+          hasDupe: false,
+          parentName: "",
+          dateAdded: toolbarInfo.dateAdded.getTime(),
+          title: toolbarInfo.title,
+          children: ["livemarkCCCC", "livemarkB111"],
         },
       },
     }, "Should upload new local livemark A");

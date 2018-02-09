@@ -29,13 +29,56 @@
   "downloadScreenshot": {
     "message": "Endir"
   },
+  "downloadOnlyNotice": {
+    "message": "Hazırda Ancaq-Endirmə rejimindəsiniz."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots bu vəziyyətlərdə avtomatik olaraq Ancaq-Endirmə rejiminə keçir:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Məxfi Səyahət pəncərəsində."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Üçüncü tərəf çərəzlər söndürülüb."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Tarixçəni heç vaxt xatırlama” aktivdir."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Firefox ESR işlədirsiniz."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Yükləmələr söndürülüb."
+  },
   "notificationLinkCopiedTitle": {
-    "message": "Keçid köçürüldü"
+    "message": "Keçid Köçürüldü"
   },
   "notificationLinkCopiedDetails": {
     "message": "Ekran görüntüsünün keçidi buferə köçürüldü. Yapışdırmaq üçün $META_KEY$-V basın.",
     "placeholders": {
       "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Köçür"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Görüntü Köçürüldü"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Görüntünüz mübadilə buferinə köçürüldü. Yapışdırmaq üçün $META_KEY$-V basın.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCroppedWarning": {
+    "message": "Şəkil $PIXELS$px ölçülərinə kəsildi.",
+    "placeholders": {
+      "pixels": {
         "content": "$1"
       }
     }
@@ -68,7 +111,7 @@
     "message": "Seçiminiz çox balacadır"
   },
   "privateWindowErrorTitle": {
-    "message": "Ekran görüntüləri Məxfi Səyahət rejimində sönülüdür"
+    "message": "Screenshots özəlliyi Məxfi Səyahət rejimində sönülüdür"
   },
   "privateWindowErrorDetails": {
     "message": "Narahatlıq üçün üzr istəyirik. Gələcək buraxılışlarda bu özəllik üzərində işləyirik."
@@ -81,6 +124,12 @@
   },
   "tourBodyIntro": {
     "message": "Firefoxu tərk etmədən ekran görüntüləri alın, saxlayın və paylaşın."
+  },
+  "tourHeaderPageAction": {
+    "message": "Saxlamağın yeni yolu"
+  },
+  "tourBodyPageAction": {
+    "message": "Ekran görüntüsü almaq istədiyinizdə ünvan sətrindəki səhifə əməliyyatları menyusunu açın."
   },
   "tourHeaderClickAndDrag": {
     "message": "İstədiyiniz hər şeyin görüntüsünü alın"

@@ -7,10 +7,12 @@
 const { createElement, createFactory } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
+const ObjectClient = require("devtools/shared/client/object-client");
 const ExtensionSidebarComponent = createFactory(require("./components/ExtensionSidebar"));
 
 const {
   updateObjectTreeView,
+  updateObjectValueGripView,
   removeExtensionSidebar,
 } = require("./actions/sidebar");
 
@@ -52,6 +54,50 @@ class ExtensionSidebar {
         title: this.title,
       }, ExtensionSidebarComponent({
         id: this.id,
+        serviceContainer: {
+          createObjectClient: (object) => {
+            return new ObjectClient(this.inspector.toolbox.target.client, object);
+          },
+          releaseActor: (actor) => {
+            if (!actor) {
+              return;
+            }
+            this.inspector.toolbox.target.client.release(actor);
+          },
+          highlightDomElement: (grip, options = {}) => {
+            const { highlighterUtils } = this.inspector.toolbox;
+
+            if (!highlighterUtils) {
+              return null;
+            }
+
+            return highlighterUtils.highlightDomValueGrip(grip, options);
+          },
+          unHighlightDomElement: (forceHide = false) => {
+            const { highlighterUtils } = this.inspector.toolbox;
+
+            if (!highlighterUtils) {
+              return null;
+            }
+
+            return highlighterUtils.unhighlight(forceHide);
+          },
+          openNodeInInspector: async (grip) => {
+            const { highlighterUtils } = this.inspector.toolbox;
+
+            if (!highlighterUtils) {
+              return null;
+            }
+
+            let front = await highlighterUtils.gripToNodeFront(grip);
+            let onInspectorUpdated = this.inspector.once("inspector-updated");
+            let onNodeFrontSet = this.inspector.toolbox.selection.setNodeFront(
+              front, "inspector-extension-sidebar"
+            );
+
+            return Promise.all([onNodeFrontSet, onInspectorUpdated]);
+          }
+        },
       }));
     }
 
@@ -92,6 +138,19 @@ class ExtensionSidebar {
     }
 
     this.store.dispatch(updateObjectTreeView(this.id, object));
+  }
+
+  /**
+   * Dispatch an objectPreview action to change the SidebarComponent into an
+   * ObjectPreview React Component, which shows the passed value grip
+   * in the sidebar.
+   */
+  setObjectValueGrip(objectValueGrip, rootTitle) {
+    if (this.removed) {
+      throw new Error("Unable to set an object preview on a removed ExtensionSidebar");
+    }
+
+    this.store.dispatch(updateObjectValueGripView(this.id, objectValueGrip, rootTitle));
   }
 }
 

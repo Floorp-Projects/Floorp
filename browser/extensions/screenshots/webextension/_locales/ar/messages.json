@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "”لا تتذكر التأريخ أبدًا“ مفعّل."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "تستخدم الإصدارة طويلة الدعم من فَيَرفُكس."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "عُطل الرفع."
+  },
   "notificationLinkCopiedTitle": {
     "message": "نُسخ الرابط"
   },

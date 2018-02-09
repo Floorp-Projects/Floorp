@@ -44,11 +44,31 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "“ઇતિહાસ ક્યારેય ન સંભારવો” સક્ષમ કરેલુ છે."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "તમે Firefox ESR નો ઉપયોગ કરી રહ્યા છો."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "અપલોડ્સ અક્ષમ કરવામાં આવ્યા છે."
+  },
   "notificationLinkCopiedTitle": {
     "message": "લિંક કૉપિ"
   },
   "notificationLinkCopiedDetails": {
     "message": "તમારા શોટ માટે લિંક ક્લિપબોર્ડ પર કૉપિ કરવામાં આવ્યું છે. પ્રેસ $META_KEY$ -V પેસ્ટ કરવા માટે.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "નકલ કરો"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "શોટ નકલ કર્યો"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "તમારા શોટ ક્લિપબોર્ડ પર નકલ કરવામાં આવ્યાં છે. પેસ્ટ કરવા માટે $META_KEY$-V દબાવો.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
