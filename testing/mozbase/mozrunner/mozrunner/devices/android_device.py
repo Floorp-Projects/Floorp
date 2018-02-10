@@ -177,7 +177,8 @@ def _maybe_update_host_utils(build_obj):
                 _install_host_utils(build_obj)
 
 
-def verify_android_device(build_obj, install=False, xre=False, debugger=False, verbose=False):
+def verify_android_device(build_obj, install=False, xre=False, debugger=False,
+                          verbose=False, app=None):
     """
        Determine if any Android device is connected via adb.
        If no device is found, prompt to start an emulator.
@@ -225,14 +226,22 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False, v
         #  - installation may take a couple of minutes.
         installed = emulator.dm.shellCheckOutput(['pm', 'list',
                                                   'packages', 'org.mozilla.'])
-        if 'fennec' not in installed and 'firefox' not in installed:
-            response = raw_input(
-                "It looks like Firefox is not installed on this device.\n"
-                "Install Firefox? (Y/n) ").strip()
-            if response.lower().startswith('y') or response == '':
-                _log_info("Installing Firefox. This may take a while...")
-                build_obj._run_make(directory=".", target='install',
-                                    ensure_exit_code=False)
+        if not app:
+            app = build_obj.substs["ANDROID_PACKAGE_NAME"]
+        if app not in installed:
+            if 'fennec' not in app and 'firefox' not in app:
+                raw_input(
+                    "It looks like %s is not installed on this device,\n"
+                    "but I don't know how to install it.\n"
+                    "Install it now, then hit Enter " % app)
+            else:
+                response = raw_input(
+                    "It looks like %s is not installed on this device.\n"
+                    "Install Firefox? (Y/n) " % app).strip()
+                if response.lower().startswith('y') or response == '':
+                    _log_info("Installing Firefox. This may take a while...")
+                    build_obj._run_make(directory=".", target='install',
+                                        ensure_exit_code=False)
 
     if device_verified and xre:
         # Check whether MOZ_HOST_BIN has been set to a valid xre; if not,

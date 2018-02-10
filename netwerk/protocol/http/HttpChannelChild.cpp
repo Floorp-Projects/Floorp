@@ -2751,7 +2751,6 @@ HttpChannelChild::ContinueAsyncOpen()
 
   openArgs.corsMode() = mCorsMode;
   openArgs.redirectMode() = mRedirectMode;
-  openArgs.fetchCacheMode() = mFetchCacheMode;
 
   openArgs.channelId() = mChannelId;
 

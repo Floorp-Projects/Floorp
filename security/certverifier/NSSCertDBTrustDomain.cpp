@@ -785,18 +785,30 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
     return rv;
   }
 
-  CERTCertListNode* rootNode = CERT_LIST_TAIL(certList);
-  if (!rootNode) {
+  // Modernization in-progress: Keep certList as a CERTCertList for storage into
+  // the mBuiltChain variable at the end, but let's use nsNSSCertList for the
+  // validity calculations.
+  UniqueCERTCertList certListCopy = nsNSSCertList::DupCertList(certList);
+
+  // This adopts the list
+  RefPtr<nsNSSCertList> nssCertList = new nsNSSCertList(Move(certListCopy));
+  if (!nssCertList) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
-  CERTCertificate* root = rootNode->cert;
+
+  nsCOMPtr<nsIX509Cert> rootCert;
+  nsresult nsrv = nssCertList->GetRootCertificate(rootCert);
+  if (NS_FAILED(nsrv)) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+  UniqueCERTCertificate root(rootCert->GetCert());
   if (!root) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
   bool isBuiltInRoot = false;
-  rv = IsCertBuiltInRoot(root, isBuiltInRoot);
-  if (rv != Success) {
-    return rv;
+  nsrv = rootCert->GetIsBuiltInRoot(&isBuiltInRoot);
+  if (NS_FAILED(nsrv)) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
   bool skipPinningChecksBecauseOfMITMMode =
     (!isBuiltInRoot && mPinningMode == CertVerifier::pinningAllowUserCAMITM);
@@ -807,8 +819,8 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
     bool enforceTestMode =
       (mPinningMode == CertVerifier::pinningEnforceTestMode);
     bool chainHasValidPins;
-    nsresult nsrv = PublicKeyPinningService::ChainHasValidPins(
-      certList, mHostname, time, enforceTestMode, mOriginAttributes,
+    nsrv = PublicKeyPinningService::ChainHasValidPins(
+      nssCertList, mHostname, time, enforceTestMode, mOriginAttributes,
       chainHasValidPins, mPinningTelemetryInfo);
     if (NS_FAILED(nsrv)) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
@@ -824,19 +836,38 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
   // chain as well. It should be possible to remove this workaround after
   // January 2019 as per bug 1349727 comment 17.
   if (requiredPolicy == sGlobalSignEVPolicy &&
-      CertMatchesStaticData(root, sGlobalSignRootCAR2SubjectBytes,
+      CertMatchesStaticData(root.get(), sGlobalSignRootCAR2SubjectBytes,
                             sGlobalSignRootCAR2SPKIBytes)) {
+
+    rootCert = nullptr; // Clear the state for Segment...
+    nsCOMPtr<nsIX509CertList> intCerts;
+    nsCOMPtr<nsIX509Cert> eeCert;
+
+    nsrv = nssCertList->SegmentCertificateChain(rootCert, intCerts, eeCert);
+    if (NS_FAILED(nsrv)) {
+      // This chain is supposed to be complete, so this is an error. There
+      // are no intermediates, so return before searching just as if the
+      // search failed.
+      return Result::ERROR_POLICY_VALIDATION_FAILED;
+    }
+
     bool foundRequiredIntermediate = false;
-    for (CERTCertListNode* node = CERT_LIST_HEAD(certList);
-         !CERT_LIST_END(node, certList); node = CERT_LIST_NEXT(node)) {
-      if (CertMatchesStaticData(
-            node->cert,
+    RefPtr<nsNSSCertList> intCertList = intCerts->GetCertList();
+    intCertList->ForEachCertificateInChain(
+      [&foundRequiredIntermediate] (nsCOMPtr<nsIX509Cert> aCert, bool aHasMore,
+                                    /* out */ bool& aContinue) {
+        // We need an owning handle when calling nsIX509Cert::GetCert().
+        UniqueCERTCertificate nssCert(aCert->GetCert());
+        if (CertMatchesStaticData(
+            nssCert.get(),
             sGlobalSignExtendedValidationCASHA256G2SubjectBytes,
             sGlobalSignExtendedValidationCASHA256G2SPKIBytes)) {
-        foundRequiredIntermediate = true;
-        break;
-      }
-    }
+          foundRequiredIntermediate = true;
+          aContinue = false;
+        }
+        return NS_OK;
+    });
+
     if (!foundRequiredIntermediate) {
       return Result::ERROR_POLICY_VALIDATION_FAILED;
     }
