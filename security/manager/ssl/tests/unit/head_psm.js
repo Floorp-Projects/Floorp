@@ -607,12 +607,9 @@ function getFailingHttpServer(serverPort, serverIdentities) {
 //   by which HTTP method the server is expected to be queried.
 // expectedResponseTypes is an optional array of OCSP response types to use (see
 //   GenerateOCSPResponse.cpp).
-// responseHeaderPairs is an optional array of HTTP header (name, value) pairs
-//   to set in each response.
 function startOCSPResponder(serverPort, identity, nssDBLocation,
                             expectedCertNames, expectedBasePaths,
-                            expectedMethods, expectedResponseTypes,
-                            responseHeaderPairs = []) {
+                            expectedMethods, expectedResponseTypes) {
   let ocspResponseGenerationArgs = expectedCertNames.map(
     function(expectedNick) {
       let responseType = "good";
@@ -641,9 +638,6 @@ function startOCSPResponder(serverPort, identity, nssDBLocation,
       }
       aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
       aResponse.setHeader("Content-Type", "application/ocsp-response");
-      for (let headerPair of responseHeaderPairs) {
-        aResponse.setHeader(headerPair[0], headerPair[1]);
-      }
       aResponse.write(ocspResponses.shift());
     });
   httpServer.identity.setPrimary("http", identity, serverPort);
