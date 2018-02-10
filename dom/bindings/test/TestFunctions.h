@@ -42,6 +42,9 @@ public:
 
   void TestThrowNsresult(ErrorResult& aError);
   void TestThrowNsresultFromNative(ErrorResult& aError);
+  static already_AddRefed<Promise>
+  ThrowToRejectPromise(GlobalObject& aGlobal,
+                       ErrorResult& aError);
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aWrapper);

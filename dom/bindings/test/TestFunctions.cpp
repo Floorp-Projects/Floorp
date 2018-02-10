@@ -101,6 +101,13 @@ TestFunctions::TestThrowNsresultFromNative(ErrorResult& aError)
   aError = impl->TestThrowNsresultFromNative();
 }
 
+already_AddRefed<Promise>
+TestFunctions::ThrowToRejectPromise(GlobalObject& aGlobal, ErrorResult& aError)
+{
+  aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  return nullptr;
+}
+
 bool
 TestFunctions::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                           JS::MutableHandle<JSObject*> aWrapper)

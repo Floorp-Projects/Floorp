@@ -14,7 +14,7 @@
  * 4) A subframe (frames[0]) which can be used as a second global for creating
  *    promises.
  */
-var label = parent;
+var label = "parent";
 
 function passBasicPromise() {
   var p1 = Promise.resolve();

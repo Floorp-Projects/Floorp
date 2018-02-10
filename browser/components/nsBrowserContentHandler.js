@@ -797,10 +797,27 @@ nsDefaultCommandLineHandler.prototype = {
           return;
         }
       }
+      if (cmdLine.state == nsICommandLine.STATE_INITIAL_LAUNCH) {
+        let win = Services.wm.getMostRecentWindow("navigator:blank");
+        if (win) {
+          win.location = gBrowserContentHandler.chromeURL;
+          win.arguments = [gBrowserContentHandler.defaultArgs];
+          return;
+        }
+      }
+
       // Passing defaultArgs, so use NO_EXTERNAL_URIS
       openWindow(null, gBrowserContentHandler.chromeURL, "_blank",
                  "chrome,dialog=no,all" + gBrowserContentHandler.getFeatures(cmdLine),
                  gBrowserContentHandler.defaultArgs, NO_EXTERNAL_URIS);
+    } else {
+      // Need a better solution in the future to avoid opening the blank window
+      // when command line parameters say we are not going to show a browser
+      // window, but for now the blank window getting closed quickly (and
+      // causing only a slight flicker) is better than leaving it open.
+      let win = Services.wm.getMostRecentWindow("navigator:blank");
+      if (win)
+        win.close();
     }
   },
 

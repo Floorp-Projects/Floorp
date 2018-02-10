@@ -3247,11 +3247,8 @@ StaticMethodPromiseWrapper(JSContext* cx, unsigned argc, JS::Value* vp);
 // simply be propagated.  Otherwise this method will attempt to convert the
 // exception to a Promise rejected with the exception that it will store in
 // rval.
-//
-// promiseScope should be the scope in which the Promise should be created.
 bool
 ConvertExceptionToPromise(JSContext* cx,
-                          JSObject* promiseScope,
                           JS::MutableHandle<JS::Value> rval);
 
 #ifdef DEBUG
