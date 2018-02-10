@@ -6,13 +6,6 @@ requestLongerTimeout(2);
 
 let extData = {
   manifest: {
-    commands: {
-      _execute_sidebar_action: {
-        suggested_key: {
-          default: "Ctrl+Shift+I",
-        },
-      },
-    },
     sidebar_action: {
       default_panel: "sidebar.html",
     },
@@ -57,6 +50,17 @@ let extData = {
   },
 };
 
+function getExtData(manifestUpdates = {}) {
+  return {
+    ...extData,
+    manifest: {
+      ...extData.manifest,
+      ...manifestUpdates,
+    },
+  };
+}
+
+
 async function sendMessage(ext, msg, data = undefined) {
   ext.sendMessage({msg, data});
   await ext.awaitMessage("done");
@@ -64,7 +68,7 @@ async function sendMessage(ext, msg, data = undefined) {
 
 add_task(async function sidebar_initial_install() {
   ok(document.getElementById("sidebar-box").hidden, "sidebar box is not visible");
-  let extension = ExtensionTestUtils.loadExtension(extData);
+  let extension = ExtensionTestUtils.loadExtension(getExtData());
   await extension.startup();
   // Test sidebar is opened on install
   await extension.awaitMessage("sidebar");
@@ -77,14 +81,14 @@ add_task(async function sidebar_initial_install() {
 
 
 add_task(async function sidebar_two_sidebar_addons() {
-  let extension2 = ExtensionTestUtils.loadExtension(extData);
+  let extension2 = ExtensionTestUtils.loadExtension(getExtData());
   await extension2.startup();
   // Test sidebar is opened on install
   await extension2.awaitMessage("sidebar");
   ok(!document.getElementById("sidebar-box").hidden, "sidebar box is visible");
 
   // Test second sidebar install opens new sidebar
-  let extension3 = ExtensionTestUtils.loadExtension(extData);
+  let extension3 = ExtensionTestUtils.loadExtension(getExtData());
   await extension3.startup();
   // Test sidebar is opened on install
   await extension3.awaitMessage("sidebar");
@@ -98,7 +102,7 @@ add_task(async function sidebar_two_sidebar_addons() {
 });
 
 add_task(async function sidebar_empty_panel() {
-  let extension = ExtensionTestUtils.loadExtension(extData);
+  let extension = ExtensionTestUtils.loadExtension(getExtData());
   await extension.startup();
   // Test sidebar is opened on install
   await extension.awaitMessage("sidebar");
@@ -109,7 +113,7 @@ add_task(async function sidebar_empty_panel() {
 
 add_task(async function sidebar_isOpen() {
   info("Load extension1");
-  let extension1 = ExtensionTestUtils.loadExtension(extData);
+  let extension1 = ExtensionTestUtils.loadExtension(getExtData());
   await extension1.startup();
 
   info("Test extension1's sidebar is opened on install");
@@ -117,14 +121,8 @@ add_task(async function sidebar_isOpen() {
   await sendMessage(extension1, "isOpen", {result: true});
   let sidebar1ID = SidebarUI.currentID;
 
-  // Test that the key is set for the extension.
-  let button = document.getElementById(`button_${makeWidgetId(extension1.id)}-sidebar-action`);
-  ok(button.hasAttribute("key"), "The menu item has a key specified");
-  let key = document.getElementById(button.getAttribute("key"));
-  ok(key, "The key attribute finds the related key element");
-
   info("Load extension2");
-  let extension2 = ExtensionTestUtils.loadExtension(extData);
+  let extension2 = ExtensionTestUtils.loadExtension(getExtData());
   await extension2.startup();
 
   info("Test extension2's sidebar is opened on install");
@@ -164,6 +162,64 @@ add_task(async function sidebar_isOpen() {
   SidebarUI.hide();
   await sendMessage(extension1, "isOpen", {result: false});
   await sendMessage(extension2, "isOpen", {result: false});
+
+  await extension1.unload();
+  await extension2.unload();
+});
+
+add_task(async function testShortcuts() {
+  function verifyShortcut(id, commandKey) {
+    // We're just testing the command key since the modifiers have different
+    // icons on different platforms.
+    let button = document.getElementById(`button_${makeWidgetId(id)}-sidebar-action`);
+    ok(button.hasAttribute("key"), "The menu item has a key specified");
+    let key = document.getElementById(button.getAttribute("key"));
+    ok(key, "The key attribute finds the related key element");
+    ok(button.getAttribute("shortcut").endsWith(commandKey),
+       "The shortcut has the right key");
+  }
+
+  let extension1 = ExtensionTestUtils.loadExtension(
+    getExtData({
+      commands: {
+        _execute_sidebar_action: {
+          suggested_key: {
+            default: "Ctrl+Shift+I",
+          },
+        },
+      },
+    }));
+  let extension2 = ExtensionTestUtils.loadExtension(
+    getExtData({
+      commands: {
+        _execute_sidebar_action: {
+          suggested_key: {
+            default: "Ctrl+Shift+E",
+          },
+        },
+      },
+    }));
+
+  await extension1.startup();
+  await extension1.awaitMessage("sidebar");
+
+  // Open and close the switcher panel to trigger shortcut content rendering.
+  let switcherPanelShown = promisePopupShown(SidebarUI._switcherPanel);
+  SidebarUI.showSwitcherPanel();
+  await switcherPanelShown;
+  let switcherPanelHidden = promisePopupHidden(SidebarUI._switcherPanel);
+  SidebarUI.hideSwitcherPanel();
+  await switcherPanelHidden;
+
+  // Test that the key is set for the extension after the shortcuts are rendered.
+  verifyShortcut(extension1.id, "I");
+
+  await extension2.startup();
+  await extension2.awaitMessage("sidebar");
+
+  // Once the switcher panel has been opened new shortcuts should be added
+  // automatically.
+  verifyShortcut(extension2.id, "E");
 
   await extension1.unload();
   await extension2.unload();

@@ -87,7 +87,7 @@ StyleSetHandle::Ptr::GetAuthorStyleDisabled() const
   FORWARD(GetAuthorStyleDisabled, ());
 }
 
-nsresult
+void
 StyleSetHandle::Ptr::SetAuthorStyleDisabled(bool aStyleDisabled)
 {
   FORWARD(SetAuthorStyleDisabled, (aStyleDisabled));

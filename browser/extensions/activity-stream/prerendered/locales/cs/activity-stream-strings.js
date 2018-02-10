@@ -32,9 +32,9 @@ window.gActivityStreamStrings = {
   "confirm_history_delete_notice_p2": "Tuto akci nelze vzít zpět.",
   "menu_action_save_to_pocket": "Uložit do služby Pocket",
   "search_for_something_with": "Vyhledat {search_term} s:",
-  "search_button": "Hledat",
+  "search_button": "Vyhledat",
   "search_header": "Vyhledat pomocí {search_engine_name}",
-  "search_web_placeholder": "Hledat na webu",
+  "search_web_placeholder": "Vyhledat na webu",
   "search_settings": "Změnit nastavení vyhledávání",
   "section_info_option": "Informace",
   "section_info_send_feedback": "Zpětná vazba",
@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Už jste všechno přečetli. Další příběhy ze služby {provider} tu najdete zase později. Ale pokud se nemůžete dočkat, vyberte své oblíbené téma a podívejte se na další velké příběhy z celého webu.",
   "manual_migration_explanation2": "Vyzkoušejte Firefox se záložkami, historií a hesly z jiného vašeho prohlížeče.",
   "manual_migration_cancel_button": "Ne, děkuji",
-  "manual_migration_import_button": "Importovat nyní"
+  "manual_migration_import_button": "Importovat nyní",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

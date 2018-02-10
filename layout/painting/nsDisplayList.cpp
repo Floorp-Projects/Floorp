@@ -7563,24 +7563,24 @@ nsDisplayStickyPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
     stickyScrollContainer->ScrollFrame()->GetScrolledFrame()->GetContent());
 
   float factor = presContext->AppUnitsPerDevPixel();
-  nsRect outer;
-  nsRect inner;
+  nsCoordBox outer;
+  nsCoordBox inner;
   stickyScrollContainer->GetScrollRanges(mFrame, &outer, &inner);
-  LayerRect stickyOuter(NSAppUnitsToFloatPixels(outer.x, factor) *
+  LayerBox stickyOuter(NSAppUnitsToFloatPixels(outer.X(), factor) *
                           aContainerParameters.mXScale,
-                        NSAppUnitsToFloatPixels(outer.y, factor) *
+                        NSAppUnitsToFloatPixels(outer.Y(), factor) *
                           aContainerParameters.mYScale,
-                        NSAppUnitsToFloatPixels(outer.width, factor) *
+                        NSAppUnitsToFloatPixels(outer.XMost(), factor) *
                           aContainerParameters.mXScale,
-                        NSAppUnitsToFloatPixels(outer.height, factor) *
+                        NSAppUnitsToFloatPixels(outer.YMost(), factor) *
                           aContainerParameters.mYScale);
-  LayerRect stickyInner(NSAppUnitsToFloatPixels(inner.x, factor) *
+  LayerBox stickyInner(NSAppUnitsToFloatPixels(inner.X(), factor) *
                           aContainerParameters.mXScale,
-                        NSAppUnitsToFloatPixels(inner.y, factor) *
+                        NSAppUnitsToFloatPixels(inner.Y(), factor) *
                           aContainerParameters.mYScale,
-                        NSAppUnitsToFloatPixels(inner.width, factor) *
+                        NSAppUnitsToFloatPixels(inner.XMost(), factor) *
                           aContainerParameters.mXScale,
-                        NSAppUnitsToFloatPixels(inner.height, factor) *
+                        NSAppUnitsToFloatPixels(inner.YMost(), factor) *
                           aContainerParameters.mYScale);
   layer->SetStickyPositionData(scrollId, stickyOuter, stickyInner);
 
@@ -7640,8 +7640,8 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
     wr::StickyOffsetBounds hBounds = { 0.0, 0.0 };
     nsPoint appliedOffset;
 
-    nsRect outer;
-    nsRect inner;
+    nsCoordBox outer;
+    nsCoordBox inner;
     stickyScrollContainer->GetScrollRanges(mFrame, &outer, &inner);
 
     nsIFrame* scrollFrame = do_QueryFrame(stickyScrollContainer->ScrollFrame());
@@ -7693,19 +7693,19 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
         MOZ_ASSERT(appliedOffset.y > 0);
       }
     }
-    if (outer.y != inner.y) {
+    if (outer.Y() != inner.Y()) {
       // Similar logic as in the previous section, but this time we care about
       // the distance from itemBounds.YMost() to scrollPort.YMost().
-      nscoord distance = DistanceToRange(outer.y, inner.y);
+      nscoord distance = DistanceToRange(outer.Y(), inner.Y());
       bottomMargin = Some(NSAppUnitsToFloatPixels(scrollPort.YMost() - itemBounds.YMost() + distance, auPerDevPixel));
       // And here WR will be moving the item upwards rather than downwards so
       // again things are inverted from the previous block.
-      vBounds.min = NSAppUnitsToFloatPixels(outer.y - inner.y, auPerDevPixel);
+      vBounds.min = NSAppUnitsToFloatPixels(outer.Y() - inner.Y(), auPerDevPixel);
       // We can't have appliedOffset be both positive and negative, and the top
       // adjustment takes priority. So here we only update appliedOffset.y if
       // it wasn't set by the top-sticky case above.
-      if (appliedOffset.y == 0 && inner.y > 0) {
-        appliedOffset.y = std::max(0, outer.y) - inner.y;
+      if (appliedOffset.y == 0 && inner.Y() > 0) {
+        appliedOffset.y = std::max(0, outer.Y()) - inner.Y();
         MOZ_ASSERT(appliedOffset.y < 0);
       }
     }
@@ -7719,12 +7719,12 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
         MOZ_ASSERT(appliedOffset.x > 0);
       }
     }
-    if (outer.x != inner.x) {
-      nscoord distance = DistanceToRange(outer.x, inner.x);
+    if (outer.X() != inner.X()) {
+      nscoord distance = DistanceToRange(outer.X(), inner.X());
       rightMargin = Some(NSAppUnitsToFloatPixels(scrollPort.XMost() - itemBounds.XMost() + distance, auPerDevPixel));
-      hBounds.min = NSAppUnitsToFloatPixels(outer.x - inner.x, auPerDevPixel);
-      if (appliedOffset.x == 0 && inner.x > 0) {
-        appliedOffset.x = std::max(0, outer.x) - inner.x;
+      hBounds.min = NSAppUnitsToFloatPixels(outer.X() - inner.X(), auPerDevPixel);
+      if (appliedOffset.x == 0 && inner.X() > 0) {
+        appliedOffset.x = std::max(0, outer.X()) - inner.X();
         MOZ_ASSERT(appliedOffset.x < 0);
       }
     }

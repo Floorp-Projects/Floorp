@@ -167,8 +167,12 @@ public:
     return mRawSet.get();
   }
 
-  bool GetAuthorStyleDisabled() const;
-  nsresult SetAuthorStyleDisabled(bool aStyleDisabled);
+  bool GetAuthorStyleDisabled() const
+  {
+    return mAuthorStyleDisabled;
+  }
+
+  void SetAuthorStyleDisabled(bool aStyleDisabled);
 
   void BeginUpdate();
   nsresult EndUpdate();

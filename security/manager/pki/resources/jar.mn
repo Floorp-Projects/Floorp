@@ -4,10 +4,6 @@
 
 pippki.jar:
 % content pippki %content/pippki/
-    content/pippki/CAOverlay.xul             (content/CAOverlay.xul)
-    content/pippki/MineOverlay.xul           (content/MineOverlay.xul)
-    content/pippki/OthersOverlay.xul         (content/OthersOverlay.xul)
-    content/pippki/WebSitesOverlay.xul       (content/WebSitesOverlay.xul)
     content/pippki/certManager.js            (content/certManager.js)
     content/pippki/certManager.xul           (content/certManager.xul)
     content/pippki/certViewer.js             (content/certViewer.js)

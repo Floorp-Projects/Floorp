@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "તમે પકડાઈ ગયા છો. {પ્રદાતા} તરફથી વધુ ટોચની વાતો માટે પછીથી પાછા તપાસો. રાહ નથી જોઈ શકતા? સમગ્ર વેબ પરથી વધુ સુંદર વાર્તાઓ શોધવા માટે એક લોકપ્રિય વિષય પસંદ કરો.",
   "manual_migration_explanation2": "અન્ય બ્રાઉઝરથી બુકમાર્ક્સ, ઇતિહાસ અને પાસવર્ડ્સ સાથે ફાયરફોક્સ અજમાવો.",
   "manual_migration_cancel_button": "ના અભાર",
-  "manual_migration_import_button": "હવે આયાત કરો"
+  "manual_migration_import_button": "હવે આયાત કરો",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

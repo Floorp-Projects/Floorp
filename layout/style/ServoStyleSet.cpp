@@ -355,23 +355,20 @@ ServoStyleSet::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
   // - mDocument, because it a non-owning pointer
 }
 
-bool
-ServoStyleSet::GetAuthorStyleDisabled() const
-{
-  return mAuthorStyleDisabled;
-}
-
-nsresult
+void
 ServoStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled)
 {
   if (mAuthorStyleDisabled == aStyleDisabled) {
-    return NS_OK;
+    return;
   }
 
   mAuthorStyleDisabled = aStyleDisabled;
-  MarkOriginsDirty(OriginFlags::Author);
-
-  return NS_OK;
+  if (Element* root = mDocument->GetRootElement()) {
+    if (nsPresContext* pc = GetPresContext()) {
+      pc->RestyleManager()->PostRestyleEvent(root, eRestyle_Subtree, nsChangeHint(0));
+    }
+  }
+  Servo_StyleSet_SetAuthorStyleDisabled(mRawSet.get(), mAuthorStyleDisabled);
 }
 
 void
@@ -1099,9 +1096,7 @@ ServoStyleSet::MarkOriginsDirty(OriginFlags aChangedOrigins)
   }
 
   SetStylistStyleSheetsDirty();
-  Servo_StyleSet_NoteStyleSheetsChanged(mRawSet.get(),
-                                        mAuthorStyleDisabled,
-                                        aChangedOrigins);
+  Servo_StyleSet_NoteStyleSheetsChanged(mRawSet.get(), aChangedOrigins);
 }
 
 void

@@ -13,7 +13,6 @@ XPIDL_SOURCES += [
     'nsIDOMHTMLMediaElement.idl',
     'nsIDOMMozBrowserFrame.idl',
     'nsIDOMTimeRanges.idl',
-    'nsIDOMValidityState.idl',
     'nsIMozBrowserFrame.idl',
 ]
 

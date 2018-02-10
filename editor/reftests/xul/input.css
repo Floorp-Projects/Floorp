@@ -39,21 +39,12 @@ html|input.num {
   text-align: end;
 }
 
-#mac html|input.num {
-  margin-inline-end: 8px;
-}
-
-#win html|input.num {
-  padding: 0 !important;
-}
-
+/* .textbox-input has 1px extra padding on Linux */
 #linux html|input.num {
-  margin-inline-end: 3px;
-  padding: 3px 4px;
+  padding-inline-end: 3px;
 }
 
 html|div.plainfield {
   color: -moz-fieldtext;
   white-space: pre;
 }
-

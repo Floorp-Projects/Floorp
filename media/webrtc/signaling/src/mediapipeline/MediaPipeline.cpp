@@ -1104,7 +1104,7 @@ MediaPipeline::RtpPacketReceived(TransportLayer* aLayer,
   }
 
   webrtc::RTPHeader header;
-  if (!mRtpParser->Parse(aData, aLen, &header)) {
+  if (!mRtpParser->Parse(aData, aLen, &header, true)) {
     return;
   }
 

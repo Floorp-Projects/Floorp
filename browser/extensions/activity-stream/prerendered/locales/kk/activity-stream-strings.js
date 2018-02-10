@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Дайын. {provider} ұсынған көбірек мақалаларды алу үшін кейінірек тексеріңіз. Күте алмайсыз ба? Интернеттен көбірек тамаша мақалаларды алу үшін әйгілі теманы таңдаңыз.",
   "manual_migration_explanation2": "Firefox қолданбасын басқа браузер бетбелгілері, тарихы және парольдерімен қолданып көріңіз.",
   "manual_migration_cancel_button": "Жоқ, рахмет",
-  "manual_migration_import_button": "Қазір импорттау"
+  "manual_migration_import_button": "Қазір импорттау",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

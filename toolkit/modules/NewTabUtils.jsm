@@ -1031,11 +1031,19 @@ var ActivityStreamProvider = {
                   .filter(item => item.status === "0")
                   .map(item => ({
                     description: item.excerpt,
-                    preview_image_url: item.has_image === "1" && item.image.src,
+                    preview_image_url: item.image && item.image.src,
                     title: item.resolved_title,
                     url: item.resolved_url,
-                    item_id: item.item_id
+                    pocket_id: item.item_id
                   }));
+
+    // Add bookmark guid for Pocket items that are also bookmarks
+    for (let item of items) {
+      const bookmarkData = await this.getBookmark({url: item.url});
+      if (bookmarkData) {
+        item.bookmarkGuid = bookmarkData.bookmarkGuid;
+      }
+    }
     return this._processHighlights(items, aOptions, "pocket");
   },
 
@@ -1225,13 +1233,16 @@ var ActivityStreamProvider = {
   },
 
   /**
-   * Gets a specific bookmark given an id
+   * Gets a specific bookmark given some info about it
    *
-   * @param {String} aGuid
-   *          A bookmark guid to use as a refrence to fetch the bookmark
+   * @param {Obj} aInfo
+   *          An object with one and only one of the following properties:
+   *            - url
+   *            - guid
+   *            - parentGuid and index
    */
-  async getBookmark(aGuid) {
-    let bookmark = await PlacesUtils.bookmarks.fetch(aGuid);
+  async getBookmark(aInfo) {
+    let bookmark = await PlacesUtils.bookmarks.fetch(aInfo);
     if (!bookmark) {
       return null;
     }
@@ -1353,6 +1364,19 @@ var ActivityStreamLinks = {
     const url = aUrl;
     PinnedLinks.unpin({url});
     return PlacesUtils.history.remove(url);
+  },
+
+  /**
+   * Helper function which makes the call to the Pocket API to delete an item from
+   * a user's saved to Pocket feed.
+   *
+   * @param {Integer} aItemID
+   *           The unique pocket ID used to find the item to be deleted
+   *
+   *@returns {Promise} Returns a promise at completion
+   */
+  deletePocketEntry(aItemID) {
+    return new Promise((success, error) => pktApi.deleteItem(aItemID, {success, error}));
   },
 
   /**

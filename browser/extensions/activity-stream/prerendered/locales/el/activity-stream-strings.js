@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Δεν υπάρχει κάτι νεότερο. Ελέγξτε αργότερα για περισσότερες ιστορίες από τον πάροχο {provider}. Δεν μπορείτε να περιμένετε; Διαλέξτε κάποιο από τα δημοφιλή θέματα και ανακαλύψτε ενδιαφέρουσες ιστορίες από όλο τον Ιστό.",
   "manual_migration_explanation2": "Δοκιμάστε το Firefox με τους σελιδοδείκτες, το ιστορικό και τους κωδικούς πρόσβασης από ένα άλλο πρόγραμμα περιήγησης.",
   "manual_migration_cancel_button": "Όχι ευχαριστώ",
-  "manual_migration_import_button": "Εισαγωγή τώρα"
+  "manual_migration_import_button": "Εισαγωγή τώρα",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };
