@@ -7,6 +7,7 @@
    there are overrides for each platform in their compacttheme.css files. */
 
 :root:-moz-lwtheme {
+  --toolbar-color: var(--chrome-color);
   --toolbar-bgcolor: var(--chrome-secondary-background-color);
   --toolbar-non-lwt-bgcolor: var(--toolbar-bgcolor);
   --toolbar-non-lwt-textcolor: var(--chrome-color);
@@ -26,13 +27,13 @@
   --chrome-selection-background-color: #5675B9;
 
   /* Url and search bars */
-  --url-and-searchbar-background-color: rgb(71, 71, 73);
-  --url-and-searchbar-color: var(--chrome-color);
+  --lwt-toolbar-field-background-color: rgb(71, 71, 73);
+  --lwt-toolbar-field-color: var(--chrome-color);
   --urlbar-separator-color: #5F6670;
 }
 
 :root:-moz-lwtheme-darktext {
-  --url-and-searchbar-background-color: #fff;
+  --lwt-toolbar-field-background-color: #fff;
 
   --chrome-background-color: #E3E4E6;
   --chrome-color: #18191a;
@@ -74,13 +75,6 @@ toolbar[brighttext] .toolbarbutton-1 {
   background-color: var(--chrome-secondary-background-color) !important;
   background-image: none !important;
   color: var(--chrome-color);
-}
-
-/* Default findbar text color doesn't look good - Bug 1125677 */
-.browserContainer > findbar .findbar-find-status,
-.browserContainer > findbar .found-matches,
-.browserContainer > findbar .findbar-button {
-  color: inherit;
 }
 
 /* URL bar and search bar*/

@@ -94,6 +94,7 @@ toolbar[brighttext] {
 .findbar-button {
   -moz-appearance: none;
   padding: 0;
+  color: inherit;
 }
 
 toolbar .toolbarbutton-1 {

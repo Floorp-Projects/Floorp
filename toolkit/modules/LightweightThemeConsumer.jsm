@@ -44,6 +44,12 @@ const toolkitVariableMap = [
   ["--arrowpanel-border-color", {
     lwtProperty: "popup_border"
   }],
+  ["--lwt-toolbar-field-background-color", {
+    lwtProperty: "toolbar_field"
+  }],
+  ["--lwt-toolbar-field-color", {
+    lwtProperty: "toolbar_field_text"
+  }],
 ];
 
 // Get the theme variables from the app resource directory.

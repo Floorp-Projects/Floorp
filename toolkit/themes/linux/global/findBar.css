@@ -12,6 +12,11 @@ findbar {
   transition-timing-function: ease-in-out, ease-in-out, linear;
 }
 
+findbar:-moz-lwtheme {
+  background-color: var(--toolbar-bgcolor);
+  color: var(--toolbar-color, var(--chrome-color, -moz-DialogText));
+}
+
 findbar[hidden] {
   /* Override display:none to make the transition work. */
   display: -moz-box;
@@ -40,11 +45,16 @@ findbar[noanim] {
 
 .findbar-textbox {
   -moz-appearance: none;
-  border: 1px solid ThreeDShadow;
+  border: 1px solid var(--lwt-toolbar-field-border-color, ThreeDShadow);
   box-shadow: 0 0 1px 0 ThreeDShadow inset;
   margin: 0;
   padding: 5px;
   width: 14em;
+}
+
+.findbar-textbox:-moz-lwtheme {
+  background-color: var(--lwt-toolbar-field-background-color, -moz-Field);
+  color: var(--lwt-toolbar-field-color, -moz-FieldText);
 }
 
 .findbar-textbox:-moz-locale-dir(ltr) {
@@ -110,6 +120,11 @@ findbar[noanim] {
 
 .findbar-find-next {
   list-style-image: url(chrome://global/skin/icons/find-next-arrow.svg);
+}
+
+.findbar-find-next:-moz-lwtheme,
+.findbar-find-previous:-moz-lwtheme {
+  border-color: var(--lwt-toolbar-field-border-color);
 }
 
 .findbar-find-previous > .toolbarbutton-icon,
