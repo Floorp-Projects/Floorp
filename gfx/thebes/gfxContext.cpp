@@ -229,7 +229,24 @@ void
 gfxContext::Fill(const Pattern& aPattern)
 {
   AUTO_PROFILER_LABEL("gfxContext::Fill", GRAPHICS);
-  FillAzure(aPattern, 1.0f);
+  AzureState &state = CurrentState();
+
+  CompositionOp op = GetOp();
+
+  if (mPathIsRect) {
+    MOZ_ASSERT(!mTransformChanged);
+
+    if (op == CompositionOp::OP_SOURCE) {
+      // Emulate cairo operator source which is bound by mask!
+      mDT->ClearRect(mRect);
+      mDT->FillRect(mRect, aPattern, DrawOptions(1.0f));
+    } else {
+      mDT->FillRect(mRect, aPattern, DrawOptions(1.0f, op, state.aaMode));
+    }
+  } else {
+    EnsurePath();
+    mDT->Fill(mPath, aPattern, DrawOptions(1.0f, op, state.aaMode));
+  }
 }
 
 void
@@ -887,29 +904,6 @@ gfxContext::EnsurePathBuilder()
   }
 
   mPathIsRect = false;
-}
-
-void
-gfxContext::FillAzure(const Pattern& aPattern, Float aOpacity)
-{
-  AzureState &state = CurrentState();
-
-  CompositionOp op = GetOp();
-
-  if (mPathIsRect) {
-    MOZ_ASSERT(!mTransformChanged);
-
-    if (op == CompositionOp::OP_SOURCE) {
-      // Emulate cairo operator source which is bound by mask!
-      mDT->ClearRect(mRect);
-      mDT->FillRect(mRect, aPattern, DrawOptions(aOpacity));
-    } else {
-      mDT->FillRect(mRect, aPattern, DrawOptions(aOpacity, op, state.aaMode));
-    }
-  } else {
-    EnsurePath();
-    mDT->Fill(mPath, aPattern, DrawOptions(aOpacity, op, state.aaMode));
-  }
 }
 
 CompositionOp
