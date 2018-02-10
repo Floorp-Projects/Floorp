@@ -2632,7 +2632,7 @@ var gCSSProperties = {
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "auto" ],
-    other_values: [ "none", "enabled", "disabled" ],
+    other_values: [ "none", "enabled" ],
     invalid_values: []
   },
   "-moz-user-modify": {
