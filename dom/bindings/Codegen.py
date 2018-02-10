@@ -8843,20 +8843,13 @@ class CGGenericPromiseReturningMethod(CGAbstractBindingMethod):
     def __init__(self, descriptor):
         unwrapFailureCode = dedent("""
             ThrowInvalidThis(cx, args, %%(securityError)s, "%s");\n
-            return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),
-                                             args.rval());\n""" %
+            return ConvertExceptionToPromise(cx, args.rval());\n""" %
                                    descriptor.interface.identifier.name)
 
         name = "genericPromiseReturningMethod"
-        customCallArgs = dedent("""
-            JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-            // Make sure to save the callee before someone maybe messes with rval().
-            JS::Rooted<JSObject*> callee(cx, &args.callee());
-        """)
 
         CGAbstractBindingMethod.__init__(self, descriptor, name,
                                          JSNativeArguments(),
-                                         callArgs=customCallArgs,
                                          unwrapFailureCode=unwrapFailureCode)
 
     def generate_code(self):
@@ -8873,8 +8866,7 @@ class CGGenericPromiseReturningMethod(CGAbstractBindingMethod):
             }
 
             MOZ_ASSERT(info->returnType() == JSVAL_TYPE_OBJECT);
-            return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),
-                                             args.rval());
+            return ConvertExceptionToPromise(cx, args.rval());
             """))
 
 
@@ -8920,15 +8912,11 @@ class CGMethodPromiseWrapper(CGAbstractStaticMethod):
     def definition_body(self):
         return fill(
             """
-            // Make sure to save the callee before someone maybe messes
-            // with rval().
-            JS::Rooted<JSObject*> callee(cx, &args.callee());
             bool ok = ${methodName}(${args});
             if (ok) {
               return true;
             }
-            return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),
-                                             args.rval());
+            return ConvertExceptionToPromise(cx, args.rval());
             """,
             methodName=self.method.name,
             args=", ".join(arg.name for arg in self.args))
@@ -9211,21 +9199,13 @@ class CGGenericPromiseReturningGetter(CGAbstractBindingMethod):
         unwrapFailureCode = fill(
             """
             ThrowInvalidThis(cx, args, %%(securityError)s, "${iface}");
-            return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),
-                                             args.rval());
+            return ConvertExceptionToPromise(cx, args.rval());
             """,
             iface=descriptor.interface.identifier.name)
         name = "genericPromiseReturningGetter"
-        customCallArgs = dedent(
-            """
-            JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-            // Make sure to save the callee before someone maybe messes with rval().
-            JS::Rooted<JSObject*> callee(cx, &args.callee());
-            """)
 
         CGAbstractBindingMethod.__init__(self, descriptor, name,
                                          JSNativeArguments(),
-                                         callArgs=customCallArgs,
                                          unwrapFailureCode=unwrapFailureCode)
 
     def generate_code(self):
@@ -9243,8 +9223,7 @@ class CGGenericPromiseReturningGetter(CGAbstractBindingMethod):
             }
 
             MOZ_ASSERT(info->returnType() == JSVAL_TYPE_OBJECT);
-            return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),
-                                             args.rval());
+            return ConvertExceptionToPromise(cx, args.rval());
             """))
 
 
@@ -9388,14 +9367,7 @@ class CGGetterPromiseWrapper(CGAbstractStaticMethod):
             if (ok) {
               return true;
             }
-            JS::Rooted<JSObject*> globalForPromise(cx);
-            // We can't use xpc::XrayAwareCalleeGlobal here because we have no
-            // callee.  Use our hacky version instead.
-            if (!xpc::XrayAwareCalleeGlobalForSpecializedGetters(cx, obj,
-                                                                 &globalForPromise)) {
-              return false;
-            }
-            return ConvertExceptionToPromise(cx, globalForPromise, args.rval());
+            return ConvertExceptionToPromise(cx, args.rval());
             """,
             getterName=self.getter.name,
             args=", ".join(arg.name for arg in self.args))
