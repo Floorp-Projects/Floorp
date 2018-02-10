@@ -21,7 +21,6 @@
 #include "nsIBaseWindow.h"
 #include "nsIClipboardCommands.h"
 #include "nsIDeprecationWarner.h"
-#include "nsIDocCharset.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
@@ -125,7 +124,6 @@ class nsDocShell final
   , public nsIBaseWindow
   , public nsIScrollable
   , public nsITextScroll
-  , public nsIDocCharset
   , public nsIRefreshURI
   , public nsIWebProgressListener
   , public nsIWebPageDescriptor
@@ -177,7 +175,6 @@ public:
   NS_DECL_NSIBASEWINDOW
   NS_DECL_NSISCROLLABLE
   NS_DECL_NSITEXTSCROLL
-  NS_DECL_NSIDOCCHARSET
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSIREFRESHURI
