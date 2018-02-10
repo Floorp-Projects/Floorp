@@ -1268,10 +1268,32 @@ nsNSSCertList::SegmentCertificateChain(/* out */ nsCOMPtr<nsIX509Cert>& aRoot,
   }
 
   if (!aRoot || !aEndEntity) {
-    // No self-sigend (or empty) chains allowed
+    // No self-signed (or empty) chains allowed
     return NS_ERROR_INVALID_ARG;
   }
 
+  return NS_OK;
+}
+
+nsresult
+nsNSSCertList::GetRootCertificate(/* out */ nsCOMPtr<nsIX509Cert>& aRoot)
+{
+  if (aRoot) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  CERTCertListNode* rootNode = CERT_LIST_TAIL(mCertList);
+  if (!rootNode) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  if (CERT_LIST_END(rootNode, mCertList)) {
+    // Empty list, leave aRoot empty
+    return NS_OK;
+  }
+  // Duplicates the certificate
+  aRoot = nsNSSCertificate::Create(rootNode->cert);
+  if (!aRoot) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   return NS_OK;
 }
 
