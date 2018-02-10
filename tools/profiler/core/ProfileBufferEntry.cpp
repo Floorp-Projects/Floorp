@@ -348,13 +348,16 @@ uint32_t UniqueStacks::GetOrAddFrameIndex(const OnStackFrameKey& aFrame)
       mFrameToIndexMap.Put(aFrame, canonicalIndex);
       return canonicalIndex;
     }
+    // A manual count is used instead of mFrameToIndexMap.Count() due to
+    // forwarding of canonical JIT frames above.
+    index = mFrameCount++;
+    mFrameToIndexMap.Put(aFrame, index);
+    StreamJITFrame(*aFrame.mJITFrameHandle);
+  } else {
+    index = mFrameCount++;
+    mFrameToIndexMap.Put(aFrame, index);
+    StreamNonJITFrame(aFrame);
   }
-
-  // A manual count is used instead of mFrameToIndexMap.Count() due to
-  // forwarding of canonical JIT frames above.
-  index = mFrameCount++;
-  mFrameToIndexMap.Put(aFrame, index);
-  StreamFrame(aFrame);
   return index;
 }
 
@@ -402,7 +405,8 @@ void UniqueStacks::StreamStack(const StackKey& aStack)
   writer.IntElement(FRAME, aStack.mFrameIndex);
 }
 
-void UniqueStacks::StreamFrame(const OnStackFrameKey& aFrame)
+void
+UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame)
 {
   enum Schema : uint32_t {
     LOCATION = 0,
@@ -414,70 +418,80 @@ void UniqueStacks::StreamFrame(const OnStackFrameKey& aFrame)
 
   AutoArraySchemaWriter writer(mFrameTableWriter, mUniqueStrings);
 
-  if (!aFrame.mJITFrameHandle) {
-    writer.StringElement(LOCATION, aFrame.mLocation.get());
-    if (aFrame.mLine.isSome()) {
-      writer.IntElement(LINE, *aFrame.mLine);
-    }
-    if (aFrame.mCategory.isSome()) {
-      writer.IntElement(CATEGORY, *aFrame.mCategory);
-    }
-  } else {
-    const JS::ProfiledFrameHandle& jitFrame = *aFrame.mJITFrameHandle;
+  writer.StringElement(LOCATION, aFrame.mLocation.get());
+  if (aFrame.mLine.isSome()) {
+    writer.IntElement(LINE, *aFrame.mLine);
+  }
+  if (aFrame.mCategory.isSome()) {
+    writer.IntElement(CATEGORY, *aFrame.mCategory);
+  }
+}
 
-    writer.StringElement(LOCATION, jitFrame.label());
+void
+UniqueStacks::StreamJITFrame(const JS::ProfiledFrameHandle& aJITFrame)
+{
+  enum Schema : uint32_t {
+    LOCATION = 0,
+    IMPLEMENTATION = 1,
+    OPTIMIZATIONS = 2,
+    LINE = 3,
+    CATEGORY = 4
+  };
 
-    JS::ProfilingFrameIterator::FrameKind frameKind = jitFrame.frameKind();
-    MOZ_ASSERT(frameKind == JS::ProfilingFrameIterator::Frame_Ion ||
-               frameKind == JS::ProfilingFrameIterator::Frame_Baseline);
-    writer.StringElement(IMPLEMENTATION,
-                         frameKind == JS::ProfilingFrameIterator::Frame_Ion
-                         ? "ion"
-                         : "baseline");
+  AutoArraySchemaWriter writer(mFrameTableWriter, mUniqueStrings);
 
-    if (jitFrame.hasTrackedOptimizations()) {
-      writer.FillUpTo(OPTIMIZATIONS);
-      mFrameTableWriter.StartObjectElement();
+  writer.StringElement(LOCATION, aJITFrame.label());
+
+  JS::ProfilingFrameIterator::FrameKind frameKind = aJITFrame.frameKind();
+  MOZ_ASSERT(frameKind == JS::ProfilingFrameIterator::Frame_Ion ||
+              frameKind == JS::ProfilingFrameIterator::Frame_Baseline);
+  writer.StringElement(IMPLEMENTATION,
+                        frameKind == JS::ProfilingFrameIterator::Frame_Ion
+                        ? "ion"
+                        : "baseline");
+
+  if (aJITFrame.hasTrackedOptimizations()) {
+    writer.FillUpTo(OPTIMIZATIONS);
+    mFrameTableWriter.StartObjectElement();
+    {
+      mFrameTableWriter.StartArrayProperty("types");
       {
-        mFrameTableWriter.StartArrayProperty("types");
+        StreamOptimizationTypeInfoOp typeInfoOp(mFrameTableWriter, mUniqueStrings);
+        aJITFrame.forEachOptimizationTypeInfo(typeInfoOp);
+      }
+      mFrameTableWriter.EndArray();
+
+      JS::Rooted<JSScript*> script(mContext);
+      jsbytecode* pc;
+      mFrameTableWriter.StartObjectProperty("attempts");
+      {
         {
-          StreamOptimizationTypeInfoOp typeInfoOp(mFrameTableWriter, mUniqueStrings);
-          jitFrame.forEachOptimizationTypeInfo(typeInfoOp);
+          JSONSchemaWriter schema(mFrameTableWriter);
+          schema.WriteField("strategy");
+          schema.WriteField("outcome");
+        }
+
+        mFrameTableWriter.StartArrayProperty("data");
+        {
+          StreamOptimizationAttemptsOp attemptOp(mFrameTableWriter, mUniqueStrings);
+          aJITFrame.forEachOptimizationAttempt(attemptOp, script.address(), &pc);
         }
         mFrameTableWriter.EndArray();
-
-        JS::Rooted<JSScript*> script(mContext);
-        jsbytecode* pc;
-        mFrameTableWriter.StartObjectProperty("attempts");
-        {
-          {
-            JSONSchemaWriter schema(mFrameTableWriter);
-            schema.WriteField("strategy");
-            schema.WriteField("outcome");
-          }
-
-          mFrameTableWriter.StartArrayProperty("data");
-          {
-            StreamOptimizationAttemptsOp attemptOp(mFrameTableWriter, mUniqueStrings);
-            jitFrame.forEachOptimizationAttempt(attemptOp, script.address(), &pc);
-          }
-          mFrameTableWriter.EndArray();
-        }
-        mFrameTableWriter.EndObject();
-
-        if (JSAtom* name = js::GetPropertyNameFromPC(script, pc)) {
-          char buf[512];
-          JS_PutEscapedFlatString(buf, mozilla::ArrayLength(buf), js::AtomToFlatString(name), 0);
-          mUniqueStrings.WriteProperty(mFrameTableWriter, "propertyName", buf);
-        }
-
-        unsigned line, column;
-        line = JS_PCToLineNumber(script, pc, &column);
-        mFrameTableWriter.IntProperty("line", line);
-        mFrameTableWriter.IntProperty("column", column);
       }
       mFrameTableWriter.EndObject();
+
+      if (JSAtom* name = js::GetPropertyNameFromPC(script, pc)) {
+        char buf[512];
+        JS_PutEscapedFlatString(buf, mozilla::ArrayLength(buf), js::AtomToFlatString(name), 0);
+        mUniqueStrings.WriteProperty(mFrameTableWriter, "propertyName", buf);
+      }
+
+      unsigned line, column;
+      line = JS_PCToLineNumber(script, pc, &column);
+      mFrameTableWriter.IntProperty("line", line);
+      mFrameTableWriter.IntProperty("column", column);
     }
+    mFrameTableWriter.EndObject();
   }
 }
 
