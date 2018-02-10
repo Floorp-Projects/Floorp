@@ -9,6 +9,13 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
+  <!--
+  This binding is bound to <toolbox id="navigator-toolbox"> so that
+  the #tabbrowser binding is initialized before the #tabs binding.
+  Remove after bug 1392352.
+  -->
+  <binding id="empty"/>
+
   <binding id="tabbrowser">
     <resources>
       <stylesheet src="chrome://browser/content/tabbrowser.css"/>
