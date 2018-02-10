@@ -145,10 +145,6 @@
                 "$ref": "ThemeColor",
                 "optional": true
               },
-              "button_background": {
-                "$ref": "ThemeColor",
-                "optional": true
-              },
               "button_background_hover": {
                "$ref": "ThemeColor",
                "optional": true

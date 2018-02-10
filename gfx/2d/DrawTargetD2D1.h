@@ -40,7 +40,7 @@ public:
   virtual already_AddRefed<SourceSurface> Snapshot() override;
   virtual already_AddRefed<SourceSurface> IntoLuminanceSource(LuminanceType aLuminanceType,
                                                               float aOpacity) override;
-  virtual IntSize GetSize() override { return mSize; }
+  virtual IntSize GetSize() const override { return mSize; }
 
   virtual void Flush() override;
   virtual void DrawSurface(SourceSurface *aSurface,

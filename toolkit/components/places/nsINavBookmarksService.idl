@@ -504,32 +504,6 @@ interface nsINavBookmarksService : nsISupports
   AUTF8String getItemTitle(in long long aItemId);
 
   /**
-   * Set the date added time for an item.
-   *
-   * @param aItemId
-   *        the id of the item whose date added time should be updated.
-   * @param aDateAdded
-   *        the new date added value in microseconds.  Note that it is rounded
-   *        down to milliseconds precision.
-   *  @param [optional] aSource
-   *         The change source, forwarded to all bookmark observers. Defaults
-   *         to SOURCE_DEFAULT.
-   */
-  void setItemDateAdded(in long long aItemId,
-                        in PRTime aDateAdded,
-                        [optional] in unsigned short aSource);
-
-  /**
-   * Get the date added time for an item.
-   *
-   * @param aItemId
-   *        the id of the item whose date added time should be retrieved.
-   *
-   * @return the date added value in microseconds.
-   */
-  PRTime getItemDateAdded(in long long aItemId);
-
-  /**
    * Set the last modified time for an item.
    *
    * @param aItemId

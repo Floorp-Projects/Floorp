@@ -30,7 +30,7 @@ public:
 
   virtual void DetachAllSnapshots() override;
 
-  virtual IntSize GetSize() override { return mSize; }
+  virtual IntSize GetSize() const override { return mSize; }
 
   /* Ensure that the DrawTarget backend has flushed all drawing operations to
    * this draw target. This must be called before using the backing surface of
@@ -269,6 +269,14 @@ public:
    */
   virtual already_AddRefed<DrawTarget>
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const override;
+
+   /**
+   * Create a similar DrawTarget whose requested size may be clipped based
+   * on this DrawTarget's rect transformed to the new target's space.
+   */
+  virtual RefPtr<DrawTarget> CreateClippedDrawTarget(const IntSize& aMaxSize,
+                                                     const Matrix& aTransform,
+                                                     SurfaceFormat aFormat) const override;
 
   /*
    * Create a path builder with the specified fillmode.

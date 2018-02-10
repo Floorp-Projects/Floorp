@@ -795,17 +795,22 @@ GenerateAndPushTextMask(nsIFrame* aFrame, gfxContext* aContext,
   IntRect drawRect =
     RoundedOut(ToRect(sourceCtx->GetClipExtents(gfxContext::eDeviceSpace)));
 
+  Matrix currentMatrix = sourceCtx->CurrentMatrix();
+  Matrix maskTransform = currentMatrix *
+                         Matrix::Translation(-drawRect.x, -drawRect.y);
+  maskTransform.Invert();
+
   // Create a mask surface.
   RefPtr<DrawTarget> sourceTarget = sourceCtx->GetDrawTarget();
   RefPtr<DrawTarget> maskDT =
-    sourceTarget->CreateSimilarDrawTarget(drawRect.Size(),
+    sourceTarget->CreateClippedDrawTarget(drawRect.Size(),
+                                          maskTransform * currentMatrix,
                                           SurfaceFormat::A8);
   if (!maskDT || !maskDT->IsValid()) {
     return false;
   }
   RefPtr<gfxContext> maskCtx = gfxContext::CreatePreservingTransformOrNull(maskDT);
   MOZ_ASSERT(maskCtx);
-  Matrix currentMatrix = sourceCtx->CurrentMatrix();
   maskCtx->SetMatrix(Matrix::Translation(bounds.TopLeft().ToUnknownPoint()) *
                      currentMatrix *
                      Matrix::Translation(-drawRect.TopLeft()));
@@ -818,10 +823,6 @@ GenerateAndPushTextMask(nsIFrame* aFrame, gfxContext* aContext,
 
   // Push the generated mask into aContext, so that the caller can pop and
   // blend with it.
-  Matrix maskTransform = currentMatrix *
-                         Matrix::Translation(-drawRect.x, -drawRect.y);
-  maskTransform.Invert();
-
   RefPtr<SourceSurface> maskSurface = maskDT->Snapshot();
   sourceCtx->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, 1.0, maskSurface, maskTransform);
 

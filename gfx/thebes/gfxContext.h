@@ -505,7 +505,6 @@ private:
   void EnsurePath();
   // This ensures mPathBuilder contains a valid PathBuilder (in user space!)
   void EnsurePathBuilder();
-  void FillAzure(const Pattern& aPattern, mozilla::gfx::Float aOpacity);
   CompositionOp GetOp();
   void ChangeTransform(const mozilla::gfx::Matrix &aNewMatrix, bool aUpdatePatternTransform = true);
   Rect GetAzureDeviceSpaceClipBounds() const;

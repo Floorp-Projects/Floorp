@@ -421,7 +421,9 @@ nsDOMCSSDeclaration::RemovePropertyInternal(nsCSSPropertyID aPropID)
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
 
   RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
-  decl->RemovePropertyByID(aPropID);
+  if (!decl->RemovePropertyByID(aPropID)) {
+    return NS_OK;
+  }
   return SetCSSDeclaration(decl);
 }
 
@@ -441,6 +443,8 @@ nsDOMCSSDeclaration::RemovePropertyInternal(const nsAString& aPropertyName)
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
 
   RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
-  decl->RemoveProperty(aPropertyName);
+  if (!decl->RemoveProperty(aPropertyName)) {
+    return NS_OK;
+  }
   return SetCSSDeclaration(decl);
 }
