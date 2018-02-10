@@ -6,7 +6,7 @@
 
 @template
 def FirefoxBranding():
-    JS_PREFERENCE_FILES += [
+    JS_PREFERENCE_PP_FILES += [
         'pref/firefox-branding.js',
     ]
 
