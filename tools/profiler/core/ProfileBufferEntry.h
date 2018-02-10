@@ -291,7 +291,8 @@ public:
   void SpliceStackTableElements(SpliceableJSONWriter& aWriter);
 
 private:
-  void StreamFrame(const OnStackFrameKey& aFrame);
+  void StreamNonJITFrame(const FrameKey& aFrame);
+  void StreamJITFrame(const JS::ProfiledFrameHandle& aJITFrame);
   void StreamStack(const StackKey& aStack);
 
 public:
