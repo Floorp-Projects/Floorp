@@ -38,12 +38,6 @@ RenderCompositorOGL::~RenderCompositorOGL()
 }
 
 bool
-RenderCompositorOGL::Destroy()
-{
-  return true;
-}
-
-bool
 RenderCompositorOGL::BeginFrame()
 {
   if (!mGL->MakeCurrent()) {

@@ -24,7 +24,7 @@ static JS::SymbolCode sCrossOriginWhitelistedSymbolCodes[] = {
     JS::SymbolCode::isConcatSpreadable
 };
 
-bool
+static bool
 IsCrossOriginWhitelistedSymbol(JSContext* cx, JS::HandleId id)
 {
     if (!JSID_IS_SYMBOL(id)) {
@@ -39,6 +39,13 @@ IsCrossOriginWhitelistedSymbol(JSContext* cx, JS::HandleId id)
     }
 
     return false;
+}
+
+bool
+IsCrossOriginWhitelistedProp(JSContext* cx, JS::HandleId id)
+{
+    return id == GetJSIDByIndex(cx, XPCJSContext::IDX_THEN) ||
+           IsCrossOriginWhitelistedSymbol(cx, id);
 }
 
 template <typename Policy>
@@ -232,7 +239,7 @@ CrossOriginXrayWrapper::getPropertyDescriptor(JSContext* cx,
         desc.attributesRef() &= ~JSPROP_PERMANENT;
         if (!desc.getter() && !desc.setter())
             desc.attributesRef() |= JSPROP_READONLY;
-    } else if (IsCrossOriginWhitelistedSymbol(cx, id)) {
+    } else if (IsCrossOriginWhitelistedProp(cx, id)) {
         // Spec says to return PropertyDescriptor {
         //   [[Value]]: undefined, [[Writable]]: false, [[Enumerable]]: false,
         //   [[Configurable]]: true
@@ -263,6 +270,16 @@ CrossOriginXrayWrapper::ownPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wra
     // the underlying native object may report. Override the inherited trap to
     // avoid passing JSITER_OWNONLY as a flag.
     if (!SecurityXrayDOM::getPropertyKeys(cx, wrapper, JSITER_HIDDEN, props)) {
+        return false;
+    }
+
+    // Add "then" if it's not already in the list.
+    AutoIdVector thenProp(cx);
+    if (!thenProp.append(GetJSIDByIndex(cx, XPCJSContext::IDX_THEN))) {
+        return false;
+    }
+
+    if (!AppendUnique(cx, props, thenProp)) {
         return false;
     }
 

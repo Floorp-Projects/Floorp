@@ -16,7 +16,7 @@
 #endif
 
 #include <stdlib.h>
-#include "nsSubstring.h"
+#include "nsAString.h"
 #include "nsString.h"
 #include "nsStringBuffer.h"
 #include "nsDependentString.h"

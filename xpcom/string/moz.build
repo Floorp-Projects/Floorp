@@ -22,7 +22,6 @@ EXPORTS += [
     'nsStringFlags.h',
     'nsStringFwd.h',
     'nsStringIterator.h',
-    'nsSubstring.h',
     'nsTDependentString.h',
     'nsTDependentSubstring.h',
     'nsTextFormatter.h',

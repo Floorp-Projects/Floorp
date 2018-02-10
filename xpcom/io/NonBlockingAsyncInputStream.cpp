@@ -124,7 +124,9 @@ NonBlockingAsyncInputStream::Close()
     MutexAutoLock lock(mLock);
 
     if (mClosed) {
-      return NS_BASE_STREAM_CLOSED;
+      // Here we could return NS_BASE_STREAM_CLOSED as well, but just to avoid
+      // warning messages, let's make everybody happy with a NS_OK.
+      return NS_OK;
     }
 
     mClosed = true;

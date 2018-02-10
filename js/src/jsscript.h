@@ -1887,6 +1887,7 @@ class JSScript : public js::gc::TenuredCell
 
     js::GCPtrAtom& getAtom(jsbytecode* pc) const {
         MOZ_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
+        MOZ_ASSERT(js::JOF_OPTYPE((JSOp)*pc) == JOF_ATOM);
         return getAtom(GET_UINT32_INDEX(pc));
     }
 
@@ -1895,8 +1896,7 @@ class JSScript : public js::gc::TenuredCell
     }
 
     js::PropertyName* getName(jsbytecode* pc) const {
-        MOZ_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
-        return getAtom(GET_UINT32_INDEX(pc))->asPropertyName();
+        return getAtom(pc)->asPropertyName();
     }
 
     JSObject* getObject(size_t index) {
