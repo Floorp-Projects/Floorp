@@ -143,7 +143,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.initialRwin(), a.blockAuthPrompt(),
                        a.suspendAfterSynthesizeResponse(),
                        a.allowStaleCacheContent(), a.contentTypeHint(),
-                       a.corsMode(), a.redirectMode(), a.fetchCacheMode(),
+                       a.corsMode(), a.redirectMode(),
                        a.channelId(), a.contentWindowId(), a.preferredAlternativeType(),
                        a.topLevelOuterContentWindowId(),
                        a.launchServiceWorkerStart(),
@@ -484,7 +484,6 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const nsCString&           aContentTypeHint,
                                  const uint32_t&            aCorsMode,
                                  const uint32_t&            aRedirectMode,
-                                 const uint32_t&            aFetchCacheMode,
                                  const uint64_t&            aChannelId,
                                  const uint64_t&            aContentWindowId,
                                  const nsCString&           aPreferredAlternativeType,
@@ -544,7 +543,6 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   // Set attributes needed to create a FetchEvent from this channel.
   httpChannel->SetCorsMode(aCorsMode);
   httpChannel->SetRedirectMode(aRedirectMode);
-  httpChannel->SetFetchCacheMode(aFetchCacheMode);
 
   // Set the channelId allocated in child to the parent instance
   httpChannel->SetChannelId(aChannelId);
