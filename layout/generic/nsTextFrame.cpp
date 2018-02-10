@@ -10142,9 +10142,13 @@ nsTextFrame::GetRenderedText(uint32_t aStartOffset,
       startOffset = aStartOffset;
       endOffset = std::min<uint32_t>(INT32_MAX, aEndOffset);
     }
+
+    // If startOffset and/or endOffset are inside of trimmedOffsets' range,
+    // then clamp the edges of trimmedOffsets accordingly.
+    int32_t origTrimmedOffsetsEnd = trimmedOffsets.GetEnd();
     trimmedOffsets.mStart = std::max<uint32_t>(trimmedOffsets.mStart,
         startOffset);
-    trimmedOffsets.mLength = std::min<uint32_t>(trimmedOffsets.GetEnd(),
+    trimmedOffsets.mLength = std::min<uint32_t>(origTrimmedOffsetsEnd,
         endOffset) - trimmedOffsets.mStart;
     if (trimmedOffsets.mLength <= 0) {
       offsetInRenderedString = nextOffsetInRenderedString;
