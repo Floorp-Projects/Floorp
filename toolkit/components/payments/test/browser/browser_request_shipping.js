@@ -11,7 +11,7 @@ add_task(async function setup() {
     "cc-number": "999999999999",
   };
 
-  profileStorage.creditCards.add(card);
+  formAutofillStorage.creditCards.add(card);
   await onChanged;
 });
 
