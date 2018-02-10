@@ -517,7 +517,7 @@ nsCaret::GetPaintGeometry(nsRect* aRect)
   CheckSelectionLanguageChange();
 
   int32_t frameOffset;
-  nsIFrame *frame = GetFrameAndOffset(GetSelectionInternal(),
+  nsIFrame* frame = GetFrameAndOffset(GetSelectionInternal(),
       mOverrideContent, mOverrideOffset, &frameOffset);
   if (!frame) {
     return nullptr;
@@ -527,8 +527,7 @@ nsCaret::GetPaintGeometry(nsRect* aRect)
   const nsStyleUserInterface* userinterface = frame->StyleUserInterface();
   if ((!mIgnoreUserModify &&
        userinterface->mUserModify == StyleUserModify::ReadOnly) ||
-      userinterface->mUserInput == StyleUserInput::None ||
-      userinterface->mUserInput == StyleUserInput::Disabled) {
+      frame->IsContentDisabled()) {
     return nullptr;
   }
 
