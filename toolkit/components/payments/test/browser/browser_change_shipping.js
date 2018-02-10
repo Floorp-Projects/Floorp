@@ -3,18 +3,18 @@
 add_task(async function setup_profiles() {
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "add");
-  profileStorage.addresses.add(PTU.Addresses.TimBL);
+  formAutofillStorage.addresses.add(PTU.Addresses.TimBL);
   await onChanged;
 
   onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                       (subject, data) => data == "add");
-  profileStorage.addresses.add(PTU.Addresses.TimBL2);
+  formAutofillStorage.addresses.add(PTU.Addresses.TimBL2);
   await onChanged;
 
   onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                       (subject, data) => data == "add");
 
-  profileStorage.creditCards.add(PTU.BasicCards.JohnDoe);
+  formAutofillStorage.creditCards.add(PTU.BasicCards.JohnDoe);
   await onChanged;
 });
 
