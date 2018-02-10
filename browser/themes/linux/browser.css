@@ -450,6 +450,11 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   text-shadow: none;
 }
 
+.browserContainer > findbar:-moz-lwtheme {
+  background-color: var(--toolbar-bgcolor);
+  color: var(--toolbar-color, -moz-DialogText);
+}
+
 /* Tabstrip */
 
 %include ../shared/tabs.inc.css

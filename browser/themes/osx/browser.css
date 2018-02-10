@@ -227,6 +227,7 @@
   background: none;
   box-shadow: none;
   border: none;
+  color: inherit;
 }
 
 /* On Mac, native buttons keep their full opacity when they become disabled
@@ -676,6 +677,12 @@ html|input.urlbar-input {
   border-top: @scopeBarSeparatorBorder@;
   color: -moz-DialogText;
   text-shadow: none;
+}
+
+.browserContainer > findbar:-moz-lwtheme {
+  background-color: var(--toolbar-bgcolor);
+  background-image: none;
+  color: var(--toolbar-color, -moz-DialogText);
 }
 
 .openintabs-menuitem {
