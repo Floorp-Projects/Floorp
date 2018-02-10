@@ -14,7 +14,6 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import org.mozilla.focus.R;
-import org.mozilla.focus.browser.LocalizedContentGecko;
 import org.mozilla.focus.session.Session;
 import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.GeckoSession;

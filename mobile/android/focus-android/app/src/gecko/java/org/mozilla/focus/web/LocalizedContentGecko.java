@@ -1,4 +1,4 @@
-package org.mozilla.focus.browser;
+package org.mozilla.focus.web;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;
