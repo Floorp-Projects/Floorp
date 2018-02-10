@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Viską perskaitėte. Užsukite vėliau, norėdami rasti daugiau gerų straipsnių iš „{provider}“. Nekantraujate? Pasirinkite populiarią temą, norėdami rasti daugiau puikių straipsnių saityne.",
   "manual_migration_explanation2": "Išbandykite „Firefox“ su adresynu, žurnalu bei slaptažodžiais iš kitos naršyklės.",
   "manual_migration_cancel_button": "Ačiū, ne",
-  "manual_migration_import_button": "Importuoti dabar"
+  "manual_migration_import_button": "Importuoti dabar",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

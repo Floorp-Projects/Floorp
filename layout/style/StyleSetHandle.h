@@ -136,7 +136,7 @@ public:
     inline void BeginShutdown();
     inline void Shutdown();
     inline bool GetAuthorStyleDisabled() const;
-    inline nsresult SetAuthorStyleDisabled(bool aStyleDisabled);
+    inline void SetAuthorStyleDisabled(bool aStyleDisabled);
     inline void BeginUpdate();
     inline nsresult EndUpdate();
     inline already_AddRefed<nsStyleContext>

@@ -57,11 +57,6 @@ xul|*.radio-icon {
   margin-inline-end: 0;
 }
 
-xul|*.numberbox-input-box {
-  -moz-appearance: none;
-  border-width: 0;
-}
-
 xul|*.text-link:-moz-focusring {
   color: var(--in-content-link-highlight);
   text-decoration: underline;
@@ -83,27 +78,12 @@ xul|radio[focused="true"] > .radio-check {
   -moz-outline-radius: 100%;
 }
 
-xul|spinbuttons {
-  -moz-appearance: none;
-}
-
-xul|*.spinbuttons-up {
-  margin-top: 0 !important;
+html|*.numberbox-input::-moz-number-spin-up {
   border-radius: 4px 4px 0 0;
 }
 
-xul|*.spinbuttons-down  {
-  margin-bottom: 0 !important;
+html|*.numberbox-input::-moz-number-spin-down  {
   border-radius: 0 0 4px 4px;
-}
-
-xul|*.spinbuttons-button > xul|*.button-box {
-  padding-inline-start: 2px !important;
-  padding-inline-end: 3px !important;
-}
-
-xul|*.spinbuttons-button > xul|*.button-box > xul|*.button-text {
-  display: none;
 }
 
 xul|textbox[type="search"]:not([searchbutton]) > .textbox-input-box > .textbox-search-sign {

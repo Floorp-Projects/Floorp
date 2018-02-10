@@ -1062,7 +1062,27 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
 
   LayerScope::DrawBegin();
 
+
   IntRect clipRect = aClipRect;
+
+  EffectMask* effectMask;
+  Rect maskBounds;
+  if (aEffectChain.mSecondaryEffects[EffectTypes::MASK]) {
+    effectMask = static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EffectTypes::MASK].get());
+
+    // We're assuming that the gl backend won't cheat and use NPOT
+    // textures when glContext says it can't (which seems to happen
+    // on a mac when you force POT textures)
+    IntSize maskSize = CalculatePOTSize(effectMask->mSize, mGLContext);
+
+    const gfx::Matrix4x4& maskTransform = effectMask->mMaskTransform;
+    NS_ASSERTION(maskTransform.Is2D(), "How did we end up with a 3D transform here?!");
+    maskBounds = Rect(Point(), Size(maskSize));
+    maskBounds = maskTransform.As2D().TransformBounds(maskBounds);
+
+    clipRect = clipRect.Intersect(RoundedOut(maskBounds) - offset);
+  }
+
   // aClipRect is in destination coordinate space (after all
   // transforms and offsets have been applied) so if our
   // drawing is going to be shifted by mRenderOffset then we need
@@ -1076,30 +1096,18 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
                                     clipRect.Width(), clipRect.Height());
 
   MaskType maskType;
-  EffectMask* effectMask;
   TextureSourceOGL* sourceMask = nullptr;
   gfx::Matrix4x4 maskQuadTransform;
   if (aEffectChain.mSecondaryEffects[EffectTypes::MASK]) {
-    effectMask = static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EffectTypes::MASK].get());
     sourceMask = effectMask->mMaskTexture->AsSourceOGL();
 
     // NS_ASSERTION(textureMask->IsAlpha(),
     //              "OpenGL mask layers must be backed by alpha surfaces");
 
-    // We're assuming that the gl backend won't cheat and use NPOT
-    // textures when glContext says it can't (which seems to happen
-    // on a mac when you force POT textures)
-    IntSize maskSize = CalculatePOTSize(effectMask->mSize, mGLContext);
-
-    const gfx::Matrix4x4& maskTransform = effectMask->mMaskTransform;
-    NS_ASSERTION(maskTransform.Is2D(), "How did we end up with a 3D transform here?!");
-    Rect bounds = Rect(Point(), Size(maskSize));
-    bounds = maskTransform.As2D().TransformBounds(bounds);
-
-    maskQuadTransform._11 = 1.0f/bounds.Width();
-    maskQuadTransform._22 = 1.0f/bounds.Height();
-    maskQuadTransform._41 = float(-bounds.X())/bounds.Width();
-    maskQuadTransform._42 = float(-bounds.Y())/bounds.Height();
+    maskQuadTransform._11 = 1.0f/maskBounds.Width();
+    maskQuadTransform._22 = 1.0f/maskBounds.Height();
+    maskQuadTransform._41 = float(-maskBounds.X())/maskBounds.Width();
+    maskQuadTransform._42 = float(-maskBounds.Y())/maskBounds.Height();
 
     maskType = MaskType::Mask;
   } else {

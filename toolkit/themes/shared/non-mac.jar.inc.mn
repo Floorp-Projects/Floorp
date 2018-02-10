@@ -16,14 +16,11 @@
   skin/classic/global/resizer.css                          (../../windows/global/resizer.css)
   skin/classic/global/richlistbox.css                      (../../windows/global/richlistbox.css)
   skin/classic/global/scrollbars.css                       (../../windows/global/xulscrollbars.css)
-  skin/classic/global/spinbuttons.css                      (../../windows/global/spinbuttons.css)
   skin/classic/global/tabprompts.css                       (../../windows/global/tabprompts.css)
   skin/classic/global/wizard.css                           (../../windows/global/wizard.css)
 
   skin/classic/global/arrow/arrow-dn.gif                   (../../windows/global/arrow/arrow-dn.gif)
-  skin/classic/global/arrow/arrow-dn-dis.gif               (../../windows/global/arrow/arrow-dn-dis.gif)
   skin/classic/global/arrow/arrow-up.gif                   (../../windows/global/arrow/arrow-up.gif)
-  skin/classic/global/arrow/arrow-up-dis.gif               (../../windows/global/arrow/arrow-up-dis.gif)
   skin/classic/global/arrow/panelarrow-horizontal.svg      (../../windows/global/arrow/panelarrow-horizontal.svg)
   skin/classic/global/arrow/panelarrow-vertical.svg        (../../windows/global/arrow/panelarrow-vertical.svg)
 

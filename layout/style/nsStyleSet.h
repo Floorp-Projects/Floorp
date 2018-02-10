@@ -431,8 +431,12 @@ class nsStyleSet final
                                   mozilla::CSSStyleSheet* aReferenceSheet);
 
   // Enable/Disable entire author style level (Doc, ScopedDoc & PresHint levels)
-  bool GetAuthorStyleDisabled() const;
-  nsresult SetAuthorStyleDisabled(bool aStyleDisabled);
+  bool GetAuthorStyleDisabled() const
+  {
+    return mAuthorStyleDisabled;
+  }
+
+  void SetAuthorStyleDisabled(bool aStyleDisabled);
 
   int32_t SheetCount(mozilla::SheetType aType) const {
     return mSheets[aType].Length();
@@ -535,7 +539,7 @@ private:
   nsresult DirtyRuleProcessors(mozilla::SheetType aType);
 
   // Update the rule processor list after a change to the style sheet list.
-  nsresult GatherRuleProcessors(mozilla::SheetType aType);
+  void GatherRuleProcessors(mozilla::SheetType aType);
 
   void AddImportantRules(nsRuleNode* aCurrLevelNode,
                          nsRuleNode* aLastPrevLevelNode,

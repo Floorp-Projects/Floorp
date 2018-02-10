@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "কিছু একটা ঠিক নেই। {provider} এর শীর্ষ গল্পগুলো পেতে কিছুক্ষণ পর আবার দেখুন। অপেক্ষা করতে চান না? বিশ্বের সেরা গল্পগুলো পেতে কোন জনপ্রিয় বিষয় নির্বাচন করুন।",
   "manual_migration_explanation2": "অন্য ব্রাউজার থেকে আনা বুকমার্ক, ইতিহাস এবং পাসওয়ার্ডগুলির সাথে ফায়ারফক্স ব্যবহার করে দেখুন।",
   "manual_migration_cancel_button": "প্রয়োজন নেই",
-  "manual_migration_import_button": "এখনই ইম্পোর্ট করুন"
+  "manual_migration_import_button": "এখনই ইম্পোর্ট করুন",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "To je nachwilu wšitko. Wróćće so pozdźišo dalšich wulkotnych stawiznow dla wot {provider}. Njemóžeće čakać? Wubjerće woblubowanu temu, zo byšće dalše wulkotne stawizny z weba namakał.",
   "manual_migration_explanation2": "Wupruwujće Firefox ze zapołožkami, historiju a hesłami z druheho wobhladowaka.",
   "manual_migration_cancel_button": "Ně, dźakuju so",
-  "manual_migration_import_button": "Nětko importować"
+  "manual_migration_import_button": "Nětko importować",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

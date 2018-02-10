@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Už ste prečítali všetko. Ďalšie príbehy zo služby {provider} tu nájdete opäť neskôr. Nemôžete sa dočkať? Vyberte si populárnu tému a pozrite sa na ďalšie skvelé príbehy z celého webu.",
   "manual_migration_explanation2": "Vyskúšajte Firefox so záložkami, históriou prehliadania a heslami s iných prehliadačov.",
   "manual_migration_cancel_button": "Nie, ďakujem",
-  "manual_migration_import_button": "Importovať teraz"
+  "manual_migration_import_button": "Importovať teraz",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

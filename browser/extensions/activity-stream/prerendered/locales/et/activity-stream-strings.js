@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Vaata hiljem uuesti, et näha parimaid postitusi teenusepakkujalt {provider}. Ei suuda oodata? Vali populaarne teema, et leida veel suurepärast sisu internetist.",
   "manual_migration_explanation2": "Proovi Firefoxi teisest brauserist pärinevate järjehoidjate, ajaloo ja paroolidega.",
   "manual_migration_cancel_button": "Ei soovi",
-  "manual_migration_import_button": "Impordi kohe"
+  "manual_migration_import_button": "Impordi kohe",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };
