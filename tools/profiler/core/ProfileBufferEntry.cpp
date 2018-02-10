@@ -179,23 +179,13 @@ class MOZ_RAII AutoArraySchemaWriter
   friend class AutoObjectWriter;
 
   SpliceableJSONWriter& mJSONWriter;
-  UniqueJSONStrings*    mStrings;
+  UniqueJSONStrings&    mStrings;
   uint32_t              mNextFreeIndex;
 
 public:
   AutoArraySchemaWriter(SpliceableJSONWriter& aWriter, UniqueJSONStrings& aStrings)
     : mJSONWriter(aWriter)
-    , mStrings(&aStrings)
-    , mNextFreeIndex(0)
-  {
-    mJSONWriter.StartArrayElement(SpliceableJSONWriter::SingleLineStyle);
-  }
-
-  // If you don't have access to a UniqueStrings, you had better not try and
-  // write a string element down the line!
-  explicit AutoArraySchemaWriter(SpliceableJSONWriter& aWriter)
-    : mJSONWriter(aWriter)
-    , mStrings(nullptr)
+    , mStrings(aStrings)
     , mNextFreeIndex(0)
   {
     mJSONWriter.StartArrayElement(SpliceableJSONWriter::SingleLineStyle);
@@ -222,9 +212,8 @@ public:
   }
 
   void StringElement(uint32_t aIndex, const char* aValue) {
-    MOZ_RELEASE_ASSERT(mStrings);
     FillUpTo(aIndex);
-    mStrings->WriteElement(mJSONWriter, aValue);
+    mStrings.WriteElement(mJSONWriter, aValue);
   }
 };
 
@@ -508,7 +497,9 @@ struct ProfileSample
   Maybe<double> mUSS;
 };
 
-static void WriteSample(SpliceableJSONWriter& aWriter, ProfileSample& aSample)
+static void
+WriteSample(SpliceableJSONWriter& aWriter, UniqueJSONStrings& aUniqueStrings,
+            const ProfileSample& aSample)
 {
   enum Schema : uint32_t {
     STACK = 0,
@@ -518,7 +509,7 @@ static void WriteSample(SpliceableJSONWriter& aWriter, ProfileSample& aSample)
     USS = 4
   };
 
-  AutoArraySchemaWriter writer(aWriter);
+  AutoArraySchemaWriter writer(aWriter, aUniqueStrings);
 
   writer.IntElement(STACK, aSample.mStack);
 
@@ -859,7 +850,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
       e.Next();
     }
 
-    WriteSample(aWriter, sample);
+    WriteSample(aWriter, aUniqueStacks.mUniqueStrings, sample);
     haveSamples = true;
   }
 
