@@ -9,7 +9,8 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.expectAssertions(0, 1); // bug 1332970
 SpecialPowers.pushPrefEnv(
   { 'set': [['dom.animations-api.core.enabled', true],
-            ['layout.reflow.synthMouseMove', false]] },
+            ['layout.reflow.synthMouseMove', false],
+            ['privacy.reduceTimerPrecision', false]] },
   function() {
     window.open('file_restyles.html');
   });

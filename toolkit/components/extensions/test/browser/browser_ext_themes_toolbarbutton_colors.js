@@ -6,7 +6,6 @@ Cu.importGlobalProperties(["InspectorUtils"]);
 // the button background color properties are applied correctly.
 
 add_task(async function test_button_background_properties() {
-  const BUTTON_BACKGROUND = "#DEDEDE";
   const BUTTON_BACKGROUND_ACTIVE = "#FFFFFF";
   const BUTTON_BACKGROUND_HOVER = "#59CBE8";
 
@@ -19,7 +18,6 @@ add_task(async function test_button_background_properties() {
         "colors": {
           "accentcolor": ACCENT_COLOR,
           "textcolor": TEXT_COLOR,
-          "button_background": BUTTON_BACKGROUND,
           "button_background_active": BUTTON_BACKGROUND_ACTIVE,
           "button_background_hover": BUTTON_BACKGROUND_HOVER,
         },
@@ -36,12 +34,6 @@ add_task(async function test_button_background_properties() {
   let toolbarButton = document.querySelector("#home-button");
   let toolbarButtonIcon = document.getAnonymousElementByAttribute(toolbarButton, "class", "toolbarbutton-icon");
   let toolbarButtonIconCS = window.getComputedStyle(toolbarButtonIcon);
-
-  Assert.equal(
-    toolbarButtonIconCS.getPropertyValue("background-color"),
-    `rgb(${hexToRGB(BUTTON_BACKGROUND).join(", ")})`,
-    "Toolbar button background is set."
-  );
 
   InspectorUtils.addPseudoClassLock(toolbarButton, ":hover");
 

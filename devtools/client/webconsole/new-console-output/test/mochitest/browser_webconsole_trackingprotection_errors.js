@@ -9,46 +9,43 @@
 "use strict";
 
 const TEST_URI = "http://tracking.example.org/browser/devtools/client/" +
-                 "webconsole/test/test-trackingprotection-securityerrors.html";
+                 "webconsole/new-console-output/test/mochitest/" +
+                 "test-trackingprotection-securityerrors.html";
 const LEARN_MORE_URI = "https://developer.mozilla.org/Firefox/Privacy/" +
                        "Tracking_Protection" + DOCS_GA_PARAMS;
-const PREF = "privacy.trackingprotection.enabled";
 
 const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
 registerCleanupFunction(function () {
-  Services.prefs.clearUserPref(PREF);
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
-add_task(function* testMessagesAppear() {
-  yield UrlClassifierTestUtils.addTestTrackers();
-  Services.prefs.setBoolPref(PREF, true);
+add_task(async function testMessagesAppear() {
+  await UrlClassifierTestUtils.addTestTrackers();
+  await pushPref("privacy.trackingprotection.enabled", true);
 
-  let { browser } = yield loadTab(TEST_URI);
+  let hud = await openNewTabAndConsole(TEST_URI);
 
-  let hud = yield openConsole();
+  let message = await waitFor(() => findMessage(hud,
+    "The resource at \u201chttp://tracking.example.com/\u201d was " +
+    "blocked because tracking protection is enabled"));
 
-  let results = yield waitForMessages({
-    webconsole: hud,
-    messages: [
-      {
-        name: "Was blocked because tracking protection is enabled",
-        text: "The resource at \u201chttp://tracking.example.com/\u201d was " +
-              "blocked because tracking protection is enabled",
-        category: CATEGORY_SECURITY,
-        severity: SEVERITY_WARNING,
-        objects: true,
-      },
-    ],
-  });
-
-  yield testClickOpenNewTab(hud, results[0]);
+  await testClickOpenNewTab(hud, message);
 });
 
-function testClickOpenNewTab(hud, match) {
-  let warningNode = match.clickableElements[0];
-  ok(warningNode, "link element");
-  ok(warningNode.classList.contains("learn-more-link"), "link class name");
-  return simulateMessageLinkClick(warningNode, LEARN_MORE_URI);
+async function testClickOpenNewTab(hud, message) {
+  info("Clicking on the Learn More link");
+
+  const learnMoreLink = message.querySelector(".learn-more-link");
+  let linkSimulation = await simulateLinkClick(learnMoreLink);
+  checkLink({
+    ...linkSimulation,
+    expectedLink: LEARN_MORE_URI,
+    expectedTab: "tab"
+  });
+}
+
+function checkLink({ link, where, expectedLink, expectedTab }) {
+  is(link, expectedLink, `Clicking the provided link opens ${link}`);
+  is(where, expectedTab, `Clicking the provided link opens in expected tab`);
 }

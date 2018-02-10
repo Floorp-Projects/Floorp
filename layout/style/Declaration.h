@@ -127,7 +127,9 @@ public:
   void GetPropertyValue(const nsAString& aProperty, nsAString& aValue) const;
   void GetPropertyValueByID(nsCSSPropertyID aPropID, nsAString& aValue) const;
   bool GetPropertyIsImportant(const nsAString& aProperty) const;
-  void RemoveProperty(const nsAString& aProperty);
+  // The two functions below returns whether there is any change to this
+  // declaration block, i.e. whether any property is actually removed.
+  bool RemoveProperty(const nsAString& aProperty);
   bool RemovePropertyByID(nsCSSPropertyID aProperty);
 
   bool HasProperty(nsCSSPropertyID aProperty) const;
@@ -154,11 +156,12 @@ public:
                    bool aOverrideImportant);
 
   /**
-   * Removes a custom property declaration from this object.
+   * Removes a custom property declaration from this object, and
+   * return whether the variable existed.
    *
    * @param aName The variable name (i.e., without the "--" prefix).
    */
-  void RemoveVariable(const nsAString& aName);
+  bool RemoveVariable(const nsAString& aName);
 
   /**
    * Gets the string value for a custom property declaration of a variable

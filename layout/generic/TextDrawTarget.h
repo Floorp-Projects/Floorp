@@ -352,7 +352,7 @@ public:
     return nullptr;
   }
 
-  IntSize GetSize() override {
+  IntSize GetSize() const override {
     MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
     return IntSize(1, 1);
   }

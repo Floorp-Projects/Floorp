@@ -681,7 +681,7 @@ DrawTargetCairo::GetType() const
 }
 
 IntSize
-DrawTargetCairo::GetSize()
+DrawTargetCairo::GetSize() const
 {
   return mSize;
 }

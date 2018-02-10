@@ -132,7 +132,8 @@ public:
   inline void GetPropertyValueByID(nsCSSPropertyID aPropID,
                                    nsAString& aValue) const;
   inline bool GetPropertyIsImportant(const nsAString& aProperty) const;
-  inline void RemoveProperty(const nsAString& aProperty);
+  // Returns whether the property was removed.
+  inline bool RemoveProperty(const nsAString& aProperty);
   // Returns whether the property was removed.
   inline bool RemovePropertyByID(nsCSSPropertyID aProperty);
 

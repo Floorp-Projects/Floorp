@@ -38,8 +38,12 @@ DrawTargetTiled::Init(const TileSet& aTiles)
                             mTiles[i].mTileOrigin.x + mTiles[i].mDrawTarget->GetSize().width);
     uint32_t newYMost = max(mRect.YMost(),
                             mTiles[i].mTileOrigin.y + mTiles[i].mDrawTarget->GetSize().height);
-    mRect.MoveTo(min(mRect.X(), mTiles[i].mTileOrigin.x),
-                 min(mRect.Y(), mTiles[i].mTileOrigin.y));
+    if (i == 0) {
+      mRect.MoveTo(mTiles[0].mTileOrigin.x, mTiles[0].mTileOrigin.y);
+    } else {
+      mRect.MoveTo(min(mRect.X(), mTiles[i].mTileOrigin.x),
+                   min(mRect.Y(), mTiles[i].mTileOrigin.y));
+    }
     mRect.SetRightEdge(newXMost);
     mRect.SetBottomEdge(newYMost);
     mTiles[i].mDrawTarget->SetTransform(Matrix::Translation(-mTiles[i].mTileOrigin.x,
