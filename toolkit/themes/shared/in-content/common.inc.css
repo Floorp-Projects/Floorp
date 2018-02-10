@@ -354,12 +354,16 @@ html|*.help-button:hover:active {
   background-color: var(--in-content-category-background-active);
 }
 
+html|*.numberbox-input::-moz-number-spin-box {
+  margin-inline-end: 1px;
+}
+
 html|*.numberbox-input::-moz-number-spin-up,
 html|*.numberbox-input::-moz-number-spin-down {
   padding: 5px 8px;
-  margin: 1px;
-  margin-inline-start: 10px;
+  margin: 0;
   min-height: initial;
+  background-position: center;
 }
 
 html|*.numberbox-input::-moz-number-spin-up {
@@ -466,6 +470,14 @@ xul|textbox {
   min-height: 30px;
   padding-right: 10px;
   padding-left: 10px;
+}
+
+xul|textbox[type="number"] {
+  padding-inline-end: 0;
+}
+
+html|*.numberbox-input::-moz-number-text {
+  margin-inline-end: 10px;
 }
 
 /* Create a separate rule to unset these styles on .tree-input instead of
