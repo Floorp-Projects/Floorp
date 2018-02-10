@@ -108,7 +108,6 @@
 #include "nsIDeviceSensors.h"
 #include "nsIContent.h"
 #include "nsIDocShell.h"
-#include "nsIDocCharset.h"
 #include "nsIDocument.h"
 #include "Crypto.h"
 #include "nsIDOMDocument.h"
