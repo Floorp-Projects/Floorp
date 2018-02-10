@@ -26,6 +26,7 @@ class nsISerialEventTarget;
 namespace mozilla {
 class AbstractThread;
 namespace dom {
+class DocGroup;
 class TabGroup;
 }
 
@@ -113,11 +114,13 @@ public:
   {
   public:
     Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
-             SchedulerGroup* aGroup);
+             SchedulerGroup* aGroup,
+             dom::DocGroup* aDocGroup);
 
     bool GetAffectedSchedulerGroups(SchedulerGroupSet& aGroups) override;
 
     SchedulerGroup* Group() const { return mGroup; }
+    dom::DocGroup* DocGroup() const;
 
     NS_IMETHOD GetName(nsACString& aName) override;
 
@@ -136,6 +139,7 @@ public:
 
     nsCOMPtr<nsIRunnable> mRunnable;
     RefPtr<SchedulerGroup> mGroup;
+    RefPtr<dom::DocGroup> mDocGroup;
   };
   friend class Runnable;
 
@@ -190,6 +194,10 @@ public:
   }
 
 protected:
+  nsresult DispatchWithDocGroup(TaskCategory aCategory,
+                                already_AddRefed<nsIRunnable>&& aRunnable,
+                                dom::DocGroup* aDocGroup);
+
   static nsresult InternalUnlabeledDispatch(TaskCategory aCategory,
                                             already_AddRefed<Runnable>&& aRunnable);
 
@@ -206,7 +214,8 @@ protected:
   static SchedulerGroup* FromEventTarget(nsIEventTarget* aEventTarget);
 
   nsresult LabeledDispatch(TaskCategory aCategory,
-                           already_AddRefed<nsIRunnable>&& aRunnable);
+                           already_AddRefed<nsIRunnable>&& aRunnable,
+                           dom::DocGroup* aDocGroup);
 
   void CreateEventTargets(bool aNeedValidation);
 

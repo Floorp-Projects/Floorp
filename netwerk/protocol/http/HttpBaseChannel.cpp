@@ -203,7 +203,6 @@ HttpBaseChannel::HttpBaseChannel()
   , mCorsIncludeCredentials(false)
   , mCorsMode(nsIHttpChannelInternal::CORS_MODE_NO_CORS)
   , mRedirectMode(nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW)
-  , mFetchCacheMode(nsIHttpChannelInternal::FETCH_CACHE_MODE_DEFAULT)
   , mOnStartRequestCalled(false)
   , mOnStopRequestCalled(false)
   , mUpgradableToSecure(true)
@@ -2808,27 +2807,32 @@ HttpBaseChannel::SetRedirectMode(uint32_t aMode)
   return NS_OK;
 }
 
+namespace {
+
+bool
+ContainsAllFlags(uint32_t aLoadFlags, uint32_t aMask)
+{
+  return (aLoadFlags & aMask) == aMask;
+}
+
+} // anonymous namespace
+
 NS_IMETHODIMP
 HttpBaseChannel::GetFetchCacheMode(uint32_t* aFetchCacheMode)
 {
   NS_ENSURE_ARG_POINTER(aFetchCacheMode);
 
-  // If the fetch cache mode is overriden, then use it directly.
-  if (mFetchCacheMode != nsIHttpChannelInternal::FETCH_CACHE_MODE_DEFAULT) {
-    *aFetchCacheMode = mFetchCacheMode;
-    return NS_OK;
-  }
-
   // Otherwise try to guess an appropriate cache mode from the load flags.
-  if (mLoadFlags & (INHIBIT_CACHING | LOAD_BYPASS_CACHE)) {
+  if (ContainsAllFlags(mLoadFlags, INHIBIT_CACHING | LOAD_BYPASS_CACHE)) {
     *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_STORE;
-  } else if (mLoadFlags & LOAD_BYPASS_CACHE) {
+  } else if (ContainsAllFlags(mLoadFlags, LOAD_BYPASS_CACHE)) {
     *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_RELOAD;
-  } else if (mLoadFlags & VALIDATE_ALWAYS) {
+  } else if (ContainsAllFlags(mLoadFlags, VALIDATE_ALWAYS)) {
     *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_CACHE;
-  } else if (mLoadFlags & (LOAD_FROM_CACHE | nsICachingChannel::LOAD_ONLY_FROM_CACHE)) {
+  } else if (ContainsAllFlags(mLoadFlags, LOAD_FROM_CACHE |
+                                          nsICachingChannel::LOAD_ONLY_FROM_CACHE)) {
     *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_ONLY_IF_CACHED;
-  } else if (mLoadFlags & LOAD_FROM_CACHE) {
+  } else if (ContainsAllFlags(mLoadFlags, LOAD_FROM_CACHE)) {
     *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_FORCE_CACHE;
   } else {
     *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_DEFAULT;
@@ -2837,34 +2841,49 @@ HttpBaseChannel::GetFetchCacheMode(uint32_t* aFetchCacheMode)
   return NS_OK;
 }
 
+namespace {
+
+void
+SetCacheFlags(uint32_t& aLoadFlags, uint32_t aFlags)
+{
+  // First, clear any possible cache related flags.
+  uint32_t allPossibleFlags = nsIRequest::INHIBIT_CACHING
+                            | nsIRequest::LOAD_BYPASS_CACHE
+                            | nsIRequest::VALIDATE_ALWAYS
+                            | nsIRequest::LOAD_FROM_CACHE
+                            | nsICachingChannel::LOAD_ONLY_FROM_CACHE;
+  aLoadFlags &= ~allPossibleFlags;
+
+  // Then set the new flags.
+  aLoadFlags |= aFlags;
+}
+
+} // anonymous namespace
+
 NS_IMETHODIMP
 HttpBaseChannel::SetFetchCacheMode(uint32_t aFetchCacheMode)
 {
   ENSURE_CALLED_BEFORE_CONNECT();
-  MOZ_ASSERT(mFetchCacheMode == nsIHttpChannelInternal::FETCH_CACHE_MODE_DEFAULT,
-             "SetFetchCacheMode() should only be called once per channel");
-
-  mFetchCacheMode = aFetchCacheMode;
 
   // Now, set the load flags that implement each cache mode.
-  switch (mFetchCacheMode) {
+  switch (aFetchCacheMode) {
   case nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_STORE:
     // no-store means don't consult the cache on the way to the network, and
     // don't store the response in the cache even if it's cacheable.
-    mLoadFlags |= INHIBIT_CACHING | LOAD_BYPASS_CACHE;
+    SetCacheFlags(mLoadFlags, INHIBIT_CACHING | LOAD_BYPASS_CACHE);
     break;
   case nsIHttpChannelInternal::FETCH_CACHE_MODE_RELOAD:
     // reload means don't consult the cache on the way to the network, but
     // do store the response in the cache if possible.
-    mLoadFlags |= LOAD_BYPASS_CACHE;
+    SetCacheFlags(mLoadFlags, LOAD_BYPASS_CACHE);
     break;
   case nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_CACHE:
     // no-cache means always validate what's in the cache.
-    mLoadFlags |= VALIDATE_ALWAYS;
+    SetCacheFlags(mLoadFlags, VALIDATE_ALWAYS);
     break;
   case nsIHttpChannelInternal::FETCH_CACHE_MODE_FORCE_CACHE:
     // force-cache means don't validate unless if the response would vary.
-    mLoadFlags |= LOAD_FROM_CACHE;
+    SetCacheFlags(mLoadFlags, LOAD_FROM_CACHE);
     break;
   case nsIHttpChannelInternal::FETCH_CACHE_MODE_ONLY_IF_CACHED:
     // only-if-cached means only from cache, no network, no validation, generate
@@ -2873,9 +2892,16 @@ HttpBaseChannel::SetFetchCacheMode(uint32_t aFetchCacheMode)
     // the user has things in their cache without any network traffic side
     // effects) are addressed in the Request constructor which enforces/requires
     // same-origin request mode.
-    mLoadFlags |= LOAD_FROM_CACHE | nsICachingChannel::LOAD_ONLY_FROM_CACHE;
+    SetCacheFlags(mLoadFlags, LOAD_FROM_CACHE |
+                              nsICachingChannel::LOAD_ONLY_FROM_CACHE);
     break;
   }
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  uint32_t finalMode = 0;
+  MOZ_ALWAYS_SUCCEEDS(GetFetchCacheMode(&finalMode));
+  MOZ_DIAGNOSTIC_ASSERT(finalMode == aFetchCacheMode);
+#endif // MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
   return NS_OK;
 }
@@ -3621,10 +3647,6 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
 
     // Preserve Redirect mode flag.
     rv = httpInternal->SetRedirectMode(mRedirectMode);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    // Preserve Cache mode flag.
-    rv = httpInternal->SetFetchCacheMode(mFetchCacheMode);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     // Preserve Integrity metadata.

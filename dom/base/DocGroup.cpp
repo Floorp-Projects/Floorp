@@ -62,7 +62,7 @@ nsresult
 DocGroup::Dispatch(TaskCategory aCategory,
                    already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  return mTabGroup->Dispatch(aCategory, Move(aRunnable));
+  return mTabGroup->DispatchWithDocGroup(aCategory, Move(aRunnable), this);
 }
 
 nsISerialEventTarget*

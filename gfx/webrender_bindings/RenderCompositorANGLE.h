@@ -28,7 +28,6 @@ public:
   virtual ~RenderCompositorANGLE();
   bool Initialize();
 
-  bool Destroy() override;
   bool BeginFrame() override;
   void EndFrame() override;
   void Pause() override;

@@ -374,7 +374,6 @@ TEST_F(psm_CertList, TestForEachStopEarly)
   ASSERT_EQ(rv, NS_OK) << "Should complete OK.";
 }
 
-
 TEST_F(psm_CertList, TestForEachStopOnError)
 {
   RefPtr<nsNSSCertList> certList = new nsNSSCertList();
@@ -393,4 +392,74 @@ TEST_F(psm_CertList, TestForEachStopOnError)
     });
   ASSERT_EQ(counter, 1) << "There should have been only the one call";
   ASSERT_EQ(rv, NS_ERROR_FAILURE) << "Should propagate the error.";
+}
+
+TEST_F(psm_CertList, TestGetRootCertificateChainTwo)
+{
+  RefPtr<nsNSSCertList> certList = new nsNSSCertList();
+
+  nsresult rv = AddCertFromStringToList(kCaIntermediatePem, certList);
+  ASSERT_EQ(NS_OK, rv) << "Should have loaded OK";
+  rv = AddCertFromStringToList(kCaPem, certList);
+  ASSERT_EQ(NS_OK, rv) << "Should have loaded OK";
+
+  nsCOMPtr<nsIX509Cert> rootCert;
+  rv = certList->GetRootCertificate(rootCert);
+  EXPECT_EQ(NS_OK, rv) << "Should have fetched the root OK";
+  ASSERT_TRUE(rootCert) << "Root cert should be filled in";
+
+  bool selfSigned;
+  EXPECT_TRUE(NS_SUCCEEDED(rootCert->GetIsSelfSigned(&selfSigned))) << "Getters should work.";
+  EXPECT_TRUE(selfSigned) << "Roots are self signed";
+
+  nsAutoString rootCn;
+  EXPECT_TRUE(NS_SUCCEEDED(rootCert->GetCommonName(rootCn))) << "Getters should work.";
+  EXPECT_TRUE(rootCn.EqualsLiteral("ca")) << "Root CN should match";
+
+  // Re-fetch and ensure we get the same certificate.
+  nsCOMPtr<nsIX509Cert> rootCertRepeat;
+  rv = certList->GetRootCertificate(rootCertRepeat);
+  EXPECT_EQ(NS_OK, rv) << "Should have fetched the root OK the second time";
+  ASSERT_TRUE(rootCertRepeat) << "Root cert should still be filled in";
+
+  nsAutoString rootRepeatCn;
+  EXPECT_TRUE(NS_SUCCEEDED(rootCertRepeat->GetCommonName(rootRepeatCn))) << "Getters should work.";
+  EXPECT_TRUE(rootRepeatCn.EqualsLiteral("ca")) << "Root CN should still match";
+}
+
+TEST_F(psm_CertList, TestGetRootCertificateChainFour)
+{
+  RefPtr<nsNSSCertList> certList = new nsNSSCertList();
+
+  nsresult rv = AddCertFromStringToList(kEePem, certList);
+  ASSERT_EQ(NS_OK, rv) << "Should have loaded OK";
+  rv = AddCertFromStringToList(kCaSecondIntermediatePem, certList);
+  ASSERT_EQ(NS_OK, rv) << "Should have loaded OK";
+  rv = AddCertFromStringToList(kCaIntermediatePem, certList);
+  ASSERT_EQ(NS_OK, rv) << "Should have loaded OK";
+  rv = AddCertFromStringToList(kCaPem, certList);
+  ASSERT_EQ(NS_OK, rv) << "Should have loaded OK";
+
+  nsCOMPtr<nsIX509Cert> rootCert;
+  rv = certList->GetRootCertificate(rootCert);
+  EXPECT_EQ(NS_OK, rv) << "Should have again fetched the root OK";
+  ASSERT_TRUE(rootCert) << "Root cert should be filled in";
+
+  bool selfSigned;
+  EXPECT_TRUE(NS_SUCCEEDED(rootCert->GetIsSelfSigned(&selfSigned))) << "Getters should work.";
+  EXPECT_TRUE(selfSigned) << "Roots are self signed";
+
+  nsAutoString rootCn;
+  EXPECT_TRUE(NS_SUCCEEDED(rootCert->GetCommonName(rootCn))) << "Getters should work.";
+  EXPECT_TRUE(rootCn.EqualsLiteral("ca")) << "Root CN should match";
+}
+
+TEST_F(psm_CertList, TestGetRootCertificateChainEmpty)
+{
+  RefPtr<nsNSSCertList> certList = new nsNSSCertList();
+
+  nsCOMPtr<nsIX509Cert> rootCert;
+  nsresult rv = certList->GetRootCertificate(rootCert);
+  EXPECT_EQ(NS_OK, rv) << "Should have again fetched the root OK";
+  EXPECT_FALSE(rootCert) << "Root cert should be empty";
 }
