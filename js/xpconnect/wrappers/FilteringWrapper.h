@@ -85,9 +85,10 @@ class CrossOriginXrayWrapper : public SecurityXrayDOM {
                               JS::ObjectOpResult& result) const override;
 };
 
-// Check whether the given jsid is a symbol whose value can be gotten
-// cross-origin.  Cross-origin gets always return undefined as the value.
-bool IsCrossOriginWhitelistedSymbol(JSContext* cx, JS::HandleId id);
+// Check whether the given jsid is a property name (string or symbol) whose value
+// can be gotten cross-origin.  Cross-origin gets always return undefined as the
+// value, unless the Xray actually provides a different value.
+bool IsCrossOriginWhitelistedProp(JSContext* cx, JS::HandleId id);
 
 } // namespace xpc
 
