@@ -257,6 +257,9 @@ pref("browser.startup.homepage",            "chrome://branding/locale/browsercon
 // Whether we should skip the homepage when opening the first-run page
 pref("browser.startup.firstrunSkipsHomepage", true);
 
+// Show an about:blank window as early as possible for quick startup feedback.
+pref("browser.startup.blankWindow", false);
+
 pref("browser.slowStartup.notificationDisabled", false);
 pref("browser.slowStartup.timeThreshold", 20000);
 pref("browser.slowStartup.maxSamples", 5);
