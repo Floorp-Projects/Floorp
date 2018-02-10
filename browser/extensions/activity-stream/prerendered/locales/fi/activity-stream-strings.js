@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Ei enempää suosituksia juuri nyt. Katso myöhemmin uudestaan lisää ykkösjuttuja lähteestä {provider}. Etkö malta odottaa? Valitse suosittu aihe ja löydä lisää hyviä juttuja ympäri verkkoa.",
   "manual_migration_explanation2": "Kokeile Firefoxia toisesta selaimesta tuotujen kirjanmerkkien, historian ja salasanojen kanssa.",
   "manual_migration_cancel_button": "Ei kiitos",
-  "manual_migration_import_button": "Tuo nyt"
+  "manual_migration_import_button": "Tuo nyt",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

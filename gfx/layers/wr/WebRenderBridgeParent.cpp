@@ -1264,14 +1264,7 @@ WebRenderBridgeParent::HoldPendingTransactionId(uint32_t aWrEpoch,
                                                 const TimeStamp& aTxnStartTime,
                                                 const TimeStamp& aFwdTime)
 {
-  // The transaction ID might get reset to 1 if the page gets reloaded, see
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1145295#c41
-  // Otherwise, it should be continually increasing.
-  MOZ_ASSERT(aTransactionId == 1 || aTransactionId > LastPendingTransactionId());
-  // Handle TransactionIdAllocator(RefreshDriver) change.
-  if (aTransactionId == 1) {
-    FlushPendingTransactionIds();
-  }
+  MOZ_ASSERT(aTransactionId > LastPendingTransactionId());
   mPendingTransactionIds.push(PendingTransactionId(wr::NewEpoch(aWrEpoch), aTransactionId, aTxnStartTime, aFwdTime));
 }
 

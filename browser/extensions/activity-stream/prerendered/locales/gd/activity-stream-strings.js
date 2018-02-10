@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Sin na naidheachdan uile o {provider} an-dràsta ach bidh barrachd ann a dh’aithghearr. No thoir sùil air cuspair air a bheil fèill mhòr is leugh na tha a’ dol mun cuairt air an lìon an-dràsta.",
   "manual_migration_explanation2": "Feuch Firefox leis na comharran-lìn, an eachdraidh ’s na faclan-faire o bhrabhsair eile.",
   "manual_migration_cancel_button": "Chan eil, tapadh leibh",
-  "manual_migration_import_button": "Ion-phortaich an-dràsta"
+  "manual_migration_import_button": "Ion-phortaich an-dràsta",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

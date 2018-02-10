@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Jetzt kennen Sie die Neuigkeiten. Schauen Sie später wieder vorbei, um neue Informationen von {provider} zu erhalten. Können Sie nicht warten? Wählen Sie ein beliebtes Thema und lesen Sie weitere interessante Geschichten aus dem Internet.",
   "manual_migration_explanation2": "Probieren Sie Firefox aus und importieren Sie die Lesezeichen, Chronik und Passwörter eines anderen Browsers.",
   "manual_migration_cancel_button": "Nein, danke",
-  "manual_migration_import_button": "Jetzt importieren"
+  "manual_migration_import_button": "Jetzt importieren",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Гатова. Праверце пазней, каб убачыць больш матэрыялаў ад {provider}. Не жадаеце чакаць? Выберыце папулярную тэму, каб знайсці больш цікавых матэрыялаў з усяго Інтэрнэту.",
   "manual_migration_explanation2": "Паспрабуйце Firefox з закладкамі, гісторыяй і паролямі з іншага браўзера.",
   "manual_migration_cancel_button": "Не, дзякуй",
-  "manual_migration_import_button": "Імпартаваць зараз"
+  "manual_migration_import_button": "Імпартаваць зараз",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

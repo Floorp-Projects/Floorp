@@ -269,6 +269,7 @@ add_test(function test_referer_blacklist() {
   let counts = get_telemetry_counts();
   let listCounts = counts.listCounts;
   listCounts[BLOCK_LIST]++;
+  listCounts[NO_LIST]++;
   gAppRep.queryReputation({
     sourceURI: exampleURI,
     referrerURI: blocklistedURI,
@@ -287,6 +288,7 @@ add_test(function test_blocklist_trumps_allowlist() {
   let counts = get_telemetry_counts();
   let listCounts = counts.listCounts;
   listCounts[BLOCK_LIST]++;
+  listCounts[ALLOW_LIST]++;
   gAppRep.queryReputation({
     sourceURI: whitelistedURI,
     referrerURI: blocklistedURI,
@@ -306,6 +308,7 @@ add_test(function test_redirect_on_blocklist() {
   let listCounts = counts.listCounts;
   listCounts[BLOCK_LIST]++;
   listCounts[ALLOW_LIST]++;
+  listCounts[NO_LIST]++;
   let secman = Services.scriptSecurityManager;
   let badRedirects = Cc["@mozilla.org/array;1"]
                        .createInstance(Ci.nsIMutableArray);
@@ -322,6 +325,8 @@ add_test(function test_redirect_on_blocklist() {
   };
   badRedirects.appendElement(redirect2);
 
+  // Add a whitelisted URI that will not be looked up against the
+  // whitelist (i.e. it will match NO_LIST).
   let redirect3 = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
     principal: secman.createCodebasePrincipal(whitelistedURI, {}),
@@ -337,6 +342,77 @@ add_test(function test_redirect_on_blocklist() {
     Assert.equal(Cr.NS_OK, aStatus);
     Assert.ok(aShouldBlock);
     check_telemetry(counts.shouldBlock + 1, listCounts);
+    run_next_test();
+  });
+});
+
+add_test(function test_whitelisted_source() {
+  Services.prefs.setCharPref(appRepURLPref,
+                             "http://localhost:4444/download");
+  let counts = get_telemetry_counts();
+  let listCounts = counts.listCounts;
+  listCounts[ALLOW_LIST]++;
+  gAppRep.queryReputation({
+    sourceURI: whitelistedURI,
+    fileSize: 12,
+  }, function onComplete(aShouldBlock, aStatus) {
+    Assert.equal(Cr.NS_OK, aStatus);
+    Assert.ok(!aShouldBlock);
+    check_telemetry(counts.shouldBlock, listCounts);
+    run_next_test();
+  });
+});
+
+add_test(function test_whitelisted_referrer() {
+  Services.prefs.setCharPref(appRepURLPref,
+                             "http://localhost:4444/download");
+  let counts = get_telemetry_counts();
+  let listCounts = counts.listCounts;
+  listCounts[NO_LIST] += 2;
+  gAppRep.queryReputation({
+    sourceURI: exampleURI,
+    referrerURI: whitelistedURI,
+    fileSize: 12,
+  }, function onComplete(aShouldBlock, aStatus) {
+    Assert.equal(Cr.NS_OK, aStatus);
+    Assert.ok(!aShouldBlock);
+    check_telemetry(counts.shouldBlock, listCounts);
+    run_next_test();
+  });
+});
+
+add_test(function test_whitelisted_redirect() {
+  Services.prefs.setCharPref(appRepURLPref,
+                             "http://localhost:4444/download");
+  let counts = get_telemetry_counts();
+  let listCounts = counts.listCounts;
+  listCounts[NO_LIST] += 3;
+  let secman = Services.scriptSecurityManager;
+  let okayRedirects = Cc["@mozilla.org/array;1"]
+                       .createInstance(Ci.nsIMutableArray);
+
+  let redirect1 = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
+    principal: secman.createCodebasePrincipal(exampleURI, {}),
+  };
+  okayRedirects.appendElement(redirect1);
+
+  // Add a whitelisted URI that will not be looked up against the
+  // whitelist (i.e. it will match NO_LIST).
+  let redirect2 = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
+    principal: secman.createCodebasePrincipal(whitelistedURI, {}),
+  };
+  okayRedirects.appendElement(redirect2);
+
+  gAppRep.queryReputation({
+    sourceURI: exampleURI,
+    redirects: okayRedirects,
+    fileSize: 12,
+  }, function onComplete(aShouldBlock, aStatus) {
+    Assert.equal(Cr.NS_OK, aStatus);
+    Assert.ok(!aShouldBlock);
+    check_telemetry(counts.shouldBlock, listCounts);
     run_next_test();
   });
 });

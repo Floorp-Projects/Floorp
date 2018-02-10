@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Tu ja es in die con toto. Reveni plus tarde pro plus historias popular de {provider}. Non vole attender? Selectiona un subjecto popular pro trovar plus altere historias interessante del web.",
   "manual_migration_explanation2": "Essaya Firefox con le marcapaginas, le chronologia e le contrasignos de un altere navigator.",
   "manual_migration_cancel_button": "No, gratias",
-  "manual_migration_import_button": "Importar ora"
+  "manual_migration_import_button": "Importar ora",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "You’ve caught up. Check back later for more top stories from {provider}. Can’t wait? Select a popular topic to find more great stories from around the web.",
   "manual_migration_explanation2": "Try Firefox with the bookmarks, history and passwords from another browser.",
   "manual_migration_cancel_button": "نہیں شکریہ",
-  "manual_migration_import_button": "ابھی درآمد کری"
+  "manual_migration_import_button": "ابھی درآمد کری",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

@@ -563,6 +563,26 @@ WebRenderLayerManager::GetTextureFactoryIdentifier()
 }
 
 void
+WebRenderLayerManager::SetTransactionIdAllocator(TransactionIdAllocator* aAllocator)
+{
+  // When changing the refresh driver, the previous refresh driver may never
+  // receive updates of pending transactions it's waiting for. So clear the
+  // waiting state before assigning another refresh driver.
+  if (mTransactionIdAllocator && (aAllocator != mTransactionIdAllocator)) {
+    mTransactionIdAllocator->ClearPendingTransactions();
+
+    // We should also reset the transaction id of the new allocator to previous
+    // allocator's last transaction id, so that completed transactions for
+    // previous allocator will be ignored and won't confuse the new allocator.
+    if (aAllocator) {
+      aAllocator->ResetInitialTransactionId(mTransactionIdAllocator->LastTransactionId());
+    }
+  }
+
+  mTransactionIdAllocator = aAllocator;
+}
+
+void
 WebRenderLayerManager::AddDidCompositeObserver(DidCompositeObserver* aObserver)
 {
   if (!mDidCompositeObservers.Contains(aObserver)) {

@@ -407,10 +407,12 @@ SortStyleSheetsByScope(nsTArray<CSSStyleSheet*>& aSheets)
   }
 }
 
-nsresult
+void
 nsStyleSet::GatherRuleProcessors(SheetType aType)
 {
-  NS_ENSURE_FALSE(mInShutdown, NS_ERROR_FAILURE);
+  if (mInShutdown) {
+    return;
+  }
 
   // We might be in GatherRuleProcessors because we are dropping a sheet,
   // resulting in an nsCSSSelector being destroyed.  Tell the
@@ -449,7 +451,7 @@ nsStyleSet::GatherRuleProcessors(SheetType aType)
     // Don't regather if this level is disabled.  Note that we gather
     // preshint sheets no matter what, but then skip them for some
     // elements later if mAuthorStyleDisabled.
-    return NS_OK;
+    return;
   }
   switch (aType) {
     // levels that do not contain CSS style sheets
@@ -457,21 +459,21 @@ nsStyleSet::GatherRuleProcessors(SheetType aType)
       MOZ_ASSERT(mSheets[aType].IsEmpty());
       mRuleProcessors[aType] = PresContext()->EffectCompositor()->
         RuleProcessor(EffectCompositor::CascadeLevel::Animations);
-      return NS_OK;
+      return;
     case SheetType::Transition:
       MOZ_ASSERT(mSheets[aType].IsEmpty());
       mRuleProcessors[aType] = PresContext()->EffectCompositor()->
         RuleProcessor(EffectCompositor::CascadeLevel::Transitions);
-      return NS_OK;
+      return;
     case SheetType::StyleAttr:
       MOZ_ASSERT(mSheets[aType].IsEmpty());
       mRuleProcessors[aType] = PresContext()->Document()->GetInlineStyleSheet();
-      return NS_OK;
+      return;
     case SheetType::PresHint:
       MOZ_ASSERT(mSheets[aType].IsEmpty());
       mRuleProcessors[aType] =
         PresContext()->Document()->GetAttributeStyleSheet();
-      return NS_OK;
+      return;
     default:
       // keep going
       break;
@@ -532,7 +534,7 @@ nsStyleSet::GatherRuleProcessors(SheetType aType)
         start = end;
       } while (start < count);
     }
-    return NS_OK;
+    return;
   }
   if (!mSheets[aType].IsEmpty()) {
     switch (aType) {
@@ -578,8 +580,6 @@ nsStyleSet::GatherRuleProcessors(SheetType aType)
         break;
     }
   }
-
-  return NS_OK;
 }
 
 nsresult
@@ -683,20 +683,15 @@ DirtyBit(SheetType aType)
 nsresult
 nsStyleSet::DirtyRuleProcessors(SheetType aType)
 {
-  if (!mBatching)
-    return GatherRuleProcessors(aType);
-
-  mDirty |= DirtyBit(aType);
+  if (mBatching) {
+    mDirty |= DirtyBit(aType);
+  } else {
+    GatherRuleProcessors(aType);
+  }
   return NS_OK;
 }
 
-bool
-nsStyleSet::GetAuthorStyleDisabled() const
-{
-  return mAuthorStyleDisabled;
-}
-
-nsresult
+void
 nsStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled)
 {
   if (aStyleDisabled == !mAuthorStyleDisabled) {
@@ -705,9 +700,8 @@ nsStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled)
     mDirty |= DirtyBit(SheetType::Doc) |
               DirtyBit(SheetType::ScopedDoc) |
               DirtyBit(SheetType::StyleAttr);
-    return EndUpdate();
+    EndUpdate();
   }
-  return NS_OK;
 }
 
 // -------- Doc Sheets
@@ -770,8 +764,7 @@ nsStyleSet::EndUpdate()
 
   for (SheetType type : MakeEnumeratedRange(SheetType::Count)) {
     if (mDirty & DirtyBit(type)) {
-      nsresult rv = GatherRuleProcessors(type);
-      NS_ENSURE_SUCCESS(rv, rv);
+      GatherRuleProcessors(type);
     }
   }
 

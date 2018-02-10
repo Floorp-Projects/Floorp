@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "다 왔습니다. {provider}에서 제공하는 주요 기사를 다시 확인해 보세요. 기다릴 수가 없나요? 주제를 선택하면 웹에서 볼 수 있는 가장 재미있는 글을 볼 수 있습니다.",
   "manual_migration_explanation2": "다른 브라우저에 있는 북마크, 기록, 비밀번호를 사용해 Firefox를 이용해 보세요.",
   "manual_migration_cancel_button": "괜찮습니다",
-  "manual_migration_import_button": "지금 가져오기"
+  "manual_migration_import_button": "지금 가져오기",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

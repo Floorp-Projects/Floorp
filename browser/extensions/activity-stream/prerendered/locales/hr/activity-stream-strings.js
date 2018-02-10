@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Provjerite kasnije za više najpopularnijih priča od {provider}. Ne možete čekati? Odaberite popularne teme kako biste pronašli više kvalitetnih priča s cijelog weba.",
   "manual_migration_explanation2": "Probajte Firefox s zabilješkama, povijesti i lozinkama iz drugog pretraživača.",
   "manual_migration_cancel_button": "Ne hvala",
-  "manual_migration_import_button": "Uvezi sada"
+  "manual_migration_import_button": "Uvezi sada",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

@@ -17,13 +17,27 @@
   content/vendor/react-intl.js (./vendor/react-intl.js)
   content/vendor/redux.js (./vendor/redux.js)
   content/vendor/react-redux.js (./vendor/react-redux.js)
-  content/data/ (./data/*)
+  content/data/content/assets/ (./data/content/assets/*)
+  content/data/content/tippytop/ (./data/content/tippytop/*)
+  content/data/content/activity-stream.bundle.js (./data/content/activity-stream.bundle.js)
+#ifndef RELEASE_OR_BETA
+  content/data/content/activity-stream.bundle.js.map (./data/content/activity-stream.bundle.js.map)
+#endif
 #ifdef XP_MACOSX
   content/css/activity-stream.css (./css/activity-stream-mac.css)
+#ifndef RELEASE_OR_BETA
+  content/css/activity-stream-mac.css.map (./css/activity-stream-mac.css.map)
+#endif
 #elifdef XP_WIN
   content/css/activity-stream.css (./css/activity-stream-windows.css)
+#ifndef RELEASE_OR_BETA
+  content/css/activity-stream-windows.css.map (./css/activity-stream-windows.css.map)
+#endif
 #else
   content/css/activity-stream.css (./css/activity-stream-linux.css)
+#ifndef RELEASE_OR_BETA
+  content/css/activity-stream-linux.css.map (./css/activity-stream-linux.css.map)
+#endif
 #endif
   content/prerendered/static/activity-stream-initial-state.js (./prerendered/static/activity-stream-initial-state.js)
 #ifndef RELEASE_OR_BETA

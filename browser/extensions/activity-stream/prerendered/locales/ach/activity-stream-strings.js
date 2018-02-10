@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Ityeko weng. Rot doki lacen pi lok madito mapol ki bot {provider}. Pe itwero kuro? Yer lok macuke lamal me nongo lok mabeco mapol ki i but kakube.",
   "manual_migration_explanation2": "Tem Firefox ki alamabuk, gin mukato ki mung me donyo ki ii layeny mukene.",
   "manual_migration_cancel_button": "Pe Apwoyo",
-  "manual_migration_import_button": "Kel kombedi"
+  "manual_migration_import_button": "Kel kombedi",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

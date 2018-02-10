@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Rydych wedi dal i fynDewch nôl rhywbryd eto am fwy o'r straeon pwysicaf gan {provider}. Methu aros? Dewiswch bwnc poblogaidd i ganfod straeon da o ar draws y we. ",
   "manual_migration_explanation2": "Profwch Firefox gyda nodau tudalen, hanes a chyfrineiriau o borwr arall.",
   "manual_migration_cancel_button": "Dim Diolch",
-  "manual_migration_import_button": "Mewnforio Nawr"
+  "manual_migration_import_button": "Mewnforio Nawr",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

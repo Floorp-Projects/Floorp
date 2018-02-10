@@ -10,7 +10,7 @@ window.gActivityStreamStrings = {
   "header_recommended_by": "ينصح به {provider}",
   "header_bookmarks_placeholder": "لا علامات لديك بعد.",
   "header_stories_from": "من",
-  "context_menu_button_sr": "Open context menu for {title}",
+  "context_menu_button_sr": "افتح قائمة {title} السياقية",
   "type_label_visited": "مُزارة",
   "type_label_bookmarked": "معلّمة",
   "type_label_synced": "مُزامنة من جهاز آخر",
@@ -79,7 +79,7 @@ window.gActivityStreamStrings = {
   "edit_topsites_edit_button": "حرّر هذا الموقع",
   "edit_topsites_dismiss_button": "احذف هذا الموقع",
   "edit_topsites_add_button": "أضِفْ",
-  "edit_topsites_add_button_tooltip": "Add Top Site",
+  "edit_topsites_add_button_tooltip": "أضف موقعًا شائعًا",
   "topsites_form_add_header": "موقع شائع جديد",
   "topsites_form_edit_header": "حرّر الموقع الشائع",
   "topsites_form_title_placeholder": "أدخل عنوانًا",
@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "لا جديد. تحقق لاحقًا للحصول على مزيد من أهم الأخبار من {provider}. لا يمكنك الانتظار؟ اختر موضوعًا شائعًا للعثور على المزيد من القصص الرائعة من جميع أنحاء الوِب.",
   "manual_migration_explanation2": "جرب فَيَرفُكس مع العلامات، و التأريخ، و كلمات السر من متصفح آخر.",
   "manual_migration_cancel_button": "لا شكرًا",
-  "manual_migration_import_button": "استورد الآن"
+  "manual_migration_import_button": "استورد الآن",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

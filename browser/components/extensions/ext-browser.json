@@ -35,6 +35,7 @@
     "url": "chrome://browser/content/ext-commands.js",
     "schema": "chrome://browser/content/schemas/commands.json",
     "scopes": ["addon_parent"],
+    "events": ["uninstall"],
     "manifest": ["commands"],
     "paths": [
       ["commands"]

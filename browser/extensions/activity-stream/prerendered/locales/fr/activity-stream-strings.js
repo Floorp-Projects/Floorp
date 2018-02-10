@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Il n’y en a pas d’autres. Revenez plus tard pour plus d’articles de {provider}. Vous ne voulez pas attendre ? Choisissez un sujet parmi les plus populaires pour découvrir d’autres articles intéressants sur le Web.",
   "manual_migration_explanation2": "Essayez Firefox en important les marque-pages, l’historique et les mots de passe depuis un autre navigateur.",
   "manual_migration_cancel_button": "Non merci",
-  "manual_migration_import_button": "Importer"
+  "manual_migration_import_button": "Importer",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };

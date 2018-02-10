@@ -96,5 +96,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Ussa has ti legì tut las novitads. Turna pli tard per ulteriuras novitads da {provider}. Na pos betg spetgar? Tscherna in tema popular per chattar ulteriuras istorgias ord il web.",
   "manual_migration_explanation2": "Emprova Firefox cun ils segnapaginas, la cronologia ed ils pleds-clav importads d'in auter navigatur.",
   "manual_migration_cancel_button": "Na, grazia",
-  "manual_migration_import_button": "Importar ussa"
+  "manual_migration_import_button": "Importar ussa",
+  "error_fallback_default_info": "Oops, something went wrong loading this content.",
+  "error_fallback_default_refresh_suggestion": "Refresh page to try again."
 };
