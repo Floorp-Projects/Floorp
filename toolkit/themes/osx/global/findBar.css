@@ -30,8 +30,10 @@ findbar[noanim] {
 
 findbar:-moz-lwtheme {
   -moz-appearance: none;
-  background: none;
+  background-color: var(--toolbar-bgcolor);
+  background-image: none;
   border-style: none;
+  color: var(--toolbar-color, var(--chrome-color, -moz-DialogText));
 }
 
 .findbar-container {
@@ -69,11 +71,16 @@ label.findbar-find-fast:-moz-lwtheme,
 .findbar-entire-word {
   -moz-appearance: none;
   border-radius: 10000px;
-  border: @roundButtonBorder@;
+  border: @roundButtonBorderWidth@ @roundButtonBorderStyle@ @roundButtonBorderColor@;
   color: @roundButtonColor@;
   background: @roundButtonBackground@;
   box-shadow: @roundButtonShadow@;
   margin: 0;
+}
+
+.findbar-find-next:-moz-lwtheme,
+.findbar-find-previous:-moz-lwtheme {
+  background-image: linear-gradient(rgba(255,255,255,.6) 1px, rgba(255,255,255,.4) 1px, rgba(255,255,255,.1));
 }
 
 @media (-moz-mac-yosemite-theme) {
@@ -131,13 +138,18 @@ label.findbar-find-fast:-moz-lwtheme,
 .findbar-textbox {
   position: relative;
   -moz-appearance: none;
-  border: @roundButtonBorder@;
+  border: @roundButtonBorderWidth@ @roundButtonBorderStyle@ var(--lwt-toolbar-field-border-color, @roundButtonBorderColor@);
   border-radius: 10000px 0 0 10000px;
   box-shadow: @roundButtonShadow@;
   background: url("chrome://global/skin/icons/search-textbox.svg") -moz-Field no-repeat 5px center;
   margin: 0;
   padding: 2px 8px;
   padding-inline-start: 19px;
+}
+
+.findbar-textbox:-moz-lwtheme {
+  background-color: var(--lwt-toolbar-field-background-color, -moz-Field);
+  color: var(--lwt-toolbar-field-color, -moz-FieldText);
 }
 
 .findbar-textbox:-moz-locale-dir(rtl) {
@@ -207,6 +219,11 @@ label.findbar-find-fast:-moz-lwtheme,
   -moz-context-properties: fill;
   fill: -moz-dialogtext;
   padding-inline-end: 7px;
+}
+
+.findbar-find-next:-moz-lwtheme,
+.findbar-find-previous:-moz-lwtheme {
+  border-color: var(--lwt-toolbar-field-border-color);
 }
 
 .findbar-find-previous[disabled] {

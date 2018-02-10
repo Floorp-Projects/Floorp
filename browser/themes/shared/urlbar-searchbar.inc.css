@@ -46,8 +46,8 @@
 
 #urlbar:-moz-lwtheme,
 #navigator-toolbox .searchbar-textbox:-moz-lwtheme {
-  background-color: var(--url-and-searchbar-background-color, hsla(0,0%,100%,.8));
-  color: var(--url-and-searchbar-color, black);
+  background-color: var(--lwt-toolbar-field-background-color, hsla(0,0%,100%,.8));
+  color: var(--lwt-toolbar-field-color, black);
 }
 
 #urlbar:not([focused="true"]):-moz-lwtheme,
@@ -62,7 +62,7 @@
 
 #urlbar:-moz-lwtheme:hover,
 #navigator-toolbox .searchbar-textbox:-moz-lwtheme:hover {
-  background-color: var(--url-and-searchbar-background-color, white);
+  background-color: var(--lwt-toolbar-field-background-color, white);
 }
 
 #urlbar[focused="true"],
@@ -72,8 +72,8 @@
 
 #urlbar:-moz-lwtheme[focused="true"],
 #navigator-toolbox .searchbar-textbox:-moz-lwtheme[focused="true"] {
-  background-color: var(--lwt-toolbar-field-focus, var(--url-and-searchbar-background-color, white));
-  color: var(--lwt-toolbar-field-focus-color, var(--url-and-searchbar-color, black));
+  background-color: var(--lwt-toolbar-field-focus, var(--lwt-toolbar-field-background-color, white));
+  color: var(--lwt-toolbar-field-focus-color, var(--lwt-toolbar-field-color, black));
 }
 
 :root[uidensity=compact] #urlbar,

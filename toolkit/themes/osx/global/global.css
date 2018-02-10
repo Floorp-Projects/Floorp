@@ -223,7 +223,7 @@ notification > button {
   min-height: 16px;
   -moz-appearance: none;
   border-radius: 10000px;
-  border: @roundButtonBorder@;
+  border: @roundButtonBorderWidth@ @roundButtonBorderStyle@ @roundButtonBorderColor@;
   text-shadow: @loweredShadow@;
   color: @roundButtonColor@;
   background: @roundButtonBackground@;

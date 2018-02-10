@@ -33,12 +33,6 @@ const ThemeVariableMap = [
   ["--toolbar-color", {
     lwtProperty: "toolbar_text"
   }],
-  ["--url-and-searchbar-background-color", {
-    lwtProperty: "toolbar_field"
-  }],
-  ["--url-and-searchbar-color", {
-    lwtProperty: "toolbar_field_text"
-  }],
   ["--lwt-toolbar-field-border-color", {
     lwtProperty: "toolbar_field_border"
   }],

@@ -682,6 +682,11 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
   text-shadow: none;
 }
 
+.browserContainer > findbar:-moz-lwtheme {
+  background-color: var(--toolbar-bgcolor);
+  color: var(--toolbar-color, -moz-DialogText);
+}
+
 /* Tabstrip */
 
 #TabsToolbar {
