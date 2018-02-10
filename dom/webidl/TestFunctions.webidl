@@ -44,4 +44,8 @@ interface TestFunctions {
   void testThrowNsresult();
   [Throws]
   void testThrowNsresultFromNative();
+
+  // Throws an InvalidStateError to auto-create a rejected promise.
+  [Throws]
+  static Promise<any> throwToRejectPromise();
 };
