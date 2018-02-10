@@ -346,38 +346,8 @@ interface nsIMessageBroadcaster : nsIMessageListenerManager
    void releaseCachedProcesses();
 };
 
-[uuid(0e602c9e-1977-422a-a8e4-fe0d4a4f78d0)]
-interface nsISyncMessageSender : nsIMessageSender
-{
-  /**
-   * Like |sendAsyncMessage()|, except blocks the sender until all
-   * listeners of the message have been invoked.  Returns an array
-   * containing return values from each listener invoked.
-   */
-  [implicit_jscontext, optional_argc]
-  jsval sendSyncMessage([optional] in AString messageName,
-                        [optional] in jsval obj,
-                        [optional] in jsval objects,
-                        [optional] in nsIPrincipal principal);
-
-  /**
-   * Like |sendSyncMessage()|, except re-entrant. New RPC messages may be
-   * issued even if, earlier on the call stack, we are waiting for a reply
-   * to an earlier sendRpcMessage() call.
-   *
-   * Both sendSyncMessage and sendRpcMessage will block until a reply is
-   * received, but they may be temporarily interrupted to process an urgent
-   * incoming message (such as a CPOW request).
-   */
-  [implicit_jscontext, optional_argc]
-  jsval sendRpcMessage([optional] in AString messageName,
-                       [optional] in jsval obj,
-                       [optional] in jsval objects,
-                       [optional] in nsIPrincipal principal);
-};
-
 [uuid(694e367c-aa25-4446-8499-2c527c4bd838)]
-interface nsIContentFrameMessageManager : nsISyncMessageSender
+interface nsIContentFrameMessageManager : nsIMessageSender
 {
 };
 

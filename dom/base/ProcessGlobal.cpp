@@ -59,7 +59,7 @@ ProcessGlobal::GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& aNames,
 ProcessGlobal*
 ProcessGlobal::Get()
 {
-  nsCOMPtr<nsISyncMessageSender> service = do_GetService(NS_CHILDPROCESSMESSAGEMANAGER_CONTRACTID);
+  nsCOMPtr<nsIMessageSender> service = do_GetService(NS_CHILDPROCESSMESSAGEMANAGER_CONTRACTID);
   if (!service) {
     return nullptr;
   }
@@ -96,10 +96,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ProcessGlobal)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISyncMessageSender)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMessageSender)
   NS_INTERFACE_MAP_ENTRY(nsIMessageListenerManager)
   NS_INTERFACE_MAP_ENTRY(nsIMessageSender)
-  NS_INTERFACE_MAP_ENTRY(nsISyncMessageSender)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
