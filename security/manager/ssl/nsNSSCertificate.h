@@ -106,6 +106,11 @@ public:
                            /* out */ nsCOMPtr<nsIX509CertList>& aIntermediates,
                            /* out */ nsCOMPtr<nsIX509Cert>& aEndEntity);
 
+  // Obtain the root certificate of a certificate chain. This method does so
+  // blindly, as SegmentCertificateChain; the same restrictions apply. On an
+  // empty list, leaves aRoot empty and returns OK.
+  nsresult GetRootCertificate(/* out */ nsCOMPtr<nsIX509Cert>& aRoot);
+
 private:
    virtual ~nsNSSCertList() {}
 
