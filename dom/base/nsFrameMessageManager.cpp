@@ -143,11 +143,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameMessageManager)
                                        static_cast<nsIMessageListenerManager*>(
                                          static_cast<nsIMessageSender*>(this))))
 
-  /* Message managers in child process implement nsIMessageSender and
-     nsISyncMessageSender.  Message managers in the chrome process are
+  /* Message managers in child process implement nsIMessageSender.
+     Message managers in the chrome process are
      either broadcasters (if they have subordinate/child message
      managers) or they're simple message senders. */
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISyncMessageSender, !mChrome)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIMessageSender, !mChrome || !mIsBroadcaster)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIMessageBroadcaster, mChrome && mIsBroadcaster)
 
@@ -530,35 +529,8 @@ GetParamsForMessage(JSContext* aCx,
   return true;
 }
 
-// nsISyncMessageSender
 
 static bool sSendingSyncMessage = false;
-
-NS_IMETHODIMP
-nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
-                                       JS::Handle<JS::Value> aJSON,
-                                       JS::Handle<JS::Value> aObjects,
-                                       nsIPrincipal* aPrincipal,
-                                       JSContext* aCx,
-                                       uint8_t aArgc,
-                                       JS::MutableHandle<JS::Value> aRetval)
-{
-  return SendMessage(aMessageName, aJSON, aObjects, aPrincipal, aCx, aArgc,
-                     aRetval, true);
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::SendRpcMessage(const nsAString& aMessageName,
-                                      JS::Handle<JS::Value> aJSON,
-                                      JS::Handle<JS::Value> aObjects,
-                                      nsIPrincipal* aPrincipal,
-                                      JSContext* aCx,
-                                      uint8_t aArgc,
-                                      JS::MutableHandle<JS::Value> aRetval)
-{
-  return SendMessage(aMessageName, aJSON, aObjects, aPrincipal, aCx, aArgc,
-                     aRetval, false);
-}
 
 static bool
 AllowMessage(size_t aDataLength, const nsAString& aMessageName)
@@ -578,53 +550,6 @@ AllowMessage(size_t aDataLength, const nsAString& aMessageName)
                         messageName);
 
   return false;
-}
-
-nsresult
-nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
-                                   JS::Handle<JS::Value> aJSON,
-                                   JS::Handle<JS::Value> aObjects,
-                                   nsIPrincipal* aPrincipal,
-                                   JSContext* aCx,
-                                   uint8_t aArgc,
-                                   JS::MutableHandle<JS::Value> aRetval,
-                                   bool aIsSync)
-{
-  AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
-    "nsFrameMessageManager::SendMessage", EVENTS, aMessageName);
-
-  aRetval.setUndefined();
-
-  if (sSendingSyncMessage && aIsSync) {
-    // No kind of blocking send should be issued on top of a sync message.
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  StructuredCloneData data;
-  if (aArgc >= 2 && !GetParamsForMessage(aCx, aJSON, JS::UndefinedHandleValue, data)) {
-    return NS_ERROR_DOM_DATA_CLONE_ERR;
-  }
-
-  JS::Rooted<JSObject*> objects(aCx);
-  if (aArgc >= 3 && aObjects.isObject()) {
-    objects = &aObjects.toObject();
-  }
-
-  nsTArray<JS::Value> result;
-  SequenceRooter<JS::Value> resultRooter(aCx, &result);
-  ErrorResult rv;
-  SendMessage(aCx, aMessageName, data, objects, aPrincipal, aIsSync, result, rv);
-  rv.WouldReportJSException();
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  JS::Rooted<JSObject*> dataArray(aCx);
-  if (!ToJSValue(aCx, result, aRetval)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
 }
 
 void
@@ -1976,7 +1901,7 @@ nsFrameMessageManager::NewProcessMessageManager(bool aIsRemote)
 }
 
 nsresult
-NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
+NS_NewChildProcessMessageManager(nsIMessageSender** aResult)
 {
   NS_ASSERTION(!nsFrameMessageManager::GetChildProcessManager(),
                "Re-creating sChildProcessManager");
