@@ -3031,7 +3031,7 @@ pref("layout.css.emulate-moz-box-with-flex", false);
 
 // Is the paint-order property supported for HTML text? (It is always supported
 // for SVG, provided it is enabled at all; see "svg.paint-order.enabled".)
-pref("layout.css.paint-order.enabled", false);
+pref("layout.css.paint-order.enabled", true);
 
 // Are sets of prefixed properties supported?
 pref("layout.css.prefixes.border-image", true);
