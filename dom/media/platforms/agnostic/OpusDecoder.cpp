@@ -35,6 +35,7 @@ OpusDataDecoder::OpusDataDecoder(const CreateDecoderParams& aParams)
   , mDecodedHeader(false)
   , mPaddingDiscarded(false)
   , mFrames(0)
+  , mChannelMap(AudioConfig::ChannelLayout::UNKNOWN_MAP)
 {
 }
 
@@ -130,18 +131,23 @@ OpusDataDecoder::DecodeHeader(const unsigned char* aData, size_t aLength)
   }
   int channels = mOpusParser->mChannels;
 
-  AudioConfig::ChannelLayout layout(channels);
-  if (!layout.IsValid()) {
+  AudioConfig::ChannelLayout vorbisLayout(
+    channels, VorbisDataDecoder::VorbisLayout(channels));
+  if (!vorbisLayout.IsValid()) {
     OPUS_DEBUG("Invalid channel mapping. Source is %d channels", channels);
     return NS_ERROR_FAILURE;
   }
+  mChannelMap = vorbisLayout.Map();
 
-  AudioConfig::ChannelLayout vorbisLayout(
-    channels, VorbisDataDecoder::VorbisLayout(channels));
-  AudioConfig::ChannelLayout smpteLayout(channels);
-  static_assert(sizeof(mOpusParser->mMappingTable) / sizeof(mOpusParser->mMappingTable[0]) >= MAX_AUDIO_CHANNELS,
-                       "Invalid size set");
-  uint8_t map[sizeof(mOpusParser->mMappingTable) / sizeof(mOpusParser->mMappingTable[0])];
+  AudioConfig::ChannelLayout smpteLayout(
+    AudioConfig::ChannelLayout::SMPTEDefault(vorbisLayout));
+
+  static_assert(sizeof(mOpusParser->mMappingTable) /
+                sizeof(mOpusParser->mMappingTable[0]) >=
+                MAX_AUDIO_CHANNELS,
+                "Invalid size set");
+  uint8_t map[sizeof(mOpusParser->mMappingTable) /
+              sizeof(mOpusParser->mMappingTable[0])];
   if (vorbisLayout.MappingTable(smpteLayout, map)) {
     for (int i = 0; i < channels; i++) {
       mMappingTable[i] = mOpusParser->mMappingTable[map[i]];
@@ -318,9 +324,14 @@ OpusDataDecoder::ProcessDecode(MediaRawData* aSample)
   mFrames += frames;
 
   return DecodePromise::CreateAndResolve(
-    DecodedData{ new AudioData(aSample->mOffset, time, duration,
-                               frames, Move(buffer), mOpusParser->mChannels,
-                               mOpusParser->mRate) },
+    DecodedData{ new AudioData(aSample->mOffset,
+                               time,
+                               duration,
+                               frames,
+                               Move(buffer),
+                               mOpusParser->mChannels,
+                               mOpusParser->mRate,
+                               mChannelMap) },
     __func__);
 }
 
