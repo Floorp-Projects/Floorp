@@ -1,4 +1,3 @@
-from itertools import chain
 import os
 import sys
 
@@ -27,20 +26,19 @@ class BalrogMixin(object):
         else:
             buildbot_properties = []
 
-        balrog_props = dict(properties=dict(chain(
-            buildbot_properties,
-            self.buildbot_properties.items(),
-        )))
+        balrog_props = {}
+        balrog_props.update(buildbot_properties)
+        balrog_props.update(self.buildbot_properties)
         if self.config.get('stage_platform'):
-            balrog_props['properties']['stage_platform'] = self.config['stage_platform']
+            balrog_props['stage_platform'] = self.config['stage_platform']
         if self.config.get('platform'):
-            balrog_props['properties']['platform'] = self.config['platform']
+            balrog_props['platform'] = self.config['platform']
         if self.config.get('balrog_platform'):
-            balrog_props["properties"]["platform"] = self.config['balrog_platform']
-        if "branch" not in balrog_props["properties"]:
-            balrog_props["properties"]["branch"] = self.branch
+            balrog_props["platform"] = self.config['balrog_platform']
+        if "branch" not in balrog_props:
+            balrog_props["branch"] = self.branch
 
-        self.dump_config(props_path, balrog_props)
+        self.dump_config(props_path, {"properties": balrog_props})
 
     def lock_balrog_rules(self, rule_ids):
         c = self.config
