@@ -288,6 +288,15 @@ UniqueStacks::AppendFrame(const StackKey& aStack, const FrameKey& aFrame)
   return StackKey(aStack, GetOrAddStackIndex(aStack), GetOrAddFrameIndex(aFrame));
 }
 
+uint32_t
+UniqueStacks::JITAddress::Hash() const
+{
+  uint32_t hash = 0;
+  hash = AddToHash(hash, mAddress);
+  hash = AddToHash(hash, mStreamingGen);
+  return hash;
+}
+
 uint32_t UniqueStacks::FrameKey::Hash() const
 {
   uint32_t hash = 0;
@@ -301,7 +310,7 @@ uint32_t UniqueStacks::FrameKey::Hash() const
     hash = mozilla::AddToHash(hash, *mCategory);
   }
   if (mJITAddress.isSome()) {
-    hash = mozilla::AddToHash(hash, *mJITAddress);
+    hash = mozilla::AddToHash(hash, mJITAddress->Hash());
     if (mJITDepth.isSome()) {
       hash = mozilla::AddToHash(hash, *mJITDepth);
     }
@@ -331,17 +340,19 @@ uint32_t UniqueStacks::GetOrAddStackIndex(const StackKey& aStack)
 
 MOZ_MUST_USE nsTArray<UniqueStacks::FrameKey>
 UniqueStacks::GetOrAddJITFrameKeysForAddress(JSContext* aContext,
-                                             void* aJITAddress)
+                                             const JITAddress& aJITAddress)
 {
   nsTArray<FrameKey>& frameKeys =
     *mAddressToJITFrameKeysMap.LookupOrAdd(aJITAddress);
 
   if (frameKeys.IsEmpty()) {
-    for (JS::ProfiledFrameHandle handle : JS::GetProfiledFrames(aContext,
-                                                                aJITAddress)) {
+    for (JS::ProfiledFrameHandle handle :
+           JS::GetProfiledFrames(aContext, aJITAddress.mAddress)) {
       // JIT frames with the same canonical address should be treated as the
       // same frame, so set the frame key's address to the canonical address.
-      FrameKey frameKey(handle.canonicalAddress(), frameKeys.Length());
+      FrameKey frameKey(
+        JITAddress{ handle.canonicalAddress(), aJITAddress.mStreamingGen },
+        frameKeys.Length());
       MaybeAddJITFrameIndex(aContext, frameKey, handle);
       frameKeys.AppendElement(frameKey);
     }
@@ -879,8 +890,9 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
 
         // A JIT frame may expand to multiple frames due to inlining.
         void* pc = e.Get().u.mPtr;
+        UniqueStacks::JITAddress address = { pc, aUniqueStacks.CurrentGen() };
         nsTArray<UniqueStacks::FrameKey> frameKeys =
-          aUniqueStacks.GetOrAddJITFrameKeysForAddress(aContext, pc);
+          aUniqueStacks.GetOrAddJITFrameKeysForAddress(aContext, address);
         for (const UniqueStacks::FrameKey& frameKey : frameKeys) {
           stack = aUniqueStacks.AppendFrame(stack, frameKey);
         }
