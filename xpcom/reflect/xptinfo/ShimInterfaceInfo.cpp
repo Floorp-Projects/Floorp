@@ -58,7 +58,6 @@
 #include "nsIDOMXULElement.h"
 #include "nsIFrameLoader.h"
 #include "nsIListBoxObject.h"
-#include "nsIMenuBoxObject.h"
 #include "nsISelection.h"
 #include "nsITreeBoxObject.h"
 #include "nsIWebBrowserPersistable.h"
@@ -107,7 +106,6 @@
 #include "mozilla/dom/ListBoxObjectBinding.h"
 #include "mozilla/dom/MediaListBinding.h"
 #include "mozilla/dom/MessageEventBinding.h"
-#include "mozilla/dom/MenuBoxObjectBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/MouseScrollEventBinding.h"
 #include "mozilla/dom/NodeListBinding.h"
@@ -226,7 +224,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(HTMLInputElement),
   DEFINE_SHIM(HTMLMediaElement),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIListBoxObject, ListBoxObject),
-  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIMenuBoxObject, MenuBoxObject),
   DEFINE_SHIM(MouseEvent),
   DEFINE_SHIM(MouseScrollEvent),
   DEFINE_SHIM(NodeList),
