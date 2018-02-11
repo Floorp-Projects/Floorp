@@ -17,7 +17,6 @@ public class GeckoActivityMonitor implements Application.ActivityLifecycleCallba
 
     private static final GeckoActivityMonitor instance = new GeckoActivityMonitor();
 
-    private GeckoApplication appContext;
     private WeakReference<Activity> currentActivity = new WeakReference<>(null);
 
     public static GeckoActivityMonitor getInstance() {
@@ -61,7 +60,7 @@ public class GeckoActivityMonitor implements Application.ActivityLifecycleCallba
     public void onActivityStopped(Activity activity) {
         // onStop for the previous activity is called after onStart/onResume for
         // the new/resumed activity, so if we're switching activities within our
-        // app, mCurrentActivity should already refer to the next activity at
+        // app, currentActivity should already refer to the next activity at
         // this point.
         // If it doesn't, it means we've been backgrounded.
         if (currentActivity.get() == activity) {
