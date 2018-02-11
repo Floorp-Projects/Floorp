@@ -369,7 +369,7 @@ public:
     mChild = nullptr;
     mOffset = mozilla::Some(aOffset);
     mIsChildInitialized = false;
-    NS_WARNING_ASSERTION(!mParent || mOffset.value() <= mParent->Length(),
+    NS_ASSERTION(!mParent || mOffset.value() <= mParent->Length(),
       "The offset is out of bounds");
   }
   void
