@@ -156,6 +156,9 @@ class Theme {
         case "toolbar_field_text":
         case "toolbar_field_border":
         case "toolbar_field_separator":
+        case "toolbar_field_focus":
+        case "toolbar_field_text_focus":
+        case "toolbar_field_border_focus":
         case "toolbar_top_separator":
         case "toolbar_bottom_separator":
         case "toolbar_vertical_separator":
@@ -164,9 +167,8 @@ class Theme {
         case "popup":
         case "popup_text":
         case "popup_border":
-        case "toolbar_field_focus":
-        case "toolbar_field_text_focus":
-        case "toolbar_field_border_focus":
+        case "popup_highlight":
+        case "popup_highlight_text":
           this.lwtStyles[color] = cssColor;
           break;
       }
