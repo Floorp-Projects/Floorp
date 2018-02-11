@@ -19,7 +19,7 @@
   text-shadow: none;
 }
 
-#customization-container:-moz-lwtheme {
+:root[lwtheme-image] #customization-container {
   background-color: transparent;
   background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-non-lwt-bgcolor) 45px);
 }
@@ -34,7 +34,7 @@
   margin: 20px 20px 15px;
 }
 
-#customization-header:-moz-lwtheme {
+:root[lwtheme-image] #customization-header {
   text-shadow: 0 0 1em var(--toolbar-non-lwt-bgcolor),
                0 0 1em var(--toolbar-non-lwt-bgcolor),
                0 0 .5em var(--toolbar-non-lwt-bgcolor);
