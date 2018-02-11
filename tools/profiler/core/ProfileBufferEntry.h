@@ -137,39 +137,9 @@ public:
 
   uint32_t GetOrAddIndex(const char* aStr);
 
-  struct StringKey {
-
-    explicit StringKey(const char* aStr)
-     : mStr(strdup(aStr))
-    {
-      mHash = mozilla::HashString(mStr);
-    }
-
-    StringKey(const StringKey& aOther)
-      : mStr(strdup(aOther.mStr))
-    {
-      mHash = aOther.mHash;
-    }
-
-    ~StringKey() {
-      free(mStr);
-    }
-
-    uint32_t Hash() const;
-    bool operator==(const StringKey& aOther) const {
-      return strcmp(mStr, aOther.mStr) == 0;
-    }
-    bool operator<(const StringKey& aOther) const {
-      return mHash < aOther.mHash;
-    }
-
-  private:
-    uint32_t mHash;
-    char* mStr;
-  };
 private:
   SpliceableChunkedJSONWriter mStringTableWriter;
-  std::map<StringKey, uint32_t> mStringToIndexMap;
+  nsDataHashtable<nsCStringHashKey, uint32_t> mStringToIndexMap;
 };
 
 class UniqueStacks
