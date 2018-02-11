@@ -104,6 +104,8 @@ LightweightThemeConsumer.prototype = {
     _setProperty(root, active, "--lwt-text-color", textcolor);
     _setProperty(root, active, "--lwt-accent-color", this._sanitizeCSSColor(aData.accentcolor) || "white");
 
+    _inferPopupColorsFromText(root, active, this._sanitizeCSSColor(aData.popup_text));
+
     if (active) {
       let dummy = this._doc.createElement("dummy");
       dummy.style.color = textcolor;
@@ -192,4 +194,23 @@ function _parseRGB(aColorString) {
   var rgb = aColorString.match(/^rgba?\((\d+), (\d+), (\d+)/);
   rgb.shift();
   return rgb.map(x => parseInt(x));
+}
+
+function _inferPopupColorsFromText(element, active, color) {
+  if (!color) {
+    element.removeAttribute("lwt-popup-brighttext");
+    _setProperty(element, active, "--autocomplete-popup-secondary-color");
+    return;
+  }
+
+  let [r, g, b] = _parseRGB(color);
+  let luminance = 0.2125 * r + 0.7154 * g + 0.0721 * b;
+
+  if (luminance <= 110) {
+    element.removeAttribute("lwt-popup-brighttext");
+  } else {
+    element.setAttribute("lwt-popup-brighttext", "true");
+  }
+
+  _setProperty(element, active, "--autocomplete-popup-secondary-color", `rgba(${r}, ${g}, ${b}, 0.5)`);
 }
