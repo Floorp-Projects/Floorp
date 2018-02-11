@@ -19,6 +19,8 @@ import org.mozilla.gecko.widget.themed.ThemedImageView;
 import org.mozilla.gecko.widget.themed.ThemedRelativeLayout;
 import org.mozilla.gecko.widget.themed.ThemedTextView;
 
+import java.text.NumberFormat;
+
 public class TabCounter extends ThemedRelativeLayout {
 
     private final ThemedImageView box;
@@ -193,7 +195,7 @@ public class TabCounter extends ThemedRelativeLayout {
         if (count > MAX_VISIBLE_TABS) {
             return SO_MANY_TABS_OPEN;
         }
-        return String.valueOf(count);
+        return NumberFormat.getInstance().format(count);
     }
 
     private void adjustTextSize(int newCount) {

@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
 const { Localization } = ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
 
 add_task(function test_methods_presence() {
@@ -30,7 +31,7 @@ add_task(async function test_methods_calling() {
   const source = new FileSource('test', ['de', 'en-US'], '/localization/{locale}');
   L10nRegistry.registerSource(source);
 
-  async function * generateMessages(resIds) {
+  async function* generateMessages(resIds) {
     yield * await L10nRegistry.generateContexts(['de', 'en-US'], resIds);
   }
 
@@ -48,3 +49,47 @@ add_task(async function test_methods_calling() {
   LocaleService.setRequestedLocales(originalRequested);
 });
 
+add_task(async function test_builtins() {
+  const { L10nRegistry, FileSource } =
+    Components.utils.import("resource://gre/modules/L10nRegistry.jsm", {});
+
+  const known_platforms = {
+    'linux': 'linux',
+    'win': 'windows',
+    'macosx': 'macos',
+    'android': 'android',
+  };
+
+  const fs = {
+    '/localization/en-US/test.ftl': `
+key = { PLATFORM() ->
+        ${ Object.values(known_platforms).map(
+              name => `      [${ name }] ${ name.toUpperCase() } Value\n`).join('') }
+       *[other] OTHER Value
+    }`,
+  };
+  const originalLoad = L10nRegistry.load;
+
+  L10nRegistry.load = async function(url) {
+    return fs[url];
+  }
+
+  const source = new FileSource('test', ['en-US'], '/localization/{locale}');
+  L10nRegistry.registerSource(source);
+
+  async function* generateMessages(resIds) {
+    yield * await L10nRegistry.generateContexts(['en-US'], resIds);
+  }
+
+  const l10n = new Localization([
+    '/test.ftl'
+  ], generateMessages);
+
+  let values = await l10n.formatValues([['key']]);
+
+  ok(values[0].includes(
+    `${ known_platforms[AppConstants.platform].toUpperCase() } Value`));
+
+  L10nRegistry.sources.clear();
+  L10nRegistry.load = originalLoad;
+});
