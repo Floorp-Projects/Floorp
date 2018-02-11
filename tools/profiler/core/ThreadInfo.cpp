@@ -83,6 +83,8 @@ ThreadInfo::StreamJSON(const ProfileBuffer& aBuffer,
     ? Move(partialProfile->mUniqueStacks)
     : MakeUnique<UniqueStacks>();
 
+  uniqueStacks->AdvanceStreamingGeneration();
+
   UniquePtr<char[]> partialSamplesJSON;
   UniquePtr<char[]> partialMarkersJSON;
   if (partialProfile) {
@@ -248,6 +250,8 @@ ThreadInfo::FlushSamplesAndMarkers(const TimeStamp& aProcessStartTime,
   UniquePtr<UniqueStacks> uniqueStacks = mPartialProfile
     ? Move(mPartialProfile->mUniqueStacks)
     : MakeUnique<UniqueStacks>();
+
+  uniqueStacks->AdvanceStreamingGeneration();
 
   UniquePtr<char[]> samplesJSON;
   UniquePtr<char[]> markersJSON;
