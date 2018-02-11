@@ -89,6 +89,9 @@ const kModalOutlineAnim = {
   duration: 50,
 };
 const kNSHTML = "http://www.w3.org/1999/xhtml";
+const kRepaintSchedulerStopped = 1;
+const kRepaintSchedulerPaused = 2;
+const kRepaintSchedulerRunning = 3;
 
 function mockAnonymousContentNode(domNode) {
   return {
@@ -170,7 +173,8 @@ FinderHighlighter.prototype = {
         frames: new Map(),
         lastWindowDimensions: { width: 0, height: 0 },
         modalHighlightRectsMap: new Map(),
-        previousRangeRectsAndTexts: { rectList: [], textList: [] }
+        previousRangeRectsAndTexts: { rectList: [], textList: [] },
+        repaintSchedulerState: kRepaintSchedulerStopped
       });
     }
     return gWindows.get(window);
@@ -370,6 +374,7 @@ FinderHighlighter.prototype = {
     if (dict.modalRepaintScheduler) {
       window.clearTimeout(dict.modalRepaintScheduler);
       dict.modalRepaintScheduler = null;
+      dict.repaintSchedulerState = kRepaintSchedulerStopped;
     }
     dict.lastWindowDimensions = { width: 0, height: 0 };
 
@@ -1033,6 +1038,7 @@ FinderHighlighter.prototype = {
       }
     }
     dict.animateOutline = false;
+    dict.ignoreNextContentChange = true;
 
     dict.previousUpdatedRange = range;
   },
@@ -1102,7 +1108,7 @@ FinderHighlighter.prototype = {
         this._repaintHighlightAllMask(window, false);
         this._scheduleRepaintOfMask(window);
       } else {
-        this._scheduleRepaintOfMask(window, { scrollOnly: true });
+        this._scheduleRepaintOfMask(window, { contentChanged: true });
       }
       return;
     }
@@ -1158,7 +1164,9 @@ FinderHighlighter.prototype = {
     this._updateRangeOutline(dict);
 
     let allRects = [];
-    if (paintContent || dict.modalHighlightAllMask) {
+    // When the user's busy scrolling the document, don't bother cutting out rectangles,
+    // because they're not going to keep up with scrolling speed anyway.
+    if (!dict.busyScrolling && (paintContent || dict.modalHighlightAllMask)) {
       // No need to update dynamic ranges separately when we already about to
       // update all of them anyway.
       if (!dict.updateAllRanges)
@@ -1183,7 +1191,11 @@ FinderHighlighter.prototype = {
       dict.updateAllRanges = false;
     }
 
+    // We may also want to cut out zero rects, which effectively clears out the mask.
     dict.modalHighlightAllMask.setCutoutRectsForElement(kMaskId, allRects);
+
+    // The reflow observer may ignore the reflow we cause ourselves here.
+    dict.ignoreNextContentChange = true;
   },
 
   /**
@@ -1242,17 +1254,45 @@ FinderHighlighter.prototype = {
    *   {Boolean} updateAllRanges Whether to recalculate the rects of all ranges
    *                             that were found up until now.
    */
-  _scheduleRepaintOfMask(window, { contentChanged, scrollOnly, updateAllRanges } =
-                                 { contentChanged: false, scrollOnly: false, updateAllRanges: false }) {
+  _scheduleRepaintOfMask(window, { contentChanged = false, scrollOnly = false, updateAllRanges = false } = {}) {
     if (!this._modal)
       return;
 
     window = window.top;
     let dict = this.getForWindow(window);
+    // Bail out early if the repaint scheduler is paused or when we're supposed
+    // to ignore the next paint (i.e. content change).
+    if ((dict.repaintSchedulerState == kRepaintSchedulerPaused) ||
+        (contentChanged && dict.ignoreNextContentChange)) {
+      dict.ignoreNextContentChange = false;
+      return;
+    }
+
     let hasDynamicRanges = !!dict.dynamicRangesSet.size;
     let pageIsTooBig = this._isPageTooBig(dict);
     let repaintDynamicRanges = ((scrollOnly || contentChanged) && hasDynamicRanges
       && !pageIsTooBig);
+
+    // Determine scroll behavior and keep that state around.
+    let startedScrolling = !dict.busyScrolling && scrollOnly;
+    // When the user started scrolling the document, hide the other highlights.
+    if (startedScrolling) {
+      dict.busyScrolling = startedScrolling;
+      this._repaintHighlightAllMask(window);
+    }
+    // Whilst scrolling, suspend the repaint scheduler, but only when the page is
+    // too big or the find results contains ranges that are inside dynamic
+    // containers.
+    if (dict.busyScrolling && (pageIsTooBig || hasDynamicRanges)) {
+      dict.ignoreNextContentChange = true;
+      this._updateRangeOutline(dict);
+      // NB: we're not using `kRepaintSchedulerPaused` on purpose here, otherwise
+      // we'd break the `busyScrolling` detection (re-)using the timer.
+      if (dict.modalRepaintScheduler) {
+        window.clearTimeout(dict.modalRepaintScheduler);
+        dict.modalRepaintScheduler = null;
+      }
+    }
 
     // When we request to repaint unconditionally, we mean to call
     // `_repaintHighlightAllMask()` right after the timeout.
@@ -1265,8 +1305,12 @@ FinderHighlighter.prototype = {
     if (dict.modalRepaintScheduler)
       return;
 
+    let timeoutMs = hasDynamicRanges && !dict.busyScrolling ?
+      kModalHighlightRepaintHiFreqMs : kModalHighlightRepaintLoFreqMs;
     dict.modalRepaintScheduler = window.setTimeout(() => {
       dict.modalRepaintScheduler = null;
+      dict.repaintSchedulerState = kRepaintSchedulerStopped;
+      dict.busyScrolling = false;
 
       let pageContentChanged = dict.detectedGeometryChange;
       if (!pageContentChanged && !pageIsTooBig) {
@@ -1287,7 +1331,8 @@ FinderHighlighter.prototype = {
         dict.unconditionalRepaintRequested = false;
         this._repaintHighlightAllMask(window);
       }
-    }, hasDynamicRanges ? kModalHighlightRepaintHiFreqMs : kModalHighlightRepaintLoFreqMs);
+    }, timeoutMs);
+    dict.repaintSchedulerState = kRepaintSchedulerRunning;
   },
 
   /**
@@ -1308,7 +1353,15 @@ FinderHighlighter.prototype = {
       this._scheduleRepaintOfMask.bind(this, window, { updateAllRanges: true }),
       this._scheduleRepaintOfMask.bind(this, window, { scrollOnly: true }),
       this.hide.bind(this, window, null),
-      () => dict.busySelecting = true
+      () => dict.busySelecting = true,
+      () => {
+        if (window.document.hidden) {
+          dict.repaintSchedulerState = kRepaintSchedulerPaused;
+        } else if (dict.repaintSchedulerState == kRepaintSchedulerPaused) {
+          dict.repaintSchedulerState = kRepaintSchedulerRunning;
+          this._scheduleRepaintOfMask(window);
+        }
+      }
     ];
     let target = this.iterator._getDocShell(window).chromeEventHandler;
     target.addEventListener("MozAfterPaint", dict.highlightListeners[0]);
@@ -1316,6 +1369,7 @@ FinderHighlighter.prototype = {
     target.addEventListener("scroll", dict.highlightListeners[2], { capture: true, passive: true });
     target.addEventListener("click", dict.highlightListeners[3]);
     target.addEventListener("selectstart", dict.highlightListeners[4]);
+    window.document.addEventListener("visibilitychange", dict.highlightListeners[5]);
   },
 
   /**
@@ -1335,6 +1389,7 @@ FinderHighlighter.prototype = {
     target.removeEventListener("scroll", dict.highlightListeners[2], { capture: true, passive: true });
     target.removeEventListener("click", dict.highlightListeners[3]);
     target.removeEventListener("selectstart", dict.highlightListeners[4]);
+    window.document.removeEventListener("visibilitychange", dict.highlightListeners[5]);
 
     dict.highlightListeners = null;
   },
