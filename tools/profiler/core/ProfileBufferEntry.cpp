@@ -251,18 +251,18 @@ MakeForEachTrackedOptimizationAttemptsLambdaOp(LambdaT&& aLambda)
   return ForEachTrackedOptimizationAttemptsLambdaOp<LambdaT>(Move(aLambda));
 }
 
-uint32_t UniqueJSONStrings::GetOrAddIndex(const char* aStr)
+uint32_t
+UniqueJSONStrings::GetOrAddIndex(const char* aStr)
 {
+  nsDependentCString str(aStr);
+
   uint32_t index;
-  StringKey key(aStr);
-
-  auto it = mStringToIndexMap.find(key);
-
-  if (it != mStringToIndexMap.end()) {
-    return it->second;
+  if (mStringToIndexMap.Get(str, &index)) {
+    return index;
   }
-  index = mStringToIndexMap.size();
-  mStringToIndexMap[key] = index;
+
+  index = mStringToIndexMap.Count();
+  mStringToIndexMap.Put(str, index);
   mStringTableWriter.StringElement(aStr);
   return index;
 }
