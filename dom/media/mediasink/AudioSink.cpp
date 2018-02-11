@@ -395,10 +395,17 @@ AudioSink::NotifyAudioNeeded()
         mFramesParsed = result.value();
       }
 
+      const AudioConfig::ChannelLayout inputLayout =
+        data->mChannelMap
+          ? AudioConfig::ChannelLayout::SMPTEDefault(data->mChannelMap)
+          : AudioConfig::ChannelLayout(data->mChannels);
+      const AudioConfig::ChannelLayout outputLayout =
+        mOutputChannels == data->mChannels
+          ? inputLayout
+          : AudioConfig::ChannelLayout(mOutputChannels);
       mConverter =
-        MakeUnique<AudioConverter>(
-          AudioConfig(data->mChannels, data->mRate),
-          AudioConfig(mOutputChannels, mOutputRate));
+        MakeUnique<AudioConverter>(AudioConfig(inputLayout, data->mRate),
+                                   AudioConfig(outputLayout, mOutputRate));
     }
 
     // See if there's a gap in the audio. If there is, push silence into the
