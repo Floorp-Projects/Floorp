@@ -9,6 +9,12 @@
   --autocomplete-popup-color: -moz-fieldtext;
   --autocomplete-popup-highlight-background: Highlight;
   --autocomplete-popup-highlight-color: HighlightText;
+  --autocomplete-popup-secondary-color: GrayText;
+}
+
+:root[popup-brighttext] {
+  --urlbar-popup-url-color: #0a84ff;
+  --urlbar-popup-action-color: #30e60b;
 }
 
 #PopupAutoCompleteRichResult,
@@ -48,7 +54,7 @@
 /* Awesomebar popup items */
 
 .ac-separator:not([selected=true]) {
-  color: GrayText;
+  color: var(--autocomplete-popup-secondary-color);
 }
 
 .ac-url:not([selected=true]) {

@@ -25,4 +25,8 @@ const ThemeVariableMap = [
   ["--lwt-toolbarbutton-hover-background", "button_background_hover"],
   ["--lwt-toolbarbutton-active-background", "button_background_active"],
   ["--lwt-selected-tab-background-color", "tab_selected"],
+  ["--autocomplete-popup-background", "popup"],
+  ["--autocomplete-popup-color", "popup_text"],
+  ["--autocomplete-popup-highlight-background", "popup_highlight"],
+  ["--autocomplete-popup-highlight-color", "popup_highlight_text"],
 ];
