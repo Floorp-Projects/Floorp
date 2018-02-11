@@ -251,31 +251,6 @@ public:
   }
 };
 
-class StreamJSFramesOp : public JS::ForEachProfiledFrameOp
-{
-  void* mReturnAddress;
-  UniqueStacks::Stack& mStack;
-  unsigned mDepth;
-
-public:
-  StreamJSFramesOp(void* aReturnAddr, UniqueStacks::Stack& aStack)
-   : mReturnAddress(aReturnAddr)
-   , mStack(aStack)
-   , mDepth(0)
-  { }
-
-  unsigned depth() const {
-    MOZ_ASSERT(mDepth > 0);
-    return mDepth;
-  }
-
-  void operator()(const JS::ForEachProfiledFrameOp::FrameHandle& aFrameHandle) override {
-    UniqueStacks::OnStackFrameKey frameKey(mReturnAddress, mDepth, aFrameHandle);
-    mStack.AppendFrame(frameKey);
-    mDepth++;
-  }
-};
-
 uint32_t UniqueJSONStrings::GetOrAddIndex(const char* aStr)
 {
   uint32_t index;
@@ -474,7 +449,7 @@ void UniqueStacks::StreamFrame(const OnStackFrameKey& aFrame)
       writer.IntElement(CATEGORY, *aFrame.mCategory);
     }
   } else {
-    const JS::ForEachProfiledFrameOp::FrameHandle& jitFrame = *aFrame.mJITFrameHandle;
+    const JS::ProfiledFrameHandle& jitFrame = *aFrame.mJITFrameHandle;
 
     writer.StringElement(LOCATION, jitFrame.label());
 
@@ -851,10 +826,14 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
         void* pc = e.Get().u.mPtr;
         unsigned depth = aUniqueStacks.LookupJITFrameDepth(pc);
         if (depth == 0) {
-          StreamJSFramesOp framesOp(pc, stack);
           MOZ_RELEASE_ASSERT(aContext);
-          JS::ForEachProfiledFrame(aContext, pc, framesOp);
-          aUniqueStacks.AddJITFrameDepth(pc, framesOp.depth());
+          for (JS::ProfiledFrameHandle handle : JS::GetProfiledFrames(aContext, pc)) {
+            UniqueStacks::OnStackFrameKey frameKey(pc, depth, handle);
+            stack.AppendFrame(frameKey);
+            depth++;
+          }
+          MOZ_ASSERT(depth > 0);
+          aUniqueStacks.AddJITFrameDepth(pc, depth);
         } else {
           for (unsigned i = 0; i < depth; i++) {
             UniqueStacks::OnStackFrameKey inlineFrameKey(pc, i);
