@@ -318,6 +318,8 @@ public abstract class GeckoApp extends GeckoActivity
     private Telemetry.Timer mGeckoReadyStartupTimer;
 
     private String mPrivateBrowsingSession;
+    private boolean mPrivateBrowsingSessionOutdated;
+    private static final int MAX_PRIVATE_TABS_UPDATE_WAIT_MSEC = 500;
 
     private volatile HealthRecorder mHealthRecorder;
     private volatile Locale mLastLocale;
@@ -608,6 +610,9 @@ public abstract class GeckoApp extends GeckoActivity
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
+        synchronized (this) {
+            mPrivateBrowsingSessionOutdated = true;
+        }
         // Through the GeckoActivityMonitor, this will flush tabs if the whole
         // application is going into the background.
         super.onSaveInstanceState(outState);
@@ -617,9 +622,16 @@ public abstract class GeckoApp extends GeckoActivity
         if (!isApplicationInBackground()) {
             EventDispatcher.getInstance().dispatch("Session:FlushTabs", null);
         }
+        synchronized (this) {
+            if (GeckoThread.isRunning() && mPrivateBrowsingSessionOutdated) {
+                try {
+                    wait(MAX_PRIVATE_TABS_UPDATE_WAIT_MSEC);
+                } catch (final InterruptedException e) { }
+            }
+            outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
+        }
 
         outState.putBoolean(SAVED_STATE_IN_BACKGROUND, isApplicationInBackground());
-        outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
     }
 
     public void addTab() { }
@@ -711,7 +723,13 @@ public abstract class GeckoApp extends GeckoActivity
             showSiteSettingsDialog(permissions);
 
         } else if ("PrivateBrowsing:Data".equals(event)) {
-            mPrivateBrowsingSession = message.getString("session");
+            synchronized (this) {
+                if (!message.getBoolean("noChange", false)) {
+                    mPrivateBrowsingSession = message.getString("session");
+                }
+                mPrivateBrowsingSessionOutdated = false;
+                notifyAll();
+            }
 
         } else if ("SystemUI:Visibility".equals(event)) {
             if (message.getBoolean("visible", true)) {
@@ -1071,6 +1089,7 @@ public abstract class GeckoApp extends GeckoActivity
 
         getAppEventDispatcher().registerGeckoThreadListener(this,
             "Locale:Set",
+            "PrivateBrowsing:Data",
             null);
 
         getAppEventDispatcher().registerUiThreadListener(this,
@@ -1083,7 +1102,6 @@ public abstract class GeckoApp extends GeckoActivity
             "Mma:web_save_image",
             "Mma:web_save_media",
             "Permissions:Data",
-            "PrivateBrowsing:Data",
             "SystemUI:Visibility",
             "ToggleChrome:Focus",
             "ToggleChrome:Hide",
@@ -2078,6 +2096,7 @@ public abstract class GeckoApp extends GeckoActivity
 
         getAppEventDispatcher().unregisterGeckoThreadListener(this,
             "Locale:Set",
+            "PrivateBrowsing:Data",
             null);
 
         getAppEventDispatcher().unregisterUiThreadListener(this,
@@ -2090,7 +2109,6 @@ public abstract class GeckoApp extends GeckoActivity
             "Mma:web_save_image",
             "Mma:web_save_media",
             "Permissions:Data",
-            "PrivateBrowsing:Data",
             "SystemUI:Visibility",
             "ToggleChrome:Focus",
             "ToggleChrome:Hide",
