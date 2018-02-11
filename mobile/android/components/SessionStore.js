@@ -208,8 +208,14 @@ SessionStore.prototype = {
         // any point without notice; therefore, we must synchronously write out any
         // pending save state to ensure that this data does not get lost.
         log("Session:FlushTabs");
-        if (this._loadState == STATE_RUNNING) {
-          this.flushPendingState();
+        if (!this._loadState == STATE_RUNNING || !this.flushPendingState()) {
+          let window = Services.wm.getMostRecentWindow("navigator:browser");
+          if (window) { // can be null if we're restarting
+            window.WindowEventDispatcher.sendRequest({
+              type: "PrivateBrowsing:Data",
+              noChange: true
+            });
+          }
         }
         break;
 
@@ -992,12 +998,18 @@ SessionStore.prototype = {
     this._saveState(true);
   },
 
-  // Immediately and synchronously writes any pending state to disk.
+  /**
+   * Immediately and synchronously writes any pending state to disk.
+   *
+   * @return True if data was written, false if no pending file writes were present.
+   */
   flushPendingState: function ss_flushPendingState() {
     log("flushPendingState(), _pendingWrite = " + this._pendingWrite);
     if (this._pendingWrite) {
       this._saveState(false);
+      return true;
     }
+    return false;
   },
 
   _saveState: function ss_saveState(aAsync) {
@@ -1056,15 +1068,6 @@ SessionStore.prototype = {
       }
     }
 
-    // Write only non-private data to disk
-    if (normalData.windows[0] && normalData.windows[0].tabs) {
-      log("_saveState() writing normal data, " +
-           normalData.windows[0].tabs.length + " tabs in window[0]");
-    } else {
-      log("_saveState() writing empty normal data");
-    }
-    this._writeFile(this._sessionFile, this._sessionFileTemp, normalData, aAsync);
-
     // If we have private data, send it to Java; otherwise, send null to
     // indicate that there is no private data
     let window = Services.wm.getMostRecentWindow("navigator:browser");
@@ -1074,6 +1077,15 @@ SessionStore.prototype = {
         session: (privateData.windows.length > 0 && privateData.windows[0].tabs.length > 0) ? JSON.stringify(privateData) : null
       });
     }
+
+    // Write only non-private data to disk
+    if (normalData.windows[0] && normalData.windows[0].tabs) {
+      log("_saveState() writing normal data, " +
+           normalData.windows[0].tabs.length + " tabs in window[0]");
+    } else {
+      log("_saveState() writing empty normal data");
+    }
+    this._writeFile(this._sessionFile, this._sessionFileTemp, normalData, aAsync);
 
     this._lastSaveTime = Date.now();
   },
