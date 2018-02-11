@@ -899,14 +899,12 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         # common values across different locales
         config = self.config
         platform = config["platform"]
-        hashType = config['hashType']
         appName = config['appName']
         branch = config['branch']
         # values from configuration
         self.set_buildbot_property("branch", branch)
         self.set_buildbot_property("appName", appName)
         # it's hardcoded to sha512 in balrog.py
-        self.set_buildbot_property("hashType", hashType)
         self.set_buildbot_property("platform", platform)
         # values common to the current repacks
         self.set_buildbot_property("buildid", self._query_buildid())

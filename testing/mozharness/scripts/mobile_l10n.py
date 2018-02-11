@@ -700,8 +700,6 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
             self.set_buildbot_property("appVersion", self.query_version())
 
             self.set_buildbot_property("appName", "Fennec")
-            # TODO: don't hardcode
-            self.set_buildbot_property("hashType", "sha512")
             self.set_buildbot_property("completeMarSize", self.query_filesize(apkfile))
             self.set_buildbot_property("completeMarHash", self.query_sha512sum(apkfile))
             self.set_buildbot_property("isOSUpdate", False)
