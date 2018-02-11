@@ -411,15 +411,15 @@ tabbrowser {
   list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-blocked.svg);
 }
 
-.tab-icon-sound:-moz-lwtheme-darktext[soundplaying],
-.tab-icon-sound:-moz-lwtheme-darktext[muted],
-.tab-icon-sound:-moz-lwtheme-darktext[activemedia-blocked] {
+:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[soundplaying],
+:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[muted],
+:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[activemedia-blocked] {
   filter: drop-shadow(1px 1px 1px white);
 }
 
-.tab-icon-sound:-moz-lwtheme-brighttext[soundplaying],
-.tab-icon-sound:-moz-lwtheme-brighttext[muted],
-.tab-icon-sound:-moz-lwtheme-brighttext[activemedia-blocked] {
+:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-brighttext[soundplaying],
+:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-brighttext[muted],
+:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-brighttext[activemedia-blocked] {
   filter: drop-shadow(1px 1px 1px black);
 }
 
