@@ -19,7 +19,6 @@ XPIDL_SOURCES += [
     'nsIBoxObject.idl',
     'nsIListBoxObject.idl',
     'nsIMenuBoxObject.idl',
-    'nsIScrollBoxObject.idl',
     'nsISliderListener.idl',
 ]
 
