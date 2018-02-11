@@ -218,7 +218,7 @@ public:
     uint32_t mHash;
   };
 
-  explicit UniqueStacks(JSContext* aContext);
+  explicit UniqueStacks();
 
   // Return a StackKey for aFrame as the stack's root frame (no prefix).
   MOZ_MUST_USE StackKey BeginStack(const FrameKey& aFrame);
@@ -228,7 +228,7 @@ public:
                                     const FrameKey& aFrame);
 
   MOZ_MUST_USE nsTArray<FrameKey>
-  GetOrAddJITFrameKeysForAddress(void* aJITAddress);
+  GetOrAddJITFrameKeysForAddress(JSContext* aContext, void* aJITAddress);
 
   MOZ_MUST_USE uint32_t GetOrAddFrameIndex(const FrameKey& aFrame);
   MOZ_MUST_USE uint32_t GetOrAddStackIndex(const StackKey& aStack);
@@ -239,19 +239,19 @@ public:
 private:
   // Make sure that there exists a frame index for aFrame, and if there isn't
   // one already, create one and call StreamJITFrame for the frame.
-  void MaybeAddJITFrameIndex(const FrameKey& aFrame,
+  void MaybeAddJITFrameIndex(JSContext* aContext,
+                             const FrameKey& aFrame,
                              const JS::ProfiledFrameHandle& aJITFrame);
 
   void StreamNonJITFrame(const FrameKey& aFrame);
-  void StreamJITFrame(const JS::ProfiledFrameHandle& aJITFrame);
+  void StreamJITFrame(JSContext* aContext,
+                      const JS::ProfiledFrameHandle& aJITFrame);
   void StreamStack(const StackKey& aStack);
 
 public:
   UniqueJSONStrings mUniqueStrings;
 
 private:
-  JSContext* mContext;
-
   // To avoid incurring JitcodeGlobalTable lookup costs for every JIT frame,
   // we cache the frame keys of frames keyed by JIT code address. All FrameKeys
   // in mAddressToJITFrameKeysMap are guaranteed to be in mFrameToIndexMap.

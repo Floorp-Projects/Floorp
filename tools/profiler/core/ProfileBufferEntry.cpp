@@ -309,8 +309,7 @@ uint32_t UniqueStacks::FrameKey::Hash() const
   return hash;
 }
 
-UniqueStacks::UniqueStacks(JSContext* aContext)
- : mContext(aContext)
+UniqueStacks::UniqueStacks()
 {
   mFrameTableWriter.StartBareList();
   mStackTableWriter.StartBareList();
@@ -331,19 +330,19 @@ uint32_t UniqueStacks::GetOrAddStackIndex(const StackKey& aStack)
 }
 
 MOZ_MUST_USE nsTArray<UniqueStacks::FrameKey>
-UniqueStacks::GetOrAddJITFrameKeysForAddress(void* aJITAddress)
+UniqueStacks::GetOrAddJITFrameKeysForAddress(JSContext* aContext,
+                                             void* aJITAddress)
 {
   nsTArray<FrameKey>& frameKeys =
     *mAddressToJITFrameKeysMap.LookupOrAdd(aJITAddress);
 
   if (frameKeys.IsEmpty()) {
-    MOZ_RELEASE_ASSERT(mContext);
-    for (JS::ProfiledFrameHandle handle : JS::GetProfiledFrames(mContext,
+    for (JS::ProfiledFrameHandle handle : JS::GetProfiledFrames(aContext,
                                                                 aJITAddress)) {
       // JIT frames with the same canonical address should be treated as the
       // same frame, so set the frame key's address to the canonical address.
       FrameKey frameKey(handle.canonicalAddress(), frameKeys.Length());
-      MaybeAddJITFrameIndex(frameKey, handle);
+      MaybeAddJITFrameIndex(aContext, frameKey, handle);
       frameKeys.AppendElement(frameKey);
     }
     MOZ_ASSERT(frameKeys.Length() > 0);
@@ -354,7 +353,8 @@ UniqueStacks::GetOrAddJITFrameKeysForAddress(void* aJITAddress)
 }
 
 void
-UniqueStacks::MaybeAddJITFrameIndex(const FrameKey& aFrame,
+UniqueStacks::MaybeAddJITFrameIndex(JSContext* aContext,
+                                    const FrameKey& aFrame,
                                     const JS::ProfiledFrameHandle& aJITFrame)
 {
   uint32_t index;
@@ -365,7 +365,7 @@ UniqueStacks::MaybeAddJITFrameIndex(const FrameKey& aFrame,
 
   index = mFrameToIndexMap.Count();
   mFrameToIndexMap.Put(aFrame, index);
-  StreamJITFrame(aJITFrame);
+  StreamJITFrame(aContext, aJITFrame);
 }
 
 uint32_t
@@ -525,7 +525,8 @@ StreamJITFrameOptimizations(SpliceableJSONWriter& aWriter,
 }
 
 void
-UniqueStacks::StreamJITFrame(const JS::ProfiledFrameHandle& aJITFrame)
+UniqueStacks::StreamJITFrame(JSContext* aContext,
+                             const JS::ProfiledFrameHandle& aJITFrame)
 {
   enum Schema : uint32_t {
     LOCATION = 0,
@@ -550,7 +551,7 @@ UniqueStacks::StreamJITFrame(const JS::ProfiledFrameHandle& aJITFrame)
   if (aJITFrame.hasTrackedOptimizations()) {
     writer.FreeFormElement(OPTIMIZATIONS,
       [&](SpliceableJSONWriter& aWriter, UniqueJSONStrings& aUniqueStrings) {
-        StreamJITFrameOptimizations(aWriter, aUniqueStrings, mContext,
+        StreamJITFrameOptimizations(aWriter, aUniqueStrings, aContext,
                                     aJITFrame);
       });
   }
@@ -873,10 +874,13 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
       } else if (e.Get().IsJitReturnAddr()) {
         numFrames++;
 
+        // We can only process JitReturnAddr entries if we have a JSContext.
+        MOZ_RELEASE_ASSERT(aContext);
+
         // A JIT frame may expand to multiple frames due to inlining.
         void* pc = e.Get().u.mPtr;
         nsTArray<UniqueStacks::FrameKey> frameKeys =
-          aUniqueStacks.GetOrAddJITFrameKeysForAddress(pc);
+          aUniqueStacks.GetOrAddJITFrameKeysForAddress(aContext, pc);
         for (const UniqueStacks::FrameKey& frameKey : frameKeys) {
           stack = aUniqueStacks.AppendFrame(stack, frameKey);
         }
