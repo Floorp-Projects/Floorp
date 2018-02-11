@@ -228,7 +228,7 @@ public:
       , mJITFrameHandle(aToCopy.mJITFrameHandle)
     { }
 
-    const JS::ForEachProfiledFrameOp::FrameHandle* mJITFrameHandle;
+    const JS::ProfiledFrameHandle* mJITFrameHandle;
 
     OnStackFrameKey(void* aJITAddress, unsigned aJITDepth)
       : FrameKey(aJITAddress, aJITDepth)
@@ -236,7 +236,7 @@ public:
     { }
 
     OnStackFrameKey(void* aJITAddress, unsigned aJITDepth,
-                    const JS::ForEachProfiledFrameOp::FrameHandle& aJITFrameHandle)
+                    const JS::ProfiledFrameHandle& aJITFrameHandle)
       : FrameKey(aJITAddress, aJITDepth)
       , mJITFrameHandle(&aJITFrameHandle)
     { }

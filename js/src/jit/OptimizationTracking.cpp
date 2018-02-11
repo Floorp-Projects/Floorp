@@ -1274,7 +1274,7 @@ IonTrackedOptimizationsTypeInfo::ForEachOpAdapter::operator()(JS::TrackedTypeSit
     op_(site, StringFromMIRType(mirType));
 }
 
-typedef JS::ForEachProfiledFrameOp::FrameHandle FrameHandle;
+typedef JS::ProfiledFrameHandle FrameHandle;
 
 void
 FrameHandle::updateHasTrackedOptimizations()
