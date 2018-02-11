@@ -81,7 +81,7 @@ ThreadInfo::StreamJSON(const ProfileBuffer& aBuffer,
 
   UniquePtr<UniqueStacks> uniqueStacks = partialProfile
     ? Move(partialProfile->mUniqueStacks)
-    : MakeUnique<UniqueStacks>(mContext);
+    : MakeUnique<UniqueStacks>();
 
   UniquePtr<char[]> partialSamplesJSON;
   UniquePtr<char[]> partialMarkersJSON;
@@ -247,7 +247,7 @@ ThreadInfo::FlushSamplesAndMarkers(const TimeStamp& aProcessStartTime,
   // mapping is stable across JS shutdown.
   UniquePtr<UniqueStacks> uniqueStacks = mPartialProfile
     ? Move(mPartialProfile->mUniqueStacks)
-    : MakeUnique<UniqueStacks>(mContext);
+    : MakeUnique<UniqueStacks>();
 
   UniquePtr<char[]> samplesJSON;
   UniquePtr<char[]> markersJSON;
