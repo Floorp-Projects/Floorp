@@ -212,7 +212,7 @@ exports.changeMatrixBase = changeMatrixBase;
  *        The node.
  * @param {DOMNode} ancestor
  *        The ancestor of the node given.
- ** @return {Array}
+ * @return {Array}
  *        The transformation matrix.
  */
 function getNodeTransformationMatrix(node, ancestor = node.parentElement) {
@@ -226,3 +226,93 @@ function getNodeTransformationMatrix(node, ancestor = node.parentElement) {
   ];
 }
 exports.getNodeTransformationMatrix = getNodeTransformationMatrix;
+
+/**
+ * Returns the matrix to rotate, translate, and reflect (if needed) from the element's
+ * top-left origin into the actual writing mode and text direction applied to the element.
+ *
+ * @param  {Object} size
+ *         An element's untransformed `width` and `height`.
+ * @param  {Object} style
+ *         The computed `writingMode` and `direction` properties for the element.
+ * @return {Array}
+ *         The matrix with adjustments for writing mode and text direction, if any.
+ */
+function getWritingModeMatrix(size, style) {
+  let currentMatrix = identity();
+  let { width, height } = size;
+  let { direction, writingMode } = style;
+
+  switch (writingMode) {
+    case "horizontal-tb":
+      // This is the initial value. No further adjustment needed.
+      break;
+    case "vertical-rl":
+      currentMatrix = multiply(
+        translate(width, 0),
+        rotate(-Math.PI / 2)
+      );
+      break;
+    case "vertical-lr":
+      currentMatrix = multiply(
+        reflectAboutY(),
+        rotate(-Math.PI / 2)
+      );
+      break;
+    case "sideways-rl":
+      currentMatrix = multiply(
+        translate(width, 0),
+        rotate(-Math.PI / 2)
+      );
+      break;
+    case "sideways-lr":
+      currentMatrix = multiply(
+        rotate(Math.PI / 2),
+        translate(-height, 0)
+      );
+      break;
+    default:
+      console.error(`Unexpected writing-mode: ${writingMode}`);
+  }
+
+  switch (direction) {
+    case "ltr":
+      // This is the initial value. No further adjustment needed.
+      break;
+    case "rtl":
+      let rowLength = width;
+      if (writingMode != "horizontal-tb") {
+        rowLength = height;
+      }
+      currentMatrix = multiply(currentMatrix, translate(rowLength, 0));
+      currentMatrix = multiply(currentMatrix, reflectAboutY());
+      break;
+    default:
+      console.error(`Unexpected direction: ${direction}`);
+  }
+
+  return currentMatrix;
+}
+exports.getWritingModeMatrix = getWritingModeMatrix;
+
+/**
+ * Convert from the matrix format used in this module:
+ *   a, c, e,
+ *   b, d, f,
+ *   0, 0, 1
+ * to the format used by the `matrix()` CSS transform function:
+ *   a, b, c, d, e, f
+ *
+ * @param  {Array} M
+ *         The matrix in this module's 9 element format.
+ * @return {String}
+ *         The matching 6 element CSS transform function.
+ */
+function getCSSMatrixTransform(M) {
+  let [
+    a, c, e,
+    b, d, f,
+  ] = M;
+  return `matrix(${a}, ${b}, ${c}, ${d}, ${e}, ${f})`;
+}
+exports.getCSSMatrixTransform = getCSSMatrixTransform;
