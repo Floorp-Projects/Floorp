@@ -117,17 +117,23 @@ function serializeNode(aNode, aIsLivemark) {
   data.instanceId = PlacesUtils.instanceId;
 
   let guid = aNode.bookmarkGuid;
+  let grandParentId;
+
   // Some nodes, e.g. the unfiled/menu/toolbar ones can have a virtual guid, so
   // we ignore any that are a folder shortcut. These will be handled below.
   if (guid && !PlacesUtils.bookmarks.isVirtualRootItem(guid)) {
     // TODO: Really guid should be set on everything, however currently this upsets
     // the drag 'n' drop / cut/copy/paste operations.
     data.itemGuid = guid;
-    if (aNode.parent)
+    if (aNode.parent) {
       data.parent = aNode.parent.itemId;
+      data.parentGuid = aNode.parent.bookmarkGuid;
+    }
+
     let grandParent = aNode.parent && aNode.parent.parent;
-    if (grandParent)
-      data.grandParentId = grandParent.itemId;
+    if (grandParent) {
+      grandParentId = grandParent.itemId;
+    }
 
     data.dateAdded = aNode.dateAdded;
     data.lastModified = aNode.lastModified;
@@ -152,7 +158,7 @@ function serializeNode(aNode, aIsLivemark) {
       data.tags = aNode.tags;
   } else if (PlacesUtils.nodeIsContainer(aNode)) {
     // Tag containers accept only uri nodes.
-    if (data.grandParentId == PlacesUtils.tagsFolderId)
+    if (grandParentId == PlacesUtils.tagsFolderId)
       throw new Error("Unexpected node type");
 
     let concreteId = PlacesUtils.getConcreteItemId(aNode);
@@ -176,7 +182,7 @@ function serializeNode(aNode, aIsLivemark) {
   } else if (PlacesUtils.nodeIsSeparator(aNode)) {
     // Tag containers don't accept separators.
     if (data.parent == PlacesUtils.tagsFolderId ||
-        data.grandParentId == PlacesUtils.tagsFolderId)
+        grandParentId == PlacesUtils.tagsFolderId)
       throw new Error("Unexpected node type");
 
     data.type = PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR;
