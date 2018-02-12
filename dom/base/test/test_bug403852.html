@@ -21,10 +21,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=403852
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
-var url = SimpleTest.getTestFileURL("bug403852_fileOpener.js");
-var script = SpecialPowers.loadChromeScript(url);
-script.addMessageListener("file.opened", onOpened);
-script.sendAsyncMessage("file.open");
+var script = '';
+SpecialPowers.pushPrefEnv({ "set":
+      [["privacy.reduceTimerPrecision", false]]},
+  function() {
+    var url = SimpleTest.getTestFileURL("bug403852_fileOpener.js");
+    script = SpecialPowers.loadChromeScript(url);
+    script.addMessageListener("file.opened", onOpened);
+    script.sendAsyncMessage("file.open");
+});
 
 function onOpened(message) {
   var fileList = document.getElementById('fileList');

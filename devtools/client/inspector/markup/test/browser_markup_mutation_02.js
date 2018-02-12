@@ -9,6 +9,8 @@
 
 // Have to use the same timer functions used by the inspector.
 const {clearTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
+ChromeUtils.defineModuleGetter(this, "Preferences",
+  "resource://gre/modules/Preferences.jsm");
 
 const TEST_URL = URL_ROOT + "doc_markup_flashing.html";
 
@@ -92,6 +94,13 @@ const TEST_DATA = [{
 }];
 
 add_task(function* () {
+  let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
+  Preferences.set("privacy.reduceTimerPrecision", false);
+
+  registerCleanupFunction(function () {
+    Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
+  });
+
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   // Make sure mutated nodes flash for a very long time so we can more easily

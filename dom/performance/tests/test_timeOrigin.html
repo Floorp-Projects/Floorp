@@ -52,6 +52,7 @@ function testSharedWorker() {
 var tests = [ testBasic, testWorker, testSharedWorker ];
 function next() {
   if (!tests.length) {
+    SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", reduceTimePrecisionPrevPrefValue);
     SimpleTest.finish();
     return;
   }
@@ -61,6 +62,14 @@ function next() {
 }
 
 SimpleTest.waitForExplicitFinish();
+
+// It is a known issue that comparing time between a worker and a window
+// when timer clamping is in effect may cause time to go backwards.
+// Do not run this test with this preference set. For large values of
+// clamping you will see failures. For small values, it is intermitant.
+var reduceTimePrecisionPrevPrefValue = SpecialPowers.getBoolPref("privacy.reduceTimerPrecision");
+SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", false);
+
 addLoadEvent(next);
       </script>
     </pre>
