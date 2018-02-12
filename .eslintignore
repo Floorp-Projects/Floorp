@@ -324,6 +324,7 @@ mobile/android/tests/browser/chrome/tp5/**
 
 # Uses `#filter substitution`
 mobile/android/app/mobile.js
+mobile/android/app/geckoview-prefs.js
 
 # Uses `#expand`
 mobile/android/chrome/content/about.js
