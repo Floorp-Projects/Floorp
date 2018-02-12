@@ -15,12 +15,15 @@
 var worker = new Worker('worker_performance_user_timing.js');
 worker.onmessage = function(event) {
   if (event.data.type == 'finish') {
+    SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", reduceTimePrecisionPrevPrefValue);
     SimpleTest.finish();
   } else if (event.data.type == 'status') {
     ok(event.data.status, event.data.msg);
   }
 }
 
+var reduceTimePrecisionPrevPrefValue = SpecialPowers.getBoolPref("privacy.reduceTimerPrecision");
+SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", false);
 SimpleTest.waitForExplicitFinish();
     </script>
   </body>
