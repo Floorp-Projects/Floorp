@@ -6,12 +6,6 @@
 
 "use strict";
 
-// If this is being run from Mocha, then the browser loader hasn't set up
-// define. We need to do that before loading Rep.
-if (typeof define === "undefined") {
-  require("amd-loader");
-}
-
 // React
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
