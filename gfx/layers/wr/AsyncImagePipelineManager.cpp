@@ -407,8 +407,12 @@ AsyncImagePipelineManager::PipelineRemoved(const wr::PipelineId& aPipelineId)
     return;
   }
   if (auto entry = mPipelineTexturesHolders.Lookup(wr::AsUint64(aPipelineId))) {
-    // Remove Pipeline
-    entry.Remove();
+    if (entry.Data()->mDestroyedEpoch.isSome()) {
+      // Remove Pipeline
+      entry.Remove();
+    }
+    // If mDestroyedEpoch contains nothing it means we reused the same pipeline id (probably because
+    // we moved the tab to another window). In this case we need to keep the holder.
   }
 }
 
