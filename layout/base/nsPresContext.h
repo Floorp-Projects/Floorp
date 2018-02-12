@@ -472,7 +472,7 @@ public:
     if (!r.IsEqualEdges(mVisibleArea)) {
       mVisibleArea = r;
       // Visible area does not affect media queries when paginated.
-      if (!IsPaginated() && HasCachedStyleData()) {
+      if (!IsPaginated()) {
         MediaFeatureValuesChanged({
           mozilla::MediaFeatureChangeReason::ViewportChange
         });
@@ -619,19 +619,19 @@ public:
    * independent of the language-specific global preference.
    */
   void SetBaseMinFontSize(int32_t aMinFontSize) {
-    if (aMinFontSize == mBaseMinFontSize)
+    if (aMinFontSize == mBaseMinFontSize) {
       return;
+    }
 
     mBaseMinFontSize = aMinFontSize;
-    if (HasCachedStyleData()) {
-      // Media queries could have changed, since we changed the meaning
-      // of 'em' units in them.
-      MediaFeatureValuesChanged({
-        eRestyle_ForceDescendants,
-        NS_STYLE_HINT_REFLOW,
-        mozilla::MediaFeatureChangeReason::MinFontSizeChange
-      });
-    }
+
+    // Media queries could have changed, since we changed the meaning
+    // of 'em' units in them.
+    MediaFeatureValuesChanged({
+      eRestyle_ForceDescendants,
+      NS_STYLE_HINT_REFLOW,
+      mozilla::MediaFeatureChangeReason::MinFontSizeChange
+    });
   }
 
   float GetFullZoom() { return mFullZoom; }
@@ -1281,9 +1281,6 @@ protected:
   void AppUnitsPerDevPixelChanged();
 
   bool HavePendingInputEvent();
-
-  // Can't be inline because we can't include nsStyleSet.h.
-  bool HasCachedStyleData();
 
   // Creates a one-shot timer with the given aCallback & aDelay.
   // Returns a refcounted pointer to the timer (or nullptr on failure).

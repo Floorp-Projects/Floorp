@@ -165,3 +165,30 @@ add_task(async function check_permission_state_change() {
 
   gBrowser.removeTab(tab);
 });
+
+// Explicitly set the permission to the otherwise default state and check that
+// the label still displays correctly.
+add_task(async function check_explicit_default_permission() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
+
+  // DENY only works if triggered through Services.perms (it's very edge-casey),
+  // since SitePermissions.jsm considers setting default permissions to be removal.
+  Services.perms.add(URI, "popup", Ci.nsIPermissionManager.DENY_ACTION);
+
+  await openIdentityPopup();
+  let menulist = document.getElementById("identity-popup-popup-menulist");
+  Assert.equal(menulist.value, "0");
+  Assert.equal(menulist.label, "Block");
+  await closeIdentityPopup();
+
+  SitePermissions.set(URI, "popup", SitePermissions.ALLOW);
+
+  await openIdentityPopup();
+  menulist = document.getElementById("identity-popup-popup-menulist");
+  Assert.equal(menulist.value, "1");
+  Assert.equal(menulist.label, "Allow");
+  await closeIdentityPopup();
+
+  SitePermissions.remove(URI, "popup");
+  gBrowser.removeTab(tab);
+});

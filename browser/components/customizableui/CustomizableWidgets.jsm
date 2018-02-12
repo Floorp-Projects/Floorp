@@ -902,7 +902,6 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
       let doc = aEvent.target.ownerDocument;
       let group = doc.getElementById("PanelUI-panic-timeSpan");
       BrowserUITelemetry.countPanicEvent(group.selectedItem.id);
-      group.selectedItem = doc.getElementById("PanelUI-panic-5min");
       let itemsToClear = [
         "cookies", "history", "openWindows", "formdata", "sessions", "cache", "downloads"
       ];
@@ -934,6 +933,9 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
     },
     onViewShowing(aEvent) {
       let forgetButton = aEvent.target.querySelector("#PanelUI-panic-view-button");
+      let doc = aEvent.target.ownerDocument;
+      let group = doc.getElementById("PanelUI-panic-timeSpan");
+      group.selectedItem = doc.getElementById("PanelUI-panic-5min");
       forgetButton.addEventListener("command", this);
     },
     onViewHiding(aEvent) {

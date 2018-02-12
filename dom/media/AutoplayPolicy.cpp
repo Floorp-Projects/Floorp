@@ -10,6 +10,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "nsIDocument.h"
+#include "MediaManager.h"
 
 namespace mozilla {
 namespace dom {
@@ -25,6 +26,16 @@ AutoplayPolicy::IsMediaElementAllowedToPlay(NotNull<HTMLMediaElement*> aElement)
 {
   if (Preferences::GetBool("media.autoplay.enabled")) {
     return true;
+  }
+
+  // Pages which have been granted permission to capture WebRTC camera or
+  // microphone are assumed to be trusted, and are allowed to autoplay.
+  MediaManager* manager = MediaManager::GetIfExists();
+  if (manager) {
+    nsCOMPtr<nsPIDOMWindowInner> window = aElement->OwnerDoc()->GetInnerWindow();
+    if (window && manager->IsActivelyCapturingOrHasAPermission(window->WindowID())) {
+      return true;
+    }
   }
 
   // TODO : this old way would be removed when user-gestures-needed becomes
