@@ -2,8 +2,13 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const requireHacker = require("require-hacker");
+// Configure enzyme with React 16 adapter.
+const Enzyme = require("enzyme");
+const Adapter = require("enzyme-adapter-react-16");
+Enzyme.configure({ adapter: new Adapter() });
 
+// Point to vendored-in files and mocks when needed.
+const requireHacker = require("require-hacker");
 requireHacker.global_hook("default", path => {
   switch (path) {
     // For Enzyme
