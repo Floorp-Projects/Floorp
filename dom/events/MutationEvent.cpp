@@ -22,12 +22,6 @@ MutationEvent::MutationEvent(EventTarget* aOwner,
   mEventIsInternal = (aEvent == nullptr);
 }
 
-NS_INTERFACE_MAP_BEGIN(MutationEvent)
-NS_INTERFACE_MAP_END_INHERITING(Event)
-
-NS_IMPL_ADDREF_INHERITED(MutationEvent, Event)
-NS_IMPL_RELEASE_INHERITED(MutationEvent, Event)
-
 already_AddRefed<nsINode>
 MutationEvent::GetRelatedNode()
 {

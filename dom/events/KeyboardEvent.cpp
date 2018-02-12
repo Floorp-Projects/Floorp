@@ -31,12 +31,6 @@ KeyboardEvent::KeyboardEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(KeyboardEvent, UIEvent)
-NS_IMPL_RELEASE_INHERITED(KeyboardEvent, UIEvent)
-
-NS_INTERFACE_MAP_BEGIN(KeyboardEvent)
-NS_INTERFACE_MAP_END_INHERITING(UIEvent)
-
 bool
 KeyboardEvent::AltKey(CallerType aCallerType)
 {

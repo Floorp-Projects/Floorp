@@ -32,12 +32,6 @@ MouseScrollEvent::MouseScrollEvent(EventTarget* aOwner,
   mDetail = mEvent->AsMouseScrollEvent()->mDelta;
 }
 
-NS_IMPL_ADDREF_INHERITED(MouseScrollEvent, MouseEvent)
-NS_IMPL_RELEASE_INHERITED(MouseScrollEvent, MouseEvent)
-
-NS_INTERFACE_MAP_BEGIN(MouseScrollEvent)
-NS_INTERFACE_MAP_END_INHERITING(MouseEvent)
-
 void
 MouseScrollEvent::InitMouseScrollEvent(const nsAString& aType,
                                        bool aCanBubble,
