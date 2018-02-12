@@ -76,19 +76,20 @@ def readRegistry(registry):
         Information extracted:
         - langTagMappings: mappings from complete language tags to preferred
           complete language tags
-        - langSubtagMappings: mappings from subtags to preferred subtags
+        - languageMappings: mappings from language subtags to preferred subtags
+        - regionMappings: mappings from region subtags to preferred subtags
         - extlangMappings: mappings from extlang subtags to preferred subtags,
           with prefix to be removed
-        Returns these three mappings as dictionaries, along with the registry's
+        Returns these four mappings as dictionaries, along with the registry's
         file date.
 
-        We also check that mappings for language subtags don't affect extlang
-        subtags and vice versa, so that CanonicalizeLanguageTag doesn't have
-        to separate them for processing. Region codes are separated by case,
-        and script codes by length, so they're unproblematic.
+        We also check that extlang mappings don't generate preferred values
+        which in turn are subject to language subtag mappings, so that
+        CanonicalizeLanguageTag can process subtags sequentially.
     """
     langTagMappings = {}
-    langSubtagMappings = {}
+    languageMappings = {}
+    regionMappings = {}
     extlangMappings = {}
     languageSubtags = set()
     extlangSubtags = set()
@@ -114,21 +115,39 @@ def readRegistry(registry):
             # the case used in the registry.
             if "Preferred-Value" in record:
                 langTagMappings[record["Tag"].lower()] = record["Preferred-Value"]
-        elif record["Type"] in ("language", "script", "region", "variant"):
-            # For langSubtagMappings, keys and values must be in the case used
+        elif record["Type"] == "language":
+            # For languageMappings, keys and values must be in the case used
             # in the registry.
             subtag = record["Subtag"]
-            if record["Type"] == "language":
-                languageSubtags.add(subtag)
+            languageSubtags.add(subtag)
+            if "Preferred-Value" in record:
+                # The 'Prefix' field is not allowed for language records.
+                # https://tools.ietf.org/html/rfc5646#section-3.1.2
+                assert "Prefix" not in record, "language subtags can't have a prefix"
+                languageMappings[subtag] = record["Preferred-Value"]
+        elif record["Type"] == "region":
+            # For regionMappings, keys and values must be in the case used in
+            # the registry.
+            subtag = record["Subtag"]
+            if "Preferred-Value" in record:
+                # The 'Prefix' field is not allowed for region records.
+                # https://tools.ietf.org/html/rfc5646#section-3.1.2
+                assert "Prefix" not in record, "region subtags can't have a prefix"
+                regionMappings[subtag] = record["Preferred-Value"]
+        elif record["Type"] == "script":
+            if "Preferred-Value" in record:
+                # The registry currently doesn't contain mappings for scripts.
+                raise Exception("Unexpected mapping for script subtags")
+        elif record["Type"] == "variant":
+            subtag = record["Subtag"]
             if "Preferred-Value" in record:
                 if subtag == "heploc":
                     # The entry for heploc is unique in its complexity; handle
                     # it as special case below.
                     continue
-                if "Prefix" in record:
-                    # This might indicate another heploc-like complex case.
-                    raise Exception("Please evaluate: subtag mapping with prefix value.")
-                langSubtagMappings[subtag] = record["Preferred-Value"]
+                # The registry currently doesn't contain mappings for variants,
+                # except for heploc which is already handled above.
+                raise Exception("Unexpected mapping for variant subtags")
         elif record["Type"] == "extlang":
             # For extlangMappings, keys must be in the case used in the
             # registry; values are records with the preferred value and the
@@ -137,6 +156,9 @@ def readRegistry(registry):
             extlangSubtags.add(subtag)
             if "Preferred-Value" in record:
                 preferred = record["Preferred-Value"]
+                # The 'Preferred-Value' and 'Subtag' fields MUST be identical.
+                # https://tools.ietf.org/html/rfc5646#section-2.2.2
+                assert preferred == subtag, "{0} = {1}".format(preferred, subtag)
                 prefix = record["Prefix"]
                 extlangMappings[subtag] = {"preferred": preferred, "prefix": prefix}
         else:
@@ -146,23 +168,21 @@ def readRegistry(registry):
 
     # Check that mappings for language subtags and extlang subtags don't affect
     # each other.
-    for lang in languageSubtags:
-        if lang in extlangMappings and extlangMappings[lang]["preferred"] != lang:
-            raise Exception("Conflict: lang with extlang mapping: " + lang)
     for extlang in extlangSubtags:
-        if extlang in langSubtagMappings:
+        if extlang in languageMappings:
             raise Exception("Conflict: extlang with lang mapping: " + extlang)
 
     # Special case for heploc.
     langTagMappings["ja-latn-hepburn-heploc"] = "ja-Latn-alalc97"
 
-    # ValidateAndCanonicalizeLanguageTag in Intl.js expects langTagMappings
-    # contains no 2*3ALPHA.
+    # ValidateAndCanonicalizeLanguageTag in CommonFunctions.js expects
+    # langTagMappings contains no 2*3ALPHA.
     assert all(len(lang) > 3 for lang in langTagMappings.iterkeys())
 
     return {"fileDate": fileDate,
             "langTagMappings": langTagMappings,
-            "langSubtagMappings": langSubtagMappings,
+            "languageMappings": languageMappings,
+            "regionMappings": regionMappings,
             "extlangMappings": extlangMappings}
 
 
@@ -194,12 +214,15 @@ def writeMappingsVar(intlData, dict, name, description, fileDate, url):
     intlData.write("};\n")
 
 
-def writeLanguageTagData(intlData, fileDate, url, langTagMappings, langSubtagMappings, extlangMappings):
+def writeLanguageTagData(intlData, fileDate, url, langTagMappings, languageMappings,
+                         regionMappings, extlangMappings):
     """ Writes the language tag data to the Intl data file. """
     writeMappingsVar(intlData, langTagMappings, "langTagMappings",
                      "Mappings from complete tags to preferred values.", fileDate, url)
-    writeMappingsVar(intlData, langSubtagMappings, "langSubtagMappings",
-                     "Mappings from non-extlang subtags to preferred values.", fileDate, url)
+    writeMappingsVar(intlData, languageMappings, "languageMappings",
+                     "Mappings from language subtags to preferred values.", fileDate, url)
+    writeMappingsVar(intlData, regionMappings, "regionMappings",
+                     "Mappings from region subtags to preferred values.", fileDate, url)
     writeMappingsVar(intlData, extlangMappings, "extlangMappings",
                      ["Mappings from extlang subtags to preferred values.",
                       "All current deprecated extlang subtags have the form `<prefix>-<extlang>`",
@@ -235,13 +258,15 @@ def updateLangTags(args):
         data = readRegistry(reg)
     fileDate = data["fileDate"]
     langTagMappings = data["langTagMappings"]
-    langSubtagMappings = data["langSubtagMappings"]
+    languageMappings = data["languageMappings"]
+    regionMappings = data["regionMappings"]
     extlangMappings = data["extlangMappings"]
 
     print("Writing Intl data...")
     with codecs.open(out, "w", encoding="utf-8") as intlData:
         intlData.write("// Generated by make_intl_data.py. DO NOT EDIT.\n")
-        writeLanguageTagData(intlData, fileDate, url, langTagMappings, langSubtagMappings, extlangMappings)
+        writeLanguageTagData(intlData, fileDate, url, langTagMappings, languageMappings,
+                             regionMappings, extlangMappings)
 
 def flines(filepath, encoding="utf-8"):
     """ Open filepath and iterate over its content. """
