@@ -103,7 +103,10 @@ fn encode_null(output: &mut Vec<u8>) {
 }
 
 impl CborType {
-    /// Serialize a Cbor object.
+    /// Serialize a Cbor object. NB: if the object to be serialized consists of too many nested
+    /// Cbor objects (for example, Array(Array(Array(...(Array(0))))), it is possible that calling
+    /// serialize will exhaust the stack. It is considered the caller's responsibility to prevent
+    /// this.
     pub fn serialize(&self) -> Vec<u8> {
         let mut bytes: Vec<u8> = Vec::new();
         match *self {

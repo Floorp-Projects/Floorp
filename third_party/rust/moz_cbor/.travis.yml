@@ -12,13 +12,12 @@ addons:
       - build-essential
 
 install:
-# Apparently cargo install returns a nonzero exit status if
-# caching succeeds, so just make this always "succeed".
-  - (cargo install rustfmt || true)
+  - rustup install nightly
+  - rustup component add --toolchain nightly rustfmt-preview
 
 script:
 - |
-  cargo fmt -- --write-mode=diff
+  cargo +nightly fmt -- --write-mode=diff
 - |
   cargo build &&
   cargo test
