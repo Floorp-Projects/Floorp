@@ -186,12 +186,19 @@ impl Example for App {
 
     fn on_event(
         &mut self,
-        event: glutin::Event,
+        event: glutin::WindowEvent,
         api: &RenderApi,
         _document_id: DocumentId,
     ) -> bool {
         match event {
-            glutin::Event::KeyboardInput(glutin::ElementState::Pressed, _, Some(key)) => {
+            glutin::WindowEvent::KeyboardInput {
+                input: glutin::KeyboardInput {
+                    state: glutin::ElementState::Pressed,
+                    virtual_keycode: Some(key),
+                    ..
+                },
+                ..
+            } => {
                 let mut updates = ResourceUpdates::new();
 
                 match key {

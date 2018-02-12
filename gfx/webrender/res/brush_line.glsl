@@ -40,20 +40,21 @@ void brush_vs(
 ) {
     vLocalPos = local_pos;
 
-    Line line = fetch_line(prim_address);
+    // Note: `line` name is reserved in HLSL
+    Line line_prim = fetch_line(prim_address);
 
     switch (int(abs(pic_task.pic_kind_and_raster_mode))) {
         case PIC_TYPE_TEXT_SHADOW:
             vColor = pic_task.color;
             break;
         default:
-            vColor = line.color;
+            vColor = line_prim.color;
             break;
     }
 
     vec2 pos, size;
 
-    switch (int(line.orientation)) {
+    switch (int(line_prim.orientation)) {
         case LINE_ORIENTATION_HORIZONTAL:
             vAxisSelect = 0.0;
             pos = local_rect.p0;
@@ -67,7 +68,7 @@ void brush_vs(
     }
 
     vLocalOrigin = pos;
-    vStyle = int(line.style);
+    vStyle = int(line_prim.style);
 
     switch (vStyle) {
         case LINE_STYLE_SOLID: {
@@ -94,7 +95,7 @@ void brush_vs(
         }
         case LINE_STYLE_WAVY: {
             // This logic copied from gecko to get the same results
-            float line_thickness = max(line.wavyLineThickness, 1.0);
+            float line_thickness = max(line_prim.wavyLineThickness, 1.0);
             // Difference in height between peaks and troughs
             // (and since slopes are 45 degrees, the length of each slope)
             float slope_length = size.y - line_thickness;

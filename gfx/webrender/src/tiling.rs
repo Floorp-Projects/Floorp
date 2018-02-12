@@ -6,7 +6,7 @@ use api::{ClipId, ColorF, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{DevicePixelScale, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
 use api::{DocumentLayer, FilterOp, ImageFormat};
 use api::{LayerRect, MixBlendMode, PipelineId};
-use batch::{AlphaBatcher, ClipBatcher, resolve_image};
+use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
 use clip::{ClipStore};
 use clip_scroll_tree::{ClipScrollTree};
 use device::{FrameId, Texture};
@@ -21,7 +21,7 @@ use prim_store::{BrushMaskKind, BrushKind, DeferredResolve, EdgeAaSegmentMask};
 use profiler::FrameProfileCounters;
 use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
 use render_task::{BlurTask, ClearMode, RenderTaskLocation, RenderTaskTree};
-use resource_cache::{ResourceCache};
+use resource_cache::ResourceCache;
 use std::{cmp, usize, f32, i32};
 use texture_allocator::GuillotineAllocator;
 
@@ -269,7 +269,7 @@ pub struct BlitJob {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ColorRenderTarget {
-    pub alpha_batcher: AlphaBatcher,
+    pub alpha_batch_containers: Vec<AlphaBatchContainer>,
     // List of blur operations to apply for this render target.
     pub vertical_blurs: Vec<BlurInstance>,
     pub horizontal_blurs: Vec<BlurInstance>,
@@ -280,6 +280,7 @@ pub struct ColorRenderTarget {
     pub outputs: Vec<FrameOutput>,
     allocator: Option<TextureAllocator>,
     alpha_tasks: Vec<RenderTaskId>,
+    screen_size: DeviceIntSize,
 }
 
 impl RenderTarget for ColorRenderTarget {
@@ -295,7 +296,7 @@ impl RenderTarget for ColorRenderTarget {
         screen_size: DeviceIntSize,
     ) -> Self {
         ColorRenderTarget {
-            alpha_batcher: AlphaBatcher::new(screen_size),
+            alpha_batch_containers: Vec::new(),
             vertical_blurs: Vec::new(),
             horizontal_blurs: Vec::new(),
             readbacks: Vec::new(),
@@ -304,6 +305,7 @@ impl RenderTarget for ColorRenderTarget {
             allocator: size.map(TextureAllocator::new),
             outputs: Vec::new(),
             alpha_tasks: Vec::new(),
+            screen_size,
         }
     }
 
@@ -314,13 +316,39 @@ impl RenderTarget for ColorRenderTarget {
         render_tasks: &mut RenderTaskTree,
         deferred_resolves: &mut Vec<DeferredResolve>,
     ) {
-        self.alpha_batcher.build(
-            &self.alpha_tasks,
-            ctx,
-            gpu_cache,
-            render_tasks,
-            deferred_resolves,
-        );
+        let mut merged_batches = AlphaBatchContainer::new(None);
+
+        for task_id in &self.alpha_tasks {
+            let task = &render_tasks[*task_id];
+
+            match task.kind {
+                RenderTaskKind::Picture(ref pic_task) => {
+                    let pic_index = ctx.prim_store.cpu_metadata[pic_task.prim_index.0].cpu_prim_index;
+                    let pic = &ctx.prim_store.cpu_pictures[pic_index.0];
+                    let (target_rect, _) = task.get_target_rect();
+
+                    let mut batch_builder = AlphaBatchBuilder::new(self.screen_size, target_rect);
+
+                    batch_builder.add_pic_to_batch(
+                        pic,
+                        *task_id,
+                        ctx,
+                        gpu_cache,
+                        render_tasks,
+                        deferred_resolves,
+                    );
+
+                    if let Some(batch_container) = batch_builder.build(&mut merged_batches) {
+                        self.alpha_batch_containers.push(batch_container);
+                    }
+                }
+                _ => {
+                    unreachable!();
+                }
+            }
+        }
+
+        self.alpha_batch_containers.push(merged_batches);
     }
 
     fn add_task(
@@ -395,9 +423,7 @@ impl RenderTarget for ColorRenderTarget {
                     BlitSource::Image { key } => {
                         // Get the cache item for the source texture.
                         let cache_item = resolve_image(
-                            key.image_key,
-                            key.image_rendering,
-                            key.tile_offset,
+                            key.request,
                             ctx.resource_cache,
                             gpu_cache,
                             deferred_resolves,
@@ -446,7 +472,9 @@ impl RenderTarget for ColorRenderTarget {
     }
 
     fn needs_depth(&self) -> bool {
-        !self.alpha_batcher.batch_list.opaque_batch_list.batches.is_empty()
+        self.alpha_batch_containers.iter().any(|ab| {
+            !ab.opaque_batches.is_empty()
+        })
     }
 }
 
@@ -793,7 +821,7 @@ impl RenderPass {
                                 //           correct target kind.
                                 (RenderTargetKind::Alpha, Some((texture_id, layer)))
                             }
-                            RenderTaskLocation::Fixed => {
+                            RenderTaskLocation::Fixed(..) => {
                                 (RenderTargetKind::Color, None)
                             }
                             RenderTaskLocation::Dynamic(ref mut origin, size) => {
