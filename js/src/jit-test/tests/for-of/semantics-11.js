@@ -40,4 +40,4 @@ var obj = new Proxy({}, {
 for (var v of obj)
     s += v;
 
-assertEq(s, 'IiNn0Nn1Nn2Nn');
+assertEq(s, 'IiNn0n1n2n');
