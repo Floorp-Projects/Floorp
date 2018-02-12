@@ -856,6 +856,41 @@ nsGlobalWindowInner::IsBackgroundInternal() const
   return !mOuterWindow || mOuterWindow->IsBackground();
 }
 
+class PromiseDocumentFlushedResolver final {
+public:
+  PromiseDocumentFlushedResolver(Promise* aPromise,
+                                 PromiseDocumentFlushedCallback& aCallback)
+  : mPromise(aPromise)
+  , mCallback(&aCallback)
+  {
+  }
+
+  virtual ~PromiseDocumentFlushedResolver() = default;
+
+  void Call()
+  {
+    MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+
+    ErrorResult error;
+    JS::Rooted<JS::Value> returnVal(RootingCx());
+    mCallback->Call(&returnVal, error);
+
+    if (error.Failed()) {
+      mPromise->MaybeReject(error);
+    } else {
+      mPromise->MaybeResolve(returnVal);
+    }
+  }
+
+  void Cancel()
+  {
+    mPromise->MaybeReject(NS_ERROR_ABORT);
+  }
+
+  RefPtr<Promise> mPromise;
+  RefPtr<PromiseDocumentFlushedCallback> mCallback;
+};
+
 //*****************************************************************************
 //***    nsGlobalWindowInner: Object Management
 //*****************************************************************************
@@ -889,6 +924,8 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter *aOuterWindow)
     mCleanedUp(false),
     mDialogAbuseCount(0),
     mAreDialogsEnabled(true),
+    mObservingDidRefresh(false),
+    mIteratingDocumentFlushedResolvers(false),
     mCanSkipCCGeneration(0),
     mBeforeUnloadListenerCount(0)
 {
@@ -1293,6 +1330,13 @@ nsGlobalWindowInner::FreeInnerObjects()
     while (mDoc->EventHandlingSuppressed()) {
       mDoc->UnsuppressEventHandlingAndFireEvents(false);
     }
+
+    if (mObservingDidRefresh) {
+      nsIPresShell* shell = mDoc->GetShell();
+      if (shell) {
+        Unused << shell->RemovePostRefreshObserver(this);
+      }
+    }
   }
 
   // Remove our reference to the document and the document principal.
@@ -1334,6 +1378,11 @@ nsGlobalWindowInner::FreeInnerObjects()
     }
     mBeforeUnloadListenerCount = 0;
   }
+
+  // If we have any promiseDocumentFlushed callbacks, fire them now so
+  // that the Promises can resolve.
+  CallDocumentFlushedResolvers();
+  mObservingDidRefresh = false;
 }
 
 //*****************************************************************************
@@ -1489,6 +1538,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mGroupMessageManagers)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingPromises)
+
+  for (size_t i = 0; i < tmp->mDocumentFlushedResolvers.Length(); i++) {
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentFlushedResolvers[i]->mPromise);
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentFlushedResolvers[i]->mCallback);
+  }
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
@@ -1583,6 +1638,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingPromises)
+  for (size_t i = 0; i < tmp->mDocumentFlushedResolvers.Length(); i++) {
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentFlushedResolvers[i]->mPromise);
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentFlushedResolvers[i]->mCallback);
+  }
+  tmp->mDocumentFlushedResolvers.Clear();
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -7321,6 +7381,125 @@ nsGlobalWindowInner::BeginWindowMove(Event& aMouseDownEvent, Element* aPanel,
   }
 
   aError = widget->BeginMoveDrag(mouseEvent);
+}
+
+already_AddRefed<Promise>
+nsGlobalWindowInner::PromiseDocumentFlushed(PromiseDocumentFlushedCallback& aCallback,
+                                            ErrorResult& aError)
+{
+  MOZ_RELEASE_ASSERT(IsChromeWindow());
+
+  if (!IsCurrentInnerWindow()) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  if (mIteratingDocumentFlushedResolvers) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  if (!mDoc) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsIPresShell* shell = mDoc->GetShell();
+  if (!shell) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  // We need to associate the lifetime of the Promise to the lifetime
+  // of the caller's global. That way, if the window we're observing
+  // refresh driver ticks on goes away before our observer is fired,
+  // we can still resolve the Promise.
+  nsIGlobalObject* global = GetIncumbentGlobal();
+  if (!global) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  RefPtr<Promise> resultPromise = Promise::Create(global, aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
+
+  UniquePtr<PromiseDocumentFlushedResolver> flushResolver(
+    new PromiseDocumentFlushedResolver(resultPromise, aCallback));
+
+  if (!shell->NeedFlush(FlushType::Style)) {
+    flushResolver->Call();
+    return resultPromise.forget();
+  }
+
+  if (!mObservingDidRefresh) {
+    bool success = shell->AddPostRefreshObserver(this);
+    if (!success) {
+      aError.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+    mObservingDidRefresh = true;
+  }
+
+  mDocumentFlushedResolvers.AppendElement(Move(flushResolver));
+  return resultPromise.forget();
+}
+
+void
+nsGlobalWindowInner::CallDocumentFlushedResolvers()
+{
+  MOZ_ASSERT(!mIteratingDocumentFlushedResolvers);
+  mIteratingDocumentFlushedResolvers = true;
+  for (const auto& documentFlushedResolver : mDocumentFlushedResolvers) {
+    documentFlushedResolver->Call();
+  }
+  mDocumentFlushedResolvers.Clear();
+  mIteratingDocumentFlushedResolvers = false;
+}
+
+void
+nsGlobalWindowInner::CancelDocumentFlushedResolvers()
+{
+  MOZ_ASSERT(!mIteratingDocumentFlushedResolvers);
+  mIteratingDocumentFlushedResolvers = true;
+  for (const auto& documentFlushedResolver : mDocumentFlushedResolvers) {
+    documentFlushedResolver->Cancel();
+  }
+  mDocumentFlushedResolvers.Clear();
+  mIteratingDocumentFlushedResolvers = false;
+}
+
+void
+nsGlobalWindowInner::DidRefresh()
+{
+  auto rejectionGuard = MakeScopeExit([&] {
+    CancelDocumentFlushedResolvers();
+    mObservingDidRefresh = false;
+  });
+
+  MOZ_ASSERT(mDoc);
+
+  nsIPresShell* shell = mDoc->GetShell();
+  MOZ_ASSERT(shell);
+
+  if (shell->NeedStyleFlush() || shell->HasPendingReflow()) {
+    // By the time our observer fired, something has already invalidated
+    // style and maybe layout. We'll wait until the next refresh driver
+    // tick instead.
+    rejectionGuard.release();
+    return;
+  }
+
+  bool success = shell->RemovePostRefreshObserver(this);
+  if (!success) {
+    return;
+  }
+
+  rejectionGuard.release();
+
+  CallDocumentFlushedResolvers();
+  mObservingDidRefresh = false;
 }
 
 already_AddRefed<nsWindowRoot>
