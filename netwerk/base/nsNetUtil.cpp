@@ -1889,8 +1889,15 @@ NS_ReadInputStreamToString(nsIInputStream* aInputStream,
         }
 
         void* dest = aDest.BeginWriting();
-        return NS_ReadInputStreamToBuffer(aInputStream, &dest, aCount,
-                                          aWritten);
+        nsresult rv = NS_ReadInputStreamToBuffer(aInputStream, &dest, aCount,
+                                                 aWritten);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+       if ((uint64_t)aCount > *aWritten) {
+           aDest.Truncate(*aWritten);
+       }
+
+       return NS_OK;
     }
 
     // If the size is unknown, BufferWriter will allocate the buffer.
