@@ -35,9 +35,8 @@
 #include "vm/Time.h"
 #include "vm/WrapperObject.h"
 
-#include "jscntxtinlines.h"
-
 #include "vm/GeckoProfiler-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
 

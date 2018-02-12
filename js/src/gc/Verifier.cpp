@@ -12,17 +12,17 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
 
-#include "jscntxt.h"
 #include "jsprf.h"
 
 #include "gc/GCInternals.h"
 #include "gc/Zone.h"
 #include "js/HashTable.h"
+#include "vm/JSContext.h"
 
-#include "jscntxtinlines.h"
 #include "jsgcinlines.h"
 
 #include "gc/Marking-inl.h"
+#include "vm/JSContext-inl.h"
 
 using namespace js;
 using namespace js::gc;

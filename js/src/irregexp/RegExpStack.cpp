@@ -30,7 +30,7 @@
 
 #include "irregexp/RegExpStack.h"
 
-#include "jscntxt.h"
+#include "vm/JSContext.h"
 
 using namespace js;
 using namespace js::irregexp;

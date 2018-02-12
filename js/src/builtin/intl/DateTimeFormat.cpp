@@ -11,7 +11,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Range.h"
 
-#include "jscntxt.h"
 #include "jsfriendapi.h"
 
 #include "builtin/intl/CommonFunctions.h"
@@ -21,6 +20,7 @@
 #include "builtin/intl/TimeZoneDataGenerated.h"
 #include "gc/FreeOp.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSContext.h"
 #include "vm/Runtime.h"
 
 #include "vm/JSObject-inl.h"

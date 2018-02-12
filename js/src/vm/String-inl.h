@@ -12,12 +12,11 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
 
-#include "jscntxt.h"
-
 #include "gc/Allocator.h"
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 
 namespace js {
 

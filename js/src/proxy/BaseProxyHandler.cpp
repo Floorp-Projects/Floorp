@@ -7,8 +7,7 @@
 #include "js/Proxy.h"
 #include "vm/ProxyObject.h"
 
-#include "jscntxtinlines.h"
-
+#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 
 using namespace js;

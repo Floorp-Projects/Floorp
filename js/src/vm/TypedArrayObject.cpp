@@ -19,7 +19,6 @@
 
 #include "jsapi.h"
 #include "jsarray.h"
-#include "jscntxt.h"
 #include "jscpucfg.h"
 #include "jsnum.h"
 #include "jstypes.h"
@@ -38,6 +37,7 @@
 #include "vm/ArrayBufferObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/PIC.h"
 #include "vm/SelfHosting.h"

@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsapi.h"
-#include "jscntxt.h"
 
 #include "vm/Interpreter.h"
 #include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/PIC.h"
 

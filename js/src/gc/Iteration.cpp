@@ -13,8 +13,9 @@
 #include "vm/JSCompartment.h"
 #include "vm/Runtime.h"
 
-#include "jscntxtinlines.h"
 #include "jsgcinlines.h"
+
+#include "vm/JSContext-inl.h"
 
 using namespace js;
 using namespace js::gc;

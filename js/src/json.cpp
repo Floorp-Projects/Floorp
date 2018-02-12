@@ -11,13 +11,13 @@
 #include "mozilla/ScopeExit.h"
 
 #include "jsarray.h"
-#include "jscntxt.h"
 #include "jsnum.h"
 #include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
 #include "vm/Interpreter.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/JSONParser.h"
 #include "vm/StringBuffer.h"

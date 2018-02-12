@@ -8,7 +8,7 @@
 #include "gc/Zone.h"
 #include "jsapi-tests/tests.h"
 
-#include "jscntxtinlines.h"
+#include "vm/JSContext-inl.h"
 
 BEGIN_TEST(testIsInsideNursery)
 {

@@ -8,10 +8,10 @@
 #define vm_DebuggerMemory_h
 
 #include "jsapi.h"
-#include "jscntxt.h"
 
 #include "js/Class.h"
 #include "js/Value.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 
 namespace js {

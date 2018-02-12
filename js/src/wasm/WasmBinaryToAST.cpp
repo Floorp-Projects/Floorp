@@ -22,9 +22,8 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Sprintf.h"
 
-#include "jscntxt.h"
-
 #include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 #include "wasm/WasmBinaryIterator.h"
 #include "wasm/WasmValidate.h"
 

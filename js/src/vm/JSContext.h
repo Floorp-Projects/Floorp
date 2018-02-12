@@ -6,8 +6,8 @@
 
 /* JS execution context. */
 
-#ifndef jscntxt_h
-#define jscntxt_h
+#ifndef vm_JSContext_h
+#define vm_JSContext_h
 
 #include "mozilla/MemoryReporting.h"
 
@@ -1372,4 +1372,4 @@ struct MOZ_RAII AutoSetThreadIsSweeping
 #pragma warning(pop)
 #endif
 
-#endif /* jscntxt_h */
+#endif /* vm_JSContext_h */

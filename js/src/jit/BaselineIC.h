@@ -9,7 +9,6 @@
 
 #include "mozilla/Assertions.h"
 
-#include "jscntxt.h"
 #include "jsopcode.h"
 
 #include "builtin/TypedObject.h"
@@ -21,6 +20,7 @@
 #include "js/GCVector.h"
 #include "vm/ArrayObject.h"
 #include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 #include "vm/UnboxedObject.h"
 
 namespace js {

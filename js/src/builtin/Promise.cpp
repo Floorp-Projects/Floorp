@@ -10,7 +10,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
 
-#include "jscntxt.h"
 #include "jsexn.h"
 #include "jsfriendapi.h"
 #include "jsiter.h"
@@ -20,6 +19,7 @@
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/Debugger.h"
+#include "vm/JSContext.h"
 
 #include "vm/Debugger-inl.h"
 #include "vm/JSObject-inl.h"

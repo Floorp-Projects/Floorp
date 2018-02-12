@@ -7,11 +7,11 @@
 #include "builtin/WeakSetObject.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jsiter.h"
 
 #include "builtin/MapObject.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 
 #include "builtin/WeakMapObject-inl.h"

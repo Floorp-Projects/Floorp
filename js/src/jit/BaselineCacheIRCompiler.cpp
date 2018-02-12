@@ -11,11 +11,10 @@
 #include "jit/SharedICHelpers.h"
 #include "proxy/Proxy.h"
 
-#include "jscntxtinlines.h"
-
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
 #include "vm/JSCompartment-inl.h"
+#include "vm/JSContext-inl.h"
 
 using namespace js;
 using namespace js::jit;

@@ -15,7 +15,6 @@
 #include <algorithm>
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jsiter.h"
 #include "jsnum.h"
@@ -29,6 +28,7 @@
 #include "js/Conversions.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/SelfHosting.h"

@@ -11,7 +11,6 @@
 
 #include <stddef.h>
 
-#include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jsiter.h"
 #include "jswrapper.h"
@@ -24,6 +23,7 @@
 #include "js/RootingAPI.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/Debugger.h"
+#include "vm/JSContext.h"
 #include "vm/WrapperObject.h"
 
 #include "jsgcinlines.h"
