@@ -361,8 +361,12 @@ CodeGeneratorMIPS64::visitDivOrModI64(LDivOrModI64* lir)
     Label done;
 
     // Handle divide by zero.
-    if (lir->canBeDivideByZero())
-        masm.ma_b(rhs, rhs, oldTrap(lir, wasm::Trap::IntegerDivideByZero), Assembler::Zero);
+    if (lir->canBeDivideByZero()) {
+        Label nonZero;
+        masm.ma_b(rhs, rhs, &nonZero, Assembler::NonZero);
+        masm.wasmTrap(wasm::Trap::IntegerDivideByZero, lir->bytecodeOffset());
+        masm.bind(&nonZero);
+    }
 
     // Handle an integer overflow exception from INT64_MIN / -1.
     if (lir->canBeNegativeOverflow()) {
@@ -397,8 +401,12 @@ CodeGeneratorMIPS64::visitUDivOrModI64(LUDivOrModI64* lir)
     Label done;
 
     // Prevent divide by zero.
-    if (lir->canBeDivideByZero())
-        masm.ma_b(rhs, rhs, oldTrap(lir, wasm::Trap::IntegerDivideByZero), Assembler::Zero);
+    if (lir->canBeDivideByZero()) {
+        Label nonZero;
+        masm.ma_b(rhs, rhs, &nonZero, Assembler::NonZero);
+        masm.wasmTrap(wasm::Trap::IntegerDivideByZero, lir->bytecodeOffset());
+        masm.bind(&nonZero);
+    }
 
     masm.as_ddivu(lhs, rhs);
 

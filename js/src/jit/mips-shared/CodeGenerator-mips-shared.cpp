@@ -568,7 +568,10 @@ CodeGeneratorMIPSShared::visitDivI(LDivI* ins)
     // Handle divide by zero.
     if (mir->canBeDivideByZero()) {
         if (mir->trapOnError()) {
-            masm.ma_b(rhs, rhs, oldTrap(mir, wasm::Trap::IntegerDivideByZero), Assembler::Zero);
+            Label nonZero;
+            masm.ma_b(rhs, rhs, &nonZero, Assembler::NonZero);
+            masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->bytecodeOffset());
+            masm.bind(&nonZero);
         } else if (mir->canTruncateInfinities()) {
             // Truncated division by zero is zero (Infinity|0 == 0)
             Label notzero;
@@ -721,7 +724,10 @@ CodeGeneratorMIPSShared::visitModI(LModI* ins)
     if (mir->canBeDivideByZero()) {
         if (mir->isTruncated()) {
             if (mir->trapOnError()) {
-                masm.ma_b(rhs, rhs, oldTrap(mir, wasm::Trap::IntegerDivideByZero), Assembler::Zero);
+                Label nonZero;
+                masm.ma_b(rhs, rhs, &nonZero, Assembler::NonZero);
+                masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->bytecodeOffset());
+                masm.bind(&nonZero);
             } else {
                 Label skip;
                 masm.ma_b(rhs, Imm32(0), &skip, Assembler::NotEqual, ShortJump);
@@ -2395,7 +2401,10 @@ CodeGeneratorMIPSShared::visitUDivOrMod(LUDivOrMod* ins)
     if (ins->canBeDivideByZero()) {
         if (ins->mir()->isTruncated()) {
             if (ins->trapOnError()) {
-                masm.ma_b(rhs, rhs, oldTrap(ins, wasm::Trap::IntegerDivideByZero), Assembler::Zero);
+                Label nonZero;
+                masm.ma_b(rhs, rhs, &nonZero, Assembler::NonZero);
+                masm.wasmTrap(wasm::Trap::IntegerDivideByZero, ins->bytecodeOffset());
+                masm.bind(&nonZero)
             } else {
                 // Infinity|0 == 0
                 Label notzero;
