@@ -81,6 +81,8 @@ CacheEntryHandle::~CacheEntryHandle()
 {
   mEntry->ReleaseHandleRef();
   Dismiss();
+
+  LOG(("CacheEntryHandle::~CacheEntryHandle %p", this));
 }
 
 // CacheEntry::Callback

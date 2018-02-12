@@ -1213,7 +1213,7 @@ ProfilingFrameIterator::label() const
 }
 
 Instance*
-wasm::LookupFaultingInstance(const CodeSegment& codeSegment, void* pc, void* fp)
+wasm::LookupFaultingInstance(const ModuleSegment& codeSegment, void* pc, void* fp)
 {
     // Assume bug-caused faults can be raised at any PC and apply the logic of
     // ProfilingFrameIterator to reject any pc outside the (post-prologue,

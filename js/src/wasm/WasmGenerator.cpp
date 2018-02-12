@@ -937,7 +937,7 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
     return true;
 }
 
-UniqueCodeSegment
+UniqueModuleSegment
 ModuleGenerator::finish(const ShareableBytes& bytecode)
 {
     MOZ_ASSERT(finishedFuncDefs_);
@@ -972,7 +972,7 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     if (!finishMetadata(bytecode))
         return nullptr;
 
-    return CodeSegment::create(tier(), masm_, bytecode, *linkDataTier_, *metadata_);
+    return ModuleSegment::create(tier(), masm_, bytecode, *linkDataTier_, *metadata_);
 }
 
 SharedModule
@@ -980,12 +980,12 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
 {
     MOZ_ASSERT(mode() == CompileMode::Once || mode() == CompileMode::Tier1);
 
-    UniqueCodeSegment codeSegment = finish(bytecode);
-    if (!codeSegment)
+    UniqueModuleSegment moduleSegment = finish(bytecode);
+    if (!moduleSegment)
         return nullptr;
 
     JumpTables jumpTables;
-    if (!jumpTables.init(mode(), *codeSegment, metadataTier_->codeRanges))
+    if (!jumpTables.init(mode(), *moduleSegment, metadataTier_->codeRanges))
         return nullptr;
 
     UniqueConstBytes maybeDebuggingBytes;
@@ -1000,7 +1000,7 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
             return nullptr;
     }
 
-    SharedCode code = js_new<Code>(Move(codeSegment), *metadata_, Move(jumpTables));
+    SharedCode code = js_new<Code>(Move(moduleSegment), *metadata_, Move(jumpTables));
     if (!code)
         return nullptr;
 
@@ -1032,13 +1032,13 @@ ModuleGenerator::finishTier2(Module& module)
     if (cancelled_ && *cancelled_)
         return false;
 
-    UniqueCodeSegment codeSegment = finish(module.bytecode());
-    if (!codeSegment)
+    UniqueModuleSegment moduleSegment = finish(module.bytecode());
+    if (!moduleSegment)
         return false;
 
     module.finishTier2(linkData_.takeLinkData(tier()),
                        metadata_->takeMetadata(tier()),
-                       Move(codeSegment),
+                       Move(moduleSegment),
                        env_);
     return true;
 }

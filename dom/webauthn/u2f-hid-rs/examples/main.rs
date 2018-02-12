@@ -63,7 +63,10 @@ fn main() {
         )
         .unwrap();
 
-    let register_data = rx.recv().unwrap();
+    let register_data = try_or!(rx.recv(), |_| {
+        panic!("Problem receiving, unable to continue");
+        return;
+    });
     println!("Register result: {}", base64::encode(&register_data));
     println!("Asking a security key to sign now, with the data from the register...");
     let credential = u2f_get_key_handle_from_register_response(&register_data).unwrap();
@@ -85,7 +88,9 @@ fn main() {
         )
         .unwrap();
 
-    let (_, sign_data) = rx.recv().unwrap();
+    let (_, sign_data) = try_or!(rx.recv(), |_| {
+        println!("Problem receiving");
+    });
     println!("Sign result: {}", base64::encode(&sign_data));
     println!("Done.");
 }

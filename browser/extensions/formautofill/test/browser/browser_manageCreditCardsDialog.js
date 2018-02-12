@@ -38,6 +38,7 @@ add_task(async function test_cancelManageCreditCardsDialogWithESC() {
 });
 
 add_task(async function test_removingSingleAndMultipleCreditCards() {
+  await SpecialPowers.pushPrefEnv({"set": [["privacy.reduceTimerPrecision", false]]});
   await saveCreditCard(TEST_CREDIT_CARD_1);
   await saveCreditCard(TEST_CREDIT_CARD_2);
   await saveCreditCard(TEST_CREDIT_CARD_3);
@@ -90,6 +91,7 @@ add_task(async function test_creditCardsDialogWatchesStorageChanges() {
 });
 
 add_task(async function test_showCreditCards() {
+  await SpecialPowers.pushPrefEnv({"set": [["privacy.reduceTimerPrecision", false]]});
   await saveCreditCard(TEST_CREDIT_CARD_1);
   await saveCreditCard(TEST_CREDIT_CARD_2);
   await saveCreditCard(TEST_CREDIT_CARD_3);

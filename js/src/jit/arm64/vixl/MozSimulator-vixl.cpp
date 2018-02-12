@@ -244,8 +244,8 @@ void Simulator::handle_wasm_interrupt() {
   uint8_t* pc = (uint8_t*)get_pc();
   uint8_t* fp = (uint8_t*)xreg(30);
 
-  const js::wasm::CodeSegment* cs = nullptr;
-  if (!js::wasm::InInterruptibleCode(cx_, pc, &cs))
+  const js::wasm::ModuleSegment* ms = nullptr;
+  if (!js::wasm::InInterruptibleCode(cx_, pc, &ms))
       return;
 
   JS::ProfilingFrameIterator::RegisterState state;
@@ -257,7 +257,7 @@ void Simulator::handle_wasm_interrupt() {
   if (!cx_->activation_->asJit()->startWasmInterrupt(state))
       return;
 
-  set_pc((Instruction*)cs->interruptCode());
+  set_pc((Instruction*)ms->interruptCode());
 }
 
 

@@ -15,6 +15,8 @@ add_task(async () => {
 
   store.dispatch(Actions.batchEnable(false));
 
+  await SpecialPowers.pushPrefEnv({ "set": [["privacy.reduceTimerPrecision", false]]});
+
   let requestsDone = waitForAllRequestsFinished(monitor);
   let markersDone = waitForTimelineMarkers(monitor);
   tab.linkedBrowser.reload();

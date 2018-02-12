@@ -11,6 +11,13 @@
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
+
+// The worker assumes it will take some amount of time to load a resource.
+// With a low enough precision, the duration to load a resource may clamp
+// down to zero.
+var reduceTimePrecisionPrevPrefValue = SpecialPowers.getBoolPref("privacy.reduceTimerPrecision");
+SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", false);
+
 var worker = new Worker('test_worker_performance_entries.js');
 worker.onmessage = function(event) {
   if (event.data.type == "check") {
@@ -19,6 +26,7 @@ worker.onmessage = function(event) {
   }
 
   if (event.data.type == "finish") {
+    SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", reduceTimePrecisionPrevPrefValue);
     SimpleTest.finish();
     return;
   }
