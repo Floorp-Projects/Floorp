@@ -526,19 +526,32 @@ CanAttachNativeGetProp(JSContext* cx, HandleObject obj, HandleId id,
 }
 
 static void
+GuardGroupProto(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId)
+{
+    // Uses the group to determine if the prototype is unchanged. If the
+    // group's prototype is mutable, we must check the actual prototype,
+    // otherwise checking the group is sufficient. This can be used if object
+    // is not ShapedObject or if Shape has UNCACHEABLE_PROTO flag set.
+
+    ObjectGroup* group = obj->groupRaw();
+
+    if (group->hasUncacheableProto())
+        writer.guardProto(objId, obj->staticPrototype());
+    else
+        writer.guardGroupForProto(objId, group);
+}
+
+static void
 GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder, ObjOperandId objId)
 {
-    // The guards here protect against the effects of JSObject::swap(). If the
-    // prototype chain is directly altered, then TI will toss the jitcode, so we
-    // don't have to worry about it, and any other change to the holder, or
-    // adding a shadowing property will result in reshaping the holder, and thus
-    // the failure of the shape guard.
+    // When UNCACHEABLE_PROTO flag is set, the prototype may be changed without
+    // generating a new shape. This adds additional guards using the group to
+    // determine if prototype has changed.
+
     MOZ_ASSERT(obj != holder);
 
-    if (obj->hasUncacheableProto()) {
-        // If the shape does not imply the proto, emit an explicit proto guard.
-        writer.guardProto(objId, obj->staticPrototype());
-    }
+    if (obj->hasUncacheableProto())
+        GuardGroupProto(writer, obj, objId);
 
     JSObject* pobj = obj->staticPrototype();
     if (!pobj)
@@ -547,12 +560,7 @@ GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder, 
     while (pobj != holder) {
         if (pobj->hasUncacheableProto()) {
             ObjOperandId protoId = writer.loadObject(pobj);
-            if (pobj->isSingleton()) {
-                // Singletons can have their group's |proto| mutated directly.
-                writer.guardProto(protoId, pobj->staticPrototype());
-            } else {
-                writer.guardGroup(protoId, pobj->group());
-            }
+            GuardGroupProto(writer, pobj, protoId);
         }
         pobj = pobj->staticPrototype();
     }
@@ -561,20 +569,20 @@ GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder, 
 static void
 GeneratePrototypeHoleGuards(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId)
 {
-    if (obj->hasUncacheableProto()) {
-        // If the shape does not imply the proto, emit an explicit proto guard.
-        writer.guardProto(objId, obj->staticPrototype());
-    }
+    if (obj->hasUncacheableProto())
+        GuardGroupProto(writer, obj, objId);
 
     JSObject* pobj = obj->staticPrototype();
     while (pobj) {
         ObjOperandId protoId = writer.loadObject(pobj);
 
-        // Non-singletons with uncacheable protos can change their proto
-        // without a shape change, so also guard on the group (which determines
-        // the proto) in this case.
+        // If shape doesn't imply proto, additional guards are needed.
+        // Singleton objects will update shape even if UNCACHEABLE_PROTO flag
+        // is set on the shape.
+        //
+        // See: SetClassAndProto
         if (pobj->hasUncacheableProto() && !pobj->isSingleton())
-            writer.guardGroup(protoId, pobj->group());
+            GuardGroupProto(writer, pobj, protoId);
 
         // Make sure the shape matches, to avoid non-dense elements or anything
         // else that is being checked by CanAttachDenseElementHole.
@@ -592,7 +600,7 @@ TestMatchingReceiver(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId,
                      Maybe<ObjOperandId>* expandoId)
 {
     if (obj->is<UnboxedPlainObject>()) {
-        writer.guardGroup(objId, obj->group());
+        writer.guardGroupForLayout(objId, obj->group());
 
         if (UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando()) {
             expandoId->emplace(writer.guardAndLoadUnboxedExpando(objId));
@@ -601,7 +609,7 @@ TestMatchingReceiver(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId,
             writer.guardNoUnboxedExpando(objId);
         }
     } else if (obj->is<TypedObject>()) {
-        writer.guardGroup(objId, obj->group());
+        writer.guardGroupForLayout(objId, obj->group());
     } else {
         Shape* shape = obj->maybeShape();
         MOZ_ASSERT(shape);
@@ -1329,7 +1337,7 @@ GetPropIRGenerator::tryAttachUnboxed(HandleObject obj, ObjOperandId objId, Handl
         return false;
 
     maybeEmitIdGuard(id);
-    writer.guardGroup(objId, obj->group());
+    writer.guardGroupForLayout(objId, obj->group());
     writer.loadUnboxedPropertyResult(objId, property->type,
                                      UnboxedPlainObject::offsetOfData() + property->offset);
     if (property->type == JSVAL_TYPE_OBJECT)
@@ -2422,10 +2430,10 @@ HasPropIRGenerator::tryAttachSparse(HandleObject obj, ObjOperandId objId,
     // Generate prototype guards if needed. This includes monitoring that
     // properties were not added in the chain.
     if (!hasOwn) {
-        if (!obj->hasUncacheableProto()) {
-            // Make sure the proto does not change without checking the shape.
-            writer.guardProto(objId, obj->staticPrototype());
-        }
+        // If GeneratePrototypeHoleGuards below won't add guards for prototype,
+        // we should add our own since we aren't guarding shape.
+        if (!obj->hasUncacheableProto())
+            GuardGroupProto(writer, obj, objId);
 
         GeneratePrototypeHoleGuards(writer, obj, objId);
     }
@@ -2521,7 +2529,7 @@ HasPropIRGenerator::tryAttachUnboxed(JSObject* obj, ObjOperandId objId,
         return false;
 
     emitIdGuard(keyId, key);
-    writer.guardGroup(objId, obj->group());
+    writer.guardGroupForLayout(objId, obj->group());
     writer.loadBooleanResult(true);
     writer.returnFromIC();
 
@@ -2588,7 +2596,7 @@ HasPropIRGenerator::tryAttachTypedObject(JSObject* obj, ObjOperandId objId,
         return false;
 
     emitIdGuard(keyId, key);
-    writer.guardGroup(objId, obj->group());
+    writer.guardGroupForLayout(objId, obj->group());
     writer.loadBooleanResult(true);
     writer.returnFromIC();
 
@@ -2941,7 +2949,7 @@ SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId,
     // types match, we don't need the group guard.
     NativeObject* nobj = &obj->as<NativeObject>();
     if (typeCheckInfo_.needsTypeBarrier())
-        writer.guardGroup(objId, nobj->group());
+        writer.guardGroupForTypeBarrier(objId, nobj->group());
     writer.guardShape(objId, nobj->lastProperty());
 
     if (IsPreliminaryObject(obj))
@@ -2972,7 +2980,7 @@ SetPropIRGenerator::tryAttachUnboxedExpandoSetSlot(HandleObject obj, ObjOperandI
         return false;
 
     maybeEmitIdGuard(id);
-    writer.guardGroup(objId, obj->group());
+    writer.guardGroupForLayout(objId, obj->group());
     ObjOperandId expandoId = writer.guardAndLoadUnboxedExpando(objId);
     writer.guardShape(expandoId, expando->lastProperty());
 
@@ -3008,7 +3016,7 @@ SetPropIRGenerator::tryAttachUnboxedProperty(HandleObject obj, ObjOperandId objI
         return false;
 
     maybeEmitIdGuard(id);
-    writer.guardGroup(objId, obj->group());
+    writer.guardGroupForLayout(objId, obj->group());
     EmitGuardUnboxedPropertyType(writer, property->type, rhsId);
     writer.storeUnboxedProperty(objId, property->type,
                                 UnboxedPlainObject::offsetOfData() + property->offset,
@@ -3050,7 +3058,7 @@ SetPropIRGenerator::tryAttachTypedObjectProperty(HandleObject obj, ObjOperandId 
     maybeEmitIdGuard(id);
     writer.guardNoDetachedTypedObjects();
     writer.guardShape(objId, obj->as<TypedObject>().shape());
-    writer.guardGroup(objId, obj->group());
+    writer.guardGroupForLayout(objId, obj->group());
 
     typeCheckInfo_.set(obj->group(), id);
 
@@ -3273,7 +3281,7 @@ SetPropIRGenerator::tryAttachSetDenseElement(HandleObject obj, ObjOperandId objI
         return false;
 
     if (typeCheckInfo_.needsTypeBarrier())
-        writer.guardGroup(objId, nobj->group());
+        writer.guardGroupForTypeBarrier(objId, nobj->group());
     writer.guardShape(objId, nobj->shape());
 
     writer.storeDenseElement(objId, indexId, rhsId);
@@ -3391,7 +3399,7 @@ SetPropIRGenerator::tryAttachSetDenseElementHole(HandleObject obj, ObjOperandId 
         return false;
 
     if (typeCheckInfo_.needsTypeBarrier())
-        writer.guardGroup(objId, nobj->group());
+        writer.guardGroupForTypeBarrier(objId, nobj->group());
     writer.guardShape(objId, nobj->shape());
 
     // Also shape guard the proto chain, unless this is an INITELEM or we know
@@ -3570,7 +3578,7 @@ SetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objI
             guardDOMProxyExpandoObjectAndShape(obj, objId, expandoVal, expandoObj);
 
         NativeObject* nativeExpandoObj = &expandoObj->as<NativeObject>();
-        writer.guardGroup(expandoObjId, nativeExpandoObj->group());
+        writer.guardGroupForTypeBarrier(expandoObjId, nativeExpandoObj->group());
         typeCheckInfo_.set(nativeExpandoObj->group(), id);
 
         EmitStoreSlotAndReturn(writer, expandoObjId, nativeExpandoObj, propShape, rhsId);
@@ -3717,7 +3725,7 @@ SetPropIRGenerator::tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, H
     ObjOperandId windowObjId = writer.loadObject(windowObj);
 
     writer.guardShape(windowObjId, windowObj->lastProperty());
-    writer.guardGroup(windowObjId, windowObj->group());
+    writer.guardGroupForTypeBarrier(windowObjId, windowObj->group());
     typeCheckInfo_.set(windowObj->group(), id);
 
     EmitStoreSlotAndReturn(writer, windowObjId, windowObj, propShape, rhsId);
@@ -3853,7 +3861,10 @@ SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape
     ObjOperandId objId = writer.guardIsObject(objValId);
     maybeEmitIdGuard(id);
 
-    writer.guardGroup(objId, oldGroup);
+    // In addition to guarding for type barrier, we need this group guard (or
+    // shape guard below) to ensure class is unchanged.
+    MOZ_ASSERT(!oldGroup->hasUncacheableClass() || obj->is<ShapedObject>());
+    writer.guardGroupForTypeBarrier(objId, oldGroup);
 
     // If we are adding a property to an object for which the new script
     // properties analysis hasn't been performed yet, make sure the stub fails
@@ -4255,7 +4266,7 @@ CallIRGenerator::tryAttachArrayPush()
 
     // Guard that the group and shape matches.
     if (typeCheckInfo_.needsTypeBarrier())
-        writer.guardGroup(thisObjId, thisobj->group());
+        writer.guardGroupForTypeBarrier(thisObjId, thisobj->group());
     writer.guardShape(thisObjId, thisarray->shape());
 
     // Guard proto chain shapes.
