@@ -25,7 +25,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
 class ActionModeCompatView extends LinearLayout implements GeckoMenu.ActionItemBarPresenter {
-    private final String LOGTAG = "GeckoActionModeCompatPresenter";
+    private static final String LOGTAG = "GeckoActionModeCompatPresenter";
 
     private static final int SPEC = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
 

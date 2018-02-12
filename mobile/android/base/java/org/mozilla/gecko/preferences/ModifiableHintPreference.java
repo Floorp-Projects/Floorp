@@ -22,10 +22,10 @@ class ModifiableHintPreference extends Preference {
     private static final String LOGTAG = "ModifiableHintPref";
     private final Context mContext;
 
-    private final String MATCH_STRING = "%I";
-    private final int RESID_TEXT_VIEW = R.id.label_search_hint;
-    private final int RESID_DRAWABLE = R.drawable.ab_add_search_engine;
-    private final double SCALE_FACTOR = 0.5;
+    private static final String MATCH_STRING = "%I";
+    private static final int RESID_TEXT_VIEW = R.id.label_search_hint;
+    private static final int RESID_DRAWABLE = R.drawable.ab_add_search_engine;
+    private static final double SCALE_FACTOR = 0.5;
 
     public ModifiableHintPreference(Context context, AttributeSet attrs) {
         super(context, attrs);

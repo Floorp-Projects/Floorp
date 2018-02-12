@@ -18,7 +18,7 @@ public class ColorPickerInput extends PromptInput {
     public static final String INPUT_TYPE = "color";
     public static final String LOGTAG = "GeckoColorPickerInput";
 
-    private final boolean mShowAdvancedButton = true;
+    private static final boolean mShowAdvancedButton = true;
     private final int mInitialColor;
 
     public ColorPickerInput(GeckoBundle obj) {
