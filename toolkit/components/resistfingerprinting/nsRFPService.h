@@ -159,6 +159,12 @@ public:
   static bool IsResistFingerprintingEnabled();
   static bool IsTimerPrecisionReductionEnabled(TimerPrecisionType aType);
 
+  enum TimeScale {
+    Seconds      = 1,
+    MilliSeconds = 1000,
+    MicroSeconds = 1000000
+  };
+
   // The following Reduce methods can be called off main thread.
   static double ReduceTimePrecisionAsUSecs(
     double aTime,
@@ -172,8 +178,8 @@ public:
   // Public only for testing purposes
   static double ReduceTimePrecisionImpl(
     double aTime,
+    TimeScale aTimeScale,
     double aResolutionUSec,
-    double aTimeScaleCorrection,
     TimerPrecisionType aType);
 
 
