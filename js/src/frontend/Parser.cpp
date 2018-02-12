@@ -25,7 +25,6 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsfun.h"
 #include "jsopcode.h"
 #include "jsscript.h"
 #include "jstypes.h"
@@ -36,6 +35,7 @@
 #include "frontend/FoldConstants.h"
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpParser.h"
+#include "vm/JSFunction.h"
 #include "vm/RegExpObject.h"
 #include "wasm/AsmJS.h"
 

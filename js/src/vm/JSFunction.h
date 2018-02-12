@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsfun_h
-#define jsfun_h
+#ifndef vm_JSFunction_h
+#define vm_JSFunction_h
 
 /*
  * JS function definitions.
@@ -1000,4 +1000,4 @@ CheckIsValidConstructible(const Value& calleev);
 } // namespace JS
 #endif
 
-#endif /* jsfun_h */
+#endif /* vm_JSFunction_h */

@@ -9,12 +9,12 @@
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/Sprintf.h"
 
-#include "jsfun.h"
 #include "jsprf.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
+#include "vm/JSFunction.h"
 #include "vm/StringBuffer.h"
 
 using namespace js;

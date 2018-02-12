@@ -16,12 +16,11 @@
 #else
 #include <unistd.h>
 #endif
-
 #include <stdarg.h>
 
-#include "jsfun.h"
 #include "jsscript.h"
 
+#include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 
 #include "jscompartmentinlines.h"

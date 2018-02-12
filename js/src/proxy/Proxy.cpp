@@ -12,11 +12,11 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsfun.h"
 #include "jswrapper.h"
 
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/ScriptedProxyHandler.h"
+#include "vm/JSFunction.h"
 #include "vm/WrapperObject.h"
 
 #include "gc/Marking-inl.h"
