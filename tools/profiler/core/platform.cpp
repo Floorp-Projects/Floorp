@@ -525,6 +525,7 @@ public:
   // still have data in the buffer.
   // For threads that have already been unregistered, the RegisteredThread
   // pointer will be null.
+  // The returned array is sorted by thread register time.
   // Do not hold on to the return value across thread registration or profiler
   // restarts.
   static nsTArray<Pair<RegisteredThread*, ProfiledThreadData*>> ProfiledThreads(PSLockRef)
@@ -536,6 +537,22 @@ public:
     for (auto& t : sInstance->mDeadProfiledThreads) {
       array.AppendElement(MakePair((RegisteredThread*)nullptr, t.get()));
     }
+
+    class ThreadRegisterTimeComparator {
+    public:
+      bool Equals(const Pair<RegisteredThread*, ProfiledThreadData*>& a,
+                  const Pair<RegisteredThread*, ProfiledThreadData*>& b) const
+      {
+        return a.second()->Info()->RegisterTime() == b.second()->Info()->RegisterTime();
+      }
+
+      bool LessThan(const Pair<RegisteredThread*, ProfiledThreadData*>& a,
+                    const Pair<RegisteredThread*, ProfiledThreadData*>& b) const
+      {
+        return a.second()->Info()->RegisterTime() < b.second()->Info()->RegisterTime();
+      }
+    };
+    array.Sort(ThreadRegisterTimeComparator());
     return array;
   }
 
