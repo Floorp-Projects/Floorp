@@ -16,9 +16,8 @@
 #include "vm/JSObject.h"
 #include "vm/TypedArrayObject.h"
 
-#include "jscntxtinlines.h"
-
 #include "gc/Marking-inl.h"
+#include "vm/JSContext-inl.h"
 
 namespace js {
 

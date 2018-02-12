@@ -16,7 +16,6 @@
 #include "mozilla/Unused.h"
 
 #include "jsarray.h"
-#include "jscntxt.h"
 #include "jsopcode.h"
 #include "jstypes.h"
 #include "jsutil.h"
@@ -28,6 +27,7 @@
 #include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 #include "vm/Shape.h"

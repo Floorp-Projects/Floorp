@@ -19,7 +19,6 @@
 
 #include "jsapi.h"
 #include "jsarray.h"
-#include "jscntxt.h"
 #include "jsexn.h"
 #include "jsfriendapi.h"
 #include "jsiter.h"
@@ -44,6 +43,7 @@
 #include "js/UniquePtr.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 #include "vm/ProxyObject.h"
@@ -52,7 +52,6 @@
 #include "vm/TypedArrayObject.h"
 
 #include "jsboolinlines.h"
-#include "jscntxtinlines.h"
 
 #include "builtin/TypedObject-inl.h"
 #include "gc/Marking-inl.h"
@@ -61,6 +60,7 @@
 #include "vm/Caches-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/JSCompartment-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/Shape-inl.h"

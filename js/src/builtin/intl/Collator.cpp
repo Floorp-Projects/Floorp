@@ -11,7 +11,6 @@
 #include "mozilla/Assertions.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"
 
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ICUStubs.h"
@@ -20,6 +19,7 @@
 #include "gc/FreeOp.h"
 #include "js/TypeDecls.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSContext.h"
 #include "vm/Runtime.h"
 #include "vm/String.h"
 

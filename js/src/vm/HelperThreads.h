@@ -21,12 +21,12 @@
 #include "mozilla/Variant.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"
 
 #include "ds/Fifo.h"
 #include "jit/Ion.h"
 #include "js/TypeDecls.h"
 #include "threading/ConditionVariable.h"
+#include "vm/JSContext.h"
 #include "vm/MutexIDs.h"
 
 namespace js {

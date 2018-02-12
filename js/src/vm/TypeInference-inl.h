@@ -27,8 +27,7 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/UnboxedObject.h"
 
-#include "jscntxtinlines.h"
-
+#include "vm/JSContext-inl.h"
 #include "vm/ObjectGroup-inl.h"
 
 namespace js {

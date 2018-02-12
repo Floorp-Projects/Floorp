@@ -8,13 +8,12 @@
 
 #include "mozilla/PodOperations.h"
 
-#include "jscntxt.h"
-
 #include "gc/Marking.h"
 #include "jit/BaselineFrame.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitCompartment.h"
 #include "vm/Debugger.h"
+#include "vm/JSContext.h"
 #include "vm/Opcodes.h"
 
 #include "jit/JSJitFrameIter-inl.h"

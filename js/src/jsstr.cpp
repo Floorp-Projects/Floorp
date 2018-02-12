@@ -23,7 +23,6 @@
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsbool.h"
-#include "jscntxt.h"
 #include "jsnum.h"
 #include "jsopcode.h"
 #include "jstypes.h"
@@ -41,6 +40,7 @@
 #endif
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/Opcodes.h"
 #include "vm/Printer.h"

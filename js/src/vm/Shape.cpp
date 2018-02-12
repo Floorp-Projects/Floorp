@@ -12,18 +12,17 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
 
-#include "jscntxt.h"
 #include "jshashutil.h"
 
 #include "gc/FreeOp.h"
 #include "gc/Policy.h"
 #include "js/HashTable.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
-
-#include "jscntxtinlines.h"
 
 #include "vm/Caches-inl.h"
 #include "vm/JSCompartment-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 

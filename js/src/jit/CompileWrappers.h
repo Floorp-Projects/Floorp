@@ -7,7 +7,7 @@
 #ifndef jit_CompileWrappers_h
 #define jit_CompileWrappers_h
 
-#include "jscntxt.h"
+#include "vm/JSContext.h"
 
 namespace js {
 namespace jit {

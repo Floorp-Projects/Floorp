@@ -20,7 +20,6 @@
 #include <string.h>
 
 #include "jsarray.h"
-#include "jscntxt.h"
 #include "jsiter.h"
 #include "jslibmath.h"
 #include "jsnum.h"
@@ -38,6 +37,7 @@
 #include "vm/AsyncIteration.h"
 #include "vm/Debugger.h"
 #include "vm/GeneratorObject.h"
+#include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"

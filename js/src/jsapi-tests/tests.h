@@ -16,10 +16,10 @@
 #include <string.h>
 
 #include "jsalloc.h"
-#include "jscntxt.h"
 #include "jsgc.h"
 
 #include "js/Vector.h"
+#include "vm/JSContext.h"
 
 /* Note: Aborts on OOM. */
 class JSAPITestString {

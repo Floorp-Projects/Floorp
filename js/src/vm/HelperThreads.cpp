@@ -25,10 +25,9 @@
 #include "vm/TraceLogging.h"
 #include "vm/Xdr.h"
 
-#include "jscntxtinlines.h"
-
 #include "gc/Iteration-inl.h"
 #include "vm/JSCompartment-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"

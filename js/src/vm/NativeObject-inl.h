@@ -9,11 +9,10 @@
 
 #include "vm/NativeObject.h"
 
-#include "jscntxt.h"
-
 #include "builtin/TypedObject.h"
 #include "gc/GCTrace.h"
 #include "proxy/Proxy.h"
+#include "vm/JSContext.h"
 #include "vm/ProxyObject.h"
 #include "vm/TypedArrayObject.h"
 

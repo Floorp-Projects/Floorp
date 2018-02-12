@@ -7,13 +7,12 @@
 #ifndef jit_Linker_h
 #define jit_Linker_h
 
-#include "jscntxt.h"
-
 #include "jit/ExecutableAllocator.h"
 #include "jit/IonCode.h"
 #include "jit/JitCompartment.h"
 #include "jit/MacroAssembler.h"
 #include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 
 namespace js {
 namespace jit {

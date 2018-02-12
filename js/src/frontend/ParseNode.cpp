@@ -8,7 +8,7 @@
 
 #include "frontend/Parser.h"
 
-#include "jscntxtinlines.h"
+#include "vm/JSContext-inl.h"
 
 using namespace js;
 using namespace js::frontend;

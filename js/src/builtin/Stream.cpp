@@ -8,9 +8,8 @@
 
 #include "js/Stream.h"
 
-#include "jscntxt.h"
-
 #include "gc/Heap.h"
+#include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 
 #include "vm/List-inl.h"

@@ -7,7 +7,7 @@
 #ifndef jit_Jit_h
 #define jit_Jit_h
 
-#include "jscntxt.h"
+#include "vm/JSContext.h"
 
 namespace js {
 
