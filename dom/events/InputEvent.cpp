@@ -29,12 +29,6 @@ InputEvent::InputEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(InputEvent, UIEvent)
-NS_IMPL_RELEASE_INHERITED(InputEvent, UIEvent)
-
-NS_INTERFACE_MAP_BEGIN(InputEvent)
-NS_INTERFACE_MAP_END_INHERITING(UIEvent)
-
 bool
 InputEvent::IsComposing()
 {

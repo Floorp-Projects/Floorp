@@ -33,7 +33,7 @@ public:
     return BeforeUnloadEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(BeforeUnloadEvent, Event)
 
   void GetReturnValue(nsAString& aReturnValue);
   void SetReturnValue(const nsAString& aReturnValue);
