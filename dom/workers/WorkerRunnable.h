@@ -457,27 +457,6 @@ protected:
   UniquePtr<WorkerHolder> mWorkerHolder;
 };
 
-// Class for checking API exposure.  This totally violates the "MUST" in the
-// comments on WorkerMainThreadRunnable::Dispatch, because API exposure checks
-// can't throw.  Maybe we should change it so they _could_ throw.  But for now
-// we are bad people and should be ashamed of ourselves.  Let's hope none of
-// them happen while a worker is shutting down.
-//
-// Do NOT copy what this class is doing elsewhere.  Just don't.
-class WorkerCheckAPIExposureOnMainThreadRunnable
-  : public WorkerMainThreadRunnable
-{
-public:
-  explicit
-  WorkerCheckAPIExposureOnMainThreadRunnable(WorkerPrivate* aWorkerPrivate);
-  virtual
-  ~WorkerCheckAPIExposureOnMainThreadRunnable();
-
-  // Returns whether the dispatch succeeded.  If this returns false, the API
-  // should not be exposed.
-  bool Dispatch();
-};
-
 // This runnable is used to stop a sync loop and it's meant to be used on the
 // main-thread only. As sync loops keep the busy count incremented as long as
 // they run this runnable does not modify the busy count

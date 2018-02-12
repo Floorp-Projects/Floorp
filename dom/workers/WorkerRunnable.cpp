@@ -626,24 +626,6 @@ WorkerMainThreadRunnable::Run()
   return NS_OK;
 }
 
-WorkerCheckAPIExposureOnMainThreadRunnable::WorkerCheckAPIExposureOnMainThreadRunnable(WorkerPrivate* aWorkerPrivate):
-  WorkerMainThreadRunnable(aWorkerPrivate,
-                           NS_LITERAL_CSTRING("WorkerCheckAPIExposureOnMainThread"))
-{}
-
-WorkerCheckAPIExposureOnMainThreadRunnable::~WorkerCheckAPIExposureOnMainThreadRunnable()
-{}
-
-bool
-WorkerCheckAPIExposureOnMainThreadRunnable::Dispatch()
-{
-  ErrorResult rv;
-  WorkerMainThreadRunnable::Dispatch(Terminating, rv);
-  bool ok = !rv.Failed();
-  rv.SuppressException();
-  return ok;
-}
-
 bool
 WorkerSameThreadRunnable::PreDispatch(WorkerPrivate* aWorkerPrivate)
 {
