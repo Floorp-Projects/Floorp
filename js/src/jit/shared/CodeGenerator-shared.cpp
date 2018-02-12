@@ -1492,10 +1492,8 @@ CodeGeneratorShared::omitOverRecursedCheck() const
 }
 
 void
-CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
+CodeGeneratorShared::emitWasmCallBase(MWasmCall* mir, bool needsBoundsCheck)
 {
-    MWasmCall* mir = ins->mir();
-
     if (mir->spIncrement())
         masm.freeStack(mir->spIncrement());
 
@@ -1528,7 +1526,7 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
         break;
       case wasm::CalleeDesc::AsmJSTable:
       case wasm::CalleeDesc::WasmTable:
-        masm.wasmCallIndirect(desc, callee, ins->needsBoundsCheck());
+        masm.wasmCallIndirect(desc, callee, needsBoundsCheck);
         reloadRegs = callee.which() == wasm::CalleeDesc::WasmTable && callee.wasmTableIsExternal();
         break;
       case wasm::CalleeDesc::Builtin:

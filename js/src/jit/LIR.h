@@ -1122,11 +1122,10 @@ namespace details {
             return 0;
         }
         MBasicBlock* getSuccessor(size_t i) const override {
-            MOZ_ASSERT(false);
-            return nullptr;
+            MOZ_CRASH("no successors");
         }
         void setSuccessor(size_t i, MBasicBlock* successor) override {
-            MOZ_ASSERT(false);
+            MOZ_CRASH("no successors");
         }
 
         // Default accessors, assuming a single input and output, respectively.
