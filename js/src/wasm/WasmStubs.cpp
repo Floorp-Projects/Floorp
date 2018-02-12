@@ -1727,11 +1727,11 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
         switch (trap) {
           case Trap::Unreachable:
           case Trap::IntegerOverflow:
+          case Trap::InvalidConversionToInteger:
           case Trap::IntegerDivideByZero:
           case Trap::StackOverflow:
             break;
           // The TODO list of "old" traps to convert to new traps:
-          case Trap::InvalidConversionToInteger:
           case Trap::OutOfBounds:
           case Trap::UnalignedAccess:
           case Trap::IndirectCallToNull:
