@@ -13,7 +13,6 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/U2FBinding.h"
 #include "mozilla/dom/WebAuthnManagerBase.h"
-#include "mozilla/dom/PWebAuthnTransaction.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/MozPromise.h"
 #include "nsProxyRelease.h"
@@ -22,6 +21,9 @@
 
 namespace mozilla {
 namespace dom {
+
+class WebAuthnMakeCredentialResult;
+class WebAuthnGetAssertionResult;
 
 class U2FRegisterCallback;
 class U2FSignCallback;
