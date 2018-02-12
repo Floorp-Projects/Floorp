@@ -27,7 +27,7 @@ class Event;
 class PopupBoxObject final : public BoxObject
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(PopupBoxObject, BoxObject)
 
   // also in PopupBoxObject.webidl
   static const uint32_t ROLLUP_DEFAULT = 0;   /* widget/platform default */

@@ -16,12 +16,6 @@ ServoNamespaceRule::~ServoNamespaceRule()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(ServoNamespaceRule, CSSNamespaceRule)
-NS_IMPL_RELEASE_INHERITED(ServoNamespaceRule, CSSNamespaceRule)
-
-NS_INTERFACE_MAP_BEGIN(ServoNamespaceRule)
-NS_INTERFACE_MAP_END_INHERITING(CSSNamespaceRule)
-
 #ifdef DEBUG
 void
 ServoNamespaceRule::List(FILE* out, int32_t aIndent) const
