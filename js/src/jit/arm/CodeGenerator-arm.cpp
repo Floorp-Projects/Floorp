@@ -2176,7 +2176,7 @@ CodeGeneratorARM::emitWasmUnalignedStore(T* lir)
         FloatRegister value = ToFloatRegister(lir->getOperand(LWasmUnalignedStore::ValueIndex));
         masm.wasmUnalignedStoreFP(mir->access(), value, HeapReg, ptr, ptr, valOrTmp);
     } else {
-        masm.wasmUnalignedStore(mir->access(), valOrTmp, HeapReg, ptr, ptr);
+        masm.wasmUnalignedStore(mir->access(), valOrTmp, HeapReg, ptr, ptr, Register::Invalid());
     }
 }
 
