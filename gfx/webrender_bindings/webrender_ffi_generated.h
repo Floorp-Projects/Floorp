@@ -101,31 +101,15 @@ enum class ImageRendering : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
-enum class LineOrientation : uint8_t {
-  Vertical = 0,
-  Horizontal = 1,
-
-  Sentinel /* this must be last for serialization purposes. */
-};
-
-enum class LineStyle : uint8_t {
-  Solid = 0,
-  Dotted = 1,
-  Dashed = 2,
-  Wavy = 3,
-
-  Sentinel /* this must be last for serialization purposes. */
-};
-
-// An enum representing the available verbosity level filters of the logging
-// framework.
+// An enum representing the available verbosity level filters of the logger.
 //
-// A `LogLevelFilter` may be compared directly to a [`LogLevel`](enum.LogLevel.html).
-// Use this type to [`get()`](struct.MaxLogLevelFilter.html#method.get) and
-// [`set()`](struct.MaxLogLevelFilter.html#method.set) the
-// [`MaxLogLevelFilter`](struct.MaxLogLevelFilter.html), or to match with the getter
-// [`max_log_level()`](fn.max_log_level.html).
-enum class LogLevelFilter : uintptr_t {
+// A `LevelFilter` may be compared directly to a [`Level`]. Use this type
+// to get and set the maximum log level with [`max_level()`] and [`set_max_level`].
+//
+// [`Level`]: enum.Level.html
+// [`max_level()`]: fn.max_level.html
+// [`set_max_level`]: fn.set_max_level.html
+enum class LevelFilter : uintptr_t {
   // A level lower than all log levels.
   Off = 0,
   // Corresponds to the `Error` log level.
@@ -138,6 +122,22 @@ enum class LogLevelFilter : uintptr_t {
   Debug = 4,
   // Corresponds to the `Trace` log level.
   Trace = 5,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
+enum class LineOrientation : uint8_t {
+  Vertical = 0,
+  Horizontal = 1,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
+enum class LineStyle : uint8_t {
+  Solid = 0,
+  Dotted = 1,
+  Dashed = 2,
+  Wavy = 3,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -273,9 +273,9 @@ struct Vec;
 // Geometry in the document's coordinate space (logical pixels).
 struct WorldPixel;
 
-struct WrProgramCache;
+struct WrPipelineInfo;
 
-struct WrRenderedEpochs;
+struct WrProgramCache;
 
 struct WrState;
 
@@ -721,7 +721,7 @@ struct GlyphOptions {
 
 using WrYuvColorSpace = YuvColorSpace;
 
-using WrLogLevelFilter = LogLevelFilter;
+using WrLogLevelFilter = LevelFilter;
 
 struct ByteSlice {
   const uint8_t *buffer;
@@ -1359,21 +1359,26 @@ extern void wr_notifier_new_scroll_frame_ready(WrWindowId aWindowId,
 extern void wr_notifier_wake_up(WrWindowId aWindowId);
 
 WR_INLINE
+void wr_pipeline_info_delete(WrPipelineInfo *aInfo)
+WR_DESTRUCTOR_SAFE_FUNC;
+
+WR_INLINE
+bool wr_pipeline_info_next_epoch(WrPipelineInfo *aInfo,
+                                 WrPipelineId *aOutPipeline,
+                                 WrEpoch *aOutEpoch)
+WR_FUNC;
+
+WR_INLINE
+bool wr_pipeline_info_next_removed_pipeline(WrPipelineInfo *aInfo,
+                                            WrPipelineId *aOutPipeline)
+WR_FUNC;
+
+WR_INLINE
 void wr_program_cache_delete(WrProgramCache *aProgramCache)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
 WrProgramCache *wr_program_cache_new()
-WR_FUNC;
-
-WR_INLINE
-void wr_rendered_epochs_delete(WrRenderedEpochs *aPipelineEpochs)
-WR_DESTRUCTOR_SAFE_FUNC;
-
-WR_INLINE
-bool wr_rendered_epochs_next(WrRenderedEpochs *aPipelineEpochs,
-                             WrPipelineId *aOutPipeline,
-                             WrEpoch *aOutEpoch)
 WR_FUNC;
 
 WR_INLINE
@@ -1387,7 +1392,7 @@ void wr_renderer_delete(Renderer *aRenderer)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
-WrRenderedEpochs *wr_renderer_flush_rendered_epochs(Renderer *aRenderer)
+WrPipelineInfo *wr_renderer_flush_pipeline_info(Renderer *aRenderer)
 WR_FUNC;
 
 WR_INLINE

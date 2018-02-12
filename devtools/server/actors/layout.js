@@ -102,9 +102,14 @@ const GridActor = ActorClassWithSpec(gridSpec, {
     let gridFragments = this.containerEl.getGridFragments();
     this.gridFragments = getStringifiableFragments(gridFragments);
 
+    // Record writing mode and text direction for use by the grid outline.
+    let { direction, writingMode } = CssLogic.getComputedStyle(this.containerEl);
+
     let form = {
       actor: this.actorID,
+      direction,
       gridFragments: this.gridFragments,
+      writingMode,
     };
 
     // If the WalkerActor already knows the container element, then also return its

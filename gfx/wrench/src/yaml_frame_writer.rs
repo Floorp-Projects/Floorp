@@ -1018,7 +1018,7 @@ impl YamlFrameWriter {
                     str_node(&mut v, "type", "clip-chain");
 
                     let id = ClipId::ClipChain(item.id);
-                    u32_node(&mut v, "id", clip_id_mapper.map_id(&id) as u32);
+                    u32_node(&mut v, "id", clip_id_mapper.add_id(id) as u32);
 
                     let clip_ids: Vec<u32> = display_list.get(base.clip_chain_items()).map(|clip_id| {
                         clip_id_mapper.map_id(&clip_id) as u32

@@ -29,7 +29,7 @@ static ENABLE_RECORDING: bool = true;
 ## `reftest`
 
 Wrench also has a reftest system for catching regressions.
-* To run all reftests, run `./headless.py reftest`
-* To run specific reftests, run `./headless.py reftest path/to/test/or/dir`
+* To run all reftests, run `script/headless.py reftest`
+* To run specific reftests, run `script/headless.py reftest path/to/test/or/dir`
 * To examine test failures, use the [reftest analyzer](https://hg.mozilla.org/mozilla-central/raw-file/tip/layout/tools/reftest/reftest-analyzer.xhtml)
 * To add a new reftest, create an example frame and a reference frame in `reftests/` and then add an entry to `reftests/reftest.list`
