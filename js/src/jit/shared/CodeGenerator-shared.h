@@ -345,9 +345,16 @@ class CodeGeneratorShared : public LElementVisitor
     void emitTruncateDouble(FloatRegister src, Register dest, MTruncateToInt32* mir);
     void emitTruncateFloat32(FloatRegister src, Register dest, MTruncateToInt32* mir);
 
-    void emitWasmCallBase(LWasmCallBase* ins);
-    void visitWasmCall(LWasmCall* ins) override { emitWasmCallBase(ins); }
-    void visitWasmCallI64(LWasmCallI64* ins) override { emitWasmCallBase(ins); }
+    void emitWasmCallBase(MWasmCall* mir, bool needsBoundsCheck);
+    void visitWasmCall(LWasmCall* ins) override {
+        emitWasmCallBase(ins->mir(), ins->needsBoundsCheck());
+    }
+    void visitWasmCallVoid(LWasmCallVoid* ins) override {
+        emitWasmCallBase(ins->mir(), ins->needsBoundsCheck());
+    }
+    void visitWasmCallI64(LWasmCallI64* ins) override {
+        emitWasmCallBase(ins->mir(), ins->needsBoundsCheck());
+    }
 
     void visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins) override;
     void visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins) override;

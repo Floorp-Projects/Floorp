@@ -39,6 +39,21 @@ using mozilla::BinarySearch;
 using mozilla::MakeEnumeratedRange;
 using JS::GenericNaN;
 
+bool
+CodeSegment::registerInProcessMap()
+{
+    if (!RegisterCodeSegment(this))
+        return false;
+    registered_ = true;
+    return true;
+}
+
+CodeSegment::~CodeSegment()
+{
+    if (registered_)
+        UnregisterCodeSegment(this);
+}
+
 static uint32_t
 RoundupCodeLength(uint32_t codeLength)
 {
@@ -48,7 +63,7 @@ RoundupCodeLength(uint32_t codeLength)
     return JS_ROUNDUP(codeLength, ExecutableCodePageSize);
 }
 
-/* static */ CodeSegment::UniqueCodeBytes
+/* static */ UniqueCodeBytes
 CodeSegment::AllocateCodeBytes(uint32_t codeLength)
 {
     codeLength = RoundupCodeLength(codeLength);
@@ -75,7 +90,7 @@ CodeSegment::AllocateCodeBytes(uint32_t codeLength)
 }
 
 void
-CodeSegment::FreeCode::operator()(uint8_t* bytes)
+FreeCode::operator()(uint8_t* bytes)
 {
     MOZ_ASSERT(codeLength);
     MOZ_ASSERT(codeLength == RoundupCodeLength(codeLength));
@@ -87,12 +102,12 @@ CodeSegment::FreeCode::operator()(uint8_t* bytes)
 }
 
 static bool
-StaticallyLink(const CodeSegment& cs, const LinkDataTier& linkData)
+StaticallyLink(const ModuleSegment& ms, const LinkDataTier& linkData)
 {
     for (LinkDataTier::InternalLink link : linkData.internalLinks) {
         CodeOffset patchAt(link.patchAtOffset);
         CodeOffset target(link.targetOffset);
-        Assembler::Bind(cs.base(), patchAt, target);
+        Assembler::Bind(ms.base(), patchAt, target);
     }
 
     if (!EnsureBuiltinThunksInitialized())
@@ -105,7 +120,7 @@ StaticallyLink(const CodeSegment& cs, const LinkDataTier& linkData)
 
         void* target = SymbolicAddressTarget(imm);
         for (uint32_t offset : offsets) {
-            uint8_t* patchAt = cs.base() + offset;
+            uint8_t* patchAt = ms.base() + offset;
             Assembler::PatchDataWithValueCheck(CodeLocationLabel(patchAt),
                                                PatchedImmPtr(target),
                                                PatchedImmPtr((void*)-1));
@@ -148,7 +163,7 @@ AppendToString(const char* str, UTF8Bytes* bytes)
 #endif
 
 static void
-SendCodeRangesToProfiler(const CodeSegment& cs, const Bytes& bytecode, const Metadata& metadata)
+SendCodeRangesToProfiler(const ModuleSegment& ms, const Bytes& bytecode, const Metadata& metadata)
 {
     bool enabled = false;
 #ifdef JS_ION_PERF
@@ -160,11 +175,11 @@ SendCodeRangesToProfiler(const CodeSegment& cs, const Bytes& bytecode, const Met
     if (!enabled)
         return;
 
-    for (const CodeRange& codeRange : metadata.metadata(cs.tier()).codeRanges) {
+    for (const CodeRange& codeRange : metadata.metadata(ms.tier()).codeRanges) {
         if (!codeRange.hasFuncIndex())
             continue;
 
-        uintptr_t start = uintptr_t(cs.base() + codeRange.begin());
+        uintptr_t start = uintptr_t(ms.base() + codeRange.begin());
         uintptr_t size = codeRange.end() - codeRange.begin();
 
         UTF8Bytes name;
@@ -216,12 +231,12 @@ SendCodeRangesToProfiler(const CodeSegment& cs, const Bytes& bytecode, const Met
     }
 }
 
-/* static */ UniqueCodeSegment
-CodeSegment::create(Tier tier,
-                    MacroAssembler& masm,
-                    const ShareableBytes& bytecode,
-                    const LinkDataTier& linkData,
-                    const Metadata& metadata)
+/* static */ UniqueModuleSegment
+ModuleSegment::create(Tier tier,
+                      MacroAssembler& masm,
+                      const ShareableBytes& bytecode,
+                      const LinkDataTier& linkData,
+                      const Metadata& metadata)
 {
     // Round up the code size to page size since this is eventually required by
     // the executable-code allocator and for setting memory protection.
@@ -242,12 +257,12 @@ CodeSegment::create(Tier tier,
     return create(tier, Move(codeBytes), codeLength, bytecode, linkData, metadata);
 }
 
-/* static */ UniqueCodeSegment
-CodeSegment::create(Tier tier,
-                    const Bytes& unlinkedBytes,
-                    const ShareableBytes& bytecode,
-                    const LinkDataTier& linkData,
-                    const Metadata& metadata)
+/* static */ UniqueModuleSegment
+ModuleSegment::create(Tier tier,
+                      const Bytes& unlinkedBytes,
+                      const ShareableBytes& bytecode,
+                      const LinkDataTier& linkData,
+                      const Metadata& metadata)
 {
     // The unlinked bytes are a snapshot of the MacroAssembler's contents so
     // round up just like in the MacroAssembler overload above.
@@ -264,33 +279,33 @@ CodeSegment::create(Tier tier,
     return create(tier, Move(codeBytes), codeLength, bytecode, linkData, metadata);
 }
 
-/* static */ UniqueCodeSegment
-CodeSegment::create(Tier tier,
-                    UniqueCodeBytes codeBytes,
-                    uint32_t codeLength,
-                    const ShareableBytes& bytecode,
-                    const LinkDataTier& linkData,
-                    const Metadata& metadata)
+/* static */ UniqueModuleSegment
+ModuleSegment::create(Tier tier,
+                      UniqueCodeBytes codeBytes,
+                      uint32_t codeLength,
+                      const ShareableBytes& bytecode,
+                      const LinkDataTier& linkData,
+                      const Metadata& metadata)
 {
     // These should always exist and should never be first in the code segment.
 
-    auto cs = js::MakeUnique<CodeSegment>();
-    if (!cs)
+    auto ms = js::MakeUnique<ModuleSegment>();
+    if (!ms)
         return nullptr;
 
-    if (!cs->initialize(tier, Move(codeBytes), codeLength, bytecode, linkData, metadata))
+    if (!ms->initialize(tier, Move(codeBytes), codeLength, bytecode, linkData, metadata))
         return nullptr;
 
-    return UniqueCodeSegment(cs.release());
+    return UniqueModuleSegment(ms.release());
 }
 
 bool
-CodeSegment::initialize(Tier tier,
-                        UniqueCodeBytes codeBytes,
-                        uint32_t codeLength,
-                        const ShareableBytes& bytecode,
-                        const LinkDataTier& linkData,
-                        const Metadata& metadata)
+ModuleSegment::initialize(Tier tier,
+                          UniqueCodeBytes codeBytes,
+                          uint32_t codeLength,
+                          const ShareableBytes& bytecode,
+                          const LinkDataTier& linkData,
+                          const Metadata& metadata)
 {
     MOZ_ASSERT(bytes_ == nullptr);
     MOZ_ASSERT(linkData.interruptOffset);
@@ -315,36 +330,29 @@ CodeSegment::initialize(Tier tier,
     if (!ExecutableAllocator::makeExecutable(bytes_.get(), RoundupCodeLength(codeLength)))
         return false;
 
-    if (!RegisterCodeSegment(this))
+    if (!registerInProcessMap())
         return false;
-    registered_ = true;
 
     SendCodeRangesToProfiler(*this, bytecode.bytes, metadata);
 
     return true;
 }
 
-CodeSegment::~CodeSegment()
-{
-    if (registered_)
-        UnregisterCodeSegment(this);
-}
-
 size_t
-CodeSegment::serializedSize() const
+ModuleSegment::serializedSize() const
 {
     return sizeof(uint32_t) + length_;
 }
 
 void
-CodeSegment::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* code, size_t* data) const
+ModuleSegment::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* code, size_t* data) const
 {
     *data += mallocSizeOf(this);
     *code += RoundupCodeLength(length_);
 }
 
 uint8_t*
-CodeSegment::serialize(uint8_t* cursor, const LinkDataTier& linkData) const
+ModuleSegment::serialize(uint8_t* cursor, const LinkDataTier& linkData) const
 {
     MOZ_ASSERT(tier() == Tier::Serialized);
 
@@ -356,8 +364,8 @@ CodeSegment::serialize(uint8_t* cursor, const LinkDataTier& linkData) const
 }
 
 const uint8_t*
-CodeSegment::deserialize(const uint8_t* cursor, const ShareableBytes& bytecode,
-                         const LinkDataTier& linkData, const Metadata& metadata)
+ModuleSegment::deserialize(const uint8_t* cursor, const ShareableBytes& bytecode,
+                           const LinkDataTier& linkData, const Metadata& metadata)
 {
     uint32_t length;
     cursor = ReadScalar<uint32_t>(cursor, &length);
@@ -720,7 +728,7 @@ Metadata::getFuncName(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes*
 }
 
 bool
-JumpTables::init(CompileMode mode, const CodeSegment& cs, const CodeRangeVector& codeRanges)
+JumpTables::init(CompileMode mode, const ModuleSegment& ms, const CodeRangeVector& codeRanges)
 {
     // Note a fast jit entry has two addresses, to be compatible with
     // ion/baseline functions which have the raw vs checked args entries,
@@ -759,7 +767,7 @@ JumpTables::init(CompileMode mode, const CodeSegment& cs, const CodeRangeVector&
     if (!jit_)
         return false;
 
-    uint8_t* codeBase = cs.base();
+    uint8_t* codeBase = ms.base();
     for (const CodeRange& cr : codeRanges) {
         if (cr.isFunction())
             setTieringEntry(cr.funcIndex(), codeBase + cr.funcTierEntry());
@@ -769,7 +777,7 @@ JumpTables::init(CompileMode mode, const CodeSegment& cs, const CodeRangeVector&
     return true;
 }
 
-Code::Code(UniqueCodeSegment tier, const Metadata& metadata, JumpTables&& maybeJumpTables)
+Code::Code(UniqueModuleSegment tier, const Metadata& metadata, JumpTables&& maybeJumpTables)
   : metadata_(&metadata),
     profilingLabels_(mutexid::WasmCodeProfilingLabels, CacheableCharsVector()),
     jumpTables_(Move(maybeJumpTables))
@@ -783,7 +791,7 @@ Code::Code()
 }
 
 void
-Code::setTier2(UniqueCodeSegment segment) const
+Code::setTier2(UniqueModuleSegment segment) const
 {
     MOZ_RELEASE_ASSERT(segment->tier() == Tier::Ion && segment1_->tier() != Tier::Ion);
     MOZ_RELEASE_ASSERT(!segment2_.get());
@@ -828,7 +836,7 @@ Code::bestTier() const
     return segment1_->tier();
 }
 
-const CodeSegment&
+const ModuleSegment&
 Code::segment(Tier tier) const
 {
     switch (tier) {
@@ -851,8 +859,8 @@ bool
 Code::containsCodePC(const void* pc) const
 {
     for (Tier t : tiers()) {
-        const CodeSegment& cs = segment(t);
-        if (cs.containsCodePC(pc))
+        const ModuleSegment& ms = segment(t);
+        if (ms.containsCodePC(pc))
             return true;
     }
     return false;
@@ -1080,16 +1088,16 @@ Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const Link
     if (!cursor)
         return nullptr;
 
-    UniqueCodeSegment codeSegment = js::MakeUnique<CodeSegment>();
-    if (!codeSegment)
+    UniqueModuleSegment moduleSegment = js::MakeUnique<ModuleSegment>();
+    if (!moduleSegment)
         return nullptr;
 
-    cursor = codeSegment->deserialize(cursor, *bytecode, linkData.linkData(Tier::Serialized),
-                                      metadata);
+    cursor = moduleSegment->deserialize(cursor, *bytecode, linkData.linkData(Tier::Serialized),
+                                        metadata);
     if (!cursor)
         return nullptr;
 
-    segment1_ = takeOwnership(Move(codeSegment));
+    segment1_ = takeOwnership(Move(moduleSegment));
     metadata_ = &metadata;
 
     if (!jumpTables_.init(CompileMode::Once, *segment1_,

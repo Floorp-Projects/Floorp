@@ -149,6 +149,8 @@ public:
 
   bool ContainsOnlyColoredGlyphs(RefPtr<ScaledFont>& aScaledFont, Color& aColor, std::vector<Glyph>& aGlyphs) override;
 
+  void Dump() override;
+
 protected:
   virtual ~DrawTargetCaptureImpl();
 

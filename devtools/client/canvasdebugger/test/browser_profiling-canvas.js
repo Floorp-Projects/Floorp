@@ -37,7 +37,7 @@ function* ifTestingSupported() {
   for (let i = 0; i < functionCalls.length - 1; i += 2) {
     ok(functionCalls[i].timestamp > 0, "The timestamp of the called function is larger than 0.");
     ok(functionCalls[i].timestamp < currentTime, "The timestamp has been minus the frame start time.");
-    ok(functionCalls[i + 1].timestamp > functionCalls[i].timestamp, "The timestamp of the called function is correct.");
+    ok(functionCalls[i + 1].timestamp >= functionCalls[i].timestamp, "The timestamp of the called function is correct.");
   }
 
   yield removeTab(target.tab);

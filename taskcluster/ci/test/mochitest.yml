@@ -167,8 +167,8 @@ mochitest-chrome:
             default: default
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-16/debug: 4
-            android.*: 2
+            android-4.3-arm7-api-16/debug: 8
+            android.*: 4
             default: 3
     max-run-time: 3600
     e10s: false

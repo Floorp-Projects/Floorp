@@ -1855,7 +1855,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_deflexical(GET_UINT32_INDEX(pc));
 
       case JSOP_DEFFUN:
-        return jsop_deffun(GET_UINT32_INDEX(pc));
+        return jsop_deffun();
 
       case JSOP_EQ:
       case JSOP_NE:
@@ -12447,7 +12447,7 @@ IonBuilder::jsop_deflexical(uint32_t index)
 }
 
 AbortReasonOr<Ok>
-IonBuilder::jsop_deffun(uint32_t index)
+IonBuilder::jsop_deffun()
 {
     MOZ_ASSERT(usesEnvironmentChain());
 

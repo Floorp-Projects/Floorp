@@ -49,12 +49,12 @@ EnsureSignalHandlers(JSContext* cx);
 bool
 HaveSignalHandlers();
 
-class CodeSegment;
+class ModuleSegment;
 
 // Returns true if wasm code is on top of the activation stack (and fills out
 // the code segment outparam in this case), or false otherwise.
 bool
-InInterruptibleCode(JSContext* cx, uint8_t* pc, const CodeSegment** cs);
+InInterruptibleCode(JSContext* cx, uint8_t* pc, const ModuleSegment** ms);
 
 #if defined(XP_DARWIN)
 // On OSX we are forced to use the lower-level Mach exception mechanism instead

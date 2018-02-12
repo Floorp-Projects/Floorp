@@ -33,7 +33,7 @@ public:
 
     if (!aTime.IsNull()) {
       result.SetValue(
-        nsRFPService::ReduceTimePrecisionAsMSecs(aTime.Value().ToMilliseconds())
+        nsRFPService::ReduceTimePrecisionAsMSecs(aTime.Value().ToMilliseconds(), TimerPrecisionType::RFPOnly)
       );
     }
 

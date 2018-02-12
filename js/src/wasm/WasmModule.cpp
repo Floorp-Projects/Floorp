@@ -279,7 +279,7 @@ Module::notifyCompilationListeners()
 
 void
 Module::finishTier2(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
-                    UniqueCodeSegment code2, ModuleEnvironment* env2)
+                    UniqueModuleSegment code2, ModuleEnvironment* env2)
 {
     // Install the data in the data structures. They will not be visible yet.
 
@@ -648,12 +648,12 @@ Module::extractCode(JSContext* cx, Tier tier, MutableHandleValue vp) const
         return true;
     }
 
-    const CodeSegment& codeSegment = code_->segment(tier);
-    RootedObject code(cx, JS_NewUint8Array(cx, codeSegment.length()));
+    const ModuleSegment& moduleSegment = code_->segment(tier);
+    RootedObject code(cx, JS_NewUint8Array(cx, moduleSegment.length()));
     if (!code)
         return false;
 
-    memcpy(code->as<TypedArrayObject>().viewDataUnshared(), codeSegment.base(), codeSegment.length());
+    memcpy(code->as<TypedArrayObject>().viewDataUnshared(), moduleSegment.base(), moduleSegment.length());
 
     RootedValue value(cx, ObjectValue(*code));
     if (!JS_DefineProperty(cx, result, "code", value, JSPROP_ENUMERATE))
@@ -1167,21 +1167,21 @@ Module::instantiate(JSContext* cx,
         // bytes that we keep around for debugging instead, because the debugger
         // may patch the pre-linked code at any time.
         if (!codeIsBusy_.compareExchange(false, true)) {
-            auto codeSegment = CodeSegment::create(Tier::Baseline,
-                                                   *unlinkedCodeForDebugging_,
-                                                   *bytecode_,
-                                                   linkData_.linkData(Tier::Baseline),
-                                                   metadata());
-            if (!codeSegment) {
+            auto moduleSegment = ModuleSegment::create(Tier::Baseline,
+                                                       *unlinkedCodeForDebugging_,
+                                                       *bytecode_,
+                                                       linkData_.linkData(Tier::Baseline),
+                                                       metadata());
+            if (!moduleSegment) {
                 ReportOutOfMemory(cx);
                 return false;
             }
 
             JumpTables jumpTables;
-            if (!jumpTables.init(CompileMode::Once, *codeSegment, metadata(Tier::Baseline).codeRanges))
+            if (!jumpTables.init(CompileMode::Once, *moduleSegment, metadata(Tier::Baseline).codeRanges))
                 return false;
 
-            code = js_new<Code>(Move(codeSegment), metadata(), Move(jumpTables));
+            code = js_new<Code>(Move(moduleSegment), metadata(), Move(jumpTables));
             if (!code) {
                 ReportOutOfMemory(cx);
                 return false;

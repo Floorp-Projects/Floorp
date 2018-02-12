@@ -237,8 +237,13 @@ function sanityCheckEvent(evt)
   is(evt.bubbles, false, "Event should not bubble");
   is(evt.cancelable, false, "Event should not be cancelable");
   if (SpecialPowers.getBoolPref("dom.event.highrestimestamp.enabled")) {
+    var lessThanOrEqualsAllowed = SpecialPowers.getBoolPref("privacy.reduceTimerPrecision");
     var now = window.performance.now();
-    ok(evt.timeStamp > 0 && evt.timeStamp < now,
+    ok(evt.timeStamp > 0 &&
+       (
+        (evt.timeStamp < now && !lessThanOrEqualsAllowed) ||
+        (evt.timeStamp <= now && lessThanOrEqualsAllowed)
+       ),
        "Event timeStamp (" + evt.timeStamp + ") should be > 0 but " +
        "before the current time (" + now + ")");
   } else {

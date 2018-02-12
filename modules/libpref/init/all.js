@@ -1412,7 +1412,7 @@ pref("privacy.resistFingerprinting", false);
 //   File.lastModified, audioContext.currentTime, canvas.captureStream.currentTime
 pref("privacy.reduceTimerPrecision", true);
 // Dynamically tune the resolution of the timer reduction for both of the two above prefs
-pref("privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 20);
+pref("privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 2000);
 // Lower the priority of network loads for resources on the tracking protection list.
 // Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
 #ifdef NIGHTLY_BUILD
@@ -5958,3 +5958,4 @@ pref("layers.omtp.paint-workers", -1);
 pref("layers.omtp.paint-workers", 1);
 #endif
 pref("layers.omtp.release-capture-on-main-thread", false);
+pref("layers.omtp.dump-capture", false);

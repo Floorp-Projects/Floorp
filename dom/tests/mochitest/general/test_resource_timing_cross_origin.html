@@ -21,7 +21,9 @@ SimpleTest.waitForExplicitFinish();
 
 // Resource timing is prefed off by default, so we had to use this workaround
 var subwindow = null;
-SpecialPowers.pushPrefEnv({"set": [["dom.enable_resource_timing", true]]}, start);
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.enable_resource_timing", true],
+  ["privacy.reduceTimerPrecision", false]]}, start);
 
 function start() {
   subwindow = window.open("resource_timing_cross_origin.html");
