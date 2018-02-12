@@ -9048,12 +9048,6 @@ class LWasmCallBase : public LInstruction
         MOZ_ASSERT(index < numOperands());
         operands_[index] = a;
     }
-    LDefinition* getTemp(size_t index) override {
-        MOZ_CRASH("no temps");
-    }
-    void setTemp(size_t index, const LDefinition& a) override {
-        MOZ_CRASH("no temps");
-    }
     size_t numSuccessors() const override {
         return 0;
     }
