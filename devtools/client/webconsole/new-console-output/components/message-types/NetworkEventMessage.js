@@ -77,7 +77,7 @@ function NetworkEventMessage({
 
   if (httpVersion && status && statusText !== undefined && totalTime !== undefined) {
     let statusCodeDocURL = getHTTPStatusCodeURL(status.toString(), "webconsole");
-    statusCode = dom.a({
+    statusCode = dom.span({
       className: "status-code",
       "data-code": status,
       title: LEARN_MORE,
