@@ -119,14 +119,14 @@ private:
   extern NS_IMETHODIMP NS_CI_INTERFACE_GETTER_NAME(_class)                    \
      (uint32_t *, nsIID ***);
 
-#define NS_IMPL_CLASSINFO(_class, _getscriptablehelper, _flags, _cid)   \
-  NS_DECL_CI_INTERFACE_GETTER(_class)                                   \
-  static const GenericClassInfo::ClassInfoData k##_class##ClassInfoData = { \
-    NS_CI_INTERFACE_GETTER_NAME(_class),                                \
-    _getscriptablehelper,                                               \
-    _flags | nsIClassInfo::SINGLETON_CLASSINFO,                         \
-    _cid,                                                               \
-  };                                                                    \
+#define NS_IMPL_CLASSINFO(_class, _getscriptablehelper, _flags, _cid)         \
+  NS_DECL_CI_INTERFACE_GETTER(_class)                                         \
+  static const GenericClassInfo::ClassInfoData k##_class##ClassInfoData = {   \
+    NS_CI_INTERFACE_GETTER_NAME(_class),                                      \
+    _getscriptablehelper,                                                     \
+    _flags | nsIClassInfo::SINGLETON_CLASSINFO,                               \
+    _cid,                                                                     \
+  };                                                                          \
   mozilla::AlignedStorage2<GenericClassInfo> k##_class##ClassInfoDataPlace;   \
   nsIClassInfo* NS_CLASSINFO_NAME(_class) = nullptr;
 
@@ -143,7 +143,7 @@ NS_IMETHODIMP                                                                 \
 NS_CI_INTERFACE_GETTER_NAME(_class)(uint32_t *count, nsIID ***array)          \
 {                                                                             \
     *count = _c;                                                              \
-    *array = (nsIID **)moz_xmalloc(sizeof (nsIID *) * _c);                \
+    *array = (nsIID **)moz_xmalloc(sizeof (nsIID *) * _c);                    \
     uint32_t i = 0;
 
 #define NS_CLASSINFO_HELPER_ENTRY(_interface)                                 \

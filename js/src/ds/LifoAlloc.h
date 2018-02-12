@@ -224,8 +224,39 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk>
         sizeof(uintptr_t) == 4 ? uintptr_t(0x4c69666f) : uintptr_t(0x4c69666f42756d70);
 #endif
 
+    // Poison the memory with memset, in order to catch errors due to
+    // use-after-free, with undefinedChunkMemory pattern, or to catch
+    // use-before-init with uninitializedChunkMemory.
+#if defined(DEBUG)
+# define LIFO_HAVE_MEM_CHECKS 1
+
     // Byte used for poisoning unused memory after releasing memory.
     static constexpr int undefinedChunkMemory = 0xcd;
+    // Byte used for poisoning uninitialized memory after reserving memory.
+    static constexpr int uninitializedChunkMemory = 0xce;
+
+# define LIFO_MAKE_MEM_NOACCESS(addr, size)      \
+    do {                                         \
+        uint8_t* base = (addr);                  \
+        size_t sz = (size);                      \
+        memset(base, undefinedChunkMemory, sz);  \
+        MOZ_MAKE_MEM_NOACCESS(base, sz);         \
+    } while (0)
+
+# define LIFO_MAKE_MEM_UNDEFINED(addr, size)         \
+    do {                                             \
+        uint8_t* base = (addr);                      \
+        size_t sz = (size);                          \
+        MOZ_MAKE_MEM_UNDEFINED(base, sz);            \
+        memset(base, uninitializedChunkMemory, sz);  \
+        MOZ_MAKE_MEM_UNDEFINED(base, sz);            \
+    } while(0)
+
+#elif defined(MOZ_HAVE_MEM_CHECKS)
+# define LIFO_HAVE_MEM_CHECKS 1
+# define LIFO_MAKE_MEM_NOACCESS(addr, size) MOZ_MAKE_MEM_NOACCESS((addr), (size))
+# define LIFO_MAKE_MEM_UNDEFINED(addr, size) MOZ_MAKE_MEM_UNDEFINED((addr), (size))
+#endif
 
     void assertInvariants() {
         MOZ_DIAGNOSTIC_ASSERT(magic_ == magicNumber);
@@ -253,6 +284,12 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk>
                    "Checked that the baked-in value correspond to computed value");
 
         assertInvariants();
+#if defined(LIFO_HAVE_MEM_CHECKS)
+        // The memory is freshly allocated and marked as undefined by the
+        // allocator of the BumpChunk. Instead, we mark this memory as
+        // no-access, as it has not been allocated within the BumpChunk.
+        LIFO_MAKE_MEM_NOACCESS(bump_, capacity_ - bump_);
+#endif
     }
 
     // Cast |this| into a uint8_t* pointer.
@@ -274,22 +311,14 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk>
         assertInvariants();
         MOZ_ASSERT(begin() <= newBump);
         MOZ_ASSERT(newBump <= capacity_);
-#if defined(DEBUG) || defined(MOZ_HAVE_MEM_CHECKS)
-        uint8_t* prev = bump_;
+#if defined(LIFO_HAVE_MEM_CHECKS)
+        // Poison/Unpoison memory that we just free'd/allocated.
+        if (bump_ > newBump)
+            LIFO_MAKE_MEM_NOACCESS(newBump, bump_ - newBump);
+        else if (newBump > bump_)
+            LIFO_MAKE_MEM_UNDEFINED(bump_, newBump - bump_);
 #endif
         bump_ = newBump;
-#ifdef DEBUG
-        // Clobber the now-free space.
-        if (prev > bump_)
-            memset(bump_, undefinedChunkMemory, prev - bump_);
-#endif
-#if defined(MOZ_HAVE_MEM_CHECKS)
-        // Poison/Unpoison memory that we just free'd/allocated.
-        if (prev > bump_)
-            MOZ_MAKE_MEM_NOACCESS(bump_, prev - bump_);
-        else if (bump_ > prev)
-            MOZ_MAKE_MEM_UNDEFINED(prev, bump_ - prev);
-#endif
     }
 
   public:

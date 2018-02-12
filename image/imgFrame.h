@@ -527,8 +527,6 @@ private:
   RefPtr<imgFrame> mFrame;
 };
 
-void MarkSurfaceShared(gfx::SourceSurface* aSurface);
-
 } // namespace image
 } // namespace mozilla
 

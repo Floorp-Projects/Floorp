@@ -165,13 +165,6 @@ impl U2FManager {
             ));
         }
 
-        if key_handles.len() < 1 {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "No key handles given",
-            ));
-        }
-
         for key_handle in &key_handles {
             if key_handle.credential.len() > 256 {
                 return Err(io::Error::new(

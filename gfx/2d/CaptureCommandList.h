@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "DrawCommand.h"
+#include "Logging.h"
 
 namespace mozilla {
 namespace gfx {
@@ -86,6 +87,15 @@ public:
     uint8_t* mCurrent;
     uint8_t* mEnd;
   };
+
+  void Log(TreeLog& aStream)
+  {
+    for (iterator iter(*this); !iter.Done(); iter.Next()) {
+      DrawingCommand* cmd = iter.Get();
+      cmd->Log(aStream);
+      aStream << "\n";
+    }
+  }
 
 private:
   CaptureCommandList(const CaptureCommandList& aOther) = delete;

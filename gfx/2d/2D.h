@@ -1464,6 +1464,8 @@ class DrawTargetCapture : public DrawTarget
 public:
   virtual bool IsCaptureDT() const override { return true; }
 
+  virtual void Dump() = 0;
+
   /**
    * Returns true if the recording only contains FillGlyph calls with
    * a single font and color. Returns the list of Glyphs along with
