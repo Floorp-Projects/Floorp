@@ -7994,8 +7994,10 @@ var gIdentityHandler = {
 
       for (let state of SitePermissions.getAvailableStates(aPermission.id)) {
         let menuitem = document.createElement("menuitem");
+        // We need to correctly display the default/unknown state, which has its
+        // own integer value (0) but represents one of the other states.
         if (state == SitePermissions.getDefault(aPermission.id)) {
-          menuitem.setAttribute("value", 0);
+          menuitem.setAttribute("value", "0");
         } else {
           menuitem.setAttribute("value", state);
         }
@@ -8004,7 +8006,12 @@ var gIdentityHandler = {
       }
 
       menulist.appendChild(menupopup);
-      menulist.setAttribute("value", aPermission.state);
+
+      if (aPermission.state == SitePermissions.getDefault(aPermission.id)) {
+        menulist.value = "0";
+      } else {
+        menulist.value = aPermission.state;
+      }
 
       // Avoiding listening to the "select" event on purpose. See Bug 1404262.
       menulist.addEventListener("command", () => {
