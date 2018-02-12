@@ -22,7 +22,6 @@ config = {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/" + MOZILLA_DIR,
     },
-    "update_gecko_source_to_enUS": False,
     "nightly_build": True,
     "repos": [{
         "vcs": "hg",
