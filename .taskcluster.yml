@@ -69,7 +69,7 @@ tasks:
       scopes:
         $if: 'tasks_for == "hg-push"'
         then:
-          - 'assume:repo:${repoUrl[8:]}:*'
+          - 'assume:repo:${repoUrl[8:]}:branch:default'
           - 'queue:route:notify.email.${ownerEmail}.*'
         else:
           $if: 'tasks_for == "action"'
