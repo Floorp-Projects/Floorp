@@ -22,6 +22,7 @@ use profiler::{GpuCacheProfileCounters, TextureCacheProfileCounters};
 use resource_cache::{FontInstanceMap,ResourceCache, TiledImageMap};
 use scene::{Scene, StackingContextHelpers, ScenePipeline, SceneProperties};
 use tiling::{CompositeOps, Frame};
+use renderer::PipelineInfo;
 
 #[derive(Copy, Clone, PartialEq, PartialOrd, Debug, Eq, Ord)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -1101,6 +1102,7 @@ impl FrameContext {
 
         self.clip_scroll_tree
             .finalize_and_apply_pending_scroll_offsets(old_scrolling_states);
+
         frame_builder
     }
 
@@ -1108,9 +1110,16 @@ impl FrameContext {
         self.pipeline_epoch_map.insert(pipeline_id, epoch);
     }
 
-    pub fn make_rendered_document(&self, frame: Frame) -> RenderedDocument {
+    pub fn make_rendered_document(&mut self, frame: Frame, removed_pipelines: Vec<PipelineId>) -> RenderedDocument {
         let nodes_bouncing_back = self.clip_scroll_tree.collect_nodes_bouncing_back();
-        RenderedDocument::new(self.pipeline_epoch_map.clone(), nodes_bouncing_back, frame)
+        RenderedDocument::new(
+            PipelineInfo {
+                epochs: self.pipeline_epoch_map.clone(),
+                removed_pipelines,
+            },
+            nodes_bouncing_back,
+            frame
+        )
     }
 
     //TODO: this can probably be simplified if `build()` is called directly by RB.
@@ -1126,7 +1135,8 @@ impl FrameContext {
         pan: WorldPoint,
         texture_cache_profile: &mut TextureCacheProfileCounters,
         gpu_cache_profile: &mut GpuCacheProfileCounters,
-        scene_properties: &SceneProperties,
+		scene_properties: &SceneProperties,
+        removed_pipelines: Vec<PipelineId>,
     ) -> (HitTester, RenderedDocument) {
         let frame = frame_builder.build(
             resource_cache,
@@ -1145,6 +1155,6 @@ impl FrameContext {
 
         let hit_tester = frame_builder.create_hit_tester(&self.clip_scroll_tree);
 
-        (hit_tester, self.make_rendered_document(frame))
+        (hit_tester, self.make_rendered_document(frame, removed_pipelines))
     }
 }

@@ -10,7 +10,7 @@ thread_profiler = "0.1.1"
 euclid = "0.16"
 app_units = "0.6"
 gleam = "0.4.20"
-log = "0.3"
+log = "0.4"
 
 [dependencies.webrender]
 path = "../webrender"

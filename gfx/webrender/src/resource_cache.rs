@@ -209,10 +209,10 @@ where
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-struct ImageRequest {
-    key: ImageKey,
-    rendering: ImageRendering,
-    tile: Option<TileOffset>,
+pub struct ImageRequest {
+    pub key: ImageKey,
+    pub rendering: ImageRendering,
+    pub tile: Option<TileOffset>,
 }
 
 impl Into<BlobImageRequest> for ImageRequest {
@@ -538,23 +538,16 @@ impl ResourceCache {
 
     pub fn request_image(
         &mut self,
-        key: ImageKey,
-        rendering: ImageRendering,
-        tile: Option<TileOffset>,
+        request: ImageRequest,
         gpu_cache: &mut GpuCache,
     ) {
         debug_assert_eq!(self.state, State::AddResources);
-        let request = ImageRequest {
-            key,
-            rendering,
-            tile,
-        };
 
-        let template = match self.resources.image_templates.get(key) {
+        let template = match self.resources.image_templates.get(request.key) {
             Some(template) => template,
             None => {
                 warn!("ERROR: Trying to render deleted / non-existent key");
-                debug!("key={:?}", key);
+                debug!("key={:?}", request.key);
                 return
             }
         };
@@ -734,26 +727,19 @@ impl ResourceCache {
     #[inline]
     pub fn get_cached_image(
         &self,
-        image_key: ImageKey,
-        image_rendering: ImageRendering,
-        tile: Option<TileOffset>,
+        request: ImageRequest,
     ) -> Result<CacheItem, ()> {
         debug_assert_eq!(self.state, State::QueryResources);
-        let key = ImageRequest {
-            key: image_key,
-            rendering: image_rendering,
-            tile,
-        };
 
         // TODO(Jerry): add a debug option to visualize the corresponding area for
         // the Err() case of CacheItem.
-        match *self.cached_images.get(&key) {
-          Ok(ref image_info) => {
-              Ok(self.texture_cache.get(&image_info.texture_cache_handle))
-          }
-          Err(_) => {
-              Err(())
-          }
+        match *self.cached_images.get(&request) {
+            Ok(ref image_info) => {
+                Ok(self.texture_cache.get(&image_info.texture_cache_handle))
+            }
+            Err(_) => {
+                Err(())
+            }
         }
     }
 

@@ -24,8 +24,8 @@ uniform sampler2DArray sSharedCacheA8;
 
 uniform sampler2D sGradients;
 
-vec2 clamp_rect(vec2 point, RectWithSize rect) {
-    return clamp(point, rect.p0, rect.p0 + rect.size);
+vec2 clamp_rect(vec2 pt, RectWithSize rect) {
+    return clamp(pt, rect.p0, rect.p0 + rect.size);
 }
 
 float distance_to_line(vec2 p0, vec2 perp_dir, vec2 p) {
@@ -481,11 +481,11 @@ Primitive load_primitive() {
 // Return the intersection of the plane (set up by "normal" and "point")
 // with the ray (set up by "ray_origin" and "ray_dir"),
 // writing the resulting scaler into "t".
-bool ray_plane(vec3 normal, vec3 point, vec3 ray_origin, vec3 ray_dir, out float t)
+bool ray_plane(vec3 normal, vec3 pt, vec3 ray_origin, vec3 ray_dir, out float t)
 {
     float denom = dot(normal, ray_dir);
     if (abs(denom) > 1e-6) {
-        vec3 d = point - ray_origin;
+        vec3 d = pt - ray_origin;
         t = dot(d, normal) / denom;
         return t >= 0.0;
     }
