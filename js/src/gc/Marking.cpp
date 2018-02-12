@@ -33,11 +33,11 @@
 #include "vm/UnboxedObject.h"
 #include "wasm/WasmJS.h"
 
-#include "jscompartmentinlines.h"
 #include "jsgcinlines.h"
 
 #include "gc/Iteration-inl.h"
 #include "gc/Nursery-inl.h"
+#include "vm/JSCompartment-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/String-inl.h"
 #include "vm/UnboxedObject-inl.h"

@@ -21,10 +21,10 @@
 #include "mozilla/CheckedInt.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 #include "jsprf.h"
 
 #include "jit/JitOptions.h"
+#include "vm/JSCompartment.h"
 #include "wasm/WasmBinaryIterator.h"
 
 using namespace js;

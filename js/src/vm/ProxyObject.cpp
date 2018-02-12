@@ -6,11 +6,10 @@
 
 #include "vm/ProxyObject.h"
 
-#include "jscompartment.h"
-
 #include "gc/Allocator.h"
 #include "gc/GCTrace.h"
 #include "proxy/DeadObjectProxy.h"
+#include "vm/JSCompartment.h"
 
 #include "gc/ObjectKind-inl.h"
 #include "vm/JSObject-inl.h"

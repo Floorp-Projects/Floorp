@@ -28,7 +28,6 @@
 #include <processthreadsapi.h>
 #endif // XP_WIN
 
-#include "jscompartment.h"
 #include "jsdtoa.h"
 #include "jsexn.h"
 #include "jsiter.h"
@@ -47,6 +46,7 @@
 #include "js/CharacterEncoding.h"
 #include "vm/ErrorReporting.h"
 #include "vm/HelperThreads.h"
+#include "vm/JSCompartment.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"

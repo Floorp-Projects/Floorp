@@ -10,9 +10,9 @@
 #include "jit/SharedICHelpers.h"
 
 #include "jsboolinlines.h"
-#include "jscompartmentinlines.h"
 
 #include "jit/MacroAssembler-inl.h"
+#include "vm/JSCompartment-inl.h"
 
 using namespace js;
 using namespace js::jit;

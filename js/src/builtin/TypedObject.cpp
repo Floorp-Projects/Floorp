@@ -9,13 +9,13 @@
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 
-#include "jscompartment.h"
 #include "jsutil.h"
 
 #include "builtin/SIMD.h"
 #include "gc/Marking.h"
 #include "js/Vector.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSCompartment.h"
 #include "vm/JSFunction.h"
 #include "vm/String.h"
 #include "vm/StringBuffer.h"

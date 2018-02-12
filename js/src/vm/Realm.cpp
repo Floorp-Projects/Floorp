@@ -7,11 +7,11 @@
 #include "js/Realm.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 
 #include "vm/GlobalObject.h"
+#include "vm/JSCompartment.h"
 
-#include "jscompartmentinlines.h"
+#include "vm/JSCompartment-inl.h"
 
 using namespace js;
 

@@ -8,7 +8,6 @@
 #define jscntxtinlines_h
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 
 #include "jsiter.h"
 
@@ -17,6 +16,7 @@
 #include "proxy/Proxy.h"
 #include "vm/HelperThreads.h"
 #include "vm/Interpreter.h"
+#include "vm/JSCompartment.h"
 #include "vm/Symbol.h"
 
 namespace js {

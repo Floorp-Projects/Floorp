@@ -15,7 +15,6 @@
 #include <math.h>
 
 #include "jsapi.h"
-#include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jshashutil.h"
 #include "jsmath.h"
@@ -29,6 +28,7 @@
 #include "js/Vector.h"
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
+#include "vm/JSCompartment.h"
 #include "vm/JSScript.h"
 #include "vm/SavedFrame.h"
 #include "vm/StringBuffer.h"

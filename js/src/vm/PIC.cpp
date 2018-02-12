@@ -7,11 +7,11 @@
 #include "vm/PIC.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSCompartment.h"
 #include "vm/JSObject.h"
 #include "vm/SelfHosting.h"
 

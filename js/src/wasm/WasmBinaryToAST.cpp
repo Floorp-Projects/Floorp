@@ -23,8 +23,8 @@
 #include "mozilla/Sprintf.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 
+#include "vm/JSCompartment.h"
 #include "wasm/WasmBinaryIterator.h"
 #include "wasm/WasmValidate.h"
 

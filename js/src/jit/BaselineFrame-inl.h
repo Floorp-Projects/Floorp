@@ -10,9 +10,9 @@
 #include "jit/BaselineFrame.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 
 #include "vm/EnvironmentObject.h"
+#include "vm/JSCompartment.h"
 
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/JSScript-inl.h"

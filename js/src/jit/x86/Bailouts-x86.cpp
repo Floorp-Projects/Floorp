@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 
 #include "jit/Bailouts.h"
 #include "jit/JitCompartment.h"
+#include "vm/JSCompartment.h"
 
 using namespace js;
 using namespace js::jit;
