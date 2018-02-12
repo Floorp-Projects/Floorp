@@ -18,7 +18,7 @@ import subprocess
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
-from mozharness.base.errors import BaseErrorList, MakefileErrorList
+from mozharness.base.errors import MakefileErrorList
 from mozharness.base.script import BaseScript
 from mozharness.base.transfer import TransferMixin
 from mozharness.base.vcs.vcsbase import VCSMixin
@@ -214,7 +214,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         self.bootstrap_env = None
         self.upload_env = None
         self.revision = None
-        self.enUS_revision = None
         self.version = None
         self.upload_urls = {}
         self.locales_property = {}
@@ -472,27 +471,11 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
             revision = self.buildbot_config['sourcestamp']['revision']
         elif self.buildbot_config and self.buildbot_config.get('revision'):
             revision = self.buildbot_config['revision']
-        elif config.get("update_gecko_source_to_enUS", True):
-            revision = self._query_enUS_revision()
 
         if not revision:
             self.fatal("Can't determine revision!")
         self.revision = str(revision)
         return self.revision
-
-    def _query_enUS_revision(self):
-        """Get revision from the objdir.
-        Only valid after setup is run.
-       """
-        if self.enUS_revision:
-            return self.enUS_revision
-        r = re.compile(r"^(gecko|fx)_revision ([0-9a-f]+\+?)$")
-        output = self._query_make_ident_output()
-        for line in output.splitlines():
-            match = r.match(line)
-            if match:
-                self.enUS_revision = match.groups()[1]
-        return self.enUS_revision
 
     def _query_make_variable(self, variable, make_args=None):
         """returns the value of make echo-variable-<variable>
@@ -615,7 +598,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
 
     def setup(self):
         """setup step"""
-        dirs = self.query_abs_dirs()
         self._run_tooltool()
         self._copy_mozconfig()
         self._mach_configure()
@@ -623,30 +605,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         self.make_wget_en_US()
         self.make_unpack_en_US()
         self.download_mar_tools()
-
-        # on try we want the source we already have, otherwise update to the
-        # same as the en-US binary
-        if self.config.get("update_gecko_source_to_enUS", True):
-            revision = self._query_enUS_revision()
-            #  TODO do this through VCSMixin instead of hardcoding hg
-            #  self.update(dest=dirs["abs_mozilla_dir"], revision=revision)
-            hg = self.query_exe("hg")
-            self.run_command([hg, "update", "-r", revision],
-                             cwd=dirs["abs_mozilla_dir"],
-                             env=self.query_bootstrap_env(),
-                             error_list=BaseErrorList,
-                             halt_on_failure=True, fatal_exit_code=3)
-            # if checkout updates CLOBBER file with a newer timestamp,
-            # next make -f client.mk configure  will delete archives
-            # downloaded with make wget_en_US, so just touch CLOBBER file
-            _clobber_file = self._clobber_file()
-            if os.path.exists(_clobber_file):
-                self._touch_file(_clobber_file)
-            # and again...
-            # thanks to the last hg update, we can be on different firefox 'version'
-            # than the one on default,
-            self._mach_configure()
-            self._run_make_in_config_dir()
 
     def _run_make_in_config_dir(self):
         """this step creates nsinstall, needed my make_wget_en_US()

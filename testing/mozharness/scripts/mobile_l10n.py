@@ -25,7 +25,7 @@ except ImportError:
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
-from mozharness.base.errors import BaseErrorList, MakefileErrorList
+from mozharness.base.errors import MakefileErrorList
 from mozharness.base.log import OutputParser
 from mozharness.base.transfer import TransferMixin
 from mozharness.mozilla.buildbot import BuildbotMixin
@@ -162,7 +162,6 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         self.buildid = None
         self.make_ident_output = None
         self.repack_env = None
-        self.enUS_revision = None
         self.revision = None
         self.upload_env = None
         self.version = None
@@ -293,27 +292,11 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
             revision = self.buildbot_config['sourcestamp']['revision']
         elif self.buildbot_config and self.buildbot_config.get('revision'):
             revision = self.buildbot_config['revision']
-        elif config.get("update_gecko_source_to_enUS", True):
-            revision = self._query_enUS_revision()
 
         if not revision:
             self.fatal("Can't determine revision!")
         self.revision = str(revision)
         return self.revision
-
-    def _query_enUS_revision(self):
-        """Get revision from the objdir.
-        Only valid after setup is run.
-       """
-        if self.enUS_revision:
-            return self.enUS_revision
-        r = re.compile(r"^gecko_revision ([0-9a-f]+\+?)$")
-        output = self._query_make_ident_output()
-        for line in output.splitlines():
-            match = r.match(line)
-            if match:
-                self.enUS_revision = match.groups()[0]
-        return self.enUS_revision
 
     def _query_make_variable(self, variable, make_args=None):
         make = self.query_exe('make')
@@ -496,24 +479,6 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
                            env=env,
                            error_list=MakefileErrorList,
                            halt_on_failure=True)
-
-        # on try we want the source we already have, otherwise update to the
-        # same as the en-US binary
-        if self.config.get("update_gecko_source_to_enUS", True):
-            revision = self._query_enUS_revision()
-            if not revision:
-                self.fatal("Can't determine revision!")
-            hg = self.query_exe("hg")
-            # TODO do this through VCSMixin instead of hardcoding hg
-            self.run_command_m([hg, "update", "-r", revision],
-                               cwd=dirs["abs_mozilla_dir"],
-                               env=env,
-                               error_list=BaseErrorList,
-                               halt_on_failure=True)
-            self.set_buildbot_property('revision', revision, write_to_file=True)
-            # Configure again since the hg update may have invalidated it.
-            buildid = self.query_buildid()
-            self._setup_configure(buildid=buildid)
 
     def repack(self):
         # TODO per-locale logs and reporting.

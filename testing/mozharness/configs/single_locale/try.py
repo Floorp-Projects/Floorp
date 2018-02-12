@@ -5,7 +5,6 @@ config = {
     "branch": "try",
     "en_us_binary_url": "http://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central",
     "update_channel": "nightly",
-    "update_gecko_source_to_enUS": False,
 
     # l10n
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
