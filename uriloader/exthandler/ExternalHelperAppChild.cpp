@@ -43,13 +43,28 @@ ExternalHelperAppChild::OnDataAvailable(nsIRequest *request,
   if (NS_FAILED(mStatus))
     return mStatus;
 
-  nsCString data;
-  nsresult rv = NS_ReadInputStreamToString(input, data, count);
-  if (NS_FAILED(rv))
-    return rv;
+  static uint32_t const kCopyChunkSize = 128 * 1024;
+  uint32_t toRead = std::min<uint32_t>(count, kCopyChunkSize);
 
-  if (!SendOnDataAvailable(data, offset, count))
-    return NS_ERROR_UNEXPECTED;
+  nsCString data;
+  if (NS_WARN_IF(!data.SetCapacity(toRead, fallible))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  while (count) {
+    nsresult rv = NS_ReadInputStreamToString(input, data, toRead);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (NS_WARN_IF(!SendOnDataAvailable(data, offset, toRead))) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    count -= toRead;
+    offset += toRead;
+    toRead = std::min<uint32_t>(count, kCopyChunkSize);
+  }
 
   return NS_OK;
 }
