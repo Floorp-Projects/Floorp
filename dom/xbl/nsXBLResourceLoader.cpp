@@ -198,8 +198,8 @@ nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet,
       MOZ_CRASH("old style system disabled");
 #endif
     } else {
-      mResources->ComputeServoStyleSet(
-        mBoundDocument->GetShell()->GetPresContext());
+      mResources->ComputeServoStyles(
+        *mBoundDocument->GetShell()->StyleSet()->AsServo());
     }
 
     // XXX Check for mPendingScripts when scripts also come online.

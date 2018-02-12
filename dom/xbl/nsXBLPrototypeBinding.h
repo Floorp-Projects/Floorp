@@ -135,8 +135,21 @@ public:
 #ifdef MOZ_OLD_STYLE
   nsIStyleRuleProcessor* GetRuleProcessor();
 #endif
-  void ComputeServoStyleSet(nsPresContext* aPresContext);
-  mozilla::ServoStyleSet* GetServoStyleSet() const;
+  const RawServoAuthorStyles* GetServoStyles() const
+  {
+    return mResources ? mResources->GetServoStyles() : nullptr;
+  }
+  RawServoAuthorStyles* GetServoStyles()
+  {
+    return mResources
+      ? const_cast<RawServoAuthorStyles*>(mResources->GetServoStyles())
+      : nullptr;
+  }
+
+  mozilla::ServoStyleRuleMap* GetServoStyleRuleMap()
+  {
+    return mResources ? mResources->GetServoStyleRuleMap() : nullptr;
+  }
 
   nsresult FlushSkinSheets();
 
