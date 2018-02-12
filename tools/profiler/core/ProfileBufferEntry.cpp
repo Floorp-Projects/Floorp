@@ -232,28 +232,26 @@ private:
   uint32_t mNextFreeIndex;
 };
 
-class StreamOptimizationAttemptsOp : public JS::ForEachTrackedOptimizationAttemptOp
+template<typename LambdaT>
+class ForEachTrackedOptimizationAttemptsLambdaOp
+  : public JS::ForEachTrackedOptimizationAttemptOp
 {
-  SpliceableJSONWriter& mWriter;
-  UniqueJSONStrings& mUniqueStrings;
-
 public:
-  StreamOptimizationAttemptsOp(SpliceableJSONWriter& aWriter, UniqueJSONStrings& aUniqueStrings)
-    : mWriter(aWriter),
-      mUniqueStrings(aUniqueStrings)
-  { }
-
-  void operator()(JS::TrackedStrategy strategy, JS::TrackedOutcome outcome) override {
-    enum Schema : uint32_t {
-      STRATEGY = 0,
-      OUTCOME = 1
-    };
-
-    AutoArraySchemaWriter writer(mWriter, mUniqueStrings);
-    writer.StringElement(STRATEGY, JS::TrackedStrategyString(strategy));
-    writer.StringElement(OUTCOME, JS::TrackedOutcomeString(outcome));
+  explicit ForEachTrackedOptimizationAttemptsLambdaOp(LambdaT&& aLambda)
+    : mLambda(Move(aLambda))
+  {}
+  void operator()(JS::TrackedStrategy aStrategy, JS::TrackedOutcome aOutcome) override {
+    mLambda(aStrategy, aOutcome);
   }
+private:
+  LambdaT mLambda;
 };
+
+template<typename LambdaT> ForEachTrackedOptimizationAttemptsLambdaOp<LambdaT>
+MakeForEachTrackedOptimizationAttemptsLambdaOp(LambdaT&& aLambda)
+{
+  return ForEachTrackedOptimizationAttemptsLambdaOp<LambdaT>(Move(aLambda));
+}
 
 uint32_t UniqueJSONStrings::GetOrAddIndex(const char* aStr)
 {
@@ -462,8 +460,18 @@ StreamJITFrameOptimizations(SpliceableJSONWriter& aWriter,
 
       aWriter.StartArrayProperty("data");
       {
-        StreamOptimizationAttemptsOp attemptOp(aWriter, aUniqueStrings);
-        aJITFrame.forEachOptimizationAttempt(attemptOp, script.address(), &pc);
+        auto op = MakeForEachTrackedOptimizationAttemptsLambdaOp(
+          [&](JS::TrackedStrategy strategy, JS::TrackedOutcome outcome) {
+            enum Schema : uint32_t {
+              STRATEGY = 0,
+              OUTCOME = 1
+            };
+
+            AutoArraySchemaWriter writer(aWriter, aUniqueStrings);
+            writer.StringElement(STRATEGY, JS::TrackedStrategyString(strategy));
+            writer.StringElement(OUTCOME, JS::TrackedOutcomeString(outcome));
+          });
+        aJITFrame.forEachOptimizationAttempt(op, script.address(), &pc);
       }
       aWriter.EndArray();
     }
