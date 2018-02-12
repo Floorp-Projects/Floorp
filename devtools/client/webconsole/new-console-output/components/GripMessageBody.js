@@ -96,7 +96,7 @@ function cleanupStyle(userProvidedStyle, createElement) {
   // Return a style object as expected by React DOM components, e.g.
   // {color: "red"}
   // without forbidden properties and values.
-  return [...dummy.style]
+  return Array.from(dummy.style)
     .filter(name => {
       return allowedStylesRegex.test(name)
         && !forbiddenValuesRegexs.some(regex => regex.test(dummy.style[name]));
