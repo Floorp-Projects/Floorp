@@ -353,7 +353,7 @@ SessionStore.prototype = {
           this._saveTimer = null;
           log("timer-callback, pendingWrite = " + this._pendingWrite);
           if (this._pendingWrite) {
-            this.saveState();
+            this._saveState(true);
           }
         }
         break;
