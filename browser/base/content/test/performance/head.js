@@ -82,9 +82,8 @@ async function withReflowObserver(testFn, expectedReflows = [], win = window) {
     },
 
     reflowInterruptible(start, end) {
-      // We're not interested in interruptible reflows, but might as well take the
-      // opportuntiy to dirty the root frame.
-      dirtyFrameFn();
+      // Interruptible reflows are the reflows caused by the refresh
+      // driver ticking. These are fine.
     },
 
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIReflowObserver,
