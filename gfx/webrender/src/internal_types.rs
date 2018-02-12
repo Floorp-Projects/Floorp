@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ClipId, DeviceUintRect, DocumentId, Epoch};
+use api::{ClipId, DeviceUintRect, DocumentId};
 use api::{ExternalImageData, ExternalImageId};
-use api::{ImageFormat, PipelineId};
+use api::ImageFormat;
 use api::DebugCommand;
 use device::TextureFilter;
+use renderer::PipelineInfo;
 use gpu_cache::GpuCacheUpdateList;
 use fxhash::FxHasher;
 use profiler::BackendProfileCounters;
@@ -131,10 +132,12 @@ impl TextureUpdateList {
 
 /// Mostly wraps a tiling::Frame, adding a bit of extra information.
 pub struct RenderedDocument {
-    /// The last rendered epoch for each pipeline present in the frame.
+    /// The pipeline info contains:
+    /// - The last rendered epoch for each pipeline present in the frame.
     /// This information is used to know if a certain transformation on the layout has
     /// been rendered, which is necessary for reftests.
-    pub pipeline_epoch_map: FastHashMap<PipelineId, Epoch>,
+    /// - Pipelines that were removed from the scene.
+    pub pipeline_info: PipelineInfo,
     /// The layers that are currently affected by the over-scrolling animation.
     pub layers_bouncing_back: FastHashSet<ClipId>,
 
@@ -143,12 +146,12 @@ pub struct RenderedDocument {
 
 impl RenderedDocument {
     pub fn new(
-        pipeline_epoch_map: FastHashMap<PipelineId, Epoch>,
+        pipeline_info: PipelineInfo,
         layers_bouncing_back: FastHashSet<ClipId>,
         frame: tiling::Frame,
     ) -> Self {
         RenderedDocument {
-            pipeline_epoch_map,
+            pipeline_info,
             layers_bouncing_back,
             frame,
         }

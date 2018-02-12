@@ -105,18 +105,6 @@ function startTest() {
 
 addEventListener("load", function() {
   try {
-    // Outside of talos, this throws a security exception which no-op this file.
-    // (It's not required nor allowed for addons since Firefox 17)
-    // It's used inside talos from non-privileged pages (like during tscroll),
-    // and it works because talos disables all/most security measures.
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  } catch (e) {}
-
-  try {
-    /* eslint-disable mozilla/use-chromeutils-import */
-    Components.utils.import("resource://gre/modules/Services.jsm");
-    Services.scriptloader.loadSubScript("chrome://talos-powers-content/content/TalosContentProfiler.js");
-
     TalosContentProfiler.resume("rasterflood_gradient.html loaded", true).then(() => {
       startTest();
     });
@@ -125,4 +113,5 @@ addEventListener("load", function() {
   }
 });
 </script>
+<script type="text/javascript" src="chrome://talos-powers-content/content/TalosContentProfiler.js"></script>
 </html>

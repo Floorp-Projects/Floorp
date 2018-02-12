@@ -168,12 +168,14 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     @WrapForJNI
     private static int start(final String type, final String[] args,
-                             final int crashFd, final int ipcFd) {
-        return INSTANCE.start(type, args, crashFd, ipcFd, /* retry */ false);
+                             final int crashFd, final int ipcFd,
+                             final int crashAnnotationFd) {
+        return INSTANCE.start(type, args, crashFd, ipcFd, crashAnnotationFd, /* retry */ false);
     }
 
     private int start(final String type, final String[] args, final int crashFd,
-                      final int ipcFd, final boolean retry) {
+                      final int ipcFd, final int crashAnnotationFd,
+                      final boolean retry) {
         final ChildConnection connection = getConnection(type);
         final IChildProcess child = connection.bind();
         if (child == null) {
@@ -182,9 +184,11 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
         final ParcelFileDescriptor crashPfd;
         final ParcelFileDescriptor ipcPfd;
+        final ParcelFileDescriptor crashAnnotationPfd;
         try {
             crashPfd = (crashFd >= 0) ? ParcelFileDescriptor.fromFd(crashFd) : null;
             ipcPfd = ParcelFileDescriptor.fromFd(ipcFd);
+            crashAnnotationPfd = (crashAnnotationFd >= 0) ? ParcelFileDescriptor.fromFd(crashAnnotationFd) : null;
         } catch (final IOException e) {
             Log.e(LOGTAG, "Cannot create fd for " + type, e);
             return 0;
@@ -192,7 +196,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
         boolean started = false;
         try {
-            started = child.start(this, args, crashPfd, ipcPfd);
+            started = child.start(this, args, crashPfd, ipcPfd, crashAnnotationPfd);
         } catch (final RemoteException e) {
         }
 
@@ -203,7 +207,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             }
             Log.w(LOGTAG, "Attempting to kill running child " + type);
             connection.unbind();
-            return start(type, args, crashFd, ipcFd, /* retry */ true);
+            return start(type, args, crashFd, ipcFd, crashAnnotationFd, /* retry */ true);
         }
 
         try {

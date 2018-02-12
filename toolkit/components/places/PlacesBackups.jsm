@@ -212,16 +212,14 @@ this.PlacesBackups = {
    * Creates a Date object from a backup file.  The date is the backup
    * creation date.
    *
-   * @param aBackupFile
-   *        nsIFile or string path of the backup.
-   * @return A Date object for the backup's creation time.
+   * @param {Sring} aBackupFile The path of the backup.
+   * @return {Date} A Date object for the backup's creation time.
    */
   getDateForFile: function PB_getDateForFile(aBackupFile) {
-    let filename = (aBackupFile instanceof Ci.nsIFile) ? aBackupFile.leafName
-                                                       : OS.Path.basename(aBackupFile);
+    let filename = OS.Path.basename(aBackupFile);
     let matches = filename.match(filenamesRegex);
     if (!matches)
-      throw ("Invalid backup file name: " + filename);
+      throw new Error(`Invalid backup file name: ${filename}`);
     return new Date(matches[1].replace(/-/g, "/"));
   },
 

@@ -8,32 +8,33 @@ extern crate gleam;
 extern crate glutin;
 extern crate webrender;
 
-use app_units::Au;
 use std::fs::File;
 use std::io::Read;
 use webrender::api::*;
+use app_units::Au;
 use gleam::gl;
+use glutin::GlContext;
 
 struct Notifier {
-    window_proxy: glutin::WindowProxy,
+    events_proxy: glutin::EventsLoopProxy,
 }
 
 impl Notifier {
-    fn new(window_proxy: glutin::WindowProxy) -> Notifier {
-        Notifier { window_proxy }
+    fn new(events_proxy: glutin::EventsLoopProxy) -> Notifier {
+        Notifier { events_proxy }
     }
 }
 
 impl RenderNotifier for Notifier {
     fn clone(&self) -> Box<RenderNotifier> {
         Box::new(Notifier {
-            window_proxy: self.window_proxy.clone(),
+            events_proxy: self.events_proxy.clone(),
         })
     }
 
     fn wake_up(&self) {
         #[cfg(not(target_os = "android"))]
-        self.window_proxy.wakeup_event_loop();
+        let _ = self.events_proxy.wakeup();
     }
 
     fn new_document_ready(&self, _: DocumentId, _scrolled: bool, _composite_needed: bool) {
@@ -42,7 +43,8 @@ impl RenderNotifier for Notifier {
 }
 
 struct Window {
-    window: glutin::Window,
+    events_loop: glutin::EventsLoop, //TODO: share events loop?
+    window: glutin::GlWindow,
     renderer: webrender::Renderer,
     name: &'static str,
     pipeline_id: PipelineId,
@@ -53,16 +55,18 @@ struct Window {
 }
 
 impl Window {
-    fn new(name: &'static str, clear_color: ColorF) -> Window {
-        let window = glutin::WindowBuilder::new()
-            .with_title(name)
-            .with_multitouch()
-            .with_dimensions(800, 600)
+    fn new(name: &'static str, clear_color: ColorF) -> Self {
+        let events_loop = glutin::EventsLoop::new();
+        let context_builder = glutin::ContextBuilder::new()
             .with_gl(glutin::GlRequest::GlThenGles {
                 opengl_version: (3, 2),
                 opengles_version: (3, 0),
-            })
-            .build()
+            });
+        let window_builder = glutin::WindowBuilder::new()
+            .with_title(name)
+            .with_multitouch()
+            .with_dimensions(800, 600);
+        let window = glutin::GlWindow::new(window_builder, context_builder, &events_loop)
             .unwrap();
 
         unsafe {
@@ -89,10 +93,10 @@ impl Window {
         };
 
         let framebuffer_size = {
-            let (width, height) = window.get_inner_size_pixels().unwrap();
+            let (width, height) = window.get_inner_size().unwrap();
             DeviceUintSize::new(width, height)
         };
-        let notifier = Box::new(Notifier::new(window.create_window_proxy()));
+        let notifier = Box::new(Notifier::new(events_loop.create_proxy()));
         let (renderer, sender) = webrender::Renderer::new(gl.clone(), notifier, opts).unwrap();
         let api = sender.create_api();
         let document_id = api.add_document(framebuffer_size, 0);
@@ -113,6 +117,7 @@ impl Window {
         api.send_transaction(document_id, txn);
 
         Window {
+            events_loop,
             window,
             renderer,
             name,
@@ -128,27 +133,43 @@ impl Window {
         unsafe {
             self.window.make_current().ok();
         }
+        let mut do_exit = false;
+        let my_name = &self.name;
+        let renderer = &mut self.renderer;
 
-        for event in self.window.poll_events() {
-            match event {
-                glutin::Event::Closed |
-                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) => return true,
-
-                glutin::Event::KeyboardInput(
-                    glutin::ElementState::Pressed,
-                    _,
-                    Some(glutin::VirtualKeyCode::P),
-                ) => {
-                    println!("toggle flags {}", self.name);
-                    self.renderer.toggle_debug_flags(webrender::DebugFlags::PROFILER_DBG);
+        self.events_loop.poll_events(|global_event| match global_event {
+            glutin::Event::WindowEvent { event, .. } => match event {
+                glutin::WindowEvent::Closed |
+                glutin::WindowEvent::KeyboardInput {
+                    input: glutin::KeyboardInput {
+                        virtual_keycode: Some(glutin::VirtualKeyCode::Escape),
+                        ..
+                    },
+                    ..
+                } => {
+                    do_exit = true
                 }
-
+                glutin::WindowEvent::KeyboardInput {
+                    input: glutin::KeyboardInput {
+                        state: glutin::ElementState::Pressed,
+                        virtual_keycode: Some(glutin::VirtualKeyCode::P),
+                        ..
+                    },
+                    ..
+                } => {
+                    println!("toggle flags {}", my_name);
+                    renderer.toggle_debug_flags(webrender::DebugFlags::PROFILER_DBG);
+                }
                 _ => {}
             }
+            _ => {}
+        });
+        if do_exit {
+            return true
         }
 
         let framebuffer_size = {
-            let (width, height) = self.window.get_inner_size_pixels().unwrap();
+            let (width, height) = self.window.get_inner_size().unwrap();
             DeviceUintSize::new(width, height)
         };
         let device_pixel_ratio = self.window.hidpi_factor();
@@ -245,8 +266,8 @@ impl Window {
         txn.generate_frame();
         self.api.send_transaction(self.document_id, txn);
 
-        self.renderer.update();
-        self.renderer.render(framebuffer_size).unwrap();
+        renderer.update();
+        renderer.render(framebuffer_size).unwrap();
         self.window.swap_buffers().ok();
 
         false

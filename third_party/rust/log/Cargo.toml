@@ -12,36 +12,46 @@
 
 [package]
 name = "log"
-version = "0.3.8"
+version = "0.4.1"
 authors = ["The Rust Project Developers"]
 description = "A lightweight logging facade for Rust\n"
 homepage = "https://github.com/rust-lang/log"
 documentation = "https://docs.rs/log"
 readme = "README.md"
+keywords = ["logging"]
 categories = ["development-tools::debugging"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/rust-lang/log"
+[package.metadata.docs.rs]
+features = ["std", "serde"]
 
 [[test]]
 name = "filters"
 harness = false
+[dependencies.cfg-if]
+version = "0.1.2"
+
+[dependencies.serde]
+version = "1.0"
+optional = true
+default-features = false
+[dev-dependencies.serde_test]
+version = "1.0"
 
 [features]
-max_level_info = []
-nightly = []
-max_level_warn = []
-release_max_level_debug = []
-release_max_level_info = []
-release_max_level_off = []
-release_max_level_error = []
 max_level_debug = []
-release_max_level_warn = []
-use_std = []
+max_level_error = []
+max_level_info = []
 max_level_off = []
 max_level_trace = []
+max_level_warn = []
+release_max_level_debug = []
+release_max_level_error = []
+release_max_level_info = []
+release_max_level_off = []
 release_max_level_trace = []
-max_level_error = []
-default = ["use_std"]
+release_max_level_warn = []
+std = []
 [badges.appveyor]
 repository = "alexcrichton/log"
 

@@ -383,19 +383,13 @@ AsyncImagePipelineManager::HoldExternalImage(const wr::PipelineId& aPipelineId, 
 }
 
 void
-AsyncImagePipelineManager::Update(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch)
+AsyncImagePipelineManager::PipelineRendered(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch)
 {
   if (mDestroyed) {
     return;
   }
   if (auto entry = mPipelineTexturesHolders.Lookup(wr::AsUint64(aPipelineId))) {
     PipelineTexturesHolder* holder = entry.Data();
-    // Remove Pipeline
-    if (holder->mDestroyedEpoch.isSome() && holder->mDestroyedEpoch.ref() <= aEpoch) {
-      entry.Remove();
-      return;
-    }
-
     // Release TextureHosts based on Epoch
     while (!holder->mTextureHosts.empty()) {
       if (aEpoch <= holder->mTextureHosts.front().mEpoch) {
@@ -403,6 +397,22 @@ AsyncImagePipelineManager::Update(const wr::PipelineId& aPipelineId, const wr::E
       }
       holder->mTextureHosts.pop();
     }
+  }
+}
+
+void
+AsyncImagePipelineManager::PipelineRemoved(const wr::PipelineId& aPipelineId)
+{
+  if (mDestroyed) {
+    return;
+  }
+  if (auto entry = mPipelineTexturesHolders.Lookup(wr::AsUint64(aPipelineId))) {
+    if (entry.Data()->mDestroyedEpoch.isSome()) {
+      // Remove Pipeline
+      entry.Remove();
+    }
+    // If mDestroyedEpoch contains nothing it means we reused the same pipeline id (probably because
+    // we moved the tab to another window). In this case we need to keep the holder.
   }
 }
 

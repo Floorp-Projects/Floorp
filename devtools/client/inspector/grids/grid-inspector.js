@@ -332,9 +332,11 @@ class GridInspector {
         id: i,
         actorID: grid.actorID,
         color,
+        direction: grid.direction,
         gridFragments: grid.gridFragments,
         highlighted: nodeFront == this.highlighters.gridHighlighterShown,
         nodeFront,
+        writingMode: grid.writingMode,
       });
     }
 

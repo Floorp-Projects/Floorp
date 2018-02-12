@@ -460,9 +460,10 @@ add_task(async function test_onItemAdded() {
     await startTracking();
 
     _("Insert a separator using the sync API");
+    let index = (await PlacesUtils.bookmarks.fetch(syncFolderGUID)).index;
     let syncSepID = PlacesUtils.bookmarks.insertSeparator(
       PlacesUtils.bookmarks.bookmarksMenuFolder,
-      PlacesUtils.bookmarks.getItemIndex(syncFolderID));
+      index);
     let syncSepGUID = await PlacesUtils.promiseItemGuid(syncSepID);
     await verifyTrackedItems(["menu", syncSepGUID]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);

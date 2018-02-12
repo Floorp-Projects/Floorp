@@ -53,8 +53,6 @@ impl ws::Handler for Server {
                     "disable_texture_cache_debug" => DebugCommand::EnableTextureCacheDebug(false),
                     "enable_render_target_debug" => DebugCommand::EnableRenderTargetDebug(true),
                     "disable_render_target_debug" => DebugCommand::EnableRenderTargetDebug(false),
-                    "enable_alpha_rects_debug" => DebugCommand::EnableAlphaRectsDebug(true),
-                    "disable_alpha_rects_debug" => DebugCommand::EnableAlphaRectsDebug(false),
                     "enable_gpu_time_queries" => DebugCommand::EnableGpuTimeQueries(true),
                     "disable_gpu_time_queries" => DebugCommand::EnableGpuTimeQueries(false),
                     "enable_gpu_sample_queries" => DebugCommand::EnableGpuSampleQueries(true),

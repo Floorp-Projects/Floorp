@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{AlphaType, BorderRadius, BuiltDisplayList, ClipAndScrollInfo, ClipMode};
-use api::{ColorF, ColorU, DeviceIntRect, DeviceIntSize, DevicePixelScale, Epoch};
+use api::{ColorF, DeviceIntRect, DeviceIntSize, DevicePixelScale, Epoch};
 use api::{ComplexClipRegion, ExtendMode, FontRenderMode};
 use api::{GlyphInstance, GlyphKey, GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag};
 use api::{LayerPoint, LayerRect, LayerSize, LayerToWorldTransform, LayerVector2D, LineOrientation};
-use api::{LineStyle, PremultipliedColorF, TileOffset};
+use api::{LineStyle, PremultipliedColorF};
 use api::{WorldToLayerTransform, YuvColorSpace, YuvFormat};
 use border::{BorderCornerInstance, BorderEdgeKind};
 use clip_scroll_tree::{CoordinateSystemId};
@@ -22,7 +22,7 @@ use picture::{PictureKind, PicturePrimitive};
 use render_task::{BlitSource, ClipChain, ClipChainNode, ClipChainNodeIter, ClipChainNodeRef, ClipWorkItem};
 use render_task::{RenderTask, RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskId};
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
-use resource_cache::{CacheItem, ImageProperties, ResourceCache};
+use resource_cache::{CacheItem, ImageProperties, ImageRequest, ResourceCache};
 use segment::SegmentBuilder;
 use std::{mem, usize};
 use std::rc::Rc;
@@ -136,6 +136,12 @@ impl GpuCacheAddress {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
+pub struct ScreenRect {
+    pub clipped: DeviceIntRect,
+    pub unclipped: DeviceIntRect,
+}
+
 // TODO(gw): Pack the fields here better!
 #[derive(Debug)]
 pub struct PrimitiveMetadata {
@@ -153,7 +159,7 @@ pub struct PrimitiveMetadata {
     pub local_clip_rect: LayerRect,
     pub clip_chain_rect_index: ClipChainRectIndex,
     pub is_backface_visible: bool,
-    pub screen_rect: Option<DeviceIntRect>,
+    pub screen_rect: Option<ScreenRect>,
 
     /// A tag used to identify this primitive outside of WebRender. This is
     /// used for returning useful data during hit testing.
@@ -325,12 +331,7 @@ impl BrushPrimitive {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ImageCacheKey {
-    // TODO(gw): Consider introducing a struct that collectively
-    //           identifies an image in the resource cache
-    //           uniquely. We pass this around to a few places.
-    pub image_key: ImageKey,
-    pub image_rendering: ImageRendering,
-    pub tile_offset: Option<TileOffset>,
+    pub request: ImageRequest,
     pub texel_rect: Option<DeviceIntRect>,
 }
 
@@ -649,7 +650,7 @@ pub struct TextRunPrimitiveCpu {
     pub glyph_count: usize,
     pub glyph_keys: Vec<GlyphKey>,
     pub glyph_gpu_blocks: Vec<GpuBlockData>,
-    pub shadow_color: ColorU,
+    pub shadow: bool,
 }
 
 impl TextRunPrimitiveCpu {
@@ -668,18 +669,6 @@ impl TextRunPrimitiveCpu {
             }
         }
         font
-    }
-
-    pub fn is_shadow(&self) -> bool {
-        self.shadow_color.a != 0
-    }
-
-    pub fn get_color(&self) -> ColorF {
-        ColorF::from(if self.is_shadow() {
-            self.shadow_color
-        } else {
-            self.font.color
-        })
     }
 
     fn prepare_for_render(
@@ -731,7 +720,7 @@ impl TextRunPrimitiveCpu {
     }
 
     fn write_gpu_blocks(&self, request: &mut GpuDataRequest) {
-        request.push(self.get_color().premultiplied());
+        request.push(ColorF::from(self.font.color).premultiplied());
         // this is the only case where we need to provide plain color to GPU
         let bg_color = ColorF::from(self.font.bg_color);
         request.push([bg_color.r, bg_color.g, bg_color.b, 1.0]);
@@ -1158,7 +1147,9 @@ impl PrimitiveStore {
                 self.cpu_pictures[metadata.cpu_prim_index.0]
                     .prepare_for_render(
                         prim_index,
-                        metadata.screen_rect.as_ref().expect("bug: trying to draw an off-screen picture!?"),
+                        &metadata.screen_rect
+                            .expect("bug: trying to draw an off-screen picture!?")
+                            .clipped,
                         &metadata.local_rect,
                         pic_state_for_children,
                         pic_state,
@@ -1186,7 +1177,7 @@ impl PrimitiveStore {
                 let image_cpu = &mut self.cpu_images[metadata.cpu_prim_index.0];
                 let image_properties = frame_state
                     .resource_cache
-                    .get_image_properties(image_cpu.key.image_key);
+                    .get_image_properties(image_cpu.key.request.key);
 
                 // TODO(gw): Add image.rs and move this code out to a separate
                 //           source file as it gets more complicated, and we
@@ -1221,60 +1212,72 @@ impl PrimitiveStore {
                         };
                     }
 
-                    // TODO(gw): Don't actually need this in cached source mode if
-                    //           the cache item is still valid...
-                    frame_state.resource_cache.request_image(
-                        image_cpu.key.image_key,
-                        image_cpu.key.image_rendering,
-                        image_cpu.key.tile_offset,
-                        frame_state.gpu_cache,
-                    );
+                    // Set if we need to request the source image from the cache this frame.
+                    let mut request_source_image = false;
 
                     // Every frame, for cached items, we need to request the render
                     // task cache item. The closure will be invoked on the first
                     // time through, and any time the render task output has been
                     // evicted from the texture cache.
-                    if let ImageSource::Cache { size, ref mut item } = image_cpu.source {
-                        let key = image_cpu.key;
+                    match image_cpu.source {
+                        ImageSource::Cache { size, ref mut item } => {
+                            let key = image_cpu.key;
 
-                        // Request a pre-rendered image task.
-                        *item = frame_state.resource_cache.request_render_task(
-                            RenderTaskCacheKey {
-                                size,
-                                kind: RenderTaskCacheKeyKind::Image(key),
-                            },
+                            // Request a pre-rendered image task.
+                            *item = frame_state.resource_cache.request_render_task(
+                                RenderTaskCacheKey {
+                                    size,
+                                    kind: RenderTaskCacheKeyKind::Image(key),
+                                },
+                                frame_state.gpu_cache,
+                                frame_state.render_tasks,
+                                |render_tasks| {
+                                    // We need to render the image cache this frame,
+                                    // so will need access to the source texture.
+                                    request_source_image = true;
+
+                                    // Create a task to blit from the texture cache to
+                                    // a normal transient render task surface. This will
+                                    // copy only the sub-rect, if specified.
+                                    let cache_to_target_task = RenderTask::new_blit(
+                                        size,
+                                        BlitSource::Image {
+                                            key,
+                                        },
+                                    );
+                                    let cache_to_target_task_id = render_tasks.add(cache_to_target_task);
+
+                                    // Create a task to blit the rect from the child render
+                                    // task above back into the right spot in the persistent
+                                    // render target cache.
+                                    let target_to_cache_task = RenderTask::new_blit(
+                                        size,
+                                        BlitSource::RenderTask {
+                                            task_id: cache_to_target_task_id,
+                                        },
+                                    );
+                                    let target_to_cache_task_id = render_tasks.add(target_to_cache_task);
+
+                                    // Hook this into the render task tree at the right spot.
+                                    pic_state.tasks.push(target_to_cache_task_id);
+
+                                    // Pass the image opacity, so that the cached render task
+                                    // item inherits the same opacity properties.
+                                    (target_to_cache_task_id, [0.0; 3], image_properties.descriptor.is_opaque)
+                                }
+                            );
+                        }
+                        ImageSource::Default => {
+                            // Normal images just reference the source texture each frame.
+                            request_source_image = true;
+                        }
+                    }
+
+                    // Request source image from the texture cache, if required.
+                    if request_source_image {
+                        frame_state.resource_cache.request_image(
+                            image_cpu.key.request,
                             frame_state.gpu_cache,
-                            frame_state.render_tasks,
-                            |render_tasks| {
-                                // Create a task to blit from the texture cache to
-                                // a normal transient render task surface. This will
-                                // copy only the sub-rect, if specified.
-                                let cache_to_target_task = RenderTask::new_blit(
-                                    size,
-                                    BlitSource::Image {
-                                        key,
-                                    },
-                                );
-                                let cache_to_target_task_id = render_tasks.add(cache_to_target_task);
-
-                                // Create a task to blit the rect from the child render
-                                // task above back into the right spot in the persistent
-                                // render target cache.
-                                let target_to_cache_task = RenderTask::new_blit(
-                                    size,
-                                    BlitSource::RenderTask {
-                                        task_id: cache_to_target_task_id,
-                                    },
-                                );
-                                let target_to_cache_task_id = render_tasks.add(target_to_cache_task);
-
-                                // Hook this into the render task tree at the right spot.
-                                pic_state.tasks.push(target_to_cache_task_id);
-
-                                // Pass the image opacity, so that the cached render task
-                                // item inherits the same opacity properties.
-                                (target_to_cache_task_id, [0.0; 3], image_properties.descriptor.is_opaque)
-                            }
                         );
                     }
                 }
@@ -1286,9 +1289,11 @@ impl PrimitiveStore {
                 debug_assert!(channel_num <= 3);
                 for channel in 0 .. channel_num {
                     frame_state.resource_cache.request_image(
-                        image_cpu.yuv_key[channel],
-                        image_cpu.image_rendering,
-                        None,
+                        ImageRequest {
+                            key: image_cpu.yuv_key[channel],
+                            rendering: image_cpu.image_rendering,
+                            tile: None,
+                        },
                         frame_state.gpu_cache,
                     );
                 }
@@ -1819,7 +1824,14 @@ impl PrimitiveStore {
                 Some(ref node) => node.combined_outer_screen_rect,
                 None => frame_context.screen_rect,
             };
-            metadata.screen_rect = screen_bounding_rect.intersection(&clip_bounds);
+            metadata.screen_rect = screen_bounding_rect
+                .intersection(&clip_bounds)
+                .map(|clipped| {
+                    ScreenRect {
+                        clipped,
+                        unclipped: screen_bounding_rect,
+                    }
+                });
 
             if metadata.screen_rect.is_none() && pic_context.perform_culling {
                 return None;

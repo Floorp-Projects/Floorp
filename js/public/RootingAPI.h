@@ -21,6 +21,7 @@
 #include "js/GCAnnotations.h"
 #include "js/GCPolicyAPI.h"
 #include "js/HeapAPI.h"
+#include "js/ProfilingStack.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
@@ -794,11 +795,19 @@ class RootingContext
     JS::AutoGCRooter* autoGCRooters_;
     friend class JS::AutoGCRooter;
 
+    // Gecko profiling metadata.
+    // This isn't really rooting related. It's only here because we want
+    // GetContextProfilingStack to be inlineable into non-JS code, and we
+    // didn't want to add another superclass of JSContext just for this.
+    js::GeckoProfilerThread geckoProfiler_;
+
   public:
     RootingContext();
 
     void traceStackRoots(JSTracer* trc);
     void checkNoGCRooters();
+
+    js::GeckoProfilerThread& geckoProfiler() { return geckoProfiler_; }
 
   protected:
     // The remaining members in this class should only be accessed through
@@ -1014,6 +1023,12 @@ inline JS::Zone*
 GetContextZone(const JSContext* cx)
 {
     return JS::RootingContext::get(cx)->zone_;
+}
+
+inline PseudoStack*
+GetContextProfilingStack(JSContext* cx)
+{
+    return JS::RootingContext::get(cx)->geckoProfiler().getPseudoStack();
 }
 
 /**

@@ -43,10 +43,10 @@ impl CoordinateSystemId {
     }
 }
 
-struct ClipChainDescriptor {
-    id: ClipChainId,
-    parent: Option<ClipChainId>,
-    clips: Vec<ClipId>,
+pub struct ClipChainDescriptor {
+    pub id: ClipChainId,
+    pub parent: Option<ClipChainId>,
+    pub clips: Vec<ClipId>,
 }
 
 pub struct ClipScrollTree {
@@ -55,7 +55,7 @@ pub struct ClipScrollTree {
     /// A Vec of all descriptors that describe ClipChains in the order in which they are
     /// encountered during display list flattening. ClipChains are expected to never be
     /// the children of ClipChains later in the list.
-    clip_chains_descriptors: Vec<ClipChainDescriptor>,
+    pub clip_chains_descriptors: Vec<ClipChainDescriptor>,
 
     /// A HashMap of built ClipChains that are described by `clip_chains_descriptors`.
     pub clip_chains: FastHashMap<ClipChainId, ClipChain>,
