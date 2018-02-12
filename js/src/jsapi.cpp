@@ -29,7 +29,6 @@
 #include "jsdate.h"
 #include "jsexn.h"
 #include "jsfriendapi.h"
-#include "jsfun.h"
 #include "jsiter.h"
 #include "jsmath.h"
 #include "jsnum.h"
@@ -78,6 +77,7 @@
 #include "vm/ErrorObject.h"
 #include "vm/HelperThreads.h"
 #include "vm/Interpreter.h"
+#include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/Runtime.h"
@@ -92,10 +92,10 @@
 #include "wasm/AsmJS.h"
 #include "wasm/WasmModule.h"
 
-#include "jsfuninlines.h"
 #include "jsscriptinlines.h"
 
 #include "vm/Interpreter-inl.h"
+#include "vm/JSFunction-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/SavedStacks-inl.h"
 #include "vm/String-inl.h"

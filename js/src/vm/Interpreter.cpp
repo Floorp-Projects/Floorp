@@ -21,7 +21,6 @@
 
 #include "jsarray.h"
 #include "jscntxt.h"
-#include "jsfun.h"
 #include "jsiter.h"
 #include "jslibmath.h"
 #include "jsnum.h"
@@ -40,6 +39,7 @@
 #include "vm/AsyncIteration.h"
 #include "vm/Debugger.h"
 #include "vm/GeneratorObject.h"
+#include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/Opcodes.h"
 #include "vm/Scope.h"
@@ -49,13 +49,13 @@
 #include "vm/TraceLogging.h"
 
 #include "jsboolinlines.h"
-#include "jsfuninlines.h"
 #include "jsscriptinlines.h"
 
 #include "jit/JitFrames-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/GeckoProfiler-inl.h"
+#include "vm/JSFunction-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Probes-inl.h"
 #include "vm/Stack-inl.h"
