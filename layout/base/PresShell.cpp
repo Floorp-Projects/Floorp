@@ -1788,28 +1788,6 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsIFrame* invalidateFrame = nullptr;
-  for (nsIFrame* f = rootFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-    if (f->GetStateBits() & NS_FRAME_NO_COMPONENT_ALPHA) {
-      invalidateFrame = f;
-      f->RemoveStateBits(NS_FRAME_NO_COMPONENT_ALPHA);
-    }
-    nsCOMPtr<nsIPresShell> shell;
-    if (f->IsSubDocumentFrame() &&
-        (shell = static_cast<nsSubDocumentFrame*>(f)
-                   ->GetSubdocumentPresShellForPainting(0)) &&
-        shell->GetPresContext()->IsRootContentDocument()) {
-      // Root content documents build a 'force active' layer, and component alpha flattening
-      // can't be propagated across that so no need to invalidate above this frame.
-      break;
-    }
-
-
-  }
-  if (invalidateFrame) {
-    invalidateFrame->InvalidateFrameSubtree();
-  }
-
   Element *root = mDocument->GetRootElement();
 
   if (root) {

@@ -2365,16 +2365,6 @@ public:
   }
 
   /**
-   * Called when the area rendered by this display item has changed (been
-   * invalidated or changed geometry) since the last paint. This includes
-   * when the display item was not rendered at all in the last paint.
-   * It does NOT get called when a display item was being rendered and no
-   * longer is, because generally that means there is no display item to
-   * call this method on.
-   */
-  virtual void NotifyRenderingChanged() const {}
-
-  /**
    * @param aSnap set to true if the edges of the rectangles of the opaque
    * region would be snapped to device pixels when drawing
    * @return a region of the item that is opaque --- that is, every pixel
@@ -3100,17 +3090,11 @@ public:
     PAINT_USE_WIDGET_LAYERS = 0x01,
     PAINT_EXISTING_TRANSACTION = 0x04,
     PAINT_NO_COMPOSITE = 0x08,
-    PAINT_COMPRESSED = 0x10,
-    PAINT_IDENTICAL_DISPLAY_LIST = 0x20
+    PAINT_COMPRESSED = 0x10
   };
   already_AddRefed<LayerManager> PaintRoot(nsDisplayListBuilder* aBuilder,
                                            gfxContext* aCtx,
                                            uint32_t aFlags);
-
-  mozilla::FrameLayerBuilder* BuildLayers(nsDisplayListBuilder* aBuilder,
-                                          LayerManager* aLayerManager,
-                                          uint32_t aFlags,
-                                          bool aIsWidgetTransaction);
   /**
    * Get the bounds. Takes the union of the bounds of all children.
    * The result is not cached.
@@ -3837,16 +3821,11 @@ public:
    * nsCSSRendering::FindBackground, or null if FindBackground returned false.
    * aBackgroundRect is relative to aFrame.
    */
-  enum class LayerizeFixed : uint8_t {
-    ALWAYS_LAYERIZE_FIXED_BACKGROUND,
-    DO_NOT_LAYERIZE_FIXED_BACKGROUND_IF_AVOIDING_COMPONENT_ALPHA_LAYERS
-  };
   static InitData GetInitData(nsDisplayListBuilder* aBuilder,
                               nsIFrame* aFrame,
                               uint32_t aLayer,
                               const nsRect& aBackgroundRect,
-                              const nsStyleBackground* aBackgroundStyle,
-                              LayerizeFixed aLayerizeFixed);
+                              const nsStyleBackground* aBackgroundStyle);
 
   explicit nsDisplayBackgroundImage(const InitData& aInitData,
                                     nsIFrame* aFrameForBounds = nullptr);
@@ -4802,7 +4781,7 @@ private:
     }
   }
 
-  friend bool MergeLayerEventRegions(nsDisplayItem*, nsDisplayItem*);
+  friend void MergeLayerEventRegions(nsDisplayItem*, nsDisplayItem*);
 
   // Relative to aFrame's reference frame.
   // These are the points that are definitely in the hit region.
