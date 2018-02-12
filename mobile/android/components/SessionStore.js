@@ -1115,7 +1115,7 @@ SessionStore.prototype = {
     tabData.index = aHistory.index;
     tabData.attributes = { image: aBrowser.mIconURL };
     tabData.desktopMode = tab.desktopMode;
-    tabData.isPrivate = aBrowser.docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing;
+    tabData.isPrivate = PrivateBrowsingUtils.isBrowserPrivate(aBrowser);
     tabData.tabId = tab.id;
     tabData.parentId = tab.parentId;
 
