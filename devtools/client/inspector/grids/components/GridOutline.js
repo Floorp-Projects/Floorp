@@ -219,8 +219,8 @@ class GridOutline extends PureComponent {
     const numberOfColumns = cols.lines.length - 1;
     const numberOfRows = rows.lines.length - 1;
     const rectangles = [];
-    let x = 1;
-    let y = 1;
+    let x = 0;
+    let y = 0;
     let width = 0;
     let height = 0;
 
@@ -240,7 +240,7 @@ class GridOutline extends PureComponent {
         x += width;
       }
 
-      x = 1;
+      x = 0;
       y += height;
     }
 
@@ -315,8 +315,8 @@ class GridOutline extends PureComponent {
       {
         key: "border",
         className: "grid-outline-border",
-        x: 1,
-        y: 1,
+        x: 0,
+        y: 0,
         width: borderWidth,
         height: borderHeight
       }
