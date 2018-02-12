@@ -1571,7 +1571,7 @@ CodeGeneratorMIPSShared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCh
     masm.wasmTrap(wasm::Trap::IntegerOverflow, ool->bytecodeOffset());
 
     masm.bind(&inputIsNaN);
-    masm.jump(oldTrap(ool, wasm::Trap::InvalidConversionToInteger));
+    masm.wasmTrap(wasm::Trap::InvalidConversionToInteger, ool->bytecodeOffset());
 }
 
 void
