@@ -569,11 +569,7 @@ CustomizeMode.prototype = {
       }
 
       // Wait until the next frame before setting the class to ensure
-      // we do start the animation. We cannot use promiseLayoutFlushed
-      // here because callback is only invoked when any actual reflow
-      // happens, while that may not happen soonish enough. If we have
-      // an observer for style flush, we may be able to replace the
-      // nested rAFs with that.
+      // we do start the animation.
       this.window.requestAnimationFrame(() => {
         this.window.requestAnimationFrame(() => {
           animationNode.classList.add("animate-out");
@@ -2421,7 +2417,8 @@ CustomizeMode.prototype = {
         panelOnTheLeft = true;
       }
     } else {
-      await BrowserUtils.promiseLayoutFlushed(doc, "display", () => {});
+      await this.window.promiseDocumentFlushed(() => {});
+
       if (!this._customizing || !this._wantToBeInCustomizeMode) {
         return;
       }
