@@ -1168,9 +1168,9 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     private class TestUpdateOrInsertHistory extends TestCase {
-        private final String TEST_URL_1 = "http://example.com";
-        private final String TEST_URL_2 = "http://example.org";
-        private final String TEST_TITLE = "Example";
+        private static final String TEST_URL_1 = "http://example.com";
+        private static final String TEST_URL_2 = "http://example.org";
+        private static final String TEST_TITLE = "Example";
 
         private long getHistoryEntryIdByUrl(String url) {
             Cursor c = mProvider.query(BrowserContract.History.CONTENT_URI,
@@ -1449,8 +1449,8 @@ public class testBrowserProvider extends ContentProviderTest {
             testRetrievalViaUrlMetadata();
         }
 
-        final String url1 = "http://mozilla.org";
-        final String url2 = "http://hello.org";
+        static final String url1 = "http://mozilla.org";
+        static final String url2 = "http://hello.org";
 
         private void testInsertionViaContentProvider() throws Exception {
             final String tileImage = "http://mozilla.org/tileImage.png";
