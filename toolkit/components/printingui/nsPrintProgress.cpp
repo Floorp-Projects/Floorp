@@ -25,7 +25,7 @@ NS_INTERFACE_MAP_BEGIN(nsPrintProgress)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrintProgress)
    NS_INTERFACE_MAP_ENTRY(nsIPrintProgress)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END
 
 
 nsPrintProgress::nsPrintProgress(nsIPrintSettings* aPrintSettings)
