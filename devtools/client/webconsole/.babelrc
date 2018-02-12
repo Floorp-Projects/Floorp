@@ -1,12 +1,14 @@
 {
   "env": {
     "test": {
-      "presets": ["es2015", "es2017"]
+      "plugins": [
+        "./new-console-output/test/node_modules/babel-plugin-transform-object-rest-spread"
+      ]
     }
   },
   "plugins": [
+    "transform-flow-strip-types",
     "transform-react-jsx",
-    "transform-object-rest-spread",
-    "transform-flow-strip-types"
+    "transform-object-rest-spread"
   ]
 }
