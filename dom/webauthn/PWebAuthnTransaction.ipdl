@@ -43,6 +43,10 @@ struct WebAuthnMakeCredentialInfo {
   WebAuthnAuthenticatorSelection AuthenticatorSelection;
 };
 
+struct WebAuthnMakeCredentialResult {
+  uint8_t[] RegBuffer;
+};
+
 struct WebAuthnGetAssertionInfo {
   uint8_t[] RpIdHash;
   uint8_t[] ClientDataHash;
@@ -50,6 +54,11 @@ struct WebAuthnGetAssertionInfo {
   WebAuthnScopedCredential[] AllowList;
   bool RequireUserVerification;
   WebAuthnExtension[] Extensions;
+};
+
+struct WebAuthnGetAssertionResult {
+  uint8_t[] CredentialID;
+  uint8_t[] SigBuffer;
 };
 
 async protocol PWebAuthnTransaction {
@@ -63,8 +72,8 @@ async protocol PWebAuthnTransaction {
 
   child:
     async __delete__();
-    async ConfirmRegister(uint64_t aTransactionId, uint8_t[] RegBuffer);
-    async ConfirmSign(uint64_t aTransactionId, uint8_t[] CredentialID, uint8_t[] ReplyBuffer);
+    async ConfirmRegister(uint64_t aTransactionId, WebAuthnMakeCredentialResult aResult);
+    async ConfirmSign(uint64_t aTransactionId, WebAuthnGetAssertionResult aResult);
     async Abort(uint64_t aTransactionId, nsresult Error);
 };
 

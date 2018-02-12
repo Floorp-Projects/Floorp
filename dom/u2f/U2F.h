@@ -13,6 +13,7 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/U2FBinding.h"
 #include "mozilla/dom/WebAuthnManagerBase.h"
+#include "mozilla/dom/PWebAuthnTransaction.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/MozPromise.h"
 #include "nsProxyRelease.h"
@@ -122,12 +123,11 @@ public:
 
   void
   FinishMakeCredential(const uint64_t& aTransactionId,
-                       nsTArray<uint8_t>& aRegBuffer) override;
+                       const WebAuthnMakeCredentialResult& aResult) override;
 
   void
   FinishGetAssertion(const uint64_t& aTransactionId,
-                     nsTArray<uint8_t>& aCredentialId,
-                     nsTArray<uint8_t>& aSigBuffer) override;
+                     const WebAuthnGetAssertionResult& aResult) override;
 
   void
   RequestAborted(const uint64_t& aTransactionId,
