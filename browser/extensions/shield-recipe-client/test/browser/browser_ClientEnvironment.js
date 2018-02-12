@@ -10,6 +10,8 @@ ChromeUtils.import("resource://shield-recipe-client/lib/PreferenceExperiments.js
 
 add_task(async function testTelemetry() {
   // setup
+  await SpecialPowers.pushPrefEnv({set: [["privacy.reduceTimerPrecision", true]]});
+
   await TelemetryController.submitExternalPing("testfoo", {foo: 1});
   await TelemetryController.submitExternalPing("testbar", {bar: 2});
   await TelemetryController.submitExternalPing("testfoo", {foo: 3});
