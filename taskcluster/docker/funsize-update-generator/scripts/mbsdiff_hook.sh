@@ -15,6 +15,9 @@ LOCAL_CACHE_DIR=
 S3_CACHE_HITS=0
 S3_CACHE_MISSES=0
 
+# Don't cache files smaller than this, as it's slower with S3
+# Bug 1437473
+CACHE_THRESHOLD=500000
 
 getsha512(){
     openssl sha512 "${1}" | awk '{print $2}'
@@ -35,6 +38,10 @@ print_usage(){
 }
 
 upload_patch(){
+    if [ "$(stat -f "%z" "$2")" -lt ${CACHE_THRESHOLD} ]
+    then
+      return 0
+    fi
     sha_from=$(getsha512 "$1")
     sha_to=$(getsha512 "$2")
     patch_path="$3"
@@ -63,6 +70,10 @@ upload_patch(){
 
 get_patch(){
     # $1 and $2 are the /path/to/filename
+    if [ "$(stat -f "%z" "$2")" -lt ${CACHE_THRESHOLD} ]
+    then
+      return 1
+    fi
     sha_from=$(getsha512 "$1")
     sha_to=$(getsha512 "$2")
     destination_file="$3"
