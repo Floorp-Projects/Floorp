@@ -76,11 +76,9 @@
       <menulist id="historyMode">
         <menupopup>
           <menuitem label="&historyHeader.remember.label;" value="remember" searchkeywords="&rememberDescription.label;
-                                                                                            &rememberActions.pre.label;
-                                                                                            &rememberActions.clearHistory.label;
-                                                                                            &rememberActions.middle.label;
-                                                                                            &rememberActions.removeCookies.label;
-                                                                                            &rememberActions.post.label;"/>
+                                                                                            &dontrememberActions.pre.label;
+                                                                                            &dontrememberActions.clearHistory.label;
+                                                                                            &dontrememberActions.post.label;"/>
           <menuitem label="&historyHeader.dontremember.label;" value="dontremember" searchkeywords="&dontrememberDescription.label;
                                                                                                     &dontrememberActions.pre.label;
                                                                                                     &dontrememberActions.clearHistory.label;
@@ -88,16 +86,15 @@
           <menuitem label="&historyHeader.custom.label;" value="custom" searchkeywords="&privateBrowsingPermanent2.label;
                                                                                         &rememberHistory2.label;
                                                                                         &rememberSearchForm.label;
-                                                                                        &acceptCookies2.label;
+                                                                                        &acceptCookies3.label;
                                                                                         &cookieExceptions.label;
-                                                                                        &acceptThirdParty2.pre.label;
+                                                                                        &acceptThirdParty3.pre.label;
                                                                                         &acceptThirdParty.always.label;
                                                                                         &acceptThirdParty.visited.label;
                                                                                         &acceptThirdParty.never.label;
                                                                                         &keepUntil2.label;
                                                                                         &expire.label;
                                                                                         &close.label;
-                                                                                        &showCookies.label;
                                                                                         &clearOnClose.label;
                                                                                         &clearOnCloseSettings.label;"/>
         </menupopup>
@@ -110,11 +107,9 @@
       <hbox align="center" flex="1">
         <vbox flex="1">
           <description>&rememberDescription.label;</description>
-          <description>&rememberActions.pre.label;<label
+          <description>&dontrememberActions.pre.label;<label
           class="text-link" id="historyRememberClear"
-          >&rememberActions.clearHistory.label;</label>&rememberActions.middle.label;<label
-          class="text-link" id="historyRememberCookies"
-          >&rememberActions.removeCookies.label;</label>&rememberActions.post.label;</description>
+          >&dontrememberActions.clearHistory.label;</label>&dontrememberActions.post.label;</description>
         </vbox>
       </hbox>
     </vbox>
@@ -143,73 +138,6 @@
                     label="&rememberSearchForm.label;"
                     accesskey="&rememberSearchForm.accesskey;"
                     preference="browser.formfill.enable"/>
-          <hbox id="cookiesBox">
-            <checkbox id="acceptCookies" label="&acceptCookies2.label;"
-                      preference="network.cookie.cookieBehavior"
-                      accesskey="&acceptCookies2.accesskey;"
-                      onsyncfrompreference="return gPrivacyPane.readAcceptCookies();"
-                      onsynctopreference="return gPrivacyPane.writeAcceptCookies();"
-                      flex="1" />
-            <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-            <hbox>
-              <button id="cookieExceptions"
-                      class="accessory-button"
-                      label="&cookieExceptions.label;" accesskey="&cookieExceptions.accesskey;"
-                      preference="pref.privacy.disable_button.cookie_exceptions"
-                      searchkeywords="&address2.label;
-                                      &block.label;
-                                      &session.label;
-                                      &allow.label;
-                                      &removepermission2.label;
-                                      &removeallpermissions2.label;
-                                      &button.cancel.label;
-                                      &button.ok.label;"/>
-            </hbox>
-          </hbox>
-          <hbox id="acceptThirdPartyRow"
-                class="indent"
-                align="center">
-            <label id="acceptThirdPartyLabel" control="acceptThirdPartyMenu"
-                   accesskey="&acceptThirdParty2.pre.accesskey;">&acceptThirdParty2.pre.label;</label>
-            <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-            <hbox>
-              <menulist id="acceptThirdPartyMenu" preference="network.cookie.cookieBehavior"
-              onsyncfrompreference="return gPrivacyPane.readAcceptThirdPartyCookies();"
-              onsynctopreference="return gPrivacyPane.writeAcceptThirdPartyCookies();">
-                <menupopup>
-                  <menuitem label="&acceptThirdParty.always.label;" value="always"/>
-                  <menuitem label="&acceptThirdParty.visited.label;" value="visited"/>
-                  <menuitem label="&acceptThirdParty.never.label;" value="never"/>
-                </menupopup>
-              </menulist>
-            </hbox>
-          </hbox>
-          <hbox id="keepRow"
-                class="indent"
-                align="center">
-            <label id="keepUntil"
-                   control="keepCookiesUntil"
-                   accesskey="&keepUntil2.accesskey;">&keepUntil2.label;</label>
-            <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-            <hbox>
-              <menulist id="keepCookiesUntil"
-                        preference="network.cookie.lifetimePolicy">
-                <menupopup>
-                  <menuitem label="&expire.label;" value="0"/>
-                  <menuitem label="&close.label;" value="2"/>
-                </menupopup>
-              </menulist>
-            </hbox>
-            <spacer flex="1"/>
-            <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-            <hbox>
-              <button id="showCookiesButton"
-                      class="accessory-button"
-                      label="&showCookies.label;"
-                      accesskey="&showCookies.accesskey;"
-                      preference="pref.privacy.disable_button.view_cookies"/>
-            </hbox>
-          </hbox>
           <hbox id="clearDataBox"
                 align="center">
             <checkbox id="alwaysClear"
@@ -241,6 +169,96 @@
   </deck>
 </groupbox>
 
+<!-- Site Data -->
+<groupbox id="siteDataGroup" hidden="true" data-category="panePrivacy" data-hidden-from-search="true">
+  <caption><label>&siteData1.label;</label></caption>
+
+  <hbox align="baseline">
+    <vbox flex="1">
+      <radiogroup id="acceptCookies"
+                  preference="network.cookie.cookieBehavior"
+                  onsyncfrompreference="return gPrivacyPane.readAcceptCookies();"
+                  onsynctopreference="return gPrivacyPane.writeAcceptCookies();">
+      <description flex="1">
+        <label id="totalSiteDataSize" class="tail-with-learn-more"></label>
+        <label id="siteDataLearnMoreLink" class="learnMore text-link">&siteDataLearnMoreLink.label;</label>
+      </description>
+      <hbox id="cookiesBox">
+        <radio label="&acceptCookies3.label;"
+               value="0"
+               accesskey="&acceptCookies3.accesskey;"
+               flex="1" />
+      </hbox>
+      <hbox id="keepRow"
+            class="indent"
+            align="center">
+        <label id="keepUntil"
+               control="keepCookiesUntil"
+               accesskey="&keepUntil2.accesskey;">&keepUntil2.label;</label>
+        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+        <hbox>
+          <menulist id="keepCookiesUntil"
+                    preference="network.cookie.lifetimePolicy">
+            <menupopup>
+              <menuitem label="&expire.label;" value="0"/>
+              <menuitem label="&close.label;" value="2"/>
+            </menupopup>
+          </menulist>
+        </hbox>
+      </hbox>
+      <hbox id="acceptThirdPartyRow"
+            class="indent"
+            align="center">
+        <label id="acceptThirdPartyLabel" control="acceptThirdPartyMenu"
+               accesskey="&acceptThirdParty3.pre.accesskey;">&acceptThirdParty3.pre.label;</label>
+        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+        <hbox>
+          <menulist id="acceptThirdPartyMenu" preference="network.cookie.cookieBehavior"
+          onsyncfrompreference="return gPrivacyPane.readAcceptThirdPartyCookies();"
+          onsynctopreference="return gPrivacyPane.writeAcceptThirdPartyCookies();">
+            <menupopup>
+              <menuitem label="&acceptThirdParty.always.label;" value="always"/>
+              <menuitem label="&acceptThirdParty.visited.label;" value="visited"/>
+              <menuitem label="&acceptThirdParty.never.label;" value="never"/>
+            </menupopup>
+          </menulist>
+        </hbox>
+      </hbox>
+      <radio label="&blockCookies.label;"
+             value="2"
+             accesskey="&blockCookies.accesskey;"
+             flex="1" />
+    </radiogroup>
+    </vbox>
+    <vbox align="end">
+      <button id="clearSiteDataButton"
+          class="accessory-button"
+          icon="clear"
+          label="&clearSiteData1.label;" accesskey="&clearSiteData1.accesskey;"/>
+      <button id="siteDataSettings"
+              class="accessory-button"
+              label="&siteDataSettings.label;"
+              accesskey="&siteDataSettings.accesskey;"
+              searchkeywords="&window.title;
+                              &hostCol.label;
+                              &statusCol.label;
+                              &usageCol.label;"/>
+      <button id="cookieExceptions"
+              class="accessory-button"
+              label="&cookieExceptions.label;" accesskey="&cookieExceptions.accesskey;"
+              preference="pref.privacy.disable_button.cookie_exceptions"
+              searchkeywords="&address2.label;
+                              &block.label;
+                              &session.label;
+                              &allow.label;
+                              &removepermission2.label;
+                              &removeallpermissions2.label;
+                              &button.cancel.label;
+                              &button.ok.label;"/>
+    </vbox>
+  </hbox>
+</groupbox>
+
 <!-- Address Bar -->
 <groupbox id="locationBarGroup"
           data-category="panePrivacy"
@@ -259,34 +277,6 @@
   <label class="text-link" id="openSearchEnginePreferences">
     &suggestionSettings2.label;
   </label>
-</groupbox>
-
-<!-- Site Data -->
-<groupbox id="siteDataGroup" hidden="true" data-category="panePrivacy" data-hidden-from-search="true">
-  <caption><label>&siteData.label;</label></caption>
-
-  <hbox align="baseline">
-    <vbox flex="1">
-      <description flex="1">
-        <label id="totalSiteDataSize" class="tail-with-learn-more"></label>
-        <label id="siteDataLearnMoreLink" class="learnMore text-link">&siteDataLearnMoreLink.label;</label>
-      </description>
-    </vbox>
-    <vbox align="end">
-      <button id="siteDataSettings"
-              class="accessory-button"
-              label="&siteDataSettings.label;"
-              accesskey="&siteDataSettings.accesskey;"
-              searchkeywords="&window.title;
-                              &hostCol.label;
-                              &statusCol.label;
-                              &usageCol.label;"/>
-      <button id="clearSiteDataButton"
-          class="accessory-button"
-          icon="clear"
-          label="&clearSiteData1.label;" accesskey="&clearSiteData1.accesskey;"/>
-    </vbox>
-  </hbox>
 </groupbox>
 
 <!-- Tracking -->
