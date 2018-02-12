@@ -382,7 +382,7 @@ this.PreferenceExperiments = {
         const newValue = getPref(UserPreferences, preferenceName, preferenceType);
         if (newValue !== preferenceValue) {
           PreferenceExperiments.stop(experimentName, {
-            didResetValue: false,
+            resetValue: false,
             reason: "user-preference-changed",
           }).catch(Cu.reportError);
         }
