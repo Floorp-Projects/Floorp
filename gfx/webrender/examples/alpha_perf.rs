@@ -53,12 +53,19 @@ impl Example for App {
 
     fn on_event(
         &mut self,
-        event: glutin::Event,
+        event: glutin::WindowEvent,
         _api: &RenderApi,
         _document_id: DocumentId
     ) -> bool {
         match event {
-            glutin::Event::KeyboardInput(glutin::ElementState::Pressed, _, Some(key)) => {
+            glutin::WindowEvent::KeyboardInput {
+                input: glutin::KeyboardInput {
+                    state: glutin::ElementState::Pressed,
+                    virtual_keycode: Some(key),
+                    ..
+                },
+                ..
+            } => {
                 match key {
                     glutin::VirtualKeyCode::Right => {
                         self.rect_count += 1;

@@ -14,10 +14,6 @@ use internal_types::FastHashMap;
 /// data from the ClipScrollTree that will persist as a new frame is under construction,
 /// allowing hit tests consistent with the currently rendered frame.
 pub struct HitTestClipScrollNode {
-    /// This node's parent in the ClipScrollTree. This is used to ensure that we can
-    /// travel up the tree of nodes.
-    parent: Option<ClipId>,
-
     /// A particular point must be inside all of these regions to be considered clipped in
     /// for the purposes of a hit test.
     regions: Vec<HitTestRegion>,
@@ -30,6 +26,16 @@ pub struct HitTestClipScrollNode {
 
     /// Origin of the viewport of the node, used to calculate node-relative positions.
     node_origin: LayerPoint,
+}
+
+/// A description of a clip chain in the HitTester. This is used to describe
+/// hierarchical clip scroll nodes as well as ClipChains, so that they can be
+/// handled the same way during hit testing. Once we represent all ClipChains
+/// using ClipChainDescriptors, we can get rid of this and just use the
+/// ClipChainDescriptor here.
+struct HitTestClipChainDescriptor {
+    parent: Option<ClipId>,
+    clips: Vec<ClipId>,
 }
 
 #[derive(Clone)]
@@ -72,6 +78,7 @@ impl HitTestRegion {
 pub struct HitTester {
     runs: Vec<HitTestingRun>,
     nodes: FastHashMap<ClipId, HitTestClipScrollNode>,
+    clip_chains: FastHashMap<ClipId, HitTestClipChainDescriptor>,
 }
 
 impl HitTester {
@@ -83,6 +90,7 @@ impl HitTester {
         let mut hit_tester = HitTester {
             runs: runs.clone(),
             nodes: FastHashMap::default(),
+            clip_chains: FastHashMap::default(),
         };
         hit_tester.read_clip_scroll_tree(clip_scroll_tree, clip_store);
         hit_tester
@@ -97,43 +105,77 @@ impl HitTester {
 
         for (id, node) in &clip_scroll_tree.nodes {
             self.nodes.insert(*id, HitTestClipScrollNode {
-                parent: node.parent,
                 regions: get_regions_for_clip_scroll_node(node, clip_store),
                 world_content_transform: node.world_content_transform,
                 world_viewport_transform: node.world_viewport_transform,
                 node_origin: node.local_viewport_rect.origin,
             });
+
+            self.clip_chains.insert(*id, HitTestClipChainDescriptor {
+                parent: node.parent,
+                clips: vec![*id],
+            });
+        }
+
+        for descriptor in &clip_scroll_tree.clip_chains_descriptors {
+            self.clip_chains.insert(
+                ClipId::ClipChain(descriptor.id),
+                HitTestClipChainDescriptor {
+                    parent: descriptor.parent.map(|id| ClipId::ClipChain(id)),
+                    clips: descriptor.clips.clone(),
+                }
+            );
         }
     }
 
-    pub fn is_point_clipped_in_for_node(
+    fn is_point_clipped_in_for_clip_chain(
+        &self,
+        point: WorldPoint,
+        chain_id: &ClipId,
+        test: &mut HitTest
+    ) -> bool {
+        if let Some(result) = test.clip_chain_cache.get(&chain_id) {
+            return *result;
+        }
+
+        let descriptor = &self.clip_chains[&chain_id];
+        let parent_clipped_in = match descriptor.parent {
+            None => true,
+            Some(ref parent) => self.is_point_clipped_in_for_clip_chain(point, parent, test),
+        };
+
+        if !parent_clipped_in {
+            test.clip_chain_cache.insert(*chain_id, false);
+            return false;
+        }
+
+        for clip_node in &descriptor.clips {
+            if !self.is_point_clipped_in_for_node(point, clip_node, test) {
+                test.clip_chain_cache.insert(*chain_id, false);
+                return false;
+            }
+        }
+
+        test.clip_chain_cache.insert(*chain_id, true);
+        true
+    }
+
+    fn is_point_clipped_in_for_node(
         &self,
         point: WorldPoint,
         node_id: &ClipId,
-        cache: &mut FastHashMap<ClipId, Option<LayerPoint>>,
+        test: &mut HitTest
     ) -> bool {
-        if let Some(point) = cache.get(node_id) {
+        if let Some(point) = test.node_cache.get(node_id) {
             return point.is_some();
         }
 
         let node = self.nodes.get(node_id).unwrap();
-        let parent_clipped_in = match node.parent {
-            None => true, // This is the root node.
-            Some(ref parent_id) => {
-                self.is_point_clipped_in_for_node(point, parent_id, cache)
-            }
-        };
-
-        if !parent_clipped_in {
-            cache.insert(*node_id, None);
-            return false;
-        }
-
         let transform = node.world_viewport_transform;
         let transformed_point = match transform.inverse() {
             Some(inverted) => inverted.transform_point2d(&point),
             None => {
-                cache.insert(*node_id, None);
+                test.node_cache.insert(*node_id, None);
                 return false;
             }
         };
@@ -141,43 +183,22 @@ impl HitTester {
         let point_in_layer = transformed_point - node.node_origin.to_vector();
         for region in &node.regions {
             if !region.contains(&transformed_point) {
-                cache.insert(*node_id, None);
+                test.node_cache.insert(*node_id, None);
                 return false;
             }
         }
 
-        cache.insert(*node_id, Some(point_in_layer));
+        test.node_cache.insert(*node_id, Some(point_in_layer));
         true
     }
 
-    pub fn make_node_relative_point_absolute(
-        &self,
-        pipeline_id: Option<PipelineId>,
-        point: &LayerPoint
-    ) -> WorldPoint {
-        pipeline_id.and_then(|id| self.nodes.get(&ClipId::root_reference_frame(id)))
-                   .map(|node| node.world_viewport_transform.transform_point2d(point))
-                   .unwrap_or_else(|| WorldPoint::new(point.x, point.y))
+    pub fn hit_test(&self, mut test: HitTest) -> HitTestResult {
+        let point = test.get_absolute_point(self);
 
-    }
-
-    pub fn hit_test(
-        &self,
-        pipeline_id: Option<PipelineId>,
-        point: WorldPoint,
-        flags: HitTestFlags
-    ) -> HitTestResult {
-        let point = if flags.contains(HitTestFlags::POINT_RELATIVE_TO_PIPELINE_VIEWPORT) {
-            self.make_node_relative_point_absolute(pipeline_id, &LayerPoint::new(point.x, point.y))
-        } else {
-            point
-        };
-
-        let mut node_cache = FastHashMap::default();
         let mut result = HitTestResult::default();
         for &HitTestingRun(ref items, ref clip_and_scroll) in self.runs.iter().rev() {
             let scroll_node = &self.nodes[&clip_and_scroll.scroll_node_id];
-            match (pipeline_id, clip_and_scroll.scroll_node_id.pipeline_id()) {
+            match (test.pipeline_id, clip_and_scroll.scroll_node_id.pipeline_id()) {
                 (Some(id), node_id) if node_id != id => continue,
                 _ => {},
             }
@@ -196,16 +217,25 @@ impl HitTester {
 
                 let clip_id = &clip_and_scroll.clip_node_id();
                 if !clipped_in {
-                    clipped_in = self.is_point_clipped_in_for_node(point, clip_id, &mut node_cache);
+                    clipped_in = self.is_point_clipped_in_for_clip_chain(point, clip_id, &mut test);
                     if !clipped_in {
                         break;
                     }
                 }
 
-                let point_in_viewport = node_cache
-                    .get(&ClipId::root_reference_frame(clip_id.pipeline_id()))
-                    .expect("Hittest target's root reference frame not hit.")
-                    .expect("Hittest target's root reference frame not hit.");
+                // We need to trigger a lookup against the root reference frame here, because
+                // items that are clipped by clip chains won't test against that part of the
+                // hierarchy. If we don't have a valid point for this test, we are likely
+                // in a situation where the reference frame has an univertible transform, but the
+                // item's clip does not.
+                let root_reference_frame = ClipId::root_reference_frame(clip_id.pipeline_id());
+                if !self.is_point_clipped_in_for_node(point, &root_reference_frame, &mut test) {
+                    continue;
+                }
+                let point_in_viewport = match test.node_cache[&root_reference_frame] {
+                    Some(point) => point,
+                    None => continue,
+                };
 
                 result.items.push(HitTestItem {
                     pipeline: clip_and_scroll.clip_node_id().pipeline_id(),
@@ -213,7 +243,7 @@ impl HitTester {
                     point_in_viewport,
                     point_relative_to_item: point_in_layer - item.rect.origin.to_vector(),
                 });
-                if !flags.contains(HitTestFlags::FIND_ALL) {
+                if !test.flags.contains(HitTestFlags::FIND_ALL) {
                     return result;
                 }
             }
@@ -243,4 +273,39 @@ fn get_regions_for_clip_scroll_node(
                 unreachable!("Didn't expect to hit test against BorderCorner"),
         }
     }).collect()
+}
+
+pub struct HitTest {
+    pipeline_id: Option<PipelineId>,
+    point: WorldPoint,
+    flags: HitTestFlags,
+    node_cache: FastHashMap<ClipId, Option<LayerPoint>>,
+    clip_chain_cache: FastHashMap<ClipId, bool>,
+}
+
+impl HitTest {
+    pub fn new(
+        pipeline_id: Option<PipelineId>,
+        point: WorldPoint,
+        flags: HitTestFlags,
+    ) -> HitTest {
+        HitTest {
+            pipeline_id,
+            point,
+            flags,
+            node_cache: FastHashMap::default(),
+            clip_chain_cache: FastHashMap::default(),
+        }
+    }
+
+    pub fn get_absolute_point(&self, hit_tester: &HitTester) -> WorldPoint {
+        if !self.flags.contains(HitTestFlags::POINT_RELATIVE_TO_PIPELINE_VIEWPORT) {
+            return self.point;
+        }
+
+        let point =  &LayerPoint::new(self.point.x, self.point.y);
+        self.pipeline_id.and_then(|id| hit_tester.nodes.get(&ClipId::root_reference_frame(id)))
+                   .map(|node| node.world_viewport_transform.transform_point2d(&point))
+                   .unwrap_or_else(|| WorldPoint::new(self.point.x, self.point.y))
+    }
 }

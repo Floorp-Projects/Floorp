@@ -39,6 +39,7 @@ impl<'a> RawtestHarness<'a> {
     }
 
     pub fn run(mut self) {
+        self.test_hit_testing();
         self.test_retained_blob_images_test();
         self.test_blob_update_test();
         self.test_blob_update_epoch_test();
@@ -571,4 +572,124 @@ impl<'a> RawtestHarness<'a> {
         let pixels2 = self.render_and_get_pixels(window_rect);
         assert!(pixels0 == pixels2);
     }
+
+
+    fn test_hit_testing(&mut self) {
+        println!("\thit testing test...");
+
+        let layout_size = LayoutSize::new(400., 400.);
+        let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
+
+        // Add a rectangle that covers the entire scene.
+        let mut info = LayoutPrimitiveInfo::new(LayoutRect::new(LayoutPoint::zero(), layout_size));
+        info.tag = Some((0, 1));
+        builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
+
+
+        // Add a simple 100x100 rectangle at 100,0.
+        let mut info = LayoutPrimitiveInfo::new(LayoutRect::new(
+            LayoutPoint::new(100., 0.),
+            LayoutSize::new(100., 100.)
+        ));
+        info.tag = Some((0, 2));
+        builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
+
+        let make_rounded_complex_clip = | rect: &LayoutRect, radius: f32 | -> ComplexClipRegion {
+            ComplexClipRegion::new(
+                *rect,
+                BorderRadius::uniform_size(LayoutSize::new(radius, radius)),
+                ClipMode::Clip
+            )
+        };
+
+        // Add a rounded 100x100 rectangle at 200,0.
+        let rect = LayoutRect::new(LayoutPoint::new(200., 0.), LayoutSize::new(100., 100.));
+        let mut info = LayoutPrimitiveInfo::with_clip(
+            rect, LocalClip::RoundedRect(rect, make_rounded_complex_clip(&rect, 20.)));
+        info.tag = Some((0, 3));
+        builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
+
+
+        // Add a rectangle that is clipped by a rounded rect clip item.
+        let rect = LayoutRect::new(LayoutPoint::new(100., 100.), LayoutSize::new(100., 100.));
+        let clip_id = builder.define_clip(rect, vec![make_rounded_complex_clip(&rect, 20.)], None);
+        builder.push_clip_id(clip_id);
+        let mut info = LayoutPrimitiveInfo::new(rect);
+        info.tag = Some((0, 4));
+        builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
+        builder.pop_clip_id();
+
+
+        // Add a rectangle that is clipped by a ClipChain containing a rounded rect.
+        let rect = LayoutRect::new(LayoutPoint::new(200., 100.), LayoutSize::new(100., 100.));
+        let clip_id = builder.define_clip(rect, vec![make_rounded_complex_clip(&rect, 20.)], None);
+        let clip_chain_id = builder.define_clip_chain(None, vec![clip_id]);
+        builder.push_clip_and_scroll_info(ClipAndScrollInfo::new(
+            ClipId::root_scroll_node(self.wrench.root_pipeline_id),
+            ClipId::ClipChain(clip_chain_id),
+        ));
+        let mut info = LayoutPrimitiveInfo::new(rect);
+        info.tag = Some((0, 5));
+        builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
+        builder.pop_clip_id();
+
+
+        let mut epoch = Epoch(0);
+        self.submit_dl(&mut epoch, layout_size, builder, None);
+
+        // We render to ensure that the hit tester is up to date with the current scene.
+        self.rx.recv().unwrap();
+        self.wrench.render();
+
+        let hit_test = | point: WorldPoint | -> HitTestResult {
+            self.wrench.api.hit_test(
+                self.wrench.document_id,
+                None,
+                point,
+                HitTestFlags::FIND_ALL,
+            )
+        };
+
+        let assert_hit_test = | point: WorldPoint, tags: Vec<ItemTag> | {
+            let result = hit_test(point);
+            assert_eq!(result.items.len(), tags.len());
+
+            for (hit_test_item, item_b) in result.items.iter().zip(tags.iter()) {
+                assert_eq!(hit_test_item.tag, *item_b);
+            }
+        };
+
+        // We should not have any hits outside the boundaries of the scene.
+        assert_hit_test(WorldPoint::new(-10., -10.), Vec::new());
+        assert_hit_test(WorldPoint::new(-10., 10.), Vec::new());
+        assert_hit_test(WorldPoint::new(450., 450.), Vec::new());
+        assert_hit_test(WorldPoint::new(100., 450.), Vec::new());
+
+        // The top left corner of the scene should only contain the background.
+        assert_hit_test(WorldPoint::new(50., 50.), vec![(0, 1)]);
+
+        // The middle of the normal rectangle should be hit.
+        assert_hit_test(WorldPoint::new(150., 50.), vec![(0, 2), (0, 1)]);
+
+        let test_rounded_rectangle = | point: WorldPoint, size: WorldSize, tag: ItemTag | {
+            // The cut out corners of the rounded rectangle should not be hit.
+            let top_left = point + WorldVector2D::new(5., 5.);
+            let bottom_right = point + size.to_vector() - WorldVector2D::new(5., 5.);
+
+            assert_hit_test(
+                WorldPoint::new(point.x + (size.width / 2.), point.y + (size.height / 2.)),
+                vec![tag, (0, 1)]
+            );
+
+            assert_hit_test(top_left, vec![(0, 1)]);
+            assert_hit_test(WorldPoint::new(bottom_right.x, top_left.y), vec![(0, 1)]);
+            assert_hit_test(WorldPoint::new(top_left.x, bottom_right.y), vec![(0, 1)]);
+            assert_hit_test(bottom_right, vec![(0, 1)]);
+        };
+
+        test_rounded_rectangle(WorldPoint::new(200., 0.), WorldSize::new(100., 100.), (0, 3));
+        test_rounded_rectangle(WorldPoint::new(100., 100.), WorldSize::new(100., 100.), (0, 4));
+        test_rounded_rectangle(WorldPoint::new(200., 100.), WorldSize::new(100., 100.), (0, 5));
+    }
+
 }

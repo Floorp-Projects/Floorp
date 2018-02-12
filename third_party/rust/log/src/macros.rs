@@ -7,49 +7,50 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+
 /// The standard logging macro.
 ///
-/// This macro will generically log with the specified `LogLevel` and `format!`
+/// This macro will generically log with the specified `Level` and `format!`
 /// based argument list.
-///
-/// The `max_level_*` features can be used to statically disable logging at
-/// various levels.
 ///
 /// # Examples
 ///
 /// ```rust
 /// # #[macro_use]
 /// # extern crate log;
-/// use log::LogLevel;
+/// use log::Level;
 ///
 /// # fn main() {
 /// let data = (42, "Forty-two");
 /// let private_data = "private";
 ///
-/// log!(LogLevel::Error, "Received errors: {}, {}", data.0, data.1);
-/// log!(target: "app_events", LogLevel::Warn, "App warning: {}, {}, {}", 
+/// log!(Level::Error, "Received errors: {}, {}", data.0, data.1);
+/// log!(target: "app_events", Level::Warn, "App warning: {}, {}, {}",
 ///     data.0, data.1, private_data);
 /// # }
 /// ```
 #[macro_export]
 macro_rules! log {
     (target: $target:expr, $lvl:expr, $($arg:tt)+) => ({
-        static _LOC: $crate::LogLocation = $crate::LogLocation {
-            __line: line!(),
-            __file: file!(),
-            __module_path: module_path!(),
-        };
         let lvl = $lvl;
-        if lvl <= $crate::__static_max_level() && lvl <= $crate::max_log_level() {
-            $crate::__log(lvl, $target, &_LOC, format_args!($($arg)+))
+        if lvl <= $crate::STATIC_MAX_LEVEL && lvl <= $crate::max_level() {
+            $crate::Log::log(
+                $crate::logger(),
+                &$crate::RecordBuilder::new()
+                    .args(format_args!($($arg)+))
+                    .level(lvl)
+                    .target($target)
+                    .module_path(Some(module_path!()))
+                    .file(Some(file!()))
+                    .line(Some(line!()))
+                    .build()
+            )
         }
     });
     ($lvl:expr, $($arg:tt)+) => (log!(target: module_path!(), $lvl, $($arg)+))
 }
 
 /// Logs a message at the error level.
-///
-/// Logging at this level is disabled if the `max_level_off` feature is present.
 ///
 /// # Examples
 ///
@@ -66,21 +67,14 @@ macro_rules! log {
 #[macro_export]
 macro_rules! error {
     (target: $target:expr, $($arg:tt)*) => (
-        log!(target: $target, $crate::LogLevel::Error, $($arg)*);
+        log!(target: $target, $crate::Level::Error, $($arg)*);
     );
     ($($arg:tt)*) => (
-        log!($crate::LogLevel::Error, $($arg)*);
+        log!($crate::Level::Error, $($arg)*);
     )
 }
 
 /// Logs a message at the warn level.
-///
-/// Logging at this level is disabled if any of the following features are
-/// present: `max_level_off` or `max_level_error`.
-///
-/// When building in release mode (i.e., without the `debug_assertions` option),
-/// logging at this level is also disabled if any of the following features are
-/// present: `release_max_level_off` or `max_level_error`.
 ///
 /// # Examples
 ///
@@ -97,22 +91,14 @@ macro_rules! error {
 #[macro_export]
 macro_rules! warn {
     (target: $target:expr, $($arg:tt)*) => (
-        log!(target: $target, $crate::LogLevel::Warn, $($arg)*);
+        log!(target: $target, $crate::Level::Warn, $($arg)*);
     );
     ($($arg:tt)*) => (
-        log!($crate::LogLevel::Warn, $($arg)*);
+        log!($crate::Level::Warn, $($arg)*);
     )
 }
 
 /// Logs a message at the info level.
-///
-/// Logging at this level is disabled if any of the following features are
-/// present: `max_level_off`, `max_level_error`, or `max_level_warn`.
-///
-/// When building in release mode (i.e., without the `debug_assertions` option),
-/// logging at this level is also disabled if any of the following features are
-/// present: `release_max_level_off`, `release_max_level_error`, or
-/// `release_max_level_warn`.
 ///
 /// # Examples
 ///
@@ -131,23 +117,14 @@ macro_rules! warn {
 #[macro_export]
 macro_rules! info {
     (target: $target:expr, $($arg:tt)*) => (
-        log!(target: $target, $crate::LogLevel::Info, $($arg)*);
+        log!(target: $target, $crate::Level::Info, $($arg)*);
     );
     ($($arg:tt)*) => (
-        log!($crate::LogLevel::Info, $($arg)*);
+        log!($crate::Level::Info, $($arg)*);
     )
 }
 
 /// Logs a message at the debug level.
-///
-/// Logging at this level is disabled if any of the following features are
-/// present: `max_level_off`, `max_level_error`, `max_level_warn`, or
-/// `max_level_info`.
-///
-/// When building in release mode (i.e., without the `debug_assertions` option),
-/// logging at this level is also disabled if any of the following features are
-/// present: `release_max_level_off`, `release_max_level_error`,
-/// `release_max_level_warn`, or `release_max_level_info`.
 ///
 /// # Examples
 ///
@@ -165,24 +142,14 @@ macro_rules! info {
 #[macro_export]
 macro_rules! debug {
     (target: $target:expr, $($arg:tt)*) => (
-        log!(target: $target, $crate::LogLevel::Debug, $($arg)*);
+        log!(target: $target, $crate::Level::Debug, $($arg)*);
     );
     ($($arg:tt)*) => (
-        log!($crate::LogLevel::Debug, $($arg)*);
+        log!($crate::Level::Debug, $($arg)*);
     )
 }
 
 /// Logs a message at the trace level.
-///
-/// Logging at this level is disabled if any of the following features are
-/// present: `max_level_off`, `max_level_error`, `max_level_warn`,
-/// `max_level_info`, or `max_level_debug`.
-///
-/// When building in release mode (i.e., without the `debug_assertions` option),
-/// logging at this level is also disabled if any of the following features are
-/// present: `release_max_level_off`, `release_max_level_error`,
-/// `release_max_level_warn`, `release_max_level_info`, or
-/// `release_max_level_debug`.
 ///
 /// # Examples
 ///
@@ -202,10 +169,10 @@ macro_rules! debug {
 #[macro_export]
 macro_rules! trace {
     (target: $target:expr, $($arg:tt)*) => (
-        log!(target: $target, $crate::LogLevel::Trace, $($arg)*);
+        log!(target: $target, $crate::Level::Trace, $($arg)*);
     );
     ($($arg:tt)*) => (
-        log!($crate::LogLevel::Trace, $($arg)*);
+        log!($crate::Level::Trace, $($arg)*);
     )
 }
 
@@ -220,12 +187,16 @@ macro_rules! trace {
 /// ```rust
 /// # #[macro_use]
 /// # extern crate log;
-/// use log::LogLevel::Debug;
+/// use log::Level::Debug;
 ///
 /// # fn foo() {
 /// if log_enabled!(Debug) {
 ///     let data = expensive_call();
 ///     debug!("expensive debug data: {} {}", data.x, data.y);
+/// }
+/// if log_enabled!(target: "Global", Debug) {
+///    let data = expensive_call();
+///    debug!(target: "Global", "expensive debug data: {} {}", data.x, data.y);
 /// }
 /// # }
 /// # struct Data { x: u32, y: u32 }
@@ -236,8 +207,14 @@ macro_rules! trace {
 macro_rules! log_enabled {
     (target: $target:expr, $lvl:expr) => ({
         let lvl = $lvl;
-        lvl <= $crate::__static_max_level() && lvl <= $crate::max_log_level() &&
-            $crate::__enabled(lvl, $target)
+        lvl <= $crate::STATIC_MAX_LEVEL && lvl <= $crate::max_level() &&
+            $crate::Log::enabled(
+                $crate::logger(),
+                &$crate::MetadataBuilder::new()
+                    .level(lvl)
+                    .target($target)
+                    .build(),
+            )
     });
     ($lvl:expr) => (log_enabled!(target: module_path!(), $lvl))
 }

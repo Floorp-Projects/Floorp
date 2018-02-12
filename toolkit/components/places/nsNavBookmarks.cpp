@@ -2247,23 +2247,6 @@ nsNavBookmarks::GetBookmarksForURI(nsIURI* aURI,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNavBookmarks::GetItemIndex(int64_t aItemId, int32_t* _index)
-{
-  NS_ENSURE_ARG_MIN(aItemId, 1);
-  NS_ENSURE_ARG_POINTER(_index);
-
-  BookmarkData bookmark;
-  nsresult rv = FetchItemInfo(aItemId, bookmark);
-  // With respect to the API.
-  if (NS_FAILED(rv)) {
-    *_index = -1;
-    return NS_OK;
-  }
-
-  *_index = bookmark.position;
-  return NS_OK;
-}
 
 
 NS_IMETHODIMP

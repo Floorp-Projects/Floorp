@@ -45,9 +45,8 @@ impl Example for App {
             // scrolling and clips stuff
             // let's make a scrollbox
             let scrollbox = (0, 0).to(300, 400);
-            let info = LayoutPrimitiveInfo::new((10, 10).by(0, 0));
             builder.push_stacking_context(
-                &info,
+                &LayoutPrimitiveInfo::new((10, 10).by(0, 0)),
                 ScrollPolicy::Scrollable,
                 None,
                 TransformStyle::Flat,
@@ -68,17 +67,20 @@ impl Example for App {
 
             // now put some content into it.
             // start with a white background
-            let info = LayoutPrimitiveInfo::new((0, 0).to(1000, 1000));
+            let mut info = LayoutPrimitiveInfo::new((0, 0).to(1000, 1000));
+            info.tag = Some((0, 1));
             builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
 
             // let's make a 50x50 blue square as a visual reference
-            let info = LayoutPrimitiveInfo::new((0, 0).to(50, 50));
+            let mut info = LayoutPrimitiveInfo::new((0, 0).to(50, 50));
+            info.tag = Some((0, 2));
             builder.push_rect(&info, ColorF::new(0.0, 0.0, 1.0, 1.0));
 
             // and a 50x50 green square next to it with an offset clip
             // to see what that looks like
-            let info =
+            let mut info =
                 LayoutPrimitiveInfo::with_clip_rect((50, 0).to(100, 50), (60, 10).to(110, 60));
+            info.tag = Some((0, 3));
             builder.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
 
             // Below the above rectangles, set up a nested scrollbox. It's still in
@@ -96,12 +98,14 @@ impl Example for App {
 
             // give it a giant gray background just to distinguish it and to easily
             // visually identify the nested scrollbox
-            let info = LayoutPrimitiveInfo::new((-1000, -1000).to(5000, 5000));
+            let mut info = LayoutPrimitiveInfo::new((-1000, -1000).to(5000, 5000));
+            info.tag = Some((0, 4));
             builder.push_rect(&info, ColorF::new(0.5, 0.5, 0.5, 1.0));
 
             // add a teal square to visualize the scrolling/clipping behaviour
             // as you scroll the nested scrollbox
-            let info = LayoutPrimitiveInfo::new((0, 200).to(50, 250));
+            let mut info = LayoutPrimitiveInfo::new((0, 200).to(50, 250));
+            info.tag = Some((0, 5));
             builder.push_rect(&info, ColorF::new(0.0, 1.0, 1.0, 1.0));
 
             // Add a sticky frame. It will "stick" twice while scrolling, once
@@ -117,13 +121,15 @@ impl Example for App {
             );
 
             builder.push_clip_id(sticky_id);
-            let info = LayoutPrimitiveInfo::new((50, 350).by(50, 50));
+            let mut info = LayoutPrimitiveInfo::new((50, 350).by(50, 50));
+            info.tag = Some((0, 6));
             builder.push_rect(&info, ColorF::new(0.5, 0.5, 1.0, 1.0));
             builder.pop_clip_id(); // sticky_id
 
             // just for good measure add another teal square further down and to
             // the right, which can be scrolled into view by the user
-            let info = LayoutPrimitiveInfo::new((250, 350).to(300, 400));
+            let mut info = LayoutPrimitiveInfo::new((250, 350).to(300, 400));
+            info.tag = Some((0, 7));
             builder.push_rect(&info, ColorF::new(0.0, 1.0, 1.0, 1.0));
 
             builder.pop_clip_id(); // nested_clip_id
@@ -135,10 +141,17 @@ impl Example for App {
         builder.pop_stacking_context();
     }
 
-    fn on_event(&mut self, event: glutin::Event, api: &RenderApi, document_id: DocumentId) -> bool {
+    fn on_event(&mut self, event: glutin::WindowEvent, api: &RenderApi, document_id: DocumentId) -> bool {
         let mut txn = Transaction::new();
         match event {
-            glutin::Event::KeyboardInput(glutin::ElementState::Pressed, _, Some(key)) => {
+            glutin::WindowEvent::KeyboardInput {
+                input: glutin::KeyboardInput {
+                    state: glutin::ElementState::Pressed,
+                    virtual_keycode: Some(key),
+                    ..
+                },
+                ..
+            } => {
                 let offset = match key {
                     glutin::VirtualKeyCode::Down => (0.0, -10.0),
                     glutin::VirtualKeyCode::Up => (0.0, 10.0),
@@ -153,14 +166,10 @@ impl Example for App {
                     ScrollEventPhase::Start,
                 );
             }
-            glutin::Event::MouseMoved(x, y) => {
+            glutin::WindowEvent::CursorMoved { position: (x, y), .. } => {
                 self.cursor_position = WorldPoint::new(x as f32, y as f32);
             }
-            glutin::Event::MouseWheel(delta, _, event_cursor_position) => {
-                if let Some((x, y)) = event_cursor_position {
-                    self.cursor_position = WorldPoint::new(x as f32, y as f32);
-                }
-
+            glutin::WindowEvent::MouseWheel { delta, .. } => {
                 const LINE_HEIGHT: f32 = 38.0;
                 let (dx, dy) = match delta {
                     glutin::MouseScrollDelta::LineDelta(dx, dy) => (dx, dy * LINE_HEIGHT),
@@ -172,6 +181,20 @@ impl Example for App {
                     self.cursor_position,
                     ScrollEventPhase::Start,
                 );
+            }
+            glutin::WindowEvent::MouseInput { .. } => {
+                let results = api.hit_test(
+                    document_id,
+                    None,
+                    self.cursor_position,
+                    HitTestFlags::FIND_ALL
+                );
+
+                println!("Hit test results:");
+                for item in &results.items {
+                    println!("  • {:?}", item);
+                }
+                println!("");
             }
             _ => (),
         }

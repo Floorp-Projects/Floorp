@@ -10,7 +10,7 @@ use crossbeam::sync::chase_lev;
 use dwrote;
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 use font_loader::system_fonts;
-use glutin::WindowProxy;
+use glutin::EventsLoopProxy;
 use json_frame_writer::JsonFrameWriter;
 use ron_frame_writer::RonFrameWriter;
 use std::collections::HashMap;
@@ -46,7 +46,7 @@ pub enum SaveType {
 }
 
 struct NotifierData {
-    window_proxy: Option<WindowProxy>,
+    events_loop_proxy: Option<EventsLoopProxy>,
     frames_notified: u32,
     timing_receiver: chase_lev::Stealer<time::SteadyTime>,
     verbose: bool,
@@ -54,12 +54,12 @@ struct NotifierData {
 
 impl NotifierData {
     fn new(
-        window_proxy: Option<WindowProxy>,
+        events_loop_proxy: Option<EventsLoopProxy>,
         timing_receiver: chase_lev::Stealer<time::SteadyTime>,
         verbose: bool,
     ) -> Self {
         NotifierData {
-            window_proxy,
+            events_loop_proxy,
             frames_notified: 0,
             timing_receiver,
             verbose,
@@ -91,9 +91,10 @@ impl Notifier {
                 }
             }
         }
-        if let Some(ref window_proxy) = data.window_proxy {
+
+        if let Some(ref elp) = data.events_loop_proxy {
             #[cfg(not(target_os = "android"))]
-            window_proxy.wakeup_event_loop();
+            let _ = elp.wakeup();
         }
     }
 }
@@ -165,6 +166,7 @@ pub struct Wrench {
 impl Wrench {
     pub fn new(
         window: &mut WindowWrapper,
+        proxy: Option<EventsLoopProxy>,
         shader_override_path: Option<PathBuf>,
         dp_ratio: f32,
         save_type: Option<SaveType>,
@@ -214,11 +216,10 @@ impl Wrench {
             ..Default::default()
         };
 
-        let proxy = window.create_window_proxy();
         // put an Awakened event into the queue to kick off the first frame
-        if let Some(ref wp) = proxy {
+        if let Some(ref elp) = proxy {
             #[cfg(not(target_os = "android"))]
-            wp.wakeup_event_loop();
+            let _ = elp.wakeup();
         }
 
         let (timing_sender, timing_receiver) = chase_lev::deque();
@@ -548,6 +549,7 @@ impl Wrench {
 
     pub fn render(&mut self) -> RendererStats {
         self.renderer.update();
+        let _ = self.renderer.flush_pipeline_info();
         self.renderer
             .render(self.window_size)
             .expect("errors encountered during render!")

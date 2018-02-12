@@ -79,34 +79,36 @@ impl Example for App {
         builder.pop_stacking_context();
     }
 
-    fn on_event(&mut self, event: glutin::Event, api: &RenderApi, document_id: DocumentId) -> bool {
+    fn on_event(&mut self, event: glutin::WindowEvent, api: &RenderApi, document_id: DocumentId) -> bool {
         match event {
-            glutin::Event::KeyboardInput(glutin::ElementState::Pressed, _, Some(key)) => {
-                match key {
-                    glutin::VirtualKeyCode::Space => {
-                        let mut image_data = Vec::new();
-                        for y in 0 .. 64 {
-                            for x in 0 .. 64 {
-                                let r = 255 * ((y & 32) == 0) as u8;
-                                let g = 255 * ((x & 32) == 0) as u8;
-                                image_data.extend_from_slice(&[0, g, r, 0xff]);
-                            }
-                        }
-
-                        let mut updates = ResourceUpdates::new();
-                        updates.update_image(
-                            self.image_key,
-                            ImageDescriptor::new(64, 64, ImageFormat::BGRA8, true),
-                            ImageData::new(image_data),
-                            None,
-                        );
-                        let mut txn = Transaction::new();
-                        txn.update_resources(updates);
-                        txn.generate_frame();
-                        api.send_transaction(document_id, txn);
+            glutin::WindowEvent::KeyboardInput {
+                input: glutin::KeyboardInput {
+                    state: glutin::ElementState::Pressed,
+                    virtual_keycode: Some(glutin::VirtualKeyCode::Space),
+                    ..
+                },
+                ..
+            } => {
+                let mut image_data = Vec::new();
+                for y in 0 .. 64 {
+                    for x in 0 .. 64 {
+                        let r = 255 * ((y & 32) == 0) as u8;
+                        let g = 255 * ((x & 32) == 0) as u8;
+                        image_data.extend_from_slice(&[0, g, r, 0xff]);
                     }
-                    _ => {}
                 }
+
+                let mut updates = ResourceUpdates::new();
+                updates.update_image(
+                    self.image_key,
+                    ImageDescriptor::new(64, 64, ImageFormat::BGRA8, true),
+                    ImageData::new(image_data),
+                    None,
+                );
+                let mut txn = Transaction::new();
+                txn.update_resources(updates);
+                txn.generate_frame();
+                api.send_transaction(document_id, txn);
             }
             _ => {}
         }

@@ -167,7 +167,7 @@ impl RenderTaskTree {
 
         // Sanity check - can be relaxed if needed
         match task.location {
-            RenderTaskLocation::Fixed => {
+            RenderTaskLocation::Fixed(..) => {
                 debug_assert!(pass_index == passes.len() - 1);
             }
             RenderTaskLocation::Dynamic(..) |
@@ -218,7 +218,7 @@ impl ops::IndexMut<RenderTaskId> for RenderTaskTree {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum RenderTaskLocation {
-    Fixed,
+    Fixed(DeviceIntRect),
     Dynamic(Option<(DeviceIntPoint, RenderTargetIndex)>, DeviceIntSize),
     TextureCache(SourceTexture, i32, DeviceIntRect),
 }
@@ -336,7 +336,7 @@ pub struct RenderTask {
 
 impl RenderTask {
     pub fn new_picture(
-        size: Option<DeviceIntSize>,
+        location: RenderTaskLocation,
         prim_index: PrimitiveIndex,
         target_kind: RenderTargetKind,
         content_origin: ContentOrigin,
@@ -345,11 +345,6 @@ impl RenderTask {
         children: Vec<RenderTaskId>,
         pic_type: PictureType,
     ) -> Self {
-        let location = match size {
-            Some(size) => RenderTaskLocation::Dynamic(None, size),
-            None => RenderTaskLocation::Fixed,
-        };
-
         RenderTask {
             children,
             location,
@@ -601,7 +596,7 @@ impl RenderTask {
 
     pub fn get_dynamic_size(&self) -> DeviceIntSize {
         match self.location {
-            RenderTaskLocation::Fixed => DeviceIntSize::zero(),
+            RenderTaskLocation::Fixed(..) => DeviceIntSize::zero(),
             RenderTaskLocation::Dynamic(_, size) => size,
             RenderTaskLocation::TextureCache(_, _, rect) => rect.size,
         }
@@ -609,8 +604,8 @@ impl RenderTask {
 
     pub fn get_target_rect(&self) -> (DeviceIntRect, RenderTargetIndex) {
         match self.location {
-            RenderTaskLocation::Fixed => {
-                (DeviceIntRect::zero(), RenderTargetIndex(0))
+            RenderTaskLocation::Fixed(rect) => {
+                (rect, RenderTargetIndex(0))
             }
             // Previously, we only added render tasks after the entire
             // primitive chain was determined visible. This meant that
@@ -824,7 +819,7 @@ impl RenderTaskCache {
 
             // Find out what size to alloc in the texture cache.
             let size = match render_task.location {
-                RenderTaskLocation::Fixed |
+                RenderTaskLocation::Fixed(..) |
                 RenderTaskLocation::TextureCache(..) => {
                     panic!("BUG: dynamic task was expected");
                 }
