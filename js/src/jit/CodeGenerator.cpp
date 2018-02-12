@@ -9631,34 +9631,15 @@ CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::BytecodeOffset trapOffs
 {
     JitSpew(JitSpew_Codegen, "# Emitting wasm code");
 
-    wasm::GenerateFunctionPrologue(masm, frameSize(), sigId, offsets);
+    wasm::IsLeaf isLeaf = !gen->needsOverrecursedCheck();
 
-    // Overflow checks are omitted by CodeGenerator in some cases (leaf
-    // functions with small framePushed). Perform overflow-checking after
-    // pushing framePushed to catch cases with really large frames.
-    Label onOverflow;
-    if (!omitOverRecursedCheck())
-        masm.wasmEmitStackCheck(masm.getStackPointer(), ABINonArgReg0, &onOverflow);
+    wasm::GenerateFunctionPrologue(masm, frameSize(), isLeaf, sigId, trapOffset, offsets);
 
     if (!generateBody())
         return false;
 
     masm.bind(&returnLabel_);
     wasm::GenerateFunctionEpilogue(masm, frameSize(), offsets);
-
-    if (!omitOverRecursedCheck()) {
-        // Since we just overflowed the stack, to be on the safe side, pop the
-        // stack so that, when the trap exit stub executes, it is a safe
-        // distance away from the end of the native stack.
-        wasm::OldTrapDesc trap(trapOffset, wasm::Trap::StackOverflow, /* framePushed = */ 0);
-        if (frameSize() > 0) {
-            masm.bind(&onOverflow);
-            masm.addToStackPtr(Imm32(frameSize()));
-            masm.jump(trap);
-        } else {
-            masm.bindLater(&onOverflow, trap);
-        }
-    }
 
 #if defined(JS_ION_PERF)
     // Note the end of the inline code and start of the OOL code.

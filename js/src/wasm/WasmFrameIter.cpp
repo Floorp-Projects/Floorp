@@ -28,6 +28,7 @@ using namespace js::jit;
 using namespace js::wasm;
 
 using mozilla::DebugOnly;
+using mozilla::Maybe;
 using mozilla::Swap;
 
 /*****************************************************************************/
@@ -349,9 +350,10 @@ wasm::ClearExitFP(MacroAssembler& masm, Register scratch)
 }
 
 static void
-GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
-                         uint32_t* entry, uint32_t* tierEntry, CompileMode mode, uint32_t funcIndex)
+GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry)
 {
+    masm.setFramePushed(0);
+
     // ProfilingFrameIterator needs to know the offsets of several key
     // instructions from entry. To save space, we make these offsets static
     // constants and assert that they match the actual codegen below. On ARM,
@@ -392,37 +394,6 @@ GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason 
         MOZ_ASSERT_IF(!masm.oom(), SetFP == masm.currentOffset() - *entry);
     }
 #endif
-    // Tiering works as follows.  The Code owns a jumpTable, which has one
-    // pointer-sized element for each function up to the largest funcIndex in
-    // the module.  Each table element is an address into the Tier-1 or the
-    // Tier-2 function at that index; the elements are updated when Tier-2 code
-    // becomes available.  The Tier-1 function will unconditionally jump to this
-    // address.  The table elements are written racily but without tearing when
-    // Tier-2 compilation is finished.
-    //
-    // The address in the table is either to the instruction following the jump
-    // in Tier-1 code, or into the function prologue after the standard setup in
-    // Tier-2 code.  Effectively, Tier-1 code performs standard frame setup on
-    // behalf of whatever code it jumps to, and the target code allocates its
-    // own frame in whatever way it wants.
-
-    if (reason.isNone()) {
-        if (mode == CompileMode::Tier1) {
-            Register scratch = ABINonArgReg0;
-            masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, jumpTable)), scratch);
-            masm.jump(Address(scratch, funcIndex*sizeof(uintptr_t)));
-        }
-        if (tierEntry)
-            *tierEntry = masm.currentOffset();
-    }
-
-    // If this frame will be exiting compiled code to C++, record the fp and
-    // reason in the JitActivation so the frame iterators can unwind.
-    if (!reason.isNone())
-        SetExitFP(masm, reason, ABINonArgReturnVolatileReg);
-
-    if (framePushed)
-        masm.subFromStackPtr(Imm32(framePushed));
 }
 
 static void
@@ -430,7 +401,7 @@ GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason 
                          uint32_t* ret)
 {
     if (framePushed)
-        masm.addToStackPtr(Imm32(framePushed));
+        masm.freeStack(framePushed);
 
     if (!reason.isNone())
         ClearExitFP(masm, ABINonArgReturnVolatileReg);
@@ -479,8 +450,9 @@ GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason 
 }
 
 void
-wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const SigIdDesc& sigId,
-                               FuncOffsets* offsets, CompileMode mode, uint32_t funcIndex)
+wasm::GenerateFunctionPrologue(MacroAssembler& masm, uint32_t framePushed, IsLeaf isLeaf,
+                               const SigIdDesc& sigId, BytecodeOffset trapOffset,
+                               FuncOffsets* offsets, const Maybe<uint32_t>& tier1FuncIndex)
 {
     // Flush pending pools so they do not get dumped between the 'begin' and
     // 'normalEntry' offsets since the difference must be less than UINT8_MAX
@@ -490,8 +462,7 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
 
     // Generate table entry:
     offsets->begin = masm.currentOffset();
-    BytecodeOffset trapOffset(0);  // ignored by masm.wasmEmitTrapOutOfLineCode
-    OldTrapDesc trap(trapOffset, Trap::IndirectCallBadSig, masm.framePushed());
+    OldTrapDesc trap(trapOffset, Trap::IndirectCallBadSig, 0);
     switch (sigId.kind()) {
       case SigIdDesc::Kind::Global: {
         Register scratch = WasmTableCallScratchReg;
@@ -513,18 +484,66 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
 
     // Generate normal entry:
     masm.nopAlign(CodeAlignment);
-    GenerateCallablePrologue(masm, framePushed, ExitReason::None(), &offsets->normalEntry,
-                             &offsets->tierEntry, mode, funcIndex);
+    GenerateCallablePrologue(masm, &offsets->normalEntry);
 
-    masm.setFramePushed(framePushed);
+    // Tiering works as follows.  The Code owns a jumpTable, which has one
+    // pointer-sized element for each function up to the largest funcIndex in
+    // the module.  Each table element is an address into the Tier-1 or the
+    // Tier-2 function at that index; the elements are updated when Tier-2 code
+    // becomes available.  The Tier-1 function will unconditionally jump to this
+    // address.  The table elements are written racily but without tearing when
+    // Tier-2 compilation is finished.
+    //
+    // The address in the table is either to the instruction following the jump
+    // in Tier-1 code, or into the function prologue after the standard setup in
+    // Tier-2 code.  Effectively, Tier-1 code performs standard frame setup on
+    // behalf of whatever code it jumps to, and the target code allocates its
+    // own frame in whatever way it wants.
+    if (tier1FuncIndex) {
+        Register scratch = ABINonArgReg0;
+        masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, jumpTable)), scratch);
+        masm.jump(Address(scratch, *tier1FuncIndex * sizeof(uintptr_t)));
+    }
+
+    offsets->tierEntry = masm.currentOffset();
+
+    // The framePushed value is tier-variant and thus the stack increment must
+    // go after the tiering jump/entry.
+    if (framePushed > 0) {
+        // If the frame is large, don't bump sp until after the stack limit check so
+        // that the trap handler isn't called with a wild sp.
+        if (framePushed > MAX_UNCHECKED_LEAF_FRAME_SIZE) {
+            Label ok;
+            Register scratch = ABINonArgReg0;
+            masm.moveStackPtrTo(scratch);
+            masm.subPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)), scratch);
+            masm.branchPtr(Assembler::GreaterThan, scratch, Imm32(framePushed), &ok);
+            masm.wasmTrap(wasm::Trap::StackOverflow, trapOffset);
+            masm.bind(&ok);
+        }
+
+        masm.reserveStack(framePushed);
+
+        if (framePushed <= MAX_UNCHECKED_LEAF_FRAME_SIZE && !isLeaf) {
+            Label ok;
+            masm.branchStackPtrRhs(Assembler::Below,
+                                   Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)),
+                                   &ok);
+            masm.wasmTrap(wasm::Trap::StackOverflow, trapOffset);
+            masm.bind(&ok);
+        }
+    }
+
+    MOZ_ASSERT(masm.framePushed() == framePushed);
 }
 
 void
 wasm::GenerateFunctionEpilogue(MacroAssembler& masm, unsigned framePushed, FuncOffsets* offsets)
 {
+    // Inverse of GenerateFunctionPrologue:
     MOZ_ASSERT(masm.framePushed() == framePushed);
     GenerateCallableEpilogue(masm, framePushed, ExitReason::None(), &offsets->ret);
-    masm.setFramePushed(0);
+    MOZ_ASSERT(masm.framePushed() == 0);
 }
 
 void
@@ -532,9 +551,15 @@ wasm::GenerateExitPrologue(MacroAssembler& masm, unsigned framePushed, ExitReaso
                            CallableOffsets* offsets)
 {
     masm.haltingAlign(CodeAlignment);
-    GenerateCallablePrologue(masm, framePushed, reason, &offsets->begin, nullptr,
-                             CompileMode::Once, 0);
-    masm.setFramePushed(framePushed);
+
+    GenerateCallablePrologue(masm, &offsets->begin);
+
+    // This frame will be exiting compiled code to C++ so record the fp and
+    // reason in the JitActivation so the frame iterators can unwind.
+    SetExitFP(masm, reason, ABINonArgReturnVolatileReg);
+
+    MOZ_ASSERT(masm.framePushed() == 0);
+    masm.reserveStack(framePushed);
 }
 
 void
@@ -544,7 +569,7 @@ wasm::GenerateExitEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReaso
     // Inverse of GenerateExitPrologue:
     MOZ_ASSERT(masm.framePushed() == framePushed);
     GenerateCallableEpilogue(masm, framePushed, reason, &offsets->ret);
-    masm.setFramePushed(0);
+    MOZ_ASSERT(masm.framePushed() == 0);
 }
 
 static void
@@ -572,10 +597,12 @@ void
 wasm::GenerateJitExitPrologue(MacroAssembler& masm, unsigned framePushed, CallableOffsets* offsets)
 {
     masm.haltingAlign(CodeAlignment);
-    GenerateCallablePrologue(masm, framePushed, ExitReason::None(), &offsets->begin, nullptr,
-                             CompileMode::Once, 0);
+
+    GenerateCallablePrologue(masm, &offsets->begin);
     AssertNoWasmExitFPInJitExit(masm);
-    masm.setFramePushed(framePushed);
+
+    MOZ_ASSERT(masm.framePushed() == 0);
+    masm.reserveStack(framePushed);
 }
 
 void
@@ -585,7 +612,7 @@ wasm::GenerateJitExitEpilogue(MacroAssembler& masm, unsigned framePushed, Callab
     MOZ_ASSERT(masm.framePushed() == framePushed);
     AssertNoWasmExitFPInJitExit(masm);
     GenerateCallableEpilogue(masm, framePushed, ExitReason::None(), &offsets->ret);
-    masm.setFramePushed(0);
+    MOZ_ASSERT(masm.framePushed() == 0);
 }
 
 void
