@@ -19,6 +19,8 @@ import mozhttpd
 
 from mozbuild.base import MachCommandBase
 
+here = os.path.abspath(os.path.dirname(__file__))
+
 
 @CommandProvider
 class Documentation(MachCommandBase):
@@ -50,9 +52,7 @@ class Documentation(MachCommandBase):
             return die('jsdoc not found - please install from npm.')
 
         self._activate_virtualenv()
-        self.virtualenv_manager.install_pip_package('sphinx_rtd_theme==0.2.4')
-        self.virtualenv_manager.install_pip_package('sphinx-js==2.1')
-        self.virtualenv_manager.install_pip_package('recommonmark==0.4.0')
+        self.virtualenv_manager.install_pip_requirements(os.path.join(here, 'requirements.txt'))
 
         import sphinx
         import webbrowser
