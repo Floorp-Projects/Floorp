@@ -399,17 +399,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
             return self.upload_env
         config = self.config
 
-        replace_dict = {
-            'buildid': self._query_buildid(),
-            'version': self.query_version(),
-        }
-        if config['branch'] == 'try':
-            replace_dict.update({
-                'who': self.query_who(),
-                'revision': self._query_revision(),
-            })
-        upload_env = self.query_env(partial_env=config.get("upload_env"),
-                                    replace_dict=replace_dict)
+        upload_env = self.query_env(partial_env=config.get("upload_env"))
         # check if there are any extra option from the platform configuration
         # and append them to the env
 
