@@ -278,13 +278,8 @@ Damp.prototype = {
     });
   },
 
-  async closeCurrentTab() {
-    let onTransition = new Promise(done => {
-      this._win.gBrowser.tabContainer.addEventListener("transitionend", done,
-        { once: true });
-    });
+  closeCurrentTab() {
     this._win.BrowserCloseTabOrWindow();
-    await onTransition;
     return this._win.gBrowser.selectedTab;
   },
 
@@ -912,7 +907,7 @@ async _consoleOpenWithCachedMessagesTest() {
   },
 
   async testTeardown(url) {
-    await this.closeCurrentTab();
+    this.closeCurrentTab();
 
     // Force freeing memory now so that it doesn't happen during the next test
     await garbageCollect();
