@@ -253,7 +253,15 @@ Probes in native code can also use the `nsITelemetry <https://dxr.mozilla.org/mo
    * @param id - histogram id
    * @param sample - value to record.
    */
-  void Accumulate(ID id, uint32_t sample);
+  void Accumulate(HistogramID id, uint32_t sample);
+
+  /**
+   * Adds samples to a histogram defined in Histograms.json
+   *
+   * @param id - histogram id
+   * @param samples - values to record.
+   */
+  void Accumulate(HistogramID id, const nsTArray<uint32_t>& samples);
 
   /**
    * Adds sample to a keyed histogram defined in Histograms.h
@@ -262,16 +270,35 @@ Probes in native code can also use the `nsITelemetry <https://dxr.mozilla.org/mo
    * @param key - the string key
    * @param sample - (optional) value to record, defaults to 1.
    */
-  void Accumulate(ID id, const nsCString& key, uint32_t sample = 1);
+  void Accumulate(HistogramID id, const nsCString& key, uint32_t sample = 1);
 
   /**
    * Adds time delta in milliseconds to a histogram defined in Histograms.json
    *
    * @param id - histogram id
    * @param start - start time
-   * @param end - end time
+   * @param end - (optional) end time, defaults to TimeStamp::Now().
    */
-  void AccumulateTimeDelta(ID id, TimeStamp start, TimeStamp end = TimeStamp::Now());
+  void AccumulateTimeDelta(HistogramID id, TimeStamp start, TimeStamp end = TimeStamp::Now());
+
+  /**
+   * Adds time delta in milliseconds to a keyed histogram defined in Histograms.json
+   *
+   * @param id - histogram id
+   * @param key - the string key
+   * @param start - start time
+   * @param end - (optional) end time, defaults to TimeStamp::Now().
+   */
+  void AccumulateTimeDelta(HistogramID id, const cs TimeStamp start, TimeStamp end = TimeStamp::Now());
+
+  /** Adds time delta in milliseconds to a histogram defined in TelemetryHistogramEnums.h
+   *
+   * @param id - histogram id
+   * @param key - the string key
+   * @param start - start time
+   * @param end - (optional) end time, defaults to TimeStamp::Now().
+   */
+  void AccumulateTimeDelta(HistogramID id, const nsCString& key, TimeStamp start, TimeStamp end = TimeStamp::Now());
 
 The histogram names declared in ``Histograms.json`` are translated into constants in the ``mozilla::Telemetry`` namespace:
 

@@ -6,9 +6,9 @@
 
 // Marionette is the remote protocol that lets OOP programs communicate
 // with, instrument, and control Gecko.
-//
-// It is included in Firefox, but not enabled by default unless the
-// -marionette flag is passed.
+
+// Controls whether the Marionette component is enabled.
+pref("marionette.enabled", false);
 
 // Delay server startup until a modal dialogue has been clicked to
 // allow time for user to set breakpoints in Browser Toolbox.
@@ -21,6 +21,5 @@ pref("marionette.log.level", "info");
 // Port to start Marionette server on.
 pref("marionette.port", 2828);
 
-// Sets preferences recommended when using Firefox in automation with
-// Marionette.
+// Sets recommended automation preferences when Marionette is started.
 pref("marionette.prefs.recommended", true);

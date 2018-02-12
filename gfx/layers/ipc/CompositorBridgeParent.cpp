@@ -1983,12 +1983,20 @@ CompositorBridgeParent::DidComposite(TimeStamp& aCompositeStart,
 }
 
 void
+CompositorBridgeParent::NotifyPipelineRemoved(const wr::PipelineId& aPipelineId)
+{
+  if (mAsyncImageManager) {
+    mAsyncImageManager->PipelineRemoved(aPipelineId);
+  }
+}
+
+void
 CompositorBridgeParent::NotifyDidCompositeToPipeline(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd)
 {
   if (!mWrBridge || !mAsyncImageManager) {
     return;
   }
-  mAsyncImageManager->Update(aPipelineId, aEpoch);
+  mAsyncImageManager->PipelineRendered(aPipelineId, aEpoch);
 
   if (mPaused) {
     return;

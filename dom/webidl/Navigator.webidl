@@ -15,6 +15,7 @@
  * https://html.spec.whatwg.org/#navigatorconcurrenthardware
  * http://wicg.github.io/netinfo/#extensions-to-the-navigator-interface
  * https://w3c.github.io/webappsec-credential-management/#framework-credential-management
+ * https://w3c.github.io/webdriver/webdriver-spec.html#interface
  *
  * © Copyright 2004-2011 Apple Computer, Inc., Mozilla Foundation, and
  * Opera Software ASA. You are granted a license to use, reproduce
@@ -33,6 +34,7 @@ Navigator implements NavigatorContentUtils;
 Navigator implements NavigatorStorageUtils;
 Navigator implements NavigatorConcurrentHardware;
 Navigator implements NavigatorStorage;
+Navigator implements NavigatorAutomationInformation;
 
 [NoInterfaceObject, Exposed=(Window,Worker)]
 interface NavigatorID {
@@ -307,4 +309,11 @@ interface NavigatorConcurrentHardware {
 partial interface Navigator {
   [Pref="security.webauth.webauthn", SecureContext, SameObject]
   readonly attribute CredentialsContainer credentials;
+};
+
+// https://w3c.github.io/webdriver/webdriver-spec.html#interface
+[NoInterfaceObject]
+interface NavigatorAutomationInformation {
+  [Pref="dom.webdriver.enabled"]
+  readonly attribute boolean webdriver;
 };

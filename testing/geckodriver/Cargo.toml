@@ -15,7 +15,7 @@ clap = { version = "^2.19", default-features = false, features = ["suggestions",
 hyper = "0.10"
 lazy_static = "0.1"
 log = "0.3"
-mozprofile = "0.3.0"
+mozprofile = { path = "../mozbase/rust/mozprofile" }
 mozrunner = { path = "../mozbase/rust/mozrunner" }
 mozversion = { path = "../mozbase/rust/mozversion" }
 regex = "0.2"

@@ -10,12 +10,12 @@
 #![allow(non_upper_case_globals)]
 
 use core_foundation::array::CFArrayRef;
-use core_foundation::base::{CFRelease, CFRetain, CFType, CFTypeID, CFTypeRef, TCFType};
+use core_foundation::base::{CFType, CFTypeID, CFTypeRef, TCFType};
 use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
 use core_foundation::number::{CFNumber, CFNumberRef};
 use core_foundation::set::CFSetRef;
 use core_foundation::string::{CFString, CFStringRef};
-use core_foundation::url::CFURL;
+use core_foundation::url::{CFURLCopyFileSystemPath, kCFURLPOSIXPathStyle, CFURL};
 use core_graphics::base::CGFloat;
 
 use libc::c_void;
@@ -131,7 +131,7 @@ impl TraitAccessorPrivate for CTFontTraits {
     unsafe fn extract_number_for_key(&self, key: CFStringRef) -> CFNumber {
         let cftype = self.get_CFType(mem::transmute(key));
         assert!(cftype.instance_of::<CFNumber>());
-        TCFType::wrap_under_get_rule(mem::transmute(cftype.as_CFTypeRef()))
+        CFNumber::wrap_under_get_rule(mem::transmute(cftype.as_CFTypeRef()))
     }
 
 }
@@ -187,66 +187,24 @@ pub struct __CTFontDescriptor(c_void);
 
 pub type CTFontDescriptorRef = *const __CTFontDescriptor;
 
-#[derive(Debug)]
-pub struct CTFontDescriptor {
-    obj: CTFontDescriptorRef,
+declare_TCFType! {
+    CTFontDescriptor, CTFontDescriptorRef
 }
+impl_TCFType!(CTFontDescriptor, CTFontDescriptorRef, CTFontDescriptorGetTypeID);
+impl_CFTypeDescription!(CTFontDescriptor);
 
-impl Drop for CTFontDescriptor {
-    fn drop(&mut self) {
-        unsafe {
-            CFRelease(self.as_CFTypeRef())
-        }
-    }
-}
-
-impl TCFType for CTFontDescriptor {
-    type Ref = CTFontDescriptorRef;
-
-    #[inline]
-    fn as_concrete_TypeRef(&self) -> CTFontDescriptorRef {
-        self.obj
-    }
-
-    #[inline]
-    unsafe fn wrap_under_get_rule(reference: CTFontDescriptorRef) -> CTFontDescriptor {
-        let reference: CTFontDescriptorRef = mem::transmute(CFRetain(mem::transmute(reference)));
-        TCFType::wrap_under_create_rule(reference)
-    }
-
-    #[inline]
-    fn as_CFTypeRef(&self) -> CFTypeRef {
-        unsafe {
-            mem::transmute(self.as_concrete_TypeRef())
-        }
-    }
-
-    #[inline]
-    unsafe fn wrap_under_create_rule(obj: CTFontDescriptorRef) -> CTFontDescriptor {
-        CTFontDescriptor {
-            obj: obj,
-        }
-    }
-
-    #[inline]
-    fn type_id() -> CFTypeID {
-        unsafe {
-            CTFontDescriptorGetTypeID()
-        }
-    }
-}
 
 impl CTFontDescriptor {
     fn get_string_attribute(&self, attribute: CFStringRef) -> Option<String> {
         unsafe {
-            let value = CTFontDescriptorCopyAttribute(self.obj, attribute);
+            let value = CTFontDescriptorCopyAttribute(self.0, attribute);
             if value.is_null() {
                 return None
             }
 
-            let value: CFType = TCFType::wrap_under_get_rule(value);
+            let value = CFType::wrap_under_create_rule(value);
             assert!(value.instance_of::<CFString>());
-            let s: CFString = TCFType::wrap_under_get_rule(mem::transmute(value.as_CFTypeRef()));
+            let s = CFString::wrap_under_get_rule(mem::transmute(value.as_CFTypeRef()));
             Some(s.to_string())
         }
     }
@@ -284,15 +242,29 @@ impl CTFontDescriptor {
 
     pub fn font_path(&self) -> Option<String> {
         unsafe {
-            let value = CTFontDescriptorCopyAttribute(self.obj, kCTFontURLAttribute);
+            let value = CTFontDescriptorCopyAttribute(self.0, kCTFontURLAttribute);
             if value.is_null() {
                 return None;
             }
 
-            let value: CFType = TCFType::wrap_under_get_rule(value);
+            let value = CFType::wrap_under_create_rule(value);
             assert!(value.instance_of::<CFURL>());
-            let url: CFURL = TCFType::wrap_under_get_rule(mem::transmute(value.as_CFTypeRef()));
-            Some(format!("{:?}", url))
+            let url = CFURL::wrap_under_get_rule(mem::transmute(value.as_CFTypeRef()));
+            let path = CFString::wrap_under_create_rule(CFURLCopyFileSystemPath(
+                url.as_concrete_TypeRef(),
+                kCFURLPOSIXPathStyle,
+            )).to_string();
+            Some(path)
+        }
+    }
+
+    pub fn traits(&self) -> CTFontTraits {
+        unsafe {
+            let value = CTFontDescriptorCopyAttribute(self.0, kCTFontTraitsAttribute);
+            assert!(!value.is_null());
+            let value = CFType::wrap_under_create_rule(value);
+            assert!(value.instance_of::<CFDictionary>());
+            CFDictionary::wrap_under_get_rule(mem::transmute(value.as_CFTypeRef()))
         }
     }
 }
@@ -301,7 +273,16 @@ pub fn new_from_attributes(attributes: &CFDictionary) -> CTFontDescriptor {
     unsafe {
         let result: CTFontDescriptorRef =
             CTFontDescriptorCreateWithAttributes(attributes.as_concrete_TypeRef());
-        TCFType::wrap_under_create_rule(result)
+        CTFontDescriptor::wrap_under_create_rule(result)
+    }
+}
+
+pub fn new_from_variations(variations: &CFDictionary) -> CTFontDescriptor {
+    unsafe {
+        let var_key = CFType::wrap_under_get_rule(mem::transmute(kCTFontVariationAttribute));
+        let var_val = CFType::wrap_under_get_rule(variations.as_CFTypeRef());
+        let attributes = CFDictionary::from_CFType_pairs(&[(var_key, var_val)]);
+        new_from_attributes(&attributes)
     }
 }
 

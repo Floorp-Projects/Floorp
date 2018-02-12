@@ -240,6 +240,7 @@ function plInit() {
 
         }
         content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/talos-content.js", false);
+        content.selectedBrowser.messageManager.loadFrameScript("chrome://talos-powers-content/content/TalosContentProfiler.js", false, true);
         content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/tscroll.js", false, true);
         content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/Profiler.js", false, true);
 

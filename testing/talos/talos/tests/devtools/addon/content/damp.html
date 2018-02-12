@@ -6,6 +6,14 @@
 <script type="application/x-javascript">
 // Empty subtests interpreted as all subtests, since otherwise meaningless.
 var config = {subtests: [], repeat: 1};
+
+// Bug 1400580 disable 'complicated.netmonitor' on Win
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+var run_complicated_netmonitor = true;
+if (Services.appinfo.OS == "WINNT") {
+  run_complicated_netmonitor = false;
+}
+
 var defaultConfig = {
   repeat: 1,
   rest: 100,
@@ -25,7 +33,7 @@ var defaultConfig = {
     "complicated.debugger": true,
     "complicated.styleeditor": true,
     "complicated.performance": true,
-    "complicated.netmonitor": true,
+    "complicated.netmonitor": run_complicated_netmonitor,
     "complicated.saveAndReadHeapSnapshot": true,
 
     "custom.webconsole": true,
