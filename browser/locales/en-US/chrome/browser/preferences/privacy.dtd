@@ -38,11 +38,14 @@
 
 <!ENTITY  suggestionSettings2.label     "Change preferences for search engine suggestions">
 
-<!ENTITY  acceptCookies2.label          "Accept cookies from websites">
-<!ENTITY  acceptCookies2.accesskey      "A">
+<!ENTITY  acceptCookies3.label          "Accept cookies and site data from websites">
+<!ENTITY  acceptCookies3.accesskey      "A">
 
-<!ENTITY  acceptThirdParty2.pre.label     "Accept third-party cookies">
-<!ENTITY  acceptThirdParty2.pre.accesskey "y">
+<!ENTITY  blockCookies.label            "Block cookies and site data (may cause websites to break)">
+<!ENTITY  blockCookies.accesskey        "B">
+
+<!ENTITY  acceptThirdParty3.pre.label     "Accept third-party cookies and site data">
+<!ENTITY  acceptThirdParty3.pre.accesskey "y">
 <!ENTITY  acceptThirdParty.always.label   "Always">
 <!ENTITY  acceptThirdParty.never.label    "Never">
 <!ENTITY  acceptThirdParty.visited.label  "From visited">
@@ -56,9 +59,6 @@
 <!ENTITY  cookieExceptions.label        "Exceptions…">
 <!ENTITY  cookieExceptions.accesskey    "E">
 
-<!ENTITY  showCookies.label             "Show Cookies…">
-<!ENTITY  showCookies.accesskey         "S">
-
 <!ENTITY  historyHeader2.pre.label         "&brandShortName; will">
 <!ENTITY  historyHeader2.pre.accesskey     "w">
 <!ENTITY  historyHeader.remember.label     "Remember history">
@@ -67,15 +67,6 @@
 <!ENTITY  historyHeader.post.label         "">
 
 <!ENTITY  rememberDescription.label      "&brandShortName; will remember your browsing, download, form and search history, and keep cookies from websites you visit.">
-
-<!-- LOCALIZATION NOTE (rememberActions.pre.label): include a trailing space as needed -->
-<!-- LOCALIZATION NOTE (rememberActions.middle.label): include a starting and trailing space as needed -->
-<!-- LOCALIZATION NOTE (rememberActions.post.label): include a starting space as needed -->
-<!ENTITY  rememberActions.pre.label           "You may want to ">
-<!ENTITY  rememberActions.clearHistory.label  "clear your recent history">
-<!ENTITY  rememberActions.middle.label        ", or ">
-<!ENTITY  rememberActions.removeCookies.label "remove individual cookies">
-<!ENTITY  rememberActions.post.label          ".">
 
 <!ENTITY  dontrememberDescription.label  "&brandShortName; will use the same settings as private browsing, and will not remember any history as you browse the Web.">
 
