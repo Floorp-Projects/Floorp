@@ -100,7 +100,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ContentHandlerService, Init)
 // session history
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHEntry)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHTransaction)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHistory)
 
 #ifndef MOZ_PLACES
 // download history
@@ -128,8 +127,6 @@ NS_DEFINE_NAMED_CID(NS_EXTERNALURLHANDLERSERVICE_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_SHENTRY_CID);
 NS_DEFINE_NAMED_CID(NS_SHTRANSACTION_CID);
-NS_DEFINE_NAMED_CID(NS_SHISTORY_CID);
-NS_DEFINE_NAMED_CID(NS_SHISTORY_INTERNAL_CID);
 #ifndef MOZ_PLACES
 NS_DEFINE_NAMED_CID(NS_DOWNLOADHISTORY_CID);
 #endif
@@ -161,8 +158,6 @@ const mozilla::Module::CIDEntry kDocShellCIDs[] = {
 #endif
   { &kNS_SHENTRY_CID, false, nullptr, nsSHEntryConstructor },
   { &kNS_SHTRANSACTION_CID, false, nullptr, nsSHTransactionConstructor },
-  { &kNS_SHISTORY_CID, false, nullptr, nsSHistoryConstructor },
-  { &kNS_SHISTORY_INTERNAL_CID, false, nullptr, nsSHistoryConstructor },
 #ifndef MOZ_PLACES
   { &kNS_DOWNLOADHISTORY_CID, false, nullptr, nsDownloadHistoryConstructor },
 #endif
@@ -223,8 +218,6 @@ const mozilla::Module::ContractIDEntry kDocShellContracts[] = {
 #endif
   { NS_SHENTRY_CONTRACTID, &kNS_SHENTRY_CID },
   { NS_SHTRANSACTION_CONTRACTID, &kNS_SHTRANSACTION_CID },
-  { NS_SHISTORY_CONTRACTID, &kNS_SHISTORY_CID },
-  { NS_SHISTORY_INTERNAL_CONTRACTID, &kNS_SHISTORY_INTERNAL_CID },
 #ifndef MOZ_PLACES
   { NS_DOWNLOADHISTORY_CONTRACTID, &kNS_DOWNLOADHISTORY_CID },
 #endif
