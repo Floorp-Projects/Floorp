@@ -540,39 +540,44 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
 
     // Replace deprecated language tags with their preferred values.
     // "in" -> "id"
-    // Note that the script generating langSubtagMappings makes sure
-    // that no regular subtag mapping will replace an extlang code.
-    if (hasOwn(language, langSubtagMappings))
-        language = langSubtagMappings[language];
+    if (hasOwn(language, languageMappings))
+        language = languageMappings[language];
 
     var canonical = language;
 
     if (extlang1) {
-        // Replace deprecated extlang subtags with their preferred values,
-        // and remove the preceding subtag if it's a redundant prefix.
-        // "zh-nan" -> "nan"
-        // Note that the script generating extlangMappings makes sure that
-        // no extlang mapping will replace a normal language code.
-        // The preferred value for all current deprecated extlang subtags
-        // is equal to the extlang subtag, so we only need remove the
-        // redundant prefix to get the preferred value.
+        // When an extlang subtag is encountered with its corresponding
+        // primary language tag prefix, replace the combination with the
+        // preferred value -- which MUST be the unadorned extlang subtag.
+        // For example, this entry
+        //
+        //   Type: extlang
+        //   Subtag: nan
+        //   Description: Min Nan Chinese
+        //   Added: 2009-07-29
+        //   Preferred-Value: nan
+        //   Prefix: zh
+        //   Macrolanguage: zh
+        //
+        // is interpreted to say that if a "nan" extlang appears after a "zh"
+        // primary language prefix, the extlang and its prefix must be
+        // replaced by its preferred value, so "zh-nan" must be replaced by
+        // the preferred value "nan". (RFC 5646 section 2.2.2)
         if (hasOwn(extlang1, extlangMappings) && extlangMappings[extlang1] === language)
             canonical = extlang1;
         else
             canonical += "-" + extlang1;
     }
 
-    if (extlang2) {
-        assert(!(hasOwn(extlang2, extlangMappings) && extlangMappings[extlang2] === canonical),
-               "unexpected extlang2 replacement");
+    // The second extlang subtag will always be left as is.
+    // (RFC 5646 section 2.2.2)
+    if (extlang2)
         canonical += "-" + extlang2;
-    }
 
-    if (extlang3) {
-        assert(!(hasOwn(extlang3, extlangMappings) && extlangMappings[extlang3] === canonical),
-               "unexpected extlang3 replacement");
+    // The third extlang subtag will always be left as is.
+    // (RFC 5646 section 2.2.2)
+    if (extlang3)
         canonical += "-" + extlang3;
-    }
 
     if (script) {
         // The first character of a script code needs to be capitalized.
@@ -580,8 +585,7 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
         script = callFunction(std_String_toUpperCase, script[0]) +
                  Substring(script, 1, script.length - 1);
 
-        assert(!hasOwn(script, langSubtagMappings), "unexpected script replacement");
-
+        // No script replacements are currently present, so append as is.
         canonical += "-" + script;
     }
 
@@ -591,23 +595,15 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
 
         // Replace deprecated subtags with their preferred values.
         // "BU" -> "MM"
-        // This has to come after we capitalize region codes because
-        // otherwise some language and region codes could be confused.
-        // For example, "in" is an obsolete language code for Indonesian,
-        // but "IN" is the country code for India.
-        if (hasOwn(region, langSubtagMappings))
-            region = langSubtagMappings[region];
+        if (hasOwn(region, regionMappings))
+            region = regionMappings[region];
 
         canonical += "-" + region;
     }
 
-    if (variants.length > 0) {
-#ifdef DEBUG
-        for (var i = 0; i < variants.length; i++)
-            assert(!hasOwn(variants[i], langSubtagMappings), "unexpected variant replacement");
-#endif
+    // No variant replacements are currently present, so append as is.
+    if (variants.length > 0)
         canonical += "-" + callFunction(std_Array_join, variants, "-");
-    }
 
     if (extensions.length > 0) {
         // Extension sequences are sorted by their singleton characters.
@@ -691,8 +687,8 @@ function ValidateAndCanonicalizeLanguageTag(locale) {
         assert(!hasOwn(locale, langTagMappings), "langTagMappings contains no 2*3ALPHA mappings");
 
         // Replace deprecated subtags with their preferred values.
-        locale = hasOwn(locale, langSubtagMappings)
-                 ? langSubtagMappings[locale]
+        locale = hasOwn(locale, languageMappings)
+                 ? languageMappings[locale]
                  : locale;
         assert(locale === CanonicalizeLanguageTag(locale), "expected same canonicalization");
 
