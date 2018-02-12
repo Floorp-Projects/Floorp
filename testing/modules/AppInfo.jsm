@@ -16,6 +16,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 let origPlatformInfo = Cc["@mozilla.org/xre/app-info;1"]
     .getService(Ci.nsIPlatformInfo);
 
+// eslint-disable-next-line mozilla/use-services
 let origRuntime = Cc["@mozilla.org/xre/app-info;1"]
     .getService(Ci.nsIXULRuntime);
 
@@ -139,4 +140,3 @@ this.updateAppInfo = function(options) {
   // code may already have looked up |Cc[cid]|.
   Cc.initialize(Cc[cid], cid);
 };
-

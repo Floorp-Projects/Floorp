@@ -116,8 +116,9 @@ MozFileLogger.close = function() {
 };
 
 try {
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-    .getService(Components.interfaces.nsIPrefBranch);
-  var filename = prefs.getCharPref("talos.logfile");
+  // ChromeUtils is not available in this scope.
+  // eslint-disable-next-line mozilla/use-chromeutils-import
+  Cu.import("resource://gre/modules/Services.jsm");
+  var filename = Services.prefs.getCharPref("talos.logfile");
   MozFileLogger.init(filename);
 } catch (ex) {} // pref does not exist, return empty string
