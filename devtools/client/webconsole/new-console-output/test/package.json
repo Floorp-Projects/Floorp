@@ -1,0 +1,30 @@
+{
+  "name": "webconsole-tests",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=6.9.0"
+  },
+  "scripts": {
+    "test": "cross-env NODE_ENV=test NODE_PATH=../../../../../ mocha \"./**/*.test.js\" -r babel-register  -r jsdom-global/register -r ./mocha-test-setup.js"
+  },
+  "dependencies": {
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-register": "^6.26.0",
+    "cross-env": "^3.1.3",
+    "enzyme": "^3.3.0",
+    "enzyme-adapter-react-16": "^1.1.1",
+    "expect": "^1.16.0",
+    "jsdom": "^9.4.1",
+    "jsdom-global": "^2.0.0",
+    "mocha": "^5.0.0",
+    "netmonitor": "file:../../../netmonitor",
+    "require-hacker": "^2.1.4",
+    "sinon": "^1.17.5",
+    "chai": "^4.1.2",
+    "es6-promise": "^4.2.4",
+    "nock": "^9.1.6",
+    "tap": "^11.1.0",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0"
+  }
+}
