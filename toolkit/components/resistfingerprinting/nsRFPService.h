@@ -160,15 +160,22 @@ public:
   static bool IsTimerPrecisionReductionEnabled(TimerPrecisionType aType);
 
   // The following Reduce methods can be called off main thread.
-  static double ReduceTimePrecisionAsMSecs(
+  static double ReduceTimePrecisionAsUSecs(
     double aTime,
     TimerPrecisionType aType = TimerPrecisionType::All);
-  static double ReduceTimePrecisionAsUSecs(
+  static double ReduceTimePrecisionAsMSecs(
     double aTime,
     TimerPrecisionType aType = TimerPrecisionType::All);
   static double ReduceTimePrecisionAsSecs(
     double aTime,
     TimerPrecisionType aType = TimerPrecisionType::All);
+  // Public only for testing purposes
+  static double ReduceTimePrecisionImpl(
+    double aTime,
+    double aResolutionUSec,
+    double aTimeScaleCorrection,
+    TimerPrecisionType aType);
+
 
   // This method calculates the video resolution (i.e. height x width) based
   // on the video quality (480p, 720p, etc).
