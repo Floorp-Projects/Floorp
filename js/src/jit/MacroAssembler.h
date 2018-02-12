@@ -1603,8 +1603,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     // including "normal" OutOfLineCode.
     void wasmEmitOldTrapOutOfLineCode();
 
-    // Perform a stack-overflow test, branching to the given Label on overflow.
-    void wasmEmitStackCheck(RegisterOrSP sp, Register scratch, Label* onOverflow);
+  public:
+    // ========================================================================
+    // Barrier functions.
 
     void emitPreBarrierFastPath(JSRuntime* rt, MIRType type, Register temp1, Register temp2,
                                 Register temp3, Label* noBarrier);
