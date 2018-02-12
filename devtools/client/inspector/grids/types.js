@@ -16,6 +16,9 @@ exports.grid = {
   // The color for the grid overlay highlighter
   color: PropTypes.string,
 
+  // The text direction of the grid container
+  direction: PropTypes.string,
+
   // The grid fragment object of the grid container
   gridFragments: PropTypes.array,
 
@@ -24,6 +27,9 @@ exports.grid = {
 
   // The node front of the grid container
   nodeFront: PropTypes.object,
+
+  // The writing mode of the grid container
+  writingMode: PropTypes.string,
 };
 
 /**

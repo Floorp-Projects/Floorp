@@ -75,7 +75,7 @@ API:
 .. code-block:: cpp
 
     // This helper class is the preferred way to record elapsed time.
-    template<ID id, TimerResolution res = MilliSecond>
+    template<HistogramID id>
     class AutoTimer {
       // Record into a plain histogram.
       explicit AutoTimer(TimeStamp aStart = TimeStamp::Now());
@@ -84,7 +84,8 @@ API:
                          TimeStamp aStart = TimeStamp::Now());
     };
 
-    void AccumulateTimeDelta(ID id, TimeStamp start, TimeStamp end = TimeStamp::Now());
+    void AccumulateTimeDelta(HistogramID id, TimeStamp start, TimeStamp end = TimeStamp::Now());
+    void AccumulateTimeDelta(HistogramID id, const nsCString& key, TimeStamp start, TimeStamp end = TimeStamp::Now());
 
 Example:
 

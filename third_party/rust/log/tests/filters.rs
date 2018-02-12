@@ -1,76 +1,66 @@
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 
 use std::sync::{Arc, Mutex};
-use log::{LogLevel, LogLevelFilter, Log, LogRecord, LogMetadata};
-use log::MaxLogLevelFilter;
+use log::{Level, LevelFilter, Log, Record, Metadata};
 
-#[cfg(feature = "use_std")]
-use log::set_logger;
-#[cfg(not(feature = "use_std"))]
-fn set_logger<M>(make_logger: M) -> Result<(), log::SetLoggerError>
-    where M: FnOnce(MaxLogLevelFilter) -> Box<Log> {
-    unsafe {
-        log::set_logger_raw(|x| std::mem::transmute(make_logger(x)))
-    }
+#[cfg(feature = "std")]
+use log::set_boxed_logger;
+
+#[cfg(not(feature = "std"))]
+fn set_boxed_logger(logger: Box<Log>) -> Result<(), log::SetLoggerError> {
+    log::set_logger(unsafe { &*Box::into_raw(logger) })
 }
 
 struct State {
-    last_log: Mutex<Option<LogLevel>>,
-    filter: MaxLogLevelFilter,
+    last_log: Mutex<Option<Level>>,
 }
 
 struct Logger(Arc<State>);
 
 impl Log for Logger {
-    fn enabled(&self, _: &LogMetadata) -> bool {
+    fn enabled(&self, _: &Metadata) -> bool {
         true
     }
 
-    fn log(&self, record: &LogRecord) {
+    fn log(&self, record: &Record) {
         *self.0.last_log.lock().unwrap() = Some(record.level());
     }
+    fn flush(&self) {}
 }
 
 fn main() {
-    let mut a = None;
-    set_logger(|max| {
-        let me = Arc::new(State {
-            last_log: Mutex::new(None),
-            filter: max,
-        });
-        a = Some(me.clone());
-        Box::new(Logger(me))
-    }).unwrap();
-    let a = a.unwrap();
+    let me = Arc::new(State { last_log: Mutex::new(None) });
+    let a = me.clone();
+    set_boxed_logger(Box::new(Logger(me))).unwrap();
 
-    test(&a, LogLevelFilter::Off);
-    test(&a, LogLevelFilter::Error);
-    test(&a, LogLevelFilter::Warn);
-    test(&a, LogLevelFilter::Info);
-    test(&a, LogLevelFilter::Debug);
-    test(&a, LogLevelFilter::Trace);
+    test(&a, LevelFilter::Off);
+    test(&a, LevelFilter::Error);
+    test(&a, LevelFilter::Warn);
+    test(&a, LevelFilter::Info);
+    test(&a, LevelFilter::Debug);
+    test(&a, LevelFilter::Trace);
 }
 
-fn test(a: &State, filter: LogLevelFilter) {
-    a.filter.set(filter);
+fn test(a: &State, filter: LevelFilter) {
+    log::set_max_level(filter);
     error!("");
-    last(&a, t(LogLevel::Error, filter));
+    last(&a, t(Level::Error, filter));
     warn!("");
-    last(&a, t(LogLevel::Warn, filter));
+    last(&a, t(Level::Warn, filter));
     info!("");
-    last(&a, t(LogLevel::Info, filter));
+    last(&a, t(Level::Info, filter));
     debug!("");
-    last(&a, t(LogLevel::Debug, filter));
+    last(&a, t(Level::Debug, filter));
     trace!("");
-    last(&a, t(LogLevel::Trace, filter));
+    last(&a, t(Level::Trace, filter));
 
-    fn t(lvl: LogLevel, filter: LogLevelFilter) -> Option<LogLevel> {
-        if lvl <= filter {Some(lvl)} else {None}
+    fn t(lvl: Level, filter: LevelFilter) -> Option<Level> {
+        if lvl <= filter { Some(lvl) } else { None }
     }
 }
 
-fn last(state: &State, expected: Option<LogLevel>) {
-    let mut lvl = state.last_log.lock().unwrap();
-    assert_eq!(*lvl, expected);
-    *lvl = None;
+fn last(state: &State, expected: Option<Level>) {
+    let lvl = state.last_log.lock().unwrap().take();
+    assert_eq!(lvl, expected);
 }

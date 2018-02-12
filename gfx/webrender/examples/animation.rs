@@ -71,9 +71,16 @@ impl Example for App {
         builder.pop_stacking_context();
     }
 
-    fn on_event(&mut self, event: glutin::Event, api: &RenderApi, document_id: DocumentId) -> bool {
-        match event {
-            glutin::Event::KeyboardInput(glutin::ElementState::Pressed, _, Some(key)) => {
+    fn on_event(&mut self, win_event: glutin::WindowEvent, api: &RenderApi, document_id: DocumentId) -> bool {
+        match win_event {
+            glutin::WindowEvent::KeyboardInput {
+                input: glutin::KeyboardInput {
+                    state: glutin::ElementState::Pressed,
+                    virtual_keycode: Some(key),
+                    ..
+                },
+                ..
+            } => {
                 let (offset_x, offset_y, angle, delta_opacity) = match key {
                     glutin::VirtualKeyCode::Down => (0.0, 10.0, 0.0, 0.0),
                     glutin::VirtualKeyCode::Up => (0.0, -10.0, 0.0, 0.0),

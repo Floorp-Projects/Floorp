@@ -151,6 +151,7 @@
 #endif
 
 using namespace mozilla;
+using mozilla::profiler::detail::RacyFeatures;
 
 LazyLogModule gProfilerLog("prof");
 
@@ -599,50 +600,6 @@ uint32_t ActivePS::sNextGeneration = 0;
 
 // The mutex that guards accesses to CorePS and ActivePS.
 static PSMutex gPSMutex;
-
-// The preferred way to check profiler activeness and features is via
-// ActivePS(). However, that requires locking gPSMutex. There are some hot
-// operations where absolute precision isn't required, so we duplicate the
-// activeness/feature state in a lock-free manner in this class.
-class RacyFeatures
-{
-public:
-  static void SetActive(uint32_t aFeatures)
-  {
-    sActiveAndFeatures = Active | aFeatures;
-  }
-
-  static void SetInactive() { sActiveAndFeatures = 0; }
-
-  static bool IsActive() { return uint32_t(sActiveAndFeatures) & Active; }
-
-  static bool IsActiveWithFeature(uint32_t aFeature)
-  {
-    uint32_t af = sActiveAndFeatures;  // copy it first
-    return (af & Active) && (af & aFeature);
-  }
-
-  static bool IsActiveWithoutPrivacy()
-  {
-    uint32_t af = sActiveAndFeatures;  // copy it first
-    return (af & Active) && !(af & ProfilerFeature::Privacy);
-  }
-
-private:
-  static const uint32_t Active = 1u << 31;
-
-  // Ensure Active doesn't overlap with any of the feature bits.
-  #define NO_OVERLAP(n_, str_, Name_) \
-    static_assert(ProfilerFeature::Name_ != Active, "bad Active value");
-
-  PROFILER_FOR_EACH_FEATURE(NO_OVERLAP);
-
-  #undef NO_OVERLAP
-
-  // We combine the active bit with the feature bits so they can be read or
-  // written in a single atomic operation.
-  static Atomic<uint32_t> sActiveAndFeatures;
-};
 
 Atomic<uint32_t> RacyFeatures::sActiveAndFeatures(0);
 
@@ -3069,17 +3026,6 @@ profiler_feature_active(uint32_t aFeature)
 
   // This function is hot enough that we use RacyFeatures, not ActivePS.
   return RacyFeatures::IsActiveWithFeature(aFeature);
-}
-
-bool
-profiler_is_active()
-{
-  // This function runs both on and off the main thread.
-
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  // This function is hot enough that we use RacyFeatures, notActivePS.
-  return RacyFeatures::IsActive();
 }
 
 void
