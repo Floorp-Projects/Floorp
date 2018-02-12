@@ -173,6 +173,7 @@ public:
   int64_t       mLastModifiedTime;
   nsCOMPtr<nsITimer> mUnloadTimer;
   int32_t       mSandboxLevel;
+  bool          mIsSandboxLoggingEnabled;
 
   void          InvalidateBlocklistState();
 

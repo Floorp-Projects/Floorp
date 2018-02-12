@@ -472,7 +472,8 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
                                          aPluginTag->mSandboxLevel));
     UniquePtr<LaunchCompleteTask> onLaunchedRunnable(new LaunchedTask(parent));
     bool launched = parent->mSubprocess->Launch(Move(onLaunchedRunnable),
-                                                aPluginTag->mSandboxLevel);
+                                                aPluginTag->mSandboxLevel,
+                                                aPluginTag->mIsSandboxLoggingEnabled);
     if (!launched) {
         // We never reached open
         parent->mShutdown = true;
