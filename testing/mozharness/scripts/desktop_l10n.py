@@ -31,7 +31,6 @@ from mozharness.mozilla.building.buildbase import (
 )
 from mozharness.mozilla.l10n.locales import LocalesMixin
 from mozharness.mozilla.mar import MarMixin
-from mozharness.mozilla.mock import MockMixin
 from mozharness.mozilla.release import ReleaseMixin
 from mozharness.mozilla.signing import SigningMixin
 from mozharness.mozilla.updates.balrog import BalrogMixin
@@ -73,7 +72,7 @@ runtime_config_tokens = ('buildid', 'version', 'locale', 'from_buildid',
 
 
 # DesktopSingleLocale {{{1
-class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
+class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
                           VCSMixin, SigningMixin, PurgeMixin, BaseScript,
                           BalrogMixin, MarMixin, VirtualenvMixin, TransferMixin):
     """Manages desktop repacks"""
@@ -161,7 +160,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         ["--disable-mock"], {
          "dest": "disable_mock",
          "action": "store_true",
-         "help": "do not run under mock despite what gecko-config says"}
+         "help": "(deprecated) no-op for CLI compatability with mobile_l10n.py"}
     ], [
         ['--scm-level'], {  # Ignored on desktop for now: see Bug 1414678.
          "action": "store",
@@ -192,7 +191,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
                 "buildbot_json_path": "buildprops.json",
                 "ignore_locales": ["en-US"],
                 "locales_dir": "browser/locales",
-                "update_mar_dir": "dist/update",
                 "buildid_section": "App",
                 "buildid_option": "BuildID",
                 "application_ini": "application.ini",
@@ -228,13 +226,9 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         self.version = None
         self.upload_urls = {}
         self.locales_property = {}
-        self.package_urls = {}
         self.pushdate = None
         # upload_files is a dictionary of files to upload, keyed by locale.
         self.upload_files = {}
-
-        if 'mock_target' in self.config:
-            self.enable_mock()
 
     def _pre_config_lock(self, rw_config):
         """replaces 'configuration_tokens' with their values, before the
@@ -715,12 +709,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         return self._mach(target=target, env=env)
 
     def _get_mach_executable(self):
-        python = sys.executable
-        # A mock environment is a special case, the system python isn't
-        # available there
-        if 'mock_target' in self.config:
-            python = 'python2.7'
-        return [python, 'mach']
+        return [sys.executable, 'mach']
 
     def _get_make_executable(self):
         config = self.config
@@ -793,9 +782,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
                                         log_obj=self.log_obj)
         retval = self._make(target=target, cwd=cwd, env=env,
                             halt_on_failure=False, output_parser=parser)
-        if locale not in self.package_urls:
-            self.package_urls[locale] = {}
-        self.package_urls[locale].update(parser.matches)
         if retval == SUCCESS:
             self.info('Upload successful (%s)' % locale)
             ret = SUCCESS
@@ -955,80 +941,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             self.generate_balrog_props(props_path)
             return SUCCESS
 
-        if self.config.get('taskcluster_nightly'):
-            self._map(balrog_props_wrapper, self.query_locales())
-        else:
-            if not self.config.get("balrog_servers"):
-                self.info("balrog_servers not set; skipping balrog submission.")
-                return
-            # submit complete mar to balrog
-            # clean up buildbot_properties
-            self._map(self.submit_repack_to_balrog, self.query_locales())
-
-    def submit_repack_to_balrog(self, locale):
-        """submit a single locale to balrog"""
-        # check if locale has been uploaded, if not just return a FAILURE
-        if locale not in self.package_urls:
-            self.error("%s is not present in package_urls. Did you run make upload?" % locale)
-            return FAILURE
-
-        if not self.query_is_nightly():
-            # remove this check when we extend this script to non-nightly builds
-            self.fatal("Not a nightly build")
-            return FAILURE
-
-        # complete mar file
-        c_marfile = self._query_complete_mar_filename(locale)
-        c_mar_url = self._query_complete_mar_url(locale)
-
-        # Set other necessary properties for Balrog submission. None need to
-        # be passed back to buildbot, so we won't write them to the properties
-        # files
-        # Locale is hardcoded to en-US, for silly reasons
-        # The Balrog submitter translates this platform into a build target
-        # via
-        # https://github.com/mozilla/build-tools/blob/master/lib/python/release/platforms.py#L23
-        self.set_buildbot_property("completeMarSize", self.query_filesize(c_marfile))
-        self.set_buildbot_property("completeMarHash", self.query_sha512sum(c_marfile))
-        self.set_buildbot_property("completeMarUrl", c_mar_url)
-        self.set_buildbot_property("locale", locale)
-        if "partialInfo" in self.package_urls[locale]:
-            self.set_buildbot_property("partialInfo",
-                                       self.package_urls[locale]["partialInfo"])
-        ret = FAILURE
-        try:
-            result = self.submit_balrog_updates()
-            self.info("balrog return code: %s" % (result))
-            if result == 0:
-                ret = SUCCESS
-        except Exception as error:
-            self.error("submit repack to balrog failed: %s" % (str(error)))
-        return ret
-
-    def _query_complete_mar_filename(self, locale):
-        """returns the full path to a localized complete mar file"""
-        config = self.config
-        version = self.query_version()
-        complete_mar_name = config['localized_mar'] % {'version': version,
-                                                       'locale': locale}
-        return os.path.join(self._update_mar_dir(), complete_mar_name)
-
-    def _query_complete_mar_url(self, locale):
-        """returns the complete mar url taken from self.package_urls[locale]
-           this value is available only after make_upload"""
-        if "complete_mar_url" in self.config:
-            return self.config["complete_mar_url"]
-        if "completeMarUrl" in self.package_urls[locale]:
-            return self.package_urls[locale]["completeMarUrl"]
-        # url = self.config.get("update", {}).get("mar_base_url")
-        # if url:
-        #    url += os.path.basename(self.query_marfile_path())
-        #    return url.format(branch=self.query_branch())
-        self.fatal("Couldn't find complete mar url in config or package_urls")
-
-    def _update_mar_dir(self):
-        """returns the full path of the update/ directory"""
-        return self._mar_dir('update_mar_dir')
+        self._map(balrog_props_wrapper, self.query_locales())
 
     def _mar_binaries(self):
         """returns a tuple with mar and mbsdiff paths"""
@@ -1070,10 +983,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         if not manifest_src and not toolchains:
             return
         python = sys.executable
-        # A mock environment is a special case, the system python isn't
-        # available there
-        if 'mock_target' in self.config:
-            python = 'python2.7'
 
         cmd = [
             python, '-u',
@@ -1104,22 +1013,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         self.run_command(cmd, cwd=dirs['abs_mozilla_dir'], halt_on_failure=True,
                          env=env)
 
-    def funsize_props(self):
-        """Set buildbot properties required to trigger funsize tasks
-         responsible to generate partial updates for successfully generated locales"""
-        locales = self.query_locales()
-        funsize_info = {
-            'locales': locales,
-            'branch': self.config['branch'],
-            'appName': self.config['appName'],
-            'platform': self.config['platform'],
-            'completeMarUrls': {locale: self._query_complete_mar_url(locale)
-                                for locale in locales},
-        }
-        self.info('funsize info: %s' % funsize_info)
-        self.set_buildbot_property('funsize_info', json.dumps(funsize_info),
-                                   write_to_file=True)
-
     def taskcluster_upload(self):
         auth = os.path.join(os.getcwd(), self.config['taskcluster_credentials_file'])
         credentials = {}
@@ -1135,9 +1028,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         # could create the virtualenv as an action, but due to some odd
         # dependencies with query_build_env() being called from build(), which
         # is necessary before the virtualenv can be created.
-        self.disable_mock()
         self.create_virtualenv()
-        self.enable_mock()
         self.activate_virtualenv()
 
         branch = self.config['branch']

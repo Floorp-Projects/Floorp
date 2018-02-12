@@ -3466,8 +3466,7 @@ nsDisplayBackgroundImage::GetInitData(nsDisplayListBuilder* aBuilder,
                                       nsIFrame* aFrame,
                                       uint32_t aLayer,
                                       const nsRect& aBackgroundRect,
-                                      const nsStyleBackground* aBackgroundStyle,
-                                      LayerizeFixed aLayerizeFixed)
+                                      const nsStyleBackground* aBackgroundStyle)
 {
   nsPresContext* presContext = aFrame->PresContext();
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
@@ -3486,15 +3485,6 @@ nsDisplayBackgroundImage::GetInitData(nsDisplayListBuilder* aBuilder,
     layer.mAttachment == NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED && !isTransformedFixed;
 
   bool shouldFixToViewport = shouldTreatAsFixed && !layer.mImage.IsEmpty();
-  if (shouldFixToViewport &&
-      aLayerizeFixed == LayerizeFixed::DO_NOT_LAYERIZE_FIXED_BACKGROUND_IF_AVOIDING_COMPONENT_ALPHA_LAYERS &&
-      !nsLayoutUtils::UsesAsyncScrolling(aFrame)) {
-    RefPtr<LayerManager> layerManager = aBuilder->GetWidgetLayerManager();
-    if (layerManager && layerManager->ShouldAvoidComponentAlphaLayers()) {
-      shouldFixToViewport = false;
-    }
-  }
-
   bool isRasterImage = state.mImageRenderer.IsRasterImage();
   nsCOMPtr<imgIContainer> image;
   if (isRasterImage) {
@@ -3791,8 +3781,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
 
     nsDisplayList thisItemList;
     nsDisplayBackgroundImage::InitData bgData =
-      nsDisplayBackgroundImage::GetInitData(aBuilder, aFrame, i, bgOriginRect, bg,
-                                            LayerizeFixed::DO_NOT_LAYERIZE_FIXED_BACKGROUND_IF_AVOIDING_COMPONENT_ALPHA_LAYERS);
+      nsDisplayBackgroundImage::GetInitData(aBuilder, aFrame, i, bgOriginRect, bg);
 
     if (bgData.shouldFixToViewport) {
 
@@ -4321,17 +4310,12 @@ nsDisplayBackgroundImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuild
     // Positioning area changed in a way that could cause everything to change,
     // so invalidate everything (both old and new painting areas).
     aInvalidRegion->Or(bounds, geometry->mBounds);
-
-    if (positioningArea.Size() != geometry->mPositioningArea.Size()) {
-      NotifyRenderingChanged();
-    }
     return;
   }
   if (!mDestRect.IsEqualInterior(geometry->mDestRect)) {
     // Dest area changed in a way that could cause everything to change,
     // so invalidate everything (both old and new painting areas).
     aInvalidRegion->Or(bounds, geometry->mBounds);
-    NotifyRenderingChanged();
     return;
   }
   if (aBuilder->ShouldSyncDecodeImages()) {
@@ -4339,16 +4323,12 @@ nsDisplayBackgroundImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuild
     if (image.GetType() == eStyleImageType_Image &&
         geometry->ShouldInvalidateToSyncDecodeImages()) {
       aInvalidRegion->Or(*aInvalidRegion, bounds);
-
-      NotifyRenderingChanged();
     }
   }
   if (!bounds.IsEqualInterior(geometry->mBounds)) {
     // Positioning area is unchanged, so invalidate just the change in the
     // painting area.
     aInvalidRegion->Xor(bounds, geometry->mBounds);
-
-    NotifyRenderingChanged();
   }
 }
 
@@ -10160,37 +10140,33 @@ PaintTelemetry::AutoRecordPaint::~AutoRecordPaint()
   // Record the total time.
   Telemetry::Accumulate(Telemetry::CONTENT_PAINT_TIME, static_cast<uint32_t>(totalMs));
 
-  // If the total time was >= 16ms, then it's likely we missed a frame due to
-  // painting. In this case we'll gather some detailed metrics below.
-  if (totalMs <= 16.0) {
-    return;
-  }
-
-  auto record = [=](const char* aKey, double aDurationMs) -> void {
+  // Helpers for recording large/small paints.
+  auto recordLarge = [=](const nsCString& aKey, double aDurationMs) -> void {
     MOZ_ASSERT(aDurationMs <= totalMs);
-
     uint32_t amount = static_cast<int32_t>((aDurationMs / totalMs) * 100.0);
-
-    nsDependentCString key(aKey);
-    Telemetry::Accumulate(Telemetry::CONTENT_LARGE_PAINT_PHASE_WEIGHT, key, amount);
+    Telemetry::Accumulate(Telemetry::CONTENT_LARGE_PAINT_PHASE_WEIGHT, aKey, amount);
+  };
+  auto recordSmall = [=](const nsString& aKey, double aDurationMs) -> void {
+    MOZ_ASSERT(aDurationMs <= totalMs);
+    uint32_t amount = static_cast<int32_t>((aDurationMs / totalMs) * 100.0);
+    Telemetry::ScalarAdd(Telemetry::ScalarID::GFX_SMALL_PAINT_PHASE_WEIGHT, aKey, amount);
   };
 
   double dlMs = sMetrics[Metric::DisplayList];
   double flbMs = sMetrics[Metric::Layerization];
   double rMs = sMetrics[Metric::Rasterization];
 
-  // Record all permutations since aggregation makes it difficult to
-  // correlate. For example we can't derive "flb+r" from "dl" because we
-  // don't know the total time associated with a bucket entry. So we just
-  // play it safe and include everything. We can however derive "other" time
-  // from the final permutation.
-  record("dl", dlMs);
-  record("flb", flbMs);
-  record("r", rMs);
-  record("dl,flb", dlMs + flbMs);
-  record("dl,r", dlMs + rMs);
-  record("flb,r", flbMs + rMs);
-  record("dl,flb,r", dlMs + flbMs + rMs);
+  // If the total time was >= 16ms, then it's likely we missed a frame due to
+  // painting. We bucket these metrics separately.
+  if (totalMs >= 16.0) {
+    recordLarge(NS_LITERAL_CSTRING("dl"), dlMs);
+    recordLarge(NS_LITERAL_CSTRING("flb"), flbMs);
+    recordLarge(NS_LITERAL_CSTRING("r"), rMs);
+  } else {
+    recordSmall(NS_LITERAL_STRING("dl"), dlMs);
+    recordSmall(NS_LITERAL_STRING("flb"), flbMs);
+    recordSmall(NS_LITERAL_STRING("r"), rMs);
+  }
 }
 
 PaintTelemetry::AutoRecord::AutoRecord(Metric aMetric)

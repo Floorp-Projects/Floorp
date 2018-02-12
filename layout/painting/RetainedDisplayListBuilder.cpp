@@ -689,6 +689,22 @@ GetModifiedAndFramesWithProps(nsDisplayListBuilder* aBuilder,
 #  define CRR_LOG(...)
 #endif
 
+static nsDisplayItem*
+GetFirstDisplayItemWithChildren(nsIFrame* aFrame)
+{
+  nsIFrame::DisplayItemArray* items = aFrame->GetProperty(nsIFrame::DisplayItems());
+  if (!items) {
+    return nullptr;
+  }
+  
+  for (nsDisplayItem* i : *items) {
+    if (i->GetChildren()) {
+      return i;
+    }
+  }
+  return nullptr;
+}
+
 static nsIFrame*
 HandlePreserve3D(nsIFrame* aFrame, nsRect& aOverflow)
 {
@@ -806,18 +822,16 @@ ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
       }
     }
 
-    if (currentFrame->IsStackingContext()) {
+    if (currentFrame != aBuilder.RootReferenceFrame() &&
+        currentFrame->IsStackingContext()) {
       CRR_LOG("Frame belongs to stacking context frame %p\n", currentFrame);
       // If we found an intermediate stacking context with an existing display item
       // then we can store the dirty rect there and stop. If we couldn't find one then
       // we need to keep bubbling up to the next stacking context.
-      if (currentFrame == aBuilder.RootReferenceFrame() ||
-          !currentFrame->HasDisplayItems()) {
+      nsDisplayItem* wrapperItem = GetFirstDisplayItemWithChildren(currentFrame);
+      if (!wrapperItem) {
         continue;
       }
-
-      aBuilder.MarkFrameForDisplayIfVisible(currentFrame,
-                                            aBuilder.RootReferenceFrame());
 
       // Store the stacking context relative dirty area such
       // that display list building will pick it up when it
@@ -838,6 +852,24 @@ ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
         // Continue ascending the frame tree until we reach aStopAtFrame.
         continue;
       }
+
+      // Grab the visible (display list building) rect for children of this wrapper
+      // item and convert into into coordinate relative to the current frame.
+      nsRect previousVisible = wrapperItem->GetVisibleRectForChildren();
+      if (wrapperItem->ReferenceFrameForChildren() == wrapperItem->ReferenceFrame()) {
+        previousVisible -= wrapperItem->ToReferenceFrame();
+      } else {
+        MOZ_ASSERT(wrapperItem->ReferenceFrameForChildren() == wrapperItem->Frame());
+      }
+
+      if (!previousVisible.Contains(aOverflow)) {
+        // If the overflow area of the changed frame isn't contained within the old
+        // item, then we might change the size of the item and need to update its
+        // sorting accordingly. Keep propagating the overflow area up so that we
+        // build intersecting items for sorting.
+        continue;
+      }
+
 
       if (!data->mModifiedAGR) {
         data->mModifiedAGR = *aAGR;

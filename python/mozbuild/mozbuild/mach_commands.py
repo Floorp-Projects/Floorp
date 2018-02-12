@@ -2169,9 +2169,21 @@ class Repackage(MachCommandBase):
         help='Optional package .zip for building a full installer')
     @CommandArgument('--output', '-o', type=str, required=True,
         help='Output filename')
-    def repackage_installer(self, tag, setupexe, package, output):
+    @CommandArgument('--package-name', type=str, required=False,
+        help='Name of the package being rebuilt')
+    @CommandArgument('--sfx-stub', type=str, required=True,
+        help='Path to the self-extraction stub.')
+    def repackage_installer(self, tag, setupexe, package, output, package_name, sfx_stub):
         from mozbuild.repackaging.installer import repackage_installer
-        repackage_installer(self.topsrcdir, tag, setupexe, package, output)
+        repackage_installer(
+            topsrcdir=self.topsrcdir,
+            tag=tag,
+            setupexe=setupexe,
+            package=package,
+            output=output,
+            package_name=package_name,
+            sfx_stub=sfx_stub,
+        )
 
     @SubCommand('repackage', 'mar',
                 description='Repackage into complete MAR file')

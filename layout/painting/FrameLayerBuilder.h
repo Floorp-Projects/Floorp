@@ -147,7 +147,7 @@ private:
     * EndUpdate must be called before the end of the transaction to complete the update.
     */
   void BeginUpdate(layers::Layer* aLayer, LayerState aState,
-                    uint32_t aContainerLayerGeneration, nsDisplayItem* aItem = nullptr);
+                   nsDisplayItem* aItem = nullptr);
 
   /**
     * Completes the update of this, and removes any references to data that won't live
@@ -170,7 +170,6 @@ private:
   nsAutoPtr<nsDisplayItemGeometry> mGeometry;
   DisplayItemClip mClip;
   uint32_t        mDisplayItemKey;
-  uint32_t        mContainerLayerGeneration;
   LayerState      mLayerState;
 
   /**
@@ -186,6 +185,7 @@ private:
     */
   bool            mUsed;
   bool            mIsInvalid;
+  bool            mReusedItem;
 };
 
 class RefCountedRegion {
@@ -649,7 +649,7 @@ protected:
    * PaintedLayer.
    */
   struct ClippedDisplayItem {
-    ClippedDisplayItem(nsDisplayItem* aItem, uint32_t aGeneration);
+    explicit ClippedDisplayItem(nsDisplayItem* aItem);
     ~ClippedDisplayItem();
 
     nsDisplayItem* mItem;
@@ -660,9 +660,6 @@ protected:
      * used for the inactive transaction.
      */
     RefPtr<LayerManager> mInactiveLayerManager;
-
-    uint32_t mContainerLayerGeneration;
-
   };
 
   static void RecomputeVisibilityForItems(nsTArray<ClippedDisplayItem>& aItems,
@@ -700,7 +697,6 @@ public:
     nsIntPoint mLastPaintOffset;
     uint32_t mLastCommonClipCount;
 
-    uint32_t mContainerLayerGeneration;
     bool mHasExplicitLastPaintOffset;
     /**
       * The first mCommonClipCount rounded rectangle clips are identical for
@@ -787,8 +783,6 @@ protected:
 
   bool                                mIsInactiveLayerManager;
 
-  uint32_t                            mContainerLayerGeneration;
-  uint32_t                            mMaxContainerLayerGeneration;
 };
 
 } // namespace mozilla
