@@ -15,5 +15,4 @@ build: false
 
 test_script:
   - cargo test --verbose
-  - cargo test --verbose --features serde
-  - cargo test --verbose --features std
+  - cargo test --manifest-path env/Cargo.toml
