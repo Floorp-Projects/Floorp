@@ -139,20 +139,19 @@ class ProcessHandlerMixin(object):
 
         def kill(self, sig=None):
             if isWin:
-                if not self._ignore_children and self._handle and self._job:
-                    self.debug("calling TerminateJobObject")
-                    winprocess.TerminateJobObject(self._job, winprocess.ERROR_CONTROL_C_EXIT)
-                    self.returncode = winprocess.GetExitCodeProcess(self._handle)
-                elif self._handle:
-                    self.debug("calling TerminateProcess")
-                    try:
+                try:
+                    if not self._ignore_children and self._handle and self._job:
+                        self.debug("calling TerminateJobObject")
+                        winprocess.TerminateJobObject(self._job, winprocess.ERROR_CONTROL_C_EXIT)
+                    elif self._handle:
+                        self.debug("calling TerminateProcess")
                         winprocess.TerminateProcess(self._handle, winprocess.ERROR_CONTROL_C_EXIT)
-                    except Exception:
-                        traceback.print_exc()
-                        raise OSError("Could not terminate process")
-                    finally:
-                        winprocess.GetExitCodeProcess(self._handle)
-                        self._cleanup()
+                except WindowsError:
+                    self._cleanup()
+
+                    traceback.print_exc()
+                    raise OSError("Could not terminate process")
+
             else:
                 def send_sig(sig, retries=0):
                     pid = self.detached_pid or self.pid
