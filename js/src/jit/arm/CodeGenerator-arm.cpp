@@ -531,7 +531,10 @@ CodeGeneratorARM::divICommon(MDiv* mir, Register lhs, Register rhs, Register out
         masm.ma_cmp(rhs, Imm32(-1), scratch, Assembler::Equal);
         if (mir->canTruncateOverflow()) {
             if (mir->trapOnError()) {
-                masm.ma_b(oldTrap(mir, wasm::Trap::IntegerOverflow), Assembler::Equal);
+                Label ok;
+                masm.ma_b(&ok, Assembler::NotEqual);
+                masm.wasmTrap(wasm::Trap::IntegerOverflow, mir->bytecodeOffset());
+                masm.bind(&ok);
             } else {
                 // (-INT32_MIN)|0 = INT32_MIN
                 Label skip;
@@ -2781,7 +2784,7 @@ CodeGeneratorARM::visitDivOrModI64(LDivOrModI64* lir)
         if (mir->isMod())
             masm.xor64(output, output);
         else
-            masm.jump(oldTrap(lir, wasm::Trap::IntegerOverflow));
+            masm.wasmTrap(wasm::Trap::IntegerOverflow, lir->bytecodeOffset());
         masm.jump(&done);
         masm.bind(&notmin);
     }

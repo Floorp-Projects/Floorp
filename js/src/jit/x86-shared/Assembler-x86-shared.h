@@ -301,6 +301,7 @@ class AssemblerX86Shared : public AssemblerShared
         LessThan = X86Encoding::ConditionL,
         LessThanOrEqual = X86Encoding::ConditionLE,
         Overflow = X86Encoding::ConditionO,
+        NoOverflow = X86Encoding::ConditionNO,
         CarrySet = X86Encoding::ConditionC,
         CarryClear = X86Encoding::ConditionNC,
         Signed = X86Encoding::ConditionS,

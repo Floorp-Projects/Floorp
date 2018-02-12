@@ -1210,10 +1210,14 @@ CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI* ins)
     if (negativeDivisor) {
         // INT32_MIN / -1 overflows.
         masm.negl(lhs);
-        if (!mir->isTruncated())
+        if (!mir->isTruncated()) {
             bailoutIf(Assembler::Overflow, ins->snapshot());
-        else if (mir->trapOnError())
-            masm.j(Assembler::Overflow, oldTrap(mir, wasm::Trap::IntegerOverflow));
+        } else if (mir->trapOnError()) {
+            Label ok;
+            masm.j(Assembler::NoOverflow, &ok);
+            masm.wasmTrap(wasm::Trap::IntegerOverflow, mir->bytecodeOffset());
+            masm.bind(&ok);
+        }
     } else if (mir->isUnsigned() && !mir->isTruncated()) {
         // Unsigned division by 1 can overflow if output is not
         // truncated.
@@ -1346,12 +1350,13 @@ CodeGeneratorX86Shared::visitDivI(LDivI* ins)
 
     // Handle an integer overflow exception from -2147483648 / -1.
     if (mir->canBeNegativeOverflow()) {
-        Label notmin;
+        Label notOverflow;
         masm.cmp32(lhs, Imm32(INT32_MIN));
-        masm.j(Assembler::NotEqual, &notmin);
+        masm.j(Assembler::NotEqual, &notOverflow);
         masm.cmp32(rhs, Imm32(-1));
         if (mir->trapOnError()) {
-            masm.j(Assembler::Equal, oldTrap(mir, wasm::Trap::IntegerOverflow));
+            masm.j(Assembler::NotEqual, &notOverflow);
+            masm.wasmTrap(wasm::Trap::IntegerOverflow, mir->bytecodeOffset());
         } else if (mir->canTruncateOverflow()) {
             // (-INT32_MIN)|0 == INT32_MIN and INT32_MIN is already in the
             // output register (lhs == eax).
@@ -1360,7 +1365,7 @@ CodeGeneratorX86Shared::visitDivI(LDivI* ins)
             MOZ_ASSERT(mir->fallible());
             bailoutIf(Assembler::Equal, ins->snapshot());
         }
-        masm.bind(&notmin);
+        masm.bind(&notOverflow);
     }
 
     // Handle negative 0.
