@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_WebAuthnManagerBase_h
 #define mozilla_dom_WebAuthnManagerBase_h
 
+#include "mozilla/dom/PWebAuthnTransaction.h"
 #include "nsIDOMEventListener.h"
 
 /*
@@ -28,12 +29,11 @@ public:
 
   virtual void
   FinishMakeCredential(const uint64_t& aTransactionId,
-                       nsTArray<uint8_t>& aRegBuffer) = 0;
+                       const WebAuthnMakeCredentialResult& aResult) = 0;
 
   virtual void
   FinishGetAssertion(const uint64_t& aTransactionId,
-                     nsTArray<uint8_t>& aCredentialId,
-                     nsTArray<uint8_t>& aSigBuffer) = 0;
+                     const WebAuthnGetAssertionResult& aResult) = 0;
 
   virtual void
   RequestAborted(const uint64_t& aTransactionId,

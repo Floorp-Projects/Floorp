@@ -650,7 +650,7 @@ WebAuthnManager::Store(const Credential& aCredential)
 
 void
 WebAuthnManager::FinishMakeCredential(const uint64_t& aTransactionId,
-                                      nsTArray<uint8_t>& aRegBuffer)
+                                      const WebAuthnMakeCredentialResult& aResult)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -660,7 +660,8 @@ WebAuthnManager::FinishMakeCredential(const uint64_t& aTransactionId,
   }
 
   CryptoBuffer regData;
-  if (NS_WARN_IF(!regData.Assign(aRegBuffer.Elements(), aRegBuffer.Length()))) {
+  if (NS_WARN_IF(!regData.Assign(aResult.RegBuffer().Elements(),
+                                 aResult.RegBuffer().Length()))) {
     RejectTransaction(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
@@ -783,8 +784,7 @@ WebAuthnManager::FinishMakeCredential(const uint64_t& aTransactionId,
 
 void
 WebAuthnManager::FinishGetAssertion(const uint64_t& aTransactionId,
-                                    nsTArray<uint8_t>& aCredentialId,
-                                    nsTArray<uint8_t>& aSigBuffer)
+                                    const WebAuthnGetAssertionResult& aResult)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -794,8 +794,8 @@ WebAuthnManager::FinishGetAssertion(const uint64_t& aTransactionId,
   }
 
   CryptoBuffer tokenSignatureData;
-  if (NS_WARN_IF(!tokenSignatureData.Assign(aSigBuffer.Elements(),
-                                            aSigBuffer.Length()))) {
+  if (NS_WARN_IF(!tokenSignatureData.Assign(aResult.SigBuffer().Elements(),
+                                            aResult.SigBuffer().Length()))) {
     RejectTransaction(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
@@ -833,7 +833,7 @@ WebAuthnManager::FinishGetAssertion(const uint64_t& aTransactionId,
   }
 
   CryptoBuffer credentialBuf;
-  if (!credentialBuf.Assign(aCredentialId)) {
+  if (!credentialBuf.Assign(aResult.CredentialID())) {
     RejectTransaction(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
