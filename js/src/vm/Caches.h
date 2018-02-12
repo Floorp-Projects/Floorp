@@ -9,7 +9,6 @@
 
 #include "jsbytecode.h"
 #include "jsmath.h"
-#include "jsobj.h"
 #include "jsscript.h"
 
 #include "frontend/SourceNotes.h"
@@ -17,6 +16,7 @@
 #include "js/RootingAPI.h"
 #include "js/UniquePtr.h"
 #include "vm/ArrayObject.h"
+#include "vm/JSObject.h"
 #include "vm/NativeObject.h"
 
 namespace js {

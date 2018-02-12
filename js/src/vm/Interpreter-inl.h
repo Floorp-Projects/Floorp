@@ -16,9 +16,8 @@
 #include "jit/Ion.h"
 #include "vm/ArgumentsObject.h"
 
-#include "jsobjinlines.h"
-
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 #include "vm/UnboxedObject-inl.h"

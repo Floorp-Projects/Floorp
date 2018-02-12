@@ -8,10 +8,10 @@
 #define vm_AsyncIteration_h
 
 #include "jscntxt.h"
-#include "jsobj.h"
 
 #include "builtin/Promise.h"
 #include "vm/GeneratorObject.h"
+#include "vm/JSObject.h"
 
 namespace js {
 

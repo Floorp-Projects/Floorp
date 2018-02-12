@@ -8,7 +8,6 @@
 #define vm_EnvironmentObject_h
 
 #include "jscntxt.h"
-#include "jsobj.h"
 #include "jsweakmap.h"
 
 #include "builtin/ModuleObject.h"
@@ -16,6 +15,7 @@
 #include "gc/Barrier.h"
 #include "js/GCHashTable.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/JSObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/Scope.h"
 

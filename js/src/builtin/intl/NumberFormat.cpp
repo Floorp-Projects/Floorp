@@ -27,7 +27,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/Stack.h"
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 

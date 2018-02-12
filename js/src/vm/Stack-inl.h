@@ -21,10 +21,10 @@
 #include "vm/GeneratorObject.h"
 #include "wasm/WasmInstance.h"
 
-#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 #include "jit/BaselineFrame-inl.h"
+#include "vm/JSObject-inl.h"
 
 namespace js {
 

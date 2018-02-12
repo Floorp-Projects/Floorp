@@ -16,10 +16,9 @@
 #include "vm/Runtime.h"
 #include "vm/String.h"
 
-#include "jsobjinlines.h"
-
 #include "gc/ArenaList-inl.h"
 #include "gc/Heap-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace gc;

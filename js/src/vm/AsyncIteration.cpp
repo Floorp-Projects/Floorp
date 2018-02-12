@@ -16,8 +16,8 @@
 #include "vm/SelfHosting.h"
 
 #include "jscntxtinlines.h"
-#include "jsobjinlines.h"
 
+#include "vm/JSObject-inl.h"
 #include "vm/List-inl.h"
 #include "vm/NativeObject-inl.h"
 

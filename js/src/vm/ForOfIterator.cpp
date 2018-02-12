@@ -7,12 +7,12 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsobj.h"
 
 #include "vm/Interpreter.h"
+#include "vm/JSObject.h"
 #include "vm/PIC.h"
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using JS::ForOfIterator;

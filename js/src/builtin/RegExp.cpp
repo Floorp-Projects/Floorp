@@ -19,8 +19,7 @@
 #include "vm/StringBuffer.h"
 #include "vm/Unicode.h"
 
-#include "jsobjinlines.h"
-
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/UnboxedObject-inl.h"
 

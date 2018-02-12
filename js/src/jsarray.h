@@ -9,10 +9,10 @@
 #ifndef jsarray_h
 #define jsarray_h
 
-#include "jsobj.h"
 #include "jspubtd.h"
 
 #include "vm/ArrayObject.h"
+#include "vm/JSObject.h"
 
 namespace js {
 /* 2^32-2, inclusive */

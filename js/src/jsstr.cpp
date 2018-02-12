@@ -25,7 +25,6 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsnum.h"
-#include "jsobj.h"
 #include "jsopcode.h"
 #include "jstypes.h"
 #include "jsutil.h"
@@ -42,6 +41,7 @@
 #endif
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSObject.h"
 #include "vm/Opcodes.h"
 #include "vm/Printer.h"
 #include "vm/RegExpObject.h"

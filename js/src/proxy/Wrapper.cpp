@@ -15,9 +15,8 @@
 #include "vm/RegExpObject.h"
 #include "vm/WrapperObject.h"
 
-#include "jsobjinlines.h"
-
 #include "gc/Marking-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

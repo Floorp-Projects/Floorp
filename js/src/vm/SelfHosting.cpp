@@ -57,11 +57,11 @@
 #include "vm/WrapperObject.h"
 
 #include "jsfuninlines.h"
-#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 #include "gc/Iteration-inl.h"
 #include "vm/BooleanObject-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/StringObject-inl.h"

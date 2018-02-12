@@ -23,7 +23,7 @@
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmSerialize.h"
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace js::jit;

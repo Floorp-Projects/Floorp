@@ -34,7 +34,6 @@
 #include "jsfun.h"
 #include "jsiter.h"
 #include "jsnativestack.h"
-#include "jsobj.h"
 #include "jsopcode.h"
 #include "jsprf.h"
 #include "jspubtd.h"
@@ -50,12 +49,13 @@
 #include "js/CharacterEncoding.h"
 #include "vm/ErrorReporting.h"
 #include "vm/HelperThreads.h"
+#include "vm/JSObject.h"
 #include "vm/Shape.h"
 #include "wasm/WasmSignalHandlers.h"
 
-#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
+#include "vm/JSObject-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;

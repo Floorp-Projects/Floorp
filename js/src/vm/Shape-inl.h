@@ -11,13 +11,13 @@
 
 #include "mozilla/TypeTraits.h"
 
-#include "jsobj.h"
-
 #include "gc/Allocator.h"
 #include "vm/Interpreter.h"
+#include "vm/JSObject.h"
 #include "vm/TypedArrayObject.h"
 
 #include "jscntxtinlines.h"
+
 #include "gc/Marking-inl.h"
 
 namespace js {

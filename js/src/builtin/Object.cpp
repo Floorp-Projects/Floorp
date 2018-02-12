@@ -21,8 +21,7 @@
 #include "vm/RegExpObject.h"
 #include "vm/StringBuffer.h"
 
-#include "jsobjinlines.h"
-
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/UnboxedObject-inl.h"

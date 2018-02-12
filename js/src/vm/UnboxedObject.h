@@ -7,10 +7,9 @@
 #ifndef vm_UnboxedObject_h
 #define vm_UnboxedObject_h
 
-#include "jsobj.h"
-
 #include "gc/DeletePolicy.h"
 #include "gc/Zone.h"
+#include "vm/JSObject.h"
 #include "vm/Runtime.h"
 #include "vm/TypeInference.h"
 

@@ -20,7 +20,6 @@
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsnum.h"
-#include "jsobj.h"
 #include "jsprf.h"
 #include "jsscript.h"
 #include "jstypes.h"
@@ -32,13 +31,13 @@
 #include "js/CharacterEncoding.h"
 #include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSObject.h"
 #include "vm/SavedStacks.h"
 #include "vm/SelfHosting.h"
 #include "vm/StringBuffer.h"
 
-#include "jsobjinlines.h"
-
 #include "vm/ErrorObject-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/SavedStacks-inl.h"
 
 using namespace js;

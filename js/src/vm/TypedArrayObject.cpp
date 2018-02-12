@@ -22,7 +22,6 @@
 #include "jscntxt.h"
 #include "jscpucfg.h"
 #include "jsnum.h"
-#include "jsobj.h"
 #include "jstypes.h"
 #include "jsutil.h"
 #ifdef XP_WIN
@@ -39,6 +38,7 @@
 #include "vm/ArrayBufferObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSObject.h"
 #include "vm/PIC.h"
 #include "vm/SelfHosting.h"
 #include "vm/SharedMem.h"
