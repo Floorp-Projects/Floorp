@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_WebAuthnManagerBase_h
 #define mozilla_dom_WebAuthnManagerBase_h
 
-#include "mozilla/dom/PWebAuthnTransaction.h"
 #include "nsIDOMEventListener.h"
 
 /*
@@ -19,6 +18,8 @@ namespace mozilla {
 namespace dom {
 
 class WebAuthnTransactionChild;
+class WebAuthnMakeCredentialResult;
+class WebAuthnGetAssertionResult;
 
 class WebAuthnManagerBase : public nsIDOMEventListener
 {
