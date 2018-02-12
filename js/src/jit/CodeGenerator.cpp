@@ -9838,11 +9838,6 @@ CodeGenerator::linkSharedStubs(JSContext* cx)
 bool
 CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
 {
-    // We cancel off-thread Ion compilations in a few places during GC, but if
-    // this compilation was performed off-thread it will already have been
-    // removed from the relevant lists by this point. Don't allow GC here.
-    JS::AutoAssertNoGC nogc(cx);
-
     RootedScript script(cx, gen->info().script());
     OptimizationLevel optimizationLevel = gen->optimizationInfo().level();
 
@@ -9923,7 +9918,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
     // read barriers which were skipped while compiling the script off thread.
     Linker linker(masm);
     AutoFlushICache afc("IonLink");
-    JitCode* code = linker.newCode<NoGC>(cx, ION_CODE, !patchableBackedges_.empty());
+    JitCode* code = linker.newCode<CanGC>(cx, ION_CODE, !patchableBackedges_.empty());
     if (!code)
         return false;
 
