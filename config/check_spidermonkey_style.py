@@ -165,8 +165,8 @@ js/src/tests/style/BadIncludesOrder-inl.h:9:10: error:
 js/src/tests/style/BadIncludesOrder-inl.h:10:11: error:
     <stdio.h> should be included after "mozilla/HashFunctions.h"
 
-js/src/tests/style/BadIncludesOrder-inl.h:27:28: error:
-    "jsobj.h" should be included after "jsfun.h"
+js/src/tests/style/BadIncludesOrder-inl.h:28:29: error:
+    "vm/JSObject.h" should be included after "jsscript.h"
 
 (multiple files): error:
     header files form one or more cycles

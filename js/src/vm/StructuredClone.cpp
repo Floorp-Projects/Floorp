@@ -52,7 +52,8 @@
 #include "wasm/WasmJS.h"
 
 #include "jscntxtinlines.h"
-#include "jsobjinlines.h"
+
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 

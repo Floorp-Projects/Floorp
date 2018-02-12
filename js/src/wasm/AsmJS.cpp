@@ -28,7 +28,6 @@
 #include "jsprf.h"
 #include "jsstr.h"
 #include "jsutil.h"
-
 #include "jswrapper.h"
 
 #include "builtin/SIMD.h"
@@ -48,10 +47,9 @@
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmValidate.h"
 
-#include "jsobjinlines.h"
-
 #include "frontend/ParseNode-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace js::frontend;

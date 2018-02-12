@@ -9,9 +9,10 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsobj.h"
+
 #include "js/Class.h"
 #include "js/Value.h"
+#include "vm/JSObject.h"
 
 namespace js {
 

@@ -8,10 +8,10 @@
 #define vm_GeneratorObject_h
 
 #include "jscntxt.h"
-#include "jsobj.h"
 
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayObject.h"
+#include "vm/JSObject.h"
 #include "vm/Stack.h"
 
 namespace js {

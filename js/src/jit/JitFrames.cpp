@@ -7,7 +7,6 @@
 #include "jit/JitFrames-inl.h"
 
 #include "jsfun.h"
-#include "jsobj.h"
 #include "jsscript.h"
 #include "jsutil.h"
 
@@ -30,11 +29,13 @@
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/Interpreter.h"
+#include "vm/JSObject.h"
 #include "vm/TraceLogging.h"
 #include "vm/TypeInference.h"
 #include "wasm/WasmBuiltins.h"
 
 #include "jsscriptinlines.h"
+
 #include "gc/Nursery-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
 #include "vm/Debugger-inl.h"

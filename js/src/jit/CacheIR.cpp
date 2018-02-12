@@ -12,12 +12,11 @@
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/BaselineIC.h"
 #include "jit/CacheIRSpewer.h"
-
 #include "vm/SelfHosting.h"
-#include "jsobjinlines.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/UnboxedObject-inl.h"
 
 using namespace js;

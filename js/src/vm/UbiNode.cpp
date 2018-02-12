@@ -14,7 +14,6 @@
 #include <algorithm>
 
 #include "jscntxt.h"
-#include "jsobj.h"
 #include "jsscript.h"
 #include "jsstr.h"
 
@@ -27,13 +26,14 @@
 #include "vm/Debugger.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSObject.h"
 #include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/String.h"
 #include "vm/Symbol.h"
 
-#include "jsobjinlines.h"
 #include "vm/Debugger-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 

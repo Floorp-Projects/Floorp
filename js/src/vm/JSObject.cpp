@@ -8,7 +8,7 @@
  * JS object implementation.
  */
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"

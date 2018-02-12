@@ -15,7 +15,8 @@
 #include "js/Conversions.h"
 
 #include "jscntxtinlines.h"
-#include "jsobjinlines.h"
+
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace js::frontend;

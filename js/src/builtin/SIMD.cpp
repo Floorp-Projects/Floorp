@@ -28,7 +28,7 @@
 #include "jit/InlinableNatives.h"
 #include "js/Value.h"
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 

@@ -6,7 +6,7 @@
 
 #include "vm/GeneratorObject.h"
 
-#include "jsobj.h"
+#include "vm/JSObject.h"
 
 #include "jsscriptinlines.h"
 

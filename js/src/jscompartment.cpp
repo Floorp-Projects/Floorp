@@ -28,10 +28,10 @@
 
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
-#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 #include "gc/Marking-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/UnboxedObject-inl.h"
 

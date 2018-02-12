@@ -13,18 +13,17 @@
 #include <stdlib.h>
 
 #include "jsarray.h"
-#include "jsobj.h"
 #include "jspubtd.h"
 
 #include "builtin/Reflect.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "js/CharacterEncoding.h"
+#include "vm/JSObject.h"
 #include "vm/RegExpObject.h"
 
-#include "jsobjinlines.h"
-
 #include "frontend/ParseNode-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace js::frontend;

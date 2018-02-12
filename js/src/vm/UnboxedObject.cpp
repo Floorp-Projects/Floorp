@@ -11,10 +11,9 @@
 #include "jit/JitCommon.h"
 #include "jit/Linker.h"
 
-#include "jsobjinlines.h"
-
 #include "gc/Nursery-inl.h"
 #include "jit/MacroAssembler-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/Shape-inl.h"
 
 using mozilla::ArrayLength;

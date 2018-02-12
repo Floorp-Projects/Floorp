@@ -15,11 +15,10 @@
 #include "vm/Debugger.h"
 #include "vm/TypedArrayObject.h"
 
-#include "jsobjinlines.h"
-
 #include "gc/Nursery-inl.h"
 #include "vm/ArrayObject-inl.h"
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/Shape-inl.h"
 
 using namespace js;

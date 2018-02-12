@@ -9,8 +9,7 @@
 
 #include "vm/StringObject.h"
 
-#include "jsobjinlines.h"
-
+#include "vm/JSObject-inl.h"
 #include "vm/Shape-inl.h"
 
 namespace js {

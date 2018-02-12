@@ -9,7 +9,7 @@
 
 #include "jsapi-tests/tests.h"
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 
 BEGIN_TEST(testLookup_bug522590)
 {

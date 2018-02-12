@@ -6,26 +6,23 @@
 
 #include "jit/Recover.h"
 
-
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsiter.h"
 #include "jsmath.h"
-#include "jsobj.h"
 #include "jsstr.h"
 
 #include "builtin/RegExp.h"
 #include "builtin/SIMD.h"
 #include "builtin/TypedObject.h"
-
 #include "gc/Heap.h"
-
 #include "jit/JitSpewer.h"
 #include "jit/JSJitFrameIter.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 #include "jit/VMFunctions.h"
 #include "vm/Interpreter.h"
+#include "vm/JSObject.h"
 #include "vm/String.h"
 
 #include "vm/Interpreter-inl.h"

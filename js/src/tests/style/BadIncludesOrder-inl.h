@@ -24,7 +24,7 @@
 # include "mozilla/HashFunctions.h"
 #endif
 
-#include "jsobj.h"
-#include "jsfun.h"      // out of order
+#include "jsfun.h"
+#include "vm/JSObject.h"  // out of order
 #include "jsscript.h"
 #include "jstypes.h"

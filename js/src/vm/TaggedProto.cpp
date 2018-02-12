@@ -7,9 +7,9 @@
 #include "vm/TaggedProto.h"
 
 #include "jsfun.h"
-#include "jsobj.h"
 
 #include "gc/Barrier.h"
+#include "vm/JSObject.h"
 
 namespace js {
 

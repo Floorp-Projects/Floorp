@@ -16,7 +16,6 @@
 #include "jsfriendapi.h"
 #include "jshashutil.h"
 #include "jsnum.h"
-#include "jsobj.h"
 #include "jsprf.h"
 #include "jswrapper.h"
 
@@ -37,16 +36,17 @@
 #include "vm/DebuggerMemory.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/GeneratorObject.h"
+#include "vm/JSObject.h"
 #include "vm/TraceLogging.h"
 #include "vm/WrapperObject.h"
 #include "wasm/WasmInstance.h"
 
 #include "jsgcinlines.h"
-#include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 #include "jsscriptinlines.h"
 
 #include "vm/GeckoProfiler-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
 

@@ -18,7 +18,6 @@
 #ifndef XP_WIN
 # include <sys/mman.h>
 #endif
-
 #ifdef MOZ_VALGRIND
 # include <valgrind/memcheck.h>
 #endif
@@ -29,7 +28,6 @@
 #include "jscpucfg.h"
 #include "jsfriendapi.h"
 #include "jsnum.h"
-#include "jsobj.h"
 #include "jstypes.h"
 #include "jsutil.h"
 #ifdef XP_WIN
@@ -45,6 +43,7 @@
 #include "js/MemoryMetrics.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSObject.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/WrapperObject.h"
 #include "wasm/WasmSignalHandlers.h"

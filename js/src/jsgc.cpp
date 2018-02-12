@@ -209,7 +209,6 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsfriendapi.h"
-#include "jsobj.h"
 #include "jsprf.h"
 #include "jsscript.h"
 #include "jstypes.h"
@@ -232,6 +231,7 @@
 #include "proxy/DeadObjectProxy.h"
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
+#include "vm/JSObject.h"
 #include "vm/Printer.h"
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
@@ -241,7 +241,6 @@
 #include "vm/TraceLogging.h"
 #include "vm/WrapperObject.h"
 
-#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 #include "gc/Heap-inl.h"
@@ -249,6 +248,7 @@
 #include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
 #include "vm/GeckoProfiler-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 

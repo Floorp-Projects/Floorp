@@ -15,7 +15,6 @@
 #include "jsarray.h"
 #include "jscntxt.h"
 #include "jsnum.h"
-#include "jsobj.h"
 #ifdef XP_WIN
 # include "jswin.h"
 #endif
@@ -26,6 +25,7 @@
 #include "vm/ArrayBufferObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSObject.h"
 #include "vm/SharedMem.h"
 #include "vm/WrapperObject.h"
 

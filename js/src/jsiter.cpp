@@ -17,7 +17,6 @@
 
 #include "jsarray.h"
 #include "jscntxt.h"
-#include "jsobj.h"
 #include "jsopcode.h"
 #include "jsscript.h"
 #include "jstypes.h"
@@ -30,6 +29,7 @@
 #include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSObject.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 

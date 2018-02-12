@@ -46,7 +46,7 @@
 #include "jit/AtomicOperations.h"
 #include "js/Vector.h"
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 
 using namespace std;
 

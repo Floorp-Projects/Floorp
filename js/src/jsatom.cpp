@@ -26,9 +26,9 @@
 
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"
-#include "jsobjinlines.h"
 
 #include "gc/AtomMarking-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/String-inl.h"
 
 using namespace js;
