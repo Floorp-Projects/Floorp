@@ -1646,11 +1646,11 @@ Simulator::handleWasmInterrupt()
 
     JitActivation* activation = TlsContext.get()->activation()->asJit();
     const wasm::CodeSegment* segment = wasm::LookupCodeSegment(pc);
-    if (!segment || !segment->containsCodePC(pc))
+    if (!segment || !segment->isModule() || !segment->containsCodePC(pc))
         return;
 
     startInterrupt(activation);
-    set_pc(int32_t(segment->interruptCode()));
+    set_pc(int32_t(segment->asModule()->interruptCode()));
 }
 
 
@@ -1675,10 +1675,11 @@ Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
     uint8_t* fp = reinterpret_cast<uint8_t*>(getRegister(Register::fp));
 
     const wasm::CodeSegment* segment = wasm::LookupCodeSegment(pc);
-    if (!segment)
+    if (!segment || !segment->isModule())
         return false;
+    const wasm::ModuleSegment* moduleSegment = segment->asModule();
 
-    wasm::Instance* instance = wasm::LookupFaultingInstance(*segment, pc, fp);
+    wasm::Instance* instance = wasm::LookupFaultingInstance(*moduleSegment, pc, fp);
     if (!instance || !instance->memoryAccessInGuardRegion((uint8_t*)addr, numBytes))
         return false;
 
@@ -1689,12 +1690,12 @@ Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
         startInterrupt(act);
         if (!instance->code().containsCodePC(pc))
             MOZ_CRASH("Cannot map PC to trap handler");
-        set_pc(int32_t(segment->outOfBoundsCode()));
+        set_pc(int32_t(moduleSegment->outOfBoundsCode()));
         return true;
     }
 
     MOZ_ASSERT(memoryAccess->hasTrapOutOfLineCode());
-    set_pc(int32_t(memoryAccess->trapOutOfLineCode(segment->base())));
+    set_pc(int32_t(memoryAccess->trapOutOfLineCode(moduleSegment->base())));
     return true;
 }
 
@@ -1713,16 +1714,17 @@ Simulator::handleWasmTrapFault()
     uint8_t* fp = reinterpret_cast<uint8_t*>(getRegister(Register::fp));
 
     const wasm::CodeSegment* segment = wasm::LookupCodeSegment(pc);
-    if (!segment)
+    if (!segment || !segment->isModule())
         return false;
+    const wasm::ModuleSegment* moduleSegment = segment->asModule();
 
     wasm::Trap trap;
     wasm::BytecodeOffset bytecode;
-    if (!segment->code().lookupTrap(pc, &trap, &bytecode))
+    if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode))
         return false;
 
     act->startWasmTrap(trap, bytecode.offset, pc, fp);
-    set_pc(int32_t(segment->trapCode()));
+    set_pc(int32_t(moduleSegment->trapCode()));
     return true;
 }
 
@@ -3639,8 +3641,8 @@ FakeInterruptHandler()
     JSContext* cx = TlsContext.get();
     uint8_t* pc = cx->simulator()->get_pc_as<uint8_t*>();
 
-    const wasm::CodeSegment* cs = nullptr;
-    if (!wasm::InInterruptibleCode(cx, pc, &cs))
+    const wasm::ModuleSegment* ms = nullptr;
+    if (!wasm::InInterruptibleCode(cx, pc, &ms))
         return;
 
     cx->simulator()->trigger_wasm_interrupt();

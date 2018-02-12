@@ -184,25 +184,22 @@ SharedSurfacesChild::DestroySharedUserData(void* aClosure)
 }
 
 /* static */ nsresult
-SharedSurfacesChild::Share(SourceSurfaceSharedData* aSurface,
-                           WebRenderLayerManager* aManager,
-                           wr::IpcResourceUpdateQueue& aResources,
-                           wr::ImageKey& aKey)
+SharedSurfacesChild::ShareInternal(SourceSurfaceSharedData* aSurface,
+                                   SharedUserData** aUserData)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aSurface);
-  MOZ_ASSERT(aManager);
+  MOZ_ASSERT(aUserData);
 
   CompositorManagerChild* manager = CompositorManagerChild::GetInstance();
   if (NS_WARN_IF(!manager || !manager->CanSend())) {
+    // We cannot try to share the surface, most likely because the GPU process
+    // crashed. Ideally, we would retry when it is ready, but the handles may be
+    // a scarce resource, which can cause much more serious problems if we run
+    // out. Better to copy into a fresh buffer later.
+    aSurface->FinishedSharing();
     return NS_ERROR_NOT_INITIALIZED;
   }
-
-  // Each time the surface changes, the producers of SourceSurfaceSharedData
-  // surfaces promise to increment the invalidation counter each time the
-  // surface has changed. We can use this counter to determine whether or not
-  // we should upate our paired ImageKey.
-  int32_t invalidations = aSurface->Invalidations();
 
   static UserDataKey sSharedKey;
   SharedUserData* data =
@@ -215,8 +212,8 @@ SharedSurfacesChild::Share(SourceSurfaceSharedData* aSurface,
     // to the GPU process crashing. All previous mappings have been released.
     data->SetId(manager->GetNextExternalImageId());
   } else if (data->IsShared()) {
-    // It has already been shared with the GPU process, reuse the id.
-    aKey = data->UpdateKey(aManager, aResources, invalidations);
+    // It has already been shared with the GPU process.
+    *aUserData = data;
     return NS_OK;
   }
 
@@ -234,7 +231,7 @@ SharedSurfacesChild::Share(SourceSurfaceSharedData* aSurface,
   if (pid == base::GetCurrentProcId()) {
     SharedSurfacesParent::AddSameProcess(data->Id(), aSurface);
     data->MarkShared();
-    aKey = data->UpdateKey(aManager, aResources, invalidations);
+    *aUserData = data;
     return NS_OK;
   }
 
@@ -269,8 +266,71 @@ SharedSurfacesChild::Share(SourceSurfaceSharedData* aSurface,
                                 SurfaceDescriptorShared(aSurface->GetSize(),
                                                         aSurface->Stride(),
                                                         format, handle));
-  aKey = data->UpdateKey(aManager, aResources, invalidations);
+  *aUserData = data;
   return NS_OK;
+}
+
+/* static */ void
+SharedSurfacesChild::Share(SourceSurfaceSharedData* aSurface)
+{
+  MOZ_ASSERT(aSurface);
+
+  // The IPDL actor to do sharing can only be accessed on the main thread so we
+  // need to dispatch if off the main thread. However there is no real danger if
+  // we end up racing because if it is already shared, this method will do
+  // nothing.
+  if (!NS_IsMainThread()) {
+    class ShareRunnable final : public Runnable
+    {
+    public:
+      explicit ShareRunnable(SourceSurfaceSharedData* aSurface)
+        : Runnable("SharedSurfacesChild::Share")
+        , mSurface(aSurface)
+      { }
+
+      NS_IMETHOD Run() override
+      {
+        SharedUserData* unused = nullptr;
+        SharedSurfacesChild::ShareInternal(mSurface, &unused);
+        return NS_OK;
+      }
+
+    private:
+      RefPtr<SourceSurfaceSharedData> mSurface;
+    };
+
+    SystemGroup::Dispatch(TaskCategory::Other,
+                          MakeAndAddRef<ShareRunnable>(aSurface));
+    return;
+  }
+
+  SharedUserData* unused = nullptr;
+  SharedSurfacesChild::ShareInternal(aSurface, &unused);
+}
+
+/* static */ nsresult
+SharedSurfacesChild::Share(SourceSurfaceSharedData* aSurface,
+                           WebRenderLayerManager* aManager,
+                           wr::IpcResourceUpdateQueue& aResources,
+                           wr::ImageKey& aKey)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aSurface);
+  MOZ_ASSERT(aManager);
+
+  // Each time the surface changes, the producers of SourceSurfaceSharedData
+  // surfaces promise to increment the invalidation counter each time the
+  // surface has changed. We can use this counter to determine whether or not
+  // we should upate our paired ImageKey.
+  int32_t invalidations = aSurface->Invalidations();
+  SharedUserData* data = nullptr;
+  nsresult rv = SharedSurfacesChild::ShareInternal(aSurface, &data);
+  if (NS_SUCCEEDED(rv)) {
+    MOZ_ASSERT(data);
+    aKey = data->UpdateKey(aManager, aResources, invalidations);
+  }
+
+  return rv;
 }
 
 /* static */ nsresult

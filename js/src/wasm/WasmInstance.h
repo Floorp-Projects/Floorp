@@ -84,7 +84,7 @@ class Instance
     const Code& code() const { return *code_; }
     DebugState& debug() { return *debug_; }
     const DebugState& debug() const { return *debug_; }
-    const CodeSegment& codeSegment(Tier t) const { return code_->segment(t); }
+    const ModuleSegment& moduleSegment(Tier t) const { return code_->segment(t); }
     TlsData* tlsData() const { return tlsData_.get(); }
     uint8_t* globalData() const { return (uint8_t*)&tlsData_->globalArea; }
     uint8_t* codeBase(Tier t) const { return code_->segment(t).base(); }

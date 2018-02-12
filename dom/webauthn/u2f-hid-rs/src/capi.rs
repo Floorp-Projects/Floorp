@@ -178,11 +178,6 @@ pub unsafe extern "C" fn rust_u2f_mgr_sign(
         return 0;
     }
 
-    // Need at least one key handle.
-    if (*khs).len() < 1 {
-        return 0;
-    }
-
     let flags = ::SignFlags::from_bits_truncate(flags);
     let challenge = from_raw(challenge_ptr, challenge_len);
     let application = from_raw(application_ptr, application_len);

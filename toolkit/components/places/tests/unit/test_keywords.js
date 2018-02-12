@@ -1,5 +1,8 @@
 "use strict";
 
+ChromeUtils.defineModuleGetter(this, "Preferences",
+                               "resource://gre/modules/Preferences.jsm");
+
 async function check_keyword(aExpectExists, aHref, aKeyword, aPostData = null) {
   // Check case-insensitivity.
   aKeyword = aKeyword.toUpperCase();
@@ -175,6 +178,13 @@ add_task(async function test_addKeyword() {
 });
 
 add_task(async function test_addBookmarkAndKeyword() {
+  let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
+  Preferences.set("privacy.reduceTimerPrecision", false);
+
+  registerCleanupFunction(function() {
+    Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
+  });
+
   await check_keyword(false, "http://example.com/", "keyword");
   let fc = await foreign_count("http://example.com/");
   let bookmark = await PlacesUtils.bookmarks.insert({ url: "http://example.com/",

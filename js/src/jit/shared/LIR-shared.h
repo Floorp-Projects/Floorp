@@ -9010,24 +9010,25 @@ class LWasmStackArgI64 : public LInstructionHelper<0, INT64_PIECES, 0>
     }
 };
 
-class LWasmCallBase : public LInstruction
+template <size_t Defs>
+class LWasmCallBase : public details::LInstructionFixedDefsTempsHelper<Defs, 0>
 {
+    using Base = details::LInstructionFixedDefsTempsHelper<Defs, 0>;
+
     LAllocation* operands_;
     uint32_t needsBoundsCheck_;
 
   public:
-
-    LWasmCallBase(LAllocation* operands, uint32_t numOperands, uint32_t numDefs,
-                  bool needsBoundsCheck)
-      : LInstruction(numOperands, numDefs, /* numTemps = */ 0),
+    LWasmCallBase(LAllocation* operands, uint32_t numOperands, bool needsBoundsCheck)
+      : Base(numOperands),
         operands_(operands),
         needsBoundsCheck_(needsBoundsCheck)
     {
-        setIsCall();
+        this->setIsCall();
     }
 
     MWasmCall* mir() const {
-        return mir_->toWasmCall();
+        return this->mir_->toWasmCall();
     }
 
     static bool isCallPreserved(AnyRegister reg) {
@@ -9041,79 +9042,48 @@ class LWasmCallBase : public LInstruction
 
     // LInstruction interface
     LAllocation* getOperand(size_t index) override {
-        MOZ_ASSERT(index < numOperands());
+        MOZ_ASSERT(index < this->numOperands());
         return &operands_[index];
     }
     void setOperand(size_t index, const LAllocation& a) override {
-        MOZ_ASSERT(index < numOperands());
+        MOZ_ASSERT(index < this->numOperands());
         operands_[index] = a;
-    }
-    LDefinition* getTemp(size_t index) override {
-        MOZ_CRASH("no temps");
-    }
-    void setTemp(size_t index, const LDefinition& a) override {
-        MOZ_CRASH("no temps");
-    }
-    size_t numSuccessors() const override {
-        return 0;
-    }
-    MBasicBlock* getSuccessor(size_t i) const override {
-        MOZ_CRASH("no successors");
-    }
-    void setSuccessor(size_t i, MBasicBlock*) override {
-        MOZ_CRASH("no successors");
     }
     bool needsBoundsCheck() const {
         return needsBoundsCheck_;
     }
 };
 
-class LWasmCall : public LWasmCallBase
+class LWasmCall : public LWasmCallBase<1>
 {
-     LDefinition def_;
-
   public:
     LIR_HEADER(WasmCall);
 
-    LWasmCall(LAllocation* operands, uint32_t numOperands, uint32_t numDefs, bool needsBoundsCheck)
-      : LWasmCallBase(operands, numOperands, numDefs, needsBoundsCheck),
-        def_(LDefinition::BogusTemp())
-    {}
-
-    // LInstruction interface
-    LDefinition* getDef(size_t index) override {
-        MOZ_ASSERT(numDefs() == 1);
-        MOZ_ASSERT(index == 0);
-        return &def_;
-    }
-    void setDef(size_t index, const LDefinition& def) override {
-        MOZ_ASSERT(index == 0);
-        def_ = def;
+    LWasmCall(LAllocation* operands, uint32_t numOperands, bool needsBoundsCheck)
+      : LWasmCallBase(operands, numOperands, needsBoundsCheck)
+    {
     }
 };
 
-class LWasmCallI64 : public LWasmCallBase
+class LWasmCallVoid : public LWasmCallBase<0>
 {
-    LDefinition defs_[INT64_PIECES];
+  public:
+    LIR_HEADER(WasmCallVoid);
 
+    LWasmCallVoid(LAllocation* operands, uint32_t numOperands, bool needsBoundsCheck)
+      : LWasmCallBase(operands, numOperands, needsBoundsCheck)
+    {
+    }
+};
+
+class LWasmCallI64 : public LWasmCallBase<INT64_PIECES>
+{
   public:
     LIR_HEADER(WasmCallI64);
 
     LWasmCallI64(LAllocation* operands, uint32_t numOperands, bool needsBoundsCheck)
-      : LWasmCallBase(operands, numOperands, INT64_PIECES, needsBoundsCheck)
+      : LWasmCallBase(operands, numOperands, needsBoundsCheck)
     {
-        for (size_t i = 0; i < numDefs(); i++)
-            defs_[i] = LDefinition::BogusTemp();
-    }
-
-    // LInstruction interface
-    LDefinition* getDef(size_t index) override {
-        MOZ_ASSERT(index < numDefs());
-        return &defs_[index];
-    }
-    void setDef(size_t index, const LDefinition& def) override {
-        MOZ_ASSERT(index < numDefs());
-        defs_[index] = def;
     }
 };
 
@@ -9121,9 +9091,10 @@ inline bool
 LNode::isCallPreserved(AnyRegister reg) const
 {
     switch (op()) {
-      case LOp_WasmCallI64:
       case LOp_WasmCall:
-        return LWasmCallBase::isCallPreserved(reg);
+      case LOp_WasmCallVoid:
+      case LOp_WasmCallI64:
+        return LWasmCallBase<0>::isCallPreserved(reg);
       default:
         return false;
     }

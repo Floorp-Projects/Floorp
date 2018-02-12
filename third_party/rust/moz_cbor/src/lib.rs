@@ -8,11 +8,7 @@ mod test_serializer;
 use std::collections::BTreeMap;
 use std::cmp::Ordering;
 
-#[derive(Debug)]
-#[derive(Clone)]
-#[derive(PartialEq)]
-#[derive(PartialOrd)]
-#[derive(Eq)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
 pub enum CborType {
     Integer(u64),
     SignedInteger(i64),
@@ -24,8 +20,7 @@ pub enum CborType {
     Null,
 }
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum CborError {
     DuplicateMapKey,
     InputTooLarge,
