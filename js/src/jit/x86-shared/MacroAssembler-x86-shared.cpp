@@ -939,6 +939,12 @@ MacroAssembler::oolWasmTruncateCheckF32ToI64(FloatRegister input, Register64 out
     jump(rejoin);
 }
 
+void
+MacroAssembler::enterFakeExitFrameForWasm(Register cxreg, Register scratch, ExitFrameType type)
+{
+    enterFakeExitFrame(cxreg, scratch, type);
+}
+
 // ========================================================================
 // Primitive atomic operations.
 
