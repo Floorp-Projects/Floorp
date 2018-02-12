@@ -15,7 +15,7 @@ NS_IMPL_RELEASE(nsSystemAlertsService)
 NS_INTERFACE_MAP_BEGIN(nsSystemAlertsService)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAlertsService)
    NS_INTERFACE_MAP_ENTRY(nsIAlertsService)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END
 
 nsSystemAlertsService::nsSystemAlertsService()
 = default;

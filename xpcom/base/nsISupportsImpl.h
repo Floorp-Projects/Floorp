@@ -1220,14 +1220,6 @@ NS_IMETHODIMP_(MozExternalRefCountType) Class::Release(void)                  \
 
 
 ///////////////////////////////////////////////////////////////////////////////
-/**
- *
- * Threadsafe implementations of the ISupports convenience macros.
- *
- * @note  These are not available when linking against the standalone glue,
- *        because the implementation requires PR_ symbols.
- */
-#define NS_INTERFACE_MAP_END_THREADSAFE NS_IMPL_QUERY_TAIL_GUTS
 
 /**
  * Macro to generate nsIClassInfo methods for classes which do not have
