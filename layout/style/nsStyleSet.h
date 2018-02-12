@@ -475,16 +475,6 @@ class nsStyleSet final
     --mRootStyleContextCount;
   }
 
-  // Return whether the rule tree has cached data such that we need to
-  // do dynamic change handling for changes that change the results of
-  // media queries or require rebuilding all style data.
-  // We don't care whether we have cached rule processors or whether
-  // they have cached rule cascades; getting the rule cascades again in
-  // order to do rule matching will get the correct rule cascade.
-  bool HasCachedStyleData() const {
-    return (mRuleTree && mRuleTree->TreeHasCachedData()) || mRootStyleContextCount > 0;
-  }
-
   // Notify the style set that a rulenode is no longer in use, or was
   // just created and is not in use yet.
   static const uint32_t kGCInterval = 300;
