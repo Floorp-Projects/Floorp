@@ -19,17 +19,21 @@ describe("FilterButton component:", () => {
 
   it("displays as active when turned on", () => {
     const wrapper = render(FilterButton(props));
-    expect(wrapper.html()).toBe(
-      "<button aria-pressed=\"true\" class=\"devtools-button error checked\">" +
-      "Error</button>"
-    );
+    expect(wrapper.is("button")).toBe(true);
+    expect(wrapper.hasClass("devtools-button")).toBe(true);
+    expect(wrapper.hasClass("error")).toBe(true);
+    expect(wrapper.hasClass("checked")).toBe(true);
+    expect(wrapper.attr("aria-pressed")).toBe("true");
+    expect(wrapper.text()).toBe("Error");
   });
 
   it("displays as inactive when turned off", () => {
-    const inactiveProps = Object.assign({}, props, { active: false });
-    const wrapper = render(FilterButton(inactiveProps));
-    expect(wrapper.html()).toBe(
-      "<button aria-pressed=\"false\" class=\"devtools-button error\">Error</button>"
-    );
+    const wrapper = render(FilterButton({...props, active: false}));
+    expect(wrapper.is("button")).toBe(true);
+    expect(wrapper.hasClass("devtools-button")).toBe(true);
+    expect(wrapper.hasClass("error")).toBe(true);
+    expect(wrapper.hasClass("checked")).toBe(false);
+    expect(wrapper.attr("aria-pressed")).toBe("false");
+    expect(wrapper.text()).toBe("Error");
   });
 });

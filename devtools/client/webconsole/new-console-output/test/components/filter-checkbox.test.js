@@ -19,18 +19,17 @@ describe("FilterCheckbox component:", () => {
 
   it("displays as checked", () => {
     const wrapper = render(FilterCheckbox(props));
-    expect(wrapper.html()).toBe(
-      '<label title="test title" class="filter-checkbox">' +
-      '<input type="checkbox" checked>test label</label>'
-    );
+    expect(wrapper.is("label")).toBe(true);
+    expect(wrapper.attr("title")).toBe("test title");
+    expect(wrapper.hasClass("filter-checkbox")).toBe(true);
+    expect(wrapper.html()).toBe('<input type="checkbox" checked>test label');
   });
 
   it("displays as unchecked", () => {
-    const uncheckedProps = Object.assign({}, props, { checked: false });
-    const wrapper = render(FilterCheckbox(uncheckedProps));
-    expect(wrapper.html()).toBe(
-      '<label title="test title" class="filter-checkbox">' +
-      '<input type="checkbox">test label</label>'
-    );
+    const wrapper = render(FilterCheckbox({...props, checked: false}));
+    expect(wrapper.is("label")).toBe(true);
+    expect(wrapper.attr("title")).toBe("test title");
+    expect(wrapper.hasClass("filter-checkbox")).toBe(true);
+    expect(wrapper.html()).toBe('<input type="checkbox">test label');
   });
 });
