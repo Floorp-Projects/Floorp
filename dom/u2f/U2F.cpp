@@ -462,7 +462,7 @@ U2F::Register(const nsAString& aAppId,
 
 void
 U2F::FinishMakeCredential(const uint64_t& aTransactionId,
-                          nsTArray<uint8_t>& aRegBuffer)
+                          const WebAuthnMakeCredentialResult& aResult)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -483,7 +483,7 @@ U2F::FinishMakeCredential(const uint64_t& aTransactionId,
   }
 
   CryptoBuffer regBuf;
-  if (NS_WARN_IF(!regBuf.Assign(aRegBuffer))) {
+  if (NS_WARN_IF(!regBuf.Assign(aResult.RegBuffer()))) {
     RejectTransaction(NS_ERROR_ABORT);
     return;
   }
@@ -606,8 +606,7 @@ U2F::Sign(const nsAString& aAppId,
 
 void
 U2F::FinishGetAssertion(const uint64_t& aTransactionId,
-                        nsTArray<uint8_t>& aCredentialId,
-                        nsTArray<uint8_t>& aSigBuffer)
+                        const WebAuthnGetAssertionResult& aResult)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -628,13 +627,13 @@ U2F::FinishGetAssertion(const uint64_t& aTransactionId,
   }
 
   CryptoBuffer credBuf;
-  if (NS_WARN_IF(!credBuf.Assign(aCredentialId))) {
+  if (NS_WARN_IF(!credBuf.Assign(aResult.CredentialID()))) {
     RejectTransaction(NS_ERROR_ABORT);
     return;
   }
 
   CryptoBuffer sigBuf;
-  if (NS_WARN_IF(!sigBuf.Assign(aSigBuffer))) {
+  if (NS_WARN_IF(!sigBuf.Assign(aResult.SigBuffer()))) {
     RejectTransaction(NS_ERROR_ABORT);
     return;
   }

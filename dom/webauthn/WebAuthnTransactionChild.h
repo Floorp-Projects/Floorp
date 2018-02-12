@@ -28,12 +28,11 @@ public:
 
   mozilla::ipc::IPCResult
   RecvConfirmRegister(const uint64_t& aTransactionId,
-                      nsTArray<uint8_t>&& aRegBuffer) override;
+                      const WebAuthnMakeCredentialResult& aResult) override;
 
   mozilla::ipc::IPCResult
   RecvConfirmSign(const uint64_t& aTransactionId,
-                  nsTArray<uint8_t>&& aCredentialId,
-                  nsTArray<uint8_t>&& aBuffer) override;
+                  const WebAuthnGetAssertionResult& aResult) override;
 
   mozilla::ipc::IPCResult
   RecvAbort(const uint64_t& aTransactionId, const nsresult& aError) override;

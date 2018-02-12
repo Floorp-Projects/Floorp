@@ -251,7 +251,7 @@ U2FTokenManager::Register(PWebAuthnTransactionParent* aTransactionParent,
                               aTransactionInfo.ClientDataHash(),
                               aTransactionInfo.TimeoutMS())
                    ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-                         [tid, startTime](U2FRegisterResult&& aResult) {
+                         [tid, startTime](WebAuthnMakeCredentialResult&& aResult) {
                            U2FTokenManager* mgr = U2FTokenManager::Get();
                            mgr->MaybeConfirmRegister(tid, aResult);
                            Telemetry::ScalarAdd(
@@ -274,15 +274,12 @@ U2FTokenManager::Register(PWebAuthnTransactionParent* aTransactionParent,
 
 void
 U2FTokenManager::MaybeConfirmRegister(const uint64_t& aTransactionId,
-                                      U2FRegisterResult& aResult)
+                                      const WebAuthnMakeCredentialResult& aResult)
 {
   MOZ_ASSERT(mLastTransactionId == aTransactionId);
   mRegisterPromise.Complete();
 
-  nsTArray<uint8_t> registration;
-  aResult.ConsumeRegistration(registration);
-
-  Unused << mTransactionParent->SendConfirmRegister(aTransactionId, registration);
+  Unused << mTransactionParent->SendConfirmRegister(aTransactionId, aResult);
   ClearTransaction();
 }
 
@@ -325,7 +322,7 @@ U2FTokenManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
                           aTransactionInfo.RequireUserVerification(),
                           aTransactionInfo.TimeoutMS())
                    ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-                     [tid, startTime](U2FSignResult&& aResult) {
+                     [tid, startTime](WebAuthnGetAssertionResult&& aResult) {
                        U2FTokenManager* mgr = U2FTokenManager::Get();
                        mgr->MaybeConfirmSign(tid, aResult);
                        Telemetry::ScalarAdd(
@@ -348,17 +345,12 @@ U2FTokenManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
 
 void
 U2FTokenManager::MaybeConfirmSign(const uint64_t& aTransactionId,
-                                  U2FSignResult& aResult)
+                                  const WebAuthnGetAssertionResult& aResult)
 {
   MOZ_ASSERT(mLastTransactionId == aTransactionId);
   mSignPromise.Complete();
 
-  nsTArray<uint8_t> keyHandle;
-  aResult.ConsumeKeyHandle(keyHandle);
-  nsTArray<uint8_t> signature;
-  aResult.ConsumeSignature(signature);
-
-  Unused << mTransactionParent->SendConfirmSign(aTransactionId, keyHandle, signature);
+  Unused << mTransactionParent->SendConfirmSign(aTransactionId, aResult);
   ClearTransaction();
 }
 
