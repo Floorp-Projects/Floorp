@@ -273,9 +273,9 @@ struct Vec;
 // Geometry in the document's coordinate space (logical pixels).
 struct WorldPixel;
 
-struct WrProgramCache;
+struct WrPipelineInfo;
 
-struct WrRenderedEpochs;
+struct WrProgramCache;
 
 struct WrState;
 
@@ -1359,21 +1359,26 @@ extern void wr_notifier_new_scroll_frame_ready(WrWindowId aWindowId,
 extern void wr_notifier_wake_up(WrWindowId aWindowId);
 
 WR_INLINE
+void wr_pipeline_info_delete(WrPipelineInfo *aInfo)
+WR_DESTRUCTOR_SAFE_FUNC;
+
+WR_INLINE
+bool wr_pipeline_info_next_epoch(WrPipelineInfo *aInfo,
+                                 WrPipelineId *aOutPipeline,
+                                 WrEpoch *aOutEpoch)
+WR_FUNC;
+
+WR_INLINE
+bool wr_pipeline_info_next_removed_pipeline(WrPipelineInfo *aInfo,
+                                            WrPipelineId *aOutPipeline)
+WR_FUNC;
+
+WR_INLINE
 void wr_program_cache_delete(WrProgramCache *aProgramCache)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
 WrProgramCache *wr_program_cache_new()
-WR_FUNC;
-
-WR_INLINE
-void wr_rendered_epochs_delete(WrRenderedEpochs *aPipelineEpochs)
-WR_DESTRUCTOR_SAFE_FUNC;
-
-WR_INLINE
-bool wr_rendered_epochs_next(WrRenderedEpochs *aPipelineEpochs,
-                             WrPipelineId *aOutPipeline,
-                             WrEpoch *aOutEpoch)
 WR_FUNC;
 
 WR_INLINE
@@ -1387,7 +1392,7 @@ void wr_renderer_delete(Renderer *aRenderer)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
-WrRenderedEpochs *wr_renderer_flush_rendered_epochs(Renderer *aRenderer)
+WrPipelineInfo *wr_renderer_flush_pipeline_info(Renderer *aRenderer)
 WR_FUNC;
 
 WR_INLINE

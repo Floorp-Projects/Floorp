@@ -195,16 +195,20 @@ RenderThread::RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aEvent)
 
 static void
 NotifyDidRender(layers::CompositorBridgeParentBase* aBridge,
-                wr::WrRenderedEpochs* aEpochs,
+                wr::WrPipelineInfo* aInfo,
                 TimeStamp aStart,
                 TimeStamp aEnd)
 {
   wr::WrPipelineId pipeline;
   wr::WrEpoch epoch;
-  while (wr_rendered_epochs_next(aEpochs, &pipeline, &epoch)) {
+  while (wr_pipeline_info_next_epoch(aInfo, &pipeline, &epoch)) {
     aBridge->NotifyDidCompositeToPipeline(pipeline, epoch, aStart, aEnd);
   }
-  wr_rendered_epochs_delete(aEpochs);
+  while (wr_pipeline_info_next_removed_pipeline(aInfo, &pipeline)) {
+    aBridge->NotifyPipelineRemoved(pipeline);
+  }
+
+  wr_pipeline_info_delete(aInfo);
 }
 
 void
@@ -230,12 +234,12 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId)
 
   TimeStamp end = TimeStamp::Now();
 
-  auto epochs = renderer->FlushRenderedEpochs();
+  auto info = renderer->FlushPipelineInfo();
   layers::CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
     "NotifyDidRenderRunnable",
     &NotifyDidRender,
     renderer->GetCompositorBridge(),
-    epochs,
+    info,
     start, end
   ));
 }
