@@ -979,10 +979,7 @@ SessionStore.prototype = {
       let delay = Math.max(currentDelay, MINIMUM_SAVE_DELAY);
       if (delay > 0) {
         this._pendingWrite++;
-        this._saveTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-        this._saveTimer.init(this, delay, Ci.nsITimer.TYPE_ONE_SHOT);
-        log("saveStateDelayed() timer delay = " + delay +
-             ", incrementing _pendingWrite to " + this._pendingWrite);
+        this._createTimer(delay);
       } else {
         log("saveStateDelayed() no delay");
         this.saveState();
@@ -1012,14 +1009,25 @@ SessionStore.prototype = {
     return false;
   },
 
-  _saveState: function ss_saveState(aAsync) {
-    log("_saveState(aAsync = " + aAsync + ")");
-    // Kill any queued timer and save immediately
+  _createTimer: function ss_createTimer(aDelay) {
+    this._saveTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._saveTimer.init(this, aDelay, Ci.nsITimer.TYPE_ONE_SHOT);
+    log("saveTimer delay = " + aDelay +
+        ", incrementing _pendingWrite to " + this._pendingWrite);
+  },
+
+  _killTimer: function ss_killTimer() {
     if (this._saveTimer) {
       this._saveTimer.cancel();
       this._saveTimer = null;
-      log("_saveState() killed queued timer");
+      log("killed queued saveTimer");
     }
+  },
+
+  _saveState: function ss_saveState(aAsync) {
+    log("_saveState(aAsync = " + aAsync + ")");
+    // Kill any queued timer and save immediately
+    this._killTimer();
 
     // Periodically save a "known good" copy of the session store data.
     if (!this._writeInProgress && Date.now() - this._lastBackupTime > this._backupInterval &&
