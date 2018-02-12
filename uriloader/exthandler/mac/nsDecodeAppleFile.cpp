@@ -13,7 +13,7 @@ NS_IMPL_RELEASE(nsDecodeAppleFile)
 NS_INTERFACE_MAP_BEGIN(nsDecodeAppleFile)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIOutputStream)
    NS_INTERFACE_MAP_ENTRY(nsIOutputStream)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END
 
 nsDecodeAppleFile::nsDecodeAppleFile()
 {
