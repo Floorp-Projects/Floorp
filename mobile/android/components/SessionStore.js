@@ -67,6 +67,7 @@ SessionStore.prototype = {
   _backupInterval: 120000, // 2 minutes
   _maxTabsUndo: 5,
   _pendingWrite: 0,
+  _pendingWritePrivateOnly: 0,
   _scrollSavePending: null,
   _writeInProgress: false,
 
@@ -351,7 +352,8 @@ SessionStore.prototype = {
         if (this._loadState == STATE_RUNNING) {
           // Timer call back for delayed saving
           this._saveTimer = null;
-          log("timer-callback, pendingWrite = " + this._pendingWrite);
+          log("timer-callback, pendingWrite = " + this._pendingWritePrivateOnly +
+              "/" + this._pendingWrite);
           if (this._pendingWrite) {
             this._saveState(true);
           }
@@ -970,7 +972,13 @@ SessionStore.prototype = {
     return displaySize;
   },
 
-  saveStateDelayed: function ss_saveStateDelayed() {
+  saveStateDelayed: function ss_saveStateDelayed(aPrivateTabsOnly = false) {
+    this._pendingWrite++;
+    if (aPrivateTabsOnly) {
+      this._pendingWritePrivateOnly++;
+    }
+    log("incrementing _pendingWrite to " + this._pendingWritePrivateOnly +
+        "/" + this._pendingWrite);
     if (!this._saveTimer) {
       // Interval until the next disk operation is allowed
       let currentDelay = this._lastSaveTime + this._interval - Date.now();
@@ -978,7 +986,6 @@ SessionStore.prototype = {
       // If we have to wait, set a timer, otherwise saveState directly
       let delay = Math.max(currentDelay, MINIMUM_SAVE_DELAY);
       if (delay > 0) {
-        this._pendingWrite++;
         this._createTimer(delay);
       } else {
         log("saveStateDelayed() no delay");
@@ -989,9 +996,13 @@ SessionStore.prototype = {
     }
   },
 
-  saveState: function ss_saveState() {
+  saveState: function ss_saveState(aPrivateTabsOnly = false) {
     this._pendingWrite++;
-    log("saveState(), incrementing _pendingWrite to " + this._pendingWrite);
+    if (aPrivateTabsOnly) {
+      this._pendingWritePrivateOnly++;
+    }
+    log("saveState(), incrementing _pendingWrite to " + this._pendingWritePrivateOnly +
+        "/" + this._pendingWrite);
     this._saveState(true);
   },
 
@@ -1012,8 +1023,7 @@ SessionStore.prototype = {
   _createTimer: function ss_createTimer(aDelay) {
     this._saveTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     this._saveTimer.init(this, aDelay, Ci.nsITimer.TYPE_ONE_SHOT);
-    log("saveTimer delay = " + aDelay +
-        ", incrementing _pendingWrite to " + this._pendingWrite);
+    log("saveTimer delay = " + aDelay);
   },
 
   _killTimer: function ss_killTimer() {
@@ -1084,6 +1094,14 @@ SessionStore.prototype = {
         type: "PrivateBrowsing:Data",
         session: (privateData.windows.length > 0 && privateData.windows[0].tabs.length > 0) ? JSON.stringify(privateData) : null
       });
+    }
+
+    // If all queued writes were for private tabs only, we can stop here.
+    if (this._pendingWrite === this._pendingWritePrivateOnly) {
+      this._pendingWrite = 0;
+      this._pendingWritePrivateOnly = 0;
+      this._lastSaveTime = Date.now();
+      return;
     }
 
     // Write only non-private data to disk
@@ -1199,6 +1217,7 @@ SessionStore.prototype = {
       // is pending, so we shouldn't reset this._pendingWrite yet.
       if (pendingWrite === this._pendingWrite) {
         this._pendingWrite = 0;
+        this._pendingWritePrivateOnly = 0;
         this._writeInProgress = false;
       }
 
