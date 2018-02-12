@@ -13,7 +13,7 @@
 //!```toml,ignore
 //!# Cargo.toml
 //![dependencies]
-//!winreg = "0.3"
+//!winreg = "0.5"
 //!```
 //!
 //!```no_run
@@ -26,8 +26,7 @@
 //!fn main() {
 //!    println!("Reading some system info...");
 //!    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
-//!    let cur_ver = hklm.open_subkey_with_flags("SOFTWARE\\Microsoft\\Windows\\CurrentVersion",
-//!        KEY_READ).unwrap();
+//!    let cur_ver = hklm.open_subkey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion").unwrap();
 //!    let pf: String = cur_ver.get_value("ProgramFilesDir").unwrap();
 //!    let dp: String = cur_ver.get_value("DevicePath").unwrap();
 //!    println!("ProgramFiles = {}\nDevicePath = {}", pf, dp);
@@ -82,126 +81,20 @@
 //!    }
 //!
 //!    let system = RegKey::predef(HKEY_LOCAL_MACHINE)
-//!        .open_subkey_with_flags("HARDWARE\\DESCRIPTION\\System", KEY_READ)
-//!        .unwrap();
+//!        .open_subkey("HARDWARE\\DESCRIPTION\\System").unwrap();
 //!    for (name, value) in system.enum_values().map(|x| x.unwrap()) {
 //!        println!("{} = {:?}", name, value);
 //!    }
 //!}
 //!```
 //!
-//!### Transactions
-//!
-//!```no_run
-//!extern crate winreg;
-//!use std::io;
-//!use winreg::RegKey;
-//!use winreg::enums::*;
-//!use winreg::transaction::Transaction;
-//!
-//!fn main() {
-//!    let t = Transaction::new().unwrap();
-//!    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-//!    let key = hkcu.create_subkey_transacted("Software\\RustTransaction", &t).unwrap();
-//!    key.set_value("TestQWORD", &1234567891011121314u64).unwrap();
-//!    key.set_value("TestDWORD", &1234567890u32).unwrap();
-//!
-//!    println!("Commit transaction? [y/N]:");
-//!    let mut input = String::new();
-//!    io::stdin().read_line(&mut input).unwrap();
-//!    input = input.trim_right().to_owned();
-//!    if input == "y" || input == "Y" {
-//!        t.commit().unwrap();
-//!        println!("Transaction committed.");
-//!    }
-//!    else {
-//!        // this is optional, if transaction wasn't committed,
-//!        // it will be rolled back on disposal
-//!        t.rollback().unwrap();
-//!
-//!        println!("Transaction wasn't committed, it will be rolled back.");
-//!    }
-//!}
-//!```
-//!
-//!### Serialization
-//!
-//!```no_run
-//!extern crate rustc_serialize;
-//!extern crate winreg;
-//!use winreg::enums::*;
-//!
-//!#[derive(Debug,RustcEncodable,RustcDecodable,PartialEq)]
-//!struct Rectangle{
-//!    x: u32,
-//!    y: u32,
-//!    w: u32,
-//!    h: u32,
-//!}
-//!
-//!#[derive(Debug,RustcEncodable,RustcDecodable,PartialEq)]
-//!struct Test {
-//!    t_bool: bool,
-//!    t_u8: u8,
-//!    t_u16: u16,
-//!    t_u32: u32,
-//!    t_u64: u64,
-//!    t_usize: usize,
-//!    t_struct: Rectangle,
-//!    t_string: String,
-//!    t_i8: i8,
-//!    t_i16: i16,
-//!    t_i32: i32,
-//!    t_i64: i64,
-//!    t_isize: isize,
-//!    t_f64: f64,
-//!    t_f32: f32,
-//!}
-//!
-//!fn main() {
-//!    let hkcu = winreg::RegKey::predef(HKEY_CURRENT_USER);
-//!    let key = hkcu.create_subkey("Software\\RustEncode").unwrap();
-//!    let v1 = Test{
-//!        t_bool: false,
-//!        t_u8: 127,
-//!        t_u16: 32768,
-//!        t_u32: 123456789,
-//!        t_u64: 123456789101112,
-//!        t_usize: 123456789101112,
-//!        t_struct: Rectangle{
-//!            x: 55,
-//!            y: 77,
-//!            w: 500,
-//!            h: 300,
-//!        },
-//!        t_string: "test 123!".to_owned(),
-//!        t_i8: -123,
-//!        t_i16: -2049,
-//!        t_i32: 20100,
-//!        t_i64: -12345678910,
-//!        t_isize: -1234567890,
-//!        t_f64: -0.01,
-//!        t_f32: 3.14,
-//!    };
-//!
-//!    key.encode(&v1).unwrap();
-//!
-//!    let v2: Test = key.decode().unwrap();
-//!    println!("Decoded {:?}", v2);
-//!
-//!    // This shows `false` because f32 and f64 encoding/decoding is NOT precise
-//!    println!("Equal to encoded: {:?}", v1 == v2);
-//!}
-//!```
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![cfg_attr(feature="clippy", plugin(clippy))]
 #![cfg_attr(feature="clippy", warn(option_unwrap_used))]
 #![cfg_attr(feature="clippy", warn(result_unwrap_used))]
 extern crate winapi;
-extern crate kernel32;
-extern crate advapi32;
-extern crate ktmw32;
-extern crate rustc_serialize;
+#[cfg(feature = "serialization-serde")]
+extern crate serde;
 use std::ptr;
 use std::slice;
 use std::fmt;
@@ -210,10 +103,13 @@ use std::ffi::OsStr;
 use std::os::windows::ffi::OsStrExt;
 use std::mem::transmute;
 use std::io;
-use winapi::winerror;
-use winapi::{HKEY, DWORD, WCHAR};
+use winapi::shared::winerror;
+use winapi::shared::minwindef::{HKEY, DWORD, BYTE, LPBYTE};
+use winapi::um::winnt::{self, WCHAR};
+use winapi::um::winreg as winapi_reg;
 use enums::*;
 use types::{FromRegValue, ToRegValue};
+#[cfg(feature = "transactions")]
 use transaction::Transaction;
 
 macro_rules! werr {
@@ -224,8 +120,12 @@ macro_rules! werr {
 
 pub mod enums;
 pub mod types;
-pub mod serialization;
+#[cfg(feature = "transactions")]
 pub mod transaction;
+#[cfg(feature = "serialization-serde")]
+mod encoder;
+#[cfg(feature = "serialization-serde")]
+mod decoder;
 
 /// Metadata returned by `RegKey::query_info`
 #[derive(Debug,Default)]
@@ -307,9 +207,10 @@ impl RegKey {
         RegKey{ hkey: hkey }
     }
 
-    /// Open subkey with `KEY_ALL_ACCESS` permissions.
+    /// Open subkey with `KEY_READ` permissions.
     /// Will open another handle to itself if `path` is an empty string.
     /// To open with different permissions use `open_subkey_with_flags`.
+    /// You can also use `create_subkey` to open with `KEY_ALL_ACCESS` permissions.
     ///
     /// # Examples
     ///
@@ -320,7 +221,7 @@ impl RegKey {
     ///     .open_subkey("Software").unwrap();
     /// ```
     pub fn open_subkey<P: AsRef<OsStr>>(&self, path: P) -> io::Result<RegKey> {
-        self.open_subkey_with_flags(path, winapi::KEY_ALL_ACCESS)
+        self.open_subkey_with_flags(path, enums::KEY_READ)
     }
 
     /// Open subkey with desired permissions.
@@ -334,11 +235,11 @@ impl RegKey {
     /// let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
     /// hklm.open_subkey_with_flags("SOFTWARE\\Microsoft", KEY_READ).unwrap();
     /// ```
-    pub fn open_subkey_with_flags<P: AsRef<OsStr>>(&self, path: P, perms: winapi::REGSAM) -> io::Result<RegKey> {
+    pub fn open_subkey_with_flags<P: AsRef<OsStr>>(&self, path: P, perms: winapi_reg::REGSAM) -> io::Result<RegKey> {
         let c_path = to_utf16(path);
         let mut new_hkey: HKEY = ptr::null_mut();
         match unsafe {
-            advapi32::RegOpenKeyExW(
+            winapi_reg::RegOpenKeyExW(
                 self.hkey,
                 c_path.as_ptr(),
                 0,
@@ -351,17 +252,21 @@ impl RegKey {
         }
     }
 
+    /// Part of `transactions` feature.
+    #[cfg(feature = "transactions")]
     pub fn open_subkey_transacted<P: AsRef<OsStr>>(&self, path: P, t: &Transaction) -> io::Result<RegKey> {
-        self.open_subkey_transacted_with_flags(path, t, winapi::KEY_ALL_ACCESS)
+        self.open_subkey_transacted_with_flags(path, t, winnt::KEY_READ)
     }
 
-    pub fn open_subkey_transacted_with_flags<P: AsRef<OsStr>>(&self, path: P, t: &Transaction, perms: winapi::REGSAM)
+    /// Part of `transactions` feature.
+    #[cfg(feature = "transactions")]
+    pub fn open_subkey_transacted_with_flags<P: AsRef<OsStr>>(&self, path: P, t: &Transaction, perms: winapi_reg::REGSAM)
         -> io::Result<RegKey>
     {
         let c_path = to_utf16(path);
         let mut new_hkey: HKEY = ptr::null_mut();
         match unsafe {
-            advapi32::RegOpenKeyTransactedW(
+            winapi_reg::RegOpenKeyTransactedW(
                 self.hkey,
                 c_path.as_ptr(),
                 0,
@@ -391,20 +296,20 @@ impl RegKey {
     /// let settings = hkcu.create_subkey("Software\\MyProduct\\Settings").unwrap();
     /// ```
     pub fn create_subkey<P: AsRef<OsStr>>(&self, path: P) -> io::Result<RegKey> {
-        self.create_subkey_with_flags(path, winapi::KEY_ALL_ACCESS)
+        self.create_subkey_with_flags(path, enums::KEY_ALL_ACCESS)
     }
 
-    pub fn create_subkey_with_flags<P: AsRef<OsStr>>(&self, path: P, perms: winapi::REGSAM) -> io::Result<RegKey> {
+    pub fn create_subkey_with_flags<P: AsRef<OsStr>>(&self, path: P, perms: winapi_reg::REGSAM) -> io::Result<RegKey> {
         let c_path = to_utf16(path);
         let mut new_hkey: HKEY = ptr::null_mut();
         let mut disp: DWORD = 0;
         match unsafe {
-            advapi32::RegCreateKeyExW(
+            winapi_reg::RegCreateKeyExW(
                 self.hkey,
                 c_path.as_ptr(),
                 0,
                 ptr::null_mut(),
-                winapi::REG_OPTION_NON_VOLATILE,
+                winnt::REG_OPTION_NON_VOLATILE,
                 perms,
                 ptr::null_mut(),
                 &mut new_hkey,
@@ -416,23 +321,27 @@ impl RegKey {
         }
     }
 
+    /// Part of `transactions` feature.
+    #[cfg(feature = "transactions")]
     pub fn create_subkey_transacted<P: AsRef<OsStr>>(&self, path: P, t: &Transaction) -> io::Result<RegKey> {
-        self.create_subkey_transacted_with_flags(path, t, winapi::KEY_ALL_ACCESS)
+        self.create_subkey_transacted_with_flags(path, t, winnt::KEY_ALL_ACCESS)
     }
 
-    pub fn create_subkey_transacted_with_flags<P: AsRef<OsStr>>(&self, path: P, t: &Transaction, perms: winapi::REGSAM)
+    /// Part of `transactions` feature.
+    #[cfg(feature = "transactions")]
+    pub fn create_subkey_transacted_with_flags<P: AsRef<OsStr>>(&self, path: P, t: &Transaction, perms: winapi_reg::REGSAM)
         -> io::Result<RegKey>
     {
         let c_path = to_utf16(path);
         let mut new_hkey: HKEY = ptr::null_mut();
         let mut disp: DWORD = 0;
         match unsafe {
-            advapi32::RegCreateKeyTransactedW(
+            winapi_reg::RegCreateKeyTransactedW(
                 self.hkey,
                 c_path.as_ptr(),
                 0,
                 ptr::null_mut(),
-                winapi::REG_OPTION_NON_VOLATILE,
+                winnt::REG_OPTION_NON_VOLATILE,
                 perms,
                 ptr::null_mut(),
                 &mut new_hkey,
@@ -462,7 +371,7 @@ impl RegKey {
     pub fn copy_tree<P: AsRef<OsStr>>(&self, path: P, dest: &RegKey) -> io::Result<()> {
         let c_path = to_utf16(path);
         match unsafe {
-            advapi32::RegCopyTreeW(
+            winapi_reg::RegCopyTreeW(
                 self.hkey,
                 c_path.as_ptr(),
                 dest.hkey,
@@ -476,7 +385,7 @@ impl RegKey {
     pub fn query_info(&self) -> io::Result<RegKeyMetadata> {
         let mut info: RegKeyMetadata = Default::default();
         match unsafe {
-            advapi32::RegQueryInfoKeyW(
+            winapi_reg::RegQueryInfoKeyW(
                 self.hkey,
                 ptr::null_mut(), // Class: winapi::LPWSTR,
                 ptr::null_mut(), // ClassLen: DWORD,
@@ -533,8 +442,8 @@ impl RegKey {
         EnumValues{key: self, index: 0}
     }
 
-    /// Delete key. Cannot delete if it has subkeys.
-    /// Will delete itself if `path` is an empty string.
+    /// Delete key.Key names are not case sensitive. 
+    /// Cannot delete if it has subkeys.
     /// Use `delete_subkey_all` for that.
     ///
     /// # Examples
@@ -548,9 +457,9 @@ impl RegKey {
     pub fn delete_subkey<P: AsRef<OsStr>>(&self, path: P) -> io::Result<()> {
         let c_path = to_utf16(path);
         match unsafe {
-            advapi32::RegDeleteKeyW(
+            winapi_reg::RegDeleteKeyW(
                 self.hkey,
-                c_path.as_ptr(),
+                c_path.as_ptr(), //This parameter cannot be NULL.
             ) as DWORD
         } {
             0 => Ok(()),
@@ -558,16 +467,18 @@ impl RegKey {
         }
     }
 
+    /// Part of `transactions` feature.
+    #[cfg(feature = "transactions")]
     pub fn delete_subkey_transacted<P: AsRef<OsStr>>(&self, path: P, t: &Transaction) -> io::Result<()> {
         let c_path = to_utf16(path);
         match unsafe {
-            advapi32::RegDeleteKeyTransactedW(
+            winapi_reg::RegDeleteKeyTransactedW(
                 self.hkey,
-                c_path.as_ptr(),
+                c_path.as_ptr(), //The value of this parameter cannot be NULL.
                 0,
                 0,
                 t.handle,
-                ptr::null_mut(),
+                ptr::null_mut(), 
             ) as DWORD
         } {
             0 => Ok(()),
@@ -576,7 +487,7 @@ impl RegKey {
     }
 
     /// Recursively delete subkey with all its subkeys and values.
-    /// Will delete itself if `path` is an empty string.
+    /// If `path` is an empty string, the subkeys and values of this key are deleted.
     ///
     /// # Examples
     ///
@@ -587,11 +498,18 @@ impl RegKey {
     ///     .delete_subkey_all("Software\\MyProduct").unwrap();
     /// ```
     pub fn delete_subkey_all<P: AsRef<OsStr>>(&self, path: P) -> io::Result<()> {
-        let c_path = to_utf16(path);
+        let c_path;
+        let path_ptr;
+        if path.as_ref().is_empty(){
+            path_ptr = ptr::null();
+        }else{
+            c_path = to_utf16(path);
+            path_ptr = c_path.as_ptr();
+        }
         match unsafe{
-            advapi32::RegDeleteTreeW(
+            winapi_reg::RegDeleteTreeW(
                 self.hkey,
-                c_path.as_ptr(),
+                path_ptr,//If this parameter is NULL, the subkeys and values of this key are deleted.
             ) as DWORD
         } {
             0 => Ok(()),
@@ -640,19 +558,19 @@ impl RegKey {
         let mut buf: Vec<u8> = Vec::with_capacity(buf_len as usize);
         loop {
             match unsafe {
-                advapi32::RegQueryValueExW(
+                winapi_reg::RegQueryValueExW(
                     self.hkey,
                     c_name.as_ptr() as *const u16,
                     ptr::null_mut(),
                     &mut buf_type,
-                    buf.as_mut_ptr() as winapi::LPBYTE,
+                    buf.as_mut_ptr() as LPBYTE,
                     &mut buf_len
                 ) as DWORD
             } {
                 0 => {
                     unsafe{ buf.set_len(buf_len as usize); }
                     // minimal check before transmute to RegType
-                    if buf_type > winapi::REG_QWORD {
+                    if buf_type > winnt::REG_QWORD {
                         return werr!(winerror::ERROR_BAD_FILE_TYPE);
                     }
                     let t: RegType = unsafe{ transmute(buf_type as u8) };
@@ -703,12 +621,12 @@ impl RegKey {
         let c_name = to_utf16(name);
         let t = value.vtype.clone() as DWORD;
         match unsafe{
-            advapi32::RegSetValueExW(
+            winapi_reg::RegSetValueExW(
                 self.hkey,
                 c_name.as_ptr(),
                 0,
                 t,
-                value.bytes.as_ptr() as *const winapi::BYTE,
+                value.bytes.as_ptr() as *const BYTE,
                 value.bytes.len() as u32
             ) as DWORD
         } {
@@ -732,7 +650,7 @@ impl RegKey {
     pub fn delete_value<N: AsRef<OsStr>>(&self, name: N) -> io::Result<()> {
         let c_name = to_utf16(name);
         match unsafe {
-            advapi32::RegDeleteValueW(
+            winapi_reg::RegDeleteValueW(
                 self.hkey,
                 c_name.as_ptr(),
             ) as DWORD
@@ -743,18 +661,19 @@ impl RegKey {
     }
 
     /// Save `Encodable` type to a registry key.
+    /// Part of `serialization-serde` feature.
     ///
     /// # Examples
     ///
     /// ```no_run
-    /// extern crate rustc_serialize;
+    /// #[macro_use]
+    /// extern crate serde_derive;
     /// extern crate winreg;
     /// # fn main() {
     /// use winreg::RegKey;
     /// use winreg::enums::*;
-    /// use rustc_serialize::Encodable;
     ///
-    /// #[derive(RustcEncodable)]
+    /// #[derive(Serialize)]
     /// struct Rectangle{
     ///     x: u32,
     ///     y: u32,
@@ -762,7 +681,7 @@ impl RegKey {
     ///     h: u32,
     /// }
     ///
-    /// #[derive(RustcEncodable)]
+    /// #[derive(Serialize)]
     /// struct Settings{
     ///     current_dir: String,
     ///     window_pos: Rectangle,
@@ -779,29 +698,31 @@ impl RegKey {
     /// s_key.encode(&s).unwrap();
     /// # }
     /// ```
-    pub fn encode<T: rustc_serialize::Encodable>(&self, value: &T)
-        -> serialization::EncodeResult<()>
+    #[cfg(feature = "serialization-serde")]
+    pub fn encode<T: serde::Serialize>(&self, value: &T)
+        -> encoder::EncodeResult<()>
     {
         let mut encoder = try!(
-            serialization::Encoder::from_key(&self)
+            encoder::Encoder::from_key(self)
         );
-        try!(value.encode(&mut encoder));
+        try!(value.serialize(&mut encoder));
         encoder.commit()
     }
 
     /// Load `Decodable` type from a registry key.
+    /// Part of `serialization-serde` feature.
     ///
     /// # Examples
     ///
     /// ```no_run
-    /// extern crate rustc_serialize;
+    /// #[macro_use]
+    /// extern crate serde_derive;
     /// extern crate winreg;
     /// # fn main() {
     /// use winreg::RegKey;
     /// use winreg::enums::*;
-    /// use rustc_serialize::Decodable;
     ///
-    /// #[derive(RustcDecodable)]
+    /// #[derive(Deserialize)]
     /// struct Rectangle{
     ///     x: u32,
     ///     y: u32,
@@ -809,7 +730,7 @@ impl RegKey {
     ///     h: u32,
     /// }
     ///
-    /// #[derive(RustcDecodable)]
+    /// #[derive(Deserialize)]
     /// struct Settings{
     ///     current_dir: String,
     ///     window_pos: Rectangle,
@@ -821,23 +742,96 @@ impl RegKey {
     /// let s: Settings = s_key.decode().unwrap();
     /// # }
     /// ```
-    pub fn decode<T: rustc_serialize::Decodable>(&self)
-        -> serialization::DecodeResult<T>
+    #[cfg(feature = "serialization-serde")]
+    pub fn decode<'de, T: serde::Deserialize<'de>>(&self)
+        -> decoder::DecodeResult<T>
     {
         let mut decoder = try!(
-            serialization::Decoder::from_key(&self)
+            decoder::Decoder::from_key(self)
         );
-        T::decode(&mut decoder)
+        T::deserialize(&mut decoder)
     }
 
     fn close_(&mut self) -> io::Result<()> {
         // don't try to close predefined keys
-        if self.hkey >= winapi::HKEY_CLASSES_ROOT { return Ok(()) };
+        if self.hkey >= enums::HKEY_CLASSES_ROOT { return Ok(()) };
         match unsafe {
-            advapi32::RegCloseKey(self.hkey) as DWORD
+            winapi_reg::RegCloseKey(self.hkey) as DWORD
         } {
             0 => Ok(()),
             err => werr!(err)
+        }
+    }
+
+    fn enum_key(&self, index: DWORD) -> Option<io::Result<String>> {
+        let mut name_len = 2048;
+        let mut name = [0 as WCHAR; 2048];
+        match unsafe {
+            winapi_reg::RegEnumKeyExW(
+                self.hkey,
+                index,
+                name.as_mut_ptr(),
+                &mut name_len,
+                ptr::null_mut(), // reserved
+                ptr::null_mut(), // lpClass: LPWSTR,
+                ptr::null_mut(), // lpcClass: LPDWORD,
+                ptr::null_mut(), // lpftLastWriteTime: PFILETIME,
+            ) as DWORD
+        } {
+            0 => {
+                match String::from_utf16(&name[..name_len as usize]) {
+                    Ok(s) => Some(Ok(s)),
+                    Err(_) => Some(werr!(winerror::ERROR_INVALID_BLOCK))
+                }
+            },
+            winerror::ERROR_NO_MORE_ITEMS => None,
+            err => {
+                Some(werr!(err))
+            }
+        }
+    }
+
+    fn enum_value(&self, index: DWORD) -> Option<io::Result<(String, RegValue)>> {
+        let mut name_len = 2048;
+        let mut name = [0 as WCHAR; 2048];
+
+        let mut buf_len: DWORD = 2048;
+        let mut buf_type: DWORD = 0;
+        let mut buf: Vec<u8> = Vec::with_capacity(buf_len as usize);
+        loop {
+            match unsafe {
+                winapi_reg::RegEnumValueW(
+                    self.hkey,
+                    index,
+                    name.as_mut_ptr(),
+                    &mut name_len,
+                    ptr::null_mut(), // reserved
+                    &mut buf_type,
+                    buf.as_mut_ptr() as LPBYTE,
+                    &mut buf_len,
+                ) as DWORD
+            } {
+                0 => {
+                    let name = match String::from_utf16(&name[..name_len as usize]) {
+                        Ok(s) => s,
+                        Err(_) => return Some(werr!(winerror::ERROR_INVALID_DATA))
+                    };
+                    unsafe{ buf.set_len(buf_len as usize); }
+                    // minimal check before transmute to RegType
+                    if buf_type > winnt::REG_QWORD {
+                        return Some(werr!(winerror::ERROR_BAD_FILE_TYPE));
+                    }
+                    let t: RegType = unsafe{ transmute(buf_type as u8) };
+                    let value = RegValue{ bytes: buf, vtype: t };
+                    return Some(Ok((name, value)))
+                },
+                winerror::ERROR_MORE_DATA => {
+                    name_len += 1; //for NULL char
+                    buf.reserve(buf_len as usize);
+                },
+                winerror::ERROR_NO_MORE_ITEMS => return None,
+                err => return Some(werr!(err))
+            }
         }
     }
 }
@@ -858,31 +852,12 @@ impl<'key> Iterator for EnumKeys<'key> {
     type Item = io::Result<String>;
 
     fn next(&mut self) -> Option<io::Result<String>> {
-        let mut name_len = 2048;
-        let mut name = [0 as WCHAR; 2048];
-        match unsafe {
-            advapi32::RegEnumKeyExW(
-                self.key.hkey,
-                self.index,
-                name.as_mut_ptr(),
-                &mut name_len,
-                ptr::null_mut(), // reserved
-                ptr::null_mut(), // lpClass: LPWSTR,
-                ptr::null_mut(), // lpcClass: LPDWORD,
-                ptr::null_mut(), // lpftLastWriteTime: PFILETIME,
-            ) as DWORD
-        } {
-            0 => {
+        match self.key.enum_key(self.index) {
+            v @ Some(_) => {
                 self.index += 1;
-                Some(match String::from_utf16(&name[..name_len as usize]) {
-                    Ok(s) => Ok(s),
-                    Err(_) => werr!(winerror::ERROR_INVALID_BLOCK)
-                })
+                v
             },
-            winerror::ERROR_NO_MORE_ITEMS => None,
-            err => {
-                Some(werr!(err))
-            }
+            e @ None => e
         }
     }
 }
@@ -897,47 +872,12 @@ impl<'key> Iterator for EnumValues<'key> {
     type Item = io::Result<(String, RegValue)>;
 
     fn next(&mut self) -> Option<io::Result<(String, RegValue)>> {
-        let mut name_len = 2048;
-        let mut name = [0 as WCHAR; 2048];
-
-        let mut buf_len: DWORD = 2048;
-        let mut buf_type: DWORD = 0;
-        let mut buf: Vec<u8> = Vec::with_capacity(buf_len as usize);
-        loop {
-            match unsafe {
-                advapi32::RegEnumValueW(
-                    self.key.hkey,
-                    self.index,
-                    name.as_mut_ptr(),
-                    &mut name_len,
-                    ptr::null_mut(), // reserved
-                    &mut buf_type,
-                    buf.as_mut_ptr() as winapi::LPBYTE,
-                    &mut buf_len,
-                ) as DWORD
-            } {
-                0 => {
-                    self.index += 1;
-                    let name = match String::from_utf16(&name[..name_len as usize]) {
-                        Ok(s) => s,
-                        Err(_) => return Some(werr!(winerror::ERROR_INVALID_DATA))
-                    };
-                    unsafe{ buf.set_len(buf_len as usize); }
-                    // minimal check before transmute to RegType
-                    if buf_type > winapi::REG_QWORD {
-                        return Some(werr!(winerror::ERROR_BAD_FILE_TYPE));
-                    }
-                    let t: RegType = unsafe{ transmute(buf_type as u8) };
-                    let value = RegValue{ bytes: buf, vtype: t };
-                    return Some(Ok((name, value)))
-                },
-                winerror::ERROR_MORE_DATA => {
-                    name_len += 1; //for NULL char
-                    buf.reserve(buf_len as usize);
-                },
-                winerror::ERROR_NO_MORE_ITEMS => return None,
-                err => return Some(werr!(err))
-            }
+        match self.key.enum_value(self.index) {
+            v @ Some(_) => {
+                self.index += 1;
+                v
+            },
+            e @ None => e
         }
     }
 }
@@ -952,6 +892,9 @@ fn v16_to_v8(v: &[u16]) -> Vec<u8> {
     }
 }
 
+#[cfg(all(test, feature = "serialization-serde"))]
+#[macro_use]
+extern crate serde_derive;
 
 #[cfg(test)]
 #[cfg_attr(feature="clippy", allow(option_unwrap_used))]
@@ -959,13 +902,9 @@ fn v16_to_v8(v: &[u16]) -> Vec<u8> {
 mod test {
     extern crate rand;
     use super::*;
-    use super::enums::*;
-    use super::types::*;
     use std::collections::HashMap;
-    use rustc_serialize::{Encodable,Decodable};
     use self::rand::Rng;
     use std::ffi::{OsStr,OsString};
-    //use std::os::windows::ffi::{OsStrExt,OsStringExt};
 
     #[test]
     fn test_open_subkey_with_flags_query_info() {
@@ -1045,7 +984,7 @@ mod test {
     fn test_os_string_value() {
         with_key!(key, "OsStringValue" => {
             let name = "RustOsStringVal";
-            let val1 = OsStr::new("Test123 \n$%^&|+-*/\\()");
+            let val1 = OsStr::new("Test123 \n$%^&|+-*/\\()\u{0}");
             key.set_value(name, &val1).unwrap();
             let val2: OsString = key.get_value(name).unwrap();
             assert_eq!(val1, val2);
@@ -1054,9 +993,10 @@ mod test {
 
     #[test]
     fn test_long_os_string_value() {
-        with_key!(key, "LongStringValue" => {
-        let name = "RustLongStringVal";
-        let val1 = rand::thread_rng().gen_ascii_chars().take(7000).collect::<String>();
+        with_key!(key, "LongOsStringValue" => {
+        let name = "RustLongOsStringVal";
+        let mut val1 = rand::thread_rng().gen_ascii_chars().take(7000).collect::<String>();
+        val1.push('\u{0}');
         let val1 = OsStr::new(&val1);
         key.set_value(name, &val1).unwrap();
         let val2: OsString = key.get_value(name).unwrap();
@@ -1143,14 +1083,15 @@ mod test {
             for (name, val) in key.enum_values()
                                   .map(|x| x.unwrap())
             {
-                assert_eq!(val.bytes, vals.get(&name).unwrap().bytes);
+                assert_eq!(val.bytes, vals[&name].bytes);
             }
         });
     }
 
+    #[cfg(feature = "serialization-serde")]
     #[test]
     fn test_serialization() {
-        #[derive(Debug,RustcEncodable,RustcDecodable,PartialEq)]
+        #[derive(Debug, PartialEq, Serialize, Deserialize)]
         struct Rectangle{
             x: u32,
             y: u32,
@@ -1158,7 +1099,7 @@ mod test {
             h: u32,
         }
 
-        #[derive(Debug,RustcEncodable,RustcDecodable,PartialEq)]
+        #[derive(Debug, PartialEq, Serialize, Deserialize)]
         struct Test {
             t_bool: bool,
             t_u8: u8,
@@ -1173,8 +1114,8 @@ mod test {
             t_i32: i32,
             t_i64: i64,
             t_isize: isize,
-            // t_f64: f64,
-            // t_f32: f32,
+            t_f64: f64,
+            t_f32: f32,
         }
 
         let v1 = Test{
@@ -1183,7 +1124,7 @@ mod test {
             t_u16: 32768,
             t_u32: 123456789,
             t_u64: 123456789101112,
-            t_usize: 123456789101112,
+            t_usize: 1234567891,
             t_struct: Rectangle{ x: 55, y: 77, w: 500, h: 300 },
             t_string: "Test123 \n$%^&|+-*/\\()".to_owned(),
             t_i8: -123,
@@ -1191,8 +1132,8 @@ mod test {
             t_i32: 20100,
             t_i64: -12345678910,
             t_isize: -1234567890,
-            // t_f64: -0.01,
-            // t_f32: 3.14,
+            t_f64: -0.01,
+            t_f32: 3.14,
         };
 
         with_key!(key, "Serialization" => {
