@@ -540,6 +540,29 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     }
   }
 
+  /**
+   * Slides in the specified view as a subview.
+   *
+   * @param viewIdOrNode
+   *        DOM element or string ID of the <panelview> to display.
+   * @param anchor
+   *        DOM element that triggered the subview, which will be highlighted
+   *        and whose "label" attribute will be used for the title of the
+   *        subview when a "title" attribute is not specified.
+   */
+  showSubView(viewIdOrNode, anchor) {
+    let viewNode = typeof viewIdOrNode == "string" ?
+                   this.document.getElementById(viewIdOrNode) : viewIdOrNode;
+    if (!viewNode) {
+      throw new Error(`Subview ${viewIdOrNode} doesn't exist.`);
+    }
+
+    this._showView(viewNode, anchor);
+  }
+
+  /**
+   * Navigates backwards by sliding out the most recent subview.
+   */
   goBack() {
     if (this.openViews.length < 2) {
       // This may be called by keyboard navigation or external code when only
@@ -549,14 +572,14 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
     let previous = this.openViews.pop().node;
     let current = this._currentSubView;
-    this.showSubView(current, null, previous);
+    this._showView(current, null, previous);
   }
 
   async showMainView() {
     if (!this.node || !this._mainViewId)
       return false;
 
-    return this.showSubView(this._mainView);
+    return this._showView(this._mainView);
   }
 
   /**
@@ -586,27 +609,19 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     this.showingSubView = nextPanelView.node.id != this._mainViewId;
   }
 
-  async showSubView(aViewId, aAnchor, aPreviousView) {
+  async _showView(viewNode, anchor, previousView) {
     try {
-      // Support passing in the node directly.
-      let viewNode = typeof aViewId == "string" ? this.node.querySelector("#" + aViewId) : aViewId;
-      if (!viewNode) {
-        viewNode = this.document.getElementById(aViewId);
-        if (viewNode) {
-          this._viewStack.appendChild(viewNode);
-        } else {
-          throw new Error(`Subview ${aViewId} doesn't exist!`);
-        }
-      } else if (viewNode.parentNode == this._panelViewCache) {
-        this._viewStack.appendChild(viewNode);
-      }
-
       let nextPanelView = PanelView.forNode(viewNode);
       this.knownViews.add(nextPanelView);
 
       viewNode.panelMultiView = this.node;
 
-      let previousViewNode = aPreviousView || this._currentSubView;
+      let previousViewNode = previousView || this._currentSubView;
+
+      if (viewNode.parentNode != this._viewStack) {
+        this._viewStack.appendChild(viewNode);
+      }
+
       // If the panelview to show is the same as the previous one, the 'ViewShowing'
       // event has already been dispatched. Don't do it twice.
       let showingSameView = viewNode == previousViewNode;
@@ -616,14 +631,14 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
       this._viewShowing = viewNode;
 
-      let reverse = !!aPreviousView;
+      let reverse = !!previousView;
       if (!reverse) {
         // We are opening a new view, either because we are navigating forward
         // or because we are showing the main view. Some properties of the view
         // may vary between panels, so we make sure to update them every time.
         // Firstly, make sure that the header matches how the view was opened.
         nextPanelView.headerText = viewNode.getAttribute("title") ||
-                                   (aAnchor && aAnchor.getAttribute("label"));
+                                   (anchor && anchor.getAttribute("label"));
         // The main view of a panel can be a subview in another one.
         let isMainView = viewNode.id == this._mainViewId;
         nextPanelView.mainview = isMainView;
@@ -631,7 +646,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         nextPanelView.minMaxWidth = isMainView ? 0 : prevPanelView.knownWidth;
       }
 
-      if (aAnchor) {
+      if (anchor) {
         viewNode.classList.add("PanelUI-subView");
       }
 
@@ -649,7 +664,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       // still running, make sure to clean it up.
       await this._cleanupTransitionPhase();
       if (!showingSameView && this._panel.state == "open") {
-        await this._transitionViews(previousViewNode, viewNode, reverse, aAnchor);
+        await this._transitionViews(previousViewNode, viewNode, reverse, anchor);
         nextPanelView.focusSelectedElement();
       } else {
         this.hideAllViewsExcept(nextPanelView);
