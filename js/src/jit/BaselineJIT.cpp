@@ -23,12 +23,12 @@
 #include "wasm/WasmInstance.h"
 
 #include "jsopcodeinlines.h"
-#include "jsscriptinlines.h"
 
 #include "gc/Iteration-inl.h"
 #include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/Stack-inl.h"
 
 using mozilla::BinarySearchIf;

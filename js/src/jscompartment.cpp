@@ -27,11 +27,11 @@
 #include "vm/WrapperObject.h"
 
 #include "jsgcinlines.h"
-#include "jsscriptinlines.h"
 
 #include "gc/Marking-inl.h"
 #include "vm/JSFunction-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/UnboxedObject-inl.h"
 

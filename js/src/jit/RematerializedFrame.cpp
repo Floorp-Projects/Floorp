@@ -6,14 +6,13 @@
 
 #include "jit/RematerializedFrame.h"
 
-
 #include "jit/JitFrames.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Debugger.h"
 
-#include "jsscriptinlines.h"
 #include "jit/JitFrames-inl.h"
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSScript-inl.h"
 
 using namespace js;
 using namespace jit;

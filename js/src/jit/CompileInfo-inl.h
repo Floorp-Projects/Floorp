@@ -10,7 +10,7 @@
 #include "jit/CompileInfo.h"
 #include "jit/JitAllocPolicy.h"
 
-#include "jsscriptinlines.h"
+#include "vm/JSScript-inl.h"
 
 namespace js {
 namespace jit {

@@ -22,7 +22,6 @@
 #include "jscntxt.h"
 #include "jsnum.h"
 #include "jsopcode.h"
-#include "jsscript.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
@@ -32,13 +31,13 @@
 #include "vm/Debugger.h"
 #include "vm/GeneratorObject.h"
 #include "vm/JSFunction.h"
+#include "vm/JSScript.h"
 #include "vm/Stack.h"
 #include "wasm/AsmJS.h"
 
-#include "jsscriptinlines.h"
-
 #include "frontend/ParseNode-inl.h"
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

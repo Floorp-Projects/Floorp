@@ -26,7 +26,6 @@
 #include "jsnum.h"
 #include "jsopcode.h"
 #include "jsprf.h"
-#include "jsscript.h"
 #include "jsstr.h"
 
 #include "builtin/Eval.h"
@@ -41,6 +40,7 @@
 #include "vm/GeneratorObject.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
+#include "vm/JSScript.h"
 #include "vm/Opcodes.h"
 #include "vm/Scope.h"
 #include "vm/Shape.h"
@@ -49,13 +49,13 @@
 #include "vm/TraceLogging.h"
 
 #include "jsboolinlines.h"
-#include "jsscriptinlines.h"
 
 #include "jit/JitFrames-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSFunction-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Probes-inl.h"
 #include "vm/Stack-inl.h"

@@ -6,7 +6,6 @@
 
 #include "jit/JitFrames-inl.h"
 
-#include "jsscript.h"
 #include "jsutil.h"
 
 #include "gc/Marking.h"
@@ -30,15 +29,15 @@
 #include "vm/Interpreter.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
+#include "vm/JSScript.h"
 #include "vm/TraceLogging.h"
 #include "vm/TypeInference.h"
 #include "wasm/WasmBuiltins.h"
 
-#include "jsscriptinlines.h"
-
 #include "gc/Nursery-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
 #include "vm/Debugger-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/Probes-inl.h"
 #include "vm/TypeInference-inl.h"
 

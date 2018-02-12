@@ -29,11 +29,10 @@
 #include "vm/TraceLogging.h"
 #include "vtune/VTuneWrapper.h"
 
-#include "jsscriptinlines.h"
-
 #include "jit/BaselineFrameInfo-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "vm/Interpreter-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/TypeInference-inl.h"
 

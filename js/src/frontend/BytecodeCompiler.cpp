@@ -10,7 +10,6 @@
 #include "mozilla/Maybe.h"
 
 #include "jscntxt.h"
-#include "jsscript.h"
 
 #include "builtin/ModuleObject.h"
 #include "frontend/BytecodeEmitter.h"
@@ -19,13 +18,13 @@
 #include "frontend/NameFunctions.h"
 #include "frontend/Parser.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSScript.h"
 #include "vm/TraceLogging.h"
 #include "wasm/AsmJS.h"
 
-#include "jsscriptinlines.h"
-
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
 
 using namespace js;
 using namespace js::frontend;

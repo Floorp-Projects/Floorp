@@ -21,7 +21,6 @@
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jscntxt.h"
-#include "jsscript.h"
 #include "jsstr.h"
 #include "jstypes.h"
 #include "jswrapper.h"
@@ -43,6 +42,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSObject.h"
+#include "vm/JSScript.h"
 #include "vm/SelfHosting.h"
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
@@ -51,9 +51,8 @@
 #include "vm/Xdr.h"
 #include "wasm/AsmJS.h"
 
-#include "jsscriptinlines.h"
-
 #include "vm/Interpreter-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
