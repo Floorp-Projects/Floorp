@@ -123,6 +123,7 @@ EXTRA_JS_MODULES += [
     'AboutHome.jsm',
     'AboutNewTab.jsm',
     'AttributionCode.jsm',
+    'BrowserErrorReporter.jsm',
     'BrowserUITelemetry.jsm',
     'BrowserUsageTelemetry.jsm',
     'ContentClick.jsm',
