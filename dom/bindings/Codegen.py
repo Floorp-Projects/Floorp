@@ -17898,20 +17898,39 @@ class CGEventClass(CGBindingImplClass):
 
         parent = self.descriptor.interface.parent
         self.parentType = self.descriptor.getDescriptor(parent.identifier.name).nativeType.split('::')[-1]
+        self.nativeType = self.descriptor.nativeType.split('::')[-1]
+
+        if self.needCC():
+            isupportsDecl = fill(
+                """
+                NS_DECL_ISUPPORTS_INHERITED
+                NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(${nativeType}, ${parentType})
+                """,
+                nativeType=self.nativeType,
+                parentType=self.parentType)
+        else:
+            isupportsDecl = fill(
+                """
+                NS_INLINE_DECL_REFCOUNTING_INHERITED(${nativeType}, ${parentType})
+                """,
+                nativeType=self.nativeType,
+                parentType=self.parentType)
+
         baseDeclarations = fill(
             """
             public:
-              NS_DECL_ISUPPORTS_INHERITED
-              NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(${nativeType}, ${parentType})
+              $*{isupportsDecl}
+
             protected:
               virtual ~${nativeType}();
               explicit ${nativeType}(mozilla::dom::EventTarget* aOwner);
 
             """,
-            nativeType=self.descriptor.nativeType.split('::')[-1],
+            isupportsDecl=isupportsDecl,
+            nativeType=self.nativeType,
             parentType=self.parentType)
 
-        className = descriptor.nativeType.split('::')[-1]
+        className = self.nativeType
         asConcreteTypeMethod = ClassMethod("As%s" % className,
                                            "%s*" % className,
                                            [],
@@ -17929,6 +17948,10 @@ class CGEventClass(CGBindingImplClass):
 
     def getWrapObjectBody(self):
         return "return %sBinding::Wrap(aCx, this, aGivenProto);\n" % self.descriptor.name
+
+    def needCC(self):
+        return (len(self.membersNeedingCC) != 0 or
+                len(self.membersNeedingTrace) != 0)
 
     def implTraverse(self):
         retVal = ""
@@ -17973,32 +17996,43 @@ class CGEventClass(CGBindingImplClass):
         if dropJS != "":
             dropJS += "mozilla::DropJSObjects(this);\n"
         # Just override CGClass and do our own thing
-        nativeType = self.descriptor.nativeType.split('::')[-1]
         ctorParams = ("aOwner, nullptr, nullptr" if self.parentType == "Event"
                       else "aOwner")
 
-        classImpl = fill(
+        if self.needCC():
+            classImpl = fill(
+                """
+
+                NS_IMPL_CYCLE_COLLECTION_CLASS(${nativeType})
+
+                NS_IMPL_ADDREF_INHERITED(${nativeType}, ${parentType})
+                NS_IMPL_RELEASE_INHERITED(${nativeType}, ${parentType})
+
+                NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(${nativeType}, ${parentType})
+                $*{traverse}
+                NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+                NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(${nativeType}, ${parentType})
+                $*{trace}
+                NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+                NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(${nativeType}, ${parentType})
+                $*{unlink}
+                NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+                NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${nativeType})
+                NS_INTERFACE_MAP_END_INHERITING(${parentType})
+                """,
+                nativeType=self.nativeType,
+                parentType=self.parentType,
+                traverse=self.implTraverse(),
+                unlink=self.implUnlink(),
+                trace=self.implTrace())
+        else:
+            classImpl = ""
+
+        classImpl += fill(
             """
-
-            NS_IMPL_CYCLE_COLLECTION_CLASS(${nativeType})
-
-            NS_IMPL_ADDREF_INHERITED(${nativeType}, ${parentType})
-            NS_IMPL_RELEASE_INHERITED(${nativeType}, ${parentType})
-
-            NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(${nativeType}, ${parentType})
-            $*{traverse}
-            NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-            NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(${nativeType}, ${parentType})
-            $*{trace}
-            NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-            NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(${nativeType}, ${parentType})
-            $*{unlink}
-            NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-            NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${nativeType})
-            NS_INTERFACE_MAP_END_INHERITING(${parentType})
 
             ${nativeType}::${nativeType}(mozilla::dom::EventTarget* aOwner)
               : ${parentType}(${ctorParams})
@@ -18011,14 +18045,11 @@ class CGEventClass(CGBindingImplClass):
             }
 
             """,
-            ifaceName=self.descriptor.name,
-            nativeType=nativeType,
+            nativeType=self.nativeType,
             ctorParams=ctorParams,
             parentType=self.parentType,
-            traverse=self.implTraverse(),
-            unlink=self.implUnlink(),
-            trace=self.implTrace(),
             dropJS=dropJS)
+
         return classImpl + CGBindingImplClass.define(self)
 
     def getNativeTypeForIDLType(self, type):
