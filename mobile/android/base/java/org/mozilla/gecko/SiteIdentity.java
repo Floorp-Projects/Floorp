@@ -12,7 +12,7 @@ import java.util.Locale;
 import android.text.TextUtils;
 
 public class SiteIdentity {
-    private final String LOGTAG = "GeckoSiteIdentity";
+    private static final String LOGTAG = "GeckoSiteIdentity";
     private SecurityMode mSecurityMode;
     private boolean mSecure;
     private MixedMode mMixedModeActive;

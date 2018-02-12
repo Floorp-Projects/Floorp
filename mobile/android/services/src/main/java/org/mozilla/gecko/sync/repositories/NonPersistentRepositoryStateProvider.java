@@ -19,7 +19,7 @@ import java.util.Map;
  */
 public class NonPersistentRepositoryStateProvider implements RepositoryStateProvider {
     // We'll have at least OFFSET and H.W.M. values set.
-    private final int INITIAL_CAPACITY = 2;
+    private static final int INITIAL_CAPACITY = 2;
     private final Map<String, Object> nonCommittedValuesMap = Collections.synchronizedMap(
             new HashMap<String, Object>(INITIAL_CAPACITY)
     );
