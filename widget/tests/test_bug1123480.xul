@@ -37,36 +37,39 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
     const gClipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"].getService(Components.interfaces.nsIClipboardHelper);
     gClipboardHelper.copyString(Ipsum);
 
-    // Disabled private browsing mode should cache large selections to disk
-    ok(clipboardFile.exists(), "correctly saved memory by caching to disk");
+    // Undefined private browsing mode should not cache to disk
+    ok(!clipboardFile.exists(), "correctly avoided caching to disk when PBM is undefined");
 
-    // Sanitize environment again
-    if (clipboardFile.exists()) {
-        clipboardFile.remove(false);
-    }
-    ok(!clipboardFile.exists(), "failed to postsanitize the environment");
-
-    // Repeat procedure of plain text selection with private browsing enabled
+    // Repeat procedure of plain text selection with private browsing
+    // disabled and enabled
     ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
-    var Winpriv = window.open("about:blank", "_blank", "chrome, width=500, height=200, private");
-    ok(Winpriv, "failed to open private window");
-    ok(PrivateBrowsingUtils.isContentWindowPrivate(Winpriv), "correctly used a private window context");
-
-    // Select plaintext in private channel
     ChromeUtils.import('resource://gre/modules/Services.jsm');
-    const nsTransferable = Components.Constructor("@mozilla.org/widget/transferable;1", "nsITransferable");
-    const nsSupportsString = Components.Constructor("@mozilla.org/supports-string;1", "nsISupportsString");
-    var Loadctx = PrivateBrowsingUtils.privacyContextFromWindow(Winpriv);
-    var Transfer = nsTransferable();
-    var Suppstr = nsSupportsString();
-    Suppstr.data = Ipsum;
-    Transfer.init(Loadctx);
-    Transfer.addDataFlavor("text/plain");
-    Transfer.setTransferData("text/plain", Suppstr, Ipsum.length);
-    Services.clipboard.setData(Transfer, null, Services.clipboard.kGlobalClipboard);
+    for (let private of [false, true]) {
+      // Sanitize environment again
+      if (clipboardFile.exists()) {
+          clipboardFile.remove(false);
+      }
+      ok(!clipboardFile.exists(), "failed to postsanitize the environment");
 
-    // Enabled private browsing mode should not cache any selection to disk
-    ok(!clipboardFile.exists(), "did not violate private browsing mode");
+      var win = window.open("about:blank", "_blank", "chrome, width=500, height=200" + (private ? ", private" : ""));
+      ok(win, "failed to open private window");
+      is(PrivateBrowsingUtils.isContentWindowPrivate(win), private, "used correct window context");
+
+      // Select plaintext in private channel
+      const nsTransferable = Components.Constructor("@mozilla.org/widget/transferable;1", "nsITransferable");
+      const nsSupportsString = Components.Constructor("@mozilla.org/supports-string;1", "nsISupportsString");
+      var Loadctx = PrivateBrowsingUtils.privacyContextFromWindow(win);
+      var Transfer = nsTransferable();
+      var Suppstr = nsSupportsString();
+      Suppstr.data = Ipsum;
+      Transfer.init(Loadctx);
+      Transfer.addDataFlavor("text/plain");
+      Transfer.setTransferData("text/plain", Suppstr, Ipsum.length);
+      Services.clipboard.setData(Transfer, null, Services.clipboard.kGlobalClipboard);
+
+      // Enabled private browsing mode should not cache any selection to disk; disabled should
+      is(!clipboardFile.exists(), private, "did not violate private browsing mode");
+    }
   }
   ]]>
   </script>
