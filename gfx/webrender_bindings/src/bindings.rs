@@ -590,25 +590,30 @@ pub unsafe extern "C" fn wr_renderer_delete(renderer: *mut Renderer) {
     // let renderer go out of scope and get dropped
 }
 
-pub struct WrRenderedEpochs {
-    data: Vec<(WrPipelineId, WrEpoch)>,
+pub struct WrPipelineInfo {
+    epochs: Vec<(WrPipelineId, WrEpoch)>,
+    removed_pipelines: Vec<PipelineId>,
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_renderer_flush_rendered_epochs(renderer: &mut Renderer) -> *mut WrRenderedEpochs {
-    let map = renderer.flush_rendered_epochs();
-    let pipeline_epochs = Box::new(WrRenderedEpochs {
-                                       data: map.into_iter().collect(),
-                                   });
+pub unsafe extern "C" fn wr_renderer_flush_pipeline_info(renderer: &mut Renderer) -> *mut WrPipelineInfo {
+    let info = renderer.flush_pipeline_info();
+    let pipeline_epochs = Box::new(
+        WrPipelineInfo {
+            epochs: info.epochs.into_iter().collect(),
+            removed_pipelines: info.removed_pipelines,
+        }
+    );
     return Box::into_raw(pipeline_epochs);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_rendered_epochs_next(pipeline_epochs: &mut WrRenderedEpochs,
-                                                 out_pipeline: &mut WrPipelineId,
-                                                 out_epoch: &mut WrEpoch)
-                                                 -> bool {
-    if let Some((pipeline, epoch)) = pipeline_epochs.data.pop() {
+pub unsafe extern "C" fn wr_pipeline_info_next_epoch(
+    info: &mut WrPipelineInfo,
+    out_pipeline: &mut WrPipelineId,
+    out_epoch: &mut WrEpoch
+) -> bool {
+    if let Some((pipeline, epoch)) = info.epochs.pop() {
         *out_pipeline = pipeline;
         *out_epoch = epoch;
         return true;
@@ -616,10 +621,22 @@ pub unsafe extern "C" fn wr_rendered_epochs_next(pipeline_epochs: &mut WrRendere
     return false;
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn wr_pipeline_info_next_removed_pipeline(
+    info: &mut WrPipelineInfo,
+    out_pipeline: &mut WrPipelineId,
+) -> bool {
+    if let Some(pipeline) = info.removed_pipelines.pop() {
+        *out_pipeline = pipeline;
+        return true;
+    }
+    return false;
+}
+
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
-pub unsafe extern "C" fn wr_rendered_epochs_delete(pipeline_epochs: *mut WrRenderedEpochs) {
-    Box::from_raw(pipeline_epochs);
+pub unsafe extern "C" fn wr_pipeline_info_delete(info: *mut WrPipelineInfo) {
+    Box::from_raw(info);
 }
 
 extern "C" {
