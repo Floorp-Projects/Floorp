@@ -336,6 +336,10 @@ namespace TuningDefaults {
     /* JSGC_COMPACTING_ENABLED */
     static const bool CompactingEnabled = true;
 
+    /* JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION */
+    static const uint32_t NurseryFreeThresholdForIdleCollection =
+        Nursery::NurseryChunkUsableSize / 4;
+
 }}} // namespace js::gc::TuningDefaults
 
 /*
@@ -1479,6 +1483,11 @@ GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value, const AutoL
       case JSGC_MAX_EMPTY_CHUNK_COUNT:
         setMaxEmptyChunkCount(value);
         break;
+      case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION:
+        if (value > gcMaxNurseryBytes())
+            value = gcMaxNurseryBytes();
+        nurseryFreeThresholdForIdleCollection_ = value;
+        break;
       default:
         MOZ_CRASH("Unknown GC parameter.");
     }
@@ -1572,7 +1581,8 @@ GCSchedulingTunables::GCSchedulingTunables()
     lowFrequencyHeapGrowth_(TuningDefaults::LowFrequencyHeapGrowth),
     dynamicMarkSliceEnabled_(TuningDefaults::DynamicMarkSliceEnabled),
     minEmptyChunkCount_(TuningDefaults::MinEmptyChunkCount),
-    maxEmptyChunkCount_(TuningDefaults::MaxEmptyChunkCount)
+    maxEmptyChunkCount_(TuningDefaults::MaxEmptyChunkCount),
+    nurseryFreeThresholdForIdleCollection_(TuningDefaults::NurseryFreeThresholdForIdleCollection)
 {}
 
 void
@@ -1652,6 +1662,10 @@ GCSchedulingTunables::resetParameter(JSGCParamKey key, const AutoLockGC& lock)
         break;
       case JSGC_MAX_EMPTY_CHUNK_COUNT:
         setMaxEmptyChunkCount(TuningDefaults::MaxEmptyChunkCount);
+        break;
+      case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION:
+        nurseryFreeThresholdForIdleCollection_ =
+            TuningDefaults::NurseryFreeThresholdForIdleCollection;
         break;
       default:
         MOZ_CRASH("Unknown GC parameter.");
