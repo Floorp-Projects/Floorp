@@ -75,6 +75,12 @@ ChildSHistory::Go(int32_t aOffset, ErrorResult& aRv)
   aRv = mHistory->GotoIndex(index.value());
 }
 
+void
+ChildSHistory::EvictLocalContentViewers()
+{
+  mHistory->EvictAllContentViewers();
+}
+
 nsISHistory*
 ChildSHistory::LegacySHistory()
 {
