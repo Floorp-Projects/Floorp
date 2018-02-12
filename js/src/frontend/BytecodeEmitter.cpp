@@ -29,6 +29,7 @@
 #include "frontend/TokenStream.h"
 #include "vm/Debugger.h"
 #include "vm/GeneratorObject.h"
+#include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
@@ -37,6 +38,7 @@
 
 #include "frontend/ParseNode-inl.h"
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSAtom-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 

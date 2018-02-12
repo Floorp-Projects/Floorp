@@ -8,7 +8,7 @@
  * JS atom table.
  */
 
-#include "jsatominlines.h"
+#include "vm/JSAtom-inl.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/RangedPtr.h"

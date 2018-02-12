@@ -51,6 +51,7 @@
 
 #include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
+#include "vm/JSAtom-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
 

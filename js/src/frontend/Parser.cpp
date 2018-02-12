@@ -33,6 +33,7 @@
 #include "frontend/FoldConstants.h"
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpParser.h"
+#include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
@@ -42,6 +43,7 @@
 #include "frontend/ParseContext-inl.h"
 #include "frontend/ParseNode-inl.h"
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSAtom-inl.h"
 #include "vm/JSScript-inl.h"
 
 using namespace js;

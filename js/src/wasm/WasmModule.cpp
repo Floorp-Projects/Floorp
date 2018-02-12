@@ -32,6 +32,7 @@
 
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/Debugger-inl.h"
+#include "vm/JSAtom-inl.h"
 
 using namespace js;
 using namespace js::jit;

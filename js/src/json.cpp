@@ -17,6 +17,7 @@
 #include "jsutil.h"
 
 #include "vm/Interpreter.h"
+#include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/JSONParser.h"
@@ -25,6 +26,7 @@
 #include "jsarrayinlines.h"
 #include "jsboolinlines.h"
 
+#include "vm/JSAtom-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

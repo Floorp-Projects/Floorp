@@ -15,6 +15,7 @@
 #include "js/RootingAPI.h"
 #include "js/UniquePtr.h"
 #include "vm/ArrayObject.h"
+#include "vm/JSAtom.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 #include "vm/NativeObject.h"
