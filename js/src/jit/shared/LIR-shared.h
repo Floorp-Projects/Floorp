@@ -1628,15 +1628,18 @@ class LToAsyncGen : public LCallInstructionHelper<1, 1, 0>
     }
 };
 
-class LToAsyncIter : public LCallInstructionHelper<1, 1, 0>
+class LToAsyncIter : public LCallInstructionHelper<1, 1 + BOX_PIECES, 0>
 {
   public:
     LIR_HEADER(ToAsyncIter)
-    explicit LToAsyncIter(const LAllocation& input) {
-        setOperand(0, input);
+    explicit LToAsyncIter(const LAllocation& iterator, const LBoxAllocation& nextMethod) {
+        setOperand(0, iterator);
+        setBoxOperand(NextMethodIndex, nextMethod);
     }
 
-    const LAllocation* unwrapped() {
+    static const size_t NextMethodIndex = 1;
+
+    const LAllocation* iterator() {
         return getOperand(0);
     }
 };

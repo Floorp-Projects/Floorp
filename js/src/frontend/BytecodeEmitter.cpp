@@ -7006,6 +7006,11 @@ BytecodeEmitter::emitAsyncIterator()
     if (!emitCheckIsObj(CheckIsObjectKind::GetIterator))          // ITER
         return false;
 
+    if (!emit1(JSOP_DUP))                                         // ITER ITER
+        return false;
+    if (!emitAtomOp(cx->names().next, JSOP_GETPROP))              // ITER SYNCNEXT
+        return false;
+
     if (!emit1(JSOP_TOASYNCITER))                                 // ITER
         return false;
 

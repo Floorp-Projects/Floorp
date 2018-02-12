@@ -4085,7 +4085,7 @@ BaselineCompiler::emit_JSOP_TOASYNCGEN()
     return true;
 }
 
-typedef JSObject* (*ToAsyncIterFn)(JSContext*, HandleObject);
+typedef JSObject* (*ToAsyncIterFn)(JSContext*, HandleObject, HandleValue);
 static const VMFunction ToAsyncIterInfo =
     FunctionInfo<ToAsyncIterFn>(js::CreateAsyncFromSyncIterator, "ToAsyncIter");
 
@@ -4093,16 +4093,18 @@ bool
 BaselineCompiler::emit_JSOP_TOASYNCITER()
 {
     frame.syncStack(0);
-    masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
+    masm.unboxObject(frame.addressOfStackValue(frame.peek(-2)), R0.scratchReg());
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
 
     prepareVMCall();
+    pushArg(R1);
     pushArg(R0.scratchReg());
 
     if (!callVM(ToAsyncIterInfo))
         return false;
 
     masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
-    frame.pop();
+    frame.popn(2);
     frame.push(R0);
     return true;
 }

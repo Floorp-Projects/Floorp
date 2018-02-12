@@ -12616,10 +12616,11 @@ IonBuilder::jsop_toasyncgen()
 AbortReasonOr<Ok>
 IonBuilder::jsop_toasynciter()
 {
-    MDefinition* unwrapped = current->pop();
-    MOZ_ASSERT(unwrapped->type() == MIRType::Object);
+    MDefinition* nextMethod = current->pop();
+    MDefinition* iterator = current->pop();
+    MOZ_ASSERT(iterator->type() == MIRType::Object);
 
-    MToAsyncIter* ins = MToAsyncIter::New(alloc(), unwrapped);
+    MToAsyncIter* ins = MToAsyncIter::New(alloc(), iterator, nextMethod);
 
     current->add(ins);
     current->push(ins);

@@ -2138,14 +2138,15 @@
      */ \
     macro(JSOP_AWAIT,         209, "await",        NULL,  4,  2,  1,  JOF_UINT24) \
     /*
-     * Pops the iterator from the top of the stack, and create async iterator
-     * from it and push the async iterator back onto the stack.
+     * Pops the iterator and its next method from the top of the stack, and
+     * create async iterator from it and push the async iterator back onto the
+     * stack.
      *   Category: Statements
      *   Type: Generator
      *   Operands:
-     *   Stack: iter => asynciter
+     *   Stack: iter, next => asynciter
      */ \
-    macro(JSOP_TOASYNCITER,   210, "toasynciter",  NULL,  1,  1,  1,  JOF_BYTE) \
+    macro(JSOP_TOASYNCITER,   210, "toasynciter",  NULL,  1,  2,  1,  JOF_BYTE) \
     /*
      * Pops the top two values 'id' and 'obj' from the stack, then pushes
      * obj.hasOwnProperty(id)
