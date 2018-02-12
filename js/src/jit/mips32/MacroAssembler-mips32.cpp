@@ -2394,164 +2394,6 @@ MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output
     bind(&done);
 }
 
-void
-MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
-                            Register ptrScratch, Register64 output)
-{
-    wasmLoadI64Impl(access, memoryBase, ptr, ptrScratch, output, InvalidReg);
-}
-
-void
-MacroAssembler::wasmUnalignedLoadI64(const wasm::MemoryAccessDesc& access, Register memoryBase,
-                                     Register ptr, Register ptrScratch, Register64 output,
-                                     Register tmp)
-{
-    wasmLoadI64Impl(access, memoryBase, ptr, ptrScratch, output, tmp);
-}
-
-void
-MacroAssembler::wasmStoreI64(const wasm::MemoryAccessDesc& access, Register64 value,
-                             Register memoryBase, Register ptr, Register ptrScratch)
-{
-    wasmStoreI64Impl(access, value, memoryBase, ptr, ptrScratch, InvalidReg);
-}
-
-void
-MacroAssembler::wasmUnalignedStoreI64(const wasm::MemoryAccessDesc& access, Register64 value,
-                                      Register memoryBase, Register ptr, Register ptrScratch,
-                                      Register tmp)
-{
-    wasmStoreI64Impl(access, value, memoryBase, ptr, ptrScratch, tmp);
-}
-
-void
-MacroAssemblerMIPSCompat::wasmLoadI64Impl(const wasm::MemoryAccessDesc& access, Register memoryBase,
-                                          Register ptr, Register ptrScratch, Register64 output,
-                                          Register tmp)
-{
-    uint32_t offset = access.offset();
-    MOZ_ASSERT_IF(offset, ptrScratch != InvalidReg);
-
-    // Maybe add the offset.
-    if (offset) {
-        asMasm().movePtr(ptr, ptrScratch);
-        asMasm().addPtr(Imm32(offset), ptrScratch);
-        ptr = ptrScratch;
-    }
-
-    unsigned byteSize = access.byteSize();
-    bool isSigned;
-
-    switch (access.type()) {
-      case Scalar::Int8:   isSigned = true; break;
-      case Scalar::Uint8:  isSigned = false; break;
-      case Scalar::Int16:  isSigned = true; break;
-      case Scalar::Uint16: isSigned = false; break;
-      case Scalar::Int32:  isSigned = true; break;
-      case Scalar::Uint32: isSigned = false; break;
-      case Scalar::Int64:  isSigned = true; break;
-      default: MOZ_CRASH("unexpected array type");
-    }
-
-    BaseIndex address(memoryBase, ptr, TimesOne);
-    MOZ_ASSERT(INT64LOW_OFFSET == 0);
-    if (IsUnaligned(access)) {
-        MOZ_ASSERT(tmp != InvalidReg);
-        if (byteSize <= 4) {
-            asMasm().ma_load_unaligned(access, output.low, address, tmp,
-                                       static_cast<LoadStoreSize>(8 * byteSize),
-                                       isSigned ? SignExtend : ZeroExtend);
-            if (!isSigned)
-                asMasm().move32(Imm32(0), output.high);
-            else
-                asMasm().ma_sra(output.high, output.low, Imm32(31));
-        } else {
-            MOZ_ASSERT(output.low != ptr);
-            asMasm().ma_load_unaligned(access, output.low, address, tmp, SizeWord, ZeroExtend);
-            asMasm().ma_load_unaligned(access, output.high,
-                                       BaseIndex(HeapReg, ptr, TimesOne, INT64HIGH_OFFSET),
-                                       tmp, SizeWord, SignExtend);
-        }
-        return;
-    }
-
-    asMasm().memoryBarrierBefore(access.sync());
-    if (byteSize <= 4) {
-        asMasm().ma_load(output.low, address, static_cast<LoadStoreSize>(8 * byteSize),
-                         isSigned ? SignExtend : ZeroExtend);
-        asMasm().append(access, asMasm().size() - 4 , asMasm().framePushed());
-        if (!isSigned)
-            asMasm().move32(Imm32(0), output.high);
-        else
-            asMasm().ma_sra(output.high, output.low, Imm32(31));
-    } else {
-        MOZ_ASSERT(output.low != ptr);
-        asMasm().ma_load(output.low, BaseIndex(HeapReg, ptr, TimesOne), SizeWord);
-        asMasm().append(access, asMasm().size() - 4 , asMasm().framePushed());
-        asMasm().ma_load(output.high, BaseIndex(HeapReg, ptr, TimesOne, INT64HIGH_OFFSET), SizeWord);
-        asMasm().append(access, asMasm().size() - 4 , asMasm().framePushed());
-    }
-    asMasm().memoryBarrierAfter(access.sync());
-}
-
-void
-MacroAssemblerMIPSCompat::wasmStoreI64Impl(const wasm::MemoryAccessDesc& access, Register64 value,
-                                           Register memoryBase, Register ptr, Register ptrScratch,
-                                           Register tmp)
-{
-    uint32_t offset = access.offset();
-    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
-    MOZ_ASSERT_IF(offset, ptrScratch != InvalidReg);
-
-    // Maybe add the offset.
-    if (offset) {
-        asMasm().addPtr(Imm32(offset), ptrScratch);
-        ptr = ptrScratch;
-    }
-
-    unsigned byteSize = access.byteSize();
-    bool isSigned;
-    switch (access.type()) {
-      case Scalar::Int8:   isSigned = true; break;
-      case Scalar::Uint8:  isSigned = false; break;
-      case Scalar::Int16:  isSigned = true; break;
-      case Scalar::Uint16: isSigned = false; break;
-      case Scalar::Int32:  isSigned = true; break;
-      case Scalar::Uint32: isSigned = false; break;
-      case Scalar::Int64:  isSigned = true; break;
-      default: MOZ_CRASH("unexpected array type");
-    }
-
-    MOZ_ASSERT(INT64LOW_OFFSET == 0);
-    BaseIndex address(memoryBase, ptr, TimesOne);
-    if (IsUnaligned(access)) {
-        MOZ_ASSERT(tmp != InvalidReg);
-        if (byteSize <= 4) {
-            asMasm().ma_store_unaligned(access, value.low, address, tmp,
-                                        static_cast<LoadStoreSize>(8 * byteSize),
-                                        isSigned ? SignExtend : ZeroExtend);
-        } else {
-            asMasm().ma_store_unaligned(access, value.high,
-                                        BaseIndex(HeapReg, ptr, TimesOne, INT64HIGH_OFFSET),
-                                        tmp, SizeWord, SignExtend);
-            asMasm().ma_store_unaligned(access, value.low, address, tmp, SizeWord, ZeroExtend);
-        }
-        return;
-    }
-
-    asMasm().memoryBarrierBefore(access.sync());
-    if (byteSize <= 4) {
-        asMasm().ma_store(value.low, address, static_cast<LoadStoreSize>(8 * byteSize));
-        asMasm().append(access, asMasm().size() - 4, asMasm().framePushed());
-    } else {
-        asMasm().ma_store(value.high, BaseIndex(HeapReg, ptr, TimesOne, INT64HIGH_OFFSET),
-                          SizeWord);
-        asMasm().append(access, asMasm().size() - 4, asMasm().framePushed());
-        asMasm().ma_store(value.low, address, SizeWord);
-    }
-    asMasm().memoryBarrierAfter(access.sync());
-}
-
 static void
 EnterAtomic64Region(MacroAssembler& masm, Register addr, Register spinlock, Register scratch)
 {
@@ -2760,7 +2602,6 @@ MacroAssembler::atomicFetchOp64(const Synchronization&, AtomicOp op, Register64 
 {
     AtomicFetchOp64(*this, op, value, mem, temp, output);
 }
-
 // ========================================================================
 // Convert floating point.
 
@@ -2784,3 +2625,4 @@ MacroAssembler::convertUInt64ToDouble(Register64 src, FloatRegister dest, Regist
 }
 
 //}}} check_macroassembler_style
+
