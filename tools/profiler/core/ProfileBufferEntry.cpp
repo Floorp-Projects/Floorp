@@ -277,13 +277,13 @@ bool UniqueStacks::FrameKey::operator==(const FrameKey& aOther) const
 }
 
 UniqueStacks::StackKey
-UniqueStacks::BeginStack(const OnStackFrameKey& aFrame)
+UniqueStacks::BeginStack(const FrameKey& aFrame)
 {
   return StackKey(GetOrAddFrameIndex(aFrame));
 }
 
 UniqueStacks::StackKey
-UniqueStacks::AppendFrame(const StackKey& aStack, const OnStackFrameKey& aFrame)
+UniqueStacks::AppendFrame(const StackKey& aStack, const FrameKey& aFrame)
 {
   return StackKey(aStack, GetOrAddStackIndex(aStack), GetOrAddFrameIndex(aFrame));
 }
@@ -311,7 +311,6 @@ uint32_t UniqueStacks::FrameKey::Hash() const
 
 UniqueStacks::UniqueStacks(JSContext* aContext)
  : mContext(aContext)
- , mFrameCount(0)
 {
   mFrameTableWriter.StartBareList();
   mStackTableWriter.StartBareList();
@@ -331,52 +330,57 @@ uint32_t UniqueStacks::GetOrAddStackIndex(const StackKey& aStack)
   return index;
 }
 
-uint32_t UniqueStacks::GetOrAddFrameIndex(const OnStackFrameKey& aFrame)
+MOZ_MUST_USE nsTArray<UniqueStacks::FrameKey>
+UniqueStacks::GetOrAddJITFrameKeysForAddress(void* aJITAddress)
+{
+  nsTArray<FrameKey>& frameKeys =
+    *mAddressToJITFrameKeysMap.LookupOrAdd(aJITAddress);
+
+  if (frameKeys.IsEmpty()) {
+    MOZ_RELEASE_ASSERT(mContext);
+    for (JS::ProfiledFrameHandle handle : JS::GetProfiledFrames(mContext,
+                                                                aJITAddress)) {
+      // JIT frames with the same canonical address should be treated as the
+      // same frame, so set the frame key's address to the canonical address.
+      FrameKey frameKey(handle.canonicalAddress(), frameKeys.Length());
+      MaybeAddJITFrameIndex(frameKey, handle);
+      frameKeys.AppendElement(frameKey);
+    }
+    MOZ_ASSERT(frameKeys.Length() > 0);
+  }
+
+  // Return a copy of the array.
+  return nsTArray<FrameKey>(frameKeys);
+}
+
+void
+UniqueStacks::MaybeAddJITFrameIndex(const FrameKey& aFrame,
+                                    const JS::ProfiledFrameHandle& aJITFrame)
 {
   uint32_t index;
   if (mFrameToIndexMap.Get(aFrame, &index)) {
-    MOZ_ASSERT(index < mFrameCount);
+    MOZ_ASSERT(index < mFrameToIndexMap.Count());
+    return;
+  }
+
+  index = mFrameToIndexMap.Count();
+  mFrameToIndexMap.Put(aFrame, index);
+  StreamJITFrame(aJITFrame);
+}
+
+uint32_t
+UniqueStacks::GetOrAddFrameIndex(const FrameKey& aFrame)
+{
+  uint32_t index;
+  if (mFrameToIndexMap.Get(aFrame, &index)) {
+    MOZ_ASSERT(index < mFrameToIndexMap.Count());
     return index;
   }
 
-  // If aFrame isn't canonical, forward it to the canonical frame's index.
-  if (aFrame.mJITFrameHandle) {
-    void* canonicalAddr = aFrame.mJITFrameHandle->canonicalAddress();
-    if (canonicalAddr != *aFrame.mJITAddress) {
-      OnStackFrameKey canonicalKey(canonicalAddr, *aFrame.mJITDepth, *aFrame.mJITFrameHandle);
-      uint32_t canonicalIndex = GetOrAddFrameIndex(canonicalKey);
-      mFrameToIndexMap.Put(aFrame, canonicalIndex);
-      return canonicalIndex;
-    }
-    // A manual count is used instead of mFrameToIndexMap.Count() due to
-    // forwarding of canonical JIT frames above.
-    index = mFrameCount++;
-    mFrameToIndexMap.Put(aFrame, index);
-    StreamJITFrame(*aFrame.mJITFrameHandle);
-  } else {
-    index = mFrameCount++;
-    mFrameToIndexMap.Put(aFrame, index);
-    StreamNonJITFrame(aFrame);
-  }
+  index = mFrameToIndexMap.Count();
+  mFrameToIndexMap.Put(aFrame, index);
+  StreamNonJITFrame(aFrame);
   return index;
-}
-
-uint32_t UniqueStacks::LookupJITFrameDepth(void* aAddr)
-{
-  uint32_t depth;
-
-  auto it = mJITFrameDepthMap.find(aAddr);
-  if (it != mJITFrameDepthMap.end()) {
-    depth = it->second;
-    MOZ_ASSERT(depth > 0);
-    return depth;
-  }
-  return 0;
-}
-
-void UniqueStacks::AddJITFrameDepth(void* aAddr, unsigned depth)
-{
-  mJITFrameDepthMap[aAddr] = depth;
 }
 
 void UniqueStacks::SpliceFrameTableElements(SpliceableJSONWriter& aWriter)
@@ -741,7 +745,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
     }
 
     UniqueStacks::StackKey stack =
-      aUniqueStacks.BeginStack(UniqueStacks::OnStackFrameKey("(root)"));
+      aUniqueStacks.BeginStack(UniqueStacks::FrameKey("(root)"));
 
     int numFrames = 0;
     while (e.Has()) {
@@ -753,7 +757,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
         unsigned long long pc = (unsigned long long)(uintptr_t)e.Get().u.mPtr;
         char buf[20];
         SprintfLiteral(buf, "%#llx", pc);
-        stack = aUniqueStacks.AppendFrame(stack, UniqueStacks::OnStackFrameKey(buf));
+        stack = aUniqueStacks.AppendFrame(stack, UniqueStacks::FrameKey(buf));
         e.Next();
 
       } else if (e.Get().IsLabel()) {
@@ -793,7 +797,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
         }
         strbuf[kMaxFrameKeyLength - 1] = '\0';
 
-        UniqueStacks::OnStackFrameKey frameKey(strbuf.get());
+        UniqueStacks::FrameKey frameKey(strbuf.get());
 
         if (e.Has() && e.Get().IsLineNumber()) {
           frameKey.mLine = Some(unsigned(e.Get().u.mInt));
@@ -812,21 +816,10 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
 
         // A JIT frame may expand to multiple frames due to inlining.
         void* pc = e.Get().u.mPtr;
-        unsigned depth = aUniqueStacks.LookupJITFrameDepth(pc);
-        if (depth == 0) {
-          MOZ_RELEASE_ASSERT(aContext);
-          for (JS::ProfiledFrameHandle handle : JS::GetProfiledFrames(aContext, pc)) {
-            UniqueStacks::OnStackFrameKey frameKey(pc, depth, handle);
-            stack = aUniqueStacks.AppendFrame(stack, frameKey);
-            depth++;
-          }
-          MOZ_ASSERT(depth > 0);
-          aUniqueStacks.AddJITFrameDepth(pc, depth);
-        } else {
-          for (unsigned i = 0; i < depth; i++) {
-            UniqueStacks::OnStackFrameKey inlineFrameKey(pc, i);
-            stack = aUniqueStacks.AppendFrame(stack, inlineFrameKey);
-          }
+        nsTArray<UniqueStacks::FrameKey> frameKeys =
+          aUniqueStacks.GetOrAddJITFrameKeysForAddress(pc);
+        for (const UniqueStacks::FrameKey& frameKey : frameKeys) {
+          stack = aUniqueStacks.AppendFrame(stack, frameKey);
         }
 
         e.Next();
