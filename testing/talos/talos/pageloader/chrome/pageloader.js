@@ -59,9 +59,6 @@ var browserWindow = null;
 var recordedName = null;
 var pageUrls;
 
-// the io service
-var gIOS = null;
-
 /**
  * SingleTimeout class. Allow to register one and only one callback using
  * setTimeout at a time.
@@ -156,10 +153,7 @@ function plInit() {
       forceCC = false;
     }
 
-    gIOS = Cc["@mozilla.org/network/io-service;1"]
-      .getService(Ci.nsIIOService);
-
-    var fileURI = gIOS.newURI(manifestURI);
+    var fileURI = Services.io.newURI(manifestURI);
     pages = plLoadURLsFromURI(fileURI);
 
     if (!pages) {
@@ -181,8 +175,6 @@ function plInit() {
     }
 
     // Create a new chromed browser window for content
-    var wwatch = Cc["@mozilla.org/embedcomp/window-watcher;1"]
-      .getService(Ci.nsIWindowWatcher);
     var blank = Cc["@mozilla.org/supports-string;1"]
       .createInstance(Ci.nsISupportsString);
     blank.data = "about:blank";
@@ -192,7 +184,7 @@ function plInit() {
       toolbars = "titlebar,resizable";
     }
 
-    browserWindow = wwatch.openWindow(null, "chrome://browser/content/", "_blank",
+    browserWindow = Services.ww.openWindow(null, "chrome://browser/content/", "_blank",
        `chrome,${toolbars},dialog=no,width=${winWidth},height=${winHeight}`, blank);
 
     gPaintWindow = browserWindow;
@@ -833,7 +825,7 @@ function plLoadURLsFromURI(manifestUri) {
         return null;
       }
 
-      var subManifest = gIOS.newURI(items[1], null, manifestUri);
+      var subManifest = Services.io.newURI(items[1], null, manifestUri);
       if (subManifest == null) {
         dumpLine("tp: invalid URI on line " + manifestUri.spec + ":" + lineNo + " : '" + line.value + "'");
         return null;
@@ -886,7 +878,7 @@ function plLoadURLsFromURI(manifestUri) {
       var url;
 
       if (!baseVsRef) {
-        url = gIOS.newURI(urlspec, null, manifestUri);
+        url = Services.io.newURI(urlspec, null, manifestUri);
 
         if (pageFilterRegexp && !pageFilterRegexp.test(url.spec))
           continue;
@@ -898,13 +890,13 @@ function plLoadURLsFromURI(manifestUri) {
         // page; later on this 'pre' is used when recording the actual time value/result; because in
         // the results we use the url as the results key; but we might use the same test page as a reference
         // page in the same test suite, so we need to add a prefix so this results key is always unique
-        url = gIOS.newURI(urlspecBase, null, manifestUri);
+        url = Services.io.newURI(urlspecBase, null, manifestUri);
         if (pageFilterRegexp && !pageFilterRegexp.test(url.spec))
           continue;
         var pre = "base_page_" + baseVsRefIndex + "_";
         url_array.push({ url, flags, pre });
 
-        url = gIOS.newURI(urlspecRef, null, manifestUri);
+        url = Services.io.newURI(urlspecRef, null, manifestUri);
         if (pageFilterRegexp && !pageFilterRegexp.test(url.spec))
           continue;
         pre = "ref_page_" + baseVsRefIndex + "_";
@@ -922,4 +914,3 @@ function dumpLine(str) {
   dump(str);
   dump("\n");
 }
-
