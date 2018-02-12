@@ -333,20 +333,14 @@ class Nursery
     JS::gcreason::Reason minorGCTriggerReason() const { return minorGCTriggerReason_; }
     void clearMinorGCRequest() { minorGCTriggerReason_ = JS::gcreason::NO_REASON; }
 
-    bool needIdleTimeCollection() const {
-        return minorGCRequested() ||
-               (freeSpace() < kIdleTimeCollectionThreshold);
-    }
+    bool needIdleTimeCollection() const;
 
     bool enableProfiling() const { return enableProfiling_; }
 
-  private:
     /* The amount of space in the mapped nursery available to allocations. */
     static const size_t NurseryChunkUsableSize = gc::ChunkSize - gc::ChunkTrailerSize;
 
-    /* Attemp to run a minor GC in the idle time if the free space falls below this threshold. */
-    static constexpr size_t kIdleTimeCollectionThreshold = NurseryChunkUsableSize / 4;
-
+  private:
     JSRuntime* runtime_;
 
     /* Vector of allocated chunks to allocate from. */

@@ -676,6 +676,13 @@ js::Nursery::endProfile(ProfileKey key)
     totalDurations_[key] += profileDurations_[key];
 }
 
+bool
+js::Nursery::needIdleTimeCollection() const {
+    uint32_t threshold =
+        runtime()->gc.tunables.nurseryFreeThresholdForIdleCollection();
+    return minorGCRequested() || freeSpace() < threshold;
+}
+
 static inline bool
 IsFullStoreBufferReason(JS::gcreason::Reason reason)
 {
