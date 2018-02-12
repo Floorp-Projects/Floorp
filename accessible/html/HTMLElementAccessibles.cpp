@@ -56,8 +56,6 @@ HTMLBRAccessible::NativeName(nsString& aName)
 // HTMLLabelAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS_INHERITED0(HTMLLabelAccessible, HyperTextAccessible)
-
 ENameValueFlag
 HTMLLabelAccessible::NativeName(nsString& aName)
 {
@@ -106,8 +104,6 @@ HTMLLabelAccessible::DoAction(uint8_t aIndex)
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLOuputAccessible
 ////////////////////////////////////////////////////////////////////////////////
-
-NS_IMPL_ISUPPORTS_INHERITED0(HTMLOutputAccessible, HyperTextAccessible)
 
 Relation
 HTMLOutputAccessible::RelationByType(RelationType aType)
@@ -207,8 +203,6 @@ HTMLSummaryAccessible::IsWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLHeaderOrFooterAccessible
 ////////////////////////////////////////////////////////////////////////////////
-
-NS_IMPL_ISUPPORTS_INHERITED0(HTMLHeaderOrFooterAccessible, HyperTextAccessible)
 
 role
 HTMLHeaderOrFooterAccessible::NativeRole()

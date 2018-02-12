@@ -22,7 +22,8 @@ public:
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLOptGroupElement, optgroup)
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLOptGroupElement,
+                                       nsGenericHTMLElement)
 
   // nsINode
   virtual nsresult InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,

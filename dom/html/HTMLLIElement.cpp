@@ -22,8 +22,6 @@ HTMLLIElement::~HTMLLIElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(HTMLLIElement, nsGenericHTMLElement)
-
 NS_IMPL_ELEMENT_CLONE(HTMLLIElement)
 
 // values that are handled case-insensitively

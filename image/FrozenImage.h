@@ -29,7 +29,7 @@ class FrozenImage : public ImageWrapper
   typedef gfx::SourceSurface SourceSurface;
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(FrozenImage, ImageWrapper)
 
   virtual void IncrementAnimationConsumers() override;
   virtual void DecrementAnimationConsumers() override;

@@ -58,7 +58,8 @@ public:
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLFrameSetElement, frameset)
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLFrameSetElement,
+                                       nsGenericHTMLElement)
 
   void GetCols(DOMString& aCols)
   {

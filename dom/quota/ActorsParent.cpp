@@ -970,6 +970,8 @@ protected:
   { }
 
 private:
+  // Need to declare refcounting unconditionally, because
+  // OpenDirectoryListener has pure-virtual refcounting.
   NS_DECL_ISUPPORTS_INHERITED
 
   virtual void

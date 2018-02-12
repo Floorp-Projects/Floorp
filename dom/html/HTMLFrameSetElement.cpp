@@ -26,8 +26,6 @@ HTMLFrameSetElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
   return HTMLFrameSetElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(HTMLFrameSetElement, nsGenericHTMLElement)
-
 NS_IMPL_ELEMENT_CLONE(HTMLFrameSetElement)
 
 nsresult

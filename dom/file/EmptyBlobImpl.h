@@ -15,7 +15,7 @@ namespace dom {
 class EmptyBlobImpl final : public BaseBlobImpl
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(EmptyBlobImpl, BaseBlobImpl)
 
   explicit EmptyBlobImpl(const nsAString& aContentType)
     : BaseBlobImpl(aContentType, 0 /* aLength */)

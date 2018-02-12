@@ -32,6 +32,8 @@ public:
   DECL_IUNKNOWN_INHERITED
 
   // nsISupports
+  // Need to declare addref/release here unconditionally, because
+  // ia2AccessibleTable has pure-virtual refcounting.
   NS_DECL_ISUPPORTS_INHERITED
 
   virtual void Shutdown() override;
@@ -54,6 +56,8 @@ public:
   DECL_IUNKNOWN_INHERITED
 
   // nsISupports
+  // Need to declare addref/release here unconditionally, because
+  // ia2AccessibleTable has pure-virtual refcounting.
   NS_DECL_ISUPPORTS_INHERITED
 
   virtual void Shutdown() override;

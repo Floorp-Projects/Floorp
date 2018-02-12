@@ -30,8 +30,6 @@ static _XScreenSaverQueryExtension_fn _XSSQueryExtension = nullptr;
 static _XScreenSaverAllocInfo_fn _XSSAllocInfo = nullptr;
 static _XScreenSaverQueryInfo_fn _XSSQueryInfo = nullptr;
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsIdleServiceGTK, nsIdleService)
-
 static void Initialize()
 {
     if (!GDK_IS_X11_DISPLAY(gdk_display_get_default()))

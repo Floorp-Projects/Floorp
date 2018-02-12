@@ -22,7 +22,7 @@ class ARIAGridAccessible : public AccessibleWrap,
 public:
   ARIAGridAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(ARIAGridAccessible, AccessibleWrap)
 
   // Accessible
   virtual TableAccessible* AsTable() override { return this; }
@@ -81,7 +81,7 @@ class ARIARowAccessible : public AccessibleWrap
 public:
   ARIARowAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(ARIARowAccessible, AccessibleWrap)
 
   // Accessible
   virtual mozilla::a11y::GroupPos GroupPosition() override;
@@ -100,7 +100,8 @@ class ARIAGridCellAccessible : public HyperTextAccessibleWrap,
 public:
   ARIAGridCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(ARIAGridCellAccessible,
+                                       HyperTextAccessibleWrap)
 
   // Accessible
   virtual TableCellAccessible* AsTableCell() override { return this; }
