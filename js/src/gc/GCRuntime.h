@@ -178,14 +178,14 @@ class GCSchedulingTunables
      *
      * Fraction of threshold.gcBytes() which triggers an incremental GC.
      */
-    UnprotectedData<float> allocThresholdFactor_;
+    UnprotectedData<double> allocThresholdFactor_;
 
     /*
      * JSGC_ALLOCATION_THRESHOLD_FACTOR_AVOID_INTERRUPT
      *
      * The same except when doing so would interrupt an already running GC.
      */
-    UnprotectedData<float> allocThresholdFactorAvoidInterrupt_;
+    UnprotectedData<double> allocThresholdFactorAvoidInterrupt_;
 
     /*
      * Number of bytes to allocate between incremental slices in GCs triggered
@@ -256,8 +256,8 @@ class GCSchedulingTunables
     size_t maxMallocBytes() const { return maxMallocBytes_; }
     size_t gcMaxNurseryBytes() const { return gcMaxNurseryBytes_; }
     size_t gcZoneAllocThresholdBase() const { return gcZoneAllocThresholdBase_; }
-    float allocThresholdFactor() const { return allocThresholdFactor_; }
-    float allocThresholdFactorAvoidInterrupt() const { return allocThresholdFactorAvoidInterrupt_; }
+    double allocThresholdFactor() const { return allocThresholdFactor_; }
+    double allocThresholdFactorAvoidInterrupt() const { return allocThresholdFactorAvoidInterrupt_; }
     size_t zoneAllocDelayBytes() const { return zoneAllocDelayBytes_; }
     bool isDynamicHeapGrowthEnabled() const { return dynamicHeapGrowthEnabled_; }
     uint64_t highFrequencyThresholdUsec() const { return highFrequencyThresholdUsec_; }

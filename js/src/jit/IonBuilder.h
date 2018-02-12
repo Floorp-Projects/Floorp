@@ -504,7 +504,7 @@ class IonBuilder
     AbortReasonOr<Ok> jsop_setarg(uint32_t arg);
     AbortReasonOr<Ok> jsop_defvar(uint32_t index);
     AbortReasonOr<Ok> jsop_deflexical(uint32_t index);
-    AbortReasonOr<Ok> jsop_deffun(uint32_t index);
+    AbortReasonOr<Ok> jsop_deffun();
     AbortReasonOr<Ok> jsop_notearg();
     AbortReasonOr<Ok> jsop_throwsetconst();
     AbortReasonOr<Ok> jsop_checklexical();

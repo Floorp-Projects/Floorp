@@ -341,7 +341,9 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
 
     nsCOMPtr<nsIURI> topWinURI;
     rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     if (!topWinURI) {
       LOG(("nsChannelClassifier[%p]: No window URI\n", this));

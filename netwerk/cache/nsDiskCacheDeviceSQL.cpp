@@ -1320,11 +1320,11 @@ nsOfflineCacheDevice::InitWithSqlite(mozIStorageService * ss)
 
     StatementSql ( mStatement_ActivateClient,    "INSERT OR REPLACE INTO moz_cache_groups (GroupID, ActiveClientID, ActivateTimeStamp) VALUES (?, ?, ?);" ),
     StatementSql ( mStatement_DeactivateGroup,   "DELETE FROM moz_cache_groups WHERE GroupID = ?;" ),
-    StatementSql ( mStatement_FindClient,        "SELECT ClientID, ItemType FROM moz_cache WHERE Key = ? ORDER BY LastFetched DESC, LastModified DESC;" ),
+    StatementSql ( mStatement_FindClient,        "/* do not warn (bug 1293375) */ SELECT ClientID, ItemType FROM moz_cache WHERE Key = ? ORDER BY LastFetched DESC, LastModified DESC;" ),
 
     // Search for namespaces that match the URI.  Use the <= operator
     // to ensure that we use the index on moz_cache_namespaces.
-    StatementSql ( mStatement_FindClientByNamespace, "SELECT ns.ClientID, ns.ItemType FROM"
+    StatementSql ( mStatement_FindClientByNamespace, "/* do not warn (bug 1293375) */ SELECT ns.ClientID, ns.ItemType FROM"
                                                      "  moz_cache_namespaces AS ns JOIN moz_cache_groups AS groups"
                                                      "  ON ns.ClientID = groups.ActiveClientID"
                                                      " WHERE ns.NameSpace <= ?1 AND ?1 GLOB ns.NameSpace || '*'"
