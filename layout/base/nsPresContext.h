@@ -1291,12 +1291,6 @@ protected:
                                          const char* aName,
                                          uint32_t aDelay);
 
-  struct TransactionInvalidations {
-    uint64_t mTransactionId;
-    nsTArray<nsRect> mInvalidations;
-  };
-  TransactionInvalidations* GetInvalidations(uint64_t aTransactionId);
-
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
   // please make the ownership explicit (pinkerton, scc).
@@ -1365,6 +1359,10 @@ protected:
 
   mozilla::UniquePtr<nsBidi> mBidiEngine;
 
+  struct TransactionInvalidations {
+    uint64_t mTransactionId;
+    nsTArray<nsRect> mInvalidations;
+  };
   AutoTArray<TransactionInvalidations, 4> mTransactions;
 
   // text performance metrics
@@ -1490,6 +1488,8 @@ protected:
   unsigned              mSuppressResizeReflow : 1;
 
   unsigned              mIsVisual : 1;
+
+  unsigned              mFireAfterPaintEvents : 1;
 
   unsigned              mIsChrome : 1;
   unsigned              mIsChromeOriginImage : 1;
