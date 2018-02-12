@@ -626,6 +626,9 @@ wasm::GenerateJitEntryPrologue(MacroAssembler& masm, Offsets* offsets)
         offsets->begin = masm.currentOffset();
         MOZ_ASSERT(BeforePushRetAddr == 0);
         masm.push(lr);
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+        offsets->begin = masm.currentOffset();
+        masm.push(ra);
 #else
         // The x86/x64 call instruction pushes the return address.
         offsets->begin = masm.currentOffset();
