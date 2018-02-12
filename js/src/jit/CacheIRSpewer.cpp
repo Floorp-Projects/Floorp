@@ -22,8 +22,7 @@
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 
-#include "jscompartmentinlines.h"
-
+#include "vm/JSCompartment-inl.h"
 #include "vm/JSObject-inl.h"
 
 using namespace js;

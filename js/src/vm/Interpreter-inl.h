@@ -9,12 +9,12 @@
 
 #include "vm/Interpreter.h"
 
-#include "jscompartment.h"
 #include "jsnum.h"
 #include "jsstr.h"
 
 #include "jit/Ion.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/JSCompartment.h"
 
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/JSObject-inl.h"

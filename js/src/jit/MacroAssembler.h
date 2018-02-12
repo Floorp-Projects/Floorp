@@ -10,7 +10,7 @@
 #include "mozilla/MacroForEach.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "jscompartment.h"
+#include "vm/JSCompartment.h"
 
 #if defined(JS_CODEGEN_X86)
 # include "jit/x86/MacroAssembler-x86.h"

@@ -25,9 +25,9 @@
 #include "vm/Xdr.h"
 
 #include "jscntxtinlines.h"
-#include "jscompartmentinlines.h"
 
 #include "gc/AtomMarking-inl.h"
+#include "vm/JSCompartment-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/String-inl.h"
 

@@ -18,9 +18,9 @@
 #include "vm/GeckoProfiler.h"
 
 #include "jscntxtinlines.h"
-#include "jscompartmentinlines.h"
 
 #include "vm/GeckoProfiler-inl.h"
+#include "vm/JSCompartment-inl.h"
 
 using namespace js;
 

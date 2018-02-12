@@ -25,7 +25,6 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jscompartment.h"
 #include "jsnum.h"
 #include "jsprf.h"
 #include "jsstr.h"
@@ -39,6 +38,7 @@
 #include "js/CharacterEncoding.h"
 #include "vm/CodeCoverage.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/JSCompartment.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
@@ -47,9 +47,9 @@
 #include "vm/StringBuffer.h"
 
 #include "jscntxtinlines.h"
-#include "jscompartmentinlines.h"
 
 #include "gc/Iteration-inl.h"
+#include "vm/JSCompartment-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 

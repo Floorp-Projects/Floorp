@@ -12,10 +12,10 @@
 #include "proxy/Proxy.h"
 
 #include "jscntxtinlines.h"
-#include "jscompartmentinlines.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
+#include "vm/JSCompartment-inl.h"
 
 using namespace js;
 using namespace js::jit;

@@ -2,13 +2,13 @@
  * vim: set ts=8 sts=4 et sw=4 tw=99:
  */
 
-#include "jscompartment.h"
 #include "jsfriendapi.h"
 
 #include "jsapi-tests/tests.h"
+#include "vm/JSCompartment.h"
 #include "vm/ProxyObject.h"
 
-#include "jscompartmentinlines.h"
+#include "vm/JSCompartment-inl.h"
 
 using namespace js;
 

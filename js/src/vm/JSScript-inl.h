@@ -15,8 +15,7 @@
 #include "vm/RegExpObject.h"
 #include "wasm/AsmJS.h"
 
-#include "jscompartmentinlines.h"
-
+#include "vm/JSCompartment-inl.h"
 #include "vm/Shape-inl.h"
 
 namespace js {

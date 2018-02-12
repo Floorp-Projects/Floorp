@@ -19,7 +19,6 @@
 #include <string.h>
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 #include "jsexn.h"
 #include "jsnum.h"
 
@@ -29,6 +28,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/UniquePtr.h"
 #include "vm/HelperThreads.h"
+#include "vm/JSCompartment.h"
 #include "vm/StringBuffer.h"
 #include "vm/Unicode.h"
 

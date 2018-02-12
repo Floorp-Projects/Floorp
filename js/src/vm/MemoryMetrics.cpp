@@ -8,13 +8,13 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "jscompartment.h"
 #include "jsgc.h"
 
 #include "gc/Heap.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "vm/ArrayObject.h"
+#include "vm/JSCompartment.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 #include "vm/Runtime.h"

@@ -6,7 +6,7 @@
 
 #include "gc/AtomMarking-inl.h"
 
-#include "jscompartment.h"
+#include "vm/JSCompartment.h"
 
 #include "jsgcinlines.h"
 #include "gc/Heap-inl.h"

@@ -13,11 +13,11 @@
 #include "mozilla/Range.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 
 #include "gc/Allocator.h"
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
+#include "vm/JSCompartment.h"
 
 namespace js {
 

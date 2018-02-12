@@ -9,10 +9,9 @@
 
 #include "vm/Caches.h"
 
-#include "jscompartment.h"
-
 #include "gc/Allocator.h"
 #include "gc/GCTrace.h"
+#include "vm/JSCompartment.h"
 #include "vm/Probes.h"
 
 #include "vm/JSObject-inl.h"

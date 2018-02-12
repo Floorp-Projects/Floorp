@@ -18,10 +18,10 @@
 #include <unistd.h>
 #endif
 
-#include "jscompartment.h"
 #include "jsopcode.h"
 #include "jsprf.h"
 
+#include "vm/JSCompartment.h"
 #include "vm/JSScript.h"
 #include "vm/Runtime.h"
 #include "vm/Time.h"

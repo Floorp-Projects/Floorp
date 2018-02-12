@@ -4,10 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jscompartmentinlines_h
-#define jscompartmentinlines_h
+#ifndef vm_JSCompartment_inl_h
+#define vm_JSCompartment_inl_h
 
-#include "jscompartment.h"
+#include "vm/JSCompartment.h"
+
 #include "jsiter.h"
 
 #include "gc/Barrier.h"
@@ -176,4 +177,4 @@ JSCompartment::objectMaybeInIteration(JSObject* obj)
     return true;
 }
 
-#endif /* jscompartmentinlines_h */
+#endif /* vm_JSCompartment_inl_h */

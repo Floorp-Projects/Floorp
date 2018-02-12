@@ -53,7 +53,6 @@
 
 #include "jsboolinlines.h"
 #include "jscntxtinlines.h"
-#include "jscompartmentinlines.h"
 
 #include "builtin/TypedObject-inl.h"
 #include "gc/Marking-inl.h"
@@ -61,6 +60,7 @@
 #include "vm/BooleanObject-inl.h"
 #include "vm/Caches-inl.h"
 #include "vm/Interpreter-inl.h"
+#include "vm/JSCompartment-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/Shape-inl.h"

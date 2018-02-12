@@ -7,12 +7,12 @@
 #include "vm/AsyncIteration.h"
 
 #include "jsarray.h"
-#include "jscompartment.h"
 
 #include "builtin/Promise.h"
 #include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSCompartment.h"
 #include "vm/SelfHosting.h"
 
 #include "jscntxtinlines.h"

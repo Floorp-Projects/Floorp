@@ -7,11 +7,10 @@
 #ifndef jit_x86_MacroAssembler_x86_h
 #define jit_x86_MacroAssembler_x86_h
 
-#include "jscompartment.h"
-
 #include "jit/JitFrames.h"
 #include "jit/MoveResolver.h"
 #include "jit/x86-shared/MacroAssembler-x86-shared.h"
+#include "vm/JSCompartment.h"
 
 namespace js {
 namespace jit {

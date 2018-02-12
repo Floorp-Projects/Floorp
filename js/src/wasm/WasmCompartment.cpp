@@ -18,8 +18,7 @@
 
 #include "wasm/WasmCompartment.h"
 
-#include "jscompartment.h"
-
+#include "vm/JSCompartment.h"
 #include "wasm/WasmInstance.h"
 
 #include "vm/Debugger-inl.h"

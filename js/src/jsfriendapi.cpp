@@ -11,7 +11,6 @@
 #include <stdint.h>
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 #include "jsprf.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
@@ -22,6 +21,7 @@
 #include "js/Proxy.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/JSCompartment.h"
 #include "vm/JSObject.h"
 #include "vm/Time.h"
 #include "vm/WrapperObject.h"
