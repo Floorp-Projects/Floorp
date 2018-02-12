@@ -6954,6 +6954,16 @@ CodeGenerator::emitGetNextEntryForIterator(LGetNextEntryForIterator* lir)
     Register range = ToRegister(lir->temp2());
     Register output = ToRegister(lir->output());
 
+#ifdef DEBUG
+    // Self-hosted code is responsible for ensuring GetNextEntryForIterator is
+    // only called with the correct iterator class. Assert here all self-
+    // hosted callers of GetNextEntryForIterator perform this class check.
+    Label success;
+    masm.branchTestObjClass(Assembler::Equal, iter, temp, &IteratorObject::class_, &success);
+    masm.assumeUnreachable("Iterator object should have the correct class.");
+    masm.bind(&success);
+#endif
+
     masm.loadPrivate(Address(iter, NativeObject::getFixedSlotOffset(IteratorObject::RangeSlot)),
                      range);
 
