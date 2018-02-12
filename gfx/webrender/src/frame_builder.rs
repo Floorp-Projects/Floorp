@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayList, ClipAndScrollInfo};
-use api::{ClipId, ColorF, ColorU, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale};
+use api::{ClipId, ColorF, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, Epoch, ExtendMode};
 use api::{ExternalScrollId, FontRenderMode, GlyphInstance, GlyphOptions, GradientStop, ImageKey};
 use api::{ImageRendering, ItemRange, LayerPoint, LayerPrimitiveInfo, LayerRect, LayerSize};
@@ -30,8 +30,8 @@ use prim_store::{PrimitiveContainer, PrimitiveIndex};
 use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu};
 use prim_store::{BrushSegmentDescriptor, PrimitiveRun, TextRunPrimitiveCpu};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
-use render_task::{ClearMode, ClipChain, RenderTask, RenderTaskId, RenderTaskTree};
-use resource_cache::ResourceCache;
+use render_task::{ClearMode, ClipChain, RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree};
+use resource_cache::{ImageRequest, ResourceCache};
 use scene::{ScenePipeline, SceneProperties};
 use std::{mem, usize, f32};
 use tiling::{CompositeOps, Frame, RenderPass, RenderTargetKind};
@@ -1407,7 +1407,7 @@ impl FrameBuilder {
             glyph_gpu_blocks: Vec::new(),
             glyph_keys: Vec::new(),
             offset: run_offset,
-            shadow_color: ColorU::new(0, 0, 0, 0),
+            shadow: false,
         };
 
         // Text shadows that have a blur radius of 0 need to be rendered as normal
@@ -1425,7 +1425,8 @@ impl FrameBuilder {
             match picture_prim.kind {
                 PictureKind::TextShadow { offset, color, blur_radius, .. } if blur_radius == 0.0 => {
                     let mut text_prim = prim.clone();
-                    text_prim.shadow_color = color.into();
+                    text_prim.font.color = color.into();
+                    text_prim.shadow = true;
                     text_prim.offset += offset;
                     fast_shadow_prims.push((idx, text_prim));
                 }
@@ -1518,9 +1519,11 @@ impl FrameBuilder {
             current_epoch: Epoch::invalid(),
             source: ImageSource::Default,
             key: ImageCacheKey {
-                image_key,
-                image_rendering,
-                tile_offset,
+                request: ImageRequest {
+                    key: image_key,
+                    rendering: image_rendering,
+                    tile: tile_offset,
+                },
                 texel_rect: sub_rect.map(|texel_rect| {
                     DeviceIntRect::new(
                         DeviceIntPoint::new(
@@ -1646,7 +1649,7 @@ impl FrameBuilder {
         pic.runs = pic_context.prim_runs;
 
         let root_render_task = RenderTask::new_picture(
-            None,
+            RenderTaskLocation::Fixed(frame_context.screen_rect),
             PrimitiveIndex(0),
             RenderTargetKind::Color,
             ContentOrigin::Screen(DeviceIntPoint::zero()),

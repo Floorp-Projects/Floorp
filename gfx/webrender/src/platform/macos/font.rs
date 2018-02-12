@@ -253,7 +253,7 @@ fn new_ct_font_with_variations(cg_font: &CGFont, size: f64, variations: &[FontVa
         }
         let vals_dict = CFDictionary::from_CFType_pairs(&vals);
         let cg_var_font = cg_font.create_copy_from_variations(&vals_dict).unwrap();
-        core_text::font::new_from_CGFont(&cg_var_font, size)
+        core_text::font::new_from_CGFont_with_variations(&cg_var_font, size, &vals_dict)
     }
 }
 
