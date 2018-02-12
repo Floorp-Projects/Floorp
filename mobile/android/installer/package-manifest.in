@@ -435,7 +435,11 @@
 
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
+#ifdef MOZ_GECKOVIEW_JAR
+@BINPATH@/@PREF_DIR@/geckoview-prefs.js
+#else
 @BINPATH@/@PREF_DIR@/mobile.js
+#endif
 @BINPATH@/@PREF_DIR@/channel-prefs.js
 @BINPATH@/ua-update.json
 @BINPATH@/greprefs.js
