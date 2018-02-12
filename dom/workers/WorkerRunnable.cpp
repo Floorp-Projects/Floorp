@@ -563,8 +563,6 @@ WorkerControlRunnable::DispatchInternal()
   return NS_SUCCEEDED(mWorkerPrivate->DispatchToMainThread(runnable.forget()));
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(WorkerControlRunnable, WorkerRunnable)
-
 WorkerMainThreadRunnable::WorkerMainThreadRunnable(
   WorkerPrivate* aWorkerPrivate,
   const nsACString& aTelemetryKey)

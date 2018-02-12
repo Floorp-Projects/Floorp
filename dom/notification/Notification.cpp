@@ -1202,7 +1202,8 @@ Notification::GetPrincipal()
 class WorkerNotificationObserver final : public MainThreadNotificationObserver
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(WorkerNotificationObserver,
+                                       MainThreadNotificationObserver)
   NS_DECL_NSIOBSERVER
 
   explicit WorkerNotificationObserver(UniquePtr<NotificationRef> aRef)
@@ -1231,8 +1232,6 @@ protected:
     }
   }
 };
-
-NS_IMPL_ISUPPORTS_INHERITED0(WorkerNotificationObserver, MainThreadNotificationObserver)
 
 class ServiceWorkerNotificationObserver final : public nsIObserver
 {

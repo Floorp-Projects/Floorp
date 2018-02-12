@@ -52,7 +52,7 @@ void EnqueueTask(already_AddRefed<nsIRunnable> aTask, int aDelayMs);
 class AndroidUiThread : public nsThread
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(AndroidUiThread, nsThread)
   AndroidUiThread()
     : nsThread(MakeNotNull<ThreadEventQueue<mozilla::EventQueue>*>(
                  MakeUnique<mozilla::EventQueue>()),
@@ -67,8 +67,6 @@ private:
   ~AndroidUiThread()
   {}
 };
-
-NS_IMPL_ISUPPORTS_INHERITED0(AndroidUiThread, nsThread)
 
 NS_IMETHODIMP
 AndroidUiThread::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)

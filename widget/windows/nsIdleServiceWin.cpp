@@ -8,8 +8,6 @@
 #include "nsIdleServiceWin.h"
 #include <windows.h>
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsIdleServiceWin, nsIdleService)
-
 bool
 nsIdleServiceWin::PollIdleTime(uint32_t *aIdleTime)
 {

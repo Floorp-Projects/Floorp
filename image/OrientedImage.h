@@ -26,7 +26,7 @@ class OrientedImage : public ImageWrapper
   typedef gfx::SourceSurface SourceSurface;
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(OrientedImage, ImageWrapper)
 
   NS_IMETHOD GetWidth(int32_t* aWidth) override;
   NS_IMETHOD GetHeight(int32_t* aHeight) override;

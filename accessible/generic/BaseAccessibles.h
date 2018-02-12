@@ -30,7 +30,7 @@ public:
   LeafAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(LeafAccessible, AccessibleWrap)
 
   // Accessible
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
@@ -60,7 +60,7 @@ public:
   {
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(LinkableAccessible, AccessibleWrap)
 
   // Accessible
   virtual void Value(nsString& aValue) override;

@@ -23,7 +23,8 @@ public:
   }
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLParagraphElement,
+                                       nsGenericHTMLElement)
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsAtom* aAttribute,

@@ -42,7 +42,8 @@ FontInfoData::Load()
 class FontInfoLoadCompleteEvent : public Runnable {
     virtual ~FontInfoLoadCompleteEvent() {}
 
-    NS_DECL_ISUPPORTS_INHERITED
+public:
+    NS_INLINE_DECL_REFCOUNTING_INHERITED(FontInfoLoadCompleteEvent, Runnable)
 
     explicit FontInfoLoadCompleteEvent(FontInfoData* aFontInfo)
       : mozilla::Runnable("FontInfoLoadCompleteEvent")
@@ -51,13 +52,15 @@ class FontInfoLoadCompleteEvent : public Runnable {
 
     NS_IMETHOD Run() override;
 
+private:
     RefPtr<FontInfoData> mFontInfo;
 };
 
 class AsyncFontInfoLoader : public Runnable {
     virtual ~AsyncFontInfoLoader() {}
 
-    NS_DECL_ISUPPORTS_INHERITED
+public:
+    NS_INLINE_DECL_REFCOUNTING_INHERITED(AsyncFontInfoLoader, Runnable)
 
     explicit AsyncFontInfoLoader(FontInfoData* aFontInfo)
       : mozilla::Runnable("AsyncFontInfoLoader")
@@ -68,6 +71,7 @@ class AsyncFontInfoLoader : public Runnable {
 
     NS_IMETHOD Run() override;
 
+private:
     RefPtr<FontInfoData> mFontInfo;
     RefPtr<FontInfoLoadCompleteEvent> mCompleteEvent;
 };
@@ -75,7 +79,8 @@ class AsyncFontInfoLoader : public Runnable {
 class ShutdownThreadEvent : public Runnable {
     virtual ~ShutdownThreadEvent() {}
 
-    NS_DECL_ISUPPORTS_INHERITED
+public:
+    NS_INLINE_DECL_REFCOUNTING_INHERITED(ShutdownThreadEvent, Runnable)
 
     explicit ShutdownThreadEvent(nsIThread* aThread)
       : mozilla::Runnable("ShutdownThreadEvent")
@@ -86,10 +91,10 @@ class ShutdownThreadEvent : public Runnable {
         mThread->Shutdown();
         return NS_OK;
     }
+
+private:
     nsCOMPtr<nsIThread> mThread;
 };
-
-NS_IMPL_ISUPPORTS_INHERITED0(ShutdownThreadEvent, Runnable);
 
 // runs on main thread after async font info loading is done
 nsresult
@@ -103,8 +108,6 @@ FontInfoLoadCompleteEvent::Run()
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(FontInfoLoadCompleteEvent, Runnable);
-
 // runs on separate thread
 nsresult
 AsyncFontInfoLoader::Run()
@@ -117,8 +120,6 @@ AsyncFontInfoLoader::Run()
 
     return NS_OK;
 }
-
-NS_IMPL_ISUPPORTS_INHERITED0(AsyncFontInfoLoader, Runnable);
 
 NS_IMPL_ISUPPORTS(gfxFontInfoLoader::ShutdownObserver, nsIObserver)
 

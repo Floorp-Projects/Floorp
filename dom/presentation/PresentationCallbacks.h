@@ -45,7 +45,8 @@ protected:
 class PresentationReconnectCallback final : public PresentationRequesterCallback
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(PresentationReconnectCallback,
+                                       PresentationRequesterCallback)
   NS_DECL_NSIPRESENTATIONSERVICECALLBACK
 
   PresentationReconnectCallback(PresentationRequest* aRequest,

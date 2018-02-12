@@ -1170,7 +1170,7 @@ class WorkerThreadPrimaryRunnable final : public Runnable
       MOZ_ASSERT(mThread);
     }
 
-    NS_DECL_ISUPPORTS_INHERITED
+    NS_INLINE_DECL_REFCOUNTING_INHERITED(FinishedRunnable, Runnable)
 
   private:
     ~FinishedRunnable()
@@ -1192,7 +1192,7 @@ public:
     MOZ_ASSERT(aThread);
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(WorkerThreadPrimaryRunnable, Runnable)
 
 private:
   ~WorkerThreadPrimaryRunnable()
@@ -2662,8 +2662,6 @@ LogViolationDetailsRunnable::MainThreadRun()
   return true;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(WorkerThreadPrimaryRunnable, Runnable)
-
 NS_IMETHODIMP
 WorkerThreadPrimaryRunnable::Run()
 {
@@ -2791,9 +2789,6 @@ WorkerThreadPrimaryRunnable::Run()
 
   return NS_OK;
 }
-
-NS_IMPL_ISUPPORTS_INHERITED0(WorkerThreadPrimaryRunnable::FinishedRunnable,
-                             Runnable)
 
 NS_IMETHODIMP
 WorkerThreadPrimaryRunnable::FinishedRunnable::Run()
