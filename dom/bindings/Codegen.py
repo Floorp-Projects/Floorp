@@ -17851,9 +17851,17 @@ class CGEventClass(CGBindingImplClass):
         CGBindingImplClass.__init__(self, descriptor, CGEventMethod, CGEventGetter, CGEventSetter, False, "WrapObjectInternal")
         members = []
         extraMethods = []
+        self.membersNeedingCC = []
+        self.membersNeedingTrace = []
+
         for m in descriptor.interface.members:
+            if getattr(m, "originatingInterface",
+                       descriptor.interface) != descriptor.interface:
+                continue
+
             if m.isAttr():
                 if m.type.isAny():
+                    self.membersNeedingTrace.append(m)
                     # Add a getter that doesn't need a JSContext.  Note that we
                     # don't need to do this if our originating interface is not
                     # the descriptor's interface, because in that case we
@@ -17872,9 +17880,16 @@ class CGEventClass(CGBindingImplClass):
                                 aRetVal.set(${memberName});
                                 """,
                                 memberName=CGDictionary.makeMemberName(m.identifier.name))))
-                if getattr(m, "originatingInterface",
-                           descriptor.interface) != descriptor.interface:
-                    continue
+                elif (m.type.isObject() or
+                      m.type.isSpiderMonkeyInterface()):
+                    self.membersNeedingTrace.append(m)
+                elif typeNeedsRooting(m.type):
+                    raise TypeError(
+                        "Need to implement tracing for event member of type %s" %
+                        m.type)
+                elif idlTypeNeedsCycleCollection(m.type):
+                    self.membersNeedingCC.append(m)
+
                 nativeType = self.getNativeTypeForIDLType(m.type).define()
                 members.append(ClassMember(CGDictionary.makeMemberName(m.identifier.name),
                                nativeType,
@@ -17917,49 +17932,44 @@ class CGEventClass(CGBindingImplClass):
 
     def implTraverse(self):
         retVal = ""
-        for m in self.descriptor.interface.members:
-            # Unroll the type so we pick up sequences of interfaces too.
-            if m.isAttr() and idlTypeNeedsCycleCollection(m.type):
-                retVal += ("  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(" +
-                           CGDictionary.makeMemberName(m.identifier.name) +
-                           ")\n")
+        for m in self.membersNeedingCC:
+            retVal += ("  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(%s)\n" %
+                       CGDictionary.makeMemberName(m.identifier.name))
         return retVal
 
     def implUnlink(self):
         retVal = ""
-        for m in self.descriptor.interface.members:
-            if m.isAttr():
-                name = CGDictionary.makeMemberName(m.identifier.name)
-                # Unroll the type so we pick up sequences of interfaces too.
-                if idlTypeNeedsCycleCollection(m.type):
-                    retVal += "  NS_IMPL_CYCLE_COLLECTION_UNLINK(" + name + ")\n"
-                elif m.type.isAny():
-                    retVal += "  tmp->" + name + ".setUndefined();\n"
-                elif m.type.isObject() or m.type.isSpiderMonkeyInterface():
-                    retVal += "  tmp->" + name + " = nullptr;\n"
+        for m in self.membersNeedingCC:
+            retVal += ("  NS_IMPL_CYCLE_COLLECTION_UNLINK(%s)\n" %
+                       CGDictionary.makeMemberName(m.identifier.name))
+        for m in self.membersNeedingTrace:
+            name = CGDictionary.makeMemberName(m.identifier.name)
+            if m.type.isAny():
+                retVal += "  tmp->" + name + ".setUndefined();\n"
+            elif m.type.isObject() or m.type.isSpiderMonkeyInterface():
+                retVal += "  tmp->" + name + " = nullptr;\n"
+            else:
+                raise TypeError("Unknown traceable member type %s" % m.type)
         return retVal
 
     def implTrace(self):
         retVal = ""
-        for m in self.descriptor.interface.members:
-            if m.isAttr():
-                name = CGDictionary.makeMemberName(m.identifier.name)
-                if m.type.isAny() or m.type.isObject() or m.type.isSpiderMonkeyInterface():
-                    retVal += "  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(" + name + ")\n"
-                elif typeNeedsRooting(m.type):
-                    raise TypeError("Need to implement tracing for event "
-                                    "member of type %s" % m.type)
+        for m in self.membersNeedingTrace:
+            retVal += ("  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(%s)\n" %
+                       CGDictionary.makeMemberName(m.identifier.name))
         return retVal
 
     def define(self):
         dropJS = ""
-        for m in self.descriptor.interface.members:
-            if m.isAttr():
-                member = CGDictionary.makeMemberName(m.identifier.name)
-                if m.type.isAny():
-                    dropJS += member + " = JS::UndefinedValue();\n"
-                elif m.type.isObject() or m.type.isSpiderMonkeyInterface():
-                    dropJS += member + " = nullptr;\n"
+        for m in self.membersNeedingTrace:
+            member = CGDictionary.makeMemberName(m.identifier.name)
+            if m.type.isAny():
+                dropJS += member + " = JS::UndefinedValue();\n"
+            elif m.type.isObject() or m.type.isSpiderMonkeyInterface():
+                dropJS += member + " = nullptr;\n"
+            else:
+                raise TypeError("Unknown traceable member type %s" % m.type)
+
         if dropJS != "":
             dropJS += "mozilla::DropJSObjects(this);\n"
         # Just override CGClass and do our own thing
