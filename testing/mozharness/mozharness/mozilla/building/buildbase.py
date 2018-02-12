@@ -693,9 +693,7 @@ class BuildScript(BuildbotMixin, PurgeMixin, BalrogMixin,
             self.fatal("Please add missing items to your config")
         self.repo_path = None
         self.buildid = None
-        self.builduid = None
         self.query_buildid()  # sets self.buildid
-        self.query_builduid()  # sets self.builduid
         self.generated_build_props = False
         self.client_id = None
         self.access_token = None
@@ -827,30 +825,6 @@ or run without that action (ie: --no-{action})"
                 cwd=dirs['abs_obj_dir'], env=env)
         else:
             return None
-
-    def query_builduid(self):
-        c = self.config
-        if self.builduid:
-            return self.builduid
-
-        builduid = None
-        if c.get("is_automation"):
-            if self.buildbot_config['properties'].get('builduid'):
-                self.info("Determining builduid from buildbot properties")
-                builduid = self.buildbot_config['properties']['builduid'].encode(
-                    'ascii', 'replace'
-                )
-
-        if not builduid:
-            self.info("Creating builduid through uuid hex")
-            builduid = generate_build_UID()
-
-        if c.get('is_automation'):
-            self.set_buildbot_property('builduid',
-                                       builduid,
-                                       write_to_file=True)
-        self.builduid = builduid
-        return self.builduid
 
     def query_buildid(self):
         c = self.config
