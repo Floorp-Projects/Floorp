@@ -176,9 +176,6 @@ public:
 
   virtual CompositorBridgeChild* GetCompositorBridgeChild() override;
 
-  // Disable component alpha layers with the software compositor.
-  virtual bool ShouldAvoidComponentAlphaLayers() override { return !IsCompositingCheap(); }
-
   bool InConstruction() { return mPhase == PHASE_CONSTRUCTION; }
 #ifdef DEBUG
   bool InDrawing() { return mPhase == PHASE_DRAWING; }

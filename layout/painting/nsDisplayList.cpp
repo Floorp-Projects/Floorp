@@ -2504,100 +2504,6 @@ nsDisplayListBuilder::GetWidgetLayerManager(nsView** aView)
   return nullptr;
 }
 
-FrameLayerBuilder*
-nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
-                           LayerManager* aLayerManager,
-                           uint32_t aFlags,
-                           bool aIsWidgetTransaction)
-{
-  nsIFrame* frame = aBuilder->RootReferenceFrame();
-  nsPresContext* presContext = frame->PresContext();
-  nsIPresShell* presShell = presContext->PresShell();
-
-  FrameLayerBuilder *layerBuilder = new FrameLayerBuilder();
-  layerBuilder->Init(aBuilder, aLayerManager);
-
-  if (aFlags & PAINT_COMPRESSED) {
-    layerBuilder->SetLayerTreeCompressionMode();
-  }
-
-  RefPtr<ContainerLayer> root;
-  {
-    AUTO_PROFILER_TRACING("Paint", "LayerBuilding");
-
-    if (XRE_IsContentProcess() && gfxPrefs::AlwaysPaint()) {
-      FrameLayerBuilder::InvalidateAllLayers(aLayerManager);
-    }
-
-    if (aIsWidgetTransaction) {
-      layerBuilder->DidBeginRetainedLayerTransaction(aLayerManager);
-    }
-
-    // Clear any ScrollMetadata that may have been set on the root layer on a
-    // previous paint. This paint will set new metrics if necessary, and if we
-    // don't clear the old one here, we may be left with extra metrics.
-    if (Layer* rootLayer = aLayerManager->GetRoot()) {
-      rootLayer->SetScrollMetadata(nsTArray<ScrollMetadata>());
-    }
-
-    ContainerLayerParameters containerParameters
-      (presShell->GetResolution(), presShell->GetResolution());
-
-    {
-      PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Layerization);
-
-      root = layerBuilder->
-        BuildContainerLayerFor(aBuilder, aLayerManager, frame, nullptr, this,
-                               containerParameters, nullptr);
-
-      if (!record.GetStart().IsNull() && gfxPrefs::LayersDrawFPS()) {
-        if (PaintTiming* pt = ClientLayerManager::MaybeGetPaintTiming(aLayerManager)) {
-          pt->flbMs() = (TimeStamp::Now() - record.GetStart()).ToMilliseconds();
-        }
-      }
-    }
-
-    if (!root) {
-      return nullptr;
-    }
-    // Root is being scaled up by the X/Y resolution. Scale it back down.
-    root->SetPostScale(1.0f/containerParameters.mXScale,
-                       1.0f/containerParameters.mYScale);
-    root->SetScaleToResolution(presShell->ScaleToResolution(),
-        containerParameters.mXScale);
-
-    auto callback = [root](FrameMetrics::ViewID aScrollId) -> bool {
-      return nsLayoutUtils::ContainsMetricsWithId(root, aScrollId);
-    };
-    if (Maybe<ScrollMetadata> rootMetadata = nsLayoutUtils::GetRootMetadata(
-          aBuilder, root->Manager(), containerParameters, callback)) {
-      root->SetScrollMetadata(rootMetadata.value());
-    }
-
-    // NS_WARNING is debug-only, so don't even bother checking the conditions in
-    // a release build.
-#ifdef DEBUG
-    bool usingDisplayport = false;
-    if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
-      nsIContent* content = rootScrollFrame->GetContent();
-      if (content) {
-        usingDisplayport = nsLayoutUtils::HasDisplayPort(content);
-      }
-    }
-    if (usingDisplayport &&
-        !(root->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
-        SpammyLayoutWarningsEnabled()) {
-      // See bug 693938, attachment 567017
-      NS_WARNING("Transparent content with displayports can be expensive.");
-    }
-#endif
-
-    aLayerManager->SetRoot(root);
-    layerBuilder->WillEndTransaction();
-  }
-  return layerBuilder;
-}
-
 /**
  * We paint by executing a layer manager transaction, constructing a
  * single layer representing the display list, and then making it the
@@ -2690,25 +2596,119 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
     presContext->MayHavePaintEventListenerInSubDocument() ? nsPresContext::NotifySubDocInvalidation : 0;
 
   UniquePtr<LayerProperties> props;
+  RefPtr<ContainerLayer> root;
 
-  bool computeInvalidRect = (computeInvalidFunc ||
-                             (!layerManager->IsCompositingCheap() && layerManager->NeedsWidgetInvalidation())) &&
-                            widgetTransaction;
+  // Store the existing layer builder to reinstate it on return.
+  FrameLayerBuilder *oldBuilder = layerManager->GetLayerBuilder();
 
-  if (computeInvalidRect) {
-    props = Move(LayerProperties::CloneFrom(layerManager->GetRoot()));
+  FrameLayerBuilder *layerBuilder = new FrameLayerBuilder();
+  layerBuilder->Init(aBuilder, layerManager);
+
+  if (aFlags & PAINT_COMPRESSED) {
+    layerBuilder->SetLayerTreeCompressionMode();
   }
 
-  if (doBeginTransaction) {
-    if (aCtx) {
-      if (!layerManager->BeginTransactionWithTarget(aCtx)) {
-        return nullptr;
-      }
-    } else {
-      if (!layerManager->BeginTransaction()) {
-        return nullptr;
+  {
+    AUTO_PROFILER_TRACING("Paint", "LayerBuilding");
+
+    if (doBeginTransaction) {
+      if (aCtx) {
+        if (!layerManager->BeginTransactionWithTarget(aCtx)) {
+          return nullptr;
+        }
+      } else {
+        if (!layerManager->BeginTransaction()) {
+          return nullptr;
+        }
       }
     }
+
+    if (XRE_IsContentProcess() && gfxPrefs::AlwaysPaint()) {
+      FrameLayerBuilder::InvalidateAllLayers(layerManager);
+    }
+
+    if (widgetTransaction) {
+      layerBuilder->DidBeginRetainedLayerTransaction(layerManager);
+    }
+
+    bool computeInvalidRect = (computeInvalidFunc ||
+                               (!layerManager->IsCompositingCheap() && layerManager->NeedsWidgetInvalidation())) &&
+                              widgetTransaction;
+
+    if (computeInvalidRect) {
+      props = Move(LayerProperties::CloneFrom(layerManager->GetRoot()));
+    }
+
+    // Clear any ScrollMetadata that may have been set on the root layer on a
+    // previous paint. This paint will set new metrics if necessary, and if we
+    // don't clear the old one here, we may be left with extra metrics.
+    if (Layer* rootLayer = layerManager->GetRoot()) {
+      rootLayer->SetScrollMetadata(nsTArray<ScrollMetadata>());
+    }
+
+    ContainerLayerParameters containerParameters
+      (presShell->GetResolution(), presShell->GetResolution());
+
+    {
+      PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Layerization);
+
+      root = layerBuilder->
+        BuildContainerLayerFor(aBuilder, layerManager, frame, nullptr, this,
+                               containerParameters, nullptr);
+
+      if (!record.GetStart().IsNull() && gfxPrefs::LayersDrawFPS()) {
+        if (PaintTiming* pt = ClientLayerManager::MaybeGetPaintTiming(layerManager)) {
+          pt->flbMs() = (TimeStamp::Now() - record.GetStart()).ToMilliseconds();
+        }
+      }
+    }
+
+    if (!root) {
+      layerManager->SetUserData(&gLayerManagerLayerBuilder, oldBuilder);
+      return nullptr;
+    }
+    // Root is being scaled up by the X/Y resolution. Scale it back down.
+    root->SetPostScale(1.0f/containerParameters.mXScale,
+                       1.0f/containerParameters.mYScale);
+    root->SetScaleToResolution(presShell->ScaleToResolution(),
+        containerParameters.mXScale);
+
+    auto callback = [root](FrameMetrics::ViewID aScrollId) -> bool {
+      return nsLayoutUtils::ContainsMetricsWithId(root, aScrollId);
+    };
+    if (Maybe<ScrollMetadata> rootMetadata = nsLayoutUtils::GetRootMetadata(
+          aBuilder, root->Manager(), containerParameters, callback)) {
+      root->SetScrollMetadata(rootMetadata.value());
+    }
+
+    // NS_WARNING is debug-only, so don't even bother checking the conditions in
+    // a release build.
+#ifdef DEBUG
+    bool usingDisplayport = false;
+    if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
+      nsIContent* content = rootScrollFrame->GetContent();
+      if (content) {
+        usingDisplayport = nsLayoutUtils::HasDisplayPort(content);
+      }
+    }
+    if (usingDisplayport &&
+        !(root->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
+        SpammyLayoutWarningsEnabled()) {
+      // See bug 693938, attachment 567017
+      NS_WARNING("Transparent content with displayports can be expensive.");
+    }
+#endif
+
+    layerManager->SetRoot(root);
+    layerBuilder->WillEndTransaction();
+  }
+
+  if (widgetTransaction ||
+      // SVG-as-an-image docs don't paint as part of the retained layer tree,
+      // but they still need the invalidation state bits cleared in order for
+      // invalidation for CSS/SMIL animation to work properly.
+      (document && document->IsBeingUsedAsImage())) {
+    frame->ClearInvalidationStateBits();
   }
 
   bool temp = aBuilder->SetIsCompositingCheap(layerManager->IsCompositingCheap());
@@ -2725,53 +2725,25 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
     }
   }
 
+  // If this is the content process, we ship plugin geometry updates over with layer
+  // updates, so calculate that now before we call EndTransaction.
+  nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
+  if (rootPresContext && XRE_IsContentProcess()) {
+    if (aBuilder->WillComputePluginGeometry()) {
+      rootPresContext->ComputePluginGeometryUpdates(aBuilder->RootReferenceFrame(), aBuilder, this);
+    }
+    // The layer system caches plugin configuration information for forwarding
+    // with layer updates which needs to get set during reflow. This must be
+    // called even if there are no windowed plugins in the page.
+    rootPresContext->CollectPluginGeometryUpdates(layerManager);
+  }
+
   MaybeSetupTransactionIdAllocator(layerManager, presContext);
 
-  // Store the existing layer builder to reinstate it on return.
-  FrameLayerBuilder *oldBuilder = layerManager->GetLayerBuilder();
-  FrameLayerBuilder *layerBuilder = nullptr;
-
-  bool sent = false;
-  if (aFlags & PAINT_IDENTICAL_DISPLAY_LIST) {
-    sent = layerManager->EndEmptyTransaction(flags);
-  }
-
-  if (!sent) {
-    layerBuilder = BuildLayers(aBuilder, layerManager,
-                               aFlags, widgetTransaction);
-
-    if (!layerBuilder) {
-      layerManager->SetUserData(&gLayerManagerLayerBuilder, oldBuilder);
-      return nullptr;
-    }
-
-    // If this is the content process, we ship plugin geometry updates over with layer
-    // updates, so calculate that now before we call EndTransaction.
-    nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
-    if (rootPresContext && XRE_IsContentProcess()) {
-      if (aBuilder->WillComputePluginGeometry()) {
-        rootPresContext->ComputePluginGeometryUpdates(aBuilder->RootReferenceFrame(), aBuilder, this);
-      }
-      // The layer system caches plugin configuration information for forwarding
-      // with layer updates which needs to get set during reflow. This must be
-      // called even if there are no windowed plugins in the page.
-      rootPresContext->CollectPluginGeometryUpdates(layerManager);
-    }
-
-    layerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer,
-                                 aBuilder, flags);
-    layerBuilder->DidEndTransaction();
-  }
-
-  if (widgetTransaction ||
-      // SVG-as-an-image docs don't paint as part of the retained layer tree,
-      // but they still need the invalidation state bits cleared in order for
-      // invalidation for CSS/SMIL animation to work properly.
-      (document && document->IsBeingUsedAsImage())) {
-    frame->ClearInvalidationStateBits();
-  }
-
+  layerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer,
+                               aBuilder, flags);
   aBuilder->SetIsCompositingCheap(temp);
+  layerBuilder->DidEndTransaction();
 
   if (document && widgetTransaction) {
     TriggerPendingAnimations(document, layerManager->GetAnimationReadyTime());
@@ -2780,11 +2752,11 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
   nsIntRegion invalid;
   bool areaOverflowed = false;
   if (props) {
-    if (!props->ComputeDifferences(layerManager->GetRoot(), invalid, computeInvalidFunc)) {
+    if (!props->ComputeDifferences(root, invalid, computeInvalidFunc)) {
       areaOverflowed = true;
     }
   } else if (widgetTransaction) {
-    LayerProperties::ClearInvalidations(layerManager->GetRoot());
+    LayerProperties::ClearInvalidations(root);
   }
 
   bool shouldInvalidate = layerManager->NeedsWidgetInvalidation();
@@ -3494,8 +3466,7 @@ nsDisplayBackgroundImage::GetInitData(nsDisplayListBuilder* aBuilder,
                                       nsIFrame* aFrame,
                                       uint32_t aLayer,
                                       const nsRect& aBackgroundRect,
-                                      const nsStyleBackground* aBackgroundStyle,
-                                      LayerizeFixed aLayerizeFixed)
+                                      const nsStyleBackground* aBackgroundStyle)
 {
   nsPresContext* presContext = aFrame->PresContext();
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
@@ -3514,15 +3485,6 @@ nsDisplayBackgroundImage::GetInitData(nsDisplayListBuilder* aBuilder,
     layer.mAttachment == NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED && !isTransformedFixed;
 
   bool shouldFixToViewport = shouldTreatAsFixed && !layer.mImage.IsEmpty();
-  if (shouldFixToViewport &&
-      aLayerizeFixed == LayerizeFixed::DO_NOT_LAYERIZE_FIXED_BACKGROUND_IF_AVOIDING_COMPONENT_ALPHA_LAYERS &&
-      !nsLayoutUtils::UsesAsyncScrolling(aFrame)) {
-    RefPtr<LayerManager> layerManager = aBuilder->GetWidgetLayerManager();
-    if (layerManager && layerManager->ShouldAvoidComponentAlphaLayers()) {
-      shouldFixToViewport = false;
-    }
-  }
-
   bool isRasterImage = state.mImageRenderer.IsRasterImage();
   nsCOMPtr<imgIContainer> image;
   if (isRasterImage) {
@@ -3819,8 +3781,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
 
     nsDisplayList thisItemList;
     nsDisplayBackgroundImage::InitData bgData =
-      nsDisplayBackgroundImage::GetInitData(aBuilder, aFrame, i, bgOriginRect, bg,
-                                            LayerizeFixed::DO_NOT_LAYERIZE_FIXED_BACKGROUND_IF_AVOIDING_COMPONENT_ALPHA_LAYERS);
+      nsDisplayBackgroundImage::GetInitData(aBuilder, aFrame, i, bgOriginRect, bg);
 
     if (bgData.shouldFixToViewport) {
 
@@ -4349,17 +4310,12 @@ nsDisplayBackgroundImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuild
     // Positioning area changed in a way that could cause everything to change,
     // so invalidate everything (both old and new painting areas).
     aInvalidRegion->Or(bounds, geometry->mBounds);
-
-    if (positioningArea.Size() != geometry->mPositioningArea.Size()) {
-      NotifyRenderingChanged();
-    }
     return;
   }
   if (!mDestRect.IsEqualInterior(geometry->mDestRect)) {
     // Dest area changed in a way that could cause everything to change,
     // so invalidate everything (both old and new painting areas).
     aInvalidRegion->Or(bounds, geometry->mBounds);
-    NotifyRenderingChanged();
     return;
   }
   if (aBuilder->ShouldSyncDecodeImages()) {
@@ -4367,16 +4323,12 @@ nsDisplayBackgroundImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuild
     if (image.GetType() == eStyleImageType_Image &&
         geometry->ShouldInvalidateToSyncDecodeImages()) {
       aInvalidRegion->Or(*aInvalidRegion, bounds);
-
-      NotifyRenderingChanged();
     }
   }
   if (!bounds.IsEqualInterior(geometry->mBounds)) {
     // Positioning area is unchanged, so invalidate just the change in the
     // painting area.
     aInvalidRegion->Xor(bounds, geometry->mBounds);
-
-    NotifyRenderingChanged();
   }
 }
 
@@ -10188,37 +10140,33 @@ PaintTelemetry::AutoRecordPaint::~AutoRecordPaint()
   // Record the total time.
   Telemetry::Accumulate(Telemetry::CONTENT_PAINT_TIME, static_cast<uint32_t>(totalMs));
 
-  // If the total time was >= 16ms, then it's likely we missed a frame due to
-  // painting. In this case we'll gather some detailed metrics below.
-  if (totalMs <= 16.0) {
-    return;
-  }
-
-  auto record = [=](const char* aKey, double aDurationMs) -> void {
+  // Helpers for recording large/small paints.
+  auto recordLarge = [=](const nsCString& aKey, double aDurationMs) -> void {
     MOZ_ASSERT(aDurationMs <= totalMs);
-
     uint32_t amount = static_cast<int32_t>((aDurationMs / totalMs) * 100.0);
-
-    nsDependentCString key(aKey);
-    Telemetry::Accumulate(Telemetry::CONTENT_LARGE_PAINT_PHASE_WEIGHT, key, amount);
+    Telemetry::Accumulate(Telemetry::CONTENT_LARGE_PAINT_PHASE_WEIGHT, aKey, amount);
+  };
+  auto recordSmall = [=](const nsString& aKey, double aDurationMs) -> void {
+    MOZ_ASSERT(aDurationMs <= totalMs);
+    uint32_t amount = static_cast<int32_t>((aDurationMs / totalMs) * 100.0);
+    Telemetry::ScalarAdd(Telemetry::ScalarID::GFX_SMALL_PAINT_PHASE_WEIGHT, aKey, amount);
   };
 
   double dlMs = sMetrics[Metric::DisplayList];
   double flbMs = sMetrics[Metric::Layerization];
   double rMs = sMetrics[Metric::Rasterization];
 
-  // Record all permutations since aggregation makes it difficult to
-  // correlate. For example we can't derive "flb+r" from "dl" because we
-  // don't know the total time associated with a bucket entry. So we just
-  // play it safe and include everything. We can however derive "other" time
-  // from the final permutation.
-  record("dl", dlMs);
-  record("flb", flbMs);
-  record("r", rMs);
-  record("dl,flb", dlMs + flbMs);
-  record("dl,r", dlMs + rMs);
-  record("flb,r", flbMs + rMs);
-  record("dl,flb,r", dlMs + flbMs + rMs);
+  // If the total time was >= 16ms, then it's likely we missed a frame due to
+  // painting. We bucket these metrics separately.
+  if (totalMs >= 16.0) {
+    recordLarge(NS_LITERAL_CSTRING("dl"), dlMs);
+    recordLarge(NS_LITERAL_CSTRING("flb"), flbMs);
+    recordLarge(NS_LITERAL_CSTRING("r"), rMs);
+  } else {
+    recordSmall(NS_LITERAL_STRING("dl"), dlMs);
+    recordSmall(NS_LITERAL_STRING("flb"), flbMs);
+    recordSmall(NS_LITERAL_STRING("r"), rMs);
+  }
 }
 
 PaintTelemetry::AutoRecord::AutoRecord(Metric aMetric)

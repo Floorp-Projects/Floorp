@@ -106,8 +106,6 @@ public:
   virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT) override;
-  virtual bool ShouldAvoidComponentAlphaLayers() override { return IsWidgetLayerManager(); }
-
   void AbortTransaction();
 
   virtual void SetRoot(Layer* aLayer) override;
