@@ -66,6 +66,11 @@ public:
   bool CanGo(int32_t aOffset);
   void Go(int32_t aOffset, ErrorResult& aRv);
 
+  /**
+   * Evicts all content viewers within the current process.
+   */
+  void EvictLocalContentViewers();
+
   nsISHistory* LegacySHistory();
   nsISHistoryInternal* LegacySHistoryInternal();
   nsIWebNavigation* LegacySHistoryWebNav();

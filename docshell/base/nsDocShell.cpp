@@ -5495,7 +5495,7 @@ nsDocShell::Destroy()
     // We want to destroy these content viewers now rather than
     // letting their destruction wait for the session history
     // entries to get garbage collected.  (Bug 488394)
-    mSessionHistory->LegacySHistoryInternal()->EvictAllContentViewers();
+    mSessionHistory->EvictLocalContentViewers();
     mSessionHistory = nullptr;
   }
 
