@@ -23,6 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=610419
 /** Test for Bug 610419**/
 
 SimpleTest.requestFlakyTimeout("Pre-existing timeouts when converting from mochitest-chrome");
+SimpleTest.requestCompleteLog();
 SimpleTest.waitForExplicitFinish();
 
 const FAILURE_TIMEOUT = 120000; // Fail early after 120 seconds (2 minutes)
@@ -80,7 +81,7 @@ function myPoll() {
     }
   }
   else
-    setTimeout(myPoll, 1);
+    setTimeout(myPoll, 20);
 }
 
 function failTest() {
