@@ -12,7 +12,6 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsobj.h"
 #include "jsprf.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
@@ -23,14 +22,15 @@
 #include "js/Proxy.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/JSObject.h"
 #include "vm/Time.h"
 #include "vm/WrapperObject.h"
 
-#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 #include "gc/Nursery-inl.h"
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

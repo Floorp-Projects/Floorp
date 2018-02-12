@@ -11,9 +11,9 @@
 #include "vm/WrapperObject.h"
 
 #include "jscompartmentinlines.h"
-#include "jsobjinlines.h"
 
 #include "gc/Nursery-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 

@@ -14,10 +14,10 @@
 #include "jit/MIRGraph.h"
 #include "wasm/WasmSignalHandlers.h"
 
-#include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 
 #include "jit/shared/Lowering-shared-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace jit;

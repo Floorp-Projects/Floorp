@@ -17,11 +17,10 @@
 #include "vm/ProxyObject.h"
 #include "vm/TypedArrayObject.h"
 
-#include "jsobjinlines.h"
-
 #include "gc/Heap-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/ObjectKind-inl.h"
+#include "vm/JSObject-inl.h"
 
 namespace js {
 

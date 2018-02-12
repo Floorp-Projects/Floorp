@@ -7,7 +7,6 @@
 #include "gc/Barrier.h"
 
 #include "jscompartment.h"
-#include "jsobj.h"
 
 #include "builtin/TypedObject.h"
 #include "gc/Policy.h"
@@ -15,6 +14,7 @@
 #include "js/HashTable.h"
 #include "js/Value.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/JSObject.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/Symbol.h"
 #include "wasm/WasmJS.h"

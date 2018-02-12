@@ -15,7 +15,7 @@
 #include "gc/GCTrace.h"
 #include "vm/Probes.h"
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 
 namespace js {
 

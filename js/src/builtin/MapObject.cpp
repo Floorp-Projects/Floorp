@@ -8,13 +8,13 @@
 
 #include "jscntxt.h"
 #include "jsiter.h"
-#include "jsobj.h"
 
 #include "ds/OrderedHashTable.h"
 #include "gc/FreeOp.h"
 #include "js/Utility.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSObject.h"
 #include "vm/SelfHosting.h"
 #include "vm/Symbol.h"
 

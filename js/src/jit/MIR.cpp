@@ -26,8 +26,9 @@
 #include "js/Conversions.h"
 
 #include "jsboolinlines.h"
-#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
+
+#include "vm/JSObject-inl.h"
 #include "vm/UnboxedObject-inl.h"
 
 using namespace js;

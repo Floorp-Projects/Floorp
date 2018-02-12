@@ -12,9 +12,8 @@
 #include "gc/GCTrace.h"
 #include "proxy/DeadObjectProxy.h"
 
-#include "jsobjinlines.h"
-
 #include "gc/ObjectKind-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/TypeInference-inl.h"
 
 using namespace js;

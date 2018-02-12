@@ -22,10 +22,10 @@
 #include "vm/TraceLogging.h"
 #include "wasm/AsmJS.h"
 
-#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace js::frontend;

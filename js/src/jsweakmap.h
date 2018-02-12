@@ -12,11 +12,11 @@
 
 #include "jscompartment.h"
 #include "jsfriendapi.h"
-#include "jsobj.h"
 
 #include "gc/DeletePolicy.h"
 #include "gc/StoreBuffer.h"
 #include "js/HashTable.h"
+#include "vm/JSObject.h"
 
 namespace js {
 

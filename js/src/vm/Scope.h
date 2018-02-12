@@ -10,7 +10,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Variant.h"
 
-#include "jsobj.h"
 #include "jsopcode.h"
 
 #include "gc/DeletePolicy.h"
@@ -18,6 +17,7 @@
 #include "gc/Policy.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
+#include "vm/JSObject.h"
 #include "vm/Xdr.h"
 
 namespace js {

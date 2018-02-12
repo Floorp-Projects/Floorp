@@ -13,13 +13,13 @@
 #include <stdint.h>
 
 #include "jsfriendapi.h"
-#include "jsobj.h"
 #include "NamespaceImports.h"
 
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
 #include "gc/Marking.h"
 #include "js/Value.h"
+#include "vm/JSObject.h"
 #include "vm/Shape.h"
 #include "vm/ShapedObject.h"
 #include "vm/String.h"

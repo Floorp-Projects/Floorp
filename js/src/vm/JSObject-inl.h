@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsobjinlines_h
-#define jsobjinlines_h
+#ifndef vm_JSObject_inl_h
+#define vm_JSObject_inl_h
 
-#include "jsobj.h"
+#include "vm/JSObject.h"
 
 #include "mozilla/DebugOnly.h"
 
@@ -909,4 +909,4 @@ JSObject::constructHook() const
     return nullptr;
 }
 
-#endif /* jsobjinlines_h */
+#endif /* vm_JSObject_inl_h */

@@ -10,13 +10,13 @@
 
 #include "jscompartment.h"
 #include "jsgc.h"
-#include "jsobj.h"
 #include "jsscript.h"
 
 #include "gc/Heap.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "vm/ArrayObject.h"
+#include "vm/JSObject.h"
 #include "vm/Runtime.h"
 #include "vm/Shape.h"
 #include "vm/String.h"

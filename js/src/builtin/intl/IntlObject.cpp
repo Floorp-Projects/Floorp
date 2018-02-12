@@ -14,7 +14,6 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsobj.h"
 
 #include "builtin/intl/Collator.h"
 #include "builtin/intl/CommonFunctions.h"
@@ -25,9 +24,10 @@
 #include "builtin/intl/ScopedICUObject.h"
 #include "js/Class.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSObject.h"
 #include "vm/String.h"
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 

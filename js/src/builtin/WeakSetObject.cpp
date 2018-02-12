@@ -14,10 +14,9 @@
 #include "vm/GlobalObject.h"
 #include "vm/SelfHosting.h"
 
-#include "jsobjinlines.h"
-
 #include "builtin/WeakMapObject-inl.h"
 #include "vm/Interpreter-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

@@ -7,7 +7,6 @@
 #include "mozilla/Casting.h"
 
 #include "jsmath.h"
-#include "jsobj.h"
 #include "jsstr.h"
 
 #include "builtin/AtomicsObject.h"
@@ -27,6 +26,7 @@
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/JSObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/SelfHosting.h"
 #include "vm/TypedArrayObject.h"

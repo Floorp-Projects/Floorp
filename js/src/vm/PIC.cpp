@@ -8,15 +8,14 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsobj.h"
 
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSObject.h"
 #include "vm/SelfHosting.h"
 
-#include "jsobjinlines.h"
-
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

@@ -55,7 +55,6 @@
 #include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jsfun.h"
-#include "jsobj.h"
 #include "jsprf.h"
 #include "jsscript.h"
 #include "jstypes.h"
@@ -73,11 +72,9 @@
 #include "builtin/ModuleObject.h"
 #include "builtin/RegExp.h"
 #include "builtin/TestingFunctions.h"
-
 #if defined(JS_BUILD_BINAST)
-#include "frontend/BinSource.h"
+# include "frontend/BinSource.h"
 #endif // defined(JS_BUILD_BINAST)
-
 #include "frontend/Parser.h"
 #include "gc/GCInternals.h"
 #include "jit/arm/Simulator-arm.h"
@@ -105,6 +102,7 @@
 #include "vm/Compression.h"
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
+#include "vm/JSObject.h"
 #include "vm/Monitor.h"
 #include "vm/MutexIDs.h"
 #include "vm/Printer.h"
@@ -117,10 +115,10 @@
 #include "wasm/WasmJS.h"
 
 #include "jscompartmentinlines.h"
-#include "jsobjinlines.h"
 
 #include "vm/ErrorObject-inl.h"
 #include "vm/Interpreter-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;

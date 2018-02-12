@@ -38,7 +38,7 @@
 #include "js/Class.h"
 #include "vm/Time.h"
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 
 #if defined(XP_WIN)
 // #define needed to link in RtlGenRandom(), a.k.a. SystemFunction036.  See the

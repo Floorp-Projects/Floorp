@@ -12,8 +12,7 @@
 #include "gc/Rooting.h"
 #include "vm/NativeObject.h"
 
-#include "jsobjinlines.h"
-
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 namespace js {

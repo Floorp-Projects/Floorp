@@ -10,7 +10,7 @@
 
 #include "vm/Interpreter.h" // For InstanceOfOperator
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

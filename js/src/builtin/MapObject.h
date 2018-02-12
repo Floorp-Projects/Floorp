@@ -7,10 +7,9 @@
 #ifndef builtin_MapObject_h
 #define builtin_MapObject_h
 
-#include "jsobj.h"
-
 #include "builtin/SelfHostingDefines.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSObject.h"
 #include "vm/NativeObject.h"
 #include "vm/PIC.h"
 #include "vm/Runtime.h"

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsobj_h
-#define jsobj_h
+#ifndef vm_JSObject_h
+#define vm_JSObject_h
 
 #include "mozilla/MemoryReporting.h"
 
@@ -1361,4 +1361,4 @@ IsObjectValueInCompartment(const Value& v, JSCompartment* comp)
 
 }  /* namespace js */
 
-#endif /* jsobj_h */
+#endif /* vm_JSObject_h */

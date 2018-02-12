@@ -9,9 +9,8 @@
 
 #include "vm/ReceiverGuard.h"
 
-#include "jsobj.h"
-
 #include "builtin/TypedObject.h"
+#include "vm/JSObject.h"
 #include "vm/ShapedObject.h"
 #include "vm/UnboxedObject.h"
 
