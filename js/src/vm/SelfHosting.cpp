@@ -12,7 +12,6 @@
 #include "mozilla/Maybe.h"
 
 #include "jsarray.h"
-#include "jscntxt.h"
 #include "jsdate.h"
 #include "jsfriendapi.h"
 #include "jshashutil.h"
@@ -48,6 +47,7 @@
 #include "vm/GeneratorObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/Printer.h"
 #include "vm/RegExpObject.h"

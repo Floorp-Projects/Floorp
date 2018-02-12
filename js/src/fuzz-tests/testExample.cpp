@@ -7,10 +7,13 @@
 
 
 #include "mozilla/ScopeExit.h"
+
 #include "jsapi.h"
+
 #include "fuzz-tests/tests.h"
 #include "vm/Interpreter.h"
-#include "jscntxtinlines.h"
+
+#include "vm/JSContext-inl.h"
 
 using namespace JS;
 using namespace js;

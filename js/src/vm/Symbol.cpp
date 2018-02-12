@@ -6,12 +6,11 @@
 
 #include "vm/Symbol.h"
 
-#include "jscntxt.h"
-
 #include "builtin/SymbolObject.h"
 #include "gc/Allocator.h"
 #include "gc/Rooting.h"
 #include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 #include "vm/StringBuffer.h"
 
 #include "vm/JSCompartment-inl.h"

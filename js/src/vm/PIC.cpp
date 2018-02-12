@@ -6,12 +6,11 @@
 
 #include "vm/PIC.h"
 
-#include "jscntxt.h"
-
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/SelfHosting.h"
 

@@ -11,7 +11,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/TypeTraits.h"
 
-#include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jshashutil.h"
 #include "jsnum.h"
@@ -36,6 +35,7 @@
 #include "vm/GeckoProfiler.h"
 #include "vm/GeneratorObject.h"
 #include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/TraceLogging.h"
 #include "vm/WrapperObject.h"

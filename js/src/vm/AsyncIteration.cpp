@@ -15,8 +15,7 @@
 #include "vm/JSCompartment.h"
 #include "vm/SelfHosting.h"
 
-#include "jscntxtinlines.h"
-
+#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/List-inl.h"
 #include "vm/NativeObject-inl.h"

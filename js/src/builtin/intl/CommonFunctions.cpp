@@ -10,10 +10,10 @@
 
 #include "mozilla/Assertions.h"
 
-#include "jscntxt.h"
 #include "jsfriendapi.h" // for GetErrorMessage, JSMSG_INTERNAL_INTL_ERROR
 
 #include "js/Value.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/SelfHosting.h"
 #include "vm/Stack.h"

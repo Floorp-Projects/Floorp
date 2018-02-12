@@ -18,7 +18,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "jscntxt.h"
 #include "jsexn.h"
 #include "jsnum.h"
 
@@ -29,6 +28,7 @@
 #include "js/UniquePtr.h"
 #include "vm/HelperThreads.h"
 #include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 #include "vm/StringBuffer.h"
 #include "vm/Unicode.h"
 

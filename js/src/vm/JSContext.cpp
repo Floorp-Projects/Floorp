@@ -8,7 +8,7 @@
  * JS execution context.
  */
 
-#include "jscntxtinlines.h"
+#include "vm/JSContext-inl.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"

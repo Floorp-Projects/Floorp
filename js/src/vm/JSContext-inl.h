@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jscntxtinlines_h
-#define jscntxtinlines_h
+#ifndef vm_JSContext_inl_h
+#define vm_JSContext_inl_h
 
-#include "jscntxt.h"
+#include "vm/JSContext.h"
 
 #include "jsiter.h"
 
@@ -622,4 +622,4 @@ JSContext::caches()
     return runtime()->caches();
 }
 
-#endif /* jscntxtinlines_h */
+#endif /* vm_JSContext_inl_h */

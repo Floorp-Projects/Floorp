@@ -7,8 +7,7 @@
 #ifndef vm_AsyncFunction_h
 #define vm_AsyncFunction_h
 
-#include "jscntxt.h"
-
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 
 namespace js {

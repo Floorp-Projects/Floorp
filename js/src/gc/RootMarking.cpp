@@ -9,7 +9,7 @@
 #ifdef MOZ_VALGRIND
 # include <valgrind/memcheck.h>
 #endif
-#include "jscntxt.h"
+
 #include "jsprf.h"
 #include "jstypes.h"
 
@@ -20,6 +20,7 @@
 #include "jit/MacroAssembler.h"
 #include "js/HashTable.h"
 #include "vm/Debugger.h"
+#include "vm/JSContext.h"
 #include "vm/JSONParser.h"
 
 #include "jsgcinlines.h"

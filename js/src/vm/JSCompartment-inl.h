@@ -14,7 +14,7 @@
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 
-#include "jscntxtinlines.h"
+#include "vm/JSContext-inl.h"
 
 inline void
 JSCompartment::initGlobal(js::GlobalObject& global)

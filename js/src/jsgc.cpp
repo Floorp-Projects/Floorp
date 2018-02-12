@@ -206,7 +206,6 @@
 #endif
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jsprf.h"
 #include "jstypes.h"
@@ -230,6 +229,7 @@
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 #include "vm/Printer.h"

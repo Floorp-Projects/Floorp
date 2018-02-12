@@ -10,10 +10,11 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/FastBernoulliTrial.h"
 
-#include "jscntxt.h"
 #include "jsmath.h"
 #include "jswrapper.h"
+
 #include "js/HashTable.h"
+#include "vm/JSContext.h"
 #include "vm/SavedFrame.h"
 #include "vm/Stack.h"
 

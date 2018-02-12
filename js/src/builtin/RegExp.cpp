@@ -9,11 +9,10 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/TypeTraits.h"
 
-#include "jscntxt.h"
-
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpParser.h"
 #include "jit/InlinableNatives.h"
+#include "vm/JSContext.h"
 #include "vm/RegExpStatics.h"
 #include "vm/SelfHosting.h"
 #include "vm/StringBuffer.h"

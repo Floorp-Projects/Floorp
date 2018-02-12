@@ -10,11 +10,10 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Result.h"
 
-#include "jscntxt.h"
-
 #include "jit/CompileWrappers.h"
 #include "jit/JitOptions.h"
 #include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 
 namespace js {
 namespace jit {

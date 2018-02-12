@@ -13,7 +13,6 @@
 
 #include <algorithm>
 
-#include "jscntxt.h"
 #include "jsstr.h"
 
 #include "jit/IonCode.h"
@@ -25,6 +24,7 @@
 #include "vm/Debugger.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 #include "vm/Scope.h"

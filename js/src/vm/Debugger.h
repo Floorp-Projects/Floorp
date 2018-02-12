@@ -14,7 +14,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Vector.h"
 
-#include "jscntxt.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
 
@@ -26,6 +25,7 @@
 #include "js/HashTable.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 #include "vm/SavedStacks.h"
 #include "wasm/WasmJS.h"
 

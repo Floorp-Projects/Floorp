@@ -13,7 +13,6 @@
 #include "mozilla/Range.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"
 
 #include "builtin/intl/Collator.h"
 #include "builtin/intl/CommonFunctions.h"
@@ -24,6 +23,7 @@
 #include "builtin/intl/ScopedICUObject.h"
 #include "js/Class.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/String.h"
 

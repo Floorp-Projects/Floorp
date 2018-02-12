@@ -7,9 +7,8 @@
 #ifndef vm_RegExpStatics_h
 #define vm_RegExpStatics_h
 
-#include "jscntxt.h"
-
 #include "gc/Marking.h"
+#include "vm/JSContext.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpShared.h"
 #include "vm/Runtime.h"

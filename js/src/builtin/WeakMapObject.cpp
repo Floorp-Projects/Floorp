@@ -7,10 +7,10 @@
 #include "builtin/WeakMapObject-inl.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"
 
 #include "builtin/WeakSetObject.h"
 #include "gc/FreeOp.h"
+#include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 
 #include "vm/Interpreter-inl.h"

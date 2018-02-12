@@ -11,7 +11,6 @@
 
 #include "mozilla/Attributes.h"
 
-#include "jscntxt.h"
 #include "jsiter.h"
 #include "jsopcode.h"
 
@@ -20,6 +19,7 @@
 #include "frontend/SharedContext.h"
 #include "frontend/SourceNotes.h"
 #include "vm/Interpreter.h"
+#include "vm/JSContext.h"
 #include "vm/JSScript.h"
 
 namespace js {

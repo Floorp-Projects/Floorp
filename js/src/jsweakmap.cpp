@@ -9,11 +9,11 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jswrapper.h"
 
 #include "vm/GlobalObject.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 
 #include "vm/JSObject-inl.h"

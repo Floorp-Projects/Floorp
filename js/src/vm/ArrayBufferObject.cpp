@@ -24,7 +24,6 @@
 
 #include "jsapi.h"
 #include "jsarray.h"
-#include "jscntxt.h"
 #include "jscpucfg.h"
 #include "jsfriendapi.h"
 #include "jsnum.h"
@@ -43,6 +42,7 @@
 #include "js/MemoryMetrics.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/WrapperObject.h"

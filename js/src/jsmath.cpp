@@ -23,7 +23,6 @@
 
 #include "fdlibm.h"
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jslibmath.h"
 #include "jstypes.h"
 #ifdef XP_WIN
@@ -33,6 +32,7 @@
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
 #include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 #include "vm/Time.h"
 
 #include "vm/JSObject-inl.h"

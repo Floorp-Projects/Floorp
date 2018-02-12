@@ -31,7 +31,6 @@
 #include <errno.h>
 #endif
 
-#include "jscntxt.h"
 #include "jsexn.h"
 #include "jsnum.h"
 #include "jsprf.h"
@@ -44,6 +43,7 @@
 #include "gc/Zone.h"
 #include "jit/AtomicOperations.h"
 #include "js/Vector.h"
+#include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 
 #include "vm/JSObject-inl.h"

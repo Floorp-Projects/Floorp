@@ -14,8 +14,6 @@
 
 #include <stdarg.h>
 
-#include "jscntxt.h"
-
 #include "jit/CompileInfo.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/JitCompartment.h"
@@ -25,6 +23,7 @@
 #endif
 #include "jit/RegisterSets.h"
 #include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 
 namespace js {
 namespace jit {

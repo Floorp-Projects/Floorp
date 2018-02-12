@@ -17,7 +17,6 @@
 #include <ctime>
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jsiter.h"
 #include "jsprf.h"
@@ -43,6 +42,7 @@
 #include "vm/Debugger.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/SavedStacks.h"
@@ -57,10 +57,9 @@
 #include "wasm/WasmTextToBinary.h"
 #include "wasm/WasmTypes.h"
 
-#include "jscntxtinlines.h"
-
 #include "vm/Debugger-inl.h"
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 

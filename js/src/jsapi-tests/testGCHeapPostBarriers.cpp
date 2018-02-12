@@ -12,7 +12,7 @@
 #include "jsapi-tests/tests.h"
 #include "vm/Runtime.h"
 
-#include "jscntxtinlines.h"
+#include "vm/JSContext-inl.h"
 
 // A heap-allocated structure containing one of our barriered pointer wrappers
 // to test.

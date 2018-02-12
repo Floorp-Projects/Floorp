@@ -7,10 +7,9 @@
 #ifndef vm_GeneratorObject_h
 #define vm_GeneratorObject_h
 
-#include "jscntxt.h"
-
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayObject.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/Stack.h"
 

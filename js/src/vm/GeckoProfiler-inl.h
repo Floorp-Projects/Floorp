@@ -9,8 +9,7 @@
 
 #include "vm/GeckoProfiler.h"
 
-#include "jscntxt.h"
-
+#include "vm/JSContext.h"
 #include "vm/Runtime.h"
 
 namespace js {

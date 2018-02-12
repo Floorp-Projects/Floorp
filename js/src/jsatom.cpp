@@ -16,18 +16,17 @@
 
 #include <string.h>
 
-#include "jscntxt.h"
 #include "jsstr.h"
 #include "jstypes.h"
 
 #include "gc/Marking.h"
+#include "vm/JSContext.h"
 #include "vm/Symbol.h"
 #include "vm/Xdr.h"
 
-#include "jscntxtinlines.h"
-
 #include "gc/AtomMarking-inl.h"
 #include "vm/JSCompartment-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/String-inl.h"
 
