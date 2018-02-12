@@ -165,7 +165,12 @@ class EnvironmentBlock:
 
 
 # Error Messages we need to watch for go here
-# See: http://msdn.microsoft.com/en-us/library/ms681388%28v=vs.85%29.aspx
+
+# https://msdn.microsoft.com/en-us/library/windows/desktop/ms681382(v=vs.85).aspx (0 - 499)
+ERROR_ACCESS_DENIED = 5
+ERROR_INVALID_PARAMETER = 87
+
+# http://msdn.microsoft.com/en-us/library/ms681388%28v=vs.85%29.aspx (500 - 999)
 ERROR_ABANDONED_WAIT_0 = 735
 
 # GetLastError()
@@ -250,6 +255,35 @@ JOB_OBJECT_MSG_JOB_MEMORY_LIMIT = 10
 DEBUG_ONLY_THIS_PROCESS = 0x00000002
 DEBUG_PROCESS = 0x00000001
 DETACHED_PROCESS = 0x00000008
+
+# OpenProcess -
+# https://msdn.microsoft.com/en-us/library/windows/desktop/ms684320(v=vs.85).aspx
+PROCESS_QUERY_INFORMATION = 0x0400
+PROCESS_VM_READ = 0x0010
+
+OpenProcessProto = WINFUNCTYPE(
+    HANDLE,  # Return type
+    DWORD,   # dwDesiredAccess
+    BOOL,    # bInheritHandle
+    DWORD,   # dwProcessId
+)
+
+OpenProcessFlags = (
+    (1, "dwDesiredAccess", 0),
+    (1, "bInheritHandle", False),
+    (1, "dwProcessId", 0),
+)
+
+
+def ErrCheckOpenProcess(result, func, args):
+    ErrCheckBool(result, func, args)
+
+    return AutoHANDLE(result)
+
+
+OpenProcess = OpenProcessProto(("OpenProcess", windll.kernel32),
+                               OpenProcessFlags)
+OpenProcess.errcheck = ErrCheckOpenProcess
 
 # GetQueuedCompletionPortStatus -
 # http://msdn.microsoft.com/en-us/library/aa364986%28v=vs.85%29.aspx
