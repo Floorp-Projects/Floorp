@@ -16,7 +16,6 @@
 #include "jscompartment.h"
 #include "jsdate.h"
 #include "jsfriendapi.h"
-#include "jsfun.h"
 #include "jshashutil.h"
 #include "jsiter.h"
 #include "jsstr.h"
@@ -49,6 +48,7 @@
 #include "vm/Compression.h"
 #include "vm/GeneratorObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSFunction.h"
 #include "vm/Printer.h"
 #include "vm/RegExpObject.h"
 #include "vm/String.h"
@@ -56,11 +56,11 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
 
-#include "jsfuninlines.h"
 #include "jsscriptinlines.h"
 
 #include "gc/Iteration-inl.h"
 #include "vm/BooleanObject-inl.h"
+#include "vm/JSFunction-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/NumberObject-inl.h"

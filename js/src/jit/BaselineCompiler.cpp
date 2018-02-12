@@ -8,8 +8,6 @@
 
 #include "mozilla/Casting.h"
 
-#include "jsfun.h"
-
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/FixedList.h"
@@ -27,6 +25,7 @@
 #include "vm/AsyncIteration.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSFunction.h"
 #include "vm/TraceLogging.h"
 #include "vtune/VTuneWrapper.h"
 

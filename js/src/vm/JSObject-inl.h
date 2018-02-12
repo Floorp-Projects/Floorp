@@ -12,7 +12,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jsfriendapi.h"
-#include "jsfun.h"
 
 #include "builtin/MapObject.h"
 #include "builtin/TypedObject.h"
@@ -21,6 +20,7 @@
 #include "vm/ArrayObject.h"
 #include "vm/DateObject.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/JSFunction.h"
 #include "vm/NumberObject.h"
 #include "vm/Probes.h"
 #include "vm/StringObject.h"

@@ -24,7 +24,6 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsfun.h"
 #include "jsopcode.h"
 #include "jsprf.h"
 #include "jstypes.h"
@@ -43,6 +42,7 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/Compression.h"
 #include "vm/Debugger.h"
+#include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/Opcodes.h"
 #include "vm/SelfHosting.h"
@@ -52,10 +52,9 @@
 #include "vm/Xdr.h"
 #include "vtune/VTuneWrapper.h"
 
-#include "jsfuninlines.h"
-
 #include "gc/Marking-inl.h"
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSFunction-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/SharedImmutableStringsCache-inl.h"

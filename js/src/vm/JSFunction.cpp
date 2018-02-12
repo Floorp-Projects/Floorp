@@ -8,7 +8,7 @@
  * JS function support.
  */
 
-#include "jsfuninlines.h"
+#include "vm/JSFunction-inl.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"

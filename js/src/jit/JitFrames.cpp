@@ -6,7 +6,6 @@
 
 #include "jit/JitFrames-inl.h"
 
-#include "jsfun.h"
 #include "jsscript.h"
 #include "jsutil.h"
 
@@ -29,6 +28,7 @@
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/Interpreter.h"
+#include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/TraceLogging.h"
 #include "vm/TypeInference.h"

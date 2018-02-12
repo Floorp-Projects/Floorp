@@ -10,10 +10,10 @@
 #include <stdint.h>
 
 #include "jscntxt.h"
-#include "jsfun.h"
 
 #include "jit/JSJitFrameIter.h"
 #include "jit/Safepoints.h"
+#include "vm/JSFunction.h"
 
 namespace js {
 namespace jit {

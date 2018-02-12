@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsfuninlines_h
-#define jsfuninlines_h
+#ifndef vm_JSFunction_inl_h
+#define vm_JSFunction_inl_h
 
-#include "jsfun.h"
+#include "vm/JSFunction.h"
 
 #include "vm/EnvironmentObject.h"
 
@@ -97,4 +97,4 @@ CloneFunctionObjectIfNotSingleton(JSContext* cx, HandleFunction fun, HandleObjec
 
 } /* namespace js */
 
-#endif /* jsfuninlines_h */
+#endif /* vm_JSFunction_inl_h */

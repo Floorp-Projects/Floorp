@@ -20,7 +20,6 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsfun.h"
 #include "jsnum.h"
 #include "jsopcode.h"
 #include "jsscript.h"
@@ -32,6 +31,7 @@
 #include "frontend/TokenStream.h"
 #include "vm/Debugger.h"
 #include "vm/GeneratorObject.h"
+#include "vm/JSFunction.h"
 #include "vm/Stack.h"
 #include "wasm/AsmJS.h"
 

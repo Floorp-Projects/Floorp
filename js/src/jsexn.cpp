@@ -18,7 +18,6 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsfun.h"
 #include "jsnum.h"
 #include "jsprf.h"
 #include "jsscript.h"
@@ -31,6 +30,7 @@
 #include "js/CharacterEncoding.h"
 #include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/SavedStacks.h"
 #include "vm/SelfHosting.h"
