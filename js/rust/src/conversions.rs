@@ -634,7 +634,7 @@ impl<T: ToJSValConvertible> ToJSValConvertible for Vec<T> {
     }
 }
 
-/// Rooting guard for the iterator field of ForOfIterator.
+/// Rooting guard for the iterator and nextMethod fields of ForOfIterator.
 /// Behaves like RootedGuard (roots on creation, unroots on drop),
 /// but borrows and allows access to the whole ForOfIterator, so
 /// that methods on ForOfIterator can still be used through it.
@@ -646,6 +646,7 @@ impl<'a> ForOfIteratorGuard<'a> {
     fn new(cx: *mut JSContext, root: &'a mut JS::ForOfIterator) -> Self {
         unsafe {
             root.iterator.register_with_root_lists(cx);
+            root.nextMethod.register_with_root_lists(cx);
         }
         ForOfIteratorGuard {
             root: root
@@ -656,6 +657,7 @@ impl<'a> ForOfIteratorGuard<'a> {
 impl<'a> Drop for ForOfIteratorGuard<'a> {
     fn drop(&mut self) {
         unsafe {
+            self.root.nextMethod.remove_from_root_stack();
             self.root.iterator.remove_from_root_stack();
         }
     }
@@ -671,6 +673,7 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
         let mut iterator = JS::ForOfIterator {
             cx_: cx,
             iterator: JS::RootedObject::new_unrooted(),
+            nextMethod: JS::RootedValue::new_unrooted(),
             index: ::std::u32::MAX, // NOT_ARRAY
         };
         let iterator = ForOfIteratorGuard::new(cx, &mut iterator);

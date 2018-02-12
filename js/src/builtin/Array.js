@@ -695,16 +695,13 @@ function ArrayIncludes(searchElement, fromIndex = 0) {
 }
 
 // ES6 draft specification, section 22.1.5.1, version 2013-09-05.
-function CreateArrayIteratorAt(obj, kind, n) {
+function CreateArrayIterator(obj, kind) {
     var iteratedObject = ToObject(obj);
     var iterator = NewArrayIterator();
     UnsafeSetReservedSlot(iterator, ITERATOR_SLOT_TARGET, iteratedObject);
-    UnsafeSetReservedSlot(iterator, ITERATOR_SLOT_NEXT_INDEX, n);
+    UnsafeSetReservedSlot(iterator, ITERATOR_SLOT_NEXT_INDEX, 0);
     UnsafeSetReservedSlot(iterator, ITERATOR_SLOT_ITEM_KIND, kind);
     return iterator;
-}
-function CreateArrayIterator(obj, kind) {
-    return CreateArrayIteratorAt(obj, kind, 0);
 }
 
 // ES6, 22.1.5.2.1
@@ -774,10 +771,6 @@ function ArrayIteratorNext() {
     assert(itemKind === ITEM_KIND_KEY, itemKind);
     result.value = index;
     return result;
-}
-
-function ArrayValuesAt(n) {
-    return CreateArrayIteratorAt(this, ITEM_KIND_VALUE, n);
 }
 
 function ArrayValues() {
