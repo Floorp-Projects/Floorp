@@ -1368,6 +1368,7 @@ class XPCShellTests(object):
 
             status = self.runTestList(tests_queue, sequential_tests, testClass,
                                       mobileArgs, **kwargs)
+            self.shutdownNode()
         else:
             #
             # Test verification: Run each test many times, in various configurations,
@@ -1437,6 +1438,7 @@ class XPCShellTests(object):
                 self.log.info(':::')
                 self.log.info('::: Test verification %s' % finalResult)
                 self.log.info(':::')
+                self.shutdownNode()
 
         return status
 
@@ -1547,7 +1549,6 @@ class XPCShellTests(object):
         # restore default SIGINT behaviour
         signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-        self.shutdownNode()
         # Clean up any slacker directories that might be lying around
         # Some might fail because of windows taking too long to unlock them.
         # We don't do anything if this fails because the test slaves will have
