@@ -136,9 +136,16 @@ public:
   {
   }
 
+  /**
+   * Initialize the surface by creating a shared memory buffer with a size
+   * determined by aSize, aStride and aFormat. If aShare is true, it will also
+   * immediately attempt to share the surface with the GPU process via
+   * SharedSurfacesChild.
+   */
   bool Init(const IntSize& aSize,
             int32_t aStride,
-            SurfaceFormat aFormat);
+            SurfaceFormat aFormat,
+            bool aShare = true);
 
   uint8_t* GetData() override
   {
@@ -235,7 +242,7 @@ public:
 
   /**
    * Signals we have finished writing to the buffer and it may be marked as
-   * read only. May release the handle if possible (see CloseHandleInternal).
+   * read only.
    */
   void Finalize();
 
