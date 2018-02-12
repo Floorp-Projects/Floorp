@@ -296,6 +296,10 @@ SessionStartup.prototype = {
    * @returns bool
    */
   isAutomaticRestoreEnabled() {
+    if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
+      return false;
+    }
+
     return Services.prefs.getBoolPref("browser.sessionstore.resume_session_once") ||
            Services.prefs.getIntPref("browser.startup.page") == BROWSER_STARTUP_RESUME_SESSION;
   },
