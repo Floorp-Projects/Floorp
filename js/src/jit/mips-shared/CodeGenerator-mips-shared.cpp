@@ -1490,10 +1490,79 @@ CodeGeneratorMIPSShared::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
 void
 CodeGeneratorMIPSShared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool)
 {
+    FloatRegister input = ool->input();
+    MIRType fromType = ool->fromType();
+    MIRType toType = ool->toType();
+    bool isUnsigned = ool->isUnsigned();
+    // Eagerly take care of NaNs.
+    Label inputIsNaN;
+    if (fromType == MIRType::Double)
+        masm.branchDouble(Assembler::DoubleUnordered, input, input, &inputIsNaN);
+    else if (fromType == MIRType::Float32)
+        masm.branchFloat(Assembler::DoubleUnordered, input, input, &inputIsNaN);
+    else
+        MOZ_CRASH("unexpected type in visitOutOfLineWasmTruncateCheck");
 
-    masm.outOfLineWasmTruncateToIntCheck(ool->input(), ool->fromType(), ool->toType(),
-                                         ool->isUnsigned(), ool->rejoin(),
-                                         ool->bytecodeOffset());
+    // By default test for the following inputs and bail:
+    // signed:   ] -Inf, INTXX_MIN - 1.0 ] and [ INTXX_MAX + 1.0 : +Inf [
+    // unsigned: ] -Inf, -1.0 ] and [ UINTXX_MAX + 1.0 : +Inf [
+    // Note: we cannot always represent those exact values. As a result
+    // this changes the actual comparison a bit.
+    double minValue, maxValue;
+    Assembler::DoubleCondition minCond = Assembler::DoubleLessThanOrEqual;
+    Assembler::DoubleCondition maxCond = Assembler::DoubleGreaterThanOrEqual;
+    if (toType == MIRType::Int64) {
+        if (isUnsigned) {
+            minValue = -1;
+            maxValue = double(UINT64_MAX) + 1.0;
+        } else {
+            // In the float32/double range there exists no value between
+            // INT64_MIN and INT64_MIN - 1.0. Making INT64_MIN the lower-bound.
+            minValue = double(INT64_MIN);
+            minCond = Assembler::DoubleLessThan;
+            maxValue = double(INT64_MAX) + 1.0;
+        }
+    } else {
+        if (isUnsigned) {
+            minValue = -1;
+            maxValue = double(UINT32_MAX) + 1.0;
+        } else {
+            if (fromType == MIRType::Float32) {
+                // In the float32 range there exists no value between
+                // INT32_MIN and INT32_MIN - 1.0. Making INT32_MIN the lower-bound.
+                minValue = double(INT32_MIN);
+                minCond = Assembler::DoubleLessThan;
+            } else {
+                minValue = double(INT32_MIN) - 1.0;
+            }
+            maxValue = double(INT32_MAX) + 1.0;
+        }
+    }
+
+    Label fail;
+
+    if (fromType == MIRType::Double) {
+        masm.loadConstantDouble(minValue, ScratchDoubleReg);
+        masm.branchDouble(minCond, input, ScratchDoubleReg, &fail);
+
+        masm.loadConstantDouble(maxValue, ScratchDoubleReg);
+        masm.branchDouble(maxCond, input, ScratchDoubleReg, &fail);
+    } else {
+        masm.loadConstantFloat32(float(minValue), ScratchFloat32Reg);
+        masm.branchFloat(minCond, input, ScratchFloat32Reg, &fail);
+
+        masm.loadConstantFloat32(float(maxValue), ScratchFloat32Reg);
+        masm.branchFloat(maxCond, input, ScratchFloat32Reg, &fail);
+    }
+
+    masm.jump(ool->rejoin());
+
+    // Handle errors.
+    masm.bind(&fail);
+    masm.jump(oldTrap(ool, wasm::Trap::IntegerOverflow));
+
+    masm.bind(&inputIsNaN);
+    masm.jump(oldTrap(ool, wasm::Trap::InvalidConversionToInteger));
 }
 
 void
@@ -1800,24 +1869,77 @@ CodeGeneratorMIPSShared::emitWasmLoad(T* lir)
 {
     const MWasmLoad* mir = lir->mir();
 
-    Register ptrScratch = InvalidReg;
-    if(!lir->ptrCopy()->isBogusTemp()){
-        ptrScratch = ToRegister(lir->ptrCopy());
+    uint32_t offset = mir->access().offset();
+    MOZ_ASSERT(offset <= INT32_MAX);
+
+    Register ptr = ToRegister(lir->ptr());
+
+    // Maybe add the offset.
+    if (offset) {
+        Register ptrPlusOffset = ToRegister(lir->ptrCopy());
+        masm.addPtr(Imm32(offset), ptrPlusOffset);
+        ptr = ptrPlusOffset;
+    } else {
+        MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
     }
 
+    unsigned byteSize = mir->access().byteSize();
+    bool isSigned;
+    bool isFloat = false;
+
+    switch (mir->access().type()) {
+      case Scalar::Int8:    isSigned = true;  break;
+      case Scalar::Uint8:   isSigned = false; break;
+      case Scalar::Int16:   isSigned = true;  break;
+      case Scalar::Uint16:  isSigned = false; break;
+      case Scalar::Int32:   isSigned = true;  break;
+      case Scalar::Uint32:  isSigned = false; break;
+      case Scalar::Float64: isFloat  = true;  break;
+      case Scalar::Float32: isFloat  = true;  break;
+      default: MOZ_CRASH("unexpected array type");
+    }
+
+    masm.memoryBarrierBefore(mir->access().sync());
+
+    BaseIndex address(HeapReg, ptr, TimesOne);
+
     if (IsUnaligned(mir->access())) {
-        if (IsFloatingPointType(mir->type())) {
-            masm.wasmUnalignedLoadFP(mir->access(), HeapReg, ToRegister(lir->ptr()), ptrScratch,
-                                     ToFloatRegister(lir->output()), ToRegister(lir->getTemp(1)),
-                                     InvalidReg, InvalidReg);
+        Register temp = ToRegister(lir->getTemp(1));
+
+        if (isFloat) {
+            FloatRegister output = ToFloatRegister(lir->output());
+
+            if (byteSize == 4)
+                masm.loadUnalignedFloat32(mir->access(), address, temp, output);
+            else
+                masm.loadUnalignedDouble(mir->access(), address, temp, output);
         } else {
-            masm.wasmUnalignedLoad(mir->access(), HeapReg, ToRegister(lir->ptr()),
-                                   ptrScratch, ToRegister(lir->output()), ToRegister(lir->getTemp(1)));
+            masm.ma_load_unaligned(mir->access(), ToRegister(lir->output()), address, temp,
+                                   static_cast<LoadStoreSize>(8 * byteSize),
+                                   isSigned ? SignExtend : ZeroExtend);
+        }
+
+        masm.memoryBarrierAfter(mir->access().sync());
+        return;
+    }
+
+    if (isFloat) {
+        FloatRegister output = ToFloatRegister(lir->output());
+
+        if (byteSize == 4) {
+            masm.loadFloat32(address, output);
+        } else {
+            masm.computeScaledAddress(address, SecondScratchReg);
+            masm.as_ld(output, SecondScratchReg, 0);
         }
     } else {
-        masm.wasmLoad(mir->access(), HeapReg, ToRegister(lir->ptr()), ptrScratch,
-                      ToAnyRegister(lir->output()));
+        masm.ma_load(ToRegister(lir->output()), address,
+                     static_cast<LoadStoreSize>(8 * byteSize),
+                     isSigned ? SignExtend : ZeroExtend);
     }
+    masm.append(mir->access(), masm.size() - 4, masm.framePushed());
+
+    masm.memoryBarrierAfter(mir->access().sync());
 }
 
 void
@@ -1838,26 +1960,81 @@ CodeGeneratorMIPSShared::emitWasmStore(T* lir)
 {
     const MWasmStore* mir = lir->mir();
 
-    Register ptrScratch = InvalidReg;
-    if(!lir->ptrCopy()->isBogusTemp()){
-        ptrScratch = ToRegister(lir->ptrCopy());
+    uint32_t offset = mir->access().offset();
+    MOZ_ASSERT(offset <= INT32_MAX);
+
+    Register ptr = ToRegister(lir->ptr());
+
+    // Maybe add the offset.
+    if (offset) {
+        Register ptrPlusOffset = ToRegister(lir->ptrCopy());
+        masm.addPtr(Imm32(offset), ptrPlusOffset);
+        ptr = ptrPlusOffset;
+    } else {
+        MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
     }
 
+    unsigned byteSize = mir->access().byteSize();
+    bool isSigned;
+    bool isFloat = false;
+
+    switch (mir->access().type()) {
+      case Scalar::Int8:    isSigned = true;  break;
+      case Scalar::Uint8:   isSigned = false; break;
+      case Scalar::Int16:   isSigned = true;  break;
+      case Scalar::Uint16:  isSigned = false; break;
+      case Scalar::Int32:   isSigned = true;  break;
+      case Scalar::Uint32:  isSigned = false; break;
+      case Scalar::Int64:   isSigned = true;  break;
+      case Scalar::Float64: isFloat  = true;  break;
+      case Scalar::Float32: isFloat  = true;  break;
+      default: MOZ_CRASH("unexpected array type");
+    }
+
+    masm.memoryBarrierBefore(mir->access().sync());
+
+    BaseIndex address(HeapReg, ptr, TimesOne);
+
     if (IsUnaligned(mir->access())) {
-        if (mir->access().type() == Scalar::Float32 ||
-            mir->access().type() == Scalar::Float64) {
-            masm.wasmUnalignedStoreFP(mir->access(), ToFloatRegister(lir->value()),
-                                      HeapReg, ToRegister(lir->ptr()), ptrScratch,
-                                      ToRegister(lir->getTemp(1)));
+        Register temp = ToRegister(lir->getTemp(1));
+
+        if (isFloat) {
+            FloatRegister value = ToFloatRegister(lir->value());
+
+            if (byteSize == 4)
+                masm.storeUnalignedFloat32(mir->access(), value, temp, address);
+            else
+                masm.storeUnalignedDouble(mir->access(), value, temp, address);
         } else {
-            masm.wasmUnalignedStore(mir->access(), ToRegister(lir->value()), HeapReg,
-                                    ToRegister(lir->ptr()), ptrScratch,
-                                    ToRegister(lir->getTemp(1)));
+            masm.ma_store_unaligned(mir->access(), ToRegister(lir->value()), address, temp,
+                                    static_cast<LoadStoreSize>(8 * byteSize),
+                                    isSigned ? SignExtend : ZeroExtend);
+        }
+
+        masm.memoryBarrierAfter(mir->access().sync());
+        return;
+    }
+
+    if (isFloat) {
+        FloatRegister value = ToFloatRegister(lir->value());
+
+        if (byteSize == 4) {
+            masm.storeFloat32(value, address);
+        } else {
+            // For time being storeDouble for mips32 uses two store instructions,
+            // so we emit only one to get correct behavior in case of OOB access.
+            masm.computeScaledAddress(address, SecondScratchReg);
+            masm.as_sd(value, SecondScratchReg, 0);
         }
     } else {
-        masm.wasmStore(mir->access(), ToAnyRegister(lir->value()), HeapReg,
-                       ToRegister(lir->ptr()), ptrScratch);
+        masm.ma_store(ToRegister(lir->value()), address,
+                      static_cast<LoadStoreSize>(8 * byteSize),
+                      isSigned ? SignExtend : ZeroExtend);
     }
+    // Only the last emitted instruction is a memory access.
+    masm.append(mir->access(), masm.size() - 4, masm.framePushed());
+
+    masm.memoryBarrierAfter(mir->access().sync());
 }
 
 void

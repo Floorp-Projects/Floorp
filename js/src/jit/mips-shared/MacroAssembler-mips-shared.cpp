@@ -328,10 +328,16 @@ template <typename L>
 void
 MacroAssemblerMIPSShared::ma_addTestCarry(Register rd, Register rs, Register rt, L overflow)
 {
-    MOZ_ASSERT_IF(rd == rs, rt != rd);
-    as_addu(rd, rs, rt);
-    as_sltu(SecondScratchReg, rd, rd == rs? rt : rs);
-    ma_b(SecondScratchReg, SecondScratchReg, overflow, Assembler::NonZero);
+    if (rd != rs) {
+        as_addu(rd, rs, rt);
+        as_sltu(SecondScratchReg, rd, rs);
+        ma_b(SecondScratchReg, SecondScratchReg, overflow, Assembler::NonZero);
+    } else {
+        ma_move(SecondScratchReg, rs);
+        as_addu(rd, rs, rt);
+        as_sltu(SecondScratchReg, rd, SecondScratchReg);
+        ma_b(SecondScratchReg, SecondScratchReg, overflow, Assembler::NonZero);
+    }
 }
 
 template void
@@ -703,8 +709,7 @@ MacroAssemblerMIPSShared::ma_store(Imm32 imm, const BaseIndex& dest,
 }
 
 void
-MacroAssemblerMIPSShared::ma_store_unaligned(const wasm::MemoryAccessDesc& access, Register data,
-                                             const BaseIndex& dest, Register temp,
+MacroAssemblerMIPSShared::ma_store_unaligned(const wasm::MemoryAccessDesc& access, Register data, const BaseIndex& dest, Register temp,
                                              LoadStoreSize size, LoadStoreExtension extension)
 {
     MOZ_ASSERT(MOZ_LITTLE_ENDIAN, "Wasm-only; wasm is disabled on big-endian.");
@@ -1538,51 +1543,20 @@ MacroAssembler::call(JitCode* c)
 CodeOffset
 MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc)
 {
-    CodeOffset offset(currentOffset());
-                // MIPS32   //MIPS64
-    as_nop();   // lui      // lui
-    as_nop();   // ori      // ori
-    as_nop();   // jalr     // drotr32
-    as_nop();               // ori
-#ifdef JS_CODEGEN_MIPS64
-    as_nop();               //jalr
-    as_nop();
-#endif
-    append(desc, CodeOffset(currentOffset()));
-    return offset;
+    MOZ_CRASH("NYI");
+    return CodeOffset();
 }
 
 void
 MacroAssembler::patchNopToCall(uint8_t* call, uint8_t* target)
 {
-#ifdef JS_CODEGEN_MIPS64
-    Instruction* inst = (Instruction*) call - 6 /* six nops */;
-    Assembler::WriteLoad64Instructions(inst, ScratchRegister, (uint64_t) target);
-    inst[4] = InstReg(op_special, ScratchRegister, zero, ra, ff_jalr);
-#else
-    Instruction* inst = (Instruction*) call - 4 /* four nops */;
-    Assembler::WriteLuiOriInstructions(inst, &inst[1], ScratchRegister, (uint32_t) target);
-    inst[2] = InstReg(op_special, ScratchRegister, zero, ra, ff_jalr);
-#endif
+    MOZ_CRASH("NYI");
 }
 
 void
 MacroAssembler::patchCallToNop(uint8_t* call)
 {
-#ifdef JS_CODEGEN_MIPS64
-    Instruction* inst = (Instruction*) call - 6 /* six nops */;
-#else
-    Instruction* inst = (Instruction*) call - 4 /* four nops */;
-#endif
-
-    inst[0].makeNop();
-    inst[1].makeNop();
-    inst[2].makeNop();
-    inst[3].makeNop();
-#ifdef JS_CODEGEN_MIPS64
-    inst[4].makeNop();
-    inst[5].makeNop();
-#endif
+    MOZ_CRASH("NYI");
 }
 
 void
@@ -1664,295 +1638,6 @@ MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input, Register output,
     moveFromFloat32(ScratchFloat32Reg, output);
     ma_ext(ScratchRegister, ScratchRegister, 6, 1);
     ma_b(ScratchRegister, Imm32(0), oolEntry, Assembler::NotEqual);
-}
-
-void
-MacroAssembler::oolWasmTruncateCheckF32ToI32(FloatRegister input, bool isUnsigned,
-                                             wasm::BytecodeOffset off, Label* rejoin)
-{
-    outOfLineWasmTruncateToIntCheck(input, MIRType::Float32, MIRType::Int32, isUnsigned,
-                                    rejoin, off);
-}
-
-void
-MacroAssembler::oolWasmTruncateCheckF64ToI32(FloatRegister input, bool isUnsigned,
-                                             wasm::BytecodeOffset off, Label* rejoin)
-{
-    outOfLineWasmTruncateToIntCheck(input, MIRType::Double, MIRType::Int32, isUnsigned,
-                                    rejoin, off);
-}
-
-void
-MacroAssembler::oolWasmTruncateCheckF32ToI64(FloatRegister input, bool isUnsigned,
-                                             wasm::BytecodeOffset off, Label* rejoin)
-{
-    outOfLineWasmTruncateToIntCheck(input, MIRType::Float32, MIRType::Int64, isUnsigned,
-                                    rejoin, off);
-}
-
-void
-MacroAssembler::oolWasmTruncateCheckF64ToI64(FloatRegister input, bool isUnsigned,
-                                             wasm::BytecodeOffset off, Label* rejoin)
-{
-    outOfLineWasmTruncateToIntCheck(input, MIRType::Double, MIRType::Int64, isUnsigned,
-                                    rejoin, off);
-}
-
-void
-MacroAssemblerMIPSShared::outOfLineWasmTruncateToIntCheck(FloatRegister input, MIRType fromType,
-                                                          MIRType toType, bool isUnsigned,
-                                                          Label* rejoin,
-                                                          wasm::BytecodeOffset trapOffset)
-{
-    // Eagerly take care of NaNs.
-    Label inputIsNaN;
-    if (fromType == MIRType::Double)
-        asMasm().branchDouble(Assembler::DoubleUnordered, input, input, &inputIsNaN);
-    else if (fromType == MIRType::Float32)
-        asMasm().branchFloat(Assembler::DoubleUnordered, input, input, &inputIsNaN);
-    else
-        MOZ_CRASH("unexpected type in visitOutOfLineWasmTruncateCheck");
-
-    // By default test for the following inputs and bail:
-    // signed:   ] -Inf, INTXX_MIN - 1.0 ] and [ INTXX_MAX + 1.0 : +Inf [
-    // unsigned: ] -Inf, -1.0 ] and [ UINTXX_MAX + 1.0 : +Inf [
-    // Note: we cannot always represent those exact values. As a result
-    // this changes the actual comparison a bit.
-    double minValue, maxValue;
-    Assembler::DoubleCondition minCond = Assembler::DoubleLessThanOrEqual;
-    Assembler::DoubleCondition maxCond = Assembler::DoubleGreaterThanOrEqual;
-    if (toType == MIRType::Int64) {
-        if (isUnsigned) {
-            minValue = -1;
-            maxValue = double(UINT64_MAX) + 1.0;
-        } else {
-            // In the float32/double range there exists no value between
-            // INT64_MIN and INT64_MIN - 1.0. Making INT64_MIN the lower-bound.
-            minValue = double(INT64_MIN);
-            minCond = Assembler::DoubleLessThan;
-            maxValue = double(INT64_MAX) + 1.0;
-        }
-    } else {
-        if (isUnsigned) {
-            minValue = -1;
-            maxValue = double(UINT32_MAX) + 1.0;
-        } else {
-            if (fromType == MIRType::Float32) {
-                // In the float32 range there exists no value between
-                // INT32_MIN and INT32_MIN - 1.0. Making INT32_MIN the lower-bound.
-                minValue = double(INT32_MIN);
-                minCond = Assembler::DoubleLessThan;
-            } else {
-                minValue = double(INT32_MIN) - 1.0;
-            }
-            maxValue = double(INT32_MAX) + 1.0;
-        }
-    }
-
-    Label fail;
-
-    if (fromType == MIRType::Double) {
-        asMasm().loadConstantDouble(minValue, ScratchDoubleReg);
-        asMasm().branchDouble(minCond, input, ScratchDoubleReg, &fail);
-
-        asMasm().loadConstantDouble(maxValue, ScratchDoubleReg);
-        asMasm().branchDouble(maxCond, input, ScratchDoubleReg, &fail);
-    } else {
-        asMasm().loadConstantFloat32(float(minValue), ScratchFloat32Reg);
-        asMasm().branchFloat(minCond, input, ScratchFloat32Reg, &fail);
-
-        asMasm().loadConstantFloat32(float(maxValue), ScratchFloat32Reg);
-        asMasm().branchFloat(maxCond, input, ScratchFloat32Reg, &fail);
-    }
-
-    asMasm().jump(rejoin);
-
-    // Handle errors.
-    asMasm().bind(&fail);
-    asMasm().jump(wasm::OldTrapDesc(trapOffset, wasm::Trap::IntegerOverflow,
-                                    asMasm().framePushed()));
-    asMasm().bind(&inputIsNaN);
-    asMasm().jump(wasm::OldTrapDesc(trapOffset, wasm::Trap::InvalidConversionToInteger,
-                                    asMasm().framePushed()));
-}
-
-void
-MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
-                         Register ptrScratch, AnyRegister output)
-{
-    wasmLoadImpl(access, memoryBase, ptr, ptrScratch, output, InvalidReg);
-}
-
-void
-MacroAssembler::wasmUnalignedLoad(const wasm::MemoryAccessDesc& access, Register memoryBase,
-                                  Register ptr, Register ptrScratch, Register output, Register tmp)
-{
-    wasmLoadImpl(access, memoryBase, ptr, ptrScratch, AnyRegister(output), tmp);
-}
-
-void
-MacroAssembler::wasmUnalignedLoadFP(const wasm::MemoryAccessDesc& access, Register memoryBase,
-                                    Register ptr, Register ptrScratch, FloatRegister output,
-                                    Register tmp1, Register tmp2, Register tmp3)
-{
-    MOZ_ASSERT(tmp2 == InvalidReg);
-    MOZ_ASSERT(tmp3 == InvalidReg);
-    wasmLoadImpl(access, memoryBase, ptr, ptrScratch, AnyRegister(output), tmp1);
-}
-
-void
-MacroAssembler::wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister value,
-                          Register memoryBase, Register ptr, Register ptrScratch)
-{
-    wasmStoreImpl(access, value, memoryBase, ptr, ptrScratch, InvalidReg);
-}
-
-void
-MacroAssembler::wasmUnalignedStore(const wasm::MemoryAccessDesc& access, Register value,
-                                   Register memoryBase, Register ptr, Register ptrScratch,
-                                   Register tmp)
-{
-    wasmStoreImpl(access, AnyRegister(value), memoryBase, ptr, ptrScratch, tmp);
-}
-
-void
-MacroAssembler::wasmUnalignedStoreFP(const wasm::MemoryAccessDesc& access, FloatRegister floatValue,
-                                     Register memoryBase, Register ptr, Register ptrScratch,
-                                     Register tmp)
-{
-    wasmStoreImpl(access, AnyRegister(floatValue), memoryBase, ptr, ptrScratch, tmp);
-}
-
-void
-MacroAssemblerMIPSShared::wasmLoadImpl(const wasm::MemoryAccessDesc& access, Register memoryBase,
-                                       Register ptr, Register ptrScratch, AnyRegister output,
-                                       Register tmp)
-{
-    uint32_t offset = access.offset();
-    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
-    MOZ_ASSERT_IF(offset, ptrScratch != InvalidReg);
-
-    // Maybe add the offset.
-    if (offset) {
-        asMasm().addPtr(Imm32(offset), ptrScratch);
-        ptr = ptrScratch;
-    }
-
-    unsigned byteSize = access.byteSize();
-    bool isSigned;
-    bool isFloat = false;
-
-    switch (access.type()) {
-      case Scalar::Int8:    isSigned = true;  break;
-      case Scalar::Uint8:   isSigned = false; break;
-      case Scalar::Int16:   isSigned = true;  break;
-      case Scalar::Uint16:  isSigned = false; break;
-      case Scalar::Int32:   isSigned = true;  break;
-      case Scalar::Uint32:  isSigned = false; break;
-      case Scalar::Float64: isFloat  = true;  break;
-      case Scalar::Float32: isFloat  = true;  break;
-      default: MOZ_CRASH("unexpected array type");
-    }
-
-    BaseIndex address(memoryBase, ptr, TimesOne);
-    if (IsUnaligned(access)) {
-        MOZ_ASSERT(tmp != InvalidReg);
-        if (isFloat) {
-            if (byteSize == 4)
-                asMasm().loadUnalignedFloat32(access, address, tmp, output.fpu());
-            else
-                asMasm().loadUnalignedDouble(access, address, tmp, output.fpu());
-        } else {
-            asMasm().ma_load_unaligned(access, output.gpr(), address, tmp,
-                                       static_cast<LoadStoreSize>(8 * byteSize),
-                                       isSigned ? SignExtend : ZeroExtend);
-        }
-        return;
-    }
-
-    asMasm().memoryBarrierBefore(access.sync());
-    if (isFloat) {
-        if (byteSize == 4) {
-            asMasm().loadFloat32(address, output.fpu());
-        } else {
-            asMasm().computeScaledAddress(address, SecondScratchReg);
-            asMasm().as_ld(output.fpu(), SecondScratchReg, 0);
-        }
-    } else {
-        asMasm().ma_load(output.gpr(), address, static_cast<LoadStoreSize>(8 * byteSize),
-                         isSigned ? SignExtend : ZeroExtend);
-    }
-    asMasm().append(access, asMasm().size() - 4, asMasm().framePushed());
-    asMasm().memoryBarrierAfter(access.sync());
-}
-
-void
-MacroAssemblerMIPSShared::wasmStoreImpl(const wasm::MemoryAccessDesc& access, AnyRegister value,
-                                        Register memoryBase, Register ptr, Register ptrScratch,
-                                        Register tmp)
-{
-    uint32_t offset = access.offset();
-    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
-    MOZ_ASSERT_IF(offset, ptrScratch != InvalidReg);
-
-    // Maybe add the offset.
-    if (offset) {
-        asMasm().addPtr(Imm32(offset), ptrScratch);
-        ptr = ptrScratch;
-    }
-
-    unsigned byteSize = access.byteSize();
-    bool isSigned;
-    bool isFloat = false;
-
-    switch (access.type()) {
-      case Scalar::Int8:    isSigned = true;  break;
-      case Scalar::Uint8:   isSigned = false; break;
-      case Scalar::Int16:   isSigned = true;  break;
-      case Scalar::Uint16:  isSigned = false; break;
-      case Scalar::Int32:   isSigned = true;  break;
-      case Scalar::Uint32:  isSigned = false; break;
-      case Scalar::Int64:   isSigned = true;  break;
-      case Scalar::Float64: isFloat  = true;  break;
-      case Scalar::Float32: isFloat  = true;  break;
-      default: MOZ_CRASH("unexpected array type");
-    }
-
-    BaseIndex address(memoryBase, ptr, TimesOne);
-    if (IsUnaligned(access)) {
-        MOZ_ASSERT(tmp != InvalidReg);
-        if (isFloat) {
-            if (byteSize == 4)
-                asMasm().storeUnalignedFloat32(access, value.fpu(), tmp, address);
-            else
-                asMasm().storeUnalignedDouble(access, value.fpu(), tmp, address);
-        } else {
-            asMasm().ma_store_unaligned(access, value.gpr(), address, tmp,
-                                        static_cast<LoadStoreSize>(8 * byteSize),
-                                        isSigned ? SignExtend : ZeroExtend);
-        }
-        return;
-    }
-
-    asMasm().memoryBarrierBefore(access.sync());
-    if (isFloat) {
-        if (byteSize == 4) {
-            asMasm().storeFloat32(value.fpu(), address);
-        } else {
-            //asMasm().storeDouble(value.fpu(), address);
-            // For time being storeDouble for mips32 uses two store instructions,
-            // so we emit only one to get correct behavior in case of OOB access.
-            asMasm().computeScaledAddress(address, SecondScratchReg);
-            asMasm().as_sd(value.fpu(), SecondScratchReg, 0);
-        }
-    } else {
-        asMasm().ma_store(value.gpr(), address,
-                      static_cast<LoadStoreSize>(8 * byteSize),
-                      isSigned ? SignExtend : ZeroExtend);
-    }
-    // Only the last emitted instruction is a memory access.
-    asMasm().append(access, asMasm().size() - 4, asMasm().framePushed());
-    asMasm().memoryBarrierAfter(access.sync());
 }
 
 // ========================================================================
