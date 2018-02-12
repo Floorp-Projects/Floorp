@@ -197,11 +197,6 @@ public:
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
-  virtual void NotifyRenderingChanged() const override
-  {
-    mFrame->DeleteProperty(nsIFrame::CachedBackgroundImageDT());
-  }
-
   // We still need to paint a background color as well as an image for this item,
   // so we can't support this yet.
   virtual bool SupportsOptimizingToImage() const override { return false; }
