@@ -10168,37 +10168,24 @@ PaintTelemetry::AutoRecordPaint::~AutoRecordPaint()
   // Record the total time.
   Telemetry::Accumulate(Telemetry::CONTENT_PAINT_TIME, static_cast<uint32_t>(totalMs));
 
-  // If the total time was >= 16ms, then it's likely we missed a frame due to
-  // painting. In this case we'll gather some detailed metrics below.
-  if (totalMs <= 16.0) {
-    return;
-  }
-
-  auto record = [=](const char* aKey, double aDurationMs) -> void {
+  // Helpers for recording large/small paints.
+  auto recordLarge = [=](const nsCString& aKey, double aDurationMs) -> void {
     MOZ_ASSERT(aDurationMs <= totalMs);
-
     uint32_t amount = static_cast<int32_t>((aDurationMs / totalMs) * 100.0);
-
-    nsDependentCString key(aKey);
-    Telemetry::Accumulate(Telemetry::CONTENT_LARGE_PAINT_PHASE_WEIGHT, key, amount);
+    Telemetry::Accumulate(Telemetry::CONTENT_LARGE_PAINT_PHASE_WEIGHT, aKey, amount);
   };
 
   double dlMs = sMetrics[Metric::DisplayList];
   double flbMs = sMetrics[Metric::Layerization];
   double rMs = sMetrics[Metric::Rasterization];
 
-  // Record all permutations since aggregation makes it difficult to
-  // correlate. For example we can't derive "flb+r" from "dl" because we
-  // don't know the total time associated with a bucket entry. So we just
-  // play it safe and include everything. We can however derive "other" time
-  // from the final permutation.
-  record("dl", dlMs);
-  record("flb", flbMs);
-  record("r", rMs);
-  record("dl,flb", dlMs + flbMs);
-  record("dl,r", dlMs + rMs);
-  record("flb,r", flbMs + rMs);
-  record("dl,flb,r", dlMs + flbMs + rMs);
+  // If the total time was >= 16ms, then it's likely we missed a frame due to
+  // painting. We bucket these metrics separately.
+  if (totalMs >= 16.0) {
+    recordLarge(NS_LITERAL_CSTRING("dl"), dlMs);
+    recordLarge(NS_LITERAL_CSTRING("flb"), flbMs);
+    recordLarge(NS_LITERAL_CSTRING("r"), rMs);
+  }
 }
 
 PaintTelemetry::AutoRecord::AutoRecord(Metric aMetric)
