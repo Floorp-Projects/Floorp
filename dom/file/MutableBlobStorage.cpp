@@ -213,6 +213,8 @@ class CreateBlobRunnable final : public Runnable
                                , public TemporaryIPCBlobChildCallback
 {
 public:
+  // We need to always declare refcounting because
+  // TemporaryIPCBlobChildCallback has pure-virtual refcounting.
   NS_DECL_ISUPPORTS_INHERITED
 
   CreateBlobRunnable(MutableBlobStorage* aBlobStorage,

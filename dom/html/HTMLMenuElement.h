@@ -23,7 +23,7 @@ public:
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLMenuElement, menu)
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLMenuElement, nsGenericHTMLElement)
 
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,

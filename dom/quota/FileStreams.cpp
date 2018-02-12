@@ -90,8 +90,6 @@ FileQuotaStreamWithWrite<FileStreamBase>::Write(const char* aBuf,
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(FileInputStream, nsFileInputStream)
-
 already_AddRefed<FileInputStream>
 FileInputStream::Create(PersistenceType aPersistenceType,
                         const nsACString& aGroup, const nsACString& aOrigin,
@@ -105,8 +103,6 @@ FileInputStream::Create(PersistenceType aPersistenceType,
   return stream.forget();
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(FileOutputStream, nsFileOutputStream)
-
 already_AddRefed<FileOutputStream>
 FileOutputStream::Create(PersistenceType aPersistenceType,
                          const nsACString& aGroup, const nsACString& aOrigin,
@@ -119,8 +115,6 @@ FileOutputStream::Create(PersistenceType aPersistenceType,
   NS_ENSURE_SUCCESS(rv, nullptr);
   return stream.forget();
 }
-
-NS_IMPL_ISUPPORTS_INHERITED0(FileStream, nsFileStream)
 
 already_AddRefed<FileStream>
 FileStream::Create(PersistenceType aPersistenceType, const nsACString& aGroup,

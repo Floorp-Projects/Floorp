@@ -716,8 +716,6 @@ nsWindow::~nsWindow()
   NS_IF_RELEASE(mNativeDragTarget);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
-
 /**************************************************************
  *
  * SECTION: nsIWidget::Create, nsIWidget::Destroy

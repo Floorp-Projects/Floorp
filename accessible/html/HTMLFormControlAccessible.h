@@ -114,7 +114,8 @@ public:
 
   HTMLTextFieldAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLTextFieldAccessible,
+                                       HyperTextAccessibleWrap)
 
   // HyperTextAccessible
   virtual already_AddRefed<TextEditor> GetEditor() const override;

@@ -23,7 +23,7 @@ namespace dom {
 class MemoryBlobImpl final : public BaseBlobImpl
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(MemoryBlobImpl, BaseBlobImpl)
 
   MemoryBlobImpl(void* aMemoryBuffer, uint64_t aLength, const nsAString& aName,
                  const nsAString& aContentType, int64_t aLastModifiedDate)

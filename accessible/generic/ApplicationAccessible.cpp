@@ -31,8 +31,6 @@ ApplicationAccessible::ApplicationAccessible() :
   MOZ_ASSERT(mAppInfo, "no application info");
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(ApplicationAccessible, Accessible)
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
 

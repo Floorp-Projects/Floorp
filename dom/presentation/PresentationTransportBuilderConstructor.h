@@ -31,7 +31,8 @@ class PresentationTransportBuilderConstructor final :
   public DummyPresentationTransportBuilderConstructor
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(PresentationTransportBuilderConstructor,
+                                       DummyPresentationTransportBuilderConstructor)
   NS_DECL_NSIPRESENTATIONTRANSPORTBUILDERCONSTRUCTOR
 
   static already_AddRefed<nsIPresentationTransportBuilderConstructor>

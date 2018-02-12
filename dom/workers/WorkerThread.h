@@ -81,7 +81,7 @@ public:
   uint32_t
   RecursionDepth(const WorkerThreadFriendKey& aKey) const;
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(WorkerThread, nsThread)
 
 private:
   WorkerThread();

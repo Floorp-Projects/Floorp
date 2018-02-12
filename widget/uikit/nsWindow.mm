@@ -420,8 +420,6 @@ private:
 }
 @end
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, Inherited)
-
 nsWindow::nsWindow()
 : mNativeView(nullptr),
   mVisible(false),

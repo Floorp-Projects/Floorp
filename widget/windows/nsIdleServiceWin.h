@@ -22,7 +22,7 @@
 class nsIdleServiceWin : public nsIdleService
 {
 public:
-    NS_DECL_ISUPPORTS_INHERITED
+    NS_INLINE_DECL_REFCOUNTING_INHERITED(nsIdleServiceWin, nsIdleService)
 
     bool PollIdleTime(uint32_t* aIdleTime) override;
 

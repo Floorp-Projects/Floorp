@@ -25,8 +25,6 @@ namespace dom {
 // buffers.
 static const float MAX_LATENCY_S = 0.5;
 
-NS_IMPL_ISUPPORTS_INHERITED0(ScriptProcessorNode, AudioNode)
-
 // This class manages a queue of output buffers shared between
 // the main thread and the Media Stream Graph thread.
 class SharedBuffers final

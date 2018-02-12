@@ -305,7 +305,8 @@ class LogForwarderEvent : public Runnable
 {
   ~LogForwarderEvent() override = default;
 
-  NS_DECL_ISUPPORTS_INHERITED
+public:
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(LogForwarderEvent, Runnable)
 
   explicit LogForwarderEvent(const nsCString& aMessage)
     : mozilla::Runnable("LogForwarderEvent")
@@ -330,8 +331,6 @@ class LogForwarderEvent : public Runnable
 protected:
   nsCString mMessage;
 };
-
-NS_IMPL_ISUPPORTS_INHERITED0(LogForwarderEvent, Runnable);
 
 void CrashStatsLogForwarder::Log(const std::string& aString)
 {
@@ -363,7 +362,8 @@ class CrashTelemetryEvent : public Runnable
 {
   ~CrashTelemetryEvent() override = default;
 
-  NS_DECL_ISUPPORTS_INHERITED
+public:
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(CrashTelemetryEvent, Runnable)
 
   explicit CrashTelemetryEvent(uint32_t aReason)
     : mozilla::Runnable("CrashTelemetryEvent")
@@ -380,8 +380,6 @@ class CrashTelemetryEvent : public Runnable
 protected:
   uint32_t mReason;
 };
-
-NS_IMPL_ISUPPORTS_INHERITED0(CrashTelemetryEvent, Runnable);
 
 void
 CrashStatsLogForwarder::CrashAction(LogReason aReason)

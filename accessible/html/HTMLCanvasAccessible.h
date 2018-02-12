@@ -20,7 +20,8 @@ public:
   HTMLCanvasAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLCanvasAccessible,
+                                       HyperTextAccessibleWrap)
 
   // Accessible
   virtual a11y::role NativeRole() override;

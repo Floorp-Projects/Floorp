@@ -1204,6 +1204,8 @@ NS_IMETHODIMP_(MozExternalRefCountType) Class::Release(void)                  \
   NS_IMPL_RELEASE(aClass)                                                     \
   NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
 
+// When possible, prefer NS_INLINE_DECL_REFCOUNTING_INHERITED to
+// NS_IMPL_ISUPPORTS_INHERITED0.
 #define NS_IMPL_ISUPPORTS_INHERITED0(aClass, aSuper)                          \
     NS_INTERFACE_TABLE_HEAD(aClass)                                           \
     NS_INTERFACE_TABLE_TAIL_INHERITING(aSuper)                                \

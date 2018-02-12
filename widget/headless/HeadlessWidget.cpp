@@ -54,8 +54,6 @@ CreateDefaultTarget(IntSize aSize)
   return ctx.forget();
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(HeadlessWidget, nsBaseWidget)
-
 StaticAutoPtr<nsTArray<HeadlessWidget*>> HeadlessWidget::sActiveWindows;
 
 already_AddRefed<HeadlessWidget>

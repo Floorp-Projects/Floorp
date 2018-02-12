@@ -21,8 +21,6 @@ using namespace mozilla::a11y;
 // HTMLListAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS_INHERITED0(HTMLListAccessible, HyperTextAccessible)
-
 role
 HTMLListAccessible::NativeRole()
 {
@@ -54,8 +52,6 @@ HTMLLIAccessible::
     AppendChild(mBullet);
   }
 }
-
-NS_IMPL_ISUPPORTS_INHERITED0(HTMLLIAccessible, HyperTextAccessible)
 
 void
 HTMLLIAccessible::Shutdown()

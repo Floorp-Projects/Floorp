@@ -22,7 +22,7 @@ public:
   Create(AudioContext& aAudioContext, const ChannelSplitterOptions& aOptions,
          ErrorResult& aRv);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(ChannelSplitterNode, AudioNode)
 
   static already_AddRefed<ChannelSplitterNode>
   Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,

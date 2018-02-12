@@ -145,7 +145,7 @@ class EncodingRunnable : public Runnable
   virtual ~EncodingRunnable() {}
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(EncodingRunnable, Runnable)
 
   EncodingRunnable(const nsAString& aType,
                    const nsAString& aOptions,
@@ -242,8 +242,6 @@ private:
   bool mUsePlaceholder;
   bool mUsingCustomOptions;
 };
-
-NS_IMPL_ISUPPORTS_INHERITED0(EncodingRunnable, Runnable);
 
 StaticRefPtr<nsIThreadPool> ImageEncoder::sThreadPool;
 

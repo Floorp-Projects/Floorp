@@ -20,7 +20,7 @@ class XULAlertAccessible : public AccessibleWrap
 public:
   XULAlertAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(XULAlertAccessible, AccessibleWrap)
 
   // Accessible
   virtual mozilla::a11y::ENameValueFlag Name(nsString& aName) override;

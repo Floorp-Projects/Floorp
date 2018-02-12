@@ -53,7 +53,7 @@ class HeadlessWidget : public nsBaseWidget
 public:
   HeadlessWidget();
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HeadlessWidget, nsBaseWidget)
 
   void* GetNativeData(uint32_t aDataType) override
   {
