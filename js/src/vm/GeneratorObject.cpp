@@ -8,9 +8,8 @@
 
 #include "vm/JSObject.h"
 
-#include "jsscriptinlines.h"
-
 #include "vm/ArrayObject-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
 

@@ -55,7 +55,6 @@
 #include "vtune/VTuneWrapper.h"
 
 #include "jscompartmentinlines.h"
-#include "jsscriptinlines.h"
 
 #include "gc/Iteration-inl.h"
 #include "jit/JitFrames-inl.h"
@@ -64,6 +63,7 @@
 #include "vm/Debugger-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;

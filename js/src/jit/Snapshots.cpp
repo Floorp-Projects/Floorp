@@ -6,8 +6,6 @@
 
 #include "jit/Snapshots.h"
 
-#include "jsscript.h"
-
 #include "jit/CompileInfo.h"
 #include "jit/JitSpewer.h"
 #ifdef TRACK_SNAPSHOTS
@@ -15,7 +13,7 @@
 #endif
 #include "jit/MIR.h"
 #include "jit/Recover.h"
-
+#include "vm/JSScript.h"
 #include "vm/Printer.h"
 
 using namespace js;

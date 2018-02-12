@@ -9,7 +9,6 @@
 
 #include "jsopcode.h"
 #include "jspubtd.h"
-#include "jsscript.h"
 #include "jstypes.h"
 
 #include "builtin/ModuleObject.h"
@@ -17,6 +16,7 @@
 #include "frontend/ParseNode.h"
 #include "frontend/TokenStream.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/JSScript.h"
 
 namespace js {
 namespace frontend {

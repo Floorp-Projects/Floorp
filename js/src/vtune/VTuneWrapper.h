@@ -11,9 +11,8 @@
 
 #include "vtune/jitprofiling.h"
 
-#include "jsscript.h"
-
 #include "jit/IonCode.h"
+#include "vm/JSScript.h"
 
 namespace js {
 namespace vtune {

@@ -43,10 +43,10 @@
 
 #include "jsgcinlines.h"
 #include "jsopcodeinlines.h"
-#include "jsscriptinlines.h"
 
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
 

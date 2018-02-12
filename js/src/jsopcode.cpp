@@ -28,7 +28,6 @@
 #include "jscompartment.h"
 #include "jsnum.h"
 #include "jsprf.h"
-#include "jsscript.h"
 #include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
@@ -42,16 +41,17 @@
 #include "vm/EnvironmentObject.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
+#include "vm/JSScript.h"
 #include "vm/Opcodes.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"
-#include "jsscriptinlines.h"
 
 #include "gc/Iteration-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
 
 using namespace js;
 using namespace js::gc;

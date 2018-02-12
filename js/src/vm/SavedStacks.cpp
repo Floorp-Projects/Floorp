@@ -20,7 +20,6 @@
 #include "jshashutil.h"
 #include "jsmath.h"
 #include "jsnum.h"
-#include "jsscript.h"
 
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
@@ -30,6 +29,7 @@
 #include "js/Vector.h"
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
+#include "vm/JSScript.h"
 #include "vm/SavedFrame.h"
 #include "vm/StringBuffer.h"
 #include "vm/Time.h"

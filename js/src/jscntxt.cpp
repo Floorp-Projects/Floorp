@@ -36,7 +36,6 @@
 #include "jsopcode.h"
 #include "jsprf.h"
 #include "jspubtd.h"
-#include "jsscript.h"
 #include "jsstr.h"
 #include "jstypes.h"
 #include "jswin.h"
@@ -50,12 +49,12 @@
 #include "vm/HelperThreads.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
+#include "vm/JSScript.h"
 #include "vm/Shape.h"
 #include "wasm/WasmSignalHandlers.h"
 
-#include "jsscriptinlines.h"
-
 #include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;

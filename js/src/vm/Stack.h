@@ -14,7 +14,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Variant.h"
 
-#include "jsscript.h"
 #include "jsutil.h"
 
 #include "gc/Rooting.h"
@@ -26,6 +25,7 @@
 #include "js/TypeDecls.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/JSFunction.h"
+#include "vm/JSScript.h"
 #include "vm/SavedFrame.h"
 #include "wasm/WasmFrameIter.h"
 #include "wasm/WasmTypes.h"

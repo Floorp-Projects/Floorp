@@ -21,8 +21,8 @@
 #include "jscompartment.h"
 #include "jsopcode.h"
 #include "jsprf.h"
-#include "jsscript.h"
 
+#include "vm/JSScript.h"
 #include "vm/Runtime.h"
 #include "vm/Time.h"
 

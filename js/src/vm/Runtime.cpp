@@ -25,7 +25,6 @@
 #endif
 
 #include "jsmath.h"
-#include "jsscript.h"
 #include "jswin.h"
 #include "jswrapper.h"
 
@@ -42,6 +41,7 @@
 #include "js/SliceBudget.h"
 #include "vm/Debugger.h"
 #include "vm/JSObject.h"
+#include "vm/JSScript.h"
 #include "vm/TraceLogging.h"
 #include "vm/TraceLoggingGraph.h"
 #include "wasm/WasmSignalHandlers.h"

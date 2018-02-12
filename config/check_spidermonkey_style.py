@@ -148,10 +148,10 @@ js/src/tests/style/BadIncludes.h:10: error:
     did you forget a prefix, or is the file not yet committed?
 
 js/src/tests/style/BadIncludesOrder-inl.h:5:6: error:
-    "vm/Interpreter-inl.h" should be included after "jsscriptinlines.h"
+    "vm/JSScript-inl.h" should be included after "vm/Interpreter-inl.h"
 
 js/src/tests/style/BadIncludesOrder-inl.h:6:7: error:
-    "jsscriptinlines.h" should be included after "js/Value.h"
+    "vm/Interpreter-inl.h" should be included after "js/Value.h"
 
 js/src/tests/style/BadIncludesOrder-inl.h:7:8: error:
     "js/Value.h" should be included after "ds/LifoAlloc.h"
@@ -166,7 +166,7 @@ js/src/tests/style/BadIncludesOrder-inl.h:10:11: error:
     <stdio.h> should be included after "mozilla/HashFunctions.h"
 
 js/src/tests/style/BadIncludesOrder-inl.h:28:29: error:
-    "vm/JSObject.h" should be included after "jstypes.h"
+    "vm/JSScript.h" should be included after "vm/JSFunction.h"
 
 (multiple files): error:
     header files form one or more cycles

@@ -9,7 +9,7 @@
 #include "jscntxt.h"
 
 #ifdef INCLUDE_MOZILLA_DTRACE
-#include "jsscriptinlines.h"
+#include "vm/JSScript-inl.h"
 #endif
 
 #define TYPEOF(cx,v)    (v.isNull() ? JSTYPE_NULL : JS_TypeOfValue(cx,v))

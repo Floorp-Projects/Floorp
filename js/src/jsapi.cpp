@@ -34,7 +34,6 @@
 #include "jsnum.h"
 #include "json.h"
 #include "jsprf.h"
-#include "jsscript.h"
 #include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
@@ -79,6 +78,7 @@
 #include "vm/Interpreter.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
+#include "vm/JSScript.h"
 #include "vm/RegExpStatics.h"
 #include "vm/Runtime.h"
 #include "vm/SavedStacks.h"
@@ -92,10 +92,9 @@
 #include "wasm/AsmJS.h"
 #include "wasm/WasmModule.h"
 
-#include "jsscriptinlines.h"
-
 #include "vm/Interpreter-inl.h"
 #include "vm/JSFunction-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/SavedStacks-inl.h"
 #include "vm/String-inl.h"

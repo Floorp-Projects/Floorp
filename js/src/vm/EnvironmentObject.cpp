@@ -22,9 +22,8 @@
 #include "vm/Xdr.h"
 #include "wasm/WasmInstance.h"
 
-#include "jsscriptinlines.h"
-
 #include "gc/Marking-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/TypeInference-inl.h"

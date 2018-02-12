@@ -56,12 +56,11 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
 
-#include "jsscriptinlines.h"
-
 #include "gc/Iteration-inl.h"
 #include "vm/BooleanObject-inl.h"
 #include "vm/JSFunction-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/StringObject-inl.h"

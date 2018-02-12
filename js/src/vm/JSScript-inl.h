@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsscriptinlines_h
-#define jsscriptinlines_h
+#ifndef vm_JSScript_inl_h
+#define vm_JSScript_inl_h
 
-#include "jsscript.h"
+#include "vm/JSScript.h"
 
 #include "jit/BaselineJIT.h"
 #include "jit/IonAnalysis.h"
@@ -202,4 +202,4 @@ JSScript::isDebuggee() const
     return compartment_->debuggerObservesAllExecution() || hasDebugScript_;
 }
 
-#endif /* jsscriptinlines_h */
+#endif /* vm_JSScript_inl_h */
