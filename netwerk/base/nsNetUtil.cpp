@@ -1874,11 +1874,37 @@ NS_ReadInputStreamToString(nsIInputStream* aInputStream,
         aWritten = &dummyWritten;
     }
 
+    // Nothing to do if aCount is 0.
+    if (aCount == 0) {
+        aDest.Truncate();
+        *aWritten = 0;
+        return NS_OK;
+    }
+
+    // If we have the size, we can pre-allocate the buffer.
+    if (aCount > 0) {
+        if (NS_WARN_IF(aCount  >= INT32_MAX) ||
+            NS_WARN_IF(!aDest.SetLength(aCount, mozilla::fallible))) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        void* dest = aDest.BeginWriting();
+        nsresult rv = NS_ReadInputStreamToBuffer(aInputStream, &dest, aCount,
+                                                 aWritten);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+       if ((uint64_t)aCount > *aWritten) {
+           aDest.Truncate(*aWritten);
+       }
+
+       return NS_OK;
+    }
+
+    // If the size is unknown, BufferWriter will allocate the buffer.
     void* dest = nullptr;
     nsresult rv = NS_ReadInputStreamToBuffer(aInputStream, &dest, aCount,
                                              aWritten);
     MOZ_ASSERT_IF(NS_FAILED(rv), dest == nullptr);
-
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!dest) {

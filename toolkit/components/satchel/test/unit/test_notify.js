@@ -6,6 +6,7 @@
  */
 
 ChromeUtils.defineModuleGetter(this, "setTimeout", "resource://gre/modules/Timer.jsm");
+ChromeUtils.defineModuleGetter(this, "Preferences", "resource://gre/modules/Preferences.jsm");
 
 const TestObserver = {
   observed: [],
@@ -134,6 +135,13 @@ add_task(async function removeEntriesForName() {
 });
 
 add_task(async function removeEntriesByTimeframe() {
+  let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
+  Preferences.set("privacy.reduceTimerPrecision", false);
+
+  registerCleanupFunction(function() {
+    Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
+  });
+
   await promiseAddEntry(entry1[0], entry1[1]);
   await promiseAddEntry(entry2[0], entry2[1]);
 

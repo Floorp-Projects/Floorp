@@ -738,8 +738,7 @@ class LNode
     size_t numTemps() const {
         return numTemps_;
     }
-    virtual LDefinition* getTemp(size_t index) = 0;
-    virtual void setTemp(size_t index, const LDefinition& a) = 0;
+    inline LDefinition* getTemp(size_t index);
 
     // Returns the number of successors of this instruction, if it is a control
     // transfer instruction, or zero otherwise.
@@ -968,12 +967,11 @@ class LPhi final : public LNode
         MOZ_ASSERT(index < numOperands());
         inputs_[index] = a;
     }
-    LDefinition* getTemp(size_t index) override {
-        MOZ_CRASH("no temps");
-    }
-    void setTemp(size_t index, const LDefinition& temp) override {
-        MOZ_CRASH("no temps");
-    }
+
+    // Phis don't have temps, so calling numTemps/getTemp is pointless.
+    size_t numTemps() const = delete;
+    LDefinition* getTemp(size_t index) = delete;
+
     size_t numSuccessors() const override {
         return 0;
     }
@@ -1086,8 +1084,7 @@ namespace details {
     template <size_t Defs, size_t Temps>
     class LInstructionFixedDefsTempsHelper : public LInstruction
     {
-        mozilla::Array<LDefinition, Defs> defs_;
-        mozilla::Array<LDefinition, Temps> temps_;
+        mozilla::Array<LDefinition, Defs + Temps> defsAndTemps_;
 
       protected:
         explicit LInstructionFixedDefsTempsHelper(uint32_t numOperands)
@@ -1096,24 +1093,28 @@ namespace details {
 
       public:
         LDefinition* getDef(size_t index) final override {
-            return &defs_[index];
+            MOZ_ASSERT(index < Defs);
+            return &defsAndTemps_[index];
         }
-        LDefinition* getTemp(size_t index) final override {
-            return &temps_[index];
+        LDefinition* getTemp(size_t index) {
+            MOZ_ASSERT(index < Temps);
+            return &defsAndTemps_[Defs + index];
         }
 
         void setDef(size_t index, const LDefinition& def) final override {
-            defs_[index] = def;
+            MOZ_ASSERT(index < Defs);
+            defsAndTemps_[index] = def;
         }
-        void setTemp(size_t index, const LDefinition& a) final override {
-            temps_[index] = a;
+        void setTemp(size_t index, const LDefinition& a) {
+            MOZ_ASSERT(index < Temps);
+            defsAndTemps_[Defs + index] = a;
         }
         void setInt64Temp(size_t index, const LInt64Definition& a) {
 #if JS_BITS_PER_WORD == 32
-            temps_[index] = a.low();
-            temps_[index + 1] = a.high();
+            setTemp(index, a.low());
+            setTemp(index + 1, a.high());
 #else
-            temps_[index] = a.value();
+            setTemp(index, a.value());
 #endif
         }
 
@@ -1121,11 +1122,10 @@ namespace details {
             return 0;
         }
         MBasicBlock* getSuccessor(size_t i) const override {
-            MOZ_ASSERT(false);
-            return nullptr;
+            MOZ_CRASH("no successors");
         }
         void setSuccessor(size_t i, MBasicBlock* successor) override {
-            MOZ_ASSERT(false);
+            MOZ_CRASH("no successors");
         }
 
         // Default accessors, assuming a single input and output, respectively.
@@ -1137,8 +1137,21 @@ namespace details {
             MOZ_ASSERT(numDefs() == 1);
             return getDef(0);
         }
+        static size_t offsetOfTemp(uint32_t numDefs, uint32_t index) {
+            using T = LInstructionFixedDefsTempsHelper<0, 0>;
+            return offsetof(T, defsAndTemps_) + (numDefs + index) * sizeof(LDefinition);
+        }
     };
 } // namespace details
+
+inline LDefinition*
+LNode::getTemp(size_t index)
+{
+    MOZ_ASSERT(index < numTemps());
+    using T = details::LInstructionFixedDefsTempsHelper<0, 0>;
+    uint8_t* p = reinterpret_cast<uint8_t*>(this) + T::offsetOfTemp(numDefs(), index);
+    return reinterpret_cast<LDefinition*>(p);
+}
 
 template <size_t Defs, size_t Operands, size_t Temps>
 class LInstructionHelper : public details::LInstructionFixedDefsTempsHelper<Defs, Temps>

@@ -260,6 +260,16 @@ add_test(function fetchAndCacheProfile_alreadyCached() {
 // Check that a new profile request within PROFILE_FRESHNESS_THRESHOLD of the
 // last one doesn't kick off a new request to check the cached copy is fresh.
 add_task(async function fetchAndCacheProfileAfterThreshold() {
+  /*
+   * This test was observed to cause a timeout for... any timer precision reduction.
+   * Even 1 us. Exact reason is still undiagnosed.
+   */
+  Services.prefs.setBoolPref("privacy.reduceTimerPrecision", false);
+
+  registerCleanupFunction(async () => {
+    Services.prefs.clearUserPref("privacy.reduceTimerPrecision");
+  });
+
   let numFetches = 0;
   let client = mockClient(mockFxa());
   client.fetchProfile = async function() {

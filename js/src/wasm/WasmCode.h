@@ -53,28 +53,82 @@ struct ShareableBytes : ShareableBase<ShareableBytes>
 typedef RefPtr<ShareableBytes> MutableBytes;
 typedef RefPtr<const ShareableBytes> SharedBytes;
 
-// A wasm CodeSegment owns the allocated executable code for a wasm module.
+// Executable code must be deallocated specially.
 
-class CodeSegment;
-typedef UniquePtr<CodeSegment> UniqueCodeSegment;
-typedef UniquePtr<const CodeSegment> UniqueConstCodeSegment;
+struct FreeCode {
+    uint32_t codeLength;
+    FreeCode() : codeLength(0) {}
+    explicit FreeCode(uint32_t codeLength) : codeLength(codeLength) {}
+    void operator()(uint8_t* codeBytes);
+};
+
+using UniqueCodeBytes = UniquePtr<uint8_t, FreeCode>;
+
+class ModuleSegment;
+
+// CodeSegment contains common helpers for determining the base and length of a
+// code segment and if a pc belongs to this segment. It is inherited by:
+// - ModuleSegment, i.e. the code segment of a Module, generated
+// eagerly when a Module is instanciated.
+// - LazyCodeSegment, i.e. the code segment of entry stubs that are lazily
+// generated.
 
 class CodeSegment
 {
-    // Executable code must be deallocated specially.
-    struct FreeCode {
-        uint32_t codeLength;
-        FreeCode() : codeLength(0) {}
-        explicit FreeCode(uint32_t codeLength) : codeLength(codeLength) {}
-        void operator()(uint8_t* codeBytes);
-    };
-    typedef UniquePtr<uint8_t, FreeCode> UniqueCodeBytes;
+  protected:
     static UniqueCodeBytes AllocateCodeBytes(uint32_t codeLength);
 
-    const Code*     code_;
-    Tier            tier_;
+    // A back reference to the owning code.
+    const Code* code_;
     UniqueCodeBytes bytes_;
-    uint32_t        length_;
+    uint32_t length_;
+
+    enum class Kind {
+        LazyStubs,
+        Module
+    } kind_;
+
+    bool registerInProcessMap();
+
+  private:
+    bool registered_;
+
+  public:
+    CodeSegment()
+      : code_(nullptr),
+        length_(0),
+        kind_(Kind::Module),
+        registered_(false)
+    {}
+
+    ~CodeSegment();
+
+    bool isLazyStubs() const { return kind_ == Kind::LazyStubs; }
+    bool isModule() const { return kind_ == Kind::Module; }
+    const ModuleSegment* asModule() const { MOZ_ASSERT(isModule()); return (ModuleSegment*) this; }
+
+    uint8_t* base() const { return bytes_.get(); }
+    uint32_t length() const { return length_; }
+
+    bool containsCodePC(const void* pc) const {
+        return pc >= base() && pc < (base() + length_);
+    }
+
+    void initCode(const Code* code) {
+        MOZ_ASSERT(!code_);
+        code_ = code;
+    }
+    const Code& code() const { MOZ_ASSERT(code_); return *code_; }
+};
+
+// A wasm ModuleSegment owns the allocated executable code for a wasm module.
+
+typedef UniquePtr<ModuleSegment> UniqueModuleSegment;
+typedef UniquePtr<const ModuleSegment> UniqueConstModuleSegment;
+
+class ModuleSegment : public CodeSegment
+{
+    Tier            tier_;
 
     // These are pointers into code for stubs used for asynchronous
     // signal-handler control-flow transfer.
@@ -83,8 +137,6 @@ class CodeSegment
     uint8_t*        unalignedAccessCode_;
     uint8_t*        trapCode_;
 
-    bool            registered_;
-
     bool initialize(Tier tier,
                     UniqueCodeBytes bytes,
                     uint32_t codeLength,
@@ -92,60 +144,43 @@ class CodeSegment
                     const LinkDataTier& linkData,
                     const Metadata& metadata);
 
-    static UniqueCodeSegment create(Tier tier,
-                                    UniqueCodeBytes bytes,
-                                    uint32_t codeLength,
-                                    const ShareableBytes& bytecode,
-                                    const LinkDataTier& linkData,
-                                    const Metadata& metadata);
+    static UniqueModuleSegment create(Tier tier,
+                                      UniqueCodeBytes bytes,
+                                      uint32_t codeLength,
+                                      const ShareableBytes& bytecode,
+                                      const LinkDataTier& linkData,
+                                      const Metadata& metadata);
   public:
-    CodeSegment(const CodeSegment&) = delete;
-    void operator=(const CodeSegment&) = delete;
+    ModuleSegment(const ModuleSegment&) = delete;
+    void operator=(const ModuleSegment&) = delete;
 
-    CodeSegment()
-      : code_(nullptr),
+    ModuleSegment()
+      : CodeSegment(),
         tier_(Tier(-1)),
-        length_(0),
         interruptCode_(nullptr),
         outOfBoundsCode_(nullptr),
         unalignedAccessCode_(nullptr),
-        trapCode_(nullptr),
-        registered_(false)
+        trapCode_(nullptr)
     {}
 
-    ~CodeSegment();
+    static UniqueModuleSegment create(Tier tier,
+                                      jit::MacroAssembler& masm,
+                                      const ShareableBytes& bytecode,
+                                      const LinkDataTier& linkData,
+                                      const Metadata& metadata);
 
-    static UniqueCodeSegment create(Tier tier,
-                                    jit::MacroAssembler& masm,
-                                    const ShareableBytes& bytecode,
-                                    const LinkDataTier& linkData,
-                                    const Metadata& metadata);
+    static UniqueModuleSegment create(Tier tier,
+                                      const Bytes& unlinkedBytes,
+                                      const ShareableBytes& bytecode,
+                                      const LinkDataTier& linkData,
+                                      const Metadata& metadata);
 
-    static UniqueCodeSegment create(Tier tier,
-                                    const Bytes& unlinkedBytes,
-                                    const ShareableBytes& bytecode,
-                                    const LinkDataTier& linkData,
-                                    const Metadata& metadata);
-
-    void initCode(const Code* code) {
-        MOZ_ASSERT(!code_);
-        code_ = code;
-    }
-
-    const Code& code() const { MOZ_ASSERT(code_); return *code_; }
     Tier tier() const { return tier_; }
-
-    uint8_t* base() const { return bytes_.get(); }
-    uint32_t length() const { return length_; }
 
     uint8_t* interruptCode() const { return interruptCode_; }
     uint8_t* outOfBoundsCode() const { return outOfBoundsCode_; }
     uint8_t* unalignedAccessCode() const { return unalignedAccessCode_; }
     uint8_t* trapCode() const { return trapCode_; }
-
-    bool containsCodePC(const void* pc) const {
-        return pc >= base() && pc < (base() + length_);
-    }
 
     // Structured clone support:
 
@@ -463,7 +498,7 @@ class JumpTables
     size_t numFuncs_;
 
   public:
-    bool init(CompileMode mode, const CodeSegment& cs, const CodeRangeVector& codeRanges);
+    bool init(CompileMode mode, const ModuleSegment& ms, const CodeRangeVector& codeRanges);
 
     void setJitEntry(size_t i, void* target) const {
         // See comment in wasm::Module::finishTier2 and JumpTables::init.
@@ -501,20 +536,20 @@ class JumpTables
 
 class Code : public ShareableBase<Code>
 {
-    UniqueConstCodeSegment              segment1_;
-    mutable UniqueConstCodeSegment      segment2_; // Access only when hasTier2() is true
+    UniqueConstModuleSegment            segment1_;
+    mutable UniqueConstModuleSegment    segment2_; // Access only when hasTier2() is true
     SharedMetadata                      metadata_;
     ExclusiveData<CacheableCharsVector> profilingLabels_;
     JumpTables                          jumpTables_;
 
-    UniqueConstCodeSegment takeOwnership(UniqueCodeSegment segment) const {
+    UniqueConstModuleSegment takeOwnership(UniqueModuleSegment segment) const {
         segment->initCode(this);
-        return UniqueConstCodeSegment(segment.release());
+        return UniqueConstModuleSegment(segment.release());
     }
 
   public:
     Code();
-    Code(UniqueCodeSegment tier, const Metadata& metadata, JumpTables&& maybeJumpTables);
+    Code(UniqueModuleSegment tier, const Metadata& metadata, JumpTables&& maybeJumpTables);
 
     void setTieringEntry(size_t i, void* target) const { jumpTables_.setTieringEntry(i, target); }
     void** tieringJumpTable() const { return jumpTables_.tiering(); }
@@ -524,14 +559,14 @@ class Code : public ShareableBase<Code>
     uint32_t lookupFuncIndex(JSFunction* fun) const;
 
     bool hasTier2() const { return metadata_->hasTier2(); }
-    void setTier2(UniqueCodeSegment segment) const;
+    void setTier2(UniqueModuleSegment segment) const;
     Tiers tiers() const;
     bool hasTier(Tier t) const;
 
     Tier stableTier() const;    // This is stable during a run
     Tier bestTier() const;      // This may transition from Baseline -> Ion at any time
 
-    const CodeSegment& segment(Tier tier) const;
+    const ModuleSegment& segment(Tier tier) const;
     const MetadataTier& metadata(Tier tier) const { return metadata_->metadata(tier); }
     const Metadata& metadata() const { return *metadata_; }
 

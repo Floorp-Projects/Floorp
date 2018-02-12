@@ -35,7 +35,8 @@ var template = function (set) {
         // If we bailout in the inner loop, then x will have a smaller value
         // than the number of iterations.
         cont = assertEqIf(lastX > 0, x, set.length);
-        lastX = x;
+        if (inIon())
+            lastX = x;
         x = 0;
     }
     return y;

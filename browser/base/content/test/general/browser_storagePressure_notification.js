@@ -25,6 +25,8 @@ add_task(async function() {
   const TEST_NOTIFICATION_INTERVAL_MS = 2000;
   await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.pressureNotification.minIntervalMS", TEST_NOTIFICATION_INTERVAL_MS]]});
+  // Commenting this to see if we really need it
+  // await SpecialPowers.pushPrefEnv({set: [["privacy.reduceTimerPrecision", false]]});
 
   await notifyStoragePressure();
   let notificationbox = document.getElementById("high-priority-global-notificationbox");

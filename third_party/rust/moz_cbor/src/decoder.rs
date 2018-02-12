@@ -7,10 +7,14 @@ use {CborError, CborType};
 // any benign data.
 pub const MAX_ARRAY_SIZE: usize = 134_217_728;
 
+// Prevent stack exhaustion by limiting the nested depth of CBOR data.
+const MAX_NESTED_DEPTH: usize = 256;
+
 /// Struct holding a cursor and additional information for decoding.
 #[derive(Debug)]
 struct DecoderCursor<'a> {
     cursor: Cursor<&'a [u8]>,
+    depth: usize,
 }
 
 /// Apply this mask (with &) to get the value part of the initial byte of a CBOR item.
@@ -121,8 +125,12 @@ impl<'a> DecoderCursor<'a> {
 
     /// Decodes the next CBOR item.
     pub fn decode_item(&mut self) -> Result<CborType, CborError> {
+        if self.depth > MAX_NESTED_DEPTH {
+            return Err(CborError::MalformedInput);
+        }
+        self.depth += 1;
         let major_type = self.peek_byte()? >> 5;
-        match major_type {
+        let result = match major_type {
             0 => {
                 let value = self.read_int()?;
                 Ok(CborType::Integer(value))
@@ -138,13 +146,20 @@ impl<'a> DecoderCursor<'a> {
             }
             7 => self.read_null(),
             _ => Err(CborError::UnsupportedType),
-        }
+        };
+        self.depth -= 1;
+        result
     }
 }
 
-/// Read the CBOR structure in bytes and return it as a `CborType`.
+/// Read the CBOR structure in bytes and return it as a `CborType`. To prevent stack exhaustion, the
+/// maximum nested depth of CBOR objects (for example, an array of an array of an array...) is 256.
+/// If the input data describes a CBOR structure that exceeds this limit, an error will be returned.
 pub fn decode(bytes: &[u8]) -> Result<CborType, CborError> {
-    let mut decoder_cursor = DecoderCursor { cursor: Cursor::new(bytes) };
+    let mut decoder_cursor = DecoderCursor {
+        cursor: Cursor::new(bytes),
+        depth: 0,
+    };
     decoder_cursor.decode_item()
     // TODO: check cursor at end?
 }
