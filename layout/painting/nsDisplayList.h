@@ -3090,11 +3090,17 @@ public:
     PAINT_USE_WIDGET_LAYERS = 0x01,
     PAINT_EXISTING_TRANSACTION = 0x04,
     PAINT_NO_COMPOSITE = 0x08,
-    PAINT_COMPRESSED = 0x10
+    PAINT_COMPRESSED = 0x10,
+    PAINT_IDENTICAL_DISPLAY_LIST = 0x20
   };
   already_AddRefed<LayerManager> PaintRoot(nsDisplayListBuilder* aBuilder,
                                            gfxContext* aCtx,
                                            uint32_t aFlags);
+
+  mozilla::FrameLayerBuilder* BuildLayers(nsDisplayListBuilder* aBuilder,
+                                          LayerManager* aLayerManager,
+                                          uint32_t aFlags,
+                                          bool aIsWidgetTransaction);
   /**
    * Get the bounds. Takes the union of the bounds of all children.
    * The result is not cached.
@@ -4781,7 +4787,7 @@ private:
     }
   }
 
-  friend void MergeLayerEventRegions(nsDisplayItem*, nsDisplayItem*);
+  friend bool MergeLayerEventRegions(nsDisplayItem*, nsDisplayItem*);
 
   // Relative to aFrame's reference frame.
   // These are the points that are definitely in the hit region.
