@@ -54,7 +54,7 @@ available. -->
 <!ENTITY connectionSettings.accesskey    "e">
 
 <!--  Site Data section manages sites using Storage API and is under Network -->
-<!ENTITY siteData.label                  "Site Data">
+<!ENTITY siteData1.label                 "Cookies and Site Data">
 <!ENTITY clearSiteData1.label            "Clear Data…">
 <!ENTITY clearSiteData1.accesskey        "l">
 <!ENTITY siteDataSettings.label          "Settings…">
