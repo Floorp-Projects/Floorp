@@ -1026,7 +1026,10 @@ CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod* ins)
         masm.test32(rhs, rhs);
         if (ins->mir()->isTruncated()) {
             if (ins->trapOnError()) {
-                masm.j(Assembler::Zero, oldTrap(ins, wasm::Trap::IntegerDivideByZero));
+                Label nonZero;
+                masm.j(Assembler::NonZero, &nonZero);
+                masm.wasmTrap(wasm::Trap::IntegerDivideByZero, ins->bytecodeOffset());
+                masm.bind(&nonZero);
             } else {
                 ool = new(alloc()) ReturnZero(output);
                 masm.j(Assembler::Zero, ool->entry());
@@ -1074,7 +1077,7 @@ CodeGeneratorX86Shared::visitUDivOrModConstant(LUDivOrModConstant *ins) {
     if (d == 0) {
         if (ins->mir()->isTruncated()) {
             if (ins->trapOnError())
-                masm.jump(oldTrap(ins, wasm::Trap::IntegerDivideByZero));
+                masm.wasmTrap(wasm::Trap::IntegerDivideByZero, ins->bytecodeOffset());
             else
                 masm.xorl(output, output);
         } else {
@@ -1336,7 +1339,10 @@ CodeGeneratorX86Shared::visitDivI(LDivI* ins)
     if (mir->canBeDivideByZero()) {
         masm.test32(rhs, rhs);
         if (mir->trapOnError()) {
-            masm.j(Assembler::Zero, oldTrap(mir, wasm::Trap::IntegerDivideByZero));
+            Label nonZero;
+            masm.j(Assembler::NonZero, &nonZero);
+            masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->bytecodeOffset());
+            masm.bind(&nonZero);
         } else if (mir->canTruncateInfinities()) {
             // Truncated division by zero is zero (Infinity|0 == 0)
             if (!ool)
@@ -1506,7 +1512,10 @@ CodeGeneratorX86Shared::visitModI(LModI* ins)
         masm.test32(rhs, rhs);
         if (mir->isTruncated()) {
             if (mir->trapOnError()) {
-                masm.j(Assembler::Zero, oldTrap(mir, wasm::Trap::IntegerDivideByZero));
+                Label nonZero;
+                masm.j(Assembler::NonZero, &nonZero);
+                masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->bytecodeOffset());
+                masm.bind(&nonZero);
             } else {
                 if (!ool)
                     ool = new(alloc()) ReturnZero(edx);
