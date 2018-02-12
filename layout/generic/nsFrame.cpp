@@ -3514,6 +3514,13 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // Animations may change the value of |HasOpacity()|.
     !(child->GetContent() &&
       child->GetContent()->MayHaveAnimations());
+
+  // dirty rect in child-relative coordinates
+  NS_ASSERTION(aBuilder->GetCurrentFrame() == this, "Wrong coord space!");
+  const nsPoint offset = child->GetOffsetTo(this);
+  nsRect visible = aBuilder->GetVisibleRect() - offset;
+  nsRect dirty = aBuilder->GetDirtyRect() - offset;
+
   if (doingShortcut) {
     // This is the shortcut for frames been handled along the common
     // path, the most common one of THE COMMON CASE mentioned later.
@@ -3527,10 +3534,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       // return below.
       aBuilder->AllocatePerspectiveItemIndex();
     }
-
-    // dirty rect in child-relative coordinates
-    nsRect dirty = aBuilder->GetDirtyRect() - child->GetOffsetTo(this);
-    nsRect visible = aBuilder->GetVisibleRect() - child->GetOffsetTo(this);
 
     if (!DescendIntoChild(aBuilder, child, visible, dirty)) {
       return;
@@ -3581,12 +3584,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     awayFromCommonPath = true;
   }
 
-  // dirty rect in child-relative coordinates
-  NS_ASSERTION(aBuilder->GetCurrentFrame() == this, "Wrong coord space!");
-  nsPoint offset = child->GetOffsetTo(this);
-  nsRect visible = aBuilder->GetVisibleRect() - offset;
-  nsRect dirty = aBuilder->GetDirtyRect() - offset;
-
   nsDisplayListBuilder::OutOfFlowDisplayData* savedOutOfFlowData = nullptr;
   bool isPlaceholder = false;
   if (child->IsPlaceholderFrame()) {
@@ -3627,7 +3624,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     awayFromCommonPath = true;
   }
 
-  if (child->HasPerspective()) {
+  const nsStyleDisplay* disp = child->StyleDisplay();
+
+  if (child->HasPerspective(disp)) {
     // We need to allocate a perspective index before a potential early
     // return below.
     aBuilder->AllocatePerspectiveItemIndex();
@@ -3672,7 +3671,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects or a blend mode..
   EffectSet* effectSet = EffectSet::GetEffectSet(child);
-  const nsStyleDisplay* disp = child->StyleDisplay();
   const nsStyleEffects* effects = child->StyleEffects();
   const nsStylePosition* pos = child->StylePosition();
   bool isVisuallyAtomic = child->IsVisuallyAtomic(effectSet, disp, effects);
