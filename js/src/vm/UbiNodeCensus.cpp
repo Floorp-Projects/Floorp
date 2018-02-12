@@ -7,7 +7,8 @@
 #include "js/UbiNodeCensus.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h"
+
+#include "vm/JSCompartment.h"
 
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"

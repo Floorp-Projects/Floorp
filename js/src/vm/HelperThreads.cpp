@@ -26,9 +26,9 @@
 #include "vm/Xdr.h"
 
 #include "jscntxtinlines.h"
-#include "jscompartmentinlines.h"
 
 #include "gc/Iteration-inl.h"
+#include "vm/JSCompartment-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"

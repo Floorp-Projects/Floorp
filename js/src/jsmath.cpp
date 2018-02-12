@@ -17,25 +17,22 @@
 
 #include <algorithm>  // for std::max
 #include <fcntl.h>
-
 #ifdef XP_UNIX
 # include <unistd.h>
 #endif
 
 #include "fdlibm.h"
-
+#include "jsapi.h"
+#include "jscntxt.h"
+#include "jslibmath.h"
+#include "jstypes.h"
 #ifdef XP_WIN
 # include "jswin.h"
 #endif
 
-#include "jsapi.h"
-#include "jscntxt.h"
-#include "jscompartment.h"
-#include "jslibmath.h"
-#include "jstypes.h"
-
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
+#include "vm/JSCompartment.h"
 #include "vm/Time.h"
 
 #include "vm/JSObject-inl.h"

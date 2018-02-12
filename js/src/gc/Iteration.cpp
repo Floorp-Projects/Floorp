@@ -8,10 +8,9 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "jscompartment.h"
-
 #include "gc/GCInternals.h"
 #include "js/HashTable.h"
+#include "vm/JSCompartment.h"
 #include "vm/Runtime.h"
 
 #include "jscntxtinlines.h"

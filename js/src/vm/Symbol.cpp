@@ -7,14 +7,14 @@
 #include "vm/Symbol.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 
 #include "builtin/SymbolObject.h"
 #include "gc/Allocator.h"
 #include "gc/Rooting.h"
+#include "vm/JSCompartment.h"
 #include "vm/StringBuffer.h"
 
-#include "jscompartmentinlines.h"
+#include "vm/JSCompartment-inl.h"
 
 using JS::Symbol;
 using namespace js;

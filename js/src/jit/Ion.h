@@ -11,10 +11,10 @@
 #include "mozilla/Result.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 
 #include "jit/CompileWrappers.h"
 #include "jit/JitOptions.h"
+#include "vm/JSCompartment.h"
 
 namespace js {
 namespace jit {

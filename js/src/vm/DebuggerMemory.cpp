@@ -14,7 +14,6 @@
 
 #include "jsalloc.h"
 #include "jscntxt.h"
-#include "jscompartment.h"
 
 #include "builtin/MapObject.h"
 #include "gc/Marking.h"
@@ -25,6 +24,7 @@
 #include "js/Utility.h"
 #include "vm/Debugger.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSCompartment.h"
 #include "vm/SavedStacks.h"
 
 #include "vm/Debugger-inl.h"

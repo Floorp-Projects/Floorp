@@ -12,9 +12,9 @@
 #include "mozilla/Move.h"
 #include "mozilla/Unused.h"
 
-#include "jscompartment.h"
 #include "jsutil.h"
 
+#include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"
 #include "jit/JitFrames.h"
@@ -23,7 +23,7 @@
 #if defined(DEBUG)
 #include "vm/EnvironmentObject.h"
 #endif
-#include "gc/FreeOp.h"
+#include "vm/JSCompartment.h"
 #include "vm/JSONPrinter.h"
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"

@@ -13,9 +13,10 @@
 #include "vm/Debugger.h"
 #include "vm/Runtime.h"
 
-#include "jscompartmentinlines.h"
 #include "jsgcinlines.h"
+
 #include "gc/Marking-inl.h"
+#include "vm/JSCompartment-inl.h"
 
 using namespace js;
 using namespace js::gc;

@@ -6,11 +6,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 #include "jsnum.h"
 #include "jsstr.h"
 
 #include "jsapi-tests/tests.h"
+#include "vm/JSCompartment.h"
 
 #include "vm/String-inl.h"
 

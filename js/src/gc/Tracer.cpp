@@ -20,9 +20,9 @@
 #include "vm/Shape.h"
 #include "vm/Symbol.h"
 
-#include "jscompartmentinlines.h"
 #include "jsgcinlines.h"
 
+#include "vm/JSCompartment-inl.h"
 #include "vm/ObjectGroup-inl.h"
 
 using namespace js;

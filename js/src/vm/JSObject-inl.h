@@ -27,10 +27,10 @@
 #include "vm/TypedArrayObject.h"
 
 #include "jsatominlines.h"
-#include "jscompartmentinlines.h"
 
 #include "gc/Marking-inl.h"
 #include "gc/ObjectKind-inl.h"
+#include "vm/JSCompartment-inl.h"
 #include "vm/ShapedObject-inl.h"
 #include "vm/TypeInference-inl.h"
 

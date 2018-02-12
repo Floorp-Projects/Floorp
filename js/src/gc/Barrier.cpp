@@ -6,14 +6,13 @@
 
 #include "gc/Barrier.h"
 
-#include "jscompartment.h"
-
 #include "builtin/TypedObject.h"
 #include "gc/Policy.h"
 #include "gc/Zone.h"
 #include "js/HashTable.h"
 #include "js/Value.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/JSCompartment.h"
 #include "vm/JSObject.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/Symbol.h"

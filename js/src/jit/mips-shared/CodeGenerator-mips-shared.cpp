@@ -10,7 +10,6 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 #include "jsnum.h"
 
 #include "jit/CodeGenerator.h"
@@ -19,6 +18,7 @@
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 #include "js/Conversions.h"
+#include "vm/JSCompartment.h"
 #include "vm/Shape.h"
 #include "vm/TraceLogging.h"
 

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jscompartment_h
-#define jscompartment_h
+#ifndef vm_JSCompartment_h
+#define vm_JSCompartment_h
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
@@ -1464,4 +1464,4 @@ struct GCPolicy<js::CrossCompartmentKey> : public StructGCPolicy<js::CrossCompar
 };
 } // namespace JS
 
-#endif /* jscompartment_h */
+#endif /* vm_JSCompartment_h */

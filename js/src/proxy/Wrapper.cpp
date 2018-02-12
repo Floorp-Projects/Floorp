@@ -5,12 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 #include "jsexn.h"
 #include "jswrapper.h"
 
 #include "js/Proxy.h"
 #include "vm/ErrorObject.h"
+#include "vm/JSCompartment.h"
 #include "vm/ProxyObject.h"
 #include "vm/RegExpObject.h"
 #include "vm/WrapperObject.h"
