@@ -36,6 +36,7 @@
 #include "nsIXPConnect.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
+#include "nsGlobalWindowInner.h"
 #include "nsThreadUtils.h"
 #include "nsIScriptChannel.h"
 #include "nsIDocument.h"
