@@ -210,7 +210,6 @@
 #include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jsprf.h"
-#include "jsscript.h"
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jsweakmap.h"
@@ -232,6 +231,7 @@
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/JSObject.h"
+#include "vm/JSScript.h"
 #include "vm/Printer.h"
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
@@ -241,14 +241,13 @@
 #include "vm/TraceLogging.h"
 #include "vm/WrapperObject.h"
 
-#include "jsscriptinlines.h"
-
 #include "gc/Heap-inl.h"
 #include "gc/Iteration-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 

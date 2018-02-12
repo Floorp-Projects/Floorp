@@ -17,9 +17,8 @@
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 
-#include "jsscriptinlines.h"
-
 #include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
 
 using namespace js;
 using namespace js::frontend;

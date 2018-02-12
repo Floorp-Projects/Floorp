@@ -9,7 +9,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jsprf.h"
-#include "jsscript.h"
 #include "jsutil.h"
 #include "NamespaceImports.h"
 
@@ -17,6 +16,7 @@
 #include "gc/Marking.h"
 #include "gc/Zone.h"
 #include "vm/JSFunction.h"
+#include "vm/JSScript.h"
 #include "vm/Shape.h"
 #include "vm/Symbol.h"
 

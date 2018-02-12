@@ -12,19 +12,18 @@
 #include "mozilla/PodOperations.h"
 
 #include "jscntxt.h"
-#include "jsscript.h"
 
 #include "jit/BaselineFrame.h"
 #include "jit/RematerializedFrame.h"
 #include "js/Debug.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/GeneratorObject.h"
+#include "vm/JSScript.h"
 #include "wasm/WasmInstance.h"
-
-#include "jsscriptinlines.h"
 
 #include "jit/BaselineFrame-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
 
 namespace js {
 

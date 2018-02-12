@@ -14,13 +14,13 @@
 #include "jscntxt.h"
 #include "jsiter.h"
 #include "jsopcode.h"
-#include "jsscript.h"
 
 #include "ds/InlineTable.h"
 #include "frontend/EitherParser.h"
 #include "frontend/SharedContext.h"
 #include "frontend/SourceNotes.h"
 #include "vm/Interpreter.h"
+#include "vm/JSScript.h"
 
 namespace js {
 namespace frontend {

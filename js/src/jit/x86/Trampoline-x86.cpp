@@ -21,10 +21,9 @@
 #include "jit/x86/SharedICHelpers-x86.h"
 #include "vtune/VTuneWrapper.h"
 
-#include "jsscriptinlines.h"
-
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
+#include "vm/JSScript-inl.h"
 
 using mozilla::IsPowerOfTwo;
 

@@ -6,8 +6,8 @@
 
 /* JS script descriptor. */
 
-#ifndef jsscript_h
-#define jsscript_h
+#ifndef vm_JSScript_h
+#define vm_JSScript_h
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
@@ -2493,4 +2493,4 @@ class Concrete<js::LazyScript> : TracerConcrete<js::LazyScript> {
 } // namespace ubi
 } // namespace JS
 
-#endif /* jsscript_h */
+#endif /* vm_JSScript_h */

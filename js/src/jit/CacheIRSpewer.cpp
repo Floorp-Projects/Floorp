@@ -18,10 +18,9 @@
 #endif
 #include <stdarg.h>
 
-#include "jsscript.h"
-
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
+#include "vm/JSScript.h"
 
 #include "jscompartmentinlines.h"
 

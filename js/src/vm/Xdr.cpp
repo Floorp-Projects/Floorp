@@ -12,10 +12,10 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsscript.h"
 
 #include "vm/Debugger.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/JSScript.h"
 #include "vm/TraceLogging.h"
 
 using namespace js;
