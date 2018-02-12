@@ -4,9 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-
 const {
   apply,
   getNodeTransformationMatrix,
@@ -42,11 +39,6 @@ const CANVAS_SIZE = 4096;
 
 // The default color used for the canvas' font, fill and stroke colors.
 const DEFAULT_COLOR = "#9400FF";
-
-// Boolean pref to enable adjustment for writing mode and RTL content.
-DevToolsUtils.defineLazyGetter(this, "WRITING_MODE_ADJUST_ENABLED", () => {
-  return Services.prefs.getBoolPref("devtools.highlighter.writingModeAdjust");
-});
 
 /**
  * Draws a rect to the context given and applies a transformation matrix if passed.
@@ -318,16 +310,14 @@ function getCurrentMatrix(element, window) {
   currentMatrix = multiply(currentMatrix,
     translate(paddingLeft + borderLeft, paddingTop + borderTop));
 
-  if (WRITING_MODE_ADJUST_ENABLED) {
-    // Adjust as needed to match the writing mode and text direction of the element.
-    let size = {
-      width: element.offsetWidth,
-      height: element.offsetHeight,
-    };
-    let writingModeMatrix = getWritingModeMatrix(size, computedStyle);
-    if (!isIdentity(writingModeMatrix)) {
-      currentMatrix = multiply(currentMatrix, writingModeMatrix);
-    }
+  // Adjust as needed to match the writing mode and text direction of the element.
+  let size = {
+    width: element.offsetWidth,
+    height: element.offsetHeight,
+  };
+  let writingModeMatrix = getWritingModeMatrix(size, computedStyle);
+  if (!isIdentity(writingModeMatrix)) {
+    currentMatrix = multiply(currentMatrix, writingModeMatrix);
   }
 
   return { currentMatrix, hasNodeTransformations };
