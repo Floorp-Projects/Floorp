@@ -42,6 +42,8 @@ from mozbuild.backend import (
     backends,
 )
 
+from concurrent.futures import ThreadPoolExecutor
+
 
 BUILD_WHAT_HELP = '''
 What to build. Can be a top-level make target or a relative directory. If
@@ -1211,6 +1213,8 @@ class PackageFrontend(MachCommandBase):
         help='Number of times to retry failed downloads')
     @CommandArgument('--artifact-manifest', metavar='FILE',
         help='Store a manifest about the downloaded taskcluster artifacts')
+    @CommandArgument('--jobs', '-j', default='4', metavar='jobs', type=int,
+        help='Number of artifacts to fetch concurrently. Default is 4.')
     @CommandArgument('files', nargs='*',
         help='A list of files to download, in the form path@task-id, in '
              'addition to the files listed in the tooltool manifest.')
@@ -1218,7 +1222,7 @@ class PackageFrontend(MachCommandBase):
                           skip_cache=False, from_build=(),
                           tooltool_manifest=None, authentication_file=None,
                           tooltool_url=None, no_unpack=False, retry=None,
-                          artifact_manifest=None, files=()):
+                          artifact_manifest=None, jobs=4, files=()):
         '''Download, cache and install pre-built toolchains.
         '''
         from mozbuild.artifacts import ArtifactCache
@@ -1401,7 +1405,9 @@ class PackageFrontend(MachCommandBase):
             record = ArtifactRecord(task_id, name)
             records[record.filename] = record
 
-        for record in records.itervalues():
+        artifacts = {} if artifact_manifest else None
+
+        def _fetch_and_unpack_record(record):
             self.log(logging.INFO, 'artifact', {'name': record.basename},
                      'Downloading {name}')
             valid = False
@@ -1446,17 +1452,13 @@ class PackageFrontend(MachCommandBase):
                                  'Will retry in a moment...')
                     continue
 
-                downloaded.append(record)
                 break
 
             if not valid:
                 self.log(logging.ERROR, 'artifact', {'name': record.basename},
                          'Failed to download {name}')
-                return 1
+                raise Exception('Failed to download {name}'.format(name=record.basename))
 
-        artifacts = {} if artifact_manifest else None
-
-        for record in downloaded:
             local = os.path.join(os.getcwd(), record.basename)
             if os.path.exists(local):
                 os.unlink(local)
@@ -1485,6 +1487,11 @@ class PackageFrontend(MachCommandBase):
                 unpack_file(local, record.setup)
                 os.unlink(local)
 
+            return record
+
+        with ThreadPoolExecutor(jobs) as pool:
+            downloaded = pool.map(_fetch_and_unpack_record, records.values())
+
         if not downloaded:
             self.log(logging.ERROR, 'artifact', {}, 'Nothing to download')
             if files:
@@ -1496,6 +1503,7 @@ class PackageFrontend(MachCommandBase):
                 json.dump(artifacts, fh, indent=4, sort_keys=True)
 
         return 0
+
 
 class StaticAnalysisSubCommand(SubCommand):
     def __call__(self, func):
