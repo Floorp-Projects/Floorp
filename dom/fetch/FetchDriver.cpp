@@ -851,8 +851,9 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
     ErrorResult result;
     if (response->Headers()->Has(NS_LITERAL_CSTRING("content-encoding"), result) ||
         response->Headers()->Has(NS_LITERAL_CSTRING("transfer-encoding"), result)) {
-      NS_WARNING("Cannot know response Content-Length due to presence of Content-Encoding "
-                 "or Transfer-Encoding headers.");
+      // We cannot trust the content-length when content-encoding or
+      // transfer-encoding are set.  There are many servers which just
+      // get this wrong.
       contentLength = InternalResponse::UNKNOWN_BODY_SIZE;
     }
     MOZ_ASSERT(!result.Failed());
