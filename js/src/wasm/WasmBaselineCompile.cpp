@@ -9885,10 +9885,6 @@ js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo
     MOZ_ASSERT(IsCompilingWasm());
     MacroAssembler masm(MacroAssembler::WasmToken(), alloc);
 
-#ifdef JS_CODEGEN_ARM64
-    masm.SetStackPointer64(sp);
-#endif
-
     // Swap in already-allocated empty vectors to avoid malloc/free.
     MOZ_ASSERT(code->empty());
     if (!code->swap(masm))
