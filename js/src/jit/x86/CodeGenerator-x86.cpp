@@ -1045,15 +1045,15 @@ CodeGeneratorX86::visitDivOrModI64(LDivOrModI64* lir)
 
     // Handle an integer overflow exception from INT64_MIN / -1.
     if (lir->canBeNegativeOverflow()) {
-        Label notmin;
-        masm.branch64(Assembler::NotEqual, lhs, Imm64(INT64_MIN), &notmin);
-        masm.branch64(Assembler::NotEqual, rhs, Imm64(-1), &notmin);
+        Label notOverflow;
+        masm.branch64(Assembler::NotEqual, lhs, Imm64(INT64_MIN), &notOverflow);
+        masm.branch64(Assembler::NotEqual, rhs, Imm64(-1), &notOverflow);
         if (mir->isMod())
             masm.xor64(output, output);
         else
-            masm.jump(oldTrap(lir, wasm::Trap::IntegerOverflow));
+            masm.wasmTrap(wasm::Trap::IntegerOverflow, lir->bytecodeOffset());
         masm.jump(&done);
-        masm.bind(&notmin);
+        masm.bind(&notOverflow);
     }
 
     masm.setupWasmABICall();

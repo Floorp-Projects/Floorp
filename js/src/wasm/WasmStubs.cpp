@@ -1726,10 +1726,10 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
     for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
         switch (trap) {
           case Trap::Unreachable:
+          case Trap::IntegerOverflow:
           case Trap::StackOverflow:
             break;
           // The TODO list of "old" traps to convert to new traps:
-          case Trap::IntegerOverflow:
           case Trap::InvalidConversionToInteger:
           case Trap::IntegerDivideByZero:
           case Trap::OutOfBounds:

@@ -3456,7 +3456,8 @@ class BaseCompiler final : public BaseCompilerInterface
             moveImm32(0, srcDest);
             masm.jump(done);
         } else {
-            masm.branch32(Assembler::Equal, rhs, Imm32(-1), oldTrap(Trap::IntegerOverflow));
+            masm.branch32(Assembler::NotEqual, rhs, Imm32(-1), &notMin);
+            trap(Trap::IntegerOverflow);
         }
         masm.bind(&notMin);
     }
@@ -3469,7 +3470,7 @@ class BaseCompiler final : public BaseCompilerInterface
             masm.xor64(srcDest, srcDest);
             masm.jump(done);
         } else {
-            masm.jump(oldTrap(Trap::IntegerOverflow));
+            trap(Trap::IntegerOverflow);
         }
         masm.bind(&notmin);
     }
