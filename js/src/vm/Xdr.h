@@ -10,11 +10,11 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/TypeTraits.h"
 
-#include "jsatom.h"
 #include "jsfriendapi.h"
 #include "NamespaceImports.h"
 
 #include "js/TypeDecls.h"
+#include "vm/JSAtom.h"
 
 namespace js {
 

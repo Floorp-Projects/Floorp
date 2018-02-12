@@ -24,6 +24,7 @@
 #include "jit/IonCode.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
+#include "vm/JSAtom.h"
 #include "vm/NativeObject.h"
 #include "vm/Scope.h"
 #include "vm/Shape.h"

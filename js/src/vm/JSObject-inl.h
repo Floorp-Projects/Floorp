@@ -26,10 +26,9 @@
 #include "vm/StringObject.h"
 #include "vm/TypedArrayObject.h"
 
-#include "jsatominlines.h"
-
 #include "gc/Marking-inl.h"
 #include "gc/ObjectKind-inl.h"
+#include "vm/JSAtom-inl.h"
 #include "vm/JSCompartment-inl.h"
 #include "vm/ShapedObject-inl.h"
 #include "vm/TypeInference-inl.h"

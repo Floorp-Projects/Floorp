@@ -19,6 +19,7 @@
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "js/CharacterEncoding.h"
+#include "vm/JSAtom.h"
 #include "vm/JSObject.h"
 #include "vm/RegExpObject.h"
 

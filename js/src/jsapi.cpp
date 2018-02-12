@@ -75,6 +75,7 @@
 #include "vm/ErrorObject.h"
 #include "vm/HelperThreads.h"
 #include "vm/Interpreter.h"
+#include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
@@ -93,6 +94,7 @@
 #include "wasm/WasmModule.h"
 
 #include "vm/Interpreter-inl.h"
+#include "vm/JSAtom-inl.h"
 #include "vm/JSFunction-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"

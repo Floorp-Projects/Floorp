@@ -15,6 +15,7 @@
 
 #include "jit/InlinableNatives.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/ProxyObject.h"

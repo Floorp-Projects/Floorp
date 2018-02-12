@@ -37,6 +37,7 @@
 #include "js/CharacterEncoding.h"
 #include "vm/CodeCoverage.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/JSAtom.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"

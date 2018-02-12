@@ -47,6 +47,7 @@
 #include "gc/Nursery-inl.h"
 #include "gc/StoreBuffer-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
+#include "vm/JSAtom-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
 

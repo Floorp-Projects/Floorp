@@ -28,6 +28,7 @@
 #include "js/Conversions.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
@@ -42,6 +43,7 @@
 #include "vm/Caches-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/Interpreter-inl.h"
+#include "vm/JSAtom-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/UnboxedObject-inl.h"
 
