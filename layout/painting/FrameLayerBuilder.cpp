@@ -4041,6 +4041,8 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
   bool hadCompositorHitTestInfo = false;
 #endif
 
+  AnimatedGeometryRoot* lastAnimatedGeometryRoot = nullptr;
+  nsPoint lastTopLeft;
   FlattenedDisplayItemIterator iter(mBuilder, aList);
   while (nsDisplayItem* i = iter.GetNext()) {
     nsDisplayItem* item = i;
@@ -4145,7 +4147,12 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       itemASR = mContainerASR;
       item->FuseClipChainUpTo(mBuilder, mContainerASR);
     }
-    topLeft = (*animatedGeometryRoot)->GetOffsetToCrossDoc(mContainerReferenceFrame);
+    if (animatedGeometryRoot == lastAnimatedGeometryRoot) {
+      topLeft = lastTopLeft;
+    } else {
+      lastTopLeft = topLeft = (*animatedGeometryRoot)->GetOffsetToCrossDoc(mContainerReferenceFrame);
+      lastAnimatedGeometryRoot = animatedGeometryRoot;
+    }
 
     const ActiveScrolledRoot* scrollMetadataASR =
         layerClipChain ? ActiveScrolledRoot::PickDescendant(itemASR, layerClipChain->mASR) : itemASR;
