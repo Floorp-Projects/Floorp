@@ -1248,7 +1248,8 @@ LIRGenerator::visitToAsyncGen(MToAsyncGen* ins)
 void
 LIRGenerator::visitToAsyncIter(MToAsyncIter* ins)
 {
-    LToAsyncIter* lir = new(alloc()) LToAsyncIter(useRegisterAtStart(ins->input()));
+    LToAsyncIter* lir = new(alloc()) LToAsyncIter(useRegisterAtStart(ins->getIterator()),
+                                                  useBoxAtStart(ins->getNextMethod()));
     defineReturn(lir, ins);
     assignSafepoint(lir, ins);
 }

@@ -3664,11 +3664,13 @@ END_CASE(JSOP_TOASYNCGEN)
 
 CASE(JSOP_TOASYNCITER)
 {
-    ReservedRooted<JSObject*> iter(&rootObject1, &REGS.sp[-1].toObject());
-    JSObject* asyncIter = CreateAsyncFromSyncIterator(cx, iter);
+    ReservedRooted<Value> nextMethod(&rootValue0, REGS.sp[-1]);
+    ReservedRooted<JSObject*> iter(&rootObject1, &REGS.sp[-2].toObject());
+    JSObject* asyncIter = CreateAsyncFromSyncIterator(cx, iter, nextMethod);
     if (!asyncIter)
         goto error;
 
+    REGS.sp--;
     REGS.sp[-1].setObject(*asyncIter);
 }
 END_CASE(JSOP_TOASYNCITER)
