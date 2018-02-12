@@ -2434,11 +2434,10 @@ Gecko_GetXBLBinding(RawGeckoElementBorrowed aElement)
   return aElement->GetXBLBinding();
 }
 
-RawServoStyleSetBorrowedOrNull
-Gecko_XBLBinding_GetRawServoStyleSet(RawGeckoXBLBindingBorrowed aXBLBinding)
+RawServoAuthorStylesBorrowedOrNull
+Gecko_XBLBinding_GetRawServoStyles(RawGeckoXBLBindingBorrowed aXBLBinding)
 {
-  const ServoStyleSet* set = aXBLBinding->GetServoStyleSet();
-  return set ? set->RawSet() : nullptr;
+  return aXBLBinding->GetServoStyles();
 }
 
 bool

@@ -42,9 +42,6 @@ nsXBLPrototypeResources::~nsXBLPrototypeResources()
   if (mLoader) {
     mLoader->mResources = nullptr;
   }
-  if (mServoStyleSet) {
-    mServoStyleSet->Shutdown();
-  }
 }
 
 void
@@ -122,7 +119,7 @@ nsXBLPrototypeResources::FlushSkinSheets()
     // Though during unlink is fine I guess...
     if (auto* shell = doc->GetShell()) {
       MOZ_ASSERT(shell->GetPresContext());
-      ComputeServoStyleSet(shell->GetPresContext());
+      ComputeServoStyles(*shell->StyleSet()->AsServo());
     }
   } else {
 #ifdef MOZ_OLD_STYLE
@@ -190,16 +187,29 @@ nsXBLPrototypeResources::GatherRuleProcessor()
 #endif
 
 void
-nsXBLPrototypeResources::ComputeServoStyleSet(nsPresContext* aPresContext)
+nsXBLPrototypeResources::ComputeServoStyles(const ServoStyleSet& aMasterStyleSet)
 {
-  nsTArray<RefPtr<ServoStyleSheet>> sheets(mStyleSheetList.Length());
-  for (StyleSheet* sheet : mStyleSheetList) {
-    MOZ_ASSERT(sheet->IsServo(),
-               "This should only be called with Servo-flavored style backend!");
-    sheets.AppendElement(sheet->AsServo());
+  mStyleRuleMap.reset(nullptr);
+  mServoStyles.reset(Servo_AuthorStyles_Create());
+  for (auto& sheet : mStyleSheetList) {
+    Servo_AuthorStyles_AppendStyleSheet(mServoStyles.get(), sheet->AsServo());
+  }
+  Servo_AuthorStyles_Flush(mServoStyles.get(), aMasterStyleSet.RawSet());
+}
+
+ServoStyleRuleMap*
+nsXBLPrototypeResources::GetServoStyleRuleMap()
+{
+  if (!HasStyleSheets() || !mServoStyles) {
+    return nullptr;
   }
 
-  mServoStyleSet = ServoStyleSet::CreateXBLServoStyleSet(aPresContext, sheets);
+  if (!mStyleRuleMap) {
+    mStyleRuleMap = MakeUnique<ServoStyleRuleMap>();
+  }
+
+  mStyleRuleMap->EnsureTable(*this);
+  return mStyleRuleMap.get();
 }
 
 void
@@ -218,24 +228,6 @@ void
 nsXBLPrototypeResources::InsertStyleSheetAt(size_t aIndex, StyleSheet* aSheet)
 {
   mStyleSheetList.InsertElementAt(aIndex, aSheet);
-}
-
-StyleSheet*
-nsXBLPrototypeResources::StyleSheetAt(size_t aIndex) const
-{
-  return mStyleSheetList[aIndex];
-}
-
-size_t
-nsXBLPrototypeResources::SheetCount() const
-{
-  return mStyleSheetList.Length();
-}
-
-bool
-nsXBLPrototypeResources::HasStyleSheets() const
-{
-  return !mStyleSheetList.IsEmpty();
 }
 
 void

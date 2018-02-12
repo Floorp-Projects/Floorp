@@ -43,7 +43,8 @@ SERVO_BINDING_FUNC(Servo_Element_IsPrimaryStyleReusedViaRuleNode,
 SERVO_BINDING_FUNC(Servo_InvalidateStyleForDocStateChanges,
                    void,
                    RawGeckoElementBorrowed root,
-                   const nsTArray<RawServoStyleSetBorrowed>* sets,
+                   RawServoStyleSetBorrowed doc_styles,
+                   const nsTArray<RawServoAuthorStylesBorrowed>* non_document_styles,
                    uint64_t aStatesChanged)
 
 // Styleset and Stylesheet management
@@ -83,13 +84,14 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_GetOrigin, uint8_t,
 SERVO_BINDING_FUNC(Servo_StyleSet_Init, RawServoStyleSet*, RawGeckoPresContextOwned pres_context)
 SERVO_BINDING_FUNC(Servo_StyleSet_RebuildCachedData, void,
                    RawServoStyleSetBorrowed set)
+
 // We'd like to return `OriginFlags` here, but bindgen bitfield enums don't
 // work as return values with the Linux 32-bit ABI at the moment because
 // they wrap the value in a struct.
 SERVO_BINDING_FUNC(Servo_StyleSet_MediumFeaturesChanged,
                    MediumFeaturesChangedResult,
                    RawServoStyleSetBorrowed document_set,
-                   const nsTArray<mozilla::ServoStyleSet*>* non_document_sets,
+                   nsTArray<RawServoAuthorStylesBorrowedMut>* non_document_sets,
                    bool may_affect_default_style)
 // We'd like to return `OriginFlags` here, but bindgen bitfield enums don't
 // work as return values with the Linux 32-bit ABI at the moment because
@@ -173,6 +175,20 @@ SERVO_BINDING_FUNC(Servo_UACache_AddSizeOf, void,
                    mozilla::MallocSizeOf malloc_size_of,
                    mozilla::MallocSizeOf malloc_enclosing_size_of,
                    mozilla::ServoStyleSetSizes* sizes)
+
+// AuthorStyles
+SERVO_BINDING_FUNC(Servo_AuthorStyles_Create, RawServoAuthorStyles*)
+// TODO(emilio): This will need to take an optional master style set to
+// implement invalidation for Shadow DOM.
+SERVO_BINDING_FUNC(Servo_AuthorStyles_AppendStyleSheet, void,
+                   RawServoAuthorStylesBorrowedMut self,
+                   const mozilla::ServoStyleSheet* gecko_sheet)
+// TODO(emilio): This will need to take an element to implement invalidation for
+// Shadow DOM.
+SERVO_BINDING_FUNC(Servo_AuthorStyles_Flush, void,
+                   RawServoAuthorStylesBorrowedMut self,
+                   RawServoStyleSetBorrowed document_styles)
+
 SERVO_BINDING_FUNC(Servo_StyleContext_AddRef, void, ServoStyleContextBorrowed ctx);
 SERVO_BINDING_FUNC(Servo_StyleContext_Release, void, ServoStyleContextBorrowed ctx);
 

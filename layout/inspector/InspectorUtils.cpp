@@ -230,7 +230,6 @@ InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
     {
       ServoStyleSet* styleSet = shell->StyleSet()->AsServo();
       ServoStyleRuleMap* map = styleSet->StyleRuleMap();
-      map->EnsureTable();
       maps.AppendElement(map);
     }
 
@@ -239,9 +238,10 @@ InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
          bindingContent = bindingContent->GetBindingParent()) {
       for (nsXBLBinding* binding = bindingContent->GetXBLBinding();
            binding; binding = binding->GetBaseBinding()) {
-        if (ServoStyleSet* styleSet = binding->GetServoStyleSet()) {
-          ServoStyleRuleMap* map = styleSet->StyleRuleMap();
-          map->EnsureTable();
+        // TODO(emilio): We're going to need to figure out something for Shadow
+        // DOM and inspector, since those rules can definitely mutate and
+        // such...
+        if (auto* map = binding->PrototypeBinding()->GetServoStyleRuleMap()) {
           maps.AppendElement(map);
         }
       }
