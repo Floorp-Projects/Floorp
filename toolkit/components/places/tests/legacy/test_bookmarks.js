@@ -113,9 +113,6 @@ add_task(async function test_bookmarks() {
   Assert.equal(bookmarksObserver._itemAddedURI, null);
   let testStartIndex = 0;
 
-  // test getItemIndex for folders
-  Assert.equal(bs.getItemIndex(testRoot), bmStartIndex);
-
   // insert a bookmark.
   // the time before we insert, in microseconds
   let beforeInsert = Date.now() * 1000;
@@ -170,9 +167,6 @@ add_task(async function test_bookmarks() {
   // get the folder that the bookmark is in
   let folderId = bs.getFolderIdForItem(newId);
   Assert.equal(folderId, testRoot);
-
-  // test getItemIndex for bookmarks
-  Assert.equal(bs.getItemIndex(newId), testStartIndex);
 
   // create a folder at a specific index
   let workFolder = bs.createFolder(testRoot, "Work", 0);
@@ -262,7 +256,6 @@ add_task(async function test_bookmarks() {
   Assert.equal(bookmarksObserver._itemMovedNewIndex, 1);
 
   // test that the new index is properly stored
-  Assert.equal(bs.getItemIndex(workFolder), 1);
   Assert.equal(bs.getFolderIdForItem(workFolder), homeFolder);
 
   // XXX expose FolderCount, and check that the old parent has one less child?
@@ -278,7 +271,6 @@ add_task(async function test_bookmarks() {
 
   // test get folder's index
   let tmpFolder = bs.createFolder(testRoot, "tmp", 2);
-  Assert.equal(bs.getItemIndex(tmpFolder), 2);
 
   // test setKeywordForBookmark
   let kwTestItemId = bs.insertBookmark(testRoot, uri("http://keywordtest.com"),
@@ -402,11 +394,6 @@ add_task(async function test_bookmarks() {
     do_throw("getBookmarkURI() should throw for non-bookmark items!");
   } catch (ex) {}
 
-  // test getItemIndex
-  let newId12 = bs.insertBookmark(testRoot, uri("http://foo10.com/"), 1, "");
-  let bmIndex = bs.getItemIndex(newId12);
-  Assert.equal(1, bmIndex);
-
   // insert a bookmark with title ZZZXXXYYY and then search for it.
   // this test confirms that we can find bookmarks that we haven't visited
   // (which are "hidden") and that we can find by title.
@@ -415,7 +402,7 @@ add_task(async function test_bookmarks() {
                                   bs.DEFAULT_INDEX, "");
   Assert.equal(bookmarksObserver._itemAddedId, newId13);
   Assert.equal(bookmarksObserver._itemAddedParent, testRoot);
-  Assert.equal(bookmarksObserver._itemAddedIndex, 11);
+  Assert.equal(bookmarksObserver._itemAddedIndex, 10);
 
   // set bookmark title
   bs.setItemTitle(newId13, "ZZZXXXYYY");

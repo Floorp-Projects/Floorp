@@ -62,8 +62,9 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
-#include "js/TypeDecls.h"
 #include "js/ProfilingStack.h"
+#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
 #include "nscore.h"
 
 // Make sure that we can use std::min here without the Windows headers messing
@@ -141,6 +142,64 @@ struct ProfilerFeature
 
   #undef DECLARE
 };
+
+#ifdef MOZ_GECKO_PROFILER
+namespace mozilla {
+namespace profiler {
+namespace detail {
+
+// RacyFeatures is only defined in this header file so that its methods can
+// be inlined into profiler_is_active(). Please do not use anything from the
+// detail namespace outside the profiler.
+
+// Within the profiler's code, the preferred way to check profiler activeness
+// and features is via ActivePS(). However, that requires locking gPSMutex.
+// There are some hot operations where absolute precision isn't required, so we
+// duplicate the activeness/feature state in a lock-free manner in this class.
+class RacyFeatures
+{
+public:
+  static void SetActive(uint32_t aFeatures)
+  {
+    sActiveAndFeatures = Active | aFeatures;
+  }
+
+  static void SetInactive() { sActiveAndFeatures = 0; }
+
+  static bool IsActive() { return uint32_t(sActiveAndFeatures) & Active; }
+
+  static bool IsActiveWithFeature(uint32_t aFeature)
+  {
+    uint32_t af = sActiveAndFeatures;  // copy it first
+    return (af & Active) && (af & aFeature);
+  }
+
+  static bool IsActiveWithoutPrivacy()
+  {
+    uint32_t af = sActiveAndFeatures;  // copy it first
+    return (af & Active) && !(af & ProfilerFeature::Privacy);
+  }
+
+private:
+  static const uint32_t Active = 1u << 31;
+
+  // Ensure Active doesn't overlap with any of the feature bits.
+  #define NO_OVERLAP(n_, str_, Name_) \
+    static_assert(ProfilerFeature::Name_ != Active, "bad Active value");
+
+  PROFILER_FOR_EACH_FEATURE(NO_OVERLAP);
+
+  #undef NO_OVERLAP
+
+  // We combine the active bit with the feature bits so they can be read or
+  // written in a single atomic operation.
+  static mozilla::Atomic<uint32_t> sActiveAndFeatures;
+};
+
+} // namespace detail
+} // namespace profiler
+} // namespace mozilla
+#endif
 
 //---------------------------------------------------------------------------
 // Start and stop the profiler
@@ -263,7 +322,14 @@ void profiler_clear_js_context();
 // expensive data will end up being created but not used if another thread
 // stops the profiler between the CreateExpensiveData() and PROFILER_OPERATION
 // calls.
-bool profiler_is_active();
+inline bool profiler_is_active()
+{
+#ifdef MOZ_GECKO_PROFILER
+  return mozilla::profiler::detail::RacyFeatures::IsActive();
+#else
+  return false;
+#endif
+}
 
 // Is the profiler active and paused? Returns false if the profiler is inactive.
 bool profiler_is_paused();
@@ -440,6 +506,16 @@ PseudoStack* profiler_get_pseudo_stack();
                                     js::ProfileEntry::Category::category); \
   }
 
+// Similar to AUTO_PROFILER_LABEL, but accepting a JSContext* parameter, and a
+// no-op if the profiler is disabled.
+// Used to annotate functions for which overhead in the range of nanoseconds is
+// noticeable. It avoids overhead from the TLS lookup because it can get the
+// PseudoStack from the JS context, and avoids almost all overhead in the case
+// where the profiler is disabled.
+#define AUTO_PROFILER_LABEL_FAST(label, category, ctx) \
+  mozilla::AutoProfilerLabel PROFILER_RAII(ctx, label, nullptr, __LINE__, \
+                                           js::ProfileEntry::Category::category)
+
 // Insert a marker in the profile timeline. This is useful to delimit something
 // important happening such as the first paint. Unlike labels, which are only
 // recorded in the profile buffer if a sample is collected while the label is
@@ -595,15 +671,40 @@ private:
 class MOZ_RAII AutoProfilerLabel
 {
 public:
+  // This is the AUTO_PROFILER_LABEL and AUTO_PROFILER_LABEL_DYNAMIC variant.
   AutoProfilerLabel(const char* aLabel, const char* aDynamicString,
                     uint32_t aLine, js::ProfileEntry::Category aCategory
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
+    // Get the PseudoStack from TLS.
+    Push(sPseudoStack.get(), aLabel, aDynamicString, aLine, aCategory);
+  }
+
+  // This is the AUTO_PROFILER_LABEL_FAST variant. It's guarded on
+  // profiler_is_active() and retrieves the PseudoStack from the JSContext.
+  AutoProfilerLabel(JSContext* aJSContext,
+                    const char* aLabel, const char* aDynamicString,
+                    uint32_t aLine, js::ProfileEntry::Category aCategory
+                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    if (profiler_is_active()) {
+      Push(js::GetContextProfilingStack(aJSContext),
+           aLabel, aDynamicString, aLine, aCategory);
+    } else {
+      mPseudoStack = nullptr;
+    }
+  }
+
+  void Push(PseudoStack* aPseudoStack,
+            const char* aLabel, const char* aDynamicString,
+            uint32_t aLine, js::ProfileEntry::Category aCategory)
+  {
     // This function runs both on and off the main thread.
 
-    mPseudoStack = sPseudoStack.get();
+    mPseudoStack = aPseudoStack;
     if (mPseudoStack) {
       mPseudoStack->pushCppFrame(aLabel, aDynamicString, this, aLine,
                                  js::ProfileEntry::Kind::CPP_NORMAL, aCategory);

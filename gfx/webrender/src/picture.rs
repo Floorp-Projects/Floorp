@@ -12,7 +12,7 @@ use gpu_cache::GpuDataRequest;
 use gpu_types::{BrushImageKind, PictureType};
 use prim_store::{BrushKind, BrushPrimitive, PrimitiveIndex, PrimitiveRun, PrimitiveRunLocalRect};
 use render_task::{ClearMode, RenderTask, RenderTaskCacheKey};
-use render_task::{RenderTaskCacheKeyKind, RenderTaskId};
+use render_task::{RenderTaskCacheKeyKind, RenderTaskId, RenderTaskLocation};
 use resource_cache::CacheItem;
 use scene::{FilterOpHelpers, SceneProperties};
 use tiling::RenderTargetKind;
@@ -318,14 +318,6 @@ impl PicturePrimitive {
         }
     }
 
-    pub fn picture_type(&self) -> PictureType {
-        match self.kind {
-            PictureKind::Image { .. } => PictureType::Image,
-            PictureKind::BoxShadow { .. } => PictureType::BoxShadow,
-            PictureKind::TextShadow { .. } => PictureType::TextShadow,
-        }
-    }
-
     pub fn prepare_for_render(
         &mut self,
         prim_index: PrimitiveIndex,
@@ -348,7 +340,7 @@ impl PicturePrimitive {
                 match composite_mode {
                     Some(PictureCompositeMode::Filter(FilterOp::Blur(blur_radius))) => {
                         let picture_task = RenderTask::new_picture(
-                            Some(prim_screen_rect.size),
+                            RenderTaskLocation::Dynamic(None, prim_screen_rect.size),
                             prim_index,
                             RenderTargetKind::Color,
                             content_origin,
@@ -377,7 +369,7 @@ impl PicturePrimitive {
                     Some(PictureCompositeMode::Filter(FilterOp::DropShadow(offset, blur_radius, color))) => {
                         let rect = (prim_local_rect.translate(&-offset) * content_scale).round().to_i32();
                         let picture_task = RenderTask::new_picture(
-                            Some(rect.size),
+                            RenderTaskLocation::Dynamic(None, rect.size),
                             prim_index,
                             RenderTargetKind::Color,
                             ContentOrigin::Screen(rect.origin),
@@ -407,7 +399,7 @@ impl PicturePrimitive {
                     }
                     Some(PictureCompositeMode::MixBlend(..)) => {
                         let picture_task = RenderTask::new_picture(
-                            Some(prim_screen_rect.size),
+                            RenderTaskLocation::Dynamic(None, prim_screen_rect.size),
                             prim_index,
                             RenderTargetKind::Color,
                             content_origin,
@@ -437,7 +429,7 @@ impl PicturePrimitive {
                             self.surface = None;
                         } else {
                             let picture_task = RenderTask::new_picture(
-                                Some(prim_screen_rect.size),
+                                RenderTaskLocation::Dynamic(None, prim_screen_rect.size),
                                 prim_index,
                                 RenderTargetKind::Color,
                                 content_origin,
@@ -454,7 +446,7 @@ impl PicturePrimitive {
                     }
                     Some(PictureCompositeMode::Blit) => {
                         let picture_task = RenderTask::new_picture(
-                            Some(prim_screen_rect.size),
+                            RenderTaskLocation::Dynamic(None, prim_screen_rect.size),
                             prim_index,
                             RenderTargetKind::Color,
                             content_origin,
@@ -494,7 +486,7 @@ impl PicturePrimitive {
                 let blur_std_deviation = device_radius * 0.5;
 
                 let picture_task = RenderTask::new_picture(
-                    Some(cache_size),
+                    RenderTaskLocation::Dynamic(None, cache_size),
                     prim_index,
                     RenderTargetKind::Color,
                     ContentOrigin::Local(content_rect.origin),
@@ -554,7 +546,7 @@ impl PicturePrimitive {
                         };
 
                         let picture_task = RenderTask::new_picture(
-                            Some(cache_size),
+                            RenderTaskLocation::Dynamic(None, cache_size),
                             prim_index,
                             RenderTargetKind::Alpha,
                             ContentOrigin::Local(content_rect.origin),

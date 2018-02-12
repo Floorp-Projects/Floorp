@@ -10,7 +10,7 @@ use ellipse::Ellipse;
 use freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
 use prim_store::{ClipData, ImageMaskData};
-use resource_cache::ResourceCache;
+use resource_cache::{ImageRequest, ResourceCache};
 use util::{MaxRect, MatrixHelpers, calculate_screen_bounding_rect, extract_inner_rect_safe};
 
 pub type ClipStore = FreeList<ClipSources>;
@@ -230,7 +230,14 @@ impl ClipSources {
             }
 
             if let ClipSource::Image(ref mask) = *source {
-                resource_cache.request_image(mask.image, ImageRendering::Auto, None, gpu_cache);
+                resource_cache.request_image(
+                    ImageRequest {
+                        key: mask.image,
+                        rendering: ImageRendering::Auto,
+                        tile: None,
+                    },
+                    gpu_cache,
+                );
             }
         }
     }

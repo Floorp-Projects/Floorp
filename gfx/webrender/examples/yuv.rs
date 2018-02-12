@@ -240,10 +240,10 @@ impl Example for App {
         builder.pop_stacking_context();
     }
 
-    fn on_event(&mut self, event: glutin::Event, api: &RenderApi, document_id: DocumentId) -> bool {
+    fn on_event(&mut self, event: glutin::WindowEvent, api: &RenderApi, document_id: DocumentId) -> bool {
         let mut txn = Transaction::new();
         match event {
-            glutin::Event::Touch(touch) => match self.touch_state.handle_event(touch) {
+            glutin::WindowEvent::Touch(touch) => match self.touch_state.handle_event(touch) {
                 TouchResult::Pan(pan) => {
                     txn.set_pan(pan);
                 }

@@ -74,23 +74,26 @@ fn broadcast<T: Clone>(base_vals: &[T], num_items: usize) -> Vec<T> {
 
 fn generate_checkerboard_image(
     border: u32,
-    tile_size: u32,
-    tile_count: u32
+    tile_x_size: u32,
+    tile_y_size: u32,
+    tile_x_count: u32,
+    tile_y_count: u32,
 ) -> (ImageDescriptor, ImageData) {
-    let size = 2 * border + tile_size * tile_count;
+    let width = 2 * border + tile_x_size * tile_x_count;
+    let height = 2 * border + tile_y_size * tile_y_count;
     let mut pixels = Vec::new();
 
-    for y in 0 .. size {
-        for x in 0 .. size {
-            if y < border || y >= (size-border) ||
-               x < border || x >= (size-border) {
+    for y in 0 .. height {
+        for x in 0 .. width {
+            if y < border || y >= (height - border) ||
+               x < border || x >= (width - border) {
                 pixels.push(0);
                 pixels.push(0);
                 pixels.push(0xff);
                 pixels.push(0xff);
             } else {
-                let xon = ((x - border) % (2 * tile_size)) < tile_size;
-                let yon = ((y - border) % (2 * tile_size)) < tile_size;
+                let xon = ((x - border) % (2 * tile_x_size)) < tile_x_size;
+                let yon = ((y - border) % (2 * tile_y_size)) < tile_y_size;
                 let value = if xon ^ yon { 0xff } else { 0x7f };
                 pixels.push(value);
                 pixels.push(value);
@@ -101,7 +104,7 @@ fn generate_checkerboard_image(
     }
 
     (
-        ImageDescriptor::new(size, size, ImageFormat::BGRA8, true),
+        ImageDescriptor::new(width, height, ImageFormat::BGRA8, true),
         ImageData::new(pixels),
     )
 }
@@ -439,11 +442,35 @@ impl YamlFrameReader {
                         args.get(4).unwrap_or(&"1000").parse::<u32>().unwrap(),
                         args.get(5).unwrap_or(&"1000").parse::<u32>().unwrap(),
                     ),
-                    ("checkerboard", args, _) => generate_checkerboard_image(
-                        args.get(0).unwrap_or(&"4").parse::<u32>().unwrap(),
-                        args.get(1).unwrap_or(&"32").parse::<u32>().unwrap(),
-                        args.get(2).unwrap_or(&"8").parse::<u32>().unwrap(),
-                    ),
+                    ("checkerboard", args, _) => {
+                        let border = args.get(0).unwrap_or(&"4").parse::<u32>().unwrap();
+
+                        let (x_size, y_size, x_count, y_count) = match args.len() {
+                            3 => {
+                                let size = args.get(1).unwrap_or(&"32").parse::<u32>().unwrap();
+                                let count = args.get(2).unwrap_or(&"8").parse::<u32>().unwrap();
+                                (size, size, count, count)
+                            }
+                            5 => {
+                                let x_size = args.get(1).unwrap_or(&"32").parse::<u32>().unwrap();
+                                let y_size = args.get(2).unwrap_or(&"32").parse::<u32>().unwrap();
+                                let x_count = args.get(3).unwrap_or(&"8").parse::<u32>().unwrap();
+                                let y_count = args.get(4).unwrap_or(&"8").parse::<u32>().unwrap();
+                                (x_size, y_size, x_count, y_count)
+                            }
+                            _ => {
+                                panic!("invalid checkerboard function");
+                            }
+                        };
+
+                        generate_checkerboard_image(
+                            border,
+                            x_size,
+                            y_size,
+                            x_count,
+                            y_count,
+                        )
+                    }
                     _ => {
                         panic!("Failed to load image {:?}", file.to_str());
                     }

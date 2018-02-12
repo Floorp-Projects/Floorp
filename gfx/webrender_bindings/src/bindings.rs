@@ -18,7 +18,7 @@ use moz2d_renderer::Moz2dImageRenderer;
 use app_units::Au;
 use rayon;
 use euclid::SideOffsets2D;
-use log::{set_logger, shutdown_logger, LogLevelFilter, Log, LogLevel, LogMetadata, LogRecord};
+use log;
 
 #[cfg(target_os = "windows")]
 use dwrote::{FontDescriptor, FontWeight, FontStretch, FontStyle};
@@ -76,7 +76,7 @@ type WrFontInstanceKey = FontInstanceKey;
 /// cbindgen:field-names=[mNamespace, mHandle]
 type WrYuvColorSpace = YuvColorSpace;
 /// cbindgen:field-names=[mNamespace, mHandle]
-type WrLogLevelFilter = LogLevelFilter;
+type WrLogLevelFilter = log::LevelFilter;
 
 fn make_slice<'a, T>(ptr: *const T, len: usize) -> &'a [T] {
     if ptr.is_null() {
@@ -590,25 +590,30 @@ pub unsafe extern "C" fn wr_renderer_delete(renderer: *mut Renderer) {
     // let renderer go out of scope and get dropped
 }
 
-pub struct WrRenderedEpochs {
-    data: Vec<(WrPipelineId, WrEpoch)>,
+pub struct WrPipelineInfo {
+    epochs: Vec<(WrPipelineId, WrEpoch)>,
+    removed_pipelines: Vec<PipelineId>,
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_renderer_flush_rendered_epochs(renderer: &mut Renderer) -> *mut WrRenderedEpochs {
-    let map = renderer.flush_rendered_epochs();
-    let pipeline_epochs = Box::new(WrRenderedEpochs {
-                                       data: map.into_iter().collect(),
-                                   });
+pub unsafe extern "C" fn wr_renderer_flush_pipeline_info(renderer: &mut Renderer) -> *mut WrPipelineInfo {
+    let info = renderer.flush_pipeline_info();
+    let pipeline_epochs = Box::new(
+        WrPipelineInfo {
+            epochs: info.epochs.into_iter().collect(),
+            removed_pipelines: info.removed_pipelines,
+        }
+    );
     return Box::into_raw(pipeline_epochs);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_rendered_epochs_next(pipeline_epochs: &mut WrRenderedEpochs,
-                                                 out_pipeline: &mut WrPipelineId,
-                                                 out_epoch: &mut WrEpoch)
-                                                 -> bool {
-    if let Some((pipeline, epoch)) = pipeline_epochs.data.pop() {
+pub unsafe extern "C" fn wr_pipeline_info_next_epoch(
+    info: &mut WrPipelineInfo,
+    out_pipeline: &mut WrPipelineId,
+    out_epoch: &mut WrEpoch
+) -> bool {
+    if let Some((pipeline, epoch)) = info.epochs.pop() {
         *out_pipeline = pipeline;
         *out_epoch = epoch;
         return true;
@@ -616,10 +621,22 @@ pub unsafe extern "C" fn wr_rendered_epochs_next(pipeline_epochs: &mut WrRendere
     return false;
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn wr_pipeline_info_next_removed_pipeline(
+    info: &mut WrPipelineInfo,
+    out_pipeline: &mut WrPipelineId,
+) -> bool {
+    if let Some(pipeline) = info.removed_pipelines.pop() {
+        *out_pipeline = pipeline;
+        return true;
+    }
+    return false;
+}
+
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
-pub unsafe extern "C" fn wr_rendered_epochs_delete(pipeline_epochs: *mut WrRenderedEpochs) {
-    Box::from_raw(pipeline_epochs);
+pub unsafe extern "C" fn wr_pipeline_info_delete(info: *mut WrPipelineInfo) {
+    Box::from_raw(info);
 }
 
 extern "C" {
@@ -2161,11 +2178,11 @@ struct WrExternalLogHandler {
     info_msg: ExternalMessageHandler,
     debug_msg: ExternalMessageHandler,
     trace_msg: ExternalMessageHandler,
-    log_level: LogLevel,
+    log_level: log::Level,
 }
 
 impl WrExternalLogHandler {
-    fn new(log_level: LogLevel) -> WrExternalLogHandler {
+    fn new(log_level: log::Level) -> WrExternalLogHandler {
         WrExternalLogHandler {
             error_msg: gfx_critical_note,
             warn_msg: gfx_critical_note,
@@ -2177,39 +2194,41 @@ impl WrExternalLogHandler {
     }
 }
 
-impl Log for WrExternalLogHandler {
-    fn enabled(&self, metadata : &LogMetadata) -> bool {
+impl log::Log for WrExternalLogHandler {
+    fn enabled(&self, metadata : &log::Metadata) -> bool {
         metadata.level() <= self.log_level
     }
 
-    fn log(&self, record: &LogRecord) {
+    fn log(&self, record: &log::Record) {
         if self.enabled(record.metadata()) {
             // For file path and line, please check the record.location().
             let msg = CString::new(format!("WR: {}",
                                            record.args())).unwrap();
             unsafe {
                 match record.level() {
-                    LogLevel::Error => (self.error_msg)(msg.as_ptr()),
-                    LogLevel::Warn => (self.warn_msg)(msg.as_ptr()),
-                    LogLevel::Info => (self.info_msg)(msg.as_ptr()),
-                    LogLevel::Debug => (self.debug_msg)(msg.as_ptr()),
-                    LogLevel::Trace => (self.trace_msg)(msg.as_ptr()),
+                    log::Level::Error => (self.error_msg)(msg.as_ptr()),
+                    log::Level::Warn => (self.warn_msg)(msg.as_ptr()),
+                    log::Level::Info => (self.info_msg)(msg.as_ptr()),
+                    log::Level::Debug => (self.debug_msg)(msg.as_ptr()),
+                    log::Level::Trace => (self.trace_msg)(msg.as_ptr()),
                 }
             }
         }
+    }
+
+    fn flush(&self) {
     }
 }
 
 #[no_mangle]
 pub extern "C" fn wr_init_external_log_handler(log_filter: WrLogLevelFilter) {
-    let _ = set_logger(|max_log_level| {
-        max_log_level.set(log_filter);
-        Box::new(WrExternalLogHandler::new(log_filter.to_log_level()
-                                                     .unwrap_or(LogLevel::Error)))
-    });
+    log::set_max_level(log_filter);
+    let logger = Box::new(WrExternalLogHandler::new(log_filter
+                                                    .to_level()
+                                                    .unwrap_or(log::Level::Error)));
+    let _ = log::set_logger(unsafe { &*Box::into_raw(logger) });
 }
 
 #[no_mangle]
 pub extern "C" fn wr_shutdown_external_log_handler() {
-    let _ = shutdown_logger();
 }

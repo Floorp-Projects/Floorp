@@ -262,12 +262,11 @@ bitflags! {
         const PROFILER_DBG      = 1 << 0;
         const RENDER_TARGET_DBG = 1 << 1;
         const TEXTURE_CACHE_DBG = 1 << 2;
-        const ALPHA_PRIM_DBG    = 1 << 3;
-        const GPU_TIME_QUERIES  = 1 << 4;
-        const GPU_SAMPLE_QUERIES= 1 << 5;
-        const DISABLE_BATCHING  = 1 << 6;
-        const EPOCHS            = 1 << 7;
-        const COMPACT_PROFILER  = 1 << 8;
+        const GPU_TIME_QUERIES  = 1 << 3;
+        const GPU_SAMPLE_QUERIES= 1 << 4;
+        const DISABLE_BATCHING  = 1 << 5;
+        const EPOCHS            = 1 << 6;
+        const COMPACT_PROFILER  = 1 << 7;
     }
 }
 
@@ -1651,7 +1650,7 @@ pub struct Renderer {
 
     gpu_cache_frame_id: FrameId,
 
-    pipeline_epoch_map: FastHashMap<PipelineId, Epoch>,
+    pipeline_info: PipelineInfo,
 
     // Manages and resolves source textures IDs to real texture IDs.
     texture_resolver: SourceTextureResolver,
@@ -2306,7 +2305,7 @@ impl Renderer {
             node_data_texture,
             local_clip_rects_texture,
             render_task_texture,
-            pipeline_epoch_map: FastHashMap::default(),
+            pipeline_info: PipelineInfo::default(),
             dither_matrix_texture,
             external_image_handler: None,
             output_image_handler: None,
@@ -2353,13 +2352,11 @@ impl Renderer {
 
     /// Returns the Epoch of the current frame in a pipeline.
     pub fn current_epoch(&self, pipeline_id: PipelineId) -> Option<Epoch> {
-        self.pipeline_epoch_map.get(&pipeline_id).cloned()
+        self.pipeline_info.epochs.get(&pipeline_id).cloned()
     }
 
-    /// Returns a HashMap containing the pipeline ids that have been received by the renderer and
-    /// their respective epochs since the last time the method was called.
-    pub fn flush_rendered_epochs(&mut self) -> FastHashMap<PipelineId, Epoch> {
-        mem::replace(&mut self.pipeline_epoch_map, FastHashMap::default())
+    pub fn flush_pipeline_info(&mut self) -> PipelineInfo {
+        mem::replace(&mut self.pipeline_info, PipelineInfo::default())
     }
 
     // update the program cache with new binaries, e.g. when some of the lazy loaded
@@ -2378,15 +2375,16 @@ impl Renderer {
             match msg {
                 ResultMsg::PublishDocument(
                     document_id,
-                    doc,
+                    mut doc,
                     texture_update_list,
                     profile_counters,
                 ) => {
                     // Update the list of available epochs for use during reftests.
                     // This is a workaround for https://github.com/servo/servo/issues/13149.
-                    for (pipeline_id, epoch) in &doc.pipeline_epoch_map {
-                        self.pipeline_epoch_map.insert(*pipeline_id, *epoch);
+                    for (pipeline_id, epoch) in &doc.pipeline_info.epochs {
+                        self.pipeline_info.epochs.insert(*pipeline_id, *epoch);
                     }
+                    self.pipeline_info.removed_pipelines.extend(doc.pipeline_info.removed_pipelines.drain(..));
 
                     // Add a new document to the active set, expressed as a `Vec` in order
                     // to re-order based on `DocumentLayer` during rendering.
@@ -2567,35 +2565,35 @@ impl Renderer {
             "Horizontal Blur",
             target.horizontal_blurs.len(),
         );
-        for (_, batch) in &target.alpha_batcher.text_run_cache_prims {
-            debug_target.add(
-                debug_server::BatchKind::Cache,
-                "Text Shadow",
-                batch.len(),
-            );
-        }
 
-        for batch in target
-            .alpha_batcher
-            .batch_list
-            .opaque_batch_list
-            .batches
-            .iter()
-            .rev()
-        {
-            debug_target.add(
-                debug_server::BatchKind::Opaque,
-                batch.key.kind.debug_name(),
-                batch.instances.len(),
-            );
-        }
+        for alpha_batch_container in &target.alpha_batch_containers {
+            for (_, batch) in &alpha_batch_container.text_run_cache_prims {
+                debug_target.add(
+                    debug_server::BatchKind::Cache,
+                    "Text Shadow",
+                    batch.len(),
+                );
+            }
 
-        for batch in &target.alpha_batcher.batch_list.alpha_batch_list.batches {
-            debug_target.add(
-                debug_server::BatchKind::Alpha,
-                batch.key.kind.debug_name(),
-                batch.instances.len(),
-            );
+            for batch in alpha_batch_container
+                .opaque_batches
+                .iter()
+                .rev() {
+                debug_target.add(
+                    debug_server::BatchKind::Opaque,
+                    batch.key.kind.debug_name(),
+                    batch.instances.len(),
+                );
+            }
+
+            for batch in &alpha_batch_container
+                .alpha_batches {
+                debug_target.add(
+                    debug_server::BatchKind::Alpha,
+                    batch.key.kind.debug_name(),
+                    batch.instances.len(),
+                );
+            }
         }
 
         debug_target
@@ -2674,9 +2672,6 @@ impl Renderer {
             }
             DebugCommand::EnableRenderTargetDebug(enable) => {
                 self.set_debug_flag(DebugFlags::RENDER_TARGET_DBG, enable);
-            }
-            DebugCommand::EnableAlphaRectsDebug(enable) => {
-                self.set_debug_flag(DebugFlags::ALPHA_PRIM_DBG, enable);
             }
             DebugCommand::EnableGpuTimeQueries(enable) => {
                 self.set_debug_flag(DebugFlags::GPU_TIME_QUERIES, enable);
@@ -3167,6 +3162,7 @@ impl Renderer {
         render_target: Option<(&Texture, i32)>,
         framebuffer_size: DeviceUintSize,
         stats: &mut RendererStats,
+        scissor_rect: Option<DeviceIntRect>,
     ) {
         match key.kind {
             BatchKind::Composite { .. } => {
@@ -3303,6 +3299,10 @@ impl Renderer {
 
         // Handle special case readback for composites.
         if let BatchKind::Composite { task_id, source_id, backdrop_id } = key.kind {
+            if scissor_rect.is_some() {
+                self.device.disable_scissor();
+            }
+
             // composites can't be grouped together because
             // they may overlap and affect each other.
             debug_assert_eq!(instances.len(), 1);
@@ -3361,6 +3361,10 @@ impl Renderer {
             // Restore draw target to current pass render target + layer.
             // Note: leaving the viewport unchanged, it's not a part of FBO state
             self.device.bind_draw_target(render_target, None);
+
+            if scissor_rect.is_some() {
+                self.device.enable_scissor();
+            }
         }
 
         let _timer = self.gpu_profile.start_timer(key.kind.gpu_sampler_tag());
@@ -3548,45 +3552,46 @@ impl Renderer {
         // considering using this for (some) other text runs, since
         // it removes the overhead of submitting many small glyphs
         // to multiple tiles in the normal text run case.
-        if !target.alpha_batcher.text_run_cache_prims.is_empty() {
-            self.device.set_blend(true);
-            self.device.set_blend_mode_premultiplied_alpha();
+        for alpha_batch_container in &target.alpha_batch_containers {
+            if !alpha_batch_container.text_run_cache_prims.is_empty() {
+                self.device.set_blend(true);
+                self.device.set_blend_mode_premultiplied_alpha();
 
-            let _timer = self.gpu_profile.start_timer(GPU_TAG_CACHE_TEXT_RUN);
-            self.cs_text_run
-                .bind(&mut self.device, projection, 0, &mut self.renderer_errors);
-            for (texture_id, instances) in &target.alpha_batcher.text_run_cache_prims {
-                self.draw_instanced_batch(
-                    instances,
-                    VertexArrayKind::Primitive,
-                    &BatchTextures::color(*texture_id),
-                    stats,
-                );
+                let _timer = self.gpu_profile.start_timer(GPU_TAG_CACHE_TEXT_RUN);
+                self.cs_text_run
+                    .bind(&mut self.device, projection, 0, &mut self.renderer_errors);
+                for (texture_id, instances) in &alpha_batch_container.text_run_cache_prims {
+                    self.draw_instanced_batch(
+                        instances,
+                        VertexArrayKind::Primitive,
+                        &BatchTextures::color(*texture_id),
+                        stats,
+                    );
+                }
             }
         }
 
         //TODO: record the pixel count for cached primitives
 
-        if !target.alpha_batcher.is_empty() {
-            let _gl = self.gpu_profile.start_marker("alpha batches");
+        if target.needs_depth() {
+            let _gl = self.gpu_profile.start_marker("opaque batches");
+            let opaque_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_OPAQUE);
             self.device.set_blend(false);
-            let mut prev_blend_mode = BlendMode::None;
+            //Note: depth equality is needed for split planes
+            self.device.set_depth_func(DepthFunction::LessEqual);
+            self.device.enable_depth();
+            self.device.enable_depth_write();
 
-            if target.needs_depth() {
-                let opaque_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_OPAQUE);
-
-                //Note: depth equality is needed for split planes
-                self.device.set_depth_func(DepthFunction::LessEqual);
-                self.device.enable_depth();
-                self.device.enable_depth_write();
+            for alpha_batch_container in &target.alpha_batch_containers {
+                if let Some(target_rect) = alpha_batch_container.target_rect {
+                    self.device.enable_scissor();
+                    self.device.set_scissor_rect(target_rect);
+                }
 
                 // Draw opaque batches front-to-back for maximum
                 // z-buffer efficiency!
-                for batch in target
-                    .alpha_batcher
-                    .batch_list
-                    .opaque_batch_list
-                    .batches
+                for batch in alpha_batch_container
+                    .opaque_batches
                     .iter()
                     .rev()
                 {
@@ -3598,32 +3603,31 @@ impl Renderer {
                         render_target,
                         target_size,
                         stats,
+                        alpha_batch_container.target_rect,
                     );
                 }
 
-                self.device.disable_depth_write();
-                self.gpu_profile.finish_sampler(opaque_sampler);
+                if alpha_batch_container.target_rect.is_some() {
+                    self.device.disable_scissor();
+                }
             }
 
-            let transparent_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_TRANSPARENT);
+            self.device.disable_depth_write();
+            self.gpu_profile.finish_sampler(opaque_sampler);
+        }
 
-            for batch in &target.alpha_batcher.batch_list.alpha_batch_list.batches {
-                if self.debug_flags.contains(DebugFlags::ALPHA_PRIM_DBG) {
-                    let color = match batch.key.blend_mode {
-                        BlendMode::None => debug_colors::BLACK,
-                        BlendMode::Alpha |
-                        BlendMode::PremultipliedAlpha => debug_colors::GREY,
-                        BlendMode::PremultipliedDestOut => debug_colors::SALMON,
-                        BlendMode::SubpixelConstantTextColor(..) => debug_colors::GREEN,
-                        BlendMode::SubpixelVariableTextColor => debug_colors::RED,
-                        BlendMode::SubpixelWithBgColor => debug_colors::BLUE,
-                        BlendMode::SubpixelDualSource => debug_colors::YELLOW,
-                    }.into();
-                    for item_rect in &batch.item_rects {
-                        self.debug.add_rect(item_rect, color);
-                    }
-                }
+        let _gl = self.gpu_profile.start_marker("alpha batches");
+        let transparent_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_TRANSPARENT);
+        self.device.set_blend(false);
+        let mut prev_blend_mode = BlendMode::None;
 
+        for alpha_batch_container in &target.alpha_batch_containers {
+            if let Some(target_rect) = alpha_batch_container.target_rect {
+                self.device.enable_scissor();
+                self.device.set_scissor_rect(target_rect);
+            }
+
+            for batch in &alpha_batch_container.alpha_batches {
                 match batch.key.kind {
                     BatchKind::Transformable(transform_kind, TransformBatchKind::TextRun(glyph_format)) => {
                         // Text run batches are handled by this special case branch.
@@ -3837,15 +3841,20 @@ impl Renderer {
                             render_target,
                             target_size,
                             stats,
+                            alpha_batch_container.target_rect,
                         );
                     }
                 }
             }
 
-            self.device.disable_depth();
-            self.device.set_blend(false);
-            self.gpu_profile.finish_sampler(transparent_sampler);
+            if alpha_batch_container.target_rect.is_some() {
+                self.device.disable_scissor();
+            }
         }
+
+        self.device.disable_depth();
+        self.device.set_blend(false);
+        self.gpu_profile.finish_sampler(transparent_sampler);
 
         // For any registered image outputs on this render target,
         // get the texture from caller and blit it.
@@ -4625,7 +4634,7 @@ impl Renderer {
         let y0: f32 = 30.0;
         let mut y = y0;
         let mut text_width = 0.0;
-        for (pipeline, epoch) in  &self.pipeline_epoch_map {
+        for (pipeline, epoch) in  &self.pipeline_info.epochs {
             y += dy;
             let w = self.debug.add_text(
                 x0, y,
@@ -4938,6 +4947,12 @@ impl OutputImageHandler for () {
     fn unlock(&mut self, _: PipelineId) {
         unreachable!()
     }
+}
+
+#[derive(Default)]
+pub struct PipelineInfo {
+    pub epochs: FastHashMap<PipelineId, Epoch>,
+    pub removed_pipelines: Vec<PipelineId>,
 }
 
 impl Renderer {

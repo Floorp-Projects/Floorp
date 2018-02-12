@@ -6,32 +6,32 @@ extern crate env_logger;
 extern crate euclid;
 
 use gleam::gl;
-use glutin;
+use glutin::{self, GlContext};
 use std::env;
 use std::path::PathBuf;
 use webrender;
 use webrender::api::*;
 
 struct Notifier {
-    window_proxy: glutin::WindowProxy,
+    events_proxy: glutin::EventsLoopProxy,
 }
 
 impl Notifier {
-    fn new(window_proxy: glutin::WindowProxy) -> Notifier {
-        Notifier { window_proxy }
+    fn new(events_proxy: glutin::EventsLoopProxy) -> Notifier {
+        Notifier { events_proxy }
     }
 }
 
 impl RenderNotifier for Notifier {
     fn clone(&self) -> Box<RenderNotifier> {
         Box::new(Notifier {
-            window_proxy: self.window_proxy.clone(),
+            events_proxy: self.events_proxy.clone(),
         })
     }
 
     fn wake_up(&self) {
         #[cfg(not(target_os = "android"))]
-        self.window_proxy.wakeup_event_loop();
+        let _ = self.events_proxy.wakeup();
     }
 
     fn new_document_ready(&self, _: DocumentId, _scrolled: bool, _composite_needed: bool) {
@@ -76,7 +76,7 @@ pub trait Example {
         pipeline_id: PipelineId,
         document_id: DocumentId,
     );
-    fn on_event(&mut self, glutin::Event, &RenderApi, DocumentId) -> bool {
+    fn on_event(&mut self, glutin::WindowEvent, &RenderApi, DocumentId) -> bool {
         false
     }
     fn get_image_handlers(
@@ -94,7 +94,7 @@ pub fn main_wrapper<E: Example>(
     example: &mut E,
     options: Option<webrender::RendererOptions>,
 ) {
-    env_logger::init().unwrap();
+    env_logger::init();
 
     let args: Vec<String> = env::args().collect();
     let res_path = if args.len() > 1 {
@@ -103,15 +103,17 @@ pub fn main_wrapper<E: Example>(
         None
     };
 
-    let window = glutin::WindowBuilder::new()
-        .with_title(E::TITLE)
-        .with_multitouch()
-        .with_dimensions(E::WIDTH, E::HEIGHT)
+    let mut events_loop = glutin::EventsLoop::new();
+    let context_builder = glutin::ContextBuilder::new()
         .with_gl(glutin::GlRequest::GlThenGles {
             opengl_version: (3, 2),
             opengles_version: (3, 0),
-        })
-        .build()
+        });
+    let window_builder = glutin::WindowBuilder::new()
+        .with_title(E::TITLE)
+        .with_multitouch()
+        .with_dimensions(E::WIDTH, E::HEIGHT);
+    let window = glutin::GlWindow::new(window_builder, context_builder, &events_loop)
         .unwrap();
 
     unsafe {
@@ -145,10 +147,10 @@ pub fn main_wrapper<E: Example>(
     };
 
     let framebuffer_size = {
-        let (width, height) = window.get_inner_size_pixels().unwrap();
+        let (width, height) = window.get_inner_size().unwrap();
         DeviceUintSize::new(width, height)
     };
-    let notifier = Box::new(Notifier::new(window.create_window_proxy()));
+    let notifier = Box::new(Notifier::new(events_loop.create_proxy()));
     let (mut renderer, sender) = webrender::Renderer::new(gl.clone(), notifier, opts).unwrap();
     let api = sender.create_api();
     let document_id = api.add_document(framebuffer_size, 0);
@@ -191,132 +193,92 @@ pub fn main_wrapper<E: Example>(
     api.send_transaction(document_id, txn);
 
     println!("Entering event loop");
-    'outer: for event in window.wait_events() {
-        let mut events = Vec::new();
-        events.push(event);
-        events.extend(window.poll_events());
-
+    events_loop.run_forever(|global_event| {
         let mut txn = Transaction::new();
-        for event in events {
-            match event {
-                glutin::Event::Closed |
-                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) => break 'outer,
+        let mut custom_event = true;
 
-                glutin::Event::KeyboardInput(
-                    glutin::ElementState::Pressed,
-                    _,
-                    Some(glutin::VirtualKeyCode::P),
-                ) => {
-                    renderer.toggle_debug_flags(webrender::DebugFlags::PROFILER_DBG);
-                }
-                glutin::Event::KeyboardInput(
-                    glutin::ElementState::Pressed,
-                    _,
-                    Some(glutin::VirtualKeyCode::O),
-                ) => {
-                    renderer.toggle_debug_flags(webrender::DebugFlags::RENDER_TARGET_DBG);
-                }
-                glutin::Event::KeyboardInput(
-                    glutin::ElementState::Pressed,
-                    _,
-                    Some(glutin::VirtualKeyCode::I),
-                ) => {
-                    renderer.toggle_debug_flags(webrender::DebugFlags::TEXTURE_CACHE_DBG);
-                }
-                glutin::Event::KeyboardInput(
-                    glutin::ElementState::Pressed,
-                    _,
-                    Some(glutin::VirtualKeyCode::B),
-                ) => {
-                    renderer.toggle_debug_flags(webrender::DebugFlags::ALPHA_PRIM_DBG);
-                }
-                glutin::Event::KeyboardInput(
-                    glutin::ElementState::Pressed,
-                    _,
-                    Some(glutin::VirtualKeyCode::S),
-                ) => {
-                    renderer.toggle_debug_flags(webrender::DebugFlags::COMPACT_PROFILER);
-                }
-                glutin::Event::KeyboardInput(
-                    glutin::ElementState::Pressed,
-                    _,
-                    Some(glutin::VirtualKeyCode::Q),
-                ) => {
-                    renderer.toggle_debug_flags(webrender::DebugFlags::GPU_TIME_QUERIES
-                        | webrender::DebugFlags::GPU_SAMPLE_QUERIES);
-                }
-                glutin::Event::KeyboardInput(
-                    glutin::ElementState::Pressed,
-                    _,
-                    Some(glutin::VirtualKeyCode::Key1),
-                ) => {
-                    txn.set_window_parameters(
-                        framebuffer_size,
-                        DeviceUintRect::new(DeviceUintPoint::zero(), framebuffer_size),
-                        1.0
-                    );
-                }
-                glutin::Event::KeyboardInput(
-                    glutin::ElementState::Pressed,
-                    _,
-                    Some(glutin::VirtualKeyCode::Key2),
-                ) => {
-                    txn.set_window_parameters(
-                        framebuffer_size,
-                        DeviceUintRect::new(DeviceUintPoint::zero(), framebuffer_size),
-                        2.0
-                    );
-                }
-                glutin::Event::KeyboardInput(
-                    glutin::ElementState::Pressed,
-                    _,
-                    Some(glutin::VirtualKeyCode::M),
-                ) => {
-                    api.notify_memory_pressure();
-                }
+        match global_event {
+            glutin::Event::WindowEvent { event: glutin::WindowEvent::Closed, .. } => return glutin::ControlFlow::Break,
+            glutin::Event::WindowEvent {
+                event: glutin::WindowEvent::KeyboardInput {
+                    input: glutin::KeyboardInput {
+                        state: glutin::ElementState::Pressed,
+                        virtual_keycode: Some(key),
+                        ..
+                    },
+                    ..
+                },
+                ..
+            } => match key {
+                glutin::VirtualKeyCode::Escape => return glutin::ControlFlow::Break,
+                glutin::VirtualKeyCode::P => renderer.toggle_debug_flags(webrender::DebugFlags::PROFILER_DBG),
+                glutin::VirtualKeyCode::O => renderer.toggle_debug_flags(webrender::DebugFlags::RENDER_TARGET_DBG),
+                glutin::VirtualKeyCode::I => renderer.toggle_debug_flags(webrender::DebugFlags::TEXTURE_CACHE_DBG),
+                glutin::VirtualKeyCode::S => renderer.toggle_debug_flags(webrender::DebugFlags::COMPACT_PROFILER),
+                glutin::VirtualKeyCode::Q => renderer.toggle_debug_flags(webrender::DebugFlags::GPU_TIME_QUERIES | webrender::DebugFlags::GPU_SAMPLE_QUERIES),
+                glutin::VirtualKeyCode::Key1 => txn.set_window_parameters(
+                    framebuffer_size,
+                    DeviceUintRect::new(DeviceUintPoint::zero(), framebuffer_size),
+                    1.0
+                ),
+                glutin::VirtualKeyCode::Key2 => txn.set_window_parameters(
+                    framebuffer_size,
+                    DeviceUintRect::new(DeviceUintPoint::zero(), framebuffer_size),
+                    2.0
+                ),
+                glutin::VirtualKeyCode::M => api.notify_memory_pressure(),
                 #[cfg(feature = "capture")]
-                glutin::Event::KeyboardInput(
-                    glutin::ElementState::Pressed,
-                    _,
-                    Some(glutin::VirtualKeyCode::C),
-                ) => {
+                glutin::VirtualKeyCode::C => {
                     let path: PathBuf = "../captures/example".into();
                     //TODO: switch between SCENE/FRAME capture types
                     // based on "shift" modifier, when `glutin` is updated.
                     let bits = CaptureBits::all();
                     api.save_capture(path, bits);
-                }
-                _ => if example.on_event(event, &api, document_id) {
-                    let mut builder = DisplayListBuilder::new(pipeline_id, layout_size);
-                    let mut resources = ResourceUpdates::new();
+                },
+                _ => {
+                    let win_event = match global_event {
+                        glutin::Event::WindowEvent { event, .. } => event,
+                        _ => unreachable!()
+                    };
+                    custom_event = example.on_event(win_event, &api, document_id)
+                },
+            },
+            glutin::Event::WindowEvent { event, .. } => custom_event = example.on_event(event, &api, document_id),
+            _ => return glutin::ControlFlow::Continue,
+        };
 
-                    example.render(
-                        &api,
-                        &mut builder,
-                        &mut resources,
-                        framebuffer_size,
-                        pipeline_id,
-                        document_id,
-                    );
-                    txn.set_display_list(
-                        epoch,
-                        None,
-                        layout_size,
-                        builder.finalize(),
-                        true,
-                    );
-                    txn.update_resources(resources);
-                    txn.generate_frame();
-                }
-            }
+        if custom_event {
+            let mut builder = DisplayListBuilder::new(pipeline_id, layout_size);
+            let mut resources = ResourceUpdates::new();
+
+            example.render(
+                &api,
+                &mut builder,
+                &mut resources,
+                framebuffer_size,
+                pipeline_id,
+                document_id,
+            );
+            txn.set_display_list(
+                epoch,
+                None,
+                layout_size,
+                builder.finalize(),
+                true,
+            );
+            txn.update_resources(resources);
+            txn.generate_frame();
         }
         api.send_transaction(document_id, txn);
 
         renderer.update();
         renderer.render(framebuffer_size).unwrap();
+        let _ = renderer.flush_pipeline_info();
         example.draw_custom(&*gl);
         window.swap_buffers().ok();
-    }
+
+        glutin::ControlFlow::Continue
+    });
 
     renderer.deinit();
 }

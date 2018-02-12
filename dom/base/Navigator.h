@@ -201,6 +201,8 @@ public:
 
   mozilla::dom::CredentialsContainer* Credentials();
 
+  static bool Webdriver();
+
   void GetLanguages(nsTArray<nsString>& aLanguages);
 
   StorageManager* Storage();

@@ -422,8 +422,8 @@ LoginReputationService::QueryLoginWhitelist(QueryRequest* aRequest)
       LR_LOG(("Query login whitelist [request = %p, result = SAFE]",
               aRequest));
 
-      AccumulateDelta_impl<Millisecond>::compute(
-        LOGIN_REPUTATION_LOGIN_WHITELIST_LOOKUP_TIME, startTimeMs);
+      AccumulateTimeDelta(LOGIN_REPUTATION_LOGIN_WHITELIST_LOOKUP_TIME,
+                          startTimeMs);
 
       Accumulate(LOGIN_REPUTATION_LOGIN_WHITELIST_RESULT,
         nsILoginReputationVerdictType::SAFE);
@@ -445,8 +445,8 @@ LoginReputationService::QueryLoginWhitelist(QueryRequest* aRequest)
         // result here.
         Accumulate(LOGIN_REPUTATION_LOGIN_WHITELIST_RESULT, 2); // 2 is error
       } else {
-        AccumulateDelta_impl<Millisecond>::compute(
-          LOGIN_REPUTATION_LOGIN_WHITELIST_LOOKUP_TIME, startTimeMs);
+        AccumulateTimeDelta(LOGIN_REPUTATION_LOGIN_WHITELIST_LOOKUP_TIME,
+                            startTimeMs);
 
         Accumulate(LOGIN_REPUTATION_LOGIN_WHITELIST_RESULT,
           nsILoginReputationVerdictType::UNSPECIFIED);

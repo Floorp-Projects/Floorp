@@ -1943,6 +1943,19 @@ impl Device {
         self.gl.disable(gl::STENCIL_TEST);
     }
 
+    pub fn set_scissor_rect(&self, rect: DeviceIntRect) {
+        self.gl.scissor(
+            rect.origin.x,
+            rect.origin.y,
+            rect.size.width,
+            rect.size.height,
+        );
+    }
+
+    pub fn enable_scissor(&self) {
+        self.gl.enable(gl::SCISSOR_TEST);
+    }
+
     pub fn disable_scissor(&self) {
         self.gl.disable(gl::SCISSOR_TEST);
     }

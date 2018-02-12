@@ -1763,6 +1763,9 @@ Http2Session::RecvPushPromise(Http2Session *self)
   } else if (!associatedStream) {
     LOG3(("Http2Session::RecvPushPromise %p lookup associated ID failed.\n", self));
     self->GenerateRstStream(PROTOCOL_ERROR, promisedID);
+  } else if (Http2PushedStream::TestOnPush(associatedStream)) {
+    LOG3(("Http2Session::RecvPushPromise %p will be handled by push listener.", self));
+    resetStream = false;
   } else {
     nsIRequestContext *requestContext = associatedStream->RequestContext();
     if (requestContext) {

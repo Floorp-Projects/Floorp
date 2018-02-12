@@ -78,8 +78,8 @@ public:
     ::GeckoStart(aEnv, argv, argc, aAppData);
   }
 
-  virtual void XRE_SetAndroidChildFds(JNIEnv* aEnv, int aCrashFd, int aIPCFd) override {
-    ::XRE_SetAndroidChildFds(aEnv, aCrashFd, aIPCFd);
+  virtual void XRE_SetAndroidChildFds(JNIEnv* aEnv, int aCrashFd, int aIPCFd, int aCrashAnnotationFd) override {
+    ::XRE_SetAndroidChildFds(aEnv, aCrashFd, aIPCFd, aCrashAnnotationFd);
   }
 #endif
 

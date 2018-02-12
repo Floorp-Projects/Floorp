@@ -15,6 +15,7 @@
 extern crate foreign_types;
 extern crate libc;
 
+#[macro_use]
 extern crate core_foundation;
 extern crate core_graphics;
 
