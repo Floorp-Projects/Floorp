@@ -1608,10 +1608,8 @@ PlacesToolbar.prototype = {
   notify: function PT_notify(aTimer) {
     if (aTimer == this._updateNodesVisibilityTimer) {
       this._updateNodesVisibilityTimer = null;
-      // TODO: This should use promiseLayoutFlushed("layout"), so that
-      // _updateNodesVisibilityTimerCallback can use getBoundsWithoutFlush. But
-      // for yet unknown reasons doing that causes intermittent failures,
-      // apparently due the flush not happening in a meaningful time.
+      // Bug 1440070: This should use promiseDocumentFlushed, so that
+      // _updateNodesVisibilityTimerCallback can use getBoundsWithoutFlush.
       window.requestAnimationFrame(this._updateNodesVisibilityTimerCallback.bind(this));
     } else if (aTimer == this._ibTimer) {
       // * Timer to turn off indicator bar.
