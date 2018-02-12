@@ -173,7 +173,7 @@ impl<'a> SectionSetter<'a> {
     /// Delete the entry in this section with `key`
     pub fn delete<K>(&'a mut self, key: &K) -> &'a mut SectionSetter<'a>
         where String: Borrow<K>,
-              K: Hash + Eq
+              K: Hash + Eq + ?Sized
     {
         if let Some(prop) = self.ini.sections.get_mut(&self.section_name) {
             prop.remove(key);
@@ -184,7 +184,7 @@ impl<'a> SectionSetter<'a> {
     /// Get the entry in this section with `key`
     pub fn get<K>(&'a mut self, key: &K) -> Option<&'a str>
         where String: Borrow<K>,
-              K: Hash + Eq
+              K: Hash + Eq + ?Sized
     {
         self.ini
             .sections
@@ -315,7 +315,7 @@ impl Ini {
     {
         match self.sections.get_mut(&section.map(|s| s.into())) {
             None => None,
-            Some(mut prop) => prop.get_mut(key).map(|s| &s[..]),
+            Some(prop) => prop.get_mut(key).map(|s| &s[..]),
         }
     }
 
@@ -443,7 +443,13 @@ impl Ini {
 impl Ini {
     /// Load from a string
     pub fn load_from_str(buf: &str) -> Result<Ini, Error> {
-        let mut parser = Parser::new(buf.chars());
+        let mut parser = Parser::new(buf.chars(), false);
+        parser.parse()
+    }
+
+    /// Load from a string, but do not interpret '\' as an escape character
+    pub fn load_from_str_noescape(buf: &str) -> Result<Ini, Error> {
+        let mut parser = Parser::new(buf.chars(), true);
         parser.parse()
     }
 
@@ -457,7 +463,21 @@ impl Ini {
                 msg: format!("{}", err),
             }
         }));
-        let mut parser = Parser::new(s.chars());
+        let mut parser = Parser::new(s.chars(), false);
+        parser.parse()
+    }
+
+    /// Load from a reader, but do not interpret '\' as an escape character
+    pub fn read_from_noescape<R: Read>(reader: &mut R) -> Result<Ini, Error> {
+        let mut s = String::new();
+        try!(reader.read_to_string(&mut s).map_err(|err| {
+            Error {
+                line: 0,
+                col: 0,
+                msg: format!("{}", err),
+            }
+        }));
+        let mut parser = Parser::new(s.chars(), true);
         parser.parse()
     }
 
@@ -474,6 +494,21 @@ impl Ini {
             Ok(r) => r,
         };
         Ini::read_from(&mut reader)
+    }
+
+    /// Load from a file, but do not interpret '\' as an escape character
+    pub fn load_from_file_noescape<P: AsRef<Path>>(filename: P) -> Result<Ini, Error> {
+        let mut reader = match File::open(filename.as_ref()) {
+            Err(e) => {
+                return Err(Error {
+                    line: 0,
+                    col: 0,
+                    msg: format!("Unable to open `{:?}`: {}", filename.as_ref(), e),
+                })
+            }
+            Ok(r) => r,
+        };
+        Ini::read_from_noescape(&mut reader)
     }
 }
 
@@ -567,6 +602,7 @@ struct Parser<'a> {
     rdr: Chars<'a>,
     line: usize,
     col: usize,
+    literal: bool,
 }
 
 #[derive(Debug)]
@@ -595,12 +631,13 @@ impl error::Error for Error {
 
 impl<'a> Parser<'a> {
     // Create a parser
-    pub fn new(rdr: Chars<'a>) -> Parser<'a> {
+    pub fn new(rdr: Chars<'a>, literal: bool) -> Parser<'a> {
         let mut p = Parser {
             ch: None,
             line: 0,
             col: 0,
             rdr: rdr,
+            literal: literal,
         };
         p.bump();
         p
@@ -730,7 +767,7 @@ impl<'a> Parser<'a> {
                 None => {
                     return self.error(format!("Expecting \"{:?}\" but found EOF.", endpoint));
                 }
-                Some('\\') => {
+                Some('\\') if !self.literal => {
                     self.bump();
                     if self.eof() {
                         return self.error(format!("Expecting \"{:?}\" but found EOF.", endpoint));
@@ -1056,5 +1093,30 @@ Key = 'Value   # This is not a comment ; at all'
         assert_eq!(sec1[&key1], val1);
         let val2: String = "val2".into();
         assert_eq!(sec1[&key2], val2);
+    }
+
+    #[test]
+    fn get_with_non_static_key() {
+        let input = "key1=val1\nkey2=val2\n";
+        let opt = Ini::load_from_str(input).unwrap();
+
+        let sec1 = &opt.sections[&None::<String>];
+
+        let key = "key1".to_owned();
+        sec1.get(&key).unwrap();
+    }
+
+    #[test]
+    fn load_from_str_noescape() {
+        let input = "path=C:\\Windows\\Some\\Folder\\";
+        let opt = Ini::load_from_str_noescape(input);
+        assert!(opt.is_ok());
+
+        let output = opt.unwrap();
+        assert_eq!(output.sections.len(), 1);
+        let sec = &output.sections[&None::<String>];
+        assert_eq!(sec.len(), 1);
+        assert!(sec.contains_key("path"));
+        assert_eq!(sec["path"], "C:\\Windows\\Some\\Folder\\");
     }
 }
