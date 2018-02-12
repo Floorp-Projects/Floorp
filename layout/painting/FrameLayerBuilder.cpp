@@ -144,6 +144,7 @@ DisplayItemData::DisplayItemData(LayerManagerData* aParent, uint32_t aKey,
   , mItem(nullptr)
   , mUsed(true)
   , mIsInvalid(false)
+  , mReusedItem(false)
 {
   MOZ_COUNT_CTOR(DisplayItemData);
 
@@ -185,9 +186,10 @@ void
 DisplayItemData::EndUpdate()
 {
   MOZ_RELEASE_ASSERT(mLayer);
-  MOZ_ASSERT(!mItem);
+  mItem = nullptr;
   mIsInvalid = false;
   mUsed = false;
+  mReusedItem = false;
 }
 
 void
@@ -221,6 +223,7 @@ DisplayItemData::BeginUpdate(Layer* aLayer, LayerState aState,
 
   if (aLayer->AsPaintedLayer()) {
     mItem = aItem;
+    mReusedItem = aItem->IsReused();
   }
 
   if (!aItem) {
@@ -4632,8 +4635,8 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
   // for this item (if it was an active layer), then we can't skip this
   // yet.
   nsAutoPtr<nsDisplayItemGeometry> geometry;
-  if (item->IsReused() && aData->mGeometry) {
-    aData->EndUpdate(geometry);
+  if (aData->mReusedItem && aData->mGeometry) {
+    aData->EndUpdate();
     return;
   }
 

@@ -185,6 +185,7 @@ private:
     */
   bool            mUsed;
   bool            mIsInvalid;
+  bool            mReusedItem;
 };
 
 class RefCountedRegion {
