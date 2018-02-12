@@ -1896,7 +1896,6 @@ nsIFrame::GetShapeBoxBorderRadii(nscoord aRadii[8]) const
       MOZ_ASSERT_UNREACHABLE("Unexpected box value");
       return false;
   }
-  return false;
 }
 
 nsStyleContext*
