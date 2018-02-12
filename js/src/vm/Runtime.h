@@ -43,6 +43,7 @@
 #include "vm/CommonPropertyNames.h"
 #include "vm/DateTime.h"
 #include "vm/GeckoProfiler.h"
+#include "vm/JSAtom.h"
 #include "vm/JSScript.h"
 #include "vm/Scope.h"
 #include "vm/SharedImmutableStringsCache.h"

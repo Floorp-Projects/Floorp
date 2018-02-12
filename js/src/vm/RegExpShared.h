@@ -24,6 +24,7 @@
 #include "js/UbiNode.h"
 #include "js/Vector.h"
 #include "vm/ArrayObject.h"
+#include "vm/JSAtom.h"
 
 namespace js {
 

@@ -204,7 +204,6 @@
 # include <sys/mman.h>
 # include <unistd.h>
 #endif
-
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jsprf.h"
@@ -228,6 +227,7 @@
 #include "proxy/DeadObjectProxy.h"
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
+#include "vm/JSAtom.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"

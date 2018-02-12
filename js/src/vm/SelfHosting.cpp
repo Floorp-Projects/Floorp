@@ -58,6 +58,7 @@
 
 #include "gc/Iteration-inl.h"
 #include "vm/BooleanObject-inl.h"
+#include "vm/JSAtom-inl.h"
 #include "vm/JSFunction-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"

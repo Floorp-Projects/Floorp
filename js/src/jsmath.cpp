@@ -31,6 +31,7 @@
 
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
+#include "vm/JSAtom.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 #include "vm/Time.h"
