@@ -236,7 +236,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArrayElement* lir) override;
     void visitWasmSelect(LWasmSelect* ins) override;
     void visitWasmReinterpret(LWasmReinterpret* ins) override;
-    void emitWasmCall(LWasmCallBase* ins);
     void visitWasmLoad(LWasmLoad* ins) override;
     void visitWasmLoadI64(LWasmLoadI64* ins) override;
     void visitWasmUnalignedLoad(LWasmUnalignedLoad* ins) override;
