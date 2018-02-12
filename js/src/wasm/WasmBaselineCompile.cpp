@@ -3440,12 +3440,18 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
     void checkDivideByZeroI32(RegI32 rhs, RegI32 srcDest, Label* done) {
-        masm.branchTest32(Assembler::Zero, rhs, rhs, oldTrap(Trap::IntegerDivideByZero));
+        Label nonZero;
+        masm.branchTest32(Assembler::NonZero, rhs, rhs, &nonZero);
+        trap(Trap::IntegerDivideByZero);
+        masm.bind(&nonZero);
     }
 
     void checkDivideByZeroI64(RegI64 r) {
+        Label nonZero;
         ScratchI32 scratch(*this);
-        masm.branchTest64(Assembler::Zero, r, r, scratch, oldTrap(Trap::IntegerDivideByZero));
+        masm.branchTest64(Assembler::NonZero, r, r, scratch, &nonZero);
+        trap(Trap::IntegerDivideByZero);
+        masm.bind(&nonZero);
     }
 
     void checkDivideSignedOverflowI32(RegI32 rhs, RegI32 srcDest, Label* done, bool zeroOnOverflow) {
