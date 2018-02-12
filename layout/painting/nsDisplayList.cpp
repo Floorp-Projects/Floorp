@@ -3494,8 +3494,7 @@ nsDisplayBackgroundImage::GetInitData(nsDisplayListBuilder* aBuilder,
                                       nsIFrame* aFrame,
                                       uint32_t aLayer,
                                       const nsRect& aBackgroundRect,
-                                      const nsStyleBackground* aBackgroundStyle,
-                                      LayerizeFixed aLayerizeFixed)
+                                      const nsStyleBackground* aBackgroundStyle)
 {
   nsPresContext* presContext = aFrame->PresContext();
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
@@ -3514,15 +3513,6 @@ nsDisplayBackgroundImage::GetInitData(nsDisplayListBuilder* aBuilder,
     layer.mAttachment == NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED && !isTransformedFixed;
 
   bool shouldFixToViewport = shouldTreatAsFixed && !layer.mImage.IsEmpty();
-  if (shouldFixToViewport &&
-      aLayerizeFixed == LayerizeFixed::DO_NOT_LAYERIZE_FIXED_BACKGROUND_IF_AVOIDING_COMPONENT_ALPHA_LAYERS &&
-      !nsLayoutUtils::UsesAsyncScrolling(aFrame)) {
-    RefPtr<LayerManager> layerManager = aBuilder->GetWidgetLayerManager();
-    if (layerManager && layerManager->ShouldAvoidComponentAlphaLayers()) {
-      shouldFixToViewport = false;
-    }
-  }
-
   bool isRasterImage = state.mImageRenderer.IsRasterImage();
   nsCOMPtr<imgIContainer> image;
   if (isRasterImage) {
@@ -3819,8 +3809,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
 
     nsDisplayList thisItemList;
     nsDisplayBackgroundImage::InitData bgData =
-      nsDisplayBackgroundImage::GetInitData(aBuilder, aFrame, i, bgOriginRect, bg,
-                                            LayerizeFixed::DO_NOT_LAYERIZE_FIXED_BACKGROUND_IF_AVOIDING_COMPONENT_ALPHA_LAYERS);
+      nsDisplayBackgroundImage::GetInitData(aBuilder, aFrame, i, bgOriginRect, bg);
 
     if (bgData.shouldFixToViewport) {
 
@@ -4349,17 +4338,12 @@ nsDisplayBackgroundImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuild
     // Positioning area changed in a way that could cause everything to change,
     // so invalidate everything (both old and new painting areas).
     aInvalidRegion->Or(bounds, geometry->mBounds);
-
-    if (positioningArea.Size() != geometry->mPositioningArea.Size()) {
-      NotifyRenderingChanged();
-    }
     return;
   }
   if (!mDestRect.IsEqualInterior(geometry->mDestRect)) {
     // Dest area changed in a way that could cause everything to change,
     // so invalidate everything (both old and new painting areas).
     aInvalidRegion->Or(bounds, geometry->mBounds);
-    NotifyRenderingChanged();
     return;
   }
   if (aBuilder->ShouldSyncDecodeImages()) {
@@ -4367,16 +4351,12 @@ nsDisplayBackgroundImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuild
     if (image.GetType() == eStyleImageType_Image &&
         geometry->ShouldInvalidateToSyncDecodeImages()) {
       aInvalidRegion->Or(*aInvalidRegion, bounds);
-
-      NotifyRenderingChanged();
     }
   }
   if (!bounds.IsEqualInterior(geometry->mBounds)) {
     // Positioning area is unchanged, so invalidate just the change in the
     // painting area.
     aInvalidRegion->Xor(bounds, geometry->mBounds);
-
-    NotifyRenderingChanged();
   }
 }
 

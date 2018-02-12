@@ -351,16 +351,6 @@ nsDisplayCanvasBackgroundColor::WriteDebugInfo(std::stringstream& aStream)
 }
 #endif
 
-#ifndef MOZ_GFX_OPTIMIZE_MOBILE
-static void BlitSurface(DrawTarget* aDest, const gfxRect& aRect, DrawTarget* aSource)
-{
-  RefPtr<SourceSurface> source = aSource->Snapshot();
-  aDest->DrawSurface(source,
-                     Rect(aRect.x, aRect.y, aRect.width, aRect.height),
-                     Rect(0, 0, aRect.width, aRect.height));
-}
-#endif
-
 void
 nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
                                       gfxContext* aCtx)
@@ -369,39 +359,6 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
   nsPoint offset = ToReferenceFrame();
   nsRect bgClipRect = frame->CanvasArea() + offset;
 
-#ifndef MOZ_GFX_OPTIMIZE_MOBILE
-  RefPtr<gfxContext> dest = aCtx;
-  gfxRect destRect;
-  if (IsSingleFixedPositionImage(aBuilder, bgClipRect, &destRect) &&
-      aBuilder->IsPaintingToWindow() && !aBuilder->IsCompositingCheap() &&
-      !dest->CurrentMatrix().HasNonIntegerTranslation()) {
-    // Snap image rectangle to nearest pixel boundaries. This is the right way
-    // to snap for this context, because we checked HasNonIntegerTranslation
-    // above.
-    destRect.Round();
-    RefPtr<DrawTarget> dt =
-      Frame()->GetProperty(nsIFrame::CachedBackgroundImageDT());
-    DrawTarget* destDT = dest->GetDrawTarget();
-    if (dt) {
-      BlitSurface(destDT, destRect, dt);
-      return;
-    }
-
-    dt = destDT->CreateSimilarRasterTarget(IntSize::Ceil(destRect.width,
-                                                         destRect.height),
-                                           SurfaceFormat::B8G8R8A8);
-    if (dt && dt->IsValid()) {
-      RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
-      MOZ_ASSERT(ctx); // already checked draw target above
-      ctx->SetMatrix(ctx->CurrentMatrix().PreTranslate(-destRect.x, -destRect.y));
-      PaintInternal(aBuilder, ctx, bgClipRect, &bgClipRect);
-      BlitSurface(dest->GetDrawTarget(), destRect, dt);
-      frame->SetProperty(nsIFrame::CachedBackgroundImageDT(),
-                              dt.forget().take());
-      return;
-    }
-  }
-#endif
   PaintInternal(aBuilder, aCtx, mVisibleRect, &bgClipRect);
 }
 
@@ -546,8 +503,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       const ActiveScrolledRoot* thisItemASR = asr;
       nsDisplayList thisItemList;
       nsDisplayBackgroundImage::InitData bgData =
-        nsDisplayBackgroundImage::GetInitData(aBuilder, this, i, bgRect, bg,
-                                              nsDisplayBackgroundImage::LayerizeFixed::ALWAYS_LAYERIZE_FIXED_BACKGROUND);
+        nsDisplayBackgroundImage::GetInitData(aBuilder, this, i, bgRect, bg);
 
       if (bgData.shouldFixToViewport) {
 

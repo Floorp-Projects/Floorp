@@ -2365,16 +2365,6 @@ public:
   }
 
   /**
-   * Called when the area rendered by this display item has changed (been
-   * invalidated or changed geometry) since the last paint. This includes
-   * when the display item was not rendered at all in the last paint.
-   * It does NOT get called when a display item was being rendered and no
-   * longer is, because generally that means there is no display item to
-   * call this method on.
-   */
-  virtual void NotifyRenderingChanged() const {}
-
-  /**
    * @param aSnap set to true if the edges of the rectangles of the opaque
    * region would be snapped to device pixels when drawing
    * @return a region of the item that is opaque --- that is, every pixel
@@ -3837,16 +3827,11 @@ public:
    * nsCSSRendering::FindBackground, or null if FindBackground returned false.
    * aBackgroundRect is relative to aFrame.
    */
-  enum class LayerizeFixed : uint8_t {
-    ALWAYS_LAYERIZE_FIXED_BACKGROUND,
-    DO_NOT_LAYERIZE_FIXED_BACKGROUND_IF_AVOIDING_COMPONENT_ALPHA_LAYERS
-  };
   static InitData GetInitData(nsDisplayListBuilder* aBuilder,
                               nsIFrame* aFrame,
                               uint32_t aLayer,
                               const nsRect& aBackgroundRect,
-                              const nsStyleBackground* aBackgroundStyle,
-                              LayerizeFixed aLayerizeFixed);
+                              const nsStyleBackground* aBackgroundStyle);
 
   explicit nsDisplayBackgroundImage(const InitData& aInitData,
                                     nsIFrame* aFrameForBounds = nullptr);
