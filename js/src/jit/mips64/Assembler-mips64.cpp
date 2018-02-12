@@ -323,9 +323,7 @@ Assembler::bind(RepatchLabel* label)
             MOZ_ASSERT(inst[0].extractOpcode() == (uint32_t(op_beq) >> OpcodeShift) ||
                        inst[0].extractOpcode() == (uint32_t(op_bne) >> OpcodeShift) ||
                        inst[0].extractOpcode() == (uint32_t(op_blez) >> OpcodeShift) ||
-                       inst[0].extractOpcode() == (uint32_t(op_bgtz) >> OpcodeShift) ||
-                       (inst[0].extractOpcode() == (uint32_t(op_regimm) >> OpcodeShift) &&
-                       inst[0].extractRT() == (uint32_t(rt_bltz) >> RTShift)));
+                       inst[0].extractOpcode() == (uint32_t(op_bgtz) >> OpcodeShift));
             inst[0].setBOffImm16(BOffImm16(offset));
         } else if (inst[0].encode() == inst_beq.encode()) {
             // Handle open long unconditional jumps created by

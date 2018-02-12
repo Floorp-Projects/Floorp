@@ -31,43 +31,43 @@ MacroAssembler::move64(Imm64 imm, Register64 dest)
 void
 MacroAssembler::moveDoubleToGPR64(FloatRegister src, Register64 dest)
 {
-    moveFromDouble(src, dest.reg);
+    MOZ_CRASH("NYI: moveDoubleToGPR64");
 }
 
 void
 MacroAssembler::moveGPR64ToDouble(Register64 src, FloatRegister dest)
 {
-    moveToDouble(src.reg, dest);
+    MOZ_CRASH("NYI: moveGPR64ToDouble");
 }
 
 void
 MacroAssembler::move64To32(Register64 src, Register dest)
 {
-    ma_sll(dest, src.reg, Imm32(0));
+    MOZ_CRASH("NYI: move64To32");
 }
 
 void
 MacroAssembler::move32To64ZeroExtend(Register src, Register64 dest)
 {
-    ma_dext(dest.reg, src, Imm32(0), Imm32(32));
+    MOZ_CRASH("NYI: move32To64ZeroExtend");
 }
 
 void
 MacroAssembler::move8To64SignExtend(Register src, Register64 dest)
 {
-    move8SignExtend(src, dest.reg);
+    MOZ_CRASH("NYI: move8To64SignExtend");
 }
 
 void
 MacroAssembler::move16To64SignExtend(Register src, Register64 dest)
 {
-    move16SignExtend(src, dest.reg);
+    MOZ_CRASH("NYI: move16To64SignExtend");
 }
 
 void
 MacroAssembler::move32To64SignExtend(Register src, Register64 dest)
 {
-    ma_sll(dest.reg, src, Imm32(0));
+    MOZ_CRASH("NYI: move32To64SignExtend");
 }
 
 // ===============================================================
@@ -245,20 +245,13 @@ MacroAssembler::add64(Imm64 imm, Register64 dest)
 CodeOffset
 MacroAssembler::sub32FromStackPtrWithPatch(Register dest)
 {
-    CodeOffset offset = CodeOffset(currentOffset());
-    MacroAssemblerMIPSShared::ma_liPatchable(dest, Imm32(0));
-    as_dsubu(dest, StackPointer, dest);
-    return offset;
+    MOZ_CRASH("NYI - sub32FromStackPtrWithPatch");
 }
 
 void
 MacroAssembler::patchSub32FromStackPtr(CodeOffset offset, Imm32 imm)
 {
-    Instruction* lui = (Instruction*) m_buffer.getInst(BufferOffset(offset.offset()));
-    MOZ_ASSERT(lui->extractOpcode() == ((uint32_t)op_lui >> OpcodeShift));
-    MOZ_ASSERT(lui->next()->extractOpcode() == ((uint32_t)op_ori >> OpcodeShift));
-
-    MacroAssemblerMIPSShared::UpdateLuiOriValue(lui, lui->next(), imm.value);
+    MOZ_CRASH("NYI - patchSub32FromStackPtr");
 }
 
 void

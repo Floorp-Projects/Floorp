@@ -5007,10 +5007,8 @@ MacroAssembler::wasmUnalignedLoadI64(const wasm::MemoryAccessDesc& access, Regis
 
 void
 MacroAssembler::wasmUnalignedStore(const wasm::MemoryAccessDesc& access, Register value,
-                                   Register memoryBase, Register ptr, Register ptrScratch,
-                                   Register tmp)
+                                   Register memoryBase, Register ptr, Register ptrScratch)
 {
-    MOZ_ASSERT(tmp == Register::Invalid());
     wasmUnalignedStoreImpl(access, FloatRegister(), Register64::Invalid(), memoryBase, ptr,
                            ptrScratch, value);
 }
