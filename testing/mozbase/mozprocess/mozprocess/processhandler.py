@@ -12,8 +12,10 @@ import sys
 import threading
 import time
 import traceback
+
 from Queue import Queue, Empty
 from datetime import datetime
+
 
 __all__ = ['ProcessHandlerMixin', 'ProcessHandler', 'LogOutput',
            'StoreOutput', 'StreamOutput']
@@ -871,6 +873,37 @@ falling back to not using job objects for managing child processes""", file=sys.
     @property
     def pid(self):
         return self.proc.pid
+
+    @staticmethod
+    def pid_exists(pid):
+        if pid < 0:
+            return False
+
+        if isWin:
+            try:
+                process = winprocess.OpenProcess(
+                    winprocess.PROCESS_QUERY_INFORMATION | winprocess.PROCESS_VM_READ, False, pid)
+                return winprocess.GetExitCodeProcess(process) == winprocess.STILL_ACTIVE
+
+            except WindowsError as e:
+                # no such process
+                if e.winerror == winprocess.ERROR_INVALID_PARAMETER:
+                    return False
+
+                # access denied
+                if e.winerror == winprocess.ERROR_ACCESS_DENIED:
+                    return True
+
+                # re-raise for any other type of exception
+                raise
+
+        elif isPosix:
+            try:
+                os.kill(pid, 0)
+            except OSError as e:
+                return e.errno == errno.EPERM
+            else:
+                return True
 
     @classmethod
     def _getpgid(cls, pid):
