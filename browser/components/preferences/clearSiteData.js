@@ -56,17 +56,20 @@ var gClearSiteDataDialog = {
   onClear() {
     let allowed = true;
 
+    if (this._clearCacheCheckbox.checked && allowed) {
+      SiteDataManager.removeCache();
+      // If we're not clearing site data, we need to tell the
+      // SiteDataManager to signal that it's updating.
+      if (!this._clearSiteDataCheckbox.checked) {
+        SiteDataManager.updateSites();
+      }
+    }
+
     if (this._clearSiteDataCheckbox.checked) {
       allowed = SiteDataManager.promptSiteDataRemoval(window);
       if (allowed) {
         SiteDataManager.removeSiteData();
       }
-    }
-
-    if (this._clearCacheCheckbox.checked && allowed) {
-      SiteDataManager.removeCache();
-      // Update cache UI in about:preferences
-      window.opener.gPrivacyPane.updateActualCacheSize();
     }
 
     if (allowed) {
