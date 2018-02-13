@@ -734,7 +734,6 @@ class LNode
     // transfer instruction, or zero otherwise.
     virtual size_t numSuccessors() const = 0;
     virtual MBasicBlock* getSuccessor(size_t i) const = 0;
-    virtual void setSuccessor(size_t i, MBasicBlock* successor) = 0;
 
     bool isCall() const {
         return isCall_;
@@ -982,9 +981,6 @@ class LPhi final : public LNode
     MBasicBlock* getSuccessor(size_t i) const override {
         MOZ_CRASH("no successors");
     }
-    void setSuccessor(size_t i, MBasicBlock*) override {
-        MOZ_CRASH("no successors");
-    }
 };
 
 class LMoveGroup;
@@ -1126,9 +1122,6 @@ namespace details {
             return 0;
         }
         MBasicBlock* getSuccessor(size_t i) const override {
-            MOZ_CRASH("no successors");
-        }
-        void setSuccessor(size_t i, MBasicBlock* successor) override {
             MOZ_CRASH("no successors");
         }
 
