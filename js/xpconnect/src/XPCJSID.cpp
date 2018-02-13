@@ -214,11 +214,8 @@ public:
     SharedScriptableHelperForJSIID() {}
 };
 
-NS_IMPL_QUERY_INTERFACE(SharedScriptableHelperForJSIID,
-                        nsIXPCScriptable)
-
-NS_IMPL_ADDREF(SharedScriptableHelperForJSIID)
-NS_IMPL_RELEASE(SharedScriptableHelperForJSIID)
+NS_IMPL_ISUPPORTS(SharedScriptableHelperForJSIID,
+                  nsIXPCScriptable)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME SharedScriptableHelperForJSIID
