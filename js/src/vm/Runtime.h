@@ -21,7 +21,6 @@
 
 #include <setjmp.h>
 
-#include "jsatom.h"
 #include "jsscript.h"
 
 #include "builtin/AtomicsObject.h"

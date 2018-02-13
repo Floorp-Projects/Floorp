@@ -21,7 +21,6 @@
 #include "vm/StringBuffer.h"
 #include "vm/TypedArrayObject.h"
 
-#include "jsatominlines.h"
 #include "jsobjinlines.h"
 
 #include "gc/Nursery-inl.h"

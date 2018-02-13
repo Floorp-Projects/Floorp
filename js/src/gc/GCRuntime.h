@@ -11,8 +11,6 @@
 #include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
 
-#include "jsatom.h"
-
 #include "gc/ArenaList.h"
 #include "gc/AtomMarking.h"
 #include "gc/GCHelperState.h"
@@ -23,6 +21,7 @@
 #include "gc/StoreBuffer.h"
 #include "js/GCAnnotations.h"
 #include "js/UniquePtr.h"
+#include "vm/AtomsTable.h"
 
 namespace js {
 

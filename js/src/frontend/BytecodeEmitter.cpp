@@ -19,7 +19,6 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jsatom.h"
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsnum.h"
@@ -36,7 +35,6 @@
 #include "vm/Stack.h"
 #include "wasm/AsmJS.h"
 
-#include "jsatominlines.h"
 #include "jsscriptinlines.h"
 
 #include "frontend/ParseNode-inl.h"

@@ -8,7 +8,6 @@
 
 #include "jsobj.h"
 
-#include "jsatominlines.h"
 #include "jsscriptinlines.h"
 
 #include "vm/ArrayObject-inl.h"
