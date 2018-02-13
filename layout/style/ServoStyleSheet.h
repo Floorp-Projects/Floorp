@@ -158,6 +158,9 @@ private:
                   nsIDocument* aDocumentToUse,
                   nsINode* aOwningNodeToUse);
 
+  // Common tail routine for the synchronous and asynchronous parsing paths.
+  void FinishParse();
+
   void DropRuleList();
 
   // Take the recently cloned sheets from the `@import` rules, and reparent them
