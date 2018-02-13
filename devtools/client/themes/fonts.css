@@ -10,10 +10,6 @@
   height: 100%;
 }
 
-#sidebar-panel-fontinspector > .devtools-toolbar {
-  display: flex;
-}
-
 #font-container {
   overflow: auto;
   flex: auto;
@@ -22,89 +18,120 @@
 #all-fonts {
   padding: 0;
   margin: 0;
-}
-
-#font-showall {
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-#font-showall:hover {
-  text-decoration: underline;
-}
-
-.font-format::before {
-  content: "(";
-}
-
-.font-format::after {
-  content: ")";
-}
-
-.preview-input-toolbar {
-  display: flex;
-  width: 100%;
-}
-
-.font-preview-container {
-  overflow-x: auto;
-}
-
-#font-preview-text-input {
-  margin-top: 1px;
-  margin-bottom: 1px;
-  padding-top: 0;
-  padding-bottom: 0;
-  flex: 1;
+  list-style: none;
 }
 
 .font {
-  padding: 10px 10px;
+  border: 1px solid var(--theme-splitter-color);
+  border-width: 0 1px 1px 0;
+  display: grid;
+  grid-template-columns: 14px auto 1fr;
+  grid-template-rows: 50px;
+  grid-column-gap: 10px;
+  padding: 0 10px;
 }
 
-.theme-dark .font {
-  border-bottom: 1px solid #444;
+#font-container .theme-twisty {
+  display: inline-block;
+  cursor: pointer;
+  place-self: center;
 }
 
-.theme-light .font {
-  border-bottom: 1px solid #DDD;
-}
-
-.font:last-of-type {
-  border-bottom: 0;
-}
-
-.theme-light .font:nth-child(even) {
-  background: #F4F4F4;
+.font-preview-container {
+  grid-column: 3 / -1;
+  grid-row: 1;
+  overflow: hidden;
+  display: grid;
+  place-items: center end;
+  position: relative;
 }
 
 .font-preview {
-  margin-left: -4px;
-  height: 60px;
+  height: 50px;
   display: block;
 }
 
+.font-preview:hover {
+  cursor: text;
+  background-image: linear-gradient(to right,
+    var(--grey-40) 3px, transparent 3px, transparent);
+  background-size: 6px 1px;
+  background-repeat: repeat-x;
+  background-position-y: 45px;
+}
+
+.font-preview-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100% - 5px);
+  height: calc(100% - 2px);
+  background: transparent;
+  color: transparent;
+}
+
+.font-preview-input::-moz-selection {
+  background: transparent;
+  color: transparent;
+}
+
 .font-name {
-  display: inline;
+  margin: 0;
+  font-size: 1em;
+  white-space: nowrap;
+  grid-column: 2;
+  place-self: center start;
+}
+
+.font-details {
+  grid-column: 2 / 4;
+  padding-inline-end: 14px;
+  width: 100%;
 }
 
 .font-css-code {
-  max-width: 100%;
+  direction: ltr;
+  padding: 5px;
+  margin: 0;
+  border: 1px solid var(--theme-splitter-color);
+  border-radius: 3px;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 5px;
-  direction: ltr;
+  color: var(--theme-toolbar-color);
 }
 
-.theme-light .font-css-code,
-.theme-light .font-url {
-  border: 1px solid #CCC;
-  background: white;
+.font-format-url {
+  text-transform: capitalize;
+  margin-block-start: 0;
 }
 
-.theme-dark .font-css-code,
-.theme-dark .font-url {
-  border: 1px solid #333;
-  background: black;
-  color: white;
+.font-url {
+  margin-inline-start: 1em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  color: var(--theme-highlight-blue);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.font-url::after {
+  content: "";
+  display: inline-block;
+  height: 13px;
+  width: 13px;
+  margin: -.3rem .15rem 0 0.25rem;
+  vertical-align: middle;
+  background-image: url(chrome://devtools-shim/content/aboutdevtools/images/external-link.svg);
+  background-repeat: no-repeat;
+  background-size: 13px 13px;
+  -moz-context-properties: fill;
+  fill: var(--blue-60);
+}
+
+
+.font:not(.expanded) .font-css-name,
+.font:not(.expanded) .font-css-code,
+.font:not(.expanded) .font-format-url {
+  display: none;
 }

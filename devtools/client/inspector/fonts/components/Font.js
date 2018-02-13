@@ -4,84 +4,94 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const FontPreview = createFactory(require("./FontPreview"));
 
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
 
 class Font extends PureComponent {
   static get propTypes() {
-    return PropTypes.shape(Types.font).isRequired;
+    return {
+      font: PropTypes.shape(Types.font).isRequired,
+      fontOptions: PropTypes.shape(Types.fontOptions).isRequired,
+      onPreviewFonts: PropTypes.func.isRequired,
+    };
   }
 
   constructor(props) {
     super(props);
-    this.renderFontCSS = this.renderFontCSS.bind(this);
-    this.renderFontCSSCode = this.renderFontCSSCode.bind(this);
-    this.renderFontFormatURL = this.renderFontFormatURL.bind(this);
-    this.renderFontName = this.renderFontName.bind(this);
-    this.renderFontPreview = this.renderFontPreview.bind(this);
+
+    this.state = {
+      isFontExpanded: false
+    };
+
+    this.onFontToggle = this.onFontToggle.bind(this);
+  }
+
+  componentWillReceiveProps(newProps) {
+    if (this.props.font.name === newProps.font.name) {
+      return;
+    }
+
+    this.setState({
+      isFontExpanded: false
+    });
+  }
+
+  onFontToggle() {
+    this.setState({
+      isFontExpanded: !this.state.isFontExpanded
+    });
   }
 
   renderFontCSS(cssFamilyName) {
     return dom.p(
       {
-        className: "font-css"
+        className: "font-css-name"
       },
-      dom.span(
-        {},
-        getStr("fontinspector.usedAs")
-      ),
-      " \"",
-      dom.span(
-        {
-          className: "font-css-name"
-        },
-        cssFamilyName
-      ),
-      "\""
+      `${getStr("fontinspector.usedAs")} "${cssFamilyName}"`
     );
   }
 
-  renderFontCSSCode(ruleText) {
+  renderFontCSSCode(rule, ruleText) {
+    if (!rule) {
+      return null;
+    }
+
     return dom.pre(
       {
-        className: "font-css-code"
+        className: "font-css-code",
       },
       ruleText
     );
   }
 
-  renderFontFormatURL(url, format) {
+  renderFontTypeAndURL(url, format) {
+    if (!url) {
+      return dom.p(
+        {
+          className: "font-format-url"
+        },
+        getStr("fontinspector.system")
+      );
+    }
+
     return dom.p(
       {
         className: "font-format-url"
       },
-      dom.input(
+      getStr("fontinspector.remote"),
+      dom.a(
         {
           className: "font-url",
-          readOnly: "readonly",
-          value: url
-        }
-      ),
-      " ",
-      format ?
-        dom.span(
-          {
-            className: "font-format"
-          },
-          format
-        )
-        :
-        dom.span(
-          {
-            className: "font-format",
-            hidden: "true"
-          },
-          format
-        )
+          href: url
+        },
+        format
+      )
     );
   }
 
@@ -89,27 +99,35 @@ class Font extends PureComponent {
     return dom.h1(
       {
         className: "font-name",
+        onClick: this.onFontToggle,
       },
       name
     );
   }
 
-  renderFontPreview(previewUrl) {
-    return dom.div(
-      {
-        className: "font-preview-container",
-      },
-      dom.img(
-        {
-          className: "font-preview",
-          src: previewUrl
-        }
-      )
-    );
+  renderTwisty() {
+    let { isFontExpanded } = this.state;
+
+    let attributes = {
+      className: "theme-twisty",
+      onClick: this.onFontToggle,
+    };
+    if (isFontExpanded) {
+      attributes.open = "true";
+    }
+
+    return dom.span(attributes);
   }
 
   render() {
-    let { font } = this.props;
+    let {
+      font,
+      fontOptions,
+      onPreviewFonts,
+    } = this.props;
+
+    let { previewText } = fontOptions;
+
     let {
       CSSFamilyName,
       format,
@@ -120,16 +138,23 @@ class Font extends PureComponent {
       URI,
     } = font;
 
+    let { isFontExpanded } = this.state;
+
     return dom.li(
       {
-        className: "font",
+        className: "font" + (isFontExpanded ? " expanded" : ""),
       },
-      this.renderFontPreview(previewUrl),
+      this.renderTwisty(),
       this.renderFontName(name),
-      " " + (URI ? getStr("fontinspector.remote") : getStr("fontinspector.system")),
-      URI ? this.renderFontFormatURL(URI, format) : null,
-      this.renderFontCSS(CSSFamilyName),
-      rule ? this.renderFontCSSCode(ruleText) : null
+      FontPreview({ previewText, previewUrl, onPreviewFonts }),
+      dom.div(
+        {
+          className: "font-details"
+        },
+        this.renderFontTypeAndURL(URI, format),
+        this.renderFontCSSCode(rule, ruleText),
+        this.renderFontCSS(CSSFamilyName)
+      )
     );
   }
 }
