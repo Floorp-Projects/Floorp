@@ -1406,12 +1406,10 @@ nsPrefBranch::~nsPrefBranch()
 NS_IMPL_ADDREF(nsPrefBranch)
 NS_IMPL_RELEASE(nsPrefBranch)
 
-NS_INTERFACE_MAP_BEGIN(nsPrefBranch)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrefBranch)
-  NS_INTERFACE_MAP_ENTRY(nsIPrefBranch)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END
+NS_IMPL_QUERY_INTERFACE(nsPrefBranch,
+                        nsIPrefBranch,
+                        nsIObserver,
+                        nsISupportsWeakReference)
 
 NS_IMETHODIMP
 nsPrefBranch::GetRoot(nsACString& aRoot)
@@ -2243,11 +2241,9 @@ nsPrefLocalizedString::~nsPrefLocalizedString() = default;
 NS_IMPL_ADDREF(nsPrefLocalizedString)
 NS_IMPL_RELEASE(nsPrefLocalizedString)
 
-NS_INTERFACE_MAP_BEGIN(nsPrefLocalizedString)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrefLocalizedString)
-  NS_INTERFACE_MAP_ENTRY(nsIPrefLocalizedString)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsString)
-NS_INTERFACE_MAP_END
+NS_IMPL_QUERY_INTERFACE(nsPrefLocalizedString,
+                        nsIPrefLocalizedString,
+                        nsISupportsString)
 
 nsresult
 nsPrefLocalizedString::Init()
@@ -2960,13 +2956,11 @@ Preferences::~Preferences()
 NS_IMPL_ADDREF(Preferences)
 NS_IMPL_RELEASE(Preferences)
 
-NS_INTERFACE_MAP_BEGIN(Preferences)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrefService)
-  NS_INTERFACE_MAP_ENTRY(nsIPrefService)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIPrefBranch)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END
+NS_IMPL_QUERY_INTERFACE(Preferences,
+                        nsIPrefService,
+                        nsIObserver,
+                        nsIPrefBranch,
+                        nsISupportsWeakReference)
 
 /* static */ void
 Preferences::SetEarlyPreferences(const nsTArray<dom::Pref>* aDomPrefs)
