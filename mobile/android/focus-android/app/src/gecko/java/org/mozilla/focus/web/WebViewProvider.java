@@ -156,7 +156,7 @@ public class WebViewProvider {
 
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String prefName) {
-            if (!prefName.isEmpty()) {
+            if (!prefName.isEmpty() && sharedPreferences != null) {
                 if (prefName.equals(getContext().getResources().getString(R.string.pref_key_privacy_block_social))) {
                     socialTrackersBlocked = sharedPreferences.getBoolean(prefName, true);
                 } else if (prefName.equals(getContext().getResources().getString(R.string.pref_key_privacy_block_ads))) {
@@ -212,7 +212,9 @@ public class WebViewProvider {
 
                 @Override
                 public void onContextMenu(GeckoSession session, int screenX, int screenY, String uri, String elementSrc) {
-                    if (elementSrc != null) {
+                    if (elementSrc != null && uri != null) {
+                        callback.onLongPress(new HitTarget(true, uri, true, elementSrc));
+                    } else if (elementSrc != null) {
                         callback.onLongPress(new HitTarget(false, null, true, elementSrc));
                     } else if (uri != null) {
                         callback.onLongPress(new HitTarget(true, uri, false, null));
