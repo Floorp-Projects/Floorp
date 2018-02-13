@@ -33,12 +33,6 @@ SimpleGestureEvent::SimpleGestureEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(SimpleGestureEvent, MouseEvent)
-NS_IMPL_RELEASE_INHERITED(SimpleGestureEvent, MouseEvent)
-
-NS_INTERFACE_MAP_BEGIN(SimpleGestureEvent)
-NS_INTERFACE_MAP_END_INHERITING(MouseEvent)
-
 uint32_t
 SimpleGestureEvent::AllowedDirections() const
 {

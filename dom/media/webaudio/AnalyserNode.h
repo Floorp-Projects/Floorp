@@ -24,7 +24,7 @@ public:
   Create(AudioContext& aAudioContext, const AnalyserOptions& aOptions,
          ErrorResult& aRv);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(AnalyserNode, AudioNode)
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 

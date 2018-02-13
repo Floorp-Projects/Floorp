@@ -32,7 +32,7 @@ public:
 
   ApplicationAccessible();
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(ApplicationAccessible, AccessibleWrap)
 
   // Accessible
   virtual void Shutdown() override;

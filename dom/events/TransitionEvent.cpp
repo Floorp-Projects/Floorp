@@ -26,12 +26,6 @@ TransitionEvent::TransitionEvent(EventTarget* aOwner,
   }
 }
 
-NS_INTERFACE_MAP_BEGIN(TransitionEvent)
-NS_INTERFACE_MAP_END_INHERITING(Event)
-
-NS_IMPL_ADDREF_INHERITED(TransitionEvent, Event)
-NS_IMPL_RELEASE_INHERITED(TransitionEvent, Event)
-
 // static
 already_AddRefed<TransitionEvent>
 TransitionEvent::Constructor(const GlobalObject& aGlobal,

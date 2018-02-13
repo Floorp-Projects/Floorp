@@ -21,7 +21,7 @@ public:
                nsPresContext* aPresContext,
                WidgetCommandEvent* aEvent);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(CommandEvent, Event)
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {

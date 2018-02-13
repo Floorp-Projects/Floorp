@@ -698,7 +698,7 @@ nsCacheEntryDescriptor::nsInputStreamWrapper::Release()
 NS_INTERFACE_MAP_BEGIN(nsCacheEntryDescriptor::nsInputStreamWrapper)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END
 
 nsresult nsCacheEntryDescriptor::
 nsInputStreamWrapper::LazyInit()
@@ -892,7 +892,7 @@ nsCacheEntryDescriptor::nsDecompressInputStreamWrapper::Release()
 NS_INTERFACE_MAP_BEGIN(nsCacheEntryDescriptor::nsDecompressInputStreamWrapper)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsCacheEntryDescriptor::
 nsDecompressInputStreamWrapper::Read(char *    buf,
@@ -1078,7 +1078,7 @@ nsCacheEntryDescriptor::nsOutputStreamWrapper::Release()
 NS_INTERFACE_MAP_BEGIN(nsCacheEntryDescriptor::nsOutputStreamWrapper)
   NS_INTERFACE_MAP_ENTRY(nsIOutputStream)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END
 
 nsresult nsCacheEntryDescriptor::
 nsOutputStreamWrapper::LazyInit()
@@ -1308,7 +1308,7 @@ nsCacheEntryDescriptor::nsCompressOutputStreamWrapper::Release()
 NS_INTERFACE_MAP_BEGIN(nsCacheEntryDescriptor::nsCompressOutputStreamWrapper)
   NS_INTERFACE_MAP_ENTRY(nsIOutputStream)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsCacheEntryDescriptor::
 nsCompressOutputStreamWrapper::Write(const char * buf,

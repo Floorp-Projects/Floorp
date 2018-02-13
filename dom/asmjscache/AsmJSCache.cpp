@@ -433,6 +433,8 @@ class ParentRunnable final
   , public PAsmJSCacheEntryParent
 {
 public:
+  // We need to always declare refcounting because
+  // OpenDirectoryListener has pure-virtual refcounting.
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
 

@@ -78,9 +78,6 @@ PresentationRequesterCallback::NotifyError(nsresult aError)
  * Implementation of PresentationRequesterCallback
  */
 
-NS_IMPL_ISUPPORTS_INHERITED0(PresentationReconnectCallback,
-                             PresentationRequesterCallback)
-
 PresentationReconnectCallback::PresentationReconnectCallback(
                                            PresentationRequest* aRequest,
                                            const nsAString& aSessionId,

@@ -140,6 +140,8 @@ private:
       , mTo(aTo)
     {}
 
+    // We need to actually declare all of nsISupports, because
+    // Notification inherits from it but doesn't declare it.
     NS_DECL_ISUPPORTS_INHERITED
     NS_IMETHOD Run() override {
       if (mTarget) {

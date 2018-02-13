@@ -330,7 +330,7 @@ CacheFileChunk::Release()
 NS_INTERFACE_MAP_BEGIN(CacheFileChunk)
   NS_INTERFACE_MAP_ENTRY(mozilla::net::CacheFileIOListener)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END
 
 CacheFileChunk::CacheFileChunk(CacheFile *aFile, uint32_t aIndex,
                                bool aInitByWriter)

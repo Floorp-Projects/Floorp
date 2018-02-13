@@ -47,8 +47,6 @@ nsresult MemoryBlobImpl::DataOwnerAdapter::Create(DataOwner* aDataOwner,
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(MemoryBlobImpl, BlobImpl)
-
 already_AddRefed<BlobImpl>
 MemoryBlobImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
                             const nsAString& aContentType,

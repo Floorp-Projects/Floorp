@@ -22,11 +22,6 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ADDREF_INHERITED(PopupBoxObject, BoxObject)
-NS_IMPL_RELEASE_INHERITED(PopupBoxObject, BoxObject)
-NS_INTERFACE_MAP_BEGIN(PopupBoxObject)
-NS_INTERFACE_MAP_END_INHERITING(BoxObject)
-
 PopupBoxObject::PopupBoxObject()
 {
 }

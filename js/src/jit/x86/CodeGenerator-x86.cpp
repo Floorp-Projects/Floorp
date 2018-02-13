@@ -1038,22 +1038,26 @@ CodeGeneratorX86::visitDivOrModI64(LDivOrModI64* lir)
     Label done;
 
     // Handle divide by zero.
-    if (lir->canBeDivideByZero())
-        masm.branchTest64(Assembler::Zero, rhs, rhs, temp, oldTrap(lir, wasm::Trap::IntegerDivideByZero));
+    if (lir->canBeDivideByZero()) {
+        Label nonZero;
+        masm.branchTest64(Assembler::NonZero, rhs, rhs, temp, &nonZero);
+        masm.wasmTrap(wasm::Trap::IntegerDivideByZero, lir->bytecodeOffset());
+        masm.bind(&nonZero);
+    }
 
     MDefinition* mir = lir->mir();
 
     // Handle an integer overflow exception from INT64_MIN / -1.
     if (lir->canBeNegativeOverflow()) {
-        Label notmin;
-        masm.branch64(Assembler::NotEqual, lhs, Imm64(INT64_MIN), &notmin);
-        masm.branch64(Assembler::NotEqual, rhs, Imm64(-1), &notmin);
+        Label notOverflow;
+        masm.branch64(Assembler::NotEqual, lhs, Imm64(INT64_MIN), &notOverflow);
+        masm.branch64(Assembler::NotEqual, rhs, Imm64(-1), &notOverflow);
         if (mir->isMod())
             masm.xor64(output, output);
         else
-            masm.jump(oldTrap(lir, wasm::Trap::IntegerOverflow));
+            masm.wasmTrap(wasm::Trap::IntegerOverflow, lir->bytecodeOffset());
         masm.jump(&done);
-        masm.bind(&notmin);
+        masm.bind(&notOverflow);
     }
 
     masm.setupWasmABICall();
@@ -1086,8 +1090,12 @@ CodeGeneratorX86::visitUDivOrModI64(LUDivOrModI64* lir)
     MOZ_ASSERT(output == ReturnReg64);
 
     // Prevent divide by zero.
-    if (lir->canBeDivideByZero())
-        masm.branchTest64(Assembler::Zero, rhs, rhs, temp, oldTrap(lir, wasm::Trap::IntegerDivideByZero));
+    if (lir->canBeDivideByZero()) {
+        Label nonZero;
+        masm.branchTest64(Assembler::NonZero, rhs, rhs, temp, &nonZero);
+        masm.wasmTrap(wasm::Trap::IntegerDivideByZero, lir->bytecodeOffset());
+        masm.bind(&nonZero);
+    }
 
     masm.setupWasmABICall();
     masm.passABIArg(lhs.high);

@@ -3267,21 +3267,6 @@ MacroAssembler::wasmEmitOldTrapOutOfLineCode()
 }
 
 void
-MacroAssembler::wasmEmitStackCheck(RegisterOrSP sp, Register scratch, Label* onOverflow)
-{
-    if (IsHiddenSP(sp)) {
-        branchStackPtrRhs(Assembler::AboveOrEqual,
-                          Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)),
-                          onOverflow);
-    } else {
-        branchPtr(Assembler::AboveOrEqual,
-                  Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)),
-                  AsRegister(sp),
-                  onOverflow);
-    }
-}
-
-void
 MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type, Register temp1, Register temp2,
                                        Register temp3, Label* noBarrier)
 {

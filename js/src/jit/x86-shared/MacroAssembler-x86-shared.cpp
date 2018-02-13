@@ -694,10 +694,10 @@ struct MOZ_RAII AutoHandleWasmTruncateToIntErrors
         // Handle errors.  These cases are not in arbitrary order: code will
         // fall through to intOverflow.
         masm.bind(&intOverflow);
-        masm.jump(wasm::OldTrapDesc(off, wasm::Trap::IntegerOverflow, masm.framePushed()));
+        masm.wasmTrap(wasm::Trap::IntegerOverflow, off);
 
         masm.bind(&inputIsNaN);
-        masm.jump(wasm::OldTrapDesc(off, wasm::Trap::InvalidConversionToInteger, masm.framePushed()));
+        masm.wasmTrap(wasm::Trap::InvalidConversionToInteger, off);
     }
 };
 

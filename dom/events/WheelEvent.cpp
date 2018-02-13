@@ -36,12 +36,6 @@ WheelEvent::WheelEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(WheelEvent, MouseEvent)
-NS_IMPL_RELEASE_INHERITED(WheelEvent, MouseEvent)
-
-NS_INTERFACE_MAP_BEGIN(WheelEvent)
-NS_INTERFACE_MAP_END_INHERITING(MouseEvent)
-
 void
 WheelEvent::InitWheelEvent(const nsAString& aType,
                            bool aCanBubble,

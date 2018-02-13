@@ -149,7 +149,7 @@ public:
     MOZ_ASSERT(aWrappedRunnable);
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(ExternalRunnableWrapper, WorkerRunnable)
 
 private:
   ~ExternalRunnableWrapper()
@@ -266,7 +266,7 @@ public:
     aFinishedWorker->AssertIsOnWorkerThread();
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(TopLevelWorkerFinishedRunnable, Runnable)
 
 private:
   ~TopLevelWorkerFinishedRunnable() {}
@@ -960,9 +960,6 @@ public:
 };
 
 } /* anonymous namespace */
-
-NS_IMPL_ISUPPORTS_INHERITED0(TopLevelWorkerFinishedRunnable, Runnable)
-
 
 class WorkerPrivate::EventTarget final : public nsISerialEventTarget
 {
@@ -5248,8 +5245,6 @@ WorkerPrivate::GetPerformanceStorage()
 
   return mPerformanceStorage;
 }
-
-NS_IMPL_ISUPPORTS_INHERITED0(ExternalRunnableWrapper, WorkerRunnable)
 
 NS_IMPL_ADDREF(WorkerPrivate::EventTarget)
 NS_IMPL_RELEASE(WorkerPrivate::EventTarget)

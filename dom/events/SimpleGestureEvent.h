@@ -23,7 +23,7 @@ public:
                      nsPresContext* aPresContext,
                      WidgetSimpleGestureEvent* aEvent);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(SimpleGestureEvent, MouseEvent)
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {

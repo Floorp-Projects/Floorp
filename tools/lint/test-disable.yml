@@ -1,6 +1,8 @@
 ---
 no-comment-disable:
-    description: "Use 'disable=<reason>' to disable a test instead of a comment"
+    description: >
+      "Use 'disabled=<reason>' to disable a test instead of a
+      comment"
     include:
         - "**/*.ini"
     exclude:

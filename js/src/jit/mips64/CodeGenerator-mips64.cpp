@@ -361,21 +361,24 @@ CodeGeneratorMIPS64::visitDivOrModI64(LDivOrModI64* lir)
     Label done;
 
     // Handle divide by zero.
-    if (lir->canBeDivideByZero())
-        masm.ma_b(rhs, rhs, oldTrap(lir, wasm::Trap::IntegerDivideByZero), Assembler::Zero);
+    if (lir->canBeDivideByZero()) {
+        Label nonZero;
+        masm.ma_b(rhs, rhs, &nonZero, Assembler::NonZero);
+        masm.wasmTrap(wasm::Trap::IntegerDivideByZero, lir->bytecodeOffset());
+        masm.bind(&nonZero);
+    }
 
     // Handle an integer overflow exception from INT64_MIN / -1.
     if (lir->canBeNegativeOverflow()) {
-        Label notmin;
-        masm.branchPtr(Assembler::NotEqual, lhs, ImmWord(INT64_MIN), &notmin);
-        masm.branchPtr(Assembler::NotEqual, rhs, ImmWord(-1), &notmin);
-        if (lir->mir()->isMod()) {
+        Label notOverflow;
+        masm.branchPtr(Assembler::NotEqual, lhs, ImmWord(INT64_MIN), &notOverflow);
+        masm.branchPtr(Assembler::NotEqual, rhs, ImmWord(-1), &notOverflow);
+        if (lir->mir()->isMod())
             masm.ma_xor(output, output);
-        } else {
-            masm.jump(oldTrap(lir, wasm::Trap::IntegerOverflow));
-        }
+        else
+            masm.wasmTrap(wasm::Trap::IntegerOverflow, lir->bytecodeOffset());
         masm.jump(&done);
-        masm.bind(&notmin);
+        masm.bind(&notOverflow);
     }
 
     masm.as_ddiv(lhs, rhs);
@@ -398,8 +401,12 @@ CodeGeneratorMIPS64::visitUDivOrModI64(LUDivOrModI64* lir)
     Label done;
 
     // Prevent divide by zero.
-    if (lir->canBeDivideByZero())
-        masm.ma_b(rhs, rhs, oldTrap(lir, wasm::Trap::IntegerDivideByZero), Assembler::Zero);
+    if (lir->canBeDivideByZero()) {
+        Label nonZero;
+        masm.ma_b(rhs, rhs, &nonZero, Assembler::NonZero);
+        masm.wasmTrap(wasm::Trap::IntegerDivideByZero, lir->bytecodeOffset());
+        masm.bind(&nonZero);
+    }
 
     masm.as_ddivu(lhs, rhs);
 

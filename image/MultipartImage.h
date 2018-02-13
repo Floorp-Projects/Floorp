@@ -25,6 +25,8 @@ class MultipartImage
 {
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(MultipartImage)
+  // We need to always declare refcounting here, because
+  // IProgressObserver has pure-virtual refcounting.
   NS_DECL_ISUPPORTS_INHERITED
 
   void BeginTransitionToPart(Image* aNextPart);

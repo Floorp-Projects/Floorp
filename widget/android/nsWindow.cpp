@@ -92,8 +92,6 @@ using namespace mozilla::java;
 using namespace mozilla::widget;
 using namespace mozilla::ipc;
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
-
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorSession.h"
 #include "mozilla/layers/LayerTransactionParent.h"

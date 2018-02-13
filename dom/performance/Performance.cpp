@@ -36,38 +36,6 @@
 namespace mozilla {
 namespace dom {
 
-namespace {
-
-class PrefEnabledRunnable final
-  : public WorkerCheckAPIExposureOnMainThreadRunnable
-{
-public:
-  PrefEnabledRunnable(WorkerPrivate* aWorkerPrivate,
-                      const nsCString& aPrefName)
-    : WorkerCheckAPIExposureOnMainThreadRunnable(aWorkerPrivate)
-    , mEnabled(false)
-    , mPrefName(aPrefName)
-  { }
-
-  bool MainThreadRun() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    mEnabled = Preferences::GetBool(mPrefName.get(), false);
-    return true;
-  }
-
-  bool IsEnabled() const
-  {
-    return mEnabled;
-  }
-
-private:
-  bool mEnabled;
-  nsCString mPrefName;
-};
-
-} // anonymous namespace
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Performance)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
@@ -537,24 +505,6 @@ Performance::QueueEntry(PerformanceEntry* aEntry)
   if (!mPendingNotificationObserversTask) {
     RunNotificationObserversTask();
   }
-}
-
-/* static */ bool
-Performance::IsObserverEnabled(JSContext* aCx, JSObject* aGlobal)
-{
-  if (NS_IsMainThread()) {
-    return Preferences::GetBool("dom.enable_performance_observer", false);
-  }
-
-  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(workerPrivate);
-  workerPrivate->AssertIsOnWorkerThread();
-
-  RefPtr<PrefEnabledRunnable> runnable =
-    new PrefEnabledRunnable(workerPrivate,
-                            NS_LITERAL_CSTRING("dom.enable_performance_observer"));
-
-  return runnable->Dispatch() && runnable->IsEnabled();
 }
 
 void

@@ -948,7 +948,7 @@ class TokenStreamCharsBase
         const CharT* ptr;
     };
 
-    MOZ_MUST_USE bool appendMultiUnitCodepointToTokenbuf(uint32_t codepoint);
+    MOZ_MUST_USE bool appendCodePointToTokenbuf(uint32_t codePoint);
 
     class MOZ_STACK_CLASS Position
     {
@@ -1158,7 +1158,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using typename CharsSharedBase::TokenBuf;
 
   private:
-    using CharsSharedBase::appendMultiUnitCodepointToTokenbuf;
+    using CharsSharedBase::appendCodePointToTokenbuf;
     using CharsSharedBase::atomizeChars;
     using CharsSharedBase::copyTokenbufTo;
     using GeneralCharsBase::getCharIgnoreEOL;
@@ -1437,7 +1437,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
     MOZ_MUST_USE bool getTokenInternal(TokenKind* ttp, Modifier modifier);
 
-    MOZ_MUST_USE bool getStringOrTemplateToken(int untilChar, Token** tp);
+    MOZ_MUST_USE bool getStringOrTemplateToken(char untilChar, Token** tp);
 
     // Try to get the next character, normalizing '\r', '\r\n', and '\n' into
     // '\n'.  Also updates internal line-counter state.  Return true on success

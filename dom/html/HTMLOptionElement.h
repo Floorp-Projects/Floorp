@@ -32,7 +32,7 @@ public:
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLOptionElement, option)
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLOptionElement, nsGenericHTMLElement)
 
   using mozilla::dom::Element::SetText;
   using mozilla::dom::Element::GetText;

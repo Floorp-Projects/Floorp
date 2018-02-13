@@ -84,7 +84,7 @@ class nsWindow final : public nsWindowBase
 public:
   explicit nsWindow(bool aIsChildWindow = false);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsWindow, nsWindowBase)
 
   friend class nsWindowGfx;
 

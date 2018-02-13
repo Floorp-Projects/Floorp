@@ -18,6 +18,8 @@ namespace mozilla {
 namespace dom {
 
 class WebAuthnTransactionChild;
+class WebAuthnMakeCredentialResult;
+class WebAuthnGetAssertionResult;
 
 class WebAuthnManagerBase : public nsIDOMEventListener
 {
@@ -28,12 +30,11 @@ public:
 
   virtual void
   FinishMakeCredential(const uint64_t& aTransactionId,
-                       nsTArray<uint8_t>& aRegBuffer) = 0;
+                       const WebAuthnMakeCredentialResult& aResult) = 0;
 
   virtual void
   FinishGetAssertion(const uint64_t& aTransactionId,
-                     nsTArray<uint8_t>& aCredentialId,
-                     nsTArray<uint8_t>& aSigBuffer) = 0;
+                     const WebAuthnGetAssertionResult& aResult) = 0;
 
   virtual void
   RequestAborted(const uint64_t& aTransactionId,

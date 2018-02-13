@@ -13,15 +13,6 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(SVGPolyElement,SVGPolyElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGPolyElement,SVGPolyElementBase)
-
-NS_INTERFACE_MAP_BEGIN(SVGPolyElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGPolyElementBase)
-
-//----------------------------------------------------------------------
 // Implementation
 
 SVGPolyElement::SVGPolyElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)

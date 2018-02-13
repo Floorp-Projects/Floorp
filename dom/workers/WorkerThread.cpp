@@ -207,8 +207,6 @@ WorkerThread::DispatchAnyThread(const WorkerThreadFriendKey& /* aKey */,
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(WorkerThread, nsThread)
-
 NS_IMETHODIMP
 WorkerThread::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags)
 {

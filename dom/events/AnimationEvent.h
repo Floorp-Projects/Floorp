@@ -21,7 +21,7 @@ public:
                  nsPresContext* aPresContext,
                  InternalAnimationEvent* aEvent);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(AnimationEvent, Event)
 
   static already_AddRefed<AnimationEvent>
   Constructor(const GlobalObject& aGlobal,

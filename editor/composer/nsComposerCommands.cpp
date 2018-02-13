@@ -75,8 +75,6 @@ nsBaseStateUpdatingCommand::~nsBaseStateUpdatingCommand()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsBaseStateUpdatingCommand, nsBaseComposerCommand)
-
 NS_IMETHODIMP
 nsBaseStateUpdatingCommand::IsCommandEnabled(const char *aCommandName,
                                              nsISupports *refCon,
@@ -584,8 +582,6 @@ nsMultiStateCommand::nsMultiStateCommand()
 nsMultiStateCommand::~nsMultiStateCommand()
 {
 }
-
-NS_IMPL_ISUPPORTS_INHERITED0(nsMultiStateCommand, nsBaseComposerCommand)
 
 NS_IMETHODIMP
 nsMultiStateCommand::IsCommandEnabled(const char * aCommandName,
@@ -1415,8 +1411,6 @@ nsInsertHTMLCommand::GetCommandStateParams(const char *aCommandName,
   IsCommandEnabled(aCommandName, refCon, &outCmdEnabled);
   return aParams->SetBooleanValue(STATE_ENABLED, outCmdEnabled);
 }
-
-NS_IMPL_ISUPPORTS_INHERITED0(nsInsertTagCommand, nsBaseComposerCommand)
 
 nsInsertTagCommand::nsInsertTagCommand(nsAtom* aTagName)
 : nsBaseComposerCommand()

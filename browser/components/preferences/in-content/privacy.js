@@ -119,6 +119,9 @@ Preferences.addAll([
 ]);
 
 // Data Choices tab
+if (AppConstants.NIGHTLY_BUILD) {
+  Preferences.add({ id: "browser.chrome.errorCollection.enabled", type: "bool" });
+}
 if (AppConstants.MOZ_CRASHREPORTER) {
   Preferences.add({ id: "browser.crashReports.unsubmittedCheck.autoSubmit2", type: "bool" });
 }
@@ -410,6 +413,9 @@ var gPrivacyPane = {
 
     if (AppConstants.MOZ_DATA_REPORTING) {
       this.initDataCollection();
+      if (AppConstants.NIGHTLY_BUILD) {
+        this.initCollectBrowserErrors();
+      }
       if (AppConstants.MOZ_CRASHREPORTER) {
         this.initSubmitCrashes();
       }
@@ -1528,6 +1534,11 @@ var gPrivacyPane = {
       "dataCollectionPrivacyNotice");
   },
 
+  initCollectBrowserErrors() {
+    this._setupLearnMoreLink("browser.chrome.errorCollection.infoURL",
+      "collectBrowserErrorsLearnMore");
+  },
+
   initSubmitCrashes() {
     this._setupLearnMoreLink("toolkit.crashreporter.infoURL",
       "crashReporterLearnMore");
@@ -1538,7 +1549,7 @@ var gPrivacyPane = {
    */
   _setupLearnMoreLink(pref, element) {
     // set up the Learn More link with the correct URL
-    let url = Services.prefs.getCharPref(pref);
+    let url = Services.urlFormatter.formatURLPref(pref);
     let el = document.getElementById(element);
 
     if (url) {

@@ -12,8 +12,6 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS_INHERITED0(ChannelSplitterNode, AudioNode)
-
 class ChannelSplitterNodeEngine final : public AudioNodeEngine
 {
 public:

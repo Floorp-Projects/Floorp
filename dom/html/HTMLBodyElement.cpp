@@ -41,8 +41,6 @@ HTMLBodyElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
   return HTMLBodyElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(HTMLBodyElement, nsGenericHTMLElement)
-
 NS_IMPL_ELEMENT_CLONE(HTMLBodyElement)
 
 bool

@@ -689,7 +689,7 @@ U2FSoftTokenManager::Register(const nsTArray<WebAuthnScopedCredential>& aCredent
   registrationBuf.AppendSECItem(attestCert.get()->derCert);
   registrationBuf.AppendSECItem(signatureItem);
 
-  U2FRegisterResult result((nsTArray<uint8_t>(registrationBuf)));
+  WebAuthnMakeCredentialResult result((nsTArray<uint8_t>(registrationBuf)));
   return U2FRegisterPromise::CreateAndResolve(Move(result), __func__);
 }
 
@@ -832,7 +832,7 @@ U2FSoftTokenManager::Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials
   signatureBuf.AppendSECItem(counterItem);
   signatureBuf.AppendSECItem(signatureItem);
 
-  U2FSignResult result(Move(keyHandle), nsTArray<uint8_t>(signatureBuf));
+  WebAuthnGetAssertionResult result(keyHandle, nsTArray<uint8_t>(signatureBuf));
   return U2FSignPromise::CreateAndResolve(Move(result), __func__);
 }
 

@@ -99,7 +99,8 @@ private:
   ~DocumentRule();
 public:
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(DocumentRule,
+                                       dom::CSSMozDocumentRule)
 
   // Rule methods
 #ifdef DEBUG
@@ -405,7 +406,8 @@ public:
   virtual bool UseForPresentation(nsPresContext* aPresContext,
                                   nsMediaQueryResultCacheKey& aKey) override;
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(CSSSupportsRule,
+                                       dom::CSSSupportsRule)
 
   // WebIDL interface
   void GetCssText(nsAString& aCssText) const final override;

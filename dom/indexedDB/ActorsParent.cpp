@@ -5516,7 +5516,7 @@ public:
     , mNeedsCheckpoint(aNeedsCheckpoint)
   { }
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(IdleConnectionRunnable, ConnectionRunnable)
 
 private:
   ~IdleConnectionRunnable() override = default;
@@ -5533,7 +5533,7 @@ public:
     : ConnectionRunnable(aDatabaseInfo)
   { }
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(CloseConnectionRunnable, ConnectionRunnable)
 
 private:
   ~CloseConnectionRunnable() override = default;
@@ -5649,7 +5649,7 @@ public:
                         uint64_t aTransactionId,
                         FinishCallback* aCallback);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(FinishCallbackWrapper, Runnable)
 
 private:
   ~FinishCallbackWrapper() override;
@@ -5744,7 +5744,7 @@ class ConnectionPool::ThreadRunnable final
 public:
   ThreadRunnable();
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(ThreadRunnable, Runnable)
 
   uint32_t
   SerialNumber() const
@@ -6291,7 +6291,7 @@ public:
   void
   WaitForTransactions();
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(WaitForTransactionsHelper, Runnable)
 
 private:
   ~WaitForTransactionsHelper() override
@@ -7134,6 +7134,8 @@ private:
   TransactionFinishedAfterUnblock() override;
 
 public:
+  // We need to declare all of nsISupports, because FinishCallback has
+  // a pure-virtual nsISupports declaration.
   NS_DECL_ISUPPORTS_INHERITED
 };
 
@@ -7546,6 +7548,8 @@ protected:
   virtual void
   SendResults() = 0;
 
+  // We need to declare refcounting unconditionally, because
+  // OpenDirectoryListener has pure-virtual refcounting.
   NS_DECL_ISUPPORTS_INHERITED
 
   // Common nsIRunnable implementation that subclasses may not override.
@@ -9303,6 +9307,8 @@ private:
   void
   Finish();
 
+  // We need to declare refcounting unconditionally, because
+  // OpenDirectoryListener has pure-virtual refcounting.
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_NSIRUNNABLE
@@ -12934,9 +12940,6 @@ ConnectionRunnable::ConnectionRunnable(DatabaseInfo* aDatabaseInfo)
   MOZ_ASSERT(mOwningEventTarget);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(ConnectionPool::IdleConnectionRunnable,
-                             ConnectionPool::ConnectionRunnable)
-
 NS_IMETHODIMP
 ConnectionPool::
 IdleConnectionRunnable::Run()
@@ -12977,9 +12980,6 @@ IdleConnectionRunnable::Run()
 
   return NS_OK;
 }
-
-NS_IMPL_ISUPPORTS_INHERITED0(ConnectionPool::CloseConnectionRunnable,
-                             ConnectionPool::ConnectionRunnable)
 
 NS_IMETHODIMP
 ConnectionPool::
@@ -13108,8 +13108,6 @@ FinishCallbackWrapper::~FinishCallbackWrapper()
   MOZ_ASSERT(!mCallback);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(ConnectionPool::FinishCallbackWrapper, Runnable)
-
 nsresult
 ConnectionPool::
 FinishCallbackWrapper::Run()
@@ -13165,8 +13163,6 @@ ThreadRunnable::~ThreadRunnable()
   MOZ_ASSERT(!mFirstRun);
   MOZ_ASSERT(!mContinueRunning);
 }
-
-NS_IMPL_ISUPPORTS_INHERITED0(ConnectionPool::ThreadRunnable, Runnable)
 
 nsresult
 ConnectionPool::
@@ -13806,8 +13802,6 @@ WaitForTransactionsHelper::CallCallback()
 
   mState = State::Complete;
 }
-
-NS_IMPL_ISUPPORTS_INHERITED0(WaitForTransactionsHelper, Runnable)
 
 NS_IMETHODIMP
 WaitForTransactionsHelper::Run()

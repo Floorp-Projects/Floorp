@@ -473,7 +473,7 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
   GlobalObject global(cx, jsGlobal);
 
   RefPtr<Request> request = Request::Constructor(global, aInput, aInit, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
+  if (aRv.Failed()) {
     return nullptr;
   }
 

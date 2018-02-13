@@ -1171,7 +1171,28 @@ StackFrames.prototype = {
         Parser.reflectionAPI.parse(aString);
         return aString; // Watch expression can be executed safely.
       } catch (e) {
-        return "\"" + e.name + ": " + e.message + "\""; // Syntax error.
+        function safelyEscape(aString) {
+          // Convert `str`, a string, to JSON -- that is, to a string beginning
+          // and ending with double-quotes, followed by string contents escaped
+          // such that the overall string contents are a JSON string literal.
+          let str = JSON.stringify(aString);
+
+          // Remove the leading and trailing double-quotes.
+          str = str.substring(1, str.length - 1);
+
+          // JSON string literals are not a subset of JS string literals in this
+          // one weird case: JSON string literals can directly contain U+2028
+          // LINE SEPARATOR and U+2029 PARAGRAPH SEPARATOR.  Replace these code
+          // points with escaped forms.
+          str = str.replace(/\u2028/g, "\\u2028");
+          str = str.replace(/\u2029/g, "\\u2029");
+
+          return str;
+        }
+        return "\"" +
+               safelyEscape(e.name) + ": " +
+               safelyEscape(e.message) +
+               "\""; // Syntax error.
       }
     });
 

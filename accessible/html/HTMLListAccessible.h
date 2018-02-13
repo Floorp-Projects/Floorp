@@ -25,7 +25,8 @@ public:
     HyperTextAccessibleWrap(aContent, aDoc) { mGenericTypes |= eList; }
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLListAccessible,
+                                       HyperTextAccessibleWrap)
 
   // Accessible
   virtual a11y::role NativeRole() override;
@@ -45,7 +46,8 @@ public:
   HTMLLIAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLLIAccessible,
+                                       HyperTextAccessibleWrap)
 
   // Accessible
   virtual void Shutdown() override;

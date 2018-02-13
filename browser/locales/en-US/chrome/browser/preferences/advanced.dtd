@@ -37,6 +37,10 @@ available. -->
 <!ENTITY dataCollectionDesc.label        "We strive to provide you with choices and collect only what we need to provide and improve &brandShortName; for everyone. We always ask permission before receiving personal information.">
 <!ENTITY dataCollectionPrivacyNotice.label    "Privacy Notice">
 
+<!ENTITY collectBrowserErrors.label          "Allow &brandShortName; to send browser error reports (including error messages) to Mozilla">
+<!ENTITY collectBrowserErrors.accesskey      "b">
+<!ENTITY collectBrowserErrorsLearnMore.label "Learn more">
+
 <!ENTITY alwaysSubmitCrashReports1.label  "Allow &brandShortName; to send crash reports to Mozilla">
 <!ENTITY alwaysSubmitCrashReports1.accesskey "c">
 <!ENTITY crashReporterLearnMore.label    "Learn more">

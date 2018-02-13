@@ -18,43 +18,8 @@
 namespace mozilla {
 namespace dom {
 
-class U2FRegisterResult {
-public:
-  explicit U2FRegisterResult(nsTArray<uint8_t>&& aRegistration)
-    : mRegistration(aRegistration)
-  { }
-
-  void ConsumeRegistration(nsTArray<uint8_t>& aBuffer) {
-    aBuffer = Move(mRegistration);
-  }
-
-private:
-  nsTArray<uint8_t> mRegistration;
-};
-
-class U2FSignResult {
-public:
-  explicit U2FSignResult(nsTArray<uint8_t>&& aKeyHandle,
-                         nsTArray<uint8_t>&& aSignature)
-    : mKeyHandle(aKeyHandle)
-    , mSignature(aSignature)
-  { }
-
-  void ConsumeKeyHandle(nsTArray<uint8_t>& aBuffer) {
-    aBuffer = Move(mKeyHandle);
-  }
-
-  void ConsumeSignature(nsTArray<uint8_t>& aBuffer) {
-    aBuffer = Move(mSignature);
-  }
-
-private:
-  nsTArray<uint8_t> mKeyHandle;
-  nsTArray<uint8_t> mSignature;
-};
-
-typedef MozPromise<U2FRegisterResult, nsresult, true> U2FRegisterPromise;
-typedef MozPromise<U2FSignResult, nsresult, true> U2FSignPromise;
+typedef MozPromise<WebAuthnMakeCredentialResult, nsresult, true> U2FRegisterPromise;
+typedef MozPromise<WebAuthnGetAssertionResult, nsresult, true> U2FSignPromise;
 
 class U2FTokenTransport
 {

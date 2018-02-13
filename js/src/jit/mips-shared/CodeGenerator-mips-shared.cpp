@@ -568,7 +568,10 @@ CodeGeneratorMIPSShared::visitDivI(LDivI* ins)
     // Handle divide by zero.
     if (mir->canBeDivideByZero()) {
         if (mir->trapOnError()) {
-            masm.ma_b(rhs, rhs, oldTrap(mir, wasm::Trap::IntegerDivideByZero), Assembler::Zero);
+            Label nonZero;
+            masm.ma_b(rhs, rhs, &nonZero, Assembler::NonZero);
+            masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->bytecodeOffset());
+            masm.bind(&nonZero);
         } else if (mir->canTruncateInfinities()) {
             // Truncated division by zero is zero (Infinity|0 == 0)
             Label notzero;
@@ -590,7 +593,10 @@ CodeGeneratorMIPSShared::visitDivI(LDivI* ins)
 
         masm.move32(Imm32(-1), temp);
         if (mir->trapOnError()) {
-            masm.ma_b(rhs, temp, oldTrap(mir, wasm::Trap::IntegerOverflow), Assembler::Equal);
+            Label ok;
+            masm.ma_b(rhs, temp, &ok, Assembler::NoEqual);
+            masm.wasmTrap(wasm::Trap::IntegerOverflow, mir->bytecodeOffset());
+            masm.bind(&ok);
         } else if (mir->canTruncateOverflow()) {
             // (-INT32_MIN)|0 == INT32_MIN
             Label skip;
@@ -718,7 +724,10 @@ CodeGeneratorMIPSShared::visitModI(LModI* ins)
     if (mir->canBeDivideByZero()) {
         if (mir->isTruncated()) {
             if (mir->trapOnError()) {
-                masm.ma_b(rhs, rhs, oldTrap(mir, wasm::Trap::IntegerDivideByZero), Assembler::Zero);
+                Label nonZero;
+                masm.ma_b(rhs, rhs, &nonZero, Assembler::NonZero);
+                masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->bytecodeOffset());
+                masm.bind(&nonZero);
             } else {
                 Label skip;
                 masm.ma_b(rhs, Imm32(0), &skip, Assembler::NotEqual, ShortJump);
@@ -1559,10 +1568,10 @@ CodeGeneratorMIPSShared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCh
 
     // Handle errors.
     masm.bind(&fail);
-    masm.jump(oldTrap(ool, wasm::Trap::IntegerOverflow));
+    masm.wasmTrap(wasm::Trap::IntegerOverflow, ool->bytecodeOffset());
 
     masm.bind(&inputIsNaN);
-    masm.jump(oldTrap(ool, wasm::Trap::InvalidConversionToInteger));
+    masm.wasmTrap(wasm::Trap::InvalidConversionToInteger, ool->bytecodeOffset());
 }
 
 void
@@ -2392,7 +2401,10 @@ CodeGeneratorMIPSShared::visitUDivOrMod(LUDivOrMod* ins)
     if (ins->canBeDivideByZero()) {
         if (ins->mir()->isTruncated()) {
             if (ins->trapOnError()) {
-                masm.ma_b(rhs, rhs, oldTrap(ins, wasm::Trap::IntegerDivideByZero), Assembler::Zero);
+                Label nonZero;
+                masm.ma_b(rhs, rhs, &nonZero, Assembler::NonZero);
+                masm.wasmTrap(wasm::Trap::IntegerDivideByZero, ins->bytecodeOffset());
+                masm.bind(&nonZero)
             } else {
                 // Infinity|0 == 0
                 Label notzero;

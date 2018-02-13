@@ -60,7 +60,8 @@ class nsBaseStateUpdatingCommand : public nsBaseComposerCommand
 public:
   explicit nsBaseStateUpdatingCommand(nsAtom* aTagName);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsBaseStateUpdatingCommand,
+                                       nsBaseComposerCommand)
 
   NS_DECL_NSICONTROLLERCOMMAND
 
@@ -102,7 +103,7 @@ class nsInsertTagCommand : public nsBaseComposerCommand
 public:
   explicit nsInsertTagCommand(nsAtom* aTagName);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsInsertTagCommand, nsBaseComposerCommand)
 
   NS_DECL_NSICONTROLLERCOMMAND
 
@@ -150,7 +151,7 @@ public:
 
   nsMultiStateCommand();
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsMultiStateCommand, nsBaseComposerCommand)
   NS_DECL_NSICONTROLLERCOMMAND
 
 protected:

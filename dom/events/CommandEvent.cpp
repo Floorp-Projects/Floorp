@@ -26,12 +26,6 @@ CommandEvent::CommandEvent(EventTarget* aOwner,
   }
 }
 
-NS_INTERFACE_MAP_BEGIN(CommandEvent)
-NS_INTERFACE_MAP_END_INHERITING(Event)
-
-NS_IMPL_ADDREF_INHERITED(CommandEvent, Event)
-NS_IMPL_RELEASE_INHERITED(CommandEvent, Event)
-
 void
 CommandEvent::GetCommand(nsAString& aCommand)
 {

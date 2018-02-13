@@ -551,8 +551,6 @@ XULListitemAccessible::~XULListitemAccessible()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(XULListitemAccessible, Accessible)
-
 Accessible*
 XULListitemAccessible::GetListAccessible() const
 {
@@ -692,9 +690,6 @@ XULListCellAccessible::
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
-
-NS_IMPL_ISUPPORTS_INHERITED0(XULListCellAccessible,
-                             HyperTextAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULListCellAccessible: TableCell

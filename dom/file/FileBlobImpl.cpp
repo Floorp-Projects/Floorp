@@ -18,8 +18,6 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS_INHERITED0(FileBlobImpl, BlobImpl)
-
 FileBlobImpl::FileBlobImpl(nsIFile* aFile)
   : BaseBlobImpl(EmptyString(), EmptyString(), UINT64_MAX, INT64_MAX)
   , mFile(aFile)
