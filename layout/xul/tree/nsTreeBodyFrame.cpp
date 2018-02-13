@@ -2845,7 +2845,7 @@ nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!mView || !GetContent ()->GetComposedDoc()->GetWindow())
     return;
 
-  nsDisplayItem* item = new (aBuilder) nsDisplayTreeBody(aBuilder, this);
+  nsDisplayItem* item = MakeDisplayItem<nsDisplayTreeBody>(aBuilder, this);
   aLists.Content()->AppendToTop(item);
 
 #ifdef XP_MACOSX

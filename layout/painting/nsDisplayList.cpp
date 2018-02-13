@@ -2257,7 +2257,7 @@ nsDisplayListBuilder::BuildCompositorHitTestInfoIfNeeded(nsIFrame* aFrame,
   }
 
   nsDisplayCompositorHitTestInfo* item =
-    new (this) nsDisplayCompositorHitTestInfo(this, aFrame, info);
+    MakeDisplayItem<nsDisplayCompositorHitTestInfo>(this, aFrame, info);
 
   SetCompositorHitTestInfo(item);
   aList->AppendToTop(item);
@@ -3531,9 +3531,10 @@ nsDisplayBackgroundImage::GetInitData(nsDisplayListBuilder* aBuilder,
   };
 }
 
-nsDisplayBackgroundImage::nsDisplayBackgroundImage(const InitData& aInitData,
+nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilder,
+                                                   const InitData& aInitData,
                                                    nsIFrame* aFrameForBounds)
-  : nsDisplayImageContainer(aInitData.builder, aInitData.frame)
+  : nsDisplayImageContainer(aBuilder, aInitData.frame)
   , mBackgroundStyle(aInitData.backgroundStyle)
   , mImage(aInitData.image)
   , mDependentFrame(nullptr)
@@ -3643,7 +3644,7 @@ SpecialCutoutRegionCase(nsDisplayListBuilder* aBuilder,
   region.Sub(aBackgroundRect, *static_cast<nsRegion*>(cutoutRegion));
   region.MoveBy(aBuilder->ToReferenceFrame(aFrame));
   aList->AppendToTop(
-    new (aBuilder) nsDisplaySolidColorRegion(aBuilder, aFrame, region, aColor));
+    MakeDisplayItem<nsDisplaySolidColorRegion>(aBuilder, aFrame, region, aColor));
 
   return true;
 }
@@ -3748,12 +3749,12 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
     nsDisplayBackgroundColor *bgItem;
     if (aSecondaryReferenceFrame) {
       bgItem =
-          new (aBuilder) nsDisplayTableBackgroundColor(aBuilder, aSecondaryReferenceFrame, bgColorRect, bg,
+          MakeDisplayItem<nsDisplayTableBackgroundColor>(aBuilder, aSecondaryReferenceFrame, bgColorRect, bg,
                                                        drawBackgroundColor ? color : NS_RGBA(0, 0, 0, 0),
                                                        aFrame);
     } else {
       bgItem =
-          new (aBuilder) nsDisplayBackgroundColor(aBuilder, aFrame, bgColorRect, bg,
+          MakeDisplayItem<nsDisplayBackgroundColor>(aBuilder, aFrame, bgColorRect, bg,
                                                   drawBackgroundColor ? color : NS_RGBA(0, 0, 0, 0));
     }
     bgItem->SetDependentFrame(aBuilder, dependentFrame);
@@ -3765,11 +3766,11 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
     if (theme->NeedToClearBackgroundBehindWidget(aFrame, aFrame->StyleDisplay()->mAppearance) &&
         aBuilder->IsInChromeDocumentOrPopup() && !aBuilder->IsInTransform()) {
       bgItemList.AppendToTop(
-        new (aBuilder) nsDisplayClearBackground(aBuilder, aFrame));
+        MakeDisplayItem<nsDisplayClearBackground>(aBuilder, aFrame));
     }
     if (aSecondaryReferenceFrame) {
       nsDisplayTableThemedBackground* bgItem =
-        new (aBuilder) nsDisplayTableThemedBackground(aBuilder,
+        MakeDisplayItem<nsDisplayTableThemedBackground>(aBuilder,
                                                       aSecondaryReferenceFrame,
                                                       bgRect,
                                                       aFrame);
@@ -3777,7 +3778,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
       bgItemList.AppendToTop(bgItem);
     } else {
       nsDisplayThemedBackground* bgItem =
-        new (aBuilder) nsDisplayThemedBackground(aBuilder, aFrame, bgRect);
+        MakeDisplayItem<nsDisplayThemedBackground>(aBuilder, aFrame, bgRect);
       bgItem->Init(aBuilder);
       bgItemList.AppendToTop(bgItem);
     }
@@ -3851,9 +3852,9 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
           nsDisplayBackgroundImage::InitData tableData = bgData;
           nsIFrame* styleFrame = tableData.frame;
           tableData.frame = aSecondaryReferenceFrame;
-          bgItem = new (aBuilder) nsDisplayTableBackgroundImage(tableData, styleFrame);
+          bgItem = MakeDisplayItem<nsDisplayTableBackgroundImage>(aBuilder, tableData, styleFrame);
         } else {
-          bgItem = new (aBuilder) nsDisplayBackgroundImage(bgData);
+          bgItem = MakeDisplayItem<nsDisplayBackgroundImage>(aBuilder, bgData);
         }
       }
       bgItem->SetDependentFrame(aBuilder, dependentFrame);
@@ -3876,9 +3877,9 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
         nsIFrame* styleFrame = tableData.frame;
         tableData.frame = aSecondaryReferenceFrame;
 
-        bgItem = new (aBuilder) nsDisplayTableBackgroundImage(tableData, styleFrame);
+        bgItem = MakeDisplayItem<nsDisplayTableBackgroundImage>(aBuilder, tableData, styleFrame);
       } else {
-        bgItem = new (aBuilder) nsDisplayBackgroundImage(bgData);
+        bgItem = MakeDisplayItem<nsDisplayBackgroundImage>(aBuilder, bgData);
       }
       bgItem->SetDependentFrame(aBuilder, dependentFrame);
       thisItemList.AppendToTop(bgItem);
@@ -3891,12 +3892,12 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
       // item with respect to asr.
       if (aSecondaryReferenceFrame) {
         thisItemList.AppendToTop(
-          new (aBuilder) nsDisplayTableBlendMode(aBuilder, aSecondaryReferenceFrame, &thisItemList,
+          MakeDisplayItem<nsDisplayTableBlendMode>(aBuilder, aSecondaryReferenceFrame, &thisItemList,
                                                  bg->mImage.mLayers[i].mBlendMode,
                                                  asr, i + 1, aFrame));
       } else {
         thisItemList.AppendToTop(
-          new (aBuilder) nsDisplayBlendMode(aBuilder, aFrame, &thisItemList,
+          MakeDisplayItem<nsDisplayBlendMode>(aBuilder, aFrame, &thisItemList,
                                             bg->mImage.mLayers[i].mBlendMode,
                                             asr, i + 1));
       }
@@ -4399,9 +4400,10 @@ nsDisplayBackgroundImage::GetBoundsInternal(nsDisplayListBuilder* aBuilder,
                                                 aBuilder->GetBackgroundPaintFlags());
 }
 
-nsDisplayTableBackgroundImage::nsDisplayTableBackgroundImage(const InitData& aData,
+nsDisplayTableBackgroundImage::nsDisplayTableBackgroundImage(nsDisplayListBuilder* aBuilder,
+                                                             const InitData& aData,
                                                              nsIFrame* aCellFrame)
-  : nsDisplayBackgroundImage(aData, aCellFrame)
+  : nsDisplayBackgroundImage(aBuilder, aData, aCellFrame)
   , mStyleFrame(aCellFrame)
   , mTableType(GetTableTypeFromFrame(mStyleFrame))
 {
@@ -6268,7 +6270,7 @@ nsDisplayWrapList::MergeDisplayListFromItem(nsDisplayListBuilder* aBuilder,
 
   // Create a new nsDisplayWrapList using a copy-constructor. This is done
   // to preserve the information about bounds.
-  nsDisplayWrapList* wrapper = new (aBuilder) nsDisplayWrapList(aBuilder, *wrappedItem);
+  nsDisplayWrapList* wrapper = MakeDisplayItem<nsDisplayWrapList>(aBuilder, *wrappedItem);
 
   // Set the display list pointer of the new wrapper item to the display list
   // of the wrapped item.
@@ -6920,7 +6922,7 @@ nsDisplayBlendContainer::CreateForMixBlendMode(nsDisplayListBuilder* aBuilder,
                                                nsIFrame* aFrame, nsDisplayList* aList,
                                                const ActiveScrolledRoot* aActiveScrolledRoot)
 {
-  return new (aBuilder) nsDisplayBlendContainer(aBuilder, aFrame, aList, aActiveScrolledRoot, false);
+  return MakeDisplayItem<nsDisplayBlendContainer>(aBuilder, aFrame, aList, aActiveScrolledRoot, false);
 }
 
 /* static */ nsDisplayBlendContainer*
@@ -6928,7 +6930,7 @@ nsDisplayBlendContainer::CreateForBackgroundBlendMode(nsDisplayListBuilder* aBui
                                                       nsIFrame* aFrame, nsDisplayList* aList,
                                                       const ActiveScrolledRoot* aActiveScrolledRoot)
 {
-  return new (aBuilder) nsDisplayBlendContainer(aBuilder, aFrame, aList, aActiveScrolledRoot, true);
+  return MakeDisplayItem<nsDisplayBlendContainer>(aBuilder, aFrame, aList, aActiveScrolledRoot, true);
 }
 
 nsDisplayBlendContainer::nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder,
@@ -6995,7 +6997,7 @@ nsDisplayTableBlendContainer::CreateForBackgroundBlendMode(nsDisplayListBuilder*
                                                            const ActiveScrolledRoot* aActiveScrolledRoot,
                                                            nsIFrame* aAncestorFrame)
 {
-  return new (aBuilder) nsDisplayTableBlendContainer(aBuilder, aFrame, aList, aActiveScrolledRoot, true, aAncestorFrame);
+  return MakeDisplayItem<nsDisplayTableBlendContainer>(aBuilder, aFrame, aList, aActiveScrolledRoot, true, aAncestorFrame);
 }
 
 nsDisplayOwnLayer::nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder,
@@ -7374,7 +7376,7 @@ nsDisplayFixedPosition::CreateForFixedBackground(nsDisplayListBuilder* aBuilder,
   nsDisplayList temp;
   temp.AppendToTop(aImage);
 
-  return new (aBuilder) nsDisplayFixedPosition(aBuilder, aFrame, &temp, aIndex + 1);
+  return MakeDisplayItem<nsDisplayFixedPosition>(aBuilder, aFrame, &temp, aIndex + 1);
 }
 
 
@@ -7487,7 +7489,7 @@ nsDisplayTableFixedPosition::CreateForFixedBackground(nsDisplayListBuilder* aBui
   nsDisplayList temp;
   temp.AppendToTop(aImage);
 
-  return new (aBuilder) nsDisplayTableFixedPosition(aBuilder, aFrame, &temp, aIndex + 1, aAncestorFrame);
+  return MakeDisplayItem<nsDisplayTableFixedPosition>(aBuilder, aFrame, &temp, aIndex + 1, aAncestorFrame);
 }
 
 nsDisplayStickyPosition::nsDisplayStickyPosition(nsDisplayListBuilder* aBuilder,
