@@ -18,7 +18,8 @@ exclude = [
   "*.mp4",
 ]
 
-build = false
+[badges]
+travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
 
 [dependencies]
 byteorder = "1.0.0"
