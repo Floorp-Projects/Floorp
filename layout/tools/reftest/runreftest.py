@@ -828,7 +828,7 @@ class RefTest(object):
 
         filters = []
         if options.totalChunks:
-            filters.append(mpf.chunk_by_slice(options.thisChunk, options.totalChunks))
+            filters.append(mpf.chunk_by_manifest(options.thisChunk, options.totalChunks))
 
         tests = mp.active_tests(exists=False, filters=filters)
         return tests
