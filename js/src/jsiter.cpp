@@ -16,7 +16,6 @@
 #include "mozilla/Unused.h"
 
 #include "jsarray.h"
-#include "jsatom.h"
 #include "jscntxt.h"
 #include "jsobj.h"
 #include "jsopcode.h"

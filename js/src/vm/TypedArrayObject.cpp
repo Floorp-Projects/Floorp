@@ -44,8 +44,6 @@
 #include "vm/SharedMem.h"
 #include "vm/WrapperObject.h"
 
-#include "jsatominlines.h"
-
 #include "gc/Nursery-inl.h"
 #include "gc/StoreBuffer-inl.h"
 #include "vm/ArrayBufferObject-inl.h"

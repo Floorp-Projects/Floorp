@@ -11,7 +11,6 @@
 #include "jsboolinlines.h"
 
 #include "jsapi.h"
-#include "jsatom.h"
 #include "jscntxt.h"
 #include "jsobj.h"
 #include "jstypes.h"

@@ -206,7 +206,6 @@
 #endif
 
 #include "jsapi.h"
-#include "jsatom.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsfriendapi.h"
@@ -5940,14 +5939,7 @@ GCRuntime::sweepAtomsTable(FreeOp* fop, SliceBudget& budget)
         atomsToSweep.popFront();
     }
 
-    // Add any new atoms from the secondary table.
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    AtomSet* atomsTable = rt->atomsForSweeping();
-    MOZ_ASSERT(atomsTable);
-    for (auto r = rt->atomsAddedWhileSweeping()->all(); !r.empty(); r.popFront()) {
-        if (!atomsTable->putNew(AtomHasher::Lookup(r.front().asPtrUnbarriered()), r.front()))
-            oomUnsafe.crash("Adding atom from secondary table after sweep");
-    }
+    MergeAtomsAddedWhileSweeping(rt);
     rt->destroyAtomsAddedWhileSweepingTable();
 
     maybeAtoms.reset();

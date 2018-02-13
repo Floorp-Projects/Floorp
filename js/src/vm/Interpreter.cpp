@@ -20,7 +20,6 @@
 #include <string.h>
 
 #include "jsarray.h"
-#include "jsatom.h"
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsiter.h"
@@ -49,7 +48,6 @@
 #include "vm/StringBuffer.h"
 #include "vm/TraceLogging.h"
 
-#include "jsatominlines.h"
 #include "jsboolinlines.h"
 #include "jsfuninlines.h"
 #include "jsscriptinlines.h"

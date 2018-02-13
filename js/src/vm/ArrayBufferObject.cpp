@@ -50,8 +50,6 @@
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmTypes.h"
 
-#include "jsatominlines.h"
-
 #include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
 #include "vm/NativeObject-inl.h"
