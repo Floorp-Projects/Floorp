@@ -2883,7 +2883,6 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, GeckoStyleContext* aCon
       MOZ_ASSERT(false, "unexpected SID");
       return nullptr;
   }
-  return nullptr;
 }
 
 /**

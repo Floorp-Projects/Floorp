@@ -49,10 +49,6 @@ const PREFS_MAX_CRASH_RESUMES = "browser.sessionstore.max_resumed_crashes";
 const PREFS_MAX_TABS_UNDO = "browser.sessionstore.max_tabs_undo";
 
 const MINIMUM_SAVE_DELAY = 2000;
-// We reduce the delay in background because we could be killed at any moment,
-// however we don't set it to 0 in order to allow for multiple events arriving
-// one after the other to be batched together in one write operation.
-const MINIMUM_SAVE_DELAY_BACKGROUND = 200;
 
 function SessionStore() { }
 
@@ -69,7 +65,6 @@ SessionStore.prototype = {
   _lastBackupTime: 0,
   _interval: 10000,
   _backupInterval: 120000, // 2 minutes
-  _minSaveDelay: MINIMUM_SAVE_DELAY,
   _maxTabsUndo: 5,
   _pendingWrite: 0,
   _scrollSavePending: null,
@@ -386,20 +381,12 @@ SessionStore.prototype = {
         // point without notice; therefore, we must synchronously write out any
         // pending save state to ensure that this data does not get lost.
         log("application-background");
-        // Tab events dispatched immediately before the application was backgrounded
-        // might actually arrive after this point, therefore save them without delay.
         if (this._loadState == STATE_RUNNING) {
-          this._interval = 0;
-          this._minSaveDelay = MINIMUM_SAVE_DELAY_BACKGROUND; // A small delay allows successive tab events to be batched together.
           this.flushPendingState();
         }
         break;
       case "application-foreground":
-        // Reset minimum interval between session store writes back to default.
         log("application-foreground");
-        this._interval = Services.prefs.getIntPref("browser.sessionstore.interval");
-        this._minSaveDelay = MINIMUM_SAVE_DELAY;
-
         // If we skipped restoring a zombified tab before backgrounding,
         // we might have to do it now instead.
         let window = Services.wm.getMostRecentWindow("navigator:browser");
@@ -982,7 +969,7 @@ SessionStore.prototype = {
       let currentDelay = this._lastSaveTime + this._interval - Date.now();
 
       // If we have to wait, set a timer, otherwise saveState directly
-      let delay = Math.max(currentDelay, this._minSaveDelay);
+      let delay = Math.max(currentDelay, MINIMUM_SAVE_DELAY);
       if (delay > 0) {
         this._pendingWrite++;
         this._saveTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);

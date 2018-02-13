@@ -14,7 +14,6 @@ XPIDL_SOURCES += [
     'nsIDOMDocumentFragment.idl',
     'nsIDOMDocumentType.idl',
     'nsIDOMDOMException.idl',
-    'nsIDOMDOMImplementation.idl',
     'nsIDOMElement.idl',
     'nsIDOMNode.idl',
     'nsIDOMNodeList.idl',

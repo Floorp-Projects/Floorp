@@ -438,12 +438,14 @@ RestyleManager::ChangeHintToString(nsChangeHint aHint)
     "ReflowChangesSizeOrPosition", "UpdateComputedBSize",
     "UpdateUsesOpacity", "UpdateBackgroundPosition",
     "AddOrRemoveTransform", "CSSOverflowChange",
-    "UpdateWidgetProperties", "UpdateTableCellSpans"
+    "UpdateWidgetProperties", "UpdateTableCellSpans",
+    "VisibilityChange"
   };
-  static_assert(nsChangeHint_AllHints == (1u << ArrayLength(names)) - 1,
+  static_assert(nsChangeHint_AllHints ==
+                  static_cast<uint32_t>((1ull << ArrayLength(names)) - 1),
                 "Name list doesn't match change hints.");
-  uint32_t hint = aHint & ((1u << ArrayLength(names)) - 1);
-  uint32_t rest = aHint & ~((1u << ArrayLength(names)) - 1);
+  uint32_t hint = aHint & static_cast<uint32_t>((1ull << ArrayLength(names)) - 1);
+  uint32_t rest = aHint & ~static_cast<uint32_t>((1ull << ArrayLength(names)) - 1);
   if ((hint & NS_STYLE_HINT_REFLOW) == NS_STYLE_HINT_REFLOW) {
     result.AppendLiteral("NS_STYLE_HINT_REFLOW");
     hint = hint & ~NS_STYLE_HINT_REFLOW;
@@ -458,7 +460,7 @@ RestyleManager::ChangeHintToString(nsChangeHint aHint)
     any = true;
   }
   for (uint32_t i = 0; i < ArrayLength(names); i++) {
-    if (hint & (1 << i)) {
+    if (hint & (1u << i)) {
       if (any) {
         result.AppendLiteral(" | ");
       }
@@ -1726,6 +1728,9 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       }
       if (hint & nsChangeHint_UpdateTableCellSpans) {
         frameConstructor->UpdateTableCellSpans(content);
+      }
+      if (hint & nsChangeHint_VisibilityChange) {
+        frame->UpdateVisibleDescendantsState();
       }
     }
   }

@@ -231,16 +231,9 @@ class CommonBackend(BuildBackend):
             mozpath.join(self.environment.topobjdir, 'dist')
         )
         self._handle_generated_sources(manager.expected_build_output_files())
-        # Bindings are compiled in unified mode to speed up compilation and
-        # to reduce linker memory size. Note that test bindings are separated
-        # from regular ones so tests bindings aren't shipped.
-        unified_source_mapping = list(group_unified_files(webidls.all_regular_cpp_basenames(),
-                                                          unified_prefix='UnifiedBindings',
-                                                          unified_suffix='cpp',
-                                                          files_per_unified_file=32))
-        self._write_unified_files(unified_source_mapping, bindings_dir,
+        self._write_unified_files(webidls.unified_source_mapping, bindings_dir,
                                   poison_windows_h=True)
-        self._handle_webidl_build(bindings_dir, unified_source_mapping,
+        self._handle_webidl_build(bindings_dir, webidls.unified_source_mapping,
                                   webidls,
                                   manager.expected_build_output_files(),
                                   manager.GLOBAL_DEFINE_FILES)
