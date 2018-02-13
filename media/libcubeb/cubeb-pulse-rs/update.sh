@@ -7,9 +7,6 @@ cp -p $1/README.md .
 cp -p $1/Cargo.toml .
 test -d src || mkdir -p src
 cp -pr $1/src/* src/
-test -d cubeb-ffi/src || mkdir -p cubeb-ffi/src
-cp -pr $1/cubeb-ffi/Cargo.toml cubeb-ffi/
-cp -pr $1/cubeb-ffi/src/* cubeb-ffi/src/
 test -d pulse-ffi/src || mkdir -p pulse-ffi/src
 cp -pr $1/pulse-ffi/Cargo.toml pulse-ffi/
 cp -pr $1/pulse-ffi/src/* pulse-ffi/src/
