@@ -219,7 +219,7 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
         final EditText username;
         if ((flags & AUTH_FLAG_ONLY_PASSWORD) == 0) {
             username = new EditText(builder.getContext());
-            username.setHint(R.string.username_hint);
+            username.setHint(R.string.gv_prompt_username_hint);
             username.setText(options.getString("username"));
             container.addView(username);
         } else {
@@ -227,7 +227,7 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
         }
 
         final EditText password = new EditText(builder.getContext());
-        password.setHint(R.string.password_hint);
+        password.setHint(R.string.gv_prompt_password_hint);
         password.setText(options.getString("password"));
         password.setInputType(InputType.TYPE_CLASS_TEXT |
                 InputType.TYPE_TEXT_VARIATION_PASSWORD);
@@ -680,7 +680,7 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
                     }
                 };
         builder.setNegativeButton(android.R.string.cancel, /* listener */ null)
-                .setNeutralButton(R.string.clear_prompt, listener)
+                .setNeutralButton(R.string.gv_prompt_clear, listener)
                 .setPositiveButton(android.R.string.ok, listener);
         createStandardDialog(builder, callback).show();
     }

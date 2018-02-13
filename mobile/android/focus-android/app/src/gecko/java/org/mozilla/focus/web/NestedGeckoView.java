@@ -82,8 +82,6 @@ public class NestedGeckoView extends GeckoView implements NestedScrollingChild {
         return eventHandled;
     }
 
-    // NestedScrollingChild
-
     @Override
     public void setNestedScrollingEnabled(boolean enabled) {
         mChildHelper.setNestedScrollingEnabled(enabled);

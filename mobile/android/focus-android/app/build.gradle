@@ -147,10 +147,10 @@ jacocoAndroidUnitTestReport {
 }
 
 repositories {
-    flatDir {
-        dirs 'libs'
-    }
     mavenCentral()
+    maven {
+        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.latest.mobile.android-api-16-opt/artifacts/public/android/maven"
+    }
 }
 
 dependencies {
@@ -176,7 +176,8 @@ dependencies {
     focusCompile 'com.adjust.sdk:adjust-android:4.11.4'
     focusCompile 'com.google.android.gms:play-services-analytics:10.2.6' // Required by Adjust
 
-    geckoCompile(name: 'geckoview-latest', ext: 'aar')
+    // gecko_version = '60.0a1'
+    geckoCompile "org.mozilla:geckoview-nightly-armeabi-v7a:+"
 
     testCompile 'junit:junit:4.12'
     testCompile "org.robolectric:robolectric:3.5.1"
