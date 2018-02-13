@@ -21,6 +21,7 @@ from mozbuild.util import StrictOrderingOnAppendList
 from mozpack.chrome.manifest import ManifestEntry
 
 import mozpack.path as mozpath
+from mozwebidlcodegen import WebIDLCodegenManager
 from .context import FinalTargetValue
 
 from collections import defaultdict, OrderedDict
@@ -277,7 +278,7 @@ class WebIDLCollection(ContextDerived):
         return [mozpath.splitext(b)[0] for b in self.all_test_basenames()]
 
     def all_test_cpp_basenames(self):
-        return ['%sBinding.cpp' % s for s in self.all_test_stems()]
+        return sorted('%sBinding.cpp' % s for s in self.all_test_stems())
 
     def all_static_sources(self):
         return self.sources | self.generated_events_sources | \
@@ -306,6 +307,20 @@ class WebIDLCollection(ContextDerived):
 
     def generated_events_stems(self):
         return [mozpath.splitext(b)[0] for b in self.generated_events_basenames()]
+
+    @property
+    def unified_source_mapping(self):
+        # Bindings are compiled in unified mode to speed up compilation and
+        # to reduce linker memory size. Note that test bindings are separated
+        # from regular ones so tests bindings aren't shipped.
+        return list(group_unified_files(self.all_regular_cpp_basenames(),
+                                        unified_prefix='UnifiedBindings',
+                                        unified_suffix='cpp',
+                                        files_per_unified_file=32))
+
+    def all_source_files(self):
+        return (sorted(list(WebIDLCodegenManager.GLOBAL_DEFINE_FILES)) +
+                sorted(set(p for p, _ in self.unified_source_mapping)))
 
 
 class IPDLCollection(ContextDerived):
@@ -348,6 +363,9 @@ class IPDLCollection(ContextDerived):
                                         unified_prefix='UnifiedProtocols',
                                         unified_suffix='cpp',
                                         files_per_unified_file=16))
+
+    def all_source_files(self):
+        return sorted(set(p for p, _ in self.unified_source_mapping))
 
 
 class LinkageWrongKindError(Exception):
