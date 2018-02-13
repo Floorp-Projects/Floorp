@@ -21,14 +21,13 @@ test(t => {
     'state');
 }, 'The current time returns the hold time when set');
 
-promise_test(t => {
+promise_test(async t => {
   const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
 
-  return animation.ready.then(() => {
-    assert_equals(animation.currentTime, null);
-  });
+  await animation.ready;
+  assert_equals(animation.currentTime, null);
 }, 'The current time is unresolved when there is no associated timeline ' +
    '(and no hold time is set)');
 
@@ -62,14 +61,13 @@ test(t => {
 }, 'The current time is calculated from the timeline time, start time and ' +
    'playback rate');
 
-promise_test(t => {
+promise_test(async t => {
   const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
   animation.playbackRate = 0;
 
-  return animation.ready.then(() => waitForAnimationFrames(1))
-  .then(() => {
-    assert_time_equals_literal(animation.currentTime, 0);
-  });
+  await animation.ready;
+  await waitForAnimationFrames(1);
+  assert_time_equals_literal(animation.currentTime, 0);
 }, 'The current time does not progress if playback rate is 0');
 
 </script>
