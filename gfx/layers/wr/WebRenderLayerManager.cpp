@@ -249,7 +249,8 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
 
 void
 WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
-                                                  nsDisplayListBuilder* aDisplayListBuilder)
+                                                  nsDisplayListBuilder* aDisplayListBuilder,
+                                                  const nsTArray<wr::WrFilterOp>& aFilters)
 {
   MOZ_ASSERT(aDisplayList && aDisplayListBuilder);
   WrBridge()->RemoveExpiredFontKeys();
@@ -282,7 +283,8 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
                                                   aDisplayList,
                                                   aDisplayListBuilder,
                                                   mScrollData,
-                                                  contentSize);
+                                                  contentSize,
+                                                  aFilters);
 
   mWidget->AddWindowOverlayWebRenderCommands(WrBridge(), builder, resourceUpdates);
   mWindowOverlayChanged = false;
