@@ -576,6 +576,27 @@ private:
                       SheetLoadData* aLoadData,
                       bool& aCompleted);
 
+  //
+  // Separate parsing paths for the old and new style systems, so that we can
+  // make parsing asynchronous in the new style system without touching the old
+  // one. Once we drop the old style system, this can be simplified.
+  //
+
+
+#ifdef MOZ_OLD_STYLE
+  nsresult DoParseSheetGecko(CSSStyleSheet* aSheet,
+                             const nsAString& aUTF16,
+                             Span<const uint8_t> aUTF8,
+                             SheetLoadData* aLoadData,
+                             bool& aCompleted);
+#endif
+
+  nsresult DoParseSheetServo(ServoStyleSheet* aSheet,
+                             const nsAString& aUTF16,
+                             Span<const uint8_t> aUTF8,
+                             SheetLoadData* aLoadData,
+                             bool& aCompleted);
+
   // The load of the sheet in aLoadData is done, one way or another.  Do final
   // cleanup, including releasing aLoadData.
   void SheetComplete(SheetLoadData* aLoadData, nsresult aStatus);
