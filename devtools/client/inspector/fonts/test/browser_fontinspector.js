@@ -46,10 +46,6 @@ function isRemote(fontLi) {
   return fontLi.querySelectorAll(".font-format-url a").length === 1;
 }
 
-function getName(fontLi) {
-  return fontLi.querySelector(".font-name").textContent;
-}
-
 function getFormat(fontLi) {
   let link = fontLi.querySelector(".font-format-url a");
   if (!link) {
@@ -66,7 +62,7 @@ function getCSSName(fontLi) {
 }
 
 function* testBodyFonts(inspector, viewDoc) {
-  let lis = viewDoc.querySelectorAll("#all-fonts > li");
+  let lis = getUsedFontsEls(viewDoc);
   is(lis.length, 5, "Found 5 fonts");
 
   for (let i = 0; i < FONTS.length; i++) {
@@ -103,7 +99,7 @@ function* testDivFonts(inspector, viewDoc) {
   yield selectNode("div", inspector);
   yield updated;
 
-  let lis = viewDoc.querySelectorAll("#all-fonts > li");
+  let lis = getUsedFontsEls(viewDoc);
   is(lis.length, 1, "Found 1 font on DIV");
   is(getName(lis[0]), "Ostrich Sans Medium", "The DIV font has the right name");
 }
