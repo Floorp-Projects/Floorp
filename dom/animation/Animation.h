@@ -105,7 +105,9 @@ public:
   void SetTimeline(AnimationTimeline* aTimeline);
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
   void SetStartTime(const Nullable<TimeDuration>& aNewStartTime);
-  Nullable<TimeDuration> GetCurrentTime() const;
+  Nullable<TimeDuration> GetCurrentTime() const {
+    return GetCurrentTimeForHoldTime(mHoldTime);
+  }
   void SetCurrentTime(const TimeDuration& aNewCurrentTime);
   double PlaybackRate() const { return mPlaybackRate; }
   void SetPlaybackRate(double aPlaybackRate);
@@ -462,6 +464,9 @@ protected:
   }
   bool IsPossiblyOrphanedPendingAnimation() const;
   StickyTimeDuration EffectEnd() const;
+
+  Nullable<TimeDuration> GetCurrentTimeForHoldTime(
+    const Nullable<TimeDuration>& aHoldTime) const;
 
   nsIDocument* GetRenderedDocument() const;
 
