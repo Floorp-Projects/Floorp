@@ -28,21 +28,16 @@ class FontList extends PureComponent {
       onPreviewFonts
     } = this.props;
 
-    return dom.div(
+    return dom.ul(
       {
-        id: "font-container"
+        className: "fonts-list"
       },
-      dom.ul(
-        {
-          id: "all-fonts"
-        },
-        fonts.map((font, i) => Font({
-          key: i,
-          font,
-          fontOptions,
-          onPreviewFonts,
-        }))
-      )
+      fonts.map((font, i) => Font({
+        key: i,
+        font,
+        fontOptions,
+        onPreviewFonts,
+      }))
     );
   }
 }

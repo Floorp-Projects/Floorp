@@ -13,7 +13,7 @@ add_task(function* () {
   let viewDoc = view.document;
 
   info("Checking all font are collapsed by default");
-  let fonts = viewDoc.querySelectorAll("#all-fonts > li");
+  let fonts = getUsedFontsEls(viewDoc);
   checkAllFontsCollapsed(fonts);
 
   info("Clicking on the first one to expand the font details");
@@ -24,7 +24,7 @@ add_task(function* () {
 
   info("Selecting a node with different fonts and checking that all fonts are collapsed");
   yield selectNode(".black-text", inspector);
-  fonts = viewDoc.querySelectorAll("#all-fonts > li");
+  fonts = getUsedFontsEls(viewDoc);
   checkAllFontsCollapsed(fonts);
 });
 

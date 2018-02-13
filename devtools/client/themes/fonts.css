@@ -15,7 +15,7 @@
   flex: auto;
 }
 
-#all-fonts {
+.fonts-list {
   padding: 0;
   margin: 0;
   list-style: none;
@@ -28,7 +28,7 @@
   grid-template-columns: 14px auto 1fr;
   grid-template-rows: 50px;
   grid-column-gap: 10px;
-  padding: 0 10px;
+  padding: 0 10px 0 5px;
 }
 
 #font-container .theme-twisty {

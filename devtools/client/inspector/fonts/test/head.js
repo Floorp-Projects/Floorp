@@ -102,3 +102,54 @@ function isFontDetailsVisible(fontEl) {
   return [...fontEl.querySelectorAll(".font-css-name, .font-css-code, .font-format-url")]
          .every(el => el.getBoxQuads().length);
 }
+
+/**
+ * Get all of the <li> elements for the fonts used on the currently selected element.
+ *
+ * @param  {document} viewDoc
+ * @return {Array}
+ */
+function getUsedFontsEls(viewDoc) {
+  return viewDoc.querySelectorAll("#font-container > .fonts-list > li");
+}
+
+/**
+ * Expand the other fonts accordion.
+ */
+async function expandOtherFontsAccordion(viewDoc) {
+  info("Expanding the other fonts section");
+
+  let accordion = viewDoc.querySelector("#font-container .accordion");
+  let isExpanded = () => accordion.querySelector(".fonts-list");
+
+  if (isExpanded()) {
+    return;
+  }
+
+  let onExpanded = BrowserTestUtils.waitForCondition(isExpanded,
+                                                     "Waiting for other fonts section");
+  accordion.querySelector(".theme-twisty").click();
+  await onExpanded;
+}
+
+/**
+ * Get all of the <li> elements for the fonts used elsewhere in the document.
+ *
+ * @param  {document} viewDoc
+ * @return {Array}
+ */
+function getOtherFontsEls(viewDoc) {
+  return viewDoc.querySelectorAll("#font-container .accordion .fonts-list > li");
+}
+
+/**
+ * Given a font element, return its name.
+ *
+ * @param  {DOMNode} fontEl
+ *         The font element.
+ * @return {String}
+ *         The name of the font as shown in the UI.
+ */
+function getName(fontEl) {
+  return fontEl.querySelector(".font-name").textContent;
+}
