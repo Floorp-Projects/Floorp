@@ -241,6 +241,15 @@ struct Animation {
   nsCSSPropertyID property;
   AnimationData data;
   float playbackRate;
+  // When performing an asynchronous update to the playbackRate, |playbackRate|
+  // above is the updated playbackRate while |previousPlaybackRate| is the
+  // existing playbackRate. This is used by AnimationInfo to update the
+  // startTime based on the 'readyTime' (timestamp at the end of painting)
+  // and is not used beyond that point.
+  //
+  // It is set to numeric_limits<float>::quiet_NaN() when no asynchronous update
+  // to the playbackRate is being performed.
+  float previousPlaybackRate;
   // This is used in the transformed progress calculation.
   TimingFunction easingFunction;
   uint8_t iterationComposite;
