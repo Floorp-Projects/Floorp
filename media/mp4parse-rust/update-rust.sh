@@ -2,7 +2,7 @@
 # Script to update mp4parse-rust sources to latest upstream
 
 # Default version.
-VER=ec45de038401d060d826ed87d71e4c67b33a8db3
+VER="v0.10.0"
 
 # Accept version or commit from the command line.
 if test -n "$1"; then
@@ -16,15 +16,7 @@ git clone https://github.com/alfredoyang/mp4parse_fallible _upstream/mp4parse_fa
 pushd _upstream/mp4parse
 git checkout ${VER}
 echo "Verifying sources..."
-pushd mp4parse
 cargo test
-popd
-echo "Constructing C api header..."
-pushd mp4parse_capi
-cargo build
-echo "Verifying sources..."
-cargo test
-popd
 popd
 rm -rf mp4parse
 mkdir -p mp4parse/src
