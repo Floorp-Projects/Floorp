@@ -214,10 +214,8 @@ public:
     SharedScriptableHelperForJSIID() {}
 };
 
-NS_INTERFACE_MAP_BEGIN(SharedScriptableHelperForJSIID)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCScriptable)
-NS_INTERFACE_MAP_END
+NS_IMPL_QUERY_INTERFACE(SharedScriptableHelperForJSIID,
+                        nsIXPCScriptable)
 
 NS_IMPL_ADDREF(SharedScriptableHelperForJSIID)
 NS_IMPL_RELEASE(SharedScriptableHelperForJSIID)
