@@ -6,6 +6,7 @@
 
 #include "jit/arm/CodeGenerator-arm.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 
@@ -1354,7 +1355,7 @@ static const uint32_t FrameSizes[] = { 128, 256, 512, 1024 };
 FrameSizeClass
 FrameSizeClass::FromDepth(uint32_t frameDepth)
 {
-    for (uint32_t i = 0; i < JS_ARRAY_LENGTH(FrameSizes); i++) {
+    for (uint32_t i = 0; i < mozilla::ArrayLength(FrameSizes); i++) {
         if (frameDepth < FrameSizes[i])
             return FrameSizeClass(i);
     }
@@ -1365,14 +1366,14 @@ FrameSizeClass::FromDepth(uint32_t frameDepth)
 FrameSizeClass
 FrameSizeClass::ClassLimit()
 {
-    return FrameSizeClass(JS_ARRAY_LENGTH(FrameSizes));
+    return FrameSizeClass(mozilla::ArrayLength(FrameSizes));
 }
 
 uint32_t
 FrameSizeClass::frameSize() const
 {
     MOZ_ASSERT(class_ != NO_FRAME_SIZE_CLASS_ID);
-    MOZ_ASSERT(class_ < JS_ARRAY_LENGTH(FrameSizes));
+    MOZ_ASSERT(class_ < mozilla::ArrayLength(FrameSizes));
 
     return FrameSizes[class_];
 }
