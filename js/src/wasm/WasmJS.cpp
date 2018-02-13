@@ -1278,7 +1278,7 @@ wasm::ExportedFunctionToFuncIndex(JSFunction* fun)
 {
     MOZ_ASSERT(IsExportedFunction(fun));
     Instance& instance = ExportedFunctionToInstanceObject(fun)->instance();
-    return instance.code().lookupFuncIndex(fun);
+    return instance.code().getFuncIndex(fun);
 }
 
 // ============================================================================

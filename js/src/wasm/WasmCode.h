@@ -511,6 +511,13 @@ class JumpTables
         MOZ_ASSERT(jit_.get()[2 * i]);
         return &jit_.get()[2 * i];
     }
+    size_t funcIndexFromJitEntry(void** target) const {
+        MOZ_ASSERT(target >= &jit_.get()[0]);
+        MOZ_ASSERT(target <= &(jit_.get()[2 * numFuncs_ - 1]));
+        size_t index = (intptr_t*)target - (intptr_t*)&jit_.get()[0];
+        MOZ_ASSERT(index % 2 == 0);
+        return index / 2;
+    }
 
     void setTieringEntry(size_t i, void* target) const {
         MOZ_ASSERT(i < numFuncs_);
@@ -556,7 +563,7 @@ class Code : public ShareableBase<Code>
 
     void setJitEntry(size_t i, void* target) const { jumpTables_.setJitEntry(i, target); }
     void** getAddressOfJitEntry(size_t i) const { return jumpTables_.getAddressOfJitEntry(i); }
-    uint32_t lookupFuncIndex(JSFunction* fun) const;
+    uint32_t getFuncIndex(JSFunction* fun) const;
 
     bool hasTier2() const { return metadata_->hasTier2(); }
     void setTier2(UniqueModuleSegment segment) const;
