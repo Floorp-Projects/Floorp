@@ -39,7 +39,7 @@ class IDecodingTask;
  * off-main-thread in the image decoding thread pool, or on some combination of
  * the two.
  */
-class DecodePool final : public nsIObserver
+class DecodePool : public nsIObserver
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -95,8 +95,9 @@ private:
 
   RefPtr<DecodePoolImpl> mImpl;
 
-  // mMutex protects mIOThread.
+  // mMutex protects mThreads and mIOThread.
   Mutex                         mMutex;
+  nsTArray<nsCOMPtr<nsIThread>> mThreads;
   nsCOMPtr<nsIThread>           mIOThread;
 };
 
