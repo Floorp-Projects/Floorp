@@ -51,7 +51,8 @@ public:
                               nsDisplayList* aDisplayList,
                               nsDisplayListBuilder* aDisplayListBuilder,
                               WebRenderScrollData& aScrollData,
-                              wr::LayoutSize& aContentSize);
+                              wr::LayoutSize& aContentSize,
+                              const nsTArray<wr::WrFilterOp>& aFilters);
 
   Maybe<wr::ImageKey> CreateImageKey(nsDisplayItem* aItem,
                                      ImageContainer* aContainer,
