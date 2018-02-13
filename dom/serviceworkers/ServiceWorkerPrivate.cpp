@@ -1947,7 +1947,7 @@ void
 ServiceWorkerPrivate::StoreISupports(nsISupports* aSupports)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mWorkerPrivate);
+  MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate);
   MOZ_ASSERT(!mSupportsArray.Contains(aSupports));
 
   mSupportsArray.AppendElement(aSupports);
