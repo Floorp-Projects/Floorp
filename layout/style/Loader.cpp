@@ -162,6 +162,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mSyncLoad(false)
   , mIsNonDocumentSheet(false)
   , mIsLoading(false)
+  , mIsBeingParsed(false)
   , mIsCancelled(false)
   , mMustNotify(false)
   , mWasAlternate(aIsAlternate)
@@ -196,6 +197,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mSyncLoad(false)
   , mIsNonDocumentSheet(false)
   , mIsLoading(false)
+  , mIsBeingParsed(false)
   , mIsCancelled(false)
   , mMustNotify(false)
   , mWasAlternate(false)
@@ -240,6 +242,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mSyncLoad(aSyncLoad)
   , mIsNonDocumentSheet(true)
   , mIsLoading(false)
+  , mIsBeingParsed(false)
   , mIsCancelled(false)
   , mMustNotify(false)
   , mWasAlternate(false)
@@ -1673,10 +1676,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
 }
 
 /**
- * ParseSheet handles parsing the data stream.  The main idea here is
- * to push the current load data onto the parse stack before letting
- * the CSS parser at the data stream.  That lets us handle @import
- * correctly.
+ * ParseSheet handles parsing the data stream.
  */
 nsresult
 Loader::ParseSheet(const nsAString& aUTF16,
@@ -1688,10 +1688,9 @@ Loader::ParseSheet(const nsAString& aUTF16,
   NS_PRECONDITION(aLoadData, "Must have load data");
   NS_PRECONDITION(aLoadData->mSheet, "Must have sheet to parse into");
 
+  aLoadData->mIsBeingParsed = true;
   aCompleted = false;
 
-  // Push our load data on the stack so any kids can pick it up
-  mParsingDatas.AppendElement(aLoadData);
   nsIURI* sheetURI = aLoadData->mSheet->GetSheetURI();
   nsIURI* baseURI = aLoadData->mSheet->GetBaseURI();
 
@@ -1721,8 +1720,7 @@ Loader::ParseSheet(const nsAString& aUTF16,
       GetCompatibilityMode());
   }
 
-  mParsingDatas.RemoveElementAt(mParsingDatas.Length() - 1);
-
+  aLoadData->mIsBeingParsed = false;
   if (NS_FAILED(rv)) {
     LOG_ERROR(("  Low-level error in parser!"));
     SheetComplete(aLoadData, rv);
@@ -1858,7 +1856,7 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
     // or some such).
     if (data->mParentData &&
         --(data->mParentData->mPendingChildren) == 0 &&
-        !mParsingDatas.Contains(data->mParentData)) {
+        !data->mParentData->mIsBeingParsed) {
       DoSheetComplete(data->mParentData, aStatus, aDatasToNotify);
     }
 
@@ -1926,7 +1924,6 @@ Loader::LoadInlineStyle(nsIContent* aElement,
                         bool* aIsAlternate)
 {
   LOG(("css::Loader::LoadInlineStyle"));
-  MOZ_ASSERT(mParsingDatas.IsEmpty(), "We're in the middle of a parse?");
 
   *aCompleted = true;
 
@@ -2011,10 +2008,8 @@ Loader::LoadStyleLink(nsIContent* aElement,
                       nsICSSLoaderObserver* aObserver,
                       bool* aIsAlternate)
 {
-  LOG(("css::Loader::LoadStyleLink"));
   NS_PRECONDITION(aURL, "Must have URL to load");
-  NS_ASSERTION(mParsingDatas.Length() == 0, "We're in the middle of a parse?");
-
+  LOG(("css::Loader::LoadStyleLink"));
   LOG_URI("  Link uri: '%s'", aURL);
   LOG(("  Link title: '%s'", NS_ConvertUTF16toUTF8(aTitle).get()));
   LOG(("  Link media: '%s'", NS_ConvertUTF16toUTF8(aMedia).get()));
@@ -2361,7 +2356,6 @@ Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
   NS_PRECONDITION(aSheet || aObserver, "Sheet and observer can't both be null");
   NS_PRECONDITION(!aUseSystemPrincipal || !aObserver,
                   "Shouldn't load system-principal sheets async");
-  NS_ASSERTION(mParsingDatas.Length() == 0, "We're in the middle of a parse?");
 
   LOG_URI("  Non-document sheet uri: '%s'", aURL);
 
@@ -2668,7 +2662,6 @@ Loader::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   // worthwhile:
   // - mLoadingDatas: transient, and should be small
   // - mPendingDatas: transient, and should be small
-  // - mParsingDatas: transient, and should be small
   // - mPostedEvents: transient, and should be small
   //
   // The following members aren't measured:
