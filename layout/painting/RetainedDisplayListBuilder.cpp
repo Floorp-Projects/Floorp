@@ -8,6 +8,7 @@
 #include "RetainedDisplayListBuilder.h"
 
 #include "DisplayListChecker.h"
+#include "gfxPrefs.h"
 #include "nsPlaceholderFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "nsViewManager.h"
