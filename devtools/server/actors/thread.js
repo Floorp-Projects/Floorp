@@ -14,11 +14,8 @@ const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const flags = require("devtools/shared/flags");
 const { assert, dumpn } = DevToolsUtils;
-const promise = require("promise");
 const { DevToolsWorker } = require("devtools/shared/worker/worker");
 const { threadSpec } = require("devtools/shared/specs/script");
-
-const { resolve, reject, all } = promise;
 
 loader.lazyGetter(this, "Debugger", () => {
   let Debugger = require("Debugger");
@@ -380,7 +377,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
                       line: originalLocation.originalLine,
                       column: originalLocation.originalColumn
                     };
-                    resolve(onPacket(packet))
+                    Promise.resolve(onPacket(packet))
           .catch(error => {
             reportError(error);
             return {
@@ -565,8 +562,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   _handleResumeLimit: function (request) {
     let steppingType = request.resumeLimit.type;
     if (!["break", "step", "next", "finish"].includes(steppingType)) {
-      return reject({ error: "badParameterType",
-                      message: "Unknown resumeLimit type" });
+      return Promise.reject({ error: "badParameterType",
+                              message: "Unknown resumeLimit type" });
     }
 
     const generatedLocation = this.sources.getFrameLocation(this.youngestFrame);
@@ -676,7 +673,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       resumeLimitHandled = this._handleResumeLimit(request);
     } else {
       this._clearSteppingHooks(this.youngestFrame);
-      resumeLimitHandled = resolve(true);
+      resumeLimitHandled = Promise.resolve(true);
     }
 
     return resumeLimitHandled.then(() => {
@@ -947,7 +944,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       promises.push(framePromise);
     }
 
-    return all(promises).then(function (frames) {
+    return Promise.all(promises).then(function (frames) {
       // Filter null values because sourcemapping may have failed.
       return { frames: frames.filter(x => !!x) };
     });
@@ -989,7 +986,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       }
     }
 
-    return all([...sourcesToScripts.values()].map(script => {
+    return Promise.all([...sourcesToScripts.values()].map(script => {
       return this.sources.createSourceActors(script.source);
     }));
   },
@@ -1644,7 +1641,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       }
 
       if (promises.length > 0) {
-        this.unsafeSynchronize(promise.all(promises));
+        this.unsafeSynchronize(Promise.all(promises));
       }
     } else {
       // Bug 1225160: If addSource is called in response to a new script

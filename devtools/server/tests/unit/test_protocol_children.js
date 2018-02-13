@@ -192,7 +192,7 @@ var ChildFront = protocol.FrontClassWithSpec(childSpec, {
   }),
 
   onEvent2a: preEvent("event2", function (a, b, c) {
-    return promise.resolve().then(() => {
+    return Promise.resolve().then(() => {
       this.event2arg3 = c;
     });
   }),
@@ -325,7 +325,7 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
 
   clearTemporaryChildren: protocol.custom(function () {
     if (!this._temporaryHolder) {
-      return promise.resolve(undefined);
+      return Promise.resolve(undefined);
     }
     this._temporaryHolder.destroy();
     delete this._temporaryHolder;
