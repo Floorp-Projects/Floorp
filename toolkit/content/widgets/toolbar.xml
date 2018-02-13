@@ -9,17 +9,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="toolbar-base">
-    <resources>
-      <stylesheet src="chrome://global/skin/toolbar.css"/>
-    </resources>
-  </binding>
-
-  <binding id="toolbar"
-           extends="chrome://global/content/bindings/toolbar.xml#toolbar-base" />
-
-  <binding id="toolbar-menubar-autohide"
-           extends="chrome://global/content/bindings/toolbar.xml#toolbar">
+  <binding id="toolbar-menubar-autohide">
     <implementation>
       <constructor>
         this._setInactive();
@@ -114,8 +104,7 @@
     </handlers>
   </binding>
 
-  <binding id="toolbar-drag"
-           extends="chrome://global/content/bindings/toolbar.xml#toolbar">
+  <binding id="toolbar-drag">
     <implementation>
       <field name="_dragBindingAlive">true</field>
       <constructor><![CDATA[
@@ -136,8 +125,7 @@
     </implementation>
   </binding>
 
-  <binding id="menubar"
-           extends="chrome://global/content/bindings/toolbar.xml#toolbar-base" display="xul:menubar">
+  <binding id="menubar" extends="xul:menubar">
     <implementation>
        <field name="_active">false</field>
        <field name="_statusbar">null</field>
@@ -181,10 +169,7 @@
     </handlers>
   </binding>
 
-  <binding id="toolbardecoration" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
-  </binding>
-
-  <binding id="toolbarpaletteitem" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base" display="xul:button">
+  <binding id="toolbarpaletteitem" extends="xul:button">
     <content>
       <xul:hbox class="toolbarpaletteitem-box" flex="1" xbl:inherits="type,place">
         <children/>
