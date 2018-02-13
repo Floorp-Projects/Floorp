@@ -17,7 +17,9 @@ MIDL_GENERATED_FILES = \
 
 export:: $(MIDL_GENERATED_FILES)
 
-$(MIDL_GENERATED_FILES): midl_done
+# Bug 1420119: We need the trailing semicolon here to generate a recipe for the
+# midl targets to avoid timestamp caching issues.
+$(MIDL_GENERATED_FILES): midl_done ;
 
 midl_done: HandlerData.acf HandlerData.idl
 	$(MIDL) $(MIDL_FLAGS) $(DEFINES) -I $(topobjdir) -I $(DIST)/include -I $(IA2DIR) -I $(MSAADIR) -Oicf -acf $(srcdir)/HandlerData.acf $(srcdir)/HandlerData.idl
