@@ -373,8 +373,8 @@ nsTextBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     nsLeafBoxFrame::BuildDisplayList(aBuilder, aLists);
 
-    aLists.Content()->AppendToTop(new (aBuilder)
-        nsDisplayXULTextBox(aBuilder, this));
+    aLists.Content()->AppendToTop(
+        MakeDisplayItem<nsDisplayXULTextBox>(aBuilder, this));
 }
 
 void

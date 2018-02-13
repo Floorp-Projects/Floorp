@@ -130,10 +130,14 @@ typedef mozilla::EnumSet<mozilla::gfx::CompositionOp> BlendModeSet;
 #define NS_DISPLAY_DECL_NAME(n, e) \
   virtual const char* Name() const override { return n; } \
   virtual DisplayItemType GetType() const override { return DisplayItemType::e; } \
+private: \
   void* operator new(size_t aSize, \
                      nsDisplayListBuilder* aBuilder) { \
     return aBuilder->Allocate(aSize, DisplayItemType::e); \
-  }
+  } \
+  template<typename T, typename... Args> \
+  friend T* ::MakeDisplayItem(nsDisplayListBuilder* aBuilder, Args&&... aArgs); \
+public:
 
 
 /**
@@ -2025,6 +2029,13 @@ protected:
 
 class nsDisplayWrapList;
 
+template<typename T, typename... Args>
+MOZ_ALWAYS_INLINE T*
+MakeDisplayItem(nsDisplayListBuilder* aBuilder, Args&&... aArgs)
+{
+  return new (aBuilder) T(aBuilder, mozilla::Forward<Args>(aArgs)...);
+}
+
 /**
  * This is the unit of rendering and event testing. Each instance of this
  * class represents an entity that can be drawn on the screen, e.g., a
@@ -3386,10 +3397,6 @@ public:
   }
   virtual const char* Name() const override { return mName; }
   virtual DisplayItemType GetType() const override { return mType; }
-  void* operator new(size_t aSize,
-                     nsDisplayListBuilder* aBuilder) {
-    return aBuilder->Allocate(aSize, DisplayItemType::TYPE_GENERIC);
-  }
 
   // This override is needed because GetType() for nsDisplayGeneric subclasses
   // does not match TYPE_GENERIC that was used to allocate the object.
@@ -3400,6 +3407,13 @@ public:
   }
 
 protected:
+  void* operator new(size_t aSize,
+                     nsDisplayListBuilder* aBuilder) {
+    return aBuilder->Allocate(aSize, DisplayItemType::TYPE_GENERIC);
+  }
+  template<typename T, typename... Args>
+  friend T* MakeDisplayItem(nsDisplayListBuilder* aBuilder, Args&&... aArgs);
+
   PaintCallback mPaint;
   OldPaintCallback mOldPaint;   // XXX: should be removed eventually
   const char* mName;
@@ -3453,7 +3467,7 @@ protected:
     if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery() &&   \
         PresShell()->IsPaintingFrameCounts()) {                               \
         aLists.Outlines()->AppendToTop(                                    \
-            new (aBuilder) nsDisplayReflowCount(aBuilder, this, _name));      \
+            MakeDisplayItem<nsDisplayReflowCount>(aBuilder, this, _name));      \
     }                                                                         \
   PR_END_MACRO
 
@@ -3462,7 +3476,7 @@ protected:
     if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery() &&   \
         PresShell()->IsPaintingFrameCounts()) {                               \
         aLists.Outlines()->AppendToTop(                                    \
-             new (aBuilder) nsDisplayReflowCount(aBuilder, this, _name, _color)); \
+             MakeDisplayItem<nsDisplayReflowCount>(aBuilder, this, _name, _color)); \
     }                                                                         \
   PR_END_MACRO
 
@@ -3834,7 +3848,8 @@ public:
                               const nsRect& aBackgroundRect,
                               const nsStyleBackground* aBackgroundStyle);
 
-  explicit nsDisplayBackgroundImage(const InitData& aInitData,
+  explicit nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilder,
+                                    const InitData& aInitData,
                                     nsIFrame* aFrameForBounds = nullptr);
   virtual ~nsDisplayBackgroundImage();
 
@@ -4028,7 +4043,7 @@ TableType GetTableTypeFromFrame(nsIFrame* aFrame);
  */
 class nsDisplayTableBackgroundImage : public nsDisplayBackgroundImage {
 public:
-  nsDisplayTableBackgroundImage(const InitData& aInitData, nsIFrame* aCellFrame);
+  nsDisplayTableBackgroundImage(nsDisplayListBuilder* aBuilder, const InitData& aInitData, nsIFrame* aCellFrame);
 
   virtual uint32_t GetPerFrameKey() const override {
     return (mLayer << (TYPE_BITS + static_cast<uint8_t>(TableTypeBits::COUNT))) |
@@ -5104,7 +5119,7 @@ public:
   virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
   {
     MOZ_COUNT_CTOR(nsDisplayOpacity);
-    return new (aBuilder) nsDisplayOpacity(aBuilder, *this);
+    return MakeDisplayItem<nsDisplayOpacity>(aBuilder, *this);
   }
 
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
@@ -5184,7 +5199,7 @@ public:
   virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
   {
     MOZ_COUNT_CTOR(nsDisplayBlendMode);
-    return new (aBuilder) nsDisplayBlendMode(aBuilder, *this);
+    return MakeDisplayItem<nsDisplayBlendMode>(aBuilder, *this);
   }
 
   nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
@@ -5248,7 +5263,7 @@ public:
 
   virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
   {
-    return new (aBuilder) nsDisplayTableBlendMode(aBuilder, *this);
+    return MakeDisplayItem<nsDisplayTableBlendMode>(aBuilder, *this);
   }
 
   virtual nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
@@ -5285,7 +5300,7 @@ public:
     virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
     {
       MOZ_COUNT_CTOR(nsDisplayBlendContainer);
-      return new (aBuilder) nsDisplayBlendContainer(aBuilder, *this);
+      return MakeDisplayItem<nsDisplayBlendContainer>(aBuilder, *this);
     }
 
     virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
@@ -5344,7 +5359,7 @@ public:
 
   virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
   {
-    return new (aBuilder) nsDisplayTableBlendContainer(aBuilder, *this);
+    return MakeDisplayItem<nsDisplayTableBlendContainer>(aBuilder, *this);
   }
 
   virtual nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
@@ -5582,7 +5597,7 @@ public:
   virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
   {
     MOZ_COUNT_CTOR(nsDisplayStickyPosition);
-    return new (aBuilder) nsDisplayStickyPosition(aBuilder, *this);
+    return MakeDisplayItem<nsDisplayStickyPosition>(aBuilder, *this);
   }
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
@@ -5636,7 +5651,7 @@ public:
 
   virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
   {
-    return new (aBuilder) nsDisplayFixedPosition(aBuilder, *this);
+    return MakeDisplayItem<nsDisplayFixedPosition>(aBuilder, *this);
   }
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
@@ -5694,7 +5709,7 @@ public:
 
   virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
   {
-    return new (aBuilder) nsDisplayTableFixedPosition(aBuilder, *this);
+    return MakeDisplayItem<nsDisplayTableFixedPosition>(aBuilder, *this);
   }
 
   virtual nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
@@ -5899,7 +5914,7 @@ public:
   virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
   {
     MOZ_COUNT_CTOR(nsDisplayMask);
-    return new (aBuilder) nsDisplayMask(aBuilder, *this);
+    return MakeDisplayItem<nsDisplayMask>(aBuilder, *this);
   }
 
   NS_DISPLAY_DECL_NAME("Mask", TYPE_MASK)
@@ -5988,7 +6003,7 @@ public:
   virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
   {
     MOZ_COUNT_CTOR(nsDisplayFilter);
-    return new (aBuilder) nsDisplayFilter(aBuilder, *this);
+    return MakeDisplayItem<nsDisplayFilter>(aBuilder, *this);
   }
 
   NS_DISPLAY_DECL_NAME("Filter", TYPE_FILTER)

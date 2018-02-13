@@ -789,7 +789,7 @@ nsBulletFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   DO_GLOBAL_REFLOW_COUNT_DSP("nsBulletFrame");
 
   aLists.Content()->AppendToTop(
-    new (aBuilder) nsDisplayBullet(aBuilder, this));
+    MakeDisplayItem<nsDisplayBullet>(aBuilder, this));
 }
 
 Maybe<BulletRenderer>
