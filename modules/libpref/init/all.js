@@ -4761,6 +4761,9 @@ pref("image.mem.surfacecache.discard_factor", 1);
 // automatically determined based on the system's number of cores.
 pref("image.multithreaded_decoding.limit", -1);
 
+// How long in ms before we should start shutting down idle decoder threads.
+pref("image.multithreaded_decoding.idle_timeout", 600000);
+
 // Limit for the canvas image cache. 0 means we don't limit the size of the
 // cache.
 pref("canvas.image.cache.limit", 0);
