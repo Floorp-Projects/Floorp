@@ -18,7 +18,7 @@ namespace net {
 
 class AppCacheStorage : public CacheStorage
 {
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(AppCacheStorage, CacheStorage)
   NS_DECL_NSICACHESTORAGE
 
 public:

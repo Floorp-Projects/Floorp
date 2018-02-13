@@ -154,11 +154,6 @@ ClientsShutdownBlocker::Done()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(
-  ClientsShutdownBlocker,
-  PlacesShutdownBlocker
-)
-
 ////////////////////////////////////////////////////////////////////////////////
 
 ConnectionShutdownBlocker::ConnectionShutdownBlocker(Database* aDatabase)

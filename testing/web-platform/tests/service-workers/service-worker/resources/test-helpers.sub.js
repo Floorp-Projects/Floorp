@@ -263,7 +263,7 @@ function with_sandboxed_iframe(url, sandbox) {
 // This can be used to wait for a period of time needed to register,
 // activate, and then unregister a service worker.  When checking that
 // certain behavior does *NOT* happen, this is preferable to using an
-// arbitrary setTimeout() delay.
+// arbitrary delay.
 async function wait_for_activation_on_dummy_scope(t) {
   const script = 'resources/empty-worker.js';
   const scope = 'resources/there/is/no/there/there?' + Date.now();

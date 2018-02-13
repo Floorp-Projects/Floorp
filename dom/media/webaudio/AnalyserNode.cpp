@@ -22,8 +22,6 @@ static_assert((CHUNK_COUNT & (CHUNK_COUNT - 1)) == 0,
 
 namespace dom {
 
-NS_IMPL_ISUPPORTS_INHERITED0(AnalyserNode, AudioNode)
-
 class AnalyserNodeEngine final : public AudioNodeEngine
 {
   class TransferBuffer final : public Runnable

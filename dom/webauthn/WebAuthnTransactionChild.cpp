@@ -22,26 +22,25 @@ WebAuthnTransactionChild::WebAuthnTransactionChild(WebAuthnManagerBase* aManager
 
 mozilla::ipc::IPCResult
 WebAuthnTransactionChild::RecvConfirmRegister(const uint64_t& aTransactionId,
-                                              nsTArray<uint8_t>&& aRegBuffer)
+                                              const WebAuthnMakeCredentialResult& aResult)
 {
   if (NS_WARN_IF(!mManager)) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mManager->FinishMakeCredential(aTransactionId, aRegBuffer);
+  mManager->FinishMakeCredential(aTransactionId, aResult);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 WebAuthnTransactionChild::RecvConfirmSign(const uint64_t& aTransactionId,
-                                          nsTArray<uint8_t>&& aCredentialId,
-                                          nsTArray<uint8_t>&& aBuffer)
+                                          const WebAuthnGetAssertionResult& aResult)
 {
   if (NS_WARN_IF(!mManager)) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  mManager->FinishGetAssertion(aTransactionId, aCredentialId, aBuffer);
+  mManager->FinishGetAssertion(aTransactionId, aResult);
   return IPC_OK();
 }
 

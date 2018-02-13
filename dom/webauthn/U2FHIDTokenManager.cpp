@@ -214,7 +214,7 @@ U2FHIDTokenManager::HandleRegisterResult(UniquePtr<U2FResult>&& aResult)
     return;
   }
 
-  U2FRegisterResult result(Move(registration));
+  WebAuthnMakeCredentialResult result(registration);
   mRegisterPromise.Resolve(Move(result), __func__);
 }
 
@@ -241,7 +241,7 @@ U2FHIDTokenManager::HandleSignResult(UniquePtr<U2FResult>&& aResult)
     return;
   }
 
-  U2FSignResult result(Move(keyHandle), Move(signature));
+  WebAuthnGetAssertionResult result(keyHandle, signature);
   mSignPromise.Resolve(Move(result), __func__);
 }
 

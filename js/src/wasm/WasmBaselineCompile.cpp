@@ -1174,11 +1174,16 @@ class BaseStackFrame
     // patchable add that is patched in endFunction().
     //
     // Note the platform scratch register may be used by branchPtr(), so
-    // generally tmp0 and tmp1 must be something else.
+    // generally tmp must be something else.
 
-    void allocStack(Register tmp0, Register tmp1, Label* stackOverflowLabel) {
-        stackAddOffset_ = masm.sub32FromStackPtrWithPatch(tmp0);
-        masm.wasmEmitStackCheck(RegisterOrSP(tmp0), tmp1, stackOverflowLabel);
+    void allocStack(Register tmp, BytecodeOffset trapOffset) {
+        stackAddOffset_ = masm.sub32FromStackPtrWithPatch(tmp);
+        Label ok;
+        masm.branchPtr(Assembler::Below,
+                       Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)),
+                       tmp, &ok);
+        masm.wasmTrap(Trap::StackOverflow, trapOffset);
+        masm.bind(&ok);
     }
 
     void patchAllocStack() {
@@ -1581,7 +1586,6 @@ class BaseCompiler final : public BaseCompilerInterface
     MIRTypeVector               SigPIIL_;
     MIRTypeVector               SigPILL_;
     NonAssertingLabel           returnLabel_;
-    NonAssertingLabel           stackOverflowLabel_;
     CompileMode                 mode_;
 
     LatentOp                    latentOp_;       // Latent operation for branch (seen next)
@@ -2888,11 +2892,13 @@ class BaseCompiler final : public BaseCompilerInterface
     void beginFunction() {
         JitSpew(JitSpew_Codegen, "# Emitting wasm baseline code");
 
+        // We are unconditionally checking for overflow in fr.allocStack(), so
+        // pass IsLeaf = true to avoid a second check in the prologue.
+        IsLeaf isLeaf = true;
         SigIdDesc sigId = env_.funcSigs[func_.index]->id;
-        if (mode_ == CompileMode::Tier1)
-            GenerateFunctionPrologue(masm, fr.initialSize(), sigId, &offsets_, mode_, func_.index);
-        else
-            GenerateFunctionPrologue(masm, fr.initialSize(), sigId, &offsets_);
+        BytecodeOffset trapOffset(func_.lineOrBytecode);
+        GenerateFunctionPrologue(masm, fr.initialSize(), isLeaf, sigId, trapOffset, &offsets_,
+                                 mode_ == CompileMode::Tier1 ? Some(func_.index) : Nothing());
 
         fr.endFunctionPrologue();
 
@@ -2905,7 +2911,7 @@ class BaseCompiler final : public BaseCompilerInterface
                           Address(masm.getStackPointer(), debugFrame + DebugFrame::offsetOfFlagsWord()));
         }
 
-        fr.allocStack(ABINonArgReg0, ABINonArgReg1, &stackOverflowLabel_);
+        fr.allocStack(ABINonArgReg0, trapOffset);
 
         // Copy arguments from registers to stack.
 
@@ -2990,7 +2996,7 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
     bool endFunction() {
-        // Always branch to stackOverflowLabel_ or returnLabel_.
+        // Always branch to returnLabel_.
         masm.breakpoint();
 
         // Patch the add in the prologue so that it checks against the correct
@@ -3002,20 +3008,6 @@ class BaseCompiler final : public BaseCompilerInterface
             return false;
 
         fr.patchAllocStack();
-
-        // Since we just overflowed the stack, to be on the safe side, pop the
-        // stack so that, when the trap exit stub executes, it is a safe
-        // distance away from the end of the native stack. If debugEnabled_ is
-        // set, we pop all locals space except allocated for DebugFrame to
-        // maintain the invariant that, when debugEnabled_, all wasm::Frames
-        // are valid wasm::DebugFrames which is observable by WasmHandleThrow.
-        masm.bind(&stackOverflowLabel_);
-        uint32_t debugFrameReserved = debugEnabled_ ? DebugFrame::offsetOfFrame() : 0;
-        MOZ_ASSERT(fr.initialSize() >= debugFrameReserved);
-        if (fr.initialSize() > debugFrameReserved)
-            masm.addToStackPtr(Imm32(fr.initialSize() - debugFrameReserved));
-        BytecodeOffset prologueTrapOffset(func_.lineOrBytecode);
-        masm.jump(OldTrapDesc(prologueTrapOffset, Trap::StackOverflow, debugFrameReserved));
 
         masm.bind(&returnLabel_);
 
@@ -3448,12 +3440,18 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
     void checkDivideByZeroI32(RegI32 rhs, RegI32 srcDest, Label* done) {
-        masm.branchTest32(Assembler::Zero, rhs, rhs, oldTrap(Trap::IntegerDivideByZero));
+        Label nonZero;
+        masm.branchTest32(Assembler::NonZero, rhs, rhs, &nonZero);
+        trap(Trap::IntegerDivideByZero);
+        masm.bind(&nonZero);
     }
 
     void checkDivideByZeroI64(RegI64 r) {
+        Label nonZero;
         ScratchI32 scratch(*this);
-        masm.branchTest64(Assembler::Zero, r, r, scratch, oldTrap(Trap::IntegerDivideByZero));
+        masm.branchTest64(Assembler::NonZero, r, r, scratch, &nonZero);
+        trap(Trap::IntegerDivideByZero);
+        masm.bind(&nonZero);
     }
 
     void checkDivideSignedOverflowI32(RegI32 rhs, RegI32 srcDest, Label* done, bool zeroOnOverflow) {
@@ -3464,7 +3462,8 @@ class BaseCompiler final : public BaseCompilerInterface
             moveImm32(0, srcDest);
             masm.jump(done);
         } else {
-            masm.branch32(Assembler::Equal, rhs, Imm32(-1), oldTrap(Trap::IntegerOverflow));
+            masm.branch32(Assembler::NotEqual, rhs, Imm32(-1), &notMin);
+            trap(Trap::IntegerOverflow);
         }
         masm.bind(&notMin);
     }
@@ -3477,7 +3476,7 @@ class BaseCompiler final : public BaseCompilerInterface
             masm.xor64(srcDest, srcDest);
             masm.jump(done);
         } else {
-            masm.jump(oldTrap(Trap::IntegerOverflow));
+            trap(Trap::IntegerOverflow);
         }
         masm.bind(&notmin);
     }

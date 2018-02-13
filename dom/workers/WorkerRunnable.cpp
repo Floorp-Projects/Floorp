@@ -563,8 +563,6 @@ WorkerControlRunnable::DispatchInternal()
   return NS_SUCCEEDED(mWorkerPrivate->DispatchToMainThread(runnable.forget()));
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(WorkerControlRunnable, WorkerRunnable)
-
 WorkerMainThreadRunnable::WorkerMainThreadRunnable(
   WorkerPrivate* aWorkerPrivate,
   const nsACString& aTelemetryKey)
@@ -624,24 +622,6 @@ WorkerMainThreadRunnable::Run()
   MOZ_ALWAYS_TRUE(response->Dispatch());
 
   return NS_OK;
-}
-
-WorkerCheckAPIExposureOnMainThreadRunnable::WorkerCheckAPIExposureOnMainThreadRunnable(WorkerPrivate* aWorkerPrivate):
-  WorkerMainThreadRunnable(aWorkerPrivate,
-                           NS_LITERAL_CSTRING("WorkerCheckAPIExposureOnMainThread"))
-{}
-
-WorkerCheckAPIExposureOnMainThreadRunnable::~WorkerCheckAPIExposureOnMainThreadRunnable()
-{}
-
-bool
-WorkerCheckAPIExposureOnMainThreadRunnable::Dispatch()
-{
-  ErrorResult rv;
-  WorkerMainThreadRunnable::Dispatch(Terminating, rv);
-  bool ok = !rv.Failed();
-  rv.SuppressException();
-  return ok;
 }
 
 bool

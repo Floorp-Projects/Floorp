@@ -32,8 +32,6 @@ ARIAGridAccessible::
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(ARIAGridAccessible, Accessible)
-
 ////////////////////////////////////////////////////////////////////////////////
 // Table
 
@@ -543,8 +541,6 @@ ARIARowAccessible::
   mGenericTypes |= eTableRow;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(ARIARowAccessible, Accessible)
-
 GroupPos
 ARIARowAccessible::GroupPosition()
 {
@@ -574,8 +570,6 @@ ARIAGridCellAccessible::
 {
   mGenericTypes |= eTableCell;
 }
-
-NS_IMPL_ISUPPORTS_INHERITED0(ARIAGridCellAccessible, HyperTextAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
 // TableCell
