@@ -274,13 +274,10 @@ void xpc_DestroyJSxIDClassObjects()
 
 /***************************************************************************/
 
-NS_INTERFACE_MAP_BEGIN(nsJSIID)
-  NS_INTERFACE_MAP_ENTRY(nsIJSID)
-  NS_INTERFACE_MAP_ENTRY(nsIJSIID)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIJSID)
-  NS_IMPL_QUERY_CLASSINFO(nsJSIID)
-NS_INTERFACE_MAP_END
+NS_IMPL_QUERY_INTERFACE_CI(nsJSIID,
+                           nsIJSID,
+                           nsIJSIID,
+                           nsIXPCScriptable)
 
 NS_IMPL_ADDREF(nsJSIID)
 NS_IMPL_RELEASE(nsJSIID)
@@ -531,13 +528,10 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative* wrapper,
 
 /***************************************************************************/
 
-NS_INTERFACE_MAP_BEGIN(nsJSCID)
-  NS_INTERFACE_MAP_ENTRY(nsIJSID)
-  NS_INTERFACE_MAP_ENTRY(nsIJSCID)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIJSID)
-  NS_IMPL_QUERY_CLASSINFO(nsJSCID)
-NS_INTERFACE_MAP_END
+NS_IMPL_QUERY_INTERFACE_CI(nsJSCID,
+                           nsIJSID,
+                           nsIJSCID,
+                           nsIXPCScriptable)
 
 NS_IMPL_ADDREF(nsJSCID)
 NS_IMPL_RELEASE(nsJSCID)
