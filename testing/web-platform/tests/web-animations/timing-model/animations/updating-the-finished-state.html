@@ -348,6 +348,16 @@ promise_test(async t => {
 }, 'Finish notification steps run when the animation completes normally');
 
 promise_test(async t => {
+  const effect = new KeyframeEffectReadOnly(null, null, 1);
+  const animation = new Animation(effect, document.timeline);
+  animation.play();
+  await animation.ready;
+
+  return waitForFinishEventAndPromise(animation);
+}, 'Finish notification steps run when an animation without a target'
+   + ' effect completes normally');
+
+promise_test(async t => {
   const animation = createDiv(t).animate(null, 1);
   await animation.ready;
 
