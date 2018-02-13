@@ -781,11 +781,13 @@ var TelemetrySendImpl = {
     this._overduePingCount = 0;
     this._tooLateToSend = false;
     this._isOSShutdown = false;
+    this._sendingEnabled = true;
 
     const histograms = [
       "TELEMETRY_SUCCESS",
       "TELEMETRY_SEND_SUCCESS",
       "TELEMETRY_SEND_FAILURE",
+      "TELEMETRY_SEND_FAILURE_TYPE",
     ];
 
     histograms.forEach(h => Telemetry.getHistogramById(h).clear());
@@ -1097,9 +1099,10 @@ var TelemetrySendImpl = {
     }
 
     if (this._tooLateToSend) {
+      // Too late to send now. Reject so we pend the ping to send it next time.
       this._log.trace("_doPing - Too late to send ping " + ping.id);
       Telemetry.getHistogramById("TELEMETRY_SEND_FAILURE_TYPE").add("eTooLate");
-      return Promise.resolve();
+      return Promise.reject();
     }
 
     this._log.trace("_doPing - server: " + this._server + ", persisted: " + isPersisted +
