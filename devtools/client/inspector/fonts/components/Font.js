@@ -26,10 +26,12 @@ class Font extends PureComponent {
     super(props);
 
     this.state = {
-      isFontExpanded: false
+      isFontExpanded: false,
+      isFontFaceRuleExpanded: false,
     };
 
     this.onFontToggle = this.onFontToggle.bind(this);
+    this.onFontFaceRuleToggle = this.onFontFaceRuleToggle.bind(this);
   }
 
   componentWillReceiveProps(newProps) {
@@ -38,13 +40,20 @@ class Font extends PureComponent {
     }
 
     this.setState({
-      isFontExpanded: false
+      isFontExpanded: false,
+      isFontFaceRuleExpanded: false,
     });
   }
 
   onFontToggle() {
     this.setState({
       isFontExpanded: !this.state.isFontExpanded
+    });
+  }
+
+  onFontFaceRuleToggle() {
+    this.setState({
+      isFontFaceRuleExpanded: !this.state.isFontFaceRuleExpanded
     });
   }
 
@@ -62,11 +71,31 @@ class Font extends PureComponent {
       return null;
     }
 
+    // Cut the rule text in 3 parts: the selector, the declarations, the closing brace.
+    // This way we can collapse the declarations by default and display an expander icon
+    // to expand them again.
+    let leading = ruleText.substring(0, ruleText.indexOf("{") + 1);
+    let body = ruleText.substring(ruleText.indexOf("{") + 1, ruleText.lastIndexOf("}"));
+    let trailing = ruleText.substring(ruleText.lastIndexOf("}"));
+
+    let { isFontFaceRuleExpanded } = this.state;
+
     return dom.pre(
       {
         className: "font-css-code",
       },
-      ruleText
+      this.renderFontCSSCodeTwisty(),
+      leading,
+      isFontFaceRuleExpanded ?
+        null
+        :
+        dom.span(
+          {
+            className: "font-css-code-expander"
+          }
+        ),
+      isFontFaceRuleExpanded ? body : null,
+      trailing
     );
   }
 
@@ -105,14 +134,22 @@ class Font extends PureComponent {
     );
   }
 
-  renderTwisty() {
+  renderFontTwisty() {
     let { isFontExpanded } = this.state;
+    return this.renderTwisty(isFontExpanded, this.onFontToggle);
+  }
 
+  renderFontCSSCodeTwisty() {
+    let { isFontFaceRuleExpanded } = this.state;
+    return this.renderTwisty(isFontFaceRuleExpanded, this.onFontFaceRuleToggle);
+  }
+
+  renderTwisty(isExpanded, onClick) {
     let attributes = {
       className: "theme-twisty",
-      onClick: this.onFontToggle,
+      onClick,
     };
-    if (isFontExpanded) {
+    if (isExpanded) {
       attributes.open = "true";
     }
 
@@ -144,7 +181,7 @@ class Font extends PureComponent {
       {
         className: "font" + (isFontExpanded ? " expanded" : ""),
       },
-      this.renderTwisty(),
+      this.renderFontTwisty(),
       this.renderFontName(name),
       FontPreview({ previewText, previewUrl, onPreviewFonts }),
       dom.div(

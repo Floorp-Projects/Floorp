@@ -17,13 +17,9 @@ add_task(function* () {
   checkAllFontsCollapsed(fonts);
 
   info("Clicking on the first one to expand the font details");
-  let onExpanded = BrowserTestUtils.waitForCondition(() => isFontDetailsVisible(fonts[0]),
-                                                     "Waiting for font details");
-  let twisty = fonts[0].querySelector(".theme-twisty");
-  twisty.click();
-  yield onExpanded;
+  yield expandFontDetails(fonts[0]);
 
-  ok(twisty.hasAttribute("open"), `Twisty is open`);
+  ok(fonts[0].querySelector(".theme-twisty").hasAttribute("open"), `Twisty is open`);
   ok(isFontDetailsVisible(fonts[0]), `Font details is shown`);
 
   info("Selecting a node with different fonts and checking that all fonts are collapsed");
@@ -31,11 +27,6 @@ add_task(function* () {
   fonts = viewDoc.querySelectorAll("#all-fonts > li");
   checkAllFontsCollapsed(fonts);
 });
-
-function isFontDetailsVisible(li) {
-  let details = li.querySelectorAll(".font-css-name, .font-css-code, .font-format-url");
-  return [...details].every(el => el.getBoxQuads().length);
-}
 
 function checkAllFontsCollapsed(fonts) {
   fonts.forEach((el, i) => {

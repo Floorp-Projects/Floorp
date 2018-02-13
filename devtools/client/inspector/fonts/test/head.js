@@ -87,3 +87,18 @@ function* updatePreviewText(view, text) {
 
   is(input.value, text, "The input now contains the correct text.");
 }
+
+async function expandFontDetails(fontEl) {
+  info("Expanding a font details section");
+
+  let onExpanded = BrowserTestUtils.waitForCondition(() => isFontDetailsVisible(fontEl),
+                                                     "Waiting for font details");
+  let twisty = fontEl.querySelector(".theme-twisty");
+  twisty.click();
+  await onExpanded;
+}
+
+function isFontDetailsVisible(fontEl) {
+  return [...fontEl.querySelectorAll(".font-css-name, .font-css-code, .font-format-url")]
+         .every(el => el.getBoxQuads().length);
+}
