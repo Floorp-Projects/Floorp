@@ -38,6 +38,7 @@ var gTestWindows = [
   "file_fullscreen-navigation.html",
   "file_fullscreen-scrollbar.html",
   "file_fullscreen-selector.html",
+  "file_fullscreen-shadowdom.html",
   "file_fullscreen-top-layer.html",
   "file_fullscreen-backdrop.html",
   "file_fullscreen-nested.html",
@@ -146,7 +147,8 @@ addLoadEvent(function() {
         ["full-screen-api.unprefix.enabled", true],
         ["full-screen-api.allow-trusted-requests-only", false],
         ["full-screen-api.transition-duration.enter", "0 0"],
-        ["full-screen-api.transition-duration.leave", "0 0"]
+        ["full-screen-api.transition-duration.leave", "0 0"],
+        ["dom.webcomponents.shadowdom.enabled", true]
       ]}, nextTest);
 });
 SimpleTest.waitForExplicitFinish();
