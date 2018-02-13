@@ -5,9 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsapi.h"
+#include "jsfriendapi.h"
 #include "jswrapper.h"
 
-#include "jsatominlines.h"
+#include "NamespaceImports.h"
+
+#include "vm/String.h"
 
 using namespace js;
 

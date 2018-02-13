@@ -52,7 +52,6 @@
 
 #include "jsapi.h"
 #include "jsarray.h"
-#include "jsatom.h"
 #include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jsfun.h"
