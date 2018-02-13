@@ -5487,7 +5487,6 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
                            const Matrix4x4* aTransform,
                            const ContainerLayerParameters& aIncomingScale,
                            ContainerLayer* aLayer,
-                           LayerState aState,
                            ContainerLayerParameters& aOutgoingScale)
 {
   nsIntPoint offset;
@@ -5506,7 +5505,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   }
   Matrix transform2d;
   if (aContainerFrame &&
-      (aState == LAYER_INACTIVE || aState == LAYER_SVG_EFFECTS) &&
+      aLayerBuilder->GetContainingPaintedLayerData() &&
       (!aTransform || (aTransform->Is2D(&transform2d) &&
                        !transform2d.HasNonTranslation()))) {
     // When we have an inactive ContainerLayer, translate the container by the offset to the
@@ -5687,13 +5686,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
       return nullptr;
   }
 
-  LayerState layerState = aContainerItem ? aContainerItem->GetLayerState(aBuilder, aManager, aParameters) : LAYER_ACTIVE;
-  if (layerState == LAYER_INACTIVE &&
-      nsDisplayItem::ForceActiveLayers()) {
-    layerState = LAYER_ACTIVE;
-  }
-
-  if (aContainerItem && layerState == LAYER_ACTIVE_EMPTY) {
+  if (aContainerItem && aContainerItem->GetType() == DisplayItemType::TYPE_SCROLL_INFO_LAYER) {
     // Empty layers only have metadata and should never have display items. We
     // early exit because later, invalidation will walk up the frame tree to
     // determine which painted layer gets invalidated. Since an empty layer
@@ -5721,7 +5714,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
                                   aContainerItem,
                                   bounds.Intersect(childrenVisible),
                                   aTransform, aParameters,
-                                  containerLayer, layerState, scaleParameters)) {
+                                  containerLayer, scaleParameters)) {
     return nullptr;
   }
 
