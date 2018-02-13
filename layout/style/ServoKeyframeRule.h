@@ -10,6 +10,8 @@
 #include "mozilla/dom/CSSKeyframeRule.h"
 #include "mozilla/ServoBindingTypes.h"
 
+class nsICSSDeclaration;
+
 namespace mozilla {
 
 class ServoDeclarationBlock;

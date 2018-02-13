@@ -10,6 +10,7 @@
 
 #include "mozilla/dom/CSSFontFaceRuleBinding.h"
 #include "mozilla/dom/CSSStyleDeclarationBinding.h"
+#include "nsStyleUtil.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
