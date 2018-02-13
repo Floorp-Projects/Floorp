@@ -309,8 +309,8 @@ Animation::GetCurrentTime() const
   if (mTimeline && !mStartTime.IsNull()) {
     Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTime();
     if (!timelineTime.IsNull()) {
-      result.SetValue((timelineTime.Value() - mStartTime.Value())
-                        .MultDouble(mPlaybackRate));
+      result = CurrentTimeFromTimelineTime(
+        timelineTime.Value(), mStartTime.Value(), mPlaybackRate);
     }
   }
   return result;
@@ -478,8 +478,8 @@ Animation::Finish(ErrorResult& aRv)
   if (mStartTime.IsNull() &&
       mTimeline &&
       !mTimeline->GetCurrentTime().IsNull()) {
-    mStartTime.SetValue(mTimeline->GetCurrentTime().Value() -
-                        limit.MultDouble(1.0 / mPlaybackRate));
+    mStartTime = StartTimeFromTimelineTime(
+      mTimeline->GetCurrentTime().Value(), limit, mPlaybackRate);
     didChange = true;
   }
 
@@ -687,20 +687,10 @@ Animation::GetCurrentOrPendingStartTime() const
   }
 
   // Calculate the equivalent start time from the pending ready time.
-  result = StartTimeFromReadyTime(mPendingReadyTime.Value());
+  result = StartTimeFromTimelineTime(
+    mPendingReadyTime.Value(), mHoldTime.Value(), mPlaybackRate);
 
   return result;
-}
-
-TimeDuration
-Animation::StartTimeFromReadyTime(const TimeDuration& aReadyTime) const
-{
-  MOZ_ASSERT(!mHoldTime.IsNull(), "Hold time should be set in order to"
-                                  " convert a ready time to a start time");
-  if (mPlaybackRate == 0) {
-    return aReadyTime;
-  }
-  return aReadyTime - mHoldTime.Value().MultDouble(1 / mPlaybackRate);
 }
 
 TimeStamp
@@ -733,7 +723,7 @@ Animation::AnimationTimeToTimeStamp(const StickyTimeDuration& aTime) const
   }
 
   // Invert the standard relation:
-  //   animation time = (timeline time - start time) * playback rate
+  //   current time = (timeline time - start time) * playback rate
   TimeDuration timelineTime =
     TimeDuration(aTime).MultDouble(1.0 / mPlaybackRate) + mStartTime.Value();
 
@@ -765,8 +755,8 @@ Animation::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
       mStartTime.SetNull();
     }
   } else {
-    mStartTime.SetValue(mTimeline->GetCurrentTime().Value() -
-                          (aSeekTime.MultDouble(1 / mPlaybackRate)));
+    mStartTime = StartTimeFromTimelineTime(
+      mTimeline->GetCurrentTime().Value(), aSeekTime, mPlaybackRate);
   }
 
   mPreviousCurrentTime.SetNull();
@@ -1001,8 +991,8 @@ Animation::ComposeStyle(ComposeAnimationResult&& aComposeResult,
         timeToUse = mTimeline->ToTimelineTime(TimeStamp::Now());
       }
       if (!timeToUse.IsNull()) {
-        mHoldTime.SetValue((timeToUse.Value() - mStartTime.Value())
-                            .MultDouble(mPlaybackRate));
+        mHoldTime = CurrentTimeFromTimelineTime(
+          timeToUse.Value(), mStartTime.Value(), mPlaybackRate);
       }
     }
 
@@ -1188,7 +1178,8 @@ Animation::ResumeAt(const TimeDuration& aReadyTime)
   // If we aborted a pending pause operation we will already have a start time
   // we should use. In all other cases, we resolve it from the ready time.
   if (mStartTime.IsNull()) {
-    mStartTime = StartTimeFromReadyTime(aReadyTime);
+    mStartTime =
+      StartTimeFromTimelineTime(aReadyTime, mHoldTime.Value(), mPlaybackRate);
     if (mPlaybackRate != 0) {
       mHoldTime.SetNull();
     }
@@ -1209,8 +1200,8 @@ Animation::PauseAt(const TimeDuration& aReadyTime)
              "Expected to pause a pause-pending animation");
 
   if (!mStartTime.IsNull() && mHoldTime.IsNull()) {
-    mHoldTime.SetValue((aReadyTime - mStartTime.Value())
-                        .MultDouble(mPlaybackRate));
+    mHoldTime = CurrentTimeFromTimelineTime(
+      aReadyTime, mStartTime.Value(), mPlaybackRate);
   }
   mStartTime.SetNull();
   mPendingState = PendingState::NotPending;
@@ -1271,8 +1262,10 @@ Animation::UpdateFinishedState(SeekFlag aSeekFlag,
                mTimeline &&
                !mTimeline->GetCurrentTime().IsNull()) {
       if (aSeekFlag == SeekFlag::DidSeek && !mHoldTime.IsNull()) {
-        mStartTime.SetValue(mTimeline->GetCurrentTime().Value() -
-                             (mHoldTime.Value().MultDouble(1 / mPlaybackRate)));
+        mStartTime =
+          StartTimeFromTimelineTime(mTimeline->GetCurrentTime().Value(),
+                                    mHoldTime.Value(),
+                                    mPlaybackRate);
       }
       mHoldTime.SetNull();
     }

@@ -7,6 +7,7 @@
 #include "AnimationInfo.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/AnimationHelper.h"
+#include "mozilla/dom/Animation.h"
 
 namespace mozilla {
 namespace layers {
@@ -104,16 +105,12 @@ AnimationInfo::StartPendingAnimations(const TimeStamp& aReadyTime)
     Animation& anim = mAnimations[animIdx];
 
     // If the animation is play-pending, resolve the start time.
-    // This mirrors the calculation in Animation::StartTimeFromReadyTime.
     if (anim.startTime().type() == MaybeTimeDuration::Tnull_t &&
         !anim.originTime().IsNull() &&
         !anim.isNotPlaying()) {
       TimeDuration readyTime = aReadyTime - anim.originTime();
-      anim.startTime() =
-        anim.playbackRate() == 0
-        ? readyTime
-        : readyTime - anim.holdTime().MultDouble(1.0 /
-                                                 anim.playbackRate());
+      anim.startTime() = dom::Animation::StartTimeFromTimelineTime(
+        readyTime, anim.holdTime(), anim.playbackRate());
       updated = true;
     }
   }
