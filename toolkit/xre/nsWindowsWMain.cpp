@@ -11,11 +11,9 @@
 #endif
 
 #include "mozilla/Char16.h"
-#include "nsSetDllDirectory.h"
 #include "nsUTF8Utils.h"
 
-#include <intrin.h>
-#include <math.h>
+#include <windows.h>
 
 #ifdef __MINGW32__
 
@@ -49,6 +47,29 @@ int main(int argc, char **argv);
 int main(int argc, char **argv, char **envp);
 #endif
 
+static void
+SanitizeEnvironmentVariables()
+{
+  DWORD bufferSize = GetEnvironmentVariableW(L"PATH", nullptr, 0);
+  if (bufferSize) {
+    wchar_t* originalPath = new wchar_t[bufferSize];
+    if (bufferSize - 1 == GetEnvironmentVariableW(L"PATH", originalPath,
+                                                  bufferSize)) {
+      bufferSize = ExpandEnvironmentStringsW(originalPath, nullptr, 0);
+      if (bufferSize) {
+        wchar_t* newPath = new wchar_t[bufferSize];
+        if (ExpandEnvironmentStringsW(originalPath,
+                                      newPath,
+                                      bufferSize)) {
+          SetEnvironmentVariableW(L"PATH", newPath);
+        }
+        delete[] newPath;
+      }
+    }
+    delete[] originalPath;
+  }
+}
+
 static char*
 AllocConvertUTF16toUTF8(char16ptr_t arg)
 {
@@ -77,7 +98,7 @@ FreeAllocStrings(int argc, char **argv)
 
 int wmain(int argc, WCHAR **argv)
 {
-  mozilla::SanitizeEnvironmentVariables();
+  SanitizeEnvironmentVariables();
   SetDllDirectoryW(L"");
 
   char **argvConverted = new char*[argc + 1];
