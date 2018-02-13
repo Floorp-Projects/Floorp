@@ -10,15 +10,23 @@
 #include "Layers.h"
 #include "LayerAnimationInfo.h" // For LayerAnimationInfo::sRecords
 #include "mozilla/StyleSetHandleInlines.h"
+#include "nsAnimationManager.h"
+#include "nsCSSFrameConstructor.h"
+#include "nsCSSRendering.h"
 #include "nsIFrame.h"
 #include "nsIPresShellInlines.h"
+#include "nsPlaceholderFrame.h"
+#include "nsStyleChangeList.h"
 #include "nsStyleUtil.h"
 #include "StickyScrollContainer.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/ViewportFrame.h"
+#include "SVGObserverUtils.h"
 #include "SVGTextFrame.h"
 #include "ActiveLayerTracker.h"
 #include "nsSVGIntegrationUtils.h"
+
+using namespace mozilla::dom;
 
 namespace mozilla {
 
@@ -1071,7 +1079,7 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       // layer for this frame, and not scheduling an invalidating
       // paint.
       if (!needInvalidatingPaint) {
-        Layer* layer;
+        nsDisplayItem::Layer* layer;
         needInvalidatingPaint |= !aFrame->TryUpdateTransformOnly(&layer);
 
         if (!needInvalidatingPaint) {

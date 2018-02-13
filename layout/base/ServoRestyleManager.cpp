@@ -27,6 +27,10 @@
 #include "nsRefreshDriver.h"
 #include "nsStyleChangeList.h"
 
+#ifdef ACCESSIBILITY
+#include "nsAccessibilityService.h"
+#endif
+
 using namespace mozilla::dom;
 
 namespace mozilla {
