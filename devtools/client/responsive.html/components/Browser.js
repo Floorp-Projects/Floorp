@@ -18,17 +18,10 @@ const { getToplevelWindow } = require("../utils/window");
 
 const FRAME_SCRIPT = "resource://devtools/client/responsive.html/browser/content.js";
 
-// Allow creation of HTML fragments without automatic sanitization, even
-// though we're in a chrome-privileged document.
-// This is, unfortunately, necessary in order to React to function
-// correctly.
-document.allowUnsafeHTML = true;
-
 class Browser extends PureComponent {
   /**
-   * This component is not allowed to depend directly on frequently changing
-   * data (width, height) due to the use of `dangerouslySetInnerHTML` below.
-   * Any changes in props will cause the <iframe> to be removed and added again,
+   * This component is not allowed to depend directly on frequently changing data (width,
+   * height). Any changes in props would cause the <iframe> to be removed and added again,
    * throwing away the current state of the page.
    */
   static get propTypes() {
@@ -141,32 +134,31 @@ class Browser extends PureComponent {
   }
 
   render() {
+    // In the case of @remote and @remoteType, the attribute must be set before the
+    // element is added to the DOM to have any effect, which we are able to do with this
+    // approach.
+    //
+    // @noisolation and @allowfullscreen are needed so that these frames have the same
+    // access to browser features as regular browser tabs. The `swapFrameLoaders` platform
+    // API we use compares such features before allowing the swap to proceed.
     return dom.div(
       {
         ref: "browserContainer",
         className: "browser-container",
-
-        /**
-         * React uses a whitelist for attributes, so we need some way to set
-         * attributes it does not know about, such as @mozbrowser.  If this were
-         * the only issue, we could use componentDidMount or ref: node => {} to
-         * set the atttibutes. In the case of @remote and @remoteType, the
-         * attribute must be set before the element is added to the DOM to have
-         * any effect, which we are able to do with this approach.
-         *
-         * @noisolation and @allowfullscreen are needed so that these frames
-         * have the same access to browser features as regular browser tabs.
-         * The `swapFrameLoaders` platform API we use compares such features
-         * before allowing the swap to proceed.
-         */
-        dangerouslySetInnerHTML: {
-          __html: `<iframe class="browser" mozbrowser="true"
-                           remote="true" remoteType="web"
-                           noisolation="true" allowfullscreen="true"
-                           src="about:blank" width="100%" height="100%">
-                   </iframe>`
+      },
+      dom.iframe(
+        {
+          allowFullScreen: "true",
+          className: "browser",
+          height: "100%",
+          mozbrowser: "true",
+          noisolation: "true",
+          remote: "true",
+          remotetype: "web",
+          src: "about:blank",
+          width: "100%",
         }
-      }
+      )
     );
   }
 }
