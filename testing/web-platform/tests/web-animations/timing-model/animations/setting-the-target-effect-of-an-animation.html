@@ -93,5 +93,15 @@ test(t => {
    'existing animation, the target effect\'s timing is updated to reflect ' +
    'the current time of the new animation.');
 
+test(t => {
+  const anim = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  anim.updatePlaybackRate(2);
+  assert_equals(anim.playbackRate, 1);
+
+  anim.effect = null;
+  assert_equals(anim.playbackRate, 2);
+}, 'Setting the target effect to null causes a pending playback rate to be'
+   + ' applied');
+
 </script>
 </body>

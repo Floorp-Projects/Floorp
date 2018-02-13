@@ -228,5 +228,61 @@ promise_test(async t => {
 }, 'A pending ready promise is resolved and not replaced when the animation'
    + ' is finished');
 
+promise_test(async t => {
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  await animation.ready;
+
+  animation.updatePlaybackRate(2);
+  assert_true(animation.pending);
+
+  animation.finish();
+  assert_false(animation.pending);
+  assert_equals(animation.playbackRate, 2);
+  assert_time_equals_literal(animation.currentTime, 100 * MS_PER_SEC);
+}, 'A pending playback rate should be applied immediately when an animation'
+   + ' is finished');
+
+promise_test(async t => {
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  await animation.ready;
+
+  animation.updatePlaybackRate(0);
+
+  assert_throws('InvalidStateError', () => {
+    animation.finish();
+  });
+}, 'An exception should be thrown if the effective playback rate is zero');
+
+promise_test(async t => {
+  const animation = createDiv(t).animate(null, {
+    duration: 100 * MS_PER_SEC,
+    iterations: Infinity
+  });
+  animation.currentTime = 50 * MS_PER_SEC;
+  animation.playbackRate = -1;
+  await animation.ready;
+
+  animation.updatePlaybackRate(1);
+
+  assert_throws('InvalidStateError', () => {
+    animation.finish();
+  });
+}, 'An exception should be thrown when finishing if the effective playback rate'
+   + ' is positive and the target effect end is infinity');
+
+promise_test(async t => {
+  const animation = createDiv(t).animate(null, {
+    duration: 100 * MS_PER_SEC,
+    iterations: Infinity
+  });
+  await animation.ready;
+
+  animation.updatePlaybackRate(-1);
+
+  animation.finish();
+  // Should not have thrown
+}, 'An exception is NOT thrown when finishing if the effective playback rate'
+   + ' is negative and the target effect end is infinity');
+
 </script>
 </body>
