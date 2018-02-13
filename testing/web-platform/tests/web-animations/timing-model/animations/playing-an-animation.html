@@ -54,5 +54,22 @@ promise_test(async t => {
 }, 'A pending ready promise should be resolved and not replaced when the'
    + ' animation enters the running state');
 
+promise_test(async t => {
+  // Seek animation beyond target end
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  animation.currentTime = -100 * MS_PER_SEC;
+  await animation.ready;
+
+  // Set pending playback rate to the opposite direction
+  animation.updatePlaybackRate(-1);
+  assert_true(animation.pending);
+  assert_equals(animation.playbackRate, 1);
+
+  // When we play, we should seek to the target end, NOT to zero (which
+  // is where we would seek to if we used the playbackRate of 1.
+  animation.play();
+  assert_time_equals_literal(animation.currentTime, 100 * MS_PER_SEC);
+}, 'A pending playback rate is used when determining auto-rewind behavior');
+
 </script>
 </body>
