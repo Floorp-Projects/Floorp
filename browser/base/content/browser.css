@@ -93,6 +93,10 @@ panelview[mainview] > .panel-header {
   display: none;
 }
 
+#navigator-toolbox {
+  -moz-binding: url("chrome://browser/content/tabbrowser.xml#empty");
+}
+
 tabbrowser {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser");
 }

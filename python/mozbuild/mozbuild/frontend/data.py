@@ -277,7 +277,7 @@ class WebIDLCollection(ContextDerived):
         return [mozpath.splitext(b)[0] for b in self.all_test_basenames()]
 
     def all_test_cpp_basenames(self):
-        return ['%sBinding.cpp' % s for s in self.all_test_stems()]
+        return sorted('%sBinding.cpp' % s for s in self.all_test_stems())
 
     def all_static_sources(self):
         return self.sources | self.generated_events_sources | \
@@ -306,6 +306,21 @@ class WebIDLCollection(ContextDerived):
 
     def generated_events_stems(self):
         return [mozpath.splitext(b)[0] for b in self.generated_events_basenames()]
+
+    @property
+    def unified_source_mapping(self):
+        # Bindings are compiled in unified mode to speed up compilation and
+        # to reduce linker memory size. Note that test bindings are separated
+        # from regular ones so tests bindings aren't shipped.
+        return list(group_unified_files(self.all_regular_cpp_basenames(),
+                                        unified_prefix='UnifiedBindings',
+                                        unified_suffix='cpp',
+                                        files_per_unified_file=32))
+
+    def all_source_files(self):
+        from mozwebidlcodegen import WebIDLCodegenManager
+        return (sorted(list(WebIDLCodegenManager.GLOBAL_DEFINE_FILES)) +
+                sorted(set(p for p, _ in self.unified_source_mapping)))
 
 
 class IPDLCollection(ContextDerived):
@@ -349,6 +364,9 @@ class IPDLCollection(ContextDerived):
                                         unified_suffix='cpp',
                                         files_per_unified_file=16))
 
+    def all_source_files(self):
+        return sorted(set(p for p, _ in self.unified_source_mapping))
+
 
 class LinkageWrongKindError(Exception):
     """Error thrown when trying to link objects of the wrong kind"""
@@ -365,6 +383,7 @@ class Linkable(ContextDerived):
         'lib_defines',
         'linked_libraries',
         'linked_system_libs',
+        'sources',
     )
 
     def __init__(self, context):
@@ -373,6 +392,7 @@ class Linkable(ContextDerived):
         self.linked_libraries = []
         self.linked_system_libs = []
         self.lib_defines = Defines(context, {})
+        self.sources = defaultdict(list)
 
     def link_library(self, obj):
         assert isinstance(obj, BaseLibrary)
@@ -403,6 +423,26 @@ class Linkable(ContextDerived):
                     self.config.import_suffix,
                 )
         self.linked_system_libs.append(lib)
+
+    def source_files(self):
+        all_sources = []
+        # This is ordered for reproducibility and consistently w/
+        # config/rules.mk
+        for suffix in ('.c', '.S', '.cpp', '.m', '.mm', '.s'):
+            all_sources += self.sources.get(suffix, [])
+        return all_sources
+
+    @property
+    def objs(self):
+        obj_prefix = ''
+        if self.KIND == 'host':
+            obj_prefix = 'host_'
+
+        return [mozpath.join(self.objdir, '%s%s.%s' % (obj_prefix,
+                                                       mozpath.splitext(mozpath.basename(f))[0],
+                                                       self.config.substs.get('OBJ_SUFFIX', '')))
+                for f in self.source_files()]
+
 
 class BaseProgram(Linkable):
     """Context derived container object for programs, which is a unicode
@@ -452,6 +492,13 @@ class SimpleProgram(BaseProgram):
     """Context derived container object for each program in SIMPLE_PROGRAMS"""
     SUFFIX_VAR = 'BIN_SUFFIX'
     KIND = 'target'
+
+    def source_files(self):
+        for srcs in self.sources.values():
+            for f in srcs:
+                if mozpath.basename(mozpath.splitext(f)[0]) == mozpath.splitext(self.program)[0]:
+                    return [f]
+        return []
 
 
 class HostSimpleProgram(HostMixin, BaseProgram):

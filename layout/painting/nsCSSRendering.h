@@ -120,6 +120,18 @@ struct nsCSSRendering {
    */
   static void Shutdown();
 
+  static bool IsBoxDecorationSlice(const nsStyleBorder& aStyleBorder);
+  static nsRect BoxDecorationRectForBorder(
+                  nsIFrame* aFrame,
+                  const nsRect& aBorderArea,
+                  Sides aSkipSides,
+                  const nsStyleBorder* aStyleBorder = nullptr);
+  static nsRect BoxDecorationRectForBackground(
+                  nsIFrame* aFrame,
+                  const nsRect& aBorderArea,
+                  Sides aSkipSides,
+                  const nsStyleBorder* aStyleBorder = nullptr);
+
   static bool GetShadowInnerRadii(nsIFrame* aFrame,
                                   const nsRect& aFrameArea,
                                   RectCornerRadii& aOutInnerRadii);

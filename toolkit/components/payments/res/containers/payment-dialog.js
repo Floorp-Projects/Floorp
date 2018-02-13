@@ -91,12 +91,15 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
     this.requestStore.setState(state);
 
     // Check if any foreign-key constraints were invalidated.
+    state = this.requestStore.getState();
     let {
       savedAddresses,
       savedBasicCards,
       selectedPaymentCard,
       selectedShippingAddress,
-    } = this.requestStore.getState();
+      selectedShippingOption,
+    } = state;
+    let shippingOptions = state.request.paymentDetails.shippingOptions;
 
     // Ensure `selectedShippingAddress` never refers to a deleted address and refers
     // to an address if one exists.
@@ -112,6 +115,24 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
       this.requestStore.setState({
         selectedPaymentCard: Object.keys(savedBasicCards)[0] || null,
         selectedPaymentCardSecurityCode: null,
+      });
+    }
+
+    // Ensure `selectedShippingOption` never refers to a deleted shipping option and
+    // refers to a shipping option if one exists.
+    if (!shippingOptions.find(option => option.id == selectedShippingOption)) {
+      // The shippingOption spec says to use the last specified selected: true item.
+      for (let i = shippingOptions.length - 1; i >= 0; i--) {
+        if (shippingOptions[i].selected) {
+          selectedShippingOption = shippingOptions[i].id;
+          break;
+        }
+      }
+      if (!selectedShippingOption && shippingOptions.length) {
+        selectedShippingOption = shippingOptions[0].id;
+      }
+      this.requestStore.setState({
+        selectedShippingOption,
       });
     }
   }

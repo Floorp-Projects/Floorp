@@ -679,22 +679,6 @@ interface nsIDOMWindowUtils : nsISupports {
   AString GetSelectionAsPlaintext();
 
   /**
-   * Focus the element aElement. The element should be in the same document
-   * that the window is displaying. Pass null to blur the element, if any,
-   * that currently has focus, and focus the document.
-   *
-   * Cannot be accessed from unprivileged context (not content-accessible)
-   * Will throw a DOM security error if called without chrome privileges.
-   *
-   * @param aElement the element to focus
-   *
-   * Do not use this method. Just use element.focus if available or
-   * nsIFocusManager::SetFocus instead.
-   *
-   */
-  void focus(in nsIDOMElement aElement);
-
-  /**
    * Force a garbage collection followed by a cycle collection.
    *
    * Will throw a DOM security error if called without chrome privileges in
