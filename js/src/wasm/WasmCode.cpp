@@ -799,11 +799,11 @@ Code::setTier2(UniqueModuleSegment segment) const
 }
 
 uint32_t
-Code::lookupFuncIndex(JSFunction* fun) const
+Code::getFuncIndex(JSFunction* fun) const
 {
     if (fun->isAsmJSNative())
         return fun->asmJSFuncIndex();
-    return lookupRange(*fun->wasmJitEntry())->funcIndex();
+    return jumpTables_.funcIndexFromJitEntry(fun->wasmJitEntry());
 }
 
 Tiers
