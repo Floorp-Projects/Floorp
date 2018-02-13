@@ -1567,7 +1567,7 @@ MacroAssemblerMIPS64Compat::unboxValue(const ValueOperand& src, AnyRegister dest
 void
 MacroAssemblerMIPS64Compat::unboxPrivate(const ValueOperand& src, Register dest)
 {
-    ma_dsrl(dest, src.valueReg(), Imm32(1));
+    ma_dsll(dest, src.valueReg(), Imm32(1));
 }
 
 void
