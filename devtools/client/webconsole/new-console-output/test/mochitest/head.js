@@ -525,11 +525,12 @@ function simulateLinkClick(element, clickEventProps) {
  * Open a new browser window and return a promise that resolves when the new window has
  * fired the "browser-delayed-startup-finished" event.
  *
+ * @param {Object} options: An options object that will be passed to OpenBrowserWindow.
  * @returns Promise
  *          A Promise that resolves when the window is ready.
  */
-function openNewBrowserWindow() {
-  let win = OpenBrowserWindow();
+function openNewBrowserWindow(options) {
+  let win = OpenBrowserWindow(options);
   return new Promise(resolve => {
     Services.obs.addObserver(function observer(subject, topic) {
       if (win == subject) {
