@@ -145,6 +145,7 @@ DisplayItemData::DisplayItemData(LayerManagerData* aParent, uint32_t aKey,
   , mUsed(true)
   , mIsInvalid(false)
   , mReusedItem(false)
+  , mDisconnected(false)
 {
   MOZ_COUNT_CTOR(DisplayItemData);
 
@@ -260,15 +261,7 @@ static const nsIFrame* sDestroyedFrame = nullptr;
 DisplayItemData::~DisplayItemData()
 {
   MOZ_COUNT_DTOR(DisplayItemData);
-  MOZ_RELEASE_ASSERT(mLayer);
-  for (uint32_t i = 0; i < mFrameList.Length(); i++) {
-    nsIFrame* frame = mFrameList[i];
-    if (frame == sDestroyedFrame) {
-      continue;
-    }
-    SmallPointerArray<DisplayItemData>& array = frame->DisplayItemData();
-    array.RemoveElement(this);
-  }
+  Disconnect();
 
   MOZ_RELEASE_ASSERT(sAliveDisplayItemDatas);
   nsPtrHashKey<mozilla::DisplayItemData>* entry
@@ -281,6 +274,27 @@ DisplayItemData::~DisplayItemData()
     delete sAliveDisplayItemDatas;
     sAliveDisplayItemDatas = nullptr;
   }
+}
+
+void
+DisplayItemData::Disconnect()
+{
+  if (mDisconnected) {
+    return;
+  }
+  mDisconnected = true;
+
+  for (uint32_t i = 0; i < mFrameList.Length(); i++) {
+    nsIFrame* frame = mFrameList[i];
+    if (frame == sDestroyedFrame) {
+      continue;
+    }
+    SmallPointerArray<DisplayItemData>& array = frame->DisplayItemData();
+    array.RemoveElement(this);
+  }
+
+  mLayer = nullptr;
+  mOptLayer = nullptr;
 }
 
 void
@@ -329,6 +343,10 @@ public:
   }
   ~LayerManagerData() {
     MOZ_COUNT_DTOR(LayerManagerData);
+
+    for (auto iter = mDisplayItems.Iter(); !iter.Done(); iter.Next()) {
+      iter.Get()->GetKey()->Disconnect();
+    }
   }
 
 #ifdef DEBUG_DISPLAY_ITEM_DATA
@@ -1931,7 +1949,7 @@ FrameLayerBuilder::RemoveFrameFromLayerManager(const nsIFrame* aFrame,
 #endif
 
   for (DisplayItemData* data : aArray) {
-    PaintedLayer* t = data->mLayer->AsPaintedLayer();
+    PaintedLayer* t = data->mLayer ? data->mLayer->AsPaintedLayer() : nullptr;
     if (t) {
       PaintedDisplayItemLayerUserData* paintedData =
           static_cast<PaintedDisplayItemLayerUserData*>(t->GetUserData(&gPaintedDisplayItemLayerUserData));
@@ -1944,6 +1962,7 @@ FrameLayerBuilder::RemoveFrameFromLayerManager(const nsIFrame* aFrame,
       }
     }
 
+    data->Disconnect();
     data->mParent->mDisplayItems.RemoveEntry(data);
   }
 
@@ -2015,6 +2034,7 @@ FrameLayerBuilder::WillEndTransaction()
       }
 
       data->ClearAnimationCompositorState();
+      data->Disconnect();
       iter.Remove();
     } else {
       ComputeGeometryChangeForItem(data);
@@ -2061,14 +2081,18 @@ FrameLayerBuilder::HasRetainedDataFor(nsIFrame* aFrame, uint32_t aDisplayItemKey
 }
 
 DisplayItemData*
-FrameLayerBuilder::GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey)
+FrameLayerBuilder::GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey, DisplayItemData* aOldData /* = nullptr */)
 {
   // If we need to build a new layer tree, then just refuse to recycle
   // anything.
   if (!mRetainingManager || mInvalidateAllLayers)
     return nullptr;
 
-  DisplayItemData *data = GetDisplayItemData(aFrame, aDisplayItemKey);
+  DisplayItemData* data = aOldData;
+  if (!data || data->mLayer->Manager() != mRetainingManager || data->Disconnected()) {
+    data = GetDisplayItemData(aFrame, aDisplayItemKey);
+  }
+  MOZ_ASSERT(data == GetDisplayItemData(aFrame, aDisplayItemKey));
 
   if (data && data->mLayer->Manager() == mRetainingManager) {
     return data;
@@ -4881,6 +4905,8 @@ FrameLayerBuilder::StoreDataForFrame(nsDisplayItem* aItem, Layer* aLayer,
 
   RefPtr<DisplayItemData> data =
     new (aItem->Frame()->PresContext()) DisplayItemData(lmd, aItem->GetPerFrameKey(), aLayer);
+
+  aItem->SetDisplayItemData(data);
 
   data->BeginUpdate(aLayer, aState, aItem);
 

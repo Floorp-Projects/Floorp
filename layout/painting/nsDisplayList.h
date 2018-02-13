@@ -2033,7 +2033,21 @@ template<typename T, typename... Args>
 MOZ_ALWAYS_INLINE T*
 MakeDisplayItem(nsDisplayListBuilder* aBuilder, Args&&... aArgs)
 {
-  return new (aBuilder) T(aBuilder, mozilla::Forward<Args>(aArgs)...);
+  T* item = new (aBuilder) T(aBuilder, mozilla::Forward<Args>(aArgs)...);
+
+  const mozilla::SmallPointerArray<mozilla::DisplayItemData>& array =
+    item->Frame()->DisplayItemData();
+  for (uint32_t i = 0; i < array.Length(); i++) {
+    mozilla::DisplayItemData* did = array.ElementAt(i);
+    if (did->GetDisplayItemKey() == item->GetPerFrameKey()) {
+      if (did->HasMergedFrames()) {
+        item->SetDisplayItemData(did);
+      }
+      break;
+    }
+  }
+
+  return item;
 }
 
 /**
@@ -2127,6 +2141,7 @@ public:
     if (mFrame && aFrame == mFrame) {
       MOZ_ASSERT(!mFrame->HasDisplayItem(this));
       mFrame = nullptr;
+      mDisplayItemData = nullptr;
     }
   }
 
@@ -2593,6 +2608,8 @@ public:
    */
   virtual void GetMergedFrames(nsTArray<nsIFrame*>* aFrames) const {}
 
+  virtual bool HasMergedFrames() const { return false; }
+
   /**
    * During the visibility computation and after TryMerge, display lists may
    * return true here to flatten themselves away, removing them. This
@@ -2818,6 +2835,12 @@ public:
       nsDisplayListBuilder* aBuilder,
       const ActiveScrolledRoot* aASR) const;
 
+  void SetDisplayItemData(mozilla::DisplayItemData* aDID) {
+    mDisplayItemData = aDID;
+  }
+
+  mozilla::DisplayItemData* GetDisplayItemData() { return mDisplayItemData; }
+
 protected:
   nsDisplayItem() = delete;
 
@@ -2834,6 +2857,7 @@ protected:
   RefPtr<struct AnimatedGeometryRoot> mAnimatedGeometryRoot;
   // Result of ToReferenceFrame(mFrame), if mFrame is non-null
   nsPoint   mToReferenceFrame;
+  RefPtr<mozilla::DisplayItemData> mDisplayItemData;
   // This is the rectangle that needs to be painted.
   // Display item construction sets this to the dirty rect.
   // nsDisplayList::ComputeVisibility sets this to the visible region
@@ -4967,6 +4991,11 @@ public:
     aFrames->AppendElements(mMergedFrames);
   }
 
+  virtual bool HasMergedFrames() const override
+  {
+    return !mMergedFrames.IsEmpty();
+  }
+
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override
   {
     return true;
@@ -5732,7 +5761,6 @@ protected:
     , mAncestorFrame(aOther.mAncestorFrame)
     , mTableType(aOther.mTableType)
   {}
-
 
   nsIFrame* mAncestorFrame;
   TableType mTableType;
