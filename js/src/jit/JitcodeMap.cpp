@@ -6,6 +6,7 @@
 
 #include "jit/JitcodeMap.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Sprintf.h"
@@ -1624,8 +1625,8 @@ JitcodeIonTable::WriteIonTable(CompactBufferWriter& writer,
 } // namespace jit
 } // namespace js
 
-JS::ForEachProfiledFrameOp::FrameHandle::FrameHandle(JSRuntime* rt, js::jit::JitcodeGlobalEntry& entry,
-                                                     void* addr, const char* label, uint32_t depth)
+JS::ProfiledFrameHandle::ProfiledFrameHandle(JSRuntime* rt, js::jit::JitcodeGlobalEntry& entry,
+                                             void* addr, const char* label, uint32_t depth)
   : rt_(rt),
     entry_(entry),
     addr_(addr),
@@ -1645,28 +1646,35 @@ JS::ForEachProfiledFrameOp::FrameHandle::FrameHandle(JSRuntime* rt, js::jit::Jit
 }
 
 JS_PUBLIC_API(JS::ProfilingFrameIterator::FrameKind)
-JS::ForEachProfiledFrameOp::FrameHandle::frameKind() const
+JS::ProfiledFrameHandle::frameKind() const
 {
     if (entry_.isBaseline())
         return JS::ProfilingFrameIterator::Frame_Baseline;
     return JS::ProfilingFrameIterator::Frame_Ion;
 }
 
-JS_PUBLIC_API(void)
-JS::ForEachProfiledFrame(JSContext* cx, void* addr, ForEachProfiledFrameOp& op)
+JS_PUBLIC_API(JS::ProfiledFrameRange)
+JS::GetProfiledFrames(JSContext* cx, void* addr)
 {
-    js::jit::JitcodeGlobalTable* table = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
+    JSRuntime* rt = cx->runtime();
+    js::jit::JitcodeGlobalTable* table = rt->jitRuntime()->getJitcodeGlobalTable();
     js::jit::JitcodeGlobalEntry* entry = table->lookup(addr);
 
-    if (!entry)
-        return;
+    ProfiledFrameRange result(rt, addr, entry);
 
-    // Extract the stack for the entry.  Assume maximum inlining depth is <64
-    const char* labels[64];
-    uint32_t depth = entry->callStackAtAddr(cx->runtime(), addr, labels, 64);
-    MOZ_ASSERT(depth < 64);
-    for (uint32_t i = depth; i != 0; i--) {
-        JS::ForEachProfiledFrameOp::FrameHandle handle(cx->runtime(), *entry, addr, labels[i - 1], i - 1);
-        op(handle);
+    if (entry) {
+        result.depth_ = entry->callStackAtAddr(rt, addr, result.labels_,
+                                               MOZ_ARRAY_LENGTH(result.labels_));
     }
+    return result;
+}
+
+JS::ProfiledFrameHandle
+JS::ProfiledFrameRange::Iter::operator*() const
+{
+    // The iterator iterates in high depth to low depth order. index_ goes up,
+    // and the depth we need to pass to ProfiledFrameHandle goes down.
+    uint32_t depth = range_.depth_ - 1 - index_;
+    return ProfiledFrameHandle(range_.rt_, *range_.entry_, range_.addr_,
+                               range_.labels_[depth], depth);
 }

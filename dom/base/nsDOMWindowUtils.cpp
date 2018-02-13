@@ -1251,21 +1251,6 @@ nsDOMWindowUtils::GetWidgetForElement(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::Focus(nsIDOMElement* aElement)
-{
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) {
-    if (aElement)
-      fm->SetFocus(aElement, 0);
-    else
-      fm->ClearFocus(window);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::GarbageCollect(nsICycleCollectorListener *aListener)
 {
   AUTO_PROFILER_LABEL("nsDOMWindowUtils::GarbageCollect", GC);
