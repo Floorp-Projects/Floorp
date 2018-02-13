@@ -10,75 +10,43 @@
 <script>
 'use strict';
 
-function assert_playbackrate(animation,
-                             previousAnimationCurrentTime,
-                             previousTimelineCurrentTime,
-                             description) {
+promise_test(async t => {
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  animation.playbackRate = 2;
+  await animation.ready;
+
+  const previousAnimationCurrentTime = animation.currentTime;
+  const previousTimelineCurrentTime = animation.timeline.currentTime;
+
+  await waitForAnimationFrames(1);
+
   const animationCurrentTimeDifference =
     animation.currentTime - previousAnimationCurrentTime;
   const timelineCurrentTimeDifference =
     animation.timeline.currentTime - previousTimelineCurrentTime;
 
-  assert_times_equal(animationCurrentTimeDifference,
-                     timelineCurrentTimeDifference * animation.playbackRate,
-                     description);
-}
+  assert_times_equal(
+    animationCurrentTimeDifference,
+    timelineCurrentTimeDifference * animation.playbackRate,
+    'The current time should increase two times faster than timeline'
+  );
+}, 'The playback rate affects the rate of progress of the current time');
 
-promise_test(t => {
-  const div = createDiv(t);
-  const animation = div.animate(null, 100 * MS_PER_SEC);
-  return animation.ready.then(() => {
-    animation.currentTime = 7 * MS_PER_SEC; // ms
-    animation.playbackRate = 0.5;
-
-    assert_equals(animation.currentTime, 7 * MS_PER_SEC,
-      'Reducing Animation.playbackRate should not change the currentTime ' +
-      'of a playing animation');
-    animation.playbackRate = 2;
-    assert_equals(animation.currentTime, 7 * MS_PER_SEC,
-      'Increasing Animation.playbackRate should not change the currentTime ' +
-      'of a playing animation');
-  });
-}, 'Test the initial effect of setting playbackRate on currentTime');
-
-promise_test(t => {
-  const div = createDiv(t);
-  const animation = div.animate(null, 100 * MS_PER_SEC);
+test(t => {
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  animation.currentTime = 50 * MS_PER_SEC;
   animation.playbackRate = 2;
-  let previousTimelineCurrentTime;
-  let previousAnimationCurrentTime;
-  return animation.ready.then(() => {
-    previousAnimationCurrentTime = animation.currentTime;
-    previousTimelineCurrentTime = animation.timeline.currentTime;
-    return waitForAnimationFrames(1);
-  }).then(() => {
-    assert_playbackrate(animation,
-      previousAnimationCurrentTime,
-      previousTimelineCurrentTime,
-      'animation.currentTime should be 2 times faster than timeline.');
-  });
-}, 'Test the effect of setting playbackRate on currentTime');
+  assert_time_equals_literal(animation.currentTime, 50 * MS_PER_SEC);
+}, 'Setting the playback rate while play-pending preserves the current time');
 
-promise_test(t => {
-  const div = createDiv(t);
-  const animation = div.animate(null, 100 * MS_PER_SEC);
+promise_test(async t => {
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  animation.currentTime = 50 * MS_PER_SEC;
+  await animation.ready;
   animation.playbackRate = 2;
-  let previousTimelineCurrentTime;
-  let previousAnimationCurrentTime;
-  return animation.ready.then(() => {
-    previousAnimationCurrentTime = animation.currentTime;
-    previousTimelineCurrentTime = animation.timeline.currentTime;
-    animation.playbackRate = 1;
-    return waitForAnimationFrames(1);
-  }).then(() => {
-    assert_equals(animation.playbackRate, 1,
-      'sanity check: animation.playbackRate is still 1.');
-    assert_playbackrate(animation,
-      previousAnimationCurrentTime,
-      previousTimelineCurrentTime,
-      'animation.currentTime should be the same speed as timeline now.');
-  });
-}, 'Test the effect of setting playbackRate while playing animation');
+  assert_greater_than_equal(animation.currentTime, 50 * MS_PER_SEC);
+  assert_less_than(animation.currentTime, 100 * MS_PER_SEC);
+}, 'Setting the playback rate while playing preserves the current time');
 
 </script>
 </body>
