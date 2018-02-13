@@ -34,10 +34,12 @@ class Accordion extends PureComponent {
     this.renderContainer = this.renderContainer.bind(this);
   }
 
-  handleHeaderClick(i) {
+  handleHeaderClick(i, event) {
     const opened = [...this.state.opened];
     const created = [...this.state.created];
     const item = this.props.items[i];
+
+    event.stopPropagation();
 
     opened[i] = !opened[i];
     created[i] = true;
@@ -67,7 +69,7 @@ class Accordion extends PureComponent {
 
       div(
         { className: "_header",
-          onClick: () => this.handleHeaderClick(i) },
+          onClick: (event) => this.handleHeaderClick(i, event) },
         span({ className: arrowClassName }),
         item.header
       ),
