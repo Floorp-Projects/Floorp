@@ -683,6 +683,11 @@ struct IonBlockCounts
     const char* code() const {
         return code_;
     }
+
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return mallocSizeOf(description_) + mallocSizeOf(successors_) +
+            mallocSizeOf(code_);
+    }
 };
 
 // Execution information for a compiled script which may persist after the
@@ -743,6 +748,25 @@ struct IonScriptCounts
     IonScriptCounts* previous() const {
         return previous_;
     }
+
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        size_t size = 0;
+        auto currCounts = this;
+        while (currCounts) {
+            const IonScriptCounts* currCount = currCounts;
+            currCounts = currCount->previous_;
+            size += currCount->sizeOfOneIncludingThis(mallocSizeOf);
+        }
+        return size;
+    }
+
+    size_t sizeOfOneIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        size_t size = mallocSizeOf(this) + mallocSizeOf(blocks_);
+        for (size_t i = 0; i < numBlocks_; i++)
+            blocks_[i].sizeOfExcludingThis(mallocSizeOf);
+        return size;
+    }
+
 };
 
 struct VMFunction;

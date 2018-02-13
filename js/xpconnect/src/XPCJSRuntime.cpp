@@ -1843,6 +1843,10 @@ ReportCompartmentStats(const JS::CompartmentStats& cStats,
         "Extra data attached to the compartment by XPConnect, including "
         "its wrapped-js.");
 
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("script-counts-map"),
+        cStats.scriptCountsMap,
+        "Profiling-related information for scripts.");
+
     if (sundriesGCHeap > 0) {
         // We deliberately don't use ZCREPORT_GC_BYTES here.
         REPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("sundries/gc-heap"),
