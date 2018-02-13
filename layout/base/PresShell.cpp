@@ -9211,14 +9211,14 @@ PresShell::WindowSizeMoveDone()
  */
 
 // Return value says whether to walk children.
-typedef bool (* frameWalkerFn)(nsIFrame *aFrame, void *aClosure);
+typedef bool (*frameWalkerFn)(nsIFrame* aFrame);
 
 static bool
-ReResolveMenusAndTrees(nsIFrame *aFrame, void *aClosure)
+ReResolveMenusAndTrees(nsIFrame* aFrame)
 {
   // Trees have a special style cache that needs to be flushed when
   // the theme changes.
-  nsTreeBodyFrame *treeBody = do_QueryFrame(aFrame);
+  nsTreeBodyFrame* treeBody = do_QueryFrame(aFrame);
   if (treeBody)
     treeBody->ClearStyleAndImageCaches();
 
@@ -9233,22 +9233,24 @@ ReResolveMenusAndTrees(nsIFrame *aFrame, void *aClosure)
 }
 
 static bool
-ReframeImageBoxes(nsIFrame *aFrame, void *aClosure)
+ReframeImageBoxes(nsIFrame* aFrame)
 {
-  nsStyleChangeList *list = static_cast<nsStyleChangeList*>(aClosure);
   if (aFrame->IsImageBoxFrame()) {
-    list->AppendChange(aFrame, aFrame->GetContent(),
-                       nsChangeHint_ReconstructFrame);
+    aFrame->PresContext()->RestyleManager()->PostRestyleEvent(
+        aFrame->GetContent()->AsElement(),
+        nsRestyleHint(0),
+        nsChangeHint_ReconstructFrame);
     return false; // don't walk descendants
   }
   return true; // walk descendants
 }
 
 static void
-WalkFramesThroughPlaceholders(nsPresContext *aPresContext, nsIFrame *aFrame,
-                              frameWalkerFn aFunc, void *aClosure)
+WalkFramesThroughPlaceholders(nsPresContext* aPresContext,
+                              nsIFrame* aFrame,
+                              frameWalkerFn aFunc)
 {
-  bool walkChildren = (*aFunc)(aFrame, aClosure);
+  bool walkChildren = (*aFunc)(aFrame);
   if (!walkChildren)
     return;
 
@@ -9262,7 +9264,7 @@ WalkFramesThroughPlaceholders(nsPresContext *aPresContext, nsIFrame *aFrame,
         // out-of-flows of placeholders.
         WalkFramesThroughPlaceholders(aPresContext,
                                       nsPlaceholderFrame::GetRealFrameFor(child),
-                                      aFunc, aClosure);
+                                      aFunc);
       }
     }
   }
@@ -9281,37 +9283,18 @@ PresShell::Observe(nsISupports* aSubject,
 
 #ifdef MOZ_XUL
   if (!nsCRT::strcmp(aTopic, "chrome-flush-skin-caches")) {
-    nsIFrame *rootFrame = mFrameConstructor->GetRootFrame();
     // Need to null-check because "chrome-flush-skin-caches" can happen
     // at interesting times during startup.
-    if (rootFrame) {
+    if (nsIFrame* rootFrame = mFrameConstructor->GetRootFrame()) {
       NS_ASSERTION(mViewManager, "View manager must exist");
 
-      AutoWeakFrame weakRoot(rootFrame);
-      // Have to make sure that the content notifications are flushed before we
-      // start messing with the frame model; otherwise we can get content doubling.
-      mDocument->FlushPendingNotifications(FlushType::ContentAndNotify);
+      WalkFramesThroughPlaceholders(
+          mPresContext, rootFrame, ReResolveMenusAndTrees);
 
-      if (weakRoot.IsAlive()) {
-        WalkFramesThroughPlaceholders(mPresContext, rootFrame,
-                                      &ReResolveMenusAndTrees, nullptr);
-
-        // Because "chrome:" URL equality is messy, reframe image box
-        // frames (hack!).
-        nsStyleChangeList changeList(mPresContext->StyleSet()->BackendType());
-        WalkFramesThroughPlaceholders(mPresContext, rootFrame,
-                                      ReframeImageBoxes, &changeList);
-        // Mark ourselves as not safe to flush while we're doing frame
-        // construction.
-        {
-          nsAutoScriptBlocker scriptBlocker;
-          ++mChangeNestCount;
-          RestyleManager* restyleManager = mPresContext->RestyleManager();
-          restyleManager->ProcessRestyledFrames(changeList);
-          restyleManager->FlushOverflowChangedTracker();
-          --mChangeNestCount;
-        }
-      }
+      // Because "chrome:" URL equality is messy, reframe image box
+      // frames (hack!).
+      WalkFramesThroughPlaceholders(
+          mPresContext, rootFrame, ReframeImageBoxes);
     }
     return NS_OK;
   }
