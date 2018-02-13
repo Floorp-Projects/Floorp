@@ -15,8 +15,7 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="printpreviewtoolbar"
-           extends="chrome://global/content/bindings/toolbar.xml#toolbar">
+  <binding id="printpreviewtoolbar">
     <resources>
       <stylesheet src="chrome://global/skin/printPreview.css"/>
     </resources>

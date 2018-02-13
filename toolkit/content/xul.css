@@ -286,10 +286,6 @@ toolbox {
   -moz-box-orient: vertical;
 }
 
-toolbar {
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar");
-}
-
 toolbar[customizing="true"][collapsed="true"] {
   /* Some apps, e.g. Firefox, use 'collapsed' to hide toolbars.
      Override it while customizing. */
@@ -321,16 +317,7 @@ toolbar[type="menubar"][autohide="true"][inactive="true"]:not([customizing="true
 }
 %endif
 
-toolbarseparator {
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbardecoration");
-}
-
-toolbarspacer {
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbardecoration");
-}
-
 toolbarspring {
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbardecoration");
   -moz-box-flex: 1000;
 }
 
