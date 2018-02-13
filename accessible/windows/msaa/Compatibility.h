@@ -67,6 +67,16 @@ public:
    */
   static bool HasKnownNonUiaConsumer();
 
+  /**
+   * Return true if a module's version is lesser than the given version.
+   * Generally, the version should be provided using the MAKE_FILE_VERSION
+   * macro.
+   * If the version information cannot be retrieved, true is returned; i.e.
+   * no version information implies an earlier version.
+   */
+  static bool IsModuleVersionLessThan(HMODULE aModuleHandle,
+                                      unsigned long long aVersion);
+
 private:
   Compatibility();
   Compatibility(const Compatibility&);
@@ -100,5 +110,11 @@ private:
 
 } // a11y namespace
 } // mozilla namespace
+
+// Convert the 4 (decimal) components of a DLL version number into a
+// single unsigned long long, as needed by
+// mozilla::a11y::Compatibility::IsModuleVersionLessThan.
+#define MAKE_FILE_VERSION(a,b,c,d)\
+  ((a##ULL << 48) + (b##ULL << 32) + (c##ULL << 16) + d##ULL)
 
 #endif
