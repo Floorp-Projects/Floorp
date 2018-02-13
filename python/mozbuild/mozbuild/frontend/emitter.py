@@ -202,7 +202,42 @@ class TreeMetadataEmitter(LoggingMixin):
             for o in emit_objs(objs): yield o
 
     def _emit_libs_derived(self, contexts):
-        # First do FINAL_LIBRARY linkage.
+
+        # First aggregate idl sources.
+        webidl_attrs = [
+            ('GENERATED_EVENTS_WEBIDL_FILES', lambda c: c.generated_events_sources),
+            ('GENERATED_WEBIDL_FILES', lambda c: c.generated_sources),
+            ('PREPROCESSED_TEST_WEBIDL_FILES', lambda c: c.preprocessed_test_sources),
+            ('PREPROCESSED_WEBIDL_FILES', lambda c: c.preprocessed_sources),
+            ('TEST_WEBIDL_FILES', lambda c: c.test_sources),
+            ('WEBIDL_FILES', lambda c: c.sources),
+            ('WEBIDL_EXAMPLE_INTERFACES', lambda c: c.example_interfaces),
+        ]
+        ipdl_attrs = [
+            ('IPDL_SOURCES', lambda c: c.sources),
+            ('PREPROCESSED_IPDL_SOURCES', lambda c: c.preprocessed_sources),
+        ]
+
+        idl_sources = {}
+        for root, cls, attrs in ((self.config.substs.get('WEBIDL_ROOT'),
+                                  WebIDLCollection, webidl_attrs),
+                                 (self.config.substs.get('IPDL_ROOT'),
+                                  IPDLCollection, ipdl_attrs)):
+            if root:
+                collection = cls(contexts[root])
+                for var, src_getter in attrs:
+                    src_getter(collection).update(self._idls[var])
+
+                idl_sources[root] = collection.all_source_files()
+                if isinstance(collection, WebIDLCollection):
+                    # Test webidl sources are added here as a somewhat special
+                    # case.
+                    idl_sources[mozpath.join(root, 'test')] = [s for s in collection.all_test_cpp_basenames()]
+
+                yield collection
+
+
+        # Next do FINAL_LIBRARY linkage.
         for lib in (l for libs in self._libs.values() for l in libs):
             if not isinstance(lib, (StaticLibrary, RustLibrary)) or not lib.link_into:
                 continue
@@ -228,9 +263,9 @@ class TreeMetadataEmitter(LoggingMixin):
                     '\n    '.join(l.objdir for l in candidates)),
                     contexts[lib.objdir])
 
-        # Next, USE_LIBS linkage.
+        # ...and USE_LIBS linkage.
         for context, obj, variable in self._linkage:
-            self._link_libraries(context, obj, variable)
+            self._link_libraries(context, obj, variable, idl_sources)
 
         def recurse_refs(lib):
             for o in lib.refs:
@@ -288,31 +323,6 @@ class TreeMetadataEmitter(LoggingMixin):
         for obj in self._binaries.values():
             yield obj
 
-        webidl_attrs = [
-            ('GENERATED_EVENTS_WEBIDL_FILES', lambda c: c.generated_events_sources),
-            ('GENERATED_WEBIDL_FILES', lambda c: c.generated_sources),
-            ('PREPROCESSED_TEST_WEBIDL_FILES', lambda c: c.preprocessed_test_sources),
-            ('PREPROCESSED_WEBIDL_FILES', lambda c: c.preprocessed_sources),
-            ('TEST_WEBIDL_FILES', lambda c: c.test_sources),
-            ('WEBIDL_FILES', lambda c: c.sources),
-            ('WEBIDL_EXAMPLE_INTERFACES', lambda c: c.example_interfaces),
-        ]
-        ipdl_attrs = [
-            ('IPDL_SOURCES', lambda c: c.sources),
-            ('PREPROCESSED_IPDL_SOURCES', lambda c: c.preprocessed_sources),
-        ]
-
-        for root, cls, attrs in ((self.config.substs.get('WEBIDL_ROOT'),
-                                  WebIDLCollection, webidl_attrs),
-                                 (self.config.substs.get('IPDL_ROOT'),
-                                  IPDLCollection, ipdl_attrs)):
-            if root:
-                collection = cls(contexts[root])
-                for var, src_getter in attrs:
-                    src_getter(collection).update(self._idls[var])
-
-                yield collection
-
 
     LIBRARY_NAME_VAR = {
         'host': 'HOST_LIBRARY_NAME',
@@ -329,9 +339,14 @@ class TreeMetadataEmitter(LoggingMixin):
         'target': 'stdc++compat',
     }
 
-    def _link_libraries(self, context, obj, variable):
+    def _link_libraries(self, context, obj, variable, extra_sources):
         """Add linkage declarations to a given object."""
         assert isinstance(obj, Linkable)
+
+        if context.objdir in extra_sources:
+            # All "extra sources" are .cpp for the moment, and happen to come
+            # first in order.
+            obj.sources['.cpp'] = extra_sources[context.objdir] + obj.sources['.cpp']
 
         for path in context.get(variable, []):
             self._link_library(context, obj, variable, path)
