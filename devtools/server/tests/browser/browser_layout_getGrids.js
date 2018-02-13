@@ -107,9 +107,9 @@ const GRID_FRAGMENT_DATA = {
   }
 };
 
-add_task(function* () {
-  let { client, walker, layout } = yield initLayoutFrontForUrl(MAIN_DOMAIN + "grid.html");
-  let grids = yield layout.getGrids(walker.rootNode);
+add_task(async function () {
+  let { client, walker, layout } = await initLayoutFrontForUrl(MAIN_DOMAIN + "grid.html");
+  let grids = await layout.getGrids(walker.rootNode);
   let grid = grids[0];
   let { gridFragments } = grid;
 
@@ -122,12 +122,12 @@ add_task(function* () {
   info("Get the grid container node front.");
 
   try {
-    let nodeFront = yield walker.getNodeFromActor(grids[0].actorID, ["containerEl"]);
+    let nodeFront = await walker.getNodeFromActor(grids[0].actorID, ["containerEl"]);
     ok(nodeFront, "Got the grid container node front.");
   } catch (e) {
     ok(false, "Did not get grid container node front.");
   }
 
-  yield client.close();
+  await client.close();
   gBrowser.removeCurrentTab();
 });

@@ -26,34 +26,34 @@ window.onload = function () {
   // searches.
   // See also test_inspector-search.html
 
-  addAsyncTest(function* setup() {
+  addAsyncTest(async function setup() {
     info("Setting up inspector and walker actors.");
 
     let url = document.getElementById("inspectorContent").href;
 
     // eslint-disable-next-line new-cap
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       attachURL(url, function (err, client, tab, doc) {
         inspector = InspectorFront(client, tab);
         resolve();
       });
     });
 
-    walkerFront = yield inspector.getWalker();
+    walkerFront = await inspector.getWalker();
     ok(walkerFront, "getWalker() should return an actor.");
 
     runNextTest();
   });
 
-  addAsyncTest(function* testWalkerFrontDefaults() {
+  addAsyncTest(async function testWalkerFrontDefaults() {
     info("Testing search API using WalkerFront.");
-    let nodes = yield walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
-    let fronts = yield nodes.items();
+    let nodes = await walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
+    let fronts = await nodes.items();
 
-    let frontResult = yield walkerFront.search("");
+    let frontResult = await walkerFront.search("");
     ok(!frontResult, "Null result on front when searching for ''");
 
-    let results = yield walkerFront.search("h2");
+    let results = await walkerFront.search("h2");
     isDeeply(results, {
       node: fronts[0],
       type: "search",
@@ -61,7 +61,7 @@ window.onload = function () {
       resultsLength: 3
     }, "Default options work");
 
-    results = yield walkerFront.search("h2", { });
+    results = await walkerFront.search("h2", { });
     isDeeply(results, {
       node: fronts[1],
       type: "search",
@@ -70,16 +70,16 @@ window.onload = function () {
     }, "Search works with empty options");
 
     // Clear search data to remove result state on the front
-    yield walkerFront.search("");
+    await walkerFront.search("");
     runNextTest();
   });
 
-  addAsyncTest(function* testMultipleSearches() {
+  addAsyncTest(async function testMultipleSearches() {
     info("Testing search API using WalkerFront (reverse=false)");
-    let nodes = yield walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
-    let fronts = yield nodes.items();
+    let nodes = await walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
+    let fronts = await nodes.items();
 
-    let results = yield walkerFront.search("h2");
+    let results = await walkerFront.search("h2");
     isDeeply(results, {
       node: fronts[0],
       type: "search",
@@ -87,7 +87,7 @@ window.onload = function () {
       resultsLength: 3
     }, "Search works with multiple results (reverse=false)");
 
-    results = yield walkerFront.search("h2");
+    results = await walkerFront.search("h2");
     isDeeply(results, {
       node: fronts[1],
       type: "search",
@@ -95,7 +95,7 @@ window.onload = function () {
       resultsLength: 3
     }, "Search works with multiple results (reverse=false)");
 
-    results = yield walkerFront.search("h2");
+    results = await walkerFront.search("h2");
     isDeeply(results, {
       node: fronts[2],
       type: "search",
@@ -103,7 +103,7 @@ window.onload = function () {
       resultsLength: 3
     }, "Search works with multiple results (reverse=false)");
 
-    results = yield walkerFront.search("h2");
+    results = await walkerFront.search("h2");
     isDeeply(results, {
       node: fronts[0],
       type: "search",
@@ -112,16 +112,16 @@ window.onload = function () {
     }, "Search works with multiple results (reverse=false)");
 
     // Clear search data to remove result state on the front
-    yield walkerFront.search("");
+    await walkerFront.search("");
     runNextTest();
   });
 
-  addAsyncTest(function* testMultipleSearchesReverse() {
+  addAsyncTest(async function testMultipleSearchesReverse() {
     info("Testing search API using WalkerFront (reverse=true)");
-    let nodes = yield walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
-    let fronts = yield nodes.items();
+    let nodes = await walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
+    let fronts = await nodes.items();
 
-    let results = yield walkerFront.search("h2", {reverse: true});
+    let results = await walkerFront.search("h2", {reverse: true});
     isDeeply(results, {
       node: fronts[2],
       type: "search",
@@ -129,7 +129,7 @@ window.onload = function () {
       resultsLength: 3
     }, "Search works with multiple results (reverse=true)");
 
-    results = yield walkerFront.search("h2", {reverse: true});
+    results = await walkerFront.search("h2", {reverse: true});
     isDeeply(results, {
       node: fronts[1],
       type: "search",
@@ -137,7 +137,7 @@ window.onload = function () {
       resultsLength: 3
     }, "Search works with multiple results (reverse=true)");
 
-    results = yield walkerFront.search("h2", {reverse: true});
+    results = await walkerFront.search("h2", {reverse: true});
     isDeeply(results, {
       node: fronts[0],
       type: "search",
@@ -145,7 +145,7 @@ window.onload = function () {
       resultsLength: 3
     }, "Search works with multiple results (reverse=true)");
 
-    results = yield walkerFront.search("h2", {reverse: true});
+    results = await walkerFront.search("h2", {reverse: true});
     isDeeply(results, {
       node: fronts[2],
       type: "search",
@@ -153,7 +153,7 @@ window.onload = function () {
       resultsLength: 3
     }, "Search works with multiple results (reverse=true)");
 
-    results = yield walkerFront.search("h2", {reverse: false});
+    results = await walkerFront.search("h2", {reverse: false});
     isDeeply(results, {
       node: fronts[0],
       type: "search",
@@ -162,7 +162,7 @@ window.onload = function () {
     }, "Search works with multiple results (reverse=false)");
 
     // Clear search data to remove result state on the front
-    yield walkerFront.search("");
+    await walkerFront.search("");
     runNextTest();
   });
 

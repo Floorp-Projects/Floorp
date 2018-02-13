@@ -23,12 +23,12 @@ window.onload = function () {
   let win = null;
   let inspector = null;
 
-  addAsyncTest(function* () {
+  addAsyncTest(async function () {
     info("Setting up inspector actor");
 
     let url = document.getElementById("inspectorContent").href;
 
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       attachURL(url, function (err, client, tab, doc) {
         win = doc.defaultView;
         inspector = InspectorFront(client, tab);
@@ -39,23 +39,23 @@ window.onload = function () {
     runNextTest();
   });
 
-  addAsyncTest(function* () {
+  addAsyncTest(async function () {
     info("Start picking a color from the page");
-    yield inspector.pickColorFromPage();
+    await inspector.pickColorFromPage();
 
     info("Click in the page and make sure a color-picked event is received");
     let onColorPicked = waitForEvent("color-picked");
     win.document.body.click();
-    let color = yield onColorPicked;
+    let color = await onColorPicked;
 
     is(color, "#000000", "The color-picked event was received with the right color");
 
     runNextTest();
   });
 
-  addAsyncTest(function* () {
+  addAsyncTest(async function () {
     info("Start picking a color from the page");
-    yield inspector.pickColorFromPage();
+    await inspector.pickColorFromPage();
 
     info("Use the escape key to dismiss the eyedropper");
     let onPickCanceled = waitForEvent("color-pick-canceled");
@@ -65,18 +65,18 @@ window.onload = function () {
                                false, false, 27, 0);
     win.document.dispatchEvent(keyboardEvent);
 
-    yield onPickCanceled;
+    await onPickCanceled;
     ok(true, "The color-pick-canceled event was received");
 
     runNextTest();
   });
 
-  addAsyncTest(function* () {
+  addAsyncTest(async function () {
     info("Start picking a color from the page");
-    yield inspector.pickColorFromPage();
+    await inspector.pickColorFromPage();
 
     info("And cancel the color picking");
-    yield inspector.cancelPickColorFromPage();
+    await inspector.cancelPickColorFromPage();
 
     runNextTest();
   });

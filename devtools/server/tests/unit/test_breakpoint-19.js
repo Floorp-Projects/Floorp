@@ -51,20 +51,20 @@ function setUpCode() {
   /* eslint-enable */
 }
 
-const testBreakpoint = Task.async(function* () {
-  let source = yield getSource(gThreadClient, URL);
-  let [response, ] = yield setBreakpoint(source, {line: 2});
+const testBreakpoint = async function () {
+  let source = await getSource(gThreadClient, URL);
+  let [response, ] = await setBreakpoint(source, {line: 2});
   ok(!response.error);
 
   let actor = response.actor;
   ok(actor);
 
-  yield executeOnNextTickAndWaitForPause(setUpCode, gClient);
-  yield resume(gThreadClient);
+  await executeOnNextTickAndWaitForPause(setUpCode, gClient);
+  await resume(gThreadClient);
 
-  let packet = yield executeOnNextTickAndWaitForPause(gDebuggee.test, gClient);
+  let packet = await executeOnNextTickAndWaitForPause(gDebuggee.test, gClient);
   equal(packet.why.type, "breakpoint");
   notEqual(packet.why.actors.indexOf(actor), -1);
 
   finishClient(gClient);
-});
+};

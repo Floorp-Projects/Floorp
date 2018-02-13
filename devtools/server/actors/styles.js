@@ -7,7 +7,6 @@
 const {Ci} = require("chrome");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
-const {Task} = require("devtools/shared/task");
 const InspectorUtils = require("InspectorUtils");
 
 // This will also add the "stylesheet" actor type for protocol.js to recognize
@@ -444,7 +443,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    *     caused this rule to match its node.
    *   `skipPseudo`: Exclude styles applied to pseudo elements of the provided node.
    */
-  getApplied: Task.async(function* (node, options) {
+  async getApplied(node, options) {
     if (!node) {
       return {entries: [], rules: [], sheets: []};
     }
@@ -457,10 +456,10 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     let result = this.getAppliedProps(node, entries, options);
     for (let rule of result.rules) {
       // See the comment in |form| to understand this.
-      yield rule.getAuthoredCssText();
+      await rule.getAuthoredCssText();
     }
     return result;
-  }),
+  },
 
   _hasInheritedProps: function (style) {
     return Array.prototype.some.call(style, prop => {
@@ -468,7 +467,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     });
   },
 
-  isPositionEditable: Task.async(function* (node) {
+  async isPositionEditable(node) {
     if (!node || node.rawNode.nodeType !== node.rawNode.ELEMENT_NODE) {
       return false;
     }
@@ -481,7 +480,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
            props.has("right") ||
            props.has("left") ||
            props.has("bottom");
-  }),
+  },
 
   /**
    * Helper function for getApplied, gets all the rules from a given
@@ -894,7 +893,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    *        CSSOM.
    * @returns {StyleRuleActor} the new rule
    */
-  addNewRule: Task.async(function* (node, pseudoClasses, editAuthored = false) {
+  async addNewRule(node, pseudoClasses, editAuthored = false) {
     let style = this.getStyleElement(node.rawNode.ownerDocument);
     let sheet = style.sheet;
     let cssRules = sheet.cssRules;
@@ -920,13 +919,13 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     // text if requested.
     if (editAuthored) {
       let sheetActor = this._sheetRef(sheet);
-      let {str: authoredText} = yield sheetActor.getText();
+      let {str: authoredText} = await sheetActor.getText();
       authoredText += "\n" + selector + " {\n" + "}";
-      yield sheetActor.update(authoredText, false);
+      await sheetActor.update(authoredText, false);
     }
 
     return this.getNewAppliedProps(node, sheet.cssRules.item(index));
-  })
+  }
 });
 exports.PageStyleActor = PageStyleActor;
 
@@ -1262,7 +1261,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    * @param {String} newText the new text of the rule
    * @returns the rule with updated properties
    */
-  setRuleText: Task.async(function* (newText) {
+  async setRuleText(newText) {
     if (!this.canSetRuleText) {
       throw new Error("invalid call to setRuleText");
     }
@@ -1273,19 +1272,19 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     } else {
       // For stylesheet rules, set the text in the stylesheet.
       let parentStyleSheet = this.pageStyle._sheetRef(this._parentSheet);
-      let {str: cssText} = yield parentStyleSheet.getText();
+      let {str: cssText} = await parentStyleSheet.getText();
 
       let {offset, text} = getRuleText(cssText, this.line, this.column);
       cssText = cssText.substring(0, offset) + newText +
         cssText.substring(offset + text.length);
 
-      yield parentStyleSheet.update(cssText, false, UPDATE_PRESERVING_RULES);
+      await parentStyleSheet.update(cssText, false, UPDATE_PRESERVING_RULES);
     }
 
     this.authoredText = newText;
 
     return this;
-  }),
+  },
 
   /**
    * Modify a rule's properties. Passed an array of modifications:
@@ -1351,7 +1350,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    * @returns {CSSRule}
    *        The new CSS rule added
    */
-  _addNewSelector: Task.async(function* (value, editAuthored) {
+  async _addNewSelector(value, editAuthored) {
     let rule = this.rawRule;
     let parentStyleSheet = this._parentSheet;
 
@@ -1366,12 +1365,12 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       }
 
       let sheetActor = this.pageStyle._sheetRef(parentStyleSheet);
-      let {str: authoredText} = yield sheetActor.getText();
+      let {str: authoredText} = await sheetActor.getText();
       let [startOffset, endOffset] = getSelectorOffsets(authoredText, this.line,
                                                         this.column);
       authoredText = authoredText.substring(0, startOffset) + value +
         authoredText.substring(endOffset);
-      yield sheetActor.update(authoredText, false, UPDATE_PRESERVING_RULES);
+      await sheetActor.update(authoredText, false, UPDATE_PRESERVING_RULES);
     } else {
       let cssRules = parentStyleSheet.cssRules;
       let cssText = rule.cssText;
@@ -1395,7 +1394,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     }
 
     return this._getRuleFromIndex(parentStyleSheet);
-  }),
+  },
 
   /**
    * Modify the current rule's selector by inserting a new rule with the new
@@ -1410,7 +1409,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    *        Returns a boolean if the selector in the stylesheet was modified,
    *        and false otherwise
    */
-  modifySelector: Task.async(function* (value) {
+  async modifySelector(value) {
     if (this.type === ELEMENT_STYLE) {
       return false;
     }
@@ -1429,11 +1428,11 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     // Check if the selector is valid and not the same as the original
     // selector
     if (selectorElement && this.rawRule.selectorText !== value) {
-      yield this._addNewSelector(value, false);
+      await this._addNewSelector(value, false);
       return true;
     }
     return false;
-  }),
+  },
 
   /**
    * Modify the current rule's selector by inserting a new rule with the new

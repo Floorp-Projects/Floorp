@@ -24,11 +24,11 @@ var gWalker = null;
 var gStyles = null;
 var gInspectee = null;
 
-addAsyncTest(function* setup() {
+addAsyncTest(async function setup() {
   let url = document.getElementById("inspectorContent").href;
   let inspector;
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     attachURL(url, function (err, client, tab, doc) {
       gInspectee = doc;
       let {InspectorFront} = require("devtools/shared/fronts/inspector");
@@ -37,32 +37,32 @@ addAsyncTest(function* setup() {
     });
   });
 
-  gWalker = yield inspector.getWalker();
-  gStyles = yield inspector.getPageStyle();
+  gWalker = await inspector.getWalker();
+  gStyles = await inspector.getPageStyle();
 
   runNextTest();
 });
 
-addAsyncTest(function* modifyProperties() {
+addAsyncTest(async function modifyProperties() {
   let localNode = gInspectee.querySelector("#inheritable-rule-inheritable-style");
 
-  let node = yield gWalker.querySelector(gWalker.rootNode,
+  let node = await gWalker.querySelector(gWalker.rootNode,
     "#inheritable-rule-inheritable-style");
 
-  let applied = yield gStyles.getApplied(node,
+  let applied = await gStyles.getApplied(node,
     { inherited: false, filter: "user" });
 
   let elementStyle = applied[0].rule;
   is(elementStyle.cssText, localNode.style.cssText, "Got expected css text");
 
   // Change an existing property...
-  yield setProperty(elementStyle, 0, "color", "black");
+  await setProperty(elementStyle, 0, "color", "black");
   // Create a new property
-  yield setProperty(elementStyle, 1, "background-color", "green");
+  await setProperty(elementStyle, 1, "background-color", "green");
 
   // Create a new property and then change it immediately.
-  yield setProperty(elementStyle, 2, "border", "1px solid black");
-  yield setProperty(elementStyle, 2, "border", "2px solid black");
+  await setProperty(elementStyle, 2, "border", "1px solid black");
+  await setProperty(elementStyle, 2, "border", "2px solid black");
 
   is(elementStyle.cssText,
      "color: black; background-color: green; border: 2px solid black;",
@@ -71,9 +71,9 @@ addAsyncTest(function* modifyProperties() {
      "Local node and style front match.");
 
   // Remove all the properties
-  yield removeProperty(elementStyle, 0, "color");
-  yield removeProperty(elementStyle, 0, "background-color");
-  yield removeProperty(elementStyle, 0, "border");
+  await removeProperty(elementStyle, 0, "color");
+  await removeProperty(elementStyle, 0, "background-color");
+  await removeProperty(elementStyle, 0, "border");
 
   is(elementStyle.cssText, "", "Should have expected cssText");
   is(elementStyle.cssText, localNode.style.cssText,
@@ -82,16 +82,16 @@ addAsyncTest(function* modifyProperties() {
   runNextTest();
 });
 
-function* setProperty(rule, index, name, value) {
+async function setProperty(rule, index, name, value) {
   let changes = rule.startModifyingProperties(isCssPropertyKnown);
   changes.setProperty(index, name, value);
-  yield changes.apply();
+  await changes.apply();
 }
 
-function* removeProperty(rule, index, name) {
+async function removeProperty(rule, index, name) {
   let changes = rule.startModifyingProperties(isCssPropertyKnown);
   changes.removeProperty(index, name);
-  yield changes.apply();
+  await changes.apply();
 }
 
 addTest(function cleanup() {

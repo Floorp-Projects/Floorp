@@ -6,8 +6,8 @@
 
 // Simple checks for the LayoutActor and GridActor
 
-add_task(function* () {
-  let {client, walker, layout} = yield initLayoutFrontForUrl(
+add_task(async function () {
+  let {client, walker, layout} = await initLayoutFrontForUrl(
     "data:text/html;charset=utf-8,<title>test</title><div></div>");
 
   ok(layout, "The LayoutFront was created");
@@ -15,17 +15,17 @@ add_task(function* () {
 
   let didThrow = false;
   try {
-    yield layout.getGrids(null);
+    await layout.getGrids(null);
   } catch (e) {
     didThrow = true;
   }
   ok(didThrow, "An exception was thrown for a missing NodeActor in getGrids");
 
-  let invalidNode = yield walker.querySelector(walker.rootNode, "title");
-  let grids = yield layout.getGrids(invalidNode);
+  let invalidNode = await walker.querySelector(walker.rootNode, "title");
+  let grids = await layout.getGrids(invalidNode);
   ok(Array.isArray(grids), "An array of grids was returned");
   is(grids.length, 0, "0 grids have been returned for the invalid node");
 
-  yield client.close();
+  await client.close();
   gBrowser.removeCurrentTab();
 });

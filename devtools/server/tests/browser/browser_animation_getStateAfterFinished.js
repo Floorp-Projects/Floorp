@@ -11,28 +11,28 @@
 // See devtools/server/actors/animation.js |getPlayerIndex| for more
 // information.
 
-add_task(function* () {
+add_task(async function () {
   let {client, walker, animations} =
-    yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
+    await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Retrieve a non animated node");
-  let node = yield walker.querySelector(walker.rootNode, ".not-animated");
+  let node = await walker.querySelector(walker.rootNode, ".not-animated");
 
   info("Apply the multiple-animations-2 class to start the animations");
-  yield node.modifyAttributes([
+  await node.modifyAttributes([
     {attributeName: "class", newValue: "multiple-animations-2"}
   ]);
 
   info("Get the list of players, by the time this executes, the first, " +
        "short, animation should have ended.");
-  let players = yield animations.getAnimationPlayersForNode(node);
+  let players = await animations.getAnimationPlayersForNode(node);
   if (players.length === 3) {
     info("The short animation hasn't ended yet, wait for a bit.");
     // The animation lasts for 500ms, so 1000ms should do it.
-    yield new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     info("And get the list again");
-    players = yield animations.getAnimationPlayersForNode(node);
+    players = await animations.getAnimationPlayersForNode(node);
   }
 
   is(players.length, 2, "2 animations remain on the node");
@@ -51,6 +51,6 @@ add_task(function* () {
   is(players[1].state.iterationCount, 100,
      "The iterationCount of the second animation is correct");
 
-  yield client.close();
+  await client.close();
   gBrowser.removeCurrentTab();
 });
