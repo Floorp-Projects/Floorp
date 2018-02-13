@@ -201,11 +201,11 @@ function getNodeFront(selector, {walker}) {
  * to highlight the node upon selection
  * @return {Promise} Resolves when the inspector is updated with the new node
  */
-var selectNode = async function(selector, inspector, reason = "test") {
+var selectNode = async function(selector, inspector, reason = "test", isSlotted) {
   info("Selecting the node for '" + selector + "'");
   let nodeFront = await getNodeFront(selector, inspector);
   let updated = inspector.once("inspector-updated");
-  inspector.selection.setNodeFront(nodeFront, { reason });
+  inspector.selection.setNodeFront(nodeFront, { reason, isSlotted });
   await updated;
 };
 
