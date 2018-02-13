@@ -24,7 +24,7 @@ function run_test() {
       function (response, tabClient, threadClient) {
         gThreadClient = threadClient;
 
-        promise.resolve(setup_code())
+        Promise.resolve(setup_code())
           .then(black_box_code)
           .then(run_code)
           .then(test_correct_location)
