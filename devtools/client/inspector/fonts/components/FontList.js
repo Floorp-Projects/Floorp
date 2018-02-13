@@ -15,12 +15,18 @@ const Types = require("../types");
 class FontList extends PureComponent {
   static get propTypes() {
     return {
-      fonts: PropTypes.arrayOf(PropTypes.shape(Types.font)).isRequired
+      fontOptions: PropTypes.shape(Types.fontOptions).isRequired,
+      fonts: PropTypes.arrayOf(PropTypes.shape(Types.font)).isRequired,
+      onPreviewFonts: PropTypes.func.isRequired,
     };
   }
 
   render() {
-    let { fonts } = this.props;
+    let {
+      fonts,
+      fontOptions,
+      onPreviewFonts
+    } = this.props;
 
     return dom.div(
       {
@@ -32,7 +38,9 @@ class FontList extends PureComponent {
         },
         fonts.map((font, i) => Font({
           key: i,
-          font
+          font,
+          fontOptions,
+          onPreviewFonts,
         }))
       )
     );

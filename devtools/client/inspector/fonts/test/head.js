@@ -51,7 +51,7 @@ var openFontInspectorForURL = Task.async(function* (url) {
 });
 
 /**
- * Clears the preview input field, types new text into it and waits for the
+ * Focus one of the preview inputs, clear it, type new text into it and wait for the
  * preview images to be updated.
  *
  * @param {FontInspector} view - The FontInspector instance.
@@ -61,25 +61,29 @@ function* updatePreviewText(view, text) {
   info(`Changing the preview text to '${text}'`);
 
   let doc = view.document;
-  let input = doc.querySelector("#sidebar-panel-fontinspector .devtools-textinput");
-  let update = view.inspector.once("fontinspector-updated");
+  let previewImg = doc.querySelector("#sidebar-panel-fontinspector .font-preview");
 
-  info("Focusing the input field.");
-  input.focus();
+  info("Clicking the font preview element to turn it to edit mode");
+  let onClick = once(doc, "click");
+  previewImg.click();
+  yield onClick;
 
+  let input = previewImg.parentNode.querySelector("input");
   is(doc.activeElement, input, "The input was focused.");
 
   info("Blanking the input field.");
-  for (let i = input.value.length; i >= 0; i--) {
+  while (input.value.length) {
+    let update = view.inspector.once("fontinspector-updated");
     EventUtils.sendKey("BACK_SPACE", doc.defaultView);
+    yield update;
   }
 
-  is(input.value, "", "The input is now blank.");
+  if (text) {
+    info("Typing the specified text to the input field.");
+    let update = waitForNEvents(view.inspector, "fontinspector-updated", text.length);
+    EventUtils.sendString(text, doc.defaultView);
+    yield update;
+  }
 
-  info("Typing the specified text to the input field.");
-  EventUtils.sendString(text, doc.defaultView);
   is(input.value, text, "The input now contains the correct text.");
-
-  info("Waiting for the font-inspector to update.");
-  yield update;
 }
