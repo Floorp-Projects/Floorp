@@ -81,7 +81,7 @@ test(t => {
 }, 'After setting timeline on an idle animation with a sufficiently ancient'
    + ' start time it is finished');
 
-promise_test(t => {
+promise_test(async t => {
   const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
@@ -94,14 +94,13 @@ promise_test(t => {
   assert_true(animation.pending && animation.playState === 'running',
               'Animation is still play-pending after setting timeline');
 
-  return animation.ready.then(() => {
-    assert_true(!animation.pending && animation.playState === 'running',
-                'Animation plays after it finishes pending');
-  });
+  await animation.ready;
+  assert_true(!animation.pending && animation.playState === 'running',
+              'Animation plays after it finishes pending');
 }, 'After setting timeline on a play-pending animation it begins playing'
    + ' after pending');
 
-promise_test(t => {
+promise_test(async t => {
   const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   null);
@@ -116,10 +115,9 @@ promise_test(t => {
   assert_true(animation.pending && animation.playState === 'paused',
               'Animation is still pause-pending after setting timeline');
 
-  return animation.ready.then(() => {
-    assert_true(!animation.pending && animation.playState === 'paused',
-                'Animation pauses after it finishes pending');
-  });
+  await animation.ready;
+  assert_true(!animation.pending && animation.playState === 'paused',
+              'Animation pauses after it finishes pending');
 }, 'After setting timeline on a pause-pending animation it becomes paused'
    + ' after pending');
 
@@ -193,7 +191,7 @@ test(t => {
   assert_true(animation.pending && animation.playState === 'running');
 }, 'After clearing timeline on play-pending animation it is still pending');
 
-promise_test(t => {
+promise_test(async t => {
   const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
   assert_true(animation.pending && animation.playState === 'running');
 
@@ -201,9 +199,8 @@ promise_test(t => {
   animation.timeline = document.timeline;
 
   assert_true(animation.pending && animation.playState === 'running');
-  return animation.ready.then(() => {
-    assert_true(!animation.pending && animation.playState === 'running');
-  });
+  await animation.ready;
+  assert_true(!animation.pending && animation.playState === 'running');
 }, 'After clearing and re-setting timeline on play-pending animation it'
    + ' begins to play');
 
@@ -220,7 +217,7 @@ test(t => {
   assert_true(animation.pending && animation.playState === 'paused');
 }, 'After clearing timeline on a pause-pending animation it is still pending');
 
-promise_test(t => {
+promise_test(async t => {
   const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
@@ -232,13 +229,12 @@ promise_test(t => {
   animation.timeline = document.timeline;
 
   assert_true(animation.pending && animation.playState === 'paused');
-  return animation.ready.then(() => {
-    assert_true(!animation.pending && animation.playState === 'paused');
-  });
+  await animation.ready;
+  assert_true(!animation.pending && animation.playState === 'paused');
 }, 'After clearing and re-setting timeline on a pause-pending animation it'
    + ' completes pausing');
 
-promise_test(t => {
+promise_test(async t => {
   const animation =
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC),
                   document.timeline);
@@ -250,9 +246,8 @@ promise_test(t => {
   animation.timeline = null;
   animation.timeline = document.timeline;
 
-  return animation.ready.then(() => {
-    assert_times_equal(animation.startTime, initialStartTime);
-  });
+  await animation.ready;
+  assert_times_equal(animation.startTime, initialStartTime);
 }, 'After clearing and re-setting timeline on an animation in the middle of'
    + ' an aborted pause, it continues playing using the same start time');
 
