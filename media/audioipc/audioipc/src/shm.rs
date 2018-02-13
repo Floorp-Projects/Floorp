@@ -5,7 +5,7 @@ use std::path::Path;
 use std::sync::atomic;
 
 pub struct SharedMemReader {
-    mmap: Mmap
+    mmap: Mmap,
 }
 
 impl SharedMemReader {
@@ -19,12 +19,7 @@ impl SharedMemReader {
         file.set_len(size as u64)?;
         let mmap = Mmap::open(&file, Protection::Read)?;
         assert_eq!(mmap.len(), size);
-        Ok((
-            SharedMemReader {
-                mmap
-            },
-            file
-        ))
+        Ok((SharedMemReader { mmap }, file))
     }
 
     pub fn read(&self, buf: &mut [u8]) -> Result<()> {
@@ -46,7 +41,7 @@ impl SharedMemReader {
 }
 
 pub struct SharedMemSlice {
-    view: MmapViewSync
+    view: MmapViewSync,
 }
 
 impl SharedMemSlice {
@@ -54,9 +49,7 @@ impl SharedMemSlice {
         let mmap = Mmap::open(file, Protection::Read)?;
         assert_eq!(mmap.len(), size);
         let view = mmap.into_view_sync();
-        Ok(SharedMemSlice {
-            view
-        })
+        Ok(SharedMemSlice { view })
     }
 
     pub fn get_slice(&self, size: usize) -> Result<&[u8]> {
@@ -79,13 +72,13 @@ impl SharedMemSlice {
     /// underlying the view is not illegally aliased.
     pub unsafe fn clone_view(&self) -> Self {
         SharedMemSlice {
-            view: self.view.clone()
+            view: self.view.clone(),
         }
     }
 }
 
 pub struct SharedMemWriter {
-    mmap: Mmap
+    mmap: Mmap,
 }
 
 impl SharedMemWriter {
@@ -98,12 +91,7 @@ impl SharedMemWriter {
         let _ = remove_file(path);
         file.set_len(size as u64)?;
         let mmap = Mmap::open(&file, Protection::ReadWrite)?;
-        Ok((
-            SharedMemWriter {
-                mmap
-            },
-            file
-        ))
+        Ok((SharedMemWriter { mmap }, file))
     }
 
     pub fn write(&mut self, buf: &[u8]) -> Result<()> {
@@ -124,7 +112,7 @@ impl SharedMemWriter {
 }
 
 pub struct SharedMemMutSlice {
-    view: MmapViewSync
+    view: MmapViewSync,
 }
 
 impl SharedMemMutSlice {
@@ -132,9 +120,7 @@ impl SharedMemMutSlice {
         let mmap = Mmap::open(file, Protection::ReadWrite)?;
         assert_eq!(mmap.len(), size);
         let view = mmap.into_view_sync();
-        Ok(SharedMemMutSlice {
-            view
-        })
+        Ok(SharedMemMutSlice { view })
     }
 
     pub fn get_mut_slice(&mut self, size: usize) -> Result<&mut [u8]> {
@@ -158,7 +144,7 @@ impl SharedMemMutSlice {
     /// aliased.
     pub unsafe fn clone_view(&self) -> Self {
         SharedMemMutSlice {
-            view: self.view.clone()
+            view: self.view.clone(),
         }
     }
 }

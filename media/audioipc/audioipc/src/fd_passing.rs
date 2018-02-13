@@ -20,7 +20,7 @@ const FDS_CAPACITY: usize = 16;
 
 struct IncomingFds {
     cmsg: BytesMut,
-    recv_fds: Option<cmsg::ControlMsgIter>
+    recv_fds: Option<cmsg::ControlMsgIter>,
 }
 
 impl IncomingFds {
@@ -28,7 +28,7 @@ impl IncomingFds {
         let capacity = c * cmsg::space(mem::size_of::<[RawFd; 3]>());
         IncomingFds {
             cmsg: BytesMut::with_capacity(capacity),
-            recv_fds: None
+            recv_fds: None,
         }
     }
 
@@ -60,7 +60,7 @@ impl IncomingFds {
 #[derive(Debug)]
 struct Frame {
     msgs: Bytes,
-    fds: Option<Bytes>
+    fds: Option<Bytes>,
 }
 
 /// A unified `Stream` and `Sink` interface over an I/O object, using
@@ -76,12 +76,12 @@ pub struct FramedWithFds<A, C> {
     // Sink
     frames: VecDeque<Frame>,
     write_buf: BytesMut,
-    outgoing_fds: BytesMut
+    outgoing_fds: BytesMut,
 }
 
 impl<A, C> FramedWithFds<A, C>
 where
-    A: AsyncSendMsg
+    A: AsyncSendMsg,
 {
     // If there is a buffered frame, try to write it to `A`
     fn do_write(&mut self) -> Poll<(), io::Error> {
@@ -102,10 +102,10 @@ where
                     let mut msgs = frame.msgs.clone().into_buf();
                     let mut fds = match frame.fds {
                         Some(ref fds) => fds.clone(),
-                        None => Bytes::new()
+                        None => Bytes::new(),
                     }.into_buf();
                     try_ready!(self.io.send_msg_buf(&mut msgs, &fds))
-                },
+                }
                 _ => {
                     // No pending frames.
                     return Ok(().into());
@@ -137,8 +137,8 @@ where
                         self.frames.push_front(frame);
                         break;
                     }
-                },
-                _ => panic!()
+                }
+                _ => panic!(),
             }
         }
         debug!("process {} frames", processed);
@@ -158,10 +158,7 @@ where
         let msgs = self.write_buf.take().freeze();
         trace!("set_frame: msgs={:?} fds={:?}", msgs, fds);
 
-        self.frames.push_back(Frame {
-            msgs,
-            fds
-        });
+        self.frames.push_back(Frame { msgs, fds });
     }
 }
 
@@ -169,7 +166,7 @@ impl<A, C> Stream for FramedWithFds<A, C>
 where
     A: AsyncRecvMsg,
     C: Codec,
-    C::Out: AssocRawFd
+    C::Out: AssocRawFd,
 {
     type Item = C::Out;
     type Error = io::Error;
@@ -226,15 +223,12 @@ impl<A, C> Sink for FramedWithFds<A, C>
 where
     A: AsyncSendMsg,
     C: Codec,
-    C::In: AssocRawFd + fmt::Debug
+    C::In: AssocRawFd + fmt::Debug,
 {
     type SinkItem = C::In;
     type SinkError = io::Error;
 
-    fn start_send(
-        &mut self,
-        item: Self::SinkItem
-    ) -> StartSend<Self::SinkItem, Self::SinkError> {
+    fn start_send(&mut self, item: Self::SinkItem) -> StartSend<Self::SinkItem, Self::SinkError> {
         trace!("start_send: item={:?}", item);
 
         // If the buffer is already over BACKPRESSURE_THRESHOLD,
@@ -295,8 +289,8 @@ pub fn framed_with_fds<A, C>(io: A, codec: C) -> FramedWithFds<A, C> {
         frames: VecDeque::new(),
         write_buf: BytesMut::with_capacity(INITIAL_CAPACITY),
         outgoing_fds: BytesMut::with_capacity(
-            FDS_CAPACITY * cmsg::space(mem::size_of::<[RawFd; 3]>())
-        )
+            FDS_CAPACITY * cmsg::space(mem::size_of::<[RawFd; 3]>()),
+        ),
     }
 }
 
@@ -307,7 +301,7 @@ fn write_zero() -> io::Error {
 fn clone_into_array<A, T>(slice: &[T]) -> A
 where
     A: Sized + Default + AsMut<[T]>,
-    T: Clone
+    T: Clone,
 {
     let mut a = Default::default();
     <A as AsMut<[T]>>::as_mut(&mut a).clone_from_slice(slice);

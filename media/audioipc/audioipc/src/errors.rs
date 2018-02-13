@@ -1,5 +1,5 @@
 use bincode;
-use cubeb_core;
+use cubeb;
 use std;
 
 error_chain! {
@@ -7,7 +7,7 @@ error_chain! {
     foreign_links {
         Bincode(bincode::Error);
         Io(std::io::Error);
-        Cubeb(cubeb_core::Error);
+        Cubeb(cubeb::Error);
     }
 
     // Replace bail!(str) with explicit errors.

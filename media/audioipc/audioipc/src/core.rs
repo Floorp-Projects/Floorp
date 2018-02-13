@@ -16,7 +16,7 @@ pub fn handle() -> Handle {
 
 pub fn spawn<F>(f: F)
 where
-    F: Future<Item = (), Error = ()> + 'static
+    F: Future<Item = (), Error = ()> + 'static,
 {
     HANDLE.with(|handle| handle.spawn(f))
 }
@@ -24,19 +24,19 @@ where
 pub fn spawn_fn<F, R>(f: F)
 where
     F: FnOnce() -> R + 'static,
-    R: IntoFuture<Item = (), Error = ()> + 'static
+    R: IntoFuture<Item = (), Error = ()> + 'static,
 {
     HANDLE.with(|handle| handle.spawn_fn(f))
 }
 
 struct Inner {
     join: thread::JoinHandle<()>,
-    shutdown: oneshot::Sender<()>
+    shutdown: oneshot::Sender<()>,
 }
 
 pub struct CoreThread {
     inner: Option<Inner>,
-    remote: Remote
+    remote: Remote,
 }
 
 impl CoreThread {
@@ -65,7 +65,7 @@ impl fmt::Debug for CoreThread {
 pub fn spawn_thread<S, F>(name: S, f: F) -> io::Result<CoreThread>
 where
     S: Into<String>,
-    F: FnOnce() -> io::Result<()> + Send + 'static
+    F: FnOnce() -> io::Result<()> + Send + 'static,
 {
     let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
     let (remote_tx, remote_rx) = mpsc::channel::<Remote>();
@@ -85,18 +85,16 @@ where
         trace!("thread shutdown...");
     }));
 
-    let remote = try!(remote_rx.recv().or_else(|_| {
-        Err(io::Error::new(
-            io::ErrorKind::Other,
-            "Failed to receive remote handle from spawned thread"
-        ))
-    }));
+    let remote = try!(remote_rx.recv().or_else(|_| Err(io::Error::new(
+        io::ErrorKind::Other,
+        "Failed to receive remote handle from spawned thread"
+    ))));
 
     Ok(CoreThread {
         inner: Some(Inner {
             join: join,
-            shutdown: shutdown_tx
+            shutdown: shutdown_tx,
         }),
-        remote: remote
+        remote: remote,
     })
 }

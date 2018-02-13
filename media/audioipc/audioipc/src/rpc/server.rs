@@ -49,13 +49,13 @@ use tokio_core::reactor::Handle;
 /// Bind an async I/O object `io` to the `server`.
 pub fn bind_server<S>(transport: S::Transport, server: S, handle: &Handle)
 where
-    S: Server
+    S: Server,
 {
     let fut = {
         let handler = ServerHandler {
             server: server,
             transport: transport,
-            in_flight: VecDeque::with_capacity(32)
+            in_flight: VecDeque::with_capacity(32),
         };
         Driver::new(handler)
     };
@@ -84,24 +84,23 @@ pub trait Server: 'static {
     fn process(&mut self, req: Self::Request) -> Self::Future;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 struct ServerHandler<S>
 where
-    S: Server
+    S: Server,
 {
     // The service handling the connection
     server: S,
     // The transport responsible for sending/receving messages over the wire
     transport: S::Transport,
     // FIFO of "in flight" responses to requests.
-    in_flight: VecDeque<InFlight<S::Future>>
+    in_flight: VecDeque<InFlight<S::Future>>,
 }
 
 impl<S> Handler for ServerHandler<S>
 where
-    S: Server
+    S: Server,
 {
     type In = S::Request;
     type Out = S::Response;
@@ -133,7 +132,7 @@ where
 
         // Is the head of the queue ready?
         match self.in_flight.front() {
-            Some(&InFlight::Done(_)) => {},
+            Some(&InFlight::Done(_)) => {}
             _ => {
                 trace!("  --> not ready");
                 return Ok(Async::NotReady);
@@ -145,8 +144,8 @@ where
             Some(InFlight::Done(res)) => {
                 trace!("  --> received response");
                 Ok(Async::Ready(Some(res)))
-            },
-            _ => panic!()
+            }
+            _ => panic!(),
         }
     }
 
@@ -160,7 +159,7 @@ where
 
 enum InFlight<F: Future<Error = ()>> {
     Active(F),
-    Done(F::Item)
+    Done(F::Item),
 }
 
 impl<F: Future<Error = ()>> InFlight<F> {
@@ -169,9 +168,9 @@ impl<F: Future<Error = ()>> InFlight<F> {
             InFlight::Active(ref mut f) => match f.poll() {
                 Ok(Async::Ready(e)) => e,
                 Err(_) => unreachable!(),
-                Ok(Async::NotReady) => return
+                Ok(Async::NotReady) => return,
             },
-            _ => return
+            _ => return,
         };
         *self = InFlight::Done(res);
     }
