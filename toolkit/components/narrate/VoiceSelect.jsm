@@ -22,12 +22,12 @@ function VoiceSelect(win, label) {
 
   let button = this.selectToggle;
   button.addEventListener("click", this);
-  button.addEventListener("keypress", this);
+  button.addEventListener("keydown", this);
 
   let listbox = this.listbox;
   listbox.addEventListener("click", this);
   listbox.addEventListener("mousemove", this);
-  listbox.addEventListener("keypress", this);
+  listbox.addEventListener("keydown", this);
   listbox.addEventListener("wheel", this, true);
 
   win.addEventListener("resize", () => {
@@ -103,16 +103,16 @@ VoiceSelect.prototype = {
         this.listbox.classList.add("hovering");
         break;
 
-      case "keypress":
+      case "keydown":
         if (target.classList.contains("select-toggle")) {
           if (evt.altKey) {
             this.toggleList(true);
           } else {
-            this._keyPressedButton(evt);
+            this._keyDownedButton(evt);
           }
         } else {
           this.listbox.classList.remove("hovering");
-          this._keyPressedInBox(evt);
+          this._keyDownedInBox(evt);
         }
         break;
 
@@ -147,7 +147,7 @@ VoiceSelect.prototype = {
     return next;
   },
 
-  _keyPressedButton(evt) {
+  _keyDownedButton(evt) {
     if (evt.altKey && (evt.key === "ArrowUp" || evt.key === "ArrowUp")) {
       this.toggleList(true);
       return;
@@ -177,7 +177,7 @@ VoiceSelect.prototype = {
     }
   },
 
-  _keyPressedInBox(evt) {
+  _keyDownedInBox(evt) {
     let toFocus;
     let cur = this._doc.activeElement;
 
