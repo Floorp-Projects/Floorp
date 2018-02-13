@@ -78,6 +78,15 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
     uint32_t mDistance;
   };
 
+  class CapabilityComparator {
+  public:
+    bool Equals(const CapabilityCandidate& aCandidate,
+                const webrtc::CaptureCapability& aCapability) const
+    {
+      return aCandidate.mCapability == aCapability;
+    }
+  };
+
   bool ChooseCapability(const NormalizedConstraints& aConstraints,
                         const MediaEnginePrefs& aPrefs,
                         const nsString& aDeviceId,
