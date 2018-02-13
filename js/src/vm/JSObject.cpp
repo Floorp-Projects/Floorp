@@ -1664,6 +1664,13 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
     MOZ_ASSERT(!a->is<TypedArrayObject>() && !b->is<TypedArrayObject>());
     MOZ_ASSERT(!a->is<TypedObject>() && !b->is<TypedObject>());
 
+    // Don't swap objects that may currently be participating in shape
+    // teleporting optimizations.
+    //
+    // See: ReshapeForProtoMutation, ReshapeForShadowedProp
+    MOZ_ASSERT_IF(a->isNative() && a->isDelegate(), a->taggedProto() == TaggedProto());
+    MOZ_ASSERT_IF(b->isNative() && b->isDelegate(), b->taggedProto() == TaggedProto());
+
     bool aIsProxyWithInlineValues =
         a->is<ProxyObject>() && a->as<ProxyObject>().usingInlineValueArray();
     bool bIsProxyWithInlineValues =
@@ -1987,47 +1994,63 @@ JSObject::fixupAfterMovingGC()
 }
 
 static bool
+ReshapeForProtoMutation(JSContext* cx, HandleObject obj)
+{
+    // To avoid the JIT guarding on each prototype in chain to detect prototype
+    // mutation, we can instead reshape the rest of the proto chain such that a
+    // guard on any of them is sufficient. To avoid excessive reshaping and
+    // invalidation, we apply heuristics to decide when to apply this and when
+    // to require a guard.
+    //
+    // Heuristics:
+    //  - Always reshape singleton objects. This historically avoided
+    //    de-optimizing in cases that compiler doesn't support
+    //    uncacheable-proto. TODO: Revisit if this is a good idea.
+    //  - Other objects instead set UNCACHEABLE_PROTO flag on shape to avoid
+    //    creating too many private shape copies.
+    //  - Only propegate along proto chain if we are mark DELEGATE. This avoids
+    //    reshaping in normal object access cases.
+    //
+    // NOTE: We only handle NativeObjects and don't propegate reshapes through
+    //       any non-native objects on the chain.
+    //
+    // See Also:
+    //  - GeneratePrototypeGuards
+    //  - GeneratePrototypeHoleGuards
+    //  - ObjectGroup::defaultNewGroup
+
+    RootedObject pobj(cx, obj);
+
+    while (pobj && pobj->isNative()) {
+        if (pobj->isSingleton()) {
+            // If object was converted to a singleton it should have cleared
+            // any UNCACHEABLE_PROTO flags.
+            MOZ_ASSERT(!pobj->hasUncacheableProto());
+
+            if (!NativeObject::reshapeForProtoMutation(cx, pobj.as<NativeObject>()))
+                return false;
+        } else {
+            if (!JSObject::setUncacheableProto(cx, pobj))
+                return false;
+        }
+
+        if (!obj->isDelegate())
+            break;
+
+        pobj = pobj->staticPrototype();
+    }
+
+    return true;
+}
+
+static bool
 SetClassAndProto(JSContext* cx, HandleObject obj,
                  const Class* clasp, Handle<js::TaggedProto> proto)
 {
-    // Regenerate the object's shape. If the object is a proto (isDelegate()),
-    // we also need to regenerate shapes for all of the objects along the old
-    // prototype chain, in case any entries were filled by looking up through
-    // obj. Stop when a non-native object is found, prototype lookups will not
-    // be cached across these.
-    //
-    // How this shape change is done is very delicate; the change can be made
-    // either by marking the object's prototype as uncacheable (such that the
-    // JIT'ed ICs cannot assume the shape determines the prototype) or by just
-    // generating a new shape for the object. Choosing the former is bad if the
-    // object is on the prototype chain of other objects, as the uncacheable
-    // prototype can inhibit iterator caches on those objects and slow down
-    // prototype accesses. Choosing the latter is bad if there are many similar
-    // objects to this one which will have their prototype mutated, as the
-    // generateOwnShape forces the object into dictionary mode and similar
-    // property lineages will be repeatedly cloned.
-    //
-    // :XXX: bug 707717 make this code less brittle.
-    RootedObject oldproto(cx, obj);
-    while (oldproto && oldproto->isNative()) {
-        if (oldproto->isSingleton()) {
-            // We always generate a new shape if the object is a singleton,
-            // regardless of the uncacheable-proto flag. ICs may rely on
-            // this.
-            if (!NativeObject::generateOwnShape(cx, oldproto.as<NativeObject>()))
-                return false;
-        } else {
-            if (!JSObject::setUncacheableProto(cx, oldproto))
-                return false;
-        }
-        if (!obj->isDelegate()) {
-            // If |obj| is not a proto of another object, we don't need to
-            // reshape the whole proto chain.
-            MOZ_ASSERT(obj == oldproto);
-            break;
-        }
-        oldproto = oldproto->staticPrototype();
-    }
+    // Regenerate object shape (and possibly prototype shape) to invalidate JIT
+    // code that is affected by a prototype mutation.
+    if (!ReshapeForProtoMutation(cx, obj))
+        return false;
 
     if (proto.isObject()) {
         RootedObject protoObj(cx, proto.toObject());
