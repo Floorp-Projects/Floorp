@@ -44,7 +44,7 @@
 
 #![deny(missing_docs)]
 
-extern crate gcc;
+extern crate cc;
 
 use std::env;
 use std::ffi::{OsString, OsStr};
@@ -70,6 +70,7 @@ pub struct Config {
     cmake_target: Option<String>,
     env: Vec<(OsString, OsString)>,
     static_crt: Option<bool>,
+    uses_cxx11: bool,
 }
 
 /// Builds the native library rooted at `path` with the default cmake options.
@@ -111,6 +112,7 @@ impl Config {
             cmake_target: None,
             env: Vec::new(),
             static_crt: None,
+            uses_cxx11: false
         }
     }
 
@@ -221,31 +223,51 @@ impl Config {
         self
     }
 
+    /// Alters the default target triple on OSX to ensure that c++11 is
+    /// available. Does not change the target triple if it is explicitly
+    /// specified.
+    ///
+    /// This does not otherwise affect any CXX flags, i.e. it does not set
+    /// -std=c++11 or -stdlib=libc++.
+    pub fn uses_cxx11(&mut self) -> &mut Config {
+        self.uses_cxx11 = true;
+        self
+    }
+
     /// Run this configuration, compiling the library with all the configured
     /// options.
     ///
     /// This will run both the build system generator command as well as the
     /// command to build the library.
     pub fn build(&mut self) -> PathBuf {
-        let target = self.target.clone().unwrap_or_else(|| {
-            getenv_unwrap("TARGET")
-        });
+        let target = match self.target.clone() {
+            Some(t) => t,
+            None => {
+                let mut t = getenv_unwrap("TARGET");
+                if t.ends_with("-darwin") && self.uses_cxx11 {
+                    t = t + "11"
+                }
+                t
+            }
+        };
         let host = self.host.clone().unwrap_or_else(|| {
             getenv_unwrap("HOST")
         });
         let msvc = target.contains("msvc");
-        let mut c_cfg = gcc::Config::new();
+        let mut c_cfg = cc::Build::new();
         c_cfg.cargo_metadata(false)
             .opt_level(0)
             .debug(false)
             .target(&target)
+            .warnings(false)
             .host(&host);
-        let mut cxx_cfg = gcc::Config::new();
+        let mut cxx_cfg = cc::Build::new();
         cxx_cfg.cargo_metadata(false)
             .cpp(true)
             .opt_level(0)
             .debug(false)
             .target(&target)
+            .warnings(false)
             .host(&host);
         if let Some(static_crt) = self.static_crt {
             c_cfg.static_crt(static_crt);
@@ -275,7 +297,8 @@ impl Config {
         let cmake_prefix_path = env::join_paths(&cmake_prefix_path).unwrap();
 
         // Build up the first cmake command to build the build system.
-        let mut cmd = Command::new("cmake");
+        let executable = env::var("CMAKE").unwrap_or("cmake".to_owned());
+        let mut cmd = Command::new(executable);
         cmd.arg(&self.path)
            .current_dir(&build);
         if target.contains("windows-gnu") {
@@ -313,6 +336,10 @@ impl Config {
             // This also guarantees that NMake generator isn't chosen implicitly.
             if self.generator.is_none() {
                 cmd.arg("-G").arg(self.visual_studio_generator(&target));
+            }
+        } else if target.contains("redox") {
+            if !self.defined("CMAKE_SYSTEM_NAME") {
+                cmd.arg("-DCMAKE_SYSTEM_NAME=Generic");
             }
         }
         let mut is_ninja = false;
@@ -358,7 +385,7 @@ impl Config {
                 }
             };
             let mut set_compiler = |kind: &str,
-                                    compiler: &gcc::Tool,
+                                    compiler: &cc::Tool,
                                     extra: &OsString| {
                 let flag_var = format!("CMAKE_{}_FLAGS", kind);
                 let tool_var = format!("CMAKE_{}_COMPILER", kind);
@@ -453,6 +480,7 @@ impl Config {
 
         run(cmd.env("CMAKE_PREFIX_PATH", cmake_prefix_path), "cmake");
 
+        let mut makeflags = None;
         let mut parallel_args = Vec::new();
         if let Ok(s) = env::var("NUM_JOBS") {
             match self.generator.as_ref().map(|g| g.to_string_lossy()) {
@@ -461,14 +489,22 @@ impl Config {
                 }
                 Some(ref g) if g.contains("Visual Studio") => {
                     parallel_args.push(format!("/m:{}", s));
+				}
+				Some(ref g) if g.contains("NMake") => {
+					// NMake creates `Makefile`s, but doesn't understand `-jN`.
+				}
+                _ if fs::metadata(&dst.join("build/Makefile")).is_ok() => {
+                    match env::var_os("CARGO_MAKEFLAGS") {
+                        // Only do this on non-windows as we could actually be
+                        // invoking make instead of mingw32-make which doesn't
+                        // work with our jobserver
+                        Some(ref s) if !cfg!(windows) => makeflags = Some(s.clone()),
+
+                        // This looks like `make`, let's hope it understands `-jN`.
+                        _ => parallel_args.push(format!("-j{}", s)),
+                    }
                 }
-                Some(ref g) if g.contains("NMake") => {
-                    // NMake creates `Makefile`s, but doesn't understand `-jN`.
-                }
-                _ => if fs::metadata(&dst.join("build/Makefile")).is_ok() {
-                    // This looks like `make`, let's hope it understands `-jN`.
-                    parallel_args.push(format!("-j{}", s));
-                }
+                _ => {}
             }
         }
 
@@ -477,6 +513,9 @@ impl Config {
         let mut cmd = Command::new("cmake");
         for &(ref k, ref v) in c_compiler.env().iter().chain(&self.env) {
             cmd.env(k, v);
+        }
+        if let Some(flags) = makeflags {
+            cmd.env("MAKEFLAGS", flags);
         }
         run(cmd.arg("--build").arg(".")
                .arg("--target").arg(target)
@@ -490,7 +529,7 @@ impl Config {
     }
 
     fn visual_studio_generator(&self, target: &str) -> String {
-        use gcc::windows_registry::{find_vs_version, VsVers};
+        use cc::windows_registry::{find_vs_version, VsVers};
 
         let base = match find_vs_version() {
             Ok(VsVers::Vs15) => "Visual Studio 15 2017",
