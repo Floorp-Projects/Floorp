@@ -78,6 +78,22 @@ const assertValuesAreInitial = () => {
     "fullZoom has the original value.");
 }
 
+const waitForMediaQueryListEvent = (mediaQueryList) => {
+  return new Promise(resolve => {
+    mediaQueryList.addListener(function listener() {
+      ok(true, "MediaQueryList's listener invoked for " + mediaQueryList.media);
+      mediaQueryList.removeListener(listener);
+      // We need to evacuate a media query list event to avoid changing any
+      // media features inside this callback (and microtasks for the callbacks),
+      // because we currently dispatch media query list events during flush
+      // pending styles, and we want to make sure there is no pending media
+      // feature changes after the event handling.
+      // This workaround should be dropped in bug 1437688.
+      setTimeout(resolve, 0);
+    });
+  });
+}
+
 const gTests = {
   "test overrideDPPX with devicePixelRatio": (done) => {
     assertValuesAreInitial();
@@ -234,24 +250,10 @@ const gTests = {
     assertValuesAreInitial();
 
     let promises = [
-      new Promise(resolve => {
-        let mql = window.matchMedia(`(resolution: ${dppx}dppx)`);
-
-        mql.addListener(function listener() {
-          ok(true, "MediaQueryList's listener invoked.")
-          mql.removeListener(listener);
-          resolve();
-        });
-      }),
-      new Promise(resolve => {
-        let mql = frameWindow.matchMedia(`(resolution: ${dppx}dppx)`);
-
-        mql.addListener(function listener() {
-          ok(true, "frame's MediaQueryList's listener invoked.")
-          mql.removeListener(listener);
-          resolve();
-        });
-      })
+      waitForMediaQueryListEvent(
+        window.matchMedia(`(resolution: ${dppx}dppx)`)),
+      waitForMediaQueryListEvent(
+        frameWindow.matchMedia(`(resolution: ${dppx}dppx)`)),
     ];
 
     Promise.all(promises)
@@ -263,30 +265,11 @@ const gTests = {
   "test OverrideDPPX with MediaQueryList and fullZoom": (done) => {
     assertValuesAreInitial();
 
-    let overridden = false;
-
     let promises = [
-      new Promise(resolve => {
-        let mql = window.matchMedia(`(resolution: ${dppx}dppx)`);
-
-        mql.addListener(function listener() {
-          ok(true, "MediaQueryList's listener for dppx invoked.");
-          mql.removeListener(listener);
-          overridden = true;
-          resolve();
-        });
-      }),
-      new Promise(resolve => {
-        let mql = window.matchMedia(`(resolution: ${originalDPR * zoom}dppx)`);
-
-        mql.addListener(function listener() {
-          ok(overridden,
-            "MediaQueryList's listener for zoom invoked in the right order");
-
-          mql.removeListener(listener);
-          resolve();
-        });
-      })
+      waitForMediaQueryListEvent(
+        window.matchMedia(`(resolution: ${dppx}dppx)`)),
+      waitForMediaQueryListEvent(
+        window.matchMedia(`(resolution: ${originalDPR * zoom}dppx)`)),
     ];
 
     setOverrideDPPX(dppx);

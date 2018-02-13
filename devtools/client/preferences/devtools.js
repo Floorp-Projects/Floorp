@@ -82,9 +82,6 @@ pref("devtools.gridinspector.showGridAreas", false);
 pref("devtools.gridinspector.showGridLineNumbers", false);
 pref("devtools.gridinspector.showInfiniteLines", false);
 
-// Common highlighter preferences
-pref("devtools.highlighter.writingModeAdjust", false);
-
 // Whether or not the box model panel is opened in the computed view
 pref("devtools.computed.boxmodel.opened", true);
 // Whether or not the box model panel is opened in the layout view

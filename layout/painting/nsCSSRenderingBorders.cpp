@@ -18,6 +18,7 @@
 #include "nsStyleConsts.h"
 #include "nsContentUtils.h"
 #include "nsCSSColorUtils.h"
+#include "nsCSSRendering.h"
 #include "nsCSSRenderingGradients.h"
 #include "GeckoProfiler.h"
 #include "nsExpirationTracker.h"
@@ -3836,9 +3837,11 @@ nsCSSBorderImageRenderer::nsCSSBorderImageRenderer(nsIFrame* aForFrame,
   // <http://dev.w3.org/csswg/css-backgrounds/#corner-clipping>.
   nsMargin borderWidths(aStyleBorder.GetComputedBorder());
   mImageOutset = aStyleBorder.GetImageOutset();
-  if (::IsBoxDecorationSlice(aStyleBorder) && !aSkipSides.IsEmpty()) {
-    mArea = ::BoxDecorationRectForBorder(aForFrame, aBorderArea,
-                                         aSkipSides, &aStyleBorder);
+  if (nsCSSRendering::IsBoxDecorationSlice(aStyleBorder) &&
+      !aSkipSides.IsEmpty()) {
+    mArea = nsCSSRendering::BoxDecorationRectForBorder(aForFrame, aBorderArea,
+                                                       aSkipSides,
+                                                       &aStyleBorder);
     if (mArea.IsEqualEdges(aBorderArea)) {
       // No need for a clip, just skip the sides we don't want.
       borderWidths.ApplySkipSides(aSkipSides);

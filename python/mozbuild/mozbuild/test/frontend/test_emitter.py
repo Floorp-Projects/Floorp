@@ -81,6 +81,7 @@ class TestEmitterBasic(unittest.TestCase):
             STL_FLAGS=['-I/path/to/topobjdir/dist/stl_wrappers'],
             VISIBILITY_FLAGS=['-include',
                               '$(topsrcdir)/config/gcc_hidden.h'],
+            OBJ_SUFFIX='obj',
         )
         if extra_substs:
             substs.update(extra_substs)
@@ -642,16 +643,26 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('program')
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 5)
-        self.assertIsInstance(objs[0], ComputedFlags)
+        self.assertEqual(len(objs), 6)
+        self.assertIsInstance(objs[0], Sources)
         self.assertIsInstance(objs[1], ComputedFlags)
-        self.assertIsInstance(objs[2], Program)
-        self.assertIsInstance(objs[3], SimpleProgram)
+        self.assertIsInstance(objs[2], ComputedFlags)
+        self.assertIsInstance(objs[3], Program)
         self.assertIsInstance(objs[4], SimpleProgram)
+        self.assertIsInstance(objs[5], SimpleProgram)
 
-        self.assertEqual(objs[2].program, 'test_program.prog')
-        self.assertEqual(objs[3].program, 'test_program1.prog')
-        self.assertEqual(objs[4].program, 'test_program2.prog')
+        self.assertEqual(objs[3].program, 'test_program.prog')
+        self.assertEqual(objs[4].program, 'test_program1.prog')
+        self.assertEqual(objs[5].program, 'test_program2.prog')
+
+        self.assertEqual(objs[4].objs,
+                         [mozpath.join(reader.config.topobjdir,
+                                       'test_program1.%s' %
+                                       reader.config.substs['OBJ_SUFFIX'])])
+        self.assertEqual(objs[5].objs,
+                         [mozpath.join(reader.config.topobjdir,
+                                       'test_program2.%s' %
+                                       reader.config.substs['OBJ_SUFFIX'])])
 
     def test_test_manifest_missing_manifest(self):
         """A missing manifest file should result in an error."""
@@ -1132,6 +1143,12 @@ class TestEmitterBasic(unittest.TestCase):
                 sources.files,
                 [mozpath.join(reader.config.topsrcdir, f) for f in files])
 
+            for f in files:
+                self.assertIn(mozpath.join(reader.config.topobjdir,
+                                           '%s.%s' % (mozpath.splitext(f)[0],
+                                                      reader.config.substs['OBJ_SUFFIX'])),
+                              linkable.objs)
+
     def test_sources_just_c(self):
         """Test that a linkable with no C++ sources doesn't have cxx_link set."""
         reader = self.reader('sources-just-c')
@@ -1195,6 +1212,12 @@ class TestEmitterBasic(unittest.TestCase):
                 sources.files,
                 [mozpath.join(reader.config.topobjdir, f) for f in files])
 
+            for f in files:
+                self.assertIn(mozpath.join(reader.config.topobjdir,
+                                           '%s.%s' % (mozpath.splitext(f)[0],
+                                                      reader.config.substs['OBJ_SUFFIX'])),
+                              linkable.objs)
+
     def test_host_sources(self):
         """Test that HOST_SOURCES works properly."""
         reader = self.reader('host-sources')
@@ -1230,13 +1253,21 @@ class TestEmitterBasic(unittest.TestCase):
                 sources.files,
                 [mozpath.join(reader.config.topsrcdir, f) for f in files])
 
+            for f in files:
+                self.assertIn(mozpath.join(reader.config.topobjdir,
+                                           'host_%s.%s' % (mozpath.splitext(f)[0],
+                                                           reader.config.substs['OBJ_SUFFIX'])),
+                              linkable.objs)
+
+
     def test_unified_sources(self):
         """Test that UNIFIED_SOURCES works properly."""
         reader = self.reader('unified-sources')
         objs = self.read_topsrcdir(reader)
 
-        # The last object is a Linkable, the second to last ComputedFlags,
+        # The last object is a ComputedFlags, the second to last a Linkable,
         # followed by ldflags, ignore them.
+        linkable = objs[-2]
         objs = objs[:-3]
         self.assertEqual(len(objs), 3)
         for o in objs:
@@ -1256,6 +1287,13 @@ class TestEmitterBasic(unittest.TestCase):
                 sources.files,
                 [mozpath.join(reader.config.topsrcdir, f) for f in files])
             self.assertTrue(sources.have_unified_mapping)
+
+            for f in dict(sources.unified_source_mapping).keys():
+                self.assertIn(mozpath.join(reader.config.topobjdir,
+                                           '%s.%s' % (mozpath.splitext(f)[0],
+                                                      reader.config.substs['OBJ_SUFFIX'])),
+                              linkable.objs)
+
 
     def test_unified_sources_non_unified(self):
         """Test that UNIFIED_SOURCES with FILES_PER_UNIFIED_FILE=1 works properly."""

@@ -45,7 +45,7 @@ addLoadEvent(function test() {
         timeout = 0 // Choose a larger value like 500 ms if you want to see what's happening.
 
     function keypressOnSelect(key) {
-        WinUtils.focus(eSelect)
+        eSelect.focus();
         synthesizeKey(key.key, {code: key.code, altKey: key.altKey});
     }
 
