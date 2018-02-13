@@ -28,6 +28,7 @@
 #include "nsIConsoleService.h"
 #include "nsIObserverService.h"
 #include "nsLayoutStatics.h"
+#include "nsLayoutUtils.h"
 
 using namespace mozilla;
 
