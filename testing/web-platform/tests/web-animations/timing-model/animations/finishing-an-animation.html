@@ -179,23 +179,6 @@ promise_test(async t => {
 }, 'Finishing an animation during an aborted pause makes it finished'
    + ' immediately');
 
-// FIXME: This belongs in the animation model tests
-promise_test(async t => {
-  const div = createDiv(t);
-  div.style.marginLeft = '10px';
-  const animation = div.animate(
-    { marginLeft: ['100px', '200px'] },
-    100 * MS_PER_SEC
-  );
-  await animation.ready;
-
-  animation.finish();
-
-  const marginLeft = parseFloat(getComputedStyle(div).marginLeft);
-  assert_equals(marginLeft, 10, 'The computed style should be reset');
-}, 'Finishing an animation that does not fill forwards causes its'
-   + ' animation style to be cleared');
-
 promise_test(async t => {
   const div = createDiv(t);
   const animation = div.animate(null, 100 * MS_PER_SEC);
@@ -228,28 +211,6 @@ promise_test(async t => {
   assert_true(resolvedFinished, 'finished promise should be resolved');
 }, 'Finishing an animation without a target resolves the finished promise'
    + ' synchronously');
-
-// FIXME: This belongs with the tests for "Updating the finished state"
-promise_test(async t => {
-  const effect = new KeyframeEffectReadOnly(null, null, 100 * MS_PER_SEC);
-  const animation = new Animation(effect, document.timeline);
-  animation.play();
-
-  let resolvedFinished = false;
-  animation.finished.then(() => {
-    resolvedFinished = true;
-  });
-
-  await animation.ready;
-
-  animation.currentTime = animation.effect.getComputedTiming().endTime - 1;
-  await waitForAnimationFrames(2);
-
-  assert_true(resolvedFinished,
-              'finished promise should be resolved soon after ' +
-              'the animation reaches the end');
-}, 'For an animation that has no target, the finished promise is resolved'
-   + ' when the animation reaches the end');
 
 promise_test(async t => {
   const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
