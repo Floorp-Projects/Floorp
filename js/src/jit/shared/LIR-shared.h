@@ -983,7 +983,7 @@ class LControlInstructionHelper : public LInstructionHelper<0, Operands, Temps> 
         return successors_[i];
     }
 
-    virtual void setSuccessor(size_t i, MBasicBlock* successor) final override {
+    void setSuccessor(size_t i, MBasicBlock* successor) {
         successors_[i] = successor;
     }
 };
