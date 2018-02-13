@@ -268,11 +268,6 @@ select > option.divider {
  * Viewport Browser
  */
 
-.browser-container {
-  width: inherit;
-  height: inherit;
-}
-
 .browser {
   display: block;
   border: 0;
