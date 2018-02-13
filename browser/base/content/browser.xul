@@ -51,7 +51,6 @@
         tabsintitlebar="true"
 #endif
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
-        lightweightthemes="true"
         windowtype="navigator:browser"
         macanimationtype="document"
         screenX="4" screenY="4"

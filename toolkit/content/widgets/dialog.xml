@@ -13,7 +13,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="dialog" extends="chrome://global/content/bindings/general.xml#root-element">
+  <binding id="dialog">
     <resources>
       <stylesheet src="chrome://global/skin/dialog.css"/>
     </resources>
