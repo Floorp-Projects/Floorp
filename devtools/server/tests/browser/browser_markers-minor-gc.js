@@ -9,25 +9,25 @@
 
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
-add_task(function* () {
+add_task(async function () {
   // This test runs very slowly on linux32 debug EC2 instances.
   requestLongerTimeout(2);
 
-  yield addTab(MAIN_DOMAIN + "doc_allocations.html");
+  await addTab(MAIN_DOMAIN + "doc_allocations.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
+  let form = await connectDebuggerClient(client);
   let front = PerformanceFront(client, form);
-  yield front.connect();
-  let rec = yield front.startRecording({ withMarkers: true });
+  await front.connect();
+  let rec = await front.startRecording({ withMarkers: true });
 
-  let markers = yield waitForMarkerType(front, ["MinorGC"]);
-  yield front.stopRecording(rec);
+  let markers = await waitForMarkerType(front, ["MinorGC"]);
+  await front.stopRecording(rec);
 
   ok(markers.some(m => m.name === "MinorGC" && m.causeName),
      "got some MinorGC markers");
 
-  yield client.close();
+  await client.close();
   gBrowser.removeCurrentTab();
 });

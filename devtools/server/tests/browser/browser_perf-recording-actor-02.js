@@ -12,18 +12,18 @@ var config = { bufferSize: BUFFER_SIZE };
 
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
-add_task(function* () {
-  yield addTab(MAIN_DOMAIN + "doc_perf.html");
+add_task(async function () {
+  await addTab(MAIN_DOMAIN + "doc_perf.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
+  let form = await connectDebuggerClient(client);
   let front = PerformanceFront(client, form);
-  yield front.connect();
+  await front.connect();
 
-  yield front.setProfilerStatusInterval(10);
-  let model = yield front.startRecording(config);
-  let stats = yield once(front, "profiler-status");
+  await front.setProfilerStatusInterval(10);
+  let model = await front.startRecording(config);
+  let stats = await once(front, "profiler-status");
   is(stats.totalSize, BUFFER_SIZE,
     `profiler-status event has totalSize: ${stats.totalSize}`);
   ok(stats.position < BUFFER_SIZE,
@@ -33,7 +33,7 @@ add_task(function* () {
   is(typeof stats.currentTime, "number", "profiler-status event has currentTime");
 
   // Halt once more for a buffer status to ensure we're beyond 0
-  yield once(front, "profiler-status");
+  await once(front, "profiler-status");
 
   let lastBufferStatus = 0;
   let checkCount = 0;
@@ -43,17 +43,17 @@ add_task(function* () {
       `buffer is more filled than before: ${currentBufferStatus} > ${lastBufferStatus}`);
     lastBufferStatus = currentBufferStatus;
     checkCount++;
-    yield once(front, "profiler-status");
+    await once(front, "profiler-status");
   }
 
   ok(checkCount >= 1, "atleast 1 event were fired until the buffer was filled");
   is(lastBufferStatus, 1, "buffer usage cannot surpass 100%");
-  yield front.stopRecording(model);
+  await front.stopRecording(model);
 
   is(front.getBufferUsageForRecording(model), null,
     "buffer usage should be null when no longer recording.");
 
-  yield front.destroy();
-  yield client.close();
+  await front.destroy();
+  await client.close();
   gBrowser.removeCurrentTab();
 });

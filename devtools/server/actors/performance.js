@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Task } = require("devtools/shared/task");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { actorBridgeWithSpec } = require("devtools/server/actors/common");
 const { performanceSpec } = require("devtools/shared/specs/performance");
@@ -64,17 +63,17 @@ var PerformanceActor = ActorClassWithSpec(performanceSpec, {
     return this.bridge.canCurrentlyRecord();
   },
 
-  startRecording: Task.async(function* (options = {}) {
+  async startRecording(options = {}) {
     if (!this.bridge.canCurrentlyRecord().success) {
       return null;
     }
 
     let normalizedOptions = normalizePerformanceFeatures(options, this.traits.features);
-    let recording = yield this.bridge.startRecording(normalizedOptions);
+    let recording = await this.bridge.startRecording(normalizedOptions);
     this.manage(recording);
 
     return recording;
-  }),
+  },
 
   stopRecording: actorBridgeWithSpec("stopRecording"),
   isRecording: actorBridgeWithSpec("isRecording"),

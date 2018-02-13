@@ -12,15 +12,15 @@ const { PromisesFront } = require("devtools/shared/fronts/promises");
 
 var EventEmitter = require("devtools/shared/event-emitter");
 
-add_task(function* () {
-  let client = yield startTestDebuggerServer("test-promises-timetosettle");
-  let chromeActors = yield getChromeActors(client);
+add_task(async function () {
+  let client = await startTestDebuggerServer("test-promises-timetosettle");
+  let chromeActors = await getChromeActors(client);
 
   ok(Promise.toString().includes("native code"), "Expect native DOM Promise.");
 
   // We have to attach the chrome TabActor before playing with the PromiseActor
-  yield attachTab(client, chromeActors);
-  yield testGetTimeToSettle(client, chromeActors, () => {
+  await attachTab(client, chromeActors);
+  await testGetTimeToSettle(client, chromeActors, () => {
     let p = new Promise(() => {});
     p.name = "p";
     let q = p.then();
@@ -29,11 +29,11 @@ add_task(function* () {
     return p;
   });
 
-  let response = yield listTabs(client);
+  let response = await listTabs(client);
   let targetTab = findTab(response.tabs, "test-promises-timetosettle");
   ok(targetTab, "Found our target tab.");
 
-  yield testGetTimeToSettle(client, targetTab, () => {
+  await testGetTimeToSettle(client, targetTab, () => {
     const debuggee =
       DebuggerServer.getTestGlobal("test-promises-timetosettle");
 
@@ -45,14 +45,14 @@ add_task(function* () {
     return p;
   });
 
-  yield close(client);
+  await close(client);
 });
 
-function* testGetTimeToSettle(client, form, makePromises) {
+async function testGetTimeToSettle(client, form, makePromises) {
   let front = PromisesFront(client, form);
 
-  yield front.attach();
-  yield front.listPromises();
+  await front.attach();
+  await front.listPromises();
 
   let onNewPromise = new Promise(resolve => {
     EventEmitter.on(front, "new-promises", promises => {
@@ -73,8 +73,8 @@ function* testGetTimeToSettle(client, form, makePromises) {
 
   let promise = makePromises();
 
-  yield onNewPromise;
-  yield front.detach();
+  await onNewPromise;
+  await front.detach();
   // Appease eslint
   void promise;
 }

@@ -10,24 +10,24 @@
 
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
-add_task(function* () {
-  yield addTab(MAIN_DOMAIN + "doc_perf.html");
+add_task(async function () {
+  await addTab(MAIN_DOMAIN + "doc_perf.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
+  let form = await connectDebuggerClient(client);
   let front = PerformanceFront(client, form);
-  yield front.connect();
+  await front.connect();
 
-  let rec = yield front.startRecording(
+  let rec = await front.startRecording(
     { withMarkers: true, withTicks: true, withMemory: true });
   ok(rec.isRecording(), "RecordingModel is recording when created");
-  yield busyWait(100);
-  yield waitUntil(() => rec.getMemory().length);
+  await busyWait(100);
+  await waitUntil(() => rec.getMemory().length);
   ok(true, "RecordingModel populates memory while recording");
-  yield waitUntil(() => rec.getTicks().length);
+  await waitUntil(() => rec.getTicks().length);
   ok(true, "RecordingModel populates ticks while recording");
-  yield waitUntil(() => rec.getMarkers().length);
+  await waitUntil(() => rec.getMarkers().length);
   ok(true, "RecordingModel populates markers while recording");
 
   ok(!rec.isCompleted(), "RecordingModel is not completed when still recording");
@@ -36,7 +36,7 @@ add_task(function* () {
   let stopped = once(front, "recording-stopped");
   front.stopRecording(rec);
 
-  yield stopping;
+  await stopping;
   ok(!rec.isRecording(), "on 'recording-stopping', model is no longer recording");
   // This handler should be called BEFORE "recording-stopped" is called, as
   // there is some delay, but in the event where "recording-stopped" finishes
@@ -49,7 +49,7 @@ add_task(function* () {
       "recording is finalized between 'recording-stopping' and 'recording-stopped'");
   }
 
-  yield stopped;
+  await stopped;
   ok(!rec.isRecording(), "on 'recording-stopped', model is still no longer recording");
   ok(rec.isCompleted(), "on 'recording-stopped', model is considered 'complete'");
 
@@ -59,9 +59,9 @@ add_task(function* () {
   // Export and import a rec, and ensure it has the correct state.
   let file = FileUtils.getFile("TmpD", ["tmpprofile.json"]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
-  yield rec.exportRecording(file);
+  await rec.exportRecording(file);
 
-  let importedModel = yield front.importRecording(file);
+  let importedModel = await front.importRecording(file);
 
   ok(importedModel.isCompleted(), "All imported recordings should be completed");
   ok(!importedModel.isRecording(), "All imported recordings should not be recording");
@@ -70,8 +70,8 @@ add_task(function* () {
   checkSystemInfo(importedModel, "Host");
   checkSystemInfo(importedModel, "Client");
 
-  yield front.destroy();
-  yield client.close();
+  await front.destroy();
+  await client.close();
   gBrowser.removeCurrentTab();
 });
 

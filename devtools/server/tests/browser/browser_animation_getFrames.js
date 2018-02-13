@@ -7,17 +7,17 @@
 // Check that the AnimationPlayerActor exposes a getFrames method that returns
 // the list of keyframes in the animation.
 
-add_task(function* () {
+add_task(async function () {
   let {client, walker, animations} =
-    yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
+    await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Get the test node and its animation front");
-  let node = yield walker.querySelector(walker.rootNode, ".simple-animation");
-  let [player] = yield animations.getAnimationPlayersForNode(node);
+  let node = await walker.querySelector(walker.rootNode, ".simple-animation");
+  let [player] = await animations.getAnimationPlayersForNode(node);
 
   ok(player.getFrames, "The front has the getFrames method");
 
-  let frames = yield player.getFrames();
+  let frames = await player.getFrames();
   is(frames.length, 2, "The correct number of keyframes was retrieved");
   ok(frames[0].transform, "Frame 0 has the transform property");
   ok(frames[1].transform, "Frame 1 has the transform property");
@@ -25,6 +25,6 @@ add_task(function* () {
   // purpose. This object comes straight out of the web animations API
   // unmodified.
 
-  yield client.close();
+  await client.close();
   gBrowser.removeCurrentTab();
 });

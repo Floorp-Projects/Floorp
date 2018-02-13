@@ -34,8 +34,8 @@ function promiseWebExtensionStartup() {
   });
 }
 
-function* findAddonInRootList(client, addonId) {
-  const result = yield client.listAddons();
+async function findAddonInRootList(client, addonId) {
+  const result = await client.listAddons();
   const addonActor = result.addons.filter(addon => addon.id === addonId)[0];
   ok(addonActor, `Found add-on actor for ${addonId}`);
   return addonActor;
@@ -53,28 +53,28 @@ function getSupportFile(path) {
   return do_get_file(path, allowMissing);
 }
 
-add_task(function* testReloadExitedAddon() {
-  const client = yield new Promise(resolve => {
+add_task(async function testReloadExitedAddon() {
+  const client = await new Promise(resolve => {
     get_chrome_actors(client => resolve(client));
   });
 
   // Install our main add-on to trigger reloads on.
   const addonFile = getSupportFile("addons/web-extension");
-  const [installedAddon] = yield Promise.all([
+  const [installedAddon] = await Promise.all([
     AddonManager.installTemporaryAddon(addonFile),
     promiseWebExtensionStartup(),
   ]);
 
   // Install a decoy add-on.
   const addonFile2 = getSupportFile("addons/web-extension2");
-  const [installedAddon2] = yield Promise.all([
+  const [installedAddon2] = await Promise.all([
     AddonManager.installTemporaryAddon(addonFile2),
     promiseWebExtensionStartup(),
   ]);
 
-  let addonActor = yield findAddonInRootList(client, installedAddon.id);
+  let addonActor = await findAddonInRootList(client, installedAddon.id);
 
-  yield Promise.all([
+  await Promise.all([
     reloadAddon(client, addonActor),
     promiseWebExtensionStartup(),
   ]);
@@ -82,11 +82,11 @@ add_task(function* testReloadExitedAddon() {
   // Uninstall the decoy add-on, which should cause its actor to exit.
   const onUninstalled = promiseAddonEvent("onUninstalled");
   installedAddon2.uninstall();
-  yield onUninstalled;
+  await onUninstalled;
 
   // Try to re-list all add-ons after a reload.
   // This was throwing an exception because of the exited actor.
-  const newAddonActor = yield findAddonInRootList(client, installedAddon.id);
+  const newAddonActor = await findAddonInRootList(client, installedAddon.id);
   equal(newAddonActor.id, addonActor.id);
 
   // The actor id should be the same after the reload
@@ -101,16 +101,16 @@ add_task(function* testReloadExitedAddon() {
 
   // Install an upgrade version of the first add-on.
   const addonUpgradeFile = getSupportFile("addons/web-extension-upgrade");
-  const [upgradedAddon] = yield Promise.all([
+  const [upgradedAddon] = await Promise.all([
     AddonManager.installTemporaryAddon(addonUpgradeFile),
     promiseWebExtensionStartup(),
   ]);
 
   // Waiting for addonListChanged unsolicited event
-  yield onAddonListChanged;
+  await onAddonListChanged;
 
   // re-list all add-ons after an upgrade.
-  const upgradedAddonActor = yield findAddonInRootList(client, upgradedAddon.id);
+  const upgradedAddonActor = await findAddonInRootList(client, upgradedAddon.id);
   equal(upgradedAddonActor.id, addonActor.id);
   // The actor id should be the same after the upgrade.
   equal(upgradedAddonActor.actor, addonActor.actor);
@@ -118,5 +118,5 @@ add_task(function* testReloadExitedAddon() {
   // The addon metadata has been updated.
   equal(upgradedAddonActor.name, "Test Addons Actor Upgrade");
 
-  yield close(client);
+  await close(client);
 });

@@ -37,27 +37,27 @@ function run_test_with_server(server, callback) {
   });
 }
 
-var test_no_skip_breakpoint = Task.async(function* (source, location) {
-  let [response, bpClient] = yield source.setBreakpoint(
+var test_no_skip_breakpoint = async function (source, location) {
+  let [response, bpClient] = await source.setBreakpoint(
     Object.assign({}, location, { noSliding: true })
   );
 
   Assert.ok(!response.actualLocation);
   Assert.equal(bpClient.location.line, gDebuggee.line0 + 3);
-  yield bpClient.remove();
-});
+  await bpClient.remove();
+};
 
 var test_skip_breakpoint = function () {
-  gThreadClient.addOneTimeListener("paused", Task.async(function* (event, packet) {
+  gThreadClient.addOneTimeListener("paused", async function (event, packet) {
     let location = { line: gDebuggee.line0 + 3 };
     let source = gThreadClient.source(packet.frame.where.source);
 
     // First, make sure that we can disable sliding with the
     // `noSliding` option.
-    yield test_no_skip_breakpoint(source, location);
+    await test_no_skip_breakpoint(source, location);
 
     // Now make sure that the breakpoint properly slides forward one line.
-    const [response, bpClient] = yield source.setBreakpoint(location);
+    const [response, bpClient] = await source.setBreakpoint(location);
     Assert.ok(!!response.actualLocation);
     Assert.equal(response.actualLocation.source.actor, source.actor);
     Assert.equal(response.actualLocation.line, location.line + 1);
@@ -82,7 +82,7 @@ var test_skip_breakpoint = function () {
     });
 
     gThreadClient.resume();
-  }));
+  });
 
   // Use `evalInSandbox` to make the debugger treat it as normal
   // globally-scoped code, where breakpoint sliding rules apply.

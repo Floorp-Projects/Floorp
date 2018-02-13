@@ -6,7 +6,6 @@
 
 const protocol = require("devtools/shared/protocol");
 const Services = require("Services");
-const { Task } = require("devtools/shared/task");
 
 const { heapSnapshotFileSpec } = require("devtools/shared/specs/heap-snapshot-file");
 
@@ -39,7 +38,7 @@ exports.HeapSnapshotFileActor = protocol.ActorClassWithSpec(heapSnapshotFileSpec
   /**
    * @see MemoryFront.prototype.transferHeapSnapshot
    */
-  transferHeapSnapshot: Task.async(function* (snapshotId) {
+  async transferHeapSnapshot(snapshotId) {
     const snapshotFilePath =
           HeapSnapshotFileUtils.getHeapSnapshotTempFilePath(snapshotId);
     if (!snapshotFilePath) {
@@ -48,20 +47,20 @@ exports.HeapSnapshotFileActor = protocol.ActorClassWithSpec(heapSnapshotFileSpec
 
     const streamPromise = DevToolsUtils.openFileStream(snapshotFilePath);
 
-    const { size } = yield OS.File.stat(snapshotFilePath);
+    const { size } = await OS.File.stat(snapshotFilePath);
     const bulkPromise = this.conn.startBulkSend({
       actor: this.actorID,
       type: "heap-snapshot",
       length: size
     });
 
-    const [bulk, stream] = yield Promise.all([bulkPromise, streamPromise]);
+    const [bulk, stream] = await Promise.all([bulkPromise, streamPromise]);
 
     try {
-      yield bulk.copyFrom(stream);
+      await bulk.copyFrom(stream);
     } finally {
       stream.close();
     }
-  }),
+  },
 
 });

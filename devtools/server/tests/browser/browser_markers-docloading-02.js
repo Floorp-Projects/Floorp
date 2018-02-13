@@ -9,29 +9,29 @@
 const { TimelineFront } = require("devtools/shared/fronts/timeline");
 const MARKER_NAMES = ["document::DOMContentLoaded", "document::Load"];
 
-add_task(function* () {
-  let browser = yield addTab(MAIN_DOMAIN + "doc_innerHTML.html");
+add_task(async function () {
+  let browser = await addTab(MAIN_DOMAIN + "doc_innerHTML.html");
   // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = browser.contentDocumentAsCPOW;
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
+  let form = await connectDebuggerClient(client);
   let front = TimelineFront(client, form);
-  let rec = yield front.start({ withMarkers: true, withDocLoadingEvents: true });
+  let rec = await front.start({ withMarkers: true, withDocLoadingEvents: true });
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     front.once("doc-loading", resolve);
     doc.location.reload();
   });
 
   ok(true, "At least one doc-loading event got fired.");
 
-  yield waitForMarkerType(front, MARKER_NAMES, () => true, e => e, "markers");
-  yield front.stop(rec);
+  await waitForMarkerType(front, MARKER_NAMES, () => true, e => e, "markers");
+  await front.stop(rec);
 
   ok(true, "Found the required marker names.");
 
-  yield client.close();
+  await client.close();
   gBrowser.removeCurrentTab();
 });
