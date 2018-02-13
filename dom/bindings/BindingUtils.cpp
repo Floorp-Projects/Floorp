@@ -871,7 +871,8 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
   }
 
   if (unscopableNames) {
-    JS::Rooted<JSObject*> unscopableObj(cx, JS_NewPlainObject(cx));
+    JS::Rooted<JSObject*> unscopableObj(cx,
+      JS_NewObjectWithGivenProto(cx, nullptr, nullptr));
     if (!unscopableObj) {
       return nullptr;
     }

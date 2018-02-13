@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "nsCOMPtr.h"
 #include "nsDOMNavigationTiming.h"
 

@@ -1026,7 +1026,10 @@ CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod* ins)
         masm.test32(rhs, rhs);
         if (ins->mir()->isTruncated()) {
             if (ins->trapOnError()) {
-                masm.j(Assembler::Zero, oldTrap(ins, wasm::Trap::IntegerDivideByZero));
+                Label nonZero;
+                masm.j(Assembler::NonZero, &nonZero);
+                masm.wasmTrap(wasm::Trap::IntegerDivideByZero, ins->bytecodeOffset());
+                masm.bind(&nonZero);
             } else {
                 ool = new(alloc()) ReturnZero(output);
                 masm.j(Assembler::Zero, ool->entry());
@@ -1074,7 +1077,7 @@ CodeGeneratorX86Shared::visitUDivOrModConstant(LUDivOrModConstant *ins) {
     if (d == 0) {
         if (ins->mir()->isTruncated()) {
             if (ins->trapOnError())
-                masm.jump(oldTrap(ins, wasm::Trap::IntegerDivideByZero));
+                masm.wasmTrap(wasm::Trap::IntegerDivideByZero, ins->bytecodeOffset());
             else
                 masm.xorl(output, output);
         } else {
@@ -1210,10 +1213,14 @@ CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI* ins)
     if (negativeDivisor) {
         // INT32_MIN / -1 overflows.
         masm.negl(lhs);
-        if (!mir->isTruncated())
+        if (!mir->isTruncated()) {
             bailoutIf(Assembler::Overflow, ins->snapshot());
-        else if (mir->trapOnError())
-            masm.j(Assembler::Overflow, oldTrap(mir, wasm::Trap::IntegerOverflow));
+        } else if (mir->trapOnError()) {
+            Label ok;
+            masm.j(Assembler::NoOverflow, &ok);
+            masm.wasmTrap(wasm::Trap::IntegerOverflow, mir->bytecodeOffset());
+            masm.bind(&ok);
+        }
     } else if (mir->isUnsigned() && !mir->isTruncated()) {
         // Unsigned division by 1 can overflow if output is not
         // truncated.
@@ -1332,7 +1339,10 @@ CodeGeneratorX86Shared::visitDivI(LDivI* ins)
     if (mir->canBeDivideByZero()) {
         masm.test32(rhs, rhs);
         if (mir->trapOnError()) {
-            masm.j(Assembler::Zero, oldTrap(mir, wasm::Trap::IntegerDivideByZero));
+            Label nonZero;
+            masm.j(Assembler::NonZero, &nonZero);
+            masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->bytecodeOffset());
+            masm.bind(&nonZero);
         } else if (mir->canTruncateInfinities()) {
             // Truncated division by zero is zero (Infinity|0 == 0)
             if (!ool)
@@ -1346,12 +1356,13 @@ CodeGeneratorX86Shared::visitDivI(LDivI* ins)
 
     // Handle an integer overflow exception from -2147483648 / -1.
     if (mir->canBeNegativeOverflow()) {
-        Label notmin;
+        Label notOverflow;
         masm.cmp32(lhs, Imm32(INT32_MIN));
-        masm.j(Assembler::NotEqual, &notmin);
+        masm.j(Assembler::NotEqual, &notOverflow);
         masm.cmp32(rhs, Imm32(-1));
         if (mir->trapOnError()) {
-            masm.j(Assembler::Equal, oldTrap(mir, wasm::Trap::IntegerOverflow));
+            masm.j(Assembler::NotEqual, &notOverflow);
+            masm.wasmTrap(wasm::Trap::IntegerOverflow, mir->bytecodeOffset());
         } else if (mir->canTruncateOverflow()) {
             // (-INT32_MIN)|0 == INT32_MIN and INT32_MIN is already in the
             // output register (lhs == eax).
@@ -1360,7 +1371,7 @@ CodeGeneratorX86Shared::visitDivI(LDivI* ins)
             MOZ_ASSERT(mir->fallible());
             bailoutIf(Assembler::Equal, ins->snapshot());
         }
-        masm.bind(&notmin);
+        masm.bind(&notOverflow);
     }
 
     // Handle negative 0.
@@ -1501,7 +1512,10 @@ CodeGeneratorX86Shared::visitModI(LModI* ins)
         masm.test32(rhs, rhs);
         if (mir->isTruncated()) {
             if (mir->trapOnError()) {
-                masm.j(Assembler::Zero, oldTrap(mir, wasm::Trap::IntegerDivideByZero));
+                Label nonZero;
+                masm.j(Assembler::NonZero, &nonZero);
+                masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->bytecodeOffset());
+                masm.bind(&nonZero);
             } else {
                 if (!ool)
                     ool = new(alloc()) ReturnZero(edx);

@@ -26,12 +26,6 @@ AnimationEvent::AnimationEvent(EventTarget* aOwner,
   }
 }
 
-NS_INTERFACE_MAP_BEGIN(AnimationEvent)
-NS_INTERFACE_MAP_END_INHERITING(Event)
-
-NS_IMPL_ADDREF_INHERITED(AnimationEvent, Event)
-NS_IMPL_RELEASE_INHERITED(AnimationEvent, Event)
-
 //static
 already_AddRefed<AnimationEvent>
 AnimationEvent::Constructor(const GlobalObject& aGlobal,

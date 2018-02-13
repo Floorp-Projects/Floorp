@@ -1488,7 +1488,7 @@ CodeGeneratorShared::omitOverRecursedCheck() const
     // stack overflow check. Note that the actual number here is somewhat
     // arbitrary, and codegen actually uses small bounded amounts of
     // additional stack space in some cases too.
-    return frameSize() < 64 && !gen->needsOverrecursedCheck();
+    return frameSize() < MAX_UNCHECKED_LEAF_FRAME_SIZE && !gen->needsOverrecursedCheck();
 }
 
 void

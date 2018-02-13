@@ -106,7 +106,8 @@ class XULListitemAccessible : public XULMenuitemAccessible
 public:
   enum { eAction_Click = 0 };
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(XULListitemAccessible,
+                                       XULMenuitemAccessible)
 
   XULListitemAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
@@ -149,7 +150,8 @@ public:
   XULListCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(XULListCellAccessible,
+                                       HyperTextAccessibleWrap)
 
   // Accessible
   virtual TableCellAccessible* AsTableCell() override { return this; }

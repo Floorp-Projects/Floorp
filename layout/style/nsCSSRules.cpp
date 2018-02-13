@@ -390,13 +390,6 @@ DocumentRule::~DocumentRule()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(DocumentRule, ConditionRule)
-NS_IMPL_RELEASE_INHERITED(DocumentRule, ConditionRule)
-
-// QueryInterface implementation for DocumentRule
-NS_INTERFACE_MAP_BEGIN(DocumentRule)
-NS_INTERFACE_MAP_END_INHERITING(dom::CSSMozDocumentRule)
-
 #ifdef DEBUG
 /* virtual */ void
 DocumentRule::List(FILE* out, int32_t aIndent) const
@@ -1468,13 +1461,6 @@ CSSSupportsRule::UseForPresentation(nsPresContext* aPresContext,
 {
   return mUseGroup;
 }
-
-NS_IMPL_ADDREF_INHERITED(mozilla::CSSSupportsRule, dom::CSSSupportsRule)
-NS_IMPL_RELEASE_INHERITED(mozilla::CSSSupportsRule, dom::CSSSupportsRule)
-
-// QueryInterface implementation for CSSSupportsRule
-NS_INTERFACE_MAP_BEGIN(CSSSupportsRule)
-NS_INTERFACE_MAP_END_INHERITING(dom::CSSSupportsRule)
 
 void
 CSSSupportsRule::GetCssText(nsAString& aCssText) const

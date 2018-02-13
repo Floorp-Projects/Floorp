@@ -18,7 +18,7 @@ namespace dom {
 class MultipartBlobImpl final : public BaseBlobImpl
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(MultipartBlobImpl, BaseBlobImpl)
 
   // Create as a file
   static already_AddRefed<MultipartBlobImpl>

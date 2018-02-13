@@ -21,8 +21,6 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS_INHERITED0(AppCacheStorage, CacheStorage)
-
 AppCacheStorage::AppCacheStorage(nsILoadContextInfo* aInfo,
                                  nsIApplicationCache* aAppCache)
 : CacheStorage(aInfo, true /* disk */, false /* lookup app cache */, false /* skip size check */, false /* pin */)

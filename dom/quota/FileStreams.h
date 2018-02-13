@@ -61,7 +61,8 @@ protected:
 class FileInputStream : public FileQuotaStream<nsFileInputStream>
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(FileInputStream,
+                                       FileQuotaStream<nsFileInputStream>)
 
   static already_AddRefed<FileInputStream>
   Create(PersistenceType aPersistenceType, const nsACString& aGroup,
@@ -82,7 +83,8 @@ private:
 class FileOutputStream : public FileQuotaStreamWithWrite<nsFileOutputStream>
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(FileOutputStream,
+                                       FileQuotaStreamWithWrite<nsFileOutputStream>);
 
   static already_AddRefed<FileOutputStream>
   Create(PersistenceType aPersistenceType, const nsACString& aGroup,
@@ -104,7 +106,8 @@ private:
 class FileStream : public FileQuotaStreamWithWrite<nsFileStream>
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(FileStream,
+                                       FileQuotaStreamWithWrite<nsFileStream>)
 
   static already_AddRefed<FileStream>
   Create(PersistenceType aPersistenceType, const nsACString& aGroup,

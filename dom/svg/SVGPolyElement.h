@@ -28,7 +28,7 @@ protected:
 public:
   //interfaces
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(SVGPolyElement, SVGPolyElementBase)
 
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;

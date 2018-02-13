@@ -23,7 +23,7 @@ NS_INTERFACE_MAP_BEGIN(nsMIMEInfoBase)
     // This is only an nsIMIMEInfo if it's a MIME handler.
     NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIMIMEInfo, mClass == eMIMEInfo)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIHandlerInfo)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END
 
 // nsMIMEInfoImpl methods
 

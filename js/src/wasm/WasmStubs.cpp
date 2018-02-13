@@ -824,7 +824,7 @@ GenerateImportFunction(jit::MacroAssembler& masm, const FuncImport& fi, SigIdDes
 
     unsigned framePushed = StackDecrementForCall(masm, WasmStackAlignment, fi.sig().args());
 
-    GenerateFunctionPrologue(masm, framePushed, sigId, offsets);
+    GenerateFunctionPrologue(masm, framePushed, IsLeaf(false), sigId,  BytecodeOffset(0), offsets);
 
     // The argument register state is already setup by our caller. We just need
     // to be sure not to clobber it before the call.
@@ -1726,17 +1726,17 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
     for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
         switch (trap) {
           case Trap::Unreachable:
-            break;
-          // The TODO list of "old" traps to convert to new traps:
           case Trap::IntegerOverflow:
           case Trap::InvalidConversionToInteger:
           case Trap::IntegerDivideByZero:
+          case Trap::StackOverflow:
+            break;
+          // The TODO list of "old" traps to convert to new traps:
           case Trap::OutOfBounds:
           case Trap::UnalignedAccess:
           case Trap::IndirectCallToNull:
           case Trap::IndirectCallBadSig:
           case Trap::ImpreciseSimdConversion:
-          case Trap::StackOverflow:
           case Trap::ThrowReported: {
             CallableOffsets offsets;
             if (!GenerateOldTrapExit(masm, trap, &throwLabel, &offsets))

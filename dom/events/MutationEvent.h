@@ -22,7 +22,7 @@ public:
                 nsPresContext* aPresContext,
                 InternalMutationEvent* aEvent);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(MutationEvent, Event)
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {

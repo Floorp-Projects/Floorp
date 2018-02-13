@@ -922,6 +922,11 @@ enum class RoundingMode {
     TowardsZero
 };
 
+// If a function contains no calls, we can assume the caller has checked the
+// stack limit up to this maximum frame size. This works because the jit stack
+// limit has a generous buffer before the real end of the native stack.
+static const uint32_t MAX_UNCHECKED_LEAF_FRAME_SIZE = 64;
+
 } // namespace jit
 } // namespace js
 

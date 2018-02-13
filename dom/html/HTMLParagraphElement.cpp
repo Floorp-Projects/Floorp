@@ -21,8 +21,6 @@ HTMLParagraphElement::~HTMLParagraphElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(HTMLParagraphElement, nsGenericHTMLElement)
-
 NS_IMPL_ELEMENT_CLONE(HTMLParagraphElement)
 
 bool

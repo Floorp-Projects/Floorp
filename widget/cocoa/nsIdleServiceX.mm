@@ -7,8 +7,6 @@
 #include "nsIServiceManager.h"
 #import <Foundation/Foundation.h>
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsIdleServiceX, nsIdleService)
-
 bool
 nsIdleServiceX::PollIdleTime(uint32_t *aIdleTime)
 {

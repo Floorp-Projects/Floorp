@@ -5895,12 +5895,10 @@ MacroAssemblerARM::outOfLineWasmTruncateToIntCheck(FloatRegister input, MIRType 
 
     // Handle errors.
     bind(&fail);
-    asMasm().jump(wasm::OldTrapDesc(trapOffset, wasm::Trap::IntegerOverflow,
-                                    asMasm().framePushed()));
+    asMasm().wasmTrap(wasm::Trap::IntegerOverflow, trapOffset);
 
     bind(&inputIsNaN);
-    asMasm().jump(wasm::OldTrapDesc(trapOffset, wasm::Trap::InvalidConversionToInteger,
-                                    asMasm().framePushed()));
+    asMasm().wasmTrap(wasm::Trap::InvalidConversionToInteger, trapOffset);
 }
 
 void

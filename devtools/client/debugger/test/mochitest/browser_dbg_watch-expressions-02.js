@@ -38,38 +38,77 @@ function test() {
       });
   });
 
+  let totalExpressionsAdded = 0;
+
   function addExpressions() {
+    function addExpression(aExpression) {
+      gWatch.addExpression(aExpression);
+      ++totalExpressionsAdded;
+    }
+
+    is(totalExpressionsAdded, 0, "addExpressions must only be called once");
+
+    // The order in which expressions are added here almost doesn't matter for
+    // this test's purposes.  (Excepting only the position of the final test.)
+    // Use the same order as in `checkWatchExpressions` for simplicity.
+    addExpression("'a'");
+    addExpression("\"a\"");
+    addExpression("'a\"\"'");
+    addExpression("\"a''\"");
+    addExpression("?");
+    addExpression("a");
+    addExpression("this");
+    addExpression("this.canada");
+    addExpression("[1, 2, 3]");
+    addExpression("x = [1, 2, 3]");
+    addExpression("y = [1, 2, 3]; y.test = 4");
+    addExpression("z = [1, 2, 3]; z.test = 4; z");
+    addExpression("t = [1, 2, 3]; t.test = 4; !t");
+    addExpression("arguments[0]");
+    addExpression("encodeURI(\"\\\")");
+    addExpression("decodeURI(\"\\\")");
+    addExpression("decodeURIComponent(\"%\")");
+    addExpression("//");
+    addExpression("// 42");
+    addExpression("{}.foo");
+    addExpression("{}.foo()");
+    addExpression("({}).foo()");
+    addExpression("new Array(-1)");
+    addExpression("4.2.toExponential(-4.2)");
+    addExpression("throw new Error(\"bazinga\")");
+    addExpression("({ get error() { throw new Error(\"bazinga\") } }).error");
+
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1205353
     // BZ#1205353 - wrong result for string replace with backslash-dollar.
-    gWatch.addExpression("'$$$'.replace(/\\$/, 'foo')");
-    gWatch.addExpression("'a'");
-    gWatch.addExpression("\"a\"");
-    gWatch.addExpression("'a\"\"'");
-    gWatch.addExpression("\"a''\"");
-    gWatch.addExpression("?");
-    gWatch.addExpression("a");
-    gWatch.addExpression("this");
-    gWatch.addExpression("this.canada");
-    gWatch.addExpression("[1, 2, 3]");
-    gWatch.addExpression("x = [1, 2, 3]");
-    gWatch.addExpression("y = [1, 2, 3]; y.test = 4");
-    gWatch.addExpression("z = [1, 2, 3]; z.test = 4; z");
-    gWatch.addExpression("t = [1, 2, 3]; t.test = 4; !t");
-    gWatch.addExpression("arguments[0]");
-    gWatch.addExpression("encodeURI(\"\\\")");
-    gWatch.addExpression("decodeURI(\"\\\")");
-    gWatch.addExpression("decodeURIComponent(\"%\")");
-    gWatch.addExpression("//");
-    gWatch.addExpression("// 42");
-    gWatch.addExpression("{}.foo");
-    gWatch.addExpression("{}.foo()");
-    gWatch.addExpression("({}).foo()");
-    gWatch.addExpression("new Array(-1)");
-    gWatch.addExpression("4.2.toExponential(-4.2)");
-    gWatch.addExpression("throw new Error(\"bazinga\")");
-    gWatch.addExpression("({ get error() { throw new Error(\"bazinga\") } }).error");
-    gWatch.addExpression("throw { get name() { throw \"bazinga\" } }");
+    addExpression("'$$$'.replace(/\\$/, 'foo')");
 
+    // Functions with parameters that aren't just a simple series of names can't
+    // be made strict mode code by adding 'use strict'.  The resulting syntax
+    // error message currently contains U+022 QUOTATION MARK characters that
+    // DebuggerController.StackFrames.syncWatchExpressions at one time
+    // mishandled: test that handling here.
+    addExpression("function x(a = 3) { 'use strict'; } 'NOT EVALUATED'");
+    addExpression("function y(...b) { 'use strict'; } 'NOT EVALUATED'");
+    addExpression("function z([]) { 'use strict'; } 'NOT EVALUATED'");
+    addExpression("function w({}) { 'use strict'; } 'NOT EVALUATED'");
+
+    // Add a working expression to verify that earlier failing expressions don't
+    // halt stuff.
+    addExpression("42");
+
+    // For the moment, this watch-expression must be last: by throwing an object
+    // with a .name that throws, it (intentionally?) mucks with the mini-script
+    // consed up in DebuggerController.StackFrames.syncWatchExpressions for
+    // eventual evaluation, and subsequent `addExpression` calls will have no
+    // effect.
+    //
+    // This watch-expression appears initially to be added as a hidden
+    // expression -- but at first breakpoint it appears to be silently removed,
+    // hence the `totalExpressionsAdded - 1` in test1 (with lingering effects on
+    // the rest of this test).
+    addExpression("throw { get name() { throw \"bazinga\" } }");
+
+    is(totalExpressionsAdded, 33, "handy-dandy count-verifying assertion");
   }
 
   function performTest() {
@@ -77,8 +116,8 @@ function test() {
 
     is(gDebugger.document.querySelectorAll(".dbg-expression[hidden=true]").length, 0,
       "There should be 0 hidden nodes in the watch expressions container");
-    is(gDebugger.document.querySelectorAll(".dbg-expression:not([hidden=true])").length, 28,
-      "There should be 28 visible nodes in the watch expressions container");
+    is(gDebugger.document.querySelectorAll(".dbg-expression:not([hidden=true])").length, totalExpressionsAdded,
+      "There should be " + totalExpressionsAdded + " visible nodes in the watch expressions container");
 
     test1(function () {
       test2(function () {
@@ -106,13 +145,13 @@ function test() {
   function finishTest() {
     is(gDebugger.document.querySelectorAll(".dbg-expression[hidden=true]").length, 0,
       "There should be 0 hidden nodes in the watch expressions container");
-    is(gDebugger.document.querySelectorAll(".dbg-expression:not([hidden=true])").length, 28,
-      "There should be 28 visible nodes in the watch expressions container");
+    is(gDebugger.document.querySelectorAll(".dbg-expression:not([hidden=true])").length, totalExpressionsAdded,
+      "There should be " + totalExpressionsAdded + " visible nodes in the watch expressions container");
   }
 
   function test1(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
-      checkWatchExpressions(27, {
+      checkWatchExpressions(totalExpressionsAdded - 1, {
         a: "ReferenceError: a is not defined",
         this: { type: "object", class: "Object" },
         prop: { type: "object", class: "String" },
@@ -126,7 +165,7 @@ function test() {
 
   function test2(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
-      checkWatchExpressions(27, {
+      checkWatchExpressions(totalExpressionsAdded - 1, {
         a: { type: "undefined" },
         this: { type: "object", class: "Window" },
         prop: { type: "undefined" },
@@ -142,7 +181,7 @@ function test() {
 
   function test3(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
-      checkWatchExpressions(27, {
+      checkWatchExpressions(totalExpressionsAdded - 1, {
         a: { type: "object", class: "Object" },
         this: { type: "object", class: "Window" },
         prop: { type: "undefined" },
@@ -158,7 +197,7 @@ function test() {
 
   function test4(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
-      checkWatchExpressions(28, {
+      checkWatchExpressions(totalExpressionsAdded, {
         a: 5,
         this: { type: "object", class: "Window" },
         prop: { type: "undefined" },
@@ -173,7 +212,7 @@ function test() {
 
   function test5(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
-      checkWatchExpressions(28, {
+      checkWatchExpressions(totalExpressionsAdded, {
         a: 5,
         this: { type: "object", class: "Window" },
         prop: { type: "undefined" },
@@ -188,7 +227,7 @@ function test() {
 
   function test6(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
-      checkWatchExpressions(28, {
+      checkWatchExpressions(totalExpressionsAdded, {
         a: 5,
         this: { type: "object", class: "Window" },
         prop: { type: "undefined" },
@@ -203,7 +242,7 @@ function test() {
 
   function test7(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
-      checkWatchExpressions(28, {
+      checkWatchExpressions(totalExpressionsAdded, {
         a: 5,
         this: { type: "object", class: "Window" },
         prop: { type: "undefined" },
@@ -218,7 +257,7 @@ function test() {
 
   function test8(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
-      checkWatchExpressions(28, {
+      checkWatchExpressions(totalExpressionsAdded, {
         a: 5,
         this: { type: "object", class: "Window" },
         prop: { type: "undefined" },
@@ -257,8 +296,8 @@ function test() {
     let label = gDebugger.L10N.getStr("watchExpressionsScopeLabel");
     let scope = gVariables._currHierarchy.get(label);
 
-    ok(scope, "There should be a wach expressions scope in the variables view.");
-    is(scope._store.size, aTotal, "There should be " + aTotal + " evaluations availalble.");
+    ok(scope, "There should be a watch expressions scope in the variables view.");
+    is(scope._store.size, aTotal, "There should be " + aTotal + " evaluations available.");
 
     let w1 = scope.get("'a'");
     let w2 = scope.get("\"a\"");
@@ -286,8 +325,16 @@ function test() {
     let w24 = scope.get("4.2.toExponential(-4.2)");
     let w25 = scope.get("throw new Error(\"bazinga\")");
     let w26 = scope.get("({ get error() { throw new Error(\"bazinga\") } }).error");
-    let w27 = scope.get("throw { get name() { throw \"bazinga\" } }");
-    let w28 = scope.get("'$$$'.replace(/\\$/, 'foo')");
+    let w27 = scope.get("'$$$'.replace(/\\$/, 'foo')");
+    let w28 = scope.get("function x(a = 3) { 'use strict'; } 'NOT EVALUATED'");
+    let w29 = scope.get("function y(...b) { 'use strict'; } 'NOT EVALUATED'");
+    let w30 = scope.get("function z([]) { 'use strict'; } 'NOT EVALUATED'");
+    let w31 = scope.get("function w({}) { 'use strict'; } 'NOT EVALUATED'");
+    let w32 = scope.get("42");
+
+    // This doesn't *have* to be last -- these could be in any order -- but keep
+    // it last for consistency with `addExpressions`.
+    let w33 = scope.get("throw { get name() { throw \"bazinga\" } }");
 
     ok(w1, "The first watch expression should be present in the scope.");
     ok(w2, "The second watch expression should be present in the scope.");
@@ -315,8 +362,15 @@ function test() {
     ok(w24, "The 24th watch expression should be present in the scope.");
     ok(w25, "The 25th watch expression should be present in the scope.");
     ok(w26, "The 26th watch expression should be present in the scope.");
-    ok(!w27, "The 27th watch expression should not be present in the scope.");
+    ok(w27, "The 27th watch expression should be present in the scope.");
     ok(w28, "The 28th watch expression should be present in the scope.");
+    ok(w29, "The 29th watch expression should be present in the scope.");
+    ok(w30, "The 30th watch expression should be present in the scope.");
+    ok(w31, "The 31st watch expression should be present in the scope.");
+    ok(w32, "The 32nd watch expression should be present in the scope.");
+
+    // Keep this last for consistency with `addExpressions`.
+    ok(!w33, "The 33rd watch expression should not be present in the scope.");
 
     is(w1.value, "a", "The first value is correct.");
     is(w2.value, "a", "The second value is correct.");
@@ -361,8 +415,8 @@ function test() {
       is(w14.value, expected_args, "The 14th value is correct.");
     }
 
-    is(w15.value, "SyntaxError: unterminated string literal", "The 15th value is correct.");
-    is(w16.value, "SyntaxError: unterminated string literal", "The 16th value is correct.");
+    is(w15.value, "SyntaxError: \"\" literal not terminated before end of script", "The 15th value is correct.");
+    is(w16.value, "SyntaxError: \"\" literal not terminated before end of script", "The 16th value is correct.");
     is(w17.value, "URIError: malformed URI sequence", "The 17th value is correct.");
 
     is(w18.value.type, "undefined", "The 18th value type is correct.");
@@ -378,6 +432,17 @@ function test() {
     is(w24.value, "RangeError: precision -4 out of range", "The 24th value is correct.");
     is(w25.value, "Error: bazinga", "The 25th value is correct.");
     is(w26.value, "Error: bazinga", "The 26th value is correct.");
-    is(w28.value, "foo$$", "The 28th value is correct.");
+    is(w27.value, "foo$$", "The 27th value is correct.");
+
+    is(w28.value, "SyntaxError: \"use strict\" not allowed in function with default parameter",
+       "The 29th value is correct.");
+    is(w29.value, "SyntaxError: \"use strict\" not allowed in function with rest parameter",
+       "The 29th value is correct.");
+    is(w30.value, "SyntaxError: \"use strict\" not allowed in function with destructuring parameter",
+        "The 30th value is correct.");
+    is(w31.value, "SyntaxError: \"use strict\" not allowed in function with destructuring parameter",
+       "The 31st value is correct.");
+
+    is(w32.value, 42, "The 32nd value is correct.");
   }
 }

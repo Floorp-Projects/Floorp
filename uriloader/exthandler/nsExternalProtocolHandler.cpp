@@ -86,7 +86,7 @@ NS_INTERFACE_MAP_BEGIN(nsExtProtocolChannel)
    NS_INTERFACE_MAP_ENTRY(nsIParentChannel)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END
 
 nsExtProtocolChannel::nsExtProtocolChannel(nsIURI* aURI,
                                            nsILoadInfo* aLoadInfo)
@@ -491,7 +491,7 @@ NS_INTERFACE_MAP_BEGIN(nsExternalProtocolHandler)
    NS_INTERFACE_MAP_ENTRY(nsIProtocolHandler)
    NS_INTERFACE_MAP_ENTRY(nsIExternalProtocolHandler)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsExternalProtocolHandler::GetScheme(nsACString &aScheme)
 {

@@ -220,6 +220,8 @@ class MediaRecorder::Session: public PrincipalChangeObserver<MediaStreamTrack>,
                          , public MutableBlobStorageCallback
   {
   public:
+    // We need to always declare refcounting because
+    // MutableBlobStorageCallback has pure-virtual refcounting.
     NS_DECL_ISUPPORTS_INHERITED
 
     // aDestroyRunnable can be null. If it's not, it will be dispatched after

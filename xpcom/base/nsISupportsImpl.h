@@ -1128,25 +1128,31 @@ namespace mozilla {
 class Runnable;
 } // namespace mozilla
 
-#define NS_IMPL_ADDREF_INHERITED(Class, Super)                                \
-NS_IMETHODIMP_(MozExternalRefCountType) Class::AddRef(void)                   \
-{                                                                             \
+#define NS_IMPL_ADDREF_INHERITED_GUTS(Class, Super)                           \
   MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(Class)                                   \
   nsrefcnt r = Super::AddRef();                                               \
   if (!mozilla::IsConvertible<Class*, mozilla::Runnable*>::value) {           \
     NS_LOG_ADDREF(this, r, #Class, sizeof(*this));                            \
   }                                                                           \
-  return r;                                                                   \
+  return r /* Purposefully no trailing semicolon */
+
+#define NS_IMPL_ADDREF_INHERITED(Class, Super)                                \
+NS_IMETHODIMP_(MozExternalRefCountType) Class::AddRef(void)                   \
+{                                                                             \
+  NS_IMPL_ADDREF_INHERITED_GUTS(Class, Super);                                \
 }
 
-#define NS_IMPL_RELEASE_INHERITED(Class, Super)                               \
-NS_IMETHODIMP_(MozExternalRefCountType) Class::Release(void)                  \
-{                                                                             \
+#define NS_IMPL_RELEASE_INHERITED_GUTS(Class, Super)                          \
   nsrefcnt r = Super::Release();                                              \
   if (!mozilla::IsConvertible<Class*, mozilla::Runnable*>::value) {           \
     NS_LOG_RELEASE(this, r, #Class);                                          \
   }                                                                           \
-  return r;                                                                   \
+  return r /* Purposefully no trailing semicolon */
+
+#define NS_IMPL_RELEASE_INHERITED(Class, Super)                               \
+NS_IMETHODIMP_(MozExternalRefCountType) Class::Release(void)                  \
+{                                                                             \
+  NS_IMPL_RELEASE_INHERITED_GUTS(Class, Super);                               \
 }
 
 /**
@@ -1198,6 +1204,8 @@ NS_IMETHODIMP_(MozExternalRefCountType) Class::Release(void)                  \
   NS_IMPL_RELEASE(aClass)                                                     \
   NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
 
+// When possible, prefer NS_INLINE_DECL_REFCOUNTING_INHERITED to
+// NS_IMPL_ISUPPORTS_INHERITED0.
 #define NS_IMPL_ISUPPORTS_INHERITED0(aClass, aSuper)                          \
     NS_INTERFACE_TABLE_HEAD(aClass)                                           \
     NS_INTERFACE_TABLE_TAIL_INHERITING(aSuper)                                \
@@ -1208,6 +1216,25 @@ NS_IMETHODIMP_(MozExternalRefCountType) Class::Release(void)                  \
   NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, __VA_ARGS__)              \
   NS_IMPL_ADDREF_INHERITED(aClass, aSuper)                                    \
   NS_IMPL_RELEASE_INHERITED(aClass, aSuper)
+
+/**
+ * A macro to declare and implement addref/release for a class that does not
+ * need to QI to any interfaces other than the ones its parent class QIs to.
+ * This can be a no-op when we're not building with refcount logging, because in
+ * that case there's no real reason to have a separate addref/release on this
+ * class.
+ */
+#if defined(NS_BUILD_REFCNT_LOGGING)
+#define NS_INLINE_DECL_REFCOUNTING_INHERITED(Class, Super)      \
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override {      \
+    NS_IMPL_ADDREF_INHERITED_GUTS(Class, Super);                \
+  }                                                             \
+  NS_IMETHOD_(MozExternalRefCountType) Release() override {     \
+    NS_IMPL_RELEASE_INHERITED_GUTS(Class, Super);               \
+  }
+#else // NS_BUILD_REFCNT_LOGGING
+#define NS_INLINE_DECL_REFCOUNTING_INHERITED(Class, Super)
+#endif // NS_BUILD_REFCNT_LOGGINGx
 
 /*
  * Macro to glue together a QI that starts with an interface table
@@ -1220,14 +1247,6 @@ NS_IMETHODIMP_(MozExternalRefCountType) Class::Release(void)                  \
 
 
 ///////////////////////////////////////////////////////////////////////////////
-/**
- *
- * Threadsafe implementations of the ISupports convenience macros.
- *
- * @note  These are not available when linking against the standalone glue,
- *        because the implementation requires PR_ symbols.
- */
-#define NS_INTERFACE_MAP_END_THREADSAFE NS_IMPL_QUERY_TAIL_GUTS
 
 /**
  * Macro to generate nsIClassInfo methods for classes which do not have
