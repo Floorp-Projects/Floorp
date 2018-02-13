@@ -95,6 +95,8 @@ DBusRemoteClient::DoSendDBusCommandLine(const char *aProgram, const char *aProfi
 
   nsAutoCString destinationName;
   destinationName = nsPrintfCString("org.mozilla.%s.%s", aProgram, profileName.get());
+  if (destinationName.Length() > DBUS_MAXIMUM_NAME_LENGTH)
+    destinationName.Truncate(DBUS_MAXIMUM_NAME_LENGTH);
 
   nsAutoCString pathName;
   pathName = nsPrintfCString("/org/mozilla/%s/Remote", aProgram);
