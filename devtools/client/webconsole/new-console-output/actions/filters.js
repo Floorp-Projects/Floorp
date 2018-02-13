@@ -7,7 +7,6 @@
 "use strict";
 
 const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");
-const Services = require("Services");
 
 const {
   FILTER_TEXT_SET,
@@ -27,19 +26,18 @@ function filterTextSet(text) {
 }
 
 function filterToggle(filter) {
-  return (dispatch, getState) => {
+  return (dispatch, getState, {prefsService}) => {
     dispatch({
       type: FILTER_TOGGLE,
       filter,
     });
     const filterState = getAllFilters(getState());
-    Services.prefs.setBoolPref(PREFS.FILTER[filter.toUpperCase()],
-      filterState[filter]);
+    prefsService.setBoolPref(PREFS.FILTER[filter.toUpperCase()], filterState[filter]);
   };
 }
 
 function filtersClear() {
-  return (dispatch, getState) => {
+  return (dispatch, getState, {prefsService}) => {
     dispatch({
       type: FILTERS_CLEAR,
     });
@@ -47,7 +45,7 @@ function filtersClear() {
     const filterState = getAllFilters(getState());
     for (let filter in filterState) {
       if (filter !== FILTERS.TEXT) {
-        Services.prefs.clearUserPref(PREFS.FILTER[filter.toUpperCase()]);
+        prefsService.clearUserPref(PREFS.FILTER[filter.toUpperCase()]);
       }
     }
   };
@@ -60,7 +58,7 @@ function filtersClear() {
  * to keep non-default filters the user might have set.
  */
 function defaultFiltersReset() {
-  return (dispatch, getState) => {
+  return (dispatch, getState, {prefsService}) => {
     // Get the state before dispatching so the action does not alter prefs reset.
     const filterState = getAllFilters(getState());
 
@@ -70,7 +68,7 @@ function defaultFiltersReset() {
 
     DEFAULT_FILTERS.forEach(filter => {
       if (filterState[filter] === false) {
-        Services.prefs.clearUserPref(PREFS.FILTER[filter.toUpperCase()]);
+        prefsService.clearUserPref(PREFS.FILTER[filter.toUpperCase()]);
       }
     });
   };
