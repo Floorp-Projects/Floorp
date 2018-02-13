@@ -48,5 +48,14 @@ promise_test(async t => {
   assert_less_than(animation.currentTime, 100 * MS_PER_SEC);
 }, 'Setting the playback rate while playing preserves the current time');
 
+promise_test(async t => {
+  const animation = createDiv(t).animate(null, 100 * MS_PER_SEC);
+  animation.currentTime = 50 * MS_PER_SEC;
+  animation.updatePlaybackRate(2);
+  animation.playbackRate = 1;
+  await animation.ready;
+  assert_equals(animation.playbackRate, 1);
+}, 'Setting the playback rate should clear any pending playback rate');
+
 </script>
 </body>
