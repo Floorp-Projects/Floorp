@@ -6,7 +6,6 @@
 
 const {Ci} = require("chrome");
 const Services = require("Services");
-const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
 const protocol = require("devtools/shared/protocol");
@@ -259,11 +258,11 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     }
 
     if (rules) {
-      return promise.resolve(rules);
+      return Promise.resolve(rules);
     }
 
     if (!this.ownerNode) {
-      return promise.resolve([]);
+      return Promise.resolve([]);
     }
 
     if (this._cssRules) {
@@ -371,20 +370,20 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    */
   _getText: function () {
     if (typeof this.text === "string") {
-      return promise.resolve(this.text);
+      return Promise.resolve(this.text);
     }
 
     let cssText = modifiedStyleSheets.get(this.rawSheet);
     if (cssText !== undefined) {
       this.text = cssText;
-      return promise.resolve(cssText);
+      return Promise.resolve(cssText);
     }
 
     if (!this.href) {
       // this is an inline <style> sheet
       let content = this.ownerNode.textContent;
       this.text = content;
-      return promise.resolve(content);
+      return Promise.resolve(content);
     }
 
     return this.fetchStylesheet(this.href).then(({ content }) => {
