@@ -13,6 +13,8 @@
 #include "nsTextFrameUtils.h"
 #include "nsFontMetrics.h"
 #include "nsDeviceContext.h"
+#include "nsStyleContext.h"
+#include "nsStyleContextInlines.h"
 #include "nsUnicodeScriptCodes.h"
 
 using namespace mozilla;

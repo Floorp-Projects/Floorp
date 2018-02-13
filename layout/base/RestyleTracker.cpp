@@ -13,8 +13,10 @@
 
 #include "GeckoProfiler.h"
 #include "nsFrameManager.h"
+#include "nsIContentInlines.h"
 #include "nsIDocument.h"
 #include "nsStyleChangeList.h"
+#include "mozilla/dom/ElementInlines.h"
 #include "mozilla/GeckoRestyleManager.h"
 #include "RestyleTrackerInlines.h"
 #include "nsTransitionManager.h"

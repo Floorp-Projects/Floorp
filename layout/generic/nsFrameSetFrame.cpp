@@ -21,6 +21,7 @@
 #include "nsContainerFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
+#include "nsIContentInlines.h"
 #include "nsIPresShell.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"

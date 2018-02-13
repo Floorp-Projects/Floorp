@@ -20,6 +20,7 @@
 #include "nsGkAtoms.h"
 #include "nsImageFrame.h"
 #include "nsCoord.h"
+#include "nsIContentInlines.h"
 #include "nsIScriptError.h"
 #include "nsIStringBundle.h"
 #include "nsContentUtils.h"

@@ -14,6 +14,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSRendering.h"
 #include "nsIFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsIPresShellInlines.h"
 #include "nsPlaceholderFrame.h"
 #include "nsStyleChangeList.h"

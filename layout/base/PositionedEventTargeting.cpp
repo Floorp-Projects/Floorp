@@ -17,6 +17,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsRegion.h"
 #include "nsDeviceContext.h"
+#include "nsIContentInlines.h"
 #include "nsIFrame.h"
 #include <algorithm>
 #include "LayersLogging.h"
