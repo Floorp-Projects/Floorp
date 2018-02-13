@@ -22,7 +22,6 @@ namespace browser {
 NS_IMPL_ISUPPORTS(AboutRedirector, nsIAboutModule)
 
 bool AboutRedirector::sActivityStreamEnabled = false;
-bool AboutRedirector::sActivityStreamAboutHomeEnabled = false;
 
 struct RedirEntry {
   const char* id;
@@ -123,8 +122,6 @@ AboutRedirector::LoadActivityStreamPrefs()
   if (!sASEnabledCacheInited) {
     Preferences::AddBoolVarCache(&AboutRedirector::sActivityStreamEnabled,
                                  "browser.newtabpage.activity-stream.enabled");
-    Preferences::AddBoolVarCache(&AboutRedirector::sActivityStreamAboutHomeEnabled,
-                                 "browser.newtabpage.activity-stream.aboutHome.enabled");
     sASEnabledCacheInited = true;
   }
 }
@@ -152,7 +149,7 @@ AboutRedirector::NewChannel(nsIURI* aURI,
       nsAutoCString url;
 
       if (path.EqualsLiteral("newtab") ||
-          (path.EqualsLiteral("home") && sActivityStreamEnabled && sActivityStreamAboutHomeEnabled)) {
+          (path.EqualsLiteral("home") && sActivityStreamEnabled)) {
         // let the aboutNewTabService decide where to redirect
         nsCOMPtr<nsIAboutNewTabService> aboutNewTabService =
           do_GetService("@mozilla.org/browser/aboutnewtab-service;1", &rv);
@@ -212,7 +209,7 @@ AboutRedirector::GetURIFlags(nsIURI *aURI, uint32_t *result)
       // Once ActivityStream is fully rolled out and we've removed Tiles,
       // this special case can go away and the flag can just become part
       // of the normal about:newtab entry in kRedirMap.
-      if (name.EqualsLiteral("newtab") || (name.EqualsLiteral("home") && sActivityStreamAboutHomeEnabled)) {
+      if (name.EqualsLiteral("newtab") || name.EqualsLiteral("home")) {
         if (sActivityStreamEnabled) {
           *result = redir.flags |
             nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
