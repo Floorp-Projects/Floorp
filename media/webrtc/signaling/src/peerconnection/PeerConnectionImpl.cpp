@@ -2321,41 +2321,6 @@ PeerConnectionImpl::DisablePacketDump(unsigned long level,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-PeerConnectionImpl::RemoveTrack(MediaStreamTrack& aTrack) {
-  PC_AUTO_ENTER_API_CALL(true);
-
-  std::vector<RefPtr<TransceiverImpl>>& transceivers =
-    mMedia->GetTransceivers();
-
-  nsresult rv = NS_ERROR_INVALID_ARG;
-
-  for (RefPtr<TransceiverImpl>& transceiver : transceivers) {
-    if (transceiver->HasSendTrack(&aTrack)) {
-      // TODO(bug 1401983): Move DTMF stuff to TransceiverImpl
-      for (size_t i = 0; i < mDTMFStates.Length(); ++i) {
-        if (mDTMFStates[i]->mTransceiver.get() == transceiver.get()) {
-          mDTMFStates[i]->mSendTimer->Cancel();
-          mDTMFStates.RemoveElementAt(i);
-          break;
-        }
-      }
-
-      rv = transceiver->UpdateSendTrack(nullptr);
-      break;
-    }
-  }
-
-  if (NS_FAILED(rv)) {
-    CSFLogError(LOGTAG, "Error updating send track on transceiver");
-    return rv;
-  }
-
-  aTrack.RemovePrincipalChangeObserver(this);
-
-  return NS_OK;
-}
-
 static int GetDTMFToneCode(uint16_t c)
 {
   const char* DTMF_TONECODES = "0123456789*#ABCD";
