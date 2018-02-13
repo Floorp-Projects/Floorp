@@ -320,7 +320,7 @@ IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript, IonSetProperty
             ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached,
                                   gen.typeCheckInfo());
         } else {
-            gen.trackNotAttached();
+            gen.trackAttached(nullptr);
         }
 
         if (!attached && !isTemporarilyUnoptimizable)
