@@ -41,8 +41,6 @@ interface PeerConnectionImpl  {
 
   /* Adds the tracks created by GetUserMedia */
   [Throws]
-  void removeTrack(MediaStreamTrack track);
-  [Throws]
   TransceiverImpl createTransceiverImpl(DOMString kind,
                                         MediaStreamTrack? track);
   [Throws]
