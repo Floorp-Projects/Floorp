@@ -441,11 +441,19 @@ add_task(async function test_tooLateToSend() {
 
   TelemetrySend.testTooLateToSend(true);
 
-  TelemetryController.submitExternalPing(TEST_TYPE, {});
-  Assert.equal(TelemetrySend.pendingPingCount, 1, "Should not send the ping, should pend delivery");
+  const id = await TelemetryController.submitExternalPing(TEST_TYPE, {});
+
+  // Triggering a shutdown should persist the pings
+  await TelemetrySend.shutdown();
+  const pendingPings = TelemetryStorage.getPendingPingList();
+  Assert.equal(pendingPings.length, 1, "Should have a pending ping in storage");
+  Assert.equal(pendingPings[0].id, id, "Should have pended our test's ping");
 
   Assert.equal(Telemetry.getHistogramById("TELEMETRY_SEND_FAILURE_TYPE").snapshot().counts[7], 1,
     "Should have registered the failed attempt to send");
+
+  await TelemetryStorage.reset();
+  Assert.equal(TelemetrySend.pendingPingCount, 0, "Should clean up after yourself");
 });
 
 // Test that the current, non-persisted pending pings are properly saved on shutdown.
