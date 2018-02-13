@@ -207,8 +207,7 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                             css::LoaderReusableStyleSheets* aReusableSheets)
 {
   MOZ_ASSERT(!mMedia || mMedia->IsServo());
-  RefPtr<URLExtraData> extraData =
-    new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal);
+  Inner()->mURLData = new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal); // RefPtr
 
   Inner()->mContents = Servo_StyleSheet_FromUTF8Bytes(aLoader,
                                                       this,
@@ -216,12 +215,19 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                                                       aInput.Elements(),
                                                       aInput.Length(),
                                                       mParsingMode,
-                                                      extraData,
+                                                      Inner()->mURLData,
                                                       aLineNumber,
                                                       aCompatMode,
                                                       aReusableSheets)
                          .Consume();
 
+  FinishParse();
+  return NS_OK;
+}
+
+void
+ServoStyleSheet::FinishParse()
+{
   nsString sourceMapURL;
   Servo_StyleSheet_GetSourceMapURL(Inner()->mContents, &sourceMapURL);
   SetSourceMapURLFromComment(sourceMapURL);
@@ -229,9 +235,6 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
   nsString sourceURL;
   Servo_StyleSheet_GetSourceURL(Inner()->mContents, &sourceURL);
   SetSourceURL(sourceURL);
-
-  Inner()->mURLData = extraData.forget();
-  return NS_OK;
 }
 
 nsresult
