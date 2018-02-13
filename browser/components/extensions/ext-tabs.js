@@ -11,6 +11,8 @@ ChromeUtils.defineModuleGetter(this, "PromiseUtils",
                                "resource://gre/modules/PromiseUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "SessionStore",
+                               "resource:///modules/sessionstore/SessionStore.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "strBundle", function() {
   return Services.strings.createBundle("chrome://global/locale/extensions.properties");
@@ -21,9 +23,6 @@ var {
 } = ExtensionUtils;
 
 const TABHIDE_PREFNAME = "extensions.webextensions.tabhide.enabled";
-
-// WeakMap[Tab -> ExtensionID]
-let hiddenTabs = new WeakMap();
 
 let tabListener = {
   tabReadyInitialized: false,
@@ -93,11 +92,9 @@ this.tabs = class extends ExtensionAPI {
       // self-manage re-hiding tabs.
       for (let tab of this.extension.tabManager.query()) {
         let nativeTab = tabTracker.getTab(tab.id);
-        if (hiddenTabs.get(nativeTab) === this.extension.id) {
-          hiddenTabs.delete(nativeTab);
-          if (nativeTab.ownerGlobal) {
-            nativeTab.ownerGlobal.gBrowser.showTab(nativeTab);
-          }
+        if (nativeTab.hidden && nativeTab.ownerGlobal &&
+            SessionStore.getTabValue(nativeTab, "hiddenBy") === this.extension.id) {
+          nativeTab.ownerGlobal.gBrowser.showTab(nativeTab);
         }
       }
     }
@@ -301,8 +298,6 @@ this.tabs = class extends ExtensionAPI {
               needed.push("discarded");
             } else if (event.type == "TabShow") {
               needed.push("hidden");
-              // Always remove the tab from the hiddenTabs map.
-              hiddenTabs.delete(event.originalTarget);
             } else if (event.type == "TabHide") {
               needed.push("hidden");
             }
@@ -1064,7 +1059,6 @@ this.tabs = class extends ExtensionAPI {
           for (let tabId of tabIds) {
             let tab = tabTracker.getTab(tabId);
             if (tab.ownerGlobal) {
-              hiddenTabs.delete(tab);
               tab.ownerGlobal.gBrowser.showTab(tab);
             }
           }
@@ -1083,9 +1077,8 @@ this.tabs = class extends ExtensionAPI {
           let tabs = tabIds.map(tabId => tabTracker.getTab(tabId));
           for (let tab of tabs) {
             if (tab.ownerGlobal && !tab.hidden) {
-              tab.ownerGlobal.gBrowser.hideTab(tab);
+              tab.ownerGlobal.gBrowser.hideTab(tab, extension.id);
               if (tab.hidden) {
-                hiddenTabs.set(tab, extension.id);
                 hidden.push(tabTracker.getId(tab));
               }
             }

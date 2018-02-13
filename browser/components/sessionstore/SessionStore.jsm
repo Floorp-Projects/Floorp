@@ -3436,7 +3436,7 @@ var SessionStoreInternal = {
       tabs.push(tab);
 
       if (tabData.hidden) {
-        tabbrowser.hideTab(tab);
+        tabbrowser.hideTab(tab, tabData.extData && tabData.extData.hiddenBy);
       }
 
       if (tabData.pinned) {
