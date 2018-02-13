@@ -785,6 +785,25 @@
     stopTracks(stream);
   };
 
+  let checkAddTrackExistingTransceiverThenRemove = async () => {
+    let pc = new RTCPeerConnection();
+    pc.addTransceiver("audio");
+    let stream = await getUserMedia({audio: true});
+    let audio = stream.getAudioTracks()[0];
+    let sender = pc.addTrack(audio, stream);
+    pc.removeTrack(sender);
+
+    // Cause transceiver to be associated
+    await pc.setLocalDescription(await pc.createOffer());
+
+    // Make sure add/remove works still
+    sender = pc.addTrack(audio, stream);
+    pc.removeTrack(sender);
+
+    pc.close();
+    stopTracks(stream);
+  };
+
   let checkRemoveTrackNegotiation = async () => {
     let pc1 = new RTCPeerConnection();
     let pc2 = new RTCPeerConnection();
@@ -2198,6 +2217,7 @@
     await checkAddTrackPairs();
     await checkReplaceTrackNullDoesntPreventPairing();
     await checkRemoveAndReadd();
+    await checkAddTrackExistingTransceiverThenRemove();
     await checkRemoveTrackNegotiation();
     await checkMute();
     await checkOnAddStream();
