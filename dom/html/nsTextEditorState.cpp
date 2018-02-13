@@ -1121,6 +1121,10 @@ nsTextEditorState::GetPreviewNode()
 void
 nsTextEditorState::Clear()
 {
+  if (mTextEditor) {
+    mTextEditor->SetTextInputListener(nullptr);
+  }
+
   if (mBoundFrame) {
     // Oops, we still have a frame!
     // This should happen when the type of a text input control is being changed
