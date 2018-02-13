@@ -331,7 +331,7 @@ The ``Telemetry.h`` header also declares the helper classes ``AutoTimer`` and ``
     return NS_OK;
   }
 
-If the HistogramID is not known at compile time, one can use the ``RuntimeAutoTimer`` class, which behaves like the template parameterized ``AutoTimer``.
+If the HistogramID is not known at compile time, one can use the ``RuntimeAutoTimer`` and ``RuntimeAutoCounter`` classes, which behave like the template parameterized ``AutoTimer`` and ``AutoCounter`` ones.
 
 .. code-block:: cpp
 
@@ -341,6 +341,16 @@ If the HistogramID is not known at compile time, one can use the ``RuntimeAutoTi
     ...
     // Measure which operation blocks and for how long
     Telemetry::RuntimeAutoTimer timer(aTelemetryID);
+    ...
+  }
+
+  int32_t
+  FunctionWithCounter(Telemetry::HistogramID aTelemetryID)
+  {
+    ...
+    // Increment an AutoCounter
+    Telemetry::RuntimeAutoCounter myCounter(aTelemetryID);
+    ++myCounter;
     ...
   }
 
