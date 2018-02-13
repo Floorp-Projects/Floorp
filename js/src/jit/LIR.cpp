@@ -517,7 +517,8 @@ LNode::dump(GenericPrinter& out)
     if (numDefs() != 0) {
         out.printf("{");
         for (size_t i = 0; i < numDefs(); i++) {
-            out.printf("%s", getDef(i)->toString().get());
+            const LDefinition* def = isPhi() ? toPhi()->getDef(i) : toInstruction()->getDef(i);
+            out.printf("%s", def->toString().get());
             if (i != numDefs() - 1)
                 out.printf(", ");
         }
@@ -527,14 +528,18 @@ LNode::dump(GenericPrinter& out)
     printName(out);
     printOperands(out);
 
-    if (numTemps()) {
-        out.printf(" t=(");
-        for (size_t i = 0; i < numTemps(); i++) {
-            out.printf("%s", getTemp(i)->toString().get());
-            if (i != numTemps() - 1)
-                out.printf(", ");
+    if (isInstruction()) {
+        LInstruction* ins = toInstruction();
+        size_t numTemps = ins->numTemps();
+        if (numTemps > 0) {
+            out.printf(" t=(");
+            for (size_t i = 0; i < numTemps; i++) {
+                out.printf("%s", ins->getTemp(i)->toString().get());
+                if (i != numTemps - 1)
+                    out.printf(", ");
+            }
+            out.printf(")");
         }
-        out.printf(")");
     }
 
     if (numSuccessors()) {
