@@ -69,7 +69,7 @@ function initRow(aPartId) {
 
   var checkbox = document.getElementById(aPartId + "Def");
   var command  = document.getElementById("cmd_" + aPartId + "Toggle");
-  var {state} = SitePermissions.get(gPermURI, aPartId);
+  var {state, scope} = SitePermissions.get(gPermURI, aPartId);
   let defaultState = SitePermissions.getDefault(aPartId);
 
   if (state != defaultState) {
@@ -79,6 +79,12 @@ function initRow(aPartId) {
     checkbox.checked = true;
     command.setAttribute("disabled", "true");
   }
+
+  if (scope == SitePermissions.SCOPE_POLICY) {
+    checkbox.setAttribute("disabled", "true");
+    command.setAttribute("disabled", "true");
+  }
+
   setRadioState(aPartId, state);
 }
 
