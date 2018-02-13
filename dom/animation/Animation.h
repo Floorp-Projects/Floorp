@@ -118,6 +118,7 @@ public:
   virtual void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior);
   virtual void Pause(ErrorResult& aRv);
   void Reverse(ErrorResult& aRv);
+  void UpdatePlaybackRate(double /*aPlaybackRate*/) {}
   bool IsRunningOnCompositor() const;
   IMPL_EVENT_HANDLER(finish);
   IMPL_EVENT_HANDLER(cancel);
