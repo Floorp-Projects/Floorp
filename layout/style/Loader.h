@@ -485,6 +485,10 @@ private:
   friend class SheetLoadData;
   friend class StreamLoader;
 
+  // Helpers to conditionally block onload if mDocument is non-null.
+  void BlockOnload();
+  void UnblockOnload(bool aFireSync);
+
   nsresult CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
                               nsIPrincipal* aTriggeringPrincipal,
                               nsIURI* aTargetURI,

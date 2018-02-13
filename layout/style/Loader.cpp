@@ -322,9 +322,7 @@ SheetLoadData::FireLoadEvent(nsIThreadInternal* aThread)
                                        false, false);
 
   // And unblock onload
-  if (mLoader->mDocument) {
-    mLoader->mDocument->UnblockOnload(true);
-  }
+  mLoader->UnblockOnload(true);
 }
 
 void
@@ -340,9 +338,7 @@ SheetLoadData::ScheduleLoadEventIfNeeded(nsresult aStatus)
   nsCOMPtr<nsIThreadInternal> internalThread = do_QueryInterface(thread);
   if (NS_SUCCEEDED(internalThread->AddObserver(this))) {
     // Make sure to block onload here
-    if (mLoader->mDocument) {
-      mLoader->mDocument->BlockOnload();
-    }
+    mLoader->BlockOnload();
   }
 }
 
@@ -1776,8 +1772,12 @@ Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
   }
 
   // This parse does not need to be synchronous. \o/
-
-  nsresult rv = aSheet->ParseSheet(
+  //
+  // Note that we need to block onload because there may be no network requests
+  // pending.
+  BlockOnload();
+  RefPtr<SheetLoadData> loadData = aLoadData;
+  aSheet->ParseSheet(
     this,
     aUTF8.IsEmpty() ? NS_ConvertUTF16toUTF8(aUTF16) : aUTF8,
     aSheet->GetSheetURI(),
@@ -1786,22 +1786,19 @@ Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
     aLoadData,
     aLoadData->mLineNumber,
     GetCompatibilityMode()
+  )->Then(GetMainThreadSerialEventTarget(), __func__,
+          [loadData](bool aDummy) {
+            MOZ_ASSERT(NS_IsMainThread());
+            loadData->mIsBeingParsed = false;
+            loadData->mLoader->UnblockOnload(/* aFireSync = */ false);
+            // If there are no child sheets outstanding, mark us as complete.
+            // Otherwise, the children are holding strong refs to the data and
+            // will call SheetComplete() on it when they complete.
+            if (loadData->mPendingChildren == 0) {
+              loadData->mLoader->SheetComplete(loadData, NS_OK);
+            }
+          }, [] { MOZ_CRASH("rejected parse promise"); }
   );
-  aLoadData->mIsBeingParsed = false;
-
-  if (NS_FAILED(rv)) {
-    LOG_ERROR(("  Low-level error in parser!"));
-    SheetComplete(aLoadData, rv);
-    return rv;
-  }
-
-  if (aLoadData->mPendingChildren == 0) {
-    LOG(("  No pending kids from parse"));
-    aCompleted = true;
-    SheetComplete(aLoadData, NS_OK);
-  }
-  // Otherwise, the children are holding strong refs to the data and
-  // will call SheetComplete() on it when they complete.
 
   return NS_OK;
 }
@@ -2533,9 +2530,7 @@ Loader::PostLoadEvent(nsIURI* aURI,
     mPostedEvents.RemoveElement(evt);
   } else {
     // We'll unblock onload when we handle the event.
-    if (mDocument) {
-      mDocument->BlockOnload();
-    }
+    BlockOnload();
 
     // We want to notify the observer for this data.
     evt->mMustNotify = true;
@@ -2571,9 +2566,7 @@ Loader::HandleLoadEvent(SheetLoadData* aEvent)
     SheetComplete(aEvent, NS_OK);
   }
 
-  if (mDocument) {
-    mDocument->UnblockOnload(true);
-  }
+  UnblockOnload(true);
 }
 
 static void
@@ -2751,6 +2744,23 @@ Loader::GetStyleBackendType() const
   }
   return mDocument->GetStyleBackendType();
 }
+
+void
+Loader::BlockOnload()
+{
+  if (mDocument) {
+    mDocument->BlockOnload();
+  }
+}
+
+void
+Loader::UnblockOnload(bool aFireSync)
+{
+  if (mDocument) {
+    mDocument->UnblockOnload(aFireSync);
+  }
+}
+
 
 } // namespace css
 } // namespace mozilla
