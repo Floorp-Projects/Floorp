@@ -12,6 +12,7 @@
 
 #define __STDC_FORMAT_MACROS
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Vector.h"
@@ -70,7 +71,7 @@ const JSCodeSpec js::CodeSpec[] = {
 #undef MAKE_CODESPEC
 };
 
-const unsigned js::NumCodeSpecs = JS_ARRAY_LENGTH(CodeSpec);
+const unsigned js::NumCodeSpecs = mozilla::ArrayLength(CodeSpec);
 
 /*
  * Each element of the array is either a source literal associated with JS

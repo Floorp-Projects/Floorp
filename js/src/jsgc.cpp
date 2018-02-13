@@ -378,7 +378,7 @@ const AllocKind gc::slotsToThingKind[] = {
     /* 16 */ AllocKind::OBJECT16
 };
 
-static_assert(JS_ARRAY_LENGTH(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
+static_assert(mozilla::ArrayLength(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
               "We have defined a slot count for each kind.");
 
 #define CHECK_THING_SIZE(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
@@ -528,11 +528,11 @@ Arena::staticAsserts()
 {
     static_assert(size_t(AllocKind::LIMIT) <= 255,
                   "We must be able to fit the allockind into uint8_t.");
-    static_assert(JS_ARRAY_LENGTH(ThingSizes) == size_t(AllocKind::LIMIT),
+    static_assert(mozilla::ArrayLength(ThingSizes) == size_t(AllocKind::LIMIT),
                   "We haven't defined all thing sizes.");
-    static_assert(JS_ARRAY_LENGTH(FirstThingOffsets) == size_t(AllocKind::LIMIT),
+    static_assert(mozilla::ArrayLength(FirstThingOffsets) == size_t(AllocKind::LIMIT),
                   "We haven't defined all offsets.");
-    static_assert(JS_ARRAY_LENGTH(ThingsPerArena) == size_t(AllocKind::LIMIT),
+    static_assert(mozilla::ArrayLength(ThingsPerArena) == size_t(AllocKind::LIMIT),
                   "We haven't defined all counts.");
 }
 

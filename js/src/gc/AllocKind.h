@@ -168,7 +168,7 @@ FOR_EACH_ALLOCKIND(EXPAND_ELEMENT)
 #undef EXPAND_ELEMENT
     };
 
-    static_assert(MOZ_ARRAY_LENGTH(map) == size_t(AllocKind::LIMIT),
+    static_assert(mozilla::ArrayLength(map) == size_t(AllocKind::LIMIT),
                   "AllocKind-to-TraceKind mapping must be in sync");
     return map[size_t(kind)];
 }
@@ -191,7 +191,8 @@ IsNurseryAllocable(AllocKind kind)
 #undef DEFINE_NURSERY_ALLOCABLE
     };
 
-    JS_STATIC_ASSERT(JS_ARRAY_LENGTH(map) == size_t(AllocKind::LIMIT));
+    static_assert(mozilla::ArrayLength(map) == size_t(AllocKind::LIMIT),
+                  "IsNurseryAllocable sanity check");
     return map[size_t(kind)];
 }
 
@@ -206,7 +207,8 @@ IsBackgroundFinalized(AllocKind kind)
 #undef DEFINE_BG_FINALIZE
     };
 
-    JS_STATIC_ASSERT(JS_ARRAY_LENGTH(map) == size_t(AllocKind::LIMIT));
+    static_assert(mozilla::ArrayLength(map) == size_t(AllocKind::LIMIT),
+                  "IsBackgroundFinalized sanity check");
     return map[size_t(kind)];
 }
 
