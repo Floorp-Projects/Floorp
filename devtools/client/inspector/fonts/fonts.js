@@ -20,7 +20,7 @@ const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
 
 const { updateFonts } = require("./actions/fonts");
-const { updatePreviewText, updateShowAllFonts } = require("./actions/font-options");
+const { updatePreviewText } = require("./actions/font-options");
 
 class FontInspector {
   constructor(inspector, window) {
@@ -33,7 +33,6 @@ class FontInspector {
 
     this.onNewNode = this.onNewNode.bind(this);
     this.onPreviewFonts = this.onPreviewFonts.bind(this);
-    this.onShowAllFont = this.onShowAllFont.bind(this);
     this.onThemeChanged = this.onThemeChanged.bind(this);
 
     this.init();
@@ -46,7 +45,6 @@ class FontInspector {
 
     let fontsApp = FontsApp({
       onPreviewFonts: this.onPreviewFonts,
-      onShowAllFont: this.onShowAllFont,
     });
 
     let provider = createElement(Provider, {
@@ -66,7 +64,6 @@ class FontInspector {
     gDevTools.on("theme-switched", this.onThemeChanged);
 
     this.store.dispatch(updatePreviewText(""));
-    this.store.dispatch(updateShowAllFonts(false));
     this.update(false, "");
   }
 
@@ -98,7 +95,6 @@ class FontInspector {
    */
   onNewNode() {
     if (this.isPanelVisible()) {
-      this.store.dispatch(updateShowAllFonts(false));
       this.update();
     }
   }
@@ -108,14 +104,6 @@ class FontInspector {
    */
   onPreviewFonts(value) {
     this.store.dispatch(updatePreviewText(value));
-    this.update();
-  }
-
-  /**
-   * Handler for click on show all fonts button.
-   */
-  onShowAllFont() {
-    this.store.dispatch(updateShowAllFonts(true));
     this.update();
   }
 
@@ -137,17 +125,16 @@ class FontInspector {
     let node = this.inspector.selection.nodeFront;
     let fonts = [];
     let { fontOptions } = this.store.getState();
-    let { showAllFonts, previewText } = fontOptions;
+    let { previewText } = fontOptions;
 
     // Clear the list of fonts if the currently selected node is not connected or a text
     // or element node unless all fonts are supposed to be shown.
     let isElementOrTextNode = this.inspector.selection.isElementNode() ||
                               this.inspector.selection.isTextNode();
-    if (!showAllFonts &&
-        (!node ||
-         !this.isPanelVisible() ||
-         !this.inspector.selection.isConnected() ||
-         !isElementOrTextNode)) {
+    if (!node ||
+        !this.isPanelVisible() ||
+        !this.inspector.selection.isConnected() ||
+        !isElementOrTextNode) {
       this.store.dispatch(updateFonts(fonts));
       return;
     }
@@ -158,13 +145,7 @@ class FontInspector {
       previewFillStyle: getColor("body-color")
     };
 
-    if (showAllFonts) {
-      fonts = await this.pageStyle.getAllUsedFontFaces(options)
-                      .catch(console.error);
-    } else {
-      fonts = await this.pageStyle.getUsedFontFaces(node, options)
-                      .catch(console.error);
-    }
+    fonts = await this.pageStyle.getUsedFontFaces(node, options).catch(console.error);
 
     if (!fonts || !fonts.length) {
       // No fonts to display. Clear the previously shown fonts.
