@@ -234,6 +234,45 @@ void SetHistogramRecordingEnabled(HistogramID id, bool enabled);
 
 const char* GetHistogramName(HistogramID id);
 
+class MOZ_RAII RuntimeAutoTimer
+{
+public:
+  explicit RuntimeAutoTimer(Telemetry::HistogramID aId,
+                            TimeStamp aStart = TimeStamp::Now()
+                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : id(aId)
+    , start(aStart)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
+  explicit RuntimeAutoTimer(Telemetry::HistogramID aId,
+                            const nsCString& aKey,
+                            TimeStamp aStart = TimeStamp::Now()
+                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : id(aId)
+    , key(aKey)
+    , start(aStart)
+  {
+    MOZ_ASSERT(!aKey.IsEmpty(), "The key must not be empty.");
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
+
+  ~RuntimeAutoTimer()
+  {
+    if (key.IsEmpty()) {
+      AccumulateTimeDelta(id, start);
+    } else {
+      AccumulateTimeDelta(id, key, start);
+    }
+  }
+
+private:
+  Telemetry::HistogramID id;
+  const nsCString key;
+  const TimeStamp start;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 template<HistogramID id>
 class MOZ_RAII AutoTimer
 {
