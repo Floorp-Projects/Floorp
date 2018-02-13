@@ -50,34 +50,44 @@ TEST_SUITES = {
     },
     # TODO(ato): integrate geckodriver tests with moz.build
     'geckodriver': {
-        'mach_command': 'geckodriver-test',
         'aliases': ('testing/geckodriver',),
+        'mach_command': 'geckodriver-test',
         'kwargs': {},
+    },
+    'marionette': {
+        'aliases': ('mn',),
+        'mach_command': 'marionette',
+        'kwargs': {'tests': None},
     },
     'mochitest-a11y': {
         'aliases': ('a11y', 'ally'),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'a11y', 'test_paths': None},
+        'task_regex': 'mochitest-a11y(?:-1)?$',
     },
     'mochitest-browser': {
         'aliases': ('bc', 'browser-chrome'),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'browser-chrome', 'test_paths': None},
+        'task_regex': 'mochitest-browser-chrome(?:-e10s)?(?:-1)?$',
     },
     'mochitest-chrome': {
         'aliases': ('mc',),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'chrome', 'test_paths': None},
+        'task_regex': 'mochitest-chrome(?:-e10s)?(?:-1)?$',
     },
     'mochitest-devtools': {
         'aliases': ('dt', 'devtools-chrome'),
         'mach_command': 'mochitest',
         'kwargs': {'subsuite': 'devtools', 'test_paths': None},
+        'task_regex': 'mochitest-devtools-chrome(?:-e10s)?(?:-1)?$',
     },
     'mochitest-plain': {
         'aliases': ('mp', 'plain',),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'plain', 'test_paths': None},
+        'task_regex': 'mochitest(?:-e10s)?(?:-1)?$',
     },
     'python': {
         'mach_command': 'python-test',
@@ -87,11 +97,13 @@ TEST_SUITES = {
         'aliases': ('rr',),
         'mach_command': 'reftest',
         'kwargs': {'tests': None},
+        'task_regex': '(opt|debug)-reftest(?:-no-accel|-gpu|-stylo)?(?:-e10s)?(?:-1)?$',
     },
     'web-platform-tests': {
         'aliases': ('wpt',),
         'mach_command': 'web-platform-tests',
-        'kwargs': {}
+        'kwargs': {'include': []},
+        'task_regex': 'web-platform-tests(?:-reftests|-wdspec)?(?:-e10s)?(?:-1)?$',
     },
     'valgrind': {
         'aliases': ('v',),
@@ -102,62 +114,6 @@ TEST_SUITES = {
         'aliases': ('x',),
         'mach_command': 'xpcshell-test',
         'kwargs': {'test_file': 'all'},
-    },
-}
-
-# Maps test flavors to metadata on how to run that test.
-TEST_FLAVORS = {
-    'a11y': {
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'a11y', 'test_paths': []},
-        'task_regex': 'mochitest-a11y(?:-1)?$',
-    },
-    'browser-chrome': {
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'browser-chrome', 'test_paths': []},
-        'task_regex': 'mochitest-browser-chrome(?:-e10s)?(?:-1)?$',
-    },
-    'crashtest': {},
-    'chrome': {
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'chrome', 'test_paths': []},
-        'task_regex': 'mochitest-chrome(?:-e10s)?(?:-1)?$',
-    },
-    'firefox-ui-functional': {
-        'mach_command': 'firefox-ui-functional',
-        'kwargs': {'tests': []},
-    },
-    'firefox-ui-update': {
-        'mach_command': 'firefox-ui-update',
-        'kwargs': {'tests': []},
-    },
-    'marionette': {
-        'mach_command': 'marionette-test',
-        'kwargs': {'tests': []},
-    },
-    'mochitest': {
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'mochitest', 'test_paths': []},
-        'task_regex': 'mochitest(?:-e10s)?(?:-1)?$',
-    },
-    'python': {
-        'mach_command': 'python-test',
-        'kwargs': {},
-    },
-    'reftest': {
-        'mach_command': 'reftest',
-        'kwargs': {'tests': []},
-        'task_regex': '(opt|debug)-reftest(?:-no-accel|-gpu|-stylo)?(?:-e10s)?(?:-1)?$',
-    },
-    'steeplechase': {},
-    'web-platform-tests': {
-        'mach_command': 'web-platform-tests',
-        'kwargs': {'include': []},
-        'task_regex': 'web-platform-tests(?:-reftests|-wdspec)?(?:-e10s)?(?:-1)?$',
-    },
-    'xpcshell': {
-        'mach_command': 'xpcshell-test',
-        'kwargs': {'test_paths': []},
         'task_regex': 'xpcshell(?:-1)?$',
     },
 }
@@ -175,6 +131,54 @@ for i in range(1, MOCHITEST_TOTAL_CHUNKS + 1):
             'test_paths': None,
         },
     }
+
+_test_flavors = {
+    'a11y': 'mochitest-a11y',
+    'browser-chrome': 'mochitest-browser',
+    'chrome': 'mochitest-chrome',
+    'crashtest': '',
+    'firefox-ui-functional': 'firefox-ui-functional',
+    'firefox-ui-update': 'firefox-ui-update',
+    'marionette': 'marionette',
+    'mochitest': 'mochitest-plain',
+    'python': 'python',
+    'reftest': 'reftest',
+    'steeplechase': '',
+    'web-platform-tests': 'web-platform-tests',
+    'xpcshell': 'xpcshell',
+}
+
+_test_subsuites = {
+    ('browser-chrome', 'devtools'): 'mochitest-devtools',
+}
+
+
+def get_suite_definition(flavor, subsuite=None, strict=False):
+    """Return a suite definition given a flavor and optional subsuite.
+
+    If strict is True, a subsuite must have its own entry in TEST_SUITES.
+    Otherwise, the entry for 'flavor' will be returned with the 'subsuite'
+    keyword arg set.
+
+    With or without strict mode, an empty dict will be returned if no
+    matching suite definition was found.
+    """
+    if not subsuite:
+        suite_name = _test_flavors.get(flavor)
+        return TEST_SUITES.get(suite_name, {}).copy()
+
+    suite_name = _test_subsuites.get((flavor, subsuite))
+    if suite_name or strict:
+        return TEST_SUITES.get(suite_name, {}).copy()
+
+    suite_name = _test_flavors.get(flavor)
+    if suite_name not in TEST_SUITES:
+        return {}
+
+    suite = TEST_SUITES[suite_name].copy()
+    suite.setdefault('kwargs', {})
+    suite['kwargs']['subsuite'] = subsuite
+    return suite
 
 
 def rewrite_test_base(test, new_base, honor_install_to_subdir=False):
