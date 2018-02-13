@@ -376,7 +376,7 @@ class MachCommands(MachCommandBase):
 
 @CommandProvider
 class TaskClusterImagesProvider(MachCommandBase):
-    def _ensure_sztd(self):
+    def _ensure_zstd(self):
         try:
             import zstd
             # There are two zstd libraries that exist in the wild, ensure we
@@ -401,7 +401,7 @@ class TaskClusterImagesProvider(MachCommandBase):
                           "contents of the tree (as built for mozilla-central"
                           "or mozilla-inbound)")
     def load_image(self, image_name, task_id, tag):
-        self._ensure_sztd()
+        self._ensure_zstd()
         from taskgraph.docker import load_image_by_name, load_image_by_task_id
         if not image_name and not task_id:
             print("Specify either IMAGE-NAME or TASK-ID")

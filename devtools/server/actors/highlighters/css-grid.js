@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
   CANVAS_SIZE,
@@ -75,11 +73,6 @@ const GRID_GAP_ALPHA = 0.5;
 // 25 is a good margin distance between the document grid container edge without cutting
 // off parts of the arrow box container.
 const OFFSET_FROM_EDGE = 25;
-
-// Boolean pref to enable adjustment for writing mode and RTL content.
-DevToolsUtils.defineLazyGetter(this, "WRITING_MODE_ADJUST_ENABLED", () => {
-  return Services.prefs.getBoolPref("devtools.highlighter.writingModeAdjust");
-});
 
 /**
  * Given an `edge` of a box, return the name of the edge one move to the right.
@@ -1254,45 +1247,43 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     }
 
     // Rotate box edge as needed for writing mode and text direction.
-    if (WRITING_MODE_ADJUST_ENABLED) {
-      let { direction, writingMode } = getComputedStyle(this.currentNode);
+    let { direction, writingMode } = getComputedStyle(this.currentNode);
 
-      switch (writingMode) {
-        case "horizontal-tb":
-          // This is the initial value.  No further adjustment needed.
-          break;
-        case "vertical-rl":
-          boxEdge = rotateEdgeRight(boxEdge);
-          break;
-        case "vertical-lr":
-          if (dimensionType === COLUMNS) {
-            boxEdge = rotateEdgeLeft(boxEdge);
-          } else {
-            boxEdge = rotateEdgeRight(boxEdge);
-          }
-          break;
-        case "sideways-rl":
-          boxEdge = rotateEdgeRight(boxEdge);
-          break;
-        case "sideways-lr":
+    switch (writingMode) {
+      case "horizontal-tb":
+        // This is the initial value.  No further adjustment needed.
+        break;
+      case "vertical-rl":
+        boxEdge = rotateEdgeRight(boxEdge);
+        break;
+      case "vertical-lr":
+        if (dimensionType === COLUMNS) {
           boxEdge = rotateEdgeLeft(boxEdge);
-          break;
-        default:
-          console.error(`Unexpected writing-mode: ${writingMode}`);
-      }
+        } else {
+          boxEdge = rotateEdgeRight(boxEdge);
+        }
+        break;
+      case "sideways-rl":
+        boxEdge = rotateEdgeRight(boxEdge);
+        break;
+      case "sideways-lr":
+        boxEdge = rotateEdgeLeft(boxEdge);
+        break;
+      default:
+        console.error(`Unexpected writing-mode: ${writingMode}`);
+    }
 
-      switch (direction) {
-        case "ltr":
-          // This is the initial value.  No further adjustment needed.
-          break;
-        case "rtl":
-          if (dimensionType === ROWS) {
-            boxEdge = reflectEdge(boxEdge);
-          }
-          break;
-        default:
-          console.error(`Unexpected direction: ${direction}`);
-      }
+    switch (direction) {
+      case "ltr":
+        // This is the initial value.  No further adjustment needed.
+        break;
+      case "rtl":
+        if (dimensionType === ROWS) {
+          boxEdge = reflectEdge(boxEdge);
+        }
+        break;
+      default:
+        console.error(`Unexpected direction: ${direction}`);
     }
 
     // Default to drawing outside the edge, but move inside when close to viewport.

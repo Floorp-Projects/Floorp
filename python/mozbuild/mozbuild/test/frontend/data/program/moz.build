@@ -7,8 +7,9 @@ def Program(name):
 
 
 @template
-def SimplePrograms(names):
+def SimplePrograms(names, ext='.cpp'):
     SIMPLE_PROGRAMS += names
+    SOURCES += ['%s%s' % (name, ext) for name in names]
 
 Program('test_program')
 
