@@ -180,7 +180,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
             match = re.match(r'https://(hg.mozilla.org)/(.*?)/?$', parameters['head_repository'])
             if not match:
                 raise Exception('Unrecognized head_repository')
-            repo_scope = 'assume:repo:{}/{}:*'.format(
+            repo_scope = 'assume:repo:{}/{}:branch:default'.format(
                 match.group(1), match.group(2))
 
             task_group_id = os.environ.get('TASK_ID', slugid())
