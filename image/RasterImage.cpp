@@ -12,7 +12,6 @@
 #include "gfxPlatform.h"
 #include "nsComponentManagerUtils.h"
 #include "nsError.h"
-#include "DecodePool.h"
 #include "Decoder.h"
 #include "prenv.h"
 #include "prsystem.h"
