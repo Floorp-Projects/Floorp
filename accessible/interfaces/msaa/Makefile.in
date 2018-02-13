@@ -12,7 +12,9 @@ MIDL_GENERATED_FILES = \
   ISimpleDOM.tlb \
   $(NULL)
 
-$(MIDL_GENERATED_FILES): done_gen
+# Bug 1420119: We need the trailing semicolon here to generate a recipe for the
+# midl targets to avoid timestamp caching issues.
+$(MIDL_GENERATED_FILES): done_gen ;
 
 done_gen: ISimpleDOM.idl \
           ISimpleDOMNode.idl \
