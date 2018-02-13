@@ -195,7 +195,7 @@ ServoStyleSheet::HasRules() const
   return Servo_StyleSheet_HasRules(Inner()->mContents);
 }
 
-nsresult
+RefPtr<StyleSheetParsePromise>
 ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                             Span<const uint8_t> aInput,
                             nsIURI* aSheetURI,
@@ -206,9 +206,10 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                             nsCompatibility aCompatMode,
                             css::LoaderReusableStyleSheets* aReusableSheets)
 {
+  MOZ_ASSERT(mParsePromise.IsEmpty());
+  RefPtr<StyleSheetParsePromise> p = mParsePromise.Ensure(__func__);
   MOZ_ASSERT(!mMedia || mMedia->IsServo());
   Inner()->mURLData = new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal); // RefPtr
-
   Inner()->mContents = Servo_StyleSheet_FromUTF8Bytes(aLoader,
                                                       this,
                                                       aLoadData,
@@ -220,9 +221,9 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                                                       aCompatMode,
                                                       aReusableSheets)
                          .Consume();
-
   FinishParse();
-  return NS_OK;
+  mParsePromise.Resolve(true, __func__);
+  return Move(p);
 }
 
 void

@@ -8,6 +8,7 @@
 #define mozilla_ServoStyleSheet_h
 
 #include "mozilla/dom/SRIMetadata.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/StyleSheet.h"
@@ -19,6 +20,9 @@
 namespace mozilla {
 
 class ServoCSSRuleList;
+typedef MozPromise</* Dummy */ bool,
+                   /* Dummy */ bool,
+                   /* IsExclusive = */ true> StyleSheetParsePromise;
 
 namespace css {
 class Loader;
@@ -87,7 +91,7 @@ public:
 
   // Parses a stylesheet. The aLoadData argument corresponds to the
   // SheetLoadData for this stylesheet. It may be null in some cases.
-  MOZ_MUST_USE nsresult
+  RefPtr<StyleSheetParsePromise>
   ParseSheet(css::Loader* aLoader,
              Span<const uint8_t> aInput,
              nsIURI* aSheetURI,
@@ -181,6 +185,8 @@ private:
   void BuildChildListAfterInnerClone();
 
   RefPtr<ServoCSSRuleList> mRuleList;
+
+  MozPromiseHolder<StyleSheetParsePromise> mParsePromise;
 
   friend class StyleSheet;
 };
