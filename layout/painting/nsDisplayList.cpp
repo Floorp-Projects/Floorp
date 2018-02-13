@@ -571,7 +571,11 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
   animation->direction() = static_cast<uint8_t>(timing.Direction());
   animation->fillMode() = static_cast<uint8_t>(computedTiming.mFill);
   animation->property() = aProperty.mProperty;
-  animation->playbackRate() = aAnimation->PlaybackRate();
+  animation->playbackRate() = aAnimation->CurrentOrPendingPlaybackRate();
+  animation->previousPlaybackRate() =
+    aAnimation->HasPendingPlaybackRate()
+      ? aAnimation->PlaybackRate()
+      : std::numeric_limits<float>::quiet_NaN();
   animation->data() = aData;
   animation->easingFunction() = ToTimingFunction(timing.TimingFunction());
   animation->iterationComposite() =

@@ -104,6 +104,20 @@ AnimationInfo::StartPendingAnimations(const TimeStamp& aReadyTime)
        animIdx < animEnd; animIdx++) {
     Animation& anim = mAnimations[animIdx];
 
+    // If the animation is doing an async update of its playback rate, then we
+    // want to match whatever its current time would be at *aReadyTime*.
+    if (!std::isnan(anim.previousPlaybackRate()) &&
+        anim.startTime().type() == MaybeTimeDuration::TTimeDuration &&
+        !anim.originTime().IsNull() && !anim.isNotPlaying()) {
+      TimeDuration readyTime = aReadyTime - anim.originTime();
+      anim.holdTime() = dom::Animation::CurrentTimeFromTimelineTime(
+        readyTime,
+        anim.startTime().get_TimeDuration(),
+        anim.previousPlaybackRate());
+      // Make start time null so that we know to update it below.
+      anim.startTime() = null_t();
+    }
+
     // If the animation is play-pending, resolve the start time.
     if (anim.startTime().type() == MaybeTimeDuration::Tnull_t &&
         !anim.originTime().IsNull() &&
