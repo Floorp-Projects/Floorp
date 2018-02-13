@@ -242,12 +242,46 @@ public:
    */
   Nullable<TimeDuration> GetCurrentOrPendingStartTime() const;
 
+
   /**
-   * Calculates the corresponding start time to use for an animation that is
-   * currently pending with current time |mHoldTime| but should behave
-   * as if it began or resumed playback at timeline time |aReadyTime|.
+   * The following relationship from the definition of the 'current time' is
+   * re-used in many algorithms so we extract it here into a static method that
+   * can be re-used:
+   *
+   *   current time = (timeline time - start time) * playback rate
+   *
+   * As per https://drafts.csswg.org/web-animations-1/#current-time
    */
-  TimeDuration StartTimeFromReadyTime(const TimeDuration& aReadyTime) const;
+  static TimeDuration CurrentTimeFromTimelineTime(
+    const TimeDuration& aTimelineTime,
+    const TimeDuration& aStartTime,
+    float aPlaybackRate)
+  {
+    return (aTimelineTime - aStartTime).MultDouble(aPlaybackRate);
+  }
+
+  /**
+   * As with calculating the current time, we often need to calculate a start
+   * time from a current time. The following method simply inverts the current
+   * time relationship.
+   *
+   * In each case where this is used, the desired behavior for playbackRate ==
+   * 0 is to return the specified timeline time (often referred to as the ready
+   * time).
+   */
+  static TimeDuration StartTimeFromTimelineTime(
+    const TimeDuration& aTimelineTime,
+    const TimeDuration& aCurrentTime,
+    float aPlaybackRate)
+  {
+    TimeDuration result = aTimelineTime;
+    if (aPlaybackRate == 0) {
+      return result;
+    }
+
+    result -= aCurrentTime.MultDouble(1.0 / aPlaybackRate);
+    return result;
+  }
 
   /**
    * Converts a time in the timescale of this Animation's currentTime, to a
