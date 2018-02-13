@@ -249,30 +249,6 @@ LocalStorageCache::Preload()
   storageChild->AsyncPreload(this);
 }
 
-namespace {
-
-// The AutoTimer provided by telemetry headers is only using static,
-// i.e. compile time known ID, but here we know the ID only at run time.
-// Hence a new class.
-class TelemetryAutoTimer
-{
-public:
-  explicit TelemetryAutoTimer(Telemetry::HistogramID aId)
-    : id(aId), start(TimeStamp::Now())
-  {}
-
-  ~TelemetryAutoTimer()
-  {
-    Telemetry::AccumulateTimeDelta(id, start);
-  }
-
-private:
-  Telemetry::HistogramID id;
-  const TimeStamp start;
-};
-
-} // namespace
-
 void
 LocalStorageCache::WaitForPreload(Telemetry::HistogramID aTelemetryID)
 {
@@ -295,7 +271,7 @@ LocalStorageCache::WaitForPreload(Telemetry::HistogramID aTelemetryID)
   }
 
   // Measure which operation blocks and for how long
-  TelemetryAutoTimer timer(aTelemetryID);
+  Telemetry::RuntimeAutoTimer timer(aTelemetryID);
 
   // If preload already started (i.e. we got some first data, but not all)
   // SyncPreload will just wait for it to finish rather then synchronously
