@@ -13,7 +13,7 @@ add_task(function* () {
   let viewDoc = view.document;
 
   info("Expanding the details section of the first font");
-  let fontEl = viewDoc.querySelector("#all-fonts > li");
+  let fontEl = getUsedFontsEls(viewDoc)[0];
   yield expandFontDetails(fontEl);
 
   info("Checking that the css font-face rule is collapsed by default");
