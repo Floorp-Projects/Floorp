@@ -536,6 +536,14 @@ ObjectGroup::defaultNewGroup(JSContext* cx, const Class* clasp,
         if (protoObj->is<PlainObject>() && !protoObj->isSingleton()) {
             if (!JSObject::changeToSingleton(cx, protoObj))
                 return nullptr;
+
+            // |ReshapeForProtoMutation| ensures singletons will reshape when
+            // prototype is mutated so clear the UNCACHEABLE_PROTO flag.
+            if (protoObj->hasUncacheableProto()) {
+                HandleNativeObject nobj = protoObj.as<NativeObject>();
+                if (!NativeObject::clearFlag(cx, nobj, BaseShape::UNCACHEABLE_PROTO))
+                    return nullptr;
+            }
         }
     }
 
