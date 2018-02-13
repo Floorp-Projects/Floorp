@@ -892,6 +892,39 @@ protected:
   nsIContent* GetNextHTMLSibling(nsINode* aNode);
 
   /**
+   * GetPreviousHTMLElementOrText*() methods are similar to
+   * EditorBase::GetPreviousElementOrText*() but this won't return nodes
+   * outside active editing host.
+   */
+  nsIContent* GetPreviousHTMLElementOrText(nsINode& aNode)
+  {
+    return GetPreviousHTMLElementOrTextInternal(aNode, false);
+  }
+  nsIContent* GetPreviousHTMLElementOrTextInBlock(nsINode& aNode)
+  {
+    return GetPreviousHTMLElementOrTextInternal(aNode, true);
+  }
+  nsIContent* GetPreviousHTMLElementOrText(const EditorRawDOMPoint& aPoint)
+  {
+    return GetPreviousHTMLElementOrTextInternal(aPoint, false);
+  }
+  nsIContent*
+  GetPreviousHTMLElementOrTextInBlock(const EditorRawDOMPoint& aPoint)
+  {
+    return GetPreviousHTMLElementOrTextInternal(aPoint, true);
+  }
+
+  /**
+   * GetPreviousHTMLElementOrTextInternal() methods are common implementation
+   * of above methods.  Please don't use this method directly.
+   */
+  nsIContent* GetPreviousHTMLElementOrTextInternal(nsINode& aNode,
+                                                   bool aNoBlockCrossing);
+  nsIContent*
+  GetPreviousHTMLElementOrTextInternal(const EditorRawDOMPoint& aPoint,
+                                       bool aNoBlockCrossing);
+
+  /**
    * GetPreviousEditableHTMLNode*() methods are similar to
    * EditorBase::GetPreviousEditableNode() but this won't return nodes outside
    * active editing host.
@@ -925,11 +958,47 @@ protected:
                 bool aNoBlockCrossing);
 
   /**
+   * GetNextHTMLElementOrText*() methods are similar to
+   * EditorBase::GetNextElementOrText*() but this won't return nodes outside
+   * active editing host.
+   *
+   * Note that same as EditorBase::GetTextEditableNode(), methods which take
+   * |const EditorRawDOMPoint&| start to search from the node pointed by it.
+   * On the other hand, methods which take |nsINode&| start to search from
+   * next node of aNode.
+   */
+  nsIContent* GetNextHTMLElementOrText(nsINode& aNode)
+  {
+    return GetNextHTMLElementOrTextInternal(aNode, false);
+  }
+  nsIContent* GetNextHTMLElementOrTextInBlock(nsINode& aNode)
+  {
+    return GetNextHTMLElementOrTextInternal(aNode, true);
+  }
+  nsIContent* GetNextHTMLElementOrText(const EditorRawDOMPoint& aPoint)
+  {
+    return GetNextHTMLElementOrTextInternal(aPoint, false);
+  }
+  nsIContent* GetNextHTMLElementOrTextInBlock(const EditorRawDOMPoint& aPoint)
+  {
+    return GetNextHTMLElementOrTextInternal(aPoint, true);
+  }
+
+  /**
+   * GetNextHTMLNodeInternal() methods are common implementation
+   * of above methods.  Please don't use this method directly.
+   */
+  nsIContent* GetNextHTMLElementOrTextInternal(nsINode& aNode,
+                                               bool aNoBlockCrossing);
+  nsIContent* GetNextHTMLElementOrTextInternal(const EditorRawDOMPoint& aPoint,
+                                               bool aNoBlockCrossing);
+
+  /**
    * GetNextEditableHTMLNode*() methods are similar to
    * EditorBase::GetNextEditableNode() but this won't return nodes outside
    * active editing host.
    *
-   * Note that same as EditorBaseGetTextEditableNode(), methods which take
+   * Note that same as EditorBase::GetTextEditableNode(), methods which take
    * |const EditorRawDOMPoint&| start to search from the node pointed by it.
    * On the other hand, methods which take |nsINode&| start to search from
    * next node of aNode.

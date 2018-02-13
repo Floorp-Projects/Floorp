@@ -870,8 +870,13 @@ HTMLEditor::IsVisibleBRElement(nsINode* aNode)
   if (!TextEditUtils::IsBreak(aNode)) {
     return false;
   }
-  // Check if there is a later node in block after br
-  nsCOMPtr<nsINode> nextNode = GetNextEditableHTMLNodeInBlock(*aNode);
+  // Check if there is another element or text node in block after current
+  // <br> element.
+  // Note that even if following node is non-editable, it may make the
+  // <br> element visible if it just exists.
+  // E.g., foo<br><button contenteditable="false">button</button>
+  // However, we need to ignore invisible data nodes like comment node.
+  nsCOMPtr<nsINode> nextNode = GetNextHTMLElementOrTextInBlock(*aNode);
   if (nextNode && TextEditUtils::IsBreak(nextNode)) {
     return true;
   }
@@ -890,7 +895,11 @@ HTMLEditor::IsVisibleBRElement(nsINode* aNode)
 
   // If there's an inline node after this one that's not a break, and also a
   // prior break, this break must be visible.
-  nsCOMPtr<nsINode> priorNode = GetPreviousEditableHTMLNodeInBlock(*aNode);
+  // Note that even if previous node is non-editable, it may make the
+  // <br> element visible if it just exists.
+  // E.g., <button contenteditable="false"><br>foo
+  // However, we need to ignore invisible data nodes like comment node.
+  nsCOMPtr<nsINode> priorNode = GetPreviousHTMLElementOrTextInBlock(*aNode);
   if (priorNode && TextEditUtils::IsBreak(priorNode)) {
     return true;
   }
@@ -3704,6 +3713,29 @@ HTMLEditor::GetNextHTMLSibling(nsINode* aNode)
 }
 
 nsIContent*
+HTMLEditor::GetPreviousHTMLElementOrTextInternal(nsINode& aNode,
+                                                 bool aNoBlockCrossing)
+{
+  if (!GetActiveEditingHost()) {
+    return nullptr;
+  }
+  return aNoBlockCrossing ? GetPreviousElementOrTextInBlock(aNode) :
+                            GetPreviousElementOrText(aNode);
+}
+
+nsIContent*
+HTMLEditor::GetPreviousHTMLElementOrTextInternal(
+              const EditorRawDOMPoint& aPoint,
+              bool aNoBlockCrossing)
+{
+  if (!GetActiveEditingHost()) {
+    return nullptr;
+  }
+  return aNoBlockCrossing ? GetPreviousElementOrTextInBlock(aPoint) :
+                            GetPreviousElementOrText(aPoint);
+}
+
+nsIContent*
 HTMLEditor::GetPreviousEditableHTMLNodeInternal(nsINode& aNode,
                                                 bool aNoBlockCrossing)
 {
@@ -3723,6 +3755,28 @@ HTMLEditor::GetPreviousEditableHTMLNodeInternal(const EditorRawDOMPoint& aPoint,
   }
   return aNoBlockCrossing ? GetPreviousEditableNodeInBlock(aPoint) :
                             GetPreviousEditableNode(aPoint);
+}
+
+nsIContent*
+HTMLEditor::GetNextHTMLElementOrTextInternal(nsINode& aNode,
+                                             bool aNoBlockCrossing)
+{
+  if (!GetActiveEditingHost()) {
+    return nullptr;
+  }
+  return aNoBlockCrossing ? GetNextElementOrTextInBlock(aNode) :
+                            GetNextElementOrText(aNode);
+}
+
+nsIContent*
+HTMLEditor::GetNextHTMLElementOrTextInternal(const EditorRawDOMPoint& aPoint,
+                                             bool aNoBlockCrossing)
+{
+  if (!GetActiveEditingHost()) {
+    return nullptr;
+  }
+  return aNoBlockCrossing ? GetNextElementOrTextInBlock(aPoint) :
+                            GetNextElementOrText(aPoint);
 }
 
 nsIContent*
