@@ -98,6 +98,19 @@ public:
              nsCompatibility aCompatMode,
              css::LoaderReusableStyleSheets* aReusableSheets = nullptr);
 
+  // Similar to the above, but guarantees that parsing will be performed
+  // synchronously.
+  void
+  ParseSheetSync(css::Loader* aLoader,
+                 Span<const uint8_t> aInput,
+                 nsIURI* aSheetURI,
+                 nsIURI* aBaseURI,
+                 nsIPrincipal* aSheetPrincipal,
+                 css::SheetLoadData* aLoadData,
+                 uint32_t aLineNumber,
+                 nsCompatibility aCompatMode,
+                 css::LoaderReusableStyleSheets* aReusableSheets = nullptr);
+
   nsresult ReparseSheet(const nsAString& aInput);
 
   const RawServoStyleSheetContents* RawContents() const {

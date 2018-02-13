@@ -574,6 +574,7 @@ private:
   nsresult ParseSheet(const nsAString& aUTF16,
                       Span<const uint8_t> aUTF8,
                       SheetLoadData* aLoadData,
+                      bool aAllowAsync,
                       bool& aCompleted);
 
   //
@@ -595,6 +596,7 @@ private:
                              const nsAString& aUTF16,
                              Span<const uint8_t> aUTF8,
                              SheetLoadData* aLoadData,
+                             bool aAllowAsync,
                              bool& aCompleted);
 
   // The load of the sheet in aLoadData is done, one way or another.  Do final
