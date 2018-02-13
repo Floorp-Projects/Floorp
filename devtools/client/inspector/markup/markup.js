@@ -480,6 +480,13 @@ MarkupView.prototype = {
   },
 
   /**
+   * Used by tests
+   */
+  getSelectedContainer: function() {
+    return this._selectedContainer;
+  },
+
+  /**
    * Get the MarkupContainer object for a given node, or undefined if
    * none exists.
    *

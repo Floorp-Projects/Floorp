@@ -838,3 +838,26 @@ async function toggleShapesHighlighter(view, highlighters, selector, property, s
     await onHighlighterHidden;
   }
 }
+
+/**
+ * Expand the provided markup container programatically and  wait for all children to
+ * update.
+ */
+async function expandContainer(inspector, container) {
+  await inspector.markup.expandNode(container.node);
+  await waitForMultipleChildrenUpdates(inspector);
+}
+
+/**
+ * Expand the provided markup container by clicking on the expand arrow and waiting for
+ * inspector and children to update. Similar to expandContainer helper, but this method
+ * uses a click rather than programatically calling expandNode().
+ */
+async function expandContainerByClick(inspector, container) {
+  let onChildren = waitForChildrenUpdated(inspector);
+  let onUpdated = inspector.once("inspector-updated");
+  EventUtils.synthesizeMouseAtCenter(container.expander, {},
+    inspector.markup.doc.defaultView);
+  await onChildren;
+  await onUpdated;
+}
