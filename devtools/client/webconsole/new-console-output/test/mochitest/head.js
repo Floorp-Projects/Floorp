@@ -550,3 +550,18 @@ async function openMessageInNetmonitor(toolbox, hud, url, urlInConsole) {
 
   ok(true, "The attached url is correct.");
 }
+
+function selectNode(hud, node) {
+  let outputContainer = hud.ui.outputNode.querySelector(".webconsole-output");
+
+  // We must first blur the input or else we can't select anything.
+  outputContainer.ownerDocument.activeElement.blur();
+
+  let selection = outputContainer.ownerDocument.getSelection();
+  let range = document.createRange();
+  range.selectNodeContents(node);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  return selection;
+}
