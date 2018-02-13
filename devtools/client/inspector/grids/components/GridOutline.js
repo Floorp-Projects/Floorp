@@ -5,7 +5,6 @@
 "use strict";
 
 const Services = require("Services");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
@@ -26,11 +25,6 @@ const GRID_OUTLINE_MAX_ROWS_PREF =
   Services.prefs.getIntPref("devtools.gridinspector.gridOutlineMaxRows");
 const GRID_OUTLINE_MAX_COLUMNS_PREF =
   Services.prefs.getIntPref("devtools.gridinspector.gridOutlineMaxColumns");
-
-// Boolean pref to enable adjustment for writing mode and RTL content.
-DevToolsUtils.defineLazyGetter(this, "WRITING_MODE_ADJUST_ENABLED", () => {
-  return Services.prefs.getBoolPref("devtools.highlighter.writingModeAdjust");
-});
 
 // Move SVG grid to the right 100 units, so that it is not flushed against the edge of
 // layout border
@@ -192,12 +186,10 @@ class GridOutline extends PureComponent {
       width += GRID_CELL_SCALE_FACTOR * (cols.tracks[i].breadth / 100);
     }
 
-    if (WRITING_MODE_ADJUST_ENABLED) {
-      // All writing modes other than horizontal-tb (the initial value) involve a 90 deg
-      // rotation, so swap width and height.
-      if (grid.writingMode != "horizontal-tb") {
-        [ width, height ] = [ height, width ];
-      }
+    // All writing modes other than horizontal-tb (the initial value) involve a 90 deg
+    // rotation, so swap width and height.
+    if (grid.writingMode != "horizontal-tb") {
+      [ width, height ] = [ height, width ];
     }
 
     return { width, height };
@@ -264,12 +256,8 @@ class GridOutline extends PureComponent {
 
     // Transform the cells as needed to match the grid container's writing mode.
     let cellGroupStyle = {};
-
-    if (WRITING_MODE_ADJUST_ENABLED) {
-      let writingModeMatrix = getWritingModeMatrix(this.state, grid);
-      cellGroupStyle.transform = getCSSMatrixTransform(writingModeMatrix);
-    }
-
+    let writingModeMatrix = getWritingModeMatrix(this.state, grid);
+    cellGroupStyle.transform = getCSSMatrixTransform(writingModeMatrix);
     let cellGroup = dom.g(
       {
         id: "grid-cell-group",

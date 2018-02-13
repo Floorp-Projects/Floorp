@@ -564,38 +564,40 @@ JoinBoxesForSlice(nsIFrame* aFrame, const nsRect& aBorderArea,
   return JoinBoxesForBlockAxisSlice(aFrame, aBorderArea);
 }
 
-static bool
-IsBoxDecorationSlice(const nsStyleBorder& aStyleBorder)
+/* static */ bool
+nsCSSRendering::IsBoxDecorationSlice(const nsStyleBorder& aStyleBorder)
 {
   return aStyleBorder.mBoxDecorationBreak == StyleBoxDecorationBreak::Slice;
 }
 
-static nsRect
-BoxDecorationRectForBorder(nsIFrame* aFrame, const nsRect& aBorderArea,
-                           Sides aSkipSides,
-                           const nsStyleBorder* aStyleBorder = nullptr)
+/* static */ nsRect
+nsCSSRendering::BoxDecorationRectForBorder(nsIFrame* aFrame,
+                                           const nsRect& aBorderArea,
+                                           Sides aSkipSides,
+                                           const nsStyleBorder* aStyleBorder)
 {
   if (!aStyleBorder) {
     aStyleBorder = aFrame->StyleBorder();
   }
   // If aSkipSides.IsEmpty() then there are no continuations, or it's
   // a ::first-letter that wants all border sides on the first continuation.
-  return ::IsBoxDecorationSlice(*aStyleBorder) && !aSkipSides.IsEmpty()
+  return IsBoxDecorationSlice(*aStyleBorder) && !aSkipSides.IsEmpty()
            ? ::JoinBoxesForSlice(aFrame, aBorderArea, eForBorder)
            : aBorderArea;
 }
 
-static nsRect
-BoxDecorationRectForBackground(nsIFrame* aFrame, const nsRect& aBorderArea,
-                               Sides aSkipSides,
-                               const nsStyleBorder* aStyleBorder = nullptr)
+/* static */ nsRect
+nsCSSRendering::BoxDecorationRectForBackground(nsIFrame* aFrame,
+                                               const nsRect& aBorderArea,
+                                               Sides aSkipSides,
+                                               const nsStyleBorder* aStyleBorder)
 {
   if (!aStyleBorder) {
     aStyleBorder = aFrame->StyleBorder();
   }
   // If aSkipSides.IsEmpty() then there are no continuations, or it's
   // a ::first-letter that wants all border sides on the first continuation.
-  return ::IsBoxDecorationSlice(*aStyleBorder) && !aSkipSides.IsEmpty()
+  return IsBoxDecorationSlice(*aStyleBorder) && !aSkipSides.IsEmpty()
            ? ::JoinBoxesForSlice(aFrame, aBorderArea, eForBackground)
            : aBorderArea;
 }
@@ -812,7 +814,8 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
   // Compute the outermost boundary of the area that might be painted.
   // Same coordinate space as aBorderArea & aBGClipRect.
   nsRect joinedBorderArea =
-    ::BoxDecorationRectForBorder(aForFrame, aBorderArea, aSkipSides, &aStyleBorder);
+    nsCSSRendering::BoxDecorationRectForBorder(aForFrame, aBorderArea,
+                                               aSkipSides, &aStyleBorder);
   RectCornerRadii bgRadii;
   ::GetRadii(aForFrame, aStyleBorder, aBorderArea, joinedBorderArea, &bgRadii);
 
@@ -820,7 +823,7 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
      joinedBorderArea.width, joinedBorderArea.height);
 
   // start drawing
-  if (::IsBoxDecorationSlice(aStyleBorder)) {
+  if (nsCSSRendering::IsBoxDecorationSlice(aStyleBorder)) {
     if (joinedBorderArea.IsEqualEdges(aBorderArea)) {
       // No need for a clip, just skip the sides we don't want.
       border.ApplySkipSides(aSkipSides);
@@ -1537,7 +1540,7 @@ nsCSSRendering::GetShadowRect(const nsRect aFrameArea,
     aForFrame->GetVisualOverflowRectRelativeToSelf() + aFrameArea.TopLeft() :
     aFrameArea;
   Sides skipSides = aForFrame->GetSkipSides();
-  frameRect = ::BoxDecorationRectForBorder(aForFrame, frameRect, skipSides);
+  frameRect = BoxDecorationRectForBorder(aForFrame, frameRect, skipSides);
 
   // Explicitly do not need to account for the spread radius here
   // Webrender does it for us or PaintBoxShadow will for non-WR
@@ -1785,7 +1788,7 @@ nsCSSRendering::GetBoxShadowInnerPaddingRect(nsIFrame* aFrame,
 {
   Sides skipSides = aFrame->GetSkipSides();
   nsRect frameRect =
-    ::BoxDecorationRectForBorder(aFrame, aFrameArea, skipSides);
+    BoxDecorationRectForBorder(aFrame, aFrameArea, skipSides);
 
   nsRect paddingRect = frameRect;
   nsMargin border = aFrame->GetUsedBorder();
@@ -1821,7 +1824,7 @@ nsCSSRendering::GetShadowInnerRadii(nsIFrame* aFrame,
   // if the frame does.
   nscoord twipsRadii[8];
   nsRect frameRect =
-    ::BoxDecorationRectForBorder(aFrame, aFrameArea, aFrame->GetSkipSides());
+    BoxDecorationRectForBorder(aFrame, aFrameArea, aFrame->GetSkipSides());
   nsSize sz = frameRect.Size();
   nsMargin border = aFrame->GetUsedBorder();
   bool hasBorderRadius = aFrame->GetBorderRadii(sz, sz, Sides(), twipsRadii);
@@ -2303,7 +2306,7 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
   // Same coordinate space as aBorderArea.
   Sides skipSides = aForFrame->GetSkipSides();
   nsRect clipBorderArea =
-    ::BoxDecorationRectForBorder(aForFrame, aBorderArea, skipSides, &aBorder);
+    BoxDecorationRectForBorder(aForFrame, aBorderArea, skipSides, &aBorder);
 
   bool haveRoundedCorners = false;
   LayoutFrameType fType = aForFrame->Type();
@@ -2750,10 +2753,10 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
   // Same coordinate space as aParams.borderArea & aParams.bgClipRect.
   Sides skipSides = aParams.frame->GetSkipSides();
   nsRect paintBorderArea =
-    ::BoxDecorationRectForBackground(aParams.frame, aParams.borderArea,
+    BoxDecorationRectForBackground(aParams.frame, aParams.borderArea,
                                      skipSides, &aBorder);
   nsRect clipBorderArea =
-    ::BoxDecorationRectForBorder(aParams.frame, aParams.borderArea,
+    BoxDecorationRectForBorder(aParams.frame, aParams.borderArea,
                                  skipSides, &aBorder);
 
   ImgDrawResult result = ImgDrawResult::SUCCESS;
@@ -2869,7 +2872,7 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBG
   // Same coordinate space as aParams.borderArea & aParams.bgClipRect.
   Sides skipSides = aParams.frame->GetSkipSides();
   nsRect paintBorderArea =
-    ::BoxDecorationRectForBackground(aParams.frame, aParams.borderArea,
+    BoxDecorationRectForBackground(aParams.frame, aParams.borderArea,
                                      skipSides, &aBorder);
 
   const nsStyleImageLayers& layers = aBackgroundSC->StyleBackground()->mImage;
@@ -3389,7 +3392,7 @@ nsCSSRendering::GetBackgroundLayerRect(nsPresContext* aPresContext,
 {
   Sides skipSides = aForFrame->GetSkipSides();
   nsRect borderArea =
-    ::BoxDecorationRectForBackground(aForFrame, aBorderArea, skipSides);
+    BoxDecorationRectForBackground(aForFrame, aBorderArea, skipSides);
   nsBackgroundLayerState state =
       PrepareImageLayer(aPresContext, aForFrame, aFlags, borderArea,
                              aClipRect, aLayer);
