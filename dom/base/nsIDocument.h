@@ -2926,7 +2926,7 @@ public:
   nsIURI* GetDocumentURIObject() const;
   // Not const because all the full-screen goop is not const
   virtual bool FullscreenEnabled(mozilla::dom::CallerType aCallerType) = 0;
-  virtual Element* GetFullscreenElement() = 0;
+  virtual Element* FullScreenStackTop() = 0;
   bool Fullscreen()
   {
     return !!GetFullscreenElement();
@@ -2936,6 +2936,9 @@ public:
   {
     UnlockPointer(this);
   }
+
+  static bool IsUnprefixedFullscreenEnabled(JSContext* aCx, JSObject* aObject);
+
 #ifdef MOZILLA_INTERNAL_API
   bool Hidden() const
   {
