@@ -1403,13 +1403,10 @@ nsPrefBranch::~nsPrefBranch()
   }
 }
 
-NS_IMPL_ADDREF(nsPrefBranch)
-NS_IMPL_RELEASE(nsPrefBranch)
-
-NS_IMPL_QUERY_INTERFACE(nsPrefBranch,
-                        nsIPrefBranch,
-                        nsIObserver,
-                        nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsPrefBranch,
+                  nsIPrefBranch,
+                  nsIObserver,
+                  nsISupportsWeakReference)
 
 NS_IMETHODIMP
 nsPrefBranch::GetRoot(nsACString& aRoot)
@@ -2238,12 +2235,9 @@ nsPrefLocalizedString::nsPrefLocalizedString() = default;
 
 nsPrefLocalizedString::~nsPrefLocalizedString() = default;
 
-NS_IMPL_ADDREF(nsPrefLocalizedString)
-NS_IMPL_RELEASE(nsPrefLocalizedString)
-
-NS_IMPL_QUERY_INTERFACE(nsPrefLocalizedString,
-                        nsIPrefLocalizedString,
-                        nsISupportsString)
+NS_IMPL_ISUPPORTS(nsPrefLocalizedString,
+                  nsIPrefLocalizedString,
+                  nsISupportsString)
 
 nsresult
 nsPrefLocalizedString::Init()
@@ -2953,14 +2947,11 @@ Preferences::~Preferences()
   gPrefNameArena.Clear();
 }
 
-NS_IMPL_ADDREF(Preferences)
-NS_IMPL_RELEASE(Preferences)
-
-NS_IMPL_QUERY_INTERFACE(Preferences,
-                        nsIPrefService,
-                        nsIObserver,
-                        nsIPrefBranch,
-                        nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(Preferences,
+                  nsIPrefService,
+                  nsIObserver,
+                  nsIPrefBranch,
+                  nsISupportsWeakReference)
 
 /* static */ void
 Preferences::SetEarlyPreferences(const nsTArray<dom::Pref>* aDomPrefs)
