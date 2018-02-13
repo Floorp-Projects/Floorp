@@ -47,8 +47,7 @@ class Browser extends PureComponent {
   componentWillMount() {
     this.browserShown = new Promise(resolve => {
       let handler = frameLoader => {
-        let browser = this.refs.browserContainer.querySelector("iframe.browser");
-        if (frameLoader.ownerElement != browser) {
+        if (frameLoader.ownerElement != this.browser) {
           return;
         }
         Services.obs.removeObserver(handler, "remote-browser-shown");
@@ -98,8 +97,10 @@ class Browser extends PureComponent {
   }
 
   async startFrameScript() {
-    let { onContentResize } = this;
-    let browser = this.refs.browserContainer.querySelector("iframe.browser");
+    let {
+      browser,
+      onContentResize,
+    } = this;
     let mm = browser.frameLoader.messageManager;
 
     // Notify tests when the content has received a resize event.  This is not
@@ -124,8 +125,10 @@ class Browser extends PureComponent {
   }
 
   async stopFrameScript() {
-    let { onContentResize } = this;
-    let browser = this.refs.browserContainer.querySelector("iframe.browser");
+    let {
+      browser,
+      onContentResize,
+    } = this;
     let mm = browser.frameLoader.messageManager;
 
     e10s.off(mm, "OnContentResize", onContentResize);
@@ -141,24 +144,21 @@ class Browser extends PureComponent {
     // @noisolation and @allowfullscreen are needed so that these frames have the same
     // access to browser features as regular browser tabs. The `swapFrameLoaders` platform
     // API we use compares such features before allowing the swap to proceed.
-    return dom.div(
+    return dom.iframe(
       {
-        ref: "browserContainer",
-        className: "browser-container",
-      },
-      dom.iframe(
-        {
-          allowFullScreen: "true",
-          className: "browser",
-          height: "100%",
-          mozbrowser: "true",
-          noisolation: "true",
-          remote: "true",
-          remotetype: "web",
-          src: "about:blank",
-          width: "100%",
-        }
-      )
+        allowFullScreen: "true",
+        className: "browser",
+        height: "100%",
+        mozbrowser: "true",
+        noisolation: "true",
+        remote: "true",
+        remotetype: "web",
+        src: "about:blank",
+        width: "100%",
+        ref: browser => {
+          this.browser = browser;
+        },
+      }
     );
   }
 }
