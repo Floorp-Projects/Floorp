@@ -5855,11 +5855,7 @@ pref("layout.css.servo.enabled", false);
 // If Stylo is not enabled, this pref doesn't take any effect.
 // Note that this pref is only read once when requested. Changing it
 // at runtime may have no effect.
-#ifdef MOZ_OLD_STYLE
-pref("layout.css.servo.chrome.enabled", false);
-#else
 pref("layout.css.servo.chrome.enabled", true);
-#endif
 #endif
 
 // TODO: Bug 1324406: Treat 'data:' documents as unique, opaque origins
