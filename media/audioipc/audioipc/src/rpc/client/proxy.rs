@@ -57,17 +57,17 @@ pub type Receiver<R, Q> = mpsc::UnboundedReceiver<Request<R, Q>>;
 
 /// Response future returned from a client
 pub struct Response<Q> {
-    inner: oneshot::Receiver<Q>
+    inner: oneshot::Receiver<Q>,
 }
 
 pub struct ClientProxy<R, Q> {
-    tx: mpsc::UnboundedSender<Request<R, Q>>
+    tx: mpsc::UnboundedSender<Request<R, Q>>,
 }
 
 impl<R, Q> Clone for ClientProxy<R, Q> {
     fn clone(&self) -> Self {
         ClientProxy {
-            tx: self.tx.clone()
+            tx: self.tx.clone(),
         }
     }
 }
@@ -78,9 +78,7 @@ pub fn channel<R, Q>() -> (ClientProxy<R, Q>, Receiver<R, Q>) {
 
     // Wrap the `tx` part in ClientProxy so the rpc call interface
     // can be implemented.
-    let client = ClientProxy {
-        tx
-    };
+    let client = ClientProxy { tx };
 
     (client, rx)
 }
@@ -97,16 +95,14 @@ impl<R, Q> ClientProxy<R, Q> {
         // into a BrokenPipe, which conveys the proper error.
         let _ = self.tx.send((request, tx));
 
-        Response {
-            inner: rx
-        }
+        Response { inner: rx }
     }
 }
 
 impl<R, Q> fmt::Debug for ClientProxy<R, Q>
 where
     R: fmt::Debug,
-    Q: fmt::Debug
+    Q: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "ClientProxy {{ ... }}")
@@ -132,7 +128,7 @@ impl<Q> Future for Response<Q> {
 
 impl<Q> fmt::Debug for Response<Q>
 where
-    Q: fmt::Debug
+    Q: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Response {{ ... }}")
