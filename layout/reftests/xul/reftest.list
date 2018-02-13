@@ -3,7 +3,7 @@
 == menuitem-key.xul menuitem-key-ref.xul
 # these random-if(Android) are due to differences between Android Native & Xul, see bug 732569
 random-if(Android) == menulist-shrinkwrap-1.xul menulist-shrinkwrap-1-ref.xul
-random-if(Android) fails-if(winWidget) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2-ref.xul
+random-if(Android) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2-ref.xul
 == textbox-overflow-1.xul textbox-overflow-1-ref.xul # for bug 749658
 # accesskeys are not normally displayed on Mac, so skip this test
 skip-if(cocoaWidget) == accesskey.xul accesskey-ref.xul
