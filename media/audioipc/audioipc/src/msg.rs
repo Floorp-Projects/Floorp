@@ -16,8 +16,8 @@ fn cvt(r: libc::ssize_t) -> io::Result<usize> {
 fn cvt_r<F: FnMut() -> libc::ssize_t>(mut f: F) -> io::Result<usize> {
     loop {
         match cvt(f()) {
-            Err(ref e) if e.kind() == io::ErrorKind::Interrupted => {},
-            other => return other
+            Err(ref e) if e.kind() == io::ErrorKind::Interrupted => {}
+            other => return other,
         }
     }
 }
@@ -26,7 +26,7 @@ pub fn recv_msg_with_flags(
     socket: RawFd,
     bufs: &mut [&mut IoVec],
     cmsg: &mut [u8],
-    flags: libc::c_int
+    flags: libc::c_int,
 ) -> io::Result<(usize, usize, libc::c_int)> {
     let slice = iovec::as_os_slice_mut(bufs);
     let len = cmp::min(<libc::c_int>::max_value() as usize, slice.len());
@@ -56,7 +56,7 @@ pub fn send_msg_with_flags(
     socket: RawFd,
     bufs: &[&IoVec],
     cmsg: &[u8],
-    flags: libc::c_int
+    flags: libc::c_int,
 ) -> io::Result<usize> {
     let slice = iovec::as_os_slice(bufs);
     let len = cmp::min(<libc::c_int>::max_value() as usize, slice.len());
@@ -74,7 +74,5 @@ pub fn send_msg_with_flags(
     msghdr.msg_control = control;
     msghdr.msg_controllen = controllen as _;
 
-    cvt_r(|| unsafe {
-        libc::sendmsg(socket, &msghdr as *const _, flags)
-    })
+    cvt_r(|| unsafe { libc::sendmsg(socket, &msghdr as *const _, flags) })
 }

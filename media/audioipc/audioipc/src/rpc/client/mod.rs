@@ -53,10 +53,10 @@ pub use self::proxy::{ClientProxy, Response};
 
 pub fn bind_client<C>(
     transport: C::Transport,
-    handle: &Handle
+    handle: &Handle,
 ) -> proxy::ClientProxy<C::Request, C::Response>
 where
-    C: Client
+    C: Client,
 {
     let (tx, rx) = proxy::channel();
 
@@ -64,7 +64,7 @@ where
         let handler = ClientHandler::<C> {
             transport: transport,
             requests: rx,
-            in_flight: VecDeque::with_capacity(32)
+            in_flight: VecDeque::with_capacity(32),
         };
         Driver::new(handler)
     };
@@ -92,16 +92,16 @@ pub trait Client: 'static {
 
 struct ClientHandler<C>
 where
-    C: Client
+    C: Client,
 {
     transport: C::Transport,
     requests: proxy::Receiver<C::Request, C::Response>,
-    in_flight: VecDeque<oneshot::Sender<C::Response>>
+    in_flight: VecDeque<oneshot::Sender<C::Response>>,
 }
 
 impl<C> Handler for ClientHandler<C>
 where
-    C: Client
+    C: Client,
 {
     type In = C::Response;
     type Out = C::Request;
@@ -118,7 +118,7 @@ where
         } else {
             return Err(io::Error::new(
                 io::ErrorKind::Other,
-                "request / response mismatch"
+                "request / response mismatch",
             ));
         }
 
@@ -138,16 +138,16 @@ where
                 self.in_flight.push_back(complete);
 
                 Ok(Some(request).into())
-            },
+            }
             Ok(Async::Ready(None)) => {
                 trace!("  --> client dropped");
                 Ok(None.into())
-            },
+            }
             Ok(Async::NotReady) => {
                 trace!("  --> not ready");
                 Ok(Async::NotReady)
-            },
-            Err(_) => unreachable!()
+            }
+            Err(_) => unreachable!(),
         }
     }
 

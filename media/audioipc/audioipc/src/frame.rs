@@ -21,7 +21,7 @@ pub struct Framed<A, C> {
     write_buf: BytesMut,
     frame: Option<<Bytes as IntoBuf>::Buf>,
     is_readable: bool,
-    eof: bool
+    eof: bool,
 }
 
 impl<A, C> Framed<A, C>
@@ -159,6 +159,6 @@ pub fn framed<A, C>(io: A, codec: C) -> Framed<A, C> {
         write_buf: BytesMut::with_capacity(INITIAL_CAPACITY),
         frame: None,
         is_readable: false,
-        eof: false
+        eof: false,
     }
 }

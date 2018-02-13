@@ -10,7 +10,7 @@ use std::os::unix::io::RawFd;
 
 #[derive(Clone, Debug)]
 pub struct Fds {
-    fds: Bytes
+    fds: Bytes,
 }
 
 impl convert::AsRef<[RawFd]> for Fds {
@@ -30,13 +30,11 @@ impl ops::Deref for Fds {
 }
 
 pub struct ControlMsgIter {
-    control: Bytes
+    control: Bytes,
 }
 
 pub fn iterator(c: Bytes) -> ControlMsgIter {
-    ControlMsgIter {
-        control: c
-    }
+    ControlMsgIter { control: c }
 }
 
 impl Iterator for ControlMsgIter {
@@ -73,12 +71,12 @@ impl Iterator for ControlMsgIter {
                 (libc::SOL_SOCKET, libc::SCM_RIGHTS) => {
                     trace!("Found SCM_RIGHTS...");
                     return Some(Fds {
-                        fds: control.slice(cmsghdr_len, cmsg_len as _)
+                        fds: control.slice(cmsghdr_len, cmsg_len as _),
                     });
-                },
+                }
                 (level, kind) => {
                     trace!("Skipping cmsg level, {}, type={}...", level, kind);
-                },
+                }
             }
         }
     }
@@ -87,19 +85,17 @@ impl Iterator for ControlMsgIter {
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Error {
     /// Not enough space in storage to insert control mesage.
-    NoSpace
+    NoSpace,
 }
 
 #[must_use]
 pub struct ControlMsgBuilder {
-    result: Result<BytesMut, Error>
+    result: Result<BytesMut, Error>,
 }
 
 pub fn builder(buf: &mut BytesMut) -> ControlMsgBuilder {
     let buf = aligned(buf);
-    ControlMsgBuilder {
-        result: Ok(buf)
-    }
+    ControlMsgBuilder { result: Ok(buf) }
 }
 
 impl ControlMsgBuilder {
@@ -113,10 +109,12 @@ impl ControlMsgBuilder {
             let cmsghdr = cmsghdr {
                 cmsg_len: cmsg_len as _,
                 cmsg_level: level,
-                cmsg_type: kind
+                cmsg_type: kind,
             };
 
-            let cmsghdr = unsafe { slice::from_raw_parts(&cmsghdr as *const _ as *const _, mem::size_of::<cmsghdr>()) };
+            let cmsghdr = unsafe {
+                slice::from_raw_parts(&cmsghdr as *const _ as *const _, mem::size_of::<cmsghdr>())
+            };
             cmsg.put_slice(cmsghdr);
             let mut cmsg = try!(align_buf(cmsg));
             cmsg.put_slice(msg);
