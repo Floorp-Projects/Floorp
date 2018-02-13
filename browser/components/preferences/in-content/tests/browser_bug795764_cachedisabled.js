@@ -16,10 +16,6 @@ function test() {
   });
 
   SpecialPowers.pushPrefEnv({set: [
-    ["browser.cache.offline.enable", false],
-    ["browser.cache.disk.enable", false],
-    ["browser.cache.memory.enable", false],
-    ["browser.storageManager.enabled", true],
     ["privacy.userContext.ui.enabled", true]
   ]}).then(() => open_preferences(runTest));
 }
