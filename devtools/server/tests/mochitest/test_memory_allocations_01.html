@@ -16,6 +16,7 @@ Bug 1067491 - Test recording allocations.
 "use strict";
 
 window.onload = function () {
+  let { Task } = require("devtools/shared/task");
   SimpleTest.waitForExplicitFinish();
 
   Task.spawn(function* () {

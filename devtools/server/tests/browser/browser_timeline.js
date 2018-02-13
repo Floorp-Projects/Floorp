@@ -12,17 +12,17 @@
 
 const {TimelineFront} = require("devtools/shared/fronts/timeline");
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8,mop");
+add_task(async function () {
+  await addTab("data:text/html;charset=utf-8,mop");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
+  let form = await connectDebuggerClient(client);
   let front = TimelineFront(client, form);
 
   ok(front, "The TimelineFront was created");
 
-  let isActive = yield front.isRecording();
+  let isActive = await front.isRecording();
   ok(!isActive, "The TimelineFront is not initially recording");
 
   info("Flush any pending reflows");
@@ -32,9 +32,9 @@ add_task(function* () {
   });
 
   info("Start recording");
-  yield front.start({ withMarkers: true });
+  await front.start({ withMarkers: true });
 
-  isActive = yield front.isRecording();
+  isActive = await front.isRecording();
   ok(isActive, "The TimelineFront is now recording");
 
   info("Change some style on the page to cause style/reflow/paint");
@@ -42,7 +42,7 @@ add_task(function* () {
   ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
     content.document.body.style.padding = "10px";
   });
-  let markers = yield onMarkers;
+  let markers = await onMarkers;
 
   ok(true, "The markers event was fired");
   ok(markers.length > 0, "Markers were returned");
@@ -58,15 +58,15 @@ add_task(function* () {
   ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
     content.document.body.style.backgroundColor = "red";
   });
-  markers = yield onMarkers;
+  markers = await onMarkers;
 
   ok(markers.length > 0, "markers were returned");
 
-  yield front.stop();
+  await front.stop();
 
-  isActive = yield front.isRecording();
+  isActive = await front.isRecording();
   ok(!isActive, "Not recording after stop()");
 
-  yield client.close();
+  await client.close();
   gBrowser.removeCurrentTab();
 });

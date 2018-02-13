@@ -28,23 +28,23 @@ function run_test() {
 const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
 
-const testBlackBox = Task.async(function* () {
-  let packet = yield executeOnNextTickAndWaitForPause(evalCode, gClient);
+const testBlackBox = async function () {
+  let packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
   let source = gThreadClient.source(packet.frame.where.source);
 
-  yield setBreakpoint(source, {
+  await setBreakpoint(source, {
     line: 2
   });
-  yield resume(gThreadClient);
+  await resume(gThreadClient);
 
-  const { sources } = yield getSources(gThreadClient);
+  const { sources } = await getSources(gThreadClient);
   let sourceClient = gThreadClient.source(
     sources.filter(s => s.url == BLACK_BOXED_URL)[0]);
   Assert.ok(!sourceClient.isBlackBoxed,
             "By default the source is not black boxed.");
 
   // Test that we can step into `doStuff` when we are not black boxed.
-  yield runTest(
+  await runTest(
     function onSteppedLocation(location) {
       Assert.equal(location.source.url, BLACK_BOXED_URL);
       Assert.equal(location.line, 2);
@@ -54,12 +54,12 @@ const testBlackBox = Task.async(function* () {
     }
   );
 
-  yield blackBox(sourceClient);
+  await blackBox(sourceClient);
   Assert.ok(sourceClient.isBlackBoxed);
 
   // Test that we step through `doStuff` when we are black boxed and its frame
   // doesn't show up.
-  yield runTest(
+  await runTest(
     function onSteppedLocation(location) {
       Assert.equal(location.source.url, SOURCE_URL);
       Assert.equal(location.line, 4);
@@ -75,11 +75,11 @@ const testBlackBox = Task.async(function* () {
     }
   );
 
-  yield unBlackBox(sourceClient);
+  await unBlackBox(sourceClient);
   Assert.ok(!sourceClient.isBlackBoxed);
 
   // Test that we can step into `doStuff` again.
-  yield runTest(
+  await runTest(
     function onSteppedLocation(location) {
       Assert.equal(location.source.url, BLACK_BOXED_URL);
       Assert.equal(location.line, 2);
@@ -90,7 +90,7 @@ const testBlackBox = Task.async(function* () {
   );
 
   finishClient(gClient);
-});
+};
 
 function evalCode() {
   /* eslint-disable */
@@ -122,26 +122,26 @@ function evalCode() {
   /* eslint-enable */
 }
 
-const runTest = Task.async(function* (onSteppedLocation, onDebuggerStatementFrames) {
-  let packet = yield executeOnNextTickAndWaitForPause(gDebuggee.runTest,
+const runTest = async function (onSteppedLocation, onDebuggerStatementFrames) {
+  let packet = await executeOnNextTickAndWaitForPause(gDebuggee.runTest,
                                                       gClient);
   Assert.equal(packet.why.type, "breakpoint");
 
-  yield stepIn(gClient, gThreadClient);
+  await stepIn(gClient, gThreadClient);
 
-  const location = yield getCurrentLocation();
+  const location = await getCurrentLocation();
   onSteppedLocation(location);
 
-  packet = yield resumeAndWaitForPause(gClient, gThreadClient);
+  packet = await resumeAndWaitForPause(gClient, gThreadClient);
   Assert.equal(packet.why.type, "debuggerStatement");
 
-  let { frames } = yield getFrames(gThreadClient, 0, 100);
+  let { frames } = await getFrames(gThreadClient, 0, 100);
   onDebuggerStatementFrames(frames);
 
   return resume(gThreadClient);
-});
+};
 
-const getCurrentLocation = Task.async(function* () {
-  const response = yield getFrames(gThreadClient, 0, 1);
+const getCurrentLocation = async function () {
+  const response = await getFrames(gThreadClient, 0, 1);
   return response.frames[0].where;
-});
+};

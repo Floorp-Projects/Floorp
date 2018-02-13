@@ -3,7 +3,7 @@
 var SOURCE_URL = getFileUrl("setBreakpoint-on-column-with-no-offsets-at-end-of-line.js");
 
 function run_test() {
-  return Task.spawn(function* () {
+  return (async function () {
     do_test_pending();
 
     DebuggerServer.registerModule("xpcshell-test/testactors");
@@ -13,27 +13,27 @@ function run_test() {
     DebuggerServer.addTestGlobal(global);
 
     let client = new DebuggerClient(DebuggerServer.connectPipe());
-    yield connect(client);
+    await connect(client);
 
-    let { tabs } = yield listTabs(client);
+    let { tabs } = await listTabs(client);
     let tab = findTab(tabs, "test");
-    let [, tabClient] = yield attachTab(client, tab);
-    let [, threadClient] = yield attachThread(tabClient);
-    yield resume(threadClient);
+    let [, tabClient] = await attachTab(client, tab);
+    let [, threadClient] = await attachThread(tabClient);
+    await resume(threadClient);
 
     let promise = waitForNewSource(threadClient, SOURCE_URL);
     loadSubScript(SOURCE_URL, global);
-    let { source } = yield promise;
+    let { source } = await promise;
     let sourceClient = threadClient.source(source);
 
     let location = { line: 4, column: 23 };
-    let [packet, ] = yield setBreakpoint(sourceClient, location);
+    let [packet, ] = await setBreakpoint(sourceClient, location);
     Assert.ok(packet.isPending);
     Assert.equal(false, "actualLocation" in packet);
 
     Cu.evalInSandbox("f()", global);
-    yield close(client);
+    await close(client);
 
     do_test_finished();
-  });
+  })();
 }

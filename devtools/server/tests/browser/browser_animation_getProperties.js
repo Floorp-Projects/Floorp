@@ -9,16 +9,16 @@
 
 const URL = MAIN_DOMAIN + "animation.html";
 
-add_task(function* () {
-  let {client, walker, animations} = yield initAnimationsFrontForUrl(URL);
+add_task(async function () {
+  let {client, walker, animations} = await initAnimationsFrontForUrl(URL);
 
   info("Get the test node and its animation front");
-  let node = yield walker.querySelector(walker.rootNode, ".simple-animation");
-  let [player] = yield animations.getAnimationPlayersForNode(node);
+  let node = await walker.querySelector(walker.rootNode, ".simple-animation");
+  let [player] = await animations.getAnimationPlayersForNode(node);
 
   ok(player.getProperties, "The front has the getProperties method");
 
-  let properties = yield player.getProperties();
+  let properties = await player.getProperties();
   is(properties.length, 1, "The correct number of properties was retrieved");
 
   let propertyObject = properties[0];
@@ -31,6 +31,6 @@ add_task(function* () {
   // purpose. This object comes straight out of the web animations API
   // unmodified.
 
-  yield client.close();
+  await client.close();
   gBrowser.removeCurrentTab();
 });

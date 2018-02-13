@@ -18,9 +18,9 @@ Bug 1068171 - Test controlling the memory actor's allocation sampling probabilit
 window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
-  Task.spawn(function* () {
-    let { memory, client } = yield startServerAndGetSelectedTabMemory();
-    yield memory.attach();
+  (async function () {
+    let { memory, client } = await startServerAndGetSelectedTabMemory();
+    await memory.attach();
 
     let allocs = [];
     function allocator() {
@@ -29,21 +29,21 @@ window.onload = function () {
       }
     }
 
-    let testProbability = Task.async(function* (p, expected) {
+    let testProbability = async function (p, expected) {
       info("probability = " + p);
-      yield memory.startRecordingAllocations({
+      await memory.startRecordingAllocations({
         probability: p
       });
       allocator();
-      let response = yield memory.getAllocations();
-      yield memory.stopRecordingAllocations();
+      let response = await memory.getAllocations();
+      await memory.stopRecordingAllocations();
       return response.allocations.length;
-    });
+    };
 
-    is((yield testProbability(0.0)), 0,
+    is((await testProbability(0.0)), 0,
        "With probability = 0.0, we shouldn't get any allocations.");
 
-    ok((yield testProbability(1.0)) >= 100,
+    ok((await testProbability(1.0)) >= 100,
        "With probability = 1.0, we should get all 100 allocations (plus "
        + "whatever allocations the actor and SpiderMonkey make).");
 
@@ -52,9 +52,9 @@ window.onload = function () {
     // jit-tests
     // (js/src/jit-test/tests/debug/Memory-allocationsSamplingProbability-*.js).
 
-    yield memory.detach();
+    await memory.detach();
     destroyServerAndFinish(client);
-  });
+  })();
 };
 </script>
 </pre>

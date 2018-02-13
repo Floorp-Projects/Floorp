@@ -27,8 +27,8 @@ function run_test() {
 
 const SOURCE_URL = "http://example.com/source.js";
 
-const testSameBreakpoint = Task.async(function* () {
-  let packet = yield executeOnNextTickAndWaitForPause(evalCode, gClient);
+const testSameBreakpoint = async function () {
+  let packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
   let source = gThreadClient.source(packet.frame.where.source);
 
   // Whole line
@@ -36,8 +36,8 @@ const testSameBreakpoint = Task.async(function* () {
     line: 2
   };
 
-  let [, firstBpClient] = yield setBreakpoint(source, wholeLineLocation);
-  let [, secondBpClient] = yield setBreakpoint(source, wholeLineLocation);
+  let [, firstBpClient] = await setBreakpoint(source, wholeLineLocation);
+  let [, secondBpClient] = await setBreakpoint(source, wholeLineLocation);
 
   Assert.equal(firstBpClient.actor, secondBpClient.actor,
                "Should get the same actor w/ whole line breakpoints");
@@ -49,14 +49,14 @@ const testSameBreakpoint = Task.async(function* () {
     column: 6
   };
 
-  [, firstBpClient] = yield setBreakpoint(source, columnLocation);
-  [, secondBpClient] = yield setBreakpoint(source, columnLocation);
+  [, firstBpClient] = await setBreakpoint(source, columnLocation);
+  [, secondBpClient] = await setBreakpoint(source, columnLocation);
 
   Assert.equal(secondBpClient.actor, secondBpClient.actor,
                "Should get the same actor column breakpoints");
 
   finishClient(gClient);
-});
+};
 
 function evalCode() {
   /* eslint-disable */

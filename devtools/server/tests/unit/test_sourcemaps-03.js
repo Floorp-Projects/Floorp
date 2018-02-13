@@ -28,12 +28,12 @@ function run_test() {
 }
 
 function testBreakpointMapping(name, callback) {
-  Task.spawn(function* () {
-    let response = yield waitForPause(gThreadClient);
+  (async function () {
+    let response = await waitForPause(gThreadClient);
     Assert.equal(response.why.type, "debuggerStatement");
 
-    const source = yield getSource(gThreadClient, "http://example.com/www/js/" + name + ".js");
-    response = yield setBreakpoint(source, {
+    const source = await getSource(gThreadClient, "http://example.com/www/js/" + name + ".js");
+    response = await setBreakpoint(source, {
       // Setting the breakpoint on an empty line so that it is pushed down one
       // line and we can check the source mapped actualLocation later.
       line: 3
@@ -42,16 +42,16 @@ function testBreakpointMapping(name, callback) {
     // Should not slide breakpoints for sourcemapped sources
     Assert.ok(!response.actualLocation);
 
-    yield setBreakpoint(source, { line: 4 });
+    await setBreakpoint(source, { line: 4 });
 
     // The eval will cause us to resume, then we get an unsolicited pause
     // because of our breakpoint, we resume again to finish the eval, and
     // finally receive our last pause which has the result of the client
     // evaluation.
-    response = yield gThreadClient.eval(null, name + "()");
+    response = await gThreadClient.eval(null, name + "()");
     Assert.equal(response.type, "resumed");
 
-    response = yield waitForPause(gThreadClient);
+    response = await waitForPause(gThreadClient);
     Assert.equal(response.why.type, "breakpoint");
     // Assert that we paused because of the breakpoint at the correct
     // location in the code by testing that the value of `ret` is still
@@ -59,16 +59,16 @@ function testBreakpointMapping(name, callback) {
     Assert.equal(response.frame.environment.bindings.variables.ret.value.type,
                  "undefined");
 
-    response = yield resume(gThreadClient);
+    response = await resume(gThreadClient);
 
-    response = yield waitForPause(gThreadClient);
+    response = await waitForPause(gThreadClient);
     Assert.equal(response.why.type, "clientEvaluated");
     Assert.equal(response.why.frameFinished.return, name);
 
-    response = yield resume(gThreadClient);
+    response = await resume(gThreadClient);
 
     callback();
-  });
+  })();
 
   gDebuggee.eval("(" + function () {
     debugger;
