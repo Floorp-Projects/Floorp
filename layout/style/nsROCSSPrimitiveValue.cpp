@@ -28,6 +28,7 @@
 #define CSS_NUMBER_UINT32 32U
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 nsROCSSPrimitiveValue::nsROCSSPrimitiveValue()
   : CSSValue(), mType(CSSPrimitiveValueBinding::CSS_PX)

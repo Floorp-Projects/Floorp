@@ -7,6 +7,7 @@
 #include "mozilla/GeckoStyleContext.h"
 
 #include "CSSVariableImageTable.h"
+#include "nsFontMetrics.h"
 #include "nsStyleConsts.h"
 #include "nsStyleStruct.h"
 #include "nsPresContext.h"
