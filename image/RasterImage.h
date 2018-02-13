@@ -24,7 +24,6 @@
 #include "nsTArray.h"
 #include "LookupResult.h"
 #include "nsThreadUtils.h"
-#include "DecodePool.h"
 #include "DecoderFactory.h"
 #include "FrameAnimator.h"
 #include "ImageMetadata.h"
