@@ -33,9 +33,9 @@ class ShippingOptionPicker extends PaymentStateSubscriberMixin(HTMLElement) {
         optionEl = document.createElement("shipping-option");
         optionEl.value = option.id;
       }
-      for (let attr of ["amount", "label"]) {
-        optionEl[attr] = option[attr];
-      }
+      optionEl.label = option.label;
+      optionEl.amountCurrency = option.amount.currency;
+      optionEl.amountValue = option.amount.value;
       desiredOptions.push(optionEl);
     }
     let el = null;
