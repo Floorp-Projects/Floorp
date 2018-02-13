@@ -1687,40 +1687,75 @@ Loader::ParseSheet(const nsAString& aUTF16,
   LOG(("css::Loader::ParseSheet"));
   NS_PRECONDITION(aLoadData, "Must have load data");
   NS_PRECONDITION(aLoadData->mSheet, "Must have sheet to parse into");
-
-  aLoadData->mIsBeingParsed = true;
   aCompleted = false;
-
-  nsIURI* sheetURI = aLoadData->mSheet->GetSheetURI();
-  nsIURI* baseURI = aLoadData->mSheet->GetBaseURI();
-
-  nsresult rv;
-
-  if (aLoadData->mSheet->IsGecko()) {
+  if (ServoStyleSheet* sheet = aLoadData->mSheet->GetAsServo()) {
+    return DoParseSheetServo(sheet, aUTF16, aUTF8, aLoadData, aCompleted);
+  }
 #ifdef MOZ_OLD_STYLE
-    nsCSSParser parser(this, aLoadData->mSheet->AsGecko());
-    rv = parser.ParseSheet(aUTF16,
-                           sheetURI,
-                           baseURI,
-                           aLoadData->mSheet->Principal(),
-                           aLoadData,
-                           aLoadData->mLineNumber);
+  return DoParseSheetGecko(aLoadData->mSheet->AsGecko(), aUTF16, aUTF8, aLoadData, aCompleted);
 #else
     MOZ_CRASH("old style system disabled");
 #endif
-  } else {
-    rv = aLoadData->mSheet->AsServo()->ParseSheet(
-      this,
-      aUTF8.IsEmpty() ? NS_ConvertUTF16toUTF8(aUTF16) : aUTF8,
-      sheetURI,
-      baseURI,
-      aLoadData->mSheet->Principal(),
-      aLoadData,
-      aLoadData->mLineNumber,
-      GetCompatibilityMode());
+}
+
+#ifdef MOZ_OLD_STYLE
+nsresult
+Loader::DoParseSheetGecko(CSSStyleSheet* aSheet,
+                          const nsAString& aUTF16,
+                          Span<const uint8_t> aUTF8,
+                          SheetLoadData* aLoadData,
+                          bool& aCompleted)
+{
+  aLoadData->mIsBeingParsed = true;
+  nsCSSParser parser(this, aSheet);
+  nsresult rv = parser.ParseSheet(aUTF16,
+                                  aSheet->GetSheetURI(),
+                                  aSheet->GetBaseURI(),
+                                  aSheet->Principal(),
+                                  aLoadData,
+                                  aLoadData->mLineNumber);
+  aLoadData->mIsBeingParsed = false;
+  if (NS_FAILED(rv)) {
+    LOG_ERROR(("  Low-level error in parser!"));
+    SheetComplete(aLoadData, rv);
+    return rv;
   }
 
+  NS_ASSERTION(aLoadData->mPendingChildren == 0 || !aLoadData->mSyncLoad,
+               "Sync load has leftover pending children!");
+
+  if (aLoadData->mPendingChildren == 0) {
+    LOG(("  No pending kids from parse"));
+    aCompleted = true;
+    SheetComplete(aLoadData, NS_OK);
+  }
+  // Otherwise, the children are holding strong refs to the data and
+  // will call SheetComplete() on it when they complete.
+
+  return NS_OK;
+}
+#endif
+
+nsresult
+Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
+                          const nsAString& aUTF16,
+                          Span<const uint8_t> aUTF8,
+                          SheetLoadData* aLoadData,
+                          bool& aCompleted)
+{
+  aLoadData->mIsBeingParsed = true;
+  nsresult rv = aSheet->ParseSheet(
+    this,
+    aUTF8.IsEmpty() ? NS_ConvertUTF16toUTF8(aUTF16) : aUTF8,
+    aSheet->GetSheetURI(),
+    aSheet->GetBaseURI(),
+    aSheet->Principal(),
+    aLoadData,
+    aLoadData->mLineNumber,
+    GetCompatibilityMode()
+  );
   aLoadData->mIsBeingParsed = false;
+
   if (NS_FAILED(rv)) {
     LOG_ERROR(("  Low-level error in parser!"));
     SheetComplete(aLoadData, rv);
