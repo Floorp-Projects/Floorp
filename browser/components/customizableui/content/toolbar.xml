@@ -9,9 +9,6 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="toolbar">
-    <resources>
-      <stylesheet src="chrome://global/skin/toolbar.css"/>
-    </resources>
     <implementation>
       <field name="overflowedDuringConstruction">null</field>
 
