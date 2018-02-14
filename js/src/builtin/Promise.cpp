@@ -12,13 +12,13 @@
 
 #include "jsexn.h"
 #include "jsfriendapi.h"
-#include "jsiter.h"
 
 #include "gc/Heap.h"
 #include "js/Debug.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/Debugger.h"
+#include "vm/Iteration.h"
 #include "vm/JSContext.h"
 
 #include "vm/Debugger-inl.h"
