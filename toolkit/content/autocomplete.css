@@ -25,16 +25,3 @@ richlistitem {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-.ac-tags[empty] {
-  display: none;
-}
-
-.autocomplete-richlistitem:not([selected]):not(:hover) > .ac-action[actiontype=searchengine],
-.autocomplete-richlistitem:not([selected]):not(:hover) > .ac-separator[actiontype=searchengine] {
-  display: none;
-}
-
-.ac-separator[type=keyword] {
-  display: none;
-}
