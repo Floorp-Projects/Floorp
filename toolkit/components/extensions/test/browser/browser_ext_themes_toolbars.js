@@ -15,6 +15,9 @@ add_task(async function test_support_toolbar_property() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "theme": {
+        "images": {
+          "headerURL": "image1.png",
+        },
         "colors": {
           "accentcolor": ACCENT_COLOR,
           "textcolor": TEXT_COLOR,
@@ -22,6 +25,9 @@ add_task(async function test_support_toolbar_property() {
           "toolbar_text": TOOLBAR_TEXT_COLOR,
         },
       },
+    },
+    files: {
+      "image1.png": BACKGROUND,
     },
   });
 
@@ -59,6 +65,9 @@ add_task(async function test_bookmark_text_property() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "theme": {
+        "images": {
+          "headerURL": "image1.png",
+        },
         "colors": {
           "frame": ACCENT_COLOR,
           "background_tab_text": TEXT_COLOR,
@@ -66,6 +75,9 @@ add_task(async function test_bookmark_text_property() {
           "bookmark_text": TOOLBAR_TEXT_COLOR,
         },
       },
+    },
+    files: {
+      "image1.png": BACKGROUND,
     },
   });
 
