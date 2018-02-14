@@ -9,6 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
+const ColorPath = createFactory(require("./ColorPath"));
 const DistancePath = createFactory(require("./DistancePath"));
 
 const {
@@ -20,6 +21,7 @@ class KeyframesGraphPath extends PureComponent {
   static get propTypes() {
     return {
       simulateAnimation: PropTypes.func.isRequired,
+      type: PropTypes.string.isRequired,
       values: PropTypes.array.isRequired,
     };
   }
@@ -36,6 +38,15 @@ class KeyframesGraphPath extends PureComponent {
     this.updateState();
   }
 
+  getPathComponent(type) {
+    switch (type) {
+      case "color" :
+        return ColorPath;
+      default :
+        return DistancePath;
+    }
+  }
+
   updateState() {
     const thisEl = ReactDOM.findDOMNode(this);
     this.setState({ componentWidth: thisEl.parentNode.clientWidth });
@@ -44,6 +55,7 @@ class KeyframesGraphPath extends PureComponent {
   render() {
     const {
       simulateAnimation,
+      type,
       values,
     } = this.props;
     const { componentWidth } = this.state;
@@ -52,6 +64,8 @@ class KeyframesGraphPath extends PureComponent {
       return dom.svg();
     }
 
+    const pathComponent = this.getPathComponent(type);
+
     return dom.svg(
       {
         className: "keyframes-graph-path",
@@ -59,7 +73,7 @@ class KeyframesGraphPath extends PureComponent {
         viewBox: `0 -${ DEFAULT_GRAPH_HEIGHT } `
                  + `${ DEFAULT_KEYFRAMES_GRAPH_DURATION } ${ DEFAULT_GRAPH_HEIGHT }`,
       },
-      DistancePath(
+      pathComponent(
         {
           componentWidth,
           graphHeight: DEFAULT_GRAPH_HEIGHT,
