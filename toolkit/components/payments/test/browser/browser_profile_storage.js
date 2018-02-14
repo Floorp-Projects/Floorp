@@ -61,6 +61,8 @@ add_task(async function test_initial_state() {
       is(Object.keys(savedBasicCards).length, 1, "Initially one savedBasicCards");
       is(savedBasicCards[card1GUID]["cc-number"], "************5678", "Check cc-number");
       is(savedBasicCards[card1GUID].guid, card1GUID, "Check card guid matches key");
+      is(savedBasicCards[card1GUID].methodName, "basic-card",
+         "Check card has a methodName of basic-card");
     }, {
       address1GUID,
       card1GUID,
@@ -102,6 +104,8 @@ add_task(async function test_initial_state() {
 
       is(Object.keys(savedBasicCards).length, 1, "Still one savedBasicCards");
       is(savedBasicCards[card1GUID].guid, card1GUID, "Check card guid matches key");
+      is(savedBasicCards[card1GUID].methodName, "basic-card",
+         "Check card has a methodName of basic-card");
     }, {
       address1GUID,
       address2GUID,
@@ -140,6 +144,8 @@ add_task(async function test_initial_state() {
       is(savedBasicCards[card1GUID].guid, card1GUID, "Check card guid matches key");
       is(savedBasicCards[card1GUID]["cc-exp-month"], 6, "Check expiry month");
       is(savedBasicCards[card1GUID]["cc-exp-year"], 2029, "Check expiry year");
+      is(savedBasicCards[card1GUID].methodName, "basic-card",
+         "Check card has a methodName of basic-card");
     }, {
       address1GUID,
       address2GUID,
