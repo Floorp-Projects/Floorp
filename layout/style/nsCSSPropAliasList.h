@@ -44,6 +44,11 @@ CSS_PROP_ALIAS(word-wrap,
                overflow_wrap,
                WordWrap,
                "")
+CSS_PROP_ALIAS(-moz-transform,
+               _moz_transform,
+               transform,
+               MozTransform,
+               "layout.css.prefixes.transforms")
 CSS_PROP_ALIAS(-moz-transform-origin,
                _moz_transform_origin,
                transform_origin,

@@ -4282,15 +4282,6 @@ CSS_PROP_DISPLAY(
     nullptr,
     offsetof(nsStyleDisplay, mSpecifiedTransform),
     eStyleAnimType_Custom)
-// This shorthand is essentially an alias, but it requires different
-// parsing rules, and it therefore implemented as a shorthand.
-CSS_PROP_SHORTHAND(
-    -moz-transform,
-    _moz_transform,
-    MozTransform,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_IS_ALIAS,
-    "layout.css.prefixes.transforms")
 CSS_PROP_DISPLAY(
     transform-box,
     transform_box,
