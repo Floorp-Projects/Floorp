@@ -60,19 +60,11 @@ setShadowDOMPrefAndCreateIframe(content)
     // Make sure that elements in the ShadowRoot are styled according to the ShadowRoot style.
     is(iframeWin.getComputedStyle(divToStyle, null).getPropertyValue("height"), "100px", "ShadowRoot style sheets should apply to elements in ShadowRoot.");
 
-    // Tests for applyAuthorStyles.
+    // Tests for author styles not applying in a ShadowRoot.
     var authorStyle = aDocument.createElement("style");
     authorStyle.innerHTML = ".fat { padding-right: 20px; padding-left: 30px; }";
     aDocument.body.appendChild(authorStyle);
-
-    is(root.applyAuthorStyles, false, "applyAuthorStyles defaults to false.");
-    isnot(iframeWin.getComputedStyle(divToStyle, null).getPropertyValue("padding-right"), "20px", "Author styles should not apply to ShadowRoot when ShadowRoot.applyAuthorStyles is false.");
-    root.applyAuthorStyles = true;
-    is(root.applyAuthorStyles, true, "applyAuthorStyles was set to true.");
-    is(iframeWin.getComputedStyle(divToStyle, null).getPropertyValue("padding-right"), "20px", "Author styles should apply to ShadowRoot when ShadowRoot.applyAuthorStyles is true.");
-    root.applyAuthorStyles = false;
-    is(root.applyAuthorStyles, false, "applyAuthorStyles was set to false.");
-    isnot(iframeWin.getComputedStyle(divToStyle, null).getPropertyValue("padding-right"), "20px", "Author styles should not apply to ShadowRoot when ShadowRoot.applyAuthorStyles is false.");
+    isnot(iframeWin.getComputedStyle(divToStyle, null).getPropertyValue("padding-right"), "20px", "Author styles should not apply to ShadowRoot.");
 
     // Test dynamic changes to style in ShadowRoot.
     root.innerHTML = '<div id="divtostyle" class="dummy"></div>';
