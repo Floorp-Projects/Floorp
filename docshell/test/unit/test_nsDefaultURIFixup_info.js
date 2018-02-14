@@ -14,6 +14,11 @@ const kSearchEngineURL = "http://www.example.org/?search={searchTerms}";
 Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get",
                                      kSearchEngineURL);
 
+Services.io.getProtocolHandler("resource")
+        .QueryInterface(Ci.nsIResProtocolHandler)
+        .setSubstitution("search-plugins",
+                         Services.io.newURI("chrome://mozapps/locale/searchplugins/"));
+
 var oldDefaultEngine = Services.search.defaultEngine;
 Services.search.defaultEngine = Services.search.getEngineByName(kSearchEngineID);
 
