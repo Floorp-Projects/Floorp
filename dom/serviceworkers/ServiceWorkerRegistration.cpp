@@ -130,5 +130,17 @@ ServiceWorkerRegistration::MatchesDescriptor(const ServiceWorkerRegistrationDesc
          aDescriptor.Scope() == mDescriptor.Scope();
 }
 
+void
+ServiceWorkerRegistration::GetScope(nsAString& aScope) const
+{
+  CopyUTF8toUTF16(mDescriptor.Scope(), aScope);
+}
+
+ServiceWorkerUpdateViaCache
+ServiceWorkerRegistration::GetUpdateViaCache(ErrorResult& aRv) const
+{
+  return mDescriptor.UpdateViaCache();
+}
+
 } // dom namespace
 } // mozilla namespace
