@@ -15,15 +15,11 @@
 #include "mozilla/MemoryReporting.h"
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Simple Arena support. Use with caution!
  */
 
-typedef struct XPTArena XPTArena;
+struct XPTArena;
 
 XPTArena*
 XPT_NewArena(size_t block_size8, size_t block_size1);
@@ -53,10 +49,6 @@ XPT_AssertFailed(const char *s, const char *file, uint32_t lineno)
     ((_expr)?((void)0):XPT_AssertFailed(# _expr, __FILE__, __LINE__))
 #else
 #define XPT_ASSERT(_expr) ((void)0)
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif /* __xpt_arena_h__ */
