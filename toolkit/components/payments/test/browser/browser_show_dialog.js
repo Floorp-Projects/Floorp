@@ -105,6 +105,7 @@ add_task(async function test_show_completePayment() {
     is(methodDetails.expiryMonth, "01", "Check expiryMonth");
     is(methodDetails.expiryYear, "9999", "Check expiryYear");
     is(methodDetails.cardSecurityCode, "999", "Check cardSecurityCode");
+    is(typeof methodDetails.methodName, "undefined", "Check methodName wasn't included");
     checkPaymentAddressMatchesStorageAddress(methodDetails.billingAddress, address,
                                              "Billing address");
 

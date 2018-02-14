@@ -271,6 +271,11 @@ var paymentDialogWrapper = {
       // Filter out the encrypted card number since the dialog content is
       // considered untrusted and runs in a content process.
       delete card["cc-number-encrypted"];
+
+      // ensure each card has a methodName property
+      if (!card.methodName) {
+        card.methodName = "basic-card";
+      }
     }
     return savedBasicCards;
   },
