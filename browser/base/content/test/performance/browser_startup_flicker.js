@@ -47,15 +47,19 @@ add_task(async function() {
                          // at ~80% of the window width
                          inRange(r.x1, width * .75, width * .9)
         },
-
-        {name: "bug 1403648 - urlbar should be focused at first paint",
-         condition: r => inRange(r.y2, 60, 80) && // in the toolbar
-                         // taking 50% to 75% of the window width
-                         inRange(r.w, width * .5, width * .75) &&
-                         // starting at 15 to 25% of the window width
-                         inRange(r.x1, width * .15, width * .25)
-        },
       ];
+
+      if (AppConstants.platform == "linux") {
+        exceptions.push(
+          {name: "bug 1403648 - urlbar should be focused at first paint",
+           condition: r => inRange(r.y2, 60, 80) && // in the toolbar
+                           // taking 50% to 75% of the window width
+                           inRange(r.w, width * .5, width * .75) &&
+                           // starting at 15 to 25% of the window width
+                           inRange(r.x1, width * .15, width * .25)
+          },
+        );
+      }
 
       let rectText = `${rect.toSource()}, window width: ${width}`;
       for (let e of exceptions) {

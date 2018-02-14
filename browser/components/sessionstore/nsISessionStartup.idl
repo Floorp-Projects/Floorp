@@ -36,13 +36,14 @@ interface nsISessionStartup: nsISupports
   boolean isAutomaticRestoreEnabled();
 
   /**
-   * Returns a promise that resolves to a boolean, indicating whether we will
-   * restore a session that ends up replacing the homepage. True guarantees
-   * that we'll restore a session; false means that we /probably/ won't do so.
+   * Returns a boolean or a promise that resolves to a boolean, indicating
+   * whether we will restore a session that ends up replacing the homepage.
+   * True guarantees that we'll restore a session; false means that we
+   * /probably/ won't do so.
    * The browser uses this to avoid unnecessarily loading the homepage when
    * restoring a session.
    */
-  readonly attribute jsval willOverrideHomepagePromise;
+  readonly attribute jsval willOverrideHomepage;
 
   /**
    * What type of session we're restoring.
