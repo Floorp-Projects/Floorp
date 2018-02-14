@@ -11,19 +11,18 @@ add_task(async function() {
   const FINAL_URI = NetUtil.newURI(BASE_URL + "final.html");
 
   let promiseVisits = new Promise(resolve => {
-    PlacesUtils.history.addObserver({
-      __proto__: NavHistoryObserver.prototype,
+    let observer = {
       _notified: [],
       onVisit(uri, id, time, referrerId, transition) {
-        info("Received onVisit: " + uri.spec);
+        info("Received onVisit: " + uri);
         this._notified.push(uri);
 
-        if (!uri.equals(FINAL_URI)) {
+        if (uri != FINAL_URI.spec) {
           return;
         }
 
         is(this._notified.length, 4);
-        PlacesUtils.history.removeObserver(this);
+        PlacesObservers.removeListener(["page-visited"], this.handleEvents);
 
         (async function() {
           // Get all pages visited from the original typed one
@@ -45,18 +44,21 @@ add_task(async function() {
           resolve();
         })();
       },
-      onVisits(visits) {
-        is(visits.length, 1, "Right number of visits notified");
+      handleEvents(events) {
+        is(events.length, 1, "Right number of visits notified");
+        is(events[0].type, "page-visited");
         let {
-          uri,
+          url,
           visitId,
-          time,
-          referrerId,
+          visitTime,
+          referringVisitId,
           transitionType,
-        } = visits[0];
-        this.onVisit(uri, visitId, time, referrerId, transitionType);
+        } = events[0];
+        this.onVisit(url, visitId, visitTime, referringVisitId, transitionType);
       }
-    });
+    };
+    observer.handleEvents = observer.handleEvents.bind(observer);
+    PlacesObservers.addListener(["page-visited"], observer.handleEvents);
   });
 
   PlacesUtils.history.markPageAsTyped(TEST_URI);
