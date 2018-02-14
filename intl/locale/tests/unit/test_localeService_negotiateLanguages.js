@@ -91,6 +91,7 @@ const data = {
       [undefined, ["fr-FR"], []],
       [2, ["fr-FR"], []],
       ["fr-FR", ["fr-FR"], []],
+      [["fą-FŻ"], ["ór_Fń"], []],
       [["fr-FR"], null, []],
       [["fr-FR"], undefined, []],
       [["fr-FR"], 2, []],
