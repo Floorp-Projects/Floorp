@@ -14,6 +14,8 @@
     ok(n >= 0, "The value of now() should be equal to or greater than 0.");
     ok(window.performance.now() >= n, "The value of now() should monotonically increase.");
     SimpleTest.waitForExplicitFinish();
+    var reduceTimePrecisionPrevPrefValue = SpecialPowers.getBoolPref("privacy.reduceTimerPrecision");
+    SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", false);
     SimpleTest.requestFlakyTimeout("untriaged");
 
     // The spec says performance.now() should have micro-second resolution, but allows 1ms if the platform doesn't support it.
@@ -58,6 +60,7 @@
                                                                                                   ", iters: " + checks +
                                                                                                   ", dt: " + (d2 - d) +
                                                                                                   ", now(): " + n2 + ").");
+      SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", reduceTimePrecisionPrevPrefValue);
       SimpleTest.finish();
     };
     setTimeout(checkAfterTimeout, 1);

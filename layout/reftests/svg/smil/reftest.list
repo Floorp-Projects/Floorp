@@ -268,15 +268,19 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == anim-gradient-attr-presence-0
 # Test filtering of excessive times
 == filtered-instance-time-1.svg anim-standard-ref.svg
 
+# Animation tests disable reduceTimerPrecision because they use a screenshot
+# mechanism that relies on performance.now(), and on low precision that can be
+# finnicky.
+
 # Test animation using defs element
-== anim-defs-gradient-property.svg lime.svg
-== anim-defs-gradient-attribute.svg lime.svg
-== anim-defs-fill.svg lime.svg
-== anim-defs-width.svg lime.svg
+pref(privacy.reduceTimerPrecision,false) == anim-defs-gradient-property.svg lime.svg
+pref(privacy.reduceTimerPrecision,false) == anim-defs-gradient-attribute.svg lime.svg
+pref(privacy.reduceTimerPrecision,false) == anim-defs-fill.svg lime.svg
+pref(privacy.reduceTimerPrecision,false) == anim-defs-width.svg lime.svg
 
 # Test animation that changes 'display' attribute
-== anim-display.svg lime.svg
-== anim-display-in-g-element.svg lime.svg
+pref(privacy.reduceTimerPrecision,false) == anim-display.svg lime.svg
+pref(privacy.reduceTimerPrecision,false) == anim-display-in-g-element.svg lime.svg
 
 # Test animation that change 'display' style value to 'none'
 == anim-change-display-none-for-ancestor-elem.html lime.html
