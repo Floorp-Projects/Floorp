@@ -185,10 +185,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY otherBookmarksCmd.label "Other Bookmarks">
 <!ENTITY mobileBookmarksCmd.label "Mobile Bookmarks">
 <!ENTITY bookmarksToolbarChevron.tooltip "Show more bookmarks">
-<!ENTITY showRecentlyBookmarked.label     "Show Recently Bookmarked">
-<!ENTITY showRecentlyBookmarked.accesskey "h">
-<!ENTITY hideRecentlyBookmarked.label     "Hide Recently Bookmarked">
-<!ENTITY hideRecentlyBookmarked.accesskey "H">
 
 <!ENTITY backCmd.label                "Back">
 <!ENTITY backCmd.accesskey            "B">
