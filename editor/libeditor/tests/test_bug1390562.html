@@ -37,7 +37,7 @@ SimpleTest.waitForFocus(function() {
   // This is necessary for backward compatibility.  When we change default
   // value of "defaultParagraphSeparator" to "div" or "p", it may be possible
   // to remove this hack.
-  synthesizeKey("KEY_Enter", { code: "Enter" });
+  synthesizeKey("KEY_Enter", {});
 
   is(editor.innerHTML,
      "<div>abc<br><br><br></div>def",
@@ -53,7 +53,7 @@ SimpleTest.waitForFocus(function() {
   // <br> element next to the caret position.
   // This is not consistent with <div> container, but this is better behavior
   // and keep using this behavior.
-  synthesizeKey("KEY_Enter", { code: "Enter" });
+  synthesizeKey("KEY_Enter", {});
 
   is(editor.innerHTML,
      "<p>abc</p><p><br></p>def",

@@ -7067,12 +7067,12 @@ function* runEditorReframeTests()
       },
       { test: function () {
           // Select "Cd"
-          synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft" });
-          synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft" });
-          synthesizeKey("KEY_Shift", { type: "keydown", code: "ShiftLeft", shiftKey: true });
-          synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true });
-          synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true });
-          synthesizeKey("KEY_Shift", { type: "keyup", code: "ShiftLeft" });
+          synthesizeKey("KEY_ArrowLeft", {});
+          synthesizeKey("KEY_ArrowLeft", {});
+          synthesizeKey("KEY_Shift", {type: "keydown", shiftKey: true});
+          synthesizeKey("KEY_ArrowLeft", {shiftKey: true});
+          synthesizeKey("KEY_ArrowLeft", {shiftKey: true});
+          synthesizeKey("KEY_Shift", {type: "keyup"});
         },
         check: function () {
         },
@@ -7348,7 +7348,7 @@ function* runIMEContentObserverTest()
     // "a[]"
     var description = aDescription + "typing 'a'";
     notifications = [];
-    synthesizeKey("a", { code: "KeyA" }, win, callback);
+    synthesizeKey("a", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: 0, addedLength: 1 });
@@ -7360,7 +7360,7 @@ function* runIMEContentObserverTest()
     // "ab[]"
     description = aDescription + "typing 'b'";
     notifications = [];
-    synthesizeKey("b", { code: "KeyB" }, win, callback);
+    synthesizeKey("b", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 1, removedLength: 0, addedLength: 1 });
@@ -7372,7 +7372,7 @@ function* runIMEContentObserverTest()
     // "abc[]"
     description = aDescription + "typing 'c'";
     notifications = [];
-    synthesizeKey("c", { code: "KeyC" }, win, callback);
+    synthesizeKey("c", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 2, removedLength: 0, addedLength: 1 });
@@ -7384,7 +7384,7 @@ function* runIMEContentObserverTest()
     // "ab[c]"
     description = aDescription + "selecting 'c' with pressing Shift+ArrowLeft";
     notifications = [];
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 2, text: "c", reversed: true });
@@ -7394,7 +7394,7 @@ function* runIMEContentObserverTest()
     // "a[bc]"
     description = aDescription + "selecting 'bc' with pressing Shift+ArrowLeft";
     notifications = [];
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 1, text: "bc", reversed: true });
@@ -7404,7 +7404,7 @@ function* runIMEContentObserverTest()
     // "[abc]"
     description = aDescription + "selecting 'bc' with pressing Shift+ArrowLeft";
     notifications = [];
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 0, text: "abc", reversed: true });
@@ -7414,7 +7414,7 @@ function* runIMEContentObserverTest()
     // "[]abc"
     description = aDescription + "collapsing selection to the left-most with pressing ArrowLeft";
     notifications = [];
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft" }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 0, text: "" });
@@ -7424,7 +7424,7 @@ function* runIMEContentObserverTest()
     // "[a]bc"
     description = aDescription + "selecting 'a' with pressing Shift+ArrowRight";
     notifications = [];
-    synthesizeKey("KEY_ArrowRight", { code: "ArrowRight", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowRight", {shiftKey: true}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 0, text: "a" });
@@ -7434,7 +7434,7 @@ function* runIMEContentObserverTest()
     // "[ab]c"
     description = aDescription + "selecting 'ab' with pressing Shift+ArrowRight";
     notifications = [];
-    synthesizeKey("KEY_ArrowRight", { code: "ArrowRight", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowRight", {shiftKey: true}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 0, text: "ab" });
@@ -7444,7 +7444,7 @@ function* runIMEContentObserverTest()
     // "[]c"
     description = aDescription + "deleting 'ab' with pressing Delete";
     notifications = [];
-    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    synthesizeKey("KEY_Delete", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: 2, addedLength: 0 });
@@ -7456,7 +7456,7 @@ function* runIMEContentObserverTest()
     // "[]"
     description = aDescription + "deleting following 'c' with pressing Delete";
     notifications = [];
-    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    synthesizeKey("KEY_Delete", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: 1, addedLength: 0 });
@@ -7465,15 +7465,15 @@ function* runIMEContentObserverTest()
     dumpUnexpectedNotifications(description, 2);
 
     // "abc[]"
-    synthesizeKey("a", { code: "KeyA" }, win, callback);
-    synthesizeKey("b", { code: "KeyB" }, win, callback);
-    synthesizeKey("c", { code: "KeyC" }, win, callback);
+    synthesizeKey("a", {}, win, callback);
+    synthesizeKey("b", {}, win, callback);
+    synthesizeKey("c", {}, win, callback);
     yield flushNotifications();
 
     // "ab[]"
     description = aDescription + "deleting 'c' with pressing Backspace";
     notifications = [];
-    synthesizeKey("KEY_Backspace", { code: "Backspace" }, win, callback);
+    synthesizeKey("KEY_Backspace", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 2, removedLength: 1, addedLength: 0 });
@@ -7483,14 +7483,14 @@ function* runIMEContentObserverTest()
     dumpUnexpectedNotifications(description, 3);
 
     // "[ab]"
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     yield flushNotifications();
 
     // "[]"
     description = aDescription + "deleting 'ab' with pressing Backspace";
     notifications = [];
-    synthesizeKey("KEY_Backspace", { code: "Backspace" }, win, callback);
+    synthesizeKey("KEY_Backspace", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: 2, addedLength: 0 });
@@ -7500,22 +7500,22 @@ function* runIMEContentObserverTest()
     dumpUnexpectedNotifications(description, 3);
 
     // "abcd[]"
-    synthesizeKey("a", { code: "KeyA" }, win, callback);
-    synthesizeKey("b", { code: "KeyB" }, win, callback);
-    synthesizeKey("c", { code: "KeyC" }, win, callback);
-    synthesizeKey("d", { code: "KeyD" }, win, callback);
+    synthesizeKey("a", {}, win, callback);
+    synthesizeKey("b", {}, win, callback);
+    synthesizeKey("c", {}, win, callback);
+    synthesizeKey("d", {}, win, callback);
     yield flushNotifications();
 
     // "a[bc]d"
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", }, win, callback);
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {}, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     yield flushNotifications();
 
     // "a[]d"
     description = aDescription + "deleting 'bc' with pressing Backspace";
     notifications = [];
-    synthesizeKey("KEY_Backspace", { code: "Backspace" }, win, callback);
+    synthesizeKey("KEY_Backspace", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 1, removedLength: 2, addedLength: 0 });
@@ -7525,16 +7525,16 @@ function* runIMEContentObserverTest()
     dumpUnexpectedNotifications(description, 3);
 
     // "a[bc]d"
-    synthesizeKey("b", { code: "KeyB" }, win, callback);
-    synthesizeKey("c", { code: "KeyC" }, win, callback);
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("b", {}, win, callback);
+    synthesizeKey("c", {}, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     yield flushNotifications();
 
     // "aB[]d"
     description = aDescription + "replacing 'bc' with 'B' with pressing Shift+B";
     notifications = [];
-    synthesizeKey("B", { code: "KeyB", shiftKey: true }, win, callback);
+    synthesizeKey("B", {shiftKey: true}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 1, removedLength: 2, addedLength: 1 });
@@ -7550,7 +7550,7 @@ function* runIMEContentObserverTest()
     // "aB\n[]d"
     description = aDescription + "inserting a line break after 'B' with pressing Enter";
     notifications = [];
-    synthesizeKey("KEY_Enter", { code: "Enter" }, win, callback);
+    synthesizeKey("KEY_Enter", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 2, removedLength: 0, addedLength: kLFLen });
@@ -7562,7 +7562,7 @@ function* runIMEContentObserverTest()
     // "aB[]d"
     description = aDescription + "removing a line break after 'B' with pressing Backspace";
     notifications = [];
-    synthesizeKey("KEY_Backspace", { code: "Backspace" }, win, callback);
+    synthesizeKey("KEY_Backspace", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 2, removedLength: kLFLen, addedLength: 0 });
@@ -7572,13 +7572,13 @@ function* runIMEContentObserverTest()
     dumpUnexpectedNotifications(description, 3);
 
     // "a[B]d"
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     yield flushNotifications();
 
     // "a\n[]d"
     description = aDescription + "replacing 'B' with a line break with pressing Enter";
     notifications = [];
-    synthesizeKey("KEY_Enter", { code: "Enter" }, win, callback);
+    synthesizeKey("KEY_Enter", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 1, removedLength: 1, addedLength: kLFLen });
@@ -7590,7 +7590,7 @@ function* runIMEContentObserverTest()
     // "a[\n]d"
     description = aDescription + "selecting '\n' with pressing Shift+ArrowLeft";
     notifications = [];
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 1, text: kLF, reversed: true });
@@ -7600,7 +7600,7 @@ function* runIMEContentObserverTest()
     // "a[]d"
     description = aDescription + "removing selected '\n' with pressing Delete";
     notifications = [];
-    synthesizeKey("KEY_Delete", { code: "Delete", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_Delete", {shiftKey: true}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 1, removedLength: kLFLen, addedLength: 0 });
@@ -7673,7 +7673,7 @@ function* runIMEContentObserverTest()
     // "a[]"
     var description = aDescription + "typing 'a'";
     notifications = [];
-    synthesizeKey("a", { code: "KeyA" }, win, callback);
+    synthesizeKey("a", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 0, addedLength: 1 });
@@ -7684,7 +7684,7 @@ function* runIMEContentObserverTest()
     // "ab[]"
     description = aDescription + "typing 'b'";
     notifications = [];
-    synthesizeKey("b", { code: "KeyB" }, win, callback);
+    synthesizeKey("b", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, removedLength: 0, addedLength: 1 });
@@ -7695,7 +7695,7 @@ function* runIMEContentObserverTest()
     // "abc[]"
     description = aDescription + "typing 'c'";
     notifications = [];
-    synthesizeKey("c", { code: "KeyC" }, win, callback);
+    synthesizeKey("c", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 2 + offsetAtContainer, removedLength: 0, addedLength: 1 });
@@ -7706,7 +7706,7 @@ function* runIMEContentObserverTest()
     // "ab[c]"
     description = aDescription + "selecting 'c' with pressing Shift+ArrowLeft";
     notifications = [];
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 2 + offsetAtContainer, text: "c", reversed: true });
@@ -7715,7 +7715,7 @@ function* runIMEContentObserverTest()
     // "a[bc]"
     description = aDescription + "selecting 'bc' with pressing Shift+ArrowLeft";
     notifications = [];
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, text: "bc", reversed: true });
@@ -7724,7 +7724,7 @@ function* runIMEContentObserverTest()
     // "[abc]"
     description = aDescription + "selecting 'bc' with pressing Shift+ArrowLeft";
     notifications = [];
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, text: "abc", reversed: true });
@@ -7733,7 +7733,7 @@ function* runIMEContentObserverTest()
     // "[]abc"
     description = aDescription + "collapsing selection to the left-most with pressing ArrowLeft";
     notifications = [];
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft" }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, text: "" });
@@ -7742,7 +7742,7 @@ function* runIMEContentObserverTest()
     // "[a]bc"
     description = aDescription + "selecting 'a' with pressing Shift+ArrowRight";
     notifications = [];
-    synthesizeKey("KEY_ArrowRight", { code: "ArrowRight", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowRight", {shiftKey: true}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, text: "a" });
@@ -7751,7 +7751,7 @@ function* runIMEContentObserverTest()
     // "[ab]c"
     description = aDescription + "selecting 'ab' with pressing Shift+ArrowRight";
     notifications = [];
-    synthesizeKey("KEY_ArrowRight", { code: "ArrowRight", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowRight", {shiftKey: true}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, text: "ab" });
@@ -7760,7 +7760,7 @@ function* runIMEContentObserverTest()
     // "[]c"
     description = aDescription + "deleting 'ab' with pressing Delete";
     notifications = [];
-    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    synthesizeKey("KEY_Delete", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 2, addedLength: 0 });
@@ -7771,7 +7771,7 @@ function* runIMEContentObserverTest()
     // "[]"
     description = aDescription + "deleting following 'c' with pressing Delete";
     notifications = [];
-    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    synthesizeKey("KEY_Delete", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 1, addedLength: kLFLen });
@@ -7779,15 +7779,15 @@ function* runIMEContentObserverTest()
     dumpUnexpectedNotifications(description, 2);
 
     // "abc[]"
-    synthesizeKey("a", { code: "KeyA" }, win, callback);
-    synthesizeKey("b", { code: "KeyB" }, win, callback);
-    synthesizeKey("c", { code: "KeyC" }, win, callback);
+    synthesizeKey("a", {}, win, callback);
+    synthesizeKey("b", {}, win, callback);
+    synthesizeKey("c", {}, win, callback);
     yield flushNotifications();
 
     // "ab[]"
     description = aDescription + "deleting 'c' with pressing Backspace";
     notifications = [];
-    synthesizeKey("KEY_Backspace", { code: "Backspace" }, win, callback);
+    synthesizeKey("KEY_Backspace", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 2 + offsetAtContainer, removedLength: 1, addedLength: 0 });
@@ -7796,14 +7796,14 @@ function* runIMEContentObserverTest()
     dumpUnexpectedNotifications(description, 3);
 
     // "[ab]"
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     yield flushNotifications();
 
     // "[]"
     description = aDescription + "deleting 'ab' with pressing Backspace";
     notifications = [];
-    synthesizeKey("KEY_Backspace", { code: "Backspace" }, win, callback);
+    synthesizeKey("KEY_Backspace", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 2, addedLength: 0 });
@@ -7812,22 +7812,22 @@ function* runIMEContentObserverTest()
     dumpUnexpectedNotifications(description, 3);
 
     // "abcd[]"
-    synthesizeKey("a", { code: "KeyA" }, win, callback);
-    synthesizeKey("b", { code: "KeyB" }, win, callback);
-    synthesizeKey("c", { code: "KeyC" }, win, callback);
-    synthesizeKey("d", { code: "KeyD" }, win, callback);
+    synthesizeKey("a", {}, win, callback);
+    synthesizeKey("b", {}, win, callback);
+    synthesizeKey("c", {}, win, callback);
+    synthesizeKey("d", {}, win, callback);
     yield flushNotifications();
 
     // "a[bc]d"
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", }, win, callback);
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {}, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     yield flushNotifications();
 
     // "a[]d"
     description = aDescription + "deleting 'bc' with pressing Backspace";
     notifications = [];
-    synthesizeKey("KEY_Backspace", { code: "Backspace" }, win, callback);
+    synthesizeKey("KEY_Backspace", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, removedLength: 2, addedLength: 0 });
@@ -7836,16 +7836,16 @@ function* runIMEContentObserverTest()
     dumpUnexpectedNotifications(description, 3);
 
     // "a[bc]d"
-    synthesizeKey("b", { code: "KeyB" }, win, callback);
-    synthesizeKey("c", { code: "KeyC" }, win, callback);
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("b", {}, win, callback);
+    synthesizeKey("c", {}, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     yield flushNotifications();
 
     // "aB[]d"
     description = aDescription + "replacing 'bc' with 'B' with pressing Shift+B";
     notifications = [];
-    synthesizeKey("B", { code: "KeyB", shiftKey: true }, win, callback);
+    synthesizeKey("B", {shiftKey: true}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkTextChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, removedLength: 2, addedLength: 1 });
@@ -7856,7 +7856,7 @@ function* runIMEContentObserverTest()
     // "aB<br>[]d" or "<block>ab</block><block>[]d</block>"
     description = aDescription + "inserting a line break after 'B' with pressing Enter";
     notifications = [];
-    synthesizeKey("KEY_Enter", { code: "Enter" }, win, callback);
+    synthesizeKey("KEY_Enter", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     if (isDefaultParagraphSeparatorBlock) {
@@ -7873,7 +7873,7 @@ function* runIMEContentObserverTest()
     // "aB[]d"
     description = aDescription + "removing a line break after 'B' with pressing Backspace";
     notifications = [];
-    synthesizeKey("KEY_Backspace", { code: "Backspace" }, win, callback);
+    synthesizeKey("KEY_Backspace", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     if (isDefaultParagraphSeparatorBlock) {
@@ -7890,13 +7890,13 @@ function* runIMEContentObserverTest()
     }
 
     // "a[B]d"
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     yield flushNotifications();
 
     // "a<br>[]d" or "<block>a</block><block>[]d</block>"
     description = aDescription + "replacing 'B' with a line break with pressing Enter";
     notifications = [];
-    synthesizeKey("KEY_Enter", { code: "Enter" }, win, callback);
+    synthesizeKey("KEY_Enter", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     if (isDefaultParagraphSeparatorBlock) {
@@ -7912,7 +7912,7 @@ function* runIMEContentObserverTest()
     // "a[<br>]d" or "<block>a[</block><block>]d</block>"
     description = aDescription + "selecting '\\n' with pressing Shift+ArrowLeft";
     notifications = [];
-    synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true }, win, callback);
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     checkSelectionChangeNotification(notifications[0], description, { offset: 1 + offsetAtContainer, text: kLF, reversed: true });
@@ -7921,7 +7921,7 @@ function* runIMEContentObserverTest()
     // "a[]d"
     description = aDescription + "removing selected '\\n' with pressing Delete";
     notifications = [];
-    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    synthesizeKey("KEY_Delete", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     if (isDefaultParagraphSeparatorBlock) {
@@ -7955,7 +7955,7 @@ function* runIMEContentObserverTest()
     yield flushNotifications();
     description = aDescription + "deleting child nodes with pressing Delete key";
     notifications = [];
-    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    synthesizeKey("KEY_Delete", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>15</div>", description + " should remove '<div>2<div>3</div>4</div>'");
@@ -7970,7 +7970,7 @@ function* runIMEContentObserverTest()
     yield flushNotifications();
     description = aDescription + "deleting child nodes (partially #1) with pressing Delete key";
     notifications = [];
-    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    synthesizeKey("KEY_Delete", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>145</div>", description + " should remove '<div>2<div>3</div></div>'");
@@ -7986,7 +7986,7 @@ function* runIMEContentObserverTest()
     yield flushNotifications();
     description = aDescription + "deleting child nodes (partially #2) with pressing Delete key";
     notifications = [];
-    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    synthesizeKey("KEY_Delete", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>13<div>4</div>5</div>", description + " should remove '<div>2</div>'");
@@ -8002,7 +8002,7 @@ function* runIMEContentObserverTest()
     yield flushNotifications();
     description = aDescription + "deleting child nodes (partially #3) with pressing Delete key";
     notifications = [];
-    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    synthesizeKey("KEY_Delete", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>1<div>2<div>35</div></div></div>", description + " should remove '4'");
@@ -8028,7 +8028,7 @@ function* runIMEContentObserverTest()
     yield flushNotifications();
     description = aDescription + "deleting child nodes (between same level descendants) with pressing Delete key";
     notifications = [];
-    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    synthesizeKey("KEY_Delete", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>1<div>2<div>37</div></div><div>8</div>9</div>", description + " should remove '456<div>7'");
@@ -8044,7 +8044,7 @@ function* runIMEContentObserverTest()
     yield flushNotifications();
     description = aDescription + "deleting child nodes (between different level descendants #1) with pressing Delete key";
     notifications = [];
-    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    synthesizeKey("KEY_Delete", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>1<div>27</div><div>8</div>9</div>", description + " should remove '<div>2<div>3</div>4</div>5<div>6<div>7</div>'");
@@ -8060,7 +8060,7 @@ function* runIMEContentObserverTest()
     yield flushNotifications();
     description = aDescription + "deleting child nodes (between different level descendants #2) with pressing Delete key";
     notifications = [];
-    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    synthesizeKey("KEY_Delete", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>1<div>29</div></div>", description + " should remove '<div>3</div>4</div>5<div>6<div>7</div>8</div>'");
@@ -8076,7 +8076,7 @@ function* runIMEContentObserverTest()
     yield flushNotifications();
     description = aDescription + "deleting child nodes (between different level descendants #3) with pressing Delete key";
     notifications = [];
-    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    synthesizeKey("KEY_Delete", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>1<div>2<div>36<div>7</div>8</div></div>9</div>", description + " should remove '<div>36<div>7</div>8</div>'");
@@ -8092,7 +8092,7 @@ function* runIMEContentObserverTest()
     yield flushNotifications();
     description = aDescription + "deleting child nodes (between different level descendants #4) with pressing Delete key";
     notifications = [];
-    synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
+    synthesizeKey("KEY_Delete", {}, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
     is(aElement.innerHTML, "<div>1<div>2<div>39</div></div></div>", description + " should remove '</div>4</div>5<div>6<div>7</div>8</div>'");

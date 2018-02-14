@@ -8,7 +8,7 @@ use darling::FromDeriveInput;
 #[derive(Debug,FromDeriveInput)]
 #[darling(attributes(from_variants), supports(enum_any))]
 pub struct Container {
-    body: ast::Body<Variant, ()>,
+    data: ast::Data<Variant, ()>,
 }
 
 #[derive(Default, Debug, FromVariant)]
@@ -20,7 +20,7 @@ pub struct Variant {
 
 #[test]
 fn expansion() {
-    let di = syn::parse_derive_input(r#"
+    let di = syn::parse_str(r#"
         enum Hello {
             World(bool),
             String(String),
@@ -32,7 +32,7 @@ fn expansion() {
 
 #[test]
 fn unsupported_shape() {
-    let di = syn::parse_derive_input(r#"
+    let di = syn::parse_str(r#"
         enum Hello {
             Foo(u16),
             World {

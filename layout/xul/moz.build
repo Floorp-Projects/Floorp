@@ -17,10 +17,7 @@ if CONFIG['ENABLE_TESTS']:
 
 XPIDL_SOURCES += [
     'nsIBoxObject.idl',
-    'nsIContainerBoxObject.idl',
     'nsIListBoxObject.idl',
-    'nsIMenuBoxObject.idl',
-    'nsIScrollBoxObject.idl',
     'nsISliderListener.idl',
 ]
 

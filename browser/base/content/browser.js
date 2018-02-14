@@ -30,6 +30,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
   LanguagePrompt: "resource://gre/modules/LanguagePrompt.jsm",
+  LightweightThemeConsumer: "resource://gre/modules/LightweightThemeConsumer.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   Log: "resource://gre/modules/Log.jsm",
   LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
@@ -1313,6 +1314,7 @@ var gBrowserInit = {
     }
 
     // Misc. inits.
+    new LightweightThemeConsumer(document);
     TabletModeUpdater.init();
     CombinedStopReload.ensureInitialized();
     gPrivateBrowsingUI.init();

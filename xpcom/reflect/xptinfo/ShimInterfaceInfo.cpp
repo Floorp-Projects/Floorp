@@ -7,7 +7,6 @@
 
 #include "ShimInterfaceInfo.h"
 
-#include "nsIContainerBoxObject.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMClientRect.h"
@@ -59,8 +58,6 @@
 #include "nsIDOMXULElement.h"
 #include "nsIFrameLoader.h"
 #include "nsIListBoxObject.h"
-#include "nsIMenuBoxObject.h"
-#include "nsIScrollBoxObject.h"
 #include "nsISelection.h"
 #include "nsITreeBoxObject.h"
 #include "nsIWebBrowserPersistable.h"
@@ -72,7 +69,6 @@
 #include "mozilla/dom/DOMRectListBinding.h"
 #include "mozilla/dom/ClipboardEventBinding.h"
 #include "mozilla/dom/CommentBinding.h"
-#include "mozilla/dom/ContainerBoxObjectBinding.h"
 #include "mozilla/dom/CSSPrimitiveValueBinding.h"
 #include "mozilla/dom/CSSStyleDeclarationBinding.h"
 #include "mozilla/dom/CSSStyleSheetBinding.h"
@@ -110,7 +106,6 @@
 #include "mozilla/dom/ListBoxObjectBinding.h"
 #include "mozilla/dom/MediaListBinding.h"
 #include "mozilla/dom/MessageEventBinding.h"
-#include "mozilla/dom/MenuBoxObjectBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/MouseScrollEventBinding.h"
 #include "mozilla/dom/NodeListBinding.h"
@@ -123,7 +118,6 @@
 #include "mozilla/dom/RangeBinding.h"
 #include "mozilla/dom/RectBinding.h"
 #include "mozilla/dom/ScreenBinding.h"
-#include "mozilla/dom/ScrollBoxObjectBinding.h"
 #include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/dom/ScrollAreaEventBinding.h"
 #include "mozilla/dom/StorageEventBinding.h"
@@ -205,7 +199,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMClientRectList, DOMRectList),
   DEFINE_SHIM(ClipboardEvent),
   DEFINE_SHIM(Comment),
-  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIContainerBoxObject, ContainerBoxObject),
   DEFINE_SHIM(CustomEvent),
 #ifdef MOZ_WEBRTC
   DEFINE_SHIM(DataChannel),
@@ -231,7 +224,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(HTMLInputElement),
   DEFINE_SHIM(HTMLMediaElement),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIListBoxObject, ListBoxObject),
-  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIMenuBoxObject, MenuBoxObject),
   DEFINE_SHIM(MouseEvent),
   DEFINE_SHIM(MouseScrollEvent),
   DEFINE_SHIM(NodeList),
@@ -244,7 +236,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(Range),
   DEFINE_SHIM(Screen),
   DEFINE_SHIM(ScrollAreaEvent),
-  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIScrollBoxObject, ScrollBoxObject),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMSerializer, XMLSerializer),
   DEFINE_SHIM(Text),
   DEFINE_SHIM(TimeRanges),

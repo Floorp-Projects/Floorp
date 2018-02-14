@@ -383,6 +383,7 @@ def grant_runtime_permissions(build_obj):
             _log_info("Granting important runtime permissions to %s" % app)
             dm.shellCheckOutput(['pm', 'grant', app, 'android.permission.WRITE_EXTERNAL_STORAGE'])
             dm.shellCheckOutput(['pm', 'grant', app, 'android.permission.READ_EXTERNAL_STORAGE'])
+            dm.shellCheckOutput(['pm', 'grant', app, 'android.permission.ACCESS_COARSE_LOCATION'])
             dm.shellCheckOutput(['pm', 'grant', app, 'android.permission.ACCESS_FINE_LOCATION'])
             dm.shellCheckOutput(['pm', 'grant', app, 'android.permission.CAMERA'])
     except DMError:

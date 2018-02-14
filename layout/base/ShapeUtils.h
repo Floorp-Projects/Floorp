@@ -8,6 +8,7 @@
 #define mozilla_ShapeUtils_h
 
 #include "nsCoord.h"
+#include "nsSize.h"
 #include "nsStyleConsts.h"
 
 struct nsPoint;

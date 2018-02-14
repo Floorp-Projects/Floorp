@@ -2,7 +2,7 @@ use syn;
 
 use Result;
 use codegen;
-use options::{Core, ParseAttribute, ParseBody};
+use options::{Core, ParseAttribute, ParseData};
 
 pub struct FmiOptions {
     base: Core
@@ -12,17 +12,17 @@ impl FmiOptions {
     pub fn new(di: &syn::DeriveInput) -> Result<Self> {
         (FmiOptions {
             base: Core::start(di),
-        }).parse_attributes(&di.attrs)?.parse_body(&di.body)
+        }).parse_attributes(&di.attrs)?.parse_body(&di.data)
     }
 }
 
 impl ParseAttribute for FmiOptions {
-    fn parse_nested(&mut self, mi: &syn::MetaItem) -> Result<()> {
+    fn parse_nested(&mut self, mi: &syn::Meta) -> Result<()> {
         self.base.parse_nested(mi)
     }
 }
 
-impl ParseBody for FmiOptions {
+impl ParseData for FmiOptions {
     fn parse_variant(&mut self, variant: &syn::Variant) -> Result<()> {
         self.base.parse_variant(variant)
     }

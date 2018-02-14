@@ -4,11 +4,12 @@
 
 import json
 import os
+import platform
 import signal
 import subprocess
+import sys
 from collections import defaultdict
 
-import which
 from mozprocess import ProcessHandlerMixin
 
 from mozlint import result
@@ -55,6 +56,13 @@ The offset is of the form (lineno_offset, num_lines) and is passed
 to the lineoffset property of `ResultContainer`.
 """
 
+# We use sys.prefix to find executables as that gets modified with
+# virtualenv's activate_this.py, whereas sys.executable doesn't.
+if platform.system() == 'Windows':
+    bindir = os.path.join(sys.prefix, 'Scripts')
+else:
+    bindir = os.path.join(sys.prefix, 'bin')
+
 results = []
 
 
@@ -90,23 +98,12 @@ class Flake8Process(ProcessHandlerMixin):
         signal.signal(signal.SIGINT, orig)
 
 
-def get_flake8_binary():
-    """
-    Returns the path of the first flake8 binary available
-    if not found returns None
-    """
-    try:
-        return which.which('flake8')
-    except which.WhichError:
-        return None
-
-
 def _run_pip(*args):
     """
     Helper function that runs pip with subprocess
     """
     try:
-        subprocess.check_output(['pip'] + list(args),
+        subprocess.check_output([os.path.join(bindir, 'pip')] + list(args),
                                 stderr=subprocess.STDOUT)
         return True
     except subprocess.CalledProcessError as e:
@@ -143,9 +140,8 @@ def setup(root):
 
 
 def lint(paths, config, **lintargs):
-    binary = get_flake8_binary()
     cmdargs = [
-        binary,
+        os.path.join(bindir, 'flake8'),
         '--format', '{"path":"%(path)s","lineno":%(row)s,'
                     '"column":%(col)s,"rule":"%(code)s","message":"%(text)s"}',
     ]

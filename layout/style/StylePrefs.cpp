@@ -21,6 +21,7 @@ bool StylePrefs::sUnprefixedFullscreenApiEnabled;
 bool StylePrefs::sVisitedLinksEnabled;
 bool StylePrefs::sMozDocumentEnabledInContent;
 bool StylePrefs::sGridTemplateSubgridValueEnabled;
+bool StylePrefs::sFontVariationsEnabled;
 bool StylePrefs::sEmulateMozBoxWithFlex;
 
 /* static */ void
@@ -48,6 +49,8 @@ StylePrefs::Init()
                                "layout.css.moz-document.content.enabled");
   Preferences::AddBoolVarCache(&sGridTemplateSubgridValueEnabled,
                                "layout.css.grid-template-subgrid-value.enabled");
+  Preferences::AddBoolVarCache(&sFontVariationsEnabled,
+                               "layout.css.font-variations.enabled");
 
   // Only honor layout.css.emulate-moz-box-with-flex in prerelease builds.
   // (In release builds, sEmulateMozBoxWithFlex will be implicitly false.)
