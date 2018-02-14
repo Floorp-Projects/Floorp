@@ -244,6 +244,7 @@
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerRegistration.h"
+#include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
 #include "mozilla/dom/U2F.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
 #include "mozilla/dom/Worklet.h"
@@ -5174,14 +5175,15 @@ nsGlobalWindowInner::GetCaches(ErrorResult& aRv)
 }
 
 already_AddRefed<ServiceWorkerRegistration>
-nsPIDOMWindowInner::GetServiceWorkerRegistration(const nsAString& aScope)
+nsPIDOMWindowInner::GetServiceWorkerRegistration(const ServiceWorkerRegistrationDescriptor& aDescriptor)
 {
+  NS_ConvertUTF8toUTF16 scope(aDescriptor.Scope());
   RefPtr<ServiceWorkerRegistration> registration;
-  if (!mServiceWorkerRegistrationTable.Get(aScope,
+  if (!mServiceWorkerRegistrationTable.Get(scope,
                                            getter_AddRefs(registration))) {
     registration =
-      ServiceWorkerRegistration::CreateForMainThread(this, aScope);
-    mServiceWorkerRegistrationTable.Put(aScope, registration);
+      ServiceWorkerRegistration::CreateForMainThread(this, aDescriptor);
+    mServiceWorkerRegistrationTable.Put(scope, registration);
   }
   return registration.forget();
 }

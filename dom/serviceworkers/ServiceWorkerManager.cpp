@@ -465,7 +465,7 @@ class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public Service
     RefPtr<ServiceWorkerRegistrationInfo> reg = registerJob->GetRegistration();
 
     RefPtr<ServiceWorkerRegistration> swr =
-      window->GetServiceWorkerRegistration(NS_ConvertUTF8toUTF16(reg->Scope()));
+      window->GetServiceWorkerRegistration(reg->Descriptor());
     promise->MaybeResolve(swr);
   }
 
@@ -1023,7 +1023,7 @@ public:
       }
 
       RefPtr<ServiceWorkerRegistration> swr =
-        mWindow->GetServiceWorkerRegistration(scope);
+        mWindow->GetServiceWorkerRegistration(info->Descriptor());
 
       array.AppendElement(swr);
     }
@@ -1146,9 +1146,8 @@ public:
       return NS_OK;
     }
 
-    NS_ConvertUTF8toUTF16 scope(registration->Scope());
     RefPtr<ServiceWorkerRegistration> swr =
-      mWindow->GetServiceWorkerRegistration(scope);
+      mWindow->GetServiceWorkerRegistration(registration->Descriptor());
     mPromise->MaybeResolve(swr);
 
     return NS_OK;
@@ -1463,9 +1462,8 @@ ServiceWorkerManager::CheckReadyPromise(nsPIDOMWindowInner* aWindow,
     GetServiceWorkerRegistrationInfo(principal, aURI);
 
   if (registration && registration->GetActive()) {
-    NS_ConvertUTF8toUTF16 scope(registration->Scope());
     RefPtr<ServiceWorkerRegistration> swr =
-      aWindow->GetServiceWorkerRegistration(scope);
+      aWindow->GetServiceWorkerRegistration(registration->Descriptor());
     aPromise->MaybeResolve(swr);
     return true;
   }

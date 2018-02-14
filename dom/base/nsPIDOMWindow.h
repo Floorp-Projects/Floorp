@@ -56,6 +56,7 @@ class Performance;
 class ServiceWorker;
 class ServiceWorkerDescriptor;
 class ServiceWorkerRegistration;
+class ServiceWorkerRegistrationDescriptor;
 class Timeout;
 class TimeoutManager;
 class CustomElementRegistry;
@@ -187,7 +188,7 @@ public:
   nsresult SetAudioCapture(bool aCapture);
 
   already_AddRefed<mozilla::dom::ServiceWorkerRegistration>
-    GetServiceWorkerRegistration(const nsAString& aScope);
+    GetServiceWorkerRegistration(const mozilla::dom::ServiceWorkerRegistrationDescriptor& aDescriptor);
   void InvalidateServiceWorkerRegistration(const nsAString& aScope);
 
   mozilla::dom::Performance* GetPerformance();

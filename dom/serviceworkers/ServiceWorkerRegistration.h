@@ -24,6 +24,7 @@ namespace dom {
 
 class Promise;
 class PushManager;
+class ServiceWorkerRegistrationDescriptor;
 class WorkerListener;
 
 // Used by ServiceWorkerManager to notify ServiceWorkerRegistrations of
@@ -58,7 +59,7 @@ public:
 
   static already_AddRefed<ServiceWorkerRegistration>
   CreateForMainThread(nsPIDOMWindowInner* aWindow,
-                      const nsAString& aScope);
+                      const ServiceWorkerRegistrationDescriptor& aDescriptor);
 
   static already_AddRefed<ServiceWorkerRegistration>
   CreateForWorker(WorkerPrivate* aWorkerPrivate,
