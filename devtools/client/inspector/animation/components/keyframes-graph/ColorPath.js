@@ -67,6 +67,48 @@ class ColorPath extends ComputedStylePath {
   /**
    * Overide parent's method.
    */
+  renderEasingHint() {
+    const {
+      easingHintStrokeWidth,
+      graphHeight,
+      totalDuration,
+      values,
+    } = this.props;
+
+    const hints = [];
+
+    for (let i = 0; i < values.length - 1; i++) {
+      const startKeyframe = values[i];
+      const endKeyframe = values[i + 1];
+      const startTime = startKeyframe.offset * totalDuration;
+      const endTime = endKeyframe.offset * totalDuration;
+
+      const g = dom.g(
+        {
+          className: "hint"
+        },
+        dom.title({}, startKeyframe.easing),
+        dom.rect(
+          {
+            x: startTime,
+            y: -graphHeight,
+            height: graphHeight,
+            width: endTime - startTime,
+            style: {
+              "stroke-width": easingHintStrokeWidth,
+            },
+          }
+        )
+      );
+      hints.push(g);
+    }
+
+    return hints;
+  }
+
+  /**
+   * Overide parent's method.
+   */
   renderPathSegments(segments) {
     for (const segment of segments) {
       segment.y = 1;

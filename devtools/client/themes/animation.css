@@ -360,7 +360,7 @@
 /* Keyframes Graph */
 .keyframes-graph {
   height: 100%;
-  padding-top: 5px;
+  padding-top: 3px;
   width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
 }
 
@@ -388,6 +388,27 @@
 
 .keyframes-graph-path .color-path path {
   stroke: none;
+}
+
+.keyframes-graph .keyframes-graph-path .hint path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-opacity: 0;
+}
+
+.keyframes-graph-path .hint path:hover {
+  stroke-opacity: 1;
+}
+
+.keyframes-graph-path .hint rect {
+  fill-opacity: 0.1;
+  stroke: #00b0bd;
+  stroke-opacity: 0;
+  vector-effect: non-scaling-stroke;
+}
+
+.keyframes-graph-path .hint rect:hover {
+  stroke-opacity: 1;
 }
 
 /* No Animation Panel */
