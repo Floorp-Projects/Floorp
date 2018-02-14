@@ -22,6 +22,13 @@ extensions.registerModules({
       ["devtools", "panels"],
     ],
   },
+  devtools_network: {
+    url: "chrome://browser/content/ext-c-devtools-network.js",
+    scopes: ["devtools_child"],
+    paths: [
+      ["devtools", "network"],
+    ],
+  },
   // Because of permissions, the module name must differ from both namespaces.
   menusInternal: {
     url: "chrome://browser/content/ext-c-menus.js",
