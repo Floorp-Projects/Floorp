@@ -21547,8 +21547,8 @@ function setSymbols(sourceId) {
 
     const symbols = await (0, _parser.getSymbols)(source);
     dispatch({ type: "SET_SYMBOLS", source, symbols });
-    dispatch(setEmptyLines(sourceId));
-    dispatch(setSourceMetaData(sourceId));
+    dispatch(setEmptyLines(source.id));
+    dispatch(setSourceMetaData(source.id));
   };
 }
 
@@ -21584,10 +21584,7 @@ function setOutOfScopeLocations() {
 
     const source = (0, _selectors.getSource)(getState(), location.sourceId);
 
-    let locations = null;
-    if (location.line && source && (0, _selectors.isPaused)(getState())) {
-      locations = await (0, _parser.findOutOfScopeLocations)(source.toJS(), location);
-    }
+    const locations = !location.line || !source ? null : await (0, _parser.findOutOfScopeLocations)(source.toJS(), location);
 
     dispatch({
       type: "OUT_OF_SCOPE_LOCATIONS",
@@ -24439,6 +24436,8 @@ var _devtoolsSourceMap = __webpack_require__(1360);
 
 var _promise = __webpack_require__(1653);
 
+var _ast = __webpack_require__(1399);
+
 var _selectors = __webpack_require__(1352);
 
 var _parser = __webpack_require__(1365);
@@ -24457,9 +24456,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
-const requests = new Map(); /* This Source Code Form is subject to the terms of the Mozilla Public
-                             * License, v. 2.0. If a copy of the MPL was not distributed with this
-                             * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const requests = new Map();
 
 async function loadSource(source, { sourceMaps, client }) {
   const id = source.get("id");
@@ -24535,6 +24536,7 @@ function loadSourceText(source) {
 
     if (!newSource.isWasm) {
       await parser.setSource(newSource);
+      dispatch((0, _ast.setSymbols)(id));
     }
 
     // signal that the action is finished
@@ -24775,26 +24777,32 @@ function getValue(expression) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.getIndentation = getIndentation;
 exports.correctIndentation = correctIndentation;
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function getIndentation(lines) {
+function getIndentation(line) {
+  if (!line) {
+    return 0;
+  }
+  return line.match(/^\s*/)[0].length;
+}
+
+function getMaxIndentation(lines) {
   const firstLine = lines[0];
   const secondLine = lines[1];
   const lastLine = lines[lines.length - 1];
 
-  const _getIndentation = line => line && line.match(/^\s*/)[0].length;
-
-  const indentations = [_getIndentation(firstLine), _getIndentation(secondLine), _getIndentation(lastLine)];
+  const indentations = [getIndentation(firstLine), getIndentation(secondLine), getIndentation(lastLine)];
 
   return Math.max(...indentations);
 }
 
 function correctIndentation(text) {
   const lines = text.trim().split("\n");
-  const indentation = getIndentation(lines);
+  const indentation = getMaxIndentation(lines);
   const formattedLines = lines.map(_line => _line.replace(new RegExp(`^\\s{0,${indentation - 1}}`), ""));
 
   return formattedLines.join("\n");
@@ -31400,7 +31408,7 @@ async function syncClientBreakpoint(getState, client, sourceMaps, sourceId, pend
   // send update only to redux
   if (pendingBreakpoint.disabled || existingClient && isSameLocation) {
     const id = pendingBreakpoint.disabled ? "" : existingClient.id;
-    return createSyncData(id, pendingBreakpoint, scopedLocation, scopedGeneratedLocation);
+    return createSyncData(id, pendingBreakpoint, scopedLocation, scopedGeneratedLocation, previousLocation);
   }
 
   // clear server breakpoints if they exist and we have moved
@@ -34779,6 +34787,8 @@ var _devtoolsConfig = __webpack_require__(1355);
 
 var _prefs = __webpack_require__(226);
 
+var _indentation = __webpack_require__(1438);
+
 var _selectors = __webpack_require__(1352);
 
 var _redux = __webpack_require__(3);
@@ -34849,6 +34859,10 @@ __webpack_require__(1333);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 const cssVars = {
   searchbarHeight: "var(--editor-searchbar-height)",
   secondSearchbarHeight: "var(--editor-second-searchbar-height)",
@@ -34856,9 +34870,7 @@ const cssVars = {
 };
 
 // Redux actions
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 
 class Editor extends _react.PureComponent {
   constructor() {
@@ -35158,7 +35170,13 @@ class Editor extends _react.PureComponent {
     const { editor } = this.state;
 
     if (this.shouldScrollToLocation(nextProps)) {
-      const { line, column } = (0, _editor.toEditorPosition)(nextProps.selectedLocation);
+      let { line, column } = (0, _editor.toEditorPosition)(nextProps.selectedLocation);
+
+      if ((0, _editor.hasDocument)(nextProps.selectedSource.get("id"))) {
+        const doc = (0, _editor.getDocument)(nextProps.selectedSource.get("id"));
+        const lineText = doc.getLine(line);
+        column = Math.max(column, (0, _indentation.getIndentation)(lineText));
+      }
       (0, _editor.scrollToColumn)(editor.codeMirror, line, column);
     }
   }
@@ -35309,7 +35327,7 @@ const mapStateToProps = state => {
     hitCount: (0, _selectors.getHitCountForSource)(state, sourceId),
     coverageOn: (0, _selectors.getCoverageEnabled)(state),
     conditionalPanelLine: (0, _selectors.getConditionalPanelLine)(state),
-    symbols: (0, _selectors.getSymbols)(state, selectedSource)
+    symbols: (0, _selectors.getSymbols)(state, selectedSource && selectedSource.toJS())
   };
 };
 
@@ -39558,17 +39576,17 @@ var _source = __webpack_require__(1356);
 
 var _pause = __webpack_require__(1400);
 
+var _indentation = __webpack_require__(1438);
+
 var _reactRedux = __webpack_require__(1189);
 
 var _selectors = __webpack_require__(1352);
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 function isDocumentReady(selectedSource, selectedFrame) {
   return selectedFrame && (0, _source.isLoaded)(selectedSource) && (0, _editor.hasDocument)(selectedFrame.location.sourceId);
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class DebugLine extends _react.Component {
 
@@ -39594,9 +39612,12 @@ class DebugLine extends _react.Component {
     const sourceId = selectedFrame.location.sourceId;
     const doc = (0, _editor.getDocument)(sourceId);
 
-    const { line, column } = (0, _editor.toEditorPosition)(selectedFrame.location);
+    let { line, column } = (0, _editor.toEditorPosition)(selectedFrame.location);
     const { markTextClass, lineClass } = this.getTextClasses(why);
     doc.addLineClass(line, "line", lineClass);
+
+    const lineText = doc.getLine(line);
+    column = Math.max(column, (0, _indentation.getIndentation)(lineText));
 
     this.debugExpression = doc.markText({ ch: column, line }, { ch: null, line }, { className: markTextClass });
   }
@@ -43516,6 +43537,20 @@ function resume() {
   };
 }
 
+/*
+ * Checks for await or yield calls on the paused line
+ * This avoids potentially expensive parser calls when we are likely
+ * not at an async expression.
+ */
+function hasAwait(source, pauseLocation) {
+  const { line, column } = pauseLocation;
+  if (!source.text) {
+    return false;
+  }
+
+  return source.text.split("\n")[line - 1].slice(column, column + 200).match(/(yield|await)/);
+}
+
 /**
  * @memberOf actions/pause
  * @static
@@ -43531,10 +43566,12 @@ function astCommand(stepType) {
     if (stepType == "stepOver") {
       const frame = (0, _selectors.getTopFrame)(getState());
       const source = (0, _selectors.getSelectedSource)(getState()).toJS();
-      const nextLocation = await (0, _parser.getNextStep)(source, frame.location);
-      if (nextLocation) {
-        await dispatch((0, _breakpoints.addHiddenBreakpoint)(nextLocation));
-        return dispatch(command("resume"));
+      if (source && hasAwait(source, frame.location)) {
+        const nextLocation = await (0, _parser.getNextStep)(source, frame.location);
+        if (nextLocation) {
+          await dispatch((0, _breakpoints.addHiddenBreakpoint)(nextLocation));
+          return dispatch(command("resume"));
+        }
       }
     }
 
@@ -49455,17 +49492,11 @@ function selectLocation(location, tabIndex = "") {
 
     await dispatch((0, _loadSourceText.loadSourceText)(source));
     const selectedSource = (0, _selectors.getSelectedSource)(getState());
-    if (!selectedSource) {
-      return;
-    }
-
-    const sourceId = selectedSource.get("id");
-    if (_prefs.prefs.autoPrettyPrint && !(0, _selectors.getPrettySource)(getState(), sourceId) && (0, _source.shouldPrettyPrint)(selectedSource) && (0, _source.isMinified)(selectedSource)) {
-      await dispatch((0, _prettyPrint.togglePrettyPrint)(sourceId));
+    if (_prefs.prefs.autoPrettyPrint && !(0, _selectors.getPrettySource)(getState(), selectedSource.get("id")) && (0, _source.shouldPrettyPrint)(selectedSource) && (0, _source.isMinified)(selectedSource)) {
+      await dispatch((0, _prettyPrint.togglePrettyPrint)(source.get("id")));
       dispatch((0, _tabs.closeTab)(source.get("url")));
     }
 
-    dispatch((0, _ast.setSymbols)(sourceId));
     dispatch((0, _ast.setOutOfScopeLocations)());
   };
 }
