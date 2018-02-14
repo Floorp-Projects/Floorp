@@ -12,15 +12,20 @@ class AnimatedPropertyName extends PureComponent {
   static get propTypes() {
     return {
       property: PropTypes.string.isRequired,
+      state: PropTypes.oneOfType([null, PropTypes.object]).isRequired,
     };
   }
 
   render() {
-    const { property } = this.props;
+    const {
+      property,
+      state,
+    } = this.props;
 
     return dom.div(
       {
-        className: "animated-property-name",
+        className: "animated-property-name" +
+                   (state && state.runningOnCompositor ? " compositor" : ""),
       },
       dom.span(
         {},
