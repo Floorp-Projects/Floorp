@@ -1253,6 +1253,18 @@ var gBrowserInit = {
     if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
       gDragSpaceObserver.init();
     }
+
+    // Hack to ensure that the about:home favicon is loaded
+    // instantaneously, to avoid flickering and improve perceived performance.
+    this._callWithURIToLoad(uriToLoad => {
+      if (uriToLoad == "about:home") {
+        gBrowser.setIcon(gBrowser.selectedTab, "chrome://branding/content/icon32.png");
+      } else if (uriToLoad == "about:privatebrowsing") {
+        gBrowser.setIcon(gBrowser.selectedTab, "chrome://browser/skin/privatebrowsing/favicon.svg");
+      }
+    });
+
+    this._setInitialFocus();
   },
 
   onLoad() {
@@ -1351,18 +1363,6 @@ var gBrowserInit = {
         Cu.reportError(e);
       }
     }
-
-    this._setInitialFocus();
-
-    // Hack to ensure that the about:home favicon is loaded
-    // instantaneously, to avoid flickering and improve perceived performance.
-    this._callWithURIToLoad(uriToLoad => {
-      if (uriToLoad == "about:home") {
-        gBrowser.setIcon(gBrowser.selectedTab, "chrome://branding/content/icon32.png");
-      } else if (uriToLoad == "about:privatebrowsing") {
-        gBrowser.setIcon(gBrowser.selectedTab, "chrome://browser/skin/privatebrowsing/favicon.svg");
-      }
-    });
 
     // Wait until chrome is painted before executing code not critical to making the window visible
     this._boundDelayedStartup = this._delayedStartup.bind(this);
