@@ -20,6 +20,7 @@ class AnimationDetailContainer extends PureComponent {
       emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
       setDetailVisibility: PropTypes.func.isRequired,
+      simulateAnimation: PropTypes.func.isRequired,
     };
   }
 
@@ -29,6 +30,7 @@ class AnimationDetailContainer extends PureComponent {
       emitEventForTest,
       getAnimatedPropertyMap,
       setDetailVisibility,
+      simulateAnimation,
     } = this.props;
 
     return dom.div(
@@ -50,6 +52,7 @@ class AnimationDetailContainer extends PureComponent {
             animation,
             emitEventForTest,
             getAnimatedPropertyMap,
+            simulateAnimation,
           }
         )
       :
