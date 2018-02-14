@@ -115,6 +115,9 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this.frameMap = new Map();
   this.selectedFrameId = null;
 
+  // List of listeners for `devtools.network.onRequestFinished` WebExt API
+  this._requestFinishedListeners = new Set();
+
   this._toolRegistered = this._toolRegistered.bind(this);
   this._toolUnregistered = this._toolUnregistered.bind(this);
   this._onWillNavigate = this._onWillNavigate.bind(this);
@@ -2998,6 +3001,8 @@ Toolbox.prototype = {
     return viewSource.viewSource(this, sourceURL, sourceLine);
   },
 
+  // Support for WebExtensions API (`devtools.network.*`)
+
   /**
    * Returns data (HAR) collected by the Network panel.
    */
@@ -3013,5 +3018,54 @@ Toolbox.prototype = {
 
     // Use Netmonitor object to get the current HAR log.
     return netPanel.panelWin.Netmonitor.getHar();
+  },
+
+  /**
+   * Add listener for `onRequestFinished` events.
+   *
+   * @param {Object} listener
+   *        The listener to be called it's expected to be
+   *        a function that takes ({harEntry, requestId})
+   *        as first argument.
+   */
+  addRequestFinishedListener: function (listener) {
+    // Log console message informing the extension developer
+    // that the Network panel needs to be selected at least
+    // once in order to receive `onRequestFinished` events.
+    let message = "The Network panel needs to be selected at least" +
+      " once in order to receive 'onRequestFinished' events.";
+    this.target.logErrorInPage(message, "har");
+
+    // Add the listener into internal list.
+    this._requestFinishedListeners.add(listener);
+  },
+
+  removeRequestFinishedListener: function (listener) {
+    this._requestFinishedListeners.delete(listener);
+  },
+
+  getRequestFinishedListeners: function () {
+    return this._requestFinishedListeners;
+  },
+
+  /**
+   * Used to lazily fetch HTTP response content within
+   * `onRequestFinished` event listener.
+   *
+   * @param {String} requestId
+   *        Id of the request for which the response content
+   *        should be fetched.
+   */
+  fetchResponseContent: function (requestId) {
+    let netPanel = this.getPanel("netmonitor");
+
+    // The panel doesn't have to exist (it must be selected
+    // by the user at least once to be created).
+    // Return undefined content in such case.
+    if (!netPanel) {
+      return Promise.resolve({content: {}});
+    }
+
+    return netPanel.panelWin.Netmonitor.fetchResponseContent(requestId);
   }
 };
