@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef json_h
-#define json_h
+#ifndef builtin_JSON_h
+#define builtin_JSON_h
 
 #include "mozilla/Range.h"
 
@@ -40,4 +40,4 @@ ParseJSONWithReviver(JSContext* cx, const mozilla::Range<const CharT> chars,
 
 } // namespace js
 
-#endif /* json_h */
+#endif /* builtin_JSON_h */
