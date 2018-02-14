@@ -678,7 +678,7 @@ public:
                            PrefValue aValue,
                            bool aIsSticky,
                            bool aIsLocked,
-                           bool aFromFile,
+                           bool aFromInit,
                            bool* aValueChanged)
   {
     // Types must always match when setting the default value.
@@ -695,7 +695,7 @@ public:
       if (!ValueMatches(PrefValueKind::Default, aType, aValue)) {
         mDefaultValue.Replace(Type(), aType, aValue);
         mHasDefaultValue = true;
-        if (!aFromFile) {
+        if (!aFromInit) {
           mHasChangedSinceInit = true;
         }
         if (aIsSticky) {
@@ -713,7 +713,7 @@ public:
 
   nsresult SetUserValue(PrefType aType,
                         PrefValue aValue,
-                        bool aFromFile,
+                        bool aFromInit,
                         bool* aValueChanged)
   {
     // If we have a default value, types must match when setting the user
@@ -724,9 +724,9 @@ public:
 
     // Should we clear the user value, if present? Only if the new user value
     // matches the default value, and the pref isn't sticky, and we aren't
-    // force-setting it.
+    // force-setting it during initialization.
     if (ValueMatches(PrefValueKind::Default, aType, aValue) && !mIsSticky &&
-        !aFromFile) {
+        !aFromInit) {
       if (mHasUserValue) {
         ClearUserValue();
         if (!IsLocked()) {
@@ -740,7 +740,7 @@ public:
       mUserValue.Replace(Type(), aType, aValue);
       SetType(aType); // needed because we may have changed the type
       mHasUserValue = true;
-      if (!aFromFile) {
+      if (!aFromInit) {
         mHasChangedSinceInit = true;
       }
       if (!IsLocked()) {
@@ -1151,7 +1151,7 @@ pref_SetPref(const char* aPrefName,
              PrefValue aValue,
              bool aIsSticky,
              bool aIsLocked,
-             bool aFromFile)
+             bool aFromInit)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1174,10 +1174,10 @@ pref_SetPref(const char* aPrefName,
   nsresult rv;
   if (aKind == PrefValueKind::Default) {
     rv = pref->SetDefaultValue(
-      aType, aValue, aIsSticky, aIsLocked, aFromFile, &valueChanged);
+      aType, aValue, aIsSticky, aIsLocked, aFromInit, &valueChanged);
   } else {
     MOZ_ASSERT(!aIsLocked); // `locked` is disallowed in user pref files
-    rv = pref->SetUserValue(aType, aValue, aFromFile, &valueChanged);
+    rv = pref->SetUserValue(aType, aValue, aFromInit, &valueChanged);
   }
   if (NS_FAILED(rv)) {
     NS_WARNING(
@@ -1349,7 +1349,7 @@ private:
                  aValue,
                  aIsSticky,
                  aIsLocked,
-                 /* fromFile */ true);
+                 /* fromInit */ true);
   }
 
   static void HandleError(const char* aMsg)
@@ -4410,7 +4410,7 @@ Preferences::SetCString(const char* aPrefName,
                       prefValue,
                       /* isSticky */ false,
                       /* isLocked */ false,
-                      /* fromFile */ false);
+                      /* fromInit */ false);
 }
 
 /* static */ nsresult
@@ -4427,7 +4427,7 @@ Preferences::SetBool(const char* aPrefName, bool aValue, PrefValueKind aKind)
                       prefValue,
                       /* isSticky */ false,
                       /* isLocked */ false,
-                      /* fromFile */ false);
+                      /* fromInit */ false);
 }
 
 /* static */ nsresult
@@ -4444,7 +4444,7 @@ Preferences::SetInt(const char* aPrefName, int32_t aValue, PrefValueKind aKind)
                       prefValue,
                       /* isSticky */ false,
                       /* isLocked */ false,
-                      /* fromFile */ false);
+                      /* fromInit */ false);
 }
 
 /* static */ nsresult
