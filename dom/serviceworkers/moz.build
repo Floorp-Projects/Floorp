@@ -10,7 +10,6 @@ with Files("**"):
 # Public stuff.
 EXPORTS.mozilla.dom += [
     'ServiceWorker.h',
-    'ServiceWorkerCommon.h',
     'ServiceWorkerContainer.h',
     'ServiceWorkerDescriptor.h',
     'ServiceWorkerEvents.h',

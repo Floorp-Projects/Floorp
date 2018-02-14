@@ -76,10 +76,7 @@ public:
   UpdateFound() override;
 
   void
-  InvalidateWorkers(WhichServiceWorker aWhichOnes) override;
-
-  void
-  TransitionWorker(WhichServiceWorker aWhichOne) override;
+  UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor) override;
 
   void
   RegistrationRemoved() override;
@@ -128,11 +125,11 @@ public:
     return static_cast<ServiceWorkerUpdateViaCache>(updateViaCache);
   }
 
+  bool
+  MatchesDescriptor(const ServiceWorkerRegistrationDescriptor& aDescriptor) override;
+
 private:
   ~ServiceWorkerRegistrationMainThread();
-
-  already_AddRefed<ServiceWorker>
-  GetWorkerReference(WhichServiceWorker aWhichOne);
 
   void
   StartListeningForEvents();

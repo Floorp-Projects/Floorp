@@ -66,50 +66,6 @@ ServiceWorkerRegistrationMainThread::~ServiceWorkerRegistrationMainThread()
   MOZ_ASSERT(!mListeningForEvents);
 }
 
-
-already_AddRefed<ServiceWorker>
-ServiceWorkerRegistrationMainThread::GetWorkerReference(WhichServiceWorker aWhichOne)
-{
-  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
-  if (!window) {
-    return nullptr;
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsIServiceWorkerManager> swm =
-    do_GetService(SERVICEWORKERMANAGER_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsISupports> serviceWorker;
-  switch(aWhichOne) {
-    case WhichServiceWorker::INSTALLING_WORKER:
-      rv = swm->GetInstalling(window, mScope, getter_AddRefs(serviceWorker));
-      break;
-    case WhichServiceWorker::WAITING_WORKER:
-      rv = swm->GetWaiting(window, mScope, getter_AddRefs(serviceWorker));
-      break;
-    case WhichServiceWorker::ACTIVE_WORKER:
-      rv = swm->GetActive(window, mScope, getter_AddRefs(serviceWorker));
-      break;
-    default:
-      MOZ_CRASH("Invalid enum value");
-  }
-
-  NS_WARNING_ASSERTION(
-    NS_SUCCEEDED(rv) || rv == NS_ERROR_DOM_NOT_FOUND_ERR,
-    "Unexpected error getting service worker instance from "
-    "ServiceWorkerManager");
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  RefPtr<ServiceWorker> ref =
-    static_cast<ServiceWorker*>(serviceWorker.get());
-  return ref.forget();
-}
-
 // XXXnsm, maybe this can be optimized to only add when a event handler is
 // registered.
 void
@@ -143,10 +99,6 @@ already_AddRefed<ServiceWorker>
 ServiceWorkerRegistrationMainThread::GetInstalling()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mInstallingWorker) {
-    mInstallingWorker = GetWorkerReference(WhichServiceWorker::INSTALLING_WORKER);
-  }
-
   RefPtr<ServiceWorker> ret = mInstallingWorker;
   return ret.forget();
 }
@@ -155,10 +107,6 @@ already_AddRefed<ServiceWorker>
 ServiceWorkerRegistrationMainThread::GetWaiting()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mWaitingWorker) {
-    mWaitingWorker = GetWorkerReference(WhichServiceWorker::WAITING_WORKER);
-  }
-
   RefPtr<ServiceWorker> ret = mWaitingWorker;
   return ret.forget();
 }
@@ -167,10 +115,6 @@ already_AddRefed<ServiceWorker>
 ServiceWorkerRegistrationMainThread::GetActive()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mActiveWorker) {
-    mActiveWorker = GetWorkerReference(WhichServiceWorker::ACTIVE_WORKER);
-  }
-
   RefPtr<ServiceWorker> ret = mActiveWorker;
   return ret.forget();
 }
@@ -182,39 +126,36 @@ ServiceWorkerRegistrationMainThread::UpdateFound()
 }
 
 void
-ServiceWorkerRegistrationMainThread::TransitionWorker(WhichServiceWorker aWhichOne)
+ServiceWorkerRegistrationMainThread::UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // We assert the worker's previous state because the 'statechange'
-  // event is dispatched in a queued runnable.
-  if (aWhichOne == WhichServiceWorker::INSTALLING_WORKER) {
-    MOZ_ASSERT_IF(mInstallingWorker, mInstallingWorker->State() == ServiceWorkerState::Installing);
-    mWaitingWorker = mInstallingWorker.forget();
-  } else if (aWhichOne == WhichServiceWorker::WAITING_WORKER) {
-    MOZ_ASSERT_IF(mWaitingWorker, mWaitingWorker->State() == ServiceWorkerState::Installed);
-    mActiveWorker = mWaitingWorker.forget();
-  } else {
-    MOZ_ASSERT_UNREACHABLE("Invalid transition!");
-  }
-}
-
-void
-ServiceWorkerRegistrationMainThread::InvalidateWorkers(WhichServiceWorker aWhichOnes)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (aWhichOnes & WhichServiceWorker::INSTALLING_WORKER) {
+  nsCOMPtr<nsIGlobalObject> global = GetParentObject();
+  if (!global) {
     mInstallingWorker = nullptr;
-  }
-
-  if (aWhichOnes & WhichServiceWorker::WAITING_WORKER) {
     mWaitingWorker = nullptr;
+    mActiveWorker = nullptr;
+    return;
   }
 
-  if (aWhichOnes & WhichServiceWorker::ACTIVE_WORKER) {
+  Maybe<ServiceWorkerDescriptor> active = aDescriptor.GetActive();
+  if (active.isSome()) {
+    mActiveWorker = global->GetOrCreateServiceWorker(active.ref());
+  } else {
     mActiveWorker = nullptr;
   }
 
+  Maybe<ServiceWorkerDescriptor> waiting = aDescriptor.GetWaiting();
+  if (waiting.isSome()) {
+    mWaitingWorker = global->GetOrCreateServiceWorker(waiting.ref());
+  } else {
+    mWaitingWorker = nullptr;
+  }
+
+  Maybe<ServiceWorkerDescriptor> installing = aDescriptor.GetInstalling();
+  if (installing.isSome()) {
+    mInstallingWorker = global->GetOrCreateServiceWorker(installing.ref());
+  } else {
+    mInstallingWorker = nullptr;
+  }
 }
 
 void
@@ -226,6 +167,13 @@ ServiceWorkerRegistrationMainThread::RegistrationRemoved()
   if (nsCOMPtr<nsPIDOMWindowInner> window = GetOwner()) {
     window->InvalidateServiceWorkerRegistration(mScope);
   }
+}
+
+bool
+ServiceWorkerRegistrationMainThread::MatchesDescriptor(const ServiceWorkerRegistrationDescriptor& aDescriptor)
+{
+  NS_ConvertUTF16toUTF8 scope(mScope);
+  return aDescriptor.Scope() == scope;
 }
 
 namespace {
@@ -266,9 +214,19 @@ public:
   void
   UpdateSucceeded(ServiceWorkerRegistrationInfo* aRegistration) override
   {
-    if (RefPtr<Promise> promise = mPromise.Get()) {
-      promise->MaybeResolveWithUndefined();
+    RefPtr<Promise> promise = mPromise.Get();
+    nsCOMPtr<nsPIDOMWindowInner> win = mPromise.GetWindow();
+    if (!promise || !win) {
+      return;
     }
+
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      "MainThreadUpdateCallback::UpdateSucceeded",
+      [promise = Move(promise)] () {
+        promise->MaybeResolveWithUndefined();
+      });
+    MOZ_ALWAYS_SUCCEEDS(
+      win->EventTargetFor(TaskCategory::Other)->Dispatch(r.forget()));
   }
 
   void
@@ -428,9 +386,19 @@ public:
   UnregisterSucceeded(bool aState) override
   {
     MOZ_ASSERT(NS_IsMainThread());
-    if (RefPtr<Promise> promise = mPromise.Get()) {
-      promise->MaybeResolve(aState);
+    RefPtr<Promise> promise = mPromise.Get();
+    nsCOMPtr<nsPIDOMWindowInner> win = mPromise.GetWindow();
+    if (!promise || !win) {
+      return NS_OK;
     }
+
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      "UnregisterCallback::UnregisterSucceeded",
+      [promise = Move(promise), aState] () {
+        promise->MaybeResolve(aState);
+      });
+    MOZ_ALWAYS_SUCCEEDS(
+      win->EventTargetFor(TaskCategory::Other)->Dispatch(r.forget()));
     return NS_OK;
   }
 
@@ -822,17 +790,10 @@ public:
   UpdateFound() override;
 
   void
-  TransitionWorker(WhichServiceWorker aWhichOne) override
+  UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor) override
   {
     MOZ_ASSERT(NS_IsMainThread());
     // TODO: Not implemented
-  }
-
-  void
-  InvalidateWorkers(WhichServiceWorker aWhichOnes) override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    // FIXME(nsm);
   }
 
   void
@@ -845,6 +806,13 @@ public:
   GetScope(nsAString& aScope) const override
   {
     aScope = mScope;
+  }
+
+  bool
+  MatchesDescriptor(const ServiceWorkerRegistrationDescriptor& aDescriptor) override
+  {
+    // TODO
+    return false;
   }
 
   ServiceWorkerRegistrationWorkerThread*
