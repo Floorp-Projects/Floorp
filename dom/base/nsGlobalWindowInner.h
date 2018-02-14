@@ -947,11 +947,8 @@ public:
   void Restore();
   void NotifyDefaultButtonLoaded(mozilla::dom::Element& aDefaultButton,
                                  mozilla::ErrorResult& aError);
-  mozilla::dom::ChromeMessageBroadcaster*
-    GetMessageManager(mozilla::ErrorResult& aError);
-  mozilla::dom::ChromeMessageBroadcaster*
-    GetGroupMessageManager(const nsAString& aGroup,
-                           mozilla::ErrorResult& aError);
+  mozilla::dom::ChromeMessageBroadcaster* MessageManager();
+  mozilla::dom::ChromeMessageBroadcaster* GetGroupMessageManager(const nsAString& aGroup);
   void BeginWindowMove(mozilla::dom::Event& aMouseDownEvent,
                        mozilla::dom::Element* aPanel,
                        mozilla::ErrorResult& aError);

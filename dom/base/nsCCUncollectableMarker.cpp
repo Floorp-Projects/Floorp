@@ -86,21 +86,20 @@ nsCCUncollectableMarker::Init()
 }
 
 static void
-MarkChildMessageManagers(nsIMessageBroadcaster* aMM)
+MarkChildMessageManagers(ChromeMessageBroadcaster* aMM)
 {
   aMM->MarkForCC();
 
-  uint32_t tabChildCount = 0;
-  aMM->GetChildCount(&tabChildCount);
+  uint32_t tabChildCount = aMM->ChildCount();
   for (uint32_t j = 0; j < tabChildCount; ++j) {
-    nsCOMPtr<nsIMessageListenerManager> childMM;
-    aMM->GetChildAt(j, getter_AddRefs(childMM));
+    RefPtr<MessageListenerManager> childMM = aMM->GetChildAt(j);
     if (!childMM) {
       continue;
     }
 
-    nsCOMPtr<nsIMessageBroadcaster> strongNonLeafMM = do_QueryInterface(childMM);
-    nsIMessageBroadcaster* nonLeafMM = strongNonLeafMM;
+    RefPtr<ChromeMessageBroadcaster> strongNonLeafMM =
+      ChromeMessageBroadcaster::From(childMM);
+    ChromeMessageBroadcaster* nonLeafMM = strongNonLeafMM;
 
     nsCOMPtr<nsIMessageSender> strongTabMM = do_QueryInterface(childMM);
     nsIMessageSender* tabMM = strongTabMM;
@@ -150,27 +149,25 @@ MarkMessageManagers()
   if (!XRE_IsParentProcess()) {
     return;
   }
-  nsCOMPtr<nsIMessageBroadcaster> strongGlobalMM =
-    do_GetService("@mozilla.org/globalmessagemanager;1");
+  RefPtr<ChromeMessageBroadcaster> strongGlobalMM =
+    nsFrameMessageManager::GetGlobalMessageManager();
   if (!strongGlobalMM) {
     return;
   }
-  nsIMessageBroadcaster* globalMM = strongGlobalMM;
+  ChromeMessageBroadcaster* globalMM = strongGlobalMM;
   strongGlobalMM = nullptr;
   MarkChildMessageManagers(globalMM);
 
   if (nsFrameMessageManager::sParentProcessManager) {
     nsFrameMessageManager::sParentProcessManager->MarkForCC();
-    uint32_t childCount = 0;
-    nsFrameMessageManager::sParentProcessManager->GetChildCount(&childCount);
+    uint32_t childCount = nsFrameMessageManager::sParentProcessManager->ChildCount();
     for (uint32_t i = 0; i < childCount; ++i) {
-      nsCOMPtr<nsIMessageListenerManager> childMM;
-      nsFrameMessageManager::sParentProcessManager->
-        GetChildAt(i, getter_AddRefs(childMM));
+      RefPtr<MessageListenerManager> childMM =
+        nsFrameMessageManager::sParentProcessManager->GetChildAt(i);
       if (!childMM) {
         continue;
       }
-      nsIMessageListenerManager* child = childMM;
+      MessageListenerManager* child = childMM;
       childMM = nullptr;
       child->MarkForCC();
     }

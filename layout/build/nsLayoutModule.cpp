@@ -16,6 +16,7 @@
 #include "nsDataDocumentContentPolicy.h"
 #include "nsNoDataProtocolContentPolicy.h"
 #include "nsDOMCID.h"
+#include "nsFrameMessageManager.h"
 #include "nsHTMLContentSerializer.h"
 #include "nsHTMLParts.h"
 #include "nsIComponentManager.h"
@@ -318,8 +319,8 @@ nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 
 nsresult NS_NewEventListenerService(nsIEventListenerService** aResult);
-nsresult NS_NewGlobalMessageManager(nsIMessageBroadcaster** aResult);
-nsresult NS_NewParentProcessMessageManager(nsIMessageBroadcaster** aResult);
+nsresult NS_NewGlobalMessageManager(nsISupports** aResult);
+nsresult NS_NewParentProcessMessageManager(nsISupports** aResult);
 nsresult NS_NewChildProcessMessageManager(nsIMessageSender** aResult);
 
 nsresult NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
@@ -396,8 +397,8 @@ MAKE_CTOR(CreateXULDocument,              nsIDocument,                 NS_NewXUL
 #endif
 MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewContentDocumentLoaderFactory)
 MAKE_CTOR(CreateEventListenerService,     nsIEventListenerService,     NS_NewEventListenerService)
-MAKE_CTOR(CreateGlobalMessageManager,     nsIMessageBroadcaster,       NS_NewGlobalMessageManager)
-MAKE_CTOR(CreateParentMessageManager,     nsIMessageBroadcaster,       NS_NewParentProcessMessageManager)
+MAKE_CTOR(CreateGlobalMessageManager,     nsISupports,                 NS_NewGlobalMessageManager)
+MAKE_CTOR(CreateParentMessageManager,     nsISupports,                 NS_NewParentProcessMessageManager)
 MAKE_CTOR(CreateChildMessageManager,      nsIMessageSender,            NS_NewChildProcessMessageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDataDocumentContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoDataProtocolContentPolicy)

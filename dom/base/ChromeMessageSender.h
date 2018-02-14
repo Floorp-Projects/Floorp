@@ -12,11 +12,13 @@
 namespace mozilla {
 namespace dom {
 
+class ChromeMessageBroadcaster;
+
 class ChromeMessageSender final : public MessageSender
 {
 public:
   ChromeMessageSender(ipc::MessageManagerCallback* aCallback,
-                      nsFrameMessageManager* aParentManager,
+                      ChromeMessageBroadcaster* aParentManager,
                       MessageManagerFlags aFlags=MessageManagerFlags::MM_NONE);
 
   virtual JSObject* WrapObject(JSContext* aCx,

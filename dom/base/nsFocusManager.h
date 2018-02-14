@@ -24,7 +24,6 @@
 class nsIContent;
 class nsIDocShellTreeItem;
 class nsPIDOMWindowOuter;
-class nsIMessageBroadcaster;
 
 namespace mozilla {
 namespace dom {
@@ -177,12 +176,6 @@ protected:
    * focused at the widget level.
    */
   void EnsureCurrentWidgetFocused();
-
-  /**
-   * Iterate over the children of the message broadcaster and notify them
-   * of the activation change.
-   */
-  void ActivateOrDeactivateChildren(nsIMessageBroadcaster* aManager, bool aActive);
 
   /**
    * Activate or deactivate the window and send the activate/deactivate events.
