@@ -16,17 +16,18 @@ extern "C" {
 #include <stdbool.h>
 
 typedef enum {
-  MP4PARSE_CODEC_UNKNOWN = 0,
-  MP4PARSE_CODEC_AAC = 1,
-  MP4PARSE_CODEC_FLAC = 2,
-  MP4PARSE_CODEC_OPUS = 3,
-  MP4PARSE_CODEC_AVC = 4,
-  MP4PARSE_CODEC_VP9 = 5,
-  MP4PARSE_CODEC_MP3 = 6,
-  MP4PARSE_CODEC_MP4V = 7,
-  MP4PARSE_CODEC_JPEG = 8,
-  MP4PARSE_CODEC_AC3 = 9,
-  MP4PARSE_CODEC_EC3 = 10,
+  MP4PARSE_CODEC_UNKNOWN,
+  MP4PARSE_CODEC_AAC,
+  MP4PARSE_CODEC_FLAC,
+  MP4PARSE_CODEC_OPUS,
+  MP4PARSE_CODEC_AVC,
+  MP4PARSE_CODEC_VP9,
+  MP4PARSE_CODEC_MP3,
+  MP4PARSE_CODEC_MP4V,
+  MP4PARSE_CODEC_JPEG,
+  MP4PARSE_CODEC_AC3,
+  MP4PARSE_CODEC_EC3,
+  MP4PARSE_CODEC_ALAC,
 } Mp4parseCodec;
 
 typedef enum {
@@ -167,11 +168,6 @@ Mp4parseStatus mp4parse_get_track_video_info(Mp4parseParser *parser,
 Mp4parseStatus mp4parse_is_fragmented(Mp4parseParser *parser,
                                       uint32_t track_id,
                                       uint8_t *fragmented);
-
-/*
- * Enable `mp4_parser` log.
- */
-void mp4parse_log(bool enable);
 
 /*
  * Allocate an `Mp4parseParser*` to read from the supplied `Mp4parseIo`.
