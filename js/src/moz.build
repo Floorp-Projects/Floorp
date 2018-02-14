@@ -28,7 +28,7 @@ with Files('jit/**'):
     BUG_COMPONENT = component_jit
 
 # File-specific metadata
-for gcfile in ['jsgc*', 'devtools/rootAnalysis', 'devtools/gc-ubench', 'devtools/gctrace']:
+for gcfile in ['devtools/rootAnalysis', 'devtools/gc-ubench', 'devtools/gctrace']:
     with Files(gcfile):
         BUG_COMPONENT = component_gc
 
@@ -193,6 +193,7 @@ UNIFIED_SOURCES += [
     'gc/Allocator.cpp',
     'gc/AtomMarking.cpp',
     'gc/Barrier.cpp',
+    'gc/GC.cpp',
     'gc/GCTrace.cpp',
     'gc/Marking.cpp',
     'gc/Memory.cpp',
@@ -202,6 +203,8 @@ UNIFIED_SOURCES += [
     'gc/Statistics.cpp',
     'gc/Tracer.cpp',
     'gc/Verifier.cpp',
+    'gc/WeakMap.cpp',
+    'gc/WeakMapPtr.cpp',
     'gc/Zone.cpp',
     'gc/ZoneGroup.cpp',
     'irregexp/NativeRegExpMacroAssembler.cpp',
@@ -295,14 +298,12 @@ UNIFIED_SOURCES += [
     'jsdate.cpp',
     'jsexn.cpp',
     'jsfriendapi.cpp',
-    'jsgc.cpp',
     'jsiter.cpp',
     'jsnativestack.cpp',
     'jsnum.cpp',
     'jsopcode.cpp',
     'jsprf.cpp',
     'jsstr.cpp',
-    'jsweakmap.cpp',
     'perf/jsperf.cpp',
     'proxy/BaseProxyHandler.cpp',
     'proxy/CrossCompartmentWrapper.cpp',
@@ -377,7 +378,6 @@ UNIFIED_SOURCES += [
     'vm/UnboxedObject.cpp',
     'vm/Unicode.cpp',
     'vm/Value.cpp',
-    'vm/WeakMapPtr.cpp',
     'vm/Xdr.cpp',
     'wasm/AsmJS.cpp',
     'wasm/WasmBaselineCompile.cpp',

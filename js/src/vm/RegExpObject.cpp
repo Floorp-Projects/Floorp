@@ -9,7 +9,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 
-#include "jshashutil.h"
 #include "jsstr.h"
 #ifdef DEBUG
 #include "jsutil.h"
@@ -17,6 +16,7 @@
 
 #include "builtin/RegExp.h"
 #include "frontend/TokenStream.h"
+#include "gc/HashUtil.h"
 #ifdef DEBUG
 #include "irregexp/RegExpBytecode.h"
 #endif

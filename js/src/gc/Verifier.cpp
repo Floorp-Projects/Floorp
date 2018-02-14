@@ -20,8 +20,7 @@
 #include "js/HashTable.h"
 #include "vm/JSContext.h"
 
-#include "jsgcinlines.h"
-
+#include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
 #include "vm/JSContext-inl.h"
 

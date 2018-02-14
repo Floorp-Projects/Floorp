@@ -185,7 +185,7 @@
  * this bitmap is managed.
  */
 
-#include "jsgcinlines.h"
+#include "gc/GC-inl.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
@@ -210,7 +210,6 @@
 #include "jsprf.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jsweakmap.h"
 #ifdef XP_WIN
 # include "jswin.h"
 #endif
@@ -221,6 +220,7 @@
 #include "gc/GCTrace.h"
 #include "gc/Memory.h"
 #include "gc/Policy.h"
+#include "gc/WeakMap.h"
 #include "jit/BaselineJIT.h"
 #include "jit/IonCode.h"
 #include "jit/JitcodeMap.h"

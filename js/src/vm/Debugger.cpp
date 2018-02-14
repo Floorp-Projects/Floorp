@@ -12,7 +12,6 @@
 #include "mozilla/TypeTraits.h"
 
 #include "jsfriendapi.h"
-#include "jshashutil.h"
 #include "jsnum.h"
 #include "jsprf.h"
 #include "jswrapper.h"
@@ -20,6 +19,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
 #include "gc/FreeOp.h"
+#include "gc/HashUtil.h"
 #include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"
@@ -42,9 +42,9 @@
 #include "vm/WrapperObject.h"
 #include "wasm/WasmInstance.h"
 
-#include "jsgcinlines.h"
 #include "jsopcodeinlines.h"
 
+#include "gc/GC-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
