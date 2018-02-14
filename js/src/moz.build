@@ -32,7 +32,7 @@ for gcfile in ['jsgc*', 'devtools/rootAnalysis', 'devtools/gc-ubench', 'devtools
     with Files(gcfile):
         BUG_COMPONENT = component_gc
 
-for stlfile in ['jsarray.*', 'jsbool*', 'jsdate.*', 'jsnum.*', 'json.*', 'jsstr.*']:
+for stlfile in ['jsarray.*', 'jsbool*', 'jsdate.*', 'jsnum.*', 'jsstr.*']:
     with Files(stlfile):
         BUG_COMPONENT = component_stl
 
@@ -165,6 +165,7 @@ UNIFIED_SOURCES += [
     'builtin/intl/PluralRules.cpp',
     'builtin/intl/RelativeTimeFormat.cpp',
     'builtin/intl/SharedIntlData.cpp',
+    'builtin/JSON.cpp',
     'builtin/MapObject.cpp',
     'builtin/ModuleObject.cpp',
     'builtin/Object.cpp',
@@ -298,7 +299,6 @@ UNIFIED_SOURCES += [
     'jsiter.cpp',
     'jsnativestack.cpp',
     'jsnum.cpp',
-    'json.cpp',
     'jsopcode.cpp',
     'jsprf.cpp',
     'jsstr.cpp',
