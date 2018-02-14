@@ -303,7 +303,8 @@ public:
   IMPL_EVENT_HANDLER(notificationclick)
   IMPL_EVENT_HANDLER(notificationclose)
 
-  ServiceWorkerGlobalScope(WorkerPrivate* aWorkerPrivate, const nsACString& aScope);
+  ServiceWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
+                           const ServiceWorkerRegistrationDescriptor& aRegistrationDescriptor);
 
   virtual bool
   WrapGlobalObject(JSContext* aCx,

@@ -1025,7 +1025,7 @@ public:
   TransitionWorker(WhichServiceWorker aWhichOne) override
   {
     MOZ_ASSERT(NS_IsMainThread());
-    NS_WARNING("FIXME: Not implemented!");
+    // TODO: Not implemented
   }
 
   void
@@ -1367,13 +1367,15 @@ ServiceWorkerRegistration::CreateForMainThread(nsPIDOMWindowInner* aWindow,
 
 /* static */ already_AddRefed<ServiceWorkerRegistration>
 ServiceWorkerRegistration::CreateForWorker(WorkerPrivate* aWorkerPrivate,
-                                           const nsAString& aScope)
+                                           const ServiceWorkerRegistrationDescriptor& aDescriptor)
 {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
+  NS_ConvertUTF8toUTF16 scope(aDescriptor.Scope());
+
   RefPtr<ServiceWorkerRegistration> registration =
-    new ServiceWorkerRegistrationWorkerThread(aWorkerPrivate, aScope);
+    new ServiceWorkerRegistrationWorkerThread(aWorkerPrivate, scope);
 
   return registration.forget();
 }
