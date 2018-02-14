@@ -41,6 +41,7 @@ class ComputedStylePath extends PureComponent {
   static get propTypes() {
     return {
       componentWidth: PropTypes.number.isRequired,
+      easingHintStrokeWidth: PropTypes.number.isRequired,
       graphHeight: PropTypes.number.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       totalDuration: PropTypes.number.isRequired,
@@ -111,6 +112,63 @@ class ComputedStylePath extends PureComponent {
   }
 
   /**
+   * Render easing hint from given path segments.
+   *
+   * @param {Array} segments
+   *        Path segments.
+   * @return {Element}
+   *         Element which represents easing hint.
+   */
+  renderEasingHint(segments) {
+    const {
+      easingHintStrokeWidth,
+      totalDuration,
+      values,
+    } = this.props;
+
+    const hints = [];
+
+    for (let i = 0, indexOfSegments = 0; i < values.length - 1; i++) {
+      const startKeyframe = values[i];
+      const endKeyframe = values[i + 1];
+      const endTime = endKeyframe.offset * totalDuration;
+      const hintSegments = [];
+
+      for (; indexOfSegments < segments.length; indexOfSegments++) {
+        const segment = segments[indexOfSegments];
+        hintSegments.push(segment);
+
+        if (startKeyframe.offset === endKeyframe.offset) {
+          hintSegments.push(segments[++indexOfSegments]);
+          break;
+        } else if (segment.x === endTime) {
+          break;
+        }
+      }
+
+      const g = dom.g(
+        {
+          className: "hint"
+        },
+        dom.title({}, startKeyframe.easing),
+        dom.path(
+          {
+            d: `M${ hintSegments[0].x },${ hintSegments[0].y } ` +
+               toPathString(hintSegments),
+            style: {
+              "stroke-width": easingHintStrokeWidth,
+            }
+          }
+        )
+      );
+
+      hints.push(g);
+    }
+
+    return hints;
+  }
+
+  /**
    * Render graph. This method returns React dom.
    *
    * @return {Element}
@@ -126,7 +184,10 @@ class ComputedStylePath extends PureComponent {
       segments.push(...this.getPathSegments(startValue, endValue));
     }
 
-    return this.renderPathSegments(segments);
+    return [
+      this.renderPathSegments(segments),
+      this.renderEasingHint(segments)
+    ];
   }
 
   /**

@@ -23,6 +23,8 @@ const DEFAULT_MIN_PROGRESS_THRESHOLD = 0.1;
 // re-divides by DEFAULT_DURATION_RESOLUTION.
 // DEFAULT_DURATION_RESOLUTION shoud be integer and more than 2.
 const DEFAULT_DURATION_RESOLUTION = 4;
+// Stroke width for easing hint.
+const DEFAULT_EASING_HINT_STROKE_WIDTH = 5;
 
 /**
  * The helper class for creating summary graph.
@@ -260,6 +262,7 @@ function toPathString(segments) {
 
 exports.createPathSegments = createPathSegments;
 exports.DEFAULT_DURATION_RESOLUTION = DEFAULT_DURATION_RESOLUTION;
+exports.DEFAULT_EASING_HINT_STROKE_WIDTH = DEFAULT_EASING_HINT_STROKE_WIDTH;
 exports.DEFAULT_GRAPH_HEIGHT = DEFAULT_GRAPH_HEIGHT;
 exports.DEFAULT_KEYFRAMES_GRAPH_DURATION = DEFAULT_KEYFRAMES_GRAPH_DURATION;
 exports.getPreferredProgressThresholdByKeyframes =
