@@ -17,6 +17,7 @@ class AnimatedPropertyListContainer extends PureComponent {
       animation: PropTypes.object.isRequired,
       emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
+      simulateAnimation: PropTypes.func.isRequired,
     };
   }
 
@@ -25,6 +26,7 @@ class AnimatedPropertyListContainer extends PureComponent {
       animation,
       emitEventForTest,
       getAnimatedPropertyMap,
+      simulateAnimation,
     } = this.props;
 
     return dom.div(
@@ -37,6 +39,7 @@ class AnimatedPropertyListContainer extends PureComponent {
           animation,
           emitEventForTest,
           getAnimatedPropertyMap,
+          simulateAnimation,
         }
       )
     );
