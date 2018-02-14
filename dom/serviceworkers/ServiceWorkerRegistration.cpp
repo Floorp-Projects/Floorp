@@ -45,8 +45,9 @@ ServiceWorkerRegistration::CreateForMainThread(nsPIDOMWindowInner* aWindow,
 
   NS_ConvertUTF8toUTF16 scope(aDescriptor.Scope());
 
-  RefPtr<ServiceWorkerRegistration> registration =
+  RefPtr<ServiceWorkerRegistrationMainThread> registration =
     new ServiceWorkerRegistrationMainThread(aWindow, scope);
+  registration->UpdateState(aDescriptor);
 
   return registration.forget();
 }
@@ -60,7 +61,7 @@ ServiceWorkerRegistration::CreateForWorker(WorkerPrivate* aWorkerPrivate,
 
   NS_ConvertUTF8toUTF16 scope(aDescriptor.Scope());
 
-  RefPtr<ServiceWorkerRegistration> registration =
+  RefPtr<ServiceWorkerRegistrationWorkerThread> registration =
     new ServiceWorkerRegistrationWorkerThread(aWorkerPrivate, scope);
 
   return registration.forget();

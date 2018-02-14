@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_ServiceWorkerRegistrationListener_h
 #define mozilla_dom_ServiceWorkerRegistrationListener_h
 
-#include "mozilla/dom/ServiceWorkerCommon.h"
-
 namespace mozilla {
 namespace dom {
+
+class ServiceWorkerRegistrationDescriptor;
 
 // Used by ServiceWorkerManager to notify ServiceWorkerRegistrations of
 // updatefound event and invalidating ServiceWorker instances.
@@ -23,16 +23,16 @@ public:
   UpdateFound() = 0;
 
   virtual void
-  InvalidateWorkers(WhichServiceWorker aWhichOnes) = 0;
-
-  virtual void
-  TransitionWorker(WhichServiceWorker aWhichOne) = 0;
+  UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor) = 0;
 
   virtual void
   RegistrationRemoved() = 0;
 
   virtual void
   GetScope(nsAString& aScope) const = 0;
+
+  virtual bool
+  MatchesDescriptor(const ServiceWorkerRegistrationDescriptor& aDescriptor) = 0;
 };
 
 
