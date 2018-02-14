@@ -1,5 +1,5 @@
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
 
 const URI1 = NetUtil.newURI("http://test1.mozilla.org/");
 const URI2 = NetUtil.newURI("http://test2.mozilla.org/");
