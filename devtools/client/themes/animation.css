@@ -305,6 +305,16 @@
   background-color: var(--animation-even-background-color);
 }
 
+/* Animated Property Name */
+.animated-property-name {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: flex-end;
+  padding-right: 10px;
+  width: var(--sidebar-width);
+}
+
 /* No Animation Panel */
 .animation-error-message {
   overflow: auto;
