@@ -1,4 +1,4 @@
-use syn::NestedMetaItem;
+use syn::NestedMeta;
 
 use {FromMetaItem, Result};
 use util::IdentList;
@@ -25,7 +25,7 @@ impl FromMetaItem for ForwardAttrs {
         Ok(ForwardAttrs::All)
     }
 
-    fn from_list(nested: &[NestedMetaItem]) -> Result<Self> {
+    fn from_list(nested: &[NestedMeta]) -> Result<Self> {
         Ok(ForwardAttrs::Only(IdentList::from_list(nested)?))
     }
 }

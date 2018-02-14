@@ -32,7 +32,7 @@ impl Deref for Flag {
 }
 
 impl FromMetaItem for Flag {
-    fn from_meta_item(mi: &syn::MetaItem) -> Result<Self> {
+    fn from_meta_item(mi: &syn::Meta) -> Result<Self> {
         FromMetaItem::from_meta_item(mi).map(Flag)
     }
 }

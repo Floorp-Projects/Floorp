@@ -18,7 +18,7 @@ struct DemoContainer {
 
 #[test]
 fn generated() {
-    let di = syn::parse_derive_input(r#"
+    let di = syn::parse_str(r#"
         #[derive(Baz)]
         #[newtype(lorem = false)]
         pub struct Foo;
