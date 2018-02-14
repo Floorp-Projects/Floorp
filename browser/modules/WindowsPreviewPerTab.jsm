@@ -816,7 +816,6 @@ var AeroPeek = {
   /* nsINavHistoryObserver implementation */
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
-  onVisits() {},
   onTitleChanged() {},
   onFrecencyChanged() {},
   onManyFrecenciesChanged() {},

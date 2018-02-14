@@ -94,17 +94,17 @@ const getHistoryObserver = () => {
       onDeleteURI(uri, guid, reason) {
         this.emit("visitRemoved", {allHistory: false, urls: [uri.spec]});
       }
-      onVisits(visits) {
-        for (let visit of visits) {
-          let data = {
-            id: visit.guid,
-            url: visit.uri.spec,
-            title: visit.lastKnownTitle || "",
-            lastVisitTime: visit.time / 1000,  // time from Places is microseconds,
-            visitCount: visit.visitCount,
-            typedCount: visit.typed,
+      handlePlacesEvents(events) {
+        for (let event of events) {
+          let visit = {
+            id: event.pageGuid,
+            url: event.url,
+            title: event.lastKnownTitle || "",
+            lastVisitTime: event.visitTime,
+            visitCount: event.visitCount,
+            typedCount: event.typedCount,
           };
-          this.emit("visited", data);
+          this.emit("visited", visit);
         }
       }
       onBeginUpdateBatch() {}
@@ -122,6 +122,9 @@ const getHistoryObserver = () => {
         this.emit("visitRemoved", {allHistory: false, urls: [uri.spec]});
       }
     }();
+    PlacesUtils.observers.addListener(
+      ["page-visited"],
+      _observer.handlePlacesEvents.bind(_observer));
     PlacesUtils.history.addObserver(_observer);
   }
   return _observer;

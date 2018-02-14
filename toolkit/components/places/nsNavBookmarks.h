@@ -78,6 +78,7 @@ class nsNavBookmarks final : public nsINavBookmarksService
                            , public nsINavHistoryObserver
                            , public nsIObserver
                            , public nsSupportsWeakReference
+                           , public mozilla::places::INativePlacesEventCallback
 {
 public:
   NS_DECL_ISUPPORTS
@@ -207,6 +208,16 @@ public:
    */
   void NotifyItemChanged(const ItemChangeData& aData);
 
+
+  /**
+   * Part of INativePlacesEventCallback - handles events from the places
+   * observer system.
+   * @param aCx
+   *        A JSContext for extracting the values from aEvents.
+   * @param aEvents
+   *        An array of weakly typed events detailing what changed.
+   */
+  void HandlePlacesEvent(const PlacesEventSequence& aEvents) override;
   static const int32_t kGetChildrenIndex_Guid;
   static const int32_t kGetChildrenIndex_Position;
   static const int32_t kGetChildrenIndex_Type;
