@@ -106,6 +106,10 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
     nsStyleUtil::AppendFontFeatureSettings(val, aResult);
     return NS_OK;
 
+  case eCSSFontDesc_FontVariationSettings:
+    nsStyleUtil::AppendFontVariationSettings(val, aResult);
+    return NS_OK;
+
   case eCSSFontDesc_FontLanguageOverride:
     val.AppendToString(eCSSProperty_font_language_override, aResult);
     return NS_OK;
