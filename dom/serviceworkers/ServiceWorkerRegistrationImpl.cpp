@@ -97,30 +97,6 @@ ServiceWorkerRegistrationMainThread::StopListeningForEvents()
   mListeningForEvents = false;
 }
 
-already_AddRefed<ServiceWorker>
-ServiceWorkerRegistrationMainThread::GetInstalling()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<ServiceWorker> ret = mInstallingWorker;
-  return ret.forget();
-}
-
-already_AddRefed<ServiceWorker>
-ServiceWorkerRegistrationMainThread::GetWaiting()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<ServiceWorker> ret = mWaitingWorker;
-  return ret.forget();
-}
-
-already_AddRefed<ServiceWorker>
-ServiceWorkerRegistrationMainThread::GetActive()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<ServiceWorker> ret = mActiveWorker;
-  return ret.forget();
-}
-
 void
 ServiceWorkerRegistrationMainThread::UpdateFound()
 {
@@ -130,38 +106,7 @@ ServiceWorkerRegistrationMainThread::UpdateFound()
 void
 ServiceWorkerRegistrationMainThread::UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor)
 {
-  MOZ_DIAGNOSTIC_ASSERT(MatchesDescriptor(aDescriptor));
-
-  mDescriptor = aDescriptor;
-
-  nsCOMPtr<nsIGlobalObject> global = GetParentObject();
-  if (!global) {
-    mInstallingWorker = nullptr;
-    mWaitingWorker = nullptr;
-    mActiveWorker = nullptr;
-    return;
-  }
-
-  Maybe<ServiceWorkerDescriptor> active = aDescriptor.GetActive();
-  if (active.isSome()) {
-    mActiveWorker = global->GetOrCreateServiceWorker(active.ref());
-  } else {
-    mActiveWorker = nullptr;
-  }
-
-  Maybe<ServiceWorkerDescriptor> waiting = aDescriptor.GetWaiting();
-  if (waiting.isSome()) {
-    mWaitingWorker = global->GetOrCreateServiceWorker(waiting.ref());
-  } else {
-    mWaitingWorker = nullptr;
-  }
-
-  Maybe<ServiceWorkerDescriptor> installing = aDescriptor.GetInstalling();
-  if (installing.isSome()) {
-    mInstallingWorker = global->GetOrCreateServiceWorker(installing.ref());
-  } else {
-    mInstallingWorker = nullptr;
-  }
+  ServiceWorkerRegistration::UpdateState(aDescriptor);
 }
 
 void
@@ -178,8 +123,7 @@ ServiceWorkerRegistrationMainThread::RegistrationRemoved()
 bool
 ServiceWorkerRegistrationMainThread::MatchesDescriptor(const ServiceWorkerRegistrationDescriptor& aDescriptor)
 {
-  return aDescriptor.PrincipalInfo() == mDescriptor.PrincipalInfo() &&
-         aDescriptor.Scope() == mDescriptor.Scope();
+  return ServiceWorkerRegistration::MatchesDescriptor(aDescriptor);
 }
 
 namespace {
@@ -881,27 +825,6 @@ ServiceWorkerRegistrationWorkerThread::~ServiceWorkerRegistrationWorkerThread()
 {
   ReleaseListener();
   MOZ_ASSERT(!mListener);
-}
-
-already_AddRefed<ServiceWorker>
-ServiceWorkerRegistrationWorkerThread::GetInstalling()
-{
-  // FIXME(nsm): Will be implemented after Bug 1113522.
-  return nullptr;
-}
-
-already_AddRefed<ServiceWorker>
-ServiceWorkerRegistrationWorkerThread::GetWaiting()
-{
-  // FIXME(nsm): Will be implemented after Bug 1113522.
-  return nullptr;
-}
-
-already_AddRefed<ServiceWorker>
-ServiceWorkerRegistrationWorkerThread::GetActive()
-{
-  // FIXME(nsm): Will be implemented after Bug 1113522.
-  return nullptr;
 }
 
 already_AddRefed<Promise>

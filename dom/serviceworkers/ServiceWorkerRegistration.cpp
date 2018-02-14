@@ -65,5 +65,70 @@ ServiceWorkerRegistration::CreateForWorker(WorkerPrivate* aWorkerPrivate,
   return registration.forget();
 }
 
+already_AddRefed<ServiceWorker>
+ServiceWorkerRegistration::GetInstalling() const
+{
+  RefPtr<ServiceWorker> ref = mInstallingWorker;
+  return ref.forget();
+}
+
+already_AddRefed<ServiceWorker>
+ServiceWorkerRegistration::GetWaiting() const
+{
+  RefPtr<ServiceWorker> ref = mWaitingWorker;
+  return ref.forget();
+}
+
+already_AddRefed<ServiceWorker>
+ServiceWorkerRegistration::GetActive() const
+{
+  RefPtr<ServiceWorker> ref = mActiveWorker;
+  return ref.forget();
+}
+
+void
+ServiceWorkerRegistration::UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor)
+{
+  MOZ_DIAGNOSTIC_ASSERT(MatchesDescriptor(aDescriptor));
+
+  mDescriptor = aDescriptor;
+
+  nsCOMPtr<nsIGlobalObject> global = GetParentObject();
+  if (!global) {
+    mInstallingWorker = nullptr;
+    mWaitingWorker = nullptr;
+    mActiveWorker = nullptr;
+    return;
+  }
+
+  Maybe<ServiceWorkerDescriptor> active = aDescriptor.GetActive();
+  if (active.isSome()) {
+    mActiveWorker = global->GetOrCreateServiceWorker(active.ref());
+  } else {
+    mActiveWorker = nullptr;
+  }
+
+  Maybe<ServiceWorkerDescriptor> waiting = aDescriptor.GetWaiting();
+  if (waiting.isSome()) {
+    mWaitingWorker = global->GetOrCreateServiceWorker(waiting.ref());
+  } else {
+    mWaitingWorker = nullptr;
+  }
+
+  Maybe<ServiceWorkerDescriptor> installing = aDescriptor.GetInstalling();
+  if (installing.isSome()) {
+    mInstallingWorker = global->GetOrCreateServiceWorker(installing.ref());
+  } else {
+    mInstallingWorker = nullptr;
+  }
+}
+
+bool
+ServiceWorkerRegistration::MatchesDescriptor(const ServiceWorkerRegistrationDescriptor& aDescriptor) const
+{
+  return aDescriptor.PrincipalInfo() == mDescriptor.PrincipalInfo() &&
+         aDescriptor.Scope() == mDescriptor.Scope();
+}
+
 } // dom namespace
 } // mozilla namespace
