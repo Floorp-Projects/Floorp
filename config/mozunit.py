@@ -2,14 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
 import inspect
 import os
 import sys
 import unittest
-from StringIO import StringIO
 from unittest import TextTestRunner as _TestRunner, TestResult as _TestResult
 
 import pytest
+import six
+
+StringIO = six.StringIO
 
 '''Helper to make python unit tests report the way that the Mozilla
 unit test infrastructure expects tests to report.
@@ -76,7 +79,9 @@ class _MozTestResult(_TestResult):
 
     def printFail(self, test, err):
         exctype, value, tb = err
-        message = value.message.splitlines()[0] if value.message else 'NO MESSAGE'
+        message = value or 'NO MESSAGE'
+        if hasattr(value, 'message'):
+            message = value.message.splitlines()[0]
         # Skip test runner traceback levels
         while tb and self._is_relevant_tb_level(tb):
             tb = tb.tb_next
@@ -149,7 +154,7 @@ class MockedOpen(object):
     '''
     def __init__(self, files={}):
         self.files = {}
-        for name, content in files.iteritems():
+        for name, content in files.items():
             self.files[normcase(os.path.abspath(name))] = content
 
     def __call__(self, name, mode='r'):
@@ -170,19 +175,19 @@ class MockedOpen(object):
         return file
 
     def __enter__(self):
-        import __builtin__
-        self.open = __builtin__.open
+        import six.moves.builtins
+        self.open = six.moves.builtins.open
         self._orig_path_exists = os.path.exists
         self._orig_path_isdir = os.path.isdir
         self._orig_path_isfile = os.path.isfile
-        __builtin__.open = self
+        six.moves.builtins.open = self
         os.path.exists = self._wrapped_exists
         os.path.isdir = self._wrapped_isdir
         os.path.isfile = self._wrapped_isfile
 
     def __exit__(self, type, value, traceback):
-        import __builtin__
-        __builtin__.open = self.open
+        import six.moves.builtins
+        six.moves.builtins.open = self.open
         os.path.exists = self._orig_path_exists
         os.path.isdir = self._orig_path_isdir
         os.path.isfile = self._orig_path_isfile
