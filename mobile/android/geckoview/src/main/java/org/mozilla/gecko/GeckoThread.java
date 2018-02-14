@@ -53,6 +53,8 @@ public class GeckoThread extends Thread {
         @WrapForJNI EXITING(3),
         // After granting request to restart
         @WrapForJNI RESTARTING(3),
+        // After failed lib extraction due to corrupted APK
+        CORRUPT_APK(2),
         // After exiting GeckoThread (corresponding to "Gecko:Exited" event)
         @WrapForJNI EXITED(0);
 
@@ -254,6 +256,7 @@ public class GeckoThread extends Thread {
         GeckoLoader.loadSQLiteLibs(context, resourcePath);
         GeckoLoader.loadNSSLibs(context, resourcePath);
         GeckoLoader.loadGeckoLibs(context, resourcePath);
+        setState(State.LIBS_READY);
     }
 
     private static void initGeckoEnvironment() {
@@ -276,19 +279,24 @@ public class GeckoThread extends Thread {
 
         try {
             loadGeckoLibs(context, resourcePath);
-
+            return;
         } catch (final Exception e) {
             // Cannot load libs; try clearing the cached files.
             Log.w(LOGTAG, "Clearing cache after load libs exception", e);
-            FileUtils.delTree(GeckoLoader.getCacheDir(context),
-                              new FileUtils.FilenameRegexFilter(".*\\.so(?:\\.crc)?$"),
-                              /* recurse */ true);
-
-            // Then try loading again. If this throws again, we actually crash.
-            loadGeckoLibs(context, resourcePath);
         }
 
-        setState(State.LIBS_READY);
+        FileUtils.delTree(GeckoLoader.getCacheDir(context),
+                          new FileUtils.FilenameRegexFilter(".*\\.so(?:\\.crc)?$"),
+                          /* recurse */ true);
+
+        if (!GeckoLoader.verifyCRCs(resourcePath)) {
+            setState(State.CORRUPT_APK);
+            EventDispatcher.getInstance().dispatch("Gecko:CorruptAPK", null);
+            return;
+        }
+
+        // Then try loading again. If this throws again, we actually crash.
+        loadGeckoLibs(context, resourcePath);
     }
 
     private String[] getMainProcessArgs() {
@@ -385,7 +393,7 @@ public class GeckoThread extends Thread {
 
         // Wait until initialization before calling Gecko entry point.
         synchronized (this) {
-            while (!mInitialized) {
+            while (!mInitialized || !isState(State.LIBS_READY)) {
                 try {
                     wait();
                 } catch (final InterruptedException e) {
