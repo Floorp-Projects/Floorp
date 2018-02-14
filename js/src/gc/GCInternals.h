@@ -35,11 +35,14 @@ class MOZ_RAII AutoTraceSession
     explicit AutoTraceSession(JSRuntime* rt, JS::HeapState state = JS::HeapState::Tracing);
     ~AutoTraceSession();
 
-    // Threads with an exclusive context can hit refillFreeList while holding
-    // the exclusive access lock. To avoid deadlocking when we try to acquire
-    // this lock during GC and the other thread is waiting, make sure we hold
-    // the exclusive access lock during GC sessions.
-    AutoLockForExclusiveAccess lock;
+    // Constructing an AutoTraceSession takes the exclusive access lock, but GC
+    // may release it during a trace session if we're not collecting the atoms
+    // zone.
+    mozilla::Maybe<AutoLockForExclusiveAccess> maybeLock;
+
+    AutoLockForExclusiveAccess& lock() {
+        return maybeLock.ref();
+    }
 
   protected:
     JSRuntime* runtime;
