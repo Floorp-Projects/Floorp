@@ -451,17 +451,32 @@ FT2FontEntry::CairoFontFace(const gfxFontStyle* aStyle)
         mFTFace = face.forget();
     }
 
-    // If aStyle includes variations, we will not use our cached mFontFace
-    // but always create a new cairo_font_face_t with the requested variation
-    // settings.
-    if (aStyle && !aStyle->variationSettings.IsEmpty() &&
-        mFTFace->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
+    // If variations are present, we will not use our cached mFontFace
+    // but always create a new cairo_font_face_t because its FT_Face will
+    // have custom variation coordinates applied.
+    if ((!mVariationSettings.IsEmpty() ||
+        (aStyle && !aStyle->variationSettings.IsEmpty())) &&
+        (mFTFace->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS)) {
         int flags = gfxPlatform::GetPlatform()->FontHintingEnabled() ?
                     FT_LOAD_DEFAULT :
                     (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+        // Resolve variations from entry (descriptor) and style (property)
+        const nsTArray<gfxFontVariation>* settings;
+        AutoTArray<gfxFontVariation,8> mergedSettings;
+        if (aStyle) {
+            if (mVariationSettings.IsEmpty()) {
+                settings = &aStyle->variationSettings;
+            } else {
+                gfxFontUtils::MergeVariations(mVariationSettings,
+                                              aStyle->variationSettings,
+                                              &mergedSettings);
+                settings = &mergedSettings;
+            }
+        } else {
+            settings = &mVariationSettings;
+        }
         AutoTArray<FT_Fixed,8> coords;
-        gfxFT2FontBase::SetupVarCoords(mFTFace, aStyle->variationSettings,
-                                       &coords);
+        gfxFT2FontBase::SetupVarCoords(mFTFace, *settings, &coords);
         // Create a separate FT_Face because we need to apply custom
         // variation settings to it.
         FT_Face ftFace;
@@ -473,7 +488,8 @@ FT2FontEntry::CairoFontFace(const gfxFontStyle* aStyle)
             ftFace = Factory::NewFTFaceFromData(nullptr, ufd->FontData(),
                                                 ufd->Length(), mFTFontIndex);
         }
-        FT_Set_Var_Design_Coordinates(ftFace, coords.Length(), coords.Elements());
+        // The variation coordinates will actually be applied to ftFace by
+        // gfxFT2FontBase::InitMetrics, so we don't need to do it here.
         cairo_font_face_t* cairoFace =
             cairo_ft_font_face_create_for_ft_face(ftFace, flags,
                                                   coords.Elements(),
