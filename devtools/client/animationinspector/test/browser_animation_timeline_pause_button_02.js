@@ -6,11 +6,21 @@
 "use strict";
 
 requestLongerTimeout(2);
+ChromeUtils.defineModuleGetter(this, "Preferences",
+  "resource://gre/modules/Preferences.jsm");
 
 // Checks that the play/pause button goes to the right state when the scrubber has reached
 // the end of the timeline but there are infinite animations playing.
 
 add_task(function* () {
+  // TODO see if this is needed?
+  // let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
+  // Preferences.set("privacy.reduceTimerPrecision", false);
+
+  // registerCleanupFunction(function () {
+  //   Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
+  // });
+
   yield addTab(URL_ROOT + "doc_simple_animation.html");
 
   let {panel, inspector} = yield openAnimationInspector();

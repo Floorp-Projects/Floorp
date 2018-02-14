@@ -11,9 +11,14 @@
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
+
+var reduceTimePrecisionPrevPrefValue = SpecialPowers.getBoolPref("privacy.reduceTimerPrecision");
+SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", false);
+
 var worker = new Worker('test_worker_performance_now.js');
 worker.onmessage = function(event) {
   if (event.data.type == 'finish') {
+    SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", reduceTimePrecisionPrevPrefValue);
     SimpleTest.finish();
 
   } else if (event.data.type == 'status') {
