@@ -299,7 +299,6 @@ UNIFIED_SOURCES += [
     'jsexn.cpp',
     'jsfriendapi.cpp',
     'jsiter.cpp',
-    'jsnativestack.cpp',
     'jsnum.cpp',
     'jsopcode.cpp',
     'jsprf.cpp',
@@ -315,6 +314,7 @@ UNIFIED_SOURCES += [
     'proxy/Wrapper.cpp',
     'threading/Mutex.cpp',
     'threading/ProtectedData.cpp',
+    'util/NativeStack.cpp',
     'vm/ArgumentsObject.cpp',
     'vm/ArrayBufferObject.cpp',
     'vm/AsyncFunction.cpp',
@@ -406,30 +406,30 @@ UNIFIED_SOURCES += [
 ]
 
 # jsarray.cpp and vm/JSAtom.cpp cannot be built in unified mode because
-# xpcshell is broken during packaging when compiled with gcc-4.8.2
+#   xpcshell is broken during packaging when compiled with gcc-4.8.2
 # builtin/RegExp.cpp cannot be built in unified mode because it is built
-# without PGO
+#   without PGO
 # frontend/Parser.cpp cannot be built in unified mode because of explicit
-# template instantiations.
-# jsdtoa.cpp cannot be built in unified mode because we want to suppress
-# compiler warnings in third-party dtoa.c.
+#   template instantiations.
 # jsmath.cpp cannot be built in unified mode because it needs to re-#define the
-# RtlGenRandom declaration's calling convention in <ntsecapi.h> on Windows.
+#   RtlGenRandom declaration's calling convention in <ntsecapi.h> on Windows.
 # jsutil.cpp cannot be built in unified mode because it is needed for
-# check-vanilla-allocations.
+#   check-vanilla-allocations.
 # StoreBuffer.cpp cannot be built in unified because its template
-# instantiations may or may not be needed depending on what it gets bundled
-# with.
+#   instantiations may or may not be needed depending on what it gets bundled
+#   with.
+# util/DoubleToString.cpp cannot be built in unified mode because we want to
+#   suppress compiler warnings in third-party dtoa.c.
 # vm/Interpreter.cpp is gigantic and destroys incremental build times for any
-# files unlucky enough to be unified with it.
+#   files unlucky enough to be unified with it.
 SOURCES += [
     'builtin/RegExp.cpp',
     'frontend/Parser.cpp',
     'gc/StoreBuffer.cpp',
     'jsarray.cpp',
-    'jsdtoa.cpp',
     'jsmath.cpp',
     'jsutil.cpp',
+    'util/DoubleToString.cpp',
     'vm/Interpreter.cpp',
     'vm/JSAtom.cpp',
 ]
@@ -786,7 +786,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
 
 # Suppress warnings in third-party code.
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    SOURCES['jsdtoa.cpp'].flags += ['-Wno-implicit-fallthrough']
+    SOURCES['util/DoubleToString.cpp'].flags += ['-Wno-implicit-fallthrough']
 
 # Generate GC statistics phase data.
 GENERATED_FILES += ['gc/StatsPhasesGenerated.h']

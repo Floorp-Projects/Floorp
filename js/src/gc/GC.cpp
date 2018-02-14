@@ -210,9 +210,6 @@
 #include "jsprf.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#ifdef XP_WIN
-# include "jswin.h"
-#endif
 
 #include "gc/FindSCCs.h"
 #include "gc/FreeOp.h"
@@ -226,6 +223,9 @@
 #include "jit/JitcodeMap.h"
 #include "js/SliceBudget.h"
 #include "proxy/DeadObjectProxy.h"
+#ifdef XP_WIN
+# include "util/Windows.h"
+#endif
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/JSAtom.h"

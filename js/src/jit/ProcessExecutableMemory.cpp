@@ -13,16 +13,16 @@
 #include "mozilla/TaggedAnonymousMemory.h"
 #include "mozilla/XorShift128PlusRNG.h"
 
+#include <errno.h>
+
 #include "jsfriendapi.h"
 #include "jsmath.h"
 #include "jsutil.h"
-#include "jswin.h"
-
-#include <errno.h>
 
 #include "gc/Memory.h"
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
+#include "util/Windows.h"
 #include "vm/MutexIDs.h"
 
 #ifdef XP_WIN

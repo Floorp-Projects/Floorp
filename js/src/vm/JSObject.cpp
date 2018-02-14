@@ -28,7 +28,6 @@
 #include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jswin.h"
 #include "jswrapper.h"
 
 #include "builtin/Eval.h"
@@ -41,6 +40,7 @@
 #include "js/Proxy.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
+#include "util/Windows.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSAtom.h"

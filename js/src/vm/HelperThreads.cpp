@@ -10,14 +10,13 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Unused.h"
 
-#include "jsnativestack.h"
-
 #include "builtin/Promise.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/GCInternals.h"
 #include "jit/IonBuilder.h"
 #include "js/Utility.h"
 #include "threading/CpuCount.h"
+#include "util/NativeStack.h"
 #include "vm/Debugger.h"
 #include "vm/ErrorReporting.h"
 #include "vm/SharedImmutableStringsCache.h"

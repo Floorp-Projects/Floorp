@@ -23,9 +23,7 @@
 #ifdef JS_CAN_CHECK_THREADSAFE_ACCESSES
 # include <sys/mman.h>
 #endif
-
 #include "jsmath.h"
-#include "jswin.h"
 #include "jswrapper.h"
 
 #include "builtin/Promise.h"
@@ -40,6 +38,7 @@
 #include "js/Date.h"
 #include "js/MemoryMetrics.h"
 #include "js/SliceBudget.h"
+#include "util/Windows.h"
 #include "vm/Debugger.h"
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"
