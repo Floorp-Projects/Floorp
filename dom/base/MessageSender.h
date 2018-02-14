@@ -19,7 +19,7 @@ public:
 
 protected:
   MessageSender(ipc::MessageManagerCallback* aCallback,
-                nsFrameMessageManager* aParentManager,
+                ChromeMessageBroadcaster* aParentManager,
                 MessageManagerFlags aFlags)
     : MessageListenerManager(aCallback, aParentManager, aFlags)
   {}

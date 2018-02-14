@@ -157,6 +157,7 @@
 #include "nsThread.h"
 #include "nsWindowWatcher.h"
 #include "nsIXULRuntime.h"
+#include "mozilla/dom/ChromeMessageBroadcaster.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "nsMemoryInfoDumper.h"
 #include "nsMemoryReporterManager.h"
@@ -2270,7 +2271,7 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
   if (ssm) {
     ssm->CloneDomainPolicy(&xpcomInit.domainPolicy());
 
-    if (nsFrameMessageManager* mm = nsFrameMessageManager::sParentProcessManager) {
+    if (ChromeMessageBroadcaster* mm = nsFrameMessageManager::sParentProcessManager) {
       AutoJSAPI jsapi;
       if (NS_WARN_IF(!jsapi.Init(xpc::PrivilegedJunkScope()))) {
         MOZ_CRASH();

@@ -42,6 +42,7 @@ namespace dom {
 class nsIContentParent;
 class nsIContentChild;
 class ChildProcessMessageManager;
+class ChromeMessageBroadcaster;
 class ChromeMessageSender;
 class ClonedMessageData;
 class MessageListener;
@@ -172,8 +173,7 @@ private:
   JS::Rooted<JSObject*> mObj;
 };
 
-class nsFrameMessageManager : public nsIContentFrameMessageManager,
-                              public nsIMessageBroadcaster
+class nsFrameMessageManager : public nsIContentFrameMessageManager
 {
   friend class mozilla::dom::MessageManagerReporter;
   typedef mozilla::dom::ipc::StructuredCloneData StructuredCloneData;
@@ -252,7 +252,6 @@ public:
 
   NS_DECL_NSIMESSAGELISTENERMANAGER
   NS_DECL_NSIMESSAGESENDER
-  NS_DECL_NSIMESSAGEBROADCASTER
   NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
 
   static mozilla::dom::ChromeMessageSender*
@@ -264,8 +263,6 @@ public:
                           mozilla::jsipc::CpowHolder* aCpows, nsIPrincipal* aPrincipal,
                           nsTArray<StructuredCloneData>* aRetVal);
 
-  void AddChildManager(mozilla::dom::MessageListenerManager* aManager);
-  void RemoveChildManager(mozilla::dom::MessageListenerManager* aManager);
   void Disconnect(bool aRemoveFromParent = true);
   void Close();
 
@@ -291,8 +288,12 @@ public:
                                         nsIPrincipal* aPrincipal);
   bool IsGlobal() { return mGlobal; }
   bool IsBroadcaster() { return mIsBroadcaster; }
+  bool IsChrome() { return mChrome; }
 
-  static nsFrameMessageManager* GetParentProcessManager()
+  // GetGlobalMessageManager creates the global message manager if it hasn't been yet.
+  static already_AddRefed<mozilla::dom::ChromeMessageBroadcaster>
+    GetGlobalMessageManager();
+  static mozilla::dom::ChromeMessageBroadcaster* GetParentProcessManager()
   {
     return sParentProcessManager;
   }
@@ -312,7 +313,7 @@ public:
 protected:
   friend class MMListenerRemover;
 
-  virtual nsFrameMessageManager* GetParentManager()
+  virtual mozilla::dom::ChromeMessageBroadcaster* GetParentManager()
   {
     return nullptr;
   }
@@ -389,7 +390,7 @@ protected:
   void LoadPendingScripts(nsFrameMessageManager* aManager,
                           nsFrameMessageManager* aChildMM);
 public:
-  static nsFrameMessageManager* sParentProcessManager;
+  static mozilla::dom::ChromeMessageBroadcaster* sParentProcessManager;
   static nsFrameMessageManager* sSameProcessParentManager;
   static nsTArray<nsCOMPtr<nsIRunnable> >* sPendingSameProcessAsyncMessages;
 private:

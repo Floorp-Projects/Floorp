@@ -306,46 +306,6 @@ interface nsIMessageSender : nsIMessageListenerManager
   readonly attribute AString remoteType;
 };
 
-/**
- * Message "broadcasters" don't have a single "other side" that they
- * send messages to, but rather a set of subordinate message managers.
- * For example, broadcasting a message through a window message
- * manager will broadcast the message to all frame message managers
- * within its window.
- */
-[uuid(4d7d62ad-4725-4f39-86cf-8fb22bf9c1d8)]
-interface nsIMessageBroadcaster : nsIMessageListenerManager
-{
-  /**
-   * Like |sendAsyncMessage()|, but also broadcasts this message to
-   * all "child" message managers of this message manager.  See long
-   * comment above for details.
-   *
-   * WARNING: broadcasting messages can be very expensive and leak
-   * sensitive data.  Use with extreme caution.
-   */
-  [implicit_jscontext, optional_argc]
-  void broadcastAsyncMessage([optional] in AString messageName,
-                             [optional] in jsval obj,
-                             [optional] in jsval objects);
-
-  /**
-   * Number of subordinate message managers.
-   */
-  readonly attribute unsigned long childCount;
-
-  /**
-   * Return a single subordinate message manager.
-   */
-  nsIMessageListenerManager getChildAt(in unsigned long aIndex);
-
-  /**
-   * Some processes are kept alive after their last tab/window are closed for testing
-   * (see dom.ipc.keepProcessesAlive). This function releases those.
-   */
-   void releaseCachedProcesses();
-};
-
 [uuid(694e367c-aa25-4446-8499-2c527c4bd838)]
 interface nsIContentFrameMessageManager : nsIMessageSender
 {

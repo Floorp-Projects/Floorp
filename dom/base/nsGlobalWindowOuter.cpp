@@ -7534,18 +7534,24 @@ nsGlobalWindowOuter::SetBrowserDOMWindowOuter(nsIBrowserDOMWindow* aBrowserWindo
   mChromeFields.mBrowserDOMWindow = aBrowserWindow;
 }
 
-NS_IMETHODIMP
-nsGlobalWindowOuter::GetMessageManager(nsIMessageBroadcaster** aManager)
+ChromeMessageBroadcaster*
+nsGlobalWindowOuter::GetMessageManager()
 {
-  FORWARD_TO_INNER(GetMessageManager, (aManager), NS_ERROR_UNEXPECTED);
+  if (!mInnerWindow) {
+    NS_WARNING("No inner window available!");
+    return nullptr;
+  }
+  return GetCurrentInnerWindowInternal()->MessageManager();
 }
 
-NS_IMETHODIMP
-nsGlobalWindowOuter::GetGroupMessageManager(const nsAString& aGroup,
-                                            nsIMessageBroadcaster** aManager)
+ChromeMessageBroadcaster*
+nsGlobalWindowOuter::GetGroupMessageManager(const nsAString& aGroup)
 {
-  MOZ_RELEASE_ASSERT(IsChromeWindow());
-  FORWARD_TO_INNER(GetGroupMessageManager, (aGroup, aManager), NS_ERROR_UNEXPECTED);
+  if (!mInnerWindow) {
+    NS_WARNING("No inner window available!");
+    return nullptr;
+  }
+  return GetCurrentInnerWindowInternal()->GetGroupMessageManager(aGroup);
 }
 
 void

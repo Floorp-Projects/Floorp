@@ -333,6 +333,12 @@ interface ContentProcessMessageManager
 // WebIDL spec.
 ContentProcessMessageManager implements MessageManagerGlobal;
 
+/**
+ * Message "broadcasters" don't have a single "other side" that they send messages to, but
+ * rather a set of subordinate message managers. For example, broadcasting a message
+ * through a window message manager will broadcast the message to all frame message
+ * managers within its window.
+ */
 [ChromeOnly]
 interface ChromeMessageBroadcaster : MessageListenerManager
 {
