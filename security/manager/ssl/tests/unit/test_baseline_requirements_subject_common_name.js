@@ -40,7 +40,10 @@ function run_test() {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("security.pki.name_matching_mode");
     Services.prefs.clearUserPref("security.test.built_in_root_hash");
+    Services.prefs.clearUserPref("privacy.reduceTimerPrecision");
   });
+
+  Services.prefs.setBoolPref("privacy.reduceTimerPrecision", false);
 
   loadCertWithTrust("ca", "CTu,,");
 
