@@ -24,7 +24,7 @@ add_task(async function test_keyword_bookmarklet() {
   // Enter bookmarklet keyword in the URL bar
   gURLBar.value = "bm";
   gURLBar.focus();
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
 
   await BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "pageshow");
 

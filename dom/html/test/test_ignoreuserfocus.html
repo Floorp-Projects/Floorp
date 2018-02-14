@@ -116,7 +116,7 @@
               // Test tabindex
               witness.focus();
               is(document.activeElement, witness, "witness should have the focus");
-              synthesizeKey("VK_TAB", {});
+              synthesizeKey("KEY_Tab");
               isnot(document.activeElement, iframe, "[synthesize tab key] iframe should not have the focus");
               is(document.activeElement, witness2, "witness2 should have the focus");
 

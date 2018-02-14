@@ -31,9 +31,7 @@ SimpleTest.waitForFocus(() => {
 
   input.focus();
 
-  synthesizeKey('1', {});
-  synthesizeKey('2', {});
-  synthesizeKey('3', {});
+  sendString("123");
 
   is(input.value, '12', 'value should be 12 with maxlength = 2');
 
@@ -46,11 +44,7 @@ SimpleTest.waitForFocus(() => {
 
     input.focus();
 
-    synthesizeKey('4', {});
-    synthesizeKey('5', {});
-    synthesizeKey('6', {});
-    synthesizeKey('7', {});
-    synthesizeKey('8', {});
+    sendString("45678");
 
     is(input.value, '4567', 'value should be 4567 with maxlength = 4');
 
@@ -62,8 +56,7 @@ SimpleTest.waitForFocus(() => {
 
       input.focus();
 
-      synthesizeKey('1', {});
-      synthesizeKey('2', {});
+      sendString("12");
 
       todo_is(input.value, '45', 'value should be 45 with maxlength = 2');
 
@@ -76,14 +69,7 @@ SimpleTest.waitForFocus(() => {
 
         input.focus();
 
-        synthesizeKey('1', {});
-        synthesizeKey('2', {});
-        synthesizeKey('3', {});
-        synthesizeKey('4', {});
-        synthesizeKey('5', {});
-        synthesizeKey('6', {});
-        synthesizeKey('7', {});
-        synthesizeKey('8', {});
+        sendString("12345678");
 
         is(input.value, '12345678', 'value should be 12345678 without maxlength');
 

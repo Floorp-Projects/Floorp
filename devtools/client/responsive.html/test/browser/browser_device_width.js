@@ -45,7 +45,7 @@ async function setViewportSizeWithInputKeys(ui) {
   resized = waitForViewportResizeTo(ui, 420, height);
   dimensions[0].focus();
   for (let i = 1; i <= 100; i++) {
-    EventUtils.synthesizeKey("KEY_ArrowUp", {});
+    EventUtils.synthesizeKey("KEY_ArrowUp");
   }
   await resized;
 
@@ -60,13 +60,13 @@ async function setViewportSizeWithInputKeys(ui) {
   // Increase height value to 600 by using `PageUp + Shift` key
   resized = waitForViewportResizeTo(ui, width, 600);
   dimensions[1].focus();
-  EventUtils.synthesizeKey("VK_PAGE_UP", {shiftKey: true});
+  EventUtils.synthesizeKey("KEY_PageUp", {shiftKey: true});
   await resized;
 
   // Resetting height value back to 500 by using `PageDown + Shift` key
   resized = waitForViewportResizeTo(ui, width, height);
   dimensions[1].focus();
-  EventUtils.synthesizeKey("VK_PAGE_DOWN", {shiftKey: true});
+  EventUtils.synthesizeKey("KEY_PageDown", {shiftKey: true});
   await resized;
 }
 

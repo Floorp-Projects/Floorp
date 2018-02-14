@@ -30,26 +30,26 @@ SimpleTest.waitForFocus(function() {
   sel[0].addEventListener('focus', function() {
     s = sel[0];
     s.removeEventListener('focus', arguments.callee);
-    synthesizeKey('VK_DOWN', {});
+    synthesizeKey('KEY_ArrowDown');
     is(s.selectedIndex,0, s.id + ": initial DOWN selects first option");
-    synthesizeKey('VK_DOWN', {ctrlKey: true});
+    synthesizeKey('KEY_ArrowDown', {ctrlKey: true});
     is(s.selectedIndex,0, s.id + ": first option is still selected");
     ok(!s[1].selected,s.id + ": CTRL+DOWN did not select 2nd option");
-    synthesizeKey('VK_DOWN', {ctrlKey: true});
-    synthesizeKey('VK_DOWN', {ctrlKey: true, shiftKey: true});
+    synthesizeKey('KEY_ArrowDown', {ctrlKey: true});
+    synthesizeKey('KEY_ArrowDown', {ctrlKey: true, shiftKey: true});
     is(s.selectedIndex,0, s.id + ": first option is still selected");
     ok(!s[1].selected,s.id + ": 2nd option is still unselected");
     ok(s[2].selected,s.id + ": 3rd option is selected");
     ok(s[3].selected,s.id + ": 4th option is selected");
     ok(!s[4].selected,s.id + ": 5th option is unselected");
-    synthesizeKey('VK_DOWN', {ctrlKey: true, shiftKey: true});
+    synthesizeKey('KEY_ArrowDown', {ctrlKey: true, shiftKey: true});
     is(s.selectedIndex,0, s.id + ": first option is still selected");
     ok(!s[1].selected,s.id + ": 2nd option is still unselected");
     ok(s[2].selected,s.id + ": 3rd option is still selected");
     ok(s[3].selected,s.id + ": 4th option is still selected");
     ok(s[4].selected,s.id + ": 5th option is selected");
     ok(!s[5].selected,s.id + ": 6th option is unselected");
-    synthesizeKey('VK_UP', {ctrlKey: true, shiftKey: true});
+    synthesizeKey('KEY_ArrowUp', {ctrlKey: true, shiftKey: true});
     is(s.selectedIndex,0, s.id + ": first option is still selected");
     ok(!s[1].selected,s.id + ": 2nd option is still unselected");
     ok(s[2].selected,s.id + ": 3rd option is still selected");
@@ -75,13 +75,13 @@ SimpleTest.waitForFocus(function() {
   sel[1].addEventListener('focus', function() {
     s = sel[1];
     s.removeEventListener('focus', arguments.callee);
-    synthesizeKey('VK_DOWN', {});
+    synthesizeKey('KEY_ArrowDown');
     is(s.selectedIndex,0, s.id + ": initial DOWN selects first option");
-    synthesizeKey('VK_DOWN', {ctrlKey: true});
+    synthesizeKey('KEY_ArrowDown', {ctrlKey: true});
     is(s.selectedIndex,1, s.id + ": 2nd option is selected");
     ok(!s[0].selected,s.id + ": CTRL+DOWN deselected first option");
-    synthesizeKey('VK_DOWN', {ctrlKey: true});
-    synthesizeKey('VK_DOWN', {ctrlKey: true, shiftKey: true});
+    synthesizeKey('KEY_ArrowDown', {ctrlKey: true});
+    synthesizeKey('KEY_ArrowDown', {ctrlKey: true, shiftKey: true});
     is(s.selectedIndex,3, s.id + ": 4th option is selected");
     ok(!s[1].selected,s.id + ": CTRL+SHIFT+DOWN deselected 2nd option");
     synthesizeKey(' ', {ctrlKey: true, shiftKey: true});
@@ -94,12 +94,12 @@ SimpleTest.waitForFocus(function() {
     if (!navigator.platform.includes("Mac")) {
       s = sel[2];
       s.removeEventListener('focus', arguments.callee);
-      synthesizeKey('VK_DOWN', {});
+      synthesizeKey('KEY_ArrowDown');
       is(s.selectedIndex,1, s.id + ": initial DOWN selects 2nd option");
-      synthesizeKey('VK_DOWN', {ctrlKey: true});
+      synthesizeKey('KEY_ArrowDown', {ctrlKey: true});
       is(s.selectedIndex,2, s.id + ": 3rd option is selected");
       ok(!s[1].selected,s.id + ": CTRL+DOWN deselected 2nd option");
-      synthesizeKey('VK_DOWN', {ctrlKey: true, shiftKey: true});
+      synthesizeKey('KEY_ArrowDown', {ctrlKey: true, shiftKey: true});
       is(s.selectedIndex,3, s.id + ": 4th option is selected");
       ok(!s[2].selected,s.id + ": CTRL+SHIFT+DOWN deselected 3rd option");
       synthesizeKey(' ', {ctrlKey: true, shiftKey: true});

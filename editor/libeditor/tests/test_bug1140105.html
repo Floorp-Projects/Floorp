@@ -26,7 +26,7 @@ SimpleTest.waitForFocus(function() {
   var div = document.getElementById("content");
   div.focus();
   synthesizeMouseAtCenter(div, {});
-  synthesizeKey("VK_LEFT", {});
+  synthesizeKey("KEY_ArrowLeft");
 
   var sel = window.getSelection();
   var selRange = sel.getRangeAt(0);

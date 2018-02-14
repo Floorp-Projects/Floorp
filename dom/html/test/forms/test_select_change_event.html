@@ -29,23 +29,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265968
 
   select.focus();
   for (var i = 1; i < select.length; i++) {
-    synthesizeKey("VK_DOWN", {});
+    synthesizeKey("KEY_ArrowDown");
     is(select.options[i].selected, true, "Option should be selected");
     is(selectChange, ++expectedChange, "Down key should fire change event.");
   }
 
   // We are at the end of the list, going down should not fire change event.
-  synthesizeKey("VK_DOWN", {});
+  synthesizeKey("KEY_ArrowDown");
   is(selectChange, expectedChange, "Down key should not fire change event when reaching end of the list.");
 
   for (var i = select.length - 2; i >= 0; i--) {
-    synthesizeKey("VK_UP", {});
+    synthesizeKey("KEY_ArrowUp");
     is(select.options[i].selected, true, "Option should be selected");
     is(selectChange, ++expectedChange, "Up key should fire change event.");
   }
 
   // We are at the top of the list, going up should not fire change event.
-  synthesizeKey("VK_UP", {});
+  synthesizeKey("KEY_ArrowUp");
   is(selectChange, expectedChange, "Up key should not fire change event when reaching top of the list.");
 
 </script>

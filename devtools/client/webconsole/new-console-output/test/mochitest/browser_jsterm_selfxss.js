@@ -25,7 +25,7 @@ add_task(async function () {
 
   info("wait for completion value after typing 'docu'");
   let onAutocompleteUpdated = jsterm.once("autocomplete-updated");
-  EventUtils.synthesizeKey("u", {});
+  EventUtils.sendString("u");
   await onAutocompleteUpdated;
 
   const completionValue = jsterm.completeNode.value;

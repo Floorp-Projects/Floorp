@@ -28,7 +28,7 @@ function checkURLBarRevert() {
 
   gURLBar.focus();
 
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
 
   is(gURLBar.value, originalValue, "ESC reverted the location bar value");
 

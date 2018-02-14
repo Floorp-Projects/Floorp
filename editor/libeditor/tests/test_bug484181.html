@@ -42,10 +42,7 @@ function append(str) {
   var sel = editor.selection;
   sel.selectAllChildren(edit);
   sel.collapseToEnd();
-
-  for (var i = 0; i < str.length; ++i) {
-    synthesizeKey(str[i], {});
-  }
+  sendString(str);
 }
 
 function runTest() {

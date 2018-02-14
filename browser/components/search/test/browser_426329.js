@@ -135,7 +135,7 @@ add_task(async function testSetupEngine() {
 
 add_task(async function testReturn() {
   await prepareTest();
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   is(gBrowser.tabs.length, preTabNo, "Return key did not open new tab");
@@ -145,7 +145,7 @@ add_task(async function testReturn() {
 add_task(async function testAltReturn() {
   await prepareTest();
   await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
-    EventUtils.synthesizeKey("VK_RETURN", { altKey: true });
+    EventUtils.synthesizeKey("KEY_Enter", {altKey: true});
   });
 
   is(gBrowser.tabs.length, preTabNo + 1, "Alt+Return key added new tab");
@@ -237,7 +237,7 @@ add_task(async function testClearHistory() {
   EventUtils.synthesizeMouseAtCenter(textbox, { type: "contextmenu", button: 2 });
   await popupShownPromise;
   // Close the context menu.
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
 
   let controller = searchBar.textbox.controllers.getControllerForCommand("cmd_clearhistory");
   ok(controller.isCommandEnabled("cmd_clearhistory"), "Clear history command enabled");

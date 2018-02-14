@@ -71,15 +71,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=423523
     ok(divIsFocused(), "Div should be focused [1].");
     ok(selectionOffsetIs(0), "Caret should be at offset 0");
     
-    synthesizeKey("VK_LEFT", { });
+    synthesizeKey("KEY_ArrowLeft");
     ok(divIsFocused(), "Div should be focused [2].");    
     ok(selectionOffsetIs(0), "Caret should be at offset 0");
     
-    synthesizeKey("VK_RIGHT", { });
+    synthesizeKey("KEY_ArrowRight");
     ok(divIsFocused(), "Div should be focused [3].");
     ok(selectionOffsetIs(1), "Caret should be at offset 1");
     
-    synthesizeKey("VK_LEFT", { });
+    synthesizeKey("KEY_ArrowLeft");
     ok(divIsFocused(), "Div should be focused [4].");
     ok(selectionOffsetIs(0), "Caret should be at offset 0");
 
@@ -89,7 +89,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=423523
 
     ok(divIsFocused(), "Div should be focused [6].");    
     ok(selectionOffsetIs(0), "Caret should be at offset 0");    
-    synthesizeKey("VK_LEFT", { });
+    synthesizeKey("KEY_ArrowLeft");
 
     ok(divIsFocused(), "Div should be focused [7].");
     ok(selectionOffsetIs(0), "Caret should be at offset 0");

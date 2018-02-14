@@ -37,9 +37,8 @@ function test() {
     let caretMove = ensureCaretAt(panel, 15, 1, true);
     // Wait a tick for the editor focus event to occur first.
     executeSoon(function () {
-      EventUtils.synthesizeKey("l", { accelKey: true });
-      EventUtils.synthesizeKey("1", {});
-      EventUtils.synthesizeKey("5", {});
+      EventUtils.synthesizeKey("l", {accelKey: true});
+      EventUtils.sendString("15");
     });
     yield caretMove;
 

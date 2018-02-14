@@ -36,8 +36,8 @@ addLoadEvent(function() {
 
   // Simulate pressing Enter twice
   ed.focus();
-  synthesizeKey("VK_RETURN", {});
-  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("KEY_Enter");
+  synthesizeKey("KEY_Enter");
 
   ok(true, "Didn't crash!");
   SimpleTest.finish();

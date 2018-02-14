@@ -45,7 +45,7 @@ add_task(function* () {
   info("Change the height property value to 100%");
   let onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.sendString("100%", view.styleWindow);
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   yield onRuleViewChanged;
 
   ok(propEditor.container.classList.contains("ruleview-highlight"),

@@ -25,11 +25,9 @@ SimpleTest.waitForFocus(function() {
   let elm = document.querySelector("input");
 
   elm.focus();
-  synthesizeKey("A", {});
-  synthesizeKey("B", {});
-  synthesizeKey("KEY_Enter", {});
-  synthesizeKey("C", {});
-  synthesizeKey("D", {});
+  sendString("AB");
+  synthesizeKey("KEY_Enter");
+  sendString("CD");
   is(elm.value, "CD", "Can type into the textbox successfully after the onkeypress handler deleting the value");
 
   SimpleTest.finish();

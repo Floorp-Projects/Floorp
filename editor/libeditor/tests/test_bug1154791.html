@@ -31,13 +31,13 @@ SimpleTest.waitForFocus(function() {
   div.focus();
   getSpellChecker().UpdateCurrentDictionary(() => {
     synthesizeMouseAtCenter(div, {});
-    synthesizeKey("VK_LEFT", {});
-    synthesizeKey("VK_LEFT", {});
+    synthesizeKey("KEY_ArrowLeft");
+    synthesizeKey("KEY_ArrowLeft");
 
     setTimeout(function() {
-      synthesizeKey("VK_BACK_SPACE", {});
+      synthesizeKey("KEY_Backspace");
       setTimeout(function() {
-        synthesizeKey(" ", {});
+        sendString(" ");
 
         onSpellCheck(div, function() {
           var sel = getSpellCheckSelection();

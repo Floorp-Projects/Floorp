@@ -30,11 +30,11 @@ function testInteractivityOfMaxLength(elem) {
   elem.setSelectionRange(elem.value.length, elem.value.length)
   elem.focus();
 
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_Backspace");
   is(elem.value, "Tes", "Element value was not changed correctly.");
   is(elem.validity.tooLong, true, "Element should still be tooLong.");
 
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_Backspace");
   is(elem.value, "Te", "Element value was not changed correctly.");
   is(elem.validity.tooLong, false, "Element should no longer be tooLong.");
 
@@ -51,11 +51,11 @@ function testInteractivityOfMinLength(elem) {
   elem.setSelectionRange(elem.value.length, elem.value.length)
   elem.focus();
 
-  synthesizeKey("e", {});
+  sendString("e");
   is(elem.value, "Teste", "Element value was not changed correctly.");
   is(elem.validity.tooShort, true, "Element should still be tooShort.");
 
-  synthesizeKey("d", {});
+  sendString("d");
   is(elem.value, "Tested", "Element value was not changed correctly.");
   is(elem.validity.tooShort, false, "Element should no longer be tooShort.");
 

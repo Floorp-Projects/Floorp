@@ -41,7 +41,7 @@ function nextTest() {
   } else {
     // Make sure the find bar is re-enabled after disabled page is closed.
     testFindEnabled("about:blank", function() {
-      EventUtils.synthesizeKey("VK_ESCAPE", { });
+      EventUtils.synthesizeKey("KEY_Escape");
       ok(gFindBar.hidden, "Find bar should now be hidden");
       finish();
     });
@@ -53,7 +53,7 @@ function testFindDisabled(url, cb) {
     ok(gFindBar.hidden, "Find bar should not be visible");
     EventUtils.synthesizeKey("/", {}, gTab.linkedBrowser.contentWindow);
     ok(gFindBar.hidden, "Find bar should not be visible");
-    EventUtils.synthesizeKey("f", { accelKey: true });
+    EventUtils.synthesizeKey("f", {accelKey: true});
     ok(gFindBar.hidden, "Find bar should not be visible");
     ok(document.getElementById("cmd_find").getAttribute("disabled"),
        "Find command should be disabled");
@@ -71,7 +71,7 @@ function testFindEnabled(url, cb) {
     // Open Find bar and then close it.
     EventUtils.synthesizeKey("f", { accelKey: true });
     ok(!gFindBar.hidden, "Find bar should be visible again");
-    EventUtils.synthesizeKey("VK_ESCAPE", { });
+    EventUtils.synthesizeKey("KEY_Escape");
     ok(gFindBar.hidden, "Find bar should now be hidden");
 
     gBrowser.removeTab(gTab);

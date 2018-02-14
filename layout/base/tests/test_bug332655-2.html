@@ -24,29 +24,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=332655
 
 SimpleTest.waitForExplicitFinish();
 
-function repeatKey(key, repetitions) {
-  for (var i = 0; i < 4; ++i) {
-    synthesizeKey(key, {});
-  }
-}
-
 function test() {
   var textInput = $("testInput");
   var s1, s2, s3, equal, str1, str2;
 
   textInput.focus();
-  synthesizeKey("\u05d0", { });
-  synthesizeKey("a", { });
-  synthesizeKey("b", { });
-  synthesizeKey(" ", { });
-  synthesizeKey("\u05d1", { });
-  synthesizeKey("\u05d2", { });
+  sendString("\u05d0");
+  sendString("ab ");
+  sendString("\u05d1\u05d2");
   s1 = snapshotWindow(window);
 
   // 4 LEFT to get to the beginning of the line: HOME doesn't work on OS X
-  repeatKey("VK_LEFT", 4);
-  synthesizeKey("VK_BACK_SPACE", { });
-  synthesizeKey("\u05d0", { });
+  synthesizeKey("KEY_ArrowLeft", {repeat: 4});
+  synthesizeKey("KEY_Backspace");
+  sendString("\u05d0");
   s2 = snapshotWindow(window);
 
   [equal, str1, str2] = compareSnapshots(s1, s2, true);
@@ -54,14 +45,11 @@ function test() {
      str1 + " but got " + str2);
 
   textInput.select();
-  synthesizeKey("a", { });
-  synthesizeKey("b", { });
-  synthesizeKey(" ", { });
-  synthesizeKey("\u05d1", { });
-  synthesizeKey("\u05d2", { });
+  sendString("ab ");
+  sendString("\u05d1\u05d2");
   // 4 LEFT to get to the beginning of the line: HOME doesn't work on OS X
-  repeatKey("VK_LEFT", 4);
-  synthesizeKey("\u05d0", { });
+  synthesizeKey("KEY_ArrowLeft", {repeat: 4});
+  sendString("\u05d0");
 
   s3 = snapshotWindow(window);
 

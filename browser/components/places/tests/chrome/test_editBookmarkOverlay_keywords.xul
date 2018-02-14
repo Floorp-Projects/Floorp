@@ -80,8 +80,8 @@
         let promise = promiseOnItemChanged();
         keywordField.focus();
         keywordField.value = "kw";
-        synthesizeKey(i.toString(), {});
-        synthesizeKey("VK_RETURN", {});
+        sendString(i.toString());
+        synthesizeKey("KEY_Enter");
         keywordField.blur();
         let {property, value} = await promise;
         is(property, "keyword", "The keyword should have been changed");

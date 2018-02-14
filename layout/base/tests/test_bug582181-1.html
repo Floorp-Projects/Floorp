@@ -32,9 +32,9 @@ function test() {
   s1 = snapshotWindow(window);
 
   textInput.focus();
-  synthesizeKey("VK_DOWN", { });
-  synthesizeKey("VK_DOWN", { });
-  synthesizeKey("VK_RETURN", { });
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_Enter");
   textInput.blur();
   s2 = snapshotWindow(window);
 
@@ -43,7 +43,7 @@ function test() {
      str1 + " but got " + str2);
 
   textInput.focus();
-  synthesizeKey("VK_BACK_SPACE", { });
+  synthesizeKey("KEY_Backspace");
   textInput.blur();
   s3 = snapshotWindow(window);
 

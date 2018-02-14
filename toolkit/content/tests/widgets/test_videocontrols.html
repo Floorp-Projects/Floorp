@@ -269,19 +269,19 @@ add_task(async function click_slider() {
 add_task(async function change_volume() {
   video.focus();
 
-  synthesizeKey("VK_DOWN", {});
+  synthesizeKey("KEY_ArrowDown");
   await waitForEvent("volumechange");
   is(video.volume, 0, "Volume should be 0.");
   ok(!video.muted, "Video is not muted.");
   ok(await isMuteButtonMuted(), "Mute button says it's muted");
 
-  synthesizeKey("VK_UP", {});
+  synthesizeKey("KEY_ArrowUp");
   await waitForEvent("volumechange");
   is(video.volume, 0.1, "Volume is increased.");
   ok(!video.muted, "Video is not muted.");
   ok(!(await isMuteButtonMuted()), "Mute button says it's not muted");
 
-  synthesizeKey("VK_DOWN", {});
+  synthesizeKey("KEY_ArrowDown");
   await waitForEvent("volumechange");
   is(video.volume, 0, "Volume should be 0.");
   ok(!video.muted, "Video is not muted.");
@@ -292,7 +292,7 @@ add_task(async function change_volume() {
   is(video.volume, 0.5, "Volume should be 0.5.");
   ok(!video.muted, "Video is not muted.");
 
-  synthesizeKey("VK_UP", {});
+  synthesizeKey("KEY_ArrowUp");
   await waitForEvent("volumechange");
   is(video.volume, 0.6, "Volume should be 0.6.");
   ok(!video.muted, "Video is not muted.");
@@ -314,14 +314,14 @@ add_task(async function change_volume() {
   is(video.volume, 0.6, "Volume should still be 0.6");
   await isVolumeSliderShowingCorrectVolume(video.volume);
 
-  synthesizeKey("VK_ESCAPE", {});
+  synthesizeKey("KEY_Escape");
   await waitForEvent("mozfullscreenchange");
   is(video.volume, 0.6, "Volume should still be 0.6");
   await isVolumeSliderShowingCorrectVolume(video.volume);
   forceReframe();
 
   video.focus();
-  synthesizeKey("VK_DOWN", {});
+  synthesizeKey("KEY_ArrowDown");
   await waitForEvent("volumechange");
   is(video.volume, 0.5, "Volume should be decreased by 0.1");
   await isVolumeSliderShowingCorrectVolume(video.volume);
@@ -332,7 +332,7 @@ add_task(async function whitespace_pause_video() {
   await waitForEvent("play");
 
   video.focus();
-  synthesizeKey(" ", {});
+  sendString(" ");
   await waitForEvent("pause");
 
   synthesizeMouse(video, playButtonCenterX, playButtonCenterY, {});

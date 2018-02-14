@@ -16,9 +16,9 @@
         d.designMode = "off";
         d.designMode = "on";
         d.body.focus();
-        synthesizeKey("x", {});
+        sendString("x");
         s.collapse(d.body.firstChild, 1);
-        synthesizeKey("x", {});
+        sendString("x");
         setTimeout(function() {
           document.documentElement.removeAttribute("class");
         }, 0);

@@ -694,7 +694,7 @@ async function test_urlBar() {
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   gURLBar.value = TESTROOT + "amosigned.xpi";
   gURLBar.focus();
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
 
   await progressPromise;
   let installDialog = await dialogPromise;

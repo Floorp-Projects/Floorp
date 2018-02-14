@@ -113,7 +113,7 @@ function* testNaviatingHistoryInUI(hud) {
   // Count backwards from original input and make sure that pressing up
   // restores this.
   for (let i = INPUT_HISTORY_COUNT - 1; i >= 0; i--) {
-    EventUtils.synthesizeKey("VK_UP", {});
+    EventUtils.synthesizeKey("KEY_ArrowUp");
     is(jsterm.getInputValue(), i, "Pressing up restores last input");
   }
 }

@@ -136,9 +136,7 @@ function runTests()
     }
 
     if (aFocus && aFocus._isFocusable) {
-      synthesizeKey("A", { });
-      synthesizeKey("B", { });
-      synthesizeKey("C", { });
+      sendString("ABC");
       checkValue(staticContent, "ABC");
       checkValue(inputInStatic, "ABC");
       checkValue(textareaInStatic, "ABC");
@@ -147,9 +145,7 @@ function runTests()
       checkValue(textareaInEditor, "ABC");
 
       if (aFocus._isEditable) {
-        synthesizeKey("VK_BACK_SPACE", { });
-        synthesizeKey("VK_BACK_SPACE", { });
-        synthesizeKey("VK_BACK_SPACE", { });
+        synthesizeKey("KEY_Backspace", {repeat: 3});
         checkValue(staticContent, "");
         checkValue(inputInStatic, "");
         checkValue(textareaInStatic, "");
@@ -302,7 +298,7 @@ function runTests()
     checkValue(inputInEditor, "\u3089");
     checkValue(textareaInEditor, "\u3089");
 
-    synthesizeKey("VK_BACK_SPACE", { });
+    synthesizeKey("KEY_Backspace");
     checkValue(staticContent, "");
     checkValue(inputInStatic, "");
     checkValue(textareaInStatic, "");

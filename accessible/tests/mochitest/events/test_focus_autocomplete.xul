@@ -127,8 +127,8 @@
 
       this.invoke = function removeChar_invoke()
       {
-        synthesizeKey("VK_LEFT", { shiftKey: true });
-        synthesizeKey("VK_DELETE", {});
+        synthesizeKey("KEY_ArrowLeft", {shiftKey: true});
+        synthesizeKey("KEY_Delete");
       }
 
       this.getID = function removeChar_getID()
@@ -144,7 +144,7 @@
       this.invoke = function replaceOnChar_invoke()
       {
         this.DOMNode.select();
-        synthesizeKey(aChar, {});
+        sendString(aChar);
       }
 
       this.getID = function replaceOnChar_getID()

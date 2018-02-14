@@ -34,13 +34,13 @@ add_task(async function() {
   // First item should already be selected
   is_selected(0);
   // Select next one (important!)
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is_selected(1);
   // Re-select keyword item
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is_selected(0);
 
-  EventUtils.synthesizeKey("b", {});
+  EventUtils.sendString("b");
   await promiseSearchComplete();
 
   is(gURLBar.textValue, "keyword ab", "urlbar should have expected input");
@@ -49,7 +49,7 @@ add_task(async function() {
   let uri = NetUtil.newURI(result.getAttribute("url"));
   is(uri.spec, PlacesUtils.mozActionURI("keyword", {url: "http://example.com/?q=ab", input: "keyword ab"}), "Expect correct url");
 
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   await promisePopupHidden(gURLBar.popup);
   gBrowser.removeTab(tab);
 });

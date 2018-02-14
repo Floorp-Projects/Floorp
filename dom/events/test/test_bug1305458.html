@@ -34,13 +34,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1305458
       // mouse hover
       input.focus();
       synthesizeMouse(input, 1, 1, {type: "mousemove"});
-      synthesizeKey("1", {});
+      sendString("1");
       input.blur();
       is(change_count, 1, "input should fire change when blur");
 
       input.focus();
       synthesizeMouse(div, 1, 1, {type: "mousemove"});
-      synthesizeKey("1", {});
+      sendString("1");
       input.blur();
       is(change_count, 2, "input should fire change when blur");
       SimpleTest.finish();

@@ -23,7 +23,7 @@ input:placeholder-shown {
     input.focus();
     is(getComputedStyle(input).borderLeftColor, "rgb(0, 0, 255)",
        ":placeholder-shown should apply")
-    synthesizeKey('x', {});
+    sendString("x");
     isnot(getComputedStyle(input).borderLeftColor, "rgb(0, 0, 255)",
           ":placeholder-shown should not apply, even though the value is invalid")
   }

@@ -52,7 +52,7 @@ function runTest()
 
   var childWinObj = frames[0].wrappedJSObject;
 
-  synthesizeKey("b", {});
+  sendString("b");
   is(gKeyDown3, 1, "keydown on input 3");
   is(gKeyPress3, 1, "keypress on input 3");
   is(gKeyUp3, 1, "keyup on input 3");
@@ -71,7 +71,7 @@ function runTest()
   // element in a chrome document from a content document.
   i4.addEventListener("keydown", () => $("i3").focus());
 
-  synthesizeKey("c", {});
+  sendString("c");
 
   is(gKeyDown3, 1, "keydown on input 3");
   is(gKeyPress3, 1, "keypress on input 3");

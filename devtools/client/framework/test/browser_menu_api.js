@@ -161,16 +161,16 @@ function* testSubmenu(toolbox) {
 
   info("Using keyboard navigation to open, close, and reopen the submenu");
   let shown = once(menus[0], "popupshown");
-  EventUtils.synthesizeKey("VK_DOWN", {});
-  EventUtils.synthesizeKey("VK_RIGHT", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_ArrowRight");
   yield shown;
 
   let hidden = once(menus[0], "popuphidden");
-  EventUtils.synthesizeKey("VK_LEFT", {});
+  EventUtils.synthesizeKey("KEY_ArrowLeft");
   yield hidden;
 
   shown = once(menus[0], "popupshown");
-  EventUtils.synthesizeKey("VK_RIGHT", {});
+  EventUtils.synthesizeKey("KEY_ArrowRight");
   yield shown;
 
   info("Clicking the submenu item");

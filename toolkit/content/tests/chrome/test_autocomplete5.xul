@@ -89,7 +89,7 @@ function startTest() {
   // search has stopped, then start a new search.
   autocomplete.blur();
   autocomplete.focus();
-  synthesizeKey("r", {});
+  sendString("r");
 }
 
 let hasTextEntered = false;
@@ -105,10 +105,10 @@ function checkSearchCompleted() {
 
   if (test == 0) {
     hasSearchBegun = false;
-    synthesizeKey("VK_RETURN", { });
+    synthesizeKey("KEY_Enter");
   } else if (test == 1) {
     hasSearchBegun = false;
-    synthesizeKey("VK_ESCAPE", { });
+    synthesizeKey("KEY_Escape");
   } else {
     throw "checkSearchCompleted should only be called twice.";
   }
@@ -125,7 +125,7 @@ function checkTextEntered() {
   autocomplete.textValue = "";
   autocomplete.blur();
   autocomplete.focus();
-  synthesizeKey("r", {});
+  sendString("r");
 }
 
 function checkTextReverted() {

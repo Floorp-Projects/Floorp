@@ -51,26 +51,26 @@ function runTests()
   // cursor keys navigate between items without opening the menu
   if (!ismac) {
     expectCommandEvent = true;
-    keyCheck(list, "VK_DOWN", 2, 1, "cursor down");
-    keyCheck(list, "VK_DOWN", 3, 1, "cursor down skip disabled");
-    keyCheck(list, "VK_UP", 2, 1, "cursor up skip disabled");
-    keyCheck(list, "VK_UP", 1, 1, "cursor up");
+    keyCheck(list, "KEY_ArrowDown", 2, 1, "cursor down");
+    keyCheck(list, "KEY_ArrowDown", 3, 1, "cursor down skip disabled");
+    keyCheck(list, "KEY_ArrowUp", 2, 1, "cursor up skip disabled");
+    keyCheck(list, "KEY_ArrowUp", 1, 1, "cursor up");
 
     // On Windows, wrapping doesn't occur.
-    keyCheck(list, "VK_UP", iswin ? 1 : 4, 1, "cursor up wrap");
+    keyCheck(list, "KEY_ArrowUp", iswin ? 1 : 4, 1, "cursor up wrap");
 
     list.selectedIndex = 4;
     list.menuBoxObject.activeChild = list.selectedItem;
-    keyCheck(list, "VK_DOWN", iswin ? 4 : 1, 4, "cursor down wrap");
+    keyCheck(list, "KEY_ArrowDown", iswin ? 4 : 1, 4, "cursor down wrap");
 
     list.selectedIndex = 0;
     list.menuBoxObject.activeChild = list.selectedItem;
   }
 
   // check that attempting to open the menulist does not change the selection
-  synthesizeKey("VK_DOWN", { altKey: !ismac });
+  synthesizeKey("KEY_ArrowDown", {altKey: !ismac});
   is(list.selectedItem, $("i1"), "open menulist down selectedItem");
-  synthesizeKey("VK_UP", { altKey: !ismac });
+  synthesizeKey("KEY_ArrowUp", {altKey: !ismac});
   is(list.selectedItem, $("i1"), "open menulist up selectedItem");
 
   list.selectedItem = $("i1");
@@ -84,7 +84,7 @@ function pressLetter()
   // where items are selected immediately.
   expectCommandEvent = !gOpenPhase || iswin;
 
-  synthesizeKey("G", { });
+  sendString("G");
   is(list.selectedItem, $("i1"), "letter pressed not found selectedItem");
 
   keyCheck(list, "T", 2, 1, "letter pressed");
@@ -144,8 +144,8 @@ function tabAndScroll()
 
   if (!ismac) {
     $("button1").focus();
-    synthesizeKeyExpectEvent("VK_TAB", { }, list, "focus", "focus to menulist");
-    synthesizeKeyExpectEvent("VK_TAB", { }, $("button2"), "focus", "focus to button");
+    synthesizeKeyExpectEvent("KEY_Tab", {}, list, "focus", "focus to menulist");
+    synthesizeKeyExpectEvent("KEY_Tab", {}, $("button2"), "focus", "focus to button");
     is(document.activeElement, $("button2"), "tab from menulist focused button");
   }
 
@@ -177,7 +177,7 @@ function tabAndScroll()
 
   originalPosition = item.getBoundingClientRect().top;
 
-  synthesizeKey("VK_DOWN", { });
+  synthesizeKey("KEY_ArrowDown");
   is(item.getBoundingClientRect().top, originalPosition - rowdiff, "position of item 10");
 
   list.open = false;
@@ -209,7 +209,7 @@ function checkEnter()
   list.addEventListener("popuphidden", checkEnterWithModifiers, false);
   list.addEventListener("command", checkModifiers, false);
   list.open = true;
-  synthesizeKey("VK_RETURN", { });
+  synthesizeKey("KEY_Enter");
 }
 
 function checkEnterWithModifiers()
@@ -222,7 +222,7 @@ function checkEnterWithModifiers()
   list.addEventListener("popuphidden", verifyPopupOnClose, false);
   list.open = true;
 
-  synthesizeKey("VK_RETURN", { shiftKey: true, ctrlKey: true, altKey: true, metaKey: true });
+  synthesizeKey("KEY_Enter", {shiftKey: true, ctrlKey: true, altKey: true, metaKey: true});
 }
 
 function verifyPopupOnClose()
@@ -246,11 +246,11 @@ function checkCursorNavigation()
   }, false);
 
   is(list.selectedIndex, 1, "selectedIndex before cursor down");
-  synthesizeKey("VK_DOWN", { });
+  synthesizeKey("KEY_ArrowDown");
   is(list.selectedIndex, iswin ? 2 : 1, "selectedIndex after cursor down");
   is(commandEventsCount, iswin ? 1 : 0, "selectedIndex after cursor down command event");
   is(list.menupopup.state, "open", "cursor down popup state");
-  synthesizeKey("VK_PAGE_DOWN", { });
+  synthesizeKey("KEY_PageDown");
   is(list.selectedIndex, iswin ? 3 : 1, "selectedIndex after page down");
   is(commandEventsCount, iswin ? 2 : 0, "selectedIndex after page down command event");
   is(list.menupopup.state, "open", "page down popup state");
@@ -258,17 +258,17 @@ function checkCursorNavigation()
   // Check whether cursor up and down wraps.
   list.selectedIndex = 0;
   list.menuBoxObject.activeChild = list.selectedItem;
-  synthesizeKey("VK_UP", { });
+  synthesizeKey("KEY_ArrowUp");
   is(list.menuBoxObject.activeChild,
      document.getElementById(iswin || ismac ? "b1" : "b4"), "cursor up wrap while open");
 
   list.selectedIndex = 3;
   list.menuBoxObject.activeChild = list.selectedItem;
-  synthesizeKey("VK_DOWN", { });
+  synthesizeKey("KEY_ArrowDown");
   is(list.menuBoxObject.activeChild,
      document.getElementById(iswin || ismac ? "b4" : "b1"), "cursor down wrap while open");
 
-  synthesizeKey("VK_UP", { altKey: true });
+  synthesizeKey("KEY_ArrowUp", {altKey: true});
   is(list.open, ismac, "alt+up closes popup");
  
   if (ismac) {

@@ -59,7 +59,7 @@ function* testEditSelector(view, name) {
 
   info("Entering a new selector name and committing");
   editor.input.value = name;
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
 
   let isVisible = yield onToggled;
 

@@ -76,7 +76,7 @@ function doTests() {
 
   textbox.value = "foo";
   gExpectedValue = "";
-  synthesizeKey("VK_ESCAPE", {});
+  synthesizeKey("KEY_Escape");
   is(textbox.value, "", "escape key clears the textbox");
   ok(gExpectedValue == null, "search triggered when clearing the textbox with the escape key");
 
@@ -86,7 +86,7 @@ function doTests() {
   ok(gExpectedValue == null, "search triggered with doCommand");
 
   gExpectedValue = "bar";
-  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("KEY_Enter");
   ok(gExpectedValue == null, "search triggered with enter key");
 
   textbox.value = "";
@@ -102,7 +102,7 @@ function doTests() {
   ok(gExpectedValue == null, "search triggered when clicking the search icon in search button mode");
   is(icons.selectedPanel, clearIcon, "clear icon displayed in search button mode after submitting");
 
-  synthesizeKey("o", {});
+  sendString("o");
   is(icons.selectedPanel, searchIcon, "search icon displayed in search button mode when typing a key");
 
   gExpectedValue = "fooo";
@@ -112,16 +112,16 @@ function doTests() {
   is(icons.selectedPanel, searchIcon, "search icon displayed in search button mode when the value is changed");
 
   gExpectedValue = "foo";
-  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("KEY_Enter");
   ok(gExpectedValue == null, "search triggered with enter key in search button mode");
   is(icons.selectedPanel, clearIcon, "clear icon displayed in search button mode after submitting with enter key");
 
   textbox.value = "x";
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_Backspace");
   is(icons.selectedPanel, searchIcon, "search icon displayed in search button mode when deleting the value with the backspace key");
 
   gExpectedValue = "";
-  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("KEY_Enter");
   ok(gExpectedValue == null, "search triggered with enter key in search button mode");
   is(icons.selectedPanel, searchIcon, "search icon displayed in search button mode after submitting an empty string");
 
@@ -152,8 +152,7 @@ function doTests() {
   gLastTest = true;
   gExpectedValue = "123";
   textbox.value = "1";
-  synthesizeKey("2", {});
-  synthesizeKey("3", {});
+  sendString("23");
 }
 
 function doSearch(aValue) {

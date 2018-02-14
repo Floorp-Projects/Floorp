@@ -25,31 +25,31 @@ function testEditedInputHistory(hud) {
   is(inputNode.selectionEnd, 0);
 
   jsterm.setInputValue('"first item"');
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(jsterm.getInputValue(), '"first item"', "null test history up");
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(jsterm.getInputValue(), '"first item"', "null test history down");
 
   jsterm.execute();
   is(jsterm.getInputValue(), "", "cleared input line after submit");
 
   jsterm.setInputValue('"editing input 1"');
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(jsterm.getInputValue(), '"first item"', "test history up");
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(jsterm.getInputValue(), '"editing input 1"',
     "test history down restores in-progress input");
 
   jsterm.setInputValue('"second item"');
   jsterm.execute();
   jsterm.setInputValue('"editing input 2"');
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(jsterm.getInputValue(), '"second item"', "test history up");
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(jsterm.getInputValue(), '"first item"', "test history up");
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(jsterm.getInputValue(), '"second item"', "test history down");
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(jsterm.getInputValue(), '"editing input 2"',
      "test history down restores new in-progress input again");
 }

@@ -32,11 +32,11 @@ add_task(async function() {
       gURLBar.selectionStart = gURLBar.selectionEnd =
         gURLBar.inputField.value.length;
       gURLBar.inputField.value = inputValue.slice(0, -1);
-      EventUtils.synthesizeKey(inputValue.slice(-1), {});
+      EventUtils.sendString(inputValue.slice(-1));
     } else {
       gURLBar.textValue = inputValue;
     }
-    EventUtils.synthesizeKey("VK_RETURN", options);
+    EventUtils.synthesizeKey("KEY_Enter", options);
     await promiseLoad;
   }
 });

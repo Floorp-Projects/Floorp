@@ -58,9 +58,7 @@
 
    function setTextboxValue(textbox, value) {
       textbox.focus();
-      for (var i = 0; i < value.length; ++i) {
-          synthesizeKey(value.charAt(i), {});
-      }
+      sendString(value);
       textbox.blur();
    }
 

@@ -96,58 +96,58 @@ var currentTest = null;
 const tests = [
   {
     desc: "HOME key remove selection",
-    key: "VK_HOME",
+    key: "KEY_Home",
     removeSelection: true,
     result: "re",
     start: 0, end: 0
   },
   {
     desc: "LEFT key remove selection",
-    key: "VK_LEFT",
+    key: "KEY_ArrowLeft",
     removeSelection: true,
     result: "re",
     start: 1, end: 1
   },
   { desc: "RIGHT key remove selection",
-    key: "VK_RIGHT",
+    key: "KEY_ArrowRight",
     removeSelection: true,
     result: "re",
     start: 2, end: 2
   },
   { desc: "ENTER key remove selection",
-    key: "VK_RETURN",
+    key: "KEY_Enter",
     removeSelection: true,
     result: "re",
     start: 2, end: 2
   },
   {
     desc: "HOME key",
-    key: "VK_HOME",
+    key: "KEY_Home",
     removeSelection: false,
     result: "Result",
     start: 0, end: 0
   },
   {
     desc: "LEFT key",
-    key: "VK_LEFT",
+    key: "KEY_ArrowLeft",
     removeSelection: false,
     result: "Result",
     start: 5, end: 5
   },
   { desc: "RIGHT key",
-    key: "VK_RIGHT",
+    key: "KEY_ArrowRight",
     removeSelection: false,
     result: "Result",
     start: 6, end: 6
   },
   { desc: "RETURN key",
-    key: "VK_RETURN",
+    key: "KEY_Enter",
     removeSelection: false,
     result: "Result",
     start: 6, end: 6
   },
   { desc: "TAB key should confirm suggestion when forcecomplete is set",
-    key: "VK_TAB",
+    key: "KEY_Tab",
     removeSelection: false,
     forceComplete: true,
     result: "Result",
@@ -155,7 +155,7 @@ const tests = [
   },
 
   { desc: "RIGHT key complete from middle",
-    key: "VK_RIGHT",
+    key: "KEY_ArrowRight",
     forceComplete: true,
     completeFromMiddle: true,
     result: "Result",
@@ -163,7 +163,7 @@ const tests = [
   },
   {
     desc: "RIGHT key w/ minResultsForPopup=2",
-    key: "VK_RIGHT",
+    key: "KEY_ArrowRight",
     removeSelection: false,
     minResultsForPopup: 2,
     result: "Result",
@@ -187,7 +187,7 @@ function nextTest() {
   currentTest = tests.shift();
 
   // HOME key works differently on Mac, so we skip tests using it.
-  if (currentTest.key == "VK_HOME" && navigator.platform.includes("Mac"))
+  if (currentTest.key == "KEY_Home" && navigator.platform.includes("Mac"))
     nextTest();
   else
     setTimeout(runCurrentTest, 0);
@@ -203,12 +203,10 @@ function runCurrentTest() {
   autocomplete.focus();
 
   if (!currentTest.completeFromMiddle) {
-    synthesizeKey("r", {});
-    synthesizeKey("e", {});
+    sendString("re");
   }
   else {
-    synthesizeKey("l", {});
-    synthesizeKey("t", {});
+    sendString("lt");
   }
 }
 
@@ -218,7 +216,7 @@ function searchComplete() {
 
   if (currentTest.completeFromMiddle) {
     if (!currentTest.forceComplete) {
-      synthesizeKey(currentTest.key, {});
+      synthesizeKey(currentTest.key);
     }
     else if (!/ >> /.test(autocomplete.value)) {
       // At this point we should have a value like "lt >> Result" showing.
@@ -240,10 +238,10 @@ function searchComplete() {
   if (autocomplete.selectionStart == 2) {  // Finished inserting "re" string.
     if (currentTest.removeSelection) {
       // remove current selection
-      synthesizeKey("VK_DELETE", {});
+      synthesizeKey("KEY_Delete");
     }
 
-    synthesizeKey(currentTest.key, {});
+    synthesizeKey(currentTest.key);
 
     checkResult();
   }

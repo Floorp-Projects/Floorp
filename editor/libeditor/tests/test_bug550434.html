@@ -29,7 +29,7 @@ SimpleTest.waitForFocus(function() {
   synthesizeMouse(ed, 10, 10, {});
   synthesizeMouse(ed, 50, 50, {});
   setTimeout(function() {
-  synthesizeKey("x", {});
+  sendString("x");
 
   is(ed.innerHTML, "x", "Editor should work after being clicked twice");
   SimpleTest.finish();

@@ -95,11 +95,11 @@ function go_back() {
 }
 
 function go_back_backspace() {
-    EventUtils.synthesizeKey("VK_BACK_SPACE", {});
+    EventUtils.synthesizeKey("KEY_Backspace");
 }
 
 function go_forward_backspace() {
-    EventUtils.synthesizeKey("VK_BACK_SPACE", {shiftKey: true});
+    EventUtils.synthesizeKey("KEY_Backspace", {shiftKey: true});
 }
 
 function go_forward() {

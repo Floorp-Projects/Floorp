@@ -26,8 +26,8 @@ add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
-  yield testEditableFieldFocus(inspector, view, "VK_RETURN");
-  yield testEditableFieldFocus(inspector, view, "VK_TAB");
+  yield testEditableFieldFocus(inspector, view, "KEY_Enter");
+  yield testEditableFieldFocus(inspector, view, "KEY_Tab");
 });
 
 function* testEditableFieldFocus(inspector, view, commitKey) {
@@ -79,7 +79,7 @@ function* testEditableFieldFocus(inspector, view, commitKey) {
     "Focus should have moved to the next rule selector");
 
   info("Blur the selector field");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
 }
 
 function* focusNextEditableField(view, ruleEditor, commitKey) {

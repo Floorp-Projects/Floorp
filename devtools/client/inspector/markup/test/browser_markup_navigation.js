@@ -8,72 +8,72 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_navigation.html";
 const TEST_DATA = [
-  ["pageup", "*doctype*"],
-  ["down", "html"],
-  ["down", "head"],
-  ["down", "body"],
-  ["down", "node0"],
-  ["right", "node0"],
-  ["down", "node1"],
-  ["down", "node2"],
-  ["down", "node3"],
-  ["down", "*comment*"],
-  ["down", "node4"],
-  ["right", "node4"],
-  ["down", "*text*"],
-  ["down", "node5"],
-  ["down", "*text*"],
-  ["down", "node6"],
-  ["down", "*text*"],
-  ["down", "*comment*"],
-  ["down", "node7"],
-  ["right", "node7"],
-  ["down", "*text*"],
-  ["down", "node8"],
-  ["left", "node7"],
-  ["left", "node7"],
-  ["right", "node7"],
-  ["right", "*text*"],
-  ["down", "node8"],
-  ["down", "*text*"],
-  ["down", "node9"],
-  ["down", "*text*"],
-  ["down", "node10"],
-  ["down", "*text*"],
-  ["down", "node11"],
-  ["down", "*text*"],
-  ["down", "node12"],
-  ["right", "node12"],
-  ["down", "*text*"],
-  ["down", "node13"],
-  ["down", "node14"],
-  ["down", "node15"],
-  ["down", "node15"],
-  ["down", "node15"],
-  ["up", "node14"],
-  ["up", "node13"],
-  ["up", "*text*"],
-  ["up", "node12"],
-  ["left", "node12"],
-  ["down", "node14"],
-  ["home", "*doctype*"],
-  ["pagedown", "*text*"],
-  ["down", "node5"],
-  ["down", "*text*"],
-  ["down", "node6"],
-  ["down", "*text*"],
-  ["down", "*comment*"],
-  ["down", "node7"],
-  ["left", "node7"],
-  ["down", "*text*"],
-  ["down", "node9"],
-  ["down", "*text*"],
-  ["down", "node10"],
-  ["pageup", "*text*"],
-  ["pageup", "*doctype*"],
-  ["down", "html"],
-  ["left", "html"],
-  ["down", "head"]
+  ["KEY_PageUp", "*doctype*"],
+  ["KEY_ArrowDown", "html"],
+  ["KEY_ArrowDown", "head"],
+  ["KEY_ArrowDown", "body"],
+  ["KEY_ArrowDown", "node0"],
+  ["KEY_ArrowRight", "node0"],
+  ["KEY_ArrowDown", "node1"],
+  ["KEY_ArrowDown", "node2"],
+  ["KEY_ArrowDown", "node3"],
+  ["KEY_ArrowDown", "*comment*"],
+  ["KEY_ArrowDown", "node4"],
+  ["KEY_ArrowRight", "node4"],
+  ["KEY_ArrowDown", "*text*"],
+  ["KEY_ArrowDown", "node5"],
+  ["KEY_ArrowDown", "*text*"],
+  ["KEY_ArrowDown", "node6"],
+  ["KEY_ArrowDown", "*text*"],
+  ["KEY_ArrowDown", "*comment*"],
+  ["KEY_ArrowDown", "node7"],
+  ["KEY_ArrowRight", "node7"],
+  ["KEY_ArrowDown", "*text*"],
+  ["KEY_ArrowDown", "node8"],
+  ["KEY_ArrowLeft", "node7"],
+  ["KEY_ArrowLeft", "node7"],
+  ["KEY_ArrowRight", "node7"],
+  ["KEY_ArrowRight", "*text*"],
+  ["KEY_ArrowDown", "node8"],
+  ["KEY_ArrowDown", "*text*"],
+  ["KEY_ArrowDown", "node9"],
+  ["KEY_ArrowDown", "*text*"],
+  ["KEY_ArrowDown", "node10"],
+  ["KEY_ArrowDown", "*text*"],
+  ["KEY_ArrowDown", "node11"],
+  ["KEY_ArrowDown", "*text*"],
+  ["KEY_ArrowDown", "node12"],
+  ["KEY_ArrowRight", "node12"],
+  ["KEY_ArrowDown", "*text*"],
+  ["KEY_ArrowDown", "node13"],
+  ["KEY_ArrowDown", "node14"],
+  ["KEY_ArrowDown", "node15"],
+  ["KEY_ArrowDown", "node15"],
+  ["KEY_ArrowDown", "node15"],
+  ["KEY_ArrowUp", "node14"],
+  ["KEY_ArrowUp", "node13"],
+  ["KEY_ArrowUp", "*text*"],
+  ["KEY_ArrowUp", "node12"],
+  ["KEY_ArrowLeft", "node12"],
+  ["KEY_ArrowDown", "node14"],
+  ["KEY_Home", "*doctype*"],
+  ["KEY_PageDown", "*text*"],
+  ["KEY_ArrowDown", "node5"],
+  ["KEY_ArrowDown", "*text*"],
+  ["KEY_ArrowDown", "node6"],
+  ["KEY_ArrowDown", "*text*"],
+  ["KEY_ArrowDown", "*comment*"],
+  ["KEY_ArrowDown", "node7"],
+  ["KEY_ArrowLeft", "node7"],
+  ["KEY_ArrowDown", "*text*"],
+  ["KEY_ArrowDown", "node9"],
+  ["KEY_ArrowDown", "*text*"],
+  ["KEY_ArrowDown", "node10"],
+  ["KEY_PageUp", "*text*"],
+  ["KEY_PageUp", "*doctype*"],
+  ["KEY_ArrowDown", "html"],
+  ["KEY_ArrowLeft", "html"],
+  ["KEY_ArrowDown", "head"]
 ];
 
 add_task(function* () {
@@ -85,7 +85,7 @@ add_task(function* () {
   info("Starting to iterate through the test data");
   for (let [key, className] of TEST_DATA) {
     info("Testing step: " + key + " to navigate to " + className);
-    pressKey(key);
+    EventUtils.synthesizeKey(key);
 
     info("Making sure markup-view children get updated");
     yield waitForChildrenUpdated(inspector);
@@ -101,32 +101,6 @@ add_task(function* () {
   // catch-all event works too.
   yield inspector.once("inspector-updated");
 });
-
-function pressKey(key) {
-  switch (key) {
-    case "right":
-      EventUtils.synthesizeKey("VK_RIGHT", {});
-      break;
-    case "down":
-      EventUtils.synthesizeKey("VK_DOWN", {});
-      break;
-    case "left":
-      EventUtils.synthesizeKey("VK_LEFT", {});
-      break;
-    case "up":
-      EventUtils.synthesizeKey("VK_UP", {});
-      break;
-    case "pageup":
-      EventUtils.synthesizeKey("VK_PAGE_UP", {});
-      break;
-    case "pagedown":
-      EventUtils.synthesizeKey("VK_PAGE_DOWN", {});
-      break;
-    case "home":
-      EventUtils.synthesizeKey("VK_HOME", {});
-      break;
-  }
-}
 
 function checkSelectedNode(key, className, inspector) {
   let node = inspector.selection.nodeFront;

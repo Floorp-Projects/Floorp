@@ -65,8 +65,8 @@ function runTests()
 
 function menuOpened()
 {
-  synthesizeKey("VK_DOWN", { });
-  synthesizeKey("VK_RETURN", { });
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_Enter");
 }
 
 function menuClosed()
@@ -88,7 +88,7 @@ function panelOnButtonOpened(panel)
 {
   is(panel.state, 'open', 'button panel is open');
   is(document.activeElement, document.documentElement, "focus blurred on panel from button open");
-  synthesizeKey("VK_DOWN", { });
+  synthesizeKey("KEY_ArrowDown");
   is(document.activeElement, document.documentElement, "focus not modified on cursor down from button");
   panel.firstChild.doCommand()
 }
@@ -98,7 +98,7 @@ function panelOnToolbarbuttonOpened(panel)
   is(panel.state, 'open', 'toolbarbutton panel is open');
   is(document.activeElement, document.documentElement, "focus blurred on panel from toolbarbutton open");
   panel.firstChild.focus();
-  synthesizeKey("VK_DOWN", { });
+  synthesizeKey("KEY_ArrowDown");
   is(document.activeElement, panel.firstChild.inputField, "focus not modified on cursor down from toolbarbutton");
   panel.parentNode.open = false;
 }

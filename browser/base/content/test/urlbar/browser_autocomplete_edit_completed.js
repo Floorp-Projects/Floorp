@@ -20,7 +20,7 @@ add_task(async function() {
   let initialIndex = list.selectedIndex;
 
   info("Key Down to select the next item.");
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
 
   let nextIndex = initialIndex + 1;
   let nextValue = gURLBar.controller.getFinalCompleteValueAt(nextIndex);
@@ -28,7 +28,7 @@ add_task(async function() {
   is(gURLBar.value, nextValue, "The selected URL is completed.");
 
   info("Press backspace");
-  EventUtils.synthesizeKey("VK_BACK_SPACE", {});
+  EventUtils.synthesizeKey("KEY_Backspace");
   await promiseSearchComplete();
 
   let editedValue = gURLBar.textValue;
@@ -38,7 +38,7 @@ add_task(async function() {
   let docLoad = waitForDocLoadAndStopIt("http://" + editedValue);
 
   info("Press return to load edited URL.");
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   await Promise.all([
     promisePopupHidden(gURLBar.popup),
     docLoad,

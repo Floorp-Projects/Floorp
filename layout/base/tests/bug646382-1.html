@@ -11,9 +11,9 @@
       }
       function typeIntoMe() {
         setTimeout(function() {
-          synthesizeKey("س", {});
-          synthesizeKey("VK_DOWN", {});
-          synthesizeKey("VK_DOWN", {});
+          sendString("س");
+          synthesizeKey("KEY_ArrowDown");
+          synthesizeKey("KEY_ArrowDown");
           document.documentElement.removeAttribute("class");
         }, 0);
       }

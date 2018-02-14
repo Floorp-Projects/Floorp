@@ -11,7 +11,7 @@ async function test_autocomplete(data) {
   if (onAutoFill)
     onAutoFill();
 
-  keys.forEach(key => EventUtils.synthesizeKey(key, {}));
+  keys.forEach(key => EventUtils.synthesizeKey(key));
 
   is(gURLBar.textValue, modified, "backspaced value is as expected");
 
@@ -46,14 +46,14 @@ add_task(async function() {
                             typed: "exam",
                             autofilled: "example.com/",
                             modified: "exam",
-                            keys: ["VK_DELETE"],
+                            keys: ["KEY_Delete"],
                             action: "searchengine"
                           });
   await test_autocomplete({ desc: "DELETE the final slash should visit",
                             typed: "example.com",
                             autofilled: "example.com/",
                             modified: "example.com",
-                            keys: ["VK_DELETE"],
+                            keys: ["KEY_Delete"],
                             action: "visiturl"
                           });
 
@@ -61,14 +61,14 @@ add_task(async function() {
                             typed: "exam",
                             autofilled: "example.com/",
                             modified: "exam",
-                            keys: ["VK_BACK_SPACE"],
+                            keys: ["KEY_Backspace"],
                             action: "searchengine"
                           });
   await test_autocomplete({ desc: "BACK_SPACE the final slash should visit",
                             typed: "example.com",
                             autofilled: "example.com/",
                             modified: "example.com",
-                            keys: ["VK_BACK_SPACE"],
+                            keys: ["KEY_Backspace"],
                             action: "visiturl"
                           });
 
@@ -76,14 +76,14 @@ add_task(async function() {
                             typed: "exam",
                             autofilled: "example.com/",
                             modified: "exa",
-                            keys: ["VK_DELETE", "VK_BACK_SPACE"],
+                            keys: ["KEY_Delete", "KEY_Backspace"],
                             action: "searchengine"
                           });
   await test_autocomplete({ desc: "DELETE the final slash, then BACK_SPACE, should search",
                             typed: "example.com",
                             autofilled: "example.com/",
                             modified: "example.co",
-                            keys: ["VK_DELETE", "VK_BACK_SPACE"],
+                            keys: ["KEY_Delete", "KEY_Backspace"],
                             action: "visiturl"
                           });
 
@@ -91,14 +91,14 @@ add_task(async function() {
                             typed: "exam",
                             autofilled: "example.com/",
                             modified: "exa",
-                            keys: ["VK_BACK_SPACE", "VK_BACK_SPACE"],
+                            keys: ["KEY_Backspace", "KEY_Backspace"],
                             action: "searchengine"
                           });
   await test_autocomplete({ desc: "BACK_SPACE the final slash, then BACK_SPACE, should search",
                             typed: "example.com",
                             autofilled: "example.com/",
                             modified: "example.co",
-                            keys: ["VK_BACK_SPACE", "VK_BACK_SPACE"],
+                            keys: ["KEY_Backspace", "KEY_Backspace"],
                             action: "visiturl"
                           });
 
@@ -106,7 +106,7 @@ add_task(async function() {
                             typed: "ex",
                             autofilled: "example.com/",
                             modified: "e",
-                            keys: ["VK_BACK_SPACE"],
+                            keys: ["KEY_Backspace"],
                             action: "searchengine",
                             onAutoFill: () => {
                               gURLBar.blur();
@@ -119,7 +119,7 @@ add_task(async function() {
                             typed: "ex",
                             autofilled: "example.com/",
                             modified: "e",
-                            keys: ["VK_DELETE"],
+                            keys: ["KEY_Delete"],
                             action: "searchengine",
                             onAutoFill: () => {
                               gURLBar.blur();
@@ -132,7 +132,7 @@ add_task(async function() {
                             typed: "ex",
                             autofilled: "example.com/",
                             modified: "e",
-                            keys: ["VK_BACK_SPACE", "VK_BACK_SPACE"],
+                            keys: ["KEY_Backspace", "KEY_Backspace"],
                             action: "searchengine",
                             onAutoFill: () => {
                               gURLBar.blur();

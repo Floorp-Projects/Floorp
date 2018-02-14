@@ -45,7 +45,7 @@ function* testModifyPropertyValueFilter(inspector, view) {
   let onBlur = once(editor.input, "blur");
   let onModification = view.once("ruleview-changed");
   EventUtils.sendString("4px 0px", view.styleWindow);
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   yield onBlur;
   yield onModification;
 

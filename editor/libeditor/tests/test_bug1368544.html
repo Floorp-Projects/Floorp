@@ -36,7 +36,7 @@ SimpleTest.waitForFocus(() => {
       textarea.value = "ABC";
       ok(editor.rootElement.hasChildNodes(),
          "editor of textarea has child nodes");
-      synthesizeKey("D", {});
+      sendString("D");
       is(textarea.value, "ABCD", "D is last character");
       ok(editor.rootElement.hasChildNodes(),
          "editor of textarea has child nodes");
@@ -44,12 +44,8 @@ SimpleTest.waitForFocus(() => {
       ok(editor.rootElement.hasChildNodes(),
          "editor of textarea has child node even if value is empty");
 
-      synthesizeKey("A", {});
-      synthesizeKey("A", {});
-      synthesizeKey("A", {});
-      synthesizeKey("VK_BACK_SPACE", {});
-      synthesizeKey("VK_BACK_SPACE", {});
-      synthesizeKey("VK_BACK_SPACE", {});
+      sendString("AAA");
+      synthesizeKey("KEY_Backspace", {repeat: 3});
       is(textarea.value, "", "value is empty");
       ok(editor.rootElement.hasChildNodes(),
          "editor of textarea has child node even if value is empty");
@@ -60,15 +56,12 @@ SimpleTest.waitForFocus(() => {
          "editor of textarea has child node even if value is empty");
 
       textarea.value = "ABC";
-      synthesizeKey("VK_RETURN", {});
-      synthesizeKey("VK_RETURN", {});
+      synthesizeKey("KEY_Enter", {repeat: 2});
       textarea.value = "";
       ok(editor.rootElement.hasChildNodes(),
          "editor of textarea has child node even if value is empty");
 
-      synthesizeKey("A", {});
-      synthesizeKey("A", {});
-      synthesizeKey("A", {});
+      sendString("AAA");
       is(textarea.value, "AAA", "value is AAA");
       textarea.addEventListener("keyup", (e) => {
         if (e.key == "Enter") {
@@ -79,7 +72,7 @@ SimpleTest.waitForFocus(() => {
         }
       });
 
-      synthesizeKey("VK_RETURN", {});
+      synthesizeKey("KEY_Enter");
     });
  });
 });

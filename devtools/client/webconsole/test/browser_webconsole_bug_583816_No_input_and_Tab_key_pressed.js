@@ -20,14 +20,14 @@ function testCompletion(hud) {
   let input = jsterm.inputNode;
 
   jsterm.setInputValue("");
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("KEY_Tab");
   is(jsterm.completeNode.value, "<- no result", "<- no result - matched");
   is(input.value, "", "inputnode is empty - matched");
   is(input.getAttribute("focused"), "true", "input is still focused");
 
   // Any thing which is not in property autocompleter
   jsterm.setInputValue("window.Bug583816");
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("KEY_Tab");
   is(jsterm.completeNode.value, "                <- no result",
      "completenode content - matched");
   is(input.value, "window.Bug583816", "inputnode content - matched");

@@ -72,7 +72,7 @@ function dismissNotification(popup)
 {
   info("dismissing notification");
   executeSoon(function() {
-    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    EventUtils.synthesizeKey("KEY_Escape");
   });
 }
 

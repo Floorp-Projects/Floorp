@@ -24,30 +24,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1283915
     var tField = document.getElementById("textField");
     tField.focus();
 
-    synthesizeKey("a", {});
+    sendString("a");
     is(tField.value, "a");
     isCursorAtEnd(tField);
     document.body.offsetWidth; // frame must be created after type change
 
-    synthesizeKey("b", {});
+    sendString("b");
     is(tField.value, "ab");
     isCursorAtEnd(tField);
 
-    synthesizeKey("c", {});
+    sendString("c");
     is(tField.value, "abc");
     isCursorAtEnd(tField);
 
     var nField = document.getElementById("numField");
     nField.focus();
 
-    synthesizeKey("1", {});
+    sendString("1");
     is(nField.value, "1");
     document.body.offsetWidth;
 
-    synthesizeKey("2", {});
+    sendString("2");
     is(nField.value, "12");
 
-    synthesizeKey("3", {});
+    sendString("3");
     is(nField.value, "123");
 
     SimpleTest.finish();

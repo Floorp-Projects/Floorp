@@ -61,7 +61,7 @@ add_task(async function searchbar_in_panel() {
   ok(isOverflowOpen(), "Panel should still be open");
 
   let hiddenPanelPromise = promiseOverflowHidden(window);
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   await hiddenPanelPromise;
   ok(!isOverflowOpen(), "Panel should no longer be open");
 

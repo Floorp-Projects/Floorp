@@ -53,7 +53,7 @@ function* editAndCheck(view) {
   let onBlur = once(editor.input, "blur");
 
   info("Entering the commit key and finishing edit");
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
 
   info("Waiting for blur on the field");
   yield onBlur;

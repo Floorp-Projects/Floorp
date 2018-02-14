@@ -16,9 +16,7 @@
 SimpleTest.waitForFocus(function() {
   let div = document.getElementById("editable");
   div.focus();
-  synthesizeKey("x", {});
-  synthesizeKey("x", {});
-  synthesizeKey("x", {});
+  sendString("xxx");
   document.documentElement.className = "";
 });
 </script>

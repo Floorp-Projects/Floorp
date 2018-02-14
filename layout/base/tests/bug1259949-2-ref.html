@@ -7,13 +7,7 @@
     <title>Testcase #2 for bug 1259949</title>
     <script>
         function test1() {
-          synthesizeKey("VK_RIGHT", { });
-          synthesizeKey("VK_RIGHT", { });
-          synthesizeKey("VK_RIGHT", { });
-          synthesizeKey("VK_RIGHT", { });
-          synthesizeKey("VK_RIGHT", { });
-          synthesizeKey("VK_RIGHT", { });
-          synthesizeKey("VK_RIGHT", { });
+          synthesizeKey("KEY_ArrowRight", {repeat: 7});
           document.body.offsetHeight;
           document.documentElement.removeAttribute("class");
         }

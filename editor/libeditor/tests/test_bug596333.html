@@ -36,10 +36,7 @@ function append(str) {
   edit.focus();
   edit.selectionStart = edit.selectionEnd = edit.value.length;
   var editor = getEditor();
-
-  for (var i = 0; i < str.length; ++i) {
-    synthesizeKey(str[i], {});
-  }
+  sendString(str);
 }
 
 function getLoadContext() {

@@ -28,11 +28,11 @@ add_task(async function () {
   input.selectionStart = length;
 
   info("Type 'd' in jsterm to trigger height change for the input");
-  EventUtils.synthesizeKey("d", {});
+  EventUtils.sendString("d");
   ok(input.clientHeight > ordinaryHeight, "the input expanded");
 
   info("Erase the value and test if the inputNode shrinks again");
   input.value = "";
-  EventUtils.synthesizeKey("d", {});
+  EventUtils.sendString("d");
   is(input.clientHeight, ordinaryHeight, "the input's height is normal again");
 });

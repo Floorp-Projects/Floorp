@@ -53,8 +53,8 @@ function checkValidity(aElement, aIsBadInput) {
 }
 
 function sendKeys(aKey) {
-  if (aKey.startsWith("VK")) {
-    synthesizeKey(aKey, {});
+  if (aKey.startsWith("KEY_")) {
+    synthesizeKey(aKey);
   } else {
     sendString(aKey);
   }
@@ -85,7 +85,7 @@ function test() {
 
   // Removing any of the fields makes the input valid again.
   elem.focus();
-  sendKeys("VK_BACK_SPACE");
+  sendKeys("KEY_Backspace");
   elem.blur();
   checkValidity(elem, false);
 

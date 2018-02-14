@@ -33,19 +33,19 @@ add_task(async function () {
   let currentPosition = hud.ui.outputWrapper.scrollTop;
   let bottom = currentPosition;
 
-  EventUtils.synthesizeKey("VK_PAGE_UP", {});
+  EventUtils.synthesizeKey("KEY_PageUp");
   isnot(hud.ui.outputWrapper.scrollTop, currentPosition,
         "scroll position changed after page up");
 
   currentPosition = hud.ui.outputWrapper.scrollTop;
-  EventUtils.synthesizeKey("VK_PAGE_DOWN", {});
+  EventUtils.synthesizeKey("KEY_PageDown");
   ok(hud.ui.outputWrapper.scrollTop > currentPosition,
      "scroll position now at bottom");
 
-  EventUtils.synthesizeKey("VK_HOME", {});
+  EventUtils.synthesizeKey("KEY_Home");
   is(hud.ui.outputWrapper.scrollTop, 0, "scroll position now at top");
 
-  EventUtils.synthesizeKey("VK_END", {});
+  EventUtils.synthesizeKey("KEY_End");
 
   let scrollTop = hud.ui.outputWrapper.scrollTop;
   ok(scrollTop > 0 && Math.abs(scrollTop - bottom) <= 5,
@@ -80,12 +80,12 @@ add_task(async function () {
 
   if (Services.appinfo.OS == "Darwin") {
     ok(hud.ui.getFilterState("network"), "network category is enabled");
-    EventUtils.synthesizeKey("t", { ctrlKey: true });
+    EventUtils.synthesizeKey("t", {ctrlKey: true});
     ok(!hud.ui.getFilterState("network"), "accesskey for Network works");
-    EventUtils.synthesizeKey("t", { ctrlKey: true });
+    EventUtils.synthesizeKey("t", {ctrlKey: true});
     ok(hud.ui.getFilterState("network"), "accesskey for Network works (again)");
   } else {
-    EventUtils.synthesizeKey("N", { altKey: true });
+    EventUtils.synthesizeKey("n", {altKey: true});
     let net = hud.ui.document.querySelector("toolbarbutton[category=net]");
     is(hud.ui.document.activeElement, net,
        "accesskey for Network category focuses the Net button");

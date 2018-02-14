@@ -22,7 +22,7 @@ function runTests() {
   var t = document.getElementById("a");
   t.focus();
   setTimeout(function() {
-    synthesizeKey('VK_RIGHT', {});
+    synthesizeKey('KEY_ArrowRight');
     ok(true, "The browser did not crash!");
 
     SimpleTest.finish();

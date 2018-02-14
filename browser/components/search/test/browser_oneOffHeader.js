@@ -94,7 +94,7 @@ add_task(async function test_notext() {
 
   promise = promiseEvent(searchPopup, "popuphidden");
   info("Closing search panel");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   await promise;
 });
 

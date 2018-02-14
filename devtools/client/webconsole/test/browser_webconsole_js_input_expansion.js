@@ -30,7 +30,7 @@ add_task(function* () {
   let initialHeight = getHeight();
   // Performs an "d". This will trigger/test for the input event that should
   // change the "row" attribute of the inputNode.
-  EventUtils.synthesizeKey("d", {});
+  EventUtils.sendString("d");
   let newHeight = getHeight();
   ok(initialHeight < newHeight, "Height changed: " + newHeight);
 
@@ -39,14 +39,14 @@ add_task(function* () {
   length = input.value.length;
   input.selectionEnd = length;
   input.selectionStart = length;
-  EventUtils.synthesizeKey("d", {});
+  EventUtils.sendString("d");
   let newerHeight = getHeight();
 
   ok(newerHeight > newHeight, "height changed: " + newerHeight);
 
   // Test if the inputNode shrinks again.
   input.value = "";
-  EventUtils.synthesizeKey("d", {});
+  EventUtils.sendString("d");
   let height = getHeight();
   info("height: " + height);
   info("initialHeight: " + initialHeight);

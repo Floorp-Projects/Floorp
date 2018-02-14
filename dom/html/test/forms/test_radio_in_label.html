@@ -40,10 +40,10 @@ function startTest() {
      "The first radio input element should be checked by clicking other element");
 
   r1.focus();
-  synthesizeKey("VK_LEFT", {});
+  synthesizeKey("KEY_ArrowLeft");
   ok(r2.checked,
      "The second radio input element should be checked by key");
-  synthesizeKey("VK_LEFT", {});
+  synthesizeKey("KEY_ArrowLeft");
   ok(r1.checked,
      "The first radio input element should be checked by key");
   SimpleTest.finish();

@@ -83,176 +83,176 @@ function performTest() {
 
     // Part 1: Make sure that UP/DOWN keys don't scroll the variables view.
 
-    yield synthesizeKeyAndWaitForTick("VK_DOWN", {});
+    yield synthesizeKeyAndWaitForTick("KEY_ArrowDown");
     is(gVariablesView._parent.scrollTop, 0,
       "The 'variables' view shouldn't scroll when pressing the DOWN key.");
 
-    yield synthesizeKeyAndWaitForTick("VK_UP", {});
+    yield synthesizeKeyAndWaitForTick("KEY_ArrowUp");
     is(gVariablesView._parent.scrollTop, 0,
       "The 'variables' view shouldn't scroll when pressing the UP key.");
 
     // Part 2: Make sure that RETURN/ESCAPE toggle input elements.
 
-    yield synthesizeKeyAndWaitForElement("VK_RETURN", {}, ".element-value-input", true);
-    yield synthesizeKeyAndWaitForElement("VK_ESCAPE", {}, ".element-value-input", false);
-    yield synthesizeKeyAndWaitForElement("VK_RETURN", { shiftKey: true }, ".element-name-input", true);
-    yield synthesizeKeyAndWaitForElement("VK_ESCAPE", {}, ".element-name-input", false);
+    yield synthesizeKeyAndWaitForElement("KEY_Enter", {}, ".element-value-input", true);
+    yield synthesizeKeyAndWaitForElement("KEY_Escape", {}, ".element-value-input", false);
+    yield synthesizeKeyAndWaitForElement("KEY_Enter", {shiftKey: true}, ".element-name-input", true);
+    yield synthesizeKeyAndWaitForElement("KEY_Escape", {}, ".element-name-input", false);
 
     // Part 3: Test simple navigation.
 
-    EventUtils.sendKey("DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp1",
       "The 'someProp1' item should be focused.");
 
-    EventUtils.sendKey("UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp0",
       "The 'someProp0' item should be focused.");
 
-    EventUtils.sendKey("PAGE_DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp5",
       "The 'someProp5' item should be focused.");
 
-    EventUtils.sendKey("PAGE_UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp0",
       "The 'someProp0' item should be focused.");
 
-    EventUtils.sendKey("END", gDebugger);
+    EventUtils.synthesizeKey("KEY_End", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "__proto__",
       "The '__proto__' item should be focused.");
 
-    EventUtils.sendKey("HOME", gDebugger);
+    EventUtils.synthesizeKey("KEY_Home", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp0",
       "The 'someProp0' item should be focused.");
 
     // Part 4: Test if pressing the same navigation key twice works as expected.
 
-    EventUtils.sendKey("DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp1",
       "The 'someProp1' item should be focused.");
 
-    EventUtils.sendKey("DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp2",
       "The 'someProp2' item should be focused.");
 
-    EventUtils.sendKey("UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp1",
       "The 'someProp1' item should be focused.");
 
-    EventUtils.sendKey("UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp0",
       "The 'someProp0' item should be focused.");
 
-    EventUtils.sendKey("PAGE_DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp5",
       "The 'someProp5' item should be focused.");
 
-    EventUtils.sendKey("PAGE_DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "__proto__",
       "The '__proto__' item should be focused.");
 
-    EventUtils.sendKey("PAGE_UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp5",
       "The 'someProp5' item should be focused.");
 
-    EventUtils.sendKey("PAGE_UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp0",
       "The 'someProp0' item should be focused.");
 
     // Part 5: Test that HOME/PAGE_UP/PAGE_DOWN are symmetrical.
 
-    EventUtils.sendKey("HOME", gDebugger);
+    EventUtils.synthesizeKey("KEY_Home", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp0",
       "The 'someProp0' item should be focused.");
 
-    EventUtils.sendKey("HOME", gDebugger);
+    EventUtils.synthesizeKey("KEY_Home", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp0",
       "The 'someProp0' item should be focused.");
 
-    EventUtils.sendKey("PAGE_UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp0",
       "The 'someProp0' item should be focused.");
 
-    EventUtils.sendKey("HOME", gDebugger);
+    EventUtils.synthesizeKey("KEY_Home", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp0",
       "The 'someProp0' item should be focused.");
 
-    EventUtils.sendKey("END", gDebugger);
+    EventUtils.synthesizeKey("KEY_End", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "__proto__",
       "The '__proto__' item should be focused.");
 
-    EventUtils.sendKey("END", gDebugger);
+    EventUtils.synthesizeKey("KEY_End", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "__proto__",
       "The '__proto__' item should be focused.");
 
-    EventUtils.sendKey("PAGE_DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "__proto__",
       "The '__proto__' item should be focused.");
 
-    EventUtils.sendKey("END", gDebugger);
+    EventUtils.synthesizeKey("KEY_End", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "__proto__",
       "The '__proto__' item should be focused.");
 
     // Part 6: Test that focus doesn't leave the variables view.
 
-    EventUtils.sendKey("PAGE_UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp5",
       "The 'someProp5' item should be focused.");
 
-    EventUtils.sendKey("PAGE_UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp0",
       "The 'someProp0' item should be focused.");
 
-    EventUtils.sendKey("UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp0",
       "The 'someProp0' item should be focused.");
 
-    EventUtils.sendKey("UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp0",
       "The 'someProp0' item should be focused.");
 
-    EventUtils.sendKey("PAGE_DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp5",
       "The 'someProp5' item should be focused.");
 
-    EventUtils.sendKey("PAGE_DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "__proto__",
       "The '__proto__' item should be focused.");
 
-    EventUtils.sendKey("PAGE_DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "__proto__",
       "The '__proto__' item should be focused.");
 
-    EventUtils.sendKey("PAGE_DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "__proto__",
       "The '__proto__' item should be focused.");
 
     // Part 7: Test that random offsets don't occur in tandem with HOME/END.
 
-    EventUtils.sendKey("HOME", gDebugger);
+    EventUtils.synthesizeKey("KEY_Home", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp0",
       "The 'someProp0' item should be focused.");
 
-    EventUtils.sendKey("DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp1",
       "The 'someProp1' item should be focused.");
 
-    EventUtils.sendKey("END", gDebugger);
+    EventUtils.synthesizeKey("KEY_End", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "__proto__",
       "The '__proto__' item should be focused.");
 
-    EventUtils.sendKey("DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "__proto__",
       "The '__proto__' item should be focused.");
 
     // Part 8: Test that the RIGHT key expands elements as intended.
 
-    EventUtils.sendKey("PAGE_UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp5",
       "The 'someProp5' item should be focused.");
     is(gVariablesView.getFocusedItem().expanded, false,
       "The 'someProp5' item should not be expanded yet.");
 
-    yield synthesizeKeyAndWaitForTick("VK_RIGHT", {});
+    yield synthesizeKeyAndWaitForTick("KEY_ArrowRight");
     is(gVariablesView.getFocusedItem().name, "someProp5",
       "The 'someProp5' item should be focused.");
     is(gVariablesView.getFocusedItem().expanded, true,
@@ -267,21 +267,21 @@ function performTest() {
     yield waitForChildNodes(gVariablesView.getFocusedItem()._enum, 7);
     yield waitForChildNodes(gVariablesView.getFocusedItem()._nonenum, 2);
 
-    EventUtils.sendKey("RIGHT", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowRight", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "0",
       "The '0' item should be focused.");
 
-    EventUtils.sendKey("RIGHT", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowRight", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "0",
       "The '0' item should still be focused.");
 
-    EventUtils.sendKey("PAGE_DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "5",
       "The '5' item should be focused.");
     is(gVariablesView.getFocusedItem().expanded, false,
       "The '5' item should not be expanded yet.");
 
-    yield synthesizeKeyAndWaitForTick("VK_RIGHT", {});
+    yield synthesizeKeyAndWaitForTick("KEY_ArrowRight");
     is(gVariablesView.getFocusedItem().name, "5",
       "The '5' item should be focused.");
     is(gVariablesView.getFocusedItem().expanded, true,
@@ -296,21 +296,21 @@ function performTest() {
     yield waitForChildNodes(gVariablesView.getFocusedItem()._enum, 3);
     yield waitForChildNodes(gVariablesView.getFocusedItem()._nonenum, 2);
 
-    EventUtils.sendKey("RIGHT", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowRight", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "0",
       "The '0' item should be focused.");
 
-    EventUtils.sendKey("RIGHT", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowRight", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "0",
       "The '0' item should still be focused.");
 
-    EventUtils.sendKey("PAGE_DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "6",
       "The '6' item should be focused.");
     is(gVariablesView.getFocusedItem().expanded, false,
       "The '6' item should not be expanded yet.");
 
-    yield synthesizeKeyAndWaitForTick("VK_RIGHT", {});
+    yield synthesizeKeyAndWaitForTick("KEY_ArrowRight");
     is(gVariablesView.getFocusedItem().name, "6",
       "The '6' item should be focused.");
     is(gVariablesView.getFocusedItem().expanded, true,
@@ -325,15 +325,15 @@ function performTest() {
     yield waitForChildNodes(gVariablesView.getFocusedItem()._enum, 2);
     yield waitForChildNodes(gVariablesView.getFocusedItem()._nonenum, 1);
 
-    EventUtils.sendKey("RIGHT", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowRight", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "prop1",
       "The 'prop1' item should be focused.");
 
-    EventUtils.sendKey("RIGHT", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowRight", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "prop1",
       "The 'prop1' item should still be focused.");
 
-    EventUtils.sendKey("PAGE_DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp6",
       "The 'someProp6' item should be focused.");
     is(gVariablesView.getFocusedItem().expanded, false,
@@ -341,83 +341,83 @@ function performTest() {
 
     // Part 9: Test that the RIGHT key collapses elements as intended.
 
-    EventUtils.sendKey("LEFT", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowLeft", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp6",
       "The 'someProp6' item should be focused.");
 
-    EventUtils.sendKey("UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "__proto__",
       "The '__proto__' item should be focused.");
 
-    EventUtils.sendKey("LEFT", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowLeft", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp5",
       "The 'someProp5' item should be focused.");
     is(gVariablesView.getFocusedItem().expanded, true,
       "The '6' item should still be expanded.");
 
-    EventUtils.sendKey("LEFT", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowLeft", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp5",
       "The 'someProp5' item should still be focused.");
     is(gVariablesView.getFocusedItem().expanded, false,
       "The '6' item should still not be expanded anymore.");
 
-    EventUtils.sendKey("LEFT", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowLeft", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp5",
       "The 'someProp5' item should still be focused.");
 
     // Part 9: Test continuous navigation.
 
-    EventUtils.sendKey("UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp4",
       "The 'someProp4' item should be focused.");
 
-    EventUtils.sendKey("UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp3",
       "The 'someProp3' item should be focused.");
 
-    EventUtils.sendKey("UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp2",
       "The 'someProp2' item should be focused.");
 
-    EventUtils.sendKey("UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp1",
       "The 'someProp1' item should be focused.");
 
-    EventUtils.sendKey("UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp0",
       "The 'someProp0' item should be focused.");
 
-    EventUtils.sendKey("PAGE_UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp0",
       "The 'someProp0' item should be focused.");
 
-    EventUtils.sendKey("PAGE_DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_PageDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp5",
       "The 'someProp5' item should be focused.");
 
-    EventUtils.sendKey("DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp6",
       "The 'someProp6' item should be focused.");
 
-    EventUtils.sendKey("DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp7",
       "The 'someProp7' item should be focused.");
 
-    EventUtils.sendKey("DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "get",
       "The 'get' item should be focused.");
 
-    EventUtils.sendKey("DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "set",
       "The 'set' item should be focused.");
 
-    EventUtils.sendKey("DOWN", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "__proto__",
       "The '__proto__' item should be focused.");
 
     // Part 10: Test that BACKSPACE deletes items in the variables view.
 
-    EventUtils.sendKey("BACK_SPACE", gDebugger);
+    EventUtils.synthesizeKey("KEY_Backspace", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "__proto__",
       "The '__proto__' variable should still be focused.");
     is(gVariablesView.getFocusedItem().value, "[object Object]",
@@ -425,7 +425,7 @@ function performTest() {
     is(gVariablesView.getFocusedItem().visible, false,
       "The '__proto__' variable should be hidden.");
 
-    EventUtils.sendKey("UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "set",
       "The 'set' item should be focused.");
     is(gVariablesView.getFocusedItem().value, "[object Object]",
@@ -433,7 +433,7 @@ function performTest() {
     is(gVariablesView.getFocusedItem().visible, true,
       "The 'set' item should be visible.");
 
-    EventUtils.sendKey("BACK_SPACE", gDebugger);
+    EventUtils.synthesizeKey("KEY_Backspace", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "set",
       "The 'set' item should still be focused.");
     is(gVariablesView.getFocusedItem().value, "[object Object]",
@@ -443,7 +443,7 @@ function performTest() {
     is(gVariablesView.getFocusedItem().twisty, false,
       "The 'set' item should be disabled and have a hidden twisty.");
 
-    EventUtils.sendKey("UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "get",
       "The 'get' item should be focused.");
     is(gVariablesView.getFocusedItem().value, "[object Object]",
@@ -451,7 +451,7 @@ function performTest() {
     is(gVariablesView.getFocusedItem().visible, true,
       "The 'get' item should be visible.");
 
-    EventUtils.sendKey("BACK_SPACE", gDebugger);
+    EventUtils.synthesizeKey("KEY_Backspace", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "get",
       "The 'get' item should still be focused.");
     is(gVariablesView.getFocusedItem().value, "[object Object]",
@@ -461,7 +461,7 @@ function performTest() {
     is(gVariablesView.getFocusedItem().twisty, false,
       "The 'get' item should be disabled and have a hidden twisty.");
 
-    EventUtils.sendKey("UP", gDebugger);
+    EventUtils.synthesizeKey("KEY_ArrowUp", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp7",
       "The 'someProp7' item should be focused.");
     is(gVariablesView.getFocusedItem().value, undefined,
@@ -469,7 +469,7 @@ function performTest() {
     is(gVariablesView.getFocusedItem().visible, true,
       "The 'someProp7' variable should be visible.");
 
-    EventUtils.sendKey("BACK_SPACE", gDebugger);
+    EventUtils.synthesizeKey("KEY_Backspace", {}, gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp7",
       "The 'someProp7' variable should still be focused.");
     is(gVariablesView.getFocusedItem().value, undefined,

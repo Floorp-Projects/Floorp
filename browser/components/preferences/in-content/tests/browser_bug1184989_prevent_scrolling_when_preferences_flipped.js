@@ -16,13 +16,13 @@ add_task(async function() {
     // Test button
     let button = doc.getElementById("button");
     button.focus();
-    EventUtils.synthesizeKey(" ", {});
+    EventUtils.sendString(" ");
     await checkPageScrolling(container, "button");
 
     // Test checkbox
     let checkbox = doc.getElementById("checkbox");
     checkbox.focus();
-    EventUtils.synthesizeKey(" ", {});
+    EventUtils.sendString(" ");
     ok(checkbox.checked, "Checkbox is checked");
     await checkPageScrolling(container, "checkbox");
 
@@ -30,14 +30,14 @@ add_task(async function() {
     let listbox = doc.getElementById("listbox");
     let listitem = doc.getElementById("listitem");
     listbox.focus();
-    EventUtils.synthesizeKey(" ", {});
+    EventUtils.sendString(" ");
     ok(listitem.selected, "Listitem is selected");
     await checkPageScrolling(container, "listbox");
 
     // Test radio
     let radiogroup = doc.getElementById("radiogroup");
     radiogroup.focus();
-    EventUtils.synthesizeKey(" ", {});
+    EventUtils.sendString(" ");
     await checkPageScrolling(container, "radio");
   });
 
@@ -49,9 +49,9 @@ add_task(async function() {
     // Test search
     let engineList = doc.getElementById("engineList");
     engineList.focus();
-    EventUtils.synthesizeKey(" ", {});
+    EventUtils.sendString(" ");
     is(engineList.view.selection.currentIndex, 0, "Search engineList is selected");
-    EventUtils.synthesizeKey(" ", {});
+    EventUtils.sendString(" ");
     await checkPageScrolling(container, "search engineList");
   });
 
@@ -80,7 +80,7 @@ add_task(async function() {
 
   let tabsToggle = doc.getElementById("tabsToggle");
   tabsToggle.focus();
-  EventUtils.synthesizeKey(" ", {});
+  EventUtils.sendString(" ");
   await checkPageScrolling(doc.documentElement, "session restore");
 
   gBrowser.removeCurrentTab();

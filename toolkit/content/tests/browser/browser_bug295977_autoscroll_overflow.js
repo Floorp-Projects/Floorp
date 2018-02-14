@@ -158,7 +158,7 @@ body > div > div {width: 1000px;height: 1000px;}\
     } while (timeCompensation < 5);
 
     // Close the autoscroll popup by synthesizing Esc.
-    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    EventUtils.synthesizeKey("KEY_Escape");
     let scrollVert = test.expected & expectScrollVert;
     let scrollHori = test.expected & expectScrollHori;
 

@@ -150,7 +150,7 @@ async function openPopupAndGetEngineButton(isSearch, popup, oneOffBinding, baseI
   } else {
     // There's no history at this stage, so we need to press a key.
     urlbar.focus();
-    EventUtils.synthesizeKey("a", {});
+    EventUtils.sendString("a");
   }
   await promise;
 
@@ -195,7 +195,7 @@ async function openPopupAndGetEngineButton(isSearch, popup, oneOffBinding, baseI
 async function promiseClosePopup(popup) {
   // close the panel using the escape key.
   let promise = promiseEvent(popup, "popuphidden");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   await promise;
 
   // Move the cursor out of the panel area to avoid messing with other tests.

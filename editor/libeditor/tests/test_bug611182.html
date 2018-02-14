@@ -65,7 +65,7 @@ SimpleTest.waitForFocus(function() {
       var textNode = findTextNode(doc);
       var sel = win.getSelection();
       sel.collapse(textNode, 4);
-      synthesizeKey("VK_BACK_SPACE", {});
+      synthesizeKey("KEY_Backspace");
       is(textNode.textContent, "foo bar", "Backspace should work correctly");
 
       var snapshot = snapshotWindow(win, false);

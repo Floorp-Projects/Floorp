@@ -70,7 +70,7 @@ function doTest() {
     checkFocus();
 
     if (gFocusCount != gFocusNb) {
-      synthesizeKey("VK_TAB", {});
+      synthesizeKey("KEY_Tab");
       return;
     }
 
@@ -85,7 +85,7 @@ function doTest() {
     o.focus();
   }, true);
 
-  synthesizeKey("VK_TAB", {});
+  synthesizeKey("KEY_Tab");
 }
 
 SimpleTest.waitForFocus(function () {

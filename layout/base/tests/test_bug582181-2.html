@@ -34,11 +34,11 @@ function test() {
   s1 = snapshotWindow(window);
 
   textInput.focus();
-  synthesizeKey("VK_DOWN", { });
-  synthesizeKey("VK_DOWN", { });
-  synthesizeKey("VK_DOWN", { });
-  synthesizeKey("VK_DOWN", { });
-  synthesizeKey("VK_BACK_SPACE", { });
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_Backspace");
   textInput.blur();
   s2 = snapshotWindow(window);
 
@@ -46,7 +46,7 @@ function test() {
   ok(unequal, "backspace after text should change rendering: got " + str2);
 
   textInput.focus();
-  synthesizeKey(">", { });
+  sendString(">");
   textInput.blur();
   s3 = snapshotWindow(window);
 

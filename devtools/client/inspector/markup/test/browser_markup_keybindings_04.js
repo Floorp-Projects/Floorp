@@ -42,7 +42,7 @@ function assertNodeSelected(inspector, tagName) {
 function selectPreviousNodeWithArrowUp(inspector) {
   let onNodeHighlighted = inspector.toolbox.once("node-highlight");
   let onUpdated = inspector.once("inspector-updated");
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   return Promise.all([onUpdated, onNodeHighlighted]);
 }
 
@@ -53,6 +53,6 @@ function* selectWithElementPicker(inspector, testActor) {
     type: "mousemove",
   }, gBrowser.selectedBrowser);
 
-  yield testActor.synthesizeKey({key: "VK_RETURN", options: {}});
+  yield testActor.synthesizeKey({key: "KEY_Enter", options: {}});
   yield inspector.once("inspector-updated");
 }

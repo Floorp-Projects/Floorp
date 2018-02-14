@@ -130,35 +130,35 @@ var popupTests = [
   // highlights the first item
   testname: "cursor down no selection",
   events: [ "DOMMenuItemActive item1" ],
-  test: function() { sendKey("DOWN"); },
+  test: function() { synthesizeKey("KEY_ArrowDown"); },
   result: function(testname) { checkActive(gFilePopup, "item1", testname); }
 },
 {
   // check that pressing cursor up wraps and highlights the last item
   testname: "cursor up wrap",
   events: [ "DOMMenuItemInactive item1", "DOMMenuItemActive item3" ],
-  test: function() { sendKey("UP"); },
+  test: function() { synthesizeKey("KEY_ArrowUp"); },
   result: function(testname) { checkActive(gFilePopup, "item3", testname); }
 },
 {
   // check that pressing cursor down wraps and highlights the first item
   testname: "cursor down wrap",
   events: [ "DOMMenuItemInactive item3", "DOMMenuItemActive item1" ],
-  test: function() { sendKey("DOWN"); },
+  test: function() { synthesizeKey("KEY_ArrowDown"); },
   result: function(testname) { checkActive(gFilePopup, "item1", testname); }
 },
 {
   // check that pressing cursor down highlights the second item
   testname: "cursor down",
   events: [ "DOMMenuItemInactive item1", "DOMMenuItemActive item2" ],
-  test: function() { sendKey("DOWN"); },
+  test: function() { synthesizeKey("KEY_ArrowDown"); },
   result: function(testname) { checkActive(gFilePopup, "item2", testname); }
 },
 {
   // check that pressing cursor up highlights the second item
   testname: "cursor up",
   events: [ "DOMMenuItemInactive item2", "DOMMenuItemActive item1" ],
-  test: function() { sendKey("UP"); },
+  test: function() { synthesizeKey("KEY_ArrowUp"); },
   result: function(testname) { checkActive(gFilePopup, "item1", testname); }
 },
 
@@ -187,7 +187,7 @@ var popupTests = [
     elist.push("popupshown editpopup");
     return elist;
   },
-  test: function() { sendKey("RIGHT"); },
+  test: function() { synthesizeKey("KEY_ArrowRight"); },
   result: function(testname) {
     var expected = (navigator.platform.indexOf("Win") == 0) ? "cut" : "copy";
     checkActive(document.getElementById("editpopup"), expected, testname);
@@ -213,7 +213,7 @@ var popupTests = [
                "command copy", "popuphiding editpopup", "popuphidden editpopup",
                "DOMMenuItemInactive copy" ];
   },
-  test: function() { sendKey("RETURN"); },
+  test: function() { synthesizeKey("KEY_Enter"); },
   result: function(testname) {
     checkClosed("editmenu", testname);
     is(document.getElementById("editmenu").openedWithKey, false, testname + " openedWithKey");
@@ -244,7 +244,7 @@ var popupTests = [
     else
       return [ "popupshowing toolbarpopup", "popupshown toolbarpopup" ];
   },
-  test: function() { sendKey("RIGHT"); },
+  test: function() { synthesizeKey("KEY_ArrowRight"); },
   result: function(testname) {
     checkOpen("viewmenu", testname);
     checkOpen("toolbar", testname);
@@ -263,7 +263,7 @@ var popupTests = [
                "DOMMenuInactive toolbarpopup",
                "DOMMenuItemActive toolbar" ];
   },
-  test: function() { sendKey("LEFT"); },
+  test: function() { synthesizeKey("KEY_ArrowLeft"); },
   result: function(testname) {
     checkOpen("viewmenu", testname);
     checkClosed("toolbar", testname);
@@ -280,7 +280,7 @@ var popupTests = [
     else
       return [ "popupshowing toolbarpopup", "popupshown toolbarpopup" ];
   },
-  test: function() { sendKey("RETURN"); },
+  test: function() { synthesizeKey("KEY_Enter"); },
   result: function(testname) {
     checkOpen("viewmenu", testname);
     checkOpen("toolbar", testname);
@@ -299,7 +299,7 @@ var popupTests = [
                "DOMMenuInactive toolbarpopup",
                "DOMMenuItemActive toolbar" ];
   },
-  test: function() { sendKey("ESCAPE"); },
+  test: function() { synthesizeKey("KEY_Escape"); },
   result: function(testname) {
     checkOpen("viewmenu", testname);
     checkClosed("toolbar", testname);
@@ -317,7 +317,7 @@ var popupTests = [
     else
       return [ "popupshowing toolbarpopup", "popupshown toolbarpopup" ];
   },
-  test: function() { sendKey("RETURN"); },
+  test: function() { synthesizeKey("KEY_Enter"); },
   result: function(testname) {
     checkOpen("viewmenu", testname);
     checkOpen("toolbar", testname);
@@ -334,7 +334,7 @@ var popupTests = [
             "DOMMenuInactive toolbarpopup", "DOMMenuItemInactive toolbar",
             "DOMMenuInactive viewpopup", "DOMMenuItemActive contents",
             "popupshown helppopup" ],
-  test: function() { sendKey("RIGHT"); },
+  test: function() { synthesizeKey("KEY_ArrowRight"); },
   result: function(testname) {
     checkOpen("helpmenu", testname);
     checkClosed("toolbar", testname);
@@ -348,7 +348,7 @@ var popupTests = [
   events: [ "popuphiding helppopup", "popuphidden helppopup",
             "DOMMenuItemInactive contents", "DOMMenuInactive helppopup",
             "DOMMenuBarInactive menubar", "DOMMenuItemInactive helpmenu" ],
-  test: function() { sendKey("ESCAPE"); },
+  test: function() { synthesizeKey("KEY_Escape"); },
   result: function(testname) { checkClosed("viewmenu", testname); },
 },
 {
@@ -359,7 +359,7 @@ var popupTests = [
             "DOMMenuItemInactive toolbar", "DOMMenuInactive viewpopup",
             "DOMMenuBarInactive menubar",
             "DOMMenuItemInactive viewmenu" ],
-  test: function() { sendKey("ESCAPE"); },
+  test: function() { synthesizeKey("KEY_Escape"); },
   result: function(testname) { checkClosed("viewmenu", testname); },
 },
 {
@@ -371,7 +371,7 @@ var popupTests = [
       document.removeEventListener("keydown", arguments.callee, true);
       aEvent.preventDefault();
     }, true);
-    sendKey("ALT");
+    synthesizeKey("KEY_Alt");
   },
   result: function(testname) {
     ok(!document.getElementById("filemenu").openedWithKey, testname);
@@ -387,7 +387,7 @@ var popupTests = [
       document.removeEventListener("keyup", arguments.callee, true);
       aEvent.preventDefault();
     }, true);
-    sendKey("ALT");
+    synthesizeKey("KEY_Alt");
   },
   result: function(testname) {
     ok(!document.getElementById("filemenu").openedWithKey, testname);
@@ -398,7 +398,7 @@ var popupTests = [
   // Pressing Alt should highlight the first menu but not open it.
   testname: "alt to activate menubar",
   events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ],
-  test: function() { sendKey("ALT"); },
+  test: function() { synthesizeKey("KEY_Alt"); },
   result: function(testname) {
     is(document.getElementById("filemenu").openedWithKey, true, testname + " openedWithKey");
     checkClosed("filemenu", testname);
@@ -408,14 +408,14 @@ var popupTests = [
   // pressing cursor left should select the previous menu but not open it
   testname: "cursor left on active menubar",
   events: [ "DOMMenuItemInactive filemenu", "DOMMenuItemActive helpmenu" ],
-  test: function() { sendKey("LEFT"); },
+  test: function() { synthesizeKey("KEY_ArrowLeft"); },
   result: function(testname) { checkClosed("helpmenu", testname); },
 },
 {
   // pressing cursor right should select the previous menu but not open it
   testname: "cursor right on active menubar",
   events: [ "DOMMenuItemInactive helpmenu", "DOMMenuItemActive filemenu" ],
-  test: function() { sendKey("RIGHT"); },
+  test: function() { synthesizeKey("KEY_ArrowRight"); },
   result: function(testname) { checkClosed("filemenu", testname); },
 },
 {
@@ -434,14 +434,14 @@ var popupTests = [
   // check that pressing cursor up skips non menuitems
   testname: "cursor up wrap",
   events: [ "DOMMenuItemInactive contents", "DOMMenuItemActive about" ],
-  test: function() { sendKey("UP"); },
+  test: function() { synthesizeKey("KEY_ArrowUp"); },
   result: function(testname) { }
 },
 {
   // check that pressing cursor down skips non menuitems
   testname: "cursor down wrap",
   events: [ "DOMMenuItemInactive about", "DOMMenuItemActive contents" ],
-  test: function() { sendKey("DOWN"); },
+  test: function() { synthesizeKey("KEY_ArrowDown"); },
   result: function(testname) { }
 },
 {
@@ -461,7 +461,7 @@ var popupTests = [
   // pressing F10 should highlight the first menu. On Linux, the menu is opened.
   testname: "F10 to activate menubar",
   events: pressF10Events(),
-  test: function() { sendKey("F10"); },
+  test: function() { synthesizeKey("KEY_F10"); },
   result: function(testname) {
     is(document.getElementById("filemenu").openedWithKey, true, testname + " openedWithKey");
     if (navigator.platform.includes("Linux"))
@@ -489,7 +489,7 @@ var popupTests = [
               // "accelerator on active menubar" because menus opened from a
               // shortcut key are fired asynchronously
               "DOMMenuItemActive contents", "popupshown helppopup" ],
-  test: function() { sendKey("LEFT"); sendKey("DOWN"); },
+  test: function() { synthesizeKey("KEY_ArrowLeft"); synthesizeKey("KEY_ArrowDown"); },
   result: function(testname) {
     is(document.getElementById("helpmenu").openedWithKey, true, testname + " openedWithKey");
   }
@@ -551,7 +551,7 @@ var popupTests = [
   testname: "F10 to activate menubar again",
   condition: function() { return (navigator.platform.indexOf("Win") == 0) },
   events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ],
-  test: function() { sendKey("F10"); },
+  test: function() { synthesizeKey("KEY_F10"); },
   result: function(testname) { checkClosed("filemenu", testname); },
 },
 {
@@ -642,12 +642,12 @@ var popupTests = [
 {
   testname: "F10 to activate menubar for tab deactivation",
   events: pressF10Events(),
-  test: function() { sendKey("F10"); },
+  test: function() { synthesizeKey("KEY_F10"); },
 },
 {
   testname: "Deactivate menubar with tab key",
   events: closeAfterF10Events(true),
-  test: function() { sendKey("TAB"); },
+  test: function() { synthesizeKey("KEY_Tab"); },
   result: function(testname) {
     is(document.getElementById("filemenu").openedWithKey, false, testname + " openedWithKey");
   }
@@ -655,12 +655,12 @@ var popupTests = [
 {
   testname: "F10 to activate menubar for escape deactivation",
   events: pressF10Events(),
-  test: function() { sendKey("F10"); },
+  test: function() { synthesizeKey("KEY_F10"); },
 },
 {
   testname: "Deactivate menubar with escape key",
   events: closeAfterF10Events(false),
-  test: function() { sendKey("ESCAPE"); },
+  test: function() { synthesizeKey("KEY_Escape"); },
   result: function(testname) {
     is(document.getElementById("filemenu").openedWithKey, false, testname + " openedWithKey");
   }
@@ -668,12 +668,12 @@ var popupTests = [
 {
   testname: "F10 to activate menubar for f10 deactivation",
   events: pressF10Events(),
-  test: function() { sendKey("F10"); },
+  test: function() { synthesizeKey("KEY_F10"); },
 },
 {
   testname: "Deactivate menubar with f10 key",
   events: closeAfterF10Events(true),
-  test: function() { sendKey("F10"); },
+  test: function() { synthesizeKey("KEY_F10"); },
   result: function(testname) {
     is(document.getElementById("filemenu").openedWithKey, false, testname + " openedWithKey");
   }
@@ -682,13 +682,13 @@ var popupTests = [
   testname: "F10 to activate menubar for alt deactivation",
   condition: function() { return (navigator.platform.indexOf("Win") == 0) },
   events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ],
-  test: function() { sendKey("F10"); },
+  test: function() { synthesizeKey("KEY_F10"); },
 },
 {
   testname: "Deactivate menubar with alt key",
   condition: function() { return (navigator.platform.indexOf("Win") == 0) },
   events: [ "DOMMenuBarInactive menubar", "DOMMenuItemInactive filemenu"  ],
-  test: function() { sendKey("ALT"); },
+  test: function() { synthesizeKey("KEY_Alt"); },
   result: function(testname) {
     is(document.getElementById("filemenu").openedWithKey, false, testname + " openedWithKey");
   }
@@ -696,12 +696,12 @@ var popupTests = [
 {
   testname: "Don't activate menubar with mousedown during alt key auto-repeat",
   test: function() {
-    synthesizeKey("VK_ALT", { type: "keydown" });
+    synthesizeKey("KEY_Alt", {type: "keydown"});
     synthesizeMouse(document.getElementById("menubar"), 8, -30, { type: "mousedown", altKey: true });
-    synthesizeKey("VK_ALT", { type: "keydown" });
+    synthesizeKey("KEY_Alt", {type: "keydown"});
     synthesizeMouse(document.getElementById("menubar"), 8, -30, { type: "mouseup", altKey: true });
-    synthesizeKey("VK_ALT", { type: "keydown" });
-    synthesizeKey("VK_ALT", { type: "keyup" });
+    synthesizeKey("KEY_Alt", {type: "keydown"});
+    synthesizeKey("KEY_Alt", {type: "keyup"});
   },
   result: function (testname) {
     checkActive(document.getElementById("menubar"), "", testname);
@@ -725,7 +725,7 @@ var popupTests = [
             "DOMMenuBarInactive menubar", "DOMMenuItemInactive filemenu",
             "DOMMenuItemInactive filemenu" ],
   test: function() {
-    synthesizeKey("VK_ALT", { });
+    synthesizeKey("KEY_Alt");
   },
   result: function (testname) {
     checkClosed("filemenu", testname);
@@ -743,9 +743,9 @@ var popupTests = [
              "popupshown filepopup" ];
   },
   test: function() {
-    synthesizeKey("VK_ALT", { type: "keydown" });
-    synthesizeKey("F", { altKey: true });
-    synthesizeKey("VK_ALT", { type: "keyup" });
+    synthesizeKey("KEY_Alt", {type: "keydown"});
+    synthesizeKey("f", {altKey: true});
+    synthesizeKey("KEY_Alt", {type: "keyup"});
   }
 },
 {
@@ -769,7 +769,7 @@ var popupTests = [
     return [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ];
   },
   test: function() {
-    sendKey("ALT");
+    synthesizeKey("KEY_Alt");
   },
   result: function (testname) {
     checkClosed("filemenu", testname);
@@ -782,7 +782,7 @@ var popupTests = [
     return [ "DOMMenuBarInactive menubar", "DOMMenuItemInactive filemenu" ];
   },
   test: function() {
-    sendKey("ALT");
+    synthesizeKey("KEY_Alt");
   }
 },
 
@@ -795,8 +795,8 @@ var popupTests = [
     return [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ];
   },
   test: function() {
-    synthesizeKey("VK_ALT", { type: "keydown" });
-    synthesizeKey("VK_TAB", { type: "keydown" }); // cancels the Alt key
+    synthesizeKey("KEY_Alt", {type: "keydown"});
+    synthesizeKey("KEY_Tab", {type: "keydown"}); // cancels the Alt key
     var thisWindow = window;
     var newWindow =
       window.open("data:text/html,", "_blank", "width=100,height=100");
@@ -805,7 +805,7 @@ var popupTests = [
       thisWindow.addEventListener("focus", function () {
         thisWindow.removeEventListener("focus", arguments.callee, false);
         setTimeout(function () {
-          sendKey("ALT", thisWindow);
+          synthesizeKey("KEY_Alt", {}, thisWindow);
         }, 0);
       }, false);
       newWindow.close();

@@ -42,7 +42,7 @@ function runTests()
   ta.setSelectionRange(0, 99); // 33 lines out of 40
 
   // Send a backspace key event to delete the selection
-  synthesizeKey("VK_BACK_SPACE", { });
+  synthesizeKey("KEY_Backspace");
 
   is(ta.scrollTop, 0, "scrolled to top after deleting selection");
 

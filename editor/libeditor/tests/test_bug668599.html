@@ -46,20 +46,20 @@ function runTests() {
   // editable <span> => the <span> *content* should be deleted
   select(span);
   span.focus();
-  synthesizeKey("x", {});
+  sendString("x");
   is(span.textContent, "x", "The <span> content should have been replaced by 'x'.");
 
   // same thing, but using [Del] instead of typing some text
   document.execCommand("Undo", false, null);
   select(span);
   span.focus();
-  synthesizeKey("VK_DELETE", {});
+  synthesizeKey("KEY_Delete");
   is(span.textContent, "", "The <span> content should have been deleted.");
 
   // <span> in editable block => the <span> *element* should be deleted
   select(document.querySelector("#test2 span"));
   document.querySelector("#test2 [contenteditable]").focus();
-  synthesizeKey("VK_DELETE", {});
+  synthesizeKey("KEY_Delete");
   is(document.querySelector("#test2 span"), null,
     "The <span> element should have been deleted.");
 

@@ -123,7 +123,7 @@ function showNotification(notifyObj) {
 
 function dismissNotification(popup) {
   info("Dismissing notification " + popup.childNodes[0].id);
-  executeSoon(() => EventUtils.synthesizeKey("VK_ESCAPE", {}));
+  executeSoon(() => EventUtils.synthesizeKey("KEY_Escape"));
 }
 
 function BasicNotification(testId) {
@@ -309,13 +309,13 @@ function triggerSecondaryCommand(popup, index) {
     // Press down until the desired command is selected. Decrease index by one
     // since the secondary action was handled above.
     for (let i = 0; i <= index - 1; i++) {
-      EventUtils.synthesizeKey("VK_DOWN", {});
+      EventUtils.synthesizeKey("KEY_ArrowDown");
     }
     // Activate
-    EventUtils.synthesizeKey("VK_RETURN", {});
+    EventUtils.synthesizeKey("KEY_Enter");
   }, {once: true});
 
   // One down event to open the popup
   info("Open the popup to trigger secondary command for notification " + notification.id);
-  EventUtils.synthesizeKey("VK_DOWN", { altKey: !navigator.platform.includes("Mac") });
+  EventUtils.synthesizeKey("KEY_ArrowDown", {altKey: !navigator.platform.includes("Mac")});
 }

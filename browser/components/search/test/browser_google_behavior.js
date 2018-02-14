@@ -138,7 +138,7 @@ async function testSearchEngine(engineDetails) {
       run() {
         gURLBar.value = "? foo";
         gURLBar.focus();
-        EventUtils.synthesizeKey("VK_RETURN", {});
+        EventUtils.synthesizeKey("KEY_Enter");
       }
     },
     {
@@ -147,7 +147,7 @@ async function testSearchEngine(engineDetails) {
       run() {
         gURLBar.value = `${engineDetails.alias} foo`;
         gURLBar.focus();
-        EventUtils.synthesizeKey("VK_RETURN", {});
+        EventUtils.synthesizeKey("KEY_Enter");
       }
     },
     {
@@ -158,7 +158,7 @@ async function testSearchEngine(engineDetails) {
         let sb = BrowserSearch.searchBar;
         sb.focus();
         sb.value = "foo";
-        EventUtils.synthesizeKey("VK_RETURN", {});
+        EventUtils.synthesizeKey("KEY_Enter");
       },
       postTest() {
         BrowserSearch.searchBar.value = "";
@@ -181,7 +181,7 @@ async function testSearchEngine(engineDetails) {
           input.focus();
           input.value = "foo";
         });
-        EventUtils.synthesizeKey("VK_RETURN", {});
+        EventUtils.synthesizeKey("KEY_Enter");
       }
     }
   ];

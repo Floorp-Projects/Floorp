@@ -51,7 +51,7 @@ function checkTooShortValidity(element)
 
   element.focus();
 
-  synthesizeKey("o", {});
+  sendString("o");
   is(element.value, "fooo", "value should have changed");
   ok(element.validity.tooShort,
     "Element should be too short after a user edit that does not make it short enough");
@@ -63,7 +63,7 @@ function checkTooShortValidity(element)
           "Please use at least 5 characters (you are currently using 4 characters).",
           "The validation message text is not correct");
 
-  synthesizeKey("o", {});
+  sendString("o");
   is(element.value, "foooo", "value should have changed");
   ok(!element.validity.tooShort,
     "Element should not be too short after a user edit makes it long enough");

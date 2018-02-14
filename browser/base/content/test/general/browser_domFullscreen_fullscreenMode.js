@@ -128,14 +128,14 @@ var gTests = [
     desc: "escape key",
     affectsFullscreenMode: false,
     exitFunc: () => {
-      executeSoon(() => EventUtils.synthesizeKey("VK_ESCAPE", {}));
+      executeSoon(() => EventUtils.synthesizeKey("KEY_Escape"));
     }
   },
   {
     desc: "F11 key",
     affectsFullscreenMode: true,
     exitFunc() {
-      executeSoon(() => EventUtils.synthesizeKey("VK_F11", {}));
+      executeSoon(() => EventUtils.synthesizeKey("KEY_F11"));
     }
   }
 ];

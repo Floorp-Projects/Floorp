@@ -120,22 +120,22 @@ const LTR = "ltr";
 const RTL = "rtl";
 
 var testTable = [
-  ["VK_LEFT",      LTR, valueMinusStep],
-  ["VK_LEFT",      RTL, valuePlusStep],
-  ["VK_RIGHT",     LTR, valuePlusStep],
-  ["VK_RIGHT",     RTL, valueMinusStep],
-  ["VK_UP",        LTR, valuePlusStep],
-  ["VK_UP",        RTL, valuePlusStep],
-  ["VK_DOWN",      LTR, valueMinusStep],
-  ["VK_DOWN",      RTL, valueMinusStep],
-  ["VK_PAGE_UP",   LTR, valuePlusTenPctOrStep],
-  ["VK_PAGE_UP",   RTL, valuePlusTenPctOrStep],
-  ["VK_PAGE_DOWN", LTR, valueMinusTenPctOrStep],
-  ["VK_PAGE_DOWN", RTL, valueMinusTenPctOrStep],
-  ["VK_HOME",      LTR, minimum],
-  ["VK_HOME",      RTL, minimum],
-  ["VK_END",       LTR, maximum],
-  ["VK_END",       RTL, maximum],
+  ["KEY_ArrowLeft",  LTR, valueMinusStep],
+  ["KEY_ArrowLeft",  RTL, valuePlusStep],
+  ["KEY_ArrowRight", LTR, valuePlusStep],
+  ["KEY_ArrowRight", RTL, valueMinusStep],
+  ["KEY_ArrowUp",    LTR, valuePlusStep],
+  ["KEY_ArrowUp",    RTL, valuePlusStep],
+  ["KEY_ArrowDown",  LTR, valueMinusStep],
+  ["KEY_ArrowDown",  RTL, valueMinusStep],
+  ["KEY_PageUp",     LTR, valuePlusTenPctOrStep],
+  ["KEY_PageUp",     RTL, valuePlusTenPctOrStep],
+  ["KEY_PageDown",   LTR, valueMinusTenPctOrStep],
+  ["KEY_PageDown",   RTL, valueMinusTenPctOrStep],
+  ["KEY_Home",       LTR, minimum],
+  ["KEY_Home",       RTL, minimum],
+  ["KEY_End",        LTR, maximum],
+  ["KEY_End",        RTL, maximum],
 ]
 
 function test() {
@@ -157,46 +157,46 @@ function test() {
     // Start at middle:
     elem.value = oldVal = defaultValue(elem);
     expectedVal = expectedFunc(elem);
-    synthesizeKey(key, {});
+    synthesizeKey(key);
     is(elem.value, String(expectedVal), "Test " + key + " for " + dir + " range with value set to the midpoint (" + oldVal + ")");
 
     // Same again:
     expectedVal = expectedFunc(elem);
-    synthesizeKey(key, {});
+    synthesizeKey(key);
     is(elem.value, String(expectedVal), "Test repeat of " + key + " for " + dir + " range");
 
     // Start at maximum:
     elem.value = oldVal = maximum(elem);
     expectedVal = expectedFunc(elem);
-    synthesizeKey(key, {});
+    synthesizeKey(key);
     is(elem.value, String(expectedVal), "Test " + key + " for " + dir + " range with value set to the maximum (" + oldVal + ")");
 
     // Same again:
     expectedVal = expectedFunc(elem);
-    synthesizeKey(key, {});
+    synthesizeKey(key);
     is(elem.value, String(expectedVal), "Test repeat of " + key + " for " + dir + " range");
 
     // Start at minimum:
     elem.value = oldVal = minimum(elem);
     expectedVal = expectedFunc(elem);
-    synthesizeKey(key, {});
+    synthesizeKey(key);
     is(elem.value, String(expectedVal), "Test " + key + " for " + dir + " range with value set to the minimum (" + oldVal + ")");
 
     // Same again:
     expectedVal = expectedFunc(elem);
-    synthesizeKey(key, {});
+    synthesizeKey(key);
     is(elem.value, String(expectedVal), "Test repeat of " + key + " for " + dir + " range");
 
     // Test for a step value that is greater than 10% of the range:
     elem.step = 20;
     elem.value = 60;
     expectedVal = expectedFunc(elem);
-    synthesizeKey(key, {});
+    synthesizeKey(key);
     is(elem.value, String(expectedVal), "Test " + key + " for " + dir + " range with a step that is greater than 10% of the range (step=" + elem.step + ")");
 
     // Same again:
     expectedVal = expectedFunc(elem);
-    synthesizeKey(key, {});
+    synthesizeKey(key);
     is(elem.value, String(expectedVal), "Test repeat of " + key + " for " + dir + " range");
 
     // reset step:

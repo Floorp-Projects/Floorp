@@ -27,7 +27,7 @@ add_task(async function() {
 
   // Send return key (cross process) to submit the form implicitly.
   let dialogShown = awaitAndCloseAlertDialog();
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   await dialogShown;
 
   // Check that the form should not have been submitted.

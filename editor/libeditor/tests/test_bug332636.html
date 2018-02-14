@@ -35,7 +35,7 @@ function test(edit) {
   edit.focus();
   var sel = window.getSelection();
   sel.collapse(edit.childNodes[0], edit.textContent.length - 1);
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_Backspace");
   is(edit.textContent, "ab", "The backspace key should delete the UTF-16 surrogate pair correctly");
 }
 
@@ -45,11 +45,11 @@ function testWithMove(edit, offset) {
   sel.collapse(edit.childNodes[0], 0);
   var i;
   for (i = 0; i < offset; ++i) {
-    synthesizeKey("VK_RIGHT", {});
-    synthesizeKey("VK_LEFT", {});
-    synthesizeKey("VK_RIGHT", {});
+    synthesizeKey("KEY_ArrowRight");
+    synthesizeKey("KEY_ArrowLeft");
+    synthesizeKey("KEY_ArrowRight");
   }
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_Backspace");
   is(edit.textContent, "ab", "The backspace key should delete the UTF-16 surrogate pair correctly");
 }
 

@@ -179,8 +179,8 @@ function snapshot(elem)
     ++count;
     if (count <= 1) {
         // close the submenu and open the bottom submenu
-        synthesizeKey("VK_LEFT", {});
-        synthesizeKey("9", {});
+        synthesizeKey("KEY_ArrowLeft");
+        sendString("9");
     } else {
         if (!navigator.platform.includes("Mac")) {
             is(pos[1], pos[0], "Popup should open in the same place when the menu is scrolled");
@@ -205,7 +205,7 @@ function openSubmenu()
         todo(false, "openSubmenu() called");
     }
     // open a submenu in the middle
-    synthesizeKey("5", {});
+    sendString("5");
 }
 
 SimpleTest.waitForExplicitFinish();

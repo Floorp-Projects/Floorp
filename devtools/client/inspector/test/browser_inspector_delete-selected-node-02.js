@@ -83,7 +83,7 @@ add_task(function* () {
     // Delete node with key, as cannot delete text node with
     // context menu at this time.
     inspector.markup._frame.focus();
-    EventUtils.synthesizeKey("VK_DELETE", {});
+    EventUtils.synthesizeKey("KEY_Delete");
     yield inspector.once("inspector-updated");
 
     expectedCrumbs = ["html", "body", "div#deleteToMakeSingleTextNode"];
@@ -108,7 +108,7 @@ add_task(function* () {
     menuItem.click();
 
     // close the open context menu
-    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    EventUtils.synthesizeKey("KEY_Escape");
 
     info("Waiting for inspector to update.");
     yield inspector.once("inspector-updated");

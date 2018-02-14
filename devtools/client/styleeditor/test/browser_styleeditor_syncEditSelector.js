@@ -28,7 +28,7 @@ add_task(function* () {
   let editor = yield focusEditableField(view, ruleEditor.selectorText);
   editor.input.value = "#testid, span";
   let onRuleViewChanged = once(view, "ruleview-changed");
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   yield onRuleViewChanged;
 
   let { ui } = yield openStyleEditor();

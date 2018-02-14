@@ -74,7 +74,7 @@ async function doTest() {
   // By default the search will open in the background and the popup will stay open:
   promise = promiseEvent(searchPopup, "popuphidden");
   info("Closing search panel");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   await promise;
 
   // Check the loaded tab.

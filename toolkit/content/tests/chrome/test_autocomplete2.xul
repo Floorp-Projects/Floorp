@@ -127,7 +127,7 @@ function check() {
   // search has stopped, then start a new search.
   autocomplete.blur();
   autocomplete.focus();
-  synthesizeKey("r", {});
+  sendString("r");
 }
 
 function checkResult() {

@@ -98,9 +98,9 @@ function doTests() {
   n1.value = 12;
   n1.inputField.focus();
   // no events should fire and no changes should occur when the field is read only
-  synthesizeKeyExpectEvent("VK_UP", { }, n1, "!change", "key up read only");
+  synthesizeKeyExpectEvent("KEY_ArrowUp", {}, n1, "!change", "key up read only");
   is(n1.value, "12", "key up read only value");
-  synthesizeKeyExpectEvent("VK_DOWN", { }, n1, "!change", "key down read only");
+  synthesizeKeyExpectEvent("KEY_ArrowDown", {}, n1, "!change", "key down read only");
   is(n1.value, "12", "key down read only value");
 
   n1.readOnly = false;
@@ -108,20 +108,20 @@ function doTests() {
   var n9 = $("n9");
   is(n9.value, "0", "initial value");
   n9.select();
-  synthesizeKey("4", {});
+  sendString("4");
   is(inputEventCount, 1, "input event count");
   is(inputEventValue, "4", "input value");
   is(n9.value, "4", "updated value");
-  synthesizeKey("2", {});
+  sendString("2");
   is(inputEventCount, 2, "input event count");
   is(inputEventValue, "42", "input value");
   is(n9.value, "42", "updated value");
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_Backspace");
   is(inputEventCount, 3, "input event count");
   is(inputEventValue, "4", "input value");
   is(n9.value, "4", "updated value");
   synthesizeKey("A", {accelKey: true});
-  synthesizeKey("VK_DELETE", {});
+  synthesizeKey("KEY_Delete");
   is(inputEventCount, 4, "input event count");
   is(inputEventValue, "0", "input value");
   is(n9.value, "0", "updated value");

@@ -180,15 +180,15 @@ function test(synthesizeFunc, clickOrTap, startName, moveName, endName) {
   elem.value = QUARTER_OF_RANGE;
   synthesizeFunc(elem, midX, midY, { type: startName });
   is(elem.value, MIDDLE_OF_RANGE, "Test " + startName + " in middle of range");
-  synthesizeKey("VK_HOME", {});
-  // The VK_HOME tests are disabled until I can figure out why they fail on Android -jwatt
-  //is(elem.value, MINIMUM_OF_RANGE, "Test VK_HOME during a drag sets the value to the minimum of the range");
+  synthesizeKey("KEY_Home");
+  // The KEY_Home tests are disabled until I can figure out why they fail on Android -jwatt
+  //is(elem.value, MINIMUM_OF_RANGE, "Test KEY_Home during a drag sets the value to the minimum of the range");
   synthesizeFunc(elem, midX+100, midY, { type: moveName });
   is(elem.value, MAXIMUM_OF_RANGE, "Test " + moveName + " outside range after key press that occurred during a drag changes the value");
   synthesizeFunc(elem, midX, midY, { type: moveName });
   is(elem.value, MIDDLE_OF_RANGE, "Test " + moveName + " in middle of range");
-  synthesizeKey("VK_HOME", {});
-  //is(elem.value, MINIMUM_OF_RANGE, "Test VK_HOME during a drag sets the value to the minimum of the range (second time)");
+  synthesizeKey("KEY_Home");
+  //is(elem.value, MINIMUM_OF_RANGE, "Test KEY_Home during a drag sets the value to the minimum of the range (second time)");
   synthesizeFunc(elem, maxX+100, midY, { type: endName });
   is(elem.value, MAXIMUM_OF_RANGE, "Test " + endName + " outside range after key press that occurred during a drag changes the value");
 }

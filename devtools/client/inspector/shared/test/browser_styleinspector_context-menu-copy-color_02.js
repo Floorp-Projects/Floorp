@@ -42,7 +42,7 @@ function* testCopyToClipboard(inspector, view) {
   yield waitForClipboardPromise(() => menuitemCopyColor.click(),
     "#123ABC");
 
-  EventUtils.synthesizeKey("VK_ESCAPE", { });
+  EventUtils.synthesizeKey("KEY_Escape");
 }
 
 function* testManualEdit(inspector, view) {

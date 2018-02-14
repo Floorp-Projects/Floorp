@@ -33,10 +33,10 @@ SimpleTest.waitForFocus(function test() {
    var sel = $('display').firstChild;
    sel.removeChild(sel.childNodes[index]);
   }
-  function up() {   synthesizeKey("VK_UP", {});  }
-  function shiftUp() {   synthesizeKey("VK_UP", {shiftKey:true});  }
-  function down() {   synthesizeKey("VK_DOWN", {});  }
-  function shiftDown() {   synthesizeKey("VK_DOWN", {shiftKey:true});  }
+  function up() { synthesizeKey("KEY_ArrowUp"); }
+  function shiftUp() { synthesizeKey("KEY_ArrowUp", {shiftKey:true}); }
+  function down() { synthesizeKey("KEY_ArrowDown"); }
+  function shiftDown() { synthesizeKey("KEY_ArrowDown", {shiftKey:true}); }
   function mouseEvent(index,event) {
     synthesizeMouse(option(index), 5, 5, event);
   }

@@ -36,131 +36,131 @@ var testData = [
    */
   {
     // Type 1030 and select AM.
-    keys: ["1030", "VK_DOWN"],
+    keys: ["1030", "KEY_ArrowDown"],
     initialVal: "",
     expectedVal: "10:30"
   },
   {
     // Type 3 in the hour field will automatically advance to the minute field.
-    keys: ["330", "VK_DOWN"],
+    keys: ["330", "KEY_ArrowDown"],
     initialVal: "",
     expectedVal: "03:30"
   },
   {
     // Type 5 in the hour field will automatically advance to the minute field.
     // Type 7 in the minute field will automatically advance to the AM/PM field.
-    keys: ["57", "VK_DOWN"],
+    keys: ["57", "KEY_ArrowDown"],
     initialVal: "",
     expectedVal: "05:07"
   },
   {
     // Advance to AM/PM field and change to PM.
-    keys: ["VK_TAB", "VK_TAB", "VK_DOWN"],
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_ArrowDown"],
     initialVal: "10:30",
     expectedVal: "22:30"
   },
   {
     // Right key should do the same thing as TAB key.
-    keys: ["VK_RIGHT", "VK_RIGHT", "VK_DOWN"],
+    keys: ["KEY_ArrowRight", "KEY_ArrowRight", "KEY_ArrowDown"],
     initialVal: "10:30",
     expectedVal: "22:30"
   },
   {
     // Advance to minute field then back to hour field and decrement.
-    keys: ["VK_RIGHT", "VK_LEFT", "VK_DOWN"],
+    keys: ["KEY_ArrowRight", "KEY_ArrowLeft", "KEY_ArrowDown"],
     initialVal: "10:30",
     expectedVal: "09:30"
   },
   {
     // Focus starts on the first field, hour in this case, and increment.
-    keys: ["VK_UP"],
+    keys: ["KEY_ArrowUp"],
     initialVal: "16:00",
     expectedVal: "17:00"
   },
   {
     // Advance to minute field and decrement.
-    keys: ["VK_TAB", "VK_DOWN"],
+    keys: ["KEY_Tab", "KEY_ArrowDown"],
     initialVal: "16:00",
     expectedVal: "16:59"
   },
   {
     // Advance to minute field and increment.
-    keys: ["VK_TAB", "VK_UP"],
+    keys: ["KEY_Tab", "KEY_ArrowUp"],
     initialVal: "16:59",
     expectedVal: "16:00"
   },
   {
     // PageUp on hour field increments hour by 3.
-    keys: ["VK_PAGE_UP"],
+    keys: ["KEY_PageUp"],
     initialVal: "05:00",
     expectedVal: "08:00"
   },
   {
     // PageDown on hour field decrements hour by 3.
-    keys: ["VK_PAGE_DOWN"],
+    keys: ["KEY_PageDown"],
     initialVal: "05:00",
     expectedVal: "02:00"
   },
   {
     // PageUp on minute field increments minute by 10.
-    keys: ["VK_TAB", "VK_PAGE_UP"],
+    keys: ["KEY_Tab", "KEY_PageUp"],
     initialVal: "14:00",
     expectedVal: "14:10"
   },
   {
     // PageDown on minute field decrements minute by 10.
-    keys: ["VK_TAB", "VK_PAGE_DOWN"],
+    keys: ["KEY_Tab", "KEY_PageDown"],
     initialVal: "14:00",
     expectedVal: "14:50"
   },
   {
     // Home key on hour field sets it to the minimum hour, which is 1 in 12-hour
     // clock.
-    keys: ["VK_HOME"],
+    keys: ["KEY_Home"],
     initialVal: "03:10",
     expectedVal: "01:10"
   },
   {
     // End key on hour field sets it to the maximum hour, which is 12 in 12-hour
     // clock.
-    keys: ["VK_END"],
+    keys: ["KEY_End"],
     initialVal: "03:10",
     expectedVal: "00:10"
   },
   {
     // Home key on minute field sets it to the minimum minute, which is 0.
-    keys: ["VK_TAB", "VK_HOME"],
+    keys: ["KEY_Tab", "KEY_Home"],
     initialVal: "19:30",
     expectedVal: "19:00"
   },
   {
     // End key on minute field sets it to the minimum minute, which is 59.
-    keys: ["VK_TAB", "VK_END"],
+    keys: ["KEY_Tab", "KEY_End"],
     initialVal: "19:30",
     expectedVal: "19:59"
   },
   // Second field will show up when needed.
   {
     // PageUp on second field increments second by 10.
-    keys: ["VK_TAB", "VK_TAB", "VK_PAGE_UP"],
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_PageUp"],
     initialVal: "08:10:10",
     expectedVal: "08:10:20"
   },
   {
     // PageDown on second field increments second by 10.
-    keys: ["VK_TAB", "VK_TAB", "VK_PAGE_DOWN"],
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_PageDown"],
     initialVal: "08:10:10",
     expectedVal: "08:10:00"
   },
   {
     // Home key on second field sets it to the minimum second, which is 0.
-    keys: ["VK_TAB", "VK_TAB", "VK_HOME"],
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_Home"],
     initialVal: "16:00:30",
     expectedVal: "16:00:00"
   },
   {
     // End key on second field sets it to the minimum second, which is 59.
-    keys: ["VK_TAB", "VK_TAB", "VK_END"],
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_End"],
     initialVal: "16:00:30",
     expectedVal: "16:00:59"
   },
@@ -169,8 +169,8 @@ var testData = [
 function sendKeys(aKeys) {
   for (let i = 0; i < aKeys.length; i++) {
     let key = aKeys[i];
-    if (key.startsWith("VK")) {
-      synthesizeKey(key, {});
+    if (key.startsWith("KEY_")) {
+      synthesizeKey(key);
     } else {
       sendString(key);
     }

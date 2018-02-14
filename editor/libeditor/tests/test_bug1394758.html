@@ -33,18 +33,18 @@ SimpleTest.waitForFocus(function() {
   editable.focus();
   window.getSelection().collapse(span.nextSibling, 0);
 
-  synthesizeKey("KEY_ArrowRight", {});
-  synthesizeKey("KEY_ArrowRight", {});
-  synthesizeKey("KEY_ArrowRight", {});
-  synthesizeKey("KEY_Backspace", {});
-  synthesizeKey("KEY_Backspace", {});
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("KEY_Backspace");
 
   is(span.textContent, beforeSpan,
      "VK_BACK_SPACE should not modify non-editable area");
   is(span.nextSibling.textContent.trim(), "rld",
      "VK_BACK_SPACE should delete first 2 characters");
 
-  synthesizeKey("KEY_Delete", {});
+  synthesizeKey("KEY_Delete");
 
   is(span.textContent, beforeSpan,
      "VK_DELETE should not modify non-editable area");

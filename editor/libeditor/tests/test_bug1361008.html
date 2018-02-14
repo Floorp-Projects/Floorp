@@ -28,9 +28,8 @@ SimpleTest.waitForFocus(() => {
   let selection = window.getSelection();
   // Insert text before BR element
   selection.collapse(edit1, 0);
-  synthesizeKey("A", {});
-  synthesizeKey("B", {});
-  synthesizeKey("VK_RETURN", {});
+  sendString("AB");
+  synthesizeKey("KEY_Enter");
   // count <div> element into contenteidable
   is(edit1.getElementsByTagName('div').length, 2,
      "DIV element should be 2 children");
@@ -44,9 +43,8 @@ SimpleTest.waitForFocus(() => {
   edit2.focus();
   selection.collapse(edit2, 0);
   // Insert text before BR element
-  synthesizeKey("A", {});
-  synthesizeKey("B", {});
-  synthesizeKey("VK_RETURN", {});
+  sendString("AB");
+  synthesizeKey("KEY_Enter");
 
   is(edit2.getElementsByTagName('p').length, 2,
      "P element should be 2 children");

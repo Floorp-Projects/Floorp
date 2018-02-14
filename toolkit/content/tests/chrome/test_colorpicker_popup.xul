@@ -57,29 +57,29 @@ function popupShown()
       gCp.hidePopup();
       break;
     case "key left":
-      synthesizeKey("VK_LEFT", { });
-      synthesizeKeyExpectEvent("VK_RETURN", { });
+      synthesizeKey("KEY_ArrowLeft");
+      synthesizeKeyExpectEvent("KEY_Enter");
       is(gCp.color, "#C0C0C0", "key left while open");
       break;
     case "key right":
-      synthesizeKey("VK_RIGHT", { });
-      synthesizeKeyExpectEvent("VK_SPACE", { });
+      synthesizeKey("KEY_ArrowRight");
+      synthesizeKeyExpectEvent("VK_SPACE");
       is(gCp.color, "#FF0000", "key right while open");
       break;
     case "key up":
-      synthesizeKey("VK_UP", { });
-      synthesizeKeyExpectEvent("VK_RETURN", { });
+      synthesizeKey("KEY_ArrowUp");
+      synthesizeKeyExpectEvent("KEY_Enter");
       is(gCp.color, "#FF6666", "key up while open");
       break;
     case "key down":
-      synthesizeKey("VK_DOWN", { });
-      synthesizeKeyExpectEvent("VK_SPACE", { });
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKeyExpectEvent(" ");
       is(gCp.color, "#FF0000", "key down while open");
       break;
     default:
       synthesizeMouse(gCp, 2, 2, { });
 // this breaks on the Mac, so disable for now
-//      synthesizeKey("VK_ESCAPE", { });
+//      synthesizeKey("KEY_Escape");
       break;
   }
 }
@@ -116,19 +116,19 @@ function goNext()
       gCp.showPopup();
       break;
     case "key left":
-      synthesizeKey("VK_LEFT", { });
+      synthesizeKey("KEY_ArrowLeft");
       break;
     case "key right":
-      synthesizeKey("VK_RIGHT", { });
+      synthesizeKey("KEY_ArrowRight");
       break;
     case "key down":
-      synthesizeKey("VK_UP", { });
+      synthesizeKey("KEY_ArrowUp");
       break;
     case "key up":
-      synthesizeKey("VK_DOWN", { });
+      synthesizeKey("KEY_ArrowDown");
       break;
     case "key space":
-      synthesizeKey("VK_SPACE", { });
+      sendString(" ");
       break;
   }
 }

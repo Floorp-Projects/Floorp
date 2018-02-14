@@ -34,7 +34,7 @@ function test() {
           "The popup should be open with a simple text entry");
       // Now we're stopped at a breakpoint with an open popup
       // we'll send a keypress and check if the popup closes
-      executeSoon(() => EventUtils.synthesizeKey("VK_F11", {}));
+      executeSoon(() => EventUtils.synthesizeKey("KEY_F11"));
       // The keypress should cause one resumed event and one paused event
       yield waitForThreadEvents(gPanel, "resumed");
       yield waitForThreadEvents(gPanel, "paused");

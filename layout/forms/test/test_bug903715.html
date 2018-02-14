@@ -58,7 +58,7 @@ function runTests()
 
   select.addEventListener("popupshowing", function (aEvent) {
     setTimeout(function () {
-      synthesizeKey("VK_DOWN", { });
+      synthesizeKey("KEY_ArrowDown");
       select.addEventListener("popuphiding", function (aEvent) {
         setTimeout(function () {
           // Enter key should cause closing the dropdown of the select element
@@ -69,12 +69,12 @@ function runTests()
         }, 100);
       });
       // Close dropdown.
-      synthesizeKey("VK_RETURN", { });
+      synthesizeKey("KEY_Enter");
     }, 100);
   });
 
   // Open dropdown.
-  synthesizeKey("VK_DOWN", { altKey: true });
+  synthesizeKey("KEY_ArrowDown", { altKey: true });
 }
 </script>
 </body>

@@ -41,7 +41,7 @@ e.addEventListener("invalid", function(event) {
 
 e.addEventListener("focus", function() {
   SimpleTest.executeSoon(function() {
-    synthesizeKey("VK_RETURN", {});
+    synthesizeKey("KEY_Enter");
   });
 }, {once: true});
 

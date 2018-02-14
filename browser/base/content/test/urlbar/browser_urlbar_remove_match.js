@@ -17,10 +17,10 @@ add_task(async function test_remove_history() {
   let result = await waitForAutocompleteResultAt(1);
   Assert.equal(result.getAttribute("ac-value"), TEST_URL, "Found the expected result");
 
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.equal(gURLBar.popup.richlistbox.selectedIndex, 1);
   let options = AppConstants.platform == "macosx" ? { shiftKey: true } : {};
-  EventUtils.synthesizeKey("VK_DELETE", options);
+  EventUtils.synthesizeKey("KEY_Delete", options);
   await promiseVisitRemoved;
   await BrowserTestUtils.waitForCondition(
     () => !gURLBar.popup.richlistbox.children.some(c => !c.collapsed && c.getAttribute("ac-value") == TEST_URL),

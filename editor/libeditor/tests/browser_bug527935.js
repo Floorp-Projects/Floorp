@@ -26,7 +26,7 @@ add_task(async function() {
       initValue.value = "foo";
     });
 
-    EventUtils.synthesizeKey("VK_RETURN", {});
+    EventUtils.synthesizeKey("KEY_Enter");
 
     await ContentTask.spawn(aBrowser, {}, async function() {
       var window = content.window.wrappedJSObject;

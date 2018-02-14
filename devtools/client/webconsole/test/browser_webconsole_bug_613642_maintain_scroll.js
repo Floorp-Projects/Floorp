@@ -49,7 +49,7 @@ add_task(function* () {
     is(scrollBox.scrollTop, 0, "scroll location updated (moved to top)");
     scrolled.resolve();
   };
-  EventUtils.synthesizeKey("VK_HOME", {}, hud.iframeWindow);
+  EventUtils.synthesizeKey("KEY_Home", {}, hud.iframeWindow);
 
   yield scrolled.promise;
 
@@ -96,7 +96,7 @@ add_task(function* () {
     isnot(scrollBox.scrollTop, 0, "scroll location updated (moved to bottom)");
     scrolled.resolve();
   };
-  EventUtils.synthesizeKey("VK_END", {});
+  EventUtils.synthesizeKey("KEY_End");
   yield scrolled.promise;
 
   let oldScrollTop = scrollBox.scrollTop;

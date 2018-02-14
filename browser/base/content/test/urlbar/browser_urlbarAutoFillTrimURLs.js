@@ -27,7 +27,7 @@ add_task(async function setup() {
 async function promiseSearch(searchtext) {
   gURLBar.focus();
   gURLBar.inputField.value = searchtext.substr(0, searchtext.length - 1);
-  EventUtils.synthesizeKey(searchtext.substr(-1, 1), {});
+  EventUtils.sendString(searchtext.substr(-1, 1));
   await promiseSearchComplete();
 }
 
@@ -111,6 +111,6 @@ add_task(async function autofill_complete_domain() {
 
   // Now ensure selecting from the popup correctly trims.
   is(gURLBar.controller.matchCount, 2, "Found the expected number of matches");
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(gURLBar.inputField.value, "www.autofilltrimurl.com/whatever", "trim was applied correctly");
 });

@@ -44,8 +44,8 @@ add_task(function* () {
 
   info("Tab to select the 2nd style and press return");
   let onExpanded = inspector.once("computed-view-property-expanded");
-  EventUtils.synthesizeKey("VK_TAB", {});
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Tab");
+  EventUtils.synthesizeKey("KEY_Enter");
   yield onExpanded;
 
   info("Verify the 2nd style has been expanded");
@@ -55,8 +55,8 @@ add_task(function* () {
 
   info("Tab back up and test the same thing, with space");
   onExpanded = inspector.once("computed-view-property-expanded");
-  EventUtils.synthesizeKey("VK_TAB", {shiftKey: true});
-  EventUtils.synthesizeKey("VK_SPACE", {});
+  EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
+  EventUtils.synthesizeKey(" ");
   yield onExpanded;
 
   info("Verify the 1st style has been expanded too");

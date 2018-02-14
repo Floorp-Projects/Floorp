@@ -44,9 +44,9 @@ function checkElement(aElement)
   aElement.focus();
   checkPseudoClass(aElement, false);
   // with keys
-  synthesizeKey('f', {});
+  sendString("f");
   checkPseudoClass(aElement, false);
-  synthesizeKey('VK_BACK_SPACE', {});
+  synthesizeKey("KEY_Backspace");
   checkPseudoClass(aElement, false);
   // with .value
   aElement.value = 'f';
@@ -62,9 +62,9 @@ function checkElement(aElement)
   aElement.focus();
   checkPseudoClass(aElement, true);
   // with keys
-  synthesizeKey('f', {});
+  sendString("f");
   checkPseudoClass(aElement, false);
-  synthesizeKey('VK_BACK_SPACE', {});
+  synthesizeKey("KEY_Backspace");
   checkPseudoClass(aElement, true);
   // with .value
   aElement.value = 'f';

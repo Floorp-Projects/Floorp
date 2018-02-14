@@ -29,7 +29,7 @@ input.addEventListener("input", function() {
 }, {once: true});
 
 input.addEventListener("focus", function() {
-  synthesizeKey("VK_ESCAPE", {});
+  synthesizeKey("KEY_Escape");
 
   setTimeout(function() {
     ok(!gotInputEvent, "No input event should have been sent.");

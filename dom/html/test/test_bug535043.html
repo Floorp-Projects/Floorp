@@ -26,7 +26,7 @@ function checkTextArea(textArea) {
   textArea.value = '';
   textArea.focus();
   for (var j = 0; j < 3; j++) {
-    synthesizeKey('x', {});
+    sendString("x");
   }
   var htmlMaxLength = textArea.getAttribute('maxlength');
   var domMaxLength = textArea.maxLength;

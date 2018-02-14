@@ -30,7 +30,7 @@ function doTest() {
      "Cut support should have been disabled");
 
   document.addEventListener("keydown", tryCopy);
-  synthesizeKey("Q", {});
+  sendString("Q");
 }
 
 function tryCopy(evt) {
@@ -51,7 +51,7 @@ function tryCopy(evt) {
     /* success fn */ SimpleTest.finish,
     /* failure fn */ function () {
       document.addEventListener("keydown", tryCut);
-      synthesizeKey("Q", {});
+      sendString("Q");
     },
     /* flavor */ undefined,
     /* timeout */ undefined,

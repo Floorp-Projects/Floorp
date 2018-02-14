@@ -51,7 +51,7 @@ function* testEditSelector(view, name) {
   let onRuleViewChanged = once(view, "ruleview-changed");
 
   info("Entering the commit key");
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   yield onRuleViewChanged;
 
   ok(getRuleViewRule(view, name), "Rule with " + name + " selector exists.");
@@ -60,7 +60,7 @@ function* testEditSelector(view, name) {
 
   // Escape the new property editor after editing the selector
   let onBlur = once(view.styleDocument.activeElement, "blur");
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
+  EventUtils.synthesizeKey("KEY_Escape", {}, view.styleWindow);
   yield onBlur;
 }
 
@@ -97,7 +97,7 @@ function* testAddMatchedRule(view, name) {
   let onRuleViewChanged = once(view, "ruleview-changed");
 
   info("Entering the commit key");
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   yield onRuleViewChanged;
 
   is(getRuleViewRuleEditor(view, 1).element.getAttribute("unmatched"), "false",
@@ -105,6 +105,6 @@ function* testAddMatchedRule(view, name) {
 
   // Escape the new property editor after editing the selector
   let onBlur = once(view.styleDocument.activeElement, "blur");
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
+  EventUtils.synthesizeKey("KEY_Escape", {}, view.styleWindow);
   yield onBlur;
 }

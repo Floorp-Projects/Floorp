@@ -13,16 +13,13 @@ add_task(async function() {
 function urlEnter(url) {
   gURLBar.value = url;
   gURLBar.focus();
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
 }
 
 function urlClick(url) {
   gURLBar.focus();
   gURLBar.value = "";
-  for (let c of url) {
-    EventUtils.synthesizeKey(c, {});
-  }
-
+  EventUtils.sendString(url);
   EventUtils.synthesizeMouseAtCenter(gURLBar.goButton, {});
 }
 

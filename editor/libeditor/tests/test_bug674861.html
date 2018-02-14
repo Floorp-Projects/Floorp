@@ -105,8 +105,8 @@ function try2split(element, caretPos) {
   sel.addRange(range);
   
   // simulates two [Return] keypresses
-  synthesizeKey("VK_RETURN", {});
-  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("KEY_Enter");
+  synthesizeKey("KEY_Enter");
 }
 
 function runTests() {

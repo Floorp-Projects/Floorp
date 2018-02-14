@@ -33,7 +33,7 @@ add_task(function* () {
   EventUtils.sendString("background", view.styleWindow);
 
   let onBlur = once(editor.input, "blur");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   yield onBlur;
 
   is(elementRuleEditor.rule.textProps.length, 1,

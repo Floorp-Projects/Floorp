@@ -19,7 +19,7 @@ add_task(async function testIdentityPopupFocusKeyboard() {
     gIdentityHandler._identityBox.focus();
     await focused;
     let shown = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popupshown");
-    EventUtils.synthesizeKey(" ", {});
+    EventUtils.sendString(" ");
     await shown;
     is(Services.focus.focusedElement, document.getElementById("identity-popup-security-expander"));
   });

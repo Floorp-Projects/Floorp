@@ -112,7 +112,7 @@ function starttest() {
       check = false;
       $("testKeyEvent").addEventListener("keypress", function() { check = true; });
       $("testKeyEvent").focus();
-      synthesizeKey("a", {});
+      sendString("a");
       is($("testKeyEvent").value, "a", "synthesizeKey should work");
       is(check, true, "synthesizeKey should dispatch keyPress");
       $("testKeyEvent").value = "";

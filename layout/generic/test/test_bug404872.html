@@ -26,8 +26,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=404872
 
 /* Focus, press key down twice, and make sure we successfully selected the second item. */
 $('a').focus();
-synthesizeKey("VK_DOWN", {});
-synthesizeKey("VK_DOWN", {});
+synthesizeKey("KEY_ArrowDown");
+synthesizeKey("KEY_ArrowDown");
 is($("a").value, "value2", "value2 should be selected!");
 
 

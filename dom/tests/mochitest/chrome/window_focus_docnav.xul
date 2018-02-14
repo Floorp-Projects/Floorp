@@ -59,14 +59,14 @@ function done()
 
 function previous(expectedWindow, expectedElement, desc)
 {
-  synthesizeKey("VK_F6", { shiftKey: true });
+  synthesizeKey("KEY_F6", {shiftKey: true});
   is(fm.focusedWindow, expectedWindow, desc);
   is(fm.focusedElement, expectedElement, desc + " element");
 }
 
 function next(expectedWindow, expectedElement, desc)
 {
-  synthesizeKey("VK_F6", { });
+  synthesizeKey("KEY_F6");
   is(fm.focusedWindow, expectedWindow, desc);
   is(fm.focusedElement, expectedElement, desc + " element" + "::" + (fm.focusedElement ? fm.focusedElement.parentNode.id : "<none>"));
 }

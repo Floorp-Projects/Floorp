@@ -34,7 +34,7 @@ function test() {
     vview.window.focus();
 
     let sidebarClosed = jsterm.once("sidebar-closed");
-    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    EventUtils.synthesizeKey("KEY_Escape");
     yield sidebarClosed;
 
     jsterm.clearOutput();
@@ -47,7 +47,7 @@ function test() {
 
     msg.scrollIntoView();
     sidebarClosed = jsterm.once("sidebar-closed");
-    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    EventUtils.synthesizeKey("KEY_Escape");
     yield sidebarClosed;
 
     function* openSidebar(objName, expectedText, expectedObj) {

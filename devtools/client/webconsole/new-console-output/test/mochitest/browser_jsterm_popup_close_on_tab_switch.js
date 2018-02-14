@@ -17,7 +17,7 @@ add_task(async function () {
   let popupShown = once(popup, "popup-opened");
 
   hud.jsterm.setInputValue("sc");
-  EventUtils.synthesizeKey("r", {});
+  EventUtils.sendString("r");
 
   await popupShown;
 

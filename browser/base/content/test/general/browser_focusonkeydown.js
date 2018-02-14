@@ -15,7 +15,7 @@ add_task(async function() {
     gBrowser.selectedBrowser.focus();
   }, {capture: true, once: true});
 
-  EventUtils.synthesizeKey("v", { });
+  EventUtils.sendString("v");
 
   is(keyUps, 1, "Key up fired at url bar");
 

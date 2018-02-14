@@ -49,5 +49,5 @@
       gBrowser.tabContainer.addEventListener("TabSelect", onTabSelect);
 
       // Press enter!
-      EventUtils.synthesizeKey("VK_RETURN", {});
+      EventUtils.synthesizeKey("KEY_Enter");
     });

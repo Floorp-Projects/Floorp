@@ -86,7 +86,7 @@ function runTest()
 
   // after a key is pressed, the focus ring will always be visible
   $("l2").focus();
-  synthesizeKey("VK_TAB", { });
+  synthesizeKey("KEY_Tab");
   checkFocus($("l3"), true, "appearance on list after tab focus");
 
   if (isMac) {

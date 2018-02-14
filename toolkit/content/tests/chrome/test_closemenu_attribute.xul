@@ -48,8 +48,8 @@ function nextTest()
 
 function executeMenuItem()
 {
-  synthesizeKey("VK_DOWN", { });
-  synthesizeKey("VK_RETURN", { });
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_Enter");
   // after a couple of seconds, end the test, as the 'none' closemenu value
   // should not hide any popups
   if (gModes[gMode] == "none")

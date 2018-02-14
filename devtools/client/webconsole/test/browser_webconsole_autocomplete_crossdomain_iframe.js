@@ -32,13 +32,13 @@ function test() {
 
     hud.jsterm.setInputValue("window[0].document");
     executeSoon(() => {
-      EventUtils.synthesizeKey(".", {});
+      EventUtils.sendString(".");
     });
 
     yield autocompleteUpdated;
 
     hud.jsterm.setInputValue("window[0].document.title");
-    EventUtils.synthesizeKey("VK_RETURN", {});
+    EventUtils.synthesizeKey("KEY_Enter");
 
     yield waitForMessages({
       webconsole: hud,

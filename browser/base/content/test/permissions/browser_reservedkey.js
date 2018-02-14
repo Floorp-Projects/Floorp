@@ -17,9 +17,7 @@ add_task(async function test_reserved_shortcuts() {
   const pageUrl = "data:text/html,<body onload='document.body.firstChild.focus();'><div onkeydown='event.preventDefault();' tabindex=0>Test</div></body>";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
-  EventUtils.synthesizeKey("O", { shiftKey: true });
-  EventUtils.synthesizeKey("P", { shiftKey: true });
-  EventUtils.synthesizeKey("Q", { shiftKey: true });
+  EventUtils.sendString("OPQ");
 
   is(document.getElementById("kt_reserved").getAttribute("count"), "1", "reserved='true' with preference off");
   is(document.getElementById("kt_notreserved").getAttribute("count"), "0", "reserved='false' with preference off");
@@ -30,9 +28,7 @@ add_task(async function test_reserved_shortcuts() {
     SpecialPowers.pushPrefEnv({"set": [["permissions.default.shortcuts", 2]]}, resolve);
   });
 
-  EventUtils.synthesizeKey("O", { shiftKey: true });
-  EventUtils.synthesizeKey("P", { shiftKey: true });
-  EventUtils.synthesizeKey("Q", { shiftKey: true });
+  EventUtils.sendString("OPQ");
 
   is(document.getElementById("kt_reserved").getAttribute("count"), "2", "reserved='true' with preference on");
   is(document.getElementById("kt_notreserved").getAttribute("count"), "0", "reserved='false' with preference on");
@@ -56,9 +52,9 @@ if (!navigator.platform.includes("Mac")) {
     // Pressing Alt+H should open the Help menu.
     let helpPopup = document.getElementById("menu_HelpPopup");
     let popupShown = BrowserTestUtils.waitForEvent(helpPopup, "popupshown");
-    EventUtils.synthesizeKey("VK_ALT", { type: "keydown" });
-    EventUtils.synthesizeKey("H", { altKey: true });
-    EventUtils.synthesizeKey("VK_ALT", { type: "keyup" });
+    EventUtils.synthesizeKey("KEY_Alt", {type: "keydown"});
+    EventUtils.synthesizeKey("h", {altKey: true});
+    EventUtils.synthesizeKey("KEY_Alt", {type: "keyup"});
     await popupShown;
 
     ok(true, "Help menu opened");
@@ -71,13 +67,13 @@ if (!navigator.platform.includes("Mac")) {
     // pressing Down will open the file menu.
     let menubar = document.getElementById("main-menubar");
     let menubarActive = BrowserTestUtils.waitForEvent(menubar, "DOMMenuBarActive");
-    EventUtils.sendKey("F10");
+    EventUtils.synthesizeKey("KEY_F10");
     await menubarActive;
 
     let filePopup = document.getElementById("menu_FilePopup");
     popupShown = BrowserTestUtils.waitForEvent(filePopup, "popupshown");
     if (navigator.platform.includes("Win")) {
-      EventUtils.synthesizeKey("KEY_ArrowDown", {});
+      EventUtils.synthesizeKey("KEY_ArrowDown");
     }
     await popupShown;
 

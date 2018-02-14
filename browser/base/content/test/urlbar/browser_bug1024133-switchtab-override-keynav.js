@@ -20,18 +20,18 @@ add_task(async function test_switchtab_override_keynav() {
 
   gURLBar.focus();
   gURLBar.value = "dummy_pag";
-  EventUtils.synthesizeKey("e", {});
+  EventUtils.sendString("e");
   await promiseSearchComplete();
 
   info("Select second autocomplete popup entry");
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   ok(/moz-action:switchtab/.test(gURLBar.value), "switch to tab entry found");
 
   info("Shift+left on switch-to-tab entry");
 
-  EventUtils.synthesizeKey("VK_SHIFT", { type: "keydown" });
-  EventUtils.synthesizeKey("VK_LEFT", { shiftKey: true });
-  EventUtils.synthesizeKey("VK_SHIFT", { type: "keyup" });
+  EventUtils.synthesizeKey("KEY_Shift", {type: "keydown"});
+  EventUtils.synthesizeKey("KEY_ArrowLeft", {shiftKey: true});
+  EventUtils.synthesizeKey("KEY_Shift", {type: "keyup"});
 
   ok(!/moz-action:switchtab/.test(gURLBar.inputField.value), "switch to tab should be hidden");
 });

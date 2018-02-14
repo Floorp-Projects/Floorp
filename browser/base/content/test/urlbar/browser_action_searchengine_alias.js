@@ -27,7 +27,7 @@ add_task(async function() {
      "Image attribute should have the search engine's icon");
 
   let tabPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  EventUtils.synthesizeKey("VK_RETURN", { });
+  EventUtils.synthesizeKey("KEY_Enter");
   await tabPromise;
 
   is(gBrowser.selectedBrowser.currentURI.spec, "http://example.com/?q=open+a+search");

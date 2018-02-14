@@ -14,7 +14,7 @@ async function test_autocomplete(data) {
 
   let promiseLoad = waitForDocLoadAndStopIt(waitForUrl);
 
-  keys.forEach(([key, mods]) => EventUtils.synthesizeKey(key, mods || {}));
+  keys.forEach(([key, mods]) => EventUtils.synthesizeKey(key, mods));
 
   is(gURLBar.textValue, modified, "value is as expected");
 
@@ -41,7 +41,7 @@ add_task(async function() {
                             autofilled: "example.com/",
                             modified: "example.com/",
                             waitForUrl: "http://example.com/",
-                            keys: [["VK_RETURN", {}]]
+                            keys: [["KEY_Enter"]]
                           });
 
   await test_autocomplete({ desc: "CTRL+ENTER on the autofilled part should bypass autofill",
@@ -49,9 +49,9 @@ add_task(async function() {
                             autofilled: "example.com/",
                             modified: "www.exam.com",
                             waitForUrl: "http://www.exam.com/",
-                            keys: [["VK_RETURN", AppConstants.platform === "macosx" ?
-                                                 { metaKey: true } :
-                                                 { ctrlKey: true }]]
+                            keys: [["KEY_Enter", AppConstants.platform === "macosx" ?
+                                                   {metaKey: true} :
+                                                   {ctrlKey: true}]]
                           });
 
   await test_autocomplete({ desc: "SHIFT+ENTER on the autofilled part should bypass autofill",
@@ -59,6 +59,6 @@ add_task(async function() {
                             autofilled: "example.com/",
                             modified: "www.exam.net",
                             waitForUrl: "http://www.exam.net/",
-                            keys: [["VK_RETURN", { shiftKey: true }]]
+                            keys: [["KEY_Enter", {shiftKey: true}]]
                           });
 });

@@ -124,7 +124,7 @@ function consoleOpened(HUD) {
   info("wait for completion value after typing 'docu'");
   jsterm.once("autocomplete-updated", onCompletionValue);
 
-  EventUtils.synthesizeKey("u", {});
+  EventUtils.sendString("u");
 
   return deferred.promise;
 }

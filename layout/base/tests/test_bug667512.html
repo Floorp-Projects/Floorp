@@ -25,8 +25,8 @@ function appendElements() {
   var x=document.getElementById('b');
   x.remove();
 
-  synthesizeKey("VK_LEFT", {});
-  synthesizeKey("VK_RIGHT", {});
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("KEY_ArrowRight");
 
   ok(true, "Should not crash!");
   SimpleTest.finish();

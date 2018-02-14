@@ -31,11 +31,11 @@ add_task(async function test_switchtab_override() {
 
   gURLBar.focus();
   gURLBar.value = "dummy_pag";
-  EventUtils.synthesizeKey("e", {});
+  EventUtils.sendString("e");
   await deferred.promise;
 
   info("Select second autocomplete popup entry");
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   ok(/moz-action:switchtab/.test(gURLBar.value), "switch to tab entry found");
 
   info("Override switch-to-tab");
@@ -51,10 +51,10 @@ add_task(async function test_switchtab_override() {
   // Otherwise it would load the page.
   BrowserTestUtils.browserLoaded(secondTab.linkedBrowser).then(deferred.resolve);
 
-  EventUtils.synthesizeKey("VK_SHIFT", { type: "keydown" });
-  EventUtils.synthesizeKey("VK_RETURN", { });
+  EventUtils.synthesizeKey("KEY_Shift", {type: "keydown"});
+  EventUtils.synthesizeKey("KEY_Enter");
   info(`gURLBar.value = ${gURLBar.value}`);
-  EventUtils.synthesizeKey("VK_SHIFT", { type: "keyup" });
+  EventUtils.synthesizeKey("KEY_Shift", {type: "keyup"});
   await deferred.promise;
 
   await PlacesUtils.history.clear();

@@ -50,7 +50,7 @@ add_task(async function() {
 function countFocus(aExpectedCount) {
   let focusCount = 0;
   do {
-    EventUtils.synthesizeKey("VK_TAB", {});
+    EventUtils.synthesizeKey("KEY_Tab");
     if (document.activeElement == gBrowser.selectedBrowser) {
       focusCount++;
     }

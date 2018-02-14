@@ -26,7 +26,7 @@ add_task(async function() {
   await waitForSearchBarFocus();
 
   let hiddenPanelPromise = promiseOverflowHidden(window);
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   await hiddenPanelPromise;
   CustomizableUI.reset();
 });
@@ -43,7 +43,7 @@ add_task(async function() {
   await waitForSearchBarFocus();
 
   let hiddenPanelPromise = promiseOverflowHidden(window);
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   await hiddenPanelPromise;
   CustomizableUI.reset();
 });
@@ -71,7 +71,7 @@ add_task(async function() {
   await waitForSearchBarFocus();
 
   let hiddenPanelPromise = promiseOverflowHidden(window);
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   await hiddenPanelPromise;
 
   Services.prefs.setBoolPref("browser.search.widget.inNavBar", false);
@@ -98,9 +98,9 @@ add_task(async function() {
 
 function sendWebSearchKeyCommand() {
   if (Services.appinfo.OS === "Darwin")
-    EventUtils.synthesizeKey("k", { accelKey: true });
+    EventUtils.synthesizeKey("k", {accelKey: true});
   else
-    EventUtils.synthesizeKey("k", { ctrlKey: true });
+    EventUtils.synthesizeKey("k", {ctrlKey: true});
 }
 
 function logActiveElement() {

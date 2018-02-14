@@ -30,7 +30,7 @@ add_task(async function () {
   filterInput.value = "init-";
   filterInput.focus();
   let onMessagesFiltered = waitFor(() => !findMessage(hud, "init-1"), null, 200);
-  EventUtils.synthesizeKey("9", {});
+  EventUtils.sendString("9");
   await onMessagesFiltered;
   ok(isScrolledToBottom(outputContainer),
     "The console is still scrolled to the bottom after filtering");
@@ -38,7 +38,7 @@ add_task(async function () {
   info("Clear the text filter and check that the scroll position is not impacted");
   let onMessagesUnFiltered = waitFor(() => findMessage(hud, "init-1"), null, 200);
   filterInput.select();
-  EventUtils.synthesizeKey("VK_DELETE", {});
+  EventUtils.synthesizeKey("KEY_Delete");
   await onMessagesUnFiltered;
   ok(isScrolledToBottom(outputContainer),
     "The console is still scrolled to the bottom after clearing the filter");
@@ -49,7 +49,7 @@ add_task(async function () {
   filterInput.value = "init-";
   filterInput.focus();
   onMessagesFiltered = waitFor(() => !findMessage(hud, "init-1"), null, 200);
-  EventUtils.synthesizeKey("9", {});
+  EventUtils.sendString("9");
   await onMessagesFiltered;
   is(outputContainer.scrollTop, 0,
     "The console is still scrolled to the top after filtering");
@@ -57,7 +57,7 @@ add_task(async function () {
   info("Clear the text filter and check that the scroll position is not impacted");
   onMessagesUnFiltered = waitFor(() => findMessage(hud, "init-1"), null, 200);
   filterInput.select();
-  EventUtils.synthesizeKey("VK_DELETE", {});
+  EventUtils.synthesizeKey("KEY_Delete");
   await onMessagesUnFiltered;
   is(outputContainer.scrollTop, 0,
     "The console is still scrolled to the top after clearing the filter");

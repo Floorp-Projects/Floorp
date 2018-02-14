@@ -101,7 +101,7 @@ add_task(async function test_plainQuery() {
   info("Simulate entering a simple search.");
   let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await searchInSearchbar("simple query");
-  EventUtils.sendKey("return");
+  EventUtils.synthesizeKey("KEY_Enter");
   await p;
 
   // Check if the scalars contain the expected values.
@@ -143,8 +143,8 @@ add_task(async function test_oneOff_enter() {
   await searchInSearchbar("query");
 
   info("Pressing Alt+Down to highlight the first one off engine.");
-  EventUtils.synthesizeKey("VK_DOWN", { altKey: true });
-  EventUtils.sendKey("return");
+  EventUtils.synthesizeKey("KEY_ArrowDown", {altKey: true});
+  EventUtils.synthesizeKey("KEY_Enter");
   await p;
 
   // Check if the scalars contain the expected values.
@@ -198,9 +198,9 @@ add_task(async function test_oneOff_enterSelection() {
   await searchInSearchbar("query");
 
   info("Select the second result, press Alt+Down to take us to the first one-off engine.");
-  EventUtils.synthesizeKey("VK_DOWN", {});
-  EventUtils.synthesizeKey("VK_DOWN", { altKey: true });
-  EventUtils.sendKey("return");
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_ArrowDown", {altKey: true});
+  EventUtils.synthesizeKey("KEY_Enter");
   await p;
 
   let resultMethods = resultMethodHist.snapshot();
@@ -322,8 +322,8 @@ add_task(async function test_suggestion_enterSelection() {
   let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await searchInSearchbar("query");
   info("Select the second result and press Return.");
-  EventUtils.synthesizeKey("VK_DOWN", {});
-  EventUtils.sendKey("return");
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_Enter");
   await p;
 
   let resultMethods = resultMethodHist.snapshot();

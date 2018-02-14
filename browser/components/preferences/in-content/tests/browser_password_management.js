@@ -59,9 +59,9 @@ add_task(async function test_deletePasswordWithKey() {
   tree.view.selection.select(0);
 
   if (AppConstants.platform == "macosx") {
-    EventUtils.synthesizeKey("VK_BACK_SPACE", {});
+    EventUtils.synthesizeKey("KEY_Backspace");
   } else {
-    EventUtils.synthesizeKey("VK_DELETE", {});
+    EventUtils.synthesizeKey("KEY_Delete");
   }
 
   await TestUtils.waitForCondition(() => tree.view.rowCount == 0);

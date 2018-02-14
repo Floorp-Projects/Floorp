@@ -516,7 +516,7 @@
       await promiseHighlightFinished();
       await promiseExpectRangeCount(3);
 
-      synthesizeKey("VK_BACK_SPACE", {});
+      synthesizeKey("KEY_Backspace");
       await promiseExpectRangeCount(0);
 
       // Regression test for bug 1316513.
@@ -535,7 +535,7 @@
 
       ok(highlightButton.checked, "testFindWithHighlight - 1316513: Highlight All " +
          "should still be checked after a reload.");
-      synthesizeKey("VK_RETURN", {});
+      synthesizeKey("KEY_Enter");
       await promiseHighlightFinished();
       await promiseExpectRangeCount(3);
 

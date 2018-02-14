@@ -133,7 +133,7 @@ function nextTest() {
   currentTest = testcases[test];
   resultText = currentTest.result;
   autocomplete.value = currentTest.search;
-  synthesizeKey("VK_DOWN", {});
+  synthesizeKey("KEY_ArrowDown");
 }
 
 function checkSearchCompleted() {

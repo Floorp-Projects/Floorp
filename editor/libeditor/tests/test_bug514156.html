@@ -27,17 +27,13 @@ SimpleTest.waitForExplicitFinish();
 function test() {
   var input1 = $("input1");
   input1.focus();
-  synthesizeKey("\u200e", { });
-  synthesizeKey("\u05d0", { });
-  synthesizeKey("\u05d1", { });
+  sendString("\u200e\u05d0\u05d1");
   is(escape(input1.value), escape("\u200e\u05d0\u05d1"), "non-spacing character and direction change shouldn't change content");
 
   var input2 = $("input2");
   input2.focus();
-  synthesizeKey("\u05b6", { });
-  synthesizeKey("a", { });
-  synthesizeKey("b", { });
-  synthesizeKey("c", { });
+  sendString("\u05b6");
+  sendString("abc");
   is(escape(input2.value), escape("\u05b6abc"), "non-spacing character and direction change shouldn't change content");
 
   SimpleTest.finish();

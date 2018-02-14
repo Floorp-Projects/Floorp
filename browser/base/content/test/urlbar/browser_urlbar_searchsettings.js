@@ -14,7 +14,7 @@ add_task(async function() {
     let popupopened = BrowserTestUtils.waitForEvent(gURLBar.popup, "popupshown");
 
     gURLBar.focus();
-    EventUtils.synthesizeKey("a", {});
+    EventUtils.sendString("a");
     await popupopened;
 
     // Since the current tab is blank the preferences pane will load there

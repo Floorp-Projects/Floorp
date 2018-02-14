@@ -158,7 +158,7 @@ function enterAll() {
   checkFullscreenStates([true, true, true]);
   info("Fully-exiting fullscreen");
   addFullscreenChangeContinuation("exit", exitAll);
-  synthesizeKey("VK_ESCAPE", {});
+  synthesizeKey("KEY_Escape");
 }
 
 function exitAll() {

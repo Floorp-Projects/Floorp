@@ -24,9 +24,9 @@ SimpleTest.waitForFocus(function() {
   var e = document.getElementById("e");
   e.focus();
   getSelection().collapse(e.firstChild, 1);
-  synthesizeKey("VK_DELETE", {});
+  synthesizeKey("KEY_Delete");
   is(e.textContent, "test", "Delete key worked");
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_Backspace");
   is(e.textContent, "est", "Backspace key worked");
   SimpleTest.finish();
 });

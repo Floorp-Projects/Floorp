@@ -23,10 +23,7 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   var i = document.querySelector("input");
   i.focus();
-  synthesizeKey("t", {});
-  synthesizeKey("e", {});
-  synthesizeKey("s", {});
-  synthesizeKey("t", {});
+  sendString("test");
   is(i.value, "test", "The correct value should be stored in the field");
   SimpleTest.finish();
 });

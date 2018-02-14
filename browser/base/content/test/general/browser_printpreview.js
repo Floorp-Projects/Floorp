@@ -21,7 +21,7 @@ function tidyUp() {
 }
 
 function testClosePrintPreviewWithAccessKey() {
-  EventUtils.synthesizeKey("c", { altKey: true });
+  EventUtils.synthesizeKey("c", {altKey: true});
   checkPrintPreviewClosed(function(aSucceeded) {
     ok(aSucceeded,
        "print preview mode should be finished by access key");
@@ -30,7 +30,7 @@ function testClosePrintPreviewWithAccessKey() {
 }
 
 function testClosePrintPreviewWithEscKey() {
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   checkPrintPreviewClosed(function(aSucceeded) {
     ok(aSucceeded,
        "print preview mode should be finished by Esc key press");
@@ -39,7 +39,7 @@ function testClosePrintPreviewWithEscKey() {
 }
 
 function testClosePrintPreviewWithClosingWindowShortcutKey() {
-  EventUtils.synthesizeKey("w", { accelKey: true });
+  EventUtils.synthesizeKey("w", {accelKey: true});
   checkPrintPreviewClosed(function(aSucceeded) {
     ok(aSucceeded,
        "print preview mode should be finished by closing window shortcut key");

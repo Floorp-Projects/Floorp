@@ -27,8 +27,8 @@ SimpleTest.waitForFocus(function() {
   synthesizeKey("A", {accelKey: true});
   is(i.selectionStart, 0, "Selection should start at 0 before appending");
   is(i.selectionEnd, 3, "Selection should end at 3 before appending");
-  synthesizeKey("VK_RIGHT", {});
-  synthesizeKey("x", {});
+  synthesizeKey("KEY_ArrowRight");
+  sendString("x");
   is(i.value, "foox", "The text should be appended correctly");
   synthesizeKey("A", {accelKey: true});
   is(i.selectionStart, 0, "Selection should start at 0 after appending");

@@ -30,9 +30,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1045270
         document.body.style.display = "";
         document.body.offsetLeft; // flush
       });
-      synthesizeKey("1", {});
+      sendString("1");
       SimpleTest.executeSoon(function() {
-        synthesizeKey("2", {});
+        sendString("2");
         SimpleTest.executeSoon(function() {
           is(input.value, "12", "Reframe should restore focus and selection properly");
           SimpleTest.finish();

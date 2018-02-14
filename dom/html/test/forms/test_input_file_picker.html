@@ -199,7 +199,7 @@ function launchNextTest() {
              testData[currentTest][0] == 'link-click') {
     synthesizeMouseAtCenter(document.getElementById(testData[currentTest][0]), {});
   } else if (testData[currentTest][0] == 'div-keydown') {
-    synthesizeKey("a", {});
+    sendString("a");
   } else {
     document.getElementById(testData[currentTest][0]).click();
   }

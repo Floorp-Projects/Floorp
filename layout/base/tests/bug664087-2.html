@@ -11,12 +11,12 @@
       }
       function typeIntoMe() {
         setTimeout(function() {
-          synthesizeKey("a", {});
-          synthesizeKey("VK_RETURN", {});
-          synthesizeKey("c", {});
-          synthesizeKey("VK_UP", {});
-          synthesizeKey("VK_END", {});
-          synthesizeKey("b", {});
+          sendString("a");
+          synthesizeKey("KEY_Enter");
+          sendString("c");
+          synthesizeKey("KEY_ArrowUp");
+          synthesizeKey("KEY_End");
+          sendString("b");
           document.documentElement.removeAttribute("class");
         }, 0);
       }

@@ -281,10 +281,10 @@ var popupTests = [
   testname: "close tooltip with modifiers",
   test: function() {
     // Press all of the modifiers; the tooltip should remain open on all platforms.
-    synthesizeKey("VK_SHIFT", {});
-    synthesizeKey("VK_CONTROL", {});
-    synthesizeKey("VK_ALT", {});
-    synthesizeKey("VK_META", {});
+    synthesizeKey("KEY_Shift");
+    synthesizeKey("KEY_Control");
+    synthesizeKey("KEY_Alt");
+    synthesizeKey("KEY_Alt");
   },
   result: function() {
     is(document.getElementById("thetooltip").state, "open", "tooltip still open after modifiers pressed")
@@ -302,7 +302,7 @@ var popupTests = [
     }
   },
   test: function() {
-    synthesizeKey("a", {});
+    sendString("a");
   },
   result: function() {
     let expectedState = (navigator.platform.indexOf("Win") > -1) ? "open" : "closed";

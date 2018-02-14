@@ -74,7 +74,7 @@ select.addEventListener("keyup", function() {
 
 select.addEventListener("focus", function() {
   SimpleTest.executeSoon(function () {
-    synthesizeKey("VK_DOWN", {});
+    synthesizeKey("KEY_ArrowDown");
   });
 }, {once: true});
 
@@ -111,7 +111,7 @@ textarea.addEventListener("input", function() {
 
 textarea.addEventListener("focus", function() {
   SimpleTest.executeSoon(function () {
-    synthesizeKey('f', {});
+    sendString("f");
   });
 }, {once: true});
 
@@ -126,7 +126,7 @@ input.addEventListener("input", function() {
 
 input.addEventListener("focus", function() {
   SimpleTest.executeSoon(function () {
-    synthesizeKey('f', {});
+    sendString("f");
   });
 }, {once: true});
 

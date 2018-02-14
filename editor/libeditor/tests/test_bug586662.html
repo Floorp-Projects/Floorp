@@ -24,7 +24,7 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   var t = document.querySelector("textarea");
   t.focus();
-  synthesizeKey("a", {});
+  sendString("a");
   is(getComputedStyle(t, null).overflow, "hidden", "The event handler should be executed");
   is(t.value, "a", "The key entry should result in a character being added to the field");
 

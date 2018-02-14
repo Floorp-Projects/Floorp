@@ -28,14 +28,10 @@ SimpleTest.waitForFocus(function() {
   t.focus();
 
   // Type foo\nbar and place the caret at the end of the last line
-  synthesizeKey("f", {});
-  synthesizeKey("o", {});
-  synthesizeKey("o", {});
-  synthesizeKey("VK_RETURN", {});
-  synthesizeKey("b", {});
-  synthesizeKey("a", {});
-  synthesizeKey("r", {});
-  synthesizeKey("VK_UP", {});
+  sendString("foo");
+  synthesizeKey("KEY_Enter");
+  sendString("bar");
+  synthesizeKey("KEY_ArrowUp");
   is(t.selectionStart, 3, "Correct start of selection");
   is(t.selectionEnd, 3, "Correct end of selection");
 
