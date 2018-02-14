@@ -11,7 +11,6 @@ Cu.import("resource://services-sync/addonsreconciler.js");
 Cu.import("resource://services-sync/engines/addons.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-ChromeUtils.defineModuleGetter(this, "Preferences", "resource://gre/modules/Preferences.jsm");
 
 const prefs = new Preferences();
 prefs.set("extensions.getAddons.get.url",
@@ -91,13 +90,6 @@ add_task(async function test_find_dupe() {
 });
 
 add_task(async function test_get_changed_ids() {
-  let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
-  Preferences.set("privacy.reduceTimerPrecision", false);
-
-  registerCleanupFunction(function() {
-    Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
-  });
-
   _("Ensure getChangedIDs() has the appropriate behavior.");
 
   _("Ensure getChangedIDs() returns an empty object by default.");

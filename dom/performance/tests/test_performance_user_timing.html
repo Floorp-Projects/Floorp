@@ -34,12 +34,8 @@
                      }
                  }
 
-                SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", reduceTimePrecisionPrevPrefValue);
                 SimpleTest.finish();
              }
-
-             var reduceTimePrecisionPrevPrefValue = SpecialPowers.getBoolPref("privacy.reduceTimerPrecision");
-             SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", false);
 
              SimpleTest.waitForExplicitFinish();
              addLoadEvent(next);
