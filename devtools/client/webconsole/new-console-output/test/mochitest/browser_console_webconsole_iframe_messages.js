@@ -3,94 +3,56 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Check that cached messages from nested iframes are displayed in the
 // Web/Browser Console.
 
 "use strict";
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-consoleiframes.html";
+                 "new-console-output/test/mochitest/test-console-iframes.html";
 
 const expectedMessages = [
-  {
-    text: "main file",
-    category: CATEGORY_WEBDEV,
-    severity: SEVERITY_LOG,
-  },
-  {
-    text: "blah",
-    category: CATEGORY_JS,
-    severity: SEVERITY_ERROR
-  },
-  {
-    text: "iframe 2",
-    category: CATEGORY_WEBDEV,
-    severity: SEVERITY_LOG
-  },
-  {
-    text: "iframe 3",
-    category: CATEGORY_WEBDEV,
-    severity: SEVERITY_LOG
-  }
+  "main file",
+  "blah",
+  "iframe 2",
+  "iframe 3"
 ];
 
-// "iframe 1" console messages can be coalesced into one if they follow each
-// other in the sequence of messages (depending on timing). If they do not, then
-// they will be displayed in the console output independently, as separate
-// messages. This is why we need to match any of the following two rules.
-const expectedMessagesAny = [
-  {
-    name: "iframe 1 (count: 2)",
-    text: "iframe 1",
-    category: CATEGORY_WEBDEV,
-    severity: SEVERITY_LOG,
-    count: 2
-  },
-  {
-    name: "iframe 1 (repeats: 2)",
-    text: "iframe 1",
-    category: CATEGORY_WEBDEV,
-    severity: SEVERITY_LOG,
-    repeats: 2
-  },
-];
+const expectedDupedMessage = "iframe 1";
 
-add_task(function* () {
+add_task(async function () {
   // On e10s, the exception is triggered in child process
   // and is ignored by test harness
   if (!Services.appinfo.browserTabsRemoteAutostart) {
     expectUncaughtException();
   }
 
-  yield loadTab(TEST_URI);
-  let hud = yield openConsole();
-  ok(hud, "web console opened");
+  let hud = await openNewTabAndConsole(TEST_URI);
 
-  yield testWebConsole(hud);
-  yield closeConsole();
+  await testMessages(hud);
+  await closeConsole();
   info("web console closed");
 
-  hud = yield HUDService.toggleBrowserConsole();
-  yield testBrowserConsole(hud);
-  yield closeConsole();
+  hud = await HUDService.toggleBrowserConsole();
+  await testBrowserConsole(hud);
+  await closeConsole();
 });
 
-function* testWebConsole(hud) {
-  yield waitForMessages({
-    webconsole: hud,
-    messages: expectedMessages,
-  });
+async function testMessages(hud) {
+  for (let message of expectedMessages) {
+    info(`checking that the message "${message}" exists`);
+    await waitFor(() => findMessage(hud, message));
+  }
 
   info("first messages matched");
 
-  yield waitForMessages({
-    webconsole: hud,
-    messages: expectedMessagesAny,
-    matchCondition: "any",
-  });
+  let messages = await findMessages(hud, expectedDupedMessage);
+  is(messages.length, 2, `${expectedDupedMessage} is present twice`);
 }
 
-function* testBrowserConsole(hud) {
+async function testBrowserConsole(hud) {
   ok(hud, "browser console opened");
 
   // TODO: The browser console doesn't show page's console.log statements
@@ -100,15 +62,5 @@ function* testBrowserConsole(hud) {
     return;
   }
 
-  yield waitForMessages({
-    webconsole: hud,
-    messages: expectedMessages,
-  });
-
-  info("first messages matched");
-  yield waitForMessages({
-    webconsole: hud,
-    messages: expectedMessagesAny,
-    matchCondition: "any",
-  });
+  await testMessages(hud);
 }
