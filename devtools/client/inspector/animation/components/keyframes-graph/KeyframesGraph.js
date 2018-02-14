@@ -13,6 +13,8 @@ const KeyframesGraphPath = createFactory(require("./KeyframesGraphPath"));
 class KeyframesGraph extends PureComponent {
   static get propTypes() {
     return {
+      getComputedStyle: PropTypes.func.isRequired,
+      property: PropTypes.string.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       type: PropTypes.string.isRequired,
       values: PropTypes.array.isRequired,
@@ -21,6 +23,8 @@ class KeyframesGraph extends PureComponent {
 
   render() {
     const {
+      getComputedStyle,
+      property,
       simulateAnimation,
       type,
       values,
@@ -32,6 +36,8 @@ class KeyframesGraph extends PureComponent {
       },
       KeyframesGraphPath(
         {
+          getComputedStyle,
+          property,
           simulateAnimation,
           type,
           values,
