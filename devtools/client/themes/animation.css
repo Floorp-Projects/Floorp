@@ -352,6 +352,10 @@
   -moz-context-properties: fill;
 }
 
+.animated-property-name.warning span {
+  text-decoration: underline dotted;
+}
+
 /* No Animation Panel */
 .animation-error-message {
   overflow: auto;
