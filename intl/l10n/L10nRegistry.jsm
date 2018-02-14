@@ -109,7 +109,7 @@ const L10nRegistry = {
       throw new Error(`Source with name "${source.name}" already registered.`);
     }
     this.sources.set(source.name, source);
-    Services.obs.notifyObservers(null, 'l10n:available-locales-changed', null);
+    Services.locale.setAvailableLocales(this.getAvailableLocales());
   },
 
   /**
@@ -126,7 +126,7 @@ const L10nRegistry = {
     }
     this.sources.set(source.name, source);
     this.ctxCache.clear();
-    Services.obs.notifyObservers(null, 'l10n:available-locales-changed', null);
+    Services.locale.setAvailableLocales(this.getAvailableLocales());
   },
 
   /**
@@ -136,7 +136,7 @@ const L10nRegistry = {
    */
   removeSource(sourceName) {
     this.sources.delete(sourceName);
-    Services.obs.notifyObservers(null, 'l10n:available-locales-changed', null);
+    Services.locale.setAvailableLocales(this.getAvailableLocales());
   },
 
   /**

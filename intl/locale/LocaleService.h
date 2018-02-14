@@ -68,9 +68,9 @@ namespace intl {
  * try to be specific when naming APIs, so the service is for locales,
  * but we negotiate between languages etc.
  */
-class LocaleService : public mozILocaleService,
-                      public nsIObserver,
-                      public nsSupportsWeakReference
+class LocaleService final : public mozILocaleService,
+                            public nsIObserver,
+                            public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
@@ -201,7 +201,14 @@ public:
   bool GetAvailableLocales(nsTArray<nsCString>& aRetVal);
 
   /**
-   * Those three functions allow to trigger cache invalidation on one of the
+   * Returns a list of locales packaged into the app bundle.
+   *
+   * (See mozILocaleService.idl for a JS-callable version of this.)
+   */
+  void GetPackagedLocales(nsTArray<nsCString>& aRetVal);
+
+  /**
+   * Those two functions allow to trigger cache invalidation on one of the
    * three cached values.
    *
    * In most cases, the functions will be called by the observer in
@@ -213,7 +220,6 @@ public:
    *
    * This code should be called only in the server mode..
    */
-  void AvailableLocalesChanged();
   void RequestedLocalesChanged();
   void LocalesChanged();
 
@@ -261,12 +267,15 @@ private:
 
   void NegotiateAppLocales(nsTArray<nsCString>& aRetVal);
 
+  void InitPackagedLocales();
+
   virtual ~LocaleService();
 
   nsAutoCStringN<16>  mDefaultLocale;
   nsTArray<nsCString> mAppLocales;
   nsTArray<nsCString> mRequestedLocales;
   nsTArray<nsCString> mAvailableLocales;
+  nsTArray<nsCString> mPackagedLocales;
   const bool mIsServer;
 
   static StaticRefPtr<LocaleService> sInstance;

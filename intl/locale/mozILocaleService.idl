@@ -205,4 +205,30 @@ interface mozILocaleService : nsISupports
    * Returns whether the current app locale is RTL.
    */
   readonly attribute boolean isAppLocaleRTL;
+
+  /**
+   * Sets a list of locales the application has resources to be localized into.
+   *
+   * The primary use of this function is to let L10nRegistry communicate all
+   * locale updates.
+   *
+   * The secondary use case is for testing purposes in scenarios in which the
+   * actual resources don't have to be available.
+   * It is recommended for tests to create a mock FileSource and register it in
+   * the L10nRegistry rather than using this call, in order to emulate full
+   * resource availability cycle.
+   *
+   */
+  void setAvailableLocales([array, size_is(aAvailableCount)] in string aAvailable,
+                           [optional] in unsigned long aAvailableCount);
+
+  /**
+   * Returns a list of locales packaged into the app bundle.
+   *
+   * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
+   *
+   * (See LocaleService.h for a more C++-friendly version of this.)
+   */
+  void getPackagedLocales([optional] out unsigned long aCount,
+                          [retval, array, size_is(aCount)] out string aOutArray);
 };
