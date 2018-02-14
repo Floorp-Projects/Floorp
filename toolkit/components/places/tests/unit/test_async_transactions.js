@@ -12,9 +12,6 @@ const rootGuid = PlacesUtils.bookmarks.rootGuid;
 const menuGuid = PlacesUtils.bookmarks.menuGuid;
 
 Components.utils.importGlobalProperties(["URL"]);
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
-
 
 // Create and add bookmarks observer.
 var observer = {
@@ -1591,13 +1588,6 @@ add_task(async function test_copy() {
     observer.reset();
     await PT.clearTransactionsHistory();
   }
-
-  let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
-  Preferences.set("privacy.reduceTimerPrecision", false);
-
-  registerCleanupFunction(function() {
-    Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
-  });
 
   // Test duplicating leafs (bookmark, separator, empty folder)
   PT.NewBookmark({ url: new URL("http://test.item.duplicate"),

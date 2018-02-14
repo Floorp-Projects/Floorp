@@ -7,7 +7,9 @@
 'use strict';
 setup({explicit_done: true});
 SpecialPowers.pushPrefEnv(
-  { "set": [["dom.animations-api.core.enabled", true]]},
+  { "set":
+      [["dom.animations-api.core.enabled", true],
+       ["privacy.reduceTimerPrecision", false]]},
   function() {
     window.open("file_animation-starttime.html");
   });

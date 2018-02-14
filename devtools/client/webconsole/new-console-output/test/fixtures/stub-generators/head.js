@@ -81,7 +81,7 @@ function getCleanedPacket(key, packet) {
         // Clean timer properties on the message.
         // Those properties are found on console.time and console.timeEnd calls,
         // and those time can vary, which is why we need to clean them.
-        if ("duration" in res.message.timer) {
+        if (res.message.timer.duration) {
           res.message.timer.duration = existingPacket.message.timer.duration;
         }
       }
