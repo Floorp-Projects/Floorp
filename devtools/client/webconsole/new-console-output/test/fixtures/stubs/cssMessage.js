@@ -13,7 +13,7 @@ const { ConsoleMessage } =
 
 let stubPreparedMessages = new Map();
 let stubPackets = new Map();
-stubPreparedMessages.set("Unknown property ‘such-unknown-property’.  Declaration dropped.", new ConsoleMessage({
+stubPreparedMessages.set(`Unknown property ‘such-unknown-property’.  Declaration dropped.`, new ConsoleMessage({
   "id": "1",
   "allowRepeating": true,
   "source": "css",
@@ -36,7 +36,7 @@ stubPreparedMessages.set("Unknown property ‘such-unknown-property’.  Declara
   "indent": 0
 }));
 
-stubPreparedMessages.set("Error in parsing value for ‘padding-top’.  Declaration dropped.", new ConsoleMessage({
+stubPreparedMessages.set(`Error in parsing value for ‘padding-top’.  Declaration dropped.`, new ConsoleMessage({
   "id": "1",
   "allowRepeating": true,
   "source": "css",
@@ -59,7 +59,7 @@ stubPreparedMessages.set("Error in parsing value for ‘padding-top’.  Declara
   "indent": 0
 }));
 
-stubPackets.set("Unknown property ‘such-unknown-property’.  Declaration dropped.", {
+stubPackets.set(`Unknown property ‘such-unknown-property’.  Declaration dropped.`, {
   "from": "server1.conn0.child1/consoleActor2",
   "type": "pageError",
   "pageError": {
@@ -82,7 +82,7 @@ stubPackets.set("Unknown property ‘such-unknown-property’.  Declaration drop
   }
 });
 
-stubPackets.set("Error in parsing value for ‘padding-top’.  Declaration dropped.", {
+stubPackets.set(`Error in parsing value for ‘padding-top’.  Declaration dropped.`, {
   "from": "server1.conn0.child1/consoleActor2",
   "type": "pageError",
   "pageError": {

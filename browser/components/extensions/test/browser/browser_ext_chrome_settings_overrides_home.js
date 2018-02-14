@@ -269,3 +269,24 @@ add_task(async function test_local() {
 
   await ext1.unload();
 });
+
+add_task(async function test_multiple() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      chrome_settings_overrides: {
+        homepage: "https://mozilla.org/|https://developer.mozilla.org/|https://addons.mozilla.org/",
+      },
+    },
+    useAddonManager: "temporary",
+  });
+
+  let prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
+  await extension.startup();
+  await prefPromise;
+
+  is(getHomePageURL(),
+     "https://mozilla.org/%7Chttps://developer.mozilla.org/%7Chttps://addons.mozilla.org/",
+     "The homepage encodes | so only one homepage is allowed");
+
+  await extension.unload();
+});

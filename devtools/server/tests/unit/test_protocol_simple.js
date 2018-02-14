@@ -118,7 +118,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   },
 
   promiseReturn: function () {
-    return promise.resolve(1);
+    return Promise.resolve(1);
   },
 
   simpleArgs: function (a, b) {

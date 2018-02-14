@@ -54,7 +54,7 @@ using mozilla::ArrayLength;
 using mozilla::IsFinite;
 using mozilla::IsNaN;
 using mozilla::NumbersAreIdentical;
-using mozilla::ReleaseAcquire;
+using mozilla::Relaxed;
 
 using JS::AutoCheckCannotGC;
 using JS::ClippedTime;
@@ -63,7 +63,7 @@ using JS::TimeClip;
 using JS::ToInteger;
 
 // When this value is non-zero, we'll round the time by this resolution.
-static Atomic<uint32_t, ReleaseAcquire> sResolutionUsec;
+static Atomic<uint32_t, Relaxed> sResolutionUsec;
 
 /*
  * The JS 'Date' object is patterned after the Java 'Date' object.

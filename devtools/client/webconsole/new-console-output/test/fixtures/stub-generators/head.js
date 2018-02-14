@@ -109,7 +109,7 @@ function getCleanedPacket(key, packet) {
       }
     }
 
-    if (res.result) {
+    if (res.result && existingPacket.result) {
       // Clean actor ids on evaluation result messages.
       res.result.actor = existingPacket.result.actor;
       if (res.result.preview) {
@@ -120,9 +120,12 @@ function getCleanedPacket(key, packet) {
       }
     }
 
-    if (res.exception) {
+    if (res.exception && existingPacket.exception) {
       // Clean actor ids on exception messages.
-      res.exception.actor = existingPacket.exception.actor;
+      if (existingPacket.exception.actor) {
+        res.exception.actor = existingPacket.exception.actor;
+      }
+
       if (res.exception.preview) {
         if (res.exception.preview.timestamp) {
           // Clean timestamp there too.
@@ -234,7 +237,7 @@ function getCleanedPacket(key, packet) {
 
 function formatPacket(key, packet) {
   let stringifiedPacket = JSON.stringify(getCleanedPacket(key, packet), null, 2);
-  return `stubPackets.set("${key}", ${stringifiedPacket});`;
+  return `stubPackets.set(\`${key}\`, ${stringifiedPacket});`;
 }
 
 function formatStub(key, packet) {
@@ -243,7 +246,8 @@ function formatStub(key, packet) {
     {getNextId: () => "1"}
   );
   let stringifiedMessage = JSON.stringify(prepared, null, 2);
-  return `stubPreparedMessages.set("${key}", new ConsoleMessage(${stringifiedMessage}));`;
+  return (
+    `stubPreparedMessages.set(\`${key}\`, new ConsoleMessage(${stringifiedMessage}));`);
 }
 
 function formatNetworkEventStub(key, packet) {

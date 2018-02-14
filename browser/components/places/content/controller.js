@@ -1410,23 +1410,16 @@ var PlacesControllerDragHelper = {
    *          A XUL DOM node.
    * @return True if the node can be moved, false otherwise.
    */
-  canMoveNode(aNode, aView, aDOMNode) {
+  canMoveNode(aNode, aView) {
     // Only bookmark items are movable.
     if (aNode.itemId == -1)
       return false;
 
-    let parentNode = aNode.parent;
-    if (!parentNode) {
-      // Normally parentless places nodes can not be moved,
-      // but simulated bookmarked URI nodes are special.
-      return !!aDOMNode &&
-             aDOMNode.hasAttribute("simulated-places-node") &&
-             PlacesUtils.nodeIsBookmark(aNode);
-    }
-
     // Once tags and bookmarked are divorced, the tag-query check should be
     // removed.
-    return PlacesUtils.nodeIsFolder(parentNode) &&
+    let parentNode = aNode.parent;
+    return parentNode != null &&
+           PlacesUtils.nodeIsFolder(parentNode) &&
            !PlacesUIUtils.isFolderReadOnly(parentNode, aView) &&
            !PlacesUtils.nodeIsTagQuery(parentNode);
   },

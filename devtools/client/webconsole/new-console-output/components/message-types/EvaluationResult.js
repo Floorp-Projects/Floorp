@@ -44,7 +44,7 @@ function EvaluationResult(props) {
   } = message;
 
   let messageBody;
-  if (message.messageText) {
+  if (typeof message.messageText !== "undefined" && message.messageText !== null) {
     if (typeof message.messageText === "string") {
       messageBody = message.messageText;
     } else if (

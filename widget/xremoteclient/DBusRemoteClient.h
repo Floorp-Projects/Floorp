@@ -9,6 +9,7 @@
 #include "nsRemoteClient.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/DBusHelpers.h"
+#include "nsString.h"
 
 class DBusRemoteClient : public nsRemoteClient
 {
@@ -25,7 +26,11 @@ public:
   void Shutdown();
 
 private:
-  nsresult         DoSendDBusCommandLine(const char *aProgram, const char *aProfile,
+  bool             GetRemoteDestinationName(const char *aProgram,
+                                            const char *aProfile,
+                                            nsCString &aDestinationName);
+  nsresult         DoSendDBusCommandLine(const char *aProgram,
+                                         const char *aProfile,
                                          const char* aBuffer, int aLength);
   RefPtr<DBusConnection> mConnection;
 };

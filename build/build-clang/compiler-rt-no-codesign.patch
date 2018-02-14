@@ -1,3 +1,5 @@
+Disable codesign for macosx cross-compile toolchain. Codesign only works on OSX.
+
 Index: cmake/Modules/AddCompilerRT.cmake
 ===================================================================
 --- a/compiler-rt/cmake/Modules/AddCompilerRT.cmake	(revision 312553)
