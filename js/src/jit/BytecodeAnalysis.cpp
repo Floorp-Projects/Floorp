@@ -6,12 +6,10 @@
 
 #include "jit/BytecodeAnalysis.h"
 
-#include "jsopcode.h"
-
 #include "jit/JitSpewer.h"
+#include "vm/BytecodeUtil.h"
 
-#include "jsopcodeinlines.h"
-
+#include "vm/BytecodeUtil-inl.h"
 #include "vm/JSScript-inl.h"
 
 using namespace js;

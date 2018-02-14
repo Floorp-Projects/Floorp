@@ -9,10 +9,9 @@
 
 #include "vm/JSCompartment.h"
 
-#include "jsiter.h"
-
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
+#include "vm/Iteration.h"
 
 #include "vm/JSContext-inl.h"
 

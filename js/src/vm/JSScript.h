@@ -15,7 +15,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Variant.h"
 
-#include "jsopcode.h"
 #include "jstypes.h"
 
 #include "frontend/NameAnalysisTypes.h"
@@ -24,6 +23,7 @@
 #include "jit/IonCode.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/JSAtom.h"
 #include "vm/NativeObject.h"
 #include "vm/Scope.h"

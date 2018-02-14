@@ -6,7 +6,7 @@
 
 /* JavaScript iterators. */
 
-#include "jsiter.h"
+#include "vm/Iteration.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
@@ -16,7 +16,6 @@
 #include "mozilla/Unused.h"
 
 #include "jsarray.h"
-#include "jsopcode.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
@@ -24,6 +23,7 @@
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "js/Proxy.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"

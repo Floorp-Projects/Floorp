@@ -23,7 +23,6 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jsopcode.h"
 #include "jsprf.h"
 #include "jstypes.h"
 #include "jsutil.h"
@@ -39,6 +38,7 @@
 #include "js/MemoryMetrics.h"
 #include "js/Utility.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/Compression.h"
 #include "vm/Debugger.h"
 #include "vm/JSAtom.h"

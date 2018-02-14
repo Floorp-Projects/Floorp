@@ -20,13 +20,13 @@
 
 #include "jsapi.h"
 #include "jsnum.h"
-#include "jsopcode.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
 #include "ds/Nestable.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/Debugger.h"
 #include "vm/GeneratorObject.h"
 #include "vm/JSAtom.h"

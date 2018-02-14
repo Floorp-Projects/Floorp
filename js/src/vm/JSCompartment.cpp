@@ -12,7 +12,6 @@
 #include <stddef.h>
 
 #include "jsfriendapi.h"
-#include "jsiter.h"
 #include "jswrapper.h"
 
 #include "gc/Policy.h"
@@ -24,6 +23,7 @@
 #include "js/RootingAPI.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/Debugger.h"
+#include "vm/Iteration.h"
 #include "vm/JSContext.h"
 #include "vm/WrapperObject.h"
 

@@ -168,7 +168,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TypeTraits.h"
 
-#include "jsiter.h"
 #include "jspubtd.h"
 
 #include "ds/Nestable.h"
@@ -181,6 +180,7 @@
 #include "frontend/SharedContext.h"
 #include "frontend/SyntaxParseHandler.h"
 #include "frontend/TokenStream.h"
+#include "vm/Iteration.h"
 
 namespace js {
 

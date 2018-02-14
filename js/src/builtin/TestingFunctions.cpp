@@ -18,7 +18,6 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsiter.h"
 #include "jsprf.h"
 #include "jswrapper.h"
 
@@ -42,6 +41,7 @@
 #include "vm/Debugger.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/Iteration.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/ProxyObject.h"

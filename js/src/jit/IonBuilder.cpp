@@ -25,11 +25,10 @@
 #include "vm/RegExpStatics.h"
 #include "vm/TraceLogging.h"
 
-#include "jsopcodeinlines.h"
-
 #include "gc/Nursery-inl.h"
 #include "jit/CompileInfo-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
+#include "vm/BytecodeUtil-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"

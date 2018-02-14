@@ -6,13 +6,12 @@
 
 #include "builtin/MapObject.h"
 
-#include "jsiter.h"
-
 #include "ds/OrderedHashTable.h"
 #include "gc/FreeOp.h"
 #include "js/Utility.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/Iteration.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/SelfHosting.h"
