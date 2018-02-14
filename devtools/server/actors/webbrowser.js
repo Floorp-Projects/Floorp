@@ -8,7 +8,6 @@
 
 var { Ci } = require("chrome");
 var Services = require("Services");
-var promise = require("promise");
 const defer = require("devtools/shared/defer");
 var { DebuggerServer } = require("devtools/server/main");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -304,7 +303,7 @@ BrowserTabList.prototype.getList = function (browserActorOptions) {
   this._mustNotify = true;
   this._checkListening();
 
-  return promise.all(actorPromises).then(values => {
+  return Promise.all(actorPromises).then(values => {
     // Filter out null values if we received a tabDestroyed error.
     return values.filter(value => value != null);
   });
@@ -333,7 +332,7 @@ BrowserTabList.prototype.getTab = function ({ outerWindowID, tabId }) {
     let window = Services.wm.getOuterWindowWithId(outerWindowID);
     // Safety check to prevent debugging top level window via getTab
     if (window && window.isChromeWindow) {
-      return promise.reject({
+      return Promise.reject({
         error: "forbidden",
         message: "Window with outerWindowID '" + outerWindowID + "' is chrome"
       });
@@ -353,7 +352,7 @@ BrowserTabList.prototype.getTab = function ({ outerWindowID, tabId }) {
         return this._getActorForBrowser(browser);
       }
     }
-    return promise.reject({
+    return Promise.reject({
       error: "noTab",
       message: "Unable to find tab with outerWindowID '" + outerWindowID + "'"
     });
@@ -366,7 +365,7 @@ BrowserTabList.prototype.getTab = function ({ outerWindowID, tabId }) {
         return this._getActorForBrowser(browser);
       }
     }
-    return promise.reject({
+    return Promise.reject({
       error: "noTab",
       message: "Unable to find tab with tabId '" + tabId + "'"
     });
@@ -378,7 +377,7 @@ BrowserTabList.prototype.getTab = function ({ outerWindowID, tabId }) {
     let selectedBrowser = this._getSelectedBrowser(topXULWindow);
     return this._getActorForBrowser(selectedBrowser);
   }
-  return promise.reject({
+  return Promise.reject({
     error: "noTab",
     message: "Unable to find any selected browser"
   });

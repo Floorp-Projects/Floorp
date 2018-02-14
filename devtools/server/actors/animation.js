@@ -26,7 +26,6 @@
  */
 
 const {Cu, Ci} = require("chrome");
-const promise = require("promise");
 const protocol = require("devtools/shared/protocol");
 const {Actor} = protocol;
 const {animationPlayerSpec, animationsSpec} = require("devtools/shared/specs/animation");
@@ -813,7 +812,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
       readyPromises.push(player.ready);
     }
     this.allAnimationsPaused = true;
-    return promise.all(readyPromises);
+    return Promise.all(readyPromises);
   },
 
   /**
@@ -830,7 +829,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
       readyPromises.push(player.ready);
     }
     this.allAnimationsPaused = false;
-    return promise.all(readyPromises);
+    return Promise.all(readyPromises);
   },
 
   toggleAll: function () {
@@ -847,7 +846,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
    * otherwise they will be played.
    */
   toggleSeveral: function (players, shouldPause) {
-    return promise.all(players.map(player => {
+    return Promise.all(players.map(player => {
       return shouldPause ? player.pause() : player.play();
     }));
   },
@@ -859,8 +858,8 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
    * @param {Boolean} shouldPause Should the players be paused too.
    */
   setCurrentTimes: function (players, time, shouldPause) {
-    return promise.all(players.map(player => {
-      let pause = shouldPause ? player.pause() : promise.resolve();
+    return Promise.all(players.map(player => {
+      let pause = shouldPause ? player.pause() : Promise.resolve();
       return pause.then(() => player.setCurrentTime(time));
     }));
   },

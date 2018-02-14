@@ -15,7 +15,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1222409
 
 window.onload = function () {
   const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-  const promise = require("promise");
   const {InspectorFront} = require("devtools/shared/fronts/inspector");
 
   SimpleTest.waitForExplicitFinish();
@@ -29,7 +28,7 @@ window.onload = function () {
     let url = document.getElementById("inspectorContent").href;
 
     // eslint-disable-next-line new-cap
-    yield new promise(resolve => {
+    yield new Promise(resolve => {
       attachURL(url, function (err, client, tab, doc) {
         win = doc.defaultView;
         inspector = InspectorFront(client, tab);
@@ -49,7 +48,7 @@ window.onload = function () {
 
     let {outerWidth, outerHeight} = win;
     // eslint-disable-next-line new-cap
-    let onResize = new promise(resolve => {
+    let onResize = new Promise(resolve => {
       walker.once("resize", () => {
         resolve();
       });

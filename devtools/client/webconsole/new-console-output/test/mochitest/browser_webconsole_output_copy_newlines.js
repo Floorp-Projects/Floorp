@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 "use strict";
 
 // Test that multiple messages are copied into the clipboard and that they are
@@ -24,11 +26,7 @@ add_task(async function () {
 
   // Select the whole output.
   const output = node.closest(".webconsole-output");
-  const selection = node.ownerDocument.getSelection();
-  const range = document.createRange();
-  range.selectNodeContents(output);
-  selection.removeAllRanges();
-  selection.addRange(range);
+  selectNode(hud, output);
 
   info("Wait for the clipboard to contain the text corresponding to all the messages");
   await waitForClipboardPromise(

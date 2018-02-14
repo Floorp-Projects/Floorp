@@ -227,6 +227,11 @@ nsLocalFile::nsLocalFile()
 {
 }
 
+nsLocalFile::nsLocalFile(const nsACString& aFilePath)
+{
+  InitWithNativePath(aFilePath);
+}
+
 nsLocalFile::nsLocalFile(const nsLocalFile& aOther)
   : mPath(aOther.mPath)
 {

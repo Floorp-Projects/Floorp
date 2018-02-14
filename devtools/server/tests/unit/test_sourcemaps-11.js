@@ -22,7 +22,7 @@ function run_test() {
       gClient, "test-source-map",
       function (response, tabClient, threadClient) {
         gThreadClient = threadClient;
-        promise.resolve(define_code())
+        Promise.resolve(define_code())
           .then(run_code)
           .then(test_frames)
           .catch(error => {

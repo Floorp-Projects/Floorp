@@ -7,6 +7,106 @@
 #define __NTEXTAPI_H__
 #include <winternl.h>
 
+
+typedef struct {
+    LARGE_INTEGER IdleTime;
+    LARGE_INTEGER KernelTime;
+    LARGE_INTEGER UserTime;
+    LARGE_INTEGER DpcTime;
+    LARGE_INTEGER InterruptTime;
+    ULONG InterruptCount;
+} _SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION;
+
+
+typedef struct {
+    LARGE_INTEGER IdleProcessTime;
+    LARGE_INTEGER IoReadTransferCount;
+    LARGE_INTEGER IoWriteTransferCount;
+    LARGE_INTEGER IoOtherTransferCount;
+    ULONG IoReadOperationCount;
+    ULONG IoWriteOperationCount;
+    ULONG IoOtherOperationCount;
+    ULONG AvailablePages;
+    ULONG CommittedPages;
+    ULONG CommitLimit;
+    ULONG PeakCommitment;
+    ULONG PageFaultCount;
+    ULONG CopyOnWriteCount;
+    ULONG TransitionCount;
+    ULONG CacheTransitionCount;
+    ULONG DemandZeroCount;
+    ULONG PageReadCount;
+    ULONG PageReadIoCount;
+    ULONG CacheReadCount;
+    ULONG CacheIoCount;
+    ULONG DirtyPagesWriteCount;
+    ULONG DirtyWriteIoCount;
+    ULONG MappedPagesWriteCount;
+    ULONG MappedWriteIoCount;
+    ULONG PagedPoolPages;
+    ULONG NonPagedPoolPages;
+    ULONG PagedPoolAllocs;
+    ULONG PagedPoolFrees;
+    ULONG NonPagedPoolAllocs;
+    ULONG NonPagedPoolFrees;
+    ULONG FreeSystemPtes;
+    ULONG ResidentSystemCodePage;
+    ULONG TotalSystemDriverPages;
+    ULONG TotalSystemCodePages;
+    ULONG NonPagedPoolLookasideHits;
+    ULONG PagedPoolLookasideHits;
+    ULONG AvailablePagedPoolPages;
+    ULONG ResidentSystemCachePage;
+    ULONG ResidentPagedPoolPage;
+    ULONG ResidentSystemDriverPage;
+    ULONG CcFastReadNoWait;
+    ULONG CcFastReadWait;
+    ULONG CcFastReadResourceMiss;
+    ULONG CcFastReadNotPossible;
+    ULONG CcFastMdlReadNoWait;
+    ULONG CcFastMdlReadWait;
+    ULONG CcFastMdlReadResourceMiss;
+    ULONG CcFastMdlReadNotPossible;
+    ULONG CcMapDataNoWait;
+    ULONG CcMapDataWait;
+    ULONG CcMapDataNoWaitMiss;
+    ULONG CcMapDataWaitMiss;
+    ULONG CcPinMappedDataCount;
+    ULONG CcPinReadNoWait;
+    ULONG CcPinReadWait;
+    ULONG CcPinReadNoWaitMiss;
+    ULONG CcPinReadWaitMiss;
+    ULONG CcCopyReadNoWait;
+    ULONG CcCopyReadWait;
+    ULONG CcCopyReadNoWaitMiss;
+    ULONG CcCopyReadWaitMiss;
+    ULONG CcMdlReadNoWait;
+    ULONG CcMdlReadWait;
+    ULONG CcMdlReadNoWaitMiss;
+    ULONG CcMdlReadWaitMiss;
+    ULONG CcReadAheadIos;
+    ULONG CcLazyWriteIos;
+    ULONG CcLazyWritePages;
+    ULONG CcDataFlushes;
+    ULONG CcDataPages;
+    ULONG ContextSwitches;
+    ULONG FirstLevelTbFills;
+    ULONG SecondLevelTbFills;
+    ULONG SystemCalls;
+
+} _SYSTEM_PERFORMANCE_INFORMATION;
+
+
+typedef struct {
+    ULONG ContextSwitches;
+    ULONG DpcCount;
+    ULONG DpcRate;
+    ULONG TimeIncrement;
+    ULONG DpcBypassCount;
+    ULONG ApcBypassCount;
+} _SYSTEM_INTERRUPT_INFORMATION;
+
+
 typedef enum _KTHREAD_STATE {
     Initialized,
     Ready,
@@ -19,6 +119,7 @@ typedef enum _KTHREAD_STATE {
     GateWait,
     MaximumThreadState
 } KTHREAD_STATE, *PKTHREAD_STATE;
+
 
 typedef enum _KWAIT_REASON {
     Executive = 0,
@@ -61,12 +162,16 @@ typedef enum _KWAIT_REASON {
     MaximumWaitReason = 37
 } KWAIT_REASON, *PKWAIT_REASON;
 
-typedef struct _CLIENT_ID {
+
+typedef struct _CLIENT_ID2 {
     HANDLE UniqueProcess;
     HANDLE UniqueThread;
-} CLIENT_ID, *PCLIENT_ID;
+} CLIENT_ID2, *PCLIENT_ID2;
 
-typedef struct _SYSTEM_THREAD_INFORMATION {
+#define CLIENT_ID CLIENT_ID2
+#define PCLIENT_ID PCLIENT_ID2
+
+typedef struct _SYSTEM_THREAD_INFORMATION2 {
     LARGE_INTEGER KernelTime;
     LARGE_INTEGER UserTime;
     LARGE_INTEGER CreateTime;
@@ -78,9 +183,13 @@ typedef struct _SYSTEM_THREAD_INFORMATION {
     ULONG ContextSwitches;
     ULONG ThreadState;
     KWAIT_REASON WaitReason;
-} SYSTEM_THREAD_INFORMATION, *PSYSTEM_THREAD_INFORMATION;
+} SYSTEM_THREAD_INFORMATION2, *PSYSTEM_THREAD_INFORMATION2;
+
+#define SYSTEM_THREAD_INFORMATION SYSTEM_THREAD_INFORMATION2
+#define PSYSTEM_THREAD_INFORMATION PSYSTEM_THREAD_INFORMATION2
 
 typedef struct _TEB *PTEB;
+
 
 // private
 typedef struct _SYSTEM_EXTENDED_THREAD_INFORMATION {
@@ -93,6 +202,7 @@ typedef struct _SYSTEM_EXTENDED_THREAD_INFORMATION {
     ULONG_PTR Reserved3;
     ULONG_PTR Reserved4;
 } SYSTEM_EXTENDED_THREAD_INFORMATION, *PSYSTEM_EXTENDED_THREAD_INFORMATION;
+
 
 typedef struct _SYSTEM_PROCESS_INFORMATION2 {
     ULONG NextEntryOffset;
@@ -151,6 +261,7 @@ typedef struct _WINSTATION_INFO {
     FILETIME CurrentTime;
 } WINSTATION_INFO, *PWINSTATION_INFO;
 
+
 typedef BOOLEAN (WINAPI * PWINSTATIONQUERYINFORMATIONW)
                  (HANDLE,ULONG,WINSTATIONINFOCLASS,PVOID,ULONG,PULONG);
 
@@ -162,6 +273,7 @@ typedef BOOLEAN (WINAPI * PWINSTATIONQUERYINFORMATIONW)
  */
 typedef LONG NTSTATUS;
 
+
 typedef NTSTATUS (NTAPI *_NtQueryInformationProcess)(
     HANDLE ProcessHandle,
     DWORD ProcessInformationClass,
@@ -169,6 +281,7 @@ typedef NTSTATUS (NTAPI *_NtQueryInformationProcess)(
     DWORD ProcessInformationLength,
     PDWORD ReturnLength
 );
+
 
 typedef NTSTATUS (NTAPI *_NtSetInformationProcess)(
     HANDLE ProcessHandle,
@@ -186,7 +299,7 @@ typedef enum _PROCESSINFOCLASS2 {
     ProcessTimes,
     ProcessBasePriority,
     ProcessRaisePriority,
-    ProcessDebugPort,
+    _ProcessDebugPort,
     ProcessExceptionPort,
     ProcessAccessToken,
     ProcessLdtInformation,
@@ -207,9 +320,9 @@ typedef enum _PROCESSINFOCLASS2 {
     ProcessForegroundInformation,
     _ProcessWow64Information,
     /* added after XP+ */
-    ProcessImageFileName,
+    _ProcessImageFileName,
     ProcessLUIDDeviceMapsEnabled,
-    ProcessBreakOnTermination,
+    _ProcessBreakOnTermination,
     ProcessDebugObjectHandle,
     ProcessDebugFlags,
     ProcessHandleTracing,
@@ -221,8 +334,12 @@ typedef enum _PROCESSINFOCLASS2 {
     MaxProcessInfoClass
 } PROCESSINFOCLASS2;
 
+
 #define PROCESSINFOCLASS PROCESSINFOCLASS2
 #define ProcessBasicInformation _ProcessBasicInformation
 #define ProcessWow64Information _ProcessWow64Information
+#define ProcessDebugPort _ProcessDebugPort
+#define ProcessImageFileName _ProcessImageFileName
+#define ProcessBreakOnTermination _ProcessBreakOnTermination
 
 #endif // __NTEXTAPI_H__
