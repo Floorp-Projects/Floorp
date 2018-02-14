@@ -7,8 +7,15 @@
 :root {
   --animation-even-background-color: rgba(0, 0, 0, 0.05);
   --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
+  --fast-track-image: url("images/animation-fast-track.svg");
+  --fill-color-cssanimation: var(--theme-contrast-background);
+  --fill-color-csstransition: var(--theme-highlight-blue);
+  --fill-color-scriptanimation: var(--theme-graphs-green);
   --graph-right-offset: 10px;
   --sidebar-width: 200px;
+  --stroke-color-cssanimation: var(--theme-highlight-lightorange);
+  --stroke-color-csstransition: var(--theme-highlight-bluegrey);
+  --stroke-color-scriptanimation: var(--theme-highlight-green);
   --tick-line-style: 0.5px solid rgba(128, 136, 144, 0.5);
 }
 
@@ -82,18 +89,18 @@
 }
 
 .animation-item.cssanimation {
-  --computed-timing-graph-color: var(--theme-contrast-background);
-  --effect-timing-graph-color: var(--theme-highlight-lightorange);
+  --computed-timing-graph-color: var(--fill-color-cssanimation);
+  --effect-timing-graph-color: var(--stroke-color-cssanimation);
 }
 
 .animation-item.csstransition {
-  --computed-timing-graph-color: var(--theme-highlight-blue);
-  --effect-timing-graph-color: var(--theme-highlight-bluegrey);
+  --computed-timing-graph-color: var(--fill-color-csstransition);
+  --effect-timing-graph-color: var(--stroke-color-csstransition);
 }
 
 .animation-item.scriptanimation {
-  --computed-timing-graph-color: var(--theme-graphs-green);
-  --effect-timing-graph-color: var(--theme-highlight-green);
+  --computed-timing-graph-color: var(--fill-color-scriptanimation);
+  --effect-timing-graph-color: var(--stroke-color-scriptanimation);
 }
 
 .animation-item.selected {
@@ -122,7 +129,7 @@
 }
 
 .animation-summary-graph.compositor::after {
-  background-image: url("images/animation-fast-track.svg");
+  background-image: var(--fast-track-image);
   background-repeat: no-repeat;
   content: "";
   display: block;
@@ -313,6 +320,36 @@
   justify-content: flex-end;
   padding-right: 10px;
   width: var(--sidebar-width);
+}
+
+.animated-property-name.compositor span {
+  padding-left: 15px;
+  position: relative;
+}
+
+.animated-property-list-container.cssanimation .animated-property-name.compositor {
+  --fast-track-color: var(--stroke-color-cssanimation);
+}
+
+.animated-property-list-container.csstransition .animated-property-name.compositor {
+  --fast-track-color: var(--stroke-color-csstransition);
+}
+
+.animated-property-list-container.scriptanimation .animated-property-name.compositor {
+  --fast-track-color: var(--stroke-color-scriptanimation);
+}
+
+.animated-property-name.compositor span::before {
+  background-image: var(--fast-track-image);
+  background-repeat: no-repeat;
+  background-size: contain;
+  content: "";
+  fill: var(--fast-track-color);
+  height: 100%;
+  position: absolute;
+  left: 0;
+  width: 15px;
+  -moz-context-properties: fill;
 }
 
 /* No Animation Panel */
