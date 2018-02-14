@@ -68,11 +68,11 @@ class ZoneHeapThreshold
 
 struct ZoneComponentFinder : public ComponentFinder<JS::Zone, ZoneComponentFinder>
 {
-    ZoneComponentFinder(uintptr_t sl, AutoLockForExclusiveAccess& lock)
-      : ComponentFinder<JS::Zone, ZoneComponentFinder>(sl), lock(lock)
+    ZoneComponentFinder(uintptr_t sl, JS::Zone* maybeAtomsZone)
+      : ComponentFinder<JS::Zone, ZoneComponentFinder>(sl), maybeAtomsZone(maybeAtomsZone)
     {}
 
-    AutoLockForExclusiveAccess& lock;
+    JS::Zone* maybeAtomsZone;
 };
 
 struct UniqueIdGCPolicy {
@@ -400,7 +400,7 @@ struct Zone : public JS::shadow::Zone,
     //
     // This is used during GC while calculating sweep groups to record edges
     // that can't be determined by examining this zone by itself.
-    js::ZoneGroupData<ZoneSet> gcSweepGroupEdges_;
+    js::ActiveThreadData<ZoneSet> gcSweepGroupEdges_;
 
   public:
     ZoneSet& gcSweepGroupEdges() { return gcSweepGroupEdges_.ref(); }
@@ -721,7 +721,7 @@ struct Zone : public JS::shadow::Zone,
     // Allow zones to be linked into a list
     friend class js::gc::ZoneList;
     static Zone * const NotOnList;
-    js::ZoneGroupOrGCTaskData<Zone*> listNext_;
+    js::ActiveThreadOrGCTaskData<Zone*> listNext_;
     bool isOnList() const;
     Zone* nextZone() const;
 

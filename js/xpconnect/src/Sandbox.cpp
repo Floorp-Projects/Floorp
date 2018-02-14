@@ -622,11 +622,9 @@ nsXPCComponents_utils_Sandbox::~nsXPCComponents_utils_Sandbox()
 {
 }
 
-NS_INTERFACE_MAP_BEGIN(nsXPCComponents_utils_Sandbox)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_utils_Sandbox)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_utils_Sandbox)
-NS_INTERFACE_MAP_END
+NS_IMPL_QUERY_INTERFACE(nsXPCComponents_utils_Sandbox,
+                        nsIXPCComponents_utils_Sandbox,
+                        nsIXPCScriptable)
 
 NS_IMPL_ADDREF(nsXPCComponents_utils_Sandbox)
 NS_IMPL_RELEASE(nsXPCComponents_utils_Sandbox)

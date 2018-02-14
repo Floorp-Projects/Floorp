@@ -836,8 +836,7 @@ TraceThisAndArguments(JSTracer* trc, const JSJitFrameIter& frame, JitFrameLayout
 
     JSFunction* fun = CalleeTokenToFunction(layout->calleeToken());
     if (frame.type() != JitFrame_JSJitToWasm &&
-        !frame.isExitFrameLayout<LazyLinkExitFrameLayout>() &&
-        !frame.isExitFrameLayout<InterpreterStubExitFrameLayout>() &&
+        !frame.isExitFrameLayout<CalledFromJitExitFrameLayout>() &&
         !fun->nonLazyScript()->mayReadFrameArgsDirectly())
     {
         nformals = fun->nargs();
@@ -1133,16 +1132,8 @@ TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame)
         return;
     }
 
-    if (frame.isExitFrameLayout<LazyLinkExitFrameLayout>()) {
-        auto* layout = frame.exitFrame()->as<LazyLinkExitFrameLayout>();
-        JitFrameLayout* jsLayout = layout->jsFrame();
-        jsLayout->replaceCalleeToken(TraceCalleeToken(trc, jsLayout->calleeToken()));
-        TraceThisAndArguments(trc, frame, jsLayout);
-        return;
-    }
-
-    if (frame.isExitFrameLayout<InterpreterStubExitFrameLayout>()) {
-        auto* layout = frame.exitFrame()->as<InterpreterStubExitFrameLayout>();
+    if (frame.isExitFrameLayout<CalledFromJitExitFrameLayout>()) {
+        auto* layout = frame.exitFrame()->as<CalledFromJitExitFrameLayout>();
         JitFrameLayout* jsLayout = layout->jsFrame();
         jsLayout->replaceCalleeToken(TraceCalleeToken(trc, jsLayout->calleeToken()));
         TraceThisAndArguments(trc, frame, jsLayout);

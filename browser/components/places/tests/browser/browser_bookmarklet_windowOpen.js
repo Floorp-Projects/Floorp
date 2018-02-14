@@ -1,6 +1,9 @@
 "use strict";
 
-const TEST_URL = "http://example.com/browser/browser/components/places/tests/browser/pageopeningwindow.html";
+let BASE_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/content/",
+                                                   "http://example.com/");
+const TEST_URL = BASE_URL + "pageopeningwindow.html";
+const DUMMY_URL = BASE_URL + "bookmarklet_windowOpen_dummy.html";
 
 function makeBookmarkFor(url, keyword) {
   return Promise.all([
@@ -21,7 +24,7 @@ add_task(async function openKeywordBookmarkWithWindowOpen() {
   ]});
 
   let moztab;
-  let tabOpened = BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla")
+  let tabOpened = BrowserTestUtils.openNewForegroundTab(gBrowser, DUMMY_URL)
                     .then((tab) => { moztab = tab; });
   let keywordForBM = "openmeatab";
 

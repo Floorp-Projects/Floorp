@@ -44,8 +44,6 @@
 #include "vm/SharedMem.h"
 #include "vm/WrapperObject.h"
 
-#include "jsatominlines.h"
-
 #include "gc/Nursery-inl.h"
 #include "gc/StoreBuffer-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
@@ -319,6 +317,11 @@ enum class SpeciesConstructorOverride {
     ArrayBuffer
 };
 
+enum class CreateSingleton {
+    Yes,
+    No
+};
+
 template<typename NativeType>
 class TypedArrayObjectTemplate : public TypedArrayObject
 {
@@ -407,10 +410,11 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     }
 
     static TypedArrayObject*
-    makeTypedInstance(JSContext* cx, uint32_t len, gc::AllocKind allocKind)
+    makeTypedInstance(JSContext* cx, uint32_t len, CreateSingleton createSingleton,
+                      gc::AllocKind allocKind)
     {
         const Class* clasp = instanceClass();
-        if (len * sizeof(NativeType) >= TypedArrayObject::SINGLETON_BYTE_LENGTH) {
+        if (createSingleton == CreateSingleton::Yes) {
             JSObject* obj = NewBuiltinClassInstance(cx, clasp, allocKind, SingletonObject);
             if (!obj)
                 return nullptr;
@@ -436,8 +440,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     }
 
     static TypedArrayObject*
-    makeInstance(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer, uint32_t byteOffset,
-                 uint32_t len, HandleObject proto)
+    makeInstance(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer,
+                 CreateSingleton createSingleton, uint32_t byteOffset, uint32_t len,
+                 HandleObject proto)
     {
         MOZ_ASSERT_IF(!buffer, byteOffset == 0);
         MOZ_ASSERT_IF(buffer, !buffer->isDetached());
@@ -463,7 +468,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         if (proto && proto != checkProto)
             obj = makeProtoInstance(cx, proto, allocKind);
         else
-            obj = makeTypedInstance(cx, len, allocKind);
+            obj = makeTypedInstance(cx, len, createSingleton, allocKind);
         if (!obj)
             return nullptr;
 
@@ -836,8 +841,12 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         if (!computeAndCheckLength(cx, buffer, byteOffset, lengthIndex, &length))
             return nullptr;
 
+        CreateSingleton createSingleton = CreateSingleton::No;
+        if (length * sizeof(NativeType) >= TypedArrayObject::SINGLETON_BYTE_LENGTH)
+            createSingleton = CreateSingleton::Yes;
+
         // Steps 13-17.
-        return makeInstance(cx, buffer, uint32_t(byteOffset), length, proto);
+        return makeInstance(cx, buffer, createSingleton, uint32_t(byteOffset), length, proto);
     }
 
     // Create a TypedArray object in another compartment.
@@ -895,7 +904,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                 return nullptr;
 
             typedArray =
-                makeInstance(cx, unwrappedBuffer, uint32_t(byteOffset), length, wrappedProto);
+                makeInstance(cx, unwrappedBuffer, CreateSingleton::No, uint32_t(byteOffset),
+                             length, wrappedProto);
             if (!typedArray)
                 return nullptr;
         }
@@ -970,7 +980,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         if (!maybeCreateArrayBuffer(cx, uint32_t(nelements), BYTES_PER_ELEMENT, nullptr, &buffer))
             return nullptr;
 
-        return makeInstance(cx, buffer, 0, uint32_t(nelements), proto);
+        return makeInstance(cx, buffer, CreateSingleton::No, 0, uint32_t(nelements), proto);
     }
 
     static bool
@@ -1226,7 +1236,8 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
     }
 
     // Steps 3-4 (remaining part), 20-23.
-    Rooted<TypedArrayObject*> obj(cx, makeInstance(cx, buffer, 0, elementLength, proto));
+    Rooted<TypedArrayObject*> obj(cx, makeInstance(cx, buffer, CreateSingleton::No, 0,
+                                                   elementLength, proto));
     if (!obj)
         return nullptr;
 
@@ -1286,7 +1297,8 @@ TypedArrayObjectTemplate<T>::fromObject(JSContext* cx, HandleObject other, Handl
         if (!maybeCreateArrayBuffer(cx, len, BYTES_PER_ELEMENT, nullptr, &buffer))
             return nullptr;
 
-        Rooted<TypedArrayObject*> obj(cx, makeInstance(cx, buffer, 0, len, proto));
+        Rooted<TypedArrayObject*> obj(cx, makeInstance(cx, buffer, CreateSingleton::No, 0,
+                                                       len, proto));
         if (!obj)
             return nullptr;
 
@@ -1353,7 +1365,8 @@ TypedArrayObjectTemplate<T>::fromObject(JSContext* cx, HandleObject other, Handl
     if (!maybeCreateArrayBuffer(cx, len, BYTES_PER_ELEMENT, nullptr, &buffer))
         return nullptr;
 
-    Rooted<TypedArrayObject*> obj(cx, makeInstance(cx, buffer, 0, len, proto));
+    Rooted<TypedArrayObject*> obj(cx, makeInstance(cx, buffer, CreateSingleton::No, 0, len,
+                                                   proto));
     if (!obj)
         return nullptr;
 

@@ -438,10 +438,10 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
    * The typename must be one of HIGHLIGHTER_CLASSES and the class must
    * implement constructor(tabActor), show(node), hide(), destroy()
    */
-  initialize: function (inspector, typeName) {
+  initialize: function (parent, typeName) {
     protocol.Actor.prototype.initialize.call(this, null);
 
-    this._inspector = inspector;
+    this._parent = parent;
 
     let modulePath = highlighterTypes.get(typeName);
     if (!modulePath) {
@@ -450,12 +450,14 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
       throw new Error(`${typeName} isn't a valid highlighter class (${list})`);
     }
 
-    // The assumption is that all custom highlighters need the canvasframe
-    // container to append their elements, so if this is a XUL window, bail out.
-    if (!isXUL(this._inspector.tabActor.window)) {
+    let constructor = require("./highlighters/" + modulePath)[typeName];
+    // The assumption is that custom highlighters either need the canvasframe
+    // container to append their elements and thus a non-XUL window or they have
+    // to define a static XULSupported flag that indicates that the highlighter
+    // supports XUL windows. Otherwise, bail out.
+    if (!isXUL(this._parent.tabActor.window) || constructor.XULSupported) {
       this._highlighterEnv = new HighlighterEnvironment();
-      this._highlighterEnv.initFromTabActor(inspector.tabActor);
-      let constructor = require("./highlighters/" + modulePath)[typeName];
+      this._highlighterEnv.initFromTabActor(parent.tabActor);
       this._highlighter = new constructor(this._highlighterEnv);
       if (this._highlighter.on) {
         this._highlighter.on("highlighter-event", this._onHighlighterEvent.bind(this));
@@ -467,13 +469,13 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
   },
 
   get conn() {
-    return this._inspector && this._inspector.conn;
+    return this._parent && this._parent.conn;
   },
 
   destroy: function () {
     protocol.Actor.prototype.destroy.call(this);
     this.finalize();
-    this._inspector = null;
+    this._parent = null;
   },
 
   release: function () {},

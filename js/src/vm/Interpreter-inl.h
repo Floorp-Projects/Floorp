@@ -16,7 +16,6 @@
 #include "jit/Ion.h"
 #include "vm/ArgumentsObject.h"
 
-#include "jsatominlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/EnvironmentObject-inl.h"

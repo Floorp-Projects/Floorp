@@ -1,5 +1,4 @@
 #include "gdb-tests.h"
-#include "jsatom.h"
 #include "jscntxt.h"
 
 // When JSGC_ANALYSIS is #defined, Rooted<JSFlatString*> needs the definition

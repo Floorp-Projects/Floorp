@@ -940,6 +940,10 @@ js::wasm::StartUnwinding(const RegisterState& registers, UnwindState* unwindStat
 #endif
         fixedFP = offsetFromEntry < SetJitEntryFP ? (Frame*) sp : fp;
         fixedPC = nullptr;
+
+        // On the error return path, FP might be set to FailFP. Ignore these transient frames.
+        if (intptr_t(fixedFP) == (FailFP & ~JitActivation::ExitFpWasmBit))
+            return false;
         break;
       case CodeRange::Throw:
         // The throw stub executes a small number of instructions before popping

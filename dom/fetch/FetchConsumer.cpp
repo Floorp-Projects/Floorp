@@ -13,6 +13,7 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsIInputStreamPump.h"
+#include "nsIThreadRetargetableRequest.h"
 #include "nsProxyRelease.h"
 
 namespace mozilla {
@@ -584,9 +585,7 @@ FetchBodyConsumer<Derived>::BeginConsumeBodyMainThread()
 
   // Try to retarget, otherwise fall back to main thread.
   nsCOMPtr<nsIThreadRetargetableRequest> rr = do_QueryInterface(pump);
-  nsCOMPtr<nsIThreadRetargetableStreamListener> rl =
-    do_QueryInterface(listener);
-  if (rr && rl) {
+  if (rr) {
     nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
     rv = rr->RetargetDeliveryTo(sts);
     if (NS_FAILED(rv)) {

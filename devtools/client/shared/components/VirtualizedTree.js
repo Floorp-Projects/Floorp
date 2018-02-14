@@ -195,6 +195,9 @@ class Tree extends Component {
       // Handle when a new item is focused.
       onFocus: PropTypes.func,
 
+      // Handle when item is activated with a keyboard (using Space or Enter)
+      onActivate: PropTypes.func,
+
       // The depth to which we should automatically expand new items.
       autoExpandDepth: PropTypes.number,
 
@@ -243,6 +246,9 @@ class Tree extends Component {
     this._focusPrevNode = oncePerAnimationFrame(this._focusPrevNode).bind(this);
     this._focusNextNode = oncePerAnimationFrame(this._focusNextNode).bind(this);
     this._focusParentNode = oncePerAnimationFrame(this._focusParentNode).bind(this);
+    this._focusFirstNode = oncePerAnimationFrame(this._focusFirstNode).bind(this);
+    this._focusLastNode = oncePerAnimationFrame(this._focusLastNode).bind(this);
+    this._activateNode = oncePerAnimationFrame(this._activateNode).bind(this);
 
     this._autoExpand = this._autoExpand.bind(this);
     this._preventArrowKeyScrolling = this._preventArrowKeyScrolling.bind(this);
@@ -323,9 +329,12 @@ class Tree extends Component {
    * Updates the state's height based on clientHeight.
    */
   _updateHeight() {
-    this.setState({
-      height: this.refs.tree.clientHeight
-    });
+    if (this.refs.tree.clientHeight &&
+        this.refs.tree.clientHeight !== this.state.height) {
+      this.setState({
+        height: this.refs.tree.clientHeight
+      });
+    }
   }
 
   /**
@@ -494,7 +503,37 @@ class Tree extends Component {
           this._focusNextNode();
         }
         break;
+
+      case "Home":
+        this._focusFirstNode();
+        break;
+
+      case "End":
+        this._focusLastNode();
+        break;
+
+      case "Enter":
+      case " ":
+        this._activateNode();
+        break;
     }
+  }
+
+  _activateNode() {
+    if (this.props.onActivate) {
+      this.props.onActivate(this.props.focused);
+    }
+  }
+
+  _focusFirstNode() {
+    const traversal = this._dfsFromRoots();
+    this._focus(0, traversal[0].item);
+  }
+
+  _focusLastNode() {
+    const traversal = this._dfsFromRoots();
+    const lastIndex = traversal.length - 1;
+    this._focus(lastIndex, traversal[lastIndex].item);
   }
 
   /**

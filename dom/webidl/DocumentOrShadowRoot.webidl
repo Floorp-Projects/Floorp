@@ -23,6 +23,8 @@ interface DocumentOrShadowRoot {
   readonly attribute StyleSheetList styleSheets;
 
   readonly attribute Element? pointerLockElement;
-  // Not implemented yet: bug 1430305.
-  // readonly attribute Element? fullscreenElement;
+  [LenientSetter, Func="nsIDocument::IsUnprefixedFullscreenEnabled"]
+  readonly attribute Element? fullscreenElement;
+  [BinaryName="fullscreenElement"]
+  readonly attribute Element? mozFullScreenElement;
 };

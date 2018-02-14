@@ -8,6 +8,7 @@
 #define mozilla_dom_MutableBlobStreamListener_h
 
 #include "nsIStreamListener.h"
+#include "nsIThreadRetargetableStreamListener.h"
 #include "mozilla/dom/MutableBlobStorage.h"
 
 class nsIEventTarget;
@@ -15,12 +16,13 @@ class nsIEventTarget;
 namespace mozilla {
 namespace dom {
 
-// This class is main-thread only.
 class MutableBlobStreamListener final : public nsIStreamListener
+                                      , public nsIThreadRetargetableStreamListener
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
 
   MutableBlobStreamListener(MutableBlobStorage::MutableBlobStorageType aType,

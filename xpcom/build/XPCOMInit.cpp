@@ -12,6 +12,10 @@
 #include "mozilla/XPCOM.h"
 #include "nsXULAppAPI.h"
 
+#ifndef ANDROID
+#include "nsTerminator.h"
+#endif
+
 #include "nsXPCOMPrivate.h"
 #include "nsXPCOMCIDInternal.h"
 
@@ -860,6 +864,10 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
         observerService->NotifyObservers(mgr, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
                                          nullptr);
       }
+
+#ifndef ANDROID
+      mozilla::XPCOMShutdownNotified();
+#endif
     }
 
     // This must happen after the shutdown of media and widgets, which

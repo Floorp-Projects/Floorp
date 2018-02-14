@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 var {Toolbox} = require("devtools/client/framework/toolbox");
 
 var toolbox = null;
@@ -16,10 +18,10 @@ function test() {
     yield addTab(URL);
 
     const target = TargetFactory.forTab(gBrowser.selectedTab);
-    toolbox = yield gDevTools.showToolbox(target, TOOL_ID_1, Toolbox.HostType.BOTTOM)
+    toolbox = yield gDevTools.showToolbox(target, TOOL_ID_1, Toolbox.HostType.BOTTOM);
 
     // select tool 2
-    yield toolbox.selectTool(TOOL_ID_2)
+    yield toolbox.selectTool(TOOL_ID_2);
     // and highlight the first one
     yield highlightTab(TOOL_ID_1);
     // to see if it has the proper class.
@@ -33,6 +35,20 @@ function test() {
     yield toolbox.selectTool(TOOL_ID_2);
     // and check again.
     yield checkHighlighted(TOOL_ID_1);
+    // Highlight another tool
+    yield highlightTab(TOOL_ID_2);
+    // Check that both tools are highlighted.
+    yield checkHighlighted(TOOL_ID_1);
+    // Check second tool being both highlighted and selected.
+    yield checkNoHighlightWhenSelected(TOOL_ID_2);
+    // Select tool 1
+    yield toolbox.selectTool(TOOL_ID_1);
+    // Check second tool is still highlighted
+    yield checkHighlighted(TOOL_ID_2);
+    // Unhighlight the second tool
+    yield unhighlightTab(TOOL_ID_2);
+    // to see the classes gone.
+    yield checkNoHighlight(TOOL_ID_2);
     // Now unhighlight the tool
     yield unhighlightTab(TOOL_ID_1);
     // to see the classes gone.

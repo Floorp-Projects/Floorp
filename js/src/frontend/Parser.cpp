@@ -24,7 +24,6 @@
 #include "mozilla/TypeTraits.h"
 
 #include "jsapi.h"
-#include "jsatom.h"
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsopcode.h"
@@ -40,7 +39,6 @@
 #include "vm/RegExpObject.h"
 #include "wasm/AsmJS.h"
 
-#include "jsatominlines.h"
 #include "jsscriptinlines.h"
 
 #include "frontend/ParseContext-inl.h"

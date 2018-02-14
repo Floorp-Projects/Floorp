@@ -222,7 +222,7 @@ DataStruct::ReadCache(nsISupports** aData, uint32_t* aDataLen)
 //
 //-------------------------------------------------------------------------
 nsTransferable::nsTransferable()
-  : mPrivateData(false)
+  : mPrivateData(true)
   , mContentPolicyType(nsIContentPolicy::TYPE_OTHER)
 #ifdef DEBUG
   , mInitialized(false)

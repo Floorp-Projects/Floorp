@@ -108,7 +108,6 @@ public:
   CopyBuffer(MutableBlobStorage* aBlobStorage,
              const void* aData, uint32_t aLength)
   {
-    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aBlobStorage);
     MOZ_ASSERT(aData);
 
@@ -162,7 +161,6 @@ private:
     , mData(aData)
     , mLength(aLength)
   {
-    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mBlobStorage);
     MOZ_ASSERT(aData);
   }
@@ -335,7 +333,8 @@ private:
 MutableBlobStorage::MutableBlobStorage(MutableBlobStorageType aType,
                                        nsIEventTarget* aEventTarget,
                                        uint32_t aMaxMemory)
-  : mData(nullptr)
+  : mMutex("MutableBlobStorage::mMutex")
+  , mData(nullptr)
   , mDataLen(0)
   , mDataBufferLen(0)
   , mStorageState(aType == eOnlyInMemory ? eKeepInMemory : eInMemory)
@@ -384,6 +383,8 @@ MutableBlobStorage::GetBlobWhenReady(nsISupports* aParent,
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCallback);
+
+  MutexAutoLock lock(mMutex);
 
   // GetBlob can be called just once.
   MOZ_ASSERT(mStorageState != eClosed);
@@ -449,7 +450,9 @@ MutableBlobStorage::GetBlobWhenReady(nsISupports* aParent,
 nsresult
 MutableBlobStorage::Append(const void* aData, uint32_t aLength)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  // This method can be called on any thread.
+
+  MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mStorageState != eClosed);
   NS_ENSURE_ARG_POINTER(aData);
 
@@ -459,8 +462,8 @@ MutableBlobStorage::Append(const void* aData, uint32_t aLength)
 
   // If eInMemory is the current Storage state, we could maybe migrate to
   // a temporary file.
-  if (mStorageState == eInMemory && ShouldBeTemporaryStorage(aLength) &&
-      !MaybeCreateTemporaryFile()) {
+  if (mStorageState == eInMemory && ShouldBeTemporaryStorage(lock, aLength) &&
+      !MaybeCreateTemporaryFile(lock)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -491,7 +494,7 @@ MutableBlobStorage::Append(const void* aData, uint32_t aLength)
 
   uint64_t offset = mDataLen;
 
-  if (!ExpandBufferSize(aLength)) {
+  if (!ExpandBufferSize(lock, aLength)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -500,9 +503,9 @@ MutableBlobStorage::Append(const void* aData, uint32_t aLength)
 }
 
 bool
-MutableBlobStorage::ExpandBufferSize(uint64_t aSize)
+MutableBlobStorage::ExpandBufferSize(const MutexAutoLock& aProofOfLock,
+                                     uint64_t aSize)
 {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mStorageState < eInTemporaryFile);
 
   if (mDataBufferLen >= mDataLen + aSize) {
@@ -533,7 +536,8 @@ MutableBlobStorage::ExpandBufferSize(uint64_t aSize)
 }
 
 bool
-MutableBlobStorage::ShouldBeTemporaryStorage(uint64_t aSize) const
+MutableBlobStorage::ShouldBeTemporaryStorage(const MutexAutoLock& aProofOfLock,
+                                             uint64_t aSize) const
 {
   MOZ_ASSERT(mStorageState == eInMemory);
 
@@ -548,16 +552,33 @@ MutableBlobStorage::ShouldBeTemporaryStorage(uint64_t aSize) const
 }
 
 bool
-MutableBlobStorage::MaybeCreateTemporaryFile()
+MutableBlobStorage::MaybeCreateTemporaryFile(const MutexAutoLock& aProofOfLock)
+{
+  mStorageState = eWaitingForTemporaryFile;
+
+  if (!NS_IsMainThread()) {
+    RefPtr<MutableBlobStorage> self = this;
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      "MutableBlobStorage::MaybeCreateTemporaryFile",
+      [self]() { self->MaybeCreateTemporaryFileOnMainThread(); });
+    EventTarget()->Dispatch(r.forget(), NS_DISPATCH_SYNC);
+    return !!mActor;
+  }
+
+  MaybeCreateTemporaryFileOnMainThread();
+  return !!mActor;
+}
+
+void
+MutableBlobStorage::MaybeCreateTemporaryFileOnMainThread()
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  mStorageState = eWaitingForTemporaryFile;
+  MOZ_ASSERT(!mActor);
 
   mozilla::ipc::PBackgroundChild* actorChild =
     mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!actorChild)) {
-    return false;
+    return;
   }
 
   mActor = new TemporaryIPCBlobChild(this);
@@ -569,14 +590,14 @@ MutableBlobStorage::MaybeCreateTemporaryFile()
   mActor.get()->AddRef();
 
   // The actor will call us when the FileDescriptor is received.
-
-  return true;
 }
 
 void
 MutableBlobStorage::TemporaryFileCreated(PRFileDesc* aFD)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mStorageState == eWaitingForTemporaryFile ||
              mStorageState == eClosed);
   MOZ_ASSERT_IF(mPendingCallback, mStorageState == eClosed);
@@ -643,6 +664,8 @@ MutableBlobStorage::AskForBlob(TemporaryIPCBlobChildCallback* aCallback,
                                const nsACString& aContentType)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mStorageState == eClosed);
   MOZ_ASSERT(mFD);
   MOZ_ASSERT(mActor);
@@ -666,6 +689,8 @@ void
 MutableBlobStorage::ErrorPropagated(nsresult aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  MutexAutoLock lock(mMutex);
   mErrorResult = aRv;
 
   if (mActor) {
@@ -695,16 +720,18 @@ MutableBlobStorage::DispatchToIOThread(already_AddRefed<nsIRunnable> aRunnable)
 }
 
 size_t
-MutableBlobStorage::SizeOfCurrentMemoryBuffer() const
+MutableBlobStorage::SizeOfCurrentMemoryBuffer()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mMutex);
   return mStorageState < eInTemporaryFile ? mDataLen : 0;
 }
 
 PRFileDesc*
-MutableBlobStorage::GetFD() const
+MutableBlobStorage::GetFD()
 {
   MOZ_ASSERT(!NS_IsMainThread());
+  MutexAutoLock lock(mMutex);
   return mFD;
 }
 
@@ -712,6 +739,7 @@ void
 MutableBlobStorage::CloseFD()
 {
   MOZ_ASSERT(!NS_IsMainThread());
+  MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mFD);
 
   PR_Close(mFD);

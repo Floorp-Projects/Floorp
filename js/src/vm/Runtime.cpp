@@ -24,7 +24,6 @@
 # include <sys/mman.h>
 #endif
 
-#include "jsatom.h"
 #include "jsmath.h"
 #include "jsobj.h"
 #include "jsscript.h"

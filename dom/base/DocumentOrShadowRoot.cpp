@@ -146,5 +146,25 @@ DocumentOrShadowRoot::GetPointerLockElement()
       retargetedPointerLockedElement->AsElement() : nullptr;
 }
 
+Element*
+DocumentOrShadowRoot::GetFullscreenElement()
+{
+  if (!AsNode().IsInComposedDoc()) {
+    return nullptr;
+  }
+
+  Element* element = AsNode().OwnerDoc()->FullScreenStackTop();
+  NS_ASSERTION(!element ||
+               element->State().HasState(NS_EVENT_STATE_FULL_SCREEN),
+    "Fullscreen element should have fullscreen styles applied");
+
+  nsIContent* retargeted = Retarget(element);
+  if (retargeted && retargeted->IsElement()) {
+    return retargeted->AsElement();
+  }
+
+  return nullptr;
+}
+
 }
 }

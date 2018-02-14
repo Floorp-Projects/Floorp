@@ -25,7 +25,6 @@
 #include "jit/RangeAnalysis.h"
 #include "js/Conversions.h"
 
-#include "jsatominlines.h"
 #include "jsboolinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"

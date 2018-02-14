@@ -86,7 +86,10 @@ define(function (require, exports, module) {
             id: col.id,
             key: col.id,
           },
-            visible ? div({ className: "treeHeaderCellBox" }, col.title) : null
+            visible ? div({
+              className: "treeHeaderCellBox",
+              role: "presentation"
+            }, col.title) : null
           )
         );
       });

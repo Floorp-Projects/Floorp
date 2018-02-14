@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1529351401947000);
+const PRTime gPreloadListExpirationTime = INT64_C(1529523515392000);
 %%
 0-1.party, 1
 0.me.uk, 1
@@ -389,7 +389,6 @@ const PRTime gPreloadListExpirationTime = INT64_C(1529351401947000);
 42t.ru, 1
 439050.com, 1
 439191.com, 1
-440hz-radio.de, 0
 441jj.com, 0
 44scc.com, 1
 4500.co.il, 1
@@ -649,7 +648,6 @@ abcbouncycastlessurrey.co.uk, 1
 abcbouncyfactory.co.uk, 1
 abcdef.be, 1
 abcheck.se, 1
-abchelp.net, 1
 abckam.com, 1
 abcpartyhire.com, 1
 abcstudio.com.au, 1
@@ -1552,6 +1550,7 @@ alpengreis.ch, 1
 alpenjuice.com, 1
 alpertron.com.ar, 1
 alpha-assistant.com, 1
+alpha-force.net, 0
 alpha.ch, 1
 alpha88uat.com, 1
 alphabetsigns.com, 1
@@ -1757,7 +1756,6 @@ amzn.rocks, 1
 anacreon.de, 1
 anadoluefessk.org, 1
 anaethelion.fr, 1
-anaiscoachpersonal.es, 1
 anaisypirueta.es, 1
 anajianu.ro, 1
 anakros.me, 0
@@ -2048,6 +2046,7 @@ anxietyspace.com, 1
 anxiolytics.com, 1
 any.pm, 0
 anyfood.fi, 1
+anymetrix.io, 1
 anynode.net, 1
 anyon.com, 1
 anypeer.net, 1
@@ -2530,7 +2529,6 @@ assistenzamicroonde.org, 1
 assodigitale.it, 1
 asspinter.me, 1
 assumptionpj.org, 1
-assurancesmons.be, 1
 asta-bar.de, 0
 astal.rs, 1
 astaninki.com, 1
@@ -2807,7 +2805,6 @@ avanovum.de, 1
 avaq.fr, 1
 avarty.com, 1
 avarty.net, 1
-avastantivirus.ro, 1
 avatarrecruit.co.uk, 1
 avcd.cz, 1
 avdagic.net, 1
@@ -2833,7 +2830,6 @@ avid.blue, 1
 avietech.com, 1
 aviv.nyc, 1
 avmemo.com, 1
-avmo.pw, 1
 avmoo.com, 1
 avnet.ws, 1
 avocode.com, 1
@@ -2841,7 +2837,6 @@ avonlearningcampus.com, 1
 avotoma.com, 1
 avova.de, 1
 avpres.net, 1
-avso.pw, 1
 avsox.com, 1
 avspot.net, 1
 avticket.ru, 0
@@ -2850,7 +2845,6 @@ avtogara-isperih.com, 1
 avtosept.by, 1
 avtovokzaly.ru, 1
 avvcorda.com, 1
-avxo.pw, 1
 awan.tech, 1
 awaremi-tai.com, 1
 awaro.net, 1
@@ -3289,7 +3283,6 @@ bashstreetband.co.uk, 1
 basilicaknights.org, 1
 basilm.co, 1
 basketball-brannenburg.de, 1
-baskettemple.com, 1
 basnieuwenhuizen.nl, 1
 basnoslovno.com.ua, 1
 basnoslovno.ru, 1
@@ -3435,7 +3428,6 @@ beans-one.com, 0
 beanworks.ca, 1
 bearcosports.com.br, 1
 bearded.sexy, 1
-bearden.io, 1
 bearingworks.com, 1
 beasel.biz, 1
 beastowner.li, 1
@@ -4096,7 +4088,6 @@ bitmex.com, 1
 bitmexin.com, 1
 bitminter.com, 1
 bitmoe.com, 1
-bitmon.net, 1
 bitok.com, 1
 bitplay.space, 1
 bitpod.de, 1
@@ -4311,6 +4302,7 @@ blogom.at, 1
 blogpentrusuflet.ro, 1
 blogreen.org, 1
 blogtroterzy.pl, 1
+blok56.nl, 1
 blokuhaka.fr, 1
 bloodsports.org, 1
 bloodyexcellent.com, 1
@@ -4330,6 +4322,7 @@ bluecards.eu, 1
 bluechilli.com, 1
 bluecon.ninja, 1
 blued.moe, 1
+bluedeck.org, 1
 bluefinger.nl, 1
 blueflare.org, 1
 bluefuzz.nl, 1
@@ -4502,6 +4495,7 @@ bookourdjs.com, 1
 bookreport.ga, 1
 booksearch.jp, 1
 bookshopofindia.com, 1
+booktracker-org.appspot.com, 1
 bookwitty.social, 1
 bool.be, 1
 boomersurf.com, 1
@@ -4800,6 +4794,7 @@ brasspipedreams.org, 1
 bratislava-airport-taxi.com, 1
 bratteng.me, 0
 bratteng.xyz, 0
+bratvanov.com, 1
 brau-ingenieur.de, 1
 braudoktor.de, 1
 brauingenieur.de, 1
@@ -5003,7 +4998,6 @@ btcgo.nl, 1
 btcontract.com, 1
 btcpop.co, 1
 btcycle.org, 1
-btio.pw, 1
 btku.org, 1
 btmstore.com.br, 1
 btnissanparts.com, 1
@@ -5031,7 +5025,6 @@ buddie5.com, 1
 buddlycrafts.com, 1
 buddyworks.net, 1
 budeanu.com, 1
-buderus-family.be, 1
 budger.nl, 1
 budget.gov, 1
 budgetalk.com, 1
@@ -5092,6 +5085,7 @@ bullpay.com, 1
 bullterrier.nu, 1
 bulmastife.com.br, 1
 bulwarkhost.com, 1
+bumarkamoda.com, 1
 bumshow.ru, 1
 bunadarbankinn.is, 1
 bunbun.be, 0
@@ -5632,6 +5626,7 @@ cashlogic.ch, 1
 cashmaxtexas.com, 1
 cashplk.com, 1
 cashsector.ga, 1
+casino-cashflow.ru, 1
 casino-trio.com, 1
 casinobonuscodes.online, 1
 casinolegal.pt, 1
@@ -6898,6 +6893,7 @@ common.io, 1
 commoncode.com.au, 1
 commoncode.io, 1
 commoncore4kids.com, 1
+community-cupboard.org, 1
 communityblog.fedoraproject.org, 1
 communitycodeofconduct.com, 1
 communityflow.info, 1
@@ -6974,7 +6970,6 @@ concerts-metal.ch, 1
 concertsenboite.fr, 1
 conciliumnotaire.ca, 1
 conclave.global, 1
-concretehermit.com, 1
 concursopublico.com.br, 1
 concursos.com.br, 1
 concursosabertos.com.br, 1
@@ -7063,7 +7058,6 @@ contextplatform.com, 1
 continuation.io, 1
 contrabass.net, 1
 contractormountain.com, 1
-contraspin.co.nz, 1
 contratatupoliza.com, 1
 contributor.google.com, 1
 controlarlaansiedad.com, 1
@@ -7546,6 +7540,7 @@ ctomp.io, 1
 ctpe.net, 1
 ctrld.me, 1
 ctyi.me, 1
+cu247secure.ie, 1
 cub-bouncingcastles.co.uk, 1
 cube-cloud.com, 1
 cube.de, 1
@@ -7663,7 +7658,7 @@ cvr.dk, 1
 cvsoftub.com, 1
 cvursache.com, 1
 cvv.cn, 1
-cw-bw.de, 1
+cw-bw.de, 0
 cw.center, 1
 cwagner.me, 1
 cwmart.in, 1
@@ -7672,7 +7667,6 @@ cwrcoding.com, 1
 cy.technology, 1
 cybbh.space, 1
 cyber-computer.club, 1
-cyber-konzept.de, 1
 cyber-perikarp.eu, 1
 cyber.cafe, 1
 cybercloud.cc, 1
@@ -8552,6 +8546,7 @@ devzero.io, 1
 dewaard.de, 1
 dewalch.net, 1
 dewapress.com, 1
+dewebwerf.nl, 1
 dexalo.de, 1
 dezeregio.nl, 1
 dezet-ev.de, 1
@@ -9192,7 +9187,6 @@ dounats.com, 1
 douzer.de, 1
 dovenzorgmalawi.nl, 1
 dovro.de, 1
-dowc.org, 1
 downloadaja.com, 1
 downloadgamemods.com, 1
 downloadgram.com, 1
@@ -9230,10 +9224,6 @@ draftguru.com.au, 1
 drafton.com, 1
 drageeparadise.fr, 1
 dragfiles.com, 1
-draghive.club, 1
-draghive.com, 1
-draghive.net, 1
-draghive.photos, 1
 draghive.tv, 1
 dragon-aspect.com, 1
 dragon-chem.eu, 1
@@ -9384,8 +9374,6 @@ druznek.xyz, 1
 drvr.xyz, 1
 drweissbrot.net, 1
 dryan.com, 0
-drybasement.com, 1
-drybasementkansas.com, 1
 drybjed.net, 1
 drycleancoalition.org, 1
 drycreekphoto.com, 1
@@ -9500,6 +9488,7 @@ dustygroove.com, 1
 dustyspokesbnb.ca, 1
 dutch.desi, 1
 dutch1.nl, 1
+dutchessuganda.com, 1
 dutchrank.nl, 1
 dutchwanderers.nl, 1
 dutchweballiance.nl, 1
@@ -9540,6 +9529,7 @@ dynamics365.no, 1
 dynamicsnetwork.net, 1
 dynamictostatic.com, 1
 dynamicyou.co.uk, 1
+dynastic.co, 1
 dynn.be, 1
 dynorphin.com, 1
 dynorphins.com, 1
@@ -10066,6 +10056,7 @@ elisabethkostecki.de, 1
 elistor6100.xyz, 1
 elite-box.com, 1
 elite-box.org, 1
+elite-porno.ru, 1
 elite12.de, 1
 elitebouncingfun.com, 1
 elitegameservers.net, 1
@@ -10197,7 +10188,6 @@ employer411.com, 1
 emporiodascalcinhas.com.br, 1
 emporiodosperfumes.com.br, 1
 emporiopatanegra.com.br, 1
-emporiovinareal.com.br, 1
 emporioviverbem.com.br, 1
 empower.net, 1
 empowerdb.com, 1
@@ -10223,6 +10213,7 @@ encfs.win, 1
 encircleapp.com, 1
 encnet.de, 1
 encode.host, 1
+encoderx.uk, 1
 encouragemarketing.com, 1
 encredible.de, 0
 encredible.org, 0
@@ -10758,7 +10749,6 @@ etherpad.fr, 1
 etherpad.nl, 1
 ethicaldata.co.uk, 1
 ethicalpolitics.org, 1
-ethicaltek.com, 1
 ethicsburg.gov, 1
 ethika.com, 1
 ethiobaba.com, 1
@@ -11623,7 +11613,6 @@ firesofheaven.org, 1
 firetotheprisons.org, 1
 firevap.org, 1
 firewallconsultants.com, 1
-fireworkcoaching.com, 1
 fireworksshowvr.com, 1
 firexarxa.de, 1
 firma-cerny.cz, 1
@@ -11674,7 +11663,6 @@ fiveboosts.xyz, 1
 fiws.net, 1
 fix-the-timeline.com, 1
 fix-the-timeline.org, 1
-fixate.ru, 1
 fixatom.com, 1
 fixeaide.com, 1
 fixeaider.com, 1
@@ -11839,7 +11827,6 @@ flymns.fr, 1
 flynn.io, 1
 flyp.me, 1
 flyserver.co.il, 1
-flyspace.ga, 1
 flyspace.ml, 1
 flyss.net, 1
 flyssh.net, 1
@@ -11872,7 +11859,6 @@ focusministries1.org, 1
 focuspointtechnologies.com, 1
 foej-aktiv.de, 1
 foej.net, 1
-foerster-kunststoff.de, 1
 fognini-depablo.eu, 1
 foia.gov, 1
 foiaonline.gov, 1
@@ -12387,7 +12373,6 @@ fundayltd.com, 1
 fundays.nl, 1
 fundchan.com, 1
 fundeego.com, 1
-funderburg.me, 1
 fundingempire.com, 1
 fundort.ch, 1
 funerariahogardecristo.cl, 1
@@ -12495,7 +12480,7 @@ g01.in.ua, 1
 g1.ie, 1
 g10e.ch, 1
 g1jeu.com, 1
-g2-inc.com, 0
+g2-inc.com, 1
 g2links.com, 1
 g2pla.net, 1
 g2soft.net, 1
@@ -12507,6 +12492,7 @@ gabemack.com, 1
 gabethebabetv.com, 1
 gabriel.to, 1
 gabriele-kluge.de, 1
+gabrielsimonet.ch, 1
 gachter.name, 1
 gadabit.pl, 1
 gadgethacks.com, 1
@@ -13135,6 +13121,7 @@ glidingshop.de, 1
 glidingshop.eu, 1
 glloq.org, 1
 glob-coin.com, 1
+global-adult-webcams.com, 1
 global-lights.ma, 1
 global-office.com, 1
 global-village.koeln, 1
@@ -13306,7 +13293,6 @@ googleplex.com, 1
 googlesource.com, 1
 goombi.fr, 1
 goonersworld.co.uk, 1
-gootax.pro, 1
 gootlijsten.nl, 1
 goozp.com, 1
 gopher.tk, 1
@@ -13326,6 +13312,7 @@ gorognyelv.hu, 1
 gorschenin.com, 1
 gosccs.com, 1
 gosciencegirls.com, 1
+gosharewood.com, 1
 goshawkdb.io, 1
 goshin-group.co.jp, 1
 gospelfollower.com, 1
@@ -13488,7 +13475,7 @@ greengoblindev.com, 1
 greenitpark.net, 1
 greenliquidsystem.com, 1
 greenlungs.net, 1
-greenoutdoor.dk, 1
+greenoutdoor.dk, 0
 greenpartyofnewmilford.org, 1
 greenpeace-magazin.de, 1
 greenpeace.berlin, 1
@@ -14206,7 +14193,6 @@ heimatverein-eitensheim.de, 1
 heimonen.eu, 1
 heimprofis.de, 1
 heinemann.io, 1
-heinemeier.dk, 1
 heinpost.nl, 0
 heinzelmann.co, 1
 heisenberg.co, 1
@@ -14264,8 +14250,8 @@ helup.com, 1
 helvella.de, 1
 hematoonkologia.pl, 1
 hemdal.se, 1
+hemnet.se, 1
 hen.ne.ke, 1
-hendric.us, 1
 hendrinortier.nl, 1
 hendyisaac.com, 1
 hengelsportdeal.com, 1
@@ -14328,6 +14314,7 @@ herringsresidence.be, 1
 herrsmith.com, 1
 hertsbouncycastles.com, 1
 hertz.bj, 1
+herzbotschaft.de, 1
 herzig.cc, 1
 hesaplama.net, 1
 hessen-liebe.de, 1
@@ -14529,7 +14516,6 @@ hjortland.org, 1
 hjw-kunstwerk.de, 1
 hk.search.yahoo.com, 0
 hkdobrev.com, 1
-hknet.at, 1
 hkustmbajp.com, 1
 hl7999.com, 1
 hl8999.com, 1
@@ -15371,7 +15357,6 @@ imaginetricks.com, 1
 imagr.io, 1
 imanageproducts.uk, 1
 imanesdeviaje.com, 1
-imanhearts.com, 1
 imanolbarba.net, 1
 imanudin.net, 1
 imarkethost.co.uk, 1
@@ -15403,7 +15388,7 @@ imirhil.fr, 1
 imitza.com, 1
 imjad.cn, 1
 imjustcreative.com, 1
-imkerei-freilinger.de, 1
+imkerei-freilinger.de, 0
 imkerverein-moenchswald.de, 1
 imlinan.cn, 1
 imlinan.com, 1
@@ -15569,6 +15554,7 @@ info-screw.com, 1
 infobae.com, 1
 infocity-tech.fr, 1
 infocommsociety.com, 1
+infogrfx.com, 1
 infomegastore.com, 1
 infomisto.com, 1
 infopagina.es, 1
@@ -15819,7 +15805,7 @@ introvertedtravel.space, 1
 intune.life, 1
 intux.be, 0
 intvonline.com, 1
-intxt.net, 1
+intxt.net, 0
 inusasha.de, 1
 inuyasha-petition.tk, 1
 invasion.com, 1
@@ -16288,7 +16274,6 @@ jake.eu.org, 1
 jake.ml, 1
 jake.nom.za, 1
 jakecurtis.de, 1
-jakeguild.com, 1
 jakenbake.com, 1
 jakereynolds.co, 1
 jakerullman.com, 1
@@ -16350,6 +16335,7 @@ jamyeprice.com, 0
 jan-and-maaret.de, 1
 jan-bucher.ch, 1
 jan-rieger.de, 1
+jan-roenspies.de, 1
 jan-von.de, 1
 janada.cz, 1
 janaundgeorgsagenja.eu, 1
@@ -16388,7 +16374,6 @@ jardins-utopie.net, 1
 jaredeberle.org, 0
 jaredfernandez.com, 1
 jaredfraser.com, 1
-jarivisual.com, 1
 jarl.ninja, 1
 jarniashop.se, 1
 jaroku.com, 1
@@ -16624,6 +16609,7 @@ jino-jossy.appspot.com, 1
 jinshuju.net, 1
 jintaiyang123.org, 1
 jiogo.com, 1
+jiosongs.com, 1
 jirav.com, 1
 jiripudil.cz, 1
 jiveiaktivno.bg, 1
@@ -16810,7 +16796,6 @@ jongbloed.nl, 1
 jongcs.com, 1
 jonilar.com, 1
 jonincharacter.com, 1
-jonirrings.com, 1
 jonkermedia.nl, 1
 jonlabelle.com, 1
 jonlu.ca, 1
@@ -16916,7 +16901,6 @@ jschumacher.info, 1
 jsd-cog.org, 1
 jselby.net, 1
 jsent.co.uk, 1
-jsevilleja.org, 1
 jsjyhzy.cc, 1
 jskier.com, 0
 jskoelliken.ch, 1
@@ -17126,7 +17110,6 @@ kaigojj.com, 1
 kaika-facilitymanagement.de, 1
 kaileymslusser.com, 1
 kainetsoft.com, 1
-kainz.bayern, 1
 kainz.be, 1
 kairion.de, 1
 kaisakura.net, 1
@@ -18313,7 +18296,7 @@ landyparts.nl, 1
 lanetix.com, 1
 lang-php.com, 1
 langatang.com, 1
-langendorf-ernaehrung-training.de, 1
+langendorf-ernaehrung-training.de, 0
 langguth.io, 1
 langkahteduh.com, 1
 langly.fr, 1
@@ -18395,7 +18378,6 @@ lastrada-minden.de, 1
 lastweekinaws.com, 1
 lasuzefc.fr, 1
 lat.sk, 1
-latable-bowling-vire.fr, 1
 latabledebry.be, 1
 latabledemontebello.com, 1
 latamarissiere.eu, 1
@@ -18415,7 +18397,7 @@ latiendadelbebefeliz.com, 1
 latino.dating, 1
 latinphone.com, 1
 latintoy.com, 1
-latitude42technology.com, 1
+latitude42technology.com, 0
 latitudesign.com, 1
 latour-managedcare.ch, 1
 latremebunda.com, 1
@@ -18831,7 +18813,6 @@ liautard.fr, 1
 lib64.net, 1
 libbitcoin.org, 1
 libble.eu, 1
-libdeer.so, 1
 liberapay.com, 1
 libertas-tech.com, 1
 libmpq.org, 1
@@ -18938,7 +18919,6 @@ lilaccakeboutique.com, 1
 liliang13.com, 1
 lilismartinis.com, 1
 lillepuu.com, 1
-lily-bearing.com, 1
 lily-inn.com, 1
 lilyfarmfreshskincare.com, 1
 lilygreen.co.za, 1
@@ -19398,7 +19378,6 @@ lovelive.us, 1
 lovelivewiki.com, 1
 lovelytimes.net, 1
 lovemomiji.com, 1
-lovemysafetynet.com, 1
 lovenwishes.com, 1
 loveph.one, 1
 lover-bg.com, 1
@@ -19529,6 +19508,7 @@ lukestebbing.com, 1
 lukmanulhakim.id, 1
 lukull-pizza.de, 1
 lumer.tech, 1
+lumi.pw, 1
 lumiere.com, 1
 luminancy.com, 1
 lumitop.com, 1
@@ -19536,6 +19516,7 @@ lunafag.ru, 1
 lunakit.org, 1
 lunapps.com, 1
 lunar6.ch, 1
+lunarlog.com, 1
 lunarshark.com, 1
 lunarsoft.net, 1
 lunartail.nl, 1
@@ -19591,7 +19572,7 @@ lwl.moe, 1
 lwl12.com, 1
 lxd.cc, 1
 lycee-saintjoseph-mesnieres.fr, 1
-lychankiet.name.vn, 1
+lychankiet.name.vn, 0
 lycly.me, 1
 lydudlejning.net, 1
 lyfbits.com, 1
@@ -19877,6 +19858,7 @@ mammaw.com, 1
 mammeitalianeavienna.com, 1
 mammooc.org, 1
 mamochka.org.ua, 1
+mamospienas.lt, 1
 mamot.fr, 0
 mamout.xyz, 1
 mamuko.nl, 1
@@ -20400,6 +20382,7 @@ mdek.at, 1
 mdewendt.de, 1
 mdf-bis.com, 1
 mdiv.pl, 1
+mdkr.nl, 1
 mdlayher.com, 1
 mdma.net, 1
 mdmed.clinic, 1
@@ -20982,6 +20965,7 @@ minigolfandgames.co.uk, 1
 minikidz.es, 1
 minikneet.com, 1
 minilions.fr, 1
+minimaliston.com, 1
 minimaltimer.com, 1
 minimayhemsoftplay.co.uk, 1
 minimbah.com.au, 1
@@ -21107,6 +21091,7 @@ mjasm.org, 1
 mjec.net, 1
 mjlaurindo.pt, 1
 mjmnagy.info, 1
+mjscustomcreations.com.au, 1
 mk89.de, 1
 mkacg.com, 1
 mkaciuba.com, 1
@@ -22313,7 +22298,6 @@ ne-on.org, 1
 ne1home.dyndns.org, 1
 neap.io, 1
 nearby.in.th, 1
-nearon.nl, 1
 neartothesky.com, 1
 neatous.cz, 1
 neatous.net, 1
@@ -22499,7 +22483,6 @@ netulo.com, 1
 netvizura.co.uk, 1
 netwarc.eu, 1
 netwarc.nl, 1
-netweaver.uk, 1
 netwerkmanager.nl, 0
 network-notes.com, 1
 network23.nl, 1
@@ -22592,7 +22575,6 @@ next-taxi.ru, 1
 next24.io, 1
 nextads.ch, 1
 nextcairn.com, 1
-nextcloud.com, 1
 nextcloud.li, 1
 nextend.net, 1
 nextend.org, 1
@@ -22902,7 +22884,6 @@ norad.sytes.net, 1
 nord-sud.be, 1
 nordakademie.de, 1
 nordic-survival.de, 1
-nordiccasinocommunity.com, 1
 nordicirc.com, 1
 nordinfo.fi, 1
 nordlichter-brv.de, 1
@@ -22938,7 +22919,6 @@ northernmuscle.ca, 1
 northernselfstorage.co.za, 1
 northfieldyarn.com, 1
 northokanaganbookkeeping.com, 1
-northpennvwparts.com, 1
 northpole.dance, 1
 northridgeelectrical.com, 1
 northumbriagames.co.uk, 1
@@ -23428,7 +23408,6 @@ omoteura.com, 1
 omranic.com, 1
 omronwellness.com, 1
 omsdieppe.fr, 1
-on-te.ch, 1
 on-tech.co.uk, 1
 ona.io, 1
 onaboat.se, 1
@@ -23583,6 +23562,7 @@ opendataincubator.eu, 1
 opendecide.com, 1
 openevic.info, 1
 openfir.st, 1
+openfitapi-falke.azurewebsites.net, 1
 opengg.me, 0
 openings.ninja, 1
 openintelligence.uk, 1
@@ -24203,6 +24183,7 @@ patentfamily.de, 1
 paterno-gaming.com, 1
 patflix.com, 1
 pathagoras.com, 1
+pathwaystoresilience.org, 1
 pathwaytofaith.com, 1
 patika-biztositas.hu, 1
 patikabiztositas.hu, 1
@@ -24241,7 +24222,6 @@ paulchen.at, 1
 pauldcox.com, 1
 paulewen.ca, 1
 paulinewesterman.nl, 1
-paulmeier.com, 1
 paulomonteiro.pt, 1
 paulov.com, 1
 paulov.info, 1
@@ -25110,7 +25090,6 @@ politeiaudesa.org, 1
 politic.org.ua, 1
 politik-bei-uns.de, 1
 polizeiwallis.ch, 1
-polkam.go.id, 0
 pollet-ghijs.be, 1
 pollet-ghys.be, 1
 polletmera.com, 1
@@ -25180,6 +25159,7 @@ pornbay.org, 1
 pornblog.org, 1
 porncandi.com, 1
 pornfacefinder.com, 1
+porno-gif.ru, 1
 pornohub.su, 1
 pornolab-net.appspot.com, 0
 pornomens.be, 1
@@ -25240,7 +25220,6 @@ postdarwinism.com, 1
 postdeck.de, 1
 posteo.de, 0
 posters.win, 1
-posterspy.com, 1
 postfalls-naturopathic.com, 1
 postfinance.ch, 1
 postmatescode.com, 1
@@ -25374,7 +25353,6 @@ prepaid-voip.nl, 1
 prepaidgirl.com, 1
 prepaidkredietkaart.be, 1
 prepare-job-hunting.com, 1
-preparedcapital.com, 1
 preparetheword.com, 0
 preprodfan.gov, 1
 presbee.com, 1
@@ -25423,6 +25401,7 @@ primorus.lt, 1
 primotilesandbathrooms.co.uk, 1
 princeagency.com, 1
 princeofwhales.com, 1
+princesparktouch.com, 1
 princessbackpack.de, 1
 princessmargaretlotto.com, 1
 principalstest.com, 1
@@ -25700,7 +25679,6 @@ pseta.ru, 1
 pseudo.coffee, 1
 psg.bg, 1
 psicoexpansao.com.br, 1
-psicologoforensebarcelona.com, 1
 psicologoforensemadrid.com, 1
 psicosalud.online, 1
 psm.org.ph, 1
@@ -25733,6 +25711,7 @@ psychoco.net, 1
 psychotherapie-kp.de, 1
 psydix.org, 1
 psyk.yt, 1
+psylab.cc, 1
 psylab.re, 1
 psylab.vip, 1
 psynapse.net.au, 1
@@ -26217,7 +26196,6 @@ rautelow.de, 1
 rautermods.net, 1
 ravchat.com, 1
 raven.dog, 1
-ravenger.net, 1
 ravengergaming.net, 1
 ravensbuch.de, 1
 ravhaaglanden.org, 1
@@ -26750,6 +26728,7 @@ ricaud.me, 1
 riccy.org, 1
 riceadvice.info, 1
 riceglue.com, 1
+richamorindonesia.com, 1
 richardb.me, 1
 richardcrosby.co.uk, 1
 richardhering.de, 1
@@ -27380,6 +27359,7 @@ sabine-forschbach.de, 1
 sabineforschbach.de, 1
 sabrinajoias.com.br, 1
 sabrinajoiasprontaentrega.com.br, 1
+sabtunes.com, 1
 sacaentradas.com, 1
 saccani.net, 1
 sackers.com, 1
@@ -27685,7 +27665,6 @@ savinggoliath.com, 1
 savingsbondwizard.gov, 1
 savingsomegreen.com, 1
 savingsstoreonline.ca, 1
-savisasolutions.co.za, 1
 savvytime.com, 1
 sawyerroofing.com, 1
 saxeandthecity.com, 1
@@ -28220,6 +28199,7 @@ sentry.io, 1
 sentry.nu, 1
 senzaparole.de, 1
 seo-analyse.com, 1
+seo-lagniappe.com, 1
 seo-linz.at, 1
 seo-nerd.de, 1
 seo-portal.de, 1
@@ -28299,6 +28279,7 @@ serverco.com, 1
 serverd.de, 1
 serverfrog.de, 1
 serverlauget.no, 1
+serverlog.net, 1
 serveroffline.net, 0
 serverpedia.de, 1
 servers4all.co.uk, 1
@@ -28458,7 +28439,6 @@ sharperedgecomputers.com, 1
 sharu.me, 1
 sharvey.ca, 1
 shasso.com, 1
-shatorin.com, 1
 shaun.net, 1
 shaunandamyswedding.com, 1
 shaunc.com, 1
@@ -28803,7 +28783,7 @@ simoesgoulart.com.br, 1
 simon-hofmann.org, 1
 simon-mueller.de, 1
 simon.lc, 1
-simon3k.moe, 0
+simon3k.moe, 1
 simonberard.garden, 1
 simonbondo.dk, 1
 simoncommunity.org.uk, 1
@@ -28890,6 +28870,7 @@ sinonimosonline.com, 1
 sinonimosonline.com.br, 1
 sinoscandinavia.se, 1
 sinquin.eu, 1
+sinsojb.me, 1
 sint-joris.nl, 1
 sinterama.biz, 1
 sintesysglobal.com, 1
@@ -28986,7 +28967,6 @@ skipfault.com, 1
 skipperinnovations.com, 1
 skippy.dog, 1
 skischule-wildewiese.de, 1
-skischuleulm.de, 1
 skks.cz, 1
 sklepsamsung.pl, 1
 sklotechnik.cz, 1
@@ -29674,7 +29654,6 @@ spornkuller.de, 1
 sport-in-sundern.de, 1
 sport-potreby.cz, 1
 sport-potreby.sk, 1
-sport-socken.net, 1
 sporter.com, 1
 sportflash.info, 1
 sportnesia.com, 1
@@ -30217,6 +30196,7 @@ studenttenant.com, 1
 studer.su, 1
 studiemeter.nl, 1
 studienportal.eu, 1
+studienservice.de, 1
 studiereader.nl, 1
 studio-architetto.com, 1
 studio-fotografico.ru, 1
@@ -30448,7 +30428,6 @@ suttonbouncycastles.co.uk, 1
 suuria.de, 1
 suvidhaapay.com, 1
 suwalls.com, 1
-suzi3d.com, 1
 suzukimarinepress.com, 1
 sv-1966-medenbach.de, 1
 sv-turm-hohenlimburg.de, 1
@@ -30691,6 +30670,7 @@ tadcastercircuit.org.uk, 1
 tadluedtke.com, 1
 tadtadya.com, 1
 tadu.de, 1
+tagdocumentary.com, 1
 tagesmutter-in-bilm.de, 1
 taggedpdf.com, 0
 taglioepiega.com, 1
@@ -31311,6 +31291,7 @@ thedocumentrefinery.com, 1
 thedominatorsclan.com, 1
 thedreamtravelgroup.co.uk, 1
 thedronechart.com, 1
+thedrunkencabbage.com, 1
 thedutchmarketers.com, 1
 theebookkeepers.co.za, 1
 theeducationchannel.info, 1
@@ -31806,7 +31787,6 @@ tkn.tokyo, 1
 tkts.cl, 1
 tkusano.jp, 1
 tkw01536.de, 1
-tlach.cz, 1
 tlca.org, 1
 tlcnet.info, 1
 tlehseasyads.com, 1
@@ -32816,6 +32796,7 @@ un-zero-un.fr, 1
 unapolegetic.co, 1
 unapp.me, 1
 unbelievableplaces.de, 1
+unblock-zh.org, 1
 unblockall.xyz, 1
 unblocked.at, 1
 unblocked.bet, 1
@@ -33643,6 +33624,7 @@ vivamusic.es, 1
 vivanosports.com.br, 1
 vivatv.com.tw, 1
 vivendi.de, 1
+vivianmaier.cn, 1
 vivid-academy.com, 1
 vividinflatables.co.uk, 1
 vividlumen.com, 1
@@ -33729,7 +33711,6 @@ voloevents.com, 1
 volta.io, 1
 voltimax.com, 1
 volto.io, 1
-voltotc.com, 1
 volunteeringmatters.org.uk, 1
 vomitb.in, 1
 vonauw.com, 1
@@ -33749,7 +33730,7 @@ vorodevops.com, 1
 vos-fleurs.ch, 1
 vos-fleurs.com, 1
 vosgym.jp, 1
-voshod.org, 1
+voshod.org, 0
 vosjesweb.nl, 1
 vosky.fr, 1
 vostronet.com, 1
@@ -33992,6 +33973,7 @@ watertrails.io, 1
 waterworkscondos.com, 1
 watoo.tech, 1
 watsonwork.me, 1
+wattechweb.com, 1
 wave-ola.es, 1
 wave.is, 1
 wavesboardshop.com, 1
@@ -34357,7 +34339,6 @@ wetherbyweather.org.uk, 1
 wetofu.top, 1
 wetthost.com, 1
 wevenues.com, 1
-wevg.org, 1
 wexfordbouncycastles.ie, 1
 weyland-yutani.org, 1
 weyland.tech, 1
@@ -35315,7 +35296,6 @@ xpj.bet, 1
 xpjcunkuan.com, 1
 xpletus.nl, 1
 xplore-dna.net, 1
-xpressprint.com.br, 1
 xps2pdf.co.uk, 1
 xpwn.cz, 1
 xqin.net, 1
@@ -35585,7 +35565,6 @@ youcancraft.de, 1
 youcanfuckoff.xyz, 1
 youcanmakeit.at, 1
 youcruit.com, 1
-youdamom.com, 0
 youdowell.com, 1
 youdungoofd.com, 1
 youftp.tk, 1
@@ -35928,6 +35907,7 @@ ziemlichzackig.de, 1
 zifb.in, 1
 zigi.io, 1
 zigzagmart.com, 1
+zihao.me, 1
 ziin.de, 0
 zijung.me, 1
 zikirakhirzaman.com, 1
@@ -35979,7 +35959,6 @@ zoigl.club, 1
 zojadravai.com, 1
 zoki.art, 1
 zokster.net, 1
-zollihood.ch, 1
 zolokar.xyz, 1
 zombiesecured.com, 1
 zomerschoen.nl, 1
