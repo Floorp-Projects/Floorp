@@ -1715,13 +1715,15 @@ pref("extensions.formautofill.firstTimeUse", true);
 pref("extensions.formautofill.heuristics.enabled", true);
 pref("extensions.formautofill.section.enabled", true);
 pref("extensions.formautofill.loglevel", "Warn");
-// Comma separated list of countries Form Autofill supports
-#if MOZ_UPDATE_CHANNEL == release
-pref("extensions.formautofill.supportedCountries", "US");
-pref("extensions.formautofill.supportRTL", false);
-#else
+
+#ifdef NIGHTLY_BUILD
+// Comma separated list of countries Form Autofill supports.
+// This affects feature availability and the address edit form country picker.
 pref("extensions.formautofill.supportedCountries", "US,CA,DE");
 pref("extensions.formautofill.supportRTL", true);
+#else
+pref("extensions.formautofill.supportedCountries", "US");
+pref("extensions.formautofill.supportRTL", false);
 #endif
 
 // Whether or not to restore a session with lazy-browser tabs.
