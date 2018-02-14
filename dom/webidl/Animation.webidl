@@ -44,7 +44,6 @@ interface Animation : EventTarget {
   void play ();
   [Throws, BinaryName="pauseFromJS"]
   void pause ();
-  void updatePlaybackRate (double playbackRate);
   [Throws]
   void reverse ();
 };

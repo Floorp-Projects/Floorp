@@ -390,16 +390,14 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
 
       if (hasCurrentAnimation(changedAnimations)) {
         // Only consider the state has having changed if any of delay, duration,
-        // iterationCount, iterationStart, or playbackRate has changed (for now
-        // at least).
+        // iterationcount or iterationStart has changed (for now at least).
         let newState = this.getState();
         let oldState = this.currentState;
         hasChanged = newState.delay !== oldState.delay ||
                      newState.iterationCount !== oldState.iterationCount ||
                      newState.iterationStart !== oldState.iterationStart ||
                      newState.duration !== oldState.duration ||
-                     newState.endDelay !== oldState.endDelay ||
-                     newState.playbackRate !== oldState.playbackRate;
+                     newState.endDelay !== oldState.endDelay;
         break;
       }
     }
@@ -466,8 +464,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    * Set the playback rate of the animation player.
    */
   setPlaybackRate: function (playbackRate) {
-    this.player.updatePlaybackRate(playbackRate);
-    return this.player.ready;
+    this.player.playbackRate = playbackRate;
   },
 
   /**
@@ -873,8 +870,8 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
    * @param {Number} rate The new rate.
    */
   setPlaybackRates: function (players, rate) {
-    return promise.all(
-      players.map(player => player.setPlaybackRate(rate))
-    );
+    for (let player of players) {
+      player.setPlaybackRate(rate);
+    }
   }
 });
