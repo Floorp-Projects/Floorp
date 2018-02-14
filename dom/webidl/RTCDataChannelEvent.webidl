@@ -7,6 +7,8 @@
  * http://dev.w3.org/2011/webrtc/editor/webrtc.html#idl-def-RTCDataChannelEvent
  */
 
+interface RTCDataChannel;
+
 dictionary RTCDataChannelEventInit : EventInit {
     RTCDataChannel? channel = null;
 };
