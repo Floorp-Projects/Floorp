@@ -98,6 +98,7 @@ pub enum Mp4parseCodec {
     Jpeg,   // for QT JPEG atom in video track
     Ac3,
     Ec3,
+    Alac,
 }
 
 impl Default for Mp4parseCodec {
@@ -297,12 +298,6 @@ pub unsafe extern fn mp4parse_free(parser: *mut Mp4parseParser) {
     let _ = Box::from_raw(parser);
 }
 
-/// Enable `mp4_parser` log.
-#[no_mangle]
-pub unsafe extern fn mp4parse_log(enable: bool) {
-    mp4parse::set_debug_mode(enable);
-}
-
 /// Run the `Mp4parseParser*` allocated by `mp4parse_new()` until EOF or error.
 #[no_mangle]
 pub unsafe extern fn mp4parse_read(parser: *mut Mp4parseParser) -> Mp4parseStatus {
@@ -429,6 +424,8 @@ pub unsafe extern fn mp4parse_get_track_info(parser: *mut Mp4parseParser, track_
                 Mp4parseCodec::Unknown,
             AudioCodecSpecific::MP3 =>
                 Mp4parseCodec::Mp3,
+            AudioCodecSpecific::ALACSpecificBox(_) =>
+                Mp4parseCodec::Alac,
         },
         Some(SampleEntry::Video(ref video)) => match video.codec_specific {
             VideoCodecSpecific::VPxConfig(_) =>
@@ -564,6 +561,10 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut Mp4parseParser, 
                     }
                 }
             }
+        }
+        AudioCodecSpecific::ALACSpecificBox(ref alac) => {
+            (*info).extra_data.length = alac.data.len() as u32;
+            (*info).extra_data.data = alac.data.as_ptr();
         }
         AudioCodecSpecific::MP3 | AudioCodecSpecific::LPCM => (),
     }
@@ -1138,14 +1139,6 @@ fn new_parser() {
         let parser = mp4parse_new(&io);
         assert!(!parser.is_null());
         mp4parse_free(parser);
-    }
-}
-
-#[test]
-#[should_panic(expected = "assertion failed")]
-fn free_null_parser() {
-    unsafe {
-        mp4parse_free(std::ptr::null_mut());
     }
 }
 

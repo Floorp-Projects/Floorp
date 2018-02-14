@@ -6,6 +6,9 @@
 #[cfg(feature = "fuzz")]
 extern crate afl;
 
+#[macro_use]
+extern crate log;
+
 extern crate byteorder;
 extern crate bitreader;
 extern crate num_traits;
@@ -35,25 +38,6 @@ const BUF_SIZE_LIMIT: usize = 1024 * 1024;
 // Max table length. Calculating in worth case for one week long video, one
 // frame per table entry in 30 fps.
 const TABLE_SIZE_LIMIT: u32 = 30 * 60 * 60 * 24 * 7;
-
-static DEBUG_MODE: std::sync::atomic::AtomicBool = std::sync::atomic::ATOMIC_BOOL_INIT;
-
-pub fn set_debug_mode(mode: bool) {
-    DEBUG_MODE.store(mode, std::sync::atomic::Ordering::SeqCst);
-}
-
-#[inline(always)]
-fn get_debug_mode() -> bool {
-    DEBUG_MODE.load(std::sync::atomic::Ordering::Relaxed)
-}
-
-macro_rules! log {
-    ($($args:tt)*) => (
-        if get_debug_mode() {
-            println!( $( $args )* );
-        }
-    )
-}
 
 // TODO: vec_push() and vec_reserve() needs to be replaced when Rust supports
 // fallible memory allocation in raw_vec.
@@ -316,6 +300,7 @@ pub enum AudioCodecSpecific {
     ES_Descriptor(ES_Descriptor),
     FLACSpecificBox(FLACSpecificBox),
     OpusSpecificBox(OpusSpecificBox),
+    ALACSpecificBox(ALACSpecificBox),
     MP3,
     LPCM,
 }
@@ -392,6 +377,13 @@ pub struct OpusSpecificBox {
     channel_mapping_table: Option<ChannelMappingTable>,
 }
 
+/// Represent an ALACSpecificBox 'alac'
+#[derive(Debug, Clone)]
+pub struct ALACSpecificBox {
+    version: u8,
+    pub data: Vec<u8>,
+}
+
 #[derive(Debug)]
 pub struct MovieExtendsBox {
     pub fragment_duration: Option<MediaScaledTime>,
@@ -464,6 +456,7 @@ pub enum CodecType {
     EncryptedVideo,
     EncryptedAudio,
     LPCM,   // QT
+    ALAC,
 }
 
 impl Default for CodecType {
@@ -573,7 +566,7 @@ impl<'a, T: Read> Drop for BMFFBox<'a, T> {
     fn drop(&mut self) {
         if self.content.limit() > 0 {
             let name: FourCC = From::from(self.head.name);
-            log!("Dropping {} bytes in '{}'", self.content.limit(), name);
+            debug!("Dropping {} bytes in '{}'", self.content.limit(), name);
         }
     }
 }
@@ -627,7 +620,7 @@ fn skip_box_content<T: Read>(src: &mut BMFFBox<T>) -> Result<()> {
     // Skip the contents of unknown chunks.
     let to_skip = {
         let header = src.get_header();
-        log!("{:?} (skipped)", header);
+        debug!("{:?} (skipped)", header);
         (header.size - header.offset) as usize
     };
     assert_eq!(to_skip, src.bytes_left());
@@ -639,7 +632,7 @@ fn skip_box_remain<T: Read>(src: &mut BMFFBox<T>) -> Result<()> {
     let remain = {
         let header = src.get_header();
         let len = src.bytes_left();
-        log!("remain {} (skipped) in {:?}", len, header);
+        debug!("remain {} (skipped) in {:?}", len, header);
         len
     };
     skip(src, remain)
@@ -648,7 +641,7 @@ fn skip_box_remain<T: Read>(src: &mut BMFFBox<T>) -> Result<()> {
 macro_rules! check_parser_state {
     ( $src:expr ) => {
         if $src.limit() > 0 {
-            log!("bad parser state: {} content bytes left", $src.limit());
+            debug!("bad parser state: {} content bytes left", $src.limit());
             return Err(Error::InvalidData("unread box content or bad parser sync"));
         }
     }
@@ -684,7 +677,7 @@ pub fn read_mp4<T: Read>(f: &mut T, context: &mut MediaContext) -> Result<()> {
             BoxType::FileTypeBox => {
                 let ftyp = read_ftyp(&mut b)?;
                 found_ftyp = true;
-                log!("{:?}", ftyp);
+                debug!("{:?}", ftyp);
             }
             BoxType::MovieBox => {
                 read_moov(&mut b, context)?;
@@ -694,7 +687,7 @@ pub fn read_mp4<T: Read>(f: &mut T, context: &mut MediaContext) -> Result<()> {
         };
         check_parser_state!(b.content);
         if found_moov {
-            log!("found moov {}, could stop pure 'moov' parser now", if found_ftyp {
+            debug!("found moov {}, could stop pure 'moov' parser now", if found_ftyp {
                 "and ftyp"
             } else {
                 "but no ftyp"
@@ -728,7 +721,7 @@ fn read_moov<T: Read>(f: &mut BMFFBox<T>, context: &mut MediaContext) -> Result<
             BoxType::MovieHeaderBox => {
                 let (mvhd, timescale) = parse_mvhd(&mut b)?;
                 context.timescale = timescale;
-                log!("{:?}", mvhd);
+                debug!("{:?}", mvhd);
             }
             BoxType::TrackBox => {
                 let mut track = Track::new(context.tracks.len());
@@ -737,12 +730,12 @@ fn read_moov<T: Read>(f: &mut BMFFBox<T>, context: &mut MediaContext) -> Result<
             }
             BoxType::MovieExtendsBox => {
                 let mvex = read_mvex(&mut b)?;
-                log!("{:?}", mvex);
+                debug!("{:?}", mvex);
                 context.mvex = Some(mvex);
             }
             BoxType::ProtectionSystemSpecificHeaderBox => {
                 let pssh = read_pssh(&mut b)?;
-                log!("{:?}", pssh);
+                debug!("{:?}", pssh);
                 vec_push(&mut context.psshs, pssh)?;
             }
             _ => skip_box_content(&mut b)?,
@@ -825,7 +818,7 @@ fn read_trak<T: Read>(f: &mut BMFFBox<T>, track: &mut Track) -> Result<()> {
                 let tkhd = read_tkhd(&mut b)?;
                 track.track_id = Some(tkhd.track_id);
                 track.tkhd = Some(tkhd.clone());
-                log!("{:?}", tkhd);
+                debug!("{:?}", tkhd);
             }
             BoxType::EditBox => read_edts(&mut b, track)?,
             BoxType::MediaBox => read_mdia(&mut b, track)?,
@@ -860,7 +853,7 @@ fn read_edts<T: Read>(f: &mut BMFFBox<T>, track: &mut Track) -> Result<()> {
                 }
                 track.media_time = Some(TrackScaledTime::<u64>(elst.edits[idx].media_time as u64,
                                                         track.id));
-                log!("{:?}", elst);
+                debug!("{:?}", elst);
             }
             _ => skip_box_content(&mut b)?,
         };
@@ -890,7 +883,7 @@ fn read_mdia<T: Read>(f: &mut BMFFBox<T>, track: &mut Track) -> Result<()> {
                 let (mdhd, duration, timescale) = parse_mdhd(&mut b, track)?;
                 track.duration = duration;
                 track.timescale = timescale;
-                log!("{:?}", mdhd);
+                debug!("{:?}", mdhd);
             }
             BoxType::HandlerBox => {
                 let hdlr = read_hdlr(&mut b)?;
@@ -900,7 +893,7 @@ fn read_mdia<T: Read>(f: &mut BMFFBox<T>, track: &mut Track) -> Result<()> {
                     "soun" => track.track_type = TrackType::Audio,
                     _ => (),
                 }
-                log!("{:?}", hdlr);
+                debug!("{:?}", hdlr);
             }
             BoxType::MediaInformationBox => read_minf(&mut b, track)?,
             _ => skip_box_content(&mut b)?,
@@ -928,41 +921,41 @@ fn read_stbl<T: Read>(f: &mut BMFFBox<T>, track: &mut Track) -> Result<()> {
         match b.head.name {
             BoxType::SampleDescriptionBox => {
                 let stsd = read_stsd(&mut b, track)?;
-                log!("{:?}", stsd);
+                debug!("{:?}", stsd);
             }
             BoxType::TimeToSampleBox => {
                 let stts = read_stts(&mut b)?;
-                log!("{:?}", stts);
+                debug!("{:?}", stts);
                 track.stts = Some(stts);
             }
             BoxType::SampleToChunkBox => {
                 let stsc = read_stsc(&mut b)?;
-                log!("{:?}", stsc);
+                debug!("{:?}", stsc);
                 track.stsc = Some(stsc);
             }
             BoxType::SampleSizeBox => {
                 let stsz = read_stsz(&mut b)?;
-                log!("{:?}", stsz);
+                debug!("{:?}", stsz);
                 track.stsz = Some(stsz);
             }
             BoxType::ChunkOffsetBox => {
                 let stco = read_stco(&mut b)?;
-                log!("{:?}", stco);
+                debug!("{:?}", stco);
                 track.stco = Some(stco);
             }
             BoxType::ChunkLargeOffsetBox => {
                 let co64 = read_co64(&mut b)?;
-                log!("{:?}", co64);
+                debug!("{:?}", co64);
                 track.stco = Some(co64);
             }
             BoxType::SyncSampleBox => {
                 let stss = read_stss(&mut b)?;
-                log!("{:?}", stss);
+                debug!("{:?}", stss);
                 track.stss = Some(stss);
             }
             BoxType::CompositionOffsetBox => {
                 let ctts = read_ctts(&mut b)?;
-                log!("{:?}", ctts);
+                debug!("{:?}", ctts);
                 track.ctts = Some(ctts);
             }
             _ => skip_box_content(&mut b)?,
@@ -1409,7 +1402,7 @@ fn find_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
                 read_ds_descriptor(descriptor, esds)?;
             },
             _ => {
-                log!("Unsupported descriptor, tag {}", tag);
+                debug!("Unsupported descriptor, tag {}", tag);
             },
         }
 
@@ -1462,7 +1455,7 @@ fn read_ds_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
     // When channel_counts is 0, we need to parse the program_config_element
     // to calculate the channel counts.
     if channel_counts == 0 {
-        log!("Parsing program_config_element for channel counts");
+        debug!("Parsing program_config_element for channel counts");
 
         bit_reader.skip(4)?;    // element_instance_tag
         bit_reader.skip(2)?;    // object_type
@@ -1689,6 +1682,28 @@ pub fn serialize_opus_header<W: byteorder::WriteBytesExt + std::io::Write>(opus:
     Ok(())
 }
 
+/// Parse `ALACSpecificBox`.
+fn read_alac<T: Read>(src: &mut BMFFBox<T>) -> Result<ALACSpecificBox> {
+    let (version, flags) = read_fullbox_extra(src)?;
+    if version != 0 {
+        return Err(Error::Unsupported("unknown alac (ALAC) version"));
+    }
+    if flags != 0 {
+        return Err(Error::InvalidData("no-zero alac (ALAC) flags"));
+    }
+
+    let length = src.bytes_left();
+    if length != 24 && length != 48 {
+        return Err(Error::InvalidData("ALACSpecificBox magic cookie is the wrong size"));
+    }
+    let data = read_buf(src, length)?;
+
+    Ok(ALACSpecificBox {
+        version: version,
+        data: data,
+    })
+}
+
 /// Parse a hdlr box.
 fn read_hdlr<T: Read>(src: &mut BMFFBox<T>) -> Result<HandlerBox> {
     let (_, _) = read_fullbox_extra(src)?;
@@ -1719,7 +1734,7 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
         BoxType::VP9SampleEntry => CodecType::VP9,
         BoxType::ProtectedVisualSampleEntry => CodecType::EncryptedVideo,
         _ => {
-            log!("Unsupported video codec, box {:?} found", name);
+            debug!("Unsupported video codec, box {:?} found", name);
             CodecType::Unknown
         }
     };
@@ -1753,7 +1768,7 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
                     }
                 let avcc_size = b.head.size - b.head.offset;
                 let avcc = read_buf(&mut b.content, avcc_size as usize)?;
-                log!("{:?} (avcc)", avcc);
+                debug!("{:?} (avcc)", avcc);
                 // TODO(kinetik): Parse avcC box?  For now we just stash the data.
                 codec_specific = Some(VideoCodecSpecific::AVCConfig(avcc));
             }
@@ -1781,11 +1796,11 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
                     return Err(Error::InvalidData("malformed video sample entry"));
                 }
                 let sinf = read_sinf(&mut b)?;
-                log!("{:?} (sinf)", sinf);
+                debug!("{:?} (sinf)", sinf);
                 vec_push(&mut protection_info, sinf)?;
             }
             _ => {
-                log!("Unsupported video codec, box {:?} found", b.head.name);
+                debug!("Unsupported video codec, box {:?} found", b.head.name);
                 skip_box_content(&mut b)?;
             }
         }
@@ -1900,6 +1915,15 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
                 codec_type = CodecType::Opus;
                 codec_specific = Some(AudioCodecSpecific::OpusSpecificBox(dops));
             }
+            BoxType::ALACSpecificBox => {
+                if name != BoxType::ALACSpecificBox ||
+                    codec_specific.is_some() {
+                    return Err(Error::InvalidData("malformed audio sample entry"));
+                }
+                let alac = read_alac(&mut b)?;
+                codec_type = CodecType::ALAC;
+                codec_specific = Some(AudioCodecSpecific::ALACSpecificBox(alac));
+            }
             BoxType::QTWaveAtom => {
                 let qt_esds = read_qt_wave_atom(&mut b)?;
                 codec_type = qt_esds.audio_codec;
@@ -1910,12 +1934,12 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
                     return Err(Error::InvalidData("malformed audio sample entry"));
                 }
                 let sinf = read_sinf(&mut b)?;
-                log!("{:?} (sinf)", sinf);
+                debug!("{:?} (sinf)", sinf);
                 codec_type = CodecType::EncryptedAudio;
                 vec_push(&mut protection_info, sinf)?;
             }
             _ => {
-                log!("Unsupported audio codec, box {:?} found", b.head.name);
+                debug!("Unsupported audio codec, box {:?} found", b.head.name);
                 skip_box_content(&mut b)?;
             }
         }
@@ -1968,7 +1992,7 @@ fn read_stsd<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<SampleD
             if track.data.is_none() {
                 track.data = Some(description.clone());
             } else {
-                log!("** don't know how to handle multiple descriptions **");
+                debug!("** don't know how to handle multiple descriptions **");
             }
             vec_push(&mut descriptions, description)?;
             check_parser_state!(b.content);
