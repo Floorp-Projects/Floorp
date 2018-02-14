@@ -38,6 +38,10 @@
 #include "nsTHashtable.h"
 #include "jsapi.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/PlacesObservers.h"
+#include "mozilla/dom/PlacesVisit.h"
+#include "mozilla/dom/ProcessGlobal.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 // Initial size for the cache holding visited status observers.
 #define VISIT_OBSERVERS_INITIAL_CACHE_LENGTH 64
@@ -666,21 +670,28 @@ public:
       aNavHistory->NotifyTitleChange(aURI, aPlace.title, aPlace.guid);
     }
 
+    aNavHistory->UpdateDaysOfHistory(aPlace.visitTime);
+
     return NS_OK;
   }
 
   void AddPlaceForNotify(const VisitData& aPlace,
                          nsIURI* aURI,
-                         nsCOMArray<nsIVisitData>& aPlaces) {
+                         Sequence<OwningNonNull<PlacesEvent>>& aEvents) {
     if (aPlace.transitionType != nsINavHistoryService::TRANSITION_EMBED) {
-      nsCOMPtr<nsIVisitData> notifyPlace = new nsVisitData(
-        aURI, aPlace.visitId, aPlace.visitTime,
-        aPlace.referrerVisitId, aPlace.transitionType,
-        aPlace.guid, aPlace.hidden,
-        aPlace.visitCount + 1, // Add current visit.
-        static_cast<uint32_t>(aPlace.typed),
-        aPlace.title);
-      aPlaces.AppendElement(notifyPlace.forget());
+      RefPtr<PlacesVisit> vd = new PlacesVisit();
+      vd->mVisitId = aPlace.visitId;
+      vd->mUrl.Assign(NS_ConvertUTF8toUTF16(aPlace.spec));
+      vd->mVisitTime = aPlace.visitTime / 1000;
+      vd->mReferringVisitId = aPlace.referrerVisitId;
+      vd->mTransitionType = aPlace.transitionType;
+      vd->mPageGuid.Assign(aPlace.guid);
+      vd->mHidden = aPlace.hidden;
+      vd->mVisitCount = aPlace.visitCount + 1; // Add current visit
+      vd->mTypedCount = static_cast<uint32_t>(aPlace.typed);
+      vd->mLastKnownTitle.Assign(aPlace.title);
+      bool success = !!aEvents.AppendElement(vd.forget(), fallible);
+      MOZ_RELEASE_ASSERT(success);
     }
   }
 
@@ -703,7 +714,7 @@ public:
     nsCOMPtr<nsIObserverService> obsService =
       mozilla::services::GetObserverService();
 
-    nsCOMArray<nsIVisitData> places;
+    Sequence<OwningNonNull<PlacesEvent>> events;
     nsCOMArray<nsIURI> uris;
     if (mPlaces.Length() > 0) {
       for (uint32_t i = 0; i < mPlaces.Length(); ++i) {
@@ -712,7 +723,7 @@ public:
         if (!uri) {
           return NS_ERROR_UNEXPECTED;
         }
-        AddPlaceForNotify(mPlaces[i], uri, places);
+        AddPlaceForNotify(mPlaces[i], uri, events);
         uris.AppendElement(uri.forget());
       }
     } else {
@@ -721,11 +732,12 @@ public:
       if (!uri) {
         return NS_ERROR_UNEXPECTED;
       }
-      AddPlaceForNotify(mPlace, uri, places);
+      AddPlaceForNotify(mPlace, uri, events);
       uris.AppendElement(uri.forget());
     }
-    if (places.Length() > 0) {
-      navHistory->NotifyOnVisits(places.Elements(), places.Length());
+
+    if (events.Length() > 0) {
+      PlacesObservers::NotifyListeners(events);
     }
 
     PRTime now = PR_Now();
