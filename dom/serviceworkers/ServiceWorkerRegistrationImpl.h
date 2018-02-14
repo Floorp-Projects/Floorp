@@ -23,17 +23,20 @@ class ServiceWorker;
 ////////////////////////////////////////////////////
 // Main Thread implementation
 
-class ServiceWorkerRegistrationMainThread final : public ServiceWorkerRegistration,
-                                                  public ServiceWorkerRegistrationListener
+class ServiceWorkerRegistrationMainThread final : public ServiceWorkerRegistration::Inner
+                                                , public ServiceWorkerRegistrationListener
 {
-  friend nsPIDOMWindowInner;
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerRegistrationMainThread,
-                                           ServiceWorkerRegistration)
+  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerRegistrationMainThread, override)
 
-  ServiceWorkerRegistrationMainThread(nsPIDOMWindowInner* aWindow,
-                                      const ServiceWorkerRegistrationDescriptor& aDescriptor);
+  explicit ServiceWorkerRegistrationMainThread(const ServiceWorkerRegistrationDescriptor& aDescriptor);
+
+  // ServiceWorkerRegistration::Inner
+  void
+  SetServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
+
+  void
+  ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
   already_AddRefed<Promise>
   Update(ErrorResult& aRv) override;
@@ -41,7 +44,6 @@ public:
   already_AddRefed<Promise>
   Unregister(ErrorResult& aRv) override;
 
-  // Partial interface from Notification API.
   already_AddRefed<Promise>
   ShowNotification(JSContext* aCx,
                    const nsAString& aTitle,
@@ -54,13 +56,6 @@ public:
 
   already_AddRefed<PushManager>
   GetPushManager(JSContext* aCx, ErrorResult& aRv) override;
-
-  // DOMEventTargethelper
-  void DisconnectFromOwner() override
-  {
-    StopListeningForEvents();
-    ServiceWorkerRegistration::DisconnectFromOwner();
-  }
 
   // ServiceWorkerRegistrationListener
   void
@@ -90,10 +85,9 @@ private:
   void
   StopListeningForEvents();
 
+  ServiceWorkerRegistration* mOuter;
   const nsString mScope;
   bool mListeningForEvents;
-
-  RefPtr<PushManager> mPushManager;
 };
 
 ////////////////////////////////////////////////////
@@ -101,16 +95,21 @@ private:
 
 class WorkerListener;
 
-class ServiceWorkerRegistrationWorkerThread final : public ServiceWorkerRegistration
+class ServiceWorkerRegistrationWorkerThread final : public ServiceWorkerRegistration::Inner
                                                   , public WorkerHolder
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerRegistrationWorkerThread,
-                                           ServiceWorkerRegistration)
+  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerRegistrationWorkerThread, override)
 
   ServiceWorkerRegistrationWorkerThread(WorkerPrivate* aWorkerPrivate,
                                         const ServiceWorkerRegistrationDescriptor& aDescriptor);
+
+  // ServiceWorkerRegistration::Inner
+  void
+  SetServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
+
+  void
+  ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
   already_AddRefed<Promise>
   Update(ErrorResult& aRv) override;
@@ -118,7 +117,6 @@ public:
   already_AddRefed<Promise>
   Unregister(ErrorResult& aRv) override;
 
-  // Partial interface from Notification API.
   already_AddRefed<Promise>
   ShowNotification(JSContext* aCx,
                    const nsAString& aTitle,
@@ -129,11 +127,15 @@ public:
   GetNotifications(const GetNotificationOptions& aOptions,
                    ErrorResult& aRv) override;
 
+  already_AddRefed<PushManager>
+  GetPushManager(JSContext* aCx, ErrorResult& aRv) override;
+
+  // WorkerHolder
   bool
   Notify(WorkerStatus aStatus) override;
 
-  already_AddRefed<PushManager>
-  GetPushManager(JSContext* aCx, ErrorResult& aRv) override;
+  void
+  UpdateFound();
 
 private:
   ~ServiceWorkerRegistrationWorkerThread();
@@ -144,11 +146,10 @@ private:
   void
   ReleaseListener();
 
+  ServiceWorkerRegistration* mOuter;
   WorkerPrivate* mWorkerPrivate;
   const nsString mScope;
   RefPtr<WorkerListener> mListener;
-
-  RefPtr<PushManager> mPushManager;
 };
 
 } // dom namespace
