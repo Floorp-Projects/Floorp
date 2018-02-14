@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jshashutil_h
-#define jshashutil_h
+#ifndef gc_HashUtil_h
+#define gc_HashUtil_h
 
 #include "gc/Zone.h"
 #include "vm/JSContext.h"

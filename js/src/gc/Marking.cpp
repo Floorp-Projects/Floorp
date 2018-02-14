@@ -33,8 +33,7 @@
 #include "vm/UnboxedObject.h"
 #include "wasm/WasmJS.h"
 
-#include "jsgcinlines.h"
-
+#include "gc/GC-inl.h"
 #include "gc/Nursery-inl.h"
 #include "gc/PrivateIterators-inl.h"
 #include "vm/JSCompartment-inl.h"

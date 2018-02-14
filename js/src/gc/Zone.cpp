@@ -14,8 +14,7 @@
 #include "vm/Debugger.h"
 #include "vm/Runtime.h"
 
-#include "jsgcinlines.h"
-
+#include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
 #include "vm/JSCompartment-inl.h"
 

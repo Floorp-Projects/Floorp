@@ -48,8 +48,7 @@
 #include "vm/TraceLoggingGraph.h"
 #include "wasm/WasmSignalHandlers.h"
 
-#include "jsgcinlines.h"
-
+#include "gc/GC-inl.h"
 #include "vm/JSContext-inl.h"
 
 using namespace js;

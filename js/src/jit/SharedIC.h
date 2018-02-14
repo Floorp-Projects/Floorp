@@ -7,8 +7,7 @@
 #ifndef jit_SharedIC_h
 #define jit_SharedIC_h
 
-#include "jsgc.h"
-
+#include "gc/GC.h"
 #include "jit/BaselineICList.h"
 #include "jit/BaselineJIT.h"
 #include "jit/ICState.h"

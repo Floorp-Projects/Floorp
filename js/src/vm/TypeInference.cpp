@@ -13,10 +13,10 @@
 #include "mozilla/Sprintf.h"
 
 #include "jsapi.h"
-#include "jshashutil.h"
 #include "jsprf.h"
 #include "jsstr.h"
 
+#include "gc/HashUtil.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CompileInfo.h"
 #include "jit/Ion.h"

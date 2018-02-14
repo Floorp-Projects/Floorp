@@ -27,8 +27,7 @@
 #include "vm/JSContext.h"
 #include "vm/WrapperObject.h"
 
-#include "jsgcinlines.h"
-
+#include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSFunction-inl.h"
