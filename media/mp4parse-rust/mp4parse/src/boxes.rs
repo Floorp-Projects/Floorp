@@ -138,4 +138,5 @@ box_database!(
     MP3AudioSampleEntry               0x2e6d7033, // ".mp3" - from F4V.
     CompositionOffsetBox              0x63747473, // "ctts"
     LPCMAudioSampleEntry              0x6C70636D, // "lpcm" - quicktime atom
+    ALACSpecificBox                   0x616C6163, // "alac" - Also used by ALACSampleEntry
 );

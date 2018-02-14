@@ -654,6 +654,28 @@ fn serialize_opus_header() {
 }
 
 #[test]
+fn read_alac() {
+    let mut stream = make_box(BoxSize::Auto, b"alac", |s| {
+        s.append_repeated(0, 6) // reserved
+         .B16(1) // data reference index
+         .B32(0) // reserved
+         .B32(0) // reserved
+         .B16(2) // channel count
+         .B16(16) // bits per sample
+         .B16(0) // pre_defined
+         .B16(0) // reserved
+         .B32(44100 << 16) // Sample rate
+         .append_bytes(&make_fullbox(BoxSize::Auto, b"alac", 0, |s| {
+             s.append_bytes(&vec![0xfa; 24])
+         }).into_inner())
+    });
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+    let r = super::read_audio_sample_entry(&mut stream);
+    assert!(r.is_ok());
+}
+
+#[test]
 fn avcc_limit() {
     let mut stream = make_box(BoxSize::Auto, b"avc1", |s| {
         s.append_repeated(0, 6)
