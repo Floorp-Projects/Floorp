@@ -52,10 +52,10 @@ import java.util.Locale;
 
 final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
     protected static final String LOGTAG = "GeckoViewPrompt";
-    private final String ITEMS = "items";
-    private final String LABEL = "label";
-    private final String SELECTED = "selected";
-    private final String SEPARATOR = "separator";
+    private static final String ITEMS = "items";
+    private static final String LABEL = "label";
+    private static final String SELECTED = "selected";
+    private static final String SEPARATOR = "separator";
 
     private final Activity mActivity;
     public int filePickerRequestCode = 1;

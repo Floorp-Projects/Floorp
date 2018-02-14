@@ -120,10 +120,16 @@ android {
         focusWebviewBeta {
             res.srcDir 'src/focusBeta/res'
         }
+        focusGeckoBeta {
+            res.srcDir 'src/focusBeta/res'
+        }
         klarWebviewBeta {
             res.srcDir 'src/klarBeta/res'
         }
         focusWebviewDebug {
+            res.srcDir 'src/focusDebug/res'
+        }
+        focusGeckoDebug {
             res.srcDir 'src/focusDebug/res'
         }
         klarWebviewDebug {
@@ -137,6 +143,12 @@ android {
             java.srcDir 'src/focusRelease/java'
             manifest.srcFile 'src/focusRelease/AndroidManifest.xml'
             res.srcDir 'src/focusRelease/res'
+        }
+        klarGeckoDebug {
+            res.srcDir 'src/klarDebug/res'
+        }
+        klarGeckoBeta {
+            res.srcDir 'src/klarBeta/res'
         }
     }
 }

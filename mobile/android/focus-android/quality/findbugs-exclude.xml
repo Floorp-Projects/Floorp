@@ -16,4 +16,11 @@
     <Match>
         <Class name="~.*\.*Test"/>
     </Match>
+    <!-- Todo consider reincluding -->
+    <Match>
+        <Class name="~.*\.*Helper"/>
+    </Match>
+    <Match>
+        <Class name="~.*\.*Screenshots"/>
+    </Match>
 </FindBugsFilter>

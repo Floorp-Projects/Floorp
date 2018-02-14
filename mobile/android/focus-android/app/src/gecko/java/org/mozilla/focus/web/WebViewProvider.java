@@ -17,7 +17,6 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.session.Session;
 import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.GeckoSession;
-import org.mozilla.gecko.GeckoSession.*;
 import org.mozilla.gecko.GeckoSessionSettings;
 
 /**
@@ -173,24 +172,24 @@ public class WebViewProvider {
         private void updateBlocking() {
             int categories = 0;
             if (socialTrackersBlocked) {
-                categories += TrackingProtectionDelegate.CATEGORY_SOCIAL;
+                categories += GeckoSession.TrackingProtectionDelegate.CATEGORY_SOCIAL;
             }
             if (adTrackersBlocked) {
-                categories += TrackingProtectionDelegate.CATEGORY_AD;
+                categories += GeckoSession.TrackingProtectionDelegate.CATEGORY_AD;
             }
             if (analyticTrackersBlocked) {
-                categories += TrackingProtectionDelegate.CATEGORY_ANALYTIC;
+                categories += GeckoSession.TrackingProtectionDelegate.CATEGORY_ANALYTIC;
             }
             if (contentTrackersBlocked) {
-                categories += TrackingProtectionDelegate.CATEGORY_CONTENT;
+                categories += GeckoSession.TrackingProtectionDelegate.CATEGORY_CONTENT;
             }
             if (geckoSession != null) {
                 geckoSession.enableTrackingProtection(categories);
             }
         }
 
-        private ContentListener createContentListener() {
-            return new ContentListener() {
+        private GeckoSession.ContentListener createContentListener() {
+            return new GeckoSession.ContentListener() {
                 @Override
                 public void onTitleChange(GeckoSession session, String title) {
                     webViewTitle = title;
@@ -228,8 +227,8 @@ public class WebViewProvider {
             };
         }
 
-        private ProgressListener createProgressListener() {
-            return new ProgressListener() {
+        private GeckoSession.ProgressListener createProgressListener() {
+            return new GeckoSession.ProgressListener() {
                 @Override
                 public void onPageStart(GeckoSession session, String url) {
                     if (callback != null) {
@@ -259,8 +258,8 @@ public class WebViewProvider {
             };
         }
 
-        private NavigationListener createNavigationListener() {
-            return new NavigationListener() {
+        private GeckoSession.NavigationListener createNavigationListener() {
+            return new GeckoSession.NavigationListener() {
                 public void onLocationChange(GeckoSession session, String url) {
                     currentUrl = url;
                     System.out.println(currentUrl);
@@ -280,13 +279,13 @@ public class WebViewProvider {
                 @Override
                 public boolean onLoadUri(GeckoSession session, String uri, GeckoSession.NavigationListener.TargetWindow where) {
                     // If this is trying to load in a new tab, just load it in the current one
-                    if (where == TargetWindow.NEW) {
+                    if (where == GeckoSession.NavigationListener.TargetWindow.NEW) {
                         geckoSession.loadUri(uri);
                         return true;
                     }
 
                     // Check if we should handle an internal link
-                    if (LocalizedContentGecko.handleInternalContent(uri, session, getContext())) {
+                    if (LocalizedContentGecko.INSTANCE.handleInternalContent(uri, session, getContext())) {
                         return true;
                     }
 
@@ -296,8 +295,8 @@ public class WebViewProvider {
             };
         }
 
-        private TrackingProtectionDelegate createTrackingProtectionDelegate() {
-           return new TrackingProtectionDelegate() {
+        private GeckoSession.TrackingProtectionDelegate createTrackingProtectionDelegate() {
+           return new GeckoSession.TrackingProtectionDelegate() {
                 @Override
                 public void onTrackerBlocked(GeckoSession geckoSession, String s, int i) {
                     if (callback != null) {
@@ -307,7 +306,7 @@ public class WebViewProvider {
             };
         }
 
-        private PromptDelegate createPromptDelegate() {
+        private GeckoSession.PromptDelegate createPromptDelegate() {
             return new GeckoViewPrompt((Activity) getContext());
         }
 
