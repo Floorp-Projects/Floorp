@@ -471,7 +471,7 @@ nsTextFormatter::dosprintf(SprintfStateStr* aState, const char16_t* aFmt,
 {
   static const char16_t space = ' ';
   static const char16_t hex[] = u"0123456789abcdef";
-  static char16_t HEX[] = u"0123456789ABCDEF";
+  static const char16_t HEX[] = u"0123456789ABCDEF";
   static const BoxedValue emptyString(u"");
 
   char16_t c;
