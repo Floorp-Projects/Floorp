@@ -536,7 +536,6 @@ nsPlacesExpiration.prototype = {
     this.status = STATUS.CLEAN;
   },
 
-  onVisits() {},
   onTitleChanged() {},
   onDeleteURI() {},
   onPageChanged() {},
