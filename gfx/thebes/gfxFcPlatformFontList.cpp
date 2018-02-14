@@ -764,11 +764,22 @@ gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
     }
 
     AutoTArray<FT_Fixed,8> coords;
-    if (!aStyle->variationSettings.IsEmpty()) {
+    if (!aStyle->variationSettings.IsEmpty() || !mVariationSettings.IsEmpty()) {
         FT_Face ftFace = GetFTFace();
         if (ftFace) {
-            gfxFT2FontBase::SetupVarCoords(ftFace, aStyle->variationSettings,
-                                           &coords);
+            const nsTArray<gfxFontVariation>* settings;
+            AutoTArray<gfxFontVariation,8> mergedSettings;
+            if (mVariationSettings.IsEmpty()) {
+                settings = &aStyle->variationSettings;
+            } else if (aStyle->variationSettings.IsEmpty()) {
+                settings = &mVariationSettings;
+            } else {
+                gfxFontUtils::MergeVariations(mVariationSettings,
+                                              aStyle->variationSettings,
+                                              &mergedSettings);
+                settings = &mergedSettings;
+            }
+            gfxFT2FontBase::SetupVarCoords(ftFace, *settings, &coords);
         }
     }
 
