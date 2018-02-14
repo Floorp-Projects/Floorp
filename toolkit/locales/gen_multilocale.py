@@ -4,7 +4,6 @@
 
 from __future__ import print_function, unicode_literals
 
-import json
 import sys
 
 
@@ -12,9 +11,8 @@ def main(output, *locales):
     locales = list(locales)
     if "en-US" not in locales:
         locales.append("en-US")
-    json.dump({
-        "locales": locales
-    }, output)
+
+    print(",".join(locales), file=output)
 
 
 if __name__ == '__main__':

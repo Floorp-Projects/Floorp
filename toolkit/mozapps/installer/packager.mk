@@ -32,7 +32,7 @@ export USE_ELF_HACK ELF_HACK_FLAGS
 # Override the value of OMNIJAR_NAME from config.status with the value
 # set earlier in this file.
 
-stage-package: multilocale.json locale-manifest.in $(MOZ_PKG_MANIFEST) $(MOZ_PKG_MANIFEST_DEPS)
+stage-package: multilocale.txt locale-manifest.in $(MOZ_PKG_MANIFEST) $(MOZ_PKG_MANIFEST_DEPS)
 	OMNIJAR_NAME=$(OMNIJAR_NAME) \
 	NO_PKG_FILES="$(NO_PKG_FILES)" \
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/packager.py $(DEFINES) $(ACDEFINES) \
@@ -204,23 +204,23 @@ BASE_PATH:=@RESPATH@
 MULTILOCALE_DIR = $(DIST)/$(RESPATH)/res
 endif
 
-# This version of the target uses MOZ_CHROME_MULTILOCALE to build multilocale.json
+# This version of the target uses MOZ_CHROME_MULTILOCALE to build multilocale.txt
 # and places it in dist/bin/res - it should be used when packaging a build.
-multilocale.json: LOCALES?=$(MOZ_CHROME_MULTILOCALE)
-multilocale.json:
-	$(call py_action,file_generate,$(MOZILLA_DIR)/toolkit/locales/gen_multilocale.py main '$(MULTILOCALE_DIR)/multilocale.json' $(MDDEPDIR)/multilocale.json.pp $(ALL_LOCALES))
+multilocale.txt: LOCALES?=$(MOZ_CHROME_MULTILOCALE)
+multilocale.txt:
+	$(call py_action,file_generate,$(MOZILLA_DIR)/toolkit/locales/gen_multilocale.py main '$(MULTILOCALE_DIR)/multilocale.txt' $(MDDEPDIR)/multilocale.txt.pp $(ALL_LOCALES))
 
-# This version of the target uses AB_CD to build multilocale.json and places it
+# This version of the target uses AB_CD to build multilocale.txt and places it
 # in the $(XPI_NAME)/res dir - it should be used when repackaging a build.
-multilocale.json-%: LOCALES?=$(AB_CD)
-multilocale.json-%: MULTILOCALE_DIR=$(DIST)/xpi-stage/$(XPI_NAME)/res
-multilocale.json-%:
-	$(call py_action,file_generate,$(MOZILLA_DIR)/toolkit/locales/gen_multilocale.py main '$(MULTILOCALE_DIR)/multilocale.json' $(MDDEPDIR)/multilocale.json.pp $(ALL_LOCALES))
+multilocale.txt-%: LOCALES?=$(AB_CD)
+multilocale.txt-%: MULTILOCALE_DIR=$(DIST)/xpi-stage/$(XPI_NAME)/res
+multilocale.txt-%:
+	$(call py_action,file_generate,$(MOZILLA_DIR)/toolkit/locales/gen_multilocale.py main '$(MULTILOCALE_DIR)/multilocale.txt' $(MDDEPDIR)/multilocale.txt.pp $(ALL_LOCALES))
 
 locale-manifest.in: LOCALES?=$(MOZ_CHROME_MULTILOCALE)
 locale-manifest.in: $(GLOBAL_DEPS) FORCE
 	printf '\n[multilocale]\n' > $@
-	printf '$(BASE_PATH)/res/multilocale.json\n' >> $@
+	printf '$(BASE_PATH)/res/multilocale.txt\n' >> $@
 	for LOCALE in $(ALL_LOCALES) ;\
 	do \
 	  for ENTRY in $(MOZ_CHROME_LOCALE_ENTRIES) ;\
