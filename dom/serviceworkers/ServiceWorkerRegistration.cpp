@@ -24,10 +24,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServiceWorkerRegistration)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 ServiceWorkerRegistration::ServiceWorkerRegistration(nsPIDOMWindowInner* aWindow,
-                                                     const nsAString& aScope)
+                                                     const ServiceWorkerRegistrationDescriptor& aDescriptor)
   : DOMEventTargetHelper(aWindow)
-  , mScope(aScope)
-{}
+  , mDescriptor(aDescriptor)
+{
+}
 
 JSObject*
 ServiceWorkerRegistration::WrapObject(JSContext* aCx,
@@ -43,11 +44,8 @@ ServiceWorkerRegistration::CreateForMainThread(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(NS_IsMainThread());
 
-  NS_ConvertUTF8toUTF16 scope(aDescriptor.Scope());
-
-  RefPtr<ServiceWorkerRegistrationMainThread> registration =
-    new ServiceWorkerRegistrationMainThread(aWindow, scope);
-  registration->UpdateState(aDescriptor);
+  RefPtr<ServiceWorkerRegistration> registration =
+    new ServiceWorkerRegistrationMainThread(aWindow, aDescriptor);
 
   return registration.forget();
 }
@@ -61,8 +59,8 @@ ServiceWorkerRegistration::CreateForWorker(WorkerPrivate* aWorkerPrivate,
 
   NS_ConvertUTF8toUTF16 scope(aDescriptor.Scope());
 
-  RefPtr<ServiceWorkerRegistrationWorkerThread> registration =
-    new ServiceWorkerRegistrationWorkerThread(aWorkerPrivate, scope);
+  RefPtr<ServiceWorkerRegistration> registration =
+    new ServiceWorkerRegistrationWorkerThread(aWorkerPrivate, aDescriptor);
 
   return registration.forget();
 }

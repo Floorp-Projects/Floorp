@@ -11,6 +11,7 @@
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
+#include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
 
 // Support for Notification API extension.
 #include "mozilla/dom/NotificationBinding.h"
@@ -22,7 +23,6 @@ namespace dom {
 
 class Promise;
 class PushManager;
-class ServiceWorkerRegistrationDescriptor;
 class WorkerPrivate;
 
 class ServiceWorkerRegistration : public DOMEventTargetHelper
@@ -79,12 +79,12 @@ public:
 
 protected:
   ServiceWorkerRegistration(nsPIDOMWindowInner* aWindow,
-                            const nsAString& aScope);
+                            const ServiceWorkerRegistrationDescriptor& aDescriptor);
 
   virtual ~ServiceWorkerRegistration()
   { }
 
-  const nsString mScope;
+  ServiceWorkerRegistrationDescriptor mDescriptor;
 };
 
 
