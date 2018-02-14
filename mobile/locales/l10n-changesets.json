@@ -420,6 +420,13 @@
         ], 
         "revision": "default"
     }, 
+    "km": {
+        "platforms": [
+            "android", 
+            "android-api-16"
+        ], 
+        "revision": "default"
+    }, 
     "kn": {
         "platforms": [
             "android", 
@@ -472,6 +479,13 @@
             "android", 
             "android-api-16", 
             "android-multilocale"
+        ], 
+        "revision": "default"
+    }, 
+    "meh": {
+        "platforms": [
+            "android", 
+            "android-api-16"
         ], 
         "revision": "default"
     }, 
@@ -679,6 +693,13 @@
             "android", 
             "android-api-16", 
             "android-multilocale"
+        ], 
+        "revision": "default"
+    }, 
+    "tl": {
+        "platforms": [
+            "android", 
+            "android-api-16"
         ], 
         "revision": "default"
     }, 
