@@ -9,6 +9,7 @@
 #include "xpt_xdr.h"
 #include "nscore.h"
 #include <string.h>             /* strchr */
+#include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
 
 static size_t
@@ -17,7 +18,7 @@ CursPoolOffsetRaw(NotNull<XPTCursor*> cursor)
     if (cursor->pool == XPT_HEADER) {
         return cursor->offset;
     }
-    XPT_ASSERT(cursor->state->data_offset);
+    MOZ_ASSERT(cursor->state->data_offset);
     return cursor->offset + cursor->state->data_offset;
 }
 
@@ -40,7 +41,7 @@ CheckCount(NotNull<XPTCursor*> cursor, uint32_t space)
     // XXX Also fail if we're in the data area and !state->data_offset
     if (cursor->pool == XPT_DATA &&
         (CursPoolOffset(cursor) + space > cursor->state->pool_allocated)) {
-        XPT_ASSERT(0);
+        MOZ_ASSERT(false);
         fprintf(stderr, "FATAL: no room for %u in cursor\n", space);
         return false;
     }
@@ -134,7 +135,7 @@ XPT_DoCString(XPTArena *arena, NotNull<XPTCursor*> cursor, char **identp,
         return false;
     }
     int len = end - start;
-    XPT_ASSERT(len > 0);
+    MOZ_ASSERT(len > 0);
 
     if (!ignore) {
         char *ident = (char*)XPT_CALLOC1(arena, len + 1u);

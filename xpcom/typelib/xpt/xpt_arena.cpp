@@ -12,6 +12,7 @@
 */
 
 #include "xpt_arena.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/MemoryReporting.h"
 #include <string.h>
 #include <stdio.h>
@@ -94,7 +95,7 @@ XPT_ArenaCalloc(XPTArena *arena, size_t size, size_t alignment)
         return NULL;
 
     if (!arena) {
-        XPT_ASSERT(0);
+        MOZ_ASSERT(false);
         return NULL;
     }
 
@@ -104,7 +105,7 @@ XPT_ArenaCalloc(XPTArena *arena, size_t size, size_t alignment)
     } else if (alignment == 1) {
         subarena = &arena->subarena1;
     } else {
-        XPT_ASSERT(0);
+        MOZ_ASSERT(false);
         return NULL;
     }
 
@@ -146,7 +147,7 @@ XPT_ArenaCalloc(XPTArena *arena, size_t size, size_t alignment)
         /* do corruption check */
         size_t i;
         for (i = 0; i < bytes; ++i) {
-            XPT_ASSERT(subarena->next[i] == 0xcd);
+            MOZ_ASSERT(subarena->next[i] == 0xcd);
         }
         /* we guarantee that the block will be filled with zeros */
         memset(subarena->next, 0, bytes);
@@ -161,16 +162,6 @@ XPT_ArenaCalloc(XPTArena *arena, size_t size, size_t alignment)
 }
 
 /***************************************************************************/
-
-#ifdef DEBUG
-void
-XPT_AssertFailed(const char *s, const char *file, uint32_t lineno)
-{
-    fprintf(stderr, "Assertion failed: %s, file %s, line %d\n",
-            s, file, lineno);
-    abort();
-}
-#endif
 
 static size_t
 SizeOfSubArenaExcludingThis(XPTSubArena *subarena, MozMallocSizeOf mallocSizeOf)
