@@ -39,15 +39,15 @@ add_task(async function redirect_check_new_typed_visit() {
   redirectTargetFrecency += TYPED_VISIT_BONUS;
   let redirectNotified = false;
 
-  let visitedPromise = PlacesTestUtils.waitForNotification("onVisits", visits => {
+  let visitedPromise = PlacesTestUtils.waitForNotification("page-visited", visits => {
     is(visits.length, 1, "Was notified for the right number of visits.");
-    let {uri} = visits[0];
-    info("Received onVisits for: " + uri.spec);
-    if (uri.equals(REDIRECT_URI)) {
+    let {url} = visits[0];
+    info("Received 'page-visited': " + url);
+    if (url == REDIRECT_URI.spec) {
       redirectNotified = true;
     }
-    return uri.equals(TARGET_URI);
-  }, "history");
+    return url == TARGET_URI.spec;
+  }, "places");
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, REDIRECT_URI.spec);
   info("Waiting for onVisits");
@@ -68,15 +68,15 @@ add_task(async function redirect_check_second_typed_visit() {
   redirectTargetFrecency += TYPED_VISIT_BONUS;
   let redirectNotified = false;
 
-  let visitedPromise = PlacesTestUtils.waitForNotification("onVisits", visits => {
+  let visitedPromise = PlacesTestUtils.waitForNotification("page-visited", visits => {
     is(visits.length, 1, "Was notified for the right number of visits.");
-    let {uri} = visits[0];
-    info("Received onVisits: " + uri.spec);
-    if (uri.equals(REDIRECT_URI)) {
+    let {url} = visits[0];
+    info("Received 'page-visited': " + url);
+    if (url == REDIRECT_URI.spec) {
       redirectNotified = true;
     }
-    return uri.equals(TARGET_URI);
-  }, "history");
+    return url == TARGET_URI.spec;
+  }, "places");
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, REDIRECT_URI.spec);
   info("Waiting for onVisits");
@@ -95,15 +95,15 @@ add_task(async function redirect_check_subsequent_link_visit() {
   redirectTargetFrecency += LINK_VISIT_BONUS;
   let redirectNotified = false;
 
-  let visitedPromise = PlacesTestUtils.waitForNotification("onVisits", visits => {
+  let visitedPromise = PlacesTestUtils.waitForNotification("page-visited", visits => {
     is(visits.length, 1, "Was notified for the right number of visits.");
-    let {uri} = visits[0];
-    info("Received onVisits: " + uri.spec);
-    if (uri.equals(REDIRECT_URI)) {
+    let {url} = visits[0];
+    info("Received 'page-visited': " + url);
+    if (url == REDIRECT_URI.spec) {
       redirectNotified = true;
     }
-    return uri.equals(TARGET_URI);
-  }, "history");
+    return url == TARGET_URI.spec;
+  }, "places");
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, REDIRECT_URI.spec);
   info("Waiting for onVisits");

@@ -2400,7 +2400,7 @@ add_task(async function test_history() {
 
   // The history notifications should be received before the download completes.
   let [time, transitionType] = await promiseVisit;
-  Assert.equal(time, download.startTime.getTime() * 1000);
+  Assert.equal(time, download.startTime.getTime());
   Assert.equal(transitionType, Ci.nsINavHistoryService.TRANSITION_DOWNLOAD);
 
   // Restart and complete the download after clearing history.
@@ -2434,7 +2434,7 @@ add_task(async function test_history_tryToKeepPartialData() {
   // The time set by nsIHelperAppService may be different than the start time in
   // the download object, thus we only check that it is a meaningful time.  Note
   // that we subtract one second from the earliest time to account for rounding.
-  Assert.ok(time >= beforeStartTimeMs * 1000 - 1000000);
+  Assert.ok(time >= beforeStartTimeMs - 1000);
 
   // Complete the download before finishing the test.
   continueResponses();

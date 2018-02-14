@@ -12,43 +12,24 @@ var gVisits = [{url: "http://www.mozilla.com/",
                 transition: TRANSITION_LINK}];
 
 add_task(async function test_execute() {
-  let observer;
   let completionPromise = new Promise(resolveCompletionPromise => {
-    observer = {
-      __proto__: NavHistoryObserver.prototype,
-      _visitCount: 0,
-      onVisit(aURI, aVisitID, aTime, aSessionID, aReferringID,
-                        aTransitionType, aAdded) {
-        Assert.equal(aURI.spec, gVisits[this._visitCount].url);
-        Assert.equal(aTransitionType, gVisits[this._visitCount].transition);
-        this._visitCount++;
+    let visitCount = 0;
+    function listener(aEvents) {
+      Assert.equal(aEvents.length, 1, "Right number of visits notified");
+      Assert.equal(aEvents[0].type, "page-visited");
+      let event = aEvents[0];
+      Assert.equal(event.url, gVisits[visitCount].url);
+      Assert.equal(event.transitionType, gVisits[visitCount].transition);
+      visitCount++;
 
-        if (this._visitCount == gVisits.length) {
-          resolveCompletionPromise();
-        }
-      },
-      onVisits(aVisits) {
-        Assert.equal(aVisits.length, 1, "Right number of visits notified");
-        let {
-          uri,
-          visitId,
-          time,
-          referrerId,
-          transitionType,
-          guid,
-          hidden,
-          visitCount,
-          typed,
-          lastKnownTitle,
-        } = aVisits[0];
-        this.onVisit(uri, visitId, time, 0, referrerId,
-                     transitionType, guid, hidden, visitCount,
-                     typed, lastKnownTitle);
-      },
-    };
+      if (visitCount == gVisits.length) {
+        resolveCompletionPromise();
+        PlacesObservers.removeListener(["page-visited"], listener);
+      }
+    }
+    PlacesObservers.addListener(["page-visited"], listener);
   });
 
-  PlacesUtils.history.addObserver(observer);
 
   for (var visit of gVisits) {
     if (visit.transition == TRANSITION_TYPED)
@@ -67,5 +48,4 @@ add_task(async function test_execute() {
 
   await completionPromise;
 
-  PlacesUtils.history.removeObserver(observer);
 });

@@ -20,16 +20,14 @@ add_task(async function test() {
   PlacesUtils.history.markPageAsTyped(NetUtil.newURI(TEST_URL));
 
   let promiseVisit = new Promise(resolve => {
-    let historyObserver = {
-      __proto__: NavHistoryObserver.prototype,
-      onVisits(visits) {
-        PlacesUtils.history.removeObserver(historyObserver);
-        is(visits.length, 1, "Right number of visits");
-        is(visits[0].uri.spec, TEST_URL, "Check visited url");
-        resolve();
-      }
-    };
-    PlacesUtils.history.addObserver(historyObserver);
+    function onVisits(events) {
+      PlacesObservers.removeListener(["page-visited"], onVisits);
+      is(events.length, 1, "Right number of visits");
+      is(events[0].type, "page-visited");
+      is(events[0].url, TEST_URL, "Check visited url");
+      resolve();
+    }
+    PlacesObservers.addListener(["page-visited"], onVisits);
   });
   gBrowser.selectedBrowser.loadURI(TEST_URL);
   await promiseVisit;
