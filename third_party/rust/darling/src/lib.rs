@@ -37,7 +37,7 @@
 //! |`ident`|`syn::Ident`|The identifier of the passed-in type|
 //! |`vis`|`syn::Visibility`|The visibility of the passed-in type|
 //! |`generics`|`syn::Generics`|The generics of the passed-in type|
-//! |`body`|`darling::ast::Body`|The body of the passed-in type|
+//! |`body`|`darling::ast::Data`|The body of the passed-in type|
 //! |`attrs`|`Vec<syn::Attribute>`|The forwarded attributes from the passed in type. These are controlled using the `forward_attrs` attribute.|
 //!
 //! ### `FromField`
@@ -45,7 +45,7 @@
 //! |---|---|---|
 //! |`ident`|`syn::Ident`|The identifier of the passed-in field|
 //! |`vis`|`syn::Visibility`|The visibility of the passed-in field|
-//! |`ty`|`syn::Ty`|The type of the passed-in field|
+//! |`ty`|`syn::Type`|The type of the passed-in field|
 //! |`attrs`|`Vec<syn::Attribute>`|The forwarded attributes from the passed in field. These are controlled using the `forward_attrs` attribute.|
 
 extern crate core;

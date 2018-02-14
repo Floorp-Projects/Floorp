@@ -19,7 +19,7 @@ pub struct Lorem {
 #[derive(Debug, FromMetaItem)]
 pub enum Sit {
     Amet(bool),
-    
+
     #[darling(skip)]
     Foo {
         hello: bool,
@@ -34,7 +34,7 @@ pub enum Sit {
 
 #[test]
 fn verify_skipped_field_not_required() {
-    let di = syn::parse_derive_input(r#"
+    let di = syn::parse_str(r#"
         #[skip_test(ipsum = "Hello")]
         struct Baz;
     "#).unwrap();
