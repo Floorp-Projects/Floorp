@@ -23,9 +23,10 @@ startTest({
   prefs: [
     [ "media.test.video-suspend", true ],
     [ "media.suspend-bkgnd-video.enabled", true ],
-    // User a short delay to ensure video decode suspend happens before end
+    // Use a short delay to ensure video decode suspend happens before end
     // of video.
-    [ "media.suspend-bkgnd-video.delay-ms", MIN_DELAY ]
+    [ "media.suspend-bkgnd-video.delay-ms", MIN_DELAY ],
+    [ "privacy.reduceTimerPrecision", false ]
   ],
   tests: gDecodeSuspendTests,
   runTest: (test, token) => {
