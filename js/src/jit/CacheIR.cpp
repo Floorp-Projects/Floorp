@@ -211,7 +211,7 @@ GetPropIRGenerator::tryAttachStub()
             if (tryAttachProxy(obj, objId, id))
                 return true;
 
-            trackAttached(nullptr);
+            trackAttached(IRGenerator::NotAttached);
             return false;
         }
 
@@ -232,11 +232,11 @@ GetPropIRGenerator::tryAttachStub()
             if (tryAttachArgumentsObjectArg(obj, objId, index, indexId))
                 return true;
 
-            trackAttached(nullptr);
+            trackAttached(IRGenerator::NotAttached);
             return false;
         }
 
-        trackAttached(nullptr);
+        trackAttached(IRGenerator::NotAttached);
         return false;
     }
 
@@ -248,7 +248,7 @@ GetPropIRGenerator::tryAttachStub()
         if (tryAttachMagicArgumentsName(valId, id))
             return true;
 
-        trackAttached(nullptr);
+        trackAttached(IRGenerator::NotAttached);
         return false;
     }
 
@@ -259,11 +259,11 @@ GetPropIRGenerator::tryAttachStub()
         if (tryAttachMagicArgument(valId, indexId))
             return true;
 
-        trackAttached(nullptr);
+        trackAttached(IRGenerator::NotAttached);
         return false;
     }
 
-    trackAttached(nullptr);
+    trackAttached(IRGenerator::NotAttached);
     return false;
 }
 
@@ -1974,7 +1974,7 @@ GetNameIRGenerator::tryAttachStub()
     if (tryAttachEnvironmentName(envId, id))
         return true;
 
-    trackAttached(nullptr);
+    trackAttached(IRGenerator::NotAttached);
     return false;
 }
 
@@ -2228,7 +2228,7 @@ BindNameIRGenerator::tryAttachStub()
     if (tryAttachEnvironmentName(envId, id))
         return true;
 
-    trackAttached(nullptr);
+    trackAttached(IRGenerator::NotAttached);
     return false;
 }
 
@@ -2672,7 +2672,7 @@ HasPropIRGenerator::tryAttachStub()
     ValOperandId valId(writer.setInputOperandId(1));
 
     if (!val_.isObject()) {
-        trackAttached(nullptr);
+        trackAttached(IRGenerator::NotAttached);
         return false;
     }
     RootedObject obj(cx_, &val_.toObject());
@@ -2695,7 +2695,7 @@ HasPropIRGenerator::tryAttachStub()
         if (tryAttachDoesNotExist(obj, objId, id, keyId))
             return true;
 
-        trackAttached(nullptr);
+        trackAttached(IRGenerator::NotAttached);
         return false;
     }
 
@@ -2711,11 +2711,11 @@ HasPropIRGenerator::tryAttachStub()
         if (tryAttachSparse(obj, objId, index, indexId))
             return true;
 
-        trackAttached(nullptr);
+        trackAttached(IRGenerator::NotAttached);
         return false;
     }
 
-    trackAttached(nullptr);
+    trackAttached(IRGenerator::NotAttached);
     return false;
 }
 
@@ -3928,41 +3928,41 @@ InstanceOfIRGenerator::tryAttachStub()
 
     // Ensure RHS is a function -- could be a Proxy, which the IC isn't prepared to handle.
     if (!rhsObj_->is<JSFunction>()) {
-        trackAttached(nullptr);
+        trackAttached(IRGenerator::NotAttached);
         return false;
     }
 
     HandleFunction fun = rhsObj_.as<JSFunction>();
 
     if (fun->isBoundFunction()) {
-        trackAttached(nullptr);
+        trackAttached(IRGenerator::NotAttached);
         return false;
     }
 
     // If the user has supplied their own @@hasInstance method we shouldn't
     // clobber it.
     if (!js::FunctionHasDefaultHasInstance(fun, cx_->wellKnownSymbols())) {
-        trackAttached(nullptr);
+        trackAttached(IRGenerator::NotAttached);
         return false;
     }
 
     // Refuse to optimize any function whose [[Prototype]] isn't
     // Function.prototype.
     if (!fun->hasStaticPrototype() || fun->hasUncacheableProto()) {
-        trackAttached(nullptr);
+        trackAttached(IRGenerator::NotAttached);
         return false;
     }
 
     Value funProto = cx_->global()->getPrototype(JSProto_Function);
     if (!funProto.isObject() || fun->staticPrototype() != &funProto.toObject()) {
-        trackAttached(nullptr);
+        trackAttached(IRGenerator::NotAttached);
         return false;
     }
 
     // Ensure that the function's prototype slot is the same.
     Shape* shape = fun->lookupPure(cx_->names().prototype);
     if (!shape || !shape->isDataProperty()) {
-        trackAttached(nullptr);
+        trackAttached(IRGenerator::NotAttached);
         return false;
     }
 
@@ -3970,7 +3970,7 @@ InstanceOfIRGenerator::tryAttachStub()
 
     MOZ_ASSERT(fun->numFixedSlots() == 0, "Stub code relies on this");
     if (!fun->getSlot(slot).isObject()) {
-        trackAttached(nullptr);
+        trackAttached(IRGenerator::NotAttached);
         return false;
     }
 
@@ -4519,11 +4519,11 @@ CompareIRGenerator::tryAttachStub()
         if (tryAttachSymbol(lhsId, rhsId))
             return true;
 
-        trackAttached(nullptr);
+        trackAttached(IRGenerator::NotAttached);
         return false;
     }
 
-    trackAttached(nullptr);
+    trackAttached(IRGenerator::NotAttached);
     return false;
 }
 
@@ -4572,7 +4572,7 @@ ToBoolIRGenerator::tryAttachStub()
     if (tryAttachSymbol())
         return true;
 
-    trackAttached(nullptr);
+    trackAttached(IRGenerator::NotAttached);
     return false;
 }
 
