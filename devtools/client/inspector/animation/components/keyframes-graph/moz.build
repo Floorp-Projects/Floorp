@@ -7,6 +7,8 @@ DevToolsModules(
     'ComputedStylePath.js',
     'DiscretePath.js',
     'DistancePath.js',
+    'KeyframeMarkerItem.js',
+    'KeyframeMarkerList.js',
     'KeyframesGraph.js',
     'KeyframesGraphPath.js',
 )

@@ -8,6 +8,7 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const KeyframeMarkerList = createFactory(require("./KeyframeMarkerList"));
 const KeyframesGraphPath = createFactory(require("./KeyframesGraphPath"));
 
 class KeyframesGraph extends PureComponent {
@@ -42,7 +43,8 @@ class KeyframesGraph extends PureComponent {
           type,
           values,
         }
-      )
+      ),
+      KeyframeMarkerList({ values })
     );
   }
 }
