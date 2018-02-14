@@ -120,7 +120,7 @@ Preferences.addAll([
 
 // Data Choices tab
 if (AppConstants.NIGHTLY_BUILD) {
-  Preferences.add({ id: "browser.chrome.errorCollection.enabled", type: "bool" });
+  Preferences.add({ id: "browser.chrome.errorReporter.enabled", type: "bool" });
 }
 if (AppConstants.MOZ_CRASHREPORTER) {
   Preferences.add({ id: "browser.crashReports.unsubmittedCheck.autoSubmit2", type: "bool" });
@@ -1535,7 +1535,7 @@ var gPrivacyPane = {
   },
 
   initCollectBrowserErrors() {
-    this._setupLearnMoreLink("browser.chrome.errorCollection.infoURL",
+    this._setupLearnMoreLink("browser.chrome.errorReporter.infoURL",
       "collectBrowserErrorsLearnMore");
   },
 
