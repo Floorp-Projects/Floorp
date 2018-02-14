@@ -234,10 +234,10 @@ class ScriptCounts
 };
 
 // Note: The key of this hash map is a weak reference to a JSScript.  We do not
-// use the WeakMap implementation provided in jsweakmap.h because it would be
+// use the WeakMap implementation provided in gc/WeakMap.h because it would be
 // collected at the beginning of the sweeping of the compartment, thus before
-// the calls to the JSScript::finalize function which are used to aggregate code
-// coverage results on the compartment.
+// the calls to the JSScript::finalize function which are used to aggregate
+// code coverage results on the compartment.
 typedef HashMap<JSScript*,
                 ScriptCounts*,
                 DefaultHasher<JSScript*>,

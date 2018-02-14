@@ -16,11 +16,11 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jshashutil.h"
 #include "jsmath.h"
 #include "jsnum.h"
 
 #include "gc/FreeOp.h"
+#include "gc/HashUtil.h"
 #include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "gc/Rooting.h"

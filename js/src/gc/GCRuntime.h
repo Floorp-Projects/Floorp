@@ -897,7 +897,7 @@ class GCRuntime
      * mainly useful to embedders.
      *
      * We use zeal_ == 4 to enable write barrier verification. See the comment
-     * in jsgc.cpp for more information about this.
+     * in gc/Verifier.cpp for more information about this.
      *
      * zeal_ values from 8 to 10 periodically run different types of
      * incremental GC.

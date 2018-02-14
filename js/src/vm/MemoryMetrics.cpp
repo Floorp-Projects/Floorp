@@ -8,8 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "jsgc.h"
-
+#include "gc/GC.h"
 #include "gc/Heap.h"
 #include "gc/Nursery.h"
 #include "gc/PublicIterators.h"

@@ -17,10 +17,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "jsgc.h"
 #include "jsprf.h"
 #include "jsutil.h"
 
+#include "gc/GC.h"
 #include "gc/Memory.h"
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"

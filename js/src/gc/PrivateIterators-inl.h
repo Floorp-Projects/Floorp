@@ -13,7 +13,7 @@
 
 #include "gc/PublicIterators.h"
 
-#include "jsgcinlines.h"
+#include "gc/GC-inl.h"
 
 namespace js {
 namespace gc {
