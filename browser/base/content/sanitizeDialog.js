@@ -99,7 +99,6 @@ var gSanitizePromptDialog = {
     try {
       let range = Sanitizer.getClearRange(this.selectedTimespan);
       let options = {
-        prefDomain: "privacy.cpd.",
         ignoreTimespan: !range,
         range,
       };
