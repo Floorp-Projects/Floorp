@@ -162,6 +162,8 @@ public:
   void SetVariant(const nsAString& aValue, mozilla::ErrorResult& aRv);
   void GetFeatureSettings(nsString& aResult);
   void SetFeatureSettings(const nsAString& aValue, mozilla::ErrorResult& aRv);
+  void GetVariationSettings(nsString& aResult);
+  void SetVariationSettings(const nsAString& aValue, mozilla::ErrorResult& aRv);
   void GetDisplay(nsString& aResult);
   void SetDisplay(const nsAString& aValue, mozilla::ErrorResult& aRv);
 
