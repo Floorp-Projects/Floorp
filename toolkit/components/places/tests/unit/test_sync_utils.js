@@ -1,8 +1,8 @@
 Cu.import("resource://gre/modules/ObjectUtils.jsm");
 Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://testing-common/httpd.js");
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
 Cu.importGlobalProperties(["URLSearchParams"]);
 
 const DESCRIPTION_ANNO = "bookmarkProperties/description";

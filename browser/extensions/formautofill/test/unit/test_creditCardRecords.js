@@ -5,8 +5,8 @@
 "use strict";
 
 const {ProfileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {});
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
 
 const TEST_STORE_FILE_NAME = "test-credit-card.json";
 const COLLECTION_NAME = "creditCards";

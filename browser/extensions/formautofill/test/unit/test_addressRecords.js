@@ -254,8 +254,8 @@ const MERGE_TESTCASES = [
   },
 ];
 
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
 
 let do_check_record_matches = (recordWithMeta, record) => {
   for (let key in record) {
