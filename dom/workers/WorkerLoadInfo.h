@@ -8,6 +8,7 @@
 #define mozilla_dom_workers_WorkerLoadInfo_h
 
 #include "mozilla/dom/ChannelInfo.h"
+#include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "nsIInterfaceRequestor.h"
@@ -92,6 +93,7 @@ struct WorkerLoadInfo
 
   nsString mServiceWorkerCacheName;
   Maybe<ServiceWorkerDescriptor> mServiceWorkerDescriptor;
+  Maybe<ServiceWorkerRegistrationDescriptor> mServiceWorkerRegistrationDescriptor;
 
   Maybe<ServiceWorkerDescriptor> mParentController;
 

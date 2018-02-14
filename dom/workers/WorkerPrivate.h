@@ -842,6 +842,14 @@ public:
     return mLoadInfo.mServiceWorkerDescriptor.ref();
   }
 
+  const ServiceWorkerRegistrationDescriptor&
+  GetServiceWorkerRegistrationDescriptor() const
+  {
+    MOZ_DIAGNOSTIC_ASSERT(IsServiceWorker());
+    MOZ_DIAGNOSTIC_ASSERT(mLoadInfo.mServiceWorkerRegistrationDescriptor.isSome());
+    return mLoadInfo.mServiceWorkerRegistrationDescriptor.ref();
+  }
+
   void
   UpdateServiceWorkerState(ServiceWorkerState aState)
   {

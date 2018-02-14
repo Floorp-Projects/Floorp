@@ -63,7 +63,7 @@ public:
 
   static already_AddRefed<ServiceWorkerRegistration>
   CreateForWorker(WorkerPrivate* aWorkerPrivate,
-                  const nsAString& aScope);
+                  const ServiceWorkerRegistrationDescriptor& aDescriptor);
 
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
