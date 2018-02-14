@@ -214,6 +214,7 @@ let DUPED_ADDRESSES = {
 let BASIC_CARDS_1 = {
   "53f9d009aed2": {
     billingAddressGUID: "68gjdh354j",
+    methodName: "basic-card",
     "cc-number": "************5461",
     "guid": "53f9d009aed2",
     "version": 1,
@@ -230,6 +231,7 @@ let BASIC_CARDS_1 = {
     "cc-exp": "2024-06",
   },
   "9h5d4h6f4d1s": {
+    methodName: "basic-card",
     "cc-number": "************0954",
     "guid": "9h5d4h6f4d1s",
     "version": 1,
