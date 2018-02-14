@@ -73,6 +73,9 @@ ServiceWorkerRegistrationDescriptor::ServiceWorkerRegistrationDescriptor(const S
 ServiceWorkerRegistrationDescriptor&
 ServiceWorkerRegistrationDescriptor::operator=(const ServiceWorkerRegistrationDescriptor& aRight)
 {
+  if (this == &aRight) {
+    return *this;
+  }
   mData.reset();
   mData = MakeUnique<IPCServiceWorkerRegistrationDescriptor>(*aRight.mData);
   MOZ_DIAGNOSTIC_ASSERT(IsValid());
