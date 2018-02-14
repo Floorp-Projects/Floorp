@@ -12,7 +12,7 @@
 
 #include <stdarg.h>
 
-#include "jsdtoa.h"
+#include "util/DoubleToString.h"
 
 using namespace js;
 

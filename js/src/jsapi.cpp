@@ -7355,7 +7355,7 @@ JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t* 
 
 #if !defined(STATIC_EXPORTABLE_JS_API) && !defined(STATIC_JS_API) && defined(XP_WIN)
 
-#include "jswin.h"
+#include "util/Windows.h"
 
 /*
  * Initialization routine for the JS DLL.
