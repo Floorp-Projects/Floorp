@@ -7,11 +7,15 @@ requestLongerTimeout(2);
 add_task(async function() {
   let aboutURLs = [];
 
-  // List of about: URLs that will initiate network requests.
-  let networkURLs = [
+  // List of about: URLs that may cause problem, so we skip them in this test.
+  let skipURLs = [
+    // about:credits will initiate network request.
     "credits",
-    "telemetry" // about:telemetry will fetch Telemetry asynchrounously and takes
-                // longer, we skip this for now.
+    // about:telemetry will fetch Telemetry asynchronously and takes longer,
+    // so we skip this for now.
+    "telemetry",
+    // about:downloads causes a shutdown leak with stylo-chrome. bug 1419943.
+    "downloads"
   ];
 
   for (let cid in Cc) {
@@ -27,7 +31,7 @@ add_task(async function() {
       let uri = Services.io.newURI("about:" + aboutType);
       let flags = am.getURIFlags(uri);
       if (!(flags & Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT) &&
-          !networkURLs.includes(aboutType)) {
+          !skipURLs.includes(aboutType)) {
         aboutURLs.push(aboutType);
       }
     } catch (e) {
