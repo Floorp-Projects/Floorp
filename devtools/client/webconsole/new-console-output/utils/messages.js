@@ -243,8 +243,9 @@ function transformNetworkEventPacket(packet) {
 
 function transformEvaluationResultPacket(packet) {
   let {
-    exceptionMessage: messageText,
+    exceptionMessage,
     exceptionDocURL,
+    exception,
     frame,
     result,
     helperResult,
@@ -258,19 +259,25 @@ function transformEvaluationResultPacket(packet) {
 
   if (helperResult && helperResult.type === "error") {
     try {
-      messageText = l10n.getStr(helperResult.message);
+      exceptionMessage = l10n.getStr(helperResult.message);
     } catch (ex) {
-      messageText = helperResult.message;
+      exceptionMessage = helperResult.message;
     }
+  } else if (typeof exception === "string") {
+    // Wrap thrown strings in Error objects, so `throw "foo"` outputs "Error: foo"
+    exceptionMessage = new Error(exceptionMessage).toString();
   }
 
-  const level = messageText ? MESSAGE_LEVEL.ERROR : MESSAGE_LEVEL.LOG;
+  const level = typeof exceptionMessage !== "undefined" && exceptionMessage !== null
+    ? MESSAGE_LEVEL.ERROR
+    : MESSAGE_LEVEL.LOG;
+
   return new ConsoleMessage({
     source: MESSAGE_SOURCE.JAVASCRIPT,
     type: MESSAGE_TYPE.RESULT,
     helperType: helperResult ? helperResult.type : null,
     level,
-    messageText,
+    messageText: exceptionMessage,
     parameters: [parameter],
     exceptionDocURL,
     frame,

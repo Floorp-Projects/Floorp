@@ -261,7 +261,7 @@ function getNodeForToolbarItem(aItemId, aValidator) {
       var child = children[i];
 
       // Is this a Places node?
-      if (!child._placesNode || child.hasAttribute("simulated-places-node")) {
+      if (!child._placesNode) {
         staticNodes++;
         continue;
       }
@@ -304,7 +304,7 @@ function getNodeForMenuItem(aItemId, aValidator) {
       var child = children[i];
 
       // Is this a Places node?
-      if (!child._placesNode || child.hasAttribute("simulated-places-node")) {
+      if (!child._placesNode) {
         staticNodes++;
         continue;
       }

@@ -6,7 +6,6 @@
 
 const {Ci, Cu} = require("chrome");
 
-const promise = require("promise");
 const {Task} = require("devtools/shared/task");
 
 loader.lazyRequireGetter(this, "AsyncUtils", "devtools/shared/async-utils");
@@ -140,12 +139,12 @@ function nodeHasSize(node) {
 function ensureImageLoaded(image, timeout) {
   let { HTMLImageElement } = image.ownerGlobal;
   if (!(image instanceof HTMLImageElement)) {
-    return promise.reject("image must be an HTMLImageELement");
+    return Promise.reject("image must be an HTMLImageELement");
   }
 
   if (image.complete) {
     // The image has already finished loading.
-    return promise.resolve();
+    return Promise.resolve();
   }
 
   // This image is still loading.
@@ -153,7 +152,7 @@ function ensureImageLoaded(image, timeout) {
 
   // Reject if loading fails.
   let onError = AsyncUtils.listenOnce(image, "error").then(() => {
-    return promise.reject("Image '" + image.src + "' failed to load.");
+    return Promise.reject("Image '" + image.src + "' failed to load.");
   });
 
   // Don't timeout when testing. This is never settled.
@@ -162,12 +161,12 @@ function ensureImageLoaded(image, timeout) {
   if (!flags.testing) {
     // Tests are not running. Reject the promise after given timeout.
     onAbort = DevToolsUtils.waitForTime(timeout).then(() => {
-      return promise.reject("Image '" + image.src + "' took too long to load.");
+      return Promise.reject("Image '" + image.src + "' took too long to load.");
     });
   }
 
   // See which happens first.
-  return promise.race([onLoad, onError, onAbort]);
+  return Promise.race([onLoad, onError, onAbort]);
 }
 
 /**

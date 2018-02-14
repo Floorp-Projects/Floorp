@@ -775,8 +775,7 @@ var BookmarksEventHandler = {
       return;
     let modifKey = AppConstants.platform === "macosx" ? aEvent.metaKey
                                                       : aEvent.ctrlKey;
-    // Don't keep menu open for 'Open all in Tabs'.
-    if (modifKey && !target.classList.contains("openintabs-menuitem")) {
+    if (modifKey) {
       target.setAttribute("closemenu", "none");
     }
   },
@@ -796,12 +795,11 @@ var BookmarksEventHandler = {
     var target = aEvent.originalTarget;
     // If this event bubbled up from a menu or menuitem,
     // close the menus if browser.bookmarks.openInTabClosesMenu.
-    if ((PlacesUIUtils.openInTabClosesMenu && target.tagName == "menuitem") ||
-        target.tagName == "menu" ||
-        target.classList.contains("openintabs-menuitem")) {
+    var tag = target.tagName;
+    if (PlacesUIUtils.openInTabClosesMenu && (tag == "menuitem" || tag == "menu")) {
       closeMenus(aEvent.target);
     }
-    // Command already precesssed so remove any closemenu attr set in onMouseUp.
+    // Command already processed so remove any closemenu attr set in onMouseUp.
     if (aEvent.button == 0 &&
         target.tagName == "menuitem" &&
         target.getAttribute("closemenu") == "none") {

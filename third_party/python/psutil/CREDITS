@@ -20,6 +20,32 @@ C: Italy
 E: g.rodola@gmail.com
 W: http://grodola.blogspot.com/
 
+Experts
+=======
+
+Github usernames of people to CC on github when in need of help.
+
+- NetBSD:
+    - 0-wiz-0, Thomas Klausner
+    - ryoqun, Ryo Onodera
+- OpenBSD:
+    - landryb, Landry Breuil
+- FreeBSD:
+    - glebius, Gleb Smirnoff (#1013)
+    - sunpoet, Po-Chuan Hsieh (pkg maintainer, #1105)
+    - kostikbel, Konstantin Belousov (#1105)
+- OSX:
+    - whitlockjc, Jeremy Whitlock
+- Windows:
+    - mrjefftang, Jeff Tang
+    - wj32, Wen Jia Liu
+    - fbenkstein, Frank Benkstein
+- SunOS:
+    - wiggin15, Arnon Yaari
+    - alxchk, Oleksii Shevchuk
+- AIX:
+    - wiggin15, Arnon Yaari (maintainer)
+
 Contributors
 ============
 
@@ -29,10 +55,23 @@ E: jloden@gmail.com
 D: original co-author, initial design/bootstrap and occasional bug fixes
 W: http://www.jayloden.com
 
+N: Arnon Yaari (wiggin15)
+W: https://github.com/wiggin15
+I: 517, 607, 610, 1131, 1123, 1130, 1154, 1164, 1174, 1177
+
+N: Jeff Tang
+W: https://github.com/mrjefftang
+I: 340, 529, 616, 653, 654, 648, 641
+
 N: Jeremy Whitlock
 E: jcscoobyrs@gmail.com
 D: great help with OSX C development.
 I: 125, 150, 174, 206
+
+N: Landry Breuil
+W: https://github.com/landryb
+D: OpenBSD implementation.
+I: 615
 
 N: wj32
 E: wj32.64@gmail.com
@@ -55,6 +94,14 @@ E: david.daeschler@gmail.com
 W: http://daviddaeschler.com
 D: some contributions to initial design/bootstrap plus occasional bug fixing
 I: 522, 536
+
+N: Thomas Klausner
+W: https://github.com/0-wiz-0
+I: #557
+
+N: Ryo Onodera
+W: https://github.com/ryoon
+I: #557
 
 N: cjgohlke
 E: cjgohlke@gmail.com
@@ -253,10 +300,6 @@ N: msabramo
 E: msabramo@gmail.com
 I: 492
 
-N: Jeff Tang
-W: https://github.com/mrjefftang
-I: 340, 529, 616, 653, 654
-
 N: Yaolong Huang
 E: airekans@gmail.com
 W: http://airekans.github.io/
@@ -267,8 +310,9 @@ W: https://github.com/anders-chrigstrom
 I: 496
 
 N: spacewander
+W: https://github.com/spacewander
 E: spacewanderlzx@gmail.com
-I: 561
+I: 561, 603
 
 N: Sylvain Mouquet
 E: sylvain.mouquet@gmail.com
@@ -308,3 +352,166 @@ N: Árni Már Jónsson
 E: Reykjavik, Iceland
 E: https://github.com/arnimarj
 I: 634
+
+N: Bart van Kleef
+W: https://github.com/bkleef
+I: 664
+
+N: Steven Winfield
+W: https://github.com/stevenwinfield
+I: 672
+
+N: sk6249
+W: https://github.com/sk6249
+I: 670
+
+N: maozguttman
+W: https://github.com/maozguttman
+I: 659
+
+N: dasumin
+W: https://github.com/dasumin
+I: 541
+
+N: Mike Sarahan
+W: https://github.com/msarahan
+I: 688
+
+N: Syohei YOSHIDA
+W: https://github.com/syohex
+I: 730
+
+N: Frank Benkstein
+W: https://github.com/fbenkstein
+I: 732, 733
+
+N: Visa Hankala
+E: visa@openbsd.org
+I: 741
+
+N: Sebastian-Gabriel Brestin
+C: Romania
+E: sebastianbrestin@gmail.com
+I: 704
+
+N: Timmy Konick
+W: https://github.com/tijko
+I: 751
+
+N: mpderbec
+W: https://github.com/mpderbec
+I: 660
+
+N: Mozilla Foundation
+D: sample code for process USS memory.
+
+N: wxwright
+W: https://github.com/wxwright
+I: 776
+
+N: Farhan Khan
+E: khanzf@gmail.com
+I: 823
+
+N: Jake Omann
+E: https://github.com/jomann09
+I: 816, 775
+
+N: Jeremy Humble
+W: https://github.com/jhumble
+I: 863
+
+N: Ilya Georgievsky
+W: https://github.com/xBeAsTx
+I: 870
+
+N: Yago Jesus
+W: https://github.com/YJesus
+I: 798
+
+N: Andre Caron
+C: Montreal, QC, Canada
+E: andre.l.caron@gmail.com
+W: https://github.com/AndreLouisCaron
+I: 880
+
+N: ewedlund
+W: https://github.com/ewedlund
+I: 874
+
+N: Arcadiy Ivanov
+W: https://github.com/arcivanov
+I: 919
+
+N: Max Bélanger
+W: https://github.com/maxbelanger
+I: 936, 1133
+
+N: Pierre Fersing
+C: France
+E: pierre.fersing@bleemeo.com
+I: 950
+
+N: Thiago Borges Abdnur
+W: https://github.com/bolaum
+I: 959
+
+N: Nicolas Hennion
+W: https://github.com/nicolargo
+I: 974
+
+N: Baruch Siach
+W: https://github.com/baruchsiach
+I: 872
+
+N: Danek Duvall
+W: https://github.com/dhduvall
+I: 1002
+
+N: Alexander Hasselhuhn
+C: Germany
+W: https://github.com/alexanha
+
+N: Himanshu Shekhar
+W: https://github.com/himanshub16
+I: 1036
+
+N: Yannick Gingras
+W: https://github.com/ygingras
+I: 1057
+
+N: Gleb Smirnoff
+W: https://github.com/glebius
+I: 1042, 1079
+
+N: Oleksii Shevchuk
+W: https://github.com/alxchk
+I: 1077, 1093, 1091
+
+N: Prodesire
+W: https://github.com/Prodesire
+I: 1138
+
+N: Sebastian Saip
+W: https://github.com/ssaip
+I: 1141
+
+N: Jakub Bacic
+W: https://github.com/jakub-bacic
+I: 1127
+
+N: Akos Kiss
+W: https://github.com/akosthekiss
+I: 1150
+
+N: Adrian Page
+W: https://github.com/adpag
+I: 1159, 1160, 1161
+
+N: Matthew Long
+W: https://github.com/matray
+I: 1167
+
+N: janderbrain
+W: https://github.com/janderbrain
+I: 1169

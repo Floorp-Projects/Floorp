@@ -247,8 +247,8 @@ private:
                                     const WidgetKeyboardEvent* aKeyboardEvent,
                                     SpoofingKeyboardCode& aOut);
 
-  static Atomic<bool, ReleaseAcquire> sPrivacyResistFingerprinting;
-  static Atomic<bool, ReleaseAcquire> sPrivacyTimerPrecisionReduction;
+  static Atomic<bool, Relaxed> sPrivacyResistFingerprinting;
+  static Atomic<bool, Relaxed> sPrivacyTimerPrecisionReduction;
 
   static nsDataHashtable<KeyboardHashKey, const SpoofingKeyboardCode*>* sSpoofingKeyboardCodes;
 
