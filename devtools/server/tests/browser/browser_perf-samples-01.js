@@ -14,6 +14,7 @@ const WAIT_TIME = 1000;
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
 add_task(function* () {
+  yield SpecialPowers.pushPrefEnv({"set": [["privacy.reduceTimerPrecision", false]]});
   yield addTab(MAIN_DOMAIN + "doc_perf.html");
 
   initDebuggerServer();

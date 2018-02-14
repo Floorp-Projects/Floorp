@@ -63,7 +63,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=453650
         }
 
         info("times: " + start + ", " + end);
-        ok(start < end, "reflow start time lower than end time");
+        ok(start <= end, "reflow start time lower than end time");
         done();
       },
 
@@ -75,7 +75,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=453650
         }
 
         info("times: " + start + ", " + end);
-        ok(start < end, "reflow start time lower than end time");
+        ok(start <= end, "reflow start time lower than end time");
         done();
       },
 
