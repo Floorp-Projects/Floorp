@@ -1074,11 +1074,3 @@ button.button-link:not([disabled="true"]):active:hover {
   border: none;
   border-radius: 0;
 }
-
-#PopupAutoComplete > richlistbox > richlistitem > .ac-type-icon,
-#PopupAutoComplete > richlistbox > richlistitem > .ac-site-icon,
-#PopupAutoComplete > richlistbox > richlistitem > .ac-tags,
-#PopupAutoComplete > richlistbox > richlistitem > .ac-separator,
-#PopupAutoComplete > richlistbox > richlistitem > .ac-url {
-  display: none;
-}
