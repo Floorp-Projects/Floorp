@@ -278,7 +278,8 @@ function sendChar(aChar, aWindow) {
       hasShift = true;
       break;
     default:
-      hasShift = (aChar == aChar.toUpperCase());
+      hasShift = aChar.toLowerCase() != aChar.toUpperCase() &&
+                 aChar == aChar.toUpperCase();
       break;
   }
   synthesizeKey(aChar, { shiftKey: hasShift }, aWindow);
@@ -900,28 +901,30 @@ function _computeKeyCodeFromChar(aChar)
  * aWindow is optional, and defaults to the current window object.
  * aCallback is optional, use the callback for receiving notifications of TIP.
  */
-function synthesizeKey(aKey, aEvent, aWindow = window, aCallback)
+function synthesizeKey(aKey, aEvent = undefined, aWindow = window, aCallback)
 {
+  var event = aEvent === undefined || aEvent === null ? {} : aEvent;
+
   var TIP = _getTIP(aWindow, aCallback);
   if (!TIP) {
     return;
   }
   var KeyboardEvent = _getKeyboardEvent(aWindow);
-  var modifiers = _emulateToActivateModifiers(TIP, aEvent, aWindow);
-  var keyEventDict = _createKeyboardEventDictionary(aKey, aEvent, aWindow);
+  var modifiers = _emulateToActivateModifiers(TIP, event, aWindow);
+  var keyEventDict = _createKeyboardEventDictionary(aKey, event, aWindow);
   var keyEvent = new KeyboardEvent("", keyEventDict.dictionary);
   var dispatchKeydown =
-    !("type" in aEvent) || aEvent.type === "keydown" || !aEvent.type;
+    !("type" in event) || event.type === "keydown" || !event.type;
   var dispatchKeyup =
-    !("type" in aEvent) || aEvent.type === "keyup"   || !aEvent.type;
+    !("type" in event) || event.type === "keyup"   || !event.type;
 
   try {
     if (dispatchKeydown) {
       TIP.keydown(keyEvent, keyEventDict.flags);
-      if ("repeat" in aEvent && aEvent.repeat > 1) {
+      if ("repeat" in event && event.repeat > 1) {
         keyEventDict.dictionary.repeat = true;
         var repeatedKeyEvent = new KeyboardEvent("", keyEventDict.dictionary);
-        for (var i = 1; i < aEvent.repeat; i++) {
+        for (var i = 1; i < event.repeat; i++) {
           TIP.keydown(repeatedKeyEvent, keyEventDict.flags);
         }
       }
