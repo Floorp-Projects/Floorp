@@ -1,3 +1,6 @@
+ChromeUtils.defineModuleGetter(this, "Preferences",
+                               "resource://gre/modules/Preferences.jsm");
+
 const URI1 = NetUtil.newURI("http://test1.mozilla.org/");
 const URI2 = NetUtil.newURI("http://test2.mozilla.org/");
 const URI3 = NetUtil.newURI("http://test3.mozilla.org/");
@@ -80,6 +83,13 @@ add_task(function test_invalid_input() {
 });
 
 add_task(async function test_addBookmarkAndKeyword() {
+  let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
+  Preferences.set("privacy.reduceTimerPrecision", false);
+
+  registerCleanupFunction(function() {
+    Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
+  });
+
   await check_keyword(URI1, null);
   let fc = await foreign_count(URI1);
   let observer = expectNotifications();
@@ -128,6 +138,13 @@ add_task(async function test_addBookmarkToURIHavingKeyword() {
 });
 
 add_task(async function test_sameKeywordDifferentURI() {
+  let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
+  Preferences.set("privacy.reduceTimerPrecision", false);
+
+  registerCleanupFunction(function() {
+    Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
+  });
+
   let fc1 = await foreign_count(URI1);
   let fc2 = await foreign_count(URI2);
   let observer = expectNotifications();

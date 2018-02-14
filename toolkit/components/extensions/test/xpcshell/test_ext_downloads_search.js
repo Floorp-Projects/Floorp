@@ -86,10 +86,12 @@ add_task(async function test_search() {
 
   Services.prefs.setIntPref("browser.download.folderList", 2);
   Services.prefs.setComplexValue("browser.download.dir", nsIFile, downloadDir);
+  Services.prefs.setBoolPref("privacy.reduceTimerPrecision", false);
 
   registerCleanupFunction(async () => {
     Services.prefs.clearUserPref("browser.download.folderList");
     Services.prefs.clearUserPref("browser.download.dir");
+    Services.prefs.clearUserPref("privacy.reduceTimerPrecision");
     await cleanupDir(downloadDir);
     await clearDownloads();
   });
