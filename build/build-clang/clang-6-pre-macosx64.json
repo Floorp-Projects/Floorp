@@ -1,0 +1,27 @@
+{
+    "llvm_revision": "317840",
+    "stages": "1",
+    "build_libcxx": true,
+    "build_type": "Release",
+    "assertions": false,
+    "osx_cross_compile": true,
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/trunk",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/trunk",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/trunk",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/trunk",
+    "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/trunk",
+    "python_path": "/usr/bin/python2.7",
+    "gcc_dir": "/builds/worker/workspace/build/src/gcc",
+    "cc": "/builds/worker/workspace/build/src/clang/bin/clang",
+    "cxx": "/builds/worker/workspace/build/src/clang/bin/clang++",
+    "as": "/builds/worker/workspace/build/src/clang/bin/clang",
+    "ar": "/builds/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin11-ar",
+    "ranlib": "/builds/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin11-ranlib",
+    "libtool": "/builds/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin11-libtool",
+    "ld": "/builds/worker/workspace/build/src/clang/bin/clang",
+    "patches": [
+      "compiler-rt-cross-compile.patch",
+      "compiler-rt-no-codesign.patch",
+      "r321543.patch"
+    ]
+}

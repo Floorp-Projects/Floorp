@@ -6,8 +6,6 @@
 
 var {DebuggerServer} = require("devtools/server/main");
 
-var promise = require("promise");
-
 var protocol = require("devtools/shared/protocol");
 const {longStringSpec} = require("devtools/shared/specs/string");
 
@@ -36,7 +34,7 @@ exports.LongStringActor = protocol.ActorClassWithSpec(longStringSpec, {
   },
 
   substring: function (start, end) {
-    return promise.resolve(this.str.substring(start, end));
+    return Promise.resolve(this.str.substring(start, end));
   },
 
   release: function () { }

@@ -13,7 +13,7 @@ const { ConsoleMessage } =
 
 let stubPreparedMessages = new Map();
 let stubPackets = new Map();
-stubPreparedMessages.set("ReferenceError: asdf is not defined", new ConsoleMessage({
+stubPreparedMessages.set(`ReferenceError: asdf is not defined`, new ConsoleMessage({
   "id": "1",
   "allowRepeating": true,
   "source": "javascript",
@@ -68,7 +68,7 @@ stubPreparedMessages.set("ReferenceError: asdf is not defined", new ConsoleMessa
   "indent": 0
 }));
 
-stubPreparedMessages.set("SyntaxError: redeclaration of let a", new ConsoleMessage({
+stubPreparedMessages.set(`SyntaxError: redeclaration of let a`, new ConsoleMessage({
   "id": "1",
   "allowRepeating": true,
   "source": "javascript",
@@ -113,7 +113,7 @@ stubPreparedMessages.set("SyntaxError: redeclaration of let a", new ConsoleMessa
   "indent": 0
 }));
 
-stubPreparedMessages.set("TypeError longString message", new ConsoleMessage({
+stubPreparedMessages.set(`TypeError longString message`, new ConsoleMessage({
   "id": "1",
   "allowRepeating": true,
   "source": "javascript",
@@ -160,7 +160,45 @@ stubPreparedMessages.set("TypeError longString message", new ConsoleMessage({
   "indent": 0
 }));
 
-stubPackets.set("ReferenceError: asdf is not defined", {
+stubPreparedMessages.set(`throw ""`, new ConsoleMessage({
+  "id": "1",
+  "allowRepeating": true,
+  "source": "javascript",
+  "timeStamp": 1517942398629,
+  "type": "log",
+  "helperType": null,
+  "level": "error",
+  "messageText": "uncaught exception: ",
+  "parameters": null,
+  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"uncaught exception: \",\"parameters\":null,\"source\":\"javascript\",\"type\":\"log\",\"userProvidedStyles\":null}",
+  "stacktrace": null,
+  "frame": null,
+  "groupId": null,
+  "userProvidedStyles": null,
+  "notes": null,
+  "indent": 0
+}));
+
+stubPreparedMessages.set(`throw "tomato"`, new ConsoleMessage({
+  "id": "1",
+  "allowRepeating": true,
+  "source": "javascript",
+  "timeStamp": 1517942398637,
+  "type": "log",
+  "helperType": null,
+  "level": "error",
+  "messageText": "uncaught exception: tomato",
+  "parameters": null,
+  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"uncaught exception: tomato\",\"parameters\":null,\"source\":\"javascript\",\"type\":\"log\",\"userProvidedStyles\":null}",
+  "stacktrace": null,
+  "frame": null,
+  "groupId": null,
+  "userProvidedStyles": null,
+  "notes": null,
+  "indent": 0
+}));
+
+stubPackets.set(`ReferenceError: asdf is not defined`, {
   "from": "server1.conn0.child1/consoleActor2",
   "type": "pageError",
   "pageError": {
@@ -215,7 +253,7 @@ stubPackets.set("ReferenceError: asdf is not defined", {
   }
 });
 
-stubPackets.set("SyntaxError: redeclaration of let a", {
+stubPackets.set(`SyntaxError: redeclaration of let a`, {
   "from": "server1.conn0.child1/consoleActor2",
   "type": "pageError",
   "pageError": {
@@ -260,7 +298,7 @@ stubPackets.set("SyntaxError: redeclaration of let a", {
   }
 });
 
-stubPackets.set("TypeError longString message", {
+stubPackets.set(`TypeError longString message`, {
   "from": "server1.conn0.child1/consoleActor2",
   "type": "pageError",
   "pageError": {
@@ -303,6 +341,52 @@ stubPackets.set("TypeError longString message", {
         "functionName": null
       }
     ],
+    "notes": null
+  }
+});
+
+stubPackets.set(`throw ""`, {
+  "from": "server1.conn0.child1/consoleActor2",
+  "type": "pageError",
+  "pageError": {
+    "errorMessage": "uncaught exception: ",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "",
+    "lineText": "",
+    "lineNumber": 0,
+    "columnNumber": 0,
+    "category": "content javascript",
+    "timeStamp": 1517942398629,
+    "warning": false,
+    "error": false,
+    "exception": false,
+    "strict": false,
+    "info": false,
+    "private": false,
+    "stacktrace": null,
+    "notes": null
+  }
+});
+
+stubPackets.set(`throw "tomato"`, {
+  "from": "server1.conn0.child1/consoleActor2",
+  "type": "pageError",
+  "pageError": {
+    "errorMessage": "uncaught exception: tomato",
+    "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+    "sourceName": "",
+    "lineText": "",
+    "lineNumber": 0,
+    "columnNumber": 0,
+    "category": "content javascript",
+    "timeStamp": 1517942398637,
+    "warning": false,
+    "error": false,
+    "exception": false,
+    "strict": false,
+    "info": false,
+    "private": false,
+    "stacktrace": null,
     "notes": null
   }
 });

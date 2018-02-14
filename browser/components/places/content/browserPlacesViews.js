@@ -908,8 +908,7 @@ PlacesViewBase.prototype = {
         break;
       }
 
-      if (child._placesNode && !child.hasAttribute("simulated-places-node") &&
-          !firstNonStaticNodeFound) {
+      if (child._placesNode && !firstNonStaticNodeFound) {
         firstNonStaticNodeFound = true;
         aPopup.insertBefore(aPopup._startMarker, child);
       }

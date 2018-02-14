@@ -188,7 +188,7 @@ function run_test() {
       });
     }));
 
-    promise.all(calls).then(() => {
+    Promise.all(calls).then(() => {
       client.close().then(() => {
         do_test_finished();
       });
