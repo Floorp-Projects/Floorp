@@ -5,7 +5,6 @@
 "use strict";
 
 const {Ci} = require("chrome");
-const promise = require("promise");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {Task} = require("devtools/shared/task");
@@ -1237,11 +1236,11 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     if (!this.canSetRuleText ||
         (this.type !== CSSRule.STYLE_RULE &&
          this.type !== CSSRule.KEYFRAME_RULE)) {
-      return promise.resolve("");
+      return Promise.resolve("");
     }
 
     if (typeof this.authoredText === "string") {
-      return promise.resolve(this.authoredText);
+      return Promise.resolve(this.authoredText);
     }
 
     let parentStyleSheet =

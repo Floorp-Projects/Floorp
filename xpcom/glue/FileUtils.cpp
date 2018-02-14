@@ -4,13 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/FileUtils.h"
+
 #include <errno.h>
 #include <stdio.h>
 
 #include "nscore.h"
 #include "private/pprio.h"
+#include "prmem.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/FileUtils.h"
 
 #if defined(XP_MACOSX)
 #include <fcntl.h>
@@ -161,7 +163,62 @@ mozilla::ReadAheadFile(nsIFile* aFile, const size_t aOffset,
 #endif
 }
 
-#endif // !defined(XPCOM_GLUE)
+mozilla::PathString
+mozilla::GetLibraryName(mozilla::pathstr_t aDirectory, const char* aLib)
+{
+#ifdef XP_WIN
+  nsAutoString fullName;
+  if (aDirectory) {
+    fullName.Assign(aDirectory);
+    fullName.Append('\\');
+  }
+  AppendUTF8toUTF16(aLib, fullName);
+  if (!strstr(aLib, ".dll")) {
+    fullName.AppendLiteral(".dll");
+  }
+  return fullName;
+#else
+  char* temp = PR_GetLibraryName(aDirectory, aLib);
+  if (!temp) {
+    return EmptyCString();
+  }
+  nsAutoCString libname(temp);
+  PR_FreeLibraryName(temp);
+  return libname;
+#endif
+}
+
+mozilla::PathString
+mozilla::GetLibraryFilePathname(mozilla::pathstr_t aName, PRFuncPtr aAddr)
+{
+#ifdef XP_WIN
+  HMODULE handle = GetModuleHandleW(char16ptr_t(aName));
+  if (!handle) {
+    return EmptyString();
+  }
+
+  nsAutoString path;
+  path.SetLength(MAX_PATH);
+  DWORD len = GetModuleFileNameW(handle, char16ptr_t(path.BeginWriting()),
+                                 path.Length());
+  if (!len) {
+    return EmptyString();
+  }
+
+  path.SetLength(len);
+  return path;
+#else
+  char* temp = PR_GetLibraryFilePathname(aName, aAddr);
+  if (!temp) {
+    return EmptyCString();
+  }
+  nsAutoCString path(temp);
+  PR_Free(temp); // PR_GetLibraryFilePathname() uses PR_Malloc().
+  return path;
+#endif
+}
+
+#endif // defined(MOZILLA_INTERNAL_API)
 
 #if defined(LINUX) && !defined(ANDROID)
 

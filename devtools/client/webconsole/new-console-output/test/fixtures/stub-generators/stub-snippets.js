@@ -185,6 +185,9 @@ let evaluationResult = new Map(evaluationResultCommands.map(cmd => [cmd, cmd]));
 evaluationResult.set("longString message Error",
   `throw new Error("Long error ".repeat(10000))`);
 
+evaluationResult.set(`eval throw ""`, `throw ""`);
+evaluationResult.set(`eval throw "tomato"`, `throw "tomato"`);
+
 // Network Event
 
 let networkEvent = new Map();
@@ -233,6 +236,9 @@ pageError.set("SyntaxError: redeclaration of let a", `
 
 pageError.set("TypeError longString message",
   `throw new Error("Long error ".repeat(10000))`);
+
+pageError.set(`throw ""`, `throw ""`);
+pageError.set(`throw "tomato"`, `throw "tomato"`);
 
 module.exports = {
   consoleApi,
