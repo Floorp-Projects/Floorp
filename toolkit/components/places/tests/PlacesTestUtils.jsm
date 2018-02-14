@@ -318,6 +318,18 @@ var PlacesTestUtils = Object.freeze({
   },
 
   waitForNotification(notification, conditionFn = () => true, type = "bookmarks") {
+    if (type == "places") {
+      return new Promise(resolve => {
+        function listener(events) {
+          if (conditionFn(events)) {
+            PlacesObservers.removeListener([notification], listener);
+            resolve();
+          }
+        }
+        PlacesObservers.addListener([notification], listener);
+      });
+    }
+
     let iface = type == "bookmarks" ? Ci.nsINavBookmarkObserver
                                     : Ci.nsINavHistoryObserver;
     return new Promise(resolve => {
