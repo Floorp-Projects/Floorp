@@ -27,11 +27,7 @@ import org.mozilla.focus.session.Session
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.Settings
-import org.mozilla.focus.utils.SupportUtils
-import org.mozilla.focus.utils.ThreadUtils
-import org.mozilla.focus.utils.UrlUtils
-import org.mozilla.focus.utils.ViewUtils
+import org.mozilla.focus.utils.*
 import org.mozilla.focus.whatsnew.WhatsNew
 import org.mozilla.focus.widget.InlineAutocompleteEditText
 
@@ -169,7 +165,7 @@ class UrlInputFragment :
         urlView.setOnCommitListener(this)
 
         session?.let {
-            urlView.setText(if (it.isSearch) it.searchTerms else it.url.value)
+            urlView.setText(if (it.isSearch && Features.SEARCH_TERMS_OR_URL) it.searchTerms else it.url.value)
             clearView.visibility = View.VISIBLE
             searchViewContainer.visibility = View.GONE
         }

@@ -20,6 +20,7 @@ import android.graphics.drawable.TransitionDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
@@ -239,8 +240,10 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                     progressView.setProgress(5);
                     progressView.setVisibility(View.VISIBLE);
+                    TelemetryWrapper.startLoad(SystemClock.elapsedRealtime());
                 } else {
                     if (progressView.getVisibility() == View.VISIBLE) {
+                        TelemetryWrapper.endLoad(SystemClock.elapsedRealtime());
                         // We start a transition only if a page was just loading before
                         // allowing to avoid issue #1179
                         backgroundTransitionGroup.startTransition(ANIMATION_DURATION);
