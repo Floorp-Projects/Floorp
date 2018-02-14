@@ -7,6 +7,8 @@
 #include "ServiceWorkerRegistration.h"
 
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PushManager.h"
+#include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "nsCycleCollectionParticipant.h"
@@ -17,17 +19,36 @@
 namespace mozilla {
 namespace dom {
 
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistration,
+                                   DOMEventTargetHelper,
+                                   mInstallingWorker,
+                                   mWaitingWorker,
+                                   mActiveWorker,
+                                   mPushManager);
+
 NS_IMPL_ADDREF_INHERITED(ServiceWorkerRegistration, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(ServiceWorkerRegistration, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServiceWorkerRegistration)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-ServiceWorkerRegistration::ServiceWorkerRegistration(nsPIDOMWindowInner* aWindow,
-                                                     const ServiceWorkerRegistrationDescriptor& aDescriptor)
-  : DOMEventTargetHelper(aWindow)
+ServiceWorkerRegistration::ServiceWorkerRegistration(nsIGlobalObject* aGlobal,
+                                                     const ServiceWorkerRegistrationDescriptor& aDescriptor,
+                                                     ServiceWorkerRegistration::Inner* aInner)
+  : DOMEventTargetHelper(aGlobal)
   , mDescriptor(aDescriptor)
+  , mInner(aInner)
 {
+  MOZ_DIAGNOSTIC_ASSERT(mInner);
+  UpdateState(mDescriptor);
+  mInner->SetServiceWorkerRegistration(this);
+}
+
+ServiceWorkerRegistration::~ServiceWorkerRegistration()
+{
+  if (mInner) {
+    mInner->ClearServiceWorkerRegistration(this);
+  }
 }
 
 JSObject*
@@ -44,8 +65,12 @@ ServiceWorkerRegistration::CreateForMainThread(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(NS_IsMainThread());
 
+  nsCOMPtr<nsIGlobalObject> global(do_QueryInterface(aWindow));
+
+  RefPtr<Inner> inner = new ServiceWorkerRegistrationMainThread(aDescriptor);
+
   RefPtr<ServiceWorkerRegistration> registration =
-    new ServiceWorkerRegistrationMainThread(aWindow, aDescriptor);
+    new ServiceWorkerRegistration(global, aDescriptor, inner);
 
   return registration.forget();
 }
@@ -57,12 +82,22 @@ ServiceWorkerRegistration::CreateForWorker(WorkerPrivate* aWorkerPrivate,
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
-  NS_ConvertUTF8toUTF16 scope(aDescriptor.Scope());
-
-  RefPtr<ServiceWorkerRegistration> registration =
+  RefPtr<Inner> inner =
     new ServiceWorkerRegistrationWorkerThread(aWorkerPrivate, aDescriptor);
 
+  RefPtr<ServiceWorkerRegistration> registration =
+    new ServiceWorkerRegistration(aWorkerPrivate->GlobalScope(), aDescriptor,
+                                  inner);
+
   return registration.forget();
+}
+
+void
+ServiceWorkerRegistration::DisconnectFromOwner()
+{
+  mInner->ClearServiceWorkerRegistration(this);
+  mInner = nullptr;
+  DOMEventTargetHelper::DisconnectFromOwner();
 }
 
 already_AddRefed<ServiceWorker>
@@ -140,6 +175,67 @@ ServiceWorkerUpdateViaCache
 ServiceWorkerRegistration::GetUpdateViaCache(ErrorResult& aRv) const
 {
   return mDescriptor.UpdateViaCache();
+}
+
+already_AddRefed<Promise>
+ServiceWorkerRegistration::Update(ErrorResult& aRv)
+{
+  if (!mInner) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+  return mInner->Update(aRv);
+}
+
+already_AddRefed<Promise>
+ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
+{
+  if (!mInner) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+  return mInner->Unregister(aRv);
+}
+
+already_AddRefed<PushManager>
+ServiceWorkerRegistration::GetPushManager(JSContext* aCx, ErrorResult& aRv)
+{
+  if (!mInner) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+  if (!mPushManager) {
+    mPushManager = mInner->GetPushManager(aCx, aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+  }
+  RefPtr<PushManager> ret = mPushManager;
+  return ret.forget();
+}
+
+already_AddRefed<Promise>
+ServiceWorkerRegistration::ShowNotification(JSContext* aCx,
+                                            const nsAString& aTitle,
+                                            const NotificationOptions& aOptions,
+                                            ErrorResult& aRv)
+{
+  if (!mInner) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+  return mInner->ShowNotification(aCx, aTitle, aOptions, aRv);
+}
+
+already_AddRefed<Promise>
+ServiceWorkerRegistration::GetNotifications(const GetNotificationOptions& aOptions,
+                                            ErrorResult& aRv)
+{
+  if (!mInner) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+  return mInner->GetNotifications(aOptions, aRv);
 }
 
 } // dom namespace

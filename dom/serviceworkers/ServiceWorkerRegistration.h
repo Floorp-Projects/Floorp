@@ -9,7 +9,6 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/DOMPrefs.h"
-#include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
@@ -17,7 +16,7 @@
 // Support for Notification API extension.
 #include "mozilla/dom/NotificationBinding.h"
 
-class nsPIDOMWindowInner;
+class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
@@ -25,11 +24,44 @@ namespace dom {
 class Promise;
 class PushManager;
 class WorkerPrivate;
+class ServiceWorker;
 
-class ServiceWorkerRegistration : public DOMEventTargetHelper
+class ServiceWorkerRegistration final : public DOMEventTargetHelper
 {
 public:
+  class Inner
+  {
+  public:
+    NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+    virtual void
+    SetServiceWorkerRegistration(ServiceWorkerRegistration* aReg) = 0;
+
+    virtual void
+    ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) = 0;
+
+    virtual already_AddRefed<Promise>
+    Update(ErrorResult& aRv) = 0;
+
+    virtual already_AddRefed<Promise>
+    Unregister(ErrorResult& aRv) = 0;
+
+    virtual already_AddRefed<Promise>
+    ShowNotification(JSContext* aCx,
+                     const nsAString& aTitle,
+                     const NotificationOptions& aOptions,
+                     ErrorResult& aRv) = 0;
+
+    virtual already_AddRefed<Promise>
+    GetNotifications(const GetNotificationOptions& aOptions,
+                     ErrorResult& aRv) = 0;
+
+    virtual already_AddRefed<PushManager>
+    GetPushManager(JSContext* aCx, ErrorResult& aRv) = 0;
+  };
+
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerRegistration, DOMEventTargetHelper)
 
   IMPL_EVENT_HANDLER(updatefound)
 
@@ -43,6 +75,8 @@ public:
 
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+
+  void DisconnectFromOwner() override;
 
   already_AddRefed<ServiceWorker>
   GetInstalling() const;
@@ -65,36 +99,38 @@ public:
   ServiceWorkerUpdateViaCache
   GetUpdateViaCache(ErrorResult& aRv) const;
 
-  virtual already_AddRefed<Promise>
-  Update(ErrorResult& aRv) = 0;
+  already_AddRefed<Promise>
+  Update(ErrorResult& aRv);
 
-  virtual already_AddRefed<Promise>
-  Unregister(ErrorResult& aRv) = 0;
+  already_AddRefed<Promise>
+  Unregister(ErrorResult& aRv);
 
-  virtual already_AddRefed<PushManager>
-  GetPushManager(JSContext* aCx, ErrorResult& aRv) = 0;
+  already_AddRefed<PushManager>
+  GetPushManager(JSContext* aCx, ErrorResult& aRv);
 
-  virtual already_AddRefed<Promise>
+  already_AddRefed<Promise>
   ShowNotification(JSContext* aCx,
                    const nsAString& aTitle,
                    const NotificationOptions& aOptions,
-                   ErrorResult& aRv) = 0;
+                   ErrorResult& aRv);
 
-  virtual already_AddRefed<Promise>
+  already_AddRefed<Promise>
   GetNotifications(const GetNotificationOptions& aOptions,
-                   ErrorResult& aRv) = 0;
+                   ErrorResult& aRv);
 
-protected:
-  ServiceWorkerRegistration(nsPIDOMWindowInner* aWindow,
-                            const ServiceWorkerRegistrationDescriptor& aDescriptor);
+private:
+  ServiceWorkerRegistration(nsIGlobalObject* aGlobal,
+                            const ServiceWorkerRegistrationDescriptor& aDescriptor,
+                            Inner* aInner);
 
-  virtual ~ServiceWorkerRegistration()
-  { }
+  ~ServiceWorkerRegistration();
 
   ServiceWorkerRegistrationDescriptor mDescriptor;
+  RefPtr<Inner> mInner;
   RefPtr<ServiceWorker> mInstallingWorker;
   RefPtr<ServiceWorker> mWaitingWorker;
   RefPtr<ServiceWorker> mActiveWorker;
+  RefPtr<PushManager> mPushManager;
 };
 
 
