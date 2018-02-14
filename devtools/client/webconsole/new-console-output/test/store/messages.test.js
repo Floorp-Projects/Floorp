@@ -317,9 +317,13 @@ describe("Message reducer:", () => {
     });
 
     it("properly limits number of messages", () => {
-      const { dispatch, getState } = setupStore();
-
       const logLimit = 1000;
+      const { dispatch, getState } = setupStore([], {
+        storeOptions: {
+          logLimit,
+        }
+      });
+
       const packet = clonePacket(stubPackets.get("console.log(undefined)"));
 
       for (let i = 1; i <= logLimit + 2; i++) {
@@ -335,9 +339,12 @@ describe("Message reducer:", () => {
     });
 
     it("properly limits number of messages when there are nested groups", () => {
-      const { dispatch, getState } = setupStore();
-
       const logLimit = 1000;
+      const { dispatch, getState } = setupStore([], {
+        storeOptions: {
+          logLimit,
+        }
+      });
 
       const packet = clonePacket(stubPackets.get("console.log(undefined)"));
       const packetGroup = clonePacket(stubPackets.get("console.group('bar')"));
