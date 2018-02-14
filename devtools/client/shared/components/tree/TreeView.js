@@ -18,11 +18,21 @@ define(function (require, exports, module) {
   const TreeRow = createFactory(require("./TreeRow"));
   const TreeHeader = createFactory(require("./TreeHeader"));
 
+  const SUPPORTED_KEYS = [
+    "ArrowUp",
+    "ArrowDown",
+    "ArrowLeft",
+    "ArrowRight",
+    "End",
+    "Home"
+  ];
+
   const defaultProps = {
     object: null,
     renderRow: null,
     provider: ObjectProvider,
     expandedNodes: new Set(),
+    selected: null,
     expandableStrings: true,
     columns: []
   };
@@ -99,10 +109,14 @@ define(function (require, exports, module) {
         renderLabelCell: PropTypes.func,
         // Set of expanded nodes
         expandedNodes: PropTypes.object,
+        // Selected node
+        selected: PropTypes.string,
         // Custom filtering callback
         onFilter: PropTypes.func,
         // Custom sorting callback
         onSort: PropTypes.func,
+        // Custom row click callback
+        onClickRow: PropTypes.func,
         // A header is displayed if set to true
         header: PropTypes.bool,
         // Long string is expandable by a toggle button
@@ -126,7 +140,8 @@ define(function (require, exports, module) {
       this.state = {
         expandedNodes: props.expandedNodes,
         columns: ensureDefaultColumn(props.columns),
-        selected: null
+        selected: props.selected,
+        lastSelectedIndex: 0
       };
 
       this.toggle = this.toggle.bind(this);
@@ -143,19 +158,24 @@ define(function (require, exports, module) {
     }
 
     componentWillReceiveProps(nextProps) {
-      let { expandedNodes } = nextProps;
-      this.setState(Object.assign({}, this.state, {
+      let { expandedNodes, selected } = nextProps;
+      let state = {
         expandedNodes,
-      }));
+        lastSelectedIndex: this.getSelectedRowIndex()
+      };
+
+      if (selected) {
+        state.selected = selected;
+      }
+
+      this.setState(Object.assign({}, this.state, state));
     }
 
     componentDidUpdate() {
-      let selected = this.getSelectedRow(this.rows);
+      let selected = this.getSelectedRow();
       if (!selected && this.rows.length > 0) {
-        // TODO: Do better than just selecting the first row again. We want to
-        // select (in order) previous, next or parent in case when selected
-        // row is removed.
-        this.selectRow(this.rows[0]);
+        this.selectRow(this.rows[
+          Math.min(this.state.lastSelectedIndex, this.rows.length - 1)]);
       }
     }
 
@@ -229,11 +249,11 @@ define(function (require, exports, module) {
     // Event Handlers
 
     onKeyDown(event) {
-      if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+      if (!SUPPORTED_KEYS.includes(event.key)) {
         return;
       }
 
-      let row = this.getSelectedRow(this.rows);
+      let row = this.getSelectedRow();
       if (!row) {
         return;
       }
@@ -263,12 +283,33 @@ define(function (require, exports, module) {
             this.selectRow(previousRow);
           }
           break;
+        case "Home":
+          let firstRow = this.rows[0];
+          if (firstRow) {
+            this.selectRow(firstRow);
+          }
+          break;
+        case "End":
+          let lastRow = this.rows[this.rows.length - 1];
+          if (lastRow) {
+            this.selectRow(lastRow);
+          }
+          break;
       }
 
+      // Focus should always remain on the tree container itself.
+      this.tree.focus();
       event.preventDefault();
     }
 
     onClickRow(nodePath, event) {
+      let onClickRow = this.props.onClickRow;
+
+      if (onClickRow) {
+        onClickRow.call(this, nodePath, event);
+        return;
+      }
+
       event.stopPropagation();
       let cell = event.target.closest("td");
       if (cell && cell.classList.contains("treeLabelCell")) {
@@ -277,15 +318,29 @@ define(function (require, exports, module) {
       this.selectRow(event.currentTarget);
     }
 
-    getSelectedRow(rows) {
-      if (!this.state.selected || rows.length === 0) {
+    getSelectedRow() {
+      if (!this.state.selected || this.rows.length === 0) {
         return null;
       }
-      return rows.find(row => this.isSelected(row.props.member.path));
+      return this.rows.find(row => this.isSelected(row.props.member.path));
+    }
+
+    getSelectedRowIndex() {
+      let row = this.getSelectedRow();
+      if (!row) {
+        // If selected row is not found, return index of the first row.
+        return 0;
+      }
+
+      return this.rows.indexOf(row);
     }
 
     selectRow(row) {
       row = findDOMNode(row);
+      if (this.state.selected === row.id) {
+        return;
+      }
+
       this.setState(Object.assign({}, this.state, {
         selected: row.id
       }));
@@ -465,6 +520,9 @@ define(function (require, exports, module) {
         dom.table({
           className: classNames.join(" "),
           role: "tree",
+          ref: tree => {
+            this.tree = tree;
+          },
           tabIndex: 0,
           onKeyDown: this.onKeyDown,
           "aria-label": this.props.label || "",
@@ -473,7 +531,8 @@ define(function (require, exports, module) {
           cellSpacing: 0},
           TreeHeader(props),
           dom.tbody({
-            role: "presentation"
+            role: "presentation",
+            tabIndex: -1
           }, rows)
         )
       );

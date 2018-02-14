@@ -15,7 +15,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Variant.h"
 
-#include "jsatom.h"
 #include "jsopcode.h"
 #include "jstypes.h"
 

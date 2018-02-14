@@ -257,7 +257,7 @@ class JSFunction : public js::NativeObject
 
     /* Compound attributes: */
     bool isBuiltin() const {
-        return isBuiltinNative() || isSelfHostedBuiltin();
+        return isBuiltinNative() || isNativeWithJitEntry() || isSelfHostedBuiltin();
     }
 
     bool isNamedLambda() const {

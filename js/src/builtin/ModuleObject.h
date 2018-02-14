@@ -10,7 +10,6 @@
 #include "mozilla/Maybe.h"
 
 #include "jsapi.h"
-#include "jsatom.h"
 
 #include "builtin/SelfHostingDefines.h"
 #include "js/GCVector.h"
