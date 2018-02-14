@@ -19,12 +19,12 @@ function start() {
   theDiv.focus();
   sel.collapse(theDiv, 0);
   if (navigator.platform.indexOf("Win") == 0) {
-    synthesizeKey("VK_END", {});
+    synthesizeKey("KEY_End");
   } else {
     // End key doesn't work as expected on Mac and Linux.
     sel.modify("move", "right", "lineboundary");
   }
-  synthesizeKey("VK_RETURN", {shiftKey: true});
+  synthesizeKey("KEY_Enter", {shiftKey: true});
 }
 
 SimpleTest.waitForFocus(start);

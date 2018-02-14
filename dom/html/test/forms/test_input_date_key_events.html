@@ -89,109 +89,109 @@ var testData = [
   },
   {
     // Advance to year field and decrement.
-    keys: ["VK_TAB", "VK_TAB", "VK_DOWN"],
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_ArrowDown"],
     initialVal: "2016-11-25",
     expectedVal: "2015-11-25"
   },
   {
     // Right key should do the same thing as TAB key.
-    keys: ["VK_RIGHT", "VK_RIGHT", "VK_DOWN"],
+    keys: ["KEY_ArrowRight", "KEY_ArrowRight", "KEY_ArrowDown"],
     initialVal: "2016-11-25",
     expectedVal: "2015-11-25"
   },
   {
     // Advance to day field then back to month field and decrement.
-    keys: ["VK_RIGHT", "VK_LEFT", "VK_DOWN"],
+    keys: ["KEY_ArrowRight", "KEY_ArrowLeft", "KEY_ArrowDown"],
     initialVal: "2000-05-01",
     expectedVal: "2000-04-01"
   },
   {
     // Focus starts on the first field, month in this case, and increment.
-    keys: ["VK_UP"],
+    keys: ["KEY_ArrowUp"],
     initialVal: "2000-03-01",
     expectedVal: "2000-04-01"
   },
   {
     // Advance to day field and decrement.
-    keys: ["VK_TAB", "VK_DOWN"],
+    keys: ["KEY_Tab", "KEY_ArrowDown"],
     initialVal: "1234-01-01",
     expectedVal: "1234-01-31"
   },
   {
     // Advance to day field and increment.
-    keys: ["VK_TAB", "VK_UP"],
+    keys: ["KEY_Tab", "KEY_ArrowUp"],
     initialVal: "1234-01-01",
     expectedVal: "1234-01-02"
   },
   {
     // PageUp on month field increments month by 3.
-    keys: ["VK_PAGE_UP"],
+    keys: ["KEY_PageUp"],
     initialVal: "1999-01-01",
     expectedVal: "1999-04-01"
   },
   {
     // PageDown on month field decrements month by 3.
-    keys: ["VK_PAGE_DOWN"],
+    keys: ["KEY_PageDown"],
     initialVal: "1999-01-01",
     expectedVal: "1999-10-01"
   },
   {
     // PageUp on day field increments day by 7.
-    keys: ["VK_TAB", "VK_PAGE_UP"],
+    keys: ["KEY_Tab", "KEY_PageUp"],
     initialVal: "1999-01-01",
     expectedVal: "1999-01-08"
   },
   {
     // PageDown on day field decrements day by 7.
-    keys: ["VK_TAB", "VK_PAGE_DOWN"],
+    keys: ["KEY_Tab", "KEY_PageDown"],
     initialVal: "1999-01-01",
     expectedVal: "1999-01-25"
   },
   {
     // PageUp on year field increments year by 10.
-    keys: ["VK_TAB", "VK_TAB", "VK_PAGE_UP"],
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_PageUp"],
     initialVal: "1999-01-01",
     expectedVal: "2009-01-01"
   },
   {
     // PageDown on year field decrements year by 10.
-    keys: ["VK_TAB", "VK_TAB", "VK_PAGE_DOWN"],
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_PageDown"],
     initialVal: "1999-01-01",
     expectedVal: "1989-01-01"
   },
   {
     // Home key on month field sets it to the minimum month, which is 01.
-    keys: ["VK_HOME"],
+    keys: ["KEY_Home"],
     initialVal: "2016-06-01",
     expectedVal: "2016-01-01"
   },
   {
     // End key on month field sets it to the maximum month, which is 12.
-    keys: ["VK_END"],
+    keys: ["KEY_End"],
     initialVal: "2016-06-01",
     expectedVal: "2016-12-01"
   },
   {
     // Home key on day field sets it to the minimum day, which is 01.
-    keys: ["VK_TAB", "VK_HOME"],
+    keys: ["KEY_Tab", "KEY_Home"],
     initialVal: "2016-01-10",
     expectedVal: "2016-01-01"
   },
   {
     // End key on day field sets it to the maximum day, which is 31.
-    keys: ["VK_TAB", "VK_END"],
+    keys: ["KEY_Tab", "KEY_End"],
     initialVal: "2016-01-10",
     expectedVal: "2016-01-31"
   },
   {
     // Home key should have no effect on year field.
-    keys: ["VK_TAB", "VK_TAB", "VK_HOME"],
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_Home"],
     initialVal: "2016-01-01",
     expectedVal: "2016-01-01"
   },
   {
     // End key should have no effect on year field.
-    keys: ["VK_TAB", "VK_TAB", "VK_END"],
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_End"],
     initialVal: "2016-01-01",
     expectedVal: "2016-01-01"
   },
@@ -200,8 +200,8 @@ var testData = [
 function sendKeys(aKeys) {
   for (let i = 0; i < aKeys.length; i++) {
     let key = aKeys[i];
-    if (key.startsWith("VK")) {
-      synthesizeKey(key, {});
+    if (key.startsWith("KEY_")) {
+      synthesizeKey(key);
     } else {
       sendString(key);
     }

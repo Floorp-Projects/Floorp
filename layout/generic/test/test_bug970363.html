@@ -34,11 +34,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=970363
       sel.collapse(t, 0);
 
       // Move past the 'S' char.
-      synthesizeKey("VK_RIGHT", {});
+      synthesizeKey("KEY_ArrowRight");
       // Move across the span.
-      synthesizeKey("VK_RIGHT", {});
+      synthesizeKey("KEY_ArrowRight");
       // Insert an 'I' to show when IP currently is.
-      synthesizeKey("I", {});
+      sendString("I");
 
       is(t.textContent, "SreadonlyIE", "the 'I' char should be inserted between 'readonly' and 'E'");
       SimpleTest.finish();

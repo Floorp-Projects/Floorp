@@ -137,15 +137,15 @@ function startTests()
     }
 
     clear();
-    synthesizeKey("a", { type: "keydown" });
+    synthesizeKey("a", {type: "keydown"});
     checkKeyEvents(true, true, false, true, "a keydown and a keypress");
     is(textarea.value, "a", "textarea value isn't 'a'");
     clear();
-    synthesizeKey("a", { type: "keyup" });
+    synthesizeKey("a", {type: "keyup"});
     checkKeyEvents(false, false, true, false, "a keyup");
     clear();
-    synthesizeKey("VK_BACK_SPACE", {});
-    checkKeyEvents(true, true, true, true, "VK_BACK_SPACE key events");
+    synthesizeKey("KEY_Backspace");
+    checkKeyEvents(true, true, true, true, "KEY_Backspace key events");
     is(textarea.value, "", "textarea value isn't empty");
 
     // IME events

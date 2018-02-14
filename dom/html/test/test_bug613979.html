@@ -28,7 +28,7 @@ input.addEventListener("input", function() {
     ok(input.validity.valid, "input should be valid");
     testNum++;
     SimpleTest.executeSoon(function() {
-      synthesizeKey("VK_BACK_SPACE", {});
+      synthesizeKey("KEY_Backspace");
     });
   } else if (testNum == 1) {
     ok(!input.validity.valid, "input should not be valid");
@@ -41,7 +41,7 @@ SimpleTest.waitForExplicitFinish();
 
 SimpleTest.waitForFocus(function() {
   input.focus();
-  synthesizeKey("a", {});
+  sendString("a");
 });
 
 </script>

@@ -37,7 +37,7 @@ async function checkPopupContextMenu() {
   await contextMenuHiddenPromise;
   let popupHiddenPromise = onPopupEvent(BMB_menuPopup, "hidden");
   // Can't use synthesizeMouseAtCenter because the dropdown panel is in the way
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   info("Waiting for bookmarks menu to be hidden.");
   await popupHiddenPromise;
 }

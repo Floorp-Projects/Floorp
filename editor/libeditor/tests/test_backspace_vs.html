@@ -52,7 +52,7 @@ function test(edit, bsCount) {
   var sel = window.getSelection();
   sel.collapse(edit.childNodes[0], edit.textContent.length - 1);
   for (i = 0; i < bsCount; ++i) {
-    synthesizeKey("VK_BACK_SPACE", {});
+    synthesizeKey("KEY_Backspace");
   }
   is(edit.textContent, "ab", "The backspace key should delete the characters correctly");
 }
@@ -63,13 +63,11 @@ function testWithMove(edit, offset, bsCount) {
   sel.collapse(edit.childNodes[0], 0);
   var i;
   for (i = 0; i < offset; ++i) {
-    synthesizeKey("VK_RIGHT", {});
-    synthesizeKey("VK_LEFT", {});
-    synthesizeKey("VK_RIGHT", {});
+    synthesizeKey("KEY_ArrowRight");
+    synthesizeKey("KEY_ArrowLeft");
+    synthesizeKey("KEY_ArrowRight");
   }
-  for (i = 0; i < bsCount; ++i) {
-    synthesizeKey("VK_BACK_SPACE", {});
-  }
+  synthesizeKey("KEY_Backspace", {repeat: bsCount});
   is(edit.textContent, "ab", "The backspace key should delete the characters correctly");
 }
 

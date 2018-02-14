@@ -41,11 +41,11 @@
         textInput.focus();
         s1 = snapshotWindow(window);
 
-        synthesizeKey("VK_UP", { });
-        synthesizeKey("VK_UP", { });
-        synthesizeKey("VK_UP", { });
-        synthesizeKey("VK_DELETE", { });
-        synthesizeKey("VK_RETURN", { });
+        synthesizeKey("KEY_ArrowUp");
+        synthesizeKey("KEY_ArrowUp");
+        synthesizeKey("KEY_ArrowUp");
+        synthesizeKey("KEY_Delete");
+        synthesizeKey("KEY_Enter");
         // Bug 1016184: Touch caret will hide due to key event.
         s2 = snapshotWindow(window);
 

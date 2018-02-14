@@ -344,16 +344,16 @@ add_task(async function() {
     _lastfocus = "urlbar";
     _lastfocuswindow = "main-window";
 
-    await expectFocusShift(() => EventUtils.synthesizeKey("VK_F6", { }),
+    await expectFocusShift(() => EventUtils.synthesizeKey("KEY_F6"),
                            "window1", "html1",
                            true, "switch document forward with f6");
 
-    EventUtils.synthesizeKey("VK_F6", { });
+    EventUtils.synthesizeKey("KEY_F6");
     is(fm.focusedWindow, window, "switch document forward again with f6");
 
     browser1.style.MozUserFocus = "ignore";
     browser1.clientWidth;
-    EventUtils.synthesizeKey("VK_F6", { });
+    EventUtils.synthesizeKey("KEY_F6");
     is(fm.focusedWindow, window, "switch document forward again with f6 when browser non-focusable");
 
     browser1.style.MozUserFocus = "normal";

@@ -40,7 +40,7 @@ add_task(function* () {
   let onRuleViewChanged = once(view, "ruleview-changed");
 
   info("Entering the commit key");
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   yield onRuleViewChanged;
 
   info("Re-focusing the selector name in the rule-view");
@@ -61,7 +61,7 @@ add_task(function* () {
   onRuleViewChanged = once(view, "ruleview-changed");
 
   info("Entering the commit key");
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   yield onRuleViewChanged;
 
   is(view._elementStyle.rules.length, 2, "Should have 2 rules.");

@@ -33,7 +33,7 @@ is(false, document.queryCommandEnabled('cut'));
 is(false, document.queryCommandEnabled('copy'));
 
 // Fire a user callback
-synthesizeKey('A', {});
+sendString('A');
 
 ok(userCallbackRun, "User callback should've been run");
 

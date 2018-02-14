@@ -46,7 +46,7 @@ function runTest()
                   .QueryInterface(SpecialPowers.Ci.nsISelectionController);
     var sel = controller.getSelection(controller.SELECTION_NORMAL);
     sel.collapse(anchorInEditor, 0);
-    synthesizeKey('a', {});
+    sendString("a");
     range.selectNodeContents(editor);
     return prevStr != range.toString();
   }

@@ -70,7 +70,7 @@ add_task(function* () {
 
   info("Enter new value and commit.");
   editor.input.value = newValue;
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   yield onRuleViewChanged;
   ok(getRuleViewRule(view, newValue), "Rule with '" + newValue + " 'exists.");
 });

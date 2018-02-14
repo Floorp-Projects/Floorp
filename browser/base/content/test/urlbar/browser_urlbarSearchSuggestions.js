@@ -56,9 +56,9 @@ async function testPressEnterOnSuggestion(expectedUrl = null, keyModifiers = {})
   let promiseLoad = waitForDocLoadAndStopIt(expectedUrl);
 
   for (let i = 0; i < idx; ++i) {
-    EventUtils.synthesizeKey("VK_DOWN", {});
+    EventUtils.synthesizeKey("KEY_ArrowDown");
   }
-  EventUtils.synthesizeKey("VK_RETURN", keyModifiers);
+  EventUtils.synthesizeKey("KEY_Enter", keyModifiers);
 
   await promiseLoad;
   await BrowserTestUtils.removeTab(tab);
@@ -80,13 +80,13 @@ add_task(async function copySuggestionText() {
   await promiseAutocompleteResultPopup("foo");
   let [idx, suggestion] = await promiseFirstSuggestion();
   for (let i = 0; i < idx; ++i) {
-    EventUtils.synthesizeKey("VK_DOWN", {});
+    EventUtils.synthesizeKey("KEY_ArrowDown");
   }
   gURLBar.select();
   await new Promise((resolve, reject) => waitForClipboard(suggestion, function() {
     goDoCommand("cmd_copy");
   }, resolve, reject));
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   await promisePopupHidden(gURLBar.popup);
 });
 

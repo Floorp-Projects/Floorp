@@ -83,8 +83,8 @@ function doTest1(expectedEventLog,focusAfterCloseId) {
     var select1 = document.getElementById('Select1');
     select1.focus();
     is(document.activeElement, select1, "select element should be focused");
-    synthesizeKey("VK_DOWN",{});
-    synthesizeKey("VK_TAB", {});
+    synthesizeKey("KEY_ArrowDown");
+    synthesizeKey("KEY_Tab");
     SimpleTest.waitForFocus(function () { doTest1_rest1(expectedEventLog,focusAfterCloseId); }, popup);
 
   } catch(e) {

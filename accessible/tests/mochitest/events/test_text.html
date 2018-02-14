@@ -169,7 +169,7 @@
         this.DOMNode.focus();
         this.DOMNode.setSelectionRange(aStart, aEnd);
 
-        synthesizeKey("VK_DELETE", {});
+        synthesizeKey("KEY_Delete");
       };
 
       this.getID = function removeTextFromInput_getID() {
@@ -189,7 +189,7 @@
 
       this.invoke = function insertTextIntoInput_invoke() {
         this.DOMNode.focus();
-        synthesizeKey("a", {});
+        sendString("a");
       };
 
       this.getID = function insertTextIntoInput_getID() {
@@ -212,7 +212,7 @@
         range.setEnd(this.textNode, aEnd);
         selection.addRange(range);
 
-        synthesizeKey("VK_DELETE", {});
+        synthesizeKey("KEY_Delete");
       };
 
       this.getID = function removeTextFromEditable_getID() {

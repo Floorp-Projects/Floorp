@@ -51,7 +51,7 @@ function checkTooLongValidity(element)
 
   element.focus();
 
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_Backspace");
   is(element.value, "fo", "value should have changed");
   ok(element.validity.tooLong,
     "Element should be too long after a user edit that does not make it short enough");
@@ -63,7 +63,7 @@ function checkTooLongValidity(element)
           "Please shorten this text to 1 characters or less (you are currently using 2 characters).",
           "The validation message text is not correct");
 
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_Backspace");
   is(element.value, "f", "value should have changed");
   ok(!element.validity.tooLong,
     "Element should not be too long after a user edit makes it short enough");

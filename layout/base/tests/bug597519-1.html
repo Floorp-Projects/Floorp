@@ -7,10 +7,9 @@
   var t = document.querySelector("textarea");
   t.focus();
 
-  synthesizeKey("a", {});
-  synthesizeKey("b", {});
-  synthesizeKey("VK_RETURN", {});
-  synthesizeKey("c", {});
+  sendString("ab");
+  synthesizeKey("KEY_Enter");
+  sendString("c");
 </script>
 </body>
 </html>

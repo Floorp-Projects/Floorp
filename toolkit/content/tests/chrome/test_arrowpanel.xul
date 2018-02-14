@@ -201,7 +201,7 @@ function* nextTest()
     yield;
     window.removeEventListener("transitionend", transitionEnded, false);
 
-    synthesizeKey("VK_ESCAPE", { });
+    synthesizeKey("KEY_Escape");
     ok(!animatedPopupHidden, "animated popup not hidden yet");
     yield;
   }

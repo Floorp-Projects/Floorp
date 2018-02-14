@@ -86,19 +86,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=756984
       selRange = sel.getRangeAt(0);
       is(selRange.endContainer.nodeName, "#text", "selection should be in text node (1)");
       is(selRange.endOffset, 10, "offset should be 10");
-      synthesizeKey("X", {});
+      sendString("X");
 
       // 2) Down arrow to the end of the second line, add "Y".
-      synthesizeKey("VK_DOWN", {});
+      synthesizeKey("KEY_ArrowDown");
       selRange = sel.getRangeAt(0);
       is(selRange.endContainer.nodeName, "#text", "selection should be in text node (2)");
       is(selRange.endOffset, 3, "offset should be 3");
-      synthesizeKey("Y", {});
+      sendString("Y");
 
       // 3) Right arrow and end key to the end of the third line, add "Z".
-      synthesizeKey("VK_RIGHT", {});
+      synthesizeKey("KEY_ArrowRight");
       if (navigator.platform.indexOf("Win") == 0) {
-        synthesizeKey("VK_END", {});
+        synthesizeKey("KEY_End");
       } else {
         // End key doesn't work as expected on Mac and Linux.
         sel.modify("move", "right", "lineboundary");
@@ -106,26 +106,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=756984
       selRange = sel.getRangeAt(0);
       is(selRange.endContainer.nodeName, "#text", "selection should be in text node (3)");
       is(selRange.endOffset, 12, "offset should be 12");
-      synthesizeKey("Z", {});
+      sendString("Z");
 
       // 4) Up arrow to the end of the second line, add "T".
-      synthesizeKey("VK_UP", {});
+      synthesizeKey("KEY_ArrowUp");
       selRange = sel.getRangeAt(0);
       is(selRange.endContainer.nodeName, "#text", "selection should be in text node (4)");
       is(selRange.endOffset, 4, "offset should be 4");
-      synthesizeKey("T", {});
+      sendString("T");
 
       // 5) Left arrow six times to the end of the first line, add "A".
-      synthesizeKey("VK_LEFT", {});
-      synthesizeKey("VK_LEFT", {});
-      synthesizeKey("VK_LEFT", {});
-      synthesizeKey("VK_LEFT", {});
-      synthesizeKey("VK_LEFT", {});
-      synthesizeKey("VK_LEFT", {});
+      synthesizeKey("KEY_ArrowLeft", {repeat: 6});
       selRange = sel.getRangeAt(0);
       is(selRange.endContainer.nodeName, "#text", "selection should be in text node (5)");
       is(selRange.endOffset, 11, "offset should be 11");
-      synthesizeKey("A", {});
+      sendString("A");
 
       // Check the resulting HTML. First prepare what we expect.
       originalHTML = originalHTML.replace(/1234567890/, "1234567890XA");

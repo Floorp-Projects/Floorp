@@ -35,7 +35,7 @@ function runTests() {
   // Register a word to the form history.
   target.focus();
   target.value = "Mozilla";
-  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("KEY_Enter");
   target.value = "";
 
   new nsDoTestsForAutoCompleteWithComposition(

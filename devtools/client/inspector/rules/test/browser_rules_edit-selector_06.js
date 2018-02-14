@@ -32,7 +32,7 @@ function* testEditClassSelector(view) {
 
   editor.input.value = "body";
   let onRuleViewChanged = once(view, "ruleview-changed");
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   yield onRuleViewChanged;
 
   // Get the new rule editor that replaced the original
@@ -57,7 +57,7 @@ function* testEditDivSelector(view) {
 
   editor.input.value = "asdf";
   let onRuleViewChanged = once(view, "ruleview-changed");
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   yield onRuleViewChanged;
 
   // Get the new rule editor that replaced the original

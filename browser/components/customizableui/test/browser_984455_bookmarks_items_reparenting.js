@@ -103,7 +103,7 @@ function checkSpecialContextMenus() {
  */
 function closePopup(aPopup) {
   let hiddenPromise = popupHidden(aPopup);
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   return hiddenPromise;
 }
 

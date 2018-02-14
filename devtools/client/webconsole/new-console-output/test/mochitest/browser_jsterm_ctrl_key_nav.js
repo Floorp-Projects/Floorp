@@ -29,7 +29,7 @@ add_task(async function () {
 function testSingleLineInputNavNoHistory(jsterm) {
   let inputNode = jsterm.inputNode;
   // Single char input
-  EventUtils.synthesizeKey("1", {});
+  EventUtils.sendString("1");
   is(inputNode.selectionStart, 1, "caret location after single char input");
 
   // nav to start/end with ctrl-a and ctrl-e;
@@ -42,14 +42,14 @@ function testSingleLineInputNavNoHistory(jsterm) {
      "caret location after single char input and ctrl-e");
 
   // Second char input
-  EventUtils.synthesizeKey("2", {});
+  EventUtils.sendString("2");
   // nav to start/end with up/down keys; verify behaviour using ctrl-p/ctrl-n
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(inputNode.selectionStart, 0,
-     "caret location after two char input and VK_UP");
-  EventUtils.synthesizeKey("VK_DOWN", {});
+     "caret location after two char input and KEY_ArrowUp");
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(inputNode.selectionStart, 2,
-     "caret location after two char input and VK_DOWN");
+     "caret location after two char input and KEY_ArrowDown");
 
   synthesizeLineStartKey();
   is(inputNode.selectionStart, 0,
@@ -85,7 +85,7 @@ function testMultiLineInputNavNoHistory(jsterm) {
   // simulate shift-return
   for (let i = 0; i < lineValues.length; i++) {
     jsterm.setInputValue(jsterm.getInputValue() + lineValues[i]);
-    EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true });
+    EventUtils.synthesizeKey("KEY_Enter", {shiftKey: true});
   }
   let inputValue = jsterm.getInputValue();
   is(inputNode.selectionStart, inputNode.selectionEnd);
@@ -97,12 +97,12 @@ function testMultiLineInputNavNoHistory(jsterm) {
   let newlineString = inputValue.match(/(\r\n?|\n\r?)$/)[0];
 
   // Ok, test navigating within the multi-line string!
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   let expectedStringAfterCarat = lineValues[5] + newlineString;
   is(jsterm.getInputValue().slice(inputNode.selectionStart), expectedStringAfterCarat,
      "up arrow from end of multiline");
 
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(jsterm.getInputValue().slice(inputNode.selectionStart), "",
      "down arrow from within multiline");
 
@@ -226,17 +226,17 @@ function testNavWithHistory(jsterm) {
 }
 
 function synthesizeLineStartKey() {
-  EventUtils.synthesizeKey("a", { ctrlKey: true });
+  EventUtils.synthesizeKey("a", {ctrlKey: true});
 }
 
 function synthesizeLineEndKey() {
-  EventUtils.synthesizeKey("e", { ctrlKey: true });
+  EventUtils.synthesizeKey("e", {ctrlKey: true});
 }
 
 function synthesizeLineUpKey() {
-  EventUtils.synthesizeKey("p", { ctrlKey: true });
+  EventUtils.synthesizeKey("p", {ctrlKey: true});
 }
 
 function synthesizeLineDownKey() {
-  EventUtils.synthesizeKey("n", { ctrlKey: true });
+  EventUtils.synthesizeKey("n", {ctrlKey: true});
 }

@@ -36,12 +36,12 @@ function* testEditSelector(view) {
 
   editor.input.value = "#testid span";
   let onRuleViewChanged = once(view, "ruleview-changed");
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   yield onRuleViewChanged;
 
   // Escape the new property editor after editing the selector
   let onBlur = once(view.styleDocument.activeElement, "blur");
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
+  EventUtils.synthesizeKey("KEY_Escape", {}, view.styleWindow);
   yield onBlur;
 
   // Get the new rule editor that replaced the original

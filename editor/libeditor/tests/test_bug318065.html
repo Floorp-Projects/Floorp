@@ -53,8 +53,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=318065
         input.focus();
 
         // Tests 0 + 1: Input letter and delete it again
-        synthesizeKey("A", {});
-        synthesizeKey("VK_BACK_SPACE", {});
+        sendString("A");
+        synthesizeKey("KEY_Backspace");
 
         // Test 2: Undo deletion. Value of input should be "A"
         synthesizeKey("Z", {accelKey: true});
@@ -65,7 +65,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=318065
         input2.focus();
 
         // Test 4: Input letter
-        synthesizeKey("A", {});
+        sendString("A");
 
         // Test 5: Undo typing. Value of input should be ""
         synthesizeKey("Z", {accelKey: true});

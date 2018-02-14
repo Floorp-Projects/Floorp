@@ -10,7 +10,7 @@ add_task(async function() {
   is(gURLBar.popup.state, "open", "Popup should be open");
   is(gURLBar.popup.richlistbox.selectedIndex, 0, "Should have selected something");
 
-  EventUtils.synthesizeKey("VK_RIGHT", {});
+  EventUtils.synthesizeKey("KEY_ArrowRight");
   await promisePopupHidden(gURLBar.popup);
 
   is(gURLBar.selectionStart, 5, "Should have moved the cursor");

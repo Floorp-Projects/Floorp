@@ -8,15 +8,15 @@
     <script>
         function test1() {
           const kIsMac = navigator.platform.indexOf("Mac") == 0;
-          synthesizeKey("VK_DOWN", {});  // go to the second line
+          synthesizeKey("KEY_ArrowDown");  // go to the second line
           // go to the end of the second line
           if (kIsMac) {
-            synthesizeKey("VK_RIGHT", {accelKey: true});
+            synthesizeKey("KEY_ArrowRight", {accelKey: true});
           } else {
-            synthesizeKey("VK_END", {});
+            synthesizeKey("KEY_End");
           }
-          synthesizeKey("VK_RIGHT", { shiftKey: true }); // select the newline
-          synthesizeKey("VK_RIGHT", {}); // collapse to the end of the selection
+          synthesizeKey("KEY_ArrowRight", {shiftKey: true}); // select the newline
+          synthesizeKey("KEY_ArrowRight"); // collapse to the end of the selection
           // caret should now be at the start of the third line
           document.body.offsetHeight;
           setTimeout(function(){ document.documentElement.removeAttribute("class"); },0);

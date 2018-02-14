@@ -120,7 +120,7 @@ var tests = [
         // Typing in the location bar should hide the notification.
         let hidden = waitForNotificationPanelHidden();
         gURLBar.select();
-        EventUtils.synthesizeKey("*", {});
+        EventUtils.sendString("*");
         await hidden;
 
         is(document.getElementById("geo-notification-icon").boxObject.width, 0,
@@ -130,8 +130,8 @@ var tests = [
         // anchored to the identity icon. We clear the URL bar before moving the
         // focus so that the awesomebar popup doesn't get in the way.
         shown = waitForNotificationPanel();
-        EventUtils.synthesizeKey("VK_BACK_SPACE", {});
-        EventUtils.synthesizeKey("VK_TAB", {});
+        EventUtils.synthesizeKey("KEY_Backspace");
+        EventUtils.synthesizeKey("KEY_Tab");
         await shown;
 
         is(PopupNotifications.panel.anchorNode.id, "identity-icon",
@@ -139,12 +139,12 @@ var tests = [
 
         // Moving focus to the location bar should hide the notification again.
         hidden = waitForNotificationPanelHidden();
-        EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
+        EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
         await hidden;
 
         // Reverting the URL should show the notification again.
         shown = waitForNotificationPanel();
-        EventUtils.synthesizeKey("VK_ESCAPE", {});
+        EventUtils.synthesizeKey("KEY_Escape");
         await shown;
 
         checkPopup(PopupNotifications.panel, this.notifyObj);
@@ -163,8 +163,8 @@ var tests = [
       for (let persistent of [false, true]) {
         // Start editing the URL, ensuring that the awesomebar popup is hidden.
         gURLBar.select();
-        EventUtils.synthesizeKey("*", {});
-        EventUtils.synthesizeKey("VK_BACK_SPACE", {});
+        EventUtils.sendString("*");
+        EventUtils.synthesizeKey("KEY_Backspace");
 
         // Trying to show a notification should display nothing.
         let notShowing = promiseTopicObserved("PopupNotifications-updateNotShowing");
@@ -176,7 +176,7 @@ var tests = [
 
         // Reverting the URL should show the notification.
         let shown = waitForNotificationPanel();
-        EventUtils.synthesizeKey("VK_ESCAPE", {});
+        EventUtils.synthesizeKey("KEY_Escape");
         await shown;
 
         checkPopup(PopupNotifications.panel, this.notifyObj);
@@ -210,7 +210,7 @@ var tests = [
 
       // Start editing the URL.
       gURLBar.select();
-      EventUtils.synthesizeKey("*", {});
+      EventUtils.sendString("*");
 
       // Switching to the old tab should show the notification again.
       shown = waitForNotificationPanel();

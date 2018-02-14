@@ -2,7 +2,7 @@
 
 async function checkURLBarValueStays(browser) {
   gURLBar.select();
-  EventUtils.synthesizeKey("a", {});
+  EventUtils.sendString("a");
   is(gURLBar.value, "a", "URL bar value should match after sending a key");
   await new Promise(resolve => {
     let listener = {

@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829606
     element.selectionStart = element.selectionEnd = element.value.length;
 
     setTimeout(function() {
-      synthesizeKey('f', {});
+      sendString('f');
 
       requestAnimationFrame(function() {
         var selectionAtTheEndSnapshot = snapshotWindow(window);

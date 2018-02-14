@@ -14,7 +14,7 @@
         sel.collapse(div, 0);
         // Press Right four times to set the caret right before "baz"
         for (var i = 0; i < 5; ++i) {
-          synthesizeKey("VK_RIGHT", {});
+          synthesizeKey("KEY_ArrowRight");
         }
         document.documentElement.removeAttribute("class");
       }

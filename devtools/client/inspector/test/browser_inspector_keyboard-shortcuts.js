@@ -12,12 +12,12 @@ const TEST_URI = "data:text/html;charset=utf-8," +
   " I come in peace.</p></body></html>";
 
 const TEST_DATA = [
-  { key: "VK_LEFT", selectedNode: "p" },
-  { key: "VK_LEFT", selectedNode: "body" },
-  { key: "VK_LEFT", selectedNode: "html" },
-  { key: "VK_RIGHT", selectedNode: "body" },
-  { key: "VK_RIGHT", selectedNode: "p" },
-  { key: "VK_RIGHT", selectedNode: "strong" },
+  { key: "KEY_ArrowLeft", selectedNode: "p" },
+  { key: "KEY_ArrowLeft", selectedNode: "body" },
+  { key: "KEY_ArrowLeft", selectedNode: "html" },
+  { key: "KEY_ArrowRight", selectedNode: "body" },
+  { key: "KEY_ArrowRight", selectedNode: "p" },
+  { key: "KEY_ArrowRight", selectedNode: "strong" },
 ];
 
 add_task(function* () {
@@ -38,7 +38,7 @@ add_task(function* () {
     info("Pressing " + key + " to select " + selectedNode);
 
     let updated = inspector.once("inspector-updated");
-    EventUtils.synthesizeKey(key, {});
+    EventUtils.synthesizeKey(key);
     yield updated;
 
     let selectedNodeFront = yield getNodeFront(selectedNode, inspector);

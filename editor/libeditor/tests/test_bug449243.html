@@ -55,7 +55,7 @@ function split(element, caretPos, nbKeyPresses) {
   
   // simulates a [Return] keypress
   for (var i = 0; i < nbKeyPresses; i++)
-    synthesizeKey("VK_RETURN", {});
+    synthesizeKey("KEY_Enter");
 }
 
 function undo(nbKeyPresses) {

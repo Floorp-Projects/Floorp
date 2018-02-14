@@ -33,11 +33,11 @@ SimpleTest.waitForFocus(function() {
   synthesizeMouseAtCenter(div, {});
 
   getSpellChecker().UpdateCurrentDictionary(() => {
-    synthesizeKey(" ", {});
+    sendString(" ");
     setTimeout(function() {
-      synthesizeKey("a", {});
+      sendString("a");
       setTimeout(function() {
-        synthesizeKey("VK_BACK_SPACE", {});
+        synthesizeKey("KEY_Backspace");
 
         onSpellCheck(div, function() {
           var sel = getSpellCheckSelection();

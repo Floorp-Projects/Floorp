@@ -27,7 +27,7 @@
 
       this.invoke = function openFileMenu_invoke()
       {
-        synthesizeKey("F", { altKey: true, shiftKey: true });
+        synthesizeKey("F", {altKey: true, shiftKey: true});
       }
 
       this.getID = function openFileMenu_getID()
@@ -46,7 +46,7 @@
 
       this.invoke = function openEditMenu_invoke()
       {
-        synthesizeKey("VK_RIGHT", { });
+        synthesizeKey("KEY_ArrowRight");
       }
 
       this.getID = function openEditMenu_getID()
@@ -65,7 +65,7 @@
 
       this.invoke = function closeEditMenu_invoke()
       {
-        synthesizeKey("VK_ESCAPE", { });
+        synthesizeKey("KEY_Escape");
       }
 
       this.getID = function closeEditMenu_getID()
@@ -83,7 +83,7 @@
 
       this.invoke = function focusFileMenu_invoke()
       {
-        synthesizeKey("VK_ALT", { });
+        synthesizeKey("KEY_Alt");
       }
 
       this.getID = function focusFileMenu_getID()
@@ -100,7 +100,7 @@
 
       this.invoke = function focusEditMenu_invoke()
       {
-        synthesizeKey("VK_RIGHT", { });
+        synthesizeKey("KEY_ArrowRight");
       }
 
       this.getID = function focusEditMenu_getID()
@@ -118,7 +118,7 @@
 
       this.invoke = function leaveMenubar_invoke()
       {
-        synthesizeKey("VK_ESCAPE", { });
+        synthesizeKey("KEY_Escape");
       }
 
       this.getID = function leaveMenubar_getID()

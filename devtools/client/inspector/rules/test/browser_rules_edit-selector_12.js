@@ -21,12 +21,12 @@ add_task(function* () {
   info("Change the selector to something else");
   editor.input.value = "div";
   let onRuleViewChanged = once(view, "ruleview-changed");
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   yield onRuleViewChanged;
 
   info("Escape the new property editor after editing the selector");
   let onBlur = once(view.styleDocument.activeElement, "blur");
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
+  EventUtils.synthesizeKey("KEY_Escape", {}, view.styleWindow);
   yield onBlur;
 
   info("Check the rules are still displayed correctly");

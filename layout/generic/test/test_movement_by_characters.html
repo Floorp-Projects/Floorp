@@ -34,13 +34,13 @@ function test() {
   var editor = document.getElementById("editor");
 
   function testRight(node, offset) {
-    synthesizeKey("VK_RIGHT", {});
+    synthesizeKey("KEY_ArrowRight");
     is(sel.anchorNode, node, "Right movement broken in " + editor.innerHTML);
     is(sel.anchorOffset, offset, "Right movement broken in " + editor.innerHTML);
   }
 
   function testLeft(node, offset) {
-    synthesizeKey("VK_LEFT", {});
+    synthesizeKey("KEY_ArrowLeft");
     is(sel.anchorNode, node, "Left movement broken in " + editor.innerHTML);
     is(sel.anchorOffset, offset, "Left movement broken in " + editor.innerHTML);
   }

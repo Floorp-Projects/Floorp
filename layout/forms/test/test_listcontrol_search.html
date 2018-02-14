@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=849438
   SimpleTest.waitForFocus(function() {
     var select = document.getElementsByTagName('select')[0];
     select.focus();
-    synthesizeKey('a', {});
+    sendString('a');
 
     is(select.options[0].selected, false, "the first option isn't selected");
     is(select.options[1].selected, true, "the second option is selected");

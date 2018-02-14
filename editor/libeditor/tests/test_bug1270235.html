@@ -37,7 +37,7 @@ SimpleTest.waitForFocus(()=>{
   ok(selection.isCollapsed, 'isCollapsed must be true');
 
   // Don't crash by user input
-  synthesizeKey("X", {});
+  sendString("X");
 
   SimpleTest.finish();
 });

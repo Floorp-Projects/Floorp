@@ -55,7 +55,7 @@
           ] };
         testAccessibleTree(this.button, tree);
 
-        synthesizeKey("VK_ESCAPE", { });
+        synthesizeKey("KEY_Escape");
       }
 
       this.getID = function openMenu_getID()

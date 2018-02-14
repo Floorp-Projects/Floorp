@@ -70,7 +70,7 @@ function* chooseWithInspectElementContextMenu(selector, tab) {
     button: 2
   }, tab.linkedBrowser);
 
-  yield EventUtils.synthesizeKey("Q", {});
+  yield EventUtils.sendString("Q");
 }
 
 function waitForLinkedBrowserEvent(tab, event) {

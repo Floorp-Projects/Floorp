@@ -129,7 +129,7 @@ function checkNext() {
   autocomplete.completeDefaultIndex = tests[currentTest].completeDefaultIndex;
   autocomplete.focus();
 
-  synthesizeKey(tests[currentTest].key, {});
+  synthesizeKey(tests[currentTest].key);
 }
 
 function checkResult() {
@@ -154,11 +154,11 @@ function checkResult() {
     setTimeout(checkNext, 0);
   else {
     // TODO (bug 494809): Autocomplete-in-the-middle should take in count RTL
-    // and complete on VK_RIGHT or VK_LEFT based on that.  It should also revert
+    // and complete on KEY_ArrowRight or KEY_ArrowLeft based on that.  It should also revert
     // what user has typed to far if he moves in the opposite direction.
     if (!autocomplete.value.includes(">>")) {
       // Test result if user accepts autocomplete suggestion.
-      synthesizeKey("VK_RIGHT", {});
+      synthesizeKey("KEY_ArrowRight");
       is(autocomplete.value, "Result",
          "Test complete: autocomplete.value should equal 'Result'");
       is(autocomplete.selectionStart, 6,

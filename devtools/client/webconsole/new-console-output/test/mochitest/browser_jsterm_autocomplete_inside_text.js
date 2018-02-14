@@ -31,14 +31,14 @@ add_task(async function () {
   const dumpString = "dump(window.testBu)";
   jsterm.setInputValue(dumpString);
   inputNode.selectionStart = inputNode.selectionEnd = dumpString.indexOf(")");
-  EventUtils.synthesizeKey("g", {});
+  EventUtils.sendString("g");
 
   await onPopUpOpen;
 
   ok(popup.isOpen, "popup is open");
   is(popup.itemCount, 2, "popup.itemCount is correct");
 
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(popup.selectedIndex, 0, "popup.selectedIndex is correct");
   ok(!completeNode.value, "completeNode.value is empty");
 
@@ -48,7 +48,7 @@ add_task(async function () {
 
   info("press Tab and wait for popup to hide");
   const onPopupClose = popup.once("popup-closed");
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("KEY_Tab");
 
   await onPopupClose;
 

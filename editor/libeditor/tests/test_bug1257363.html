@@ -38,22 +38,22 @@ SimpleTest.waitForFocus(function() {
   is(selRange.endOffset, 5, "offset should be 5");
 
   // Return and backspace should take us to where we started.
-  synthesizeKey("VK_RETURN", {});
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_Enter");
+  synthesizeKey("KEY_Backspace");
 
   selRange = sel.getRangeAt(0);
   is(selRange.endContainer.nodeName, "#text", "selection should be at the end of text node");
   is(selRange.endOffset, 5, "offset should be 5");
 
   // Add an "a" to the end of the paragraph.
-  synthesizeKey("a", {});
+  sendString("a");
 
   // Return and forward delete should take us to the following line.
-  synthesizeKey("VK_RETURN", {});
-  synthesizeKey("VK_DELETE", {});
+  synthesizeKey("KEY_Enter");
+  synthesizeKey("KEY_Delete");
 
   // Add a "b" to the start.
-  synthesizeKey("b", {});
+  sendString("b");
 
   is(div.innerHTML, "<p style=\"color:red;\">12345a</p>b67",
                     "unexpected HTML");
@@ -70,22 +70,22 @@ SimpleTest.waitForFocus(function() {
   is(selRange.endOffset, 5, "offset should be 5");
 
   // Return and backspace should take us to where we started.
-  synthesizeKey("VK_RETURN", {});
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_Enter");
+  synthesizeKey("KEY_Backspace");
 
   selRange = sel.getRangeAt(0);
   is(selRange.endContainer.nodeName, "#text", "selection should be at the end of text node");
   is(selRange.endOffset, 5, "offset should be 5");
 
   // Add an "a" to the end of the paragraph.
-  synthesizeKey("a", {});
+  sendString("a");
 
   // Return and forward delete should take us to the following line.
-  synthesizeKey("VK_RETURN", {});
-  synthesizeKey("VK_DELETE", {});
+  synthesizeKey("KEY_Enter");
+  synthesizeKey("KEY_Delete");
 
   // Add a "b" to the start.
-  synthesizeKey("b", {});
+  sendString("b");
 
   // Here we get a somewhat ugly result since the red sticks.
   is(div.innerHTML, "<p><font color=\"red\">12345a</font></p><font color=\"red\">b</font>67",
@@ -103,8 +103,8 @@ SimpleTest.waitForFocus(function() {
 
   // left, enter should create a new empty paragraph before
   // but leave the selection at the start of the existing paragraph.
-  synthesizeKey("VK_LEFT", {});
-  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("KEY_Enter");
 
   selRange = sel.getRangeAt(0);
   is(selRange.endContainer.nodeName, "#text", "selection should be at the start of text node");
@@ -112,21 +112,21 @@ SimpleTest.waitForFocus(function() {
   is(selRange.endContainer.nodeValue, "x", "we should be in the text node with the x");
 
   // Now moving up into the new empty paragraph.
-  synthesizeKey("VK_UP", {});
+  synthesizeKey("KEY_ArrowUp");
 
   selRange = sel.getRangeAt(0);
   is(selRange.endContainer.nodeName, "P", "selection should be the new empty paragraph");
   is(selRange.endOffset, 0, "offset should be 0");
 
   // Forward delete should now take us to where we started.
-  synthesizeKey("VK_DELETE", {});
+  synthesizeKey("KEY_Delete");
 
   selRange = sel.getRangeAt(0);
   is(selRange.endContainer.nodeName, "#text", "selection should be at the start of text node");
   is(selRange.endOffset, 0, "offset should be 0");
 
   // Add an "a" to the start of the paragraph.
-  synthesizeKey("a", {});
+  sendString("a");
 
   is(div.innerHTML, "<p style=\"color:red;\">ax</p>",
                     "unexpected HTML");
@@ -143,8 +143,8 @@ SimpleTest.waitForFocus(function() {
 
   // left, enter should create a new empty paragraph before
   // but leave the selection at the start of the existing paragraph.
-  synthesizeKey("VK_LEFT", {});
-  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("KEY_Enter");
 
   selRange = sel.getRangeAt(0);
   is(selRange.endContainer.nodeName, "#text", "selection should be at the start of text node");
@@ -152,7 +152,7 @@ SimpleTest.waitForFocus(function() {
   is(selRange.endContainer.nodeValue, "y", "we should be in the text node with the y");
 
   // Now moving up into the new empty paragraph.
-  synthesizeKey("VK_UP", {});
+  synthesizeKey("KEY_ArrowUp");
 
   selRange = sel.getRangeAt(0);
   is(selRange.endContainer.nodeName, "FONT", "selection should be the font tag");
@@ -160,14 +160,14 @@ SimpleTest.waitForFocus(function() {
   is(selRange.endContainer.parentNode.nodeName, "P", "the parent of the font should be a paragraph");
 
   // Forward delete should now take us to where we started.
-  synthesizeKey("VK_DELETE", {});
+  synthesizeKey("KEY_Delete");
 
   selRange = sel.getRangeAt(0);
   is(selRange.endContainer.nodeName, "#text", "selection should be at the start of text node");
   is(selRange.endOffset, 0, "offset should be 0");
 
   // Add an "a" to the start of the paragraph.
-  synthesizeKey("a", {});
+  sendString("a");
 
   is(div.innerHTML, "<p><font color=\"red\">ay</font></p>",
                     "unexpected HTML");

@@ -47,7 +47,7 @@ function test() {
         Services.search.removeEngine(fooEngine);
       }
 
-      EventUtils.synthesizeKey("VK_RETURN", {});
+      EventUtils.synthesizeKey("KEY_Enter");
       executeSoon(() => executeSoon(afterSearch));
   }
 

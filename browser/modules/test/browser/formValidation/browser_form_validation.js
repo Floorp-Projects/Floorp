@@ -188,7 +188,7 @@ add_task(async function() {
   await checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
 
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popuphidden");
-  EventUtils.synthesizeKey("a", {});
+  EventUtils.sendString("a");
   await popupHiddenPromise;
 
   gBrowser.removeCurrentTab();
@@ -211,7 +211,7 @@ add_task(async function() {
   await checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
 
   await new Promise((resolve, reject) => {
-    EventUtils.synthesizeKey("a", {});
+    EventUtils.sendString("a");
     executeSoon(function() {
       checkPopupShow();
       resolve();
@@ -260,7 +260,7 @@ add_task(async function() {
   await checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
 
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(gInvalidFormPopup, "popuphidden");
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("KEY_Tab");
   await popupHiddenPromise;
 
   gBrowser.removeCurrentTab();
@@ -394,7 +394,7 @@ add_task(async function() {
 
   // eslint-disable-next-line mozilla/no-cpows-in-tests
   let inputPromise = BrowserTestUtils.waitForEvent(gBrowser.contentDocument.getElementById("i"), "input");
-  EventUtils.synthesizeKey("f", {});
+  EventUtils.sendString("f");
   await inputPromise;
 
   // Now, the element suffers from another error, the message should have

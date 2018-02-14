@@ -32,12 +32,12 @@ function testInputExpansion(hud) {
   input.selectionStart = length;
   // Performs an "d". This will trigger/test for the input event that should
   // change the height of the inputNode.
-  EventUtils.synthesizeKey("d", {});
+  EventUtils.sendString("d");
   ok(input.clientHeight > ordinaryHeight, "the input expanded");
 
   // Test if the inputNode shrinks again.
   input.value = "";
-  EventUtils.synthesizeKey("d", {});
+  EventUtils.sendString("d");
   is(input.clientHeight, ordinaryHeight, "the input's height is normal again");
 
   input = length = null;

@@ -84,7 +84,7 @@ add_task(async function() {
 
   info("Send the first escape");
   let popupHidePromise = promiseWaitForEvent(window, "popuphidden");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   await popupHidePromise;
   is(contextMenu.state, "closed", "Should have closed context menu");
 
@@ -100,7 +100,7 @@ add_task(async function() {
   gMessageManager.removeMessageListener(
     "Test:FullscreenChanged", captureUnexpectedFullscreenChange);
   let fullscreenExitPromise = promiseOneMessage("Test:FullscreenChanged");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   state = await fullscreenExitPromise;
   ok(!state, "The content should have exited fullscreen");
   ok(!document.fullscreenElement, "The chrome should have exited fullscreen");

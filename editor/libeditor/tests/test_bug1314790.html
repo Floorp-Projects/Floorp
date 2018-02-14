@@ -29,16 +29,8 @@ SimpleTest.waitForFocus(function() {
   SpecialPowers.doCommand(window, "cmd_wordNext");
   SpecialPowers.doCommand(window, "cmd_wordNext");
 
-  synthesizeKey("VK_RETURN", {});
-  synthesizeKey("a", {});
-  synthesizeKey("p", {});
-  synthesizeKey("p", {});
-  synthesizeKey("l", {});
-  synthesizeKey("e", {});
-  synthesizeKey(" ", {});
-  synthesizeKey("p", {});
-  synthesizeKey("e", {});
-  synthesizeKey("n", {});
+  synthesizeKey("KEY_Enter");
+  sendString("apple pen");
 
   is(elm.childNodes[0].textContent, "pen pineapple",
      "'pen pineapple' is first elment");

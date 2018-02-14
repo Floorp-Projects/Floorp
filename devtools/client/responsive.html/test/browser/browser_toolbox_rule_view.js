@@ -63,7 +63,7 @@ async function testEscapeOpensSplitConsole(inspector) {
 
   info("Press escape");
   let onSplit = inspector._toolbox.once("split-console");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   await onSplit;
 
   ok(inspector._toolbox._splitConsole, "Console is split after pressing ESC.");

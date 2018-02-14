@@ -28,11 +28,11 @@ function runTest()
   var pbutton = document.getElementById("pbutton");
   pbutton.focus();
 
-  synthesizeKey("VK_TAB", { });
+  synthesizeKey("KEY_Tab");
   is(document.activeElement, obj, "focus in parent after tab");
   is(childDoc.activeElement, childDoc.documentElement, "focus in child after tab");
 
-  synthesizeKey("VK_TAB", { });
+  synthesizeKey("KEY_Tab");
   is(document.activeElement, obj, "focus in parent after tab 2");
   is(childDoc.activeElement, button, "focus in child after tab 2");
 

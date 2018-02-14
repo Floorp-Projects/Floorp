@@ -119,32 +119,32 @@ function runTests()
     //   Otherwise, editor doesn't consume the event but the native key
     //   bindings on nsTextControlFrame may consume it.
     reset("");
-    synthesizeKey("VK_BACK_SPACE", { });
+    synthesizeKey("KEY_Backspace");
     check(aDescription + "Backspace", true, true, true);
 
     reset("");
-    synthesizeKey("VK_BACK_SPACE", { shiftKey: true });
+    synthesizeKey("KEY_Backspace", {shiftKey: true});
     check(aDescription + "Shift+Backspace", true, true, true);
 
     reset("");
-    synthesizeKey("VK_BACK_SPACE", { ctrlKey: true });
+    synthesizeKey("KEY_Backspace", {ctrlKey: true});
     // Win: cmd_deleteWordBackward
     check(aDescription + "Ctrl+Backspace",
           true, true, aIsReadonly || kIsWin);
 
     reset("");
-    synthesizeKey("VK_BACK_SPACE", { altKey: true });
+    synthesizeKey("KEY_Backspace", {altKey: true});
     // Win: cmd_undo
     // Mac: cmd_deleteWordBackward
     check(aDescription + "Alt+Backspace",
           true, true, aIsReadonly || kIsWin || kIsMac);
 
     reset("");
-    synthesizeKey("VK_BACK_SPACE", { metaKey: true });
+    synthesizeKey("KEY_Backspace", {metaKey: true});
     check(aDescription + "Meta+Backspace", true, true, aIsReadonly);
 
     reset("");
-    synthesizeKey("VK_BACK_SPACE", { osKey: true });
+    synthesizeKey("KEY_Backspace", {osKey: true});
     check(aDescription + "OS+Backspace", true, true, aIsReadonly);
 
     // Delete key:
@@ -153,7 +153,7 @@ function runTests()
     //   Otherwise, editor doesn't consume the event but the native key
     //   bindings on nsTextControlFrame may consume it.
     reset("");
-    synthesizeKey("VK_DELETE", { });
+    synthesizeKey("KEY_Delete");
     // Linux: native handler
     // Mac: cmd_deleteCharForward
     check(aDescription + "Delete",
@@ -163,31 +163,31 @@ function runTests()
     // Win: cmd_cutOrDelete
     // Linux: cmd_cut
     // Mac: cmd_deleteCharForward
-    synthesizeKey("VK_DELETE", { shiftKey: true });
+    synthesizeKey("KEY_Delete", {shiftKey: true});
     check(aDescription + "Shift+Delete",
           true, true, true);
 
     reset("");
-    synthesizeKey("VK_DELETE", { ctrlKey: true });
+    synthesizeKey("KEY_Delete", {ctrlKey: true});
     // Win: cmd_deleteWordForward
     // Linux: cmd_copy
     check(aDescription + "Ctrl+Delete",
           true, true, kIsWin || kIsLinux);
 
     reset("");
-    synthesizeKey("VK_DELETE", { altKey: true });
+    synthesizeKey("KEY_Delete", {altKey: true});
     // Mac: cmd_deleteWordForward
     check(aDescription + "Alt+Delete",
           true, true, kIsMac);
 
     reset("");
-    synthesizeKey("VK_DELETE", { metaKey: true });
+    synthesizeKey("KEY_Delete", {metaKey: true});
     // Linux: native handler consumed.
     check(aDescription + "Meta+Delete",
           true, true, kIsLinux);
 
     reset("");
-    synthesizeKey("VK_DELETE", { osKey: true });
+    synthesizeKey("KEY_Delete", {osKey: true});
     check(aDescription + "OS+Delete",
           true, true, false);
 
@@ -200,36 +200,36 @@ function runTests()
     //   and Shift+Return.
     //   Otherwise, editor doesn't consume the event.
     reset("a");
-    synthesizeKey("VK_RETURN", { });
+    synthesizeKey("KEY_Enter");
     check(aDescription + "Return",
           true, true, !aIsSingleLine && !aIsReadonly);
     is(aElement.value, !aIsSingleLine && !aIsReadonly ? "a\n" : "a",
        aDescription + "Return");
 
     reset("a");
-    synthesizeKey("VK_RETURN", { shiftKey: true });
+    synthesizeKey("KEY_Enter", {shiftKey: true});
     check(aDescription + "Shift+Return",
           true, true, !aIsSingleLine && !aIsReadonly);
     is(aElement.value, !aIsSingleLine && !aIsReadonly ? "a\n" : "a",
        aDescription + "Shift+Return");
 
     reset("a");
-    synthesizeKey("VK_RETURN", { ctrlKey: true });
+    synthesizeKey("KEY_Enter", {ctrlKey: true});
     check(aDescription + "Ctrl+Return", true, true, false);
     is(aElement.value, "a", aDescription + "Ctrl+Return");
 
     reset("a");
-    synthesizeKey("VK_RETURN", { altKey: true });
+    synthesizeKey("KEY_Enter", {altKey: true});
     check(aDescription + "Alt+Return", true, true, false);
     is(aElement.value, "a", aDescription + "Alt+Return");
 
     reset("a");
-    synthesizeKey("VK_RETURN", { metaKey: true });
+    synthesizeKey("KEY_Enter", {metaKey: true});
     check(aDescription + "Meta+Return", true, true, false);
     is(aElement.value, "a", aDescription + "Meta+Return");
 
     reset("a");
-    synthesizeKey("VK_RETURN", { osKey: true });
+    synthesizeKey("KEY_Enter", {osKey: true});
     check(aDescription + "OS+Return", true, true, false);
     is(aElement.value, "a", aDescription + "OS+Return");
 
@@ -237,7 +237,7 @@ function runTests()
     //   If editor is tabbable, editor doesn't consume all tab key events.
     //   Otherwise, editor consumes tab key event without any modifier keys.
     reset("a");
-    synthesizeKey("VK_TAB", { });
+    synthesizeKey("KEY_Tab");
     check(aDescription + "Tab",
           true, true, !aIsTabbable && !aIsReadonly);
     is(aElement.value, !aIsTabbable && !aIsReadonly ? "a\t" : "a",
@@ -249,7 +249,7 @@ function runTests()
     // even if it's empty.
     if (!aIsTabbable && !aIsReadonly) {
       reset("");
-      synthesizeKey("VK_TAB", {});
+      synthesizeKey("KEY_Tab");
       check(aDescription + "Tab on empty textarea",
             true, true, !aIsReadonly);
       is(aElement.value, "\t", aDescription + "Tab on empty textarea");
@@ -258,7 +258,7 @@ function runTests()
     }
 
     reset("a");
-    synthesizeKey("VK_TAB", { shiftKey: true });
+    synthesizeKey("KEY_Tab", {shiftKey: true});
     check(aDescription + "Shift+Tab", true, true, false);
     is(aElement.value, "a", aDescription + "Shift+Tab");
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
@@ -267,28 +267,28 @@ function runTests()
     // Ctrl+Tab should be consumed by tabbrowser at keydown, so, keypress
     // event should never be fired.
     reset("a");
-    synthesizeKey("VK_TAB", { ctrlKey: true });
+    synthesizeKey("KEY_Tab", {ctrlKey: true});
     check(aDescription + "Ctrl+Tab", false, false, false);
     is(aElement.value, "a", aDescription + "Ctrl+Tab");
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Ctrl+Tab)");
 
     reset("a");
-    synthesizeKey("VK_TAB", { altKey: true });
+    synthesizeKey("KEY_Tab", {altKey: true});
     check(aDescription + "Alt+Tab", true, true, false);
     is(aElement.value, "a", aDescription + "Alt+Tab");
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Alt+Tab)");
 
     reset("a");
-    synthesizeKey("VK_TAB", { metaKey: true });
+    synthesizeKey("KEY_Tab", {metaKey: true});
     check(aDescription + "Meta+Tab", true, true, false);
     is(aElement.value, "a", aDescription + "Meta+Tab");
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Meta+Tab)");
 
     reset("a");
-    synthesizeKey("VK_TAB", { osKey: true });
+    synthesizeKey("KEY_Tab", {osKey: true});
     check(aDescription + "OS+Tab", true, true, false);
     is(aElement.value, "a", aDescription + "OS+Tab");
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
@@ -297,46 +297,46 @@ function runTests()
     // Esc key:
     //   In all cases, esc key events are not consumed
     reset("abc");
-    synthesizeKey("VK_ESCAPE", { });
+    synthesizeKey("KEY_Escape");
     check(aDescription + "Esc", true, true, false);
 
     reset("abc");
-    synthesizeKey("VK_ESCAPE", { shiftKey: true });
+    synthesizeKey("KEY_Escape", {shiftKey: true});
     check(aDescription + "Shift+Esc", true, true, false);
 
     reset("abc");
-    synthesizeKey("VK_ESCAPE", { ctrlKey: true });
+    synthesizeKey("KEY_Escape", {ctrlKey: true});
     check(aDescription + "Ctrl+Esc", true, true, false);
 
     reset("abc");
-    synthesizeKey("VK_ESCAPE", { altKey: true });
+    synthesizeKey("KEY_Escape", {altKey: true});
     check(aDescription + "Alt+Esc", true, true, false);
 
     reset("abc");
-    synthesizeKey("VK_ESCAPE", { metaKey: true });
+    synthesizeKey("KEY_Escape", {metaKey: true});
     check(aDescription + "Meta+Esc", true, true, false);
 
     reset("abc");
-    synthesizeKey("VK_ESCAPE", { osKey: true });
+    synthesizeKey("KEY_Escape", {osKey: true});
     check(aDescription + "OS+Esc", true, true, false);
 
     // typical typing tests:
     reset("");
-    synthesizeKey("M", { shiftKey: true });
+    sendString("M");
     check(aDescription + "M", true, true, !aIsReadonly);
-    synthesizeKey("o", { });
+    sendString("o");
     check(aDescription + "o", true, true, !aIsReadonly);
-    synthesizeKey("z", { });
+    sendString("z");
     check(aDescription + "z", true, true, !aIsReadonly);
-    synthesizeKey("i", { });
+    sendString("i");
     check(aDescription + "i", true, true, !aIsReadonly);
-    synthesizeKey("l", { });
+    sendString("l");
     check(aDescription + "l", true, true, !aIsReadonly);
-    synthesizeKey("l", { });
+    sendString("l");
     check(aDescription + "l", true, true, !aIsReadonly);
-    synthesizeKey("a", { });
+    sendString("a");
     check(aDescription + "a", true, true, !aIsReadonly);
-    synthesizeKey(" ", { });
+    sendString(" ");
     check(aDescription + "' '", true, true, !aIsReadonly);
     is(aElement.value, !aIsReadonly ? "Mozilla " : "",
        aDescription + "typed \"Mozilla \"");

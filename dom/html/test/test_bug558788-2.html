@@ -133,10 +133,10 @@ function makeMinMaxLengthElementsActuallyInvalid(aInvalidElements,
     var e = aInvalidElements[i];
     if (aInvalidElementsDesc[i][5]) { // maxlength
       e.focus();
-      synthesizeKey("VK_BACK_SPACE", {});
+      synthesizeKey("KEY_Backspace");
     } else if (aInvalidElementsDesc[i][6]) { // minlength
       e.focus();
-      synthesizeKey("VK_BACK_SPACE", {});
+      synthesizeKey("KEY_Backspace");
     }
   }
 }

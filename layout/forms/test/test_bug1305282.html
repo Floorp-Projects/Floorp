@@ -33,13 +33,13 @@ select.addEventListener("change", function(aEvent) {
 
 select.addEventListener("focus", function() {
   SimpleTest.executeSoon(function () {
-    synthesizeKey("VK_DOWN", {});
+    synthesizeKey("KEY_ArrowDown");
     SimpleTest.executeSoon(function () {
-      synthesizeKey('b', {});
+      sendString("b");
       SimpleTest.executeSoon(function () {
-        synthesizeKey(' ', {});
+        sendString(" ");
         SimpleTest.executeSoon(function () {
-          synthesizeKey("VK_RETURN", {});
+          synthesizeKey("KEY_Enter");
         });
       });
     });

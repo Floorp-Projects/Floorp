@@ -54,7 +54,7 @@ function do_tests() {
   SpecialPowers.clipboardCopyString("snowy owl");
 
   elt.focus();
-  synthesizeKey("x", {});
+  sendString("x");
 
   is(SpecialPowers.getClipboardData("text/unicode"), RESULT, "clipboard copying worked");
 

@@ -119,7 +119,7 @@ window.onload = async function () {
     $(".devtools-searchinput").focus();
 
     // ArrowDown
-    synthesizeKey("VK_DOWN", {});
+    synthesizeKey("KEY_ArrowDown");
     await forceRender(component);
     is(refs.autocomplete.state.selectedIndex, 0, "selectedIndex is 0");
     ok($(".devtools-autocomplete-listbox .autocomplete-item:nth-child(1)")
@@ -127,56 +127,56 @@ window.onload = async function () {
       "Selection class applied");
 
     // ArrowUp should roll back to the bottom of the list
-    synthesizeKey("VK_UP", {});
+    synthesizeKey("KEY_ArrowUp");
     await forceRender(component);
     is(refs.autocomplete.state.selectedIndex, 6, "ArrowUp works");
 
     // PageDown should take -5 places up
-    synthesizeKey("VK_PAGE_UP", {});
+    synthesizeKey("KEY_PageUp");
     await forceRender(component);
     is(refs.autocomplete.state.selectedIndex, 1, "PageUp works");
 
     // PageDown should take +5 places down
-    synthesizeKey("VK_PAGE_DOWN", {});
+    synthesizeKey("KEY_PageDown");
     await forceRender(component);
     is(refs.autocomplete.state.selectedIndex, 6, "PageDown works");
 
     // Home should take to the top of the list
-    synthesizeKey("VK_HOME", {});
+    synthesizeKey("KEY_Home");
     await forceRender(component);
     is(refs.autocomplete.state.selectedIndex, 0, "Home works");
 
     // End should take to the bottom of the list
-    synthesizeKey("VK_END", {});
+    synthesizeKey("KEY_End");
     await forceRender(component);
     is(refs.autocomplete.state.selectedIndex, 6, "End works");
 
     // Key down in existing state should rollover to the top
-    synthesizeKey("VK_DOWN", {});
+    synthesizeKey("KEY_ArrowDown");
     await forceRender(component);
     // Tab should select the component and hide popup
-    synthesizeKey("VK_TAB", {});
+    synthesizeKey("KEY_Tab");
     await forceRender(component);
     is(component.state.value, "ABC", "Tab hit selects the item");
     ok(!$(".devtools-autocomplete-popup"), "Tab hit hides the popup");
 
     // Activate popup by removing a key
-    synthesizeKey("VK_BACK_SPACE", {});
+    synthesizeKey("KEY_Backspace");
     await forceRender(component);
     ok($(".devtools-autocomplete-popup"), "Popup is up");
     compareAutocompleteList($(".devtools-autocomplete-listbox"), ["ABC", "abc"]);
 
     // Enter key selection
-    synthesizeKey("VK_UP", {});
+    synthesizeKey("KEY_ArrowUp");
     await forceRender(component);
-    synthesizeKey("VK_RETURN", {});
+    synthesizeKey("KEY_Enter");
     is(component.state.value, "abc", "Enter selection");
     ok(!$(".devtools-autocomplete-popup"), "Enter/Return hides the popup");
 
     // Escape should remove the autocomplete component
-    synthesizeKey("VK_BACK_SPACE", {});
+    synthesizeKey("KEY_Backspace");
     await forceRender(component);
-    synthesizeKey("VK_ESCAPE", {});
+    synthesizeKey("KEY_Escape");
     await forceRender(component);
     ok(!$(".devtools-autocomplete-popup"),
       "Autocomplete list removed from DOM on Escape");
@@ -191,7 +191,7 @@ window.onload = async function () {
     await forceRender(component);
 
     // ArrowDown
-    synthesizeKey("VK_DOWN", {});
+    synthesizeKey("KEY_ArrowDown");
     await forceRender(component);
     synthesizeMouseAtCenter($(".devtools-searchinput"), {}, window);
     await forceRender(component);

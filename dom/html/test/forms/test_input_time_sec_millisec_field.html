@@ -54,7 +54,7 @@ function countNumberOfFields(aElement) {
   let n = 0;
   while (document.activeElement == aElement) {
     n++;
-    synthesizeKey("VK_TAB", {});
+    synthesizeKey("KEY_Tab");
   }
 
   return n;

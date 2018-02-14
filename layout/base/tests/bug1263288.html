@@ -20,7 +20,7 @@ function start() {
   theDiv.focus();
   sel.collapse(theDiv, 0);
   synthesizeMouse(theDiv, 100, 2, {});
-  synthesizeKey("VK_END", {});
+  synthesizeKey("KEY_End");
 }
 
 SimpleTest.waitForFocus(start);

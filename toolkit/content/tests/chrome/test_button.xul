@@ -41,19 +41,19 @@ function test_button()
 
   if (!navigator.platform.includes("Mac")) {
     $("one").focus();
-    synthesizeKey("VK_DOWN", { });
+    synthesizeKey("KEY_ArrowDown");
     is(document.activeElement, $("three"), "key cursor down on button");
 
-    synthesizeKey("VK_RIGHT", { });
+    synthesizeKey("KEY_ArrowRight");
     is(document.activeElement, $("four"), "key cursor right on button");
-    synthesizeKey("VK_DOWN", { });
+    synthesizeKey("KEY_ArrowDown");
     is(document.activeElement, $("four"), "key cursor down on menu button");
     $("five").focus();
-    synthesizeKey("VK_DOWN", { });
+    synthesizeKey("KEY_ArrowDown");
     is(document.activeElement, $("five"), "key cursor down on panel button");
 
     $("three").focus();
-    synthesizeKey("VK_UP", { });
+    synthesizeKey("KEY_ArrowUp");
     is(document.activeElement, $("one"), "key cursor up on button");
   }
 

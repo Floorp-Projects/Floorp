@@ -28,7 +28,7 @@ SimpleTest.waitForFocus(function() {
   t.focus();
   var originalValue = t.value;
   synthesizeMouse(t, 10, 30, {accelKey: true});
-  synthesizeKey("x", {});
+  sendString("x");
   t = document.querySelector("textarea")
   ok(t, "The text area should not be removed from the document");
   isnot(t.value, originalValue, "Its value should be modified");

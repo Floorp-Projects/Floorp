@@ -444,7 +444,7 @@ function* addNewRuleAndDismissEditor(inspector, view, expectedSelector, expected
      "The editor for the new selector has the correct value: " + expectedSelector);
 
   info("Pressing escape to leave the editor");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
 
   is(ruleEditor.selectorText.textContent, expectedSelector,
      "The new selector has the correct text: " + expectedSelector);

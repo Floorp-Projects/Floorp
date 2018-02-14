@@ -46,7 +46,7 @@ add_task(async function openKeywordBookmarkWithWindowOpen() {
   gURLBar.focus();
 
   let tabCreatedPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
 
   info("Waiting for tab being created");
   let {target: tab} = await tabCreatedPromise;

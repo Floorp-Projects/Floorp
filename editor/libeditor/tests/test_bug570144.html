@@ -72,8 +72,8 @@ function try2split(list) {
   else
     selection.selectAllChildren(editor.querySelector("p"));
   selection.collapseToEnd();
-  // simulate a [Return] keypress
-  synthesizeKey("VK_RETURN", {});
+  // simulate a [Enter] keypress
+  synthesizeKey("KEY_Enter");
 }
 
 function testSection(element, context, shouldCreateLI, shouldCreateP) {

@@ -43,10 +43,10 @@ function testTabbing(click, focus, selectionOffset) {
   var focusedElement = document.activeElement;
   is(focusedElement, document.getElementById(focus),
      "clicking should move focus to the contentEditable node");
-  synthesizeKey("VK_TAB", {});
-  synthesizeKey("VK_TAB", {});
-  synthesizeKey("VK_TAB", { shiftKey: true });
-  synthesizeKey("VK_TAB", { shiftKey: true });
+  synthesizeKey("KEY_Tab");
+  synthesizeKey("KEY_Tab");
+  synthesizeKey("KEY_Tab", {shiftKey: true});
+  synthesizeKey("KEY_Tab", {shiftKey: true});
   is(document.activeElement, focusedElement,
      "tab/shift-tab should move focus back to the contentEditable node");
   if (selectionOffset) {

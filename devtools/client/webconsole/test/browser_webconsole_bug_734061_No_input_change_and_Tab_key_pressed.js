@@ -17,19 +17,19 @@ add_task(function* () {
   let input = jsterm.inputNode;
 
   is(input.getAttribute("focused"), "true", "input has focus");
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("KEY_Tab");
   is(input.getAttribute("focused"), "", "focus moved away");
 
   // Test user changed something
   input.focus();
-  EventUtils.synthesizeKey("A", {});
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.sendString("a");
+  EventUtils.synthesizeKey("KEY_Tab");
   is(input.getAttribute("focused"), "true", "input is still focused");
 
   // Test non empty input but not changed since last focus
   input.blur();
   input.focus();
-  EventUtils.synthesizeKey("VK_RIGHT", {});
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("KEY_ArrowRight");
+  EventUtils.synthesizeKey("KEY_Tab");
   is(input.getAttribute("focused"), "", "input moved away");
 });

@@ -41,22 +41,22 @@
     synthesizeMouseAtCenter(scrubber, {});
   }, done => {
     let counter = 0;
-    let keyCodes = ["VK_DOWN", "VK_DOWN", "VK_UP", "VK_DOWN", "VK_UP", "VK_UP"];
+    let keys = ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_ArrowUp", "KEY_ArrowDown", "KEY_ArrowUp", "KEY_ArrowUp"];
 
     video.addEventListener("seeked", () => ok(false, "should not trigger seeked event"));
     video.addEventListener("volumechange", () => {
-      if (++counter === keyCodes.length) {
+      if (++counter === keys.length) {
         ok(true, "change volume by up/down arrow key without trigger 'seeked' event");
         done();
       }
 
-      if (counter > keyCodes.length) {
+      if (counter > keys.length) {
         ok(false, "trigger too much volumechange events");
       }
     });
 
-    for (let keyCode of keyCodes) {
-      synthesizeKey(keyCode, {});
+    for (let key of keys) {
+      synthesizeKey(key);
     }
   });
 

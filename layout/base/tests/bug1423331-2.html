@@ -20,9 +20,7 @@ SimpleTest.waitForFocus(function() {
   let div = document.getElementById("editable");
   synthesizeMouseAtCenter(div, {});
   synthesizeMouseAtCenter(div, {});
-  synthesizeKey("x", {});
-  synthesizeKey("x", {});
-  synthesizeKey("x", {});
+  sendString("xxx");
   document.documentElement.className = "";
 });
 </script>

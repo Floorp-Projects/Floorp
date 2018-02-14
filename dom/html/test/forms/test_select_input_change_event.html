@@ -41,17 +41,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265968
   var expectedInput = 0;
 
   selectSingleOneItem.focus();
-  synthesizeKey("VK_DOWN", {});
+  synthesizeKey("KEY_ArrowDown");
   is(selectInput, expectedInput, "Down key should not fire input event when reaching end of the list.");
   is(selectChange, expectedChange, "Down key should not fire change event when reaching end of the list.");
 
-  synthesizeKey("VK_UP", {});
+  synthesizeKey("KEY_ArrowUp");
   is(selectInput, expectedInput, "Up key should not fire input event when reaching top of the list.");
   is(selectChange, expectedChange, "Up key should not fire change event when reaching top of the list.");
 
   selectSingle.focus();
   for (var i = 1; i < selectSingle.length; i++) {
-    synthesizeKey("VK_DOWN", {});
+    synthesizeKey("KEY_ArrowDown");
 
     is(selectSingle.options[i].selected, true, "Option should be selected");
     is(selectInput, ++expectedInput, "Down key should fire input event.");
@@ -59,12 +59,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265968
   }
 
   // We are at the end of the list, going down should not fire change event.
-  synthesizeKey("VK_DOWN", {});
+  synthesizeKey("KEY_ArrowDown");
   is(selectInput, expectedInput, "Down key should not fire input event when reaching end of the list.");
   is(selectChange, expectedChange, "Down key should not fire change event when reaching end of the list.");
 
   for (var i = selectSingle.length - 2; i >= 0; i--) {
-    synthesizeKey("VK_UP", {});
+    synthesizeKey("KEY_ArrowUp");
 
     is(selectSingle.options[i].selected, true, "Option should be selected");
     is(selectInput, ++expectedInput, "Up key should fire input event.");
@@ -72,26 +72,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265968
   }
 
   // We are at the top of the list, going up should not fire change event.
-  synthesizeKey("VK_UP", {});
+  synthesizeKey("KEY_ArrowUp");
   is(selectInput, expectedInput, "Up key should not fire input event when reaching top of the list.");
   is(selectChange, expectedChange, "Up key should not fire change event when reaching top of the list.");
 
   selectMultipleOneItem.focus();
-  synthesizeKey("VK_DOWN", {});
+  synthesizeKey("KEY_ArrowDown");
   is(selectInput, ++expectedInput, "Down key should fire input event when reaching end of the list.");
   is(selectChange, ++expectedChange, "Down key should fire change event when reaching end of the list.");
 
-  synthesizeKey("VK_DOWN", {});
+  synthesizeKey("KEY_ArrowDown");
   is(selectInput, expectedInput, "Down key should not fire input event when reaching end of the list.");
   is(selectChange, expectedChange, "Down key should not fire change event when reaching end of the list.");
 
-  synthesizeKey("VK_UP", {});
+  synthesizeKey("KEY_ArrowUp");
   is(selectInput, expectedInput, "Up key should not fire input event when reaching top of the list.");
   is(selectChange, expectedChange, "Up key should not fire change event when reaching top of the list.");
 
   selectMultiple.focus();
   for (var i = 0; i < selectMultiple.length; i++) {
-    synthesizeKey("VK_DOWN", {});
+    synthesizeKey("KEY_ArrowDown");
 
     is(selectMultiple.options[i].selected, true, "Option should be selected");
     is(selectInput, ++expectedInput, "Down key should fire input event.");
@@ -99,12 +99,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265968
   }
 
   // We are at the end of the list, going down should not fire change event.
-  synthesizeKey("VK_DOWN", {});
+  synthesizeKey("KEY_ArrowDown");
   is(selectInput, expectedInput, "Down key should not fire input event when reaching end of the list.");
   is(selectChange, expectedChange, "Down key should not fire change event when reaching end of the list.");
 
   for (var i = selectMultiple.length - 2; i >= 0; i--) {
-    synthesizeKey("VK_UP", {});
+    synthesizeKey("KEY_ArrowUp");
 
     is(selectMultiple.options[i].selected, true, "Option should be selected");
     is(selectInput, ++expectedInput, "Up key should fire input event.");
@@ -112,7 +112,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265968
   }
 
   // We are at the top of the list, going up should not fire change event.
-  synthesizeKey("VK_UP", {});
+  synthesizeKey("KEY_ArrowUp");
   is(selectInput, expectedInput, "Up key should not fire input event when reaching top of the list.");
   is(selectChange, expectedChange, "Up key should not fire change event when reaching top of the list.");
 

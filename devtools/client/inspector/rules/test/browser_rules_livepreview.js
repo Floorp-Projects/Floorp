@@ -58,9 +58,9 @@ function* testLivePreviewData(data, ruleView, selector) {
 
   let onValueDone = ruleView.once("ruleview-changed");
   if (data.escape) {
-    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    EventUtils.synthesizeKey("KEY_Escape");
   } else {
-    EventUtils.synthesizeKey("VK_RETURN", {});
+    EventUtils.synthesizeKey("KEY_Enter");
   }
   yield onValueDone;
 

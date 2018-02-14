@@ -54,7 +54,7 @@ function checkAccessKeyOnPanel(panelid, buttonid, cb) {
       panel.hidePopup();
       cb();
     }
-    synthesizeKey("X", {});
+    sendString("X");
   });
  panel.openPopup(null, "", 100, 100, false, false);
 }

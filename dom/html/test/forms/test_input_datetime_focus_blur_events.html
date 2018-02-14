@@ -52,25 +52,25 @@ function test() {
     is(blurEvents[i], 0, inputTypes[i] + " input element should not have dispatched blur event.");
 
     // Move around inside the input element's input box.
-    synthesizeKey("VK_TAB", {});
+    synthesizeKey("KEY_Tab");
     is(focusEvents[i], 1, inputTypes[i] + " input element should not have dispatched focus event.");
     is(focusInEvents[i], 1, inputTypes[i] + " input element should not have dispatched focusin event.");
     is(focusOutEvents[i], 0, inputTypes[i] + " input element should not have dispatched focusout event.");
     is(blurEvents[i], 0, inputTypes[i] + " time input element should not have dispatched blur event.");
 
-    synthesizeKey("VK_RIGHT", {});
+    synthesizeKey("KEY_ArrowRight");
     is(focusEvents[i], 1, inputTypes[i] + " input element should not have dispatched focus event.");
     is(focusInEvents[i], 1, inputTypes[i] + " input element should not have dispatched focusin event.");
     is(focusOutEvents[i], 0, inputTypes[i] + " input element should not have dispatched focusout event.");
     is(blurEvents[i], 0, inputTypes[i] + " input element should not have dispatched blur event.");
 
-    synthesizeKey("VK_LEFT", {});
+    synthesizeKey("KEY_ArrowLeft");
     is(focusEvents[i], 1,inputTypes[i] + " input element should not have dispatched focus event.");
     is(focusInEvents[i], 1, inputTypes[i] + " input element should not have dispatched focusin event.");
     is(focusOutEvents[i], 0, inputTypes[i] + " input element should not have dispatched focusout event.");
     is(blurEvents[i], 0, inputTypes[i] + " input element should not have dispatched blur event.");
 
-    synthesizeKey("VK_RIGHT", {});
+    synthesizeKey("KEY_ArrowRight");
     is(focusEvents[i], 1, inputTypes[i] + " input element should not have dispatched focus event.");
     is(focusInEvents[i], 1, inputTypes[i] + " input element should not have dispatched focusin event.");
     is(focusOutEvents[i], 0, inputTypes[i] + " input element should not have dispatched focusout event.");
