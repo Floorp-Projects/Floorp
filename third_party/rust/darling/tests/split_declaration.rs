@@ -18,7 +18,7 @@ struct Lorem {
 
 #[test]
 fn split_attributes_accrue_to_instance() {
-    let di = syn::parse_derive_input(r#"
+    let di = syn::parse_str(r#"
         #[split(foo = "Hello")]
         #[split(bar)]
         pub struct Foo;
@@ -33,7 +33,7 @@ fn split_attributes_accrue_to_instance() {
 
 #[test]
 fn duplicates_across_split_attrs_error() {
-    let di = syn::parse_derive_input(r#"
+    let di = syn::parse_str(r#"
         #[split(foo = "Hello")]
         #[split(foo = "World", bar)]
         pub struct Foo;
@@ -45,7 +45,7 @@ fn duplicates_across_split_attrs_error() {
 
 #[test]
 fn multiple_errors_accrue_to_instance() {
-    let di = syn::parse_derive_input(r#"
+    let di = syn::parse_str(r#"
         #[split(foo = "Hello")]
         #[split(foo = "World")]
         pub struct Foo;

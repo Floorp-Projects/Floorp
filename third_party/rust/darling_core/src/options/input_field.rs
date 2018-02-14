@@ -4,22 +4,15 @@ use ::{FromMetaItem, Error, Result};
 use codegen;
 use options::{Core, DefaultExpression, ParseAttribute};
 
-lazy_static! {
-    /// The default path for extracting data from a meta item. This can be overridden
-    /// using the `with` attribute.
-    static ref FROM_META_ITEM: syn::Path = {
-        path!(::darling::FromMetaItem::from_meta_item)
-    };
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InputField {
     pub ident: syn::Ident,
     pub attr_name: Option<String>,
-    pub ty: syn::Ty,
+    pub ty: syn::Type,
     pub default: Option<DefaultExpression>,
     pub with: Option<syn::Path>,
-    
+
     /// If `true`, generated code will not look for this field in the input meta item,
     /// instead always falling back to either `InputField::default` or `Default::default`.
     pub skip: bool,
@@ -35,14 +28,14 @@ impl InputField {
             name_in_attr: self.attr_name.as_ref().map(|n| n.as_str()).unwrap_or(self.ident.as_ref()),
             ty: &self.ty,
             default_expression: self.as_codegen_default(),
-            with_path: self.with.as_ref().unwrap_or(&FROM_META_ITEM),
+            with_path: self.with.clone().unwrap_or(parse_quote!(::darling::FromMetaItem::from_meta_item)),
             skip: self.skip,
             map: self.map.as_ref(),
             multiple: self.multiple,
         }
     }
 
-    /// Generate a codegen::DefaultExpression for this field. This requires the field name 
+    /// Generate a codegen::DefaultExpression for this field. This requires the field name
     /// in the `Inherit` case.
     fn as_codegen_default<'a>(&'a self) -> Option<codegen::DefaultExpression<'a>> {
         self.default.as_ref().map(|expr| {
@@ -54,7 +47,7 @@ impl InputField {
         })
     }
 
-    fn new(ident: syn::Ident, ty: syn::Ty) -> Self {
+    fn new(ident: syn::Ident, ty: syn::Type) -> Self {
         InputField {
             ident,
             ty,
@@ -68,10 +61,10 @@ impl InputField {
     }
 
     pub fn from_field(f: &syn::Field, parent: Option<&Core>) -> Result<Self> {
-        let ident = f.ident.clone().unwrap_or(syn::Ident::new("__unnamed"));
+        let ident = f.ident.clone().unwrap_or(syn::Ident::from("__unnamed"));
         let ty = f.ty.clone();
         let base = Self::new(ident, ty).parse_attributes(&f.attrs)?;
-        
+
         if let Some(container) = parent {
             base.with_inherited(container)
         } else {
@@ -113,7 +106,7 @@ impl InputField {
 }
 
 impl ParseAttribute for InputField {
-    fn parse_nested(&mut self, mi: &syn::MetaItem) -> Result<()> {
+    fn parse_nested(&mut self, mi: &syn::Meta) -> Result<()> {
         let name = mi.name().to_string();
         match name.as_str() {
             "rename" => { self.attr_name = FromMetaItem::from_meta_item(mi)?; Ok(()) }

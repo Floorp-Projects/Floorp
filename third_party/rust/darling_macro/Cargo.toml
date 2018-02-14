@@ -12,7 +12,7 @@
 
 [package]
 name = "darling_macro"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Ted Driggs <ted.driggs@outlook.com>"]
 description = "Internal support for a proc-macro library for reading attributes into structs when\nimplementing custom derives. Use https://crates.io/crates/darling in your code.\n"
 license = "MIT"
@@ -20,11 +20,11 @@ repository = "https://github.com/TedDriggs/darling"
 
 [lib]
 proc-macro = true
-[dependencies.quote]
-version = "0.3.15"
-
 [dependencies.darling_core]
-version = "=0.2.0"
+version = "=0.3.0"
+
+[dependencies.quote]
+version = "0.4"
 
 [dependencies.syn]
-version = "0.11.11"
+version = "0.12"

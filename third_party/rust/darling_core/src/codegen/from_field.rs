@@ -26,7 +26,7 @@ impl<'a> ToTokens for FromFieldImpl<'a> {
         let error_check = self.base.check_errors();
 
         let initializers = self.base.initializers();
-        
+
         let default = if self.from_ident {
             quote!(let __default: Self = ::darling::export::From::from(#input.ident.clone());)
         } else {
@@ -38,7 +38,7 @@ impl<'a> ToTokens for FromFieldImpl<'a> {
         let passed_ty = self.ty.as_ref().map(|i| quote!(#i: #input.ty.clone(),));
         let passed_attrs = self.attrs.as_ref().map(|i| quote!(#i: __fwd_attrs,));
 
-        /// Determine which attributes to forward (if any).
+        // Determine which attributes to forward (if any).
         let grab_attrs = self.extractor();
         let map = self.base.map_fn();
 
@@ -61,7 +61,7 @@ impl<'a> ToTokens for FromFieldImpl<'a> {
                     #passed_attrs
                     #initializers
                 }) #map
-                
+
             }
         }, tokens);
     }

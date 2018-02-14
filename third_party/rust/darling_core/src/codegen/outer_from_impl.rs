@@ -1,4 +1,4 @@
-use syn::{Generics, Path, PolyTraitRef, TraitBoundModifier, TyParamBound};
+use syn::{Generics, Path, TraitBound, TraitBoundModifier, TypeParamBound, GenericParam};
 use quote::{Tokens, ToTokens};
 
 use codegen::TraitImpl;
@@ -21,7 +21,7 @@ pub trait OuterFromImpl<'a> {
         let generics = compute_impl_bounds(self.trait_bound(), base.generics.clone());
         let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
-        tokens.append(quote!(
+        tokens.append_all(quote!(
             impl #impl_generics #trayt for #ty_ident #ty_generics
                 #where_clause
             {
@@ -32,18 +32,20 @@ pub trait OuterFromImpl<'a> {
 }
 
 fn compute_impl_bounds(bound: Path, mut generics: Generics) -> Generics {
-    if generics.ty_params.is_empty() {
+    if generics.params.is_empty() {
         return generics;
     }
 
-    let added_bound = TyParamBound::Trait(PolyTraitRef {
-                                              trait_ref: bound,
-                                              bound_lifetimes: vec![],
-                                          },
-                                          TraitBoundModifier::None);
+    let added_bound = TypeParamBound::Trait(TraitBound {
+            modifier: TraitBoundModifier::None,
+            lifetimes: None,
+            path: bound,
+        });
 
-    for mut typ in generics.ty_params.iter_mut() {
-        typ.bounds.push(added_bound.clone());
+    for mut param in generics.params.iter_mut() {
+        if let &mut GenericParam::Type(ref mut typ) = param {
+            typ.bounds.push(added_bound.clone());
+        }
     }
 
     generics
