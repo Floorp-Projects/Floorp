@@ -367,13 +367,10 @@ BrowserGlue.prototype = {
   },
 
   _sendMainPingCentrePing() {
-    const ACTIVITY_STREAM_ENABLED_PREF = "browser.newtabpage.activity-stream.enabled";
     const ACTIVITY_STREAM_ID = "activity-stream";
-    let asEnabled = Services.prefs.getBoolPref(ACTIVITY_STREAM_ENABLED_PREF, false);
-
     const payload = {
       event: "AS_ENABLED",
-      value: asEnabled
+      value: true
     };
     const options = {filter: ACTIVITY_STREAM_ID};
     this.pingCentre.sendPing(payload, options);
