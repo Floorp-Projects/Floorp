@@ -7,7 +7,7 @@
 "use strict";
 
 /**
- * Types of nodes used in the rule and omputed view.
+ * Types of nodes used in the rule and computed view.
  */
 
 exports.VIEW_NODE_SELECTOR_TYPE = 1;

@@ -167,8 +167,8 @@ class HighlightersOverlay {
 
     this.shapesHighlighterShown = node;
     let { mode } = options;
-    this._toggleRuleViewIcon(node, false, ".ruleview-shape");
-    this._toggleRuleViewIcon(node, true, `.ruleview-shape[data-mode='${mode}']`);
+    this._toggleRuleViewIcon(node, false, ".ruleview-shapeswatch");
+    this._toggleRuleViewIcon(node, true, `.ruleview-shapeswatch[data-mode='${mode}']`);
 
     try {
       // Save shapes highlighter state.
@@ -193,7 +193,7 @@ class HighlightersOverlay {
       return;
     }
 
-    this._toggleRuleViewIcon(node, false, ".ruleview-shape");
+    this._toggleRuleViewIcon(node, false, ".ruleview-shapeswatch");
 
     await this.highlighters.ShapesHighlighter.hide();
     this.emit("shapes-highlighter-hidden", this.shapesHighlighterShown,
@@ -723,7 +723,7 @@ class HighlightersOverlay {
    * @return {Boolean}
    */
   _isRuleViewShape(node) {
-    return this.isRuleView(node) && node.classList.contains("ruleview-shape");
+    return this.isRuleView(node) && node.classList.contains("ruleview-shapeswatch");
   }
 
   /**
