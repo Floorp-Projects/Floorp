@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
+
+#include "mozilla/dom/IPCServiceWorkerRegistrationDescriptor.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "ServiceWorkerInfo.h"
 
@@ -90,6 +92,11 @@ ServiceWorkerRegistrationDescriptor::operator=(ServiceWorkerRegistrationDescript
   mData = Move(aRight.mData);
   MOZ_DIAGNOSTIC_ASSERT(IsValid());
   return *this;
+}
+
+ServiceWorkerRegistrationDescriptor::~ServiceWorkerRegistrationDescriptor()
+{
+  // Non-default destructor to avoid exposing the IPC type in the header.
 }
 
 bool
@@ -249,9 +256,9 @@ ServiceWorkerRegistrationDescriptor::SetWorkers(ServiceWorkerInfo* aInstalling,
 }
 
 void
-ServiceWorkerRegistrationDescriptor::SetWorkers(OptionalIPCServiceWorkerDescriptor& aInstalling,
-                                                OptionalIPCServiceWorkerDescriptor& aWaiting,
-                                                OptionalIPCServiceWorkerDescriptor& aActive)
+ServiceWorkerRegistrationDescriptor::SetWorkers(const OptionalIPCServiceWorkerDescriptor& aInstalling,
+                                                const OptionalIPCServiceWorkerDescriptor& aWaiting,
+                                                const OptionalIPCServiceWorkerDescriptor& aActive)
 {
   mData->installing() = aInstalling;
   mData->waiting() = aWaiting;
