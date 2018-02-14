@@ -7,9 +7,10 @@ const reduxActions = require("devtools/client/webconsole/new-console-output/acti
 const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
 const { IdGenerator } = require("devtools/client/webconsole/new-console-output/utils/id-generator");
 const { stubPackets } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
-const {
-  getAllMessagesById,
-} = require("devtools/client/webconsole/new-console-output/selectors/messages");
+const { getAllMessagesById } = require("devtools/client/webconsole/new-console-output/selectors/messages");
+const { getPrefsService } = require("devtools/client/webconsole/new-console-output/utils/prefs");
+const prefsService = getPrefsService({});
+const { PREFS } = require("devtools/client/webconsole/new-console-output/constants");
 
 /**
  * Prepare actions for use in testing.
@@ -96,11 +97,29 @@ function getLastMessage(state) {
   return getMessageAt(state, lastIndex);
 }
 
+function getFiltersPrefs() {
+  return Object.values(PREFS.FILTER).reduce((res, pref) => {
+    res[pref] = prefsService.getBoolPref(pref);
+    return res;
+  }, {});
+}
+
+function clearPrefs() {
+  [
+    "devtools.hud.loglimit",
+    ...Object.values(PREFS.FILTER),
+    ...Object.values(PREFS.UI),
+  ].forEach(prefsService.clearUserPref);
+}
+
 module.exports = {
+  clearPrefs,
   clonePacket,
-  getMessageAt,
+  getFiltersPrefs,
   getFirstMessage,
   getLastMessage,
+  getMessageAt,
+  prefsService,
   setupActions,
   setupStore,
 };
