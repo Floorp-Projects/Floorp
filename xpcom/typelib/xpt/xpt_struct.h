@@ -14,8 +14,6 @@
 #include "xpt_arena.h"
 #include <stdint.h>
 
-extern "C" {
-
 /*
  * Originally, I was going to have structures that exactly matched the on-disk
  * representation, but that proved difficult: different compilers can pack
@@ -27,14 +25,14 @@ extern "C" {
 
 /* Structures for the typelib components */
 
-typedef struct XPTHeader XPTHeader;
-typedef struct XPTInterfaceDirectoryEntry XPTInterfaceDirectoryEntry;
-typedef struct XPTInterfaceDescriptor XPTInterfaceDescriptor;
-typedef struct XPTConstDescriptor XPTConstDescriptor;
-typedef struct XPTMethodDescriptor XPTMethodDescriptor;
-typedef struct XPTParamDescriptor XPTParamDescriptor;
-typedef struct XPTTypeDescriptor XPTTypeDescriptor;
-typedef struct XPTTypeDescriptorPrefix XPTTypeDescriptorPrefix;
+struct XPTHeader;
+struct XPTInterfaceDirectoryEntry;
+struct XPTInterfaceDescriptor;
+struct XPTConstDescriptor;
+struct XPTMethodDescriptor;
+struct XPTParamDescriptor;
+struct XPTTypeDescriptor;
+struct XPTTypeDescriptorPrefix;
 
 #ifndef nsID_h__
 /*
@@ -356,11 +354,9 @@ struct XPTMethodDescriptor {
  * present.
  */
 
-#define XPT_ANN_LAST	                0x80
+#define XPT_ANN_LAST                    0x80
 #define XPT_ANN_IS_LAST(flags)          (flags & XPT_ANN_LAST)
 #define XPT_ANN_PRIVATE                 0x40
 #define XPT_ANN_IS_PRIVATE(flags)       (flags & XPT_ANN_PRIVATE)
-
-}
 
 #endif /* __xpt_struct_h__ */

@@ -15,12 +15,8 @@
 
 using mozilla::NotNull;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct XPTState         XPTState;
-typedef struct XPTCursor        XPTCursor;
+struct XPTState;
+struct XPTCursor;
 
 bool
 XPT_SkipStringInline(NotNull<XPTCursor*> cursor);
@@ -47,10 +43,10 @@ XPT_Do8(NotNull<XPTCursor*> cursor, uint8_t *u8p);
 bool
 XPT_DoHeader(XPTArena *arena, NotNull<XPTCursor*> cursor, XPTHeader **headerp);
 
-typedef enum {
+enum XPTPool {
     XPT_HEADER = 0,
     XPT_DATA = 1
-} XPTPool;
+};
 
 struct XPTState {
     uint32_t         data_offset;
@@ -78,9 +74,5 @@ XPT_SeekTo(NotNull<XPTCursor*> cursor, uint32_t offset);
 
 void
 XPT_SetDataOffset(XPTState *state, uint32_t data_offset);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __xpt_xdr_h__ */
