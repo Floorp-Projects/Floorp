@@ -878,8 +878,6 @@ public:
   //
   already_AddRefed<nsSimpleContentList> BlockedTrackingNodes() const;
 
-  static bool IsUnprefixedFullscreenEnabled(JSContext* aCx, JSObject* aObject);
-
   // Do the "fullscreen element ready check" from the fullscreen spec.
   // It returns true if the given element is allowed to go into fullscreen.
   bool FullscreenElementReadyCheck(Element* aElement, bool aWasCallerChrome);
@@ -903,11 +901,10 @@ public:
   void FullScreenStackPop();
 
   // Returns the top element from the full-screen stack.
-  Element* FullScreenStackTop();
+  Element* FullScreenStackTop() override;
 
   // DOM-exposed fullscreen API
   bool FullscreenEnabled(mozilla::dom::CallerType aCallerType) override;
-  Element* GetFullscreenElement() override;
 
   virtual bool AllowPaymentRequest() const override;
   virtual void SetAllowPaymentRequest(bool aIsAllowPaymentRequest) override;

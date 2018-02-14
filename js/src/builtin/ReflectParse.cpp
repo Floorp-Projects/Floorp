@@ -13,7 +13,6 @@
 #include <stdlib.h>
 
 #include "jsarray.h"
-#include "jsatom.h"
 #include "jsobj.h"
 #include "jspubtd.h"
 

@@ -298,7 +298,7 @@ class GlobalHelperThreadState
                                    Handle<GlobalObject*> global,
                                    JSCompartment* dest);
 
-    void trace(JSTracer* trc);
+    void trace(JSTracer* trc, js::gc::AutoTraceSession& session);
 
     JSScript* finishScriptParseTask(JSContext* cx, void* token);
     JSScript* finishScriptDecodeTask(JSContext* cx, void* token);

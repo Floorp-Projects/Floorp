@@ -66,6 +66,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT']:
             'version',
             'wintrust',
         ]
+        DELAYLOAD_DLLS += [
+            'crypt32.dll',
+            'wintrust.dll',
+        ]
         EXPORTS.mozilla += [
             'Authenticode.h',
         ]

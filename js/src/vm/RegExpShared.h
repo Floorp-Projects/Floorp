@@ -16,7 +16,6 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "jsalloc.h"
-#include "jsatom.h"
 
 #include "builtin/SelfHostingDefines.h"
 #include "gc/Barrier.h"

@@ -242,10 +242,6 @@ partial interface Document {
   readonly attribute boolean fullscreenEnabled;
   [BinaryName="fullscreenEnabled", NeedsCallerType]
   readonly attribute boolean mozFullScreenEnabled;
-  [LenientSetter, Func="nsDocument::IsUnprefixedFullscreenEnabled"]
-  readonly attribute Element? fullscreenElement;
-  [BinaryName="fullscreenElement"]
-  readonly attribute Element? mozFullScreenElement;
 
   [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
   void exitFullscreen();

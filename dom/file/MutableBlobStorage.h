@@ -8,6 +8,7 @@
 #define mozilla_dom_MutableBlobStorage_h
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/Mutex.h"
 #include "prio.h"
 
 class nsIEventTarget;
@@ -35,7 +36,8 @@ public:
                                   nsresult aRv) = 0;
 };
 
-// This class is main-thread only.
+// This class is must be created and used on main-thread, except for Append()
+// that can be called on any thread.
 class MutableBlobStorage final
 {
 public:
@@ -74,25 +76,31 @@ public:
 
   // Returns the heap size in bytes of our internal buffers.
   // Note that this intentionally ignores the data in the temp file.
-  size_t SizeOfCurrentMemoryBuffer() const;
+  size_t SizeOfCurrentMemoryBuffer();
 
-  PRFileDesc* GetFD() const;
+  PRFileDesc* GetFD();
 
   void CloseFD();
 
 private:
   ~MutableBlobStorage();
 
-  bool ExpandBufferSize(uint64_t aSize);
+  bool ExpandBufferSize(const MutexAutoLock& aProofOfLock,
+                        uint64_t aSize);
 
-  bool ShouldBeTemporaryStorage(uint64_t aSize) const;
+  bool ShouldBeTemporaryStorage(const MutexAutoLock& aProofOfLock,
+                                uint64_t aSize) const;
 
-  bool MaybeCreateTemporaryFile();
+  bool MaybeCreateTemporaryFile(const MutexAutoLock& aProofOfLock);
+  void MaybeCreateTemporaryFileOnMainThread();
 
   MOZ_MUST_USE nsresult
   DispatchToIOThread(already_AddRefed<nsIRunnable> aRunnable);
 
-  // All these variables are touched on the main thread only.
+  Mutex mMutex;
+
+  // All these variables are touched on the main thread only or in the
+  // retargeted thread when used by Append(). They are protected by mMutex.
 
   void* mData;
   uint64_t mDataLen;

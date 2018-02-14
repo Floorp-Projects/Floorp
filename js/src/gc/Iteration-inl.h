@@ -57,12 +57,14 @@ class GrayObjectIter : public ZoneCellIter<js::gc::TenuredCell> {
 
 class GCZonesIter
 {
-  private:
     ZonesIter zone;
 
   public:
     explicit GCZonesIter(JSRuntime* rt, ZoneSelector selector = WithAtoms) : zone(rt, selector) {
         MOZ_ASSERT(JS::CurrentThreadIsHeapBusy());
+        MOZ_ASSERT_IF(rt->gc.atomsZone->isCollectingFromAnyThread(),
+                      !rt->hasHelperThreadZones());
+
         if (!zone->isCollectingFromAnyThread())
             next();
     }

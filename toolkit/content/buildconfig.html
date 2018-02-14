@@ -7,15 +7,12 @@
 #include @TOPOBJDIR@/source-repo.h
 <html>
 <head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src chrome:" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width; user-scalable=false;">
   <title>about:buildconfig</title>
   <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css">
-  <style type="text/css">
-    th { text-align: start; }
-    h2 { margin-top: 1.5em; }
-    th, td { vertical-align: top; }
-  </style>
+  <link rel="stylesheet" href="chrome://global/content/buildconfig.css" type="text/css">
 </head>
 <body class="aboutPageWideContainer">
 <h1>about:buildconfig</h1>
