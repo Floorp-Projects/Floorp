@@ -539,9 +539,8 @@ ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint, uint32
 
   if (!sImageBridgeChildThread) {
     sImageBridgeChildThread = new Thread("ImageBridgeChild");
-    if (!sImageBridgeChildThread->Start()) {
-      return false;
-    }
+    bool success = sImageBridgeChildThread->Start();
+    MOZ_RELEASE_ASSERT(success, "Failed to start ImageBridgeChild thread!");
   }
 
   RefPtr<ImageBridgeChild> child = new ImageBridgeChild(aNamespace);
