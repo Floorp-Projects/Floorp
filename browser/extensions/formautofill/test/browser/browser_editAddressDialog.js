@@ -1,5 +1,12 @@
 "use strict";
 
+add_task(async function setup_supportedCountries() {
+  await SpecialPowers.pushPrefEnv({set: [
+    [SUPPORTED_COUNTRIES_PREF, "US,CA,DE"],
+  ]});
+});
+
+
 add_task(async function test_cancelEditAddressDialog() {
   await testDialog(EDIT_ADDRESS_DIALOG_URL, win => {
     win.document.querySelector("#cancel").click();
