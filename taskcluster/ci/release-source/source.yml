@@ -1,8 +1,5 @@
 linux64-source/opt:
     description: "Firefox source builder"
-    index:
-        product: firefox
-        job-name: linux64-source-opt
     treeherder:
         platform: linux64/opt
         symbol: Src
@@ -21,9 +18,6 @@ linux64-source/opt:
 
 linux64-fennec-source/opt:
     description: "Fennec source builder"
-    index:
-        product: fennec
-        job-name: linux64-fennec-source-opt
     treeherder:
         platform: android-api-16/opt
         symbol: Src
@@ -42,9 +36,6 @@ linux64-fennec-source/opt:
 
 linux64-devedition-source/opt:
     description: "Devedition source builder"
-    index:
-        product: devedition
-        job-name: linux64-devedition-source-opt
     treeherder:
         platform: linux64-devedition-source/opt
         symbol: Src
