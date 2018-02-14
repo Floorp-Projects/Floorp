@@ -19,7 +19,6 @@
 #include "proxy/ScriptedProxyHandler.h"
 #include "vm/WrapperObject.h"
 
-#include "jsatominlines.h"
 #include "jsobjinlines.h"
 
 #include "gc/Marking-inl.h"

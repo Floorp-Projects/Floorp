@@ -11,7 +11,6 @@
 #include "mozilla/ScopeExit.h"
 
 #include "jsarray.h"
-#include "jsatom.h"
 #include "jscntxt.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -24,7 +23,6 @@
 #include "vm/StringBuffer.h"
 
 #include "jsarrayinlines.h"
-#include "jsatominlines.h"
 #include "jsboolinlines.h"
 
 #include "vm/NativeObject-inl.h"

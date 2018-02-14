@@ -7,7 +7,6 @@
 #ifndef frontend_SharedContext_h
 #define frontend_SharedContext_h
 
-#include "jsatom.h"
 #include "jsopcode.h"
 #include "jspubtd.h"
 #include "jsscript.h"

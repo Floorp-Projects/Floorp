@@ -641,3 +641,10 @@
 :-moz-native-anonymous .shapes-marker-hover {
   fill: var(--highlighter-guide-color);
 }
+
+/* Accessible highlighter */
+
+:-moz-native-anonymous .accessible-bounds {
+  opacity: 0.6;
+  fill: #6a5acd;
+}

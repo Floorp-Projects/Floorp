@@ -22,7 +22,6 @@
 
 #include "jsapi.h"
 #include "jsarray.h"
-#include "jsatom.h"
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsnum.h"

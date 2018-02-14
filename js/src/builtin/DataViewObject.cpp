@@ -43,10 +43,8 @@ using JS::ToInt32;
 using JS::ToUint32;
 
 static NewObjectKind
-DataViewNewObjectKind(JSContext* cx, uint32_t byteLength, JSObject* proto)
+DataViewNewObjectKind(JSContext* cx)
 {
-    if (!proto && byteLength >= TypedArrayObject::SINGLETON_BYTE_LENGTH)
-        return SingletonObject;
     jsbytecode* pc;
     JSScript* script = cx->currentScript(&pc);
     if (script && ObjectGroup::useSingletonForAllocationSite(script, pc, &DataViewObject::class_))
@@ -70,7 +68,7 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
     RootedObject proto(cx, protoArg);
     RootedObject obj(cx);
 
-    NewObjectKind newKind = DataViewNewObjectKind(cx, byteLength, proto);
+    NewObjectKind newKind = DataViewNewObjectKind(cx);
     obj = NewObjectWithClassProto(cx, &class_, proto, newKind);
     if (!obj)
         return nullptr;

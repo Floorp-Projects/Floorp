@@ -29,7 +29,6 @@
 #endif
 
 #include "jsapi.h"
-#include "jsatom.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jslibmath.h"

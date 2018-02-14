@@ -56,7 +56,6 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
 
-#include "jsatominlines.h"
 #include "jsfuninlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"

@@ -26,7 +26,6 @@
 #include "vm/Debugger.h"
 #include "vm/WrapperObject.h"
 
-#include "jsatominlines.h"
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"

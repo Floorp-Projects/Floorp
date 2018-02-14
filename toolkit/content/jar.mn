@@ -40,6 +40,7 @@ toolkit.jar:
    content/global/browser-child.js
    content/global/browser-content.js
 *   content/global/buildconfig.html
+   content/global/buildconfig.css
    content/global/contentAreaUtils.js
    content/global/datepicker.xhtml
 #ifndef MOZ_FENNEC
@@ -49,6 +50,7 @@ toolkit.jar:
    content/global/filepicker.properties
    content/global/globalOverlay.js
    content/global/mozilla.xhtml
+   content/global/aboutMozilla.css
    content/global/preferencesBindings.js
    content/global/process-content.js
    content/global/resetProfile.css
