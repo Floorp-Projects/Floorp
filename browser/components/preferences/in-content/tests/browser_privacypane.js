@@ -11,7 +11,7 @@ add_task(async function testBrowserErrorInitialValue() {
   }
 
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.chrome.errorCollection.enabled", true]],
+    set: [["browser.chrome.errorReporter.enabled", true]],
   });
   await openPreferencesViaOpenPreferencesAPI("privacy-reports", {leaveOpen: true});
 
@@ -34,7 +34,7 @@ add_task(async function testBrowserErrorLearnMore() {
   }
 
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.chrome.errorCollection.infoURL", "https://example.com/%NAME%/"]],
+    set: [["browser.chrome.errorReporter.infoURL", "https://example.com/%NAME%/"]],
   });
   await openPreferencesViaOpenPreferencesAPI("privacy-reports", {leaveOpen: true});
 

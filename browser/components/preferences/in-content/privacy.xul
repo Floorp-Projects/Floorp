@@ -590,7 +590,7 @@
     <hbox align="center">
       <checkbox id="collectBrowserErrorsBox"
                 class="tail-with-learn-more"
-                preference="browser.chrome.errorCollection.enabled"
+                preference="browser.chrome.errorReporter.enabled"
                 label="&collectBrowserErrors.label;"
                 accesskey="&collectBrowserErrors.accesskey;"/>
       <label id="collectBrowserErrorsLearnMore"
