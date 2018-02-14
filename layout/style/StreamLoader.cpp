@@ -117,7 +117,7 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest,
   bool dummy;
   return mSheetLoadData->mLoader->ParseSheet(
     EmptyString(),
-    Span<const uint8_t>(utf8String).From(0),
+    utf8String,
     mSheetLoadData,
     /* aAllowAsync = */ true,
     dummy);

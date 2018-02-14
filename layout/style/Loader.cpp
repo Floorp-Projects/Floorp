@@ -1568,7 +1568,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
  */
 nsresult
 Loader::ParseSheet(const nsAString& aUTF16,
-                   Span<const uint8_t> aUTF8,
+                   const nsACString& aUTF8,
                    SheetLoadData* aLoadData,
                    bool aAllowAsync,
                    bool& aCompleted)
@@ -1577,17 +1577,20 @@ Loader::ParseSheet(const nsAString& aUTF16,
   NS_PRECONDITION(aLoadData, "Must have load data");
   NS_PRECONDITION(aLoadData->mSheet, "Must have sheet to parse into");
   aCompleted = false;
-  if (ServoStyleSheet* sheet = aLoadData->mSheet->GetAsServo()) {
-    return DoParseSheetServo(sheet, aUTF16, aUTF8, aLoadData, aAllowAsync, aCompleted);
+  ServoStyleSheet* sheet = aLoadData->mSheet->AsServo();
+  MOZ_ASSERT(aUTF16.IsEmpty() || aUTF8.IsEmpty());
+  if (!aUTF16.IsEmpty()) {
+    return DoParseSheetServo(sheet, NS_ConvertUTF16toUTF8(aUTF16),
+                             aLoadData, aAllowAsync, aCompleted);
+  } else {
+    return DoParseSheetServo(sheet, aUTF8,
+                             aLoadData, aAllowAsync, aCompleted);
   }
-    MOZ_CRASH("old style system disabled");
 }
-
 
 nsresult
 Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
-                          const nsAString& aUTF16,
-                          Span<const uint8_t> aUTF8,
+                          const nsACString& aBytes,
                           SheetLoadData* aLoadData,
                           bool aAllowAsync,
                           bool& aCompleted)
@@ -1599,7 +1602,7 @@ Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
   if (aLoadData->mSyncLoad || !aAllowAsync) {
     aSheet->ParseSheetSync(
       this,
-      aUTF8.IsEmpty() ? NS_ConvertUTF16toUTF8(aUTF16) : aUTF8,
+      aBytes,
       aSheet->GetSheetURI(),
       aSheet->GetBaseURI(),
       aSheet->Principal(),
@@ -1628,7 +1631,7 @@ Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
   nsCOMPtr<nsISerialEventTarget> target = DispatchTarget();
   aSheet->ParseSheet(
     this,
-    aUTF8.IsEmpty() ? NS_ConvertUTF16toUTF8(aUTF16) : aUTF8,
+    aBytes,
     aSheet->GetSheetURI(),
     aSheet->GetBaseURI(),
     aSheet->Principal(),
@@ -1921,8 +1924,8 @@ Loader::LoadInlineStyle(nsIContent* aElement,
   //
   // Note that we need to parse synchronously, since the web expects that the
   // effects of inline stylesheets are visible immediately (aside from @imports).
-  rv = ParseSheet(aBuffer, Span<const uint8_t>(), data,
-                  /* aAllowAsync = */ false, *aCompleted);
+  rv = ParseSheet(aBuffer, EmptyCString(),
+                  data, /* aAllowAsync = */ false, *aCompleted);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If aCompleted is true, |data| may well be deleted by now.
