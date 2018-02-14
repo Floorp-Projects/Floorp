@@ -115,8 +115,7 @@ public:
                        WidgetEvent* aEvent,
                        nsIDOMEvent* aDOMEvent,
                        nsEventStatus aEventStatus,
-                       bool aIsInAnon,
-                       dom::EventTarget* aTargetInKnownToBeHandledScope)
+                       bool aIsInAnon)
     : EventChainVisitor(aPresContext, aEvent, aDOMEvent, aEventStatus)
     , mCanHandle(true)
     , mAutomaticChromeDispatch(true)
@@ -129,11 +128,8 @@ public:
     , mRootOfClosedTree(false)
     , mParentIsSlotInClosedTree(false)
     , mParentIsChromeHandler(false)
-    , mRelatedTargetRetargetedInCurrentScope(false)
     , mParentTarget(nullptr)
     , mEventTargetAtParent(nullptr)
-    , mRetargetedRelatedTarget(nullptr)
-    , mTargetInKnownToBeHandledScope(aTargetInKnownToBeHandledScope)
   {
   }
 
@@ -150,12 +146,8 @@ public:
     mRootOfClosedTree = false;
     mParentIsSlotInClosedTree = false;
     mParentIsChromeHandler = false;
-    // Note, we don't clear mRelatedTargetRetargetedInCurrentScope explicitly,
-    // since it is used during event path creation to indicate whether
-    // relatedTarget may need to be retargeted.
     mParentTarget = nullptr;
     mEventTargetAtParent = nullptr;
-    mRetargetedRelatedTarget = nullptr;
   }
 
   dom::EventTarget* GetParentTarget()
@@ -169,13 +161,6 @@ public:
     if (mParentTarget) {
       mParentIsChromeHandler = aIsChromeHandler;
     }
-  }
-
-  void IgnoreCurrentTarget()
-  {
-    mCanHandle = false;
-    SetParentTarget(nullptr, false);
-    mEventTargetAtParent = nullptr;
   }
 
   /**
@@ -246,12 +231,6 @@ public:
    */
   bool mParentIsChromeHandler;
 
-  /**
-   * True if event's related target has been already retargeted in the
-   * current 'scope'. This should be set to false initially and whenever
-   * event path creation crosses shadow boundary.
-   */
-  bool mRelatedTargetRetargetedInCurrentScope;
 private:
   /**
    * Parent item in the event target chain.
@@ -264,19 +243,6 @@ public:
    * which should be used when the event is handled at mParentTarget.
    */
   dom::EventTarget* mEventTargetAtParent;
-
-  /**
-   * If the related target of the event needs to be retargeted, set this
-   * to a new EventTarget.
-   */
-  dom::EventTarget* mRetargetedRelatedTarget;
-
-  /**
-   * Set to the value of mEvent->mTarget of the previous scope in case of
-   * Shadow DOM or such, and if there is no anonymous content this just points
-   * to the initial target.
-   */
-  dom::EventTarget* mTargetInKnownToBeHandledScope;
 };
 
 class EventChainPostVisitor : public mozilla::EventChainVisitor

@@ -566,7 +566,6 @@ public:
     , mCurrentTarget(Move(aOther.mCurrentTarget))
     , mOriginalTarget(Move(aOther.mOriginalTarget))
     , mRelatedTarget(Move(aOther.mRelatedTarget))
-    , mOriginalRelatedTarget(Move(aOther.mOriginalRelatedTarget))
     , mPath(Move(aOther.mPath))
   {
     MOZ_COUNT_CTOR(WidgetEvent);
@@ -616,7 +615,6 @@ public:
 
   /// The possible related target
   nsCOMPtr<dom::EventTarget> mRelatedTarget;
-  nsCOMPtr<dom::EventTarget> mOriginalRelatedTarget;
 
   nsTArray<EventTargetChainItem>* mPath;
 
@@ -639,8 +637,6 @@ public:
     mCurrentTarget = aCopyTargets ? aEvent.mCurrentTarget : nullptr;
     mOriginalTarget = aCopyTargets ? aEvent.mOriginalTarget : nullptr;
     mRelatedTarget = aCopyTargets ? aEvent.mRelatedTarget : nullptr;
-    mOriginalRelatedTarget =
-      aCopyTargets ? aEvent.mOriginalRelatedTarget : nullptr;
   }
 
   /**
