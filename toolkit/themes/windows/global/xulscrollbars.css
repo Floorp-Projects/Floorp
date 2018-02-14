@@ -65,7 +65,6 @@ scrollbarbutton {
 
 scrollcorner { 
   /* XXX -moz-appearance: scrollcorner; */
-  -moz-binding: url(chrome://global/content/bindings/scrollbar.xml#scrollbar-base);
   width: 16px;
   cursor: default;
   background-color: -moz-Dialog;
