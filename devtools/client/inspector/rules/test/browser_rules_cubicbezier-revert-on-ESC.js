@@ -19,7 +19,6 @@ add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {view} = yield openRuleView();
   yield testPressingEscapeRevertsChanges(view);
-  yield testPressingEscapeRevertsChangesAndDisables(view);
 });
 
 function* testPressingEscapeRevertsChanges(view) {
@@ -39,52 +38,6 @@ function* testPressingEscapeRevertsChanges(view) {
     "linear");
   is(propEditor.valueSpan.textContent, "linear",
     "Got expected property value.");
-}
-
-function* testPressingEscapeRevertsChangesAndDisables(view) {
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let textProp = ruleEditor.rule.textProps[0];
-  let propEditor = textProp.editor;
-
-  info("Disabling animation-timing-function property");
-  yield togglePropStatus(view, textProp);
-
-  ok(propEditor.element.classList.contains("ruleview-overridden"),
-    "property is overridden.");
-  is(propEditor.enable.style.visibility, "visible",
-    "property enable checkbox is visible.");
-  ok(!propEditor.enable.getAttribute("checked"),
-    "property enable checkbox is not checked.");
-  ok(!propEditor.prop.enabled,
-    "animation-timing-function property is disabled.");
-  let newValue = yield getRulePropertyValue("animation-timing-function");
-  is(newValue, "", "animation-timing-function should have been unset.");
-
-  yield openCubicBezierAndChangeCoords(view, 1, 0, [0.1, 2, 0.9, -1]);
-
-  yield escapeTooltip(view);
-
-  ok(propEditor.element.classList.contains("ruleview-overridden"),
-    "property is overridden.");
-  is(propEditor.enable.style.visibility, "visible",
-    "property enable checkbox is visible.");
-  ok(!propEditor.enable.getAttribute("checked"),
-    "property enable checkbox is not checked.");
-  ok(!propEditor.prop.enabled,
-    "animation-timing-function property is disabled.");
-  newValue = yield getRulePropertyValue("animation-timing-function");
-  is(newValue, "", "animation-timing-function should have been unset.");
-  is(propEditor.valueSpan.textContent, "linear",
-    "Got expected property value.");
-}
-
-function* getRulePropertyValue(name) {
-  let propValue = yield executeInContent("Test:GetRulePropertyValue", {
-    styleSheetIndex: 0,
-    ruleIndex: 0,
-    name: name
-  });
-  return propValue;
 }
 
 function* escapeTooltip(view) {
