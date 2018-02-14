@@ -6,16 +6,26 @@
 /**
  * Test showing/hiding columns.
  */
-
 add_task(async function () {
   let { monitor, tab } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, store, parent } = monitor.panelWin;
+  let { document, store, parent, connector, windowRequire } = monitor.panelWin;
+  let { requestData } = connector;
+  let {
+    getSortedRequests,
+  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   let wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.loadURI(SIMPLE_URL);
   await wait;
+
+  let item = getSortedRequests(store.getState()).get(0);
+  ok(item.responseHeadersAvailable, "headers are available for lazily fetching");
+
+  if (item.responseHeadersAvailable && !item.responseHeaders) {
+    await requestData(item.id, "responseHeaders");
+  }
 
   let requestsContainer = document.querySelector(".requests-list-contents");
   ok(requestsContainer, "Container element exists as expected.");
@@ -53,6 +63,8 @@ async function testWhiteSpaceContextMenuItem(column, document, parent) {
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelector(".devtools-toolbar.requests-list-headers"));
 
+  // Wait for next tick to do stuff async and force repaint.
+  await waitForTick();
   await toggleAndCheckColumnVisibility(column, document, parent);
 }
 
@@ -64,6 +76,8 @@ async function testVisibleColumnContextMenuItem(column, document, parent) {
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelector("#requests-list-status-button") ||
     document.querySelector("#requests-list-waterfall-button"));
+
+  await waitForTick();
 
   let menuItem = parent.document.querySelector(`#request-list-header-${column}-toggle`);
 
@@ -77,6 +91,7 @@ async function testVisibleColumnContextMenuItem(column, document, parent) {
   menuItem.click();
 
   await onHeaderRemoved;
+  await waitForTick();
 
   ok(!document.querySelector(`#requests-list-${column}-button`),
      `Column ${column} should be hidden`);
@@ -91,6 +106,7 @@ async function testHiddenColumnContextMenuItem(column, document, parent) {
     document.querySelector("#requests-list-status-button") ||
     document.querySelector("#requests-list-waterfall-button"));
 
+  await waitForTick();
   await toggleAndCheckColumnVisibility(column, document, parent);
 }
 
@@ -107,6 +123,7 @@ async function toggleAndCheckColumnVisibility(column, document, parent) {
   menuItem.click();
 
   await onHeaderAdded;
+  await waitForTick();
 
   ok(document.querySelector(`#requests-list-${column}-button`),
      `Column ${column} should be visible`);
