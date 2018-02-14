@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 
 #include "nsCSSValue.h"
+#include "mozAutoDocUpdate.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/css/ImportRule.h"

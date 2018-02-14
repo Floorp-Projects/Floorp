@@ -60,7 +60,7 @@ SimpleTest.waitForFocus(()=>{
                                   "Backspace from " + i + "th empty text node";
     editor.focus();
     initForBackspace(i);
-    synthesizeKey("KEY_Backspace", { code: "Backspace" });
+    synthesizeKey("KEY_Backspace", {});
     var p = document.getElementById("p");
     ok(p, kDescription + ": <p> element shouldn't be removed by Backspace key press");
     is(p.tagName.toLowerCase(), "p", kDescription + ": <p> element shouldn't be removed by Backspace key press");
@@ -117,7 +117,7 @@ SimpleTest.waitForFocus(()=>{
                                   "Delete from " + i + "th empty text node";
     editor.focus();
     initForDelete(i);
-    synthesizeKey("KEY_Delete", { code: "Delete" });
+    synthesizeKey("KEY_Delete", {});
     var p = document.getElementById("p");
     ok(p, kDescription + ": <p> element shouldn't be removed by Delete key press");
     is(p.tagName.toLowerCase(), "p", kDescription + ": <p> element shouldn't be removed by Delete key press");

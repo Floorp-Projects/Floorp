@@ -25,7 +25,7 @@ function runTests() {
   input.addEventListener("keydown", () => {
     input.value = "new value";
   }, { once: true });
-  synthesizeKey("KEY_Escape", { code: "Escape" });
+  synthesizeKey("KEY_Escape", {});
   is(input.value, "new value",
      "New <input> value changed by an Escape key event listener shouldn't be " +
      "overwritten by original value even if Escape key is pressed");

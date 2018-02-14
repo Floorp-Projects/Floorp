@@ -119,7 +119,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
   }
 
   function pressAccessKey(key) {
-    synthesizeKey(key.key, {code: key.code, altKey: true, shiftKey: true});
+    synthesizeKey(key.key, {altKey: true, shiftKey: true});
   }
 
   function testFocusableElements() {
@@ -128,7 +128,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
       if (code == "b".charCodeAt(0))
         continue;
       var accessChar = String.fromCharCode(code).toUpperCase();
-      pressAccessKey({key: accessChar, code: "Key" + accessChar});
+      pressAccessKey({key: accessChar});
     }
     ok(focusArray.length == 0, "(focus) unhandled elements remaining: " + focusArray.join(","));
   }
@@ -187,7 +187,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
     var i, e;
     for (i = 0; i < unfocusableTags.length; ++ i) {
       createUnfocusableElement(unfocusableTags[i], "z");
-      pressAccessKey({key: "Z", code:"KeyZ"});
+      pressAccessKey({key: "Z"});
       destroyUnfocusableElement();
     }
     for (i = 0; i < invalidElements.length; ++ i) {
@@ -196,7 +196,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
       e.setAttribute("accesskey", "z");
       e.setAttribute("onclick", "handleClick(event.target); event.preventDefault();");
       e.setAttribute("onfocus", "handleInvalid(event.target);");
-      pressAccessKey({key: "Z", code:"KeyZ"});
+      pressAccessKey({key: "Z"});
       e.removeAttribute("accesskey");
       e.removeAttribute("onclick");
       e.removeAttribute("onfocus");

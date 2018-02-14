@@ -20,7 +20,7 @@ struct Ipsum {
 
 #[test]
 fn expand_many() {
-    let di = syn::parse_derive_input(r#"
+    let di = syn::parse_str(r#"
         #[hello(ipsum(dolor = "Hello", dolor = "World"))]
         pub struct Baz;
     "#).unwrap();

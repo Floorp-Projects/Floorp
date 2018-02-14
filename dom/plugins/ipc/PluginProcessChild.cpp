@@ -96,6 +96,16 @@ PluginProcessChild::Init(int aArgc, char* aArgv[])
 
     pluginFilename = UnmungePluginDsoPath(values[1]);
 
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+    if (values.size() >= 3 && values[2] == "-flashSandbox") {
+      bool enableLogging = false;
+      if (values.size() >= 4 && values[3] == "-flashSandboxLogging") {
+        enableLogging = true;
+      }
+      mPlugin.EnableFlashSandbox(enableLogging);
+    }
+#endif
+
 #elif defined(OS_WIN)
     std::vector<std::wstring> values =
         CommandLine::ForCurrentProcess()->GetLooseValues();

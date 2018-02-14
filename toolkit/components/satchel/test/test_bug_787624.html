@@ -74,7 +74,7 @@ add_task(async function test_popup_not_move_input() {
 
   let popupShown = waitForNextPopup();
   input.focus();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await popupShown;
 
   let newRect = input.getBoundingClientRect();

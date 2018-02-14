@@ -15,7 +15,7 @@ impl ErrorDeclaration {
 
 impl ToTokens for ErrorDeclaration {
     fn to_tokens(&self, tokens: &mut Tokens) {
-        tokens.append(quote! {
+        tokens.append_all(quote! {
             let mut __errors = Vec::new();
         })
     }
@@ -51,7 +51,7 @@ impl<'a> ToTokens for ErrorCheck<'a> {
             quote!()
         };
 
-        tokens.append(quote! {
+        tokens.append_all(quote! {
             if !__errors.is_empty() {
                 return ::darling::export::Err(::darling::Error::multiple(__errors) #at_call);
             }

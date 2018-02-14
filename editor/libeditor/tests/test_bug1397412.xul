@@ -49,14 +49,14 @@ function runTest() {
   // Test 1.
   body.innerHTML = initialHTML1;
   selection.collapse(body, 2);
-  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("t", {});
   var actualHTML = body.innerHTML;
   is(actualHTML, expectedHTML1, "'t' should be inserted between <br>s");
 
   // Test 2.
   body.innerHTML = initialHTML2;
   selection.collapse(body, 2);
-  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("t", {});
   actualHTML = body.innerHTML;
   is(actualHTML, expectedHTML2, "'t' should be inserted between <br>s");
 

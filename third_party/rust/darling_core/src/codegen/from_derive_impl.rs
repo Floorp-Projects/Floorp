@@ -1,7 +1,7 @@
 use quote::{Tokens, ToTokens};
 use syn::{self, Ident};
 
-use ast::Body;
+use ast::Data;
 use codegen::{TraitImpl, ExtractAttribute, OuterFromImpl};
 use options::{ForwardAttrs, Shape};
 
@@ -10,7 +10,7 @@ pub struct FromDeriveInputImpl<'a> {
     pub generics: Option<&'a Ident>,
     pub vis: Option<&'a Ident>,
     pub attrs: Option<&'a Ident>,
-    pub body: Option<&'a Ident>,
+    pub data: Option<&'a Ident>,
     pub base: TraitImpl<'a>,
     pub attr_names: Vec<&'a str>,
     pub forward_attrs: Option<&'a ForwardAttrs>,
@@ -23,8 +23,8 @@ impl<'a> ToTokens for FromDeriveInputImpl<'a> {
         let ty_ident = self.base.ident;
         let input = self.param_name();
         let map = self.base.map_fn();
-        
-        if let Body::Struct(ref data) = self.base.body {
+
+        if let Data::Struct(ref data) = self.base.data {
             if data.is_newtype() {
                 self.wrap(quote!{
                     fn from_derive_input(#input: &::syn::DeriveInput) -> ::darling::Result<Self> {
@@ -42,11 +42,11 @@ impl<'a> ToTokens for FromDeriveInputImpl<'a> {
         let passed_vis = self.vis.as_ref().map(|i| quote!(#i: #input.vis.clone(),));
         let passed_generics = self.generics.as_ref().map(|i| quote!(#i: #input.generics.clone(),));
         let passed_attrs = self.attrs.as_ref().map(|i| quote!(#i: __fwd_attrs,));
-        let passed_body = self.body.as_ref().map(|i| quote!(#i: ::darling::ast::Body::try_from(&#input.body)?,));
+        let passed_body = self.data.as_ref().map(|i| quote!(#i: ::darling::ast::Data::try_from(&#input.data)?,));
 
         let supports = self.supports.map(|i| quote!{
             #i
-            __validate_body(&#input.body)?;
+            __validate_body(&#input.data)?;
         });
 
         let inits = self.base.initializers();

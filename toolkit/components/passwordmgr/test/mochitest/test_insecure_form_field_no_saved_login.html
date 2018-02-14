@@ -82,16 +82,16 @@ add_task(async function test_form1_warning_entry() {
   // Trigger autocomplete popup
   restoreForm();
   let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
+  synthesizeKey("KEY_ArrowDown", {}); // open
   await shownPromise;
 
   let popupState = await getPopupState();
   is(popupState.open, true, "Check popup is opened");
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
 
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // select insecure warning
+  synthesizeKey("KEY_ArrowDown", {}); // select insecure warning
   checkACForm("", ""); // value shouldn't update just by selecting
-  synthesizeKey("KEY_Enter", {code: "Enter"});
+  synthesizeKey("KEY_Enter", {});
   await spinEventLoop(); // let focus happen
   checkACForm("", "");
 });

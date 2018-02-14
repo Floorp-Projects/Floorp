@@ -17,6 +17,7 @@
 #include "nsAtom.h"
 #include "PLDHashTable.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/StylePrefs.h"
 #include "mozilla/css/ImportRule.h"
 #include "mozilla/css/StyleRule.h"
 #include "mozilla/css/GroupRule.h"

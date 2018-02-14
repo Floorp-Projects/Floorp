@@ -1,5 +1,5 @@
 use quote::{Tokens, ToTokens};
-use syn::{Ident, Path, Ty};
+use syn::{Ident, Path, Type};
 
 use codegen::DefaultExpression;
 
@@ -16,9 +16,9 @@ pub struct Field<'a> {
     pub ident: &'a Ident,
 
     /// The type of the field in the input.
-    pub ty: &'a Ty,
+    pub ty: &'a Type,
     pub default_expression: Option<DefaultExpression<'a>>,
-    pub with_path: &'a Path,
+    pub with_path: Path,
     pub map: Option<&'a Path>,
     pub skip: bool,
     pub multiple: bool,
@@ -60,7 +60,7 @@ impl<'a> ToTokens for Declaration<'a> {
 
         let mutable = if self.1 { quote!(mut) } else { quote!() };
 
-        tokens.append(if field.multiple {
+        tokens.append_all(if field.multiple {
             // This is NOT mutable, as it will be declared mutable only temporarily.
             quote!(let #mutable #ident: #ty = ::darling::export::Default::default();)
         } else {
@@ -78,11 +78,11 @@ impl<'a> ToTokens for MatchArm<'a> {
         if !field.skip {
             let name_str = field.name_in_attr;
             let ident = field.ident;
-            let with_path = field.with_path;
+            let with_path = &field.with_path;
 
-            /// Errors include the location of the bad input, so we compute that here.
-            /// Fields that take multiple values add the index of the error for convenience,
-            /// while single-value fields only expose the name in the input attribute.
+            // Errors include the location of the bad input, so we compute that here.
+            // Fields that take multiple values add the index of the error for convenience,
+            // while single-value fields only expose the name in the input attribute.
             let location = if field.multiple {
                 // we use the local variable `len` here because location is accessed via
                 // a closure, and the borrow checker gets very unhappy if we try to immutably
@@ -97,11 +97,11 @@ impl<'a> ToTokens for MatchArm<'a> {
                 extractor = quote!(#extractor.map(#map))
             }
 
-            tokens.append(if field.multiple {
+            tokens.append_all(if field.multiple {
                 quote!(
                     #name_str => {
-                        /// Store the index of the name we're assessing in case we need
-                        /// it for error reporting.
+                        // Store the index of the name we're assessing in case we need
+                        // it for error reporting.
                         let __len = #ident.len();
                         match #extractor {
                             Ok(__val) => {
@@ -115,7 +115,7 @@ impl<'a> ToTokens for MatchArm<'a> {
                 )
             } else {
                 quote!(
-                    #name_str => {  
+                    #name_str => {
                         if !#ident.0 {
                             match #extractor {
                                 Ok(__val) => {
@@ -143,7 +143,7 @@ impl<'a> ToTokens for Initializer<'a> {
     fn to_tokens(&self, tokens: &mut Tokens) {
         let field: &Field = self.0;
         let ident = field.ident;
-        tokens.append(if field.multiple {
+        tokens.append_all(if field.multiple {
             if let Some(ref expr) = field.default_expression {
                 quote!(#ident: if !#ident.is_empty() {
                     #ident
@@ -175,7 +175,7 @@ impl<'a> ToTokens for CheckMissing<'a> {
             let ident = self.0.ident;
             let name_in_attr = self.0.name_in_attr;
 
-            tokens.append(quote! {
+            tokens.append_all(quote! {
                 if !#ident.0 {
                     __errors.push(::darling::Error::missing_field(#name_in_attr));
                 }

@@ -55,7 +55,7 @@ async function testOpenedAndDraggedXPI(aBrowser) {
   let urlbar = document.getElementById("urlbar");
   urlbar.value = fileurl1.spec;
   urlbar.focus();
-  EventUtils.synthesizeKey("KEY_Enter", { code: "Enter" });
+  EventUtils.synthesizeKey("KEY_Enter", {});
   await promiseNotification;
   await CheckBrowserInPid(aBrowser, browserPid,
                           "Check that browser has not switched process.");

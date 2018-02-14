@@ -39,6 +39,7 @@
 #include "imgRequestProxy.h"
 #include "nsIURI.h"
 #include "SVGImageContext.h"
+#include "TextDrawTarget.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 
 #include <algorithm>
@@ -50,6 +51,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
+using namespace mozilla::layout;
 
 NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(FontSizeInflationProperty, float)
 

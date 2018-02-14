@@ -10,6 +10,7 @@
 
 #include "mozilla/css/GroupRule.h"
 #include "nsCCUncollectableMarker.h"
+#include "nsIDocument.h"
 #include "nsWrapperCacheInlines.h"
 
 using namespace mozilla;

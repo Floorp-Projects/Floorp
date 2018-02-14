@@ -8,6 +8,7 @@
 #define MobileViewportManager_h_
 
 #include "mozilla/Maybe.h"
+#include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
 #include "nsIObserver.h"
 #include "Units.h"

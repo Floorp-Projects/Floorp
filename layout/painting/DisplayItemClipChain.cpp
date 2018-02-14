@@ -6,6 +6,8 @@
 
 #include "DisplayItemClipChain.h"
 
+#include "nsDisplayList.h"
+
 namespace mozilla {
 
 /* static */ const DisplayItemClip*

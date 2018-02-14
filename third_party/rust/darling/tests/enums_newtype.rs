@@ -34,7 +34,7 @@ impl PartialEq<Lorem> for Holder {
 
 #[test]
 fn bool_word() {
-    let di = syn::parse_derive_input(r#"
+    let di = syn::parse_str(r#"
         #[hello(lorem(ipsum))]
         pub struct Bar;
     "#).unwrap();
@@ -45,7 +45,7 @@ fn bool_word() {
 
 #[test]
 fn bool_literal() {
-    let di = syn::parse_derive_input(r#"
+    let di = syn::parse_str(r#"
         #[hello(lorem(ipsum = false))]
         pub struct Bar;
     "#).unwrap();
@@ -56,7 +56,7 @@ fn bool_literal() {
 
 #[test]
 fn string_literal() {
-    let di = syn::parse_derive_input(r#"
+    let di = syn::parse_str(r#"
         #[hello(lorem(dolor = "Hello"))]
         pub struct Bar;
     "#).unwrap();
@@ -67,7 +67,7 @@ fn string_literal() {
 
 #[test]
 fn struct_nested() {
-    let di = syn::parse_derive_input(r#"
+    let di = syn::parse_str(r#"
         #[hello(lorem(sit(world = "Hello", hello = false)))]
         pub struct Bar;
     "#).unwrap();
@@ -82,7 +82,7 @@ fn struct_nested() {
 #[test]
 #[should_panic]
 fn format_mismatch() {
-    let di = syn::parse_derive_input(r#"
+    let di = syn::parse_str(r#"
         #[hello(lorem(dolor(world = "Hello", hello = false)))]
         pub struct Bar;
     "#).unwrap();

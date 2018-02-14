@@ -33,6 +33,7 @@
 #include "DisplayListClipState.h"
 #include "LayerState.h"
 #include "FrameMetrics.h"
+#include "ImgDrawResult.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"

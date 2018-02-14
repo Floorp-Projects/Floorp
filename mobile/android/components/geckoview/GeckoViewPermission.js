@@ -11,6 +11,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 // See: http://developer.android.com/reference/android/Manifest.permission.html
+const PERM_ACCESS_COARSE_LOCATION = "android.permission.ACCESS_COARSE_LOCATION";
 const PERM_ACCESS_FINE_LOCATION = "android.permission.ACCESS_FINE_LOCATION";
 const PERM_CAMERA = "android.permission.CAMERA";
 const PERM_RECORD_AUDIO = "android.permission.RECORD_AUDIO";

@@ -1086,6 +1086,10 @@ pref("security.sandbox.gpu.level", 0);
 pref("security.sandbox.content.level", 3);
 #endif
 
+#if defined(NIGHTLY_BUILD) && defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+pref("security.sandbox.mac.flash.enabled", false);
+#endif
+
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)
 // This pref is introduced as part of bug 742434, the naming is inspired from
 // its Windows/Mac counterpart, but on Linux it's an integer which means:

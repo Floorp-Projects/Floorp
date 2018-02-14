@@ -51,7 +51,7 @@ Darling's features are built to work well for real-world projects.
 
 * **Defaults**: Supports struct- and field-level defaults, using the same path syntax as `serde`.
 * **Field Renaming**: Fields can have different names in usage vs. the backing code.
-* **Auto-populated fields**: Structs deriving `FromDeriveInput` and `FromField` can declare properties named `ident`, `vis`, `ty`, `attrs`, and `generics` to automatically get copies of the matching values from the input AST.
+* **Auto-populated fields**: Structs deriving `FromDeriveInput` and `FromField` can declare properties named `ident`, `vis`, `ty`, `attrs`, and `generics` to automatically get copies of the matching values from the input AST. `FromDeriveInput` additionally exposes `data` to get access to the body of the deriving type, and `FromVariant` exposes `fields`.
 * **Mapping function**: Use `#[darling(map="path")]` to specify a function that runs on the result of parsing a meta-item field. This can change the return type, which enables you to parse to an intermediate form and convert that to the type you need in your struct.
 * **Skip fields**: Use `#[darling(skip)]` to mark a field that shouldn't be read from attribute meta-items.
 * **Multiple-occurrence fields**: Use `#[darling(multiple)]` on a `Vec` field to allow that field to appear multiple times in the meta-item. Each occurrence will be pushed into the `Vec`.

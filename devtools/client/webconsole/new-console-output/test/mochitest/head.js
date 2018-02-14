@@ -31,14 +31,14 @@ const STATUS_CODES_GA_PARAMS = `?${new URLSearchParams({
   "utm_campaign": "default"
 })}`;
 
-Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", true);
-registerCleanupFunction(function* () {
-  Services.prefs.clearUserPref("devtools.webconsole.new-frontend-enabled");
+Services.prefs.setBoolPref("devtools.browserconsole.new-frontend-enabled", true);
+registerCleanupFunction(async function () {
+  Services.prefs.clearUserPref("devtools.browserconsole.new-frontend-enabled");
   Services.prefs.clearUserPref("devtools.webconsole.ui.filterbar");
 
   // Reset all filter prefs between tests. First flushPrefEnv in case one of the
   // filter prefs has been pushed for the test
-  yield SpecialPowers.flushPrefEnv();
+  await SpecialPowers.flushPrefEnv();
   Services.prefs.getChildList("devtools.webconsole.filter").forEach(pref => {
     Services.prefs.clearUserPref(pref);
   });
@@ -47,7 +47,7 @@ registerCleanupFunction(function* () {
     if (browserConsole.jsterm) {
       browserConsole.jsterm.clearOutput(true);
     }
-    yield HUDService.toggleBrowserConsole();
+    await HUDService.toggleBrowserConsole();
   }
 });
 

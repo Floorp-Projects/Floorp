@@ -225,13 +225,18 @@ async function createFileInHome() {
   }
 }
 
-// Test if the content process can create a temp file, should pass. Also test
-// that the content process cannot create symlinks or delete files.
+// Test if the content process can create a temp file, this is disallowed on
+// macOS but allowed everywhere else. Also test that the content process cannot
+// create symlinks or delete files.
 async function createTempFile() {
   let browser = gBrowser.selectedBrowser;
   let path = fileInTempDir().path;
   let fileCreated = await ContentTask.spawn(browser, path, createFile);
-  ok(fileCreated == true, "creating a file in content temp is permitted");
+  if (isMac()) {
+    ok(fileCreated == false, "creating a file in content temp is not permitted");
+  } else {
+    ok(fileCreated == true, "creating a file in content temp is permitted");
+  }
   // now delete the file
   let fileDeleted = await ContentTask.spawn(browser, path, deleteFile);
   if (isMac()) {

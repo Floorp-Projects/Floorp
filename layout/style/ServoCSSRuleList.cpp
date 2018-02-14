@@ -23,6 +23,8 @@
 #include "nsCSSCounterStyleRule.h"
 #include "nsCSSFontFaceRule.h"
 
+using namespace mozilla::dom;
+
 namespace mozilla {
 
 ServoCSSRuleList::ServoCSSRuleList(already_AddRefed<ServoCssRules> aRawRules,

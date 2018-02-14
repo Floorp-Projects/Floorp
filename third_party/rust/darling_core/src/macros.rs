@@ -1,5 +1,6 @@
 macro_rules! path {
     ($($path:tt)+) => {
-        ::syn::parse_path(stringify!($($path)+)).unwrap()
+        parse_quote!($($path)+)
+        //stringify!($($path)+).parse().unwrap()
     };
 }
