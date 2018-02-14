@@ -8,6 +8,7 @@
 #define mozilla_CachedInheritingStyles_h
 
 #include "nsAtom.h"
+#include "nsCOMPtr.h"
 #include "nsTArray.h"
 
 class nsWindowSizes;

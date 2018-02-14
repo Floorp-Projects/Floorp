@@ -8,20 +8,23 @@ const {
   UPDATE_FONTS,
 } = require("../actions/index");
 
-const INITIAL_FONTS = [];
+const INITIAL_FONT_DATA = {
+  fonts: [],
+  otherFonts: []
+};
 
 let reducers = {
 
-  [UPDATE_FONTS](_, { fonts }) {
-    return fonts;
+  [UPDATE_FONTS](_, { fonts, otherFonts }) {
+    return { fonts, otherFonts };
   },
 
 };
 
-module.exports = function (fonts = INITIAL_FONTS, action) {
+module.exports = function (fontData = INITIAL_FONT_DATA, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
-    return fonts;
+    return fontData;
   }
-  return reducer(fonts, action);
+  return reducer(fontData, action);
 };

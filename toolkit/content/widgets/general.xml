@@ -57,25 +57,6 @@
     </implementation>      
   </binding>
 
-  <binding id="root-element">
-    <implementation>
-      <field name="_lightweightTheme">null</field>
-      <constructor><![CDATA[
-        if (this.hasAttribute("lightweightthemes")) {
-          let temp = {};
-          ChromeUtils.import("resource://gre/modules/LightweightThemeConsumer.jsm", temp);
-          this._lightweightTheme = new temp.LightweightThemeConsumer(this.ownerDocument);
-        }
-      ]]></constructor>
-      <destructor><![CDATA[
-        if (this._lightweightTheme) {
-          this._lightweightTheme.destroy();
-          this._lightweightTheme = null;
-        }
-      ]]></destructor>
-    </implementation>
-  </binding>
-
   <binding id="iframe" role="outerdoc">
     <implementation>
       <property name="docShell" readonly="true">

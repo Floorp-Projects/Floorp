@@ -7,7 +7,7 @@ use options::{DataShape, ForwardAttrs};
 pub struct FromVariantImpl<'a> {
     pub base: TraitImpl<'a>,
     pub ident: Option<&'a Ident>,
-    pub data: Option<&'a Ident>,
+    pub fields: Option<&'a Ident>,
     pub attrs: Option<&'a Ident>,
     pub attr_names: Vec<&'a str>,
     pub forward_attrs: Option<&'a ForwardAttrs>,
@@ -21,7 +21,7 @@ impl<'a> ToTokens for FromVariantImpl<'a> {
         let extractor = self.extractor();
         let passed_ident = self.ident.as_ref().map(|i| quote!(#i: #input.ident.clone(),));
         let passed_attrs = self.attrs.as_ref().map(|i| quote!(#i: __fwd_attrs,));
-        let passed_data = self.data.as_ref().map(|i| quote!(#i: ::darling::ast::VariantData::try_from(&#input.data)?,));
+        let passed_fields = self.fields.as_ref().map(|i| quote!(#i: ::darling::ast::Fields::try_from(&#input.fields)?,));
 
         let inits = self.base.initializers();
         let map = self.base.map_fn();
@@ -34,7 +34,7 @@ impl<'a> ToTokens for FromVariantImpl<'a> {
 
         let supports = self.supports.map(|i| quote! {
             #i
-            __validate_data(&#input.data)?;
+            __validate_data(&#input.fields)?;
         });
 
         let error_declaration = self.base.declare_errors();
@@ -58,7 +58,7 @@ impl<'a> ToTokens for FromVariantImpl<'a> {
                 ::darling::export::Ok(Self {
                     #passed_ident
                     #passed_attrs
-                    #passed_data
+                    #passed_fields
                     #inits
                 }) #map
             }

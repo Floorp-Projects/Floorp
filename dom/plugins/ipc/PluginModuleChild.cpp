@@ -54,6 +54,10 @@
 #include "ChildProfilerController.h"
 #endif
 
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+#include "mozilla/Sandbox.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::ipc;
 using namespace mozilla::plugins;
@@ -98,6 +102,10 @@ PluginModuleChild::PluginModuleChild(bool aIsChrome)
   , mNestedEventHook(nullptr)
   , mGlobalCallWndProcHook(nullptr)
   , mAsyncRenderSupport(false)
+#endif
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+  , mEnableFlashSandbox(false)
+  , mEnableFlashSandboxLogging(false)
 #endif
 {
     memset(&mFunctions, 0, sizeof(mFunctions));
@@ -191,6 +199,15 @@ PluginModuleChild::RecvDisableFlashProtectedMode()
     return IPC_OK();
 }
 
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+void
+PluginModuleChild::EnableFlashSandbox(bool aShouldEnableLogging)
+{
+    mEnableFlashSandbox = true;
+    mEnableFlashSandboxLogging = aShouldEnableLogging;
+}
+#endif
+
 bool
 PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
                                  base::ProcessId aParentPid,
@@ -282,6 +299,22 @@ PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
 
 #  error Please copy the initialization code from nsNPAPIPlugin.cpp
 
+#endif
+
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+    if (mEnableFlashSandbox) {
+      MacSandboxInfo flashSandboxInfo;
+      flashSandboxInfo.type = MacSandboxType_Plugin;
+      flashSandboxInfo.pluginInfo.type = MacSandboxPluginType_Flash;
+      flashSandboxInfo.pluginInfo.pluginBinaryPath = aPluginFilename;
+      flashSandboxInfo.shouldLog = mEnableFlashSandboxLogging;
+
+      std::string sbError;
+      if (!mozilla::StartMacSandbox(flashSandboxInfo, sbError)) {
+          fprintf(stderr, "Failed to start sandbox:\n%s\n", sbError.c_str());
+          return false;
+      }
+    }
 #endif
 
     return true;

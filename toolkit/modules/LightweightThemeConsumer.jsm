@@ -47,6 +47,7 @@ this.LightweightThemeConsumer =
   ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
   this._update(temp.LightweightThemeManager.currentThemeForDisplay);
   this._win.addEventListener("resize", this);
+  this._win.addEventListener("unload", this.destroy.bind(this), { once: true });
 };
 
 LightweightThemeConsumer.prototype = {

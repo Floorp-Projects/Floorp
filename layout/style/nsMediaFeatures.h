@@ -14,6 +14,7 @@
 class nsAtom;
 class nsIDocument;
 class nsCSSValue;
+class nsStaticAtom;
 
 struct nsMediaFeature;
 typedef void (*nsMediaFeatureValueGetter)(nsIDocument* aDocument,

@@ -9,7 +9,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 /**
  * A single font.
  */
-exports.font = {
+const font = exports.font = {
   // The name of the font family
   CSSFamilyName: PropTypes.string,
 
@@ -30,4 +30,20 @@ exports.font = {
 
   // The URI of the font file
   URI: PropTypes.string,
+};
+
+exports.fontOptions = {
+  // The current preview text
+  previewText: PropTypes.string,
+};
+
+/**
+ * Font data
+ */
+exports.fontData = {
+  // The fonts used in the current element.
+  fonts: PropTypes.arrayOf(PropTypes.shape(font)),
+
+  // Fonts used elsewhere.
+  otherFonts: PropTypes.arrayOf(PropTypes.shape(font)),
 };

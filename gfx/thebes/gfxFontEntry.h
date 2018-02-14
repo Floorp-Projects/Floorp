@@ -413,6 +413,7 @@ public:
     // list of gfxFonts that are using SVG glyphs
     nsTArray<gfxFont*> mFontsUsingSVGGlyphs;
     nsTArray<gfxFontFeature> mFeatureSettings;
+    nsTArray<gfxFontVariation> mVariationSettings;
     mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey,bool>> mSupportedFeatures;
     mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey,hb_set_t*>> mFeatureInputs;
     uint32_t         mLanguageOverride;

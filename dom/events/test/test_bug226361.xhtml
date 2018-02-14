@@ -38,7 +38,7 @@ function setTabFocus() {
 
 var doc = document;
 function tab_to(id) {
-  synthesizeKey("KEY_Tab", {code: "Tab"});
+  synthesizeKey("KEY_Tab", {});
   is(doc.activeElement.id, id, "element with id=" + id + " should have focus");
 }
 

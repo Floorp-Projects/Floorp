@@ -16,6 +16,8 @@
 
 #include "mozAutoDocUpdate.h"
 
+using namespace mozilla::dom;
+
 namespace mozilla {
 
 // -- ServoStyleRuleDeclaration ---------------------------------------

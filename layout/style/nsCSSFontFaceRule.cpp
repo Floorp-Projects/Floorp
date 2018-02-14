@@ -10,6 +10,7 @@
 
 #include "mozilla/dom/CSSFontFaceRuleBinding.h"
 #include "mozilla/dom/CSSStyleDeclarationBinding.h"
+#include "nsStyleUtil.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -103,6 +104,10 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
 
   case eCSSFontDesc_FontFeatureSettings:
     nsStyleUtil::AppendFontFeatureSettings(val, aResult);
+    return NS_OK;
+
+  case eCSSFontDesc_FontVariationSettings:
+    nsStyleUtil::AppendFontVariationSettings(val, aResult);
     return NS_OK;
 
   case eCSSFontDesc_FontLanguageOverride:

@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use syn::{Ident, NestedMetaItem, MetaItem};
+use syn::{Ident, NestedMeta, Meta};
 
 use {FromMetaItem, Result, Error};
 
@@ -21,7 +21,7 @@ pub struct IdentList(Vec<Ident>);
 impl IdentList {
     /// Create a new list.
     pub fn new<T: Into<Ident>>(vals: Vec<T>) -> Self {
-        IdentList(vals.into_iter().map(Ident::new).collect())
+        IdentList(vals.into_iter().map(T::into).collect())
     }
 
     /// Creates a view of the contained identifiers as `&str`s.
@@ -45,10 +45,10 @@ impl From<Vec<Ident>> for IdentList {
 }
 
 impl FromMetaItem for IdentList {
-    fn from_list(v: &[NestedMetaItem]) -> Result<Self> {
+    fn from_list(v: &[NestedMeta]) -> Result<Self> {
         let mut idents = Vec::with_capacity(v.len());
         for nmi in v {
-            if let NestedMetaItem::MetaItem(MetaItem::Word(ref ident)) = *nmi {
+            if let NestedMeta::Meta(Meta::Word(ref ident)) = *nmi {
                 idents.push(ident.clone());
             } else {
                 return Err(Error::unexpected_type("non-word"))

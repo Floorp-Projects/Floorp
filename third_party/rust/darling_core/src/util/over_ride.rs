@@ -1,6 +1,6 @@
 use std::fmt;
 
-use syn::{Lit, NestedMetaItem};
+use syn::{Lit, NestedMeta};
 
 use {Result, FromMetaItem};
 
@@ -130,14 +130,14 @@ impl<T: fmt::Display> fmt::Display for Override<T> {
     }
 }
 
-/// Parses a `MetaItem`. A bare word will produce `Override::Inherit`, while
+/// Parses a `Meta`. A bare word will produce `Override::Inherit`, while
 /// any value will be forwarded to `T::from_meta_item`.
 impl<T: FromMetaItem> FromMetaItem for Override<T> {
     fn from_word() -> Result<Self> {
         Ok(Inherit)
     }
 
-    fn from_list(items: &[NestedMetaItem]) -> Result<Self> {
+    fn from_list(items: &[NestedMeta]) -> Result<Self> {
         Ok(Explicit(FromMetaItem::from_list(items)?))
     }
 

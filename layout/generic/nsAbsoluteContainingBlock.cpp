@@ -16,6 +16,7 @@
 #include "nsIPresShell.h"
 #include "mozilla/CSSAlignUtils.h"
 #include "mozilla/ReflowInput.h"
+#include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsGridContainerFrame.h"

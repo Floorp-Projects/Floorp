@@ -11,6 +11,8 @@
 #include <algorithm>
 #include "nsIPresShell.h" // for allocation
 
+using namespace mozilla;
+
 nsIntervalSet::nsIntervalSet(nsIPresShell* aPresShell)
     : mList(nullptr),
       mPresShell(aPresShell)

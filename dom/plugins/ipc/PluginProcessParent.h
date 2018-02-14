@@ -55,9 +55,12 @@ public:
      * thread once the asynchonous launch has completed.
      * @param aSandboxLevel Determines the strength of the sandbox.
      * <= 0 means no sandbox.
+     * @param aIsSandboxLoggingEnabled Indicates if sandbox violation
+     * logging should be enabled for the plugin process.
      */
     bool Launch(UniquePtr<LaunchCompleteTask> aLaunchCompleteTask = UniquePtr<LaunchCompleteTask>(),
-                int32_t aSandboxLevel = 0);
+                int32_t aSandboxLevel = 0,
+                bool aIsSandboxLoggingEnabled = false);
 
     void Delete();
 

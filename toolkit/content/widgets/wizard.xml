@@ -20,7 +20,7 @@
     </resources>
   </binding>
 
-  <binding id="wizard" extends="chrome://global/content/bindings/general.xml#root-element">
+  <binding id="wizard">
     <resources>
       <stylesheet src="chrome://global/skin/wizard.css"/>
     </resources>

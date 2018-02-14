@@ -21,7 +21,7 @@ pub use self::from_variant_impl::FromVariantImpl;
 pub use self::outer_from_impl::OuterFromImpl;
 pub use self::trait_impl::TraitImpl;
 pub use self::variant::Variant;
-pub use self::variant_data::VariantDataGen;
+pub use self::variant_data::FieldsGen;
 
 use options::ForwardAttrs;
 
@@ -65,14 +65,16 @@ pub trait ExtractAttribute {
 
         let input = self.param_name();
 
-        /// The block for parsing attributes whose names have been claimed by the target
-        /// struct. If no attributes were claimed, this is a pass-through.
+        // The block for parsing attributes whose names have been claimed by the target
+        // struct. If no attributes were claimed, this is a pass-through.
         let parse_handled = if will_parse_any {
             let attr_names = self.attr_names();
             let core_loop = self.core_loop();
             quote!(
                 #(#attr_names)|* => {
-                    if let ::syn::MetaItem::List(_, ref __items) = __attr.value {
+                    if let Some(::syn::Meta::List(ref __data)) = __attr.interpret_meta() {
+                        let __items = &__data.nested;
+
                         #core_loop
                     } else {
                         // darling currently only supports list-style
@@ -84,8 +86,8 @@ pub trait ExtractAttribute {
             quote!()
         };
 
-        /// Specifies the behavior for unhandled attributes. They will either be silently ignored or 
-        /// forwarded to the inner struct for later analysis.
+        // Specifies the behavior for unhandled attributes. They will either be silently ignored or
+        // forwarded to the inner struct for later analysis.
         let forward_unhandled = if will_fwd_any {
             forwards_to_local(self.forwarded_attrs().unwrap())
         } else {
@@ -98,7 +100,7 @@ pub trait ExtractAttribute {
 
             for __attr in &#input.attrs {
                 // Filter attributes based on name
-                match __attr.name() {
+                match __attr.path.segments.iter().map(|s| s.ident.as_ref()).collect::<Vec<&str>>().join("::").as_str() {
                     #parse_handled
                     #forward_unhandled
                 }

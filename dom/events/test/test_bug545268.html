@@ -46,7 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=545268
     subwin.addEventListener("mouseup", function(e) { ++mouseUp; }, true);
     subwin.addEventListener("click", function(e) { ++mouseClick; }, true);
 
-    synthesizeKey("a", {code: "KeyA"}, subwin);
+    synthesizeKey("a", {}, subwin);
     is(keyDown, 1, "Wrong number events (1)");
     is(keyPress, 1, "Wrong number events (2)");
     is(keyUp, 1, "Wrong number events (3)");
@@ -54,7 +54,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=545268
     // Test that suppressing events on the parent window prevents key
     // events in the subdocument window
     utils.suppressEventHandling(true);
-    synthesizeKey("a", {code: "KeyA"}, subwin);
+    synthesizeKey("a", {}, subwin);
     is(keyDown, 1, "Wrong number events (4)");
     is(keyPress, 1, "Wrong number events (5)");
     is(keyUp, 1, "Wrong number events (6)");
@@ -69,7 +69,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=545268
   function continueTest1() {
     var utils = SpecialPowers.getDOMWindowUtils(win);
     subwin.addEventListener("keydown", () => { utils.suppressEventHandling(true); }, {once: true});
-    synthesizeKey("a", {code: "KeyA"}, subwin);
+    synthesizeKey("a", {}, subwin);
     is(keyDown, 2, "Wrong number events (10)");
     is(keyPress, 1, "Wrong number events (11)");
     is(keyUp, 1, "Wrong number events (12)");

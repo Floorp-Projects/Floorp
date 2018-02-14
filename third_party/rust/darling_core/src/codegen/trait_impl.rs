@@ -1,16 +1,16 @@
 use quote::Tokens;
 use syn::{Generics, Ident, Path, WherePredicate};
 
-use codegen::{DefaultExpression, Field, Variant, VariantDataGen};
+use codegen::{DefaultExpression, Field, Variant, FieldsGen};
 use codegen::field;
 use codegen::error::{ErrorCheck, ErrorDeclaration};
-use ast::Body;
+use ast::Data;
 
 #[derive(Debug)]
 pub struct TraitImpl<'a> {
     pub ident: &'a Ident,
     pub generics: &'a Generics,
-    pub body: Body<Variant<'a>, Field<'a>>,
+    pub data: Data<Variant<'a>, Field<'a>>,
     pub default: Option<DefaultExpression<'a>>,
     pub map: Option<&'a Path>,
     pub bound: Option<&'a [WherePredicate]>,
@@ -29,7 +29,7 @@ impl<'a> TraitImpl<'a> {
 
     /// Generate local variable declarations for all fields.
     pub(in codegen) fn local_declarations(&self) -> Tokens {
-        if let Body::Struct(ref vd) = self.body {
+        if let Data::Struct(ref vd) = self.data {
             let vdr = vd.as_ref().map(Field::as_declaration);
             let decls = vdr.fields.as_slice();
             quote!(#(#decls)*)
@@ -40,7 +40,7 @@ impl<'a> TraitImpl<'a> {
 
     /// Generate immutable variable declarations for all fields.
     pub(in codegen) fn immutable_declarations(&self) -> Tokens {
-        if let Body::Struct(ref vd) = self.body {
+        if let Data::Struct(ref vd) = self.data {
             let vdr = vd.as_ref().map(|f| field::Declaration::new(f, false));
             let decls = vdr.fields.as_slice();
             quote!(#(#decls)*)
@@ -60,7 +60,7 @@ impl<'a> TraitImpl<'a> {
     }
 
     pub fn require_fields(&self) -> Tokens {
-        if let Body::Struct(ref vd) = self.body {
+        if let Data::Struct(ref vd) = self.data {
             let check_nones = vd.as_ref().map(Field::as_presence_check);
             let checks = check_nones.fields.as_slice();
             quote!(#(#checks)*)
@@ -70,10 +70,10 @@ impl<'a> TraitImpl<'a> {
     }
 
     pub(in codegen) fn initializers(&self) -> Tokens {
-        let foo = match self.body {
-            Body::Enum(_) => panic!("Core loop on enums isn't supported"),
-            Body::Struct(ref data) => { 
-                VariantDataGen(data)
+        let foo = match self.data {
+            Data::Enum(_) => panic!("Core loop on enums isn't supported"),
+            Data::Struct(ref data) => {
+                FieldsGen(data)
             }
         };
 
@@ -82,10 +82,10 @@ impl<'a> TraitImpl<'a> {
 
     /// Generate the loop which walks meta items looking for property matches.
     pub(in codegen) fn core_loop(&self) -> Tokens {
-        let foo = match self.body {
-            Body::Enum(_) => panic!("Core loop on enums isn't supported"),
-            Body::Struct(ref data) => { 
-                VariantDataGen(data)
+        let foo = match self.data {
+            Data::Enum(_) => panic!("Core loop on enums isn't supported"),
+            Data::Struct(ref data) => {
+                FieldsGen(data)
             }
         };
 
