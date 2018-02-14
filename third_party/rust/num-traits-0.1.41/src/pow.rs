@@ -1,4 +1,4 @@
-use core::ops::Mul;
+use std::ops::Mul;
 use {One, CheckedMul};
 
 /// Raises a value to the power of exp, using exponentiation by squaring.

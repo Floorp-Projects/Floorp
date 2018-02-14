@@ -1,4 +1,4 @@
-use core::ops::{Not, BitAnd, BitOr, BitXor, Shl, Shr};
+use std::ops::{Not, BitAnd, BitOr, BitXor, Shl, Shr};
 
 use {Num, NumCast};
 use bounds::Bounded;
