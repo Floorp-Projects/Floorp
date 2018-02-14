@@ -220,6 +220,7 @@ public:
                               int32_t aStretch,
                               uint8_t aStyle,
                               const nsTArray<gfxFontFeature>& aFeatureSettings,
+                              const nsTArray<gfxFontVariation>& aVariationSettings,
                               uint32_t aLanguageOverride,
                               gfxCharacterMap* aUnicodeRanges,
                               uint8_t aFontDisplay) = 0;
@@ -233,6 +234,7 @@ public:
                                int32_t aStretch,
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
+                               const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,
                                gfxCharacterMap* aUnicodeRanges,
                                uint8_t aFontDisplay);
@@ -423,6 +425,7 @@ public:
                 return mozilla::HashGeneric(principalHash + int(aKey->mPrivate),
                                             aKey->mURI->Hash(),
                                             HashFeatures(aKey->mFontEntry->mFeatureSettings),
+                                            HashVariations(aKey->mFontEntry->mVariationSettings),
                                             mozilla::HashString(aKey->mFontEntry->mFamilyName),
                                             (aKey->mFontEntry->mStyle |
                                              (aKey->mFontEntry->mWeight << 2) |
@@ -457,6 +460,12 @@ public:
             HashFeatures(const nsTArray<gfxFontFeature>& aFeatures) {
                 return mozilla::HashBytes(aFeatures.Elements(),
                                           aFeatures.Length() * sizeof(gfxFontFeature));
+            }
+
+            static uint32_t
+            HashVariations(const nsTArray<gfxFontVariation>& aVariations) {
+                return mozilla::HashBytes(aVariations.Elements(),
+                                          aVariations.Length() * sizeof(gfxFontVariation));
             }
 
             // An entry in mAllowedFontSets.
@@ -566,6 +575,7 @@ protected:
                                    int32_t aStretch,
                                    uint8_t aStyle,
                                    const nsTArray<gfxFontFeature>& aFeatureSettings,
+                                   const nsTArray<gfxFontVariation>& aVariationSettings,
                                    uint32_t aLanguageOverride,
                                    gfxCharacterMap* aUnicodeRanges,
                                    uint8_t aFontDisplay);
@@ -615,6 +625,7 @@ public:
                      int32_t aStretch,
                      uint8_t aStyle,
                      const nsTArray<gfxFontFeature>& aFeatureSettings,
+                     const nsTArray<gfxFontVariation>& aVariationSettings,
                      uint32_t aLanguageOverride,
                      gfxCharacterMap* aUnicodeRanges,
                      uint8_t aFontDisplay);
@@ -627,6 +638,7 @@ public:
                  int32_t aStretch,
                  uint8_t aStyle,
                  const nsTArray<gfxFontFeature>& aFeatureSettings,
+                 const nsTArray<gfxFontVariation>& aVariationSettings,
                  uint32_t aLanguageOverride,
                  gfxCharacterMap* aUnicodeRanges,
                  uint8_t aFontDisplay);
