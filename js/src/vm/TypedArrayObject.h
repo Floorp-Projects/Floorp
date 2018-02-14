@@ -186,8 +186,9 @@ class TypedArrayObject : public NativeObject
                                MutableHandleObject res);
 
     /*
-     * Byte length above which created typed arrays and data views will have
-     * singleton types regardless of the context in which they are created.
+     * Byte length above which created typed arrays will have singleton types
+     * regardless of the context in which they are created. This only applies to
+     * typed arrays created with an existing ArrayBuffer.
      */
     static const uint32_t SINGLETON_BYTE_LENGTH = 1024 * 1024 * 10;
 

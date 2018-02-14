@@ -18,6 +18,7 @@
 #include <stdint.h>
 
 #include "js/TraceKind.h"
+#include "js/Utility.h"
 
 namespace js {
 namespace gc {

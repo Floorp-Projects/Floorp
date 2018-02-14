@@ -17,7 +17,6 @@
 #include "vm/Interpreter.h"
 #include "vm/TypedArrayObject.h"
 
-#include "jsatominlines.h"
 #include "jscntxtinlines.h"
 #include "gc/Marking-inl.h"
 

@@ -9,63 +9,14 @@
 
 #include "jsatom.h"
 
-#include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
 
-#include "jscntxt.h"
 #include "jsnum.h"
 
+#include "vm/Runtime.h"
 #include "vm/String.h"
 
-inline JSAtom*
-js::AtomStateEntry::asPtr(JSContext* cx) const
-{
-    JSAtom* atom = asPtrUnbarriered();
-    if (!cx->helperThread())
-        JSString::readBarrier(atom);
-    return atom;
-}
-
-inline JSAtom*
-js::AtomStateEntry::asPtrUnbarriered() const
-{
-    MOZ_ASSERT(bits != 0);
-    return reinterpret_cast<JSAtom*>(bits & NO_TAG_MASK);
-}
-
 namespace js {
-
-struct AtomHasher::Lookup
-{
-    union {
-        const JS::Latin1Char* latin1Chars;
-        const char16_t* twoByteChars;
-    };
-    bool isLatin1;
-    size_t length;
-    const JSAtom* atom; /* Optional. */
-    JS::AutoCheckCannotGC nogc;
-
-    HashNumber hash;
-
-    MOZ_ALWAYS_INLINE Lookup(const char16_t* chars, size_t length)
-      : twoByteChars(chars), isLatin1(false), length(length), atom(nullptr)
-        {
-            hash = mozilla::HashString(chars, length);
-        }
-    MOZ_ALWAYS_INLINE Lookup(const JS::Latin1Char* chars, size_t length)
-      : latin1Chars(chars), isLatin1(true), length(length), atom(nullptr)
-        {
-            hash = mozilla::HashString(chars, length);
-        }
-    inline explicit Lookup(const JSAtom* atom);
-};
-
-inline HashNumber
-AtomHasher::hash(const Lookup& l)
-{
-    return l.hash;
-}
 
 inline jsid
 AtomToId(JSAtom* atom)
@@ -199,42 +150,6 @@ IdToString(JSContext* cx, jsid id)
     return str->ensureFlat(cx);
 }
 
-inline
-AtomHasher::Lookup::Lookup(const JSAtom* atom)
-  : isLatin1(atom->hasLatin1Chars()), length(atom->length()), atom(atom)
-{
-    hash = atom->hash();
-    if (isLatin1) {
-        latin1Chars = atom->latin1Chars(nogc);
-        MOZ_ASSERT(mozilla::HashString(latin1Chars, length) == hash);
-    } else {
-        twoByteChars = atom->twoByteChars(nogc);
-        MOZ_ASSERT(mozilla::HashString(twoByteChars, length) == hash);
-    }
-}
-
-MOZ_ALWAYS_INLINE bool
-AtomHasher::match(const AtomStateEntry& entry, const Lookup& lookup)
-{
-    JSAtom* key = entry.asPtrUnbarriered();
-    if (lookup.atom)
-        return lookup.atom == key;
-    if (key->length() != lookup.length || key->hash() != lookup.hash)
-        return false;
-
-    if (key->hasLatin1Chars()) {
-        const Latin1Char* keyChars = key->latin1Chars(lookup.nogc);
-        if (lookup.isLatin1)
-            return mozilla::PodEqual(keyChars, lookup.latin1Chars, lookup.length);
-        return EqualChars(keyChars, lookup.twoByteChars, lookup.length);
-    }
-
-    const char16_t* keyChars = key->twoByteChars(lookup.nogc);
-    if (lookup.isLatin1)
-        return EqualChars(lookup.latin1Chars, keyChars, lookup.length);
-    return mozilla::PodEqual(keyChars, lookup.twoByteChars, lookup.length);
-}
-
 inline Handle<PropertyName*>
 TypeName(JSType type, const JSAtomState& names)
 {
@@ -255,12 +170,6 @@ ClassName(JSProtoKey key, JSAtomState& atomState)
                      sizeof(JSAtomState));
     JS_STATIC_ASSERT(JSProto_Null == 0);
     return (&atomState.Null)[key];
-}
-
-inline Handle<PropertyName*>
-ClassName(JSProtoKey key, JSContext* cx)
-{
-    return ClassName(key, cx->names());
 }
 
 } // namespace js

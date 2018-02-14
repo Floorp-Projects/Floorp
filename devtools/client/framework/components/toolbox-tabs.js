@@ -20,7 +20,7 @@ class ToolboxTabs extends Component {
       currentToolId: PropTypes.string,
       focusButton: PropTypes.func,
       focusedButton: PropTypes.string,
-      highlightedTool: PropTypes.string,
+      highlightedTools: PropTypes.object,
       panelDefinitions: PropTypes.array,
       selectTool: PropTypes.func,
       toolbox: PropTypes.object,
@@ -88,7 +88,7 @@ class ToolboxTabs extends Component {
       currentToolId,
       focusButton,
       focusedButton,
-      highlightedTool,
+      highlightedTools,
       panelDefinitions,
       selectTool,
     } = this.props;
@@ -97,7 +97,7 @@ class ToolboxTabs extends Component {
       currentToolId,
       focusButton,
       focusedButton,
-      highlightedTool,
+      highlightedTools,
       panelDefinition,
       selectTool,
     }));
