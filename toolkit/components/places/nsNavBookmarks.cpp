@@ -17,6 +17,8 @@
 #include "nsQueryObject.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/storage.h"
+#include "mozilla/dom/PlacesObservers.h"
+#include "mozilla/dom/PlacesVisit.h"
 
 #include "GeckoProfiler.h"
 
@@ -212,6 +214,9 @@ nsNavBookmarks::Init()
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_STATE(history);
   history->AddObserver(this, true);
+  AutoTArray<PlacesEventType, 1> events;
+  events.AppendElement(PlacesEventType::Page_visited);
+  PlacesObservers::AddListener(events, this);
 
   // DO NOT PUT STUFF HERE that can fail. See observer comment above.
 
@@ -2053,30 +2058,28 @@ nsNavBookmarks::OnEndUpdateBatch()
 }
 
 
-NS_IMETHODIMP
-nsNavBookmarks::OnVisits(nsIVisitData** aVisits, uint32_t aVisitsCount)
+void
+nsNavBookmarks::HandlePlacesEvent(const PlacesEventSequence& aEvents)
 {
-  NS_ENSURE_ARG(aVisits);
-  NS_ENSURE_ARG(aVisitsCount);
+  for (const auto& event : aEvents) {
+    if (NS_WARN_IF(event->Type() != PlacesEventType::Page_visited)) {
+      continue;
+    }
 
-  for (uint32_t i = 0; i < aVisitsCount; ++i) {
-    nsIVisitData* place = aVisits[i];
-    nsCOMPtr<nsIURI> uri;
-    MOZ_ALWAYS_SUCCEEDS(place->GetUri(getter_AddRefs(uri)));
+    const dom::PlacesVisit* visit = event->AsPlacesVisit();
+    if (NS_WARN_IF(!visit)) {
+      continue;
+    }
 
-    // If the page is bookmarked, notify observers for each associated bookmark.
     ItemVisitData visitData;
-    nsresult rv = uri->GetSpec(visitData.bookmark.url);
-    NS_ENSURE_SUCCESS(rv, rv);
-    MOZ_ALWAYS_SUCCEEDS(place->GetVisitId(&visitData.visitId));
-    MOZ_ALWAYS_SUCCEEDS(place->GetTime(&visitData.time));
-    MOZ_ALWAYS_SUCCEEDS(place->GetTransitionType(&visitData.transitionType));
-
+    visitData.visitId = visit->mVisitId;
+    visitData.bookmark.url = NS_ConvertUTF16toUTF8(visit->mUrl);
+    visitData.time = visit->mVisitTime * 1000;
+    visitData.transitionType = visit->mTransitionType;
     RefPtr< AsyncGetBookmarksForURI<ItemVisitMethod, ItemVisitData> > notifier =
       new AsyncGetBookmarksForURI<ItemVisitMethod, ItemVisitData>(this, &nsNavBookmarks::NotifyItemVisited, visitData);
     notifier->Init();
   }
-  return NS_OK;
 }
 
 
