@@ -684,6 +684,7 @@ ServiceWorkerRegistrationInfo::SetUpdateViaCache(
     ServiceWorkerUpdateViaCache aUpdateViaCache)
 {
   mDescriptor.SetUpdateViaCache(aUpdateViaCache);
+  UpdateRegistrationState();
 }
 
 int64_t

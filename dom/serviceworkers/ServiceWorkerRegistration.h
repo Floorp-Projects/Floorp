@@ -59,11 +59,11 @@ public:
   bool
   MatchesDescriptor(const ServiceWorkerRegistrationDescriptor& aDescriptor) const;
 
-  virtual void
-  GetScope(nsAString& aScope) const = 0;
+  void
+  GetScope(nsAString& aScope) const;
 
-  virtual ServiceWorkerUpdateViaCache
-  GetUpdateViaCache(ErrorResult& aRv) const = 0;
+  ServiceWorkerUpdateViaCache
+  GetUpdateViaCache(ErrorResult& aRv) const;
 
   virtual already_AddRefed<Promise>
   Update(ErrorResult& aRv) = 0;
