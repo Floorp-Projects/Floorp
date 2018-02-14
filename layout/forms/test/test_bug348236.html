@@ -46,7 +46,7 @@ addLoadEvent(function test() {
 
     function keypressOnSelect(key) {
         eSelect.focus();
-        synthesizeKey(key.key, {code: key.code, altKey: key.altKey});
+        synthesizeKey(key.key, {altKey: key.altKey});
     }
 
     function testKey(key, keyString, functionToContinue) {
@@ -93,19 +93,19 @@ addLoadEvent(function test() {
     is(eSelect.selectedIndex, 0, "SELECT selectedIndex should be 0 after load.")
 
     // Check if sending key events works.
-    keypressOnSelect({key: "KEY_ArrowDown", code: "ArrowDown"});
+    keypressOnSelect({key: "KEY_ArrowDown"});
     is(eSelect.value, "2", "SELECT value should be 2 after pressing Down.")
       
     // Test ALT-Down.
-    testKey({key: "KEY_ArrowDown", code: "ArrowDown", altKey: true}, "ALT-Down", nextKey1)
+    testKey({key: "KEY_ArrowDown", altKey: true}, "ALT-Down", nextKey1)
     function nextKey1() {
         // Test ALT-Up.
-        testKey({key: "KEY_ArrowUp", code: "ArrowUp", altKey: true}, "ALT-Up", nextKey2)
+        testKey({key: "KEY_ArrowUp", altKey: true}, "ALT-Up", nextKey2)
     }
     function nextKey2() {
         // Test the F4 key on Windows.
         if (/Win/i.test(navigator.platform))
-            testKey({key: "KEY_F4", code: "F4"}, "F4", finished)
+            testKey({key: "KEY_F4"}, "F4", finished)
         else
             finished()
     }

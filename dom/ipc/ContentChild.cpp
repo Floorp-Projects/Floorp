@@ -1543,25 +1543,9 @@ StartMacOSContentSandbox()
     MOZ_CRASH("Error resolving child process path");
   }
 
-  // During sandboxed content process startup, before reaching
-  // this point, NS_OS_TEMP_DIR is modified to refer to a sandbox-
-  // writable temporary directory
-  nsCOMPtr<nsIFile> tempDir;
-  nsresult rv = nsDirectoryService::gService->Get(NS_OS_TEMP_DIR,
-      NS_GET_IID(nsIFile), getter_AddRefs(tempDir));
-  if (NS_FAILED(rv)) {
-    MOZ_CRASH("Failed to get NS_OS_TEMP_DIR");
-  }
-
-  nsAutoCString tempDirPath;
-  tempDir->Normalize();
-  rv = tempDir->GetNativePath(tempDirPath);
-  if (NS_FAILED(rv)) {
-    MOZ_CRASH("Failed to get NS_OS_TEMP_DIR path");
-  }
-
   ContentChild* cc = ContentChild::GetSingleton();
 
+  nsresult rv;
   nsCOMPtr<nsIFile> profileDir;
   cc->GetProfileDir(getter_AddRefs(profileDir));
   nsCString profileDirPath;
@@ -1584,7 +1568,6 @@ StartMacOSContentSandbox()
   info.appPath.assign(appPath.get());
   info.appBinaryPath.assign(appBinaryPath.get());
   info.appDir.assign(appDir.get());
-  info.appTempDir.assign(tempDirPath.get());
   info.hasAudio = !Preferences::GetBool("media.cubeb.sandbox");
 
   // These paths are used to whitelist certain directories used by the testing

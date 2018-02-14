@@ -9,6 +9,8 @@
 
 #include "mozilla/css/Rule.h"
 
+class nsICSSDeclaration;
+
 namespace mozilla {
 namespace dom {
 

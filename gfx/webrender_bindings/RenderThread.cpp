@@ -176,6 +176,33 @@ RenderThread::NewFrameReady(wr::WindowId aWindowId)
 }
 
 void
+RenderThread::WakeUp(wr::WindowId aWindowId)
+{
+  if (mHasShutdown) {
+    return;
+  }
+
+  if (!IsInRenderThread()) {
+    Loop()->PostTask(
+      NewRunnableMethod<wr::WindowId>("wr::RenderThread::WakeUp",
+                                      this,
+                                      &RenderThread::WakeUp,
+                                      aWindowId));
+    return;
+  }
+
+  if (IsDestroyed(aWindowId)) {
+    return;
+  }
+
+  auto it = mRenderers.find(aWindowId);
+  MOZ_ASSERT(it != mRenderers.end());
+  if (it != mRenderers.end()) {
+    it->second->Update();
+  }
+}
+
+void
 RenderThread::RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aEvent)
 {
   if (!IsInRenderThread()) {
@@ -469,8 +496,7 @@ static void NewFrameReady(mozilla::wr::WrWindowId aWindowId)
 
 void wr_notifier_wake_up(mozilla::wr::WrWindowId aWindowId)
 {
-  //TODO?
-  mozilla::Unused << aWindowId;
+  mozilla::wr::RenderThread::Get()->WakeUp(mozilla::wr::WindowId(aWindowId));
 }
 
 void wr_notifier_new_frame_ready(mozilla::wr::WrWindowId aWindowId)

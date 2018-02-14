@@ -1,8 +1,8 @@
 use quote::{Tokens, ToTokens};
 use syn::Ident;
 
-use ast::VariantData;
-use codegen::{Field, VariantDataGen};
+use ast::Fields;
+use codegen::{Field, FieldsGen};
 use codegen::error::{ErrorCheck, ErrorDeclaration};
 
 /// An enum variant.
@@ -17,7 +17,7 @@ pub struct Variant<'a> {
     /// The name of the parent enum type.
     pub ty_ident: &'a Ident,
 
-    pub data: VariantData<Field<'a>>,
+    pub data: Fields<Field<'a>>,
 
     /// Whether or not the variant should be skipped in the generated code.
     pub skip: bool,
@@ -49,11 +49,11 @@ impl<'a> ToTokens for UnitMatchArm<'a> {
             let variant_ident = val.variant_ident;
             let ty_ident = val.ty_ident;
 
-            tokens.append(quote!(
+            tokens.append_all(quote!(
                 #name_in_attr => ::darling::export::Ok(#ty_ident::#variant_ident),
             ));
         } else {
-            tokens.append(quote!(
+            tokens.append_all(quote!(
                 #name_in_attr => ::darling::export::Err(::darling::Error::unsupported_format("literal")),
             ));
         }
@@ -75,15 +75,15 @@ impl<'a> ToTokens for DataMatchArm<'a> {
         let ty_ident = val.ty_ident;
 
         if val.data.is_unit() {
-            tokens.append(quote!(
+            tokens.append_all(quote!(
                 #name_in_attr => ::darling::export::Err(::darling::Error::unsupported_format("list")),
             ));
 
             return;
         }
 
-        
-        let vdg = VariantDataGen(&val.data);
+
+        let vdg = FieldsGen(&val.data);
 
         if val.data.is_struct() {
             let declare_errors = ErrorDeclaration::new();
@@ -93,9 +93,11 @@ impl<'a> ToTokens for DataMatchArm<'a> {
             let core_loop = vdg.core_loop();
             let inits = vdg.initializers();
 
-            tokens.append(quote!(
+            tokens.append_all(quote!(
                 #name_in_attr => {
-                    if let ::syn::MetaItem::List(_, ref __items) = *__nested {
+                    if let ::syn::Meta::List(ref __data) = *__nested {
+                        let __items = &__data.nested;
+
                         #declare_errors
 
                         #decls
@@ -105,7 +107,7 @@ impl<'a> ToTokens for DataMatchArm<'a> {
                         #require_fields
 
                         #check_errors
-                        
+
                         ::darling::export::Ok(#ty_ident::#variant_ident {
                             #inits
                         })
@@ -115,7 +117,7 @@ impl<'a> ToTokens for DataMatchArm<'a> {
                 }
             ));
         } else if val.data.is_newtype() {
-            tokens.append(quote!(
+            tokens.append_all(quote!(
                 #name_in_attr => {
                     ::darling::export::Ok(
                         #ty_ident::#variant_ident(

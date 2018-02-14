@@ -7,5 +7,6 @@
 DevToolsModules(
     'Font.js',
     'FontList.js',
+    'FontPreview.js',
     'FontsApp.js',
 )

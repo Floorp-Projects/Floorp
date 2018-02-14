@@ -6,22 +6,16 @@
 
 const {
   UPDATE_PREVIEW_TEXT,
-  UPDATE_SHOW_ALL_FONTS
 } = require("../actions/index");
 
 const INITIAL_FONT_OPTIONS = {
   previewText: "Abc",
-  showAllFonts: false,
 };
 
 let reducers = {
 
   [UPDATE_PREVIEW_TEXT](fontOptions, { previewText }) {
     return Object.assign({}, fontOptions, { previewText });
-  },
-
-  [UPDATE_SHOW_ALL_FONTS](fontOptions, { showAllFonts }) {
-    return Object.assign({}, fontOptions, { showAllFonts });
   },
 
 };

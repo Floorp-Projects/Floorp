@@ -13,10 +13,11 @@ module.exports = {
   /**
    * Update the list of fonts in the font inspector
    */
-  updateFonts(fonts) {
+  updateFonts(fonts, otherFonts) {
     return {
       type: UPDATE_FONTS,
       fonts,
+      otherFonts,
     };
   },
 

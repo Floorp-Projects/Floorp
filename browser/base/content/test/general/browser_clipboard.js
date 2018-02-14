@@ -54,7 +54,7 @@ add_task(async function() {
         resolve();
       }, true);
 
-      sendAsyncMessage("Test:SendKey", { key: "c", code: "KeyC" });
+      sendAsyncMessage("Test:SendKey", {key: "c"});
     });
 
     selection.modify("move", "right", "line");
@@ -73,7 +73,7 @@ add_task(async function() {
         resolve();
       }, true);
 
-      sendAsyncMessage("Test:SendKey", {key: "v", code: "KeyV"});
+      sendAsyncMessage("Test:SendKey", {key: "v"});
     });
 
     Assert.equal(main.innerHTML, "Test <b>Bold</b> After Textt <b>Bold</b>", "Copy and paste html");
@@ -92,7 +92,7 @@ add_task(async function() {
         resolve();
       }, true);
 
-      sendAsyncMessage("Test:SendKey", {key: "x", code: "KeyX"});
+      sendAsyncMessage("Test:SendKey", {key: "x"});
     });
 
     selection.modify("move", "left", "line");
@@ -111,7 +111,7 @@ add_task(async function() {
         resolve();
       }, true);
 
-      sendAsyncMessage("Test:SendKey", {key: "v", code: "KeyV"});
+      sendAsyncMessage("Test:SendKey", {key: "v"});
     });
 
     Assert.equal(main.innerHTML, "<i>Italic</i> Test <b>Bold</b> After<b></b>",
@@ -155,7 +155,7 @@ add_task(async function() {
         resolve();
       }, true);
 
-      sendAsyncMessage("Test:SendKey", {key: "v", code: "KeyV"});
+      sendAsyncMessage("Test:SendKey", {key: "v"});
     });
 
     // The new content should now include an image.

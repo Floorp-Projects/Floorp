@@ -700,6 +700,15 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
                                    const nsTArray<gfxFontVariation>* aVariations,
                                    DWRITE_FONT_SIMULATIONS aSimulations)
 {
+    // Convert an OpenType font tag from our uint32_t representation
+    // (as constructed by TRUETYPE_TAG(...)) to the order DWrite wants.
+    auto makeDWriteAxisTag = [](uint32_t aTag) {
+        return DWRITE_MAKE_FONT_AXIS_TAG((aTag >> 24) & 0xff,
+                                         (aTag >> 16) & 0xff,
+                                         (aTag >> 8) & 0xff,
+                                          aTag & 0xff);
+    };
+
     // initialize mFontFace if this hasn't been done before
     if (!mFontFace) {
         HRESULT hr;
@@ -726,6 +735,26 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
         if (mFontFace) {
             mFontFace->QueryInterface(__uuidof(IDWriteFontFace5),
                 (void**)getter_AddRefs(mFontFace5));
+            if (!mVariationSettings.IsEmpty()) {
+                // If the font entry has variations specified, mFontFace5 will
+                // be a distinct face that has the variations applied.
+                RefPtr<IDWriteFontResource> resource;
+                HRESULT hr =
+                    mFontFace5->GetFontResource(getter_AddRefs(resource));
+                MOZ_ASSERT(SUCCEEDED(hr));
+                AutoTArray<DWRITE_FONT_AXIS_VALUE, 4> fontAxisValues;
+                for (const auto& v : mVariationSettings) {
+                    DWRITE_FONT_AXIS_VALUE axisValue = {
+                        makeDWriteAxisTag(v.mTag),
+                        v.mValue
+                    };
+                    fontAxisValues.AppendElement(axisValue);
+                }
+                resource->CreateFontFace(mFontFace->GetSimulations(),
+                                         fontAxisValues.Elements(),
+                                         fontAxisValues.Length(),
+                                         getter_AddRefs(mFontFace5));
+            }
         }
     }
 
@@ -743,13 +772,24 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
         MOZ_ASSERT(SUCCEEDED(hr));
         AutoTArray<DWRITE_FONT_AXIS_VALUE, 4> fontAxisValues;
         if (aVariations) {
-            for (const auto& v : *aVariations) {
+            // Merge mVariationSettings and *aVariations if both present
+            const nsTArray<gfxFontVariation>* vars;
+            AutoTArray<gfxFontVariation,4> mergedSettings;
+            if (!aVariations) {
+                vars = &mVariationSettings;
+            } else  {
+                if (mVariationSettings.IsEmpty()) {
+                    vars = aVariations;
+                } else {
+                    gfxFontUtils::MergeVariations(mVariationSettings,
+                                                  *aVariations,
+                                                  &mergedSettings);
+                    vars = &mergedSettings;
+                }
+            }
+            for (const auto& v : *vars) {
                 DWRITE_FONT_AXIS_VALUE axisValue = {
-                    // let dwrite put the tag bytes in the order it wants
-                    DWRITE_MAKE_FONT_AXIS_TAG((v.mTag >> 24) & 0xff,
-                                              (v.mTag >> 16) & 0xff,
-                                              (v.mTag >> 8) & 0xff,
-                                              v.mTag & 0xff),
+                    makeDWriteAxisTag(v.mTag),
                     v.mValue
                 };
                 fontAxisValues.AppendElement(axisValue);
@@ -793,8 +833,13 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
         return FAILED(hr) ? NS_ERROR_FAILURE : NS_OK;
     }
 
-    // no simulation: we can just add a reference to mFontFace and return that
-    *aFontFace = mFontFace;
+    // no simulation: we can just add a reference to mFontFace5 (if present)
+    // or mFontFace (otherwise) and return that
+    if (mFontFace5) {
+        *aFontFace = mFontFace5;
+    } else {
+        *aFontFace = mFontFace;
+    }
     (*aFontFace)->AddRef();
     return NS_OK;
 }

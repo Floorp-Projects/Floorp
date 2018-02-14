@@ -33,7 +33,7 @@ impl From<syn::Ident> for Lorem {
 
 #[test]
 fn parsing_fail() {
-    let di = syn::parse_derive_input(r#"
+    let di = syn::parse_str(r#"
         #[hello(ipsum(amet = "yes", world = false))]
         pub struct Foo;
     "#).unwrap();
@@ -43,7 +43,7 @@ fn parsing_fail() {
 
 #[test]
 fn missing_field() {
-    let di = syn::parse_derive_input(r#"
+    let di = syn::parse_str(r#"
         #[hello(ipsum(amet = true))]
         pub struct Foo;
     "#).unwrap();

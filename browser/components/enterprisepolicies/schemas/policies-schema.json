@@ -10,6 +10,15 @@
       "enum": [true]
     },
 
+    "DisableAppUpdate": {
+      "description": "Prevent the browser from updating.",
+      "first_available": "60.0",
+      "enterprise_only": true,
+
+      "type": "boolean",
+      "enum": [true]
+    },
+
     "display_menu_bar": {
       "description": "Causes the menu bar to be displayed by default.",
       "first_available": "60.0",

@@ -23,10 +23,13 @@
 #include "nsFrameList.h"
 #include "nsPlaceholderFrame.h"
 #include "nsPluginFrame.h"
+#include "nsIBaseWindow.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "nsContentUtils.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsCSSPseudoElements.h"
+#include "nsCSSRendering.h"
 #include "nsAtom.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -89,6 +92,7 @@
 #include "RetainedDisplayListBuilder.h"
 
 #include "gfxContext.h"
+#include "gfxPrefs.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "StickyScrollContainer.h"
 #include "nsFontInflationData.h"
@@ -3502,14 +3506,22 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   aBuilder->ClearWillChangeBudget(child);
 
-  const bool doingShortcut =
+  const bool shortcutPossible = aBuilder->IsPaintingToWindow() &&
+    (aBuilder->IsBuildingLayerEventRegions() ||
+     aBuilder->BuildCompositorHitTestInfo());
+
+  const bool doingShortcut = shortcutPossible &&
     (child->GetStateBits() & NS_FRAME_SIMPLE_DISPLAYLIST) &&
-    aBuilder->IsPaintingToWindow() &&
-    // This would be changed by the change of preference.
-    aBuilder->IsBuildingLayerEventRegions() &&
     // Animations may change the value of |HasOpacity()|.
     !(child->GetContent() &&
       child->GetContent()->MayHaveAnimations());
+
+  // dirty rect in child-relative coordinates
+  NS_ASSERTION(aBuilder->GetCurrentFrame() == this, "Wrong coord space!");
+  const nsPoint offset = child->GetOffsetTo(this);
+  nsRect visible = aBuilder->GetVisibleRect() - offset;
+  nsRect dirty = aBuilder->GetDirtyRect() - offset;
+
   if (doingShortcut) {
     // This is the shortcut for frames been handled along the common
     // path, the most common one of THE COMMON CASE mentioned later.
@@ -3523,10 +3535,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       // return below.
       aBuilder->AllocatePerspectiveItemIndex();
     }
-
-    // dirty rect in child-relative coordinates
-    nsRect dirty = aBuilder->GetDirtyRect() - child->GetOffsetTo(this);
-    nsRect visible = aBuilder->GetVisibleRect() - child->GetOffsetTo(this);
 
     if (!DescendIntoChild(aBuilder, child, visible, dirty)) {
       return;
@@ -3577,12 +3585,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     awayFromCommonPath = true;
   }
 
-  // dirty rect in child-relative coordinates
-  NS_ASSERTION(aBuilder->GetCurrentFrame() == this, "Wrong coord space!");
-  nsPoint offset = child->GetOffsetTo(this);
-  nsRect visible = aBuilder->GetVisibleRect() - offset;
-  nsRect dirty = aBuilder->GetDirtyRect() - offset;
-
   nsDisplayListBuilder::OutOfFlowDisplayData* savedOutOfFlowData = nullptr;
   bool isPlaceholder = false;
   if (child->IsPlaceholderFrame()) {
@@ -3623,7 +3625,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     awayFromCommonPath = true;
   }
 
-  if (child->HasPerspective()) {
+  const nsStyleDisplay* disp = child->StyleDisplay();
+
+  if (child->HasPerspective(disp)) {
     // We need to allocate a perspective index before a potential early
     // return below.
     aBuilder->AllocatePerspectiveItemIndex();
@@ -3668,7 +3672,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects or a blend mode..
   EffectSet* effectSet = EffectSet::GetEffectSet(child);
-  const nsStyleDisplay* disp = child->StyleDisplay();
   const nsStyleEffects* effects = child->StyleEffects();
   const nsStylePosition* pos = child->StylePosition();
   bool isVisuallyAtomic = child->IsVisuallyAtomic(effectSet, disp, effects);
@@ -3790,13 +3793,13 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
         if (eventRegions) {
           eventRegions->AddFrame(aBuilder, child);
         }
-        if (!awayFromCommonPath &&
-            aBuilder->IsPaintingToWindow() &&
-            !buildingForChild.MaybeAnimatedGeometryRoot()) {
-          // The shortcut is available for the child for next time.
-          child->AddStateBits(NS_FRAME_SIMPLE_DISPLAYLIST);
-        }
       }
+    }
+
+    if (!awayFromCommonPath && shortcutPossible &&
+        !differentAGR && !buildingForChild.MaybeAnimatedGeometryRoot()) {
+      // The shortcut is available for the child for next time.
+      child->AddStateBits(NS_FRAME_SIMPLE_DISPLAYLIST);
     }
 
     if (!pseudoStackingContext) {

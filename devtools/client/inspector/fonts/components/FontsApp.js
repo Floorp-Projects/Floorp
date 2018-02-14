@@ -9,30 +9,73 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const SearchBox = createFactory(require("devtools/client/shared/components/SearchBox"));
+const Accordion = createFactory(require("devtools/client/inspector/layout/components/Accordion"));
 const FontList = createFactory(require("./FontList"));
 
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
 
-const PREVIEW_UPDATE_DELAY = 150;
-
 class FontsApp extends PureComponent {
   static get propTypes() {
     return {
-      fonts: PropTypes.arrayOf(PropTypes.shape(Types.font)).isRequired,
+      fontData: PropTypes.shape(Types.fontData).isRequired,
+      fontOptions: PropTypes.shape(Types.fontOptions).isRequired,
       onPreviewFonts: PropTypes.func.isRequired,
-      onShowAllFont: PropTypes.func.isRequired,
     };
   }
 
-  render() {
+  renderElementFonts() {
     let {
-      fonts,
+      fontData,
+      fontOptions,
       onPreviewFonts,
-      onShowAllFont,
     } = this.props;
+    let { fonts } = fontData;
 
+    return fonts.length ?
+      FontList({
+        fonts,
+        fontOptions,
+        onPreviewFonts
+      })
+      :
+      dom.div(
+        {
+          className: "devtools-sidepanel-no-result"
+        },
+        getStr("fontinspector.noFontsOnSelectedElement")
+      );
+  }
+
+  renderOtherFonts() {
+    let {
+      fontData,
+      onPreviewFonts,
+      fontOptions,
+    } = this.props;
+    let { otherFonts } = fontData;
+
+    if (!otherFonts.length) {
+      return null;
+    }
+
+    return Accordion({
+      items: [
+        {
+          header: getStr("fontinspector.otherFontsInPageHeader"),
+          component: FontList,
+          componentProps: {
+            fontOptions,
+            fonts: otherFonts,
+            onPreviewFonts
+          },
+          opened: false
+        }
+      ]
+    });
+  }
+
+  render() {
     return dom.div(
       {
         className: "theme-sidebar inspector-tabpanel",
@@ -40,33 +83,11 @@ class FontsApp extends PureComponent {
       },
       dom.div(
         {
-          className: "devtools-toolbar"
+          id: "font-container"
         },
-        SearchBox({
-          delay: PREVIEW_UPDATE_DELAY,
-          placeholder: getStr("fontinspector.previewText"),
-          type: "text",
-          onChange: onPreviewFonts,
-        }),
-        dom.label(
-          {
-            id: "font-showall",
-            className: "theme-link",
-            title: getStr("fontinspector.seeAll.tooltip"),
-            onClick: onShowAllFont,
-          },
-          getStr("fontinspector.seeAll")
-        )
-      ),
-      fonts.length ?
-        FontList({ fonts })
-        :
-        dom.div(
-          {
-            className: "devtools-sidepanel-no-result"
-          },
-          getStr("fontinspector.noFontsOnSelectedElement")
-        )
+        this.renderElementFonts(),
+        this.renderOtherFonts()
+      )
     );
   }
 }

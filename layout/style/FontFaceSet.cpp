@@ -1102,6 +1102,19 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
                  "@font-face font-feature-settings has unexpected unit");
   }
 
+  // set up font variations
+  nsTArray<gfxFontVariation> variationSettings;
+  aFontFace->GetDesc(eCSSFontDesc_FontVariationSettings, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Normal) {
+    // empty list of variations
+  } else if (unit == eCSSUnit_PairList || unit == eCSSUnit_PairListDep) {
+    nsLayoutUtils::ComputeFontVariations(val.GetPairListValue(), variationSettings);
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face font-variation-settings has unexpected unit");
+  }
+
   // set up font language override
   aFontFace->GetDesc(eCSSFontDesc_FontLanguageOverride, val);
   unit = val.GetUnit();
@@ -1229,6 +1242,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
     set->mUserFontSet->FindOrCreateUserFontEntry(aFamilyName, srcArray, weight,
                                                  stretch, italicStyle,
                                                  featureSettings,
+                                                 variationSettings,
                                                  languageOverride,
                                                  unicodeRanges, fontDisplay);
   return entry.forget();
@@ -2001,13 +2015,15 @@ FontFaceSet::UserFontSet::CreateUserFontEntry(
                                int32_t aStretch,
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
+                               const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,
                                gfxCharacterMap* aUnicodeRanges,
                                uint8_t aFontDisplay)
 {
   RefPtr<gfxUserFontEntry> entry =
     new FontFace::Entry(this, aFontFaceSrcList, aWeight, aStretch, aStyle,
-                        aFeatureSettings, aLanguageOverride, aUnicodeRanges,
+                        aFeatureSettings, aVariationSettings,
+                        aLanguageOverride, aUnicodeRanges,
                         aFontDisplay);
   return entry.forget();
 }

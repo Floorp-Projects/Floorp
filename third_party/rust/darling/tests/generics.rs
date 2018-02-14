@@ -15,7 +15,7 @@ struct Foo<T> {
 
 #[test]
 fn expansion() {
-    let di = syn::parse_derive_input(r#"
+    let di = syn::parse_str(r#"
         #[hello(lorem = "Hello")]
         pub struct Foo;
     "#)

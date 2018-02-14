@@ -164,7 +164,7 @@ add_task(async function test_untrusted_events_ignored() {
 
   // A privileged key press will actually open the popup.
   let popupShown = waitForNextPopup();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await popupShown;
 
   // The selected autocomplete item should not change from untrusted events.
@@ -178,7 +178,7 @@ add_task(async function test_untrusted_events_ignored() {
 
   // A privileged key press will actually change the selected index.
   let indexChanged = new Promise(resolve => notifySelectedIndex(0, resolve));
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await indexChanged;
 
   // The selected autocomplete item should not change and it should not be

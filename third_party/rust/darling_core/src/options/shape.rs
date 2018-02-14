@@ -1,5 +1,5 @@
 use quote::{Tokens, ToTokens};
-use syn::{MetaItem, NestedMetaItem};
+use syn::{Meta, NestedMeta};
 
 use {Error, FromMetaItem, Result};
 
@@ -30,10 +30,10 @@ impl Default for Shape {
 }
 
 impl FromMetaItem for Shape {
-    fn from_list(items: &[NestedMetaItem]) -> Result<Self> {
+    fn from_list(items: &[NestedMeta]) -> Result<Self> {
         let mut new = Shape::default();
         for item in items {
-            if let NestedMetaItem::MetaItem(MetaItem::Word(ref ident)) = *item {
+            if let NestedMeta::Meta(Meta::Word(ref ident)) = *item {
                 let word = ident.as_ref();
                 if word == "any" {
                     new.any = true;
@@ -64,30 +64,32 @@ impl ToTokens for Shape {
             let st = &self.struct_values;
             quote! {
                 match *__body {
-                    ::syn::Body::Enum(ref variants) => {
-                        fn validate_variant(data: &::syn::VariantData) -> ::darling::Result<()> {
+                    ::syn::Data::Enum(ref data) => {
+                        fn validate_variant(data: &::syn::Fields) -> ::darling::Result<()> {
                             #en
                         }
 
-                        for variant in variants {
-                            validate_variant(&variant.data)?;
+                        for variant in &data.variants {
+                            validate_variant(&variant.fields)?;
                         }
 
                         Ok(())
                     }
-                    ::syn::Body::Struct(ref data) => {
+                    ::syn::Data::Struct(ref data) => {
                         #st
                     }
+                    ::syn::Data::Union(_) => unreachable!(),
                 }
             }
         };
 
-        tokens.append(quote!{
+        // FIXME: Remove the &[]
+        tokens.append_all(&[quote!{
             #[allow(unused_variables)]
-            fn __validate_body(__body: &::syn::Body) -> ::darling::Result<()> {
+            fn __validate_body(__body: &::syn::Data) -> ::darling::Result<()> {
                 #fn_body
             }
-        });
+        }]);
     }
 }
 
@@ -113,7 +115,7 @@ impl DataShape {
 
     fn supports_none(&self) -> bool {
         !(self.any || self.newtype || self.named || self.tuple || self.unit)
-    } 
+    }
 
     fn set_word(&mut self, word: &str) -> Result<()> {
         match word.trim_left_matches(self.prefix) {
@@ -143,10 +145,10 @@ impl DataShape {
 }
 
 impl FromMetaItem for DataShape {
-    fn from_list(items: &[NestedMetaItem]) -> Result<Self> {
+    fn from_list(items: &[NestedMeta]) -> Result<Self> {
         let mut new = DataShape::default();
         for item in items {
-            if let NestedMetaItem::MetaItem(MetaItem::Word(ref ident)) = *item {
+            if let NestedMeta::Meta(Meta::Word(ref ident)) = *item {
                 new.set_word(ident.as_ref())?;
             } else {
                 return Err(Error::unsupported_format("non-word"));
@@ -171,22 +173,24 @@ impl ToTokens for DataShape {
             let tuple = match_arm("tuple", self.tuple);
             quote! {
                 match *data {
-                    ::syn::VariantData::Unit => #unit,
-                    ::syn::VariantData::Tuple(ref fields) if fields.len() == 1 => #newtype,
-                    ::syn::VariantData::Tuple(_) => #tuple,
-                    ::syn::VariantData::Struct(_) => #named,
+                    ::syn::Fields::Unit => #unit,
+                    ::syn::Fields::Unnamed(ref fields) if fields.unnamed.len() == 1 => #newtype,
+                    ::syn::Fields::Unnamed(_) => #tuple,
+                    ::syn::Fields::Named(_) => #named,
                 }
             }
         };
 
         if self.embedded {
-            tokens.append(body);
+            // FIXME: Remove the &[]
+            tokens.append_all(&[body]);
         } else {
-            tokens.append(quote! {
-                fn __validate_data(data: &::syn::VariantData) -> ::darling::Result<()> {
+            // FIXME: Remove the &[]
+            tokens.append_all(&[quote! {
+                fn __validate_data(data: &::syn::Fields) -> ::darling::Result<()> {
                     #body
                 }
-            });
+            }]);
         }
     }
 }
@@ -202,36 +206,38 @@ fn match_arm(name: &'static str, is_supported: bool) -> Tokens {
 #[cfg(test)]
 mod tests {
     use syn;
-    
+    use quote::Tokens;
+
     use super::Shape;
     use {FromMetaItem};
 
-    /// parse a string as a syn::MetaItem instance.
-    fn pmi(s: &str) -> ::std::result::Result<syn::MetaItem, String> {
-        Ok(syn::parse_outer_attr(&format!("#[{}]", s))?.value)
+    /// parse a string as a syn::Meta instance.
+    fn pmi(tokens: Tokens) -> ::std::result::Result<syn::Meta, String> {
+        let attribute: syn::Attribute = parse_quote!(#[#tokens]);
+        attribute.interpret_meta().ok_or("Unable to parse".into())
     }
 
-    fn fmi<T: FromMetaItem>(s: &str) -> T {
-        FromMetaItem::from_meta_item(&pmi(s).expect("Tests should pass well-formed input"))
+    fn fmi<T: FromMetaItem>(tokens: Tokens) -> T {
+        FromMetaItem::from_meta_item(&pmi(tokens).expect("Tests should pass well-formed input"))
             .expect("Tests should pass valid input")
     }
 
     #[test]
     fn supports_any() {
-        let decl = fmi::<Shape>("ignore(any)");
+        let decl = fmi::<Shape>(quote!(ignore(any)));
         assert_eq!(decl.any, true);
     }
 
     #[test]
     fn supports_struct() {
-        let decl = fmi::<Shape>("ignore(struct_any, struct_newtype)");
+        let decl = fmi::<Shape>(quote!(ignore(struct_any, struct_newtype)));
         assert_eq!(decl.struct_values.any, true);
         assert_eq!(decl.struct_values.newtype, true);
     }
 
     #[test]
     fn supports_mixed() {
-        let decl = fmi::<Shape>("ignore(struct_newtype, enum_newtype, enum_tuple)");
+        let decl = fmi::<Shape>(quote!(ignore(struct_newtype, enum_newtype, enum_tuple)));
         assert_eq!(decl.struct_values.newtype, true);
         assert_eq!(decl.enum_values.newtype, true);
         assert_eq!(decl.enum_values.tuple, true);

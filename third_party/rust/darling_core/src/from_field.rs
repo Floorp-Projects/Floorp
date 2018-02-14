@@ -19,7 +19,7 @@ impl FromField for Field {
     }
 }
 
-impl FromField for syn::Ty {
+impl FromField for syn::Type {
     fn from_field(field: &Field) -> Result<Self> {
         Ok(field.ty.clone())
     }

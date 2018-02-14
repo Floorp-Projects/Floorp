@@ -17,6 +17,6 @@ add_task(function* () {
   let { nodes } = yield inspector.walker.children(bodyNode);
   yield selectNode(nodes[0], inspector);
 
-  let sections = viewDoc.querySelectorAll("#all-fonts > li");
-  is(sections.length, 1, "Font inspector shows 1 font");
+  let lis = getUsedFontsEls(viewDoc);
+  is(lis.length, 1, "Font inspector shows 1 font");
 });

@@ -9,7 +9,7 @@ pub struct Lorem {
     ident: syn::Ident,
     into: Option<bool>,
     skip: Option<bool>,
-    data: darling::ast::VariantData<syn::Ty>,
+    fields: darling::ast::Fields<syn::Type>,
 }
 
 impl From<syn::Ident> for Lorem {
@@ -18,12 +18,12 @@ impl From<syn::Ident> for Lorem {
             ident,
             into: Default::default(),
             skip: Default::default(),
-            data: darling::ast::Style::Unit.into(),
+            fields: darling::ast::Style::Unit.into(),
         }
     }
 }
 
 #[test]
 fn expansion() {
-    
+
 }

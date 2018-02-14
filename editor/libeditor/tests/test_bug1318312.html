@@ -29,7 +29,7 @@ function runTests()
   // at least for now because user can move focus with ArrowUp key even from
   // innerEditor to outerEditor but we don't allow such navigation.
   // FYI: Edge behaves same as us.
-  synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+  synthesizeKey("KEY_ArrowDown", {});
   is(document.activeElement, outerEditor,
      "outerEditor should still have focus because focus shouldn't be moved by moving caret");
   is(document.getSelection().focusNode, document.getElementById("innerEditor").firstChild.firstChild,
@@ -37,7 +37,7 @@ function runTests()
   is(document.getSelection().focusOffset, 0,
      "focus offset of selection should be 0");
 
-  synthesizeKey("a", { code: "KeyA" });
+  synthesizeKey("a", {});
   is(document.activeElement, outerEditor,
      "outerEditor should still have focus because focus shouldn't be moved by typing a character");
   is(document.getSelection().focusNode, document.getElementById("innerEditor").firstChild.firstChild,
@@ -45,7 +45,7 @@ function runTests()
   is(document.getSelection().focusOffset, 1,
      "focus offset of selection should be 1");
 
-  synthesizeKey("KEY_Enter", { code: "Enter" });
+  synthesizeKey("KEY_Enter", {});
   is(document.activeElement, outerEditor,
      "outerEditor should still have focus because focus shouldn't be moved by typing Enter");
   is(document.getSelection().focusNode, document.getElementById("innerEditor").childNodes.item(1).firstChild,
@@ -53,7 +53,7 @@ function runTests()
   is(document.getSelection().focusOffset, 0,
      "focus offset of selection should be 0");
 
-  synthesizeKey("KEY_Backspace", { code: "Backspace" });
+  synthesizeKey("KEY_Backspace", {});
   is(document.activeElement, outerEditor,
      "outerEditor should still have focus because focus shouldn't be moved by typing Backspace (removing the line breaker)");
   is(document.getSelection().focusNode, document.getElementById("innerEditor").firstChild.firstChild,
@@ -61,7 +61,7 @@ function runTests()
   is(document.getSelection().focusOffset, 1,
      "focus offset of selection should be 1");
 
-  synthesizeKey("KEY_ArrowLeft", { code: "ArrowLeft", shiftKey: true });
+  synthesizeKey("KEY_ArrowLeft", {shiftKey: true});
   is(document.activeElement, outerEditor,
      "outerEditor should still have focus because focus shouldn't be moved by typing Shift+ArrowLeft (selecting 'a')");
   is(document.getSelection().focusNode, document.getElementById("innerEditor").firstChild.firstChild,
@@ -73,7 +73,7 @@ function runTests()
   is(document.getSelection().anchorOffset, 1,
      "anchor offset of selection should be 1");
 
-  synthesizeKey("KEY_Delete", { code: "Delete" });
+  synthesizeKey("KEY_Delete", {});
   is(document.activeElement, outerEditor,
      "outerEditor should still have focus because focus shouldn't be moved by typing Delete (removing the 'a')");
   is(document.getSelection().focusNode, document.getElementById("innerEditor").firstChild.firstChild,
@@ -81,7 +81,7 @@ function runTests()
   is(document.getSelection().focusOffset, 0,
      "focus offset of selection should be 0");
 
-  synthesizeKey("KEY_ArrowUp", { code: "ArrowUp" });
+  synthesizeKey("KEY_ArrowUp", {});
   is(document.activeElement, outerEditor,
      "outerEditor should still have focus because focus shouldn't be moved by moving caret from innerEditor to outerEditor");
   is(document.getSelection().focusNode, document.getElementById("outerEditor").firstChild.firstChild,

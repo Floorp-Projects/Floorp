@@ -81,6 +81,12 @@ RendererOGL::GetExternalImageHandler()
   };
 }
 
+void
+RendererOGL::Update()
+{
+  wr_renderer_update(mRenderer);
+}
+
 bool
 RendererOGL::UpdateAndRender()
 {
