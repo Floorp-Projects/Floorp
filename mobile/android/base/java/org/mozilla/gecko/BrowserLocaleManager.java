@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Locale;
@@ -13,9 +14,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -406,25 +404,20 @@ public class BrowserLocaleManager implements LocaleManager {
     }
 
     /**
-     * Examines <code>multilocale.json</code>, returning the included list of
+     * Examines <code>multilocale.txt</code>, returning the included list of
      * locale codes.
      *
-     * If <code>multilocale.json</code> is not present, returns
+     * If <code>multilocale.txt</code> is not present, returns
      * <code>null</code>. In that case, consider {@link #getFallbackLocaleTag()}.
      *
-     * multilocale.json currently looks like this:
+     * multilocale.txt currently looks like this:
      *
      * <code>
-     * {"locales": ["en-US", "be", "ca", "cs", "da", "de", "en-GB",
-     *              "en-ZA", "es-AR", "es-ES", "es-MX", "et", "fi",
-     *              "fr", "ga-IE", "hu", "id", "it", "ja", "ko",
-     *              "lt", "lv", "nb-NO", "nl", "pl", "pt-BR",
-     *              "pt-PT", "ro", "ru", "sk", "sl", "sv-SE", "th",
-     *              "tr", "uk", "zh-CN", "zh-TW", "en-US"]}
+     * en-US,be,ca,cs,da,de,en-GB,en-ZA,es-AR,es-ES,es-MX,et,fi
      * </code>
      */
     public static Collection<String> getPackagedLocaleTags(final Context context) {
-        final String resPath = "res/multilocale.json";
+        final String resPath = "res/multilocale.txt";
         final String jarURL = GeckoJarReader.getJarURL(context, resPath);
 
         final String contents = GeckoJarReader.getText(context, jarURL);
@@ -433,32 +426,15 @@ public class BrowserLocaleManager implements LocaleManager {
             return null;
         }
 
-        try {
-            final JSONObject multilocale = new JSONObject(contents);
-            final JSONArray locales = multilocale.getJSONArray("locales");
-            if (locales == null) {
-                Log.e(LOG_TAG, "No 'locales' array in multilocales.json!");
-                return null;
-            }
+        String[] values = contents.trim().split("\\s*,\\s*");
+        final Set<String> out = new HashSet<String>(Arrays.asList(values));
 
-            final Set<String> out = new HashSet<String>(locales.length());
-            for (int i = 0; i < locales.length(); ++i) {
-                // If any item in the array is invalid, this will throw,
-                // and the entire clause will fail, being caught below
-                // and returning null.
-                out.add(locales.getString(i));
-            }
-
-            return out;
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, "Unable to parse multilocale.json.", e);
-            return null;
-        }
+        return out;
     }
 
     /**
      * @return the single default locale baked into this application.
-     *         Applicable when there is no multilocale.json present.
+     *         Applicable when there is no multilocale.txt present.
      */
     @SuppressWarnings("static-method")
     public String getFallbackLocaleTag() {
