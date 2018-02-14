@@ -18,7 +18,7 @@ toolbarbutton {
   padding: 3px;
 }
 
-:root[lwtheme-image] toolbarbutton {
+toolbarbutton:-moz-lwtheme {
   text-shadow: none;
 }
 

@@ -103,11 +103,11 @@ sidebarheader {
   -moz-appearance: none;
 }
 
-:root[lwtheme-image]:-moz-lwtheme-darktext {
+:root:-moz-lwtheme-darktext {
   text-shadow: 0 -0.5px 1.5px white;
 }
 
-:root[lwtheme-image]:-moz-lwtheme-brighttext {
+:root:-moz-lwtheme-brighttext {
   text-shadow: 1px 1px 1.5px black;
 }
 
