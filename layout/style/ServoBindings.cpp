@@ -2263,6 +2263,13 @@ Gecko_CSSValue_SetInt(nsCSSValueBorrowedMut aCSSValue,
   aCSSValue->SetIntValue(aInteger, aUnit);
 }
 
+void
+Gecko_CSSValue_SetFloat(nsCSSValueBorrowedMut aCSSValue,
+                        float aValue, nsCSSUnit aUnit)
+{
+  aCSSValue->SetFloatValue(aValue, aUnit);
+}
+
 nsCSSValueBorrowedMut
 Gecko_CSSValue_GetArrayItem(nsCSSValueBorrowedMut aCSSValue, int32_t aIndex)
 {
