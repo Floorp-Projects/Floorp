@@ -133,6 +133,11 @@ android {
             java.srcDir 'src/klarRelease/java'
             res.srcDir 'src/klarRelease/res'
         }
+        focusGeckoRelease {
+            java.srcDir 'src/focusRelease/java'
+            manifest.srcFile 'src/focusRelease/AndroidManifest.xml'
+            res.srcDir 'src/focusRelease/res'
+        }
     }
 }
 
