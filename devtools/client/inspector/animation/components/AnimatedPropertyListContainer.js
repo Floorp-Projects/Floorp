@@ -29,7 +29,7 @@ class AnimatedPropertyListContainer extends PureComponent {
 
     return dom.div(
       {
-        className: "animated-property-list-container"
+        className: `animated-property-list-container ${ animation.state.type }`
       },
       AnimatedPropertyListHeader(),
       AnimatedPropertyList(

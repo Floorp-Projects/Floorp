@@ -35,6 +35,18 @@ class AnimatedPropertyList extends PureComponent {
     this.updateKeyframesList(nextProps.animation);
   }
 
+  getPropertyState(property) {
+    const { animation } = this.props;
+
+    for (const propState of animation.state.propertyState) {
+      if (propState.property === property) {
+        return propState;
+      }
+    }
+
+    return null;
+  }
+
   async updateKeyframesList(animation) {
     const {
       getAnimatedPropertyMap,
@@ -59,9 +71,11 @@ class AnimatedPropertyList extends PureComponent {
         className: "animated-property-list"
       },
       [...animatedPropertyMap.entries()].map(([property, values]) => {
+        const state = this.getPropertyState(property);
         return AnimatedPropertyItem(
           {
             property,
+            state,
             values,
           }
         );

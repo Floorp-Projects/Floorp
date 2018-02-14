@@ -14,12 +14,16 @@ class AnimatedPropertyItem extends PureComponent {
   static get propTypes() {
     return {
       property: PropTypes.string.isRequired,
+      state: PropTypes.object.isRequired,
       values: PropTypes.array.isRequired,
     };
   }
 
   render() {
-    const { property } = this.props;
+    const {
+      property,
+      state,
+    } = this.props;
 
     return dom.li(
       {
@@ -28,6 +32,7 @@ class AnimatedPropertyItem extends PureComponent {
       AnimatedPropertyName(
         {
           property,
+          state,
         }
       )
     );
