@@ -20,7 +20,6 @@
 
 #include "jsapi.h"
 #include "jsarray.h"
-#include "jsatom.h"
 #include "jscntxt.h"
 #include "jsobj.h"
 #include "jsscript.h"

@@ -90,7 +90,10 @@ void
 C1Spewer::spewRanges(GenericPrinter& out, BacktrackingAllocator* regalloc, LNode* ins)
 {
     for (size_t k = 0; k < ins->numDefs(); k++) {
-        uint32_t id = ins->getDef(k)->virtualRegister();
+        const LDefinition* def = ins->isPhi()
+            ? ins->toPhi()->getDef(k)
+            : ins->toInstruction()->getDef(k);
+        uint32_t id = def->virtualRegister();
         VirtualRegister* vreg = &regalloc->vregs[id];
 
         for (LiveRange::RegisterLinkIterator iter = vreg->rangesBegin(); iter; iter++) {

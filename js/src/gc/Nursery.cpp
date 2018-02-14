@@ -809,7 +809,7 @@ js::Nursery::doCollection(JS::gcreason::Reason reason,
     endProfile(ProfileKey::TraceGenericEntries);
 
     startProfile(ProfileKey::MarkRuntime);
-    rt->gc.traceRuntimeForMinorGC(&mover, session.lock);
+    rt->gc.traceRuntimeForMinorGC(&mover, session);
     endProfile(ProfileKey::MarkRuntime);
 
     startProfile(ProfileKey::MarkDebugger);

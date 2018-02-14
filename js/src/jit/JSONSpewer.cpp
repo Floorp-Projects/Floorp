@@ -194,8 +194,12 @@ JSONSpewer::spewLIns(LNode* ins)
     out_.printf("\"");
 
     beginListProperty("defs");
-    for (size_t i = 0; i < ins->numDefs(); i++)
-        value(ins->getDef(i)->virtualRegister());
+    for (size_t i = 0; i < ins->numDefs(); i++) {
+        if (ins->isPhi())
+            value(ins->toPhi()->getDef(i)->virtualRegister());
+        else
+            value(ins->toInstruction()->getDef(i)->virtualRegister());
+    }
     endList();
 
     endObject();

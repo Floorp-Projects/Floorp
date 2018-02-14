@@ -22,15 +22,14 @@
 <html id="feedHandler"
       xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; img-src *; media-src *" />
     <title>&feedPage.title;</title>
     <link rel="stylesheet"
           href="chrome://browser/skin/feeds/subscribe.css"
           type="text/css"
           media="all"/>
-    <script type="application/javascript"
-            src="chrome://browser/content/feeds/subscribe.js"/>
   </head>
-  <body onload="SubscribeHandler.writeContent();" onunload="SubscribeHandler.uninit();">
+  <body>
     <div id="feedHeaderContainer">
       <div id="feedHeader" dir="&locale.dir;">
         <div id="feedIntroText">
@@ -52,12 +51,6 @@
       </div>
       <div id="feedHeaderContainerSpacer"/>
     </div>
-
-    <script type="application/javascript">
-      /* import-globals-from subscribe.js */
-      SubscribeHandler.init();
-    </script>
-
     <div id="feedBody">
       <div id="feedTitle">
         <a id="feedTitleLink">
@@ -71,4 +64,5 @@
       <div id="feedContent"/>
     </div>
   </body>
+  <script type="application/javascript" src="chrome://browser/content/feeds/subscribe.js"/>
 </html>

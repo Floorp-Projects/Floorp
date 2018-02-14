@@ -35,6 +35,9 @@ private:
   int32_t mCurrentStep;
 };
 
+// This is called by XPCOMInit when the shutdown is completed.
+void XPCOMShutdownNotified();
+
 } // namespace mozilla
 
 #define NS_TOOLKIT_TERMINATOR_CID { 0x2e59cc70, 0xf83a, 0x412f, \

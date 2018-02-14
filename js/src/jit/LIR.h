@@ -725,26 +725,15 @@ class LNode
     size_t numDefs() const {
         return numDefs_;
     }
-    virtual LDefinition* getDef(size_t index) = 0;
-    virtual void setDef(size_t index, const LDefinition& def) = 0;
 
     // Returns information about operands.
     virtual LAllocation* getOperand(size_t index) = 0;
     virtual void setOperand(size_t index, const LAllocation& a) = 0;
 
-    // Returns information about temporary registers needed. Each temporary
-    // register is an LDefinition with a fixed or virtual register and
-    // either GENERAL, FLOAT32, or DOUBLE type.
-    size_t numTemps() const {
-        return numTemps_;
-    }
-    inline LDefinition* getTemp(size_t index);
-
     // Returns the number of successors of this instruction, if it is a control
     // transfer instruction, or zero otherwise.
     virtual size_t numSuccessors() const = 0;
     virtual MBasicBlock* getSuccessor(size_t i) const = 0;
-    virtual void setSuccessor(size_t i, MBasicBlock* successor) = 0;
 
     bool isCall() const {
         return isCall_;
@@ -841,6 +830,20 @@ class LInstruction
     }
 
   public:
+    inline LDefinition* getDef(size_t index);
+
+    void setDef(size_t index, const LDefinition& def) {
+        *getDef(index) = def;
+    }
+
+    // Returns information about temporary registers needed. Each temporary
+    // register is an LDefinition with a fixed or virtual register and
+    // either GENERAL, FLOAT32, or DOUBLE type.
+    size_t numTemps() const {
+        return numTemps_;
+    }
+    inline LDefinition* getTemp(size_t index);
+
     LSnapshot* snapshot() const {
         return snapshot_;
     }
@@ -948,11 +951,11 @@ class LPhi final : public LNode
         setMir(ins);
     }
 
-    LDefinition* getDef(size_t index) override {
+    LDefinition* getDef(size_t index) {
         MOZ_ASSERT(index == 0);
         return &def_;
     }
-    void setDef(size_t index, const LDefinition& def) override {
+    void setDef(size_t index, const LDefinition& def) {
         MOZ_ASSERT(index == 0);
         def_ = def;
     }
@@ -976,9 +979,6 @@ class LPhi final : public LNode
         return 0;
     }
     MBasicBlock* getSuccessor(size_t i) const override {
-        MOZ_CRASH("no successors");
-    }
-    void setSuccessor(size_t i, MBasicBlock*) override {
         MOZ_CRASH("no successors");
     }
 };
@@ -1092,7 +1092,7 @@ namespace details {
         {}
 
       public:
-        LDefinition* getDef(size_t index) final override {
+        LDefinition* getDef(size_t index) {
             MOZ_ASSERT(index < Defs);
             return &defsAndTemps_[index];
         }
@@ -1101,7 +1101,7 @@ namespace details {
             return &defsAndTemps_[Defs + index];
         }
 
-        void setDef(size_t index, const LDefinition& def) final override {
+        void setDef(size_t index, const LDefinition& def) {
             MOZ_ASSERT(index < Defs);
             defsAndTemps_[index] = def;
         }
@@ -1124,9 +1124,6 @@ namespace details {
         MBasicBlock* getSuccessor(size_t i) const override {
             MOZ_CRASH("no successors");
         }
-        void setSuccessor(size_t i, MBasicBlock* successor) override {
-            MOZ_CRASH("no successors");
-        }
 
         // Default accessors, assuming a single input and output, respectively.
         const LAllocation* input() {
@@ -1137,6 +1134,10 @@ namespace details {
             MOZ_ASSERT(numDefs() == 1);
             return getDef(0);
         }
+        static size_t offsetOfDef(size_t index) {
+            using T = LInstructionFixedDefsTempsHelper<0, 0>;
+            return offsetof(T, defsAndTemps_) + index * sizeof(LDefinition);
+        }
         static size_t offsetOfTemp(uint32_t numDefs, uint32_t index) {
             using T = LInstructionFixedDefsTempsHelper<0, 0>;
             return offsetof(T, defsAndTemps_) + (numDefs + index) * sizeof(LDefinition);
@@ -1145,7 +1146,16 @@ namespace details {
 } // namespace details
 
 inline LDefinition*
-LNode::getTemp(size_t index)
+LInstruction::getDef(size_t index)
+{
+    MOZ_ASSERT(index < numDefs());
+    using T = details::LInstructionFixedDefsTempsHelper<0, 0>;
+    uint8_t* p = reinterpret_cast<uint8_t*>(this) + T::offsetOfDef(index);
+    return reinterpret_cast<LDefinition*>(p);
+}
+
+inline LDefinition*
+LInstruction::getTemp(size_t index)
 {
     MOZ_ASSERT(index < numTemps());
     using T = details::LInstructionFixedDefsTempsHelper<0, 0>;

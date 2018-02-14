@@ -22,7 +22,6 @@
 #include "vm/Xdr.h"
 #include "wasm/WasmInstance.h"
 
-#include "jsatominlines.h"
 #include "jsscriptinlines.h"
 
 #include "gc/Marking-inl.h"

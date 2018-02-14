@@ -114,6 +114,7 @@ public:
   ~DocumentOrShadowRoot() = default;
 
   Element* GetPointerLockElement();
+  Element* GetFullscreenElement();
 protected:
   nsIContent* Retarget(nsIContent* aContent) const;
 

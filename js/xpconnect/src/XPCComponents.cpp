@@ -187,15 +187,10 @@ nsXPCComponents_Interfaces::~nsXPCComponents_Interfaces()
 }
 
 
-NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Interfaces)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_Interfaces)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Interfaces)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsXPCComponents_Interfaces)
-NS_IMPL_RELEASE(nsXPCComponents_Interfaces)
+NS_IMPL_ISUPPORTS(nsXPCComponents_Interfaces,
+                  nsIXPCComponents_Interfaces,
+                  nsIXPCScriptable,
+                  nsIClassInfo);
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME         nsXPCComponents_Interfaces
@@ -391,15 +386,10 @@ nsXPCComponents_InterfacesByID::~nsXPCComponents_InterfacesByID()
     // empty
 }
 
-NS_INTERFACE_MAP_BEGIN(nsXPCComponents_InterfacesByID)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_InterfacesByID)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_InterfacesByID)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsXPCComponents_InterfacesByID)
-NS_IMPL_RELEASE(nsXPCComponents_InterfacesByID)
+NS_IMPL_ISUPPORTS(nsXPCComponents_InterfacesByID,
+                  nsIXPCComponents_InterfacesByID,
+                  nsIXPCScriptable,
+                  nsIClassInfo)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME         nsXPCComponents_InterfacesByID
@@ -595,15 +585,10 @@ nsXPCComponents_Classes::~nsXPCComponents_Classes()
     // empty
 }
 
-NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Classes)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_Classes)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Classes)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsXPCComponents_Classes)
-NS_IMPL_RELEASE(nsXPCComponents_Classes)
+NS_IMPL_ISUPPORTS(nsXPCComponents_Classes,
+                  nsIXPCComponents_Classes,
+                  nsIXPCScriptable,
+                  nsIClassInfo)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME         nsXPCComponents_Classes
@@ -789,15 +774,10 @@ nsXPCComponents_ClassesByID::~nsXPCComponents_ClassesByID()
     // empty
 }
 
-NS_INTERFACE_MAP_BEGIN(nsXPCComponents_ClassesByID)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_ClassesByID)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_ClassesByID)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsXPCComponents_ClassesByID)
-NS_IMPL_RELEASE(nsXPCComponents_ClassesByID)
+NS_IMPL_ISUPPORTS(nsXPCComponents_ClassesByID,
+                  nsIXPCComponents_ClassesByID,
+                  nsIXPCScriptable,
+                  nsIClassInfo)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME         nsXPCComponents_ClassesByID
@@ -1000,15 +980,10 @@ nsXPCComponents_Results::~nsXPCComponents_Results()
     // empty
 }
 
-NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Results)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_Results)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Results)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsXPCComponents_Results)
-NS_IMPL_RELEASE(nsXPCComponents_Results)
+NS_IMPL_ISUPPORTS(nsXPCComponents_Results,
+                  nsIXPCComponents_Results,
+                  nsIXPCScriptable,
+                  nsIClassInfo)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME         nsXPCComponents_Results
@@ -1167,15 +1142,10 @@ nsXPCComponents_ID::~nsXPCComponents_ID()
     // empty
 }
 
-NS_INTERFACE_MAP_BEGIN(nsXPCComponents_ID)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_ID)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_ID)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsXPCComponents_ID)
-NS_IMPL_RELEASE(nsXPCComponents_ID)
+NS_IMPL_ISUPPORTS(nsXPCComponents_ID,
+                  nsIXPCComponents_ID,
+                  nsIXPCScriptable,
+                  nsIClassInfo)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME         nsXPCComponents_ID
@@ -1343,15 +1313,10 @@ nsXPCComponents_Exception::~nsXPCComponents_Exception()
     // empty
 }
 
-NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Exception)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_Exception)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Exception)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsXPCComponents_Exception)
-NS_IMPL_RELEASE(nsXPCComponents_Exception)
+NS_IMPL_ISUPPORTS(nsXPCComponents_Exception,
+                  nsIXPCComponents_Exception,
+                  nsIXPCScriptable,
+                  nsIClassInfo)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME         nsXPCComponents_Exception
@@ -1708,15 +1673,10 @@ nsXPCConstructor::GetInitializer(char * *aInitializer)
     XPC_STRING_GETTER_BODY(aInitializer, mInitializer);
 }
 
-NS_INTERFACE_MAP_BEGIN(nsXPCConstructor)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCConstructor)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCConstructor)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsXPCConstructor)
-NS_IMPL_RELEASE(nsXPCConstructor)
+NS_IMPL_ISUPPORTS(nsXPCConstructor,
+                  nsIXPCConstructor,
+                  nsIXPCScriptable,
+                  nsIClassInfo)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME         nsXPCConstructor
@@ -1881,15 +1841,10 @@ nsXPCComponents_Constructor::~nsXPCComponents_Constructor()
     // empty
 }
 
-NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Constructor)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_Constructor)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Constructor)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsXPCComponents_Constructor)
-NS_IMPL_RELEASE(nsXPCComponents_Constructor)
+NS_IMPL_ISUPPORTS(nsXPCComponents_Constructor,
+                  nsIXPCComponents_Constructor,
+                  nsIXPCScriptable,
+                  nsIClassInfo)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME         nsXPCComponents_Constructor
@@ -2078,14 +2033,9 @@ private:
     nsCOMPtr<nsIXPCComponents_utils_Sandbox> mSandbox;
 };
 
-NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Utils)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_Utils)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Utils)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsXPCComponents_Utils)
-NS_IMPL_RELEASE(nsXPCComponents_Utils)
+NS_IMPL_ISUPPORTS(nsXPCComponents_Utils,
+                  nsIXPCComponents_Utils,
+                  nsIXPCScriptable)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME         nsXPCComponents_Utils
@@ -3351,10 +3301,7 @@ ComponentsSH ComponentsSH::singleton(0);
 NS_IMETHODIMP_(MozExternalRefCountType) ComponentsSH::AddRef(void) { return 1; }
 NS_IMETHODIMP_(MozExternalRefCountType) ComponentsSH::Release(void) { return 1; }
 
-NS_INTERFACE_MAP_BEGIN(ComponentsSH)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_QUERY_INTERFACE(ComponentsSH, nsIXPCScriptable)
 
 #define NSXPCCOMPONENTSBASE_CID \
 { 0xc62998e5, 0x95f1, 0x4058, \

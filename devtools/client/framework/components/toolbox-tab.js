@@ -15,7 +15,7 @@ class ToolboxTab extends Component {
       currentToolId: PropTypes.string,
       focusButton: PropTypes.func,
       focusedButton: PropTypes.string,
-      highlightedTool: PropTypes.string,
+      highlightedTools: PropTypes.object.isRequired,
       panelDefinition: PropTypes.object,
       selectTool: PropTypes.func,
     };
@@ -39,7 +39,7 @@ class ToolboxTab extends Component {
   }
 
   render() {
-    const {panelDefinition, currentToolId, highlightedTool, selectTool,
+    const {panelDefinition, currentToolId, highlightedTools, selectTool,
            focusedButton, focusButton} = this.props;
     const {id, tooltip, label, iconOnly} = panelDefinition;
     const isHighlighted = id === currentToolId;
@@ -47,7 +47,7 @@ class ToolboxTab extends Component {
     const className = [
       "devtools-tab",
       currentToolId === id ? "selected" : "",
-      highlightedTool === id ? "highlighted" : "",
+      highlightedTools.has(id) ? "highlighted" : "",
       iconOnly ? "devtools-tab-icon-only" : ""
     ].join(" ");
 

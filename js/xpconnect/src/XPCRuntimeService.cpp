@@ -12,17 +12,12 @@
 #include "nsIPrincipal.h"
 #include "mozilla/dom/BindingUtils.h"
 
-NS_INTERFACE_MAP_BEGIN(BackstagePass)
-  NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCScriptable)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(BackstagePass)
-NS_IMPL_RELEASE(BackstagePass)
+NS_IMPL_ISUPPORTS(BackstagePass,
+                  nsIXPCScriptable,
+                  nsIGlobalObject,
+                  nsIClassInfo,
+                  nsIScriptObjectPrincipal,
+                  nsISupportsWeakReference)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME         BackstagePass
