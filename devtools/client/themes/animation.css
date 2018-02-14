@@ -370,9 +370,24 @@
 }
 
 .keyframes-graph-path path {
-  fill: lime;
+  fill: #00b0bd88;
+  stroke: #00b0bd;
   vector-effect: non-scaling-stroke;
   transform: scale(1, -1);
+}
+
+.keyframes-graph.opacity .keyframes-graph-path path {
+  fill: #df00a988;
+  stroke: #df00a9;
+}
+
+.keyframes-graph.transform .keyframes-graph-path path {
+  fill: #ea800088;
+  stroke: #ea8000;
+}
+
+.keyframes-graph-path .color-path path {
+  stroke: none;
 }
 
 /* No Animation Panel */
