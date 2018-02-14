@@ -9,8 +9,6 @@ Cu.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this)
 
 
 add_task(async function testTelemetry() {
-  await SpecialPowers.pushPrefEnv({set: [["privacy.reduceTimerPrecision", true]]});
-
   // setup
   await TelemetryController.submitExternalPing("testfoo", {foo: 1});
   await TelemetryController.submitExternalPing("testbar", {bar: 2});

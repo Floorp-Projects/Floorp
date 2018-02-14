@@ -20,14 +20,9 @@ var newTab;
 
 function test() {
   waitForExplicitFinish();
-  // This test assumes that time passes between operations. But if the precision
-  // is low enough, and the test fast enough, an operation, and a successive call
-  // to Date.now() will have the same time value.
-  SpecialPowers.pushPrefEnv({"set": [["privacy.reduceTimerPrecision", false]]},
-    function() {
-      originalTab = gBrowser.selectedTab;
-      nextStep(step2);
-    });
+
+  originalTab = gBrowser.selectedTab;
+  nextStep(step2);
 }
 
 function step2() {

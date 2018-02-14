@@ -20,9 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=822480
 SimpleTest.waitForExplicitFinish();
 
 // Resource timing is prefed off by default, so we had to use this workaround
-SpecialPowers.pushPrefEnv({"set": [
-	["dom.enable_resource_timing", true],
-	["privacy.reduceTimerPrecision", false]]}, start);
+SpecialPowers.pushPrefEnv({"set": [["dom.enable_resource_timing", true]]}, start);
 var subwindow = null;
 
 function start() {
