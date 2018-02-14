@@ -51,12 +51,14 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationMainThread,
                                    mInstallingWorker, mWaitingWorker, mActiveWorker);
 
 ServiceWorkerRegistrationMainThread::ServiceWorkerRegistrationMainThread(nsPIDOMWindowInner* aWindow,
-                                                                         const nsAString& aScope)
-  : ServiceWorkerRegistration(aWindow, aScope)
+                                                                         const ServiceWorkerRegistrationDescriptor& aDescriptor)
+  : ServiceWorkerRegistration(aWindow, aDescriptor)
+  , mScope(NS_ConvertUTF8toUTF16(aDescriptor.Scope()))
   , mListeningForEvents(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
+  UpdateState(aDescriptor);
   StartListeningForEvents();
 }
 
@@ -128,6 +130,10 @@ ServiceWorkerRegistrationMainThread::UpdateFound()
 void
 ServiceWorkerRegistrationMainThread::UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor)
 {
+  MOZ_DIAGNOSTIC_ASSERT(MatchesDescriptor(aDescriptor));
+
+  mDescriptor = aDescriptor;
+
   nsCOMPtr<nsIGlobalObject> global = GetParentObject();
   if (!global) {
     mInstallingWorker = nullptr;
@@ -172,8 +178,8 @@ ServiceWorkerRegistrationMainThread::RegistrationRemoved()
 bool
 ServiceWorkerRegistrationMainThread::MatchesDescriptor(const ServiceWorkerRegistrationDescriptor& aDescriptor)
 {
-  NS_ConvertUTF16toUTF8 scope(mScope);
-  return aDescriptor.Scope() == scope;
+  return aDescriptor.PrincipalInfo() == mDescriptor.PrincipalInfo() &&
+         aDescriptor.Scope() == mDescriptor.Scope();
 }
 
 namespace {
@@ -811,7 +817,7 @@ public:
   bool
   MatchesDescriptor(const ServiceWorkerRegistrationDescriptor& aDescriptor) override
   {
-    // TODO
+    // TODO: Not implemented
     return false;
   }
 
@@ -862,10 +868,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ServiceWorkerRegistrationWorkerT
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 ServiceWorkerRegistrationWorkerThread::ServiceWorkerRegistrationWorkerThread(WorkerPrivate* aWorkerPrivate,
-                                                                             const nsAString& aScope)
-  : ServiceWorkerRegistration(nullptr, aScope)
+                                                                             const ServiceWorkerRegistrationDescriptor& aDescriptor)
+  : ServiceWorkerRegistration(nullptr, aDescriptor)
   , WorkerHolder("ServiceWorkerRegistrationWorkerThread")
   , mWorkerPrivate(aWorkerPrivate)
+  , mScope(NS_ConvertUTF8toUTF16(aDescriptor.Scope()))
 {
   InitListener();
 }
@@ -1064,6 +1071,7 @@ ServiceWorkerRegistrationWorkerThread::ShowNotification(JSContext* aCx,
                                                         const NotificationOptions& aOptions,
                                                         ErrorResult& aRv)
 {
+
   // Until Bug 1131324 exposes ServiceWorkerContainer on workers,
   // ShowPersistentNotification() checks for valid active worker while it is
   // also verifying scope so that we block the worker on the main thread only

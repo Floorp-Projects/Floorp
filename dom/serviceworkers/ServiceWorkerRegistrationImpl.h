@@ -33,7 +33,7 @@ public:
                                            ServiceWorkerRegistration)
 
   ServiceWorkerRegistrationMainThread(nsPIDOMWindowInner* aWindow,
-                                      const nsAString& aScope);
+                                      const ServiceWorkerRegistrationDescriptor& aDescriptor);
 
   already_AddRefed<Promise>
   Update(ErrorResult& aRv) override;
@@ -100,7 +100,8 @@ public:
     MOZ_ASSERT(doc);
 
     nsCOMPtr<nsIServiceWorkerRegistrationInfo> registration;
-    nsresult rv = swm->GetRegistrationByPrincipal(doc->NodePrincipal(), mScope,
+    NS_ConvertUTF8toUTF16 scope(mDescriptor.Scope());
+    nsresult rv = swm->GetRegistrationByPrincipal(doc->NodePrincipal(), scope,
                                                   getter_AddRefs(registration));
 
     /*
@@ -137,6 +138,7 @@ private:
   void
   StopListeningForEvents();
 
+  const nsString mScope;
   bool mListeningForEvents;
 
   // The following properties are cached here to ensure JS equality is satisfied
@@ -164,7 +166,7 @@ public:
                                            ServiceWorkerRegistration)
 
   ServiceWorkerRegistrationWorkerThread(WorkerPrivate* aWorkerPrivate,
-                                        const nsAString& aScope);
+                                        const ServiceWorkerRegistrationDescriptor& aDescriptor);
 
   already_AddRefed<Promise>
   Update(ErrorResult& aRv) override;
@@ -221,6 +223,7 @@ private:
   ReleaseListener();
 
   WorkerPrivate* mWorkerPrivate;
+  const nsString mScope;
   RefPtr<WorkerListener> mListener;
 
   RefPtr<PushManager> mPushManager;
