@@ -11,19 +11,26 @@
 #include <string.h>             /* strchr */
 #include "mozilla/EndianUtils.h"
 
-#define CURS_POOL_OFFSET_RAW(cursor)                                          \
-  ((cursor)->pool == XPT_HEADER                                               \
-   ? (cursor)->offset                                                         \
-   : (XPT_ASSERT((cursor)->state->data_offset),                               \
-      (cursor)->offset + (cursor)->state->data_offset))
+static size_t
+CursPoolOffsetRaw(NotNull<XPTCursor*> cursor)
+{
+    if (cursor->pool == XPT_HEADER) {
+        return cursor->offset;
+    }
+    XPT_ASSERT(cursor->state->data_offset);
+    return cursor->offset + cursor->state->data_offset;
+}
 
-#define CURS_POOL_OFFSET(cursor)                                              \
-  (CURS_POOL_OFFSET_RAW(cursor) - 1)
+static size_t
+CursPoolOffset(NotNull<XPTCursor*> cursor)
+{
+    return CursPoolOffsetRaw(cursor) - 1;
+}
 
 static char*
 CursPoint(NotNull<XPTCursor*> cursor)
 {
-    return &cursor->state->pool_data[CURS_POOL_OFFSET(cursor)];
+    return &cursor->state->pool_data[CursPoolOffset(cursor)];
 }
 
 static bool
@@ -32,7 +39,7 @@ CheckCount(NotNull<XPTCursor*> cursor, uint32_t space)
     // Fail if we're in the data area and about to exceed the allocation.
     // XXX Also fail if we're in the data area and !state->data_offset
     if (cursor->pool == XPT_DATA &&
-        (CURS_POOL_OFFSET(cursor) + space > (cursor)->state->pool_allocated)) {
+        (CursPoolOffset(cursor) + space > cursor->state->pool_allocated)) {
         XPT_ASSERT(0);
         fprintf(stderr, "FATAL: no room for %u in cursor\n", space);
         return false;
