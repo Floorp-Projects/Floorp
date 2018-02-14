@@ -13,14 +13,14 @@ add_task(async function() {
 function sendHome() {
   // unclear why VK_HOME doesn't work on Mac, but it doesn't...
   if (Services.appinfo.OS == "Darwin") {
-    EventUtils.synthesizeKey("VK_LEFT", { altKey: true });
+    EventUtils.synthesizeKey("KEY_ArrowLeft", {altKey: true});
   } else {
-    EventUtils.synthesizeKey("VK_HOME", {});
+    EventUtils.synthesizeKey("KEY_Home");
   }
 }
 
 function sendDelete() {
-  EventUtils.synthesizeKey("VK_DELETE", {});
+  EventUtils.synthesizeKey("KEY_Delete");
 }
 
 async function testDelete() {

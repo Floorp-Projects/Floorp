@@ -58,8 +58,8 @@ function runTests()
   $("scale").focus();
 
   var accessKeyDetails = (navigator.platform.includes("Mac")) ?
-                         { altKey: true, ctrlKey : true } :
-                         { altKey : true, shiftKey: true };
+                         {altKey: true, ctrlKey: true} :
+                         {altKey: true, shiftKey: true};
 
   gExpectedBlur = document.getAnonymousNodes($("scale"))[0];
   gExpectedFocus = $("menulist").inputField;
@@ -76,19 +76,19 @@ function runTests()
   if (!navigator.platform.includes("Mac")) {
     gExpectedBlur = gExpectedFocus;
     gExpectedFocus = $("textbox").inputField;
-    synthesizeKey("VK_TAB", { shiftKey: true });
+    synthesizeKey("KEY_Tab", {shiftKey: true});
 
     gExpectedBlur = gExpectedFocus;
     gExpectedFocus = $("menulist").inputField;
-    synthesizeKey("VK_TAB", { shiftKey: true });
+    synthesizeKey("KEY_Tab", {shiftKey: true});
 
     gExpectedBlur = gExpectedFocus;
     gExpectedFocus = $("textbox").inputField;
-    synthesizeKey("VK_TAB", { });
+    synthesizeKey("KEY_Tab");
 
     gExpectedBlur = gExpectedFocus;
     gExpectedFocus = document.getAnonymousNodes($("scale"))[0];
-    synthesizeKey("VK_TAB", { });
+    synthesizeKey("KEY_Tab");
 
     is(gBlurs, 9, "correct number of blurs");
     is(gFocuses, 10, "correct number of focuses");

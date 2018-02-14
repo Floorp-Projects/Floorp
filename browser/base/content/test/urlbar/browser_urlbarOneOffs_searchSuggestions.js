@@ -31,21 +31,21 @@ add_task(async function oneOffReturnAfterSuggestion() {
   assertState(0, -1, typedValue);
 
   // Down to select the first search suggestion.
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   assertState(1, -1, "foofoo");
 
   // Down to select the next search suggestion.
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   assertState(2, -1, "foobar");
 
   // Alt+Down to select the first one-off.
-  EventUtils.synthesizeKey("VK_DOWN", { altKey: true });
+  EventUtils.synthesizeKey("KEY_ArrowDown", {altKey: true});
   assertState(2, 0, "foobar");
 
   let resultsPromise =
     BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false,
                                    `http://mochi.test:8888/?terms=foobar`);
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   await resultsPromise;
 
   await PlacesUtils.history.clear();
@@ -62,11 +62,11 @@ add_task(async function oneOffClickAfterSuggestion() {
   assertState(0, -1, typedValue);
 
   // Down to select the first search suggestion.
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   assertState(1, -1, "foofoo");
 
   // Down to select the next search suggestion.
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   assertState(2, -1, "foobar");
 
   let oneOffs = gURLBar.popup.oneOffSearchButtons.getSelectableButtons(true);
@@ -87,11 +87,11 @@ add_task(async function overridden_engine_not_reused() {
     await promiseAutocompleteResultPopup(typedValue, window, true);
     await promiseSuggestionsPresent();
     // Down to select the first search suggestion.
-    EventUtils.synthesizeKey("VK_DOWN", {});
+    EventUtils.synthesizeKey("KEY_ArrowDown");
     assertState(1, -1, "foofoo");
     // ALT+Down to select the second search engine.
-    EventUtils.synthesizeKey("VK_DOWN", { altKey: true });
-    EventUtils.synthesizeKey("VK_DOWN", { altKey: true });
+    EventUtils.synthesizeKey("KEY_ArrowDown", {altKey: true});
+    EventUtils.synthesizeKey("KEY_ArrowDown", {altKey: true});
     assertState(1, 1, "foofoo");
 
     let label = gURLBar.popup.richlistbox.children[gURLBar.popup.richlistbox.selectedIndex].label;
@@ -116,6 +116,6 @@ function assertState(result, oneOff, textValue = undefined) {
 }
 
 async function hidePopup() {
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   await promisePopupHidden(gURLBar.popup);
 }

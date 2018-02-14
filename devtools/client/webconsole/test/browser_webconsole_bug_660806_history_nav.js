@@ -39,8 +39,8 @@ function consoleOpened(HUD) {
   is(jsterm.lastInputValue, "window.foobarBug660806.location",
      "lastInputValue is correct");
 
-  EventUtils.synthesizeKey("VK_RETURN", {});
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_Enter");
+  EventUtils.synthesizeKey("KEY_ArrowUp");
 
   is(jsterm.lastInputValue, "window.foobarBug660806.location",
      "lastInputValue is correct, again");

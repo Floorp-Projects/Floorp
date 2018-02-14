@@ -40,7 +40,7 @@ add_task(async function () {
   jsterm.setInputValue("window.foo");
 
   // Shows the popup
-  EventUtils.synthesizeKey(".", {});
+  EventUtils.sendString(".");
   await onPopUpOpen;
 
   ok(popup.isOpen, "popup is open");
@@ -59,20 +59,20 @@ add_task(async function () {
   is(popup.selectedIndex, expectedPopupItems.length - 1,
       "Index of the first item from bottom is selected.");
 
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
 
   let prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
   is(popup.selectedIndex, 0, "index 0 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
   is(completeNode.value, prefix + "item3", "completeNode.value holds item3");
 
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
 
   is(popup.selectedIndex, 1, "index 1 is selected");
   is(popup.selectedItem.label, "item2", "item2 is selected");
   is(completeNode.value, prefix + "item2", "completeNode.value holds item2");
 
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
 
   is(popup.selectedIndex, 0, "index 0 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
@@ -80,30 +80,30 @@ add_task(async function () {
 
   let currentSelectionIndex = popup.selectedIndex;
 
-  EventUtils.synthesizeKey("VK_PAGE_DOWN", {});
+  EventUtils.synthesizeKey("KEY_PageDown");
 
   ok(popup.selectedIndex > currentSelectionIndex, "Index is greater after PGDN");
 
   currentSelectionIndex = popup.selectedIndex;
-  EventUtils.synthesizeKey("VK_PAGE_UP", {});
+  EventUtils.synthesizeKey("KEY_PageUp");
 
   ok(popup.selectedIndex < currentSelectionIndex, "Index is less after Page UP");
 
-  EventUtils.synthesizeKey("VK_END", {});
+  EventUtils.synthesizeKey("KEY_End");
   is(popup.selectedIndex, expectedPopupItems.length - 1, "index is last after End");
 
-  EventUtils.synthesizeKey("VK_HOME", {});
+  EventUtils.synthesizeKey("KEY_Home");
   is(popup.selectedIndex, 0, "index is first after Home");
 
   info("press Tab and wait for popup to hide");
   const onPopupClose = popup.once("popup-closed");
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("KEY_Tab");
 
   await onPopupClose;
 
   // At this point the completion suggestion should be accepted.
   ok(!popup.isOpen, "popup is not open");
   is(jsterm.getInputValue(), "window.foo.item3",
-     "completion was successful after VK_TAB");
+     "completion was successful after KEY_Tab");
   ok(!completeNode.value, "completeNode is empty");
 });

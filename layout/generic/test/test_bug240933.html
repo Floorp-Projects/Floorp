@@ -38,18 +38,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=240933
         t.focus();
         t.selectionStart = t.selectionEnd = t.value.length;
         var val = t.value;
-        synthesizeKey("VK_RETURN", {});
+        synthesizeKey("KEY_Enter");
         is(t.value, val + "\n", "Pressing enter right after focusing the textarea should work");
 
         t = document.getElementById("tb");
         t.focus();
-        synthesizeKey("VK_RETURN", {});
+        synthesizeKey("KEY_Enter");
         is(t.value, "\n", "Pressing enter for the first time should work");
-        synthesizeKey("VK_RETURN", {});
+        synthesizeKey("KEY_Enter");
         is(t.value, "\n\n", "Pressing enter for the second time should work");
-        synthesizeKey("VK_BACK_SPACE", {});
+        synthesizeKey("KEY_Backspace");
         is(t.value, "\n", "Pressing backspace for the first time should work");
-        synthesizeKey("VK_BACK_SPACE", {});
+        synthesizeKey("KEY_Backspace");
         is(t.value, "", "Pressing backspace for the second time should work");
         SimpleTest.finish();
       });

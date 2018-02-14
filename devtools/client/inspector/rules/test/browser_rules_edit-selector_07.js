@@ -46,7 +46,7 @@ function* testEditSelector(view, name) {
 
   info("Entering the commit key");
   let onRuleViewChanged = once(view, "ruleview-changed");
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   yield onRuleViewChanged;
 
   // Get the new rule editor that replaced the original

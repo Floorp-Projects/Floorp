@@ -414,38 +414,9 @@ function runUndoRedoTest()
   // commit
   synthesizeComposition({ type: "compositioncommitasis" });
 
-  synthesizeKey(" ", {});
-  synthesizeKey("m", {});
-  synthesizeKey("e", {});
-  synthesizeKey("a", {});
-  synthesizeKey("n", {});
-  synthesizeKey("t", {});
-  synthesizeKey("VK_BACK_SPACE", {});
-  synthesizeKey("s", {});
-  synthesizeKey(" ", {});
-  synthesizeKey("\"", {});
-  synthesizeKey("c", {});
-  synthesizeKey("a", {});
-  synthesizeKey("t", {});
-  synthesizeKey("-", {});
-  synthesizeKey("g", {});
-  synthesizeKey("i", {});
-  synthesizeKey("r", {});
-  synthesizeKey("l", {});
-  synthesizeKey("\"", {});
-  synthesizeKey(".", {});
-  synthesizeKey(" ", {});
-  synthesizeKey("VK_SHIFT", { type: "keydown" });
-  synthesizeKey("S", { shiftKey: true });
-  synthesizeKey("VK_SHIFT", { type: "keyup" });
-  synthesizeKey("h", {});
-  synthesizeKey("e", {});
-  synthesizeKey(" ", {});
-  synthesizeKey("i", {});
-  synthesizeKey("s", {});
-  synthesizeKey(" ", {});
-  synthesizeKey("a", {});
-  synthesizeKey(" ", {});
+  sendString(" meant");
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("s \"cat-girl\". She is a ");
 
   // input raw characters
   synthesizeCompositionChange(
@@ -507,18 +478,7 @@ function runUndoRedoTest()
   // commit
   synthesizeComposition({ type: "compositioncommitasis" });
 
-  synthesizeKey("VK_BACK_SPACE", {});
-  synthesizeKey("VK_BACK_SPACE", {});
-  synthesizeKey("VK_BACK_SPACE", {});
-  synthesizeKey("VK_BACK_SPACE", {});
-  synthesizeKey("VK_BACK_SPACE", {});
-  synthesizeKey("VK_BACK_SPACE", {});
-  synthesizeKey("VK_BACK_SPACE", {});
-  synthesizeKey("VK_BACK_SPACE", {});
-  synthesizeKey("VK_BACK_SPACE", {});
-  synthesizeKey("VK_BACK_SPACE", {});
-  synthesizeKey("VK_BACK_SPACE", {});
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_Backspace", {repeat: 12});
 
   var i = 0;
   if (!checkContent("\u732B\u5A18 means \"cat-girl\".",
@@ -1603,7 +1563,7 @@ function runCompositionTest()
   }
 
   // testing whether the empty composition string deletes selected string.
-  synthesizeKey("VK_LEFT", { shiftKey: true });
+  synthesizeKey("KEY_ArrowLeft", {shiftKey: true});
 
   synthesizeCompositionChange(
     { "composition":
@@ -1629,7 +1589,7 @@ function runCompositionTest()
     return;
   }
 
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_Backspace");
   if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
                     "runCompositionTest", "#4-11") ||
       !checkSelection(4, "", "runCompositionTest", "#4-11")) {
@@ -1941,7 +1901,7 @@ function runCompositionEventTest()
   // select the second character, then, data of composition start should be
   // the selected character.
   initResults();
-  synthesizeKey("VK_LEFT", { shiftKey: true });
+  synthesizeKey("KEY_ArrowLeft", {shiftKey: true});
 
   synthesizeCompositionChange(
     { "composition":
@@ -5833,7 +5793,7 @@ function runIsComposingTest()
   //     don't dispatch key events while composition (bug 354358).
   SpecialPowers.setBoolPref("dom.keyboardevent.dispatch_during_composition", true);
   description = "events before dispatching compositionstart";
-  synthesizeKey("VK_LEFT", {});
+  synthesizeKey("KEY_ArrowLeft");
 
   description = "events after dispatching compositionchange";
   synthesizeCompositionChange(
@@ -5849,7 +5809,7 @@ function runIsComposingTest()
     });
 
   // Although, firing keypress event during composition is a bug.
-  synthesizeKey("VK_INSERT", {});
+  synthesizeKey("KEY_Insert");
 
   description = "events for committing composition string";
 
@@ -5859,7 +5819,7 @@ function runIsComposingTest()
   // input event will be fired by synthesizing compositionend event.
   // Then, its isComposing should be false.
   description = "events after dispatching compositioncommitasis";
-  synthesizeKey("VK_RETURN", { type: "keyup" });
+  synthesizeKey("KEY_Enter", {type: "keyup"});
 
   SpecialPowers.clearUserPref("dom.keyboardevent.dispatch_during_composition");
 
@@ -7067,8 +7027,8 @@ function* runEditorReframeTests()
       },
       { test: function () {
           // Select "Cd"
-          synthesizeKey("KEY_ArrowLeft", {});
-          synthesizeKey("KEY_ArrowLeft", {});
+          synthesizeKey("KEY_ArrowLeft");
+          synthesizeKey("KEY_ArrowLeft");
           synthesizeKey("KEY_Shift", {type: "keydown", shiftKey: true});
           synthesizeKey("KEY_ArrowLeft", {shiftKey: true});
           synthesizeKey("KEY_ArrowLeft", {shiftKey: true});

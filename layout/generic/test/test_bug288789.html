@@ -43,12 +43,12 @@ function test() {
   }
 
   function testRight(offset) {
-    synthesizeKey("VK_RIGHT", {});
+    synthesizeKey("KEY_ArrowRight");
     is(textarea.selectionStart, offset, "Right movement broken");
   }
 
   function testLeft(offset) {
-    synthesizeKey("VK_LEFT", {});
+    synthesizeKey("KEY_ArrowLeft");
     is(textarea.selectionStart, offset, "Left movement broken");
   }
 

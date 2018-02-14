@@ -181,7 +181,7 @@ function runTests()
   const listboxes = Array.from(document.querySelectorAll('select[size="3"]'));
   listboxes.forEach((elem) => {
     elem.focus();
-    synthesizeKey("VK_DOWN", {});
+    synthesizeKey("KEY_ArrowDown");
     is(""+elem.selectedIndex,
        elem.getAttribute('firstNonDisabledIndex'),
        elem.id + ": DOWN selected first non-disabled option");
@@ -192,7 +192,7 @@ function runTests()
   if (!kIsMac) {
     comboboxes.forEach((elem) => {
       elem.focus();
-      synthesizeKey("VK_DOWN", {});
+      synthesizeKey("KEY_ArrowDown");
       is(""+elem.selectedIndex,
          elem.getAttribute('firstNonDisabledIndex'),
          elem.id + ": DOWN selected first non-disabled option");
@@ -209,7 +209,7 @@ function runTests()
   //
   listboxes.forEach((elem) => {
     elem.focus();
-    synthesizeKey("VK_DOWN", {shiftKey:true});
+    synthesizeKey("KEY_ArrowDown", {shiftKey:true});
     is(""+elem.selectedIndex,
        elem.getAttribute('firstNonDisabledIndex'),
        elem.id + ": SHIFT+DOWN selected first non-disabled option");
@@ -219,7 +219,7 @@ function runTests()
   if (!kIsMac) {
     comboboxes.forEach((elem) => {
       elem.focus();
-      synthesizeKey("VK_DOWN", {shiftKey:true});
+      synthesizeKey("KEY_ArrowDown", {shiftKey:true});
       is(""+elem.selectedIndex,
          elem.getAttribute('firstNonDisabledIndex'),
          elem.id + ": SHIFT+DOWN selected first non-disabled option");
@@ -236,7 +236,7 @@ function runTests()
   //
   listboxes.forEach((elem) => {
     elem.focus();
-    synthesizeKey("VK_DOWN", {ctrlKey:true});
+    synthesizeKey("KEY_ArrowDown", {ctrlKey:true});
     if (!elem.multiple)
       is(""+elem.selectedIndex,
          elem.getAttribute('firstNonDisabledIndex'),
@@ -249,7 +249,7 @@ function runTests()
   if (!kIsMac) {
     comboboxes.forEach((elem) => {
       elem.focus();
-      synthesizeKey("VK_DOWN", {ctrlKey:true});
+      synthesizeKey("KEY_ArrowDown", {ctrlKey:true});
       is(""+elem.selectedIndex,
          elem.getAttribute('firstNonDisabledIndex'),
          elem.id + ": CTRL+DOWN selected first non-disabled option");
@@ -266,7 +266,7 @@ function runTests()
   //
   listboxes.forEach((elem) => {
     elem.focus();
-    synthesizeKey(" ", {});
+    sendString(" ");
     is(""+elem.selectedIndex,
        elem.getAttribute('firstNonDisabledIndex'),
        elem.id + ": SPACE selected first non-disabled option");
@@ -331,7 +331,7 @@ function runTests()
   //
   listboxes.forEach((elem) => {
     elem.focus();
-    synthesizeKey("VK_DOWN", {ctrlKey:true, shiftKey:true});
+    synthesizeKey("KEY_ArrowDown", {ctrlKey:true, shiftKey:true});
     is(""+elem.selectedIndex,
        elem.getAttribute('firstNonDisabledIndex'),
        elem.id + ": CTRL+SHIFT+DOWN selected first non-disabled option");
@@ -341,7 +341,7 @@ function runTests()
   if (!kIsMac) {
     comboboxes.forEach((elem) => {
       elem.focus();
-      synthesizeKey("VK_DOWN", {ctrlKey:true, shiftKey:true});
+      synthesizeKey("KEY_ArrowDown", {ctrlKey:true, shiftKey:true});
       is(""+elem.selectedIndex,
          elem.getAttribute('firstNonDisabledIndex'),
          elem.id + ": CTRL+SHIFT+DOWN selected first non-disabled option");

@@ -272,9 +272,9 @@ function allMechanisms(aCb, aClipOverride, aNegateAll) {
     case 0:
       // Keyboard issued
       cutCopyAll(function docut(aSucc) {
-        synthesizeKey("X", {accelKey: true});
+        synthesizeKey("x", {accelKey: true});
       }, function docopy(aSucc) {
-        synthesizeKey("C", {accelKey: true});
+        synthesizeKey("c", {accelKey: true});
       }, function done() { testStep(n + 1); }, false, aClipOverride, aNegateAll);
       return;
 
@@ -282,10 +282,10 @@ function allMechanisms(aCb, aClipOverride, aNegateAll) {
       // Button issued
       cutCopyAll(function docut(aSucc) {
         document.addEventListener('keydown', execCut(aSucc));
-        synthesizeKey("Q", {});
+        sendString("Q");
       }, function docopy(aSucc) {
         document.addEventListener('keydown', execCopy(aSucc));
-        synthesizeKey("Q", {});
+        sendString("Q");
       }, function done() { testStep(n + 1); }, false, aClipOverride, aNegateAll);
       return;
 

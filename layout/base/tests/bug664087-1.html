@@ -11,12 +11,12 @@
       }
       function typeIntoMe() {
         setTimeout(function() {
-          synthesizeKey("א", {});
-          synthesizeKey("VK_RETURN", {});
-          synthesizeKey("ג", {});
-          synthesizeKey("VK_UP", {});
-          synthesizeKey("VK_END", {});
-          synthesizeKey("ב", {});
+          sendString("א");
+          synthesizeKey("KEY_Enter");
+          sendString("ג");
+          synthesizeKey("KEY_ArrowUp");
+          synthesizeKey("KEY_End");
+          sendString("ב");
           document.documentElement.removeAttribute("class");
         }, 0);
       }

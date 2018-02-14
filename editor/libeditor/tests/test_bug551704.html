@@ -54,22 +54,19 @@ function testLineBreak(div, type, expectedText, expectedHTML, callback)
 }
 
 function typeABCDEF() {
-  synthesizeKey("a", {});
+  sendString("a");
   typeBCDEF_chars();
 }
 
 function typeBCDEF() {
-  synthesizeKey("VK_RIGHT", {});
+  synthesizeKey("KEY_ArrowRight");
   typeBCDEF_chars();
 }
 
 function typeBCDEF_chars() {
-  synthesizeKey("b", {});
-  synthesizeKey("c", {});
-  synthesizeKey("VK_RETURN", {});
-  synthesizeKey("d", {});
-  synthesizeKey("e", {});
-  synthesizeKey("f", {});
+  sendString("bc");
+  synthesizeKey("KEY_Enter");
+  sendString("def");
 }
 
 /** Test for Bug 551704 **/

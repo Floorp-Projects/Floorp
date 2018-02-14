@@ -51,7 +51,7 @@ add_task(async function() {
       if (gURLBar.selectionStart == gURLBar.selectionEnd) {
         gURLBar.selectionStart = gURLBar.selectionEnd = gURLBar.textValue.length;
       }
-      EventUtils.synthesizeKey("VK_BACK_SPACE", {});
+      EventUtils.synthesizeKey("KEY_Backspace");
     });
   }
 

@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1248128
        "scroll is unchanged: got " + outer.scrollTop + ", expected " + scroll);
 
     // Make sure cmd_moveLeft isn't failing for some unrelated reason
-    synthesizeKey("a", {});
+    sendString("a");
     is(input.selectionStart, 1, "selectionStart after typing");
     SpecialPowers.doCommand(window, "cmd_moveLeft");
     is(input.selectionStart, 0, "selectionStart after move left");

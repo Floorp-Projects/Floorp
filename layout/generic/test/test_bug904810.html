@@ -35,12 +35,12 @@ SimpleTest.expectAssertions(0, 2);
 SimpleTest.waitForFocus(function test() {
   function shiftLeft(i) {
     for ( ; i > 0; --i)
-      synthesizeKey("VK_LEFT", {shiftKey:true});
+      synthesizeKey("KEY_ArrowLeft", {shiftKey:true});
   }
 
   function shiftRight(i) {
     for ( ; i > 0; --i)
-      synthesizeKey("VK_RIGHT", {shiftKey:true});
+      synthesizeKey("KEY_ArrowRight", {shiftKey:true});
   }
 
   const isWindows = /WINNT/.test(SpecialPowers.OS);
@@ -48,11 +48,11 @@ SimpleTest.waitForFocus(function test() {
   var textarea = document.getElementById('textarea904810');
   textarea.focus();
 
-  // Testing VK_DOWN with forward selection
+  // Testing KEY_ArrowDown with forward selection
   textarea.selectionStart = 1;
   textarea.selectionEnd = 1;
   shiftRight(7);
-  synthesizeKey("VK_DOWN", {});
+  synthesizeKey("KEY_ArrowDown");
   if (isWindows) {
     is(textarea.selectionStart, 19, "caret moved to next line below selection end");
     is(textarea.selectionEnd, 19, "caret moved to next line below selection end");
@@ -61,11 +61,11 @@ SimpleTest.waitForFocus(function test() {
     is(textarea.selectionEnd, 8, "caret moved to visual end of selection");
   }
 
-  // Testing VK_DOWN with backward selection
+  // Testing KEY_ArrowDown with backward selection
   textarea.selectionStart = 8;
   textarea.selectionEnd = 8;
   shiftLeft(7);
-  synthesizeKey("VK_DOWN", {});
+  synthesizeKey("KEY_ArrowDown");
   if (isWindows) {
     is(textarea.selectionStart, 12, "caret moved to next line below selection start");
     is(textarea.selectionEnd, 12, "caret moved to next line below selection start");
@@ -74,11 +74,11 @@ SimpleTest.waitForFocus(function test() {
     is(textarea.selectionEnd, 8, "caret moved to visual end of selection");
   }
 
-  // Testing VK_UP with forward selection
+  // Testing KEY_ArrowUp with forward selection
   textarea.selectionStart = 12;
   textarea.selectionEnd = 12;
   shiftRight(7);
-  synthesizeKey("VK_UP", {});
+  synthesizeKey("KEY_ArrowUp");
   var result = textarea.selectionEnd
   if (isWindows) {
     is(textarea.selectionStart, 8, "caret moved to previous line above selection end");
@@ -88,11 +88,11 @@ SimpleTest.waitForFocus(function test() {
     is(textarea.selectionEnd, 12, "caret moved to visual start of selection");
   }
 
-  // Testing VK_UP with backward selection
+  // Testing KEY_ArrowUp with backward selection
   textarea.selectionStart = 19;
   textarea.selectionEnd = 19;
   shiftLeft(7);
-  synthesizeKey("VK_UP", {});
+  synthesizeKey("KEY_ArrowUp");
   var result = textarea.selectionEnd
   if (isWindows) {
     is(textarea.selectionStart, 1, "caret moved to previous line above selection start");

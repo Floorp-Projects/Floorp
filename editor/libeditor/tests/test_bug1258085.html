@@ -10,7 +10,7 @@ var div = document.querySelector("div");
 function reset() {
   div.innerHTML = "x<br> y";
   div.focus();
-  synthesizeKey("VK_DOWN", {});
+  synthesizeKey("KEY_ArrowDown");
 }
 
 function checks(msg) {
@@ -27,34 +27,34 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   // Put selection after the "y" and backspace
   reset();
-  synthesizeKey("VK_RIGHT", {});
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("KEY_Backspace");
   checks("Collapsed backspace");
 
   // Now do the same with delete
   reset();
-  synthesizeKey("VK_DELETE", {});
+  synthesizeKey("KEY_Delete");
   checks("Collapsed delete");
 
   // Forward selection
   reset();
-  synthesizeKey("VK_RIGHT", {shiftKey: true});
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_ArrowRight", {shiftKey: true});
+  synthesizeKey("KEY_Backspace");
   checks("Forward-selected backspace");
 
   // Backward selection
   reset();
-  synthesizeKey("VK_RIGHT", {});
-  synthesizeKey("VK_LEFT", {shiftKey: true});
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("KEY_ArrowLeft", {shiftKey: true});
+  synthesizeKey("KEY_Backspace");
   checks("Backward-selected backspace");
 
   // Make sure we're not deleting if the whitespace isn't actually collapsed
   div.style.whiteSpace = "pre-wrap";
   reset();
-  synthesizeKey("VK_RIGHT", {});
-  synthesizeKey("VK_RIGHT", {});
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("KEY_Backspace");
   if (div.innerHTML, "x<br> ", "pre-wrap: Don't delete uncollapsed space");
   ok(getSelection().isCollapsed, "pre-wrap: Selection must be collapsed");
   is(getSelection().focusNode, div.lastChild,

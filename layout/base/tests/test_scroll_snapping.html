@@ -26,7 +26,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "525px 500px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_RIGHT",
+    "key"                     : "KEY_ArrowRight",
     "expectedX"               : 525,
     "expectedY"               : 500,
     "notExpected"             : false
@@ -41,7 +41,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "475px 500px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_LEFT",
+    "key"                     : "KEY_ArrowLeft",
     "expectedX"               : 475,
     "expectedY"               : 500,
     "notExpected"             : false
@@ -56,7 +56,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "500px 475px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_UP",
+    "key"                     : "KEY_ArrowUp",
     "expectedX"               : 500,
     "expectedY"               : 475,
     "notExpected"             : false
@@ -71,7 +71,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "500px 525px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_DOWN",
+    "key"                     : "KEY_ArrowDown",
     "expectedX"               : 500,
     "expectedY"               : 525,
     "notExpected"             : false
@@ -86,7 +86,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "700px 500px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_RIGHT",
+    "key"                     : "KEY_ArrowRight",
     "expectedX"               : 700,
     "expectedY"               : 500,
     "notExpected"             : true
@@ -101,7 +101,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "300px 500px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_LEFT",
+    "key"                     : "KEY_ArrowLeft",
     "expectedX"               : 300,
     "expectedY"               : 500,
     "notExpected"             : true
@@ -116,7 +116,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "500px 300px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_UP",
+    "key"                     : "KEY_ArrowUp",
     "expectedX"               : 500,
     "expectedY"               : 300,
     "notExpected"             : true
@@ -131,7 +131,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "500px 700px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_DOWN",
+    "key"                     : "KEY_ArrowDown",
     "expectedX"               : 500,
     "expectedY"               : 700,
     "notExpected"             : true
@@ -146,7 +146,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "700px 500px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_RIGHT",
+    "key"                     : "KEY_ArrowRight",
     "expectedX"               : 700,
     "expectedY"               : 500,
     "notExpected"             : false
@@ -161,7 +161,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "300px 500px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_LEFT",
+    "key"                     : "KEY_ArrowLeft",
     "expectedX"               : 300,
     "expectedY"               : 500,
     "notExpected"             : false
@@ -176,7 +176,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "500px 300px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_UP",
+    "key"                     : "KEY_ArrowUp",
     "expectedX"               : 500,
     "expectedY"               : 300,
     "notExpected"             : false
@@ -191,7 +191,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "500px 700px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_DOWN",
+    "key"                     : "KEY_ArrowDown",
     "expectedX"               : 500,
     "expectedY"               : 700,
     "notExpected"             : false
@@ -206,7 +206,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "none",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_LEFT",
+    "key"                     : "KEY_ArrowLeft",
     "expectedX"               : 500,
     "expectedY"               : 500,
     "notExpected"             : false
@@ -221,7 +221,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "none",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_RIGHT",
+    "key"                     : "KEY_ArrowRight",
     "expectedX"               : 500,
     "expectedY"               : 500,
     "notExpected"             : false
@@ -236,7 +236,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "none",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_UP",
+    "key"                     : "KEY_ArrowUp",
     "expectedX"               : 500,
     "expectedY"               : 500,
     "notExpected"             : false
@@ -251,7 +251,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "none",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_DOWN",
+    "key"                     : "KEY_ArrowDown",
     "expectedX"               : 500,
     "expectedY"               : 500,
     "notExpected"             : false
@@ -266,7 +266,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "none",
     "initialX"                : 0,
     "initialY"                : 200,
-    "key"                     : "VK_UP",
+    "key"                     : "KEY_ArrowUp",
     "expectedX"               : 0,
     "expectedY"               : 200,
     "notExpected"             : false
@@ -281,7 +281,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "none",
     "initialX"                : 0,
     "initialY"                : 200,
-    "key"                     : "VK_PAGE_UP",
+    "key"                     : "KEY_PageUp",
     "expectedX"               : 0,
     "expectedY"               : 200,
     "notExpected"             : false
@@ -296,7 +296,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "none",
     "initialX"                : 0,
     "initialY"                : 200,
-    "key"                     : "VK_HOME",
+    "key"                     : "KEY_Home",
     "expectedX"               : 0,
     "expectedY"               : 475,
     "notExpected"             : false
@@ -311,7 +311,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "none",
     "initialX"                : 200,
     "initialY"                : 0,
-    "key"                     : "VK_LEFT",
+    "key"                     : "KEY_ArrowLeft",
     "expectedX"               : 200,
     "expectedY"               : 0,
     "notExpected"             : false
@@ -326,7 +326,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "none",
     "initialX"                : 0,
     "initialY"                : 800,
-    "key"                     : "VK_DOWN",
+    "key"                     : "KEY_ArrowDown",
     "expectedX"               : 0,
     "expectedY"               : 800,
     "notExpected"             : false
@@ -341,7 +341,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "none",
     "initialX"                : 0,
     "initialY"                : 800,
-    "key"                     : "VK_PAGE_DOWN",
+    "key"                     : "KEY_PageDown",
     "expectedX"               : 0,
     "expectedY"               : 800,
     "notExpected"             : false
@@ -356,7 +356,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "none",
     "initialX"                : 0,
     "initialY"                : 800,
-    "key"                     : "VK_END",
+    "key"                     : "KEY_End",
     "expectedX"               : 0,
     "expectedY"               : 525,
     "notExpected"             : false
@@ -371,7 +371,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "500px 100px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_HOME",
+    "key"                     : "KEY_Home",
     "expectedX"               : 500,
     "expectedY"               : 100,
     "notExpected"             : false
@@ -386,7 +386,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "500px 900px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_END",
+    "key"                     : "KEY_End",
     "expectedX"               : 500,
     "expectedY"               : 900,
     "notExpected"             : false
@@ -401,7 +401,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "none",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_LEFT",
+    "key"                     : "KEY_ArrowLeft",
     "expectedX"               : 500,
     "expectedY"               : 500,
     "notExpected"             : false
@@ -416,7 +416,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "none",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_RIGHT",
+    "key"                     : "KEY_ArrowRight",
     "expectedX"               : 500,
     "expectedY"               : 500,
     "notExpected"             : false
@@ -431,7 +431,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "none",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_UP",
+    "key"                     : "KEY_ArrowUp",
     "expectedX"               : 500,
     "expectedY"               : 500,
     "notExpected"             : false
@@ -446,7 +446,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "none",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_DOWN",
+    "key"                     : "KEY_ArrowDown",
     "expectedX"               : 500,
     "expectedY"               : 500,
     "notExpected"             : false
@@ -461,7 +461,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "120px 120px, 220px 220px",
     "initialX"                : 0,
     "initialY"                : 0,
-    "key"                     : "VK_RIGHT",
+    "key"                     : "KEY_ArrowRight",
     "expectedX"               : 120,
     "expectedY"               : 0,
     "notExpected"             : false
@@ -476,7 +476,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "120px 120px, 220px 220px",
     "initialX"                : 120,
     "initialY"                : 0,
-    "key"                     : "VK_RIGHT",
+    "key"                     : "KEY_ArrowRight",
     "expectedX"               : 200,
     "expectedY"               : 0,
     "notExpected"             : false
@@ -492,7 +492,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "120px 120px, 220px 220px",
     "initialX"                : 200,
     "initialY"                : 0,
-    "key"                     : "VK_RIGHT",
+    "key"                     : "KEY_ArrowRight",
     "expectedX"               : 220,
     "expectedY"               : 0,
     "notExpected"             : false
@@ -507,7 +507,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "120px 120px, 220px 220px",
     "initialX"                : 0,
     "initialY"                : 300,
-    "key"                     : "VK_UP",
+    "key"                     : "KEY_ArrowUp",
     "expectedX"               : 0,
     "expectedY"               : 220,
     "notExpected"             : false
@@ -522,7 +522,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "120px 120px, 220px 220px",
     "initialX"                : 0,
     "initialY"                : 220,
-    "key"                     : "VK_UP",
+    "key"                     : "KEY_ArrowUp",
     "expectedX"               : 0,
     "expectedY"               : 200,
     "notExpected"             : false
@@ -537,7 +537,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "120px 120px, 220px 220px",
     "initialX"                : 0,
     "initialY"                : 200,
-    "key"                     : "VK_UP",
+    "key"                     : "KEY_ArrowUp",
     "expectedX"               : 0,
     "expectedY"               : 120,
     "notExpected"             : false
@@ -552,7 +552,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "600px 600px, 475px 475px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_PAGE_DOWN",
+    "key"                     : "KEY_PageDown",
     "expectedX"               : 500,
     "expectedY"               : 600,
     "notExpected"             : false
@@ -567,7 +567,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "400px 400px, 525px 525px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_PAGE_UP",
+    "key"                     : "KEY_PageUp",
     "expectedX"               : 500,
     "expectedY"               : 400,
     "notExpected"             : false
@@ -582,7 +582,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "525px 525px, 550px 550px, 800px 800px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_PAGE_DOWN",
+    "key"                     : "KEY_PageDown",
     "expectedX"               : 500,
     "expectedY"               : 550,
     "notExpected"             : false
@@ -597,7 +597,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "475px 475px, 450px 450px, 200px 200px",
     "initialX"                : 500,
     "initialY"                : 500,
-    "key"                     : "VK_PAGE_UP",
+    "key"                     : "KEY_PageUp",
     "expectedX"               : 500,
     "expectedY"               : 450,
     "notExpected"             : false
@@ -612,7 +612,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "50px 50px, 800px 800px, 900px 900px",
     "initialX"                : 100,
     "initialY"                : 100,
-    "key"                     : "VK_PAGE_DOWN",
+    "key"                     : "KEY_PageDown",
     "expectedX"               : 100,
     "expectedY"               : 800,
     "notExpected"             : false
@@ -627,7 +627,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "950px 950px, 200px 200px, 100px 100px",
     "initialX"                : 900,
     "initialY"                : 900,
-    "key"                     : "VK_PAGE_UP",
+    "key"                     : "KEY_PageUp",
     "expectedX"               : 900,
     "expectedY"               : 200,
     "notExpected"             : false
@@ -642,7 +642,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "50px 50px, 800px 800px, 900px 900px",
     "initialX"                : 100,
     "initialY"                : 100,
-    "key"                     : "VK_PAGE_DOWN",
+    "key"                     : "KEY_PageDown",
     "expectedX"               : 100,
     "expectedY"               : 800,
     "notExpected"             : false
@@ -657,7 +657,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "950px 950px, 200px 200px, 100px 100px",
     "initialX"                : 900,
     "initialY"                : 900,
-    "key"                     : "VK_PAGE_UP",
+    "key"                     : "KEY_PageUp",
     "expectedX"               : 900,
     "expectedY"               : 200,
     "notExpected"             : false
@@ -672,7 +672,7 @@ var testCases = [
     "scrollSnapCoordinate"    : "950px 950px, 200px 200px, 100px 100px",
     "initialX"                : 900,
     "initialY"                : 900,
-    "key"                     : "VK_LEFT",
+    "key"                     : "KEY_ArrowLeft",
     "expectedX"               : 200,
     "expectedY"               : 900,
     "notExpected"             : false
@@ -715,7 +715,7 @@ function initTest() {
   sd.style.scrollSnapCoordinate = testCase.scrollSnapCoordinate;
   sc.scrollTo(testCase.initialX, testCase.initialY);
   sc.focus();
-  synthesizeKey(testCase.key, {});
+  synthesizeKey(testCase.key);
 
   stopFrameCount = 0;
   lastScrollTop = sc.scrollTop;

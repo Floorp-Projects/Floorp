@@ -51,7 +51,7 @@ add_task(function* () {
   // The value field is still focused. Blur it now and wait for the
   // ruleview-changed event to avoid pending requests.
   onRuleViewChanged = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   yield onRuleViewChanged;
 });
 

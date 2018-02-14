@@ -47,7 +47,7 @@ addLoadEvent(function() {
   // test delete
   i.selectionStart = 0;
   i.selectionEnd = 2;
-  synthesizeKey("VK_DELETE", {});
+  synthesizeKey("KEY_Delete");
   is(i.value, "r", "Delete should work correctly");
   is(inputCount, 4, "input event should be raised correctly");
 

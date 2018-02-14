@@ -38,5 +38,5 @@ function* testNewRule(view) {
   is(editor.value, "#testid", "Selector editor value is as expected");
 
   info("Escaping from the selector field the change");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
 }

@@ -88,7 +88,7 @@ var consoleOpened = Task.async(function* (hud) {
 
     is(popup.selectedIndex, 16,
        "Index of the first item from bottom is selected.");
-    EventUtils.synthesizeKey("VK_DOWN", {});
+    EventUtils.synthesizeKey("KEY_ArrowDown");
 
     let prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
 
@@ -97,14 +97,14 @@ var consoleOpened = Task.async(function* (hud) {
     is(completeNode.value, prefix + "valueOf",
         "completeNode.value holds valueOf");
 
-    EventUtils.synthesizeKey("VK_DOWN", {});
+    EventUtils.synthesizeKey("KEY_ArrowDown");
 
     is(popup.selectedIndex, 1, "index 1 is selected");
     is(popup.selectedItem.label, "toString", "toString is selected");
     is(completeNode.value, prefix + "toString",
         "completeNode.value holds toString");
 
-    EventUtils.synthesizeKey("VK_UP", {});
+    EventUtils.synthesizeKey("KEY_ArrowUp");
 
     is(popup.selectedIndex, 0, "index 0 is selected");
     is(popup.selectedItem.label, "valueOf", "valueOf is selected");
@@ -113,32 +113,32 @@ var consoleOpened = Task.async(function* (hud) {
 
     let currentSelectionIndex = popup.selectedIndex;
 
-    EventUtils.synthesizeKey("VK_PAGE_DOWN", {});
+    EventUtils.synthesizeKey("KEY_PageDown");
 
     ok(popup.selectedIndex > currentSelectionIndex,
       "Index is greater after PGDN");
 
     currentSelectionIndex = popup.selectedIndex;
-    EventUtils.synthesizeKey("VK_PAGE_UP", {});
+    EventUtils.synthesizeKey("KEY_PageUp");
 
     ok(popup.selectedIndex < currentSelectionIndex,
        "Index is less after Page UP");
 
-    EventUtils.synthesizeKey("VK_END", {});
+    EventUtils.synthesizeKey("KEY_End");
     is(popup.selectedIndex, 16, "index is last after End");
 
-    EventUtils.synthesizeKey("VK_HOME", {});
+    EventUtils.synthesizeKey("KEY_Home");
     is(popup.selectedIndex, 0, "index is first after Home");
 
     info("press Tab and wait for popup to hide");
     popup.once("popup-closed", () => {
       deferred.resolve();
     });
-    EventUtils.synthesizeKey("VK_TAB", {});
+    EventUtils.synthesizeKey("KEY_Tab");
   });
 
   jsterm.setInputValue("window.foobarBug585991");
-  EventUtils.synthesizeKey(".", {});
+  EventUtils.sendString(".");
 
   return deferred.promise;
 });
@@ -150,7 +150,7 @@ function popupHideAfterTab() {
   ok(!popup.isOpen, "popup is not open");
 
   is(jsterm.getInputValue(), "window.foobarBug585991.valueOf",
-     "completion was successful after VK_TAB");
+     "completion was successful after KEY_Tab");
 
   ok(!completeNode.value, "completeNode is empty");
 
@@ -160,7 +160,7 @@ function popupHideAfterTab() {
     is(popup.itemCount, 17, "popup.itemCount is correct");
 
     is(popup.selectedIndex, 16, "First index from bottom is selected");
-    EventUtils.synthesizeKey("VK_DOWN", {});
+    EventUtils.synthesizeKey("KEY_ArrowDown");
 
     let prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
 
@@ -170,7 +170,7 @@ function popupHideAfterTab() {
         "completeNode.value holds valueOf");
 
     popup.once("popup-closed", function onHidden() {
-      ok(!popup.isOpen, "popup is not open after VK_ESCAPE");
+      ok(!popup.isOpen, "popup is not open after KEY_Escape");
 
       is(jsterm.getInputValue(), "window.foobarBug585991.",
          "completion was cancelled");
@@ -182,14 +182,14 @@ function popupHideAfterTab() {
 
     info("press Escape to close the popup");
     executeSoon(function () {
-      EventUtils.synthesizeKey("VK_ESCAPE", {});
+      EventUtils.synthesizeKey("KEY_Escape");
     });
   }, false);
 
   info("wait for completion: window.foobarBug585991.");
   executeSoon(function () {
     jsterm.setInputValue("window.foobarBug585991");
-    EventUtils.synthesizeKey(".", {});
+    EventUtils.sendString(".");
   });
 
   return deferred.promise;
@@ -204,7 +204,7 @@ function testReturnKey() {
     is(popup.itemCount, 17, "popup.itemCount is correct");
 
     is(popup.selectedIndex, 16, "First index from bottom is selected");
-    EventUtils.synthesizeKey("VK_DOWN", {});
+    EventUtils.synthesizeKey("KEY_ArrowDown");
 
     let prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
 
@@ -213,7 +213,7 @@ function testReturnKey() {
     is(completeNode.value, prefix + "valueOf",
         "completeNode.value holds valueOf");
 
-    EventUtils.synthesizeKey("VK_DOWN", {});
+    EventUtils.synthesizeKey("KEY_ArrowDown");
 
     is(popup.selectedIndex, 1, "index 1 is selected");
     is(popup.selectedItem.label, "toString", "toString is selected");
@@ -221,10 +221,10 @@ function testReturnKey() {
        "completeNode.value holds toString");
 
     popup.once("popup-closed", function onHidden() {
-      ok(!popup.isOpen, "popup is not open after VK_RETURN");
+      ok(!popup.isOpen, "popup is not open after KEY_Enter");
 
       is(jsterm.getInputValue(), "window.foobarBug585991.toString",
-         "completion was successful after VK_RETURN");
+         "completion was successful after KEY_Enter");
 
       ok(!completeNode.value, "completeNode is empty");
 
@@ -233,15 +233,14 @@ function testReturnKey() {
 
     info("press Return to accept suggestion. wait for popup to hide");
 
-    executeSoon(() => EventUtils.synthesizeKey("VK_RETURN", {}));
+    executeSoon(() => EventUtils.synthesizeKey("KEY_Enter"));
   }, false);
 
   info("wait for completion suggestions: window.foobarBug585991.");
 
   executeSoon(function () {
     jsterm.setInputValue("window.foobarBug58599");
-    EventUtils.synthesizeKey("1", {});
-    EventUtils.synthesizeKey(".", {});
+    EventUtils.sendString("1.");
   });
 
   return deferred.promise;
@@ -271,13 +270,13 @@ function* dontShowArrayNumbers() {
     }, false);
 
     info("wait for popup to hide");
-    executeSoon(() => EventUtils.synthesizeKey("VK_ESCAPE", {}));
+    executeSoon(() => EventUtils.synthesizeKey("KEY_Escape"));
   }, false);
 
   info("wait for popup to show");
   executeSoon(() => {
     jsterm.setInputValue("window.foobarBug585991");
-    EventUtils.synthesizeKey(".", {});
+    EventUtils.sendString(".");
   });
 
   return deferred.promise;
@@ -297,22 +296,22 @@ function testReturnWithNoSelection() {
     popup.once("popup-closed", function popupHidden() {
       deferred.resolve();
     });
-    executeSoon(() => EventUtils.synthesizeKey("VK_RETURN", {}));
+    executeSoon(() => EventUtils.synthesizeKey("KEY_Enter"));
   });
 
   executeSoon(() => {
     info("wait for popup to show");
     jsterm.setInputValue("window.testBu");
-    EventUtils.synthesizeKey("g", {});
+    EventUtils.sendString("g");
   });
 
   return deferred.promise;
 }
 
 function popupHideAfterReturnWithNoSelection() {
-  ok(!popup.isOpen, "popup is not open after VK_RETURN");
+  ok(!popup.isOpen, "popup is not open after KEY_Enter");
 
-  is(jsterm.getInputValue(), "", "inputNode is empty after VK_RETURN");
+  is(jsterm.getInputValue(), "", "inputNode is empty after KEY_Enter");
   is(completeNode.value, "", "completeNode is empty");
   is(jsterm.history[jsterm.history.length - 1], "window.testBug",
      "jsterm history is correct");
@@ -329,7 +328,7 @@ function testCompletionInText() {
     ok(popup.isOpen, "popup is open");
     is(popup.itemCount, 2, "popup.itemCount is correct");
 
-    EventUtils.synthesizeKey("VK_DOWN", {});
+    EventUtils.synthesizeKey("KEY_ArrowDown");
     is(popup.selectedIndex, 0, "popup.selectedIndex is correct");
     ok(!completeNode.value, "completeNode.value is empty");
 
@@ -342,12 +341,12 @@ function testCompletionInText() {
     popup.once("popup-closed", function popupHidden() {
       deferred.resolve();
     });
-    EventUtils.synthesizeKey("VK_TAB", {});
+    EventUtils.synthesizeKey("KEY_Tab");
   });
 
   jsterm.setInputValue("dump(window.testBu)");
   inputNode.selectionStart = inputNode.selectionEnd = 18;
-  EventUtils.synthesizeKey("g", {});
+  EventUtils.sendString("g");
   return deferred.promise;
 }
 
@@ -355,7 +354,7 @@ function popupHideAfterCompletionInText() {
   // At this point the completion suggestion should be accepted.
   ok(!popup.isOpen, "popup is not open");
   is(jsterm.getInputValue(), "dump(window.testBug873250b)",
-     "completion was successful after VK_TAB");
+     "completion was successful after KEY_Tab");
   is(inputNode.selectionStart, 26, "cursor location is correct");
   is(inputNode.selectionStart, inputNode.selectionEnd,
      "cursor location (confirmed)");

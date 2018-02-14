@@ -47,7 +47,7 @@ add_task(function* () {
 
   info("Submit the change");
   let onRuleViewChanged = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   yield onRuleViewChanged;
 
   ok(propEditor.container.classList.contains("ruleview-highlight"),
@@ -57,6 +57,6 @@ add_task(function* () {
   // automatically. Blur it now and wait for the rule-view to refresh to avoid
   // pending requests.
   onRuleViewChanged = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   yield onRuleViewChanged;
 });

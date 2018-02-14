@@ -163,7 +163,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
         synthesizeMouse(theDiv, 100, 2, {}); /* click behind and down */
 
         /** First round: Forward delete. **/
-        synthesizeKey("VK_DELETE", {});
+        synthesizeKey("KEY_Delete");
         is(theDiv.innerHTML, tests[i][1], "delete(collapsed): inner HTML for " + testName);
 
         /* Set up the selection. */
@@ -174,8 +174,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
         synthesizeMouse(theDiv, 100, 2, {}); /* click behind and down */
 
         /** Second round: Backspace. **/
-        synthesizeKey("VK_RIGHT", {});
-        synthesizeKey("VK_BACK_SPACE", {});
+        synthesizeKey("KEY_ArrowRight");
+        synthesizeKey("KEY_Backspace");
         if (tests[i].length == 2) {
           is(theDiv.innerHTML, tests[i][1], "backspace: inner HTML for " + testName);
         } else {
@@ -195,12 +195,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
           // This test doesn't work, since we can't select only one newline using the right arrow key.
           continue;
         }
-        synthesizeKey("VK_LEFT", {});
+        synthesizeKey("KEY_ArrowLeft");
         /* Strangely enough we need to hit "right arrow" three times to select two characters. */
-        synthesizeKey("VK_RIGHT", {shiftKey:true});
-        synthesizeKey("VK_RIGHT", {shiftKey:true});
-        synthesizeKey("VK_RIGHT", {shiftKey:true});
-        synthesizeKey("VK_DELETE", {});
+        synthesizeKey("KEY_ArrowRight", {shiftKey:true});
+        synthesizeKey("KEY_ArrowRight", {shiftKey:true});
+        synthesizeKey("KEY_ArrowRight", {shiftKey:true});
+        synthesizeKey("KEY_Delete");
 
         /* We always expect to the delete the "tf" in "testfoo". */
         var expected = tests[i][1].replace("testfoo", "tesoo")

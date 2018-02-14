@@ -2,15 +2,15 @@
 function invokeUsingCtrlD(phase) {
   switch (phase) {
   case 1:
-    EventUtils.synthesizeKey("d", { accelKey: true });
+    EventUtils.synthesizeKey("d", {accelKey: true});
     break;
   case 2:
   case 4:
-    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    EventUtils.synthesizeKey("KEY_Escape");
     break;
   case 3:
-    EventUtils.synthesizeKey("d", { accelKey: true });
-    EventUtils.synthesizeKey("d", { accelKey: true });
+    EventUtils.synthesizeKey("d", {accelKey: true});
+    EventUtils.synthesizeKey("d", {accelKey: true});
     break;
   }
 }
@@ -22,7 +22,7 @@ function invokeUsingStarButton(phase) {
     break;
   case 2:
   case 4:
-    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    EventUtils.synthesizeKey("KEY_Escape");
     break;
   case 3:
      EventUtils.synthesizeMouseAtCenter(BookmarkingUI.star,

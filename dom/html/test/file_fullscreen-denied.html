@@ -117,7 +117,7 @@ function testLongRunningEventHandler() {
     SpecialPowers.popPrefEnv(finish);
   });
   window.addEventListener("keypress", longRunningHandler);
-  synthesizeKey("VK_A", {});
+  sendString("a");
 }
 
 function finish() {

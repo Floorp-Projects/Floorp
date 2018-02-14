@@ -33,21 +33,21 @@ function test() {
   // it's neither the original value nor expectedValue.
   var tests = [["adding returns", () => {
     getSelection().collapse(edit.firstChild, 0);
-    synthesizeKey("VK_RIGHT", {});
-    synthesizeKey("VK_RETURN", {});
-    synthesizeKey("VK_RETURN", {});
-    synthesizeKey("VK_BACK_SPACE", {});
-    synthesizeKey("VK_BACK_SPACE", {});
+    synthesizeKey("KEY_ArrowRight");
+    synthesizeKey("KEY_Enter");
+    synthesizeKey("KEY_Enter");
+    synthesizeKey("KEY_Backspace");
+    synthesizeKey("KEY_Backspace");
   // For some reason this test fails if the separator is not "br"
   }, () => document.queryCommandValue("defaultParagraphSeparator") == "br"
            ?  undefined : " A; B ; C "],
   ["adding shift-returns", () => {
     getSelection().collapse(edit.firstChild, 0);
-    synthesizeKey("VK_RIGHT", {});
-    synthesizeKey("VK_RETURN", {shiftKey: true});
-    synthesizeKey("VK_RETURN", {shiftKey: true});
-    synthesizeKey("VK_BACK_SPACE", {});
-    synthesizeKey("VK_BACK_SPACE", {});
+    synthesizeKey("KEY_ArrowRight");
+    synthesizeKey("KEY_Enter", {shiftKey: true});
+    synthesizeKey("KEY_Enter", {shiftKey: true});
+    synthesizeKey("KEY_Backspace");
+    synthesizeKey("KEY_Backspace");
   }, "A ; B ; C "]];
   [
     "insertorderedlist",

@@ -7,8 +7,8 @@
     <title>Testcase #1 for bug 1237236</title>
     <script>
         function test1() {
-          synthesizeKey("VK_DOWN", { shiftKey: true });  // select first line including the newline
-          synthesizeKey("VK_RIGHT", { }); // collapse to the end of the selection
+          synthesizeKey("KEY_ArrowDown", {shiftKey: true});  // select first line including the newline
+          synthesizeKey("KEY_ArrowRight"); // collapse to the end of the selection
           // caret should now be at the start of the second line
           document.body.offsetHeight;
           setTimeout(function(){ document.documentElement.removeAttribute("class"); },0);

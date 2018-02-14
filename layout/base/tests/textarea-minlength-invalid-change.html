@@ -13,7 +13,7 @@
         var textarea = document.getElementById('textarea');
         textarea.setSelectionRange(textarea.value.length, textarea.value.length)
         textarea.focus();
-        synthesizeKey('o', {});
+        sendString("o");
         textarea.blur(); // to hide the caret
         document.documentElement.className='';
       }

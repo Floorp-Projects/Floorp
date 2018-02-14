@@ -1405,7 +1405,7 @@ function closeCombobox(aComboboxID) {
   ];
 
   this.invoke = function closeCombobox_invoke() {
-    synthesizeKey("VK_ESCAPE", { });
+    synthesizeKey("KEY_Escape");
   };
 
   this.getID = function closeCombobox_getID() {
@@ -1459,12 +1459,12 @@ function moveToPrevLineEnd(aID, aCaretOffset) {
   this.__proto__ = new synthAction(aID, new caretMoveChecker(aCaretOffset, aID));
 
   this.invoke = function moveToPrevLineEnd_invoke() {
-    synthesizeKey("VK_UP", { });
+    synthesizeKey("KEY_ArrowUp");
 
     if (MAC)
-      synthesizeKey("VK_RIGHT", { metaKey: true });
+      synthesizeKey("Key_ArrowRight", {metaKey: true});
     else
-      synthesizeKey("VK_END", { });
+      synthesizeKey("KEY_End");
   };
 
   this.getID = function moveToPrevLineEnd_getID() {

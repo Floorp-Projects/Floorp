@@ -38,7 +38,7 @@ function* testMarkOverridden(inspector, view) {
 
   let onRuleViewChanged = once(view, "ruleview-changed");
   info("Entering the commit key");
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   yield onRuleViewChanged;
 
   view.searchField.focus();

@@ -28,7 +28,7 @@ function testContentEditable() {
   document.getElementById("input2").onfocus = function() { focusedElement = this };
 
   document.getElementById("input1").focus();
-  synthesizeKey("VK_TAB", {});
+  synthesizeKey("KEY_Tab");
 
   is(focusedElement.id, "input2");
 }

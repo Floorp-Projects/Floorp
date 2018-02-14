@@ -31,7 +31,7 @@ function* testInitialFocus(inspector, view) {
   let viewdoc = view.document;
   let boxmodel = viewdoc.querySelector(".boxmodel-container");
   boxmodel.focus();
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
 
   is(boxmodel.getAttribute("activedescendant"), "boxmodel-main devtools-monospace",
     "Should be set to the position layout.");
@@ -42,38 +42,38 @@ function* testChangingLevels(inspector, view) {
   let viewdoc = view.document;
   let boxmodel = viewdoc.querySelector(".boxmodel-container");
   boxmodel.focus();
-  EventUtils.synthesizeKey("VK_RETURN", {});
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Enter");
+  EventUtils.synthesizeKey("KEY_Escape");
 
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(boxmodel.getAttribute("activedescendant"), "boxmodel-margins",
     "Should be set to the margin layout.");
 
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(boxmodel.getAttribute("activedescendant"), "boxmodel-borders",
     "Should be set to the border layout.");
 
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(boxmodel.getAttribute("activedescendant"), "boxmodel-paddings",
     "Should be set to the padding layout.");
 
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(boxmodel.getAttribute("activedescendant"), "boxmodel-contents",
     "Should be set to the content layout.");
 
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(boxmodel.getAttribute("activedescendant"), "boxmodel-paddings",
     "Should be set to the padding layout.");
 
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(boxmodel.getAttribute("activedescendant"), "boxmodel-borders",
     "Should be set to the border layout.");
 
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(boxmodel.getAttribute("activedescendant"), "boxmodel-margins",
     "Should be set to the margin layout.");
 
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(boxmodel.getAttribute("activedescendant"), "boxmodel-main devtools-monospace",
     "Should be set to the position layout.");
 }
@@ -83,20 +83,20 @@ function* testTabbingWrapAround(inspector, view) {
   let viewdoc = view.document;
   let boxmodel = viewdoc.querySelector(".boxmodel-container");
   boxmodel.focus();
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
 
   let editLevel = boxmodel.getAttribute("activedescendant").split(" ")[0];
   let dataLevel = viewdoc.querySelector(`.${editLevel}`).getAttribute("data-box");
   let editBoxes = [...viewdoc.querySelectorAll(
     `[data-box="${dataLevel}"].boxmodel-editable`)];
 
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   editBoxes[3].focus();
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("KEY_Tab");
   is(editBoxes[0], viewdoc.activeElement, "Top edit box should have focus.");
 
   editBoxes[0].focus();
-  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
+  EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
   is(editBoxes[3], viewdoc.activeElement, "Left edit box should have focus.");
 }
 

@@ -25,26 +25,23 @@ SimpleTest.waitForFocus(function() {
   let elm = document.getElementById("input1");
 
   elm.focus();
-  synthesizeKey("A", {});
-  synthesizeKey("B", {});
+  sendString("AB");
   is(elm.value, "AB", "AB is input.value now");
 
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_Backspace");
   is(elm.value, "A", "A is input.value now");
 
   synthesizeKey("Z", { accelKey: true });
   is(elm.value, "AB", "AB is input.value now");
 
-  synthesizeKey("C", {});
+  sendString("C");
   is(elm.value, "ABC", "ABC is input.value now");
 
-  synthesizeKey("VK_BACK_SPACE", {});
-  synthesizeKey("VK_BACK_SPACE", {});
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("KEY_Backspace");
 
-  synthesizeKey("A", {});
-  synthesizeKey("B", {});
-  synthesizeKey("C", {});
+  sendString("ABC");
   is(elm.value, "ABC", "ABC is input.value now");
 
   synthesizeKey("Z", { accelKey: true });
@@ -53,7 +50,7 @@ SimpleTest.waitForFocus(function() {
   synthesizeKey("Z", { accelKey: true, shiftKey: true });
   is(elm.value, "ABC", "ABC is input.value now");
 
-  synthesizeKey("D", {});
+  sendString("D");
   is(elm.value, "ABCD", "ABCD is input.value now");
 
   SimpleTest.finish();

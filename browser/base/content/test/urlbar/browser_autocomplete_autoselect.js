@@ -56,40 +56,40 @@ add_task(async function() {
   is_selected(0);
 
   info("Key Down to select the next item");
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is_selected(1);
 
   info("Key Down maxResults-1 times should select the first one-off");
-  repeat(maxResults - 1, () => EventUtils.synthesizeKey("VK_DOWN", {}));
+  repeat(maxResults - 1, () => EventUtils.synthesizeKey("KEY_ArrowDown"));
   is_selected_one_off(0);
 
   info("Key Down numButtons-1 should select the last one-off");
   let numButtons =
     gURLBar.popup.oneOffSearchButtons.getSelectableButtons(true).length;
-  repeat(numButtons - 1, () => EventUtils.synthesizeKey("VK_DOWN", {}));
+  repeat(numButtons - 1, () => EventUtils.synthesizeKey("KEY_ArrowDown"));
   is_selected_one_off(numButtons - 1);
 
   info("Key Down twice more should select the second result");
-  repeat(2, () => EventUtils.synthesizeKey("VK_DOWN", {}));
+  repeat(2, () => EventUtils.synthesizeKey("KEY_ArrowDown"));
   is_selected(1);
 
   info("Key Down maxResults + numButtons times should wrap around");
   repeat(maxResults + numButtons,
-         () => EventUtils.synthesizeKey("VK_DOWN", {}));
+         () => EventUtils.synthesizeKey("KEY_ArrowDown"));
   is_selected(1);
 
   info("Key Up maxResults + numButtons times should wrap around the other way");
-  repeat(maxResults + numButtons, () => EventUtils.synthesizeKey("VK_UP", {}));
+  repeat(maxResults + numButtons, () => EventUtils.synthesizeKey("KEY_ArrowUp"));
   is_selected(1);
 
   info("Page Up will go up the list, but not wrap");
-  EventUtils.synthesizeKey("VK_PAGE_UP", {});
+  EventUtils.synthesizeKey("KEY_PageUp");
   is_selected(0);
 
   info("Page Up again will wrap around to the end of the list");
-  EventUtils.synthesizeKey("VK_PAGE_UP", {});
+  EventUtils.synthesizeKey("KEY_PageUp");
   is_selected(maxResults - 1);
 
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   await promisePopupHidden(gURLBar.popup);
 });

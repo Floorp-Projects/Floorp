@@ -57,7 +57,7 @@ function runTest() {
     var editor = getEditor();
     var sel = editor.selection;
     sel.collapse(newTextNode, newTextNode.textContent.length);
-    synthesizeKey("!", {});
+    sendString("!");
 
     edit.blur();
 

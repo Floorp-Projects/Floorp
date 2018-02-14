@@ -19,7 +19,7 @@ add_task(async function testFullscreen() {
   is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
 
   let popuphiddenPromise = BrowserTestUtils.waitForEvent(PanelUI.notificationPanel, "popuphidden");
-  EventUtils.synthesizeKey("VK_F11", {});
+  EventUtils.synthesizeKey("KEY_F11");
   await popuphiddenPromise;
   await new Promise(executeSoon);
   is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
@@ -28,7 +28,7 @@ add_task(async function testFullscreen() {
   is(PanelUI.menuButton.getAttribute("badge-status"), "update-manual", "Badge is displaying on PanelUI button.");
 
   let popupshownPromise = BrowserTestUtils.waitForEvent(PanelUI.notificationPanel, "popupshown");
-  EventUtils.synthesizeKey("VK_F11", {});
+  EventUtils.synthesizeKey("KEY_F11");
   await popupshownPromise;
   await new Promise(executeSoon);
   isnot(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is showing.");

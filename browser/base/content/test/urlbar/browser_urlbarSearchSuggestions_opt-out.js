@@ -47,9 +47,7 @@ add_task(async function focus() {
   Assert.equal(gURLBar.popup.matchCount, 0, "popup should have no results");
 
   // Start searching.
-  EventUtils.synthesizeKey("r", {});
-  EventUtils.synthesizeKey("n", {});
-  EventUtils.synthesizeKey("d", {});
+  EventUtils.sendString("rnd");
   await promiseSearchComplete();
   Assert.ok(suggestionsPresent());
   assertVisible(true);

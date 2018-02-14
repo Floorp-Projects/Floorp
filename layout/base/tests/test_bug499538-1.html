@@ -28,23 +28,16 @@ function test() {
   var s1, s2, s3, equal, str1, str2;
 
   textInput.focus();
-  synthesizeKey("a", { });
-  synthesizeKey(" ", { });
-  synthesizeKey("\u0639", { });
-  synthesizeKey("\u063A", { });
-  synthesizeKey(" ", { });
-  synthesizeKey("b", { });
+  sendString("a ");
+  sendString("\u0639\u063A");
+  sendString(" b");
   s1 = snapshotWindow(window);
 
   textInput.select();
-  synthesizeKey("a", { });
-  synthesizeKey(" ", { });
-  synthesizeKey(" ", { });
-  synthesizeKey("b", { });
-  synthesizeKey("VK_LEFT", { });
-  synthesizeKey("VK_LEFT", { });
-  synthesizeKey("\u0639", { });
-  synthesizeKey("\u063A", { });
+  sendString("a  b");
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("KEY_ArrowLeft");
+  sendString("\u0639\u063A");
   s2 = snapshotWindow(window);
 
   [equal, str1, str2] = compareSnapshots(s1, s2, true);

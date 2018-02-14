@@ -23,7 +23,7 @@ var tests = [
     },
     onShown(popup) {
       checkPopup(popup, this.notifyObj);
-      EventUtils.synthesizeKey("VK_ESCAPE", {});
+      EventUtils.synthesizeKey("KEY_Escape");
     },
     onHidden(popup) {
       ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked");
@@ -41,7 +41,7 @@ var tests = [
     },
     onShown(popup) {
       checkPopup(popup, this.notifyObj);
-      EventUtils.synthesizeKey("VK_ESCAPE", {});
+      EventUtils.synthesizeKey("KEY_Escape");
     },
     onHidden(popup) {
       ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked");
@@ -66,7 +66,7 @@ var tests = [
       let anchor = document.getElementById(this.notifyObj.anchorID);
       anchor.focus();
       is(document.activeElement, anchor);
-      EventUtils.synthesizeKey(" ", {});
+      EventUtils.sendString(" ");
       is(document.activeElement, popup.childNodes[0].closebutton);
       this.notification.remove();
     },
@@ -108,7 +108,7 @@ var tests = [
       anchor.focus();
       is(document.activeElement, anchor);
       opened = waitForNotificationPanel();
-      EventUtils.synthesizeKey(" ", {});
+      EventUtils.sendString(" ");
       popup = await opened;
       checkPopup(popup, notifyObj1);
 
@@ -119,7 +119,7 @@ var tests = [
       anchor.focus();
       is(document.activeElement, anchor);
       opened = waitForNotificationPanel();
-      EventUtils.synthesizeKey(" ", {});
+      EventUtils.sendString(" ");
       popup = await opened;
       checkPopup(popup, notifyObj2);
 
@@ -147,7 +147,7 @@ var tests = [
       // can not be focused, next tab focus will be inside the panel.
       is(Services.focus.focusedElement, null);
 
-      EventUtils.synthesizeKey("VK_TAB", {});
+      EventUtils.synthesizeKey("KEY_Tab");
       is(Services.focus.focusedElement, popup.childNodes[0].closebutton);
       dismissNotification(popup);
     },

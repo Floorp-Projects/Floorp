@@ -25,21 +25,21 @@ add_task(async function () {
   const bottom = currentPosition;
   hud.jsterm.inputNode.focus();
   // Page up.
-  EventUtils.synthesizeKey("VK_PAGE_UP", {});
+  EventUtils.synthesizeKey("KEY_PageUp");
   isnot(outputScroller.scrollTop, currentPosition,
     "scroll position changed after page up");
   // Page down.
   currentPosition = outputScroller.scrollTop;
-  EventUtils.synthesizeKey("VK_PAGE_DOWN", {});
+  EventUtils.synthesizeKey("KEY_PageDown");
   ok(outputScroller.scrollTop > currentPosition,
      "scroll position now at bottom");
 
   // Home
-  EventUtils.synthesizeKey("VK_HOME", {});
+  EventUtils.synthesizeKey("KEY_Home");
   is(outputScroller.scrollTop, 0, "scroll position now at top");
 
   // End
-  EventUtils.synthesizeKey("VK_END", {});
+  EventUtils.synthesizeKey("KEY_End");
   let scrollTop = outputScroller.scrollTop;
   ok(scrollTop > 0 && Math.abs(scrollTop - bottom) <= 5,
      "scroll position now at bottom");

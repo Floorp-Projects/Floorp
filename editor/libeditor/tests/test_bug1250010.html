@@ -40,11 +40,11 @@ SimpleTest.waitForFocus(function() {
   is(selRange.endContainer.nodeName, "#text", "selection should be at the end of text node");
   is(selRange.endOffset, 10, "offset should be 10");
 
-  synthesizeKey("VK_RETURN", {});
-  synthesizeKey("VK_RETURN", {});
-  synthesizeKey("b", {});
-  synthesizeKey("VK_UP", {});
-  synthesizeKey("a", {});
+  synthesizeKey("KEY_Enter");
+  synthesizeKey("KEY_Enter");
+  sendString("b");
+  synthesizeKey("KEY_ArrowUp");
+  sendString("a");
 
   is(div.innerHTML, "<p><b><font color=\"red\">1234567890</font></b></p>" +
                     "<p><b><font color=\"red\">a<br></font></b></p>" +
@@ -63,10 +63,10 @@ SimpleTest.waitForFocus(function() {
 
   // Move behind the image and press enter, insert an "A".
   // That should insert a new empty paragraph with the "A" after what we have.
-  synthesizeKey("VK_RIGHT", {});
-  synthesizeKey("VK_RIGHT", {});
-  synthesizeKey("VK_RETURN", {});
-  synthesizeKey("A", {});
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("KEY_Enter");
+  sendString("A");
 
   // The resulting HTML is sadly less than optimal:
   // A <br> gets inserted after the image and the "A" is followed by an empty <tt></tt>.

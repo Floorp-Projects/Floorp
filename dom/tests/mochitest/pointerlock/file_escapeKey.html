@@ -45,7 +45,7 @@
         is(document.pointerLockElement, div, "Pointer should have been locked on #div");
         document.addEventListener("pointerlockchange", unlockedPointer);
         addFullscreenChangeContinuation("exit", leavedFullscreen);
-        SimpleTest.executeSoon(() => synthesizeKey("VK_ESCAPE", {}));
+        SimpleTest.executeSoon(() => synthesizeKey("KEY_Escape"));
       }
 
       var pointerUnlocked = false;

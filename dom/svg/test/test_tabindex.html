@@ -65,16 +65,16 @@ function main()
     // Step 2: Checking by triggering TAB event
     is(document.activeElement.tabIndex, -1, "In the beginning, the active element tabindex is -1");
 
-    synthesizeKey("VK_TAB", {});
+    synthesizeKey("KEY_Tab");
     is(document.activeElement.tabIndex, 1, "The active element tabindex is 1");
 
-    synthesizeKey("VK_TAB", {});
+    synthesizeKey("KEY_Tab");
     is(document.activeElement.tabIndex, 2, "The active element tabindex is 2");
 
-    synthesizeKey("VK_TAB", {});
+    synthesizeKey("KEY_Tab");
     is(document.activeElement.tabIndex, 3, "The active element tabindex is 3");
 
-    synthesizeKey("VK_TAB", {});
+    synthesizeKey("KEY_Tab");
     // On Mac, SVG link elements should not be focused.
     if (isMac) {
       is(document.activeElement.tabIndex, 6, "The active element tabindex is 6");
@@ -82,7 +82,7 @@ function main()
       is(document.activeElement.tabIndex, 4, "The active element tabindex is 4");
     }
 
-    synthesizeKey("VK_TAB", {});
+    synthesizeKey("KEY_Tab");
     // On Mac, SVG link elements should not be focused.
     if (isMac) {
       is(document.activeElement.tabIndex, 7, "The active element tabindex is 7");

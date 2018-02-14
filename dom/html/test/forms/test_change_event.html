@@ -104,18 +104,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     for (var i = 0; i < textInputTypes.length; ++i) {
       input = document.getElementById("input_" + textInputTypes[i]);
       input.focus();
-      synthesizeKey("VK_RETURN", {});
+      synthesizeKey("KEY_Enter");
       is(textInputChange[i], 0, "Change event shouldn't be dispatched on " + textInputTypes[i] + " input element");
 
-      synthesizeKey("m", {});
-      synthesizeKey("VK_RETURN", {});
+      sendString("m");
+      synthesizeKey("KEY_Enter");
       is(textInputChange[i], 1, textInputTypes[i] + " input element should have dispatched change event.");
     }
 
     //focus and blur text input
     input = document.getElementById("input_text");
     input.focus();
-    synthesizeKey("f", {});
+    sendString("f");
     input.blur();
     is(textInputChange[0], 2, "text input element should have dispatched change event (2).");
 
@@ -127,7 +127,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
 
     // value being set while focused after being modified manually
     input.focus();
-    synthesizeKey("f", {});
+    sendString("f");
     input.value = 'bar';
     input.blur();
     is(textInputChange[0], 3, "text input element should have dispatched change event (3).");
@@ -135,7 +135,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     //focus and blur textarea
     var textarea = document.getElementById("textarea");
     textarea.focus();
-    synthesizeKey("f", {});
+    sendString("f");
     textarea.blur();
     is(textareaChange, 1, "Textarea element should have dispatched change event.");
 
@@ -147,7 +147,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
 
     // value being set while focused after being modified manually
     textarea.focus();
-    synthesizeKey("f", {});
+    sendString("f");
     textarea.value = 'bar';
     textarea.blur();
     is(textareaChange, 2, "textearea should have dispatched change event (2).");
@@ -186,13 +186,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     // Special case type=number
     var number = document.getElementById("input_number");
     number.focus();
-    synthesizeKey("a", {});
+    sendString("a");
     number.blur();
     is(numberChange, 0, "Change event shouldn't be dispatched on number input element for key changes that don't change its value");
     number.value = "";
     number.focus();
-    synthesizeKey("1", {});
-    synthesizeKey("2", {});
+    sendString("12");
     is(numberChange, 0, "Change event shouldn't be dispatched on number input element for keyboard input until it loses focus");
     number.blur();
     is(numberChange, 1, "Change event should be dispatched on number input element on blur");
@@ -200,9 +199,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     if (isDesktop) { // up/down arrow keys not supported on android/b2g
       number.value = "";
       number.focus();
-      synthesizeKey("VK_UP", {});
-      synthesizeKey("VK_UP", {});
-      synthesizeKey("VK_DOWN", {});
+      synthesizeKey("KEY_ArrowUp");
+      synthesizeKey("KEY_ArrowUp");
+      synthesizeKey("KEY_ArrowDown");
       is(numberChange, 4, "Change event should be dispatched on number input element for up/down arrow keys (a special case)");
       is(number.value, "1", "Sanity check that number and arrow keys were actually handled");
     }
@@ -210,11 +209,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     // Special case type=range
     var range = document.getElementById("input_range");
     range.focus();
-    synthesizeKey("a", {});
+    sendString("a");
     range.blur();
     is(rangeChange, 0, "Change event shouldn't be dispatched on range input element for key changes that don't change its value");
     range.focus();
-    synthesizeKey("VK_HOME", {});
+    synthesizeKey("VK_HOME");
     is(rangeChange, 1, "Change event should be dispatched on range input element for key changes");
     range.blur();
     is(rangeChange, 1, "Change event shouldn't be dispatched on range input element on blur");
@@ -234,30 +233,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     is(rangeChange, 3, "Change event should be dispatched on range input element for a click that gives the range focus");
 
     if (isDesktop) { // up/down arrow keys not supported on android/b2g
-      synthesizeKey("VK_UP", {});
-      is(rangeChange, 4, "Change event should be dispatched on range input element for key changes that change its value (VK_UP)");
-      synthesizeKey("VK_DOWN", {});
-      is(rangeChange, 5, "Change event should be dispatched on range input element for key changes that change its value (VK_DOWN)");
-      synthesizeKey("VK_RIGHT", {});
-      is(rangeChange, 6, "Change event should be dispatched on range input element for key changes that change its value (VK_RIGHT)");
-      synthesizeKey("VK_LEFT", {});
-      is(rangeChange, 7, "Change event should be dispatched on range input element for key changes that change its value (VK_LEFT)");
-      synthesizeKey("VK_UP", {shiftKey: true});
-      is(rangeChange, 8, "Change event should be dispatched on range input element for key changes that change its value (Shift+VK_UP)");
-      synthesizeKey("VK_DOWN", {shiftKey: true});
-      is(rangeChange, 9, "Change event should be dispatched on range input element for key changes that change its value (Shift+VK_DOWN)");
-      synthesizeKey("VK_RIGHT", {shiftKey: true});
-      is(rangeChange, 10, "Change event should be dispatched on range input element for key changes that change its value (Shift+VK_RIGHT)");
-      synthesizeKey("VK_LEFT", {shiftKey: true});
-      is(rangeChange, 11, "Change event should be dispatched on range input element for key changes that change its value (Shift+VK_LEFT)");
-      synthesizeKey("VK_PAGE_UP", {});
-      is(rangeChange, 12, "Change event should be dispatched on range input element for key changes that change its value (VK_PAGE_UP)");
-      synthesizeKey("VK_PAGE_DOWN", {});
-      is(rangeChange, 13, "Change event should be dispatched on range input element for key changes that change its value (VK_PAGE_DOWN");
-      synthesizeKey("VK_RIGHT", {shiftKey: true});
-      is(rangeChange, 14, "Change event should be dispatched on range input element for key changes that change its value (Shift+VK_PAGE_UP)");
-      synthesizeKey("VK_LEFT", {shiftKey: true});
-      is(rangeChange, 15, "Change event should be dispatched on range input element for key changes that change its value (Shift+VK_PAGE_DOWN)");
+      synthesizeKey("KEY_ArrowUp");
+      is(rangeChange, 4, "Change event should be dispatched on range input element for key changes that change its value (KEY_ArrowUp)");
+      synthesizeKey("KEY_ArrowDown");
+      is(rangeChange, 5, "Change event should be dispatched on range input element for key changes that change its value (KEY_ArrowDown)");
+      synthesizeKey("KEY_ArrowRight");
+      is(rangeChange, 6, "Change event should be dispatched on range input element for key changes that change its value (KEY_ArrowRight)");
+      synthesizeKey("KEY_ArrowLeft");
+      is(rangeChange, 7, "Change event should be dispatched on range input element for key changes that change its value (KEY_ArrowLeft)");
+      synthesizeKey("KEY_ArrowUp", {shiftKey: true});
+      is(rangeChange, 8, "Change event should be dispatched on range input element for key changes that change its value (Shift+KEY_ArrowUp)");
+      synthesizeKey("KEY_ArrowDown", {shiftKey: true});
+      is(rangeChange, 9, "Change event should be dispatched on range input element for key changes that change its value (Shift+KEY_ArrowDown)");
+      synthesizeKey("KEY_ArrowRight", {shiftKey: true});
+      is(rangeChange, 10, "Change event should be dispatched on range input element for key changes that change its value (Shift+KEY_ArrowRight)");
+      synthesizeKey("KEY_ArrowLeft", {shiftKey: true});
+      is(rangeChange, 11, "Change event should be dispatched on range input element for key changes that change its value (Shift+KEY_ArrowLeft)");
+      synthesizeKey("KEY_PageUp");
+      is(rangeChange, 12, "Change event should be dispatched on range input element for key changes that change its value (KEY_PageUp)");
+      synthesizeKey("KEY_PageDown");
+      is(rangeChange, 13, "Change event should be dispatched on range input element for key changes that change its value (KEY_PageDown");
+      synthesizeKey("KEY_ArrowRight", {shiftKey: true});
+      is(rangeChange, 14, "Change event should be dispatched on range input element for key changes that change its value (Shift+KEY_PageUp)");
+      synthesizeKey("KEY_ArrowLeft", {shiftKey: true});
+      is(rangeChange, 15, "Change event should be dispatched on range input element for key changes that change its value (Shift+KEY_PageDown)");
     }
     //Input type change test.
     input = document.getElementById("input_checkbox");

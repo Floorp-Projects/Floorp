@@ -20,8 +20,8 @@ add_task(async function setup() {
 add_task(async function test_keyword() {
   await promiseAutocompleteResultPopup("keyword bear");
   gURLBar.focus();
-  EventUtils.synthesizeKey("d", {});
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.sendString("d");
+  EventUtils.synthesizeKey("KEY_Enter");
   info("wait for the page to load");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
                                       false, "http://example.com/?q=beard");
@@ -37,7 +37,7 @@ add_task(async function test_sametext() {
   let event = document.createEvent("Events");
   event.initEvent("input", true, true);
   gURLBar.dispatchEvent(event);
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
 
   info("wait for the page to load");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
@@ -49,8 +49,8 @@ add_task(async function test_after_empty_search() {
   gURLBar.focus();
   // Add www. to avoid a switch-to-tab.
   gURLBar.value = "www.e";
-  EventUtils.synthesizeKey("x", {});
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("x");
+  EventUtils.synthesizeKey("KEY_Enter");
 
   info("wait for the page to load");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
@@ -87,8 +87,8 @@ add_task(async function test_disabled_ac() {
 
   gURLBar.focus();
   gURLBar.value = "e";
-  EventUtils.synthesizeKey("x", {});
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.sendString("x");
+  EventUtils.synthesizeKey("KEY_Enter");
 
   info("wait for the page to load");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
@@ -115,8 +115,8 @@ add_task(async function test_delay() {
   gURLBar.closePopup();
   gURLBar.focus();
   gURLBar.value = "e";
-  EventUtils.synthesizeKey("x", {});
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.sendString("x");
+  EventUtils.synthesizeKey("KEY_Enter");
   info("wait for the page to load");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
                                        false, "http://example.com/");

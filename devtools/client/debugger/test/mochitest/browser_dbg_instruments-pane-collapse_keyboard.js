@@ -18,22 +18,22 @@ async function test() {
   ok(panel.classList.contains("pane-collapsed"),
      "The instruments panel is initially in collapsed state");
 
-  await togglePane(button, "Press on the toggle button to expand", panel, "VK_RETURN");
+  await togglePane(button, "Press on the toggle button to expand", panel, "KEY_Enter");
   ok(!panel.classList.contains("pane-collapsed"),
      "The instruments panel is in the expanded state");
 
-  await togglePane(button, "Press on the toggle button to collapse", panel, "VK_SPACE");
+  await togglePane(button, "Press on the toggle button to collapse", panel, " ");
   ok(panel.classList.contains("pane-collapsed"),
      "The instruments panel is in the collapsed state");
 
   closeDebuggerAndFinish(aPanel);
 }
 
-async function togglePane(button, message, pane, keycode) {
+async function togglePane(button, message, pane, key) {
   let onTransitionEnd = once(pane, "transitionend");
   info(message);
   button.focus();
-  EventUtils.synthesizeKey(keycode, {});
+  EventUtils.synthesizeKey(key);
   await onTransitionEnd;
 
   // Wait for the next event tick to make sure all transitionend event

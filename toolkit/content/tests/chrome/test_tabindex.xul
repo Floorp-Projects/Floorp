@@ -105,7 +105,7 @@ function runTests()
   }, true);
 
   for (t = 1; t <= gTestCount; t++)
-    synthesizeKey("VK_TAB", { });
+    synthesizeKey("KEY_Tab");
 
   is(gTestsOccurred, gTestCount, "test count");
   SimpleTest.finish();

@@ -11,12 +11,12 @@ SimpleTest.waitForExplicitFinish();
 
 SimpleTest.waitForFocus(function() {
   document.getElementById("flexbutton1").focus();
-  synthesizeKey("VK_TAB", { });
+  synthesizeKey("KEY_Tab");
   var e = document.getElementById("flexbutton2");
   is(document.activeElement, e, "focus in flexbutton2 after TAB");
 
   document.getElementById("gridbutton1").focus();
-  synthesizeKey("VK_TAB", { });
+  synthesizeKey("KEY_Tab");
   e = document.getElementById("gridbutton2");
   is(document.activeElement, e, "focus in gridbutton2 after TAB");
 

@@ -95,7 +95,7 @@ info("textbox.mController.searchString = " + textbox.mController.searchString);
   ok(!textbox.selectedButton, "no one-off button should be selected");
 
   // Pressing should select the first one-off.
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
   is(textbox.value, "", "the textfield value should be unmodified");
 
@@ -103,31 +103,31 @@ info("textbox.mController.searchString = " + textbox.mController.searchString);
   for (let i = 0; i < oneOffs.length; ++i) {
     is(textbox.selectedButton, oneOffs[i],
        "the one-off button #" + (i + 1) + " should be selected");
-    EventUtils.synthesizeKey("VK_DOWN", {});
+    EventUtils.synthesizeKey("KEY_ArrowDown");
   }
 
   is(textbox.selectedButton.getAttribute("anonid"), "search-settings",
      "the settings item should be selected");
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
 
   // We should now be back to the initial situation.
   is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
   ok(!textbox.selectedButton, "no one-off button should be selected");
 
   info("now test the up arrow key");
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(textbox.selectedButton.getAttribute("anonid"), "search-settings",
      "the settings item should be selected");
 
   // cycle through the one-off items, the first one is already selected.
   for (let i = oneOffs.length; i; --i) {
-    EventUtils.synthesizeKey("VK_UP", {});
+    EventUtils.synthesizeKey("KEY_ArrowUp");
     is(textbox.selectedButton, oneOffs[i - 1],
        "the one-off button #" + i + " should be selected");
   }
 
   // Another press on up should clear the one-off selection.
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   ok(!textbox.selectedButton, "no one-off button should be selected");
   is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
   is(textbox.value, "", "the textfield value should be unmodified");
@@ -143,7 +143,7 @@ add_task(async function test_tab() {
   // Pressing tab should select the first one-off without selecting suggestions.
   // now cycle through the one-off items, the first one is already selected.
   for (let i = 0; i < oneOffs.length; ++i) {
-    EventUtils.synthesizeKey("VK_TAB", {});
+    EventUtils.synthesizeKey("KEY_Tab");
     is(textbox.selectedButton, oneOffs[i],
        "the one-off button #" + (i + 1) + " should be selected");
   }
@@ -151,13 +151,13 @@ add_task(async function test_tab() {
   is(textbox.value, "", "the textfield value should be unmodified");
 
   // One more <tab> selects the settings button.
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("KEY_Tab");
   is(textbox.selectedButton.getAttribute("anonid"), "search-settings",
      "the settings item should be selected");
 
   // Pressing tab again should close the panel...
   let promise = promiseEvent(searchPopup, "popuphidden");
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("KEY_Tab");
   await promise;
 
   // ... and move the focus out of the searchbox.
@@ -179,26 +179,26 @@ add_task(async function test_shift_tab() {
   is(searchPopup.getAttribute("showonlysettings"), "true", "Should show the small popup");
 
   // Press up once to select the last button.
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(textbox.selectedButton.getAttribute("anonid"), "search-settings",
      "the settings item should be selected");
 
   // Press up again to select the last one-off button.
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
 
   // Pressing shift+tab should cycle through the one-off items.
   for (let i = oneOffs.length - 1; i >= 0; --i) {
     is(textbox.selectedButton, oneOffs[i],
        "the one-off button #" + (i + 1) + " should be selected");
     if (i)
-      EventUtils.synthesizeKey("VK_TAB", {shiftKey: true});
+      EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
   }
   is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
   is(textbox.value, "", "the textfield value should be unmodified");
 
   // Pressing shift+tab again should close the panel...
   promise = promiseEvent(searchPopup, "popuphidden");
-  EventUtils.synthesizeKey("VK_TAB", {shiftKey: true});
+  EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
   await promise;
 
   // ... and move the focus out of the searchbox.
@@ -225,23 +225,23 @@ add_task(async function test_alt_down() {
   // and cycle through the one-off items.
   let oneOffs = getOneOffs();
   for (let i = 0; i < oneOffs.length; ++i) {
-    EventUtils.synthesizeKey("VK_DOWN", {altKey: true});
+    EventUtils.synthesizeKey("KEY_ArrowDown", {altKey: true});
     is(textbox.selectedButton, oneOffs[i],
        "the one-off button #" + (i + 1) + " should be selected");
     is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
   }
 
   // One more alt+down keypress and nothing should be selected.
-  EventUtils.synthesizeKey("VK_DOWN", {altKey: true});
+  EventUtils.synthesizeKey("KEY_ArrowDown", {altKey: true});
   ok(!textbox.selectedButton, "no one-off button should be selected");
 
   // another one and the first one-off should be selected.
-  EventUtils.synthesizeKey("VK_DOWN", {altKey: true});
+  EventUtils.synthesizeKey("KEY_ArrowDown", {altKey: true});
   is(textbox.selectedButton, oneOffs[0],
      "the first one-off button should be selected");
 
   // Clear the selection with an alt+up keypress
-  EventUtils.synthesizeKey("VK_UP", {altKey: true});
+  EventUtils.synthesizeKey("KEY_ArrowUp", {altKey: true});
   ok(!textbox.selectedButton, "no one-off button should be selected");
 });
 
@@ -255,26 +255,26 @@ add_task(async function test_alt_up() {
   // and cycle up through the one-off items.
   let oneOffs = getOneOffs();
   for (let i = oneOffs.length - 1; i >= 0; --i) {
-    EventUtils.synthesizeKey("VK_UP", {altKey: true});
+    EventUtils.synthesizeKey("KEY_ArrowUp", {altKey: true});
     is(textbox.selectedButton, oneOffs[i],
        "the one-off button #" + (i + 1) + " should be selected");
     is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
   }
 
   // One more alt+down keypress and nothing should be selected.
-  EventUtils.synthesizeKey("VK_UP", {altKey: true});
+  EventUtils.synthesizeKey("KEY_ArrowUp", {altKey: true});
   ok(!textbox.selectedButton, "no one-off button should be selected");
 
   // another one and the last one-off should be selected.
-  EventUtils.synthesizeKey("VK_UP", {altKey: true});
+  EventUtils.synthesizeKey("KEY_ArrowUp", {altKey: true});
   is(textbox.selectedButton, oneOffs[oneOffs.length - 1],
      "the last one-off button should be selected");
 
   // Cleanup for the next test.
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(textbox.selectedButton.getAttribute("anonid"), "search-settings",
      "the settings item should be selected");
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   ok(!textbox.selectedButton, "no one-off should be selected anymore");
 });
 
@@ -286,19 +286,19 @@ add_task(async function test_tab_and_arrows() {
 
   // After pressing down, the first one-off should be selected.
   let oneOffs = getOneOffs();
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(textbox.selectedButton, oneOffs[0],
      "the first one-off button should be selected");
   is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
 
   // After pressing tab, the second one-off should be selected.
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("KEY_Tab");
   is(textbox.selectedButton, oneOffs[1],
      "the second one-off button should be selected");
   is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
 
   // After pressing up, the first one-off should be selected again.
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(textbox.selectedButton, oneOffs[0],
      "the first one-off button should be selected");
   is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
@@ -327,13 +327,13 @@ add_task(async function test_open_search() {
   ok(!textbox.selectedButton, "no button should be selected");
 
   // Pressing up once selects the setting button...
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(textbox.selectedButton.getAttribute("anonid"), "search-settings",
      "the settings item should be selected");
 
   // ...and then pressing up selects open search engines.
   for (let i = engines.length; i; --i) {
-    EventUtils.synthesizeKey("VK_UP", {});
+    EventUtils.synthesizeKey("KEY_ArrowUp");
     let selectedButton = textbox.selectedButton;
     is(selectedButton, engines[i - 1],
        "the engine #" + i + " should be selected");
@@ -342,19 +342,19 @@ add_task(async function test_open_search() {
   }
 
   // Pressing up again should select the last one-off button.
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   is(textbox.selectedButton, getOneOffs().pop(),
      "the last one-off button should be selected");
 
   info("now check that the down key navigates open search items as expected");
   for (let i = 0; i < engines.length; ++i) {
-    EventUtils.synthesizeKey("VK_DOWN", {});
+    EventUtils.synthesizeKey("KEY_ArrowDown");
     is(textbox.selectedButton, engines[i],
        "the engine #" + (i + 1) + " should be selected");
   }
 
   // Pressing down on the last engine item selects the settings button.
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(textbox.selectedButton.getAttribute("anonid"), "search-settings",
      "the settings item should be selected");
 

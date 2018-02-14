@@ -11,7 +11,7 @@ add_task(async function() {
   let remote = gBrowser.selectedBrowser.isRemoteBrowser;
 
   let findBarOpenPromise = promiseWaitForEvent(gBrowser, "findbaropen");
-  EventUtils.synthesizeKey("f", { accelKey: true });
+  EventUtils.synthesizeKey("f", {accelKey: true});
   await findBarOpenPromise;
 
   ok(gFindBarInitialized, "find bar is now initialized");
@@ -20,9 +20,7 @@ add_task(async function() {
   let scrollPromise = remote ?
     BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "scroll") :
     BrowserTestUtils.waitForEvent(gBrowser, "scroll");
-  EventUtils.synthesizeKey("d", {});
-  EventUtils.synthesizeKey("i", {});
-  EventUtils.synthesizeKey("v", {});
+  EventUtils.sendString("div");
   await scrollPromise;
 
   // Wait for one paint to ensure we've processed the previous key events and scrolling.
@@ -40,7 +38,7 @@ add_task(async function() {
   scrollPromise = remote ?
     BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "scroll") :
     BrowserTestUtils.waitForEvent(gBrowser, "scroll");
-  EventUtils.synthesizeKey("g", { accelKey: true });
+  EventUtils.synthesizeKey("g", {accelKey: true});
   await scrollPromise;
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
@@ -49,8 +47,8 @@ add_task(async function() {
   });
 
   // clear the find bar
-  EventUtils.synthesizeKey("a", { accelKey: true });
-  EventUtils.synthesizeKey("VK_DELETE", { });
+  EventUtils.synthesizeKey("a", {accelKey: true});
+  EventUtils.synthesizeKey("KEY_Delete");
 
   gFindBar.close();
   gBrowser.removeCurrentTab();

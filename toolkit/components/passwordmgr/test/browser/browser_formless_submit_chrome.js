@@ -39,7 +39,7 @@ add_task(async function test_urlbar_new_URL() {
     await focusPromise;
     info("focused");
     EventUtils.sendString("http://mochi.test:8888/");
-    EventUtils.synthesizeKey("VK_RETURN", {});
+    EventUtils.synthesizeKey("KEY_Enter");
     await BrowserTestUtils.browserLoaded(aBrowser, false, "http://mochi.test:8888/");
   });
 });
@@ -47,9 +47,9 @@ add_task(async function test_urlbar_new_URL() {
 add_task(async function test_urlbar_fragment_enter() {
   await withTestPage(function(aBrowser) {
     gURLBar.focus();
-    EventUtils.synthesizeKey("VK_RIGHT", {});
+    EventUtils.synthesizeKey("KEY_ArrowRight");
     EventUtils.sendString("#fragment");
-    EventUtils.synthesizeKey("VK_RETURN", {});
+    EventUtils.synthesizeKey("KEY_Enter");
   });
 });
 
@@ -127,7 +127,7 @@ add_task(async function test_back_keyboard_shortcut() {
     await fillTestPage(aBrowser);
 
     let backPromise = BrowserTestUtils.browserStopped(aBrowser);
-    EventUtils.synthesizeKey("VK_BACK_SPACE", {});
+    EventUtils.synthesizeKey("KEY_Backspace");
     await backPromise;
   });
 });

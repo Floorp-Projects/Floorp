@@ -200,7 +200,7 @@ add_task(async function() {
   });
   is(result, true, "plugin is visible");
 
-  EventUtils.synthesizeKey("VK_END", {});
+  EventUtils.synthesizeKey("KEY_End");
 
   await waitScrollStart(gBrowser.selectedBrowser);
 
@@ -220,7 +220,7 @@ add_task(async function() {
   });
   is(result, false, "plugin is hidden");
 
-  EventUtils.synthesizeKey("VK_HOME", {});
+  EventUtils.synthesizeKey("KEY_Home");
 
   await waitScrollFinish(gBrowser.selectedBrowser);
 
@@ -265,7 +265,7 @@ add_task(async function() {
   });
   is(result, true, "plugin is visible");
 
-  EventUtils.synthesizeKey("VK_END", {});
+  EventUtils.synthesizeKey("KEY_End");
 
   await waitScrollStart(gBrowser.selectedBrowser);
 
@@ -285,7 +285,7 @@ add_task(async function() {
   });
   is(result, false, "plugin is hidden");
 
-  EventUtils.synthesizeKey("VK_HOME", {});
+  EventUtils.synthesizeKey("KEY_Home");
 
   await waitScrollFinish(gBrowser.selectedBrowser);
 

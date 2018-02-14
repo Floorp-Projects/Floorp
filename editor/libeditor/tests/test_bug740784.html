@@ -30,9 +30,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=740784
         var t1 = $("t1");
 
         t1.focus();
-        synthesizeKey("VK_END", {});
-        synthesizeKey("VK_BACK_SPACE", {});
-        synthesizeKey("Z", {accelKey: true});
+        synthesizeKey("KEY_End");
+        synthesizeKey("KEY_Backspace");
+        synthesizeKey("z", {accelKey: true});
 
         // Was the former bogus node changed to a mozBR?
         is(t1.value, "a", "trailing <br> correctly ignored");

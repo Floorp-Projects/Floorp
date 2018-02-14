@@ -246,7 +246,7 @@ add_task(async function focus_change_closes_popup() {
 
   promise = promiseEvent(searchPopup, "popuphidden");
   let promise2 = promiseEvent(searchbar, "blur");
-  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
+  EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
   await promise;
   await promise2;
 
@@ -269,7 +269,7 @@ add_task(async function focus_change_closes_small_popup() {
 
   promise = promiseEvent(searchPopup, "popuphidden");
   let promise2 = promiseEvent(searchbar, "blur");
-  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
+  EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
   await promise;
   await promise2;
 });
@@ -289,7 +289,7 @@ add_task(async function escape_closes_popup() {
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
   promise = promiseEvent(searchPopup, "popuphidden");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   await promise;
 
   textbox.value = "";
@@ -332,7 +332,7 @@ add_task(async function tab_opens_popup() {
   textbox.value = "foo";
 
   let promise = promiseEvent(searchPopup, "popupshown");
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("KEY_Tab");
   await promise;
   isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
 
@@ -352,7 +352,7 @@ add_no_popup_task(function tab_doesnt_open_popup() {
   gURLBar.focus();
   textbox.value = "foo";
 
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("KEY_Tab");
 
   is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
   is(textbox.selectionStart, 0, "Should have selected all of the text");
@@ -404,7 +404,7 @@ add_task(async function refocus_window_doesnt_open_popup_keyboard() {
   textbox.value = "foo";
 
   let promise = promiseEvent(searchPopup, "popupshown");
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("KEY_Tab");
   await promise;
   isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
 
@@ -502,45 +502,45 @@ add_task(async function dont_rollup_oncaretmove() {
   await promise;
 
   // Deselect the text
-  EventUtils.synthesizeKey("VK_RIGHT", {});
+  EventUtils.synthesizeKey("KEY_ArrowRight");
   is(textbox.selectionStart, 9, "Should have moved the caret (selectionStart after deselect right)");
   is(textbox.selectionEnd, 9, "Should have moved the caret (selectionEnd after deselect right)");
   is(searchPopup.state, "open", "Popup should still be open");
 
-  EventUtils.synthesizeKey("VK_LEFT", {});
+  EventUtils.synthesizeKey("KEY_ArrowLeft");
   is(textbox.selectionStart, 8, "Should have moved the caret (selectionStart after left)");
   is(textbox.selectionEnd, 8, "Should have moved the caret (selectionEnd after left)");
   is(searchPopup.state, "open", "Popup should still be open");
 
-  EventUtils.synthesizeKey("VK_RIGHT", {});
+  EventUtils.synthesizeKey("KEY_ArrowRight");
   is(textbox.selectionStart, 9, "Should have moved the caret (selectionStart after right)");
   is(textbox.selectionEnd, 9, "Should have moved the caret (selectionEnd after right)");
   is(searchPopup.state, "open", "Popup should still be open");
 
   // Ensure caret movement works while a suggestion is selected.
   is(textbox.popup.selectedIndex, -1, "No selected item in list");
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
   is(textbox.popup.selectedIndex, 0, "Selected item in list");
   is(textbox.selectionStart, 9, "Should have moved the caret to the end (selectionStart after selection)");
   is(textbox.selectionEnd, 9, "Should have moved the caret to the end (selectionEnd after selection)");
 
-  EventUtils.synthesizeKey("VK_LEFT", {});
+  EventUtils.synthesizeKey("KEY_ArrowLeft");
   is(textbox.selectionStart, 8, "Should have moved the caret again (selectionStart after left)");
   is(textbox.selectionEnd, 8, "Should have moved the caret again (selectionEnd after left)");
   is(searchPopup.state, "open", "Popup should still be open");
 
-  EventUtils.synthesizeKey("VK_LEFT", {});
+  EventUtils.synthesizeKey("KEY_ArrowLeft");
   is(textbox.selectionStart, 7, "Should have moved the caret (selectionStart after left)");
   is(textbox.selectionEnd, 7, "Should have moved the caret (selectionEnd after left)");
   is(searchPopup.state, "open", "Popup should still be open");
 
-  EventUtils.synthesizeKey("VK_RIGHT", {});
+  EventUtils.synthesizeKey("KEY_ArrowRight");
   is(textbox.selectionStart, 8, "Should have moved the caret (selectionStart after right)");
   is(textbox.selectionEnd, 8, "Should have moved the caret (selectionEnd after right)");
   is(searchPopup.state, "open", "Popup should still be open");
 
   if (!navigator.platform.includes("Mac")) {
-    EventUtils.synthesizeKey("VK_HOME", {});
+    EventUtils.synthesizeKey("KEY_Home");
     is(textbox.selectionStart, 0, "Should have moved the caret (selectionStart after home)");
     is(textbox.selectionEnd, 0, "Should have moved the caret (selectionEnd after home)");
     is(searchPopup.state, "open", "Popup should still be open");
@@ -548,7 +548,7 @@ add_task(async function dont_rollup_oncaretmove() {
 
   // Close the popup again
   promise = promiseEvent(searchPopup, "popuphidden");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
   await promise;
 
   textbox.value = "";
@@ -560,7 +560,7 @@ add_task(async function dont_open_in_customization() {
   textbox.value = "foo";
 
   let promise = promiseEvent(searchPopup, "popupshown");
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("KEY_Tab");
   await promise;
   isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
 

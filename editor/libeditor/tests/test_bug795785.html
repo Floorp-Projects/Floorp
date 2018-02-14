@@ -51,29 +51,16 @@ function doKeyEventTest(aElement, aElementDescription, aCallback)
   hitEventLoop(function () {
     is(aElement.scrollTop, 0,
        aElementDescription + "'s scrollTop isn't 0");
-    synthesizeKey("VK_RETURN", { shiftKey: true });
-    synthesizeKey("VK_RETURN", { shiftKey: true });
-    synthesizeKey("VK_RETURN", { shiftKey: true });
-    synthesizeKey("VK_RETURN", { shiftKey: true });
-    synthesizeKey("VK_RETURN", { shiftKey: true });
-    synthesizeKey("VK_RETURN", { shiftKey: true });
+    synthesizeKey("KEY_Enter", {shiftKey: true, repeat: 6});
     hitEventLoop(function () {
       isnot(aElement.scrollTop, 0,
             aElementDescription + " was not scrolled by inserting line breaks");
       var scrollTop = aElement.scrollTop;
-      synthesizeKey("VK_UP", { });
-      synthesizeKey("VK_UP", { });
-      synthesizeKey("VK_UP", { });
-      synthesizeKey("VK_UP", { });
-      synthesizeKey("VK_UP", { });
+      synthesizeKey("KEY_ArrowUp", {repeat: 5});
       hitEventLoop(function () {
         isnot(aElement.scrollTop, scrollTop,
               aElementDescription + " was not scrolled by up key events");
-        synthesizeKey("VK_DOWN", { });
-        synthesizeKey("VK_DOWN", { });
-        synthesizeKey("VK_DOWN", { });
-        synthesizeKey("VK_DOWN", { });
-        synthesizeKey("VK_DOWN", { });
+        synthesizeKey("KEY_ArrowDown", {repeat: 5});
         hitEventLoop(function () {
           is(aElement.scrollTop, scrollTop,
              aElementDescription + " was not scrolled by down key events");
@@ -84,15 +71,11 @@ function doKeyEventTest(aElement, aElementDescription, aCallback)
                   aElementDescription + " was not scrolled by typing long word");
             var scrollLeft = aElement.scrollLeft;
             var i;
-            for (i = 0; i < longWord.length; i++) {
-              synthesizeKey("VK_LEFT", { });
-            }
+            synthesizeKey("KEY_ArrowLeft", {repeat: longWord.length});
             hitEventLoop(function () {
               isnot(aElement.scrollLeft, scrollLeft,
                     aElementDescription + " was not scrolled by left key events");
-              for (i = 0; i < longWord.length; i++) {
-                synthesizeKey("VK_RIGHT", { });
-              }
+              synthesizeKey("KEY_ArrowRight", {repeat: longWord.length});
               hitEventLoop(function () {
                 is(aElement.scrollLeft, scrollLeft,
                    aElementDescription + " was not scrolled by right key events");

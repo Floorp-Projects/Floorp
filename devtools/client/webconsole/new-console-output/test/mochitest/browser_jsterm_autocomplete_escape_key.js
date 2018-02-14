@@ -36,7 +36,7 @@ add_task(async function () {
 
   info("wait for completion: window.foo.");
   jsterm.setInputValue("window.foo");
-  EventUtils.synthesizeKey(".", {});
+  EventUtils.sendString(".");
 
   await onPopUpOpen;
 
@@ -45,7 +45,7 @@ add_task(async function () {
 
   info("press Escape to close the popup");
   const onPopupClose = popup.once("popup-closed");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  EventUtils.synthesizeKey("KEY_Escape");
 
   await onPopupClose;
 

@@ -42,7 +42,7 @@ var fullKeyboardAccess = false;
 function startTest()
 {
   var testButton = document.getElementById("test");
-  synthesizeKey("VK_TAB", { });
+  synthesizeKey("KEY_Tab");
   fullKeyboardAccess = (document.activeElement == testButton);
   info("We " + (fullKeyboardAccess ? "have" : "don't have") + " full keyboard access");
   runTest();

@@ -32,7 +32,7 @@ SimpleTest.waitForFocus(function() {
     is(i.value, "test", "Sanity check");
 
     is(document.activeElement, i, "Should be focused before frame reconstruction");
-    synthesizeKey("1", {});
+    sendString("1");
     is(i.value, "1test", "Can accept keyboard events before frame reconstruction");
 
     // force frame reconstruction
@@ -42,7 +42,7 @@ SimpleTest.waitForFocus(function() {
     document.offsetHeight;
 
     is(document.activeElement, i, "Should be focused after frame reconstruction");
-    synthesizeKey("2", {});
+    sendString("2");
     is(i.value, "12test", "Can accept keyboard events after frame reconstruction");
 
     // Make sure reframing happens gracefully

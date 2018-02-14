@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=346043
       // mouse events work with the dropdown itself, instead of the window below
       // it.
       select.focus();
-      synthesizeKey("VK_DOWN", {altKey: true});
+      synthesizeKey("KEY_ArrowDown", {altKey: true});
 
       var options = select.getElementsByTagName("option");
       synthesizeMouseAtCenter(options[1],
@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=346043
 
       // Close the select dropdown.
       if (useEscape)
-        synthesizeKey("VK_ESCAPE", {});  // Tests a different code path.
+        synthesizeKey("KEY_Escape");  // Tests a different code path.
       select.blur();
       is(select.selectedIndex, index, "Selected index shouldn't change");
     }

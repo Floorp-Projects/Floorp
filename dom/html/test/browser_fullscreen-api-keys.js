@@ -4,8 +4,8 @@
 
 // List of key codes which should exit full-screen mode.
 const kKeyList = [
-  { code: "VK_ESCAPE", suppressed: true},
-  { code: "VK_F11",    suppressed: false},
+  { key: "Escape", keyCode: "VK_ESCAPE", suppressed: true},
+  { key: "F11",    keyCode: "VK_F11",    suppressed: false},
 ];
 
 const kStrictKeyPressEvents =
@@ -136,9 +136,9 @@ add_task(async function() {
       "Test:KeyReceived", captureUnexpectedKeyEvent);
   });
 
-  for (let {code, suppressed} of kKeyList) {
-    var keyCode = KeyEvent["DOM_" + code];
-    info(`Test keycode ${code} (${keyCode})`);
+  for (let {key, keyCode, suppressed} of kKeyList) {
+    let keyCodeValue = KeyEvent["DOM_" + keyCode];
+    info(`Test keycode ${key} (${keyCodeValue})`);
 
     info("Enter fullscreen");
     await temporaryRemoveUnexpectedFullscreenChangeCapture(async function() {
@@ -151,8 +151,8 @@ add_task(async function() {
 
     info("Dispatch untrusted key events from content");
     await temporaryRemoveUnexpectedKeyEventCapture(async function() {
-      let promiseExpectedKeyEvents = receiveExpectedKeyEvents(keyCode, false);
-      gMessageManager.sendAsyncMessage("Test:DispatchUntrustedKeyEvents", code);
+      let promiseExpectedKeyEvents = receiveExpectedKeyEvents(keyCodeValue, false);
+      gMessageManager.sendAsyncMessage("Test:DispatchUntrustedKeyEvents", keyCode);
       await promiseExpectedKeyEvents;
     });
 
@@ -160,8 +160,8 @@ add_task(async function() {
     await temporaryRemoveUnexpectedFullscreenChangeCapture(async function() {
       await temporaryRemoveUnexpectedKeyEventCapture(async function() {
         let promiseExpectedKeyEvents = suppressed ?
-          Promise.resolve() : receiveExpectedKeyEvents(keyCode, true);
-        EventUtils.synthesizeKey(code, {});
+          Promise.resolve() : receiveExpectedKeyEvents(keyCodeValue, true);
+        EventUtils.synthesizeKey("KEY_" + key);
         await promiseExpectedKeyEvents;
         let state = await promiseOneMessage("Test:FullscreenChanged");
         ok(!state, "The content should have exited fullscreen");

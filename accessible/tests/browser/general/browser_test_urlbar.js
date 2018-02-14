@@ -15,7 +15,7 @@ add_task(async function testAutocompleteRichResult() {
   urlbar.focus();
   let urlbarPopup = document.getElementById("PopupAutoCompleteRichResult");
   let shown = BrowserTestUtils.waitForEvent(urlbarPopup, "popupshown");
-  EventUtils.synthesizeKey("a", {});
+  EventUtils.sendString("a");
   await shown;
 
   info("Waiting for accessibility to be created for the richlistbox");

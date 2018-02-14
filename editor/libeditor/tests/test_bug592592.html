@@ -30,7 +30,7 @@ SimpleTest.waitForFocus(function() {
   window.getSelection().collapse(ed.firstChild, 1);
 
   // Press space
-  synthesizeKey(" ", {});
+  sendString(" ");
 
   // Make sure we haven't added an nbsp
   is(ed.innerHTML, "a  b", "We should not be adding an &nbsp; for preformatted text");
@@ -46,7 +46,7 @@ SimpleTest.waitForFocus(function() {
   window.getSelection().collapse(ed.firstChild, 1);
 
   // Press space
-  synthesizeKey(" ", {});
+  sendString(" ");
 
   // Make sure that we have added an nbsp
   is(ed.innerHTML, "a&nbsp; b", "We should add an &nbsp; for non-preformatted text");
@@ -58,7 +58,7 @@ SimpleTest.waitForFocus(function() {
   window.getSelection().collapse(ed.firstChild, 3);
 
   // Press the back-space key
-  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("KEY_Backspace");
 
   // Make sure that we've only deleted a single space
   is(ed.innerHTML, "a  b", "We should only be deleting a single space");

@@ -22,9 +22,9 @@ add_task(function* () {
     let addAttribute = getMenuItem("node-menu-add-attribute");
     addAttribute.click();
 
-    EventUtils.synthesizeKey('class="u-hidden"', {});
+    EventUtils.sendString('class="u-hidden"');
     let onMutation = inspector.once("markupmutation");
-    EventUtils.synthesizeKey("VK_RETURN", {});
+    EventUtils.synthesizeKey("KEY_Enter");
     yield onMutation;
 
     let hasAttribute = testActor.hasNode("#attributes.u-hidden");
@@ -72,9 +72,9 @@ add_task(function* () {
       name: "data-edit"
     };
     editAttribute.click();
-    EventUtils.synthesizeKey("data-edit='edited'", {});
+    EventUtils.sendString("data-edit='edited'");
     let onMutation = inspector.once("markupmutation");
-    EventUtils.synthesizeKey("VK_RETURN", {});
+    EventUtils.synthesizeKey("KEY_Enter");
     yield onMutation;
 
     let isAttributeChanged =
@@ -106,7 +106,7 @@ add_task(function* () {
     let menuItem = allMenuItems.find(i => i.id === id);
     ok(menuItem, "Menu item '" + id + "' found");
     // Close the menu so synthesizing future keys won't select menu items.
-    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    EventUtils.synthesizeKey("KEY_Escape");
     return menuItem;
   }
 });

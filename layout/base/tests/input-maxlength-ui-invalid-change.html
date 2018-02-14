@@ -13,7 +13,7 @@
         var input = document.getElementById('input');
         input.setSelectionRange(input.value.length, input.value.length)
         input.focus();
-        synthesizeKey('VK_BACK_SPACE', {});
+        synthesizeKey("KEY_Backspace");
         input.blur(); // to hide the caret
         document.documentElement.className='';
       }

@@ -38,7 +38,7 @@ function performTests(jsterm) {
   let { inputNode } = jsterm;
   let values = TEST_VALUES;
 
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
 
   is(jsterm.getInputValue(), values[4],
      "VK_UP: jsterm.getInputValue() #4 is correct");
@@ -47,7 +47,7 @@ function performTests(jsterm) {
      inputNode.selectionStart == inputNode.selectionEnd,
      "caret location is correct");
 
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
 
   is(jsterm.getInputValue(), values[3],
      "VK_UP: jsterm.getInputValue() #3 is correct");
@@ -58,8 +58,8 @@ function performTests(jsterm) {
 
   inputNode.setSelectionRange(values[3].length - 2, values[3].length - 2);
 
-  EventUtils.synthesizeKey("VK_UP", {});
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  EventUtils.synthesizeKey("KEY_ArrowUp");
 
   is(jsterm.getInputValue(), values[3],
      "VK_UP two times: jsterm.getInputValue() #3 is correct");
@@ -68,7 +68,7 @@ function performTests(jsterm) {
      inputNode.selectionStart == inputNode.selectionEnd,
      "caret location is correct");
 
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
 
   is(jsterm.getInputValue(), values[3],
      "VK_UP again: jsterm.getInputValue() #3 is correct");
@@ -77,17 +77,17 @@ function performTests(jsterm) {
      inputNode.selectionStart == inputNode.selectionEnd,
      "caret location is correct");
 
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
 
   is(jsterm.getInputValue(), values[2],
      "VK_UP: jsterm.getInputValue() #2 is correct");
 
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
 
   is(jsterm.getInputValue(), values[1],
      "VK_UP: jsterm.getInputValue() #1 is correct");
 
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
 
   is(jsterm.getInputValue(), values[0],
      "VK_UP: jsterm.getInputValue() #0 is correct");
@@ -96,7 +96,7 @@ function performTests(jsterm) {
      inputNode.selectionStart == inputNode.selectionEnd,
      "caret location is correct");
 
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
 
   is(jsterm.getInputValue(), values[1],
      "VK_DOWN: jsterm.getInputValue() #1 is correct");
@@ -105,12 +105,12 @@ function performTests(jsterm) {
      inputNode.selectionStart == inputNode.selectionEnd,
      "caret location is correct");
 
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
 
   is(jsterm.getInputValue(), values[2],
      "VK_DOWN: jsterm.getInputValue() #2 is correct");
 
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
 
   is(jsterm.getInputValue(), values[3],
      "VK_DOWN: jsterm.getInputValue() #3 is correct");
@@ -121,8 +121,8 @@ function performTests(jsterm) {
 
   inputNode.setSelectionRange(2, 2);
 
-  EventUtils.synthesizeKey("VK_DOWN", {});
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_ArrowDown");
 
   is(jsterm.getInputValue(), values[3],
      "VK_DOWN two times: jsterm.getInputValue() #3 is correct");
@@ -131,7 +131,7 @@ function performTests(jsterm) {
      inputNode.selectionStart == inputNode.selectionEnd,
      "caret location is correct");
 
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
 
   is(jsterm.getInputValue(), values[3],
      "VK_DOWN again: jsterm.getInputValue() #3 is correct");
@@ -140,12 +140,12 @@ function performTests(jsterm) {
      inputNode.selectionStart == inputNode.selectionEnd,
      "caret location is correct");
 
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
 
   is(jsterm.getInputValue(), values[4],
     "VK_DOWN: jsterm.getInputValue() #4 is correct");
 
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("KEY_ArrowDown");
 
   ok(!jsterm.getInputValue(),
      "VK_DOWN: jsterm.getInputValue() is empty");

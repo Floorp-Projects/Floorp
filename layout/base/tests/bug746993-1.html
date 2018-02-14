@@ -14,7 +14,7 @@
         doc.body.focus();
         win.getSelection().collapse(doc.body, 0);
         sendString("Here's some text.");
-        synthesizeKey("VK_RETURN", {});
+        synthesizeKey("KEY_Enter");
         document.documentElement.removeAttribute("class");
       }
     </script>

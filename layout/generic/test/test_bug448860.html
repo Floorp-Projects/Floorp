@@ -42,11 +42,7 @@ function mapChange(mapNo){
 }
 
 function focusarea() {
-  synthesizeKey("VK_TAB", {});
-  synthesizeKey("VK_TAB", {});
-  synthesizeKey("VK_TAB", {});
-  synthesizeKey("VK_TAB", {});
-  synthesizeKey("VK_TAB", {});
+  synthesizeKey("KEY_Tab", {repeat: 5});
   ok(true, "we did not crash");
   SimpleTest.finish();
 }

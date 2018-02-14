@@ -107,7 +107,7 @@
     var mininp = document.getElementById("minlength");
     mininp.focus();
     mininp.setSelectionRange(mininp.value.length, mininp.value.length);
-    synthesizeKey("VK_BACK_SPACE", {});
+    synthesizeKey("KEY_Backspace");
     ok(!mininp.validity.valid,
        "input should be invalid after interactive edits");
     testStates(mininp, STATE_INVALID);

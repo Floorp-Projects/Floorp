@@ -39,7 +39,7 @@ add_task(function* () {
 
   info("Close the autocomplete popup by simulating a TAB key event");
   let onPopupClosed = jsterm.autocompletePopup.once("popup-closed");
-  EventUtils.synthesizeKey("VK_TAB", {});
+  EventUtils.synthesizeKey("KEY_Tab");
 
   info("Wait for the autocomplete popup to be closed");
   yield onPopupClosed;

@@ -20,12 +20,12 @@ add_task(async function () {
   // Make sure we don't throw when trying to autocomplete
   let autocompleteUpdated = hud.jsterm.once("autocomplete-updated");
   jsterm.setInputValue("window[0].document");
-  EventUtils.synthesizeKey(".", {});
+  EventUtils.sendString(".");
   await autocompleteUpdated;
 
   hud.jsterm.setInputValue("window[0].document.title");
   const onPermissionDeniedMessage = waitForMessage(hud, "Permission denied");
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  EventUtils.synthesizeKey("KEY_Enter");
   const permissionDenied = await onPermissionDeniedMessage;
   ok(permissionDenied.node.classList.contains("error"),
     "A message error is shown when trying to inspect window[0]");

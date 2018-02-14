@@ -333,7 +333,7 @@ function done()
   opener.wrappedJSObject.SimpleTest.finish();
 }
 
-var pressTab = () => synthesizeKey("VK_TAB", { });
+var pressTab = () => synthesizeKey("KEY_Tab");
 
 function setFocusTo(id, fwindow)
 {
@@ -400,10 +400,10 @@ function startTest()
     }
     setFocusTo("last", window);
     expectFocusShift(pressTab, null, getById(partialTabList[0]), true, "partial tab key wrap to start");
-    expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }),
+    expectFocusShift(() => synthesizeKey("KEY_Tab", {shiftKey: true}),
                      null, getById("last"), true, "partial shift tab key wrap to end");
     for (var idx = partialTabList.length - 1; idx >= 0; idx--) {
-      expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }),
+      expectFocusShift(() => synthesizeKey("KEY_Tab", {shiftKey: true}),
                        null, getById(partialTabList[idx]), true, "partial tab key " + partialTabList[idx]);
     }
   }
@@ -416,13 +416,13 @@ function startTest()
     // wrapping around at end with TAB key
     setFocusTo("last", window);
     expectFocusShift(pressTab, null, getById("t1"), true, "tab key wrap to start");
-    expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }),
+    expectFocusShift(() => synthesizeKey("KEY_Tab", {shiftKey: true}),
                      null, getById("last"), true, "shift tab key wrap to end");
 
     // Shift+TAB key
     setFocusTo("o5", window);
     for (idx = kTabbableSteps; idx > 0; idx--) {
-      expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }),
+      expectFocusShift(() => synthesizeKey("KEY_Tab", {shiftKey: true}),
                        null, getById("t" + idx), true, "shift tab key t" + idx);
     }
   }
@@ -807,7 +807,7 @@ function startTest()
   expectFocusShift(() => textbox2.focus(),
                    null, textbox2.inputField, true, "focus on textbox");
   gLastFocusMethod = fm.FLAG_BYKEY;
-  expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }),
+  expectFocusShift(() => synthesizeKey("KEY_Tab", {shiftKey: true}),
                    null, textbox1.inputField, true, "shift+tab on textbox");
 
   textbox1.tabIndex = 2;
@@ -816,7 +816,7 @@ function startTest()
   expectFocusShift(() => textbox2.focus(),
                    null, textbox2.inputField, true, "focus on textbox with tabindex set");
   gLastFocusMethod = fm.FLAG_BYKEY;
-  expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }),
+  expectFocusShift(() => synthesizeKey("KEY_Tab", {shiftKey: true}),
                    null, textbox1.inputField, true, "shift+tab on textbox with tabindex set");
 
   // ---- test for bug 618907 which ensures that canceling the mousedown event still focuses the
@@ -1030,11 +1030,11 @@ function testMoveFocus()
                 getService(Components.interfaces.nsIPrefBranch);
   prefs.setBoolPref("accessibility.browsewithcaret", true);
 
-  synthesizeKey("VK_LEFT", { }, gChildWindow);
-  synthesizeKey("VK_LEFT", { }, gChildWindow);
+  synthesizeKey("KEY_ArrowLeft", {}, gChildWindow);
+  synthesizeKey("KEY_ArrowLeft", {}, gChildWindow);
   is(fm.focusedElement, null, "move caret away from link");
 
-  synthesizeKey("VK_LEFT", { }, gChildWindow);
+  synthesizeKey("KEY_ArrowLeft", {}, gChildWindow);
   is(fm.focusedElement, getById("t24"), "move caret away onto link");
 
   prefs.setBoolPref("accessibility.browsewithcaret", false);
@@ -1049,18 +1049,18 @@ function testMoveFocus()
     gLastFocusMethod = fm.FLAG_BYKEY;
 
     selection.selectAllChildren(getById("hiddenspan"));
-    expectFocusShift(() => synthesizeKey("VK_TAB", { }),
+    expectFocusShift(() => synthesizeKey("KEY_Tab"),
                      gChildWindow, getById("t26"), true, "tab with selection on hidden content");
 
     setFocusTo($("o15"), window);
     $("o15").hidden = true;
     document.documentElement.getBoundingClientRect(); // flush after hiding
-    expectFocusShift(() => synthesizeKey("VK_TAB", { }),
+    expectFocusShift(() => synthesizeKey("KEY_Tab"),
                      window, $("o17"), true, "tab with focus on hidden content");
 
     $("o17").hidden = true;
     document.documentElement.getBoundingClientRect();
-    expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }),
+    expectFocusShift(() => synthesizeKey("KEY_Tab", {shiftKey: true}),
                      window, $("o13"), true, "shift+tab with focus on hidden content");
   }
 
@@ -1157,7 +1157,7 @@ function modalWindowOpened(modalWindow)
   if (gPartialTabbing)
     elem.focus();
   else
-    synthesizeKey("VK_TAB", { }, modalWindow);
+    synthesizeKey("KEY_Tab", {}, modalWindow);
   is(fm.activeWindow, modalWindow, "modal activeWindow");
   is(fm.focusedElement, elem, "modal focusedElement");
 
@@ -1187,43 +1187,43 @@ function framesetWindowLoaded(framesetWindow)
     gNewExpectedWindow = framesetWindow.frames[(idx - 1) >> 1];
     if (idx % 2)
       initEvents(gNewExpectedWindow);
-    expectFocusShift(() => synthesizeKey("VK_TAB", { }, framesetWindow),
+    expectFocusShift(() => synthesizeKey("KEY_Tab", {}, framesetWindow),
                      gNewExpectedWindow, getById("f" + idx), true, "frameset tab key f" + idx);
     gMoveToFocusFrame = false;
     gOldExpectedWindow = gNewExpectedWindow;
   }
 
   gNewExpectedWindow = framesetWindow.frames[0];
-  expectFocusShift(() => synthesizeKey("VK_TAB", { }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("KEY_Tab", {}, framesetWindow),
                    gNewExpectedWindow, getById("f1"), true, "frameset tab key wrap to start");
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[3];
-  expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("KEY_Tab", {shiftKey: true}, framesetWindow),
                    gNewExpectedWindow, getById("f8"), true, "frameset shift tab key wrap to end");
 
   for (idx = 7; idx >= 1; idx--) {
     gOldExpectedWindow = gNewExpectedWindow;
     gNewExpectedWindow = framesetWindow.frames[(idx - 1) >> 1];
-    expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }, framesetWindow),
+    expectFocusShift(() => synthesizeKey("KEY_Tab", {shiftKey: true}, framesetWindow),
                      gNewExpectedWindow, getById("f" + idx), true, "frameset shift tab key f" + idx);
   }
 
   // document shifting
   // XXXndeakin P3 ctrl+tab doesn't seem to be testable currently for some reason
   gNewExpectedWindow = framesetWindow.frames[1];
-  expectFocusShift(() => synthesizeKey("VK_F6", { ctrlKey: true }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("KEY_F6", {ctrlKey: true}, framesetWindow),
                    gNewExpectedWindow, getById("f3"), true, "switch document forward with f6");
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[2];
-  expectFocusShift(() => synthesizeKey("VK_F6", { }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("KEY_F6", {}, framesetWindow),
                    gNewExpectedWindow, getById("f5"), true, "switch document forward with ctrl+tab");
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[3];
-  expectFocusShift(() => synthesizeKey("VK_F6", { ctrlKey: true }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("KEY_F6", {ctrlKey: true}, framesetWindow),
                    gNewExpectedWindow, getById("f7"), true, "switch document forward with ctrl+f6");
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[0];
-  expectFocusShift(() => synthesizeKey("VK_F6", { ctrlKey: true }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("KEY_F6", {ctrlKey: true}, framesetWindow),
                    gNewExpectedWindow, getById("f1"), true, "switch document forward and wrap");
 
 // going backwards by document and wrapping doesn't currently work, but didn't work
@@ -1232,7 +1232,7 @@ function framesetWindowLoaded(framesetWindow)
 /*
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[3];
-  expectFocusShift(() => synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("KEY_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
                    gNewExpectedWindow, getById("f7"), true, "switch document backward and wrap");
  */
 
@@ -1241,15 +1241,15 @@ function framesetWindowLoaded(framesetWindow)
 
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[2];
-  expectFocusShift(() => synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("KEY_F6", {ctrlKey: true, shiftKey: true}, framesetWindow),
                    gNewExpectedWindow, getById("f5"), true, "switch document backward with f6");
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[1];
-  expectFocusShift(() => synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("KEY_F6", {ctrlKey: true, shiftKey: true}, framesetWindow),
                    gNewExpectedWindow, getById("f3"), true, "switch document backward with ctrl+tab");
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[0];
-  expectFocusShift(() => synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("KEY_F6", {ctrlKey: true, shiftKey: true}, framesetWindow),
                    gNewExpectedWindow, getById("f1"), true, "switch document backward with ctrl+f6");
 
   // skip the window switching tests for now on Linux, as raising and lowering
