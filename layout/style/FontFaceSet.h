@@ -100,6 +100,7 @@ public:
                                    int32_t aStretch,
                                    uint8_t aStyle,
                                    const nsTArray<gfxFontFeature>& aFeatureSettings,
+                                   const nsTArray<gfxFontVariation>& aVariationSettings,
                                    uint32_t aLanguageOverride,
                                    gfxCharacterMap* aUnicodeRanges,
                                    uint8_t aFontDisplay) override;
