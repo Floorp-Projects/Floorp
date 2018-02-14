@@ -460,7 +460,7 @@ struct JSContext : public JS::RootingContext,
     js::jit::AutoFlushICache* autoFlushICache() const;
     void setAutoFlushICache(js::jit::AutoFlushICache* afc);
 
-    /* State used by jsdtoa.cpp. */
+    // State used by util/DoubleToString.cpp.
     js::ThreadLocalData<DtoaState*> dtoaState;
 
     // Any GC activity occurring on this thread.

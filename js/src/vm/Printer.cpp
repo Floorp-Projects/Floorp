@@ -16,11 +16,10 @@
 #include "jsutil.h"
 
 #include "ds/LifoAlloc.h"
-#include "vm/JSContext.h"
-
 #ifdef XP_WIN32
-#include "jswin.h"
+# include "util/Windows.h"
 #endif
+#include "vm/JSContext.h"
 
 using mozilla::PodCopy;
 

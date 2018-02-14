@@ -23,14 +23,14 @@
 // For JSFunctionSpecWithHelp
 #include "jsfriendapi.h"
 #include "jsstr.h"
-#ifdef XP_WIN
-# include "jswin.h"
-#endif
 #include "jswrapper.h"
 
 #include "gc/FreeOp.h"
 #include "js/Conversions.h"
 #include "shell/jsshell.h"
+#ifdef XP_WIN
+# include "util/Windows.h"
+#endif
 #include "vm/JSObject.h"
 #include "vm/StringBuffer.h"
 #include "vm/TypedArrayObject.h"

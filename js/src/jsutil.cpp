@@ -21,7 +21,7 @@
 #include "vm/HelperThreads.h"
 
 #ifdef WIN32
-#    include "jswin.h"
+#    include "util/Windows.h"
 #endif
 
 #include "js/Utility.h"
