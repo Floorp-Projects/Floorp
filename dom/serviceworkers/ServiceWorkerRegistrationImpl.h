@@ -52,15 +52,6 @@ public:
   GetNotifications(const GetNotificationOptions& aOptions,
                    ErrorResult& aRv) override;
 
-  already_AddRefed<ServiceWorker>
-  GetInstalling() override;
-
-  already_AddRefed<ServiceWorker>
-  GetWaiting() override;
-
-  already_AddRefed<ServiceWorker>
-  GetActive() override;
-
   already_AddRefed<PushManager>
   GetPushManager(JSContext* aCx, ErrorResult& aRv) override;
 
@@ -141,14 +132,6 @@ private:
   const nsString mScope;
   bool mListeningForEvents;
 
-  // The following properties are cached here to ensure JS equality is satisfied
-  // instead of acquiring a new worker instance from the ServiceWorkerManager
-  // for every access. A null value is considered a cache miss.
-  // These three may change to a new worker at any time.
-  RefPtr<ServiceWorker> mInstallingWorker;
-  RefPtr<ServiceWorker> mWaitingWorker;
-  RefPtr<ServiceWorker> mActiveWorker;
-
   RefPtr<PushManager> mPushManager;
 };
 
@@ -184,15 +167,6 @@ public:
   already_AddRefed<Promise>
   GetNotifications(const GetNotificationOptions& aOptions,
                    ErrorResult& aRv) override;
-
-  already_AddRefed<ServiceWorker>
-  GetInstalling() override;
-
-  already_AddRefed<ServiceWorker>
-  GetWaiting() override;
-
-  already_AddRefed<ServiceWorker>
-  GetActive() override;
 
   void
   GetScope(nsAString& aScope) const override
