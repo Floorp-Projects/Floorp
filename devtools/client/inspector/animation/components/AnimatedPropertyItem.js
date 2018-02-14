@@ -17,6 +17,7 @@ class AnimatedPropertyItem extends PureComponent {
       property: PropTypes.string.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       state: PropTypes.object.isRequired,
+      type: PropTypes.string.isRequired,
       values: PropTypes.array.isRequired,
     };
   }
@@ -26,6 +27,7 @@ class AnimatedPropertyItem extends PureComponent {
       property,
       simulateAnimation,
       state,
+      type,
       values,
     } = this.props;
 
@@ -42,6 +44,7 @@ class AnimatedPropertyItem extends PureComponent {
       KeyframesGraph(
         {
           simulateAnimation,
+          type,
           values,
         }
       )

@@ -14,6 +14,7 @@ class KeyframesGraph extends PureComponent {
   static get propTypes() {
     return {
       simulateAnimation: PropTypes.func.isRequired,
+      type: PropTypes.string.isRequired,
       values: PropTypes.array.isRequired,
     };
   }
@@ -21,6 +22,7 @@ class KeyframesGraph extends PureComponent {
   render() {
     const {
       simulateAnimation,
+      type,
       values,
     } = this.props;
 
@@ -31,6 +33,7 @@ class KeyframesGraph extends PureComponent {
       KeyframesGraphPath(
         {
           simulateAnimation,
+          type,
           values,
         }
       )
