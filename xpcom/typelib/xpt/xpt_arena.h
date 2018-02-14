@@ -15,14 +15,6 @@
 #include "mozilla/MemoryReporting.h"
 #include <stdint.h>
 
-
-/*
- * The XPT library is statically linked: no functions are exported from
- * shared libraries.
- */
-#define XPT_PUBLIC_API(t)    t
-#define XPT_PUBLIC_DATA(t)   t
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -33,16 +25,16 @@ extern "C" {
 
 typedef struct XPTArena XPTArena;
 
-XPT_PUBLIC_API(XPTArena *)
+XPTArena*
 XPT_NewArena(size_t block_size8, size_t block_size1);
 
-XPT_PUBLIC_API(void)
+void
 XPT_DestroyArena(XPTArena *arena);
 
-XPT_PUBLIC_API(void *)
+void*
 XPT_ArenaCalloc(XPTArena *arena, size_t size, size_t alignment);
 
-XPT_PUBLIC_API(size_t)
+size_t
 XPT_SizeOfArenaIncludingThis(XPTArena *arena, MozMallocSizeOf mallocSizeOf);
 
 /* --------------------------------------------------------- */
@@ -54,7 +46,7 @@ XPT_SizeOfArenaIncludingThis(XPTArena *arena, MozMallocSizeOf mallocSizeOf);
 /* --------------------------------------------------------- */
 
 #ifdef DEBUG
-XPT_PUBLIC_API(void)
+void
 XPT_AssertFailed(const char *s, const char *file, uint32_t lineno)
   MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS;
 #define XPT_ASSERT(_expr) \
