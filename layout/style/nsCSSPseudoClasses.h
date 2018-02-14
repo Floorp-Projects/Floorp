@@ -11,6 +11,7 @@
 
 #include "nsStringFwd.h"
 #include "mozilla/CSSEnabledState.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/Maybe.h"
 
 // The following two flags along with the pref defines where this pseudo
@@ -29,6 +30,7 @@
   (CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS | CSS_PSEUDO_CLASS_ENABLED_IN_CHROME)
 
 class nsAtom;
+class nsIDocument;
 
 namespace mozilla {
 namespace dom {

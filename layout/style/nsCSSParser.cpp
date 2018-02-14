@@ -12056,6 +12056,12 @@ CSSParserImpl::ParseFontDescriptorValue(nsCSSFontDesc aDescID,
   case eCSSFontDesc_FontFeatureSettings:
     return ParseFontFeatureSettings(aValue);
 
+  case eCSSFontDesc_FontVariationSettings:
+    if (StylePrefs::sFontVariationsEnabled) {
+      return ParseFontVariationSettings(aValue);
+    }
+    return false;
+
   case eCSSFontDesc_FontLanguageOverride:
     return ParseSingleTokenVariant(aValue, VARIANT_NORMAL | VARIANT_STRING,
                                    nullptr);

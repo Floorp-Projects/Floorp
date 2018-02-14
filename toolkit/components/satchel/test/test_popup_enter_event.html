@@ -52,9 +52,9 @@ function handleEnter(evt) {
 }
 
 function popupShownListener(evt) {
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
-  synthesizeKey("KEY_Enter", {code: "Enter"}); // select the first entry in the popup
-  synthesizeKey("KEY_Enter", {code: "Enter"}); // try to submit the form with the filled value
+  synthesizeKey("KEY_ArrowDown", {});
+  synthesizeKey("KEY_Enter", {}); // select the first entry in the popup
+  synthesizeKey("KEY_Enter", {}); // try to submit the form with the filled value
 }
 
 function runTest() {
@@ -74,7 +74,7 @@ function runTest() {
   input.focus();
   input.value = "value";
   input.focus();
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
 }
 
 function startTest() {

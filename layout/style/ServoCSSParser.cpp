@@ -9,6 +9,7 @@
 #include "ServoCSSParser.h"
 
 #include "mozilla/ServoBindings.h"
+#include "mozilla/ServoStyleSet.h"
 #include "nsIDocument.h"
 
 using namespace mozilla;

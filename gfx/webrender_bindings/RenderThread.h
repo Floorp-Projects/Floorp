@@ -118,6 +118,9 @@ public:
   void NewFrameReady(wr::WindowId aWindowId);
 
   /// Automatically forwarded to the render thread.
+  void WakeUp(wr::WindowId aWindowId);
+
+  /// Automatically forwarded to the render thread.
   void PipelineSizeChanged(wr::WindowId aWindowId, uint64_t aPipelineId, float aWidth, float aHeight);
 
   /// Automatically forwarded to the render thread.

@@ -10,11 +10,11 @@ use {FromMetaItem, FromDeriveInput, FromField, FromVariant, Result};
 pub struct Ignored;
 
 impl FromMetaItem for Ignored {
-    fn from_meta_item(_: &syn::MetaItem) -> Result<Self> {
+    fn from_meta_item(_: &syn::Meta) -> Result<Self> {
         Ok(Ignored)
     }
 
-    fn from_nested_meta_item(_: &syn::NestedMetaItem) -> Result<Self> {
+    fn from_nested_meta_item(_: &syn::NestedMeta) -> Result<Self> {
         Ok(Ignored)
     }
 }

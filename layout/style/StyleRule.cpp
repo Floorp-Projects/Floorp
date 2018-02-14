@@ -27,6 +27,7 @@
 #include "nsXMLNameSpaceMap.h"
 #include "nsCSSPseudoClasses.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsCSSRuleProcessor.h"
 #include "nsTArray.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
@@ -34,6 +35,7 @@
 #include "nsRuleProcessorData.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 #define NS_IF_CLONE(member_)                                                  \
   PR_BEGIN_MACRO                                                              \

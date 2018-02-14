@@ -122,7 +122,7 @@ function makeTest(manifestPermissions, optionalPermissions, checkFetch = true) {
       is(result, false, "fetch() failed from content script due to lack of host permission");
     }
 
-    synthesizeKey("a", {code: "KeyA"}, win);
+    synthesizeKey("a", {}, win);
     result = await extension.awaitMessage("request.result");
     is(result, true, "permissions.request() succeeded");
 

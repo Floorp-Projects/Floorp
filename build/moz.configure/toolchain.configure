@@ -779,21 +779,26 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     # doesn't match the target C compiler.
     # As a special case, since clang supports all kinds of targets in the same
     # executable, when cross compiling with clang, default to the same compiler
-    # as the target compiler, resetting flags.
+    # as the target compiler, resetting flags.  However, Android NDK clangs do
+    # not function as host compilers -- they're target compilers only -- so
+    # don't use clang target as host if the target OS is Android.
     if host_or_target == host:
         if other_c_compiler is not None:
             args = (c_compiler, other_c_compiler)
         else:
             args = ()
 
-        @depends(provided_compiler, other_compiler, cross_compiling, *args)
-        def provided_compiler(value, other_compiler, cross_compiling, *args):
+        @depends(provided_compiler, other_compiler, cross_compiling,
+                 target, *args)
+        def provided_compiler(value, other_compiler, cross_compiling,
+                              target, *args):
             if value:
                 return value
             c_compiler, other_c_compiler = args if args else (None, None)
             if not cross_compiling and c_compiler == other_c_compiler:
                 return other_compiler
-            if cross_compiling and other_compiler.type == 'clang':
+            if cross_compiling and other_compiler.type == 'clang' and \
+                    target.os != 'Android':
                 return namespace(**{
                     k: [] if k == 'flags' else v
                     for k, v in other_compiler.__dict__.iteritems()

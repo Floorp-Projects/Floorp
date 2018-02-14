@@ -52,10 +52,16 @@ PluginProcessParent::~PluginProcessParent()
 
 bool
 PluginProcessParent::Launch(mozilla::UniquePtr<LaunchCompleteTask> aLaunchCompleteTask,
-                            int32_t aSandboxLevel)
+                            int32_t aSandboxLevel,
+                            bool aIsSandboxLoggingEnabled)
 {
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_SANDBOX)
+    // At present, the Mac Flash plugin sandbox does not support different
+    // levels and is enabled via a boolean pref or environment variable.
+    // On Mac, when |aSandboxLevel| is positive, we enable the sandbox.
+#if defined(XP_WIN)
     mSandboxLevel = aSandboxLevel;
+#endif // XP_WIN
 #else
     if (aSandboxLevel != 0) {
         MOZ_ASSERT(false,
@@ -67,6 +73,15 @@ PluginProcessParent::Launch(mozilla::UniquePtr<LaunchCompleteTask> aLaunchComple
 
     vector<string> args;
     args.push_back(MungePluginDsoPath(mPluginFilePath));
+
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+    if (aSandboxLevel > 0) {
+        args.push_back("-flashSandbox");
+        if (aIsSandboxLoggingEnabled) {
+            args.push_back("-flashSandboxLogging");
+        }
+    }
+#endif
 
     bool result = AsyncLaunch(args);
     if (!result) {

@@ -1043,3 +1043,38 @@ decorate_task(
     );
   }
 );
+
+// Should send the correct event telemetry when a study ends because
+// the user changed preferences during a browser run.
+decorate_task(
+  withMockPreferences,
+  withStub(TelemetryEvents, "sendEvent"),
+  async function testPrefChangeEventTelemetry(mockPreferences, sendEventStub) {
+    is(Preferences.get("fake.preference"), null, "preference should start unset");
+
+    await PreferenceExperiments.start({
+      name: "test",
+      branch: "branch",
+      preferenceName: "fake.preference",
+      preferenceValue: "experimentvalue",
+      preferenceBranchType: "default",
+      preferenceType: "string",
+    });
+
+    // setting the preference on the user branch should trigger the observer to stop the experiment
+    mockPreferences.set("fake.preference", "uservalue", "user");
+
+    // let the event loop tick to run the observer
+    await Promise.resolve();
+
+    is(sendEventStub.getCall(0).args[0], "enroll", "There is an enrollment event from start()");
+    Assert.deepEqual(
+      sendEventStub.getCall(1).args,
+      ["unenroll", "preference_study", "test", {
+        didResetValue: "false",
+        reason: "user-preference-changed",
+      }],
+      "stop should send a telemetry event indicating the user unenrolled manually",
+    );
+  },
+);

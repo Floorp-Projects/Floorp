@@ -203,7 +203,7 @@ function testOptionColors(index, item, menulist) {
 
   // Press Down to move the selected item to the next item in the
   // list and check the colors of this item when it's not selected.
-  EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+  EventUtils.synthesizeKey("KEY_ArrowDown", {});
 
   if (expected.end) {
     return;

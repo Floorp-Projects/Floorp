@@ -31,7 +31,7 @@ SimpleTest.waitForFocus(()=>{
   ok(range.collapsed, "range should be collapsed at the end of <blockquote>");
   is(range.startContainer, blockquote, "range should be collapsed in the <blockquote>");
   is(range.startOffset, blockquote.childNodes.length, "range should be collapsed at the end");
-  synthesizeKey("KEY_Backspace", { code: "Backspace" });
+  synthesizeKey("KEY_Backspace", {});
   is(blockquote.innerHTML, "<p>ab</p>", "Pressing Backspace key at the end of <blockquote> should remove the last character in the <p>");
 
   // Try to remove the first character from the start of the <blockquote>
@@ -40,7 +40,7 @@ SimpleTest.waitForFocus(()=>{
   ok(range.collapsed, "range should be collapsed at the start of <blockquote>");
   is(range.startContainer, blockquote, "range should be collapsed in the <blockquote>");
   is(range.startOffset, 0, "range should be collapsed at the start");
-  synthesizeKey("KEY_Delete", { code: "Delete" });
+  synthesizeKey("KEY_Delete", {});
   is(blockquote.innerHTML, "<p>b</p>", "Pressing Delete key at the start of <blockquote> should remove the first character in the <p>");
 
   SimpleTest.finish();

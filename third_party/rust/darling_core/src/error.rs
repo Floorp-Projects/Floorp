@@ -70,7 +70,7 @@ impl Error {
         Error::new(ErrorKind::TooFewItems(min))
     }
 
-    /// Creates a new error when a list got more items than it supports. The `max` argument 
+    /// Creates a new error when a list got more items than it supports. The `max` argument
     /// is the largest number of items the receiver could accept.
     pub fn too_many_items(max: usize) -> Self {
         Error::new(ErrorKind::TooManyItems(max))
@@ -108,7 +108,7 @@ impl Error {
         }
     }
 
-    /// Adds a location to the error, such as a field or variant. 
+    /// Adds a location to the error, such as a field or variant.
     /// Locations must be added in reverse order of specificity.
     pub fn at<T: fmt::Display>(mut self, location: T) -> Self {
         self.locations.insert(0, location.to_string());
@@ -208,7 +208,7 @@ impl Iterator for IntoIter {
 }
 
 type FieldName = String;
-type MetaItemFormat = String;
+type MetaFormat = String;
 
 #[derive(Debug)]
 // Don't want to publicly commit to ErrorKind supporting equality yet, but
@@ -220,14 +220,14 @@ enum ErrorKind {
     DuplicateField(FieldName),
     MissingField(FieldName),
     UnknownField(FieldName),
-    UnexpectedFormat(MetaItemFormat),
+    UnexpectedFormat(MetaFormat),
     UnexpectedType(String),
     UnknownValue(String),
     TooFewItems(usize),
     TooManyItems(usize),
     /// A set of errors.
     Multiple(Vec<Error>),
-    
+
     // TODO make this variant take `!` so it can't exist
     #[doc(hidden)]
     __NonExhaustive
@@ -236,7 +236,7 @@ enum ErrorKind {
 impl ErrorKind {
     pub fn description(&self) -> &str {
         use self::ErrorKind::*;
-        
+
         match *self {
             Custom(ref s) => s,
             DuplicateField(_) => "Duplicate field",
@@ -289,7 +289,7 @@ impl fmt::Display for ErrorKind {
 
                     item.fmt(f)?;
                 }
-                
+
                 write!(f, ")")
             },
             __NonExhaustive => unreachable!(),
@@ -317,7 +317,7 @@ mod tests {
         assert!(err.location().is_empty());
 
         let mut err_iter = err.into_iter();
-        
+
         let first = err_iter.next();
         assert!(first.is_some());
         assert_eq!(first.unwrap().location(), vec!["foo", "world"]);

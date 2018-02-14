@@ -50,11 +50,13 @@ public:
           int32_t aStretch,
           uint8_t aStyle,
           const nsTArray<gfxFontFeature>& aFeatureSettings,
+          const nsTArray<gfxFontVariation>& aVariationSettings,
           uint32_t aLanguageOverride,
           gfxCharacterMap* aUnicodeRanges,
           uint8_t aFontDisplay)
       : gfxUserFontEntry(aFontSet, aFontFaceSrcList, aWeight, aStretch,
-                         aStyle, aFeatureSettings, aLanguageOverride,
+                         aStyle, aFeatureSettings, aVariationSettings,
+                         aLanguageOverride,
                          aUnicodeRanges, aFontDisplay) {}
 
     virtual void SetLoadState(UserFontLoadState aLoadState) override;
@@ -160,6 +162,8 @@ public:
   void SetVariant(const nsAString& aValue, mozilla::ErrorResult& aRv);
   void GetFeatureSettings(nsString& aResult);
   void SetFeatureSettings(const nsAString& aValue, mozilla::ErrorResult& aRv);
+  void GetVariationSettings(nsString& aResult);
+  void SetVariationSettings(const nsAString& aValue, mozilla::ErrorResult& aRv);
   void GetDisplay(nsString& aResult);
   void SetDisplay(const nsAString& aValue, mozilla::ErrorResult& aRv);
 
