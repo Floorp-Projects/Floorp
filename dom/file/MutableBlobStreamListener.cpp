@@ -38,6 +38,7 @@ MutableBlobStreamListener::~MutableBlobStreamListener()
 
 NS_IMPL_ISUPPORTS(MutableBlobStreamListener,
                   nsIStreamListener,
+                  nsIThreadRetargetableStreamListener,
                   nsIRequestObserver)
 
 NS_IMETHODIMP
@@ -79,7 +80,7 @@ MutableBlobStreamListener::OnDataAvailable(nsIRequest* aRequest,
                                            uint64_t aSourceOffset,
                                            uint32_t aCount)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  // This method could be called on any thread.
   MOZ_ASSERT(mStorage);
 
   uint32_t countRead;
@@ -94,7 +95,7 @@ MutableBlobStreamListener::WriteSegmentFun(nsIInputStream* aWriterStream,
                                            uint32_t aCount,
                                            uint32_t* aWriteCount)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  // This method could be called on any thread.
 
   MutableBlobStreamListener* self = static_cast<MutableBlobStreamListener*>(aClosure);
   MOZ_ASSERT(self->mStorage);
@@ -105,6 +106,12 @@ MutableBlobStreamListener::WriteSegmentFun(nsIInputStream* aWriterStream,
   }
 
   *aWriteCount = aCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MutableBlobStreamListener::CheckListenerChain()
+{
   return NS_OK;
 }
 
