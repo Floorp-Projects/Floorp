@@ -25,6 +25,7 @@
 #include "nsServiceManagerUtils.h"
 #include "ServiceWorker.h"
 #include "ServiceWorkerManager.h"
+#include "ServiceWorkerRegistrationListener.h"
 
 #include "nsIDocument.h"
 #include "nsIServiceWorkerManager.h"
@@ -885,6 +886,8 @@ ServiceWorkerRegistrationMainThread::GetPushManager(JSContext* aCx,
 
 ////////////////////////////////////////////////////
 // Worker Thread implementation
+
+class WorkerListener;
 
 class ServiceWorkerRegistrationWorkerThread final : public ServiceWorkerRegistration
                                                   , public WorkerHolder
