@@ -12,6 +12,7 @@
   --fill-color-csstransition: var(--theme-highlight-blue);
   --fill-color-scriptanimation: var(--theme-graphs-green);
   --graph-right-offset: 10px;
+  --keyframe-marker-shadow-color: #c4c4c4;
   --sidebar-width: 200px;
   --stroke-color-cssanimation: var(--theme-highlight-lightorange);
   --stroke-color-csstransition: var(--theme-highlight-bluegrey);
@@ -21,6 +22,7 @@
 
 :root.theme-dark {
   --animation-even-background-color: rgba(255, 255, 255, 0.05);
+  --keyframe-marker-shadow-color: #818181;
 }
 
 :root.theme-firebug {
@@ -361,6 +363,7 @@
 .keyframes-graph {
   height: 100%;
   padding-top: 3px;
+  position: relative;
   width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
 }
 
@@ -409,6 +412,39 @@
 
 .keyframes-graph-path .hint rect:hover {
   stroke-opacity: 1;
+}
+
+/* Keyframe Marker List */
+.keyframe-marker-list {
+  pointer-events: none;
+  position: absolute;
+  height: 100%;
+  list-style-type: none;
+  top: 0%;
+  width: 100%;
+}
+
+.keyframe-marker-item {
+  box-shadow: 0 0 0 1px var(--keyframe-marker-shadow-color);
+  border-radius: 100%;
+  pointer-events: auto;
+  position: absolute;
+  top: 50%;
+  height: 10px;
+  transform: translate(-5px, -3px);
+  width: 10px;
+}
+
+.animated-property-list-container.cssanimation .keyframe-marker-item {
+  background-color: var(--fill-color-cssanimation);
+}
+
+.animated-property-list-container.csstransition .keyframe-marker-item {
+  background-color: var(--fill-color-csstransition);
+}
+
+.animated-property-list-container.scriptanimation .keyframe-marker-item {
+  background-color: var(--fill-color-scriptanimation);
 }
 
 /* No Animation Panel */
