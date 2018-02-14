@@ -42,14 +42,4 @@ XPT_SizeOfArenaIncludingThis(XPTArena *arena, MozMallocSizeOf mallocSizeOf);
 
 /* --------------------------------------------------------- */
 
-#ifdef DEBUG
-void
-XPT_AssertFailed(const char *s, const char *file, uint32_t lineno)
-  MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS;
-#define XPT_ASSERT(_expr) \
-    ((_expr)?((void)0):XPT_AssertFailed(# _expr, __FILE__, __LINE__))
-#else
-#define XPT_ASSERT(_expr) ((void)0)
-#endif
-
 #endif /* __xpt_arena_h__ */
