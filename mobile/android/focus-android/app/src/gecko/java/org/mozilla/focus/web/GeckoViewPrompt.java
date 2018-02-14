@@ -35,6 +35,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
+import org.mozilla.focus.R;
+import org.mozilla.gecko.GeckoSession;
+import org.mozilla.gecko.util.GeckoBundle;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -42,12 +46,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-import org.mozilla.focus.R;
-import org.mozilla.gecko.GeckoSession;
-import org.mozilla.gecko.util.GeckoBundle;
-
 final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
-    protected static final String LOGTAG = "BasicGeckoViewPrompt";
+    protected static final String LOGTAG = "GeckoViewPrompt";
+    private final String ITEMS = "items";
+    private final String LABEL = "label";
+    private final String SELECTED = "selected";
+    private final String SEPARATOR = "separator";
 
     private final Activity mActivity;
     public int filePickerRequestCode = 1;
@@ -143,7 +147,7 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
 
     private int getViewPadding(final AlertDialog.Builder builder) {
         final TypedArray attr = builder.getContext().obtainStyledAttributes(
-                new int[] { android.R.attr.listPreferredItemPaddingLeft });
+                new int[]{android.R.attr.listPreferredItemPaddingLeft});
         final int padding = attr.getDimensionPixelSize(0, 1);
         attr.recycle();
         return padding;
@@ -263,9 +267,9 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
         }
 
         for (final GeckoBundle item : items) {
-            final GeckoBundle[] children = item.getBundleArray("items");
+            final GeckoBundle[] children = item.getBundleArray(ITEMS);
             if (indent != null && children == null) {
-                item.putString("label", indent + item.getString("label", ""));
+                item.putString(LABEL, indent + item.getString(LABEL, ""));
             }
             list.add(item);
 
@@ -318,11 +322,11 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             @Override
             public int getItemViewType(final int position) {
                 final GeckoBundle item = getItem(position);
-                if (item.getBoolean("separator")) {
+                if (item.getBoolean(SEPARATOR)) {
                     return TYPE_SEPARATOR;
                 } else if (type == CHOICE_TYPE_MENU) {
-                    return item.getBoolean("selected") ? TYPE_MENU_CHECK : TYPE_MENU_ITEM;
-                } else if (item.containsKey("items")) {
+                    return item.getBoolean(SELECTED) ? TYPE_MENU_CHECK : TYPE_MENU_ITEM;
+                } else if (item.containsKey(ITEMS)) {
                     return TYPE_GROUP;
                 } else if (type == CHOICE_TYPE_SINGLE) {
                     return TYPE_SINGLE;
@@ -336,9 +340,9 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             @Override
             public boolean isEnabled(final int position) {
                 final GeckoBundle item = getItem(position);
-                return !item.getBoolean("separator") && !item.getBoolean("disabled") &&
+                return !item.getBoolean(SEPARATOR) && !item.getBoolean("disabled") &&
                         ((type != CHOICE_TYPE_SINGLE && type != CHOICE_TYPE_MULTIPLE) ||
-                                !item.containsKey("items"));
+                                !item.containsKey(ITEMS));
             }
 
             @Override
@@ -352,7 +356,7 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
                         mSeparator.setLayoutParams(new ListView.LayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT, 2, itemType));
                         final TypedArray attr = getContext().obtainStyledAttributes(
-                                new int[] { android.R.attr.listDivider });
+                                new int[]{android.R.attr.listDivider});
                         mSeparator.setBackgroundResource(attr.getResourceId(0, 0));
                         attr.recycle();
                     }
@@ -381,9 +385,9 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
                 final GeckoBundle item = getItem(position);
                 final TextView text = (TextView) view;
                 text.setEnabled(!item.getBoolean("disabled"));
-                text.setText(item.getString("label"));
+                text.setText(item.getString(LABEL));
                 if (view instanceof CheckedTextView) {
-                    final boolean selected = item.getBoolean("selected");
+                    final boolean selected = item.getBoolean(SELECTED);
                     if (itemType == TYPE_MULTIPLE) {
                         list.setItemChecked(position, selected);
                     } else {
@@ -407,12 +411,12 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
                                         final int position, final long id) {
                     final GeckoBundle item = adapter.getItem(position);
                     if (type == CHOICE_TYPE_MENU) {
-                        final GeckoBundle[] children = item.getBundleArray("items");
+                        final GeckoBundle[] children = item.getBundleArray(ITEMS);
                         if (children != null) {
                             // Show sub-menu.
                             dialog.setOnDismissListener(null);
                             dialog.dismiss();
-                            promptForChoice(session, item.getString("label"), /* msg */ null,
+                            promptForChoice(session, item.getString(LABEL), /* msg */ null,
                                     type, children, callback);
                             return;
                         }
@@ -427,7 +431,7 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
                 public void onItemClick(final AdapterView<?> parent, final View v,
                                         final int position, final long id) {
                     final GeckoBundle item = adapter.getItem(position);
-                    item.putBoolean("selected", ((CheckedTextView) v).isChecked());
+                    item.putBoolean(SELECTED, ((CheckedTextView) v).isChecked());
                 }
             });
             builder.setNegativeButton(android.R.string.cancel, /* listener */ null)
@@ -440,7 +444,7 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
                                     ArrayList<String> items = new ArrayList<>(len);
                                     for (int i = 0; i < len; i++) {
                                         final GeckoBundle item = adapter.getItem(i);
-                                        if (item.getBoolean("selected")) {
+                                        if (item.getBoolean(SELECTED)) {
                                             items.add(item.getString("id"));
                                         }
                                     }
@@ -463,8 +467,7 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
     }
 
     public void promptForColor(final GeckoSession session, final String title,
-                               final String value, final TextCallback callback)
-    {
+                               final String value, final TextCallback callback) {
         final Activity activity = mActivity;
         if (activity == null) {
             callback.dismiss();
@@ -611,7 +614,7 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             if (resId != 0) {
                 try {
                     picker = (DatePicker) inflater.inflate(resId, /* root */ null);
-                } catch (final ClassCastException|InflateException e) {
+                } catch (final ClassCastException | InflateException e) {
                 }
             }
             if (picker == null) {
@@ -638,7 +641,7 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             if (resId != 0) {
                 try {
                     picker = (TimePicker) inflater.inflate(resId, /* root */ null);
-                } catch (final ClassCastException|InflateException e) {
+                } catch (final ClassCastException | InflateException e) {
                 }
             }
             if (picker == null) {
@@ -686,8 +689,7 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
     }
 
     public void promptForFile(GeckoSession session, String title, int type,
-                              String[] mimeTypes, FileCallback callback)
-    {
+                              String[] mimeTypes, FileCallback callback) {
         final Activity activity = mActivity;
         if (activity == null) {
             callback.dismiss();

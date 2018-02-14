@@ -282,7 +282,8 @@ object TelemetryWrapper {
         TelemetryHolder.get().recordSessionEnd()
 
         if (numLoads > 0) {
-            TelemetryEvent.create(Category.ACTION, Method.FOREGROUND, Object.BROWSER).extra(Extra.AVERAGE, averageTime.toString()).queue()
+            TelemetryEvent.create(Category.ACTION, Method.FOREGROUND, Object.BROWSER)
+                    .extra(Extra.AVERAGE, averageTime.toString()).queue()
             resetAverageLoad()
         }
 

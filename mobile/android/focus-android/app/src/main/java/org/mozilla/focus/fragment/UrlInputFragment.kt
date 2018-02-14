@@ -27,7 +27,12 @@ import org.mozilla.focus.session.Session
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.*
+import org.mozilla.focus.utils.Features
+import org.mozilla.focus.utils.Settings
+import org.mozilla.focus.utils.SupportUtils
+import org.mozilla.focus.utils.ThreadUtils
+import org.mozilla.focus.utils.UrlUtils
+import org.mozilla.focus.utils.ViewUtils
 import org.mozilla.focus.whatsnew.WhatsNew
 import org.mozilla.focus.widget.InlineAutocompleteEditText
 
