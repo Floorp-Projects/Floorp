@@ -54,8 +54,9 @@ class AnimatedPropertyList extends PureComponent {
       emitEventForTest,
     } = this.props;
     const animatedPropertyMap = await getAnimatedPropertyMap(animation);
+    const animationTypes = await animation.getAnimationTypes(animatedPropertyMap.keys());
 
-    this.setState({ animatedPropertyMap });
+    this.setState({ animatedPropertyMap, animationTypes });
 
     emitEventForTest("animation-keyframes-rendered");
   }
@@ -66,6 +67,7 @@ class AnimatedPropertyList extends PureComponent {
     } = this.props;
     const {
       animatedPropertyMap,
+      animationTypes,
     } = this.state;
 
     if (!animatedPropertyMap) {
@@ -78,11 +80,13 @@ class AnimatedPropertyList extends PureComponent {
       },
       [...animatedPropertyMap.entries()].map(([property, values]) => {
         const state = this.getPropertyState(property);
+        const type = animationTypes[property];
         return AnimatedPropertyItem(
           {
             property,
             simulateAnimation,
             state,
+            type,
             values,
           }
         );
