@@ -41,6 +41,11 @@ Task.spawn(function* () {
 
   assertPausedLocation(dbg, "browser-toolbox-test.js", 3);
 
+  // Remove the breakpoint before resuming in order to prevent hitting the breakpoint
+  // again during test closing.
+  let source = findSource(dbg, "browser-toolbox-test.js");
+  yield removeBreakpoint(dbg, source.id, 2);
+
   yield resume(dbg);
 
   info("Close the browser toolbox");
