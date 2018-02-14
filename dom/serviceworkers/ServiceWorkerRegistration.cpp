@@ -1352,13 +1352,15 @@ ServiceWorkerRegistration::WrapObject(JSContext* aCx,
 
 /* static */ already_AddRefed<ServiceWorkerRegistration>
 ServiceWorkerRegistration::CreateForMainThread(nsPIDOMWindowInner* aWindow,
-                                               const nsAString& aScope)
+                                               const ServiceWorkerRegistrationDescriptor& aDescriptor)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(NS_IsMainThread());
 
+  NS_ConvertUTF8toUTF16 scope(aDescriptor.Scope());
+
   RefPtr<ServiceWorkerRegistration> registration =
-    new ServiceWorkerRegistrationMainThread(aWindow, aScope);
+    new ServiceWorkerRegistrationMainThread(aWindow, scope);
 
   return registration.forget();
 }
