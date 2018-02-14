@@ -9,6 +9,7 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/DOMPrefs.h"
+#include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
@@ -43,14 +44,20 @@ public:
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual already_AddRefed<ServiceWorker>
-  GetInstalling() = 0;
+  already_AddRefed<ServiceWorker>
+  GetInstalling() const;
 
-  virtual already_AddRefed<ServiceWorker>
-  GetWaiting() = 0;
+  already_AddRefed<ServiceWorker>
+  GetWaiting() const;
 
-  virtual already_AddRefed<ServiceWorker>
-  GetActive() = 0;
+  already_AddRefed<ServiceWorker>
+  GetActive() const;
+
+  void
+  UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor);
+
+  bool
+  MatchesDescriptor(const ServiceWorkerRegistrationDescriptor& aDescriptor) const;
 
   virtual void
   GetScope(nsAString& aScope) const = 0;
@@ -85,6 +92,9 @@ protected:
   { }
 
   ServiceWorkerRegistrationDescriptor mDescriptor;
+  RefPtr<ServiceWorker> mInstallingWorker;
+  RefPtr<ServiceWorker> mWaitingWorker;
+  RefPtr<ServiceWorker> mActiveWorker;
 };
 
 
