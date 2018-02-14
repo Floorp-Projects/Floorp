@@ -54,7 +54,7 @@ add_task(async function history_only_menu_checking() {
   await setupFormHistory();
 
   await setInput("#tel", "");
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await expectPopup();
   checkMenuEntries(["+1234567890"], false);
 });
@@ -67,7 +67,7 @@ add_task(async function all_saved_fields_less_than_threshold() {
   });
 
   await setInput("#email", "");
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await expectPopup();
   checkMenuEntries(["foo@mozilla.com"], false);
 
@@ -79,7 +79,7 @@ add_task(async function check_menu_when_both_existed() {
   await setupAddressStorage();
 
   await setInput("#organization", "");
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({
@@ -89,7 +89,7 @@ add_task(async function check_menu_when_both_existed() {
   ));
 
   await setInput("#street-address", "");
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({
@@ -99,7 +99,7 @@ add_task(async function check_menu_when_both_existed() {
   ));
 
   await setInput("#tel", "");
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({
@@ -109,7 +109,7 @@ add_task(async function check_menu_when_both_existed() {
   ));
 
   await setInput("#address-line1", "");
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({
@@ -122,7 +122,7 @@ add_task(async function check_menu_when_both_existed() {
 // Display history search result if no matched data in addresses.
 add_task(async function check_fallback_for_mismatched_field() {
   await setInput("#email", "");
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await expectPopup();
   checkMenuEntries(["foo@mozilla.com"], false);
 });
@@ -134,7 +134,7 @@ add_task(async function check_search_result_for_pref_off() {
   });
 
   await setInput("#tel", "");
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await expectPopup();
   checkMenuEntries(["+1234567890"], false);
 
@@ -144,7 +144,7 @@ add_task(async function check_search_result_for_pref_off() {
 // Autofill the address from dropdown menu.
 add_task(async function check_fields_after_form_autofill() {
   const focusedInput = await setInput("#organization", "Moz");
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({
@@ -152,16 +152,16 @@ add_task(async function check_fields_after_form_autofill() {
       secondary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
     })
   ).slice(1));
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await triggerAutofillAndCheckProfile(MOCK_STORAGE[1]);
-  synthesizeKey("KEY_Escape", {code: "Escape"});
+  synthesizeKey("KEY_Escape", {});
   is(focusedInput.value, "Mozilla", "Filled field shouldn't be reverted by ESC key");
 });
 
 // Fallback to history search after autofill address.
 add_task(async function check_fallback_after_form_autofill() {
   await setInput("#tel", "", true);
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await expectPopup();
   checkMenuEntries(["+1234567890"], false);
 });
@@ -171,7 +171,7 @@ add_task(async function check_form_autofill_resume() {
   document.querySelector("#tel").blur();
   document.querySelector("#form1").reset();
   await setInput("#tel", "");
-  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+  synthesizeKey("KEY_ArrowDown", {});
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({

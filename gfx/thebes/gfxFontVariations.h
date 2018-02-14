@@ -8,6 +8,8 @@
 #define GFX_FONT_VARIATIONS_H
 
 #include "mozilla/gfx/FontVariation.h"
+#include "nsString.h"
+#include "nsTArray.h"
 
 typedef mozilla::gfx::FontVariation gfxFontVariation;
 

@@ -20,7 +20,7 @@ const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
 
 const { updateFonts } = require("./actions/fonts");
-const { updatePreviewText, updateShowAllFonts } = require("./actions/font-options");
+const { updatePreviewText } = require("./actions/font-options");
 
 class FontInspector {
   constructor(inspector, window) {
@@ -33,7 +33,6 @@ class FontInspector {
 
     this.onNewNode = this.onNewNode.bind(this);
     this.onPreviewFonts = this.onPreviewFonts.bind(this);
-    this.onShowAllFont = this.onShowAllFont.bind(this);
     this.onThemeChanged = this.onThemeChanged.bind(this);
 
     this.init();
@@ -46,7 +45,6 @@ class FontInspector {
 
     let fontsApp = FontsApp({
       onPreviewFonts: this.onPreviewFonts,
-      onShowAllFont: this.onShowAllFont,
     });
 
     let provider = createElement(Provider, {
@@ -66,8 +64,24 @@ class FontInspector {
     gDevTools.on("theme-switched", this.onThemeChanged);
 
     this.store.dispatch(updatePreviewText(""));
-    this.store.dispatch(updateShowAllFonts(false));
     this.update(false, "");
+  }
+
+  /**
+   * Given all fonts on the page, and given the fonts used in given node, return all fonts
+   * not from the page not used in this node.
+   *
+   * @param  {Array} allFonts
+   *         All fonts used on the entire page
+   * @param  {Array} nodeFonts
+   *         Fonts used only in one of the nodes
+   * @return {Array}
+   *         All fonts, except the ones used in the current node
+   */
+  excludeNodeFonts(allFonts, nodeFonts) {
+    return allFonts.filter(font => {
+      return !nodeFonts.some(nodeFont => nodeFont.name === font.name);
+    });
   }
 
   /**
@@ -85,6 +99,34 @@ class FontInspector {
     this.store = null;
   }
 
+  async getFontsForNode(node, options) {
+    // In case we've been destroyed in the meantime
+    if (!this.document) {
+      return [];
+    }
+
+    let fonts = await this.pageStyle.getUsedFontFaces(node, options).catch(console.error);
+    if (!fonts) {
+      return [];
+    }
+
+    return fonts;
+  }
+
+  async getFontsNotInNode(nodeFonts, options) {
+    // In case we've been destroyed in the meantime
+    if (!this.document) {
+      return [];
+    }
+
+    let allFonts = await this.pageStyle.getAllUsedFontFaces(options).catch(console.error);
+    if (!allFonts) {
+      allFonts = [];
+    }
+
+    return this.excludeNodeFonts(allFonts, nodeFonts);
+  }
+
   /**
    * Returns true if the font inspector panel is visible, and false otherwise.
    */
@@ -98,7 +140,6 @@ class FontInspector {
    */
   onNewNode() {
     if (this.isPanelVisible()) {
-      this.store.dispatch(updateShowAllFonts(false));
       this.update();
     }
   }
@@ -108,14 +149,6 @@ class FontInspector {
    */
   onPreviewFonts(value) {
     this.store.dispatch(updatePreviewText(value));
-    this.update();
-  }
-
-  /**
-   * Handler for click on show all fonts button.
-   */
-  onShowAllFont() {
-    this.store.dispatch(updateShowAllFonts(true));
     this.update();
   }
 
@@ -135,20 +168,22 @@ class FontInspector {
     }
 
     let node = this.inspector.selection.nodeFront;
+
     let fonts = [];
+    let otherFonts = [];
+
     let { fontOptions } = this.store.getState();
-    let { showAllFonts, previewText } = fontOptions;
+    let { previewText } = fontOptions;
 
     // Clear the list of fonts if the currently selected node is not connected or a text
     // or element node unless all fonts are supposed to be shown.
     let isElementOrTextNode = this.inspector.selection.isElementNode() ||
                               this.inspector.selection.isTextNode();
-    if (!showAllFonts &&
-        (!node ||
-         !this.isPanelVisible() ||
-         !this.inspector.selection.isConnected() ||
-         !isElementOrTextNode)) {
-      this.store.dispatch(updateFonts(fonts));
+    if (!node ||
+        !this.isPanelVisible() ||
+        !this.inspector.selection.isConnected() ||
+        !isElementOrTextNode) {
+      this.store.dispatch(updateFonts(fonts, otherFonts));
       return;
     }
 
@@ -158,23 +193,18 @@ class FontInspector {
       previewFillStyle: getColor("body-color")
     };
 
-    if (showAllFonts) {
-      fonts = await this.pageStyle.getAllUsedFontFaces(options)
-                      .catch(console.error);
-    } else {
-      fonts = await this.pageStyle.getUsedFontFaces(node, options)
-                      .catch(console.error);
-    }
+    fonts = await this.getFontsForNode(node, options);
+    otherFonts = await this.getFontsNotInNode(fonts, options);
 
-    if (!fonts || !fonts.length) {
+    if (!fonts.length && !otherFonts.length) {
       // No fonts to display. Clear the previously shown fonts.
       if (this.store) {
-        this.store.dispatch(updateFonts(fonts));
+        this.store.dispatch(updateFonts(fonts, otherFonts));
       }
       return;
     }
 
-    for (let font of fonts) {
+    for (let font of [...fonts, ...otherFonts]) {
       font.previewUrl = await font.preview.data.string();
     }
 
@@ -183,7 +213,7 @@ class FontInspector {
       return;
     }
 
-    this.store.dispatch(updateFonts(fonts));
+    this.store.dispatch(updateFonts(fonts, otherFonts));
 
     this.inspector.emit("fontinspector-updated");
   }

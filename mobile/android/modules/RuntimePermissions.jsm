@@ -12,12 +12,14 @@ ChromeUtils.defineModuleGetter(this, "EventDispatcher",
                                "resource://gre/modules/Messaging.jsm");
 
 // See: http://developer.android.com/reference/android/Manifest.permission.html
+const ACCESS_COARSE_LOCATION = "android.permission.ACCESS_COARSE_LOCATION";
 const ACCESS_FINE_LOCATION = "android.permission.ACCESS_FINE_LOCATION";
 const CAMERA = "android.permission.CAMERA";
 const RECORD_AUDIO = "android.permission.RECORD_AUDIO";
 const WRITE_EXTERNAL_STORAGE = "android.permission.WRITE_EXTERNAL_STORAGE";
 
 var RuntimePermissions = {
+  ACCESS_COARSE_LOCATION: ACCESS_COARSE_LOCATION,
   ACCESS_FINE_LOCATION: ACCESS_FINE_LOCATION,
   CAMERA: CAMERA,
   RECORD_AUDIO: RECORD_AUDIO,

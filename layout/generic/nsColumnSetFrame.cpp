@@ -7,6 +7,7 @@
 /* rendering object for css3 multi-column layout */
 
 #include "mozilla/Unused.h"
+#include "gfxPrefs.h"
 #include "nsColumnSetFrame.h"
 #include "nsCSSRendering.h"
 
@@ -91,7 +92,7 @@ nsDisplayColumnRule::GetLayerState(nsDisplayListBuilder* aBuilder,
   return LAYER_ACTIVE;
 }
 
-already_AddRefed<Layer>
+already_AddRefed<nsDisplayItem::Layer>
 nsDisplayColumnRule::BuildLayer(nsDisplayListBuilder* aBuilder,
                                 LayerManager* aManager,
                                 const ContainerLayerParameters& aContainerParameters)

@@ -62,7 +62,7 @@ add_task(async function() {
 
   // Alt + D is a shortcut key to move focus to the URL bar and selects its text.
   info("Pressing Alt + D in the search bar...");
-  EventUtils.synthesizeKey("d", {code: "KeyD", altKey: true});
+  EventUtils.synthesizeKey("d", {altKey: true});
 
   await promiseURLBarHasFocus();
   await promiseURLBarSelectsAllText();
@@ -74,7 +74,7 @@ add_task(async function() {
     gURLBar.inputField.value.length;
 
   info("Pressing Alt + D in the URL bar...");
-  EventUtils.synthesizeKey("d", {code: "KeyD", altKey: true});
+  EventUtils.synthesizeKey("d", {altKey: true});
   await promiseURLBarHasFocus();
   await promiseURLBarSelectsAllText();
 

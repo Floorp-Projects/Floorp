@@ -132,6 +132,7 @@ function waitForViewportResizeTo(ui, width, height) {
     // If the viewport has already the expected size, we resolve the promise immediately.
     let size = await getContentSize(ui);
     if (isSizeMatching(size)) {
+      info(`Content already resized to ${width} x ${height}`);
       resolve();
       return;
     }

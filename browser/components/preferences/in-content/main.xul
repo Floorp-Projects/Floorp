@@ -379,7 +379,8 @@
                 label="&translateWebPages.label;." accesskey="&translateWebPages.accesskey;"
                 onsyncfrompreference="return gMainPane.updateButtons('translateButton',
                                               'browser.translation.detectLanguage');"/>
-      <hbox id="bingAttribution" hidden="true">
+      <hbox id="bingAttribution" hidden="true" align="center">
+        <separator orient="vertical" class="thin"/>
         <label>&translation.options.attribution.beforeLogo;</label>
         <separator orient="vertical" class="thin"/>
         <image id="translationAttributionImage" aria-label="Microsoft Translator"

@@ -20,6 +20,8 @@
 class nsCSSValue;
 class nsIDocument;
 struct nsCSSRect;
+struct nsTimingFunction;
+struct RawServoDeclarationBlock;
 
 using RawGeckoGfxMatrix4x4 = mozilla::gfx::Float[16];
 

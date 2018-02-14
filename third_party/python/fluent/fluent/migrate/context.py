@@ -254,9 +254,10 @@ class MergeContext(object):
         return resource.get(key, None)
 
     def messages_equal(self, res1, res2):
-        """Compare messages of two FTL resources.
+        """Compare messages and terms of two FTL resources.
 
-        Uses FTL.BaseNode.equals to compare all messages in two FTL resources.
+        Uses FTL.BaseNode.equals to compare all messages/terms
+        in two FTL resources.
         If the order or number of messages differ, the result is also False.
         """
         def message_id(message):
@@ -264,10 +265,14 @@ class MergeContext(object):
             return message.id.name
 
         messages1 = sorted(
-            (entry for entry in res1.body if isinstance(entry, FTL.Message)),
+            (entry for entry in res1.body
+             if isinstance(entry, FTL.Message)
+                or isinstance(entry, FTL.Term)),
             key=message_id)
         messages2 = sorted(
-            (entry for entry in res2.body if isinstance(entry, FTL.Message)),
+            (entry for entry in res2.body
+             if isinstance(entry, FTL.Message)
+                or isinstance(entry, FTL.Term)),
             key=message_id)
         for msg1, msg2 in zip_longest(messages1, messages2):
             if msg1 is None or msg2 is None:

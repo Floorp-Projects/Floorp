@@ -2,7 +2,7 @@ use syn::{self, Ident};
 
 use {Result};
 use codegen::FromFieldImpl;
-use options::{ParseAttribute, ParseBody, OuterFrom};
+use options::{ParseAttribute, ParseData, OuterFrom};
 
 #[derive(Debug)]
 pub struct FromFieldOptions {
@@ -17,17 +17,17 @@ impl FromFieldOptions {
             base: OuterFrom::start(di),
             vis: Default::default(),
             ty: Default::default(),
-        }).parse_attributes(&di.attrs)?.parse_body(&di.body)
+        }).parse_attributes(&di.attrs)?.parse_body(&di.data)
     }
 }
 
 impl ParseAttribute for FromFieldOptions {
-    fn parse_nested(&mut self, mi: &syn::MetaItem) -> Result<()> {
+    fn parse_nested(&mut self, mi: &syn::Meta) -> Result<()> {
         self.base.parse_nested(mi)
     }
 }
 
-impl ParseBody for FromFieldOptions {
+impl ParseData for FromFieldOptions {
     fn parse_variant(&mut self, variant: &syn::Variant) -> Result<()> {
         self.base.parse_variant(variant)
     }

@@ -327,27 +327,27 @@ class OSXBootstrapper(BaseBootstrapper):
         return self._ensure_homebrew_packages(casks, extra_brew_args=['cask'])
 
     def ensure_homebrew_system_packages(self):
+        # We need to install Python because Mercurial requires the
+        # Python development headers which are missing from OS X (at
+        # least on 10.8) and because the build system wants a version
+        # newer than what Apple ships.
         packages = [
-            # We need to install Python because Mercurial requires the Python
-            # development headers which are missing from OS X (at least on
-            # 10.8) and because the build system wants a version newer than
-            # what Apple ships.
+            'autoconf@2.13',
+            'git',
+            'gnu-tar',
+            'llvm',
+            'mercurial',
+            'node',
             'python',
             'python3',
-            'mercurial',
-            'git',
-            'autoconf@2.13',
-            'gnu-tar',
-            'watchman',
             'terminal-notifier',
-            'node',
+            'watchman',
         ]
         self._ensure_homebrew_packages(packages)
 
     def ensure_homebrew_browser_packages(self, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
         packages = [
-            'llvm',
             'yasm',
         ]
         self._ensure_homebrew_packages(packages)

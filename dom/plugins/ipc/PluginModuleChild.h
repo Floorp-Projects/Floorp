@@ -313,7 +313,17 @@ public: // called by PluginInstanceChild
         return mFunctions.destroy(instance->GetNPP(), 0);
     }
 
+#if defined(OS_MACOSX) && defined(MOZ_SANDBOX)
+    void EnableFlashSandbox(bool aShouldEnableLogging);
+#endif
+
 private:
+
+#if defined(OS_MACOSX) && defined(MOZ_SANDBOX)
+    bool mEnableFlashSandbox;
+    bool mEnableFlashSandboxLogging;
+#endif
+
 #if defined(OS_WIN)
     virtual void EnteredCall() override;
     virtual void ExitedCall() override;

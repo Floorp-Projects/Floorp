@@ -41,7 +41,7 @@ impl FromMetaItem for DefaultExpression {
     }
 
     fn from_string(lit: &str) -> Result<Self> {
-        Ok(DefaultExpression::Explicit(syn::parse_path(lit).unwrap()))
+        Ok(DefaultExpression::Explicit(syn::Path::from(lit)))
     }
 }
 
@@ -49,7 +49,7 @@ impl FromMetaItem for DefaultExpression {
 pub trait ParseAttribute: Sized {
     fn parse_attributes(mut self, attrs: &[syn::Attribute]) -> Result<Self> {
         for attr in attrs {
-            if attr.name() == "darling" {
+            if attr.path == parse_quote!(darling) {
                 parse_attr(attr, &mut self)?;
             }
         }
@@ -58,7 +58,7 @@ pub trait ParseAttribute: Sized {
     }
 
     /// Read a meta-item, and apply its values to the current instance.
-    fn parse_nested(&mut self, mi: &syn::MetaItem) -> Result<()>;
+    fn parse_nested(&mut self, mi: &syn::Meta) -> Result<()>;
 }
 
 fn parse_attr<T: ParseAttribute>(attr: &syn::Attribute, target: &mut T) -> Result<()> {
@@ -66,10 +66,10 @@ fn parse_attr<T: ParseAttribute>(attr: &syn::Attribute, target: &mut T) -> Resul
         return Ok(())
     }
 
-    match attr.value {
-        syn::MetaItem::List(_, ref items) => {
-            for item in items {
-                if let syn::NestedMetaItem::MetaItem(ref mi) = *item {
+    match attr.interpret_meta() {
+        Some(syn::Meta::List(data)) => {
+            for item in data.nested {
+                if let syn::NestedMeta::Meta(ref mi) = item {
                     target.parse_nested(mi)?;
                 } else {
                     panic!("Wasn't able to parse: `{:?}`", item);
@@ -78,31 +78,42 @@ fn parse_attr<T: ParseAttribute>(attr: &syn::Attribute, target: &mut T) -> Resul
 
             Ok(())
         },
-        ref item => panic!("Wasn't able to parse: `{:?}`", item)
+        Some(ref item) => panic!("Wasn't able to parse: `{:?}`", item),
+        None => panic!("Unable to parse {:?}", attr),
     }
 }
 
-pub trait ParseBody: Sized {
-    fn parse_body(mut self, body: &syn::Body) -> Result<Self> {
-        use syn::{Body, VariantData};
+pub trait ParseData: Sized {
+    fn parse_body(mut self, body: &syn::Data) -> Result<Self> {
+        use syn::{Data, Fields};
 
         match *body {
-            Body::Struct(VariantData::Unit) => Ok(self),
-            Body::Struct(VariantData::Tuple(ref fields)) |
-            Body::Struct(VariantData::Struct(ref fields)) => {
-                for field in fields {
-                    self.parse_field(field)?;
-                }
+            Data::Struct(ref data) => {
+                match data.fields {
+                    Fields::Unit => Ok(self),
+                    Fields::Named(ref fields) => {
+                        for field in &fields.named {
+                            self.parse_field(field)?;
+                        }
+                        Ok(self)
+                    }
+                    Fields::Unnamed(ref fields) => {
+                        for field in &fields.unnamed {
+                            self.parse_field(field)?;
+                        }
 
-                Ok(self)
+                        Ok(self)
+                    }
+                }
             }
-            Body::Enum(ref variants) => {
-                for variant in variants {
+            Data::Enum(ref data) => {
+                for variant in &data.variants {
                     self.parse_variant(variant)?;
                 }
 
                 Ok(self)
             }
+            Data::Union(_) => unreachable!(),
         }
     }
 
