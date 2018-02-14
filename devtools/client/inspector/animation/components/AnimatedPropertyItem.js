@@ -14,6 +14,7 @@ const KeyframesGraph = createFactory(require("./keyframes-graph/KeyframesGraph")
 class AnimatedPropertyItem extends PureComponent {
   static get propTypes() {
     return {
+      getComputedStyle: PropTypes.func.isRequired,
       property: PropTypes.string.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       state: PropTypes.object.isRequired,
@@ -24,6 +25,7 @@ class AnimatedPropertyItem extends PureComponent {
 
   render() {
     const {
+      getComputedStyle,
       property,
       simulateAnimation,
       state,
@@ -43,6 +45,8 @@ class AnimatedPropertyItem extends PureComponent {
       ),
       KeyframesGraph(
         {
+          getComputedStyle,
+          property,
           simulateAnimation,
           type,
           values,

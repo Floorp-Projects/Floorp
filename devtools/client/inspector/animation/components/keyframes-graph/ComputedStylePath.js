@@ -75,7 +75,7 @@ class ComputedStylePath extends PureComponent {
       return {
         offset: index,
         easing: keyframe.easing,
-        [propertyName]: this.getPropertyValue(keyframe),
+        [getJsPropertyName(propertyName)]: this.getPropertyValue(keyframe),
       };
     });
     const effect = {
@@ -149,6 +149,24 @@ class ComputedStylePath extends PureComponent {
 
     return dom.path({ d, style });
   }
+}
+
+/**
+ * Convert given CSS property name to JavaScript CSS name.
+ *
+ * @param {String} cssPropertyName
+ *        CSS property name (e.g. background-color).
+ * @return {String}
+ *         JavaScript CSS property name (e.g. backgroundColor).
+ */
+function getJsPropertyName(cssPropertyName) {
+  if (cssPropertyName == "float") {
+    return "cssFloat";
+  }
+  // https://drafts.csswg.org/cssom/#css-property-to-idl-attribute
+  return cssPropertyName.replace(/-([a-z])/gi, (str, group) => {
+    return group.toUpperCase();
+  });
 }
 
 module.exports = ComputedStylePath;

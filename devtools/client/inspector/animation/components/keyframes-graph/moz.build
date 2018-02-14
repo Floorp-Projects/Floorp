@@ -5,6 +5,7 @@
 DevToolsModules(
     'ColorPath.js',
     'ComputedStylePath.js',
+    'DiscretePath.js',
     'DistancePath.js',
     'KeyframesGraph.js',
     'KeyframesGraphPath.js',
