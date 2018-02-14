@@ -1,5 +1,5 @@
-use core::ops::{Add, Sub, Mul};
-use core::num::Wrapping;
+use std::ops::{Add, Sub, Mul};
+use std::num::Wrapping;
 
 macro_rules! wrapping_impl {
     ($trait_name:ident, $method:ident, $t:ty) => {

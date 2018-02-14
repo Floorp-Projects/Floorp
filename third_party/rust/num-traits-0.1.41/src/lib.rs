@@ -9,35 +9,23 @@
 // except according to those terms.
 
 //! Numeric traits for generic mathematics
-//!
-//! ## Compatibility
-//!
-//! The `num-traits` crate is tested for rustc 1.8 and greater.
+#![doc(html_logo_url = "https://rust-num.github.io/num/rust-logo-128x128-blk-v2.png",
+       html_favicon_url = "https://rust-num.github.io/num/favicon.ico",
+       html_root_url = "https://rust-num.github.io/num/",
+       html_playground_url = "http://play.integer32.com/")]
 
-#![doc(html_root_url = "https://docs.rs/num-traits/0.2")]
-
-#![deny(unconditional_recursion)]
-
-#![cfg_attr(not(feature = "std"), no_std)]
-#[cfg(feature = "std")]
-extern crate core;
-
-use core::ops::{Add, Sub, Mul, Div, Rem};
-use core::ops::{AddAssign, SubAssign, MulAssign, DivAssign, RemAssign};
-use core::num::Wrapping;
-use core::fmt;
+use std::ops::{Add, Sub, Mul, Div, Rem};
+use std::ops::{AddAssign, SubAssign, MulAssign, DivAssign, RemAssign};
+use std::num::Wrapping;
 
 pub use bounds::Bounded;
-#[cfg(feature = "std")]
-pub use float::Float;
-pub use float::FloatConst;
-// pub use real::Real; // NOTE: Don't do this, it breaks `use num_traits::*;`.
+pub use float::{Float, FloatConst};
 pub use identities::{Zero, One, zero, one};
-pub use ops::checked::{CheckedAdd, CheckedSub, CheckedMul, CheckedDiv, CheckedShl, CheckedShr};
-pub use ops::wrapping::{WrappingAdd, WrappingMul, WrappingSub};
+pub use ops::checked::*;
+pub use ops::wrapping::*;
 pub use ops::saturating::Saturating;
 pub use sign::{Signed, Unsigned, abs, abs_sub, signum};
-pub use cast::{AsPrimitive, FromPrimitive, ToPrimitive, NumCast, cast};
+pub use cast::*;
 pub use int::PrimInt;
 pub use pow::{pow, checked_pow};
 
@@ -46,8 +34,6 @@ pub mod sign;
 pub mod ops;
 pub mod bounds;
 pub mod float;
-#[cfg(feature = "std")]
-pub mod real;
 pub mod cast;
 pub mod int;
 pub mod pow;
@@ -143,10 +129,10 @@ impl<T> NumAssignRef for T where T: NumAssign + for<'r> NumAssignOps<&'r T> {}
 macro_rules! int_trait_impl {
     ($name:ident for $($t:ty)*) => ($(
         impl $name for $t {
-            type FromStrRadixErr = ::core::num::ParseIntError;
+            type FromStrRadixErr = ::std::num::ParseIntError;
             #[inline]
             fn from_str_radix(s: &str, radix: u32)
-                              -> Result<Self, ::core::num::ParseIntError>
+                              -> Result<Self, ::std::num::ParseIntError>
             {
                 <$t>::from_str_radix(s, radix)
             }
@@ -172,29 +158,18 @@ pub enum FloatErrorKind {
     Empty,
     Invalid,
 }
-// FIXME: core::num::ParseFloatError is stable in 1.0, but opaque to us,
+// FIXME: std::num::ParseFloatError is stable in 1.0, but opaque to us,
 // so there's not really any way for us to reuse it.
 #[derive(Debug)]
 pub struct ParseFloatError {
     pub kind: FloatErrorKind,
 }
 
-impl fmt::Display for ParseFloatError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let description = match self.kind {
-            FloatErrorKind::Empty => "cannot parse float from empty string",
-            FloatErrorKind::Invalid => "invalid float literal",
-        };
-
-        description.fmt(f)
-    }
-}
-
 // FIXME: The standard library from_str_radix on floats was deprecated, so we're stuck
 // with this implementation ourselves until we want to make a breaking change.
 // (would have to drop it from `Num` though)
 macro_rules! float_trait_impl {
-    ($name:ident for $($t:ident)*) => ($(
+    ($name:ident for $($t:ty)*) => ($(
         impl $name for $t {
             type FromStrRadixErr = ParseFloatError;
 
@@ -206,9 +181,9 @@ macro_rules! float_trait_impl {
 
                 // Special values
                 match src {
-                    "inf"   => return Ok(core::$t::INFINITY),
-                    "-inf"  => return Ok(core::$t::NEG_INFINITY),
-                    "NaN"   => return Ok(core::$t::NAN),
+                    "inf"   => return Ok(Float::infinity()),
+                    "-inf"  => return Ok(Float::neg_infinity()),
+                    "NaN"   => return Ok(Float::nan()),
                     _       => {},
                 }
 
@@ -249,15 +224,15 @@ macro_rules! float_trait_impl {
                             // if we've not seen any non-zero digits.
                             if prev_sig != 0.0 {
                                 if is_positive && sig <= prev_sig
-                                    { return Ok(core::$t::INFINITY); }
+                                    { return Ok(Float::infinity()); }
                                 if !is_positive && sig >= prev_sig
-                                    { return Ok(core::$t::NEG_INFINITY); }
+                                    { return Ok(Float::neg_infinity()); }
 
                                 // Detect overflow by reversing the shift-and-add process
                                 if is_positive && (prev_sig != (sig - digit as $t) / radix as $t)
-                                    { return Ok(core::$t::INFINITY); }
+                                    { return Ok(Float::infinity()); }
                                 if !is_positive && (prev_sig != (sig + digit as $t) / radix as $t)
-                                    { return Ok(core::$t::NEG_INFINITY); }
+                                    { return Ok(Float::neg_infinity()); }
                             }
                             prev_sig = sig;
                         },
@@ -293,9 +268,9 @@ macro_rules! float_trait_impl {
                                 };
                                 // Detect overflow by comparing to last value
                                 if is_positive && sig < prev_sig
-                                    { return Ok(core::$t::INFINITY); }
+                                    { return Ok(Float::infinity()); }
                                 if !is_positive && sig > prev_sig
-                                    { return Ok(core::$t::NEG_INFINITY); }
+                                    { return Ok(Float::neg_infinity()); }
                                 prev_sig = sig;
                             },
                             None => match c {
@@ -329,15 +304,9 @@ macro_rules! float_trait_impl {
                             None             => return Err(PFE { kind: Invalid }),
                         };
 
-                        #[cfg(feature = "std")]
-                        fn pow(base: $t, exp: usize) -> $t {
-                            Float::powi(base, exp as i32)
-                        }
-                        // otherwise uses the generic `pow` from the root
-
                         match (is_positive, exp) {
-                            (true,  Ok(exp)) => pow(base, exp),
-                            (false, Ok(exp)) => 1.0 / pow(base, exp),
+                            (true,  Ok(exp)) => base.powi(exp as i32),
+                            (false, Ok(exp)) => 1.0 / base.powi(exp as i32),
                             (_, Err(_))      => return Err(PFE { kind: Invalid }),
                         }
                     },
