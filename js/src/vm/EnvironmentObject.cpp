@@ -9,13 +9,12 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
 
-#include "jsiter.h"
-
 #include "builtin/ModuleObject.h"
 #include "gc/Policy.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/AsyncFunction.h"
 #include "vm/GlobalObject.h"
+#include "vm/Iteration.h"
 #include "vm/JSCompartment.h"
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"

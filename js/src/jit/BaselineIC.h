@@ -9,8 +9,6 @@
 
 #include "mozilla/Assertions.h"
 
-#include "jsopcode.h"
-
 #include "builtin/TypedObject.h"
 #include "gc/Barrier.h"
 #include "jit/BaselineICList.h"
@@ -19,6 +17,7 @@
 #include "jit/SharedICRegisters.h"
 #include "js/GCVector.h"
 #include "vm/ArrayObject.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 #include "vm/UnboxedObject.h"
