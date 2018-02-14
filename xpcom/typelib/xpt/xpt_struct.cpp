@@ -48,7 +48,7 @@ DoParamDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
 
 /***************************************************************************/
 
-XPT_PUBLIC_API(bool)
+bool
 XPT_DoHeader(XPTArena *arena, NotNull<XPTCursor*> cursor, XPTHeader **headerp)
 {
     unsigned int i;
