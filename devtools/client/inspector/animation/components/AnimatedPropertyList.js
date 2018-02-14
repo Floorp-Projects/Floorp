@@ -16,6 +16,7 @@ class AnimatedPropertyList extends PureComponent {
       animation: PropTypes.object.isRequired,
       emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
+      simulateAnimation: PropTypes.func.isRequired,
     };
   }
 
@@ -60,7 +61,12 @@ class AnimatedPropertyList extends PureComponent {
   }
 
   render() {
-    const { animatedPropertyMap } = this.state;
+    const {
+      simulateAnimation,
+    } = this.props;
+    const {
+      animatedPropertyMap,
+    } = this.state;
 
     if (!animatedPropertyMap) {
       return null;
@@ -75,6 +81,7 @@ class AnimatedPropertyList extends PureComponent {
         return AnimatedPropertyItem(
           {
             property,
+            simulateAnimation,
             state,
             values,
           }

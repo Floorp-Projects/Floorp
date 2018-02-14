@@ -4,15 +4,36 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const KeyframesGraphPath = createFactory(require("./KeyframesGraphPath"));
 
 class KeyframesGraph extends PureComponent {
+  static get propTypes() {
+    return {
+      simulateAnimation: PropTypes.func.isRequired,
+      values: PropTypes.array.isRequired,
+    };
+  }
+
   render() {
+    const {
+      simulateAnimation,
+      values,
+    } = this.props;
+
     return dom.div(
       {
-        className: "keyframes-graph"
-      }
+        className: "keyframes-graph",
+      },
+      KeyframesGraphPath(
+        {
+          simulateAnimation,
+          values,
+        }
+      )
     );
   }
 }

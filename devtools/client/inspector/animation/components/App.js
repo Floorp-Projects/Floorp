@@ -65,6 +65,7 @@ class App extends PureComponent {
             emitEventForTest,
             getAnimatedPropertyMap,
             setDetailVisibility,
+            simulateAnimation,
           }
         ),
         endPanelControl: true,

@@ -360,7 +360,19 @@
 /* Keyframes Graph */
 .keyframes-graph {
   height: 100%;
+  padding-top: 5px;
   width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
+}
+
+.keyframes-graph-path {
+  height: 100%;
+  width: 100%;
+}
+
+.keyframes-graph-path path {
+  fill: lime;
+  vector-effect: non-scaling-stroke;
+  transform: scale(1, -1);
 }
 
 /* No Animation Panel */
