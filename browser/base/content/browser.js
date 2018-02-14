@@ -1356,7 +1356,7 @@ var gBrowserInit = {
 
     // Hack to ensure that the about:home favicon is loaded
     // instantaneously, to avoid flickering and improve perceived performance.
-    this._uriToLoadPromise.then(uriToLoad => {
+    this._callWithURIToLoad(uriToLoad => {
       if (uriToLoad == "about:home") {
         gBrowser.setIcon(gBrowser.selectedTab, "chrome://branding/content/icon32.png");
       } else if (uriToLoad == "about:privatebrowsing") {
@@ -1590,7 +1590,7 @@ var gBrowserInit = {
       initialBrowser.removeAttribute("blank");
     });
 
-    this._uriToLoadPromise.then(uriToLoad => {
+    this._callWithURIToLoad(uriToLoad => {
       if ((isBlankPageURL(uriToLoad) || uriToLoad == "about:privatebrowsing") &&
           focusAndSelectUrlBar()) {
         return;
@@ -1615,7 +1615,7 @@ var gBrowserInit = {
   },
 
   _handleURIToLoad() {
-    this._uriToLoadPromise.then(uriToLoad => {
+    this._callWithURIToLoad(uriToLoad => {
       if (!uriToLoad || uriToLoad == "about:blank") {
         return;
       }
@@ -1734,18 +1734,18 @@ var gBrowserInit = {
     }, {timeout: 10000});
   },
 
-  // Returns the URI(s) to load at startup.
+  // Returns the URI(s) to load at startup if it is immediately known, or a
+  // promise resolving to the URI to load.
   get _uriToLoadPromise() {
     delete this._uriToLoadPromise;
-    return this._uriToLoadPromise = new Promise(resolve => {
+    return this._uriToLoadPromise = function() {
       // window.arguments[0]: URI to load (string), or an nsIArray of
       //                      nsISupportsStrings to load, or a xul:tab of
       //                      a tabbrowser, which will be replaced by this
       //                      window (for this case, all other arguments are
       //                      ignored).
       if (!window.arguments || !window.arguments[0]) {
-        resolve(null);
-        return;
+        return null;
       }
 
       let uri = window.arguments[0];
@@ -1755,16 +1755,28 @@ var gBrowserInit = {
 
       // If the given URI is different from the homepage, we want to load it.
       if (uri != defaultArgs) {
-        resolve(uri);
-        return;
+        return uri;
       }
 
       // The URI appears to be the the homepage. We want to load it only if
       // session restore isn't about to override the homepage.
-      SessionStartup.willOverrideHomepagePromise.then(willOverrideHomepage => {
-        resolve(willOverrideHomepage ? null : uri);
-      });
-    });
+      let willOverride = SessionStartup.willOverrideHomepage;
+      if (!(willOverride instanceof Promise)) {
+        return willOverride ? null : uri;
+      }
+      return willOverride.then(willOverrideHomepage =>
+                                 willOverrideHomepage ? null : uri);
+    }();
+  },
+
+  // Calls the given callback with the URI to load at startup.
+  // Synchronously if possible, or after _uriToLoadPromise resolves otherwise.
+  _callWithURIToLoad(callback) {
+    let uriToLoad = this._uriToLoadPromise;
+    if (uriToLoad instanceof Promise)
+      uriToLoad.then(callback);
+    else
+      callback(uriToLoad);
   },
 
   onUnload() {
