@@ -405,3 +405,137 @@ function injectScript(aScript, aWindow = window) {
     });
   };
 }
+
+// Compute some configuration information used for hit testing.
+// The computed information is cached to avoid recomputing it
+// each time this function is called.
+// The computed information is an object with three fields:
+//   utils: the nsIDOMWindowUtils instance for this window
+//   isWebRender: true if WebRender is enabled
+//   isWindow: true if the platform is Windows
+function getHitTestConfig() {
+  if (!("hitTestConfig" in window)) {
+    var utils = SpecialPowers.getDOMWindowUtils(window);
+    var isWebRender = (utils.layerManagerType == 'WebRender');
+    var isWindows = (getPlatform() == 'windows');
+    window.hitTestConfig = { utils, isWebRender, isWindows };
+  }
+  return window.hitTestConfig;
+}
+
+// Peform a compositor hit test at the given point and return the result.
+// The returned object has two fields:
+//   hitInfo: a combination of APZHitResultFlags
+//   scrollId: the view-id of the scroll frame that was hit
+function hitTest(point) {
+  var utils = getHitTestConfig().utils;
+  dump("Hit-testing point (" + point.x + ", " + point.y + ")\n");
+  utils.sendMouseEvent("MozMouseHittest", point.x, point.y, 0, 0, 0, true, 0, 0, true, true);
+  var data = utils.getCompositorAPZTestData();
+  ok(data.hitResults.length >= 1, "Expected at least one hit result in the APZTestData");
+  var result = data.hitResults[data.hitResults.length - 1];
+  return { hitInfo: result.hitResult, scrollId: result.scrollId };
+}
+
+// Symbolic constants used by hitTestScrollbar().
+var ScrollbarTrackLocation = {
+    START: 1,
+    END: 2
+};
+var LayerState = {
+    ACTIVE: 1,
+    INACTIVE: 2
+};
+
+// Perform a hit test on the scrollbar(s) of a scroll frame.
+// This function takes a single argument which is expected to be
+// an object with the following fields:
+//   element: The scroll frame to perform the hit test on.
+//   directions: The direction(s) of scrollbars to test.
+//     If directions.vertical is true, the vertical scrollbar will be tested.
+//     If directions.horizontal is true, the horizontal scrollbar will be tested.
+//     Both may be true in a single call (in which case two tests are performed).
+//   expectedScrollId: The scroll id that is expected to be hit.
+//   trackLocation: One of ScrollbarTrackLocation.{START, END}.
+//     Determines which end of the scrollbar track is targeted.
+//   expectThumb: Whether the scrollbar thumb is expected to be present
+//     at the targeted end of the scrollbar track.
+//   layerState: Whether the scroll frame is active or inactive.
+// The function performs the hit tests and asserts that the returned
+// hit test information is consistent with the passed parameters.
+// There is no return value.
+// Tests that use this function must set the pref
+// "layout.scrollbars.always-layerize-track".
+function hitTestScrollbar(params) {
+  var config = getHitTestConfig();
+
+  var elem = params.element;
+
+  var boundingClientRect = elem.getBoundingClientRect();
+
+  var verticalScrollbarWidth = boundingClientRect.width - elem.clientWidth;
+  var horizontalScrollbarHeight = boundingClientRect.height - elem.clientHeight;
+
+  // On windows, the scrollbar tracks have buttons on the end. When computing
+  // coordinates for hit-testing we need to account for this. We assume the
+  // buttons are square, and so can use the scrollbar width/height to estimate
+  // the size of the buttons
+  var scrollbarArrowButtonHeight = config.isWindows ? verticalScrollbarWidth : 0;
+  var scrollbarArrowButtonWidth = config.isWindows ? horizontalScrollbarHeight : 0;
+
+  // Compute the expected hit result flags.
+  // The direction flag (APZHitResultFlags.SCROLLBAR_VERTICAL) is added in
+  // later, for the vertical test only.
+  // The APZHitResultFlags.SCROLLBAR flag will be present regardless of whether
+  // the layer is active or inactive because we force layerization of scrollbar
+  // tracks. Unfortunately not forcing the layerization results in different
+  // behaviour on different platforms which makes testing harder.
+  var expectedHitInfo = APZHitResultFlags.VISIBLE | APZHitResultFlags.SCROLLBAR;
+  if (params.expectThumb) {
+    // WebRender will hit-test scroll thumbs even inside inactive scrollframes,
+    // because the hit-test is based on display items and we do in fact generate
+    // the display items for the scroll thumb. The user-observed behaviour is
+    // going to be unaffected because the dispatch-to-content flag will also be
+    // set on these thumbs so it's not like APZ will allow async-scrolling them
+    // before the scrollframe has been activated/layerized. In non-WebRender we
+    // do not generate the layers for thumbs on inactive scrollframes, so the
+    // hit test will be accordingly different.
+    expectedHitInfo |= APZHitResultFlags.DISPATCH_TO_CONTENT;
+    if (config.isWebRender || params.layerState == LayerState.ACTIVE) {
+        expectedHitInfo |= APZHitResultFlags.SCROLLBAR_THUMB;
+    }
+  }
+
+  var scrollframeMsg = (params.layerState == LayerState.ACTIVE)
+    ? "active scrollframe" : "inactive scrollframe";
+
+  // Hit-test the targeted areas, assuming we don't have overlay scrollbars
+  // with zero dimensions.
+  if (params.directions.vertical && verticalScrollbarWidth > 0) {
+    var verticalScrollbarPoint = {
+        x: boundingClientRect.right - (verticalScrollbarWidth / 2),
+        y: (params.trackLocation == ScrollbarTrackLocation.START)
+             ? (boundingClientRect.y + scrollbarArrowButtonHeight + 5)
+             : (boundingClientRect.bottom - horizontalScrollbarHeight - scrollbarArrowButtonHeight - 5)
+    };
+    var {hitInfo, scrollId} = hitTest(verticalScrollbarPoint);
+    is(hitInfo, expectedHitInfo | APZHitResultFlags.SCROLLBAR_VERTICAL,
+       scrollframeMsg + " - vertical scrollbar hit info");
+    is(scrollId, params.expectedScrollId,
+       scrollframeMsg + " - vertical scrollbar scrollid");
+  }
+
+  if (params.directions.horizontal && horizontalScrollbarHeight > 0) {
+    var horizontalScrollbarPoint = {
+        x: (params.trackLocation == ScrollbarTrackLocation.START)
+             ? (boundingClientRect.x + scrollbarArrowButtonWidth + 5)
+             : (boundingClientRect.right - verticalScrollbarWidth - scrollbarArrowButtonWidth - 5),
+        y: boundingClientRect.bottom - (horizontalScrollbarHeight / 2),
+    };
+    var {hitInfo, scrollId} = hitTest(horizontalScrollbarPoint);
+    is(hitInfo, expectedHitInfo,
+       scrollframeMsg + " - horizontal scrollbar hit info");
+    is(scrollId, params.expectedScrollId,
+       scrollframeMsg + " - horizontal scrollbar scrollid");
+  }
+}
