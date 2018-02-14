@@ -305,6 +305,7 @@
 
 /* Animated Property Item */
 .animated-property-item {
+  display: flex;
   height: 30px;
 }
 
@@ -354,6 +355,12 @@
 
 .animated-property-name.warning span {
   text-decoration: underline dotted;
+}
+
+/* Keyframes Graph */
+.keyframes-graph {
+  height: 100%;
+  width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
 }
 
 /* No Animation Panel */
