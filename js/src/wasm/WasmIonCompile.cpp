@@ -4442,3 +4442,13 @@ wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
 
     return code->swap(masm);
 }
+
+bool
+js::wasm::IonCanCompile()
+{
+#if !defined(JS_CODEGEN_NONE) && !defined(JS_CODEGEN_ARM64)
+    return true;
+#else
+    return false;
+#endif
+}
