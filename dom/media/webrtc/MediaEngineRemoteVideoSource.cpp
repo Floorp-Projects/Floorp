@@ -374,21 +374,24 @@ MediaEngineRemoteVideoSource::Reconfigure(const RefPtr<AllocationHandle>& aHandl
     return NS_OK;
   }
 
-  {
-    MutexAutoLock lock(mMutex);
-    // Start() applies mCapability on the device.
-    mCapability = newCapability;
-  }
-
-  if (mState == kStarted) {
+  bool started = mState == kStarted;
+  if (started) {
     // Allocate always returns a null AllocationHandle.
     // We can safely pass nullptr below.
     nsresult rv = Stop(nullptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+  }
 
-    rv = Start(nullptr);
+  {
+    MutexAutoLock lock(mMutex);
+    // Start() applies mCapability on the device.
+    mCapability = newCapability;
+  }
+
+  if (started) {
+    nsresult rv = Start(nullptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
