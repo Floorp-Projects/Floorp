@@ -22,29 +22,29 @@ extern "C" {
 typedef struct XPTState         XPTState;
 typedef struct XPTCursor        XPTCursor;
 
-extern bool
+bool
 XPT_SkipStringInline(NotNull<XPTCursor*> cursor);
 
-extern bool
+bool
 XPT_DoCString(XPTArena *arena, NotNull<XPTCursor*> cursor, char **strp,
               bool ignore = false);
 
-extern bool
+bool
 XPT_DoIID(NotNull<XPTCursor*> cursor, nsID *iidp);
 
-extern bool
+bool
 XPT_Do64(NotNull<XPTCursor*> cursor, int64_t *u64p);
 
-extern bool
+bool
 XPT_Do32(NotNull<XPTCursor*> cursor, uint32_t *u32p);
 
-extern bool
+bool
 XPT_Do16(NotNull<XPTCursor*> cursor, uint16_t *u16p);
 
-extern bool
+bool
 XPT_Do8(NotNull<XPTCursor*> cursor, uint8_t *u8p);
 
-extern bool
+bool
 XPT_DoHeader(XPTArena *arena, NotNull<XPTCursor*> cursor, XPTHeader **headerp);
 
 typedef enum {
@@ -66,17 +66,17 @@ struct XPTCursor {
     uint8_t     bits;
 };
 
-extern void
+void
 XPT_InitXDRState(XPTState* state, char* data, uint32_t len);
 
-extern bool
+bool
 XPT_MakeCursor(XPTState *state, XPTPool pool, uint32_t len,
                NotNull<XPTCursor*> cursor);
 
-extern bool
+bool
 XPT_SeekTo(NotNull<XPTCursor*> cursor, uint32_t offset);
 
-extern void
+void
 XPT_SetDataOffset(XPTState *state, uint32_t data_offset);
 
 #ifdef __cplusplus
