@@ -470,8 +470,8 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 }
 
 @media (-moz-menubar-drag) {
-  #toolbar-menubar:not([autohide="true"]):not(:-moz-lwtheme),
-  #TabsToolbar:not(:-moz-lwtheme) {
+  #toolbar-menubar:not([autohide="true"]),
+  #TabsToolbar {
     -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-drag");
   }
 }
