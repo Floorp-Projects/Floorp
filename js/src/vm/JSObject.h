@@ -186,7 +186,7 @@ class JSObject : public js::gc::Cell
      * directly too, as may any object, but only those objects linked after the
      * head of any prototype or scope chain are flagged as delegates. This
      * definition helps to optimize shape-based property cache invalidation
-     * (see Purge{Scope,Proto}Chain in jsobj.cpp).
+     * (see Purge{Scope,Proto}Chain in JSObject.cpp).
      */
     inline bool isDelegate() const;
     static bool setDelegate(JSContext* cx, JS::HandleObject obj) {

@@ -903,7 +903,7 @@ JSObject*
 GenericCreateConstructor(JSContext* cx, JSProtoKey key)
 {
     // Note - We duplicate the trick from ClassName() so that we don't need to
-    // include jsatominlines.h here.
+    // include vm/JSAtom-inl.h here.
     PropertyName* name = (&cx->names().Null)[key];
     return GlobalObject::createConstructor(cx, ctor, name, length, kind, jitInfo);
 }
