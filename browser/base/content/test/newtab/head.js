@@ -3,10 +3,8 @@
 
 const PREF_NEWTAB_ENABLED = "browser.newtabpage.enabled";
 const PREF_NEWTAB_DIRECTORYSOURCE = "browser.newtabpage.directory.source";
-const PREF_NEWTAB_ACTIVITY_STREAM = "browser.newtabpage.activity-stream.enabled";
 
 Services.prefs.setBoolPref(PREF_NEWTAB_ENABLED, true);
-Services.prefs.setBoolPref(PREF_NEWTAB_ACTIVITY_STREAM, false);
 
 // Opens and closes a new tab to clear any existing preloaded ones. This is
 // necessary to prevent any left-over activity-stream preloaded new tabs from
@@ -96,7 +94,6 @@ add_task(async function setupWindowSize() {
 
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref(PREF_NEWTAB_ENABLED);
-  Services.prefs.clearUserPref(PREF_NEWTAB_ACTIVITY_STREAM);
   Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, gOrigDirectorySource);
 
   return watchLinksChangeOnce();
