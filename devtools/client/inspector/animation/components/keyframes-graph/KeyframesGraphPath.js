@@ -10,6 +10,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
 const ColorPath = createFactory(require("./ColorPath"));
+const DiscretePath = createFactory(require("./DiscretePath"));
 const DistancePath = createFactory(require("./DistancePath"));
 
 const {
@@ -20,6 +21,8 @@ const {
 class KeyframesGraphPath extends PureComponent {
   static get propTypes() {
     return {
+      getComputedStyle: PropTypes.func.isRequired,
+      property: PropTypes.string.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       type: PropTypes.string.isRequired,
       values: PropTypes.array.isRequired,
@@ -42,6 +45,8 @@ class KeyframesGraphPath extends PureComponent {
     switch (type) {
       case "color" :
         return ColorPath;
+      case "discrete" :
+        return DiscretePath;
       default :
         return DistancePath;
     }
@@ -54,6 +59,8 @@ class KeyframesGraphPath extends PureComponent {
 
   render() {
     const {
+      getComputedStyle,
+      property,
       simulateAnimation,
       type,
       values,
@@ -76,7 +83,9 @@ class KeyframesGraphPath extends PureComponent {
       pathComponent(
         {
           componentWidth,
+          getComputedStyle,
           graphHeight: DEFAULT_GRAPH_HEIGHT,
+          property,
           simulateAnimation,
           totalDuration: DEFAULT_KEYFRAMES_GRAPH_DURATION,
           values,
