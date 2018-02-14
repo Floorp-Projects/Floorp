@@ -11,15 +11,11 @@ const { PromisesFront } = require("devtools/shared/fronts/promises");
 
 var EventEmitter = require("devtools/shared/event-emitter");
 
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
-
 add_task(function* () {
-  let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
-  Preferences.set("privacy.reduceTimerPrecision", false);
+  Services.prefs.setBoolPref("privacy.reduceTimerPrecision", false);
 
   registerCleanupFunction(function () {
-    Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
+    Services.prefs.clearUserPref("privacy.reduceTimerPrecision");
   });
 
   let client = yield startTestDebuggerServer("promises-object-test");

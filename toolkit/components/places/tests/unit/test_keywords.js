@@ -1,7 +1,7 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
 
 async function check_keyword(aExpectExists, aHref, aKeyword, aPostData = null) {
   // Check case-insensitivity.
