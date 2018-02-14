@@ -7,7 +7,6 @@ const { Cu } = require("chrome");
 const { Task } = require("devtools/shared/task");
 
 loader.lazyRequireGetter(this, "Services");
-loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(this, "Memory",
@@ -348,7 +347,7 @@ PerformanceRecorder.prototype = {
       memoryStart = this._memory.startRecordingAllocations(recordingOptions);
     }
 
-    let [profilerStartData, timelineStartData, memoryStartData] = yield promise.all([
+    let [profilerStartData, timelineStartData, memoryStartData] = yield Promise.all([
       profilerStart, timelineStart, memoryStart
     ]);
 

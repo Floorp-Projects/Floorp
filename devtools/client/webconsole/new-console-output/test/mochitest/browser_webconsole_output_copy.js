@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 "use strict";
 
 // Test copy to clipboard on the console output. See Bug 587617.
@@ -19,11 +21,7 @@ add_task(async function () {
   const {node} = await onMessage;
   ok(true, "Message was logged");
 
-  const selection = node.ownerDocument.getSelection();
-  const range = document.createRange();
-  range.selectNodeContents(node);
-  selection.removeAllRanges();
-  selection.addRange(range);
+  let selection = selectNode(hud, node);
 
   const selectionString = selection.toString().trim();
   is(selectionString, smokeMessage, `selection has expected "${smokeMessage}" value`);

@@ -8,7 +8,6 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, fetch } = DevToolsUtils;
 const EventEmitter = require("devtools/shared/old-event-emitter");
 const { OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
-const { resolve } = require("promise");
 const { joinURI } = require("devtools/shared/path");
 
 loader.lazyRequireGetter(this, "SourceActor", "devtools/server/actors/source", true);
@@ -372,7 +371,7 @@ TabSources.prototype = {
    */
   _createSourceMappedActors: function (source) {
     if (!this._useSourceMaps || !source.sourceMapURL) {
-      return resolve(null);
+      return Promise.resolve(null);
     }
 
     return this.fetchSourceMap(source)
@@ -415,11 +414,11 @@ TabSources.prototype = {
    */
   fetchSourceMap: function (source) {
     if (!this._useSourceMaps) {
-      return resolve(null);
+      return Promise.resolve(null);
     } else if (this._sourceMaps.has(source)) {
       return this._sourceMaps.get(source);
     } else if (!source || !source.sourceMapURL) {
-      return resolve(null);
+      return Promise.resolve(null);
     }
 
     let sourceMapURL = source.sourceMapURL;
@@ -446,14 +445,14 @@ TabSources.prototype = {
    * have a source map or source maps are disabled.
    */
   getSourceMap: function (source) {
-    return resolve(this._sourceMaps.get(source));
+    return Promise.resolve(this._sourceMaps.get(source));
   },
 
   /**
    * Set a SourceMapConsumer for the source map for |source|.
    */
   setSourceMap: function (source, map) {
-    this._sourceMaps.set(source, resolve(map));
+    this._sourceMaps.set(source, Promise.resolve(map));
   },
 
   /**
@@ -566,7 +565,7 @@ TabSources.prototype = {
 
     // Forcefully set the sourcemap cache. This will be used even if
     // sourcemaps are disabled.
-    this._sourceMapCache[url] = resolve(map);
+    this._sourceMapCache[url] = Promise.resolve(map);
     this.emit("updatedSource", this.getSourceActor(source));
   },
 
