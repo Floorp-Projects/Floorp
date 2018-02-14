@@ -33,11 +33,6 @@ class WorkerPrivate;
  * +-------------+-------------+-----------------+
  */
 
-#ifdef Status
-/* Xlib headers insist on this for some reason... Nuke it because
-   it'll override our member name */
-#undef Status
-#endif
 enum WorkerStatus
 {
   // Not yet scheduled.
