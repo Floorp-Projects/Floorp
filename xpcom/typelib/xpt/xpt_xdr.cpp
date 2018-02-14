@@ -20,9 +20,11 @@
 #define CURS_POOL_OFFSET(cursor)                                              \
   (CURS_POOL_OFFSET_RAW(cursor) - 1)
 
-/* can be used as lvalue */
-#define CURS_POINT(cursor)                                                    \
-  ((cursor)->state->pool_data[CURS_POOL_OFFSET(cursor)])
+static char*
+CursPoint(NotNull<XPTCursor*> cursor)
+{
+    return &cursor->state->pool_data[CURS_POOL_OFFSET(cursor)];
+}
 
 static bool
 CheckCount(NotNull<XPTCursor*> cursor, uint32_t space)
@@ -117,7 +119,7 @@ XPT_DoCString(XPTArena *arena, NotNull<XPTCursor*> cursor, char **identp,
     my_cursor.pool = XPT_DATA;
     my_cursor.offset = offset;
     my_cursor.state = cursor->state;
-    char* start = &CURS_POINT(&my_cursor);
+    char* start = CursPoint(WrapNotNull(&my_cursor));
 
     char* end = strchr(start, 0); /* find the end of the string */
     if (!end) {
@@ -181,7 +183,7 @@ XPT_DoIID(NotNull<XPTCursor*> cursor, nsID *iidp)
             return false;                         \
         }                                         \
                                                   \
-        *valuep = func(&CURS_POINT(cursor));      \
+        *valuep = func(CursPoint(cursor));        \
         cursor->offset += sz;                     \
         return true;                              \
     } while(0)
@@ -218,7 +220,7 @@ XPT_Do8(NotNull<XPTCursor*> cursor, uint8_t *u8p)
     if (!CheckCount(cursor, 1))
         return false;
 
-    *u8p = CURS_POINT(cursor);
+    *u8p = *CursPoint(cursor);
 
     cursor->offset++;
 
