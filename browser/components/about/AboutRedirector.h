@@ -24,11 +24,6 @@ public:
 
 protected:
   virtual ~AboutRedirector() {}
-
-private:
-  static bool sActivityStreamEnabled;
-
-  static void LoadActivityStreamPrefs();
 };
 
 } // namespace browser
