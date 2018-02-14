@@ -818,6 +818,10 @@ ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
                                                            /* aStopAtStackingContextAndDisplayPortAndOOFFrame = */ true,
                                                            &currentFrame);
     MOZ_ASSERT(currentFrame);
+    aOverflow.IntersectRect(aOverflow, currentFrame->GetVisualOverflowRectRelativeToSelf());
+    if (aOverflow.IsEmpty()) {
+      break;
+    }
 
     if (nsLayoutUtils::FrameHasDisplayPort(currentFrame)) {
       CRR_LOG("Frame belongs to displayport frame %p\n", currentFrame);
@@ -851,13 +855,8 @@ ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
       } else {
         // Don't contribute to the root dirty area at all.
         aOverflow.SetEmpty();
+        break;
       }
-    } else {
-      aOverflow.IntersectRect(aOverflow, currentFrame->GetVisualOverflowRectRelativeToSelf());
-    }
-
-    if (aOverflow.IsEmpty()) {
-      break;
     }
 
     if (currentFrame != aBuilder.RootReferenceFrame() &&
