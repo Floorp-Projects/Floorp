@@ -264,6 +264,9 @@ static const DllBlockInfo sWindowsDllBlocklist[] = {
   // Old versions of G DATA BankGuard, bug 1421991
   { "banksafe64.dll", MAKE_VERSION(1, 2, 15299, 65535) },
 
+  // Old versions of G DATA, bug 1043775
+  { "gdkbfltdll64.dll", MAKE_VERSION(1, 0, 14141, 240) },
+
   { nullptr, 0 }
 };
 
