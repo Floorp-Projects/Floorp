@@ -29,6 +29,7 @@
 #include "nsIProtocolHandler.h"
 #include "nsIScriptSecurityManager.h"
 #include "xpcpublic.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ScriptPreloader.h"
@@ -132,23 +133,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameMessageManager)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentFrameMessageManager)
 
-  /* nsFrameMessageManager implements nsIMessageSender and nsIMessageBroadcaster,
-   * both of which descend from nsIMessageListenerManager. QI'ing to
-   * nsIMessageListenerManager is therefore ambiguous and needs explicit casts
-   * depending on which child interface applies. */
-  NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIMessageListenerManager,
-                                    (mIsBroadcaster ?
-                                       static_cast<nsIMessageListenerManager*>(
-                                         static_cast<nsIMessageBroadcaster*>(this)) :
-                                       static_cast<nsIMessageListenerManager*>(
-                                         static_cast<nsIMessageSender*>(this))))
+  NS_INTERFACE_MAP_ENTRY(nsIMessageListenerManager)
 
   /* Message managers in child process implement nsIMessageSender.
      Message managers in the chrome process are
      either broadcasters (if they have subordinate/child message
      managers) or they're simple message senders. */
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIMessageSender, !mChrome || !mIsBroadcaster)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIMessageBroadcaster, mChrome && mIsBroadcaster)
 
   /* nsIContentFrameMessageManager is accessible only in TabChildGlobal. */
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIContentFrameMessageManager,
@@ -750,46 +741,6 @@ nsFrameMessageManager::SendAsyncMessage(const nsAString& aMessageName,
 }
 
 
-// nsIMessageBroadcaster
-
-NS_IMETHODIMP
-nsFrameMessageManager::BroadcastAsyncMessage(const nsAString& aMessageName,
-                                             JS::Handle<JS::Value> aJSON,
-                                             JS::Handle<JS::Value> aObjects,
-                                             JSContext* aCx,
-                                             uint8_t aArgc)
-{
-  return DispatchAsyncMessage(aMessageName, aJSON, aObjects, nullptr,
-                              JS::UndefinedHandleValue, aCx, aArgc);
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::GetChildCount(uint32_t* aChildCount)
-{
-  *aChildCount = mChildManagers.Length();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::GetChildAt(uint32_t aIndex,
-                                  nsIMessageListenerManager** aMM)
-{
-  MessageListenerManager* mm = mChildManagers.SafeElementAt(aIndex);
-  if (mm) {
-    CallQueryInterface(mm, aMM);
-  } else {
-    *aMM = nullptr;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::ReleaseCachedProcesses()
-{
-  ContentParent::ReleaseCachedProcesses();
-  return NS_OK;
-}
-
 class MMListenerRemover
 {
 public:
@@ -1042,23 +993,6 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                            aRetVal);
   }
   return NS_OK;
-}
-
-void
-nsFrameMessageManager::AddChildManager(MessageListenerManager* aManager)
-{
-  mChildManagers.AppendElement(aManager);
-
-  RefPtr<nsFrameMessageManager> kungfuDeathGrip = this;
-  RefPtr<nsFrameMessageManager> kungfuDeathGrip2 = aManager;
-
-  LoadPendingScripts(this, aManager);
-}
-
-void
-nsFrameMessageManager::RemoveChildManager(MessageListenerManager* aManager)
-{
-  mChildManagers.RemoveElement(aManager);
 }
 
 void
@@ -1352,20 +1286,16 @@ ReportReferentCount(const char* aManagerType,
 #undef REPORT
 }
 
+static StaticRefPtr<ChromeMessageBroadcaster> sGlobalMessageManager;
+
 NS_IMETHODIMP
 MessageManagerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
                                        nsISupports* aData, bool aAnonymize)
 {
-  if (XRE_IsParentProcess()) {
-    nsCOMPtr<nsIMessageBroadcaster> globalmm =
-      do_GetService("@mozilla.org/globalmessagemanager;1");
-    if (globalmm) {
-      RefPtr<nsFrameMessageManager> mm =
-        static_cast<nsFrameMessageManager*>(globalmm.get());
-      MessageManagerReferentCount count;
-      CountReferents(mm, &count);
-      ReportReferentCount("global-manager", count, aHandleReport, aData);
-    }
+  if (XRE_IsParentProcess() && sGlobalMessageManager) {
+    MessageManagerReferentCount count;
+    CountReferents(sGlobalMessageManager, &count);
+    ReportReferentCount("global-manager", count, aHandleReport, aData);
   }
 
   if (nsFrameMessageManager::sParentProcessManager) {
@@ -1386,15 +1316,25 @@ MessageManagerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 } // namespace dom
 } // namespace mozilla
 
-nsresult
-NS_NewGlobalMessageManager(nsIMessageBroadcaster** aResult)
+already_AddRefed<ChromeMessageBroadcaster>
+nsFrameMessageManager::GetGlobalMessageManager()
 {
-  NS_ENSURE_TRUE(XRE_IsParentProcess(),
-                 NS_ERROR_NOT_AVAILABLE);
-  RefPtr<nsFrameMessageManager> mm =
-    new ChromeMessageBroadcaster(MessageManagerFlags::MM_GLOBAL);
-  RegisterStrongMemoryReporter(new MessageManagerReporter());
-  mm.forget(aResult);
+  RefPtr<ChromeMessageBroadcaster> mm;
+  if (sGlobalMessageManager) {
+    mm = sGlobalMessageManager;
+  } else {
+    sGlobalMessageManager = mm =
+      new ChromeMessageBroadcaster(MessageManagerFlags::MM_GLOBAL);
+    ClearOnShutdown(&sGlobalMessageManager);
+    RegisterStrongMemoryReporter(new MessageManagerReporter());
+  }
+  return mm.forget();
+}
+
+nsresult
+NS_NewGlobalMessageManager(nsISupports** aResult)
+{
+  *aResult = nsFrameMessageManager::GetGlobalMessageManager().take();
   return NS_OK;
 }
 
@@ -1644,7 +1584,7 @@ nsMessageManagerScriptExecutor::MarkScopesForCC()
 NS_IMPL_ISUPPORTS(nsScriptCacheCleaner, nsIObserver)
 
 ChildProcessMessageManager* nsFrameMessageManager::sChildProcessManager = nullptr;
-nsFrameMessageManager* nsFrameMessageManager::sParentProcessManager = nullptr;
+ChromeMessageBroadcaster* nsFrameMessageManager::sParentProcessManager = nullptr;
 nsFrameMessageManager* nsFrameMessageManager::sSameProcessParentManager = nullptr;
 
 class nsAsyncMessageToSameProcessChild : public nsSameProcessAsyncMessageBase,
@@ -1860,11 +1800,11 @@ public:
 
 // This creates the global parent process message manager.
 nsresult
-NS_NewParentProcessMessageManager(nsIMessageBroadcaster** aResult)
+NS_NewParentProcessMessageManager(nsISupports** aResult)
 {
   NS_ASSERTION(!nsFrameMessageManager::sParentProcessManager,
                "Re-creating sParentProcessManager");
-  RefPtr<nsFrameMessageManager> mm =
+  RefPtr<ChromeMessageBroadcaster> mm =
     new ChromeMessageBroadcaster(MessageManagerFlags::MM_PROCESSMANAGER);
   nsFrameMessageManager::sParentProcessManager = mm;
   nsFrameMessageManager::NewProcessMessageManager(false); // Create same process message manager.
@@ -1877,7 +1817,7 @@ ChromeMessageSender*
 nsFrameMessageManager::NewProcessMessageManager(bool aIsRemote)
 {
   if (!nsFrameMessageManager::sParentProcessManager) {
-     nsCOMPtr<nsIMessageBroadcaster> dummy =
+     nsCOMPtr<nsISupports> dummy =
        do_GetService("@mozilla.org/parentprocessmessagemanager;1");
   }
 

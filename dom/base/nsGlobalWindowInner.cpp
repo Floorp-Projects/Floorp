@@ -7768,49 +7768,27 @@ nsGlobalWindowInner::NotifyDefaultButtonLoaded(Element& aDefaultButton,
 #endif
 }
 
-NS_IMETHODIMP
-nsGlobalWindowInner::GetMessageManager(nsIMessageBroadcaster** aManager)
-{
-  ErrorResult rv;
-  NS_IF_ADDREF(*aManager = GetMessageManager(rv));
-  return rv.StealNSResult();
-}
-
 ChromeMessageBroadcaster*
-nsGlobalWindowInner::GetMessageManager(ErrorResult& aError)
+nsGlobalWindowInner::MessageManager()
 {
   MOZ_ASSERT(IsChromeWindow());
   if (!mChromeFields.mMessageManager) {
-    nsCOMPtr<nsIMessageBroadcaster> globalMM =
-      do_GetService("@mozilla.org/globalmessagemanager;1");
-    mChromeFields.mMessageManager =
-      new ChromeMessageBroadcaster(static_cast<nsFrameMessageManager*>(globalMM.get()));
+    RefPtr<ChromeMessageBroadcaster> globalMM =
+      nsFrameMessageManager::GetGlobalMessageManager();
+    mChromeFields.mMessageManager = new ChromeMessageBroadcaster(globalMM);
   }
   return mChromeFields.mMessageManager;
 }
 
-NS_IMETHODIMP
-nsGlobalWindowInner::GetGroupMessageManager(const nsAString& aGroup,
-                                            nsIMessageBroadcaster** aManager)
-{
-  MOZ_RELEASE_ASSERT(IsChromeWindow());
-  ErrorResult rv;
-  NS_IF_ADDREF(*aManager = GetGroupMessageManager(aGroup, rv));
-  return rv.StealNSResult();
-}
-
 ChromeMessageBroadcaster*
-nsGlobalWindowInner::GetGroupMessageManager(const nsAString& aGroup,
-                                            ErrorResult& aError)
+nsGlobalWindowInner::GetGroupMessageManager(const nsAString& aGroup)
 {
   MOZ_ASSERT(IsChromeWindow());
 
   RefPtr<ChromeMessageBroadcaster> messageManager =
     mChromeFields.mGroupMessageManagers.LookupForAdd(aGroup).OrInsert(
-      [this, &aError] () {
-        nsFrameMessageManager* parent = GetMessageManager(aError);
-
-        return new ChromeMessageBroadcaster(parent);
+      [this] () {
+        return new ChromeMessageBroadcaster(MessageManager());
       });
   return messageManager;
 }

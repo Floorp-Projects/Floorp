@@ -22,14 +22,21 @@ public:
                             MessageManagerFlags::MM_PROCESSMANAGER |
                             MessageManagerFlags::MM_OWNSCALLBACK)));
   }
-  explicit ChromeMessageBroadcaster(nsFrameMessageManager* aParentManager)
+  explicit ChromeMessageBroadcaster(ChromeMessageBroadcaster* aParentManager)
     : ChromeMessageBroadcaster(aParentManager, MessageManagerFlags::MM_NONE)
   {}
+
+  static ChromeMessageBroadcaster* From(nsFrameMessageManager* aManager)
+  {
+    if (aManager->IsBroadcaster() && aManager->IsChrome()) {
+      return static_cast<ChromeMessageBroadcaster*>(aManager);
+    }
+    return nullptr;
+  }
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  using nsFrameMessageManager::BroadcastAsyncMessage;
   void BroadcastAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
                              JS::Handle<JS::Value> aObj,
                              JS::Handle<JSObject*> aObjects,
@@ -42,12 +49,11 @@ public:
   {
     return mChildManagers.Length();
   }
-  using nsFrameMessageManager::GetChildAt;
   MessageListenerManager* GetChildAt(uint32_t aIndex)
   {
     return mChildManagers.SafeElementAt(aIndex);
   }
-  // XPCOM ReleaseCachedProcesses is OK
+  void ReleaseCachedProcesses();
 
   // ProcessScriptLoader
   void LoadProcessScript(const nsAString& aUrl, bool aAllowDelayedLoad,
@@ -86,8 +92,11 @@ public:
     GetDelayedScripts(aCx, aScripts, aError);
   }
 
+  void AddChildManager(MessageListenerManager* aManager);
+  void RemoveChildManager(MessageListenerManager* aManager);
+
 private:
-  ChromeMessageBroadcaster(nsFrameMessageManager* aParentManager,
+  ChromeMessageBroadcaster(ChromeMessageBroadcaster* aParentManager,
                            MessageManagerFlags aFlags);
   virtual ~ChromeMessageBroadcaster();
 };
