@@ -6,6 +6,7 @@
 
 #include "gc/AtomMarking-inl.h"
 
+#include "gc/Iteration.h"
 #include "vm/JSCompartment.h"
 
 #include "jsgcinlines.h"

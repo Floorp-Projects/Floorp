@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gc/Iteration-inl.h"
-
 #include "mozilla/DebugOnly.h"
 
 #include "gc/GCInternals.h"
@@ -13,8 +11,7 @@
 #include "vm/JSCompartment.h"
 #include "vm/Runtime.h"
 
-#include "jsgcinlines.h"
-
+#include "gc/GCIteration-inl.h"
 #include "vm/JSContext-inl.h"
 
 using namespace js;
@@ -49,7 +46,7 @@ js::IterateHeapUnbarriered(JSContext* cx, void* data,
                            IterateArenaCallback arenaCallback,
                            IterateCellCallback cellCallback)
 {
-    AutoPrepareForTracing prop(cx, WithAtoms);
+    AutoPrepareForTracing prop(cx);
 
     for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
         (*zoneCallback)(cx->runtime(), data, zone);
@@ -65,7 +62,7 @@ js::IterateHeapUnbarrieredForZone(JSContext* cx, Zone* zone, void* data,
                                   IterateArenaCallback arenaCallback,
                                   IterateCellCallback cellCallback)
 {
-    AutoPrepareForTracing prop(cx, WithAtoms);
+    AutoPrepareForTracing prop(cx);
 
     (*zoneCallback)(cx->runtime(), data, zone);
     IterateCompartmentsArenasCellsUnbarriered(cx, zone, data,
@@ -75,7 +72,7 @@ js::IterateHeapUnbarrieredForZone(JSContext* cx, Zone* zone, void* data,
 void
 js::IterateChunks(JSContext* cx, void* data, IterateChunkCallback chunkCallback)
 {
-    AutoPrepareForTracing prep(cx, SkipAtoms);
+    AutoPrepareForTracing prep(cx);
     AutoLockGC lock(cx->runtime());
 
     for (auto chunk = cx->runtime()->gc.allNonEmptyChunks(lock); !chunk.done(); chunk.next())
@@ -88,7 +85,7 @@ js::IterateScripts(JSContext* cx, JSCompartment* compartment,
 {
     MOZ_ASSERT(!cx->suppressGC);
     AutoEmptyNursery empty(cx);
-    AutoPrepareForTracing prep(cx, SkipAtoms);
+    AutoPrepareForTracing prep(cx);
 
     if (compartment) {
         Zone* zone = compartment->zone();
@@ -119,7 +116,7 @@ void
 js::IterateGrayObjects(Zone* zone, GCThingCallback cellCallback, void* data)
 {
     MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());
-    AutoPrepareForTracing prep(TlsContext.get(), SkipAtoms);
+    AutoPrepareForTracing prep(TlsContext.get());
     ::IterateGrayObjects(zone, cellCallback, data);
 }
 

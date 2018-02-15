@@ -7,6 +7,7 @@
 #include "jsiter.h"
 #include "jswrapper.h"
 
+#include "gc/Iteration.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/WrapperObject.h"
 

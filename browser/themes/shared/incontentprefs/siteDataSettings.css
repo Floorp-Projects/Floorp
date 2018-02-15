@@ -9,8 +9,15 @@
   min-height: 20em;
 }
 
+#sitesList > richlistitem > hbox,
+.item-box > label {
+  -moz-box-flex: 1;
+}
+
 .item-box {
   padding: 5px 8px;
+  -moz-box-align: center;
+  width: 50px;
 }
 
 /**
@@ -18,6 +25,7 @@
  */
 #SiteDataRemoveSelectedDialog {
   padding: 16px;
+  min-height: 36em;
 }
 
 #contentContainer {

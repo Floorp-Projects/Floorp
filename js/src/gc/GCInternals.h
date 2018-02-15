@@ -23,8 +23,6 @@
 namespace js {
 namespace gc {
 
-void FinishGC(JSContext* cx);
-
 /*
  * This class should be used by any code that needs to exclusive access to the
  * heap in order to trace through it...
@@ -60,7 +58,7 @@ class MOZ_RAII AutoPrepareForTracing
     mozilla::Maybe<AutoTraceSession> session_;
 
   public:
-    AutoPrepareForTracing(JSContext* cx, ZoneSelector selector);
+    explicit AutoPrepareForTracing(JSContext* cx);
     AutoTraceSession& session() { return session_.ref(); }
 };
 

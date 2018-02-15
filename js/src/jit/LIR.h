@@ -671,6 +671,7 @@ class LNode
     uint32_t nonPhiNumOperands_ : 6;
     uint32_t numDefs_ : 4;
     uint32_t numTemps_ : 4;
+    uint32_t numSuccessors_ : 2;
 
   public:
     LNode(uint32_t nonPhiNumOperands, uint32_t numDefs, uint32_t numTemps)
@@ -680,7 +681,8 @@ class LNode
         isCall_(false),
         nonPhiNumOperands_(nonPhiNumOperands),
         numDefs_(numDefs),
-        numTemps_(numTemps)
+        numTemps_(numTemps),
+        numSuccessors_(0)
     {
         MOZ_ASSERT(nonPhiNumOperands_ == nonPhiNumOperands,
                    "nonPhiNumOperands must fit in bitfield");
@@ -729,11 +731,6 @@ class LNode
     // Returns information about operands.
     virtual LAllocation* getOperand(size_t index) = 0;
     virtual void setOperand(size_t index, const LAllocation& a) = 0;
-
-    // Returns the number of successors of this instruction, if it is a control
-    // transfer instruction, or zero otherwise.
-    virtual size_t numSuccessors() const = 0;
-    virtual MBasicBlock* getSuccessor(size_t i) const = 0;
 
     bool isCall() const {
         return isCall_;
@@ -843,6 +840,16 @@ class LInstruction
         return numTemps_;
     }
     inline LDefinition* getTemp(size_t index);
+
+    // Returns the number of successors of this instruction, if it is a control
+    // transfer instruction, or zero otherwise.
+    size_t numSuccessors() const {
+        return numSuccessors_;
+    }
+    void setNumSuccessors(size_t succ) {
+        numSuccessors_ = succ;
+        MOZ_ASSERT(numSuccessors_ == succ, "Number of successors must fit in bitfield");
+    }
 
     LSnapshot* snapshot() const {
         return snapshot_;
@@ -974,13 +981,6 @@ class LPhi final : public LNode
     // Phis don't have temps, so calling numTemps/getTemp is pointless.
     size_t numTemps() const = delete;
     LDefinition* getTemp(size_t index) = delete;
-
-    size_t numSuccessors() const override {
-        return 0;
-    }
-    MBasicBlock* getSuccessor(size_t i) const override {
-        MOZ_CRASH("no successors");
-    }
 };
 
 class LMoveGroup;
@@ -1116,13 +1116,6 @@ namespace details {
 #else
             setTemp(index, a.value());
 #endif
-        }
-
-        size_t numSuccessors() const override {
-            return 0;
-        }
-        MBasicBlock* getSuccessor(size_t i) const override {
-            MOZ_CRASH("no successors");
         }
 
         // Default accessors, assuming a single input and output, respectively.

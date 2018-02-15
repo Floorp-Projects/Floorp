@@ -10,8 +10,6 @@ ChromeUtils.import("resource://gre/modules/PluralForm.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "SiteDataManager",
-                               "resource:///modules/SiteDataManager.jsm");
 ChromeUtils.defineModuleGetter(this, "ContextualIdentityService",
                                "resource://gre/modules/ContextualIdentityService.jsm");
 
@@ -77,12 +75,18 @@ var gCookiesWindow = {
                                                aCookieB.originAttributes);
   },
 
+  _isPrivateCookie(cookie) {
+    let { userContextId } = cookie.originAttributes;
+    // A private cookie is when its userContextId points to a private identity.
+    return userContextId && !ContextualIdentityService.getPublicIdentityFromId(userContextId);
+  },
+
   observe(aCookie, aTopic, aData) {
     if (aTopic != "cookie-changed")
       return;
 
     if (aCookie instanceof Components.interfaces.nsICookie) {
-      if (SiteDataManager.isPrivateCookie(aCookie)) {
+      if (this._isPrivateCookie(aCookie)) {
         return;
       }
 
@@ -475,7 +479,7 @@ var gCookiesWindow = {
     while (e.hasMoreElements()) {
       var cookie = e.getNext();
       if (cookie && cookie instanceof Components.interfaces.nsICookie) {
-        if (SiteDataManager.isPrivateCookie(cookie)) {
+        if (this._isPrivateCookie(cookie)) {
           continue;
         }
 

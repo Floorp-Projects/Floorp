@@ -148,6 +148,18 @@ InspectorFontFace::GetFormat(nsAString& aFormat)
     if (formatFlags & gfxUserFontSet::FLAG_FORMAT_WOFF2) {
       AppendToFormat(aFormat, "woff2");
     }
+    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_OPENTYPE_VARIATIONS) {
+      AppendToFormat(aFormat, "opentype-variations");
+    }
+    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_TRUETYPE_VARIATIONS) {
+      AppendToFormat(aFormat, "truetype-variations");
+    }
+    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_WOFF_VARIATIONS) {
+      AppendToFormat(aFormat, "woff-variations");
+    }
+    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_WOFF2_VARIATIONS) {
+      AppendToFormat(aFormat, "woff2-variations");
+    }
   }
 }
 
