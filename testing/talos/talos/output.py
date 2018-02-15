@@ -256,9 +256,9 @@ class Output(object):
         return score
 
     @classmethod
-    def benchmark_score(cls, val_list):
+    def ares6_score(cls, val_list):
         """
-        benchmark_score: ares6/jetstream self reported as 'geomean'
+        ares6_score: reported as 'geomean'
         """
         results = [i for i, j in val_list if j == 'geomean']
         return filter.mean(results)
@@ -288,9 +288,7 @@ class Output(object):
         elif testname.startswith('kraken'):
             return self.JS_Metric(vals)
         elif testname.startswith('ares6'):
-            return self.benchmark_score(vals)
-        elif testname.startswith('jetstream'):
-            return self.benchmark_score(vals)
+            return self.ares6_score(vals)
         elif testname.startswith('speedometer'):
             return self.speedometer_score(vals)
         elif testname.startswith('stylebench'):
