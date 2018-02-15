@@ -114,6 +114,7 @@ function renderToolboxButtons({toolboxButtons, focusedButton, focusButton}, isSt
       const {
         id,
         description,
+        disabled,
         onClick,
         isChecked,
         className: buttonClass,
@@ -122,6 +123,7 @@ function renderToolboxButtons({toolboxButtons, focusedButton, focusButton}, isSt
       return button({
         id,
         title: description,
+        disabled,
         className: (
           "command-button devtools-button "
           + buttonClass + (isChecked ? " checked" : "")

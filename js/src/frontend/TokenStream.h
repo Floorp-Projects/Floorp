@@ -172,7 +172,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include "jscntxt.h"
 #include "jspubtd.h"
 
 #include "frontend/ErrorReporter.h"
@@ -180,6 +179,7 @@
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
 #include "vm/ErrorReporting.h"
+#include "vm/JSContext.h"
 #include "vm/RegExpShared.h"
 #include "vm/String.h"
 #include "vm/Unicode.h"

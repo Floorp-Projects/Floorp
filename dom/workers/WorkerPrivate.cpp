@@ -5140,7 +5140,9 @@ WorkerPrivate::GetOrCreateGlobalScope(JSContext* aCx)
     if (IsSharedWorker()) {
       globalScope = new SharedWorkerGlobalScope(this, WorkerName());
     } else if (IsServiceWorker()) {
-      globalScope = new ServiceWorkerGlobalScope(this, ServiceWorkerScope());
+      globalScope =
+        new ServiceWorkerGlobalScope(this,
+                                     GetServiceWorkerRegistrationDescriptor());
     } else {
       globalScope = new DedicatedWorkerGlobalScope(this, WorkerName());
     }

@@ -9,7 +9,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "jscompartment.h"
 #include "jsutil.h"
 
 #include "gc/Marking.h"
@@ -18,6 +17,7 @@
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitCompartment.h"
 #include "jit/MacroAssembler.h"
+#include "vm/JSCompartment.h"
 
 using namespace js;
 using namespace js::jit;

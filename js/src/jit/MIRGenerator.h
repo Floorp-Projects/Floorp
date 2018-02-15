@@ -14,9 +14,6 @@
 
 #include <stdarg.h>
 
-#include "jscntxt.h"
-#include "jscompartment.h"
-
 #include "jit/CompileInfo.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/JitCompartment.h"
@@ -25,6 +22,8 @@
 # include "jit/PerfSpewer.h"
 #endif
 #include "jit/RegisterSets.h"
+#include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 
 namespace js {
 namespace jit {
@@ -107,6 +106,10 @@ class MIRGenerator
     bool isOptimizationTrackingEnabled() {
         return isProfilerInstrumentationEnabled() && !info().isAnalysis() &&
                !JitOptions.disableOptimizationTracking;
+    }
+
+    bool stringsCanBeInNursery() const {
+        return stringsCanBeInNursery_;
     }
 
     bool safeForMinorGC() const {
@@ -198,6 +201,7 @@ class MIRGenerator
     bool instrumentedProfiling_;
     bool instrumentedProfilingIsCached_;
     bool safeForMinorGC_;
+    bool stringsCanBeInNursery_;
 
     void addAbortedPreliminaryGroup(ObjectGroup* group);
 

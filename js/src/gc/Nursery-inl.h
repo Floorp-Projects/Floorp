@@ -10,12 +10,11 @@
 
 #include "gc/Nursery.h"
 
-#include "jscntxt.h"
-
 #include "gc/Heap.h"
 #include "gc/RelocationOverlay.h"
 #include "gc/Zone.h"
 #include "js/TracingAPI.h"
+#include "vm/JSContext.h"
 #include "vm/Runtime.h"
 #include "vm/SharedMem.h"
 
@@ -27,14 +26,14 @@ js::Nursery::isInside(const SharedMem<T>& p) const
 }
 
 MOZ_ALWAYS_INLINE /* static */ bool
-js::Nursery::getForwardedPointer(JSObject** ref)
+js::Nursery::getForwardedPointer(js::gc::Cell** ref)
 {
     MOZ_ASSERT(ref);
     MOZ_ASSERT(IsInsideNursery(*ref));
     const gc::RelocationOverlay* overlay = reinterpret_cast<const gc::RelocationOverlay*>(*ref);
     if (!overlay->isForwarded())
         return false;
-    *ref = static_cast<JSObject*>(overlay->forwardingAddress());
+    *ref = overlay->forwardingAddress();
     return true;
 }
 

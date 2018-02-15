@@ -25,9 +25,8 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmModule.h"
 
-#include "jsobjinlines.h"
-
 #include "vm/ArrayBufferObject-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace js::jit;

@@ -2160,6 +2160,8 @@ EmitCallArgs(FunctionCompiler& f, const Sig& sig, const DefVector& args, CallCom
         return false;
 
     for (size_t i = 0, n = sig.args().length(); i < n; ++i) {
+        if (!f.mirGen().ensureBallast())
+            return false;
         if (!f.passArg(args[i], sig.args()[i], call))
             return false;
     }

@@ -695,17 +695,6 @@ public class BrowserApp extends GeckoApp
 
         showSplashScreen = true;
 
-        boolean supported = HardwareUtils.isSupportedSystem();
-        if (supported) {
-            GeckoLoader.loadMozGlue(appContext);
-            supported = GeckoLoader.neonCompatible();
-        }
-        if (!supported) {
-            // This build does not support the Android version of the device; Exit early.
-            super.onCreate(savedInstanceState);
-            return;
-        }
-
         final SafeIntent intent = new SafeIntent(getIntent());
         final boolean isInAutomation = IntentUtils.getIsInAutomationFromEnvironment(intent);
 
@@ -724,6 +713,10 @@ public class BrowserApp extends GeckoApp
         app.prepareLightweightTheme();
 
         super.onCreate(savedInstanceState);
+
+        if (mIsAbortingAppLaunch) {
+          return;
+        }
 
         initSwitchboard(this, intent, isInAutomation);
         initTelemetryUploader(isInAutomation);

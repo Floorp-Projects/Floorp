@@ -11,9 +11,8 @@
 #include "jit/BaselineIC.h"
 #include "jit/CacheIRCompiler.h"
 
-#include "jsscriptinlines.h"
-
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/ObjectGroup-inl.h"
 #include "vm/ReceiverGuard-inl.h"
 

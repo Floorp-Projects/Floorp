@@ -9,8 +9,7 @@
 #include "vm/StringBuffer.h"
 #include "vm/Symbol.h"
 
-#include "jsobjinlines.h"
-
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using JS::Symbol;

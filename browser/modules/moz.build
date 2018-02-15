@@ -88,6 +88,9 @@ with Files("Sanitizer.jsm"):
 with Files("SitePermissions.jsm"):
     BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
+with Files("ThemeVariableMap.jsm"):
+    BUG_COMPONENT = ("Toolkit", "WebExtensions: Themes")
+
 with Files("TransientPrefs.jsm"):
     BUG_COMPONENT = ("Firefox", "Preferences")
 
@@ -152,6 +155,7 @@ EXTRA_JS_MODULES += [
     'Sanitizer.jsm',
     'SchedulePressure.jsm',
     'SitePermissions.jsm',
+    'ThemeVariableMap.jsm',
     'TransientPrefs.jsm',
     'UpdateTopLevelContentWindowIDHelper.jsm',
     'webrtcUI.jsm',

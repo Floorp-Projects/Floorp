@@ -7,9 +7,9 @@
 #ifndef vm_TemplateRegistry_h
 #define vm_TemplateRegistry_h
 
-#include "jsobj.h"
 #include "gc/Marking.h"
 #include "js/GCHashTable.h"
+#include "vm/JSObject.h"
 
 namespace js {
 

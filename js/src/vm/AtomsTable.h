@@ -12,8 +12,7 @@
 #define vm_AtomsTable_h
 
 #include "js/GCHashTable.h"
-
-class JSAtom;
+#include "js/TypeDecls.h"
 
 namespace js {
 

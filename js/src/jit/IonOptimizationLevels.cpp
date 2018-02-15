@@ -6,9 +6,8 @@
 
 #include "jit/IonOptimizationLevels.h"
 
-#include "jsscript.h"
-
 #include "jit/Ion.h"
+#include "vm/JSScript.h"
 
 using namespace js;
 using namespace js::jit;

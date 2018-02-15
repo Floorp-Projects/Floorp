@@ -6040,11 +6040,11 @@ class MToAsyncGen
 };
 
 class MToAsyncIter
-  : public MUnaryInstruction,
-    public SingleObjectPolicy::Data
+  : public MBinaryInstruction,
+    public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data
 {
-    explicit MToAsyncIter(MDefinition* unwrapped)
-      : MUnaryInstruction(classOpcode, unwrapped)
+    explicit MToAsyncIter(MDefinition* iterator, MDefinition* nextMethod)
+      : MBinaryInstruction(classOpcode, iterator, nextMethod)
     {
         setResultType(MIRType::Object);
     }
@@ -6052,6 +6052,7 @@ class MToAsyncIter
   public:
     INSTRUCTION_HEADER(ToAsyncIter)
     TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, getIterator), (1, getNextMethod))
 };
 
 class MToId
@@ -10011,7 +10012,7 @@ class MFallibleStoreElement
 };
 
 
-// Store an unboxed object or null pointer to a v\ector.
+// Store an unboxed object or null pointer to an elements vector.
 class MStoreUnboxedObjectOrNull
   : public MQuaternaryInstruction,
     public StoreUnboxedObjectOrNullPolicy::Data
@@ -10054,28 +10055,30 @@ class MStoreUnboxedObjectOrNull
     ALLOW_CLONE(MStoreUnboxedObjectOrNull)
 };
 
-// Store an unboxed object or null pointer to a vector.
+// Store an unboxed string to an elements vector.
 class MStoreUnboxedString
-  : public MTernaryInstruction,
-    public MixPolicy<SingleObjectPolicy, ConvertToStringPolicy<2> >::Data
+  : public MQuaternaryInstruction,
+    public StoreUnboxedStringPolicy::Data
 {
     int32_t offsetAdjustment_;
     bool preBarrier_;
 
-    MStoreUnboxedString(MDefinition* elements, MDefinition* index, MDefinition* value,
+    MStoreUnboxedString(MDefinition* elements, MDefinition* index,
+                        MDefinition* value, MDefinition* typedObj,
                         int32_t offsetAdjustment = 0, bool preBarrier = true)
-      : MTernaryInstruction(classOpcode, elements, index, value),
+      : MQuaternaryInstruction(classOpcode, elements, index, value, typedObj),
         offsetAdjustment_(offsetAdjustment),
         preBarrier_(preBarrier)
     {
         MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
         MOZ_ASSERT(index->type() == MIRType::Int32);
+        MOZ_ASSERT(typedObj->type() == MIRType::Object);
     }
 
   public:
     INSTRUCTION_HEADER(StoreUnboxedString)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index), (2, value))
+    NAMED_OPERANDS((0, elements), (1, index), (2, value), (3, typedObj));
 
     int32_t offsetAdjustment() const {
         return offsetAdjustment_;
@@ -10085,6 +10088,12 @@ class MStoreUnboxedString
     }
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::UnboxedElement);
+    }
+
+    // For StoreUnboxedStringPolicy, to replace the original output with the
+    // output of a post barrier (if one is needed.)
+    void setValue(MDefinition* def) {
+        replaceOperand(2, def);
     }
 
     ALLOW_CLONE(MStoreUnboxedString)

@@ -7,9 +7,8 @@
 #ifndef jshashutil_h
 #define jshashutil_h
 
-#include "jscntxt.h"
-
 #include "gc/Zone.h"
+#include "vm/JSContext.h"
 
 namespace js {
 

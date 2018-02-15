@@ -7,10 +7,9 @@
 #ifndef vm_DateObject_h_
 #define vm_DateObject_h_
 
-#include "jsobj.h"
-
 #include "js/Date.h"
 #include "js/Value.h"
+#include "vm/JSObject.h"
 
 namespace js {
 

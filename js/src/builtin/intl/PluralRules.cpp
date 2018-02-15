@@ -11,17 +11,15 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 
-#include "jscntxt.h"
-
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ICUStubs.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "gc/FreeOp.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSContext.h"
 #include "vm/String.h"
 
-#include "jsobjinlines.h"
-
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

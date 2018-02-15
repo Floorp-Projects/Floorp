@@ -1120,8 +1120,10 @@ TabChild::ActorDestroy(ActorDestroyReason why)
     }
   }
 
-  CompositorBridgeChild* compositorChild = static_cast<CompositorBridgeChild*>(CompositorBridgeChild::Get());
-  compositorChild->CancelNotifyAfterRemotePaint(this);
+  CompositorBridgeChild* compositorChild = CompositorBridgeChild::Get();
+  if (compositorChild) {
+    compositorChild->CancelNotifyAfterRemotePaint(this);
+  }
 
   if (GetTabId() != 0) {
     NestedTabChildMap().erase(GetTabId());

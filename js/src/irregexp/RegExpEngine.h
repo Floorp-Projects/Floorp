@@ -31,10 +31,9 @@
 #ifndef V8_JSREGEXP_H_
 #define V8_JSREGEXP_H_
 
-#include "jscntxt.h"
-
 #include "ds/SplayTree.h"
 #include "jit/Label.h"
+#include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
 
 namespace js {

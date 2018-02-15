@@ -36,7 +36,6 @@
 #include <algorithm>
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jsdate.h"
 #include "jswrapper.h"
 
@@ -44,6 +43,7 @@
 #include "builtin/MapObject.h"
 #include "js/Date.h"
 #include "js/GCHashTable.h"
+#include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
 #include "vm/SavedFrame.h"
 #include "vm/SharedArrayObject.h"
@@ -51,8 +51,8 @@
 #include "vm/WrapperObject.h"
 #include "wasm/WasmJS.h"
 
-#include "jscntxtinlines.h"
-#include "jsobjinlines.h"
+#include "vm/JSContext-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 

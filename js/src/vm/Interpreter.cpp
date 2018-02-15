@@ -20,15 +20,11 @@
 #include <string.h>
 
 #include "jsarray.h"
-#include "jscntxt.h"
-#include "jsfun.h"
 #include "jsiter.h"
 #include "jslibmath.h"
 #include "jsnum.h"
-#include "jsobj.h"
 #include "jsopcode.h"
 #include "jsprf.h"
-#include "jsscript.h"
 #include "jsstr.h"
 
 #include "builtin/Eval.h"
@@ -41,6 +37,11 @@
 #include "vm/AsyncIteration.h"
 #include "vm/Debugger.h"
 #include "vm/GeneratorObject.h"
+#include "vm/JSAtom.h"
+#include "vm/JSContext.h"
+#include "vm/JSFunction.h"
+#include "vm/JSObject.h"
+#include "vm/JSScript.h"
 #include "vm/Opcodes.h"
 #include "vm/Scope.h"
 #include "vm/Shape.h"
@@ -49,13 +50,14 @@
 #include "vm/TraceLogging.h"
 
 #include "jsboolinlines.h"
-#include "jsfuninlines.h"
-#include "jsscriptinlines.h"
 
 #include "jit/JitFrames-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/GeckoProfiler-inl.h"
+#include "vm/JSAtom-inl.h"
+#include "vm/JSFunction-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Probes-inl.h"
 #include "vm/Stack-inl.h"
@@ -3662,11 +3664,13 @@ END_CASE(JSOP_TOASYNCGEN)
 
 CASE(JSOP_TOASYNCITER)
 {
-    ReservedRooted<JSObject*> iter(&rootObject1, &REGS.sp[-1].toObject());
-    JSObject* asyncIter = CreateAsyncFromSyncIterator(cx, iter);
+    ReservedRooted<Value> nextMethod(&rootValue0, REGS.sp[-1]);
+    ReservedRooted<JSObject*> iter(&rootObject1, &REGS.sp[-2].toObject());
+    JSObject* asyncIter = CreateAsyncFromSyncIterator(cx, iter, nextMethod);
     if (!asyncIter)
         goto error;
 
+    REGS.sp--;
     REGS.sp[-1].setObject(*asyncIter);
 }
 END_CASE(JSOP_TOASYNCITER)

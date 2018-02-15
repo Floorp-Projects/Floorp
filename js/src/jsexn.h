@@ -12,8 +12,9 @@
 #define jsexn_h
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "NamespaceImports.h"
+
+#include "vm/JSContext.h"
 
 namespace js {
 class ErrorObject;

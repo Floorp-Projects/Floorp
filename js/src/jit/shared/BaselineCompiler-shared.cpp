@@ -9,8 +9,8 @@
 #include "jit/BaselineIC.h"
 #include "jit/VMFunctions.h"
 
-#include "jsscriptinlines.h"
 #include "jit/MacroAssembler-inl.h"
+#include "vm/JSScript-inl.h"
 
 using namespace js;
 using namespace js::jit;
