@@ -95,30 +95,23 @@ class RequestListContent extends Component {
       toggleDelay: REQUESTS_TOOLTIP_TOGGLE_DELAY,
       interactive: true
     });
-    // Everytime the list is created or pruned, re-enable scroll to bottom feature.
-    this.shouldScrollToBottom = true;
-
     // Install event handler to hide the tooltip on scroll
     this.refs.contentEl.addEventListener("scroll", this.onScroll, true);
     this.onResize();
   }
 
-  componentDidUpdate(prevProps) {
-    if (!this.shouldScrollToBottom) {
-      return;
-    }
+  componentWillUpdate(nextProps) {
     // Check if the list is scrolled to bottom before the UI update.
     // The scroll is ever needed only if new rows are added to the list.
-    const hasNewRequests = this.props.displayedRequests.size -
-      prevProps.displayedRequests.size > 0;
-    // Keep the list scrolled to bottom if a new row was added
-    if (hasNewRequests) {
-      // Set a boolean flag to help `scroll` listener to know that the next event
-      // is related to the scroll to bottom and can be ignored.
-      this.ignoreNextScroll = true;
+    const delta = nextProps.displayedRequests.size - this.props.displayedRequests.size;
+    this.shouldScrollBottom = delta > 0 && this.isScrolledToBottom();
+  }
 
+  componentDidUpdate(prevProps) {
+    let node = this.refs.contentEl;
+    // Keep the list scrolled to bottom if a new row was added
+    if (this.shouldScrollBottom && node.scrollTop !== MAX_SCROLL_HEIGHT) {
       // Using maximum scroll height rather than node.scrollHeight to avoid sync reflow.
-      let node = this.refs.contentEl;
       node.scrollTop = MAX_SCROLL_HEIGHT;
     }
   }
@@ -200,14 +193,6 @@ class RequestListContent extends Component {
    */
   onScroll() {
     this.tooltip.hide();
-
-    // Ignore scroll related to new requests being displayed
-    // To prevent slow reflows done in isScrolledToBottom.
-    if (this.ignoreNextScroll) {
-      this.ignoreNextScroll = false;
-      return;
-    }
-    this.shouldScrollToBottom = this.isScrolledToBottom();
   }
 
   /**
@@ -259,7 +244,7 @@ class RequestListContent extends Component {
    * scrolled to bottom, but allow scrolling up with the selection.
    */
   onFocusedNodeChange() {
-    this.shouldScrollToBottom = false;
+    this.shouldScrollBottom = false;
   }
 
   render() {
@@ -285,9 +270,7 @@ class RequestListContent extends Component {
             className: "requests-list-contents",
             tabIndex: 0,
             onKeyDown: this.onKeyDown,
-            // scale is null until the waterfall is initialized
-            style: { "--timings-scale": scale ? scale : 0,
-                     "--timings-rev-scale": (scale ? 1 / scale : 1) }
+            style: { "--timings-scale": scale, "--timings-rev-scale": 1 / scale }
           },
             RequestListHeader(),
             displayedRequests.map((item, index) => RequestListItem({
