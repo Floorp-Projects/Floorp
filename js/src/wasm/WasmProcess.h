@@ -24,18 +24,19 @@
 namespace js {
 namespace wasm {
 
-class CodeSegment;
 class Code;
+class CodeRange;
+class CodeSegment;
 
 // These methods return the wasm::CodeSegment (resp. wasm::Code) containing
 // the given pc, if any exist in the process. These methods do not take a lock,
 // and thus are safe to use in a profiling or async interrupt context.
 
 const CodeSegment*
-LookupCodeSegment(const void* pc);
+LookupCodeSegment(const void* pc, const CodeRange** codeRange = nullptr);
 
 const Code*
-LookupCode(const void* pc);
+LookupCode(const void* pc, const CodeRange** codeRange = nullptr);
 
 // A bool member that can be used as a very fast lookup to know if there is any
 // code segment at all.

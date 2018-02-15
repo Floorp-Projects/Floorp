@@ -226,15 +226,20 @@ wasm::UnregisterCodeSegment(const CodeSegment* cs)
 }
 
 const CodeSegment*
-wasm::LookupCodeSegment(const void* pc)
+wasm::LookupCodeSegment(const void* pc, const CodeRange** cr /*= nullptr */)
 {
-    return processCodeSegmentMap.lookup(pc);
+    if (const CodeSegment* found = processCodeSegmentMap.lookup(pc)) {
+        if (cr)
+            *cr = found->codeTier().lookupRange(pc);
+        return found;
+    }
+    return nullptr;
 }
 
 const Code*
-wasm::LookupCode(const void* pc)
+wasm::LookupCode(const void* pc, const CodeRange** cr /* = nullptr */)
 {
-    const CodeSegment* found = LookupCodeSegment(pc);
+    const CodeSegment* found = LookupCodeSegment(pc, cr);
     return found ? &found->code() : nullptr;
 }
 

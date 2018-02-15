@@ -119,6 +119,7 @@ class CodeSegment
         MOZ_ASSERT(!codeTier_);
         codeTier_ = codeTier;
     }
+    const CodeTier& codeTier() const { return *codeTier_; }
     const Code& code() const;
 };
 
@@ -522,6 +523,8 @@ class CodeTier
     const ModuleSegment& segment() const { return *segment_.get(); }
     const Code& code() const { return *code_; }
 
+    const CodeRange* lookupRange(const void* pc) const;
+
     size_t serializedSize() const;
     uint8_t* serialize(uint8_t* cursor, const LinkDataTier& linkData) const;
     const uint8_t* deserialize(const uint8_t* cursor, const SharedBytes& bytecode,
@@ -636,7 +639,7 @@ class Code : public ShareableBase<Code>
     // Metadata lookup functions:
 
     const CallSite* lookupCallSite(void* returnAddress) const;
-    const CodeRange* lookupRange(void* pc) const;
+    const CodeRange* lookupFuncRange(void* pc) const;
     const MemoryAccess* lookupMemoryAccess(void* pc) const;
     bool containsCodePC(const void* pc) const;
     bool lookupTrap(void* pc, Trap* trap, BytecodeOffset* bytecode) const;

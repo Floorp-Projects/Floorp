@@ -1770,10 +1770,8 @@ jit::JitActivation::startWasmInterrupt(const JS::ProfilingFrameIterator::Registe
         // caller's FP, and the caller could be the jit entry. Ignore this
         // interrupt, in this case, because FP points to a jit frame and not a
         // wasm one.
-        const wasm::CodeRange* codeRange = wasm::LookupCode(pc)->lookupRange(pc);
-        if (codeRange->isJitEntry())
+        if (!wasm::LookupCode(pc)->lookupFuncRange(pc))
             return false;
-        MOZ_ASSERT(codeRange->isFunction());
     }
 
     cx_->runtime()->wasmUnwindData.ref().construct<wasm::InterruptData>(pc, state.pc);
