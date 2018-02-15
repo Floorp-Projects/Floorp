@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  Test that a self updating service worker can't keep running forever when the
+  script changes.
+  -->
+<head>
+  <title>Test for Bug 1432846</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="error_reporting_helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1432846">Mozilla Bug 1432846</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script src="utils.js"></script>
+<script class="testbody" type="text/javascript">
+add_task(function setupPrefs() {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+  ]});
+});
+
+function activateDummyWorker() {
+  return navigator.serviceWorker.register("empty.js",
+    { scope: "./empty?random=" + Date.now() })
+    .then(function(registration) {
+      var worker = registration.installing;
+      return waitForState(worker, 'activated', registration).then(function() {
+        ok(true, "got dummy!");
+        return registration.unregister();
+      });
+    });
+}
+
+add_task(async function test_update() {
+  navigator.serviceWorker.onmessage = function(event) {
+    ok (event.data.version < 3, "Service worker updated too many times." + event.data.version);
+  }
+
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.idle_timeout", 0],
+    ["dom.serviceWorkers.update_delay", 30000],
+    ["dom.serviceWorkers.idle_extended_timeout", 299999]]});
+
+  var worker;
+  let registration = await navigator.serviceWorker.register(
+    "self_update_worker.sjs",
+    { scope: "./test_self_update_worker.html?random=" + Date.now()})
+    .then(function(registration) {
+      worker = registration.installing;
+      return waitForState(worker, 'activated', registration);
+    });
+
+  // We need to wait a reasonable time to give the self updating worker a chance
+  // to change to a newer version. Register and activate an empty worker 5 times.
+  for (i = 0; i < 5; i++) {
+    await activateDummyWorker();
+  }
+
+
+  await registration.unregister();
+  await SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
+});
+</script>
+</body>
+</html>
