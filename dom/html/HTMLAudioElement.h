@@ -21,6 +21,8 @@ class HTMLAudioElement final : public HTMLMediaElement
 public:
   typedef mozilla::dom::NodeInfo NodeInfo;
 
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLAudioElement, audio)
+
   explicit HTMLAudioElement(already_AddRefed<NodeInfo>& aNodeInfo);
 
   // Element
