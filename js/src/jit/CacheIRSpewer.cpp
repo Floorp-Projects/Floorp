@@ -73,7 +73,7 @@ CacheIRSpewer::init()
 }
 
 void
-CacheIRSpewer::beginCache(const IRGenerator& gen)
+CacheIRSpewer::beginCache(LockGuard<Mutex>&, const IRGenerator& gen)
 {
     MOZ_ASSERT(enabled());
     JSONPrinter& j = json.ref();
@@ -121,7 +121,7 @@ QuoteString(GenericPrinter& out, JSLinearString* str)
 }
 
 void
-CacheIRSpewer::valueProperty(const char* name, const Value& v)
+CacheIRSpewer::valueProperty(LockGuard<Mutex>&, const char* name, const Value& v)
 {
     MOZ_ASSERT(enabled());
     JSONPrinter& j = json.ref();
@@ -153,14 +153,14 @@ CacheIRSpewer::valueProperty(const char* name, const Value& v)
 }
 
 void
-CacheIRSpewer::attached(const char* name)
+CacheIRSpewer::attached(LockGuard<Mutex>&, const char* name)
 {
     MOZ_ASSERT(enabled());
     json.ref().property("attached", name);
 }
 
 void
-CacheIRSpewer::endCache()
+CacheIRSpewer::endCache(LockGuard<Mutex>&)
 {
     MOZ_ASSERT(enabled());
     json.ref().endObject();
