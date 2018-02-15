@@ -101,8 +101,13 @@ add_task(async function testTabSwitchContext() {
           tabs.push(tab.id);
           expect(null);
         },
-        expect => {
+        async expect => {
           browser.test.log("Await tab load. No icon visible.");
+          let promise = promiseTabLoad({id: tabs[1], url: "about:blank?0"});
+          let {url} = await browser.tabs.get(tabs[1]);
+          if (url === "about:blank") {
+            await promise;
+          }
           expect(null);
         },
         async expect => {
