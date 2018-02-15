@@ -181,9 +181,7 @@ const WasmHelpers = {};
         enableSingleStepProfiling();
         disableSingleStepProfiling();
         enabled = true;
-    } catch (e) {
-        print(e.message);
-    }
+    } catch (e) {}
     WasmHelpers.isSingleStepProfilingEnabled = enabled;
 })();
 
