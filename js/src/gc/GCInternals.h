@@ -58,7 +58,7 @@ class MOZ_RAII AutoPrepareForTracing
     mozilla::Maybe<AutoTraceSession> session_;
 
   public:
-    AutoPrepareForTracing(JSContext* cx);
+    explicit AutoPrepareForTracing(JSContext* cx);
     AutoTraceSession& session() { return session_.ref(); }
 };
 
