@@ -9,12 +9,11 @@
 
 #include "mozilla/Maybe.h"
 
-#include "jsfun.h"
-
 #include "jit/JitAllocPolicy.h"
 #include "jit/JitFrames.h"
 #include "jit/Registers.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/JSFunction.h"
 
 namespace js {
 namespace jit {

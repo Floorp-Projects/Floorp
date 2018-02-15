@@ -11,12 +11,13 @@
 #include "jsboolinlines.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"
-#include "jsobj.h"
 #include "jstypes.h"
 
 #include "jit/InlinableNatives.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSAtom.h"
+#include "vm/JSContext.h"
+#include "vm/JSObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/StringBuffer.h"
 

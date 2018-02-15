@@ -5,12 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsfriendapi.h"
-#include "jsscript.h"
 #include "jsstr.h"
 
 #include "jsapi-tests/tests.h"
+#include "vm/JSScript.h"
 
-#include "jsscriptinlines.h"
+#include "vm/JSScript-inl.h"
 
 static bool
 GetBuildId(JS::BuildIdCharVector* buildId)

@@ -9,9 +9,10 @@
 #include <stdio.h>
 
 #include "jsalloc.h"
-#include "jscntxt.h"
+
 #include "js/Initialization.h"
 #include "js/RootingAPI.h"
+#include "vm/JSContext.h"
 
 #ifdef LIBFUZZER
 #include "FuzzerDefs.h"

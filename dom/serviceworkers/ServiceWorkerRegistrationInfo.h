@@ -8,7 +8,6 @@
 #define mozilla_dom_serviceworkerregistrationinfo_h
 
 #include "mozilla/dom/ServiceWorkerInfo.h"
-#include "mozilla/dom/ServiceWorkerCommon.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
 #include "nsProxyRelease.h"
@@ -213,20 +212,11 @@ public:
   Descriptor() const;
 
 private:
-  enum TransitionType {
-    TransitionToNextState = 0,
-    Invalidate
-  };
-
-  // Queued as a runnable from UpdateRegistrationStateProperties.
-  void
-  AsyncUpdateRegistrationStateProperties(WhichServiceWorker aWorker, TransitionType aType);
-
   // Roughly equivalent to [[Update Registration State algorithm]]. Make sure
   // this is called *before* updating SW instances' state, otherwise they
   // may get CC-ed.
   void
-  UpdateRegistrationStateProperties(WhichServiceWorker aWorker, TransitionType aType);
+  UpdateRegistrationState();
 
   // Used by devtools to track changes to the properties of *nsIServiceWorkerRegistrationInfo*.
   // Note, this doesn't necessarily need to be in sync with the DOM registration objects, but

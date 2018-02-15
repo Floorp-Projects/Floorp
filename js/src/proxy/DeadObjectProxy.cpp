@@ -7,8 +7,8 @@
 #include "proxy/DeadObjectProxy.h"
 
 #include "jsapi.h"
-#include "jsfun.h" // XXXefaust Bug 1064662
 
+#include "vm/JSFunction.h" // XXXefaust Bug 1064662
 #include "vm/ProxyObject.h"
 
 using namespace js;

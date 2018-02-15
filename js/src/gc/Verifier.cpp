@@ -12,17 +12,17 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
 
-#include "jscntxt.h"
 #include "jsprf.h"
 
 #include "gc/GCInternals.h"
 #include "gc/Zone.h"
 #include "js/HashTable.h"
+#include "vm/JSContext.h"
 
-#include "jscntxtinlines.h"
 #include "jsgcinlines.h"
 
 #include "gc/Marking-inl.h"
+#include "vm/JSContext-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -529,7 +529,14 @@ HeapCheckTracerBase::onChild(const JS::GCCellPtr& thing)
         return;
 
     // Don't trace into GC in zones being used by helper threads.
-    Zone* zone = thing.is<JSObject>() ? thing.as<JSObject>().zone() : cell->asTenured().zone();
+    Zone* zone;
+    if (thing.is<JSObject>())
+        zone = thing.as<JSObject>().zone();
+    else if (thing.is<JSString>())
+        zone = thing.as<JSString>().zone();
+    else
+        zone = cell->asTenured().zone();
+
     if (zone->group() && zone->group()->usedByHelperThread())
         return;
 

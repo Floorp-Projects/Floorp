@@ -1,4 +1,4 @@
-winreg [![Crates.io](https://img.shields.io/crates/v/winreg.svg)](https://crates.io/crates/winreg)
+winreg [![Crates.io](https://img.shields.io/crates/v/winreg.svg)](https://crates.io/crates/winreg) [![Build status](https://ci.appveyor.com/api/projects/status/f3lwrt67ghrf5omd?svg=true)](https://ci.appveyor.com/project/gentoo90/winreg-rs)
 ======
 
 Rust bindings to MS Windows Registry API. Work in progress.
@@ -23,7 +23,7 @@ Current features:
 ```toml
 # Cargo.toml
 [dependencies]
-winreg = "0.3"
+winreg = "0.5"
 ```
 
 ```rust
@@ -36,8 +36,7 @@ use winreg::enums::*;
 fn main() {
     println!("Reading some system info...");
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
-    let cur_ver = hklm.open_subkey_with_flags("SOFTWARE\\Microsoft\\Windows\\CurrentVersion",
-        KEY_READ).unwrap();
+    let cur_ver = hklm.open_subkey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion").unwrap();
     let pf: String = cur_ver.get_value("ProgramFilesDir").unwrap();
     let dp: String = cur_ver.get_value("DevicePath").unwrap();
     println!("ProgramFiles = {}\nDevicePath = {}", pf, dp);
@@ -92,7 +91,7 @@ fn main() {
     }
 
     let system = RegKey::predef(HKEY_LOCAL_MACHINE)
-        .open_subkey_with_flags("HARDWARE\\DESCRIPTION\\System", KEY_READ)
+        .open_subkey("HARDWARE\\DESCRIPTION\\System")
         .unwrap();
     for (name, value) in system.enum_values().map(|x| x.unwrap()) {
         println!("{} = {:?}", name, value);
@@ -101,6 +100,12 @@ fn main() {
 ```
 
 ### Transactions
+
+```toml
+# Cargo.toml
+[dependencies]
+winreg = { version = "0.5", features = ["transactions"] }
+```
 
 ```rust
 extern crate winreg;
@@ -136,12 +141,22 @@ fn main() {
 
 ### Serialization
 
+```toml
+# Cargo.toml
+[dependencies]
+winreg = { version = "0.5", features = ["serialization-serde"] }
+serde = "1"
+serde_derive = "1"
+```
+
 ```rust
-extern crate rustc_serialize;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
 extern crate winreg;
 use winreg::enums::*;
 
-#[derive(Debug,RustcEncodable,RustcDecodable,PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct Rectangle{
     x: u32,
     y: u32,
@@ -149,7 +164,7 @@ struct Rectangle{
     h: u32,
 }
 
-#[derive(Debug,RustcEncodable,RustcDecodable,PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct Test {
     t_bool: bool,
     t_u8: u8,
@@ -205,6 +220,20 @@ fn main() {
 ```
 
 ## Changelog
+
+### 0.5.0
+
+* Breaking change: `open_subkey` now opens a key with readonly permissions.
+Use `create_subkey` or `open_subkey_with_flags` to open with read-write permissins.
+* Breaking change: features `transactions` and `serialization-serde` are now disabled by default.
+* Breaking change: serialization now uses `serde` instead of `rustc-serialize`.
+* `winreg` updated to `0.3`.
+* Documentation fixes (#14)
+
+### 0.4.0
+
+* Make transactions and serialization otional features
+* Update dependensies + minor fixes (#12)
 
 ### 0.3.5
 

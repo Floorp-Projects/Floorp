@@ -16,8 +16,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/String.h"
 
-#include "jsobjinlines.h"
-
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/SavedStacks-inl.h"
 #include "vm/Shape-inl.h"

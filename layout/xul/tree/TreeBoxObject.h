@@ -20,6 +20,7 @@ namespace dom {
 
 struct TreeCellInfo;
 class DOMRect;
+enum class CallerType : uint32_t;
 
 class TreeBoxObject final : public BoxObject,
                             public nsITreeBoxObject
@@ -43,9 +44,10 @@ public:
 
   already_AddRefed<nsTreeColumns> GetColumns();
 
-  already_AddRefed<nsITreeView> GetView();
+  already_AddRefed<nsITreeView> GetView(CallerType /* unused */);
 
-  void SetView(nsITreeView* arg, ErrorResult& aRv);
+  void SetView(nsITreeView* arg, CallerType aCallerType,
+               ErrorResult& aRv);
 
   bool Focused();
 

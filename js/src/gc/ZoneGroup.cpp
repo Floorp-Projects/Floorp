@@ -6,10 +6,9 @@
 
 #include "gc/ZoneGroup.h"
 
-#include "jscntxt.h"
-
 #include "jit/IonBuilder.h"
 #include "jit/JitCompartment.h"
+#include "vm/JSContext.h"
 
 using namespace js;
 

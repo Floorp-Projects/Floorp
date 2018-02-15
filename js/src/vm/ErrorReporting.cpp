@@ -10,11 +10,12 @@
 
 #include <stdarg.h>
 
-#include "jscntxt.h"
 #include "jsexn.h"
 #include "jsfriendapi.h"
 
-#include "jscntxtinlines.h"
+#include "vm/JSContext.h"
+
+#include "vm/JSContext-inl.h"
 
 using mozilla::Move;
 

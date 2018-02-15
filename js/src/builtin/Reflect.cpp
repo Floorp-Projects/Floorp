@@ -7,10 +7,10 @@
 #include "builtin/Reflect.h"
 
 #include "jsarray.h"
-#include "jscntxt.h"
 
 #include "jit/InlinableNatives.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/JSContext.h"
 #include "vm/Stack.h"
 
 #include "vm/Interpreter-inl.h"

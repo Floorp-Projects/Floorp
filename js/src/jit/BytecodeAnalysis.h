@@ -7,9 +7,9 @@
 #ifndef jit_BytecodeAnalysis_h
 #define jit_BytecodeAnalysis_h
 
-#include "jsscript.h"
 #include "jit/JitAllocPolicy.h"
 #include "js/Vector.h"
+#include "vm/JSScript.h"
 
 namespace js {
 namespace jit {

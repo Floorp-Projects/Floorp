@@ -5,8 +5,8 @@
 #include <stdlib.h>
 
 #include "jit/shared/IonAssemblerBufferWithConstantPools.h"
-
 #include "jsapi-tests/tests.h"
+#include "vm/JSAtom.h"
 
 // Tests for classes in:
 //

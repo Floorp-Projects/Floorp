@@ -184,6 +184,67 @@ Zip::GetFirstEntry() const
   return entries;
 }
 
+bool
+Zip::VerifyCRCs() const
+{
+  AutoLock lock(&mutex);
+
+  for (const DirectoryEntry *entry = GetFirstEntry();
+       entry; entry = entry->GetNext()) {
+    const LocalFile *file = LocalFile::validate(
+        static_cast<const char *>(mapped) + entry->offset);
+    uint32_t crc = crc32(0, nullptr, 0);
+
+    DEBUG_LOG("%.*s: crc=%08x", int(entry->filenameSize),
+              reinterpret_cast<const char *>(entry) + sizeof(*entry),
+              uint32_t(entry->CRC32));
+
+    if (entry->compression == Stream::Type::STORE) {
+      crc = crc32(crc, static_cast<const uint8_t*>(file->GetData()),
+                  entry->compressedSize);
+      DEBUG_LOG(" STORE size=%d crc=%08x", int(entry->compressedSize), crc);
+
+    } else if (entry->compression == Stream::Type::DEFLATE) {
+      zxx_stream zstream;
+      Bytef buffer[1024];
+      zstream.avail_in = entry->compressedSize;
+      zstream.next_in = reinterpret_cast<Bytef *>(
+                        const_cast<void *>(file->GetData()));
+
+      if (inflateInit2(&zstream, -MAX_WBITS) != Z_OK) {
+        return false;
+      }
+
+      for (;;) {
+        zstream.avail_out = sizeof(buffer);
+        zstream.next_out = buffer;
+
+        int ret = inflate(&zstream, Z_SYNC_FLUSH);
+        crc = crc32(crc, buffer, sizeof(buffer) - zstream.avail_out);
+
+        if (ret == Z_STREAM_END) {
+          break;
+        } else if (ret != Z_OK) {
+          return false;
+        }
+      }
+
+      inflateEnd(&zstream);
+      DEBUG_LOG(" DEFLATE size=%d crc=%08x", int(zstream.total_out), crc);
+
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Unexpected stream type");
+      continue;
+    }
+
+    if (entry->CRC32 != crc) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 ZipCollection ZipCollection::Singleton;
 
 static pthread_mutex_t sZipCollectionMutex = PTHREAD_MUTEX_INITIALIZER;

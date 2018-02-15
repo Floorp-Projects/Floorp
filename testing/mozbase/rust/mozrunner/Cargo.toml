@@ -11,7 +11,7 @@ log = "0.3"
 mozprofile = { path = "../mozprofile" }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-winreg = "0.3.5"
+winreg = "0.5"
 
 [[bin]]
 name = "firefox-default-path"

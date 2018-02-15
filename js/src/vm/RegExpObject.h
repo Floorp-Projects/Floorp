@@ -12,13 +12,12 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 
-#include "jscntxt.h"
-
 #include "builtin/SelfHostingDefines.h"
 #include "gc/Marking.h"
 #include "js/GCHashTable.h"
 #include "proxy/Proxy.h"
 #include "vm/ArrayObject.h"
+#include "vm/JSContext.h"
 #include "vm/RegExpShared.h"
 #include "vm/Shape.h"
 

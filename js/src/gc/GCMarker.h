@@ -10,10 +10,7 @@
 #include "ds/OrderedHashTable.h"
 #include "js/SliceBudget.h"
 #include "js/TracingAPI.h"
-
-namespace JS {
-class Symbol;
-}
+#include "js/TypeDecls.h"
 
 namespace js {
 

@@ -6,7 +6,6 @@
 
 #include "jit/IonAnalysis.h"
 
-
 #include "jit/AliasAnalysis.h"
 #include "jit/BaselineInspector.h"
 #include "jit/BaselineJIT.h"
@@ -20,11 +19,11 @@
 #include "vm/RegExpObject.h"
 #include "vm/SelfHosting.h"
 
-#include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
-#include "jsscriptinlines.h"
 
 #include "jit/shared/Lowering-shared-inl.h"
+#include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
 
 using namespace js;
 using namespace js::jit;

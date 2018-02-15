@@ -291,21 +291,16 @@ UNIFIED_SOURCES += [
     'jsalloc.cpp',
     'jsapi.cpp',
     'jsbool.cpp',
-    'jscntxt.cpp',
-    'jscompartment.cpp',
     'jsdate.cpp',
     'jsexn.cpp',
     'jsfriendapi.cpp',
-    'jsfun.cpp',
     'jsgc.cpp',
     'jsiter.cpp',
     'jsnativestack.cpp',
     'jsnum.cpp',
-    'jsobj.cpp',
     'json.cpp',
     'jsopcode.cpp',
     'jsprf.cpp',
-    'jsscript.cpp',
     'jsstr.cpp',
     'jsweakmap.cpp',
     'perf/jsperf.cpp',
@@ -341,8 +336,13 @@ UNIFIED_SOURCES += [
     'vm/HelperThreads.cpp',
     'vm/Id.cpp',
     'vm/Initialization.cpp',
+    'vm/JSCompartment.cpp',
+    'vm/JSContext.cpp',
+    'vm/JSFunction.cpp',
+    'vm/JSObject.cpp',
     'vm/JSONParser.cpp',
     'vm/JSONPrinter.cpp',
+    'vm/JSScript.cpp',
     'vm/MemoryMetrics.cpp',
     'vm/NativeObject.cpp',
     'vm/ObjectGroup.cpp',
@@ -405,7 +405,7 @@ UNIFIED_SOURCES += [
     'wasm/WasmValidate.cpp'
 ]
 
-# jsarray.cpp and jsatom.cpp cannot be built in unified mode because
+# jsarray.cpp and vm/JSAtom.cpp cannot be built in unified mode because
 # xpcshell is broken during packaging when compiled with gcc-4.8.2
 # builtin/RegExp.cpp cannot be built in unified mode because it is built
 # without PGO
@@ -427,11 +427,11 @@ SOURCES += [
     'frontend/Parser.cpp',
     'gc/StoreBuffer.cpp',
     'jsarray.cpp',
-    'jsatom.cpp',
     'jsdtoa.cpp',
     'jsmath.cpp',
     'jsutil.cpp',
     'vm/Interpreter.cpp',
+    'vm/JSAtom.cpp',
 ]
 
 if CONFIG['JS_POSIX_NSPR']:

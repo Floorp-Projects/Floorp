@@ -14,9 +14,9 @@
 #include <processthreadsapi.h>
 #endif // defined(XP_WIN)
 
-#include "jscompartment.h"
 #include "jswin.h"
 
+#include "vm/JSCompartment.h"
 #include "vm/Runtime.h"
 
 namespace js {

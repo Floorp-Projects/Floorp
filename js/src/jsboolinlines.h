@@ -9,9 +9,8 @@
 
 #include "jsbool.h"
 
-#include "jscntxt.h"
-
 #include "vm/BooleanObject.h"
+#include "vm/JSContext.h"
 #include "vm/WrapperObject.h"
 
 namespace js {

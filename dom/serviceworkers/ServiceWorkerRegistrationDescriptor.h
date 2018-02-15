@@ -7,7 +7,6 @@
 #define _mozilla_dom_ServiceWorkerRegistrationDescriptor_h
 
 #include "mozilla/Maybe.h"
-#include "mozilla/dom/IPCServiceWorkerRegistrationDescriptor.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/UniquePtr.h"
 
@@ -20,6 +19,7 @@ class PrincipalInfo;
 namespace dom {
 
 class IPCServiceWorkerRegistrationDescriptor;
+class OptionalIPCServiceWorkerDescriptor;
 class ServiceWorkerInfo;
 enum class ServiceWorkerUpdateViaCache : uint8_t;
 
@@ -57,7 +57,7 @@ public:
   ServiceWorkerRegistrationDescriptor&
   operator=(ServiceWorkerRegistrationDescriptor&& aRight);
 
-  ~ServiceWorkerRegistrationDescriptor() = default;
+  ~ServiceWorkerRegistrationDescriptor();
 
   bool
   operator==(const ServiceWorkerRegistrationDescriptor& aRight) const;
@@ -95,9 +95,9 @@ public:
              ServiceWorkerInfo* aActive);
 
   void
-  SetWorkers(OptionalIPCServiceWorkerDescriptor& aInstalling,
-             OptionalIPCServiceWorkerDescriptor& aWaiting,
-             OptionalIPCServiceWorkerDescriptor& aActive);
+  SetWorkers(const OptionalIPCServiceWorkerDescriptor& aInstalling,
+             const OptionalIPCServiceWorkerDescriptor& aWaiting,
+             const OptionalIPCServiceWorkerDescriptor& aActive);
 
   // Expose the underlying IPC type so that it can be passed via IPC.
   const IPCServiceWorkerRegistrationDescriptor&

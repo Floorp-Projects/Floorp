@@ -444,25 +444,6 @@ skip script test262/annexB/language/function-code/block-decl-func-skip-arguments
 skip script test262/language/expressions/assignment/destructuring/keyed-destructuring-property-reference-target-evaluation-order.js
 skip script test262/language/expressions/assignment/destructuring/iterator-destructuring-property-reference-target-evaluation-order.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1407588
-skip script test262/language/statements/for-of/iterator-next-reference.js
-skip script test262/language/expressions/async-generator/yield-star-async-next.js
-skip script test262/language/expressions/async-generator/named-yield-star-async-next.js
-skip script test262/language/expressions/object/method-definition/async-gen-yield-star-async-next.js
-skip script test262/language/expressions/class/async-gen-method-yield-star-async-next.js
-skip script test262/language/expressions/class/async-gen-method-static-yield-star-async-next.js
-skip script test262/language/statements/async-generator/yield-star-async-next.js
-skip script test262/language/statements/class/async-gen-method-yield-star-async-next.js
-skip script test262/language/statements/class/async-gen-method-static-yield-star-async-next.js
-skip script test262/language/statements/async-generator/yield-star-sync-next.js
-skip script test262/language/statements/class/async-gen-method-yield-star-sync-next.js
-skip script test262/language/statements/class/async-gen-method-static-yield-star-sync-next.js
-skip script test262/language/expressions/async-generator/named-yield-star-sync-next.js
-skip script test262/language/expressions/async-generator/yield-star-sync-next.js
-skip script test262/language/expressions/object/method-definition/async-gen-yield-star-sync-next.js
-skip script test262/language/expressions/class/async-gen-method-yield-star-sync-next.js
-skip script test262/language/expressions/class/async-gen-method-static-yield-star-sync-next.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1321616
 skip script test262/annexB/built-ins/Function/createdynfn-html-close-comment-params.js
 

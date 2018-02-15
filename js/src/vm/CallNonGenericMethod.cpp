@@ -6,10 +6,9 @@
 
 #include "js/CallNonGenericMethod.h"
 
-#include "jsfun.h"
-#include "jsobj.h"
-
 #include "proxy/Proxy.h"
+#include "vm/JSFunction.h"
+#include "vm/JSObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/SelfHosting.h"
 

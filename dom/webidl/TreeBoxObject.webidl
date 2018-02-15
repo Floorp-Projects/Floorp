@@ -27,7 +27,7 @@ interface TreeBoxObject : BoxObject {
    * It is dynamically settable, either using a view attribute on the
    * tree tag or by setting this attribute to a new value.
    */
-  [SetterThrows]
+  [SetterThrows, NeedsCallerType]
   attribute MozTreeView? view;
 
   /**

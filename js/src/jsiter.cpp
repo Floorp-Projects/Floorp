@@ -16,10 +16,7 @@
 #include "mozilla/Unused.h"
 
 #include "jsarray.h"
-#include "jscntxt.h"
-#include "jsobj.h"
 #include "jsopcode.h"
-#include "jsscript.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
@@ -30,11 +27,14 @@
 #include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSAtom.h"
+#include "vm/JSContext.h"
+#include "vm/JSObject.h"
+#include "vm/JSScript.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 
-#include "jsscriptinlines.h"
-
+#include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/ReceiverGuard-inl.h"
 #include "vm/Stack-inl.h"

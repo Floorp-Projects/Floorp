@@ -12,8 +12,7 @@ use winreg::enums::*;
 fn main() {
     println!("Reading some system info...");
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
-    let cur_ver = hklm.open_subkey_with_flags("SOFTWARE\\Microsoft\\Windows\\CurrentVersion",
-        KEY_READ).unwrap();
+    let cur_ver = hklm.open_subkey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion").unwrap();
     let pf: String = cur_ver.get_value("ProgramFilesDir").unwrap();
     let dp: String = cur_ver.get_value("DevicePath").unwrap();
     println!("ProgramFiles = {}\nDevicePath = {}", pf, dp);
@@ -42,7 +41,7 @@ fn main() {
     hkcu.delete_subkey_all(&path).unwrap();
 
     println!("Trying to open nonexistent key...");
-    let key2 = hkcu.open_subkey(&path)
+    hkcu.open_subkey(&path)
     .unwrap_or_else(|e| match e.kind() {
         io::ErrorKind::NotFound => panic!("Key doesn't exist"),
         io::ErrorKind::PermissionDenied => panic!("Access denied"),

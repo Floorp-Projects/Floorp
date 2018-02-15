@@ -6,7 +6,7 @@
 
 #include "jswrapper.h"
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 

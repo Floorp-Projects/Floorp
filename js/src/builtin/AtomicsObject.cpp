@@ -66,7 +66,7 @@
 #include "vm/TypedArrayObject.h"
 #include "wasm/WasmInstance.h"
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 

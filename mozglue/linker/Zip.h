@@ -263,6 +263,11 @@ public:
     return name;
   }
 
+  /**
+   * Returns whether all files have correct CRC checksum.
+   */
+  bool VerifyCRCs() const;
+
 private:
   /* File name of the archive */
   char *name;

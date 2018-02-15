@@ -96,8 +96,8 @@ class C2 extends C1 {
              [
                "rhs get @@iterator",
                "rhs call @@iterator",
-
                "rhs get @@iterator()::next",
+
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
@@ -113,9 +113,9 @@ class C2 extends C1 {
              [
                "rhs get @@iterator",
                "rhs call @@iterator",
+               "rhs get @@iterator()::next",
 
                "lhs before name a",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
@@ -133,20 +133,17 @@ class C2 extends C1 {
              [
                "rhs get @@iterator",
                "rhs call @@iterator",
+               "rhs get @@iterator()::next",
 
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "lhs set a",
@@ -161,21 +158,18 @@ class C2 extends C1 {
              [
                "rhs get @@iterator",
                "rhs call @@iterator",
+               "rhs get @@iterator()::next",
 
                "lhs before name a",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "lhs set a",
@@ -194,26 +188,23 @@ class C2 extends C1 {
              [
                "rhs get @@iterator",
                "rhs call @@iterator",
-
                "rhs get @@iterator()::next",
+
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
                "lhs set a",
 
                "lhs before name b",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
                "lhs set b",
 
                "lhs before name c",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "lhs set c",
@@ -281,27 +272,25 @@ class C2 extends C1 {
              [
                "rhs get @@iterator",
                "rhs call @@iterator",
-
                "rhs get @@iterator()::next",
+
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
                "rhs get @@iterator()::next()::value::@@iterator",
                "rhs call @@iterator()::next()::value::@@iterator",
+               "rhs get @@iterator()::next()::value::@@iterator()::next",
 
                "lhs before name a",
-               "rhs get @@iterator()::next()::value::@@iterator()::next",
                "rhs call @@iterator()::next()::value::@@iterator()::next",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::done",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value",
                "lhs set a",
 
                "lhs before name b",
-               "rhs get @@iterator()::next()::value::@@iterator()::next",
                "rhs call @@iterator()::next()::value::@@iterator()::next",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::done",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value",
-               "rhs get @@iterator()::next()::value::@@iterator()::next",
                "rhs call @@iterator()::next()::value::@@iterator()::next",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::done",
                "lhs set b",
@@ -323,16 +312,14 @@ class C2 extends C1 {
              [
                "rhs get @@iterator",
                "rhs call @@iterator",
+               "rhs get @@iterator()::next",
 
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
 
@@ -356,8 +343,8 @@ class C2 extends C1 {
              [
                "rhs get @@iterator",
                "rhs call @@iterator",
-
                "rhs get @@iterator()::next",
+
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
@@ -381,16 +368,14 @@ class C2 extends C1 {
              [
                "rhs get @@iterator",
                "rhs call @@iterator",
+               "rhs get @@iterator()::next",
 
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
 
@@ -419,9 +404,9 @@ class C2 extends C1 {
                "rhs get a",
                "rhs get a::@@iterator",
                "rhs call a::@@iterator",
+               "rhs get a::@@iterator()::next",
 
                "lhs before name b",
-               "rhs get a::@@iterator()::next",
                "rhs call a::@@iterator()::next",
                "rhs get a::@@iterator()::next()::done",
                "rhs get a::@@iterator()::next()::value",
@@ -514,29 +499,27 @@ class C2 extends C1 {
              [
                "rhs get @@iterator",
                "rhs call @@iterator",
+               "rhs get @@iterator()::next",
 
                "lhs before name a",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
                "lhs set a",
 
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
                "rhs get @@iterator()::next()::value::@@iterator",
                "rhs call @@iterator()::next()::value::@@iterator",
+               "rhs get @@iterator()::next()::value::@@iterator()::next",
 
                "lhs before name b",
-               "rhs get @@iterator()::next()::value::@@iterator()::next",
                "rhs call @@iterator()::next()::value::@@iterator()::next",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::done",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value",
                "lhs set b",
 
-               "rhs get @@iterator()::next()::value::@@iterator()::next",
                "rhs call @@iterator()::next()::value::@@iterator()::next",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::done",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value",
@@ -554,15 +537,14 @@ class C2 extends C1 {
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value::d::f",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value::d::f::@@iterator",
                "rhs call @@iterator()::next()::value::@@iterator()::next()::value::d::f::@@iterator",
+               "rhs get @@iterator()::next()::value::@@iterator()::next()::value::d::f::@@iterator()::next",
 
                "lhs before name g",
-               "rhs get @@iterator()::next()::value::@@iterator()::next()::value::d::f::@@iterator()::next",
                "rhs call @@iterator()::next()::value::@@iterator()::next()::value::d::f::@@iterator()::next",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value::d::f::@@iterator()::next()::done",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value::d::f::@@iterator()::next()::value",
                "lhs set g",
 
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
@@ -574,15 +556,14 @@ class C2 extends C1 {
                "rhs get @@iterator()::next()::value::i",
                "rhs get @@iterator()::next()::value::i::@@iterator",
                "rhs call @@iterator()::next()::value::i::@@iterator",
+               "rhs get @@iterator()::next()::value::i::@@iterator()::next",
 
                "lhs before name j",
-               "rhs get @@iterator()::next()::value::i::@@iterator()::next",
                "rhs call @@iterator()::next()::value::i::@@iterator()::next",
                "rhs get @@iterator()::next()::value::i::@@iterator()::next()::done",
                "rhs get @@iterator()::next()::value::i::@@iterator()::next()::value",
                "lhs set j",
 
-               "rhs get @@iterator()::next()::value::i::@@iterator()::next",
                "rhs call @@iterator()::next()::value::i::@@iterator()::next",
                "rhs get @@iterator()::next()::value::i::@@iterator()::next()::done",
                "rhs get @@iterator()::next()::value::i::@@iterator()::next()::value",
@@ -590,31 +571,26 @@ class C2 extends C1 {
                "rhs get @@iterator()::next()::value::i::@@iterator()::next()::value::k",
                "rhs get @@iterator()::next()::value::i::@@iterator()::next()::value::k::@@iterator",
                "rhs call @@iterator()::next()::value::i::@@iterator()::next()::value::k::@@iterator",
+               "rhs get @@iterator()::next()::value::i::@@iterator()::next()::value::k::@@iterator()::next",
 
                "lhs before name l",
-               "rhs get @@iterator()::next()::value::i::@@iterator()::next()::value::k::@@iterator()::next",
                "rhs call @@iterator()::next()::value::i::@@iterator()::next()::value::k::@@iterator()::next",
                "rhs get @@iterator()::next()::value::i::@@iterator()::next()::value::k::@@iterator()::next()::done",
                "rhs get @@iterator()::next()::value::i::@@iterator()::next()::value::k::@@iterator()::next()::value",
                "lhs set l",
 
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
                "rhs get @@iterator()::next()::value",
-               "rhs get @@iterator()::next",
                "rhs call @@iterator()::next",
                "rhs get @@iterator()::next()::done",
 
@@ -623,15 +599,14 @@ class C2 extends C1 {
 
                "rhs get @@iterator()::next()::value::@@iterator",
                "rhs call @@iterator()::next()::value::@@iterator",
+               "rhs get @@iterator()::next()::value::@@iterator()::next",
 
                "lhs before name n",
-               "rhs get @@iterator()::next()::value::@@iterator()::next",
                "rhs call @@iterator()::next()::value::@@iterator()::next",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::done",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value",
                "lhs set n",
 
-               "rhs get @@iterator()::next()::value::@@iterator()::next",
                "rhs call @@iterator()::next()::value::@@iterator()::next",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::done",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value",
@@ -649,9 +624,9 @@ class C2 extends C1 {
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value::p::r",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value::p::r::@@iterator",
                "rhs call @@iterator()::next()::value::@@iterator()::next()::value::p::r::@@iterator",
+               "rhs get @@iterator()::next()::value::@@iterator()::next()::value::p::r::@@iterator()::next",
 
                "lhs before name s",
-               "rhs get @@iterator()::next()::value::@@iterator()::next()::value::p::r::@@iterator()::next",
                "rhs call @@iterator()::next()::value::@@iterator()::next()::value::p::r::@@iterator()::next",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value::p::r::@@iterator()::next()::done",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value::p::r::@@iterator()::next()::value",
@@ -662,15 +637,14 @@ class C2 extends C1 {
 
                "rhs get @@iterator()::next()::value::@@iterator",
                "rhs call @@iterator()::next()::value::@@iterator",
+               "rhs get @@iterator()::next()::value::@@iterator()::next",
 
                "lhs before name u",
-               "rhs get @@iterator()::next()::value::@@iterator()::next",
                "rhs call @@iterator()::next()::value::@@iterator()::next",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::done",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value",
                "lhs set u",
 
-               "rhs get @@iterator()::next()::value::@@iterator()::next",
                "rhs call @@iterator()::next()::value::@@iterator()::next",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::done",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value",
@@ -688,9 +662,9 @@ class C2 extends C1 {
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value::w::y",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value::w::y::@@iterator",
                "rhs call @@iterator()::next()::value::@@iterator()::next()::value::w::y::@@iterator",
+               "rhs get @@iterator()::next()::value::@@iterator()::next()::value::w::y::@@iterator()::next",
 
                "lhs before name z",
-               "rhs get @@iterator()::next()::value::@@iterator()::next()::value::w::y::@@iterator()::next",
                "rhs call @@iterator()::next()::value::@@iterator()::next()::value::w::y::@@iterator()::next",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value::w::y::@@iterator()::next()::done",
                "rhs get @@iterator()::next()::value::@@iterator()::next()::value::w::y::@@iterator()::next()::value",

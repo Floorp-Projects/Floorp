@@ -1562,11 +1562,23 @@ function TypedArrayToStringTag() {
 }
 _SetCanonicalName(TypedArrayToStringTag, "get [Symbol.toStringTag]");
 
-// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// ES2018 draft rev 0525bb33861c7f4e9850f8a222c89642947c4b9c
 // 22.2.2.1.1 Runtime Semantics: IterableToList( items, method )
 function IterableToList(items, method) {
-    // Step 1.
-    var iterator = GetIterator(items, method);
+    // Step 1 (Inlined GetIterator).
+
+    // 7.4.1 GetIterator, step 1.
+    assert(IsCallable(method), "method argument is a function");
+
+    // 7.4.1 GetIterator, step 2.
+    var iterator = callContentFunction(method, items);
+
+    // 7.4.1 GetIterator, step 3.
+    if (!IsObject(iterator))
+        ThrowTypeError(JSMSG_GET_ITER_RETURNED_PRIMITIVE);
+
+    // 7.4.1 GetIterator, step 4.
+    var nextMethod = iterator.next;
 
     // Step 2.
     var values = [];
@@ -1575,7 +1587,7 @@ function IterableToList(items, method) {
     var i = 0;
     while (true) {
         // Step 4.a.
-        var next = callContentFunction(iterator.next, iterator);
+        var next = callContentFunction(nextMethod, iterator);
         if (!IsObject(next))
             ThrowTypeError(JSMSG_ITER_METHOD_RETURNED_PRIMITIVE, "next");
 

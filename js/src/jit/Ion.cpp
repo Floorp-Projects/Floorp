@@ -10,7 +10,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ThreadLocal.h"
 
-#include "jscompartment.h"
 #include "jsprf.h"
 
 #include "gc/FreeOp.h"
@@ -51,12 +50,9 @@
 #include "jit/WasmBCE.h"
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
+#include "vm/JSCompartment.h"
 #include "vm/TraceLogging.h"
 #include "vtune/VTuneWrapper.h"
-
-#include "jscompartmentinlines.h"
-#include "jsobjinlines.h"
-#include "jsscriptinlines.h"
 
 #include "gc/Iteration-inl.h"
 #include "jit/JitFrames-inl.h"
@@ -64,6 +60,9 @@
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSCompartment-inl.h"
+#include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -455,6 +454,8 @@ JitCompartment::initialize(JSContext* cx)
         ReportOutOfMemory(cx);
         return false;
     }
+
+    stringsCanBeInNursery = cx->nursery().canAllocateStrings();
 
     return true;
 }

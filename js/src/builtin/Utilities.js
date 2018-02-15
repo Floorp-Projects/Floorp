@@ -157,22 +157,6 @@ function IsPropertyKey(argument) {
     return type === "string" || type === "symbol";
 }
 
-/* Spec: ECMAScript Draft, 6th edition Dec 24, 2014, 7.4.1 */
-function GetIterator(obj, method) {
-    // Steps 1-2.
-    assert(IsCallable(method), "method argument is not optional");
-
-    // Steps 3-4.
-    var iterator = callContentFunction(method, obj);
-
-    // Step 5.
-    if (!IsObject(iterator))
-        ThrowTypeError(JSMSG_GET_ITER_RETURNED_PRIMITIVE);
-
-    // Step 6.
-    return iterator;
-}
-
 #define TO_PROPERTY_KEY(name) \
 (typeof name !== "string" && typeof name !== "number" && typeof name !== "symbol" ? ToPropertyKey(name) : name)
 

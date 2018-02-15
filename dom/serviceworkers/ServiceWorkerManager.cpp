@@ -80,6 +80,7 @@
 #include "ServiceWorkerRegisterJob.h"
 #include "ServiceWorkerRegistrar.h"
 #include "ServiceWorkerRegistration.h"
+#include "ServiceWorkerRegistrationListener.h"
 #include "ServiceWorkerScriptCache.h"
 #include "ServiceWorkerEvents.h"
 #include "ServiceWorkerUnregisterJob.h"
@@ -465,8 +466,15 @@ class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public Service
     RefPtr<ServiceWorkerRegistrationInfo> reg = registerJob->GetRegistration();
 
     RefPtr<ServiceWorkerRegistration> swr =
-      window->GetServiceWorkerRegistration(NS_ConvertUTF8toUTF16(reg->Scope()));
-    promise->MaybeResolve(swr);
+      window->GetServiceWorkerRegistration(reg->Descriptor());
+
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      "ServiceWorkerResolveWindowPromiseOnRegisterCallback::JobFinished",
+      [promise = Move(promise), swr = Move(swr)] () {
+        promise->MaybeResolve(swr);
+      });
+    MOZ_ALWAYS_SUCCEEDS(
+      window->EventTargetFor(TaskCategory::Other)->Dispatch(r.forget()));
   }
 
 public:
@@ -1023,7 +1031,7 @@ public:
       }
 
       RefPtr<ServiceWorkerRegistration> swr =
-        mWindow->GetServiceWorkerRegistration(scope);
+        mWindow->GetServiceWorkerRegistration(info->Descriptor());
 
       array.AppendElement(swr);
     }
@@ -1146,9 +1154,8 @@ public:
       return NS_OK;
     }
 
-    NS_ConvertUTF8toUTF16 scope(registration->Scope());
     RefPtr<ServiceWorkerRegistration> swr =
-      mWindow->GetServiceWorkerRegistration(scope);
+      mWindow->GetServiceWorkerRegistration(registration->Descriptor());
     mPromise->MaybeResolve(swr);
 
     return NS_OK;
@@ -1463,9 +1470,8 @@ ServiceWorkerManager::CheckReadyPromise(nsPIDOMWindowInner* aWindow,
     GetServiceWorkerRegistrationInfo(principal, aURI);
 
   if (registration && registration->GetActive()) {
-    NS_ConvertUTF8toUTF16 scope(registration->Scope());
     RefPtr<ServiceWorkerRegistration> swr =
-      aWindow->GetServiceWorkerRegistration(scope);
+      aWindow->GetServiceWorkerRegistration(registration->Descriptor());
     aPromise->MaybeResolve(swr);
     return true;
   }
@@ -2308,72 +2314,6 @@ ServiceWorkerManager::FireUpdateFoundOnServiceWorkerRegistrations(
   }
 }
 
-/*
- * This is used for installing, waiting and active.
- */
-nsresult
-ServiceWorkerManager::GetServiceWorkerForScope(nsPIDOMWindowInner* aWindow,
-                                               const nsAString& aScope,
-                                               WhichServiceWorker aWhichWorker,
-                                               nsISupports** aServiceWorker)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (NS_WARN_IF(!aWindow)) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
-  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
-  MOZ_ASSERT(doc);
-
-  ///////////////////////////////////////////
-  // Security check
-  nsAutoCString scope = NS_ConvertUTF16toUTF8(aScope);
-  nsCOMPtr<nsIURI> scopeURI;
-  // We pass nullptr as the base URI since scopes obtained from
-  // ServiceWorkerRegistrations MUST be fully qualified URIs.
-  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), scope, nullptr, nullptr);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  nsCOMPtr<nsIPrincipal> documentPrincipal = doc->NodePrincipal();
-  rv = documentPrincipal->CheckMayLoad(scopeURI, true /* report */,
-                                       false /* allowIfInheritsPrinciple */);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-  ////////////////////////////////////////////
-
-  RefPtr<ServiceWorkerRegistrationInfo> registration =
-    GetRegistration(documentPrincipal, scope);
-  if (NS_WARN_IF(!registration)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  RefPtr<ServiceWorkerInfo> info;
-  if (aWhichWorker == WhichServiceWorker::INSTALLING_WORKER) {
-    info = registration->GetInstalling();
-  } else if (aWhichWorker == WhichServiceWorker::WAITING_WORKER) {
-    info = registration->GetWaiting();
-  } else if (aWhichWorker == WhichServiceWorker::ACTIVE_WORKER) {
-    info = registration->GetActive();
-  } else {
-    MOZ_CRASH("Invalid worker type");
-  }
-
-  if (NS_WARN_IF(!info)) {
-    return NS_ERROR_DOM_NOT_FOUND_ERR;
-  }
-
-  RefPtr<ServiceWorker> serviceWorker =
-    aWindow->GetOrCreateServiceWorker(info->Descriptor());
-
-  serviceWorker->SetState(info->State());
-  serviceWorker.forget(aServiceWorker);
-  return NS_OK;
-}
-
 namespace {
 
 class ContinueDispatchFetchEventRunnable : public Runnable
@@ -2626,72 +2566,15 @@ ServiceWorkerManager::GetClientRegistration(const ClientInfo& aClientInfo,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-ServiceWorkerManager::GetInstalling(nsPIDOMWindowInner* aWindow,
-                                    const nsAString& aScope,
-                                    nsISupports** aServiceWorker)
-{
-  return GetServiceWorkerForScope(aWindow, aScope,
-                                  WhichServiceWorker::INSTALLING_WORKER,
-                                  aServiceWorker);
-}
-
-NS_IMETHODIMP
-ServiceWorkerManager::GetWaiting(nsPIDOMWindowInner* aWindow,
-                                 const nsAString& aScope,
-                                 nsISupports** aServiceWorker)
-{
-  return GetServiceWorkerForScope(aWindow, aScope,
-                                  WhichServiceWorker::WAITING_WORKER,
-                                  aServiceWorker);
-}
-
-NS_IMETHODIMP
-ServiceWorkerManager::GetActive(nsPIDOMWindowInner* aWindow,
-                                const nsAString& aScope,
-                                nsISupports** aServiceWorker)
-{
-  return GetServiceWorkerForScope(aWindow, aScope,
-                                  WhichServiceWorker::ACTIVE_WORKER,
-                                  aServiceWorker);
-}
-
 void
-ServiceWorkerManager::TransitionServiceWorkerRegistrationWorker(ServiceWorkerRegistrationInfo* aRegistration,
-                                                                WhichServiceWorker aWhichOne)
+ServiceWorkerManager::UpdateRegistrationListeners(ServiceWorkerRegistrationInfo* aReg)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mServiceWorkerRegistrationListeners);
   while (it.HasMore()) {
     RefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
-    nsAutoString regScope;
-    target->GetScope(regScope);
-    MOZ_ASSERT(!regScope.IsEmpty());
-
-    NS_ConvertUTF16toUTF8 utf8Scope(regScope);
-
-    if (utf8Scope.Equals(aRegistration->Scope())) {
-      target->TransitionWorker(aWhichOne);
-    }
-  }
-}
-
-void
-ServiceWorkerManager::InvalidateServiceWorkerRegistrationWorker(ServiceWorkerRegistrationInfo* aRegistration,
-                                                                WhichServiceWorker aWhichOnes)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mServiceWorkerRegistrationListeners);
-  while (it.HasMore()) {
-    RefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
-    nsAutoString regScope;
-    target->GetScope(regScope);
-    MOZ_ASSERT(!regScope.IsEmpty());
-
-    NS_ConvertUTF16toUTF8 utf8Scope(regScope);
-
-    if (utf8Scope.Equals(aRegistration->Scope())) {
-      target->InvalidateWorkers(aWhichOnes);
+    if (target->MatchesDescriptor(aReg->Descriptor())) {
+      target->UpdateState(aReg->Descriptor());
     }
   }
 }
