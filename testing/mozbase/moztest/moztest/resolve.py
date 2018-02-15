@@ -24,27 +24,27 @@ MOCHITEST_TOTAL_CHUNKS = 5
 
 TEST_SUITES = {
     'cppunittest': {
-        'aliases': ('Cpp', 'cpp'),
+        'aliases': ('cpp',),
         'mach_command': 'cppunittest',
         'kwargs': {'test_file': None},
     },
     'crashtest': {
-        'aliases': ('C', 'Rc', 'RC', 'rc'),
+        'aliases': ('c', 'rc'),
         'mach_command': 'crashtest',
         'kwargs': {'test_file': None},
     },
     'firefox-ui-functional': {
-        'aliases': ('Fxfn',),
+        'aliases': ('fxfn',),
         'mach_command': 'firefox-ui-functional',
         'kwargs': {},
     },
     'firefox-ui-update': {
-        'aliases': ('Fxup',),
+        'aliases': ('fxup',),
         'mach_command': 'firefox-ui-update',
         'kwargs': {},
     },
     'check-spidermonkey': {
-        'aliases': ('Sm', 'sm'),
+        'aliases': ('sm',),
         'mach_command': 'check-spidermonkey',
         'kwargs': {'valgrind': False},
     },
@@ -55,24 +55,27 @@ TEST_SUITES = {
         'kwargs': {},
     },
     'mochitest-a11y': {
+        'aliases': ('a11y', 'ally'),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'a11y', 'test_paths': None},
     },
     'mochitest-browser': {
-        'aliases': ('bc', 'BC', 'Bc'),
+        'aliases': ('bc', 'browser-chrome'),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'browser-chrome', 'test_paths': None},
     },
     'mochitest-chrome': {
+        'aliases': ('mc',),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'chrome', 'test_paths': None},
     },
     'mochitest-devtools': {
-        'aliases': ('dt', 'DT', 'Dt'),
+        'aliases': ('dt', 'devtools-chrome'),
         'mach_command': 'mochitest',
         'kwargs': {'subsuite': 'devtools', 'test_paths': None},
     },
     'mochitest-plain': {
+        'aliases': ('mp', 'plain',),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'plain', 'test_paths': None},
     },
@@ -81,7 +84,7 @@ TEST_SUITES = {
         'kwargs': {'tests': None},
     },
     'reftest': {
-        'aliases': ('RR', 'rr', 'Rr'),
+        'aliases': ('rr',),
         'mach_command': 'reftest',
         'kwargs': {'tests': None},
     },
@@ -91,12 +94,12 @@ TEST_SUITES = {
         'kwargs': {}
     },
     'valgrind': {
-        'aliases': ('V', 'v'),
+        'aliases': ('v',),
         'mach_command': 'valgrind-test',
         'kwargs': {},
     },
     'xpcshell': {
-        'aliases': ('X', 'x'),
+        'aliases': ('x',),
         'mach_command': 'xpcshell-test',
         'kwargs': {'test_file': 'all'},
     },
@@ -161,7 +164,7 @@ TEST_FLAVORS = {
 
 for i in range(1, MOCHITEST_TOTAL_CHUNKS + 1):
     TEST_SUITES['mochitest-%d' % i] = {
-        'aliases': ('M%d' % i, 'm%d' % i),
+        'aliases': ('m%d' % i,),
         'mach_command': 'mochitest',
         'kwargs': {
             'flavor': 'mochitest',
@@ -455,7 +458,7 @@ class TestResolver(MozbuildObject):
                 continue
             suitefound = False
             for suite, v in TEST_SUITES.items():
-                if entry in v.get('aliases', []):
+                if entry.lower() in v.get('aliases', []):
                     run_suites.add(suite)
                     suitefound = True
             if suitefound:
