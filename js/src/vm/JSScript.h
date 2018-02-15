@@ -728,6 +728,9 @@ class ScriptSourceObject : public NativeObject
     static bool initFromOptions(JSContext* cx, HandleScriptSource source,
                                 const ReadOnlyCompileOptions& options);
 
+    static bool initElementProperties(JSContext* cx, HandleScriptSource source,
+                                      HandleObject element, HandleString elementAttrName);
+
     ScriptSource* source() const {
         return static_cast<ScriptSource*>(getReservedSlot(SOURCE_SLOT).toPrivate());
     }
