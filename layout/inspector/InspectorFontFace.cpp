@@ -294,5 +294,17 @@ InspectorFontFace::GetFeatures(nsTArray<InspectorFontFeature>& aResult,
   }
 }
 
+void
+InspectorFontFace::GetRanges(nsTArray<RefPtr<nsRange>>& aResult)
+{
+  aResult = mRanges;
+}
+
+void
+InspectorFontFace::AddRange(nsRange* aRange)
+{
+  mRanges.AppendElement(aRange);
+}
+
 } // namespace dom
 } // namespace mozilla

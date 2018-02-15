@@ -1030,10 +1030,11 @@ InspectorUtils::GetCleanStyleContextForElement(dom::Element* aElement,
 /* static */ void
 InspectorUtils::GetUsedFontFaces(GlobalObject& aGlobalObject,
                                  nsRange& aRange,
+                                 uint32_t aMaxRanges,
                                  nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
                                  ErrorResult& aRv)
 {
-  nsresult rv = aRange.GetUsedFontFaces(aResult);
+  nsresult rv = aRange.GetUsedFontFaces(aResult, aMaxRanges);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
