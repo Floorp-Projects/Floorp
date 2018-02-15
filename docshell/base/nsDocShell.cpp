@@ -8749,6 +8749,11 @@ nsDocShell::CreateContentViewer(const nsACString& aContentType,
     aOpenedChannel->GetURI(getter_AddRefs(mLoadingURI));
   }
   FirePageHideNotification(!mSavingOldViewer);
+  if (mIsBeingDestroyed) {
+    // Force to stop the newly created orphaned viewer.
+    viewer->Stop();
+    return NS_ERROR_DOCSHELL_DYING;
+  }
   mLoadingURI = nullptr;
 
   // Set mFiredUnloadEvent = false so that the unload handler for the
