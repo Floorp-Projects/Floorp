@@ -1,0 +1,74 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - beetmover-cdns
+
+transforms:
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.bouncer_check:transforms
+    - taskgraph.transforms.release_notifications:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    name: bouncer-check
+    description: bouncer check
+    run-on-projects: []  # to make sure this never runs as part of CI
+    shipping-phase: push
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1200
+        docker-image: {in-tree: "lint"}
+    run:
+        using: run-task
+        sparse-profile: mozharness
+    attributes:
+        build_platform: linux64
+        build_type: opt
+    treeherder:
+        symbol: Rel(BncChk)
+        kind: test
+        tier: 1
+
+jobs:
+    firefox:
+        shipping-product: firefox
+        index:
+            product: firefox
+            job-name: firefox-bouncer-check
+        run:
+            config:
+                by-project:
+                    mozilla-release:
+                        - releases/bouncer_firefox_release.py
+                    mozilla-beta:
+                        - releases/bouncer_firefox_beta.py
+                    maple:
+                        - releases/dev_bouncer_firefox_beta.py
+                    default:
+                        - releases/bouncer_firefox_dev.py
+        treeherder:
+            platform: linux64/opt
+
+    devedition:
+        shipping-product: devedition
+        index:
+            product: devedition
+            job-name: devedition-bouncer-check
+        run:
+            config:
+                by-project:
+                    mozilla-release:
+                        - releases/bouncer_devedition_release.py
+                    mozilla-beta:
+                        - releases/bouncer_devedition_beta.py
+                    maple:
+                        - releases/dev_bouncer_devedition_beta.py
+                    default:
+                        - releases/bouncer_devedition_dev.py
+        treeherder:
+            platform: linux64-devedition/opt
