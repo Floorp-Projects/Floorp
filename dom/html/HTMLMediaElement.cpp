@@ -147,6 +147,7 @@ static mozilla::LazyLogModule gMediaElementEventsLog("nsMediaElementEvents");
 
 using namespace mozilla::layers;
 using mozilla::net::nsMediaFragmentURIParser;
+using namespace mozilla::dom::HTMLMediaElementBinding;
 
 namespace mozilla {
 namespace dom {
@@ -1392,7 +1393,7 @@ public:
       // On Fennec, we do some hack for unsupported type media, we don't set
       // its error state in order to open it with external app.
       mSrcIsUnsupportedTypeMedia = true;
-      mOwner->ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
+      mOwner->ChangeNetworkState(NETWORK_NO_SOURCE);
       MaybeOpenUnsupportedMediaForOwner();
     } else {
       mError = new MediaError(mOwner, aErrorCode, aErrorDetails);
@@ -1402,15 +1403,15 @@ public:
         // https://html.spec.whatwg.org/multipage/embedded-content.html#media-data-processing-steps-list
         // "If the media data fetching process is aborted by the user"
         mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("abort"));
-        mOwner->ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
+        mOwner->ChangeNetworkState(NETWORK_EMPTY);
         mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("emptied"));
         if (mOwner->mDecoder) {
           mOwner->ShutdownDecoder();
         }
       } else if (aErrorCode == MEDIA_ERR_SRC_NOT_SUPPORTED) {
-        mOwner->ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
+        mOwner->ChangeNetworkState(NETWORK_NO_SOURCE);
       } else {
-        mOwner->ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
+        mOwner->ChangeNetworkState(NETWORK_IDLE);
       }
     }
   }
@@ -1817,8 +1818,8 @@ void HTMLMediaElement::AbortExistingLoads()
   DDUNLINKCHILD(mMediaSource.get());
   mMediaSource = nullptr;
 
-  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING ||
-      mNetworkState == nsIDOMHTMLMediaElement::NETWORK_IDLE)
+  if (mNetworkState == NETWORK_LOADING ||
+      mNetworkState == NETWORK_IDLE)
   {
     DispatchAsyncEvent(NS_LITERAL_STRING("abort"));
   }
@@ -1841,7 +1842,7 @@ void HTMLMediaElement::AbortExistingLoads()
 
   mTags = nullptr;
 
-  if (mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
+  if (mNetworkState != NETWORK_EMPTY) {
     NS_ASSERTION(!mDecoder && !mSrcStream, "How did someone setup a new stream/decoder already?");
     // ChangeNetworkState() will call UpdateAudioChannelPlayingState()
     // indirectly which depends on mPaused. So we need to update mPaused first.
@@ -1849,8 +1850,8 @@ void HTMLMediaElement::AbortExistingLoads()
       mPaused = true;
       RejectPromises(TakePendingPlayPromises(), NS_ERROR_DOM_MEDIA_ABORT_ERR);
     }
-    ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING);
+    ChangeNetworkState(NETWORK_EMPTY);
+    ChangeReadyState(HAVE_NOTHING);
 
     //TODO: Apply the rules for text track cue rendering Bug 865407
     if (mTextTrackManager) {
@@ -1940,13 +1941,13 @@ void HTMLMediaElement::QueueLoadFromSourceTask()
   if (mDecoder) {
     // Reset readyState to HAVE_NOTHING since we're going to load a new decoder.
     ShutdownDecoder();
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING);
+    ChangeReadyState(HAVE_NOTHING);
   }
 
   AssertReadyStateIsNothing();
 
   ChangeDelayLoadStatus(true);
-  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_LOADING);
+  ChangeNetworkState(NETWORK_LOADING);
   RefPtr<Runnable> r = NewRunnableMethod("HTMLMediaElement::LoadFromSourceChildren",
                                          this, &HTMLMediaElement::LoadFromSourceChildren);
   RunInStableState(r);
@@ -1958,7 +1959,7 @@ void HTMLMediaElement::QueueSelectResourceTask()
   if (mHaveQueuedSelectResource)
     return;
   mHaveQueuedSelectResource = true;
-  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
+  ChangeNetworkState(NETWORK_NO_SOURCE);
   RefPtr<Runnable> r = NewRunnableMethod("HTMLMediaElement::SelectResourceWrapper",
                                          this, &HTMLMediaElement::SelectResourceWrapper);
   RunInStableState(r);
@@ -2056,14 +2057,14 @@ void HTMLMediaElement::SelectResource()
       !HasSourceChildren(this)) {
     // The media element has neither a src attribute nor any source
     // element children, abort the load.
-    ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
+    ChangeNetworkState(NETWORK_EMPTY);
     ChangeDelayLoadStatus(false);
     return;
   }
 
   ChangeDelayLoadStatus(true);
 
-  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_LOADING);
+  ChangeNetworkState(NETWORK_LOADING);
   DispatchAsyncEvent(NS_LITERAL_STRING("loadstart"));
 
   // Delay setting mIsRunningSeletResource until after UpdatePreloadAction
@@ -2371,7 +2372,7 @@ void HTMLMediaElement::LoadFromSourceChildren()
       // Exhausted candidates, wait for more candidates to be appended to
       // the media element.
       mLoadWaitStatus = WAITING_FOR_SOURCE;
-      ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
+      ChangeNetworkState(NETWORK_NO_SOURCE);
       ChangeDelayLoadStatus(false);
       ReportLoadError("MediaLoadExhaustedCandidates");
       return;
@@ -2420,7 +2421,7 @@ void HTMLMediaElement::LoadFromSourceChildren()
           nsCString(NS_ConvertUTF16toUTF8(src)));
     mMediaSource = childSrc->GetSrcMediaSource();
     DDLINKCHILD("mediasource", mMediaSource.get());
-    NS_ASSERTION(mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING,
+    NS_ASSERTION(mNetworkState == NETWORK_LOADING,
                  "Network state should be loading");
 
     if (mPreloadAction == HTMLMediaElement::PRELOAD_NONE &&
@@ -2444,7 +2445,7 @@ void HTMLMediaElement::LoadFromSourceChildren()
 void HTMLMediaElement::SuspendLoad()
 {
   mSuspendedForPreloadNone = true;
-  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
+  ChangeNetworkState(NETWORK_IDLE);
   ChangeDelayLoadStatus(false);
 }
 
@@ -2455,7 +2456,7 @@ void HTMLMediaElement::ResumeLoad(PreloadAction aAction)
   mSuspendedForPreloadNone = false;
   mPreloadAction = aAction;
   ChangeDelayLoadStatus(true);
-  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_LOADING);
+  ChangeNetworkState(NETWORK_LOADING);
   if (!mIsLoadingFromSourceChildren) {
     // We were loading from the element's src attribute.
     MediaResult rv = LoadResource();
@@ -2818,7 +2819,7 @@ HTMLMediaElement::Seek(double aTime,
     mCurrentPlayRangeStart = -1.0;
   }
 
-  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
+  if (mReadyState == HAVE_NOTHING) {
     mDefaultPlaybackStartPosition = aTime;
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
@@ -3015,7 +3016,7 @@ NS_IMETHODIMP HTMLMediaElement::GetPlayed(nsIDOMTimeRanges** aPlayed)
 void
 HTMLMediaElement::Pause(ErrorResult& aRv)
 {
-  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
+  if (mNetworkState == NETWORK_EMPTY) {
     LOG(LogLevel::Debug, ("Loading due to Pause()"));
     DoLoad();
   } else if (mDecoder) {
@@ -3083,7 +3084,7 @@ HTMLMediaElement::MozGetMetadata(JSContext* cx,
                                  JS::MutableHandle<JSObject*> aRetval,
                                  ErrorResult& aRv)
 {
-  if (mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
+  if (mReadyState < HAVE_METADATA) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -3957,7 +3958,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mSrcStreamPausedCurrentTime(-1),
     mShutdownObserver(new ShutdownObserver),
     mSourcePointer(nullptr),
-    mNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY),
+    mNetworkState(NETWORK_EMPTY),
     mCurrentLoadID(0),
     mLoadWaitStatus(NOT_WAITING),
     mVolume(1.0),
@@ -4255,21 +4256,21 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
     //      HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA: notify about playing for the
     //      element.
     switch (mReadyState) {
-    case nsIDOMHTMLMediaElement::HAVE_NOTHING:
+    case HAVE_NOTHING:
       DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
       break;
-    case nsIDOMHTMLMediaElement::HAVE_METADATA:
-    case nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA:
+    case HAVE_METADATA:
+    case HAVE_CURRENT_DATA:
       FireTimeUpdate(false);
       DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
       break;
-    case nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA:
-    case nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA:
+    case HAVE_FUTURE_DATA:
+    case HAVE_ENOUGH_DATA:
       FireTimeUpdate(false);
       NotifyAboutPlaying();
       break;
     }
-  } else if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
+  } else if (mReadyState >= HAVE_FUTURE_DATA) {
     // 7. Otherwise, if the media element's readyState attribute has the value
     //    HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA, take pending play promises and
     //    queue a task to resolve pending play promises with the result.
@@ -4285,7 +4286,7 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
 void
 HTMLMediaElement::MaybeDoLoad()
 {
-  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
+  if (mNetworkState == NETWORK_EMPTY) {
     DoLoad();
   }
 }
@@ -4647,7 +4648,7 @@ HTMLMediaElement::ReportTelemetry()
     stalled = index != TimeRanges::NoIndex &&
               (ranges->End(index, ignore) - t) < errorMargin;
     stalled |= mDecoder && NextFrameStatus() == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING &&
-               mReadyState == HTMLMediaElement::HAVE_CURRENT_DATA;
+               mReadyState == HAVE_CURRENT_DATA;
     if (stalled) {
       state = STALLED;
     }
@@ -4875,7 +4876,7 @@ void
 HTMLMediaElement::AssertReadyStateIsNothing()
 {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  if (mReadyState != nsIDOMHTMLMediaElement::HAVE_NOTHING) {
+  if (mReadyState != HAVE_NOTHING) {
     char buf[1024];
     SprintfLiteral(buf,
                    "readyState=%d networkState=%d mLoadWaitStatus=%d "
@@ -5022,7 +5023,7 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
 nsresult
 HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder)
 {
-  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_LOADING);
+  ChangeNetworkState(NETWORK_LOADING);
 
   // Force a same-origin check before allowing events for this media resource.
   mMediaSecurityVerified = false;
@@ -5324,7 +5325,7 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
   mSrcStream->AddPrincipalChangeObserver(this);
   mSrcStreamVideoPrincipal = mSrcStream->GetVideoPrincipal();
 
-  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
+  ChangeNetworkState(NETWORK_IDLE);
   ChangeDelayLoadStatus(false);
   CheckAutoplayDataReady();
 
@@ -5479,7 +5480,7 @@ HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
   mIsEncrypted = aInfo->IsEncrypted() || mPendingEncryptedInitData.IsEncrypted();
   mTags = Move(aTags);
   mLoadedDataFired = false;
-  ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
+  ChangeReadyState(HAVE_METADATA);
 
   DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   if (IsVideo() && HasVideo()) {
@@ -5569,7 +5570,7 @@ void HTMLMediaElement::FirstFrameLoaded()
 void
 HTMLMediaElement::NetworkError(const MediaResult& aError)
 {
-  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
+  if (mReadyState == HAVE_NOTHING) {
     NoSupportedMediaSourceError(aError.Description());
   } else {
     Error(MEDIA_ERR_NETWORK);
@@ -5596,7 +5597,7 @@ void HTMLMediaElement::DecodeError(const MediaResult& aError)
     } else {
       NS_WARNING("Should know the source we were loading from!");
     }
-  } else if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
+  } else if (mReadyState == HAVE_NOTHING) {
     NoSupportedMediaSourceError(aError.Description());
   } else {
     Error(MEDIA_ERR_DECODE, aError.Description());
@@ -5702,22 +5703,22 @@ HTMLMediaElement::NotifySuspendedByCache(bool aSuspendedByCache)
 
 void HTMLMediaElement::DownloadSuspended()
 {
-  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING) {
+  if (mNetworkState == NETWORK_LOADING) {
     DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
   }
-  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
+  ChangeNetworkState(NETWORK_IDLE);
 }
 
 void
 HTMLMediaElement::DownloadResumed()
 {
-  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_LOADING);
+  ChangeNetworkState(NETWORK_LOADING);
 }
 
 void HTMLMediaElement::CheckProgress(bool aHaveNewProgress)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING);
+  MOZ_ASSERT(mNetworkState == NETWORK_LOADING);
 
   TimeStamp now = TimeStamp::NowLoRes();
 
@@ -5782,7 +5783,7 @@ void HTMLMediaElement::ProgressTimerCallback(nsITimer* aTimer, void* aClosure)
 void HTMLMediaElement::StartProgressTimer()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING);
+  MOZ_ASSERT(mNetworkState == NETWORK_LOADING);
   NS_ASSERTION(!mProgressTimer, "Already started progress timer.");
 
   NS_NewTimerWithFuncCallback(getter_AddRefs(mProgressTimer),
@@ -5814,7 +5815,7 @@ void HTMLMediaElement::StopProgress()
 
 void HTMLMediaElement::DownloadProgressed()
 {
-  if (mNetworkState != nsIDOMHTMLMediaElement::NETWORK_LOADING) {
+  if (mNetworkState != NETWORK_LOADING) {
     return;
   }
   CheckProgress(true);
@@ -5844,7 +5845,7 @@ HTMLMediaElement::UpdateReadyStateInternal()
     return;
   }
 
-  if (mDecoder && mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
+  if (mDecoder && mReadyState < HAVE_METADATA) {
     // aNextFrame might have a next frame because the decoder can advance
     // on its own thread before MetadataLoaded gets a chance to run.
     // The arrival of more data can't change us out of this readyState.
@@ -5853,7 +5854,7 @@ HTMLMediaElement::UpdateReadyStateInternal()
     return;
   }
 
-  if (mSrcStream && mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
+  if (mSrcStream && mReadyState < HAVE_METADATA) {
     if (!mSrcStreamTracksAvailable) {
       LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
                             "MediaStreamTracks not available yet", this));
@@ -5932,7 +5933,7 @@ HTMLMediaElement::UpdateReadyStateInternal()
   if (nextFrameStatus == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING) {
     LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
                           "NEXT_FRAME_UNAVAILABLE_SEEKING; Forcing HAVE_METADATA", this));
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
+    ChangeReadyState(HAVE_METADATA);
     return;
   }
 
@@ -5944,7 +5945,7 @@ HTMLMediaElement::UpdateReadyStateInternal()
     // a video frame is available.
     LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
                           "Playing video but no video frame; Forcing HAVE_METADATA", this));
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
+    ChangeReadyState(HAVE_METADATA);
     return;
   }
 
@@ -5956,7 +5957,7 @@ HTMLMediaElement::UpdateReadyStateInternal()
 
   if (nextFrameStatus == NEXT_FRAME_UNAVAILABLE_BUFFERING) {
     // Force HAVE_CURRENT_DATA when buffering.
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
+    ChangeReadyState(HAVE_CURRENT_DATA);
     return;
   }
 
@@ -5964,7 +5965,7 @@ HTMLMediaElement::UpdateReadyStateInternal()
   // HAVE_FUTURE_DATA.
   // So force HAVE_CURRENT_DATA if text tracks not loaded.
   if (mTextTrackManager && !mTextTrackManager->IsLoaded()) {
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
+    ChangeReadyState(HAVE_CURRENT_DATA);
     return;
   }
 
@@ -5980,21 +5981,21 @@ HTMLMediaElement::UpdateReadyStateInternal()
     // downloaded the whole data stream.
     LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
                           "Decoder download suspended by cache", this));
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
+    ChangeReadyState(HAVE_ENOUGH_DATA);
     return;
   }
 
   if (nextFrameStatus != MediaDecoderOwner::NEXT_FRAME_AVAILABLE) {
     LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
                           "Next frame not available", this));
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
+    ChangeReadyState(HAVE_CURRENT_DATA);
     return;
   }
 
   if (mSrcStream) {
     LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
                           "Stream HAVE_ENOUGH_DATA", this));
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
+    ChangeReadyState(HAVE_ENOUGH_DATA);
     return;
   }
 
@@ -6009,12 +6010,12 @@ HTMLMediaElement::UpdateReadyStateInternal()
   if (mDecoder->CanPlayThrough()) {
     LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
                           "Decoder can play through", this));
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
+    ChangeReadyState(HAVE_ENOUGH_DATA);
     return;
   }
   LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
                         "Default; Decoder has future data", this));
-  ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA);
+  ChangeReadyState(HAVE_FUTURE_DATA);
 }
 
 static const char* const gReadyStateToString[] = {
@@ -6039,7 +6040,7 @@ HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
 
   DDLOG(DDLogCategory::Property, "ready_state", gReadyStateToString[aState]);
 
-  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
+  if (mNetworkState == NETWORK_EMPTY) {
     return;
   }
 
@@ -6057,24 +6058,24 @@ HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
   // must queue a task to fire a simple event named timeupdate at the element,
   // and queue a task to fire a simple event named waiting at the element."
   if (mPlayingBeforeSeek &&
-      mReadyState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
+      mReadyState < HAVE_FUTURE_DATA) {
     DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
-  } else if (oldState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
-             mReadyState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
+  } else if (oldState >= HAVE_FUTURE_DATA &&
+             mReadyState < HAVE_FUTURE_DATA &&
              !Paused() && !Ended() && !mErrorSink->mError) {
     FireTimeUpdate(false);
     DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
   }
 
-  if (oldState < nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
-      mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
+  if (oldState < HAVE_CURRENT_DATA &&
+      mReadyState >= HAVE_CURRENT_DATA &&
       !mLoadedDataFired) {
     DispatchAsyncEvent(NS_LITERAL_STRING("loadeddata"));
     mLoadedDataFired = true;
   }
 
-  if (oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
-      mReadyState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
+  if (oldState < HAVE_FUTURE_DATA &&
+      mReadyState >= HAVE_FUTURE_DATA) {
     DispatchAsyncEvent(NS_LITERAL_STRING("canplay"));
     if (!mPaused) {
       NotifyAboutPlaying();
@@ -6083,8 +6084,8 @@ HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
 
   CheckAutoplayDataReady();
 
-  if (oldState < nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA &&
-      mReadyState >= nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) {
+  if (oldState < HAVE_ENOUGH_DATA &&
+      mReadyState >= HAVE_ENOUGH_DATA) {
     DispatchAsyncEvent(NS_LITERAL_STRING("canplaythrough"));
   }
 }
@@ -6108,15 +6109,15 @@ void HTMLMediaElement::ChangeNetworkState(nsMediaNetworkState aState)
   DDLOG(
     DDLogCategory::Property, "network_state", gNetworkStateToString[aState]);
 
-  if (oldState == nsIDOMHTMLMediaElement::NETWORK_LOADING) {
+  if (oldState == NETWORK_LOADING) {
     // Stop progress notification when exiting NETWORK_LOADING.
     StopProgress();
   }
 
-  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING) {
+  if (mNetworkState == NETWORK_LOADING) {
     // Start progress notification when entering NETWORK_LOADING.
     StartProgress();
-  } else if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_IDLE &&
+  } else if (mNetworkState == NETWORK_IDLE &&
              !mErrorSink->mError) {
     // Fire 'suspend' event when entering NETWORK_IDLE and no error presented.
     DispatchAsyncEvent(NS_LITERAL_STRING("suspend"));
@@ -6174,7 +6175,7 @@ bool HTMLMediaElement::CanActivateAutoplay()
   }
 
   bool hasData =
-    (mDecoder && mReadyState >= nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) ||
+    (mDecoder && mReadyState >= HAVE_ENOUGH_DATA) ||
     (mSrcStream && mSrcStream->Active());
 
   return hasData;
@@ -6380,8 +6381,8 @@ bool HTMLMediaElement::IsPotentiallyPlaying() const
   //   and the element has not paused for user interaction
   return
     !mPaused &&
-    (mReadyState == nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA ||
-    mReadyState == nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) &&
+    (mReadyState == HAVE_ENOUGH_DATA ||
+     mReadyState == HAVE_FUTURE_DATA) &&
     !IsPlaybackEnded();
 }
 
@@ -6390,7 +6391,7 @@ bool HTMLMediaElement::IsPlaybackEnded() const
   // TODO:
   //   the current playback position is equal to the effective end of the media resource.
   //   See bug 449157.
-  return mReadyState >= nsIDOMHTMLMediaElement::HAVE_METADATA &&
+  return mReadyState >= HAVE_METADATA &&
          mDecoder && mDecoder->IsEnded();
 }
 
@@ -6606,7 +6607,7 @@ void HTMLMediaElement::AddRemoveSelfReference()
      (mDecoder && mDecoder->IsSeeking()) ||
      CanActivateAutoplay() ||
      (mMediaSource ? mProgressTimer :
-      mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING));
+      mNetworkState == NETWORK_LOADING));
 
   if (needSelfReference != mHasSelfReference) {
     mHasSelfReference = needSelfReference;
@@ -6659,7 +6660,7 @@ void HTMLMediaElement::NotifyAddedSource()
   // NETWORK_EMPTY, the user agent must invoke the media element's
   // resource selection algorithm.
   if (!HasAttr(kNameSpaceID_None, nsGkAtoms::src) &&
-      mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY)
+      mNetworkState == NETWORK_EMPTY)
   {
     AssertReadyStateIsNothing();
     QueueSelectResourceTask();
@@ -7338,7 +7339,7 @@ HTMLMediaElement::DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
       ("%p DispatchEncrypted initDataType='%s'",
       this, NS_ConvertUTF16toUTF8(aInitDataType).get()));
 
-  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
+  if (mReadyState == HAVE_NOTHING) {
     // Ready state not HAVE_METADATA (yet), don't dispatch encrypted now.
     // Queueing for later dispatch in MetadataLoaded.
     mPendingEncryptedInitData.AddInitData(aInitDataType, aInitData);
@@ -7507,7 +7508,7 @@ HTMLMediaElement::IsCurrentlyPlaying() const
 {
   // We have playable data, but we still need to check whether data is "real"
   // current data.
-  return mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
+  return mReadyState >= HAVE_CURRENT_DATA &&
          !IsPlaybackEnded();
 }
 
