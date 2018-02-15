@@ -74,7 +74,7 @@ optional = true
 version = "1.0"
 
 [dependencies.clippy]
-version = "0.0.181"
+version = "~0.0.166"
 optional = true
 
 [dependencies.strsim]
