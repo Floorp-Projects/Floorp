@@ -16,15 +16,60 @@ let gSiteDataSettings = {
 
   // Array of metadata of sites. Each array element is object holding:
   // - uri: uri of site; instance of nsIURI
+  // - baseDomain: base domain of the site
+  // - cookies: array of cookies of that site
   // - status: persistent-storage permission status
   // - usage: disk usage which site uses
   // - userAction: "remove" or "update-permission"; the action user wants to take.
-  //               If not specified, means no action to take
   _sites: null,
 
   _list: null,
   _searchBox: null,
   _prefStrBundle: null,
+
+  _createSiteListItem(site) {
+    let item = document.createElement("richlistitem");
+    item.setAttribute("host", site.host);
+    let container = document.createElement("hbox");
+
+    // Creates a new column item with the specified relative width.
+    function addColumnItem(value, flexWidth) {
+      let box = document.createElement("hbox");
+      box.className = "item-box";
+      box.setAttribute("flex", flexWidth);
+      let label = document.createElement("label");
+      label.setAttribute("crop", "end");
+      if (value) {
+        box.setAttribute("tooltiptext", value);
+        label.setAttribute("value", value);
+      }
+      box.appendChild(label);
+      container.appendChild(box);
+    }
+
+    // Add "Host" column.
+    addColumnItem(site.host, "4");
+
+    // Add "Status" column
+    addColumnItem(site.persisted ?
+      this._prefStrBundle.getString("persistent") : null, "2");
+
+    // Add "Cookies" column.
+    addColumnItem(site.cookies.length, "1");
+
+    // Add "Storage" column
+    if (site.usage > 0) {
+      let size = DownloadUtils.convertByteUnits(site.usage);
+      let str = this._prefStrBundle.getFormattedString("siteUsage", size);
+      addColumnItem(str, "1");
+    } else {
+      // Pass null to avoid showing "0KB" when there is no site data stored.
+      addColumnItem(null, "1");
+    }
+
+    item.appendChild(container);
+    return item;
+  },
 
   init() {
     function setEventListener(id, eventType, callback) {
@@ -50,6 +95,7 @@ let gSiteDataSettings = {
     setEventListener("sitesList", "select", this.onSelect);
     setEventListener("hostCol", "click", this.onClickTreeCol);
     setEventListener("usageCol", "click", this.onClickTreeCol);
+    setEventListener("cookiesCol", "click", this.onClickTreeCol);
     setEventListener("statusCol", "click", this.onClickTreeCol);
     setEventListener("cancel", "command", this.close);
     setEventListener("save", "command", this.saveChanges);
@@ -91,8 +137,8 @@ let gSiteDataSettings = {
     switch (col.id) {
       case "hostCol":
         sortFunc = (a, b) => {
-          let aHost = a.host.toLowerCase();
-          let bHost = b.host.toLowerCase();
+          let aHost = a.baseDomain.toLowerCase();
+          let bHost = b.baseDomain.toLowerCase();
           return aHost.localeCompare(bHost);
         };
         break;
@@ -106,6 +152,10 @@ let gSiteDataSettings = {
           }
           return 0;
         };
+        break;
+
+      case "cookiesCol":
+        sortFunc = (a, b) => a.cookies.length - b.cookies.length;
         break;
 
       case "usageCol":
@@ -149,13 +199,7 @@ let gSiteDataSettings = {
         continue;
       }
 
-      let size = DownloadUtils.convertByteUnits(site.usage);
-      let item = document.createElement("richlistitem");
-      item.setAttribute("host", host);
-      item.setAttribute("usage", this._prefStrBundle.getFormattedString("siteUsage", size));
-      if (site.persisted) {
-        item.setAttribute("status", this._prefStrBundle.getString("persistent"));
-      }
+      let item = this._createSiteListItem(site);
       this._list.appendChild(item);
     }
     this._updateButtonsState();
@@ -174,70 +218,23 @@ let gSiteDataSettings = {
     this._updateButtonsState();
   },
 
-  _getBaseDomainFromHost(host) {
-    let result = host;
-    try {
-      result = Services.eTLD.getBaseDomainFromHost(host);
-    } catch (e) {
-      if (e.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS ||
-          e.result == Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
-        // For this 2 expected errors, just take the host as the result.
-        // - NS_ERROR_HOST_IS_IP_ADDRESS: the host is in ipv4/ipv6.
-        // - NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS: not enough domain part to extract.
-        result = host;
-      } else {
-        throw e;
-      }
-    }
-    return result;
-  },
-
   saveChanges() {
-    let allowed = true;
+    // Tracks whether the user confirmed their decision.
+    let allowed = false;
 
-    // Confirm user really wants to remove site data starts
-    let removals = new Set();
-    this._sites = this._sites.filter(site => {
-      if (site.userAction === "remove") {
-        removals.add(site.host);
-        return false;
-      }
-      return true;
-    });
+    let removals = this._sites
+      .filter(site => site.userAction == "remove")
+      .map(site => site.host);
 
-    if (removals.size > 0) {
-      if (this._sites.length == 0) {
-        if (SiteDataManager.promptSiteDataRemoval(window)) {
+    if (removals.length > 0) {
+      if (this._sites.length == removals.length) {
+        allowed = SiteDataManager.promptSiteDataRemoval(window);
+        if (allowed) {
           SiteDataManager.removeAll();
         }
       } else {
-        // User only removes partial sites.
-        // We will remove cookies based on base domain, say, user selects "news.foo.com" to remove.
-        // The cookies under "music.foo.com" will be removed together.
-        // We have to prompt user about this action.
-        let hostsTable = new Map();
-        // Group removed sites by base domain
-        for (let host of removals) {
-          let baseDomain = this._getBaseDomainFromHost(host);
-          let hosts = hostsTable.get(baseDomain);
-          if (!hosts) {
-            hosts = [];
-            hostsTable.set(baseDomain, hosts);
-          }
-          hosts.push(host);
-        }
-
-        // Pick out sites with the same base domain as removed sites
-        for (let site of this._sites) {
-          let baseDomain = this._getBaseDomainFromHost(site.host);
-          let hosts = hostsTable.get(baseDomain);
-          if (hosts) {
-            hosts.push(site.host);
-          }
-        }
-
         let args = {
-          hostsTable,
+          hosts: removals,
           allowed: false
         };
         let features = "centerscreen,chrome,modal,resizable=no";
@@ -255,9 +252,12 @@ let gSiteDataSettings = {
         }
       }
     }
-    // Confirm user really wants to remove site data ends
 
-    this.close();
+    // If the user cancelled the confirm dialog keep the site data window open,
+    // they can still press cancel again to exit.
+    if (allowed) {
+      this.close();
+    }
   },
 
   close() {

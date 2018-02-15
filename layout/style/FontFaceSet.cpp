@@ -55,6 +55,7 @@
 #endif
 #include "nsUTF8Utils.h"
 #include "nsDOMNavigationTiming.h"
+#include "StylePrefs.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -1208,6 +1209,19 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
               face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_EOT;
             } else if (valueString.LowerCaseEqualsASCII("svg")) {
               face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_SVG;
+            } else if (StylePrefs::sFontVariationsEnabled &&
+                       valueString.LowerCaseEqualsASCII("woff-variations")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_WOFF_VARIATIONS;
+            } else if (StylePrefs::sFontVariationsEnabled &&
+                       Preferences::GetBool(GFX_PREF_WOFF2_ENABLED) &&
+                       valueString.LowerCaseEqualsASCII("woff2-variations")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_WOFF2_VARIATIONS;
+            } else if (StylePrefs::sFontVariationsEnabled &&
+                       valueString.LowerCaseEqualsASCII("opentype-variations")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_OPENTYPE_VARIATIONS;
+            } else if (StylePrefs::sFontVariationsEnabled &&
+                       valueString.LowerCaseEqualsASCII("truetype-variations")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE_VARIATIONS;
             } else {
               // unknown format specified, mark to distinguish from the
               // case where no format hints are specified

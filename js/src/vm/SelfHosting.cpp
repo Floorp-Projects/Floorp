@@ -56,7 +56,7 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
 
-#include "gc/Iteration-inl.h"
+#include "gc/GCIteration-inl.h"
 #include "vm/BooleanObject-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSFunction-inl.h"
