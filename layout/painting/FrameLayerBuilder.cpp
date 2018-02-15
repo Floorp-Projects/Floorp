@@ -926,6 +926,7 @@ public:
                        nscolor& aBackgroundColor)
     : mContainerState(aContainerState)
     , mContainerUniformBackgroundColor(aBackgroundColor)
+    , mForInactiveLayer(false)
   {}
 
   ~PaintedLayerDataTree()
@@ -933,6 +934,8 @@ public:
     MOZ_ASSERT(!mRoot);
     MOZ_ASSERT(mNodes.Count() == 0);
   }
+
+  void InitializeForInactiveLayer(AnimatedGeometryRoot* aAnimatedGeometryRoot);
 
   /**
    * Notify our contents that some non-PaintedLayer content has been added.
@@ -1021,7 +1024,7 @@ protected:
                                             AnimatedGeometryRoot** aOutAncestorChild);
 
   ContainerState& mContainerState;
-  UniquePtr<PaintedLayerDataNode> mRoot;
+  Maybe<PaintedLayerDataNode> mRoot;
 
   /**
    * The uniform opaque color from behind this container layer, or
@@ -1036,6 +1039,8 @@ protected:
    * geometry root.
    */
   nsDataHashtable<nsPtrHashKey<AnimatedGeometryRoot>, PaintedLayerDataNode*> mNodes;
+
+  bool mForInactiveLayer;
 };
 
 /**
@@ -2920,6 +2925,14 @@ PaintedLayerDataNode::PopAllPaintedLayerData()
   mPaintedLayerDataStack.Clear();
 }
 
+void
+PaintedLayerDataTree::InitializeForInactiveLayer(AnimatedGeometryRoot* aAnimatedGeometryRoot)
+{
+  mForInactiveLayer = true;
+  mRoot.emplace(*this, nullptr, aAnimatedGeometryRoot);
+
+}
+
 nsDisplayListBuilder*
 PaintedLayerDataTree::Builder() const
 {
@@ -2933,7 +2946,7 @@ PaintedLayerDataTree::Finish()
     mRoot->Finish(false);
   }
   MOZ_ASSERT(mNodes.Count() == 0);
-  mRoot = nullptr;
+  mRoot.reset();
 }
 
 void
@@ -2947,8 +2960,13 @@ PaintedLayerDataTree::AddingOwnLayer(AnimatedGeometryRoot* aAnimatedGeometryRoot
                                      const nsIntRect* aRect,
                                      nscolor* aOutUniformBackgroundColor)
 {
-  FinishPotentiallyIntersectingNodes(aAnimatedGeometryRoot, aRect);
-  PaintedLayerDataNode* node = EnsureNodeFor(aAnimatedGeometryRoot);
+  PaintedLayerDataNode* node = nullptr;
+  if (mForInactiveLayer) {
+    node = mRoot.ptr();
+  } else {
+    FinishPotentiallyIntersectingNodes(aAnimatedGeometryRoot, aRect);
+    node = EnsureNodeFor(aAnimatedGeometryRoot);
+  }
   if (aRect) {
     if (aOutUniformBackgroundColor) {
       *aOutUniformBackgroundColor = node->FindOpaqueBackgroundColor(*aRect);
@@ -2972,8 +2990,13 @@ PaintedLayerDataTree::FindPaintedLayerFor(AnimatedGeometryRoot* aAnimatedGeometr
                                           NewPaintedLayerCallbackType aNewPaintedLayerCallback)
 {
   const nsIntRect* bounds = &aVisibleRect;
-  FinishPotentiallyIntersectingNodes(aAnimatedGeometryRoot, bounds);
-  PaintedLayerDataNode* node = EnsureNodeFor(aAnimatedGeometryRoot);
+  PaintedLayerDataNode* node = nullptr;
+  if (mForInactiveLayer) {
+    node = mRoot.ptr();
+  } else {
+    FinishPotentiallyIntersectingNodes(aAnimatedGeometryRoot, bounds);
+    node = EnsureNodeFor(aAnimatedGeometryRoot);
+  }
 
   PaintedLayerData* data =
     node->FindPaintedLayerFor(aVisibleRect, aBackfaceHidden, aASR, aClipChain,
@@ -3042,8 +3065,8 @@ PaintedLayerDataTree::EnsureNodeFor(AnimatedGeometryRoot* aAnimatedGeometryRoot)
   if (!parentAnimatedGeometryRoot) {
     MOZ_ASSERT(!mRoot);
     MOZ_ASSERT(*aAnimatedGeometryRoot == Builder()->RootReferenceFrame());
-    mRoot = MakeUnique<PaintedLayerDataNode>(*this, nullptr, aAnimatedGeometryRoot);
-    node = mRoot.get();
+    mRoot.emplace(*this, nullptr, aAnimatedGeometryRoot);
+    node = mRoot.ptr();
   } else {
     PaintedLayerDataNode* parentNode = EnsureNodeFor(parentAnimatedGeometryRoot);
     MOZ_ASSERT(parentNode);
@@ -3058,6 +3081,9 @@ bool
 PaintedLayerDataTree::IsClippedWithRespectToParentAnimatedGeometryRoot(AnimatedGeometryRoot* aAnimatedGeometryRoot,
                                                                        nsIntRect* aOutClip)
 {
+  if (mForInactiveLayer) {
+    return false;
+  }
   nsIScrollableFrame* scrollableFrame = nsLayoutUtils::GetScrollableFrameFor(*aAnimatedGeometryRoot);
   if (!scrollableFrame) {
     return false;
@@ -4119,6 +4145,10 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
   bool hadLayerEventRegions = false;
   bool hadCompositorHitTestInfo = false;
 #endif
+
+  if (!mManager->IsWidgetLayerManager()) {
+    mPaintedLayerDataTree.InitializeForInactiveLayer(mContainerAnimatedGeometryRoot);
+  }
 
   AnimatedGeometryRoot* lastAnimatedGeometryRoot = nullptr;
   nsPoint lastTopLeft;
