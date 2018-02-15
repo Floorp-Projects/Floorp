@@ -122,7 +122,7 @@ IE7FormPasswords.prototype = {
     }
   },
 
-  migrate(aCallback) {
+  async migrate(aCallback) {
     let historyEnumerator = Cc["@mozilla.org/profile/migrator/iehistoryenumerator;1"].
                             createInstance(Ci.nsISimpleEnumerator);
     let uris = []; // the uris of the websites that are going to be migrated
@@ -138,7 +138,7 @@ IE7FormPasswords.prototype = {
 
       uris.push(uri);
     }
-    this._migrateURIs(uris);
+    await this._migrateURIs(uris);
     aCallback(true);
   },
 
@@ -146,7 +146,7 @@ IE7FormPasswords.prototype = {
    * Migrate the logins that were saved for the uris arguments.
    * @param {nsIURI[]} uris - the uris that are going to be migrated.
    */
-  _migrateURIs(uris) {
+  async _migrateURIs(uris) {
     this.ctypesKernelHelpers = new MSMigrationUtils.CtypesKernelHelpers();
     this._crypto = new OSCrypto();
     let nsIWindowsRegKey = Ci.nsIWindowsRegKey;
@@ -166,6 +166,7 @@ IE7FormPasswords.prototype = {
      * to the Firefox password manager.
      */
 
+    let logins = [];
     for (let uri of uris) {
       try {
         // remove the query and the ref parts of the URL
@@ -200,11 +201,23 @@ IE7FormPasswords.prototype = {
         if (ieLogins.length) {
           successfullyDecryptedValues++;
         }
-        this._addLogins(ieLogins);
+        for (let ieLogin of ieLogins) {
+          logins.push({
+            username: ieLogin.username,
+            password: ieLogin.password,
+            hostname: ieLogin.url,
+            timeCreated: ieLogin.creation,
+          });
+        }
       } catch (e) {
         Cu.reportError("Error while importing logins for " + uri.spec + ": " + e);
       }
     }
+
+    if (logins.length > 0) {
+      await MigrationUtils.insertLoginsWrapper(logins);
+    }
+
     // if the number of the imported values is less than the number of values in the key, it means
     // that not all the values were imported and an error should be reported
     if (successfullyDecryptedValues < key.valueCount) {
@@ -220,27 +233,6 @@ IE7FormPasswords.prototype = {
   },
 
   _crypto: null,
-
-  /**
-   * Add the logins to the password manager.
-   * @param {Object[]} logins - array of the login details.
-   */
-  _addLogins(ieLogins) {
-    for (let ieLogin of ieLogins) {
-      try {
-        // create a new login
-        let login = {
-          username: ieLogin.username,
-          password: ieLogin.password,
-          hostname: ieLogin.url,
-          timeCreated: ieLogin.creation,
-        };
-        MigrationUtils.insertLoginWrapper(login);
-      } catch (e) {
-        Cu.reportError(e);
-      }
-    }
-  },
 
   /**
    * Extract the details of one or more logins from the raw decrypted data.
