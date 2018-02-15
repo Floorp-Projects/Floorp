@@ -312,17 +312,21 @@ LoginManager.prototype = {
     let ciphertexts = await crypto.encryptMany(plaintexts);
     let usernames = ciphertexts.slice(0, logins.length);
     let passwords = ciphertexts.slice(logins.length);
+    let resultLogins = new Array(logins.length);
     for (let i = 0; i < logins.length; i++) {
       let plaintextUsername = logins[i].username;
       let plaintextPassword = logins[i].password;
       logins[i].username = usernames[i];
       logins[i].password = passwords[i];
       log.debug("Adding login");
-      this._storage.addLogin(logins[i], true);
+      resultLogins[i] = this._storage.addLogin(logins[i], true);
       // Reset the username and password to keep the same guarantees as addLogin
       logins[i].username = plaintextUsername;
       logins[i].password = plaintextPassword;
+      resultLogins[i].username = plaintextUsername;
+      resultLogins[i].password = plaintextPassword;
     }
+    return resultLogins;
   },
 
   /**
