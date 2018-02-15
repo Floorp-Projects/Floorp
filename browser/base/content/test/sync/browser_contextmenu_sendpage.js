@@ -7,6 +7,8 @@ const remoteClientsFixture = [ { id: 1, name: "Foo"}, { id: 2, name: "Bar"} ];
 
 add_task(async function setup() {
   await promiseSyncReady();
+  // gSync.init() is called in a requestIdleCallback. Force its initialization.
+  gSync.init();
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
 });
 
@@ -28,7 +30,7 @@ add_task(async function test_page_contextmenu() {
   sandbox.restore();
 });
 
-add_task(async function test_page_contextmenu_sendtab_no_remote_clients() {
+add_task(async function test_page_contextmenu_no_remote_clients() {
   const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, remoteClients: [],
                                       state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
 
@@ -46,7 +48,7 @@ add_task(async function test_page_contextmenu_sendtab_no_remote_clients() {
   sandbox.restore();
 });
 
-add_task(async function test_page_contextmenu_sendtab_one_remote_client() {
+add_task(async function test_page_contextmenu_one_remote_client() {
   const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, remoteClients: [{ id: 1, name: "Foo"}],
                                       state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
 
@@ -173,6 +175,16 @@ add_task(async function test_page_contextmenu_login_failed() {
   syncReady.restore();
   getState.restore();
   isSendableURI.restore();
+});
+
+add_task(async function test_page_contextmenu_fxa_disabled() {
+  const getter = sinon.stub(gSync, "SYNC_ENABLED").get(() => false);
+  gSync.onSyncDisabled(); // Would have been called on gSync initialization if SYNC_ENABLED had been set.
+  await openContentContextMenu("#moztext");
+  is(document.getElementById("context-sendpagetodevice").hidden, true, "Send tab to device is hidden");
+  is(document.getElementById("context-sep-sendpagetodevice").hidden, true, "Separator is also hidden");
+  await hideContentContextMenu();
+  getter.restore();
 });
 
 // We are not going to bother testing the visibility of context-sendlinktodevice
