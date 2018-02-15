@@ -247,12 +247,19 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env):
 @depends(c_compiler)
 @imports('os')
 def vc_path(c_compiler):
-    if c_compiler.type != 'msvc':
+    if c_compiler.type not in ('msvc', 'clang-cl'):
         return
+
     # Normally, we'd start from c_compiler.compiler, but for now, it's not the
     # ideal full path to the compiler. At least, we're guaranteed find_program
     # will get us the one we found in toolchain.configure.
-    cl = find_program(c_compiler.compiler)
+    vc_program = c_compiler.compiler
+
+    # In clang-cl builds, we use the headers and libraries from an MSVC installation.
+    if c_compiler.type == 'clang-cl':
+        vc_program = 'cl.exe'
+
+    cl = find_program(vc_program)
     result = os.path.dirname(cl)
     while True:
         next, p = os.path.split(result)
