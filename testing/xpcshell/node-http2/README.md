@@ -6,6 +6,8 @@ client and server implementation for node.js.
 
 ![Travis CI status](https://travis-ci.org/molnarg/node-http2.svg?branch=master)
 
+**NOTE WELL** This package is officially deprecated. As of node 9.0.0, there is an 'http2' package built-in. You should use that one instead.
+
 Installation
 ------------
 

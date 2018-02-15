@@ -1,10 +1,10 @@
 {
   "name": "http2",
-  "version": "3.3.6",
+  "version": "3.3.8",
   "description": "An HTTP/2 client and server implementation",
   "main": "lib/index.js",
-  "engines" : {
-    "node" : ">=0.12.0"
+  "engines": {
+    "node": ">=0.12.0 <9.0.0"
   },
   "devDependencies": {
     "istanbul": "*",
