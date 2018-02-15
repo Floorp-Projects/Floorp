@@ -34,10 +34,10 @@ using namespace js::jit;
 
 ExecutablePool::~ExecutablePool()
 {
-    MOZ_ASSERT(m_ionCodeBytes == 0);
-    MOZ_ASSERT(m_baselineCodeBytes == 0);
-    MOZ_ASSERT(m_regexpCodeBytes == 0);
-    MOZ_ASSERT(m_otherCodeBytes == 0);
+#ifdef DEBUG
+    for (size_t bytes : m_codeBytes)
+        MOZ_ASSERT(bytes == 0);
+#endif
 
     MOZ_ASSERT(!isMarked());
 
@@ -56,26 +56,8 @@ ExecutablePool::release(bool willDestroy)
 void
 ExecutablePool::release(size_t n, CodeKind kind)
 {
-    switch (kind) {
-      case CodeKind::Ion:
-        m_ionCodeBytes -= n;
-        MOZ_ASSERT(m_ionCodeBytes < m_allocation.size); // Shouldn't underflow.
-        break;
-      case CodeKind::Baseline:
-        m_baselineCodeBytes -= n;
-        MOZ_ASSERT(m_baselineCodeBytes < m_allocation.size);
-        break;
-      case CodeKind::RegExp:
-        m_regexpCodeBytes -= n;
-        MOZ_ASSERT(m_regexpCodeBytes < m_allocation.size);
-        break;
-      case CodeKind::Other:
-        m_otherCodeBytes -= n;
-        MOZ_ASSERT(m_otherCodeBytes < m_allocation.size);
-        break;
-      default:
-        MOZ_CRASH("bad code kind");
-    }
+    m_codeBytes[kind] -= n;
+    MOZ_ASSERT(m_codeBytes[kind] < m_allocation.size); // Shouldn't underflow.
 
     release();
 }
@@ -98,13 +80,7 @@ ExecutablePool::alloc(size_t n, CodeKind kind)
     void* result = m_freePtr;
     m_freePtr += n;
 
-    switch (kind) {
-      case CodeKind::Ion:      m_ionCodeBytes      += n; break;
-      case CodeKind::Baseline: m_baselineCodeBytes += n; break;
-      case CodeKind::RegExp:   m_regexpCodeBytes   += n; break;
-      case CodeKind::Other:    m_otherCodeBytes    += n; break;
-      default: MOZ_CRASH("bad code kind");
-    }
+    m_codeBytes[kind] += n;
 
     return result;
 }
@@ -295,14 +271,11 @@ ExecutableAllocator::addSizeOfCode(JS::CodeSizes* sizes) const
     if (m_pools.initialized()) {
         for (ExecPoolHashSet::Range r = m_pools.all(); !r.empty(); r.popFront()) {
             ExecutablePool* pool = r.front();
-            sizes->ion      += pool->m_ionCodeBytes;
-            sizes->baseline += pool->m_baselineCodeBytes;
-            sizes->regexp   += pool->m_regexpCodeBytes;
-            sizes->other    += pool->m_otherCodeBytes;
-            sizes->unused   += pool->m_allocation.size - pool->m_ionCodeBytes
-                                                       - pool->m_baselineCodeBytes
-                                                       - pool->m_regexpCodeBytes
-                                                       - pool->m_otherCodeBytes;
+            sizes->ion      += pool->m_codeBytes[CodeKind::Ion];
+            sizes->baseline += pool->m_codeBytes[CodeKind::Baseline];
+            sizes->regexp   += pool->m_codeBytes[CodeKind::RegExp];
+            sizes->other    += pool->m_codeBytes[CodeKind::Other];
+            sizes->unused   += pool->m_allocation.size - pool->usedCodeBytes();
         }
     }
 }
