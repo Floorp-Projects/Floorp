@@ -1884,7 +1884,7 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
   if (IsAutofocusable() && HasAttr(kNameSpaceID_None, nsGkAtoms::autofocus) &&
       nsContentUtils::AutoFocusEnabled()) {
     nsCOMPtr<nsIRunnable> event = new nsAutoFocusEvent(this);
-    rv = aDocument->Dispatch(mozilla::TaskCategory::Other, event.forget());
+    rv = NS_DispatchToCurrentThread(event);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

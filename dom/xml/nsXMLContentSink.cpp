@@ -1615,7 +1615,7 @@ nsXMLContentSink::ContinueInterruptedParsingAsync()
                       this,
                       &nsXMLContentSink::ContinueInterruptedParsingIfEnabled);
 
-  mDocument->Dispatch(mozilla::TaskCategory::Other, ev.forget());
+  NS_DispatchToCurrentThread(ev);
 }
 
 nsIParser*

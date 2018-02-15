@@ -78,7 +78,6 @@ class nsGeolocationRequest final
                        GeoPositionErrorCallback aErrorCallback,
                        UniquePtr<PositionOptions>&& aOptions,
                        uint8_t aProtocolType,
-                       nsIEventTarget* aMainThreadTarget,
                        bool aWatchPositionRequest = false,
                        bool aIsHandlingUserInput = false,
                        int32_t aWatchId = 0);
@@ -137,7 +136,6 @@ class nsGeolocationRequest final
   bool mShutdown;
   nsCOMPtr<nsIContentPermissionRequester> mRequester;
   uint8_t mProtocolType;
-  nsCOMPtr<nsIEventTarget> mMainThreadTarget;
 };
 
 static UniquePtr<PositionOptions>
@@ -309,7 +307,6 @@ nsGeolocationRequest::nsGeolocationRequest(Geolocation* aLocator,
                                            GeoPositionErrorCallback aErrorCallback,
                                            UniquePtr<PositionOptions>&& aOptions,
                                            uint8_t aProtocolType,
-                                           nsIEventTarget* aMainThreadTarget,
                                            bool aWatchPositionRequest,
                                            bool aIsHandlingUserInput,
                                            int32_t aWatchId)
@@ -321,8 +318,7 @@ nsGeolocationRequest::nsGeolocationRequest(Geolocation* aLocator,
     mLocator(aLocator),
     mWatchId(aWatchId),
     mShutdown(false),
-    mProtocolType(aProtocolType),
-    mMainThreadTarget(aMainThreadTarget)
+    mProtocolType(aProtocolType)
 {
   if (nsCOMPtr<nsPIDOMWindowInner> win =
       do_QueryReferent(mLocator->GetOwner())) {
@@ -625,7 +621,7 @@ NS_IMETHODIMP
 nsGeolocationRequest::Update(nsIDOMGeoPosition* aPosition)
 {
   nsCOMPtr<nsIRunnable> ev = new RequestSendLocationEvent(aPosition, this);
-  mMainThreadTarget->Dispatch(ev.forget());
+  NS_DispatchToMainThread(ev);
   return NS_OK;
 }
 
@@ -1251,15 +1247,6 @@ Geolocation::GetCurrentPosition(PositionCallback& aCallback,
   }
 }
 
-static nsIEventTarget* MainThreadTarget(Geolocation* geo)
-{
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(geo->GetOwner());
-  if (!window) {
-    return GetMainThreadEventTarget();
-  }
-  return nsGlobalWindowInner::Cast(window)->EventTargetFor(mozilla::TaskCategory::Other);
-}
-
 nsresult
 Geolocation::GetCurrentPosition(GeoPositionCallback callback,
                                 GeoPositionErrorCallback errorCallback,
@@ -1276,16 +1263,15 @@ Geolocation::GetCurrentPosition(GeoPositionCallback callback,
   Telemetry::Accumulate(Telemetry::GEOLOCATION_GETCURRENTPOSITION_SECURE_ORIGIN,
                         static_cast<uint8_t>(mProtocolType));
 
-  nsIEventTarget* target = MainThreadTarget(this);
   RefPtr<nsGeolocationRequest> request =
     new nsGeolocationRequest(this, Move(callback), Move(errorCallback),
-                             Move(options), static_cast<uint8_t>(mProtocolType), target,
+                             Move(options), static_cast<uint8_t>(mProtocolType),
                              false, EventStateManager::IsHandlingUserInput());
 
   if (!sGeoEnabled || ShouldBlockInsecureRequests() ||
       nsContentUtils::ResistFingerprinting(aCallerType)) {
     nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(false, request);
-    target->Dispatch(ev.forget());
+    NS_DispatchToMainThread(ev);
     return NS_OK;
   }
 
@@ -1306,7 +1292,7 @@ Geolocation::GetCurrentPosition(GeoPositionCallback callback,
   }
 
   nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(true, request);
-  target->Dispatch(ev.forget());
+  NS_DispatchToMainThread(ev);
 
   return NS_OK;
 }
@@ -1364,17 +1350,16 @@ Geolocation::WatchPosition(GeoPositionCallback aCallback,
   // The watch ID:
   *aRv = mLastWatchId++;
 
-  nsIEventTarget* target = MainThreadTarget(this);
   RefPtr<nsGeolocationRequest> request =
     new nsGeolocationRequest(this, Move(aCallback), Move(aErrorCallback),
                              Move(aOptions),
-                             static_cast<uint8_t>(mProtocolType), target, true,
+                             static_cast<uint8_t>(mProtocolType), true,
                              EventStateManager::IsHandlingUserInput(), *aRv);
 
   if (!sGeoEnabled || ShouldBlockInsecureRequests() ||
       nsContentUtils::ResistFingerprinting(aCallerType)) {
     nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(false, request);
-    target->Dispatch(ev.forget());
+    NS_DispatchToMainThread(ev);
     return NS_OK;
   }
 
@@ -1468,16 +1453,15 @@ Geolocation::NotifyAllowedRequest(nsGeolocationRequest* aRequest)
 bool
 Geolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
 {
-  nsIEventTarget* target = MainThreadTarget(this);
   if (Preferences::GetBool("geo.prompt.testing", false)) {
     bool allow = Preferences::GetBool("geo.prompt.testing.allow", false);
     nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(allow, request);
-    target->Dispatch(ev.forget());
+    NS_DispatchToMainThread(ev);
     return true;
   }
 
   nsCOMPtr<nsIRunnable> ev  = new RequestPromptEvent(request, mOwner);
-  target->Dispatch(ev.forget());
+  NS_DispatchToMainThread(ev);
   return true;
 }
 
