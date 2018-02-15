@@ -168,16 +168,16 @@ add_task(async function checkUndoPreconditions() {
       this._getMigrateDataArgs = profileToMigrate;
       return Ci.nsIBrowserProfileMigrator.BOOKMARKS;
     },
-    migrate(types, startup, profileToMigrate) {
+    async migrate(types, startup, profileToMigrate) {
       this._migrateArgs = [types, startup, profileToMigrate];
       if (shouldAddData) {
         // Insert a login and check that that worked.
-        MigrationUtils.insertLoginWrapper({
+        await MigrationUtils.insertLoginsWrapper([{
           hostname: "www.mozilla.org",
           formSubmitURL: "http://www.mozilla.org",
           username: "user",
           password: "pass",
-        });
+        }]);
       }
       TestUtils.executeSoon(function() {
         Services.obs.notifyObservers(null, "Migration:Ended", undefined);
@@ -239,12 +239,12 @@ add_task(async function checkUndoRemoval() {
   MigrationUtils.initializeUndoData();
   Preferences.set("browser.migrate.automigrate.browser", "automationbrowser");
   // Insert a login and check that that worked.
-  MigrationUtils.insertLoginWrapper({
+  await MigrationUtils.insertLoginsWrapper([{
     hostname: "www.mozilla.org",
     formSubmitURL: "http://www.mozilla.org",
     username: "user",
     password: "pass",
-  });
+  }]);
   let storedLogins = Services.logins.findLogins({}, "www.mozilla.org",
                                                 "http://www.mozilla.org", null);
   Assert.equal(storedLogins.length, 1, "Should have 1 login");
@@ -441,13 +441,13 @@ add_task(async function testBookmarkRemovalByUndo() {
 
 add_task(async function checkUndoLoginsState() {
   MigrationUtils.initializeUndoData();
-  MigrationUtils.insertLoginWrapper({
+  await MigrationUtils.insertLoginsWrapper([{
     username: "foo",
     password: "bar",
     hostname: "https://example.com",
     formSubmitURL: "https://example.com/",
     timeCreated: new Date(),
-  });
+  }]);
   let storedLogins = Services.logins.findLogins({}, "https://example.com", "", "");
   let storedLogin = storedLogins[0];
   storedLogin.QueryInterface(Ci.nsILoginMetaInfo);
@@ -459,28 +459,28 @@ add_task(async function checkUndoLoginsState() {
 
 add_task(async function testLoginsRemovalByUndo() {
   MigrationUtils.initializeUndoData();
-  MigrationUtils.insertLoginWrapper({
+  await MigrationUtils.insertLoginsWrapper([{
     username: "foo",
     password: "bar",
     hostname: "https://example.com",
     formSubmitURL: "https://example.com/",
     timeCreated: new Date(),
-  });
-  MigrationUtils.insertLoginWrapper({
+  }]);
+  await MigrationUtils.insertLoginsWrapper([{
     username: "foo",
     password: "bar",
     hostname: "https://example.org",
     formSubmitURL: "https://example.org/",
     timeCreated: new Date(new Date().getTime() - 10000),
-  });
+  }]);
   // This should update the existing login
-  LoginHelper.maybeImportLogin({
+  await LoginHelper.maybeImportLogins([{
     username: "foo",
     password: "bazzy",
     hostname: "https://example.org",
     formSubmitURL: "https://example.org/",
     timePasswordChanged: new Date(),
-  });
+  }]);
   Assert.equal(1, LoginHelper.searchLoginsWithObject({hostname: "https://example.org", formSubmitURL: "https://example.org/"}).length,
                "Should be only 1 login for example.org (that was updated)");
   let undoLoginData = (await MigrationUtils.stopAndRetrieveUndoData()).get("logins");
