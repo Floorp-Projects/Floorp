@@ -55,7 +55,10 @@ function init_all() {
   register_module("paneSearch", gSearchPane);
   register_module("panePrivacy", gPrivacyPane);
   register_module("paneContainers", gContainersPane);
-  register_module("paneSync", gSyncPane);
+  if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
+    document.getElementById("category-sync").hidden = false;
+    register_module("paneSync", gSyncPane);
+  }
   register_module("paneSearchResults", gSearchResultsPane);
   gSearchResultsPane.init();
   gMainPane.preInit();
