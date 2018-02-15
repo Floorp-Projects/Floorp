@@ -106,19 +106,19 @@
         list-style-image: url(chrome://browser/skin/window-controls/close.svg);
       }
 
-      :root[lwtheme-image] .titlebar-button {
+      .titlebar-button:-moz-lwtheme {
         -moz-context-properties: unset;
       }
-      :root[lwtheme-image] #titlebar-min {
+      #titlebar-min:-moz-lwtheme {
         list-style-image: url(chrome://browser/skin/window-controls/minimize-themes.svg);
       }
-      :root[lwtheme-image] #titlebar-max {
+      #titlebar-max:-moz-lwtheme {
         list-style-image: url(chrome://browser/skin/window-controls/maximize-themes.svg);
       }
-      :root[lwtheme-image][sizemode="maximized"] #titlebar-max {
+      :root[sizemode="maximized"] #titlebar-max:-moz-lwtheme {
         list-style-image: url(chrome://browser/skin/window-controls/restore-themes.svg);
       }
-      :root[lwtheme-image] #titlebar-close {
+      #titlebar-close:-moz-lwtheme {
         list-style-image: url(chrome://browser/skin/window-controls/close-themes.svg);
       }
 

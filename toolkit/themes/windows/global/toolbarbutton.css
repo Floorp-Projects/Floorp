@@ -70,21 +70,21 @@ toolbarbutton[checked="true"]:not([disabled="true"]) {
 }
 
 @media (-moz-windows-default-theme) {
-  :root[lwtheme-image] toolbarbutton {
+  toolbarbutton:-moz-lwtheme {
     text-shadow: none;
   }
 
-  :root[lwtheme-image] toolbarbutton:not([disabled="true"]) {
+  toolbarbutton:-moz-lwtheme:not([disabled="true"]) {
     text-shadow: inherit;
   }
 }
 
 @media (-moz-windows-default-theme: 0) {
-  :root[lwtheme-image] toolbarbutton {
+  toolbarbutton:-moz-lwtheme {
     -moz-appearance: none;
   }
 
-  :root[lwtheme-image] toolbarbutton:not([disabled="true"]) {
+  toolbarbutton:-moz-lwtheme:not([disabled="true"]) {
     text-shadow: inherit;
   }
 }
