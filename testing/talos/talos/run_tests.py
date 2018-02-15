@@ -57,15 +57,26 @@ def set_tp_preferences(test, browser_config):
                         'fnbpaint']
     CLI_options = ['tpcycles', 'tppagecycles', 'tptimeout', 'tpmanifest']
     for key in CLI_bool_options:
+        _pref_name = "talos.%s" % key
         if key in test:
-            _pref_name = "talos.%s" % key
             test['preferences'][_pref_name] = test.get(key)
+        else:
+            # current test doesn't use this setting, remove it from our prefs
+            if _pref_name in test['preferences']:
+                del test['preferences'][_pref_name]
 
     for key in CLI_options:
         value = test.get(key)
+        _pref_name = "talos.%s" % key
         if value:
-            _pref_name = "talos.%s" % key
             test['preferences'][_pref_name] = value
+        else:
+            # current test doesn't use this setting, remove it from our prefs
+            if _pref_name in test['preferences']:
+                del test['preferences'][_pref_name]
+
+    LOG.info("* RW * preferences are now:")
+    LOG.info(test['preferences'])
 
 
 def setup_webserver(webserver):
