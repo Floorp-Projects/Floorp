@@ -235,6 +235,14 @@ protected:
       types = BuildTypes(GetParam());
     }
     AddTracks(side, types, magic);
+
+    // Now, we move datachannel to the end
+    auto it = std::find(types.begin(), types.end(),
+                        SdpMediaSection::kApplication);
+    if (it != types.end()) {
+      types.erase(it);
+      types.push_back(SdpMediaSection::kApplication);
+    }
   }
 
   void
@@ -282,17 +290,15 @@ protected:
       size_t comma = mediatypes.find(',', ptr);
       std::string chunk = mediatypes.substr(ptr, comma - ptr);
 
-      SdpMediaSection::MediaType type;
       if (chunk == "audio") {
-        type = SdpMediaSection::kAudio;
+        result.push_back(SdpMediaSection::kAudio);
       } else if (chunk == "video") {
-        type = SdpMediaSection::kVideo;
+        result.push_back(SdpMediaSection::kVideo);
       } else if (chunk == "datachannel") {
-        type = SdpMediaSection::kApplication;
+        result.push_back(SdpMediaSection::kApplication);
       } else {
         MOZ_CRASH();
       }
-      result.push_back(type);
 
       if (comma == std::string::npos)
         break;
@@ -355,7 +361,7 @@ protected:
           }
 
           if (IsNull(transceivers[i]->mSendTrack) ||
-              type == SdpMediaSection::MediaType::kApplication) {
+              transceivers[i]->GetMediaType() == SdpMediaSection::kApplication) {
             break;
           }
         }
@@ -440,6 +446,24 @@ protected:
     }
 
     return nullptr;
+  }
+
+  JsepTransceiver*
+  GetTransceiverByLevel(
+      const std::vector<RefPtr<JsepTransceiver>>& transceivers,
+      size_t level) {
+    for (auto& transceiver : transceivers) {
+      if (transceiver->HasLevel() && transceiver->GetLevel() == level) {
+        return transceiver.get();
+      }
+    }
+
+    return nullptr;
+  }
+
+  JsepTransceiver*
+  GetTransceiverByLevel(JsepSession& side, size_t level) {
+    return GetTransceiverByLevel(side.GetTransceivers(), level);
   }
 
   std::vector<std::string>
@@ -1395,7 +1419,7 @@ protected:
   void
   DumpTransceivers(const JsepSessionImpl& session)
   {
-    for (const auto& transceiver : mSessionAns->GetTransceivers()) {
+    for (const auto& transceiver : session.GetTransceivers()) {
       std::cerr << "Transceiver ";
       if (transceiver->HasLevel()) {
         std::cerr << transceiver->GetLevel() << std::endl;
@@ -1892,9 +1916,6 @@ TEST_P(JsepSessionTest, RenegotiationOffererChangesMsid)
 {
   AddTracks(*mSessionOff);
   AddTracks(*mSessionAns);
-  if (types.front() == SdpMediaSection::kApplication) {
-    return;
-  }
 
   OfferAnswer();
 
@@ -1904,6 +1925,9 @@ TEST_P(JsepSessionTest, RenegotiationOffererChangesMsid)
   RefPtr<JsepTransceiver> transceiver =
     GetNegotiatedTransceiver(*mSessionOff, 0);
   ASSERT_TRUE(transceiver);
+  if (transceiver->GetMediaType() == SdpMediaSection::kApplication) {
+    return;
+  }
   std::string streamId = transceiver->mSendTrack.GetStreamIds()[0];
   std::string trackId = transceiver->mSendTrack.GetTrackId();
   std::string msidToReplace("a=msid:");
@@ -1930,11 +1954,15 @@ TEST_P(JsepSessionTest, RenegotiationAnswererChangesMsid)
 {
   AddTracks(*mSessionOff);
   AddTracks(*mSessionAns);
-  if (types.front() == SdpMediaSection::kApplication) {
-    return;
-  }
 
   OfferAnswer();
+
+  RefPtr<JsepTransceiver> transceiver =
+    GetNegotiatedTransceiver(*mSessionOff, 0);
+  ASSERT_TRUE(transceiver);
+  if (transceiver->GetMediaType() == SdpMediaSection::kApplication) {
+    return;
+  }
 
   std::string offer = CreateOffer();
   SetLocalOffer(offer);
@@ -1942,9 +1970,11 @@ TEST_P(JsepSessionTest, RenegotiationAnswererChangesMsid)
   std::string answer = CreateAnswer();
   SetLocalAnswer(answer);
 
-  RefPtr<JsepTransceiver> transceiver =
-    GetNegotiatedTransceiver(*mSessionAns, 0);
+  transceiver = GetNegotiatedTransceiver(*mSessionAns, 0);
   ASSERT_TRUE(transceiver);
+  if (transceiver->GetMediaType() == SdpMediaSection::kApplication) {
+    return;
+  }
   std::string streamId = transceiver->mSendTrack.GetStreamIds()[0];
   std::string trackId = transceiver->mSendTrack.GetTrackId();
   std::string msidToReplace("a=msid:");
@@ -2181,8 +2211,10 @@ TEST_P(JsepSessionTest, RenegotiationBothStopTransceiverDifferentMsection)
     return;
   }
 
-  if (types[0] == SdpMediaSection::kApplication ||
-      types[1] == SdpMediaSection::kApplication) {
+  if (mSessionOff->GetTransceivers()[0]->GetMediaType() ==
+        SdpMediaSection::kApplication ||
+      mSessionOff->GetTransceivers()[1]->GetMediaType() ==
+        SdpMediaSection::kApplication) {
     return;
   }
 
@@ -2201,7 +2233,8 @@ TEST_P(JsepSessionTest, RenegotiationOffererReplacesTrack)
   AddTracks(*mSessionOff);
   AddTracks(*mSessionAns);
 
-  if (types.front() == SdpMediaSection::kApplication) {
+  if (mSessionOff->GetTransceivers()[0]->GetMediaType() ==
+        SdpMediaSection::kApplication) {
     return;
   }
 
@@ -2225,7 +2258,8 @@ TEST_P(JsepSessionTest, RenegotiationAnswererReplacesTrack)
   AddTracks(*mSessionOff);
   AddTracks(*mSessionAns);
 
-  if (types.front() == SdpMediaSection::kApplication) {
+  if (mSessionOff->GetTransceivers()[0]->GetMediaType() ==
+        SdpMediaSection::kApplication) {
     return;
   }
 
@@ -2512,7 +2546,7 @@ TEST_P(JsepSessionTest, RenegotiationOffererDisablesBundleTransport)
 
   OfferAnswer();
 
-  mSessionOff->GetTransceivers()[0]->Stop();
+  GetTransceiverByLevel(*mSessionOff, 0)->Stop();
 
   std::vector<RefPtr<JsepTransceiver>> origOffererTransceivers
     = DeepCopy(mSessionOff->GetTransceivers());
@@ -2528,26 +2562,30 @@ TEST_P(JsepSessionTest, RenegotiationOffererDisablesBundleTransport)
   ASSERT_EQ(origOffererTransceivers.size(), newOffererTransceivers.size());
   ASSERT_EQ(origAnswererTransceivers.size(), newAnswererTransceivers.size());
 
-  ASSERT_FALSE(newOffererTransceivers[0]->HasBundleLevel());
-  ASSERT_FALSE(newAnswererTransceivers[0]->HasBundleLevel());
+  JsepTransceiver* ot0 = GetTransceiverByLevel(newOffererTransceivers, 0);
+  JsepTransceiver* at0 = GetTransceiverByLevel(newAnswererTransceivers, 0);
+  ASSERT_FALSE(ot0->HasBundleLevel());
+  ASSERT_FALSE(at0->HasBundleLevel());
 
-  ASSERT_NE(newOffererTransceivers[0]->mTransport.get(),
-            origOffererTransceivers[0]->mTransport.get());
-  ASSERT_NE(newAnswererTransceivers[0]->mTransport.get(),
-            origAnswererTransceivers[0]->mTransport.get());
+  ASSERT_NE(
+      ot0->mTransport.get(),
+      GetTransceiverByLevel(origOffererTransceivers, 0)->mTransport.get());
+  ASSERT_NE(
+      at0->mTransport.get(),
+      GetTransceiverByLevel(origAnswererTransceivers, 0)->mTransport.get());
 
-  ASSERT_EQ(0U, newOffererTransceivers[0]->mTransport->mComponents);
-  ASSERT_EQ(0U, newAnswererTransceivers[0]->mTransport->mComponents);
+  ASSERT_EQ(0U, ot0->mTransport->mComponents);
+  ASSERT_EQ(0U, at0->mTransport->mComponents);
 
-  for (size_t i = 1; i < newOffererTransceivers.size(); ++i) {
-    ASSERT_TRUE(newOffererTransceivers[i]->HasBundleLevel());
-    ASSERT_TRUE(newAnswererTransceivers[i]->HasBundleLevel());
-    ASSERT_EQ(1U, newOffererTransceivers[i]->BundleLevel());
-    ASSERT_EQ(1U, newAnswererTransceivers[i]->BundleLevel());
-    ASSERT_NE(newOffererTransceivers[0]->mTransport.get(),
-              newOffererTransceivers[i]->mTransport.get());
-    ASSERT_NE(newAnswererTransceivers[0]->mTransport.get(),
-              newAnswererTransceivers[i]->mTransport.get());
+  for (size_t i = 1; i < types.size() - 1; ++i) {
+    JsepTransceiver* ot = GetTransceiverByLevel(newOffererTransceivers, i);
+    JsepTransceiver* at = GetTransceiverByLevel(newAnswererTransceivers, i);
+    ASSERT_TRUE(ot->HasBundleLevel());
+    ASSERT_TRUE(at->HasBundleLevel());
+    ASSERT_EQ(1U, ot->BundleLevel());
+    ASSERT_EQ(1U, at->BundleLevel());
+    ASSERT_NE(ot0->mTransport.get(), ot->mTransport.get());
+    ASSERT_NE(at0->mTransport.get(), at->mTransport.get());
   }
 }
 
@@ -2567,7 +2605,7 @@ TEST_P(JsepSessionTest, RenegotiationAnswererDisablesBundleTransport)
   std::vector<RefPtr<JsepTransceiver>> origAnswererTransceivers
     = DeepCopy(mSessionAns->GetTransceivers());
 
-  mSessionAns->GetTransceivers()[0]->Stop();
+  GetTransceiverByLevel(*mSessionAns, 0)->Stop();
 
   OfferAnswer(CHECK_SUCCESS);
 
@@ -2578,26 +2616,30 @@ TEST_P(JsepSessionTest, RenegotiationAnswererDisablesBundleTransport)
   ASSERT_EQ(origOffererTransceivers.size(), newOffererTransceivers.size());
   ASSERT_EQ(origAnswererTransceivers.size(), newAnswererTransceivers.size());
 
-  ASSERT_FALSE(newOffererTransceivers[0]->HasBundleLevel());
-  ASSERT_FALSE(newAnswererTransceivers[0]->HasBundleLevel());
+  JsepTransceiver* ot0 = GetTransceiverByLevel(newOffererTransceivers, 0);
+  JsepTransceiver* at0 = GetTransceiverByLevel(newAnswererTransceivers, 0);
+  ASSERT_FALSE(ot0->HasBundleLevel());
+  ASSERT_FALSE(at0->HasBundleLevel());
 
-  ASSERT_NE(newOffererTransceivers[0]->mTransport.get(),
-            origOffererTransceivers[0]->mTransport.get());
-  ASSERT_NE(newAnswererTransceivers[0]->mTransport.get(),
-            origAnswererTransceivers[0]->mTransport.get());
+  ASSERT_NE(
+      ot0->mTransport.get(),
+      GetTransceiverByLevel(origOffererTransceivers, 0)->mTransport.get());
+  ASSERT_NE(
+      at0->mTransport.get(),
+      GetTransceiverByLevel(origAnswererTransceivers, 0)->mTransport.get());
 
-  ASSERT_EQ(0U, newOffererTransceivers[0]->mTransport->mComponents);
-  ASSERT_EQ(0U, newAnswererTransceivers[0]->mTransport->mComponents);
+  ASSERT_EQ(0U, ot0->mTransport->mComponents);
+  ASSERT_EQ(0U, at0->mTransport->mComponents);
 
   for (size_t i = 1; i < newOffererTransceivers.size(); ++i) {
-    ASSERT_TRUE(newOffererTransceivers[i]->HasBundleLevel());
-    ASSERT_TRUE(newAnswererTransceivers[i]->HasBundleLevel());
-    ASSERT_EQ(1U, newOffererTransceivers[i]->BundleLevel());
-    ASSERT_EQ(1U, newAnswererTransceivers[i]->BundleLevel());
-    ASSERT_NE(newOffererTransceivers[0]->mTransport.get(),
-              newOffererTransceivers[i]->mTransport.get());
-    ASSERT_NE(newAnswererTransceivers[0]->mTransport.get(),
-              newAnswererTransceivers[i]->mTransport.get());
+    JsepTransceiver* ot = GetTransceiverByLevel(newOffererTransceivers, i);
+    JsepTransceiver* at = GetTransceiverByLevel(newAnswererTransceivers, i);
+    ASSERT_TRUE(ot->HasBundleLevel());
+    ASSERT_TRUE(at->HasBundleLevel());
+    ASSERT_EQ(1U, ot->BundleLevel());
+    ASSERT_EQ(1U, at->BundleLevel());
+    ASSERT_NE(ot0->mTransport.get(), ot->mTransport.get());
+    ASSERT_NE(at0->mTransport.get(), at->mTransport.get());
   }
 }
 
@@ -4033,7 +4075,9 @@ TEST_P(JsepSessionTest, TestRejectMline)
   // We need to do this before adding tracks
   types = BuildTypes(GetParam());
 
-  switch (types.front()) {
+  SdpMediaSection::MediaType type = types.front();
+
+  switch (type) {
     case SdpMediaSection::kAudio:
       // Sabotage audio
       EnsureNegotiationFailure(types.front(), "opus");
@@ -4066,7 +4110,7 @@ TEST_P(JsepSessionTest, TestRejectMline)
   SdpMediaSection* failed_section = nullptr;
 
   for (size_t i = 0; i < outputSdp->GetMediaSectionCount(); ++i) {
-    if (outputSdp->GetMediaSection(i).GetMediaType() == types.front()) {
+    if (outputSdp->GetMediaSection(i).GetMediaType() == type) {
       failed_section = &outputSdp->GetMediaSection(i);
     }
   }
@@ -4079,10 +4123,10 @@ TEST_P(JsepSessionTest, TestRejectMline)
   mSessionAns->SetLocalDescription(kJsepSdpAnswer, answer);
   mSessionOff->SetRemoteDescription(kJsepSdpAnswer, answer);
 
-  size_t numRejected = std::count(types.begin(), types.end(), types.front());
+  size_t numRejected = std::count(types.begin(), types.end(), type);
   size_t numAccepted = types.size() - numRejected;
 
-  if (types.front() == SdpMediaSection::MediaType::kApplication) {
+  if (type == SdpMediaSection::MediaType::kApplication) {
     ASSERT_TRUE(GetDatachannelTransceiver(*mSessionOff));
     ASSERT_FALSE(
         GetDatachannelTransceiver(*mSessionOff)->mRecvTrack.GetActive());
