@@ -3603,9 +3603,6 @@ class ChannelDownloader extends CommonDownloader {
    * See nsIProgressEventSink.idl
    */
   onProgress(request, context, progress, maxProgress) {
-    LOG("ChannelDownloader:onProgress - progress: " + progress +
-        "/" + maxProgress);
-
     if (progress > this._patch.size) {
       LOG("ChannelDownloader:onProgress - progress: " + progress +
           " is higher than patch size: " + this._patch.size);
@@ -3627,6 +3624,8 @@ class ChannelDownloader extends CommonDownloader {
 
     let currentTime = Date.now();
     if ((currentTime - this._lastProgressTimeMs) > DOWNLOAD_PROGRESS_INTERVAL) {
+      LOG("ChannelDownloader:onProgress - progress: " + progress +
+          "/" + maxProgress);
       this._lastProgressTimeMs = currentTime;
       let listeners = this._listeners.concat();
       let listenerCount = listeners.length;
