@@ -34,6 +34,8 @@ class Driver {
         this._magicCell = magicCell;
         this._summary = new Stats(summaryCell, "summary");
         this._key = key;
+        this._values = [];
+        this._names = [];
         if (isInBrowser)
             window[key] = this;
     }
@@ -116,9 +118,15 @@ class Driver {
         }
         
         let statses = [];
-        for (let results of this._benchmarks.values()) {
-            for (let subResult of Results.subResults)
+        for (let [benchmark, results] of this._benchmarks) {
+            for (let subResult of Results.subResults) {
                 statses.push(results[subResult]);
+                let val = results[subResult].valueForIteration(results[subResult].numIterations - 1);
+                if (val > 0 && benchmark.name == this._benchmark.name) {
+                    this._values.push(val);
+                    this._names.push(benchmark.name + "_" + subResult);
+                }
+            }
         }
 
         let numIterations = Math.min(...statses.map(stats => stats.numIterations));
@@ -130,12 +138,17 @@ class Driver {
             for (let i = 0; i < data.length; ++i)
                 data[i].add(stats.valueForIteration(i));
         }
-        
+
         let geomeans = data.map(geomean => geomean.result);
-        
+        if (geomeans.length == this._startIterations) {
+            for (let iter = 0; iter < geomeans.length; iter++) {
+                this._values.push(geomeans[iter]);
+                this._names.push("geomean");
+            }
+        }
         this._summary.reset(...geomeans);
     }
-    
+
     _iterate()
     {
         this._benchmark = this._iterator ? this._iterator.next().value : null;
@@ -144,6 +157,8 @@ class Driver {
                 if (isInBrowser) {
                     this._statusCell.innerHTML = "Restart";
                     this.readyTrigger();
+                    if (typeof tpRecordTime !== "undefined")
+                        tpRecordTime(this._values.join(','), 0, this._names.join(','));
                 } else
                     print("Success! Benchmark is now finished.");
                 return;
