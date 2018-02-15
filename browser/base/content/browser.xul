@@ -97,8 +97,9 @@
                 accesskey="&moveToNewWindow.accesskey;"
                 tbattr="tabbrowser-multiple"
                 oncommand="gBrowser.replaceTabWithWindow(TabContextMenu.contextTab);"/>
-      <menuseparator id="context_sendTabToDevice_separator"/>
+      <menuseparator id="context_sendTabToDevice_separator" class="sync-ui-item"/>
       <menu id="context_sendTabToDevice" label="&sendTabToDevice.label;"
+            class="sync-ui-item"
             accesskey="&sendTabToDevice.accesskey;">
         <menupopup id="context_sendTabToDevicePopupMenu"
                    onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, TabContextMenu.contextTab.linkedBrowser.currentURI.spec, TabContextMenu.contextTab.linkedBrowser.contentTitle);"/>
