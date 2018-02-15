@@ -82,6 +82,6 @@
 
     <popupnotification id="addon-installed-notification" hidden="true">
       <popupnotificationcontent class="addon-installed-notification-content" orient="vertical">
-        <description id="addon-installed-notification-message"/>
+        <description>&addonPostInstallMessage.label;</description>
       </popupnotificationcontent>
     </popupnotification>

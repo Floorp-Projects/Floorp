@@ -148,6 +148,10 @@ let gWhitelist = [{
     file: "aboutdevtools.dtd",
     key: "aboutDevtools.newsletter.privacy.label",
     type: "single-quote"
+  }, {
+    file: "browser.dtd",
+    key: "addonPostInstallMessage.label",
+    type: "single-quote"
   }
 ];
 
