@@ -143,6 +143,13 @@
       }
     },
 
+    "RememberPasswords": {
+      "description": "Enforces the setting to allow Firefox to remember saved logins and passwords. Both true and false values are accepted.",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
     "install_addons": {
       "description": "Allow or deny popup websites to install webextensions.",
       "first_available": "60.0",
