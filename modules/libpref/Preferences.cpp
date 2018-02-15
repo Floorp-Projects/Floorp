@@ -295,18 +295,44 @@ StrEscape(const char* aOriginal, nsCString& aResult)
   aResult.Append('"');
 }
 
+namespace mozilla {
+struct PrefsSizes
+{
+  PrefsSizes()
+    : mHashTable(0)
+    , mPrefValues(0)
+    , mStringValues(0)
+    , mCacheData(0)
+    , mRootBranches(0)
+    , mPrefNameArena(0)
+    , mCallbacks(0)
+    , mMisc(0)
+  {
+  }
+
+  size_t mHashTable;
+  size_t mPrefValues;
+  size_t mStringValues;
+  size_t mCacheData;
+  size_t mRootBranches;
+  size_t mPrefNameArena;
+  size_t mCallbacks;
+  size_t mMisc;
+};
+}
+
 static ArenaAllocator<8192, 1> gPrefNameArena;
 
-class Pref : public PLDHashEntryHdr
+class Pref
 {
 public:
   explicit Pref(const char* aName)
-    : mType(static_cast<uint32_t>(PrefType::None))
+    : mName(ArenaStrdup(aName, gPrefNameArena))
+    , mType(static_cast<uint32_t>(PrefType::None))
     , mIsSticky(false)
     , mIsLocked(false)
     , mHasDefaultValue(false)
     , mHasUserValue(false)
-    , mName(ArenaStrdup(aName, gPrefNameArena))
     , mDefaultValue()
     , mUserValue()
   {
@@ -344,34 +370,13 @@ public:
 
   // Other operations.
 
-  static bool MatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
+  bool MatchEntry(const char* aPrefName)
   {
-    auto pref = static_cast<const Pref*>(aEntry);
-    auto key = static_cast<const char*>(aKey);
-
-    if (pref->mName == aKey) {
-      return true;
-    }
-
-    if (!pref->mName || !aKey) {
+    if (!mName || !aPrefName) {
       return false;
     }
 
-    return strcmp(pref->mName, key) == 0;
-  }
-
-  static void InitEntry(PLDHashEntryHdr* aEntry, const void* aKey)
-  {
-    auto pref = static_cast<Pref*>(aEntry);
-    auto prefName = static_cast<const char*>(aKey);
-    new (pref) Pref(prefName);
-  }
-
-  static void ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
-  {
-    auto pref = static_cast<Pref*>(aEntry);
-    pref->~Pref();
-    memset(pref, 0, sizeof(Pref)); // zero just to be extra safe
+    return strcmp(mName, aPrefName) == 0;
   }
 
   nsresult GetBoolValue(PrefValueKind aKind, bool* aResult)
@@ -640,35 +645,61 @@ public:
     return false;
   }
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf)
+  void AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf, PrefsSizes& aSizes)
   {
     // Note: mName is allocated in gPrefNameArena, measured elsewhere.
-    size_t n = 0;
+    aSizes.mPrefValues += aMallocSizeOf(this);
     if (IsTypeString()) {
       if (mHasDefaultValue) {
-        n += aMallocSizeOf(mDefaultValue.mStringVal);
+        aSizes.mStringValues += aMallocSizeOf(mDefaultValue.mStringVal);
       }
       if (mHasUserValue) {
-        n += aMallocSizeOf(mUserValue.mStringVal);
+        aSizes.mStringValues += aMallocSizeOf(mUserValue.mStringVal);
       }
     }
-    return n;
   }
 
 private:
-  // These fields go first to minimize this struct's size on 64-bit. (Because
-  // this a subclass of PLDHashEntryHdr, there's a preceding 32-bit mKeyHash
-  // field.)
+  const char* mName; // allocated in gPrefNameArena
+
   uint32_t mType : 2;
   uint32_t mIsSticky : 1;
   uint32_t mIsLocked : 1;
   uint32_t mHasDefaultValue : 1;
   uint32_t mHasUserValue : 1;
 
-  const char* mName; // allocated in gPrefNameArena
-
   PrefValue mDefaultValue;
   PrefValue mUserValue;
+};
+
+class PrefEntry : public PLDHashEntryHdr
+{
+public:
+  Pref* mPref;  // Note: this is never null in a live entry.
+
+  static bool MatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
+  {
+    auto entry = static_cast<const PrefEntry*>(aEntry);
+    auto prefName = static_cast<const char*>(aKey);
+
+    return entry->mPref->MatchEntry(prefName);
+  }
+
+  static void InitEntry(PLDHashEntryHdr* aEntry, const void* aKey)
+  {
+    auto entry = static_cast<PrefEntry*>(aEntry);
+    auto prefName = static_cast<const char*>(aKey);
+
+    entry->mPref = new Pref(prefName);
+  }
+
+  static void ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
+  {
+    auto entry = static_cast<PrefEntry*>(aEntry);
+
+    delete entry->mPref;
+    entry->mPref = nullptr;
+  }
 };
 
 struct CallbackNode
@@ -711,10 +742,10 @@ static bool gShouldCleanupDeadNodes = false;
 
 static PLDHashTableOps pref_HashTableOps = {
   PLDHashTable::HashStringKey,
-  Pref::MatchEntry,
+  PrefEntry::MatchEntry,
   PLDHashTable::MoveEntryStub,
-  Pref::ClearEntry,
-  Pref::InitEntry,
+  PrefEntry::ClearEntry,
+  PrefEntry::InitEntry,
 };
 
 static Pref*
@@ -733,7 +764,7 @@ pref_savePrefs()
   PrefSaveData savedPrefs(gHashTable->EntryCount());
 
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<Pref*>(iter.Get());
+    Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
 
     nsAutoCString prefValueStr;
     if (!pref->UserValueToStringForSaving(prefValueStr)) {
@@ -792,8 +823,8 @@ IsEarlyPref(const char* aPrefName)
 
 #endif // DEBUG
 
-static Pref*
-pref_HashTableLookup(const char* aPrefName)
+static PrefEntry*
+pref_HashTableLookupInner(const char* aPrefName)
 {
   MOZ_ASSERT(NS_IsMainThread() || mozilla::ServoStyleSet::IsInServoTraversal());
 
@@ -815,7 +846,14 @@ pref_HashTableLookup(const char* aPrefName)
   }
 #endif
 
-  return static_cast<Pref*>(gHashTable->Search(aPrefName));
+  return static_cast<PrefEntry*>(gHashTable->Search(aPrefName));
+}
+
+static Pref*
+pref_HashTableLookup(const char* aPrefName)
+{
+  PrefEntry* entry = pref_HashTableLookupInner(aPrefName);
+  return entry ? entry->mPref : nullptr;
 }
 
 static nsresult
@@ -832,11 +870,12 @@ pref_SetPref(const char* aPrefName,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  auto pref = static_cast<Pref*>(gHashTable->Add(aPrefName, fallible));
-  if (!pref) {
+  auto entry = static_cast<PrefEntry*>(gHashTable->Add(aPrefName, fallible));
+  if (!entry) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  Pref* pref = entry->mPref;
   if (pref->IsTypeNone()) {
     // New entry. Set the type.
     pref->SetType(aType);
@@ -1946,7 +1985,7 @@ nsPrefBranch::DeleteBranch(const char* aStartingAt)
     Substring(branchName, 0, branchName.Length() - 1);
 
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<Pref*>(iter.Get());
+    Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
 
     // The first disjunct matches branches: e.g. a branch name "foo.bar."
     // matches a name "foo.bar.baz" (but it won't match "foo.barrel.baz").
@@ -1987,7 +2026,7 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
   const PrefName& parent = GetPrefName(aStartingAt);
   size_t parentLen = parent.Length();
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<Pref*>(iter.Get());
+    Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
     if (strncmp(pref->Name(), parent.get(), parentLen) == 0) {
       prefArray.AppendElement(pref->Name());
     }
@@ -2550,28 +2589,6 @@ AssertNotAlreadyCached(const char* aPrefType, const char* aPref, void* aPtr)
 }
 #endif
 
-struct PrefsSizes
-{
-  PrefsSizes()
-    : mHashTable(0)
-    , mStringValues(0)
-    , mCacheData(0)
-    , mRootBranches(0)
-    , mPrefNameArena(0)
-    , mCallbacks(0)
-    , mMisc(0)
-  {
-  }
-
-  size_t mHashTable;
-  size_t mStringValues;
-  size_t mCacheData;
-  size_t mRootBranches;
-  size_t mPrefNameArena;
-  size_t mCallbacks;
-  size_t mMisc;
-};
-
 // Although this is a member of Preferences, it measures sPreferences and
 // several other global structures.
 /* static */ void
@@ -2623,8 +2640,8 @@ PreferenceServiceReporter::CollectReports(
   if (gHashTable) {
     sizes.mHashTable += gHashTable->ShallowSizeOfIncludingThis(mallocSizeOf);
     for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-      auto pref = static_cast<Pref*>(iter.Get());
-      sizes.mStringValues += pref->SizeOfExcludingThis(mallocSizeOf);
+      Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
+      pref->AddSizeOfIncludingThis(mallocSizeOf, sizes);
     }
   }
 
@@ -2647,6 +2664,12 @@ PreferenceServiceReporter::CollectReports(
                      UNITS_BYTES,
                      sizes.mHashTable,
                      "Memory used by libpref's hash table.");
+
+  MOZ_COLLECT_REPORT("explicit/preferences/pref-values",
+                     KIND_HEAP,
+                     UNITS_BYTES,
+                     sizes.mPrefValues,
+                     "Memory used by PrefValues hanging off the hash table.");
 
   MOZ_COLLECT_REPORT("explicit/preferences/string-values",
                      KIND_HEAP,
@@ -2811,7 +2834,7 @@ Preferences::GetInstanceForService()
 
   MOZ_ASSERT(!gHashTable);
   gHashTable = new PLDHashTable(
-    &pref_HashTableOps, sizeof(Pref), PREF_HASHTABLE_INITIAL_LENGTH);
+    &pref_HashTableOps, sizeof(PrefEntry), PREF_HASHTABLE_INITIAL_LENGTH);
 
   gTelemetryLoadData =
     new nsDataHashtable<nsCStringHashKey, TelemetryLoadData>();
@@ -3081,7 +3104,7 @@ Preferences::ResetUserPrefs()
 
   Vector<const char*> prefNames;
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<Pref*>(iter.Get());
+    Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
 
     if (pref->HasUserValue()) {
       if (!prefNames.append(pref->Name())) {
@@ -3158,10 +3181,12 @@ Preferences::SetPreference(const dom::Pref& aDomPref)
 
   const char* prefName = aDomPref.name().get();
 
-  auto pref = static_cast<Pref*>(gHashTable->Add(prefName, fallible));
-  if (!pref) {
+  auto entry = static_cast<PrefEntry*>(gHashTable->Add(prefName, fallible));
+  if (!entry) {
     return;
   }
+
+  Pref* pref = entry->mPref;
 
   bool valueChanged = false;
   pref->FromDomPref(aDomPref, &valueChanged);
@@ -3177,7 +3202,7 @@ Preferences::SetPreference(const dom::Pref& aDomPref)
   //   needlessly, but that's ok because this case is rare.
   //
   if (!pref->HasDefaultValue() && !pref->HasUserValue()) {
-    gHashTable->RemoveEntry(pref);
+    gHashTable->RemoveEntry(entry);
   }
 
   // Note: we don't have to worry about HandleDirty() because we are setting
@@ -3207,7 +3232,7 @@ Preferences::GetPreferences(InfallibleTArray<dom::Pref>* aDomPrefs)
 
   aDomPrefs->SetCapacity(gHashTable->EntryCount());
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto pref = static_cast<Pref*>(iter.Get());
+    Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
 
     if (pref->HasAdvisablySizedValues()) {
       dom::Pref* setting = aDomPrefs->AppendElement();
@@ -4107,12 +4132,13 @@ Preferences::ClearUserInAnyProcess(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  Pref* pref = pref_HashTableLookup(aPrefName);
-  if (pref && pref->HasUserValue()) {
+  PrefEntry* entry = pref_HashTableLookupInner(aPrefName);
+  Pref* pref;
+  if (entry && (pref = entry->mPref) && pref->HasUserValue()) {
     pref->ClearUserValue();
 
     if (!pref->HasDefaultValue()) {
-      gHashTable->RemoveEntry(pref);
+      gHashTable->RemoveEntry(entry);
     }
 
     NotifyCallbacks(aPrefName);

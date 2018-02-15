@@ -9,19 +9,17 @@
 
 #include "vm/NativeObject.h"
 
-#include "jscntxt.h"
-
 #include "builtin/TypedObject.h"
 #include "gc/GCTrace.h"
 #include "proxy/Proxy.h"
+#include "vm/JSContext.h"
 #include "vm/ProxyObject.h"
 #include "vm/TypedArrayObject.h"
-
-#include "jsobjinlines.h"
 
 #include "gc/Heap-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/ObjectKind-inl.h"
+#include "vm/JSObject-inl.h"
 
 namespace js {
 
@@ -125,7 +123,7 @@ NativeObject::elementsRangeWriteBarrierPost(uint32_t start, uint32_t count)
 {
     for (size_t i = 0; i < count; i++) {
         const Value& v = elements_[start + i];
-        if (v.isObject() && IsInsideNursery(&v.toObject())) {
+        if ((v.isObject() || v.isString()) && IsInsideNursery(v.toGCThing())) {
             zone()->group()->storeBuffer().putSlot(this, HeapSlot::Element,
                                                    unshiftedIndex(start + i),
                                                    count - i);

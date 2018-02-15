@@ -20,9 +20,8 @@
 #include "js/Vector.h"
 #include "vm/GeckoProfiler.h"
 
-#include "jsscriptinlines.h"
-
 #include "vm/GeckoProfiler-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/TypeInference-inl.h"
 
 using mozilla::Maybe;

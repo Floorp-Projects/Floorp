@@ -9,11 +9,10 @@
 
 #include "mozilla/Attributes.h"
 
-#include "jsobj.h"
-
 #include "gc/Barrier.h"
 #include "js/Class.h"
 #include "vm/ArrayBufferObject.h"
+#include "vm/JSObject.h"
 #include "vm/SharedArrayObject.h"
 
 #define JS_FOR_EACH_TYPED_ARRAY(macro) \

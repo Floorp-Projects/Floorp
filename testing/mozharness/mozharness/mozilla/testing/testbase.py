@@ -23,7 +23,6 @@ from mozharness.base.python import (
     virtualenv_config_options,
 )
 from mozharness.mozilla.buildbot import BuildbotMixin, TBPL_WARNING
-from mozharness.mozilla.proxxy import Proxxy
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.mozilla.taskcluster_helper import TaskClusterArtifactFinderMixin
 from mozharness.mozilla.testing.unittest import DesktopUnittestOutputParser
@@ -124,34 +123,6 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
     minidump_stackwalk_path = None
     nodejs_path = None
     default_tools_repo = 'https://hg.mozilla.org/build/tools'
-    proxxy = None
-
-    def _query_proxxy(self):
-        """manages the proxxy"""
-        if not self.proxxy:
-            self.proxxy = Proxxy(self.config, self.log_obj)
-        return self.proxxy
-
-    def download_proxied_file(self, url, file_name=None, parent_dir=None,
-                              create_parent_dir=True, error_level=FATAL,
-                              exit_code=3):
-        proxxy = self._query_proxxy()
-        return proxxy.download_proxied_file(url=url, file_name=file_name,
-                                            parent_dir=parent_dir,
-                                            create_parent_dir=create_parent_dir,
-                                            error_level=error_level,
-                                            exit_code=exit_code)
-
-    def download_file(self, *args, **kwargs):
-        '''
-        This function helps not to use download of proxied files
-        since it does not support authenticated downloads.
-        This could be re-factored and fixed in bug 1087664.
-        '''
-        if self.config.get("developer_mode"):
-            return super(TestingMixin, self).download_file(*args, **kwargs)
-        else:
-            return self.download_proxied_file(*args, **kwargs)
 
     def query_build_dir_url(self, file_name):
         """

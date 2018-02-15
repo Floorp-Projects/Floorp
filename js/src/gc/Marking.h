@@ -12,11 +12,11 @@
 #ifndef gc_Marking_h
 #define gc_Marking_h
 
+#include "js/TypeDecls.h"
 #include "vm/TaggedProto.h"
 
 class JSLinearString;
 class JSRope;
-struct JSRuntime;
 class JSTracer;
 
 namespace js {
@@ -164,11 +164,11 @@ namespace gc {
 //                  to allow slots to be accessed.
 
 template <typename T>
-inline bool IsForwarded(T* t);
+inline bool IsForwarded(const T* t);
 inline bool IsForwarded(const JS::Value& value);
 
 template <typename T>
-inline T* Forwarded(T* t);
+inline T* Forwarded(const T* t);
 
 inline Value Forwarded(const JS::Value& value);
 

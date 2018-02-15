@@ -9,12 +9,12 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "jscompartment.h"
 #include "jsutil.h"
 
 #include "gc/Marking.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitCompartment.h"
+#include "vm/JSCompartment.h"
 
 using mozilla::DebugOnly;
 

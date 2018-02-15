@@ -26,7 +26,6 @@ config = {
         'hg': os.path.join(os.environ['PROGRAMFILES'], 'Mercurial', 'hg')
     },
 
-    "proxxy": {},
     "find_links": [
         "http://pypi.pub.build.mozilla.org/pub",
     ],

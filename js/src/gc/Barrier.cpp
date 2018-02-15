@@ -6,15 +6,14 @@
 
 #include "gc/Barrier.h"
 
-#include "jscompartment.h"
-#include "jsobj.h"
-
 #include "builtin/TypedObject.h"
 #include "gc/Policy.h"
 #include "gc/Zone.h"
 #include "js/HashTable.h"
 #include "js/Value.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/JSCompartment.h"
+#include "vm/JSObject.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/Symbol.h"
 #include "wasm/WasmJS.h"
@@ -218,6 +217,13 @@ JS::HeapObjectPostBarrier(JSObject** objp, JSObject* prev, JSObject* next)
 {
     MOZ_ASSERT(objp);
     js::InternalBarrierMethods<JSObject*>::postBarrier(objp, prev, next);
+}
+
+JS_PUBLIC_API(void)
+JS::HeapStringPostBarrier(JSString** strp, JSString* prev, JSString* next)
+{
+    MOZ_ASSERT(strp);
+    js::InternalBarrierMethods<JSString*>::postBarrier(strp, prev, next);
 }
 
 JS_PUBLIC_API(void)

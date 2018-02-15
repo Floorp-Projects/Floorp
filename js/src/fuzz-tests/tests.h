@@ -14,6 +14,6 @@
 
 #include "FuzzingInterface.h"
 
-#include "jscntxt.h"
+#include "vm/JSContext.h"
 
 #endif /* fuzz_tests_tests_h */

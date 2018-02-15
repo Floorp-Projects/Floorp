@@ -7,9 +7,9 @@
 #ifndef vm_StringObject_h
 #define vm_StringObject_h
 
-#include "jsobj.h"
 #include "jsstr.h"
 
+#include "vm/JSObject.h"
 #include "vm/Shape.h"
 
 namespace js {

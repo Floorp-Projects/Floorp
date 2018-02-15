@@ -15,8 +15,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "jscntxt.h"
-
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ICUStubs.h"
 #include "builtin/intl/ScopedICUObject.h"
@@ -24,10 +22,11 @@
 #include "gc/FreeOp.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
+#include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 #include "vm/Stack.h"
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 

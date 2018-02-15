@@ -7,17 +7,16 @@
 #include "vm/AsyncIteration.h"
 
 #include "jsarray.h"
-#include "jscompartment.h"
 
 #include "builtin/Promise.h"
 #include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSCompartment.h"
 #include "vm/SelfHosting.h"
 
-#include "jscntxtinlines.h"
-#include "jsobjinlines.h"
-
+#include "vm/JSContext-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/List-inl.h"
 #include "vm/NativeObject-inl.h"
 
@@ -169,18 +168,18 @@ const Class AsyncFromSyncIteratorObject::class_ = {
 
 // Async Iteration proposal 11.1.3.1.
 JSObject*
-js::CreateAsyncFromSyncIterator(JSContext* cx, HandleObject iter)
+js::CreateAsyncFromSyncIterator(JSContext* cx, HandleObject iter, HandleValue nextMethod)
 {
     // Step 1 (implicit).
     // Done in bytecode emitted by emitAsyncIterator.
 
     // Steps 2-4.
-    return AsyncFromSyncIteratorObject::create(cx, iter);
+    return AsyncFromSyncIteratorObject::create(cx, iter, nextMethod);
 }
 
 // Async Iteration proposal 11.1.3.1 steps 2-4.
 /* static */ JSObject*
-AsyncFromSyncIteratorObject::create(JSContext* cx, HandleObject iter)
+AsyncFromSyncIteratorObject::create(JSContext* cx, HandleObject iter, HandleValue nextMethod)
 {
     // Step 2.
     RootedObject proto(cx, GlobalObject::getOrCreateAsyncFromSyncIteratorPrototype(cx,
@@ -196,6 +195,10 @@ AsyncFromSyncIteratorObject::create(JSContext* cx, HandleObject iter)
 
     // Step 3.
     asyncIter->setIterator(iter);
+
+    // Spec update pending:
+    // https://github.com/tc39/proposal-async-iteration/issues/116
+    asyncIter->setNextMethod(nextMethod);
 
     // Step 4.
     return asyncIter;

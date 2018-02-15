@@ -12,8 +12,6 @@
 
 #include "vm/Stack.h"
 
-class JSAtom;
-
 namespace js {
 
 /*

@@ -6,10 +6,9 @@
 
 #include "threading/ProtectedData.h"
 
-#include "jscntxt.h"
-
 #include "gc/Heap.h"
 #include "vm/HelperThreads.h"
+#include "vm/JSContext.h"
 
 namespace js {
 

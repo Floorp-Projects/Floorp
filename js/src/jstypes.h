@@ -170,26 +170,6 @@
 # error "Implement me"
 #endif
 
-/***********************************************************************
-** MACROS:      JS_ARRAY_LENGTH
-**              JS_ARRAY_END
-** DESCRIPTION:
-**      Macros to get the number of elements and the pointer to one past the
-**      last element of a C array. Use them like this:
-**
-**      char16_t buf[10];
-**      JSString* str;
-**      ...
-**      for (char16_t* s = buf; s != JS_ARRAY_END(buf); ++s) *s = ...;
-**      ...
-**      str = JS_NewStringCopyN(cx, buf, JS_ARRAY_LENGTH(buf));
-**      ...
-**
-***********************************************************************/
-
-#define JS_ARRAY_LENGTH(array) (sizeof (array) / sizeof (array)[0])
-#define JS_ARRAY_END(array)    ((array) + JS_ARRAY_LENGTH(array))
-
 #define JS_BITS_PER_BYTE 8
 #define JS_BITS_PER_BYTE_LOG2 3
 

@@ -408,7 +408,6 @@ MacroAssembler::branchIfRopeOrExternal(Register str, Register temp, Label* label
     and32(flags, temp);
 
     branchTest32(Assembler::Zero, temp, Imm32(JSString::LINEAR_BIT), label);
-
     branch32(Assembler::Equal, temp, Imm32(JSString::EXTERNAL_FLAGS), label);
 }
 

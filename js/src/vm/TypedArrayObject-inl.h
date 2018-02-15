@@ -16,16 +16,13 @@
 #include "mozilla/PodOperations.h"
 
 #include "jsarray.h"
-#include "jscntxt.h"
 #include "jsnum.h"
 
 #include "gc/Zone.h"
-
 #include "jit/AtomicOperations.h"
-
 #include "js/Conversions.h"
 #include "js/Value.h"
-
+#include "vm/JSContext.h"
 #include "vm/NativeObject.h"
 
 #include "gc/ObjectKind-inl.h"

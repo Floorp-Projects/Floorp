@@ -1,9 +1,8 @@
 #include "gdb-tests.h"
 #include "jsapi.h"
 
-#include "jscntxt.h"
-
 #include "jit/ExecutableAllocator.h"
+#include "vm/JSContext.h"
 
 FRAGMENT(ExecutableAllocator, empty) {
     using namespace js::jit;

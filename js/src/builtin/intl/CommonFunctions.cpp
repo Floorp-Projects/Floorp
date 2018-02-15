@@ -10,15 +10,15 @@
 
 #include "mozilla/Assertions.h"
 
-#include "jscntxt.h"
 #include "jsfriendapi.h" // for GetErrorMessage, JSMSG_INTERNAL_INTL_ERROR
-#include "jsobj.h"
 
 #include "js/Value.h"
+#include "vm/JSContext.h"
+#include "vm/JSObject.h"
 #include "vm/SelfHosting.h"
 #include "vm/Stack.h"
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 
 bool
 js::intl::InitializeObject(JSContext* cx, JS::Handle<JSObject*> obj,

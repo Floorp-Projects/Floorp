@@ -8,6 +8,7 @@
 
 #include "jsprf.h"
 #include "jsutil.h"
+
 #include "jit/arm/Simulator-arm.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
@@ -18,14 +19,12 @@
 #include "jit/mips64/Simulator-mips64.h"
 #include "jit/Recover.h"
 #include "jit/RematerializedFrame.h"
-
 #include "vm/ArgumentsObject.h"
 #include "vm/Debugger.h"
 #include "vm/TraceLogging.h"
 
-#include "jsscriptinlines.h"
-
 #include "jit/JitFrames-inl.h"
+#include "vm/JSScript-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -519,9 +518,11 @@ HasLiveStackValueAtDepth(JSScript* script, jsbytecode* pc, uint32_t stackDepth)
             break;
 
           case JSTRY_FOR_OF:
-            // For-of loops have the iterator and the result.value on stack.
-            // The iterator is below the result.value.
-            if (stackDepth == tn->stackDepth - 1)
+            // For-of loops have the iterator, its next method and the
+            // result.value on stack.
+            // The iterator is below the result.value, the next method below
+            // the iterator.
+            if (stackDepth == tn->stackDepth - 1 || stackDepth == tn->stackDepth - 2)
                 return true;
             break;
 

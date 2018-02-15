@@ -29,7 +29,7 @@
 
 #include "vm/Probes.h"
 
-#include "jscntxtinlines.h"
+#include "vm/JSContext-inl.h"
 
 using namespace js;
 

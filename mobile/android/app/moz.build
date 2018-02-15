@@ -49,6 +49,7 @@ if CONFIG['MOZ_PKG_SPECIAL']:
     DEFINES['MOZ_PKG_SPECIAL'] = CONFIG['MOZ_PKG_SPECIAL']
 
 JS_PREFERENCE_PP_FILES += [
+     'geckoview-prefs.js',
      'mobile.js',
 ]
 

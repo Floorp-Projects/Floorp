@@ -158,42 +158,27 @@ TreeBoxObject::GetView(nsITreeView * *aView)
 }
 
 already_AddRefed<nsITreeView>
-TreeBoxObject::GetView() {
+TreeBoxObject::GetView(CallerType /* unused */)
+{
   nsCOMPtr<nsITreeView> view;
   GetView(getter_AddRefs(view));
   return view.forget();
 }
 
-static bool
-CanTrustView(nsISupports* aValue)
+void
+TreeBoxObject::SetView(nsITreeView* aView, CallerType aCallerType,
+                       ErrorResult& aRv)
 {
-  // Untrusted content is only allowed to specify known-good views
-  if (nsContentUtils::IsCallerChrome())
-    return true;
-  nsCOMPtr<nsINativeTreeView> nativeTreeView = do_QueryInterface(aValue);
-  if (!nativeTreeView || NS_FAILED(nativeTreeView->EnsureNative())) {
-    // XXX ERRMSG need a good error here for developers
-    return false;
+  if (aCallerType != CallerType::System) {
+    // Don't trust views coming from random places.
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
   }
-  return true;
-}
-
-NS_IMETHODIMP TreeBoxObject::SetView(nsITreeView * aView)
-{
-  if (!CanTrustView(aView))
-    return NS_ERROR_DOM_SECURITY_ERR;
 
   mView = aView;
   nsTreeBodyFrame* body = GetTreeBodyFrame();
   if (body)
     body->SetView(aView);
-
-  return NS_OK;
-}
-
-void TreeBoxObject::SetView(nsITreeView* aView, ErrorResult& aRv)
-{
-  aRv = SetView(aView);
 }
 
 bool TreeBoxObject::Focused()

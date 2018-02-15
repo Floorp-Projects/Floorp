@@ -28,7 +28,6 @@
 #include "jsprf.h"
 #include "jsstr.h"
 #include "jsutil.h"
-
 #include "jswrapper.h"
 
 #include "builtin/SIMD.h"
@@ -48,10 +47,9 @@
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmValidate.h"
 
-#include "jsobjinlines.h"
-
 #include "frontend/ParseNode-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace js::frontend;
@@ -4855,6 +4853,9 @@ static bool
 CheckFunctionSignature(ModuleValidator& m, ParseNode* usepn, Sig&& sig, PropertyName* name,
                        ModuleValidator::Func** func)
 {
+    if (sig.args().length() > MaxParams)
+        return m.failf(usepn, "too many parameters");
+
     ModuleValidator::Func* existing = m.lookupFuncDef(name);
     if (!existing) {
         if (!CheckModuleLevelName(m, usepn, name))

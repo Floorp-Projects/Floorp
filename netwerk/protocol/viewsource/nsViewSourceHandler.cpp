@@ -11,12 +11,15 @@
 
 #define VIEW_SOURCE "view-source"
 
+#define DEFAULT_FLAGS (URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD | URI_NON_PERSISTABLE)
+
 namespace mozilla {
 namespace net {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS(nsViewSourceHandler, nsIProtocolHandler)
+NS_IMPL_ISUPPORTS(nsViewSourceHandler, nsIProtocolHandler,
+    nsIProtocolHandlerWithDynamicFlags)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIProtocolHandler methods:
@@ -38,8 +41,28 @@ nsViewSourceHandler::GetDefaultPort(int32_t *result)
 NS_IMETHODIMP
 nsViewSourceHandler::GetProtocolFlags(uint32_t *result)
 {
-    *result = URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD |
-        URI_LOADABLE_BY_EXTENSIONS | URI_NON_PERSISTABLE;
+    *result = DEFAULT_FLAGS;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewSourceHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* result)
+{
+    *result = DEFAULT_FLAGS;
+    nsCOMPtr<nsINestedURI> nestedURI(do_QueryInterface(aURI));
+    if (!nestedURI) {
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIURI> innerURI;
+    nestedURI->GetInnerURI(getter_AddRefs(innerURI));
+    nsCOMPtr<nsINetUtil> netUtil = do_GetNetUtil();
+    bool isLoadable = false;
+    nsresult rv = netUtil->ProtocolHasFlags(innerURI, URI_LOADABLE_BY_ANYONE, &isLoadable);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (isLoadable) {
+        *result |= URI_LOADABLE_BY_EXTENSIONS;
+    }
     return NS_OK;
 }
 

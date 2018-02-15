@@ -10,13 +10,13 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Move.h"
 
-#include "jscompartment.h"
 #include "jsfriendapi.h"
-#include "jsobj.h"
 
 #include "gc/DeletePolicy.h"
 #include "gc/StoreBuffer.h"
 #include "js/HashTable.h"
+#include "vm/JSCompartment.h"
+#include "vm/JSObject.h"
 
 namespace js {
 
