@@ -16,15 +16,14 @@
 #else
 #include <unistd.h>
 #endif
-
 #include <stdarg.h>
 
-#include "jsfun.h"
-#include "jsobj.h"
-#include "jsscript.h"
+#include "vm/JSFunction.h"
+#include "vm/JSObject.h"
+#include "vm/JSScript.h"
 
-#include "jscompartmentinlines.h"
-#include "jsobjinlines.h"
+#include "vm/JSCompartment-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace js::jit;

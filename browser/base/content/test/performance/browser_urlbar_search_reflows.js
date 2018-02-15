@@ -138,8 +138,7 @@ add_task(async function setup() {
  * with the default values in Places.
  */
 add_task(async function() {
-  let win = await BrowserTestUtils.openNewBrowserWindow();
-  await ensureNoPreloadedBrowser(win);
+  let win = await prepareSettledWindow();
 
   let URLBar = win.gURLBar;
   let popup = URLBar.popup;

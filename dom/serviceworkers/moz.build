@@ -10,7 +10,6 @@ with Files("**"):
 # Public stuff.
 EXPORTS.mozilla.dom += [
     'ServiceWorker.h',
-    'ServiceWorkerCommon.h',
     'ServiceWorkerContainer.h',
     'ServiceWorkerDescriptor.h',
     'ServiceWorkerEvents.h',
@@ -45,6 +44,7 @@ UNIFIED_SOURCES += [
     'ServiceWorkerRegistrar.cpp',
     'ServiceWorkerRegistration.cpp',
     'ServiceWorkerRegistrationDescriptor.cpp',
+    'ServiceWorkerRegistrationImpl.cpp',
     'ServiceWorkerRegistrationInfo.cpp',
     'ServiceWorkerScriptCache.cpp',
     'ServiceWorkerUnregisterJob.cpp',

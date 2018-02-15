@@ -31,7 +31,7 @@ class TreeBoxObject;
 
 nsresult NS_NewTreeContentView(nsITreeView** aResult);
 
-class nsTreeContentView final : public nsINativeTreeView,
+class nsTreeContentView final : public nsITreeView,
                                 public nsITreeContentView,
                                 public nsStubDocumentObserver,
                                 public nsWrapperCache
@@ -41,7 +41,7 @@ class nsTreeContentView final : public nsINativeTreeView,
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsTreeContentView,
-                                                           nsINativeTreeView)
+                                                           nsITreeView)
 
     virtual JSObject* WrapObject(JSContext* aCx,
                                  JS::Handle<JSObject*> aGivenProto) override;
@@ -117,8 +117,6 @@ class nsTreeContentView final : public nsINativeTreeView,
     int32_t GetIndexOfItem(mozilla::dom::Element* aItem);
 
     NS_DECL_NSITREEVIEW
-    // nsINativeTreeView: Untrusted code can use us
-    NS_IMETHOD EnsureNative() override { return NS_OK; }
 
     NS_DECL_NSITREECONTENTVIEW
 

@@ -26,12 +26,12 @@
 #include "vm/TraceLogging.h"
 
 #include "jsopcodeinlines.h"
-#include "jsscriptinlines.h"
 
 #include "gc/Nursery-inl.h"
 #include "jit/CompileInfo-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/ObjectGroup-inl.h"
 #include "vm/UnboxedObject-inl.h"
@@ -7407,9 +7407,14 @@ IonBuilder::loadStaticSlot(JSObject* staticObject, BarrierKind barrier, Temporar
 bool
 IonBuilder::needsPostBarrier(MDefinition* value)
 {
-    if (!compartment->zone()->nurseryExists())
+    CompileZone* zone = compartment->zone();
+    if (!zone->nurseryExists())
         return false;
-    return value->mightBeType(MIRType::Object);
+    if (value->mightBeType(MIRType::Object))
+        return true;
+    if (value->mightBeType(MIRType::String) && zone->canNurseryAllocateStrings())
+        return true;
+    return false;
 }
 
 AbortReasonOr<Ok>
@@ -11961,7 +11966,7 @@ IonBuilder::storeUnboxedValue(MDefinition* obj, MDefinition* elements, int32_t e
         break;
 
       case JSVAL_TYPE_STRING:
-        store = MStoreUnboxedString::New(alloc(), elements, scaledOffset, value,
+        store = MStoreUnboxedString::New(alloc(), elements, scaledOffset, value, obj,
                                          elementsOffset, preBarrier);
         break;
 
@@ -12611,10 +12616,11 @@ IonBuilder::jsop_toasyncgen()
 AbortReasonOr<Ok>
 IonBuilder::jsop_toasynciter()
 {
-    MDefinition* unwrapped = current->pop();
-    MOZ_ASSERT(unwrapped->type() == MIRType::Object);
+    MDefinition* nextMethod = current->pop();
+    MDefinition* iterator = current->pop();
+    MOZ_ASSERT(iterator->type() == MIRType::Object);
 
-    MToAsyncIter* ins = MToAsyncIter::New(alloc(), unwrapped);
+    MToAsyncIter* ins = MToAsyncIter::New(alloc(), iterator, nextMethod);
 
     current->add(ins);
     current->push(ins);
@@ -13691,9 +13697,9 @@ IonBuilder::setPropTryReferenceTypedObjectValue(bool* emitted,
         store = MStoreUnboxedObjectOrNull::New(alloc(), elements, scaledOffset, value, typedObj, adjustment);
         break;
       case ReferenceTypeDescr::TYPE_STRING:
-        // Strings are not nursery allocated, so these writes do not need post
-        // barriers.
-        store = MStoreUnboxedString::New(alloc(), elements, scaledOffset, value, adjustment);
+        // See previous comment. The StoreUnboxedString type policy may insert
+        // ToString instructions that require a post barrier.
+        store = MStoreUnboxedString::New(alloc(), elements, scaledOffset, value, typedObj, adjustment);
         break;
     }
 

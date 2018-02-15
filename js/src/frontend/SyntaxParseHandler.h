@@ -12,10 +12,9 @@
 
 #include <string.h>
 
-#include "jscntxt.h"
-
 #include "frontend/ParseNode.h"
 #include "js/GCAnnotations.h"
+#include "vm/JSContext.h"
 
 namespace js {
 

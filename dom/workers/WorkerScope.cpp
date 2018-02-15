@@ -633,9 +633,15 @@ NS_IMPL_ADDREF_INHERITED(ServiceWorkerGlobalScope, WorkerGlobalScope)
 NS_IMPL_RELEASE_INHERITED(ServiceWorkerGlobalScope, WorkerGlobalScope)
 
 ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
-                                                   const nsACString& aScope)
-  : WorkerGlobalScope(aWorkerPrivate),
-    mScope(NS_ConvertUTF8toUTF16(aScope))
+                                                   const ServiceWorkerRegistrationDescriptor& aRegistrationDescriptor)
+  : WorkerGlobalScope(aWorkerPrivate)
+  , mScope(NS_ConvertUTF8toUTF16(aRegistrationDescriptor.Scope()))
+
+  // Eagerly create the registration because we will need to receive updates
+  // about the state of the registration.  We can't wait until first access
+  // to start receiving these.
+  , mRegistration(ServiceWorkerRegistration::CreateForWorker(aWorkerPrivate,
+                                                             aRegistrationDescriptor))
 {
 }
 
@@ -672,11 +678,6 @@ ServiceWorkerGlobalScope::GetClients()
 ServiceWorkerRegistration*
 ServiceWorkerGlobalScope::Registration()
 {
-  if (!mRegistration) {
-    mRegistration =
-      ServiceWorkerRegistration::CreateForWorker(mWorkerPrivate, mScope);
-  }
-
   return mRegistration;
 }
 

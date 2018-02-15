@@ -9,7 +9,7 @@
 
 #include "jsopcode.h"
 
-#include "jsscript.h"
+#include "vm/JSScript.h"
 
 namespace js {
 

@@ -7,8 +7,6 @@
 #ifndef jit_SharedIC_h
 #define jit_SharedIC_h
 
-#include "jscntxt.h"
-#include "jscompartment.h"
 #include "jsgc.h"
 
 #include "jit/BaselineICList.h"
@@ -17,6 +15,8 @@
 #include "jit/MacroAssembler.h"
 #include "jit/SharedICList.h"
 #include "jit/SharedICRegisters.h"
+#include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 #include "vm/ReceiverGuard.h"
 #include "vm/TypedArrayObject.h"
 

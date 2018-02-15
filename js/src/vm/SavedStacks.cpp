@@ -15,12 +15,10 @@
 #include <math.h>
 
 #include "jsapi.h"
-#include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jshashutil.h"
 #include "jsmath.h"
 #include "jsnum.h"
-#include "jsscript.h"
 
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
@@ -30,14 +28,15 @@
 #include "js/Vector.h"
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
+#include "vm/JSCompartment.h"
+#include "vm/JSScript.h"
 #include "vm/SavedFrame.h"
 #include "vm/StringBuffer.h"
 #include "vm/Time.h"
 #include "vm/WrapperObject.h"
 
-#include "jscntxtinlines.h"
-
 #include "vm/GeckoProfiler-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
 

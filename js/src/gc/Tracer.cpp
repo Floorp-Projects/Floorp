@@ -8,22 +8,21 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "jsfun.h"
 #include "jsprf.h"
-#include "jsscript.h"
 #include "jsutil.h"
 #include "NamespaceImports.h"
 
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #include "gc/Zone.h"
-
+#include "vm/JSFunction.h"
+#include "vm/JSScript.h"
 #include "vm/Shape.h"
 #include "vm/Symbol.h"
 
-#include "jscompartmentinlines.h"
 #include "jsgcinlines.h"
 
+#include "vm/JSCompartment-inl.h"
 #include "vm/ObjectGroup-inl.h"
 
 using namespace js;

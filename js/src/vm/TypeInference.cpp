@@ -13,11 +13,8 @@
 #include "mozilla/Sprintf.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jshashutil.h"
-#include "jsobj.h"
 #include "jsprf.h"
-#include "jsscript.h"
 #include "jsstr.h"
 
 #include "jit/BaselineJIT.h"
@@ -28,16 +25,19 @@
 #include "jit/OptimizationTracking.h"
 #include "js/MemoryMetrics.h"
 #include "vm/HelperThreads.h"
+#include "vm/JSContext.h"
+#include "vm/JSObject.h"
+#include "vm/JSScript.h"
 #include "vm/Opcodes.h"
 #include "vm/Printer.h"
 #include "vm/Shape.h"
 #include "vm/Time.h"
 #include "vm/UnboxedObject.h"
 
-#include "jsscriptinlines.h"
-
 #include "gc/Iteration-inl.h"
 #include "gc/Marking-inl.h"
+#include "vm/JSAtom-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

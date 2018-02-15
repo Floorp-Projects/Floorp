@@ -3198,6 +3198,11 @@ ScriptLoader::PreloadURI(nsIURI* aURI,
     }
   }
 
+  if (!aType.IsEmpty() && !nsContentUtils::IsJavascriptMIMEType(aType)) {
+    // Unknown type.  Don't load it.
+    return;
+  }
+
   SRIMetadata sriMetadata;
   GetSRIMetadata(aIntegrity, &sriMetadata);
 

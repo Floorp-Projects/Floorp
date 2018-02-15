@@ -403,11 +403,13 @@ WebExtensionContentScript::Matches(const DocInfo& aDoc) const
     return false;
   }
 
-  if (mHasActiveTabPermission && aDoc.ShouldMatchActiveTabPermission()) {
+  URLInfo urlinfo(aDoc.PrincipalURL());
+  if (mHasActiveTabPermission && aDoc.ShouldMatchActiveTabPermission() &&
+      MatchPattern::MatchesAllURLs(urlinfo)) {
     return true;
   }
 
-  return MatchesURI(aDoc.PrincipalURL());
+  return MatchesURI(urlinfo);
 }
 
 bool

@@ -8,14 +8,14 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "jscompartment.h"
-
 #include "gc/GCInternals.h"
 #include "js/HashTable.h"
+#include "vm/JSCompartment.h"
 #include "vm/Runtime.h"
 
-#include "jscntxtinlines.h"
 #include "jsgcinlines.h"
+
+#include "vm/JSContext-inl.h"
 
 using namespace js;
 using namespace js::gc;
