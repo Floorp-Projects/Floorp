@@ -22,8 +22,8 @@ redox_syscall = "0.1"
 winapi = "0.2.0"
 kernel32-sys = "0.2.0"
 
-[target.'cfg(windows)'.dev-dependencies]
-advapi32-sys = "0.1.2"
-
 [dev-dependencies]
 log = "0.3"
+
+[target.'cfg(windows)'.dev-dependencies]
+advapi32-sys = "0.1.2"
