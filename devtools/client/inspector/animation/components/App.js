@@ -21,6 +21,7 @@ class App extends PureComponent {
       detailVisibility: PropTypes.bool.isRequired,
       emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
+      getComputedStyle: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
@@ -42,6 +43,7 @@ class App extends PureComponent {
       detailVisibility,
       emitEventForTest,
       getAnimatedPropertyMap,
+      getComputedStyle,
       getNodeFromActor,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
@@ -64,7 +66,9 @@ class App extends PureComponent {
           {
             emitEventForTest,
             getAnimatedPropertyMap,
+            getComputedStyle,
             setDetailVisibility,
+            simulateAnimation,
           }
         ),
         endPanelControl: true,

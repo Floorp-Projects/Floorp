@@ -7,8 +7,6 @@
    there are overrides for each platform in their compacttheme.css files. */
 
 :root:-moz-lwtheme {
-  text-shadow: none;
-
   --toolbar-bgcolor: var(--chrome-secondary-background-color);
   --toolbar-gbimage: none;
   --toolbar-non-lwt-bgcolor: var(--toolbar-bgcolor);
@@ -109,9 +107,3 @@ toolbar[brighttext] .toolbarbutton-1 {
 #urlbar-zoom-button:-moz-lwtheme-brighttext:hover:active {
   background-color: rgba(255,255,255,.3);
 }
-
-.tab-icon-sound[soundplaying],
-.tab-icon-sound[muted] {
-  filter: none !important; /* removes drop-shadow filter */
-}
-

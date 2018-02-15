@@ -84,9 +84,8 @@ class Theme {
       this.loadProperties(details.properties);
     }
 
-    // Lightweight themes require all properties to be defined.
-    if (this.lwtStyles.headerURL &&
-        this.lwtStyles.accentcolor &&
+    // Lightweight themes require accentcolor and textcolor to be defined.
+    if (this.lwtStyles.accentcolor &&
         this.lwtStyles.textcolor) {
       if (this.windowId) {
         windowOverrides.set(this.windowId, this);

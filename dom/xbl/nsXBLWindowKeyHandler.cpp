@@ -565,9 +565,12 @@ nsXBLWindowKeyHandler::HandleEventOnCaptureInSystemEventGroup(
     aEvent->WidgetEventPtr()->AsKeyboardEvent();
 
   // If the event won't be sent to remote process, this listener needs to do
-  // nothing.
-  if (widgetEvent->mFlags.mOnlySystemGroupDispatchInContent ||
-      !widgetEvent->WillBeSentToRemoteProcess()) {
+  // nothing.  Note that even if mOnlySystemGroupDispatchInContent is true,
+  // we need to send the event to remote process and check reply event
+  // before matching it with registered shortcut keys because event listeners
+  // in the system event group may want to handle the event before registered
+  // shortcut key handlers.
+  if (!widgetEvent->WillBeSentToRemoteProcess()) {
     return;
   }
 

@@ -7,13 +7,22 @@
 :root {
   --animation-even-background-color: rgba(0, 0, 0, 0.05);
   --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
+  --fast-track-image: url("images/animation-fast-track.svg");
+  --fill-color-cssanimation: var(--theme-contrast-background);
+  --fill-color-csstransition: var(--theme-highlight-blue);
+  --fill-color-scriptanimation: var(--theme-graphs-green);
   --graph-right-offset: 10px;
+  --keyframe-marker-shadow-color: #c4c4c4;
   --sidebar-width: 200px;
+  --stroke-color-cssanimation: var(--theme-highlight-lightorange);
+  --stroke-color-csstransition: var(--theme-highlight-bluegrey);
+  --stroke-color-scriptanimation: var(--theme-highlight-green);
   --tick-line-style: 0.5px solid rgba(128, 136, 144, 0.5);
 }
 
 :root.theme-dark {
   --animation-even-background-color: rgba(255, 255, 255, 0.05);
+  --keyframe-marker-shadow-color: #818181;
 }
 
 :root.theme-firebug {
@@ -82,18 +91,18 @@
 }
 
 .animation-item.cssanimation {
-  --computed-timing-graph-color: var(--theme-contrast-background);
-  --effect-timing-graph-color: var(--theme-highlight-lightorange);
+  --computed-timing-graph-color: var(--fill-color-cssanimation);
+  --effect-timing-graph-color: var(--stroke-color-cssanimation);
 }
 
 .animation-item.csstransition {
-  --computed-timing-graph-color: var(--theme-highlight-blue);
-  --effect-timing-graph-color: var(--theme-highlight-bluegrey);
+  --computed-timing-graph-color: var(--fill-color-csstransition);
+  --effect-timing-graph-color: var(--stroke-color-csstransition);
 }
 
 .animation-item.scriptanimation {
-  --computed-timing-graph-color: var(--theme-graphs-green);
-  --effect-timing-graph-color: var(--theme-highlight-green);
+  --computed-timing-graph-color: var(--fill-color-scriptanimation);
+  --effect-timing-graph-color: var(--stroke-color-scriptanimation);
 }
 
 .animation-item.selected {
@@ -122,7 +131,7 @@
 }
 
 .animation-summary-graph.compositor::after {
-  background-image: url("images/animation-fast-track.svg");
+  background-image: var(--fast-track-image);
   background-repeat: no-repeat;
   content: "";
   display: block;
@@ -291,18 +300,151 @@
 .animated-property-list {
   flex: 1;
   list-style-type: none;
-  margin-top: 0;
+  margin: 0;
   overflow-y: auto;
   padding: 0;
 }
 
 /* Animated Property Item */
 .animated-property-item {
+  display: flex;
   height: 30px;
 }
 
 .animated-property-item:nth-child(2n+1) {
   background-color: var(--animation-even-background-color);
+}
+
+/* Animated Property Name */
+.animated-property-name {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: flex-end;
+  padding-right: 10px;
+  width: var(--sidebar-width);
+}
+
+.animated-property-name.compositor span {
+  padding-left: 15px;
+  position: relative;
+}
+
+.animated-property-list-container.cssanimation .animated-property-name.compositor {
+  --fast-track-color: var(--stroke-color-cssanimation);
+}
+
+.animated-property-list-container.csstransition .animated-property-name.compositor {
+  --fast-track-color: var(--stroke-color-csstransition);
+}
+
+.animated-property-list-container.scriptanimation .animated-property-name.compositor {
+  --fast-track-color: var(--stroke-color-scriptanimation);
+}
+
+.animated-property-name.compositor span::before {
+  background-image: var(--fast-track-image);
+  background-repeat: no-repeat;
+  background-size: contain;
+  content: "";
+  fill: var(--fast-track-color);
+  height: 100%;
+  position: absolute;
+  left: 0;
+  width: 15px;
+  -moz-context-properties: fill;
+}
+
+.animated-property-name.warning span {
+  text-decoration: underline dotted;
+}
+
+/* Keyframes Graph */
+.keyframes-graph {
+  height: 100%;
+  padding-top: 3px;
+  position: relative;
+  width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
+}
+
+.keyframes-graph-path {
+  height: 100%;
+  width: 100%;
+}
+
+.keyframes-graph-path path {
+  fill: #00b0bd88;
+  stroke: #00b0bd;
+  vector-effect: non-scaling-stroke;
+  transform: scale(1, -1);
+}
+
+.keyframes-graph.opacity .keyframes-graph-path path {
+  fill: #df00a988;
+  stroke: #df00a9;
+}
+
+.keyframes-graph.transform .keyframes-graph-path path {
+  fill: #ea800088;
+  stroke: #ea8000;
+}
+
+.keyframes-graph-path .color-path path {
+  stroke: none;
+}
+
+.keyframes-graph .keyframes-graph-path .hint path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-opacity: 0;
+}
+
+.keyframes-graph-path .hint path:hover {
+  stroke-opacity: 1;
+}
+
+.keyframes-graph-path .hint rect {
+  fill-opacity: 0.1;
+  stroke: #00b0bd;
+  stroke-opacity: 0;
+  vector-effect: non-scaling-stroke;
+}
+
+.keyframes-graph-path .hint rect:hover {
+  stroke-opacity: 1;
+}
+
+/* Keyframe Marker List */
+.keyframe-marker-list {
+  pointer-events: none;
+  position: absolute;
+  height: 100%;
+  list-style-type: none;
+  top: 0%;
+  width: 100%;
+}
+
+.keyframe-marker-item {
+  box-shadow: 0 0 0 1px var(--keyframe-marker-shadow-color);
+  border-radius: 100%;
+  pointer-events: auto;
+  position: absolute;
+  top: 50%;
+  height: 10px;
+  transform: translate(-5px, -3px);
+  width: 10px;
+}
+
+.animated-property-list-container.cssanimation .keyframe-marker-item {
+  background-color: var(--fill-color-cssanimation);
+}
+
+.animated-property-list-container.csstransition .keyframe-marker-item {
+  background-color: var(--fill-color-csstransition);
+}
+
+.animated-property-list-container.scriptanimation .keyframe-marker-item {
+  background-color: var(--fill-color-scriptanimation);
 }
 
 /* No Animation Panel */

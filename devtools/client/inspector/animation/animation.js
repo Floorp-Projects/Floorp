@@ -27,6 +27,7 @@ class AnimationInspector {
     this.win = win;
 
     this.getAnimatedPropertyMap = this.getAnimatedPropertyMap.bind(this);
+    this.getComputedStyle = this.getComputedStyle.bind(this);
     this.getNodeFromActor = this.getNodeFromActor.bind(this);
     this.selectAnimation = this.selectAnimation.bind(this);
     this.setDetailVisibility = this.setDetailVisibility.bind(this);
@@ -57,6 +58,7 @@ class AnimationInspector {
     const {
       emit: emitEventForTest,
       getAnimatedPropertyMap,
+      getComputedStyle,
       getNodeFromActor,
       selectAnimation,
       setDetailVisibility,
@@ -77,6 +79,7 @@ class AnimationInspector {
         {
           emitEventForTest,
           getAnimatedPropertyMap,
+          getComputedStyle,
           getNodeFromActor,
           onHideBoxModelHighlighter,
           onShowBoxModelHighlighterForNode,
@@ -155,6 +158,27 @@ class AnimationInspector {
     }
 
     return animatedPropertyMap;
+  }
+
+  /**
+   * Return the computed style of the specified property after setting the given styles
+   * to the simulated element.
+   *
+   * @param {String} property
+   *        CSS property name (e.g. text-align).
+   * @param {Object} styles
+   *        Map of CSS property name and value.
+   * @return {String}
+   *         Computed style of property.
+   */
+  getComputedStyle(property, styles) {
+    this.simulatedElement.style.cssText = "";
+
+    for (let propertyName in styles) {
+      this.simulatedElement.style.setProperty(propertyName, styles[propertyName]);
+    }
+
+    return this.win.getComputedStyle(this.simulatedElement).getPropertyValue(property);
   }
 
   getNodeFromActor(actorID) {

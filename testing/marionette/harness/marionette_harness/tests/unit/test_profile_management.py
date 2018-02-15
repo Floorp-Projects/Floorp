@@ -1,3 +1,5 @@
+# coding=UTF-8
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -170,6 +172,24 @@ class TestSwitchProfileWithoutWorkspace(ExternalProfileMixin, BaseProfileManagem
 
         self.assertNotEqual(self.profile_path, self.orig_profile_path)
         self.assertIn("foobar", self.profile_path)
+        self.assertFalse(os.path.exists(self.orig_profile_path))
+
+    def test_new_named_profile_unicode(self):
+        """Test using unicode string with 1-4 bytes encoding works."""
+        self.marionette.instance.switch_profile(u"$¢€🍪")
+        self.marionette.start_session()
+
+        self.assertNotEqual(self.profile_path, self.orig_profile_path)
+        self.assertIn(u"$¢€🍪", self.profile_path)
+        self.assertFalse(os.path.exists(self.orig_profile_path))
+
+    def test_new_named_profile_unicode_escape_characters(self):
+        """Test using escaped unicode string with 1-4 bytes encoding works."""
+        self.marionette.instance.switch_profile(u"\u0024\u00A2\u20AC\u1F36A")
+        self.marionette.start_session()
+
+        self.assertNotEqual(self.profile_path, self.orig_profile_path)
+        self.assertIn(u"\u0024\u00A2\u20AC\u1F36A", self.profile_path)
         self.assertFalse(os.path.exists(self.orig_profile_path))
 
     def test_clone_existing_profile(self):

@@ -261,33 +261,6 @@
   </label>
 </groupbox>
 
-<!-- Cache -->
-<groupbox id="cacheGroup" data-category="panePrivacy" hidden="true">
-  <caption><label>&httpCache.label;</label></caption>
-
-  <hbox align="center">
-    <label id="actualDiskCacheSize" flex="1"/>
-    <button id="clearCacheButton"
-            class="accessory-button"
-            icon="clear"
-            label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"/>
-  </hbox>
-  <checkbox preference="browser.cache.disk.smart_size.enabled"
-            id="allowSmartSize"
-            onsyncfrompreference="return gPrivacyPane.readSmartSizeEnabled();"
-            label="&overrideSmartCacheSize.label;"
-            accesskey="&overrideSmartCacheSize.accesskey;"/>
-  <hbox align="center" class="indent">
-    <label id="useCacheBefore" control="cacheSize"
-            accesskey="&limitCacheSizeBefore.accesskey;">
-      &limitCacheSizeBefore.label;
-    </label>
-    <textbox id="cacheSize" type="number" size="4" max="1024"
-              aria-labelledby="useCacheBefore cacheSize useCacheAfter"/>
-    <label id="useCacheAfter" flex="1">&limitCacheSizeAfter.label;</label>
-  </hbox>
-</groupbox>
-
 <!-- Site Data -->
 <groupbox id="siteDataGroup" hidden="true" data-category="panePrivacy" data-hidden-from-search="true">
   <caption><label>&siteData.label;</label></caption>

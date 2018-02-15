@@ -71,6 +71,10 @@ clang_checkers:
    publish: !!bool yes
  - name: readability-redundant-smartptr-get
    publish: !!bool no
+ - name: readability-redundant-string-cstr
+   publish: !!bool yes
+ - name: readability-redundant-string-init
+   publish: !!bool yes
  - name: readability-static-accessed-through-instance
    publish: !!bool yes
  - name: readability-uniqueptr-delete-release

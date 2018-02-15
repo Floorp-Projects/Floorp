@@ -22,7 +22,7 @@ progressmeter[mode="undetermined"] {
 }
 
 @media (-moz-menubar-drag) {
-  toolbar[type="menubar"]:not([autohide="true"]):not(:-moz-lwtheme) {
+  toolbar[type="menubar"]:not([autohide="true"]) {
     -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
   }
 }
@@ -122,11 +122,11 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-appearance: none;
 }
 
-:root:-moz-lwtheme-darktext {
+:root[lwtheme-image]:-moz-lwtheme-darktext {
   text-shadow: 0 -0.5px 1.5px white;
 }
 
-:root:-moz-lwtheme-brighttext {
+:root[lwtheme-image]:-moz-lwtheme-brighttext {
   text-shadow: 1px 1px 1.5px black;
 }
 

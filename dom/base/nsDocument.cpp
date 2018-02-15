@@ -1582,6 +1582,7 @@ nsDocument::nsDocument(const char* aContentType)
   , mDOMLoadingSet(false)
   , mDOMInteractiveSet(false)
   , mDOMCompleteSet(false)
+  , mAutoFocusFired(false)
 {
   SetContentTypeInternal(nsDependentCString(aContentType));
 
@@ -9442,6 +9443,120 @@ nsDocument::GetTemplateContentsOwner()
   }
 
   return mTemplateContentsOwner;
+}
+
+static already_AddRefed<nsPIDOMWindowOuter>
+FindTopWindowForElement(Element* element)
+{
+  nsIDocument* document = element->OwnerDoc();
+  if (!document) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> window = document->GetWindow();
+  if (!window) {
+    return nullptr;
+  }
+
+  // Trying to find the top window (equivalent to window.top).
+  if (nsCOMPtr<nsPIDOMWindowOuter> top = window->GetTop()) {
+    window = top.forget();
+  }
+  return window.forget();
+}
+
+/**
+ * nsAutoFocusEvent is used to dispatch a focus event for an
+ * nsGenericHTMLFormElement with the autofocus attribute enabled.
+ */
+class nsAutoFocusEvent : public Runnable
+{
+public:
+  explicit nsAutoFocusEvent(already_AddRefed<Element>&& aElement,
+                            already_AddRefed<nsPIDOMWindowOuter>&& aTopWindow)
+    : mozilla::Runnable("nsAutoFocusEvent")
+    , mElement(aElement)
+    , mTopWindow(aTopWindow)
+  {
+  }
+
+  NS_IMETHOD Run() override
+  {
+    nsCOMPtr<nsPIDOMWindowOuter> currentTopWindow =
+      FindTopWindowForElement(mElement);
+    if (currentTopWindow != mTopWindow) {
+      // The element's top window changed from when the event was queued.
+      // Don't take away focus from an unrelated window.
+      return NS_OK;
+    }
+
+    // Don't steal focus from the user.
+    if (mTopWindow->GetFocusedNode()) {
+      return NS_OK;
+    }
+
+    mozilla::ErrorResult rv;
+    mElement->Focus(rv);
+    return rv.StealNSResult();
+  }
+private:
+  nsCOMPtr<Element> mElement;
+  nsCOMPtr<nsPIDOMWindowOuter> mTopWindow;
+};
+
+void
+nsDocument::SetAutoFocusElement(Element* aAutoFocusElement)
+{
+  if (mAutoFocusFired) {
+    // Too late.
+    return;
+  }
+
+  if (mAutoFocusElement) {
+    // The spec disallows multiple autofocus elements, so we consider only the
+    // first one to preserve the old behavior.
+    return;
+  }
+
+  mAutoFocusElement = do_GetWeakReference(aAutoFocusElement);
+  TriggerAutoFocus();
+}
+
+void
+nsDocument::TriggerAutoFocus()
+{
+  if (mAutoFocusFired) {
+    return;
+  }
+
+  if (!mPresShell || !mPresShell->DidInitialize()) {
+    // Delay autofocus until frames are constructed so that we don't thrash
+    // style and layout calculations.
+    return;
+  }
+
+  nsCOMPtr<Element> autoFocusElement = do_QueryReferent(mAutoFocusElement);
+  if (autoFocusElement && autoFocusElement->OwnerDoc() == this) {
+    mAutoFocusFired = true;
+
+    nsCOMPtr<nsPIDOMWindowOuter> topWindow =
+      FindTopWindowForElement(autoFocusElement);
+    if (!topWindow) {
+      return;
+    }
+
+    // NOTE: This may be removed in the future since the spec technically
+    // allows autofocus after load.
+    nsCOMPtr<nsIDocument> topDoc = topWindow->GetExtantDoc();
+    if (topDoc && topDoc->GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE) {
+      return;
+    }
+
+    nsCOMPtr<nsIRunnable> event =
+      new nsAutoFocusEvent(autoFocusElement.forget(), topWindow.forget());
+    nsresult rv = NS_DispatchToCurrentThread(event.forget());
+    NS_ENSURE_SUCCESS_VOID(rv);
+  }
 }
 
 void

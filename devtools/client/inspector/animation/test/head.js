@@ -209,6 +209,24 @@ const waitForAllSummaryGraph = async function (animationInspector) {
 };
 
 /**
+ * Check the <stop> element in the given linearGradientEl for the correct offset
+ * and color attributes.
+ *
+ * @param {Element} linearGradientEl
+          <linearGradient> element which has <stop> element.
+ * @param {Number} offset
+ *        float which represents the "offset" attribute of <stop>.
+ * @param {String} expectedColor
+ *        e.g. rgb(0, 0, 255)
+ */
+function assertLinearGradient(linearGradientEl, offset, expectedColor) {
+  const stopEl = findStopElement(linearGradientEl, offset);
+  ok(stopEl, `stop element at offset ${ offset } should exist`);
+  is(stopEl.getAttribute("stop-color"), expectedColor,
+    `stop-color of stop element at offset ${ offset } should be ${ expectedColor }`);
+}
+
+/**
  * SummaryGraph is constructed by <path> element.
  * This function checks the vertex of path segments.
  *
@@ -289,6 +307,26 @@ function findAnimationItemElementsByTargetClassName(panel, targetClassName) {
 
     if (className === targetClassName) {
       return animationTargetEl.closest(".animation-item");
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Find the <stop> element which has the given offset in the given linearGradientEl.
+ *
+ * @param {Element} linearGradientEl
+ *        <linearGradient> element which has <stop> element.
+ * @param {Number} offset
+ *        Float which represents the "offset" attribute of <stop>.
+ * @return {Element}
+ *         If can't find suitable element, returns null.
+ */
+function findStopElement(linearGradientEl, offset) {
+  for (const stopEl of linearGradientEl.querySelectorAll("stop")) {
+    if (offset <= parseFloat(stopEl.getAttribute("offset"))) {
+      return stopEl;
     }
   }
 

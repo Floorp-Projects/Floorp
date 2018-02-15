@@ -153,8 +153,7 @@
     </handlers>
   </binding>
 
-  <binding id="findbar"
-           extends="chrome://global/content/bindings/toolbar.xml#toolbar">
+  <binding id="findbar">
     <resources>
       <stylesheet src="chrome://global/skin/findBar.css"/>
     </resources>

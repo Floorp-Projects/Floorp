@@ -3,7 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'graph'
+    'graph',
+    'keyframes-graph'
 ]
 
 DevToolsModules(
@@ -11,6 +12,7 @@ DevToolsModules(
     'AnimatedPropertyList.js',
     'AnimatedPropertyListContainer.js',
     'AnimatedPropertyListHeader.js',
+    'AnimatedPropertyName.js',
     'AnimationDetailContainer.js',
     'AnimationDetailHeader.js',
     'AnimationItem.js',
