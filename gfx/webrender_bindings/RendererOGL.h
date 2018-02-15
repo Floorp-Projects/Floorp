@@ -53,7 +53,7 @@ public:
   void Update();
 
   /// This can be called on the render thread only.
-  bool UpdateAndRender();
+  bool UpdateAndRender(bool aReadback);
 
   /// This can be called on the render thread only.
   bool RenderToTarget(gfx::DrawTarget& aTarget);
