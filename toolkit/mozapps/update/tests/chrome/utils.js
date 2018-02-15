@@ -71,9 +71,6 @@
 
 /* globals TESTS, runTest, finishTest */
 
-const { classes: Cc, interfaces: Ci, manager: Cm, results: Cr,
-        utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
 /* import-globals-from testConstants.js */
