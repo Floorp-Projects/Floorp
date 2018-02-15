@@ -8698,7 +8698,7 @@ nsDocShell::CreateContentViewer(const nsACString& aContentType,
 {
   *aContentHandler = nullptr;
 
-  if (!mTreeOwner) {
+  if (!mTreeOwner || mIsBeingDestroyed) {
     // If we don't have a tree owner, then we're in the process of being
     // destroyed. Rather than continue trying to load something, just give up.
     return NS_ERROR_DOCSHELL_DYING;
