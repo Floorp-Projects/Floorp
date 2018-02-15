@@ -339,7 +339,7 @@ JitRuntime::initialize(JSContext* cx, AutoLockForExclusiveAccess& lock)
 
     Linker linker(masm);
     AutoFlushICache afc("Trampolines");
-    trampolineCode_ = linker.newCode<NoGC>(cx, OTHER_CODE);
+    trampolineCode_ = linker.newCode<NoGC>(cx, CodeKind::Other);
     if (!trampolineCode_)
         return false;
 
