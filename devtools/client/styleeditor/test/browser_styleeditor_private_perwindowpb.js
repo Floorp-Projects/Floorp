@@ -9,8 +9,6 @@
 
 const TEST_URL = "http://" + TEST_HOST + "/browser/devtools/client/" +
   "styleeditor/test/test_private.html";
-const cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
-  .getService(Ci.nsICacheStorageService);
 
 add_task(function* () {
   info("Opening a new private window");
@@ -18,7 +16,7 @@ add_task(function* () {
   yield waitForDelayedStartupFinished(win);
 
   info("Clearing the browser cache");
-  cache.clear();
+  Services.cache2.clear();
 
   let { toolbox, ui } = yield openStyleEditorForURL(TEST_URL, win);
 
@@ -62,7 +60,8 @@ function checkDiskCacheFor(host) {
     };
     function Visitor() {}
 
-    let storage = cache.diskCacheStorage(Services.loadContextInfo.default, false);
+    let storage =
+      Services.cache2.diskCacheStorage(Services.loadContextInfo.default, false);
     storage.asyncVisitStorage(new Visitor(),
       /* Do walk entries */
       true);

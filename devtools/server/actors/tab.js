@@ -662,8 +662,7 @@ TabActor.prototype = {
     let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
     scriptError.initWithWindowID(text, null, null, 0, 0, 1,
                                  category, getInnerId(this.window));
-    let console = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
-    console.logMessage(scriptError);
+    Services.console.logMessage(scriptError);
     return {};
   },
 

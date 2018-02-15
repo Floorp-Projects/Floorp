@@ -5,7 +5,7 @@
 
 /* global XPCNativeWrapper */
 
-const { Cu, Cc, Ci } = require("chrome");
+const { Cu } = require("chrome");
 
 const protocol = require("devtools/shared/protocol");
 const { CallWatcherActor } = require("devtools/server/actors/call-watcher");
@@ -17,8 +17,7 @@ const {
 } = require("devtools/shared/specs/webaudio");
 const { WebAudioFront } = require("devtools/shared/fronts/webaudio");
 
-const observerService = Cc["@mozilla.org/observer-service;1"]
-                       .getService(Ci.nsIObserverService);
+const Services = require("Services");
 
 const AUDIO_NODE_DEFINITION = require("devtools/server/actors/utils/audionodes.json");
 const ENABLE_AUTOMATION = false;
@@ -557,7 +556,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
     this._initialized = false;
 
     try {
-      observerService.removeObserver(this, "webaudio-node-demise");
+      Services.obs.removeObserver(this, "webaudio-node-demise");
     } catch (e) {
       // Maybe we've shutdown already and it's too late to remove the observer. So avoid
       // NS_ERROR_FAILURE errors with this silent try/catch.
@@ -625,7 +624,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
    * Called on first audio node creation, signifying audio context usage
    */
   _onStartContext: function () {
-    observerService.addObserver(this, "webaudio-node-demise");
+    Services.obs.addObserver(this, "webaudio-node-demise");
     this.emit("start-context");
   },
 
@@ -753,7 +752,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
     if (this._nativeToActorID) {
       this._nativeToActorID.clear();
     }
-    observerService.removeObserver(this, "webaudio-node-demise");
+    Services.obs.removeObserver(this, "webaudio-node-demise");
   }
 });
 
