@@ -10,6 +10,7 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
+#include "MozFramebuffer.h"
 #include "nsString.h"
 #include "WebGLBuffer.h"
 #include "WebGLContextUtils.h"
