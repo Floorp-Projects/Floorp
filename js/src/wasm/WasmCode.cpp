@@ -746,6 +746,13 @@ CodeTier::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code, size_t* data) c
     *data += metadata_->sizeOfExcludingThis(mallocSizeOf);
 }
 
+const CodeRange*
+CodeTier::lookupRange(const void* pc) const
+{
+    CodeRange::OffsetInCode target((uint8_t*)pc - segment_->base());
+    return LookupInSorted(metadata_->codeRanges, target);
+}
+
 bool
 JumpTables::init(CompileMode mode, const ModuleSegment& ms, const CodeRangeVector& codeRanges)
 {
@@ -920,15 +927,13 @@ Code::lookupCallSite(void* returnAddress) const
 }
 
 const CodeRange*
-Code::lookupRange(void* pc) const
+Code::lookupFuncRange(void* pc) const
 {
     for (Tier t : tiers()) {
-        CodeRange::OffsetInCode target((uint8_t*)pc - segment(t).base());
-        const CodeRange* result = LookupInSorted(metadata(t).codeRanges, target);
-        if (result)
+        const CodeRange* result = codeTier(t).lookupRange(pc);
+        if (result && result->isFunction())
             return result;
     }
-
     return nullptr;
 }
 
