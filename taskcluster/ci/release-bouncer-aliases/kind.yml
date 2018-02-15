@@ -11,7 +11,7 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - release-uptake-monitoring
+   - release-bouncer-check
 
 job-defaults:
    description: Update bouncer aliases job

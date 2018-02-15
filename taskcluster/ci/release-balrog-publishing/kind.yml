@@ -12,7 +12,7 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - release-uptake-monitoring
+   - release-bouncer-check
 
 job-defaults:
    description: Schedule publishing in balrog

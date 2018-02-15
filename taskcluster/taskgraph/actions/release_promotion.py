@@ -76,15 +76,13 @@ VERSION_BUMP_FLAVORS = (
     'ship_devedition',
 )
 
-UPTAKE_MONITORING_PLATFORMS_FLAVORS = (
-    'push_firefox',
-    'push_devedition',
-)
-
-PARTIAL_UPDATES_FLAVORS = UPTAKE_MONITORING_PLATFORMS_FLAVORS + (
+PARTIAL_UPDATES_FLAVORS = (
     'promote_firefox',
     'promote_firefox_rc',
     'promote_devedition',
+    'ship_firefox',
+    'ship_firefox_rc',
+    'ship_devedition',
 )
 
 
@@ -203,21 +201,6 @@ def is_release_promotion_available(parameters):
                 }
             },
 
-            'uptake_monitoring_platforms': {
-                'type': 'array',
-                'items': {
-                    'type': 'string',
-                    'enum': [
-                        'macosx',
-                        'win32',
-                        'win64',
-                        'linux',
-                        'linux64',
-                    ],
-                },
-                'default': [],
-            },
-
             'release_eta': {
                 'type': 'string',
                 'default': '',
@@ -255,15 +238,6 @@ def release_promotion_action(parameters, input, task_group_id, task_id, task):
                 balrog_prefix, parameters['project'],
                 partial_updates=input['partial_updates']
             )
-
-        if release_promotion_flavor in UPTAKE_MONITORING_PLATFORMS_FLAVORS:
-            uptake_monitoring_platforms = json.dumps(input.get('uptake_monitoring_platforms', []))
-            if partial_updates == "[]":
-                raise Exception(
-                    "`uptake_monitoring_platforms` property needs to be provided for %s "
-                    "targets." % ', '.join(UPTAKE_MONITORING_PLATFORMS_FLAVORS)
-                )
-            os.environ['UPTAKE_MONITORING_PLATFORMS'] = uptake_monitoring_platforms
 
     promotion_config = RELEASE_PROMOTION_CONFIG[release_promotion_flavor]
 
