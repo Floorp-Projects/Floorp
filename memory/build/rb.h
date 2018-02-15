@@ -67,6 +67,7 @@
 #define RB_H_
 
 #include "mozilla/Alignment.h"
+#include "mozilla/Assertions.h"
 #include "Utils.h"
 
 enum NodeColor
@@ -420,8 +421,8 @@ private:
         }
       }
       if (rbp_r_cmp == Order::eGreater) {
-        if (rbp_r_c->Right() && (!rbp_r_c->Right()->Left() ||
-                                 rbp_r_c->Right()->Left()->IsBlack())) {
+        if (!rbp_r_c->Right() || !rbp_r_c->Right()->Left() ||
+            rbp_r_c->Right()->Left()->IsBlack()) {
           rbp_r_t = rbp_r_c->Left();
           if (rbp_r_t->IsRed()) {
             // Standard transform.

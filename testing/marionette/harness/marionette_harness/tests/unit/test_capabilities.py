@@ -7,11 +7,6 @@ from __future__ import absolute_import, print_function
 from marionette_driver.errors import SessionNotCreatedException
 from marionette_harness import MarionetteTestCase
 
-# Unlike python 3, python 2 doesn't have a proper implementation of realpath or
-# samefile for Windows. However this function, which does exactly what we want,
-# was added to python 2 to fix an issue with tcl installations and symlinks.
-from FixTk import convert_path
-
 
 class TestCapabilities(MarionetteTestCase):
 
@@ -62,9 +57,9 @@ class TestCapabilities(MarionetteTestCase):
             if self.caps["browserName"] == "fennec":
                 current_profile = self.marionette.instance.runner.device.app_ctx.remote_profile
             else:
-                current_profile = convert_path(self.marionette.instance.runner.profile.profile)
-            self.assertEqual(convert_path(str(self.caps["moz:profile"])), current_profile)
-            self.assertEqual(convert_path(str(self.marionette.profile)), current_profile)
+                current_profile = self.marionette.profile_path
+            # Bug 1438461 - mozprofile uses lower-case letters even on case-sensitive filesystems
+            self.assertEqual(self.caps["moz:profile"].lower(), current_profile.lower())
 
         self.assertIn("moz:accessibilityChecks", self.caps)
         self.assertFalse(self.caps["moz:accessibilityChecks"])

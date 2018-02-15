@@ -5,22 +5,26 @@
 "use strict";
 
 // BOUND_EXCLUDING_TIME should be less than 1ms and is used to exclude start
-// and end bounds when dividing  duration in createPathSegments.
+// and end bounds when dividing duration in createPathSegments.
 const BOUND_EXCLUDING_TIME = 0.001;
 // We define default graph height since if the height of viewport in SVG is
 // too small (e.g. 1), vector-effect may not be able to calculate correctly.
 const DEFAULT_GRAPH_HEIGHT = 100;
+// Default animation duration for keyframes graph.
+const DEFAULT_KEYFRAMES_GRAPH_DURATION = 1000;
 // DEFAULT_MIN_PROGRESS_THRESHOLD shoud be between more than 0 to 1.
 const DEFAULT_MIN_PROGRESS_THRESHOLD = 0.1;
 // In the createPathSegments function, an animation duration is divided by
-// DURATION_RESOLUTION in order to draw the way the animation progresses.
+// DEFAULT_DURATION_RESOLUTION in order to draw the way the animation progresses.
 // But depending on the timing-function, we may be not able to make the graph
 // smoothly progress if this resolution is not high enough.
 // So, if the difference of animation progress between 2 divisions is more than
 // DEFAULT_MIN_PROGRESS_THRESHOLD * DEFAULT_GRAPH_HEIGHT, then createPathSegments
-// re-divides by DURATION_RESOLUTION.
-// DURATION_RESOLUTION shoud be integer and more than 2.
-const DURATION_RESOLUTION = 4;
+// re-divides by DEFAULT_DURATION_RESOLUTION.
+// DEFAULT_DURATION_RESOLUTION shoud be integer and more than 2.
+const DEFAULT_DURATION_RESOLUTION = 4;
+// Stroke width for easing hint.
+const DEFAULT_EASING_HINT_STROKE_WIDTH = 5;
 
 /**
  * The helper class for creating summary graph.
@@ -122,7 +126,7 @@ function createPathSegments(startTime, endTime, minSegmentDuration,
   let previousSegment = startTimeSegment;
 
   // Split the duration in equal intervals, and iterate over them.
-  // See the definition of DURATION_RESOLUTION for more information about this.
+  // See the definition of DEFAULT_DURATION_RESOLUTION for more information about this.
   const interval = (endTime - startTime) / resolution;
   for (let index = 1; index <= resolution; index++) {
     // Create a segment for this interval.
@@ -139,7 +143,7 @@ function createPathSegments(startTime, endTime, minSegmentDuration,
       const nextEndTime = currentSegment.x - BOUND_EXCLUDING_TIME;
       const segments =
         createPathSegments(nextStartTime, nextEndTime, minSegmentDuration,
-                           minProgressThreshold, DURATION_RESOLUTION, getSegment);
+                           minProgressThreshold, DEFAULT_DURATION_RESOLUTION, getSegment);
       pathSegments = pathSegments.concat(segments);
     }
 
@@ -161,10 +165,10 @@ function createPathSegments(startTime, endTime, minSegmentDuration,
  */
 function getPreferredDurationResolution(keyframes) {
   if (!keyframes) {
-    return DURATION_RESOLUTION;
+    return DEFAULT_DURATION_RESOLUTION;
   }
 
-  let durationResolution = DURATION_RESOLUTION;
+  let durationResolution = DEFAULT_DURATION_RESOLUTION;
   let previousOffset = 0;
   for (let keyframe of keyframes) {
     if (previousOffset && previousOffset != keyframe.offset) {
@@ -198,6 +202,23 @@ function getPreferredProgressThreshold(state, keyframes) {
   if (!keyframes) {
     return threshold;
   }
+
+  threshold = Math.min(threshold, getPreferredProgressThresholdByKeyframes(keyframes));
+
+  return threshold;
+}
+
+/**
+ * Return preferred progress threshold by keyframes.
+ *
+ * @param {Array} keyframes
+ *        Array of keyframe.
+ * @return {float}
+ *         Preferred threshold.
+ */
+function getPreferredProgressThresholdByKeyframes(keyframes) {
+  let threshold = DEFAULT_MIN_PROGRESS_THRESHOLD;
+  let stepsOrFrames;
 
   for (let i = 0; i < keyframes.length - 1; i++) {
     const keyframe = keyframes[i];
@@ -239,6 +260,12 @@ function toPathString(segments) {
   return pathString;
 }
 
-module.exports.DEFAULT_GRAPH_HEIGHT = DEFAULT_GRAPH_HEIGHT;
+exports.createPathSegments = createPathSegments;
+exports.DEFAULT_DURATION_RESOLUTION = DEFAULT_DURATION_RESOLUTION;
+exports.DEFAULT_EASING_HINT_STROKE_WIDTH = DEFAULT_EASING_HINT_STROKE_WIDTH;
+exports.DEFAULT_GRAPH_HEIGHT = DEFAULT_GRAPH_HEIGHT;
+exports.DEFAULT_KEYFRAMES_GRAPH_DURATION = DEFAULT_KEYFRAMES_GRAPH_DURATION;
+exports.getPreferredProgressThresholdByKeyframes =
+  getPreferredProgressThresholdByKeyframes;
 exports.SummaryGraphHelper = SummaryGraphHelper;
 exports.toPathString = toPathString;

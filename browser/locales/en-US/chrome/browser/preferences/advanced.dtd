@@ -53,8 +53,6 @@ available. -->
 <!ENTITY connectionSettings.label        "Settings…">
 <!ENTITY connectionSettings.accesskey    "e">
 
-<!ENTITY httpCache.label                 "Cached Web Content">
-
 <!--  Site Data section manages sites using Storage API and is under Network -->
 <!ENTITY siteData.label                  "Site Data">
 <!ENTITY clearSiteData.label             "Clear All Data">
@@ -62,20 +60,6 @@ available. -->
 <!ENTITY siteDataSettings.label          "Settings…">
 <!ENTITY siteDataSettings.accesskey      "i">
 <!ENTITY siteDataLearnMoreLink.label     "Learn more">
-
-<!-- LOCALIZATION NOTE:
-  The entities limitCacheSizeBefore.label and limitCacheSizeAfter.label appear on a single
-  line in preferences as follows:
-
-  &limitCacheSizeBefore.label [textbox for cache size in MB] &limitCacheSizeAfter.label;
--->
-<!ENTITY limitCacheSizeBefore.label      "Limit cache to">
-<!ENTITY limitCacheSizeBefore.accesskey  "L">
-<!ENTITY limitCacheSizeAfter.label       "MB of space">
-<!ENTITY clearCacheNow.label             "Clear Now">
-<!ENTITY clearCacheNow.accesskey         "C">
-<!ENTITY overrideSmartCacheSize.label    "Override automatic cache management">
-<!ENTITY overrideSmartCacheSize.accesskey "O">
 
 <!ENTITY updateTab.label                 "Update">
 

@@ -16,6 +16,8 @@ class AnimatedPropertyList extends PureComponent {
       animation: PropTypes.object.isRequired,
       emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
+      getComputedStyle: PropTypes.func.isRequired,
+      simulateAnimation: PropTypes.func.isRequired,
     };
   }
 
@@ -35,20 +37,40 @@ class AnimatedPropertyList extends PureComponent {
     this.updateKeyframesList(nextProps.animation);
   }
 
+  getPropertyState(property) {
+    const { animation } = this.props;
+
+    for (const propState of animation.state.propertyState) {
+      if (propState.property === property) {
+        return propState;
+      }
+    }
+
+    return null;
+  }
+
   async updateKeyframesList(animation) {
     const {
       getAnimatedPropertyMap,
       emitEventForTest,
     } = this.props;
     const animatedPropertyMap = await getAnimatedPropertyMap(animation);
+    const animationTypes = await animation.getAnimationTypes(animatedPropertyMap.keys());
 
-    this.setState({ animatedPropertyMap });
+    this.setState({ animatedPropertyMap, animationTypes });
 
     emitEventForTest("animation-keyframes-rendered");
   }
 
   render() {
-    const { animatedPropertyMap } = this.state;
+    const {
+      getComputedStyle,
+      simulateAnimation,
+    } = this.props;
+    const {
+      animatedPropertyMap,
+      animationTypes,
+    } = this.state;
 
     if (!animatedPropertyMap) {
       return null;
@@ -59,9 +81,15 @@ class AnimatedPropertyList extends PureComponent {
         className: "animated-property-list"
       },
       [...animatedPropertyMap.entries()].map(([property, values]) => {
+        const state = this.getPropertyState(property);
+        const type = animationTypes[property];
         return AnimatedPropertyItem(
           {
+            getComputedStyle,
             property,
+            simulateAnimation,
+            state,
+            type,
             values,
           }
         );

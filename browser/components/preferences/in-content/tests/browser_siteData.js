@@ -72,6 +72,7 @@ add_task(async function() {
   let updatedPromise = promiseSiteDataManagerSitesUpdated();
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   await updatedPromise;
+  let cacheSize = await SiteDataManager.getCacheSize();
 
   let actual = null;
   let expected = null;
@@ -86,7 +87,7 @@ add_task(async function() {
                        .then(usage => {
                          actual = totalSiteDataSizeLabel.textContent;
                          expected = prefStrBundle.getFormattedString(
-                           "totalSiteDataSize", DownloadUtils.convertByteUnits(usage));
+                           "totalSiteDataSize1", DownloadUtils.convertByteUnits(usage + cacheSize));
                           is(actual, expected, "Should show the right total site data size");
                        });
 
@@ -94,17 +95,18 @@ add_task(async function() {
   is(clearBtn.disabled, true, "Should disable clear button while updating sites");
   is(settingsButton.disabled, true, "Should disable settings button while updating sites");
   actual = totalSiteDataSizeLabel.textContent;
-  expected = prefStrBundle.getString("loadingSiteDataSize");
+  expected = prefStrBundle.getString("loadingSiteDataSize1");
   is(actual, expected, "Should show the loading message while updating");
 
   Services.obs.notifyObservers(null, "sitedatamanager:sites-updated");
   is(clearBtn.disabled, false, "Should enable clear button after sites updated");
   is(settingsButton.disabled, false, "Should enable settings button after sites updated");
+  cacheSize = await SiteDataManager.getCacheSize();
   await SiteDataManager.getTotalUsage()
                        .then(usage => {
                          actual = totalSiteDataSizeLabel.textContent;
                          expected = prefStrBundle.getFormattedString(
-                           "totalSiteDataSize", DownloadUtils.convertByteUnits(usage));
+                           "totalSiteDataSize1", DownloadUtils.convertByteUnits(usage + cacheSize));
                           is(actual, expected, "Should show the right total site data size");
                        });
 
