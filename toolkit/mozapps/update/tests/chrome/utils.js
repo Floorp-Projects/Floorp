@@ -259,7 +259,6 @@ function runTestDefaultWaitForWindowClosed() {
     setupPrefs();
     gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     removeUpdateDirsAndFiles();
-    reloadUpdateManagerData();
     setupTimer(gTestTimeout);
     SimpleTest.executeSoon(setupTestUpdater);
   }
