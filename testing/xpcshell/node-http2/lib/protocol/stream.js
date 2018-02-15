@@ -62,6 +62,7 @@ function Stream(log, connection) {
   this._initializeState();
 
   this.connection = connection;
+  this.sentEndStream = false;
 }
 
 Stream.prototype = Object.create(Duplex.prototype, { constructor: { value: Stream } });
@@ -103,6 +104,16 @@ Stream.prototype.headers = function headers(headers) {
     flags: {},
     stream: this.id,
     headers: headers
+  });
+};
+
+Stream.prototype.trailers = function trailers(trailers) {
+  this.sentEndStream = true;
+  this._pushUpstream({
+    type: 'HEADERS',
+    flags: {'END_STREAM': true},
+    stream: this.id,
+    headers: trailers
   });
 };
 
@@ -342,6 +353,13 @@ Stream.prototype._finishing = function _finishing() {
     stream: this.id,
     data: emptyBuffer
   };
+
+  if (this.sentEndStream) {
+    this._log.debug('Already sent END_STREAM, not sending again.');
+    return;
+  }
+
+  this.sentEndStream = true;
   var lastFrame = this.upstream.getLastQueuedFrame();
   if (lastFrame && ((lastFrame.type === 'DATA') || (lastFrame.type === 'HEADERS'))) {
     this._log.debug({ frame: lastFrame }, 'Marking last frame with END_STREAM flag.');
