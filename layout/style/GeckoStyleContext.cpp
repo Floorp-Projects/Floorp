@@ -16,6 +16,7 @@
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/ReflowInput.h"
+#include "mozilla/StyleSetHandleInlines.h"
 #include "RubyUtils.h"
 
 using namespace mozilla;

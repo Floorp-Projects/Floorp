@@ -1,5 +1,9 @@
 "use strict";
 
+ChromeUtils.defineModuleGetter(this, "SessionStore",
+                               "resource:///modules/sessionstore/SessionStore.jsm");
+ChromeUtils.defineModuleGetter(this, "TabStateFlusher",
+                               "resource:///modules/sessionstore/TabStateFlusher.jsm");
 const {Utils} = ChromeUtils.import("resource://gre/modules/sessionstore/Utils.jsm", {});
 const triggeringPrincipal_base64 = Utils.SERIALIZED_SYSTEMPRINCIPAL;
 
@@ -116,7 +120,24 @@ add_task(async function test_tabs_showhide() {
     ok(!tabs[0].hidden, "first tab not hidden");
     for (let i = 1; i < tabs.length; i++) {
       ok(tabs[i].hidden, "tab hidden value is correct");
+      let id = SessionStore.getTabValue(tabs[i], "hiddenBy");
+      is(id, extension.id, "tab hiddenBy value is correct");
+      await TabStateFlusher.flush(tabs[i].linkedBrowser);
     }
+  }
+
+  // Close the other window then restore it to test that the tabs are
+  // restored with proper hidden state, and the correct extension id.
+  await BrowserTestUtils.closeWindow(otherwin);
+
+  otherwin = SessionStore.undoCloseWindow(0);
+  await BrowserTestUtils.waitForEvent(otherwin, "load");
+  let tabs = Array.from(otherwin.gBrowser.tabs.values());
+  ok(!tabs[0].hidden, "first tab not hidden");
+  for (let i = 1; i < tabs.length; i++) {
+    ok(tabs[i].hidden, "tab hidden value is correct");
+    let id = SessionStore.getTabValue(tabs[i], "hiddenBy");
+    is(id, extension.id, "tab hiddenBy value is correct");
   }
 
   // Test closing the last visible tab, the next tab which is hidden should become

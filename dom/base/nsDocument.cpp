@@ -59,7 +59,6 @@
 
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "nsIDOMDocumentXBL.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FramingChecker.h"
 #include "nsGenericHTMLElement.h"
@@ -1802,7 +1801,6 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNode)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentXBL)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIScriptObjectPrincipal)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMEventTarget)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, mozilla::dom::EventTarget)
@@ -6214,29 +6212,9 @@ nsIDocument::ImportNode(nsINode& aNode, bool aDeep, ErrorResult& rv) const
   return nullptr;
 }
 
-NS_IMETHODIMP
-nsDocument::LoadBindingDocument(const nsAString& aURI)
-{
-  ErrorResult rv;
-  nsIDocument::LoadBindingDocument(aURI,
-                                   nsContentUtils::GetCurrentJSContext()
-                                     ? Some(nsContentUtils::SubjectPrincipal())
-                                     : Nothing(),
-                                   rv);
-  return rv.StealNSResult();
-}
-
 void
 nsIDocument::LoadBindingDocument(const nsAString& aURI,
                                  nsIPrincipal& aSubjectPrincipal,
-                                 ErrorResult& rv)
-{
-  LoadBindingDocument(aURI, Some(&aSubjectPrincipal), rv);
-}
-
-void
-nsIDocument::LoadBindingDocument(const nsAString& aURI,
-                                 const Maybe<nsIPrincipal*>& aSubjectPrincipal,
                                  ErrorResult& rv)
 {
   nsCOMPtr<nsIURI> uri;
@@ -6245,24 +6223,7 @@ nsIDocument::LoadBindingDocument(const nsAString& aURI,
     return;
   }
 
-  // Note - This computation of subjectPrincipal isn't necessarily sensical.
-  // It's just designed to preserve the old semantics during a mass-conversion
-  // patch.
-  nsCOMPtr<nsIPrincipal> subjectPrincipal =
-    aSubjectPrincipal.isSome() ? aSubjectPrincipal.value() : NodePrincipal();
-  BindingManager()->LoadBindingDocument(this, uri, subjectPrincipal);
-}
-
-NS_IMETHODIMP
-nsDocument::GetBindingParent(nsIDOMNode* aNode, nsIDOMElement** aResult)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_ARG_POINTER(node);
-
-  Element* bindingParent = nsIDocument::GetBindingParent(*node);
-  nsCOMPtr<nsIDOMElement> retval = do_QueryInterface(bindingParent);
-  retval.forget(aResult);
-  return NS_OK;
+  BindingManager()->LoadBindingDocument(this, uri, &aSubjectPrincipal);
 }
 
 Element*
@@ -6333,23 +6294,6 @@ nsDocument::GetAnonymousElementByAttribute(nsIContent* aElement,
   return nullptr;
 }
 
-NS_IMETHODIMP
-nsDocument::GetAnonymousElementByAttribute(nsIDOMElement* aElement,
-                                           const nsAString& aAttrName,
-                                           const nsAString& aAttrValue,
-                                           nsIDOMElement** aResult)
-{
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  NS_ENSURE_ARG_POINTER(element);
-
-  Element* anonEl =
-    nsIDocument::GetAnonymousElementByAttribute(*element, aAttrName,
-                                                aAttrValue);
-  nsCOMPtr<nsIDOMElement> retval = do_QueryInterface(anonEl);
-  retval.forget(aResult);
-  return NS_OK;
-}
-
 Element*
 nsIDocument::GetAnonymousElementByAttribute(Element& aElement,
                                             const nsAString& aAttrName,
@@ -6358,17 +6302,6 @@ nsIDocument::GetAnonymousElementByAttribute(Element& aElement,
   RefPtr<nsAtom> attribute = NS_Atomize(aAttrName);
 
   return GetAnonymousElementByAttribute(&aElement, attribute, aAttrValue);
-}
-
-
-NS_IMETHODIMP
-nsDocument::GetAnonymousNodes(nsIDOMElement* aElement,
-                              nsIDOMNodeList** aResult)
-{
-  *aResult = nullptr;
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
-  return BindingManager()->GetAnonymousNodesFor(content, aResult);
 }
 
 nsINodeList*

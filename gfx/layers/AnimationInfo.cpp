@@ -7,6 +7,7 @@
 #include "AnimationInfo.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/AnimationHelper.h"
+#include "mozilla/dom/Animation.h"
 
 namespace mozilla {
 namespace layers {
@@ -103,17 +104,27 @@ AnimationInfo::StartPendingAnimations(const TimeStamp& aReadyTime)
        animIdx < animEnd; animIdx++) {
     Animation& anim = mAnimations[animIdx];
 
+    // If the animation is doing an async update of its playback rate, then we
+    // want to match whatever its current time would be at *aReadyTime*.
+    if (!std::isnan(anim.previousPlaybackRate()) &&
+        anim.startTime().type() == MaybeTimeDuration::TTimeDuration &&
+        !anim.originTime().IsNull() && !anim.isNotPlaying()) {
+      TimeDuration readyTime = aReadyTime - anim.originTime();
+      anim.holdTime() = dom::Animation::CurrentTimeFromTimelineTime(
+        readyTime,
+        anim.startTime().get_TimeDuration(),
+        anim.previousPlaybackRate());
+      // Make start time null so that we know to update it below.
+      anim.startTime() = null_t();
+    }
+
     // If the animation is play-pending, resolve the start time.
-    // This mirrors the calculation in Animation::StartTimeFromReadyTime.
     if (anim.startTime().type() == MaybeTimeDuration::Tnull_t &&
         !anim.originTime().IsNull() &&
         !anim.isNotPlaying()) {
       TimeDuration readyTime = aReadyTime - anim.originTime();
-      anim.startTime() =
-        anim.playbackRate() == 0
-        ? readyTime
-        : readyTime - anim.holdTime().MultDouble(1.0 /
-                                                 anim.playbackRate());
+      anim.startTime() = dom::Animation::StartTimeFromTimelineTime(
+        readyTime, anim.holdTime(), anim.playbackRate());
       updated = true;
     }
   }

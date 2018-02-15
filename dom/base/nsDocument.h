@@ -21,7 +21,6 @@
 #include "nsTArray.h"
 #include "nsIdentifierMapEntry.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentXBL.h"
 #include "nsStubDocumentObserver.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIContent.h"
@@ -322,7 +321,6 @@ class PrincipalFlashClassifier;
 // Base class for our document implementations.
 class nsDocument : public nsIDocument,
                    public nsIDOMDocument,
-                   public nsIDOMDocumentXBL,
                    public nsSupportsWeakReference,
                    public nsIScriptObjectPrincipal,
                    public nsIRadioGroupContainer,
@@ -635,9 +633,6 @@ private:
 public:
   // nsIDOMDocument
   NS_DECL_NSIDOMDOCUMENT
-
-  // nsIDOMDocumentXBL
-  NS_DECL_NSIDOMDOCUMENTXBL
 
   using mozilla::dom::DocumentOrShadowRoot::GetElementById;
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagName;

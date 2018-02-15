@@ -481,25 +481,6 @@ ShadowRoot::Host()
   return host->AsElement();
 }
 
-bool
-ShadowRoot::ApplyAuthorStyles()
-{
-  return mProtoBinding->InheritsStyle();
-}
-
-void
-ShadowRoot::SetApplyAuthorStyles(bool aApplyAuthorStyles)
-{
-  mProtoBinding->SetInheritsStyle(aApplyAuthorStyles);
-
-  nsIPresShell* shell = OwnerDoc()->GetShell();
-  if (shell) {
-    OwnerDoc()->BeginUpdate(UPDATE_STYLE);
-    shell->RecordShadowStyleChange(this);
-    OwnerDoc()->EndUpdate(UPDATE_STYLE);
-  }
-}
-
 void
 ShadowRoot::AttributeChanged(nsIDocument* aDocument,
                              Element* aElement,

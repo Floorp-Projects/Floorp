@@ -96,6 +96,10 @@ fn public_api() {
                         assert!(opus.version > 0);
                         "Opus"
                     }
+                    mp4::AudioCodecSpecific::ALACSpecificBox(alac) => {
+                        assert!(alac.data.len() == 24 || alac.data.len() == 48);
+                        "ALAC"
+                    }
                     mp4::AudioCodecSpecific::MP3 => {
                         "MP3"
                     }

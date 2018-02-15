@@ -9,6 +9,7 @@
 #include "nsAttrValueInlines.h"
 #include "nsCSSParser.h"
 #include "nsPresContext.h"
+#include "nsStyleContextInlines.h"
 #include "mozilla/GeckoStyleContext.h"
 #include "mozilla/Poison.h"
 #include <stdint.h>

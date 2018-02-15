@@ -1,52 +1,19 @@
-7-Zip 4.42 Sources
-------------------
+7-Zip 18.01 Sources
+-------------------
 
-7-Zip is a file archiver for Windows 95/98/ME/NT/2000/2003/XP. 
+7-Zip is a file archiver for Windows. 
 
-7-Zip Copyright (C) 1999-2006 Igor Pavlov.
+7-Zip Copyright (C) 1999-2018 Igor Pavlov.
 
 
 License Info
 ------------
 
-Most of 7-Zip source code is under GNU LGPL.
+7-Zip is free software distributed under the GNU LGPL 
+(except for unRar code).
+read License.txt for more infomation about license.
 
-Files in folders
-  7zip/Compress/Rar20
-  7zip/Compress/Rar29
-  7zip/Compress/Rar29/Original
-are licensed under "unRAR license + GNU LGPL" license.
-Source code files in all other folders of this package are under GNU LGPL.
-
-"unRAR license + GNU LGPL" means that you must follow 
-GNU LGPL in all aspects while it is in agreement 
-with unRAR license. But you can not break unRAR license rules.
-It means that unRAR license is main license in that pair.
-
-You can find unRAR license in file unrarLicense.txt
-You can find GNU LGPL license in file copying.txt
-
-
-GNU LGPL information:
----------------------
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-
-unRAR license + GNU LGPL Notes
-------------------------------
+Notes about unRAR license:
 
 Please check main restriction from unRar license:
 
@@ -66,25 +33,13 @@ In brief it means:
 3) You can not use unRAR sources to re-create the RAR compression algorithm.
 
 
-7zip\Compress\Rar29\Original folder contains files that are modified
-versions of original unRAR source code files.
+LZMA SDK
+--------
 
-
-License notes
--------------
-
-You can support development of 7-Zip by registering.
-
-7-Zip is free software distributed under the GNU LGPL.
-If you need license with other conditions, write to
-http://www.7-zip.org/support.html
-
----
-Also this package contains files from LZMA SDK
-you can download LZMA SDK from this page:
-http://www.7-zip.org/sdk.html
-read about addtional licenses for LZMA SDK in file
-DOC/lzma.txt
+This package also contains some files from LZMA SDK
+You can download LZMA SDK from:
+  http://www.7-zip.org/sdk.html
+LZMA SDK is written and placed in the public domain by Igor Pavlov.
 
 
 How to compile
@@ -107,6 +62,10 @@ Tools / Options / Directories
 To compile 7-Zip for AMD64 and IA64 you need:
   Windows Server 2003 SP1 Platform SDK from microsoft.com
 
+Also you need Microsoft Macro Assembler:
+  - ml.exe for x86 
+  - ml64.exe for AMD64
+You can use ml.exe from Windows SDK for Windows Vista or some other version.
 
 
 Compiling under Unix/Linux
@@ -138,89 +97,62 @@ DOC                Documentation
   7zFormat.txt   - 7z format description
   copying.txt    - GNU LGPL license
   unRarLicense.txt - License for unRAR part of source code
-  history.txt    - Sources history
+  src-history.txt  - Sources history
   Methods.txt    - Compression method IDs
   readme.txt     - Readme file
-  lzma.txt       - LZMA SDK description
+  lzma.txt       - LZMA compression description
   7zip.nsi       - installer script for NSIS
+  7zip.wix       - installer script for WIX
 
 
-Common            Common modules
-Windows           Win32 wrappers
+Asm - Source code in Assembler (optimized code for CRC calculation and Intel-AES encryption)
+
+C   - Source code in C
+
+CPP - Source code in C++
+
+Common            common files for C++ projects
+
+Windows           common files for Windows related code
 
 7zip
--------
+
   Common          Common modules for 7-zip
 
-  Archive         7-Zip Archive Format Plugins 
-  --------
-    Common
-    7z
-    Arj
-    BZip2
-    Cab
-    Cpio
-    GZip
-    Rar
-    Rpm            
-    Split
-    Tar
-    Zip
+  Archive         files related to archiving
 
-  Bundle          Modules that are bundles of other modules
-  ------
-    Alone         7za.exe: Standalone version of 7z
-    Alone7z       7zr.exe: Standalone version of 7z that supports only 7z/LZMA/BCJ/BCJ2
+  Bundle          Modules that are bundles of other modules (files)
+
+    Alone         7za.exe: Standalone version of 7-Zip console that supports only 7z/xz/cab/zip/gzip/bzip2/tar.
+    Alone7z       7zr.exe: Standalone version of 7-Zip console that supports only 7z (reduced version)
+    Fm            Standalone version of 7-Zip File Manager
+    Format7z            7za.dll:  .7z support
+    Format7zExtract     7zxa.dll: .7z support, extracting only
+    Format7zR           7zr.dll:  .7z support, reduced version
+    Format7zExtractR    7zxr.dll: .7z support, reduced version, extracting only
+    Format7zF           7z.dll:   all formats
+    LzmaCon       lzma.exe: LZMA compression/decompression
     SFXCon        7zCon.sfx: Console 7z SFX module
     SFXWin        7z.sfx: Windows 7z SFX module
     SFXSetup      7zS.sfx: Windows 7z SFX module for Installers
-    Format7z      7za.dll: Standalone version of 7z.dll
+
+  Compress        files for compression/decompression
+
+  Crypto          files for encryption / decompression
 
   UI
-  --
+
     Agent         Intermediary modules for FAR plugin and Explorer plugin
-    Console       7z.exe Console version
-    Explorer      Explorer plugin
-    Resource      Resources
-    Far           FAR plugin  
     Client7z      Test application for 7za.dll 
+    Common        Common UI files
+    Console       7z.exe : Console version
+    Explorer      7-zip.dll: 7-Zip Shell extension
+    Far           plugin for Far Manager
+    FileManager   7zFM.exe: 7-Zip File Manager
+    GUI           7zG.exe: 7-Zip GUI version
 
-  Compress
-  --------
-    BZip2        BZip2 compressor
-      Original   Download BZip2 compression sources from
-                    http://sources.redhat.com/bzip2/index.html   
-                 to that folder.
-    Branch       Branch converter
-    ByteSwap     Byte Swap converter
-    Copy         Copy coder
-    Deflate       
-    Implode
-    Arj
-    LZMA
-    PPMd          Dmitry Shkarin's PPMdH with small changes.
-    LZ            Lempel - Ziv
-      MT          Multi Thread Match finder
-      BinTree     Match Finder based on Binary Tree
-      Patricia    Match Finder based on Patricia algoritm
-      HashChain   Match Finder based on Hash Chains
-
-  Crypto          Crypto modules
-  ------
-    7zAES         Cipher for 7z
-    AES           AES Cipher
-    Rar20         Cipher for Rar 2.0
-    RarAES        Cipher for Rar 3.0
-    Zip           Cipher for Zip
-
-  FileManager       File Manager
 
 
 ---
 Igor Pavlov
 http://www.7-zip.org
-
-
----
-End of document
-

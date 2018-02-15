@@ -79,7 +79,7 @@ LookupCache::LookupCache(const nsACString& aTableName,
 nsresult
 LookupCache::Open()
 {
-  LOG(("Loading PrefixSet"));
+  LOG(("Loading PrefixSet for %s", mTableName.get()));
   nsresult rv = LoadPrefixSet();
   NS_ENSURE_SUCCESS(rv, rv);
 

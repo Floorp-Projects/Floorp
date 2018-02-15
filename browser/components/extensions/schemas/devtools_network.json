@@ -68,11 +68,14 @@
     "events": [
       {
         "name": "onRequestFinished",
-        "unsupported": true,
         "type": "function",
         "description": "Fired when a network request is finished and all request data are available.",
         "parameters": [
-          { "name": "request", "$ref": "Request", "description": "Description of a network request in the form of a HAR entry. See HAR specification for details." }
+          {
+            "name": "request",
+            "$ref": "Request",
+            "description": "Description of a network request in the form of a HAR entry. See HAR specification for details."
+          }
         ]
       },
       {

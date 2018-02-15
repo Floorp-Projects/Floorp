@@ -136,9 +136,6 @@ with Files('*640387*'):
 with Files('*668513*'):
     BUG_COMPONENT = ('Core', 'DOM')
 
-with Files('*713825*'):
-    BUG_COMPONENT = ('Core', 'Internationalization')
-
 with Files('*797909*'):
     BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
 

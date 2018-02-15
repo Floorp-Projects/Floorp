@@ -632,12 +632,15 @@ protected:
   nsIContent* FindNode(nsINode* aCurrentNode,
                        bool aGoForward,
                        bool aEditableNode,
+                       bool aFindAnyDataNode,
                        bool bNoBlockCrossing);
 
   /**
    * Get the node immediately previous node of aNode.
    * @param atNode               The node from which we start the search.
    * @param aFindEditableNode    If true, only return an editable node.
+   * @param aFindAnyDataNode     If true, may return invisible data node
+   *                             like Comment.
    * @param aNoBlockCrossing     If true, don't move across "block" nodes,
    *                             whatever that means.
    * @return                     The node that occurs before aNode in
@@ -647,6 +650,7 @@ protected:
    */
   nsIContent* GetPreviousNodeInternal(nsINode& aNode,
                                       bool aFindEditableNode,
+                                      bool aFindAnyDataNode,
                                       bool aNoBlockCrossing);
 
   /**
@@ -654,12 +658,15 @@ protected:
    */
   nsIContent* GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
                                       bool aFindEditableNode,
+                                      bool aFindAnyDataNode,
                                       bool aNoBlockCrossing);
 
   /**
    * Get the node immediately next node of aNode.
    * @param aNode                The node from which we start the search.
    * @param aFindEditableNode    If true, only return an editable node.
+   * @param aFindAnyDataNode     If true, may return invisible data node
+   *                             like Comment.
    * @param aNoBlockCrossing     If true, don't move across "block" nodes,
    *                             whatever that means.
    * @return                     The node that occurs after aNode in the
@@ -669,6 +676,7 @@ protected:
    */
   nsIContent* GetNextNodeInternal(nsINode& aNode,
                                   bool aFindEditableNode,
+                                  bool aFindAnyDataNode,
                                   bool bNoBlockCrossing);
 
   /**
@@ -676,6 +684,7 @@ protected:
    */
   nsIContent* GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
                                   bool aFindEditableNode,
+                                  bool aFindAnyDataNode,
                                   bool aNoBlockCrossing);
 
 
@@ -807,36 +816,52 @@ public:
    */
   nsIContent* GetPreviousNode(const EditorRawDOMPoint& aPoint)
   {
-    return GetPreviousNodeInternal(aPoint, false, false);
+    return GetPreviousNodeInternal(aPoint, false, true, false);
+  }
+  nsIContent* GetPreviousElementOrText(const EditorRawDOMPoint& aPoint)
+  {
+    return GetPreviousNodeInternal(aPoint, false, false, false);
   }
   nsIContent* GetPreviousEditableNode(const EditorRawDOMPoint& aPoint)
   {
-    return GetPreviousNodeInternal(aPoint, true, false);
+    return GetPreviousNodeInternal(aPoint, true, true, false);
   }
   nsIContent* GetPreviousNodeInBlock(const EditorRawDOMPoint& aPoint)
   {
-    return GetPreviousNodeInternal(aPoint, false, true);
+    return GetPreviousNodeInternal(aPoint, false, true, true);
+  }
+  nsIContent* GetPreviousElementOrTextInBlock(const EditorRawDOMPoint& aPoint)
+  {
+    return GetPreviousNodeInternal(aPoint, false, false, true);
   }
   nsIContent* GetPreviousEditableNodeInBlock(
                 const EditorRawDOMPoint& aPoint)
   {
-    return GetPreviousNodeInternal(aPoint, true, true);
+    return GetPreviousNodeInternal(aPoint, true, true, true);
   }
   nsIContent* GetPreviousNode(nsINode& aNode)
   {
-    return GetPreviousNodeInternal(aNode, false, false);
+    return GetPreviousNodeInternal(aNode, false, true, false);
+  }
+  nsIContent* GetPreviousElementOrText(nsINode& aNode)
+  {
+    return GetPreviousNodeInternal(aNode, false, false, false);
   }
   nsIContent* GetPreviousEditableNode(nsINode& aNode)
   {
-    return GetPreviousNodeInternal(aNode, true, false);
+    return GetPreviousNodeInternal(aNode, true, true, false);
   }
   nsIContent* GetPreviousNodeInBlock(nsINode& aNode)
   {
-    return GetPreviousNodeInternal(aNode, false, true);
+    return GetPreviousNodeInternal(aNode, false, true, true);
+  }
+  nsIContent* GetPreviousElementOrTextInBlock(nsINode& aNode)
+  {
+    return GetPreviousNodeInternal(aNode, false, false, true);
   }
   nsIContent* GetPreviousEditableNodeInBlock(nsINode& aNode)
   {
-    return GetPreviousNodeInternal(aNode, true, true);
+    return GetPreviousNodeInternal(aNode, true, true, true);
   }
 
   /**
@@ -867,36 +892,52 @@ public:
    */
   nsIContent* GetNextNode(const EditorRawDOMPoint& aPoint)
   {
-    return GetNextNodeInternal(aPoint, false, false);
+    return GetNextNodeInternal(aPoint, false, true, false);
+  }
+  nsIContent* GetNextElementOrText(const EditorRawDOMPoint& aPoint)
+  {
+    return GetNextNodeInternal(aPoint, false, false, false);
   }
   nsIContent* GetNextEditableNode(const EditorRawDOMPoint& aPoint)
   {
-    return GetNextNodeInternal(aPoint, true, false);
+    return GetNextNodeInternal(aPoint, true, true, false);
   }
   nsIContent* GetNextNodeInBlock(const EditorRawDOMPoint& aPoint)
   {
-    return GetNextNodeInternal(aPoint, false, true);
+    return GetNextNodeInternal(aPoint, false, true, true);
+  }
+  nsIContent* GetNextElementOrTextInBlock(const EditorRawDOMPoint& aPoint)
+  {
+    return GetNextNodeInternal(aPoint, false, false, true);
   }
   nsIContent* GetNextEditableNodeInBlock(
                 const EditorRawDOMPoint& aPoint)
   {
-    return GetNextNodeInternal(aPoint, true, true);
+    return GetNextNodeInternal(aPoint, true, true, true);
   }
   nsIContent* GetNextNode(nsINode& aNode)
   {
-    return GetNextNodeInternal(aNode, false, false);
+    return GetNextNodeInternal(aNode, false, true, false);
+  }
+  nsIContent* GetNextElementOrText(nsINode& aNode)
+  {
+    return GetNextNodeInternal(aNode, false, false, false);
   }
   nsIContent* GetNextEditableNode(nsINode& aNode)
   {
-    return GetNextNodeInternal(aNode, true, false);
+    return GetNextNodeInternal(aNode, true, true, false);
   }
   nsIContent* GetNextNodeInBlock(nsINode& aNode)
   {
-    return GetNextNodeInternal(aNode, false, true);
+    return GetNextNodeInternal(aNode, false, true, true);
+  }
+  nsIContent* GetNextElementOrTextInBlock(nsINode& aNode)
+  {
+    return GetNextNodeInternal(aNode, false, false, true);
   }
   nsIContent* GetNextEditableNodeInBlock(nsINode& aNode)
   {
-    return GetNextNodeInternal(aNode, true, true);
+    return GetNextNodeInternal(aNode, true, true, true);
   }
 
   /**
@@ -975,6 +1016,20 @@ public:
   }
 
   /**
+   * Returns true if aNode is a usual element node (not bogus node) or
+   * a text node.  In other words, returns true if aNode is a usual element
+   * node or visible data node.
+   */
+  bool IsElementOrText(const nsINode& aNode) const
+  {
+    if (!aNode.IsContent() || IsMozEditorBogusNode(&aNode)) {
+      return false;
+    }
+    return aNode.NodeType() == nsINode::ELEMENT_NODE ||
+           aNode.NodeType() == nsINode::TEXT_NODE;
+  }
+
+  /**
    * Returns true if selection is in an editable element and both the range
    * start and the range end are editable.  E.g., even if the selection range
    * includes non-editable elements, returns true when one of common ancestors
@@ -985,7 +1040,7 @@ public:
   /**
    * Returns true if aNode is a MozEditorBogus node.
    */
-  bool IsMozEditorBogusNode(nsINode* aNode)
+  bool IsMozEditorBogusNode(const nsINode* aNode) const
   {
     return aNode && aNode->IsElement() &&
            aNode->AsElement()->AttrValueIs(kNameSpaceID_None,

@@ -6,6 +6,8 @@
 
 #include "mozilla/StyleSheet.h"
 
+#include "nsStyleContext.h"
+#include "nsStyleContextInlines.h"
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/CSSRuleList.h"
@@ -13,9 +15,12 @@
 #include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/ShadowRootBinding.h"
+#include "mozilla/GeckoStyleContext.h"
 #include "mozilla/ServoCSSRuleList.h"
+#include "mozilla/ServoStyleContext.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoStyleSheet.h"
+#include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/StyleSheetInlines.h"
 #ifdef MOZ_OLD_STYLE
 #include "mozilla/CSSStyleSheet.h"

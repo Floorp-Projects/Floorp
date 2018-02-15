@@ -106,7 +106,7 @@ add_task(async function testExtensionControlledHomepage() {
   let controlledLabel = controlledContent.querySelector("description");
   is(homepagePref(), extensionHomepage, "homepage is set by extension");
   // There are two spaces before "set_homepage" because it's " <image /> set_homepage".
-  is(controlledLabel.textContent, "An extension,  set_homepage, controls your home page.",
+  is(controlledLabel.textContent, "An extension,  set_homepage, is controlling your home page.",
      "The user is notified that an extension is controlling the homepage");
   is(controlledContent.hidden, false, "The extension controlled row is hidden");
   is(doc.getElementById("browserHomePage").disabled, true, "The homepage input is disabled");
@@ -296,7 +296,7 @@ add_task(async function testExtensionControlledNewTab() {
   let controlledLabel = controlledContent.querySelector("description");
   ok(aboutNewTabService.newTabURL.startsWith("moz-extension:"), "new tab url is set by extension");
   // There are two spaces before "set_newtab" because it's " <image /> set_newtab".
-  is(controlledLabel.textContent, "An extension,  set_newtab, controls your New Tab page.",
+  is(controlledLabel.textContent, "An extension,  set_newtab, is controlling your New Tab page.",
      "The user is notified that an extension is controlling the new tab page");
   is(controlledContent.hidden, false, "The extension controlled row is hidden");
 
