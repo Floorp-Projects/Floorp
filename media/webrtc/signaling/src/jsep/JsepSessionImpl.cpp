@@ -1419,6 +1419,16 @@ JsepSessionImpl::GetTransceiverForLocal(size_t level)
 
   // There is no transceiver for |level| right now.
 
+  // Look for an RTP transceiver
+  for (RefPtr<JsepTransceiver>& transceiver : mTransceivers) {
+    if (transceiver->GetMediaType() != SdpMediaSection::kApplication &&
+        !transceiver->IsStopped() && !transceiver->HasLevel()) {
+      transceiver->SetLevel(level);
+      return transceiver.get();
+    }
+  }
+
+  // Ok, look for a datachannel
   for (RefPtr<JsepTransceiver>& transceiver : mTransceivers) {
     if (!transceiver->IsStopped() && !transceiver->HasLevel()) {
       transceiver->SetLevel(level);
