@@ -104,11 +104,6 @@ add_task(async function() {
     is((await extension.awaitMessage("result")), winId, `${name} is on top (check 3) [${kind}]`);
   }
 
-  await focusWindow(win1);
-  await checkWindow("background", winId1, "win1");
-  await focusWindow(win2);
-  await checkWindow("background", winId2, "win2");
-
   async function triggerPopup(win, callback) {
     await clickBrowserAction(extension, win);
     await awaitExtensionPanel(extension, win);
@@ -120,13 +115,14 @@ add_task(async function() {
     closeBrowserAction(extension, win);
   }
 
-  // Set focus to some other window.
-  await focusWindow(window);
-
+  await focusWindow(win1);
+  await checkWindow("background", winId1, "win1");
   await triggerPopup(win1, async function() {
     await checkWindow("popup", winId1, "win1");
   });
 
+  await focusWindow(win2);
+  await checkWindow("background", winId2, "win2");
   await triggerPopup(win2, async function() {
     await checkWindow("popup", winId2, "win2");
   });
