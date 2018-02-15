@@ -543,6 +543,12 @@ import android.view.inputmethod.InputMethodManager;
         return getHandler();
     }
 
+    // Android N: @Override // InputConnection
+    @SuppressLint("Override")
+    public void closeConnection() {
+        // Not supported at the moment.
+    }
+
     @Override // TextInputController.Delegate
     public synchronized InputConnection onCreateInputConnection(EditorInfo outAttrs) {
         // Some keyboards require us to fill out outAttrs even if we return null.
