@@ -9,6 +9,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/dom/HTMLMediaElementBinding.h"
 #include "nsIDocument.h"
 #include "MediaManager.h"
 
@@ -53,7 +54,7 @@ AutoplayPolicy::IsMediaElementAllowedToPlay(NotNull<HTMLMediaElement*> aElement)
 
   // Media has already loaded metadata and doesn't contain audio track
   if (aElement->IsVideo() &&
-      aElement->ReadyState() >= nsIDOMHTMLMediaElement::HAVE_METADATA &&
+      aElement->ReadyState() >= HTMLMediaElementBinding::HAVE_METADATA &&
       !aElement->HasAudio()) {
     return true;
   }
