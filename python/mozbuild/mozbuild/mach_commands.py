@@ -1727,7 +1727,8 @@ class StaticAnalysis(MachCommandBase):
             return rc
 
         if path is None:
-            return self._run_clang_format_diff(self._clang_format_diff, show)
+            return self._run_clang_format_diff(self._clang_format_diff,
+                                               self._clang_format_path, show)
         else:
             return self._run_clang_format_path(self._clang_format_path, show, path)
 
@@ -1936,13 +1937,14 @@ class StaticAnalysis(MachCommandBase):
                     args += [':({0}){1}'.format(','.join(magics), pattern)]
         return args
 
-    def _run_clang_format_diff(self, clang_format_diff, show):
+    def _run_clang_format_diff(self, clang_format_diff, clang_format, show):
         # Run clang-format on the diff
         # Note that this will potentially miss a lot things
         from subprocess import Popen, PIPE, check_output, CalledProcessError
 
         diff_process = Popen(self._get_clang_format_diff_command(), stdout=PIPE)
-        args = [sys.executable, clang_format_diff, "-p1"]
+        args = [sys.executable, clang_format_diff, "-p1", "-binary=%s" % clang_format]
+
         if not show:
             args.append("-i")
         try:
