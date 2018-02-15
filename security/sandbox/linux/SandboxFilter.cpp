@@ -814,11 +814,20 @@ public:
       return Allow();
 
       // Bug 1354731: proprietary GL drivers try to mknod() their devices
-    case __NR_mknod: {
-      Arg<mode_t> mode(1);
+#ifdef __NR_mknod
+    case __NR_mknod:
+#endif
+    case __NR_mknodat: {
+      Arg<mode_t> mode(sysno == __NR_mknodat ? 2 : 1);
       return If((mode & S_IFMT) == S_IFCHR, Error(EPERM))
         .Else(InvalidSyscall());
     }
+      // Bug 1438389: ...and nvidia GL will sometimes try to chown the devices
+#ifdef __NR_chown
+    case __NR_chown:
+#endif
+    case __NR_fchownat:
+      return Error(EPERM);
 
       // For ORBit called by GConf (on some systems) to get proxy
       // settings.  Can remove when bug 1325242 happens in some form.
