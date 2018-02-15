@@ -10,7 +10,6 @@ with Files("**"):
 XPIDL_SOURCES += [
     'nsIDOMHTMLFormElement.idl',
     'nsIDOMHTMLInputElement.idl',
-    'nsIDOMHTMLMediaElement.idl',
     'nsIDOMMozBrowserFrame.idl',
     'nsIDOMTimeRanges.idl',
     'nsIMozBrowserFrame.idl',
