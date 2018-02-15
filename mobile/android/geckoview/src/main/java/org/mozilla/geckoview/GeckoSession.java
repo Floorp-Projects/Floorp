@@ -791,7 +791,7 @@ public class GeckoSession extends LayerSession
     /**
     * Set the tracking protection callback handler.
     * This will replace the current handler.
-    * @param listener An implementation of TrackingProtectionDelegate.
+    * @param delegate An implementation of TrackingProtectionDelegate.
     */
     public void setTrackingProtectionDelegate(TrackingProtectionDelegate delegate) {
         mTrackingProtectionHandler.setListener(delegate, this);
@@ -1934,7 +1934,7 @@ public class GeckoSession extends LayerSession
         * @param session The GeckoSession that initiated the callback.
         * @param uri The URI of the blocked element.
         * @param categories The tracker categories of the blocked element.
-        *                   One or more of the {@link #CATEGORY_AD CATEGORY_*}
+        *                   One or more of the {@link TrackingProtectionDelegate#CATEGORY_AD}
         *                   flags.
         */
         void onTrackerBlocked(GeckoSession session, String uri, int categories);
@@ -1943,7 +1943,7 @@ public class GeckoSession extends LayerSession
     /**
      * Enable tracking protection.
      * @param categories The categories of trackers that should be blocked.
-     *                   Use one or more of the {@link #CATEGORY_AD CATEGORY_*}
+     *                   Use one or more of the {@link TrackingProtectionDelegate#CATEGORY_AD}
      *                   flags.
      **/
     public void enableTrackingProtection(int categories) {
