@@ -24,6 +24,8 @@ function updateTabContextMenu(tab) {
 
 add_task(async function setup() {
   await promiseSyncReady();
+  // gSync.init() is called in a requestIdleCallback. Force its initialization.
+  gSync.init();
   is(gBrowser.visibleTabs.length, 1, "there is one visible tab");
 });
 
@@ -94,4 +96,17 @@ add_task(async function test_tab_contextmenu_sync_not_ready_other_state() {
   is(document.getElementById("context_sendTabToDevice").disabled, false, "Send tab to device is enabled");
 
   sandbox.restore();
+});
+
+add_task(async function test_tab_contextmenu_fxa_disabled() {
+  const getter = sinon.stub(gSync, "SYNC_ENABLED").get(() => false);
+  // Simulate onSyncDisabled() being called on window open.
+  gSync.onSyncDisabled();
+
+  updateTabContextMenu(testTab);
+  is(document.getElementById("context_sendTabToDevice").hidden, true, "Send tab to device is hidden");
+  is(document.getElementById("context_sendTabToDevice_separator").hidden, true, "Separator is also hidden");
+
+  getter.restore();
+  [...document.querySelectorAll(".sync-ui-item")].forEach(e => e.hidden = false);
 });
