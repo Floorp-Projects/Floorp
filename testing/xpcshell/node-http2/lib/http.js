@@ -345,7 +345,7 @@ OutgoingMessage.prototype._finish = function _finish() {
       if (this.request) {
         this.request.addTrailers(this._trailers);
       } else {
-        this.stream.headers(this._trailers);
+        this.stream.trailers(this._trailers);
       }
     }
     this.finished = true;
@@ -360,7 +360,7 @@ OutgoingMessage.prototype.setHeader = function setHeader(name, value) {
     return this.emit('error', new Error('Can\'t set headers after they are sent.'));
   } else {
     name = name.toLowerCase();
-    if (deprecatedHeaders.includes(name)) {
+    if (deprecatedHeaders.indexOf(name) !== -1) {
       return this.emit('error', new Error('Cannot set deprecated header: ' + name));
     }
     this._headers[name] = value;
