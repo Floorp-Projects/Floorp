@@ -205,32 +205,4 @@ private:
 // NO DATA - this a flyweight wrapper
 };
 
-
-// forward declaration
-struct nsXPTCMiniVariant;
-
-class nsXPTConstant : public XPTConstDescriptor
-{
-// NO DATA - this a flyweight wrapper
-public:
-    MOZ_IMPLICIT nsXPTConstant(const XPTConstDescriptor& desc)
-        {*(XPTConstDescriptor*)this = desc;}
-
-    const char* GetName() const
-        {return name;}
-
-    const nsXPTType GetType() const
-        {return type.prefix;}
-
-    // XXX this is ugly. But sometimes you gotta do what you gotta do.
-    // A reinterpret_cast won't do the trick here. And this plain C cast
-    // works correctly and is safe enough.
-    // See http://bugzilla.mozilla.org/show_bug.cgi?id=49641
-    const nsXPTCMiniVariant* GetValue() const
-        {return (nsXPTCMiniVariant*) &value;}
-private:
-    nsXPTConstant();    // no implementation
-// NO DATA - this a flyweight wrapper
-};
-
 #endif /* xptiinfo_h___ */
