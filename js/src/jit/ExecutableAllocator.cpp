@@ -260,9 +260,19 @@ ExecutableAllocator::purge()
     // Don't race with reprotectAll called from the signal handler.
     JitRuntime::AutoPreventBackedgePatching apbp(rt_);
 
-    for (size_t i = 0; i < m_smallPools.length(); i++)
-        m_smallPools[i]->release();
-    m_smallPools.clear();
+    for (size_t i = 0; i < m_smallPools.length(); ) {
+        ExecutablePool* pool = m_smallPools[i];
+        if (pool->m_refCount > 1) {
+            // Releasing this pool is not going to deallocate it, so we might as
+            // well hold on to it and reuse it for future allocations.
+            i++;
+            continue;
+        }
+
+        MOZ_ASSERT(pool->m_refCount == 1);
+        pool->release();
+        m_smallPools.erase(&m_smallPools[i]);
+    }
 }
 
 void
