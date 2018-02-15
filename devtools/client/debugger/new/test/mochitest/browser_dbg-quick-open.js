@@ -65,8 +65,8 @@ add_task(async function() {
   await waitForSource(dbg, "switching-01");
   quickOpen(dbg, "sw");
   pressKey(dbg, "Enter");
-
   await waitForSelectedSource(dbg, "switching-01");
+
   info("Arrow keys and check to see if source is selected");
   quickOpen(dbg, "sw");
   is(resultCount(dbg), 2, "two file results");
@@ -83,6 +83,7 @@ add_task(async function() {
   is(resultCount(dbg), 2, "two function results");
 
   type(dbg, "@x");
+  await waitForTime(1000);
   is(resultCount(dbg), 0, "no functions with 'x' in name");
 
   pressKey(dbg, "Escape");
