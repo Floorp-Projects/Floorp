@@ -359,8 +359,13 @@ Classifier::DeleteTables(nsIFile* aDirectory, const nsTArray<nsCString>& aTables
     rv = file->GetNativeLeafName(leafName);
     NS_ENSURE_SUCCESS_VOID(rv);
 
-    leafName.Truncate(leafName.RFind("."));
-    if (aTables.Contains(leafName)) {
+    // Remove file extension if there's one.
+    int32_t dotPosition = leafName.RFind(".");
+    if (dotPosition >= 0) {
+      leafName.Truncate(dotPosition);
+    }
+
+    if (!leafName.IsEmpty() && aTables.Contains(leafName)) {
       if (NS_FAILED(file->Remove(false))) {
         NS_WARNING(nsPrintfCString("Fail to remove file %s from the disk",
                                    leafName.get()).get());
