@@ -209,6 +209,15 @@ Changing histogram declarations after the histogram has been released is tricky.
 
 The one exception is categorical histograms which can only be changed by adding labels, and only until it reaches 50 labels.
 
+Histogram values
+================
+
+The values you can accumulate to Histograms are limited by their internal represenation.
+
+Telemetry Histograms do not record negative values, instead clamping them to 0 before recording.
+
+Telemetry Histograms do not record values greater than 2^31, instead clamping them to INT_MAX before recording.
+
 Adding a JavaScript Probe
 =========================
 
