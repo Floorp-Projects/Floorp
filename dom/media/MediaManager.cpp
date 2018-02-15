@@ -2149,6 +2149,20 @@ MediaManager::PostTask(already_AddRefed<Runnable> task)
   Get()->mMediaThread->message_loop()->PostTask(Move(task));
 }
 
+template<typename MozPromiseType, typename FunctionType>
+/* static */ RefPtr<MozPromiseType>
+MediaManager::PostTask(const char* aName, FunctionType&& aFunction)
+{
+  MozPromiseHolder<MozPromiseType> holder;
+  RefPtr<MozPromiseType> promise = holder.Ensure(aName);
+  MediaManager::PostTask(NS_NewRunnableFunction(aName,
+        [h = Move(holder), func = Forward<FunctionType>(aFunction)]() mutable
+        {
+          func(h);
+        }));
+  return promise;
+}
+
 /* static */ nsresult
 MediaManager::NotifyRecordingStatusChange(nsPIDOMWindowInner* aWindow)
 {
@@ -4014,14 +4028,11 @@ SourceListener::SetEnabledFor(TrackID aTrackID, bool aEnable)
         return DeviceOperationPromise::CreateAndResolve(NS_OK, __func__);
       }
 
-      RefPtr<DeviceOperationPromise::Private> promise =
-        new DeviceOperationPromise::Private(__func__);
-      MediaManager::PostTask(NewTaskFrom([self, device = state.mDevice,
-                                          aEnable, promise]() mutable {
-        promise->Resolve(aEnable ? device->Start() : device->Stop(), __func__);
-      }));
-      RefPtr<DeviceOperationPromise> result = promise.get();
-      return result;
+      return MediaManager::PostTask<DeviceOperationPromise>(__func__,
+          [self, device = state.mDevice, aEnable]
+          (MozPromiseHolder<DeviceOperationPromise>& h) {
+            h.Resolve(aEnable ? device->Start() : device->Stop(), __func__);
+          });
     }, [](bool aDummy) {
       // Timer was canceled by us. We signal this with NS_ERROR_ABORT.
       return DeviceOperationPromise::CreateAndResolve(NS_ERROR_ABORT, __func__);
