@@ -351,6 +351,10 @@ var JetStream = (function() {
 
         initializeWithModeBasedOnHash();
         window.onpopstate = initializeWithModeBasedOnHash;
+
+        if (location.search == '?gecko') {
+            JetStream.start();
+        }
     }
 
     function switchMode(mode)
@@ -451,13 +455,26 @@ var JetStream = (function() {
 
     function end()
     {
-        console.log("Raw results:", JSON.stringify(computeRawResults()));
+        raw_results = computeRawResults();
+        console.log("Raw results:", JSON.stringify(raw_results));
 
         document.getElementById("result-summary").innerHTML = "<label>Score</label><br><span class=\"score\">" + formatGeomean(allSelector) + "</span>";
 
         isRunning = false;
         hasAlreadyRun = true;
         prepareToStart();
+
+        if (tpRecordTime !== "undefined") {
+            let names = [];
+            let values = [];
+            for (var test in raw_results) {
+                for (var item in raw_results[test]['result']) {
+                    names.push(test);
+                    values.push(raw_results[test]['result'][item]);
+                }
+            }
+            tpRecordTime(values.join(','), 0, names.join(','));
+        }
     }
 
     function iterate()
