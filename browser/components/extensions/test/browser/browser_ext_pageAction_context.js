@@ -100,8 +100,13 @@ add_task(async function testTabSwitchContext() {
           tabs.push(tab.id);
           expect(null);
         },
-        expect => {
+        async expect => {
           browser.test.log("Await tab load. No icon visible.");
+          let promise = promiseTabLoad({id: tabs[1], url: "about:blank?0"});
+          let {url} = await browser.tabs.get(tabs[1]);
+          if (url === "about:blank") {
+            await promise;
+          }
           expect(null);
         },
         async expect => {
@@ -192,4 +197,97 @@ add_task(async function testTabSwitchContext() {
       ];
     },
   });
+});
+
+add_task(async function testNavigationClearsData() {
+  let url = "http://example.com/";
+  let default_title = "Default title";
+  let tab_title = "Tab title";
+
+  let {Management: {global: {tabTracker}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+  let extension, tab, tabId, tabs = [];
+  async function addTab(...args) {
+    tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, ...args);
+    tabId = tabTracker.getId(tab);
+    tabs.push(tab);
+  }
+  async function locationChange(url, task) {
+    let locationChanged = BrowserTestUtils.waitForLocationChange(gBrowser, url);
+    await ContentTask.spawn(tab.linkedBrowser, url, task);
+    await locationChanged;
+  }
+  function setUrl(url) {
+    return locationChange(url, (url) => { content.location.href = url; });
+  }
+  function historyPushState(url) {
+    return locationChange(url, (url) => { content.history.pushState(null, null, url); });
+  }
+  async function sendMessage(method, param, expect, msg) {
+    extension.sendMessage({method, param, expect, msg});
+    await extension.awaitMessage("done");
+  }
+  async function expectTabSpecificData(msg) {
+    await sendMessage("isShown", {tabId}, true, msg);
+    await sendMessage("getTitle", {tabId}, tab_title, msg);
+  }
+  async function expectDefaultData(msg) {
+    await sendMessage("isShown", {tabId}, false, msg);
+    await sendMessage("getTitle", {tabId}, default_title, msg);
+  }
+  async function setTabSpecificData() {
+    await expectDefaultData("Expect default data before setting tab-specific data.");
+    await sendMessage("show", tabId);
+    await sendMessage("setTitle", {tabId, title: tab_title});
+    await expectTabSpecificData("Expect tab-specific data after setting it.");
+  }
+
+  info("Load a tab before installing the extension");
+  await addTab(url, true, true);
+
+  extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      page_action: {default_title},
+    },
+    background: function() {
+      browser.test.onMessage.addListener(async ({method, param, expect, msg}) => {
+        let result = await browser.pageAction[method](param);
+        if (expect !== undefined) {
+          browser.test.assertEq(expect, result, msg);
+        }
+        browser.test.sendMessage("done");
+      });
+    },
+  });
+  await extension.startup();
+
+  info("Set tab-specific data to the existing tab.");
+  await setTabSpecificData();
+
+  info("Add a hash. Does not cause navigation.");
+  await setUrl(url + "#hash");
+  await expectTabSpecificData("Adding a hash does not clear tab-specific data");
+
+  info("Remove the hash. Causes navigation.");
+  await setUrl(url);
+  await expectDefaultData("Removing hash clears tab-specific data");
+
+  info("Open a new tab, set tab-specific data to it.");
+  await addTab("about:newtab", false, false);
+  await setTabSpecificData();
+
+  info("Load a page in that tab.");
+  await setUrl(url);
+  await expectDefaultData("Loading a page clears tab-specific data.");
+
+  info("Set tab-specific data.");
+  await setTabSpecificData();
+
+  info("Push history state. Does not cause navigation.");
+  await historyPushState(url + "/path");
+  await expectTabSpecificData("history.pushState() does not clear tab-specific data");
+
+  for (let tab of tabs) {
+    await BrowserTestUtils.removeTab(tab);
+  }
+  await extension.unload();
 });

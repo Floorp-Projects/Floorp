@@ -114,7 +114,6 @@ global.TabContext = class extends EventEmitter {
     this.getDefaults = getDefaults;
 
     this.tabData = new WeakMap();
-    this.lastLocation = new WeakMap();
 
     windowTracker.addListener("progress", this);
     windowTracker.addListener("TabSelect", this);
@@ -140,24 +139,14 @@ global.TabContext = class extends EventEmitter {
     }
   }
 
-  onStateChange(browser, webProgress, request, stateFlags, statusCode) {
-    let flags = Ci.nsIWebProgressListener;
-
-    if (!(~stateFlags & (flags.STATE_IS_WINDOW | flags.STATE_START) ||
-          this.lastLocation.has(browser))) {
-      this.lastLocation.set(browser, request.URI);
-    }
-  }
-
   onLocationChange(browser, webProgress, request, locationURI, flags) {
     let gBrowser = browser.ownerGlobal.gBrowser;
-    let lastLocation = this.lastLocation.get(browser);
-    if (browser === gBrowser.selectedBrowser &&
-        !(lastLocation && lastLocation.equalsExceptRef(browser.currentURI))) {
-      let nativeTab = gBrowser.getTabForBrowser(browser);
-      this.emit("location-change", nativeTab, true);
+    if (browser === gBrowser.selectedBrowser) {
+      let tab = gBrowser.getTabForBrowser(browser);
+      // fromBrowse will be false in case of e.g. a hash change or history.pushState
+      let fromBrowse = !(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT);
+      this.emit("location-change", tab, fromBrowse);
     }
-    this.lastLocation.set(browser, browser.currentURI);
   }
 
   shutdown() {
