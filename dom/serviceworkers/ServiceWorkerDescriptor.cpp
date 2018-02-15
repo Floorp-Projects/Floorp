@@ -52,6 +52,9 @@ ServiceWorkerDescriptor::ServiceWorkerDescriptor(const ServiceWorkerDescriptor& 
 ServiceWorkerDescriptor&
 ServiceWorkerDescriptor::operator=(const ServiceWorkerDescriptor& aRight)
 {
+  if (this == &aRight) {
+    return *this;
+  }
   mData.reset();
   mData = MakeUnique<IPCServiceWorkerDescriptor>(*aRight.mData);
   return *this;

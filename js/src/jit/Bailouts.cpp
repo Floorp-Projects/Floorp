@@ -8,13 +8,12 @@
 
 #include "mozilla/ScopeExit.h"
 
-#include "jscntxt.h"
-
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/JitCompartment.h"
 #include "jit/JitSpewer.h"
 #include "jit/Snapshots.h"
+#include "vm/JSContext.h"
 #include "vm/TraceLogging.h"
 
 #include "jit/JSJitFrameIter-inl.h"

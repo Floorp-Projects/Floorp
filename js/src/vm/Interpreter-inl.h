@@ -9,16 +9,16 @@
 
 #include "vm/Interpreter.h"
 
-#include "jscompartment.h"
 #include "jsnum.h"
 #include "jsstr.h"
 
 #include "jit/Ion.h"
 #include "vm/ArgumentsObject.h"
-
-#include "jsobjinlines.h"
+#include "vm/JSCompartment.h"
 
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSAtom-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 #include "vm/UnboxedObject-inl.h"

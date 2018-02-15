@@ -12,7 +12,4 @@ config = {
     # mozcrash support
     'download_minidump_stackwalk': True,
     'download_symbols': 'ondemand',
-
-    # Disable proxxy because it isn't present in the QA environment.
-    'proxxy': {},
 }

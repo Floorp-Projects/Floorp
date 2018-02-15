@@ -45,6 +45,7 @@
 
 #include "js/TraceKind.h"
 #include "js/TracingAPI.h"
+#include "js/TypeDecls.h"
 
 // Expand the given macro D for each public GC pointer.
 #define FOR_EACH_PUBLIC_GC_POINTER_TYPE(D) \
@@ -62,15 +63,6 @@
 
 #define FOR_EACH_PUBLIC_AGGREGATE_GC_POINTER_TYPE(D) \
     D(JSPropertyDescriptor)
-
-class JSAtom;
-class JSFunction;
-class JSObject;
-class JSScript;
-class JSString;
-namespace JS {
-class Symbol;
-}
 
 namespace JS {
 

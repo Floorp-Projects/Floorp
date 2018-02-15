@@ -20,7 +20,6 @@
 #include "js/Value.h"
 #include "js/Vector.h"
 
-struct JSRuntime;
 struct JSStructuredCloneReader;
 struct JSStructuredCloneWriter;
 

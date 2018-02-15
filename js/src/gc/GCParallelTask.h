@@ -7,9 +7,8 @@
 #ifndef gc_GCParallelTask_h
 #define gc_GCParallelTask_h
 
+#include "js/TypeDecls.h"
 #include "threading/ProtectedData.h"
-
-struct JSRuntime;
 
 namespace js {
 

@@ -1833,6 +1833,13 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
     return NS_ERROR_FAILURE;
   }
 
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  NS_ENSURE_TRUE(swm, NS_ERROR_FAILURE);
+
+  RefPtr<ServiceWorkerRegistrationInfo> reg =
+    swm->GetRegistration(mInfo->Principal(), mInfo->Scope());
+  NS_ENSURE_TRUE(reg, NS_ERROR_FAILURE);
+
   // TODO(catalinb): Bug 1192138 - Add telemetry for service worker wake-ups.
 
   // Ensure that the IndexedDatabaseManager is initialized
@@ -1850,11 +1857,8 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   MOZ_ASSERT(!mInfo->CacheName().IsEmpty());
   info.mServiceWorkerCacheName = mInfo->CacheName();
 
-  PrincipalInfo principalInfo;
-  rv = PrincipalToPrincipalInfo(mInfo->Principal(), &principalInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   info.mServiceWorkerDescriptor.emplace(mInfo->Descriptor());
+  info.mServiceWorkerRegistrationDescriptor.emplace(reg->Descriptor());
 
   info.mLoadGroup = aLoadGroup;
   info.mLoadFailedAsyncRunnable = aLoadFailedRunnable;

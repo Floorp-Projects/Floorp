@@ -10,10 +10,9 @@
 #include "proxy/DeadObjectProxy.h"
 #include "vm/WrapperObject.h"
 
-#include "jscompartmentinlines.h"
-#include "jsobjinlines.h"
-
 #include "gc/Nursery-inl.h"
+#include "vm/JSCompartment-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 

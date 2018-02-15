@@ -7,10 +7,9 @@
 #ifndef vm_UnboxedObject_h
 #define vm_UnboxedObject_h
 
-#include "jsobj.h"
-
 #include "gc/DeletePolicy.h"
 #include "gc/Zone.h"
+#include "vm/JSObject.h"
 #include "vm/Runtime.h"
 #include "vm/TypeInference.h"
 
@@ -40,7 +39,7 @@ UnboxedTypeNeedsPreBarrier(JSValueType type)
 static inline bool
 UnboxedTypeNeedsPostBarrier(JSValueType type)
 {
-    return type == JSVAL_TYPE_OBJECT;
+    return type == JSVAL_TYPE_STRING || type == JSVAL_TYPE_OBJECT;
 }
 
 // Class tracking information specific to unboxed objects.

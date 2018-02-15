@@ -10,9 +10,8 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MaybeOneOf.h"
 
-#include "jscntxt.h"
-
 #include "js/Vector.h"
+#include "vm/JSContext.h"
 
 namespace js {
 

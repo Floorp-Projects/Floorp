@@ -7,13 +7,11 @@
 #ifndef vm_List_inl_h
 #define vm_List_inl_h
 
-#include "jscntxt.h"
-
 #include "gc/Rooting.h"
+#include "vm/JSContext.h"
 #include "vm/NativeObject.h"
 
-#include "jsobjinlines.h"
-
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 namespace js {

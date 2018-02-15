@@ -146,6 +146,7 @@ WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
   mOrigin = aOther.mOrigin;
   mServiceWorkerCacheName = aOther.mServiceWorkerCacheName;
   mServiceWorkerDescriptor = aOther.mServiceWorkerDescriptor;
+  mServiceWorkerRegistrationDescriptor = aOther.mServiceWorkerRegistrationDescriptor;
   mLoadFlags = aOther.mLoadFlags;
   mWindowID = aOther.mWindowID;
   mReferrerPolicy = aOther.mReferrerPolicy;

@@ -34,7 +34,7 @@
 #include "irregexp/RegExpMacroAssembler.h"
 #include "vm/MatchPairs.h"
 
-#include "jscntxtinlines.h"
+#include "vm/JSContext-inl.h"
 
 using namespace js;
 using namespace js::irregexp;

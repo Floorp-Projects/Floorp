@@ -6,11 +6,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsapi.h"
-#include "jscompartment.h"
 
 #include "js/RootingAPI.h"
 #include "js/SliceBudget.h"
 #include "jsapi-tests/tests.h"
+#include "vm/JSCompartment.h"
 
 static bool
 ConstructCCW(JSContext* cx, const JSClass* globalClasp,

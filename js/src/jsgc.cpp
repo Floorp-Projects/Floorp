@@ -204,14 +204,9 @@
 # include <sys/mman.h>
 # include <unistd.h>
 #endif
-
 #include "jsapi.h"
-#include "jscntxt.h"
-#include "jscompartment.h"
 #include "jsfriendapi.h"
-#include "jsobj.h"
 #include "jsprf.h"
-#include "jsscript.h"
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jsweakmap.h"
@@ -232,6 +227,11 @@
 #include "proxy/DeadObjectProxy.h"
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
+#include "vm/JSAtom.h"
+#include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
+#include "vm/JSObject.h"
+#include "vm/JSScript.h"
 #include "vm/Printer.h"
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
@@ -241,14 +241,13 @@
 #include "vm/TraceLogging.h"
 #include "vm/WrapperObject.h"
 
-#include "jsobjinlines.h"
-#include "jsscriptinlines.h"
-
 #include "gc/Heap-inl.h"
 #include "gc/Iteration-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
 #include "vm/GeckoProfiler-inl.h"
+#include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 
@@ -378,7 +377,7 @@ const AllocKind gc::slotsToThingKind[] = {
     /* 16 */ AllocKind::OBJECT16
 };
 
-static_assert(JS_ARRAY_LENGTH(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
+static_assert(mozilla::ArrayLength(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
               "We have defined a slot count for each kind.");
 
 #define CHECK_THING_SIZE(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
@@ -528,11 +527,11 @@ Arena::staticAsserts()
 {
     static_assert(size_t(AllocKind::LIMIT) <= 255,
                   "We must be able to fit the allockind into uint8_t.");
-    static_assert(JS_ARRAY_LENGTH(ThingSizes) == size_t(AllocKind::LIMIT),
+    static_assert(mozilla::ArrayLength(ThingSizes) == size_t(AllocKind::LIMIT),
                   "We haven't defined all thing sizes.");
-    static_assert(JS_ARRAY_LENGTH(FirstThingOffsets) == size_t(AllocKind::LIMIT),
+    static_assert(mozilla::ArrayLength(FirstThingOffsets) == size_t(AllocKind::LIMIT),
                   "We haven't defined all offsets.");
-    static_assert(JS_ARRAY_LENGTH(ThingsPerArena) == size_t(AllocKind::LIMIT),
+    static_assert(mozilla::ArrayLength(ThingsPerArena) == size_t(AllocKind::LIMIT),
                   "We haven't defined all counts.");
 }
 
@@ -3928,6 +3927,19 @@ class MOZ_RAII js::gc::AutoRunParallelTask : public GCParallelTask
 };
 
 void
+GCRuntime::purgeRuntimeForMinorGC()
+{ 
+    // If external strings become nursery allocable, remember to call
+    // zone->externalStringCache().purge() (and delete this assert.)
+    MOZ_ASSERT(!IsNurseryAllocable(AllocKind::EXTERNAL_STRING));
+
+    for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next())
+        zone->functionToStringCache().purge();
+
+    rt->caches().purgeForMinorGC(rt);
+}
+
+void
 GCRuntime::purgeRuntime()
 {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::PURGE);
@@ -3947,12 +3959,7 @@ GCRuntime::purgeRuntime()
         target.context()->frontendCollectionPool().purge();
     }
 
-    rt->caches().gsnCache.purge();
-    rt->caches().envCoordinateNameCache.purge();
-    rt->caches().newObjectCache.purge();
-    rt->caches().uncompressedSourceCache.purge();
-    if (rt->caches().evalCache.initialized())
-        rt->caches().evalCache.clear();
+    rt->caches().purge();
 
     if (auto cache = rt->maybeThisRuntimeSharedImmutableStrings())
         cache->purge();
@@ -6620,9 +6627,7 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason, SliceBudget& sliceBudget,
         releaseRelocatedArenas(relocatedArenas);
 
     // Clear caches that can contain cell pointers.
-    rt->caches().newObjectCache.purge();
-    if (rt->caches().evalCache.initialized())
-        rt->caches().evalCache.clear();
+    rt->caches().purgeForCompaction();
 
 #ifdef DEBUG
     CheckHashTablesAfterMovingGC(rt);
@@ -8297,10 +8302,10 @@ JS::AssertGCThingMustBeTenured(JSObject* obj)
 }
 
 JS_FRIEND_API(void)
-JS::AssertGCThingIsNotAnObjectSubclass(Cell* cell)
+JS::AssertGCThingIsNotNurseryAllocable(Cell* cell)
 {
     MOZ_ASSERT(cell);
-    MOZ_ASSERT(!cell->is<JSObject>());
+    MOZ_ASSERT(!cell->is<JSObject>() && !cell->is<JSString>());
 }
 
 JS_FRIEND_API(void)
@@ -8314,7 +8319,8 @@ js::gc::AssertGCThingHasType(js::gc::Cell* cell, JS::TraceKind kind)
     MOZ_ASSERT(IsCellPointerValid(cell));
 
     if (IsInsideNursery(cell)) {
-        MOZ_ASSERT(kind == JS::TraceKind::Object);
+        MOZ_ASSERT(kind == (JSString::nurseryCellIsString(cell) ? JS::TraceKind::String
+                                                                : JS::TraceKind::Object));
         return;
     }
 

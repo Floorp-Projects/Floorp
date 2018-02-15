@@ -9,7 +9,7 @@
 
 #include "vm/Probes.h"
 
-#include "jscntxt.h"
+#include "vm/JSContext.h"
 
 namespace js {
 

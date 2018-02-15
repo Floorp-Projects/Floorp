@@ -49,15 +49,10 @@
 # include <sys/wait.h>
 # include <unistd.h>
 #endif
-
 #include "jsapi.h"
 #include "jsarray.h"
-#include "jscntxt.h"
 #include "jsfriendapi.h"
-#include "jsfun.h"
-#include "jsobj.h"
 #include "jsprf.h"
-#include "jsscript.h"
 #include "jstypes.h"
 #include "jsutil.h"
 #ifdef XP_WIN
@@ -73,11 +68,9 @@
 #include "builtin/ModuleObject.h"
 #include "builtin/RegExp.h"
 #include "builtin/TestingFunctions.h"
-
 #if defined(JS_BUILD_BINAST)
-#include "frontend/BinSource.h"
+# include "frontend/BinSource.h"
 #endif // defined(JS_BUILD_BINAST)
-
 #include "frontend/Parser.h"
 #include "gc/GCInternals.h"
 #include "jit/arm/Simulator-arm.h"
@@ -105,6 +98,11 @@
 #include "vm/Compression.h"
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
+#include "vm/JSAtom.h"
+#include "vm/JSContext.h"
+#include "vm/JSFunction.h"
+#include "vm/JSObject.h"
+#include "vm/JSScript.h"
 #include "vm/Monitor.h"
 #include "vm/MutexIDs.h"
 #include "vm/Printer.h"
@@ -116,11 +114,10 @@
 #include "vm/WrapperObject.h"
 #include "wasm/WasmJS.h"
 
-#include "jscompartmentinlines.h"
-#include "jsobjinlines.h"
-
 #include "vm/ErrorObject-inl.h"
 #include "vm/Interpreter-inl.h"
+#include "vm/JSCompartment-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;

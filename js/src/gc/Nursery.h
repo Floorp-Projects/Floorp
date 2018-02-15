@@ -14,6 +14,7 @@
 #include "js/Class.h"
 #include "js/HeapAPI.h"
 #include "js/TracingAPI.h"
+#include "js/TypeDecls.h"
 #include "js/Vector.h"
 
 #define FOR_EACH_NURSERY_PROFILE_TIME(_)                                      \
@@ -28,7 +29,7 @@
     _(CheckHashTables,          "ckTbls")                                     \
     _(MarkRuntime,              "mkRntm")                                     \
     _(MarkDebugger,             "mkDbgr")                                     \
-    _(ClearNewObjectCache,      "clrNOC")                                     \
+    _(SweepCaches,              "swpCch")                                     \
     _(CollectToFP,              "collct")                                     \
     _(ObjectsTenuredCallback,   "tenCB")                                      \
     _(Sweep,                    "sweep")                                      \
@@ -39,10 +40,6 @@
     _(Pretenure,                "pretnr")
 
 template<typename T> class SharedMem;
-
-namespace JS {
-struct Zone;
-} // namespace JS
 
 namespace js {
 
@@ -80,18 +77,19 @@ class TenuringTracer : public JSTracer
     // Amount of data moved to the tenured generation during collection.
     size_t tenuredSize;
 
-    // This list is threaded through the Nursery using the space from already
-    // moved things. The list is used to fix up the moved things and to find
-    // things held live by intra-Nursery pointers.
-    gc::RelocationOverlay* head;
-    gc::RelocationOverlay** tail;
+    // These lists are threaded through the Nursery using the space from
+    // already moved things. The lists are used to fix up the moved things and
+    // to find things held live by intra-Nursery pointers.
+    gc::RelocationOverlay* objHead;
+    gc::RelocationOverlay** objTail;
+    gc::RelocationOverlay* stringHead;
+    gc::RelocationOverlay** stringTail;
 
     TenuringTracer(JSRuntime* rt, Nursery* nursery);
 
   public:
-    const Nursery& nursery() const { return nursery_; }
+    Nursery& nursery() { return nursery_; }
 
-    // Returns true if the pointer was updated.
     template <typename T> void traverse(T** thingp);
     template <typename T> void traverse(T* thingp);
 
@@ -99,18 +97,21 @@ class TenuringTracer : public JSTracer
     void traceObject(JSObject* src);
     void traceObjectSlots(NativeObject* nobj, uint32_t start, uint32_t length);
     void traceSlots(JS::Value* vp, uint32_t nslots);
+    void traceString(JSString* src);
 
   private:
-    Nursery& nursery() { return nursery_; }
-
-    inline void insertIntoFixupList(gc::RelocationOverlay* entry);
+    inline void insertIntoObjectFixupList(gc::RelocationOverlay* entry);
+    inline void insertIntoStringFixupList(gc::RelocationOverlay* entry);
     template <typename T>
     inline T* allocTenured(JS::Zone* zone, gc::AllocKind kind);
 
     inline JSObject* movePlainObjectToTenured(PlainObject* src);
     JSObject* moveToTenuredSlow(JSObject* src);
+    JSString* moveToTenured(JSString* src);
+
     size_t moveElementsToTenured(NativeObject* dst, NativeObject* src, gc::AllocKind dstKind);
     size_t moveSlotsToTenured(NativeObject* dst, NativeObject* src, gc::AllocKind dstKind);
+    size_t moveStringToTenured(JSString* dst, JSString* src, gc::AllocKind dstKind);
 
     void traceSlots(JS::Value* vp, JS::Value* end);
 };
@@ -135,6 +136,15 @@ class Nursery
     static const size_t Alignment = gc::ChunkSize;
     static const size_t ChunkShift = gc::ChunkShift;
 
+    struct alignas(gc::CellAlignBytes) CellAlignedByte {
+        char byte;
+    };
+
+    struct StringLayout {
+        JS::Zone* zone;
+        CellAlignedByte cell;
+    };
+
     explicit Nursery(JSRuntime* rt);
     ~Nursery();
 
@@ -156,6 +166,10 @@ class Nursery
     void enable();
     void disable();
     bool isEnabled() const { return maxChunkCount() != 0; }
+
+    void enableStrings();
+    void disableStrings();
+    bool canAllocateStrings() const { return canAllocateStrings_; }
 
     /* Return true if no allocations have been made since the last collection. */
     bool isEmpty() const;
@@ -181,6 +195,29 @@ class Nursery
      * pointer pre-filled. Returns nullptr if the Nursery is full.
      */
     JSObject* allocateObject(JSContext* cx, size_t size, size_t numDynamic, const js::Class* clasp);
+
+    /*
+     * Allocate and return a pointer to a new string. Returns nullptr if the
+     * Nursery is full.
+     */
+    gc::Cell* allocateString(JSContext* cx, JS::Zone* zone, size_t size, gc::AllocKind kind);
+
+    /*
+     * String zones are stored just before the string in nursery memory.
+     */
+    static JS::Zone* getStringZone(const JSString* str) {
+#ifdef DEBUG
+        auto cell = reinterpret_cast<const js::gc::Cell*>(str); // JSString type is incomplete here
+        MOZ_ASSERT(js::gc::IsInsideNursery(cell), "getStringZone must be passed a nursery string");
+#endif
+
+        auto layout = reinterpret_cast<const uint8_t*>(str) - offsetof(StringLayout, cell);
+        return reinterpret_cast<const StringLayout*>(layout)->zone;
+    }
+
+    static size_t stringHeaderSize() {
+        return offsetof(StringLayout, cell);
+    }
 
     /* Allocate a buffer for a given zone, using the nursery if possible. */
     void* allocateBuffer(JS::Zone* zone, size_t nbytes);
@@ -212,17 +249,24 @@ class Nursery
     void collect(JS::gcreason::Reason reason);
 
     /*
-     * Check if the thing at |*ref| in the Nursery has been forwarded. If so,
-     * sets |*ref| to the new location of the object and returns true. Otherwise
-     * returns false and leaves |*ref| unset.
+     * If the thing at |*ref| in the Nursery has been forwarded, set |*ref| to
+     * the new location and return true. Otherwise return false and leave
+     * |*ref| unset.
      */
-    MOZ_ALWAYS_INLINE MOZ_MUST_USE static bool getForwardedPointer(JSObject** ref);
+    MOZ_ALWAYS_INLINE MOZ_MUST_USE static bool getForwardedPointer(js::gc::Cell** ref);
 
     /* Forward a slots/elements pointer stored in an Ion frame. */
     void forwardBufferPointer(HeapSlot** pSlotsElems);
 
     inline void maybeSetForwardingPointer(JSTracer* trc, void* oldData, void* newData, bool direct);
     inline void setForwardingPointerWhileTenuring(void* oldData, void* newData, bool direct);
+
+    /*
+     * Register a malloced buffer that is held by a nursery object, which
+     * should be freed at the end of a minor GC. Buffers are unregistered when
+     * their owning objects are tenured.
+     */
+    bool registerMallocedBuffer(void* buffer);
 
     /* Mark a malloced buffer as no longer needing to be freed. */
     void removeMallocedBuffer(void* buffer) {
@@ -281,6 +325,7 @@ class Nursery
 
     void* addressOfCurrentEnd() const { return (void*)&currentEnd_; }
     void* addressOfPosition() const { return (void*)&position_; }
+    void* addressOfCurrentStringEnd() const { return (void*)&currentStringEnd_; }
 
     void requestMinorGC(JS::gcreason::Reason reason) const;
 
@@ -317,6 +362,12 @@ class Nursery
     /* Pointer to the last byte of space in the current chunk. */
     uintptr_t currentEnd_;
 
+    /*
+     * Pointer to the last byte of space in the current chunk, or nullptr if we
+     * are not allocating strings in the nursery.
+     */
+    uintptr_t currentStringEnd_;
+
     /* The index of the chunk that is currently being allocated from. */
     unsigned currentChunk_;
 
@@ -342,7 +393,10 @@ class Nursery
     mozilla::TimeDuration profileThreshold_;
     bool enableProfiling_;
 
-    /* Report ObjectGroups with at lest this many instances tenured. */
+    /* Whether we will nursery-allocate strings. */
+    bool canAllocateStrings_;
+
+    /* Report ObjectGroups with at least this many instances tenured. */
     int64_t reportTenurings_;
 
     /*
@@ -460,9 +514,6 @@ class Nursery
     uintptr_t position() const { return position_; }
 
     JSRuntime* runtime() const { return runtime_; }
-
-    /* Allocates a new GC thing from the tenured generation during minor GC. */
-    gc::TenuredCell* allocateFromTenured(JS::Zone* zone, gc::AllocKind thingKind);
 
     /* Common internal allocator function. */
     void* allocate(size_t size);

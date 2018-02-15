@@ -8,12 +8,11 @@
 
 #include "mozilla/ScopeExit.h"
 
-#include "jsscript.h"
-
 #include "builtin/ModuleObject.h"
 #include "gc/Allocator.h"
 #include "gc/FreeOp.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/JSScript.h"
 #include "vm/StringBuffer.h"
 #include "wasm/WasmInstance.h"
 

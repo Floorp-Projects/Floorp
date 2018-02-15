@@ -9,13 +9,12 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "jscntxt.h"
-#include "jscompartment.h"
-
 #include "ds/LifoAlloc.h"
 #include "jit/Bailouts.h"
 #include "jit/IonCode.h"
 #include "jit/MacroAssembler.h"
+#include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 #include "vm/TraceLogging.h"
 
 namespace js {

@@ -10,7 +10,6 @@
 # include <valgrind/memcheck.h>
 #endif
 
-#include "jscntxt.h"
 #include "jsprf.h"
 #include "jstypes.h"
 
@@ -21,13 +20,14 @@
 #include "jit/MacroAssembler.h"
 #include "js/HashTable.h"
 #include "vm/Debugger.h"
+#include "vm/JSContext.h"
 #include "vm/JSONParser.h"
 
 #include "jsgcinlines.h"
-#include "jsobjinlines.h"
 
 #include "gc/Iteration-inl.h"
 #include "gc/Nursery-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace js::gc;

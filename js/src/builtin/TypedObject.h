@@ -7,12 +7,12 @@
 #ifndef builtin_TypedObject_h
 #define builtin_TypedObject_h
 
-#include "jsobj.h"
 #include "jsweakmap.h"
 
 #include "builtin/TypedObjectConstants.h"
 #include "js/Conversions.h"
 #include "vm/ArrayBufferObject.h"
+#include "vm/JSObject.h"
 #include "vm/ShapedObject.h"
 
 /*

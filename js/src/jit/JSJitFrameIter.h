@@ -7,14 +7,13 @@
 #ifndef jit_JSJitFrameIter_h
 #define jit_JSJitFrameIter_h
 
-#include "jsfun.h"
-#include "jsscript.h"
 #include "jstypes.h"
 
 #include "jit/IonCode.h"
 #include "jit/Snapshots.h"
-
 #include "js/ProfilingFrameIterator.h"
+#include "vm/JSFunction.h"
+#include "vm/JSScript.h"
 
 namespace js {
 namespace jit {

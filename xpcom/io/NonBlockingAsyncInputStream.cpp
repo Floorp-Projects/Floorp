@@ -70,9 +70,11 @@ NonBlockingAsyncInputStream::Create(already_AddRefed<nsIInputStream> aInputStrea
 
   MOZ_DIAGNOSTIC_ASSERT(nonBlocking);
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   nsCOMPtr<nsIAsyncInputStream> asyncInputStream =
     do_QueryInterface(inputStream);
   MOZ_DIAGNOSTIC_ASSERT(!asyncInputStream);
+#endif // MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
   RefPtr<NonBlockingAsyncInputStream> stream =
     new NonBlockingAsyncInputStream(inputStream.forget());

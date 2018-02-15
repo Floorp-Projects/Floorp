@@ -7,7 +7,7 @@
 #ifndef jit_CompileWrappers_h
 #define jit_CompileWrappers_h
 
-#include "jscntxt.h"
+#include "vm/JSContext.h"
 
 namespace js {
 namespace jit {
@@ -76,9 +76,12 @@ class CompileZone
     const void* addressOfNeedsIncrementalBarrier();
     const void* addressOfFreeList(gc::AllocKind allocKind);
     const void* addressOfNurseryPosition();
+    const void* addressOfStringNurseryPosition();
     const void* addressOfNurseryCurrentEnd();
+    const void* addressOfStringNurseryCurrentEnd();
 
     bool nurseryExists();
+    bool canNurseryAllocateStrings();
     void setMinorGCShouldCancelIonCompilations();
 };
 

@@ -23,7 +23,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ClientHandle.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/ServiceWorkerCommon.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/ServiceWorkerRegistrarTypes.h"
 #include "mozilla/dom/ServiceWorkerRegistrationInfo.h"
@@ -352,12 +351,6 @@ private:
   GetClientRegistration(const ClientInfo& aClientInfo,
                         ServiceWorkerRegistrationInfo** aRegistrationInfo);
 
-  nsresult
-  GetServiceWorkerForScope(nsPIDOMWindowInner* aWindow,
-                           const nsAString& aScope,
-                           WhichServiceWorker aWhichWorker,
-                           nsISupports** aServiceWorker);
-
   ServiceWorkerInfo*
   GetActiveWorkerInfoForScope(const OriginAttributes& aOriginAttributes,
                               const nsACString& aScope);
@@ -366,11 +359,7 @@ private:
   GetActiveWorkerInfoForDocument(nsIDocument* aDocument);
 
   void
-  TransitionServiceWorkerRegistrationWorker(ServiceWorkerRegistrationInfo* aRegistration,
-                                            WhichServiceWorker aWhichOne);
-  void
-  InvalidateServiceWorkerRegistrationWorker(ServiceWorkerRegistrationInfo* aRegistration,
-                                            WhichServiceWorker aWhichOnes);
+  UpdateRegistrationListeners(ServiceWorkerRegistrationInfo* aReg);
 
   void
   NotifyServiceWorkerRegistrationRemoved(ServiceWorkerRegistrationInfo* aRegistration);

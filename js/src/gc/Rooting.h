@@ -9,8 +9,8 @@
 
 #include "js/GCVector.h"
 #include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
 
-class JSAtom;
 class JSLinearString;
 
 namespace js {

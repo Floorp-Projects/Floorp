@@ -10,7 +10,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
 
-#include "jscntxt.h"
 #include "jsexn.h"
 #include "jsfriendapi.h"
 #include "jsiter.h"
@@ -20,10 +19,10 @@
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/Debugger.h"
-
-#include "jsobjinlines.h"
+#include "vm/JSContext.h"
 
 #include "vm/Debugger-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
@@ -2634,6 +2633,11 @@ js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind co
 
     // Step 3.
     if (!thisVal.isObject() || !thisVal.toObject().is<AsyncFromSyncIteratorObject>()) {
+        // NB: See https://github.com/tc39/proposal-async-iteration/issues/105
+        // for why this check shouldn't be necessary as long as we can ensure
+        // the Async-from-Sync iterator can't be accessed directly by user
+        // code.
+
         // Step 3.a.
         RootedValue badGeneratorError(cx);
         if (!GetTypeError(cx, JSMSG_NOT_AN_ASYNC_ITERATOR, &badGeneratorError))
@@ -2658,8 +2662,7 @@ js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind co
     RootedValue func(cx);
     if (completionKind == CompletionKind::Normal) {
         // 11.1.3.2.1 steps 5-6 (partially).
-        if (!GetProperty(cx, iter, iter, cx->names().next, &func))
-            return AbruptRejectPromise(cx, args, resultPromise, nullptr);
+        func.set(asyncIter->nextMethod());
     } else if (completionKind == CompletionKind::Return) {
         // 11.1.3.2.2 steps 5-6.
         if (!GetProperty(cx, iter, iter, cx->names().return_, &func))

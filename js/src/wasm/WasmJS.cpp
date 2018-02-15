@@ -38,9 +38,8 @@
 #include "wasm/WasmStubs.h"
 #include "wasm/WasmValidate.h"
 
-#include "jsobjinlines.h"
-
 #include "vm/ArrayBufferObject-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

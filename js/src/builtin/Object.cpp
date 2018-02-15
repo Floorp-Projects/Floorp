@@ -9,7 +9,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MaybeOneOf.h"
 
-#include "jscntxt.h"
 #include "jsstr.h"
 
 #include "builtin/Eval.h"
@@ -18,11 +17,11 @@
 #include "jit/InlinableNatives.h"
 #include "js/UniquePtr.h"
 #include "vm/AsyncFunction.h"
+#include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
 #include "vm/StringBuffer.h"
 
-#include "jsobjinlines.h"
-
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/UnboxedObject-inl.h"

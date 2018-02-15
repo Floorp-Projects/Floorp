@@ -5,14 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsapi.h"
-#include "jscntxt.h"
-#include "jscompartment.h"
-#include "jsobj.h"
 
 #include "vm/Interpreter.h"
+#include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
+#include "vm/JSObject.h"
 #include "vm/PIC.h"
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using JS::ForOfIterator;
@@ -41,6 +41,7 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
             // Got optimized stub.  Array is optimizable.
             index = 0;
             iterator = iterableObj;
+            nextMethod.setUndefined();
             return true;
         }
     }
@@ -77,7 +78,12 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
     if (!res.isObject())
         return ThrowCheckIsObject(cx, CheckIsObjectKind::GetIterator);
 
-    iterator = &res.toObject();
+    RootedObject iteratorObj(cx, &res.toObject());
+    if (!GetProperty(cx, iteratorObj, iteratorObj, cx->names().next, &res))
+        return false;
+
+    iterator = iteratorObj;
+    nextMethod = res;
     return true;
 }
 
@@ -114,25 +120,11 @@ bool
 ForOfIterator::next(MutableHandleValue vp, bool* done)
 {
     MOZ_ASSERT(iterator);
-    if (index != NOT_ARRAY) {
-        ForOfPIC::Chain* stubChain = ForOfPIC::getOrCreate(cx_);
-        if (!stubChain)
-            return false;
-
-        if (stubChain->isArrayNextStillSane())
-            return nextFromOptimizedArray(vp, done);
-
-        // ArrayIterator.prototype.next changed, materialize a proper
-        // ArrayIterator instance and fall through to slowpath case.
-        if (!materializeArrayIterator())
-            return false;
-    }
+    if (index != NOT_ARRAY)
+        return nextFromOptimizedArray(vp, done);
 
     RootedValue v(cx_);
-    if (!GetProperty(cx_, iterator, iterator, cx_->names().next, &v))
-        return false;
-
-    if (!js::Call(cx_, v, iterator, &v))
+    if (!js::Call(cx_, nextMethod, iterator, &v))
         return false;
 
     if (!v.isObject())
@@ -197,24 +189,4 @@ ForOfIterator::closeThrow()
 
     // Step 6.
     cx_->setPendingException(completionException);
-}
-
-bool
-ForOfIterator::materializeArrayIterator()
-{
-    MOZ_ASSERT(index != NOT_ARRAY);
-
-    HandlePropertyName name = cx_->names().ArrayValuesAt;
-    RootedValue val(cx_);
-    if (!GlobalObject::getSelfHostedFunction(cx_, cx_->global(), name, name, 1, &val))
-        return false;
-
-    RootedValue indexOrRval(cx_, Int32Value(index));
-    if (!js::Call(cx_, val, iterator, indexOrRval, &indexOrRval))
-        return false;
-
-    index = NOT_ARRAY;
-    // Result of call to ArrayValuesAt must be an object.
-    iterator = &indexOrRval.toObject();
-    return true;
 }

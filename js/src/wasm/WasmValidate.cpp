@@ -20,11 +20,11 @@
 
 #include "mozilla/CheckedInt.h"
 
-#include "jscntxt.h"
-#include "jscompartment.h"
 #include "jsprf.h"
 
 #include "jit/JitOptions.h"
+#include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 #include "wasm/WasmBinaryIterator.h"
 
 using namespace js;
@@ -265,6 +265,9 @@ Decoder::finishNameSubsection(uint32_t endOffset)
 bool
 wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals)
 {
+    if (locals.length() > MaxLocals)
+        return false;
+
     uint32_t numLocalEntries = 0;
     ValType prev = ValType(TypeCode::Limit);
     for (ValType t : locals) {

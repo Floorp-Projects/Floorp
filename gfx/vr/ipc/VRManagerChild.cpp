@@ -90,7 +90,7 @@ VRManagerChild::InitForContent(Endpoint<PVRManagerChild>&& aEndpoint)
 
   RefPtr<VRManagerChild> child(new VRManagerChild());
   if (!aEndpoint.Bind(child)) {
-    MOZ_CRASH("Couldn't Open() Compositor channel.");
+    return false;
   }
   sVRManagerChildSingleton = child;
   return true;

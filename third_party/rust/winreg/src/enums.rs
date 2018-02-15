@@ -6,7 +6,7 @@
 
 //! `use winreg::enums::*;` to import all needed enumerations and constants
 use super::winapi;
-pub use winapi::{HKEY_CLASSES_ROOT,
+pub use winapi::um::winreg::{HKEY_CLASSES_ROOT,
                  HKEY_CURRENT_USER,
                  HKEY_LOCAL_MACHINE,
                  HKEY_USERS,
@@ -16,7 +16,7 @@ pub use winapi::{HKEY_CLASSES_ROOT,
                  HKEY_CURRENT_CONFIG,
                  HKEY_DYN_DATA,
                  HKEY_CURRENT_USER_LOCAL_SETTINGS};
-pub use winapi::{KEY_QUERY_VALUE,
+pub use winapi::um::winnt::{KEY_QUERY_VALUE,
                  KEY_SET_VALUE,
                  KEY_CREATE_SUB_KEY,
                  KEY_ENUMERATE_SUB_KEYS,
@@ -36,7 +36,7 @@ macro_rules! winapi_enum{
         #[allow(non_camel_case_types)]
         #[derive(Debug,Clone,PartialEq)]
         pub enum $t {
-            $( $v = winapi::$v as isize ),*
+            $( $v = winapi::um::winnt::$v as isize ),*
         }
     )
 }

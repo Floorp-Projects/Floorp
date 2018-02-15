@@ -3,29 +3,30 @@
 // http://opensource.org/licenses/MIT>. This file
 // may not be copied, modified, or distributed
 // except according to those terms.
-extern crate rustc_serialize;
+#[macro_use]
+extern crate serde_derive;
 extern crate winreg;
 use winreg::enums::*;
 
-#[derive(Debug,RustcEncodable,RustcDecodable,PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct Coords {
     x: u32,
     y: u32,
 }
 
-#[derive(Debug,RustcEncodable,RustcDecodable,PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct Size {
     w: u32,
     h: u32,
 }
 
-#[derive(Debug,RustcEncodable,RustcDecodable,PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct Rectangle {
     coords: Coords,
     size: Size,
 }
 
-#[derive(Debug,RustcEncodable,RustcDecodable,PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct Test {
     t_bool: bool,
     t_u8: u8,
@@ -54,7 +55,7 @@ fn main() {
         t_u16: 32768,
         t_u32: 123456789,
         t_u64: 123456789101112,
-        t_usize: 123456789101112,
+        t_usize: 1234567891,
         t_struct: Rectangle{
             coords: Coords{ x: 55, y: 77 },
             size: Size{ w: 500, h: 300 },

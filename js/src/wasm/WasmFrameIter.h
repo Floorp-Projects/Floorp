@@ -20,9 +20,8 @@
 #define wasm_frame_iter_h
 
 #include "js/ProfilingFrameIterator.h"
+#include "js/TypeDecls.h"
 #include "wasm/WasmTypes.h"
-
-class JSAtom;
 
 namespace js {
 

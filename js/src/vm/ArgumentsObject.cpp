@@ -14,9 +14,8 @@
 #include "vm/GlobalObject.h"
 #include "vm/Stack.h"
 
-#include "jsobjinlines.h"
-
 #include "gc/Nursery-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
 

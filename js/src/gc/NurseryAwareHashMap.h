@@ -148,14 +148,18 @@ class NurseryAwareHashMap
 
             // Update and relocate the key, if the value is still needed.
             //
-            // Note that this currently assumes that all Value will contain a
-            // strong reference to Key, as per its use as the
-            // CrossCompartmentWrapperMap. We may need to make the following
-            // behavior more dynamic if we use this map in other nursery-aware
-            // contexts.
+            // Non-string Values will contain a strong reference to Key, as per
+            // its use in the CrossCompartmentWrapperMap, so the key will never
+            // be dying here. Strings do *not* have any sort of pointer from
+            // wrapper to wrappee, as they are just copies. The wrapper map
+            // entry is merely used as a cache to avoid re-copying the string,
+            // and currently that entire cache is flushed on major GC.
             Key copy(key);
-            mozilla::DebugOnly<bool> sweepKey = JS::GCPolicy<Key>::needsSweep(&copy);
-            MOZ_ASSERT(!sweepKey);
+            bool sweepKey = JS::GCPolicy<Key>::needsSweep(&copy);
+            if (sweepKey) {
+                map.remove(key);
+                continue;
+            }
             map.rekeyIfMoved(key, copy);
         }
         nurseryEntries.clear();

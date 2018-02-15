@@ -18,18 +18,15 @@
 #ifndef XP_WIN
 # include <sys/mman.h>
 #endif
-
 #ifdef MOZ_VALGRIND
 # include <valgrind/memcheck.h>
 #endif
 
 #include "jsapi.h"
 #include "jsarray.h"
-#include "jscntxt.h"
 #include "jscpucfg.h"
 #include "jsfriendapi.h"
 #include "jsnum.h"
-#include "jsobj.h"
 #include "jstypes.h"
 #include "jsutil.h"
 #ifdef XP_WIN
@@ -45,6 +42,8 @@
 #include "js/MemoryMetrics.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/JSContext.h"
+#include "vm/JSObject.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/WrapperObject.h"
 #include "wasm/WasmSignalHandlers.h"
@@ -52,6 +51,7 @@
 
 #include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
+#include "vm/JSAtom-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
 

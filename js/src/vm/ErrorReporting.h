@@ -16,8 +16,6 @@
 #include "js/UniquePtr.h" // for UniquePtr
 #include "js/Utility.h" // for UniqueTwoByteChars
 
-struct JSContext;
-
 namespace js {
 
 /**

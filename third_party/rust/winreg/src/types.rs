@@ -9,7 +9,7 @@ use std::slice;
 use std::io;
 use std::ffi::{OsStr,OsString};
 use std::os::windows::ffi::{OsStrExt,OsStringExt};
-use super::winapi::winerror;
+use super::winapi::shared::winerror;
 use super::{RegValue};
 use super::enums::*;
 use super::{to_utf16,v16_to_v8};

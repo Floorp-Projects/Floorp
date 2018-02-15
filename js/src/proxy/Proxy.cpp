@@ -11,17 +11,17 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jscntxt.h"
-#include "jsfun.h"
 #include "jswrapper.h"
 
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/ScriptedProxyHandler.h"
+#include "vm/JSContext.h"
+#include "vm/JSFunction.h"
 #include "vm/WrapperObject.h"
 
-#include "jsobjinlines.h"
-
 #include "gc/Marking-inl.h"
+#include "vm/JSAtom-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

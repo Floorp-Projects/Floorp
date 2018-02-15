@@ -127,7 +127,7 @@ public:
   void RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aCallBack);
 
   /// Can only be called from the render thread.
-  void UpdateAndRender(wr::WindowId aWindowId);
+  void UpdateAndRender(wr::WindowId aWindowId, bool aReadback = false);
 
   void Pause(wr::WindowId aWindowId);
   bool Resume(wr::WindowId aWindowId);

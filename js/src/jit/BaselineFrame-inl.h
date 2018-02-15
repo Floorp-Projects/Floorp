@@ -9,14 +9,12 @@
 
 #include "jit/BaselineFrame.h"
 
-#include "jscntxt.h"
-#include "jscompartment.h"
-
 #include "vm/EnvironmentObject.h"
-
-#include "jsscriptinlines.h"
+#include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSScript-inl.h"
 
 namespace js {
 namespace jit {

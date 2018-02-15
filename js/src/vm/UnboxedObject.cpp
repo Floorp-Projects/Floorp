@@ -11,10 +11,9 @@
 #include "jit/JitCommon.h"
 #include "jit/Linker.h"
 
-#include "jsobjinlines.h"
-
 #include "gc/Nursery-inl.h"
 #include "jit/MacroAssembler-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/Shape-inl.h"
 
 using mozilla::ArrayLength;
@@ -137,13 +136,23 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
     Label postBarrier;
     for (size_t i = 0; i < layout.properties().length(); i++) {
         const UnboxedLayout::Property& property = layout.properties()[i];
+        if (!UnboxedTypeNeedsPostBarrier(property.type))
+            continue;
+
+        Address valueAddress(propertiesReg, i * sizeof(IdValuePair) + offsetof(IdValuePair, value));
         if (property.type == JSVAL_TYPE_OBJECT) {
-            Address valueAddress(propertiesReg, i * sizeof(IdValuePair) + offsetof(IdValuePair, value));
             Label notObject;
             masm.branchTestObject(Assembler::NotEqual, valueAddress, &notObject);
             Register valueObject = masm.extractObject(valueAddress, scratch1);
             masm.branchPtrInNurseryChunk(Assembler::Equal, valueObject, scratch2, &postBarrier);
             masm.bind(&notObject);
+        } else {
+            MOZ_ASSERT(property.type == JSVAL_TYPE_STRING);
+            Label notString;
+            masm.branchTestString(Assembler::NotEqual, valueAddress, &notString);
+            masm.unboxString(valueAddress, scratch1);
+            masm.branchPtrInNurseryChunk(Assembler::Equal, scratch1, scratch2, &postBarrier);
+            masm.bind(&notString);
         }
     }
 

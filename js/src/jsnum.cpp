@@ -21,14 +21,15 @@
 #include <math.h>
 #include <string.h>
 
-#include "jscntxt.h"
 #include "jsdtoa.h"
-#include "jsobj.h"
 #include "jsstr.h"
 #include "jstypes.h"
 
 #include "js/Conversions.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSAtom.h"
+#include "vm/JSContext.h"
+#include "vm/JSObject.h"
 #include "vm/StringBuffer.h"
 
 #include "vm/NativeObject-inl.h"

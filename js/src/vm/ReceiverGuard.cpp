@@ -8,7 +8,8 @@
 
 #include "builtin/TypedObject.h"
 #include "vm/UnboxedObject.h"
-#include "jsobjinlines.h"
+
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 

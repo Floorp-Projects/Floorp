@@ -8,8 +8,7 @@
 
 #include "mozilla/Range.h"
 
-#include "jsobjinlines.h"
-
+#include "vm/JSObject-inl.h"
 #include "vm/String-inl.h"
 
 using namespace js;

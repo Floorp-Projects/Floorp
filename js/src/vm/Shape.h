@@ -16,7 +16,6 @@
 #include "mozilla/TemplateLib.h"
 
 #include "jsapi.h"
-#include "jsatom.h"
 #include "jsfriendapi.h"
 #include "jstypes.h"
 #include "NamespaceImports.h"
@@ -28,6 +27,7 @@
 #include "js/MemoryMetrics.h"
 #include "js/RootingAPI.h"
 #include "js/UbiNode.h"
+#include "vm/JSAtom.h"
 #include "vm/ObjectGroup.h"
 #include "vm/Printer.h"
 #include "vm/String.h"

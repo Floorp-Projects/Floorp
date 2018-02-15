@@ -12,8 +12,7 @@
 #include "gc/GCTrace.h"
 #include "vm/String.h"
 
-#include "jsobjinlines.h"
-
+#include "vm/JSObject-inl.h"
 #include "vm/TypeInference-inl.h"
 
 namespace js {

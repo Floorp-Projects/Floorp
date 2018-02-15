@@ -8,11 +8,10 @@
 
 #include "mozilla/Sprintf.h"
 
-#include "jscntxt.h"
-#include "jscompartment.h"
-
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
+#include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 #include "vm/MutexIDs.h"
 #include "vm/Shape.h"
 

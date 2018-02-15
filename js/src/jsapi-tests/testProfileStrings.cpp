@@ -9,9 +9,8 @@
 
 #include "mozilla/Atomics.h"
 
-#include "jscntxt.h"
-
 #include "jsapi-tests/tests.h"
+#include "vm/JSContext.h"
 
 static PseudoStack pseudoStack;
 static uint32_t peakStackPointer = 0;
