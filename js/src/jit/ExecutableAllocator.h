@@ -83,7 +83,12 @@ namespace JS {
 namespace js {
 namespace jit {
 
-enum CodeKind { ION_CODE = 0, BASELINE_CODE, REGEXP_CODE, OTHER_CODE };
+enum class CodeKind : uint8_t {
+    Ion,
+    Baseline,
+    RegExp,
+    Other
+};
 
 class ExecutableAllocator;
 class JitRuntime;

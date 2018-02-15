@@ -84,7 +84,7 @@ class JitCode : public gc::TenuredCell
         jumpRelocTableBytes_(0),
         dataRelocTableBytes_(0),
         headerSize_(headerSize),
-        kind_(kind),
+        kind_(uint8_t(kind)),
         invalidated_(false),
         hasBytecodeMap_(false)
     {
