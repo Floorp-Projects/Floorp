@@ -740,23 +740,28 @@ CodeGeneratorX64::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
 
     MOZ_ASSERT(inputType == MIRType::Double || inputType == MIRType::Float32);
 
-    auto* ool = new(alloc()) OutOfLineWasmTruncateCheck(mir, input);
+    auto* ool = new(alloc()) OutOfLineWasmTruncateCheck(mir, input, output);
     addOutOfLineCode(ool, mir);
 
     FloatRegister temp = mir->isUnsigned() ? ToFloatRegister(lir->temp()) : InvalidFloatReg;
 
     Label* oolEntry = ool->entry();
     Label* oolRejoin = ool->rejoin();
+    bool isSaturating = mir->isSaturating();
     if (inputType == MIRType::Double) {
         if (mir->isUnsigned())
-            masm.wasmTruncateDoubleToUInt64(input, output, oolEntry, oolRejoin, temp);
+            masm.wasmTruncateDoubleToUInt64(input, output, isSaturating,
+                                            oolEntry, oolRejoin, temp);
         else
-            masm.wasmTruncateDoubleToInt64(input, output, oolEntry, oolRejoin, temp);
+            masm.wasmTruncateDoubleToInt64(input, output, isSaturating,
+                                           oolEntry, oolRejoin, temp);
     } else {
         if (mir->isUnsigned())
-            masm.wasmTruncateFloat32ToUInt64(input, output, oolEntry, oolRejoin, temp);
+            masm.wasmTruncateFloat32ToUInt64(input, output, isSaturating,
+                                             oolEntry, oolRejoin, temp);
         else
-            masm.wasmTruncateFloat32ToInt64(input, output, oolEntry, oolRejoin, temp);
+            masm.wasmTruncateFloat32ToInt64(input, output, isSaturating,
+                                            oolEntry, oolRejoin, temp);
     }
 }
 

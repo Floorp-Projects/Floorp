@@ -1118,6 +1118,10 @@ ThunkedNativeToDescription(SymbolicAddress func)
         return "call to native i64.trunc_u/f64 (in wasm)";
       case SymbolicAddress::TruncateDoubleToInt64:
         return "call to native i64.trunc_s/f64 (in wasm)";
+      case SymbolicAddress::SaturatingTruncateDoubleToUint64:
+        return "call to native i64.trunc_u:sat/f64 (in wasm)";
+      case SymbolicAddress::SaturatingTruncateDoubleToInt64:
+        return "call to native i64.trunc_s:sat/f64 (in wasm)";
       case SymbolicAddress::Uint64ToDouble:
         return "call to native f64.convert_u/i64 (in wasm)";
       case SymbolicAddress::Uint64ToFloat32:
