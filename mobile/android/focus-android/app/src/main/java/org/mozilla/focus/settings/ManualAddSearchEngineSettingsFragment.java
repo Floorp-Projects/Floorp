@@ -21,6 +21,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
 import org.mozilla.focus.search.ManualAddSearchEnginePreference;
@@ -36,9 +37,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
+public class ManualAddSearchEngineSettingsFragment extends BaseSettingsFragment {
     private static final String LOGTAG = "ManualAddSearchEngine";
 
     // Set so the user doesn't have to wait *too* long. It's used twice: once for connecting and once for reading.
@@ -55,14 +54,17 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        addPreferencesFromResource(R.xml.manual_add_search_engine);
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        // We've checked that this cast is legal in super.onAttach.
-        ((ActionBarUpdater) getActivity()).updateIcon(R.drawable.ic_close);
+        final SettingsFragment.ActionBarUpdater updater = getActionBarUpdater();
+        updater.updateTitle(R.string.action_option_add_search_engine);
+        updater.updateIcon(R.drawable.ic_close);
    }
 
     @Override
@@ -132,6 +134,15 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
 
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        final View view = getView();
+        if (view != null) {
+            ViewUtils.hideKeyboard(view);
         }
     }
 

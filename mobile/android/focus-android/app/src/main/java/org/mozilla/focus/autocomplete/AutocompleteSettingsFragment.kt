@@ -10,7 +10,7 @@ import android.preference.Preference
 import android.preference.PreferenceFragment
 import android.preference.PreferenceScreen
 import org.mozilla.focus.R
-import org.mozilla.focus.settings.SettingsFragment
+import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
 /**
@@ -26,7 +26,7 @@ class AutocompleteSettingsFragment : PreferenceFragment(), SharedPreferences.OnS
     override fun onResume() {
         super.onResume()
 
-        val updater = activity as SettingsFragment.ActionBarUpdater
+        val updater = activity as BaseSettingsFragment.ActionBarUpdater
         updater.updateTitle(R.string.preference_subitem_autocomplete)
         updater.updateIcon(R.drawable.ic_back)
 

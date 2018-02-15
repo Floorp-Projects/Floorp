@@ -9,9 +9,10 @@ import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_settings.*
 import org.mozilla.focus.R
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
+import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.settings.SettingsFragment
 
-class SettingsActivity : LocaleAwareAppCompatActivity(), SettingsFragment.ActionBarUpdater {
+class SettingsActivity : LocaleAwareAppCompatActivity(), BaseSettingsFragment.ActionBarUpdater {
 
     companion object {
         @JvmField
@@ -27,10 +28,8 @@ class SettingsActivity : LocaleAwareAppCompatActivity(), SettingsFragment.Action
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         if (savedInstanceState == null) {
-            val fragment = SettingsFragment.newInstance(intent.extras, SettingsFragment.SettingsScreen.MAIN)
-
             fragmentManager.beginTransaction()
-                    .add(R.id.container, fragment)
+                    .add(R.id.container, SettingsFragment.newInstance())
                     .commit()
         }
 

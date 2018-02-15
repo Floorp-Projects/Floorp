@@ -28,9 +28,10 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import org.mozilla.focus.R
-import org.mozilla.focus.settings.SettingsFragment
+import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import java.util.Collections
+import org.mozilla.focus.utils.ViewUtils
 
 /**
  * Fragment showing settings UI listing all custom autocomplete domains entered by the user.
@@ -122,9 +123,10 @@ open class AutocompleteListFragment : Fragment() {
     override fun onResume() {
         super.onResume()
 
-        val updater = activity as SettingsFragment.ActionBarUpdater
-        updater.updateTitle(R.string.preference_autocomplete_subitem_customlist)
-        updater.updateIcon(R.drawable.ic_back)
+        (activity as BaseSettingsFragment.ActionBarUpdater).apply {
+            updateTitle(R.string.preference_autocomplete_subitem_customlist)
+            updateIcon(R.drawable.ic_back)
+        }
 
         (domainList.adapter as DomainListAdapter).refresh(activity) {
             activity?.invalidateOptionsMenu()
@@ -138,12 +140,12 @@ open class AutocompleteListFragment : Fragment() {
     override fun onPrepareOptionsMenu(menu: Menu?) {
         val removeItem = menu?.findItem(R.id.remove)
 
-        removeItem?.isVisible = isSelectionMode() || domainList.adapter.itemCount > 1
-        val isEnabled = !isSelectionMode()
-                || (domainList.adapter as DomainListAdapter).selection().isNotEmpty()
-        removeItem?.isEnabled = isEnabled
-        removeItem?.icon?.mutate()?.alpha =
-                if (isEnabled) SettingsFragment.ALPHA_ENABLED else SettingsFragment.ALPHA_DISABLED
+        removeItem?.let {
+            it.isVisible = isSelectionMode() || domainList.adapter.itemCount > 1
+            val isEnabled = !isSelectionMode()
+                    || (domainList.adapter as DomainListAdapter).selection().isNotEmpty()
+            ViewUtils.setMenuItemEnabled(it, isEnabled)
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean = when (item?.itemId) {
