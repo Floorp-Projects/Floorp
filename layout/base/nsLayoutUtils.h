@@ -2278,21 +2278,25 @@ public:
   /**
    * Adds all font faces used in the frame tree starting from aFrame
    * to the list aFontFaceList.
+   * aMaxRanges: maximum number of text ranges to record for each face.
    */
   static nsresult GetFontFacesForFrames(nsIFrame* aFrame,
-                                        UsedFontFaceTable& aResult);
+                                        UsedFontFaceTable& aResult,
+                                        uint32_t aMaxRanges);
 
   /**
    * Adds all font faces used within the specified range of text in aFrame,
    * and optionally its continuations, to the list in aFontFaceList.
    * Pass 0 and INT32_MAX for aStartOffset and aEndOffset to specify the
    * entire text is to be considered.
+   * aMaxRanges: maximum number of text ranges to record for each face.
    */
   static nsresult GetFontFacesForText(nsIFrame* aFrame,
                                       int32_t aStartOffset,
                                       int32_t aEndOffset,
                                       bool aFollowContinuations,
-                                      UsedFontFaceTable& aResult);
+                                      UsedFontFaceTable& aResult,
+                                      uint32_t aMaxRanges);
 
   /**
    * Walks the frame tree starting at aFrame looking for textRuns.
