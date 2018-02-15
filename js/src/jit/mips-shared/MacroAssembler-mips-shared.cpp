@@ -1620,7 +1620,8 @@ MacroAssembler::wasmTrapInstruction()
 }
 
 void
-MacroAssembler::wasmTruncateDoubleToInt32(FloatRegister input, Register output, Label* oolEntry)
+MacroAssembler::wasmTruncateDoubleToInt32(FloatRegister input, Register output, bool isSaturating,
+                                          Label* oolEntry)
 {
     as_truncwd(ScratchFloat32Reg, input);
     as_cfc1(ScratchRegister, Assembler::FCSR);
@@ -1631,7 +1632,8 @@ MacroAssembler::wasmTruncateDoubleToInt32(FloatRegister input, Register output, 
 
 
 void
-MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input, Register output, Label* oolEntry)
+MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input, Register output, bool isSaturating,
+                                           Label* oolEntry)
 {
     as_truncws(ScratchFloat32Reg, input);
     as_cfc1(ScratchRegister, Assembler::FCSR);

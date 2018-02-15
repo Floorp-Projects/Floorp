@@ -1561,37 +1561,41 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // The truncate-to-int32 methods do not bind the rejoin label; clients must
     // do so if oolWasmTruncateCheckF64ToI32() can jump to it.
-    void wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry) PER_ARCH;
-    void wasmTruncateDoubleToInt32(FloatRegister input, Register output, Label* oolEntry) PER_SHARED_ARCH;
-    void oolWasmTruncateCheckF64ToI32(FloatRegister input, bool isUnsigned,
+    void wasmTruncateDoubleToUInt32(FloatRegister input, Register output, bool isSaturating,
+                                    Label* oolEntry) PER_ARCH;
+    void wasmTruncateDoubleToInt32(FloatRegister input, Register output, bool isSaturating,
+                                   Label* oolEntry) PER_SHARED_ARCH;
+    void oolWasmTruncateCheckF64ToI32(FloatRegister input, Register output, TruncFlags flags,
                                       wasm::BytecodeOffset off, Label* rejoin)
         DEFINED_ON(arm, arm64, x86_shared);
 
-    void wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, Label* oolEntry) PER_ARCH;
-    void wasmTruncateFloat32ToInt32(FloatRegister input, Register output, Label* oolEntry) PER_SHARED_ARCH;
-    void oolWasmTruncateCheckF32ToI32(FloatRegister input, bool isUnsigned,
+    void wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, bool isSaturating,
+                                     Label* oolEntry) PER_ARCH;
+    void wasmTruncateFloat32ToInt32(FloatRegister input, Register output, bool isSaturating,
+                                    Label* oolEntry) PER_SHARED_ARCH;
+    void oolWasmTruncateCheckF32ToI32(FloatRegister input, Register output, TruncFlags flags,
                                       wasm::BytecodeOffset off, Label* rejoin)
         DEFINED_ON(arm, arm64, x86_shared);
 
     // The truncate-to-int64 methods will always bind the `oolRejoin` label
     // after the last emitted instruction.
-    void wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, Label* oolEntry,
-                                   Label* oolRejoin, FloatRegister tempDouble)
+    void wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, bool isSaturating,
+                                   Label* oolEntry, Label* oolRejoin, FloatRegister tempDouble)
         DEFINED_ON(arm64, x86, x64);
-    void wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
-                                    Label* oolRejoin, FloatRegister tempDouble)
+    void wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, bool isSaturating,
+                                    Label* oolEntry, Label* oolRejoin, FloatRegister tempDouble)
         DEFINED_ON(arm64, x86, x64);
-    void oolWasmTruncateCheckF64ToI64(FloatRegister input, bool isUnsigned,
+    void oolWasmTruncateCheckF64ToI64(FloatRegister input, Register64 output, TruncFlags flags,
                                       wasm::BytecodeOffset off, Label* rejoin)
         DEFINED_ON(arm, arm64, x86_shared);
 
-    void wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, Label* oolEntry,
-                                    Label* oolRejoin, FloatRegister tempDouble)
+    void wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, bool isSaturating,
+                                    Label* oolEntry, Label* oolRejoin, FloatRegister tempDouble)
         DEFINED_ON(arm64, x86, x64);
-    void wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
-                                     Label* oolRejoin, FloatRegister tempDouble)
+    void wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, bool isSaturating,
+                                     Label* oolEntry, Label* oolRejoin, FloatRegister tempDouble)
         DEFINED_ON(arm64, x86, x64);
-    void oolWasmTruncateCheckF32ToI64(FloatRegister input, bool isUnsigned,
+    void oolWasmTruncateCheckF32ToI64(FloatRegister input, Register64 output, TruncFlags flags,
                                       wasm::BytecodeOffset off, Label* rejoin)
         DEFINED_ON(arm, arm64, x86_shared);
 
