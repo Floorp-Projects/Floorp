@@ -5427,18 +5427,20 @@ nsDocShell::Create()
 NS_IMETHODIMP
 nsDocShell::Destroy()
 {
+  if (mIsBeingDestroyed) {
+    return NS_ERROR_DOCSHELL_DYING;
+  }
+
   NS_ASSERTION(mItemType == typeContent || mItemType == typeChrome,
                "Unexpected item type in docshell");
 
   AssertOriginAttributesMatchPrivateBrowsing();
 
-  if (!mIsBeingDestroyed) {
-    nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
-    if (serv) {
-      const char* msg = mItemType == typeContent ?
-        NS_WEBNAVIGATION_DESTROY : NS_CHROME_WEBNAVIGATION_DESTROY;
-      serv->NotifyObservers(GetAsSupports(this), msg, nullptr);
-    }
+  nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
+  if (serv) {
+    const char* msg = mItemType == typeContent ?
+      NS_WEBNAVIGATION_DESTROY : NS_CHROME_WEBNAVIGATION_DESTROY;
+    serv->NotifyObservers(GetAsSupports(this), msg, nullptr);
   }
 
   mIsBeingDestroyed = true;
