@@ -31,7 +31,7 @@ public:
 
   using HTMLMediaElement::GetPaused;
 
-  NS_IMETHOD_(bool) IsVideo() override {
+  virtual bool IsVideo() const override {
     return true;
   }
 
