@@ -1194,8 +1194,6 @@ class MOZ_RAII IRGenerator
 
     const CacheIRWriter& writerRef() const { return writer; }
     CacheKind cacheKind() const { return cacheKind_; }
-
-    static constexpr char* NotAttached = nullptr;
 };
 
 // Flags used to describe what values a GetProperty cache may produce.
@@ -1308,6 +1306,7 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
     void maybeEmitIdGuard(jsid id);
 
     void trackAttached(const char* name);
+    void trackNotAttached();
 
   public:
     GetPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, CacheKind cacheKind,
@@ -1337,6 +1336,7 @@ class MOZ_RAII GetNameIRGenerator : public IRGenerator
     bool tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
 
     void trackAttached(const char* name);
+    void trackNotAttached();
 
   public:
     GetNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
@@ -1355,6 +1355,7 @@ class MOZ_RAII BindNameIRGenerator : public IRGenerator
     bool tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
 
     void trackAttached(const char* name);
+    void trackNotAttached();
 
   public:
     BindNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
@@ -1458,6 +1459,8 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
     bool tryAttachProxyElement(HandleObject obj, ObjOperandId objId, ValOperandId rhsId);
     bool tryAttachMegamorphicSetElement(HandleObject obj, ObjOperandId objId, ValOperandId rhsId);
 
+    void trackAttached(const char* name);
+
   public:
     SetPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, CacheKind cacheKind,
                        ICState::Mode mode, bool* isTemporarilyUnoptimizable, HandleValue lhsVal,
@@ -1466,7 +1469,7 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
 
     bool tryAttachStub();
     bool tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape oldShape);
-    void trackAttached(const char* name);
+    void trackNotAttached();
 
     bool shouldUnlinkPreliminaryObjectStubs() const {
         return preliminaryObjectAction_ == PreliminaryObjectAction::Unlink;
@@ -1519,6 +1522,7 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator
                                ValOperandId keyId);
 
     void trackAttached(const char* name);
+    void trackNotAttached();
 
   public:
     // NOTE: Argument order is PROPERTY, OBJECT
@@ -1534,6 +1538,7 @@ class MOZ_RAII InstanceOfIRGenerator : public IRGenerator
     HandleObject rhsObj_;
 
     void trackAttached(const char* name);
+    void trackNotAttached();
   public:
     InstanceOfIRGenerator(JSContext*, HandleScript, jsbytecode*, ICState::Mode,
                           HandleValue, HandleObject);
@@ -1583,6 +1588,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator
     bool tryAttachArrayJoin();
 
     void trackAttached(const char* name);
+    void trackNotAttached();
 
   public:
     CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
@@ -1612,6 +1618,7 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator
     bool tryAttachSymbol(ValOperandId lhsId, ValOperandId rhsId);
 
     void trackAttached(const char* name);
+    void trackNotAttached();
 
   public:
     CompareIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode,
@@ -1632,6 +1639,7 @@ class MOZ_RAII ToBoolIRGenerator : public IRGenerator
     bool tryAttachObject();
 
     void trackAttached(const char* name);
+    void trackNotAttached();
 
   public:
     ToBoolIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode,
@@ -1645,6 +1653,7 @@ class MOZ_RAII GetIntrinsicIRGenerator : public IRGenerator
     HandleValue val_;
 
     void trackAttached(const char* name);
+    void trackNotAttached();
 
   public:
     GetIntrinsicIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode,

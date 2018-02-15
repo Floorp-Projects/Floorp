@@ -211,7 +211,7 @@ GetPropIRGenerator::tryAttachStub()
             if (tryAttachProxy(obj, objId, id))
                 return true;
 
-            trackAttached(IRGenerator::NotAttached);
+            trackNotAttached();
             return false;
         }
 
@@ -232,11 +232,11 @@ GetPropIRGenerator::tryAttachStub()
             if (tryAttachArgumentsObjectArg(obj, objId, index, indexId))
                 return true;
 
-            trackAttached(IRGenerator::NotAttached);
+            trackNotAttached();
             return false;
         }
 
-        trackAttached(IRGenerator::NotAttached);
+        trackNotAttached();
         return false;
     }
 
@@ -248,7 +248,7 @@ GetPropIRGenerator::tryAttachStub()
         if (tryAttachMagicArgumentsName(valId, id))
             return true;
 
-        trackAttached(IRGenerator::NotAttached);
+        trackNotAttached();
         return false;
     }
 
@@ -259,11 +259,11 @@ GetPropIRGenerator::tryAttachStub()
         if (tryAttachMagicArgument(valId, indexId))
             return true;
 
-        trackAttached(IRGenerator::NotAttached);
+        trackNotAttached();
         return false;
     }
 
-    trackAttached(IRGenerator::NotAttached);
+    trackNotAttached();
     return false;
 }
 
@@ -1903,9 +1903,29 @@ void
 GetPropIRGenerator::trackAttached(const char* name)
 {
 #ifdef JS_CACHEIR_SPEW
-    if (CacheIRSpewer::Guard sp = CacheIRSpewer::Guard(*this, name)) {
-        sp.valueProperty("base", val_);
-        sp.valueProperty("property", idVal_);
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "base", val_);
+        sp.valueProperty(guard, "property", idVal_);
+        sp.attached(guard, name);
+        sp.endCache(guard);
+    }
+#endif
+}
+
+void
+GetPropIRGenerator::trackNotAttached()
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "base", val_);
+        sp.valueProperty(guard, "property", idVal_);
+        sp.endCache(guard);
     }
 #endif
 }
@@ -1974,7 +1994,7 @@ GetNameIRGenerator::tryAttachStub()
     if (tryAttachEnvironmentName(envId, id))
         return true;
 
-    trackAttached(IRGenerator::NotAttached);
+    trackNotAttached();
     return false;
 }
 
@@ -2198,9 +2218,29 @@ void
 GetNameIRGenerator::trackAttached(const char* name)
 {
 #ifdef JS_CACHEIR_SPEW
-    if (CacheIRSpewer::Guard sp = CacheIRSpewer::Guard(*this, name)) {
-        sp.valueProperty("base", ObjectValue(*env_));
-        sp.valueProperty("property", StringValue(name_));
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "base", ObjectValue(*env_));
+        sp.valueProperty(guard, "property", StringValue(name_));
+        sp.attached(guard, name);
+        sp.endCache(guard);
+    }
+#endif
+}
+
+void
+GetNameIRGenerator::trackNotAttached()
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "base", ObjectValue(*env_));
+        sp.valueProperty(guard, "property", StringValue(name_));
+        sp.endCache(guard);
     }
 #endif
 }
@@ -2228,7 +2268,7 @@ BindNameIRGenerator::tryAttachStub()
     if (tryAttachEnvironmentName(envId, id))
         return true;
 
-    trackAttached(IRGenerator::NotAttached);
+    trackNotAttached();
     return false;
 }
 
@@ -2336,9 +2376,29 @@ void
 BindNameIRGenerator::trackAttached(const char* name)
 {
 #ifdef JS_CACHEIR_SPEW
-    if (CacheIRSpewer::Guard sp = CacheIRSpewer::Guard(*this, name)) {
-        sp.valueProperty("base", ObjectValue(*env_));
-        sp.valueProperty("property", StringValue(name_));
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "base", ObjectValue(*env_));
+        sp.valueProperty(guard, "property", StringValue(name_));
+        sp.attached(guard, name);
+        sp.endCache(guard);
+    }
+#endif
+}
+
+void
+BindNameIRGenerator::trackNotAttached()
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "base", ObjectValue(*env_));
+        sp.valueProperty(guard, "property", StringValue(name_));
+        sp.endCache(guard);
     }
 #endif
 }
@@ -2672,7 +2732,7 @@ HasPropIRGenerator::tryAttachStub()
     ValOperandId valId(writer.setInputOperandId(1));
 
     if (!val_.isObject()) {
-        trackAttached(IRGenerator::NotAttached);
+        trackNotAttached();
         return false;
     }
     RootedObject obj(cx_, &val_.toObject());
@@ -2695,7 +2755,7 @@ HasPropIRGenerator::tryAttachStub()
         if (tryAttachDoesNotExist(obj, objId, id, keyId))
             return true;
 
-        trackAttached(IRGenerator::NotAttached);
+        trackNotAttached();
         return false;
     }
 
@@ -2711,11 +2771,11 @@ HasPropIRGenerator::tryAttachStub()
         if (tryAttachSparse(obj, objId, index, indexId))
             return true;
 
-        trackAttached(IRGenerator::NotAttached);
+        trackNotAttached();
         return false;
     }
 
-    trackAttached(IRGenerator::NotAttached);
+    trackNotAttached();
     return false;
 }
 
@@ -2723,9 +2783,29 @@ void
 HasPropIRGenerator::trackAttached(const char* name)
 {
 #ifdef JS_CACHEIR_SPEW
-    if (CacheIRSpewer::Guard sp = CacheIRSpewer::Guard(*this, name)) {
-        sp.valueProperty("base", val_);
-        sp.valueProperty("property", idVal_);
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "base", val_);
+        sp.valueProperty(guard, "property", idVal_);
+        sp.attached(guard, name);
+        sp.endCache(guard);
+    }
+#endif
+}
+
+void
+HasPropIRGenerator::trackNotAttached()
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "base", val_);
+        sp.valueProperty(guard, "property", idVal_);
+        sp.endCache(guard);
     }
 #endif
 }
@@ -3089,10 +3169,31 @@ void
 SetPropIRGenerator::trackAttached(const char* name)
 {
 #ifdef JS_CACHEIR_SPEW
-    if (CacheIRSpewer::Guard sp = CacheIRSpewer::Guard(*this, name)) {
-        sp.valueProperty("base", lhsVal_);
-        sp.valueProperty("property", idVal_);
-        sp.valueProperty("value", rhsVal_);
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "base", lhsVal_);
+        sp.valueProperty(guard, "property", idVal_);
+        sp.valueProperty(guard, "value", rhsVal_);
+        sp.attached(guard, name);
+        sp.endCache(guard);
+    }
+#endif
+}
+
+void
+SetPropIRGenerator::trackNotAttached()
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "base", lhsVal_);
+        sp.valueProperty(guard, "property", idVal_);
+        sp.valueProperty(guard, "value", rhsVal_);
+        sp.endCache(guard);
     }
 #endif
 }
@@ -3928,41 +4029,41 @@ InstanceOfIRGenerator::tryAttachStub()
 
     // Ensure RHS is a function -- could be a Proxy, which the IC isn't prepared to handle.
     if (!rhsObj_->is<JSFunction>()) {
-        trackAttached(IRGenerator::NotAttached);
+        trackNotAttached();
         return false;
     }
 
     HandleFunction fun = rhsObj_.as<JSFunction>();
 
     if (fun->isBoundFunction()) {
-        trackAttached(IRGenerator::NotAttached);
+        trackNotAttached();
         return false;
     }
 
     // If the user has supplied their own @@hasInstance method we shouldn't
     // clobber it.
     if (!js::FunctionHasDefaultHasInstance(fun, cx_->wellKnownSymbols())) {
-        trackAttached(IRGenerator::NotAttached);
+        trackNotAttached();
         return false;
     }
 
     // Refuse to optimize any function whose [[Prototype]] isn't
     // Function.prototype.
     if (!fun->hasStaticPrototype() || fun->hasUncacheableProto()) {
-        trackAttached(IRGenerator::NotAttached);
+        trackNotAttached();
         return false;
     }
 
     Value funProto = cx_->global()->getPrototype(JSProto_Function);
     if (!funProto.isObject() || fun->staticPrototype() != &funProto.toObject()) {
-        trackAttached(IRGenerator::NotAttached);
+        trackNotAttached();
         return false;
     }
 
     // Ensure that the function's prototype slot is the same.
     Shape* shape = fun->lookupPure(cx_->names().prototype);
     if (!shape || !shape->isDataProperty()) {
-        trackAttached(IRGenerator::NotAttached);
+        trackNotAttached();
         return false;
     }
 
@@ -3970,7 +4071,7 @@ InstanceOfIRGenerator::tryAttachStub()
 
     MOZ_ASSERT(fun->numFixedSlots() == 0, "Stub code relies on this");
     if (!fun->getSlot(slot).isObject()) {
-        trackAttached(IRGenerator::NotAttached);
+        trackNotAttached();
         return false;
     }
 
@@ -4000,9 +4101,29 @@ void
 InstanceOfIRGenerator::trackAttached(const char* name)
 {
 #ifdef JS_CACHEIR_SPEW
-    if (CacheIRSpewer::Guard sp = CacheIRSpewer::Guard(*this, name)) {
-        sp.valueProperty("lhs", lhsVal_);
-        sp.valueProperty("rhs", ObjectValue(*rhsObj_));
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "lhs", lhsVal_);
+        sp.valueProperty(guard, "rhs", ObjectValue(*rhsObj_));
+        sp.attached(guard, name);
+        sp.endCache(guard);
+    }
+#endif
+}
+
+void
+InstanceOfIRGenerator::trackNotAttached()
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "lhs", lhsVal_);
+        sp.valueProperty(guard, "rhs", ObjectValue(*rhsObj_));
+        sp.endCache(guard);
     }
 #endif
 }
@@ -4394,10 +4515,15 @@ void
 CallIRGenerator::trackAttached(const char* name)
 {
 #ifdef JS_CACHEIR_SPEW
-    if (CacheIRSpewer::Guard sp = CacheIRSpewer::Guard(*this, name)) {
-        sp.valueProperty("callee", callee_);
-        sp.valueProperty("thisval", thisval_);
-        sp.valueProperty("argc", Int32Value(argc_));
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "callee", callee_);
+        sp.valueProperty(guard, "thisval", thisval_);
+        sp.valueProperty(guard, "argc", Int32Value(argc_));
+        sp.attached(guard, name);
+        sp.endCache(guard);
     }
 #endif
 }
@@ -4438,6 +4564,22 @@ jit::LoadShapeWrapperContents(MacroAssembler& masm, Register obj, Register dst, 
     masm.unboxObject(privateAddr, dst);
     masm.unboxNonDouble(Address(dst, NativeObject::getFixedSlotOffset(SHAPE_CONTAINER_SLOT)), dst,
                         JSVAL_TYPE_PRIVATE_GCTHING);
+}
+
+void
+CallIRGenerator::trackNotAttached()
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "callee", callee_);
+        sp.valueProperty(guard, "thisval", thisval_);
+        sp.valueProperty(guard, "argc", Int32Value(argc_));
+        sp.endCache(guard);
+    }
+#endif
 }
 
 CompareIRGenerator::CompareIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
@@ -4519,11 +4661,11 @@ CompareIRGenerator::tryAttachStub()
         if (tryAttachSymbol(lhsId, rhsId))
             return true;
 
-        trackAttached(IRGenerator::NotAttached);
+        trackNotAttached();
         return false;
     }
 
-    trackAttached(IRGenerator::NotAttached);
+    trackNotAttached();
     return false;
 }
 
@@ -4531,9 +4673,29 @@ void
 CompareIRGenerator::trackAttached(const char* name)
 {
 #ifdef JS_CACHEIR_SPEW
-    if (CacheIRSpewer::Guard sp = CacheIRSpewer::Guard(*this, name)) {
-        sp.valueProperty("lhs", lhsVal_);
-        sp.valueProperty("rhs", rhsVal_);
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "lhs", lhsVal_);
+        sp.valueProperty(guard, "rhs", rhsVal_);
+        sp.attached(guard, name);
+        sp.endCache(guard);
+    }
+#endif
+}
+
+void
+CompareIRGenerator::trackNotAttached()
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "lhs", lhsVal_);
+        sp.valueProperty(guard, "rhs", rhsVal_);
+        sp.endCache(guard);
     }
 #endif
 }
@@ -4548,8 +4710,27 @@ void
 ToBoolIRGenerator::trackAttached(const char* name)
 {
 #ifdef JS_CACHEIR_SPEW
-    if (CacheIRSpewer::Guard sp = CacheIRSpewer::Guard(*this, name)) {
-        sp.valueProperty("val", val_);
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "val", val_);
+        sp.attached(guard, name);
+        sp.endCache(guard);
+    }
+#endif
+}
+
+void
+ToBoolIRGenerator::trackNotAttached()
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "val", val_);
+        sp.endCache(guard);
     }
 #endif
 }
@@ -4572,7 +4753,7 @@ ToBoolIRGenerator::tryAttachStub()
     if (tryAttachSymbol())
         return true;
 
-    trackAttached(IRGenerator::NotAttached);
+    trackNotAttached();
     return false;
 }
 
@@ -4670,8 +4851,27 @@ void
 GetIntrinsicIRGenerator::trackAttached(const char* name)
 {
 #ifdef JS_CACHEIR_SPEW
-    if (CacheIRSpewer::Guard sp = CacheIRSpewer::Guard(*this, name)) {
-        sp.valueProperty("val", val_);
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "val", val_);
+        sp.attached(guard, name);
+        sp.endCache(guard);
+    }
+#endif
+}
+
+void
+GetIntrinsicIRGenerator::trackNotAttached()
+{
+#ifdef JS_CACHEIR_SPEW
+    CacheIRSpewer& sp = CacheIRSpewer::singleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "val", val_);
+        sp.endCache(guard);
     }
 #endif
 }
