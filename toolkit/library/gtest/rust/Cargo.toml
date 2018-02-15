@@ -49,4 +49,4 @@ codegen-units = 1
 
 [patch.crates-io]
 libudev-sys = { path = "../../../../dom/webauthn/libudev-sys" }
-serde_derive = { git = "https://github.com/gankro/serde", branch = "deserialize_from_enums4", feature = "deserialize_in_place" }
+serde_derive = { git = "https://github.com/gankro/serde", branch = "deserialize_from_enums4" }
