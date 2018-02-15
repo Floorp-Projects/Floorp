@@ -7,6 +7,7 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
+#include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webrender/webrender_ffi.h"
@@ -1019,6 +1020,7 @@ gfxPlatform::InitLayersIPC()
   } else if (XRE_IsParentProcess()) {
     if (gfxVars::UseWebRender()) {
       wr::RenderThread::Start();
+      layers::SharedSurfacesParent::Initialize();
     }
 
     layers::CompositorThreadHolder::Start();
@@ -1053,6 +1055,7 @@ gfxPlatform::ShutdownLayersIPC()
         layers::CompositorThreadHolder::Shutdown();
         gfx::VRListenerThreadHolder::Shutdown();
         if (gfxVars::UseWebRender()) {
+          layers::SharedSurfacesParent::Shutdown();
           wr::RenderThread::ShutDown();
 
           Preferences::UnregisterCallback(WebRenderDebugPrefChangeCallback, WR_DEBUG_PREF);
