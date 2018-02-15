@@ -71,8 +71,6 @@ object LocalizedContentGecko {
         // putLayoutDirectionIntoMap(substitutionMap, context);
 
         val data = HtmlLoader.loadResourceFile(context, R.raw.about, substitutionMap)
-
-
         val path = context.filesDir
         val file = File(path, "about.html")
         writeDataToFile(file, data.toByteArray())
