@@ -2733,7 +2733,7 @@ public:
     aRun.GetClipEdges(mVisIStartEdge, mVisIEndEdge);
   }
 
-  NS_DISPLAY_DECL_NAME("SVGText", TYPE_TEXT)
+  NS_DISPLAY_DECL_NAME("SVGCharClip", TYPE_SVG_CHAR_CLIP)
 };
 
 // -----------------------------------------------------------------------------
