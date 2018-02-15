@@ -711,10 +711,6 @@ def enable_code_coverage(config, tests):
         if 'ccov' in test['build-platform'] and not test['test-name'].startswith('test-verify'):
             test['mozharness'].setdefault('extra-options', []).append('--code-coverage')
             test['instance-size'] = 'xlarge'
-            # Ensure we don't run on inbound/autoland/beta, but if the test is try only, ignore it
-            if 'mozilla-central' in test['run-on-projects'] or \
-                    test['run-on-projects'] == 'built-projects':
-                test['run-on-projects'] = ['mozilla-central', 'try']
 
             if 'talos' in test['test-name']:
                 test['max-run-time'] = 7200
@@ -729,10 +725,6 @@ def enable_code_coverage(config, tests):
                 test['mozharness']['extra-options'].append('--add-option')
                 test['mozharness']['extra-options'].append('--tptimeout,15000')
         elif test['build-platform'] == 'linux64-jsdcov/opt':
-            # Ensure we don't run on inbound/autoland/beta, but if the test is try only, ignore it
-            if 'mozilla-central' in test['run-on-projects'] or \
-                    test['run-on-projects'] == 'built-projects':
-                test['run-on-projects'] = ['mozilla-central', 'try']
             test['mozharness'].setdefault('extra-options', []).append('--jsd-code-coverage')
         yield test
 
