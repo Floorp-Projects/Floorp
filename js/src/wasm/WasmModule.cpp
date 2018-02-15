@@ -115,17 +115,9 @@ LinkDataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 void
 LinkData::setTier2(UniqueLinkDataTier linkData) const
 {
-    MOZ_RELEASE_ASSERT(linkData->tier == Tier::Ion && linkData1_->tier != Tier::Ion);
+    MOZ_RELEASE_ASSERT(linkData->tier == Tier::Ion && linkData1_->tier == Tier::Baseline);
     MOZ_RELEASE_ASSERT(!linkData2_.get());
     linkData2_ = Move(linkData);
-}
-
-Tiers
-LinkData::tiers() const
-{
-    if (hasTier2())
-        return Tiers(linkData1_->tier, linkData2_->tier);
-    return Tiers(linkData1_->tier);
 }
 
 const LinkDataTier&
@@ -139,40 +131,12 @@ LinkData::linkData(Tier tier) const
       case Tier::Ion:
         if (linkData1_->tier == Tier::Ion)
             return *linkData1_;
-        if (hasTier2())
+        if (linkData2_)
             return *linkData2_;
         MOZ_CRASH("No linkData at this tier");
       default:
         MOZ_CRASH();
     }
-}
-
-LinkDataTier&
-LinkData::linkData(Tier tier)
-{
-    switch (tier) {
-      case Tier::Baseline:
-        if (linkData1_->tier == Tier::Baseline)
-            return *linkData1_;
-        MOZ_CRASH("No linkData at this tier");
-      case Tier::Ion:
-        if (linkData1_->tier == Tier::Ion)
-            return *linkData1_;
-        if (hasTier2())
-            return *linkData2_;
-        MOZ_CRASH("No linkData at this tier");
-      default:
-        MOZ_CRASH();
-    }
-}
-
-bool
-LinkData::initTier1(Tier tier, const Metadata& metadata)
-{
-    MOZ_ASSERT(!linkData1_);
-    metadata_ = &metadata;
-    linkData1_ = js::MakeUnique<LinkDataTier>(tier);
-    return linkData1_ != nullptr;
 }
 
 size_t
@@ -191,7 +155,11 @@ LinkData::serialize(uint8_t* cursor) const
 const uint8_t*
 LinkData::deserialize(const uint8_t* cursor)
 {
-    (cursor = linkData(Tier::Serialized).deserialize(cursor));
+    MOZ_ASSERT(!linkData1_);
+    linkData1_ = js::MakeUnique<LinkDataTier>(Tier::Serialized);
+    if (!linkData1_)
+        return nullptr;
+    cursor = linkData1_->deserialize(cursor);
     return cursor;
 }
 
@@ -199,8 +167,9 @@ size_t
 LinkData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     size_t sum = 0;
-    for (auto t : tiers())
-        sum += linkData(t).sizeOfExcludingThis(mallocSizeOf);
+    sum += linkData1_->sizeOfExcludingThis(mallocSizeOf);
+    if (linkData2_)
+        sum += linkData2_->sizeOfExcludingThis(mallocSizeOf);
     return sum;
 }
 
@@ -277,21 +246,20 @@ Module::notifyCompilationListeners()
 }
 
 void
-Module::finishTier2(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
-                    UniqueModuleSegment code2, ModuleEnvironment* env2)
+Module::finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2, ModuleEnvironment* env2)
 {
     // Install the data in the data structures. They will not be visible yet.
 
-    metadata().setTier2(Move(metadata2));
+    MOZ_ASSERT(!code().hasTier2());
     linkData().setTier2(Move(linkData2));
-    code().setTier2(Move(code2));
+    code().setTier2(Move(tier2));
     for (uint32_t i = 0; i < elemSegments_.length(); i++)
         elemSegments_[i].setTier2(Move(env2->elemSegments[i].elemCodeRangeIndices(Tier::Ion)));
 
     // Now that all the code and metadata is valid, make tier 2 code visible and
     // unblock anyone waiting on it.
 
-    metadata().commitTier2();
+    code().commitTier2();
     notifyCompilationListeners();
 
     // And we update the jump vector.
@@ -410,7 +378,7 @@ Module::compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const
     cursor = SerializeVector(cursor, exports_);
     cursor = SerializePodVector(cursor, dataSegments_);
     cursor = SerializeVector(cursor, elemSegments_);
-    cursor = code_->serialize(cursor, linkData_);
+    cursor = code_->serialize(cursor, linkData_.linkData(Tier::Serialized));
     MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
 }
 
@@ -443,19 +411,12 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
 
     MutableMetadata metadata(maybeMetadata);
     if (!metadata) {
-        auto tierMetadata = js::MakeUnique<MetadataTier>(Tier::Ion);
-        if (!tierMetadata)
-            return nullptr;
-
-        metadata = js_new<Metadata>(Move(tierMetadata));
+        metadata = js_new<Metadata>();
         if (!metadata)
             return nullptr;
     }
 
     LinkData linkData;
-    if (!linkData.initTier1(Tier::Serialized, *metadata))
-        return nullptr;
-
     cursor = linkData.deserialize(cursor);
     if (!cursor)
         return nullptr;
@@ -481,7 +442,7 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
         return nullptr;
 
     MutableCode code = js_new<Code>();
-    cursor = code->deserialize(cursor, bytecode, linkData, *metadata);
+    cursor = code->deserialize(cursor, bytecode, linkData.linkData(Tier::Serialized), *metadata);
     if (!cursor)
         return nullptr;
 
@@ -571,7 +532,7 @@ wasm::DeserializeModule(PRFileDesc* bytecodeFile, PRFileDesc* maybeCompiledFile,
 
     // Since the compiled file's assumptions don't match, we must recompile from
     // bytecode. The bytecode file format is simply that of a .wasm (see
-    // Module::serialize).
+    // Module::bytecodeSerialize).
 
     MutableBytes bytecode = js_new<ShareableBytes>();
     if (!bytecode || !bytecode->bytes.initLengthUninitialized(bytecodeInfo.size))
@@ -1166,21 +1127,31 @@ Module::instantiate(JSContext* cx,
         // bytes that we keep around for debugging instead, because the debugger
         // may patch the pre-linked code at any time.
         if (!codeIsBusy_.compareExchange(false, true)) {
-            auto moduleSegment = ModuleSegment::create(Tier::Baseline,
-                                                       *unlinkedCodeForDebugging_,
-                                                       *bytecode_,
-                                                       linkData_.linkData(Tier::Baseline),
-                                                       metadata());
-            if (!moduleSegment) {
+            Tier tier = Tier::Baseline;
+            auto segment = ModuleSegment::create(tier,
+                                                 *unlinkedCodeForDebugging_,
+                                                 *bytecode_,
+                                                 linkData(tier),
+                                                 metadata(),
+                                                 metadata(tier).codeRanges);
+            if (!segment) {
                 ReportOutOfMemory(cx);
                 return false;
             }
 
-            JumpTables jumpTables;
-            if (!jumpTables.init(CompileMode::Once, *moduleSegment, metadata(Tier::Baseline).codeRanges))
+            UniqueMetadataTier metadataTier = js::MakeUnique<MetadataTier>(tier);
+            if (!metadataTier || !metadataTier->clone(metadata(tier)))
                 return false;
 
-            code = js_new<Code>(Move(moduleSegment), metadata(), Move(jumpTables));
+            auto codeTier = js::MakeUnique<CodeTier>(tier, Move(metadataTier), Move(segment));
+            if (!codeTier)
+                return false;
+
+            JumpTables jumpTables;
+            if (!jumpTables.init(CompileMode::Once, moduleSegment(tier), metadata(tier).codeRanges))
+                return false;
+
+            code = js_new<Code>(Move(codeTier), metadata(), Move(jumpTables));
             if (!code) {
                 ReportOutOfMemory(cx);
                 return false;
