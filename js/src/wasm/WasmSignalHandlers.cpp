@@ -1509,8 +1509,7 @@ wasm::InInterruptibleCode(JSContext* cx, uint8_t* pc, const ModuleSegment** ms)
         return false;
 
     *ms = cs->asModule();
-    const CodeRange* codeRange = (*ms)->code().lookupRange(pc);
-    return codeRange && codeRange->isFunction();
+    return !!(*ms)->code().lookupFuncRange(pc);
 }
 
 // The return value indicates whether the PC was changed, not whether there was

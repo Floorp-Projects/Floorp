@@ -53,8 +53,8 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
         code_ = &fp_->tls->instance->code();
         MOZ_ASSERT(code_ == LookupCode(activation->wasmTrapPC()));
 
-        codeRange_ = code_->lookupRange(activation->wasmTrapPC());
-        MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
+        codeRange_ = code_->lookupFuncRange(activation->wasmTrapPC());
+        MOZ_ASSERT(codeRange_);
 
         lineOrBytecode_ = activation->wasmTrapBytecodeOffset();
 
@@ -74,8 +74,8 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
         code_ = &fp_->tls->instance->code();
         MOZ_ASSERT(code_ == LookupCode(activation->wasmInterruptUnwindPC()));
 
-        codeRange_ = code_->lookupRange(activation->wasmInterruptUnwindPC());
-        MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
+        codeRange_ = code_->lookupFuncRange(activation->wasmInterruptUnwindPC());
+        MOZ_ASSERT(codeRange_);
 
         lineOrBytecode_ = codeRange_->funcLineOrBytecode();
 
@@ -151,8 +151,8 @@ WasmFrameIter::popFrame()
 
     void* returnAddress = prevFP->returnAddress;
 
-    code_ = LookupCode(returnAddress);
-    codeRange_ = code_->lookupRange(returnAddress);
+    code_ = LookupCode(returnAddress, &codeRange_);
+    MOZ_ASSERT(codeRange_);
 
     if (codeRange_->isJitEntry()) {
         unwoundIonCallerFP_ = (uint8_t*) fp_;
@@ -687,10 +687,10 @@ static inline void
 AssertMatchesCallSite(void* callerPC, Frame* callerFP)
 {
 #ifdef DEBUG
-    const Code* code = LookupCode(callerPC);
-    MOZ_ASSERT(code);
+    const CodeRange* callerCodeRange;
+    const Code* code = LookupCode(callerPC, &callerCodeRange);
 
-    const CodeRange* callerCodeRange = code->lookupRange(callerPC);
+    MOZ_ASSERT(code);
     MOZ_ASSERT(callerCodeRange);
 
     if (callerCodeRange->isInterpEntry()) {
@@ -716,10 +716,8 @@ ProfilingFrameIterator::initFromExitFP(const Frame* fp)
 
     void* pc = fp->returnAddress;
 
-    code_ = LookupCode(pc);
+    code_ = LookupCode(pc, &codeRange_);
     MOZ_ASSERT(code_);
-
-    codeRange_ = code_->lookupRange(pc);
     MOZ_ASSERT(codeRange_);
 
     // Since we don't have the pc for fp, start unwinding at the caller of fp.
@@ -783,11 +781,11 @@ js::wasm::StartUnwinding(const RegisterState& registers, UnwindState* unwindStat
     uint8_t* codeBase;
     const Code* code = nullptr;
 
-    const CodeSegment* codeSegment = LookupCodeSegment(pc);
+    const CodeSegment* codeSegment = LookupCodeSegment(pc, &codeRange);
     if (codeSegment) {
         code = &codeSegment->code();
-        codeRange = code->lookupRange(pc);
         codeBase = codeSegment->base();
+        MOZ_ASSERT(codeRange);
     } else if (!LookupBuiltinThunk(pc, &codeRange, &codeBase)) {
         return false;
     }
@@ -1037,15 +1035,14 @@ ProfilingFrameIterator::operator++()
     }
 
     if (!callerFP_) {
-        codeRange_ = code_->lookupRange(callerPC_);
+        MOZ_ALWAYS_TRUE(LookupCode(callerPC_, &codeRange_) == code_);
         MOZ_ASSERT(codeRange_->kind() == CodeRange::InterpEntry);
         callerPC_ = nullptr;
         MOZ_ASSERT(!done());
         return;
     }
 
-    code_ = LookupCode(callerPC_);
-    codeRange_ = code_->lookupRange(callerPC_);
+    code_ = LookupCode(callerPC_, &codeRange_);
     MOZ_ASSERT(codeRange_);
 
     if (codeRange_->isJitEntry()) {
@@ -1259,8 +1256,8 @@ wasm::LookupFaultingInstance(const ModuleSegment& codeSegment, void* pc, void* f
     // simulators which call this function at every load/store before even
     // knowing whether there is a fault.
 
-    const CodeRange* codeRange = codeSegment.code().lookupRange(pc);
-    if (!codeRange || !codeRange->isFunction())
+    const CodeRange* codeRange = codeSegment.code().lookupFuncRange(pc);
+    if (!codeRange)
         return nullptr;
 
     size_t offsetInModule = ((uint8_t*)pc) - codeSegment.base();

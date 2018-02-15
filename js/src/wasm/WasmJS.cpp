@@ -1810,8 +1810,7 @@ WasmTableObject::getImpl(JSContext* cx, const CallArgs& args)
     }
 
     Instance& instance = *elem.tls->instance;
-    const CodeRange& codeRange = *instance.code().lookupRange(elem.code);
-    MOZ_ASSERT(codeRange.isFunction());
+    const CodeRange& codeRange = *instance.code().lookupFuncRange(elem.code);
 
     RootedWasmInstanceObject instanceObj(cx, instance.object());
     RootedFunction fun(cx);
