@@ -11,10 +11,12 @@
 #include "mozilla/ServoCSSRuleList.h"
 #include "mozilla/ServoImportRule.h"
 #include "mozilla/ServoMediaList.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/MediaList.h"
 #include "nsIStyleSheetLinkingElement.h"
+#include "ErrorReporter.h"
 #include "Loader.h"
 
 
@@ -193,6 +195,42 @@ ServoStyleSheet::HasRules() const
   return Servo_StyleSheet_HasRules(Inner()->mContents);
 }
 
+// We disable parallel stylesheet parsing if any of the following three
+// conditions hold:
+//
+// (1) The pref is off.
+// (2) The browser is recording CSS errors (which parallel parsing can't handle).
+// (3) The stylesheet is a chrome stylesheet, since those can use -moz-bool-pref,
+//     which needs to access the pref service, which is not threadsafe.
+static bool
+AllowParallelParse(css::Loader* aLoader, nsIURI* aSheetURI)
+{
+  // Check the pref.
+  if (!StaticPrefs::layout_css_parsing_parallel()) {
+    return false;
+  }
+
+  // If the browser is recording CSS errors, we need to use the sequential path
+  // because the parallel path doesn't support that.
+  nsIDocument* doc = aLoader->GetDocument();
+  if (doc && css::ErrorReporter::ShouldReportErrors(*doc)) {
+    return false;
+  }
+
+  // If this is a chrome stylesheet, it might use -moz-bool-pref, which needs to
+  // access the pref service, which is not thread-safe. We could probably expose
+  // the relevant booleans as thread-safe var caches if we needed to, but
+  // parsing chrome stylesheets in parallel is unlikely to be a win anyway.
+  //
+  // Note that UA stylesheets can also use -moz-bool-pref, but those are always
+  // parsed sync.
+  if (dom::IsChromeURI(aSheetURI)) {
+    return false;
+  }
+
+  return true;
+}
+
 RefPtr<StyleSheetParsePromise>
 ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                             const nsACString& aBytes,
@@ -201,26 +239,49 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                             nsIPrincipal* aSheetPrincipal,
                             css::SheetLoadData* aLoadData,
                             uint32_t aLineNumber,
-                            nsCompatibility aCompatMode,
-                            css::LoaderReusableStyleSheets* aReusableSheets)
+                            nsCompatibility aCompatMode)
 {
   MOZ_ASSERT(mParsePromise.IsEmpty());
   RefPtr<StyleSheetParsePromise> p = mParsePromise.Ensure(__func__);
   Inner()->mURLData = new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal); // RefPtr
-  Inner()->mContents = Servo_StyleSheet_FromUTF8Bytes(aLoader,
-                                                      this,
-                                                      aLoadData,
-                                                      &aBytes,
-                                                      mParsingMode,
-                                                      Inner()->mURLData,
-                                                      aLineNumber,
-                                                      aCompatMode,
-                                                      aReusableSheets)
-                         .Consume();
-  FinishParse();
-  mParsePromise.Resolve(true, __func__);
+
+  if (!AllowParallelParse(aLoader, aSheetURI)) {
+    RefPtr<RawServoStyleSheetContents> contents =
+      Servo_StyleSheet_FromUTF8Bytes(aLoader,
+                                     this,
+                                     aLoadData,
+                                     &aBytes,
+                                     mParsingMode,
+                                     Inner()->mURLData,
+                                     aLineNumber,
+                                     aCompatMode,
+                                     /* reusable_sheets = */ nullptr)
+      .Consume();
+    FinishAsyncParse(contents.forget());
+  } else {
+    RefPtr<css::SheetLoadDataHolder> loadDataHolder =
+      new css::SheetLoadDataHolder(__func__, aLoadData);
+    Servo_StyleSheet_FromUTF8BytesAsync(loadDataHolder,
+                                        Inner()->mURLData,
+                                        &aBytes,
+                                        mParsingMode,
+                                        aLineNumber,
+                                        aCompatMode);
+  }
+
   return Move(p);
 }
+
+void
+ServoStyleSheet::FinishAsyncParse(already_AddRefed<RawServoStyleSheetContents> aSheetContents)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mParsePromise.IsEmpty());
+  Inner()->mContents = aSheetContents;
+  FinishParse();
+  mParsePromise.Resolve(true, __func__);
+}
+
 
 void
 ServoStyleSheet::ParseSheetSync(css::Loader* aLoader,
