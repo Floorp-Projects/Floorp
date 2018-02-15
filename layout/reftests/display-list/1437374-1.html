@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html reftest-async-scroll class="reftest-wait reftest-snapshot-all">
+<body>
+<div style="width:400px; height:500px; overflow:hidden; border:2px solid black"
+     reftest-displayport-x="0" reftest-displayport-y="0"
+     reftest-displayport-w="800" reftest-displayport-h="2000"
+     reftest-async-scroll-x="0" reftest-async-scroll-y="50">
+  <div style="height:500px"></div>
+  <div style="height:100px; background-color:red" id="scrolled"></div>
+</div>
+<script>
+
+function doTest()
+{
+  var scrolled = document.getElementById("scrolled");
+  scrolled.style.backgroundColor = "purple";
+  document.documentElement.setAttribute("class", "reftest-snapshot-all");
+}
+
+document.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>
