@@ -256,6 +256,14 @@ class Output(object):
         return score
 
     @classmethod
+    def ares6_score(cls, val_list):
+        """
+        ares6_score: reported as 'geomean'
+        """
+        results = [i for i, j in val_list if j == 'geomean']
+        return filter.mean(results)
+
+    @classmethod
     def stylebench_score(cls, val_list):
         """
         stylebench_score: https://bug-172968-attachments.webkit.org/attachment.cgi?id=319888
@@ -279,6 +287,8 @@ class Output(object):
             return self.v8_Metric(vals)
         elif testname.startswith('kraken'):
             return self.JS_Metric(vals)
+        elif testname.startswith('ares6'):
+            return self.ares6_score(vals)
         elif testname.startswith('speedometer'):
             return self.speedometer_score(vals)
         elif testname.startswith('stylebench'):

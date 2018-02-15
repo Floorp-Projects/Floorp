@@ -52,3 +52,7 @@ driver.addBenchmark(BasicBenchmarkRunner);
 driver.addBenchmark(BabylonBenchmarkRunner);
 driver.addBenchmark(MLBenchmarkRunner);
 driver.readyTrigger();
+
+if (location.search == '?gecko') {
+    driver.start(6);
+}
