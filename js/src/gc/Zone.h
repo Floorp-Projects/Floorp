@@ -27,43 +27,6 @@ class JitZone;
 
 namespace gc {
 
-class GCSchedulingState;
-class GCSchedulingTunables;
-
-// This class encapsulates the data that determines when we need to do a zone GC.
-class ZoneHeapThreshold
-{
-    // The "growth factor" for computing our next thresholds after a GC.
-    GCLockData<double> gcHeapGrowthFactor_;
-
-    // GC trigger threshold for allocations on the GC heap.
-    mozilla::Atomic<size_t, mozilla::Relaxed> gcTriggerBytes_;
-
-  public:
-    ZoneHeapThreshold()
-      : gcHeapGrowthFactor_(3.0),
-        gcTriggerBytes_(0)
-    {}
-
-    double gcHeapGrowthFactor() const { return gcHeapGrowthFactor_; }
-    size_t gcTriggerBytes() const { return gcTriggerBytes_; }
-    double eagerAllocTrigger(bool highFrequencyGC) const;
-
-    void updateAfterGC(size_t lastBytes, JSGCInvocationKind gckind,
-                       const GCSchedulingTunables& tunables, const GCSchedulingState& state,
-                       const AutoLockGC& lock);
-    void updateForRemovedArena(const GCSchedulingTunables& tunables);
-
-  private:
-    static double computeZoneHeapGrowthFactorForHeapSize(size_t lastBytes,
-                                                         const GCSchedulingTunables& tunables,
-                                                         const GCSchedulingState& state);
-    static size_t computeZoneTriggerBytes(double growthFactor, size_t lastBytes,
-                                          JSGCInvocationKind gckind,
-                                          const GCSchedulingTunables& tunables,
-                                          const AutoLockGC& lock);
-};
-
 struct ZoneComponentFinder : public ComponentFinder<JS::Zone, ZoneComponentFinder>
 {
     ZoneComponentFinder(uintptr_t sl, JS::Zone* maybeAtomsZone)
