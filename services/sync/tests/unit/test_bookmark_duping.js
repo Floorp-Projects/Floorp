@@ -552,6 +552,8 @@ add_task(async function test_dupe_reparented_to_future_arriving_parent_bookmark(
     let expected = [
       // We haven't fixed the incoming record that referenced the missing parent.
       { name: "orphans", count: 1 },
+      // And it's parent still points at it
+      { name: "parentChildMismatches", count: 1 },
     ];
     await validate(collection, expected);
 
@@ -603,6 +605,7 @@ add_task(async function test_dupe_reparented_to_future_arriving_parent_bookmark(
       //   the server record.
       // Hence, newGUID is a child of both those server records :(
       { name: "multipleParents", count: 1 },
+      { name: "parentChildMismatches", count: 1 },
     ];
     await validate(collection, expected);
 

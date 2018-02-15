@@ -739,7 +739,21 @@ this.Utils = {
     let seconds = String(date.getSeconds()).padStart(2, "0");
 
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  }
+  },
+
+  * walkTree(tree, parent = null) {
+    if (tree) {
+      // Skip root node
+      if (parent) {
+        yield [tree, parent];
+      }
+      if (tree.children) {
+        for (let child of tree.children) {
+          yield* Utils.walkTree(child, tree);
+        }
+      }
+    }
+  },
 };
 
 /**
