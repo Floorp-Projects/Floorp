@@ -1007,6 +1007,18 @@ function handleRequest(req, res) {
     push.end(pushedContent);
   }
 
+  // For test_header_Server_Timing.js
+  else if (u.pathname === "/server-timing") {
+    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Content-Length', '12');
+    res.setHeader('Trailer', 'Server-Timing');
+    res.setHeader('Server-Timing', 'metric; dur=123.4; desc=description, metric2; dur=456.78; desc=description1');
+    res.write('data reached');
+    res.addTrailers({'Server-Timing': 'metric3; dur=789.11; desc=description2, metric4; dur=1112.13; desc=description3'});
+    res.end();
+    return;
+  }
+
   res.setHeader('Content-Type', 'text/html');
   if (req.httpVersionMajor != 2) {
     res.setHeader('Connection', 'close');

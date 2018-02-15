@@ -6,69 +6,55 @@
 //  HTTP Server-Timing header test
 //
 
-ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
-  return "http://localhost:" + httpServer.identity.primaryPort + "/content";
-});
-
-let httpServer = null;
 
 function make_and_open_channel(url, callback) {
   let chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
   chan.asyncOpen2(new ChannelListener(callback, null, CL_ALLOW_UNKNOWN_CL));
 }
 
-var respnseServerTiming = [{metric:"metric", duration:"123.4", description:"description"},
-                           {metric:"metric2", duration:"456.78", description:"description1"}];
+var responseServerTiming = [{metric:"metric", duration:"123.4", description:"description"},
+                            {metric:"metric2", duration:"456.78", description:"description1"}];
 var trailerServerTiming = [{metric:"metric3", duration:"789.11", description:"description2"},
                            {metric:"metric4", duration:"1112.13", description:"description3"}];
 
-function createServerTimingHeader(headerData) {
-  var header = "";
-  for (var i = 0; i < headerData.length; i++) {
-    header += "Server-Timing:" + headerData[i].metric + ";" +
-              "dur=" + headerData[i].duration + ";" +
-              "desc=" + headerData[i].description + "\r\n";
-  }
-  return header;
+function readFile(file) {
+  let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
+                  .createInstance(Ci.nsIFileInputStream);
+  fstream.init(file, -1, 0, 0);
+  let data = NetUtil.readInputStreamToString(fstream, fstream.available());
+  fstream.close();
+  return data;
 }
 
-function contentHandler(metadata, response)
-{
-  var body = "c\r\ndata reached\r\n3\r\nhej\r\n0\r\n";
-
-  response.seizePower();
-  response.write("HTTP/1.1 200 OK\r\n");
-  response.write("Content-Type: text/plain\r\n");
-  response.write(createServerTimingHeader(respnseServerTiming));
-
-  response.write("Transfer-Encoding: chunked\r\n");
-  response.write("\r\n");
-  response.write(body);
-  response.write(createServerTimingHeader(trailerServerTiming));
-  response.write("\r\n");
-  response.finish();
+function addCertFromFile(certdb, filename, trustString) {
+  let certFile = do_get_file(filename, false);
+  let der = readFile(certFile);
+  certdb.addCert(der, trustString);
 }
 
 function run_test()
 {
-  Services.prefs.setBoolPref("network.http.allow-plaintext-server-timing", true);
+  do_test_pending();
+
+  // Set up to allow the cert presented by the server
+  do_get_profile();
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
+                  .getService(Ci.nsIX509CertDB);
+  addCertFromFile(certdb, "CA.cert.der", "CTu,u,u");
+
+  Services.prefs.setCharPref("network.dns.localDomains", "foo.example.com");
   registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("network.http.allow-plaintext-server-timing");
+    Services.prefs.clearUserPref("network.dns.localDomains");
   });
 
-  httpServer = new HttpServer();
-  httpServer.registerPathHandler("/content", contentHandler);
-  httpServer.start(-1);
-
-  do_test_pending();
-  make_and_open_channel(URL, readServerContent);
+  var env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+  var serverPort = env.get("MOZHTTP2_PORT");
+  make_and_open_channel("https://foo.example.com:" + serverPort + "/server-timing", readServerContent);
 }
 
 function checkServerTimingContent(headers) {
-  var expectedResult = respnseServerTiming.concat(trailerServerTiming);
+  var expectedResult = responseServerTiming.concat(trailerServerTiming);
   Assert.equal(headers.length, expectedResult.length);
 
   for (var i = 0; i < expectedResult.length; i++) {
@@ -84,6 +70,5 @@ function readServerContent(request, buffer)
   let channel = request.QueryInterface(Ci.nsITimedChannel);
   let headers = channel.serverTiming.QueryInterface(Ci.nsIArray);
   checkServerTimingContent(headers);
-
-  httpServer.stop(do_test_finished);
+  do_test_finished();
 }
