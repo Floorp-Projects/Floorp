@@ -5248,6 +5248,11 @@ public:
 
   NS_IMETHOD Run() override
   {
+    nsCOMPtr<nsIPresShell> shell = do_QueryInterface(mSelectionController);
+    if (!shell || shell->IsDestroying()) {
+      return NS_OK;
+    }
+
     mSelectionController->RepaintSelection(
                             nsISelectionController::SELECTION_NORMAL);
     return NS_OK;
