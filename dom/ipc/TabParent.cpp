@@ -27,7 +27,6 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/Hal.h"
 #include "mozilla/IMEStateManager.h"
-#include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/InputAPZContext.h"
@@ -1002,24 +1001,6 @@ TabParent::GetTopLevelDocAccessible() const
                                 "there shouldn't be an accessible doc at all!");
 #endif
   return nullptr;
-}
-
-PDocumentRendererParent*
-TabParent::AllocPDocumentRendererParent(const nsRect& documentRect,
-                                        const gfx::Matrix& transform,
-                                        const nsString& bgcolor,
-                                        const uint32_t& renderFlags,
-                                        const bool& flushLayout,
-                                        const nsIntSize& renderSize)
-{
-    return new DocumentRendererParent();
-}
-
-bool
-TabParent::DeallocPDocumentRendererParent(PDocumentRendererParent* actor)
-{
-    delete actor;
-    return true;
 }
 
 PFilePickerParent*
