@@ -22,6 +22,7 @@ import org.mozilla.gecko.GeckoSession;
 import org.mozilla.gecko.GeckoSessionSettings;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.GeckoView;
+import org.mozilla.gecko.GeckoSession.PermissionDelegate.MediaSource;
 import org.mozilla.gecko.GeckoSession.TrackingProtectionDelegate;
 import org.mozilla.gecko.util.GeckoBundle;
 
@@ -282,14 +283,14 @@ public class GeckoViewActivity extends Activity {
             prompt.promptForPermission(session, title, callback);
         }
 
-        private void normalizeMediaName(final GeckoBundle[] sources) {
+        private void normalizeMediaName(final MediaSource[] sources) {
             if (sources == null) {
                 return;
             }
-            for (final GeckoBundle source : sources) {
-                final String mediaSource = source.getString("mediaSource");
-                String name = source.getString("name");
-                if ("camera".equals(mediaSource)) {
+            for (final MediaSource source : sources) {
+                final int mediaSource = source.source;
+                String name = source.name;
+                if (MediaSource.SOURCE_CAMERA == mediaSource) {
                     if (name.toLowerCase(Locale.ENGLISH).contains("front")) {
                         name = getString(R.string.media_front_camera);
                     } else {
@@ -297,19 +298,18 @@ public class GeckoViewActivity extends Activity {
                     }
                 } else if (!name.isEmpty()) {
                     continue;
-                } else if ("microphone".equals(mediaSource)) {
+                } else if (MediaSource.SOURCE_MICROPHONE == mediaSource) {
                     name = getString(R.string.media_microphone);
                 } else {
                     name = getString(R.string.media_other);
                 }
-                source.putString("name", name);
+                source.name = name;
             }
         }
 
         @Override
         public void requestMediaPermission(final GeckoSession session, final String uri,
-                                           final GeckoBundle[] video,
-                                           final GeckoBundle[] audio,
+                                           final MediaSource[] video, final MediaSource[] audio,
                                            final MediaCallback callback) {
             final String host = Uri.parse(uri).getAuthority();
             final String title;
