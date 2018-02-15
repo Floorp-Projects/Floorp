@@ -356,6 +356,7 @@ public:
 
     virtual nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
     void SetDrawsInTitlebar(bool aState) override;
+    virtual void UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion) override;
 
     // HiDPI scale conversion
     gint GdkScaleFactor();
@@ -494,6 +495,8 @@ private:
     bool               mIsCSDAvailable;
     // If true, draw our own window titlebar.
     bool               mIsCSDEnabled;
+    // Draggable titlebar region maintained by UpdateWindowDraggingRegion
+    LayoutDeviceIntRegion mDraggableRegion;
 
 #ifdef ACCESSIBILITY
     RefPtr<mozilla::a11y::Accessible> mRootAccessible;
