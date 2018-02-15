@@ -374,7 +374,7 @@ class CodeGeneratorShared : public LElementVisitor
     MBasicBlock* skipTrivialBlocks(MBasicBlock* block) {
         while (block->lir()->isTrivial()) {
             MOZ_ASSERT(block->lir()->rbegin()->numSuccessors() == 1);
-            block = block->lir()->rbegin()->getSuccessor(0);
+            block = block->lir()->rbegin()->toGoto()->getSuccessor(0);
         }
         return block;
     }
