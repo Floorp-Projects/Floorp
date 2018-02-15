@@ -221,6 +221,13 @@ nsNSSSocketInfo::SetClientCert(nsIX509Cert* aClientCert)
 }
 
 NS_IMETHODIMP
+nsNSSSocketInfo::GetClientCertSent(bool* arg)
+{
+  *arg = mSentClientCert;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNSSSocketInfo::GetBypassAuthentication(bool* arg)
 {
   *arg = mBypassAuthentication;
