@@ -46,7 +46,6 @@ function dummyLightweightTheme(id) {
   return {
     id,
     name: id,
-    headerURL: "resource:///chrome/browser/content/browser/defaultthemes/compact.header.png",
     iconURL: "resource:///chrome/browser/content/browser/defaultthemes/light.icon.svg",
     textcolor: "red",
     accentcolor: "blue"

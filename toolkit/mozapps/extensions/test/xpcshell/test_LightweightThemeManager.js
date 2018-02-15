@@ -1,7 +1,7 @@
-const MANDATORY = ["id", "name", "headerURL"];
-const OPTIONAL = ["footerURL", "textcolor", "accentcolor", "iconURL",
-                  "previewURL", "author", "description", "homepageURL",
-                  "updateURL", "version"];
+const MANDATORY = ["id", "name"];
+const OPTIONAL = ["headerURL", "footerURL", "textcolor", "accentcolor",
+                  "iconURL", "previewURL", "author", "description",
+                  "homepageURL", "updateURL", "version"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 

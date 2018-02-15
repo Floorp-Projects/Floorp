@@ -411,15 +411,15 @@ tabbrowser {
   list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-blocked.svg);
 }
 
-.tab-icon-sound:-moz-lwtheme-darktext[soundplaying],
-.tab-icon-sound:-moz-lwtheme-darktext[muted],
-.tab-icon-sound:-moz-lwtheme-darktext[activemedia-blocked] {
+:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[soundplaying],
+:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[muted],
+:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[activemedia-blocked] {
   filter: drop-shadow(1px 1px 1px white);
 }
 
-.tab-icon-sound:-moz-lwtheme-brighttext[soundplaying],
-.tab-icon-sound:-moz-lwtheme-brighttext[muted],
-.tab-icon-sound:-moz-lwtheme-brighttext[activemedia-blocked] {
+:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-brighttext[soundplaying],
+:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-brighttext[muted],
+:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-brighttext[activemedia-blocked] {
   filter: drop-shadow(1px 1px 1px black);
 }
 
@@ -530,7 +530,7 @@ tabbrowser {
  */
 
 /* Lightweight theme on tabs */
-#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background[selected=true]:-moz-lwtheme {
+:root[lwtheme-image] #tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background[selected=true] {
   background-attachment: scroll, fixed;
   background-color: transparent;
   background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor)),

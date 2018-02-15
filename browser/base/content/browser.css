@@ -18,9 +18,13 @@
 
 :root:-moz-lwtheme {
   background-color: var(--lwt-accent-color) !important;
-  background-image: var(--lwt-header-image), var(--lwt-additional-images) !important;
+  background-image: var(--lwt-additional-images) !important;
   background-position: var(--lwt-background-alignment) !important;
   background-repeat: var(--lwt-background-tiling) !important;
+}
+
+:root:-moz-lwtheme[lwtheme-image] {
+  background-image: var(--lwt-header-image), var(--lwt-additional-images) !important;
 }
 
 :root:-moz-lwtheme:-moz-window-inactive {
