@@ -10,6 +10,7 @@ const TEST_OFFLINE_HOST = "example.org";
 const TEST_OFFLINE_ORIGIN = "https://" + TEST_OFFLINE_HOST;
 const TEST_OFFLINE_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/offline/offline.html";
 const TEST_SERVICE_WORKER_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/service_worker_test.html";
+const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
 const { DownloadUtils } = ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm", {});
@@ -142,5 +143,96 @@ add_task(async function() {
   await acceptRemovePromise;
   await updatePromise;
   await promiseServiceWorkersCleared();
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+// Test showing and removing sites with cookies.
+add_task(async function() {
+  SiteDataManager.removeAll();
+
+  // Add some test cookies.
+  let uri = Services.io.newURI("https://example.com");
+  let uri2 = Services.io.newURI("https://example.org");
+  Services.cookies.add(uri.host, uri.pathQueryRef, "test1", "1",
+    false, false, false, Date.now() + 1000 * 60 * 60);
+  Services.cookies.add(uri.host, uri.pathQueryRef, "test2", "2",
+    false, false, false, Date.now() + 1000 * 60 * 60);
+  Services.cookies.add(uri2.host, uri2.pathQueryRef, "test1", "1",
+    false, false, false, Date.now() + 1000 * 60 * 60);
+
+  // Ensure that private browsing cookies are ignored.
+  Services.cookies.add(uri.host, uri.pathQueryRef, "test3", "3",
+    false, false, false, Date.now() + 1000 * 60 * 60, { privateBrowsingId: 1 });
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+
+  // Open the site data manager and remove one site.
+  await openSiteDataSettingsDialog();
+  let removeDialogOpenPromise = promiseWindowDialogOpen("accept", REMOVE_DIALOG_URL);
+  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
+
+    let siteItems = frameDoc.getElementsByTagName("richlistitem");
+    is(siteItems.length, 2, "Should list two sites with cookies");
+    let sitesList = frameDoc.getElementById("sitesList");
+    let site1 = sitesList.querySelector(`richlistitem[host="example.com"]`);
+    let site2 = sitesList.querySelector(`richlistitem[host="example.org"]`);
+
+    let columns = site1.querySelectorAll(".item-box > label");
+    is(columns[0].value, "example.com", "Should show the correct host.");
+    is(columns[2].value, "2", "Should show the correct number of cookies.");
+    is(columns[3].value, "", "Should show no site data.");
+
+    columns = site2.querySelectorAll(".item-box > label");
+    is(columns[0].value, "example.org", "Should show the correct host.");
+    is(columns[2].value, "1", "Should show the correct number of cookies.");
+    is(columns[3].value, "", "Should show no site data.");
+
+    let removeBtn = frameDoc.getElementById("removeSelected");
+    let saveBtn = frameDoc.getElementById("save");
+    site2.click();
+    removeBtn.doCommand();
+    saveBtn.doCommand();
+  });
+  await removeDialogOpenPromise;
+
+  await TestUtils.waitForCondition(() => Services.cookies.countCookiesFromHost(uri2.host) == 0, "Cookies from the first host should be cleared");
+  is(Services.cookies.countCookiesFromHost(uri.host), 2, "Cookies from the second host should not be cleared");
+
+  // Open the site data manager and remove another site.
+  await openSiteDataSettingsDialog();
+  let acceptRemovePromise = promiseAlertDialogOpen("accept");
+  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
+
+    let siteItems = frameDoc.getElementsByTagName("richlistitem");
+    is(siteItems.length, 1, "Should list one site with cookies");
+    let sitesList = frameDoc.getElementById("sitesList");
+    let site1 = sitesList.querySelector(`richlistitem[host="example.com"]`);
+
+    let columns = site1.querySelectorAll(".item-box > label");
+    is(columns[0].value, "example.com", "Should show the correct host.");
+    is(columns[2].value, "2", "Should show the correct number of cookies.");
+    is(columns[3].value, "", "Should show no site data.");
+
+    let removeBtn = frameDoc.getElementById("removeSelected");
+    let saveBtn = frameDoc.getElementById("save");
+    site1.click();
+    removeBtn.doCommand();
+    saveBtn.doCommand();
+  });
+  await acceptRemovePromise;
+
+  await TestUtils.waitForCondition(() => Services.cookies.countCookiesFromHost(uri.host) == 0, "Cookies from the second host should be cleared");
+
+  await openSiteDataSettingsDialog();
+
+  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
+
+    let siteItems = frameDoc.getElementsByTagName("richlistitem");
+    is(siteItems.length, 0, "Should list no sites with cookies");
+  });
+
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

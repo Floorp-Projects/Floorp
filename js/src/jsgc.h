@@ -127,6 +127,8 @@ NewCompartment(JSContext* cx, JSPrincipals* principals,
 
 namespace gc {
 
+void FinishGC(JSContext* cx);
+
 /*
  * Merge all contents of source into target. This can only be used if source is
  * the only compartment in its zone.

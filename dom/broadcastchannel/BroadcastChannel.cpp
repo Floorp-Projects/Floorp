@@ -186,7 +186,6 @@ public:
 
   nsresult Cancel() override
   {
-    mBC = nullptr;
     return NS_OK;
   }
 
@@ -198,40 +197,85 @@ private:
 
 NS_IMPL_ISUPPORTS(CloseRunnable, nsICancelableRunnable, nsIRunnable)
 
-class TeardownRunnable final : public nsIRunnable,
-                               public nsICancelableRunnable
+class TeardownRunnable
 {
-public:
-  NS_DECL_ISUPPORTS
-
+protected:
   explicit TeardownRunnable(BroadcastChannelChild* aActor)
     : mActor(aActor)
   {
     MOZ_ASSERT(mActor);
   }
 
-  NS_IMETHOD Run() override
+  void RunInternal()
   {
     MOZ_ASSERT(mActor);
     if (!mActor->IsActorDestroyed()) {
       mActor->SendClose();
     }
-    return NS_OK;
   }
 
-  nsresult Cancel() override
-  {
-    mActor = nullptr;
-    return NS_OK;
-  }
+protected:
+  virtual ~TeardownRunnable() = default;
 
 private:
-  ~TeardownRunnable() {}
-
   RefPtr<BroadcastChannelChild> mActor;
 };
 
-NS_IMPL_ISUPPORTS(TeardownRunnable, nsICancelableRunnable, nsIRunnable)
+class TeardownRunnableOnMainThread final : public Runnable
+                                         , public TeardownRunnable
+{
+public:
+  explicit TeardownRunnableOnMainThread(BroadcastChannelChild* aActor)
+    : Runnable("TeardownRunnableOnMainThread")
+    , TeardownRunnable(aActor)
+  {
+  }
+
+  NS_IMETHOD Run() override
+  {
+    RunInternal();
+    return NS_OK;
+  }
+};
+
+class TeardownRunnableOnWorker final : public WorkerControlRunnable
+                                     , public TeardownRunnable
+{
+public:
+  TeardownRunnableOnWorker(WorkerPrivate* aWorkerPrivate,
+                           BroadcastChannelChild* aActor)
+    : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
+    , TeardownRunnable(aActor)
+  {
+  }
+
+  bool WorkerRun(JSContext*, WorkerPrivate*) override
+  {
+    RunInternal();
+    return true;
+  }
+
+  bool
+  PreDispatch(WorkerPrivate* aWorkerPrivate) override
+  {
+    return true;
+  }
+
+  void
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
+  {}
+
+  bool
+  PreRun(WorkerPrivate* aWorkerPrivate) override
+  {
+    return true;
+  }
+
+  void
+  PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+          bool aRunResult) override
+  {}
+};
 
 class BroadcastChannelWorkerHolder final : public WorkerHolder
 {
@@ -451,8 +495,18 @@ BroadcastChannel::Shutdown()
   if (mActor) {
     mActor->SetParent(nullptr);
 
-    RefPtr<TeardownRunnable> runnable = new TeardownRunnable(mActor);
-    NS_DispatchToCurrentThread(runnable);
+    if (NS_IsMainThread()) {
+      RefPtr<TeardownRunnableOnMainThread> runnable =
+        new TeardownRunnableOnMainThread(mActor);
+      NS_DispatchToCurrentThread(runnable);
+    } else {
+      WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+      MOZ_ASSERT(workerPrivate);
+
+      RefPtr<TeardownRunnableOnWorker> runnable =
+        new TeardownRunnableOnWorker(workerPrivate, mActor);
+      runnable->Dispatch();
+    }
 
     mActor = nullptr;
   }

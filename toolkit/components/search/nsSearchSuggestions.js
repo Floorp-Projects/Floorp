@@ -26,13 +26,6 @@ SuggestAutoComplete.prototype = {
     this._suggestionController.maxLocalResults = this._historyLimit;
   },
 
-  get _suggestionLabel() {
-    let bundle = Services.strings.createBundle("chrome://global/locale/search/search.properties");
-    let label = bundle.GetStringFromName("suggestion_label");
-    Object.defineProperty(SuggestAutoComplete.prototype, "_suggestionLabel", {value: label});
-    return label;
-  },
-
   /**
    * The object implementing nsIAutoCompleteObserver that we notify when
    * we have found results
@@ -64,9 +57,8 @@ SuggestAutoComplete.prototype = {
 
     // If there are remote matches, add them.
     if (results.remote.length) {
-      // "comments" column values for suggestions starts as empty strings
-      let comments = new Array(results.remote.length).fill("", 1);
-      comments[0] = this._suggestionLabel;
+      // "comments" column values for suggestions are empty strings
+      let comments = new Array(results.remote.length).fill("");
       // now put the history results above the suggestions
       finalResults = finalResults.concat(results.remote);
       finalComments = finalComments.concat(comments);

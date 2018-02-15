@@ -25,7 +25,7 @@
 #include "vm/TraceLogging.h"
 #include "vm/Xdr.h"
 
-#include "gc/Iteration-inl.h"
+#include "gc/GCIteration-inl.h"
 #include "vm/JSCompartment-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"

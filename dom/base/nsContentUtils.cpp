@@ -2558,6 +2558,34 @@ nsContentUtils::ContentIsHostIncludingDescendantOf(
   return false;
 }
 
+bool
+nsContentUtils::ContentIsShadowIncludingDescendantOf(
+  const nsINode* aPossibleDescendant, const nsINode* aPossibleAncestor)
+{
+  MOZ_ASSERT(aPossibleDescendant, "The possible descendant is null!");
+  MOZ_ASSERT(aPossibleAncestor, "The possible ancestor is null!");
+
+  if (aPossibleAncestor == aPossibleDescendant->GetComposedDoc()) {
+    return true;
+  }
+
+  do {
+    if (aPossibleDescendant == aPossibleAncestor) {
+      return true;
+    }
+
+    if (aPossibleDescendant->NodeType() == nsINode::DOCUMENT_FRAGMENT_NODE) {
+      ShadowRoot* shadowRoot =
+        ShadowRoot::FromNode(const_cast<nsINode*>(aPossibleDescendant));
+      aPossibleDescendant = shadowRoot ? shadowRoot->GetHost() : nullptr;
+    } else {
+      aPossibleDescendant = aPossibleDescendant->GetParentNode();
+    }
+  } while (aPossibleDescendant);
+
+  return false;
+}
+
 // static
 bool
 nsContentUtils::ContentIsCrossDocDescendantOf(nsINode* aPossibleDescendant,
@@ -2613,6 +2641,30 @@ nsContentUtils::ContentIsFlattenedTreeDescendantOfForStyle(
   } while (aPossibleDescendant);
 
   return false;
+}
+
+// static
+nsINode*
+nsContentUtils::Retarget(nsINode* aTargetA, nsINode* aTargetB)
+{
+  while (true && aTargetA) {
+    // If A's root is not a shadow root...
+    nsINode* root = aTargetA->SubtreeRoot();
+    if (!root->IsShadowRoot()) {
+      // ...then return A.
+      return aTargetA;
+    }
+
+    // or A's root is a shadow-including inclusive ancestor of B...
+    if (nsContentUtils::ContentIsShadowIncludingDescendantOf(aTargetB, root)) {
+      // ...then return A.
+      return aTargetA;
+    }
+
+    aTargetA = ShadowRoot::FromNode(root)->GetHost();
+  }
+
+  return nullptr;
 }
 
 // static

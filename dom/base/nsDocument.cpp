@@ -11887,10 +11887,11 @@ nsDocument::UnlockPointer(nsIDocument* aDoc)
     do_QueryReferent(EventStateManager::sPointerLockedElement);
   ChangePointerLockedElement(nullptr, doc, pointerLockedElement);
 
-  nsContentUtils::DispatchEventOnlyToChrome(
-    doc, ToSupports(pointerLockedElement),
-    NS_LITERAL_STRING("MozDOMPointerLock:Exited"),
-    /* Bubbles */ true, /* Cancelable */ false, /* DefaultAction */ nullptr);
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+    new AsyncEventDispatcher(pointerLockedElement,
+                             NS_LITERAL_STRING("MozDOMPointerLock:Exited"),
+                             true, true);
+  asyncDispatcher->RunDOMEventWhenSafe();
 }
 
 void
