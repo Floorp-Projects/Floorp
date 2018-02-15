@@ -134,7 +134,7 @@ BaselineCompiler::compile()
     }
 
     AutoFlushICache afc("Baseline");
-    JitCode* code = linker.newCode<CanGC>(cx, BASELINE_CODE);
+    JitCode* code = linker.newCode<CanGC>(cx, CodeKind::Baseline);
     if (!code)
         return Method_Error;
 

@@ -269,7 +269,7 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
 
     Linker linker(masm);
     AutoFlushICache afc("UnboxedObject");
-    JitCode* code = linker.newCode<NoGC>(cx, OTHER_CODE);
+    JitCode* code = linker.newCode<NoGC>(cx, CodeKind::Other);
     if (!code)
         return false;
 

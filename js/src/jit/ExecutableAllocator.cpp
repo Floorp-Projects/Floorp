@@ -57,19 +57,19 @@ void
 ExecutablePool::release(size_t n, CodeKind kind)
 {
     switch (kind) {
-      case ION_CODE:
+      case CodeKind::Ion:
         m_ionCodeBytes -= n;
         MOZ_ASSERT(m_ionCodeBytes < m_allocation.size); // Shouldn't underflow.
         break;
-      case BASELINE_CODE:
+      case CodeKind::Baseline:
         m_baselineCodeBytes -= n;
         MOZ_ASSERT(m_baselineCodeBytes < m_allocation.size);
         break;
-      case REGEXP_CODE:
+      case CodeKind::RegExp:
         m_regexpCodeBytes -= n;
         MOZ_ASSERT(m_regexpCodeBytes < m_allocation.size);
         break;
-      case OTHER_CODE:
+      case CodeKind::Other:
         m_otherCodeBytes -= n;
         MOZ_ASSERT(m_otherCodeBytes < m_allocation.size);
         break;
@@ -99,11 +99,11 @@ ExecutablePool::alloc(size_t n, CodeKind kind)
     m_freePtr += n;
 
     switch (kind) {
-      case ION_CODE:      m_ionCodeBytes      += n;        break;
-      case BASELINE_CODE: m_baselineCodeBytes += n;        break;
-      case REGEXP_CODE:   m_regexpCodeBytes   += n;        break;
-      case OTHER_CODE:    m_otherCodeBytes    += n;        break;
-      default:            MOZ_CRASH("bad code kind");
+      case CodeKind::Ion:      m_ionCodeBytes      += n; break;
+      case CodeKind::Baseline: m_baselineCodeBytes += n; break;
+      case CodeKind::RegExp:   m_regexpCodeBytes   += n; break;
+      case CodeKind::Other:    m_otherCodeBytes    += n; break;
+      default: MOZ_CRASH("bad code kind");
     }
 
     return result;
