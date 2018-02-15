@@ -101,7 +101,7 @@ AllocateBufferForImage(const IntSize& size,
   }
 #endif
 
-  if (!aIsAnimated && gfxVars::UseWebRender() && gfxPrefs::ImageMemShared()) {
+  if (!aIsAnimated && gfxPrefs::ImageMemShared()) {
     RefPtr<SourceSurfaceSharedData> newSurf = new SourceSurfaceSharedData();
     if (newSurf->Init(size, stride, format)) {
       return newSurf.forget();
