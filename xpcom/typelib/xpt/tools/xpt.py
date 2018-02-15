@@ -577,10 +577,14 @@ class CachedStringWriter(object):
     def __init__(self, file, data_pool_offset):
         self.file = file
         self.data_pool_offset = data_pool_offset
+        self.names = {}
 
     def write(self, s):
         if s:
+            if s in self.names:
+                return self.names[s]
             offset = self.file.tell() - self.data_pool_offset + 1
+            self.names[s] = offset
             self.file.write(s + "\x00")
             return offset
         else:
