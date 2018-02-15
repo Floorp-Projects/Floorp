@@ -613,6 +613,9 @@ internal_HistogramAdd(Histogram& histogram,
   // Clamp large values of `value` to be INT_MAX so they continue to be treated
   // as large values (instead of negative ones).
   if (value > INT_MAX) {
+    TelemetryScalar::Add(
+      mozilla::Telemetry::ScalarID::TELEMETRY_ACCUMULATE_CLAMPED_VALUES,
+      NS_ConvertASCIItoUTF16(gHistogramInfos[id].name()), 1);
     value = INT_MAX;
   }
 
@@ -822,6 +825,16 @@ KeyedHistogram::Add(const nsCString& key, uint32_t sample,
     return NS_ERROR_FAILURE;
   }
 #endif
+
+  // The internal representation of a base::Histogram's buckets uses `int`.
+  // Clamp large values of `sample` to be INT_MAX so they continue to be treated
+  // as large values (instead of negative ones).
+  if (sample > INT_MAX) {
+    TelemetryScalar::Add(
+      mozilla::Telemetry::ScalarID::TELEMETRY_ACCUMULATE_CLAMPED_VALUES,
+      NS_ConvertASCIItoUTF16(mHistogramInfo.name()), 1);
+    sample = INT_MAX;
+  }
 
   histogram->Add(sample);
 #if !defined(MOZ_WIDGET_ANDROID)
