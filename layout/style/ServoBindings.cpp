@@ -39,6 +39,7 @@
 #include "nsMediaFeatures.h"
 #include "nsNameSpaceManager.h"
 #include "nsNetUtil.h"
+#include "nsProxyRelease.h"
 #include "nsString.h"
 #include "nsStyleStruct.h"
 #include "nsStyleUtil.h"
@@ -2513,28 +2514,38 @@ Gecko_GetAppUnitsPerPhysicalInch(RawGeckoPresContextBorrowed aPresContext)
   return presContext->DeviceContext()->AppUnitsPerPhysicalInch();
 }
 
-ServoStyleSheet*
-Gecko_LoadStyleSheet(css::Loader* aLoader,
-                     ServoStyleSheet* aParent,
-                     SheetLoadData* aParentLoadData,
-                     css::LoaderReusableStyleSheets* aReusableSheets,
-                     RawGeckoURLExtraData* aURLExtraData,
-                     const uint8_t* aURLString,
-                     uint32_t aURLStringLength,
-                     RawServoMediaListStrong aMediaList)
+NS_IMPL_THREADSAFE_FFI_REFCOUNTING(SheetLoadDataHolder, SheetLoadDataHolder);
+
+void
+Gecko_StyleSheet_FinishAsyncParse(SheetLoadDataHolder* aData,
+                                  RawServoStyleSheetContentsStrong aSheetContents)
+{
+  RefPtr<SheetLoadDataHolder> loadData = aData;
+  RefPtr<RawServoStyleSheetContents> sheetContents = aSheetContents.Consume();
+  NS_DispatchToMainThread(NS_NewRunnableFunction(__func__,
+                                                 [d = Move(loadData),
+                                                  s = Move(sheetContents)]() mutable {
+    MOZ_ASSERT(NS_IsMainThread());
+    d->get()->mSheet->AsServo()->FinishAsyncParse(s.forget());
+  }));
+}
+
+static already_AddRefed<ServoStyleSheet>
+LoadImportSheet(css::Loader* aLoader,
+                ServoStyleSheet* aParent,
+                SheetLoadData* aParentLoadData,
+                css::LoaderReusableStyleSheets* aReusableSheets,
+                css::URLValue* aURL,
+                already_AddRefed<RawServoMediaList> aMediaList)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aLoader, "Should've catched this before");
   MOZ_ASSERT(aParent, "Only used for @import, so parent should exist!");
-  MOZ_ASSERT(aURLString, "Invalid URLs shouldn't be loaded!");
-  MOZ_ASSERT(aURLExtraData, "Need URL extra data");
+  MOZ_ASSERT(aURL, "Invalid URLs shouldn't be loaded!");
 
-  RefPtr<dom::MediaList> media = new ServoMediaList(aMediaList.Consume());
-  nsDependentCSubstring urlSpec(reinterpret_cast<const char*>(aURLString),
-                                aURLStringLength);
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nullptr,
-                          aURLExtraData->BaseURI());
+  RefPtr<dom::MediaList> media = new ServoMediaList(Move(aMediaList));
+  nsCOMPtr<nsIURI> uri = aURL->GetURI();
+  nsresult rv = uri ? NS_OK : NS_ERROR_FAILURE;
 
   StyleSheet* previousFirstChild = aParent->GetFirstChild();
   if (NS_SUCCEEDED(rv)) {
@@ -2558,15 +2569,52 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
       NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("about:invalid"));
     }
     emptySheet->SetURIs(uri, uri, uri);
-    emptySheet->SetPrincipal(aURLExtraData->GetPrincipal());
+    emptySheet->SetPrincipal(aURL->mExtraData->GetPrincipal());
     emptySheet->SetComplete();
     aParent->PrependStyleSheet(emptySheet);
-    return emptySheet.forget().take();
+    return emptySheet.forget();
   }
 
   RefPtr<ServoStyleSheet> sheet =
     static_cast<ServoStyleSheet*>(aParent->GetFirstChild());
-  return sheet.forget().take();
+  return sheet.forget();
+}
+
+ServoStyleSheet*
+Gecko_LoadStyleSheet(css::Loader* aLoader,
+                     ServoStyleSheet* aParent,
+                     SheetLoadData* aParentLoadData,
+                     css::LoaderReusableStyleSheets* aReusableSheets,
+                     ServoBundledURI aServoURL,
+                     RawServoMediaListStrong aMediaList)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  RefPtr<css::URLValue> url = aServoURL.IntoCssUrl();
+  return LoadImportSheet(aLoader, aParent, aParentLoadData, aReusableSheets,
+                         url, aMediaList.Consume()).take();
+}
+
+void
+Gecko_LoadStyleSheetAsync(css::SheetLoadDataHolder* aParentData,
+                          ServoBundledURI aServoURL,
+                          RawServoMediaListStrong aMediaList,
+                          RawServoImportRuleStrong aImportRule)
+{
+  RefPtr<SheetLoadDataHolder> loadData = aParentData;
+  RefPtr<css::URLValue> urlVal = aServoURL.IntoCssUrl();
+  RefPtr<RawServoMediaList> mediaList = aMediaList.Consume();
+  RefPtr<RawServoImportRule> importRule = aImportRule.Consume();
+  NS_DispatchToMainThread(NS_NewRunnableFunction(__func__,
+                                                 [data = Move(loadData),
+                                                  url = Move(urlVal),
+                                                  media = Move(mediaList),
+                                                  import = Move(importRule)]() mutable {
+    MOZ_ASSERT(NS_IsMainThread());
+    SheetLoadData* d = data->get();
+    RefPtr<ServoStyleSheet> sheet =
+      LoadImportSheet(d->mLoader, d->mSheet->AsServo(), d, nullptr, url, media.forget());
+    Servo_ImportRule_SetSheet(import, sheet);
+  }));
 }
 
 nsCSSKeyword
