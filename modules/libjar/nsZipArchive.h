@@ -160,7 +160,7 @@ public:
    * @param   outname    Name of file to write to
    * @return  status code
    */
-  nsresult ExtractFile(nsZipItem * zipEntry, const char *outname, PRFileDesc * outFD);
+  nsresult ExtractFile(nsZipItem * zipEntry, nsIFile* outFile, PRFileDesc * outFD);
 
   /**
    * FindInit

@@ -1752,6 +1752,14 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
       *aHandled = true;
       return NS_OK;
     }
+    // Now, mNewBlock is last created block element for wrapping inline
+    // elements around the caret position and AfterEditInner() will move
+    // caret into it.  However, it may be different from block parent of
+    // the caret position.  E.g., MakeBasicBlock() may wrap following
+    // inline elements of a <br> element which is next sibling of container
+    // of the caret.  So, we need to adjust mNewBlock here for avoiding
+    // jumping caret to odd position.
+    mNewBlock = blockParent;
   }
 
   // If block is empty, populate with br.  (For example, imagine a div that
@@ -5925,6 +5933,18 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
 
   // look ahead through any further inline nodes that aren't across a <br> from
   // us, and that are enclosed in the same block.
+  // XXX Currently, we stop block-extending when finding visible <br> element.
+  //     This might be different from "block-extend" of execCommand spec.
+  //     However, the spec is really unclear.
+  // XXX Probably, scanning only editable nodes is wrong for
+  //     EditAction::makeBasicBlock because it might be better to wrap existing
+  //     inline elements even if it's non-editable.  For example, following
+  //     examples with insertParagraph causes different result:
+  //     * <div contenteditable>foo[]<b contenteditable="false">bar</b></div>
+  //     * <div contenteditable>foo[]<b>bar</b></div>
+  //     * <div contenteditable>foo[]<b contenteditable="false">bar</b>baz</div>
+  //     Only in the first case, after the caret position isn't wrapped with
+  //     new <div> element.
   nsCOMPtr<nsIContent> nextNode =
     htmlEditor->GetNextEditableHTMLNodeInBlock(point.AsRaw());
 

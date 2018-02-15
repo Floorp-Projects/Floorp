@@ -1201,9 +1201,6 @@ class RTCPeerConnection {
       return;
     }
 
-    // TODO(bug 1401983): Move to TransceiverImpl?
-    this._impl.removeTrack(sender.track);
-
     sender.setTrack(null);
     if (transceiver.direction == "sendrecv") {
       transceiver.setDirectionInternal("recvonly");
@@ -1376,8 +1373,7 @@ class RTCPeerConnection {
     return this._impl.getDTMFToneBuffer(sender.__DOM_IMPL__);
   }
 
-  _replaceTrack(transceiverImpl, withTrack) {
-    this._checkClosed();
+  _replaceTrackNoRenegotiation(transceiverImpl, withTrack) {
     this._impl.replaceTrackNoRenegotiation(transceiverImpl, withTrack);
   }
 
@@ -1965,7 +1961,7 @@ class RTCRtpSender {
     // Updates the track on the MediaPipeline; this is needed whether or not
     // we've associated this transceiver, the spec language notwithstanding.
     // Synchronous, and will throw on failure.
-    this._pc._replaceTrack(this._transceiverImpl, withTrack);
+    this._pc._replaceTrackNoRenegotiation(this._transceiverImpl, withTrack);
 
     let setTrack = () => {
       this.track = withTrack;
@@ -2039,6 +2035,7 @@ class RTCRtpSender {
   }
 
   setTrack(track) {
+    this._pc._replaceTrackNoRenegotiation(this._transceiverImpl, track);
     this.track = track;
   }
 

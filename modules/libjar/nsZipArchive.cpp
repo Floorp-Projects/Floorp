@@ -473,7 +473,7 @@ MOZ_WIN_MEM_TRY_CATCH(return nullptr)
 // If 'aFd' is null, it only tests the extraction.
 // On extraction error(s) it removes the file.
 //---------------------------------------------
-nsresult nsZipArchive::ExtractFile(nsZipItem *item, const char *outname,
+nsresult nsZipArchive::ExtractFile(nsZipItem *item, nsIFile* outFile,
                                    PRFileDesc* aFd)
 {
   if (!item)
@@ -512,8 +512,9 @@ nsresult nsZipArchive::ExtractFile(nsZipItem *item, const char *outname,
   //-- delete the file on errors
   if (aFd) {
     PR_Close(aFd);
-    if (rv != NS_OK)
-      PR_Delete(outname);
+    if (NS_FAILED(rv) && outFile) {
+      outFile->Remove(false);
+    }
   }
 
   return rv;

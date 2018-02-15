@@ -64,6 +64,31 @@ describe("Message reducer:", () => {
       expect(repeat[getFirstMessage(getState()).id]).toBe(4);
     });
 
+    it("doesn't increment repeat on same log message with different locations", () => {
+      const key1 = "console.log('foobar', 'test')";
+      const { dispatch, getState } = setupStore();
+
+      const packet = clonePacket(stubPackets.get(key1));
+
+      // Dispatch original packet.
+      dispatch(actions.messagesAdd([packet]));
+
+      // Dispatch same packet with modified column number.
+      packet.message.columnNumber = packet.message.columnNumber + 1;
+      dispatch(actions.messagesAdd([packet]));
+
+      // Dispatch same packet with modified line number.
+      packet.message.lineNumber = packet.message.lineNumber + 1;
+      dispatch(actions.messagesAdd([packet]));
+
+      const messages = getAllMessagesById(getState());
+
+      expect(messages.size).toBe(3);
+
+      const repeat = getAllRepeatById(getState());
+      expect(Object.keys(repeat).length).toBe(0);
+    });
+
     it("increments repeat on a repeating css message", () => {
       const key1 = "Unknown property ‘such-unknown-property’.  Declaration dropped.";
       const { dispatch, getState } = setupStore([key1, key1]);
@@ -82,6 +107,31 @@ describe("Message reducer:", () => {
 
       const repeat = getAllRepeatById(getState());
       expect(repeat[getFirstMessage(getState()).id]).toBe(4);
+    });
+
+    it("doesn't increment repeat on same css message with different locations", () => {
+      const key1 = "Unknown property ‘such-unknown-property’.  Declaration dropped.";
+      const { dispatch, getState } = setupStore();
+
+      const packet = clonePacket(stubPackets.get(key1));
+
+      // Dispatch original packet.
+      dispatch(actions.messagesAdd([packet]));
+
+      // Dispatch same packet with modified column number.
+      packet.pageError.columnNumber = packet.pageError.columnNumber + 1;
+      dispatch(actions.messagesAdd([packet]));
+
+      // Dispatch same packet with modified line number.
+      packet.pageError.lineNumber = packet.pageError.lineNumber + 1;
+      dispatch(actions.messagesAdd([packet]));
+
+      const messages = getAllMessagesById(getState());
+
+      expect(messages.size).toBe(3);
+
+      const repeat = getAllRepeatById(getState());
+      expect(Object.keys(repeat).length).toBe(0);
     });
 
     it("increments repeat on a repeating error message", () => {
@@ -124,6 +174,57 @@ describe("Message reducer:", () => {
       expect(repeat[getFirstMessage(getState()).id]).toBe(2);
       expect(repeat[getMessageAt(getState(), 2).id]).toBe(3);
       expect(repeat[getLastMessage(getState()).id]).toBe(undefined);
+    });
+
+    it("doesn't increment undefined messages coming from different places", () => {
+      const { getState } = setupStore([
+        "console.log(undefined)",
+        "undefined",
+      ]);
+
+      const messages = getAllMessagesById(getState());
+      expect(messages.size).toBe(2);
+
+      const repeat = getAllRepeatById(getState());
+      expect(Object.keys(repeat).length).toBe(0);
+    });
+
+    it("doesn't increment successive falsy but different messages", () => {
+      const { getState } = setupStore([
+        "console.log(NaN)",
+        "console.log(undefined)",
+        "console.log(null)",
+      ], {actions});
+
+      let messages = getAllMessagesById(getState());
+      expect(messages.size).toBe(3);
+      let repeat = getAllRepeatById(getState());
+      expect(Object.keys(repeat).length).toBe(0);
+    });
+
+    it("increment falsy messages when expected", () => {
+      const { dispatch, getState } = setupStore();
+
+      const nanPacket = stubPackets.get("console.log(NaN)");
+      dispatch(actions.messagesAdd([nanPacket, nanPacket]));
+      let messages = getAllMessagesById(getState());
+      expect(messages.size).toBe(1);
+      let repeat = getAllRepeatById(getState());
+      expect(repeat[getLastMessage(getState()).id]).toBe(2);
+
+      const undefinedPacket = stubPackets.get("console.log(undefined)");
+      dispatch(actions.messagesAdd([undefinedPacket, undefinedPacket]));
+      messages = getAllMessagesById(getState());
+      expect(messages.size).toBe(2);
+      repeat = getAllRepeatById(getState());
+      expect(repeat[getLastMessage(getState()).id]).toBe(2);
+
+      const nullPacket = stubPackets.get("console.log(null)");
+      dispatch(actions.messagesAdd([nullPacket, nullPacket]));
+      messages = getAllMessagesById(getState());
+      expect(messages.size).toBe(3);
+      repeat = getAllRepeatById(getState());
+      expect(repeat[getLastMessage(getState()).id]).toBe(2);
     });
 
     it("does not clobber a unique message", () => {

@@ -834,7 +834,12 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       let { unitX, unitY, valueX, valueY, ratioX, ratioY } = point;
       let vector = [valueX / ratioX, valueY / ratioY];
       let [newX, newY] = apply(this.transformMatrix, vector);
-      return `${newX * ratioX}${unitX} ${newY * ratioY}${unitY}`;
+      let precisionX = getDecimalPrecision(unitX);
+      let precisionY = getDecimalPrecision(unitY);
+      newX = (newX * ratioX).toFixed(precisionX);
+      newY = (newY * ratioY).toFixed(precisionY);
+
+      return `${newX}${unitX} ${newY}${unitY}`;
     }).join(", ");
     polygonDef = (this.geometryBox) ? `polygon(${polygonDef}) ${this.geometryBox}` :
                                       `polygon(${polygonDef})`;
@@ -965,12 +970,15 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     let { point, unitX, unitY, valueX, valueY, ratioX, ratioY, x, y } = this[_dragging];
     let deltaX = (pageX - x) * ratioX;
     let deltaY = (pageY - y) * ratioY;
-    let newX = `${valueX + deltaX}${unitX}`;
-    let newY = `${valueY + deltaY}${unitY}`;
+    let precisionX = getDecimalPrecision(unitX);
+    let precisionY = getDecimalPrecision(unitY);
+    let newX = (valueX + deltaX).toFixed(precisionX);
+    let newY = (valueY + deltaY).toFixed(precisionY);
 
     let polygonDef = (this.fillRule) ? `${this.fillRule}, ` : "";
     polygonDef += this.coordUnits.map((coords, i) => {
-      return (i === point) ? `${newX} ${newY}` : `${coords[0]} ${coords[1]}`;
+      return (i === point) ?
+        `${newX}${unitX} ${newY}${unitY}` : `${coords[0]} ${coords[1]}`;
     }).join(", ");
     polygonDef = (this.geometryBox) ? `polygon(${polygonDef}) ${this.geometryBox}` :
                                       `polygon(${polygonDef})`;
@@ -980,6 +988,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
   /**
    * Set the inline style of the polygon, adding a new point.
+   * TODO: Bug 1436054 - Do not default to percentage unit when inserting new point.
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=1436054
+   *
    * @param {Number} after the index of the point that the new point should be added after
    * @param {Number} x the x coordinate of the new point
    * @param {Number} y the y coordinate of the new point
@@ -1567,7 +1578,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
           pageY <= Math.max(y1, y2) + clickWidth) {
         // Get the point on the line closest to the clicked point.
         let [newX, newY] = projection(x1, y1, x2, y2, pageX, pageY);
-        this._addPolygonPoint(i, newX, newY);
+        // Default unit for new points is percentages
+        let precision = getDecimalPrecision("%");
+        this._addPolygonPoint(i, newX.toFixed(precision), newY.toFixed(precision));
         return;
       }
     }
@@ -2727,5 +2740,28 @@ const getAnchorPoint = (type) => {
 
   return anchor;
 };
+
+/**
+* Get the decimal point precision for values depending on unit type.
+* Used as argument for `toFixed()` on coordinate values when:
+* - transforming shapes
+* - inserting new points on a polygon.
+* Only handle pixels and falsy values for now. Round them to the nearest integer value.
+* All other unit types round to two decimal points.
+*
+* @param {String|undefined} unitType any one of the accepted CSS unit types for position.
+* @return {Number} decimal precision when rounding a value
+*/
+function getDecimalPrecision(unitType) {
+  switch (unitType) {
+    case "px":
+    case "":
+    case undefined:
+      return 0;
+    default:
+      return 2;
+  }
+}
+exports.getDecimalPrecision = getDecimalPrecision;
 
 exports.ShapesHighlighter = ShapesHighlighter;

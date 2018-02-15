@@ -46,7 +46,7 @@ struct XPTArena
     XPTSubArena subarena1;
 };
 
-XPT_PUBLIC_API(XPTArena *)
+XPTArena*
 XPT_NewArena(size_t block_size8, size_t block_size1)
 {
     XPTArena *arena = static_cast<XPTArena*>(calloc(1, sizeof(XPTArena)));
@@ -73,7 +73,7 @@ DestroySubArena(XPTSubArena *subarena)
     }
 }
 
-XPT_PUBLIC_API(void)
+void
 XPT_DestroyArena(XPTArena *arena)
 {
     DestroySubArena(&arena->subarena8);
@@ -86,7 +86,7 @@ XPT_DestroyArena(XPTArena *arena)
 * so that the 'arena->next' pointer one will point to properly aligned space.
 */
 
-XPT_PUBLIC_API(void *)
+void*
 XPT_ArenaCalloc(XPTArena *arena, size_t size, size_t alignment)
 {
     if (!size)
@@ -162,7 +162,7 @@ XPT_ArenaCalloc(XPTArena *arena, size_t size, size_t alignment)
 /***************************************************************************/
 
 #ifdef DEBUG
-XPT_PUBLIC_API(void)
+void
 XPT_AssertFailed(const char *s, const char *file, uint32_t lineno)
 {
     fprintf(stderr, "Assertion failed: %s, file %s, line %d\n",
@@ -186,7 +186,7 @@ SizeOfSubArenaExcludingThis(XPTSubArena *subarena, MozMallocSizeOf mallocSizeOf)
     return n;
 }
 
-XPT_PUBLIC_API(size_t)
+size_t
 XPT_SizeOfArenaIncludingThis(XPTArena *arena, MozMallocSizeOf mallocSizeOf)
 {
     size_t n = mallocSizeOf(arena);

@@ -7,6 +7,7 @@ loader: taskgraph.loader.transform:loader
 transforms:
    - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.release_notifications:transforms
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
@@ -17,8 +18,6 @@ job-defaults:
    worker-type: buildbot-bridge/buildbot-bridge
    run-on-projects: []
    shipping-phase: push
-   index:
-      type: release
    run:
       using: buildbot
       release-promotion: true
@@ -30,47 +29,6 @@ job-defaults:
                mozilla-release: https://bounceradmin.mozilla.com/api
                maple: https://admin-bouncer-releng.stage.mozaws.net/api
                default: http://localhost/api
-   notifications:
-      completed:
-         subject: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         message: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         plugins:
-            by-project:
-               mozilla-beta: ["log_collect"]
-               mozilla-release: ["log_collect"]
-               default: []
-
-      failed:
-         subject: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         message: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         plugins:
-            by-project:
-               mozilla-beta: ["log_collect", "ses"]
-               mozilla-release: ["log_collect", "ses"]
-               default: ["ses"]
-         emails:
-            by-project:
-               mozilla-beta: ["release-automation-notifications@mozilla.com"]
-               mozilla-release: ["release-automation-notifications@mozilla.com"]
-               try: ["{task_def[metadata][owner]}"]
-               maple: ["release+tcstaging@mozilla.com"]
-               default: []
-
-      exception:
-         subject: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         message: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         plugins:
-            by-project:
-               mozilla-beta: ["log_collect", "ses"]
-               mozilla-release: ["log_collect", "ses"]
-               default: ["ses"]
-         emails:
-            by-project:
-               mozilla-beta: ["release-automation-notifications@mozilla.com"]
-               mozilla-release: ["release-automation-notifications@mozilla.com"]
-               try: ["{task_def[metadata][owner]}"]
-               maple: ["release+tcstaging@mozilla.com"]
-               default: []
 
 jobs:
    fennec:
@@ -82,11 +40,7 @@ jobs:
       worker:
          properties:
             platforms: "android-api-16, android-x86"
-      routes:
-         - index.releases.v1.{branch}.latest.fennec.latest.uptake_monitoring
-         - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.uptake_monitoring
-      index:
-         product: fennec
+
    firefox:
       name: firefox_release_uptake_monitoring
       shipping-product: firefox
@@ -96,11 +50,7 @@ jobs:
       worker:
          properties:
             platforms: "linux, linux64, win32, win64, macosx64"
-      routes:
-         - index.releases.v1.{branch}.latest.firefox.latest.uptake_monitoring
-         - index.releases.v1.{branch}.{revision}.firefox.{underscore_version}.build{build_number}.uptake_monitoring
-      index:
-         product: firefox
+
    devedition:
       name: devedition_release_uptake_monitoring
       shipping-product: devedition
@@ -110,8 +60,3 @@ jobs:
       worker:
          properties:
             platforms: "linux, linux64, win32, win64, macosx64"
-      routes:
-         - index.releases.v1.{branch}.latest.devedition.latest.uptake_monitoring
-         - index.releases.v1.{branch}.{revision}.devedition.{underscore_version}.build{build_number}.uptake_monitoring
-      index:
-         product: devedition

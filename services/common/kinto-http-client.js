@@ -23,10 +23,10 @@ const global = this;
 this.EXPORTED_SYMBOLS = ["KintoHttpClient"];
 
 /*
- * Version 4.3.4 - 1294207
+ * Version 4.5.3 - 5179c56
  */
 
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.KintoHttpClient = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.KintoHttpClient = f()}})(function(){var define,module,exports;return (function(){function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s}return e})()({1:[function(require,module,exports){
 /*
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,35 +49,41 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = undefined;
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 var _base = require("../src/base");
 
 var _base2 = _interopRequireDefault(_base);
 
+var _errors = require("../src/errors");
+
+var errors = _interopRequireWildcard(_errors);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
-Cu.importGlobalProperties(['fetch']);
+Cu.importGlobalProperties(["fetch"]);
 const { EventEmitter } = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm", {});
 
 let KintoHttpClient = class KintoHttpClient extends _base2.default {
   constructor(remote, options = {}) {
     const events = {};
     EventEmitter.decorate(events);
-    super(remote, _extends({ events }, options));
+    super(remote, { events, ...options });
   }
 };
+exports.default = KintoHttpClient;
+
+
+KintoHttpClient.errors = errors;
 
 // This fixes compatibility with CommonJS required by browserify.
 // See http://stackoverflow.com/questions/33505992/babel-6-changes-how-it-exports-default/33683495#33683495
-
-exports.default = KintoHttpClient;
 if (typeof module === "object") {
   module.exports = KintoHttpClient;
 }
 
-},{"../src/base":7}],2:[function(require,module,exports){
+},{"../src/base":7,"../src/errors":12}],2:[function(require,module,exports){
 var v1 = require('./v1');
 var v4 = require('./v4');
 
@@ -90,7 +96,7 @@ module.exports = uuid;
 },{"./v1":5,"./v4":6}],3:[function(require,module,exports){
 /**
  * Convert array of 16 byte values to UUID string format of the form:
- * XXXXXXXX-XXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+ * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
  */
 var byteToHex = [];
 for (var i = 0; i < 256; ++i) {
@@ -100,7 +106,7 @@ for (var i = 0; i < 256; ++i) {
 function bytesToUuid(buf, offset) {
   var i = offset || 0;
   var bth = byteToHex;
-  return  bth[buf[i++]] + bth[buf[i++]] +
+  return bth[buf[i++]] + bth[buf[i++]] +
           bth[buf[i++]] + bth[buf[i++]] + '-' +
           bth[buf[i++]] + bth[buf[i++]] + '-' +
           bth[buf[i++]] + bth[buf[i++]] + '-' +
@@ -117,25 +123,26 @@ module.exports = bytesToUuid;
 // browser this is a little complicated due to unknown quality of Math.random()
 // and inconsistent support for the `crypto` API.  We do the best we can via
 // feature-detection
-var rng;
 
-var crypto = global.crypto || global.msCrypto; // for IE 11
-if (crypto && crypto.getRandomValues) {
+// getRandomValues needs to be invoked in a context where "this" is a Crypto implementation.
+var getRandomValues = (typeof(crypto) != 'undefined' && crypto.getRandomValues.bind(crypto)) ||
+                      (typeof(msCrypto) != 'undefined' && msCrypto.getRandomValues.bind(msCrypto));
+if (getRandomValues) {
   // WHATWG crypto RNG - http://wiki.whatwg.org/wiki/Crypto
-  var rnds8 = new Uint8Array(16);
-  rng = function whatwgRNG() {
-    crypto.getRandomValues(rnds8);
+  var rnds8 = new Uint8Array(16); // eslint-disable-line no-undef
+
+  module.exports = function whatwgRNG() {
+    getRandomValues(rnds8);
     return rnds8;
   };
-}
-
-if (!rng) {
+} else {
   // Math.random()-based (RNG)
   //
   // If all else fails, use Math.random().  It's fast, but is of unspecified
   // quality.
-  var  rnds = new Array(16);
-  rng = function() {
+  var rnds = new Array(16);
+
+  module.exports = function mathRNG() {
     for (var i = 0, r; i < 16; i++) {
       if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
       rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
@@ -145,12 +152,7 @@ if (!rng) {
   };
 }
 
-module.exports = rng;
-
 },{}],5:[function(require,module,exports){
-// Unique ID creation requires a high quality random # generator.  We feature
-// detect to determine the best RNG source, normalizing to a function that
-// returns 128-bits of randomness, since that's what's usually required
 var rng = require('./lib/rng');
 var bytesToUuid = require('./lib/bytesToUuid');
 
@@ -159,20 +161,12 @@ var bytesToUuid = require('./lib/bytesToUuid');
 // Inspired by https://github.com/LiosK/UUID.js
 // and http://docs.python.org/library/uuid.html
 
-// random #'s we need to init node and clockseq
-var _seedBytes = rng();
-
-// Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
-var _nodeId = [
-  _seedBytes[0] | 0x01,
-  _seedBytes[1], _seedBytes[2], _seedBytes[3], _seedBytes[4], _seedBytes[5]
-];
-
-// Per 4.2.2, randomize (14 bit) clockseq
-var _clockseq = (_seedBytes[6] << 8 | _seedBytes[7]) & 0x3fff;
+var _nodeId;
+var _clockseq;
 
 // Previous uuid creation time
-var _lastMSecs = 0, _lastNSecs = 0;
+var _lastMSecs = 0;
+var _lastNSecs = 0;
 
 // See https://github.com/broofa/node-uuid for API details
 function v1(options, buf, offset) {
@@ -180,8 +174,26 @@ function v1(options, buf, offset) {
   var b = buf || [];
 
   options = options || {};
-
+  var node = options.node || _nodeId;
   var clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq;
+
+  // node and clockseq need to be initialized to random values if they're not
+  // specified.  We do this lazily to minimize issues related to insufficient
+  // system entropy.  See #189
+  if (node == null || clockseq == null) {
+    var seedBytes = rng();
+    if (node == null) {
+      // Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
+      node = _nodeId = [
+        seedBytes[0] | 0x01,
+        seedBytes[1], seedBytes[2], seedBytes[3], seedBytes[4], seedBytes[5]
+      ];
+    }
+    if (clockseq == null) {
+      // Per 4.2.2, randomize (14 bit) clockseq
+      clockseq = _clockseq = (seedBytes[6] << 8 | seedBytes[7]) & 0x3fff;
+    }
+  }
 
   // UUID timestamps are 100 nano-second units since the Gregorian epoch,
   // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
@@ -242,7 +254,6 @@ function v1(options, buf, offset) {
   b[i++] = clockseq & 0xff;
 
   // `node`
-  var node = options.node || _nodeId;
   for (var n = 0; n < 6; ++n) {
     b[i + n] = node[n];
   }
@@ -260,7 +271,7 @@ function v4(options, buf, offset) {
   var i = buf && offset || 0;
 
   if (typeof(options) == 'string') {
-    buf = options == 'binary' ? new Array(16) : null;
+    buf = options === 'binary' ? new Array(16) : null;
     options = null;
   }
   options = options || {};
@@ -290,8 +301,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = exports.SUPPORTED_PROTOCOL_VERSION = undefined;
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _dec, _dec2, _dec3, _dec4, _dec5, _dec6, _dec7, _desc, _value, _class;
 
@@ -360,8 +369,8 @@ const SUPPORTED_PROTOCOL_VERSION = exports.SUPPORTED_PROTOCOL_VERSION = "v1";
  * @example
  * const client = new KintoClient("https://kinto.dev.mozaws.net/v1");
  * client.bucket("default")
-*    .collection("my-blog")
-*    .createRecord({title: "First article"})
+ *    .collection("my-blog")
+ *    .createRecord({title: "First article"})
  *   .then(console.log.bind(console))
  *   .catch(console.error.bind(console));
  */
@@ -505,6 +514,19 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
   }
 
   /**
+   * Set client "headers" for every request, updating previous headers (if any).
+   *
+   * @param {Object} headers The headers to merge with existing ones.
+   */
+  setHeaders(headers) {
+    this._headers = {
+      ...this._headers,
+      ...headers
+    };
+    this.serverInfo = null;
+  }
+
+  /**
    * Get the value of "headers" for a given request, merging the
    * per-request headers with our own "default" headers.
    *
@@ -516,7 +538,10 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * @returns {Object}
    */
   _getHeaders(options) {
-    return _extends({}, this._headers, options.headers);
+    return {
+      ...this._headers,
+      ...options.headers
+    };
   }
 
   /**
@@ -529,7 +554,7 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * @returns {Boolean}
    */
   _getSafe(options) {
-    return _extends({ safe: this._safe }, options).safe;
+    return { safe: this._safe, ...options }.safe;
   }
 
   /**
@@ -538,7 +563,7 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * @private
    */
   _getRetry(options) {
-    return _extends({ retry: this._retry }, options).retry;
+    return { retry: this._retry, ...options }.retry;
   }
 
   /**
@@ -787,19 +812,21 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
     // FIXME: this is called even in batch requests, which doesn't
     // make any sense (since all batch requests get a "dummy"
     // response; see execute() above).
-    const { sort, filters, limit, pages, since } = _extends({
-      sort: "-last_modified"
-    }, params);
+    const { sort, filters, limit, pages, since } = {
+      sort: "-last_modified",
+      ...params
+    };
     // Safety/Consistency check on ETag value.
     if (since && typeof since !== "string") {
       throw new Error(`Invalid value for since (${since}), should be ETag value.`);
     }
 
-    const querystring = (0, _utils.qsify)(_extends({}, filters, {
+    const querystring = (0, _utils.qsify)({
+      ...filters,
       _sort: sort,
       _limit: limit,
       _since: since
-    }));
+    });
     let results = [],
         current = 0;
 
@@ -872,7 +899,7 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
     const path = (0, _endpoint2.default)("permissions");
     // Ensure the default sort parameter is something that exists in permissions
     // entries, as `last_modified` doesn't; here, we pick "id".
-    const paginationOptions = _extends({ sort: "id" }, options);
+    const paginationOptions = { sort: "id", ...options };
     return this.paginatedList(path, paginationOptions, {
       headers: this._getHeaders(options),
       retry: this._getRetry(options)
@@ -940,7 +967,7 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
       throw new Error("A bucket id is required.");
     }
     const path = (0, _endpoint2.default)("bucket", bucketObj.id);
-    const { last_modified } = _extends({}, bucketObj, options);
+    const { last_modified } = { ...bucketObj, ...options };
     return this.execute(requests.deleteRequest(path, {
       last_modified,
       headers: this._getHeaders(options),
@@ -1002,7 +1029,7 @@ function aggregate(responses = [], requests = []) {
       acc.published.push(response.body);
     } else if (status === 404) {
       // Extract the id manually from request path while waiting for Kinto/kinto#818
-      const regex = /(buckets|groups|collections|records)\/([^\/]+)$/;
+      const regex = /(buckets|groups|collections|records)\/([^/]+)$/;
       const extracts = request.path.match(regex);
       const id = extracts.length === 3 ? extracts[2] : undefined;
       acc.skipped.push({
@@ -1035,8 +1062,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = undefined;
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _dec, _desc, _value, _class;
 
@@ -1131,7 +1156,10 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    * @private
    */
   _getHeaders(options) {
-    return _extends({}, this._headers, options.headers);
+    return {
+      ...this._headers,
+      ...options.headers
+    };
   }
 
   /**
@@ -1144,7 +1172,7 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    * @returns {Boolean}
    */
   _getSafe(options) {
-    return _extends({ safe: this._safe }, options).safe;
+    return { safe: this._safe, ...options }.safe;
   }
 
   /**
@@ -1153,7 +1181,7 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    * @private
    */
   _getRetry(options) {
-    return _extends({ retry: this._retry }, options).retry;
+    return { retry: this._retry, ...options }.retry;
   }
 
   /**
@@ -1211,7 +1239,7 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
       throw new Error("A bucket object is required.");
     }
 
-    const bucket = _extends({}, data, { id: this.name });
+    const bucket = { ...data, id: this.name };
 
     // For default bucket, we need to drop the id from the data object.
     // Bug in Kinto < 3.1.1
@@ -1222,7 +1250,7 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
 
     const path = (0, _endpoint2.default)("bucket", bucketId);
     const { patch, permissions } = options;
-    const { last_modified } = _extends({}, data, options);
+    const { last_modified } = { ...data, ...options };
     const request = requests.updateRequest(path, { data: bucket, permissions }, {
       last_modified,
       patch,
@@ -1309,7 +1337,7 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
       throw new Error("A collection id is required.");
     }
     const { id } = collectionObj;
-    const { last_modified } = _extends({}, collectionObj, options);
+    const { last_modified } = { ...collectionObj, ...options };
     const path = (0, _endpoint2.default)("collection", this.name, id);
     const request = requests.deleteRequest(path, {
       last_modified,
@@ -1369,10 +1397,11 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
    * @return {Promise<Object, Error>}
    */
   async createGroup(id, members = [], options = {}) {
-    const data = _extends({}, options.data, {
+    const data = {
+      ...options.data,
       id,
       members
-    });
+    };
     const path = (0, _endpoint2.default)("group", this.name, id);
     const { permissions } = options;
     const request = requests.createRequest(path, { data, permissions }, {
@@ -1403,10 +1432,13 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
     if (!group.id) {
       throw new Error("A group id is required.");
     }
-    const data = _extends({}, options.data, group);
+    const data = {
+      ...options.data,
+      ...group
+    };
     const path = (0, _endpoint2.default)("group", this.name, group.id);
     const { patch, permissions } = options;
-    const { last_modified } = _extends({}, data, options);
+    const { last_modified } = { ...data, ...options };
     const request = requests.updateRequest(path, { data, permissions }, {
       last_modified,
       patch,
@@ -1431,7 +1463,7 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
   async deleteGroup(group, options = {}) {
     const groupObj = (0, _utils.toDataBody)(group);
     const { id } = groupObj;
-    const { last_modified } = _extends({}, groupObj, options);
+    const { last_modified } = { ...groupObj, ...options };
     const path = (0, _endpoint2.default)("group", this.name, id);
     const request = requests.deleteRequest(path, {
       last_modified,
@@ -1570,8 +1602,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = undefined;
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 var _dec, _dec2, _dec3, _desc, _value, _class;
 
 var _uuid = require("uuid");
@@ -1664,7 +1694,10 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
     this._safe = !!options.safe;
     // FIXME: This is kind of ugly; shouldn't the bucket be responsible
     // for doing the merge?
-    this._headers = _extends({}, this.bucket._headers, options.headers);
+    this._headers = {
+      ...this.bucket._headers,
+      ...options.headers
+    };
   }
 
   /**
@@ -1674,7 +1707,10 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    * @private
    */
   _getHeaders(options) {
-    return _extends({}, this._headers, options.headers);
+    return {
+      ...this._headers,
+      ...options.headers
+    };
   }
 
   /**
@@ -1687,7 +1723,7 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    * @returns {Boolean}
    */
   _getSafe(options) {
-    return _extends({ safe: this._safe }, options).safe;
+    return { safe: this._safe, ...options }.safe;
   }
 
   /**
@@ -1696,7 +1732,7 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    * @private
    */
   _getRetry(options) {
-    return _extends({ retry: this._retry }, options).retry;
+    return { retry: this._retry, ...options }.retry;
   }
 
   /**
@@ -1757,7 +1793,7 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
       throw new Error("A collection object is required.");
     }
     const { patch, permissions } = options;
-    const { last_modified } = _extends({}, data, options);
+    const { last_modified } = { ...data, ...options };
 
     const path = (0, _endpoint2.default)("collection", this.bucket.name, this.name);
     const request = requests.updateRequest(path, { data, permissions }, {
@@ -1907,7 +1943,7 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
     const { permissions } = options;
     const id = record.id || _uuid.v4.v4();
     const path = (0, _endpoint2.default)("attachment", this.bucket.name, this.name, id);
-    const { last_modified } = _extends({}, record, options);
+    const { last_modified } = { ...record, ...options };
     const addAttachmentRequest = requests.addAttachmentRequest(path, dataURI, { data: record, permissions }, {
       last_modified,
       filename: options.filename,
@@ -1966,7 +2002,7 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
       throw new Error("A record id is required.");
     }
     const { permissions } = options;
-    const { last_modified } = _extends({}, record, options);
+    const { last_modified } = { ...record, ...options };
     const path = (0, _endpoint2.default)("record", this.bucket.name, this.name, record.id);
     const request = requests.updateRequest(path, { data: record, permissions }, {
       headers: this._getHeaders(options),
@@ -1995,7 +2031,7 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
       throw new Error("A record id is required.");
     }
     const { id } = recordObj;
-    const { last_modified } = _extends({}, recordObj, options);
+    const { last_modified } = { ...recordObj, ...options };
     const path = (0, _endpoint2.default)("record", this.bucket.name, this.name, id);
     const request = requests.deleteRequest(path, {
       last_modified,
@@ -2100,7 +2136,8 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
       filters: {
         resource_name: "record",
         collection_id: this.name,
-        "max_target.data.last_modified": String(at) }
+        "max_target.data.last_modified": String(at) // eq. to <=
+      }
     });
     return changes;
   }
@@ -2118,9 +2155,7 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
     // Replay changes to compute the requested snapshot.
     const seenIds = new Set();
     let snapshot = [];
-    for (const _ref of changes) {
-      const { action, target: { data: record } } = _ref;
-
+    for (const { action, target: { data: record } } of changes) {
       if (action == "delete") {
         seenIds.add(record.id); // ensure not reprocessing deleted entries
         snapshot = snapshot.filter(r => r.id !== record.id);
@@ -2209,7 +2244,7 @@ Object.defineProperty(exports, "__esModule", {
  * Kinto server error code descriptors.
  * @type {Object}
  */
-exports.default = {
+const ERROR_CODES = {
   104: "Missing Authorization Token",
   105: "Invalid Authorization Token",
   106: "Request body was not valid JSON",
@@ -2231,6 +2266,90 @@ exports.default = {
   999: "Internal Server Error"
 };
 
+exports.default = ERROR_CODES;
+let NetworkTimeoutError = class NetworkTimeoutError extends Error {
+  constructor(url, options) {
+    super(`Timeout while trying to access ${url} with ${JSON.stringify(options)}`);
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, NetworkTimeoutError);
+    }
+
+    this.url = url;
+    this.options = options;
+  }
+};
+let UnparseableResponseError = class UnparseableResponseError extends Error {
+  constructor(response, body, error) {
+    const { status } = response;
+
+    super(`Response from server unparseable (HTTP ${status || 0}; ${error}): ${body}`);
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, UnparseableResponseError);
+    }
+
+    this.status = status;
+    this.response = response;
+    this.stack = error.stack;
+    this.error = error;
+  }
+};
+
+/**
+ * "Error" subclass representing a >=400 response from the server.
+ *
+ * Whether or not this is an error depends on your application.
+ *
+ * The `json` field can be undefined if the server responded with an
+ * empty response body. This shouldn't generally happen. Most "bad"
+ * responses come with a JSON error description, or (if they're
+ * fronted by a CDN or nginx or something) occasionally non-JSON
+ * responses (which become UnparseableResponseErrors, above).
+ */
+
+let ServerResponse = class ServerResponse extends Error {
+  constructor(response, json) {
+    const { status } = response;
+    let { statusText } = response;
+    let errnoMsg;
+
+    if (json) {
+      // Try to fill in information from the JSON error.
+      statusText = json.error || statusText;
+
+      // Take errnoMsg from either ERROR_CODES or json.message.
+      if (json.errno && json.errno in ERROR_CODES) {
+        errnoMsg = ERROR_CODES[json.errno];
+      } else if (json.message) {
+        errnoMsg = json.message;
+      }
+
+      // If we had both ERROR_CODES and json.message, and they differ,
+      // combine them.
+      if (errnoMsg && json.message && json.message !== errnoMsg) {
+        errnoMsg += ` (${json.message})`;
+      }
+    }
+
+    let message = `HTTP ${status} ${statusText}`;
+    if (errnoMsg) {
+      message += `: ${errnoMsg}`;
+    }
+
+    super(message.trim());
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, ServerResponse);
+    }
+
+    this.response = response;
+    this.data = json;
+  }
+};
+exports.NetworkTimeoutError = NetworkTimeoutError;
+exports.ServerResponse = ServerResponse;
+exports.UnparseableResponseError = UnparseableResponseError;
+
 },{}],13:[function(require,module,exports){
 "use strict";
 
@@ -2239,15 +2358,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = undefined;
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 var _utils = require("./utils");
 
 var _errors = require("./errors");
-
-var _errors2 = _interopRequireDefault(_errors);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
  * Enhanced HTTP client for the Kinto protocol.
@@ -2319,7 +2432,7 @@ let HTTP = class HTTP {
       if (this.timeout) {
         _timeoutId = setTimeout(() => {
           hasTimedout = true;
-          reject(new Error("Request timeout."));
+          reject(new _errors.NetworkTimeoutError(url, options));
         }, this.timeout);
       }
       function proceedWithHandler(fn) {
@@ -2340,42 +2453,19 @@ let HTTP = class HTTP {
    * @private
    */
   async processResponse(response) {
-    const { status } = response;
+    const { status, headers } = response;
     const text = await response.text();
     // Check if we have a body; if so parse it as JSON.
-    if (text.length === 0) {
-      return this.formatResponse(response, null);
-    }
-    try {
-      return this.formatResponse(response, JSON.parse(text));
-    } catch (err) {
-      const error = new Error(`HTTP ${status || 0}; ${err}`);
-      error.response = response;
-      error.stack = err.stack;
-      throw error;
-    }
-  }
-
-  /**
-   * @private
-   */
-  formatResponse(response, json) {
-    const { status, statusText, headers } = response;
-    if (json && status >= 400) {
-      let message = `HTTP ${status} ${json.error || ""}: `;
-      if (json.errno && json.errno in _errors2.default) {
-        const errnoMsg = _errors2.default[json.errno];
-        message += errnoMsg;
-        if (json.message && json.message !== errnoMsg) {
-          message += ` (${json.message})`;
-        }
-      } else {
-        message += statusText || "";
+    let json;
+    if (text.length !== 0) {
+      try {
+        json = JSON.parse(text);
+      } catch (err) {
+        throw new _errors.UnparseableResponseError(response, text, err);
       }
-      const error = new Error(message.trim());
-      error.response = response;
-      error.data = json;
-      throw error;
+    }
+    if (status >= 400) {
+      throw new _errors.ServerResponse(response, json);
     }
     return { status, json, headers };
   }
@@ -2385,7 +2475,7 @@ let HTTP = class HTTP {
    */
   async retry(url, retryAfter, request, options) {
     await (0, _utils.delay)(retryAfter);
-    return this.request(url, request, _extends({}, options, { retry: options.retry - 1 }));
+    return this.request(url, request, { ...options, retry: options.retry - 1 });
   }
 
   /**
@@ -2407,7 +2497,7 @@ let HTTP = class HTTP {
    */
   async request(url, request = { headers: {} }, options = { retry: 0 }) {
     // Ensure default request headers are always set
-    request.headers = _extends({}, HTTP.DEFAULT_REQUEST_HEADERS, request.headers);
+    request.headers = { ...HTTP.DEFAULT_REQUEST_HEADERS, ...request.headers };
     // If a multipart body is provided, remove any custom Content-Type header as
     // the fetch() implementation will add the correct one for us.
     if (request.body && typeof request.body.append === "function") {
@@ -2477,9 +2567,6 @@ exports.default = HTTP;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 exports.createRequest = createRequest;
 exports.updateRequest = updateRequest;
 exports.jsonPatchPermissionsRequest = jsonPatchPermissionsRequest;
@@ -2514,11 +2601,14 @@ function safeHeader(safe, last_modified) {
  * @private
  */
 function createRequest(path, { data, permissions }, options = {}) {
-  const { headers, safe } = _extends({}, requestDefaults, options);
+  const { headers, safe } = {
+    ...requestDefaults,
+    ...options
+  };
   return {
     method: data && data.id ? "PUT" : "POST",
     path,
-    headers: _extends({}, headers, safeHeader(safe)),
+    headers: { ...headers, ...safeHeader(safe) },
     body: { data, permissions }
   };
 }
@@ -2527,8 +2617,8 @@ function createRequest(path, { data, permissions }, options = {}) {
  * @private
  */
 function updateRequest(path, { data, permissions }, options = {}) {
-  const { headers, safe, patch } = _extends({}, requestDefaults, options);
-  const { last_modified } = _extends({}, data, options);
+  const { headers, safe, patch } = { ...requestDefaults, ...options };
+  const { last_modified } = { ...data, ...options };
 
   if (Object.keys((0, _utils.omit)(data, "id", "last_modified")).length === 0) {
     data = undefined;
@@ -2537,7 +2627,7 @@ function updateRequest(path, { data, permissions }, options = {}) {
   return {
     method: patch ? "PATCH" : "PUT",
     path,
-    headers: _extends({}, headers, safeHeader(safe, last_modified)),
+    headers: { ...headers, ...safeHeader(safe, last_modified) },
     body: { data, permissions }
   };
 }
@@ -2546,7 +2636,7 @@ function updateRequest(path, { data, permissions }, options = {}) {
  * @private
  */
 function jsonPatchPermissionsRequest(path, permissions, opType, options = {}) {
-  const { headers, safe, last_modified } = _extends({}, requestDefaults, options);
+  const { headers, safe, last_modified } = { ...requestDefaults, ...options };
 
   const ops = [];
 
@@ -2562,9 +2652,11 @@ function jsonPatchPermissionsRequest(path, permissions, opType, options = {}) {
   return {
     method: "PATCH",
     path,
-    headers: _extends({}, headers, safeHeader(safe, last_modified), {
+    headers: {
+      ...headers,
+      ...safeHeader(safe, last_modified),
       "Content-Type": "application/json-patch+json"
-    }),
+    },
     body: ops
   };
 }
@@ -2573,14 +2665,17 @@ function jsonPatchPermissionsRequest(path, permissions, opType, options = {}) {
  * @private
  */
 function deleteRequest(path, options = {}) {
-  const { headers, safe, last_modified } = _extends({}, requestDefaults, options);
+  const { headers, safe, last_modified } = {
+    ...requestDefaults,
+    ...options
+  };
   if (safe && !last_modified) {
     throw new Error("Safe concurrency check requires a last_modified value.");
   }
   return {
     method: "DELETE",
     path,
-    headers: _extends({}, headers, safeHeader(safe, last_modified))
+    headers: { ...headers, ...safeHeader(safe, last_modified) }
   };
 }
 
@@ -2588,8 +2683,8 @@ function deleteRequest(path, options = {}) {
  * @private
  */
 function addAttachmentRequest(path, dataURI, { data, permissions } = {}, options = {}) {
-  const { headers, safe, gzipped } = _extends({}, requestDefaults, options);
-  const { last_modified } = _extends({}, data, options);
+  const { headers, safe, gzipped } = { ...requestDefaults, ...options };
+  const { last_modified } = { ...data, ...options };
 
   const body = { data, permissions };
   const formData = (0, _utils.createFormData)(dataURI, body, options);
@@ -2599,7 +2694,7 @@ function addAttachmentRequest(path, dataURI, { data, permissions } = {}, options
   return {
     method: "POST",
     path: customPath,
-    headers: _extends({}, headers, safeHeader(safe, last_modified)),
+    headers: { ...headers, ...safeHeader(safe, last_modified) },
     body: formData
   };
 }
@@ -2610,9 +2705,6 @@ function addAttachmentRequest(path, dataURI, { data, permissions } = {}, options
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 exports.partition = partition;
 exports.delay = delay;
 exports.pMap = pMap;
@@ -2873,9 +2965,9 @@ function parseDataURL(dataURL) {
   const [type, ...rawParams] = props.split(";");
   const params = rawParams.reduce((acc, param) => {
     const [key, value] = param.split("=");
-    return _extends({}, acc, { [key]: value });
+    return { ...acc, [key]: value };
   }, {});
-  return _extends({}, params, { type, base64 });
+  return { ...params, type, base64 };
 }
 
 /**

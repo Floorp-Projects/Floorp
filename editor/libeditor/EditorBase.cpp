@@ -3571,17 +3571,20 @@ EditorBase::GetNodeLocation(nsINode* aChild,
 nsIContent*
 EditorBase::GetPreviousNodeInternal(nsINode& aNode,
                                     bool aFindEditableNode,
+                                    bool aFindAnyDataNode,
                                     bool aNoBlockCrossing)
 {
   if (!IsDescendantOfEditorRoot(&aNode)) {
     return nullptr;
   }
-  return FindNode(&aNode, false, aFindEditableNode, aNoBlockCrossing);
+  return FindNode(&aNode, false,
+                  aFindEditableNode, aFindAnyDataNode, aNoBlockCrossing);
 }
 
 nsIContent*
 EditorBase::GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
                                     bool aFindEditableNode,
+                                    bool aFindAnyDataNode,
                                     bool aNoBlockCrossing)
 {
   MOZ_ASSERT(aPoint.IsSetAndValid());
@@ -3597,13 +3600,15 @@ EditorBase::GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
       return nullptr;
     }
     return GetPreviousNodeInternal(*aPoint.GetContainer(),
-                                   aFindEditableNode, aNoBlockCrossing);
+                                   aFindEditableNode, aFindAnyDataNode,
+                                   aNoBlockCrossing);
   }
 
   // else look before the child at 'aOffset'
   if (aPoint.GetChild()) {
     return GetPreviousNodeInternal(*aPoint.GetChild(),
-                                   aFindEditableNode, aNoBlockCrossing);
+                                   aFindEditableNode, aFindAnyDataNode,
+                                   aNoBlockCrossing);
   }
 
   // unless there isn't one, in which case we are at the end of the node
@@ -3614,29 +3619,34 @@ EditorBase::GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
     return nullptr;
   }
 
-  if (!aFindEditableNode || IsEditable(rightMostNode)) {
+  if ((!aFindEditableNode || IsEditable(rightMostNode)) &&
+      (aFindAnyDataNode || IsElementOrText(*rightMostNode))) {
     return rightMostNode;
   }
 
   // restart the search from the non-editable node we just found
   return GetPreviousNodeInternal(*rightMostNode,
-                                 aFindEditableNode, aNoBlockCrossing);
+                                 aFindEditableNode, aFindAnyDataNode,
+                                 aNoBlockCrossing);
 }
 
 nsIContent*
 EditorBase::GetNextNodeInternal(nsINode& aNode,
                                 bool aFindEditableNode,
+                                bool aFindAnyDataNode,
                                 bool aNoBlockCrossing)
 {
   if (!IsDescendantOfEditorRoot(&aNode)) {
     return nullptr;
   }
-  return FindNode(&aNode, true, aFindEditableNode, aNoBlockCrossing);
+  return FindNode(&aNode, true,
+                  aFindEditableNode, aFindAnyDataNode, aNoBlockCrossing);
 }
 
 nsIContent*
 EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
                                 bool aFindEditableNode,
+                                bool aFindAnyDataNode,
                                 bool aNoBlockCrossing)
 {
   MOZ_ASSERT(aPoint.IsSetAndValid());
@@ -3670,13 +3680,15 @@ EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
       return nullptr;
     }
 
-    if (!aFindEditableNode || IsEditable(leftMostNode)) {
+    if ((!aFindEditableNode || IsEditable(leftMostNode)) &&
+        (aFindAnyDataNode || IsElementOrText(*leftMostNode))) {
       return leftMostNode;
     }
 
     // restart the search from the non-editable node we just found
     return GetNextNodeInternal(*leftMostNode,
-                               aFindEditableNode, aNoBlockCrossing);
+                               aFindEditableNode, aFindAnyDataNode,
+                               aNoBlockCrossing);
   }
 
   // unless there isn't one, in which case we are at the end of the node
@@ -3687,7 +3699,8 @@ EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
   }
 
   return GetNextNodeInternal(*point.GetContainer(),
-                             aFindEditableNode, aNoBlockCrossing);
+                             aFindEditableNode, aFindAnyDataNode,
+                             aNoBlockCrossing);
 }
 
 nsIContent*
@@ -3746,6 +3759,7 @@ nsIContent*
 EditorBase::FindNode(nsINode* aCurrentNode,
                      bool aGoForward,
                      bool aEditableNode,
+                     bool aFindAnyDataNode,
                      bool bNoBlockCrossing)
 {
   if (IsEditorRoot(aCurrentNode)) {
@@ -3763,11 +3777,13 @@ EditorBase::FindNode(nsINode* aCurrentNode,
     return nullptr;
   }
 
-  if (!aEditableNode || IsEditable(candidate)) {
+  if ((!aEditableNode || IsEditable(candidate)) &&
+      (aFindAnyDataNode || IsElementOrText(*candidate))) {
     return candidate;
   }
 
-  return FindNode(candidate, aGoForward, aEditableNode, bNoBlockCrossing);
+  return FindNode(candidate, aGoForward,
+                  aEditableNode, aFindAnyDataNode, bNoBlockCrossing);
 }
 
 nsIContent*
@@ -5232,6 +5248,11 @@ public:
 
   NS_IMETHOD Run() override
   {
+    nsCOMPtr<nsIPresShell> shell = do_QueryInterface(mSelectionController);
+    if (!shell || shell->IsDestroying()) {
+      return NS_OK;
+    }
+
     mSelectionController->RepaintSelection(
                             nsISelectionController::SELECTION_NORMAL);
     return NS_OK;

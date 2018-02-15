@@ -7,6 +7,7 @@ loader: taskgraph.loader.transform:loader
 transforms:
    - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.release_notifications:transforms
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
@@ -20,49 +21,6 @@ job-defaults:
    run:
       using: buildbot
       release-promotion: true
-   index:
-      type: release
-   notifications:
-      completed:
-         subject: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         message: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         plugins:
-            by-project:
-               mozilla-beta: ["log_collect"]
-               mozilla-release: ["log_collect"]
-               default: []
-
-      failed:
-         subject: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         message: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         plugins:
-            by-project:
-               mozilla-beta: ["log_collect", "ses"]
-               mozilla-release: ["log_collect", "ses"]
-               default: ["ses"]
-         emails:
-            by-project:
-               mozilla-beta: ["release-automation-notifications@mozilla.com"]
-               mozilla-release: ["release-automation-notifications@mozilla.com"]
-               try: ["{task_def[metadata][owner]}"]
-               maple: ["release+tcstaging@mozilla.com"]
-               default: []
-
-      exception:
-         subject: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         message: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         plugins:
-            by-project:
-               mozilla-beta: ["log_collect", "ses"]
-               mozilla-release: ["log_collect", "ses"]
-               default: ["ses"]
-         emails:
-            by-project:
-               mozilla-beta: ["release-automation-notifications@mozilla.com"]
-               mozilla-release: ["release-automation-notifications@mozilla.com"]
-               try: ["{task_def[metadata][owner]}"]
-               maple: ["release+tcstaging@mozilla.com"]
-               default: []
 
 jobs:
    fennec:
@@ -71,30 +29,17 @@ jobs:
       run:
          product: fennec
          buildername: release-{branch}-fennec_version_bump
-      routes:
-         - index.releases.v1.{branch}.latest.fennec.latest.version_bump
-         - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.version_bump
-      index:
-         product: fennec
+
    firefox:
       name: firefox-version-bump
       shipping-product: firefox
       run:
          product: firefox
          buildername: release-{branch}-firefox_version_bump
-      routes:
-         - index.releases.v1.{branch}.latest.firefox.latest.version_bump
-         - index.releases.v1.{branch}.{revision}.firefox.{underscore_version}.build{build_number}.version_bump
-      index:
-         product: firefox
+
    devedition:
       name: devedition-version-bump
       shipping-product: devedition
       run:
          product: devedition
          buildername: release-{branch}-devedition_version_bump
-      routes:
-         - index.releases.v1.{branch}.latest.devedition.latest.version_bump
-         - index.releases.v1.{branch}.{revision}.devedition.{underscore_version}.build{build_number}.version_bump
-      index:
-         product: devedition

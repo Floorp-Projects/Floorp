@@ -166,6 +166,28 @@ stubPreparedMessages.set(`cd(document)`, new ConsoleMessage({
   "indent": 0
 }));
 
+stubPreparedMessages.set(`undefined`, new ConsoleMessage({
+  "id": "1",
+  "allowRepeating": true,
+  "source": "javascript",
+  "timeStamp": 1518606917356,
+  "type": "result",
+  "helperType": null,
+  "level": "log",
+  "parameters": [
+    {
+      "type": "undefined"
+    }
+  ],
+  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"log\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
+  "stacktrace": null,
+  "frame": null,
+  "groupId": null,
+  "userProvidedStyles": null,
+  "notes": null,
+  "indent": 0
+}));
+
 stubPreparedMessages.set(`longString message Error`, new ConsoleMessage({
   "id": "1",
   "allowRepeating": true,
@@ -387,6 +409,19 @@ stubPackets.set(`cd(document)`, {
     "type": "error",
     "message": "cdFunctionInvalidArgument"
   },
+  "notes": null
+});
+
+stubPackets.set(`undefined`, {
+  "from": "server1.conn0.child1/consoleActor2",
+  "input": "undefined",
+  "result": {
+    "type": "undefined"
+  },
+  "timestamp": 1518606917356,
+  "exception": null,
+  "frame": null,
+  "helperResult": null,
   "notes": null
 });
 

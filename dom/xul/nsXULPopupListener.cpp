@@ -12,15 +12,10 @@
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMXULElement.h"
-#include "nsIDOMNodeList.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMDocumentXBL.h"
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
 #include "nsXULPopupManager.h"
 #include "nsIScriptContext.h"
-#include "nsIDOMWindow.h"
 #include "nsIDocument.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIPrincipal.h"
@@ -368,18 +363,11 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
   if (identifier.EqualsLiteral("_child")) {
     popup = GetImmediateChild(mElement, nsGkAtoms::menupopup);
     if (!popup) {
-      nsCOMPtr<nsIDOMDocumentXBL> nsDoc(do_QueryInterface(document));
-      nsCOMPtr<nsIDOMNodeList> list;
-      nsCOMPtr<nsIDOMElement> el = do_QueryInterface(mElement);
-      nsDoc->GetAnonymousNodes(el, getter_AddRefs(list));
+      nsINodeList* list = document->GetAnonymousNodes(*mElement);
       if (list) {
-        uint32_t ctr,listLength;
-        nsCOMPtr<nsIDOMNode> node;
-        list->GetLength(&listLength);
-        for (ctr = 0; ctr < listLength; ctr++) {
-          list->Item(ctr, getter_AddRefs(node));
-          nsCOMPtr<nsIContent> childContent(do_QueryInterface(node));
-
+        uint32_t listLength = list->Length();
+        for (uint32_t ctr = 0; ctr < listLength; ctr++) {
+          nsIContent* childContent = list->Item(ctr);
           if (childContent->NodeInfo()->Equals(nsGkAtoms::menupopup,
                                                kNameSpaceID_XUL)) {
             popup = childContent->AsElement();

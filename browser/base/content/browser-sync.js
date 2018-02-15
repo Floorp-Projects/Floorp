@@ -114,20 +114,25 @@ var gSync = {
       return;
     }
 
+    // initial label for the sync buttons.
+    let statusBroadcaster = document.getElementById("sync-status");
+    if (!statusBroadcaster) {
+      // We are in a window without our elements - just abort now, without
+      // setting this._initialized, so we don't attempt to remove observers.
+      return;
+    }
+    statusBroadcaster.setAttribute("label", this.syncStrings.GetStringFromName("syncnow.label"));
+    // We start with every broadcasters hidden, so that we don't need to init
+    // the sync UI on windows like pageInfo.xul (see bug 1384856).
+    let setupBroadcaster = document.getElementById("sync-setup-state");
+    setupBroadcaster.hidden = false;
+
     for (let topic of this._obs) {
       Services.obs.addObserver(this, topic, true);
     }
 
     this._generateNodeGetters();
     this._definePrefGetters();
-
-    // initial label for the sync buttons.
-    let statusBroadcaster = document.getElementById("sync-status");
-    statusBroadcaster.setAttribute("label", this.syncStrings.GetStringFromName("syncnow.label"));
-    // We start with every broadcasters hidden, so that we don't need to init
-    // the sync UI on windows like pageInfo.xul (see bug 1384856).
-    let setupBroadcaster = document.getElementById("sync-setup-state");
-    setupBroadcaster.hidden = false;
 
     this._maybeUpdateUIState();
 
@@ -180,11 +185,6 @@ var gSync = {
   },
 
   updatePanelPopup(state) {
-    // Some windows (e.g. places.xul) won't contain the panel UI, so we can
-    // abort immediately for those (bug 1384856).
-    if (!this.appMenuContainer) {
-      return;
-    }
     let defaultLabel = this.appMenuStatus.getAttribute("defaultlabel");
     // The localization string is for the signed in text, but it's the default text as well
     let defaultTooltiptext = this.appMenuStatus.getAttribute("signedinTooltiptext");

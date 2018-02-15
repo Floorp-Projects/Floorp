@@ -645,7 +645,8 @@ var LightWeightThemeWebInstaller = {
     }
 
     let strings = {
-      header: gNavigatorBundle.getFormattedString("webextPerms.header", [data.name]),
+      header: gNavigatorBundle.getFormattedString("webextPerms.header", ["<>"]),
+      addonName: data.name,
       text: gNavigatorBundle.getFormattedString("lwthemeInstallRequest.message2",
                                                 [uri.host]),
       acceptText: gNavigatorBundle.getString("lwthemeInstallRequest.allowButton2"),

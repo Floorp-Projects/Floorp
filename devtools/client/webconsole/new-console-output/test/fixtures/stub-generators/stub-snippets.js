@@ -178,7 +178,8 @@ const evaluationResultCommands = [
   "asdf()",
   "1 + @",
   "inspect({a: 1})",
-  "cd(document)"
+  "cd(document)",
+  "undefined"
 ];
 
 let evaluationResult = new Map(evaluationResultCommands.map(cmd => [cmd, cmd]));

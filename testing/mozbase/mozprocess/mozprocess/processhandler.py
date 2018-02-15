@@ -12,8 +12,10 @@ import sys
 import threading
 import time
 import traceback
+
 from Queue import Queue, Empty
 from datetime import datetime
+
 
 __all__ = ['ProcessHandlerMixin', 'ProcessHandler', 'LogOutput',
            'StoreOutput', 'StreamOutput']
@@ -137,20 +139,19 @@ class ProcessHandlerMixin(object):
 
         def kill(self, sig=None):
             if isWin:
-                if not self._ignore_children and self._handle and self._job:
-                    self.debug("calling TerminateJobObject")
-                    winprocess.TerminateJobObject(self._job, winprocess.ERROR_CONTROL_C_EXIT)
-                    self.returncode = winprocess.GetExitCodeProcess(self._handle)
-                elif self._handle:
-                    self.debug("calling TerminateProcess")
-                    try:
+                try:
+                    if not self._ignore_children and self._handle and self._job:
+                        self.debug("calling TerminateJobObject")
+                        winprocess.TerminateJobObject(self._job, winprocess.ERROR_CONTROL_C_EXIT)
+                    elif self._handle:
+                        self.debug("calling TerminateProcess")
                         winprocess.TerminateProcess(self._handle, winprocess.ERROR_CONTROL_C_EXIT)
-                    except Exception:
-                        traceback.print_exc()
-                        raise OSError("Could not terminate process")
-                    finally:
-                        winprocess.GetExitCodeProcess(self._handle)
-                        self._cleanup()
+                except WindowsError:
+                    self._cleanup()
+
+                    traceback.print_exc()
+                    raise OSError("Could not terminate process")
+
             else:
                 def send_sig(sig, retries=0):
                     pid = self.detached_pid or self.pid
@@ -871,6 +872,37 @@ falling back to not using job objects for managing child processes""", file=sys.
     @property
     def pid(self):
         return self.proc.pid
+
+    @staticmethod
+    def pid_exists(pid):
+        if pid < 0:
+            return False
+
+        if isWin:
+            try:
+                process = winprocess.OpenProcess(
+                    winprocess.PROCESS_QUERY_INFORMATION | winprocess.PROCESS_VM_READ, False, pid)
+                return winprocess.GetExitCodeProcess(process) == winprocess.STILL_ACTIVE
+
+            except WindowsError as e:
+                # no such process
+                if e.winerror == winprocess.ERROR_INVALID_PARAMETER:
+                    return False
+
+                # access denied
+                if e.winerror == winprocess.ERROR_ACCESS_DENIED:
+                    return True
+
+                # re-raise for any other type of exception
+                raise
+
+        elif isPosix:
+            try:
+                os.kill(pid, 0)
+            except OSError as e:
+                return e.errno == errno.EPERM
+            else:
+                return True
 
     @classmethod
     def _getpgid(cls, pid):

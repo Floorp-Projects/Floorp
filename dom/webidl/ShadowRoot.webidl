@@ -31,7 +31,6 @@ interface ShadowRoot : DocumentFragment
   HTMLCollection getElementsByClassName(DOMString classNames);
   [CEReactions, SetterThrows, TreatNullAs=EmptyString]
   attribute DOMString innerHTML;
-  attribute boolean applyAuthorStyles;
 };
 
 ShadowRoot implements DocumentOrShadowRoot;

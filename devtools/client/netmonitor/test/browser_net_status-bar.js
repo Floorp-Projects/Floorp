@@ -34,11 +34,19 @@ add_task(async () => {
   ok(onContentLoad, "There must be DOMContentLoaded label");
   ok(onLoad, "There must be load label");
 
-  // The content should not be empty
-  ok(requestCount.textContent, "There must be request count label text");
-  ok(size.textContent, "There must be size label text");
-  ok(onContentLoad.textContent, "There must be DOMContentLoaded label text");
-  ok(onLoad.textContent, "There must be load label text");
+  // The content should not be empty. The UI update can also be async,
+  // so use waitUntil.
+  await waitUntil(() => requestCount.textContent);
+  ok(true, "There must be request count label text");
+
+  await waitUntil(() => size.textContent);
+  ok(true, "There must be size label text");
+
+  await waitUntil(() => onContentLoad.textContent);
+  ok(true, "There must be DOMContentLoaded label text");
+
+  await waitUntil(() => onLoad.textContent);
+  ok(true, "There must be load label text");
 
   return teardown(monitor);
 });
