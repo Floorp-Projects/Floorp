@@ -735,15 +735,25 @@ js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp)
     JSAtom* atom;
     if (latin1) {
         const Latin1Char* chars = nullptr;
-        if (length)
-            chars = reinterpret_cast<const Latin1Char*>(xdr->buf.read(length));
+        if (length) {
+            const uint8_t *ptr;
+            size_t nbyte = length * sizeof(Latin1Char);
+            if (!xdr->peekData(&ptr, nbyte))
+                return false;
+            chars = reinterpret_cast<const Latin1Char*>(ptr);
+        }
         atom = AtomizeChars(cx, chars, length);
     } else {
 #if MOZ_LITTLE_ENDIAN
         /* Directly access the little endian chars in the XDR buffer. */
         const char16_t* chars = nullptr;
-        if (length)
-            chars = reinterpret_cast<const char16_t*>(xdr->buf.read(length * sizeof(char16_t)));
+        if (length) {
+            const uint8_t *ptr;
+            size_t nbyte = length * sizeof(char16_t);
+            if (!xdr->peekData(&ptr, nbyte))
+                return false;
+            chars = reinterpret_cast<const char16_t*>(ptr);
+        }
         atom = AtomizeChars(cx, chars, length);
 #else
         /*
