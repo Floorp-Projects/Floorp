@@ -1,0 +1,4 @@
+%include build/sparse-profiles/mozharness
+
+[include]
+path:build/mozrelease
