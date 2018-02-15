@@ -153,12 +153,22 @@ add_task(async function() {
     ]
   );
 
-  await breakpointScopes(dbg, "imported-bindings", { line: 11, column: 2 }, [
+  // Babel 6's imports aren't fully mapped, so they show as unavailable.
+  // The call-based ones work, but the single-identifier ones do not.
+  await breakpointScopes(dbg, "imported-bindings", { line: 17, column: 2 }, [
     "Module",
     ["aDefault", "(unavailable)"],
+    ["aDefault2", '"a-default2"'],
+    ["aDefault3", "(unavailable)"],
     ["anAliased", "(unavailable)"],
+    ["anAliased2", '"an-original2"'],
+    ["anAliased3", "(unavailable)"],
     ["aNamed", "(unavailable)"],
+    ["aNamed2", '"a-named2"'],
+    ["aNamed3", "(unavailable)"],
     ["aNamespace", "{\u2026}"],
+    ["aNamespace2", "{\u2026}"],
+    ["aNamespace3", "{\u2026}"],
     "root()"
   ]);
 
@@ -266,6 +276,40 @@ add_task(async function() {
     "Block",
     ["one", "1"],
     "Module",
+    "root()"
+  ]);
+
+  await breakpointScopes(dbg, "webpack-modules", { line: 17, column: 2 }, [
+    "Module",
+    ["aDefault", '"a-default"'],
+    ["aDefault2", '"a-default2"'],
+    ["aDefault3", '"a-default3"'],
+    ["anAliased", "Getter"],
+    ["anAliased2", "Getter"],
+    ["anAliased3", "Getter"],
+    ["aNamed", "Getter"],
+    ["aNamed2", "Getter"],
+    ["aNamed3", "Getter"],
+    ["aNamespace", "{\u2026}"],
+    ["aNamespace2", "{\u2026}"],
+    ["aNamespace3", "{\u2026}"],
+    "root()"
+  ]);
+
+  await breakpointScopes(dbg, "webpack-modules-es6", { line: 17, column: 2 }, [
+    "Module",
+    ["aDefault", '"a-default"'],
+    ["aDefault2", '"a-default2"'],
+    ["aDefault3", '"a-default3"'],
+    ["anAliased", '"an-original"'],
+    ["anAliased2", '"an-original2"'],
+    ["anAliased3", '"an-original3"'],
+    ["aNamed", '"a-named"'],
+    ["aNamed2", '"a-named2"'],
+    ["aNamed3", '"a-named3"'],
+    ["aNamespace", "{\u2026}"],
+    ["aNamespace2", "{\u2026}"],
+    ["aNamespace3", "{\u2026}"],
     "root()"
   ]);
 });

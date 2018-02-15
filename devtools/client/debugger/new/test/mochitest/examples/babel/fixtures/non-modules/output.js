@@ -78,7 +78,7 @@ function thirdModuleScoped() {}
 
 function nonModules() {
   console.log("pause here");
-};
+}
 
 Promise.resolve().then(function () {
   // Webpack sets this to undefined initially since this file

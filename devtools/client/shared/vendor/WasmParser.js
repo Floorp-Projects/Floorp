@@ -381,7 +381,7 @@ var BinaryReaderState;
     BinaryReaderState[BinaryReaderState["RELOC_SECTION_ENTRY"] = 42] = "RELOC_SECTION_ENTRY";
     BinaryReaderState[BinaryReaderState["SOURCE_MAPPING_URL"] = 43] = "SOURCE_MAPPING_URL";
 })(BinaryReaderState = exports.BinaryReaderState || (exports.BinaryReaderState = {}));
-var DataRange = (function () {
+var DataRange = /** @class */ (function () {
     function DataRange(start, end) {
         this.start = start;
         this.end = end;
@@ -392,7 +392,7 @@ var DataRange = (function () {
     };
     return DataRange;
 }());
-var Int64 = (function () {
+var Int64 = /** @class */ (function () {
     function Int64(data) {
         this._data = data || new Uint8Array(8);
     }
@@ -424,7 +424,7 @@ var Int64 = (function () {
     return Int64;
 }());
 exports.Int64 = Int64;
-var BinaryReader = (function () {
+var BinaryReader = /** @class */ (function () {
     function BinaryReader() {
         this._data = null;
         this._pos = 0;
@@ -1138,7 +1138,7 @@ var BinaryReader = (function () {
         if (!this._eof && pos + MAX_CODE_OPERATOR_SIZE > this._length) {
             return false;
         }
-        var code = this._data[this._pos++] | 0;
+        var code = this._data[this._pos++];
         var blockType, brDepth, brTable, funcIndex, typeIndex, localIndex, globalIndex, memoryAddress, literal, reserved;
         switch (code) {
             case 2 /* block */:
