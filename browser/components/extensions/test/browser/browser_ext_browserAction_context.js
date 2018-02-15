@@ -226,6 +226,17 @@ add_task(async function testTabSwitchContext() {
          "disabled": false},
       ];
 
+      let promiseTabLoad = details => {
+        return new Promise(resolve => {
+          browser.tabs.onUpdated.addListener(function listener(tabId, changed) {
+            if (tabId == details.id && changed.url == details.url) {
+              browser.tabs.onUpdated.removeListener(listener);
+              resolve();
+            }
+          });
+        });
+      };
+
       return [
         async expect => {
           browser.test.log("Initial state, expect default properties.");
@@ -244,6 +255,13 @@ add_task(async function testTabSwitchContext() {
           browser.test.log("Create a new tab. Expect default properties.");
           let tab = await browser.tabs.create({active: true, url: "about:blank?0"});
           tabs.push(tab.id);
+
+          browser.test.log("Await tab load.");
+          let promise = promiseTabLoad({id: tabs[1], url: "about:blank?0"});
+          let {url} = await browser.tabs.get(tabs[1]);
+          if (url === "about:blank") {
+            await promise;
+          }
 
           await expectDefaults(details[0]);
           expect(details[0]);
