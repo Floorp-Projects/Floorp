@@ -8,8 +8,10 @@
  * GC-internal iterators for various data structures.
  */
 
-#ifndef gc_Iteration_inl_h
-#define gc_Iteration_inl_h
+#ifndef gc_GCIteration_h
+#define gc_GCIteration_h
+
+#include "gc/Iteration.h"
 
 #include "jsgcinlines.h"
 
@@ -120,4 +122,4 @@ typedef CompartmentsIterT<SweepGroupZonesIter> SweepGroupCompartmentsIter;
 } // namespace gc
 } // namespace js
 
-#endif // gc_Iteration_h
+#endif // gc_GCIteration_h

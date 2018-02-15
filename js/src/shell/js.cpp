@@ -72,7 +72,7 @@
 # include "frontend/BinSource.h"
 #endif // defined(JS_BUILD_BINAST)
 #include "frontend/Parser.h"
-#include "gc/GCInternals.h"
+#include "gc/Iteration.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"

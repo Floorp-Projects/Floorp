@@ -16,6 +16,7 @@
 
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
+#include "gc/Iteration.h"
 #include "gc/Memory.h"
 #include "jit/JitFrames.h"
 #include "vm/ArrayObject.h"

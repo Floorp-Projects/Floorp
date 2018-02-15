@@ -20,6 +20,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
 #include "gc/FreeOp.h"
+#include "gc/Iteration.h"
 #include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "jit/BaselineDebugModeOSR.h"

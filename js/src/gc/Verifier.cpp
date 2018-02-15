@@ -15,6 +15,7 @@
 #include "jsprf.h"
 
 #include "gc/GCInternals.h"
+#include "gc/Iteration.h"
 #include "gc/Zone.h"
 #include "js/HashTable.h"
 #include "vm/JSContext.h"
@@ -195,7 +196,7 @@ gc::GCRuntime::startVerifyPreBarriers()
         return;
 
     JSContext* cx = TlsContext.get();
-    AutoPrepareForTracing prep(cx, WithAtoms);
+    AutoPrepareForTracing prep(cx);
 
     {
         AutoLockGC lock(cx->runtime());
@@ -335,7 +336,7 @@ gc::GCRuntime::endVerifyPreBarriers()
 
     MOZ_ASSERT(!JS::IsGenerationalGCEnabled(rt));
 
-    AutoPrepareForTracing prep(rt->activeContextFromOwnThread(), SkipAtoms);
+    AutoPrepareForTracing prep(rt->activeContextFromOwnThread());
 
     bool compartmentCreated = false;
 

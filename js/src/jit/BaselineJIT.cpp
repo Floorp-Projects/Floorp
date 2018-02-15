@@ -24,7 +24,7 @@
 
 #include "jsopcodeinlines.h"
 
-#include "gc/Iteration-inl.h"
+#include "gc/GCIteration-inl.h"
 #include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "vm/JSObject-inl.h"

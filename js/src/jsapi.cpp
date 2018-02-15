@@ -56,6 +56,7 @@
 #include "frontend/FullParseHandler.h"  // for JS_BufferIsCompileableUnit
 #include "frontend/Parser.h" // for JS_BufferIsCompileableUnit
 #include "gc/FreeOp.h"
+#include "gc/Iteration.h"
 #include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "jit/JitCommon.h"

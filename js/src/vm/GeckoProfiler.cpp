@@ -11,6 +11,7 @@
 #include "jsnum.h"
 #include "jsprf.h"
 
+#include "gc/Iteration.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JitcodeMap.h"

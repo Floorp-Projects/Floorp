@@ -47,7 +47,7 @@
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
-#include "gc/Iteration-inl.h"
+#include "gc/GCIteration-inl.h"
 #include "vm/JSCompartment-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
@@ -2896,7 +2896,7 @@ GenerateLcovInfo(JSContext* cx, JSCompartment* comp, GenericPrinter& out)
 
     // Collect the list of scripts which are part of the current compartment.
     {
-        js::gc::AutoPrepareForTracing apft(cx, SkipAtoms);
+        js::gc::AutoPrepareForTracing apft(cx);
     }
     Rooted<ScriptVector> topScripts(cx, ScriptVector(cx));
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
