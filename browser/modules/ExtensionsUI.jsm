@@ -393,15 +393,9 @@ this.ExtensionsUI = {
     let win = target.ownerGlobal;
     let popups = win.PopupNotifications;
 
-    let addonIcon = '<image class="addon-addon-icon"/>';
-    let toolbarIcon = '<image class="addon-toolbar-icon"/>';
-
     let brandBundle = win.document.getElementById("bundle_brand");
     let appName = brandBundle.getString("brandShortName");
-
     let bundle = win.gNavigatorBundle;
-    let msg2 = bundle.getFormattedString("addonPostInstall.messageDetail",
-                                         [addonIcon, toolbarIcon]);
 
     // Create the notification header element.
     let message = {};
@@ -428,12 +422,7 @@ this.ExtensionsUI = {
         timeout: Date.now() + 30000,
         popupIconURL: icon,
         eventCallback(topic) {
-          if (topic == "showing") {
-            let doc = this.browser.ownerDocument;
-            // eslint-disable-next-line no-unsanitized/property
-            doc.getElementById("addon-installed-notification-message")
-               .unsafeSetInnerHTML(msg2);
-          } else if (topic == "dismissed") {
+          if (topic == "dismissed") {
             resolve();
           }
         }
