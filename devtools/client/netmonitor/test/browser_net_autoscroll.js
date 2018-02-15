@@ -41,11 +41,6 @@ add_task(function* () {
 
   // (3) Now set the scroll position back at the bottom and check that
   // additional requests *do* cause the container to scroll down.
-  // Wait for another request to be displayed in order to ensure that
-  // scrollTop is set just before next RequestListContent.componentWillUpdate fires.
-  // If scrollTop is set between componentWillUpdate and componentDidUpdate,
-  // the view won't be scrolled.
-  yield waitForNetworkEvents(monitor, 8);
   requestsContainer.scrollTop = requestsContainer.scrollHeight;
   ok(scrolledToBottom(requestsContainer), "Set scroll position to bottom.");
   yield waitForNetworkEvents(monitor, 8);
