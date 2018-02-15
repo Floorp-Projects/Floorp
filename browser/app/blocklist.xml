@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1518553957211" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1518640450735" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2192,6 +2192,10 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="646e2384-f894-41bf-b7fc-8879e0095109" id="/^(https|youtube)@vietbacsecurity\.com$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="cc5848e8-23d5-4655-b45c-dc239839b74e" id="/^(\{01c9a4a4-06dd-426b-9500-2ea6fe841b88\}|{5e024309-042c-4b9d-a634-5d92cf9c7514\}|{f4262989-6de0-4604-918f-663b85fad605\}|{e341ed12-a703-47fe-b8dd-5948c38070e4\}|{cd89045b-2e06-46bb-9e34-48e8799e5ef2\}|{ac296b47-7c03-486f-a1d6-c48b24419749\}|{5da81d3d-5db1-432a-affc-4a2fe9a70749\}|{df09f268-3c92-49db-8c31-6a25a6643896\}|{81ac42f3-3d17-4cff-85af-8b7f89c8826b\}|{09c8fa16-4eec-4f78-b19d-9b24b1b57e1e\}|{71639610-9cc3-47e0-86ed-d5b99eaa41d5\}|{83d38ac3-121b-4f28-bf9c-1220bd3c643b\}|{7f8bc48d-1c7c-41a0-8534-54adc079338f\})$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>

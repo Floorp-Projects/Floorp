@@ -16,35 +16,6 @@ const TEST_OFFLINE_ORIGIN = "https://" + TEST_OFFLINE_HOST;
 const TEST_OFFLINE_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/offline/offline.html";
 const TEST_SERVICE_WORKER_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/service_worker_test.html";
 
-// XXX: The intermittent bug 1331851
-// The implementation of nsICacheStorageConsumptionObserver must be passed as weak referenced,
-// so we must hold this observer here well. If we didn't, there would be a chance that
-// in Linux debug test run the observer was released before the operation at gecko was completed
-// (may be because of a relatively quicker GC cycle or a relatively slower operation).
-// As a result of that, we would never get the cache usage we want so the test would fail from timeout.
-const cacheUsageGetter = {
-  _promise: null,
-  _resolve: null,
-  get() {
-    if (!this._promise) {
-      this._promise = new Promise(resolve => {
-        this._resolve = resolve;
-        Services.cache2.asyncGetDiskConsumption(this);
-      });
-    }
-    return this._promise;
-  },
-  // nsICacheStorageConsumptionObserver implementations
-  onNetworkCacheDiskConsumption(usage) {
-    cacheUsageGetter._promise = null;
-    cacheUsageGetter._resolve(usage);
-  },
-  QueryInterface: XPCOMUtils.generateQI([
-    Components.interfaces.nsICacheStorageConsumptionObserver,
-    Components.interfaces.nsISupportsWeakReference
-  ]),
-};
-
 async function testClearData(clearSiteData, clearCache) {
   let quotaURI = Services.io.newURI(TEST_QUOTA_USAGE_ORIGIN);
   SitePermissions.set(quotaURI, "persistent-storage", SitePermissions.ALLOW);
@@ -69,12 +40,17 @@ async function testClearData(clearSiteData, clearCache) {
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
 
   // Test the initial states.
-  let cacheUsage = await cacheUsageGetter.get();
+  let cacheUsage = await SiteDataManager.getCacheSize();
   let quotaUsage = await getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
   let totalUsage = await SiteDataManager.getTotalUsage();
   Assert.greater(cacheUsage, 0, "The cache usage should not be 0");
   Assert.greater(quotaUsage, 0, "The quota usage should not be 0");
   Assert.greater(totalUsage, 0, "The total usage should not be 0");
+
+  let initialSizeLabelValue = await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+    let sizeLabel = content.document.getElementById("totalSiteDataSize");
+    return sizeLabel.textContent;
+  });
 
   let doc = gBrowser.selectedBrowser.contentDocument;
   let clearSiteDataButton = doc.getElementById("clearSiteDataButton");
@@ -145,11 +121,11 @@ async function testClearData(clearSiteData, clearCache) {
 
   if (clearCache) {
     TestUtils.waitForCondition(async function() {
-      let usage = await cacheUsageGetter.get();
+      let usage = await SiteDataManager.getCacheSize();
       return usage == 0;
     }, "The cache usage should be removed");
   } else {
-    Assert.greater(await cacheUsageGetter.get(), 0, "The cache usage should not be 0");
+    Assert.greater(await SiteDataManager.getCacheSize(), 0, "The cache usage should not be 0");
   }
 
   if (clearSiteData) {
@@ -161,19 +137,20 @@ async function testClearData(clearSiteData, clearCache) {
       let usage = await SiteDataManager.getTotalUsage();
       return usage == 0;
     }, "The total usage should be removed");
-
-    // Check that the size label in about:preferences updates after we cleared data.
-    await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
-      let sizeLabel = content.document.getElementById("totalSiteDataSize");
-
-      await ContentTaskUtils.waitForCondition(
-        () => sizeLabel.textContent.includes("0"), "Site data size label should have updated.");
-    });
   } else {
     quotaUsage = await getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
     totalUsage = await SiteDataManager.getTotalUsage();
     Assert.greater(quotaUsage, 0, "The quota usage should not be 0");
     Assert.greater(totalUsage, 0, "The total usage should not be 0");
+  }
+
+  if (clearCache || clearSiteData) {
+    // Check that the size label in about:preferences updates after we cleared data.
+    await ContentTask.spawn(gBrowser.selectedBrowser, {initialSizeLabelValue}, async function(opts) {
+      let sizeLabel = content.document.getElementById("totalSiteDataSize");
+      await ContentTaskUtils.waitForCondition(
+        () => sizeLabel.textContent != opts.initialSizeLabelValue, "Site data size label should have updated.");
+    });
   }
 
   let desiredPermissionState = clearSiteData ? SitePermissions.UNKNOWN : SitePermissions.ALLOW;

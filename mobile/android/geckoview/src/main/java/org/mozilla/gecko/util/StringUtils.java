@@ -71,6 +71,18 @@ public class StringUtils {
     }
 
     /**
+     * Check for the existence of %s and %S in a given URL
+     *
+     * @return True if  %s or %S exists, False otherwise.
+     */
+    public static boolean queryExists(final String inputURL) {
+        if (inputURL == null) {
+            return false;
+        }
+        return inputURL.contains("%s") || inputURL.contains("%S");
+    }
+
+    /**
      * Strip the ref from a URL, if present
      *
      * @return The base URL, without the ref. The original String is returned if it has no ref,

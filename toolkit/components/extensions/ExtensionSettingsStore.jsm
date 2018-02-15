@@ -88,10 +88,12 @@ function initialize() {
 }
 
 // Test-only method to force reloading of the JSON file.
-async function reloadFile(finalize) {
-  if (finalize) {
-    await _store.finalize();
+async function reloadFile(saveChanges) {
+  if (!saveChanges) {
+    // Disarm the saver so that the current changes are dropped.
+    _store._saver.disarm();
   }
+  await _store.finalize();
   _initializePromise = null;
   return initialize();
 }
@@ -509,12 +511,13 @@ this.ExtensionSettingsStore = {
    * Note that this method simply clears the local variable that stores the
    * file, so the next time the file is accessed it will be reloaded.
    *
-   * @param   {boolean} finalize
-   *          When false, skip finalizing the store (writing current state to file).
+   * @param   {boolean} saveChanges
+   *          When false, discard any changes that have been made since the last
+   *          time the store was saved.
    * @returns {Promise}
    *          A promise that resolves once the settings store has been cleared.
    */
-  _reloadFile(finalize = true) {
-    return reloadFile(finalize);
+  _reloadFile(saveChanges = true) {
+    return reloadFile(saveChanges);
   },
 };

@@ -444,6 +444,9 @@ add_task(async function testExtensionControlledHomepageUninstalledAddon() {
      "The homepage_override is not set");
   await checkHomepageEnabled();
 
+  // Disarm any pending writes before we modify the JSONFile directly.
+  await ExtensionSettingsStore._reloadFile(false);
+
   // Write out a bad store file.
   let storeData = {
     prefs: {

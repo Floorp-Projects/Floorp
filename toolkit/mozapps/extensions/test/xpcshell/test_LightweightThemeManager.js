@@ -1,7 +1,7 @@
-const MANDATORY = ["id", "name", "headerURL"];
-const OPTIONAL = ["footerURL", "textcolor", "accentcolor", "iconURL",
-                  "previewURL", "author", "description", "homepageURL",
-                  "updateURL", "version"];
+const MANDATORY = ["id", "name"];
+const OPTIONAL = ["headerURL", "footerURL", "textcolor", "accentcolor",
+                  "iconURL", "previewURL", "author", "description",
+                  "homepageURL", "updateURL", "version"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -312,32 +312,32 @@ function run_test() {
     // Expected exception
   }
 
+  // Sanitize themes with a bad headerURL
   data = dummy();
   data.headerURL = "foo";
-  try {
-    ltm.currentTheme = data;
-    do_throw("Should have rejected a theme with a bad headerURL");
-  } catch (e) {
-    // Expected exception
-  }
+  ltm.currentTheme = data;
+  Assert.equal(ltm.usedThemes.length, 1);
+  Assert.equal(ltm.currentTheme.headerURL, undefined);
+  ltm.forgetUsedTheme(ltm.currentTheme.id);
+  Assert.equal(ltm.usedThemes.length, 0);
 
+  // Sanitize themes with a non-http(s) headerURL
   data = dummy();
   data.headerURL = "ftp://lwtest.invalid/test.png";
-  try {
-    ltm.currentTheme = data;
-    do_throw("Should have rejected a theme with a non-http(s) headerURL");
-  } catch (e) {
-    // Expected exception
-  }
+  ltm.currentTheme = data;
+  Assert.equal(ltm.usedThemes.length, 1);
+  Assert.equal(ltm.currentTheme.headerURL, undefined);
+  ltm.forgetUsedTheme(ltm.currentTheme.id);
+  Assert.equal(ltm.usedThemes.length, 0);
 
+  // Sanitize themes with a non-http(s) headerURL
   data = dummy();
   data.headerURL = "file:///test.png";
-  try {
-    ltm.currentTheme = data;
-    do_throw("Should have rejected a theme with a non-http(s) headerURL");
-  } catch (e) {
-    // Expected exception
-  }
+  ltm.currentTheme = data;
+  Assert.equal(ltm.usedThemes.length, 1);
+  Assert.equal(ltm.currentTheme.headerURL, undefined);
+  ltm.forgetUsedTheme(ltm.currentTheme.id);
+  Assert.equal(ltm.usedThemes.length, 0);
 
   data = dummy();
   data.updateURL = "file:///test.json";
@@ -357,12 +357,11 @@ function run_test() {
 
   data = dummy();
   data.headerURL = "ftp://lwtest.invalid/test.png";
-  try {
-    ltm.setLocalTheme(data);
-    do_throw("Should have rejected a theme with a non-http(s), non-file headerURL");
-  } catch (e) {
-    // Expected exception
-  }
+  ltm.setLocalTheme(data);
+  Assert.equal(ltm.usedThemes.length, 1);
+  Assert.equal(ltm.currentTheme.updateURL, undefined);
+  ltm.forgetUsedTheme(ltm.currentTheme.id);
+  Assert.equal(ltm.usedThemes.length, 0);
 
   data = dummy();
   delete data.id;

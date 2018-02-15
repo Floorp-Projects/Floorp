@@ -82,7 +82,9 @@ missing:=$(strip $(foreach onefile,$(strip $(patsubst %.tlb,,$(subst dlldata.c,,
 
 missing_base:=$(sort $(basename $(subst _p.c,,$(subst _i.c,,$(missing)))))
 
-$(MIDL_GENERATED_FILES) : midl_done typelib_done
+# Bug 1420119: We need the trailing semicolon here to generate a recipe for the
+# midl targets to avoid timestamp caching issues.
+$(MIDL_GENERATED_FILES) : midl_done typelib_done ;
 
 ifneq ("$(missing)","")
 midl_done : FORCE
