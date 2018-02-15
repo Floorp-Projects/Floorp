@@ -22,6 +22,7 @@
 #include "nsCSSPropertyID.h"
 #include "nsUnicharInputStream.h"
 #include "nsAttrName.h"
+#include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
 #include "nsComponentManagerUtils.h"
@@ -952,6 +953,7 @@ nsTreeSanitizer::nsTreeSanitizer(uint32_t aFlags)
      nsIParserUtils::SanitizerCidEmbedsOnly)
  , mDropMedia(aFlags & nsIParserUtils::SanitizerDropMedia)
  , mFullDocument(false)
+ , mLogRemovals(aFlags & nsIParserUtils::SanitizerLogRemovals)
 {
   if (mCidEmbedsOnly) {
     // Sanitizing styles for external references is not supported.
@@ -1167,6 +1169,9 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
       }
     }
   }
+  if (didSanitize && mLogRemovals) {
+    LogMessage("Removed some rules and/or properties from stylesheet.", aDocument);
+  }
   return didSanitize;
 }
 
@@ -1218,6 +1223,10 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
                               nsGkAtoms::style,
                               cleanValue,
                               false);
+            if (mLogRemovals) {
+              LogMessage("Removed -moz-binding styling from element style attribute.",
+                         aElement->OwnerDoc(), aElement);
+            }
           }
         }
         continue;
@@ -1295,6 +1304,10 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
       // else not allowed
     }
     aElement->UnsetAttr(kNameSpaceID_None, attrLocal, false);
+    if (mLogRemovals) {
+      LogMessage("Removed unsafe attribute.", aElement->OwnerDoc(),
+                 aElement, attrLocal);
+    }
     // in case the attribute removal shuffled the attribute order, start the
     // loop again.
     --ac;
@@ -1363,6 +1376,10 @@ nsTreeSanitizer::SanitizeURL(mozilla::dom::Element* aElement,
   }
   if (NS_FAILED(rv)) {
     aElement->UnsetAttr(aNamespace, aLocalName, false);
+    if (mLogRemovals) {
+      LogMessage("Removed unsafe URI from element attribute.",
+                 aElement->OwnerDoc(), aElement, aLocalName);
+    }
     return true;
   }
   return false;
@@ -1410,6 +1427,9 @@ nsTreeSanitizer::SanitizeChildren(nsINode* aRoot)
       int32_t ns = nodeInfo->NamespaceID();
 
       if (MustPrune(ns, localName, elt)) {
+        if (mLogRemovals) {
+          LogMessage("Removing unsafe node.", elt->OwnerDoc(), elt);
+        }
         RemoveAllAttributes(elt);
         nsIContent* descendant = node;
         while ((descendant = descendant->GetNextNode(node))) {
@@ -1440,6 +1460,10 @@ nsTreeSanitizer::SanitizeChildren(nsINode* aRoot)
           nsContentUtils::SetNodeTextContent(node, sanitizedStyle, true);
         } else {
           // If the node had non-text child nodes, this operation zaps those.
+          //XXXgijs: if we're logging, we should theoretically report about
+          // this, but this way of removing those items doesn't allow for that
+          // to happen. Seems less likely to be a problem for actual chrome
+          // consumers though.
           nsContentUtils::SetNodeTextContent(node, styleText, true);
         }
         if (ns == kNameSpaceID_XHTML) {
@@ -1461,6 +1485,10 @@ nsTreeSanitizer::SanitizeChildren(nsINode* aRoot)
         continue;
       }
       if (MustFlatten(ns, localName)) {
+        if (mLogRemovals) {
+          LogMessage("Flattening unsafe node (descendants are preserved).",
+                     elt->OwnerDoc(), elt);
+        }
         RemoveAllAttributes(elt);
         nsCOMPtr<nsIContent> next = node->GetNextNode(aRoot);
         nsCOMPtr<nsIContent> parent = node->GetParent();
@@ -1523,6 +1551,27 @@ nsTreeSanitizer::RemoveAllAttributes(Element* aElement)
     int32_t attrNs = attrName->NamespaceID();
     RefPtr<nsAtom> attrLocal = attrName->LocalName();
     aElement->UnsetAttr(attrNs, attrLocal, false);
+  }
+}
+
+void
+nsTreeSanitizer::LogMessage(const char* aMessage, nsIDocument* aDoc,
+                            Element* aElement, nsAtom* aAttr)
+{
+  if (mLogRemovals) {
+    nsAutoString msg;
+    msg.Assign(NS_ConvertASCIItoUTF16(aMessage));
+    if (aElement) {
+      msg.Append(NS_LITERAL_STRING(" Element: ") + aElement->LocalName() +
+                 NS_LITERAL_STRING("."));
+    }
+    if (aAttr) {
+      msg.Append(NS_LITERAL_STRING(" Attribute: ") +
+                 nsDependentAtomString(aAttr) + NS_LITERAL_STRING("."));
+    }
+
+    nsContentUtils::ReportToConsoleNonLocalized(
+        msg, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), aDoc);
   }
 }
 
