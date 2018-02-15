@@ -838,11 +838,6 @@ public:
 
 protected:
   /**
-   * Finish the topmost item in mPaintedLayerDataStack and pop it from the
-   * stack.
-   */
-  void PopPaintedLayerData();
-  /**
    * Finish all items in mPaintedLayerDataStack and clear the stack.
    */
   void PopAllPaintedLayerData();
@@ -863,7 +858,7 @@ protected:
   /**
    * Our contents: a PaintedLayerData stack and our child nodes.
    */
-  nsTArray<PaintedLayerData> mPaintedLayerDataStack;
+  AutoTArray<PaintedLayerData, 3> mPaintedLayerDataStack;
 
   /**
    * UniquePtr is used here in the sense of "unique ownership", i.e. there is
@@ -2895,23 +2890,15 @@ PaintedLayerDataNode::SetAllDrawingAbove()
 }
 
 void
-PaintedLayerDataNode::PopPaintedLayerData()
-{
-  MOZ_ASSERT(!mPaintedLayerDataStack.IsEmpty());
-  size_t lastIndex = mPaintedLayerDataStack.Length() - 1;
-  PaintedLayerData& data = mPaintedLayerDataStack[lastIndex];
-  mTree.ContState().FinishPaintedLayerData(data, [this, &data, lastIndex]() {
-    return this->FindOpaqueBackgroundColor(data.mVisibleRegion, lastIndex);
-  });
-  mPaintedLayerDataStack.RemoveElementAt(lastIndex);
-}
-
-void
 PaintedLayerDataNode::PopAllPaintedLayerData()
 {
-  while (!mPaintedLayerDataStack.IsEmpty()) {
-    PopPaintedLayerData();
+  for (int32_t index = mPaintedLayerDataStack.Length() - 1; index >= 0; index--) {
+    PaintedLayerData& data = mPaintedLayerDataStack[index];
+    mTree.ContState().FinishPaintedLayerData(data, [this, &data, index]() {
+      return this->FindOpaqueBackgroundColor(data.mVisibleRegion, index);
+    });
   }
+  mPaintedLayerDataStack.Clear();
 }
 
 nsDisplayListBuilder*
