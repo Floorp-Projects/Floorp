@@ -153,6 +153,12 @@ this.Policies = {
     }
   },
 
+  "RememberPasswords": {
+    onBeforeUIStartup(manager, param) {
+      setAndLockPref("signon.rememberSignons", param);
+    }
+  },
+
   "install_addons": {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("install", param.allow, param.block);
