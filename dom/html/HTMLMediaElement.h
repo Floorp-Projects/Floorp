@@ -1436,7 +1436,7 @@ protected:
   // Media loading flags. See:
   //   http://www.whatwg.org/specs/web-apps/current-work/#video)
   nsMediaNetworkState mNetworkState;
-  nsMediaReadyState mReadyState = nsIDOMHTMLMediaElement::HAVE_NOTHING;
+  nsMediaReadyState mReadyState = HTMLMediaElementBinding::HAVE_NOTHING;
 
   enum LoadAlgorithmState {
     // No load algorithm instance is waiting for a source to be added to the
