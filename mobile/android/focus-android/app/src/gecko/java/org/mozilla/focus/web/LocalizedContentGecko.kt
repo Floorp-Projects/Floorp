@@ -25,6 +25,11 @@ object LocalizedContentGecko {
     // a custom scheme.
     val URL_ABOUT = "focus:about"
     val URL_RIGHTS = "focus:rights"
+    val mplUrl = "https://www.mozilla.org/en-US/MPL/"
+    val trademarkPolicyUrl = "https://www.mozilla.org/foundation/trademarks/policy/"
+    val gplUrl = "gpl.html"
+    val trackingProtectionUrl = "https://wiki.mozilla.org/Security/Tracking_protection#Lists"
+    val licensesUrl = "licenses.html"
 
     fun handleInternalContent(url: String, geckoSession: GeckoSession, context: Context): Boolean {
         if (URL_ABOUT == url) {
@@ -34,7 +39,6 @@ object LocalizedContentGecko {
             loadRights(geckoSession, context)
             return true
         }
-
         return false
     }
 
@@ -71,25 +75,7 @@ object LocalizedContentGecko {
 
         val path = context.filesDir
         val file = File(path, "about.html")
-        var stream: FileOutputStream? = null
-        try {
-            stream = FileOutputStream(file)
-        } catch (e: FileNotFoundException) {
-            e.printStackTrace()
-        }
-
-        try {
-            stream!!.write(data.toByteArray())
-        } catch (e: IOException) {
-            e.printStackTrace()
-        } finally {
-            try {
-                stream!!.close()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-
-        }
+        writeDataToFile(file, data.toByteArray())
 
         geckoSession.loadUri(Uri.fromFile(file))
     }
@@ -99,15 +85,9 @@ object LocalizedContentGecko {
      */
     private fun loadRights(geckoSession: GeckoSession, context: Context) {
         val resources = Locales.getLocalizedResources(context)
+        val appName = resources.getString(R.string.app_name)
 
         val substitutionMap = ArrayMap<String, String>()
-
-        val appName = context.resources.getString(R.string.app_name)
-        val mplUrl = "https://www.mozilla.org/en-US/MPL/"
-        val trademarkPolicyUrl = "https://www.mozilla.org/foundation/trademarks/policy/"
-        val gplUrl = "gpl.html"
-        val trackingProtectionUrl = "https://wiki.mozilla.org/Security/Tracking_protection#Lists"
-        val licensesUrl = "licenses.html"
 
         val content1 = resources.getString(R.string.your_rights_content1, appName)
         substitutionMap["%your-rights-content1%"] = content1
@@ -128,6 +108,12 @@ object LocalizedContentGecko {
 
         val path = context.filesDir
         val file = File(path, "rights.html")
+        writeDataToFile(file, data.toByteArray())
+
+        geckoSession.loadUri(Uri.fromFile(file))
+    }
+
+    private fun writeDataToFile(file: File, data: ByteArray) {
         var stream: FileOutputStream? = null
         try {
             stream = FileOutputStream(file)
@@ -136,7 +122,7 @@ object LocalizedContentGecko {
         }
 
         try {
-            stream!!.write(data.toByteArray())
+            stream!!.write(data)
         } catch (e: IOException) {
             e.printStackTrace()
         } finally {
@@ -145,10 +131,7 @@ object LocalizedContentGecko {
             } catch (e: IOException) {
                 e.printStackTrace()
             }
-
         }
-
-        geckoSession.loadUri(Uri.fromFile(file))
     }
 
     //    private static void putLayoutDirectionIntoMap(Map<String, String> substitutionMap, Context context) {
