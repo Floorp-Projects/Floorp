@@ -190,14 +190,8 @@
  * is not usually necessary and should be done with caution.
  */
 
-class JSAtom;
-struct JSCompartment;
 class JSFlatString;
 class JSLinearString;
-
-namespace JS {
-class Symbol;
-} // namespace JS
 
 namespace js {
 
@@ -289,18 +283,18 @@ struct InternalBarrierMethods<Value>
 
         // If the target needs an entry, add it.
         js::gc::StoreBuffer* sb;
-        if (next.isObject() && (sb = reinterpret_cast<gc::Cell*>(&next.toObject())->storeBuffer())) {
+        if ((next.isObject() || next.isString()) && (sb = next.toGCThing()->storeBuffer())) {
             // If we know that the prev has already inserted an entry, we can
             // skip doing the lookup to add the new entry. Note that we cannot
             // safely assert the presence of the entry because it may have been
             // added via a different store buffer.
-            if (prev.isObject() && reinterpret_cast<gc::Cell*>(&prev.toObject())->storeBuffer())
+            if ((prev.isObject() || prev.isString()) && prev.toGCThing()->storeBuffer())
                 return;
             sb->putValue(vp);
             return;
         }
         // Remove the prev entry if the new value does not need it.
-        if (prev.isObject() && (sb = reinterpret_cast<gc::Cell*>(&prev.toObject())->storeBuffer()))
+        if ((prev.isObject() || prev.isString()) && (sb = prev.toGCThing()->storeBuffer()))
             sb->unputValue(vp);
     }
 
@@ -687,8 +681,8 @@ class HeapSlot : public WriteBarrieredBase<Value>
 #ifdef DEBUG
         assertPreconditionForWriteBarrierPost(owner, kind, slot, target);
 #endif
-        if (this->value.isObject()) {
-            gc::Cell* cell = reinterpret_cast<gc::Cell*>(&this->value.toObject());
+        if (this->value.isObject() || this->value.isString()) {
+            gc::Cell* cell = this->value.toGCThing();
             if (cell->storeBuffer())
                 cell->storeBuffer()->putSlot(owner, kind, slot, 1);
         }

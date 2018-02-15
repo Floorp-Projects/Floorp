@@ -761,6 +761,15 @@ MacroAssembler::moveValue(const Value& src, const ValueOperand& dest)
 // Branch functions
 
 void
+MacroAssembler::loadStoreBuffer(Register ptr, Register buffer)
+{
+    if (ptr != buffer)
+        movePtr(ptr, buffer);
+    orPtr(Imm32(gc::ChunkMask), buffer);
+    loadPtr(Address(buffer, gc::ChunkStoreBufferOffsetFromLastByte), buffer);
+}
+
+void
 MacroAssembler::branchPtrInNurseryChunk(Condition cond, Register ptr, Register temp,
                                         Label* label)
 {
@@ -776,23 +785,49 @@ MacroAssembler::branchPtrInNurseryChunk(Condition cond, Register ptr, Register t
 }
 
 void
-MacroAssembler::branchValueIsNurseryObject(Condition cond, const Address& address, Register temp,
-                                           Label* label)
+MacroAssembler::branchValueIsNurseryCell(Condition cond, const Address& address, Register temp,
+                                         Label* label)
 {
-    branchValueIsNurseryObjectImpl(cond, address, temp, label);
+    branchValueIsNurseryCellImpl(cond, address, temp, label);
+}
+
+void
+MacroAssembler::branchValueIsNurseryCell(Condition cond, ValueOperand value, Register temp,
+                                         Label* label)
+{
+    branchValueIsNurseryCellImpl(cond, value, temp, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchValueIsNurseryCellImpl(Condition cond, const T& value, Register temp,
+                                             Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    MOZ_ASSERT(temp != ScratchReg && temp != ScratchReg2); // Both may be used internally.
+
+    Label done, checkAddress, checkObjectAddress;
+    bool testNursery = (cond == Assembler::Equal);
+    branchTestObject(Assembler::Equal, value, &checkObjectAddress);
+    branchTestString(Assembler::NotEqual, value, testNursery ? &done : label);
+
+    unboxString(value, temp);
+    jump(&checkAddress);
+
+    bind(&checkObjectAddress);
+    unboxObject(value, temp);
+
+    bind(&checkAddress);
+    orPtr(Imm32(gc::ChunkMask), temp);
+    branch32(cond, Address(temp, gc::ChunkLocationOffsetFromLastByte),
+             Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
+
+    bind(&done);
 }
 
 void
 MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
                                            Label* label)
-{
-    branchValueIsNurseryObjectImpl(cond, value, temp, label);
-}
-
-template <typename T>
-void
-MacroAssembler::branchValueIsNurseryObjectImpl(Condition cond, const T& value, Register temp,
-                                               Label* label)
 {
     MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
     MOZ_ASSERT(temp != ScratchReg && temp != ScratchReg2); // Both may be used internally.

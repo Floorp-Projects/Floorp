@@ -12,10 +12,9 @@
 
 #include <stddef.h>
 
-#include "jsscript.h"
-
 #include "js/ProfilingStack.h"
 #include "threading/ExclusiveData.h"
+#include "vm/JSScript.h"
 #include "vm/MutexIDs.h"
 
 /*

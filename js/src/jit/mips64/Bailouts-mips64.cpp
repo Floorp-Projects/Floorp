@@ -6,8 +6,8 @@
 
 #include "jit/mips64/Bailouts-mips64.h"
 
-#include "jscntxt.h"
-#include "jscompartment.h"
+#include "vm/JSCompartment.h"
+#include "vm/JSContext.h"
 
 using namespace js;
 using namespace js::jit;

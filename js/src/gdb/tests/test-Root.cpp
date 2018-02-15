@@ -1,9 +1,9 @@
 #include "gdb-tests.h"
 
 #include "jsapi.h"
-#include "jsfun.h"
 
 #include "gc/Barrier.h"
+#include "vm/JSFunction.h"
 
 FRAGMENT(Root, null) {
   JS::Rooted<JSObject*> null(cx, nullptr);

@@ -15,6 +15,7 @@
 #include "js/GCVector.h"
 #include "js/Id.h"
 #include "js/UniquePtr.h"
+#include "vm/JSAtom.h"
 #include "vm/NativeObject.h"
 #include "vm/ProxyObject.h"
 

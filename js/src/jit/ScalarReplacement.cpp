@@ -15,7 +15,7 @@
 #include "jit/MIRGraph.h"
 #include "vm/UnboxedObject.h"
 
-#include "jsobjinlines.h"
+#include "vm/JSObject-inl.h"
 
 namespace js {
 namespace jit {

@@ -1,4 +1,6 @@
 // |jit-test| crash
+setJitCompilerOption("ion.warmup.trigger", 50);
+setJitCompilerOption("offthread-compilation.enable", 0);
 
 var opts = getJitCompilerOptions();
 if (!opts['ion.enable'] || !opts['baseline.enable'] ||

@@ -163,8 +163,6 @@
 // structure of the snapshot file, the analyses should be prepared for ubi::Node
 // graphs constructed from snapshots to be even more bizarre.
 
-class JSAtom;
-
 namespace JS {
 namespace ubi {
 

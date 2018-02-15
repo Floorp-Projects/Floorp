@@ -6,8 +6,6 @@
 
 #include "mozilla/MathAlgorithms.h"
 
-#include "jscompartment.h"
-
 #include "jit/Bailouts.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JitCompartment.h"
@@ -19,12 +17,12 @@
 #endif
 #include "jit/VMFunctions.h"
 #include "jit/x86/SharedICHelpers-x86.h"
+#include "vm/JSCompartment.h"
 #include "vtune/VTuneWrapper.h"
-
-#include "jsscriptinlines.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
+#include "vm/JSScript-inl.h"
 
 using mozilla::IsPowerOfTwo;
 

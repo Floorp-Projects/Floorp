@@ -10,11 +10,11 @@
 #include "mozilla/Atomics.h"
 
 #include "jsapi.h"
-#include "jsobj.h"
 #include "jstypes.h"
 
 #include "gc/Barrier.h"
 #include "vm/ArrayBufferObject.h"
+#include "vm/JSObject.h"
 
 typedef struct JSProperty JSProperty;
 

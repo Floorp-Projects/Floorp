@@ -154,6 +154,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._onPickerStopped = this._onPickerStopped.bind(this);
   this._onInspectObject = this._onInspectObject.bind(this);
   this._onNewSelectedNodeFront = this._onNewSelectedNodeFront.bind(this);
+  this._updatePickerButton = this._updatePickerButton.bind(this);
   this.selectTool = this.selectTool.bind(this);
 
   this._target.on("close", this.destroy);
@@ -177,6 +178,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
 
   this.on("host-changed", this._refreshHostTitle);
   this.on("select", this._refreshHostTitle);
+  this.on("select", this._updatePickerButton);
 
   this.on("ready", this._showDevEditionPromo);
 
@@ -723,6 +725,7 @@ Toolbox.prototype = {
    * @property {String} className - An optional additional className for the button.
    * @property {String} description - The value that will display as a tooltip and in
    *                    the options panel for enabling/disabling.
+   * @property {Boolean} disabled - An optional disabled state for the button.
    * @property {Function} onClick - The function to run when the button is activated by
    *                      click or keyboard shortcut. First argument will be the 'click'
    *                      event, and second argument is the toolbox instance.
@@ -749,6 +752,7 @@ Toolbox.prototype = {
       id,
       className,
       description,
+      disabled,
       onClick,
       isInStartContainer,
       setup,
@@ -762,6 +766,7 @@ Toolbox.prototype = {
       id,
       className,
       description,
+      disabled,
       onClick(event) {
         if (typeof onClick == "function") {
           onClick(event, toolbox);
@@ -1309,11 +1314,19 @@ Toolbox.prototype = {
    * focus the window. This is only desirable when the toolbox is mounted to the
    * window. When devtools is free floating, then the target window should not
    * pop in front of the viewer when the picker is clicked.
+   *
+   * Note: Toggle picker can be overwritten by panel other than the inspector to
+   * allow for custom picker behaviour.
    */
   _onPickerClick: function () {
     let focus = this.hostType === Toolbox.HostType.BOTTOM ||
                 this.hostType === Toolbox.HostType.SIDE;
-    this.highlighterUtils.togglePicker(focus);
+    let currentPanel = this.getCurrentPanel();
+    if (currentPanel.togglePicker) {
+      currentPanel.togglePicker(focus);
+    } else {
+      this.highlighterUtils.togglePicker(focus);
+    }
   },
 
   /**
@@ -1322,7 +1335,12 @@ Toolbox.prototype = {
    */
   _onPickerKeypress: function (event) {
     if (event.keyCode === KeyCodes.DOM_VK_ESCAPE) {
-      this.highlighterUtils.cancelPicker();
+      let currentPanel = this.getCurrentPanel();
+      if (currentPanel.cancelPicker) {
+        currentPanel.cancelPicker();
+      } else {
+        this.highlighterUtils.cancelPicker();
+      }
       // Stop the console from toggling.
       event.stopImmediatePropagation();
     }
@@ -1394,6 +1412,29 @@ Toolbox.prototype = {
     this.toolbarButtons.forEach(button => {
       button.isVisible = this._commandIsVisible(button);
     });
+    this.component.setToolboxButtons(this.toolbarButtons);
+  },
+
+  /**
+   * Visually update picker button.
+   * This function is called on every "select" event. Newly selected panel can
+   * update the visual state of the picker button such as disabled state,
+   * additional CSS classes (className), and tooltip (description).
+   */
+  _updatePickerButton() {
+    const button = this.pickerButton;
+    let currentPanel = this.getCurrentPanel();
+
+    if (currentPanel && currentPanel.updatePickerButton) {
+      currentPanel.updatePickerButton();
+    } else {
+      // If the current panel doesn't define a custom updatePickerButton,
+      // revert the button to its default state
+      button.description = L10N.getStr("pickButton.tooltip");
+      button.className = null;
+      button.disabled = null;
+    }
+
     this.component.setToolboxButtons(this.toolbarButtons);
   },
 
@@ -2583,7 +2624,13 @@ Toolbox.prototype = {
       // in the initialization process can throw errors.
       yield this._initInspector;
 
-      yield this.highlighterUtils.stopPicker();
+      let currentPanel = this.getCurrentPanel();
+      if (currentPanel.stopPicker) {
+        yield currentPanel.stopPicker();
+      } else {
+        yield this.highlighterUtils.stopPicker();
+      }
+
       yield this._inspector.destroy();
       if (this._highlighter) {
         // Note that if the toolbox is closed, this will work fine, but will fail
@@ -2642,6 +2689,7 @@ Toolbox.prototype = {
     this._target.off("navigate", this._refreshHostTitle);
     this._target.off("frame-update", this._updateFrames);
     this.off("select", this._refreshHostTitle);
+    this.off("select", this._updatePickerButton);
     this.off("host-changed", this._refreshHostTitle);
     this.off("ready", this._showDevEditionPromo);
 

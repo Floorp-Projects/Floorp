@@ -6,7 +6,7 @@
 
 #include "jsalloc.h"
 
-#include "jscntxt.h"
+#include "vm/JSContext.h"
 
 using namespace js;
 

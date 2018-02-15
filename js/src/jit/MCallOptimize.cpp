@@ -7,7 +7,6 @@
 #include "mozilla/Casting.h"
 
 #include "jsmath.h"
-#include "jsobj.h"
 #include "jsstr.h"
 
 #include "builtin/AtomicsObject.h"
@@ -27,13 +26,13 @@
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/JSObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/SelfHosting.h"
 #include "vm/TypedArrayObject.h"
 
-#include "jsscriptinlines.h"
-
 #include "jit/shared/Lowering-shared-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/StringObject-inl.h"
 #include "vm/UnboxedObject-inl.h"
@@ -2558,20 +2557,10 @@ IonBuilder::inlineGetNextEntryForIterator(CallInfo& callInfo, MGetNextEntryForIt
     MDefinition* iterArg = callInfo.getArg(0);
     MDefinition* resultArg = callInfo.getArg(1);
 
+    // Self-hosted code has already validated |iterArg| is a (possibly boxed)
+    // Map- or SetIterator object.
     if (iterArg->type() != MIRType::Object)
         return InliningStatus_NotInlined;
-
-    TemporaryTypeSet* iterTypes = iterArg->resultTypeSet();
-    const Class* iterClasp = iterTypes ? iterTypes->getKnownClass(constraints()) : nullptr;
-    if (mode == MGetNextEntryForIterator::Map) {
-        if (iterClasp != &MapIteratorObject::class_)
-            return InliningStatus_NotInlined;
-    } else {
-        MOZ_ASSERT(mode == MGetNextEntryForIterator::Set);
-
-        if (iterClasp != &SetIteratorObject::class_)
-            return InliningStatus_NotInlined;
-    }
 
     if (resultArg->type() != MIRType::Object)
         return InliningStatus_NotInlined;

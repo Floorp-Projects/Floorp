@@ -13,10 +13,10 @@
 #include <ctype.h>
 
 #include "jsarray.h"
-#include "jscompartment.h"
 #include "jsnum.h"
 #include "jsprf.h"
 
+#include "vm/JSCompartment.h"
 #include "vm/StringBuffer.h"
 
 #include "vm/NativeObject-inl.h"

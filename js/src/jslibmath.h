@@ -11,8 +11,9 @@
 
 #include <math.h>
 
-#include "jscntxt.h"
 #include "jsnum.h"
+
+#include "vm/JSContext.h"
 
 /*
  * Use system provided math routines.

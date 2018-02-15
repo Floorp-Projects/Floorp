@@ -8,15 +8,16 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "jscompartment.h"
 #include "jsgc.h"
-#include "jsobj.h"
-#include "jsscript.h"
 
 #include "gc/Heap.h"
+#include "gc/Nursery.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "vm/ArrayObject.h"
+#include "vm/JSCompartment.h"
+#include "vm/JSObject.h"
+#include "vm/JSScript.h"
 #include "vm/Runtime.h"
 #include "vm/Shape.h"
 #include "vm/String.h"
@@ -522,13 +523,16 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
 
       case JS::TraceKind::String: {
         JSString* str = static_cast<JSString*>(thing);
+        size_t size = thingSize;
+        if (!str->isTenured())
+            size += Nursery::stringHeaderSize();
 
         JS::StringInfo info;
         if (str->hasLatin1Chars()) {
-            info.gcHeapLatin1 = thingSize;
+            info.gcHeapLatin1 = size;
             info.mallocHeapLatin1 = str->sizeOfExcludingThis(rtStats->mallocSizeOf_);
         } else {
-            info.gcHeapTwoByte = thingSize;
+            info.gcHeapTwoByte = size;
             info.mallocHeapTwoByte = str->sizeOfExcludingThis(rtStats->mallocSizeOf_);
         }
         info.numCopies = 1;

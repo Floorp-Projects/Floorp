@@ -20,8 +20,7 @@
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmTypes.h"
 
-#include "jsobjinlines.h"
-
+#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using mozilla::Some;

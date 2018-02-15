@@ -48,15 +48,8 @@ add_task(async () => {
 
   // access registration.updateViaCache to trigger the bug
   // we really care that we don't crash. In the future we will fix
-  // updateViaCache to be accessible after unregister().
-  try {
-    if (registration.updateViaCache) {
-      ok(false,
-         "Expected InvalidStateError when accessing registration.updateViaCache after unregister()");
-    }
-  } catch (err) {
-    is(err.name, "InvalidStateError", "Expected InvalidStateError.");
-  }
+  is(registration.updateViaCache, "imports",
+     "registration.updateViaCache should work after unregister()");
 });
 
 </script>

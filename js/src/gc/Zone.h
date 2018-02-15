@@ -17,8 +17,6 @@
 #include "vm/RegExpShared.h"
 #include "vm/Runtime.h"
 
-struct JSContext;
-
 namespace js {
 
 class Debugger;

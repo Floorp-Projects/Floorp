@@ -9,10 +9,9 @@
 
 #include "mozilla/Maybe.h"
 
-#include "jsobj.h"
-
 #include "builtin/TypedObjectConstants.h"
 #include "js/GCHashTable.h"
+#include "vm/JSObject.h"
 #include "vm/Runtime.h"
 #include "vm/SharedMem.h"
 #include "wasm/WasmTypes.h"

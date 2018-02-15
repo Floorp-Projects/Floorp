@@ -6,8 +6,6 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "jscompartment.h"
-
 #include "jit/Bailouts.h"
 #include "jit/JitCompartment.h"
 #include "jit/JitFrames.h"
@@ -19,6 +17,7 @@
 # include "jit/PerfSpewer.h"
 #endif
 #include "jit/VMFunctions.h"
+#include "vm/JSCompartment.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"

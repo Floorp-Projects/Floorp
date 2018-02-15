@@ -10,11 +10,7 @@
 #include "mozilla/Attributes.h"
 
 #include "js/RootingAPI.h"
-
-struct JSContext;
-class JSObject;
-
-namespace JS { class Value; }
+#include "js/TypeDecls.h"
 
 namespace js {
 

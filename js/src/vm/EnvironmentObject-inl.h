@@ -9,8 +9,7 @@
 
 #include "vm/EnvironmentObject.h"
 
-#include "jsobjinlines.h"
-
+#include "vm/JSObject-inl.h"
 #include "vm/TypeInference-inl.h"
 
 namespace js {
