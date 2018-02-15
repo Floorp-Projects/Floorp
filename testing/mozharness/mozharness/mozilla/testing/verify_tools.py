@@ -229,6 +229,7 @@ class VerifyToolsMixin(object):
                       suite == 'jsreftest'):
                     file = os.path.relpath(file, jsreftest_extra_dir)
                     file = os.path.join(self.jsreftest_test_dir, file)
+                file = file.replace(os.sep, posixpath.sep)
                 files.append(file)
             for file in files:
                 if self.config.get('verify_category') == "web-platform":

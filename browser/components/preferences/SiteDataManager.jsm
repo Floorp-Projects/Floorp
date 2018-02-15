@@ -5,8 +5,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "OfflineAppCacheHelper",
                                "resource:///modules/offlineAppCache.jsm");
-ChromeUtils.defineModuleGetter(this, "ContextualIdentityService",
-                               "resource://gre/modules/ContextualIdentityService.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
                                    "@mozilla.org/serviceworkers/manager;1",
                                    "nsIServiceWorkerManager");
@@ -48,9 +46,46 @@ this.SiteDataManager = {
 
   async updateSites() {
     Services.obs.notifyObservers(null, "sitedatamanager:updating-sites");
+    // Clear old data and requests first
+    this._sites.clear();
+    this._getAllCookies();
     await this._getQuotaUsage();
     this._updateAppCache();
     Services.obs.notifyObservers(null, "sitedatamanager:sites-updated");
+  },
+
+  _getBaseDomainFromHost(host) {
+    let result = host;
+    try {
+      result = Services.eTLD.getBaseDomainFromHost(host);
+    } catch (e) {
+      if (e.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS ||
+          e.result == Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+        // For these 2 expected errors, just take the host as the result.
+        // - NS_ERROR_HOST_IS_IP_ADDRESS: the host is in ipv4/ipv6.
+        // - NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS: not enough domain parts to extract.
+        result = host;
+      } else {
+        throw e;
+      }
+    }
+    return result;
+  },
+
+  _getOrInsertSite(host) {
+    let site = this._sites.get(host);
+    if (!site) {
+      site = {
+        baseDomain: this._getBaseDomainFromHost(host),
+        cookies: [],
+        persisted: false,
+        quotaUsage: 0,
+        principals: [],
+        appCacheList: [],
+      };
+      this._sites.set(host, site);
+    }
+    return site;
   },
 
   /**
@@ -94,8 +129,6 @@ this.SiteDataManager = {
   },
 
   _getQuotaUsage() {
-    // Clear old data and requests first
-    this._sites.clear();
     this._cancelGetQuotaUsage();
     this._getQuotaUsagePromise = new Promise(resolve => {
       let onUsageResult = request => {
@@ -110,15 +143,7 @@ this.SiteDataManager = {
               Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
             let uri = principal.URI;
             if (uri.scheme == "http" || uri.scheme == "https") {
-              let site = this._sites.get(uri.host);
-              if (!site) {
-                site = {
-                  persisted: false,
-                  quotaUsage: 0,
-                  principals: [],
-                  appCacheList: [],
-                };
-              }
+              let site = this._getOrInsertSite(uri.host);
               // Assume 3 sites:
               //   - Site A (not persisted): https://www.foo.com
               //   - Site B (not persisted): https://www.foo.com^userContextId=2
@@ -130,7 +155,6 @@ this.SiteDataManager = {
               }
               site.principals.push(principal);
               site.quotaUsage += item.usage;
-              this._sites.set(uri.host, site);
             }
           }
         }
@@ -142,6 +166,15 @@ this.SiteDataManager = {
       this._quotaUsageRequest = this._qms.getUsage(onUsageResult);
     });
     return this._getQuotaUsagePromise;
+  },
+
+  _getAllCookies() {
+    let cookiesEnum = Services.cookies.enumerator;
+    while (cookiesEnum.hasMoreElements()) {
+      let cookie = cookiesEnum.getNext().QueryInterface(Ci.nsICookie2);
+      let site = this._getOrInsertSite(cookie.rawHost);
+      site.cookies.push(cookie);
+    }
   },
 
   _cancelGetQuotaUsage() {
@@ -161,16 +194,8 @@ this.SiteDataManager = {
       }
       let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(group);
       let uri = principal.URI;
-      let site = this._sites.get(uri.host);
-      if (!site) {
-        site = {
-          persisted: false,
-          quotaUsage: 0,
-          principals: [ principal ],
-          appCacheList: [],
-        };
-        this._sites.set(uri.host, site);
-      } else if (!site.principals.some(p => p.origin == principal.origin)) {
+      let site = this._getOrInsertSite(uri.host);
+      if (!site.principals.some(p => p.origin == principal.origin)) {
         site.principals.push(principal);
       }
       site.appCacheList.push(cache);
@@ -199,6 +224,8 @@ this.SiteDataManager = {
           usage += cache.usage;
         }
         list.push({
+          baseDomain: site.baseDomain,
+          cookies: site.cookies,
           host,
           usage,
           persisted: site.persisted
@@ -254,24 +281,12 @@ this.SiteDataManager = {
     }
   },
 
-  _removeCookie(site) {
-    for (let principal of site.principals) {
-      // Although `getCookiesFromHost` can get cookies across hosts under the same base domain, OAs matter.
-      // We still need OAs here.
-      let e = Services.cookies.getCookiesFromHost(principal.URI.host, principal.originAttributes);
-      while (e.hasMoreElements()) {
-        let cookie = e.getNext();
-        if (cookie instanceof Components.interfaces.nsICookie) {
-          if (this.isPrivateCookie(cookie)) {
-            continue;
-          }
-          Services.cookies.remove(
-            cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
-        }
-      }
-
-      Services.obs.notifyObservers(null, "browser:purge-domain-data", principal.URI.host);
+  _removeCookies(site) {
+    for (let cookie of site.cookies) {
+      Services.cookies.remove(
+        cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
     }
+    site.cookies = [];
   },
 
   _unregisterServiceWorker(serviceWorker) {
@@ -287,12 +302,11 @@ this.SiteDataManager = {
 
   _removeServiceWorkersForSites(sites) {
     let promises = [];
-    let targetHosts = sites.map(s => s.principals[0].URI.host);
     let serviceWorkers = serviceWorkerManager.getAllRegistrations();
     for (let i = 0; i < serviceWorkers.length; i++) {
       let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
       // Sites are grouped and removed by host so we unregister service workers by the same host as well
-      if (targetHosts.includes(sw.principal.URI.host)) {
+      if (sites.has(sw.principal.URI.host)) {
         promises.push(this._unregisterServiceWorker(sw));
       }
     }
@@ -301,24 +315,28 @@ this.SiteDataManager = {
 
   remove(hosts) {
     let unknownHost = "";
-    let targetSites = [];
+    let targetSites = new Map();
     for (let host of hosts) {
       let site = this._sites.get(host);
       if (site) {
         this._removePermission(site);
         this._removeAppCache(site);
-        this._removeCookie(site);
-        targetSites.push(site);
+        this._removeCookies(site);
+        Services.obs.notifyObservers(null, "browser:purge-domain-data", host);
+        targetSites.set(host, site);
       } else {
         unknownHost = host;
         break;
       }
     }
 
-    if (targetSites.length > 0) {
+    if (targetSites.size > 0) {
       this._removeServiceWorkersForSites(targetSites)
           .then(() => {
-            let promises = targetSites.map(s => this._removeQuotaUsage(s));
+            let promises = [];
+            for (let [, site] of targetSites) {
+              promises.push(this._removeQuotaUsage(site));
+            }
             return Promise.all(promises);
           })
           .then(() => this.updateSites());
@@ -401,6 +419,7 @@ this.SiteDataManager = {
     // We don't do "Clear All" on the quota manager like the cookie, appcache, http cache above
     // because that would clear browser data as well too,
     // see https://bugzilla.mozilla.org/show_bug.cgi?id=1312361#c9
+    this._sites.clear();
     await this._getQuotaUsage();
     promises = [];
     for (let site of this._sites.values()) {
@@ -409,10 +428,4 @@ this.SiteDataManager = {
     }
     return Promise.all(promises).then(() => this.updateSites());
   },
-
-  isPrivateCookie(cookie) {
-    let { userContextId } = cookie.originAttributes;
-    // A private cookie is when its userContextId points to a private identity.
-    return userContextId && !ContextualIdentityService.getPublicIdentityFromId(userContextId);
-  }
 };

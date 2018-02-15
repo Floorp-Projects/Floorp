@@ -210,6 +210,7 @@
 }
 
 .search-panel-tree > .autocomplete-richlistitem > .ac-type-icon {
+  display: -moz-box;
   width: 14px;
   height: 14px;
 }
@@ -223,12 +224,6 @@
 
 .search-panel-tree > .autocomplete-richlistitem[originaltype="fromhistory"][selected] > .ac-type-icon {
   fill-opacity: 1;
-}
-
-.search-panel-tree > .autocomplete-richlistitem > .ac-site-icon,
-.search-panel-tree > .autocomplete-richlistitem > .ac-separator,
-.search-panel-tree > .autocomplete-richlistitem > .ac-url {
-  display: none;
 }
 
 .search-setting-button {

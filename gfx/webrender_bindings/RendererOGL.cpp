@@ -84,7 +84,9 @@ RendererOGL::GetExternalImageHandler()
 void
 RendererOGL::Update()
 {
-  wr_renderer_update(mRenderer);
+  if (gl()->MakeCurrent()) {
+    wr_renderer_update(mRenderer);
+  }
 }
 
 bool

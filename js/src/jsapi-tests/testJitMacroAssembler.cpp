@@ -46,7 +46,7 @@ static bool Execute(JSContext* cx, MacroAssembler& masm)
         return false;
 
     Linker linker(masm);
-    JitCode* code = linker.newCode<CanGC>(cx, OTHER_CODE);
+    JitCode* code = linker.newCode<CanGC>(cx, CodeKind::Other);
     if (!code)
         return false;
     if (!ExecutableAllocator::makeExecutable(code->raw(), code->bufferSize()))

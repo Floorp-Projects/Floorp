@@ -1172,7 +1172,7 @@ JitRuntime::generateBaselineDebugModeOSRHandler(JSContext* cx, uint32_t* noFrame
 
     Linker linker(masm);
     AutoFlushICache afc("BaselineDebugModeOSRHandler");
-    JitCode* code = linker.newCode<NoGC>(cx, OTHER_CODE);
+    JitCode* code = linker.newCode<NoGC>(cx, CodeKind::Other);
     if (!code)
         return nullptr;
 

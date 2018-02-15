@@ -5,33 +5,34 @@ const { DownloadUtils } = ChromeUtils.import("resource://gre/modules/DownloadUti
 // Test not displaying sites which store 0 byte and don't have persistent storage.
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({ set: [["browser.storageManager.enabled", true]] });
-  mockSiteDataManager.register(SiteDataManager);
-  mockSiteDataManager.fakeSites = [
+  mockSiteDataManager.register(SiteDataManager, [
     {
       usage: 0,
-      principal: Services.scriptSecurityManager
-        .createCodebasePrincipalFromOrigin("https://account.xyz.com"),
+      origin: "https://account.xyz.com",
       persisted: true
     },
     {
       usage: 0,
-      principal: Services.scriptSecurityManager
-        .createCodebasePrincipalFromOrigin("https://shopping.xyz.com"),
+      origin: "https://shopping.xyz.com",
       persisted: false
     },
     {
       usage: 1024,
-      principal: Services.scriptSecurityManager
-        .createCodebasePrincipalFromOrigin("http://cinema.bar.com"),
+      origin: "http://cinema.bar.com",
       persisted: true
     },
     {
       usage: 1024,
-      principal: Services.scriptSecurityManager
-        .createCodebasePrincipalFromOrigin("http://email.bar.com"),
+      origin: "http://email.bar.com",
       persisted: false
     },
-  ];
+    {
+      usage: 0,
+      origin: "http://cookies.bar.com",
+      cookies: 5,
+      persisted: false
+    },
+  ]);
   let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
 
   let updatePromise = promiseSiteDataManagerSitesUpdated();
@@ -49,33 +50,32 @@ add_task(async function() {
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({ set: [["browser.storageManager.enabled", true]] });
   const quotaUsage = 1024;
-  mockSiteDataManager.register(SiteDataManager);
-  mockSiteDataManager.fakeSites = [
+  mockSiteDataManager.register(SiteDataManager, [
     {
       usage: quotaUsage,
-      principal: Services.scriptSecurityManager
-        .createCodebasePrincipalFromOrigin("https://account.xyz.com^userContextId=1"),
+      origin: "https://account.xyz.com^userContextId=1",
+      cookies: 2,
       persisted: true
     },
     {
       usage: quotaUsage,
-      principal: Services.scriptSecurityManager
-        .createCodebasePrincipalFromOrigin("https://account.xyz.com"),
+      origin: "https://account.xyz.com",
+      cookies: 1,
       persisted: false
     },
     {
       usage: quotaUsage,
-      principal: Services.scriptSecurityManager
-        .createCodebasePrincipalFromOrigin("https://account.xyz.com:123"),
+      origin: "https://account.xyz.com:123",
+      cookies: 1,
       persisted: false
     },
     {
       usage: quotaUsage,
-      principal: Services.scriptSecurityManager
-        .createCodebasePrincipalFromOrigin("http://account.xyz.com"),
+      origin: "http://account.xyz.com",
+      cookies: 1,
       persisted: false
     },
-  ];
+  ]);
 
   let updatedPromise = promiseSiteDataManagerSitesUpdated();
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
@@ -89,19 +89,20 @@ add_task(async function() {
   let siteItems = frameDoc.getElementsByTagName("richlistitem");
   is(siteItems.length, 1, "Should group sites across scheme, port and origin attributes");
 
+  let columns = siteItems[0].querySelectorAll(".item-box > label");
+
   let expected = "account.xyz.com";
-  let host = siteItems[0].getAttribute("host");
-  is(host, expected, "Should group and list sites by host");
+  is(columns[0].value, expected, "Should group and list sites by host");
 
   let prefStrBundle = frameDoc.getElementById("bundlePreferences");
+  expected = prefStrBundle.getString("persistent");
+  is(columns[1].value, expected, "Should mark persisted status across scheme, port and origin attributes");
+
+  is(columns[2].value, "5", "Should group cookies across scheme, port and origin attributes");
+
   expected = prefStrBundle.getFormattedString("siteUsage",
     DownloadUtils.convertByteUnits(quotaUsage * mockSiteDataManager.fakeSites.length));
-  let usage = siteItems[0].getAttribute("usage");
-  is(usage, expected, "Should sum up usages across scheme, port and origin attributes");
-
-  expected = prefStrBundle.getString("persistent");
-  let status = siteItems[0].getAttribute("status");
-  is(status, expected, "Should mark persisted status across scheme, port and origin attributes");
+  is(columns[3].value, expected, "Should sum up usages across scheme, port and origin attributes");
 
   mockSiteDataManager.unregister();
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -110,27 +111,26 @@ add_task(async function() {
 // Test sorting
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
-  mockSiteDataManager.register(SiteDataManager);
-  mockSiteDataManager.fakeSites = [
+  mockSiteDataManager.register(SiteDataManager, [
     {
       usage: 1024,
-      principal: Services.scriptSecurityManager
-                         .createCodebasePrincipalFromOrigin("https://account.xyz.com"),
+      origin: "https://account.xyz.com",
+      cookies: 6,
       persisted: true
     },
     {
       usage: 1024 * 2,
-      principal: Services.scriptSecurityManager
-                         .createCodebasePrincipalFromOrigin("https://books.foo.com"),
+      origin: "https://books.foo.com",
+      cookies: 0,
       persisted: false
     },
     {
       usage: 1024 * 3,
-      principal: Services.scriptSecurityManager
-                         .createCodebasePrincipalFromOrigin("http://cinema.bar.com"),
+      origin: "http://cinema.bar.com",
+      cookies: 3,
       persisted: true
     },
-  ];
+  ]);
 
   let updatePromise = promiseSiteDataManagerSitesUpdated();
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
@@ -144,6 +144,7 @@ add_task(async function() {
   let hostCol = frameDoc.getElementById("hostCol");
   let usageCol = frameDoc.getElementById("usageCol");
   let statusCol = frameDoc.getElementById("statusCol");
+  let cookiesCol = frameDoc.getElementById("cookiesCol");
   let sitesList = frameDoc.getElementById("sitesList");
 
   // Test default sorting
@@ -157,11 +158,17 @@ add_task(async function() {
 
   // Test sorting on the host column
   hostCol.click();
-  assertSortByHost("ascending");
+  assertSortByBaseDomain("ascending");
   hostCol.click();
-  assertSortByHost("descending");
+  assertSortByBaseDomain("descending");
 
   // Test sorting on the permission status column
+  cookiesCol.click();
+  assertSortByCookies("ascending");
+  cookiesCol.click();
+  assertSortByCookies("descending");
+
+  // Test sorting on the cookies column
   statusCol.click();
   assertSortByStatus("ascending");
   statusCol.click();
@@ -170,12 +177,14 @@ add_task(async function() {
   mockSiteDataManager.unregister();
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-  function assertSortByHost(order) {
+  function assertSortByBaseDomain(order) {
     let siteItems = sitesList.getElementsByTagName("richlistitem");
     for (let i = 0; i < siteItems.length - 1; ++i) {
       let aHost = siteItems[i].getAttribute("host");
       let bHost = siteItems[i + 1].getAttribute("host");
-      let result = aHost.localeCompare(bHost);
+      let a = findSiteByHost(aHost);
+      let b = findSiteByHost(bHost);
+      let result = a.baseDomain.localeCompare(b.baseDomain);
       if (order == "ascending") {
         Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by host");
       } else {
@@ -217,6 +226,22 @@ add_task(async function() {
         Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by usage");
       } else {
         Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by usage");
+      }
+    }
+  }
+
+  function assertSortByCookies(order) {
+    let siteItems = sitesList.getElementsByTagName("richlistitem");
+    for (let i = 0; i < siteItems.length - 1; ++i) {
+      let aHost = siteItems[i].getAttribute("host");
+      let bHost = siteItems[i + 1].getAttribute("host");
+      let a = findSiteByHost(aHost);
+      let b = findSiteByHost(bHost);
+      let result = a.cookies.length - b.cookies.length;
+      if (order == "ascending") {
+        Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by number of cookies");
+      } else {
+        Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by number of cookies");
       }
     }
   }

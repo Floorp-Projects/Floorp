@@ -13,6 +13,7 @@
 #include "NamespaceImports.h"
 
 #include "gc/GCInternals.h"
+#include "gc/Iteration.h"
 #include "gc/Marking.h"
 #include "gc/Zone.h"
 #include "vm/JSFunction.h"
