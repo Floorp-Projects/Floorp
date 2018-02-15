@@ -593,31 +593,18 @@ WindowSurfaceWayland::~WindowSurfaceWayland()
   }
 }
 
-void
-WindowSurfaceWayland::UpdateScaleFactor()
-{
-  wl_surface* waylandSurface = mWindow->GetWaylandSurface();
-  if (waylandSurface) {
-    wl_surface_set_buffer_scale(waylandSurface, mWindow->GdkScaleFactor());
-  }
-}
-
 WindowBackBuffer*
 WindowSurfaceWayland::GetBufferToDraw(int aWidth, int aHeight)
 {
   if (!mFrontBuffer) {
     mFrontBuffer = new WindowBackBuffer(mWaylandDisplay, aWidth, aHeight);
     mBackBuffer = new WindowBackBuffer(mWaylandDisplay, aWidth, aHeight);
-    UpdateScaleFactor();
     return mFrontBuffer;
   }
 
   if (!mFrontBuffer->IsAttached()) {
     if (!mFrontBuffer->IsMatchingSize(aWidth, aHeight)) {
       mFrontBuffer->Resize(aWidth, aHeight);
-      // There's a chance that scale factor has been changed
-      // when buffer size changed
-      UpdateScaleFactor();
     }
     return mFrontBuffer;
   }
@@ -648,7 +635,6 @@ WindowSurfaceWayland::GetBufferToDraw(int aWidth, int aHeight)
     // the new buffer and leave gecko to render new whole content.
     mFrontBuffer->Resize(aWidth, aHeight);
   }
-  UpdateScaleFactor();
 
   return mFrontBuffer;
 }
@@ -714,6 +700,10 @@ WindowSurfaceWayland::Commit(const LayoutDeviceIntRegion& aInvalidRegion)
     mFrameCallback = wl_surface_frame(waylandSurface);
     wl_callback_add_listener(mFrameCallback, &frame_listener, this);
     mFrameCallbackSurface = waylandSurface;
+
+    // Let the wayland know of the current scaling factor for the hdpi
+    // displays
+    wl_surface_set_buffer_scale(waylandSurface, mWindow->GdkScaleFactor());
 
     // There's no pending frame callback so we can draw immediately
     // and create frame callback for possible subsequent drawing.

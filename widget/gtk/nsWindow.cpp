@@ -5931,7 +5931,6 @@ scale_changed_cb (GtkWidget* widget, GParamSpec* aPSpec, gpointer aPointer)
     if (!window) {
       return;
     }
-    // This eventually propagate new scale to the PuppetWidgets
     window->OnDPIChanged();
 
     // configure_event is already fired before scale-factor signal,
