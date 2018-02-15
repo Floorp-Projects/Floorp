@@ -748,7 +748,7 @@ WindowsVaultFormPasswords.prototype = {
    * false if there is no password in the vault and aOnlyCheckExists is set to true, undefined if
    * aOnlyCheckExists is set to false.
    */
-  migrate(aCallback, aOnlyCheckExists = false) {
+  async migrate(aCallback, aOnlyCheckExists = false) {
     // check if the vault item is an IE/Edge one
     function _isIEOrEdgePassword(id) {
       return id[0] == INTERNET_EXPLORER_EDGE_GUID[0] &&
@@ -785,6 +785,8 @@ WindowsVaultFormPasswords.prototype = {
       if (error != RESULT_SUCCESS) {
         throw new Error("Unable to enumerate Vault items: " + error);
       }
+
+      let logins = [];
       for (let j = 0; j < itemCount.value; j++) {
         try {
           // if it's not an ie/edge password, skip it
@@ -830,12 +832,11 @@ WindowsVaultFormPasswords.prototype = {
             // Ignore exceptions in the dates and just create the login for right now.
           }
           // create a new login
-          let login = {
+          logins.push({
             username, password,
             hostname: realURL.prePath,
             timeCreated: creation,
-          };
-          MigrationUtils.insertLoginWrapper(login);
+          });
 
           // close current item
           error = ctypesVaultHelpers._functions.VaultFree(credential);
@@ -849,6 +850,10 @@ WindowsVaultFormPasswords.prototype = {
           // move to next item in the table returned by VaultEnumerateItems
           item = item.increment();
         }
+      }
+
+      if (logins.length > 0) {
+        await MigrationUtils.insertLoginsWrapper(logins);
       }
     } catch (e) {
       Cu.reportError(e);
