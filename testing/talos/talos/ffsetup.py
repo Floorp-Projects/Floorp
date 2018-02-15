@@ -93,7 +93,7 @@ class FFSetup(object):
 
         extensions = self.browser_config['extensions'][:]
         if self.test_config.get('extensions'):
-            extensions.append(self.test_config['extensions'])
+            extensions.extend(self.test_config['extensions'])
 
         # downloading a profile instead of using the empty one
         if self.test_config['profile'] is not None:
@@ -123,7 +123,8 @@ class FFSetup(object):
         profile.set_preferences(preferences)
 
         # installing addons
-        LOG.info("Installing Add-ons")
+        LOG.info("Installing Add-ons:")
+        LOG.info(extensions)
         profile.addon_manager.install_addons(extensions)
 
         # installing webextensions
@@ -132,7 +133,7 @@ class FFSetup(object):
             webextensions = [webextensions]
 
         if webextensions is not None:
-            LOG.info("Installing Webextensions")
+            LOG.info("Installing Webextensions:")
             for webext in webextensions:
                 filename = utils.interpolate(webext)
                 if mozinfo.os == 'win':
@@ -141,7 +142,7 @@ class FFSetup(object):
                     continue
                 if not os.path.exists(filename):
                     continue
-
+                LOG.info(filename)
                 profile.addon_manager.install_from_path(filename)
 
     def _run_profile(self):

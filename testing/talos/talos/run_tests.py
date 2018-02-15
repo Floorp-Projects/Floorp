@@ -101,7 +101,11 @@ def run_tests(config, browser_config):
         # Build command line from config
         for path in paths:
             if test.get(path):
-                test[path] = utils.interpolate(test[path])
+                if path == 'extensions':
+                    for _index, _ext in enumerate(test['extensions']):
+                        test['extensions'][_index] = utils.interpolate(_ext)
+                else:
+                    test[path] = utils.interpolate(test[path])
         if test.get('tpmanifest'):
             test['tpmanifest'] = \
                 os.path.normpath('file:/%s' % (urllib.quote(test['tpmanifest'],
