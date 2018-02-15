@@ -114,6 +114,10 @@ const BrowserListener = {
         this.unblockParser();
         this.blockingPromise = null;
       }
+    } else if (name === "Extension:GrabFocus") {
+      content.window.requestAnimationFrame(() => {
+        Services.focus.focusedWindow = content.window;
+      });
     }
   },
 
@@ -304,6 +308,7 @@ const BrowserListener = {
 
 addMessageListener("Extension:InitBrowser", BrowserListener);
 addMessageListener("Extension:UnblockParser", BrowserListener);
+addMessageListener("Extension:GrabFocus", BrowserListener);
 
 var WebBrowserChrome = {
   onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab) {
