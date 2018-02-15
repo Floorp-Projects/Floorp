@@ -239,7 +239,7 @@ NotifyDidRender(layers::CompositorBridgeParentBase* aBridge,
 }
 
 void
-RenderThread::UpdateAndRender(wr::WindowId aWindowId)
+RenderThread::UpdateAndRender(wr::WindowId aWindowId, bool aReadback)
 {
   AUTO_PROFILER_TRACING("Paint", "Composite");
   MOZ_ASSERT(IsInRenderThread());
@@ -253,7 +253,7 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId)
   auto& renderer = it->second;
   TimeStamp start = TimeStamp::Now();
 
-  bool ret = renderer->UpdateAndRender();
+  bool ret = renderer->UpdateAndRender(aReadback);
   if (!ret) {
     // Render did not happen, do not call NotifyDidRender.
     return;
