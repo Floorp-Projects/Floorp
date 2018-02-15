@@ -829,13 +829,6 @@ class motionmark_htmlsuite(WebkitBenchmark):
 
 
 @register_test()
-class JetStream(WebkitBenchmark):
-    # JetStream benchmark used by many browser vendors (from webkit)
-    tpmanifest = '${talos}/tests/jetstream/jetstream.manifest'
-    tppagecycles = 1
-
-
-@register_test()
 class perf_reftest(PageloaderTest):
     """
     Style perf-reftest a set of tests where the result is the difference of base vs ref pages
