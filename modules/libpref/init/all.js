@@ -1430,7 +1430,7 @@ pref("privacy.reduceTimerPrecision", true);
 // Dynamically tune the resolution of the timer reduction for both of the two above prefs
 pref("privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 2000);
 // Enable jittering the clock one precision value forward
-pref("privacy.resistFingerprinting.reduceTimerPrecision.jitter", false);
+pref("privacy.resistFingerprinting.reduceTimerPrecision.jitter", true);
 // Lower the priority of network loads for resources on the tracking protection list.
 // Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
 #ifdef NIGHTLY_BUILD
