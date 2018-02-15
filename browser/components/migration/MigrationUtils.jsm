@@ -1042,19 +1042,6 @@ this.MigrationUtils = Object.freeze({
     return PlacesUtils.asyncHistory.updatePlaces(places, options, true);
   },
 
-  insertLoginWrapper(login) {
-    this._importQuantities.logins++;
-    let insertedLogin = LoginHelper.maybeImportLogin(login);
-    // Note that this means that if we import a login that has a newer password
-    // than we know about, we will update the login, and an undo of the import
-    // will not revert this. This seems preferable over removing the login
-    // outright or storing the old password in the undo file.
-    if (insertedLogin && gKeepUndoData) {
-      let {guid, timePasswordChanged} = insertedLogin;
-      gUndoData.get("logins").push({guid, timePasswordChanged});
-    }
-  },
-
   async insertLoginsWrapper(logins) {
     this._importQuantities.logins += logins.length;
     let inserted = await LoginHelper.maybeImportLogins(logins);
