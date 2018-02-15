@@ -732,6 +732,8 @@ ProfilingFrameIterator::initFromExitFP(const Frame* fp)
       case CodeRange::InterpEntry:
         callerPC_ = nullptr;
         callerFP_ = nullptr;
+        codeRange_ = nullptr;
+        exitReason_ = ExitReason(ExitReason::Fixed::FakeInterpEntry);
         break;
       case CodeRange::JitEntry:
         callerPC_ = nullptr;
@@ -1002,6 +1004,11 @@ ProfilingFrameIterator::ProfilingFrameIterator(const JitActivation& activation,
     if (unwindState.codeRange->isJitEntry())
         unwoundIonCallerFP_ = (uint8_t*) callerFP_;
 
+    if (unwindState.codeRange->isInterpEntry()) {
+        unwindState.codeRange = nullptr;
+        exitReason_ = ExitReason(ExitReason::Fixed::FakeInterpEntry);
+    }
+
     code_ = unwindState.code;
     codeRange_ = unwindState.codeRange;
     stackAddress_ = state.sp;
@@ -1012,9 +1019,10 @@ void
 ProfilingFrameIterator::operator++()
 {
     if (!exitReason_.isNone()) {
-        MOZ_ASSERT(codeRange_);
+        DebugOnly<ExitReason> prevExitReason = exitReason_;
         exitReason_ = ExitReason::None();
-        MOZ_ASSERT(!done());
+        MOZ_ASSERT(!codeRange_ == prevExitReason.value.isInterpEntry());
+        MOZ_ASSERT(done() == prevExitReason.value.isInterpEntry());
         return;
     }
 
@@ -1035,8 +1043,10 @@ ProfilingFrameIterator::operator++()
     }
 
     if (!callerFP_) {
-        MOZ_ALWAYS_TRUE(LookupCode(callerPC_, &codeRange_) == code_);
+        MOZ_ASSERT(LookupCode(callerPC_, &codeRange_) == code_);
         MOZ_ASSERT(codeRange_->kind() == CodeRange::InterpEntry);
+        exitReason_ = ExitReason(ExitReason::Fixed::FakeInterpEntry);
+        codeRange_ = nullptr;
         callerPC_ = nullptr;
         MOZ_ASSERT(!done());
         return;
@@ -1225,11 +1235,13 @@ ProfilingFrameIterator::label() const
         return trapDescription;
       case ExitReason::Fixed::DebugTrap:
         return debugTrapDescription;
+      case ExitReason::Fixed::FakeInterpEntry:
+        return "slow entry trampoline (in wasm)";
     }
 
     switch (codeRange_->kind()) {
       case CodeRange::Function:          return code_->profilingLabel(codeRange_->funcIndex());
-      case CodeRange::InterpEntry:       return "slow entry trampoline (in wasm)";
+      case CodeRange::InterpEntry:       MOZ_CRASH("should be an ExitReason");
       case CodeRange::JitEntry:          return "fast entry trampoline (in wasm)";
       case CodeRange::ImportJitExit:     return importJitDescription;
       case CodeRange::BuiltinThunk:      return builtinNativeDescription;
