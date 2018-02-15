@@ -43,7 +43,6 @@ module.exports = {
     // XXX Bug 1421969. These files/directories are still being fixed,
     // so turn off mozilla/use-services for them for now.
     "files": [
-      "devtools/**",
       "extensions/pref/**",
       "mobile/android/**",
       "testing/**",

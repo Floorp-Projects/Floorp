@@ -4,16 +4,14 @@
 
 "use strict";
 
-const { Cc, Ci } = require("chrome");
 const Services = require("Services");
 const l10n = require("gcli/l10n");
 const { DevToolsLoader } = require("resource://devtools/shared/Loader.jsm");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
-const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"]
-                           .getService(Ci.nsIStringBundleService)
-                           .createBundle("chrome://branding/locale/brand.properties")
-                           .GetStringFromName("brandShortName");
+const BRAND_SHORT_NAME =
+  Services.strings.createBundle("chrome://branding/locale/brand.properties")
+                  .GetStringFromName("brandShortName");
 
 XPCOMUtils.defineLazyGetter(this, "debuggerServer", () => {
   // Create a separate loader instance, so that we can be sure to receive
