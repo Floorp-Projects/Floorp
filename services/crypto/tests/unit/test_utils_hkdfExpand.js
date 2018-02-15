@@ -101,6 +101,32 @@ function hkdf_hex(ikm, salt, info, len) {
   return CommonUtils.bytesAsHex(CryptoUtils.hkdf(ikm, salt, info, len));
 }
 
+// In bug 1437416 we thought we supplied a default for the salt but
+// actually ended up calling the platform c++ code with undefined as the
+// salt - which still ended up doing the right thing. Let's try and
+// codify that behaviour.
+let hkdf_tc1 = {
+  ikm: "foo",
+  info: "bar",
+  salt: undefined,
+  len: 64,
+  // As all inputs are known, we can pre-calculate the expected result:
+  // >>> tokenlib.utils.HKDF("foo", None, "bar", 64).encode("hex")
+  // 'f037f3ab189f485d0d93249f432def681a0305e39ef85f810e2f0b74d2078861fbd34318934b49de822c6148c8bb0785613e4b01176b47634e25eecd5e94ff3b'
+  result: "f037f3ab189f485d0d93249f432def681a0305e39ef85f810e2f0b74d2078861fbd34318934b49de822c6148c8bb0785613e4b01176b47634e25eecd5e94ff3b",
+};
+
+// same inputs, but this time with the default salt explicitly defined.
+// should give the same result.
+let hkdf_tc2 = {
+  ikm: "foo",
+  info: "bar",
+  salt: String.fromCharCode(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+  len: 64,
+  result: hkdf_tc1.result,
+};
+
 function run_test() {
   _("Verifying Test Case 1");
   Assert.equal(extract_hex(tc1.salt, tc1.IKM), tc1.PRK);
@@ -117,4 +143,10 @@ function run_test() {
   Assert.equal(expand_hex(tc3.PRK, tc3.info, tc3.L), tc3.OKM);
   Assert.equal(hkdf_hex(tc3.IKM, tc3.salt, tc3.info, tc3.L), tc3.OKM);
   Assert.equal(hkdf_hex(tc3.IKM, undefined, tc3.info, tc3.L), tc3.OKM);
+
+  _("Verifying hkdf semantics");
+  for (let tc of [hkdf_tc1, hkdf_tc2]) {
+    let result = CommonUtils.bytesAsHex(CryptoUtils.hkdf(tc.ikm, tc.salt, tc.info, tc.len));
+    Assert.equal(result, tc.result);
+  }
 }
