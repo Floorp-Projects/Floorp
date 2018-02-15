@@ -222,7 +222,7 @@ private:
   TreeNode First(TreeNode aStart)
   {
     TreeNode ret;
-    for (ret = aStart ? aStart : mRoot; ret && ret.Left(); ret = ret.Left()) {
+    for (ret = aStart ? aStart : mRoot; ret.Left(); ret = ret.Left()) {
     }
     return ret;
   }
@@ -230,7 +230,7 @@ private:
   TreeNode Last(TreeNode aStart)
   {
     TreeNode ret;
-    for (ret = aStart ? aStart : mRoot; ret && ret.Right(); ret = ret.Right()) {
+    for (ret = aStart ? aStart : mRoot; ret.Right(); ret = ret.Right()) {
     }
     return ret;
   }
@@ -338,8 +338,8 @@ private:
     // the tree, assuming a sufficiently deep tree.
     while (rbp_i_c) {
       rbp_i_t = rbp_i_c.Left();
-      rbp_i_u = rbp_i_t ? rbp_i_t.Left() : nullptr;
-      if (rbp_i_t && rbp_i_u && rbp_i_t.IsRed() && rbp_i_u.IsRed()) {
+      rbp_i_u = rbp_i_t.Left();
+      if (rbp_i_t.IsRed() && rbp_i_u.IsRed()) {
         // rbp_i_c is the top of a logical 4-node, so split it.
         // This iteration does not move down the tree, due to the
         // disruptiveness of node splitting.
@@ -427,8 +427,8 @@ private:
     rbp_r_cmp = Trait::Compare(aNode.Get(), rbp_r_c.Get());
     if (rbp_r_cmp == Order::eLess) {
       rbp_r_t = rbp_r_c.Left();
-      rbp_r_u = rbp_r_t ? rbp_r_t.Left() : nullptr;
-      if ((!rbp_r_t || rbp_r_t.IsBlack()) && (!rbp_r_u || rbp_r_u.IsBlack())) {
+      rbp_r_u = rbp_r_t.Left();
+      if (rbp_r_t.IsBlack() && rbp_r_u.IsBlack()) {
         // Apply standard transform to prepare for left move.
         rbp_r_t = MoveRedLeft(rbp_r_c);
         rbp_r_t.SetColor(NodeColor::Black);
@@ -461,8 +461,7 @@ private:
         }
       }
       if (rbp_r_cmp == Order::eGreater) {
-        if (!rbp_r_c.Right() || !rbp_r_c.Right().Left() ||
-            rbp_r_c.Right().Left().IsBlack()) {
+        if (rbp_r_c.Right().Left().IsBlack()) {
           rbp_r_t = rbp_r_c.Left();
           if (rbp_r_t.IsRed()) {
             // Standard transform.
@@ -471,7 +470,7 @@ private:
             // Root-specific transform.
             rbp_r_c.SetColor(NodeColor::Red);
             rbp_r_u = rbp_r_t.Left();
-            if (rbp_r_u && rbp_r_u.IsRed()) {
+            if (rbp_r_u.IsRed()) {
               rbp_r_u.SetColor(NodeColor::Black);
               rbp_r_t = RotateRight(rbp_r_c);
               rbp_r_u = RotateLeft(rbp_r_c);
@@ -518,7 +517,7 @@ private:
             break;
           }
           rbp_r_u = rbp_r_t.Left();
-          if (rbp_r_t.IsBlack() && (!rbp_r_u || rbp_r_u.IsBlack())) {
+          if (rbp_r_t.IsBlack() && rbp_r_u.IsBlack()) {
             rbp_r_t = MoveRedLeft(rbp_r_c);
             if (rbp_r_p.Left() == rbp_r_c) {
               rbp_r_p.SetLeft(rbp_r_t);
@@ -559,7 +558,7 @@ private:
           }
           rbp_r_t = rbp_r_c.Right();
           rbp_r_u = rbp_r_t.Left();
-          if (!rbp_r_u || rbp_r_u.IsBlack()) {
+          if (rbp_r_u.IsBlack()) {
             rbp_r_t = MoveRedRight(rbp_r_c);
             if (rbp_r_p.Left() == rbp_r_c) {
               rbp_r_p.SetLeft(rbp_r_t);
@@ -619,13 +618,13 @@ private:
     rbp_mrl_t = aNode.Left();
     rbp_mrl_t.SetColor(NodeColor::Red);
     rbp_mrl_t = aNode.Right();
-    rbp_mrl_u = rbp_mrl_t ? rbp_mrl_t.Left() : nullptr;
-    if (rbp_mrl_u && rbp_mrl_u.IsRed()) {
+    rbp_mrl_u = rbp_mrl_t.Left();
+    if (rbp_mrl_u.IsRed()) {
       rbp_mrl_u = RotateRight(rbp_mrl_t);
       aNode.SetRight(rbp_mrl_u);
       node = RotateLeft(aNode);
       rbp_mrl_t = aNode.Right();
-      if (rbp_mrl_t && rbp_mrl_t.IsRed()) {
+      if (rbp_mrl_t.IsRed()) {
         rbp_mrl_t.SetColor(NodeColor::Black);
         aNode.SetColor(NodeColor::Red);
         rbp_mrl_t = RotateLeft(aNode);
@@ -645,11 +644,11 @@ private:
     TreeNode node;
     TreeNode rbp_mrr_t;
     rbp_mrr_t = aNode.Left();
-    if (rbp_mrr_t && rbp_mrr_t.IsRed()) {
+    if (rbp_mrr_t.IsRed()) {
       TreeNode rbp_mrr_u, rbp_mrr_v;
       rbp_mrr_u = rbp_mrr_t.Right();
-      rbp_mrr_v = rbp_mrr_u ? rbp_mrr_u.Left() : nullptr;
-      if (rbp_mrr_v && rbp_mrr_v.IsRed()) {
+      rbp_mrr_v = rbp_mrr_u.Left();
+      if (rbp_mrr_v.IsRed()) {
         rbp_mrr_u.SetColor(aNode.Color());
         rbp_mrr_v.SetColor(NodeColor::Black);
         rbp_mrr_u = RotateLeft(rbp_mrr_t);
@@ -668,7 +667,7 @@ private:
     } else {
       rbp_mrr_t.SetColor(NodeColor::Red);
       rbp_mrr_t = rbp_mrr_t.Left();
-      if (rbp_mrr_t && rbp_mrr_t.IsRed()) {
+      if (rbp_mrr_t.IsRed()) {
         rbp_mrr_t.SetColor(NodeColor::Black);
         node = RotateRight(aNode);
         rbp_mrr_t = RotateLeft(aNode);
