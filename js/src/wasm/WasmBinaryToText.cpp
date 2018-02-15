@@ -751,6 +751,33 @@ RenderConversionOperator(WasmRenderContext& c, AstConversionOperator& conv)
 }
 
 static bool
+RenderExtraConversionOperator(WasmRenderContext& c, AstExtraConversionOperator& conv)
+{
+    if (!RenderExpr(c, *conv.operand()))
+        return false;
+
+    if (!RenderIndent(c))
+        return false;
+
+    MAP_AST_EXPR(c, conv);
+    const char* opStr;
+    switch (conv.op()) {
+#ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
+      case NumericOp::I32TruncSSatF32:   opStr = "i32.trunc_s:sat/f32"; break;
+      case NumericOp::I32TruncUSatF32:   opStr = "i32.trunc_u:sat/f32"; break;
+      case NumericOp::I32TruncSSatF64:   opStr = "i32.trunc_s:sat/f64"; break;
+      case NumericOp::I32TruncUSatF64:   opStr = "i32.trunc_u:sat/f64"; break;
+      case NumericOp::I64TruncSSatF32:   opStr = "i64.trunc_s:sat/f32"; break;
+      case NumericOp::I64TruncUSatF32:   opStr = "i64.trunc_u:sat/f32"; break;
+      case NumericOp::I64TruncSSatF64:   opStr = "i64.trunc_s:sat/f64"; break;
+      case NumericOp::I64TruncUSatF64:   opStr = "i64.trunc_u:sat/f64"; break;
+#endif
+      default:                      return Fail(c, "unexpected extra conversion operator");
+    }
+    return c.buffer.append(opStr, strlen(opStr));
+}
+
+static bool
 RenderIf(WasmRenderContext& c, AstIf& if_)
 {
     if (!RenderExpr(c, if_.cond()))
@@ -1327,6 +1354,12 @@ RenderExpr(WasmRenderContext& c, AstExpr& expr, bool newLine /* = true */)
         if (!RenderConversionOperator(c, expr.as<AstConversionOperator>()))
             return false;
         break;
+#ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
+      case AstExprKind::ExtraConversionOperator:
+        if (!RenderExtraConversionOperator(c, expr.as<AstExtraConversionOperator>()))
+            return false;
+        break;
+#endif
       case AstExprKind::Load:
         if (!RenderLoad(c, expr.as<AstLoad>()))
             return false;

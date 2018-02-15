@@ -240,6 +240,24 @@ wasm::Classify(OpBytes op)
         return OpKind::CurrentMemory;
       case Op::GrowMemory:
         return OpKind::GrowMemory;
+      case Op::NumericPrefix: {
+#ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
+          switch (NumericOp(op.b1)) {
+            case NumericOp::I32TruncSSatF32:
+            case NumericOp::I32TruncUSatF32:
+            case NumericOp::I32TruncSSatF64:
+            case NumericOp::I32TruncUSatF64:
+            case NumericOp::I64TruncSSatF32:
+            case NumericOp::I64TruncUSatF32:
+            case NumericOp::I64TruncSSatF64:
+            case NumericOp::I64TruncUSatF64:
+              return OpKind::Conversion;
+            default:
+              break;
+          }
+#endif
+          break;
+      }
       case Op::ThreadPrefix: {
 #ifdef ENABLE_WASM_THREAD_OPS
           switch (ThreadOp(op.b1)) {

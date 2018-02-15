@@ -985,7 +985,8 @@ MacroAssembler::atomicFetchOp64(const Synchronization&, AtomicOp op, const Addre
 }
 
 void
-MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry)
+MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output, bool isSaturating,
+                                           Label* oolEntry)
 {
     Label done;
     vcvttsd2si(input, output);
@@ -1002,7 +1003,8 @@ MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output,
 }
 
 void
-MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, Label* oolEntry)
+MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, bool isSaturating,
+                                            Label* oolEntry)
 {
     Label done;
     vcvttss2si(input, output);
@@ -1019,8 +1021,8 @@ MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output
 }
 
 void
-MacroAssembler::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, Label* oolEntry,
-                                          Label* oolRejoin, FloatRegister tempReg)
+MacroAssembler::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, bool isSaturating,
+                                          Label* oolEntry, Label* oolRejoin, FloatRegister tempReg)
 {
     Label fail, convert;
     Register temp = output.high;
@@ -1049,8 +1051,9 @@ MacroAssembler::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output
 }
 
 void
-MacroAssembler::wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, Label* oolEntry,
-                                           Label* oolRejoin, FloatRegister tempReg)
+MacroAssembler::wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output,
+                                           bool isSaturating,
+                                           Label* oolEntry, Label* oolRejoin, FloatRegister tempReg)
 {
     Label fail, convert;
     Register temp = output.high;
@@ -1079,7 +1082,8 @@ MacroAssembler::wasmTruncateFloat32ToInt64(FloatRegister input, Register64 outpu
 }
 
 void
-MacroAssembler::wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
+MacroAssembler::wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output,
+                                           bool isSaturating, Label* oolEntry,
                                            Label* oolRejoin, FloatRegister tempReg)
 {
     Label fail, convert;
@@ -1109,7 +1113,8 @@ MacroAssembler::wasmTruncateDoubleToUInt64(FloatRegister input, Register64 outpu
 }
 
 void
-MacroAssembler::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
+MacroAssembler::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output,
+                                            bool isSaturating, Label* oolEntry,
                                             Label* oolRejoin, FloatRegister tempReg)
 {
     Label fail, convert;

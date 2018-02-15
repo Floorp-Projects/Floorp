@@ -705,6 +705,27 @@ AstDecodeConversion(AstDecodeContext& c, ValType fromType, ValType toType, Op op
     return true;
 }
 
+#ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
+static bool
+AstDecodeExtraConversion(AstDecodeContext& c, ValType fromType, ValType toType, NumericOp op)
+{
+    if (!c.iter().readConversion(fromType, toType, nullptr))
+        return false;
+
+    AstDecodeStackItem operand = c.popCopy();
+
+    AstExtraConversionOperator* conversion =
+        new(c.lifo) AstExtraConversionOperator(op, operand.expr);
+    if (!conversion)
+        return false;
+
+    if (!c.push(AstDecodeStackItem(conversion)))
+        return false;
+
+    return true;
+}
+#endif
+
 static AstLoadStoreAddress
 AstDecodeLoadStoreAddress(const LinearMemoryAddress<Nothing>& addr, const AstDecodeStackItem& item)
 {
@@ -1640,6 +1661,34 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!c.push(AstDecodeStackItem(tmp)))
             return false;
         break;
+#ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
+      case uint16_t(Op::NumericPrefix):
+        switch (op.b1) {
+          case uint16_t(NumericOp::I32TruncSSatF32):
+          case uint16_t(NumericOp::I32TruncUSatF32):
+            if (!AstDecodeExtraConversion(c, ValType::F32, ValType::I32, NumericOp(op.b1)))
+                return false;
+            break;
+          case uint16_t(NumericOp::I32TruncSSatF64):
+          case uint16_t(NumericOp::I32TruncUSatF64):
+            if (!AstDecodeExtraConversion(c, ValType::F64, ValType::I32, NumericOp(op.b1)))
+                return false;
+            break;
+          case uint16_t(NumericOp::I64TruncSSatF32):
+          case uint16_t(NumericOp::I64TruncUSatF32):
+            if (!AstDecodeExtraConversion(c, ValType::F32, ValType::I64, NumericOp(op.b1)))
+                return false;
+            break;
+          case uint16_t(NumericOp::I64TruncSSatF64):
+          case uint16_t(NumericOp::I64TruncUSatF64):
+            if (!AstDecodeExtraConversion(c, ValType::F64, ValType::I64, NumericOp(op.b1)))
+                return false;
+            break;
+          default:
+            return c.iter().unrecognizedOpcode(&op);
+        }
+        break;
+#endif
       case uint16_t(Op::ThreadPrefix):
         switch (op.b1) {
           case uint16_t(ThreadOp::Wake):
