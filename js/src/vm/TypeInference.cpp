@@ -34,7 +34,7 @@
 #include "vm/Time.h"
 #include "vm/UnboxedObject.h"
 
-#include "gc/Iteration-inl.h"
+#include "gc/GCIteration-inl.h"
 #include "gc/Marking-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSScript-inl.h"

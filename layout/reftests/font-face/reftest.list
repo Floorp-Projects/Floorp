@@ -192,3 +192,16 @@ fuzzy-if(OSX==1010,3,5) HTTP(..) == font-display-2.html font-display-2-ref.html 
 != meiryo-en-oblique.html meiryo-en.html
 != meiryo-en-bolditalic.html meiryo-en.html
 != meiryo-en-bolditalic.html meiryo-en-bold.html
+
+# test support of variation-font format hints
+default-preferences pref(layout.css.font-variations.enabled,false)
+== variation-format-hint-1a.html variation-format-hint-1A-ref.html
+== variation-format-hint-1b.html variation-format-hint-1A-ref.html
+== variation-format-hint-1c.html variation-format-hint-1A-ref.html
+== variation-format-hint-1d.html variation-format-hint-1A-ref.html
+default-preferences pref(layout.css.font-variations.enabled,true)
+== variation-format-hint-1a.html variation-format-hint-1B-ttf-ref.html
+== variation-format-hint-1b.html variation-format-hint-1B-otf-ref.html
+== variation-format-hint-1c.html variation-format-hint-1B-woff-ref.html
+== variation-format-hint-1d.html variation-format-hint-1B-woff2-ref.html
+default-preferences

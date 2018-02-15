@@ -31,6 +31,7 @@
 #include "builtin/Promise.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
+#include "gc/Iteration.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/arm64/vixl/Simulator-vixl.h"
 #include "jit/JitCompartment.h"

@@ -241,16 +241,38 @@ const mockSiteDataManager = {
     });
   },
 
-  register(SiteDataManager) {
+  register(SiteDataManager, fakeSites) {
     this._SiteDataManager = SiteDataManager;
     this._originalQMS = this._SiteDataManager._qms;
     this._SiteDataManager._qms = this;
     this._originalRemoveQuotaUsage = this._SiteDataManager._removeQuotaUsage;
     this._SiteDataManager._removeQuotaUsage = this._removeQuotaUsage.bind(this);
-    this.fakeSites = null;
+    // Add some fake data.
+    this.fakeSites = fakeSites;
+    for (let site of fakeSites) {
+      if (!site.principal) {
+        site.principal = Services.scriptSecurityManager
+          .createCodebasePrincipalFromOrigin(site.origin);
+      }
+
+      let uri = site.principal.URI;
+      try {
+        site.baseDomain = Services.eTLD.getBaseDomainFromHost(uri.host);
+      } catch (e) {
+        site.baseDomain = uri.host;
+      }
+
+      // Add some cookies if needed.
+      for (let i = 0; i < (site.cookies || 0); i++) {
+        Services.cookies.add(uri.host, uri.pathQueryRef, Cu.now(), i,
+          false, false, false, Date.now() + 1000 * 60 * 60);
+      }
+    }
   },
 
   unregister() {
+    this.fakeSites = null;
+    this._SiteDataManager.removeAll();
     this._SiteDataManager._qms = this._originalQMS;
     this._SiteDataManager._removeQuotaUsage = this._originalRemoveQuotaUsage;
   }

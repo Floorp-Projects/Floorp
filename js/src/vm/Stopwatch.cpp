@@ -16,6 +16,7 @@
 
 #include "jswin.h"
 
+#include "gc/Iteration.h"
 #include "vm/JSCompartment.h"
 #include "vm/Runtime.h"
 

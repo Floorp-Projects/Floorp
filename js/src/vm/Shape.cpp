@@ -15,6 +15,7 @@
 #include "jshashutil.h"
 
 #include "gc/FreeOp.h"
+#include "gc/Iteration.h"
 #include "gc/Policy.h"
 #include "js/HashTable.h"
 #include "vm/JSAtom.h"

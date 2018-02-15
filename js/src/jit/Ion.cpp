@@ -54,7 +54,7 @@
 #include "vm/TraceLogging.h"
 #include "vtune/VTuneWrapper.h"
 
-#include "gc/Iteration-inl.h"
+#include "gc/GCIteration-inl.h"
 #include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
@@ -339,7 +339,7 @@ JitRuntime::initialize(JSContext* cx, AutoLockForExclusiveAccess& lock)
 
     Linker linker(masm);
     AutoFlushICache afc("Trampolines");
-    trampolineCode_ = linker.newCode<NoGC>(cx, OTHER_CODE);
+    trampolineCode_ = linker.newCode<NoGC>(cx, CodeKind::Other);
     if (!trampolineCode_)
         return false;
 

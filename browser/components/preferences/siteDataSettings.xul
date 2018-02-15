@@ -12,7 +12,7 @@
 <!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/siteDataSettings.dtd" >
 
 <window id="SiteDataSettingsDialog" windowtype="Browser:SiteDataSettings"
-        class="windowDialog" title="&window.title;"
+        class="windowDialog" title="&window1.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 45em;"
         onload="gSiteDataSettings.init();"
@@ -39,6 +39,7 @@
       <listheader>
         <treecol flex="4" width="50" label="&hostCol.label;" id="hostCol"/>
         <treecol flex="2" width="50" label="&statusCol.label;" id="statusCol"/>
+        <treecol flex="1" width="50" label="&cookiesCol.label;" id="cookiesCol"/>
         <!-- Sorted by usage so the user can quickly see which sites use the most data. -->
         <treecol flex="1" width="50" label="&usageCol.label;" id="usageCol" data-isCurrentSortCol="true"/>
       </listheader>

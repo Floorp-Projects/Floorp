@@ -976,10 +976,13 @@ class LControlInstructionHelper : public LInstructionHelper<0, Operands, Temps> 
 
     mozilla::Array<MBasicBlock*, Succs> successors_;
 
-  public:
-    virtual size_t numSuccessors() const final override { return Succs; }
+  protected:
+    LControlInstructionHelper() {
+        this->setNumSuccessors(Succs);
+    }
 
-    virtual MBasicBlock* getSuccessor(size_t i) const final override {
+  public:
+    MBasicBlock* getSuccessor(size_t i) const {
         return successors_[i];
     }
 
