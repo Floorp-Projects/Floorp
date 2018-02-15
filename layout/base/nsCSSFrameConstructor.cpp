@@ -8583,7 +8583,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
       return true;
     }
 
-    FlattenedChildIterator iter(aChild);
+    StyleChildrenIterator iter(aChild);
     for (nsIContent* c = iter.GetNextChild(); c; c = iter.GetNextChild()) {
       if (c->GetPrimaryFrame() || GetDisplayContentsStyleFor(c)) {
         LAYOUT_PHASE_TEMP_EXIT();

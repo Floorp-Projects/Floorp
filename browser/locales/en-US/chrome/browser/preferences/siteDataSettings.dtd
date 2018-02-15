@@ -2,9 +2,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!ENTITY     window.title                  "Settings - Site Data">
+<!ENTITY     window1.title                 "Settings - Cookies and Site Data">
 <!ENTITY     hostCol.label                 "Site">
 <!ENTITY     statusCol.label               "Status">
+<!ENTITY     cookiesCol.label              "Cookies">
 <!ENTITY     usageCol.label                "Storage">
 <!ENTITY     searchTextboxPlaceHolder             "Search websites">
 <!ENTITY     searchTextboxPlaceHolder.accesskey   "S">
@@ -14,6 +15,6 @@
 <!ENTITY     save.accesskey                "a">
 <!ENTITY     cancel.label                  "Cancel">
 <!ENTITY     cancel.accesskey              "C">
-<!ENTITY     removingDialog.title          "Removing Site Data">
-<!ENTITY     removingSelected.description  "Removing site data will also remove related cookies and offline web content. This may log you out of websites. Are you sure you want to make the changes?">
-<!ENTITY     siteTree2.label               "The following website cookies will be removed">
+<!ENTITY     removingDialog1.title         "Removing Cookies and Site Data">
+<!ENTITY     removingSelected1.description "Removing cookies and site data may log you out of websites. Are you sure you want to make the changes?">
+<!ENTITY     siteTree3.label               "Cookies and site data for the following websites will be removed">

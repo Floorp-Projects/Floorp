@@ -511,6 +511,34 @@ LInstruction::assignSnapshot(LSnapshot* snapshot)
 #endif
 }
 
+#ifdef JS_JITSPEW
+static MBasicBlock*
+GetSuccessorHelper(const LNode* ins, size_t i)
+{
+    MOZ_CRASH("Unexpected instruction with successors");
+}
+
+template <size_t Succs, size_t Operands, size_t Temps>
+static MBasicBlock*
+GetSuccessorHelper(const LControlInstructionHelper<Succs, Operands, Temps>* ins, size_t i)
+{
+    return ins->getSuccessor(i);
+}
+
+static MBasicBlock*
+GetSuccessor(const LInstruction* ins, size_t i)
+{
+    MOZ_ASSERT(i < ins->numSuccessors());
+
+    switch (ins->op()) {
+      default: MOZ_CRASH("Unexpected LIR op");
+# define LIROP(x) case LNode::LOp_##x: return GetSuccessorHelper(ins->to##x(), i);
+    LIR_OPCODE_LIST(LIROP)
+# undef LIROP
+    }
+}
+#endif
+
 void
 LNode::dump(GenericPrinter& out)
 {
@@ -540,16 +568,22 @@ LNode::dump(GenericPrinter& out)
             }
             out.printf(")");
         }
-    }
 
-    if (numSuccessors()) {
-        out.printf(" s=(");
-        for (size_t i = 0; i < numSuccessors(); i++) {
-            out.printf("block%u", getSuccessor(i)->id());
-            if (i != numSuccessors() - 1)
-                out.printf(", ");
+        size_t numSuccessors = ins->numSuccessors();
+        if (numSuccessors > 0) {
+            out.printf(" s=(");
+            for (size_t i = 0; i < numSuccessors; i++) {
+#ifdef JS_JITSPEW
+                MBasicBlock* succ = GetSuccessor(ins, i);
+                out.printf("block%u", succ->id());
+#else
+                out.put("block<unknown>");
+#endif
+                if (i != numSuccessors - 1)
+                    out.printf(", ");
+            }
+            out.printf(")");
         }
-        out.printf(")");
     }
 }
 

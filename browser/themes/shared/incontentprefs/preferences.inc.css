@@ -119,6 +119,10 @@ button > hbox > label {
   border-radius: 0;
 }
 
+.ac-site-icon {
+  display: -moz-box;
+}
+
 /* Subcategory title */
 
 /**

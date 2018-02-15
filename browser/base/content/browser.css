@@ -598,17 +598,31 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
   direction: ltr !important;
 }
 
-/* For non-action items, hide the action text; for action items, hide the URL
-   text. */
-.ac-url[actiontype],
-.ac-action:not([actiontype]) {
-  display: none;
-}
-
 /* Never show a scrollbar for the Location Bar popup.  This overrides the
    richlistbox inline overflow: auto style.*/
 #PopupAutoCompleteRichResult > richlistbox > scrollbox {
   overflow: hidden !important;
+}
+
+/* For non-action items, hide the action text; for action items, hide the URL
+   text. Don't show the separator for keyword results. */
+#PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-type-icon,
+#PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-site-icon,
+#PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-tags:not([empty]),
+#PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-separator:not([type=keyword]),
+#PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-url:not([actiontype]),
+#PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-action[actiontype] {
+  display: -moz-box;
+}
+
+/* Only show the "Search with" label on hover or selection. */
+#PopupAutoCompleteRichResult > richlistbox > richlistitem:not([selected]):not(:hover) > .ac-action[actiontype=searchengine],
+#PopupAutoCompleteRichResult > richlistbox > richlistitem:not([selected]):not(:hover) > .ac-separator[actiontype=searchengine] {
+  display: none;
+}
+
+#PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-site-icon {
+  margin-inline-start: 0;
 }
 
 /* For action items in a noactions popup, show the URL text and hide the action
@@ -629,14 +643,6 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
   display: none;
 }
 
-#PopupAutoComplete > richlistbox > richlistitem > .ac-type-icon,
-#PopupAutoComplete > richlistbox > richlistitem > .ac-site-icon,
-#PopupAutoComplete > richlistbox > richlistitem > .ac-tags,
-#PopupAutoComplete > richlistbox > richlistitem > .ac-separator,
-#PopupAutoComplete > richlistbox > richlistitem > .ac-url {
-  display: none;
-}
-
 #PopupAutoComplete[firstresultstyle="insecureWarning"] {
   min-width: 200px;
 }
@@ -647,6 +653,7 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-site-icon {
+  margin-inline-start: 0;
   display: initial;
 }
 

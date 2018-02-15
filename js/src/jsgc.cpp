@@ -241,8 +241,8 @@
 #include "vm/TraceLogging.h"
 #include "vm/WrapperObject.h"
 
+#include "gc/GCIteration-inl.h"
 #include "gc/Heap-inl.h"
-#include "gc/Iteration-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
 #include "vm/GeckoProfiler-inl.h"
@@ -7802,7 +7802,7 @@ js::gc::FinishGC(JSContext* cx)
         group->nursery().waitBackgroundFreeEnd();
 }
 
-AutoPrepareForTracing::AutoPrepareForTracing(JSContext* cx, ZoneSelector selector)
+AutoPrepareForTracing::AutoPrepareForTracing(JSContext* cx)
 {
     js::gc::FinishGC(cx);
     session_.emplace(cx->runtime());

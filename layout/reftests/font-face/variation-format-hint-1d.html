@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+
+<style>
+@font-face {
+  font-family: test;
+  /* this should load markB if variation font support is enabled,
+     and markA otherwise */
+  src: url(../fonts/markB.woff2) format("woff2-variations"),
+       url(../fonts/markA.woff);
+}
+div {
+  font-family: test, serif;
+  font-size: 50px;
+  line-height: 2em;
+}
+</style>
+
+<div>
+ABC
+</div>

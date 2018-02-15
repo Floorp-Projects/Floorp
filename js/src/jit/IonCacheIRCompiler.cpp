@@ -601,7 +601,7 @@ IonCacheIRCompiler::compile()
 
     Linker linker(masm);
     AutoFlushICache afc("getStubCode");
-    Rooted<JitCode*> newStubCode(cx_, linker.newCode<NoGC>(cx_, ION_CODE));
+    Rooted<JitCode*> newStubCode(cx_, linker.newCode<NoGC>(cx_, CodeKind::Ion));
     if (!newStubCode) {
         cx_->recoverFromOutOfMemory();
         return nullptr;

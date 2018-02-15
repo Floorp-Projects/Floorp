@@ -400,6 +400,7 @@ async function waitForLoadedScopes(dbg) {
   // with the aria-level attribute equal to "1".
   await waitUntil(() => scopes.querySelector(`.tree-node[aria-level="1"]`));
 }
+
 /**
  * Waits for the debugger to be fully paused.
  *
@@ -698,17 +699,17 @@ function navigate(dbg, url, ...sources) {
  * @return {Promise}
  * @static
  */
-function addBreakpoint(dbg, source, line, col) {
+function addBreakpoint(dbg, source, line, column) {
   source = findSource(dbg, source);
   const sourceId = source.id;
-  dbg.actions.addBreakpoint({ sourceId, line, col });
+  dbg.actions.addBreakpoint({ sourceId, line, column });
   return waitForDispatch(dbg, "ADD_BREAKPOINT");
 }
 
-function disableBreakpoint(dbg, source, line, col) {
+function disableBreakpoint(dbg, source, line, column) {
   source = findSource(dbg, source);
   const sourceId = source.id;
-  dbg.actions.disableBreakpoint({ sourceId, line, col });
+  dbg.actions.disableBreakpoint({ sourceId, line, column });
   return waitForDispatch(dbg, "DISABLE_BREAKPOINT");
 }
 
@@ -723,8 +724,9 @@ function disableBreakpoint(dbg, source, line, col) {
  * @return {Promise}
  * @static
  */
-function removeBreakpoint(dbg, sourceId, line, col) {
-  return dbg.actions.removeBreakpoint({ sourceId, line, col });
+function removeBreakpoint(dbg, sourceId, line, column) {
+  dbg.actions.removeBreakpoint({ sourceId, line, column });
+  return waitForDispatch(dbg, "REMOVE_BREAKPOINT");
 }
 
 /**
@@ -932,6 +934,8 @@ const selectors = {
   stepOver: ".stepOver.active",
   stepOut: ".stepOut.active",
   stepIn: ".stepIn.active",
+  replayPrevious: ".replay-previous.active",
+  replayNext: ".replay-next.active",
   toggleBreakpoints: ".breakpoints-toggle",
   prettyPrintButton: ".source-footer .prettyPrint",
   sourceMapLink: ".source-footer .mapped-source",

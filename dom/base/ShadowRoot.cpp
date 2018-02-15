@@ -301,6 +301,8 @@ ShadowRoot::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
   aVisitor.mRootOfClosedTree = IsClosed();
+  // Inform that we're about to exit the current scope.
+  aVisitor.mRelatedTargetRetargetedInCurrentScope = false;
 
   // https://dom.spec.whatwg.org/#ref-for-get-the-parent%E2%91%A6
   if (!aVisitor.mEvent->mFlags.mComposed) {
@@ -323,12 +325,10 @@ ShadowRoot::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   nsIContent* shadowHost = GetHost();
   aVisitor.SetParentTarget(shadowHost, false);
 
-  if (aVisitor.mOriginalTargetIsInAnon) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mEvent->mTarget));
-    if (content && content->GetBindingParent() == shadowHost) {
-      aVisitor.mEventTargetAtParent = shadowHost;
-    }
- }
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mEvent->mTarget));
+  if (content && content->GetBindingParent() == shadowHost) {
+    aVisitor.mEventTargetAtParent = shadowHost;
+  }
 
   return NS_OK;
 }
