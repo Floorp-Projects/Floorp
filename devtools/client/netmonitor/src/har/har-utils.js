@@ -11,11 +11,6 @@ const { Ci, Cc, CC } = require("chrome");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const { gDevTools } = require("devtools/client/framework/devtools");
 
-XPCOMUtils.defineLazyGetter(this, "dirService", function () {
-  return Cc["@mozilla.org/file/directory_service;1"]
-    .getService(Ci.nsIProperties);
-});
-
 XPCOMUtils.defineLazyGetter(this, "ZipWriter", function () {
   return CC("@mozilla.org/zipwriter;1", "nsIZipWriter");
 });
@@ -159,7 +154,7 @@ var HarUtils = {
     let dir;
 
     if (!path) {
-      dir = dirService.get("ProfD", Ci.nsIFile);
+      dir = Services.dirsvc.get("ProfD", Ci.nsIFile);
       dir.append("har");
       dir.append("logs");
     } else {

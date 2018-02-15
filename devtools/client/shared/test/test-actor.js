@@ -8,7 +8,8 @@
 
 // A helper actor for inspector and markupview tests.
 
-const { Cc, Ci, Cu } = require("chrome");
+const { Ci, Cu } = require("chrome");
+const Services = require("Services");
 const {
   getRect, getAdjustedQuads, getWindowDimensions
 } = require("devtools/shared/layout/utils");
@@ -18,8 +19,6 @@ const {
   isContentStylesheet,
   getCSSStyleRules
 } = require("devtools/shared/inspector/css-logic");
-const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-                 .getService(Ci.mozIJSSubScriptLoader);
 const InspectorUtils = require("InspectorUtils");
 
 // Set up a dummy environment so that EventUtils works. We need to be careful to
@@ -32,7 +31,7 @@ EventUtils.parent = {};
 EventUtils._EU_Ci = Components.interfaces;
 EventUtils._EU_Cc = Components.classes;
 /* eslint-disable camelcase */
-loader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
 const protocol = require("devtools/shared/protocol");
 const {Arg, RetVal} = protocol;

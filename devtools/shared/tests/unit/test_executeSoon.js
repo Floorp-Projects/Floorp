@@ -12,7 +12,6 @@
 
 var { executeSoon } = require("devtools/shared/DevToolsUtils");
 var defer = require("devtools/shared/defer");
-var Services = require("Services");
 
 var asyncStackEnabled =
   Services.prefs.getBoolPref("javascript.options.asyncstack");

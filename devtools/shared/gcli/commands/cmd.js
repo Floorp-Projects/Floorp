@@ -5,17 +5,12 @@
 "use strict";
 
 const { Cc, Ci, Cu } = require("chrome");
+const Services = require("Services");
 const { OS } = require("resource://gre/modules/osfile.jsm");
 const { Task } = require("devtools/shared/task");
 
 const gcli = require("gcli/index");
 const l10n = require("gcli/l10n");
-
-loader.lazyGetter(this, "prefBranch", function () {
-  let prefService = Cc["@mozilla.org/preferences-service;1"]
-                      .getService(Ci.nsIPrefService);
-  return prefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch);
-});
 
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 
@@ -27,16 +22,14 @@ const PREF_DIR = "devtools.commands.dir";
  * using in gcli.addItemsByModule
  */
 function loadItemsFromMozDir() {
-  let dirName = prefBranch.getStringPref(PREF_DIR).trim();
+  let dirName = Services.prefs.getStringPref(PREF_DIR).trim();
   if (dirName == "") {
     return Promise.resolve([]);
   }
 
   // replaces ~ with the home directory path in unix and windows
   if (dirName.indexOf("~") == 0) {
-    let dirService = Cc["@mozilla.org/file/directory_service;1"]
-                      .getService(Ci.nsIProperties);
-    let homeDirFile = dirService.get("Home", Ci.nsIFile);
+    let homeDirFile = Services.dirsvc.get("Home", Ci.nsIFile);
     let homeDir = homeDirFile.path;
     dirName = dirName.substr(1);
     dirName = homeDir + dirName;
@@ -123,7 +116,7 @@ exports.items = [
   {
     name: "cmd",
     get hidden() {
-      return !prefBranch.prefHasUserValue(PREF_DIR);
+      return !Services.prefs.prefHasUserValue(PREF_DIR);
     },
     description: l10n.lookup("cmdDesc")
   },
@@ -133,12 +126,12 @@ exports.items = [
     name: "cmd refresh",
     description: l10n.lookup("cmdRefreshDesc"),
     get hidden() {
-      return !prefBranch.prefHasUserValue(PREF_DIR);
+      return !Services.prefs.prefHasUserValue(PREF_DIR);
     },
     exec: function (args, context) {
       gcli.load();
 
-      let dirName = prefBranch.getStringPref(PREF_DIR).trim();
+      let dirName = Services.prefs.getStringPref(PREF_DIR).trim();
       return l10n.lookupFormat("cmdStatus3", [ dirName ]);
     }
   },
@@ -162,11 +155,11 @@ exports.items = [
     ],
     returnType: "string",
     get hidden() {
-      // !prefBranch.prefHasUserValue(PREF_DIR);
+      // !Services.prefs.prefHasUserValue(PREF_DIR);
       return true;
     },
     exec: function (args, context) {
-      prefBranch.setStringPref(PREF_DIR, args.directory);
+      Services.prefs.setStringPref(PREF_DIR, args.directory);
 
       gcli.load();
 
