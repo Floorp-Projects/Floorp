@@ -108,7 +108,7 @@ ValidatePlane(const VideoData::YCbCrBuffer::Plane& aPlane)
   return aPlane.mWidth <= PlanarYCbCrImage::MAX_DIMENSION &&
          aPlane.mHeight <= PlanarYCbCrImage::MAX_DIMENSION &&
          aPlane.mWidth * aPlane.mHeight < MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&
-         aPlane.mStride > 0;
+         aPlane.mStride > 0 && aPlane.mWidth <= aPlane.mStride;
 }
 
 static bool ValidateBufferAndPicture(const VideoData::YCbCrBuffer& aBuffer,
